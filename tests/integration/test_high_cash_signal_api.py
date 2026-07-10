@@ -108,13 +108,17 @@ def authorized_headers() -> dict[str, str]:
 def source_evaluation_headers(
     *,
     portfolio_ids: str = PORTFOLIO_ID,
+    tenant_ids: str | None = "tenant-a",
 ) -> dict[str, str]:
-    return {
+    headers = {
         **authorized_headers(),
         "X-Correlation-Id": "corr-high-cash-source-api",
         "X-Trace-Id": "trace-high-cash-source-api",
         "X-Caller-Portfolio-Ids": portfolio_ids,
     }
+    if tenant_ids is not None:
+        headers["X-Caller-Tenant-Ids"] = tenant_ids
+    return headers
 
 
 def high_cash_source_payload(
@@ -197,6 +201,7 @@ def test_high_cash_source_api_fetches_core_evidence_without_persistence(
     }
     assert source.seen_request == CoreHighCashEvidenceRequest(
         portfolio_id=PORTFOLIO_ID,
+        tenant_id="tenant-a",
         as_of_date=AS_OF_DATE,
         evaluated_at_utc=EVALUATED_AT,
         correlation_id="corr-high-cash-source-api",
@@ -235,6 +240,58 @@ def test_high_cash_source_api_requires_portfolio_entitlement(
     assert response.json()["code"] == "permission_denied"
     assert runtime_called is False
     assert PORTFOLIO_ID not in response.text
+
+
+def test_high_cash_source_api_requires_one_trusted_tenant_before_runtime(
+    monkeypatch: Any,
+) -> None:
+    runtime_called = False
+
+    def fail_if_called() -> CoreHighCashSourceRuntime:
+        nonlocal runtime_called
+        runtime_called = True
+        raise AssertionError("source runtime must not be built without tenant context")
+
+    monkeypatch.setattr(
+        idea_signals_api,
+        "_build_core_high_cash_source_runtime_from_environment",
+        fail_if_called,
+    )
+    response = TestClient(app).post(
+        "/api/v1/idea-signals/high-cash/evaluate-from-source",
+        json=high_cash_source_payload(),
+        headers=source_evaluation_headers(tenant_ids=None),
+    )
+
+    assert response.status_code == 403
+    assert response.json()["code"] == "permission_denied"
+    assert runtime_called is False
+
+
+def test_high_cash_source_api_rejects_ambiguous_tenant_context(
+    monkeypatch: Any,
+) -> None:
+    runtime_called = False
+
+    def fail_if_called() -> CoreHighCashSourceRuntime:
+        nonlocal runtime_called
+        runtime_called = True
+        raise AssertionError("source runtime must not be built with ambiguous tenant context")
+
+    monkeypatch.setattr(
+        idea_signals_api,
+        "_build_core_high_cash_source_runtime_from_environment",
+        fail_if_called,
+    )
+    response = TestClient(app).post(
+        "/api/v1/idea-signals/high-cash/evaluate-from-source",
+        json=high_cash_source_payload(),
+        headers=source_evaluation_headers(tenant_ids="tenant-a,tenant-b"),
+    )
+
+    assert response.status_code == 403
+    assert response.json()["code"] == "permission_denied"
+    assert runtime_called is False
 
 
 def test_high_cash_source_api_blocks_when_core_runtime_is_not_configured(

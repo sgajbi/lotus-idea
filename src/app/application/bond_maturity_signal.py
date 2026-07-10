@@ -42,6 +42,7 @@ class EvaluateBondMaturitySignalCommand:
 @dataclass(frozen=True)
 class EvaluateBondMaturityFromCoreCommand:
     portfolio_id: str
+    tenant_id: str
     as_of_date: date
     evaluated_at_utc: datetime
     maturity_window_days: int = 30
@@ -90,6 +91,7 @@ def evaluate_bond_maturity_signal_from_core(
         evidence = core_source.fetch_bond_maturity_evidence(
             CoreBondMaturityEvidenceRequest(
                 portfolio_id=command.portfolio_id,
+                tenant_id=command.tenant_id,
                 as_of_date=command.as_of_date,
                 evaluated_at_utc=command.evaluated_at_utc,
                 maturity_window_days=command.maturity_window_days,

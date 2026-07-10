@@ -86,6 +86,7 @@ def test_bond_maturity_source_api_fetches_core_evidence_without_persistence(
     }
     assert source.seen_request == CoreBondMaturityEvidenceRequest(
         portfolio_id=PORTFOLIO_ID,
+        tenant_id="tenant-a",
         as_of_date=AS_OF_DATE,
         evaluated_at_utc=EVALUATED_AT,
         maturity_window_days=45,
@@ -443,6 +444,7 @@ def source_evaluation_headers(
         "X-Correlation-Id": "corr-bond-maturity-source-api",
         "X-Trace-Id": "trace-bond-maturity-source-api",
         "X-Caller-Portfolio-Ids": portfolio_ids,
+        "X-Caller-Tenant-Ids": "tenant-a",
     }
 
 

@@ -113,6 +113,7 @@ def test_evaluate_low_income_signal_from_core_blocks_source_unavailable() -> Non
 def _command() -> EvaluateLowIncomeFromCoreCommand:
     return EvaluateLowIncomeFromCoreCommand(
         portfolio_id="PB_SG_GLOBAL_BAL_001",
+        tenant_id="tenant-a",
         as_of_date=AS_OF_DATE,
         evaluated_at_utc=EVALUATED_AT,
         horizon_days=30,

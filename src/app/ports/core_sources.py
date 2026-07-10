@@ -21,6 +21,7 @@ class CoreSourceEntitlementDenied(Exception):
 @dataclass(frozen=True)
 class CoreHighCashEvidenceRequest:
     portfolio_id: str
+    tenant_id: str
     as_of_date: date
     evaluated_at_utc: datetime
     correlation_id: str | None = None
@@ -29,6 +30,8 @@ class CoreHighCashEvidenceRequest:
     def __post_init__(self) -> None:
         if not self.portfolio_id.strip():
             raise ValueError("portfolio_id is required")
+        if not self.tenant_id.strip():
+            raise ValueError("tenant_id is required")
         if self.evaluated_at_utc.tzinfo is None or self.evaluated_at_utc.utcoffset() is None:
             raise ValueError("evaluated_at_utc must be timezone-aware")
 
@@ -47,6 +50,7 @@ class CoreHighCashEvidence:
 @dataclass(frozen=True)
 class CoreBenchmarkAssignmentEvidenceRequest:
     portfolio_id: str
+    tenant_id: str
     as_of_date: date
     evaluated_at_utc: datetime
     reporting_currency: str | None = None
@@ -56,6 +60,8 @@ class CoreBenchmarkAssignmentEvidenceRequest:
     def __post_init__(self) -> None:
         if not self.portfolio_id.strip():
             raise ValueError("portfolio_id is required")
+        if not self.tenant_id.strip():
+            raise ValueError("tenant_id is required")
         if self.evaluated_at_utc.tzinfo is None or self.evaluated_at_utc.utcoffset() is None:
             raise ValueError("evaluated_at_utc must be timezone-aware")
 
@@ -74,6 +80,7 @@ class CoreBenchmarkAssignmentEvidence:
 @dataclass(frozen=True)
 class CorePortfolioStateEvidenceRequest:
     portfolio_id: str
+    tenant_id: str
     as_of_date: date
     evaluated_at_utc: datetime
     correlation_id: str | None = None
@@ -82,6 +89,8 @@ class CorePortfolioStateEvidenceRequest:
     def __post_init__(self) -> None:
         if not self.portfolio_id.strip():
             raise ValueError("portfolio_id is required")
+        if not self.tenant_id.strip():
+            raise ValueError("tenant_id is required")
         if self.evaluated_at_utc.tzinfo is None or self.evaluated_at_utc.utcoffset() is None:
             raise ValueError("evaluated_at_utc must be timezone-aware")
 
@@ -97,6 +106,7 @@ class CorePortfolioStateEvidence:
 @dataclass(frozen=True)
 class CoreLowIncomeEvidenceRequest:
     portfolio_id: str
+    tenant_id: str
     as_of_date: date
     evaluated_at_utc: datetime
     horizon_days: int = 30
@@ -106,6 +116,8 @@ class CoreLowIncomeEvidenceRequest:
     def __post_init__(self) -> None:
         if not self.portfolio_id.strip():
             raise ValueError("portfolio_id is required")
+        if not self.tenant_id.strip():
+            raise ValueError("tenant_id is required")
         if self.horizon_days < 1 or self.horizon_days > 366:
             raise ValueError("horizon_days must be between 1 and 366")
         if self.evaluated_at_utc.tzinfo is None or self.evaluated_at_utc.utcoffset() is None:
@@ -125,6 +137,7 @@ class CoreLowIncomeEvidence:
 @dataclass(frozen=True)
 class CoreBondMaturityEvidenceRequest:
     portfolio_id: str
+    tenant_id: str
     as_of_date: date
     evaluated_at_utc: datetime
     maturity_window_days: int = 30
@@ -134,6 +147,8 @@ class CoreBondMaturityEvidenceRequest:
     def __post_init__(self) -> None:
         if not self.portfolio_id.strip():
             raise ValueError("portfolio_id is required")
+        if not self.tenant_id.strip():
+            raise ValueError("tenant_id is required")
         if self.maturity_window_days < 1 or self.maturity_window_days > 366:
             raise ValueError("maturity_window_days must be between 1 and 366")
         if self.evaluated_at_utc.tzinfo is None or self.evaluated_at_utc.utcoffset() is None:

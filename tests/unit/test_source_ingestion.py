@@ -106,6 +106,7 @@ def command(
 ) -> IngestHighCashSourceSignalCommand:
     return IngestHighCashSourceSignalCommand(
         portfolio_id=PORTFOLIO_ID,
+        tenant_id="tenant-a",
         as_of_date=AS_OF_DATE,
         evaluated_at_utc=EVALUATED_AT,
         idempotency_key=idempotency_key,
@@ -183,6 +184,7 @@ def test_run_once_batch_ingests_and_replays_duplicate_work_items() -> None:
                     as_of_date=AS_OF_DATE,
                 ),
             ),
+            tenant_id="tenant-a",
             evaluated_at_utc=EVALUATED_AT,
             correlation_id="corr-source-worker",
             trace_id="trace-source-worker",
@@ -216,6 +218,7 @@ def test_run_once_batch_reports_conflicts_without_duplicate_candidates() -> None
     first = run_high_cash_source_ingestion_batch(
         RunHighCashSourceIngestionBatchCommand(
             work_items=(work_item,),
+            tenant_id="tenant-a",
             evaluated_at_utc=EVALUATED_AT,
         ),
         core_source=source,
@@ -225,6 +228,7 @@ def test_run_once_batch_reports_conflicts_without_duplicate_candidates() -> None
     second = run_high_cash_source_ingestion_batch(
         RunHighCashSourceIngestionBatchCommand(
             work_items=(work_item,),
+            tenant_id="tenant-a",
             evaluated_at_utc=EVALUATED_AT,
         ),
         core_source=source,
@@ -384,6 +388,7 @@ def test_validates_run_once_batch_boundaries() -> None:
     mutable_work_items = [valid_item]
     command = RunHighCashSourceIngestionBatchCommand(
         work_items=mutable_work_items,
+        tenant_id="tenant-a",
         evaluated_at_utc=EVALUATED_AT,
     )
     mutable_work_items.append(valid_item)
@@ -397,6 +402,7 @@ def test_validates_run_once_batch_boundaries() -> None:
         (
             lambda: RunHighCashSourceIngestionBatchCommand(
                 work_items=(),
+                tenant_id="tenant-a",
                 evaluated_at_utc=EVALUATED_AT,
             ),
             "work_items must not be empty",
@@ -404,6 +410,7 @@ def test_validates_run_once_batch_boundaries() -> None:
         (
             lambda: RunHighCashSourceIngestionBatchCommand(
                 work_items=(valid_item,),
+                tenant_id="tenant-a",
                 evaluated_at_utc=datetime(2026, 6, 21, 10, 0),
             ),
             "evaluated_at_utc must be timezone-aware",
@@ -411,6 +418,7 @@ def test_validates_run_once_batch_boundaries() -> None:
         (
             lambda: RunHighCashSourceIngestionBatchCommand(
                 work_items=(valid_item,),
+                tenant_id="tenant-a",
                 evaluated_at_utc=EVALUATED_AT,
                 max_items=0,
             ),
@@ -419,6 +427,7 @@ def test_validates_run_once_batch_boundaries() -> None:
         (
             lambda: RunHighCashSourceIngestionBatchCommand(
                 work_items=(valid_item,),
+                tenant_id="tenant-a",
                 evaluated_at_utc=EVALUATED_AT,
                 max_items=SOURCE_INGESTION_RUN_ONCE_BATCH_CEILING + 1,
             ),
@@ -427,6 +436,7 @@ def test_validates_run_once_batch_boundaries() -> None:
         (
             lambda: RunHighCashSourceIngestionBatchCommand(
                 work_items=(valid_item,) * (SOURCE_INGESTION_RUN_ONCE_BATCH_CEILING + 1),
+                tenant_id="tenant-a",
                 evaluated_at_utc=EVALUATED_AT,
                 max_items=SOURCE_INGESTION_RUN_ONCE_BATCH_CEILING,
             ),
@@ -435,6 +445,7 @@ def test_validates_run_once_batch_boundaries() -> None:
         (
             lambda: RunHighCashSourceIngestionBatchCommand(
                 work_items=(valid_item, valid_item),
+                tenant_id="tenant-a",
                 evaluated_at_utc=EVALUATED_AT,
                 max_items=1,
             ),
@@ -443,6 +454,7 @@ def test_validates_run_once_batch_boundaries() -> None:
         (
             lambda: RunHighCashSourceIngestionBatchCommand(
                 work_items=(valid_item,),
+                tenant_id="tenant-a",
                 evaluated_at_utc=EVALUATED_AT,
                 actor_subject=" ",
             ),
@@ -466,6 +478,7 @@ def test_validates_source_ingestion_identity_fields() -> None:
         (
             IngestHighCashSourceSignalCommand(
                 portfolio_id=" ",
+                tenant_id="tenant-a",
                 as_of_date=AS_OF_DATE,
                 evaluated_at_utc=EVALUATED_AT,
             ),
@@ -474,6 +487,7 @@ def test_validates_source_ingestion_identity_fields() -> None:
         (
             IngestHighCashSourceSignalCommand(
                 portfolio_id=PORTFOLIO_ID,
+                tenant_id="tenant-a",
                 as_of_date=AS_OF_DATE,
                 evaluated_at_utc=EVALUATED_AT,
                 actor_subject=" ",
@@ -483,6 +497,7 @@ def test_validates_source_ingestion_identity_fields() -> None:
         (
             IngestHighCashSourceSignalCommand(
                 portfolio_id=PORTFOLIO_ID,
+                tenant_id="tenant-a",
                 as_of_date=AS_OF_DATE,
                 evaluated_at_utc=EVALUATED_AT,
                 idempotency_key=" ",

@@ -47,6 +47,7 @@ class EvaluateHighCashSignalCommand:
 @dataclass(frozen=True)
 class EvaluateHighCashFromCoreCommand:
     portfolio_id: str
+    tenant_id: str
     as_of_date: date
     evaluated_at_utc: datetime
     duplicate_of_candidate_id: str | None = None
@@ -112,6 +113,7 @@ def evaluate_high_cash_signal_from_core(
         evidence = core_source.fetch_high_cash_evidence(
             CoreHighCashEvidenceRequest(
                 portfolio_id=command.portfolio_id,
+                tenant_id=command.tenant_id,
                 as_of_date=command.as_of_date,
                 evaluated_at_utc=command.evaluated_at_utc,
                 correlation_id=command.correlation_id,
@@ -180,6 +182,7 @@ def evaluate_and_persist_high_cash_signal_from_core(
         evidence = core_source.fetch_high_cash_evidence(
             CoreHighCashEvidenceRequest(
                 portfolio_id=command.evaluation.portfolio_id,
+                tenant_id=command.evaluation.tenant_id,
                 as_of_date=command.evaluation.as_of_date,
                 evaluated_at_utc=command.evaluation.evaluated_at_utc,
                 correlation_id=command.evaluation.correlation_id,

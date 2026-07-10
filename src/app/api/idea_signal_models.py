@@ -169,11 +169,13 @@ class EvaluateHighCashFromSourceRequest(CamelModel):
     def to_command(
         self,
         *,
+        tenant_id: str,
         correlation_id: str | None,
         trace_id: str | None,
     ) -> EvaluateHighCashFromCoreCommand:
         return EvaluateHighCashFromCoreCommand(
             portfolio_id=self.portfolio_id,
+            tenant_id=tenant_id,
             as_of_date=self.as_of_date,
             evaluated_at_utc=self.evaluated_at_utc,
             duplicate_of_candidate_id=self.duplicate_of_candidate_id,

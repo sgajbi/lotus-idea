@@ -218,10 +218,11 @@ def evaluate_source_signal(
     runtime_factory: Callable[[], object],
     is_runtime_blocked: Callable[[object], bool],
     blocked_detail: str,
-    command_factory: Callable[[RuntimeT], CommandT],
+    command_factory: Callable[[RuntimeT, str | None], CommandT],
     evaluator: Callable[[CommandT, RuntimeT], SignalEvaluationResult],
     response_factory: Callable[..., ResponseT],
     emit_event: Callable[..., None],
+    require_tenant_context: bool = False,
 ) -> ResponseT | JSONResponse:
     """Run the shared source-backed signal boundary in a fixed order.
 
@@ -238,6 +239,16 @@ def evaluate_source_signal(
     )
     if permission_problem is not None:
         return permission_problem
+
+    tenant_id: str | None = None
+    if require_tenant_context:
+        tenant_id, tenant_problem = required_tenant_context_or_problem(
+            caller=caller,
+            source_authority=source_authority,
+            emit_event=emit_event,
+        )
+        if tenant_problem is not None:
+            return tenant_problem
 
     runtime_or_blocker = runtime_factory()
     if is_runtime_blocked(runtime_or_blocker):
@@ -257,7 +268,7 @@ def evaluate_source_signal(
 
     runtime = cast(RuntimeT, runtime_or_blocker)
     try:
-        result = evaluator(command_factory(runtime), runtime)
+        result = evaluator(command_factory(runtime, tenant_id), runtime)
         emit_signal_evaluation_event(
             result=result,
             source_authority=source_authority,
@@ -335,6 +346,29 @@ def signal_permission_problem_or_none(
     return None
 
 
+def required_tenant_context_or_problem(
+    *,
+    caller: CallerContext,
+    source_authority: str,
+    emit_event: Callable[..., None],
+) -> tuple[str | None, JSONResponse | None]:
+    tenant_ids = caller.entitlement_scope.tenant_ids
+    if len(tenant_ids) == 1:
+        return tenant_ids[0], None
+    emit_event(
+        IdeaOperation.SIGNAL_EVALUATION,
+        OperationOutcome.PERMISSION_DENIED,
+        source_authority=source_authority,
+        error_code="tenant_context_required",
+    )
+    return None, problem_response(
+        status_code=status.HTTP_403_FORBIDDEN,
+        code="permission_denied",
+        title="Permission denied",
+        detail="A single trusted tenant context is required for this source evaluation.",
+    )
+
+
 def _caller_scope_allows_requested_scope(
     caller: CallerContext,
     requested_access_scope: ReviewAccessScope | None,
@@ -345,10 +379,10 @@ def _caller_scope_allows_requested_scope(
     if caller_scope.is_empty:
         return False
     requested_scope_filter = QueueAccessScopeFilter(
-        tenant_id=requested_access_scope.tenant_id,
-        book_id=requested_access_scope.book_id,
-        portfolio_id=requested_access_scope.portfolio_id,
-        client_id=requested_access_scope.client_id,
+        tenant_id=_known_scope_value(requested_access_scope.tenant_id),
+        book_id=_known_scope_value(requested_access_scope.book_id),
+        portfolio_id=_known_scope_value(requested_access_scope.portfolio_id),
+        client_id=_known_scope_value(requested_access_scope.client_id),
     )
     caller_scope_filter = QueueAccessScopeFilter(
         tenant_id=caller_scope.tenant_ids,
@@ -357,6 +391,10 @@ def _caller_scope_allows_requested_scope(
         client_id=caller_scope.client_ids,
     )
     return requested_scope_filter.is_subset_of(caller_scope_filter)
+
+
+def _known_scope_value(value: str) -> str | None:
+    return None if value == "unknown" else value
 
 
 def emit_signal_evaluation_event(

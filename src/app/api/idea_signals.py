@@ -132,7 +132,8 @@ async def evaluate_high_cash_signal_from_source(
         runtime_factory=_build_core_high_cash_source_runtime_from_environment,
         is_runtime_blocked=_is_core_high_cash_runtime_blocked,
         blocked_detail="Core source runtime is not configured for high-cash source evaluation.",
-        command_factory=lambda runtime: signal_request.to_command(
+        command_factory=lambda runtime, tenant_id: signal_request.to_command(
+            tenant_id=tenant_id or "",
             correlation_id=_request_correlation_id(request),
             trace_id=_request_trace_id(request),
         ),
@@ -142,6 +143,7 @@ async def evaluate_high_cash_signal_from_source(
         ),
         response_factory=EvaluateHighCashSignalResponse.from_domain,
         emit_event=emit_foundation_operation_event,
+        require_tenant_context=True,
     )
 
 
@@ -183,7 +185,7 @@ async def evaluate_mandate_restriction_signal_from_source(
         runtime_factory=_build_advise_policy_evaluation_source_runtime_from_environment,
         is_runtime_blocked=_is_advise_policy_runtime_blocked,
         blocked_detail="Advise source runtime is not configured for mandate-restriction source evaluation.",
-        command_factory=lambda runtime: signal_request.to_command(
+        command_factory=lambda runtime, _tenant_id: signal_request.to_command(
             correlation_id=_request_correlation_id(request),
             trace_id=_request_trace_id(request),
         ),

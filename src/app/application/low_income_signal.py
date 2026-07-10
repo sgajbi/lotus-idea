@@ -42,6 +42,7 @@ class EvaluateLowIncomeSignalCommand:
 @dataclass(frozen=True)
 class EvaluateLowIncomeFromCoreCommand:
     portfolio_id: str
+    tenant_id: str
     as_of_date: date
     evaluated_at_utc: datetime
     horizon_days: int = 30
@@ -90,6 +91,7 @@ def evaluate_low_income_signal_from_core(
         evidence = core_source.fetch_low_income_evidence(
             CoreLowIncomeEvidenceRequest(
                 portfolio_id=command.portfolio_id,
+                tenant_id=command.tenant_id,
                 as_of_date=command.as_of_date,
                 evaluated_at_utc=command.evaluated_at_utc,
                 horizon_days=command.horizon_days,

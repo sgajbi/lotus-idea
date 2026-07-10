@@ -135,6 +135,7 @@ def test_evaluate_missing_benchmark_signal_from_core_blocks_source_unavailable()
 def _command() -> EvaluateMissingBenchmarkFromCoreCommand:
     return EvaluateMissingBenchmarkFromCoreCommand(
         portfolio_id="PB_SG_GLOBAL_BAL_001",
+        tenant_id="tenant-a",
         as_of_date=AS_OF_DATE,
         evaluated_at_utc=EVALUATED_AT,
         reporting_currency="SGD",

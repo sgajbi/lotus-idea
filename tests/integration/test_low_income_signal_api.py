@@ -87,6 +87,7 @@ def test_low_income_source_api_fetches_core_evidence_without_persistence(
     }
     assert source.seen_request == CoreLowIncomeEvidenceRequest(
         portfolio_id=PORTFOLIO_ID,
+        tenant_id="tenant-a",
         as_of_date=AS_OF_DATE,
         evaluated_at_utc=EVALUATED_AT,
         horizon_days=30,
@@ -434,6 +435,7 @@ def source_evaluation_headers(
         "X-Correlation-Id": "corr-low-income-source-api",
         "X-Trace-Id": "trace-low-income-source-api",
         "X-Caller-Portfolio-Ids": portfolio_ids,
+        "X-Caller-Tenant-Ids": "tenant-a",
     }
 
 

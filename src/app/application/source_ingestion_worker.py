@@ -24,6 +24,7 @@ MANIFEST_SCHEMA_VERSION = "lotus-idea.source-ingestion.high-cash.run-once.v1"
 _MANIFEST_KEYS = {
     "schemaVersion",
     "evaluatedAtUtc",
+    "tenantId",
     "actorSubject",
     "maxItems",
     "correlationId",
@@ -75,6 +76,7 @@ def source_ingestion_worker_plan_from_manifest(
     work_items = _work_items_from_manifest(manifest.get("workItems"))
     command = RunHighCashSourceIngestionBatchCommand(
         work_items=work_items,
+        tenant_id=_require_text(manifest.get("tenantId"), "tenantId"),
         evaluated_at_utc=_aware_datetime(manifest.get("evaluatedAtUtc"), "evaluatedAtUtc"),
         actor_subject=_optional_text(manifest.get("actorSubject")) or SOURCE_INGESTION_ACTOR,
         max_items=_positive_int(

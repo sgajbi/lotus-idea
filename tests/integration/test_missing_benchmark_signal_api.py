@@ -91,6 +91,7 @@ def test_missing_benchmark_source_api_fetches_core_evidence_without_persistence(
     }
     assert source.seen_request == CoreBenchmarkAssignmentEvidenceRequest(
         portfolio_id=PORTFOLIO_ID,
+        tenant_id="tenant-a",
         as_of_date=AS_OF_DATE,
         evaluated_at_utc=EVALUATED_AT,
         reporting_currency="USD",
@@ -451,6 +452,7 @@ def source_evaluation_headers(
         "X-Correlation-Id": "corr-missing-benchmark-source-api",
         "X-Trace-Id": "trace-missing-benchmark-source-api",
         "X-Caller-Portfolio-Ids": portfolio_ids,
+        "X-Caller-Tenant-Ids": "tenant-a",
     }
 
 

@@ -112,6 +112,7 @@ def test_evaluate_bond_maturity_signal_from_core_blocks_source_unavailable() -> 
 def _command() -> EvaluateBondMaturityFromCoreCommand:
     return EvaluateBondMaturityFromCoreCommand(
         portfolio_id="PB_SG_GLOBAL_BAL_001",
+        tenant_id="tenant-a",
         as_of_date=AS_OF_DATE,
         evaluated_at_utc=EVALUATED_AT,
         maturity_window_days=30,

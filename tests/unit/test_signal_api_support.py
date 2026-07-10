@@ -363,8 +363,9 @@ def test_source_signal_boundary_orders_runtime_evaluation_projection_and_cleanup
         calls.append("runtime")
         return runtime
 
-    def map_command(active_runtime: Runtime) -> object:
+    def map_command(active_runtime: Runtime, tenant_id: str | None) -> object:
         assert active_runtime is runtime
+        assert tenant_id is None
         calls.append("dto-mapped")
         return object()
 
@@ -411,7 +412,7 @@ def test_source_signal_boundary_blocks_before_runtime_use_case_and_cleanup() -> 
         runtime_factory=lambda: blocker,
         is_runtime_blocked=lambda value: value is blocker,
         blocked_detail="Core source runtime is not configured.",
-        command_factory=lambda runtime: calls.append("dto-mapped"),
+        command_factory=lambda runtime, tenant_id: calls.append("dto-mapped"),
         evaluator=lambda command, runtime: calls.append("use-case"),
         response_factory=lambda result, **kwargs: result,
         emit_event=lambda *args, **kwargs: calls.append(kwargs.get("error_code", "event")),

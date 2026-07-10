@@ -182,11 +182,13 @@ class EvaluateLowIncomeFromSourceRequest(CamelModel):
     def to_command(
         self,
         *,
+        tenant_id: str,
         correlation_id: str | None,
         trace_id: str | None,
     ) -> EvaluateLowIncomeFromCoreCommand:
         return EvaluateLowIncomeFromCoreCommand(
             portfolio_id=self.portfolio_id,
+            tenant_id=tenant_id,
             as_of_date=self.as_of_date,
             evaluated_at_utc=self.evaluated_at_utc,
             horizon_days=self.horizon_days,
@@ -233,7 +235,8 @@ async def evaluate_low_income_signal_from_source(
         runtime_factory=_build_core_low_income_source_runtime_from_environment,
         is_runtime_blocked=_is_core_low_income_runtime_blocked,
         blocked_detail="Core source runtime is not configured for low-income source evaluation.",
-        command_factory=lambda runtime: signal_request.to_command(
+        command_factory=lambda runtime, tenant_id: signal_request.to_command(
+            tenant_id=tenant_id or "",
             correlation_id=_request_correlation_id(request),
             trace_id=_request_trace_id(request),
         ),
@@ -243,6 +246,7 @@ async def evaluate_low_income_signal_from_source(
         ),
         response_factory=EvaluateLowIncomeSignalResponse.from_domain,
         emit_event=emit_foundation_operation_event,
+        require_tenant_context=True,
     )
 
 

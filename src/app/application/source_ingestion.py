@@ -44,6 +44,7 @@ class HighCashSourceIngestionDecision(StrEnum):
 @dataclass(frozen=True)
 class IngestHighCashSourceSignalCommand:
     portfolio_id: str
+    tenant_id: str
     as_of_date: date
     evaluated_at_utc: datetime
     actor_subject: str = SOURCE_INGESTION_ACTOR
@@ -77,6 +78,7 @@ class HighCashSourceIngestionWorkItem:
 @dataclass(frozen=True)
 class RunHighCashSourceIngestionBatchCommand:
     work_items: Sequence[HighCashSourceIngestionWorkItem]
+    tenant_id: str
     evaluated_at_utc: datetime
     actor_subject: str = SOURCE_INGESTION_ACTOR
     max_items: int = DEFAULT_SOURCE_INGESTION_BATCH_LIMIT
@@ -84,6 +86,7 @@ class RunHighCashSourceIngestionBatchCommand:
     trace_id: str | None = None
 
     def __post_init__(self) -> None:
+        _require_text(self.tenant_id, "tenant_id")
         _require_text(self.actor_subject, "actor_subject")
         work_items = tuple(self.work_items)
         if self.evaluated_at_utc.tzinfo is None or self.evaluated_at_utc.utcoffset() is None:
@@ -132,6 +135,7 @@ def ingest_high_cash_signal_from_core(
     policy: HighCashSignalPolicy = DEFAULT_HIGH_CASH_POLICY,
 ) -> HighCashSourceIngestionResult:
     _require_text(command.portfolio_id, "portfolio_id")
+    _require_text(command.tenant_id, "tenant_id")
     _require_text(command.actor_subject, "actor_subject")
     if command.idempotency_key is not None:
         _require_text(command.idempotency_key, "idempotency_key")
@@ -144,6 +148,7 @@ def ingest_high_cash_signal_from_core(
         EvaluateAndPersistHighCashFromCoreCommand(
             evaluation=EvaluateHighCashFromCoreCommand(
                 portfolio_id=command.portfolio_id,
+                tenant_id=command.tenant_id,
                 as_of_date=command.as_of_date,
                 evaluated_at_utc=command.evaluated_at_utc,
                 duplicate_of_candidate_id=command.duplicate_of_candidate_id,
@@ -175,6 +180,7 @@ def run_high_cash_source_ingestion_batch(
         ingest_high_cash_signal_from_core(
             IngestHighCashSourceSignalCommand(
                 portfolio_id=item.portfolio_id,
+                tenant_id=command.tenant_id,
                 as_of_date=item.as_of_date,
                 evaluated_at_utc=command.evaluated_at_utc,
                 actor_subject=command.actor_subject,

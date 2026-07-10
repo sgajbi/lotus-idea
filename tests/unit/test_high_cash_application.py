@@ -115,6 +115,7 @@ class RecordingCoreSource(CoreOpportunitySourcePort):
 def from_core_command() -> EvaluateHighCashFromCoreCommand:
     return EvaluateHighCashFromCoreCommand(
         portfolio_id="PB_SG_GLOBAL_BAL_001",
+        tenant_id="tenant-a",
         as_of_date=AS_OF_DATE,
         evaluated_at_utc=EVALUATED_AT,
         correlation_id="corr-idea",

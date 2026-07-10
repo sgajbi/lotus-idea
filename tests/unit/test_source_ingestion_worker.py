@@ -56,6 +56,7 @@ def test_loads_worker_manifest_as_bounded_batch_command() -> None:
         {
             "schemaVersion": MANIFEST_SCHEMA_VERSION,
             "evaluatedAtUtc": "2026-06-21T10:00:00Z",
+            "tenantId": "default",
             "actorSubject": "signal-ingestion-worker",
             "maxItems": 10,
             "correlationId": "corr-worker",
@@ -88,6 +89,7 @@ def test_rejects_unknown_manifest_keys_before_worker_execution() -> None:
     invalid_manifest = {
         "schemaVersion": MANIFEST_SCHEMA_VERSION,
         "evaluatedAtUtc": "2026-06-21T10:00:00Z",
+        "tenantId": "default",
         "workItems": [{"portfolioId": PORTFOLIO_ID, "asOfDate": "2026-06-21"}],
         "unexpected": "value",
     }
@@ -104,6 +106,7 @@ def test_rejects_unsupported_schema_version() -> None:
     invalid_manifest = {
         "schemaVersion": "lotus-idea.source-ingestion.high-cash.v0",
         "evaluatedAtUtc": "2026-06-21T10:00:00Z",
+        "tenantId": "default",
         "workItems": [{"portfolioId": PORTFOLIO_ID, "asOfDate": "2026-06-21"}],
     }
 
@@ -140,6 +143,7 @@ def test_rejects_malformed_worker_manifest_fields(
     manifest: dict[str, object] = {
         "schemaVersion": MANIFEST_SCHEMA_VERSION,
         "evaluatedAtUtc": "2026-06-21T10:00:00Z",
+        "tenantId": "default",
         "workItems": [{"portfolioId": PORTFOLIO_ID, "asOfDate": "2026-06-21"}],
     }
     manifest.update(manifest_update)
@@ -152,6 +156,7 @@ def test_rejects_worker_manifest_over_service_batch_ceiling() -> None:
     manifest: dict[str, object] = {
         "schemaVersion": MANIFEST_SCHEMA_VERSION,
         "evaluatedAtUtc": "2026-06-21T10:00:00Z",
+        "tenantId": "default",
         "workItems": [
             {"portfolioId": f"portfolio-{index}", "asOfDate": "2026-06-21"}
             for index in range(SOURCE_INGESTION_RUN_ONCE_BATCH_CEILING + 1)
@@ -172,6 +177,7 @@ def test_summarizes_worker_run_without_source_payloads_or_supported_claims() -> 
         {
             "schemaVersion": MANIFEST_SCHEMA_VERSION,
             "evaluatedAtUtc": "2026-06-21T10:00:00Z",
+            "tenantId": "default",
             "correlationId": "corr-worker",
             "traceId": "trace-worker",
             "workItems": [{"portfolioId": PORTFOLIO_ID, "asOfDate": "2026-06-21"}],
@@ -213,6 +219,7 @@ def test_summarizes_worker_source_failure_without_source_payloads() -> None:
         {
             "schemaVersion": MANIFEST_SCHEMA_VERSION,
             "evaluatedAtUtc": "2026-06-21T10:00:00Z",
+            "tenantId": "default",
             "workItems": [
                 {
                     "portfolioId": PORTFOLIO_ID,
@@ -247,6 +254,7 @@ def test_summarizes_worker_failure_with_default_safe_error_code() -> None:
         {
             "schemaVersion": MANIFEST_SCHEMA_VERSION,
             "evaluatedAtUtc": "2026-06-21T10:00:00Z",
+            "tenantId": "default",
             "workItems": [{"portfolioId": PORTFOLIO_ID, "asOfDate": "2026-06-21"}],
         }
     )
@@ -269,6 +277,7 @@ def test_summarizes_worker_block_reasons_without_source_identifiers() -> None:
         {
             "schemaVersion": MANIFEST_SCHEMA_VERSION,
             "evaluatedAtUtc": "2026-06-21T10:00:00Z",
+            "tenantId": "default",
             "workItems": [{"portfolioId": PORTFOLIO_ID, "asOfDate": "2026-06-21"}],
         }
     )

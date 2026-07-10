@@ -43,6 +43,7 @@ class EvaluateMissingBenchmarkSignalCommand:
 @dataclass(frozen=True)
 class EvaluateMissingBenchmarkFromCoreCommand:
     portfolio_id: str
+    tenant_id: str
     as_of_date: date
     evaluated_at_utc: datetime
     reporting_currency: str | None = None
@@ -89,6 +90,7 @@ def evaluate_missing_benchmark_signal_from_core(
         evidence = core_source.fetch_benchmark_assignment_evidence(
             CoreBenchmarkAssignmentEvidenceRequest(
                 portfolio_id=command.portfolio_id,
+                tenant_id=command.tenant_id,
                 as_of_date=command.as_of_date,
                 evaluated_at_utc=command.evaluated_at_utc,
                 reporting_currency=command.reporting_currency,

@@ -1,6 +1,7 @@
 {
   "schemaVersion": "lotus-idea.source-ingestion.high-cash.run-once.v1",
   "evaluatedAtUtc": "2026-06-20T10:00:00Z",
+  "tenantId": "default",
   "actorSubject": "signal-ingestion-worker",
   "maxItems": 100,
   "correlationId": "corr-source-ingestion-worker",

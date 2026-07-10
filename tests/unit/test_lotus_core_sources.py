@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import UTC, date, datetime
+from dataclasses import replace
 from decimal import Decimal
 import json
 from typing import Any
@@ -107,6 +108,7 @@ def _split_adapter(
 def _request() -> CoreHighCashEvidenceRequest:
     return CoreHighCashEvidenceRequest(
         portfolio_id="PB_SG_GLOBAL_BAL_001",
+        tenant_id="tenant-a",
         as_of_date=AS_OF_DATE,
         evaluated_at_utc=datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
         correlation_id="corr-core",
@@ -117,6 +119,7 @@ def _request() -> CoreHighCashEvidenceRequest:
 def _benchmark_assignment_request() -> CoreBenchmarkAssignmentEvidenceRequest:
     return CoreBenchmarkAssignmentEvidenceRequest(
         portfolio_id="PB_SG_GLOBAL_BAL_001",
+        tenant_id="tenant-a",
         as_of_date=AS_OF_DATE,
         reporting_currency="USD",
         evaluated_at_utc=datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
@@ -128,6 +131,7 @@ def _benchmark_assignment_request() -> CoreBenchmarkAssignmentEvidenceRequest:
 def _portfolio_state_request() -> CorePortfolioStateEvidenceRequest:
     return CorePortfolioStateEvidenceRequest(
         portfolio_id="PB_SG_GLOBAL_BAL_001",
+        tenant_id="tenant-a",
         as_of_date=AS_OF_DATE,
         evaluated_at_utc=datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
         correlation_id="corr-core",
@@ -138,6 +142,7 @@ def _portfolio_state_request() -> CorePortfolioStateEvidenceRequest:
 def _low_income_request() -> CoreLowIncomeEvidenceRequest:
     return CoreLowIncomeEvidenceRequest(
         portfolio_id="PB_SG_GLOBAL_BAL_001",
+        tenant_id="tenant-a",
         as_of_date=AS_OF_DATE,
         evaluated_at_utc=datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
         horizon_days=45,
@@ -149,6 +154,7 @@ def _low_income_request() -> CoreLowIncomeEvidenceRequest:
 def _bond_maturity_request() -> CoreBondMaturityEvidenceRequest:
     return CoreBondMaturityEvidenceRequest(
         portfolio_id="PB_SG_GLOBAL_BAL_001",
+        tenant_id="tenant-a",
         as_of_date=AS_OF_DATE,
         evaluated_at_utc=datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
         maturity_window_days=30,
@@ -199,6 +205,38 @@ def test_lotus_core_adapter_fetches_declared_high_cash_source_products() -> None
         evidence.cashflow_projection_ref.product_id == "lotus-core:PortfolioCashflowProjection:v1"
     )
     assert len(seen) == 4
+
+
+def test_lotus_core_adapter_propagates_each_explicit_tenant() -> None:
+    seen_tenants: list[str] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.method == "POST":
+            seen_tenants.append(json.loads(request.content)["tenant_id"])
+            return httpx.Response(
+                200,
+                json=_payload(
+                    "PortfolioStateSnapshot",
+                    extra={"request_fingerprint": "core-snapshot-fingerprint"},
+                ),
+            )
+        url = str(request.url)
+        if "cash-balances" in url:
+            return httpx.Response(
+                200,
+                json=_payload("HoldingsAsOf", extra={"sourceReportedCashWeight": "0.18"}),
+            )
+        if "cash-movement-summary" in url:
+            return httpx.Response(200, json=_payload("PortfolioCashMovementSummary"))
+        if "cashflow-projection" in url:
+            return httpx.Response(200, json=_payload("PortfolioCashflowProjection"))
+        raise AssertionError(f"unexpected URL {url}")
+
+    adapter = _adapter(httpx.MockTransport(handler))
+    adapter.fetch_high_cash_evidence(replace(_request(), tenant_id="tenant-a"))
+    adapter.fetch_high_cash_evidence(replace(_request(), tenant_id="tenant-b"))
+
+    assert seen_tenants == ["tenant-a", "tenant-b"]
 
 
 def test_lotus_core_adapter_fetches_benchmark_assignment_source_product() -> None:
@@ -255,7 +293,7 @@ def test_lotus_core_adapter_fetches_portfolio_state_source_product() -> None:
             "as_of_date": "2026-06-21",
             "snapshot_mode": "BASELINE",
             "consumer_system": "lotus-idea",
-            "tenant_id": "default",
+            "tenant_id": "tenant-a",
             "sections": ["portfolio_state", "portfolio_totals"],
         }
         return httpx.Response(
@@ -576,6 +614,7 @@ def test_lotus_core_adapter_marks_benchmark_assignment_missing_effective_date_an
 
     request = CoreBenchmarkAssignmentEvidenceRequest(
         portfolio_id="PB_SG_GLOBAL_BAL_001",
+        tenant_id="tenant-a",
         as_of_date=AS_OF_DATE,
         evaluated_at_utc=datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
     )
@@ -996,6 +1035,7 @@ def test_core_high_cash_evidence_request_requires_portfolio_id() -> None:
     with pytest.raises(ValueError, match="portfolio_id is required"):
         CoreHighCashEvidenceRequest(
             portfolio_id=" ",
+            tenant_id="tenant-a",
             as_of_date=AS_OF_DATE,
             evaluated_at_utc=datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
         )
@@ -1005,6 +1045,7 @@ def test_core_high_cash_evidence_request_requires_aware_evaluation_time() -> Non
     with pytest.raises(ValueError, match="evaluated_at_utc must be timezone-aware"):
         CoreHighCashEvidenceRequest(
             portfolio_id="PB_SG_GLOBAL_BAL_001",
+            tenant_id="tenant-a",
             as_of_date=AS_OF_DATE,
             evaluated_at_utc=datetime(2026, 6, 21, 10, 0),
         )
@@ -1014,6 +1055,7 @@ def test_core_benchmark_assignment_evidence_request_requires_portfolio_id() -> N
     with pytest.raises(ValueError, match="portfolio_id is required"):
         CoreBenchmarkAssignmentEvidenceRequest(
             portfolio_id=" ",
+            tenant_id="tenant-a",
             as_of_date=AS_OF_DATE,
             evaluated_at_utc=datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
         )
@@ -1023,6 +1065,7 @@ def test_core_benchmark_assignment_evidence_request_requires_aware_evaluation_ti
     with pytest.raises(ValueError, match="evaluated_at_utc must be timezone-aware"):
         CoreBenchmarkAssignmentEvidenceRequest(
             portfolio_id="PB_SG_GLOBAL_BAL_001",
+            tenant_id="tenant-a",
             as_of_date=AS_OF_DATE,
             evaluated_at_utc=datetime(2026, 6, 21, 10, 0),
         )
@@ -1032,6 +1075,7 @@ def test_core_portfolio_state_evidence_request_requires_portfolio_id() -> None:
     with pytest.raises(ValueError, match="portfolio_id is required"):
         CorePortfolioStateEvidenceRequest(
             portfolio_id=" ",
+            tenant_id="tenant-a",
             as_of_date=AS_OF_DATE,
             evaluated_at_utc=datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
         )
@@ -1041,6 +1085,7 @@ def test_core_portfolio_state_evidence_request_requires_aware_evaluation_time() 
     with pytest.raises(ValueError, match="evaluated_at_utc must be timezone-aware"):
         CorePortfolioStateEvidenceRequest(
             portfolio_id="PB_SG_GLOBAL_BAL_001",
+            tenant_id="tenant-a",
             as_of_date=AS_OF_DATE,
             evaluated_at_utc=datetime(2026, 6, 21, 10, 0),
         )
@@ -1050,6 +1095,7 @@ def test_core_low_income_evidence_request_requires_valid_horizon() -> None:
     with pytest.raises(ValueError, match="horizon_days must be between 1 and 366"):
         CoreLowIncomeEvidenceRequest(
             portfolio_id="PB_SG_GLOBAL_BAL_001",
+            tenant_id="tenant-a",
             as_of_date=AS_OF_DATE,
             evaluated_at_utc=datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
             horizon_days=0,
@@ -1060,6 +1106,7 @@ def test_core_low_income_evidence_request_requires_portfolio_id() -> None:
     with pytest.raises(ValueError, match="portfolio_id is required"):
         CoreLowIncomeEvidenceRequest(
             portfolio_id=" ",
+            tenant_id="tenant-a",
             as_of_date=AS_OF_DATE,
             evaluated_at_utc=datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
         )
@@ -1069,6 +1116,7 @@ def test_core_low_income_evidence_request_requires_aware_evaluation_time() -> No
     with pytest.raises(ValueError, match="evaluated_at_utc must be timezone-aware"):
         CoreLowIncomeEvidenceRequest(
             portfolio_id="PB_SG_GLOBAL_BAL_001",
+            tenant_id="tenant-a",
             as_of_date=AS_OF_DATE,
             evaluated_at_utc=datetime(2026, 6, 21, 10, 0),
         )

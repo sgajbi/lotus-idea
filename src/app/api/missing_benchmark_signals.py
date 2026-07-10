@@ -185,11 +185,13 @@ class EvaluateMissingBenchmarkFromSourceRequest(CamelModel):
     def to_command(
         self,
         *,
+        tenant_id: str,
         correlation_id: str | None,
         trace_id: str | None,
     ) -> EvaluateMissingBenchmarkFromCoreCommand:
         return EvaluateMissingBenchmarkFromCoreCommand(
             portfolio_id=self.portfolio_id,
+            tenant_id=tenant_id,
             as_of_date=self.as_of_date,
             evaluated_at_utc=self.evaluated_at_utc,
             reporting_currency=self.reporting_currency,
@@ -238,7 +240,8 @@ async def evaluate_missing_benchmark_signal_from_source(
         blocked_detail=(
             "Core source runtime is not configured for missing-benchmark source evaluation."
         ),
-        command_factory=lambda runtime: signal_request.to_command(
+        command_factory=lambda runtime, tenant_id: signal_request.to_command(
+            tenant_id=tenant_id or "",
             correlation_id=_request_correlation_id(request),
             trace_id=_request_trace_id(request),
         ),
@@ -248,6 +251,7 @@ async def evaluate_missing_benchmark_signal_from_source(
         ),
         response_factory=EvaluateMissingBenchmarkSignalResponse.from_domain,
         emit_event=emit_foundation_operation_event,
+        require_tenant_context=True,
     )
 
 

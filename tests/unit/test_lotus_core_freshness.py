@@ -48,6 +48,7 @@ def _adapter(handler: httpx.MockTransport) -> LotusCoreHighCashSourceAdapter:
 def _high_cash_request() -> CoreHighCashEvidenceRequest:
     return CoreHighCashEvidenceRequest(
         portfolio_id="PB_SG_GLOBAL_BAL_001",
+        tenant_id="tenant-a",
         as_of_date=AS_OF_DATE,
         evaluated_at_utc=datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
         correlation_id="corr-core",
@@ -58,6 +59,7 @@ def _high_cash_request() -> CoreHighCashEvidenceRequest:
 def _benchmark_assignment_request() -> CoreBenchmarkAssignmentEvidenceRequest:
     return CoreBenchmarkAssignmentEvidenceRequest(
         portfolio_id="PB_SG_GLOBAL_BAL_001",
+        tenant_id="tenant-a",
         as_of_date=AS_OF_DATE,
         reporting_currency="USD",
         evaluated_at_utc=datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
@@ -69,6 +71,7 @@ def _benchmark_assignment_request() -> CoreBenchmarkAssignmentEvidenceRequest:
 def _portfolio_state_request() -> CorePortfolioStateEvidenceRequest:
     return CorePortfolioStateEvidenceRequest(
         portfolio_id="PB_SG_GLOBAL_BAL_001",
+        tenant_id="tenant-a",
         as_of_date=AS_OF_DATE,
         evaluated_at_utc=datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
         correlation_id="corr-core",
@@ -79,6 +82,7 @@ def _portfolio_state_request() -> CorePortfolioStateEvidenceRequest:
 def _low_income_request() -> CoreLowIncomeEvidenceRequest:
     return CoreLowIncomeEvidenceRequest(
         portfolio_id="PB_SG_GLOBAL_BAL_001",
+        tenant_id="tenant-a",
         as_of_date=AS_OF_DATE,
         evaluated_at_utc=datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
         horizon_days=45,
@@ -90,6 +94,7 @@ def _low_income_request() -> CoreLowIncomeEvidenceRequest:
 def _bond_maturity_request() -> CoreBondMaturityEvidenceRequest:
     return CoreBondMaturityEvidenceRequest(
         portfolio_id="PB_SG_GLOBAL_BAL_001",
+        tenant_id="tenant-a",
         as_of_date=AS_OF_DATE,
         evaluated_at_utc=datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
         maturity_window_days=30,
