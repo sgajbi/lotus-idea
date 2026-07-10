@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import date, datetime
 from decimal import Decimal
 import hashlib
 import json
@@ -35,6 +36,7 @@ from app.domain.signal_evaluation_models import (
     UnderperformanceSignalInput,
     UnderperformanceSignalPolicy,
 )
+from app.domain.source_temporal import source_temporal_violation
 
 
 def blocked_signal_result(
@@ -48,6 +50,28 @@ def blocked_signal_result(
         family=family,
         reason_codes=reason_codes,
         unsupported_reasons=unsupported_reasons,
+    )
+
+
+def temporal_blocked_signal_result(
+    *,
+    family: OpportunityFamily,
+    as_of_date: date,
+    evaluated_at_utc: datetime,
+    source_refs: tuple[SourceRef, ...],
+) -> SignalEvaluationResult | None:
+    violation = source_temporal_violation(
+        requested_as_of_date=as_of_date,
+        evaluated_at_utc=evaluated_at_utc,
+        source_refs=source_refs,
+    )
+    if violation is None:
+        return None
+    reason_code, unsupported_reason = violation
+    return blocked_signal_result(
+        family=family,
+        reason_codes=(reason_code,),
+        unsupported_reasons=(unsupported_reason,),
     )
 
 
@@ -72,6 +96,14 @@ def evaluate_high_cash_signal(
             reason_codes=(ReasonCode.SOURCE_PARTIAL,),
             unsupported_reasons=missing_reasons,
         )
+    temporal_block = temporal_blocked_signal_result(
+        family=OpportunityFamily.HIGH_CASH,
+        as_of_date=source_input.as_of_date,
+        evaluated_at_utc=source_input.evaluated_at_utc,
+        source_refs=source_refs,
+    )
+    if temporal_block is not None:
+        return temporal_block
     stale_sources = [
         source_ref
         for source_ref in source_refs
@@ -175,6 +207,14 @@ def evaluate_concentration_risk_signal(
             reason_codes=(ReasonCode.SOURCE_PARTIAL,),
             unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,),
         )
+    temporal_block = temporal_blocked_signal_result(
+        family=OpportunityFamily.CONCENTRATION,
+        as_of_date=source_input.as_of_date,
+        evaluated_at_utc=source_input.evaluated_at_utc,
+        source_refs=(source_input.concentration_ref,),
+    )
+    if temporal_block is not None:
+        return temporal_block
     if source_input.concentration_ref.freshness is not EvidenceFreshness.CURRENT:
         return blocked_signal_result(
             family=OpportunityFamily.CONCENTRATION,
@@ -292,6 +332,14 @@ def evaluate_underperformance_signal(
             reason_codes=(ReasonCode.SOURCE_PARTIAL,),
             unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,),
         )
+    temporal_block = temporal_blocked_signal_result(
+        family=OpportunityFamily.UNDERPERFORMANCE,
+        as_of_date=source_input.as_of_date,
+        evaluated_at_utc=source_input.evaluated_at_utc,
+        source_refs=(source_input.performance_ref,),
+    )
+    if temporal_block is not None:
+        return temporal_block
     if source_input.performance_ref.freshness is not EvidenceFreshness.CURRENT:
         return blocked_signal_result(
             family=OpportunityFamily.UNDERPERFORMANCE,
@@ -399,6 +447,14 @@ def evaluate_mandate_health_signal(
             reason_codes=(ReasonCode.SOURCE_PARTIAL,),
             unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,),
         )
+    temporal_block = temporal_blocked_signal_result(
+        family=OpportunityFamily.ALLOCATION_DRIFT,
+        as_of_date=source_input.as_of_date,
+        evaluated_at_utc=source_input.evaluated_at_utc,
+        source_refs=(source_input.action_register_ref,),
+    )
+    if temporal_block is not None:
+        return temporal_block
     if source_input.action_register_ref.freshness is not EvidenceFreshness.CURRENT:
         return blocked_signal_result(
             family=OpportunityFamily.ALLOCATION_DRIFT,
@@ -529,6 +585,14 @@ def evaluate_high_volatility_signal(
             reason_codes=(ReasonCode.SOURCE_PARTIAL,),
             unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,),
         )
+    temporal_block = temporal_blocked_signal_result(
+        family=OpportunityFamily.HIGH_VOLATILITY,
+        as_of_date=source_input.as_of_date,
+        evaluated_at_utc=source_input.evaluated_at_utc,
+        source_refs=(source_input.risk_ref,),
+    )
+    if temporal_block is not None:
+        return temporal_block
     if source_input.risk_ref.freshness is not EvidenceFreshness.CURRENT:
         return blocked_signal_result(
             family=OpportunityFamily.HIGH_VOLATILITY,
@@ -640,6 +704,14 @@ def evaluate_drawdown_review_signal(
             reason_codes=(ReasonCode.SOURCE_PARTIAL,),
             unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,),
         )
+    temporal_block = temporal_blocked_signal_result(
+        family=OpportunityFamily.HIGH_VOLATILITY,
+        as_of_date=source_input.as_of_date,
+        evaluated_at_utc=source_input.evaluated_at_utc,
+        source_refs=(source_input.risk_ref,),
+    )
+    if temporal_block is not None:
+        return temporal_block
     if source_input.risk_ref.freshness is not EvidenceFreshness.CURRENT:
         return blocked_signal_result(
             family=OpportunityFamily.HIGH_VOLATILITY,

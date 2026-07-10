@@ -26,6 +26,7 @@ from app.domain.signal_evaluation import (
     SignalEvaluationOutcome,
     SignalEvaluationResult,
     blocked_signal_result,
+    temporal_blocked_signal_result,
 )
 
 
@@ -65,6 +66,14 @@ def evaluate_missing_suitability_context_signal(
     policy: MissingSuitabilityContextSignalPolicy,
 ) -> SignalEvaluationResult:
     _validate_evaluated_at(source_input.evaluated_at_utc)
+    temporal_block = temporal_blocked_signal_result(
+        family=OpportunityFamily.MISSING_SUITABILITY_CONTEXT,
+        as_of_date=source_input.as_of_date,
+        evaluated_at_utc=source_input.evaluated_at_utc,
+        source_refs=((source_input.policy_ref,) if source_input.policy_ref else ()),
+    )
+    if temporal_block is not None:
+        return temporal_block
     blocked = _blocking_result(source_input)
     if blocked is not None:
         return blocked

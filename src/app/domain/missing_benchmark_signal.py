@@ -22,7 +22,11 @@ from app.domain.ideas import (
     SourceRef,
     UnsupportedEvidenceReason,
 )
-from app.domain.signal_evaluation import SignalEvaluationOutcome, SignalEvaluationResult
+from app.domain.signal_evaluation import (
+    SignalEvaluationOutcome,
+    SignalEvaluationResult,
+    temporal_blocked_signal_result,
+)
 
 
 @dataclass(frozen=True)
@@ -71,6 +75,14 @@ def evaluate_missing_benchmark_signal(
             reason_codes=(ReasonCode.SOURCE_PARTIAL,),
             unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,),
         )
+    temporal_block = temporal_blocked_signal_result(
+        family=OpportunityFamily.MISSING_BENCHMARK,
+        as_of_date=source_input.as_of_date,
+        evaluated_at_utc=source_input.evaluated_at_utc,
+        source_refs=(source_input.benchmark_assignment_ref,),
+    )
+    if temporal_block is not None:
+        return temporal_block
     if source_input.benchmark_assignment_ref.freshness is not EvidenceFreshness.CURRENT:
         return _blocked(
             reason_codes=(ReasonCode.SOURCE_STALE,),

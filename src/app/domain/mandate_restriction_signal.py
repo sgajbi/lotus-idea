@@ -22,7 +22,11 @@ from app.domain.ideas import (
     SourceRef,
     UnsupportedEvidenceReason,
 )
-from app.domain.signal_evaluation import SignalEvaluationOutcome, SignalEvaluationResult
+from app.domain.signal_evaluation import (
+    SignalEvaluationOutcome,
+    SignalEvaluationResult,
+    temporal_blocked_signal_result,
+)
 
 
 _ACTIONABLE_RESTRICTION_STATUSES = {
@@ -75,6 +79,15 @@ def evaluate_mandate_restriction_signal(
         or source_input.evaluated_at_utc.utcoffset() is None
     ):
         raise ValueError("evaluated_at_utc must be timezone-aware")
+
+    temporal_block = temporal_blocked_signal_result(
+        family=OpportunityFamily.MANDATE_RESTRICTION,
+        as_of_date=source_input.as_of_date,
+        evaluated_at_utc=source_input.evaluated_at_utc,
+        source_refs=((source_input.restriction_ref,) if source_input.restriction_ref else ()),
+    )
+    if temporal_block is not None:
+        return temporal_block
 
     blocked = _blocking_result(source_input)
     if blocked is not None:

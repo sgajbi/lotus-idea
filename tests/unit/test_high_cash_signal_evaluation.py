@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from dataclasses import replace
 
 import pytest
 
@@ -125,6 +126,39 @@ def test_high_cash_stale_source_blocks_positive_claim() -> None:
     assert result.candidate is None
     assert result.reason_codes == (ReasonCode.SOURCE_STALE,)
     assert result.unsupported_reasons == (UnsupportedEvidenceReason.STALE_SOURCE,)
+
+
+def test_high_cash_mismatched_source_date_blocks_candidate_creation() -> None:
+    input_value = high_cash_input()
+    mismatched_ref = replace(
+        input_value.portfolio_state_ref,
+        as_of_date=date(2026, 6, 20),
+    )
+    result = evaluate_high_cash_signal(
+        replace(input_value, portfolio_state_ref=mismatched_ref),
+        policy(),
+    )
+
+    assert result.outcome is SignalEvaluationOutcome.BLOCKED
+    assert result.candidate is None
+    assert result.reason_codes == (ReasonCode.SOURCE_DATE_MISMATCH,)
+    assert result.unsupported_reasons == (UnsupportedEvidenceReason.SOURCE_TEMPORAL_MISMATCH,)
+
+
+def test_high_cash_future_source_generation_blocks_candidate_creation() -> None:
+    input_value = high_cash_input()
+    future_ref = replace(
+        input_value.portfolio_state_ref,
+        generated_at_utc=datetime(2026, 6, 21, 10, 0, 1, tzinfo=UTC),
+    )
+    result = evaluate_high_cash_signal(
+        replace(input_value, portfolio_state_ref=future_ref),
+        policy(),
+    )
+
+    assert result.outcome is SignalEvaluationOutcome.BLOCKED
+    assert result.reason_codes == (ReasonCode.SOURCE_GENERATED_AFTER_EVALUATION,)
+    assert result.unsupported_reasons == (UnsupportedEvidenceReason.SOURCE_TEMPORAL_MISMATCH,)
 
 
 def test_high_cash_missing_source_blocks_positive_claim() -> None:

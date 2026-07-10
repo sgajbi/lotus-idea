@@ -427,6 +427,24 @@ def test_high_cash_api_returns_blocked_posture_for_source_entitlement_denial() -
     assert payload["supportedFeaturePromoted"] is False
 
 
+def test_high_cash_api_blocks_mismatched_source_business_date() -> None:
+    payload = high_cash_payload()
+    payload["sourceEvidence"]["portfolioStateRef"]["asOfDate"] = "2026-06-20"
+
+    response = TestClient(app).post(
+        "/api/v1/idea-signals/high-cash/evaluate",
+        json=payload,
+        headers=authorized_headers(),
+    )
+
+    assert response.status_code == 200
+    response_payload = response.json()
+    assert response_payload["outcome"] == "blocked"
+    assert response_payload["candidate"] is None
+    assert response_payload["reasonCodes"] == ["source_date_mismatch"]
+    assert response_payload["unsupportedReasons"] == ["source_temporal_mismatch"]
+
+
 def test_high_cash_api_returns_blocked_posture_for_stale_source_evidence() -> None:
     client = TestClient(app)
 

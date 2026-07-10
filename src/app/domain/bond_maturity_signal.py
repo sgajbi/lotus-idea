@@ -22,7 +22,11 @@ from app.domain.ideas import (
     SourceRef,
     UnsupportedEvidenceReason,
 )
-from app.domain.signal_evaluation import SignalEvaluationOutcome, SignalEvaluationResult
+from app.domain.signal_evaluation import (
+    SignalEvaluationOutcome,
+    SignalEvaluationResult,
+    temporal_blocked_signal_result,
+)
 
 
 @dataclass(frozen=True)
@@ -65,6 +69,14 @@ def evaluate_bond_maturity_signal(
 
     source_refs = _available_bond_maturity_source_refs(source_input)
     missing_count = 2 - len(source_refs)
+    temporal_block = temporal_blocked_signal_result(
+        family=OpportunityFamily.BOND_MATURITY,
+        as_of_date=source_input.as_of_date,
+        evaluated_at_utc=source_input.evaluated_at_utc,
+        source_refs=source_refs,
+    )
+    if temporal_block is not None:
+        return temporal_block
     if not source_input.entitlement_allowed:
         return _blocked(
             reason_codes=(ReasonCode.REVIEW_REQUIRED,),
