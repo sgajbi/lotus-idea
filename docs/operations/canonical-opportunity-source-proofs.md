@@ -87,6 +87,14 @@ source runtime factory, application use case, and port-specific adapter; the
 helper owns the ordered entitlement, fail-closed runtime, event, projection,
 and cleanup sequence. The `signal-api-contract-gate` enforces this boundary.
 
+Core-backed routes additionally require exactly one trusted tenant from the
+caller context before building the source runtime. That tenant is carried
+through the application command and Core source port; the infrastructure
+adapter never substitutes a production `default` tenant. The run-once worker
+uses the same rule through a required `tenantId` in its versioned manifest.
+The `unknown` value used by portfolio-only scope checks is an unconstrained
+scope dimension, not a tenant value that may be sent to Core.
+
 The domain layer also rejects source evidence whose business date differs from
 the requested `asOfDate`, or whose `generatedAtUtc` is later than
 `evaluatedAtUtc`. The proof runner therefore cannot turn temporally

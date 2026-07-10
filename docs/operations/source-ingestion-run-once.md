@@ -16,6 +16,11 @@ provider, and Core source adapter. It is the service API counterpart to the
 manifest-backed worker foundation and is intended for controlled operator proof,
 not business-user execution.
 
+The run-once manifest must include one explicit `tenantId`. The worker carries
+that value through the application command and Core source port; missing or
+ambiguous caller tenant context is rejected before runtime construction, and
+the adapter has no production fallback tenant.
+
 ## What It Proves
 
 The endpoint proves the service can:

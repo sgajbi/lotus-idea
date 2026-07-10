@@ -1,6 +1,6 @@
 # RFC-0002 Slice 05: Deterministic Signal Evaluation And Candidate Generation
 
-Status: Partially implemented - deterministic signal policies and source-backed foundations are present across Core, Risk, Performance, Advise, and Manage; caller-supplied and source-backed routes use shared ordered API boundaries for entitlement, source-contract validation, DTO mapping, application evaluation, event emission, response projection, and runtime cleanup. The repo-native canonical opportunity-source proof runner binds Risk/Performance proof artifacts to source revision, correlation, and trace metadata. A clean-tree canonical run now validates current Risk concentration, Performance underperformance, and Performance benchmark-readiness evidence for the governed portfolio. Merged release evidence, Gateway/Workbench realization, data-mesh certification, supported-feature promotion, and full Slice 5 closure remain open.
+Status: Partially implemented - deterministic signal policies and source-backed foundations are present across Core, Risk, Performance, Advise, and Manage; caller-supplied and source-backed routes use shared ordered API boundaries for entitlement, source-contract validation, trusted tenant resolution where Core is involved, DTO mapping, application evaluation, event emission, response projection, and runtime cleanup. The repo-native canonical opportunity-source proof runner binds Risk/Performance proof artifacts to source revision, correlation, and trace metadata. A clean-tree canonical run now validates current Risk concentration, Performance underperformance, and Performance benchmark-readiness evidence for the governed portfolio. Merged release evidence, Gateway/Workbench realization, data-mesh certification, supported-feature promotion, and full Slice 5 closure remain open.
 
 ## Outcome
 
@@ -137,6 +137,12 @@ Additional implemented source-adapter foundation:
     internal design-module boundary inside the existing `lotus-idea` process.
     There is still no workload, failure-isolation, ownership, or operability
     evidence justifying a separate runtime service boundary.
+15. Core-backed source routes require exactly one trusted caller tenant before
+    runtime construction. The resolved tenant is explicit in every Core source
+    request port and is sent by the adapter for tenant-aware snapshot calls;
+    the worker manifest carries the same requirement through `tenantId`. The
+    shared signal contract gate prevents Core-backed routes from omitting this
+    fail-closed tenant boundary.
 
 Additional implemented bond-maturity / reinvestment foundation:
 

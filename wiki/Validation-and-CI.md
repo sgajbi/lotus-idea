@@ -822,6 +822,14 @@ Runtime route code now separately validates caller-supplied source refs against 
 governed source contract before domain evaluation, so copied route families cannot accept a valid
 shape from the wrong source authority or data product.
 
+Core-backed source routes additionally require exactly one trusted caller
+tenant before runtime construction. The tenant is carried through the
+application command and Core source port, while the source adapter rejects
+blank values and does not supply a production default. The blocking
+`signal-api-contract-gate` checks that each Core-backed route opts into this
+shared tenant boundary, and integration tests prove missing, ambiguous, and
+distinct tenant contexts without calling Core under the wrong scope.
+
 Data-mesh foundation checks:
 
 1. repo-owned proposed producer and consumer declarations must exist,

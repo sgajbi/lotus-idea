@@ -542,6 +542,14 @@ independently scalable signal evaluation path. The endpoints continue to
 consume caller-supplied source-owned evidence and do not calculate official
 portfolio, suitability, risk, performance, execution, or report facts.
 
+Core-backed signal routes also require exactly one trusted tenant in the
+caller context before constructing a source runtime. The resolved tenant flows
+through the application command and `Core*EvidenceRequest` port into the Core
+adapter; the adapter does not fall back to `default`. Portfolio-only scope
+checks treat the internal `unknown` sentinel as unconstrained and never send
+it as a tenant. The source API contract gate protects this boundary for every
+Core-backed route.
+
 Conversion-intent and conversion-outcome request/response DTOs live in
 `src/app/api/conversion_governance_models.py`, while
 `src/app/api/conversion_governance.py` keeps caller checks, idempotency,

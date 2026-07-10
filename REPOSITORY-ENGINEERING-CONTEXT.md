@@ -1072,6 +1072,16 @@ repeated defect patterns are fixed once and pinned with tests or gates:
     dashboard/alert proof checks now validate against the same runtime-owned
     vocabulary so future observability changes cannot reintroduce partial
     hardcoded allowlists.
+23. Trusted Core tenant propagation: GitHub issue `#335` is addressed by
+    requiring exactly one trusted caller tenant for Core-backed source routes,
+    carrying that value through API DTO mapping, application commands, Core
+    source request ports, and the infrastructure adapter, and requiring
+    `tenantId` in the source-ingestion worker manifest. The adapter no longer
+    hard-codes `default`; `unknown` remains only an unconstrained portfolio
+    scope sentinel and is never sent to Core. The signal API contract gate,
+    adapter A/B propagation tests, and fail-closed missing/ambiguous tenant
+    tests protect the boundary. This is design modularity within the existing
+    process and does not justify a new runtime service.
 
 Recently closed by PR `#273` and mainline validation:
 
