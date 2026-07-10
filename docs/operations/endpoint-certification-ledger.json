@@ -1238,7 +1238,7 @@
         "tests/integration/test_api_operation_events.py::test_lifecycle_queue_review_and_feedback_emit_operation_events",
         "tests/unit/test_review_queue_application.py::test_build_review_queue_from_repository_uses_repository_side_page_projection",
         "tests/unit/test_postgres_review_queue.py::test_postgres_repository_review_queue_page_uses_bounded_candidate_projection",
-        "tests/integration/test_postgres_runtime_integration.py::test_postgres_review_queue_preserves_snapshot_across_future_insert_and_rejects_stale_token"
+        "tests/integration/test_postgres_review_queue_runtime.py::test_postgres_review_queue_preserves_snapshot_across_future_insert_and_rejects_stale_token"
       ],
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
     },
