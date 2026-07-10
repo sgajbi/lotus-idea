@@ -58,6 +58,7 @@ class OutboxDeliveryReadinessSnapshot:
     delivery_ready_count: int
     retry_deferred_count: int
     expired_lease_count: int
+    oldest_delivery_ready_age_seconds: float
     max_retry_count: int
     status_counts: OutboxDeliveryStatusCounts
     source_of_truth: Mapping[str, str]
@@ -107,6 +108,10 @@ def build_outbox_delivery_readiness_snapshot(
         delivery_ready_count=readiness_summary.delivery_ready_count,
         retry_deferred_count=readiness_summary.retry_deferred_count,
         expired_lease_count=readiness_summary.expired_lease_count,
+        oldest_delivery_ready_age_seconds=_oldest_delivery_ready_age_seconds(
+            readiness_summary.oldest_delivery_ready_at_utc,
+            evaluated_at_utc=evaluated_at,
+        ),
         max_retry_count=max_retry_count,
         status_counts=_status_counts_from_summary(readiness_summary),
         source_of_truth={
@@ -154,6 +159,11 @@ def _readiness_summary(
             evaluated_at_utc=evaluated_at_utc,
         )
     )
+    oldest_delivery_ready_at_utc = _oldest_delivery_ready_at_utc(
+        repository,
+        evaluated_at_utc=evaluated_at_utc,
+        max_retry_count=max_retry_count,
+    )
     return OutboxDeliveryReadinessRepositorySummary(
         pending_count=status_counts.pending_count,
         leased_count=status_counts.leased_count,
@@ -163,7 +173,45 @@ def _readiness_summary(
         expired_lease_count=expired_lease_count,
         delivery_ready_count=delivery_ready_count,
         retry_deferred_count=retry_deferred_count,
+        oldest_delivery_ready_at_utc=oldest_delivery_ready_at_utc,
     )
+
+
+def _oldest_delivery_ready_at_utc(
+    repository: CandidateSnapshotRepository,
+    *,
+    evaluated_at_utc: datetime,
+    max_retry_count: int,
+) -> datetime | None:
+    ready_at_values: list[datetime] = []
+    for event in repository.snapshot().outbox_events.values():
+        if event.status is OutboxEventStatus.PENDING:
+            ready_at_values.append(event.occurred_at_utc)
+        elif (
+            event.status is OutboxEventStatus.FAILED
+            and event.retry_count < max_retry_count
+            and event.next_attempt_at_utc is not None
+            and event.next_attempt_at_utc <= evaluated_at_utc
+        ):
+            ready_at_values.append(event.next_attempt_at_utc)
+        elif (
+            event.status is OutboxEventStatus.LEASED
+            and event.lease_expires_at_utc is not None
+            and event.lease_expires_at_utc <= evaluated_at_utc
+        ):
+            ready_at_values.append(event.lease_expires_at_utc)
+    return min(ready_at_values, default=None)
+
+
+def _oldest_delivery_ready_age_seconds(
+    oldest_delivery_ready_at_utc: datetime | None,
+    *,
+    evaluated_at_utc: datetime,
+) -> float:
+    if oldest_delivery_ready_at_utc is None:
+        return 0.0
+    _require_aware_utc(oldest_delivery_ready_at_utc, "oldest_delivery_ready_at_utc")
+    return max(0.0, (evaluated_at_utc - oldest_delivery_ready_at_utc).total_seconds())
 
 
 def _snapshot_status_counts(

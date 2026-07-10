@@ -55,10 +55,19 @@ def outbox_delivery_ready_rows(
 def outbox_readiness_summary_row(
     connection: FakeOutboxConnection,
     params: Sequence[Any],
-) -> list[dict[str, int]]:
+) -> list[dict[str, Any]]:
     evaluated_at_utc: datetime = params[6]
     max_retry_count = params[9]
     rows = connection.rows["idea_outbox_event"]
+    ready_rows = [
+        row
+        for row in rows
+        if _delivery_ready(
+            row,
+            max_retry_count=max_retry_count,
+            claimed_at_utc=evaluated_at_utc,
+        )
+    ]
     return [
         {
             "pending_count": _count_status(rows, OutboxEventStatus.PENDING),
@@ -90,8 +99,20 @@ def outbox_readiness_summary_row(
                 and row.get("next_attempt_at_utc") is not None
                 and row["next_attempt_at_utc"] > evaluated_at_utc
             ),
+            "oldest_delivery_ready_at_utc": min(
+                (_delivery_ready_at_utc(row) for row in ready_rows),
+                default=None,
+            ),
         }
     ]
+
+
+def _delivery_ready_at_utc(row: dict[str, Any]) -> datetime:
+    if row["status"] == OutboxEventStatus.FAILED.value:
+        return row["next_attempt_at_utc"]
+    if row["status"] == OutboxEventStatus.LEASED.value:
+        return row["lease_expires_at_utc"]
+    return row["occurred_at_utc"]
 
 
 def publish_outbox_event_row(

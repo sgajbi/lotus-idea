@@ -61,6 +61,7 @@ def test_outbox_delivery_readiness_reports_blocked_foundation_posture(
     assert snapshot.delivery_ready_count == 3
     assert snapshot.retry_deferred_count == 1
     assert snapshot.expired_lease_count == 1
+    assert snapshot.oldest_delivery_ready_age_seconds == 300.0
     assert snapshot.max_retry_count == DEFAULT_OUTBOX_DELIVERY_MAX_RETRY_COUNT
     assert snapshot.status_counts.pending_count == 1
     assert snapshot.status_counts.leased_count == 2
@@ -126,6 +127,7 @@ def test_outbox_delivery_readiness_uses_repository_projection_without_snapshot(
             expired_lease_count=1,
             delivery_ready_count=7,
             retry_deferred_count=8,
+            oldest_delivery_ready_at_utc=PUBLISHED_AT - timedelta(minutes=10),
         )
     )
 
@@ -140,6 +142,7 @@ def test_outbox_delivery_readiness_uses_repository_projection_without_snapshot(
     assert snapshot.delivery_ready_count == 7
     assert snapshot.retry_deferred_count == 8
     assert snapshot.expired_lease_count == 1
+    assert snapshot.oldest_delivery_ready_age_seconds == 600.0
     assert snapshot.status_counts.pending_count == 2
     assert snapshot.status_counts.leased_count == 3
     assert snapshot.status_counts.failed_count == 4

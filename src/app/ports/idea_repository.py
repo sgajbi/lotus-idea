@@ -71,6 +71,7 @@ class OutboxDeliveryReadinessRepositorySummary:
     expired_lease_count: int
     delivery_ready_count: int
     retry_deferred_count: int = 0
+    oldest_delivery_ready_at_utc: datetime | None = None
 
 
 @dataclass(frozen=True)

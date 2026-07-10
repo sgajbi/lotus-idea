@@ -70,6 +70,7 @@ def test_postgres_repository_uses_outbox_only_readiness_projection() -> None:
     assert summary.expired_lease_count == 1
     assert summary.delivery_ready_count == 3
     assert summary.retry_deferred_count == 1
+    assert summary.oldest_delivery_ready_at_utc == EVALUATED_AT - timedelta(minutes=1)
     assert "/* lotus-idea outbox-readiness-summary */" in executed_sql
     assert "from idea_outbox_event" in executed_sql
     for unrelated_table in (

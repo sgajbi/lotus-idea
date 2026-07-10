@@ -181,7 +181,20 @@ def load_outbox_delivery_readiness_summary(
                        AND retry_count < %s
                        AND next_attempt_at_utc IS NOT NULL
                        AND next_attempt_at_utc > %s
-                ) AS retry_deferred_count
+                ) AS retry_deferred_count,
+                MIN(
+                    CASE
+                        WHEN status = %s THEN occurred_at_utc
+                        WHEN status = %s
+                         AND retry_count < %s
+                         AND next_attempt_at_utc IS NOT NULL
+                         AND next_attempt_at_utc <= %s
+                            THEN next_attempt_at_utc
+                        WHEN status = %s AND lease_expires_at_utc <= %s
+                            THEN lease_expires_at_utc
+                        ELSE NULL
+                    END
+                ) AS oldest_delivery_ready_at_utc
             FROM idea_outbox_event
             """,
             (
@@ -201,6 +214,12 @@ def load_outbox_delivery_readiness_summary(
                 OutboxEventStatus.FAILED.value,
                 max_retry_count,
                 evaluated_at_utc,
+                OutboxEventStatus.PENDING.value,
+                OutboxEventStatus.FAILED.value,
+                max_retry_count,
+                evaluated_at_utc,
+                OutboxEventStatus.LEASED.value,
+                evaluated_at_utc,
             ),
         )
         rows = cursor.fetchall()
@@ -214,6 +233,7 @@ def load_outbox_delivery_readiness_summary(
             expired_lease_count=0,
             delivery_ready_count=0,
             retry_deferred_count=0,
+            oldest_delivery_ready_at_utc=None,
         )
     return _outbox_readiness_summary_from_row(rows[0])
 
@@ -379,6 +399,7 @@ def _outbox_readiness_summary_from_row(row: Any) -> OutboxDeliveryReadinessRepos
         expired_lease_count=read_row_value(row, "expired_lease_count"),
         delivery_ready_count=read_row_value(row, "delivery_ready_count"),
         retry_deferred_count=read_row_value(row, "retry_deferred_count"),
+        oldest_delivery_ready_at_utc=read_row_value(row, "oldest_delivery_ready_at_utc"),
     )
 
 
