@@ -214,7 +214,7 @@ class ReviewWorkflowRepository(CandidateSnapshotRepository, Protocol):
     ) -> ReviewPersistenceResult: ...
 
 
-class ConversionWorkflowRepository(CandidateSnapshotRepository, Protocol):
+class ConversionIntentWorkflowRepository(CandidateSnapshotRepository, Protocol):
     def precheck_conversion_mutation(
         self,
         *,
@@ -230,6 +230,8 @@ class ConversionWorkflowRepository(CandidateSnapshotRepository, Protocol):
         payload: dict[str, Any],
     ) -> ConversionPersistenceResult: ...
 
+
+class ConversionOutcomeWorkflowRepository(Protocol):
     def conversion_intent_by_id(
         self,
         conversion_intent_id: str,
@@ -255,6 +257,14 @@ class ConversionWorkflowRepository(CandidateSnapshotRepository, Protocol):
         idempotency_key: str,
         payload: dict[str, Any],
     ) -> ConversionPersistenceResult: ...
+
+
+class ConversionWorkflowRepository(
+    ConversionIntentWorkflowRepository,
+    ConversionOutcomeWorkflowRepository,
+    Protocol,
+):
+    pass
 
 
 class ReportEvidenceWorkflowRepository(Protocol):
@@ -398,7 +408,8 @@ class IdeaRepository(
     CandidateLifecycleRepository,
     CandidateEvidenceReplayRepository,
     ReviewWorkflowRepository,
-    ConversionWorkflowRepository,
+    ConversionIntentWorkflowRepository,
+    ConversionOutcomeWorkflowRepository,
     ReportEvidenceWorkflowRepository,
     AIExplanationRepository,
     DownstreamSubmissionRepository,

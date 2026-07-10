@@ -15,7 +15,10 @@ from app.domain import (
     record_conversion_outcome,
     request_conversion_intent,
 )
-from app.ports.idea_repository import ConversionWorkflowRepository
+from app.ports.idea_repository import (
+    ConversionIntentWorkflowRepository,
+    ConversionOutcomeWorkflowRepository,
+)
 
 
 @dataclass(frozen=True)
@@ -57,7 +60,7 @@ class ConversionOutcomeWorkflowResult:
 def request_conversion_intent_to_repository(
     command: RequestConversionIntentToRepositoryCommand,
     *,
-    repository: ConversionWorkflowRepository,
+    repository: ConversionIntentWorkflowRepository,
 ) -> ConversionIntentWorkflowResult:
     record = candidate_record_by_id(repository, command.candidate_id)
     if record is None:
@@ -92,7 +95,7 @@ def request_conversion_intent_to_repository(
 def record_conversion_outcome_to_repository(
     command: RecordConversionOutcomeToRepositoryCommand,
     *,
-    repository: ConversionWorkflowRepository,
+    repository: ConversionOutcomeWorkflowRepository,
 ) -> ConversionOutcomeWorkflowResult:
     conversion_intent = repository.conversion_intent_by_id(command.conversion_intent_id)
     if conversion_intent is None:
