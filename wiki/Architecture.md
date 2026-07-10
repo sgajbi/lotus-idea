@@ -734,6 +734,24 @@ HTTP adapter foundations for Advise, Manage, and Report handoff envelopes. They
 preserve downstream source authority and bounded evidence posture, but they are
 not live downstream contract proof, route-existence proof, or materialization
 proof.
+
+Downstream realization now uses a durable claim-before-call state machine.
+Design modules separate domain transitions, in-memory persistence, PostgreSQL
+persistence, orchestration, transport adapters, operator reconciliation, and
+API DTOs behind stable ports; they remain in the same runtime because no
+independent scaling or failure-isolation case has been demonstrated. A newly
+accepted claim is the only posture allowed to reach a downstream adapter.
+Timeout, 5xx, malformed response, transport ambiguity, lease loss, or local
+finalization failure becomes `reconciliation_required` or retains the durable
+`in_flight` claim. Same-key retries never make another external call.
+
+Migration `008_downstream_submission_state_machine` persists an opaque support
+reference, attempt count, lease identity and expiry, update time, and append-only
+audit history. PostgreSQL uses exact locked lookup and lease-fenced updates.
+Operator reconciliation is role-and-capability protected, binds
+`Idempotency-Key` to `changeReference`, and can record accepted, rejected, or
+quarantined local posture only after source-owned receipt verification. It does
+not create an authoritative conversion outcome or grant downstream authority.
 This opt-in wiring and proof are not data-product certification, live-source
 support, Gateway/Workbench support, downstream realization, or
 supported-feature promotion.

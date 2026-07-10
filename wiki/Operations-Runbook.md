@@ -408,6 +408,30 @@ examples for downstream adapter configuration and durable repository
 write-readiness, and must not add examples that expose downstream URLs, DSNs,
 hostnames, raw adapter errors, payloads, or idempotency keys.
 
+### Reconcile Uncertain Submissions
+
+An uncertain submission returns `202 reconciliation_required` with an opaque
+`downstream-submission-...` support reference. Do not retry the downstream
+call. Inspect the bounded queue with operator role plus
+`idea.downstream-reconciliation.read`:
+
+```powershell
+curl -H "X-Caller-Roles: operator" -H "X-Caller-Capabilities: idea.downstream-reconciliation.read" http://localhost:8330/api/v1/downstream-submissions/reconciliation
+```
+
+After verifying the receipt in the owning downstream service, resolve the
+record with operator role plus `idea.downstream-reconciliation.resolve`.
+`Idempotency-Key` must equal `changeReference`. Exact repeats replay; changed
+resolution, reason, or actor under the same reference conflicts.
+
+```powershell
+curl -X POST -H "Content-Type: application/json" -H "X-Caller-Roles: operator" -H "X-Caller-Capabilities: idea.downstream-reconciliation.resolve" -H "Idempotency-Key: CHG-334-001" -d '{"resolution":"quarantined","reason":"downstream_receipt_unverifiable","changeReference":"CHG-334-001"}' http://localhost:8330/api/v1/downstream-submissions/reconciliation/downstream-submission-0123456789abcdef01234567
+```
+
+The route appends actor, reason, change reference, time, and posture transition
+to durable audit history. It never invokes the downstream adapter, exposes raw
+resource/idempotency data, or records source-authoritative conversion truth.
+
 ## Operator Map
 
 | Operating area | Current proof | Must not be inferred |
@@ -416,7 +440,7 @@ hostnames, raw adapter errors, payloads, or idempotency keys.
 | Persistence | PostgreSQL integration proof for internal persistence/replay paths plus source-safe durable repository proof artifact that clears aggregate durable-repository and repository-side queue-pagination proof blockers only | Runtime database configuration, production storage certification, production recovery readiness, Workbench proof, or supported-feature promotion |
 | Outbox delivery foundation | Source-safe records, durable retry scheduling with first/last failure timing, retryable failure status, published status, dead-letter status, HTTP publisher adapter foundation, repo-owned outbox event and downstream consumer contracts, aggregate readiness diagnostic, bounded run-once operator action, bounded outbox broker proof artifact, bounded downstream consumer runtime proof artifact, and bounded platform mesh event publication proof artifact | Certified external broker publication, downstream delivery, Gateway/Workbench behavior, client-ready publication, or supported-feature promotion |
 | Data mesh | Proposed contracts, source-safe readiness diagnostics, and bounded platform source-manifest/catalog onboarding proof | Promoted data product, mesh certification, Gateway/Workbench discovery, or supported-feature promotion |
-| Downstream realization | Readiness diagnostics plus certified internal submission posture over current workflow counts, source-safe adapter-foundation presence, planned Advise/Manage/Report handoff contract posture, default Advise proposal, Manage action, Report intake route, and bounded Report materialization proof when sibling evidence is present | Suitability, mandate/rebalance authority, execution, order creation, client publication, or supported-feature promotion |
+| Downstream realization | Readiness diagnostics, durable claim-before-call submission, opaque uncertain-work inspection, audited operator reconciliation, real PostgreSQL concurrency/restart proof, source-safe adapters, and bounded downstream route proof when sibling evidence is present | Authoritative downstream outcome, automatic uncertain-call retry, suitability, mandate/rebalance authority, execution, order creation, client publication, or supported-feature promotion |
 
 ```mermaid
 flowchart LR

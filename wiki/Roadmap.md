@@ -41,7 +41,10 @@ proof, downstream proof, supported-feature evidence, and mainline CI all agree.
    source-version lifecycle and legacy-history quarantine, lifecycle audit
    history, recovery primitives, and high-cash
    evaluate-and-persist orchestration plus the manifest-backed run-once
-   source-ingestion worker CLI and check-only gate,
+   source-ingestion worker CLI and check-only gate. It now also includes
+   durable claim-before-call downstream submission, uncertain-outcome
+   quarantine/reconciliation, operator audit controls, and real PostgreSQL
+   concurrency/restart proof,
 10. RFC-0002 Slice 07 partially implements internal deterministic scoring,
    priority buckets, stable queue projection, snooze, suppression,
    deduplication, expiry, unsupported-evidence, unscored-candidate exclusions,

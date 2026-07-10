@@ -104,6 +104,11 @@ Current RFC-0002 implementation-start baseline:
    identity/idempotency posture while proving bounded configured-publisher
    orchestration without exposing raw idempotency keys, event identifiers,
    calling downstream services, or promoting a supported feature.
+   Downstream handoffs now also claim durably before an external call, preserve
+   uncertain outcomes without automatic retry, expose source-safe operator
+   reconciliation by opaque support reference, and carry real PostgreSQL
+   concurrency/restart proof. This closes issue `#334` locally without claiming
+   downstream execution or supported-feature readiness.
 8. Slice 07 partially implements internal deterministic scoring, score reason
    codes, priority buckets, stable queue projection, snooze, suppression,
    deduplication, expiry, unsupported-evidence, and unscored-candidate
