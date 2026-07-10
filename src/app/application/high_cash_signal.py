@@ -7,6 +7,7 @@ from typing import Any
 
 from app.domain import (
     CandidatePersistenceResult,
+    EventLineageContext,
     HighCashSignalInput,
     HighCashSignalPolicy,
     OpportunityFamily,
@@ -60,6 +61,7 @@ class EvaluateAndPersistHighCashSignalCommand:
     evaluation: EvaluateHighCashSignalCommand
     idempotency_key: str
     actor_subject: str
+    event_lineage: EventLineageContext | None = None
 
 
 @dataclass(frozen=True)
@@ -165,6 +167,7 @@ def evaluate_and_persist_high_cash_signal(
         payload=_idempotency_payload_for_high_cash(command.evaluation, policy=policy),
         actor_subject=command.actor_subject,
         occurred_at_utc=command.evaluation.evaluated_at_utc,
+        event_lineage=command.event_lineage,
     )
     return HighCashSignalPersistenceResult(evaluation=evaluation, persistence=persistence)
 

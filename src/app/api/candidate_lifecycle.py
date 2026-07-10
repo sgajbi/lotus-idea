@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from enum import StrEnum
 
-from fastapi import FastAPI, Header, Path, status
+from fastapi import FastAPI, Header, Path, Request, status
 from fastapi.responses import JSONResponse
 from pydantic import Field, field_validator
 
@@ -15,6 +15,10 @@ from app.api.durable_write_guard import (
     durable_write_problem,
 )
 from app.api.idempotency import validate_idempotency_key
+from app.api.event_lineage import (
+    EventCausationHeader,
+    event_lineage_from_request,
+)
 from app.api.problem_details import (
     conflict_metadata,
     invalid_request_metadata,
@@ -34,6 +38,7 @@ from app.application.candidate_lifecycle import (
     apply_candidate_lifecycle_transition_to_repository,
 )
 from app.domain import (
+    EventLineageContext,
     IdeaLifecycleStatus,
     InvalidLifecycleTransition,
     LifecyclePersistenceDecision,
@@ -112,6 +117,7 @@ class CandidateLifecycleTransitionRequest(CamelModel):
         candidate_id: str,
         caller: CallerContext,
         idempotency_key: str,
+        event_lineage: EventLineageContext,
     ) -> ApplyCandidateLifecycleTransitionCommand:
         return ApplyCandidateLifecycleTransitionCommand(
             candidate_id=candidate_id,
@@ -121,6 +127,7 @@ class CandidateLifecycleTransitionRequest(CamelModel):
             reason_codes=tuple(reason.value for reason in self.reason_codes),
             actor_subject=caller.subject,
             idempotency_key=idempotency_key,
+            event_lineage=event_lineage,
         )
 
 
@@ -165,6 +172,7 @@ class CandidateLifecycleTransitionResponse(CamelModel):
 
 async def record_candidate_lifecycle_transition(
     request: CandidateLifecycleTransitionRequest,
+    http_request: Request,
     candidate_id: str = Path(..., alias="candidateId"),
     idempotency_key: str = Header(..., alias="Idempotency-Key"),
     x_caller_subject: str | None = Header(default=None, alias="X-Caller-Subject"),
@@ -174,6 +182,7 @@ async def record_candidate_lifecycle_transition(
         default=None,
         alias=TRUSTED_CALLER_CONTEXT_HEADER,
     ),
+    x_causation_id: EventCausationHeader = None,
 ) -> CandidateLifecycleTransitionResponse | JSONResponse:
     caller = caller_context_from_headers(
         subject=x_caller_subject,
@@ -199,6 +208,10 @@ async def record_candidate_lifecycle_transition(
                 candidate_id=candidate_id,
                 caller=caller,
                 idempotency_key=idempotency_key,
+                event_lineage=event_lineage_from_request(
+                    http_request,
+                    causation_id=x_causation_id,
+                ),
             ),
             repository=repository,
         )

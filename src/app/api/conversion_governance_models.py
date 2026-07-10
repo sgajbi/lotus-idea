@@ -18,6 +18,7 @@ from app.domain import (
     ConversionOutcomeStatus,
     ConversionPersistenceDecision,
     ConversionPersistenceResult,
+    EventLineageContext,
     ConversionTarget,
     GovernedConversionIntent,
     GovernedConversionOutcome,
@@ -55,6 +56,7 @@ class ConversionIntentRequest(CamelModel):
         candidate_id: str,
         caller: CallerContext,
         idempotency_key: str,
+        event_lineage: EventLineageContext,
     ) -> RequestConversionIntentToRepositoryCommand:
         return RequestConversionIntentToRepositoryCommand(
             candidate_id=candidate_id,
@@ -67,6 +69,7 @@ class ConversionIntentRequest(CamelModel):
                 requested_at_utc=self.requested_at_utc,
             ),
             idempotency_key=idempotency_key,
+            event_lineage=event_lineage,
         )
 
 
@@ -115,6 +118,7 @@ class ConversionOutcomeRequest(CamelModel):
         conversion_intent_id: str,
         caller: CallerContext,
         idempotency_key: str,
+        event_lineage: EventLineageContext,
     ) -> RecordConversionOutcomeToRepositoryCommand:
         return RecordConversionOutcomeToRepositoryCommand(
             conversion_intent_id=conversion_intent_id,
@@ -130,6 +134,7 @@ class ConversionOutcomeRequest(CamelModel):
                 correction_reason=self.correction_reason,
             ),
             idempotency_key=idempotency_key,
+            event_lineage=event_lineage,
         )
 
 

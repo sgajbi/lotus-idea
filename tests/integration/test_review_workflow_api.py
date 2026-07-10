@@ -45,6 +45,8 @@ def persist_headers(idempotency_key: str) -> dict[str, str]:
     return {
         "X-Caller-Subject": "signal-ingestion-worker",
         "X-Caller-Capabilities": "idea.candidate.persist",
+        "X-Correlation-Id": "corr-candidate-persist-api",
+        "X-Trace-Id": "trace-candidate-persist-api",
         "Idempotency-Key": idempotency_key,
     }
 
@@ -61,6 +63,7 @@ def review_headers(
         "X-Caller-Portfolio-Ids": "PB_SG_GLOBAL_BAL_001",
         "X-Caller-Client-Ids": "client-001",
         "X-Correlation-Id": "corr-review-api",
+        "X-Trace-Id": "trace-review-api",
         "Idempotency-Key": idempotency_key,
     }
 
@@ -75,6 +78,7 @@ def feedback_headers(idempotency_key: str) -> dict[str, str]:
         "X-Caller-Portfolio-Ids": "PB_SG_GLOBAL_BAL_001",
         "X-Caller-Client-Ids": "client-001",
         "X-Correlation-Id": "corr-feedback-api",
+        "X-Trace-Id": "trace-feedback-api",
         "Idempotency-Key": idempotency_key,
     }
 
@@ -87,6 +91,7 @@ def conversion_intent_headers(
         "X-Caller-Subject": "advisor-001",
         "X-Caller-Capabilities": capabilities,
         "X-Correlation-Id": "corr-conversion-intent-api",
+        "X-Trace-Id": "trace-conversion-intent-api",
         "Idempotency-Key": idempotency_key,
     }
 
@@ -99,6 +104,7 @@ def conversion_outcome_headers(
         "X-Caller-Subject": "lotus-report-worker",
         "X-Caller-Capabilities": capabilities,
         "X-Correlation-Id": "corr-conversion-outcome-api",
+        "X-Trace-Id": "trace-conversion-outcome-api",
         "Idempotency-Key": idempotency_key,
     }
 
@@ -111,6 +117,7 @@ def report_evidence_pack_headers(
         "X-Caller-Subject": "advisor-001",
         "X-Caller-Capabilities": capabilities,
         "X-Correlation-Id": "corr-report-evidence-pack-api",
+        "X-Trace-Id": "trace-report-evidence-pack-api",
         "Idempotency-Key": idempotency_key,
     }
 
@@ -123,6 +130,7 @@ def lifecycle_headers(
         "X-Caller-Subject": "idea-lifecycle-worker",
         "X-Caller-Capabilities": capabilities,
         "X-Correlation-Id": "corr-lifecycle-api",
+        "X-Trace-Id": "trace-lifecycle-api",
         "Idempotency-Key": idempotency_key,
     }
 
@@ -257,6 +265,16 @@ def persisted_candidate_id(client: TestClient, *, idempotency_key: str) -> str:
     return str(payload["persistence"]["candidateId"])
 
 
+def latest_outbox_event(event_type: str) -> Any:
+    events = [
+        event
+        for event in get_idea_repository().snapshot().outbox_events.values()
+        if event.event_type == event_type
+    ]
+    assert events, f"missing outbox event: {event_type}"
+    return events[-1]
+
+
 def transition_candidate(
     client: TestClient,
     candidate_id: str,
@@ -314,6 +332,7 @@ def test_lifecycle_transition_api_records_idempotent_transition() -> None:
     client = TestClient(app)
     candidate_id = persisted_candidate_id(client, idempotency_key="seed-lifecycle-api-001")
     headers = lifecycle_headers("lifecycle-api-replay-001")
+    headers["X-Causation-Id"] = "event-candidate-persisted-001"
     request = lifecycle_payload()
 
     first = client.post(
@@ -321,10 +340,11 @@ def test_lifecycle_transition_api_records_idempotent_transition() -> None:
         json=request,
         headers=headers,
     )
+    replay_headers = {**headers, "X-Trace-Id": "trace-lifecycle-retry-api"}
     replayed = client.post(
         f"/api/v1/idea-candidates/{candidate_id}/lifecycle-transitions",
         json=request,
-        headers=headers,
+        headers=replay_headers,
     )
 
     assert first.status_code == 200
@@ -341,6 +361,14 @@ def test_lifecycle_transition_api_records_idempotent_transition() -> None:
     assert replayed.status_code == 200
     assert replayed.json()["transition"] is None
     assert replayed.json()["persistence"]["decision"] == "replayed"
+    candidate_event = latest_outbox_event("idea.candidate.persisted.v1")
+    assert candidate_event.correlation_id == "corr-candidate-persist-api"
+    assert candidate_event.trace_id == "trace-candidate-persist-api"
+    lifecycle_event = latest_outbox_event("idea.lifecycle.transitioned.v1")
+    assert lifecycle_event.correlation_id == "corr-lifecycle-api"
+    assert lifecycle_event.trace_id == "trace-lifecycle-api"
+    assert lifecycle_event.causation_id == "event-candidate-persisted-001"
+    assert lifecycle_event.lineage_origin.value == "parent_event"
 
 
 def test_lifecycle_transition_api_returns_safe_conflicts_and_not_found() -> None:
@@ -379,6 +407,27 @@ def test_lifecycle_transition_api_returns_safe_conflicts_and_not_found() -> None
     assert invalid_transition.json()["code"] == "lifecycle_transition_conflict"
     assert not_found.status_code == 404
     assert not_found.json()["code"] == "candidate_not_found"
+
+
+def test_lifecycle_transition_api_rejects_sensitive_causation_without_event_write() -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+    candidate_id = persisted_candidate_id(client, idempotency_key="seed-sensitive-causation-001")
+    headers = lifecycle_headers("lifecycle-sensitive-causation-001")
+    headers["X-Causation-Id"] = "bearer-secret-token"
+
+    response = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/lifecycle-transitions",
+        json=lifecycle_payload(),
+        headers=headers,
+    )
+
+    assert response.status_code == 400
+    assert response.json()["code"] == "invalid_request"
+    assert not any(
+        event.event_type == "idea.lifecycle.transitioned.v1"
+        for event in get_idea_repository().snapshot().outbox_events.values()
+    )
 
 
 def test_lifecycle_transition_api_requires_permission_and_valid_request() -> None:
@@ -512,6 +561,11 @@ def test_review_action_api_persists_suppression_with_audit_posture() -> None:
     assert payload["persistence"]["auditEventType"] == "idea.review.decision_recorded"
     assert payload["durableStorageBacked"] is False
     assert payload["supportedFeaturePromoted"] is False
+    event = latest_outbox_event("idea.review.decision_recorded.v1")
+    assert event.correlation_id == "corr-review-api"
+    assert event.trace_id == "trace-review-api"
+    assert event.causation_id is None
+    assert event.lineage_origin.value == "request"
 
 
 def test_review_action_api_replays_same_idempotency_payload() -> None:
@@ -614,6 +668,9 @@ def test_feedback_api_persists_source_provenanced_feedback() -> None:
     assert payload["persistence"]["auditEventType"] == "idea.feedback.recorded"
     assert payload["durableStorageBacked"] is False
     assert payload["supportedFeaturePromoted"] is False
+    event = latest_outbox_event("idea.feedback.recorded.v1")
+    assert event.correlation_id == "corr-feedback-api"
+    assert event.trace_id == "trace-feedback-api"
 
 
 def test_review_action_api_returns_not_found_for_missing_candidate() -> None:
@@ -820,6 +877,9 @@ def test_conversion_intent_api_records_review_approved_candidate_without_downstr
     assert payload["persistence"]["auditEventType"] == "idea.conversion.intent_requested"
     assert payload["durableStorageBacked"] is False
     assert payload["supportedFeaturePromoted"] is False
+    event = latest_outbox_event("idea.conversion.intent_requested.v1")
+    assert event.correlation_id == "corr-conversion-intent-api"
+    assert event.trace_id == "trace-conversion-intent-api"
 
 
 def test_conversion_intent_api_replays_and_conflicts_idempotently() -> None:
@@ -925,10 +985,12 @@ def test_conversion_outcome_api_records_source_authorized_result() -> None:
     )
     assert intent.status_code == 200
 
+    outcome_headers = conversion_outcome_headers("conversion-outcome-api-report-001")
+    outcome_headers["X-Causation-Id"] = "event-conversion-intent-001"
     response = client.post(
         "/api/v1/conversion-intents/conversion-outcome-001/outcomes",
         json=conversion_outcome_payload(),
-        headers=conversion_outcome_headers("conversion-outcome-api-report-001"),
+        headers=outcome_headers,
     )
 
     assert response.status_code == 200
@@ -945,6 +1007,11 @@ def test_conversion_outcome_api_records_source_authorized_result() -> None:
     assert payload["persistence"]["auditEventType"] == "idea.conversion.outcome_recorded"
     assert payload["durableStorageBacked"] is False
     assert payload["supportedFeaturePromoted"] is False
+    event = latest_outbox_event("idea.conversion.outcome_recorded.v1")
+    assert event.correlation_id == "corr-conversion-outcome-api"
+    assert event.trace_id == "trace-conversion-outcome-api"
+    assert event.causation_id == "event-conversion-intent-001"
+    assert event.lineage_origin.value == "parent_event"
 
 
 def test_conversion_outcome_api_rejects_wrong_source_not_found_permission_and_replays() -> None:
@@ -1075,6 +1142,29 @@ def test_report_evidence_pack_api_records_request_without_render_or_archive_auth
     assert payload["persistence"]["auditEventType"] == "idea.report_evidence_pack.requested"
     assert payload["durableStorageBacked"] is False
     assert payload["supportedFeaturePromoted"] is False
+    event = latest_outbox_event("idea.report_evidence_pack.requested.v1")
+    assert event.correlation_id == "corr-report-evidence-pack-api"
+    assert event.trace_id == "trace-report-evidence-pack-api"
+
+
+def test_mutation_openapi_exposes_optional_causation_header() -> None:
+    schema = app.openapi()
+    mutation_paths = (
+        "/api/v1/idea-signals/high-cash/evaluate-and-persist",
+        "/api/v1/idea-candidates/{candidateId}/lifecycle-transitions",
+        "/api/v1/idea-candidates/{candidateId}/review-actions",
+        "/api/v1/idea-candidates/{candidateId}/feedback",
+        "/api/v1/idea-candidates/{candidateId}/conversion-intents",
+        "/api/v1/conversion-intents/{conversionIntentId}/outcomes",
+        "/api/v1/conversion-intents/{conversionIntentId}/report-evidence-packs",
+    )
+
+    for path in mutation_paths:
+        parameters = schema["paths"][path]["post"]["parameters"]
+        causation = [parameter for parameter in parameters if parameter["name"] == "X-Causation-Id"]
+        assert len(causation) == 1
+        assert causation[0]["in"] == "header"
+        assert causation[0]["required"] is False
 
 
 def test_report_evidence_pack_api_replays_conflicts_and_blocks_client_ready_publication() -> None:

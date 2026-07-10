@@ -16,6 +16,7 @@ from app.application.review_workflow import (
 )
 from app.domain import (
     FeedbackCommand,
+    EventLineageContext,
     FeedbackOutcome,
     GovernedFeedbackEvent,
     GovernedReviewDecision,
@@ -109,6 +110,7 @@ class ReviewActionRequest(CamelModel):
         caller: CallerContext,
         role: ReviewActorRole,
         idempotency_key: str,
+        event_lineage: EventLineageContext,
     ) -> ApplyReviewActionToRepositoryCommand:
         return ApplyReviewActionToRepositoryCommand(
             candidate_id=candidate_id,
@@ -123,6 +125,7 @@ class ReviewActionRequest(CamelModel):
                 snoozed_until_utc=self.snoozed_until_utc,
             ),
             idempotency_key=idempotency_key,
+            event_lineage=event_lineage,
         )
 
 
@@ -157,6 +160,7 @@ class FeedbackRequest(CamelModel):
         caller: CallerContext,
         role: ReviewActorRole,
         idempotency_key: str,
+        event_lineage: EventLineageContext,
     ) -> RecordFeedbackToRepositoryCommand:
         return RecordFeedbackToRepositoryCommand(
             candidate_id=candidate_id,
@@ -169,6 +173,7 @@ class FeedbackRequest(CamelModel):
                 recorded_at_utc=self.recorded_at_utc,
             ),
             idempotency_key=idempotency_key,
+            event_lineage=event_lineage,
         )
 
 

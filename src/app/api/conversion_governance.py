@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from fastapi import FastAPI, Header, Path, status
+from fastapi import FastAPI, Header, Path, Request, status
 from fastapi.responses import JSONResponse
 
 from app.api.caller_headers import TRUSTED_CALLER_CONTEXT_HEADER
@@ -23,6 +23,7 @@ from app.api.conversion_governance_operations import (
     problem_for_conversion_persistence,
 )
 from app.api.durable_write_guard import durable_repository_write_unavailable_metadata
+from app.api.event_lineage import EventCausationHeader, event_lineage_from_request
 from app.api.problem_details import (
     conflict_metadata,
     invalid_request_metadata,
@@ -73,6 +74,7 @@ __all__ = [
 
 async def record_conversion_intent(
     request: ConversionIntentRequest,
+    http_request: Request,
     candidate_id: str = Path(..., alias="candidateId"),
     idempotency_key: str = Header(..., alias="Idempotency-Key"),
     x_caller_subject: str | None = Header(default=None, alias="X-Caller-Subject"),
@@ -82,6 +84,7 @@ async def record_conversion_intent(
         default=None,
         alias=TRUSTED_CALLER_CONTEXT_HEADER,
     ),
+    x_causation_id: EventCausationHeader = None,
 ) -> ConversionIntentApiResponse | JSONResponse:
     try:
         context = prepare_conversion_mutation(
@@ -102,6 +105,10 @@ async def record_conversion_intent(
                 candidate_id=candidate_id,
                 caller=context.caller,
                 idempotency_key=idempotency_key,
+                event_lineage=event_lineage_from_request(
+                    http_request,
+                    causation_id=x_causation_id,
+                ),
             ),
             repository=context.repository,
         )
@@ -165,6 +172,7 @@ async def record_conversion_intent(
 
 async def record_conversion_outcome(
     request: ConversionOutcomeRequest,
+    http_request: Request,
     conversion_intent_id: str = Path(..., alias="conversionIntentId"),
     idempotency_key: str = Header(..., alias="Idempotency-Key"),
     x_caller_subject: str | None = Header(default=None, alias="X-Caller-Subject"),
@@ -174,6 +182,7 @@ async def record_conversion_outcome(
         default=None,
         alias=TRUSTED_CALLER_CONTEXT_HEADER,
     ),
+    x_causation_id: EventCausationHeader = None,
 ) -> ConversionOutcomeApiResponse | JSONResponse:
     try:
         context = prepare_conversion_mutation(
@@ -194,6 +203,10 @@ async def record_conversion_outcome(
                 conversion_intent_id=conversion_intent_id,
                 caller=context.caller,
                 idempotency_key=idempotency_key,
+                event_lineage=event_lineage_from_request(
+                    http_request,
+                    causation_id=x_causation_id,
+                ),
             ),
             repository=context.repository,
         )

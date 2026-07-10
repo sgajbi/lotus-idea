@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from fastapi import FastAPI, Header, Path, status
+from fastapi import FastAPI, Header, Path, Request, status
 from fastapi.responses import JSONResponse
 from pydantic import Field, field_validator
 
@@ -14,6 +14,7 @@ from app.api.durable_write_guard import (
     durable_write_problem,
 )
 from app.api.idempotency import validate_idempotency_key
+from app.api.event_lineage import EventCausationHeader, event_lineage_from_request
 from app.api.problem_details import (
     conflict_metadata,
     invalid_request_metadata,
@@ -36,6 +37,7 @@ from app.application.report_evidence import (
 from app.domain import (
     EvidencePackPersistenceDecision,
     EvidencePackPersistenceResult,
+    EventLineageContext,
     GovernedReportEvidencePack,
     InvalidReportEvidencePack,
     ReasonCode,
@@ -91,6 +93,7 @@ class ReportEvidencePackRequest(CamelModel):
         conversion_intent_id: str,
         caller: CallerContext,
         idempotency_key: str,
+        event_lineage: EventLineageContext,
     ) -> RequestReportEvidencePackToRepositoryCommand:
         return RequestReportEvidencePackToRepositoryCommand(
             conversion_intent_id=conversion_intent_id,
@@ -105,6 +108,7 @@ class ReportEvidencePackRequest(CamelModel):
                 client_ready_publication_requested=self.client_ready_publication_requested,
             ),
             idempotency_key=idempotency_key,
+            event_lineage=event_lineage,
         )
 
 
@@ -215,6 +219,7 @@ class ReportEvidencePackApiResponse(CamelModel):
 
 async def record_report_evidence_pack(
     request: ReportEvidencePackRequest,
+    http_request: Request,
     conversion_intent_id: str = Path(..., alias="conversionIntentId"),
     idempotency_key: str = Header(..., alias="Idempotency-Key"),
     x_caller_subject: str | None = Header(default=None, alias="X-Caller-Subject"),
@@ -224,6 +229,7 @@ async def record_report_evidence_pack(
         default=None,
         alias=TRUSTED_CALLER_CONTEXT_HEADER,
     ),
+    x_causation_id: EventCausationHeader = None,
 ) -> ReportEvidencePackApiResponse | JSONResponse:
     caller = caller_context_from_headers(
         subject=x_caller_subject,
@@ -249,6 +255,10 @@ async def record_report_evidence_pack(
                 conversion_intent_id=conversion_intent_id,
                 caller=caller,
                 idempotency_key=idempotency_key,
+                event_lineage=event_lineage_from_request(
+                    http_request,
+                    causation_id=x_causation_id,
+                ),
             ),
             repository=repository,
         )

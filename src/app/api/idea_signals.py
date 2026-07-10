@@ -10,6 +10,7 @@ from app.api.durable_write_guard import (
     durable_repository_write_unavailable_metadata,
     durable_write_problem,
 )
+from app.api.event_lineage import EventCausationHeader, event_lineage_from_request
 from app.api.idea_signal_models import (
     CandidatePersistenceSummaryResponse,
     EvaluateAndPersistHighCashSignalResponse,
@@ -200,8 +201,10 @@ async def evaluate_mandate_restriction_signal_from_source(
 
 async def evaluate_and_persist_high_cash_signal(
     request: EvaluateHighCashSignalRequest,
+    http_request: Request,
     caller: CallerContextHeaders,
     idempotency_key: str = Header(..., alias="Idempotency-Key"),
+    x_causation_id: EventCausationHeader = None,
 ) -> EvaluateAndPersistHighCashSignalResponse | JSONResponse:
     try:
         require_capability(caller, _PERSIST_HIGH_CASH_POLICY)
@@ -253,11 +256,24 @@ async def evaluate_and_persist_high_cash_signal(
             error_code="durable_repository_not_configured",
         )
         return configuration_problem
+    try:
+        event_lineage = event_lineage_from_request(
+            http_request,
+            causation_id=x_causation_id,
+        )
+    except ValueError:
+        return problem_response(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            code="invalid_request",
+            title="Invalid request",
+            detail="Correct the event lineage headers and retry.",
+        )
     result = evaluate_and_persist_high_cash_signal_command(
         EvaluateAndPersistHighCashSignalCommand(
             evaluation=request.to_command(),
             idempotency_key=idempotency_key,
             actor_subject=caller.subject,
+            event_lineage=event_lineage,
         ),
         repository=repository,
     )
