@@ -15,6 +15,10 @@ quality/baseline_report.json
 quality/baseline_report.md
 node_modules
 docs
+!docs/
+!docs/examples/
+!docs/examples/source-ingestion/
+!docs/examples/source-ingestion/canonical-high-cash-worker.manifest.json
 tests
 **/__pycache__
 **/*.pyc
