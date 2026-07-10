@@ -9,13 +9,7 @@ from psycopg.types.json import Jsonb
 from app.domain.ai_governance import AIExplanationResult
 from app.domain.audit import AuditEvent
 from app.domain.events import EventLineageContext, OutboxEventRecord
-from app.domain.downstream_submission import (
-    DownstreamSubmissionClaimResult,
-    DownstreamSubmissionMutationResult,
-    DownstreamSubmissionPosture,
-    DownstreamSubmissionRecord,
-    DownstreamSubmissionResolution,
-)
+from app.domain.downstream_submission import DownstreamSubmissionRecord
 from app.domain.conversion_governance import (
     ConversionIntentResult,
     ConversionOutcomeResult,
@@ -93,18 +87,15 @@ from app.infrastructure.postgres_protocols import PostgresCursor
 from app.infrastructure.postgres_downstream_lookup import (
     load_candidate_record_for_conversion_intent,
     load_conversion_intent_by_id,
-    load_downstream_submission_by_idempotency_key,
     load_report_evidence_pack_by_id,
 )
 from app.infrastructure.postgres_downstream_submission import (
     DOWNSTREAM_SUBMISSION_COLUMNS,
-    claim_postgres_downstream_submission,
     downstream_submission_from_row,
     downstream_submission_values,
-    finalize_postgres_downstream_submission,
-    load_postgres_downstream_submission_by_support_reference,
-    load_postgres_downstream_submissions_requiring_reconciliation,
-    reconcile_postgres_downstream_submission,
+)
+from app.infrastructure.postgres_downstream_submission_repository import (
+    PostgresDownstreamSubmissionRepositoryMixin,
 )
 from app.infrastructure.postgres_downstream_readiness import (
     load_downstream_realization_readiness_summary,
@@ -134,6 +125,7 @@ class PostgresIdeaRepository(
     PostgresReviewQueueRepositoryMixin,
     PostgresOutboxRepositoryMixin,
     PostgresOutboxRecoveryRepositoryMixin,
+    PostgresDownstreamSubmissionRepositoryMixin,
 ):
     """PostgreSQL-backed implementation of the governed idea repository ports."""
 
@@ -469,77 +461,6 @@ class PostgresIdeaRepository(
                 idempotency_key=idempotency_key,
                 payload=payload,
             )
-        )
-
-    def downstream_submission_by_idempotency_key(
-        self,
-        idempotency_key: str,
-    ) -> DownstreamSubmissionRecord | None:
-        return load_downstream_submission_by_idempotency_key(self._connection, idempotency_key)
-
-    def claim_downstream_submission(
-        self,
-        record: DownstreamSubmissionRecord,
-    ) -> DownstreamSubmissionClaimResult:
-        return claim_postgres_downstream_submission(self._connection, record)
-
-    def finalize_downstream_submission(
-        self,
-        *,
-        idempotency_key: str,
-        lease_owner: str,
-        lease_attempt_id: str,
-        posture: DownstreamSubmissionPosture,
-        finalized_at_utc: datetime,
-        failure_reason: str | None = None,
-    ) -> DownstreamSubmissionMutationResult:
-        return finalize_postgres_downstream_submission(
-            self._connection,
-            idempotency_key=idempotency_key,
-            lease_owner=lease_owner,
-            lease_attempt_id=lease_attempt_id,
-            posture=posture,
-            finalized_at_utc=finalized_at_utc,
-            failure_reason=failure_reason,
-        )
-
-    def downstream_submissions_requiring_reconciliation(
-        self,
-        *,
-        limit: int = 100,
-    ) -> tuple[DownstreamSubmissionRecord, ...]:
-        return load_postgres_downstream_submissions_requiring_reconciliation(
-            self._connection,
-            limit=limit,
-        )
-
-    def downstream_submission_by_support_reference(
-        self,
-        support_reference: str,
-    ) -> DownstreamSubmissionRecord | None:
-        return load_postgres_downstream_submission_by_support_reference(
-            self._connection,
-            support_reference,
-        )
-
-    def reconcile_downstream_submission(
-        self,
-        *,
-        support_reference: str,
-        resolution: DownstreamSubmissionResolution,
-        actor_subject: str,
-        reason: str,
-        change_reference: str,
-        reconciled_at_utc: datetime,
-    ) -> DownstreamSubmissionMutationResult:
-        return reconcile_postgres_downstream_submission(
-            self._connection,
-            support_reference=support_reference,
-            resolution=resolution,
-            actor_subject=actor_subject,
-            reason=reason,
-            change_reference=change_reference,
-            reconciled_at_utc=reconciled_at_utc,
         )
 
     def snapshot(self) -> IdeaRepositorySnapshot:
