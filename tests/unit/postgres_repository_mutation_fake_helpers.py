@@ -121,6 +121,13 @@ def row_for_insert(table_name: str, params: Sequence[Any]) -> dict[str, Any]:
             "correlation_id",
             "trace_id",
             "submitted_at_utc",
+            "support_reference",
+            "attempt_count",
+            "updated_at_utc",
+            "lease_owner",
+            "lease_attempt_id",
+            "lease_expires_at_utc",
+            "audit_json",
         ),
         "idea_ai_explanation_lineage": (
             "ai_explanation_request_id",

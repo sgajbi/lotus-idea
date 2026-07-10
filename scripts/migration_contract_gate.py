@@ -209,6 +209,26 @@ REQUIRED_MIGRATIONS = (
             "DROP COLUMN IF EXISTS trace_id",
         ),
     ),
+    MigrationContract(
+        version="008",
+        forward_path=MIGRATIONS_DIR / "008_downstream_submission_state_machine.sql",
+        rollback_path=MIGRATIONS_DIR / "008_downstream_submission_state_machine.rollback.sql",
+        required_tables=(),
+        required_indexes=("idx_idea_downstream_submission_reconciliation",),
+        required_forward_fragments=(
+            "sha256(idempotency_key::bytea)",
+            "audit_json JSONB",
+            "uq_idea_downstream_submission_support_reference",
+            "uq_idea_downstream_submission_lease_attempt",
+            "ck_idea_downstream_submission_failure_posture",
+            "ck_idea_downstream_submission_lease",
+        ),
+        required_rollback_fragments=(
+            "DROP CONSTRAINT IF EXISTS ck_idea_downstream_submission_lease",
+            "DROP CONSTRAINT IF EXISTS uq_idea_downstream_submission_support_reference",
+            "DROP COLUMN IF EXISTS support_reference",
+        ),
+    ),
 )
 
 

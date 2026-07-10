@@ -4,6 +4,9 @@ from copy import deepcopy
 from typing import Any, Sequence
 
 from app.domain.outbox_recovery import outbox_dead_letter_support_reference
+from tests.unit.postgres_downstream_submission_fake_helpers import (
+    execute_downstream_submission_query,
+)
 from tests.unit.postgres_outbox_fake_helpers import (
     claim_outbox_event_rows,
     fail_outbox_event_row,
@@ -42,6 +45,8 @@ class FakePostgresCursor:
     def execute(self, query: str, params: Sequence[Any] | None = None) -> None:
         normalized = " ".join(query.lower().split())
         self.connection.executed_sql.append(normalized)
+        if execute_downstream_submission_query(self, normalized, params):
+            return
         if _execute_outbox_recovery_query(self, normalized, params):
             return
         if normalized.startswith("/* lotus-idea review-queue-count */"):
@@ -368,7 +373,12 @@ def _execute_outbox_recovery_query(
 
 
 class FakePostgresConnection:
-    def __init__(self, *, fail_on_insert: str | None = None) -> None:
+    def __init__(
+        self,
+        *,
+        fail_on_insert: str | None = None,
+        fail_on_update: str | None = None,
+    ) -> None:
         self.rows: dict[str, list[dict[str, Any]]] = {
             "idea_candidate_record": [],
             "idea_idempotency_record": [],
@@ -386,6 +396,7 @@ class FakePostgresConnection:
             "idea_outbox_recovery_audit": [],
         }
         self.fail_on_insert = fail_on_insert
+        self.fail_on_update = fail_on_update
         self.commits = 0
         self.rollbacks = 0
         self.deletes = 0

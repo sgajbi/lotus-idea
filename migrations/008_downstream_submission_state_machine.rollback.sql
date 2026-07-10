@@ -1,0 +1,19 @@
+DROP INDEX IF EXISTS idx_idea_downstream_submission_reconciliation;
+
+ALTER TABLE IF EXISTS idea_downstream_submission
+    DROP CONSTRAINT IF EXISTS ck_idea_downstream_submission_lease,
+    DROP CONSTRAINT IF EXISTS ck_idea_downstream_submission_failure_posture,
+    DROP CONSTRAINT IF EXISTS ck_idea_downstream_submission_status,
+    DROP CONSTRAINT IF EXISTS ck_idea_downstream_submission_audit,
+    DROP CONSTRAINT IF EXISTS ck_idea_downstream_submission_updated_time,
+    DROP CONSTRAINT IF EXISTS ck_idea_downstream_submission_attempt_count,
+    DROP CONSTRAINT IF EXISTS ck_idea_downstream_submission_support_reference,
+    DROP CONSTRAINT IF EXISTS uq_idea_downstream_submission_lease_attempt,
+    DROP CONSTRAINT IF EXISTS uq_idea_downstream_submission_support_reference,
+    DROP COLUMN IF EXISTS audit_json,
+    DROP COLUMN IF EXISTS lease_expires_at_utc,
+    DROP COLUMN IF EXISTS lease_attempt_id,
+    DROP COLUMN IF EXISTS lease_owner,
+    DROP COLUMN IF EXISTS updated_at_utc,
+    DROP COLUMN IF EXISTS attempt_count,
+    DROP COLUMN IF EXISTS support_reference;

@@ -122,7 +122,7 @@ def test_postgres_downstream_submission_idempotency_lookup_uses_direct_table_que
 
     assert loaded == record
     executed_sql = " ".join(connection.executed_sql)
-    assert "/* lotus-idea downstream-lookup-submission-idempotency */" in executed_sql
+    assert "/* lotus-idea downstream-submission-by-idempotency */" in executed_sql
     assert "where idempotency_key = %s" in executed_sql
     assert "idea_downstream_submission" in executed_sql
     assert "idea_candidate_record" not in executed_sql

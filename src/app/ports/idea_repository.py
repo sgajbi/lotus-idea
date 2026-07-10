@@ -19,7 +19,11 @@ from app.domain import (
     GovernedConversionIntent,
     GovernedConversionOutcome,
     GovernedReportEvidencePack,
+    DownstreamSubmissionClaimResult,
+    DownstreamSubmissionMutationResult,
+    DownstreamSubmissionPosture,
     DownstreamSubmissionRecord,
+    DownstreamSubmissionResolution,
     IdeaCandidate,
     IdeaLifecycleStatus,
     IdeaRepositorySnapshot,
@@ -323,7 +327,7 @@ class AIExplanationRepository(CandidateSnapshotRepository, Protocol):
     ) -> AIExplanationLineagePersistenceResult: ...
 
 
-class DownstreamSubmissionRepository(CandidateSnapshotRepository, Protocol):
+class DownstreamSubmissionRepository(Protocol):
     def conversion_intent_by_id(
         self,
         conversion_intent_id: str,
@@ -339,8 +343,45 @@ class DownstreamSubmissionRepository(CandidateSnapshotRepository, Protocol):
         idempotency_key: str,
     ) -> DownstreamSubmissionRecord | None: ...
 
-    def record_downstream_submission(self, record: DownstreamSubmissionRecord) -> None: ...
+    def claim_downstream_submission(
+        self,
+        record: DownstreamSubmissionRecord,
+    ) -> DownstreamSubmissionClaimResult: ...
 
+    def finalize_downstream_submission(
+        self,
+        *,
+        idempotency_key: str,
+        lease_owner: str,
+        lease_attempt_id: str,
+        posture: DownstreamSubmissionPosture,
+        finalized_at_utc: datetime,
+        failure_reason: str | None = None,
+    ) -> DownstreamSubmissionMutationResult: ...
+
+    def downstream_submissions_requiring_reconciliation(
+        self,
+        *,
+        limit: int = 100,
+    ) -> tuple[DownstreamSubmissionRecord, ...]: ...
+
+    def downstream_submission_by_support_reference(
+        self,
+        support_reference: str,
+    ) -> DownstreamSubmissionRecord | None: ...
+
+    def reconcile_downstream_submission(
+        self,
+        *,
+        support_reference: str,
+        resolution: DownstreamSubmissionResolution,
+        actor_subject: str,
+        reason: str,
+        change_reference: str,
+        reconciled_at_utc: datetime,
+    ) -> DownstreamSubmissionMutationResult: ...
+
+    def record_downstream_submission(self, record: DownstreamSubmissionRecord) -> None: ...
 
 class OutboxDeliveryRepository(CandidateSnapshotRepository, Protocol):
     def record_outbox_delivery_run_request(
