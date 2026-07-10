@@ -42,6 +42,7 @@ class DownstreamSubmissionClaimDecision(StrEnum):
 
 class DownstreamSubmissionMutationDecision(StrEnum):
     ACCEPTED = "accepted"
+    REPLAYED = "replayed"
     NOT_FOUND = "not_found"
     LEASE_CONFLICT = "lease_conflict"
     INVALID_STATE = "invalid_state"
@@ -252,6 +253,27 @@ def reconcile_downstream_submission(
     change_reference: str,
     reconciled_at_utc: datetime,
 ) -> DownstreamSubmissionMutationResult:
+    _require_text(actor_subject, "actor_subject")
+    _require_text(reason, "reason")
+    _require_text(change_reference, "change_reference")
+    _require_aware_utc(reconciled_at_utc, "reconciled_at_utc")
+    posture = DownstreamSubmissionPosture(resolution.value)
+    last_audit = record.audit_history[-1]
+    if last_audit.change_reference == change_reference:
+        if (
+            last_audit.current_posture is posture
+            and last_audit.actor_subject == actor_subject
+            and last_audit.reason == reason
+        ):
+            return DownstreamSubmissionMutationResult(
+                decision=DownstreamSubmissionMutationDecision.REPLAYED,
+                record=record,
+            )
+        return DownstreamSubmissionMutationResult(
+            decision=DownstreamSubmissionMutationDecision.INVALID_STATE,
+            record=record,
+            blocker="downstream_submission_change_reference_conflict",
+        )
     if record.status not in {
         DownstreamSubmissionPosture.IN_FLIGHT,
         DownstreamSubmissionPosture.RECONCILIATION_REQUIRED,
@@ -261,7 +283,6 @@ def reconcile_downstream_submission(
             record=record,
             blocker="downstream_submission_not_reconcilable",
         )
-    posture = DownstreamSubmissionPosture(resolution.value)
     action = (
         DownstreamSubmissionAuditAction.QUARANTINED
         if resolution is DownstreamSubmissionResolution.QUARANTINED

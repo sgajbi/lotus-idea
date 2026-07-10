@@ -150,6 +150,48 @@ def test_operator_can_quarantine_but_cannot_rewrite_terminal_history() -> None:
     assert repeated.decision is DownstreamSubmissionMutationDecision.INVALID_STATE
 
 
+def test_reconciliation_change_reference_is_replay_safe_and_conflict_aware() -> None:
+    uncertain = finalize_downstream_submission(
+        _claim(),
+        lease_owner="downstream-submission",
+        lease_attempt_id="attempt-001",
+        posture=DownstreamSubmissionPosture.RECONCILIATION_REQUIRED,
+        finalized_at_utc=CLAIMED_AT + timedelta(minutes=1),
+        failure_reason="downstream_timeout",
+    ).record
+    assert uncertain is not None
+    accepted = reconcile_downstream_submission(
+        uncertain,
+        resolution=DownstreamSubmissionResolution.ACCEPTED_BY_DOWNSTREAM,
+        actor_subject="operations-user",
+        reason="downstream_receipt_verified",
+        change_reference="INC-334-003",
+        reconciled_at_utc=CLAIMED_AT + timedelta(minutes=5),
+    )
+    assert accepted.record is not None
+
+    replayed = reconcile_downstream_submission(
+        accepted.record,
+        resolution=DownstreamSubmissionResolution.ACCEPTED_BY_DOWNSTREAM,
+        actor_subject="operations-user",
+        reason="downstream_receipt_verified",
+        change_reference="INC-334-003",
+        reconciled_at_utc=CLAIMED_AT + timedelta(minutes=6),
+    )
+    conflict = reconcile_downstream_submission(
+        accepted.record,
+        resolution=DownstreamSubmissionResolution.REJECTED_BY_DOWNSTREAM,
+        actor_subject="operations-user",
+        reason="downstream_receipt_rejected",
+        change_reference="INC-334-003",
+        reconciled_at_utc=CLAIMED_AT + timedelta(minutes=6),
+    )
+
+    assert replayed.decision is DownstreamSubmissionMutationDecision.REPLAYED
+    assert conflict.decision is DownstreamSubmissionMutationDecision.INVALID_STATE
+    assert conflict.blocker == "downstream_submission_change_reference_conflict"
+
+
 def test_claim_rejects_partial_or_invalid_lease() -> None:
     with pytest.raises(ValueError, match="lease_expires_at_utc must be after"):
         _claim(lease_expires_at_utc=CLAIMED_AT)
