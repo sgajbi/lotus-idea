@@ -14,6 +14,20 @@ from app.api.signal_models import (
     SignalEvaluationResponse,
     SourceRefRequest,
 )
+from app.api.allocation_drift_signals import EvaluateAllocationDriftFromSourceRequest
+from app.api.bond_maturity_signals import EvaluateBondMaturityFromSourceRequest
+from app.api.concentration_risk_signals import EvaluateConcentrationRiskFromSourceRequest
+from app.api.drawdown_review_signals import EvaluateDrawdownReviewFromSourceRequest
+from app.api.high_volatility_signals import EvaluateHighVolatilityFromSourceRequest
+from app.api.idea_signal_models import (
+    EvaluateHighCashFromSourceRequest,
+    EvaluateMandateRestrictionFromSourceRequest,
+)
+from app.api.low_income_signals import EvaluateLowIncomeFromSourceRequest
+from app.api.missing_benchmark_signals import EvaluateMissingBenchmarkFromSourceRequest
+from app.api.missing_risk_profile_signals import EvaluateMissingRiskProfileFromSourceRequest
+from app.api.missing_suitability_signals import EvaluateMissingSuitabilityFromSourceRequest
+from app.api.underperformance_signals import EvaluateUnderperformanceFromSourceRequest
 from app.domain import (
     EvidenceFreshness,
     HighCashSignalInput,
@@ -133,6 +147,171 @@ def test_api_signal_model_boundary_gate_passes_current_repository() -> None:
     module = _load_api_signal_model_boundary_gate()
 
     assert module.validate_api_signal_model_boundary() == []
+
+
+def _portfolio_source_request_payload() -> dict[str, object]:
+    return {
+        "portfolioId": "PB_SG_GLOBAL_BAL_001",
+        "asOfDate": date(2026, 6, 21),
+        "evaluatedAtUtc": datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
+    }
+
+
+def _evaluation_source_request_payload() -> dict[str, object]:
+    return {
+        "evaluationId": "pev_001",
+        "asOfDate": date(2026, 6, 21),
+        "evaluatedAtUtc": datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
+    }
+
+
+@pytest.mark.parametrize(
+    ("request_model", "payload", "field", "message"),
+    [
+        (
+            EvaluateAllocationDriftFromSourceRequest,
+            _portfolio_source_request_payload(),
+            "portfolioId",
+            "portfolioId is required",
+        ),
+        (
+            EvaluateBondMaturityFromSourceRequest,
+            _portfolio_source_request_payload(),
+            "portfolioId",
+            "portfolioId is required",
+        ),
+        (
+            EvaluateConcentrationRiskFromSourceRequest,
+            _portfolio_source_request_payload(),
+            "portfolioId",
+            "portfolioId is required",
+        ),
+        (
+            EvaluateDrawdownReviewFromSourceRequest,
+            {**_portfolio_source_request_payload(), "periodName": "YTD"},
+            "portfolioId",
+            "portfolioId is required",
+        ),
+        (
+            EvaluateHighVolatilityFromSourceRequest,
+            {**_portfolio_source_request_payload(), "periodName": "YTD"},
+            "portfolioId",
+            "portfolioId is required",
+        ),
+        (
+            EvaluateLowIncomeFromSourceRequest,
+            _portfolio_source_request_payload(),
+            "portfolioId",
+            "portfolioId is required",
+        ),
+        (
+            EvaluateHighCashFromSourceRequest,
+            _portfolio_source_request_payload(),
+            "portfolioId",
+            "portfolioId is required",
+        ),
+        (
+            EvaluateMissingBenchmarkFromSourceRequest,
+            _portfolio_source_request_payload(),
+            "portfolioId",
+            "portfolioId is required",
+        ),
+        (
+            EvaluateUnderperformanceFromSourceRequest,
+            {**_portfolio_source_request_payload(), "periodName": "YTD"},
+            "portfolioId",
+            "portfolioId is required",
+        ),
+        (
+            EvaluateDrawdownReviewFromSourceRequest,
+            {**_portfolio_source_request_payload(), "periodName": "YTD"},
+            "periodName",
+            "periodName is required",
+        ),
+        (
+            EvaluateHighVolatilityFromSourceRequest,
+            {**_portfolio_source_request_payload(), "periodName": "YTD"},
+            "periodName",
+            "periodName is required",
+        ),
+        (
+            EvaluateUnderperformanceFromSourceRequest,
+            {**_portfolio_source_request_payload(), "periodName": "YTD"},
+            "periodName",
+            "periodName is required",
+        ),
+        (
+            EvaluateMissingRiskProfileFromSourceRequest,
+            _evaluation_source_request_payload(),
+            "evaluationId",
+            "evaluationId is required",
+        ),
+        (
+            EvaluateMissingSuitabilityFromSourceRequest,
+            _evaluation_source_request_payload(),
+            "evaluationId",
+            "evaluationId is required",
+        ),
+        (
+            EvaluateMandateRestrictionFromSourceRequest,
+            _evaluation_source_request_payload(),
+            "evaluationId",
+            "evaluationId is required",
+        ),
+    ],
+)
+def test_source_request_rejects_blank_identity_fields(
+    request_model: type[object],
+    payload: dict[str, object],
+    field: str,
+    message: str,
+) -> None:
+    invalid_payload = {**payload, field: " "}
+
+    with pytest.raises(ValidationError, match=message):
+        request_model(**invalid_payload)
+
+
+def test_missing_benchmark_request_preserves_explicitly_omitted_currency() -> None:
+    request = EvaluateMissingBenchmarkFromSourceRequest(
+        **_portfolio_source_request_payload(),
+        reportingCurrency=None,
+    )
+
+    assert request.reporting_currency is None
+
+
+def test_missing_benchmark_request_rejects_blank_currency() -> None:
+    with pytest.raises(ValidationError, match="reportingCurrency must not be blank"):
+        EvaluateMissingBenchmarkFromSourceRequest(
+            **_portfolio_source_request_payload(),
+            reportingCurrency=" ",
+        )
+
+
+def test_underperformance_request_preserves_optional_currency_and_normalizes_it() -> None:
+    request = EvaluateUnderperformanceFromSourceRequest(
+        **_portfolio_source_request_payload(),
+        periodName="YTD",
+        reportingCurrency=None,
+    )
+    normalized = EvaluateUnderperformanceFromSourceRequest(
+        **_portfolio_source_request_payload(),
+        periodName="YTD",
+        reportingCurrency="usd",
+    )
+
+    assert request.reporting_currency is None
+    assert normalized.reporting_currency == "USD"
+
+
+def test_underperformance_request_rejects_non_iso_currency() -> None:
+    with pytest.raises(ValidationError, match="3-letter ISO currency code"):
+        EvaluateUnderperformanceFromSourceRequest(
+            **_portfolio_source_request_payload(),
+            periodName="YTD",
+            reportingCurrency="US1",
+        )
 
 
 def test_api_signal_model_boundary_gate_blocks_route_module_dto_import(tmp_path: Path) -> None:
