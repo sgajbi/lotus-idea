@@ -91,6 +91,8 @@ CANONICAL_OPPORTUNITY_REPORTING_CURRENCY ?=
 CANONICAL_OPPORTUNITY_TIMEOUT_SECONDS ?= 5.0
 CANONICAL_OPPORTUNITY_GENERATED_AT_UTC ?=
 CANONICAL_OPPORTUNITY_EVALUATED_AT_UTC ?=
+CANONICAL_OPPORTUNITY_CORRELATION_ID ?=
+CANONICAL_OPPORTUNITY_TRACE_ID ?=
 CANONICAL_OPPORTUNITY_OUTPUT_DIRECTORY ?= output/opportunity/canonical-source-proofs
 
 ifeq ($(OS),Windows_NT)
@@ -361,7 +363,7 @@ source-ingestion-live-proof-contract-gate:
 	$(VENV_PYTHON) scripts/source_ingestion_live_proof_contract_gate.py
 
 canonical-opportunity-source-proofs:
-	$(VENV_PYTHON) scripts/run_canonical_opportunity_source_proofs.py --portfolio-id "$(CANONICAL_OPPORTUNITY_PORTFOLIO_ID)" --as-of-date "$(CANONICAL_OPPORTUNITY_AS_OF_DATE)" --risk-base-url "$(CANONICAL_OPPORTUNITY_RISK_BASE_URL)" --performance-base-url "$(CANONICAL_OPPORTUNITY_PERFORMANCE_BASE_URL)" --period-name "$(CANONICAL_OPPORTUNITY_PERIOD_NAME)" --reporting-currency "$(CANONICAL_OPPORTUNITY_REPORTING_CURRENCY)" --timeout-seconds "$(CANONICAL_OPPORTUNITY_TIMEOUT_SECONDS)" --generated-at-utc "$(CANONICAL_OPPORTUNITY_GENERATED_AT_UTC)" --evaluated-at-utc "$(CANONICAL_OPPORTUNITY_EVALUATED_AT_UTC)" --output-directory "$(CANONICAL_OPPORTUNITY_OUTPUT_DIRECTORY)"
+	$(VENV_PYTHON) scripts/run_canonical_opportunity_source_proofs.py --portfolio-id "$(CANONICAL_OPPORTUNITY_PORTFOLIO_ID)" --as-of-date "$(CANONICAL_OPPORTUNITY_AS_OF_DATE)" --risk-base-url "$(CANONICAL_OPPORTUNITY_RISK_BASE_URL)" --performance-base-url "$(CANONICAL_OPPORTUNITY_PERFORMANCE_BASE_URL)" --period-name "$(CANONICAL_OPPORTUNITY_PERIOD_NAME)" --reporting-currency "$(CANONICAL_OPPORTUNITY_REPORTING_CURRENCY)" --timeout-seconds "$(CANONICAL_OPPORTUNITY_TIMEOUT_SECONDS)" --generated-at-utc "$(CANONICAL_OPPORTUNITY_GENERATED_AT_UTC)" --evaluated-at-utc "$(CANONICAL_OPPORTUNITY_EVALUATED_AT_UTC)" --correlation-id "$(CANONICAL_OPPORTUNITY_CORRELATION_ID)" --trace-id "$(CANONICAL_OPPORTUNITY_TRACE_ID)" --output-directory "$(CANONICAL_OPPORTUNITY_OUTPUT_DIRECTORY)"
 
 risk-concentration-live-proof-contract-gate:
 	$(VENV_PYTHON) scripts/risk_concentration_live_proof_contract_gate.py

@@ -65,12 +65,16 @@ def main(argv: list[str] | None = None) -> int:
             generated_at=generated_at,
             evaluated_at=evaluated_at,
             output_directory=output_directory,
+            correlation_id=args.correlation_id,
+            trace_id=args.trace_id,
         )
         payload = _aggregate_payload(
             generated_at=generated_at,
             evaluated_at=evaluated_at,
             portfolio_id=args.portfolio_id,
             as_of_date=args.as_of_date,
+            correlation_id=args.correlation_id,
+            trace_id=args.trace_id,
             summaries=summaries,
         )
         aggregate_path = output_directory / "canonical-opportunity-source-proofs.json"
@@ -90,6 +94,8 @@ def _run_proofs(
     generated_at: datetime,
     evaluated_at: datetime,
     output_directory: Path,
+    correlation_id: str,
+    trace_id: str,
 ) -> list[dict[str, Any]]:
     summaries: list[dict[str, Any]] = []
     for case in cases:
@@ -100,6 +106,8 @@ def _run_proofs(
             generated_at=generated_at,
             evaluated_at=evaluated_at,
             output_path=output_path,
+            correlation_id=correlation_id,
+            trace_id=trace_id,
         )
         completed = subprocess.run(
             command,
@@ -166,6 +174,8 @@ def _proof_command(
     generated_at: datetime,
     evaluated_at: datetime,
     output_path: Path,
+    correlation_id: str,
+    trace_id: str,
 ) -> list[str]:
     command = [
         sys.executable,
@@ -180,6 +190,10 @@ def _proof_command(
         _format_instant(evaluated_at),
         "--output",
         str(output_path),
+        "--correlation-id",
+        correlation_id,
+        "--trace-id",
+        trace_id,
     ]
     if case.name == "performance_benchmark_readiness":
         command.extend(["--performance-base-url", args.performance_base_url])
@@ -203,6 +217,8 @@ def _aggregate_payload(
     evaluated_at: datetime,
     portfolio_id: str,
     as_of_date: str,
+    correlation_id: str,
+    trace_id: str,
     summaries: list[dict[str, Any]],
 ) -> dict[str, Any]:
     ready = all(
@@ -216,6 +232,8 @@ def _aggregate_payload(
         "evaluatedAtUtc": _format_instant(evaluated_at),
         "portfolioId": portfolio_id,
         "asOfDate": as_of_date,
+        "correlationId": correlation_id,
+        "traceId": trace_id,
         "certificationReady": ready,
         "supportedFeaturePromoted": False,
         "proofClosed": False,
@@ -242,6 +260,8 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--timeout-seconds", default="5.0")
     parser.add_argument("--generated-at-utc", required=True)
     parser.add_argument("--evaluated-at-utc", required=True)
+    parser.add_argument("--correlation-id", required=True)
+    parser.add_argument("--trace-id", required=True)
     parser.add_argument("--output-directory", required=True)
     return parser
 

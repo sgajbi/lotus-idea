@@ -22,6 +22,8 @@ def test_proof_command_keeps_source_adapter_arguments_explicit() -> None:
         period_name="1Y",
         reporting_currency="USD",
         timeout_seconds="5.0",
+        correlation_id="corr-canonical-proof",
+        trace_id="trace-canonical-proof",
     )
 
     command = _proof_command(
@@ -30,6 +32,8 @@ def test_proof_command_keeps_source_adapter_arguments_explicit() -> None:
         generated_at=datetime(2026, 7, 10, tzinfo=UTC),
         evaluated_at=datetime(2026, 7, 10, tzinfo=UTC),
         output_path=Path("output/opportunity/risk.json"),
+        correlation_id=args.correlation_id,
+        trace_id=args.trace_id,
     )
 
     assert command[0].endswith("python.exe") or command[0].endswith("python")
@@ -65,6 +69,8 @@ def test_run_proofs_fails_closed_when_a_child_is_blocked_or_artifact_is_invalid(
         period_name="1Y",
         reporting_currency=None,
         timeout_seconds="5.0",
+        correlation_id="corr-canonical-proof",
+        trace_id="trace-canonical-proof",
     )
 
     summaries = _run_proofs(
@@ -73,12 +79,16 @@ def test_run_proofs_fails_closed_when_a_child_is_blocked_or_artifact_is_invalid(
         generated_at=datetime(2026, 7, 10, tzinfo=UTC),
         evaluated_at=datetime(2026, 7, 10, tzinfo=UTC),
         output_directory=tmp_path,
+        correlation_id=args.correlation_id,
+        trace_id=args.trace_id,
     )
     payload = _aggregate_payload(
         generated_at=datetime(2026, 7, 10, tzinfo=UTC),
         evaluated_at=datetime(2026, 7, 10, tzinfo=UTC),
         portfolio_id=args.portfolio_id,
         as_of_date=args.as_of_date,
+        correlation_id=args.correlation_id,
+        trace_id=args.trace_id,
         summaries=summaries,
     )
 
