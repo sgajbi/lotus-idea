@@ -40,6 +40,9 @@ class RestoreDrillRequest:
     backup_source: str
     operator_id: str
     correlation_id: str
+    backup_format: str
+    backup_artifact_sha256: str
+    pitr_proof: bool
     migration_bundle_sha256: str
     latest_migration: str
     backup_created_at_utc: datetime
@@ -53,11 +56,14 @@ class RestoreDrillRequest:
             "backup_source",
             "operator_id",
             "correlation_id",
+            "backup_format",
             "latest_migration",
         ):
             _require_safe_identifier(getattr(self, field_name), field_name)
         if not re.fullmatch(r"[a-f0-9]{64}", self.migration_bundle_sha256):
             raise ValueError("migration_bundle_sha256 must be a lowercase SHA-256 digest")
+        if not re.fullmatch(r"[a-f0-9]{64}", self.backup_artifact_sha256):
+            raise ValueError("backup_artifact_sha256 must be a lowercase SHA-256 digest")
         for field_name in (
             "backup_created_at_utc",
             "incident_cutoff_utc",
@@ -114,6 +120,9 @@ class RestoreDrillEvidence:
     backup_source: str
     operator_id: str
     correlation_id: str
+    backup_format: str
+    backup_artifact_sha256: str
+    pitr_proof: bool
     database_identity_sha256: str
     postgres_version: str
     migration_bundle_sha256: str
@@ -134,6 +143,7 @@ class RestoreDrillEvidence:
     real_restored_backup: bool = True
     synthetic_smoke: bool = False
     supported_feature_promoted: bool = False
+    certification_status: str = "not_certified"
 
 
 def evaluate_restored_database(
@@ -185,6 +195,9 @@ def evaluate_restored_database(
         backup_source=request.backup_source,
         operator_id=request.operator_id,
         correlation_id=request.correlation_id,
+        backup_format=request.backup_format,
+        backup_artifact_sha256=request.backup_artifact_sha256,
+        pitr_proof=request.pitr_proof,
         database_identity_sha256=snapshot.database_identity_sha256,
         postgres_version=snapshot.postgres_version,
         migration_bundle_sha256=request.migration_bundle_sha256,

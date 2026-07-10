@@ -39,6 +39,8 @@ def test_restore_use_case_proves_bounded_real_restore_evidence() -> None:
     assert evidence.validation_mode == "real_restore_validation"
     assert evidence.real_restored_backup is True
     assert evidence.synthetic_smoke is False
+    assert evidence.pitr_proof is False
+    assert evidence.certification_status == "not_certified"
     assert evidence.actual_rpo_seconds == 300
     assert evidence.actual_rto_seconds == 900
     assert evidence.failed_checks == ()
@@ -114,6 +116,7 @@ def test_restore_use_case_rejects_readiness_time_before_restore_started() -> Non
     [
         ({"backup_identifier": "postgresql://secret"}, "source-safe identifier"),
         ({"migration_bundle_sha256": "not-a-hash"}, "lowercase SHA-256"),
+        ({"backup_artifact_sha256": "not-a-hash"}, "lowercase SHA-256"),
         (
             {"backup_created_at_utc": datetime(2026, 7, 11, 1, 0)},
             "timezone-aware UTC",
@@ -137,6 +140,9 @@ def valid_request() -> RestoreDrillRequest:
         backup_source="ci-disposable-postgres",
         operator_id="github-actions",
         correlation_id="drill-run-123",
+        backup_format="postgres-custom-logical",
+        backup_artifact_sha256="e" * 64,
+        pitr_proof=False,
         migration_bundle_sha256="f" * 64,
         latest_migration="008_downstream_submission_state_machine",
         backup_created_at_utc=NOW - timedelta(minutes=45),
