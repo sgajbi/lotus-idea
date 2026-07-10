@@ -8,6 +8,7 @@ from typing import Any, cast
 import httpx
 import pytest
 
+import app.infrastructure.lotus_performance_sources as performance_sources
 from app.domain import EvidenceFreshness
 from app.infrastructure.downstream_client import DownstreamClientConfig, DownstreamJsonClient
 from app.infrastructure.lotus_performance_sources import (
@@ -119,6 +120,15 @@ def test_lotus_performance_adapter_close_releases_owned_client() -> None:
     adapter.close()
 
     assert client.close_count == 1
+
+
+def test_lotus_performance_adapter_rejects_invalid_async_poll_policy() -> None:
+    transport = httpx.MockTransport(lambda request: httpx.Response(200, json=_payload()))
+
+    with pytest.raises(ValueError, match="max_polls must be at least 1"):
+        _adapter(transport, async_result_max_polls=0)
+    with pytest.raises(ValueError, match="poll_interval_seconds must not be negative"):
+        _adapter(transport, async_result_poll_interval_seconds=-1)
 
 
 def test_lotus_performance_adapter_fetches_declared_returns_series_source_product() -> None:
@@ -347,6 +357,126 @@ def test_lotus_performance_adapter_follows_async_result_path_for_underperformanc
         ("POST", "/integration/returns/series"),
         ("GET", "/integration/returns/series/results/example"),
     ]
+
+
+def test_lotus_performance_adapter_retries_eventually_consistent_async_result() -> None:
+    accepted_payload = {
+        "source_service": "lotus-performance",
+        "contract_version": "v1",
+        "execution_mode": "async",
+        "status": "pending",
+        "result_path": "/integration/returns/series/results/eventual",
+    }
+    result_attempts = 0
+    sleeps: list[float] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal result_attempts
+        if request.method == "POST":
+            return httpx.Response(202, json=accepted_payload)
+        result_attempts += 1
+        if result_attempts == 1:
+            return httpx.Response(404, json={"code": "result_not_materialized"})
+        return httpx.Response(200, json=_payload())
+
+    evidence = _adapter(
+        httpx.MockTransport(handler),
+        async_result_max_polls=2,
+        async_result_poll_interval_seconds=0.25,
+        sleep=sleeps.append,
+    ).fetch_underperformance_evidence(_request())
+
+    assert evidence.source_reported_active_return == Decimal("-0.0125")
+    assert result_attempts == 2
+    assert sleeps == [0.25]
+
+
+@pytest.mark.parametrize(
+    ("status_code", "exception_type"),
+    [(403, PerformanceSourceEntitlementDenied), (503, PerformanceSourceUnavailable)],
+)
+def test_lotus_performance_adapter_maps_async_result_failures(
+    status_code: int,
+    exception_type: type[Exception],
+) -> None:
+    accepted_payload = {
+        "source_service": "lotus-performance",
+        "contract_version": "v1",
+        "execution_mode": "async",
+        "status": "pending",
+        "result_path": "/integration/returns/series/results/failure",
+    }
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.method == "POST":
+            return httpx.Response(202, json=accepted_payload)
+        return httpx.Response(status_code, json={})
+
+    with pytest.raises(exception_type):
+        _adapter(httpx.MockTransport(handler)).fetch_underperformance_evidence(_request())
+
+
+def test_lotus_performance_adapter_maps_mandate_source_failure_and_identity_mismatch() -> None:
+    unavailable = _adapter(httpx.MockTransport(lambda request: httpx.Response(503, json={})))
+    with pytest.raises(PerformanceSourceUnavailable, match="upstream_unavailable"):
+        unavailable.fetch_mandate_health_context(_mandate_health_request())
+
+    payload = _mandate_health_payload(extra={"source_services": ["lotus-core"]})
+    with pytest.raises(PerformanceSourceUnavailable, match="source_mismatch"):
+        _adapter(
+            httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+        ).fetch_mandate_health_context(_mandate_health_request())
+
+
+@pytest.mark.parametrize(
+    ("freshness", "expected"),
+    [
+        ("stale", EvidenceFreshness.STALE),
+        ("expired", EvidenceFreshness.EXPIRED),
+        ("source unavailable", EvidenceFreshness.UNAVAILABLE),
+    ],
+)
+def test_lotus_performance_adapter_preserves_source_freshness_posture(
+    freshness: str,
+    expected: EvidenceFreshness,
+) -> None:
+    payload = _payload()
+    diagnostics = payload["diagnostics"]
+    assert isinstance(diagnostics, dict)
+    diagnostics["freshness"] = freshness
+
+    evidence = _adapter(
+        httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+    ).fetch_underperformance_evidence(_request())
+
+    assert evidence.performance_ref is not None
+    assert evidence.performance_ref.freshness is expected
+
+
+@pytest.mark.parametrize(
+    "measure_reader",
+    [
+        performance_sources._underperformance_measures,
+        performance_sources._benchmark_readiness_measures,
+    ],
+)
+def test_performance_measure_readers_reject_unresolved_async_payloads(
+    measure_reader: Any,
+) -> None:
+    payload = _payload(
+        extra={
+            "execution_mode": "async",
+            "status": "pending",
+        }
+    )
+
+    with pytest.raises(PerformanceSourceUnavailable, match="returns_series_pending"):
+        measure_reader(payload)
+
+
+def test_performance_text_fields_fail_closed_when_product_identity_is_missing() -> None:
+    with pytest.raises(PerformanceSourceUnavailable, match="performance_product_name_missing"):
+        performance_sources._validate_mandate_health_payload({})
 
 
 def test_lotus_performance_adapter_rejects_async_response_without_result_path() -> None:

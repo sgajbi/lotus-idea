@@ -190,3 +190,48 @@ def test_caller_context_openapi_contract_handles_sparse_parameters_and_alternati
     decorated_context = cast(dict[str, Any], decorated_post[CALLER_CONTEXT_EXTENSION])
 
     assert decorated_context["requiredCapabilities"] == ["idea.signal.evaluate"]
+
+
+def test_caller_context_problem_contract_repairs_malformed_response_shapes() -> None:
+    requirement = CallerContextOpenApiRequirement(
+        method="GET",
+        path="/synthetic",
+        required_capabilities=("idea.synthetic.read",),
+        required_roles=("operator",),
+    )
+    malformed_responses: dict[str, Any] = {"responses": "not-an-object"}
+    _apply_operation_requirement(malformed_responses, requirement)
+
+    malformed_nested: dict[str, Any] = {
+        "responses": {
+            "400": "not-a-response",
+            "403": {
+                "content": {
+                    "application/problem+json": "not-media-metadata",
+                    "application/json": "not-media-metadata",
+                }
+            },
+        }
+    }
+    _apply_operation_requirement(malformed_nested, requirement)
+    malformed_content: dict[str, Any] = {
+        "responses": {
+            "400": {"content": "not-an-object"},
+            "403": {"content": "not-an-object"},
+        }
+    }
+    _apply_operation_requirement(malformed_content, requirement)
+
+    assert isinstance(malformed_responses["responses"], dict)
+    for status_code in ("400", "403"):
+        response = malformed_nested["responses"][status_code]
+        assert isinstance(response, dict)
+        assert isinstance(response["content"], dict)
+        for media_type in PROBLEM_MEDIA_TYPES:
+            assert response["content"][media_type]["schema"] == {
+                "$ref": "#/components/schemas/ProblemDetails"
+            }
+    assert all(
+        isinstance(malformed_content["responses"][status_code]["content"], dict)
+        for status_code in ("400", "403")
+    )
