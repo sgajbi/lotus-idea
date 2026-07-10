@@ -1243,8 +1243,8 @@ Current gaps remain explicit:
 11. no full production identity-provider integration, signed caller assertion,
     or Workbench entitlement-denied proof for caller-context authorization,
 12. no production multi-process PostgreSQL concurrency certification beyond
-    adapter-level stale-write, idempotency-collision, and review-resource
-    identity-collision proof,
+    adapter-level stale-write/idempotency proof and local real-PostgreSQL
+    two-connection review/feedback identity-collision proof,
 13. no full container-filesystem SBOM; release evidence includes
     runtime-dependency SBOM, Trivy image scan, registry digest capture, keyless
     image signature, and provenance/SBOM attestations,

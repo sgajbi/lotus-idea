@@ -281,7 +281,8 @@ Protected `main` uses strict branch protection. Required PR Merge Gate status ch
 
 The PostgreSQL runtime proof is required explicitly, not only as a Docker-build dependency, because
 it proves durable repository behavior, migration rollback/reapply, idempotency replay,
-source-ingestion recovery, and source-safe AI explanation lineage persistence against real
+source-ingestion recovery, concurrent review/feedback resource-identity
+serialization, and source-safe AI explanation lineage persistence against real
 `postgres:18-alpine` state.
 
 Persistence adapter validation:

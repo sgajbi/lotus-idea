@@ -86,8 +86,9 @@ Implemented in this slice:
     `review_identity_conflict`.
 21. PostgreSQL claims resource identity before candidate mutation and retries a
     collision once from fresh state. The same behavior is covered in the
-    process-local adapter, API, fake PostgreSQL concurrency suite, OpenAPI named
-    examples, and `make review-identity-contract-gate`.
+    process-local adapter, API, fake adapter suite, real PostgreSQL two-connection
+    integration proof, OpenAPI named examples, and
+    `make review-identity-contract-gate`.
 
 Validation evidence from the implementation slice:
 
