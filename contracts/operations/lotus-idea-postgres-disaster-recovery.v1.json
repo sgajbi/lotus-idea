@@ -1,0 +1,105 @@
+{
+  "contract_id": "lotus-idea-postgres-disaster-recovery",
+  "contract_version": "1.0.0",
+  "repository": "lotus-idea",
+  "data_owner": "lotus-idea",
+  "infrastructure_operator": "lotus-platform-database-operations",
+  "certification_status": "not_certified",
+  "supported_feature_promoted": false,
+  "source_of_truth": {
+    "migrations": "migrations",
+    "slice": "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-06-persistence-replay-idempotency-and-audit.md"
+  },
+  "recovery_objectives": {
+    "rpo_minutes": 15,
+    "rto_minutes": 60,
+    "rpo_measurement": "recovery_point_utc minus latest_durable_commit_utc",
+    "rto_measurement": "authorized_restore_start_utc through validated_service_ready_utc"
+  },
+  "backup_and_pitr": {
+    "strategy": "physical_base_backup_plus_continuous_wal_archiving",
+    "base_backup_frequency_hours": 24,
+    "continuous_wal_archiving_required": true,
+    "point_in_time_recovery_required": true,
+    "logical_dump_is_pitr_proof": false,
+    "operational_retention_days": 35,
+    "retention_policy_boundary": "Legal hold, regulatory retention, and erasure are governed separately and may prevent expiry.",
+    "encryption_at_rest_required": true,
+    "encryption_in_transit_required": true,
+    "customer_managed_key_supported": true,
+    "credential_rotation_required": true,
+    "secrets_in_arguments_or_evidence_forbidden": true
+  },
+  "residency_and_access": {
+    "restore_region_policy": "same_approved_jurisdiction",
+    "cross_region_restore_requires_approval": true,
+    "least_privilege_restore_role_required": true,
+    "dual_authorization_for_production_cutover": true,
+    "break_glass_access_audited": true
+  },
+  "operating_model": {
+    "service_owner": "lotus-idea-service-owner",
+    "on_call": "lotus-platform-database-on-call",
+    "escalation": "lotus-production-incident-commander",
+    "restore_verification_cadence": "weekly",
+    "full_dr_exercise_cadence": "quarterly"
+  },
+  "restore_verification": {
+    "clean_target_instance_required": true,
+    "source_and_target_must_differ": true,
+    "post_migration_restore_required": true,
+    "owned_tables": [
+      "idea_ai_explanation_lineage",
+      "idea_audit_event",
+      "idea_candidate_record",
+      "idea_candidate_state_quarantine",
+      "idea_conversion_intent",
+      "idea_conversion_outcome",
+      "idea_conversion_outcome_quarantine",
+      "idea_downstream_submission",
+      "idea_feedback_event",
+      "idea_idempotency_record",
+      "idea_lifecycle_history",
+      "idea_outbox_event",
+      "idea_outbox_recovery_audit",
+      "idea_report_evidence_pack_request",
+      "idea_review_decision"
+    ],
+    "required_invariants": [
+      "migration_history_and_schema_compatibility",
+      "required_primary_foreign_key_unique_and_check_constraints",
+      "required_operational_indexes",
+      "cross_table_referential_integrity",
+      "candidate_evidence_and_audit_lineage_integrity",
+      "idempotency_key_replay_and_conflict_integrity",
+      "outbox_status_lease_retry_dead_letter_and_publication_integrity",
+      "downstream_submission_status_lease_and_realization_integrity",
+      "ai_explanation_candidate_lineage_integrity",
+      "resume_without_duplicate_outbox_or_downstream_publication"
+    ]
+  },
+  "evidence_requirements": {
+    "real_restored_backup_required": true,
+    "synthetic_smoke_is_certification_proof": false,
+    "backup_identifier_required": true,
+    "sanitized_source_identity_required": true,
+    "schema_version_required": true,
+    "backup_created_at_utc_required": true,
+    "recovery_point_utc_required": true,
+    "restore_started_at_utc_required": true,
+    "service_ready_at_utc_required": true,
+    "rpo_and_rto_measurements_required": true,
+    "table_row_counts_and_source_safe_hashes_required": true,
+    "invariant_results_required": true,
+    "operator_and_correlation_identity_required": true,
+    "signed_immutable_evidence_required": true,
+    "alert_on_backup_age_restore_failure_or_rpo_breach": true
+  },
+  "certification_blockers": [
+    "approved production backup and PITR topology evidence",
+    "successful real-backup restore drill within declared RPO and RTO",
+    "post-restore invariant and non-duplication proof",
+    "operator-approved failover cutover and rollback exercise",
+    "scheduled evidence retention alerting and signature proof"
+  ]
+}

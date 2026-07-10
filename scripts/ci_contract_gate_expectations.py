@@ -31,6 +31,7 @@ REQUIRED_LINT_TARGETS = (
     "ai-model-risk-operations-proof-contract-gate",
     "operator-workflows-ops-contract-gate",
     "outbox-supportability-contract-gate",
+    "disaster-recovery-contract-gate",
     "operator-workflows-operations-proof-contract-gate",
     "ci-signal-evidence-contract-gate",
     "implementation-truth-gate",

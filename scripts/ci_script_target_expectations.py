@@ -102,6 +102,7 @@ SCRIPT_TARGET_EXPECTATIONS = {
     ),
     "operator-workflows-ops-contract-gate": "scripts/operator_workflows_operations_contract_gate.py",
     "outbox-supportability-contract-gate": "scripts/outbox_supportability_contract_gate.py",
+    "disaster-recovery-contract-gate": "scripts/disaster_recovery_contract_gate.py",
     "operator-workflows-operations-proof-contract-gate": (
         "scripts/operator_workflows_operations_proof_contract_gate.py"
     ),
