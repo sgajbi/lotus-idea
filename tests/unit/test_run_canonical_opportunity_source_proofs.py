@@ -85,5 +85,7 @@ def test_run_proofs_fails_closed_when_a_child_is_blocked_or_artifact_is_invalid(
     assert len(summaries) == 3
     assert all(summary["exitCode"] == 3 for summary in summaries)
     assert all(summary["artifactValid"] is False for summary in summaries)
+    assert all("stderr" not in summary and "stdout" not in summary for summary in summaries)
+    assert all(summary["processOutputSuppressed"] is True for summary in summaries)
     assert payload["certificationReady"] is False
     assert payload["supportedFeaturePromoted"] is False

@@ -110,10 +110,13 @@ def _run_proofs(
         )
         artifact_valid = False
         artifact_error: str | None = None
+        artifact_observation: dict[str, Any] = {}
         if output_path.is_file():
             try:
                 artifact = json.loads(output_path.read_text(encoding="utf-8"))
                 artifact_valid = isinstance(artifact, dict) and case.validator(artifact)
+                if isinstance(artifact, dict):
+                    artifact_observation = _artifact_observation(artifact)
                 if not artifact_valid:
                     artifact_error = "proof_artifact_contract_invalid"
             except (OSError, json.JSONDecodeError, TypeError):
@@ -130,11 +133,30 @@ def _run_proofs(
                 else str(output_path),
                 "artifactValid": artifact_valid,
                 "artifactError": artifact_error,
-                "stderr": completed.stderr.strip(),
-                "stdout": completed.stdout.strip(),
+                "processOutputSuppressed": bool(completed.stdout or completed.stderr),
+                "artifactObservation": artifact_observation,
             }
         )
     return summaries
+
+
+def _artifact_observation(artifact: Mapping[str, Any]) -> dict[str, Any]:
+    """Keep aggregate evidence useful without copying child process output."""
+    observation: dict[str, Any] = {}
+    for key in (
+        "runStatus",
+        "evaluationOutcome",
+        "sourceEvidenceCurrent",
+        "benchmarkContextAvailable",
+        "benchmarkReadinessDiagnostic",
+    ):
+        if key in artifact:
+            observation[key] = artifact[key]
+    for key in ("proofBlockers", "sourceDiagnosticCodes", "reasonCodes", "unsupportedReasons"):
+        value = artifact.get(key)
+        if isinstance(value, list | tuple):
+            observation[key] = [str(item) for item in value]
+    return observation
 
 
 def _proof_command(
