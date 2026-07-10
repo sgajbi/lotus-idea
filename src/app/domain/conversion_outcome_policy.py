@@ -77,6 +77,30 @@ def validate_conversion_outcome_progression(
     existing: tuple[ConversionOutcomeIdentity, ...],
     proposed: ConversionOutcomeIdentity,
 ) -> None:
+    validate_conversion_outcome_history(existing)
+    _validate_next_conversion_outcome(existing, proposed)
+
+
+def validate_conversion_outcome_history(
+    outcomes: tuple[ConversionOutcomeIdentity, ...],
+) -> None:
+    accepted: list[ConversionOutcomeIdentity] = []
+    for outcome in sorted(
+        outcomes,
+        key=lambda item: (
+            item.source_event_version,
+            item.recorded_at_utc,
+            item.conversion_outcome_id,
+        ),
+    ):
+        _validate_next_conversion_outcome(tuple(accepted), outcome)
+        accepted.append(outcome)
+
+
+def _validate_next_conversion_outcome(
+    existing: tuple[ConversionOutcomeIdentity, ...],
+    proposed: ConversionOutcomeIdentity,
+) -> None:
     matching_identity = next(
         (
             outcome
@@ -93,7 +117,7 @@ def validate_conversion_outcome_progression(
         )
         raise ConversionOutcomePolicyViolation(reason)
 
-    current = current_conversion_outcome_identity(existing)
+    current = _latest_conversion_outcome_identity(existing)
     if current is None:
         _validate_initial_outcome(proposed)
         return
@@ -114,6 +138,18 @@ def validate_conversion_outcome_progression(
 
 
 def current_conversion_outcome_identity(
+    outcomes: tuple[ConversionOutcomeIdentity, ...],
+) -> ConversionOutcomeIdentity | None:
+    if not outcomes:
+        return None
+    try:
+        validate_conversion_outcome_history(outcomes)
+    except ConversionOutcomePolicyViolation:
+        return None
+    return _latest_conversion_outcome_identity(outcomes)
+
+
+def _latest_conversion_outcome_identity(
     outcomes: tuple[ConversionOutcomeIdentity, ...],
 ) -> ConversionOutcomeIdentity | None:
     if not outcomes:

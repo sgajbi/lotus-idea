@@ -11,10 +11,12 @@ from app.domain import (
     CandidatePersistenceResult,
     ConversionIntentResult,
     ConversionOutcomeResult,
+    ConversionOutcomeIdentity,
     ConversionPersistenceResult,
     EvidenceReplayResult,
     EvidencePackPersistenceResult,
     GovernedConversionIntent,
+    GovernedConversionOutcome,
     GovernedReportEvidencePack,
     DownstreamSubmissionRecord,
     IdeaCandidate,
@@ -232,6 +234,19 @@ class ConversionWorkflowRepository(CandidateSnapshotRepository, Protocol):
         self,
         conversion_intent_id: str,
     ) -> GovernedConversionIntent | None: ...
+
+    def conversion_outcomes_for_intent(
+        self,
+        conversion_intent_id: str,
+    ) -> tuple[GovernedConversionOutcome, ...]: ...
+
+    def precheck_conversion_outcome_mutation(
+        self,
+        *,
+        idempotency_key: str,
+        payload: dict[str, Any],
+        identity: ConversionOutcomeIdentity,
+    ) -> ConversionPersistenceResult | None: ...
 
     def record_conversion_outcome(
         self,

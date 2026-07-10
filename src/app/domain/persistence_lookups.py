@@ -33,6 +33,16 @@ class InMemoryIdeaLookupMixin:
             return None
         return self._candidate_records.get(candidate_id)
 
+    def conversion_outcomes_for_intent(self, conversion_intent_id: str) -> tuple[Any, ...]:
+        record = self.candidate_record_for_conversion_intent(conversion_intent_id)
+        if record is None:
+            return ()
+        return tuple(
+            outcome
+            for outcome in record.conversion_outcomes
+            if outcome.conversion_intent_id == conversion_intent_id
+        )
+
     def report_evidence_pack_by_id(self, report_evidence_pack_id: str) -> Any | None:
         _require_text(report_evidence_pack_id, "report_evidence_pack_id")
         return report_evidence_pack_by_id(

@@ -51,6 +51,7 @@ class ConversionPersistenceDecision(StrEnum):
     ACCEPTED = "accepted"
     REPLAYED = "replayed"
     CONFLICT = "conflict"
+    OUTCOME_CONFLICT = "outcome_conflict"
     NOT_FOUND = "not_found"
 
 

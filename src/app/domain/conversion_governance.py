@@ -317,6 +317,25 @@ def record_conversion_outcome(
     return ConversionOutcomeResult(conversion_outcome=governed_outcome, audit_event=audit_event)
 
 
+def conversion_outcome_identity_from_command(
+    governed_intent: GovernedConversionIntent,
+    command: ConversionOutcomeCommand,
+) -> ConversionOutcomeIdentity:
+    return ConversionOutcomeIdentity(
+        conversion_outcome_id=command.conversion_outcome_id,
+        conversion_intent_id=governed_intent.intent.conversion_intent_id,
+        target=governed_intent.intent.target,
+        source_system=command.source_system,
+        source_event_version=command.source_event_version,
+        status=command.status,
+        downstream_reference=command.downstream_reference,
+        recorded_at_utc=command.recorded_at_utc,
+        actor_subject=command.actor_subject,
+        supersedes_conversion_outcome_id=command.supersedes_conversion_outcome_id,
+        correction_reason=command.correction_reason,
+    )
+
+
 def current_conversion_outcome(
     outcomes: tuple[GovernedConversionOutcome, ...],
 ) -> GovernedConversionOutcome | None:

@@ -66,6 +66,11 @@ from app.domain.conversion_governance import (
     ConversionIntentResult,
     ConversionOutcomeResult,
 )
+from app.domain.conversion_outcome_policy import (
+    ConversionOutcomeIdentity,
+    ConversionOutcomePolicyViolation,
+    validate_conversion_outcome_progression,
+)
 from app.domain.report_evidence import ReportEvidencePackResult
 from app.domain.review_governance import (
     FeedbackResult,
@@ -628,6 +633,14 @@ class InMemoryIdeaRepository(InMemoryIdeaLookupMixin):
                 record=self._record_for_idempotency_key(idempotency_key),
             )
 
+        identity_result = self._conversion_outcome_identity_result(
+            identity=result.conversion_outcome.identity,
+            idempotency_key=idempotency_key,
+            idempotency_record=idempotency_record,
+        )
+        if identity_result is not None:
+            return identity_result
+
         candidate_id = self._conversion_intent_candidates.get(conversion_intent_id)
         if candidate_id is None:
             return ConversionPersistenceResult(
@@ -639,6 +652,20 @@ class InMemoryIdeaRepository(InMemoryIdeaLookupMixin):
             return ConversionPersistenceResult(
                 decision=ConversionPersistenceDecision.NOT_FOUND,
                 record=None,
+            )
+        try:
+            validate_conversion_outcome_progression(
+                tuple(
+                    outcome.identity
+                    for outcome in record.conversion_outcomes
+                    if outcome.conversion_intent_id == conversion_intent_id
+                ),
+                result.conversion_outcome.identity,
+            )
+        except ConversionOutcomePolicyViolation:
+            return ConversionPersistenceResult(
+                decision=ConversionPersistenceDecision.OUTCOME_CONFLICT,
+                record=record,
             )
 
         updated = replace(
@@ -656,7 +683,11 @@ class InMemoryIdeaRepository(InMemoryIdeaLookupMixin):
             idempotency_key=idempotency_key,
             payload={
                 "source_system": result.conversion_outcome.source_system.value,
+                "source_event_version": str(result.conversion_outcome.source_event_version),
                 "status": result.conversion_outcome.outcome.status.value,
+                "supersedes_outcome": str(
+                    result.conversion_outcome.supersedes_conversion_outcome_id is not None
+                ).lower(),
                 "target": result.conversion_outcome.target.value,
             },
         )
@@ -664,6 +695,36 @@ class InMemoryIdeaRepository(InMemoryIdeaLookupMixin):
             decision=ConversionPersistenceDecision.ACCEPTED,
             record=updated,
             audit_event=result.audit_event,
+        )
+
+    def precheck_conversion_outcome_mutation(
+        self,
+        *,
+        idempotency_key: str,
+        payload: Mapping[str, Any],
+        identity: ConversionOutcomeIdentity,
+    ) -> ConversionPersistenceResult | None:
+        _require_text(idempotency_key, "idempotency_key")
+        existing_idempotency = self._idempotency_records.get(idempotency_key)
+        idempotency_decision, idempotency_record = evaluate_idempotency(
+            key=idempotency_key,
+            payload=dict(payload),
+            existing=existing_idempotency,
+        )
+        if idempotency_decision is IdempotencyDecision.CONFLICT:
+            return ConversionPersistenceResult(
+                decision=ConversionPersistenceDecision.CONFLICT,
+                record=self._record_for_idempotency_key(idempotency_key),
+            )
+        if idempotency_decision is IdempotencyDecision.REPLAYED:
+            return ConversionPersistenceResult(
+                decision=ConversionPersistenceDecision.REPLAYED,
+                record=self._record_for_idempotency_key(idempotency_key),
+            )
+        return self._conversion_outcome_identity_result(
+            identity=identity,
+            idempotency_key=idempotency_key,
+            idempotency_record=idempotency_record,
         )
 
     def precheck_evidence_pack_mutation(
@@ -1014,6 +1075,39 @@ class InMemoryIdeaRepository(InMemoryIdeaLookupMixin):
                     existing.resource_id == identity.resource_id
                 ):
                     return existing, record
+        return None
+
+    def _conversion_outcome_identity_result(
+        self,
+        *,
+        identity: ConversionOutcomeIdentity,
+        idempotency_key: str,
+        idempotency_record: IdempotencyRecord,
+    ) -> ConversionPersistenceResult | None:
+        existing = self._conversion_outcome_identity_record(identity.conversion_outcome_id)
+        if existing is None:
+            return None
+        existing_identity, record = existing
+        if existing_identity != identity:
+            return ConversionPersistenceResult(
+                decision=ConversionPersistenceDecision.OUTCOME_CONFLICT,
+                record=record,
+            )
+        self._idempotency_records[idempotency_key] = idempotency_record
+        self._idempotency_candidates[idempotency_key] = record.candidate.candidate_id
+        return ConversionPersistenceResult(
+            decision=ConversionPersistenceDecision.REPLAYED,
+            record=record,
+        )
+
+    def _conversion_outcome_identity_record(
+        self,
+        conversion_outcome_id: str,
+    ) -> tuple[ConversionOutcomeIdentity, CandidatePersistenceRecord] | None:
+        for record in self._candidate_records.values():
+            for outcome in record.conversion_outcomes:
+                if outcome.outcome.conversion_outcome_id == conversion_outcome_id:
+                    return outcome.identity, record
         return None
 
     def _transition_record(

@@ -26,6 +26,8 @@ from app.application.report_materialization_proof import (
     REPORT_MATERIALIZATION_ROUTE,
     report_materialization_proof_is_valid,
 )
+from app.domain.conversion_governance import GovernedConversionOutcome
+from app.domain.conversion_outcome_policy import current_conversion_outcome_identity
 from app.ports.idea_repository import (
     CandidateSnapshotRepository,
     DownstreamRealizationReadinessProjectionRepository,
@@ -195,10 +197,30 @@ def _downstream_realization_readiness_summary(
     records = tuple(snapshot.candidate_records.values())
     return DownstreamRealizationReadinessRepositorySummary(
         conversion_intent_count=sum(len(record.conversion_intents) for record in records),
-        conversion_outcome_count=sum(len(record.conversion_outcomes) for record in records),
+        conversion_outcome_count=sum(
+            _valid_conversion_outcome_stream_count(record.conversion_outcomes)
+            for record in records
+        ),
         report_evidence_pack_request_count=sum(
             len(record.report_evidence_packs) for record in records
         ),
+    )
+
+
+def _valid_conversion_outcome_stream_count(
+    outcomes: tuple[GovernedConversionOutcome, ...],
+) -> int:
+    intent_ids = {outcome.conversion_intent_id for outcome in outcomes}
+    return sum(
+        current_conversion_outcome_identity(
+            tuple(
+                outcome.identity
+                for outcome in outcomes
+                if outcome.conversion_intent_id == intent_id
+            )
+        )
+        is not None
+        for intent_id in intent_ids
     )
 
 

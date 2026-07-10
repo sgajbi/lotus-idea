@@ -93,6 +93,24 @@ def test_conversion_outcome_policy_accepts_accepted_to_completed() -> None:
     assert current_conversion_outcome_identity((completed, accepted)) == completed
 
 
+def test_conversion_outcome_policy_validates_complete_three_event_history() -> None:
+    requested = identity(ConversionOutcomeStatus.REQUESTED)
+    accepted = identity(
+        ConversionOutcomeStatus.ACCEPTED,
+        outcome_id="outcome-002",
+        version=2,
+        minute=1,
+    )
+    completed = identity(
+        ConversionOutcomeStatus.COMPLETED,
+        outcome_id="outcome-003",
+        version=3,
+        minute=2,
+    )
+
+    assert current_conversion_outcome_identity((completed, requested, accepted)) == completed
+
+
 @pytest.mark.parametrize(
     "terminal_status",
     (
@@ -188,3 +206,15 @@ def test_conversion_outcome_policy_rejects_version_gap_out_of_order_and_unlinked
         with pytest.raises(ConversionOutcomePolicyViolation) as exc_info:
             validate_conversion_outcome_progression((accepted,), proposed)
         assert exc_info.value.reason is expected_reason
+
+
+def test_invalid_legacy_history_has_no_authoritative_current_posture() -> None:
+    rejected = identity(ConversionOutcomeStatus.REJECTED)
+    contradictory = identity(
+        ConversionOutcomeStatus.ACCEPTED,
+        outcome_id="outcome-002",
+        version=2,
+        minute=1,
+    )
+
+    assert current_conversion_outcome_identity((rejected, contradictory)) is None

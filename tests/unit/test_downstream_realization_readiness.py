@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
 from typing import Any, cast
 
 from app.application.downstream_realization_readiness import (
@@ -16,7 +17,14 @@ from app.application.report_intake_route_proof import (
     REPORT_INTAKE_ROUTE_BLOCKERS_CLEARED,
     REPORT_INTAKE_ROUTE_PROOF_SCHEMA_VERSION,
 )
-from app.domain import IdeaRepositorySnapshot, InMemoryIdeaRepository
+from app.domain import (
+    ConversionOutcomeIdentity,
+    ConversionOutcomeStatus,
+    ConversionTarget,
+    IdeaRepositorySnapshot,
+    InMemoryIdeaRepository,
+    SourceSystem,
+)
 from app.ports.idea_repository import DownstreamRealizationReadinessRepositorySummary
 from tests.support.downstream_route_contract_fixtures import (
     valid_advise_route_proof,
@@ -29,6 +37,42 @@ class _WorkflowRecord:
     conversion_intents: tuple[object, ...] = ()
     conversion_outcomes: tuple[object, ...] = ()
     report_evidence_packs: tuple[object, ...] = ()
+
+
+@dataclass(frozen=True)
+class _Outcome:
+    identity: ConversionOutcomeIdentity
+
+    @property
+    def conversion_intent_id(self) -> str:
+        return self.identity.conversion_intent_id
+
+
+def _outcome(
+    status: ConversionOutcomeStatus,
+    *,
+    outcome_id: str,
+    version: int,
+    minute: int,
+) -> _Outcome:
+    return _Outcome(
+        ConversionOutcomeIdentity(
+            conversion_outcome_id=outcome_id,
+            conversion_intent_id="intent-001",
+            target=ConversionTarget.REPORT_EVIDENCE,
+            source_system=SourceSystem.LOTUS_REPORT,
+            source_event_version=version,
+            status=status,
+            downstream_reference=(
+                "report-evidence-001"
+                if status in {ConversionOutcomeStatus.ACCEPTED, ConversionOutcomeStatus.COMPLETED}
+                else None
+            ),
+            recorded_at_utc=datetime(2026, 6, 21, 10, tzinfo=UTC)
+            + timedelta(minutes=minute),
+            actor_subject="lotus-report-worker",
+        )
+    )
 
 
 def test_downstream_realization_readiness_reports_blocked_foundation_posture() -> None:
@@ -78,7 +122,20 @@ def test_downstream_realization_readiness_counts_internal_workflow_records() -> 
                     Any,
                     _WorkflowRecord(
                         conversion_intents=(object(), object()),
-                        conversion_outcomes=(object(),),
+                        conversion_outcomes=(
+                            _outcome(
+                                ConversionOutcomeStatus.REQUESTED,
+                                outcome_id="outcome-001",
+                                version=1,
+                                minute=0,
+                            ),
+                            _outcome(
+                                ConversionOutcomeStatus.ACCEPTED,
+                                outcome_id="outcome-002",
+                                version=2,
+                                minute=1,
+                            ),
+                        ),
                         report_evidence_packs=(object(),),
                     ),
                 )
@@ -98,6 +155,39 @@ def test_downstream_realization_readiness_counts_internal_workflow_records() -> 
     assert snapshot.conversion_outcome_count == 1
     assert snapshot.report_evidence_pack_request_count == 1
     assert snapshot.certification_ready is False
+
+
+def test_downstream_realization_readiness_excludes_invalid_outcome_history() -> None:
+    record = _WorkflowRecord(
+        conversion_outcomes=(
+            _outcome(
+                ConversionOutcomeStatus.REJECTED,
+                outcome_id="outcome-001",
+                version=1,
+                minute=0,
+            ),
+            _outcome(
+                ConversionOutcomeStatus.ACCEPTED,
+                outcome_id="outcome-002",
+                version=2,
+                minute=1,
+            ),
+        )
+    )
+    repository = InMemoryIdeaRepository(
+        IdeaRepositorySnapshot(
+            candidate_records={"idea-candidate-redacted": cast(Any, record)},
+            idempotency_records={},
+            idempotency_candidates={},
+        )
+    )
+
+    snapshot = build_downstream_realization_readiness_snapshot(
+        repository=repository,
+        durable_storage_backed=False,
+    )
+
+    assert snapshot.conversion_outcome_count == 0
 
 
 def test_downstream_realization_readiness_uses_repository_projection_without_snapshot() -> None:

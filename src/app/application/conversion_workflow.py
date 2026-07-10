@@ -11,6 +11,7 @@ from app.domain import (
     ConversionOutcomeResult,
     ConversionPersistenceDecision,
     ConversionPersistenceResult,
+    conversion_outcome_identity_from_command,
     record_conversion_outcome,
     request_conversion_intent,
 )
@@ -93,14 +94,6 @@ def record_conversion_outcome_to_repository(
     *,
     repository: ConversionWorkflowRepository,
 ) -> ConversionOutcomeWorkflowResult:
-    payload = _conversion_outcome_payload(command)
-    prechecked = repository.precheck_conversion_mutation(
-        idempotency_key=command.idempotency_key,
-        payload=payload,
-    )
-    if prechecked is not None:
-        return ConversionOutcomeWorkflowResult(outcome_result=None, persistence=prechecked)
-
     conversion_intent = repository.conversion_intent_by_id(command.conversion_intent_id)
     if conversion_intent is None:
         return ConversionOutcomeWorkflowResult(
@@ -111,14 +104,33 @@ def record_conversion_outcome_to_repository(
             ),
         )
 
-    outcome_result = record_conversion_outcome(conversion_intent, command.outcome)
+    payload = _conversion_outcome_payload(command)
+    identity = conversion_outcome_identity_from_command(conversion_intent, command.outcome)
+    prechecked = repository.precheck_conversion_outcome_mutation(
+        idempotency_key=command.idempotency_key,
+        payload=payload,
+        identity=identity,
+    )
+    if prechecked is not None:
+        return ConversionOutcomeWorkflowResult(outcome_result=None, persistence=prechecked)
+
+    existing_outcomes = repository.conversion_outcomes_for_intent(command.conversion_intent_id)
+    outcome_result = record_conversion_outcome(
+        conversion_intent,
+        command.outcome,
+        existing_outcomes=existing_outcomes,
+    )
     persistence = repository.record_conversion_outcome(
         outcome_result,
         idempotency_key=command.idempotency_key,
         payload=payload,
     )
     return ConversionOutcomeWorkflowResult(
-        outcome_result=outcome_result,
+        outcome_result=(
+            outcome_result
+            if persistence.decision is ConversionPersistenceDecision.ACCEPTED
+            else None
+        ),
         persistence=persistence,
     )
 
@@ -143,10 +155,14 @@ def _conversion_outcome_payload(
     return {
         "conversion_intent_id": command.conversion_intent_id,
         "conversion_outcome_id": outcome.conversion_outcome_id,
+        "actor_subject": outcome.actor_subject,
         "downstream_reference": outcome.downstream_reference,
         "recorded_at_utc": outcome.recorded_at_utc.isoformat(),
         "source_system": outcome.source_system.value,
+        "source_event_version": outcome.source_event_version,
         "status": outcome.status.value,
+        "supersedes_conversion_outcome_id": outcome.supersedes_conversion_outcome_id,
+        "correction_reason": outcome.correction_reason,
     }
 
 

@@ -51,6 +51,7 @@ from app.domain.conversion_governance import (
     InvalidConversionOutcome,
     TARGET_LIFECYCLE_STATUS,
     TARGET_SOURCE_AUTHORITIES,
+    conversion_outcome_identity_from_command,
     current_conversion_outcome,
     record_conversion_outcome,
     request_conversion_intent,
@@ -62,6 +63,7 @@ from app.domain.conversion_outcome_policy import (
     ConversionOutcomePolicyReason,
     ConversionOutcomePolicyViolation,
     current_conversion_outcome_identity,
+    validate_conversion_outcome_history,
     validate_conversion_outcome_progression,
 )
 from app.domain.events import (
@@ -298,6 +300,7 @@ __all__ = [
     "InvalidConversionOutcome",
     "TARGET_LIFECYCLE_STATUS",
     "TARGET_SOURCE_AUTHORITIES",
+    "conversion_outcome_identity_from_command",
     "current_conversion_outcome",
     "record_conversion_outcome",
     "request_conversion_intent",
@@ -307,6 +310,7 @@ __all__ = [
     "ConversionOutcomePolicyReason",
     "ConversionOutcomePolicyViolation",
     "current_conversion_outcome_identity",
+    "validate_conversion_outcome_history",
     "validate_conversion_outcome_progression",
     "OutboxEventRecord",
     "OutboxEventStatus",
