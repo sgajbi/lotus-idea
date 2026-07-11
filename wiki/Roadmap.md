@@ -32,7 +32,8 @@ proof, downstream proof, supported-feature evidence, and mainline CI all agree.
 7. RFC-0002 Slice 04 implements the pre-certification source-authority and
    data-mesh baseline contracts plus a repo-native data-mesh contract gate
    while keeping mesh certification planned,
-8. RFC-0002 Slice 05 is implemented on the branch pending mainline closure:
+8. RFC-0002 Slice 05 is implemented on `main` through PRs `#347` and `#348`,
+   green main commit `ad88690`, and synchronized RFC/wiki evidence:
    deterministic signal policies, conservative source adapters, and governed
    source-backed APIs span Core, Risk, Performance, Advise, and Manage without
    duplicating source-owned calculations,

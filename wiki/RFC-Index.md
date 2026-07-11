@@ -74,7 +74,9 @@ Current RFC-0002 implementation-start baseline:
    freshness, quality, lineage, access, deprecation semantics, and consumer
    dependency freshness/provenance metadata. Platform mesh certification
    remains planned.
-6. Slice 05 is implemented on the branch pending mainline closure. It began
+6. Slice 05 is implemented on `main`. PRs `#347` and `#348` merged the
+   implementation and release-identity fix; main commit `ad88690` passed
+   releasability and CodeQL. It began
    with high-cash / idle-liquidity and now provides deterministic,
    policy-versioned evaluation plus governed caller-supplied and source-backed
    APIs across Core, Risk, Performance, Advise, and Manage. Missing, stale,
