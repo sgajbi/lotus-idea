@@ -41,6 +41,7 @@ def _measurement(scenario: str, index: int) -> CapacityMeasurement:
         queue_age_seconds=5.0 if scenario == "outbox_delivery" else None,
         retry_count=2 if scenario == "dependency_failure" else 0,
         recovered=True if scenario == "dependency_failure" else None,
+        observed_offset_seconds=float(index),
     )
 
 
@@ -139,6 +140,7 @@ def _load_soak_proof() -> dict[str, Any]:
                 "errorRate": 0.0,
                 "latencyP95Seconds": thresholds[1],
                 "latencyP99Seconds": thresholds[2],
+                "observationSpanSeconds": 3_600.0,
             }
             for scenario, thresholds in LOAD_SOAK_SCENARIO_THRESHOLDS.items()
         ],
@@ -179,6 +181,7 @@ def test_builds_ordered_source_safe_report_only_baseline() -> None:
     assert source["errorCount"] == 1
     assert source["errorRate"] == 0.1
     assert source["latencyP95Seconds"] == 0.1
+    assert source["observationSpanSeconds"] == 9.0
     assert artifact["claimPosture"] == "report_only_baseline"
     assert artifact["certificationReady"] is False
     assert artifact["supportedFeaturePromoted"] is False
@@ -423,6 +426,7 @@ def test_validator_rejects_claim_inflation_and_sensitive_fields() -> None:
         ({"item_count": -1}, "item_count must not be negative"),
         ({"queue_age_seconds": -1.0}, "queue_age_seconds must not be negative"),
         ({"retry_count": -1}, "retry_count must not be negative"),
+        ({"observed_offset_seconds": -1.0}, "observed_offset_seconds must not be negative"),
         ({"recovered": True}, "recovered is only valid"),
     ],
 )

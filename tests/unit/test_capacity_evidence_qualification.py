@@ -109,6 +109,7 @@ def _load_soak_proof() -> dict[str, object]:
             "errorRate": 0.0,
             "latencyP95Seconds": thresholds[1],
             "latencyP99Seconds": thresholds[2],
+            "observationSpanSeconds": 3_600.0,
         }
         for scenario, thresholds in LOAD_SOAK_SCENARIO_THRESHOLDS.items()
     ]
@@ -191,6 +192,7 @@ def test_load_soak_qualification_rejects_incomplete_proof(
     ("mutation", "scenario"),
     [
         ({"sampleCount": 999}, "api"),
+        ({"observationSpanSeconds": 3_599.9}, "api"),
         ({"conflictCount": 1}, "source_ingestion"),
         ({"errorRate": 0.002}, "outbox_delivery"),
         ({"latencyP95Seconds": 2.01}, "downstream_submission"),

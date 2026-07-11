@@ -62,6 +62,7 @@ class CapacityMeasurement:
     queue_age_seconds: float | None = None
     retry_count: int = 0
     recovered: bool | None = None
+    observed_offset_seconds: float | None = None
 
     def __post_init__(self) -> None:
         if self.scenario not in SCENARIOS:
@@ -76,6 +77,8 @@ class CapacityMeasurement:
             raise ValueError("queue_age_seconds must not be negative")
         if self.retry_count < 0:
             raise ValueError("retry_count must not be negative")
+        if self.observed_offset_seconds is not None and self.observed_offset_seconds < 0:
+            raise ValueError("observed_offset_seconds must not be negative")
         if self.scenario != "dependency_failure" and self.recovered is not None:
             raise ValueError("recovered is only valid for dependency_failure measurements")
 
@@ -252,6 +255,11 @@ def _scenario_summary(
         item.queue_age_seconds for item in measurements if item.queue_age_seconds is not None
     ]
     recovery_samples = [item.recovered for item in measurements if item.recovered is not None]
+    observation_offsets = [
+        item.observed_offset_seconds
+        for item in measurements
+        if item.observed_offset_seconds is not None
+    ]
     return {
         "scenario": scenario,
         "sampleCount": sample_count,
@@ -273,6 +281,11 @@ def _scenario_summary(
         "recoverySuccessRate": (
             _ratio(sum(recovered is True for recovered in recovery_samples), len(recovery_samples))
             if recovery_samples
+            else None
+        ),
+        "observationSpanSeconds": (
+            max(observation_offsets) - min(observation_offsets)
+            if len(observation_offsets) == sample_count and sample_count > 1
             else None
         ),
     }

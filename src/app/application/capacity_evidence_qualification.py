@@ -237,6 +237,7 @@ def _validate_load_soak_scenario(
     error_rate = scenario.get("errorRate")
     observed_p95 = scenario.get("latencyP95Seconds")
     observed_p99 = scenario.get("latencyP99Seconds")
+    observation_span = scenario.get("observationSpanSeconds")
     if (
         isinstance(sample_count, bool)
         or not isinstance(sample_count, int)
@@ -248,6 +249,9 @@ def _validate_load_soak_scenario(
         or not isinstance(observed_p95, (int, float))
         or isinstance(observed_p99, bool)
         or not isinstance(observed_p99, (int, float))
+        or isinstance(observation_span, bool)
+        or not isinstance(observation_span, (int, float))
+        or observation_span < MINIMUM_LOAD_SOAK_SECONDS
         or error_rate > error_budget
         or observed_p95 > latency_p95
         or observed_p99 > latency_p99
