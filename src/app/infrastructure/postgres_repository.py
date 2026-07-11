@@ -6,7 +6,6 @@ from typing import Any, Callable, Mapping, TypeVar
 
 from psycopg.types.json import Jsonb
 
-from app.domain.ai_governance import AIExplanationResult
 from app.domain.audit import AuditEvent
 from app.domain.events import EventLineageContext, OutboxEventRecord
 from app.domain.downstream_submission import DownstreamSubmissionRecord
@@ -18,8 +17,6 @@ from app.domain.conversion_governance import (
 )
 from app.domain.conversion_outcome_policy import ConversionOutcomeIdentity
 from app.domain.ideas import IdeaCandidate, IdeaLifecycleStatus, SourceRef
-from app.domain.ai_lineage_persistence import AIExplanationLineagePersistenceResult
-from app.domain.lotus_ai_run_attestation import VerifiedLotusAIRunAttestationReceipt
 from app.domain.idempotency import IdempotencyDecision, IdempotencyRecord
 from app.domain.outbox_delivery_state import OutboxDeliveryResult
 from app.domain.persistence import (
@@ -50,6 +47,7 @@ from app.infrastructure.postgres_candidate_writes import (
     update_postgres_candidate_record,
 )
 from app.infrastructure.postgres_ai_lineage_reads import ai_explanation_lineage_from_row
+from app.infrastructure.postgres_ai_lineage_repository import PostgresAIExplanationWriteMixin
 from app.infrastructure.postgres_conversion_outcome import (
     insert_postgres_conversion_outcome,
     load_postgres_conversion_outcomes_for_intent,
@@ -128,6 +126,7 @@ _T = TypeVar("_T")
 
 
 class PostgresIdeaRepository(
+    PostgresAIExplanationWriteMixin,
     PostgresCapacityRepositoryMixin,
     PostgresCandidateDetailRepositoryMixin,
     PostgresReviewQueueRepositoryMixin,
@@ -458,36 +457,6 @@ class PostgresIdeaRepository(
             failed_at_utc=failed_at_utc,
             max_retry_count=max_retry_count,
             next_attempt_at_utc=next_attempt_at_utc,
-        )
-
-    def record_ai_explanation_lineage(
-        self,
-        result: AIExplanationResult,
-        *,
-        attestation_receipt: VerifiedLotusAIRunAttestationReceipt | None = None,
-    ) -> AIExplanationLineagePersistenceResult:
-        return self._mutate(
-            lambda repository: repository.record_ai_explanation_lineage(
-                result,
-                attestation_receipt=attestation_receipt,
-            )
-        )
-
-    def record_ai_explanation_lineage_request(
-        self,
-        result: AIExplanationResult,
-        *,
-        idempotency_key: str,
-        payload: dict[str, Any],
-        attestation_receipt: VerifiedLotusAIRunAttestationReceipt | None = None,
-    ) -> AIExplanationLineagePersistenceResult:
-        return self._mutate(
-            lambda repository: repository.record_ai_explanation_lineage_request(
-                result,
-                idempotency_key=idempotency_key,
-                payload=payload,
-                attestation_receipt=attestation_receipt,
-            )
         )
 
     def snapshot(self) -> IdeaRepositorySnapshot:

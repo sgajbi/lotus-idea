@@ -41,6 +41,7 @@ from app.api.runtime_dependencies import (
 from app.application.ai_governance import (
     AIExplanationEvaluationDecision,
     AIExplanationWorkflowResult,
+    EvaluateAIExplanationToRepositoryCommand,
     build_ai_explanation_readiness_snapshot,
     evaluate_ai_explanation_to_repository,
 )
@@ -48,6 +49,7 @@ from app.application.lotus_ai_run_attestation_verification import (
     LotusAIAttestationSignatureVerifier,
 )
 from app.ports.lotus_ai_attestation import LotusAIAttestationKeySource
+from app.ports.idea_repository import AIExplanationRepository
 from app.domain import (
     AIExplanationLineagePersistenceDecision,
     AIExplanationPosture,
@@ -156,22 +158,7 @@ async def evaluate_ai_explanation(
                 durable_storage_backed=durable_storage_backed,
             )
             return configuration_problem
-        attestation_key_source: LotusAIAttestationKeySource | None = None
-        signature_verifier: LotusAIAttestationSignatureVerifier | None = None
-        if command.run_attestation is not None:
-            try:
-                attestation_key_source, signature_verifier = get_lotus_ai_attestation_dependencies()
-            except RuntimeError as exc:
-                raise UntrustedAIWorkflowOutput(
-                    "lotus-ai attestation trust infrastructure is unavailable",
-                    reason=(AIWorkflowProvenanceRejectionReason.TRUST_INFRASTRUCTURE_UNAVAILABLE),
-                ) from exc
-        result = evaluate_ai_explanation_to_repository(
-            command,
-            repository=repository,
-            attestation_key_source=attestation_key_source,
-            signature_verifier=signature_verifier,
-        )
+        result = _evaluate_ai_explanation_command(command, repository=repository)
     except PermissionDeniedError:
         _emit_ai_explanation_operation_event(
             OperationOutcome.PERMISSION_DENIED,
@@ -246,6 +233,17 @@ async def evaluate_ai_explanation(
     problem = _ai_explanation_result_problem(result)
     if problem is not None:
         return problem
+    return _successful_ai_explanation_response(
+        result,
+        durable_storage_backed=bool(getattr(repository, "durable_storage_backed", False)),
+    )
+
+
+def _successful_ai_explanation_response(
+    result: AIExplanationWorkflowResult,
+    *,
+    durable_storage_backed: bool,
+) -> AIExplanationEvaluationResponse:
     assert result.explanation_result is not None
     assert result.lineage_persistence_result is not None
     _emit_ai_explanation_operation_event(
@@ -261,7 +259,7 @@ async def evaluate_ai_explanation(
         result.explanation_result,
         ai_lineage_recorded=result.lineage_persistence_result.lineage_record is not None,
         ai_lineage_persistence_decision=result.lineage_persistence_result.decision.value,
-        durable_storage_backed=bool(getattr(repository, "durable_storage_backed", False)),
+        durable_storage_backed=durable_storage_backed,
     )
 
 
@@ -317,6 +315,34 @@ def _ai_explanation_result_problem(
 def _require_ai_explanation_caller(caller: CallerContext) -> None:
     if not caller.has_capability(_AI_EXPLANATION_CAPABILITY):
         raise PermissionDeniedError(_AI_EXPLANATION_CAPABILITY)
+
+
+def _attestation_verification_dependencies(
+    command: EvaluateAIExplanationToRepositoryCommand,
+) -> tuple[LotusAIAttestationKeySource | None, LotusAIAttestationSignatureVerifier | None]:
+    if command.run_attestation is None:
+        return None, None
+    try:
+        return get_lotus_ai_attestation_dependencies()
+    except RuntimeError as exc:
+        raise UntrustedAIWorkflowOutput(
+            "lotus-ai attestation trust infrastructure is unavailable",
+            reason=AIWorkflowProvenanceRejectionReason.TRUST_INFRASTRUCTURE_UNAVAILABLE,
+        ) from exc
+
+
+def _evaluate_ai_explanation_command(
+    command: EvaluateAIExplanationToRepositoryCommand,
+    *,
+    repository: AIExplanationRepository,
+) -> AIExplanationWorkflowResult:
+    key_source, signature_verifier = _attestation_verification_dependencies(command)
+    return evaluate_ai_explanation_to_repository(
+        command,
+        repository=repository,
+        attestation_key_source=key_source,
+        signature_verifier=signature_verifier,
+    )
 
 
 def _require_ai_explanation_readiness_caller(caller: CallerContext) -> None:
