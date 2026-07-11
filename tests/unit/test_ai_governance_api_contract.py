@@ -132,7 +132,7 @@ def test_ai_explanation_request_rejects_blank_request_id_and_naive_time() -> Non
 
 def test_ai_metadata_openapi_schema_is_closed_and_versioned_by_response_contract() -> None:
     with pytest.raises(ValidationError):
-        AIApprovedMetadataRequest(customerEmail="client@example.com")
+        AIApprovedMetadataRequest.model_validate({"customerEmail": "client@example.com"})
 
     schema = app.openapi()
     metadata_schema = schema["components"]["schemas"]["AIApprovedMetadataRequest"]

@@ -243,7 +243,7 @@ def ai_explanation_result_for_candidate(
                 purpose=AIWorkflowPurpose.UNSUPPORTED_CLAIM_VERIFICATION,
                 evaluation_ref="lotus-ai:governed-verifier:v1",
             ),
-            approved_metadata={"audience": "internal_advisor_review"},
+            approved_metadata={"channel": "advisor-workbench"},
             requested_at_utc=datetime(2026, 6, 21, 10, 12, tzinfo=UTC),
         ),
     )
