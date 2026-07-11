@@ -118,7 +118,7 @@ def qualify_load_soak_evidence(
     qualification_run_id: str,
 ) -> dict[str, Any]:
     _validate_qualification_inputs(generated_at_utc, qualification_run_id)
-    _validate_load_soak_proof(capacity_proof)
+    validate_load_soak_proof(capacity_proof)
     _validate_attestation(
         verified_attestation,
         capacity_proof,
@@ -205,7 +205,7 @@ def _validate_dependency_recovery_proof(proof: dict[str, Any]) -> None:
         raise ValueError("dependency recovery proof does not show fault and clean recovery")
 
 
-def _validate_load_soak_proof(proof: dict[str, Any]) -> None:
+def validate_load_soak_proof(proof: dict[str, Any]) -> None:
     _validate_capacity_proof_header(proof, proof_name="load soak proof")
     observed_window = proof.get("observedWindowSeconds")
     if (
