@@ -49,9 +49,7 @@ def build_service_resource_baseline(
         "observedWindowSeconds": window_seconds,
         "sampleCount": len(ordered),
         "cpuCoreSecondsPerSecondAverage": cpu_delta / window_seconds,
-        "residentMemoryBytesAverage": sum(
-            snapshot.resident_memory_bytes for snapshot in ordered
-        )
+        "residentMemoryBytesAverage": sum(snapshot.resident_memory_bytes for snapshot in ordered)
         / len(ordered),
         "residentMemoryBytesMax": max(snapshot.resident_memory_bytes for snapshot in ordered),
         "virtualMemoryBytesMax": max(

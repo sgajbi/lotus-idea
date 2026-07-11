@@ -102,9 +102,7 @@ def test_window_guard_rejects_unsafe_collection(
         module._validate_window(sample_count, interval)
 
 
-def test_cli_fails_closed_and_closes_probe(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_cli_fails_closed_and_closes_probe(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     module = _load_script()
 
     class FailingProbe:

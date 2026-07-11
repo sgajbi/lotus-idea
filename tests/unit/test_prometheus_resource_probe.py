@@ -56,8 +56,7 @@ lotus_idea_http_requests_total{tenant_id="not-consumed"} 9
     [
         ("process_cpu_seconds_total 1\n", "required resource metrics are missing"),
         (
-            "process_cpu_seconds_total{worker=\"one\"} 1\n"
-            "process_resident_memory_bytes 1\n",
+            'process_cpu_seconds_total{worker="one"} 1\nprocess_resident_memory_bytes 1\n',
             "cardinality is not singular",
         ),
         (
@@ -65,8 +64,7 @@ lotus_idea_http_requests_total{tenant_id="not-consumed"} 9
             "metric value is invalid",
         ),
         (
-            "process_cpu_seconds_total 1\nprocess_resident_memory_bytes 1\n"
-            "process_open_fds 1\n",
+            "process_cpu_seconds_total 1\nprocess_resident_memory_bytes 1\nprocess_open_fds 1\n",
             "file descriptor resource metrics are incomplete",
         ),
         (
@@ -75,10 +73,10 @@ lotus_idea_http_requests_total{tenant_id="not-consumed"} 9
         ),
     ],
 )
-def test_fails_closed_on_missing_ambiguous_or_invalid_metrics(
-    payload: str, message: str
-) -> None:
-    probe = PrometheusResourceProbe(metrics_url="https://idea.example/metrics", client=_client(payload))
+def test_fails_closed_on_missing_ambiguous_or_invalid_metrics(payload: str, message: str) -> None:
+    probe = PrometheusResourceProbe(
+        metrics_url="https://idea.example/metrics", client=_client(payload)
+    )
 
     with pytest.raises(ResourceProbeError, match=message):
         probe.execute()
