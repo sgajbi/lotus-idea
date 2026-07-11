@@ -76,6 +76,23 @@ def test_service_slo_capacity_contract_rejects_sensitive_labels_and_mesh_alias()
     assert "service SLO contract must remain distinct from mesh data-product SLO" in errors
 
 
+def test_service_slo_capacity_contract_rejects_recording_and_alert_rule_drift() -> None:
+    module = _load_gate()
+    malformed = """
+      - record: lotus_idea:http_error_ratio:rate5m
+        expr: lotus_idea_http_requests_total{portfolio_id='unsafe'}
+      - alert: UnknownAlert
+        expr: vector(1)
+    """
+
+    errors = module.validate_rule_text(malformed)
+
+    assert "service SLO recording rules must match governed set" in errors
+    assert "service SLO alert rules must match governed set" in errors
+    assert "service SLO rules must consume lotus_idea_workflow_runs_total" in errors
+    assert "service SLO rule expressions contain sensitive labels: portfolio_id" in errors
+
+
 def test_service_slo_capacity_contract_loader_rejects_non_object(tmp_path: Path) -> None:
     module = _load_gate()
     path = tmp_path / "contract.json"

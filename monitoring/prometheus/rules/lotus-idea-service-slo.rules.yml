@@ -1,0 +1,59 @@
+groups:
+  - name: lotus-idea-service-slo-recording
+    interval: 1m
+    rules:
+      - record: lotus_idea:http_error_ratio:rate5m
+        expr: sum(rate(lotus_idea_http_requests_total{status_class="5xx"}[5m])) / clamp_min(sum(rate(lotus_idea_http_requests_total[5m])), 0.000001)
+      - record: lotus_idea:http_error_ratio:rate1h
+        expr: sum(rate(lotus_idea_http_requests_total{status_class="5xx"}[1h])) / clamp_min(sum(rate(lotus_idea_http_requests_total[1h])), 0.000001)
+      - record: lotus_idea:http_error_ratio:rate30m
+        expr: sum(rate(lotus_idea_http_requests_total{status_class="5xx"}[30m])) / clamp_min(sum(rate(lotus_idea_http_requests_total[30m])), 0.000001)
+      - record: lotus_idea:http_error_ratio:rate6h
+        expr: sum(rate(lotus_idea_http_requests_total{status_class="5xx"}[6h])) / clamp_min(sum(rate(lotus_idea_http_requests_total[6h])), 0.000001)
+      - record: lotus_idea:workflow_error_ratio:rate5m
+        expr: sum by (workflow) (rate(lotus_idea_workflow_runs_total{outcome="failed"}[5m])) / clamp_min(sum by (workflow) (rate(lotus_idea_workflow_runs_total{outcome=~"accepted|failed|replayed"}[5m])), 0.000001)
+      - record: lotus_idea:workflow_error_ratio:rate1h
+        expr: sum by (workflow) (rate(lotus_idea_workflow_runs_total{outcome="failed"}[1h])) / clamp_min(sum by (workflow) (rate(lotus_idea_workflow_runs_total{outcome=~"accepted|failed|replayed"}[1h])), 0.000001)
+
+  - name: lotus-idea-service-slo-alerts
+    rules:
+      - alert: LotusIdeaApiErrorBudgetFastBurn
+        expr: (lotus_idea:http_error_ratio:rate5m > 0.0144) and (lotus_idea:http_error_ratio:rate1h > 0.0144)
+        for: 5m
+        labels:
+          alert_id: api-error-budget-fast-burn
+          severity: P1
+          owner_repo: lotus-idea
+        annotations:
+          summary: Lotus Idea API is consuming its 99.9% error budget at fast-burn rate.
+          runbook: docs/operations/service-slo-capacity.md#fast-api-error-budget-burn
+      - alert: LotusIdeaApiErrorBudgetSlowBurn
+        expr: (lotus_idea:http_error_ratio:rate30m > 0.006) and (lotus_idea:http_error_ratio:rate6h > 0.006)
+        for: 30m
+        labels:
+          alert_id: api-error-budget-slow-burn
+          severity: P2
+          owner_repo: lotus-idea
+        annotations:
+          summary: Lotus Idea API is consuming its 99.9% error budget at sustained rate.
+          runbook: docs/operations/service-slo-capacity.md#sustained-api-error-budget-burn
+      - alert: LotusIdeaSourceIngestionErrorBudgetFastBurn
+        expr: (lotus_idea:workflow_error_ratio:rate5m{workflow="source_ingestion"} > 0.144) and (lotus_idea:workflow_error_ratio:rate1h{workflow="source_ingestion"} > 0.144)
+        for: 5m
+        labels:
+          alert_id: source-ingestion-error-budget-fast-burn
+          severity: P2
+          owner_repo: lotus-idea
+        annotations:
+          summary: Source ingestion is consuming its 99.0% workflow error budget rapidly.
+          runbook: docs/operations/service-slo-capacity.md#workflow-error-budget-burn
+      - alert: LotusIdeaOutboxDeliveryErrorBudgetFastBurn
+        expr: (lotus_idea:workflow_error_ratio:rate5m{workflow="outbox_delivery"} > 0.0144) and (lotus_idea:workflow_error_ratio:rate1h{workflow="outbox_delivery"} > 0.0144)
+        for: 5m
+        labels:
+          alert_id: outbox-delivery-error-budget-fast-burn
+          severity: P1
+          owner_repo: lotus-idea
+        annotations:
+          summary: Outbox delivery is consuming its 99.9% workflow error budget rapidly.
+          runbook: docs/operations/service-slo-capacity.md#workflow-error-budget-burn

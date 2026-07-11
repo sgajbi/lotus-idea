@@ -1,0 +1,83 @@
+rule_files:
+  - ../rules/lotus-idea-service-slo.rules.yml
+
+evaluation_interval: 1m
+
+tests:
+  - name: service SLO alerts stay quiet within error budgets
+    interval: 1m
+    input_series:
+      - series: 'lotus_idea_http_requests_total{method="GET",route="/health",status_class="2xx"}'
+        values: '0+999x400'
+      - series: 'lotus_idea_http_requests_total{method="GET",route="/health",status_class="5xx"}'
+        values: '0+1x400'
+      - series: 'lotus_idea_workflow_runs_total{workflow="source_ingestion",outcome="accepted"}'
+        values: '0+99x400'
+      - series: 'lotus_idea_workflow_runs_total{workflow="source_ingestion",outcome="failed"}'
+        values: '0+1x400'
+      - series: 'lotus_idea_workflow_runs_total{workflow="outbox_delivery",outcome="accepted"}'
+        values: '0+999x400'
+      - series: 'lotus_idea_workflow_runs_total{workflow="outbox_delivery",outcome="failed"}'
+        values: '0+1x400'
+    alert_rule_test:
+      - eval_time: 390m
+        alertname: LotusIdeaApiErrorBudgetFastBurn
+        exp_alerts: []
+      - eval_time: 390m
+        alertname: LotusIdeaApiErrorBudgetSlowBurn
+        exp_alerts: []
+      - eval_time: 390m
+        alertname: LotusIdeaSourceIngestionErrorBudgetFastBurn
+        exp_alerts: []
+      - eval_time: 390m
+        alertname: LotusIdeaOutboxDeliveryErrorBudgetFastBurn
+        exp_alerts: []
+
+  - name: fast burn alerts after sustained service and workflow failures
+    interval: 1m
+    input_series:
+      - series: 'lotus_idea_http_requests_total{method="POST",route="/api/v1/source-ingestion/run-once",status_class="2xx"}'
+        values: '0+98x80'
+      - series: 'lotus_idea_http_requests_total{method="POST",route="/api/v1/source-ingestion/run-once",status_class="5xx"}'
+        values: '0+2x80'
+      - series: 'lotus_idea_workflow_runs_total{workflow="source_ingestion",outcome="accepted"}'
+        values: '0+80x80'
+      - series: 'lotus_idea_workflow_runs_total{workflow="source_ingestion",outcome="failed"}'
+        values: '0+20x80'
+      - series: 'lotus_idea_workflow_runs_total{workflow="outbox_delivery",outcome="accepted"}'
+        values: '0+98x80'
+      - series: 'lotus_idea_workflow_runs_total{workflow="outbox_delivery",outcome="failed"}'
+        values: '0+2x80'
+    alert_rule_test:
+      - eval_time: 70m
+        alertname: LotusIdeaApiErrorBudgetFastBurn
+        exp_alerts:
+          - exp_labels:
+              alert_id: api-error-budget-fast-burn
+              owner_repo: lotus-idea
+              severity: P1
+            exp_annotations:
+              summary: Lotus Idea API is consuming its 99.9% error budget at fast-burn rate.
+              runbook: docs/operations/service-slo-capacity.md#fast-api-error-budget-burn
+      - eval_time: 70m
+        alertname: LotusIdeaSourceIngestionErrorBudgetFastBurn
+        exp_alerts:
+          - exp_labels:
+              alert_id: source-ingestion-error-budget-fast-burn
+              owner_repo: lotus-idea
+              severity: P2
+              workflow: source_ingestion
+            exp_annotations:
+              summary: Source ingestion is consuming its 99.0% workflow error budget rapidly.
+              runbook: docs/operations/service-slo-capacity.md#workflow-error-budget-burn
+      - eval_time: 70m
+        alertname: LotusIdeaOutboxDeliveryErrorBudgetFastBurn
+        exp_alerts:
+          - exp_labels:
+              alert_id: outbox-delivery-error-budget-fast-burn
+              owner_repo: lotus-idea
+              severity: P1
+              workflow: outbox_delivery
+            exp_annotations:
+              summary: Outbox delivery is consuming its 99.9% workflow error budget rapidly.
+              runbook: docs/operations/service-slo-capacity.md#workflow-error-budget-burn

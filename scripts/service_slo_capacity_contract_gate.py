@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+import re
 from typing import Any
 
 
@@ -17,9 +18,7 @@ EXPECTED_WORKFLOWS = {
 }
 REQUIRED_BLOCKERS = {
     "workflow_sli_metrics_incomplete",
-    "error_budget_recording_rules_missing",
     "slo_dashboard_missing",
-    "burn_rate_alerts_missing",
     "load_and_soak_baseline_missing",
     "dependency_failure_baseline_missing",
     "postgres_saturation_evidence_missing",
@@ -35,6 +34,20 @@ FORBIDDEN_LABELS = {
     "request_id",
     "tenant_id",
     "trace_id",
+}
+REQUIRED_RECORDING_RULES = {
+    "lotus_idea:http_error_ratio:rate5m",
+    "lotus_idea:http_error_ratio:rate1h",
+    "lotus_idea:http_error_ratio:rate30m",
+    "lotus_idea:http_error_ratio:rate6h",
+    "lotus_idea:workflow_error_ratio:rate5m",
+    "lotus_idea:workflow_error_ratio:rate1h",
+}
+REQUIRED_ALERT_RULES = {
+    "LotusIdeaApiErrorBudgetFastBurn",
+    "LotusIdeaApiErrorBudgetSlowBurn",
+    "LotusIdeaSourceIngestionErrorBudgetFastBurn",
+    "LotusIdeaOutboxDeliveryErrorBudgetFastBurn",
 }
 
 
@@ -70,6 +83,7 @@ def validate_payload(
     errors.extend(_validate_capacity(payload))
     errors.extend(_validate_labels(payload))
     errors.extend(_validate_source_truth(payload, repository_root))
+    errors.extend(_validate_rule_file(payload, repository_root))
     errors.extend(_validate_certification(payload))
     return sorted(errors)
 
@@ -166,6 +180,8 @@ def _validate_source_truth(payload: dict[str, Any], repository_root: Path) -> li
         "mesh_slo_contract",
         "operation_metric_contract",
         "sli_metric_source",
+        "recording_alert_rules",
+        "rule_tests",
         "contract_gate",
         "operations_doc",
         "rfc_slice",
@@ -191,6 +207,39 @@ def _validate_certification(payload: dict[str, Any]) -> list[str]:
     boundaries = payload.get("non_proof_boundaries")
     if not isinstance(boundaries, list) or len(boundaries) < 4:
         errors.append("service SLO non_proof_boundaries must remain explicit")
+    return errors
+
+
+def _validate_rule_file(payload: dict[str, Any], repository_root: Path) -> list[str]:
+    source = payload.get("source_of_truth")
+    if not isinstance(source, dict):
+        return []
+    raw_path = source.get("recording_alert_rules")
+    if not isinstance(raw_path, str):
+        return []
+    path = repository_root / raw_path
+    if not path.is_file():
+        return []
+    return validate_rule_text(path.read_text(encoding="utf-8"))
+
+
+def validate_rule_text(rule_text: str) -> list[str]:
+    records = set(re.findall(r"^\s*-\s+record:\s+(\S+)\s*$", rule_text, re.MULTILINE))
+    alerts = set(re.findall(r"^\s*-\s+alert:\s+(\S+)\s*$", rule_text, re.MULTILINE))
+    errors: list[str] = []
+    if records != REQUIRED_RECORDING_RULES:
+        errors.append("service SLO recording rules must match governed set")
+    if alerts != REQUIRED_ALERT_RULES:
+        errors.append("service SLO alert rules must match governed set")
+    for metric in (
+        "lotus_idea_http_requests_total",
+        "lotus_idea_workflow_runs_total",
+    ):
+        if metric not in rule_text:
+            errors.append(f"service SLO rules must consume {metric}")
+    leaked = sorted(label for label in FORBIDDEN_LABELS if label in rule_text)
+    if leaked:
+        errors.append(f"service SLO rule expressions contain sensitive labels: {', '.join(leaked)}")
     return errors
 
 
