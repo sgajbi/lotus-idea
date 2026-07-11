@@ -45,12 +45,12 @@ def test_output_integrity_covers_every_advisor_visible_content_dimension() -> No
 
 
 def test_output_integrity_preserves_contractually_meaningful_claim_order() -> None:
-    first = {
+    first: dict[str, object] = {
         "claim_id": "claim-1",
         "claim_text": "First claim.",
         "source_product_ids": ("product-1",),
     }
-    second = {
+    second: dict[str, object] = {
         "claim_id": "claim-2",
         "claim_text": "Second claim.",
         "source_product_ids": ("product-2",),
