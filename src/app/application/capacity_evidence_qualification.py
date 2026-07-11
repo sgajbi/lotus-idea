@@ -157,7 +157,7 @@ def qualify_resource_evidence(
     qualification_run_id: str,
 ) -> dict[str, Any]:
     _validate_qualification_inputs(generated_at_utc, qualification_run_id)
-    _validate_resource_proof(resource_proof)
+    validate_resource_proof(resource_proof)
     _validate_attestation(
         verified_attestation,
         resource_proof,
@@ -266,7 +266,7 @@ def validate_load_soak_proof(proof: dict[str, Any]) -> None:
         _validate_load_soak_scenario(scenario_name, scenario, thresholds)
 
 
-def _validate_resource_proof(proof: dict[str, Any]) -> None:
+def validate_resource_proof(proof: dict[str, Any]) -> None:
     errors = validate_service_resource_baseline(proof)
     if errors:
         raise ValueError("; ".join(errors))
