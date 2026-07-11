@@ -352,6 +352,18 @@ fault plus one successful recovery and zero errors/conflicts. This
 implementation cannot produce qualifying evidence before merge and protected
 runtime configuration, so the blocker remains open.
 
+The capacity vocabulary now includes `downstream_submission`, closing a
+contract/documentation mismatch that previously claimed downstream load
+coverage without an executable scenario. The runner accepts only allowlisted
+conversion-intent or report evidence-pack handoff paths, requires the existing
+Idea downstream-submit capability, emits unique transient idempotency keys,
+expects accepted responses, and never stores the resource path or identifiers.
+This remains Idea-owned intent handoff measurement; it does not grant
+suitability, execution, render, archive, or downstream outcome authority. The
+scenario set is contract-gated against runtime vocabulary. Canonical automation
+does not yet seed a dedicated synthetic handoff resource, so production-like
+downstream load/soak evidence remains blocked.
+
 ## Required Work
 
 1. Add metrics, logs, traces, audit events, health/readiness diagnostics, and

@@ -134,7 +134,7 @@ operator-action proof. The contract alone must not unblock supported features.
 
 ## Capacity Baseline Evidence
 
-The workload runner uses the same governed evidence model for five closed
+The workload runner uses the same governed evidence model for six closed
 scenario families:
 
 | Scenario | Probe | Stored evidence | Important boundary |
@@ -142,6 +142,7 @@ scenario families:
 | `api` | `GET /health/ready` | Latency and accepted/error counts | Read-only; readiness is not business-feature proof. |
 | `source_ingestion` | Bounded run-once endpoint | Duration and aggregate item count | Mutating; maximum 100 manifest items. |
 | `outbox_delivery` | Bounded run-once endpoint | Duration, aggregate attempts, and retry posture | Mutating; unique transient idempotency keys and maximum 100 events. |
+| `downstream_submission` | Pre-seeded synthetic conversion-intent or report evidence-pack handoff | End-to-end Idea submission latency and accepted/error counts | Mutating; unique transient idempotency keys. The resource path is allowlisted, transient, and never stored. |
 | `dependency_failure` | Faulted source-ingestion call followed by recovery | Exact source-unavailable classification and explicit clean recovery | Only `source_unavailable` qualifies. Entitlement denial, configuration/capacity blocks, mixed failures, and generic blocked responses fail closed. |
 | `postgresql` | Read-only `SELECT 1` plus aggregate connection posture | Query latency and maximum observed utilization | Observation does not prove a threshold stress/recovery exercise. |
 
@@ -171,12 +172,21 @@ make service-capacity-workload `
   SERVICE_CAPACITY_SCENARIO_ARGS="--scenario api"
 ```
 
-Source-ingestion, outbox, and dependency-failure scenarios require
+Source-ingestion, outbox, downstream-submission, and dependency-failure scenarios require
 `--allow-mutating-workflows`. Production additionally requires
 `--allow-production-mutations`; invoke the script directly for those flags.
 Provide transient authorization or trusted-caller assertions only through
 `LOTUS_IDEA_CAPACITY_AUTHORIZATION` or
 `LOTUS_IDEA_CAPACITY_TRUSTED_CALLER_CONTEXT`.
+
+The downstream scenario additionally requires
+`LOTUS_IDEA_CAPACITY_DOWNSTREAM_PATH`. Only the governed conversion-intent and
+report evidence-pack submission route shapes are accepted. The referenced
+resource must be synthetic, pre-seeded through governed Idea lifecycle APIs,
+and isolated from client activity. Current canonical front-office automation
+does not yet create this capacity resource, so protected downstream load/soak
+execution remains blocked rather than using a hard-coded or discovered client
+identifier.
 
 The dependency-failure scenario accepts only a classified source-unavailable
 outcome: either aggregate `sourceFailureCounts` containing one or more

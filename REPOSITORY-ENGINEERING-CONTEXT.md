@@ -1479,6 +1479,16 @@ classified fault sample, a clean recovery sample, zero errors/conflicts, and a
 protected production-like environment. Never accept a local artifact,
 caller-selected profile, or serialized verification claim as qualification.
 
+Capacity evidence must include the contract-gated scenario vocabulary from
+`service_capacity_baseline.SCENARIOS`, including `downstream_submission`.
+Downstream capacity may target only the allowlisted conversion-intent or report
+evidence-pack submission routes for a pre-seeded synthetic resource. Keep the
+path and idempotency keys transient and out of artifacts. This measures Idea's
+intent-handoff behavior only; it does not make Idea authoritative for
+suitability, execution, report rendering/archive, or downstream outcomes. Do
+not claim downstream load coverage until canonical automation seeds and proves
+the synthetic resource.
+
 Capacity probes must cross a narrow port and return bounded aggregates only.
 Keep request and response bodies, URLs, DSNs, credentials, caller assertions,
 and business identifiers transient inside infrastructure adapters. Require an

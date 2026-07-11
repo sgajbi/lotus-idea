@@ -16,7 +16,7 @@ reconciliation, quality, and lineage policy.
 | PostgreSQL capacity posture | Aggregate utilization, collection success, one-hot posture, alerts, and nonessential source/outbox shedding are implemented. |
 | Error-budget rules and alerts | Implemented and tested with `promtool`. |
 | Grafana dashboard | Implemented from bounded metrics and recording rules. |
-| Source-safe baseline runner | Implemented for guarded API, source-ingestion, outbox, exact source-unavailable failure/clean recovery, and read-only PostgreSQL scenarios. |
+| Source-safe baseline runner | Implemented for guarded API, source-ingestion, outbox, downstream intent handoff, exact source-unavailable failure/clean recovery, and read-only PostgreSQL scenarios. |
 | Controlled PostgreSQL threshold proof | Implemented with exact target identity, hard connection caps, mandatory acknowledgement, release/recovery checks, and proof-only baseline linkage. Test evidence is non-certifying. |
 | Process resource observation | Bounded CPU, memory, and optional file-descriptor collection is implemented through a narrow Prometheus adapter. Test observations are non-certifying and are not cost evidence. |
 | Dependency recovery attestation | A manual, main-only protected workflow and exact signer verification are implemented. No qualifying artifact exists until the workflow executes successfully on `main`. |
@@ -24,6 +24,12 @@ reconciliation, quality, and lineage policy.
 
 No tenant, client, portfolio, candidate, event, request, idempotency,
 correlation, or trace identifier is permitted as a metric label.
+
+Downstream capacity requires an allowlisted path to a pre-seeded synthetic
+conversion intent or report evidence pack. That path and its unique transient
+idempotency keys are never written to evidence. Canonical seed automation does
+not yet provide this resource, so downstream load/soak certification remains
+blocked.
 
 ## First Response
 
