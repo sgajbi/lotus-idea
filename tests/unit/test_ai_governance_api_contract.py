@@ -159,6 +159,28 @@ def test_ai_explanation_application_command_rejects_blank_candidate() -> None:
         )
 
 
+def test_ai_explanation_application_command_rejects_blank_idempotency_key() -> None:
+    with pytest.raises(ValueError, match="idempotency_key is required"):
+        EvaluateAIExplanationToRepositoryCommand(
+            candidate_id="idea-ai-001",
+            explanation=AIExplanationCommand(
+                request_id="ai-explanation-001",
+                actor_subject="advisor-001",
+                workflow_pack=AIWorkflowPackRef(
+                    workflow_pack_id="lotus-ai:idea-explanation:v1",
+                    workflow_pack_version="v1",
+                    purpose=AIWorkflowPurpose.MISSING_EVIDENCE_CHECK,
+                    evaluation_ref="lotus-ai:governed-verifier:v1",
+                ),
+                approved_metadata={},
+                requested_at_utc=datetime(2026, 6, 21, 10, 12, tzinfo=UTC),
+            ),
+            fallback_reason=AIFallbackReason.AI_UNAVAILABLE,
+            idempotency_key=" ",
+            idempotency_payload={},
+        )
+
+
 def test_operation_event_rejects_blank_source_authority_and_error_code() -> None:
     with pytest.raises(ValueError, match="source_authority is required"):
         OperationEvent(

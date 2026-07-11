@@ -62,6 +62,39 @@ def test_lineage_codec_rejects_execution_provenance_column_mismatch() -> None:
         )
 
 
+def test_lineage_codec_rejects_integrity_version_column_mismatch() -> None:
+    payload = _lineage_payload()
+
+    with pytest.raises(ValueError, match="integrity version column mismatch"):
+        ai_explanation_lineage_from_json(
+            payload,
+            expected_integrity_version="lotus-idea.ai-output-integrity.v2",
+        )
+
+
+@pytest.mark.parametrize(
+    ("integrity_version", "provenance_posture"),
+    [
+        (
+            "lotus-idea.ai-output-integrity.pre-v1-unverifiable",
+            "pre_attestation_unverifiable",
+        ),
+        ("lotus-idea.ai-output-integrity.v1", "pre_attestation_unverifiable"),
+    ],
+)
+def test_lineage_codec_preserves_explicit_unverifiable_migration_posture(
+    integrity_version: str,
+    provenance_posture: str,
+) -> None:
+    payload = _lineage_payload()
+    payload["output_integrity_version"] = integrity_version
+    payload["execution_provenance_posture"] = provenance_posture
+
+    record = ai_explanation_lineage_from_json(payload)
+
+    assert record.execution_provenance_posture == "pre_attestation_unverifiable"
+
+
 @pytest.mark.parametrize("tampered_field", ["output_content_digest", "lineage_hash"])
 def test_lineage_codec_rejects_v1_hash_tampering(tampered_field: str) -> None:
     payload = deepcopy(_lineage_payload())

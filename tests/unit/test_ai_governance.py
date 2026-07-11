@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from typing import Any
@@ -46,6 +47,7 @@ from app.domain import (
     deterministic_ai_fallback,
     evaluate_ai_workflow_output,
 )
+from app.domain.ai_execution_provenance import AIExecutionProvenancePosture
 from app.domain.ai_governance import AIExplanationCommand
 from app.domain.persistence import CandidatePersistenceDecision
 
@@ -659,6 +661,27 @@ def test_ai_result_and_output_identity_validation_fail_closed() -> None:
             execution_provenance_posture=accepted.execution_provenance_posture,
             fallback_reason=AIFallbackReason.AI_UNAVAILABLE,
         )
+
+    fallback = deterministic_ai_fallback(
+        request,
+        fallback_reason=AIFallbackReason.AI_UNAVAILABLE,
+        occurred_at_utc=VERIFIED_AT,
+    )
+    accepted = evaluate_ai_workflow_output(request, output(request.request_id))
+    with pytest.raises(ValueError, match="fallback result requires not-applicable"):
+        replace(
+            fallback,
+            execution_provenance_posture=(
+                AIExecutionProvenancePosture.UNATTESTED_LOCAL_TEST_FIXTURE
+            ),
+        )
+    with pytest.raises(ValueError, match="evaluated workflow output requires"):
+        replace(
+            accepted,
+            execution_provenance_posture=(AIExecutionProvenancePosture.NOT_APPLICABLE_FALLBACK),
+        )
+    with pytest.raises(ValueError, match="reason_codes is required"):
+        replace(accepted, reason_codes=())
 
     wrong_pack = AIWorkflowOutput(
         output_id="ai-output-wrong-pack",
