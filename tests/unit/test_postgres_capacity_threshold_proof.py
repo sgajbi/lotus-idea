@@ -7,6 +7,7 @@ import pytest
 
 from app.application.postgres_capacity_threshold_proof import (
     execute_postgres_capacity_threshold_proof,
+    validate_postgres_capacity_threshold_proof,
 )
 from app.domain.capacity_posture import evaluate_postgres_capacity_posture
 
@@ -61,6 +62,30 @@ def test_builds_source_safe_threshold_and_recovery_evidence() -> None:
     assert artifact["productionCapacityCertified"] is False
     assert artifact["supportedFeaturePromoted"] is False
     assert port.released == 2
+    assert validate_postgres_capacity_threshold_proof(artifact) == []
+
+
+@pytest.mark.parametrize(
+    ("path", "value", "message"),
+    [
+        (("claimPosture",), "production_certified", "claimPosture"),
+        (("productionCapacityCertified",), True, "must not claim"),
+        (("supportedFeaturePromoted",), True, "must not promote"),
+        (("threshold", "posture"), "normal", "must be shed"),
+        (("threshold", "heldConnectionCount"), 0, "between 1 and 100"),
+        (("recovered", "connectionUtilizationFraction"), 2.0, "between zero and one"),
+    ],
+)
+def test_validator_rejects_claim_or_observation_mutation(
+    path: tuple[str, ...], value: object, message: str
+) -> None:
+    artifact = _execute(StubStressPort([0.2, 0.9, 0.2]))
+    target: dict[str, object] = artifact
+    for key in path[:-1]:
+        target = target[key]  # type: ignore[assignment]
+    target[path[-1]] = value
+
+    assert any(message in error for error in validate_postgres_capacity_threshold_proof(artifact))
 
 
 @pytest.mark.parametrize(

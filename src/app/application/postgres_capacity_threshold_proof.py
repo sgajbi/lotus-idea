@@ -52,7 +52,7 @@ def execute_postgres_capacity_threshold_proof(
     recovered = stress_port.read_posture()
     if recovered.posture is not CapacityPosture.NORMAL:
         raise ValueError("PostgreSQL capacity posture did not recover to normal")
-    return {
+    artifact = {
         "schemaVersion": SCHEMA_VERSION,
         "repository": "lotus-idea",
         "proofScope": "source_safe_postgres_capacity_threshold_and_recovery",
@@ -68,6 +68,54 @@ def execute_postgres_capacity_threshold_proof(
         "productionCapacityCertified": False,
         "supportedFeaturePromoted": False,
     }
+    errors = validate_postgres_capacity_threshold_proof(artifact)
+    if errors:
+        raise ValueError("; ".join(errors))
+    return artifact
+
+
+def validate_postgres_capacity_threshold_proof(artifact: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    expected = {
+        "branch",
+        "claimPosture",
+        "commitSha",
+        "environmentProfile",
+        "generatedAtUtc",
+        "initial",
+        "productionCapacityCertified",
+        "proofScope",
+        "recovered",
+        "repository",
+        "runId",
+        "schemaVersion",
+        "supportedFeaturePromoted",
+        "threshold",
+    }
+    if set(artifact) != expected:
+        errors.append("artifact fields must match the governed threshold proof schema")
+    if artifact.get("schemaVersion") != SCHEMA_VERSION:
+        errors.append(f"schemaVersion must be {SCHEMA_VERSION}")
+    if artifact.get("repository") != "lotus-idea":
+        errors.append("repository must be lotus-idea")
+    if artifact.get("proofScope") != "source_safe_postgres_capacity_threshold_and_recovery":
+        errors.append("proofScope must remain threshold-and-recovery only")
+    if artifact.get("claimPosture") != "controlled_environment_evidence_only":
+        errors.append("claimPosture must remain controlled_environment_evidence_only")
+    if artifact.get("environmentProfile") not in {"test", "production-like"}:
+        errors.append("environmentProfile must be test or production-like")
+    if artifact.get("productionCapacityCertified") is not False:
+        errors.append("threshold proof must not claim production capacity certification")
+    if artifact.get("supportedFeaturePromoted") is not False:
+        errors.append("threshold proof must not promote a supported feature")
+    _validate_observation(artifact.get("initial"), "normal", "initial", errors)
+    _validate_observation(artifact.get("threshold"), "shed", "threshold", errors)
+    _validate_observation(artifact.get("recovered"), "normal", "recovered", errors)
+    threshold = artifact.get("threshold")
+    held = threshold.get("heldConnectionCount") if isinstance(threshold, dict) else None
+    if isinstance(held, bool) or not isinstance(held, int) or not 1 <= held <= 100:
+        errors.append("threshold.heldConnectionCount must be between 1 and 100")
+    return errors
 
 
 def _validate_inputs(
@@ -96,3 +144,30 @@ def _observation(posture: PostgresCapacityPosture) -> dict[str, object]:
         "connectionUtilizationFraction": posture.connection_utilization_fraction,
         "collectionSucceeded": posture.collection_succeeded,
     }
+
+
+def _validate_observation(
+    value: object,
+    expected_posture: str,
+    name: str,
+    errors: list[str],
+) -> None:
+    if not isinstance(value, dict):
+        errors.append(f"{name} must be an object")
+        return
+    expected_fields = {"collectionSucceeded", "connectionUtilizationFraction", "posture"}
+    if name == "threshold":
+        expected_fields.add("heldConnectionCount")
+    if set(value) != expected_fields:
+        errors.append(f"{name} fields must match the governed observation schema")
+    utilization = value.get("connectionUtilizationFraction")
+    if (
+        isinstance(utilization, bool)
+        or not isinstance(utilization, (int, float))
+        or not 0 <= utilization <= 1
+    ):
+        errors.append(f"{name}.connectionUtilizationFraction must be between zero and one")
+    if value.get("posture") != expected_posture:
+        errors.append(f"{name}.posture must be {expected_posture}")
+    if value.get("collectionSucceeded") is not True:
+        errors.append(f"{name}.collectionSucceeded must be true")
