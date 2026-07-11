@@ -34,6 +34,7 @@ from app.application.source_ingestion import (
 from app.application.capacity_posture import evaluate_nonessential_workload_capacity
 from app.application.source_ingestion_readiness import build_source_ingestion_readiness_snapshot
 from app.api.problem_details import problem_details_response as problem_response
+from app.ports.idea_repository import IdeaRepository
 from app.observability import (
     IdeaOperation,
     OperationEvent,
@@ -191,6 +192,19 @@ async def post_source_ingestion_run_once(
             ),
         )
 
+    return _execute_source_ingestion_runtime(
+        runtime,
+        repository=repository,
+        durable_storage_backed=durable_storage_backed,
+    )
+
+
+def _execute_source_ingestion_runtime(
+    runtime: SourceIngestionRuntime,
+    *,
+    repository: IdeaRepository,
+    durable_storage_backed: bool,
+) -> SourceIngestionRunOnceResponse | JSONResponse:
     started_at = time.perf_counter()
     try:
         try:
