@@ -7,8 +7,9 @@ from pathlib import Path
 import subprocess
 
 from app.application.capacity_evidence_qualification import (
+    DEPENDENCY_RECOVERY_SIGNER_WORKFLOW,
+    POSTGRES_CAPACITY_SIGNER_WORKFLOW,
     TRUSTED_REPOSITORY,
-    TRUSTED_SIGNER_WORKFLOW,
     TRUSTED_SOURCE_REF,
     VerifiedArtifactAttestation,
 )
@@ -20,11 +21,18 @@ class GitHubCapacityAttestationVerifier:
         *,
         command_runner: Callable[..., subprocess.CompletedProcess[str]] = subprocess.run,
         timeout_seconds: int = 60,
+        signer_workflow: str = POSTGRES_CAPACITY_SIGNER_WORKFLOW,
     ) -> None:
         if timeout_seconds <= 0:
             raise ValueError("timeout_seconds must be positive")
+        if signer_workflow not in {
+            POSTGRES_CAPACITY_SIGNER_WORKFLOW,
+            DEPENDENCY_RECOVERY_SIGNER_WORKFLOW,
+        }:
+            raise ValueError("capacity evidence signer workflow is not trusted")
         self._command_runner = command_runner
         self._timeout_seconds = timeout_seconds
+        self._signer_workflow = signer_workflow
 
     def verify(
         self,
@@ -45,7 +53,7 @@ class GitHubCapacityAttestationVerifier:
             "--repo",
             TRUSTED_REPOSITORY,
             "--signer-workflow",
-            TRUSTED_SIGNER_WORKFLOW,
+            self._signer_workflow,
             "--source-ref",
             TRUSTED_SOURCE_REF,
             "--source-digest",
@@ -76,7 +84,7 @@ class GitHubCapacityAttestationVerifier:
         return VerifiedArtifactAttestation(
             subject_sha256=subject_sha256,
             repository=TRUSTED_REPOSITORY,
-            signer_workflow=TRUSTED_SIGNER_WORKFLOW,
+            signer_workflow=self._signer_workflow,
             source_ref=TRUSTED_SOURCE_REF,
             source_commit_sha=source_commit_sha,
         )

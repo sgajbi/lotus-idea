@@ -7,6 +7,7 @@ import subprocess
 import pytest
 
 from app.application.capacity_evidence_qualification import (
+    DEPENDENCY_RECOVERY_SIGNER_WORKFLOW,
     TRUSTED_REPOSITORY,
     TRUSTED_SIGNER_WORKFLOW,
     TRUSTED_SOURCE_REF,
@@ -52,6 +53,26 @@ def test_verifies_artifact_with_exact_trust_policy(tmp_path: Path) -> None:
     assert receipt.source_commit_sha == "a" * 40
 
 
+def test_verifies_dependency_artifact_with_dedicated_signer_policy(tmp_path: Path) -> None:
+    artifact = tmp_path / "dependency-recovery.json"
+    artifact.write_text('{"sourceSafe":true}\n', encoding="utf-8")
+    calls: list[list[str]] = []
+
+    def run(command: list[str], **kwargs: object) -> subprocess.CompletedProcess[str]:
+        calls.append(command)
+        return subprocess.CompletedProcess(command, 0, stdout='[{"verified":true}]', stderr="")
+
+    receipt = GitHubCapacityAttestationVerifier(
+        command_runner=run,
+        signer_workflow=DEPENDENCY_RECOVERY_SIGNER_WORKFLOW,
+    ).verify(artifact_path=artifact, source_commit_sha="a" * 40)
+
+    assert calls[0][calls[0].index("--signer-workflow") + 1] == (
+        DEPENDENCY_RECOVERY_SIGNER_WORKFLOW
+    )
+    assert receipt.signer_workflow == DEPENDENCY_RECOVERY_SIGNER_WORKFLOW
+
+
 @pytest.mark.parametrize(
     ("result", "message"),
     [
@@ -86,6 +107,8 @@ def test_rejects_missing_artifact_blank_commit_and_invalid_timeout(tmp_path: Pat
         verifier.verify(artifact_path=artifact, source_commit_sha=" ")
     with pytest.raises(ValueError, match="positive"):
         GitHubCapacityAttestationVerifier(timeout_seconds=0)
+    with pytest.raises(ValueError, match="workflow is not trusted"):
+        GitHubCapacityAttestationVerifier(signer_workflow="other/workflow.yml")
 
 
 def test_maps_command_unavailability_to_generic_failure(tmp_path: Path) -> None:
