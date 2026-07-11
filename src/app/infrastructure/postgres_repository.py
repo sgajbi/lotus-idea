@@ -114,9 +114,8 @@ from app.infrastructure.postgres_runtime_trust_telemetry import (
     load_runtime_trust_telemetry_summary,
 )
 from app.infrastructure.postgres_slo import execute_observed_postgres_call
-from app.infrastructure.postgres_capacity_posture import load_postgres_capacity_posture
-from app.domain.capacity_posture import PostgresCapacityPosture
-from app.infrastructure.postgres_candidate_detail import load_candidate_record_by_id
+from app.infrastructure.postgres_capacity_posture import PostgresCapacityRepositoryMixin
+from app.infrastructure.postgres_candidate_detail import PostgresCandidateDetailRepositoryMixin
 from app.infrastructure.postgres_data_lifecycle import (
     PostgresDataLifecycleRepository,
     assert_data_lifecycle_allows_candidate_writes,
@@ -132,6 +131,8 @@ _T = TypeVar("_T")
 
 
 class PostgresIdeaRepository(
+    PostgresCapacityRepositoryMixin,
+    PostgresCandidateDetailRepositoryMixin,
     PostgresReviewQueueRepositoryMixin,
     PostgresOutboxRepositoryMixin,
     PostgresOutboxRecoveryRepositoryMixin,
@@ -144,9 +145,6 @@ class PostgresIdeaRepository(
     def __init__(self, connection: PostgresConnection) -> None:
         self._connection = connection
 
-    def candidate_record_by_id(self, candidate_id: str) -> CandidatePersistenceRecord | None:
-        return load_candidate_record_by_id(self._connection, candidate_id)
-
     def downstream_realization_readiness_summary(
         self,
     ) -> DownstreamRealizationReadinessRepositorySummary:
@@ -154,9 +152,6 @@ class PostgresIdeaRepository(
 
     def runtime_trust_telemetry_summary(self) -> RuntimeTrustTelemetryRepositorySummary:
         return load_runtime_trust_telemetry_summary(self._connection)
-
-    def postgres_capacity_posture(self) -> PostgresCapacityPosture:
-        return load_postgres_capacity_posture(self._connection)
 
     def execute_data_lifecycle(
         self,

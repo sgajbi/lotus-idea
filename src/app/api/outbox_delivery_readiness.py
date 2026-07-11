@@ -179,34 +179,17 @@ async def post_outbox_delivery_run_once(
         )
         return configuration_problem
 
-    capacity_decision = evaluate_nonessential_workload_capacity(repository)
-    if not capacity_decision.allowed:
-        blocker = capacity_decision.blocker or "postgres_capacity_posture_unavailable"
-        _emit_outbox_delivery_run_event(
-            OperationOutcome.BLOCKED,
-            blocker,
-            durable_storage_backed=durable_storage_backed,
-            operator_run_reference=operator_run_reference,
-        )
-        return OutboxDeliveryRunOnceResponse.blocked(
-            durable_storage_backed=durable_storage_backed,
-            blocker=blocker,
-            max_retry_count=max_retry_count,
-            operator_run_reference=operator_run_reference,
-        )
+    capacity_block = _outbox_capacity_block(
+        repository, durable_storage_backed, max_retry_count, operator_run_reference
+    )
+    if capacity_block is not None:
+        return capacity_block
 
-    if delivered_at_utc is not None and not is_utc_datetime(delivered_at_utc):
-        _emit_outbox_delivery_run_event(
-            OperationOutcome.INVALID_REQUEST,
-            "invalid_request",
-            durable_storage_backed=durable_storage_backed,
-            operator_run_reference=operator_run_reference,
-        )
-        return problem_response(
-            **_outbox_delivery_run_invalid_request_response_args(
-                "deliveredAtUtc must be UTC when provided."
-            )
-        )
+    delivery_time_problem = _delivery_time_problem(
+        delivered_at_utc, durable_storage_backed, operator_run_reference
+    )
+    if delivery_time_problem is not None:
+        return delivery_time_problem
 
     run_request_payload = outbox_delivery_run_request_payload(
         limit=limit,
@@ -271,6 +254,50 @@ def _outbox_delivery_slo_outcome(run_status: OutboxDeliveryRunStatus) -> str:
     if run_status is OutboxDeliveryRunStatus.REPLAYED:
         return "replayed"
     return "accepted"
+
+
+def _outbox_capacity_block(
+    repository: object,
+    durable_storage_backed: bool,
+    max_retry_count: int,
+    operator_run_reference: str,
+) -> OutboxDeliveryRunOnceResponse | None:
+    decision = evaluate_nonessential_workload_capacity(repository)
+    if decision.allowed:
+        return None
+    blocker = decision.blocker or "postgres_capacity_posture_unavailable"
+    _emit_outbox_delivery_run_event(
+        OperationOutcome.BLOCKED,
+        blocker,
+        durable_storage_backed=durable_storage_backed,
+        operator_run_reference=operator_run_reference,
+    )
+    return OutboxDeliveryRunOnceResponse.blocked(
+        durable_storage_backed=durable_storage_backed,
+        blocker=blocker,
+        max_retry_count=max_retry_count,
+        operator_run_reference=operator_run_reference,
+    )
+
+
+def _delivery_time_problem(
+    delivered_at_utc: datetime | None,
+    durable_storage_backed: bool,
+    operator_run_reference: str,
+) -> JSONResponse | None:
+    if delivered_at_utc is None or is_utc_datetime(delivered_at_utc):
+        return None
+    _emit_outbox_delivery_run_event(
+        OperationOutcome.INVALID_REQUEST,
+        "invalid_request",
+        durable_storage_backed=durable_storage_backed,
+        operator_run_reference=operator_run_reference,
+    )
+    return problem_response(
+        **_outbox_delivery_run_invalid_request_response_args(
+            "deliveredAtUtc must be UTC when provided."
+        )
+    )
 
 
 def _run_observed_outbox_delivery(

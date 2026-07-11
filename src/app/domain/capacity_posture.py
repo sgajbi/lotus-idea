@@ -3,10 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import StrEnum
 
-from app.contracts.operational_limits import (
-    POSTGRES_CONNECTION_UTILIZATION_SHED_FRACTION,
-    POSTGRES_CONNECTION_UTILIZATION_WARN_FRACTION,
-)
+POSTGRES_CONNECTION_UTILIZATION_WARN_FRACTION = 0.7
+POSTGRES_CONNECTION_UTILIZATION_SHED_FRACTION = 0.9
 
 
 class CapacityPosture(StrEnum):

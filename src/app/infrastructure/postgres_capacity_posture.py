@@ -19,6 +19,13 @@ FROM pg_stat_activity
 """
 
 
+class PostgresCapacityRepositoryMixin:
+    _connection: PostgresConnection
+
+    def postgres_capacity_posture(self) -> PostgresCapacityPosture:
+        return load_postgres_capacity_posture(self._connection)
+
+
 def load_postgres_capacity_posture(
     connection: PostgresConnection,
 ) -> PostgresCapacityPosture:

@@ -20,6 +20,13 @@ from app.infrastructure.postgres_protocols import PostgresConnection, PostgresCu
 from app.infrastructure.postgres_review_queue import candidate_record_from_row
 
 
+class PostgresCandidateDetailRepositoryMixin:
+    _connection: PostgresConnection
+
+    def candidate_record_by_id(self, candidate_id: str) -> CandidatePersistenceRecord | None:
+        return load_candidate_record_by_id(self._connection, candidate_id)
+
+
 def load_candidate_record_by_id(
     connection: PostgresConnection,
     candidate_id: str,
