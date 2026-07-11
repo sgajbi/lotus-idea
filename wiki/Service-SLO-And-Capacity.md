@@ -15,6 +15,7 @@ reconciliation, quality, and lineage policy.
 | PostgreSQL duration and outcomes | Implemented for mutations, lifecycle actions, and snapshot reads. |
 | Error-budget rules and alerts | Implemented and tested with `promtool`. |
 | Grafana dashboard | Implemented from bounded metrics and recording rules. |
+| Source-safe baseline runner | Implemented for guarded API, source-ingestion, outbox, dependency-failure/recovery, and read-only PostgreSQL scenarios. |
 | Production capacity certification | Blocked on load/soak, dependency-failure, pool-saturation, and cost/resource evidence. |
 
 No tenant, client, portfolio, candidate, event, request, idempotency,
@@ -35,8 +36,14 @@ correlation, or trace identifier is permitted as a metric label.
 
 ```powershell
 make service-slo-capacity-contract-gate
+make service-capacity-baseline-contract-gate
 make service-slo-rule-test
 ```
+
+`make service-capacity-workload` defaults to a read-only test-profile API
+baseline. Mutating workflow scenarios require explicit flags and a second
+confirmation for production. Stored evidence is aggregate and report-only;
+observed PostgreSQL utilization is not saturation certification.
 
 See `docs/operations/service-slo-capacity.md` for target values, alert response,
 capacity assumptions, and non-proof boundaries.

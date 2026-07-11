@@ -111,3 +111,53 @@ make service-slo-rule-test
 Certification additionally requires representative API, worker, outbox,
 downstream, and PostgreSQL load/failure scenarios plus dashboard, alert, and
 operator-action proof. The contract alone must not unblock supported features.
+
+## Capacity Baseline Evidence
+
+The workload runner uses the same governed evidence model for five closed
+scenario families:
+
+| Scenario | Probe | Stored evidence | Important boundary |
+| --- | --- | --- | --- |
+| `api` | `GET /health/ready` | Latency and accepted/error counts | Read-only; readiness is not business-feature proof. |
+| `source_ingestion` | Bounded run-once endpoint | Duration and aggregate item count | Mutating; maximum 100 manifest items. |
+| `outbox_delivery` | Bounded run-once endpoint | Duration, aggregate attempts, and retry posture | Mutating; unique transient idempotency keys and maximum 100 events. |
+| `dependency_failure` | Faulted source-ingestion call followed by recovery | Failure handling and explicit recovery outcome | Requires externally controlled fault injection; a blocked call is not recovery. |
+| `postgresql` | Read-only `SELECT 1` plus aggregate connection posture | Query latency and maximum observed utilization | Observation does not prove threshold saturation or load shedding. |
+
+Artifacts use `lotus-idea.service-capacity-baseline.v1` and contain aggregate
+measurements only. Request or response bodies, URLs, DSNs, credentials, caller
+assertions, and business identifiers are rejected or discarded.
+
+Test runs remain `report_only_baseline`. Certification requires at least 1,000
+samples per scenario, a one-hour observed window, production-like or production
+provenance, explicit dependency recovery, a PostgreSQL saturation-threshold
+exercise, and cost/resource evidence. These conditions do not replace review
+of SLO results and operator actions.
+
+### Safe Execution
+
+Run the default read-only API scenario:
+
+```powershell
+make service-capacity-workload `
+  SERVICE_CAPACITY_PROFILE=test `
+  SERVICE_CAPACITY_SCENARIO_ARGS="--scenario api"
+```
+
+Source-ingestion, outbox, and dependency-failure scenarios require
+`--allow-mutating-workflows`. Production additionally requires
+`--allow-production-mutations`; invoke the script directly for those flags.
+Provide transient authorization or trusted-caller assertions only through
+`LOTUS_IDEA_CAPACITY_AUTHORIZATION` or
+`LOTUS_IDEA_CAPACITY_TRUSTED_CALLER_CONTEXT`.
+
+The PostgreSQL scenario reads `LOTUS_IDEA_DATABASE_URL` transiently. It stores
+only query outcome, duration, and aggregate utilization. It does not retain the
+DSN or database error detail and does not clear saturation certification.
+
+Validate the evidence boundary independently:
+
+```powershell
+make service-capacity-baseline-contract-gate
+```

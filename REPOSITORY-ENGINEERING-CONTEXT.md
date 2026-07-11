@@ -1462,6 +1462,13 @@ idempotent workflow outcomes; conflicts and configuration blocks must not be
 silently converted into service failures. Do not claim pool saturation when the
 runtime exposes only an injected/direct PostgreSQL connection.
 
+Capacity probes must cross a narrow port and return bounded aggregates only.
+Keep request and response bodies, URLs, DSNs, credentials, caller assertions,
+and business identifiers transient inside infrastructure adapters. Require an
+explicit mutation switch for operator workflows and an additional confirmation
+for production. Treat observed PostgreSQL connection utilization as posture,
+not proof that saturation thresholds or load shedding were exercised.
+
 The contract, dashboard, and alert artifacts remain `not_certified` until
 representative load/soak, dependency-failure, PostgreSQL saturation, and
 cost/resource evidence exists. No runtime service split follows from adding

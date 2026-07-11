@@ -279,6 +279,16 @@ dependency-failure, PostgreSQL pool-saturation, and cost/resource baselines.
 The current injected/direct PostgreSQL connection must not be described as a
 measured pool, and no supported feature is promoted by this foundation.
 
+The issue `#345` baseline sub-slice now adds a closed, source-safe evidence
+model and guarded workload runner. It can exercise API, source-ingestion,
+outbox-delivery, dependency-failure/recovery, and read-only PostgreSQL probes;
+stores only aggregate latency, outcome, throughput, queue, retry, and
+utilization posture; and requires explicit mutation confirmation, including a
+second production confirmation. Test-profile evidence remains report-only.
+Observed PostgreSQL utilization does not clear the saturation/load-shed
+blocker, and no load/soak, dependency-failure, saturation, or cost blocker is
+removed until a qualifying production-like artifact is reviewed.
+
 ## Required Work
 
 1. Add metrics, logs, traces, audit events, health/readiness diagnostics, and
