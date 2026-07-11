@@ -190,6 +190,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--commit-sha", required=True)
     parser.add_argument("--branch", required=True)
     parser.add_argument("--run-id", required=True)
+    parser.add_argument("--postgres-threshold-proof", type=Path)
     parser.add_argument(
         "--output",
         type=Path,
@@ -252,6 +253,7 @@ def main(argv: list[str] | None = None) -> int:
             branch=args.branch,
             run_id=args.run_id,
             observed_window_seconds=observed_window_seconds,
+            postgres_threshold_proof=_read_optional_proof(args.postgres_threshold_proof),
             postgres_max_connection_utilization_fraction=postgres_max_utilization,
         )
         _write_json_atomic(args.output, artifact)
@@ -269,6 +271,15 @@ def _write_json_atomic(path: Path, payload: dict[str, object]) -> None:
     temporary = path.with_suffix(f"{path.suffix}.tmp")
     temporary.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     temporary.replace(path)
+
+
+def _read_optional_proof(path: Path | None) -> dict[str, object] | None:
+    if path is None:
+        return None
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError("PostgreSQL threshold proof must be a JSON object")
+    return payload
 
 
 if __name__ == "__main__":

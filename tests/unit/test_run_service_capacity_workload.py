@@ -116,6 +116,87 @@ def test_cli_writes_source_safe_report_only_evidence(
     assert "scenario_coverage_incomplete" in artifact["certificationBlockers"]
 
 
+def test_cli_links_validated_threshold_proof_without_clearing_test_blocker(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    module = _load_script()
+    output = tmp_path / "capacity.json"
+    proof = tmp_path / "threshold.json"
+    proof.write_text(
+        json.dumps(
+            {
+                "branch": "feature/capacity",
+                "claimPosture": "controlled_environment_evidence_only",
+                "commitSha": "abc123",
+                "environmentProfile": "test",
+                "generatedAtUtc": "2026-07-11T06:00:00Z",
+                "initial": {
+                    "collectionSucceeded": True,
+                    "connectionUtilizationFraction": 0.2,
+                    "posture": "normal",
+                },
+                "productionCapacityCertified": False,
+                "proofScope": "source_safe_postgres_capacity_threshold_and_recovery",
+                "recovered": {
+                    "collectionSucceeded": True,
+                    "connectionUtilizationFraction": 0.2,
+                    "posture": "normal",
+                },
+                "repository": "lotus-idea",
+                "runId": "threshold-1",
+                "schemaVersion": "lotus-idea.postgres-capacity-threshold-proof.v1",
+                "supportedFeaturePromoted": False,
+                "threshold": {
+                    "collectionSucceeded": True,
+                    "connectionUtilizationFraction": 0.9,
+                    "posture": "shed",
+                    "heldConnectionCount": 12,
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    class FakeProbe:
+        def __init__(self, **kwargs: object) -> None:
+            pass
+
+        def execute(self, request: CapacityProbeRequest) -> CapacityProbeResult:
+            return CapacityProbeResult(0.01, 200, "accepted", {})
+
+        def close(self) -> None:
+            pass
+
+    monkeypatch.setattr(module, "HttpCapacityProbe", FakeProbe)
+
+    exit_code = module.main(
+        [
+            "--base-url",
+            "https://idea.example",
+            "--environment-profile",
+            "test",
+            "--scenario",
+            "api",
+            "--commit-sha",
+            "abc123",
+            "--branch",
+            "feature/capacity",
+            "--run-id",
+            "local-1",
+            "--postgres-threshold-proof",
+            str(proof),
+            "--output",
+            str(output),
+        ]
+    )
+
+    assert exit_code == 0
+    resource = json.loads(output.read_text(encoding="utf-8"))["resourceEvidence"]
+    assert resource["postgresThresholdProofValidated"] is True
+    assert resource["postgresSaturationMeasured"] is False
+
+
 @pytest.mark.parametrize(
     ("kwargs", "message"),
     [

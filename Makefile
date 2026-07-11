@@ -118,6 +118,7 @@ POSTGRES_CAPACITY_EXPECTED_DATABASE ?=
 POSTGRES_CAPACITY_MAX_TARGET_CONNECTIONS ?= 100
 POSTGRES_CAPACITY_MAX_LOAD_CONNECTIONS ?= 100
 POSTGRES_CAPACITY_CONFIRMATION ?=
+SERVICE_CAPACITY_POSTGRES_THRESHOLD_PROOF_ARG ?=
 
 ifeq ($(OS),Windows_NT)
 VENV_PYTHON := $(VENV_DIR)/Scripts/python.exe
@@ -327,7 +328,7 @@ service-capacity-baseline-contract-gate:
 	$(VENV_PYTHON) scripts/service_capacity_baseline_contract_gate.py
 
 service-capacity-workload:
-	$(VENV_PYTHON) scripts/run_service_capacity_workload.py --base-url "$(SERVICE_CAPACITY_BASE_URL)" --environment-profile "$(SERVICE_CAPACITY_PROFILE)" $(SERVICE_CAPACITY_SCENARIO_ARGS) --request-count "$(SERVICE_CAPACITY_REQUEST_COUNT)" --concurrency "$(SERVICE_CAPACITY_CONCURRENCY)" --commit-sha "$(BUILD_GIT_COMMIT_SHA)" --branch "$(BUILD_GIT_BRANCH)" --run-id "$(BUILD_CI_RUN_ID)" --output "$(SERVICE_CAPACITY_OUTPUT)"
+	$(VENV_PYTHON) scripts/run_service_capacity_workload.py --base-url "$(SERVICE_CAPACITY_BASE_URL)" --environment-profile "$(SERVICE_CAPACITY_PROFILE)" $(SERVICE_CAPACITY_SCENARIO_ARGS) --request-count "$(SERVICE_CAPACITY_REQUEST_COUNT)" --concurrency "$(SERVICE_CAPACITY_CONCURRENCY)" --commit-sha "$(BUILD_GIT_COMMIT_SHA)" --branch "$(BUILD_GIT_BRANCH)" --run-id "$(BUILD_CI_RUN_ID)" $(SERVICE_CAPACITY_POSTGRES_THRESHOLD_PROOF_ARG) --output "$(SERVICE_CAPACITY_OUTPUT)"
 
 postgres-capacity-threshold-proof:
 	$(VENV_PYTHON) scripts/run_postgres_capacity_threshold_proof.py --environment-profile "$(SERVICE_CAPACITY_PROFILE)" --expected-database-name "$(POSTGRES_CAPACITY_EXPECTED_DATABASE)" --maximum-target-connections "$(POSTGRES_CAPACITY_MAX_TARGET_CONNECTIONS)" --maximum-load-connections "$(POSTGRES_CAPACITY_MAX_LOAD_CONNECTIONS)" --confirmation "$(POSTGRES_CAPACITY_CONFIRMATION)" --commit-sha "$(BUILD_GIT_COMMIT_SHA)" --branch "$(BUILD_GIT_BRANCH)" --run-id "$(BUILD_CI_RUN_ID)" --output "$(POSTGRES_CAPACITY_PROOF_OUTPUT)"
