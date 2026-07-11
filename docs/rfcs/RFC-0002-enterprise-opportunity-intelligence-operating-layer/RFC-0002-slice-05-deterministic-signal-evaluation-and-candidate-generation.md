@@ -1,6 +1,6 @@
 # RFC-0002 Slice 05: Deterministic Signal Evaluation And Candidate Generation
 
-Status: Implemented on branch, pending mainline closure - the Slice 05 outcome and acceptance gate are satisfied by deterministic, policy-versioned candidate generation; fail-closed source freshness and entitlement behavior; reason-path unit and integration tests; source-authority preservation; and governed caller-supplied/source-backed API boundaries across Core, Risk, Performance, Advise, and Manage. Trusted Core tenant scope, temporal reconciliation, stable caller-boundary ProblemDetails, and clean-tree canonical Risk/Performance proof are implementation-backed. Merge/CI evidence and later-slice Gateway/Workbench, data-mesh certification, and supported-feature promotion remain open and are not reclassified as Slice 05 implementation work.
+Status: Implemented on `main` - the Slice 05 outcome and acceptance gate are satisfied by deterministic, policy-versioned candidate generation; fail-closed source freshness and entitlement behavior; reason-path unit and integration tests; source-authority preservation; and governed caller-supplied/source-backed API boundaries across Core, Risk, Performance, Advise, and Manage. Trusted Core tenant scope, temporal reconciliation, stable caller-boundary ProblemDetails, and clean-tree canonical Risk/Performance proof are implementation-backed. PR `#347` merged the implementation, PR `#348` fixed the mainline release-identity validator, and commit `ad88690f4c25096c52981ccfa618e42a77a1347d` passed Main Releasability run `29154949303` and CodeQL run `29154947568`. Later-slice Gateway/Workbench certification, data-mesh promotion, and supported-feature promotion remain open and are not reclassified as Slice 05 implementation work.
 
 ## Outcome
 
@@ -941,8 +941,9 @@ Performance underperformance, and Performance benchmark-readiness evidence;
 the aggregate returned `certificationReady=true`. The aggregate records
 `sourceRevision`, `sourceTreeDirty=false`, correlation, trace, per-proof
 observations, and explicit non-proof boundaries. Raw child process output is
-intentionally excluded. The result is branch evidence until the implementation
-slice is merged and the mainline release lane captures equivalent proof.
+intentionally excluded. The implementation is merged on `main`; the source-safe
+aggregate remains bounded canonical source evidence rather than a broader
+Gateway/Workbench or supported-feature certification.
 
 This is implementation-proof automation, not Gateway/Workbench certification,
 data-product activation, client publication approval, official performance or
@@ -985,8 +986,10 @@ Current source-port validation:
 5. `make ci` passed with integration tests, e2e tests, coverage gate at
    `99.41%`, and dependency audit reporting no known vulnerabilities.
 
-GitHub PR validation and post-merge main releasability remain required before
-mainline closure.
+GitHub PR validation and post-merge main releasability are complete through PRs
+`#347` and `#348`, main commit
+`ad88690f4c25096c52981ccfa618e42a77a1347d`, Main Releasability run
+`29154949303`, and CodeQL run `29154947568`.
 
 Current source-ingestion orchestration validation:
 
