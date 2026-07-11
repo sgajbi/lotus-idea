@@ -13,6 +13,7 @@ from app.domain.ai_lineage_persistence import (
 )
 from app.domain.ai_governance import AIFallbackReason, AIExplanationResult
 from app.domain.idempotency import IdempotencyRecord
+from app.domain.lotus_ai_run_attestation import VerifiedLotusAIRunAttestationReceipt
 from app.domain.persistence import CandidatePersistenceRecord
 from tests.unit.test_ai_governance import EVALUATED_AT, candidate, command
 from app.domain import build_ai_explanation_request, deterministic_ai_fallback
@@ -28,9 +29,13 @@ def test_ai_lineage_request_idempotency_returns_conflict_without_recording_linea
     persisted_record = _candidate_record()
     record_calls = 0
 
-    def record_lineage(result: AIExplanationResult) -> AIExplanationLineagePersistenceResult:
+    def record_lineage(
+        result: AIExplanationResult,
+        *,
+        attestation_receipt: VerifiedLotusAIRunAttestationReceipt | None = None,
+    ) -> AIExplanationLineagePersistenceResult:
         nonlocal record_calls
-        del result
+        del result, attestation_receipt
         record_calls += 1
         raise AssertionError("conflict must not record lineage")
 
@@ -53,6 +58,17 @@ def test_ai_lineage_request_idempotency_returns_conflict_without_recording_linea
 def test_ai_lineage_request_idempotency_rejects_blank_key() -> None:
     result = _ai_result()
 
+    def record_lineage(
+        result: AIExplanationResult,
+        *,
+        attestation_receipt: VerifiedLotusAIRunAttestationReceipt | None = None,
+    ) -> AIExplanationLineagePersistenceResult:
+        del result, attestation_receipt
+        return AIExplanationLineagePersistenceResult(
+            decision=AIExplanationLineagePersistenceDecision.ACCEPTED,
+            record=None,
+        )
+
     try:
         record_ai_explanation_lineage_request_with_idempotency(
             result,
@@ -61,10 +77,7 @@ def test_ai_lineage_request_idempotency_rejects_blank_key() -> None:
             idempotency_records={},
             idempotency_candidates={},
             record_for_idempotency_key=lambda key: {"key": key},
-            record_lineage=lambda lineage_result: AIExplanationLineagePersistenceResult(
-                decision=AIExplanationLineagePersistenceDecision.ACCEPTED,
-                record=None,
-            ),
+            record_lineage=record_lineage,
         )
     except ValueError as exc:
         assert str(exc) == "idempotency_key is required"
