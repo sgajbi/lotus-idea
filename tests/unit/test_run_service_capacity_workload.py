@@ -658,6 +658,16 @@ def test_cost_attribution_verification_requires_production_like_profile(
         )
 
 
+def test_make_target_exposes_named_cost_attribution_evidence_argument() -> None:
+    makefile = (ROOT / "Makefile").read_text(encoding="utf-8")
+
+    assert "SERVICE_CAPACITY_COST_ATTRIBUTION_ARG ?=" in makefile
+    target = makefile.split("service-capacity-workload:", maxsplit=1)[1].split(
+        "\n\n", maxsplit=1
+    )[0]
+    assert "$(SERVICE_CAPACITY_COST_ATTRIBUTION_ARG)" in target
+
+
 def test_paced_load_soak_request_accepts_only_qualifying_steady_state_proof() -> None:
     module = _load_script()
 
