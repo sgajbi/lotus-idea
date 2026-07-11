@@ -2,6 +2,7 @@ import httpx
 import pytest
 from typing import Any
 
+import app.infrastructure.downstream_client as downstream_client_module
 from app.infrastructure.downstream_client import (
     DownstreamClientConfig,
     DownstreamClientConfigurationError,
@@ -26,6 +27,14 @@ def test_invalid_base_url_is_rejected() -> None:
 def test_invalid_timeout_is_rejected() -> None:
     with pytest.raises(DownstreamClientConfigurationError):
         DownstreamClientConfig(base_url="https://upstream.example", timeout_seconds=0)
+
+
+def test_unknown_dependency_metric_identity_is_rejected() -> None:
+    with pytest.raises(DownstreamClientConfigurationError, match="governed service vocabulary"):
+        DownstreamClientConfig(
+            base_url="https://upstream.example",
+            dependency="client-123",
+        )
 
 
 @pytest.mark.parametrize(
@@ -177,6 +186,73 @@ def test_trace_headers_are_forwarded() -> None:
         trace_id="trace-123",
     )
     assert payload == {"status": "ok"}
+
+
+def test_governed_dependency_records_one_logical_request_after_success(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    observations: list[dict[str, object]] = []
+    monkeypatch.setattr(
+        downstream_client_module,
+        "observe_dependency_request",
+        lambda **values: observations.append(values),
+    )
+    client = DownstreamJsonClient(
+        DownstreamClientConfig(
+            base_url="https://upstream.example",
+            dependency="lotus-core-query",
+        ),
+        client=httpx.Client(
+            base_url="https://upstream.example",
+            transport=httpx.MockTransport(
+                lambda _request: httpx.Response(200, json={"status": "ok"})
+            ),
+        ),
+    )
+
+    assert client.get_json("/status") == {"status": "ok"}
+    assert len(observations) == 1
+    assert observations[0]["dependency"] == "lotus-core-query"
+    assert observations[0]["method"] == "GET"
+    assert observations[0]["outcome"] == "accepted"
+    assert observations[0]["duration_seconds"] >= 0  # type: ignore[operator]
+
+
+@pytest.mark.parametrize(
+    ("response", "expected_outcome"),
+    [
+        (httpx.Response(400, json={"code": "rejected"}), "rejected"),
+        (httpx.Response(503, json={"code": "unavailable"}), "unavailable"),
+        (httpx.Response(200, text="not-json"), "malformed"),
+    ],
+)
+def test_governed_dependency_classifies_failed_logical_request(
+    monkeypatch: pytest.MonkeyPatch,
+    response: httpx.Response,
+    expected_outcome: str,
+) -> None:
+    observations: list[dict[str, object]] = []
+    monkeypatch.setattr(
+        downstream_client_module,
+        "observe_dependency_request",
+        lambda **values: observations.append(values),
+    )
+    client = DownstreamJsonClient(
+        DownstreamClientConfig(
+            base_url="https://upstream.example",
+            dependency="lotus-risk",
+        ),
+        client=httpx.Client(
+            base_url="https://upstream.example",
+            transport=httpx.MockTransport(lambda _request: response),
+        ),
+    )
+
+    with pytest.raises(DownstreamServiceError):
+        client.get_json("/status")
+
+    assert len(observations) == 1
+    assert observations[0]["outcome"] == expected_outcome
 
 
 def test_unsafe_trace_headers_are_replaced_before_forwarding() -> None:

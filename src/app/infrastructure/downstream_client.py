@@ -9,6 +9,7 @@ from urllib.parse import urlparse
 
 import httpx
 
+from app.observability.service_slo_metrics import DEPENDENCIES, observe_dependency_request
 from app.observability.correlation_context import (
     generated_correlation_id,
     generated_trace_id,
@@ -37,6 +38,7 @@ class DownstreamServiceError(Exception):
 @dataclass(frozen=True)
 class DownstreamClientConfig:
     base_url: str
+    dependency: str | None = None
     timeout_seconds: float = 2.0
     max_connections: int = 20
     max_keepalive_connections: int = 10
@@ -56,6 +58,10 @@ class DownstreamClientConfig:
         if parsed.scheme not in {"http", "https"} or not parsed.netloc:
             raise DownstreamClientConfigurationError(
                 "Downstream base_url must be an absolute HTTP(S) URL."
+            )
+        if self.dependency is not None and self.dependency not in DEPENDENCIES:
+            raise DownstreamClientConfigurationError(
+                "Downstream dependency must use the governed service vocabulary."
             )
         if self.timeout_seconds <= 0:
             raise DownstreamClientConfigurationError("Downstream timeout_seconds must be positive.")
@@ -214,6 +220,40 @@ class DownstreamJsonClient:
         trace_id: str | None = None,
         idempotency_key: str | None = None,
     ) -> dict[str, Any]:
+        started_at = time.perf_counter()
+        try:
+            payload = self._request_json_with_retries(
+                method,
+                path,
+                json_payload=json_payload,
+                correlation_id=correlation_id,
+                trace_id=trace_id,
+                idempotency_key=idempotency_key,
+            )
+        except DownstreamServiceError as error:
+            self._observe_dependency_request(
+                method=method,
+                outcome=_dependency_outcome(error),
+                duration_seconds=time.perf_counter() - started_at,
+            )
+            raise
+        self._observe_dependency_request(
+            method=method,
+            outcome="accepted",
+            duration_seconds=time.perf_counter() - started_at,
+        )
+        return payload
+
+    def _request_json_with_retries(
+        self,
+        method: str,
+        path: str,
+        *,
+        json_payload: dict[str, Any] | None = None,
+        correlation_id: str | None = None,
+        trace_id: str | None = None,
+        idempotency_key: str | None = None,
+    ) -> dict[str, Any]:
         retry_attempt_limit = self._retry_attempt_limit(
             method=method,
             idempotency_key=idempotency_key,
@@ -288,6 +328,22 @@ class DownstreamJsonClient:
             )
         return payload
 
+    def _observe_dependency_request(
+        self,
+        *,
+        method: str,
+        outcome: str,
+        duration_seconds: float,
+    ) -> None:
+        if self._config.dependency is None:
+            return
+        observe_dependency_request(
+            dependency=self._config.dependency,
+            method=method,
+            outcome=outcome,
+            duration_seconds=duration_seconds,
+        )
+
     def _retry_attempt_limit(self, *, method: str, idempotency_key: str | None) -> int:
         if self._config.retry_max_attempts <= 1:
             return 1
@@ -323,6 +379,14 @@ class DownstreamJsonClient:
         random_sample = min(max(self._jitter_random(), 0.0), 1.0)
         jitter_factor = 1 - (self._config.retry_jitter_ratio * random_sample)
         return delay_seconds * jitter_factor
+
+
+def _dependency_outcome(error: DownstreamServiceError) -> str:
+    return {
+        "upstream_timeout": "timeout",
+        "upstream_rejected_request": "rejected",
+        "upstream_malformed_response": "malformed",
+    }.get(error.code, "unavailable")
 
 
 def _retry_after_seconds(response: httpx.Response | None) -> float | None:

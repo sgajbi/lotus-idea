@@ -729,6 +729,7 @@ def _core_source_client_configs(
     return (
         DownstreamClientConfig(
             base_url=core_source_urls.query_base_url,
+            dependency="lotus-core-query",
             timeout_seconds=timeout_seconds,
             max_connections=max_connections,
             max_keepalive_connections=max_keepalive_connections,
@@ -740,6 +741,7 @@ def _core_source_client_configs(
         ),
         DownstreamClientConfig(
             base_url=core_source_urls.query_control_plane_base_url,
+            dependency="lotus-core-control",
             timeout_seconds=timeout_seconds,
             max_connections=max_connections,
             max_keepalive_connections=max_keepalive_connections,
@@ -755,6 +757,7 @@ def _core_source_client_configs(
 def _risk_source_client_config(risk_base_url: str) -> DownstreamClientConfig:
     return DownstreamClientConfig(
         base_url=risk_base_url,
+        dependency="lotus-risk",
         timeout_seconds=_positive_float_env(RISK_TIMEOUT_SECONDS_ENV, default=2.0),
         max_connections=_positive_int_env(SOURCE_INGESTION_MAX_CONNECTIONS_ENV, default=20),
         max_keepalive_connections=_positive_int_env(
@@ -777,6 +780,7 @@ def _risk_source_client_config(risk_base_url: str) -> DownstreamClientConfig:
 def _performance_source_client_config(performance_base_url: str) -> DownstreamClientConfig:
     return DownstreamClientConfig(
         base_url=performance_base_url,
+        dependency="lotus-performance",
         timeout_seconds=_positive_float_env(PERFORMANCE_TIMEOUT_SECONDS_ENV, default=2.0),
         max_connections=_positive_int_env(SOURCE_INGESTION_MAX_CONNECTIONS_ENV, default=20),
         max_keepalive_connections=_positive_int_env(
@@ -799,6 +803,7 @@ def _performance_source_client_config(performance_base_url: str) -> DownstreamCl
 def _manage_source_client_config(manage_base_url: str) -> DownstreamClientConfig:
     return DownstreamClientConfig(
         base_url=manage_base_url,
+        dependency="lotus-manage",
         timeout_seconds=_positive_float_env(MANAGE_TIMEOUT_SECONDS_ENV, default=2.0),
         max_connections=_positive_int_env(SOURCE_INGESTION_MAX_CONNECTIONS_ENV, default=20),
         max_keepalive_connections=_positive_int_env(
@@ -821,6 +826,7 @@ def _manage_source_client_config(manage_base_url: str) -> DownstreamClientConfig
 def _advise_source_client_config(advise_base_url: str) -> DownstreamClientConfig:
     return DownstreamClientConfig(
         base_url=advise_base_url,
+        dependency="lotus-advise",
         timeout_seconds=_positive_float_env(ADVISE_TIMEOUT_SECONDS_ENV, default=2.0),
         max_connections=_positive_int_env(SOURCE_INGESTION_MAX_CONNECTIONS_ENV, default=20),
         max_keepalive_connections=_positive_int_env(

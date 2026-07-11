@@ -38,6 +38,7 @@ class OutboxBrokerPublisherConfig:
         try:
             DownstreamClientConfig(
                 base_url=self.base_url,
+                dependency="lotus-platform-broker",
                 timeout_seconds=self.timeout_seconds,
                 max_connections=self.max_connections,
                 max_keepalive_connections=self.max_keepalive_connections,
@@ -60,6 +61,7 @@ class HttpOutboxEventPublisher:
         self._client = client or DownstreamJsonClient(
             DownstreamClientConfig(
                 base_url=config.base_url,
+                dependency="lotus-platform-broker",
                 timeout_seconds=config.timeout_seconds,
                 max_connections=config.max_connections,
                 max_keepalive_connections=config.max_keepalive_connections,

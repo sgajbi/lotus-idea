@@ -44,6 +44,7 @@ class DownstreamRealizationAdapterConfig:
         try:
             DownstreamClientConfig(
                 base_url=self.base_url,
+                dependency=self.source_authority.value,
                 timeout_seconds=self.timeout_seconds,
                 max_connections=self.max_connections,
                 max_keepalive_connections=self.max_keepalive_connections,
@@ -158,6 +159,7 @@ def _client_from_config(
     return client or DownstreamJsonClient(
         DownstreamClientConfig(
             base_url=config.base_url,
+            dependency=config.source_authority.value,
             timeout_seconds=config.timeout_seconds,
             max_connections=config.max_connections,
             max_keepalive_connections=config.max_keepalive_connections,
