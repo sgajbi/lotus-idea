@@ -22,7 +22,7 @@ INPUT_KEYS = frozenset(
         "generatedAtUtc",
         "measurements",
         "observedWindowSeconds",
-        "postgresSaturationMeasured",
+        "postgresThresholdProof",
         "runId",
     }
 )
@@ -61,7 +61,7 @@ def generate_service_capacity_baseline(input_payload: dict[str, Any]) -> dict[st
         branch=_required_text(input_payload, "branch"),
         run_id=_required_text(input_payload, "runId"),
         observed_window_seconds=_number(input_payload, "observedWindowSeconds"),
-        postgres_saturation_measured=_boolean(input_payload, "postgresSaturationMeasured"),
+        postgres_threshold_proof=_optional_object(input_payload, "postgresThresholdProof"),
         cost_resource_measured=_boolean(input_payload, "costResourceMeasured"),
     )
 
@@ -121,6 +121,13 @@ def _boolean(payload: dict[str, Any], key: str) -> bool:
 
 def _optional_boolean(payload: dict[str, Any], key: str) -> bool | None:
     return None if payload.get(key) is None else _boolean(payload, key)
+
+
+def _optional_object(payload: dict[str, Any], key: str) -> dict[str, Any] | None:
+    value = payload.get(key)
+    if value is not None and not isinstance(value, dict):
+        raise ValueError(f"{key} must be an object or null")
+    return value
 
 
 def _parse_datetime(value: Any) -> datetime:

@@ -30,7 +30,7 @@ def _input() -> dict[str, Any]:
         "branch": "feature/capacity",
         "runId": "local-1",
         "observedWindowSeconds": 30.0,
-        "postgresSaturationMeasured": False,
+        "postgresThresholdProof": None,
         "costResourceMeasured": False,
         "measurements": [
             {

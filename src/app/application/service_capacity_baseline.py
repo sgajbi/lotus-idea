@@ -6,6 +6,10 @@ from datetime import UTC, datetime
 import math
 from typing import Any, Iterable
 
+from app.application.postgres_capacity_threshold_proof import (
+    validate_postgres_capacity_threshold_proof,
+)
+
 
 SCHEMA_VERSION = "lotus-idea.service-capacity-baseline.v1"
 SCENARIOS = (
@@ -79,7 +83,7 @@ def build_service_capacity_baseline(
     branch: str,
     run_id: str,
     observed_window_seconds: float,
-    postgres_saturation_measured: bool = False,
+    postgres_threshold_proof: dict[str, Any] | None = None,
     postgres_max_connection_utilization_fraction: float | None = None,
     cost_resource_measured: bool = False,
 ) -> dict[str, Any]:
@@ -104,6 +108,16 @@ def build_service_capacity_baseline(
     for measurement in measurements:
         grouped[measurement.scenario].append(measurement)
     scenarios = [_scenario_summary(scenario, grouped[scenario]) for scenario in SCENARIOS]
+    postgres_threshold_proof_validated = _postgres_threshold_proof_is_valid(
+        postgres_threshold_proof,
+        commit_sha=commit_sha,
+        branch=branch,
+    )
+    postgres_saturation_measured = bool(
+        postgres_threshold_proof_validated
+        and postgres_threshold_proof is not None
+        and postgres_threshold_proof.get("environmentProfile") == "production-like"
+    )
     blockers = _certification_blockers(
         environment_profile=environment_profile,
         scenarios=scenarios,
@@ -125,6 +139,12 @@ def build_service_capacity_baseline(
         "scenarios": scenarios,
         "resourceEvidence": {
             "postgresSaturationMeasured": postgres_saturation_measured,
+            "postgresThresholdProofValidated": postgres_threshold_proof_validated,
+            "postgresThresholdProofRunId": (
+                postgres_threshold_proof.get("runId")
+                if postgres_threshold_proof_validated and postgres_threshold_proof is not None
+                else None
+            ),
             "postgresMaxConnectionUtilizationFraction": (
                 postgres_max_connection_utilization_fraction
             ),
@@ -225,6 +245,20 @@ def _certification_blockers(
     if not cost_resource_measured:
         blockers.append("cost_resource_evidence_missing")
     return blockers
+
+
+def _postgres_threshold_proof_is_valid(
+    proof: dict[str, Any] | None,
+    *,
+    commit_sha: str,
+    branch: str,
+) -> bool:
+    return bool(
+        proof is not None
+        and not validate_postgres_capacity_threshold_proof(proof)
+        and proof.get("commitSha") == commit_sha
+        and proof.get("branch") == branch
+    )
 
 
 def _percentile(samples: list[float], percentile: float) -> float | None:

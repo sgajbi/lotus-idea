@@ -10,6 +10,10 @@ from app.application.service_capacity_baseline import (
     build_service_capacity_baseline,
     validate_service_capacity_baseline,
 )
+from app.application.postgres_capacity_threshold_proof import (
+    execute_postgres_capacity_threshold_proof,
+)
+from app.domain.capacity_posture import evaluate_postgres_capacity_posture
 import app.application.service_capacity_baseline as baseline_module
 
 
@@ -25,6 +29,35 @@ def _measurement(scenario: str, index: int) -> CapacityMeasurement:
         queue_age_seconds=5.0 if scenario == "outbox_delivery" else None,
         retry_count=2 if scenario == "dependency_failure" else 0,
         recovered=True if scenario == "dependency_failure" else None,
+    )
+
+
+class ThresholdProofPort:
+    def __init__(self) -> None:
+        self._utilizations = iter([0.2, 0.9, 0.2])
+
+    def read_posture(self):  # type: ignore[no-untyped-def]
+        return evaluate_postgres_capacity_posture(next(self._utilizations))
+
+    def acquire_load_connection(self) -> None:
+        pass
+
+    def release_load_connections(self) -> None:
+        pass
+
+    def close(self) -> None:
+        pass
+
+
+def _threshold_proof(*, environment_profile: str = "production-like") -> dict[str, object]:
+    return execute_postgres_capacity_threshold_proof(
+        stress_port=ThresholdProofPort(),
+        environment_profile=environment_profile,
+        generated_at_utc=GENERATED_AT,
+        commit_sha="abc123",
+        branch="main",
+        run_id="threshold-1",
+        maximum_load_connections=5,
     )
 
 
@@ -69,7 +102,7 @@ def test_missing_scenarios_and_dependency_recovery_remain_explicit() -> None:
         branch="main",
         run_id="ci-1",
         observed_window_seconds=3_600,
-        postgres_saturation_measured=True,
+        postgres_threshold_proof=_threshold_proof(),
         cost_resource_measured=True,
     )
 
@@ -78,6 +111,40 @@ def test_missing_scenarios_and_dependency_recovery_remain_explicit() -> None:
         "minimum_sample_volume_missing",
         "dependency_recovery_evidence_missing",
     ]
+    assert artifact["resourceEvidence"]["postgresSaturationMeasured"] is True
+    assert artifact["resourceEvidence"]["postgresThresholdProofValidated"] is True
+
+
+def test_test_profile_or_mismatched_threshold_proof_cannot_clear_saturation_blocker() -> None:
+    test_proof = _threshold_proof(environment_profile="test")
+    artifact = build_service_capacity_baseline(
+        measurements=[],
+        environment_profile="test",
+        generated_at_utc=GENERATED_AT,
+        commit_sha="abc123",
+        branch="main",
+        run_id="run-1",
+        observed_window_seconds=1.0,
+        postgres_threshold_proof=test_proof,
+    )
+    assert artifact["resourceEvidence"]["postgresThresholdProofValidated"] is True
+    assert artifact["resourceEvidence"]["postgresSaturationMeasured"] is False
+    assert "postgres_saturation_evidence_missing" in artifact["certificationBlockers"]
+
+    mismatched = dict(_threshold_proof())
+    mismatched["commitSha"] = "different"
+    artifact = build_service_capacity_baseline(
+        measurements=[],
+        environment_profile="production-like",
+        generated_at_utc=GENERATED_AT,
+        commit_sha="abc123",
+        branch="main",
+        run_id="run-1",
+        observed_window_seconds=1.0,
+        postgres_threshold_proof=mismatched,
+    )
+    assert artifact["resourceEvidence"]["postgresThresholdProofValidated"] is False
+    assert "postgres_saturation_evidence_missing" in artifact["certificationBlockers"]
 
 
 def test_validator_rejects_claim_inflation_and_sensitive_fields() -> None:
