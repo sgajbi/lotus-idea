@@ -1,0 +1,94 @@
+name: Service Load Soak Evidence
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: Confirm the controlled production-like one-hour load and soak exercise
+        required: true
+        type: string
+
+concurrency:
+  group: service-load-soak-evidence-main
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write
+  attestations: write
+
+jobs:
+  load-soak-proof:
+    name: Production-like Service Load Soak Proof
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      inputs.confirmation == 'RUN_CONTROLLED_LOTUS_IDEA_LOAD_SOAK'
+    runs-on: [self-hosted, linux, lotus-capacity-evidence]
+    environment: capacity-production-like
+    timeout-minutes: 90
+    env:
+      LOTUS_IDEA_CAPACITY_AUTHORIZATION: ${{ secrets.LOTUS_IDEA_CAPACITY_AUTHORIZATION }}
+      LOTUS_IDEA_CAPACITY_TRUSTED_CALLER_CONTEXT: ${{ secrets.LOTUS_IDEA_CAPACITY_TRUSTED_CALLER_CONTEXT }}
+      LOTUS_IDEA_DATABASE_URL: ${{ secrets.LOTUS_IDEA_CAPACITY_DATABASE_URL }}
+      SERVICE_CAPACITY_BASE_URL: ${{ vars.LOTUS_IDEA_CAPACITY_BASE_URL }}
+      SERVICE_CAPACITY_AS_OF_DATE: ${{ vars.LOTUS_IDEA_CAPACITY_AS_OF_DATE }}
+      PIP_DISABLE_PIP_VERSION_CHECK: "1"
+      PYTHONUNBUFFERED: "1"
+      PYTHON_VERSION: "3.12"
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: "pip"
+      - name: Install locked dependencies
+        run: make install
+      - name: Validate protected environment inputs
+        run: >-
+          test -n "${SERVICE_CAPACITY_BASE_URL}" &&
+          test -n "${SERVICE_CAPACITY_AS_OF_DATE}" &&
+          test -n "${LOTUS_IDEA_DATABASE_URL}"
+      - name: Seed isolated synthetic downstream capacity resource
+        run: >-
+          .venv/bin/python scripts/seed_downstream_capacity_resource.py
+          --base-url "${SERVICE_CAPACITY_BASE_URL}"
+          --as-of-date "${SERVICE_CAPACITY_AS_OF_DATE}"
+          --seeded-at-utc "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          --commit-sha "${GITHUB_SHA}"
+          --branch "${GITHUB_REF_NAME}"
+          --run-id "${GITHUB_RUN_ID}"
+          --confirmation SEED_SYNTHETIC_LOTUS_IDEA_CAPACITY_RESOURCE
+          --output output/observability/downstream-capacity-seed.json
+      - name: Run paced five-scenario load and soak proof
+        run: >-
+          .venv/bin/python scripts/run_service_capacity_workload.py
+          --base-url "${SERVICE_CAPACITY_BASE_URL}"
+          --environment-profile production-like
+          --scenario api
+          --scenario source_ingestion
+          --scenario outbox_delivery
+          --scenario downstream_submission
+          --scenario postgresql
+          --request-count 1000
+          --concurrency 10
+          --paced-load-soak
+          --minimum-observation-seconds 3600
+          --allow-mutating-workflows
+          --downstream-capacity-seed output/observability/downstream-capacity-seed.json
+          --commit-sha "${GITHUB_SHA}"
+          --branch "${GITHUB_REF_NAME}"
+          --run-id "${GITHUB_RUN_ID}"
+          --output output/observability/service-load-soak-proof.json
+      - name: Validate qualifying source-safe proof artifact
+        run: make service-load-soak-proof-gate
+      - name: Attest load and soak provenance
+        uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4.1.1
+        with:
+          subject-path: output/observability/service-load-soak-proof.json
+      - name: Upload load and soak evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0 # v7.0.1
+        with:
+          name: service-load-soak-${{ github.run_id }}
+          path: output/observability/service-load-soak-proof.json
+          if-no-files-found: error
+          retention-days: 90

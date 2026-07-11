@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 import re
 import sys
-from typing import Any
+from typing import Any, TypeGuard
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -20,6 +20,11 @@ from app.application.source_ingestion import (  # noqa: E402
     SOURCE_INGESTION_RUN_ONCE_BATCH_CEILING,
 )
 from app.application.service_capacity_baseline import SCENARIOS  # noqa: E402
+from app.application.capacity_evidence_qualification import (  # noqa: E402
+    LOAD_SOAK_SCENARIO_THRESHOLDS,
+    MINIMUM_LOAD_SOAK_SAMPLES,
+    MINIMUM_LOAD_SOAK_SECONDS,
+)
 from app.contracts.operational_limits import (  # noqa: E402
     DEFAULT_DEPENDENCY_MAX_CONNECTIONS,
     DEFAULT_DEPENDENCY_MAX_KEEPALIVE_CONNECTIONS,
@@ -41,10 +46,10 @@ EXPECTED_WORKFLOWS = {
     "postgresql",
 }
 REQUIRED_BLOCKERS = {
-    "load_and_soak_baseline_missing",
+    "load_soak_attestation_missing",
     "dependency_recovery_attestation_missing",
     "postgres_saturation_evidence_missing",
-    "cost_resource_baseline_missing",
+    "cost_resource_evidence_missing",
 }
 FORBIDDEN_LABELS = {
     "candidate_id",
@@ -157,6 +162,14 @@ def _validate_objectives(payload: dict[str, Any]) -> list[str]:
             errors.append(f"{workflow} latency objectives must be positive and ordered")
         if objective.get("certification_status") != "baseline_required":
             errors.append(f"{workflow} objective must remain baseline_required")
+        expected = LOAD_SOAK_SCENARIO_THRESHOLDS.get(workflow)
+        if expected is not None and (error_budget, p95, p99) != expected:
+            errors.append(f"{workflow} objective must match code-owned load soak thresholds")
+    applicability = payload.get("applicability")
+    if not isinstance(applicability, dict) or applicability.get(
+        "minimum_request_volume"
+    ) != MINIMUM_LOAD_SOAK_SAMPLES:
+        errors.append("service SLO minimum request volume must match load soak qualification")
     return errors
 
 
@@ -253,6 +266,8 @@ def _validate_source_truth(payload: dict[str, Any], repository_root: Path) -> li
         "postgres_threshold_attestation_verifier",
         "postgres_threshold_qualification_model",
         "dependency_recovery_attestation_workflow",
+        "load_soak_attestation_workflow",
+        "load_soak_proof_gate",
         "operations_doc",
         "operations_wiki",
         "rfc_slice",
@@ -297,6 +312,7 @@ def _validate_capacity_attestation_workflow(repository_root: Path) -> list[str]:
     if "SERVICE_CAPACITY_PROFILE: production" in workflow:
         errors.append("PostgreSQL threshold measurement must remain controlled-test classified")
     errors.extend(_validate_dependency_recovery_workflow(repository_root))
+    errors.extend(_validate_load_soak_workflow(repository_root))
     return errors
 
 
@@ -325,6 +341,44 @@ def _validate_dependency_recovery_workflow(repository_root: Path) -> list[str]:
     ]
     if "schedule:" in workflow:
         errors.append("dependency recovery workflow must not run on a schedule")
+    return errors
+
+
+def _validate_load_soak_workflow(repository_root: Path) -> list[str]:
+    path = repository_root / ".github/workflows/service-load-soak-evidence.yml"
+    if not path.is_file():
+        return ["load soak attestation workflow is missing"]
+    workflow = path.read_text(encoding="utf-8")
+    required = (
+        "workflow_dispatch:",
+        "github.ref == 'refs/heads/main'",
+        "RUN_CONTROLLED_LOTUS_IDEA_LOAD_SOAK",
+        "runs-on: [self-hosted, linux, lotus-capacity-evidence]",
+        "environment: capacity-production-like",
+        "LOTUS_IDEA_DATABASE_URL: ${{ secrets.LOTUS_IDEA_CAPACITY_DATABASE_URL }}",
+        "SEED_SYNTHETIC_LOTUS_IDEA_CAPACITY_RESOURCE",
+        "--environment-profile production-like",
+        f"--request-count {MINIMUM_LOAD_SOAK_SAMPLES}",
+        "--paced-load-soak",
+        f"--minimum-observation-seconds {int(MINIMUM_LOAD_SOAK_SECONDS)}",
+        "--downstream-capacity-seed",
+        "make service-load-soak-proof-gate",
+        "actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373",
+    )
+    errors = [
+        f"load soak workflow missing {token!r}" for token in required if token not in workflow
+    ]
+    for scenario in sorted(EXPECTED_WORKFLOWS):
+        if workflow.count(f"--scenario {scenario}") != 1:
+            errors.append(f"load soak workflow must run scenario {scenario} exactly once")
+    if "--scenario dependency_failure" in workflow:
+        errors.append("load soak workflow must keep dependency recovery evidence separate")
+    if "schedule:" in workflow:
+        errors.append("load soak workflow must not run on a schedule")
+    gate = workflow.find("make service-load-soak-proof-gate")
+    attestation = workflow.find("actions/attest-build-provenance@")
+    if gate < 0 or attestation < 0 or gate > attestation:
+        errors.append("load soak proof gate must run before provenance attestation")
     return errors
 
 
@@ -461,11 +515,11 @@ def validate_dashboard_payload(payload: Any) -> list[str]:
     return errors
 
 
-def _fraction(value: Any) -> bool:
+def _fraction(value: Any) -> TypeGuard[int | float]:
     return not isinstance(value, bool) and isinstance(value, (int, float)) and 0 < value < 1
 
 
-def _positive_number(value: Any) -> bool:
+def _positive_number(value: Any) -> TypeGuard[int | float]:
     return not isinstance(value, bool) and isinstance(value, (int, float)) and value > 0
 
 

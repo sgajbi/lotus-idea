@@ -149,15 +149,17 @@
     "postgres_threshold_attestation_verifier": "src/app/infrastructure/github_capacity_attestation.py",
     "postgres_threshold_qualification_model": "src/app/application/capacity_evidence_qualification.py",
     "dependency_recovery_attestation_workflow": ".github/workflows/service-dependency-recovery-evidence.yml",
+    "load_soak_attestation_workflow": ".github/workflows/service-load-soak-evidence.yml",
+    "load_soak_proof_gate": "scripts/service_load_soak_proof_gate.py",
     "operations_doc": "docs/operations/service-slo-capacity.md",
     "operations_wiki": "wiki/Service-SLO-And-Capacity.md",
     "rfc_slice": "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-15-observability-security-entitlements-and-operations.md"
   },
   "certification_blockers": [
-    "load_and_soak_baseline_missing",
+    "load_soak_attestation_missing",
     "dependency_recovery_attestation_missing",
     "postgres_saturation_evidence_missing",
-    "cost_resource_baseline_missing"
+    "cost_resource_evidence_missing"
   ],
   "non_proof_boundaries": [
     "This service/workflow SLO contract is distinct from the mesh data-product SLO contract.",

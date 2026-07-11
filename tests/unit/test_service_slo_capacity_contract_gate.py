@@ -49,6 +49,12 @@ def test_service_slo_capacity_contract_names_baseline_automation() -> None:
     assert payload["source_of_truth"]["postgres_threshold_attestation_workflow"].endswith(
         "postgres-capacity-evidence.yml"
     )
+    assert payload["source_of_truth"]["load_soak_attestation_workflow"].endswith(
+        "service-load-soak-evidence.yml"
+    )
+    assert payload["source_of_truth"]["load_soak_proof_gate"].endswith(
+        "service_load_soak_proof_gate.py"
+    )
 
 
 def test_service_slo_capacity_contract_blocks_false_certification() -> None:
@@ -82,6 +88,18 @@ def test_service_slo_capacity_contract_rejects_invalid_objectives_and_capacity()
     assert any("batch_max_items must be a positive integer" in error for error in errors)
     assert "PostgreSQL utilization thresholds must be ordered fractions" in errors
     assert "source-ingestion capacity budget must match code-owned ceiling" in errors
+
+
+def test_service_slo_capacity_contract_rejects_load_soak_threshold_drift() -> None:
+    module = _load_gate()
+    payload = _payload(module)
+    payload["service_objectives"][0]["latency_p99_seconds"] = 1.6
+    payload["applicability"]["minimum_request_volume"] = 999
+
+    errors = module.validate_payload(payload)
+
+    assert "api objective must match code-owned load soak thresholds" in errors
+    assert "service SLO minimum request volume must match load soak qualification" in errors
 
 
 def test_service_slo_capacity_contract_rejects_runtime_default_drift() -> None:
