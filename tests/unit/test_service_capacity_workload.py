@@ -300,6 +300,58 @@ def test_paced_soak_rejects_incomplete_or_inconsistent_plans(
         )
 
 
+def test_paced_soak_rejects_invalid_window_volume_concurrency_or_rounds() -> None:
+    scenarios = ("api", "source_ingestion", "outbox_delivery", "downstream_submission")
+    valid = [CapacityWorkloadPlan(scenario, (REQUEST,) * 4, 2) for scenario in scenarios]
+    cases = (
+        (valid, 4, 0.0, "minimum_observation_seconds must be positive"),
+        (valid, 3, 10.0, "PostgreSQL and HTTP request counts must match"),
+        (
+            [
+                CapacityWorkloadPlan(scenario, (REQUEST,) * 4, 1 if scenario == "api" else 2)
+                for scenario in scenarios
+            ],
+            4,
+            10.0,
+            "same concurrency",
+        ),
+        (
+            [CapacityWorkloadPlan(scenario, (REQUEST,), 1) for scenario in scenarios],
+            1,
+            10.0,
+            "at least two observation rounds",
+        ),
+    )
+
+    for plans, postgres_count, window, message in cases:
+        with pytest.raises(ValueError, match=message):
+            execute_paced_capacity_soak(
+                plans=plans,
+                http_probe=StubProbe([]),
+                postgres_probe=StubPostgresProbe([]),
+                postgres_request_count=postgres_count,
+                minimum_observation_seconds=window,
+            )
+
+
+def test_paced_soak_fails_when_runtime_clock_does_not_observe_window() -> None:
+    scenarios = ("api", "source_ingestion", "outbox_delivery", "downstream_submission")
+    plans = [CapacityWorkloadPlan(scenario, (REQUEST,) * 2, 1) for scenario in scenarios]
+
+    with pytest.raises(ValueError, match="clock did not observe the minimum window"):
+        execute_paced_capacity_soak(
+            plans=plans,
+            http_probe=StubProbe([_result() for _ in range(8)]),
+            postgres_probe=StubPostgresProbe(
+                [PostgresCapacityProbeResult(0.01, "accepted", 0.1) for _ in range(2)]
+            ),
+            postgres_request_count=2,
+            minimum_observation_seconds=10.0,
+            monotonic=lambda: 0.0,
+            sleeper=lambda _: None,
+        )
+
+
 @pytest.mark.parametrize(
     ("request_count", "max_concurrency", "message"),
     [

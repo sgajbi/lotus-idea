@@ -125,7 +125,11 @@ def execute_paced_capacity_soak(
         raise ValueError(
             "paced soak requires each governed steady-state HTTP scenario exactly once"
         )
-    if minimum_observation_seconds <= 0:
+    if (
+        isinstance(minimum_observation_seconds, bool)
+        or not math.isfinite(minimum_observation_seconds)
+        or minimum_observation_seconds <= 0
+    ):
         raise ValueError("minimum_observation_seconds must be positive")
     request_counts = {len(plan.requests) for plan in plans}
     if len(request_counts) != 1:
@@ -154,30 +158,25 @@ def execute_paced_capacity_soak(
         for plan in plans:
             start = round_index * plan.max_concurrency
             requests = plan.requests[start : start + plan.max_concurrency]
-            if not requests:
-                continue
             batch = replace(plan, requests=requests, max_concurrency=len(requests))
             measurements.extend(
                 replace(item, observed_offset_seconds=observed_offset)
                 for item in execute_capacity_workload(batch, probe=http_probe)
             )
         postgres_batch_size = min(concurrency, postgres_remaining)
-        if postgres_batch_size:
-            postgres_result = execute_postgres_capacity_workload(
-                probe=postgres_probe,
-                request_count=postgres_batch_size,
-                max_concurrency=postgres_batch_size,
-            )
-            measurements.extend(
-                replace(item, observed_offset_seconds=observed_offset)
-                for item in postgres_result.measurements
-            )
-            observed_utilization = postgres_result.max_connection_utilization_fraction
-            if observed_utilization is not None:
-                max_postgres_utilization = max(
-                    max_postgres_utilization or 0.0, observed_utilization
-                )
-            postgres_remaining -= postgres_batch_size
+        postgres_result = execute_postgres_capacity_workload(
+            probe=postgres_probe,
+            request_count=postgres_batch_size,
+            max_concurrency=postgres_batch_size,
+        )
+        measurements.extend(
+            replace(item, observed_offset_seconds=observed_offset)
+            for item in postgres_result.measurements
+        )
+        observed_utilization = postgres_result.max_connection_utilization_fraction
+        if observed_utilization is not None:
+            max_postgres_utilization = max(max_postgres_utilization or 0.0, observed_utilization)
+        postgres_remaining -= postgres_batch_size
     observed_window_seconds = monotonic() - started_at
     if observed_window_seconds < minimum_observation_seconds:
         raise ValueError("paced soak clock did not observe the minimum window")
