@@ -27,6 +27,10 @@ class RuntimeProfile(StrEnum):
     def requires_durable_write_repository(self) -> bool:
         return not self.allows_process_local_repository
 
+    @property
+    def allows_unattested_ai_workflow_fixture(self) -> bool:
+        return self in {RuntimeProfile.LOCAL, RuntimeProfile.TEST}
+
 
 @dataclass(frozen=True)
 class LotusIdeaRuntimeSettings:

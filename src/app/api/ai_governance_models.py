@@ -8,6 +8,7 @@ from pydantic import Field, field_validator
 from app.api.base_model import CamelModel
 from app.api.temporal_validation import require_timezone_aware
 from app.domain.ai_action_policy import AI_ACTION_POLICY_VERSION
+from app.domain.ai_execution_provenance import AIWorkflowOutputTrustPolicy
 from app.application.ai_governance import (
     AIExplanationReadinessSnapshot,
     EvaluateAIExplanationToRepositoryCommand,
@@ -173,6 +174,7 @@ class AIExplanationEvaluationRequest(CamelModel):
         candidate_id: str,
         caller: CallerContext,
         idempotency_key: str,
+        allow_unattested_workflow_fixture: bool,
     ) -> EvaluateAIExplanationToRepositoryCommand:
         return EvaluateAIExplanationToRepositoryCommand(
             candidate_id=candidate_id,
@@ -196,6 +198,11 @@ class AIExplanationEvaluationRequest(CamelModel):
                 )
                 if self.workflow_output is not None
                 else None
+            ),
+            workflow_output_trust_policy=(
+                AIWorkflowOutputTrustPolicy.UNATTESTED_LOCAL_TEST_FIXTURE_ALLOWED
+                if allow_unattested_workflow_fixture
+                else AIWorkflowOutputTrustPolicy.LOTUS_AI_ATTESTATION_REQUIRED
             ),
         )
 
@@ -310,6 +317,7 @@ class AIExplanationEvaluationResponse(CamelModel):
     audit_event_type: str = Field(..., alias="auditEventType")
     output_integrity_version: str = Field(..., alias="outputIntegrityVersion")
     output_content_digest: str = Field(..., alias="outputContentDigest")
+    execution_provenance_posture: str = Field(..., alias="executionProvenancePosture")
     redacted_evidence: RedactedIdeaEvidenceResponse = Field(..., alias="redactedEvidence")
     verified_output: AIWorkflowOutputSummaryResponse | None = Field(
         default=None,
@@ -348,6 +356,7 @@ class AIExplanationEvaluationResponse(CamelModel):
             auditEventType=result.audit_event.event_type,
             outputIntegrityVersion=result.output_integrity.version,
             outputContentDigest=result.output_integrity.digest,
+            executionProvenancePosture=result.execution_provenance_posture.value,
             redactedEvidence=RedactedIdeaEvidenceResponse.from_domain(
                 result.request.redacted_evidence
             ),
@@ -387,6 +396,18 @@ class AIExplanationReadinessResponse(CamelModel):
         alias="forbiddenActionBlockingAvailable",
     )
     action_content_policy_version: str = Field(..., alias="actionContentPolicyVersion")
+    lotus_ai_run_attestation_available: bool = Field(
+        ...,
+        alias="lotusAiRunAttestationAvailable",
+    )
+    production_like_attestation_required: bool = Field(
+        ...,
+        alias="productionLikeAttestationRequired",
+    )
+    local_test_unattested_fixture_allowed: bool = Field(
+        ...,
+        alias="localTestUnattestedFixtureAllowed",
+    )
     durable_ai_lineage_store_backed: bool = Field(..., alias="durableAiLineageStoreBacked")
     model_risk_operations_contract_available: bool = Field(
         ...,
@@ -424,6 +445,9 @@ class AIExplanationReadinessResponse(CamelModel):
             unsupportedClaimBlockingAvailable=snapshot.unsupported_claim_blocking_available,
             forbiddenActionBlockingAvailable=snapshot.forbidden_action_blocking_available,
             actionContentPolicyVersion=snapshot.action_content_policy_version,
+            lotusAiRunAttestationAvailable=snapshot.lotus_ai_run_attestation_available,
+            productionLikeAttestationRequired=snapshot.production_like_attestation_required,
+            localTestUnattestedFixtureAllowed=(snapshot.local_test_unattested_fixture_allowed),
             durableAiLineageStoreBacked=snapshot.durable_ai_lineage_store_backed,
             modelRiskOperationsContractAvailable=(
                 snapshot.model_risk_operations_contract_available

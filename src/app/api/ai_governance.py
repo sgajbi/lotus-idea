@@ -35,6 +35,7 @@ from app.api.route_metadata import RouteMetadata
 from app.api.runtime_dependencies import (
     get_idea_repository,
     idea_repository_durable_storage_backed,
+    load_runtime_settings,
 )
 from app.application.ai_governance import (
     AIExplanationEvaluationDecision,
@@ -50,6 +51,7 @@ from app.domain import (
     InvalidAIWorkflowPack,
     InvalidAIWorkflowOutput,
 )
+from app.domain.ai_execution_provenance import UntrustedAIWorkflowOutput
 from app.api.problem_details import problem_details_response as problem_response
 from app.observability import (
     IdeaOperation,
@@ -130,6 +132,9 @@ async def evaluate_ai_explanation(
             candidate_id=candidate_id,
             caller=caller,
             idempotency_key=idempotency_key,
+            allow_unattested_workflow_fixture=(
+                load_runtime_settings().runtime_profile.allows_unattested_ai_workflow_fixture
+            ),
         )
         repository = get_idea_repository()
         durable_storage_backed = idea_repository_durable_storage_backed(repository)
@@ -166,6 +171,17 @@ async def evaluate_ai_explanation(
             code="invalid_ai_output",
             title="Invalid AI output",
             detail="The AI workflow output does not match the governed explanation request.",
+        )
+    except UntrustedAIWorkflowOutput:
+        _emit_ai_explanation_operation_event(
+            OperationOutcome.BLOCKED,
+            "ai_execution_provenance_required",
+        )
+        return problem_response(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            code="ai_execution_provenance_required",
+            title="AI execution provenance required",
+            detail="Production-like profiles require verified Lotus AI execution provenance.",
         )
     except InvalidAIWorkflowPack:
         _emit_ai_explanation_operation_event(
@@ -369,6 +385,9 @@ AI_EXPLANATION_READINESS_ROUTE: RouteMetadata = {
                         "unsupportedClaimBlockingAvailable": True,
                         "forbiddenActionBlockingAvailable": True,
                         "actionContentPolicyVersion": ("lotus-idea.ai-action-content-policy.v1"),
+                        "lotusAiRunAttestationAvailable": False,
+                        "productionLikeAttestationRequired": True,
+                        "localTestUnattestedFixtureAllowed": True,
                         "durableAiLineageStoreBacked": False,
                         "modelRiskOperationsContractAvailable": True,
                         "modelRiskDashboardContractAvailable": True,
@@ -440,6 +459,7 @@ AI_EXPLANATION_ROUTE: RouteMetadata = {
                         "auditEventType": "idea.ai_explanation.evaluated",
                         "outputIntegrityVersion": "lotus-idea.ai-output-integrity.v1",
                         "outputContentDigest": f"sha256:{'a' * 64}",
+                        "executionProvenancePosture": "unattested_local_test_fixture",
                         "redactedEvidence": {
                             "candidateId": "idea_high_cash_8d57adbf52f7f5a7",
                             "family": "high_cash",
@@ -506,6 +526,17 @@ AI_EXPLANATION_ROUTE: RouteMetadata = {
                         "The AI workflow output does not match the governed explanation request."
                     ),
                     description="AI workflow output did not match the governed request.",
+                ),
+                problem_response_metadata(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    code="ai_execution_provenance_required",
+                    title="AI execution provenance required",
+                    detail=(
+                        "Production-like profiles require verified Lotus AI execution provenance."
+                    ),
+                    description=(
+                        "Self-asserted workflow output is not accepted in production-like profiles."
+                    ),
                 ),
             ),
         ),

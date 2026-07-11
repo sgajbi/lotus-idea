@@ -29,6 +29,7 @@ def test_insert_ai_explanation_lineage_records_writes_each_lineage_record() -> N
     assert params[1] == candidate.candidate_id
     assert params[11] == "lotus-idea.ai-output-integrity.v1"
     assert params[12] == f"sha256:{'1' * 64}"
+    assert params[14] == "not_applicable_fallback"
 
 
 def _lineage_record(candidate_id: str) -> AIExplanationLineageRecord:
@@ -52,6 +53,7 @@ def _lineage_record(candidate_id: str) -> AIExplanationLineageRecord:
         action_policy_version="lotus-idea.ai-action-content-policy.v1",
         output_integrity_version="lotus-idea.ai-output-integrity.v1",
         output_content_digest=f"sha256:{'1' * 64}",
+        execution_provenance_posture="not_applicable_fallback",
         actor_subject="advisor-001",
         requested_at_utc=evaluated_at,
         evaluated_at_utc=evaluated_at,

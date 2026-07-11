@@ -196,11 +196,68 @@ def test_ai_explanation_api_returns_deterministic_fallback_without_runtime_claim
     assert payload["aiLineagePersistenceDecision"] == "accepted"
     assert payload["outputIntegrityVersion"] == "lotus-idea.ai-output-integrity.v1"
     assert payload["outputContentDigest"].startswith("sha256:")
+    assert payload["executionProvenancePosture"] == "not_applicable_fallback"
     assert payload["durableStorageBacked"] is False
     assert payload["lotusAiRuntimeExecuted"] is False
     assert payload["supportedFeaturePromoted"] is False
     assert payload["redactedEvidence"]["candidateId"] == candidate_id
     assert "route" not in response.text
+
+
+def test_production_like_ai_output_requires_provenance_before_lineage_write(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    repository = DurableInMemoryIdeaRepository()
+    try:
+        reset_idea_repository_for_tests(repository=repository)
+        client = TestClient(app)
+        candidate_id = persisted_candidate_id(
+            client,
+            idempotency_key="seed-ai-production-provenance-001",
+        )
+        transition_candidate_to_review_ready(client, candidate_id)
+        before_lineage = (
+            repository.snapshot().candidate_records[candidate_id].ai_explanation_lineage_records
+        )
+        monkeypatch.setenv("LOTUS_IDEA_RUNTIME_PROFILE", "production")
+        monkeypatch.setenv("LOTUS_IDEA_DATABASE_URL", "postgresql://configured")
+        monkeypatch.setenv("LOTUS_IDEA_TRUSTED_CALLER_CONTEXT_TOKEN", "trusted-ingress")
+        headers = {
+            **ai_headers(idempotency_key="ai-production-provenance-001"),
+            "X-Lotus-Trusted-Caller-Context": "trusted-ingress",
+        }
+
+        rejected = client.post(
+            f"/api/v1/idea-candidates/{candidate_id}/ai-explanations/evaluate",
+            json=ai_request_payload(
+                purpose="advisor_rationale_draft",
+                workflow_output=workflow_output(),
+            ),
+            headers=headers,
+        )
+        after_rejected_lineage = (
+            repository.snapshot().candidate_records[candidate_id].ai_explanation_lineage_records
+        )
+        fallback = client.post(
+            f"/api/v1/idea-candidates/{candidate_id}/ai-explanations/evaluate",
+            json=ai_request_payload(request_id="ai-production-fallback-001"),
+            headers={**headers, "Idempotency-Key": "ai-production-fallback-001"},
+        )
+
+        assert rejected.status_code == 400
+        assert rejected.json()["code"] == "ai_execution_provenance_required"
+        assert "workflow output" not in rejected.text.lower()
+        assert after_rejected_lineage == before_lineage
+        assert fallback.status_code == 200
+        assert fallback.json()["executionProvenancePosture"] == "not_applicable_fallback"
+        assert (
+            len(
+                repository.snapshot().candidate_records[candidate_id].ai_explanation_lineage_records
+            )
+            == len(before_lineage) + 1
+        )
+    finally:
+        reset_idea_repository_for_tests()
 
 
 def test_ai_explanation_api_accepts_verified_output_for_review_ready_candidate() -> None:
@@ -232,6 +289,7 @@ def test_ai_explanation_api_accepts_verified_output_for_review_ready_candidate()
     assert payload["aiLineageRecorded"] is True
     assert payload["aiLineagePersistenceDecision"] == "accepted"
     assert payload["lotusAiRuntimeExecuted"] is False
+    assert payload["executionProvenancePosture"] == "unattested_local_test_fixture"
 
 
 def test_ai_explanation_api_blocks_unsupported_claims_and_forbidden_actions() -> None:
@@ -573,6 +631,9 @@ def test_ai_explanation_readiness_api_returns_source_safe_blocked_posture() -> N
         "unsupportedClaimBlockingAvailable": True,
         "forbiddenActionBlockingAvailable": True,
         "actionContentPolicyVersion": "lotus-idea.ai-action-content-policy.v1",
+        "lotusAiRunAttestationAvailable": False,
+        "productionLikeAttestationRequired": True,
+        "localTestUnattestedFixtureAllowed": True,
         "durableAiLineageStoreBacked": False,
         "modelRiskOperationsContractAvailable": True,
         "modelRiskDashboardContractAvailable": True,
@@ -584,6 +645,7 @@ def test_ai_explanation_readiness_api_returns_source_safe_blocked_posture() -> N
             "lotus_ai_runtime_execution_missing",
             "certified_ai_lineage_store_missing",
             "workflow_pack_runtime_contract_not_certified",
+            "lotus_ai_run_attestation_contract_missing",
             "certified_runtime_trust_telemetry_missing",
             "workbench_product_proof_missing",
         ],

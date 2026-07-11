@@ -796,7 +796,7 @@ class PostgresIdeaRepository(
         cursor.execute(
             """
             SELECT ai_explanation_request_id, candidate_id, output_integrity_version,
-                   output_content_digest, lineage_json
+                   output_content_digest, execution_provenance_posture, lineage_json
             FROM idea_ai_explanation_lineage
             ORDER BY evaluated_at_utc, ai_explanation_request_id
             """

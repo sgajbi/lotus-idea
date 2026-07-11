@@ -6,6 +6,10 @@ from typing import Any, Mapping
 
 from app.application.candidate_lookup import candidate_record_by_id
 from app.domain.ai_action_policy import AI_ACTION_POLICY_VERSION
+from app.domain.ai_execution_provenance import (
+    AIWorkflowOutputTrustPolicy,
+    UntrustedAIWorkflowOutput,
+)
 from app.domain import (
     AIFallbackReason,
     AIExplanationCommand,
@@ -40,6 +44,9 @@ class AIExplanationReadinessSnapshot:
     unsupported_claim_blocking_available: bool
     forbidden_action_blocking_available: bool
     action_content_policy_version: str
+    lotus_ai_run_attestation_available: bool
+    production_like_attestation_required: bool
+    local_test_unattested_fixture_allowed: bool
     durable_ai_lineage_store_backed: bool
     model_risk_operations_contract_available: bool
     model_risk_dashboard_contract_available: bool
@@ -59,12 +66,23 @@ class EvaluateAIExplanationToRepositoryCommand:
     idempotency_key: str
     idempotency_payload: Mapping[str, Any]
     workflow_output: AIWorkflowOutput | None = None
+    workflow_output_trust_policy: AIWorkflowOutputTrustPolicy = (
+        AIWorkflowOutputTrustPolicy.LOTUS_AI_ATTESTATION_REQUIRED
+    )
 
     def __post_init__(self) -> None:
         if not self.candidate_id.strip():
             raise ValueError("candidate_id is required")
         if not self.idempotency_key.strip():
             raise ValueError("idempotency_key is required")
+        if (
+            self.workflow_output is not None
+            and self.workflow_output_trust_policy
+            is AIWorkflowOutputTrustPolicy.LOTUS_AI_ATTESTATION_REQUIRED
+        ):
+            raise UntrustedAIWorkflowOutput(
+                "production-like workflow output requires verified lotus-ai provenance"
+            )
 
 
 @dataclass(frozen=True)
@@ -91,6 +109,9 @@ def build_ai_explanation_readiness_snapshot(
         unsupported_claim_blocking_available=True,
         forbidden_action_blocking_available=True,
         action_content_policy_version=AI_ACTION_POLICY_VERSION,
+        lotus_ai_run_attestation_available=False,
+        production_like_attestation_required=True,
+        local_test_unattested_fixture_allowed=True,
         durable_ai_lineage_store_backed=durable_ai_lineage_store_backed,
         model_risk_operations_contract_available=True,
         model_risk_dashboard_contract_available=True,
@@ -102,6 +123,7 @@ def build_ai_explanation_readiness_snapshot(
             "lotus_ai_runtime_execution_missing",
             "certified_ai_lineage_store_missing",
             "workflow_pack_runtime_contract_not_certified",
+            "lotus_ai_run_attestation_contract_missing",
             "certified_runtime_trust_telemetry_missing",
             "workbench_product_proof_missing",
         ),

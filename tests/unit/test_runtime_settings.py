@@ -62,3 +62,11 @@ def test_runtime_storage_posture_treats_repository_initialization_failure_as_blo
 
     assert posture.configuration_blockers == (DURABLE_REPOSITORY_UNAVAILABLE,)
     assert posture.write_ready is False
+
+
+def test_runtime_profiles_allow_unattested_ai_fixtures_only_locally() -> None:
+    assert RuntimeProfile.LOCAL.allows_unattested_ai_workflow_fixture is True
+    assert RuntimeProfile.TEST.allows_unattested_ai_workflow_fixture is True
+    assert RuntimeProfile.DEMO.allows_unattested_ai_workflow_fixture is False
+    assert RuntimeProfile.STAGING.allows_unattested_ai_workflow_fixture is False
+    assert RuntimeProfile.PRODUCTION.allows_unattested_ai_workflow_fixture is False

@@ -32,6 +32,7 @@ def test_lineage_codec_round_trip_verifies_content_integrity_without_storing_out
     )
 
     assert record.output_content_digest == payload["output_content_digest"]
+    assert record.execution_provenance_posture == "not_applicable_fallback"
     serialized = json.dumps(payload, sort_keys=True)
     assert "explanation_text" not in serialized
     assert "claim_text" not in serialized
@@ -48,6 +49,16 @@ def test_lineage_codec_rejects_physical_column_and_json_digest_mismatch() -> Non
             payload,
             expected_integrity_version=str(payload["output_integrity_version"]),
             expected_content_digest=f"sha256:{'f' * 64}",
+        )
+
+
+def test_lineage_codec_rejects_execution_provenance_column_mismatch() -> None:
+    payload = _lineage_payload()
+
+    with pytest.raises(ValueError, match="execution provenance column mismatch"):
+        ai_explanation_lineage_from_json(
+            payload,
+            expected_execution_provenance_posture="unattested_local_test_fixture",
         )
 
 

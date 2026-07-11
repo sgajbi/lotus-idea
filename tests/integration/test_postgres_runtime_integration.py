@@ -753,6 +753,7 @@ def test_postgres_runtime_provider_persists_ai_explanation_lineage(
     assert accepted_payload["aiLineagePersistenceDecision"] == "accepted"
     assert accepted_payload["outputIntegrityVersion"] == "lotus-idea.ai-output-integrity.v1"
     assert accepted_payload["outputContentDigest"].startswith("sha256:")
+    assert accepted_payload["executionProvenancePosture"] == "not_applicable_fallback"
     assert accepted_payload["lotusAiRuntimeExecuted"] is False
     assert accepted_payload["supportedFeaturePromoted"] is False
     assert _table_count(postgres_database_url, "idea_ai_explanation_lineage") == 1
@@ -797,6 +798,14 @@ def test_postgres_runtime_provider_persists_ai_explanation_lineage(
     assert lineage_row["output_content_digest"] == accepted_payload["outputContentDigest"]
     assert lineage_json["output_integrity_version"] == lineage_row["output_integrity_version"]
     assert lineage_json["output_content_digest"] == lineage_row["output_content_digest"]
+    assert (
+        lineage_row["execution_provenance_posture"]
+        == (accepted_payload["executionProvenancePosture"])
+    )
+    assert (
+        lineage_json["execution_provenance_posture"]
+        == (lineage_row["execution_provenance_posture"])
+    )
     assert lineage_json["grants_downstream_authority"] is False
     assert "portfolio_id" not in lineage_json
     assert "client_id" not in lineage_json
@@ -843,7 +852,8 @@ def _ai_lineage_row(database_url: str) -> dict[str, Any]:
             cursor.execute(
                 """
                 SELECT ai_explanation_request_id, candidate_id,
-                       output_integrity_version, output_content_digest, lineage_json
+                       output_integrity_version, output_content_digest,
+                       execution_provenance_posture, lineage_json
                 FROM idea_ai_explanation_lineage
                 """
             )
@@ -855,7 +865,8 @@ def _ai_lineage_row(database_url: str) -> dict[str, Any]:
         "candidate_id": str(row[1]),
         "output_integrity_version": str(row[2]),
         "output_content_digest": str(row[3]),
-        "lineage_json": row[4],
+        "execution_provenance_posture": str(row[4]),
+        "lineage_json": row[5],
     }
 
 

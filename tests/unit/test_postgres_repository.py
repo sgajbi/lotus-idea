@@ -873,6 +873,11 @@ def test_postgres_repository_round_trips_ai_explanation_lineage() -> None:
         lineage_row["lineage_json"]["output_content_digest"]
         == (lineage_row["output_content_digest"])
     )
+    assert lineage_row["execution_provenance_posture"] == "not_applicable_fallback"
+    assert (
+        lineage_row["lineage_json"]["execution_provenance_posture"]
+        == (lineage_row["execution_provenance_posture"])
+    )
 
 
 def test_postgres_repository_applies_idempotency_to_ai_lineage_requests() -> None:

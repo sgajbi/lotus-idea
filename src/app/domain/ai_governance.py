@@ -15,6 +15,7 @@ from app.domain.ai_action_policy import (
     evaluate_ai_action_policy,
 )
 from app.domain.ai_output_integrity import AIOutputIntegrity, build_ai_output_integrity
+from app.domain.ai_execution_provenance import AIExecutionProvenancePosture
 from app.domain.ideas import (
     EvidenceFreshness,
     EvidenceSupportability,
@@ -331,6 +332,7 @@ class AIExplanationResult:
     reason_codes: tuple[ReasonCode, ...]
     audit_event: AuditEvent
     output_integrity: AIOutputIntegrity
+    execution_provenance_posture: AIExecutionProvenancePosture
     output: AIWorkflowOutput | None = None
     fallback_reason: AIFallbackReason | None = None
 
@@ -353,6 +355,18 @@ class AIExplanationResult:
             and self.fallback_reason is not None
         ):
             raise ValueError("fallback_reason requires fallback posture")
+        if (
+            self.posture is AIExplanationPosture.FALLBACK_USED
+            and self.execution_provenance_posture
+            is not AIExecutionProvenancePosture.NOT_APPLICABLE_FALLBACK
+        ):
+            raise ValueError("fallback result requires not-applicable execution provenance")
+        if (
+            self.posture is not AIExplanationPosture.FALLBACK_USED
+            and self.execution_provenance_posture
+            is AIExecutionProvenancePosture.NOT_APPLICABLE_FALLBACK
+        ):
+            raise ValueError("evaluated workflow output requires execution provenance posture")
         object.__setattr__(self, "reason_codes", tuple(self.reason_codes))
 
 
@@ -406,6 +420,7 @@ def deterministic_ai_fallback(
         explanation_text=explanation_text,
         reason_codes=(ReasonCode.AI_FALLBACK_USED,),
         output_integrity=output_integrity,
+        execution_provenance_posture=AIExecutionProvenancePosture.NOT_APPLICABLE_FALLBACK,
         audit_event=_ai_audit_event(
             request=request,
             posture=AIExplanationPosture.FALLBACK_USED,
@@ -486,6 +501,7 @@ def evaluate_ai_workflow_output(
         explanation_text=sanitized_output.explanation_text,
         reason_codes=(ReasonCode.AI_VERIFIER_PASSED,),
         output_integrity=output_integrity,
+        execution_provenance_posture=(AIExecutionProvenancePosture.UNATTESTED_LOCAL_TEST_FIXTURE),
         audit_event=_ai_audit_event(
             request=request,
             posture=AIExplanationPosture.READY_FOR_ADVISOR_REVIEW,
@@ -517,6 +533,7 @@ def _blocked_ai_result(
         explanation_text=output.explanation_text,
         reason_codes=(reason_code,),
         output_integrity=output_integrity,
+        execution_provenance_posture=(AIExecutionProvenancePosture.UNATTESTED_LOCAL_TEST_FIXTURE),
         audit_event=_ai_audit_event(
             request=request,
             posture=posture,
@@ -619,6 +636,11 @@ def _ai_audit_event(
             ),
             "output_integrity_version": output_integrity.version,
             "output_content_digest": output_integrity.digest,
+            "execution_provenance_posture": (
+                AIExecutionProvenancePosture.NOT_APPLICABLE_FALLBACK.value
+                if posture is AIExplanationPosture.FALLBACK_USED
+                else AIExecutionProvenancePosture.UNATTESTED_LOCAL_TEST_FIXTURE.value
+            ),
         },
     )
 

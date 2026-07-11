@@ -138,6 +138,7 @@ def ai_explanation_lineage_from_json(
     *,
     expected_integrity_version: str | None = None,
     expected_content_digest: str | None = None,
+    expected_execution_provenance_posture: str | None = None,
 ) -> AIExplanationLineageRecord:
     record = _ai_explanation_lineage_from_json(payload)
     if (
@@ -150,6 +151,11 @@ def ai_explanation_lineage_from_json(
         and record.output_content_digest != expected_content_digest
     ):
         raise ValueError("AI explanation lineage content digest column mismatch")
+    if (
+        expected_execution_provenance_posture is not None
+        and record.execution_provenance_posture != expected_execution_provenance_posture
+    ):
+        raise ValueError("AI explanation lineage execution provenance column mismatch")
     verify_ai_explanation_lineage_record_integrity(record)
     return record
 
@@ -456,6 +462,7 @@ def _ai_explanation_lineage_to_json(record: AIExplanationLineageRecord) -> dict[
         "action_policy_version": record.action_policy_version,
         "output_integrity_version": record.output_integrity_version,
         "output_content_digest": record.output_content_digest,
+        "execution_provenance_posture": record.execution_provenance_posture,
         "actor_subject": record.actor_subject,
         "requested_at_utc": record.requested_at_utc.isoformat(),
         "evaluated_at_utc": record.evaluated_at_utc.isoformat(),
@@ -490,6 +497,7 @@ def _ai_explanation_lineage_from_json(
         action_policy_version=str(payload["action_policy_version"]),
         output_integrity_version=str(payload["output_integrity_version"]),
         output_content_digest=str(payload["output_content_digest"]),
+        execution_provenance_posture=str(payload["execution_provenance_posture"]),
         actor_subject=str(payload["actor_subject"]),
         requested_at_utc=_datetime(payload["requested_at_utc"]),
         evaluated_at_utc=_datetime(payload["evaluated_at_utc"]),

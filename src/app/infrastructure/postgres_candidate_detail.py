@@ -244,7 +244,7 @@ def _attach_ai_explanation_lineage_records(
         table="idea_ai_explanation_lineage",
         columns=(
             "ai_explanation_request_id, candidate_id, output_integrity_version, "
-            "output_content_digest, lineage_json"
+            "output_content_digest, execution_provenance_posture, lineage_json"
         ),
         candidate_id=record.candidate.candidate_id,
         order_by="evaluated_at_utc, ai_explanation_request_id",

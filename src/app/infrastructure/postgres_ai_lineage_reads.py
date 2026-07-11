@@ -15,4 +15,5 @@ def ai_explanation_lineage_from_row(row: Any) -> AIExplanationLineageRecord:
         read_json_object(row, "lineage_json"),
         expected_integrity_version=read_row_value(row, "output_integrity_version"),
         expected_content_digest=read_row_value(row, "output_content_digest"),
+        expected_execution_provenance_posture=read_row_value(row, "execution_provenance_posture"),
     )

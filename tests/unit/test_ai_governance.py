@@ -643,6 +643,7 @@ def test_ai_result_and_output_identity_validation_fail_closed() -> None:
             reason_codes=(ReasonCode.AI_FALLBACK_USED,),
             audit_event=fallback.audit_event,
             output_integrity=fallback.output_integrity,
+            execution_provenance_posture=fallback.execution_provenance_posture,
         )
 
     with pytest.raises(ValueError, match="fallback_reason requires fallback posture"):
@@ -655,6 +656,7 @@ def test_ai_result_and_output_identity_validation_fail_closed() -> None:
             reason_codes=(ReasonCode.AI_VERIFIER_PASSED,),
             audit_event=accepted.audit_event,
             output_integrity=accepted.output_integrity,
+            execution_provenance_posture=accepted.execution_provenance_posture,
             fallback_reason=AIFallbackReason.AI_UNAVAILABLE,
         )
 

@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Any, Mapping
 from app.domain.ai_governance import AIExplanationResult
 from app.domain.ai_action_policy import AI_ACTION_POLICY_VERSION
 from app.domain.ai_output_integrity import AIOutputIntegrity
+from app.domain.ai_execution_provenance import AIExecutionProvenancePosture
 from app.domain.audit import AuditEvent
 
 if TYPE_CHECKING:
@@ -43,6 +44,7 @@ class AIExplanationLineageRecord:
     action_policy_version: str
     output_integrity_version: str
     output_content_digest: str
+    execution_provenance_posture: str
     actor_subject: str
     requested_at_utc: datetime
     evaluated_at_utc: datetime
@@ -64,6 +66,7 @@ class AIExplanationLineageRecord:
             "action_policy_version",
             "output_integrity_version",
             "output_content_digest",
+            "execution_provenance_posture",
             "lineage_hash",
         ):
             _require_text(str(getattr(self, field_name)), field_name)
@@ -77,6 +80,7 @@ class AIExplanationLineageRecord:
             version=self.output_integrity_version,
             digest=self.output_content_digest,
         )
+        AIExecutionProvenancePosture(self.execution_provenance_posture)
         object.__setattr__(self, "reason_codes", tuple(self.reason_codes))
         object.__setattr__(self, "claim_ids", tuple(self.claim_ids))
         object.__setattr__(self, "proposed_action_types", tuple(self.proposed_action_types))
@@ -118,6 +122,7 @@ def ai_explanation_lineage_record_from_result(
         "action_policy_version": AI_ACTION_POLICY_VERSION,
         "output_integrity_version": result.output_integrity.version,
         "output_content_digest": result.output_integrity.digest,
+        "execution_provenance_posture": result.execution_provenance_posture.value,
         "purpose": result.request.purpose.value,
         "reason_codes": [reason.value for reason in result.reason_codes],
         "request_id": result.request.request_id,
@@ -153,6 +158,7 @@ def ai_explanation_lineage_record_from_result(
         action_policy_version=AI_ACTION_POLICY_VERSION,
         output_integrity_version=result.output_integrity.version,
         output_content_digest=result.output_integrity.digest,
+        execution_provenance_posture=result.execution_provenance_posture.value,
         actor_subject=result.request.actor_subject,
         requested_at_utc=result.request.requested_at_utc,
         evaluated_at_utc=evaluated_at_utc,
@@ -165,6 +171,11 @@ def verify_ai_explanation_lineage_record_integrity(
     record: AIExplanationLineageRecord,
 ) -> None:
     if record.output_integrity_version != "lotus-idea.ai-output-integrity.v1":
+        return
+    if (
+        record.execution_provenance_posture
+        == AIExecutionProvenancePosture.PRE_ATTESTATION_UNVERIFIABLE.value
+    ):
         return
     expected = _hash_payload(
         {
@@ -182,6 +193,7 @@ def verify_ai_explanation_lineage_record_integrity(
             "action_policy_version": record.action_policy_version,
             "output_integrity_version": record.output_integrity_version,
             "output_content_digest": record.output_content_digest,
+            "execution_provenance_posture": record.execution_provenance_posture,
             "purpose": record.purpose,
             "reason_codes": list(record.reason_codes),
             "request_id": record.request_id,
