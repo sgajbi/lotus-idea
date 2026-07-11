@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from typing import cast
 
 import pytest
 
@@ -203,7 +204,8 @@ def test_load_soak_qualification_rejects_scenario_threshold_breach(
     mutation: dict[str, object], scenario: str
 ) -> None:
     proof = _load_soak_proof()
-    scenarios = [dict(item) for item in proof["scenarios"]]  # type: ignore[union-attr]
+    source_scenarios = cast(list[dict[str, object]], proof["scenarios"])
+    scenarios = [dict(item) for item in source_scenarios]
     target = next(item for item in scenarios if item["scenario"] == scenario)
     target.update(mutation)
     proof["scenarios"] = scenarios
