@@ -150,3 +150,59 @@ def test_qualification_rejects_unbound_idea_resource_evidence(
             generated_at_utc=datetime(2026, 7, 11, 10, tzinfo=UTC),
             qualification_run_id="qual-1",
         )
+
+
+@pytest.mark.parametrize(
+    ("mutator", "message"),
+    [
+        (
+            lambda artifact: artifact["service"].update(repository="other"),
+            "service repository",
+        ),
+        (lambda artifact: artifact["service"].update(serviceId="other"), "service id"),
+        (lambda artifact: artifact["service"].update(environment="test"), "environment"),
+        (lambda artifact: artifact.update(provenance=None), "provenance must be an object"),
+        (
+            lambda artifact: artifact["provenance"].update(sourceRef="refs/heads/feature"),
+            "artifact source ref",
+        ),
+        (
+            lambda artifact: artifact["resourceObservation"].update(schemaVersion="other"),
+            "resource schema",
+        ),
+    ],
+)
+def test_qualification_rejects_non_authoritative_platform_evidence(
+    mutator: Any, message: str
+) -> None:
+    artifact = _artifact()
+    mutator(artifact)
+
+    with pytest.raises(ValueError, match=message):
+        qualify_platform_cost_attribution(
+            artifact=artifact,
+            attestation=_attestation(),
+            resource_qualification=_resource_qualification(),
+            generated_at_utc=datetime(2026, 7, 11, 10, tzinfo=UTC),
+            qualification_run_id="qual-1",
+        )
+
+
+@pytest.mark.parametrize(
+    ("generated_at_utc", "qualification_run_id", "message"),
+    [
+        (datetime(2026, 7, 11, 10), "qual-1", "timezone-aware"),
+        (datetime(2026, 7, 11, 10, tzinfo=UTC), " ", "must not be blank"),
+    ],
+)
+def test_qualification_rejects_unusable_qualification_identity(
+    generated_at_utc: datetime, qualification_run_id: str, message: str
+) -> None:
+    with pytest.raises(ValueError, match=message):
+        qualify_platform_cost_attribution(
+            artifact=_artifact(),
+            attestation=_attestation(),
+            resource_qualification=_resource_qualification(),
+            generated_at_utc=generated_at_utc,
+            qualification_run_id=qualification_run_id,
+        )

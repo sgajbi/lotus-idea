@@ -55,6 +55,34 @@ def test_maps_exact_hashed_producer_output_to_idea_workflow_output() -> None:
             ),
             "proposed actions are required",
         ),
+        (
+            lambda payload: payload["structured_output"].update(idea_workflow_output=None),
+            "missing idea_workflow_output",
+        ),
+        (
+            lambda payload: payload["structured_output"]["idea_workflow_output"].update(
+                claims=["not-an-object"]
+            ),
+            "claims must contain objects",
+        ),
+        (
+            lambda payload: payload["structured_output"]["idea_workflow_output"].update(
+                output_id=" "
+            ),
+            "output_id is required",
+        ),
+        (
+            lambda payload: payload["structured_output"]["idea_workflow_output"]["claims"][
+                0
+            ].update(source_product_ids=[]),
+            "source_product_ids is required",
+        ),
+        (
+            lambda payload: payload["structured_output"]["idea_workflow_output"]["claims"][
+                0
+            ].update(source_product_ids=["lotus-core:PortfolioStateSnapshot:v1", None]),
+            "source_product_ids contains invalid values",
+        ),
     ],
 )
 def test_rejects_non_binding_or_malformed_producer_output(

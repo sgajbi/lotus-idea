@@ -1,5 +1,8 @@
+from copy import deepcopy
 from datetime import UTC, datetime
 from pathlib import Path
+
+import pytest
 
 from app.application.lotus_ai_attestation_contract_proof import (
     REMAINING_LOTUS_AI_ATTESTATION_BLOCKERS,
@@ -52,3 +55,39 @@ def test_consumer_contract_rejects_missing_repository_owned_control(tmp_path: Pa
     proof["proofChecks"]["consumerReplayPersistenceImplemented"] = False
 
     assert not lotus_ai_attestation_consumer_contract_is_valid(proof)
+
+
+@pytest.mark.parametrize(
+    ("path", "invalid_value"),
+    [
+        (("schemaVersion",), "other-schema"),
+        (("repository",), "other-repository"),
+        (("proofType",), "other-proof"),
+        (("proofScope",), "other-scope"),
+        (("localContractProofValid",), False),
+        (("eligibleForMainlineCertification",), False),
+        (("mainlineValidated",), True),
+        (("aggregateBlockersCleared",), ("unsupported-clearance",)),
+        (("remainingCertificationBlockers",), ()),
+        (("evidenceRefs",), ()),
+        (("generatedAtUtc",), "not-a-timestamp"),
+        (("liveProviderExecuted",), True),
+        (("workbenchProductProofCertified",), True),
+        (("supportedFeaturePromoted",), True),
+    ],
+)
+def test_cross_repository_proof_rejects_inflated_or_tampered_claims(
+    tmp_path: Path,
+    path: tuple[str, ...],
+    invalid_value: object,
+) -> None:
+    lotus_ai_root = materialize_lotus_ai_attestation_source(tmp_path / "lotus-ai")
+    proof = build_lotus_ai_attestation_contract_proof(
+        generated_at_utc=datetime(2026, 7, 11, 12, 0, tzinfo=UTC),
+        repository_root=ROOT,
+        lotus_ai_root=lotus_ai_root,
+    )
+    tampered = deepcopy(proof)
+    tampered[path[0]] = invalid_value
+
+    assert not lotus_ai_attestation_contract_proof_is_valid(tampered)

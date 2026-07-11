@@ -1,3 +1,5 @@
+import pytest
+
 from app.domain.lotus_ai_execution_digest import (
     LotusAIExecutionInputEvidence,
     LotusAIExecutionOutputContent,
@@ -72,3 +74,39 @@ def test_digest_changes_for_material_input_or_output_change() -> None:
     assert lotus_ai_output_content_sha256(baseline_output) != lotus_ai_output_content_sha256(
         changed_output
     )
+
+
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        {"task_id": ""},
+        {"context_summary": " "},
+        {"source_refs": ("source:one", "")},
+    ],
+)
+def test_input_evidence_rejects_incomplete_digest_material(overrides: dict[str, object]) -> None:
+    values: dict[str, object] = {
+        "task_id": "explain.v1",
+        "context_summary": "summary",
+        "context_payload": {},
+        "source_refs": ("source:one",),
+        "expected_output_label": "EXPLANATION_ONLY",
+    }
+    values.update(overrides)
+
+    with pytest.raises(ValueError):
+        LotusAIExecutionInputEvidence(**values)  # type: ignore[arg-type]
+
+
+@pytest.mark.parametrize("field", ["status", "output_label", "message"])
+def test_output_content_rejects_incomplete_digest_material(field: str) -> None:
+    values = {
+        "status": "COMPLETED",
+        "output_label": "EXPLANATION_ONLY",
+        "message": "explanation",
+        "structured_output": {},
+    }
+    values[field] = " "
+
+    with pytest.raises(ValueError):
+        LotusAIExecutionOutputContent(**values)

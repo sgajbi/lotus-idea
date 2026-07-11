@@ -254,5 +254,35 @@ def test_rejects_signature_tampering_and_claim_mapping_divergence() -> None:
         )
 
 
+def test_claims_reject_incomplete_identity_digest_and_time() -> None:
+    with pytest.raises(ValueError, match="provider_id is required"):
+        _claims(provider_id=" ")
+    with pytest.raises(ValueError, match="replay_nonce must be"):
+        _claims(replay_nonce="not-a-digest")
+    with pytest.raises(ValueError, match="issued_at_utc must be timezone-aware"):
+        _claims(issued_at_utc=NOW.replace(tzinfo=None))
+
+
+def test_verified_receipt_rejects_invalid_persisted_identity_and_validity() -> None:
+    envelope, discovery = _fixture()
+    receipt = verify_lotus_ai_run_attestation(
+        envelope=envelope,
+        key_discovery=discovery,
+        expected=_expected(),
+        signature_verifier=SIGNATURE_VERIFIER,
+    )
+
+    with pytest.raises(ValueError, match="run_id is required"):
+        replace(receipt, run_id=" ")
+    with pytest.raises(ValueError, match="rotation_epoch must be positive"):
+        replace(receipt, rotation_epoch=0)
+    with pytest.raises(ValueError, match="replay_nonce must be"):
+        replace(receipt, replay_nonce="not-a-digest")
+    with pytest.raises(ValueError, match="verified_at_utc must be timezone-aware"):
+        replace(receipt, verified_at_utc=NOW.replace(tzinfo=None))
+    with pytest.raises(ValueError, match="validity window"):
+        replace(receipt, verified_at_utc=receipt.expires_at_utc)
+
+
 def _encode(value: bytes) -> str:
     return base64.urlsafe_b64encode(value).rstrip(b"=").decode("ascii")

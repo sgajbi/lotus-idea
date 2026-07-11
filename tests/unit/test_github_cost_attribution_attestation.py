@@ -66,3 +66,35 @@ def test_verifier_fails_closed_without_leaking_command_output(
             command_runner=lambda *args, **kwargs: result
         ).verify(artifact_path=artifact, source_commit_sha="a" * 40)
     assert "sensitive" not in str(captured.value)
+
+
+def test_verifier_rejects_invalid_configuration_or_subject(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="timeout_seconds"):
+        GitHubCostAttributionAttestationVerifier(timeout_seconds=0)
+    verifier = GitHubCostAttributionAttestationVerifier()
+    with pytest.raises(ValueError, match="artifact path"):
+        verifier.verify(artifact_path=tmp_path / "missing.json", source_commit_sha="a" * 40)
+    artifact = tmp_path / "cost.json"
+    artifact.write_text("{}", encoding="utf-8")
+    with pytest.raises(ValueError, match="source_commit_sha"):
+        verifier.verify(artifact_path=artifact, source_commit_sha=" ")
+
+
+@pytest.mark.parametrize(
+    "failure",
+    [OSError("gh unavailable"), subprocess.TimeoutExpired("gh", timeout=1)],
+)
+def test_verifier_maps_command_unavailability_to_bounded_error(
+    tmp_path: Path, failure: BaseException
+) -> None:
+    artifact = tmp_path / "cost.json"
+    artifact.write_text("{}", encoding="utf-8")
+
+    def fail(*args: object, **kwargs: object) -> subprocess.CompletedProcess[str]:
+        raise failure
+
+    with pytest.raises(ValueError, match="verification unavailable"):
+        GitHubCostAttributionAttestationVerifier(command_runner=fail).verify(
+            artifact_path=artifact,
+            source_commit_sha="a" * 40,
+        )
