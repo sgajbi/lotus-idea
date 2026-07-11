@@ -1,6 +1,6 @@
 # RFC-0002 Slice 06: Persistence, Replay, Idempotency, And Audit
 
-Status: Partially implemented - internal persistence, replay, audit, governed retention/legal-hold/erasure/purge enforcement, lifecycle trust telemetry, durable downstream submission claim/finalize/reconciliation, source-safe outbox retry/dead-letter delivery, certified operator diagnostics/actions, schema/rollback contracts, PostgreSQL adapters, real concurrency/restart proof, real logical backup/restore plus no-duplicate resume proof, provider-restore validation, recovery-aware write gating, source-ingestion recovery, and bounded broker/consumer/mesh proof foundations are implemented; physical/WAL production recovery certification, signed lifecycle authority integration, Report/Archive/AI retention conformance, scheduled purge proof, external publication, downstream execution/materialization proof, and supported-feature promotion remain blocked
+Status: Partially implemented - internal persistence, replay, audit, governed retention/legal-hold/erasure/purge enforcement, lifecycle trust telemetry, bounded scheduled expiry review, durable downstream submission claim/finalize/reconciliation, source-safe outbox retry/dead-letter delivery, certified operator diagnostics/actions, schema/rollback contracts, PostgreSQL adapters, real concurrency/restart proof, real logical backup/restore plus no-duplicate resume proof, provider-restore validation, recovery-aware write gating, source-ingestion recovery, and bounded broker/consumer/mesh proof foundations are implemented; physical/WAL production recovery certification, signed lifecycle authority integration, Report/Archive/AI retention conformance, production authorized purge proof, external publication, downstream execution/materialization proof, and supported-feature promotion remain blocked
 
 ## Outcome
 
@@ -56,9 +56,28 @@ Implemented evidence:
 
 Remaining lifecycle certification blockers are bank approval for durations
 and start events, signed authority integration, Report/Archive/AI conformance,
-scheduled expiry/purge proof with privacy review, mainline CI, and supported
-feature promotion. Lotus Idea enforces approved decisions; it does not own
+production authorized purge proof with privacy review, mainline CI, and
+supported feature promotion. Lotus Idea enforces approved decisions; it does not own
 legal, privacy, archive, report-rendering, or AI-provider policy decisions.
+
+### Scheduled Expiry Review Foundation
+
+The scheduled review path preserves the external decision boundary. A bounded
+application use case reads at most 100 expired, non-purged controls through a
+PostgreSQL projection and classifies each as ready for an authorized purge or
+blocked by legal hold, invalid lifecycle state, or active delivery work. The
+review does not mutate lifecycle state and does not manufacture an authority
+or approver identity.
+
+The weekly/manual `scheduled-data-lifecycle-review.yml` workflow migrates an
+empty PostgreSQL 18 database, seeds synthetic ready, held, and active-delivery
+states through production repository/application paths, emits aggregate-only
+evidence, runs a fail-closed proof gate, attests the artifact, and retains it
+for 90 days. The artifact is explicitly `reviewOnly=true`,
+`productionAuthorityVerified=false`, `not_certified`, and non-promotional.
+Mainline workflow evidence remains required before this foundation can be
+claimed as merged proof; production purge remains blocked on signed privacy
+authority, dual review, and cross-service conformance.
 
 ## Implementation Evidence
 

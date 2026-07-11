@@ -118,6 +118,37 @@ Active outbox or downstream claims block erase and purge. Concurrent erasure
 and claim creation share a database lock: either erasure wins and the claim is
 rejected, or the claim wins and erasure records an active-delivery blocker.
 
+## Scheduled Expiry Review
+
+The scheduled workflow is a review and evidence control, not an automatic
+deletion mechanism.
+
+| Property | Enforced posture |
+| --- | --- |
+| Selection | Expired, non-purged lifecycle controls ordered by expiry and candidate identity. |
+| Batch limit | Maximum 100 controls; a sentinel row reports truncation. |
+| Decision | Ready for authorized purge, or blocked by hold, lifecycle state, or active delivery work. |
+| Mutation | None. The workflow cannot erase, purge, release a hold, or approve a decision. |
+| Evidence | Aggregate counts only; candidate, tenant, authority, and approver identifiers are forbidden. |
+| Runtime proof | Empty disposable PostgreSQL 18 database with synthetic fixture states. |
+| Certification | `not_certified`; no supported-feature promotion. |
+
+Run the same bounded flow locally only against an explicitly disposable empty
+database:
+
+```powershell
+make migrate
+make scheduled-data-lifecycle-seed
+make scheduled-data-lifecycle-review
+make scheduled-data-lifecycle-review-proof-gate
+```
+
+The weekly/manual GitHub workflow attests and retains the source-safe artifact
+for 90 days. A ready decision is only a queue for external privacy review. It
+must never be converted into a production purge command without a verified
+bank authority decision, distinct approver, tenant entitlement, and the
+existing transactional lifecycle controls.
+
 ## Monitoring And Evidence
 
 Runtime preview and snapshot expose only bounded aggregates:
@@ -156,7 +187,8 @@ following remain external or production-evidence blockers:
 2. Signed legal-hold and erasure decision integration.
 3. Report and Archive policy-reference conformance evidence.
 4. AI-provider retention and deletion confirmation.
-5. Scheduled expiry/purge evidence with privacy review.
+5. Mainline scheduled expiry-review evidence and production authorized purge
+   evidence with signed privacy authority.
 
 The retention posture follows Singapore's purpose-based retention limitation:
 personal data should not be retained when no longer needed for legal or
