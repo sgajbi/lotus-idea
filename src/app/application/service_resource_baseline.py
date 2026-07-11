@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import Any, Iterable
+import math
+from typing import Any, Iterable, TypeGuard
 
 from app.ports.resource_probe import ProcessResourceSnapshot
 
 SCHEMA_VERSION = "lotus-idea.service-resource-baseline.v1"
 MINIMUM_RESOURCE_SAMPLES = 2
+RESOURCE_ENVIRONMENT_PROFILES = frozenset({"test", "production-like"})
 
 
 def build_service_resource_baseline(
@@ -21,8 +23,8 @@ def build_service_resource_baseline(
     ordered = list(snapshots)
     if len(ordered) < MINIMUM_RESOURCE_SAMPLES:
         raise ValueError("resource baseline requires at least two snapshots")
-    if environment_profile != "test":
-        raise ValueError("resource baseline measurement requires the test profile")
+    if environment_profile not in RESOURCE_ENVIRONMENT_PROFILES:
+        raise ValueError("resource baseline measurement requires test or production-like profile")
     if generated_at_utc.tzinfo is None or generated_at_utc.utcoffset() is None:
         raise ValueError("generated_at_utc must be timezone-aware")
     for name, value in (("commit_sha", commit_sha), ("branch", branch), ("run_id", run_id)):
@@ -40,7 +42,7 @@ def build_service_resource_baseline(
         "schemaVersion": SCHEMA_VERSION,
         "repository": "lotus-idea",
         "proofScope": "source_safe_process_resource_observation",
-        "claimPosture": "controlled_test_resource_evidence_only",
+        "claimPosture": "report_only_resource_observation",
         "environmentProfile": environment_profile,
         "generatedAtUtc": generated_at_utc.astimezone(UTC).isoformat().replace("+00:00", "Z"),
         "commitSha": commit_sha,
@@ -61,8 +63,8 @@ def build_service_resource_baseline(
             default=None,
         ),
         "openFileDescriptorUtilizationMax": max(fd_utilizations, default=None),
-        "costEvidencePresent": False,
-        "productionLikeAttestationVerified": False,
+        "costAttributionVerified": False,
+        "resourceAttestationVerified": False,
         "certificationReady": False,
         "certificationBlockers": [
             "production_like_resource_attestation_missing",
@@ -82,14 +84,21 @@ def validate_service_resource_baseline(artifact: dict[str, Any]) -> list[str]:
         errors.append(f"schemaVersion must be {SCHEMA_VERSION}")
     if artifact.get("proofScope") != "source_safe_process_resource_observation":
         errors.append("proofScope must remain process-resource-observation only")
-    if artifact.get("claimPosture") != "controlled_test_resource_evidence_only":
-        errors.append("claimPosture must remain controlled_test_resource_evidence_only")
-    if artifact.get("environmentProfile") != "test":
-        errors.append("environmentProfile must remain test")
-    if artifact.get("costEvidencePresent") is not False:
-        errors.append("resource observation must not claim cost evidence")
-    if artifact.get("productionLikeAttestationVerified") is not False:
-        errors.append("resource observation must not claim production-like attestation")
+    if artifact.get("claimPosture") != "report_only_resource_observation":
+        errors.append("claimPosture must remain report_only_resource_observation")
+    if artifact.get("environmentProfile") not in RESOURCE_ENVIRONMENT_PROFILES:
+        errors.append("environmentProfile must be test or production-like")
+    if artifact.get("repository") != "lotus-idea":
+        errors.append("repository must be lotus-idea")
+    for name in ("commitSha", "branch", "runId"):
+        value = artifact.get(name)
+        if not isinstance(value, str) or not value.strip():
+            errors.append(f"{name} must be a non-blank string")
+    _validate_measurements(artifact, errors)
+    if artifact.get("costAttributionVerified") is not False:
+        errors.append("resource observation must not claim cost attribution")
+    if artifact.get("resourceAttestationVerified") is not False:
+        errors.append("resource observation must not claim resource attestation")
     if artifact.get("certificationReady") is not False:
         errors.append("resource observation must remain non-certifying")
     if artifact.get("supportedFeaturePromoted") is not False:
@@ -101,6 +110,41 @@ def validate_service_resource_baseline(artifact: dict[str, Any]) -> list[str]:
     if set(artifact.get("certificationBlockers", [])) != expected_blockers:
         errors.append("resource observation certification blockers must remain explicit")
     return errors
+
+
+def _validate_measurements(artifact: dict[str, Any], errors: list[str]) -> None:
+    sample_count = artifact.get("sampleCount")
+    if (
+        isinstance(sample_count, bool)
+        or not isinstance(sample_count, int)
+        or sample_count < MINIMUM_RESOURCE_SAMPLES
+    ):
+        errors.append("sampleCount must contain at least two samples")
+    for name in (
+        "observedWindowSeconds",
+        "cpuCoreSecondsPerSecondAverage",
+        "residentMemoryBytesAverage",
+        "residentMemoryBytesMax",
+    ):
+        value = artifact.get(name)
+        if not _non_negative_number(value) or (name == "observedWindowSeconds" and value == 0):
+            errors.append(f"{name} must be a finite non-negative measurement")
+    for name in ("virtualMemoryBytesMax", "openFileDescriptorUtilizationMax"):
+        value = artifact.get(name)
+        if value is not None and not _non_negative_number(value):
+            errors.append(f"{name} must be null or a finite non-negative measurement")
+    fd_utilization = artifact.get("openFileDescriptorUtilizationMax")
+    if _non_negative_number(fd_utilization) and fd_utilization > 1:
+        errors.append("openFileDescriptorUtilizationMax must not exceed one")
+
+
+def _non_negative_number(value: object) -> TypeGuard[int | float]:
+    return (
+        not isinstance(value, bool)
+        and isinstance(value, (int, float))
+        and math.isfinite(value)
+        and value >= 0
+    )
 
 
 def _validate_sequence(snapshots: list[ProcessResourceSnapshot]) -> None:

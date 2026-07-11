@@ -79,7 +79,7 @@ def test_cli_collects_atomic_source_safe_resource_evidence(
     artifact = json.loads(output.read_text(encoding="utf-8"))
     assert artifact["sampleCount"] == 2
     assert artifact["cpuCoreSecondsPerSecondAverage"] == 0.5
-    assert artifact["costEvidencePresent"] is False
+    assert artifact["costAttributionVerified"] is False
     assert "sensitive.example" not in output.read_text(encoding="utf-8")
     assert sleeps == [0.1]
     assert FakeProbe.instance.closed is True

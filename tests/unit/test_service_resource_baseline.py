@@ -33,10 +33,10 @@ def _snapshot(
     )
 
 
-def _build(snapshots: list[ProcessResourceSnapshot]) -> dict[str, object]:
+def _build(snapshots: list[ProcessResourceSnapshot], *, profile: str = "test") -> dict[str, object]:
     return build_service_resource_baseline(
         snapshots=snapshots,
-        environment_profile="test",
+        environment_profile=profile,
         generated_at_utc=START + timedelta(minutes=1),
         commit_sha="abc123",
         branch="feature/capacity",
@@ -52,7 +52,8 @@ def test_builds_bounded_non_certifying_resource_observation() -> None:
     assert artifact["residentMemoryBytesMax"] == 300
     assert artifact["virtualMemoryBytesMax"] == 600
     assert artifact["openFileDescriptorUtilizationMax"] == 0.05
-    assert artifact["costEvidencePresent"] is False
+    assert artifact["costAttributionVerified"] is False
+    assert artifact["resourceAttestationVerified"] is False
     assert artifact["certificationReady"] is False
     assert validate_service_resource_baseline(artifact) == []
 
@@ -66,6 +67,17 @@ def test_supports_platforms_without_file_descriptor_metrics() -> None:
     )
 
     assert artifact["openFileDescriptorUtilizationMax"] is None
+
+
+def test_builds_non_certifying_production_like_observation() -> None:
+    artifact = _build(
+        [_snapshot(0, 1.0, 100), _snapshot(1, 1.1, 100)],
+        profile="production-like",
+    )
+
+    assert artifact["environmentProfile"] == "production-like"
+    assert artifact["claimPosture"] == "report_only_resource_observation"
+    assert artifact["resourceAttestationVerified"] is False
 
 
 @pytest.mark.parametrize(
@@ -87,6 +99,7 @@ def test_rejects_incomplete_or_invalid_sequences(
     ("kwargs", "message"),
     [
         ({"cpu_seconds_total": -1.0}, "cpu_seconds_total"),
+        ({"cpu_seconds_total": float("nan")}, "finite"),
         ({"resident_memory_bytes": -1}, "resident_memory_bytes"),
         ({"virtual_memory_bytes": -1}, "virtual_memory_bytes"),
         ({"open_file_descriptors": 1, "max_file_descriptors": None}, "present together"),
@@ -107,16 +120,16 @@ def test_snapshot_rejects_invalid_measurements(kwargs: dict[str, object], messag
 
 def test_validator_rejects_claim_inflation() -> None:
     artifact = _build([_snapshot(0, 1.0, 100), _snapshot(1, 1.1, 100)])
-    artifact["costEvidencePresent"] = True
-    artifact["productionLikeAttestationVerified"] = True
+    artifact["costAttributionVerified"] = True
+    artifact["resourceAttestationVerified"] = True
     artifact["certificationReady"] = True
     artifact["supportedFeaturePromoted"] = True
     artifact["certificationBlockers"] = []
 
     errors = validate_service_resource_baseline(artifact)
 
-    assert "resource observation must not claim cost evidence" in errors
-    assert "resource observation must not claim production-like attestation" in errors
+    assert "resource observation must not claim cost attribution" in errors
+    assert "resource observation must not claim resource attestation" in errors
     assert "resource observation must remain non-certifying" in errors
     assert "resource observation must not promote a supported feature" in errors
     assert "resource observation certification blockers must remain explicit" in errors
@@ -129,6 +142,7 @@ def test_validator_rejects_claim_inflation() -> None:
         ("proofScope", "billing", "proofScope"),
         ("claimPosture", "certified", "claimPosture"),
         ("environmentProfile", "production", "environmentProfile"),
+        ("repository", "other", "repository"),
     ],
 )
 def test_validator_rejects_contract_identity_mutation(
@@ -143,7 +157,7 @@ def test_validator_rejects_contract_identity_mutation(
 @pytest.mark.parametrize(
     ("overrides", "message"),
     [
-        ({"environment_profile": "production-like"}, "requires the test profile"),
+        ({"environment_profile": "production"}, "requires test or production-like"),
         ({"generated_at_utc": datetime(2026, 7, 11)}, "timezone-aware"),
         ({"commit_sha": " "}, "commit_sha must not be blank"),
     ],
@@ -160,6 +174,25 @@ def test_builder_rejects_ambiguous_provenance(overrides: dict[str, object], mess
     values.update(overrides)
     with pytest.raises(ValueError, match=message):
         build_service_resource_baseline(**values)  # type: ignore[arg-type]
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "message"),
+    [
+        ("sampleCount", 1, "sampleCount"),
+        ("observedWindowSeconds", 0.0, "observedWindowSeconds"),
+        ("cpuCoreSecondsPerSecondAverage", float("nan"), "cpuCoreSeconds"),
+        ("residentMemoryBytesAverage", -1, "residentMemoryBytesAverage"),
+        ("virtualMemoryBytesMax", float("inf"), "virtualMemoryBytesMax"),
+        ("openFileDescriptorUtilizationMax", 1.1, "must not exceed one"),
+        ("commitSha", " ", "commitSha"),
+    ],
+)
+def test_validator_rejects_tampered_measurements(field: str, value: object, message: str) -> None:
+    artifact = _build([_snapshot(0, 1.0, 100), _snapshot(1, 1.1, 100)])
+    artifact[field] = value
+
+    assert any(message in error for error in validate_service_resource_baseline(artifact))
 
 
 def test_builder_fails_closed_on_final_validation_failure(

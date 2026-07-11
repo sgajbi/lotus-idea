@@ -22,7 +22,7 @@ def _parser() -> argparse.ArgumentParser:
         description="Collect bounded source-safe Lotus Idea process resource evidence."
     )
     parser.add_argument("--metrics-url", required=True)
-    parser.add_argument("--environment-profile", required=True, choices=("test",))
+    parser.add_argument("--environment-profile", required=True, choices=("test", "production-like"))
     parser.add_argument("--sample-count", type=int, default=5)
     parser.add_argument("--sample-interval-seconds", type=float, default=1.0)
     parser.add_argument("--commit-sha", required=True)

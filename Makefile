@@ -129,6 +129,7 @@ DOWNSTREAM_CAPACITY_SEEDED_AT_UTC ?= 2026-07-11T08:00:00Z
 DOWNSTREAM_CAPACITY_SEED_CONFIRMATION ?=
 DOWNSTREAM_CAPACITY_SEED_OUTPUT ?= output/observability/downstream-capacity-seed.json
 SERVICE_RESOURCE_METRICS_URL ?= http://127.0.0.1:8330/metrics
+SERVICE_RESOURCE_PROFILE ?= test
 SERVICE_RESOURCE_SAMPLE_COUNT ?= 5
 SERVICE_RESOURCE_SAMPLE_INTERVAL_SECONDS ?= 1
 SERVICE_RESOURCE_OUTPUT ?= output/observability/service-resource-baseline.json
@@ -354,7 +355,7 @@ downstream-capacity-seed:
 	$(VENV_PYTHON) scripts/seed_downstream_capacity_resource.py --base-url "$(SERVICE_CAPACITY_BASE_URL)" --as-of-date "$(DOWNSTREAM_CAPACITY_SEED_AS_OF_DATE)" --seeded-at-utc "$(DOWNSTREAM_CAPACITY_SEEDED_AT_UTC)" --commit-sha "$(BUILD_GIT_COMMIT_SHA)" --branch "$(BUILD_GIT_BRANCH)" --run-id "$(BUILD_CI_RUN_ID)" --confirmation "$(DOWNSTREAM_CAPACITY_SEED_CONFIRMATION)" --output "$(DOWNSTREAM_CAPACITY_SEED_OUTPUT)"
 
 service-resource-baseline:
-	$(VENV_PYTHON) scripts/run_service_resource_baseline.py --metrics-url "$(SERVICE_RESOURCE_METRICS_URL)" --environment-profile test --sample-count "$(SERVICE_RESOURCE_SAMPLE_COUNT)" --sample-interval-seconds "$(SERVICE_RESOURCE_SAMPLE_INTERVAL_SECONDS)" --commit-sha "$(BUILD_GIT_COMMIT_SHA)" --branch "$(BUILD_GIT_BRANCH)" --run-id "$(BUILD_CI_RUN_ID)" --output "$(SERVICE_RESOURCE_OUTPUT)"
+	$(VENV_PYTHON) scripts/run_service_resource_baseline.py --metrics-url "$(SERVICE_RESOURCE_METRICS_URL)" --environment-profile "$(SERVICE_RESOURCE_PROFILE)" --sample-count "$(SERVICE_RESOURCE_SAMPLE_COUNT)" --sample-interval-seconds "$(SERVICE_RESOURCE_SAMPLE_INTERVAL_SECONDS)" --commit-sha "$(BUILD_GIT_COMMIT_SHA)" --branch "$(BUILD_GIT_BRANCH)" --run-id "$(BUILD_CI_RUN_ID)" --output "$(SERVICE_RESOURCE_OUTPUT)"
 
 postgres-capacity-threshold-proof:
 	$(VENV_PYTHON) scripts/run_postgres_capacity_threshold_proof.py --environment-profile "$(SERVICE_CAPACITY_PROFILE)" --expected-database-name "$(POSTGRES_CAPACITY_EXPECTED_DATABASE)" --maximum-target-connections "$(POSTGRES_CAPACITY_MAX_TARGET_CONNECTIONS)" --maximum-load-connections "$(POSTGRES_CAPACITY_MAX_LOAD_CONNECTIONS)" --confirmation "$(POSTGRES_CAPACITY_CONFIRMATION)" --commit-sha "$(BUILD_GIT_COMMIT_SHA)" --branch "$(BUILD_GIT_BRANCH)" --run-id "$(BUILD_CI_RUN_ID)" --output "$(POSTGRES_CAPACITY_PROOF_OUTPUT)"

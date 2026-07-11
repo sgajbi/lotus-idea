@@ -31,7 +31,7 @@ def test_resource_baseline_contract_rejects_claim_inflation(
     def inflated(**kwargs: object) -> dict[str, object]:
         return {
             "certificationBlockers": [],
-            "costEvidencePresent": True,
+            "costAttributionVerified": True,
             "certificationReady": True,
         }
 

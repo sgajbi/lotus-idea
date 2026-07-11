@@ -37,7 +37,7 @@ def validate_contract() -> list[str]:
     }
     if set(artifact["certificationBlockers"]) != expected_blockers:
         errors.append("resource baseline must preserve production-like and cost blockers")
-    if artifact["costEvidencePresent"] is not False:
+    if artifact["costAttributionVerified"] is not False:
         errors.append("resource baseline must not infer cost evidence from process metrics")
     if artifact["certificationReady"] is not False:
         errors.append("controlled resource baseline must remain non-certifying")

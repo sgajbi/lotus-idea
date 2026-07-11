@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
+import math
 from typing import Protocol
 
 
@@ -17,8 +18,8 @@ class ProcessResourceSnapshot:
     def __post_init__(self) -> None:
         if self.observed_at_utc.tzinfo is None or self.observed_at_utc.utcoffset() is None:
             raise ValueError("observed_at_utc must be timezone-aware")
-        if self.cpu_seconds_total < 0:
-            raise ValueError("cpu_seconds_total must not be negative")
+        if not math.isfinite(self.cpu_seconds_total) or self.cpu_seconds_total < 0:
+            raise ValueError("cpu_seconds_total must be finite and not negative")
         if self.resident_memory_bytes < 0:
             raise ValueError("resident_memory_bytes must not be negative")
         if self.virtual_memory_bytes is not None and self.virtual_memory_bytes < 0:
