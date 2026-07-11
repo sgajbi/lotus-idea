@@ -18,6 +18,8 @@ from app.domain.data_lifecycle import (
 )
 from app.security.caller_context import CallerContext
 from app.domain.events import EventLineageContext
+from app.domain.lifecycle_authority import VerifiedLifecycleAuthorityReceipt
+from app.integration.lifecycle_authority_contract import LifecycleAuthorityProducerDecision
 
 SOURCE_SAFE_REFERENCE = r"^[A-Za-z0-9][A-Za-z0-9._:/-]{2,255}$"
 
@@ -39,6 +41,10 @@ class DataLifecycleActionRequest(CamelModel):
         alias="approverSubject",
         pattern=SOURCE_SAFE_REFERENCE,
     )
+    authority_decision: LifecycleAuthorityProducerDecision | None = Field(
+        default=None,
+        alias="authorityDecision",
+    )
 
     @field_validator("requested_at_utc")
     @classmethod
@@ -52,6 +58,8 @@ class DataLifecycleActionRequest(CamelModel):
         caller: CallerContext,
         idempotency_key: str,
         event_lineage: EventLineageContext,
+        authority_verification_required: bool = False,
+        authority_receipt: VerifiedLifecycleAuthorityReceipt | None = None,
     ) -> DataLifecycleCommand:
         payload = {
             "action": self.action.value,
@@ -63,6 +71,7 @@ class DataLifecycleActionRequest(CamelModel):
             "reason": self.reason,
             "requested_at_utc": self.requested_at_utc.isoformat(),
             "tenant_id": self.tenant_id,
+            "authority_decision_sha256": _authority_decision_sha256(self.authority_decision),
         }
         canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"))
         return DataLifecycleCommand(
@@ -80,7 +89,23 @@ class DataLifecycleActionRequest(CamelModel):
             trace_id=event_lineage.trace_id,
             requested_at_utc=self.requested_at_utc,
             dry_run=self.dry_run,
+            authority_verification_required=authority_verification_required,
+            authority_receipt=authority_receipt,
         )
+
+
+def _authority_decision_sha256(
+    decision: LifecycleAuthorityProducerDecision | None,
+) -> str | None:
+    if decision is None:
+        return None
+    canonical = json.dumps(
+        decision.model_dump(mode="json"),
+        ensure_ascii=True,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    return hashlib.sha256(canonical.encode("ascii")).hexdigest()
 
 
 class DataLifecycleActionResponse(CamelModel):

@@ -3,11 +3,13 @@ from __future__ import annotations
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 import hashlib
+from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
 
 from app.api import data_lifecycle as api_module
+from app.api.caller_headers import TRUSTED_CALLER_CONTEXT_HEADER, TRUSTED_CALLER_CONTEXT_TOKEN_ENV
 from app.api.durable_write_guard import durable_repository_not_configured_problem
 from app.domain.data_lifecycle import (
     REGULATED_ADVISORY_POLICY_REF,
@@ -19,8 +21,13 @@ from app.domain.data_lifecycle import (
     DataLifecycleOperationResult,
     DataLifecycleState,
 )
+from app.domain.lifecycle_authority import (
+    LifecycleAuthorityKeyDiscovery,
+    LifecycleAuthorityPublicKey,
+)
 from app.main import app
 from app.ports.data_lifecycle import DataLifecycleEvaluator
+from tests.support.lifecycle_authority_fixture import lifecycle_authority_decision_payload
 
 REQUESTED_AT = datetime(2026, 7, 10, 9, 0, tzinfo=UTC)
 
@@ -217,6 +224,129 @@ def test_data_lifecycle_api_fails_closed_without_durable_lifecycle_capability(
     assert response.json()["code"] == expected_code
 
 
+class StaticLifecycleAuthorityKeySource:
+    def get_key_discovery(self) -> LifecycleAuthorityKeyDiscovery:
+        return LifecycleAuthorityKeyDiscovery(
+            schema_version="lotus.lifecycle-authority-keys.v1",
+            issuer="bank-lifecycle-governance",
+            keys=(
+                LifecycleAuthorityPublicKey(
+                    key_id="lifecycle-key-001",
+                    algorithm="EdDSA",
+                    curve="Ed25519",
+                    public_key_base64url="cHVibGljLWtleQ",
+                    rotation_epoch=3,
+                    status="active",
+                    not_before_utc=datetime.now(UTC) - timedelta(days=1),
+                    not_after_utc=None,
+                ),
+            ),
+        )
+
+
+class AcceptingSignatureVerifier:
+    def __init__(self) -> None:
+        self.calls = 0
+
+    def verify(self, **_: object) -> None:
+        self.calls += 1
+
+
+def test_data_lifecycle_api_requires_and_binds_signed_authority_in_staging(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    repository = ApiLifecycleRepository()
+    verifier = AcceptingSignatureVerifier()
+    monkeypatch.setattr(api_module, "get_idea_repository", lambda: repository)
+    monkeypatch.setattr(
+        api_module,
+        "get_lifecycle_authority_dependencies",
+        lambda: (StaticLifecycleAuthorityKeySource(), verifier),
+    )
+    monkeypatch.setenv("LOTUS_IDEA_RUNTIME_PROFILE", "staging")
+    monkeypatch.setenv(
+        "LOTUS_IDEA_DATABASE_URL",
+        "postgresql://configured-runtime/not-used-by-test",
+    )
+    monkeypatch.setenv(TRUSTED_CALLER_CONTEXT_TOKEN_ENV, "gateway-secret")
+    request = lifecycle_request(dry_run=True)
+
+    missing = TestClient(app).post(
+        lifecycle_path(),
+        json=request,
+        headers=trusted_lifecycle_headers("lifecycle-api-authority-missing-001"),
+    )
+    accepted = TestClient(app).post(
+        lifecycle_path(),
+        json={**request, "authorityDecision": authority_decision_for_request()},
+        headers=trusted_lifecycle_headers("lifecycle-api-authority-accepted-001"),
+    )
+
+    assert missing.status_code == 400
+    assert accepted.status_code == 200
+    assert repository.calls == 1
+    assert verifier.calls == 1
+    assert repository.commands[0].authority_verification_required is True
+    assert repository.commands[0].authority_receipt is not None
+    assert repository.commands[0].authority_receipt.decision_id == "privacy-decision-001"
+
+
+def test_data_lifecycle_api_rejects_signed_claim_substitution_before_mutation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    repository = ApiLifecycleRepository()
+    monkeypatch.setattr(api_module, "get_idea_repository", lambda: repository)
+    monkeypatch.setattr(
+        api_module,
+        "get_lifecycle_authority_dependencies",
+        lambda: (StaticLifecycleAuthorityKeySource(), AcceptingSignatureVerifier()),
+    )
+    monkeypatch.setenv("LOTUS_IDEA_RUNTIME_PROFILE", "staging")
+    monkeypatch.setenv(TRUSTED_CALLER_CONTEXT_TOKEN_ENV, "gateway-secret")
+    decision = authority_decision_for_request()
+    claims = decision["claims"]
+    assert isinstance(claims, dict)
+    claims["candidate_id"] = "candidate-other"
+
+    response = TestClient(app).post(
+        lifecycle_path(),
+        json={**lifecycle_request(), "authorityDecision": decision},
+        headers=trusted_lifecycle_headers("lifecycle-api-authority-substitution-001"),
+    )
+
+    assert response.status_code == 400
+    assert response.json()["code"] == "invalid_request"
+    assert repository.calls == 0
+
+
+def test_data_lifecycle_api_reports_authority_trust_outage_source_safely(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    repository = ApiLifecycleRepository()
+    monkeypatch.setattr(api_module, "get_idea_repository", lambda: repository)
+    monkeypatch.setattr(
+        api_module,
+        "get_lifecycle_authority_dependencies",
+        lambda: (_ for _ in ()).throw(RuntimeError("raw trust backend detail")),
+    )
+    monkeypatch.setenv("LOTUS_IDEA_RUNTIME_PROFILE", "staging")
+    monkeypatch.setenv(TRUSTED_CALLER_CONTEXT_TOKEN_ENV, "gateway-secret")
+
+    response = TestClient(app).post(
+        lifecycle_path(),
+        json={
+            **lifecycle_request(),
+            "authorityDecision": authority_decision_for_request(),
+        },
+        headers=trusted_lifecycle_headers("lifecycle-api-authority-outage-001"),
+    )
+
+    assert response.status_code == 503
+    assert response.json()["code"] == "lifecycle_authority_unavailable"
+    assert "raw trust backend detail" not in response.text
+    assert repository.calls == 0
+
+
 def test_data_lifecycle_openapi_certifies_success_and_failure_contracts() -> None:
     operation = app.openapi()["paths"][lifecycle_route_path()]["post"]
 
@@ -239,6 +369,12 @@ def test_data_lifecycle_openapi_certifies_success_and_failure_contracts() -> Non
     } == {
         "data_lifecycle_action_blocked",
         "data_lifecycle_idempotency_conflict",
+    }
+    assert "lifecycle_authority_unavailable" in {
+        example["value"]["code"]
+        for example in operation["responses"]["503"]["content"]["application/json"][
+            "examples"
+        ].values()
     }
 
 
@@ -281,6 +417,24 @@ def lifecycle_request(*, dry_run: bool = False) -> dict[str, object]:
     }
 
 
+def authority_decision_for_request() -> dict[str, Any]:
+    now = datetime.now(UTC)
+    payload = lifecycle_authority_decision_payload()
+    claims = payload["claims"]
+    assert isinstance(claims, dict)
+    claims.update(
+        {
+            "tenant_id": "tenant-001",
+            "candidate_id": "candidate-001",
+            "action": "erase",
+            "issued_at_utc": (now - timedelta(minutes=2)).isoformat(),
+            "effective_at_utc": (now - timedelta(minutes=1)).isoformat(),
+            "expires_at_utc": (now + timedelta(minutes=5)).isoformat(),
+        }
+    )
+    return payload
+
+
 def lifecycle_headers(idempotency_key: str) -> dict[str, str]:
     return {
         "Idempotency-Key": idempotency_key,
@@ -290,4 +444,11 @@ def lifecycle_headers(idempotency_key: str) -> dict[str, str]:
         "X-Caller-Tenant-Ids": "tenant-001",
         "X-Correlation-Id": "corr-lifecycle-api-001",
         "X-Trace-Id": "trace-lifecycle-api-001",
+    }
+
+
+def trusted_lifecycle_headers(idempotency_key: str) -> dict[str, str]:
+    return {
+        **lifecycle_headers(idempotency_key),
+        TRUSTED_CALLER_CONTEXT_HEADER: "gateway-secret",
     }
