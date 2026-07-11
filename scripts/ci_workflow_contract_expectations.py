@@ -197,6 +197,25 @@ WORKFLOW_EXPECTATIONS: dict[str, tuple[str, ...]] = {
         "gh workflow run main-releasability.yml",
         "--ref main",
     ),
+    "postgres-disaster-recovery-drill.yml": (
+        "schedule:",
+        'POSTGRESQL_MAJOR_VERSION: "18"',
+        "postgres:18-alpine",
+        "Install matching PostgreSQL client",
+        'sudo apt-get install --yes "postgresql-client-${POSTGRESQL_MAJOR_VERSION}"',
+        'echo "/usr/lib/postgresql/${POSTGRESQL_MAJOR_VERSION}/bin" >> "$GITHUB_PATH"',
+        "Verify PostgreSQL client and server compatibility",
+        'pg_dump --version | grep -Eq " ${POSTGRESQL_MAJOR_VERSION}\\\\."',
+        'pg_restore --version | grep -Eq " ${POSTGRESQL_MAJOR_VERSION}\\\\."',
+        '--command "SHOW server_version"',
+        'grep -Eq "^${POSTGRESQL_MAJOR_VERSION}\\\\."',
+        "make postgres-disaster-recovery-seed",
+        "make postgres-disaster-recovery-drill",
+        "make postgres-disaster-recovery-resume",
+        "make disaster-recovery-proof-gate",
+        "actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4.1.1",
+        "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1",
+    ),
 }
 
 PROHIBITED_WORKFLOW_PATTERNS: dict[str, tuple[str, ...]] = {
