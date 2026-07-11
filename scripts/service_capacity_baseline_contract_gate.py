@@ -66,6 +66,7 @@ def validate_contract() -> list[str]:
         "production_like_environment_missing",
         "minimum_sample_volume_missing",
         "minimum_soak_window_missing",
+        "dependency_recovery_attestation_missing",
         "postgres_saturation_evidence_missing",
         "cost_resource_evidence_missing",
     }

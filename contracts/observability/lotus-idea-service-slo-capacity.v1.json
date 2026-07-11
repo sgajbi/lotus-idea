@@ -136,13 +136,14 @@
     "postgres_threshold_attestation_workflow": ".github/workflows/postgres-capacity-evidence.yml",
     "postgres_threshold_attestation_verifier": "src/app/infrastructure/github_capacity_attestation.py",
     "postgres_threshold_qualification_model": "src/app/application/capacity_evidence_qualification.py",
+    "dependency_recovery_attestation_workflow": ".github/workflows/service-dependency-recovery-evidence.yml",
     "operations_doc": "docs/operations/service-slo-capacity.md",
     "operations_wiki": "wiki/Service-SLO-And-Capacity.md",
     "rfc_slice": "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-15-observability-security-entitlements-and-operations.md"
   },
   "certification_blockers": [
     "load_and_soak_baseline_missing",
-    "dependency_failure_baseline_missing",
+    "dependency_recovery_attestation_missing",
     "postgres_saturation_evidence_missing",
     "cost_resource_baseline_missing"
   ],

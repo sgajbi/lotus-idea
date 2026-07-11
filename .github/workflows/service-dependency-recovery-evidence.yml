@@ -1,0 +1,71 @@
+name: Service Dependency Recovery Evidence
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: Confirm the controlled production-like dependency recovery exercise
+        required: true
+        type: string
+
+concurrency:
+  group: service-dependency-recovery-evidence-main
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write
+  attestations: write
+
+jobs:
+  dependency-recovery-proof:
+    name: Production-like Dependency Recovery Proof
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      inputs.confirmation == 'RUN_CONTROLLED_LOTUS_IDEA_DEPENDENCY_RECOVERY'
+    runs-on: [self-hosted, linux, lotus-capacity-evidence]
+    environment: capacity-production-like
+    timeout-minutes: 30
+    env:
+      LOTUS_IDEA_CAPACITY_AUTHORIZATION: ${{ secrets.LOTUS_IDEA_CAPACITY_AUTHORIZATION }}
+      SERVICE_CAPACITY_BASE_URL: ${{ vars.LOTUS_IDEA_CAPACITY_BASE_URL }}
+      SERVICE_CAPACITY_REQUEST_COUNT: ${{ vars.LOTUS_IDEA_DEPENDENCY_PROOF_REQUEST_COUNT }}
+      SERVICE_CAPACITY_RECOVERY_DELAY_SECONDS: ${{ vars.LOTUS_IDEA_DEPENDENCY_RECOVERY_DELAY_SECONDS }}
+      PIP_DISABLE_PIP_VERSION_CHECK: "1"
+      PYTHONUNBUFFERED: "1"
+      PYTHON_VERSION: "3.12"
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: "pip"
+      - name: Install locked dependencies
+        run: make install
+      - name: Run controlled dependency fault and recovery proof
+        run: >-
+          .venv/bin/python scripts/run_service_capacity_workload.py
+          --base-url "${SERVICE_CAPACITY_BASE_URL}"
+          --environment-profile production-like
+          --scenario dependency_failure
+          --request-count "${SERVICE_CAPACITY_REQUEST_COUNT}"
+          --concurrency 1
+          --dependency-recovery-delay-seconds "${SERVICE_CAPACITY_RECOVERY_DELAY_SECONDS}"
+          --allow-mutating-workflows
+          --commit-sha "${GITHUB_SHA}"
+          --branch "${GITHUB_REF_NAME}"
+          --run-id "${GITHUB_RUN_ID}"
+          --output output/observability/service-dependency-recovery-proof.json
+      - name: Validate source-safe proof artifact
+        run: make service-capacity-baseline-contract-gate
+      - name: Attest dependency recovery provenance
+        uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4.1.1
+        with:
+          subject-path: output/observability/service-dependency-recovery-proof.json
+      - name: Upload dependency recovery evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0 # v7.0.1
+        with:
+          name: service-dependency-recovery-${{ github.run_id }}
+          path: output/observability/service-dependency-recovery-proof.json
+          if-no-files-found: error
+          retention-days: 90

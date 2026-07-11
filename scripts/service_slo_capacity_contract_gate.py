@@ -41,7 +41,7 @@ EXPECTED_WORKFLOWS = {
 }
 REQUIRED_BLOCKERS = {
     "load_and_soak_baseline_missing",
-    "dependency_failure_baseline_missing",
+    "dependency_recovery_attestation_missing",
     "postgres_saturation_evidence_missing",
     "cost_resource_baseline_missing",
 }
@@ -246,6 +246,7 @@ def _validate_source_truth(payload: dict[str, Any], repository_root: Path) -> li
         "postgres_threshold_attestation_workflow",
         "postgres_threshold_attestation_verifier",
         "postgres_threshold_qualification_model",
+        "dependency_recovery_attestation_workflow",
         "operations_doc",
         "operations_wiki",
         "rfc_slice",
@@ -289,6 +290,35 @@ def _validate_capacity_attestation_workflow(repository_root: Path) -> list[str]:
         errors.append("PostgreSQL saturation workflow must not run on a schedule")
     if "SERVICE_CAPACITY_PROFILE: production" in workflow:
         errors.append("PostgreSQL threshold measurement must remain controlled-test classified")
+    errors.extend(_validate_dependency_recovery_workflow(repository_root))
+    return errors
+
+
+def _validate_dependency_recovery_workflow(repository_root: Path) -> list[str]:
+    path = repository_root / ".github/workflows/service-dependency-recovery-evidence.yml"
+    if not path.is_file():
+        return ["dependency recovery attestation workflow is missing"]
+    workflow = path.read_text(encoding="utf-8")
+    required = (
+        "workflow_dispatch:",
+        "github.ref == 'refs/heads/main'",
+        "RUN_CONTROLLED_LOTUS_IDEA_DEPENDENCY_RECOVERY",
+        "runs-on: [self-hosted, linux, lotus-capacity-evidence]",
+        "environment: capacity-production-like",
+        "LOTUS_IDEA_CAPACITY_AUTHORIZATION: ${{ secrets.LOTUS_IDEA_CAPACITY_AUTHORIZATION }}",
+        "--environment-profile production-like",
+        "--scenario dependency_failure",
+        "--dependency-recovery-delay-seconds",
+        "--allow-mutating-workflows",
+        "actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373",
+    )
+    errors = [
+        f"dependency recovery workflow missing {token!r}"
+        for token in required
+        if token not in workflow
+    ]
+    if "schedule:" in workflow:
+        errors.append("dependency recovery workflow must not run on a schedule")
     return errors
 
 
