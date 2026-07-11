@@ -1690,6 +1690,39 @@
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
     },
     {
+      "method": "POST",
+      "path": "/api/v1/data-lifecycle/candidates/{candidateId}/actions",
+      "certification_status": "implemented_not_certified",
+      "owner": "lotus-idea privacy and records operations",
+      "purpose": "Preview or apply a tenant-scoped legal hold, hold release, erasure, or purge while preserving regulated tombstones, delivery fences, and immutable operation audit.",
+      "when_to_use": "Use only through an authorized privacy or records workflow carrying idea.data-lifecycle.manage, exact tenant entitlement, a governed authority decision, Idempotency-Key, and required dual approval.",
+      "when_not_to_use": "Do not use Lotus Idea to self-authorize legal, privacy, Archive, Report, or AI-provider decisions; do not use this route for portfolio accounting, official performance, risk, suitability, compliance determination, execution, report rendering, client publication, Gateway/Workbench publication, or supported-feature promotion.",
+      "request_examples": [
+        "{\"tenantId\":\"tenant-001\",\"action\":\"erase\",\"authorityRef\":\"bank-privacy-governance:decision-001\",\"reason\":\"approved_lifecycle_request\",\"changeReference\":\"privacy-case-001\",\"requestedAtUtc\":\"2026-07-10T09:00:00Z\",\"dryRun\":true,\"approverSubject\":\"privacy-approver-001\"}",
+        "Headers: Idempotency-Key, X-Caller-Subject, X-Caller-Roles=privacy_officer|records_manager, X-Caller-Capabilities=idea.data-lifecycle.manage, X-Caller-Tenant-Ids, and trusted caller-context provenance in production profiles."
+      ],
+      "response_examples": [
+        "{\"repository\":\"lotus-idea\",\"operationId\":\"lifecycle-operation-0123456789abcdef01234567\",\"decision\":\"preview\",\"action\":\"erase\",\"state\":\"erased\",\"retentionExpiresAtUtc\":\"2033-07-11T09:00:00Z\",\"controlVersion\":2,\"blockers\":[],\"dryRun\":true,\"auditSha256\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"affectedRowCounts\":{},\"certificationStatus\":\"not_certified\",\"supportedFeaturePromoted\":false}"
+      ],
+      "error_examples": [
+        "400 invalid_request for malformed action metadata or Idempotency-Key.",
+        "403 permission_denied for missing role, idea.data-lifecycle.manage, trusted provenance, or exact tenant entitlement.",
+        "404 data_lifecycle_candidate_not_found without cross-tenant existence disclosure.",
+        "409 data_lifecycle_action_blocked for hold, active delivery, retention, approval, authority, policy, or state prerequisites.",
+        "409 data_lifecycle_idempotency_conflict when an Idempotency-Key is reused with changed content.",
+        "503 durable or lifecycle repository unavailable; no process-local mutation fallback is permitted."
+      ],
+      "test_evidence": [
+        "tests/integration/test_data_lifecycle_api.py::test_data_lifecycle_api_previews_replays_and_conflicts_source_safely",
+        "tests/integration/test_data_lifecycle_api.py::test_data_lifecycle_api_requires_role_capability_and_exact_tenant",
+        "tests/integration/test_data_lifecycle_api.py::test_data_lifecycle_api_rejects_invalid_request_and_blocks_unsafe_erasure",
+        "tests/integration/test_data_lifecycle_api.py::test_data_lifecycle_api_does_not_disclose_cross_tenant_candidate_existence",
+        "tests/integration/test_data_lifecycle_api.py::test_data_lifecycle_openapi_certifies_success_and_failure_contracts",
+        "tests/unit/test_postgres_data_lifecycle.py::test_postgres_lifecycle_erasure_redacts_and_audits_in_one_commit"
+      ],
+      "openapi_evidence": "scripts/openapi_quality_gate.py validates operation identity, summary, description, Operations tag, source-safe success example, and complete 400/403/404/409/503 Problem Details metadata. Live PostgreSQL concurrency/restart and cross-service authority proof remain blockers."
+    },
+    {
       "method": "GET",
       "path": "/health/live",
       "certification_status": "baseline_certified",

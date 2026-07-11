@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Protocol
+from typing import Protocol, runtime_checkable
 
 from app.domain.data_lifecycle import (
     DataLifecycleCandidateContext,
@@ -21,6 +21,7 @@ class DataLifecycleEvaluator(Protocol):
     ) -> DataLifecycleEvaluation: ...
 
 
+@runtime_checkable
 class DataLifecycleRepository(Protocol):
     def execute_data_lifecycle(
         self,

@@ -97,6 +97,16 @@ PROTECTED_OPERATION_REQUIREMENTS = (
     ),
     CallerContextOpenApiRequirement(
         method="POST",
+        path="/api/v1/data-lifecycle/candidates/{candidateId}/actions",
+        required_capabilities=("idea.data-lifecycle.manage",),
+        alternative_roles=("privacy_officer", "records_manager"),
+        entitlement_scope=(
+            "The request tenantId must exactly match a tenant in trusted caller entitlements. "
+            "Missing or broader tenant scope fails closed without candidate existence disclosure."
+        ),
+    ),
+    CallerContextOpenApiRequirement(
+        method="POST",
         path="/api/v1/idea-candidates/{candidateId}/ai-explanations/evaluate",
         required_capabilities=("idea.ai-explanation.evaluate",),
         required_roles=("advisor",),

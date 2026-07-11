@@ -13,6 +13,7 @@ from app.api.candidate_lifecycle import register_candidate_lifecycle_routes
 from app.api.concentration_risk_signals import register_concentration_risk_signal_routes
 from app.api.conversion_governance import register_conversion_governance_routes
 from app.api.data_mesh_readiness import register_data_mesh_readiness_routes
+from app.api.data_lifecycle import register_data_lifecycle_routes
 from app.api.drawdown_review_signals import register_drawdown_review_signal_routes
 from app.api.downstream_realization import register_downstream_realization_routes
 from app.api.downstream_submission_reconciliation import (
@@ -122,6 +123,7 @@ def _register_product_routes(application: FastAPI) -> None:
     register_downstream_submission_reconciliation_routes(application)
     register_downstream_realization_readiness_routes(application)
     register_data_mesh_readiness_routes(application)
+    register_data_lifecycle_routes(application)
     register_runtime_trust_telemetry_routes(application)
     register_source_ingestion_readiness_routes(application)
     register_outbox_delivery_readiness_routes(application)

@@ -44,6 +44,9 @@ CALLER_CONTEXT_HEADERS_REQUIRING_DESCRIPTIONS = (
     "X-Lotus-Trusted-Caller-Context",
 )
 TEST_REFERENCE_PATTERN = re.compile(r"^(?P<path>tests/.+\.py)::(?P<test>[A-Za-z_][A-Za-z0-9_]*)$")
+ALLOWED_CERTIFICATION_STATUSES = frozenset(
+    "baseline_certified certified implemented_not_certified planned not_applicable".split()
+)
 OPERATION_EVENT_TEST_TERMS = ("operation_event", "operation_events")
 NEGATIVE_OR_DEGRADED_TEST_TERMS = (
     "blocked",
@@ -421,8 +424,6 @@ def main() -> int:
         if method in {"GET", "POST", "PUT", "PATCH", "DELETE"}
     }
     ledger_operations: set[tuple[str, str]] = set()
-    allowed_statuses = {"baseline_certified", "certified", "planned", "not_applicable"}
-
     for index, endpoint in enumerate(entries):
         if not isinstance(endpoint, dict):
             errors.append(f"endpoints[{index}] must be an object")
@@ -436,7 +437,7 @@ def main() -> int:
         operation = (str(endpoint["method"]).upper(), str(endpoint["path"]))
         ledger_operations.add(operation)
 
-        if endpoint["certification_status"] not in allowed_statuses:
+        if endpoint["certification_status"] not in ALLOWED_CERTIFICATION_STATUSES:
             errors.append(
                 f"{operation}: invalid certification_status {endpoint['certification_status']!r}"
             )

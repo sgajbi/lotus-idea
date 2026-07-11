@@ -78,6 +78,7 @@ class IdeaOperation(StrEnum):
     DOWNSTREAM_REALIZATION_SUBMISSION = "downstream_realization_submission"
     DOWNSTREAM_RECONCILIATION_READ = "downstream_reconciliation_read"
     DOWNSTREAM_RECONCILIATION_RESOLVE = "downstream_reconciliation_resolve"
+    DATA_LIFECYCLE_ACTION = "data_lifecycle_action"
     OUTBOX_DELIVERY_RUN_ONCE = "outbox_delivery_run_once"
     OUTBOX_DELIVERY_READINESS_READ = "outbox_delivery_readiness_read"
     OUTBOX_DEAD_LETTER_READ = "outbox_dead_letter_read"

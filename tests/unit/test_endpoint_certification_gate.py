@@ -418,6 +418,12 @@ def test_endpoint_certification_gate_validates_json_examples() -> None:
     assert "('POST', '/api/v1/example'): response_examples[1] must be valid JSON" in errors[0]
 
 
+def test_endpoint_certification_gate_represents_implemented_uncertified_truth() -> None:
+    module = _load_endpoint_certification_gate()
+
+    assert "implemented_not_certified" in module.ALLOWED_CERTIFICATION_STATUSES
+
+
 def _certified_endpoint(*, test_evidence: list[str]) -> dict[str, object]:
     return {
         "method": "POST",
