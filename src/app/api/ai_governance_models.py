@@ -10,6 +10,7 @@ from app.api.temporal_validation import require_timezone_aware
 from app.domain.ai_action_policy import AI_ACTION_POLICY_VERSION
 from app.domain.ai_execution_provenance import (
     AI_EXECUTION_PROVENANCE_POLICY_VERSION,
+    AIExecutionProvenancePosture,
     AIWorkflowOutputTrustPolicy,
 )
 from app.domain.ai_metadata_policy import AI_METADATA_ENVELOPE_VERSION
@@ -34,6 +35,8 @@ from app.domain import (
     SourceSystem,
 )
 from app.security.caller_context import CallerContext
+from app.integration.lotus_ai_attestation_contract import LotusAIProducerAttestation
+from app.integration.lotus_ai_idea_explanation_output import LotusAIExecutionOutputEvidence
 
 
 class AIWorkflowPackRequest(CamelModel):
@@ -174,6 +177,11 @@ class AIExplanationEvaluationRequest(CamelModel):
         alias="fallbackReason",
     )
     workflow_output: AIWorkflowOutputRequest | None = Field(default=None, alias="workflowOutput")
+    producer_run_id: str | None = Field(default=None, alias="producerRunId")
+    producer_execution_output: LotusAIExecutionOutputEvidence | None = Field(
+        default=None, alias="producerExecutionOutput"
+    )
+    run_attestation: LotusAIProducerAttestation | None = Field(default=None, alias="runAttestation")
 
     @field_validator("request_id")
     @classmethod
@@ -217,6 +225,15 @@ class AIExplanationEvaluationRequest(CamelModel):
                 )
                 if self.workflow_output is not None
                 else None
+            ),
+            producer_run_id=self.producer_run_id,
+            producer_execution_output=(
+                self.producer_execution_output.to_domain()
+                if self.producer_execution_output is not None
+                else None
+            ),
+            run_attestation=(
+                self.run_attestation.to_domain() if self.run_attestation is not None else None
             ),
             workflow_output_trust_policy=(
                 AIWorkflowOutputTrustPolicy.UNATTESTED_LOCAL_TEST_FIXTURE_ALLOWED
@@ -395,7 +412,10 @@ class AIExplanationEvaluationResponse(CamelModel):
             aiLineageRecorded=ai_lineage_recorded,
             aiLineagePersistenceDecision=ai_lineage_persistence_decision,
             durableStorageBacked=durable_storage_backed,
-            lotusAiRuntimeExecuted=False,
+            lotusAiRuntimeExecuted=(
+                result.execution_provenance_posture
+                is AIExecutionProvenancePosture.LOTUS_AI_ATTESTATION_VERIFIED
+            ),
             supportedFeaturePromoted=False,
         )
 

@@ -58,6 +58,10 @@ from app.runtime.source_ingestion_state import (
     build_risk_volatility_source_runtime_from_environment,
     build_source_ingestion_runtime_from_environment,
 )
+from app.runtime.lotus_ai_attestation_state import (
+    close_lotus_ai_attestation_dependencies,
+    get_lotus_ai_attestation_dependencies,
+)
 
 __all__ = [
     "DownstreamRealizationClientsUnavailableError",
@@ -109,4 +113,6 @@ __all__ = [
     "idea_repository_runtime_posture",
     "load_runtime_settings",
     "load_recovery_runtime_state",
+    "close_lotus_ai_attestation_dependencies",
+    "get_lotus_ai_attestation_dependencies",
 ]

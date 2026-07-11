@@ -33,6 +33,7 @@ from app.api.problem_details import (
 )
 from app.api.route_metadata import RouteMetadata
 from app.api.runtime_dependencies import (
+    get_lotus_ai_attestation_dependencies,
     get_idea_repository,
     idea_repository_durable_storage_backed,
     load_runtime_settings,
@@ -43,6 +44,10 @@ from app.application.ai_governance import (
     build_ai_explanation_readiness_snapshot,
     evaluate_ai_explanation_to_repository,
 )
+from app.application.lotus_ai_run_attestation_verification import (
+    LotusAIAttestationSignatureVerifier,
+)
+from app.ports.lotus_ai_attestation import LotusAIAttestationKeySource
 from app.domain import (
     AIExplanationLineagePersistenceDecision,
     AIExplanationPosture,
@@ -147,9 +152,20 @@ async def evaluate_ai_explanation(
                 durable_storage_backed=durable_storage_backed,
             )
             return configuration_problem
+        attestation_key_source: LotusAIAttestationKeySource | None = None
+        signature_verifier: LotusAIAttestationSignatureVerifier | None = None
+        if command.run_attestation is not None:
+            try:
+                attestation_key_source, signature_verifier = get_lotus_ai_attestation_dependencies()
+            except RuntimeError as exc:
+                raise UntrustedAIWorkflowOutput(
+                    "lotus-ai attestation trust infrastructure is unavailable"
+                ) from exc
         result = evaluate_ai_explanation_to_repository(
             command,
             repository=repository,
+            attestation_key_source=attestation_key_source,
+            signature_verifier=signature_verifier,
         )
     except PermissionDeniedError:
         _emit_ai_explanation_operation_event(
@@ -443,8 +459,11 @@ AI_EXPLANATION_ROUTE: RouteMetadata = {
         "versioned output-content integrity, and a purpose-scoped provider-safe metadata "
         "allowlist, "
         "API Idempotency-Key replay/conflict protection, and bounded operation telemetry. "
-        "It does not call an AI provider, execute lotus-ai runtime workflows, persist "
-        "provider payloads or prompts, grant downstream authority, or promote a supported feature."
+        "When supplied together, producer execution output and a signed lotus-ai run attestation "
+        "are verified against trusted keys and bound to the Idea request before a bounded "
+        "verification receipt is persisted. The route does not call an AI provider or execute "
+        "lotus-ai runtime workflows, persist provider payloads or prompts, grant downstream "
+        "authority, or promote a supported feature."
     ),
     "status_code": status.HTTP_200_OK,
     "response_model": AIExplanationEvaluationResponse,

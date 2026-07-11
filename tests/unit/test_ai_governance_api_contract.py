@@ -150,6 +150,22 @@ def test_ai_metadata_openapi_schema_is_closed_and_versioned_by_response_contract
         )
 
 
+def test_ai_explanation_openapi_publishes_attestation_boundary() -> None:
+    schema = app.openapi()
+    operation = schema["paths"][
+        "/api/v1/idea-candidates/{candidateId}/ai-explanations/evaluate"
+    ]["post"]
+
+    assert "signed lotus-ai run attestation" in operation["description"]
+    assert "does not call an AI provider" in operation["description"]
+    request_schema = schema["components"]["schemas"]["AIExplanationEvaluationRequest"]
+    assert {
+        "producerRunId",
+        "producerExecutionOutput",
+        "runAttestation",
+    } <= request_schema["properties"].keys()
+
+
 def test_ai_explanation_application_command_rejects_blank_candidate() -> None:
     with pytest.raises(ValueError, match="candidate_id is required"):
         EvaluateAIExplanationToRepositoryCommand(
