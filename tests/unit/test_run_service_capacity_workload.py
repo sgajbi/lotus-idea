@@ -10,7 +10,6 @@ import pytest
 from app.ports.capacity_probe import CapacityProbeRequest, CapacityProbeResult
 from app.application.capacity_evidence_qualification import (
     TRUSTED_REPOSITORY,
-    TRUSTED_SIGNER_WORKFLOW,
     TRUSTED_SOURCE_REF,
     VerifiedArtifactAttestation,
 )
@@ -252,11 +251,14 @@ def test_cli_requires_verified_mainline_attestation_to_clear_saturation(
             pass
 
     class FakeVerifier:
+        def __init__(self, *, signer_workflow: str) -> None:
+            self.signer_workflow = signer_workflow
+
         def verify(self, **kwargs: object) -> VerifiedArtifactAttestation:
             return VerifiedArtifactAttestation(
                 subject_sha256="b" * 64,
                 repository=TRUSTED_REPOSITORY,
-                signer_workflow=TRUSTED_SIGNER_WORKFLOW,
+                signer_workflow=self.signer_workflow,
                 source_ref=TRUSTED_SOURCE_REF,
                 source_commit_sha="abc123",
             )
@@ -290,6 +292,97 @@ def test_cli_requires_verified_mainline_attestation_to_clear_saturation(
     resource = json.loads(output.read_text(encoding="utf-8"))["resourceEvidence"]
     assert resource["postgresThresholdAttestationVerified"] is True
     assert resource["postgresSaturationMeasured"] is True
+
+
+def test_cli_requires_dedicated_attestation_to_clear_dependency_blocker(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    module = _load_script()
+    output = tmp_path / "capacity.json"
+    proof = tmp_path / "dependency-recovery.json"
+    proof.write_text(
+        json.dumps(
+            {
+                "schemaVersion": "lotus-idea.service-capacity-baseline.v1",
+                "repository": "lotus-idea",
+                "proofScope": "source_safe_service_capacity_baseline",
+                "claimPosture": "report_only_baseline",
+                "environmentProfile": "production-like",
+                "commitSha": "abc123",
+                "branch": "main",
+                "runId": "dependency-proof-1",
+                "scenarios": [
+                    {
+                        "scenario": "dependency_failure",
+                        "sampleCount": 2,
+                        "acceptedCount": 2,
+                        "errorCount": 0,
+                        "conflictCount": 0,
+                        "recoverySampleCount": 1,
+                        "recoverySuccessRate": 1.0,
+                    }
+                ],
+                "supportedFeaturePromoted": False,
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    class FakeProbe:
+        def __init__(self, **kwargs: object) -> None:
+            pass
+
+        def execute(self, request: CapacityProbeRequest) -> CapacityProbeResult:
+            return CapacityProbeResult(0.01, 200, "accepted", {})
+
+        def close(self) -> None:
+            pass
+
+    class FakeVerifier:
+        def __init__(self, *, signer_workflow: str) -> None:
+            self.signer_workflow = signer_workflow
+
+        def verify(self, **kwargs: object) -> VerifiedArtifactAttestation:
+            return VerifiedArtifactAttestation(
+                subject_sha256="c" * 64,
+                repository=TRUSTED_REPOSITORY,
+                signer_workflow=self.signer_workflow,
+                source_ref=TRUSTED_SOURCE_REF,
+                source_commit_sha="abc123",
+            )
+
+    monkeypatch.setattr(module, "HttpCapacityProbe", FakeProbe)
+    monkeypatch.setattr(module, "GitHubCapacityAttestationVerifier", FakeVerifier)
+
+    exit_code = module.main(
+        [
+            "--base-url",
+            "https://idea.example",
+            "--environment-profile",
+            "production-like",
+            "--scenario",
+            "api",
+            "--commit-sha",
+            "abc123",
+            "--branch",
+            "main",
+            "--run-id",
+            "aggregate-1",
+            "--dependency-recovery-proof",
+            str(proof),
+            "--verify-dependency-recovery-attestation",
+            "--output",
+            str(output),
+        ]
+    )
+
+    assert exit_code == 0
+    artifact = json.loads(output.read_text(encoding="utf-8"))
+    resource = artifact["resourceEvidence"]
+    assert resource["dependencyRecoveryAttestationVerified"] is True
+    assert resource["dependencyRecoveryProofRunId"] == "dependency-proof-1"
+    assert "dependency_recovery_attestation_missing" not in artifact["certificationBlockers"]
 
 
 def test_resource_baseline_reader_requires_json_object(tmp_path: Path) -> None:

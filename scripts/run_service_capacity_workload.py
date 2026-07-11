@@ -11,6 +11,11 @@ import time
 from typing import Mapping
 
 from app.application.service_capacity_baseline import build_service_capacity_baseline
+from app.application.capacity_evidence_qualification import (
+    DEPENDENCY_RECOVERY_SIGNER_WORKFLOW,
+    POSTGRES_CAPACITY_SIGNER_WORKFLOW,
+    VerifiedArtifactAttestation,
+)
 from app.application.service_capacity_workload import (
     CapacityWorkloadPlan,
     execute_capacity_recovery,
@@ -192,8 +197,10 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--branch", required=True)
     parser.add_argument("--run-id", required=True)
     parser.add_argument("--postgres-threshold-proof", type=Path)
+    parser.add_argument("--dependency-recovery-proof", type=Path)
     parser.add_argument("--resource-baseline", type=Path)
     parser.add_argument("--verify-postgres-threshold-attestation", action="store_true")
+    parser.add_argument("--verify-dependency-recovery-attestation", action="store_true")
     parser.add_argument(
         "--output",
         type=Path,
@@ -249,19 +256,23 @@ def main(argv: list[str] | None = None) -> int:
             postgres_max_utilization = postgres_result.max_connection_utilization_fraction
         observed_window_seconds = max(time.perf_counter() - started_at, 0.000001)
         threshold_proof = _read_optional_proof(args.postgres_threshold_proof)
-        threshold_attestation = None
-        if args.verify_postgres_threshold_attestation:
-            if args.postgres_threshold_proof is None or threshold_proof is None:
-                raise ValueError("attestation verification requires --postgres-threshold-proof")
-            if args.environment_profile != "production-like":
-                raise ValueError("attested capacity qualification requires production-like profile")
-            proof_commit = threshold_proof.get("commitSha")
-            if not isinstance(proof_commit, str) or not proof_commit.strip():
-                raise ValueError("PostgreSQL threshold proof commitSha must be a non-blank string")
-            threshold_attestation = GitHubCapacityAttestationVerifier().verify(
-                artifact_path=args.postgres_threshold_proof,
-                source_commit_sha=proof_commit,
-            )
+        threshold_attestation = _verify_optional_attestation(
+            verification_requested=args.verify_postgres_threshold_attestation,
+            artifact_path=args.postgres_threshold_proof,
+            proof=threshold_proof,
+            environment_profile=args.environment_profile,
+            signer_workflow=POSTGRES_CAPACITY_SIGNER_WORKFLOW,
+            proof_name="PostgreSQL threshold proof",
+        )
+        dependency_recovery_proof = _read_optional_proof(args.dependency_recovery_proof)
+        dependency_recovery_attestation = _verify_optional_attestation(
+            verification_requested=args.verify_dependency_recovery_attestation,
+            artifact_path=args.dependency_recovery_proof,
+            proof=dependency_recovery_proof,
+            environment_profile=args.environment_profile,
+            signer_workflow=DEPENDENCY_RECOVERY_SIGNER_WORKFLOW,
+            proof_name="dependency recovery proof",
+        )
         artifact = build_service_capacity_baseline(
             measurements=measurements,
             environment_profile=args.environment_profile,
@@ -272,6 +283,8 @@ def main(argv: list[str] | None = None) -> int:
             observed_window_seconds=observed_window_seconds,
             postgres_threshold_proof=threshold_proof,
             postgres_threshold_attestation=threshold_attestation,
+            dependency_recovery_proof=dependency_recovery_proof,
+            dependency_recovery_attestation=dependency_recovery_attestation,
             resource_baseline=_read_optional_resource_baseline(args.resource_baseline),
             postgres_max_connection_utilization_fraction=postgres_max_utilization,
         )
@@ -293,21 +306,44 @@ def _write_json_atomic(path: Path, payload: dict[str, object]) -> None:
 
 
 def _read_optional_proof(path: Path | None) -> dict[str, object] | None:
+    return _read_optional_json_object(path, name="capacity proof")
+
+
+def _verify_optional_attestation(
+    *,
+    verification_requested: bool,
+    artifact_path: Path | None,
+    proof: dict[str, object] | None,
+    environment_profile: str,
+    signer_workflow: str,
+    proof_name: str,
+) -> VerifiedArtifactAttestation | None:
+    if not verification_requested:
+        return None
+    if artifact_path is None or proof is None:
+        raise ValueError(f"attestation verification requires {proof_name}")
+    if environment_profile != "production-like":
+        raise ValueError("attested capacity qualification requires production-like profile")
+    proof_commit = proof.get("commitSha")
+    if not isinstance(proof_commit, str) or not proof_commit.strip():
+        raise ValueError(f"{proof_name} commitSha must be a non-blank string")
+    return GitHubCapacityAttestationVerifier(signer_workflow=signer_workflow).verify(
+        artifact_path=artifact_path,
+        source_commit_sha=proof_commit,
+    )
+
+
+def _read_optional_json_object(path: Path | None, *, name: str) -> dict[str, object] | None:
     if path is None:
         return None
     payload = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(payload, dict):
-        raise ValueError("PostgreSQL threshold proof must be a JSON object")
+        raise ValueError(f"{name} must be a JSON object")
     return payload
 
 
 def _read_optional_resource_baseline(path: Path | None) -> dict[str, object] | None:
-    if path is None:
-        return None
-    payload = json.loads(path.read_text(encoding="utf-8"))
-    if not isinstance(payload, dict):
-        raise ValueError("resource baseline must be a JSON object")
-    return payload
+    return _read_optional_json_object(path, name="resource baseline")
 
 
 if __name__ == "__main__":
