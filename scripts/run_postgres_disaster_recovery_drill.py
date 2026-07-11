@@ -25,6 +25,7 @@ from app.domain.disaster_recovery import (  # noqa: E402
     RestoreValidationStatus,
 )
 from app.infrastructure.postgres_backup_restore import (  # noqa: E402
+    PostgresBackupRestoreCommandError,
     PostgresLogicalBackupRestore,
 )
 from app.infrastructure.postgres_disaster_recovery import (  # noqa: E402
@@ -210,6 +211,9 @@ def main() -> int:
             incident_cutoff_utc=args.incident_cutoff_utc,
             output_path=args.output_path,
         )
+    except PostgresBackupRestoreCommandError as exc:
+        print(f"PostgreSQL disaster recovery drill failed: {exc}")
+        return 1
     except (OSError, ValueError, TypeError, subprocess.SubprocessError) as exc:
         print(f"PostgreSQL disaster recovery drill failed: {type(exc).__name__}")
         return 1

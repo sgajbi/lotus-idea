@@ -9,7 +9,10 @@ from typing import Any
 
 import pytest
 
-from app.infrastructure.postgres_backup_restore import PostgresLogicalBackupRestore
+from app.infrastructure.postgres_backup_restore import (
+    PostgresBackupRestoreCommandError,
+    PostgresLogicalBackupRestore,
+)
 
 SOURCE_URL = "postgresql://source-user:source-secret@source-db:5432/source_idea"
 TARGET_URL = "postgresql://target-user:target-secret@target-db:5432/target_idea"
@@ -111,3 +114,58 @@ def test_logical_restore_rejects_naive_operator_clock() -> None:
 
     with pytest.raises(ValueError, match="timezone-aware UTC"):
         runner.execute(source_database_url=SOURCE_URL, target_database_url=TARGET_URL)
+
+
+@pytest.mark.parametrize(
+    "failed_command, expected_phase", [("pg_dump", "backup"), ("pg_restore", "restore")]
+)
+def test_logical_restore_reports_source_safe_command_failure(
+    failed_command: str,
+    expected_phase: str,
+) -> None:
+    def connect(database_url: str) -> FakeConnection:
+        return FakeConnection(CHECKPOINT if database_url == SOURCE_URL else 0)
+
+    def run_command(command: list[str], **_kwargs: Any) -> subprocess.CompletedProcess[str]:
+        if command[0] == "pg_dump":
+            dump_path = Path(command[command.index("--file") + 1])
+            dump_path.write_bytes(b"source-safe-logical-backup")
+        if command[0] == failed_command:
+            settings = (
+                ("source-db", "source_idea", "source-user", "source-secret")
+                if failed_command == "pg_dump"
+                else ("target-db", "target_idea", "target-user", "target-secret")
+            )
+            raise subprocess.CalledProcessError(
+                1,
+                command,
+                stderr=(
+                    f"connection to {settings[0]}/{settings[1]} as {settings[2]} "
+                    f"failed using {settings[3]}"
+                ),
+            )
+        return subprocess.CompletedProcess(command, 0, stdout="", stderr="")
+
+    runner = PostgresLogicalBackupRestore(
+        run_command=run_command,
+        connect=connect,
+        now=lambda: CHECKPOINT,
+    )
+
+    with pytest.raises(PostgresBackupRestoreCommandError) as captured:
+        runner.execute(source_database_url=SOURCE_URL, target_database_url=TARGET_URL)
+
+    message = str(captured.value)
+    assert f"logical {expected_phase} command failed with exit code 1" in message
+    assert "<host>/<database> as <user>" in message
+    for sensitive_value in (
+        "source-db",
+        "source_idea",
+        "source-user",
+        "source-secret",
+        "target-db",
+        "target_idea",
+        "target-user",
+        "target-secret",
+    ):
+        assert sensitive_value not in message
