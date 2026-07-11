@@ -23,6 +23,7 @@ from app.domain import (
     reconcile_downstream_submission,
 )
 from app.infrastructure.postgres_codecs import decode_datetime, read_row_value
+from app.infrastructure.postgres_data_lifecycle import DataLifecycleWriteBlockedError
 from app.infrastructure.postgres_protocols import PostgresConnection, PostgresCursor
 
 
@@ -44,6 +45,7 @@ def claim_postgres_downstream_submission(
 ) -> DownstreamSubmissionClaimResult:
     try:
         with connection.cursor() as cursor:
+            _lock_active_resource_lifecycle(cursor, record)
             cursor.execute(
                 f"""
                 /* lotus-idea downstream-submission-claim */
@@ -84,6 +86,41 @@ def claim_postgres_downstream_submission(
     except Exception:
         connection.rollback()
         raise
+
+
+def _lock_active_resource_lifecycle(
+    cursor: PostgresCursor,
+    record: DownstreamSubmissionRecord,
+) -> None:
+    resource_contract = {
+        DownstreamSubmissionResourceType.CONVERSION_INTENT: (
+            "idea_conversion_intent",
+            "conversion_intent_id",
+        ),
+        DownstreamSubmissionResourceType.REPORT_EVIDENCE_PACK: (
+            "idea_report_evidence_pack_request",
+            "report_evidence_pack_id",
+        ),
+    }
+    table_name, identity_column = resource_contract[record.resource_type]
+    cursor.execute(
+        f"""
+        /* lotus-idea downstream-submission-lifecycle-fence */
+        SELECT lifecycle.candidate_id, lifecycle.state, lifecycle.held_from_state
+        FROM {table_name} resource
+        JOIN idea_data_lifecycle_control lifecycle
+          ON lifecycle.candidate_id = resource.candidate_id
+        WHERE resource.{identity_column} = %s
+        FOR UPDATE OF lifecycle
+        """,
+        (record.resource_id,),
+    )
+    rows = cursor.fetchall()
+    if not rows:
+        raise DataLifecycleWriteBlockedError(record.resource_id, "resource_missing_or_erased")
+    state = read_row_value(rows[0], "held_from_state") or read_row_value(rows[0], "state")
+    if state != "active":
+        raise DataLifecycleWriteBlockedError(record.resource_id, "candidate_erased")
 
 
 def finalize_postgres_downstream_submission(

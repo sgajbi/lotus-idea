@@ -232,6 +232,34 @@ def _execute_data_lifecycle_query(
     params: Sequence[Any] | None,
 ) -> bool:
     connection = cursor.connection
+    if normalized.startswith("/* lotus-idea downstream-submission-lifecycle-fence */"):
+        assert params is not None
+        resource_table = (
+            "idea_conversion_intent"
+            if "from idea_conversion_intent" in normalized
+            else "idea_report_evidence_pack_request"
+        )
+        identity_column = (
+            "conversion_intent_id"
+            if resource_table == "idea_conversion_intent"
+            else "report_evidence_pack_id"
+        )
+        resources = [
+            row for row in connection.rows[resource_table] if row[identity_column] == params[0]
+        ]
+        controls = {
+            row["candidate_id"]: row for row in connection.rows["idea_data_lifecycle_control"]
+        }
+        cursor._rows = [
+            dict(control)
+            for resource in resources
+            if (control := controls.get(resource["candidate_id"])) is not None
+        ]
+        if not resources and not controls:
+            cursor._rows = [
+                {"candidate_id": "legacy-fixture", "state": "active", "held_from_state": None}
+            ]
+        return True
     if normalized.startswith("select") and "candidate_id = any(" in normalized:
         assert params is not None
         candidate_ids = set(params[0])

@@ -18,6 +18,7 @@ from app.domain import (
     create_downstream_submission_claim,
 )
 from app.infrastructure.postgres_repository import PostgresIdeaRepository
+from app.infrastructure.postgres_data_lifecycle import DataLifecycleWriteBlockedError
 from tests.unit.postgres_repository_fake import FakePostgresConnection
 
 
@@ -37,6 +38,27 @@ def test_postgres_claim_survives_restart_and_distinguishes_conflict() -> None:
     assert repeated.decision is DownstreamSubmissionClaimDecision.RECONCILIATION_REQUIRED
     assert conflict.decision is DownstreamSubmissionClaimDecision.CONFLICT
     assert len(connection.rows["idea_downstream_submission"]) == 1
+
+
+def test_postgres_claim_rejects_erased_resource_before_delivery_insert() -> None:
+    connection = FakePostgresConnection()
+    connection.rows["idea_conversion_intent"].append(
+        {"conversion_intent_id": "conversion-001", "candidate_id": "candidate-erased"}
+    )
+    connection.rows["idea_data_lifecycle_control"].append(
+        {
+            "candidate_id": "candidate-erased",
+            "state": "erased",
+            "held_from_state": None,
+        }
+    )
+
+    with pytest.raises(DataLifecycleWriteBlockedError) as error:
+        PostgresIdeaRepository(connection).claim_downstream_submission(_claim("fingerprint-a"))
+
+    assert error.value.blocker == "candidate_erased"
+    assert connection.rows["idea_downstream_submission"] == []
+    assert connection.rollbacks == 1
 
 
 def test_postgres_finalization_failure_preserves_durable_in_flight_claim() -> None:
