@@ -9,6 +9,7 @@ from app.domain.data_lifecycle import (
     DataLifecycleEvaluation,
     DataLifecycleOperationResult,
 )
+from app.domain.data_lifecycle_schedule import ScheduledLifecycleControlSnapshot
 
 
 class DataLifecycleEvaluator(Protocol):
@@ -30,3 +31,13 @@ class DataLifecycleRepository(Protocol):
         evaluated_at_utc: datetime,
         evaluator: DataLifecycleEvaluator,
     ) -> DataLifecycleOperationResult: ...
+
+
+@runtime_checkable
+class ScheduledDataLifecycleRepository(Protocol):
+    def scan_data_lifecycle_controls(
+        self,
+        *,
+        evaluated_at_utc: datetime,
+        limit: int,
+    ) -> tuple[ScheduledLifecycleControlSnapshot, ...]: ...
