@@ -17,6 +17,7 @@ from app.domain.data_lifecycle import (
     DataLifecycleDecision,
 )
 from app.infrastructure.postgres_data_lifecycle import DataLifecycleWriteBlockedError
+from app.infrastructure.postgres_disaster_recovery import REFERENTIAL_CHECKS
 from app.infrastructure.postgres_repository import PostgresConnection, PostgresIdeaRepository
 from app.main import app
 from app.runtime.repository_state import reset_idea_repository_for_tests
@@ -128,6 +129,7 @@ def test_postgres_data_lifecycle_survives_restart_and_redacts_atomically(
     )
     assert purged.json()["state"] == "purged"
     _assert_purged_graph(postgres_database_url, candidate_id)
+    _assert_no_orphaned_references(postgres_database_url)
     with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
         repository = PostgresIdeaRepository(cast(PostgresConnection, connection))
         purged_telemetry = repository.runtime_trust_telemetry_summary()
@@ -351,3 +353,13 @@ def _operation_blockers(database_url: str, idempotency_key: str) -> object:
             )
             row = cursor.fetchone()
     return row["blockers_json"] if row is not None else "operation_not_persisted"
+
+
+def _assert_no_orphaned_references(database_url: str) -> None:
+    with psycopg.connect(database_url, row_factory=dict_row) as connection:
+        with connection.cursor() as cursor:
+            for relationship, (_, query) in REFERENTIAL_CHECKS.items():
+                cursor.execute(query)
+                row = cursor.fetchone()
+                assert row is not None
+                assert next(iter(row.values())) == 0, relationship
