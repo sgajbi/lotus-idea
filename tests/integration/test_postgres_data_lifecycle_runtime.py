@@ -220,13 +220,17 @@ def _assert_purged_graph(database_url: str, candidate_id: str) -> None:
                    WHERE aggregate_type = 'idea_candidate' AND aggregate_id = %s""",
                 (candidate_id,),
             )
-            assert cursor.fetchone()["payload_count"] == 0
+            payload_count = cursor.fetchone()
+            assert payload_count is not None
+            assert payload_count["payload_count"] == 0
             cursor.execute(
                 """SELECT COUNT(*) AS operation_count
                    FROM idea_data_lifecycle_operation WHERE candidate_id = %s""",
                 (candidate_id,),
             )
-            assert cursor.fetchone()["operation_count"] >= 6
+            operation_count = cursor.fetchone()
+            assert operation_count is not None
+            assert operation_count["operation_count"] >= 6
 
 
 def _operation_blockers(database_url: str, idempotency_key: str) -> object:

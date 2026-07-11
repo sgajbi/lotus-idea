@@ -134,7 +134,7 @@ class LifecycleCursor:
 class LifecycleConnection:
     def __init__(self) -> None:
         self.candidate_exists = True
-        self.candidate_tenant_id = "tenant-001"
+        self.candidate_tenant_id: str | None = "tenant-001"
         self.control = active_control_row()
         self.operations: dict[str, dict[str, Any]] = {}
         self.active_outbox_count = 0
