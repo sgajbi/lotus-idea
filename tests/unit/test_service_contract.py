@@ -156,3 +156,16 @@ def test_lifecycle_transition_openapi_excludes_downstream_authority_input_status
     assert {"accepted", "executed"}.issubset(
         set(schema["components"]["schemas"]["IdeaLifecycleStatus"]["enum"])
     )
+
+
+def test_source_ingestion_openapi_publishes_both_dependency_failure_codes() -> None:
+    schema = app.openapi()
+    response = schema["paths"]["/api/v1/source-ingestion/run-once"]["post"]["responses"]["502"]
+
+    assert set(response["content"]["application/problem+json"]["examples"]) == {
+        "source_dependency_entitlement_denied",
+        "source_dependency_unavailable",
+    }
+    assert response["content"]["application/problem+json"]["schema"] == {
+        "$ref": "#/components/schemas/ProblemDetails"
+    }

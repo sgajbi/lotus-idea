@@ -6,7 +6,11 @@ from fastapi import FastAPI, Header, status
 from fastapi.responses import JSONResponse
 
 from app.api.caller_headers import TRUSTED_CALLER_CONTEXT_HEADER, caller_context_from_headers
-from app.api.problem_details import permission_denied_metadata, problem_response_metadata
+from app.api.problem_details import (
+    merged_problem_response_metadata,
+    permission_denied_metadata,
+    problem_response_metadata,
+)
 from app.api.route_metadata import RouteMetadata
 from app.api.runtime_dependencies import (
     SourceIngestionRuntime,
@@ -478,14 +482,29 @@ SOURCE_INGESTION_RUN_ONCE_ROUTE: RouteMetadata = {
             detail="The caller is not permitted to run source ingestion.",
             description="Caller lacks source-ingestion run permission.",
         ),
-        **problem_response_metadata(
+        **merged_problem_response_metadata(
             status_code=status.HTTP_502_BAD_GATEWAY,
-            code="source_dependency_unavailable",
-            title="Source dependency unavailable",
-            detail="The authoritative source is unavailable for this ingestion run.",
             description=(
                 "The configured authoritative source was unavailable or rejected the service "
                 "entitlement. No candidate result is claimed."
+            ),
+            responses=(
+                problem_response_metadata(
+                    status_code=status.HTTP_502_BAD_GATEWAY,
+                    code="source_dependency_unavailable",
+                    title="Source dependency unavailable",
+                    detail="The authoritative source is unavailable for this ingestion run.",
+                    description="The authoritative source was unavailable.",
+                ),
+                problem_response_metadata(
+                    status_code=status.HTTP_502_BAD_GATEWAY,
+                    code="source_dependency_entitlement_denied",
+                    title="Source dependency entitlement denied",
+                    detail=(
+                        "The authoritative source rejected the configured service entitlement."
+                    ),
+                    description="The authoritative source rejected the service entitlement.",
+                ),
             ),
         ),
     },
