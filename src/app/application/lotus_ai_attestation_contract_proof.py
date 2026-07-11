@@ -26,7 +26,8 @@ REQUIRED_LOTUS_AI_ATTESTATION_EVIDENCE_REFS = (
     "src/app/application/lotus_ai_run_attestation_verification.py",
     "src/app/infrastructure/http_lotus_ai_attestation_keys.py",
     "src/app/infrastructure/ed25519_lotus_ai_attestation_verifier.py",
-    "src/app/domain/persistence.py",
+    "src/app/domain/persistence_ai_lineage.py",
+    "src/app/domain/lotus_ai_attestation_replay.py",
     "migrations/012_ai_run_attestation_receipt.sql",
     "tests/unit/test_lotus_ai_run_attestation_verification.py",
     "tests/unit/test_ai_attestation_replay.py",
@@ -73,12 +74,19 @@ def build_lotus_ai_attestation_contract_proof(
         repository_root / "src/app/application/lotus_ai_run_attestation_verification.py",
         ("verify_lotus_ai_run_attestation", "input digest", "output digest", "Ed25519"),
     )
-    consumer_replay_persistence_implemented = text_file_contains_all(
-        repository_root / "src/app/domain/persistence.py",
-        ("_lotus_ai_attestation_run_requests", "_lotus_ai_attestation_replay_requests"),
-    ) and text_file_contains_all(
-        repository_root / "migrations/012_ai_run_attestation_receipt.sql",
-        ("lotus_ai_run_id", "lotus_ai_replay_nonce", "CREATE UNIQUE INDEX"),
+    consumer_replay_persistence_implemented = (
+        text_file_contains_all(
+            repository_root / "src/app/domain/persistence_ai_lineage.py",
+            ("LotusAIAttestationReplayIndex", "attestation_receipt"),
+        )
+        and text_file_contains_all(
+            repository_root / "src/app/domain/lotus_ai_attestation_replay.py",
+            ("_request_by_run_id", "_request_by_nonce", "conflicts"),
+        )
+        and text_file_contains_all(
+            repository_root / "migrations/012_ai_run_attestation_receipt.sql",
+            ("lotus_ai_run_id", "lotus_ai_replay_nonce", "CREATE UNIQUE INDEX"),
+        )
     )
     local_contract_proof_valid = all(
         (
