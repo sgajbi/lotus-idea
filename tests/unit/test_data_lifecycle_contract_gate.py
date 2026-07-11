@@ -27,6 +27,8 @@ def test_data_lifecycle_contract_rejects_false_certification_and_weakened_contro
         False
     )
     payload["authority_boundaries"]["idea_may_self_authorize_legal_hold_or_erasure"] = True
+    payload["scheduled_review_proof"]["automatic_lifecycle_mutation"] = True
+    payload["scheduled_review_proof"]["production_authority_verified"] = True
 
     errors = validate_payload(module, tmp_path, payload)
 
@@ -38,6 +40,14 @@ def test_data_lifecycle_contract_rejects_false_certification_and_weakened_contro
     ) in errors
     assert (
         "data lifecycle authorities idea_may_self_authorize_legal_hold_or_erasure must be False"
+        in errors
+    )
+    assert (
+        "data lifecycle scheduled review proof automatic_lifecycle_mutation must be False"
+        in errors
+    )
+    assert (
+        "data lifecycle scheduled review proof production_authority_verified must be False"
         in errors
     )
 
@@ -87,11 +97,13 @@ def test_data_lifecycle_contract_rejects_unsafe_sources_and_embedded_secrets(
     module = load_gate()
     payload = load_contract(module)
     payload["source_of_truth"]["migrations"] = "../migrations"
+    payload["scheduled_review_proof"]["workflow"] = "../untrusted.yml"
     payload["authority_boundaries"]["connection"] = "postgresql://operator:secret@db/idea"
 
     errors = validate_payload(module, tmp_path, payload)
 
     assert "data lifecycle source migrations must be a safe relative path" in errors
+    assert "data lifecycle scheduled review workflow must be a safe path" in errors
     assert "data lifecycle contract must not embed credentials, DSNs, or secrets" in errors
 
 
