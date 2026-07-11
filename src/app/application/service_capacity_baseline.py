@@ -70,16 +70,21 @@ class CapacityMeasurement:
             raise ValueError("scenario must use the governed capacity vocabulary")
         if self.outcome not in OUTCOMES:
             raise ValueError("outcome must use the governed capacity vocabulary")
-        if self.duration_seconds < 0:
-            raise ValueError("duration_seconds must not be negative")
+        if not math.isfinite(self.duration_seconds) or self.duration_seconds < 0:
+            raise ValueError("duration_seconds must be finite and not negative")
         if self.item_count < 0:
             raise ValueError("item_count must not be negative")
-        if self.queue_age_seconds is not None and self.queue_age_seconds < 0:
-            raise ValueError("queue_age_seconds must not be negative")
+        if self.queue_age_seconds is not None and (
+            not math.isfinite(self.queue_age_seconds) or self.queue_age_seconds < 0
+        ):
+            raise ValueError("queue_age_seconds must be finite and not negative")
         if self.retry_count < 0:
             raise ValueError("retry_count must not be negative")
-        if self.observed_offset_seconds is not None and self.observed_offset_seconds < 0:
-            raise ValueError("observed_offset_seconds must not be negative")
+        if self.observed_offset_seconds is not None and (
+            not math.isfinite(self.observed_offset_seconds)
+            or self.observed_offset_seconds < 0
+        ):
+            raise ValueError("observed_offset_seconds must be finite and not negative")
         if self.scenario != "dependency_failure" and self.recovered is not None:
             raise ValueError("recovered is only valid for dependency_failure measurements")
 
@@ -107,14 +112,17 @@ def build_service_capacity_baseline(
         raise ValueError("environment_profile must be test, production-like, or production")
     if generated_at_utc.tzinfo is None or generated_at_utc.utcoffset() is None:
         raise ValueError("generated_at_utc must be timezone-aware")
-    if observed_window_seconds <= 0:
-        raise ValueError("observed_window_seconds must be positive")
+    if not math.isfinite(observed_window_seconds) or observed_window_seconds <= 0:
+        raise ValueError("observed_window_seconds must be finite and positive")
     if (
         postgres_max_connection_utilization_fraction is not None
-        and not 0 <= postgres_max_connection_utilization_fraction <= 1
+        and (
+            not math.isfinite(postgres_max_connection_utilization_fraction)
+            or not 0 <= postgres_max_connection_utilization_fraction <= 1
+        )
     ):
         raise ValueError(
-            "postgres_max_connection_utilization_fraction must be between zero and one"
+            "postgres_max_connection_utilization_fraction must be finite and between zero and one"
         )
     for name, value in (("commit_sha", commit_sha), ("branch", branch), ("run_id", run_id)):
         if not value.strip():

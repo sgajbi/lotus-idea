@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import StrEnum
+import math
 
 POSTGRES_CONNECTION_UTILIZATION_WARN_FRACTION = 0.7
 POSTGRES_CONNECTION_UTILIZATION_SHED_FRACTION = 0.9
@@ -22,8 +23,12 @@ class PostgresCapacityPosture:
 
     def __post_init__(self) -> None:
         utilization = self.connection_utilization_fraction
-        if utilization is not None and not 0 <= utilization <= 1:
-            raise ValueError("connection_utilization_fraction must be between zero and one")
+        if utilization is not None and (
+            not math.isfinite(utilization) or not 0 <= utilization <= 1
+        ):
+            raise ValueError(
+                "connection_utilization_fraction must be finite and between zero and one"
+            )
         if self.collection_succeeded != (utilization is not None):
             raise ValueError("collection_succeeded must match utilization availability")
 

@@ -476,11 +476,18 @@ def test_validator_rejects_claim_inflation_and_sensitive_fields() -> None:
     [
         ({"scenario": "unknown"}, "scenario must use"),
         ({"outcome": "unknown"}, "outcome must use"),
-        ({"duration_seconds": -0.1}, "duration_seconds must not be negative"),
+        ({"duration_seconds": -0.1}, "duration_seconds must be finite and not negative"),
+        ({"duration_seconds": float("nan")}, "duration_seconds must be finite"),
+        ({"duration_seconds": float("inf")}, "duration_seconds must be finite"),
         ({"item_count": -1}, "item_count must not be negative"),
-        ({"queue_age_seconds": -1.0}, "queue_age_seconds must not be negative"),
+        ({"queue_age_seconds": -1.0}, "queue_age_seconds must be finite and not negative"),
+        ({"queue_age_seconds": float("nan")}, "queue_age_seconds must be finite"),
         ({"retry_count": -1}, "retry_count must not be negative"),
-        ({"observed_offset_seconds": -1.0}, "observed_offset_seconds must not be negative"),
+        (
+            {"observed_offset_seconds": -1.0},
+            "observed_offset_seconds must be finite and not negative",
+        ),
+        ({"observed_offset_seconds": float("inf")}, "observed_offset_seconds must be finite"),
         ({"recovered": True}, "recovered is only valid"),
     ],
 )
@@ -520,10 +527,7 @@ def test_build_rejects_ambiguous_provenance() -> None:
             observed_window_seconds=1.0,
             postgres_max_connection_utilization_fraction=1.1,
         )
-
-
-def test_build_rejects_non_positive_window_and_blank_provenance() -> None:
-    with pytest.raises(ValueError, match="observed_window_seconds must be positive"):
+    with pytest.raises(ValueError, match="postgres_max_connection_utilization_fraction"):
         build_service_capacity_baseline(
             measurements=[],
             environment_profile="test",
@@ -531,8 +535,28 @@ def test_build_rejects_non_positive_window_and_blank_provenance() -> None:
             commit_sha="abc123",
             branch="main",
             run_id="run-1",
-            observed_window_seconds=0,
+            observed_window_seconds=1.0,
+            postgres_max_connection_utilization_fraction=float("nan"),
         )
+
+
+@pytest.mark.parametrize("observed_window_seconds", [0.0, float("nan"), float("inf")])
+def test_build_rejects_non_finite_or_non_positive_window(
+    observed_window_seconds: float,
+) -> None:
+    with pytest.raises(ValueError, match="observed_window_seconds must be finite and positive"):
+        build_service_capacity_baseline(
+            measurements=[],
+            environment_profile="test",
+            generated_at_utc=GENERATED_AT,
+            commit_sha="abc123",
+            branch="main",
+            run_id="run-1",
+            observed_window_seconds=observed_window_seconds,
+        )
+
+
+def test_build_rejects_blank_provenance() -> None:
     with pytest.raises(ValueError, match="commit_sha must not be blank"):
         build_service_capacity_baseline(
             measurements=[],

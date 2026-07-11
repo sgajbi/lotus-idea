@@ -65,6 +65,8 @@ def test_nonessential_workload_policy_preserves_warning_and_fails_closed(
     [
         (-0.01, True, "between zero and one"),
         (1.01, True, "between zero and one"),
+        (float("nan"), True, "must be finite"),
+        (float("inf"), True, "must be finite"),
         (None, True, "must match utilization availability"),
         (0.5, False, "must match utilization availability"),
     ],
