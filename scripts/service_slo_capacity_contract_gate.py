@@ -16,7 +16,7 @@ EXPECTED_WORKFLOWS = {
     "postgresql",
 }
 REQUIRED_BLOCKERS = {
-    "runtime_sli_metrics_missing",
+    "workflow_sli_metrics_incomplete",
     "error_budget_recording_rules_missing",
     "slo_dashboard_missing",
     "burn_rate_alerts_missing",
@@ -165,6 +165,7 @@ def _validate_source_truth(payload: dict[str, Any], repository_root: Path) -> li
     required = {
         "mesh_slo_contract",
         "operation_metric_contract",
+        "sli_metric_source",
         "contract_gate",
         "operations_doc",
         "rfc_slice",

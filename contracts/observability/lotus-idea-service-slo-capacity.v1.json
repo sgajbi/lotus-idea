@@ -23,7 +23,7 @@
       "latency_p95_seconds": 0.5,
       "latency_p99_seconds": 1.5,
       "error_budget_fraction": 0.001,
-      "measurement_source": "lotus_idea_http_requests_total_and_duration_seconds",
+      "measurement_source": "lotus_idea_http_requests_total + lotus_idea_http_request_duration_seconds",
       "certification_status": "baseline_required"
     },
     {
@@ -114,12 +114,13 @@
   "source_of_truth": {
     "mesh_slo_contract": "contracts/mesh-slo/lotus-idea-idea-candidate.slo.v1.json",
     "operation_metric_contract": "contracts/observability/lotus-idea-operation-metrics.v1.json",
+    "sli_metric_source": "src/app/observability/service_slo_metrics.py",
     "contract_gate": "scripts/service_slo_capacity_contract_gate.py",
     "operations_doc": "docs/operations/service-slo-capacity.md",
     "rfc_slice": "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-15-observability-security-entitlements-and-operations.md"
   },
   "certification_blockers": [
-    "runtime_sli_metrics_missing",
+    "workflow_sli_metrics_incomplete",
     "error_budget_recording_rules_missing",
     "slo_dashboard_missing",
     "burn_rate_alerts_missing",

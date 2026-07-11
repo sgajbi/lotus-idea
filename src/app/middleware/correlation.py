@@ -12,6 +12,7 @@ from app.observability.correlation_context import (
     generated_trace_id,
     sanitize_or_generate_context_id,
 )
+from app.observability.service_slo_metrics import observe_http_request
 
 
 class CorrelationIdMiddleware(BaseHTTPMiddleware):
@@ -35,10 +36,32 @@ class CorrelationIdMiddleware(BaseHTTPMiddleware):
         request.state.correlation_id = correlation_id
         request.state.trace_id = trace_id
         start = time.perf_counter()
-        response = await call_next(request)
-        duration_ms = (time.perf_counter() - start) * 1000.0
+        try:
+            response = await call_next(request)
+        except Exception:
+            observe_http_request(
+                method=request.method,
+                route=_route_template(request),
+                status_code=500,
+                duration_seconds=time.perf_counter() - start,
+            )
+            raise
+        duration_seconds = time.perf_counter() - start
+        observe_http_request(
+            method=request.method,
+            route=_route_template(request),
+            status_code=response.status_code,
+            duration_seconds=duration_seconds,
+        )
+        duration_ms = duration_seconds * 1000.0
         response.headers["X-Correlation-Id"] = correlation_id
         response.headers["X-Trace-Id"] = trace_id
         response.headers["X-Service-Name"] = self._service_name
         response.headers["X-Request-Duration-Ms"] = f"{duration_ms:.3f}"
         return response
+
+
+def _route_template(request: Request) -> str:
+    route = request.scope.get("route")
+    path = getattr(route, "path", None)
+    return path if isinstance(path, str) and path.startswith("/") else "/unknown"

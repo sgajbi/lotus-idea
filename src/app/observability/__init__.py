@@ -29,6 +29,14 @@ from app.observability.outbox_supportability import (
     OutboxDeliverySupportabilityCollector,
     configure_outbox_supportability_metrics,
 )
+from app.observability.service_slo_metrics import (
+    HTTP_DURATION_BUCKETS_SECONDS,
+    HTTP_DURATION_METRIC,
+    HTTP_METRIC_LABELS,
+    HTTP_REQUESTS_METRIC,
+    ServiceSloMetrics,
+    observe_http_request,
+)
 
 __all__ = [
     "FORBIDDEN_OPERATION_FIELD_KEYS",
@@ -56,4 +64,10 @@ __all__ = [
     "OUTBOX_DELIVERY_STATES",
     "OutboxDeliverySupportabilityCollector",
     "configure_outbox_supportability_metrics",
+    "HTTP_DURATION_BUCKETS_SECONDS",
+    "HTTP_DURATION_METRIC",
+    "HTTP_METRIC_LABELS",
+    "HTTP_REQUESTS_METRIC",
+    "ServiceSloMetrics",
+    "observe_http_request",
 ]
