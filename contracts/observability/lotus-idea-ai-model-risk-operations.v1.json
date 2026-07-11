@@ -9,11 +9,13 @@
   "alert_certified": true,
   "action_content_policy_version": "lotus-idea.ai-action-content-policy.v1",
   "output_integrity_version": "lotus-idea.ai-output-integrity.v1",
+  "execution_provenance_policy_version": "lotus-idea.ai-execution-provenance-policy.v1",
   "source_of_truth": {
     "ai_readiness_source": "src/app/application/ai_governance.py",
     "ai_api_source": "src/app/api/ai_governance.py",
     "action_policy_source": "src/app/domain/ai_action_policy.py",
     "output_integrity_source": "src/app/domain/ai_output_integrity.py",
+    "execution_provenance_source": "src/app/domain/ai_execution_provenance.py",
     "data_lifecycle_contract": "contracts/operations/lotus-idea-data-lifecycle.v1.json",
     "operation_metric_contract": "contracts/observability/lotus-idea-operation-metrics.v1.json",
     "contract_gate": "scripts/ai_model_risk_operations_contract_gate.py",
@@ -52,6 +54,15 @@
     "retention_policy_ref": "lotus-idea:regulated-advisory-evidence:seven-year:v1",
     "access_posture": "governed_evaluation_replay_or_authorized_lineage_store",
     "pre_v1_migration_posture": "explicitly_unverifiable_no_retroactive_claim"
+  },
+  "execution_provenance": {
+    "production_like_policy": "verified_lotus_ai_attestation_required",
+    "local_test_policy": "unattested_fixture_allowed_non_production_only",
+    "fallback_policy": "deterministic_fallback_allowed_without_ai_execution",
+    "producer_attestation_available": false,
+    "producer_blocker": "sgajbi/lotus-ai#113",
+    "unattested_output_clears_runtime_proof": false,
+    "pre_attestation_migration_posture": "explicitly_unverifiable"
   },
   "model_risk_dashboard_controls": [
     {

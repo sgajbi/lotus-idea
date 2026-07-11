@@ -388,6 +388,9 @@ AI_EXPLANATION_READINESS_ROUTE: RouteMetadata = {
                         "lotusAiRunAttestationAvailable": False,
                         "productionLikeAttestationRequired": True,
                         "localTestUnattestedFixtureAllowed": True,
+                        "executionProvenancePolicyVersion": (
+                            "lotus-idea.ai-execution-provenance-policy.v1"
+                        ),
                         "durableAiLineageStoreBacked": False,
                         "modelRiskOperationsContractAvailable": True,
                         "modelRiskDashboardContractAvailable": True,
@@ -399,6 +402,7 @@ AI_EXPLANATION_READINESS_ROUTE: RouteMetadata = {
                             "lotus_ai_runtime_execution_missing",
                             "certified_ai_lineage_store_missing",
                             "workflow_pack_runtime_contract_not_certified",
+                            "lotus_ai_run_attestation_contract_missing",
                             "certified_runtime_trust_telemetry_missing",
                             "workbench_product_proof_missing",
                         ],
@@ -460,6 +464,9 @@ AI_EXPLANATION_ROUTE: RouteMetadata = {
                         "outputIntegrityVersion": "lotus-idea.ai-output-integrity.v1",
                         "outputContentDigest": f"sha256:{'a' * 64}",
                         "executionProvenancePosture": "unattested_local_test_fixture",
+                        "executionProvenancePolicyVersion": (
+                            "lotus-idea.ai-execution-provenance-policy.v1"
+                        ),
                         "redactedEvidence": {
                             "candidateId": "idea_high_cash_8d57adbf52f7f5a7",
                             "family": "high_cash",

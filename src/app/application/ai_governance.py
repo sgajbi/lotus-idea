@@ -7,6 +7,7 @@ from typing import Any, Mapping
 from app.application.candidate_lookup import candidate_record_by_id
 from app.domain.ai_action_policy import AI_ACTION_POLICY_VERSION
 from app.domain.ai_execution_provenance import (
+    AI_EXECUTION_PROVENANCE_POLICY_VERSION,
     AIWorkflowOutputTrustPolicy,
     UntrustedAIWorkflowOutput,
 )
@@ -47,6 +48,7 @@ class AIExplanationReadinessSnapshot:
     lotus_ai_run_attestation_available: bool
     production_like_attestation_required: bool
     local_test_unattested_fixture_allowed: bool
+    execution_provenance_policy_version: str
     durable_ai_lineage_store_backed: bool
     model_risk_operations_contract_available: bool
     model_risk_dashboard_contract_available: bool
@@ -112,6 +114,7 @@ def build_ai_explanation_readiness_snapshot(
         lotus_ai_run_attestation_available=False,
         production_like_attestation_required=True,
         local_test_unattested_fixture_allowed=True,
+        execution_provenance_policy_version=AI_EXECUTION_PROVENANCE_POLICY_VERSION,
         durable_ai_lineage_store_backed=durable_ai_lineage_store_backed,
         model_risk_operations_contract_available=True,
         model_risk_dashboard_contract_available=True,

@@ -197,6 +197,9 @@ def test_ai_explanation_api_returns_deterministic_fallback_without_runtime_claim
     assert payload["outputIntegrityVersion"] == "lotus-idea.ai-output-integrity.v1"
     assert payload["outputContentDigest"].startswith("sha256:")
     assert payload["executionProvenancePosture"] == "not_applicable_fallback"
+    assert payload["executionProvenancePolicyVersion"] == (
+        "lotus-idea.ai-execution-provenance-policy.v1"
+    )
     assert payload["durableStorageBacked"] is False
     assert payload["lotusAiRuntimeExecuted"] is False
     assert payload["supportedFeaturePromoted"] is False
@@ -290,6 +293,9 @@ def test_ai_explanation_api_accepts_verified_output_for_review_ready_candidate()
     assert payload["aiLineagePersistenceDecision"] == "accepted"
     assert payload["lotusAiRuntimeExecuted"] is False
     assert payload["executionProvenancePosture"] == "unattested_local_test_fixture"
+    assert payload["executionProvenancePolicyVersion"] == (
+        "lotus-idea.ai-execution-provenance-policy.v1"
+    )
 
 
 def test_ai_explanation_api_blocks_unsupported_claims_and_forbidden_actions() -> None:
@@ -634,6 +640,7 @@ def test_ai_explanation_readiness_api_returns_source_safe_blocked_posture() -> N
         "lotusAiRunAttestationAvailable": False,
         "productionLikeAttestationRequired": True,
         "localTestUnattestedFixtureAllowed": True,
+        "executionProvenancePolicyVersion": ("lotus-idea.ai-execution-provenance-policy.v1"),
         "durableAiLineageStoreBacked": False,
         "modelRiskOperationsContractAvailable": True,
         "modelRiskDashboardContractAvailable": True,

@@ -19,6 +19,9 @@ def test_ai_explanation_readiness_reports_blocked_not_certified_posture() -> Non
     assert snapshot.lotus_ai_run_attestation_available is False
     assert snapshot.production_like_attestation_required is True
     assert snapshot.local_test_unattested_fixture_allowed is True
+    assert snapshot.execution_provenance_policy_version == (
+        "lotus-idea.ai-execution-provenance-policy.v1"
+    )
     assert snapshot.durable_ai_lineage_store_backed is False
     assert snapshot.model_risk_operations_contract_available is True
     assert snapshot.model_risk_dashboard_contract_available is True
