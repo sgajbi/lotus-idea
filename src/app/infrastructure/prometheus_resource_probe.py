@@ -84,7 +84,7 @@ def _metric_measurements(payload: str) -> dict[str, float]:
                 continue
             if sample.labels or sample.name in measurements:
                 raise ResourceProbeError("resource metric cardinality is not singular")
-            measurement = float(sample.value)
+            measurement = sample.value
             if not math.isfinite(measurement) or measurement < 0:
                 raise ResourceProbeError("resource metric measurement is invalid")
             measurements[sample.name] = measurement
