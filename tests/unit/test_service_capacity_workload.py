@@ -228,9 +228,7 @@ def test_postgres_workload_preserves_query_outcomes_and_max_observed_utilization
 
 def test_paced_soak_cycles_every_scenario_across_the_shared_window() -> None:
     scenarios = ("api", "source_ingestion", "outbox_delivery", "downstream_submission")
-    plans = [
-        CapacityWorkloadPlan(scenario, (REQUEST,) * 4, 2) for scenario in scenarios
-    ]
+    plans = [CapacityWorkloadPlan(scenario, (REQUEST,) * 4, 2) for scenario in scenarios]
     clock = FakeClock()
 
     result = execute_paced_capacity_soak(

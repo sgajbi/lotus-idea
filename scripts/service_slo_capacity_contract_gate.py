@@ -166,9 +166,10 @@ def _validate_objectives(payload: dict[str, Any]) -> list[str]:
         if expected is not None and (error_budget, p95, p99) != expected:
             errors.append(f"{workflow} objective must match code-owned load soak thresholds")
     applicability = payload.get("applicability")
-    if not isinstance(applicability, dict) or applicability.get(
-        "minimum_request_volume"
-    ) != MINIMUM_LOAD_SOAK_SAMPLES:
+    if (
+        not isinstance(applicability, dict)
+        or applicability.get("minimum_request_volume") != MINIMUM_LOAD_SOAK_SAMPLES
+    ):
         errors.append("service SLO minimum request volume must match load soak qualification")
     return errors
 

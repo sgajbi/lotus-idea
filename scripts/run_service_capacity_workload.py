@@ -301,9 +301,7 @@ def main(argv: list[str] | None = None) -> int:
                 minimum_observation_seconds=args.minimum_observation_seconds,
             )
             measurements.extend(paced_result.measurements)
-            postgres_max_utilization = (
-                paced_result.postgres_max_connection_utilization_fraction
-            )
+            postgres_max_utilization = paced_result.postgres_max_connection_utilization_fraction
             observed_window_seconds = paced_result.observed_window_seconds
         else:
             for plan in plans:

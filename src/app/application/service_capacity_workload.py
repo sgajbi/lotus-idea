@@ -122,7 +122,9 @@ def execute_paced_capacity_soak(
 ) -> PacedCapacitySoakResult:
     indexed = {plan.scenario: plan for plan in plans}
     if len(indexed) != len(plans) or set(indexed) != STEADY_STATE_SCENARIOS:
-        raise ValueError("paced soak requires each governed steady-state HTTP scenario exactly once")
+        raise ValueError(
+            "paced soak requires each governed steady-state HTTP scenario exactly once"
+        )
     if minimum_observation_seconds <= 0:
         raise ValueError("minimum_observation_seconds must be positive")
     request_counts = {len(plan.requests) for plan in plans}
@@ -159,9 +161,7 @@ def execute_paced_capacity_soak(
                 replace(item, observed_offset_seconds=observed_offset)
                 for item in execute_capacity_workload(batch, probe=http_probe)
             )
-        postgres_batch_size = min(
-            concurrency, postgres_remaining
-        )
+        postgres_batch_size = min(concurrency, postgres_remaining)
         if postgres_batch_size:
             postgres_result = execute_postgres_capacity_workload(
                 probe=postgres_probe,
