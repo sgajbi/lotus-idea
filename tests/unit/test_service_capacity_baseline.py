@@ -49,10 +49,10 @@ class ThresholdProofPort:
         pass
 
 
-def _threshold_proof(*, environment_profile: str = "production-like") -> dict[str, object]:
+def _threshold_proof() -> dict[str, object]:
     return execute_postgres_capacity_threshold_proof(
         stress_port=ThresholdProofPort(),
-        environment_profile=environment_profile,
+        environment_profile="test",
         generated_at_utc=GENERATED_AT,
         commit_sha="abc123",
         branch="main",
@@ -110,13 +110,14 @@ def test_missing_scenarios_and_dependency_recovery_remain_explicit() -> None:
         "scenario_coverage_incomplete",
         "minimum_sample_volume_missing",
         "dependency_recovery_evidence_missing",
+        "postgres_saturation_evidence_missing",
     ]
-    assert artifact["resourceEvidence"]["postgresSaturationMeasured"] is True
+    assert artifact["resourceEvidence"]["postgresSaturationMeasured"] is False
     assert artifact["resourceEvidence"]["postgresThresholdProofValidated"] is True
 
 
 def test_test_profile_or_mismatched_threshold_proof_cannot_clear_saturation_blocker() -> None:
-    test_proof = _threshold_proof(environment_profile="test")
+    test_proof = _threshold_proof()
     artifact = build_service_capacity_baseline(
         measurements=[],
         environment_profile="test",

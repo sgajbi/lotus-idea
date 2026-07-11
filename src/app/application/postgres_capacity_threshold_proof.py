@@ -56,7 +56,7 @@ def execute_postgres_capacity_threshold_proof(
         "schemaVersion": SCHEMA_VERSION,
         "repository": "lotus-idea",
         "proofScope": "source_safe_postgres_capacity_threshold_and_recovery",
-        "claimPosture": "controlled_environment_evidence_only",
+        "claimPosture": "controlled_test_evidence_only",
         "environmentProfile": environment_profile,
         "generatedAtUtc": generated_at_utc.astimezone(UTC).isoformat().replace("+00:00", "Z"),
         "commitSha": commit_sha,
@@ -100,10 +100,10 @@ def validate_postgres_capacity_threshold_proof(artifact: dict[str, Any]) -> list
         errors.append("repository must be lotus-idea")
     if artifact.get("proofScope") != "source_safe_postgres_capacity_threshold_and_recovery":
         errors.append("proofScope must remain threshold-and-recovery only")
-    if artifact.get("claimPosture") != "controlled_environment_evidence_only":
-        errors.append("claimPosture must remain controlled_environment_evidence_only")
-    if artifact.get("environmentProfile") not in {"test", "production-like"}:
-        errors.append("environmentProfile must be test or production-like")
+    if artifact.get("claimPosture") != "controlled_test_evidence_only":
+        errors.append("claimPosture must remain controlled_test_evidence_only")
+    if artifact.get("environmentProfile") != "test":
+        errors.append("environmentProfile must remain test")
     if artifact.get("productionCapacityCertified") is not False:
         errors.append("threshold proof must not claim production capacity certification")
     if artifact.get("supportedFeaturePromoted") is not False:
@@ -127,8 +127,8 @@ def _validate_inputs(
     run_id: str,
     maximum_load_connections: int,
 ) -> None:
-    if environment_profile not in {"test", "production-like"}:
-        raise ValueError("capacity threshold proof is prohibited in production")
+    if environment_profile != "test":
+        raise ValueError("capacity threshold proof requires the test profile")
     if generated_at_utc.tzinfo is None or generated_at_utc.utcoffset() is None:
         raise ValueError("generated_at_utc must be timezone-aware")
     if not 1 <= maximum_load_connections <= MAXIMUM_CONTROLLED_LOAD_CONNECTIONS:

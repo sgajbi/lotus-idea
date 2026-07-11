@@ -24,7 +24,7 @@ def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Run a bounded PostgreSQL capacity threshold and recovery proof."
     )
-    parser.add_argument("--environment-profile", required=True, choices=("test", "production-like"))
+    parser.add_argument("--environment-profile", required=True, choices=("test",))
     parser.add_argument("--expected-database-name", required=True)
     parser.add_argument("--maximum-target-connections", type=int, required=True)
     parser.add_argument("--maximum-load-connections", type=int, default=100)

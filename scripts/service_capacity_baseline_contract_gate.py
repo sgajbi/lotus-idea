@@ -80,7 +80,7 @@ def validate_contract() -> list[str]:
 
     proof = execute_postgres_capacity_threshold_proof(
         stress_port=_ThresholdProofPort(),
-        environment_profile="production-like",
+        environment_profile="test",
         generated_at_utc=datetime(2026, 7, 11, tzinfo=UTC),
         commit_sha="contract-gate",
         branch="contract-gate",
@@ -99,11 +99,11 @@ def validate_contract() -> list[str]:
     )
     resource = linked["resourceEvidence"]
     if resource["postgresThresholdProofValidated"] is not True:
-        errors.append("matching production-like threshold proof must validate")
-    if resource["postgresSaturationMeasured"] is not True:
-        errors.append("matching production-like threshold proof must satisfy saturation evidence")
-    if "postgres_saturation_evidence_missing" in linked["certificationBlockers"]:
-        errors.append("validated production-like proof must clear only the saturation blocker")
+        errors.append("matching controlled test threshold proof must validate")
+    if resource["postgresSaturationMeasured"] is not False:
+        errors.append("controlled test proof must not satisfy saturation certification")
+    if "postgres_saturation_evidence_missing" not in linked["certificationBlockers"]:
+        errors.append("controlled test proof must preserve the saturation blocker")
     return errors
 
 

@@ -113,11 +113,7 @@ def build_service_capacity_baseline(
         commit_sha=commit_sha,
         branch=branch,
     )
-    postgres_saturation_measured = bool(
-        postgres_threshold_proof_validated
-        and postgres_threshold_proof is not None
-        and postgres_threshold_proof.get("environmentProfile") == "production-like"
-    )
+    postgres_saturation_measured = False
     blockers = _certification_blockers(
         environment_profile=environment_profile,
         scenarios=scenarios,

@@ -52,7 +52,7 @@ def test_builds_source_safe_threshold_and_recovery_evidence() -> None:
     artifact = _execute(port)
 
     assert artifact["proofScope"] == "source_safe_postgres_capacity_threshold_and_recovery"
-    assert artifact["claimPosture"] == "controlled_environment_evidence_only"
+    assert artifact["claimPosture"] == "controlled_test_evidence_only"
     assert artifact["threshold"] == {
         "posture": "shed",
         "connectionUtilizationFraction": 0.9,
@@ -78,7 +78,7 @@ def test_builds_source_safe_threshold_and_recovery_evidence() -> None:
         (("schemaVersion",), "unknown", "schemaVersion"),
         (("repository",), "other", "repository must"),
         (("proofScope",), "production", "proofScope"),
-        (("environmentProfile",), "production", "environmentProfile"),
+        (("environmentProfile",), "production-like", "environmentProfile"),
         (("initial", "collectionSucceeded"), False, "collectionSucceeded"),
     ],
 )
@@ -146,7 +146,7 @@ def test_fails_closed_and_releases_load_connections(
 @pytest.mark.parametrize(
     ("overrides", "message"),
     [
-        ({"environment_profile": "production"}, "prohibited in production"),
+        ({"environment_profile": "production-like"}, "requires the test profile"),
         ({"maximum_load_connections": 0}, "between 1 and 100"),
         ({"maximum_load_connections": 101}, "between 1 and 100"),
         ({"commit_sha": " "}, "commit_sha must not be blank"),

@@ -127,7 +127,7 @@ def test_cli_links_validated_threshold_proof_without_clearing_test_blocker(
         json.dumps(
             {
                 "branch": "feature/capacity",
-                "claimPosture": "controlled_environment_evidence_only",
+                "claimPosture": "controlled_test_evidence_only",
                 "commitSha": "abc123",
                 "environmentProfile": "test",
                 "generatedAtUtc": "2026-07-11T06:00:00Z",
