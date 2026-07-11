@@ -11,9 +11,7 @@ from app.application.postgres_capacity_threshold_proof import (
 
 SCHEMA_VERSION = "lotus-idea.capacity-evidence-qualification.v1"
 TRUSTED_REPOSITORY = "sgajbi/lotus-idea"
-TRUSTED_SIGNER_WORKFLOW = (
-    "sgajbi/lotus-idea/.github/workflows/postgres-capacity-evidence.yml"
-)
+TRUSTED_SIGNER_WORKFLOW = "sgajbi/lotus-idea/.github/workflows/postgres-capacity-evidence.yml"
 TRUSTED_SOURCE_REF = "refs/heads/main"
 
 

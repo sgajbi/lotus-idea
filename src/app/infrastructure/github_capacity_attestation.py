@@ -68,7 +68,9 @@ class GitHubCapacityAttestationVerifier:
         try:
             verified = json.loads(result.stdout)
         except json.JSONDecodeError as exc:
-            raise ValueError("capacity evidence attestation verification returned invalid JSON") from exc
+            raise ValueError(
+                "capacity evidence attestation verification returned invalid JSON"
+            ) from exc
         if not isinstance(verified, list) or not verified:
             raise ValueError("capacity evidence attestation verification returned no attestations")
         return VerifiedArtifactAttestation(

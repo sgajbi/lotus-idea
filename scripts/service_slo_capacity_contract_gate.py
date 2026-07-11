@@ -275,7 +275,11 @@ def _validate_capacity_attestation_workflow(repository_root: Path) -> list[str]:
         "make postgres-capacity-threshold-proof",
         "actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373",
     )
-    errors = [f"PostgreSQL capacity workflow missing {token!r}" for token in required if token not in workflow]
+    errors = [
+        f"PostgreSQL capacity workflow missing {token!r}"
+        for token in required
+        if token not in workflow
+    ]
     if "schedule:" in workflow:
         errors.append("PostgreSQL saturation workflow must not run on a schedule")
     if "SERVICE_CAPACITY_PROFILE: production" in workflow:
