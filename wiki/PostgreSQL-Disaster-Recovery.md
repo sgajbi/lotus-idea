@@ -8,6 +8,13 @@ readiness, and a weekly attested CI drill. Production PITR remains
 `not_certified` until approved managed-provider topology and a successful
 physical base-backup/WAL exercise are evidenced.
 
+The latest mainline logical drill is workflow dispatch `29157824527` at commit
+`e565c915` (2026-07-11). PostgreSQL 18.4 restored all 17 owned tables through
+migration `012_ai_run_attestation_receipt`; RPO was `0s`, RTO was `0.193s`,
+replay/fencing passed without content-hash mutation, provenance was attested,
+and evidence was retained. The artifact remains `not_certified`,
+`pitrProof=false`, and `supportedFeaturePromoted=false`.
+
 ## Operator Decision Table
 
 | Posture | Readiness | Writes | Operator action |
