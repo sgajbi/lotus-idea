@@ -6,6 +6,8 @@ import shutil
 import sys
 from types import ModuleType
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[2]
 
 
@@ -82,3 +84,18 @@ def test_required_fragment_diagnostic_does_not_echo_scanned_content() -> None:
 
     assert errors == ["contract.py: required tenant contract fragment 1 is missing"]
     assert sensitive_fragment not in errors[0]
+
+
+def test_cli_failure_does_not_emit_validation_details(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    module = _load_gate()
+    sensitive_detail = "secret-token-value"
+    monkeypatch.setattr(
+        module, "validate_trusted_tenant_context", lambda: [sensitive_detail]
+    )
+
+    assert module.main() == 1
+    output = capsys.readouterr().out
+    assert output == "Trusted tenant context gate failed with 1 violation(s)\n"
+    assert sensitive_detail not in output

@@ -186,8 +186,7 @@ def _require_fragments(
 def main() -> int:
     errors = validate_trusted_tenant_context()
     if errors:
-        print("Trusted tenant context gate failed:")
-        print("\n".join(errors))
+        print(f"Trusted tenant context gate failed with {len(errors)} violation(s)")
         return 1
     print("Trusted tenant context gate passed")
     return 0
