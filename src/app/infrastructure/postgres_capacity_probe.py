@@ -2,26 +2,16 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import time
-from typing import Any, Protocol, cast
+from typing import Protocol, cast
 
 import psycopg
 
 from app.ports.capacity_probe import PostgresCapacityProbeResult
+from app.infrastructure.postgres_capacity_posture import load_postgres_capacity_posture
+from app.infrastructure.postgres_protocols import PostgresConnection
 
 
-class _Cursor(Protocol):
-    def execute(self, query: str) -> Any: ...
-
-    def fetchone(self) -> tuple[object, ...] | None: ...
-
-    def __enter__(self) -> "_Cursor": ...
-
-    def __exit__(self, *args: object) -> None: ...
-
-
-class _Connection(Protocol):
-    def cursor(self) -> _Cursor: ...
-
+class CloseablePostgresConnection(PostgresConnection, Protocol):
     def close(self) -> None: ...
 
 
@@ -31,7 +21,7 @@ class PostgresCapacityProbe:
         *,
         database_url: str,
         connect_timeout_seconds: int = 5,
-        connection_factory: Callable[..., _Connection] | None = None,
+        connection_factory: Callable[..., CloseablePostgresConnection] | None = None,
         monotonic: Callable[[], float] = time.perf_counter,
     ) -> None:
         if not database_url.strip():
@@ -44,25 +34,20 @@ class PostgresCapacityProbe:
         self._monotonic = monotonic
 
     def execute(self) -> PostgresCapacityProbeResult:
-        connection: _Connection | None = None
+        connection: CloseablePostgresConnection | None = None
         started_at = self._monotonic()
         try:
             connection = self._connect()
             with connection.cursor() as cursor:
                 cursor.execute("SELECT 1")
-                row = cursor.fetchone()
-                if row != (1,):
+                rows = cursor.fetchall()
+                if rows != [(1,)]:
                     return self._result(started_at, "failed", None)
-                cursor.execute(
-                    "SELECT COUNT(*)::double precision / "
-                    "current_setting('max_connections')::double precision "
-                    "FROM pg_stat_activity"
-                )
-                utilization_row = cursor.fetchone()
+            posture = load_postgres_capacity_posture(connection)
             return self._result(
                 started_at,
                 "accepted",
-                _utilization_fraction(utilization_row),
+                posture.connection_utilization_fraction,
             )
         except (psycopg.Error, OSError):
             return self._result(started_at, "failed", None)
@@ -70,7 +55,7 @@ class PostgresCapacityProbe:
             if connection is not None:
                 connection.close()
 
-    def _connect(self) -> _Connection:
+    def _connect(self) -> CloseablePostgresConnection:
         if self._connection_factory is not None:
             return self._connection_factory(
                 self._database_url,
@@ -78,7 +63,7 @@ class PostgresCapacityProbe:
                 application_name="lotus-idea-capacity-probe",
             )
         return cast(
-            _Connection,
+            CloseablePostgresConnection,
             psycopg.connect(
                 self._database_url,
                 connect_timeout=self._connect_timeout_seconds,
@@ -97,13 +82,3 @@ class PostgresCapacityProbe:
             outcome=outcome,
             connection_utilization_fraction=utilization_fraction,
         )
-
-
-def _utilization_fraction(row: tuple[object, ...] | None) -> float | None:
-    if row is None or len(row) != 1:
-        return None
-    measurement = row[0]
-    if isinstance(measurement, bool) or not isinstance(measurement, (int, float)):
-        return None
-    fraction = float(measurement)
-    return fraction if 0 <= fraction <= 1 else None

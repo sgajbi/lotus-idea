@@ -114,6 +114,8 @@ from app.infrastructure.postgres_runtime_trust_telemetry import (
     load_runtime_trust_telemetry_summary,
 )
 from app.infrastructure.postgres_slo import execute_observed_postgres_call
+from app.infrastructure.postgres_capacity_posture import load_postgres_capacity_posture
+from app.domain.capacity_posture import PostgresCapacityPosture
 from app.infrastructure.postgres_candidate_detail import load_candidate_record_by_id
 from app.infrastructure.postgres_data_lifecycle import (
     PostgresDataLifecycleRepository,
@@ -152,6 +154,9 @@ class PostgresIdeaRepository(
 
     def runtime_trust_telemetry_summary(self) -> RuntimeTrustTelemetryRepositorySummary:
         return load_runtime_trust_telemetry_summary(self._connection)
+
+    def postgres_capacity_posture(self) -> PostgresCapacityPosture:
+        return load_postgres_capacity_posture(self._connection)
 
     def execute_data_lifecycle(
         self,

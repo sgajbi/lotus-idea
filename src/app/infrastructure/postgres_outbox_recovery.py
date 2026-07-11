@@ -19,9 +19,9 @@ from app.domain.outbox_recovery import (
 from app.infrastructure.postgres_codecs import read_row_value
 from app.infrastructure.postgres_outbox_delivery import (
     OUTBOX_EVENT_RETURNING_COLUMNS,
-    PostgresConnection,
     outbox_event_from_row,
 )
+from app.infrastructure.postgres_protocols import PostgresConnection
 
 
 OUTBOX_RECOVERY_RETURNING_COLUMNS = """

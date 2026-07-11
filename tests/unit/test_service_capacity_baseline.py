@@ -152,19 +152,26 @@ def test_build_rejects_ambiguous_provenance() -> None:
 
 
 def test_build_rejects_non_positive_window_and_blank_provenance() -> None:
-    common = {
-        "measurements": [],
-        "environment_profile": "test",
-        "generated_at_utc": GENERATED_AT,
-        "commit_sha": "abc123",
-        "branch": "main",
-        "run_id": "run-1",
-        "observed_window_seconds": 1.0,
-    }
     with pytest.raises(ValueError, match="observed_window_seconds must be positive"):
-        build_service_capacity_baseline(**{**common, "observed_window_seconds": 0})
+        build_service_capacity_baseline(
+            measurements=[],
+            environment_profile="test",
+            generated_at_utc=GENERATED_AT,
+            commit_sha="abc123",
+            branch="main",
+            run_id="run-1",
+            observed_window_seconds=0,
+        )
     with pytest.raises(ValueError, match="commit_sha must not be blank"):
-        build_service_capacity_baseline(**{**common, "commit_sha": " "})
+        build_service_capacity_baseline(
+            measurements=[],
+            environment_profile="test",
+            generated_at_utc=GENERATED_AT,
+            commit_sha=" ",
+            branch="main",
+            run_id="run-1",
+            observed_window_seconds=1.0,
+        )
 
 
 def test_validator_rejects_schema_scope_and_scenario_shape() -> None:

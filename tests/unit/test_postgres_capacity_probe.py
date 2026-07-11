@@ -14,17 +14,17 @@ class StubCursor:
         self.rows = deque(rows)
         self.queries: list[str] = []
 
-    def execute(self, query: str) -> None:
+    def execute(self, query: str, params: object = None) -> None:
         self.queries.append(query)
-
-    def fetchone(self) -> tuple[object, ...] | None:
-        return self.rows.popleft()
 
     def __enter__(self) -> "StubCursor":
         return self
 
     def __exit__(self, *args: object) -> None:
         pass
+
+    def fetchall(self) -> list[object]:
+        return [self.rows.popleft()]
 
 
 class StubConnection:
@@ -37,6 +37,12 @@ class StubConnection:
 
     def close(self) -> None:
         self.closed = True
+
+    def commit(self) -> None:
+        pass
+
+    def rollback(self) -> None:
+        pass
 
 
 def test_probe_measures_read_only_query_and_connection_utilization() -> None:
@@ -60,10 +66,8 @@ def test_probe_measures_read_only_query_and_connection_utilization() -> None:
     assert result.duration_seconds == pytest.approx(0.2)
     assert result.outcome == "accepted"
     assert result.connection_utilization_fraction == 0.25
-    assert cursor.queries == [
-        "SELECT 1",
-        "SELECT COUNT(*)::double precision / current_setting('max_connections')::double precision FROM pg_stat_activity",
-    ]
+    assert cursor.queries[0] == "SELECT 1"
+    assert "lotus-idea postgres-capacity-posture" in cursor.queries[1]
     assert connection_args["application_name"] == "lotus-idea-capacity-probe"
     assert connection.closed is True
 
