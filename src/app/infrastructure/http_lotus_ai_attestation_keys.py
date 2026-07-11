@@ -5,7 +5,7 @@ from typing import Mapping
 import httpx
 
 from app.domain.lotus_ai_run_attestation import LotusAIAttestationKeyDiscovery
-from app.infrastructure.lotus_ai_attestation_contract_mapper import (
+from app.integration.lotus_ai_attestation_contract import (
     map_lotus_ai_attestation_key_discovery,
 )
 

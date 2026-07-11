@@ -14,7 +14,7 @@ from app.domain.lotus_ai_run_attestation import (
 )
 
 
-class _ProducerClaims(BaseModel):
+class LotusAIProducerClaims(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     schema_version: str
@@ -44,7 +44,7 @@ class _ProducerClaims(BaseModel):
     supportability_status: str
 
 
-class _ProducerSignature(BaseModel):
+class LotusAIProducerSignature(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     algorithm: str
@@ -53,15 +53,24 @@ class _ProducerSignature(BaseModel):
     signature_base64url: str
 
 
-class _ProducerEnvelope(BaseModel):
+class LotusAIProducerAttestation(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    claims: _ProducerClaims
-    signature: _ProducerSignature
+    claims: LotusAIProducerClaims
+    signature: LotusAIProducerSignature
     key_discovery_path: str
 
+    def to_domain(self) -> LotusAIRunAttestationEnvelope:
+        raw = self.model_dump(mode="json")
+        return LotusAIRunAttestationEnvelope(
+            claims=LotusAIRunAttestationClaims(**self.claims.model_dump()),
+            signature=LotusAIRunAttestationSignature(**self.signature.model_dump()),
+            key_discovery_path=self.key_discovery_path,
+            canonical_claims=dict(raw["claims"]),
+        )
 
-class _ProducerPublicKey(BaseModel):
+
+class LotusAIProducerPublicKey(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     key_id: str
@@ -74,37 +83,28 @@ class _ProducerPublicKey(BaseModel):
     not_after_utc: datetime | None = None
 
 
-class _ProducerKeyDiscovery(BaseModel):
+class LotusAIProducerKeyDiscovery(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     schema_version: str
     issuer: str
-    keys: tuple[_ProducerPublicKey, ...] = Field(min_length=1)
+    keys: tuple[LotusAIProducerPublicKey, ...] = Field(min_length=1)
+
+    def to_domain(self) -> LotusAIAttestationKeyDiscovery:
+        return LotusAIAttestationKeyDiscovery(
+            schema_version=self.schema_version,
+            issuer=self.issuer,
+            keys=tuple(LotusAIAttestationPublicKey(**key.model_dump()) for key in self.keys),
+        )
 
 
 def map_lotus_ai_run_attestation(
     payload: Mapping[str, Any],
 ) -> LotusAIRunAttestationEnvelope:
-    parsed = _ProducerEnvelope.model_validate(payload)
-    raw_claims = payload.get("claims")
-    if not isinstance(raw_claims, Mapping):
-        raise ValueError("lotus-ai run attestation claims must be an object")
-    claims = parsed.claims
-    signature = parsed.signature
-    return LotusAIRunAttestationEnvelope(
-        claims=LotusAIRunAttestationClaims(**claims.model_dump()),
-        signature=LotusAIRunAttestationSignature(**signature.model_dump()),
-        key_discovery_path=parsed.key_discovery_path,
-        canonical_claims=dict(raw_claims),
-    )
+    return LotusAIProducerAttestation.model_validate(payload).to_domain()
 
 
 def map_lotus_ai_attestation_key_discovery(
     payload: Mapping[str, Any],
 ) -> LotusAIAttestationKeyDiscovery:
-    parsed = _ProducerKeyDiscovery.model_validate(payload)
-    return LotusAIAttestationKeyDiscovery(
-        schema_version=parsed.schema_version,
-        issuer=parsed.issuer,
-        keys=tuple(LotusAIAttestationPublicKey(**key.model_dump()) for key in parsed.keys),
-    )
+    return LotusAIProducerKeyDiscovery.model_validate(payload).to_domain()

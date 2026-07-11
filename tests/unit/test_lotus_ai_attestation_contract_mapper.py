@@ -1,6 +1,6 @@
 from datetime import UTC, datetime
 
-from app.infrastructure.lotus_ai_attestation_contract_mapper import (
+from app.integration.lotus_ai_attestation_contract import (
     map_lotus_ai_run_attestation,
 )
 
