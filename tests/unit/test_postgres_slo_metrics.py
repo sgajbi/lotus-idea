@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import pytest
+from typing import NoReturn
 
 import app.infrastructure.postgres_slo as postgres_slo_module
 from app.infrastructure.postgres_repository import PostgresIdeaRepository
@@ -43,6 +44,6 @@ def test_postgres_snapshot_records_failure_without_query_identity(
     assert set(observations[0]) == {"operation", "outcome", "duration_seconds"}
 
 
-class FailingConnection:
-    def cursor(self) -> object:
+class FailingConnection(FakePostgresConnection):
+    def cursor(self) -> NoReturn:
         raise RuntimeError("database unavailable")

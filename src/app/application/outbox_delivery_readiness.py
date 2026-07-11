@@ -7,7 +7,9 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Mapping
 
-from app.contracts.operational_limits import DEFAULT_OUTBOX_DELIVERY_MAX_RETRY_COUNT
+from app.contracts.operational_limits import (
+    DEFAULT_OUTBOX_DELIVERY_MAX_RETRY_COUNT as DEFAULT_OUTBOX_DELIVERY_MAX_RETRY_COUNT,
+)
 from app.domain import OutboxEventStatus
 from app.ports.idea_repository import (
     CandidateSnapshotRepository,
