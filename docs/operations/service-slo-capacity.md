@@ -213,4 +213,28 @@ Validate the evidence boundary independently:
 
 ```powershell
 make service-capacity-baseline-contract-gate
+make service-resource-baseline-contract-gate
 ```
+
+## Resource Observation
+
+Collect a bounded test observation from the service's Prometheus endpoint:
+
+```powershell
+make service-resource-baseline `
+  SERVICE_RESOURCE_SAMPLE_COUNT=5 `
+  SERVICE_RESOURCE_SAMPLE_INTERVAL_SECONDS=1
+```
+
+The adapter consumes only unlabeled `process_cpu_seconds_total`, resident and
+virtual memory, and paired open/max file-descriptor metrics. Responses are
+limited to 1 MiB; labeled, duplicate, incomplete, non-finite, or negative
+resource measurements fail closed. The endpoint URL and raw metrics are not
+stored.
+
+The resulting `lotus-idea.service-resource-baseline.v1` artifact reports CPU
+core-seconds per second, peak/average resident memory, optional virtual memory,
+and optional file-descriptor utilization. It is test-classified and retains
+both `production_like_resource_attestation_missing` and
+`cost_attribution_evidence_missing`. Process telemetry is not billing evidence;
+no cost, scale, supported-feature, or runtime-split claim follows from it.

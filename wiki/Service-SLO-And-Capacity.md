@@ -18,6 +18,7 @@ reconciliation, quality, and lineage policy.
 | Grafana dashboard | Implemented from bounded metrics and recording rules. |
 | Source-safe baseline runner | Implemented for guarded API, source-ingestion, outbox, dependency-failure/recovery, and read-only PostgreSQL scenarios. |
 | Controlled PostgreSQL threshold proof | Implemented with exact target identity, hard connection caps, mandatory acknowledgement, release/recovery checks, and proof-only baseline linkage. Test evidence is non-certifying. |
+| Process resource observation | Bounded CPU, memory, and optional file-descriptor collection is implemented through a narrow Prometheus adapter. Test observations are non-certifying and are not cost evidence. |
 | Production capacity certification | Blocked on load/soak, dependency-failure, pool-saturation, and cost/resource evidence. |
 
 No tenant, client, portfolio, candidate, event, request, idempotency,
@@ -39,6 +40,7 @@ correlation, or trace identifier is permitted as a metric label.
 ```powershell
 make service-slo-capacity-contract-gate
 make service-capacity-baseline-contract-gate
+make service-resource-baseline-contract-gate
 make service-slo-rule-test
 make postgres-capacity-threshold-proof `
   SERVICE_CAPACITY_PROFILE=test `
@@ -66,6 +68,12 @@ certification by itself. Qualifying evidence must come from the main-only
 dedicated runner, then pass `gh attestation verify` with exact repository,
 signer-workflow, main-ref, and source-commit constraints. This path becomes
 operational only after merge and protected-environment configuration.
+
+`make service-resource-baseline` collects bounded process-resource aggregates.
+It never stores the metrics URL or raw scrape and cannot clear production-like
+or cost-attribution blockers. Process telemetry must not be presented as cloud
+billing, unit economics, horizontal-scale evidence, or justification for a new
+runtime service.
 
 See `docs/operations/service-slo-capacity.md` for target values, alert response,
 capacity assumptions, and non-proof boundaries.

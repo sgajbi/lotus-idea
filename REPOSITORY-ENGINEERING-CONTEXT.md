@@ -1475,6 +1475,13 @@ additionally requires GitHub artifact-attestation verification pinned to the
 governed signer workflow, `refs/heads/main`, and exact source commit. A local
 or unattested proof cannot clear the production-like blocker.
 
+Resource evidence must cross the narrow process-resource probe port and use
+only bounded CPU, memory, and paired file-descriptor aggregates. Keep metrics
+URLs and raw scrapes transient. Treat process telemetry as resource
+observation, not cost attribution, billing reconciliation, horizontal-scale
+certification, or evidence for a runtime split. Those claims require
+separately governed, attested production-like and billing artifacts.
+
 Durable PostgreSQL repositories expose capacity through a narrow repository
 port. Nonessential source-ingestion and outbox operator runs must evaluate that
 posture before constructing external clients or publishers: `warning` remains

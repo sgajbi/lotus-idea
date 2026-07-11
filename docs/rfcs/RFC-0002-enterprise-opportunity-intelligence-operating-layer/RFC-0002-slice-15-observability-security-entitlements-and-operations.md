@@ -316,6 +316,16 @@ source commit before saturation evidence can count. This implementation cannot
 produce qualifying evidence until merged to `main` and the protected
 environment and runner are configured; the blocker therefore remains open.
 
+The resource-evidence sub-slice now adds a bounded process snapshot model, a
+narrow probe port, a Prometheus parser adapter, guarded collection CLI, and
+blocking contract gate. It records CPU core consumption rate, resident and
+virtual memory, and optional file-descriptor utilization without retaining raw
+scrapes or endpoint identity. A live test observation against Lotus Idea
+validated the HTTP/parser path. The artifact is deliberately non-certifying:
+process metrics do not prove production-like sizing, cloud cost, billing
+allocation, horizontal scale, or a need for another deployable. Production-like
+resource attestation and cost-attribution evidence remain blocked.
+
 ## Required Work
 
 1. Add metrics, logs, traces, audit events, health/readiness diagnostics, and
