@@ -5,6 +5,7 @@ from datetime import UTC, datetime, timedelta
 import pytest
 
 from app.application.capacity_evidence_qualification import (
+    DEPENDENCY_RECOVERY_SIGNER_WORKFLOW,
     TRUSTED_REPOSITORY,
     TRUSTED_SIGNER_WORKFLOW,
     TRUSTED_SOURCE_REF,
@@ -79,6 +80,31 @@ def _verified_attestation() -> VerifiedArtifactAttestation:
     )
 
 
+def _dependency_attestation() -> VerifiedArtifactAttestation:
+    return VerifiedArtifactAttestation(
+        subject_sha256="c" * 64,
+        repository=TRUSTED_REPOSITORY,
+        signer_workflow=DEPENDENCY_RECOVERY_SIGNER_WORKFLOW,
+        source_ref=TRUSTED_SOURCE_REF,
+        source_commit_sha="abc123",
+    )
+
+
+def _dependency_recovery_proof() -> dict[str, object]:
+    return build_service_capacity_baseline(
+        measurements=[
+            CapacityMeasurement("dependency_failure", 0.1, "accepted"),
+            CapacityMeasurement("dependency_failure", 0.1, "accepted", recovered=True),
+        ],
+        environment_profile="production-like",
+        generated_at_utc=GENERATED_AT,
+        commit_sha="abc123",
+        branch="main",
+        run_id="dependency-proof-1",
+        observed_window_seconds=10.0,
+    )
+
+
 def _resource_baseline() -> dict[str, object]:
     return build_service_resource_baseline(
         snapshots=[
@@ -119,6 +145,7 @@ def test_builds_ordered_source_safe_report_only_baseline() -> None:
         "production_like_environment_missing",
         "minimum_sample_volume_missing",
         "minimum_soak_window_missing",
+        "dependency_recovery_attestation_missing",
         "postgres_saturation_evidence_missing",
         "cost_resource_evidence_missing",
     ]
@@ -141,12 +168,60 @@ def test_attested_mainline_proof_clears_only_saturation_blocker() -> None:
     assert artifact["certificationBlockers"] == [
         "scenario_coverage_incomplete",
         "minimum_sample_volume_missing",
-        "dependency_recovery_evidence_missing",
+        "dependency_recovery_attestation_missing",
         "cost_resource_evidence_missing",
     ]
     assert artifact["resourceEvidence"]["postgresSaturationMeasured"] is True
     assert artifact["resourceEvidence"]["postgresThresholdProofValidated"] is True
     assert artifact["resourceEvidence"]["postgresThresholdAttestationVerified"] is True
+
+
+def test_local_recovery_observation_cannot_clear_attestation_blocker() -> None:
+    proof = _dependency_recovery_proof()
+
+    assert proof["resourceEvidence"]["dependencyRecoveryObserved"] is True
+    assert proof["resourceEvidence"]["dependencyRecoveryAttestationVerified"] is False
+    assert "dependency_recovery_attestation_missing" in proof["certificationBlockers"]
+
+
+def test_attested_mainline_recovery_proof_clears_only_dependency_blocker() -> None:
+    artifact = build_service_capacity_baseline(
+        measurements=[],
+        environment_profile="production-like",
+        generated_at_utc=GENERATED_AT,
+        commit_sha="abc123",
+        branch="main",
+        run_id="aggregate-1",
+        observed_window_seconds=1.0,
+        dependency_recovery_proof=_dependency_recovery_proof(),
+        dependency_recovery_attestation=_dependency_attestation(),
+    )
+
+    resource = artifact["resourceEvidence"]
+    assert resource["dependencyRecoveryObserved"] is False
+    assert resource["dependencyRecoveryAttestationVerified"] is True
+    assert resource["dependencyRecoveryProofRunId"] == "dependency-proof-1"
+    assert "dependency_recovery_attestation_missing" not in artifact["certificationBlockers"]
+
+
+def test_mismatched_dependency_attestation_cannot_clear_blocker() -> None:
+    attestation = VerifiedArtifactAttestation(
+        **{**_dependency_attestation().__dict__, "source_commit_sha": "different"}
+    )
+    artifact = build_service_capacity_baseline(
+        measurements=[],
+        environment_profile="production-like",
+        generated_at_utc=GENERATED_AT,
+        commit_sha="abc123",
+        branch="main",
+        run_id="aggregate-1",
+        observed_window_seconds=1.0,
+        dependency_recovery_proof=_dependency_recovery_proof(),
+        dependency_recovery_attestation=attestation,
+    )
+
+    assert artifact["resourceEvidence"]["dependencyRecoveryAttestationVerified"] is False
+    assert "dependency_recovery_attestation_missing" in artifact["certificationBlockers"]
 
 
 def test_test_profile_or_mismatched_threshold_proof_cannot_clear_saturation_blocker() -> None:

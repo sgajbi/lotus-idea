@@ -55,7 +55,8 @@ def test_generator_maps_closed_measurement_input() -> None:
     assert dependency["sampleCount"] == 1
     assert dependency["maxRetryCount"] == 2
     assert dependency["recoverySuccessRate"] == 1.0
-    assert "dependency_recovery_evidence_missing" not in artifact["certificationBlockers"]
+    assert artifact["resourceEvidence"]["dependencyRecoveryObserved"] is False
+    assert "dependency_recovery_attestation_missing" in artifact["certificationBlockers"]
 
 
 @pytest.mark.parametrize("field", ["payload", "tenant_id", "database_url", "url"])

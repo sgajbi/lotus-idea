@@ -11,6 +11,7 @@ from app.application.postgres_capacity_threshold_proof import (
 )
 from app.application.capacity_evidence_qualification import (
     VerifiedArtifactAttestation,
+    qualify_dependency_recovery_evidence,
     qualify_postgres_capacity_threshold_evidence,
 )
 from app.application.service_resource_baseline import validate_service_resource_baseline
@@ -90,6 +91,8 @@ def build_service_capacity_baseline(
     observed_window_seconds: float,
     postgres_threshold_proof: dict[str, Any] | None = None,
     postgres_threshold_attestation: VerifiedArtifactAttestation | None = None,
+    dependency_recovery_proof: dict[str, Any] | None = None,
+    dependency_recovery_attestation: VerifiedArtifactAttestation | None = None,
     postgres_max_connection_utilization_fraction: float | None = None,
     resource_baseline: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
@@ -126,6 +129,13 @@ def build_service_capacity_baseline(
         run_id=run_id,
     )
     postgres_saturation_measured = postgres_qualification is not None
+    dependency_recovery_qualification = _dependency_recovery_qualification(
+        proof=dependency_recovery_proof,
+        attestation=dependency_recovery_attestation,
+        generated_at_utc=generated_at_utc,
+        run_id=run_id,
+        commit_sha=commit_sha,
+    )
     resource_baseline_validated = _resource_baseline_is_valid(
         resource_baseline,
         commit_sha=commit_sha,
@@ -136,6 +146,7 @@ def build_service_capacity_baseline(
         scenarios=scenarios,
         observed_window_seconds=observed_window_seconds,
         postgres_saturation_measured=postgres_saturation_measured,
+        dependency_recovery_attested=dependency_recovery_qualification is not None,
         cost_resource_measured=False,
     )
     artifact = {
@@ -151,6 +162,15 @@ def build_service_capacity_baseline(
         "observedWindowSeconds": observed_window_seconds,
         "scenarios": scenarios,
         "resourceEvidence": {
+            "dependencyRecoveryObserved": _dependency_recovery_observed(scenarios),
+            "dependencyRecoveryAttestationVerified": (
+                dependency_recovery_qualification is not None
+            ),
+            "dependencyRecoveryProofRunId": (
+                dependency_recovery_qualification.get("capacityProofRunId")
+                if dependency_recovery_qualification is not None
+                else None
+            ),
             "postgresSaturationMeasured": postgres_saturation_measured,
             "postgresThresholdProofValidated": postgres_threshold_proof_validated,
             "postgresThresholdProofRunId": (
@@ -251,6 +271,7 @@ def _certification_blockers(
     scenarios: list[dict[str, Any]],
     observed_window_seconds: float,
     postgres_saturation_measured: bool,
+    dependency_recovery_attested: bool,
     cost_resource_measured: bool,
 ) -> list[str]:
     blockers: list[str] = []
@@ -262,9 +283,8 @@ def _certification_blockers(
         blockers.append("minimum_sample_volume_missing")
     if observed_window_seconds < MINIMUM_SOAK_SECONDS:
         blockers.append("minimum_soak_window_missing")
-    dependency = next(item for item in scenarios if item["scenario"] == "dependency_failure")
-    if dependency["recoverySampleCount"] == 0:
-        blockers.append("dependency_recovery_evidence_missing")
+    if not dependency_recovery_attested:
+        blockers.append("dependency_recovery_attestation_missing")
     if not postgres_saturation_measured:
         blockers.append("postgres_saturation_evidence_missing")
     if not cost_resource_measured:
@@ -284,6 +304,38 @@ def _postgres_threshold_proof_is_valid(
         and proof.get("commitSha") == commit_sha
         and proof.get("branch") == branch
     )
+
+
+def _dependency_recovery_observed(scenarios: list[dict[str, Any]]) -> bool:
+    dependency = next(item for item in scenarios if item["scenario"] == "dependency_failure")
+    return bool(
+        dependency["recoverySampleCount"] > 0
+        and dependency["recoverySuccessRate"] == 1.0
+        and dependency["acceptedCount"] > dependency["recoverySampleCount"]
+        and dependency["errorCount"] == 0
+        and dependency["conflictCount"] == 0
+    )
+
+
+def _dependency_recovery_qualification(
+    *,
+    proof: dict[str, Any] | None,
+    attestation: VerifiedArtifactAttestation | None,
+    generated_at_utc: datetime,
+    run_id: str,
+    commit_sha: str,
+) -> dict[str, Any] | None:
+    if proof is None or attestation is None or proof.get("commitSha") != commit_sha:
+        return None
+    try:
+        return qualify_dependency_recovery_evidence(
+            capacity_proof=proof,
+            verified_attestation=attestation,
+            generated_at_utc=generated_at_utc,
+            qualification_run_id=run_id,
+        )
+    except ValueError:
+        return None
 
 
 def _postgres_threshold_qualification(
