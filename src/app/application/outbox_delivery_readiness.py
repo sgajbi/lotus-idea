@@ -7,6 +7,7 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Mapping
 
+from app.contracts.operational_limits import DEFAULT_OUTBOX_DELIVERY_MAX_RETRY_COUNT
 from app.domain import OutboxEventStatus
 from app.ports.idea_repository import (
     CandidateSnapshotRepository,
@@ -17,7 +18,6 @@ from app.ports.idea_repository import (
 
 
 OUTBOX_BROKER_URL_ENV = "LOTUS_IDEA_OUTBOX_BROKER_URL"
-DEFAULT_OUTBOX_DELIVERY_MAX_RETRY_COUNT = 3
 REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 OUTBOX_EVENT_CONTRACT_PATH = (
     REPOSITORY_ROOT / "contracts" / "outbox-events" / "lotus-idea-outbox-events.v1.json"

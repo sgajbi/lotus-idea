@@ -63,6 +63,25 @@ def test_service_slo_capacity_contract_rejects_invalid_objectives_and_capacity()
     assert "source-ingestion capacity budget must match code-owned ceiling" in errors
 
 
+def test_service_slo_capacity_contract_rejects_runtime_default_drift() -> None:
+    module = _load_gate()
+    payload = _payload(module)
+    drifted_keys = (
+        "outbox_max_retry_count",
+        "source_dependency_timeout_seconds",
+        "source_dependency_max_connections",
+        "source_dependency_max_keepalive_connections",
+        "request_body_max_bytes",
+    )
+    for key in drifted_keys:
+        payload["capacity_budgets"][key] += 1
+
+    errors = module.validate_payload(payload)
+
+    for key in drifted_keys:
+        assert f"service SLO capacity {key} must match code-owned default" in errors
+
+
 def test_service_slo_capacity_contract_rejects_sensitive_labels_and_mesh_alias() -> None:
     module = _load_gate()
     payload = _payload(module)

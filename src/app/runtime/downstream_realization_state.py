@@ -3,6 +3,11 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 
+from app.contracts.operational_limits import (
+    DEFAULT_DEPENDENCY_MAX_CONNECTIONS,
+    DEFAULT_DEPENDENCY_MAX_KEEPALIVE_CONNECTIONS,
+    DEFAULT_DEPENDENCY_TIMEOUT_SECONDS,
+)
 from app.domain import SourceSystem
 from app.infrastructure.downstream_realization import (
     DownstreamRealizationAdapterConfig,
@@ -119,8 +124,13 @@ def _adapter_config(
             submit_path=submit_path,
             source_authority=source_authority,
             timeout_seconds=_timeout_seconds(),
-            max_connections=_positive_int_env(MAX_CONNECTIONS_ENV, default=20),
-            max_keepalive_connections=_positive_int_env(MAX_KEEPALIVE_CONNECTIONS_ENV, default=10),
+            max_connections=_positive_int_env(
+                MAX_CONNECTIONS_ENV, default=DEFAULT_DEPENDENCY_MAX_CONNECTIONS
+            ),
+            max_keepalive_connections=_positive_int_env(
+                MAX_KEEPALIVE_CONNECTIONS_ENV,
+                default=DEFAULT_DEPENDENCY_MAX_KEEPALIVE_CONNECTIONS,
+            ),
             pool_timeout_seconds=_positive_float_env(POOL_TIMEOUT_SECONDS_ENV, default=2.0),
             retry_max_attempts=_positive_int_env(RETRY_MAX_ATTEMPTS_ENV, default=1),
             retry_initial_backoff_seconds=_non_negative_float_env(
@@ -142,7 +152,7 @@ def _required_env(name: str) -> str:
 
 
 def _timeout_seconds() -> float:
-    return _positive_float_env(TIMEOUT_SECONDS_ENV, default=2.0)
+    return _positive_float_env(TIMEOUT_SECONDS_ENV, default=DEFAULT_DEPENDENCY_TIMEOUT_SECONDS)
 
 
 def _positive_float_env(name: str, *, default: float) -> float:

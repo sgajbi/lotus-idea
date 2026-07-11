@@ -9,6 +9,11 @@ from urllib.parse import urlparse
 
 import httpx
 
+from app.contracts.operational_limits import (
+    DEFAULT_DEPENDENCY_MAX_CONNECTIONS,
+    DEFAULT_DEPENDENCY_MAX_KEEPALIVE_CONNECTIONS,
+    DEFAULT_DEPENDENCY_TIMEOUT_SECONDS,
+)
 from app.observability.service_slo_metrics import DEPENDENCIES, observe_dependency_request
 from app.observability.correlation_context import (
     generated_correlation_id,
@@ -39,9 +44,9 @@ class DownstreamServiceError(Exception):
 class DownstreamClientConfig:
     base_url: str
     dependency: str | None = None
-    timeout_seconds: float = 2.0
-    max_connections: int = 20
-    max_keepalive_connections: int = 10
+    timeout_seconds: float = DEFAULT_DEPENDENCY_TIMEOUT_SECONDS
+    max_connections: int = DEFAULT_DEPENDENCY_MAX_CONNECTIONS
+    max_keepalive_connections: int = DEFAULT_DEPENDENCY_MAX_KEEPALIVE_CONNECTIONS
     pool_timeout_seconds: float = 2.0
     retry_max_attempts: int = 1
     retry_initial_backoff_seconds: float = 0.05

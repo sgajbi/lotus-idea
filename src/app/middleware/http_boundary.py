@@ -10,11 +10,12 @@ from starlette.middleware.cors import CORSMiddleware
 from starlette.types import ASGIApp, Message
 
 from app.api.problem_details import problem_details_response
+from app.contracts.operational_limits import DEFAULT_HTTP_REQUEST_BODY_MAX_BYTES
 
 TRUSTED_HOSTS_ENV = "LOTUS_IDEA_TRUSTED_HOSTS"
 CORS_ALLOWED_ORIGINS_ENV = "LOTUS_IDEA_CORS_ALLOWED_ORIGINS"
 MAX_REQUEST_BODY_BYTES_ENV = "LOTUS_IDEA_MAX_REQUEST_BODY_BYTES"
-DEFAULT_MAX_REQUEST_BODY_BYTES = 1_048_576
+DEFAULT_MAX_REQUEST_BODY_BYTES = DEFAULT_HTTP_REQUEST_BODY_MAX_BYTES
 
 SECURITY_HEADERS = {
     "Strict-Transport-Security": "max-age=31536000; includeSubDomains",

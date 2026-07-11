@@ -19,6 +19,13 @@ from app.application.outbox_delivery import (  # noqa: E402
 from app.application.source_ingestion import (  # noqa: E402
     SOURCE_INGESTION_RUN_ONCE_BATCH_CEILING,
 )
+from app.contracts.operational_limits import (  # noqa: E402
+    DEFAULT_DEPENDENCY_MAX_CONNECTIONS,
+    DEFAULT_DEPENDENCY_MAX_KEEPALIVE_CONNECTIONS,
+    DEFAULT_DEPENDENCY_TIMEOUT_SECONDS,
+    DEFAULT_HTTP_REQUEST_BODY_MAX_BYTES,
+    DEFAULT_OUTBOX_DELIVERY_MAX_RETRY_COUNT,
+)
 
 CONTRACT_PATH = Path("contracts/observability/lotus-idea-service-slo-capacity.v1.json")
 EXPECTED_WORKFLOWS = {
@@ -162,6 +169,18 @@ def _validate_capacity(payload: dict[str, Any]) -> list[str]:
         errors.append("source-ingestion capacity budget must match code-owned ceiling")
     if capacity.get("outbox_delivery_batch_max_items") != OUTBOX_DELIVERY_RUN_ONCE_BATCH_CEILING:
         errors.append("outbox-delivery capacity budget must match code-owned ceiling")
+    code_owned_limits = {
+        "outbox_max_retry_count": DEFAULT_OUTBOX_DELIVERY_MAX_RETRY_COUNT,
+        "source_dependency_timeout_seconds": DEFAULT_DEPENDENCY_TIMEOUT_SECONDS,
+        "source_dependency_max_connections": DEFAULT_DEPENDENCY_MAX_CONNECTIONS,
+        "source_dependency_max_keepalive_connections": (
+            DEFAULT_DEPENDENCY_MAX_KEEPALIVE_CONNECTIONS
+        ),
+        "request_body_max_bytes": DEFAULT_HTTP_REQUEST_BODY_MAX_BYTES,
+    }
+    for key, expected in code_owned_limits.items():
+        if capacity.get(key) != expected:
+            errors.append(f"service SLO capacity {key} must match code-owned default")
     warn = capacity.get("postgres_pool_utilization_warn_fraction")
     shed = capacity.get("postgres_pool_utilization_shed_fraction")
     if not _fraction(warn) or not _fraction(shed) or warn >= shed:
