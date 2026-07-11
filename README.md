@@ -29,16 +29,10 @@ contracts, OpenAPI evidence, tests, documentation, wiki source, CI evidence on
 | Area | Current truth | Promotion blocker |
 | --- | --- | --- |
 | Opportunity policies | Bounded foundations exist for high cash, concentration risk, underperformance, allocation drift, bond maturity, volatility, drawdown, suitability gaps, risk-profile gaps, mandate/restriction review, income gaps, and missing benchmark review. | Live source certification, data-mesh proof, Workbench proof, and supported-feature registration remain blocked. |
-| Lifecycle and review | Candidate persistence, replay, review actions, feedback, queues, scoring, and audit-oriented state transitions are implemented as internal foundations. Lifecycle and review posture use one versioned compatibility policy with terminal-state normalization and durable legacy quarantine. | Client publication and official advisory workflow ownership remain out of scope. |
+| Lifecycle and review | Candidate persistence, replay, review actions, feedback, queues, scoring, audit-oriented state transitions, and tenant-scoped retention/hold/erasure/purge enforcement are implemented as internal foundations. Data lifecycle includes versioned classification/residency policy, transactional PostgreSQL controls, pseudonymized tombstones, and bounded trust telemetry. | Legal/privacy decision authority, jurisdiction approval, Report/Archive/AI conformance, scheduled purge proof, client publication, and supported-feature promotion remain blocked. |
 | Downstream intent | Conversion intent, source-versioned append-only outcome history, policy-valid current posture, report evidence-pack requests, outbox records, and Advise/Manage/Report route-proof consumption are bounded foundations. | Execution, report rendering, archive authority, and downstream materialization proof remain external; quarantined outcome history does not count as ready. |
 | AI-adjacent support | Explanation readiness, lineage-store proof, workflow-pack registration/runtime proof consumption, and model-risk operations evidence are governed. | `lotus-idea` does not own AI infrastructure, provider calls, RAG runtime, or model operations. |
 | Data mesh | Proposed product and consumer contracts, mesh policy proof, platform onboarding proof consumption, and runtime trust telemetry exist. | Data-product certification and supported-feature promotion remain blocked. |
-
-The long-form implementation ledger is deliberately not in this README. Use
-[docs/rfcs/README.md](docs/rfcs/README.md),
-[docs/architecture/CODEBASE-REVIEW-LEDGER.md](docs/architecture/CODEBASE-REVIEW-LEDGER.md),
-and [quality/quality_scorecard.md](quality/quality_scorecard.md) for detailed
-slice evidence.
 
 ## Product Boundary
 
@@ -236,6 +230,7 @@ Operator entrypoints:
 - Workers and delivery: source-ingestion readiness/run-once plus outbox readiness/run-once/recovery
 - Workflow operations: advisor queue, AI explanation, downstream realization, and reconciliation readiness
 - Governance: implementation-proof, data-mesh, and runtime trust-telemetry preview/snapshot
+- Privacy lifecycle: governed hold, erasure, purge, replay, and aggregate lifecycle posture
 
 Operator details live in
 [docs/runbooks/service-operations.md](docs/runbooks/service-operations.md),
@@ -244,6 +239,7 @@ Operator details live in
 [outbox lineage](docs/architecture/outbox-event-lineage.md),
 [outbox dead-letter recovery](docs/operations/outbox-dead-letter-recovery.md),
 [downstream realization](docs/operations/downstream-realization-readiness.md),
+[data lifecycle operations](docs/runbooks/data-lifecycle-operations.md),
 [PostgreSQL disaster recovery](docs/runbooks/postgres-disaster-recovery.md), and
 [wiki/Operations-Runbook.md](wiki/Operations-Runbook.md).
 
@@ -287,6 +283,7 @@ Local gates keep claims grounded:
 | API, review, and conversion-contract truth | `make api-route-metadata-gate`, `make api-problem-details-boundary-gate`, `make api-idempotency-boundary-gate`, `make candidate-state-contract-gate`, `make review-identity-contract-gate`, `make conversion-outcome-contract-gate`, `make openapi-gate` |
 | Observability and AI-adjacent proof | `make source-observability-contract-gate`, `make operation-metric-contract-gate`, `make outbox-supportability-contract-gate`, `make outbox-supportability-rule-test`, `make ai-model-risk-ops-contract-gate` |
 | PostgreSQL recovery | `make disaster-recovery-contract-gate`, `make postgres-disaster-recovery-drill`, `make postgres-disaster-recovery-resume`, `make disaster-recovery-proof-gate` |
+| Data lifecycle and privacy posture | `make data-lifecycle-contract-gate`, `make postgres-integration-gate`, `make no-sensitive-content-guard` |
 | Modularity and modern code posture | `make maintainability-gate`, `make duplicate-implementation-gate`, `make private-import-boundary-gate` |
 | Local evidence hygiene | `make no-sensitive-content-guard`, `make repository-hygiene-gate` |
 
@@ -307,6 +304,8 @@ Start here:
   support-promotion process.
 - [docs/runbooks/postgres-disaster-recovery.md](docs/runbooks/postgres-disaster-recovery.md):
   RPO/RTO, backup/PITR boundaries, restore, resume, cutover, and evidence procedure.
+- [docs/runbooks/data-lifecycle-operations.md](docs/runbooks/data-lifecycle-operations.md):
+  authority boundaries, hold/erasure/purge procedure, failure response, telemetry, and certification blockers.
 - [docs/architecture/CODEBASE-REVIEW-LEDGER.md](docs/architecture/CODEBASE-REVIEW-LEDGER.md):
   modularity and issue-pattern hardening ledger.
 - [docs/architecture/GITHUB-ISSUE-CLOSURE-MATRIX.md](docs/architecture/GITHUB-ISSUE-CLOSURE-MATRIX.md):

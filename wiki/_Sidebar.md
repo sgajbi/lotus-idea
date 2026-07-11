@@ -24,6 +24,7 @@
 ## Operations And Governance
 
 - [Operations Runbook](Operations-Runbook)
+- [Data Lifecycle Operations](Data-Lifecycle-Operations)
 - [PostgreSQL Disaster Recovery](PostgreSQL-Disaster-Recovery)
 - [Troubleshooting](Troubleshooting)
 - [Security and Governance](Security-and-Governance)
