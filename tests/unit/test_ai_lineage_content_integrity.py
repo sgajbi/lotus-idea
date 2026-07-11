@@ -1,11 +1,17 @@
 from __future__ import annotations
 
 from copy import deepcopy
+from dataclasses import replace
+from datetime import UTC, datetime, timedelta
 import json
+from typing import cast
 
 import pytest
 
 from app.domain.ai_lineage_persistence import ai_explanation_lineage_record_from_result
+from app.domain.ai_execution_provenance import AIExecutionProvenancePosture
+from app.domain.ai_governance import build_ai_explanation_request, evaluate_ai_workflow_output
+from app.domain.lotus_ai_run_attestation import VerifiedLotusAIRunAttestationReceipt
 from app.infrastructure.postgres_codecs import (
     ai_explanation_lineage_from_json,
     ai_explanation_lineage_to_json,
@@ -14,6 +20,7 @@ from tests.unit.test_idea_persistence import (
     ai_explanation_result_for_candidate,
     high_cash_candidate,
 )
+from tests.unit.test_ai_governance import candidate, command, output
 
 
 def _lineage_payload() -> dict[str, object]:
@@ -102,3 +109,51 @@ def test_lineage_codec_rejects_v1_hash_tampering(tampered_field: str) -> None:
 
     with pytest.raises(ValueError, match="lineage hash does not match"):
         ai_explanation_lineage_from_json(payload)
+
+
+def test_verified_attestation_receipt_round_trips_and_is_lineage_hash_bound() -> None:
+    request = build_ai_explanation_request(candidate(), command())
+    result = replace(
+        evaluate_ai_workflow_output(request, output(request.request_id)),
+        execution_provenance_posture=AIExecutionProvenancePosture.LOTUS_AI_ATTESTATION_VERIFIED,
+    )
+    record = ai_explanation_lineage_record_from_result(
+        result,
+        attestation_receipt=_verified_receipt(request.request_id),
+    )
+    payload = ai_explanation_lineage_to_json(record)
+
+    restored = ai_explanation_lineage_from_json(payload)
+
+    assert restored.attestation_receipt is not None
+    assert restored.attestation_receipt.run_id == "packrun_idea_explanation_request-001"
+    assert restored.attestation_receipt.replay_nonce == "a" * 64
+    assert "explanation_text" not in json.dumps(payload)
+
+    tampered = deepcopy(payload)
+    cast(dict[str, object], tampered["attestation_receipt"])["replay_nonce"] = "f" * 64
+    with pytest.raises(ValueError, match="lineage hash does not match"):
+        ai_explanation_lineage_from_json(tampered)
+
+
+def _verified_receipt(request_id: str) -> VerifiedLotusAIRunAttestationReceipt:
+    verified_at = datetime(2026, 7, 11, 10, 5, tzinfo=UTC)
+    return VerifiedLotusAIRunAttestationReceipt(
+        run_id="packrun_idea_explanation_request-001",
+        consumer_request_id=request_id,
+        replay_nonce="a" * 64,
+        key_id="attestation-key-1",
+        rotation_epoch=1,
+        provider_id="text.openai",
+        provider_mode="openai",
+        model_id="gpt-5.4",
+        model_version="2026-06-01",
+        model_risk_approval_ref="model-risk://lotus-ai/gpt-5.4/2026-06-01",
+        evaluator_id="idea-explanation-guardrails",
+        evaluator_policy_version="idea-explanation-policy.v1",
+        input_evidence_sha256="b" * 64,
+        output_content_sha256="c" * 64,
+        issued_at_utc=verified_at - timedelta(seconds=5),
+        expires_at_utc=verified_at + timedelta(minutes=5),
+        verified_at_utc=verified_at,
+    )

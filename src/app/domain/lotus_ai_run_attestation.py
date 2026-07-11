@@ -135,3 +135,34 @@ class VerifiedLotusAIRunAttestationReceipt:
     issued_at_utc: datetime
     expires_at_utc: datetime
     verified_at_utc: datetime
+
+    def __post_init__(self) -> None:
+        for field_name in (
+            "run_id",
+            "consumer_request_id",
+            "key_id",
+            "provider_id",
+            "provider_mode",
+            "model_id",
+            "model_version",
+            "model_risk_approval_ref",
+            "evaluator_id",
+            "evaluator_policy_version",
+        ):
+            if not str(getattr(self, field_name)).strip():
+                raise ValueError(f"{field_name} is required")
+        if self.rotation_epoch < 1:
+            raise ValueError("rotation_epoch must be positive")
+        for field_name in (
+            "replay_nonce",
+            "input_evidence_sha256",
+            "output_content_sha256",
+        ):
+            if not _SHA256.fullmatch(str(getattr(self, field_name))):
+                raise ValueError(f"{field_name} must be a lowercase SHA-256 digest")
+        for field_name in ("issued_at_utc", "expires_at_utc", "verified_at_utc"):
+            value = getattr(self, field_name)
+            if value.tzinfo is None or value.utcoffset() is None:
+                raise ValueError(f"{field_name} must be timezone-aware")
+        if not self.issued_at_utc <= self.verified_at_utc < self.expires_at_utc:
+            raise ValueError("verified receipt must be inside the attestation validity window")

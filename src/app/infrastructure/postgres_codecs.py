@@ -34,6 +34,7 @@ from app.domain.ideas import (
     SuppressionReason,
     UnsupportedEvidenceReason,
 )
+from app.domain.lotus_ai_run_attestation import VerifiedLotusAIRunAttestationReceipt
 from app.domain.report_evidence import (
     GovernedReportEvidencePack,
     ReportEvidencePackBoundary,
@@ -468,6 +469,11 @@ def _ai_explanation_lineage_to_json(record: AIExplanationLineageRecord) -> dict[
         "evaluated_at_utc": record.evaluated_at_utc.isoformat(),
         "grants_downstream_authority": record.grants_downstream_authority,
         "lineage_hash": record.lineage_hash,
+        "attestation_receipt": (
+            _attestation_receipt_to_json(record.attestation_receipt)
+            if record.attestation_receipt is not None
+            else None
+        ),
     }
 
 
@@ -503,6 +509,59 @@ def _ai_explanation_lineage_from_json(
         evaluated_at_utc=_datetime(payload["evaluated_at_utc"]),
         grants_downstream_authority=bool(payload["grants_downstream_authority"]),
         lineage_hash=str(payload["lineage_hash"]),
+        attestation_receipt=(
+            _attestation_receipt_from_json(payload["attestation_receipt"])
+            if payload.get("attestation_receipt") is not None
+            else None
+        ),
+    )
+
+
+def _attestation_receipt_to_json(
+    receipt: VerifiedLotusAIRunAttestationReceipt,
+) -> dict[str, object]:
+    return {
+        "run_id": receipt.run_id,
+        "consumer_request_id": receipt.consumer_request_id,
+        "replay_nonce": receipt.replay_nonce,
+        "key_id": receipt.key_id,
+        "rotation_epoch": receipt.rotation_epoch,
+        "provider_id": receipt.provider_id,
+        "provider_mode": receipt.provider_mode,
+        "model_id": receipt.model_id,
+        "model_version": receipt.model_version,
+        "model_risk_approval_ref": receipt.model_risk_approval_ref,
+        "evaluator_id": receipt.evaluator_id,
+        "evaluator_policy_version": receipt.evaluator_policy_version,
+        "input_evidence_sha256": receipt.input_evidence_sha256,
+        "output_content_sha256": receipt.output_content_sha256,
+        "issued_at_utc": receipt.issued_at_utc.isoformat(),
+        "expires_at_utc": receipt.expires_at_utc.isoformat(),
+        "verified_at_utc": receipt.verified_at_utc.isoformat(),
+    }
+
+
+def _attestation_receipt_from_json(
+    payload: Mapping[str, Any],
+) -> VerifiedLotusAIRunAttestationReceipt:
+    return VerifiedLotusAIRunAttestationReceipt(
+        run_id=str(payload["run_id"]),
+        consumer_request_id=str(payload["consumer_request_id"]),
+        replay_nonce=str(payload["replay_nonce"]),
+        key_id=str(payload["key_id"]),
+        rotation_epoch=int(payload["rotation_epoch"]),
+        provider_id=str(payload["provider_id"]),
+        provider_mode=str(payload["provider_mode"]),
+        model_id=str(payload["model_id"]),
+        model_version=str(payload["model_version"]),
+        model_risk_approval_ref=str(payload["model_risk_approval_ref"]),
+        evaluator_id=str(payload["evaluator_id"]),
+        evaluator_policy_version=str(payload["evaluator_policy_version"]),
+        input_evidence_sha256=str(payload["input_evidence_sha256"]),
+        output_content_sha256=str(payload["output_content_sha256"]),
+        issued_at_utc=_datetime(payload["issued_at_utc"]),
+        expires_at_utc=_datetime(payload["expires_at_utc"]),
+        verified_at_utc=_datetime(payload["verified_at_utc"]),
     )
 
 

@@ -12,6 +12,7 @@ from app.domain.ai_action_policy import AI_ACTION_POLICY_VERSION
 from app.domain.ai_output_integrity import AIOutputIntegrity
 from app.domain.ai_execution_provenance import AIExecutionProvenancePosture
 from app.domain.audit import AuditEvent
+from app.domain.lotus_ai_run_attestation import VerifiedLotusAIRunAttestationReceipt
 
 if TYPE_CHECKING:
     from app.domain.persistence import CandidatePersistenceRecord
@@ -50,6 +51,7 @@ class AIExplanationLineageRecord:
     evaluated_at_utc: datetime
     grants_downstream_authority: bool
     lineage_hash: str
+    attestation_receipt: VerifiedLotusAIRunAttestationReceipt | None = None
 
     def __post_init__(self) -> None:
         for field_name in (
@@ -81,6 +83,14 @@ class AIExplanationLineageRecord:
             digest=self.output_content_digest,
         )
         AIExecutionProvenancePosture(self.execution_provenance_posture)
+        verified_posture = (
+            self.execution_provenance_posture
+            == AIExecutionProvenancePosture.LOTUS_AI_ATTESTATION_VERIFIED.value
+        )
+        if verified_posture != (self.attestation_receipt is not None):
+            raise ValueError(
+                "verified execution provenance and attestation receipt must be present together"
+            )
         object.__setattr__(self, "reason_codes", tuple(self.reason_codes))
         object.__setattr__(self, "claim_ids", tuple(self.claim_ids))
         object.__setattr__(self, "proposed_action_types", tuple(self.proposed_action_types))
@@ -96,12 +106,14 @@ class AIExplanationLineagePersistenceResult:
 
 def ai_explanation_lineage_record_from_result(
     result: AIExplanationResult,
+    *,
+    attestation_receipt: VerifiedLotusAIRunAttestationReceipt | None = None,
 ) -> AIExplanationLineageRecord:
     output = result.output
     evaluated_at_utc = (
         output.verifier_ran_at_utc if output is not None else result.audit_event.occurred_at_utc
     )
-    record_payload = {
+    record_payload: dict[str, Any] = {
         "actor_subject": result.request.actor_subject,
         "candidate_id": result.request.redacted_evidence.candidate_id,
         "claim_ids": [claim.claim_id for claim in output.claims] if output is not None else [],
@@ -132,6 +144,8 @@ def ai_explanation_lineage_record_from_result(
         "workflow_pack_id": result.request.workflow_pack.workflow_pack_id,
         "workflow_pack_version": result.request.workflow_pack.workflow_pack_version,
     }
+    if attestation_receipt is not None:
+        record_payload["attestation_receipt"] = _attestation_receipt_payload(attestation_receipt)
     lineage_hash = _hash_payload(record_payload)
     return AIExplanationLineageRecord(
         request_id=result.request.request_id,
@@ -164,6 +178,7 @@ def ai_explanation_lineage_record_from_result(
         evaluated_at_utc=evaluated_at_utc,
         grants_downstream_authority=result.grants_downstream_authority,
         lineage_hash=lineage_hash,
+        attestation_receipt=attestation_receipt,
     )
 
 
@@ -177,33 +192,36 @@ def verify_ai_explanation_lineage_record_integrity(
         == AIExecutionProvenancePosture.PRE_ATTESTATION_UNVERIFIABLE.value
     ):
         return
-    expected = _hash_payload(
-        {
-            "actor_subject": record.actor_subject,
-            "candidate_id": record.candidate_id,
-            "claim_ids": list(record.claim_ids),
-            "evidence_content_hash": record.evidence_content_hash,
-            "evidence_packet_id": record.evidence_packet_id,
-            "fallback_reason": record.fallback_reason,
-            "fallback_used": record.fallback_used,
-            "grants_downstream_authority": record.grants_downstream_authority,
-            "output_id": record.output_id,
-            "posture": record.posture,
-            "proposed_action_types": list(record.proposed_action_types),
-            "action_policy_version": record.action_policy_version,
-            "output_integrity_version": record.output_integrity_version,
-            "output_content_digest": record.output_content_digest,
-            "execution_provenance_posture": record.execution_provenance_posture,
-            "purpose": record.purpose,
-            "reason_codes": list(record.reason_codes),
-            "request_id": record.request_id,
-            "requested_at_utc": record.requested_at_utc.isoformat(),
-            "evaluated_at_utc": record.evaluated_at_utc.isoformat(),
-            "verifier_outcome": record.verifier_outcome,
-            "workflow_pack_id": record.workflow_pack_id,
-            "workflow_pack_version": record.workflow_pack_version,
-        }
-    )
+    expected_payload: dict[str, Any] = {
+        "actor_subject": record.actor_subject,
+        "candidate_id": record.candidate_id,
+        "claim_ids": list(record.claim_ids),
+        "evidence_content_hash": record.evidence_content_hash,
+        "evidence_packet_id": record.evidence_packet_id,
+        "fallback_reason": record.fallback_reason,
+        "fallback_used": record.fallback_used,
+        "grants_downstream_authority": record.grants_downstream_authority,
+        "output_id": record.output_id,
+        "posture": record.posture,
+        "proposed_action_types": list(record.proposed_action_types),
+        "action_policy_version": record.action_policy_version,
+        "output_integrity_version": record.output_integrity_version,
+        "output_content_digest": record.output_content_digest,
+        "execution_provenance_posture": record.execution_provenance_posture,
+        "purpose": record.purpose,
+        "reason_codes": list(record.reason_codes),
+        "request_id": record.request_id,
+        "requested_at_utc": record.requested_at_utc.isoformat(),
+        "evaluated_at_utc": record.evaluated_at_utc.isoformat(),
+        "verifier_outcome": record.verifier_outcome,
+        "workflow_pack_id": record.workflow_pack_id,
+        "workflow_pack_version": record.workflow_pack_version,
+    }
+    if record.attestation_receipt is not None:
+        expected_payload["attestation_receipt"] = _attestation_receipt_payload(
+            record.attestation_receipt
+        )
+    expected = _hash_payload(expected_payload)
     if record.lineage_hash != expected:
         raise ValueError("AI explanation lineage hash does not match persisted content")
 
@@ -211,6 +229,32 @@ def verify_ai_explanation_lineage_record_integrity(
 def _hash_payload(payload: Mapping[str, Any]) -> str:
     canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"))
     return f"sha256:{hashlib.sha256(canonical.encode('utf-8')).hexdigest()}"
+
+
+def _attestation_receipt_payload(
+    receipt: VerifiedLotusAIRunAttestationReceipt | None,
+) -> dict[str, object] | None:
+    if receipt is None:
+        return None
+    return {
+        "run_id": receipt.run_id,
+        "consumer_request_id": receipt.consumer_request_id,
+        "replay_nonce": receipt.replay_nonce,
+        "key_id": receipt.key_id,
+        "rotation_epoch": receipt.rotation_epoch,
+        "provider_id": receipt.provider_id,
+        "provider_mode": receipt.provider_mode,
+        "model_id": receipt.model_id,
+        "model_version": receipt.model_version,
+        "model_risk_approval_ref": receipt.model_risk_approval_ref,
+        "evaluator_id": receipt.evaluator_id,
+        "evaluator_policy_version": receipt.evaluator_policy_version,
+        "input_evidence_sha256": receipt.input_evidence_sha256,
+        "output_content_sha256": receipt.output_content_sha256,
+        "issued_at_utc": receipt.issued_at_utc.isoformat(),
+        "expires_at_utc": receipt.expires_at_utc.isoformat(),
+        "verified_at_utc": receipt.verified_at_utc.isoformat(),
+    }
 
 
 def _require_text(value: str, field_name: str) -> None:

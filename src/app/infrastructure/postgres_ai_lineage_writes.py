@@ -29,8 +29,9 @@ def insert_ai_explanation_lineage_record(
             evidence_content_hash, workflow_pack_id, workflow_pack_version,
             purpose, posture, verifier_outcome, fallback_used, fallback_reason,
             output_integrity_version, output_content_digest, lineage_hash,
-            execution_provenance_posture, lineage_json, requested_at_utc, evaluated_at_utc
-        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            execution_provenance_posture, lotus_ai_run_id, lotus_ai_replay_nonce,
+            lotus_ai_attestation_key_id, lineage_json, requested_at_utc, evaluated_at_utc
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """,
         (
             lineage_record.request_id,
@@ -48,6 +49,21 @@ def insert_ai_explanation_lineage_record(
             lineage_record.output_content_digest,
             lineage_record.lineage_hash,
             lineage_record.execution_provenance_posture,
+            (
+                lineage_record.attestation_receipt.run_id
+                if lineage_record.attestation_receipt is not None
+                else None
+            ),
+            (
+                lineage_record.attestation_receipt.replay_nonce
+                if lineage_record.attestation_receipt is not None
+                else None
+            ),
+            (
+                lineage_record.attestation_receipt.key_id
+                if lineage_record.attestation_receipt is not None
+                else None
+            ),
             Jsonb(ai_explanation_lineage_to_json(lineage_record)),
             lineage_record.requested_at_utc,
             lineage_record.evaluated_at_utc,
