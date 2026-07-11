@@ -91,9 +91,7 @@ def test_cli_failure_does_not_emit_validation_details(
 ) -> None:
     module = _load_gate()
     sensitive_detail = "secret-token-value"
-    monkeypatch.setattr(
-        module, "validate_trusted_tenant_context", lambda: [sensitive_detail]
-    )
+    monkeypatch.setattr(module, "validate_trusted_tenant_context", lambda: [sensitive_detail])
 
     assert module.main() == 1
     output = capsys.readouterr().out
