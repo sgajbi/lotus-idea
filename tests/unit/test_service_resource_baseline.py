@@ -122,6 +122,48 @@ def test_validator_rejects_claim_inflation() -> None:
     assert "resource observation certification blockers must remain explicit" in errors
 
 
+@pytest.mark.parametrize(
+    ("field", "value", "message"),
+    [
+        ("schemaVersion", "unknown", "schemaVersion"),
+        ("proofScope", "billing", "proofScope"),
+        ("claimPosture", "certified", "claimPosture"),
+        ("environmentProfile", "production", "environmentProfile"),
+    ],
+)
+def test_validator_rejects_contract_identity_mutation(
+    field: str, value: object, message: str
+) -> None:
+    artifact = _build([_snapshot(0, 1.0, 100), _snapshot(1, 1.1, 100)])
+    artifact[field] = value
+
+    assert any(message in error for error in validate_service_resource_baseline(artifact))
+
+
+@pytest.mark.parametrize(
+    ("overrides", "message"),
+    [
+        ({"environment_profile": "production-like"}, "requires the test profile"),
+        ({"generated_at_utc": datetime(2026, 7, 11)}, "timezone-aware"),
+        ({"commit_sha": " "}, "commit_sha must not be blank"),
+    ],
+)
+def test_builder_rejects_ambiguous_provenance(
+    overrides: dict[str, object], message: str
+) -> None:
+    values: dict[str, object] = {
+        "snapshots": [_snapshot(0, 1.0, 100), _snapshot(1, 1.1, 100)],
+        "environment_profile": "test",
+        "generated_at_utc": START + timedelta(seconds=2),
+        "commit_sha": "abc123",
+        "branch": "main",
+        "run_id": "resource-1",
+    }
+    values.update(overrides)
+    with pytest.raises(ValueError, match=message):
+        build_service_resource_baseline(**values)  # type: ignore[arg-type]
+
+
 def test_builder_fails_closed_on_final_validation_failure(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

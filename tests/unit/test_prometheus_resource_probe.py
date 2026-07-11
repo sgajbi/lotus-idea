@@ -125,3 +125,25 @@ def test_close_does_not_close_injected_client() -> None:
 
     assert client.is_closed is False
     client.close()
+
+
+def test_close_releases_owned_client(monkeypatch: pytest.MonkeyPatch) -> None:
+    class FakeClient:
+        closed = False
+
+        def __init__(self, **kwargs: object) -> None:
+            pass
+
+        def close(self) -> None:
+            self.closed = True
+
+    client = FakeClient()
+    monkeypatch.setattr(
+        "app.infrastructure.prometheus_resource_probe.httpx.Client",
+        lambda **kwargs: client,
+    )
+    probe = PrometheusResourceProbe(metrics_url="https://idea.example/metrics")
+
+    probe.close()
+
+    assert client.closed is True
