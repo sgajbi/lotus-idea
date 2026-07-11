@@ -19,6 +19,7 @@ from app.application.outbox_delivery import (  # noqa: E402
 from app.application.source_ingestion import (  # noqa: E402
     SOURCE_INGESTION_RUN_ONCE_BATCH_CEILING,
 )
+from app.application.service_capacity_baseline import SCENARIOS  # noqa: E402
 from app.contracts.operational_limits import (  # noqa: E402
     DEFAULT_DEPENDENCY_MAX_CONNECTIONS,
     DEFAULT_DEPENDENCY_MAX_KEEPALIVE_CONNECTIONS,
@@ -326,6 +327,8 @@ def _validate_certification(payload: dict[str, Any]) -> list[str]:
     errors: list[str] = []
     if set(payload.get("certification_blockers", [])) != REQUIRED_BLOCKERS:
         errors.append("service SLO certification blockers must match required evidence set")
+    if payload.get("capacity_evidence_scenarios") != list(SCENARIOS):
+        errors.append("service SLO capacity evidence scenarios must match runtime vocabulary")
     boundaries = payload.get("non_proof_boundaries")
     if not isinstance(boundaries, list) or len(boundaries) < 4:
         errors.append("service SLO non_proof_boundaries must remain explicit")

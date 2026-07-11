@@ -88,6 +88,14 @@
     "exhausted_action": "freeze_promotion_and_reduce_nonessential_workload",
     "dependency_failure_classification": "separate_from_service_saturation"
   },
+  "capacity_evidence_scenarios": [
+    "api",
+    "source_ingestion",
+    "outbox_delivery",
+    "downstream_submission",
+    "dependency_failure",
+    "postgresql"
+  ],
   "metric_label_policy": {
     "allowed": [
       "dependency",

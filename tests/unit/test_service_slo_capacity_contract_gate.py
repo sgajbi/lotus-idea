@@ -160,6 +160,19 @@ def test_service_slo_capacity_contract_loader_rejects_non_object(tmp_path: Path)
         raise AssertionError("expected non-object contract to fail")
 
 
+def test_certification_rejects_capacity_scenario_drift() -> None:
+    module = _load_gate()
+    payload = {
+        "certification_blockers": sorted(module.REQUIRED_BLOCKERS),
+        "capacity_evidence_scenarios": ["api", "source_ingestion"],
+        "non_proof_boundaries": ["one", "two", "three", "four"],
+    }
+
+    errors = module._validate_certification(payload)
+
+    assert "service SLO capacity evidence scenarios must match runtime vocabulary" in errors
+
+
 def test_capacity_attestation_workflow_rejects_automatic_or_untrusted_shape(
     tmp_path: Path,
 ) -> None:
