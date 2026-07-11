@@ -7,7 +7,7 @@ from types import ModuleType
 import pytest
 
 from scripts.ci_release_evidence_contract import (
-    validate_compose_build_identity,
+    validate_compose_runtime_contract,
     validate_dockerfile_runtime,
     validate_release_evidence_targets,
 )
@@ -15,10 +15,10 @@ from scripts.ci_release_evidence_contract import (
 ROOT = Path(__file__).resolve().parents[2]
 
 
-def test_compose_passes_complete_non_secret_build_identity() -> None:
+def test_compose_passes_complete_runtime_contract() -> None:
     compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
 
-    assert validate_compose_build_identity(compose) == []
+    assert validate_compose_runtime_contract(compose) == []
     assert "SECRET" not in "\n".join(
         line for line in compose.splitlines() if "LOTUS_IDEA_BUILD_" in line
     )
@@ -34,10 +34,19 @@ def test_compose_build_identity_rejects_missing_commit_and_run_id() -> None:
         "",
     )
 
-    errors = validate_compose_build_identity(degraded)
+    errors = validate_compose_runtime_contract(degraded)
 
     assert "docker-compose.yml must pass governed commit SHA build identity" in errors
     assert "docker-compose.yml must pass governed run ID build identity" in errors
+
+
+def test_compose_runtime_contract_rejects_missing_realization_wiring() -> None:
+    compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
+    degraded = compose.replace("      LOTUS_IDEA_ADVISE_REALIZATION_BASE_URL:", "      REMOVED:")
+
+    assert "docker-compose.yml must configure governed Advise realization base URL" in (
+        validate_compose_runtime_contract(degraded)
+    )
 
 
 def _load_ci_contract_gate() -> ModuleType:

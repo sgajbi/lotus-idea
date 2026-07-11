@@ -238,6 +238,11 @@ version values before rebuilding. The default `unknown`/`local` posture is
 acceptable for ad hoc diagnostics only; it is not canonical provenance,
 release evidence, or permission to pass secrets through Docker build inputs.
 
+The same Compose contract requires the separate Advise, Manage, and Report
+realization base/path pairs. Generic source-read URLs cannot stand in for
+downstream handoff configuration; `make ci-contract-gate` blocks missing
+realization wiring before canonical runtime validation.
+
 PR Merge Gate and Main Releasability also run `make container-runtime-smoke`
 after the Docker image build. The target starts the built image, probes
 `/health` and `/health/live` for `200`, requires `/health/ready` to be reachable

@@ -230,7 +230,7 @@ def validate_release_evidence_targets(makefile: str) -> list[str]:
     return errors
 
 
-def validate_compose_build_identity(compose: str) -> list[str]:
+def validate_compose_runtime_contract(compose: str) -> list[str]:
     required = {
         'GIT_COMMIT_SHA: "${LOTUS_IDEA_BUILD_GIT_COMMIT_SHA:-unknown}"': "commit SHA",
         'GIT_BRANCH: "${LOTUS_IDEA_BUILD_GIT_BRANCH:-unknown}"': "Git branch",
@@ -242,11 +242,25 @@ def validate_compose_build_identity(compose: str) -> list[str]:
         'IMAGE_BUILD_ID: "${LOTUS_IDEA_BUILD_IMAGE_ID:-local}"': "image build ID",
         'SERVICE_VERSION: "${LOTUS_IDEA_BUILD_SERVICE_VERSION:-0.1.0}"': "service version",
     }
-    return [
+    errors = [
         f"docker-compose.yml must pass governed {label} build identity"
         for fragment, label in required.items()
         if fragment not in compose
     ]
+    required_realization = {
+        "      LOTUS_IDEA_ADVISE_REALIZATION_BASE_URL:": "Advise realization base URL",
+        "      LOTUS_IDEA_ADVISE_REALIZATION_SUBMIT_PATH:": "Advise realization submit path",
+        "      LOTUS_IDEA_MANAGE_REALIZATION_BASE_URL:": "Manage realization base URL",
+        "      LOTUS_IDEA_MANAGE_REALIZATION_SUBMIT_PATH:": "Manage realization submit path",
+        "      LOTUS_IDEA_REPORT_REALIZATION_BASE_URL:": "Report realization base URL",
+        "      LOTUS_IDEA_REPORT_REALIZATION_SUBMIT_PATH:": "Report realization submit path",
+    }
+    errors.extend(
+        f"docker-compose.yml must configure governed {label}"
+        for fragment, label in required_realization.items()
+        if fragment not in compose
+    )
+    return errors
 
 
 def validate_dockerfile_runtime(dockerfile: str) -> list[str]:

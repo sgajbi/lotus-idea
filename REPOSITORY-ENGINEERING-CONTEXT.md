@@ -945,6 +945,9 @@ Recent issue-derived patterns to preserve:
     `LOTUS_IDEA_BUILD_*`; canonical Workbench automation must populate them
     from exact Idea source/runtime truth. Default `unknown`/`local` values are
     diagnostic local posture only and cannot satisfy cross-repository proof.
+    Compose must also configure the distinct Advise, Manage, and Report
+    realization base/path pairs. Generic source-read URLs are not realization
+    configuration; the CI Compose runtime contract blocks that substitution.
 28. duplicate-implementation controls now split report-only evidence from
     blocking enforcement. `make duplicate-implementation-inventory` scans exact
     first-party function-body duplicates across `src/app` and `scripts`, writes

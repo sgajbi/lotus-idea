@@ -24,6 +24,12 @@ services:
       LOTUS_PERFORMANCE_BASE_URL: "${LOTUS_PERFORMANCE_BASE_URL:-http://host.docker.internal:8002}"
       LOTUS_ADVISE_BASE_URL: "${LOTUS_ADVISE_BASE_URL:-http://host.docker.internal:8000}"
       LOTUS_MANAGE_BASE_URL: "${LOTUS_MANAGE_BASE_URL:-http://host.docker.internal:8001}"
+      LOTUS_IDEA_ADVISE_REALIZATION_BASE_URL: "${LOTUS_IDEA_ADVISE_REALIZATION_BASE_URL:-http://host.docker.internal:8000}"
+      LOTUS_IDEA_ADVISE_REALIZATION_SUBMIT_PATH: "${LOTUS_IDEA_ADVISE_REALIZATION_SUBMIT_PATH:-/advisory/proposals/idea-intake}"
+      LOTUS_IDEA_MANAGE_REALIZATION_BASE_URL: "${LOTUS_IDEA_MANAGE_REALIZATION_BASE_URL:-http://host.docker.internal:8001}"
+      LOTUS_IDEA_MANAGE_REALIZATION_SUBMIT_PATH: "${LOTUS_IDEA_MANAGE_REALIZATION_SUBMIT_PATH:-/api/v1/rebalance/idea-action-intake}"
+      LOTUS_IDEA_REPORT_REALIZATION_BASE_URL: "${LOTUS_IDEA_REPORT_REALIZATION_BASE_URL:-http://host.docker.internal:8300}"
+      LOTUS_IDEA_REPORT_REALIZATION_SUBMIT_PATH: "${LOTUS_IDEA_REPORT_REALIZATION_SUBMIT_PATH:-/reports/idea-evidence-packs}"
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8330/health/ready')"]
       interval: 15s

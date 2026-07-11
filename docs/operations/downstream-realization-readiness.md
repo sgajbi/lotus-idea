@@ -319,6 +319,12 @@ raw adapter errors, request payloads, response payloads, or idempotency keys.
 | Manage action realization | `LOTUS_IDEA_MANAGE_REALIZATION_BASE_URL` | `LOTUS_IDEA_MANAGE_REALIZATION_SUBMIT_PATH` |
 | Report evidence-pack realization | `LOTUS_IDEA_REPORT_REALIZATION_BASE_URL` | `LOTUS_IDEA_REPORT_REALIZATION_SUBMIT_PATH` |
 
+Local Compose configures all three realization pairs to the canonical Advise,
+Manage, and Report owner routes. These variables are distinct from source-read
+base URLs: configuring `LOTUS_ADVISE_BASE_URL` does not configure proposal
+realization. `make ci-contract-gate` blocks missing Compose realization wiring
+so a healthy source adapter cannot mask an unavailable downstream handoff.
+
 `LOTUS_IDEA_DOWNSTREAM_REALIZATION_TIMEOUT_SECONDS` controls the HTTP adapter
 timeout and defaults conservatively when absent.
 
