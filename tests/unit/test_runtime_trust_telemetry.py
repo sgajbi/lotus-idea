@@ -63,6 +63,8 @@ def test_runtime_trust_telemetry_preview_reports_empty_blocked_posture() -> None
         == "runtime_backed"
     )
     assert snapshot.candidate_snapshot_count == 0
+    assert snapshot.data_lifecycle_state_counts == {}
+    assert snapshot.lifecycle_control_missing_count == 0
     assert snapshot.current_source_ref_count == 0
     assert snapshot.stale_or_unavailable_source_ref_count == 0
     assert snapshot.lineage_materialized is False

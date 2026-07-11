@@ -630,7 +630,9 @@ def _runtime_trust_telemetry_summary_from_records(
             record.candidate.evidence_packet.supportability.value for record in records
         ),
         lifecycle_counts=Counter(record.candidate.lifecycle_status.value for record in records),
-        data_lifecycle_state_counts={"process_local_uncontrolled": len(records)},
+        data_lifecycle_state_counts=(
+            {"process_local_uncontrolled": len(records)} if records else {}
+        ),
         retention_expired_count=0,
         lifecycle_control_missing_count=len(records),
         review_decision_count=sum(len(record.review_decisions) for record in records),
