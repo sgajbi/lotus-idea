@@ -439,7 +439,7 @@ AI_EXPLANATION_READINESS_ROUTE: RouteMetadata = {
                         "unsupportedClaimBlockingAvailable": True,
                         "forbiddenActionBlockingAvailable": True,
                         "actionContentPolicyVersion": ("lotus-idea.ai-action-content-policy.v1"),
-                        "lotusAiRunAttestationAvailable": False,
+                        "lotusAiRunAttestationAvailable": True,
                         "productionLikeAttestationRequired": True,
                         "localTestUnattestedFixtureAllowed": True,
                         "executionProvenancePolicyVersion": (
@@ -457,7 +457,7 @@ AI_EXPLANATION_READINESS_ROUTE: RouteMetadata = {
                             "lotus_ai_runtime_execution_missing",
                             "certified_ai_lineage_store_missing",
                             "workflow_pack_runtime_contract_not_certified",
-                            "lotus_ai_run_attestation_contract_missing",
+                            "lotus_ai_run_attestation_mainline_proof_missing",
                             "certified_runtime_trust_telemetry_missing",
                             "workbench_product_proof_missing",
                         ],
