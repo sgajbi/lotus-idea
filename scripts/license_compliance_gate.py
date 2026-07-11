@@ -130,8 +130,20 @@ def _validate_header(payload: dict[str, Any]) -> list[str]:
     approval = payload.get("approval")
     if not isinstance(approval, dict) or approval.get("policy_change_review_required") is not True:
         errors.append("license policy changes must require explicit owner/legal/security review")
-    elif set(approval.get("owners", [])) != {"lotus-idea-owners", "security", "legal"}:
-        errors.append("license policy approval owners must include app, security, and legal")
+    else:
+        required_owners = {"lotus-idea-owners", "security", "legal"}
+        if set(approval.get("owners", [])) != required_owners:
+            errors.append("license policy approval owners must include app, security, and legal")
+        if set(approval.get("required_exception_approvals", [])) != required_owners:
+            errors.append("license exceptions must require app, security, and legal approval")
+        if approval.get("exception_expiry_required") is not True:
+            errors.append("license exceptions must require expiry")
+        if approval.get("approval_evidence_required") is not True:
+            errors.append("license approvals must require durable evidence")
+        if approval.get("approval_evidence_format") != "immutable_review_or_ticket_reference":
+            errors.append("license approval evidence must use an immutable review or ticket reference")
+        if approval.get("repository_review_routing") != ".github/CODEOWNERS":
+            errors.append("license policy must declare repository review routing")
     return errors
 
 
@@ -253,6 +265,7 @@ def _has_active_exception(
     for exception in exceptions:
         if not isinstance(exception, dict):
             continue
+        approved_by = exception.get("approved_by")
         try:
             expires = date.fromisoformat(str(exception.get("expires_on")))
         except ValueError:
@@ -260,7 +273,13 @@ def _has_active_exception(
         if (
             exception.get("component") == component
             and exception.get("spdx") == expression
-            and exception.get("approved_by")
+            and isinstance(approved_by, list)
+            and set(approved_by)
+            == {"lotus-idea-owners", "security", "legal"}
+            and isinstance(exception.get("approval_evidence_ref"), str)
+            and str(exception.get("approval_evidence_ref")).strip() != ""
+            and isinstance(exception.get("reason"), str)
+            and str(exception.get("reason")).strip() != ""
             and expires >= as_of_date
         ):
             return True

@@ -7,6 +7,8 @@ name = "lotus-idea"
 version = "0.1.0"
 description = "Wealth opportunity intelligence and idea lifecycle service"
 readme = "README.md"
+license = "LicenseRef-Lotus-Proprietary"
+license-files = ["LICENSE"]
 requires-python = ">=3.12"
 dependencies = [
   "fastapi==0.138.2",

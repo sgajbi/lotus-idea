@@ -1,0 +1,10 @@
+# Default repository ownership.
+* @sgajbi
+
+# Compliance changes require repository-owner routing in addition to the
+# external legal and security approvals governed by the policy contract.
+/LICENSE @sgajbi
+/THIRD_PARTY_NOTICES.md @sgajbi
+/contracts/compliance/ @sgajbi
+/scripts/license_compliance_gate.py @sgajbi
+/tests/unit/test_license_compliance_gate.py @sgajbi

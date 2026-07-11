@@ -82,6 +82,7 @@ def test_license_policy_accepts_active_exception_and_rejects_expired_exception(
             "component": "ruff",
             "spdx": "GPL-3.0-only",
             "approved_by": ["legal", "security", "lotus-idea-owners"],
+            "approval_evidence_ref": "https://github.com/sgajbi/lotus-idea/issues/999",
             "expires_on": "2026-07-31",
             "reason": "Bounded CI-only evaluation exception",
         }
@@ -100,6 +101,51 @@ def test_license_policy_accepts_active_exception_and_rejects_expired_exception(
         payload,
         repository_root=tmp_path,
         as_of_date=date(2026, 8, 1),
+    )
+
+
+def test_license_policy_rejects_incomplete_approval_governance(tmp_path: Path) -> None:
+    payload = current_policy()
+    payload["approval"]["required_exception_approvals"] = ["lotus-idea-owners"]
+    payload["approval"]["approval_evidence_required"] = False
+    payload["approval"]["exception_expiry_required"] = False
+    materialize_policy(tmp_path, payload)
+
+    errors = validate_license_policy(payload, repository_root=tmp_path)
+
+    assert "license exceptions must require app, security, and legal approval" in errors
+    assert "license exceptions must require expiry" in errors
+    assert "license approvals must require durable evidence" in errors
+
+
+def test_license_policy_rejects_exception_without_all_approvals_or_evidence(
+    tmp_path: Path,
+) -> None:
+    payload = current_policy()
+    component(payload, "ruff")["spdx"] = "GPL-3.0-only"
+    payload["exceptions"] = [
+        {
+            "exception_id": "LIC-EX-001",
+            "component": "ruff",
+            "spdx": "GPL-3.0-only",
+            "approved_by": ["lotus-idea-owners"],
+            "expires_on": "2026-07-31",
+            "reason": "Bounded CI-only evaluation exception",
+        }
+    ]
+    materialize_policy(tmp_path, payload)
+
+    assert "license GPL-3.0-only is not approved for ruff" in validate_license_policy(
+        payload,
+        repository_root=tmp_path,
+        as_of_date=date(2026, 7, 11),
+    )
+
+    payload["exceptions"][0]["approved_by"] = None
+    assert "license GPL-3.0-only is not approved for ruff" in validate_license_policy(
+        payload,
+        repository_root=tmp_path,
+        as_of_date=date(2026, 7, 11),
     )
 
 

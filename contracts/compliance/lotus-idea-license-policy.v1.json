@@ -70,7 +70,11 @@
   "approval": {
     "owners": ["lotus-idea-owners", "security", "legal"],
     "policy_change_review_required": true,
-    "exception_expiry_required": true
+    "exception_expiry_required": true,
+    "required_exception_approvals": ["lotus-idea-owners", "security", "legal"],
+    "approval_evidence_required": true,
+    "approval_evidence_format": "immutable_review_or_ticket_reference",
+    "repository_review_routing": ".github/CODEOWNERS"
   },
   "non_proof_boundaries": [
     "This contract does not replace legal review or vendor contracts.",
