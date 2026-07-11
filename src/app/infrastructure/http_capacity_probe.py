@@ -13,7 +13,6 @@ ALLOWED_RESPONSE_FIELDS = frozenset(
     {
         "attemptedCount",
         "blocker",
-        "configurationBlockers",
         "deliveredCount",
         "deliveryReadyCount",
         "durableStorageBacked",
@@ -96,11 +95,12 @@ def _bounded_response_summary(response: httpx.Response) -> dict[str, object]:
         return {}
     if not isinstance(payload, dict):
         return {}
-    return {
-        key: _bounded_value(value)
-        for key, value in payload.items()
-        if key in ALLOWED_RESPONSE_FIELDS and _bounded_value(value) is not None
-    }
+    summary: dict[str, object] = {}
+    for key, value in payload.items():
+        bounded = _bounded_value(value)
+        if key in ALLOWED_RESPONSE_FIELDS and bounded is not None:
+            summary[key] = bounded
+    return summary
 
 
 def _bounded_value(value: Any) -> object | None:

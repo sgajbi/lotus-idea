@@ -142,7 +142,7 @@ def _measurement_outcome(
     if transport_outcome == "timeout":
         return "timeout"
     if transport_outcome != "accepted":
-        return "accepted" if dependency_failure_expected else "rejected"
+        return "rejected"
     if run_status == "conflict":
         return "conflict"
     if run_status == "blocked":

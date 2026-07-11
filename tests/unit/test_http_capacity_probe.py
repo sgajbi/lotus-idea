@@ -25,6 +25,7 @@ def test_probe_returns_only_bounded_operational_response_fields() -> None:
                 "attemptedCount": 100,
                 "deliveredCount": 98,
                 "failedCount": 2,
+                "configurationBlockers": ["attacker-controlled-detail"],
                 "operatorRunReference": "must-not-leak",
                 "candidateId": "must-not-leak",
                 "payload": {"must": "not-leak"},

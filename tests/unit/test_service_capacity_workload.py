@@ -108,7 +108,7 @@ def test_dependency_failure_and_recovery_are_measured_separately() -> None:
 
     measurements = execute_capacity_workload(plan, probe=probe)
 
-    assert [item.outcome for item in measurements] == ["accepted", "accepted", "accepted"]
+    assert [item.outcome for item in measurements] == ["rejected", "accepted", "accepted"]
     assert [item.recovered for item in measurements] == [None, None, True]
     assert measurements[-1].item_count == 100
 
