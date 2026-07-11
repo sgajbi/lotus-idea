@@ -119,6 +119,9 @@
     "rule_tests": "monitoring/prometheus/tests/lotus-idea-service-slo.test.yml",
     "dashboard": "monitoring/grafana/dashboards/lotus-idea-service-slo.json",
     "contract_gate": "scripts/service_slo_capacity_contract_gate.py",
+    "baseline_evidence_model": "src/app/application/service_capacity_baseline.py",
+    "baseline_generator": "scripts/generate_service_capacity_baseline.py",
+    "baseline_contract_gate": "scripts/service_capacity_baseline_contract_gate.py",
     "operations_doc": "docs/operations/service-slo-capacity.md",
     "operations_wiki": "wiki/Service-SLO-And-Capacity.md",
     "rfc_slice": "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-15-observability-security-entitlements-and-operations.md"

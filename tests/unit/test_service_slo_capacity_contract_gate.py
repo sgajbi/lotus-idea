@@ -30,6 +30,21 @@ def test_service_slo_capacity_contract_passes_current_foundation() -> None:
     assert module.validate_service_slo_capacity_contract() == []
 
 
+def test_service_slo_capacity_contract_names_baseline_automation() -> None:
+    module = _load_gate()
+    payload = _payload(module)
+
+    assert payload["source_of_truth"]["baseline_evidence_model"].endswith(
+        "service_capacity_baseline.py"
+    )
+    assert payload["source_of_truth"]["baseline_generator"].endswith(
+        "generate_service_capacity_baseline.py"
+    )
+    assert payload["source_of_truth"]["baseline_contract_gate"].endswith(
+        "service_capacity_baseline_contract_gate.py"
+    )
+
+
 def test_service_slo_capacity_contract_blocks_false_certification() -> None:
     module = _load_gate()
     payload = _payload(module)
