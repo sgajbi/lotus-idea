@@ -13,13 +13,7 @@ from app.observability import (
 
 PayloadValidator = Callable[[dict[str, Any]], list[str]]
 SourceOfTruthValidator = Callable[..., list[str]]
-OperationsContractValidators = tuple[
-    PayloadValidator,
-    SourceOfTruthValidator,
-    PayloadValidator,
-    PayloadValidator,
-    PayloadValidator,
-]
+OperationsContractValidators = tuple[Callable[..., list[str]], ...]
 
 
 def validate_operations_contract_payload(
@@ -28,19 +22,14 @@ def validate_operations_contract_payload(
     repository_root: Path,
     validators: OperationsContractValidators,
 ) -> list[str]:
-    (
-        validate_header,
-        validate_source_of_truth,
-        validate_dashboard_controls,
-        validate_alert_candidates,
-        validate_non_proof_boundaries,
-    ) = validators
+    if len(validators) < 2:
+        raise ValueError("operations contracts require header and source-of-truth validators")
+    validate_header, validate_source_of_truth, *section_validators = validators
     errors: list[str] = []
     errors.extend(validate_header(payload))
     errors.extend(validate_source_of_truth(payload, repository_root=repository_root))
-    errors.extend(validate_dashboard_controls(payload))
-    errors.extend(validate_alert_candidates(payload))
-    errors.extend(validate_non_proof_boundaries(payload))
+    for validate_section in section_validators:
+        errors.extend(validate_section(payload))
     return sorted(errors)
 
 

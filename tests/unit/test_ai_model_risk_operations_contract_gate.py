@@ -91,6 +91,19 @@ def test_ai_model_risk_operations_contract_gate_blocks_control_drift() -> None:
     assert any("missing alert candidates" in error for error in errors)
 
 
+def test_ai_model_risk_operations_contract_gate_blocks_action_policy_drift() -> None:
+    module = _load_gate()
+    payload = _current_payload(module)
+    payload["action_content_policy_version"] = "local-policy"
+    payload["action_content_policy"]["accepted_label_posture"] = "provider_authored"
+    payload["action_content_policy"]["raw_rejected_label_returned"] = True
+
+    errors = module.validate_ai_model_risk_operations_contract_payload(payload)
+
+    assert any("action_content_policy_version" in error for error in errors)
+    assert "AI model-risk action_content_policy must match code-owned safety posture" in errors
+
+
 def test_ai_model_risk_operations_contract_gate_blocks_bad_source_truth() -> None:
     module = _load_gate()
     payload = _current_payload(module)

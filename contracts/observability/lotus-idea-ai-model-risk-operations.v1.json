@@ -7,9 +7,11 @@
   "supported_feature_promoted": false,
   "dashboard_certified": true,
   "alert_certified": true,
+  "action_content_policy_version": "lotus-idea.ai-action-content-policy.v1",
   "source_of_truth": {
     "ai_readiness_source": "src/app/application/ai_governance.py",
     "ai_api_source": "src/app/api/ai_governance.py",
+    "action_policy_source": "src/app/domain/ai_action_policy.py",
     "operation_metric_contract": "contracts/observability/lotus-idea-operation-metrics.v1.json",
     "contract_gate": "scripts/ai_model_risk_operations_contract_gate.py",
     "proof_contract_gate": "scripts/ai_model_risk_operations_proof_contract_gate.py",
@@ -21,6 +23,18 @@
     "operations_runbook": "wiki/Operations-Runbook.md",
     "rfc_slice_09": "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-09-governed-ai-explanation-and-model-risk-controls.md",
     "rfc_slice_15": "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-15-observability-security-entitlements-and-operations.md"
+  },
+  "action_content_policy": {
+    "input_posture": "untrusted_provider_content",
+    "accepted_label_posture": "canonical_server_owned",
+    "unsupported_script_posture": "fail_closed_ambiguous",
+    "blocked_reasons": [
+      "ambiguous_action_content",
+      "forbidden_action_content",
+      "forbidden_action_type"
+    ],
+    "raw_rejected_label_persisted": false,
+    "raw_rejected_label_returned": false
   },
   "model_risk_dashboard_controls": [
     {

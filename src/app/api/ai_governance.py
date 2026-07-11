@@ -342,7 +342,9 @@ AI_EXPLANATION_READINESS_ROUTE: RouteMetadata = {
     "summary": "Get AI explanation readiness",
     "description": (
         "Returns source-safe operator readiness for the internal AI explanation foundation. "
-        "The endpoint reports guardrail availability and certification blockers only; it does "
+        "The endpoint reports guardrail availability, the versioned deterministic action-content "
+        "policy, and certification blockers only. Forbidden-action blocking covers structured "
+        "types and untrusted label content; accepted labels are server-owned. It does "
         "not invoke lotus-ai runtime workflows, expose prompts or provider payloads, disclose "
         "candidate evidence, grant downstream authority, or promote a supported feature."
     ),
@@ -366,6 +368,7 @@ AI_EXPLANATION_READINESS_ROUTE: RouteMetadata = {
                         "redactedEvidenceEnvelopeAvailable": True,
                         "unsupportedClaimBlockingAvailable": True,
                         "forbiddenActionBlockingAvailable": True,
+                        "actionContentPolicyVersion": ("lotus-idea.ai-action-content-policy.v1"),
                         "durableAiLineageStoreBacked": False,
                         "modelRiskOperationsContractAvailable": True,
                         "modelRiskDashboardContractAvailable": True,

@@ -13,6 +13,10 @@ if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
 from app.observability import OperationOutcome  # noqa: E402
+from app.domain.ai_action_policy import (  # noqa: E402
+    AI_ACTION_POLICY_VERSION,
+    AIActionPolicyReason,
+)
 
 try:
     from scripts.operations_contract_validators import (  # noqa: E402
@@ -86,6 +90,7 @@ def _validate_header(payload: dict[str, Any]) -> list[str]:
         "supported_feature_promoted": False,
         "dashboard_certified": True,
         "alert_certified": True,
+        "action_content_policy_version": AI_ACTION_POLICY_VERSION,
     }
     for key, value in expected.items():
         if payload.get(key) != value:
@@ -102,6 +107,7 @@ def _validate_source_of_truth(
     required_keys = {
         "ai_readiness_source",
         "ai_api_source",
+        "action_policy_source",
         "operation_metric_contract",
         "contract_gate",
         "proof_contract_gate",
@@ -138,6 +144,25 @@ def _validate_source_of_truth(
         if not (repository_root / path).exists():
             errors.append(f"AI model-risk operations contract source_of_truth.{key} path missing")
     return errors
+
+
+def _validate_action_content_policy(payload: dict[str, Any]) -> list[str]:
+    policy = payload.get("action_content_policy")
+    expected = {
+        "input_posture": "untrusted_provider_content",
+        "accepted_label_posture": "canonical_server_owned",
+        "unsupported_script_posture": "fail_closed_ambiguous",
+        "blocked_reasons": sorted(
+            reason.value
+            for reason in AIActionPolicyReason
+            if reason is not AIActionPolicyReason.ALLOWED
+        ),
+        "raw_rejected_label_persisted": False,
+        "raw_rejected_label_returned": False,
+    }
+    if policy != expected:
+        return ["AI model-risk action_content_policy must match code-owned safety posture"]
+    return []
 
 
 def _validate_dashboard_controls(payload: dict[str, Any]) -> list[str]:
@@ -240,6 +265,7 @@ def _validate_non_proof_boundaries(payload: dict[str, Any]) -> list[str]:
 OPERATIONS_CONTRACT_VALIDATORS = (
     _validate_header,
     _validate_source_of_truth,
+    _validate_action_content_policy,
     _validate_dashboard_controls,
     _validate_alert_candidates,
     _validate_non_proof_boundaries,
