@@ -56,7 +56,8 @@ REQUIRED_BLOCKERS = {
     "load_soak_attestation_missing",
     "dependency_recovery_attestation_missing",
     "postgres_saturation_evidence_missing",
-    "cost_resource_evidence_missing",
+    "production_like_resource_attestation_missing",
+    "cost_attribution_evidence_missing",
 }
 FORBIDDEN_LABELS = {
     "candidate_id",
@@ -267,6 +268,8 @@ def _validate_source_truth(payload: dict[str, Any], repository_root: Path) -> li
         "resource_probe_adapter",
         "resource_baseline_runner",
         "resource_baseline_contract_gate",
+        "resource_proof_gate",
+        "resource_attestation_workflow",
         "postgres_threshold_proof_model",
         "postgres_threshold_proof_adapter",
         "postgres_threshold_proof_runner",

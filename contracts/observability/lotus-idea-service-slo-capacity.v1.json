@@ -142,6 +142,8 @@
     "resource_probe_adapter": "src/app/infrastructure/prometheus_resource_probe.py",
     "resource_baseline_runner": "scripts/run_service_resource_baseline.py",
     "resource_baseline_contract_gate": "scripts/service_resource_baseline_contract_gate.py",
+    "resource_proof_gate": "scripts/service_resource_proof_gate.py",
+    "resource_attestation_workflow": ".github/workflows/service-load-soak-evidence.yml",
     "postgres_threshold_proof_model": "src/app/application/postgres_capacity_threshold_proof.py",
     "postgres_threshold_proof_adapter": "src/app/infrastructure/postgres_capacity_stress.py",
     "postgres_threshold_proof_runner": "scripts/run_postgres_capacity_threshold_proof.py",
@@ -159,7 +161,8 @@
     "load_soak_attestation_missing",
     "dependency_recovery_attestation_missing",
     "postgres_saturation_evidence_missing",
-    "cost_resource_evidence_missing"
+    "production_like_resource_attestation_missing",
+    "cost_attribution_evidence_missing"
   ],
   "non_proof_boundaries": [
     "This service/workflow SLO contract is distinct from the mesh data-product SLO contract.",

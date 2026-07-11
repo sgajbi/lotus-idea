@@ -224,6 +224,32 @@ def test_dependency_recovery_workflow_rejects_automatic_or_untrusted_shape(
     assert any("capacity-production-like" in error for error in errors)
 
 
+def test_load_soak_workflow_requires_concurrent_resource_proof_and_separate_attestation(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    workflow = tmp_path / ".github" / "workflows" / "service-load-soak-evidence.yml"
+    workflow.parent.mkdir(parents=True)
+    workflow.write_text(
+        "\n".join(
+            [
+                "schedule:",
+                *[f"--scenario {scenario}" for scenario in sorted(module.EXPECTED_WORKFLOWS)],
+                "make service-load-soak-proof-gate",
+                "actions/attest-build-provenance@one",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    errors = module._validate_load_soak_workflow(tmp_path)
+
+    assert "load soak workflow must not run on a schedule" in errors
+    assert "load soak workflow must attest load and resource artifacts separately" in errors
+    assert any("service-resource-proof-gate" in error for error in errors)
+    assert any("run_service_resource_baseline.py" in error for error in errors)
+
+
 def test_downstream_capacity_seed_gate_rejects_missing_layered_sources(
     tmp_path: Path,
 ) -> None:

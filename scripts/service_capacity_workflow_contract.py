@@ -93,6 +93,7 @@ def validate_load_soak_workflow(repository_root: Path) -> list[str]:
         "runs-on: [self-hosted, linux, lotus-capacity-evidence]",
         "environment: capacity-production-like",
         "LOTUS_IDEA_DATABASE_URL: ${{ secrets.LOTUS_IDEA_CAPACITY_DATABASE_URL }}",
+        "SERVICE_RESOURCE_METRICS_URL: ${{ vars.LOTUS_IDEA_RESOURCE_METRICS_URL }}",
         "SEED_SYNTHETIC_LOTUS_IDEA_CAPACITY_RESOURCE",
         "--environment-profile production-like",
         f"--request-count {MINIMUM_LOAD_SOAK_SAMPLES}",
@@ -100,6 +101,14 @@ def validate_load_soak_workflow(repository_root: Path) -> list[str]:
         f"--minimum-observation-seconds {int(MINIMUM_LOAD_SOAK_SECONDS)}",
         "--downstream-capacity-seed",
         "make service-load-soak-proof-gate",
+        "scripts/run_service_resource_baseline.py",
+        "--sample-count 61",
+        "--sample-interval-seconds 60",
+        "resource_pid=$!",
+        "load_pid=$!",
+        'wait -n "${resource_pid}" "${load_pid}"',
+        "make service-resource-proof-gate",
+        "subject-path: output/observability/service-resource-baseline.json",
         ATTESTATION_ACTION,
     )
     errors = [
@@ -112,8 +121,17 @@ def validate_load_soak_workflow(repository_root: Path) -> list[str]:
         errors.append("load soak workflow must keep dependency recovery evidence separate")
     if "schedule:" in workflow:
         errors.append("load soak workflow must not run on a schedule")
-    gate = workflow.find("make service-load-soak-proof-gate")
-    attestation = workflow.find("actions/attest-build-provenance@")
-    if gate < 0 or attestation < 0 or gate > attestation:
+    load_gate = workflow.find("make service-load-soak-proof-gate")
+    resource_gate = workflow.find("make service-resource-proof-gate")
+    attestations = [
+        index
+        for index in range(len(workflow))
+        if workflow.startswith("actions/attest-build-provenance@", index)
+    ]
+    if len(attestations) != 2:
+        errors.append("load soak workflow must attest load and resource artifacts separately")
+    elif load_gate < 0 or load_gate > attestations[0]:
         errors.append("load soak proof gate must run before provenance attestation")
+    elif resource_gate < 0 or resource_gate > attestations[1]:
+        errors.append("resource proof gate must run before provenance attestation")
     return errors
