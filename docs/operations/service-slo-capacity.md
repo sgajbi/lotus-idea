@@ -179,14 +179,34 @@ Provide transient authorization or trusted-caller assertions only through
 `LOTUS_IDEA_CAPACITY_AUTHORIZATION` or
 `LOTUS_IDEA_CAPACITY_TRUSTED_CALLER_CONTEXT`.
 
-The downstream scenario additionally requires
-`LOTUS_IDEA_CAPACITY_DOWNSTREAM_PATH`. Only the governed conversion-intent and
-report evidence-pack submission route shapes are accepted. The referenced
+The downstream scenario requires either a validated seed manifest through
+`--downstream-capacity-seed` or the diagnostic
+`LOTUS_IDEA_CAPACITY_DOWNSTREAM_PATH` fallback. Only governed conversion-intent
+and report evidence-pack submission route shapes are accepted. The referenced
 resource must be synthetic, pre-seeded through governed Idea lifecycle APIs,
-and isolated from client activity. Current canonical front-office automation
-does not yet create this capacity resource, so protected downstream load/soak
-execution remains blocked rather than using a hard-coded or discovered client
-identifier.
+and isolated from client activity.
+
+Create the deterministic synthetic conversion intent through the layered seed
+automation:
+
+```powershell
+make downstream-capacity-seed `
+  SERVICE_CAPACITY_BASE_URL=http://localhost:8330 `
+  DOWNSTREAM_CAPACITY_SEED_CONFIRMATION=SEED_SYNTHETIC_LOTUS_IDEA_CAPACITY_RESOURCE
+```
+
+The command calls candidate persistence, ordered lifecycle transitions, human
+review approval, and conversion-intent recording through the public API. It
+uses only the `capacity-synthetic-*` scope, deterministic replay identities,
+environment-only credentials, bounded responses, and atomic output. The seed
+manifest is explicitly `seed_only_not_capacity_evidence`, non-certifying, and
+non-promoting. Bind it to a workload with
+`SERVICE_CAPACITY_DOWNSTREAM_SEED_ARG="--downstream-capacity-seed <path>"`;
+the runner requires exact commit/branch and synthetic provenance.
+
+Canonical front-office automation does not yet invoke this command, so
+protected downstream load/soak execution remains blocked rather than using a
+hard-coded or discovered client identifier.
 
 The dependency-failure scenario accepts only a classified source-unavailable
 outcome: either aggregate `sourceFailureCounts` containing one or more

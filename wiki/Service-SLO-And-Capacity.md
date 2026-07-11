@@ -26,10 +26,14 @@ No tenant, client, portfolio, candidate, event, request, idempotency,
 correlation, or trace identifier is permitted as a metric label.
 
 Downstream capacity requires an allowlisted path to a pre-seeded synthetic
-conversion intent or report evidence pack. That path and its unique transient
-idempotency keys are never written to evidence. Canonical seed automation does
-not yet provide this resource, so downstream load/soak certification remains
-blocked.
+conversion intent or report evidence pack. `make downstream-capacity-seed`
+creates the conversion intent through existing candidate, lifecycle, review,
+and conversion APIs and emits an atomic non-certifying seed manifest. The
+workload runner validates exact commit/branch and synthetic posture before
+using the manifest. Resource identity and unique transient workload
+idempotency keys are never written to capacity evidence. Canonical front-office
+automation does not yet invoke this command, so live downstream load/soak
+certification remains blocked.
 
 ## First Response
 

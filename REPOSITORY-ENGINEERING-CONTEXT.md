@@ -1489,6 +1489,17 @@ suitability, execution, report rendering/archive, or downstream outcomes. Do
 not claim downstream load coverage until canonical automation seeds and proves
 the synthetic resource.
 
+Use `make downstream-capacity-seed` to create the governed synthetic handoff
+resource. The CLI must remain layered through
+`app.application.downstream_capacity_seed`, the narrow seed port, and
+`HttpDownstreamCapacitySeed`; it must call existing public APIs instead of
+writing repository tables directly. Preserve the `capacity-synthetic-*` scope,
+deterministic replay identity, exact confirmation, bounded/source-safe response
+handling, atomic manifest, and seed-only non-certifying posture. Workload
+consumption must validate schema, commit, branch, synthetic claim, and route.
+Platform/Workbench canonical automation integration is separate evidence and
+must not be inferred from the Idea-local command.
+
 Capacity probes must cross a narrow port and return bounded aggregates only.
 Keep request and response bodies, URLs, DSNs, credentials, caller assertions,
 and business identifiers transient inside infrastructure adapters. Require an

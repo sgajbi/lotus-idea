@@ -364,6 +364,18 @@ scenario set is contract-gated against runtime vocabulary. Canonical automation
 does not yet seed a dedicated synthetic handoff resource, so production-like
 downstream load/soak evidence remains blocked.
 
+Idea-local seed automation now closes the resource-construction gap through a
+layered application use case, narrow seed port, bounded HTTP adapter, guarded
+CLI, and repository-native Make target. It creates deterministic synthetic
+high-cash candidate evidence, advances only the governed lifecycle sequence,
+records explicit advisor review approval, and creates an Advise proposal
+conversion intent. Credentials remain environment-only; response size, status,
+and shape fail closed; every mutation is idempotent; and the atomic manifest is
+explicitly seed-only, non-certifying, and non-promoting. Capacity runs accept
+the manifest only when schema, synthetic posture, commit, branch, and route
+shape match. Canonical Workbench/platform automation still needs to invoke and
+prove this command before protected load/soak execution can begin.
+
 ## Required Work
 
 1. Add metrics, logs, traces, audit events, health/readiness diagnostics, and
