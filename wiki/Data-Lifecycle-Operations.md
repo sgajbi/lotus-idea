@@ -64,6 +64,12 @@ atomic redaction, purge, and concurrent delivery-claim serialization tests.
 Telemetry publishes aggregate state, expired-retention, and missing-control
 counts without candidate, tenant, client, or portfolio identifiers.
 
+AI explanation lineage stores output-integrity digests and versions, not raw
+prompts or unrestricted provider output. These records use the seven-year
+regulated-advisory policy and inherit legal-hold, erasure, and purge controls.
+Migration `010` marks pre-integrity rows as unverifiable; operators must not
+represent those rows as content-level audit proof.
+
 ## Remaining Blockers
 
 - Bank approval for jurisdiction-specific durations and start events.

@@ -133,6 +133,14 @@ Implemented in this slice:
     tests cover directive hiding behind allowed enums, case/punctuation/common
     substitution obfuscation, unsupported scripts, canonical-label projection,
     source-safe audit, lineage versioning, and replay/conflict behavior.
+22. `src/app/domain/ai_output_integrity.py` and migration `010` bind every
+    accepted, blocked, and fallback result to
+    `lotus-idea.ai-output-integrity.v1`. The ordered canonical payload covers
+    advisor-visible explanation/claim/action content plus workflow/evaluator
+    and policy metadata; persistence retains only the digest and version.
+    PostgreSQL hydration verifies column/JSON parity and the enclosing lineage
+    hash. Pre-v1 rows are explicitly unverifiable rather than retroactively
+    certified.
 
 Validation evidence from the implementation slice:
 

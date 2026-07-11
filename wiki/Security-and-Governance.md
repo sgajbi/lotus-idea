@@ -159,6 +159,14 @@ Accepted actions use canonical server-owned labels. Rejected raw labels are not
 returned, persisted, or copied into audit attributes; bounded policy reasons
 and the policy version remain available for model-risk review and replay.
 
+Every accepted, blocked, and fallback result also carries
+`lotus-idea.ai-output-integrity.v1`. Its digest commits to ordered explanation,
+claim, action, workflow/evaluator, and policy content. Only the digest and
+version enter lineage and audit evidence; unrestricted provider text does not.
+Exact governed replay verifies the digest without another provider call, while
+changed content conflicts. PostgreSQL reload rejects column/JSON/hash mismatch,
+and pre-v1 records remain explicitly unverifiable.
+
 Operation-event governance:
 
 1. high-cash, candidate persistence, candidate evidence replay, lifecycle,

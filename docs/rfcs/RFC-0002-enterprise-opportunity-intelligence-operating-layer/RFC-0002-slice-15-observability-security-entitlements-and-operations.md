@@ -18,6 +18,13 @@ excluded from responses, persistence, and audit attributes. The readiness
 endpoint and model-risk operations contract expose the same policy version
 without claiming provider-runtime or supported-feature readiness.
 
+AI lineage now also exposes `lotus-idea.ai-output-integrity.v1`. The digest
+binds ordered explanation, claim, action, workflow/evaluator, and policy
+content into replay/conflict identity while retaining no unrestricted output
+text. Model-risk and lifecycle contracts govern digest semantics, access,
+seven-year regulated-advisory retention, and explicit pre-v1 unverifiable
+migration posture.
+
 Implementation evidence:
 
 1. `src/app/observability/logging.py` defines bounded operation, outcome, and

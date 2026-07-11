@@ -631,6 +631,14 @@ rejected raw labels out of persistence, audit attributes, and API responses.
 This is an Idea-owned deterministic output-governance boundary, not ownership
 of provider execution, prompts, RAG, or AI runtime infrastructure.
 
+AI explanation replay identity must include
+`lotus-idea.ai-output-integrity.v1`. Commit to ordered explanation, claim,
+action, workflow/evaluator, and policy content; persist only the source-safe
+digest/version; return the same values through the governed evaluation API;
+and fail PostgreSQL hydration on column/JSON/hash mismatch. Pre-v1 rows are
+explicitly unverifiable and must never be described as retroactive content
+proof. Retention follows the Idea regulated-advisory lifecycle policy.
+
 Non-AI operator workflow operations proof is limited to source-safe dashboard
 and alert visibility over implemented source-ingestion, outbox delivery,
 downstream realization, runtime trust telemetry, and implementation-proof

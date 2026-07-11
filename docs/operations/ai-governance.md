@@ -50,6 +50,9 @@ RFC-0002 Slice 09 adds `src/app/domain/ai_governance.py`,
     labels as untrusted, validates both the action enum and normalized label
     content, and replaces every accepted label with server-owned canonical
     wording.
+15. versioned output-content integrity that commits to ordered explanation,
+    claim, action, workflow/evaluator, and policy content without persisting
+    unrestricted provider-authored text.
 
 The API preserves source authority: AI output cannot mutate candidate score,
 lifecycle, source facts, review state, conversion state, or downstream workflow
@@ -154,6 +157,31 @@ The current lineage record is an audit and replay foundation owned by
 `lotus-idea`. It is intentionally source-safe and excludes raw prompts,
 provider responses, source routes, trace ids, correlation ids, portfolio ids,
 client ids, request bodies, response bodies, and free-form source payloads.
+
+### Content Integrity
+
+`lotus-idea.ai-output-integrity.v1` creates a deterministic SHA-256 commitment
+for accepted, blocked, and fallback results. The canonical payload covers:
+
+1. explanation text with Unicode NFC and line-ending normalization,
+2. ordered claim identifiers, text, and source-product bindings,
+3. ordered action types and submitted labels,
+4. workflow-pack, evaluator, action-policy, verifier-policy, and fallback metadata.
+
+Order and whitespace remain meaningful. The lineage store retains only the
+integrity version and digest, then includes both in the wider lineage hash. The
+evaluation API returns the same version and digest, so an authorized caller can
+replay an exact governed request and verify content identity without invoking a
+provider. Changed explanation text, claim text, action labels, ordering, or
+policy metadata produces a distinct digest and a request-id conflict.
+
+PostgreSQL stores the version/digest in dedicated columns and source-safe JSON.
+Hydration fails closed when the column and JSON values diverge or when a v1
+lineage hash no longer matches. Migration `010` marks records written before
+this contract as `pre-v1-unverifiable`; it does not fabricate retroactive
+content proof. AI lineage follows
+`lotus-idea:regulated-advisory-evidence:seven-year:v1`, subject to legal hold,
+erasure, and purge controls in the data-lifecycle contract.
 
 `lotus-ai` remains the owner for runtime workflow execution, prompt registry,
 RAG context construction, provider telemetry, evaluation telemetry, and

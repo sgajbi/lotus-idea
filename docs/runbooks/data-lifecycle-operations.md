@@ -23,6 +23,12 @@ and retain the external authority decision.
 | Report and Archive records | `lotus-report`, `lotus-archive` | Preserve local references; do not claim rendering or archive authority. |
 | AI provider retention | `lotus-ai` and the approved provider owner | Redact local lineage; require external deletion confirmation for certification. |
 
+Idea-local AI lineage retains only governed identifiers, output-integrity
+digest/version, bounded posture, and audit metadata under the seven-year
+regulated-advisory policy. It does not retain raw prompts or unrestricted
+provider output. Migration `010` marks pre-integrity rows as unverifiable;
+legal hold preserves that honest posture rather than upgrading it to proof.
+
 The machine-readable inventory is
 [`contracts/operations/lotus-idea-data-lifecycle.v1.json`](../../contracts/operations/lotus-idea-data-lifecycle.v1.json).
 It defines retention policies, field-classification profiles, residency,
