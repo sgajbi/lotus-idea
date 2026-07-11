@@ -1,0 +1,137 @@
+{
+  "contract_id": "lotus-idea-service-slo-capacity",
+  "contract_version": "1.0.0",
+  "repository": "lotus-idea",
+  "lifecycle_status": "implemented_contract_foundation",
+  "certification_status": "not_certified",
+  "supported_feature_promoted": false,
+  "owner": {
+    "service_owner": "lotus-idea",
+    "on_call_role": "opportunity-intelligence-service-owner",
+    "escalation_runbook": "docs/operations/service-slo-capacity.md"
+  },
+  "applicability": {
+    "profiles": ["production", "production-like"],
+    "measurement_window_days": 28,
+    "minimum_request_volume": 1000,
+    "low_traffic_posture": "insufficient_sample_not_certified"
+  },
+  "service_objectives": [
+    {
+      "workflow": "api",
+      "availability_target": 0.999,
+      "latency_p95_seconds": 0.5,
+      "latency_p99_seconds": 1.5,
+      "error_budget_fraction": 0.001,
+      "measurement_source": "lotus_idea_http_requests_total_and_duration_seconds",
+      "certification_status": "baseline_required"
+    },
+    {
+      "workflow": "source_ingestion",
+      "availability_target": 0.99,
+      "latency_p95_seconds": 300.0,
+      "latency_p99_seconds": 600.0,
+      "error_budget_fraction": 0.01,
+      "measurement_source": "lotus_idea_workflow_runs_total_and_duration_seconds",
+      "certification_status": "baseline_required"
+    },
+    {
+      "workflow": "outbox_delivery",
+      "availability_target": 0.999,
+      "latency_p95_seconds": 60.0,
+      "latency_p99_seconds": 300.0,
+      "error_budget_fraction": 0.001,
+      "measurement_source": "lotus_idea_workflow_runs_total_and_duration_seconds",
+      "certification_status": "baseline_required"
+    },
+    {
+      "workflow": "downstream_submission",
+      "availability_target": 0.99,
+      "latency_p95_seconds": 2.0,
+      "latency_p99_seconds": 5.0,
+      "error_budget_fraction": 0.01,
+      "measurement_source": "lotus_idea_dependency_requests_total_and_duration_seconds",
+      "certification_status": "baseline_required"
+    },
+    {
+      "workflow": "postgresql",
+      "availability_target": 0.999,
+      "latency_p95_seconds": 0.1,
+      "latency_p99_seconds": 0.5,
+      "error_budget_fraction": 0.001,
+      "measurement_source": "lotus_idea_postgres_operations_total_and_duration_seconds",
+      "certification_status": "baseline_required"
+    }
+  ],
+  "capacity_budgets": {
+    "source_ingestion_batch_max_items": 100,
+    "outbox_delivery_batch_max_items": 100,
+    "outbox_max_retry_count": 3,
+    "source_dependency_timeout_seconds": 2.0,
+    "source_dependency_max_connections": 20,
+    "source_dependency_max_keepalive_connections": 10,
+    "postgres_pool_utilization_warn_fraction": 0.7,
+    "postgres_pool_utilization_shed_fraction": 0.9,
+    "request_body_max_bytes": 1048576,
+    "capacity_posture": "baseline_required"
+  },
+  "queue_objectives": {
+    "outbox_oldest_ready_age_warn_seconds": 300,
+    "outbox_oldest_ready_age_critical_seconds": 900,
+    "source_ingestion_schedule_lag_warn_seconds": 300,
+    "source_ingestion_schedule_lag_critical_seconds": 900
+  },
+  "error_budget_policy": {
+    "fast_burn": {"window_minutes": 60, "burn_rate": 14.4},
+    "slow_burn": {"window_minutes": 360, "burn_rate": 6.0},
+    "long_window": {"window_minutes": 4320, "burn_rate": 1.0},
+    "exhausted_action": "freeze_promotion_and_reduce_nonessential_workload",
+    "dependency_failure_classification": "separate_from_service_saturation"
+  },
+  "metric_label_policy": {
+    "allowed": [
+      "dependency",
+      "method",
+      "operation",
+      "outcome",
+      "repository",
+      "route",
+      "status_class",
+      "workflow"
+    ],
+    "forbidden": [
+      "candidate_id",
+      "client_id",
+      "correlation_id",
+      "event_id",
+      "idempotency_key",
+      "portfolio_id",
+      "request_id",
+      "tenant_id",
+      "trace_id"
+    ]
+  },
+  "source_of_truth": {
+    "mesh_slo_contract": "contracts/mesh-slo/lotus-idea-idea-candidate.slo.v1.json",
+    "operation_metric_contract": "contracts/observability/lotus-idea-operation-metrics.v1.json",
+    "contract_gate": "scripts/service_slo_capacity_contract_gate.py",
+    "operations_doc": "docs/operations/service-slo-capacity.md",
+    "rfc_slice": "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-15-observability-security-entitlements-and-operations.md"
+  },
+  "certification_blockers": [
+    "runtime_sli_metrics_missing",
+    "error_budget_recording_rules_missing",
+    "slo_dashboard_missing",
+    "burn_rate_alerts_missing",
+    "load_and_soak_baseline_missing",
+    "dependency_failure_baseline_missing",
+    "postgres_saturation_evidence_missing",
+    "cost_resource_baseline_missing"
+  ],
+  "non_proof_boundaries": [
+    "This service/workflow SLO contract is distinct from the mesh data-product SLO contract.",
+    "Target values are initial engineering budgets and are not production certification without measured baseline evidence.",
+    "This contract does not certify horizontal scale, multi-process safety, infrastructure capacity, or cloud cost.",
+    "This contract does not promote a supported business feature."
+  ]
+}
