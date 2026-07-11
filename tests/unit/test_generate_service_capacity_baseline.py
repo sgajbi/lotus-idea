@@ -31,7 +31,6 @@ def _input() -> dict[str, Any]:
         "runId": "local-1",
         "observedWindowSeconds": 30.0,
         "postgresThresholdProof": None,
-        "costResourceMeasured": False,
         "measurements": [
             {
                 "scenario": "dependency_failure",

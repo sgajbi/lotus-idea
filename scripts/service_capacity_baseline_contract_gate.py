@@ -77,6 +77,8 @@ def validate_contract() -> list[str]:
         errors.append(
             "capacity generation must accept proof, not a caller-asserted saturation boolean"
         )
+    if "costResourceMeasured" in INPUT_KEYS:
+        errors.append("capacity generation must not accept caller-asserted cost evidence")
 
     proof = execute_postgres_capacity_threshold_proof(
         stress_port=_ThresholdProofPort(),

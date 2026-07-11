@@ -85,7 +85,6 @@ def build_service_capacity_baseline(
     observed_window_seconds: float,
     postgres_threshold_proof: dict[str, Any] | None = None,
     postgres_max_connection_utilization_fraction: float | None = None,
-    cost_resource_measured: bool = False,
 ) -> dict[str, Any]:
     if environment_profile not in ENVIRONMENT_PROFILES:
         raise ValueError("environment_profile must be test, production-like, or production")
@@ -119,7 +118,7 @@ def build_service_capacity_baseline(
         scenarios=scenarios,
         observed_window_seconds=observed_window_seconds,
         postgres_saturation_measured=postgres_saturation_measured,
-        cost_resource_measured=cost_resource_measured,
+        cost_resource_measured=False,
     )
     artifact = {
         "schemaVersion": SCHEMA_VERSION,
@@ -144,7 +143,7 @@ def build_service_capacity_baseline(
             "postgresMaxConnectionUtilizationFraction": (
                 postgres_max_connection_utilization_fraction
             ),
-            "costResourceMeasured": cost_resource_measured,
+            "costResourceMeasured": False,
         },
         "certificationReady": not blockers,
         "certificationBlockers": blockers,

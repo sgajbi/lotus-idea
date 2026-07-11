@@ -103,7 +103,6 @@ def test_missing_scenarios_and_dependency_recovery_remain_explicit() -> None:
         run_id="ci-1",
         observed_window_seconds=3_600,
         postgres_threshold_proof=_threshold_proof(),
-        cost_resource_measured=True,
     )
 
     assert artifact["certificationBlockers"] == [
@@ -111,6 +110,7 @@ def test_missing_scenarios_and_dependency_recovery_remain_explicit() -> None:
         "minimum_sample_volume_missing",
         "dependency_recovery_evidence_missing",
         "postgres_saturation_evidence_missing",
+        "cost_resource_evidence_missing",
     ]
     assert artifact["resourceEvidence"]["postgresSaturationMeasured"] is False
     assert artifact["resourceEvidence"]["postgresThresholdProofValidated"] is True
