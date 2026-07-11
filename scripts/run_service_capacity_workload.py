@@ -24,7 +24,6 @@ from app.application.capacity_evidence_qualification import (
     MINIMUM_LOAD_SOAK_SAMPLES,
     MINIMUM_LOAD_SOAK_SECONDS,
 )
-from app.application.cost_attribution_qualification import VerifiedPlatformCostAttestation
 from app.application.service_capacity_workload import (
     CapacityWorkloadPlan,
     STEADY_STATE_SCENARIOS,
@@ -35,9 +34,6 @@ from app.application.service_capacity_workload import (
 )
 from app.infrastructure.http_capacity_probe import HttpCapacityProbe
 from app.infrastructure.github_capacity_attestation import GitHubCapacityAttestationVerifier
-from app.infrastructure.github_cost_attribution_attestation import (
-    GitHubCostAttributionAttestationVerifier,
-)
 from app.infrastructure.capacity_artifact_io import (
     read_optional_capacity_proof as _read_optional_proof,
     read_optional_json_object as _read_optional_json_object,
@@ -45,6 +41,10 @@ from app.infrastructure.capacity_artifact_io import (
     write_json_atomic as _write_json_atomic,
 )
 from app.infrastructure.postgres_capacity_probe import PostgresCapacityProbe
+from app.infrastructure.service_capacity_workload_inputs import (
+    required_database_url,
+    verify_optional_cost_attribution_attestation,
+)
 from app.ports.capacity_probe import CapacityProbeRequest
 
 
@@ -331,7 +331,7 @@ def main(argv: list[str] | None = None) -> int:
         cost_attribution_artifact = _read_optional_json_object(
             args.cost_attribution_artifact, name="platform cost-attribution artifact"
         )
-        cost_attribution_attestation = _verify_optional_cost_attribution_attestation(
+        cost_attribution_attestation = verify_optional_cost_attribution_attestation(
             verification_requested=args.verify_cost_attribution_attestation,
             artifact_path=args.cost_attribution_artifact,
             artifact=cost_attribution_artifact,
@@ -383,7 +383,7 @@ def _execute_measurements(
         paced_result = execute_paced_capacity_soak(
             plans=plans,
             http_probe=probe,
-            postgres_probe=PostgresCapacityProbe(database_url=_required_database_url()),
+            postgres_probe=PostgresCapacityProbe(database_url=required_database_url()),
             postgres_request_count=args.request_count,
             minimum_observation_seconds=args.minimum_observation_seconds,
         )
@@ -412,7 +412,7 @@ def _execute_measurements(
     postgres_max_utilization = None
     if "postgresql" in args.scenario:
         postgres_result = execute_postgres_capacity_workload(
-            probe=PostgresCapacityProbe(database_url=_required_database_url()),
+            probe=PostgresCapacityProbe(database_url=required_database_url()),
             request_count=args.request_count,
             max_concurrency=args.concurrency,
         )
@@ -443,13 +443,6 @@ def validate_paced_load_soak_request(
         raise ValueError("paced load soak does not meet the minimum observation window")
 
 
-def _required_database_url() -> str:
-    database_url = os.getenv("LOTUS_IDEA_DATABASE_URL", "").strip()
-    if not database_url:
-        raise ValueError("LOTUS_IDEA_DATABASE_URL is required for the postgresql scenario")
-    return database_url
-
-
 def _verify_optional_attestation(
     *,
     verification_requested: bool,
@@ -471,31 +464,6 @@ def _verify_optional_attestation(
     return GitHubCapacityAttestationVerifier(signer_workflow=signer_workflow).verify(
         artifact_path=artifact_path,
         source_commit_sha=proof_commit,
-    )
-
-
-def _verify_optional_cost_attribution_attestation(
-    *,
-    verification_requested: bool,
-    artifact_path: Path | None,
-    artifact: dict[str, object] | None,
-    environment_profile: str,
-) -> VerifiedPlatformCostAttestation | None:
-    if not verification_requested:
-        return None
-    if artifact_path is None or artifact is None:
-        raise ValueError("cost-attribution verification requires a platform artifact")
-    if environment_profile != "production-like":
-        raise ValueError("attested cost attribution requires production-like profile")
-    provenance = artifact.get("provenance")
-    if not isinstance(provenance, dict):
-        raise ValueError("platform cost-attribution provenance must be an object")
-    source_commit = provenance.get("sourceCommitSha")
-    if not isinstance(source_commit, str) or not source_commit.strip():
-        raise ValueError("platform cost-attribution sourceCommitSha must be a non-blank string")
-    return GitHubCostAttributionAttestationVerifier().verify(
-        artifact_path=artifact_path,
-        source_commit_sha=source_commit,
     )
 
 

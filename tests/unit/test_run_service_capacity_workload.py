@@ -629,8 +629,12 @@ def test_cost_attribution_verification_uses_platform_provenance(
                 source_commit_sha="b" * 40,
             )
 
-    monkeypatch.setattr(module, "GitHubCostAttributionAttestationVerifier", FakeVerifier)
-    receipt = module._verify_optional_cost_attribution_attestation(
+    monkeypatch.setitem(
+        module.verify_optional_cost_attribution_attestation.__globals__,
+        "GitHubCostAttributionAttestationVerifier",
+        FakeVerifier,
+    )
+    receipt = module.verify_optional_cost_attribution_attestation(
         verification_requested=True,
         artifact_path=artifact_path,
         artifact={"provenance": {"sourceCommitSha": "b" * 40}},
@@ -650,7 +654,7 @@ def test_cost_attribution_verification_requires_production_like_profile(
     artifact_path.write_text("{}", encoding="utf-8")
 
     with pytest.raises(ValueError, match="production-like"):
-        module._verify_optional_cost_attribution_attestation(
+        module.verify_optional_cost_attribution_attestation(
             verification_requested=True,
             artifact_path=artifact_path,
             artifact={"provenance": {"sourceCommitSha": "b" * 40}},
