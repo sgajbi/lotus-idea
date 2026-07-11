@@ -117,11 +117,13 @@ def test_logical_restore_rejects_naive_operator_clock() -> None:
 
 
 @pytest.mark.parametrize(
-    "failed_command, expected_phase", [("pg_dump", "backup"), ("pg_restore", "restore")]
+    "failed_command, expected_phase, bytes_stderr",
+    [("pg_dump", "backup", False), ("pg_restore", "restore", True)],
 )
 def test_logical_restore_reports_source_safe_command_failure(
     failed_command: str,
     expected_phase: str,
+    bytes_stderr: bool,
 ) -> None:
     def connect(database_url: str) -> FakeConnection:
         return FakeConnection(CHECKPOINT if database_url == SOURCE_URL else 0)
@@ -136,13 +138,14 @@ def test_logical_restore_reports_source_safe_command_failure(
                 if failed_command == "pg_dump"
                 else ("target-db", "target_idea", "target-user", "target-secret")
             )
+            diagnostic = (
+                f"connection to {settings[0]}/{settings[1]} as {settings[2]} "
+                f"failed using {settings[3]}"
+            )
             raise subprocess.CalledProcessError(
                 1,
                 command,
-                stderr=(
-                    f"connection to {settings[0]}/{settings[1]} as {settings[2]} "
-                    f"failed using {settings[3]}"
-                ),
+                stderr=diagnostic.encode() if bytes_stderr else diagnostic,
             )
         return subprocess.CompletedProcess(command, 0, stdout="", stderr="")
 
