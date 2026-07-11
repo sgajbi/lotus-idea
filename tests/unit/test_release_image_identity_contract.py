@@ -35,7 +35,7 @@ def evidence() -> tuple[dict[str, object], dict[str, object], dict[str, object]]
         "io.lotus.image.identity.contract": "lotus.image-identity.v1",
         "io.lotus.image.registry.digest.binding": "runtime-release-manifest",
     }
-    runtime = {
+    runtime: dict[str, object] = {
         "containerRuntimeSmoke": [
             {
                 "path": "/version",
