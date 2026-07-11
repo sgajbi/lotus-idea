@@ -6,6 +6,7 @@ import pytest
 
 from app.application.service_capacity_workload import (
     CapacityWorkloadPlan,
+    execute_capacity_recovery,
     execute_capacity_workload,
 )
 from app.ports.capacity_probe import CapacityProbeRequest, CapacityProbeResult
@@ -115,6 +116,17 @@ def test_failed_recovery_is_not_misrepresented() -> None:
 
     assert measurements[-1].outcome == "failed"
     assert measurements[-1].recovered is False
+
+
+def test_recovery_use_case_requires_explicit_dependency_recovery_probe() -> None:
+    plan = CapacityWorkloadPlan(
+        scenario="api",
+        requests=(REQUEST,),
+        max_concurrency=1,
+    )
+
+    with pytest.raises(ValueError, match="requires a dependency_failure recovery probe"):
+        execute_capacity_recovery(plan, probe=StubProbe([]))
 
 
 @pytest.mark.parametrize(

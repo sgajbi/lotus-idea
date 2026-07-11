@@ -45,6 +45,16 @@ def execute_capacity_workload(
     return measurements
 
 
+def execute_capacity_recovery(
+    plan: CapacityWorkloadPlan,
+    *,
+    probe: CapacityProbePort,
+) -> CapacityMeasurement:
+    if plan.scenario != "dependency_failure" or plan.recovery_probe is None:
+        raise ValueError("capacity recovery requires a dependency_failure recovery probe")
+    return _recovery_measurement(plan, probe.execute(plan.recovery_probe))
+
+
 def _measurement(
     plan: CapacityWorkloadPlan,
     result: CapacityProbeResult,
