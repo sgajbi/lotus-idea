@@ -93,10 +93,13 @@ def test_postgres_scheduled_lifecycle_scan_is_bounded_ordered_and_source_complet
 def test_postgres_scheduled_lifecycle_scan_uses_governed_metric_vocabulary() -> None:
     repository = PostgresScheduledDataLifecycleRepository(Connection(Cursor([])))
 
-    assert repository.scan_data_lifecycle_controls(
-        evaluated_at_utc=NOW,
-        limit=10,
-    ) == ()
+    assert (
+        repository.scan_data_lifecycle_controls(
+            evaluated_at_utc=NOW,
+            limit=10,
+        )
+        == ()
+    )
 
 
 def test_postgres_scheduled_lifecycle_scan_observes_failure(

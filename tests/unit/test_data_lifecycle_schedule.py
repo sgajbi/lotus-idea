@@ -105,4 +105,3 @@ def test_scheduled_review_rejects_invalid_batch_limits(limit: object) -> None:
 
     with pytest.raises(ValueError, match="scheduled lifecycle review limit"):
         ReviewScheduledDataLifecycle(repository, now=lambda: NOW).execute(limit=limit)  # type: ignore[arg-type]
-
