@@ -7,6 +7,8 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "src"
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
@@ -16,6 +18,28 @@ from app.application.service_capacity_baseline import (  # noqa: E402
     build_service_capacity_baseline,
     validate_service_capacity_baseline,
 )
+from app.application.postgres_capacity_threshold_proof import (  # noqa: E402
+    execute_postgres_capacity_threshold_proof,
+)
+from app.domain.capacity_posture import evaluate_postgres_capacity_posture  # noqa: E402
+from scripts.generate_service_capacity_baseline import INPUT_KEYS  # noqa: E402
+
+
+class _ThresholdProofPort:
+    def __init__(self) -> None:
+        self._utilizations = iter([0.2, 0.9, 0.2])
+
+    def read_posture(self):  # type: ignore[no-untyped-def]
+        return evaluate_postgres_capacity_posture(next(self._utilizations))
+
+    def acquire_load_connection(self) -> None:
+        pass
+
+    def release_load_connections(self) -> None:
+        pass
+
+    def close(self) -> None:
+        pass
 
 
 def validate_contract() -> list[str]:
@@ -49,6 +73,35 @@ def validate_contract() -> list[str]:
         errors.append("test-profile capacity baseline must preserve non-certification blockers")
     if artifact["certificationReady"] is not False:
         errors.append("test-profile capacity baseline must not be certification-ready")
+    if "postgresThresholdProof" not in INPUT_KEYS or "postgresSaturationMeasured" in INPUT_KEYS:
+        errors.append("capacity generation must accept proof, not a caller-asserted saturation boolean")
+
+    proof = execute_postgres_capacity_threshold_proof(
+        stress_port=_ThresholdProofPort(),
+        environment_profile="production-like",
+        generated_at_utc=datetime(2026, 7, 11, tzinfo=UTC),
+        commit_sha="contract-gate",
+        branch="contract-gate",
+        run_id="threshold-contract-gate",
+        maximum_load_connections=5,
+    )
+    linked = build_service_capacity_baseline(
+        measurements=measurements,
+        environment_profile="production-like",
+        generated_at_utc=datetime(2026, 7, 11, tzinfo=UTC),
+        commit_sha="contract-gate",
+        branch="contract-gate",
+        run_id="contract-gate",
+        observed_window_seconds=1.0,
+        postgres_threshold_proof=proof,
+    )
+    resource = linked["resourceEvidence"]
+    if resource["postgresThresholdProofValidated"] is not True:
+        errors.append("matching production-like threshold proof must validate")
+    if resource["postgresSaturationMeasured"] is not True:
+        errors.append("matching production-like threshold proof must satisfy saturation evidence")
+    if "postgres_saturation_evidence_missing" in linked["certificationBlockers"]:
+        errors.append("validated production-like proof must clear only the saturation blocker")
     return errors
 
 
