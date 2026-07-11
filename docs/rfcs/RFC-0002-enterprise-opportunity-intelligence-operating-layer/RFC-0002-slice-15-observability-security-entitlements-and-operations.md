@@ -360,9 +360,10 @@ Idea downstream-submit capability, emits unique transient idempotency keys,
 expects accepted responses, and never stores the resource path or identifiers.
 This remains Idea-owned intent handoff measurement; it does not grant
 suitability, execution, render, archive, or downstream outcome authority. The
-scenario set is contract-gated against runtime vocabulary. Canonical automation
-does not yet seed a dedicated synthetic handoff resource, so production-like
-downstream load/soak evidence remains blocked.
+scenario set is contract-gated against runtime vocabulary. Idea-local protected
+automation now seeds the dedicated synthetic handoff resource. Canonical
+front-office stack invocation and successful mainline evidence remain separate
+and pending.
 
 Idea-local seed automation now closes the resource-construction gap through a
 layered application use case, narrow seed port, bounded HTTP adapter, guarded
@@ -374,7 +375,30 @@ and shape fail closed; every mutation is idempotent; and the atomic manifest is
 explicitly seed-only, non-certifying, and non-promoting. Capacity runs accept
 the manifest only when schema, synthetic posture, commit, branch, and route
 shape match. Canonical Workbench/platform automation still needs to invoke and
-prove this command before protected load/soak execution can begin.
+prove this command for cross-repository live-stack evidence; the Idea-local
+protected producer invokes it directly.
+
+The steady-state load/soak producer is now implementation-backed. A paced
+application use case cycles API, source ingestion, outbox delivery, downstream
+submission, and PostgreSQL batches over one shared observation window while
+retaining a monotonic offset on every sample. Qualification requires at least
+1,000 samples and a 3,600-second first-to-last span for each scenario; total
+process lifetime alone is insufficient. Equal scenario volume/concurrency and
+PostgreSQL parity fail closed. Dependency fault/recovery remains a separate
+attested exercise so expected source failure cannot dilute steady-state SLOs.
+
+The manual main-only `service-load-soak-evidence.yml` workflow runs in the
+protected capacity environment, seeds the isolated synthetic handoff resource,
+executes the five scenarios, validates the exact source-safe artifact against
+code-owned SLO thresholds, and only then creates provenance attestation. The
+consumer verifier pins repository, dedicated signer, main ref, and source
+commit. Contract gates bind SLO values, sample minima, workflow shape, scenario
+set, and gate-before-attestation ordering. This is design modularity over the
+existing application ports and adapters; there is still no workload,
+failure-isolation, ownership, or operability evidence for another deployable.
+No qualifying artifact exists until this implementation is merged and the
+protected workflow succeeds, so certification and supported-feature posture do
+not change.
 
 ## Required Work
 

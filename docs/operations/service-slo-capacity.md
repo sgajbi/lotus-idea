@@ -156,11 +156,12 @@ Artifacts use `lotus-idea.service-capacity-baseline.v1` and contain aggregate
 measurements only. Request or response bodies, URLs, DSNs, credentials, caller
 assertions, and business identifiers are rejected or discarded.
 
-Test runs remain `report_only_baseline`. Certification requires at least 1,000
-samples per scenario, a one-hour observed window, production-like or production
-provenance, explicit dependency recovery, a PostgreSQL saturation-threshold
-exercise, and cost/resource evidence. These conditions do not replace review
-of SLO results and operator actions.
+All runs remain `report_only_baseline`. Load/soak qualification requires at
+least 1,000 samples and a measured one-hour observation span for each of the
+five steady-state scenarios, not merely a one-hour process lifetime. Full
+certification additionally requires separately attested dependency recovery,
+PostgreSQL saturation/recovery, and cost/resource evidence. These conditions
+do not replace review of SLO results and operator actions.
 
 ### Safe Execution
 
@@ -204,9 +205,40 @@ non-promoting. Bind it to a workload with
 `SERVICE_CAPACITY_DOWNSTREAM_SEED_ARG="--downstream-capacity-seed <path>"`;
 the runner requires exact commit/branch and synthetic provenance.
 
-Canonical front-office automation does not yet invoke this command, so
-protected downstream load/soak execution remains blocked rather than using a
-hard-coded or discovered client identifier.
+The protected load/soak producer invokes this seed command directly. Canonical
+front-office automation does not yet invoke it; that cross-repository live-stack
+proof remains tracked separately and must not be inferred from Idea-local CI.
+
+### Protected Load And Soak Evidence
+
+Dispatch `.github/workflows/service-load-soak-evidence.yml` from `main` with
+the exact confirmation `RUN_CONTROLLED_LOTUS_IDEA_LOAD_SOAK`. The job runs only
+in the protected `capacity-production-like` environment on the governed
+`lotus-capacity-evidence` runner. It requires the Idea base URL, transient
+authorization/trusted-caller context, a dedicated database URL, and governed
+synthetic as-of date from protected environment configuration.
+
+The workflow seeds an isolated synthetic downstream resource, then cycles API,
+source ingestion, outbox delivery, downstream submission, and PostgreSQL
+samples through shared paced rounds. Every scenario receives 1,000 samples
+spanning at least 3,600 seconds. `observationSpanSeconds` is derived from
+monotonic sample offsets, so a short burst followed by idle waiting fails
+qualification. Dependency fault/recovery remains in its separate controlled
+workflow and is never mixed into steady-state error budgets.
+
+Before signing, the workflow runs:
+
+```powershell
+make service-load-soak-proof-gate
+```
+
+The gate enforces source-safe posture, mainline production-like provenance,
+sample/span minima, zero conflicts, and the code-owned error and latency
+budgets. Only then is the exact artifact attested and uploaded. An aggregate
+baseline may consume it through `--load-soak-proof <path>` together with
+`--verify-load-soak-attestation`; verification pins repository, signer, main
+ref, and commit. The workflow must merge and execute successfully before
+`load_soak_attestation_missing` can clear.
 
 The dependency-failure scenario accepts only a classified source-unavailable
 outcome: either aggregate `sourceFailureCounts` containing one or more

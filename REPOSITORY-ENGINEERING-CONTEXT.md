@@ -1500,6 +1500,24 @@ consumption must validate schema, commit, branch, synthetic claim, and route.
 Platform/Workbench canonical automation integration is separate evidence and
 must not be inferred from the Idea-local command.
 
+Steady-state load/soak evidence must use
+`app.application.service_capacity_workload.execute_paced_capacity_soak` with
+exactly API, source ingestion, outbox delivery, downstream submission, and
+PostgreSQL scenarios. Require equal sample volume and concurrency, at least
+1,000 samples per scenario, and at least 3,600 seconds between each scenario's
+first and last monotonic sample offsets. Process lifetime is not observation
+span; never qualify a burst followed by idle waiting. Keep dependency fault and
+recovery in its dedicated attested workflow so expected source failure does not
+pollute steady-state error budgets.
+
+Only the manual main-only `service-load-soak-evidence.yml` producer may clear
+the load/soak attestation blocker. It must run in the protected capacity
+environment, seed only the governed synthetic downstream resource, pass
+`service-load-soak-proof-gate` before attestation, and sign the exact source-safe
+artifact. Consumer verification must pin repository, signer workflow, main
+ref, and exact commit. Keep the producer as orchestration over existing ports
+and adapters; no separate runtime service is justified by evidence collection.
+
 Capacity probes must cross a narrow port and return bounded aggregates only.
 Keep request and response bodies, URLs, DSNs, credentials, caller assertions,
 and business identifiers transient inside infrastructure adapters. Require an

@@ -20,7 +20,8 @@ reconciliation, quality, and lineage policy.
 | Controlled PostgreSQL threshold proof | Implemented with exact target identity, hard connection caps, mandatory acknowledgement, release/recovery checks, and proof-only baseline linkage. Test evidence is non-certifying. |
 | Process resource observation | Bounded CPU, memory, and optional file-descriptor collection is implemented through a narrow Prometheus adapter. Test observations are non-certifying and are not cost evidence. |
 | Dependency recovery attestation | A manual, main-only protected workflow and exact signer verification are implemented. No qualifying artifact exists until the workflow executes successfully on `main`. |
-| Production capacity certification | Blocked on load/soak, dependency-failure, pool-saturation, and cost/resource evidence. |
+| Load/soak attestation | A paced five-scenario, main-only protected workflow, per-scenario observation-span proof, pre-attestation artifact gate, and exact signer verification are implemented. No qualifying artifact exists until execution on `main`. |
+| Production capacity certification | Blocked on executed load/soak, dependency-failure, pool-saturation, and cost/resource attestations. |
 
 No tenant, client, portfolio, candidate, event, request, idempotency,
 correlation, or trace identifier is permitted as a metric label.
@@ -31,9 +32,9 @@ creates the conversion intent through existing candidate, lifecycle, review,
 and conversion APIs and emits an atomic non-certifying seed manifest. The
 workload runner validates exact commit/branch and synthetic posture before
 using the manifest. Resource identity and unique transient workload
-idempotency keys are never written to capacity evidence. Canonical front-office
-automation does not yet invoke this command, so live downstream load/soak
-certification remains blocked.
+idempotency keys are never written to capacity evidence. The protected
+load/soak workflow invokes the seed directly. Canonical front-office automation
+does not yet invoke it, so cross-repository live-stack proof remains separate.
 
 ## First Response
 
@@ -51,6 +52,7 @@ certification remains blocked.
 ```powershell
 make service-slo-capacity-contract-gate
 make service-capacity-baseline-contract-gate
+make service-load-soak-proof-gate
 make service-resource-baseline-contract-gate
 make service-slo-rule-test
 make postgres-capacity-threshold-proof `
@@ -67,6 +69,23 @@ confirmation for production. Stored evidence is aggregate and report-only;
 observed PostgreSQL utilization and policy execution are not saturation stress
 or recovery certification.
 
+### Load And Soak Qualification
+
+`.github/workflows/service-load-soak-evidence.yml` is manual, main-only, and
+protected by the capacity environment plus exact operator confirmation. It
+seeds a synthetic downstream resource and paces API, source-ingestion, outbox,
+downstream-submission, and PostgreSQL sampling through one shared window. Each
+scenario must contribute at least 1,000 samples spanning 3,600 seconds. A burst
+followed by idle waiting cannot qualify because the artifact records the
+monotonic observation span of every scenario.
+
+The artifact gate runs before provenance attestation and applies the same
+code-owned error and latency budgets as the SLO contract. Consumers must pair
+`--load-soak-proof` with `--verify-load-soak-attestation`. Merge and successful
+protected execution are still required before the load/soak blocker clears.
+
+### Dependency Recovery
+
 Dependency-failure evidence is fail closed. Only an exact
 `source_unavailable` classification qualifies; entitlement denial,
 configuration or capacity blocks, mixed failures, and generic blocked responses
@@ -81,6 +100,8 @@ confirmation. Consumers must use `--dependency-recovery-proof` together with
 `--verify-dependency-recovery-attestation`; a local artifact or serialized
 attestation claim cannot clear the blocker.
 
+### PostgreSQL Threshold Evidence
+
 The PostgreSQL adapter refreshes its session-local statistics snapshot before
 reading aggregate connection utilization. This prevents a long-lived
 transaction from masking a threshold crossing while preserving the caller's
@@ -93,6 +114,8 @@ certification by itself. Qualifying evidence must come from the main-only
 dedicated runner, then pass `gh attestation verify` with exact repository,
 signer-workflow, main-ref, and source-commit constraints. This path becomes
 operational only after merge and protected-environment configuration.
+
+### Resource And Cost Boundary
 
 `make service-resource-baseline` collects bounded process-resource aggregates.
 It never stores the metrics URL or raw scrape and cannot clear production-like
