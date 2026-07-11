@@ -5,7 +5,10 @@ from decimal import Decimal
 from typing import Any, Mapping
 
 from app.domain.access_scope import ReviewAccessScope
-from app.domain.ai_lineage_persistence import AIExplanationLineageRecord
+from app.domain.ai_lineage_persistence import (
+    AIExplanationLineageRecord,
+    verify_ai_explanation_lineage_record_integrity,
+)
 from app.domain.conversion_governance import (
     ConversionBoundary,
     GovernedConversionIntent,
@@ -132,8 +135,23 @@ def ai_explanation_lineage_to_json(record: AIExplanationLineageRecord) -> dict[s
 
 def ai_explanation_lineage_from_json(
     payload: Mapping[str, Any],
+    *,
+    expected_integrity_version: str | None = None,
+    expected_content_digest: str | None = None,
 ) -> AIExplanationLineageRecord:
-    return _ai_explanation_lineage_from_json(payload)
+    record = _ai_explanation_lineage_from_json(payload)
+    if (
+        expected_integrity_version is not None
+        and record.output_integrity_version != expected_integrity_version
+    ):
+        raise ValueError("AI explanation lineage integrity version column mismatch")
+    if (
+        expected_content_digest is not None
+        and record.output_content_digest != expected_content_digest
+    ):
+        raise ValueError("AI explanation lineage content digest column mismatch")
+    verify_ai_explanation_lineage_record_integrity(record)
+    return record
 
 
 def _row(row: Any, key: str) -> Any:
@@ -436,6 +454,8 @@ def _ai_explanation_lineage_to_json(record: AIExplanationLineageRecord) -> dict[
         "claim_ids": list(record.claim_ids),
         "proposed_action_types": list(record.proposed_action_types),
         "action_policy_version": record.action_policy_version,
+        "output_integrity_version": record.output_integrity_version,
+        "output_content_digest": record.output_content_digest,
         "actor_subject": record.actor_subject,
         "requested_at_utc": record.requested_at_utc.isoformat(),
         "evaluated_at_utc": record.evaluated_at_utc.isoformat(),
@@ -468,6 +488,8 @@ def _ai_explanation_lineage_from_json(
             str(value) for value in payload.get("proposed_action_types", ())
         ),
         action_policy_version=str(payload["action_policy_version"]),
+        output_integrity_version=str(payload["output_integrity_version"]),
+        output_content_digest=str(payload["output_content_digest"]),
         actor_subject=str(payload["actor_subject"]),
         requested_at_utc=_datetime(payload["requested_at_utc"]),
         evaluated_at_utc=_datetime(payload["evaluated_at_utc"]),

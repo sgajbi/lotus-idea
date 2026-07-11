@@ -866,6 +866,13 @@ def test_postgres_repository_round_trips_ai_explanation_lineage() -> None:
         is False
     )
     assert "portfolio_id" not in connection.rows["idea_ai_explanation_lineage"][0]["lineage_json"]
+    lineage_row = connection.rows["idea_ai_explanation_lineage"][0]
+    assert lineage_row["output_integrity_version"] == "lotus-idea.ai-output-integrity.v1"
+    assert lineage_row["output_content_digest"] == explanation_result.output_integrity.digest
+    assert (
+        lineage_row["lineage_json"]["output_content_digest"]
+        == (lineage_row["output_content_digest"])
+    )
 
 
 def test_postgres_repository_applies_idempotency_to_ai_lineage_requests() -> None:

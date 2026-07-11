@@ -48,6 +48,7 @@ from app.domain import (
     SourceSystem,
     apply_review_action,
     build_ai_explanation_request,
+    ai_explanation_lineage_record_from_result,
     evaluate_high_cash_signal,
     deterministic_ai_fallback,
     record_feedback,
@@ -636,6 +637,14 @@ def test_ai_explanation_lineage_records_replays_and_conflicts_by_request_id() ->
     assert accepted.lineage_record.proposed_action_types == ()
     assert accepted.lineage_record.action_policy_version == (
         "lotus-idea.ai-action-content-policy.v1"
+    )
+    assert accepted.lineage_record.output_integrity_version == ("lotus-idea.ai-output-integrity.v1")
+    assert accepted.lineage_record.output_content_digest == result.output_integrity.digest
+    assert changed_result.output_integrity.digest != result.output_integrity.digest
+    assert conflict.lineage_record is not None
+    assert (
+        ai_explanation_lineage_record_from_result(changed_result).lineage_hash
+        != accepted.lineage_record.lineage_hash
     )
     assert accepted.record is not None
     assert len(accepted.record.ai_explanation_lineage_records) == 1

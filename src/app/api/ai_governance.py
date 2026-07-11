@@ -404,6 +404,7 @@ AI_EXPLANATION_ROUTE: RouteMetadata = {
         "Evaluates an internal AI explanation workflow result or deterministic fallback "
         "against a persisted idea candidate. The route applies redaction, source-product "
         "claim verification, forbidden-action blocking, source-safe lineage recording, "
+        "versioned output-content integrity, "
         "API Idempotency-Key replay/conflict protection, and bounded operation telemetry. "
         "It does not call an AI provider, execute lotus-ai runtime workflows, persist "
         "provider payloads or prompts, grant downstream authority, or promote a supported feature."
@@ -437,6 +438,8 @@ AI_EXPLANATION_ROUTE: RouteMetadata = {
                         "fallbackReason": None,
                         "grantsDownstreamAuthority": False,
                         "auditEventType": "idea.ai_explanation.evaluated",
+                        "outputIntegrityVersion": "lotus-idea.ai-output-integrity.v1",
+                        "outputContentDigest": f"sha256:{'a' * 64}",
                         "redactedEvidence": {
                             "candidateId": "idea_high_cash_8d57adbf52f7f5a7",
                             "family": "high_cash",
@@ -466,6 +469,7 @@ AI_EXPLANATION_ROUTE: RouteMetadata = {
                             "claimIds": ["claim-001"],
                             "proposedActionTypes": ["advisor_review"],
                             "verifierRanAtUtc": "2026-06-21T10:12:00Z",
+                            "actionPolicyVersion": "lotus-idea.ai-action-content-policy.v1",
                         },
                         "approvedMetadataKeys": ["channel"],
                         "aiLineageRecorded": True,

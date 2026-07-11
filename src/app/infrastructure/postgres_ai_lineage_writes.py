@@ -28,8 +28,9 @@ def insert_ai_explanation_lineage_record(
             ai_explanation_request_id, candidate_id, evidence_packet_id,
             evidence_content_hash, workflow_pack_id, workflow_pack_version,
             purpose, posture, verifier_outcome, fallback_used, fallback_reason,
-            lineage_hash, lineage_json, requested_at_utc, evaluated_at_utc
-        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            output_integrity_version, output_content_digest, lineage_hash,
+            lineage_json, requested_at_utc, evaluated_at_utc
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """,
         (
             lineage_record.request_id,
@@ -43,6 +44,8 @@ def insert_ai_explanation_lineage_record(
             lineage_record.verifier_outcome,
             lineage_record.fallback_used,
             lineage_record.fallback_reason,
+            lineage_record.output_integrity_version,
+            lineage_record.output_content_digest,
             lineage_record.lineage_hash,
             Jsonb(ai_explanation_lineage_to_json(lineage_record)),
             lineage_record.requested_at_utc,

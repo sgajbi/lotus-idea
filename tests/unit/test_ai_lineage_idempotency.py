@@ -92,11 +92,13 @@ def test_ai_lineage_lookup_returns_none_when_request_id_is_absent() -> None:
                 claim_ids=(),
                 proposed_action_types=(),
                 action_policy_version="lotus-idea.ai-action-content-policy.v1",
+                output_integrity_version="lotus-idea.ai-output-integrity.v1",
+                output_content_digest=f"sha256:{'1' * 64}",
                 actor_subject="advisor-001",
                 requested_at_utc=EVALUATED_AT,
                 evaluated_at_utc=EVALUATED_AT,
                 grants_downstream_authority=False,
-                lineage_hash="sha256:lineage",
+                lineage_hash=f"sha256:{'2' * 64}",
             ),
         )
     )

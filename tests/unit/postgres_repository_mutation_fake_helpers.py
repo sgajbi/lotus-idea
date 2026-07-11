@@ -141,6 +141,8 @@ def row_for_insert(table_name: str, params: Sequence[Any]) -> dict[str, Any]:
             "verifier_outcome",
             "fallback_used",
             "fallback_reason",
+            "output_integrity_version",
+            "output_content_digest",
             "lineage_hash",
             "lineage_json",
             "requested_at_utc",

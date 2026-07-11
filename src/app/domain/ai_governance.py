@@ -14,6 +14,7 @@ from app.domain.ai_action_policy import (
     AIProposedActionType as AIProposedActionType,
     evaluate_ai_action_policy,
 )
+from app.domain.ai_output_integrity import AIOutputIntegrity, build_ai_output_integrity
 from app.domain.ideas import (
     EvidenceFreshness,
     EvidenceSupportability,
@@ -329,6 +330,7 @@ class AIExplanationResult:
     explanation_text: str
     reason_codes: tuple[ReasonCode, ...]
     audit_event: AuditEvent
+    output_integrity: AIOutputIntegrity
     output: AIWorkflowOutput | None = None
     fallback_reason: AIFallbackReason | None = None
 
@@ -384,6 +386,17 @@ def deterministic_ai_fallback(
         f"{evidence.family.value}, supportability {evidence.supportability.value}, "
         f"reason codes {', '.join(reason.value for reason in evidence.reason_codes)}."
     )
+    output_integrity = build_ai_output_integrity(
+        explanation_text=explanation_text,
+        claims=(),
+        proposed_actions=(),
+        workflow_pack_id=request.workflow_pack.workflow_pack_id,
+        workflow_pack_version=request.workflow_pack.workflow_pack_version,
+        evaluation_ref=request.workflow_pack.evaluation_ref,
+        action_policy_version=AI_ACTION_POLICY_VERSION,
+        output_kind="fallback",
+        policy_metadata={"fallback_reason": fallback_reason.value},
+    )
     return AIExplanationResult(
         request=request,
         output=None,
@@ -392,12 +405,14 @@ def deterministic_ai_fallback(
         fallback_reason=fallback_reason,
         explanation_text=explanation_text,
         reason_codes=(ReasonCode.AI_FALLBACK_USED,),
+        output_integrity=output_integrity,
         audit_event=_ai_audit_event(
             request=request,
             posture=AIExplanationPosture.FALLBACK_USED,
             verifier_outcome=AIVerifierOutcome.NOT_RUN,
             outcome="fallback",
             occurred_at_utc=occurred_at_utc,
+            output_integrity=output_integrity,
         ),
     )
 
@@ -407,6 +422,7 @@ def evaluate_ai_workflow_output(
     output: AIWorkflowOutput,
 ) -> AIExplanationResult:
     _ensure_output_matches_request(request, output)
+    output_integrity = _workflow_output_integrity(request, output)
     action_decisions = tuple(
         evaluate_ai_action_policy(action.action_type, action.action_label)
         for action in output.proposed_actions
@@ -429,6 +445,7 @@ def evaluate_ai_workflow_output(
             verifier_outcome=AIVerifierOutcome.FAILED_FORBIDDEN_ACTION,
             reason_code=ReasonCode.AI_FORBIDDEN_ACTION_BLOCKED,
             action_policy_reason=AIActionPolicyReason.FORBIDDEN_ACTION_TYPE,
+            output_integrity=output_integrity,
         )
     rejected_content = next(
         (decision for decision in action_decisions if not decision.allowed),
@@ -442,6 +459,7 @@ def evaluate_ai_workflow_output(
             verifier_outcome=AIVerifierOutcome.FAILED_ACTION_CONTENT,
             reason_code=ReasonCode.AI_ACTION_CONTENT_BLOCKED,
             action_policy_reason=rejected_content.reason,
+            output_integrity=output_integrity,
         )
     allowed_source_product_ids = request.redacted_evidence.source_product_ids
     unsupported_claims = tuple(
@@ -457,6 +475,7 @@ def evaluate_ai_workflow_output(
             verifier_outcome=AIVerifierOutcome.FAILED_UNSUPPORTED_CLAIM,
             reason_code=ReasonCode.AI_UNSUPPORTED_CLAIM_BLOCKED,
             action_policy_reason=AIActionPolicyReason.ALLOWED,
+            output_integrity=output_integrity,
         )
     return AIExplanationResult(
         request=request,
@@ -466,6 +485,7 @@ def evaluate_ai_workflow_output(
         fallback_reason=None,
         explanation_text=sanitized_output.explanation_text,
         reason_codes=(ReasonCode.AI_VERIFIER_PASSED,),
+        output_integrity=output_integrity,
         audit_event=_ai_audit_event(
             request=request,
             posture=AIExplanationPosture.READY_FOR_ADVISOR_REVIEW,
@@ -473,6 +493,7 @@ def evaluate_ai_workflow_output(
             outcome="accepted",
             occurred_at_utc=sanitized_output.verifier_ran_at_utc,
             action_policy_reason=AIActionPolicyReason.ALLOWED,
+            output_integrity=output_integrity,
         ),
     )
 
@@ -485,6 +506,7 @@ def _blocked_ai_result(
     verifier_outcome: AIVerifierOutcome,
     reason_code: ReasonCode,
     action_policy_reason: AIActionPolicyReason,
+    output_integrity: AIOutputIntegrity,
 ) -> AIExplanationResult:
     return AIExplanationResult(
         request=request,
@@ -494,6 +516,7 @@ def _blocked_ai_result(
         fallback_reason=None,
         explanation_text=output.explanation_text,
         reason_codes=(reason_code,),
+        output_integrity=output_integrity,
         audit_event=_ai_audit_event(
             request=request,
             posture=posture,
@@ -501,6 +524,7 @@ def _blocked_ai_result(
             outcome="blocked",
             occurred_at_utc=output.verifier_ran_at_utc,
             action_policy_reason=action_policy_reason,
+            output_integrity=output_integrity,
         ),
     )
 
@@ -574,6 +598,7 @@ def _ai_audit_event(
     outcome: str,
     occurred_at_utc: datetime,
     action_policy_reason: AIActionPolicyReason | None = None,
+    output_integrity: AIOutputIntegrity,
 ) -> AuditEvent:
     return AuditEvent(
         event_type="idea.ai_explanation.evaluated",
@@ -592,5 +617,37 @@ def _ai_audit_event(
             "action_policy_reason": (
                 action_policy_reason.value if action_policy_reason is not None else "not_run"
             ),
+            "output_integrity_version": output_integrity.version,
+            "output_content_digest": output_integrity.digest,
         },
+    )
+
+
+def _workflow_output_integrity(
+    request: AIExplanationRequest,
+    output: AIWorkflowOutput,
+) -> AIOutputIntegrity:
+    return build_ai_output_integrity(
+        explanation_text=output.explanation_text,
+        claims=tuple(
+            {
+                "claim_id": claim.claim_id,
+                "claim_text": claim.claim_text,
+                "source_product_ids": claim.source_product_ids,
+            }
+            for claim in output.claims
+        ),
+        proposed_actions=tuple(
+            {
+                "action_type": action.action_type.value,
+                "submitted_action_label": action.action_label,
+            }
+            for action in output.proposed_actions
+        ),
+        workflow_pack_id=output.workflow_pack_id,
+        workflow_pack_version=output.workflow_pack_version,
+        evaluation_ref=request.workflow_pack.evaluation_ref,
+        action_policy_version=AI_ACTION_POLICY_VERSION,
+        output_kind="workflow_output",
+        policy_metadata={"verifier_policy": "deterministic_source_and_action_verifier.v1"},
     )

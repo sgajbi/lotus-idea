@@ -751,6 +751,8 @@ def test_postgres_runtime_provider_persists_ai_explanation_lineage(
     assert accepted_payload["durableStorageBacked"] is True
     assert accepted_payload["aiLineageRecorded"] is True
     assert accepted_payload["aiLineagePersistenceDecision"] == "accepted"
+    assert accepted_payload["outputIntegrityVersion"] == "lotus-idea.ai-output-integrity.v1"
+    assert accepted_payload["outputContentDigest"].startswith("sha256:")
     assert accepted_payload["lotusAiRuntimeExecuted"] is False
     assert accepted_payload["supportedFeaturePromoted"] is False
     assert _table_count(postgres_database_url, "idea_ai_explanation_lineage") == 1
@@ -791,6 +793,10 @@ def test_postgres_runtime_provider_persists_ai_explanation_lineage(
     assert lineage_json["candidate_id"] == candidate_id
     assert lineage_json["fallback_used"] is True
     assert lineage_json["fallback_reason"] == "ai_unavailable"
+    assert lineage_row["output_integrity_version"] == accepted_payload["outputIntegrityVersion"]
+    assert lineage_row["output_content_digest"] == accepted_payload["outputContentDigest"]
+    assert lineage_json["output_integrity_version"] == lineage_row["output_integrity_version"]
+    assert lineage_json["output_content_digest"] == lineage_row["output_content_digest"]
     assert lineage_json["grants_downstream_authority"] is False
     assert "portfolio_id" not in lineage_json
     assert "client_id" not in lineage_json
@@ -836,7 +842,8 @@ def _ai_lineage_row(database_url: str) -> dict[str, Any]:
         with connection.cursor() as cursor:
             cursor.execute(
                 """
-                SELECT ai_explanation_request_id, candidate_id, lineage_json
+                SELECT ai_explanation_request_id, candidate_id,
+                       output_integrity_version, output_content_digest, lineage_json
                 FROM idea_ai_explanation_lineage
                 """
             )
@@ -846,7 +853,9 @@ def _ai_lineage_row(database_url: str) -> dict[str, Any]:
     return {
         "ai_explanation_request_id": str(row[0]),
         "candidate_id": str(row[1]),
-        "lineage_json": row[2],
+        "output_integrity_version": str(row[2]),
+        "output_content_digest": str(row[3]),
+        "lineage_json": row[4],
     }
 
 

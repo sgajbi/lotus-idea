@@ -127,14 +127,16 @@ def workflow_output(
     claim_source_ids: list[str] | None = None,
     action_type: str = "advisor_review",
     action_label: str = "Route to advisor review",
+    explanation_text: str = "Candidate has elevated idle cash and source-ready evidence.",
+    claim_text: str = "Cash weight is above idle-liquidity policy threshold.",
 ) -> dict[str, Any]:
     return {
         "outputId": "ai-output-001",
-        "explanationText": "Candidate has elevated idle cash and source-ready evidence.",
+        "explanationText": explanation_text,
         "claims": [
             {
                 "claimId": "claim-001",
-                "claimText": "Cash weight is above idle-liquidity policy threshold.",
+                "claimText": claim_text,
                 "sourceProductIds": claim_source_ids or ["lotus-core:PortfolioStateSnapshot:v1"],
             }
         ],
@@ -192,6 +194,8 @@ def test_ai_explanation_api_returns_deterministic_fallback_without_runtime_claim
     assert payload["grantsDownstreamAuthority"] is False
     assert payload["aiLineageRecorded"] is True
     assert payload["aiLineagePersistenceDecision"] == "accepted"
+    assert payload["outputIntegrityVersion"] == "lotus-idea.ai-output-integrity.v1"
+    assert payload["outputContentDigest"].startswith("sha256:")
     assert payload["durableStorageBacked"] is False
     assert payload["lotusAiRuntimeExecuted"] is False
     assert payload["supportedFeaturePromoted"] is False
@@ -343,6 +347,58 @@ def test_ai_explanation_api_replays_same_lineage_and_conflicts_changed_request()
     assert conflict.status_code == 409
     assert conflict.json()["code"] == "idempotency_conflict"
     assert "workflow_not_approved" not in conflict.text
+
+
+@pytest.mark.parametrize(
+    ("changed_output", "changed_text"),
+    [
+        (
+            workflow_output(explanation_text="Changed advisor explanation."),
+            "Changed advisor explanation.",
+        ),
+        (workflow_output(claim_text="Changed governed claim."), "Changed governed claim."),
+        (
+            workflow_output(action_label="Request the missing governed evidence"),
+            "Request the missing governed evidence",
+        ),
+    ],
+)
+def test_ai_explanation_api_conflicts_reused_request_identity_when_content_changes(
+    changed_output: dict[str, Any],
+    changed_text: str,
+) -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+    candidate_id = persisted_candidate_id(
+        client,
+        idempotency_key=f"seed-ai-integrity-{changed_output['claims'][0]['claimText']}",
+    )
+    transition_candidate_to_review_ready(client, candidate_id)
+    request_id = "ai-explanation-content-integrity-001"
+    baseline = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/ai-explanations/evaluate",
+        json=ai_request_payload(
+            request_id=request_id,
+            purpose="advisor_rationale_draft",
+            workflow_output=workflow_output(),
+        ),
+        headers=ai_headers(idempotency_key="ai-integrity-first-001"),
+    )
+    changed = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/ai-explanations/evaluate",
+        json=ai_request_payload(
+            request_id=request_id,
+            purpose="advisor_rationale_draft",
+            workflow_output=changed_output,
+        ),
+        headers=ai_headers(idempotency_key="ai-integrity-changed-002"),
+    )
+
+    assert baseline.status_code == 200
+    assert baseline.json()["aiLineagePersistenceDecision"] == "accepted"
+    assert changed.status_code == 409
+    assert changed.json()["code"] == "ai_explanation_lineage_conflict"
+    assert changed_text not in changed.text
 
 
 def test_ai_explanation_api_requires_idempotency_key() -> None:

@@ -308,6 +308,8 @@ class AIExplanationEvaluationResponse(CamelModel):
     fallback_reason: AIFallbackReason | None = Field(default=None, alias="fallbackReason")
     grants_downstream_authority: bool = Field(False, alias="grantsDownstreamAuthority")
     audit_event_type: str = Field(..., alias="auditEventType")
+    output_integrity_version: str = Field(..., alias="outputIntegrityVersion")
+    output_content_digest: str = Field(..., alias="outputContentDigest")
     redacted_evidence: RedactedIdeaEvidenceResponse = Field(..., alias="redactedEvidence")
     verified_output: AIWorkflowOutputSummaryResponse | None = Field(
         default=None,
@@ -344,6 +346,8 @@ class AIExplanationEvaluationResponse(CamelModel):
             fallbackReason=result.fallback_reason,
             grantsDownstreamAuthority=result.grants_downstream_authority,
             auditEventType=result.audit_event.event_type,
+            outputIntegrityVersion=result.output_integrity.version,
+            outputContentDigest=result.output_integrity.digest,
             redactedEvidence=RedactedIdeaEvidenceResponse.from_domain(
                 result.request.redacted_evidence
             ),

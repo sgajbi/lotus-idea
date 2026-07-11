@@ -139,11 +139,13 @@ def ai_lineage_record() -> AIExplanationLineageRecord:
         claim_ids=(),
         proposed_action_types=(),
         action_policy_version="lotus-idea.ai-action-content-policy.v1",
+        output_integrity_version="lotus-idea.ai-output-integrity.v1",
+        output_content_digest=f"sha256:{'1' * 64}",
         actor_subject="advisor-001",
         requested_at_utc=EVENT_TIME,
         evaluated_at_utc=EVENT_TIME + timedelta(minutes=1),
         grants_downstream_authority=False,
-        lineage_hash="sha256:lineage",
+        lineage_hash=f"sha256:{'2' * 64}",
     )
 
 

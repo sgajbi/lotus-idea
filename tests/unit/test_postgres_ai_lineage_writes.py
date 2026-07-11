@@ -27,6 +27,8 @@ def test_insert_ai_explanation_lineage_records_writes_each_lineage_record() -> N
     assert "INSERT INTO idea_ai_explanation_lineage" in query
     assert params[0] == "ai-request-001"
     assert params[1] == candidate.candidate_id
+    assert params[11] == "lotus-idea.ai-output-integrity.v1"
+    assert params[12] == f"sha256:{'1' * 64}"
 
 
 def _lineage_record(candidate_id: str) -> AIExplanationLineageRecord:
@@ -48,11 +50,13 @@ def _lineage_record(candidate_id: str) -> AIExplanationLineageRecord:
         claim_ids=(),
         proposed_action_types=(),
         action_policy_version="lotus-idea.ai-action-content-policy.v1",
+        output_integrity_version="lotus-idea.ai-output-integrity.v1",
+        output_content_digest=f"sha256:{'1' * 64}",
         actor_subject="advisor-001",
         requested_at_utc=evaluated_at,
         evaluated_at_utc=evaluated_at,
         grants_downstream_authority=False,
-        lineage_hash="sha256:lineage",
+        lineage_hash=f"sha256:{'2' * 64}",
     )
 
 

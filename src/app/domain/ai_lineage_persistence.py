@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any, Mapping
 
 from app.domain.ai_governance import AIExplanationResult
 from app.domain.ai_action_policy import AI_ACTION_POLICY_VERSION
+from app.domain.ai_output_integrity import AIOutputIntegrity
 from app.domain.audit import AuditEvent
 
 if TYPE_CHECKING:
@@ -40,6 +41,8 @@ class AIExplanationLineageRecord:
     claim_ids: tuple[str, ...]
     proposed_action_types: tuple[str, ...]
     action_policy_version: str
+    output_integrity_version: str
+    output_content_digest: str
     actor_subject: str
     requested_at_utc: datetime
     evaluated_at_utc: datetime
@@ -59,6 +62,8 @@ class AIExplanationLineageRecord:
             "verifier_outcome",
             "actor_subject",
             "action_policy_version",
+            "output_integrity_version",
+            "output_content_digest",
             "lineage_hash",
         ):
             _require_text(str(getattr(self, field_name)), field_name)
@@ -68,6 +73,10 @@ class AIExplanationLineageRecord:
             raise ValueError("reason_codes is required")
         _require_aware_utc(self.requested_at_utc, "requested_at_utc")
         _require_aware_utc(self.evaluated_at_utc, "evaluated_at_utc")
+        AIOutputIntegrity(
+            version=self.output_integrity_version,
+            digest=self.output_content_digest,
+        )
         object.__setattr__(self, "reason_codes", tuple(self.reason_codes))
         object.__setattr__(self, "claim_ids", tuple(self.claim_ids))
         object.__setattr__(self, "proposed_action_types", tuple(self.proposed_action_types))
@@ -107,6 +116,8 @@ def ai_explanation_lineage_record_from_result(
             else []
         ),
         "action_policy_version": AI_ACTION_POLICY_VERSION,
+        "output_integrity_version": result.output_integrity.version,
+        "output_content_digest": result.output_integrity.digest,
         "purpose": result.request.purpose.value,
         "reason_codes": [reason.value for reason in result.reason_codes],
         "request_id": result.request.request_id,
@@ -140,12 +151,49 @@ def ai_explanation_lineage_record_from_result(
             else ()
         ),
         action_policy_version=AI_ACTION_POLICY_VERSION,
+        output_integrity_version=result.output_integrity.version,
+        output_content_digest=result.output_integrity.digest,
         actor_subject=result.request.actor_subject,
         requested_at_utc=result.request.requested_at_utc,
         evaluated_at_utc=evaluated_at_utc,
         grants_downstream_authority=result.grants_downstream_authority,
         lineage_hash=lineage_hash,
     )
+
+
+def verify_ai_explanation_lineage_record_integrity(
+    record: AIExplanationLineageRecord,
+) -> None:
+    if record.output_integrity_version != "lotus-idea.ai-output-integrity.v1":
+        return
+    expected = _hash_payload(
+        {
+            "actor_subject": record.actor_subject,
+            "candidate_id": record.candidate_id,
+            "claim_ids": list(record.claim_ids),
+            "evidence_content_hash": record.evidence_content_hash,
+            "evidence_packet_id": record.evidence_packet_id,
+            "fallback_reason": record.fallback_reason,
+            "fallback_used": record.fallback_used,
+            "grants_downstream_authority": record.grants_downstream_authority,
+            "output_id": record.output_id,
+            "posture": record.posture,
+            "proposed_action_types": list(record.proposed_action_types),
+            "action_policy_version": record.action_policy_version,
+            "output_integrity_version": record.output_integrity_version,
+            "output_content_digest": record.output_content_digest,
+            "purpose": record.purpose,
+            "reason_codes": list(record.reason_codes),
+            "request_id": record.request_id,
+            "requested_at_utc": record.requested_at_utc.isoformat(),
+            "evaluated_at_utc": record.evaluated_at_utc.isoformat(),
+            "verifier_outcome": record.verifier_outcome,
+            "workflow_pack_id": record.workflow_pack_id,
+            "workflow_pack_version": record.workflow_pack_version,
+        }
+    )
+    if record.lineage_hash != expected:
+        raise ValueError("AI explanation lineage hash does not match persisted content")
 
 
 def _hash_payload(payload: Mapping[str, Any]) -> str:

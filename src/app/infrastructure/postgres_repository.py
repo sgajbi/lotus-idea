@@ -17,11 +17,7 @@ from app.domain.conversion_governance import (
     GovernedConversionIntent,
 )
 from app.domain.conversion_outcome_policy import ConversionOutcomeIdentity
-from app.domain.ideas import (
-    IdeaCandidate,
-    IdeaLifecycleStatus,
-    SourceRef,
-)
+from app.domain.ideas import IdeaCandidate, IdeaLifecycleStatus, SourceRef
 from app.domain.ai_lineage_persistence import AIExplanationLineagePersistenceResult
 from app.domain.idempotency import IdempotencyDecision, IdempotencyRecord
 from app.domain.outbox_delivery_state import OutboxDeliveryResult
@@ -52,13 +48,13 @@ from app.infrastructure.postgres_candidate_writes import (
     ConcurrentIdempotencyMutationError,
     update_postgres_candidate_record,
 )
+from app.infrastructure.postgres_ai_lineage_reads import ai_explanation_lineage_from_row
 from app.infrastructure.postgres_conversion_outcome import (
     insert_postgres_conversion_outcome,
     load_postgres_conversion_outcomes_for_intent,
     precheck_postgres_conversion_outcome_mutation,
 )
 from app.infrastructure.postgres_codecs import (
-    ai_explanation_lineage_from_json,
     conversion_intent_from_json,
     conversion_intent_to_json,
     conversion_outcome_from_json,
@@ -799,7 +795,8 @@ class PostgresIdeaRepository(
     ) -> dict[str, str]:
         cursor.execute(
             """
-            SELECT ai_explanation_request_id, candidate_id, lineage_json
+            SELECT ai_explanation_request_id, candidate_id, output_integrity_version,
+                   output_content_digest, lineage_json
             FROM idea_ai_explanation_lineage
             ORDER BY evaluated_at_utc, ai_explanation_request_id
             """
@@ -811,7 +808,7 @@ class PostgresIdeaRepository(
             if record is None:
                 continue
             request_id = read_row_value(row, "ai_explanation_request_id")
-            lineage_record = ai_explanation_lineage_from_json(read_json_object(row, "lineage_json"))
+            lineage_record = ai_explanation_lineage_from_row(row)
             records[candidate_id] = replace(
                 record,
                 ai_explanation_lineage_records=(

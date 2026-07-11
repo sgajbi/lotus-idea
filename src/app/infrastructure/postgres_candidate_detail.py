@@ -6,8 +6,8 @@ from typing import Any
 from app.domain.audit import AuditEvent
 from app.domain.ideas import IdeaLifecycleStatus
 from app.domain.persistence import CandidatePersistenceRecord, LifecycleHistoryEntry
+from app.infrastructure.postgres_ai_lineage_reads import ai_explanation_lineage_from_row
 from app.infrastructure.postgres_codecs import (
-    ai_explanation_lineage_from_json,
     conversion_intent_from_json,
     conversion_outcome_from_json,
     feedback_event_from_json,
@@ -242,16 +242,17 @@ def _attach_ai_explanation_lineage_records(
     rows = _select_candidate_rows(
         cursor,
         table="idea_ai_explanation_lineage",
-        columns="ai_explanation_request_id, candidate_id, lineage_json",
+        columns=(
+            "ai_explanation_request_id, candidate_id, output_integrity_version, "
+            "output_content_digest, lineage_json"
+        ),
         candidate_id=record.candidate.candidate_id,
         order_by="evaluated_at_utc, ai_explanation_request_id",
         comment="candidate-detail-ai-lineage",
     )
     return replace(
         record,
-        ai_explanation_lineage_records=tuple(
-            ai_explanation_lineage_from_json(read_json_object(row, "lineage_json")) for row in rows
-        ),
+        ai_explanation_lineage_records=tuple(ai_explanation_lineage_from_row(row) for row in rows),
     )
 
 

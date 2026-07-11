@@ -630,30 +630,31 @@ def test_ai_result_and_output_identity_validation_fail_closed() -> None:
     )
 
     with pytest.raises(ValueError, match="fallback_reason is required"):
+        fallback = deterministic_ai_fallback(
+            request,
+            fallback_reason=AIFallbackReason.AI_UNAVAILABLE,
+            occurred_at_utc=VERIFIED_AT,
+        )
         AIExplanationResult(
             request=request,
             posture=AIExplanationPosture.FALLBACK_USED,
             verifier_outcome=AIVerifierOutcome.NOT_RUN,
             explanation_text="Fallback without reason.",
             reason_codes=(ReasonCode.AI_FALLBACK_USED,),
-            audit_event=deterministic_ai_fallback(
-                request,
-                fallback_reason=AIFallbackReason.AI_UNAVAILABLE,
-                occurred_at_utc=VERIFIED_AT,
-            ).audit_event,
+            audit_event=fallback.audit_event,
+            output_integrity=fallback.output_integrity,
         )
 
     with pytest.raises(ValueError, match="fallback_reason requires fallback posture"):
+        accepted = evaluate_ai_workflow_output(request, output(request.request_id))
         AIExplanationResult(
             request=request,
             posture=AIExplanationPosture.READY_FOR_ADVISOR_REVIEW,
             verifier_outcome=AIVerifierOutcome.PASSED,
             explanation_text="Ready with invalid fallback reason.",
             reason_codes=(ReasonCode.AI_VERIFIER_PASSED,),
-            audit_event=evaluate_ai_workflow_output(
-                request,
-                output(request.request_id),
-            ).audit_event,
+            audit_event=accepted.audit_event,
+            output_integrity=accepted.output_integrity,
             fallback_reason=AIFallbackReason.AI_UNAVAILABLE,
         )
 
