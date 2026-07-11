@@ -8,6 +8,12 @@ from types import ModuleType
 import pytest
 
 from app.ports.capacity_probe import CapacityProbeRequest, CapacityProbeResult
+from app.application.capacity_evidence_qualification import (
+    TRUSTED_REPOSITORY,
+    TRUSTED_SIGNER_WORKFLOW,
+    TRUSTED_SOURCE_REF,
+    VerifiedArtifactAttestation,
+)
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -195,6 +201,95 @@ def test_cli_links_validated_threshold_proof_without_clearing_test_blocker(
     resource = json.loads(output.read_text(encoding="utf-8"))["resourceEvidence"]
     assert resource["postgresThresholdProofValidated"] is True
     assert resource["postgresSaturationMeasured"] is False
+
+
+def test_cli_requires_verified_mainline_attestation_to_clear_saturation(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    module = _load_script()
+    output = tmp_path / "capacity.json"
+    proof = tmp_path / "threshold.json"
+    payload = {
+        "branch": "main",
+        "claimPosture": "controlled_test_evidence_only",
+        "commitSha": "abc123",
+        "environmentProfile": "test",
+        "generatedAtUtc": "2026-07-11T06:00:00Z",
+        "initial": {
+            "collectionSucceeded": True,
+            "connectionUtilizationFraction": 0.2,
+            "posture": "normal",
+        },
+        "productionCapacityCertified": False,
+        "proofScope": "source_safe_postgres_capacity_threshold_and_recovery",
+        "recovered": {
+            "collectionSucceeded": True,
+            "connectionUtilizationFraction": 0.2,
+            "posture": "normal",
+        },
+        "repository": "lotus-idea",
+        "runId": "threshold-1",
+        "schemaVersion": "lotus-idea.postgres-capacity-threshold-proof.v1",
+        "supportedFeaturePromoted": False,
+        "threshold": {
+            "collectionSucceeded": True,
+            "connectionUtilizationFraction": 0.9,
+            "posture": "shed",
+            "heldConnectionCount": 12,
+        },
+    }
+    proof.write_text(json.dumps(payload), encoding="utf-8")
+
+    class FakeProbe:
+        def __init__(self, **kwargs: object) -> None:
+            pass
+
+        def execute(self, request: CapacityProbeRequest) -> CapacityProbeResult:
+            return CapacityProbeResult(0.01, 200, "accepted", {})
+
+        def close(self) -> None:
+            pass
+
+    class FakeVerifier:
+        def verify(self, **kwargs: object) -> VerifiedArtifactAttestation:
+            return VerifiedArtifactAttestation(
+                subject_sha256="b" * 64,
+                repository=TRUSTED_REPOSITORY,
+                signer_workflow=TRUSTED_SIGNER_WORKFLOW,
+                source_ref=TRUSTED_SOURCE_REF,
+                source_commit_sha="abc123",
+            )
+
+    monkeypatch.setattr(module, "HttpCapacityProbe", FakeProbe)
+    monkeypatch.setattr(module, "GitHubCapacityAttestationVerifier", FakeVerifier)
+
+    exit_code = module.main(
+        [
+            "--base-url",
+            "https://idea.example",
+            "--environment-profile",
+            "production-like",
+            "--scenario",
+            "api",
+            "--commit-sha",
+            "abc123",
+            "--branch",
+            "main",
+            "--run-id",
+            "baseline-1",
+            "--postgres-threshold-proof",
+            str(proof),
+            "--verify-postgres-threshold-attestation",
+            "--output",
+            str(output),
+        ]
+    )
+
+    assert exit_code == 0
+    resource = json.loads(output.read_text(encoding="utf-8"))["resourceEvidence"]
+    assert resource["postgresThresholdAttestationVerified"] is True
+    assert resource["postgresSaturationMeasured"] is True
 
 
 @pytest.mark.parametrize(

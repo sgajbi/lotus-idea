@@ -9,6 +9,10 @@ from typing import Any, Iterable
 from app.application.postgres_capacity_threshold_proof import (
     validate_postgres_capacity_threshold_proof,
 )
+from app.application.capacity_evidence_qualification import (
+    VerifiedArtifactAttestation,
+    qualify_postgres_capacity_threshold_evidence,
+)
 
 
 SCHEMA_VERSION = "lotus-idea.service-capacity-baseline.v1"
@@ -84,6 +88,7 @@ def build_service_capacity_baseline(
     run_id: str,
     observed_window_seconds: float,
     postgres_threshold_proof: dict[str, Any] | None = None,
+    postgres_threshold_attestation: VerifiedArtifactAttestation | None = None,
     postgres_max_connection_utilization_fraction: float | None = None,
 ) -> dict[str, Any]:
     if environment_profile not in ENVIRONMENT_PROFILES:
@@ -112,7 +117,13 @@ def build_service_capacity_baseline(
         commit_sha=commit_sha,
         branch=branch,
     )
-    postgres_saturation_measured = False
+    postgres_qualification = _postgres_threshold_qualification(
+        proof=postgres_threshold_proof,
+        attestation=postgres_threshold_attestation,
+        generated_at_utc=generated_at_utc,
+        run_id=run_id,
+    )
+    postgres_saturation_measured = postgres_qualification is not None
     blockers = _certification_blockers(
         environment_profile=environment_profile,
         scenarios=scenarios,
@@ -138,6 +149,12 @@ def build_service_capacity_baseline(
             "postgresThresholdProofRunId": (
                 postgres_threshold_proof.get("runId")
                 if postgres_threshold_proof_validated and postgres_threshold_proof is not None
+                else None
+            ),
+            "postgresThresholdAttestationVerified": postgres_saturation_measured,
+            "postgresThresholdQualificationRunId": (
+                postgres_qualification.get("qualificationRunId")
+                if postgres_qualification is not None
                 else None
             ),
             "postgresMaxConnectionUtilizationFraction": (
@@ -254,6 +271,26 @@ def _postgres_threshold_proof_is_valid(
         and proof.get("commitSha") == commit_sha
         and proof.get("branch") == branch
     )
+
+
+def _postgres_threshold_qualification(
+    *,
+    proof: dict[str, Any] | None,
+    attestation: VerifiedArtifactAttestation | None,
+    generated_at_utc: datetime,
+    run_id: str,
+) -> dict[str, Any] | None:
+    if proof is None or attestation is None:
+        return None
+    try:
+        return qualify_postgres_capacity_threshold_evidence(
+            threshold_proof=proof,
+            verified_attestation=attestation,
+            generated_at_utc=generated_at_utc,
+            qualification_run_id=run_id,
+        )
+    except ValueError:
+        return None
 
 
 def _percentile(samples: list[float], percentile: float) -> float | None:

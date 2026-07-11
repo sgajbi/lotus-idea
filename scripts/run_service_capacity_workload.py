@@ -18,6 +18,7 @@ from app.application.service_capacity_workload import (
     execute_postgres_capacity_workload,
 )
 from app.infrastructure.http_capacity_probe import HttpCapacityProbe
+from app.infrastructure.github_capacity_attestation import GitHubCapacityAttestationVerifier
 from app.infrastructure.postgres_capacity_probe import PostgresCapacityProbe
 from app.ports.capacity_probe import CapacityProbeRequest
 
@@ -191,6 +192,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--branch", required=True)
     parser.add_argument("--run-id", required=True)
     parser.add_argument("--postgres-threshold-proof", type=Path)
+    parser.add_argument("--verify-postgres-threshold-attestation", action="store_true")
     parser.add_argument(
         "--output",
         type=Path,
@@ -245,6 +247,20 @@ def main(argv: list[str] | None = None) -> int:
             measurements.extend(postgres_result.measurements)
             postgres_max_utilization = postgres_result.max_connection_utilization_fraction
         observed_window_seconds = max(time.perf_counter() - started_at, 0.000001)
+        threshold_proof = _read_optional_proof(args.postgres_threshold_proof)
+        threshold_attestation = None
+        if args.verify_postgres_threshold_attestation:
+            if args.postgres_threshold_proof is None or threshold_proof is None:
+                raise ValueError("attestation verification requires --postgres-threshold-proof")
+            if args.environment_profile != "production-like":
+                raise ValueError("attested capacity qualification requires production-like profile")
+            proof_commit = threshold_proof.get("commitSha")
+            if not isinstance(proof_commit, str) or not proof_commit.strip():
+                raise ValueError("PostgreSQL threshold proof commitSha must be a non-blank string")
+            threshold_attestation = GitHubCapacityAttestationVerifier().verify(
+                artifact_path=args.postgres_threshold_proof,
+                source_commit_sha=proof_commit,
+            )
         artifact = build_service_capacity_baseline(
             measurements=measurements,
             environment_profile=args.environment_profile,
@@ -253,7 +269,8 @@ def main(argv: list[str] | None = None) -> int:
             branch=args.branch,
             run_id=args.run_id,
             observed_window_seconds=observed_window_seconds,
-            postgres_threshold_proof=_read_optional_proof(args.postgres_threshold_proof),
+            postgres_threshold_proof=threshold_proof,
+            postgres_threshold_attestation=threshold_attestation,
             postgres_max_connection_utilization_fraction=postgres_max_utilization,
         )
         _write_json_atomic(args.output, artifact)

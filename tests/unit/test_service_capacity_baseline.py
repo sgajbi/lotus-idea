@@ -4,6 +4,12 @@ from datetime import UTC, datetime
 
 import pytest
 
+from app.application.capacity_evidence_qualification import (
+    TRUSTED_REPOSITORY,
+    TRUSTED_SIGNER_WORKFLOW,
+    TRUSTED_SOURCE_REF,
+    VerifiedArtifactAttestation,
+)
 from app.application.service_capacity_baseline import (
     CapacityMeasurement,
     SCENARIOS,
@@ -61,6 +67,16 @@ def _threshold_proof() -> dict[str, object]:
     )
 
 
+def _verified_attestation() -> VerifiedArtifactAttestation:
+    return VerifiedArtifactAttestation(
+        subject_sha256="b" * 64,
+        repository=TRUSTED_REPOSITORY,
+        signer_workflow=TRUSTED_SIGNER_WORKFLOW,
+        source_ref=TRUSTED_SOURCE_REF,
+        source_commit_sha="abc123",
+    )
+
+
 def test_builds_ordered_source_safe_report_only_baseline() -> None:
     measurements = [_measurement(scenario, index) for scenario in SCENARIOS for index in range(10)]
 
@@ -93,7 +109,7 @@ def test_builds_ordered_source_safe_report_only_baseline() -> None:
     assert validate_service_capacity_baseline(artifact) == []
 
 
-def test_missing_scenarios_and_dependency_recovery_remain_explicit() -> None:
+def test_attested_mainline_proof_clears_only_saturation_blocker() -> None:
     artifact = build_service_capacity_baseline(
         measurements=[CapacityMeasurement("api", 0.01, "accepted")],
         environment_profile="production-like",
@@ -103,17 +119,18 @@ def test_missing_scenarios_and_dependency_recovery_remain_explicit() -> None:
         run_id="ci-1",
         observed_window_seconds=3_600,
         postgres_threshold_proof=_threshold_proof(),
+        postgres_threshold_attestation=_verified_attestation(),
     )
 
     assert artifact["certificationBlockers"] == [
         "scenario_coverage_incomplete",
         "minimum_sample_volume_missing",
         "dependency_recovery_evidence_missing",
-        "postgres_saturation_evidence_missing",
         "cost_resource_evidence_missing",
     ]
-    assert artifact["resourceEvidence"]["postgresSaturationMeasured"] is False
+    assert artifact["resourceEvidence"]["postgresSaturationMeasured"] is True
     assert artifact["resourceEvidence"]["postgresThresholdProofValidated"] is True
+    assert artifact["resourceEvidence"]["postgresThresholdAttestationVerified"] is True
 
 
 def test_test_profile_or_mismatched_threshold_proof_cannot_clear_saturation_blocker() -> None:
@@ -130,6 +147,7 @@ def test_test_profile_or_mismatched_threshold_proof_cannot_clear_saturation_bloc
     )
     assert artifact["resourceEvidence"]["postgresThresholdProofValidated"] is True
     assert artifact["resourceEvidence"]["postgresSaturationMeasured"] is False
+    assert artifact["resourceEvidence"]["postgresThresholdAttestationVerified"] is False
     assert "postgres_saturation_evidence_missing" in artifact["certificationBlockers"]
 
     mismatched = dict(_threshold_proof())
@@ -145,6 +163,26 @@ def test_test_profile_or_mismatched_threshold_proof_cannot_clear_saturation_bloc
         postgres_threshold_proof=mismatched,
     )
     assert artifact["resourceEvidence"]["postgresThresholdProofValidated"] is False
+    assert "postgres_saturation_evidence_missing" in artifact["certificationBlockers"]
+
+
+def test_mismatched_attestation_cannot_clear_saturation_blocker() -> None:
+    mismatched = VerifiedArtifactAttestation(
+        **{**_verified_attestation().__dict__, "source_commit_sha": "different"}
+    )
+    artifact = build_service_capacity_baseline(
+        measurements=[],
+        environment_profile="production-like",
+        generated_at_utc=GENERATED_AT,
+        commit_sha="abc123",
+        branch="main",
+        run_id="run-1",
+        observed_window_seconds=1.0,
+        postgres_threshold_proof=_threshold_proof(),
+        postgres_threshold_attestation=mismatched,
+    )
+
+    assert artifact["resourceEvidence"]["postgresThresholdAttestationVerified"] is False
     assert "postgres_saturation_evidence_missing" in artifact["certificationBlockers"]
 
 
