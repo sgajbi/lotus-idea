@@ -16,6 +16,10 @@ from app.application.capacity_evidence_qualification import (
     qualify_postgres_capacity_threshold_evidence,
     qualify_resource_evidence,
 )
+from app.application.cost_attribution_qualification import (
+    VerifiedPlatformCostAttestation,
+    qualify_platform_cost_attribution,
+)
 from app.application.service_resource_baseline import validate_service_resource_baseline
 
 
@@ -106,6 +110,8 @@ def build_service_capacity_baseline(
     postgres_max_connection_utilization_fraction: float | None = None,
     resource_baseline: dict[str, Any] | None = None,
     resource_attestation: VerifiedArtifactAttestation | None = None,
+    cost_attribution_artifact: dict[str, Any] | None = None,
+    cost_attribution_attestation: VerifiedPlatformCostAttestation | None = None,
 ) -> dict[str, Any]:
     if environment_profile not in ENVIRONMENT_PROFILES:
         raise ValueError("environment_profile must be test, production-like, or production")
@@ -166,12 +172,19 @@ def build_service_capacity_baseline(
         run_id=run_id,
         commit_sha=commit_sha,
     )
+    cost_attribution_qualification = _cost_attribution_qualification(
+        artifact=cost_attribution_artifact,
+        attestation=cost_attribution_attestation,
+        resource_qualification=resource_qualification,
+        generated_at_utc=generated_at_utc,
+        run_id=run_id,
+    )
     blockers = _certification_blockers(
         load_soak_attested=load_soak_qualification is not None,
         postgres_saturation_measured=postgres_saturation_measured,
         dependency_recovery_attested=dependency_recovery_qualification is not None,
         production_like_resource_attested=resource_qualification is not None,
-        cost_attribution_verified=False,
+        cost_attribution_verified=cost_attribution_qualification is not None,
     )
     artifact = {
         "schemaVersion": SCHEMA_VERSION,
@@ -199,6 +212,7 @@ def build_service_capacity_baseline(
             resource_baseline_validated=resource_baseline_validated,
             resource_baseline=resource_baseline,
             resource_qualification=resource_qualification,
+            cost_attribution_qualification=cost_attribution_qualification,
         ),
         "certificationReady": not blockers,
         "certificationBlockers": blockers,
@@ -223,6 +237,7 @@ def _resource_evidence(
     resource_baseline_validated: bool,
     resource_baseline: dict[str, Any] | None,
     resource_qualification: dict[str, Any] | None,
+    cost_attribution_qualification: dict[str, Any] | None,
 ) -> dict[str, Any]:
     return {
         "loadSoakAttestationVerified": load_soak_qualification is not None,
@@ -258,7 +273,17 @@ def _resource_evidence(
             if resource_qualification is not None
             else None
         ),
-        "costAttributionVerified": False,
+        "costAttributionVerified": cost_attribution_qualification is not None,
+        "costAttributionQualificationRunId": (
+            cost_attribution_qualification.get("qualificationRunId")
+            if cost_attribution_qualification is not None
+            else None
+        ),
+        "costAttributionArtifactSha256": (
+            cost_attribution_qualification.get("platformArtifactSha256")
+            if cost_attribution_qualification is not None
+            else None
+        ),
         "resourceBaselineValidated": resource_baseline_validated,
         "resourceBaselineRunId": (
             resource_baseline.get("runId")
@@ -475,6 +500,28 @@ def _resource_qualification(
         return qualify_resource_evidence(
             resource_proof=proof,
             verified_attestation=attestation,
+            generated_at_utc=generated_at_utc,
+            qualification_run_id=run_id,
+        )
+    except ValueError:
+        return None
+
+
+def _cost_attribution_qualification(
+    *,
+    artifact: dict[str, Any] | None,
+    attestation: VerifiedPlatformCostAttestation | None,
+    resource_qualification: dict[str, Any] | None,
+    generated_at_utc: datetime,
+    run_id: str,
+) -> dict[str, Any] | None:
+    if artifact is None or attestation is None or resource_qualification is None:
+        return None
+    try:
+        return qualify_platform_cost_attribution(
+            artifact=artifact,
+            attestation=attestation,
+            resource_qualification=resource_qualification,
             generated_at_utc=generated_at_utc,
             qualification_run_id=run_id,
         )

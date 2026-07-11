@@ -15,6 +15,11 @@ from app.application.capacity_evidence_qualification import (
     TRUSTED_SOURCE_REF,
     VerifiedArtifactAttestation,
 )
+from app.application.cost_attribution_qualification import (
+    TRUSTED_REPOSITORY as TRUSTED_PLATFORM_REPOSITORY,
+    TRUSTED_SIGNER_WORKFLOW as TRUSTED_PLATFORM_SIGNER_WORKFLOW,
+    VerifiedPlatformCostAttestation,
+)
 from app.application.service_capacity_baseline import (
     CapacityMeasurement,
     SCENARIOS,
@@ -188,6 +193,47 @@ def _resource_attestation() -> VerifiedArtifactAttestation:
         signer_workflow=RESOURCE_SIGNER_WORKFLOW,
         source_ref=TRUSTED_SOURCE_REF,
         source_commit_sha="abc123",
+    )
+
+
+def _platform_cost_artifact() -> dict[str, Any]:
+    return {
+        "schemaVersion": "lotus-platform.service-cost-attribution.v1",
+        "repository": "lotus-platform",
+        "proofScope": "source_safe_service_cost_attribution",
+        "claimPosture": "reconciled_not_attested",
+        "service": {
+            "repository": "lotus-idea",
+            "serviceId": "lotus-idea-api",
+            "environment": "production-like",
+            "region": "ap-southeast-1",
+        },
+        "billingPeriod": {"start": "2026-07-01", "end": "2026-07-31"},
+        "currency": "USD",
+        "provenance": {
+            "sourceCommitSha": "f" * 40,
+            "sourceRef": TRUSTED_SOURCE_REF,
+            "pipelineRunId": "platform-run-1",
+        },
+        "resourceObservation": {
+            "schemaVersion": "lotus-idea.service-resource-baseline.v1",
+            "sha256": "e" * 64,
+            "runId": "resource-production-like-1",
+        },
+        "costAttributionReconciled": True,
+        "costAttributionCertified": False,
+        "certificationBlockers": ["artifact_attestation_missing"],
+        "supportedFeaturePromoted": False,
+    }
+
+
+def _platform_cost_attestation() -> VerifiedPlatformCostAttestation:
+    return VerifiedPlatformCostAttestation(
+        subject_sha256="d" * 64,
+        repository=TRUSTED_PLATFORM_REPOSITORY,
+        signer_workflow=TRUSTED_PLATFORM_SIGNER_WORKFLOW,
+        source_ref=TRUSTED_SOURCE_REF,
+        source_commit_sha="f" * 40,
     )
 
 
@@ -428,6 +474,53 @@ def test_attested_resource_observation_clears_only_resource_blocker() -> None:
     assert resource["resourceQualificationRunId"] == "aggregate-resource-1"
     assert resource["costAttributionVerified"] is False
     assert "production_like_resource_attestation_missing" not in artifact["certificationBlockers"]
+    assert "cost_attribution_evidence_missing" in artifact["certificationBlockers"]
+
+
+def test_attested_platform_cost_attribution_clears_only_bound_cost_blocker() -> None:
+    artifact = build_service_capacity_baseline(
+        measurements=[],
+        environment_profile="production-like",
+        generated_at_utc=GENERATED_AT + timedelta(hours=2),
+        commit_sha="abc123",
+        branch="main",
+        run_id="aggregate-resource-1",
+        observed_window_seconds=1.0,
+        resource_baseline=_production_resource_baseline(),
+        resource_attestation=_resource_attestation(),
+        cost_attribution_artifact=_platform_cost_artifact(),
+        cost_attribution_attestation=_platform_cost_attestation(),
+    )
+
+    resource = artifact["resourceEvidence"]
+    assert resource["costAttributionVerified"] is True
+    assert resource["costAttributionQualificationRunId"] == "aggregate-resource-1"
+    assert resource["costAttributionArtifactSha256"] == "d" * 64
+    assert "cost_attribution_evidence_missing" not in artifact["certificationBlockers"]
+    assert artifact["certificationReady"] is False
+
+
+def test_unbound_platform_cost_attribution_preserves_cost_blocker() -> None:
+    cost_artifact = _platform_cost_artifact()
+    cost_artifact["resourceObservation"] = {
+        **cost_artifact["resourceObservation"],
+        "sha256": "0" * 64,
+    }
+    artifact = build_service_capacity_baseline(
+        measurements=[],
+        environment_profile="production-like",
+        generated_at_utc=GENERATED_AT + timedelta(hours=2),
+        commit_sha="abc123",
+        branch="main",
+        run_id="aggregate-resource-1",
+        observed_window_seconds=1.0,
+        resource_baseline=_production_resource_baseline(),
+        resource_attestation=_resource_attestation(),
+        cost_attribution_artifact=cost_artifact,
+        cost_attribution_attestation=_platform_cost_attestation(),
+    )
+
+    assert artifact["resourceEvidence"]["costAttributionVerified"] is False
     assert "cost_attribution_evidence_missing" in artifact["certificationBlockers"]
 
 
