@@ -23,6 +23,7 @@ INPUT_KEYS = frozenset(
         "observedWindowSeconds",
         "postgresThresholdProof",
         "runId",
+        "resourceBaseline",
     }
 )
 MEASUREMENT_KEYS = frozenset(
@@ -61,6 +62,7 @@ def generate_service_capacity_baseline(input_payload: dict[str, Any]) -> dict[st
         run_id=_required_text(input_payload, "runId"),
         observed_window_seconds=_number(input_payload, "observedWindowSeconds"),
         postgres_threshold_proof=_optional_object(input_payload, "postgresThresholdProof"),
+        resource_baseline=_optional_object(input_payload, "resourceBaseline"),
     )
 
 

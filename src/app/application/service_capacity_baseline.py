@@ -13,6 +13,7 @@ from app.application.capacity_evidence_qualification import (
     VerifiedArtifactAttestation,
     qualify_postgres_capacity_threshold_evidence,
 )
+from app.application.service_resource_baseline import validate_service_resource_baseline
 
 
 SCHEMA_VERSION = "lotus-idea.service-capacity-baseline.v1"
@@ -90,6 +91,7 @@ def build_service_capacity_baseline(
     postgres_threshold_proof: dict[str, Any] | None = None,
     postgres_threshold_attestation: VerifiedArtifactAttestation | None = None,
     postgres_max_connection_utilization_fraction: float | None = None,
+    resource_baseline: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     if environment_profile not in ENVIRONMENT_PROFILES:
         raise ValueError("environment_profile must be test, production-like, or production")
@@ -124,6 +126,11 @@ def build_service_capacity_baseline(
         run_id=run_id,
     )
     postgres_saturation_measured = postgres_qualification is not None
+    resource_baseline_validated = _resource_baseline_is_valid(
+        resource_baseline,
+        commit_sha=commit_sha,
+        branch=branch,
+    )
     blockers = _certification_blockers(
         environment_profile=environment_profile,
         scenarios=scenarios,
@@ -161,6 +168,12 @@ def build_service_capacity_baseline(
                 postgres_max_connection_utilization_fraction
             ),
             "costResourceMeasured": False,
+            "resourceBaselineValidated": resource_baseline_validated,
+            "resourceBaselineRunId": (
+                resource_baseline.get("runId")
+                if resource_baseline_validated and resource_baseline is not None
+                else None
+            ),
         },
         "certificationReady": not blockers,
         "certificationBlockers": blockers,
@@ -291,6 +304,20 @@ def _postgres_threshold_qualification(
         )
     except ValueError:
         return None
+
+
+def _resource_baseline_is_valid(
+    baseline: dict[str, Any] | None,
+    *,
+    commit_sha: str,
+    branch: str,
+) -> bool:
+    return bool(
+        baseline is not None
+        and not validate_service_resource_baseline(baseline)
+        and baseline.get("commitSha") == commit_sha
+        and baseline.get("branch") == branch
+    )
 
 
 def _percentile(samples: list[float], percentile: float) -> float | None:

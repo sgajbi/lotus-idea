@@ -192,6 +192,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--branch", required=True)
     parser.add_argument("--run-id", required=True)
     parser.add_argument("--postgres-threshold-proof", type=Path)
+    parser.add_argument("--resource-baseline", type=Path)
     parser.add_argument("--verify-postgres-threshold-attestation", action="store_true")
     parser.add_argument(
         "--output",
@@ -271,6 +272,7 @@ def main(argv: list[str] | None = None) -> int:
             observed_window_seconds=observed_window_seconds,
             postgres_threshold_proof=threshold_proof,
             postgres_threshold_attestation=threshold_attestation,
+            resource_baseline=_read_optional_resource_baseline(args.resource_baseline),
             postgres_max_connection_utilization_fraction=postgres_max_utilization,
         )
         _write_json_atomic(args.output, artifact)
@@ -296,6 +298,15 @@ def _read_optional_proof(path: Path | None) -> dict[str, object] | None:
     payload = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(payload, dict):
         raise ValueError("PostgreSQL threshold proof must be a JSON object")
+    return payload
+
+
+def _read_optional_resource_baseline(path: Path | None) -> dict[str, object] | None:
+    if path is None:
+        return None
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError("resource baseline must be a JSON object")
     return payload
 
 

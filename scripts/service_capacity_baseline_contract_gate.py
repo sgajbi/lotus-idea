@@ -79,6 +79,8 @@ def validate_contract() -> list[str]:
         )
     if "costResourceMeasured" in INPUT_KEYS:
         errors.append("capacity generation must not accept caller-asserted cost evidence")
+    if "resourceBaseline" not in INPUT_KEYS:
+        errors.append("capacity generation must accept governed resource baseline evidence")
 
     proof = execute_postgres_capacity_threshold_proof(
         stress_port=_ThresholdProofPort(),

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
@@ -20,6 +20,8 @@ from app.application.postgres_capacity_threshold_proof import (
     execute_postgres_capacity_threshold_proof,
 )
 from app.domain.capacity_posture import evaluate_postgres_capacity_posture
+from app.application.service_resource_baseline import build_service_resource_baseline
+from app.ports.resource_probe import ProcessResourceSnapshot
 import app.application.service_capacity_baseline as baseline_module
 
 
@@ -74,6 +76,20 @@ def _verified_attestation() -> VerifiedArtifactAttestation:
         signer_workflow=TRUSTED_SIGNER_WORKFLOW,
         source_ref=TRUSTED_SOURCE_REF,
         source_commit_sha="abc123",
+    )
+
+
+def _resource_baseline() -> dict[str, object]:
+    return build_service_resource_baseline(
+        snapshots=[
+            ProcessResourceSnapshot(GENERATED_AT, 1.0, 100),
+            ProcessResourceSnapshot(GENERATED_AT + timedelta(seconds=1), 1.1, 200),
+        ],
+        environment_profile="test",
+        generated_at_utc=GENERATED_AT + timedelta(seconds=2),
+        commit_sha="abc123",
+        branch="main",
+        run_id="resource-1",
     )
 
 
@@ -184,6 +200,44 @@ def test_mismatched_attestation_cannot_clear_saturation_blocker() -> None:
 
     assert artifact["resourceEvidence"]["postgresThresholdAttestationVerified"] is False
     assert "postgres_saturation_evidence_missing" in artifact["certificationBlockers"]
+
+
+def test_links_resource_observation_without_claiming_cost_evidence() -> None:
+    artifact = build_service_capacity_baseline(
+        measurements=[],
+        environment_profile="production-like",
+        generated_at_utc=GENERATED_AT,
+        commit_sha="abc123",
+        branch="main",
+        run_id="run-1",
+        observed_window_seconds=1.0,
+        resource_baseline=_resource_baseline(),
+    )
+
+    resource = artifact["resourceEvidence"]
+    assert resource["resourceBaselineValidated"] is True
+    assert resource["resourceBaselineRunId"] == "resource-1"
+    assert resource["costResourceMeasured"] is False
+    assert "cost_resource_evidence_missing" in artifact["certificationBlockers"]
+
+
+def test_rejects_resource_observation_from_another_commit() -> None:
+    resource_baseline = dict(_resource_baseline())
+    resource_baseline["commitSha"] = "different"
+
+    artifact = build_service_capacity_baseline(
+        measurements=[],
+        environment_profile="production-like",
+        generated_at_utc=GENERATED_AT,
+        commit_sha="abc123",
+        branch="main",
+        run_id="run-1",
+        observed_window_seconds=1.0,
+        resource_baseline=resource_baseline,
+    )
+
+    assert artifact["resourceEvidence"]["resourceBaselineValidated"] is False
+    assert artifact["resourceEvidence"]["resourceBaselineRunId"] is None
 
 
 def test_validator_rejects_claim_inflation_and_sensitive_fields() -> None:

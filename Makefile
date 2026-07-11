@@ -119,6 +119,7 @@ POSTGRES_CAPACITY_MAX_TARGET_CONNECTIONS ?= 100
 POSTGRES_CAPACITY_MAX_LOAD_CONNECTIONS ?= 100
 POSTGRES_CAPACITY_CONFIRMATION ?=
 SERVICE_CAPACITY_POSTGRES_THRESHOLD_PROOF_ARG ?=
+SERVICE_CAPACITY_RESOURCE_BASELINE_ARG ?=
 SERVICE_RESOURCE_METRICS_URL ?= http://127.0.0.1:8330/metrics
 SERVICE_RESOURCE_SAMPLE_COUNT ?= 5
 SERVICE_RESOURCE_SAMPLE_INTERVAL_SECONDS ?= 1
@@ -336,7 +337,7 @@ service-resource-baseline-contract-gate:
 	$(VENV_PYTHON) scripts/service_resource_baseline_contract_gate.py
 
 service-capacity-workload:
-	$(VENV_PYTHON) scripts/run_service_capacity_workload.py --base-url "$(SERVICE_CAPACITY_BASE_URL)" --environment-profile "$(SERVICE_CAPACITY_PROFILE)" $(SERVICE_CAPACITY_SCENARIO_ARGS) --request-count "$(SERVICE_CAPACITY_REQUEST_COUNT)" --concurrency "$(SERVICE_CAPACITY_CONCURRENCY)" --commit-sha "$(BUILD_GIT_COMMIT_SHA)" --branch "$(BUILD_GIT_BRANCH)" --run-id "$(BUILD_CI_RUN_ID)" $(SERVICE_CAPACITY_POSTGRES_THRESHOLD_PROOF_ARG) --output "$(SERVICE_CAPACITY_OUTPUT)"
+	$(VENV_PYTHON) scripts/run_service_capacity_workload.py --base-url "$(SERVICE_CAPACITY_BASE_URL)" --environment-profile "$(SERVICE_CAPACITY_PROFILE)" $(SERVICE_CAPACITY_SCENARIO_ARGS) --request-count "$(SERVICE_CAPACITY_REQUEST_COUNT)" --concurrency "$(SERVICE_CAPACITY_CONCURRENCY)" --commit-sha "$(BUILD_GIT_COMMIT_SHA)" --branch "$(BUILD_GIT_BRANCH)" --run-id "$(BUILD_CI_RUN_ID)" $(SERVICE_CAPACITY_POSTGRES_THRESHOLD_PROOF_ARG) $(SERVICE_CAPACITY_RESOURCE_BASELINE_ARG) --output "$(SERVICE_CAPACITY_OUTPUT)"
 
 service-resource-baseline:
 	$(VENV_PYTHON) scripts/run_service_resource_baseline.py --metrics-url "$(SERVICE_RESOURCE_METRICS_URL)" --environment-profile test --sample-count "$(SERVICE_RESOURCE_SAMPLE_COUNT)" --sample-interval-seconds "$(SERVICE_RESOURCE_SAMPLE_INTERVAL_SECONDS)" --commit-sha "$(BUILD_GIT_COMMIT_SHA)" --branch "$(BUILD_GIT_BRANCH)" --run-id "$(BUILD_CI_RUN_ID)" --output "$(SERVICE_RESOURCE_OUTPUT)"

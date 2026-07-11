@@ -292,6 +292,19 @@ def test_cli_requires_verified_mainline_attestation_to_clear_saturation(
     assert resource["postgresSaturationMeasured"] is True
 
 
+def test_resource_baseline_reader_requires_json_object(tmp_path: Path) -> None:
+    module = _load_script()
+    valid = tmp_path / "resource.json"
+    valid.write_text('{"schemaVersion":"resource-v1"}', encoding="utf-8")
+    invalid = tmp_path / "invalid.json"
+    invalid.write_text("[]", encoding="utf-8")
+
+    assert module._read_optional_resource_baseline(valid) == {"schemaVersion": "resource-v1"}
+    assert module._read_optional_resource_baseline(None) is None
+    with pytest.raises(ValueError, match="resource baseline must be a JSON object"):
+        module._read_optional_resource_baseline(invalid)
+
+
 @pytest.mark.parametrize(
     ("kwargs", "message"),
     [

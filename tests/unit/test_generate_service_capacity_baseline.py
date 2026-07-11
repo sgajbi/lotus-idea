@@ -29,6 +29,7 @@ def _input() -> dict[str, Any]:
         "commitSha": "abc123",
         "branch": "feature/capacity",
         "runId": "local-1",
+        "resourceBaseline": None,
         "observedWindowSeconds": 30.0,
         "postgresThresholdProof": None,
         "measurements": [
