@@ -114,8 +114,15 @@ from app.infrastructure.postgres_runtime_trust_telemetry import (
     load_runtime_trust_telemetry_summary,
 )
 from app.infrastructure.postgres_candidate_detail import load_candidate_record_by_id
+from app.infrastructure.postgres_data_lifecycle import (
+    PostgresDataLifecycleRepository,
+    assert_data_lifecycle_allows_candidate_writes,
+    insert_data_lifecycle_control_for_candidate,
+)
 from app.ports.idea_repository import DownstreamRealizationReadinessRepositorySummary
 from app.ports.idea_repository import RuntimeTrustTelemetryRepositorySummary
+from app.domain.data_lifecycle import DataLifecycleCommand, DataLifecycleOperationResult
+from app.ports.data_lifecycle import DataLifecycleEvaluator
 
 
 _T = TypeVar("_T")
@@ -144,6 +151,19 @@ class PostgresIdeaRepository(
 
     def runtime_trust_telemetry_summary(self) -> RuntimeTrustTelemetryRepositorySummary:
         return load_runtime_trust_telemetry_summary(self._connection)
+
+    def execute_data_lifecycle(
+        self,
+        command: DataLifecycleCommand,
+        *,
+        evaluated_at_utc: datetime,
+        evaluator: DataLifecycleEvaluator,
+    ) -> DataLifecycleOperationResult:
+        return PostgresDataLifecycleRepository(self._connection).execute_data_lifecycle(
+            command,
+            evaluated_at_utc=evaluated_at_utc,
+            evaluator=evaluator,
+        )
 
     def persist_candidate(
         self,
@@ -501,6 +521,8 @@ class PostgresIdeaRepository(
         try:
             with self._connection.cursor() as cursor:
                 for table_name in (
+                    "idea_data_lifecycle_operation",
+                    "idea_data_lifecycle_control",
                     "idea_ai_explanation_lineage",
                     "idea_report_evidence_pack_request",
                     "idea_conversion_outcome",
@@ -553,9 +575,14 @@ class PostgresIdeaRepository(
     ) -> dict[str, CandidatePersistenceRecord]:
         cursor.execute(
             """
-            SELECT candidate_id, evidence_hash, candidate_json, persisted_at_utc
-            FROM idea_candidate_record
-            ORDER BY persisted_at_utc, candidate_id
+            SELECT candidate.candidate_id, candidate.evidence_hash,
+                   candidate.candidate_json, candidate.persisted_at_utc
+            FROM idea_candidate_record candidate
+            LEFT JOIN idea_data_lifecycle_control lifecycle
+              ON lifecycle.candidate_id = candidate.candidate_id
+            WHERE COALESCE(lifecycle.held_from_state, lifecycle.state, 'active')
+                  NOT IN ('erased', 'purged')
+            ORDER BY candidate.persisted_at_utc, candidate.candidate_id
             """
         )
         records: dict[str, CandidatePersistenceRecord] = {}
@@ -874,6 +901,14 @@ class PostgresIdeaRepository(
                 candidate.updated_at_utc,
             ),
         )
+        insert_data_lifecycle_control_for_candidate(cursor, record)
+
+    def _assert_data_lifecycle_write_allowed(
+        self,
+        cursor: Any,
+        candidate_ids: set[str],
+    ) -> None:
+        assert_data_lifecycle_allows_candidate_writes(cursor, candidate_ids)
 
     def _update_candidate_record(
         self,

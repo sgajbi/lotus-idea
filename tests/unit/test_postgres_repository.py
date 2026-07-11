@@ -58,6 +58,7 @@ from app.domain.persistence import (
     ReviewPersistenceDecision,
 )
 from app.infrastructure.postgres_repository import PostgresIdeaRepository
+from app.infrastructure.postgres_data_lifecycle import DataLifecycleWriteBlockedError
 from tests.unit.downstream_submission_helpers import build_downstream_submission_claim
 from app.infrastructure.postgres_mutation_metadata import idempotency_created_at
 from app.infrastructure.postgres_candidate_writes import StaleCandidateMutationError
@@ -71,6 +72,24 @@ from tests.unit.postgres_repository_fake import FakePostgresConnection
 
 AS_OF_DATE = datetime(2026, 6, 21, 10, 0, tzinfo=UTC).date()
 EVALUATED_AT = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
+
+
+def test_postgres_repository_rejects_unscoped_durable_candidate_atomically() -> None:
+    connection = FakePostgresConnection()
+    candidate = high_cash_candidate()
+
+    with pytest.raises(DataLifecycleWriteBlockedError) as exc_info:
+        PostgresIdeaRepository(connection).persist_candidate(
+            candidate,
+            idempotency_key="candidate:missing-tenant-scope",
+            payload={"candidateId": candidate.candidate_id},
+            actor_subject="signal-ingestion-worker",
+            occurred_at_utc=EVALUATED_AT,
+        )
+
+    assert exc_info.value.blocker == "tenant_scope_missing"
+    assert connection.rows["idea_candidate_record"] == []
+    assert connection.rows["idea_data_lifecycle_control"] == []
 
 
 class StaleSnapshotRepository(PostgresIdeaRepository):
@@ -155,12 +174,12 @@ def test_postgres_repository_round_trips_mutating_workflow_details() -> None:
     connection = FakePostgresConnection()
     repository = PostgresIdeaRepository(connection)
     review_ready = replace(
-        high_cash_candidate(),
+        high_cash_candidate(candidate_scope=access_scope()),
         candidate_id="idea_high_cash_review_ready",
         lifecycle_status=IdeaLifecycleStatus.READY_FOR_REVIEW,
     )
     approved = replace(
-        high_cash_candidate(),
+        high_cash_candidate(candidate_scope=access_scope()),
         candidate_id="idea_high_cash_approved",
         lifecycle_status=IdeaLifecycleStatus.APPROVED,
         review_posture=ReviewPosture.APPROVED_FOR_CONVERSION,
@@ -333,7 +352,7 @@ def test_postgres_repository_rejects_mismatched_conversion_intent_idempotency() 
     connection = FakePostgresConnection()
     repository = PostgresIdeaRepository(connection)
     approved = replace(
-        high_cash_candidate(),
+        high_cash_candidate(candidate_scope=access_scope()),
         candidate_id="idea_high_cash_idempotency_mismatch",
         lifecycle_status=IdeaLifecycleStatus.APPROVED,
         review_posture=ReviewPosture.APPROVED_FOR_CONVERSION,
@@ -371,7 +390,7 @@ def test_postgres_repository_rejects_mismatched_conversion_intent_idempotency() 
 def test_postgres_repository_rolls_back_failed_snapshot_replacement() -> None:
     source_connection = FakePostgresConnection()
     source_repository = PostgresIdeaRepository(source_connection)
-    candidate = high_cash_candidate()
+    candidate = high_cash_candidate(candidate_scope=access_scope())
     source_repository.persist_candidate(
         candidate,
         idempotency_key="candidate:replace-rollback",
@@ -392,12 +411,12 @@ def test_postgres_repository_row_scoped_mutations_preserve_independent_rows() ->
     connection = FakePostgresConnection()
     repository = PostgresIdeaRepository(connection)
     first_candidate = replace(
-        high_cash_candidate(),
+        high_cash_candidate(candidate_scope=access_scope()),
         candidate_id="idea_high_cash_row_scoped_first",
         lifecycle_status=IdeaLifecycleStatus.READY_FOR_REVIEW,
     )
     second_candidate = replace(
-        high_cash_candidate(),
+        high_cash_candidate(candidate_scope=access_scope()),
         candidate_id="idea_high_cash_row_scoped_second",
         lifecycle_status=IdeaLifecycleStatus.READY_FOR_REVIEW,
     )
@@ -451,7 +470,7 @@ def test_postgres_repository_rejects_stale_same_candidate_snapshot_write() -> No
     connection = FakePostgresConnection()
     repository = PostgresIdeaRepository(connection)
     candidate = replace(
-        high_cash_candidate(),
+        high_cash_candidate(candidate_scope=access_scope()),
         candidate_id="idea_high_cash_stale_same_candidate",
         lifecycle_status=IdeaLifecycleStatus.READY_FOR_REVIEW,
     )
@@ -506,7 +525,7 @@ def test_postgres_repository_retries_idempotency_collision_as_replay() -> None:
     connection = FakePostgresConnection()
     repository = PostgresIdeaRepository(connection)
     candidate = replace(
-        high_cash_candidate(),
+        high_cash_candidate(candidate_scope=access_scope()),
         candidate_id="idea_high_cash_idempotency_collision_replay",
         lifecycle_status=IdeaLifecycleStatus.READY_FOR_REVIEW,
     )
@@ -554,7 +573,7 @@ def test_postgres_repository_retries_idempotency_collision_as_conflict() -> None
     connection = FakePostgresConnection()
     repository = PostgresIdeaRepository(connection)
     candidate = replace(
-        high_cash_candidate(),
+        high_cash_candidate(candidate_scope=access_scope()),
         candidate_id="idea_high_cash_idempotency_collision_conflict",
         lifecycle_status=IdeaLifecycleStatus.READY_FOR_REVIEW,
     )
@@ -604,7 +623,7 @@ def test_postgres_candidate_updates_use_optimistic_snapshot_guard() -> None:
     connection = FakePostgresConnection()
     repository = PostgresIdeaRepository(connection)
     candidate = replace(
-        high_cash_candidate(),
+        high_cash_candidate(candidate_scope=access_scope()),
         candidate_id="idea_high_cash_optimistic_guard",
         lifecycle_status=IdeaLifecycleStatus.READY_FOR_REVIEW,
     )
@@ -638,7 +657,7 @@ def test_postgres_candidate_updates_use_optimistic_snapshot_guard() -> None:
 def test_postgres_repository_persists_outbox_delivery_status_updates() -> None:
     connection = FakePostgresConnection()
     repository = PostgresIdeaRepository(connection)
-    candidate = high_cash_candidate()
+    candidate = high_cash_candidate(candidate_scope=access_scope())
     repository.persist_candidate(
         candidate,
         idempotency_key="candidate:outbox-delivery",
@@ -747,7 +766,7 @@ def test_postgres_repository_persists_outbox_delivery_status_updates() -> None:
 def test_postgres_repository_rejects_sensitive_outbox_failure_reason() -> None:
     connection = FakePostgresConnection()
     repository = PostgresIdeaRepository(connection)
-    candidate = high_cash_candidate()
+    candidate = high_cash_candidate(candidate_scope=access_scope())
     repository.persist_candidate(
         candidate,
         idempotency_key="candidate:outbox-sensitive-failure",
@@ -816,7 +835,7 @@ def test_postgres_repository_round_trips_ai_explanation_lineage() -> None:
     connection = FakePostgresConnection()
     repository = PostgresIdeaRepository(connection)
     candidate = replace(
-        high_cash_candidate(),
+        high_cash_candidate(candidate_scope=access_scope()),
         lifecycle_status=IdeaLifecycleStatus.READY_FOR_REVIEW,
     )
     repository.persist_candidate(
@@ -853,7 +872,7 @@ def test_postgres_repository_applies_idempotency_to_ai_lineage_requests() -> Non
     connection = FakePostgresConnection()
     repository = PostgresIdeaRepository(connection)
     candidate = replace(
-        high_cash_candidate(),
+        high_cash_candidate(candidate_scope=access_scope()),
         lifecycle_status=IdeaLifecycleStatus.READY_FOR_REVIEW,
     )
     repository.persist_candidate(
@@ -901,7 +920,7 @@ def test_postgres_repository_applies_idempotency_to_ai_lineage_requests() -> Non
 def test_postgres_repository_ignores_orphan_detail_rows_during_hydration() -> None:
     connection = FakePostgresConnection()
     repository = PostgresIdeaRepository(connection)
-    candidate = high_cash_candidate()
+    candidate = high_cash_candidate(candidate_scope=access_scope())
     repository.persist_candidate(
         candidate,
         idempotency_key="candidate:orphan-guard",
@@ -975,7 +994,7 @@ def test_postgres_repository_row_and_json_guards() -> None:
 def test_postgres_repository_rolls_back_when_flush_fails() -> None:
     connection = FakePostgresConnection(fail_on_insert="idea_candidate_record")
     repository = PostgresIdeaRepository(connection)
-    candidate = high_cash_candidate()
+    candidate = high_cash_candidate(candidate_scope=access_scope())
 
     with pytest.raises(RuntimeError, match="insert failed"):
         repository.persist_candidate(

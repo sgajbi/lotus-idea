@@ -20,6 +20,12 @@ from app.infrastructure.postgres_ai_lineage_writes import insert_ai_explanation_
 
 
 class PostgresSnapshotDeltaWriter(Protocol):
+    def _assert_data_lifecycle_write_allowed(
+        self,
+        cursor: Any,
+        candidate_ids: set[str],
+    ) -> None: ...
+
     def _insert_candidate_record(
         self,
         cursor: Any,
@@ -118,6 +124,10 @@ def apply_postgres_snapshot_delta(
     before: IdeaRepositorySnapshot,
     after: IdeaRepositorySnapshot,
 ) -> None:
+    writer._assert_data_lifecycle_write_allowed(
+        cursor,
+        _mutated_candidate_ids(before, after),
+    )
     for candidate_id, after_record in after.candidate_records.items():
         if candidate_id not in before.candidate_records:
             writer._insert_candidate_record(cursor, after_record)
@@ -150,6 +160,40 @@ def apply_postgres_snapshot_delta(
     for key, submission_record in after.downstream_submission_records.items():
         if key not in before.downstream_submission_records:
             writer._insert_downstream_submission_record(cursor, submission_record)
+
+
+def _mutated_candidate_ids(
+    before: IdeaRepositorySnapshot,
+    after: IdeaRepositorySnapshot,
+) -> set[str]:
+    candidate_ids = {
+        candidate_id
+        for candidate_id, record in after.candidate_records.items()
+        if before.candidate_records.get(candidate_id) != record
+    }
+    candidate_ids.update(
+        event.aggregate_id
+        for event_id, event in after.outbox_events.items()
+        if event_id not in before.outbox_events and event.aggregate_type == "idea_candidate"
+    )
+    for key, submission in after.downstream_submission_records.items():
+        if key in before.downstream_submission_records:
+            continue
+        candidate_id = _submission_candidate_id(after, submission)
+        if candidate_id is not None:
+            candidate_ids.add(candidate_id)
+    return candidate_ids
+
+
+def _submission_candidate_id(
+    snapshot: IdeaRepositorySnapshot,
+    submission: DownstreamSubmissionRecord,
+) -> str | None:
+    if submission.resource_type.value == "conversion_intent":
+        return snapshot.conversion_intent_candidates.get(submission.resource_id)
+    if submission.resource_type.value == "report_evidence_pack":
+        return snapshot.report_evidence_pack_candidates.get(submission.resource_id)
+    return None
 
 
 def _insert_record_detail_delta(

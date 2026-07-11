@@ -41,10 +41,14 @@ class FakePostgresCursor:
     def __init__(self, connection: FakePostgresConnection) -> None:
         self.connection = connection
         self._rows: list[dict[str, Any]] = []
+        self.rowcount = 0
 
     def execute(self, query: str, params: Sequence[Any] | None = None) -> None:
         normalized = " ".join(query.lower().split())
         self.connection.executed_sql.append(normalized)
+        self.rowcount = 0
+        if _execute_data_lifecycle_query(self, normalized, params):
+            return
         if execute_downstream_submission_query(self, normalized, params):
             return
         if _execute_outbox_recovery_query(self, normalized, params):
@@ -205,17 +209,69 @@ class FakePostgresCursor:
             if _execute_identity_insert(self, table_name, normalized, params):
                 return
             self.connection.rows[table_name].append(row_for_insert(table_name, params))
+            self.rowcount = 1
             return
         raise AssertionError(f"unexpected SQL: {query}")
 
     def fetchall(self) -> Sequence[dict[str, Any]]:
         return self._rows
 
+    def fetchone(self) -> dict[str, Any] | None:
+        return self._rows[0] if self._rows else None
+
     def __enter__(self) -> FakePostgresCursor:
         return self
 
     def __exit__(self, exc_type: object, exc: object, traceback: object) -> None:
         return None
+
+
+def _execute_data_lifecycle_query(
+    cursor: FakePostgresCursor,
+    normalized: str,
+    params: Sequence[Any] | None,
+) -> bool:
+    connection = cursor.connection
+    if normalized.startswith("select") and "candidate_id = any(" in normalized:
+        assert params is not None
+        candidate_ids = set(params[0])
+        table = (
+            "idea_data_lifecycle_control"
+            if "from idea_data_lifecycle_control" in normalized
+            else "idea_candidate_record"
+        )
+        cursor._rows = [
+            row for row in connection.rows[table] if row["candidate_id"] in candidate_ids
+        ]
+        return True
+    if not normalized.startswith("insert into idea_data_lifecycle_control"):
+        return False
+    assert params is not None
+    connection.begin_write()
+    candidate_id, tenant_id, policy_ref, persisted_at_utc, updated_at_utc = params
+    rows = connection.rows["idea_data_lifecycle_control"]
+    if any(row["candidate_id"] == candidate_id for row in rows):
+        return True
+    rows.append(
+        {
+            "candidate_id": candidate_id,
+            "tenant_id": tenant_id,
+            "policy_ref": policy_ref,
+            "state": "active",
+            "retention_expires_at_utc": persisted_at_utc.replace(year=persisted_at_utc.year + 7),
+            "version": 1,
+            "updated_at_utc": updated_at_utc,
+            "held_from_state": None,
+            "hold_authority_ref": None,
+            "hold_change_reference": None,
+            "held_at_utc": None,
+            "erased_at_utc": None,
+            "purged_at_utc": None,
+            "tombstone_sha256": None,
+        }
+    )
+    cursor.rowcount = 1
+    return True
 
 
 def _execute_conversion_outcome_query(
@@ -394,6 +450,8 @@ class FakePostgresConnection:
             "idea_downstream_submission": [],
             "idea_ai_explanation_lineage": [],
             "idea_outbox_recovery_audit": [],
+            "idea_data_lifecycle_control": [],
+            "idea_data_lifecycle_operation": [],
         }
         self.fail_on_insert = fail_on_insert
         self.fail_on_update = fail_on_update
@@ -437,6 +495,8 @@ def _table_from_select(query: str) -> str:
         "idea_downstream_submission",
         "idea_ai_explanation_lineage",
         "idea_outbox_recovery_audit",
+        "idea_data_lifecycle_control",
+        "idea_data_lifecycle_operation",
     ):
         if f" from {table_name}" in query:
             return table_name

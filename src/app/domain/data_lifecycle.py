@@ -48,6 +48,7 @@ class DataLifecycleDecision(StrEnum):
 
 class DataLifecycleBlocker(StrEnum):
     CANDIDATE_NOT_FOUND = "candidate_not_found"
+    IDEMPOTENCY_CONFLICT = "idempotency_conflict"
     TENANT_SCOPE_MISSING = "tenant_scope_missing"
     TENANT_SCOPE_MISMATCH = "tenant_scope_mismatch"
     LIFECYCLE_CONTROL_MISSING = "lifecycle_control_missing"
