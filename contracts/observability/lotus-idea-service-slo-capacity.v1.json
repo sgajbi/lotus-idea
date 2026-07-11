@@ -128,6 +128,9 @@
     "postgres_threshold_proof_model": "src/app/application/postgres_capacity_threshold_proof.py",
     "postgres_threshold_proof_adapter": "src/app/infrastructure/postgres_capacity_stress.py",
     "postgres_threshold_proof_runner": "scripts/run_postgres_capacity_threshold_proof.py",
+    "postgres_threshold_attestation_workflow": ".github/workflows/postgres-capacity-evidence.yml",
+    "postgres_threshold_attestation_verifier": "src/app/infrastructure/github_capacity_attestation.py",
+    "postgres_threshold_qualification_model": "src/app/application/capacity_evidence_qualification.py",
     "operations_doc": "docs/operations/service-slo-capacity.md",
     "operations_wiki": "wiki/Service-SLO-And-Capacity.md",
     "rfc_slice": "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-15-observability-security-entitlements-and-operations.md"

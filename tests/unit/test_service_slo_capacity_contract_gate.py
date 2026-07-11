@@ -46,6 +46,9 @@ def test_service_slo_capacity_contract_names_baseline_automation() -> None:
     assert payload["source_of_truth"]["baseline_workload_runner"].endswith(
         "run_service_capacity_workload.py"
     )
+    assert payload["source_of_truth"]["postgres_threshold_attestation_workflow"].endswith(
+        "postgres-capacity-evidence.yml"
+    )
 
 
 def test_service_slo_capacity_contract_blocks_false_certification() -> None:
@@ -155,3 +158,21 @@ def test_service_slo_capacity_contract_loader_rejects_non_object(tmp_path: Path)
         assert str(error) == "service SLO capacity contract must be a JSON object"
     else:
         raise AssertionError("expected non-object contract to fail")
+
+
+def test_capacity_attestation_workflow_rejects_automatic_or_untrusted_shape(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    workflow = tmp_path / ".github" / "workflows" / "postgres-capacity-evidence.yml"
+    workflow.parent.mkdir(parents=True)
+    workflow.write_text(
+        "schedule:\n  - cron: daily\nSERVICE_CAPACITY_PROFILE: production-like\n",
+        encoding="utf-8",
+    )
+
+    errors = module._validate_capacity_attestation_workflow(tmp_path)
+
+    assert "PostgreSQL saturation workflow must not run on a schedule" in errors
+    assert "PostgreSQL threshold measurement must remain controlled-test classified" in errors
+    assert any("capacity-production-like" in error for error in errors)

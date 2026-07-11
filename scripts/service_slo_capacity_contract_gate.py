@@ -109,6 +109,7 @@ def validate_payload(
     errors.extend(_validate_source_truth(payload, repository_root))
     errors.extend(_validate_rule_file(payload, repository_root))
     errors.extend(_validate_dashboard(payload, repository_root))
+    errors.extend(_validate_capacity_attestation_workflow(repository_root))
     errors.extend(_validate_certification(payload))
     return sorted(errors)
 
@@ -237,6 +238,9 @@ def _validate_source_truth(payload: dict[str, Any], repository_root: Path) -> li
         "postgres_threshold_proof_model",
         "postgres_threshold_proof_adapter",
         "postgres_threshold_proof_runner",
+        "postgres_threshold_attestation_workflow",
+        "postgres_threshold_attestation_verifier",
+        "postgres_threshold_qualification_model",
         "operations_doc",
         "operations_wiki",
         "rfc_slice",
@@ -252,6 +256,30 @@ def _validate_source_truth(payload: dict[str, Any], repository_root: Path) -> li
             errors.append(f"service SLO source_of_truth.{key} must stay repository-relative")
         elif not (repository_root / path).is_file():
             errors.append(f"service SLO source_of_truth.{key} path missing")
+    return errors
+
+
+def _validate_capacity_attestation_workflow(repository_root: Path) -> list[str]:
+    path = repository_root / ".github/workflows/postgres-capacity-evidence.yml"
+    if not path.is_file():
+        return ["PostgreSQL capacity attestation workflow is missing"]
+    workflow = path.read_text(encoding="utf-8")
+    required = (
+        "workflow_dispatch:",
+        "if: github.ref == 'refs/heads/main'",
+        "runs-on: [self-hosted, linux, lotus-capacity-evidence]",
+        "environment: capacity-production-like",
+        "LOTUS_IDEA_DATABASE_URL: ${{ secrets.LOTUS_IDEA_CAPACITY_DATABASE_URL }}",
+        "POSTGRES_CAPACITY_CONFIRMATION: SATURATE_DEDICATED_LOTUS_IDEA_POSTGRES",
+        "SERVICE_CAPACITY_PROFILE: test",
+        "make postgres-capacity-threshold-proof",
+        "actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373",
+    )
+    errors = [f"PostgreSQL capacity workflow missing {token!r}" for token in required if token not in workflow]
+    if "schedule:" in workflow:
+        errors.append("PostgreSQL saturation workflow must not run on a schedule")
+    if "SERVICE_CAPACITY_PROFILE: production" in workflow:
+        errors.append("PostgreSQL threshold measurement must remain controlled-test classified")
     return errors
 
 

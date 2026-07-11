@@ -1,0 +1,55 @@
+name: PostgreSQL Capacity Evidence
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: postgres-capacity-evidence-main
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write
+  attestations: write
+
+jobs:
+  threshold-proof:
+    name: Production-like PostgreSQL Threshold Proof
+    if: github.ref == 'refs/heads/main'
+    runs-on: [self-hosted, linux, lotus-capacity-evidence]
+    environment: capacity-production-like
+    timeout-minutes: 20
+    env:
+      LOTUS_IDEA_DATABASE_URL: ${{ secrets.LOTUS_IDEA_CAPACITY_DATABASE_URL }}
+      POSTGRES_CAPACITY_EXPECTED_DATABASE: ${{ vars.LOTUS_IDEA_CAPACITY_DATABASE_NAME }}
+      POSTGRES_CAPACITY_MAX_TARGET_CONNECTIONS: ${{ vars.LOTUS_IDEA_CAPACITY_MAX_CONNECTIONS }}
+      POSTGRES_CAPACITY_MAX_LOAD_CONNECTIONS: ${{ vars.LOTUS_IDEA_CAPACITY_MAX_CONNECTIONS }}
+      POSTGRES_CAPACITY_CONFIRMATION: SATURATE_DEDICATED_LOTUS_IDEA_POSTGRES
+      SERVICE_CAPACITY_PROFILE: test
+      BUILD_CI_RUN_ID: ${{ github.run_id }}
+      PIP_DISABLE_PIP_VERSION_CHECK: "1"
+      PYTHONUNBUFFERED: "1"
+      PYTHON_VERSION: "3.12"
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: "pip"
+      - name: Install locked dependencies
+        run: make install
+      - name: Run controlled threshold and recovery proof
+        run: make postgres-capacity-threshold-proof
+      - name: Validate source-safe proof artifact
+        run: make service-capacity-baseline-contract-gate
+      - name: Attest threshold evidence provenance
+        uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4.1.1
+        with:
+          subject-path: output/observability/postgres-capacity-threshold-proof.json
+      - name: Upload threshold evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: postgres-capacity-threshold-${{ github.run_id }}
+          path: output/observability/postgres-capacity-threshold-proof.json
+          if-no-files-found: error
+          retention-days: 90
