@@ -10,11 +10,21 @@ from app.domain.ai_lineage_persistence import (
     AIExplanationLineagePersistenceResult,
 )
 from app.domain.idempotency import IdempotencyDecision, IdempotencyRecord, evaluate_idempotency
+from app.domain.lotus_ai_run_attestation import VerifiedLotusAIRunAttestationReceipt
 
 
 class AIExplanationLineageCarrier(Protocol):
     @property
     def ai_explanation_lineage_records(self) -> tuple[AIExplanationLineageRecord, ...]: ...
+
+
+class AIExplanationLineageRecorder(Protocol):
+    def __call__(
+        self,
+        result: AIExplanationResult,
+        *,
+        attestation_receipt: VerifiedLotusAIRunAttestationReceipt | None = None,
+    ) -> AIExplanationLineagePersistenceResult: ...
 
 
 def record_ai_explanation_lineage_request_with_idempotency(
@@ -25,7 +35,8 @@ def record_ai_explanation_lineage_request_with_idempotency(
     idempotency_records: MutableMapping[str, IdempotencyRecord],
     idempotency_candidates: MutableMapping[str, str],
     record_for_idempotency_key: Callable[[str], Any],
-    record_lineage: Callable[[AIExplanationResult], AIExplanationLineagePersistenceResult],
+    record_lineage: AIExplanationLineageRecorder,
+    attestation_receipt: VerifiedLotusAIRunAttestationReceipt | None = None,
 ) -> AIExplanationLineagePersistenceResult:
     if not idempotency_key.strip():
         raise ValueError("idempotency_key is required")
@@ -41,7 +52,7 @@ def record_ai_explanation_lineage_request_with_idempotency(
             lineage_record=None,
             audit_event=None,
         )
-    lineage_result = record_lineage(result)
+    lineage_result = record_lineage(result, attestation_receipt=attestation_receipt)
     if idempotency_decision is IdempotencyDecision.ACCEPTED and (
         lineage_result.decision is AIExplanationLineagePersistenceDecision.ACCEPTED
     ):

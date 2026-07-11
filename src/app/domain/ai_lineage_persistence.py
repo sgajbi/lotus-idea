@@ -109,6 +109,11 @@ def ai_explanation_lineage_record_from_result(
     *,
     attestation_receipt: VerifiedLotusAIRunAttestationReceipt | None = None,
 ) -> AIExplanationLineageRecord:
+    if (
+        attestation_receipt is not None
+        and attestation_receipt.consumer_request_id != result.request.request_id
+    ):
+        raise ValueError("attestation receipt request does not match AI explanation request")
     output = result.output
     evaluated_at_utc = (
         output.verifier_ran_at_utc if output is not None else result.audit_event.occurred_at_utc

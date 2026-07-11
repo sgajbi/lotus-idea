@@ -42,6 +42,7 @@ from app.domain import (
     SourceRef,
 )
 from app.domain.idempotency import IdempotencyDecision
+from app.domain.lotus_ai_run_attestation import VerifiedLotusAIRunAttestationReceipt
 
 
 @dataclass(frozen=True)
@@ -319,6 +320,8 @@ class AIExplanationRepository(CandidateSnapshotRepository, Protocol):
     def record_ai_explanation_lineage(
         self,
         result: AIExplanationResult,
+        *,
+        attestation_receipt: VerifiedLotusAIRunAttestationReceipt | None = None,
     ) -> AIExplanationLineagePersistenceResult: ...
 
     def record_ai_explanation_lineage_request(
@@ -327,6 +330,7 @@ class AIExplanationRepository(CandidateSnapshotRepository, Protocol):
         *,
         idempotency_key: str,
         payload: dict[str, Any],
+        attestation_receipt: VerifiedLotusAIRunAttestationReceipt | None = None,
     ) -> AIExplanationLineagePersistenceResult: ...
 
 

@@ -80,6 +80,7 @@ from app.domain.conversion_outcome_policy import (
     validate_conversion_outcome_progression,
 )
 from app.domain.report_evidence import ReportEvidencePackResult
+from app.domain.lotus_ai_run_attestation import VerifiedLotusAIRunAttestationReceipt
 from app.domain.review_governance import (
     FeedbackResult,
     ReviewActionResult,
@@ -103,6 +104,8 @@ class InMemoryIdeaRepository(
         self._conversion_intent_candidates: dict[str, str] = {}
         self._report_evidence_pack_candidates: dict[str, str] = {}
         self._ai_explanation_lineage_candidates: dict[str, str] = {}
+        self._lotus_ai_attestation_run_requests: dict[str, str] = {}
+        self._lotus_ai_attestation_replay_requests: dict[str, str] = {}
         self._outbox_events: dict[str, OutboxEventRecord] = {}
         self._outbox_recovery_records: dict[str, OutboxRecoveryAuditRecord] = {}
         self._downstream_submission_records: dict[str, DownstreamSubmissionRecord] = {}
@@ -117,6 +120,7 @@ class InMemoryIdeaRepository(
             )
             self._outbox_events.update(snapshot.outbox_events)
             self._downstream_submission_records.update(snapshot.downstream_submission_records)
+            self._restore_ai_attestation_replay_indexes()
 
     def persist_candidate(
         self,
@@ -834,14 +838,29 @@ class InMemoryIdeaRepository(
     def record_ai_explanation_lineage(
         self,
         result: AIExplanationResult,
+        *,
+        attestation_receipt: VerifiedLotusAIRunAttestationReceipt | None = None,
     ) -> AIExplanationLineagePersistenceResult:
-        lineage_record = ai_explanation_lineage_record_from_result(result)
+        lineage_record = ai_explanation_lineage_record_from_result(
+            result,
+            attestation_receipt=attestation_receipt,
+        )
         candidate_id = lineage_record.candidate_id
         record = self._candidate_records.get(candidate_id)
         if record is None:
             return AIExplanationLineagePersistenceResult(
                 decision=AIExplanationLineagePersistenceDecision.NOT_FOUND,
                 record=None,
+                lineage_record=None,
+            )
+
+        if attestation_receipt is not None and self._attestation_identity_conflicts(
+            request_id=lineage_record.request_id,
+            receipt=attestation_receipt,
+        ):
+            return AIExplanationLineagePersistenceResult(
+                decision=AIExplanationLineagePersistenceDecision.CONFLICT,
+                record=record,
                 lineage_record=None,
             )
 
@@ -884,6 +903,13 @@ class InMemoryIdeaRepository(
         )
         self._candidate_records[candidate_id] = updated
         self._ai_explanation_lineage_candidates[lineage_record.request_id] = candidate_id
+        if attestation_receipt is not None:
+            self._lotus_ai_attestation_run_requests[attestation_receipt.run_id] = (
+                lineage_record.request_id
+            )
+            self._lotus_ai_attestation_replay_requests[attestation_receipt.replay_nonce] = (
+                lineage_record.request_id
+            )
         return AIExplanationLineagePersistenceResult(
             decision=AIExplanationLineagePersistenceDecision.ACCEPTED,
             record=updated,
@@ -897,6 +923,7 @@ class InMemoryIdeaRepository(
         *,
         idempotency_key: str,
         payload: Mapping[str, Any],
+        attestation_receipt: VerifiedLotusAIRunAttestationReceipt | None = None,
     ) -> AIExplanationLineagePersistenceResult:
         return record_ai_explanation_lineage_request_with_idempotency(
             result,
@@ -906,7 +933,38 @@ class InMemoryIdeaRepository(
             idempotency_candidates=self._idempotency_candidates,
             record_for_idempotency_key=self._record_for_idempotency_key,
             record_lineage=self.record_ai_explanation_lineage,
+            attestation_receipt=attestation_receipt,
         )
+
+    def _attestation_identity_conflicts(
+        self,
+        *,
+        request_id: str,
+        receipt: VerifiedLotusAIRunAttestationReceipt,
+    ) -> bool:
+        return any(
+            existing_request_id not in {None, request_id}
+            for existing_request_id in (
+                self._lotus_ai_attestation_run_requests.get(receipt.run_id),
+                self._lotus_ai_attestation_replay_requests.get(receipt.replay_nonce),
+            )
+        )
+
+    def _restore_ai_attestation_replay_indexes(self) -> None:
+        for candidate_record in self._candidate_records.values():
+            for lineage_record in candidate_record.ai_explanation_lineage_records:
+                receipt = lineage_record.attestation_receipt
+                if receipt is None:
+                    continue
+                if self._attestation_identity_conflicts(
+                    request_id=lineage_record.request_id,
+                    receipt=receipt,
+                ):
+                    raise ValueError("snapshot contains duplicate lotus-ai attestation identity")
+                self._lotus_ai_attestation_run_requests[receipt.run_id] = lineage_record.request_id
+                self._lotus_ai_attestation_replay_requests[receipt.replay_nonce] = (
+                    lineage_record.request_id
+                )
 
     def outbox_events_for_delivery(
         self,
