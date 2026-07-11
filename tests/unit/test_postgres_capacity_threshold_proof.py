@@ -5,6 +5,7 @@ from datetime import UTC, datetime
 
 import pytest
 
+import app.application.postgres_capacity_threshold_proof as proof_module
 from app.application.postgres_capacity_threshold_proof import (
     execute_postgres_capacity_threshold_proof,
     validate_postgres_capacity_threshold_proof,
@@ -74,6 +75,11 @@ def test_builds_source_safe_threshold_and_recovery_evidence() -> None:
         (("threshold", "posture"), "normal", "must be shed"),
         (("threshold", "heldConnectionCount"), 0, "between 1 and 100"),
         (("recovered", "connectionUtilizationFraction"), 2.0, "between zero and one"),
+        (("schemaVersion",), "unknown", "schemaVersion"),
+        (("repository",), "other", "repository must"),
+        (("proofScope",), "production", "proofScope"),
+        (("environmentProfile",), "production", "environmentProfile"),
+        (("initial", "collectionSucceeded"), False, "collectionSucceeded"),
     ],
 )
 def test_validator_rejects_claim_or_observation_mutation(
@@ -86,6 +92,34 @@ def test_validator_rejects_claim_or_observation_mutation(
     target[path[-1]] = value
 
     assert any(message in error for error in validate_postgres_capacity_threshold_proof(artifact))
+
+
+def test_validator_rejects_unknown_fields_and_malformed_observation() -> None:
+    artifact = _execute(StubStressPort([0.2, 0.9, 0.2]))
+    artifact["unexpected"] = True
+    artifact["initial"] = "not-an-object"
+    threshold = artifact["threshold"]
+    assert isinstance(threshold, dict)
+    threshold["unexpected"] = True
+
+    errors = validate_postgres_capacity_threshold_proof(artifact)
+
+    assert "artifact fields must match the governed threshold proof schema" in errors
+    assert "initial must be an object" in errors
+    assert "threshold fields must match the governed observation schema" in errors
+
+
+def test_builder_fails_closed_when_final_artifact_validation_fails(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        proof_module,
+        "validate_postgres_capacity_threshold_proof",
+        lambda artifact: ["forced proof contract failure"],
+    )
+
+    with pytest.raises(ValueError, match="forced proof contract failure"):
+        _execute(StubStressPort([0.2, 0.9, 0.2]))
 
 
 @pytest.mark.parametrize(
