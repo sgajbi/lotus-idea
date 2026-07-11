@@ -39,9 +39,12 @@ input/output digests before domain mapping or lineage persistence.
 Run id and replay nonce are durable unique identities. Operation events expose
 only bounded verification/rejection posture; they exclude signatures, keys,
 run ids, prompts, provider payloads, and client data. Local proof is enforced
-by `make lotus-ai-attestation-contract-proof-gate`, but support remains blocked
-until cross-repository mainline CI, runtime telemetry, Workbench proof, and
-supported-feature promotion are complete.
+by `make lotus-ai-attestation-contract-proof-gate`. Isolated repository CI
+validates lotus-idea-owned verification and replay controls without asserting
+producer certification; a supplied lotus-ai checkout activates the full
+cross-repository proof. Support remains blocked until cross-repository mainline
+CI, runtime telemetry, Workbench proof, and supported-feature promotion are
+complete.
 
 ## License And IP Governance
 

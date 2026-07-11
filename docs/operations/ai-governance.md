@@ -272,8 +272,12 @@ with `lotus_ai_run_attestation_mainline_proof_missing`.
 
 The producer delivery is tracked by `sgajbi/lotus-ai#113`. Local source-safe
 proof is generated with `make lotus-ai-attestation-contract-proof` and enforced
-by `make lotus-ai-attestation-contract-proof-gate`. It clears no aggregate
-blocker because branch-local source inspection does not prove merged
+by `make lotus-ai-attestation-contract-proof-gate`. In isolated repository CI,
+where the sibling producer checkout is unavailable, the gate validates only
+lotus-idea-owned verification and replay controls and retains producer and
+mainline certification as false. Supplying a producer checkout makes the same
+gate require the complete cross-repository contract proof. It clears no
+aggregate blocker because branch-local source inspection does not prove merged
 producer/consumer CI, live-provider rollout, Workbench behavior, or
 supported-feature promotion. Idea does not own signing keys, provider
 execution, model inventory, prompts, RAG, or AI runtime infrastructure.

@@ -4,6 +4,7 @@ from pathlib import Path
 from app.application.lotus_ai_attestation_contract_proof import (
     REMAINING_LOTUS_AI_ATTESTATION_BLOCKERS,
     build_lotus_ai_attestation_contract_proof,
+    lotus_ai_attestation_consumer_contract_is_valid,
     lotus_ai_attestation_contract_proof_is_valid,
 )
 
@@ -35,3 +36,15 @@ def test_missing_producer_repository_fails_closed(tmp_path: Path) -> None:
     assert proof["localContractProofValid"] is False
     assert proof["eligibleForMainlineCertification"] is False
     assert not lotus_ai_attestation_contract_proof_is_valid(proof)
+    assert lotus_ai_attestation_consumer_contract_is_valid(proof)
+
+
+def test_consumer_contract_rejects_missing_repository_owned_control(tmp_path: Path) -> None:
+    proof = build_lotus_ai_attestation_contract_proof(
+        generated_at_utc=datetime(2026, 7, 11, 12, 0, tzinfo=UTC),
+        repository_root=ROOT,
+        lotus_ai_root=tmp_path / "missing-lotus-ai",
+    )
+    proof["proofChecks"]["consumerReplayPersistenceImplemented"] = False
+
+    assert not lotus_ai_attestation_consumer_contract_is_valid(proof)

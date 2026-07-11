@@ -41,6 +41,12 @@ REMAINING_LOTUS_AI_ATTESTATION_BLOCKERS = (
     "supported_feature_promotion_missing",
 )
 
+REPOSITORY_OWNED_ATTESTATION_CHECKS = (
+    "timezoneAwareGeneratedAtUtc",
+    "consumerVerificationImplemented",
+    "consumerReplayPersistenceImplemented",
+)
+
 
 def build_lotus_ai_attestation_contract_proof(
     *,
@@ -159,3 +165,20 @@ def lotus_ai_attestation_contract_proof_is_valid(payload: Mapping[str, Any]) -> 
         return False
     checks = payload.get("proofChecks")
     return isinstance(checks, Mapping) and all(value is True for value in checks.values())
+
+
+def lotus_ai_attestation_consumer_contract_is_valid(payload: Mapping[str, Any]) -> bool:
+    """Validate only controls owned by lotus-idea when producer source is unavailable."""
+    checks = payload.get("proofChecks")
+    return (
+        payload.get("schemaVersion") == LOTUS_AI_ATTESTATION_CONTRACT_PROOF_SCHEMA_VERSION
+        and payload.get("repository") == "lotus-idea"
+        and payload.get("localContractProofValid") is False
+        and payload.get("eligibleForMainlineCertification") is False
+        and isinstance(checks, Mapping)
+        and all(checks.get(check) is True for check in REPOSITORY_OWNED_ATTESTATION_CHECKS)
+        and checks.get("fileEvidencePresent") is False
+        and checks.get("producerContractImplemented") is False
+        and checks.get("producerSigningImplemented") is False
+        and checks.get("producerIssuanceFailClosed") is False
+    )

@@ -6,6 +6,7 @@ import sys
 
 from app.application.lotus_ai_attestation_contract_proof import (
     build_lotus_ai_attestation_contract_proof,
+    lotus_ai_attestation_consumer_contract_is_valid,
     lotus_ai_attestation_contract_proof_is_valid,
 )
 
@@ -45,14 +46,23 @@ _validate_source_safety = forbidden_content_validator(
 
 
 def validate_lotus_ai_attestation_contract_proof(*, lotus_ai_root: Path | None = None) -> list[str]:
+    resolved_lotus_ai_root = lotus_ai_root or ROOT.parent / "lotus-ai"
     proof = build_lotus_ai_attestation_contract_proof(
         generated_at_utc=datetime(2026, 7, 11, 12, 0, tzinfo=UTC),
         repository_root=ROOT,
-        lotus_ai_root=lotus_ai_root,
+        lotus_ai_root=resolved_lotus_ai_root,
     )
     errors: list[str] = []
-    if not lotus_ai_attestation_contract_proof_is_valid(proof):
+    producer_checkout_available = resolved_lotus_ai_root.is_dir()
+    proof_valid = (
+        lotus_ai_attestation_contract_proof_is_valid(proof)
+        if producer_checkout_available
+        else lotus_ai_attestation_consumer_contract_is_valid(proof)
+    )
+    if not proof_valid:
+        scope = "cross-repository" if producer_checkout_available else "consumer-only"
         errors.append("local Lotus AI attestation contract proof must be valid")
+        errors.append(f"Lotus AI attestation validation scope: {scope}")
     _validate_source_safety(proof, errors)
     return errors
 
