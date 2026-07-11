@@ -145,8 +145,12 @@ Implemented in this slice:
     distinguish deterministic fallback, local/test unattested fixtures, and
     historical pre-attestation records. Demo, staging, and production reject
     self-asserted workflow output before candidate lookup or lineage write.
-    Full attested acceptance remains blocked on producer-owned signed run/model
-    provenance in `sgajbi/lotus-ai#113`; local fixtures cannot clear proof.
+    Signed producer/consumer contracts are implemented locally: Lotus AI issues
+    Ed25519 run attestations and fixed-path key discovery, while Idea verifies
+    exact claims and digests, maps producer output, persists a bounded receipt,
+    and rejects run-id or nonce replay. Mainline cross-repository proof remains
+    tracked by `sgajbi/lotus-ai#113`; local fixtures and source inspection
+    cannot clear it.
 24. `src/app/domain/ai_metadata_policy.py` implements
     `lotus-idea.ai-metadata-envelope.v1` as a closed, purpose-scoped allowlist.
     The typed request DTO rejects unknown fields, the domain rejects
@@ -185,6 +189,10 @@ Validation evidence from the implementation slice:
 13. `python -m pytest tests/unit/test_ai_governance.py tests/unit/test_ai_governance_api_contract.py tests/unit/test_ai_workflow_pack_registration_proof.py tests/integration/test_ai_governance_api.py -q`
     passed with `74 passed` after adding the governed workflow-pack allowlist
     and product-safe `invalid_ai_workflow_pack` API rejection.
+14. `make check` passed after the signed-attestation consumer slice with all
+    lint, maintainability, duplicate, security, contract, proof, migration,
+    OpenAPI, type, architecture, endpoint, and supported-feature gates plus
+    `3365 passed` unit tests. Supported-feature promotion remained blocked.
 
 ## Current Governance References
 
@@ -206,10 +214,11 @@ tests, RFC evidence, supported-features ledger, CI, and published wiki source.
 This slice is not yet a supported AI explanation product. Remaining work
 includes:
 
-1. `lotus-ai` runtime execution,
+1. merge and mainline CI proof for both signed-attestation producer and
+   consumer implementations,
 2. prompt registry, RAG, evaluation, and provider telemetry owned by
    `lotus-ai`,
-3. `lotus-ai` runtime execution and workflow-pack runtime certification beyond
+3. live-provider execution and workflow-pack runtime certification beyond
    the current source-safe AI lineage store proof and certified repo-owned
    model-risk operations dashboard/alert artifacts,
 4. Gateway/Workbench proof,

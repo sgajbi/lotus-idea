@@ -23,6 +23,26 @@ promotion remain blocked.
 | AI assistance | Deterministic evidence, workflow-pack allowlist, type-and-content action policy, canonical server-owned labels, verifier, lineage, and model-risk controls. | AI governance docs and gates |
 | License and IP | Exact runtime/CI inventory, SPDX policy, conditional obligations, deterministic notices, expiring exceptions, and digest-bound release evidence. | `make license-compliance-gate` and the operator runbook |
 
+## Signed Lotus AI Output
+
+Idea accepts production-like AI explanation output only as a complete producer
+bundle: producer run id, exact execution output, and signed Lotus AI run
+attestation. It verifies trusted Ed25519 keys, issuer and audience,
+workflow/evaluator/model-risk claims, validity times, and deterministic
+input/output digests before domain mapping or lineage persistence.
+
+| Owner | Responsibility |
+| --- | --- |
+| `lotus-ai` | Provider execution, model approval, attestation issuance, signing keys, and rotation. |
+| `lotus-idea` | Evidence binding, signature verification, replay protection, bounded receipt persistence, and human review. |
+
+Run id and replay nonce are durable unique identities. Operation events expose
+only bounded verification/rejection posture; they exclude signatures, keys,
+run ids, prompts, provider payloads, and client data. Local proof is enforced
+by `make lotus-ai-attestation-contract-proof-gate`, but support remains blocked
+until cross-repository mainline CI, runtime telemetry, Workbench proof, and
+supported-feature promotion are complete.
+
 ## License And IP Governance
 
 `lotus-idea` service code is proprietary. The versioned compliance policy

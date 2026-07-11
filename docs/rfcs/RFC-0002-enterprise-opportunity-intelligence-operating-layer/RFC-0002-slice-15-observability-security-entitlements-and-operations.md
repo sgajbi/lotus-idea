@@ -52,9 +52,11 @@ Production-like AI output now fails closed under
 `lotus-idea.ai-execution-provenance-policy.v1`. Only local/test may accept an
 explicitly unattested fixture, and that posture is carried in API, audit, and
 lineage evidence without clearing runtime proof. Deterministic fallback remains
-available. Signed Lotus AI run/model attestation is still blocked on
-`sgajbi/lotus-ai#113`, so this is consumer-boundary hardening rather than live
-AI runtime completion.
+available. Signed Lotus AI run/model attestation issuance and Idea-side
+verification are implemented locally with bounded success/rejection telemetry.
+Cross-repository mainline proof remains blocked on `sgajbi/lotus-ai#113`, so
+this is implementation-backed consumer hardening rather than live AI runtime
+or supported-feature completion.
 
 Implementation evidence:
 
@@ -268,6 +270,10 @@ aggregate lineage-store blocker, and the current AI model-risk operations
 contract narrows the prior dashboard gap to a not-certified contract posture;
 neither is `lotus-ai` runtime, dashboard, alert, Workbench, or supported
 feature certification evidence.
+The verifier may report `lotusAiRunAttestationAvailable=true`; this is local
+capability availability, not certification. The source-safe
+`lotus-ai-attestation-contract-proof` validates producer and consumer code but
+clears no blocker until mainline CI evidence is available.
 The implementation-proof readiness diagnostic is explicitly `not_certified`
 until every reported proof family has implementation-backed live evidence and
 supported-feature promotion evidence where applicable.

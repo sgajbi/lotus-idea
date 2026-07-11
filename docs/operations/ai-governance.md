@@ -12,6 +12,10 @@ implemented AI explanation telemetry. None of this is certified `lotus-ai`
 runtime lineage, live-provider execution, Workbench product proof, or
 supported-feature promotion.
 
+It can verify a signed Lotus AI workflow-run attestation supplied with
+producer output, bind that output to the exact Idea request, and persist a
+bounded verification receipt. This does not make Idea the AI runtime owner.
+
 ## Current Implementation
 
 RFC-0002 Slice 09 adds `src/app/domain/ai_governance.py`,
@@ -61,6 +65,13 @@ RFC-0002 Slice 09 adds `src/app/domain/ai_governance.py`,
 17. evaluation and readiness responses that expose
     `metadataEnvelopeVersion=lotus-idea.ai-metadata-envelope.v1` so consumers
     can verify the active boundary contract.
+18. exact Lotus AI producer wire contracts, Ed25519 verification, fixed-path
+    signing-key discovery, deterministic input/output digest binding, and
+    issuer, audience, workflow, evaluator, model-risk, and time validation.
+19. durable replay protection over producer run id and replay nonce, including
+    PostgreSQL partial unique indexes and reconstruction after restart.
+20. bounded provenance telemetry that excludes signatures, keys, run ids,
+    prompts, model content, and client data.
 
 The API preserves source authority: AI output cannot mutate candidate score,
 lifecycle, source facts, review state, conversion state, or downstream workflow
@@ -74,7 +85,8 @@ Successful API responses always return:
 2. `aiLineagePersistenceDecision=accepted|replayed`,
 3. `durableStorageBacked=false` only for allowed `local`/`test` process-local
    writes and `true` when the active repository provider is PostgreSQL,
-4. `lotusAiRuntimeExecuted=false`,
+4. `lotusAiRuntimeExecuted=true` only for cryptographically verified,
+   request-bound producer execution; fallback and local fixtures remain `false`,
 5. `supportedFeaturePromoted=false`,
 6. `grantsDownstreamAuthority=false`.
 
@@ -90,6 +102,8 @@ The readiness diagnostic always returns:
 6. `supportedFeaturePromoted=false`.
 7. `actionContentPolicyVersion=lotus-idea.ai-action-content-policy.v1`.
 8. `metadataEnvelopeVersion=lotus-idea.ai-metadata-envelope.v1`.
+9. `lotusAiRunAttestationAvailable=true`, while certification remains blocked
+   by `lotus_ai_run_attestation_mainline_proof_missing`.
 
 ## Provider-Safe Metadata Envelope
 
@@ -179,9 +193,10 @@ The internal domain model supports these bounded workflow purposes:
 4. meeting-preparation drafting when evidence is ready and the candidate is
    review-ready.
 
-Runtime execution through `lotus-ai` remains planned. `lotus-ai` owns provider
-execution, prompt registry, RAG, evaluation, workflow-pack runtime, and AI
-telemetry.
+`lotus-ai` owns provider execution, prompt registry, RAG, evaluation,
+workflow-pack runtime, signing keys, key rotation, model approvals, and AI
+telemetry. `lotus-idea` owns deterministic evidence binding, verification
+policy, replay protection, bounded receipt persistence, and human-review gates.
 
 ## Lineage Boundary
 
@@ -226,7 +241,7 @@ trust telemetry, and Workbench proof exist.
 
 ## API Behavior
 
-The internal evaluator supports two modes:
+The internal evaluator supports three modes:
 
 1. **Deterministic fallback**: when no workflow output is supplied, the route
    returns a governed fallback explanation over persisted candidate evidence
@@ -235,6 +250,10 @@ The internal evaluator supports two modes:
    that every claim references source products already present in the redacted
    evidence envelope and that proposed actions are limited to advisor review or
    missing-evidence requests.
+3. **Attested producer evaluation**: producer run id, execution output, and
+   signed attestation must be supplied together. The route verifies trusted
+   Lotus AI keys and deterministic bindings before mapping output into the Idea
+   verifier and atomically writing lineage plus the bounded receipt.
 
 ### Execution Provenance Boundary
 
@@ -243,20 +262,21 @@ Self-asserted workflow output is never production evidence.
 | Runtime profile | Workflow output | Deterministic fallback |
 | --- | --- | --- |
 | `local`, `test` | Allowed only as `unattested_local_test_fixture`; cannot clear runtime proof. | Allowed. |
-| `demo`, `staging`, `production` | Rejected with `400 ai_execution_provenance_required` before candidate lookup or lineage persistence. | Allowed. |
+| `demo`, `staging`, `production` | Accepted only as a complete, verified Lotus AI producer bundle; otherwise rejected with product-safe `400 ai_execution_provenance_required` before lineage persistence. | Allowed. |
 
 The evaluation response, audit attributes, and lineage record expose the bounded
 provenance posture. Migration `011` marks existing records
 `pre_attestation_unverifiable`; it does not infer that historical output came
-from Lotus AI. Readiness remains blocked with
-`lotus_ai_run_attestation_contract_missing`.
+from Lotus AI. Readiness reports the verifier as available but remains blocked
+with `lotus_ai_run_attestation_mainline_proof_missing`.
 
-The missing producer contract is tracked by `sgajbi/lotus-ai#113`. Lotus AI
-must own signed run/model provenance, issuer and audience, key rotation,
-provider/model approval, evaluator policy, evidence/output digest binding,
-issued/expiry time, and request/run replay identity. Idea will consume and
-verify that receipt; it will not own signing keys, provider execution, model
-inventory, prompts, RAG, or AI runtime infrastructure.
+The producer delivery is tracked by `sgajbi/lotus-ai#113`. Local source-safe
+proof is generated with `make lotus-ai-attestation-contract-proof` and enforced
+by `make lotus-ai-attestation-contract-proof-gate`. It clears no aggregate
+blocker because branch-local source inspection does not prove merged
+producer/consumer CI, live-provider rollout, Workbench behavior, or
+supported-feature promotion. Idea does not own signing keys, provider
+execution, model inventory, prompts, RAG, or AI runtime infrastructure.
 
 Unsupported claims and forbidden action types or content return `200` with a blocked posture
 because the verifier successfully evaluated and rejected the output. Missing

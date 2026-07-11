@@ -62,7 +62,8 @@ Current implementation includes these bounded foundations:
    state, idempotent operator run-once identity, and bounded broker proof
    artifacts,
 9. AI explanation foundations with deterministic evidence, API-idempotent
-   lineage storage, model-risk operations evidence, and no provider-runtime
+   lineage storage, signed Lotus AI run-attestation verification and replay
+   protection, model-risk operations evidence, and no provider-runtime
    certification,
 10. implementation-proof readiness diagnostics that aggregate blockers instead
     of promoting support.
@@ -658,9 +659,17 @@ AI workflow output trust is governed by
 `lotus-idea.ai-execution-provenance-policy.v1`. Local/test may accept only an
 explicit `unattested_local_test_fixture`; demo, staging, and production reject
 workflow output before candidate lookup or persistence until a verified
-producer receipt exists. Deterministic fallback remains allowed. The signed
-run/model attestation, key distribution, provider/model approval, and runtime
-truth belong to `lotus-ai` and are tracked by `sgajbi/lotus-ai#113`.
+producer receipt exists. Deterministic fallback remains allowed. Signed
+run/model attestation issuance, key distribution, provider/model approval, and
+runtime truth belong to `lotus-ai` and are tracked by `sgajbi/lotus-ai#113`.
+Idea consumes the exact producer envelope through `app.integration`, discovers
+keys only at the fixed well-known path, verifies Ed25519 signatures and
+deterministic input/output bindings, maps verified output through the
+application use case, and atomically persists a bounded receipt. Run id and
+replay nonce remain unique across restart. Readiness may report the verifier as
+available, but must retain `lotus_ai_run_attestation_mainline_proof_missing`
+until producer and consumer mainline/CI evidence exists. Local source proof
+clears no aggregate blocker.
 
 Provider-bound AI metadata uses the closed
 `lotus-idea.ai-metadata-envelope.v1` policy in
