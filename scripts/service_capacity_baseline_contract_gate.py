@@ -74,7 +74,9 @@ def validate_contract() -> list[str]:
     if artifact["certificationReady"] is not False:
         errors.append("test-profile capacity baseline must not be certification-ready")
     if "postgresThresholdProof" not in INPUT_KEYS or "postgresSaturationMeasured" in INPUT_KEYS:
-        errors.append("capacity generation must accept proof, not a caller-asserted saturation boolean")
+        errors.append(
+            "capacity generation must accept proof, not a caller-asserted saturation boolean"
+        )
 
     proof = execute_postgres_capacity_threshold_proof(
         stress_port=_ThresholdProofPort(),
