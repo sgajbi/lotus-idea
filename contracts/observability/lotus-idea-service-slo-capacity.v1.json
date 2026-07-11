@@ -125,6 +125,9 @@
     "baseline_generator": "scripts/generate_service_capacity_baseline.py",
     "baseline_contract_gate": "scripts/service_capacity_baseline_contract_gate.py",
     "baseline_workload_runner": "scripts/run_service_capacity_workload.py",
+    "postgres_threshold_proof_model": "src/app/application/postgres_capacity_threshold_proof.py",
+    "postgres_threshold_proof_adapter": "src/app/infrastructure/postgres_capacity_stress.py",
+    "postgres_threshold_proof_runner": "scripts/run_postgres_capacity_threshold_proof.py",
     "operations_doc": "docs/operations/service-slo-capacity.md",
     "operations_wiki": "wiki/Service-SLO-And-Capacity.md",
     "rfc_slice": "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-15-observability-security-entitlements-and-operations.md"
@@ -139,6 +142,7 @@
     "This service/workflow SLO contract is distinct from the mesh data-product SLO contract.",
     "Target values are initial engineering budgets and are not production certification without measured baseline evidence.",
     "This contract does not certify horizontal scale, multi-process safety, infrastructure capacity, or cloud cost.",
+    "Test-profile threshold evidence validates policy behavior but cannot satisfy the production-like PostgreSQL saturation blocker.",
     "This contract does not promote a supported business feature."
   ]
 }

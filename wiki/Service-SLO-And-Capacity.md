@@ -17,6 +17,7 @@ reconciliation, quality, and lineage policy.
 | Error-budget rules and alerts | Implemented and tested with `promtool`. |
 | Grafana dashboard | Implemented from bounded metrics and recording rules. |
 | Source-safe baseline runner | Implemented for guarded API, source-ingestion, outbox, dependency-failure/recovery, and read-only PostgreSQL scenarios. |
+| Controlled PostgreSQL threshold proof | Implemented with exact target identity, hard connection caps, mandatory acknowledgement, release/recovery checks, and proof-only baseline linkage. Test evidence is non-certifying. |
 | Production capacity certification | Blocked on load/soak, dependency-failure, pool-saturation, and cost/resource evidence. |
 
 No tenant, client, portfolio, candidate, event, request, idempotency,
@@ -39,6 +40,12 @@ correlation, or trace identifier is permitted as a metric label.
 make service-slo-capacity-contract-gate
 make service-capacity-baseline-contract-gate
 make service-slo-rule-test
+make postgres-capacity-threshold-proof `
+  SERVICE_CAPACITY_PROFILE=test `
+  POSTGRES_CAPACITY_EXPECTED_DATABASE=idea_capacity_proof `
+  POSTGRES_CAPACITY_MAX_TARGET_CONNECTIONS=20 `
+  POSTGRES_CAPACITY_MAX_LOAD_CONNECTIONS=20 `
+  POSTGRES_CAPACITY_CONFIRMATION=SATURATE_DEDICATED_LOTUS_IDEA_POSTGRES
 ```
 
 `make service-capacity-workload` defaults to a read-only test-profile API
@@ -51,6 +58,11 @@ The PostgreSQL adapter refreshes its session-local statistics snapshot before
 reading aggregate connection utilization. This prevents a long-lived
 transaction from masking a threshold crossing while preserving the caller's
 business transaction boundary.
+
+The threshold command is restricted to a dedicated `test` or
+`production-like` database and requires `LOTUS_IDEA_DATABASE_URL` transiently.
+Only a valid artifact with matching commit and branch can feed the baseline;
+test-profile evidence never clears production certification.
 
 See `docs/operations/service-slo-capacity.md` for target values, alert response,
 capacity assumptions, and non-proof boundaries.

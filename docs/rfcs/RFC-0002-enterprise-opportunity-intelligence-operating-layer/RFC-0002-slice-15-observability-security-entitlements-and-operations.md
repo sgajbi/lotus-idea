@@ -299,6 +299,16 @@ data-lifecycle authority remain available. This clears the missing-metric
 implementation blocker only; production-like threshold stress, recovery, and
 cost/resource evidence remain required.
 
+Controlled PostgreSQL threshold/recovery automation now crosses a narrow
+application port and guarded infrastructure adapter. It verifies dedicated
+database identity and a hard `max_connections` ceiling, requires an exact
+operator acknowledgement, prohibits production execution, releases held
+connections on every path, and emits source-safe evidence. The baseline no
+longer accepts a caller-asserted saturation boolean: it requires a valid proof
+with matching commit/branch provenance, and only `production-like` proof can
+satisfy the saturation blocker. Disposable test evidence reached the 90% shed
+threshold and recovered to normal, but remains explicitly non-certifying.
+
 ## Required Work
 
 1. Add metrics, logs, traces, audit events, health/readiness diagnostics, and

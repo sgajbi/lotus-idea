@@ -182,6 +182,25 @@ The PostgreSQL scenario reads `LOTUS_IDEA_DATABASE_URL` transiently. It stores
 only query outcome, duration, and aggregate utilization. It does not retain the
 DSN or database error detail and does not clear saturation certification.
 
+Run threshold/recovery proof only against a dedicated bounded target:
+
+```powershell
+$env:LOTUS_IDEA_DATABASE_URL = "<transient dedicated proof DSN>"
+make postgres-capacity-threshold-proof `
+  SERVICE_CAPACITY_PROFILE=test `
+  POSTGRES_CAPACITY_EXPECTED_DATABASE=idea_capacity_proof `
+  POSTGRES_CAPACITY_MAX_TARGET_CONNECTIONS=20 `
+  POSTGRES_CAPACITY_MAX_LOAD_CONNECTIONS=20 `
+  POSTGRES_CAPACITY_CONFIRMATION=SATURATE_DEDICATED_LOTUS_IDEA_POSTGRES
+```
+
+The command verifies the exact database identity and refuses targets above the
+declared connection cap. It is prohibited in production and always releases
+held connections. A baseline accepts `--postgres-threshold-proof <path>` only
+when the artifact validates and matches its commit and branch. Test-profile
+proof remains non-certifying; only reviewed production-like evidence can clear
+the saturation blocker.
+
 Validate the evidence boundary independently:
 
 ```powershell

@@ -1467,7 +1467,12 @@ Keep request and response bodies, URLs, DSNs, credentials, caller assertions,
 and business identifiers transient inside infrastructure adapters. Require an
 explicit mutation switch for operator workflows and an additional confirmation
 for production. Treat observed PostgreSQL connection utilization as posture,
-not proof that saturation thresholds or load shedding were exercised.
+not proof that saturation thresholds or load shedding were exercised. Never
+accept a caller-asserted saturation boolean: require the governed threshold
+artifact, exact commit/branch provenance, dedicated-target identity, bounded
+connections, explicit acknowledgement, guaranteed release, and recovery to
+normal. Test-profile proof may validate behavior but cannot clear a
+production-like certification blocker.
 
 Durable PostgreSQL repositories expose capacity through a narrow repository
 port. Nonessential source-ingestion and outbox operator runs must evaluate that
