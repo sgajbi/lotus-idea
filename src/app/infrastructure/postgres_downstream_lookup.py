@@ -27,9 +27,12 @@ def load_conversion_intent_by_id(
         cursor.execute(
             """
             /* lotus-idea downstream-lookup-conversion-intent */
-            SELECT conversion_intent_id, candidate_id, intent_json
-            FROM idea_conversion_intent
-            WHERE conversion_intent_id = %s
+            SELECT intent.conversion_intent_id, intent.candidate_id, intent.intent_json
+            FROM idea_conversion_intent intent
+            JOIN idea_data_lifecycle_control lifecycle
+              ON lifecycle.candidate_id = intent.candidate_id
+            WHERE intent.conversion_intent_id = %s
+              AND COALESCE(lifecycle.held_from_state, lifecycle.state) = 'active'
             """,
             (conversion_intent_id,),
         )
@@ -47,9 +50,12 @@ def load_candidate_record_for_conversion_intent(
         cursor.execute(
             """
             /* lotus-idea downstream-lookup-conversion-candidate */
-            SELECT candidate_id
-            FROM idea_conversion_intent
-            WHERE conversion_intent_id = %s
+            SELECT intent.candidate_id
+            FROM idea_conversion_intent intent
+            JOIN idea_data_lifecycle_control lifecycle
+              ON lifecycle.candidate_id = intent.candidate_id
+            WHERE intent.conversion_intent_id = %s
+              AND COALESCE(lifecycle.held_from_state, lifecycle.state) = 'active'
             """,
             (conversion_intent_id,),
         )
@@ -67,9 +73,13 @@ def load_report_evidence_pack_by_id(
         cursor.execute(
             """
             /* lotus-idea downstream-lookup-report-evidence-pack */
-            SELECT report_evidence_pack_id, candidate_id, evidence_pack_json
-            FROM idea_report_evidence_pack_request
-            WHERE report_evidence_pack_id = %s
+            SELECT report.report_evidence_pack_id, report.candidate_id,
+                   report.evidence_pack_json
+            FROM idea_report_evidence_pack_request report
+            JOIN idea_data_lifecycle_control lifecycle
+              ON lifecycle.candidate_id = report.candidate_id
+            WHERE report.report_evidence_pack_id = %s
+              AND COALESCE(lifecycle.held_from_state, lifecycle.state) = 'active'
             """,
             (report_evidence_pack_id,),
         )

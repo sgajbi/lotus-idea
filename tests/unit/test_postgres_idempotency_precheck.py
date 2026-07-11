@@ -15,6 +15,7 @@ from app.infrastructure.postgres_repository import PostgresIdeaRepository
 from tests.unit.postgres_repository_fake import FakePostgresConnection
 from tests.unit.test_postgres_repository import (
     EVALUATED_AT,
+    access_scope,
     conversion_command,
     high_cash_candidate,
     review_command,
@@ -25,12 +26,12 @@ def test_postgres_review_and_conversion_idempotency_prechecks_are_bounded() -> N
     connection = FakePostgresConnection()
     repository = PostgresIdeaRepository(connection)
     review_ready = replace(
-        high_cash_candidate(),
+        high_cash_candidate(candidate_scope=access_scope()),
         candidate_id="idea_high_cash_bounded_review_precheck",
         lifecycle_status=IdeaLifecycleStatus.READY_FOR_REVIEW,
     )
     approved = replace(
-        high_cash_candidate(),
+        high_cash_candidate(candidate_scope=access_scope()),
         candidate_id="idea_high_cash_bounded_conversion_precheck",
         lifecycle_status=IdeaLifecycleStatus.APPROVED,
         review_posture=ReviewPosture.APPROVED_FOR_CONVERSION,
@@ -117,7 +118,7 @@ def test_postgres_review_identity_precheck_replays_and_reserves_a_new_transport_
     connection = FakePostgresConnection()
     repository = PostgresIdeaRepository(connection)
     candidate = replace(
-        high_cash_candidate(),
+        high_cash_candidate(candidate_scope=access_scope()),
         candidate_id="idea_high_cash_resource_identity_precheck",
         lifecycle_status=IdeaLifecycleStatus.READY_FOR_REVIEW,
     )

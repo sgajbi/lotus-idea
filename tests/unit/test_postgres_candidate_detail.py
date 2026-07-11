@@ -40,7 +40,8 @@ def test_postgres_repository_loads_candidate_detail_without_whole_snapshot() -> 
     ]
     executed_sql = " ".join(connection.executed_sql)
     assert "/* lotus-idea candidate-detail-base */" in executed_sql
-    assert "where candidate_id = %s" in executed_sql
+    assert "candidate.candidate_id = %s" in executed_sql
+    assert "join idea_data_lifecycle_control" in executed_sql
     assert "idea_candidate_record" in executed_sql
     assert "idea_outbox_event" not in executed_sql
     assert "idea_downstream_submission" not in executed_sql
@@ -56,3 +57,20 @@ def test_postgres_repository_candidate_detail_returns_none_for_missing_candidate
     executed_sql = " ".join(connection.executed_sql)
     assert "/* lotus-idea candidate-detail-base */" in executed_sql
     assert "candidate-detail-lifecycle" not in executed_sql
+
+
+def test_postgres_repository_hides_erased_candidate_detail() -> None:
+    connection = FakePostgresConnection()
+    repository = PostgresIdeaRepository(connection)
+    candidate = high_cash_candidate(candidate_scope=access_scope())
+    repository.persist_candidate(
+        candidate,
+        idempotency_key="signal-ingestion:hidden-erased-detail",
+        payload={"candidateId": candidate.candidate_id},
+        actor_subject="signal-ingestion-worker",
+        occurred_at_utc=EVALUATED_AT,
+    )
+    control = connection.rows["idea_data_lifecycle_control"][0]
+    control["state"] = "erased"
+
+    assert repository.candidate_record_by_id(candidate.candidate_id) is None

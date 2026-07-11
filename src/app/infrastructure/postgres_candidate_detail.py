@@ -45,9 +45,13 @@ def _load_base_candidate_record(
     cursor.execute(
         """
         /* lotus-idea candidate-detail-base */
-        SELECT candidate_id, evidence_hash, candidate_json, persisted_at_utc
-        FROM idea_candidate_record
-        WHERE candidate_id = %s
+        SELECT candidate.candidate_id, candidate.evidence_hash,
+               candidate.candidate_json, candidate.persisted_at_utc
+        FROM idea_candidate_record candidate
+        JOIN idea_data_lifecycle_control lifecycle
+          ON lifecycle.candidate_id = candidate.candidate_id
+        WHERE candidate.candidate_id = %s
+          AND COALESCE(lifecycle.held_from_state, lifecycle.state) = 'active'
         """,
         (candidate_id,),
     )

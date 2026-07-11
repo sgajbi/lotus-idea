@@ -16,13 +16,18 @@ def candidate_detail_rows(
             for row in connection.rows[table_name]
             if row["conversion_intent_id"] in intent_ids
         ]
-    if "where candidate_id = %s" in query:
+    if "candidate_id = %s" in query:
         candidate_id = params[0]
-        return [
+        rows = [
             dict(row)
             for row in connection.rows[table_name]
             if row.get("candidate_id") == candidate_id
         ]
+        return (
+            _active_candidate_rows(connection, rows)
+            if "join idea_data_lifecycle" in query
+            else rows
+        )
     raise AssertionError(f"unexpected candidate detail query: {query}")
 
 
@@ -33,18 +38,20 @@ def downstream_lookup_rows(
 ) -> list[dict[str, Any]]:
     table_name = _table_from_select(query)
     lookup_value = params[0]
-    if "where conversion_intent_id = %s" in query:
-        return [
+    if "conversion_intent_id = %s" in query:
+        rows = [
             dict(row)
             for row in connection.rows[table_name]
             if row["conversion_intent_id"] == lookup_value
         ]
-    if "where report_evidence_pack_id = %s" in query:
-        return [
+        return _active_candidate_rows(connection, rows)
+    if "report_evidence_pack_id = %s" in query:
+        rows = [
             dict(row)
             for row in connection.rows[table_name]
             if row["report_evidence_pack_id"] == lookup_value
         ]
+        return _active_candidate_rows(connection, rows)
     if "where idempotency_key = %s" in query:
         return [
             dict(row)
@@ -52,6 +59,19 @@ def downstream_lookup_rows(
             if row["idempotency_key"] == lookup_value
         ]
     raise AssertionError(f"unexpected downstream lookup query: {query}")
+
+
+def _active_candidate_rows(
+    connection: Any,
+    rows: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    controls = {row["candidate_id"]: row for row in connection.rows["idea_data_lifecycle_control"]}
+    return [
+        row
+        for row in rows
+        if (control := controls.get(row.get("candidate_id"))) is not None
+        and (control.get("held_from_state") or control["state"]) == "active"
+    ]
 
 
 def idempotency_lookup_rows(

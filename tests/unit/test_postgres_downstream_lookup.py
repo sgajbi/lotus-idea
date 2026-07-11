@@ -54,7 +54,8 @@ def test_postgres_conversion_intent_lookup_uses_direct_table_query() -> None:
     assert loaded == conversion_result.conversion_intent
     executed_sql = " ".join(connection.executed_sql)
     assert "/* lotus-idea downstream-lookup-conversion-intent */" in executed_sql
-    assert "where conversion_intent_id = %s" in executed_sql
+    assert "intent.conversion_intent_id = %s" in executed_sql
+    assert "join idea_data_lifecycle_control" in executed_sql
     assert "idea_conversion_intent" in executed_sql
     assert "idea_candidate_record" not in executed_sql
     assert "idea_outbox_event" not in executed_sql
@@ -96,7 +97,8 @@ def test_postgres_report_pack_lookup_uses_direct_table_query() -> None:
     assert loaded == pack_result.evidence_pack
     executed_sql = " ".join(connection.executed_sql)
     assert "/* lotus-idea downstream-lookup-report-evidence-pack */" in executed_sql
-    assert "where report_evidence_pack_id = %s" in executed_sql
+    assert "report.report_evidence_pack_id = %s" in executed_sql
+    assert "join idea_data_lifecycle_control" in executed_sql
     assert "idea_report_evidence_pack_request" in executed_sql
     assert "idea_candidate_record" not in executed_sql
     assert "idea_outbox_event" not in executed_sql
@@ -147,3 +149,27 @@ def test_postgres_downstream_lookups_return_none_for_missing_records() -> None:
     assert repository.candidate_record_for_conversion_intent("missing-conversion") is None
     assert repository.report_evidence_pack_by_id("missing-report-pack") is None
     assert repository.downstream_submission_by_idempotency_key("missing-submission") is None
+
+
+def test_postgres_downstream_lookups_hide_erased_candidate_resources() -> None:
+    connection = FakePostgresConnection()
+    repository = PostgresIdeaRepository(connection)
+    candidate = approved_candidate()
+    repository.persist_candidate(
+        candidate,
+        idempotency_key="signal-ingestion:hidden-erased-resource",
+        payload={"candidateId": candidate.candidate_id},
+        actor_subject="signal-ingestion-worker",
+        occurred_at_utc=EVALUATED_AT,
+    )
+    conversion_result = request_conversion_intent(candidate, conversion_command())
+    repository.record_conversion_intent(
+        conversion_result,
+        idempotency_key=conversion_result.conversion_intent.idempotency_key,
+        payload={"conversionIntentId": "conversion-report-001"},
+    )
+    control = connection.rows["idea_data_lifecycle_control"][0]
+    control["state"] = "erased"
+
+    assert repository.conversion_intent_by_id("conversion-report-001") is None
+    assert repository.candidate_record_for_conversion_intent("conversion-report-001") is None
