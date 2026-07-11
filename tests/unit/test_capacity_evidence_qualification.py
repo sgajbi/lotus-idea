@@ -125,9 +125,13 @@ def test_qualifies_only_attested_fault_and_clean_recovery_evidence() -> None:
 @pytest.mark.parametrize(
     ("mutations", "message"),
     [
+        ({"schemaVersion": "unknown"}, "schemaVersion"),
+        ({"proofScope": "raw_dependency_payload"}, "source-safe"),
+        ({"claimPosture": "production_certified"}, "report_only_baseline"),
         ({"environmentProfile": "test"}, "production-like"),
         ({"branch": "feature/capacity"}, "originate from main"),
         ({"supportedFeaturePromoted": True}, "must not promote"),
+        ({"scenarios": {}}, "scenarios must be a list"),
         ({"scenarios": []}, "scenario is missing"),
     ],
 )
