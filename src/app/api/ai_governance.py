@@ -56,7 +56,11 @@ from app.domain import (
     InvalidAIWorkflowPack,
     InvalidAIWorkflowOutput,
 )
-from app.domain.ai_execution_provenance import UntrustedAIWorkflowOutput
+from app.domain.ai_execution_provenance import (
+    AIExecutionProvenancePosture,
+    AIWorkflowProvenanceRejectionReason,
+    UntrustedAIWorkflowOutput,
+)
 from app.domain.ai_metadata_policy import InvalidAIMetadataEnvelope
 from app.api.problem_details import problem_details_response as problem_response
 from app.observability import (
@@ -159,7 +163,10 @@ async def evaluate_ai_explanation(
                 attestation_key_source, signature_verifier = get_lotus_ai_attestation_dependencies()
             except RuntimeError as exc:
                 raise UntrustedAIWorkflowOutput(
-                    "lotus-ai attestation trust infrastructure is unavailable"
+                    "lotus-ai attestation trust infrastructure is unavailable",
+                    reason=(
+                        AIWorkflowProvenanceRejectionReason.TRUST_INFRASTRUCTURE_UNAVAILABLE
+                    ),
                 ) from exc
         result = evaluate_ai_explanation_to_repository(
             command,
@@ -189,10 +196,12 @@ async def evaluate_ai_explanation(
             title="Invalid AI output",
             detail="The AI workflow output does not match the governed explanation request.",
         )
-    except UntrustedAIWorkflowOutput:
+    except UntrustedAIWorkflowOutput as exc:
         _emit_ai_explanation_operation_event(
             OperationOutcome.BLOCKED,
             "ai_execution_provenance_required",
+            provenance_posture="rejected",
+            provenance_rejection_reason=exc.reason.value,
         )
         return problem_response(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -242,7 +251,13 @@ async def evaluate_ai_explanation(
     assert result.explanation_result is not None
     assert result.lineage_persistence_result is not None
     _emit_ai_explanation_operation_event(
-        _operation_outcome_from_ai_result(result.explanation_result)
+        _operation_outcome_from_ai_result(result.explanation_result),
+        provenance_posture=(
+            "verified"
+            if result.explanation_result.execution_provenance_posture
+            is AIExecutionProvenancePosture.LOTUS_AI_ATTESTATION_VERIFIED
+            else None
+        ),
     )
     return AIExplanationEvaluationResponse.from_domain(
         result.explanation_result,
@@ -351,13 +366,24 @@ def _emit_ai_explanation_operation_event(
     error_code: str | None = None,
     *,
     durable_storage_backed: bool = False,
+    provenance_posture: str | None = None,
+    provenance_rejection_reason: str | None = None,
 ) -> None:
+    attributes = {
+        key: value
+        for key, value in {
+            "ai_execution_provenance_posture": provenance_posture,
+            "ai_execution_provenance_rejection_reason": provenance_rejection_reason,
+        }.items()
+        if value is not None
+    }
     emit_foundation_operation_event(
         IdeaOperation.AI_EXPLANATION,
         outcome,
         source_authority="lotus-idea",
         error_code=error_code,
         durable_storage_backed=durable_storage_backed,
+        attributes=attributes,
     )
 
 

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Mapping
 
 import pytest
 from fastapi.testclient import TestClient
@@ -606,7 +606,9 @@ def capture_operation_events(
         source_authority: str = "lotus-idea",
         durable_storage_backed: bool = False,
         error_code: str | None = None,
+        attributes: Mapping[str, str] | None = None,
     ) -> None:
+        del attributes
         events.append(
             (operation.value, outcome.value, source_authority, durable_storage_backed, error_code)
         )

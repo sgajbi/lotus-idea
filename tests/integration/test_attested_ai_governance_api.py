@@ -55,6 +55,18 @@ def test_api_accepts_signed_bound_lotus_ai_output(
         "get_lotus_ai_attestation_dependencies",
         lambda: (StaticKeySource(issued_at), AcceptingSignatureVerifier()),
     )
+    operation_attributes: list[Mapping[str, str]] = []
+
+    def capture_operation_event(*args: object, **kwargs: object) -> None:
+        attributes = kwargs.get("attributes", {})
+        assert isinstance(attributes, Mapping)
+        operation_attributes.append(cast(Mapping[str, str], attributes))
+
+    monkeypatch.setattr(
+        ai_governance_api,
+        "emit_foundation_operation_event",
+        capture_operation_event,
+    )
     payload = ai_request_payload(
         request_id=request_id,
         purpose="advisor_rationale_draft",
@@ -88,6 +100,7 @@ def test_api_accepts_signed_bound_lotus_ai_output(
     )
     assert lineage.attestation_receipt is not None
     assert lineage.attestation_receipt.run_id == "packrun_idea_explanation_attested-api-request-001"
+    assert operation_attributes == [{"ai_execution_provenance_posture": "verified"}]
     reset_idea_repository_for_tests()
 
 

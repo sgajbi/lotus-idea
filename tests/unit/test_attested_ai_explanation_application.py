@@ -13,6 +13,7 @@ from app.application.lotus_ai_idea_explanation_request import (
 )
 from app.domain.ai_execution_provenance import (
     AIExecutionProvenancePosture,
+    AIWorkflowProvenanceRejectionReason,
     UntrustedAIWorkflowOutput,
 )
 from app.domain.ai_governance import (
@@ -92,7 +93,7 @@ def test_attested_application_path_fails_before_write_when_keys_are_unavailable(
         execution_output=execution_output,
     )
 
-    with pytest.raises(UntrustedAIWorkflowOutput, match="verification failed"):
+    with pytest.raises(UntrustedAIWorkflowOutput, match="verification failed") as raised:
         evaluate_ai_explanation_to_repository(
             EvaluateAIExplanationToRepositoryCommand(
                 candidate_id=candidate_id,
@@ -110,8 +111,29 @@ def test_attested_application_path_fails_before_write_when_keys_are_unavailable(
             verification_clock=lambda: VERIFIED_AT,
         )
 
+    assert raised.value.reason is (
+        AIWorkflowProvenanceRejectionReason.ATTESTATION_VERIFICATION_FAILED
+    )
     persisted = repository.snapshot().candidate_records[candidate_id]
     assert persisted.ai_explanation_lineage_records == ()
+
+
+def test_attested_command_classifies_incomplete_bundle_before_repository_access() -> None:
+    _, explanation_command, candidate_id = _repository_and_command()
+
+    with pytest.raises(UntrustedAIWorkflowOutput) as raised:
+        EvaluateAIExplanationToRepositoryCommand(
+            candidate_id=candidate_id,
+            explanation=explanation_command,
+            fallback_reason=AIFallbackReason.AI_UNAVAILABLE,
+            idempotency_key="attested-explanation-incomplete-001",
+            idempotency_payload={"request_id": explanation_command.request_id},
+            producer_run_id="packrun_idea_explanation_request-001",
+        )
+
+    assert raised.value.reason is (
+        AIWorkflowProvenanceRejectionReason.INCOMPLETE_ATTESTATION_BUNDLE
+    )
 
 
 def _repository_and_command() -> tuple[InMemoryIdeaRepository, AIExplanationCommand, str]:

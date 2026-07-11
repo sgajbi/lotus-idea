@@ -9,6 +9,7 @@ from app.application.candidate_lookup import candidate_record_by_id
 from app.domain.ai_action_policy import AI_ACTION_POLICY_VERSION
 from app.domain.ai_execution_provenance import (
     AI_EXECUTION_PROVENANCE_POLICY_VERSION,
+    AIWorkflowProvenanceRejectionReason,
     AIWorkflowOutputTrustPolicy,
     UntrustedAIWorkflowOutput,
 )
@@ -110,7 +111,8 @@ class EvaluateAIExplanationToRepositoryCommand:
             is AIWorkflowOutputTrustPolicy.LOTUS_AI_ATTESTATION_REQUIRED
         ):
             raise UntrustedAIWorkflowOutput(
-                "production-like workflow output requires verified lotus-ai provenance"
+                "production-like workflow output requires verified lotus-ai provenance",
+                reason=AIWorkflowProvenanceRejectionReason.PROVENANCE_REQUIRED,
             )
         attested_values = (
             self.producer_run_id,
@@ -121,11 +123,13 @@ class EvaluateAIExplanationToRepositoryCommand:
             value is not None for value in attested_values
         ):
             raise UntrustedAIWorkflowOutput(
-                "lotus-ai run id, execution output, and attestation must be provided together"
+                "lotus-ai run id, execution output, and attestation must be provided together",
+                reason=AIWorkflowProvenanceRejectionReason.INCOMPLETE_ATTESTATION_BUNDLE,
             )
         if self.run_attestation is not None and self.workflow_output is not None:
             raise UntrustedAIWorkflowOutput(
-                "attested lotus-ai output cannot be combined with caller-mapped workflow output"
+                "attested lotus-ai output cannot be combined with caller-mapped workflow output",
+                reason=AIWorkflowProvenanceRejectionReason.CONFLICTING_OUTPUT_SOURCES,
             )
 
 
@@ -197,7 +201,8 @@ def evaluate_ai_explanation_to_repository(
     if command.run_attestation is not None:
         if attestation_key_source is None or signature_verifier is None:
             raise UntrustedAIWorkflowOutput(
-                "lotus-ai attestation trust infrastructure is unavailable"
+                "lotus-ai attestation trust infrastructure is unavailable",
+                reason=AIWorkflowProvenanceRejectionReason.TRUST_INFRASTRUCTURE_UNAVAILABLE,
             )
         assert command.producer_run_id is not None
         assert command.producer_execution_output is not None
@@ -226,7 +231,10 @@ def evaluate_ai_explanation_to_repository(
                 verifier_ran_at_utc=verified_at,
             )
         except (RuntimeError, ValueError) as exc:
-            raise UntrustedAIWorkflowOutput("lotus-ai attestation verification failed") from exc
+            raise UntrustedAIWorkflowOutput(
+                "lotus-ai attestation verification failed",
+                reason=AIWorkflowProvenanceRejectionReason.ATTESTATION_VERIFICATION_FAILED,
+            ) from exc
         explanation_result = replace(
             evaluate_ai_workflow_output(explanation_request, workflow_output),
             execution_provenance_posture=(
