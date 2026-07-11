@@ -13,6 +13,7 @@ from typing import Mapping
 
 from app.application.service_capacity_baseline import (
     CapacityMeasurement,
+    SCENARIOS,
     build_service_capacity_baseline,
 )
 from app.application.capacity_evidence_qualification import (
@@ -37,14 +38,7 @@ from app.infrastructure.postgres_capacity_probe import PostgresCapacityProbe
 from app.ports.capacity_probe import CapacityProbeRequest
 
 
-SCENARIO_CHOICES = (
-    "api",
-    "source_ingestion",
-    "outbox_delivery",
-    "downstream_submission",
-    "dependency_failure",
-    "postgresql",
-)
+SCENARIO_CHOICES = SCENARIOS
 MUTATING_SCENARIOS = frozenset(
     {"source_ingestion", "outbox_delivery", "downstream_submission", "dependency_failure"}
 )
@@ -282,51 +276,9 @@ def main(argv: list[str] | None = None) -> int:
         if args.dependency_recovery_delay_seconds < 0:
             raise ValueError("dependency_recovery_delay_seconds must not be negative")
         probe = HttpCapacityProbe(base_url=args.base_url, timeout_seconds=args.timeout_seconds)
-        started_at = time.perf_counter()
-        measurements: list[CapacityMeasurement] = []
-        postgres_max_utilization = None
-        if args.paced_load_soak:
-            validate_paced_load_soak_request(
-                scenarios=tuple(args.scenario),
-                environment_profile=args.environment_profile,
-                request_count=args.request_count,
-                minimum_observation_seconds=args.minimum_observation_seconds,
-            )
-            database_url = _required_database_url()
-            paced_result = execute_paced_capacity_soak(
-                plans=plans,
-                http_probe=probe,
-                postgres_probe=PostgresCapacityProbe(database_url=database_url),
-                postgres_request_count=args.request_count,
-                minimum_observation_seconds=args.minimum_observation_seconds,
-            )
-            measurements.extend(paced_result.measurements)
-            postgres_max_utilization = paced_result.postgres_max_connection_utilization_fraction
-            observed_window_seconds = paced_result.observed_window_seconds
-        else:
-            for plan in plans:
-                if plan.scenario == "dependency_failure" and args.dependency_recovery_delay_seconds:
-                    fault_only = CapacityWorkloadPlan(
-                        scenario=plan.scenario,
-                        requests=plan.requests,
-                        max_concurrency=plan.max_concurrency,
-                        item_count_field=plan.item_count_field,
-                        expected_source_failure_class=plan.expected_source_failure_class,
-                    )
-                    measurements.extend(execute_capacity_workload(fault_only, probe=probe))
-                    time.sleep(args.dependency_recovery_delay_seconds)
-                    measurements.append(execute_capacity_recovery(plan, probe=probe))
-                else:
-                    measurements.extend(execute_capacity_workload(plan, probe=probe))
-            if "postgresql" in args.scenario:
-                postgres_result = execute_postgres_capacity_workload(
-                    probe=PostgresCapacityProbe(database_url=_required_database_url()),
-                    request_count=args.request_count,
-                    max_concurrency=args.concurrency,
-                )
-                measurements.extend(postgres_result.measurements)
-                postgres_max_utilization = postgres_result.max_connection_utilization_fraction
-            observed_window_seconds = max(time.perf_counter() - started_at, 0.000001)
+        measurements, observed_window_seconds, postgres_max_utilization = _execute_measurements(
+            args=args, plans=plans, probe=probe
+        )
         threshold_proof = _read_optional_proof(args.postgres_threshold_proof)
         threshold_attestation = _verify_optional_attestation(
             verification_requested=args.verify_postgres_threshold_attestation,
@@ -379,6 +331,64 @@ def main(argv: list[str] | None = None) -> int:
     finally:
         if probe is not None:
             probe.close()
+
+
+def _execute_measurements(
+    *,
+    args: argparse.Namespace,
+    plans: list[CapacityWorkloadPlan],
+    probe: HttpCapacityProbe,
+) -> tuple[list[CapacityMeasurement], float, float | None]:
+    if args.paced_load_soak:
+        validate_paced_load_soak_request(
+            scenarios=tuple(args.scenario),
+            environment_profile=args.environment_profile,
+            request_count=args.request_count,
+            minimum_observation_seconds=args.minimum_observation_seconds,
+        )
+        paced_result = execute_paced_capacity_soak(
+            plans=plans,
+            http_probe=probe,
+            postgres_probe=PostgresCapacityProbe(database_url=_required_database_url()),
+            postgres_request_count=args.request_count,
+            minimum_observation_seconds=args.minimum_observation_seconds,
+        )
+        return (
+            list(paced_result.measurements),
+            paced_result.observed_window_seconds,
+            paced_result.postgres_max_connection_utilization_fraction,
+        )
+
+    started_at = time.perf_counter()
+    measurements: list[CapacityMeasurement] = []
+    for plan in plans:
+        if plan.scenario == "dependency_failure" and args.dependency_recovery_delay_seconds:
+            fault_only = CapacityWorkloadPlan(
+                scenario=plan.scenario,
+                requests=plan.requests,
+                max_concurrency=plan.max_concurrency,
+                item_count_field=plan.item_count_field,
+                expected_source_failure_class=plan.expected_source_failure_class,
+            )
+            measurements.extend(execute_capacity_workload(fault_only, probe=probe))
+            time.sleep(args.dependency_recovery_delay_seconds)
+            measurements.append(execute_capacity_recovery(plan, probe=probe))
+        else:
+            measurements.extend(execute_capacity_workload(plan, probe=probe))
+    postgres_max_utilization = None
+    if "postgresql" in args.scenario:
+        postgres_result = execute_postgres_capacity_workload(
+            probe=PostgresCapacityProbe(database_url=_required_database_url()),
+            request_count=args.request_count,
+            max_concurrency=args.concurrency,
+        )
+        measurements.extend(postgres_result.measurements)
+        postgres_max_utilization = postgres_result.max_connection_utilization_fraction
+    return (
+        measurements,
+        max(time.perf_counter() - started_at, 0.000001),
+        postgres_max_utilization,
+    )
 
 
 def _write_json_atomic(path: Path, payload: dict[str, object]) -> None:

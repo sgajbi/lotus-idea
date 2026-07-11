@@ -171,46 +171,20 @@ def build_service_capacity_baseline(
         "runId": run_id,
         "observedWindowSeconds": observed_window_seconds,
         "scenarios": scenarios,
-        "resourceEvidence": {
-            "loadSoakAttestationVerified": load_soak_qualification is not None,
-            "loadSoakProofRunId": (
-                load_soak_qualification.get("capacityProofRunId")
-                if load_soak_qualification is not None
-                else None
-            ),
-            "dependencyRecoveryObserved": _dependency_recovery_observed(scenarios),
-            "dependencyRecoveryAttestationVerified": (
-                dependency_recovery_qualification is not None
-            ),
-            "dependencyRecoveryProofRunId": (
-                dependency_recovery_qualification.get("capacityProofRunId")
-                if dependency_recovery_qualification is not None
-                else None
-            ),
-            "postgresSaturationMeasured": postgres_saturation_measured,
-            "postgresThresholdProofValidated": postgres_threshold_proof_validated,
-            "postgresThresholdProofRunId": (
-                postgres_threshold_proof.get("runId")
-                if postgres_threshold_proof_validated and postgres_threshold_proof is not None
-                else None
-            ),
-            "postgresThresholdAttestationVerified": postgres_saturation_measured,
-            "postgresThresholdQualificationRunId": (
-                postgres_qualification.get("qualificationRunId")
-                if postgres_qualification is not None
-                else None
-            ),
-            "postgresMaxConnectionUtilizationFraction": (
+        "resourceEvidence": _resource_evidence(
+            scenarios=scenarios,
+            load_soak_qualification=load_soak_qualification,
+            dependency_recovery_qualification=dependency_recovery_qualification,
+            postgres_saturation_measured=postgres_saturation_measured,
+            postgres_threshold_proof_validated=postgres_threshold_proof_validated,
+            postgres_threshold_proof=postgres_threshold_proof,
+            postgres_qualification=postgres_qualification,
+            postgres_max_connection_utilization_fraction=(
                 postgres_max_connection_utilization_fraction
             ),
-            "costResourceMeasured": False,
-            "resourceBaselineValidated": resource_baseline_validated,
-            "resourceBaselineRunId": (
-                resource_baseline.get("runId")
-                if resource_baseline_validated and resource_baseline is not None
-                else None
-            ),
-        },
+            resource_baseline_validated=resource_baseline_validated,
+            resource_baseline=resource_baseline,
+        ),
         "certificationReady": not blockers,
         "certificationBlockers": blockers,
         "supportedFeaturePromoted": False,
@@ -219,6 +193,57 @@ def build_service_capacity_baseline(
     if errors:
         raise ValueError("; ".join(errors))
     return artifact
+
+
+def _resource_evidence(
+    *,
+    scenarios: list[dict[str, Any]],
+    load_soak_qualification: dict[str, Any] | None,
+    dependency_recovery_qualification: dict[str, Any] | None,
+    postgres_saturation_measured: bool,
+    postgres_threshold_proof_validated: bool,
+    postgres_threshold_proof: dict[str, Any] | None,
+    postgres_qualification: dict[str, Any] | None,
+    postgres_max_connection_utilization_fraction: float | None,
+    resource_baseline_validated: bool,
+    resource_baseline: dict[str, Any] | None,
+) -> dict[str, Any]:
+    return {
+        "loadSoakAttestationVerified": load_soak_qualification is not None,
+        "loadSoakProofRunId": (
+            load_soak_qualification.get("capacityProofRunId")
+            if load_soak_qualification is not None
+            else None
+        ),
+        "dependencyRecoveryObserved": _dependency_recovery_observed(scenarios),
+        "dependencyRecoveryAttestationVerified": dependency_recovery_qualification is not None,
+        "dependencyRecoveryProofRunId": (
+            dependency_recovery_qualification.get("capacityProofRunId")
+            if dependency_recovery_qualification is not None
+            else None
+        ),
+        "postgresSaturationMeasured": postgres_saturation_measured,
+        "postgresThresholdProofValidated": postgres_threshold_proof_validated,
+        "postgresThresholdProofRunId": (
+            postgres_threshold_proof.get("runId")
+            if postgres_threshold_proof_validated and postgres_threshold_proof is not None
+            else None
+        ),
+        "postgresThresholdAttestationVerified": postgres_saturation_measured,
+        "postgresThresholdQualificationRunId": (
+            postgres_qualification.get("qualificationRunId")
+            if postgres_qualification is not None
+            else None
+        ),
+        "postgresMaxConnectionUtilizationFraction": (postgres_max_connection_utilization_fraction),
+        "costResourceMeasured": False,
+        "resourceBaselineValidated": resource_baseline_validated,
+        "resourceBaselineRunId": (
+            resource_baseline.get("runId")
+            if resource_baseline_validated and resource_baseline is not None
+            else None
+        ),
+    }
 
 
 def validate_service_capacity_baseline(artifact: dict[str, Any]) -> list[str]:
