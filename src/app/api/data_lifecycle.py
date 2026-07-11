@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import UTC, datetime
+
 from fastapi import FastAPI, Header, Path, Request, status
 from fastapi.responses import JSONResponse
 
@@ -22,14 +24,24 @@ from app.api.problem_details import (
     not_found_metadata,
     permission_denied_metadata,
     problem_details_response,
+    service_unavailable_metadata,
 )
 from app.api.route_metadata import RouteMetadata
 from app.api.runtime_dependencies import (
+    get_lifecycle_authority_dependencies,
     get_idea_repository,
     idea_repository_durable_storage_backed,
+    load_runtime_settings,
+)
+from app.application.lifecycle_authority_verification import (
+    verify_lifecycle_authority_decision,
 )
 from app.application.data_lifecycle import ExecuteDataLifecycle
 from app.domain.data_lifecycle import DataLifecycleDecision, DataLifecycleOperationResult
+from app.domain.lifecycle_authority import (
+    ExpectedLifecycleAuthorityDecision,
+    VerifiedLifecycleAuthorityReceipt,
+)
 from app.observability import IdeaOperation, OperationOutcome
 from app.ports.data_lifecycle import DataLifecycleRepository
 from app.security.caller_context import (
@@ -42,6 +54,7 @@ _MANAGE_POLICY = CapabilityPolicy.for_roles(
     required_capability="idea.data-lifecycle.manage",
     allowed_roles=("privacy_officer", "records_manager"),
 )
+_LIFECYCLE_AUTHORITY_UNAVAILABLE_DETAIL = "Signed lifecycle authority could not be verified."
 
 
 async def post_data_lifecycle_action(
@@ -79,11 +92,29 @@ async def post_data_lifecycle_action(
         )
     try:
         validate_idempotency_key(idempotency_key)
+        authority_required = (
+            load_runtime_settings().runtime_profile.requires_durable_write_repository
+        )
+        authority_receipt = _verify_authority_decision(
+            request=request,
+            candidate_id=candidate_id,
+            required=authority_required,
+        )
         command = request.to_command(
             candidate_id=candidate_id,
             caller=caller,
             idempotency_key=idempotency_key,
             event_lineage=event_lineage_from_request(http_request),
+            authority_verification_required=authority_required,
+            authority_receipt=authority_receipt,
+        )
+    except RuntimeError:
+        _emit_event(IdeaOperation.DATA_LIFECYCLE_ACTION, OperationOutcome.BLOCKED)
+        return problem_details_response(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            code="lifecycle_authority_unavailable",
+            title="Lifecycle authority unavailable",
+            detail=_LIFECYCLE_AUTHORITY_UNAVAILABLE_DETAIL,
         )
     except ValueError:
         _emit_event(IdeaOperation.DATA_LIFECYCLE_ACTION, OperationOutcome.INVALID_REQUEST)
@@ -109,6 +140,32 @@ async def post_data_lifecycle_action(
         result,
         request=request,
         durable_storage_backed=idea_repository_durable_storage_backed(repository),
+    )
+
+
+def _verify_authority_decision(
+    *,
+    request: DataLifecycleActionRequest,
+    candidate_id: str,
+    required: bool,
+) -> VerifiedLifecycleAuthorityReceipt | None:
+    if request.authority_decision is None:
+        if required:
+            raise ValueError("signed lifecycle authority decision is required")
+        return None
+    key_source, signature_verifier = get_lifecycle_authority_dependencies()
+    return verify_lifecycle_authority_decision(
+        envelope=request.authority_decision.to_domain(),
+        key_discovery=key_source.get_key_discovery(),
+        expected=ExpectedLifecycleAuthorityDecision(
+            tenant_id=request.tenant_id,
+            candidate_id=candidate_id,
+            action=request.action,
+            authority_ref=request.authority_ref,
+            change_reference=request.change_reference,
+            verified_at_utc=datetime.now(UTC),
+        ),
+        signature_verifier=signature_verifier,
     )
 
 
@@ -229,7 +286,19 @@ DATA_LIFECYCLE_ACTION_ROUTE: RouteMetadata = {
                 ),
             ),
         ),
-        **durable_repository_write_unavailable_metadata(),
+        **merged_problem_response_metadata(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            description="Lifecycle authority or durable repository is unavailable.",
+            responses=(
+                durable_repository_write_unavailable_metadata(),
+                service_unavailable_metadata(
+                    code="lifecycle_authority_unavailable",
+                    title="Lifecycle authority unavailable",
+                    detail=_LIFECYCLE_AUTHORITY_UNAVAILABLE_DETAIL,
+                    description="Signed lifecycle authority trust infrastructure is unavailable.",
+                ),
+            ),
+        ),
     },
 }
 
