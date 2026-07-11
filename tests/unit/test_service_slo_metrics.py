@@ -4,6 +4,9 @@ import pytest
 from prometheus_client import CollectorRegistry, generate_latest
 
 from app.observability.service_slo_metrics import (
+    DEPENDENCIES,
+    DEPENDENCY_METRIC_LABELS,
+    DEPENDENCY_OUTCOMES,
     HTTP_DURATION_BUCKETS_SECONDS,
     HTTP_METRIC_LABELS,
     ServiceSloMetrics,
@@ -105,3 +108,55 @@ def test_workflow_sli_metrics_reject_unbounded_or_invalid_observations(
 
     with pytest.raises(ValueError, match=message):
         ServiceSloMetrics(CollectorRegistry()).observe_workflow_run(**values)  # type: ignore[arg-type]
+
+
+def test_dependency_sli_metrics_capture_logical_request_with_closed_labels() -> None:
+    registry = CollectorRegistry()
+    metrics = ServiceSloMetrics(registry)
+
+    metrics.observe_dependency_request(
+        dependency="lotus-advise",
+        method="post",
+        outcome="accepted",
+        duration_seconds=0.25,
+    )
+    payload = generate_latest(registry).decode("utf-8")
+
+    assert DEPENDENCY_METRIC_LABELS == ("dependency", "method", "outcome")
+    assert "lotus-core-query" in DEPENDENCIES
+    assert DEPENDENCY_OUTCOMES == {
+        "accepted",
+        "malformed",
+        "rejected",
+        "timeout",
+        "unavailable",
+    }
+    assert 'dependency="lotus-advise"' in payload
+    assert 'method="POST"' in payload
+    assert 'outcome="accepted"' in payload
+    assert "lotus_idea_dependency_request_duration_seconds_sum" in payload
+
+
+@pytest.mark.parametrize(
+    ("changes", "message"),
+    [
+        ({"dependency": "client-123"}, "dependency is not governed"),
+        ({"method": "DELETE"}, "dependency method is not governed"),
+        ({"outcome": "unknown"}, "dependency outcome is not governed"),
+        ({"duration_seconds": -1.0}, "duration_seconds must be non-negative"),
+    ],
+)
+def test_dependency_sli_metrics_reject_unbounded_or_invalid_observations(
+    changes: dict[str, object],
+    message: str,
+) -> None:
+    values: dict[str, object] = {
+        "dependency": "lotus-risk",
+        "method": "GET",
+        "outcome": "accepted",
+        "duration_seconds": 0.5,
+    }
+    values.update(changes)
+
+    with pytest.raises(ValueError, match=message):
+        ServiceSloMetrics(CollectorRegistry()).observe_dependency_request(**values)  # type: ignore[arg-type]

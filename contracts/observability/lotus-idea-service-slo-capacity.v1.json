@@ -50,7 +50,7 @@
       "latency_p95_seconds": 2.0,
       "latency_p99_seconds": 5.0,
       "error_budget_fraction": 0.01,
-      "measurement_source": "lotus_idea_dependency_requests_total_and_duration_seconds",
+      "measurement_source": "lotus_idea_dependency_requests_total + lotus_idea_dependency_request_duration_seconds",
       "certification_status": "baseline_required"
     },
     {

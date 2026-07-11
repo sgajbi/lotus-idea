@@ -30,6 +30,12 @@ from app.observability.outbox_supportability import (
     configure_outbox_supportability_metrics,
 )
 from app.observability.service_slo_metrics import (
+    DEPENDENCIES,
+    DEPENDENCY_DURATION_BUCKETS_SECONDS,
+    DEPENDENCY_DURATION_METRIC,
+    DEPENDENCY_METRIC_LABELS,
+    DEPENDENCY_OUTCOMES,
+    DEPENDENCY_REQUESTS_METRIC,
     HTTP_DURATION_BUCKETS_SECONDS,
     HTTP_DURATION_METRIC,
     HTTP_METRIC_LABELS,
@@ -42,11 +48,18 @@ from app.observability.service_slo_metrics import (
     WORKFLOW_OUTCOMES,
     WORKFLOW_RUNS_METRIC,
     WORKFLOWS,
+    observe_dependency_request,
     observe_http_request,
     observe_workflow_run,
 )
 
 __all__ = [
+    "DEPENDENCIES",
+    "DEPENDENCY_DURATION_BUCKETS_SECONDS",
+    "DEPENDENCY_DURATION_METRIC",
+    "DEPENDENCY_METRIC_LABELS",
+    "DEPENDENCY_OUTCOMES",
+    "DEPENDENCY_REQUESTS_METRIC",
     "FORBIDDEN_OPERATION_FIELD_KEYS",
     "OPERATION_METRIC_LABELS",
     "AGGREGATE_SOURCE_AUTHORITY",
@@ -77,6 +90,7 @@ __all__ = [
     "HTTP_METRIC_LABELS",
     "HTTP_REQUESTS_METRIC",
     "ServiceSloMetrics",
+    "observe_dependency_request",
     "WORKFLOW_DURATION_BUCKETS_SECONDS",
     "WORKFLOW_DURATION_METRIC",
     "WORKFLOW_ITEMS_METRIC",

@@ -38,6 +38,34 @@ WORKFLOW_DURATION_BUCKETS_SECONDS = (
     300.0,
     600.0,
 )
+DEPENDENCY_REQUESTS_METRIC = "lotus_idea_dependency_requests_total"
+DEPENDENCY_DURATION_METRIC = "lotus_idea_dependency_request_duration_seconds"
+DEPENDENCY_METRIC_LABELS = ("dependency", "method", "outcome")
+DEPENDENCIES = frozenset(
+    {
+        "lotus-advise",
+        "lotus-core-control",
+        "lotus-core-query",
+        "lotus-manage",
+        "lotus-performance",
+        "lotus-platform-broker",
+        "lotus-report",
+        "lotus-risk",
+    }
+)
+DEPENDENCY_OUTCOMES = frozenset({"accepted", "malformed", "rejected", "timeout", "unavailable"})
+DEPENDENCY_DURATION_BUCKETS_SECONDS = (
+    0.01,
+    0.025,
+    0.05,
+    0.1,
+    0.25,
+    0.5,
+    1.0,
+    2.0,
+    5.0,
+    10.0,
+)
 
 
 class ServiceSloMetrics:
@@ -72,6 +100,19 @@ class ServiceSloMetrics:
             WORKFLOW_ITEMS_METRIC,
             "Count of bounded items considered by Lotus Idea workflows.",
             WORKFLOW_METRIC_LABELS,
+            registry=registry,
+        )
+        self._dependency_requests = Counter(
+            DEPENDENCY_REQUESTS_METRIC,
+            "Count of logical Lotus Idea dependency requests after bounded retries.",
+            DEPENDENCY_METRIC_LABELS,
+            registry=registry,
+        )
+        self._dependency_duration = Histogram(
+            DEPENDENCY_DURATION_METRIC,
+            "Lotus Idea logical dependency request duration including bounded retries.",
+            DEPENDENCY_METRIC_LABELS,
+            buckets=DEPENDENCY_DURATION_BUCKETS_SECONDS,
             registry=registry,
         )
 
@@ -121,6 +162,31 @@ class ServiceSloMetrics:
         self._workflow_duration.labels(**labels).observe(duration_seconds)
         self._workflow_items.labels(**labels).inc(item_count)
 
+    def observe_dependency_request(
+        self,
+        *,
+        dependency: str,
+        method: str,
+        outcome: str,
+        duration_seconds: float,
+    ) -> None:
+        if dependency not in DEPENDENCIES:
+            raise ValueError("dependency is not governed")
+        normalized_method = method.strip().upper()
+        if normalized_method not in {"GET", "POST"}:
+            raise ValueError("dependency method is not governed")
+        if outcome not in DEPENDENCY_OUTCOMES:
+            raise ValueError("dependency outcome is not governed")
+        if duration_seconds < 0:
+            raise ValueError("duration_seconds must be non-negative")
+        labels = {
+            "dependency": dependency,
+            "method": normalized_method,
+            "outcome": outcome,
+        }
+        self._dependency_requests.labels(**labels).inc()
+        self._dependency_duration.labels(**labels).observe(duration_seconds)
+
 
 _SERVICE_SLO_METRICS = ServiceSloMetrics()
 
@@ -152,4 +218,19 @@ def observe_workflow_run(
         outcome=outcome,
         duration_seconds=duration_seconds,
         item_count=item_count,
+    )
+
+
+def observe_dependency_request(
+    *,
+    dependency: str,
+    method: str,
+    outcome: str,
+    duration_seconds: float,
+) -> None:
+    _SERVICE_SLO_METRICS.observe_dependency_request(
+        dependency=dependency,
+        method=method,
+        outcome=outcome,
+        duration_seconds=duration_seconds,
     )
