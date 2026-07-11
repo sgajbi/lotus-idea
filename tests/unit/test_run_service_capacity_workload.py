@@ -512,6 +512,54 @@ def test_resource_baseline_reader_requires_json_object(tmp_path: Path) -> None:
         module._read_optional_resource_baseline(invalid)
 
 
+def test_paced_load_soak_request_accepts_only_qualifying_steady_state_proof() -> None:
+    module = _load_script()
+
+    module.validate_paced_load_soak_request(
+        scenarios=(
+            "api",
+            "source_ingestion",
+            "outbox_delivery",
+            "downstream_submission",
+            "postgresql",
+        ),
+        environment_profile="production-like",
+        request_count=1_000,
+        minimum_observation_seconds=3_600.0,
+    )
+
+
+@pytest.mark.parametrize(
+    ("mutation", "message"),
+    [
+        ({"scenarios": ("api", "postgresql")}, "all five steady-state"),
+        ({"environment_profile": "test"}, "production-like environment"),
+        ({"request_count": 999}, "minimum sample count"),
+        ({"minimum_observation_seconds": 3_599.9}, "minimum observation window"),
+    ],
+)
+def test_paced_load_soak_request_rejects_nonqualifying_evidence_shape(
+    mutation: dict[str, object], message: str
+) -> None:
+    module = _load_script()
+    values: dict[str, object] = {
+        "scenarios": (
+            "api",
+            "source_ingestion",
+            "outbox_delivery",
+            "downstream_submission",
+            "postgresql",
+        ),
+        "environment_profile": "production-like",
+        "request_count": 1_000,
+        "minimum_observation_seconds": 3_600.0,
+    }
+    values.update(mutation)
+
+    with pytest.raises(ValueError, match=message):
+        module.validate_paced_load_soak_request(**values)
+
+
 @pytest.mark.parametrize(
     ("kwargs", "message"),
     [

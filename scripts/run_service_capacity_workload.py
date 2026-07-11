@@ -11,17 +11,24 @@ import sys
 import time
 from typing import Mapping
 
-from app.application.service_capacity_baseline import build_service_capacity_baseline
+from app.application.service_capacity_baseline import (
+    CapacityMeasurement,
+    build_service_capacity_baseline,
+)
 from app.application.capacity_evidence_qualification import (
     DEPENDENCY_RECOVERY_SIGNER_WORKFLOW,
     LOAD_SOAK_SIGNER_WORKFLOW,
     POSTGRES_CAPACITY_SIGNER_WORKFLOW,
     VerifiedArtifactAttestation,
+    MINIMUM_LOAD_SOAK_SAMPLES,
+    MINIMUM_LOAD_SOAK_SECONDS,
 )
 from app.application.service_capacity_workload import (
     CapacityWorkloadPlan,
+    STEADY_STATE_SCENARIOS,
     execute_capacity_recovery,
     execute_capacity_workload,
+    execute_paced_capacity_soak,
     execute_postgres_capacity_workload,
 )
 from app.infrastructure.http_capacity_probe import HttpCapacityProbe
@@ -222,6 +229,12 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--concurrency", type=int, default=1)
     parser.add_argument("--timeout-seconds", type=float, default=10.0)
     parser.add_argument("--dependency-recovery-delay-seconds", type=float, default=0.0)
+    parser.add_argument("--paced-load-soak", action="store_true")
+    parser.add_argument(
+        "--minimum-observation-seconds",
+        type=float,
+        default=MINIMUM_LOAD_SOAK_SECONDS,
+    )
     parser.add_argument("--allow-mutating-workflows", action="store_true")
     parser.add_argument("--allow-production-mutations", action="store_true")
     parser.add_argument("--commit-sha", required=True)
@@ -270,34 +283,52 @@ def main(argv: list[str] | None = None) -> int:
             raise ValueError("dependency_recovery_delay_seconds must not be negative")
         probe = HttpCapacityProbe(base_url=args.base_url, timeout_seconds=args.timeout_seconds)
         started_at = time.perf_counter()
-        measurements = []
+        measurements: list[CapacityMeasurement] = []
         postgres_max_utilization = None
-        for plan in plans:
-            if plan.scenario == "dependency_failure" and args.dependency_recovery_delay_seconds:
-                fault_only = CapacityWorkloadPlan(
-                    scenario=plan.scenario,
-                    requests=plan.requests,
-                    max_concurrency=plan.max_concurrency,
-                    item_count_field=plan.item_count_field,
-                    expected_source_failure_class=plan.expected_source_failure_class,
-                )
-                measurements.extend(execute_capacity_workload(fault_only, probe=probe))
-                time.sleep(args.dependency_recovery_delay_seconds)
-                measurements.append(execute_capacity_recovery(plan, probe=probe))
-            else:
-                measurements.extend(execute_capacity_workload(plan, probe=probe))
-        if "postgresql" in args.scenario:
-            database_url = os.getenv("LOTUS_IDEA_DATABASE_URL", "").strip()
-            if not database_url:
-                raise ValueError("LOTUS_IDEA_DATABASE_URL is required for the postgresql scenario")
-            postgres_result = execute_postgres_capacity_workload(
-                probe=PostgresCapacityProbe(database_url=database_url),
+        if args.paced_load_soak:
+            validate_paced_load_soak_request(
+                scenarios=tuple(args.scenario),
+                environment_profile=args.environment_profile,
                 request_count=args.request_count,
-                max_concurrency=args.concurrency,
+                minimum_observation_seconds=args.minimum_observation_seconds,
             )
-            measurements.extend(postgres_result.measurements)
-            postgres_max_utilization = postgres_result.max_connection_utilization_fraction
-        observed_window_seconds = max(time.perf_counter() - started_at, 0.000001)
+            database_url = _required_database_url()
+            paced_result = execute_paced_capacity_soak(
+                plans=plans,
+                http_probe=probe,
+                postgres_probe=PostgresCapacityProbe(database_url=database_url),
+                postgres_request_count=args.request_count,
+                minimum_observation_seconds=args.minimum_observation_seconds,
+            )
+            measurements.extend(paced_result.measurements)
+            postgres_max_utilization = (
+                paced_result.postgres_max_connection_utilization_fraction
+            )
+            observed_window_seconds = paced_result.observed_window_seconds
+        else:
+            for plan in plans:
+                if plan.scenario == "dependency_failure" and args.dependency_recovery_delay_seconds:
+                    fault_only = CapacityWorkloadPlan(
+                        scenario=plan.scenario,
+                        requests=plan.requests,
+                        max_concurrency=plan.max_concurrency,
+                        item_count_field=plan.item_count_field,
+                        expected_source_failure_class=plan.expected_source_failure_class,
+                    )
+                    measurements.extend(execute_capacity_workload(fault_only, probe=probe))
+                    time.sleep(args.dependency_recovery_delay_seconds)
+                    measurements.append(execute_capacity_recovery(plan, probe=probe))
+                else:
+                    measurements.extend(execute_capacity_workload(plan, probe=probe))
+            if "postgresql" in args.scenario:
+                postgres_result = execute_postgres_capacity_workload(
+                    probe=PostgresCapacityProbe(database_url=_required_database_url()),
+                    request_count=args.request_count,
+                    max_concurrency=args.concurrency,
+                )
+                measurements.extend(postgres_result.measurements)
+                postgres_max_utilization = postgres_result.max_connection_utilization_fraction
+            observed_window_seconds = max(time.perf_counter() - started_at, 0.000001)
         threshold_proof = _read_optional_proof(args.postgres_threshold_proof)
         threshold_attestation = _verify_optional_attestation(
             verification_requested=args.verify_postgres_threshold_attestation,
@@ -357,6 +388,31 @@ def _write_json_atomic(path: Path, payload: dict[str, object]) -> None:
     temporary = path.with_suffix(f"{path.suffix}.tmp")
     temporary.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     temporary.replace(path)
+
+
+def validate_paced_load_soak_request(
+    *,
+    scenarios: tuple[str, ...],
+    environment_profile: str,
+    request_count: int,
+    minimum_observation_seconds: float,
+) -> None:
+    expected = {*STEADY_STATE_SCENARIOS, "postgresql"}
+    if set(scenarios) != expected or len(scenarios) != len(expected):
+        raise ValueError("paced load soak requires all five steady-state scenarios exactly once")
+    if environment_profile != "production-like":
+        raise ValueError("paced load soak requires the production-like environment profile")
+    if request_count < MINIMUM_LOAD_SOAK_SAMPLES:
+        raise ValueError("paced load soak does not meet the minimum sample count")
+    if minimum_observation_seconds < MINIMUM_LOAD_SOAK_SECONDS:
+        raise ValueError("paced load soak does not meet the minimum observation window")
+
+
+def _required_database_url() -> str:
+    database_url = os.getenv("LOTUS_IDEA_DATABASE_URL", "").strip()
+    if not database_url:
+        raise ValueError("LOTUS_IDEA_DATABASE_URL is required for the postgresql scenario")
+    return database_url
 
 
 def _read_optional_proof(path: Path | None) -> dict[str, object] | None:
