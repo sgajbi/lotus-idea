@@ -1,0 +1,123 @@
+from __future__ import annotations
+
+from datetime import date
+import hashlib
+import json
+from pathlib import Path
+from typing import Any
+
+from scripts.license_compliance_gate import (
+    POLICY_PATH,
+    ROOT,
+    render_third_party_notice,
+    validate_license_policy,
+)
+
+
+def current_policy() -> dict[str, Any]:
+    return json.loads((ROOT / POLICY_PATH).read_text(encoding="utf-8"))
+
+
+def materialize_policy(tmp_path: Path, payload: dict[str, Any]) -> None:
+    for lock_key in ("runtime_lock", "ci_lock"):
+        contract = payload[lock_key]
+        source = ROOT / contract["path"]
+        target = tmp_path / contract["path"]
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(source.read_bytes())
+    notice = tmp_path / payload["notice_path"]
+    notice.write_text(render_third_party_notice(payload), encoding="utf-8")
+
+
+def component(payload: dict[str, Any], name: str) -> dict[str, Any]:
+    return next(item for item in payload["components"] if item["name"] == name)
+
+
+def test_license_policy_accepts_current_locks_and_notice() -> None:
+    assert validate_license_policy(current_policy()) == []
+
+
+def test_license_policy_rejects_new_dependency_and_lock_hash_drift(tmp_path: Path) -> None:
+    payload = current_policy()
+    materialize_policy(tmp_path, payload)
+    runtime_path = tmp_path / payload["runtime_lock"]["path"]
+    runtime_path.write_text(
+        runtime_path.read_text(encoding="utf-8") + "unreviewed-package==1.0.0\n",
+        encoding="utf-8",
+    )
+
+    errors = validate_license_policy(payload, repository_root=tmp_path)
+
+    assert "license policy runtime_lock hash does not match the resolved lock" in errors
+    assert "license inventory missing locked component runtime:unreviewed-package" in errors
+
+
+def test_license_policy_rejects_version_unknown_denied_and_conditional_drift(
+    tmp_path: Path,
+) -> None:
+    payload = current_policy()
+    component(payload, "anyio")["version"] = "0.0.0"
+    component(payload, "ruff")["spdx"] = "LicenseRef-Unknown"
+    component(payload, "pytest")["spdx"] = "AGPL-3.0-only"
+    component(payload, "certifi")["obligations"] = []
+    materialize_policy(tmp_path, payload)
+
+    errors = validate_license_policy(payload, repository_root=tmp_path)
+
+    assert "license inventory version drift for runtime:anyio" in errors
+    assert "license LicenseRef-Unknown is not approved for ruff" in errors
+    assert "license AGPL-3.0-only is not approved for pytest" in errors
+    assert "conditional license obligations are required for certifi" in errors
+
+
+def test_license_policy_accepts_active_exception_and_rejects_expired_exception(
+    tmp_path: Path,
+) -> None:
+    payload = current_policy()
+    component(payload, "ruff")["spdx"] = "GPL-3.0-only"
+    payload["exceptions"] = [
+        {
+            "exception_id": "LIC-EX-001",
+            "component": "ruff",
+            "spdx": "GPL-3.0-only",
+            "approved_by": ["legal", "security", "lotus-idea-owners"],
+            "expires_on": "2026-07-31",
+            "reason": "Bounded CI-only evaluation exception",
+        }
+    ]
+    materialize_policy(tmp_path, payload)
+
+    assert (
+        validate_license_policy(
+            payload,
+            repository_root=tmp_path,
+            as_of_date=date(2026, 7, 11),
+        )
+        == []
+    )
+    assert "license GPL-3.0-only is not approved for ruff" in validate_license_policy(
+        payload,
+        repository_root=tmp_path,
+        as_of_date=date(2026, 8, 1),
+    )
+
+
+def test_license_policy_rejects_notice_external_and_asset_posture_drift(tmp_path: Path) -> None:
+    payload = current_policy()
+    materialize_policy(tmp_path, payload)
+    (tmp_path / payload["notice_path"]).write_text("stale notice\n", encoding="utf-8")
+    payload["external_components"] = []
+    payload["asset_inventory"]["posture"] = "unreviewed_assets"
+
+    errors = validate_license_policy(payload, repository_root=tmp_path)
+
+    assert "third-party NOTICE must match deterministic policy output" in errors
+    assert "license policy must classify governed base and scanner images" in errors
+    assert "license policy must declare generated, model, and data asset posture" in errors
+
+
+def test_lock_hashes_are_lowercase_sha256() -> None:
+    payload = current_policy()
+    for lock_key in ("runtime_lock", "ci_lock"):
+        path = ROOT / payload[lock_key]["path"]
+        assert payload[lock_key]["sha256"] == hashlib.sha256(path.read_bytes()).hexdigest()

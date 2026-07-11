@@ -1,0 +1,80 @@
+{
+  "contract_id": "lotus-idea-license-policy",
+  "contract_version": "1.0.0",
+  "service_license": "LicenseRef-Lotus-Proprietary",
+  "runtime_lock": {
+    "path": "requirements/runtime-resolved.lock.txt",
+    "sha256": "02c221a75b61619bf1b6f88b2374e0bf9edd0efb84c4c63a628e35bd9a31f6d9"
+  },
+  "ci_lock": {
+    "path": "requirements/ci-tooling.lock.txt",
+    "sha256": "d68c6da664ecb9af4cb2117496bfbda8bf395edffec5044863870288404a8702"
+  },
+  "policy": {
+    "approved": ["Apache-2.0", "BSD-3-Clause", "ISC", "MIT", "PSF-2.0"],
+    "conditional": ["LGPL-3.0-only", "MPL-2.0"],
+    "denied": ["AGPL-3.0-only", "AGPL-3.0-or-later", "BUSL-1.1", "GPL-2.0-only", "GPL-2.0-or-later", "GPL-3.0-only", "GPL-3.0-or-later", "SSPL-1.0"],
+    "unknown_posture": "fail_closed",
+    "dual_license_posture": "every_selected_expression_must_be_classified",
+    "generated_code_posture": "source_and_generator_license_required",
+    "model_asset_posture": "source_license_and_usage_rights_required",
+    "data_asset_posture": "source_license_usage_rights_and_privacy_basis_required"
+  },
+  "components": [
+    {"name":"annotated-doc","version":"0.0.4","scopes":["runtime"],"spdx":"MIT","source_url":"https://github.com/fastapi/annotated-doc","attribution_status":"included","obligations":[]},
+    {"name":"annotated-types","version":"0.7.0","scopes":["runtime"],"spdx":"MIT","source_url":"https://github.com/annotated-types/annotated-types","attribution_status":"included","obligations":[]},
+    {"name":"anyio","version":"4.14.0","scopes":["runtime"],"spdx":"MIT","source_url":"https://github.com/agronholm/anyio","attribution_status":"included","obligations":[]},
+    {"name":"certifi","version":"2026.6.17","scopes":["runtime"],"spdx":"MPL-2.0","source_url":"https://github.com/certifi/python-certifi","attribution_status":"included","obligations":["preserve_notices","make_modified_mpl_files_available_under_mpl"]},
+    {"name":"click","version":"8.4.1","scopes":["runtime"],"spdx":"BSD-3-Clause","source_url":"https://github.com/pallets/click","attribution_status":"included","obligations":[]},
+    {"name":"colorama","version":"0.4.6","scopes":["runtime"],"spdx":"BSD-3-Clause","source_url":"https://github.com/tartley/colorama","attribution_status":"included","obligations":[]},
+    {"name":"fastapi","version":"0.138.2","scopes":["runtime"],"spdx":"MIT","source_url":"https://github.com/fastapi/fastapi","attribution_status":"included","obligations":[]},
+    {"name":"h11","version":"0.16.0","scopes":["runtime"],"spdx":"MIT","source_url":"https://github.com/python-hyper/h11","attribution_status":"included","obligations":[]},
+    {"name":"httpcore","version":"1.0.9","scopes":["runtime"],"spdx":"BSD-3-Clause","source_url":"https://github.com/encode/httpcore","attribution_status":"included","obligations":[]},
+    {"name":"httpx","version":"0.28.1","scopes":["runtime"],"spdx":"BSD-3-Clause","source_url":"https://github.com/encode/httpx","attribution_status":"included","obligations":[]},
+    {"name":"idna","version":"3.18","scopes":["runtime"],"spdx":"BSD-3-Clause","source_url":"https://github.com/kjd/idna","attribution_status":"included","obligations":[]},
+    {"name":"prometheus-client","version":"0.25.0","scopes":["runtime"],"spdx":"Apache-2.0","source_url":"https://github.com/prometheus/client_python","attribution_status":"included","obligations":[]},
+    {"name":"prometheus-fastapi-instrumentator","version":"8.0.2","scopes":["runtime"],"spdx":"ISC","source_url":"https://github.com/trallnag/prometheus-fastapi-instrumentator","attribution_status":"included","obligations":[]},
+    {"name":"psycopg","version":"3.3.4","scopes":["runtime"],"spdx":"LGPL-3.0-only","source_url":"https://github.com/psycopg/psycopg","attribution_status":"included","obligations":["preserve_notices","provide_relink_or_replace_mechanism_for_lgpl_library","provide_corresponding_library_source_offer"]},
+    {"name":"psycopg-binary","version":"3.3.4","scopes":["runtime"],"spdx":"LGPL-3.0-only","source_url":"https://github.com/psycopg/psycopg","attribution_status":"included","obligations":["preserve_notices","provide_relink_or_replace_mechanism_for_lgpl_library","provide_corresponding_library_source_offer"]},
+    {"name":"pydantic","version":"2.13.4","scopes":["runtime"],"spdx":"MIT","source_url":"https://github.com/pydantic/pydantic","attribution_status":"included","obligations":[]},
+    {"name":"pydantic-core","version":"2.46.4","scopes":["runtime"],"spdx":"MIT","source_url":"https://github.com/pydantic/pydantic-core","attribution_status":"included","obligations":[]},
+    {"name":"pydantic-settings","version":"2.14.2","scopes":["runtime"],"spdx":"MIT","source_url":"https://github.com/pydantic/pydantic-settings","attribution_status":"included","obligations":[]},
+    {"name":"python-dotenv","version":"1.2.2","scopes":["runtime"],"spdx":"BSD-3-Clause","source_url":"https://github.com/theskumar/python-dotenv","attribution_status":"included","obligations":[]},
+    {"name":"starlette","version":"1.3.1","scopes":["runtime"],"spdx":"BSD-3-Clause","source_url":"https://github.com/Kludex/starlette","attribution_status":"included","obligations":[]},
+    {"name":"typing-extensions","version":"4.15.0","scopes":["runtime"],"spdx":"PSF-2.0","source_url":"https://github.com/python/typing_extensions","attribution_status":"included","obligations":[]},
+    {"name":"typing-inspection","version":"0.4.2","scopes":["runtime"],"spdx":"MIT","source_url":"https://github.com/pydantic/typing-inspection","attribution_status":"included","obligations":[]},
+    {"name":"tzdata","version":"2026.2","scopes":["runtime"],"spdx":"Apache-2.0","source_url":"https://github.com/python/tzdata","attribution_status":"included","obligations":[]},
+    {"name":"uvicorn","version":"0.49.0","scopes":["runtime"],"spdx":"BSD-3-Clause","source_url":"https://github.com/encode/uvicorn","attribution_status":"included","obligations":[]},
+    {"name":"coverage","version":"7.14.3","scopes":["ci"],"spdx":"Apache-2.0","source_url":"https://github.com/coveragepy/coveragepy","attribution_status":"included","obligations":[]},
+    {"name":"cyclonedx-bom","version":"7.3.0","scopes":["ci"],"spdx":"Apache-2.0","source_url":"https://github.com/CycloneDX/cyclonedx-python","attribution_status":"included","obligations":[]},
+    {"name":"httpx2","version":"2.5.0","scopes":["ci"],"spdx":"BSD-3-Clause","source_url":"https://github.com/pydantic/httpx2","attribution_status":"included","obligations":[]},
+    {"name":"mypy","version":"2.1.0","scopes":["ci"],"spdx":"MIT","source_url":"https://github.com/python/mypy","attribution_status":"included","obligations":[]},
+    {"name":"pip-audit","version":"2.10.1","scopes":["ci"],"spdx":"Apache-2.0","source_url":"https://github.com/pypa/pip-audit","attribution_status":"included","obligations":[]},
+    {"name":"pytest","version":"9.1.1","scopes":["ci"],"spdx":"MIT","source_url":"https://github.com/pytest-dev/pytest","attribution_status":"included","obligations":[]},
+    {"name":"pytest-asyncio","version":"1.4.0","scopes":["ci"],"spdx":"Apache-2.0","source_url":"https://github.com/pytest-dev/pytest-asyncio","attribution_status":"included","obligations":[]},
+    {"name":"pytest-cov","version":"7.1.0","scopes":["ci"],"spdx":"MIT","source_url":"https://github.com/pytest-dev/pytest-cov","attribution_status":"included","obligations":[]},
+    {"name":"ruff","version":"0.15.20","scopes":["ci"],"spdx":"MIT","source_url":"https://github.com/astral-sh/ruff","attribution_status":"included","obligations":[]}
+  ],
+  "external_components": [
+    {"name":"python-base-image","reference":"python:3.12-slim","spdx":"PSF-2.0 AND LicenseRef-Debian-Container-Packages","owner":"platform-container-policy","posture":"base_image_package_inventory_required_at_release"},
+    {"name":"trivy-scanner","reference":"aquasec/trivy:0.71.2","spdx":"Apache-2.0","owner":"release-security-tooling","posture":"scanner_not_redistributed_with_service"}
+  ],
+  "asset_inventory": {
+    "generated_code": [],
+    "model_assets": [],
+    "data_assets": [],
+    "posture": "no_external_generated_model_or_data_assets_distributed"
+  },
+  "exceptions": [],
+  "notice_path": "THIRD_PARTY_NOTICES.md",
+  "approval": {
+    "owners": ["lotus-idea-owners", "security", "legal"],
+    "policy_change_review_required": true,
+    "exception_expiry_required": true
+  },
+  "non_proof_boundaries": [
+    "This contract does not replace legal review or vendor contracts.",
+    "Debian base-image package licensing requires release-time container inventory evidence.",
+    "No external model or data asset distribution is certified by this contract."
+  ]
+}
