@@ -307,6 +307,20 @@
     "raw_sensitive_values_in_logs_metrics_or_evidence_forbidden": true,
     "cross_service_decision_reference_required": true
   },
+  "scheduled_review_proof": {
+    "execution_mode": "review_only",
+    "maximum_batch_size": 100,
+    "database_runtime": "postgresql-18",
+    "workflow": ".github/workflows/scheduled-data-lifecycle-review.yml",
+    "evidence_schema": "lotus-idea.scheduled-lifecycle-review-evidence.v1",
+    "proof_gate": "scripts/scheduled_data_lifecycle_review_proof_gate.py",
+    "automatic_lifecycle_mutation": false,
+    "production_authority_verified": false,
+    "privacy_review_required": true,
+    "source_safe_aggregate_only": true,
+    "certification_status": "not_certified",
+    "supported_feature_promoted": false
+  },
   "research_basis": [
     "Singapore PDPA retention limitation requires purpose-based disposal rather than indefinite retention.",
     "Fixed durations remain deployment policy that requires jurisdiction-specific legal and records approval.",
@@ -318,6 +332,6 @@
     "lotus-report and lotus-archive policy-reference conformance proof",
     "lotus-ai provider-retention and deletion confirmation proof",
     "production PostgreSQL concurrent lifecycle and restart proof",
-    "scheduled expiry and purge evidence with privacy review"
+    "mainline scheduled expiry review evidence and production authorized purge evidence with signed privacy authority"
   ]
 }

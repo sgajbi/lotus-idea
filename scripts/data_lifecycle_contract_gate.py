@@ -56,6 +56,20 @@ REQUIRED_CONTROL_FLAGS = {
     "raw_sensitive_values_in_logs_metrics_or_evidence_forbidden": True,
     "cross_service_decision_reference_required": True,
 }
+EXPECTED_SCHEDULED_REVIEW_PROOF = {
+    "execution_mode": "review_only",
+    "maximum_batch_size": 100,
+    "database_runtime": "postgresql-18",
+    "workflow": ".github/workflows/scheduled-data-lifecycle-review.yml",
+    "evidence_schema": "lotus-idea.scheduled-lifecycle-review-evidence.v1",
+    "proof_gate": "scripts/scheduled_data_lifecycle_review_proof_gate.py",
+    "automatic_lifecycle_mutation": False,
+    "production_authority_verified": False,
+    "privacy_review_required": True,
+    "source_safe_aggregate_only": True,
+    "certification_status": "not_certified",
+    "supported_feature_promoted": False,
+}
 REQUIRED_RECORD_FIELDS = {
     "table",
     "field_classification_profile_ref",
@@ -98,9 +112,33 @@ def validate_data_lifecycle_contract(
     errors.extend(
         _expected_values(payload.get("enforcement_controls"), REQUIRED_CONTROL_FLAGS, "controls")
     )
+    errors.extend(
+        _expected_values(
+            payload.get("scheduled_review_proof"),
+            EXPECTED_SCHEDULED_REVIEW_PROOF,
+            "scheduled review proof",
+        )
+    )
+    errors.extend(_validate_scheduled_review_sources(payload, repository_root))
     errors.extend(_validate_remaining_proof(payload))
     errors.extend(_validate_no_embedded_secrets(payload))
     return sorted(errors)
+
+
+def _validate_scheduled_review_sources(
+    payload: dict[str, Any], repository_root: Path
+) -> list[str]:
+    proof = payload.get("scheduled_review_proof")
+    if not isinstance(proof, dict):
+        return []
+    errors: list[str] = []
+    for field_name in ("workflow", "proof_gate"):
+        value = proof.get(field_name)
+        if not isinstance(value, str) or Path(value).is_absolute() or ".." in Path(value).parts:
+            errors.append(f"data lifecycle scheduled review {field_name} must be a safe path")
+        elif not (repository_root / value).is_file():
+            errors.append(f"data lifecycle scheduled review {field_name} is missing")
+    return errors
 
 
 def _expected_values(value: Any, expected: dict[str, Any], section: str) -> list[str]:
