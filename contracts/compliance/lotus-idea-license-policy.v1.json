@@ -4,7 +4,7 @@
   "service_license": "LicenseRef-Lotus-Proprietary",
   "runtime_lock": {
     "path": "requirements/runtime-resolved.lock.txt",
-    "sha256": "02c221a75b61619bf1b6f88b2374e0bf9edd0efb84c4c63a628e35bd9a31f6d9"
+    "sha256": "87468adf50da0ef0dc1a8304f2e06bf77d8311915aa6b6eb02ce1e324777e1b6"
   },
   "ci_lock": {
     "path": "requirements/ci-tooling.lock.txt",
@@ -25,8 +25,10 @@
     {"name":"annotated-types","version":"0.7.0","scopes":["runtime"],"spdx":"MIT","source_url":"https://github.com/annotated-types/annotated-types","attribution_status":"included","obligations":[]},
     {"name":"anyio","version":"4.14.0","scopes":["runtime"],"spdx":"MIT","source_url":"https://github.com/agronholm/anyio","attribution_status":"included","obligations":[]},
     {"name":"certifi","version":"2026.6.17","scopes":["runtime"],"spdx":"MPL-2.0","source_url":"https://github.com/certifi/python-certifi","attribution_status":"included","obligations":["preserve_notices","make_modified_mpl_files_available_under_mpl"]},
+    {"name":"cffi","version":"2.1.0","scopes":["runtime"],"spdx":"MIT","source_url":"https://github.com/python-cffi/cffi","attribution_status":"included","obligations":[]},
     {"name":"click","version":"8.4.1","scopes":["runtime"],"spdx":"BSD-3-Clause","source_url":"https://github.com/pallets/click","attribution_status":"included","obligations":[]},
     {"name":"colorama","version":"0.4.6","scopes":["runtime"],"spdx":"BSD-3-Clause","source_url":"https://github.com/tartley/colorama","attribution_status":"included","obligations":[]},
+    {"name":"cryptography","version":"49.0.0","scopes":["runtime"],"spdx":"Apache-2.0 OR BSD-3-Clause","source_url":"https://github.com/pyca/cryptography","attribution_status":"included","obligations":[]},
     {"name":"fastapi","version":"0.138.2","scopes":["runtime"],"spdx":"MIT","source_url":"https://github.com/fastapi/fastapi","attribution_status":"included","obligations":[]},
     {"name":"h11","version":"0.16.0","scopes":["runtime"],"spdx":"MIT","source_url":"https://github.com/python-hyper/h11","attribution_status":"included","obligations":[]},
     {"name":"httpcore","version":"1.0.9","scopes":["runtime"],"spdx":"BSD-3-Clause","source_url":"https://github.com/encode/httpcore","attribution_status":"included","obligations":[]},
@@ -36,6 +38,7 @@
     {"name":"prometheus-fastapi-instrumentator","version":"8.0.2","scopes":["runtime"],"spdx":"ISC","source_url":"https://github.com/trallnag/prometheus-fastapi-instrumentator","attribution_status":"included","obligations":[]},
     {"name":"psycopg","version":"3.3.4","scopes":["runtime"],"spdx":"LGPL-3.0-only","source_url":"https://github.com/psycopg/psycopg","attribution_status":"included","obligations":["preserve_notices","provide_relink_or_replace_mechanism_for_lgpl_library","provide_corresponding_library_source_offer"]},
     {"name":"psycopg-binary","version":"3.3.4","scopes":["runtime"],"spdx":"LGPL-3.0-only","source_url":"https://github.com/psycopg/psycopg","attribution_status":"included","obligations":["preserve_notices","provide_relink_or_replace_mechanism_for_lgpl_library","provide_corresponding_library_source_offer"]},
+    {"name":"pycparser","version":"3.0","scopes":["runtime"],"spdx":"BSD-3-Clause","source_url":"https://github.com/eliben/pycparser","attribution_status":"included","obligations":[]},
     {"name":"pydantic","version":"2.13.4","scopes":["runtime"],"spdx":"MIT","source_url":"https://github.com/pydantic/pydantic","attribution_status":"included","obligations":[]},
     {"name":"pydantic-core","version":"2.46.4","scopes":["runtime"],"spdx":"MIT","source_url":"https://github.com/pydantic/pydantic-core","attribution_status":"included","obligations":[]},
     {"name":"pydantic-settings","version":"2.14.2","scopes":["runtime"],"spdx":"MIT","source_url":"https://github.com/pydantic/pydantic-settings","attribution_status":"included","obligations":[]},
