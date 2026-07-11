@@ -60,6 +60,27 @@ def test_data_lifecycle_contract_rejects_inventory_and_policy_drift(tmp_path: Pa
     assert "data lifecycle accepted external policy references drifted" in errors
 
 
+def test_data_lifecycle_contract_requires_field_classification_and_residency(
+    tmp_path: Path,
+) -> None:
+    module = load_gate()
+    payload = load_contract(module)
+    payload["record_inventory"][0]["field_classification_profile_ref"] = "missing:v1"
+    payload["record_inventory"][1]["residency_policy_ref"] = "unapproved-region:v1"
+    payload["field_classification_profiles"]["regulated_payload:v1"]["rules"] = {}
+    payload["residency_policies"] = {}
+
+    errors = validate_payload(module, tmp_path, payload)
+
+    assert "data lifecycle governed residency policy is required" in errors
+    assert "data lifecycle classification profile regulated_payload:v1 needs rules" in errors
+    assert (
+        "data lifecycle table idea_candidate_record references an unknown field "
+        "classification profile"
+    ) in errors
+    assert "data lifecycle table idea_idempotency_record must declare governed residency" in errors
+
+
 def test_data_lifecycle_contract_rejects_unsafe_sources_and_embedded_secrets(
     tmp_path: Path,
 ) -> None:

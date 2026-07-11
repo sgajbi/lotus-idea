@@ -57,6 +57,8 @@ REQUIRED_CONTROL_FLAGS = {
 }
 REQUIRED_RECORD_FIELDS = {
     "table",
+    "field_classification_profile_ref",
+    "residency_policy_ref",
     "data_classes",
     "purpose",
     "policy_ref",
@@ -64,6 +66,7 @@ REQUIRED_RECORD_FIELDS = {
     "erasure_policy",
     "purge_policy",
 }
+REQUIRED_RESIDENCY_POLICY = "bank-approved-primary-and-dr-regions:v1"
 POLICY_REF_PATTERN = re.compile(r"^[a-z0-9-]+:[a-z0-9-]+:[a-z0-9-]+:v[1-9][0-9]*$")
 DURATION_PATTERN = re.compile(r"^P(?:[1-9][0-9]*Y|[1-9][0-9]*D)$")
 SECRET_PATTERNS = (
@@ -89,6 +92,7 @@ def validate_data_lifecycle_contract(
         _expected_values(payload.get("authority_boundaries"), EXPECTED_AUTHORITIES, "authorities")
     )
     errors.extend(_validate_policies(payload))
+    errors.extend(_validate_classification_and_residency(payload))
     errors.extend(_validate_record_inventory(payload, repository_root))
     errors.extend(
         _expected_values(payload.get("enforcement_controls"), REQUIRED_CONTROL_FLAGS, "controls")
@@ -166,6 +170,7 @@ def _validate_record_inventory(payload: dict[str, Any], repository_root: Path) -
         for policy in payload.get("retention_policies", [])
         if isinstance(policy, dict)
     }
+    profile_refs = set(payload.get("field_classification_profiles", {}))
     for record in inventory:
         if not isinstance(record, dict):
             errors.append("data lifecycle record inventory entry must be an object")
@@ -181,6 +186,12 @@ def _validate_record_inventory(payload: dict[str, Any], repository_root: Path) -
             tables.append(table)
         if record["policy_ref"] not in policy_refs:
             errors.append(f"data lifecycle table {table} references an unknown policy")
+        if record["field_classification_profile_ref"] not in profile_refs:
+            errors.append(
+                f"data lifecycle table {table} references an unknown field classification profile"
+            )
+        if record["residency_policy_ref"] != REQUIRED_RESIDENCY_POLICY:
+            errors.append(f"data lifecycle table {table} must declare governed residency")
         if not isinstance(record["data_classes"], list) or not record["data_classes"]:
             errors.append(f"data lifecycle table {table} must declare data classes")
         for key in ("purpose", "hold_behavior", "erasure_policy", "purge_policy"):
@@ -191,6 +202,52 @@ def _validate_record_inventory(payload: dict[str, Any], repository_root: Path) -
         errors.append("data lifecycle record inventory must not contain duplicate tables")
     if set(tables) != migrated:
         errors.append("data lifecycle record inventory must exactly match migrated idea tables")
+    return errors
+
+
+def _validate_classification_and_residency(payload: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    residency = payload.get("residency_policies")
+    if not isinstance(residency, dict) or REQUIRED_RESIDENCY_POLICY not in residency:
+        errors.append("data lifecycle governed residency policy is required")
+    else:
+        policy = residency[REQUIRED_RESIDENCY_POLICY]
+        required = {
+            "storage_boundary",
+            "cross_region_replication",
+            "cross_border_transfer_authority",
+        }
+        if not isinstance(policy, dict) or any(
+            not isinstance(policy.get(key), str) or not policy[key].strip() for key in required
+        ):
+            errors.append("data lifecycle residency policy must define deployment boundaries")
+
+    profiles = payload.get("field_classification_profiles")
+    if not isinstance(profiles, dict) or not profiles:
+        return [*errors, "data lifecycle field classification profiles are required"]
+    for profile_ref, profile in profiles.items():
+        if not isinstance(profile_ref, str) or not profile_ref.endswith(":v1"):
+            errors.append("data lifecycle field classification profile must be versioned")
+            continue
+        if not isinstance(profile, dict):
+            errors.append(f"data lifecycle classification profile {profile_ref} must be an object")
+            continue
+        rules = profile.get("rules")
+        if (
+            not isinstance(rules, dict)
+            or not rules
+            or any(
+                not isinstance(pattern, str)
+                or not pattern.strip()
+                or not isinstance(classification, str)
+                or not classification.strip()
+                for pattern, classification in (rules.items() if isinstance(rules, dict) else ())
+            )
+        ):
+            errors.append(f"data lifecycle classification profile {profile_ref} needs rules")
+        fallback = profile.get("fallback_class")
+        if not isinstance(fallback, str) or not fallback.strip():
+            errors.append(f"data lifecycle classification profile {profile_ref} needs fallback")
     return errors
 
 
