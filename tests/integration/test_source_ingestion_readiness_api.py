@@ -37,6 +37,7 @@ from app.ports.core_sources import (
     CoreHighCashEvidence,
     CoreHighCashEvidenceRequest,
     CoreOpportunitySourcePort,
+    CoreSourceEntitlementDenied,
     CoreSourceUnavailable,
 )
 from app.runtime.repository_state import DATABASE_URL_ENV
@@ -104,6 +105,95 @@ def source_ingestion_run_headers(
         "X-Caller-Capabilities": capabilities,
         "X-Correlation-Id": "corr-source-ingestion-run-api",
     }
+
+
+def _single_item_runtime(source: RecordingCoreSource) -> SourceIngestionRuntime:
+    return SourceIngestionRuntime(
+        plan=source_ingestion_worker_plan_from_manifest(
+            {
+                "schemaVersion": MANIFEST_SCHEMA_VERSION,
+                "tenantId": "default",
+                "evaluatedAtUtc": "2026-06-21T10:00:00Z",
+                "workItems": [{"portfolioId": PORTFOLIO_ID, "asOfDate": "2026-06-21"}],
+            }
+        ),
+        core_source=source,
+        configured_manifest_available=True,
+        core_base_url_configured=True,
+        core_query_base_url_configured=True,
+        core_query_control_plane_base_url_configured=True,
+    )
+
+
+@pytest.mark.parametrize(
+    ("error", "expected_code"),
+    [
+        (CoreSourceUnavailable(), "source_dependency_unavailable"),
+        (CoreSourceEntitlementDenied(), "source_dependency_entitlement_denied"),
+    ],
+)
+def test_source_ingestion_execution_maps_typed_dependency_boundary_failures(
+    monkeypatch: pytest.MonkeyPatch,
+    error: Exception,
+    expected_code: str,
+) -> None:
+    source = RecordingCoreSource()
+    runtime = _single_item_runtime(source)
+    observations: list[tuple[str, str, int]] = []
+    monkeypatch.setattr(
+        source_ingestion_readiness_api,
+        "run_high_cash_source_ingestion_batch",
+        lambda *args, **kwargs: (_ for _ in ()).throw(error),
+    )
+    monkeypatch.setattr(
+        source_ingestion_readiness_api,
+        "observe_workflow_run",
+        lambda **kwargs: observations.append(
+            (kwargs["workflow"], kwargs["outcome"], kwargs["item_count"])
+        ),
+    )
+
+    response = source_ingestion_readiness_api._execute_source_ingestion_runtime(
+        runtime,
+        repository=InMemoryIdeaRepository(),
+        durable_storage_backed=True,
+    )
+
+    assert response.status_code == 502
+    assert json.loads(response.body)["code"] == expected_code
+    assert observations == [("source_ingestion", "failed", 1)]
+    assert source.close_count == 1
+
+
+def test_source_ingestion_execution_observes_and_reraises_unexpected_failure(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    source = RecordingCoreSource()
+    runtime = _single_item_runtime(source)
+    observations: list[tuple[str, str, int]] = []
+    failure = RuntimeError("unclassified source boundary failure")
+    monkeypatch.setattr(
+        source_ingestion_readiness_api,
+        "run_high_cash_source_ingestion_batch",
+        lambda *args, **kwargs: (_ for _ in ()).throw(failure),
+    )
+    monkeypatch.setattr(
+        source_ingestion_readiness_api,
+        "observe_workflow_run",
+        lambda **kwargs: observations.append(
+            (kwargs["workflow"], kwargs["outcome"], kwargs["item_count"])
+        ),
+    )
+
+    with pytest.raises(RuntimeError, match="unclassified source boundary failure"):
+        source_ingestion_readiness_api._execute_source_ingestion_runtime(
+            runtime,
+            repository=InMemoryIdeaRepository(),
+            durable_storage_backed=True,
+        )
+
+    assert observations == [("source_ingestion", "failed", 1)]
+    assert source.close_count == 1
 
 
 def test_source_ingestion_readiness_api_returns_blocked_operator_posture(
