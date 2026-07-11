@@ -69,7 +69,26 @@ def test_github_issue_closure_matrix_gate_blocks_weak_evidence(tmp_path: Path) -
     errors = module.validate_issue_closure_matrix(matrix)
 
     assert "#302: implementation evidence must cite code or contract paths" in errors
-    assert "#302: test and gate evidence must cite tests or make targets" in errors
+    assert (
+        "#302: test and gate evidence must cite tests, make targets, or an executed workflow "
+        "dispatch" in errors
+    )
     assert "#302: same-pattern scan evidence is required" in errors
     assert "#302: docs/wiki/context evidence or decision is required" in errors
-    assert "#302: PR close intent must contain `Closes #302`" in errors
+    assert "#302: locally fixed intent must contain `Closes #302`" in errors
+
+
+def test_github_issue_closure_matrix_gate_rejects_partial_status_with_close_intent(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    matrix = tmp_path / "matrix.md"
+    content = module.MATRIX_PATH.read_text(encoding="utf-8")
+    content = content.replace("Keep #343 open", "Closes #343")
+    matrix.write_text(content, encoding="utf-8")
+
+    errors = module.validate_issue_closure_matrix(matrix)
+
+    assert (
+        "#343: partially fixed intent must contain `Keep #343 open` or `Keeps #343 open`" in errors
+    )
