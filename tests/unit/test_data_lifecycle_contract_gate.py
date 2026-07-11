@@ -43,8 +43,7 @@ def test_data_lifecycle_contract_rejects_false_certification_and_weakened_contro
         in errors
     )
     assert (
-        "data lifecycle scheduled review proof automatic_lifecycle_mutation must be False"
-        in errors
+        "data lifecycle scheduled review proof automatic_lifecycle_mutation must be False" in errors
     )
     assert (
         "data lifecycle scheduled review proof production_authority_verified must be False"

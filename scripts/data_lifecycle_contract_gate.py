@@ -125,9 +125,7 @@ def validate_data_lifecycle_contract(
     return sorted(errors)
 
 
-def _validate_scheduled_review_sources(
-    payload: dict[str, Any], repository_root: Path
-) -> list[str]:
+def _validate_scheduled_review_sources(payload: dict[str, Any], repository_root: Path) -> list[str]:
     proof = payload.get("scheduled_review_proof")
     if not isinstance(proof, dict):
         return []
