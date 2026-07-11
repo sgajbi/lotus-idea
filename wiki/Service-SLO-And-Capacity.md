@@ -18,10 +18,10 @@ reconciliation, quality, and lineage policy.
 | Grafana dashboard | Implemented from bounded metrics and recording rules. |
 | Source-safe baseline runner | Implemented for guarded API, source-ingestion, outbox, downstream intent handoff, exact source-unavailable failure/clean recovery, and read-only PostgreSQL scenarios. |
 | Controlled PostgreSQL threshold proof | Implemented with exact target identity, hard connection caps, mandatory acknowledgement, release/recovery checks, and proof-only baseline linkage. Test evidence is non-certifying. |
-| Process resource observation | Bounded CPU, memory, and optional file-descriptor collection is implemented through a narrow Prometheus adapter. Test observations are non-certifying and are not cost evidence. |
+| Process resource observation | Bounded CPU, memory, and optional file-descriptor collection is implemented through a narrow Prometheus adapter. Production-like observation runs concurrently with load/soak and receives a separate attestation. It is not cost evidence. |
 | Dependency recovery attestation | A manual, main-only protected workflow and exact signer verification are implemented. No qualifying artifact exists until the workflow executes successfully on `main`. |
 | Load/soak attestation | A paced five-scenario, main-only protected workflow, per-scenario observation-span proof, pre-attestation artifact gate, and exact signer verification are implemented. No qualifying artifact exists until execution on `main`. |
-| Production capacity certification | Blocked on executed load/soak, dependency-failure, pool-saturation, and cost/resource attestations. |
+| Production capacity certification | Blocked on executed load/soak, dependency-failure, pool-saturation, resource, and platform-owned cost attestations. |
 
 No tenant, client, portfolio, candidate, event, request, idempotency,
 correlation, or trace identifier is permitted as a metric label.
@@ -54,6 +54,7 @@ make service-slo-capacity-contract-gate
 make service-capacity-baseline-contract-gate
 make service-load-soak-proof-gate
 make service-resource-baseline-contract-gate
+make service-resource-proof-gate
 make service-slo-rule-test
 make postgres-capacity-threshold-proof `
   SERVICE_CAPACITY_PROFILE=test `
@@ -117,14 +118,20 @@ operational only after merge and protected-environment configuration.
 
 ### Resource And Cost Boundary
 
-`make service-resource-baseline` collects bounded process-resource aggregates.
-It never stores the metrics URL or raw scrape and cannot clear production-like
-or cost-attribution blockers. Process telemetry must not be presented as cloud
-billing, unit economics, horizontal-scale evidence, or justification for a new
-runtime service.
-The aggregate capacity runner can link this artifact with
-`--resource-baseline <path>` only when commit and branch match. A validated
-link records observation provenance but does not clear cost certification.
+`make service-resource-baseline` collects bounded process-resource aggregates
+without storing the metrics URL or raw scrape. Raw test or production-like
+artifacts cannot clear blockers. The protected load/soak workflow collects 61
+samples across one hour while representative workload runs, fails fast if
+either process fails, validates both artifacts, and attests them separately.
+
+Consumers must pair `--resource-baseline` with
+`--verify-resource-attestation`. Exact signer, repository, main ref, and commit
+verification clears only the production-like resource blocker. Process
+telemetry must not be presented as cloud billing, unit economics,
+horizontal-scale evidence, or justification for a new runtime service.
+Official cost allocation and billing reconciliation remain owned by
+`lotus-platform#495`; Idea keeps `cost_attribution_evidence_missing` until that
+platform contract and attested artifact exist.
 
 See `docs/operations/service-slo-capacity.md` for target values, alert response,
 capacity assumptions, and non-proof boundaries.

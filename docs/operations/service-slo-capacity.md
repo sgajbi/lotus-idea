@@ -13,8 +13,8 @@ reconciliation, data quality, and lineage for published data products.
 The versioned contract, bounded runtime SLIs, recording rules, burn alerts, and
 operator dashboard are implemented internal foundations. The posture remains
 `not_certified`. Target values are initial engineering budgets and do not prove
-production capacity until load and dependency-failure baselines, PostgreSQL
-saturation evidence, and cost/resource evidence exist.
+production capacity until load, dependency-failure, PostgreSQL saturation,
+production-like resource, and platform-owned cost evidence exist.
 
 ## Governed Objectives
 
@@ -160,7 +160,8 @@ All runs remain `report_only_baseline`. Load/soak qualification requires at
 least 1,000 samples and a measured one-hour observation span for each of the
 five steady-state scenarios, not merely a one-hour process lifetime. Full
 certification additionally requires separately attested dependency recovery,
-PostgreSQL saturation/recovery, and cost/resource evidence. These conditions
+PostgreSQL saturation/recovery, production-like resources, and platform-owned
+cost evidence. These conditions
 do not replace review of SLO results and operator actions.
 
 ### Safe Execution
@@ -302,14 +303,16 @@ Qualifying evidence must be produced by the manual, main-only
 `--verify-postgres-threshold-attestation`; verification pins the repository,
 signer workflow, `refs/heads/main`, and source commit. The workflow and
 protected runtime must exist on `main` before qualifying evidence can be
-produced. Cost/resource evidence has no equivalent attested artifact yet and
-therefore cannot clear its blocker.
+produced. Production-like resource evidence is co-observed and separately
+attested by the load/soak workflow. Official cost attribution remains governed
+by `lotus-platform#495` and cannot be produced by Idea.
 
 Validate the evidence boundary independently:
 
 ```powershell
 make service-capacity-baseline-contract-gate
 make service-resource-baseline-contract-gate
+make service-resource-proof-gate
 ```
 
 ## Resource Observation
@@ -330,12 +333,24 @@ stored.
 
 The resulting `lotus-idea.service-resource-baseline.v1` artifact reports CPU
 core-seconds per second, peak/average resident memory, optional virtual memory,
-and optional file-descriptor utilization. It is test-classified and retains
-both `production_like_resource_attestation_missing` and
-`cost_attribution_evidence_missing`. Process telemetry is not billing evidence;
-no cost, scale, supported-feature, or runtime-split claim follows from it.
-Pass the artifact to `run_service_capacity_workload.py` with
-`--resource-baseline <path>` (or set
-`SERVICE_CAPACITY_RESOURCE_BASELINE_ARG`) to link the observation into the
-aggregate capacity baseline. The link is accepted only for matching commit and
-branch provenance and still leaves `costResourceMeasured=false`.
+and optional file-descriptor utilization. Test and production-like observations
+remain report-only and retain both
+`production_like_resource_attestation_missing` and
+`cost_attribution_evidence_missing` until independently verified. Process
+telemetry is not billing evidence; no cost, scale, supported-feature, or
+runtime-split claim follows from it.
+
+The protected `service-load-soak-evidence.yml` producer collects 61 resource
+samples at 60-second intervals concurrently with the five-scenario soak. It
+fails the run if either process fails, validates the resource artifact through
+`make service-resource-proof-gate`, and attests load and resource artifacts
+separately. This prevents an idle-service observation from being represented as
+under-load evidence.
+
+Consume the artifact with `--resource-baseline <path>` and
+`--verify-resource-attestation`. Verification pins repository, load/soak signer
+workflow, main ref, and exact commit. A valid receipt clears only
+`production_like_resource_attestation_missing`; the aggregate retains
+`costAttributionVerified=false` and `cost_attribution_evidence_missing`.
+Official provider/platform billing allocation, decimal reconciliation, and
+attestation belong to `lotus-platform#495`, not Lotus Idea.

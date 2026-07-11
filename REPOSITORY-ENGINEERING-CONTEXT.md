@@ -1394,7 +1394,7 @@ Current gaps remain explicit:
 7. no platform mesh certification,
 8. no client-ready publication,
 9. bounded service/workflow SLIs, burn alerts, and dashboard exist, but no
-   production load/soak, PostgreSQL saturation, cost/resource, or back-pressure
+   production load/soak, PostgreSQL saturation, resource, cost, or back-pressure
    certification,
 10. no AI provider-runtime certification,
 11. no full production identity-provider integration, signed caller assertion,
@@ -1524,7 +1524,7 @@ and business identifiers transient inside infrastructure adapters. Require an
 explicit mutation switch for operator workflows and an additional confirmation
 for production. Treat observed PostgreSQL connection utilization as posture,
 not proof that saturation thresholds or load shedding were exercised. Never
-accept caller-asserted saturation or cost/resource booleans. Threshold behavior
+accept caller-asserted saturation, resource, or cost booleans. Threshold behavior
 requires dedicated-target identity, bounded connections, explicit
 acknowledgement, guaranteed release, and recovery to normal. Certification
 additionally requires GitHub artifact-attestation verification pinned to the
@@ -1537,9 +1537,19 @@ URLs and raw scrapes transient. Treat process telemetry as resource
 observation, not cost attribution, billing reconciliation, horizontal-scale
 certification, or evidence for a runtime split. Those claims require
 separately governed, attested production-like and billing artifacts.
+Production-like resource proof must be collected concurrently with the paced
+load/soak run: require at least 61 samples spanning 3,600 seconds, fail if
+either workload or resource collection fails, validate each artifact before
+separate attestation, and pin repository, signer workflow, main ref, and exact
+commit during consumption. A verified resource receipt may clear only
+`production_like_resource_attestation_missing`.
+
 Aggregate capacity evidence may reference a validated resource baseline only
-when commit and branch provenance match; linkage must not change
-`costResourceMeasured` without independently attested billing evidence.
+when commit and branch provenance match. Keep `costAttributionVerified=false`
+and `cost_attribution_evidence_missing` until the platform-owned contract in
+`lotus-platform#495` provides independently attested provider/billing evidence.
+Lotus Idea must not implement official billing adapters, allocation, or cost
+reconciliation.
 
 Durable PostgreSQL repositories expose capacity through a narrow repository
 port. Nonessential source-ingestion and outbox operator runs must evaluate that
@@ -1550,9 +1560,10 @@ data-lifecycle controls. Keep threshold stress/recovery certification separate
 from implementation-backed metrics and policy behavior.
 
 The contract, dashboard, and alert artifacts remain `not_certified` until
-representative load/soak, dependency-failure, PostgreSQL saturation, and
-cost/resource evidence exists. No runtime service split follows from adding
-observability; workload or failure-isolation evidence must justify it.
+representative load/soak, dependency-failure, PostgreSQL saturation,
+production-like resource, and platform-owned cost evidence exists. No runtime
+service split follows from adding observability; workload or failure-isolation
+evidence must justify it.
 
 ## Cross-Links
 

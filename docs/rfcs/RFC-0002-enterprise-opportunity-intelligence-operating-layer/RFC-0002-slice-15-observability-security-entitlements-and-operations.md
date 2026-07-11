@@ -275,7 +275,8 @@ posture and retains explicit certification gaps.
 This is design modularity inside the existing process. No workload,
 failure-isolation, ownership, or operability evidence justifies a separate SLO
 service. Production certification remains blocked on representative load/soak,
-dependency-failure, PostgreSQL pool-saturation, and cost/resource baselines.
+dependency-failure, PostgreSQL pool-saturation, production-like resource, and
+platform-owned cost baselines.
 The current injected/direct PostgreSQL connection must not be described as a
 measured pool, and no supported feature is promoted by this foundation.
 
@@ -296,15 +297,15 @@ and one-hot posture metrics, tested warning/shed/unavailable alerts, and
 fail-closed source-ingestion/outbox shedding before external runtime
 construction. Health, readiness, lifecycle, recovery, reconciliation, and
 data-lifecycle authority remain available. This clears the missing-metric
-implementation blocker only; production-like threshold stress, recovery, and
-cost/resource evidence remain required.
+implementation blocker only; production-like threshold stress, recovery,
+resource, and platform-owned cost evidence remain required.
 
 Controlled PostgreSQL threshold/recovery automation now crosses a narrow
 application port and guarded infrastructure adapter. It verifies dedicated
 database identity and a hard `max_connections` ceiling, requires an exact
 operator acknowledgement, prohibits production execution, releases held
 connections on every path, and emits source-safe evidence. The baseline no
-longer accepts caller-asserted saturation or cost/resource booleans.
+longer accepts caller-asserted saturation, resource, or cost booleans.
 Disposable test evidence reached the 90% shed threshold and recovered to
 normal, but remains explicitly non-certifying.
 
@@ -316,18 +317,29 @@ source commit before saturation evidence can count. This implementation cannot
 produce qualifying evidence until merged to `main` and the protected
 environment and runner are configured; the blocker therefore remains open.
 
-The resource-evidence sub-slice now adds a bounded process snapshot model, a
+The resource-evidence sub-slice adds a bounded process snapshot model, a
 narrow probe port, a Prometheus parser adapter, guarded collection CLI, and
 blocking contract gate. It records CPU core consumption rate, resident and
 virtual memory, and optional file-descriptor utilization without retaining raw
 scrapes or endpoint identity. A live test observation against Lotus Idea
 validated the HTTP/parser path. The artifact is deliberately non-certifying:
 process metrics do not prove production-like sizing, cloud cost, billing
-allocation, horizontal scale, or a need for another deployable. Production-like
-resource attestation and cost-attribution evidence remain blocked.
-The aggregate capacity baseline can now link a resource observation with exact
-commit/branch validation and source-safe run provenance. This linkage is
-informational and cannot set `costResourceMeasured` or remove the cost blocker.
+allocation, horizontal scale, or a need for another deployable.
+
+Production-like resource attestation is now implementation-backed in the
+protected load/soak producer. It collects 61 samples over 3,600 seconds while
+the five steady-state scenarios run, fails fast if either process fails,
+validates load and resource artifacts independently, and signs each artifact
+separately. Consumer verification pins repository, load/soak signer, main ref,
+and exact commit. A valid receipt removes only
+`production_like_resource_attestation_missing`; no qualifying receipt exists
+until mainline execution succeeds.
+
+The aggregate baseline now separates `resourceAttestationVerified` from
+`costAttributionVerified`. Official provider/platform billing adapters,
+allocation, decimal reconciliation, and attestation remain outside Idea and are
+tracked in `lotus-platform#495`. Therefore `cost_attribution_evidence_missing`
+stays open even after resource qualification.
 
 Dependency-failure evidence now uses closed source-failure classification
 instead of a caller-selected expectation boolean. The source-ingestion API
