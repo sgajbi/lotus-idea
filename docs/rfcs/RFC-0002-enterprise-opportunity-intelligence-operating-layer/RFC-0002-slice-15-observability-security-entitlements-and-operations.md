@@ -340,6 +340,18 @@ generic blocked responses fail closed. This clears the evidence-classification
 implementation gap only; controlled production-like fault injection, recovery
 execution, attestation, mainline CI, and review remain required.
 
+Dependency recovery now has a distinct protected attestation path. Local
+measurements can set `dependencyRecoveryObserved` but cannot remove
+`dependency_recovery_attestation_missing`. The manual main-only producer
+workflow requires the protected capacity environment, governed self-hosted
+runner, exact operator confirmation, externally controlled source fault, and
+clean recovery during the configured delay. It validates and attests the exact
+source-safe baseline. Consumer verification pins repository, dedicated signer,
+main ref, and exact commit; qualification requires at least one classified
+fault plus one successful recovery and zero errors/conflicts. This
+implementation cannot produce qualifying evidence before merge and protected
+runtime configuration, so the blocker remains open.
+
 ## Required Work
 
 1. Add metrics, logs, traces, audit events, health/readiness diagnostics, and

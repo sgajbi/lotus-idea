@@ -1470,6 +1470,15 @@ responses, and configuration or capacity blockers. Recovery requires an
 explicit completed/replayed status and zero counts for every governed source
 failure class. A boolean "expected failure" assertion is not evidence.
 
+Observed dependency recovery and qualified dependency recovery are separate
+states. Only an artifact from the manual main-only
+`service-dependency-recovery-evidence.yml` workflow may remove the dependency
+attestation blocker, and only after `gh attestation verify` pins the dedicated
+signer, trusted repository, `refs/heads/main`, and exact commit. Require a
+classified fault sample, a clean recovery sample, zero errors/conflicts, and a
+protected production-like environment. Never accept a local artifact,
+caller-selected profile, or serialized verification claim as qualification.
+
 Capacity probes must cross a narrow port and return bounded aggregates only.
 Keep request and response bodies, URLs, DSNs, credentials, caller assertions,
 and business identifiers transient inside infrastructure adapters. Require an

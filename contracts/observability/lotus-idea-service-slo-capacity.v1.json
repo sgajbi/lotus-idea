@@ -152,6 +152,7 @@
     "Target values are initial engineering budgets and are not production certification without measured baseline evidence.",
     "This contract does not certify horizontal scale, multi-process safety, infrastructure capacity, or cloud cost.",
     "Test-profile threshold evidence validates policy behavior but cannot satisfy the production-like PostgreSQL saturation blocker.",
+    "Local dependency recovery observations cannot satisfy the protected dependency recovery attestation blocker.",
     "This contract does not promote a supported business feature."
   ]
 }

@@ -19,6 +19,7 @@ reconciliation, quality, and lineage policy.
 | Source-safe baseline runner | Implemented for guarded API, source-ingestion, outbox, exact source-unavailable failure/clean recovery, and read-only PostgreSQL scenarios. |
 | Controlled PostgreSQL threshold proof | Implemented with exact target identity, hard connection caps, mandatory acknowledgement, release/recovery checks, and proof-only baseline linkage. Test evidence is non-certifying. |
 | Process resource observation | Bounded CPU, memory, and optional file-descriptor collection is implemented through a narrow Prometheus adapter. Test observations are non-certifying and are not cost evidence. |
+| Dependency recovery attestation | A manual, main-only protected workflow and exact signer verification are implemented. No qualifying artifact exists until the workflow executes successfully on `main`. |
 | Production capacity certification | Blocked on load/soak, dependency-failure, pool-saturation, and cost/resource evidence. |
 
 No tenant, client, portfolio, candidate, event, request, idempotency,
@@ -62,6 +63,13 @@ configuration or capacity blocks, mixed failures, and generic blocked responses
 are rejected. Recovery requires a completed or replayed run with every source
 failure counter at zero. Production certification still requires controlled,
 attested fault injection and recovery execution.
+
+The governed producer is
+`.github/workflows/service-dependency-recovery-evidence.yml`. It requires the
+protected capacity environment, governed self-hosted runner, and exact operator
+confirmation. Consumers must use `--dependency-recovery-proof` together with
+`--verify-dependency-recovery-attestation`; a local artifact or serialized
+attestation claim cannot clear the blocker.
 
 The PostgreSQL adapter refreshes its session-local statistics snapshot before
 reading aggregate connection utilization. This prevents a long-lived

@@ -187,6 +187,31 @@ requires `runStatus` `completed` or `replayed` with all source-failure counters
 at zero. This validates evidence semantics only; certification still requires
 externally controlled production-like fault injection and attested execution.
 
+Local recovery observations cannot clear
+`dependency_recovery_attestation_missing`. Qualifying evidence must be emitted
+by the manual, main-only `service-dependency-recovery-evidence.yml` workflow in
+the protected `capacity-production-like` environment on the governed
+self-hosted capacity runner. The operator must arrange the controlled
+source-unavailable condition, dispatch with the exact confirmation
+`RUN_CONTROLLED_LOTUS_IDEA_DEPENDENCY_RECOVERY`, and restore the authoritative
+source during the configured recovery delay. The workflow validates, attests,
+and uploads only the source-safe capacity artifact.
+
+Consume the downloaded artifact only through cryptographic verification:
+
+```powershell
+make service-capacity-workload `
+  SERVICE_CAPACITY_PROFILE=production-like `
+  SERVICE_CAPACITY_SCENARIO_ARGS="--scenario api" `
+  SERVICE_CAPACITY_DEPENDENCY_RECOVERY_PROOF_ARG="--dependency-recovery-proof <path> --verify-dependency-recovery-attestation"
+```
+
+Verification pins repository, dedicated signer workflow, `refs/heads/main`,
+and source commit. The proof must contain at least one exclusively classified
+fault plus one clean recovery, with zero errors and conflicts. This clears only
+the dependency-recovery attestation blocker; load/soak, PostgreSQL saturation,
+resource/cost, supported-feature, and mainline closure evidence remain separate.
+
 The PostgreSQL scenario reads `LOTUS_IDEA_DATABASE_URL` transiently. It stores
 only query outcome, duration, and aggregate utilization. It does not retain the
 DSN or database error detail and does not clear saturation certification.
