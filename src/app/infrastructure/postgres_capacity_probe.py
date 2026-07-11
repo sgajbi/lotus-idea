@@ -102,8 +102,8 @@ class PostgresCapacityProbe:
 def _utilization_fraction(row: tuple[object, ...] | None) -> float | None:
     if row is None or len(row) != 1:
         return None
-    value = row[0]
-    if isinstance(value, bool) or not isinstance(value, (int, float)):
+    measurement = row[0]
+    if isinstance(measurement, bool) or not isinstance(measurement, (int, float)):
         return None
-    fraction = float(value)
+    fraction = float(measurement)
     return fraction if 0 <= fraction <= 1 else None

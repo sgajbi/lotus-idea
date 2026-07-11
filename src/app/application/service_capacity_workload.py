@@ -160,7 +160,11 @@ def _summary_value(summary: Mapping[str, object], key: str | None) -> object:
     return None if key is None else summary.get(key)
 
 
-def _bounded_float(value: object) -> float | None:
-    if isinstance(value, bool) or not isinstance(value, (int, float)) or value < 0:
+def _bounded_float(measurement: object) -> float | None:
+    if (
+        isinstance(measurement, bool)
+        or not isinstance(measurement, (int, float))
+        or measurement < 0
+    ):
         return None
-    return float(value)
+    return float(measurement)

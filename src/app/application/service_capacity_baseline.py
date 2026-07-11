@@ -227,11 +227,11 @@ def _certification_blockers(
     return blockers
 
 
-def _percentile(values: list[float], percentile: float) -> float | None:
-    if not values:
+def _percentile(samples: list[float], percentile: float) -> float | None:
+    if not samples:
         return None
-    index = max(0, math.ceil(percentile * len(values)) - 1)
-    return values[index]
+    index = max(0, math.ceil(percentile * len(samples)) - 1)
+    return samples[index]
 
 
 def _ratio(numerator: int, denominator: int | float) -> float:
