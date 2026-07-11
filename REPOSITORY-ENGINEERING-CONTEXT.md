@@ -799,6 +799,16 @@ base-backup plus WAL evidence. Use `LOTUS_IDEA_RECOVERY_POSTURE=draining`,
 `restoring`, `degraded`, or `normal` during cutover. Every non-normal or invalid
 value fails readiness and durable writes before mutation.
 
+The scheduled DR workflow must install a PostgreSQL client with the same major
+version as its service database and verify both before backup. `pg_restore`
+must receive an explicit target database; `PGDATABASE` alone does not select
+restore mode. Backup/restore adapters must translate subprocess failures into
+phase-specific diagnostics while redacting host, database, user, passfile, and
+password values. Do not claim a DR workflow from contract tests alone: execute
+it on `main`, inspect the uploaded evidence, and retain `not_certified` until
+provider-owned physical/PITR, encryption, failover, and authorization evidence
+exists.
+
 Wiki check before merge when docs/wiki truth changed:
 
 ```powershell

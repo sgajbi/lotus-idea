@@ -761,7 +761,14 @@ rejection, and unchanged table hashes.
 and invalid posture fail readiness and every durable-write guard before
 mutation. The weekly CI workflow performs a real logical restore, validates
 resume safety, retains evidence for 90 days, and generates provenance
-attestation. Production PITR certification remains blocked until an approved
+attestation. Mainline dispatch `29157824527` at commit `e565c915` passed on
+2026-07-11 with PostgreSQL 18.4: all 17 owned tables were restored, the latest
+migration was `012_ai_run_attestation_receipt`, RPO was `0s`, RTO was below
+`0.2s`, all relationship/state checks passed, and replay/fencing preserved
+every table hash. The artifact remains explicitly `not_certified`,
+`pitrProof=false`, and `supportedFeaturePromoted=false`.
+
+Production PITR certification remains blocked until an approved
 managed-provider physical base-backup/WAL exercise is captured. This is
 internal design modularity and operator automation; database backup
 infrastructure remains platform/provider owned and no new runtime service is

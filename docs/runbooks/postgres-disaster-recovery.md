@@ -179,6 +179,21 @@ JSON for 90 days and generates GitHub provenance attestation. A passing logical
 drill proves restore mechanics and application invariants; because its evidence
 sets `pitrProof=false`, it cannot clear the production PITR blocker.
 
+### Latest Mainline Drill
+
+Workflow dispatch `29157824527` passed at main commit `e565c915` on
+2026-07-11. It used PostgreSQL server and client 18.4, restored all 17 owned
+tables through migration `012_ai_run_attestation_receipt`, measured RPO `0s`
+and RTO `0.193s`, produced unchanged before/after content hashes, passed replay
+and lease-fencing checks, generated provenance attestation, and uploaded the
+90-day evidence artifact. The evidence correctly records
+`certificationStatus=not_certified`, `pitrProof=false`, and
+`supportedFeaturePromoted=false`.
+
+This drill closes the repository logical-restore execution gap only. It does
+not prove managed-provider backup inventory, encryption, WAL continuity,
+physical/PITR recovery, regional failover, or production cutover approval.
+
 ## Evidence Review
 
 Evidence must include backup/artifact identity, migration bundle hash,
