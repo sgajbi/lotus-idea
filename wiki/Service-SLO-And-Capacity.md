@@ -13,6 +13,7 @@ reconciliation, quality, and lineage policy.
 | Workflow run, duration, and item throughput | Implemented for source ingestion and outbox delivery. |
 | Dependency availability and duration | Implemented for governed dependencies as one logical call including retries. |
 | PostgreSQL duration and outcomes | Implemented for mutations, lifecycle actions, and snapshot reads. |
+| PostgreSQL capacity posture | Aggregate utilization, collection success, one-hot posture, alerts, and nonessential source/outbox shedding are implemented. |
 | Error-budget rules and alerts | Implemented and tested with `promtool`. |
 | Grafana dashboard | Implemented from bounded metrics and recording rules. |
 | Source-safe baseline runner | Implemented for guarded API, source-ingestion, outbox, dependency-failure/recovery, and read-only PostgreSQL scenarios. |
@@ -43,7 +44,8 @@ make service-slo-rule-test
 `make service-capacity-workload` defaults to a read-only test-profile API
 baseline. Mutating workflow scenarios require explicit flags and a second
 confirmation for production. Stored evidence is aggregate and report-only;
-observed PostgreSQL utilization is not saturation certification.
+observed PostgreSQL utilization and policy execution are not saturation stress
+or recovery certification.
 
 See `docs/operations/service-slo-capacity.md` for target values, alert response,
 capacity assumptions, and non-proof boundaries.

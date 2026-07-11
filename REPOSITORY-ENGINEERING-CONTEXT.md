@@ -1469,6 +1469,14 @@ explicit mutation switch for operator workflows and an additional confirmation
 for production. Treat observed PostgreSQL connection utilization as posture,
 not proof that saturation thresholds or load shedding were exercised.
 
+Durable PostgreSQL repositories expose capacity through a narrow repository
+port. Nonessential source-ingestion and outbox operator runs must evaluate that
+posture before constructing external clients or publishers: `warning` remains
+allowed, while `shed` and `unavailable` fail closed. Do not apply this guard to
+health, readiness, lifecycle authority, recovery, reconciliation, or
+data-lifecycle controls. Keep threshold stress/recovery certification separate
+from implementation-backed metrics and policy behavior.
+
 The contract, dashboard, and alert artifacts remain `not_certified` until
 representative load/soak, dependency-failure, PostgreSQL saturation, and
 cost/resource evidence exists. No runtime service split follows from adding

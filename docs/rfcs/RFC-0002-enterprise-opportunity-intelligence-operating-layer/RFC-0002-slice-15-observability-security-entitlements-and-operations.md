@@ -289,6 +289,16 @@ Observed PostgreSQL utilization does not clear the saturation/load-shed
 blocker, and no load/soak, dependency-failure, saturation, or cost blocker is
 removed until a qualifying production-like artifact is reviewed.
 
+The PostgreSQL capacity sub-slice now implements code-owned 70% warning and 90%
+shed thresholds, a shared aggregate `pg_stat_activity/max_connections`
+projection, a durable repository posture port, bounded collection, utilization,
+and one-hot posture metrics, tested warning/shed/unavailable alerts, and
+fail-closed source-ingestion/outbox shedding before external runtime
+construction. Health, readiness, lifecycle, recovery, reconciliation, and
+data-lifecycle authority remain available. This clears the missing-metric
+implementation blocker only; production-like threshold stress, recovery, and
+cost/resource evidence remain required.
+
 ## Required Work
 
 1. Add metrics, logs, traces, audit events, health/readiness diagnostics, and

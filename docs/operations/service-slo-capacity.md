@@ -36,8 +36,10 @@ Source-ingestion and outbox batch ceilings are fail-closed application limits,
 not throughput certification. Dependency clients use bounded pools and
 timeouts. At the PostgreSQL shed threshold, the intended policy is to reject or
 defer nonessential operator and background work while preserving health,
-readiness, lifecycle authority, and recovery operations. Actual load-shed code
-and production pool evidence remain certification blockers.
+readiness, lifecycle authority, and recovery operations. Source-ingestion and
+outbox run-once routes now enforce that policy before constructing downstream
+clients or publishers. Production saturation/load-shed evidence remains a
+certification blocker.
 
 ## Error-Budget Response
 
@@ -88,9 +90,27 @@ measurement windows.
 
 Dependency availability includes bounded retries and stays separate from
 service failures. PostgreSQL panels cover logical mutation, lifecycle, and
-snapshot duration/outcomes. They do not expose pool utilization; the service
-currently receives an injected/direct connection rather than an observable
-production pool.
+snapshot duration/outcomes plus bounded aggregate connection utilization,
+collection success, and one-hot `normal`, `warning`, `shed`, or `unavailable`
+posture. These metrics observe server connection use through the existing
+repository connection; they do not certify an application connection pool.
+
+### PostgreSQL Capacity Response
+
+1. Treat `collection unavailable` as unknown capacity, not zero utilization.
+   Nonessential source-ingestion and outbox runs fail closed until posture is
+   observable again.
+2. At 70% utilization, investigate connection growth, query duration,
+   dependency latency, release/configuration changes, and abandoned clients.
+   Do not increase concurrency before identifying the cause.
+3. At 90% utilization, keep nonessential workflow shedding active. Preserve
+   health, readiness, lifecycle authority, dead-letter recovery, downstream
+   reconciliation, and data-lifecycle controls.
+4. Verify the alert and dashboard agree with `pg_stat_activity` aggregate
+   posture. Never publish DSNs, database identities, query text, or client
+   identifiers in evidence.
+5. Resume nonessential workflows only after utilization is below the warning
+   threshold for the governed observation window and recovery checks pass.
 
 ## Safe Labels
 
@@ -123,7 +143,7 @@ scenario families:
 | `source_ingestion` | Bounded run-once endpoint | Duration and aggregate item count | Mutating; maximum 100 manifest items. |
 | `outbox_delivery` | Bounded run-once endpoint | Duration, aggregate attempts, and retry posture | Mutating; unique transient idempotency keys and maximum 100 events. |
 | `dependency_failure` | Faulted source-ingestion call followed by recovery | Failure handling and explicit recovery outcome | Requires externally controlled fault injection; a blocked call is not recovery. |
-| `postgresql` | Read-only `SELECT 1` plus aggregate connection posture | Query latency and maximum observed utilization | Observation does not prove threshold saturation or load shedding. |
+| `postgresql` | Read-only `SELECT 1` plus aggregate connection posture | Query latency and maximum observed utilization | Observation does not prove a threshold stress/recovery exercise. |
 
 Artifacts use `lotus-idea.service-capacity-baseline.v1` and contain aggregate
 measurements only. Request or response bodies, URLs, DSNs, credentials, caller
