@@ -9,7 +9,7 @@ import psycopg
 from fastapi.testclient import TestClient
 from psycopg.rows import dict_row
 
-from app.application.data_lifecycle import ExecuteDataLifecycle
+from app.application.data_lifecycle import ExecuteDataLifecycle, ReviewScheduledDataLifecycle
 from app.domain import DownstreamSubmissionClaimDecision
 from app.domain.data_lifecycle import (
     DataLifecycleAction,
@@ -17,6 +17,9 @@ from app.domain.data_lifecycle import (
     DataLifecycleDecision,
 )
 from app.infrastructure.postgres_data_lifecycle import DataLifecycleWriteBlockedError
+from app.infrastructure.postgres_data_lifecycle_schedule import (
+    PostgresScheduledDataLifecycleRepository,
+)
 from app.infrastructure.postgres_disaster_recovery import REFERENTIAL_CHECKS
 from app.infrastructure.postgres_repository import PostgresConnection, PostgresIdeaRepository
 from app.main import app
@@ -118,6 +121,15 @@ def test_postgres_data_lifecycle_survives_restart_and_redacts_atomically(
         assert erased_telemetry.lifecycle_control_missing_count == 0
 
     _expire_retention(postgres_database_url, candidate_id)
+    with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
+        scheduled_review = ReviewScheduledDataLifecycle(
+            PostgresScheduledDataLifecycleRepository(connection),
+            now=lambda: datetime.now(UTC),
+        ).execute(limit=10)
+    assert scheduled_review.truncated is False
+    assert scheduled_review.ready_count == 1
+    assert [item.snapshot.candidate_id for item in scheduled_review.items] == [candidate_id]
+
     purged = _action(
         client,
         candidate_id,
