@@ -19,6 +19,10 @@ tests:
         values: '0+999x400'
       - series: 'lotus_idea_workflow_runs_total{workflow="outbox_delivery",outcome="failed"}'
         values: '0+1x400'
+      - series: 'lotus_idea_postgres_capacity_collection_success{repository="lotus-idea"}'
+        values: '1x400'
+      - series: 'lotus_idea_postgres_connection_utilization_ratio{repository="lotus-idea"}'
+        values: '0.5x400'
     alert_rule_test:
       - eval_time: 390m
         alertname: LotusIdeaApiErrorBudgetFastBurn
@@ -31,6 +35,15 @@ tests:
         exp_alerts: []
       - eval_time: 390m
         alertname: LotusIdeaOutboxDeliveryErrorBudgetFastBurn
+        exp_alerts: []
+      - eval_time: 390m
+        alertname: LotusIdeaPostgresCapacityCollectionUnavailable
+        exp_alerts: []
+      - eval_time: 390m
+        alertname: LotusIdeaPostgresCapacityWarning
+        exp_alerts: []
+      - eval_time: 390m
+        alertname: LotusIdeaPostgresCapacityShedActive
         exp_alerts: []
 
   - name: fast burn alerts after sustained service and workflow failures
@@ -81,3 +94,41 @@ tests:
             exp_annotations:
               summary: Outbox delivery is consuming its 99.9% workflow error budget rapidly.
               runbook: docs/operations/service-slo-capacity.md#workflow-error-budget-burn
+
+  - name: PostgreSQL saturation activates nonessential workload shedding alert
+    interval: 1m
+    input_series:
+      - series: 'lotus_idea_postgres_capacity_collection_success{repository="lotus-idea"}'
+        values: '1x20'
+      - series: 'lotus_idea_postgres_connection_utilization_ratio{repository="lotus-idea"}'
+        values: '0.95x20'
+    alert_rule_test:
+      - eval_time: 10m
+        alertname: LotusIdeaPostgresCapacityShedActive
+        exp_alerts:
+          - exp_labels:
+              alert_id: postgres-capacity-shed-active
+              owner_repo: lotus-idea
+              repository: lotus-idea
+              severity: P1
+            exp_annotations:
+              summary: Lotus Idea is shedding nonessential workflows due to PostgreSQL saturation.
+              runbook: docs/operations/service-slo-capacity.md#postgresql-capacity-response
+
+  - name: PostgreSQL capacity collection failure remains distinct from saturation
+    interval: 1m
+    input_series:
+      - series: 'lotus_idea_postgres_capacity_collection_success{repository="lotus-idea"}'
+        values: '0x20'
+    alert_rule_test:
+      - eval_time: 10m
+        alertname: LotusIdeaPostgresCapacityCollectionUnavailable
+        exp_alerts:
+          - exp_labels:
+              alert_id: postgres-capacity-collection-unavailable
+              owner_repo: lotus-idea
+              repository: lotus-idea
+              severity: P1
+            exp_annotations:
+              summary: Lotus Idea cannot determine PostgreSQL capacity posture.
+              runbook: docs/operations/service-slo-capacity.md#postgresql-capacity-response

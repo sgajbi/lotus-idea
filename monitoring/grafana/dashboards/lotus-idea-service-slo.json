@@ -83,12 +83,15 @@
     {
       "id": 7,
       "type": "timeseries",
-      "title": "PostgreSQL Operation Posture",
-      "description": "Logical mutation, lifecycle, and snapshot outcomes. Pool saturation remains an explicit certification gap.",
+      "title": "PostgreSQL Operations And Capacity",
+      "description": "Logical operation outcomes plus bounded connection utilization and active capacity posture. Observed posture is not saturation certification.",
       "gridPos": {"h": 8, "w": 8, "x": 0, "y": 15},
       "targets": [
         {"refId": "A", "expr": "histogram_quantile(0.95, sum by (operation, le) (rate(lotus_idea_postgres_operation_duration_seconds_bucket[5m])))", "legendFormat": "{{operation}} p95"},
-        {"refId": "B", "expr": "sum by (operation, outcome) (rate(lotus_idea_postgres_operations_total[5m]))", "legendFormat": "{{operation}} {{outcome}}/sec"}
+        {"refId": "B", "expr": "sum by (operation, outcome) (rate(lotus_idea_postgres_operations_total[5m]))", "legendFormat": "{{operation}} {{outcome}}/sec"},
+        {"refId": "C", "expr": "lotus_idea_postgres_connection_utilization_ratio{repository=\"lotus-idea\"}", "legendFormat": "connection utilization"},
+        {"refId": "D", "expr": "lotus_idea_postgres_capacity_posture{repository=\"lotus-idea\"}", "legendFormat": "posture {{posture}}"},
+        {"refId": "E", "expr": "lotus_idea_postgres_capacity_collection_success{repository=\"lotus-idea\"}", "legendFormat": "capacity collection"}
       ],
       "fieldConfig": {"defaults": {}, "overrides": []}
     },

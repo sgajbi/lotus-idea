@@ -57,3 +57,33 @@ groups:
         annotations:
           summary: Outbox delivery is consuming its 99.9% workflow error budget rapidly.
           runbook: docs/operations/service-slo-capacity.md#workflow-error-budget-burn
+      - alert: LotusIdeaPostgresCapacityCollectionUnavailable
+        expr: lotus_idea_postgres_capacity_collection_success{repository="lotus-idea"} == 0
+        for: 5m
+        labels:
+          alert_id: postgres-capacity-collection-unavailable
+          severity: P1
+          owner_repo: lotus-idea
+        annotations:
+          summary: Lotus Idea cannot determine PostgreSQL capacity posture.
+          runbook: docs/operations/service-slo-capacity.md#postgresql-capacity-response
+      - alert: LotusIdeaPostgresCapacityWarning
+        expr: (lotus_idea_postgres_connection_utilization_ratio{repository="lotus-idea"} >= 0.7) and (lotus_idea_postgres_connection_utilization_ratio{repository="lotus-idea"} < 0.9) and (lotus_idea_postgres_capacity_collection_success{repository="lotus-idea"} == 1)
+        for: 10m
+        labels:
+          alert_id: postgres-capacity-warning
+          severity: P2
+          owner_repo: lotus-idea
+        annotations:
+          summary: Lotus Idea PostgreSQL connection utilization is above the warning threshold.
+          runbook: docs/operations/service-slo-capacity.md#postgresql-capacity-response
+      - alert: LotusIdeaPostgresCapacityShedActive
+        expr: (lotus_idea_postgres_connection_utilization_ratio{repository="lotus-idea"} >= 0.9) and (lotus_idea_postgres_capacity_collection_success{repository="lotus-idea"} == 1)
+        for: 2m
+        labels:
+          alert_id: postgres-capacity-shed-active
+          severity: P1
+          owner_repo: lotus-idea
+        annotations:
+          summary: Lotus Idea is shedding nonessential workflows due to PostgreSQL saturation.
+          runbook: docs/operations/service-slo-capacity.md#postgresql-capacity-response
