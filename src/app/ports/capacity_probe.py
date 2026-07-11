@@ -24,3 +24,14 @@ class CapacityProbePort(Protocol):
     def execute(self, request: CapacityProbeRequest) -> CapacityProbeResult: ...
 
     def close(self) -> None: ...
+
+
+@dataclass(frozen=True)
+class PostgresCapacityProbeResult:
+    duration_seconds: float
+    outcome: str
+    connection_utilization_fraction: float | None
+
+
+class PostgresCapacityProbePort(Protocol):
+    def execute(self) -> PostgresCapacityProbeResult: ...
