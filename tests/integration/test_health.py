@@ -229,7 +229,10 @@ def test_readiness_degrades_when_production_profile_lacks_durable_repository(
         "durableStorageBacked": False,
         "processLocalRepositoryAllowed": False,
         "durableWriteRepositoryRequired": True,
-        "configurationBlockers": ["durable_repository_not_configured"],
+        "configurationBlockers": [
+            "durable_repository_not_configured",
+            "release_image_digest_binding_missing",
+        ],
     }
 
 
@@ -264,7 +267,10 @@ def test_readiness_degrades_when_configured_postgres_cannot_initialize(
         "durableStorageBacked": False,
         "processLocalRepositoryAllowed": False,
         "durableWriteRepositoryRequired": True,
-        "configurationBlockers": ["durable_repository_unavailable"],
+        "configurationBlockers": [
+            "durable_repository_unavailable",
+            "release_image_digest_binding_missing",
+        ],
     }
     serialized = response.text
     assert "secret" not in serialized

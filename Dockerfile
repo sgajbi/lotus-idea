@@ -7,7 +7,7 @@ ARG GIT_BRANCH=unknown
 ARG BUILD_TIMESTAMP=unknown
 ARG REPO_URL=unknown
 ARG CI_RUN_ID=local
-ARG IMAGE_DIGEST=local-unpublished
+ARG IMAGE_BUILD_ID=local
 ARG SERVICE_VERSION=0.1.0
 
 LABEL org.opencontainers.image.title="lotus-idea" \
@@ -19,7 +19,9 @@ LABEL org.opencontainers.image.title="lotus-idea" \
       org.opencontainers.image.created="${BUILD_TIMESTAMP}" \
       org.opencontainers.image.source="${REPO_URL}" \
       io.lotus.image.ci.run_id="${CI_RUN_ID}" \
-      io.lotus.image.digest="${IMAGE_DIGEST}"
+      io.lotus.image.build.id="${IMAGE_BUILD_ID}" \
+      io.lotus.image.identity.contract="lotus.image-identity.v1" \
+      io.lotus.image.registry.digest.binding="runtime-release-manifest"
 
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1 \
     PYTHONUNBUFFERED=1 \
@@ -29,7 +31,7 @@ ENV PIP_DISABLE_PIP_VERSION_CHECK=1 \
     LOTUS_BUILD_TIMESTAMP="${BUILD_TIMESTAMP}" \
     LOTUS_REPO_URL="${REPO_URL}" \
     LOTUS_CI_RUN_ID="${CI_RUN_ID}" \
-    LOTUS_IMAGE_DIGEST="${IMAGE_DIGEST}" \
+    LOTUS_IMAGE_BUILD_ID="${IMAGE_BUILD_ID}" \
     LOTUS_SERVICE_VERSION="${SERVICE_VERSION}"
 
 WORKDIR /app

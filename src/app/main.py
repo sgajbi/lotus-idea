@@ -58,6 +58,10 @@ from app.domain.capacity_posture import PostgresCapacityPosture
 from app.domain.recovery_posture import ServiceRecoveryPosture, evaluate_recovery_readiness
 from app.runtime.downstream_realization_state import close_downstream_realization_clients
 from app.runtime.recovery_posture import load_recovery_runtime_state
+from app.runtime.release_identity import (
+    release_identity_configuration_blockers,
+    release_identity_metadata,
+)
 from app.middleware.correlation import CorrelationIdMiddleware
 from app.middleware.http_boundary import configure_http_boundary
 from app.observability import (
@@ -70,14 +74,7 @@ from app.observability import (
 SERVICE_NAME = "lotus-idea"
 SERVICE_VERSION = os.getenv("LOTUS_SERVICE_VERSION", "0.1.0")
 ROUNDING_POLICY_VERSION = "v1"
-BUILD_METADATA = {
-    "gitCommitSha": os.getenv("LOTUS_GIT_COMMIT_SHA", "unknown"),
-    "gitBranch": os.getenv("LOTUS_GIT_BRANCH", "unknown"),
-    "buildTimestamp": os.getenv("LOTUS_BUILD_TIMESTAMP", "unknown"),
-    "repoUrl": os.getenv("LOTUS_REPO_URL", "unknown"),
-    "ciRunId": os.getenv("LOTUS_CI_RUN_ID", "local"),
-    "imageDigest": os.getenv("LOTUS_IMAGE_DIGEST", "local-unpublished"),
-}
+BUILD_METADATA = release_identity_metadata(os.environ)
 
 
 def create_app() -> FastAPI:
@@ -389,6 +386,13 @@ async def health_ready(request: Request, response: Response) -> dict[str, object
     posture = idea_repository_runtime_posture()
     payload = durable_write_readiness_payload(posture)
     payload["recoveryPosture"] = recovery_decision.posture.value
+    identity_blockers = release_identity_configuration_blockers(os.environ)
+    if identity_blockers:
+        configured_blockers = payload.get("configurationBlockers")
+        blockers = list(configured_blockers) if isinstance(configured_blockers, list) else []
+        blockers.extend(blocker for blocker in identity_blockers if blocker not in blockers)
+        payload["configurationBlockers"] = blockers
+        payload["status"] = "degraded"
     if not recovery_decision.write_ready:
         payload["status"] = recovery_decision.readiness_status
         configured_blockers = payload.get("configurationBlockers")
@@ -401,7 +405,7 @@ async def health_ready(request: Request, response: Response) -> dict[str, object
         if recovery_decision.blocker not in blockers:
             blockers.append(recovery_decision.blocker)
         payload["configurationBlockers"] = blockers
-    if not posture.write_ready or not recovery_decision.write_ready:
+    if not posture.write_ready or not recovery_decision.write_ready or identity_blockers:
         response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
     return payload
 
@@ -411,7 +415,7 @@ async def metadata() -> dict[str, object]:
         "service": SERVICE_NAME,
         "version": SERVICE_VERSION,
         "roundingPolicyVersion": ROUNDING_POLICY_VERSION,
-        "build": BUILD_METADATA,
+        "build": release_identity_metadata(os.environ),
     }
 
 

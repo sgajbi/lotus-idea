@@ -1,4 +1,5 @@
 from app.errors import ProblemDetails
+from pytest import MonkeyPatch
 from app.application.service_profile import current_service_profile
 from app.domain.service_profile import DEFAULT_SERVICE_PROFILE, ServiceProfile
 from app.main import BUILD_METADATA, SERVICE_NAME, app
@@ -25,8 +26,28 @@ def test_version_endpoint_exposes_build_metadata() -> None:
         "buildTimestamp",
         "repoUrl",
         "ciRunId",
+        "imageBuildId",
+        "imageIdentityContractVersion",
+        "registryDigestBinding",
         "imageDigest",
+        "imageDigestReference",
+        "releaseIdentityStatus",
     }
+
+
+def test_version_endpoint_exposes_digest_bound_runtime_identity(monkeypatch: MonkeyPatch) -> None:
+    from fastapi.testclient import TestClient
+
+    digest = f"sha256:{'a' * 64}"
+    reference = f"ghcr.io/sgajbi/lotus-idea@{digest}"
+    monkeypatch.setenv("LOTUS_RELEASE_IMAGE_DIGEST", digest)
+    monkeypatch.setenv("LOTUS_RELEASE_IMAGE_DIGEST_REFERENCE", reference)
+
+    payload = TestClient(app).get("/version").json()["build"]
+
+    assert payload["imageDigest"] == digest
+    assert payload["imageDigestReference"] == reference
+    assert payload["releaseIdentityStatus"] == "digest_bound"
 
 
 def test_service_profile_is_domain_authoritative() -> None:

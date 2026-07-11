@@ -21,8 +21,15 @@ def test_metadata_endpoint() -> None:
         "buildTimestamp",
         "repoUrl",
         "ciRunId",
+        "imageBuildId",
+        "imageIdentityContractVersion",
+        "registryDigestBinding",
         "imageDigest",
+        "imageDigestReference",
+        "releaseIdentityStatus",
     }
+    assert payload["build"]["imageDigest"] is None
+    assert payload["build"]["releaseIdentityStatus"] == "local_unpublished"
 
 
 def test_version_endpoint_matches_metadata_endpoint() -> None:
