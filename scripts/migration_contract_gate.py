@@ -281,6 +281,7 @@ def _contains_sql_statement(sql: str, statement: str) -> bool:
 
 def validate_migration_contracts(
     migrations: tuple[MigrationContract, ...] = REQUIRED_MIGRATIONS,
+    rollback_safety_paths: tuple[Path, ...] | None = None,
 ) -> list[str]:
     errors: list[str] = []
     for migration in migrations:
@@ -300,6 +301,17 @@ def validate_migration_contracts(
         rollback_sql = _read(migration.rollback_path)
         errors.extend(_validate_forward_sql(migration, forward_sql))
         errors.extend(_validate_rollback_sql(migration, rollback_sql))
+    if rollback_safety_paths is None:
+        rollback_safety_paths = tuple(sorted(MIGRATIONS_DIR.glob("*.rollback.sql")))
+    errors.extend(_validate_repository_rollback_table_safety(rollback_safety_paths))
+    return errors
+
+
+def _validate_repository_rollback_table_safety(paths: tuple[Path, ...]) -> list[str]:
+    errors: list[str] = []
+    for path in paths:
+        version = path.name.split("_", maxsplit=1)[0]
+        errors.extend(_validate_table_safe_rollback_alter_statements(version, _read(path)))
     return errors
 
 
@@ -341,15 +353,15 @@ def _validate_rollback_sql(migration: MigrationContract, rollback_sql: str) -> l
 
 
 def _validate_table_safe_rollback_alter_statements(
-    migration: MigrationContract,
+    migration: MigrationContract | str,
     rollback_sql: str,
 ) -> list[str]:
+    version = migration.version if isinstance(migration, MigrationContract) else migration
     errors: list[str] = []
     for match in re.finditer(r"\bALTER\s+TABLE\s+(?!IF\s+EXISTS\b)", rollback_sql, re.IGNORECASE):
         line_number = rollback_sql.count("\n", 0, match.start()) + 1
         errors.append(
-            f"Migration {migration.version} rollback line {line_number} uses "
-            "ALTER TABLE without IF EXISTS"
+            f"Migration {version} rollback line {line_number} uses ALTER TABLE without IF EXISTS"
         )
     return errors
 

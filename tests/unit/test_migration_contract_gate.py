@@ -282,6 +282,24 @@ def test_migration_contract_gate_blocks_table_unsafe_rollback_alter(
     assert "Migration 003 rollback line 1 uses ALTER TABLE without IF EXISTS" in errors
 
 
+def test_migration_contract_gate_scans_rollbacks_outside_detailed_contracts(
+    tmp_path: Path,
+) -> None:
+    module = _load_migration_contract_gate()
+    rollback = tmp_path / "099_future.rollback.sql"
+    rollback.write_text(
+        "ALTER TABLE future_table DROP COLUMN IF EXISTS future_column;\n",
+        encoding="utf-8",
+    )
+
+    errors = module.validate_migration_contracts(
+        (),
+        rollback_safety_paths=(rollback,),
+    )
+
+    assert errors == ["Migration 099 rollback line 1 uses ALTER TABLE without IF EXISTS"]
+
+
 def test_migration_contract_gate_blocks_missing_rollback_table(tmp_path: Path) -> None:
     module = _load_migration_contract_gate()
     forward = tmp_path / "001_idea_repository_foundation.sql"
