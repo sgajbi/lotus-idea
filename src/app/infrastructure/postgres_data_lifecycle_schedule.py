@@ -26,7 +26,7 @@ class PostgresScheduledDataLifecycleRepository:
                 snapshots = tuple(_snapshot_from_row(row) for row in cursor.fetchall())
             observe_postgres_operation(
                 operation="projection_read",
-                outcome="success",
+                outcome="accepted",
                 duration_seconds=time.perf_counter() - started_at,
             )
             return snapshots
