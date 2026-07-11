@@ -13,6 +13,7 @@ from app.application.capacity_evidence_qualification import (
     TRUSTED_SOURCE_REF,
     VerifiedArtifactAttestation,
 )
+from app.application.cost_attribution_qualification import VerifiedPlatformCostAttestation
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -605,6 +606,56 @@ def test_resource_baseline_reader_requires_json_object(tmp_path: Path) -> None:
     assert module._read_optional_resource_baseline(None) is None
     with pytest.raises(ValueError, match="resource baseline must be a JSON object"):
         module._read_optional_resource_baseline(invalid)
+
+
+def test_cost_attribution_verification_uses_platform_provenance(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    module = _load_script()
+    artifact_path = tmp_path / "cost.json"
+    artifact_path.write_text("{}", encoding="utf-8")
+    calls: list[dict[str, object]] = []
+
+    class FakeVerifier:
+        def verify(self, **kwargs: object) -> VerifiedPlatformCostAttestation:
+            calls.append(kwargs)
+            return VerifiedPlatformCostAttestation(
+                subject_sha256="a" * 64,
+                repository="sgajbi/lotus-platform",
+                signer_workflow=(
+                    "sgajbi/lotus-platform/.github/workflows/service-cost-attribution-evidence.yml"
+                ),
+                source_ref="refs/heads/main",
+                source_commit_sha="b" * 40,
+            )
+
+    monkeypatch.setattr(module, "GitHubCostAttributionAttestationVerifier", FakeVerifier)
+    receipt = module._verify_optional_cost_attribution_attestation(
+        verification_requested=True,
+        artifact_path=artifact_path,
+        artifact={"provenance": {"sourceCommitSha": "b" * 40}},
+        environment_profile="production-like",
+    )
+
+    assert receipt is not None
+    assert calls == [{"artifact_path": artifact_path, "source_commit_sha": "b" * 40}]
+
+
+@pytest.mark.parametrize("profile", ["test", "production"])
+def test_cost_attribution_verification_requires_production_like_profile(
+    tmp_path: Path, profile: str
+) -> None:
+    module = _load_script()
+    artifact_path = tmp_path / "cost.json"
+    artifact_path.write_text("{}", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="production-like"):
+        module._verify_optional_cost_attribution_attestation(
+            verification_requested=True,
+            artifact_path=artifact_path,
+            artifact={"provenance": {"sourceCommitSha": "b" * 40}},
+            environment_profile=profile,
+        )
 
 
 def test_paced_load_soak_request_accepts_only_qualifying_steady_state_proof() -> None:

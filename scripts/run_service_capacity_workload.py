@@ -24,6 +24,7 @@ from app.application.capacity_evidence_qualification import (
     MINIMUM_LOAD_SOAK_SAMPLES,
     MINIMUM_LOAD_SOAK_SECONDS,
 )
+from app.application.cost_attribution_qualification import VerifiedPlatformCostAttestation
 from app.application.service_capacity_workload import (
     CapacityWorkloadPlan,
     STEADY_STATE_SCENARIOS,
@@ -34,6 +35,9 @@ from app.application.service_capacity_workload import (
 )
 from app.infrastructure.http_capacity_probe import HttpCapacityProbe
 from app.infrastructure.github_capacity_attestation import GitHubCapacityAttestationVerifier
+from app.infrastructure.github_cost_attribution_attestation import (
+    GitHubCostAttributionAttestationVerifier,
+)
 from app.infrastructure.capacity_artifact_io import (
     read_optional_capacity_proof as _read_optional_proof,
     read_optional_json_object as _read_optional_json_object,
@@ -245,10 +249,12 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--load-soak-proof", type=Path)
     parser.add_argument("--downstream-capacity-seed", type=Path)
     parser.add_argument("--resource-baseline", type=Path)
+    parser.add_argument("--cost-attribution-artifact", type=Path)
     parser.add_argument("--verify-postgres-threshold-attestation", action="store_true")
     parser.add_argument("--verify-dependency-recovery-attestation", action="store_true")
     parser.add_argument("--verify-load-soak-attestation", action="store_true")
     parser.add_argument("--verify-resource-attestation", action="store_true")
+    parser.add_argument("--verify-cost-attribution-attestation", action="store_true")
     parser.add_argument(
         "--output",
         type=Path,
@@ -322,6 +328,15 @@ def main(argv: list[str] | None = None) -> int:
             signer_workflow=RESOURCE_SIGNER_WORKFLOW,
             proof_name="resource baseline proof",
         )
+        cost_attribution_artifact = _read_optional_json_object(
+            args.cost_attribution_artifact, name="platform cost-attribution artifact"
+        )
+        cost_attribution_attestation = _verify_optional_cost_attribution_attestation(
+            verification_requested=args.verify_cost_attribution_attestation,
+            artifact_path=args.cost_attribution_artifact,
+            artifact=cost_attribution_artifact,
+            environment_profile=args.environment_profile,
+        )
         artifact = build_service_capacity_baseline(
             measurements=measurements,
             environment_profile=args.environment_profile,
@@ -338,6 +353,8 @@ def main(argv: list[str] | None = None) -> int:
             load_soak_attestation=load_soak_attestation,
             resource_baseline=resource_baseline,
             resource_attestation=resource_attestation,
+            cost_attribution_artifact=cost_attribution_artifact,
+            cost_attribution_attestation=cost_attribution_attestation,
             postgres_max_connection_utilization_fraction=postgres_max_utilization,
         )
         _write_json_atomic(args.output, artifact)
@@ -454,6 +471,31 @@ def _verify_optional_attestation(
     return GitHubCapacityAttestationVerifier(signer_workflow=signer_workflow).verify(
         artifact_path=artifact_path,
         source_commit_sha=proof_commit,
+    )
+
+
+def _verify_optional_cost_attribution_attestation(
+    *,
+    verification_requested: bool,
+    artifact_path: Path | None,
+    artifact: dict[str, object] | None,
+    environment_profile: str,
+) -> VerifiedPlatformCostAttestation | None:
+    if not verification_requested:
+        return None
+    if artifact_path is None or artifact is None:
+        raise ValueError("cost-attribution verification requires a platform artifact")
+    if environment_profile != "production-like":
+        raise ValueError("attested cost attribution requires production-like profile")
+    provenance = artifact.get("provenance")
+    if not isinstance(provenance, dict):
+        raise ValueError("platform cost-attribution provenance must be an object")
+    source_commit = provenance.get("sourceCommitSha")
+    if not isinstance(source_commit, str) or not source_commit.strip():
+        raise ValueError("platform cost-attribution sourceCommitSha must be a non-blank string")
+    return GitHubCostAttributionAttestationVerifier().verify(
+        artifact_path=artifact_path,
+        source_commit_sha=source_commit,
     )
 
 
