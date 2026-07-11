@@ -16,7 +16,7 @@ SEEDED_AT = datetime(2026, 7, 11, 8, 0, tzinfo=UTC)
 
 class RecordingSeedPort:
     def __init__(self) -> None:
-        self.calls: list[tuple[str, object]] = []
+        self.calls: list[tuple[str, dict[str, object]]] = []
 
     def persist_candidate(self, **kwargs: object) -> str:
         self.calls.append(("persist", kwargs))
