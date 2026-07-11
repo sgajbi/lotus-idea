@@ -240,7 +240,7 @@ def _seed_ai_lineage(repository: PostgresIdeaRepository, candidate: IdeaCandidat
                 purpose=AIWorkflowPurpose.UNSUPPORTED_CLAIM_VERIFICATION,
                 evaluation_ref="lotus-ai:governed-verifier:v1",
             ),
-            approved_metadata={"audience": "internal_advisor_review"},
+            approved_metadata={"channel": "advisor-workbench"},
             requested_at_utc=FIXTURE_TIME + timedelta(minutes=10),
         ),
     )
