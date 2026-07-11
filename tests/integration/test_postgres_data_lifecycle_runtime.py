@@ -1,0 +1,241 @@
+from __future__ import annotations
+
+from datetime import UTC, datetime, timedelta
+from typing import Any, cast
+
+import psycopg
+from fastapi.testclient import TestClient
+from psycopg.rows import dict_row
+
+from app.infrastructure.postgres_repository import PostgresConnection, PostgresIdeaRepository
+from app.main import app
+from app.runtime.repository_state import reset_idea_repository_for_tests
+from tests.integration.postgres_runtime_support import high_cash_payload, persistence_headers
+
+
+TENANT_ID = "tenant-private-bank-sg"
+
+
+def test_postgres_data_lifecycle_survives_restart_and_redacts_atomically(
+    postgres_database_url: str,
+) -> None:
+    client = TestClient(app)
+    persisted = client.post(
+        "/api/v1/idea-signals/high-cash/evaluate-and-persist",
+        json=high_cash_payload(),
+        headers=persistence_headers("lifecycle-runtime-candidate-001"),
+    )
+    assert persisted.status_code == 200
+    candidate_id = str(persisted.json()["persistence"]["candidateId"])
+    _complete_outbox_delivery(postgres_database_url, candidate_id)
+    requested_at = datetime.now(UTC) - timedelta(seconds=1)
+
+    preview_payload = _action_payload("erase", requested_at=requested_at, dry_run=True)
+    preview = _action(client, candidate_id, "lifecycle-preview-001", preview_payload)
+    assert preview.status_code == 200
+    assert preview.json()["decision"] == "preview"
+
+    reset_idea_repository_for_tests(reload_from_environment=True)
+    replay = _action(client, candidate_id, "lifecycle-preview-001", preview_payload)
+    conflict = _action(
+        client,
+        candidate_id,
+        "lifecycle-preview-001",
+        {**preview_payload, "reason": "changed_approved_request"},
+    )
+    assert replay.status_code == 200
+    assert replay.json()["decision"] == "replayed"
+    assert conflict.status_code == 409
+    assert conflict.json()["code"] == "data_lifecycle_idempotency_conflict"
+
+    hold = _action(
+        client,
+        candidate_id,
+        "lifecycle-hold-001",
+        _action_payload(
+            "apply_hold",
+            requested_at=requested_at,
+            authority_ref="bank-legal-and-records-governance:hold-001",
+        ),
+    )
+    blocked = _action(
+        client,
+        candidate_id,
+        "lifecycle-erase-held-001",
+        _action_payload("erase", requested_at=requested_at, approver=True),
+    )
+    assert hold.status_code == 200
+    assert hold.json()["state"] == "held"
+    assert blocked.status_code == 409
+    assert blocked.json()["code"] == "data_lifecycle_action_blocked"
+
+    release = _action(
+        client,
+        candidate_id,
+        "lifecycle-release-001",
+        _action_payload(
+            "release_hold",
+            requested_at=requested_at,
+            authority_ref="bank-legal-and-records-governance:hold-001",
+            approver=True,
+        ),
+    )
+    erased = _action(
+        client,
+        candidate_id,
+        "lifecycle-erase-001",
+        _action_payload("erase", requested_at=requested_at, approver=True),
+    )
+    assert release.status_code == 200
+    assert release.json()["state"] == "active"
+    assert erased.status_code == 200
+    assert erased.json()["state"] == "erased"
+
+    _assert_erased_graph(postgres_database_url, candidate_id)
+    reset_idea_repository_for_tests(reload_from_environment=True)
+    with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
+        repository = PostgresIdeaRepository(cast(PostgresConnection, connection))
+        assert repository.candidate_record_by_id(candidate_id) is None
+
+    _expire_retention(postgres_database_url, candidate_id)
+    purged = _action(
+        client,
+        candidate_id,
+        "lifecycle-purge-001",
+        _action_payload("purge", requested_at=requested_at, approver=True),
+    )
+    assert purged.status_code == 200, _operation_blockers(
+        postgres_database_url, "lifecycle-purge-001"
+    )
+    assert purged.json()["state"] == "purged"
+    _assert_purged_graph(postgres_database_url, candidate_id)
+
+
+def _action(
+    client: TestClient,
+    candidate_id: str,
+    idempotency_key: str,
+    payload: dict[str, Any],
+) -> Any:
+    return client.post(
+        f"/api/v1/data-lifecycle/candidates/{candidate_id}/actions",
+        json=payload,
+        headers={
+            "Idempotency-Key": idempotency_key,
+            "X-Caller-Subject": "privacy-operator-001",
+            "X-Caller-Roles": "privacy_officer",
+            "X-Caller-Capabilities": "idea.data-lifecycle.manage",
+            "X-Caller-Tenant-Ids": TENANT_ID,
+        },
+    )
+
+
+def _action_payload(
+    action: str,
+    *,
+    requested_at: datetime,
+    dry_run: bool = False,
+    authority_ref: str = "bank-privacy-governance:decision-001",
+    approver: bool = False,
+) -> dict[str, Any]:
+    payload: dict[str, Any] = {
+        "tenantId": TENANT_ID,
+        "action": action,
+        "authorityRef": authority_ref,
+        "reason": "approved_lifecycle_request",
+        "changeReference": "privacy-case-runtime-001",
+        "requestedAtUtc": requested_at.isoformat(),
+        "dryRun": dry_run,
+    }
+    if approver:
+        payload["approverSubject"] = "privacy-approver-001"
+    return payload
+
+
+def _complete_outbox_delivery(database_url: str, candidate_id: str) -> None:
+    with psycopg.connect(database_url) as connection, connection.cursor() as cursor:
+        cursor.execute(
+            """UPDATE idea_outbox_event
+               SET status = 'published', published_at_utc = CURRENT_TIMESTAMP,
+                   failure_reason = NULL, lease_owner = NULL,
+                   lease_attempt_id = NULL, lease_expires_at_utc = NULL
+               WHERE aggregate_type = 'idea_candidate' AND aggregate_id = %s""",
+            (candidate_id,),
+        )
+
+
+def _assert_erased_graph(database_url: str, candidate_id: str) -> None:
+    with psycopg.connect(database_url, row_factory=dict_row) as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT candidate_json FROM idea_candidate_record WHERE candidate_id = %s",
+                (candidate_id,),
+            )
+            candidate = cursor.fetchone()
+            assert candidate is not None
+            assert candidate["candidate_json"]["data_lifecycle_state"] == "erased"
+            assert "access_scope" not in candidate["candidate_json"]
+            cursor.execute(
+                """SELECT state, actor_subject, approver_subject
+                   FROM idea_data_lifecycle_control control
+                   JOIN idea_data_lifecycle_operation operation USING (candidate_id)
+                   WHERE candidate_id = %s""",
+                (candidate_id,),
+            )
+            operations = cursor.fetchall()
+    assert operations
+    assert {row["state"] for row in operations} == {"erased"}
+    assert all(str(row["actor_subject"]).startswith("redacted-") for row in operations)
+    assert all(
+        row["approver_subject"] is None or str(row["approver_subject"]).startswith("redacted-")
+        for row in operations
+    )
+
+
+def _expire_retention(database_url: str, candidate_id: str) -> None:
+    with psycopg.connect(database_url) as connection, connection.cursor() as cursor:
+        cursor.execute(
+            """UPDATE idea_data_lifecycle_control
+               SET retention_expires_at_utc = CURRENT_TIMESTAMP - INTERVAL '1 day'
+               WHERE candidate_id = %s AND state = 'erased'""",
+            (candidate_id,),
+        )
+        assert cursor.rowcount == 1
+
+
+def _assert_purged_graph(database_url: str, candidate_id: str) -> None:
+    with psycopg.connect(database_url, row_factory=dict_row) as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """SELECT state, purged_at_utc
+                   FROM idea_data_lifecycle_control WHERE candidate_id = %s""",
+                (candidate_id,),
+            )
+            control = cursor.fetchone()
+            assert control is not None
+            assert control["state"] == "purged"
+            assert control["purged_at_utc"] is not None
+            cursor.execute(
+                """SELECT COUNT(*) AS payload_count FROM idea_outbox_event
+                   WHERE aggregate_type = 'idea_candidate' AND aggregate_id = %s""",
+                (candidate_id,),
+            )
+            assert cursor.fetchone()["payload_count"] == 0
+            cursor.execute(
+                """SELECT COUNT(*) AS operation_count
+                   FROM idea_data_lifecycle_operation WHERE candidate_id = %s""",
+                (candidate_id,),
+            )
+            assert cursor.fetchone()["operation_count"] >= 6
+
+
+def _operation_blockers(database_url: str, idempotency_key: str) -> object:
+    with psycopg.connect(database_url, row_factory=dict_row) as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """SELECT blockers_json FROM idea_data_lifecycle_operation
+                   WHERE idempotency_key = %s""",
+                (idempotency_key,),
+            )
+            row = cursor.fetchone()
+    return row["blockers_json"] if row is not None else "operation_not_persisted"

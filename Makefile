@@ -536,7 +536,7 @@ endpoint-certification-gate:
 	$(VENV_PYTHON) scripts/endpoint_certification_gate.py
 
 postgres-integration-gate:
-	$(VENV_PYTHON) -m pytest tests/integration/test_postgres_runtime_integration.py tests/integration/test_postgres_outbox_recovery_runtime.py tests/integration/test_postgres_review_queue_runtime.py tests/integration/test_postgres_downstream_submission_runtime.py
+	$(VENV_PYTHON) -m pytest tests/integration/test_postgres_runtime_integration.py tests/integration/test_postgres_outbox_recovery_runtime.py tests/integration/test_postgres_review_queue_runtime.py tests/integration/test_postgres_downstream_submission_runtime.py tests/integration/test_postgres_data_lifecycle_runtime.py
 
 typecheck:
 	$(VENV_PYTHON) -m mypy --config-file mypy.ini
