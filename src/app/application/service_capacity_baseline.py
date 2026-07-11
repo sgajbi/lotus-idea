@@ -80,6 +80,7 @@ def build_service_capacity_baseline(
     run_id: str,
     observed_window_seconds: float,
     postgres_saturation_measured: bool = False,
+    postgres_max_connection_utilization_fraction: float | None = None,
     cost_resource_measured: bool = False,
 ) -> dict[str, Any]:
     if environment_profile not in ENVIRONMENT_PROFILES:
@@ -88,6 +89,13 @@ def build_service_capacity_baseline(
         raise ValueError("generated_at_utc must be timezone-aware")
     if observed_window_seconds <= 0:
         raise ValueError("observed_window_seconds must be positive")
+    if (
+        postgres_max_connection_utilization_fraction is not None
+        and not 0 <= postgres_max_connection_utilization_fraction <= 1
+    ):
+        raise ValueError(
+            "postgres_max_connection_utilization_fraction must be between zero and one"
+        )
     for name, value in (("commit_sha", commit_sha), ("branch", branch), ("run_id", run_id)):
         if not value.strip():
             raise ValueError(f"{name} must not be blank")
@@ -117,6 +125,9 @@ def build_service_capacity_baseline(
         "scenarios": scenarios,
         "resourceEvidence": {
             "postgresSaturationMeasured": postgres_saturation_measured,
+            "postgresMaxConnectionUtilizationFraction": (
+                postgres_max_connection_utilization_fraction
+            ),
             "costResourceMeasured": cost_resource_measured,
         },
         "certificationReady": not blockers,

@@ -6,6 +6,7 @@ from typing import Mapping
 
 from app.application.service_capacity_baseline import CapacityMeasurement, SCENARIOS
 from app.ports.capacity_probe import CapacityProbePort, CapacityProbeRequest, CapacityProbeResult
+from app.ports.capacity_probe import PostgresCapacityProbePort
 
 
 @dataclass(frozen=True)
@@ -31,6 +32,12 @@ class CapacityWorkloadPlan:
             raise ValueError("recovery_probe is only valid for dependency_failure")
 
 
+@dataclass(frozen=True)
+class PostgresCapacityWorkloadResult:
+    measurements: tuple[CapacityMeasurement, ...]
+    max_connection_utilization_fraction: float | None
+
+
 def execute_capacity_workload(
     plan: CapacityWorkloadPlan,
     *,
@@ -53,6 +60,36 @@ def execute_capacity_recovery(
     if plan.scenario != "dependency_failure" or plan.recovery_probe is None:
         raise ValueError("capacity recovery requires a dependency_failure recovery probe")
     return _recovery_measurement(plan, probe.execute(plan.recovery_probe))
+
+
+def execute_postgres_capacity_workload(
+    *,
+    probe: PostgresCapacityProbePort,
+    request_count: int,
+    max_concurrency: int,
+) -> PostgresCapacityWorkloadResult:
+    if request_count <= 0:
+        raise ValueError("PostgreSQL request_count must be positive")
+    if max_concurrency <= 0 or max_concurrency > request_count:
+        raise ValueError("PostgreSQL max_concurrency must be between one and request count")
+    with ThreadPoolExecutor(max_workers=max_concurrency) as executor:
+        results = list(executor.map(lambda _: probe.execute(), range(request_count)))
+    utilization_values = [
+        result.connection_utilization_fraction
+        for result in results
+        if result.connection_utilization_fraction is not None
+    ]
+    return PostgresCapacityWorkloadResult(
+        measurements=tuple(
+            CapacityMeasurement(
+                scenario="postgresql",
+                duration_seconds=result.duration_seconds,
+                outcome="accepted" if result.outcome == "accepted" else "failed",
+            )
+            for result in results
+        ),
+        max_connection_utilization_fraction=max(utilization_values, default=None),
+    )
 
 
 def _measurement(

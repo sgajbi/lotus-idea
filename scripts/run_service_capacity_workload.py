@@ -15,12 +15,20 @@ from app.application.service_capacity_workload import (
     CapacityWorkloadPlan,
     execute_capacity_recovery,
     execute_capacity_workload,
+    execute_postgres_capacity_workload,
 )
 from app.infrastructure.http_capacity_probe import HttpCapacityProbe
+from app.infrastructure.postgres_capacity_probe import PostgresCapacityProbe
 from app.ports.capacity_probe import CapacityProbeRequest
 
 
-SCENARIO_CHOICES = ("api", "source_ingestion", "outbox_delivery", "dependency_failure")
+SCENARIO_CHOICES = (
+    "api",
+    "source_ingestion",
+    "outbox_delivery",
+    "dependency_failure",
+    "postgresql",
+)
 MUTATING_SCENARIOS = frozenset({"source_ingestion", "outbox_delivery", "dependency_failure"})
 HEADER_ENV = {
     "Authorization": "LOTUS_IDEA_CAPACITY_AUTHORIZATION",
@@ -63,6 +71,7 @@ def build_workload_plans(
             headers=headers,
         )
         for scenario in scenarios
+        if scenario != "postgresql"
     ]
 
 
@@ -208,6 +217,7 @@ def main(argv: list[str] | None = None) -> int:
         probe = HttpCapacityProbe(base_url=args.base_url, timeout_seconds=args.timeout_seconds)
         started_at = time.perf_counter()
         measurements = []
+        postgres_max_utilization = None
         for plan in plans:
             if plan.scenario == "dependency_failure" and args.dependency_recovery_delay_seconds:
                 fault_only = CapacityWorkloadPlan(
@@ -222,6 +232,17 @@ def main(argv: list[str] | None = None) -> int:
                 measurements.append(execute_capacity_recovery(plan, probe=probe))
             else:
                 measurements.extend(execute_capacity_workload(plan, probe=probe))
+        if "postgresql" in args.scenario:
+            database_url = os.getenv("LOTUS_IDEA_DATABASE_URL", "").strip()
+            if not database_url:
+                raise ValueError("LOTUS_IDEA_DATABASE_URL is required for the postgresql scenario")
+            postgres_result = execute_postgres_capacity_workload(
+                probe=PostgresCapacityProbe(database_url=database_url),
+                request_count=args.request_count,
+                max_concurrency=args.concurrency,
+            )
+            measurements.extend(postgres_result.measurements)
+            postgres_max_utilization = postgres_result.max_connection_utilization_fraction
         observed_window_seconds = max(time.perf_counter() - started_at, 0.000001)
         artifact = build_service_capacity_baseline(
             measurements=measurements,
@@ -231,6 +252,7 @@ def main(argv: list[str] | None = None) -> int:
             branch=args.branch,
             run_id=args.run_id,
             observed_window_seconds=observed_window_seconds,
+            postgres_max_connection_utilization_fraction=postgres_max_utilization,
         )
         _write_json_atomic(args.output, artifact)
         return 0

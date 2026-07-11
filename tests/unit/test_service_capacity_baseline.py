@@ -137,6 +137,17 @@ def test_build_rejects_ambiguous_provenance() -> None:
             run_id="run-1",
             observed_window_seconds=1.0,
         )
+    with pytest.raises(ValueError, match="postgres_max_connection_utilization_fraction"):
+        build_service_capacity_baseline(
+            measurements=[],
+            environment_profile="test",
+            generated_at_utc=GENERATED_AT,
+            commit_sha="abc123",
+            branch="main",
+            run_id="run-1",
+            observed_window_seconds=1.0,
+            postgres_max_connection_utilization_fraction=1.1,
+        )
     with pytest.raises(ValueError, match="timezone-aware"):
         build_service_capacity_baseline(
             measurements=[],

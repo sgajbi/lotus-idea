@@ -8,8 +8,13 @@ from app.application.service_capacity_workload import (
     CapacityWorkloadPlan,
     execute_capacity_recovery,
     execute_capacity_workload,
+    execute_postgres_capacity_workload,
 )
-from app.ports.capacity_probe import CapacityProbeRequest, CapacityProbeResult
+from app.ports.capacity_probe import (
+    CapacityProbeRequest,
+    CapacityProbeResult,
+    PostgresCapacityProbeResult,
+)
 
 
 REQUEST = CapacityProbeRequest(
@@ -29,6 +34,14 @@ class StubProbe:
 
     def close(self) -> None:
         pass
+
+
+class StubPostgresProbe:
+    def __init__(self, results: list[PostgresCapacityProbeResult]) -> None:
+        self.results = deque(results)
+
+    def execute(self) -> PostgresCapacityProbeResult:
+        return self.results.popleft()
 
 
 def _result(
@@ -127,6 +140,23 @@ def test_recovery_use_case_requires_explicit_dependency_recovery_probe() -> None
 
     with pytest.raises(ValueError, match="requires a dependency_failure recovery probe"):
         execute_capacity_recovery(plan, probe=StubProbe([]))
+
+
+def test_postgres_workload_preserves_query_outcomes_and_max_observed_utilization() -> None:
+    result = execute_postgres_capacity_workload(
+        probe=StubPostgresProbe(
+            [
+                PostgresCapacityProbeResult(0.01, "accepted", 0.2),
+                PostgresCapacityProbeResult(0.02, "failed", None),
+                PostgresCapacityProbeResult(0.03, "accepted", 0.3),
+            ]
+        ),
+        request_count=3,
+        max_concurrency=1,
+    )
+
+    assert [item.outcome for item in result.measurements] == ["accepted", "failed", "accepted"]
+    assert result.max_connection_utilization_fraction == 0.3
 
 
 @pytest.mark.parametrize(
