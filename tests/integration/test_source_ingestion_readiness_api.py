@@ -10,6 +10,7 @@ from types import SimpleNamespace
 from typing import Any
 
 import pytest
+from fastapi.responses import JSONResponse
 from fastapi.testclient import TestClient
 
 import app.api.source_ingestion_readiness as source_ingestion_readiness_api
@@ -159,8 +160,9 @@ def test_source_ingestion_execution_maps_typed_dependency_boundary_failures(
         durable_storage_backed=True,
     )
 
+    assert isinstance(response, JSONResponse)
     assert response.status_code == 502
-    assert json.loads(response.body)["code"] == expected_code
+    assert json.loads(bytes(response.body))["code"] == expected_code
     assert observations == [("source_ingestion", "failed", 1)]
     assert source.close_count == 1
 

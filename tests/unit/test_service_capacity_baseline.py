@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 import pytest
 
@@ -90,7 +91,7 @@ def _dependency_attestation() -> VerifiedArtifactAttestation:
     )
 
 
-def _dependency_recovery_proof() -> dict[str, object]:
+def _dependency_recovery_proof() -> dict[str, Any]:
     return build_service_capacity_baseline(
         measurements=[
             CapacityMeasurement("dependency_failure", 0.1, "accepted"),
