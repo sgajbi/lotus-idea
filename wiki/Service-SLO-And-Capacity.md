@@ -59,10 +59,13 @@ reading aggregate connection utilization. This prevents a long-lived
 transaction from masking a threshold crossing while preserving the caller's
 business transaction boundary.
 
-The threshold command is restricted to a dedicated `test` or
-`production-like` database and requires `LOTUS_IDEA_DATABASE_URL` transiently.
-Only a valid artifact with matching commit and branch can feed the baseline;
-test-profile evidence never clears production certification.
+The threshold command is test-classified, requires a dedicated database, and
+reads `LOTUS_IDEA_DATABASE_URL` transiently. It cannot clear production
+certification by itself. Qualifying evidence must come from the main-only
+`postgres-capacity-evidence.yml` workflow, protected GitHub environment, and
+dedicated runner, then pass `gh attestation verify` with exact repository,
+signer-workflow, main-ref, and source-commit constraints. This path becomes
+operational only after merge and protected-environment configuration.
 
 See `docs/operations/service-slo-capacity.md` for target values, alert response,
 capacity assumptions, and non-proof boundaries.

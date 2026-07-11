@@ -195,11 +195,19 @@ make postgres-capacity-threshold-proof `
 ```
 
 The command verifies the exact database identity and refuses targets above the
-declared connection cap. It is prohibited in production and always releases
-held connections. A baseline accepts `--postgres-threshold-proof <path>` only
-when the artifact validates and matches its commit and branch. Test-profile
-proof remains non-certifying; only reviewed production-like evidence can clear
-the saturation blocker.
+declared connection cap. It is test-classified and always releases held
+connections. A baseline accepts `--postgres-threshold-proof <path>` as
+behavioral evidence but cannot clear saturation from that file alone.
+
+Qualifying evidence must be produced by the manual, main-only
+`postgres-capacity-evidence.yml` workflow through the protected
+`capacity-production-like` GitHub environment on a dedicated
+`lotus-capacity-evidence` runner. The baseline must additionally receive
+`--verify-postgres-threshold-attestation`; verification pins the repository,
+signer workflow, `refs/heads/main`, and source commit. The workflow and
+protected runtime must exist on `main` before qualifying evidence can be
+produced. Cost/resource evidence has no equivalent attested artifact yet and
+therefore cannot clear its blocker.
 
 Validate the evidence boundary independently:
 

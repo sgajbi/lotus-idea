@@ -304,10 +304,17 @@ application port and guarded infrastructure adapter. It verifies dedicated
 database identity and a hard `max_connections` ceiling, requires an exact
 operator acknowledgement, prohibits production execution, releases held
 connections on every path, and emits source-safe evidence. The baseline no
-longer accepts a caller-asserted saturation boolean: it requires a valid proof
-with matching commit/branch provenance, and only `production-like` proof can
-satisfy the saturation blocker. Disposable test evidence reached the 90% shed
-threshold and recovered to normal, but remains explicitly non-certifying.
+longer accepts caller-asserted saturation or cost/resource booleans.
+Disposable test evidence reached the 90% shed threshold and recovered to
+normal, but remains explicitly non-certifying.
+
+Production-like qualification is now a separate attested path. A manual,
+main-only workflow runs through the protected `capacity-production-like`
+GitHub environment on a dedicated runner and signs the exact proof artifact.
+Baseline verification pins repository, signer workflow, main source ref, and
+source commit before saturation evidence can count. This implementation cannot
+produce qualifying evidence until merged to `main` and the protected
+environment and runner are configured; the blocker therefore remains open.
 
 ## Required Work
 
