@@ -238,3 +238,8 @@ and optional file-descriptor utilization. It is test-classified and retains
 both `production_like_resource_attestation_missing` and
 `cost_attribution_evidence_missing`. Process telemetry is not billing evidence;
 no cost, scale, supported-feature, or runtime-split claim follows from it.
+Pass the artifact to `run_service_capacity_workload.py` with
+`--resource-baseline <path>` (or set
+`SERVICE_CAPACITY_RESOURCE_BASELINE_ARG`) to link the observation into the
+aggregate capacity baseline. The link is accepted only for matching commit and
+branch provenance and still leaves `costResourceMeasured=false`.

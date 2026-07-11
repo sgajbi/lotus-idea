@@ -325,6 +325,9 @@ validated the HTTP/parser path. The artifact is deliberately non-certifying:
 process metrics do not prove production-like sizing, cloud cost, billing
 allocation, horizontal scale, or a need for another deployable. Production-like
 resource attestation and cost-attribution evidence remain blocked.
+The aggregate capacity baseline can now link a resource observation with exact
+commit/branch validation and source-safe run provenance. This linkage is
+informational and cannot set `costResourceMeasured` or remove the cost blocker.
 
 ## Required Work
 

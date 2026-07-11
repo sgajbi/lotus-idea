@@ -1481,6 +1481,9 @@ URLs and raw scrapes transient. Treat process telemetry as resource
 observation, not cost attribution, billing reconciliation, horizontal-scale
 certification, or evidence for a runtime split. Those claims require
 separately governed, attested production-like and billing artifacts.
+Aggregate capacity evidence may reference a validated resource baseline only
+when commit and branch provenance match; linkage must not change
+`costResourceMeasured` without independently attested billing evidence.
 
 Durable PostgreSQL repositories expose capacity through a narrow repository
 port. Nonessential source-ingestion and outbox operator runs must evaluate that

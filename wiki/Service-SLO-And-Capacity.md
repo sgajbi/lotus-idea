@@ -74,6 +74,9 @@ It never stores the metrics URL or raw scrape and cannot clear production-like
 or cost-attribution blockers. Process telemetry must not be presented as cloud
 billing, unit economics, horizontal-scale evidence, or justification for a new
 runtime service.
+The aggregate capacity runner can link this artifact with
+`--resource-baseline <path>` only when commit and branch match. A validated
+link records observation provenance but does not clear cost certification.
 
 See `docs/operations/service-slo-capacity.md` for target values, alert response,
 capacity assumptions, and non-proof boundaries.
