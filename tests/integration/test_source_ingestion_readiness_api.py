@@ -312,6 +312,39 @@ def test_source_ingestion_run_once_api_blocks_without_durable_repository(
     assert "idempotency" not in response.text.lower()
 
 
+def test_source_ingestion_run_once_api_sheds_before_runtime_construction(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        source_ingestion_readiness_api,
+        "idea_repository_durable_storage_backed",
+        lambda repository: True,
+    )
+    monkeypatch.setattr(
+        source_ingestion_readiness_api,
+        "evaluate_nonessential_workload_capacity",
+        lambda repository: SimpleNamespace(
+            allowed=False,
+            blocker="postgres_capacity_shed_active",
+        ),
+    )
+    monkeypatch.setattr(
+        source_ingestion_readiness_api,
+        "_build_source_ingestion_runtime_from_environment",
+        lambda: pytest.fail("shed workflow must not construct source runtime"),
+    )
+
+    response = TestClient(app).post(
+        "/api/v1/source-ingestion/run-once",
+        headers=source_ingestion_run_headers(),
+    )
+
+    assert response.status_code == 200
+    assert response.json()["runStatus"] == "blocked"
+    assert response.json()["configurationBlockers"] == ["postgres_capacity_shed_active"]
+    assert response.json()["totalCount"] == 0
+
+
 def test_source_ingestion_run_once_api_blocks_runtime_configuration_without_mutation(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

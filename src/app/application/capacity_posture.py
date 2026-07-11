@@ -10,6 +10,8 @@ from app.ports.capacity_posture import PostgresCapacityPostureRepository
 
 
 def read_postgres_capacity_posture(repository: object) -> PostgresCapacityPosture:
+    if not bool(getattr(repository, "durable_storage_backed", False)):
+        return evaluate_postgres_capacity_posture(0.0)
     if not isinstance(repository, PostgresCapacityPostureRepository):
         return evaluate_postgres_capacity_posture(None)
     try:

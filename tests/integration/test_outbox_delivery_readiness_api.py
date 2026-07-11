@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta
 from collections.abc import Iterator
 from typing import Any
+from types import SimpleNamespace
 
 import pytest
 from fastapi.testclient import TestClient
@@ -380,6 +381,34 @@ def test_outbox_delivery_run_once_api_rejects_limit_above_capacity_ceiling() -> 
 
     assert response.status_code == 400
     assert response.json()["code"] == "invalid_request"
+
+
+def test_outbox_delivery_run_once_api_sheds_before_publisher_construction(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        outbox_delivery_readiness_api,
+        "evaluate_nonessential_workload_capacity",
+        lambda repository: SimpleNamespace(
+            allowed=False,
+            blocker="postgres_capacity_shed_active",
+        ),
+    )
+    monkeypatch.setattr(
+        outbox_delivery_readiness_api,
+        "_build_outbox_publisher_from_environment",
+        lambda: pytest.fail("shed workflow must not construct publisher"),
+    )
+
+    response = TestClient(app).post(
+        "/api/v1/outbox-delivery/run-once",
+        headers=outbox_delivery_run_headers(idempotency_key="capacity-shed:001"),
+    )
+
+    assert response.status_code == 200
+    assert response.json()["runStatus"] == "blocked"
+    assert "postgres_capacity_shed_active" in response.json()["certificationBlockers"]
+    assert response.json()["attemptedCount"] == 0
 
 
 def test_outbox_delivery_run_once_api_replays_same_operator_run_without_mutating(

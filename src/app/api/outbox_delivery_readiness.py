@@ -42,6 +42,7 @@ from app.application.outbox_delivery import (
     outbox_delivery_run_request_payload,
     run_outbox_delivery_once,
 )
+from app.application.capacity_posture import evaluate_nonessential_workload_capacity
 from app.application.outbox_delivery_readiness import (
     DEFAULT_OUTBOX_DELIVERY_MAX_RETRY_COUNT,
     build_outbox_delivery_readiness_snapshot,
@@ -177,6 +178,22 @@ async def post_outbox_delivery_run_once(
             operator_run_reference=operator_run_reference,
         )
         return configuration_problem
+
+    capacity_decision = evaluate_nonessential_workload_capacity(repository)
+    if not capacity_decision.allowed:
+        blocker = capacity_decision.blocker or "postgres_capacity_posture_unavailable"
+        _emit_outbox_delivery_run_event(
+            OperationOutcome.BLOCKED,
+            blocker,
+            durable_storage_backed=durable_storage_backed,
+            operator_run_reference=operator_run_reference,
+        )
+        return OutboxDeliveryRunOnceResponse.blocked(
+            durable_storage_backed=durable_storage_backed,
+            blocker=blocker,
+            max_retry_count=max_retry_count,
+            operator_run_reference=operator_run_reference,
+        )
 
     if delivered_at_utc is not None and not is_utc_datetime(delivered_at_utc):
         _emit_outbox_delivery_run_event(

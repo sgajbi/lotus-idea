@@ -27,6 +27,7 @@ from app.application.source_ingestion import (
     HighCashSourceIngestionDecision,
     run_high_cash_source_ingestion_batch,
 )
+from app.application.capacity_posture import evaluate_nonessential_workload_capacity
 from app.application.source_ingestion_readiness import build_source_ingestion_readiness_snapshot
 from app.api.problem_details import problem_details_response as problem_response
 from app.observability import (
@@ -138,6 +139,26 @@ async def post_source_ingestion_run_once(
         snapshot = build_source_ingestion_readiness_snapshot()
         return SourceIngestionRunOnceResponse.blocked(
             blocker="durable_repository_not_configured",
+            durable_storage_backed=durable_storage_backed,
+            configured_manifest_available=snapshot.configured_manifest_available,
+            core_base_url_configured=snapshot.core_base_url_configured,
+            core_query_base_url_configured=snapshot.core_query_base_url_configured,
+            core_query_control_plane_base_url_configured=(
+                snapshot.core_query_control_plane_base_url_configured
+            ),
+        )
+
+    capacity_decision = evaluate_nonessential_workload_capacity(repository)
+    if not capacity_decision.allowed:
+        blocker = capacity_decision.blocker or "postgres_capacity_posture_unavailable"
+        _emit_source_ingestion_run_event(
+            OperationOutcome.BLOCKED,
+            blocker,
+            durable_storage_backed=durable_storage_backed,
+        )
+        snapshot = build_source_ingestion_readiness_snapshot()
+        return SourceIngestionRunOnceResponse.blocked(
+            blocker=blocker,
             durable_storage_backed=durable_storage_backed,
             configured_manifest_available=snapshot.configured_manifest_available,
             core_base_url_configured=snapshot.core_base_url_configured,

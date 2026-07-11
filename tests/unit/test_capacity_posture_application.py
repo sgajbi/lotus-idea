@@ -12,6 +12,8 @@ from app.domain.capacity_posture import (
 
 
 class StubCapacityRepository:
+    durable_storage_backed = True
+
     def __init__(self, utilization: float | None = 0.5, error: Exception | None = None) -> None:
         self.utilization = utilization
         self.error = error
@@ -32,10 +34,23 @@ def test_application_reads_repository_capacity_and_applies_shed_policy() -> None
 
 
 def test_missing_or_failed_capacity_adapter_fails_closed_without_raw_error() -> None:
-    for repository in (object(), StubCapacityRepository(error=RuntimeError("database detail"))):
+    class DurableRepositoryWithoutCapacityPort:
+        durable_storage_backed = True
+
+    for repository in (
+        DurableRepositoryWithoutCapacityPort(),
+        StubCapacityRepository(error=RuntimeError("database detail")),
+    ):
         posture = read_postgres_capacity_posture(repository)
         decision = evaluate_nonessential_workload_capacity(repository)
 
         assert posture.posture is CapacityPosture.UNAVAILABLE
         assert decision.allowed is False
         assert decision.blocker == "postgres_capacity_posture_unavailable"
+
+
+def test_non_durable_repository_remains_owned_by_existing_storage_guard() -> None:
+    decision = evaluate_nonessential_workload_capacity(object())
+
+    assert decision.allowed is True
+    assert decision.posture is CapacityPosture.NORMAL
