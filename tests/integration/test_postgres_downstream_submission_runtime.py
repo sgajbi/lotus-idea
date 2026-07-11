@@ -21,6 +21,7 @@ from app.infrastructure.postgres_repository import (
     PostgresIdeaRepository,
 )
 from tests.unit.downstream_submission_helpers import build_downstream_submission_claim
+from tests.integration.postgres_runtime_support import seed_active_conversion_resource
 
 
 SUBMITTED_AT = datetime(2026, 7, 10, 8, 0, tzinfo=UTC)
@@ -29,6 +30,7 @@ SUBMITTED_AT = datetime(2026, 7, 10, 8, 0, tzinfo=UTC)
 def test_postgres_downstream_submission_claim_recovery_and_restart_proof(
     postgres_database_url: str,
 ) -> None:
+    seed_active_conversion_resource(postgres_database_url, "conversion-postgres-runtime")
     barrier = Barrier(2)
 
     def claim_once() -> DownstreamSubmissionClaimDecision:
