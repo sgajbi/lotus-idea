@@ -5,10 +5,12 @@ from datetime import UTC, datetime
 import pytest
 
 from app.application.capacity_evidence_qualification import (
+    DEPENDENCY_RECOVERY_SIGNER_WORKFLOW,
     TRUSTED_REPOSITORY,
     TRUSTED_SIGNER_WORKFLOW,
     TRUSTED_SOURCE_REF,
     VerifiedArtifactAttestation,
+    qualify_dependency_recovery_evidence,
     qualify_postgres_capacity_threshold_evidence,
 )
 from app.application.postgres_capacity_threshold_proof import (
@@ -58,6 +60,38 @@ def _attestation(**overrides: str) -> VerifiedArtifactAttestation:
     return VerifiedArtifactAttestation(**values)
 
 
+def _dependency_proof() -> dict[str, object]:
+    return {
+        "schemaVersion": "lotus-idea.service-capacity-baseline.v1",
+        "repository": "lotus-idea",
+        "proofScope": "source_safe_service_capacity_baseline",
+        "claimPosture": "report_only_baseline",
+        "environmentProfile": "production-like",
+        "commitSha": "a" * 40,
+        "branch": "main",
+        "runId": "dependency-proof-1",
+        "scenarios": [
+            {
+                "scenario": "dependency_failure",
+                "sampleCount": 2,
+                "acceptedCount": 2,
+                "errorCount": 0,
+                "conflictCount": 0,
+                "recoverySampleCount": 1,
+                "recoverySuccessRate": 1.0,
+            }
+        ],
+        "supportedFeaturePromoted": False,
+    }
+
+
+def _dependency_attestation(**overrides: str) -> VerifiedArtifactAttestation:
+    return _attestation(
+        signer_workflow=DEPENDENCY_RECOVERY_SIGNER_WORKFLOW,
+        **overrides,
+    )
+
+
 def test_qualifies_only_attested_mainline_threshold_evidence() -> None:
     qualification = qualify_postgres_capacity_threshold_evidence(
         threshold_proof=_proof(),
@@ -71,6 +105,80 @@ def test_qualifies_only_attested_mainline_threshold_evidence() -> None:
     assert qualification["thresholdProofSha256"] == "b" * 64
     assert qualification["productionCapacityCertified"] is False
     assert qualification["supportedFeaturePromoted"] is False
+
+
+def test_qualifies_only_attested_fault_and_clean_recovery_evidence() -> None:
+    qualification = qualify_dependency_recovery_evidence(
+        capacity_proof=_dependency_proof(),
+        verified_attestation=_dependency_attestation(),
+        generated_at_utc=datetime(2026, 7, 11, 7, 0, tzinfo=UTC),
+        qualification_run_id="qualification-2",
+    )
+
+    assert qualification["proofScope"] == ("attested_dependency_recovery_environment_qualification")
+    assert qualification["capacityProofRunId"] == "dependency-proof-1"
+    assert qualification["attestationVerified"] is True
+    assert qualification["productionCapacityCertified"] is False
+    assert qualification["supportedFeaturePromoted"] is False
+
+
+@pytest.mark.parametrize(
+    ("mutations", "message"),
+    [
+        ({"environmentProfile": "test"}, "production-like"),
+        ({"branch": "feature/capacity"}, "originate from main"),
+        ({"supportedFeaturePromoted": True}, "must not promote"),
+        ({"scenarios": []}, "scenario is missing"),
+    ],
+)
+def test_rejects_unqualified_dependency_recovery_proof(
+    mutations: dict[str, object], message: str
+) -> None:
+    proof = {**_dependency_proof(), **mutations}
+    with pytest.raises(ValueError, match=message):
+        qualify_dependency_recovery_evidence(
+            capacity_proof=proof,
+            verified_attestation=_dependency_attestation(),
+            generated_at_utc=datetime(2026, 7, 11, tzinfo=UTC),
+            qualification_run_id="qualification-2",
+        )
+
+
+@pytest.mark.parametrize(
+    "dependency_mutation",
+    [
+        {"acceptedCount": 1},
+        {"errorCount": 1},
+        {"conflictCount": 1},
+        {"recoverySampleCount": 0},
+        {"recoverySuccessRate": 0.0},
+    ],
+)
+def test_dependency_qualification_requires_fault_plus_clean_recovery(
+    dependency_mutation: dict[str, object],
+) -> None:
+    proof = _dependency_proof()
+    scenario = dict(proof["scenarios"][0])  # type: ignore[index]
+    scenario.update(dependency_mutation)
+    proof["scenarios"] = [scenario]
+
+    with pytest.raises(ValueError, match="fault and clean recovery"):
+        qualify_dependency_recovery_evidence(
+            capacity_proof=proof,
+            verified_attestation=_dependency_attestation(),
+            generated_at_utc=datetime(2026, 7, 11, tzinfo=UTC),
+            qualification_run_id="qualification-2",
+        )
+
+
+def test_dependency_qualification_rejects_wrong_signer() -> None:
+    with pytest.raises(ValueError, match="workflow is not trusted"):
+        qualify_dependency_recovery_evidence(
+            capacity_proof=_dependency_proof(),
+            verified_attestation=_attestation(),
+            generated_at_utc=datetime(2026, 7, 11, tzinfo=UTC),
+            qualification_run_id="qualification-2",
+        )
 
 
 @pytest.mark.parametrize(
