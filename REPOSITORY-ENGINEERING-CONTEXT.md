@@ -1493,8 +1493,10 @@ Current gaps remain explicit:
 14. no deterministic freshness check for committed architecture boundary
     report evidence.
 15. no bank-approved jurisdiction policy, signed lifecycle decision
-    integration, Report/Archive/AI retention conformance, or scheduled
-    expiry/purge certification.
+    integration, Report/Archive/AI retention conformance, or production
+    authorized purge certification. A bounded scheduled expiry review and
+    synthetic PostgreSQL proof exist, but they do not mutate records or grant
+    privacy authority.
 
 These gaps are acceptable only while current-state surfaces keep them visible.
 

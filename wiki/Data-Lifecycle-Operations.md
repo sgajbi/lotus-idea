@@ -48,6 +48,19 @@ flowchart LR
 | Idempotency conflict | Reconcile the original operation; issue a new key only for a new decision. |
 | Missing lifecycle control | Treat runtime posture as blocked and escalate for governed backfill. |
 
+## Scheduled Review
+
+The weekly/manual scheduled workflow reviews a maximum of 100 expired controls
+against PostgreSQL 18 and emits aggregate-only evidence. It distinguishes
+records ready for an externally authorized purge from records blocked by legal
+hold, invalid state, or active delivery work.
+
+It performs no lifecycle mutation and carries no production privacy authority.
+The evidence gate forbids candidate, tenant, authority, and approver identity,
+requires `not_certified` and non-promotional posture, and retains attested CI
+evidence for 90 days. Production purge still requires a signed bank decision,
+distinct approval, exact tenant entitlement, and cross-service conformance.
+
 ## Evidence And Navigation
 
 | Evidence | Location |
@@ -75,5 +88,6 @@ represent those rows as content-level audit proof.
 - Bank approval for jurisdiction-specific durations and start events.
 - Signed legal/privacy decision integration.
 - Report, Archive, and AI-provider conformance evidence.
-- Scheduled expiry/purge evidence with privacy review.
+- Mainline scheduled expiry-review evidence and production authorized purge
+  evidence with signed privacy authority.
 - Mainline CI and supported-feature promotion evidence.
