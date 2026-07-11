@@ -14,6 +14,11 @@ from psycopg.conninfo import conninfo_to_dict
 
 CommandRunner = Callable[..., subprocess.CompletedProcess[str]]
 ConnectionFactory = Callable[[str], Any]
+_DIAGNOSTIC_LIMIT = 500
+
+
+class PostgresBackupRestoreCommandError(RuntimeError):
+    """Source-safe diagnostic for a failed PostgreSQL backup or restore command."""
 
 
 @dataclass(frozen=True)
@@ -84,6 +89,8 @@ class PostgresLogicalBackupRestore:
                     str(dump_path),
                 ],
                 environment=_postgres_environment(source, passfile),
+                phase="backup",
+                sensitive_values=(source.password,),
             )
             artifact_sha256 = _file_sha256(dump_path)
             restore_started_at = self._utc_now()
@@ -96,6 +103,8 @@ class PostgresLogicalBackupRestore:
                     str(dump_path),
                 ],
                 environment=_postgres_environment(target, passfile),
+                phase="restore",
+                sensitive_values=(target.password,),
             )
             restore_completed_at = self._utc_now()
 
@@ -107,14 +116,32 @@ class PostgresLogicalBackupRestore:
             backup_artifact_sha256=artifact_sha256,
         )
 
-    def _run(self, command: list[str], *, environment: Mapping[str, str]) -> None:
-        self._run_command(
-            command,
-            check=True,
-            capture_output=True,
-            text=True,
-            env=dict(environment),
-        )
+    def _run(
+        self,
+        command: list[str],
+        *,
+        environment: Mapping[str, str],
+        phase: str,
+        sensitive_values: tuple[str, ...],
+    ) -> None:
+        try:
+            self._run_command(
+                command,
+                check=True,
+                capture_output=True,
+                text=True,
+                env=dict(environment),
+            )
+        except subprocess.CalledProcessError as exc:
+            diagnostic = _redacted_command_diagnostic(
+                exc.stderr,
+                environment,
+                sensitive_values=sensitive_values,
+            )
+            raise PostgresBackupRestoreCommandError(
+                f"PostgreSQL logical {phase} command failed with exit code "
+                f"{exc.returncode}: {diagnostic}"
+            ) from None
 
     def _utc_now(self) -> datetime:
         value = self._now()
@@ -224,3 +251,28 @@ def _file_sha256(path: Path) -> str:
         for block in iter(lambda: stream.read(1024 * 1024), b""):
             digest.update(block)
     return digest.hexdigest()
+
+
+def _redacted_command_diagnostic(
+    stderr: str | bytes | None,
+    environment: Mapping[str, str],
+    *,
+    sensitive_values: tuple[str, ...],
+) -> str:
+    if isinstance(stderr, bytes):
+        text = stderr.decode("utf-8", errors="replace")
+    else:
+        text = stderr or "no diagnostic output"
+    replacements = {
+        environment.get("PGHOST", ""): "<host>",
+        environment.get("PGDATABASE", ""): "<database>",
+        environment.get("PGUSER", ""): "<user>",
+        environment.get("PGPASSFILE", ""): "<passfile>",
+    }
+    for sensitive_value, replacement in replacements.items():
+        if sensitive_value:
+            text = text.replace(sensitive_value, replacement)
+    for sensitive_value in sensitive_values:
+        if sensitive_value:
+            text = text.replace(sensitive_value, "<redacted>")
+    return " ".join(text.split())[:_DIAGNOSTIC_LIMIT]
