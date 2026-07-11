@@ -94,6 +94,7 @@
       "method",
       "operation",
       "outcome",
+      "posture",
       "repository",
       "route",
       "status_class",
@@ -115,6 +116,7 @@
     "mesh_slo_contract": "contracts/mesh-slo/lotus-idea-idea-candidate.slo.v1.json",
     "operation_metric_contract": "contracts/observability/lotus-idea-operation-metrics.v1.json",
     "sli_metric_source": "src/app/observability/service_slo_metrics.py",
+    "capacity_metric_source": "src/app/observability/postgres_capacity.py",
     "recording_alert_rules": "monitoring/prometheus/rules/lotus-idea-service-slo.rules.yml",
     "rule_tests": "monitoring/prometheus/tests/lotus-idea-service-slo.test.yml",
     "dashboard": "monitoring/grafana/dashboards/lotus-idea-service-slo.json",
@@ -128,7 +130,6 @@
     "rfc_slice": "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-15-observability-security-entitlements-and-operations.md"
   },
   "certification_blockers": [
-    "postgres_saturation_metric_missing",
     "load_and_soak_baseline_missing",
     "dependency_failure_baseline_missing",
     "postgres_saturation_evidence_missing",

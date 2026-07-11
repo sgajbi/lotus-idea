@@ -25,6 +25,8 @@ from app.contracts.operational_limits import (  # noqa: E402
     DEFAULT_DEPENDENCY_TIMEOUT_SECONDS,
     DEFAULT_HTTP_REQUEST_BODY_MAX_BYTES,
     DEFAULT_OUTBOX_DELIVERY_MAX_RETRY_COUNT,
+    POSTGRES_CONNECTION_UTILIZATION_SHED_FRACTION,
+    POSTGRES_CONNECTION_UTILIZATION_WARN_FRACTION,
 )
 
 CONTRACT_PATH = Path("contracts/observability/lotus-idea-service-slo-capacity.v1.json")
@@ -36,7 +38,6 @@ EXPECTED_WORKFLOWS = {
     "postgresql",
 }
 REQUIRED_BLOCKERS = {
-    "postgres_saturation_metric_missing",
     "load_and_soak_baseline_missing",
     "dependency_failure_baseline_missing",
     "postgres_saturation_evidence_missing",
@@ -66,6 +67,9 @@ REQUIRED_ALERT_RULES = {
     "LotusIdeaApiErrorBudgetSlowBurn",
     "LotusIdeaSourceIngestionErrorBudgetFastBurn",
     "LotusIdeaOutboxDeliveryErrorBudgetFastBurn",
+    "LotusIdeaPostgresCapacityCollectionUnavailable",
+    "LotusIdeaPostgresCapacityWarning",
+    "LotusIdeaPostgresCapacityShedActive",
 }
 
 
@@ -185,6 +189,10 @@ def _validate_capacity(payload: dict[str, Any]) -> list[str]:
     shed = capacity.get("postgres_pool_utilization_shed_fraction")
     if not _fraction(warn) or not _fraction(shed) or warn >= shed:
         errors.append("PostgreSQL utilization thresholds must be ordered fractions")
+    if warn != POSTGRES_CONNECTION_UTILIZATION_WARN_FRACTION:
+        errors.append("PostgreSQL warning threshold must match code-owned default")
+    if shed != POSTGRES_CONNECTION_UTILIZATION_SHED_FRACTION:
+        errors.append("PostgreSQL shed threshold must match code-owned default")
     if capacity.get("capacity_posture") != "baseline_required":
         errors.append("service SLO capacity posture must remain baseline_required")
     return errors
@@ -215,6 +223,7 @@ def _validate_source_truth(payload: dict[str, Any], repository_root: Path) -> li
         "mesh_slo_contract",
         "operation_metric_contract",
         "sli_metric_source",
+        "capacity_metric_source",
         "recording_alert_rules",
         "rule_tests",
         "dashboard",
@@ -317,6 +326,9 @@ def validate_dashboard_payload(payload: Any) -> list[str]:
         "lotus_idea_workflow_duration_seconds_bucket",
         "lotus_idea_dependency_requests_total",
         "lotus_idea_postgres_operations_total",
+        "lotus_idea_postgres_connection_utilization_ratio",
+        "lotus_idea_postgres_capacity_posture",
+        "lotus_idea_postgres_capacity_collection_success",
         "lotus_idea_outbox_delivery_oldest_ready_age_seconds",
     ):
         if metric not in expressions:
