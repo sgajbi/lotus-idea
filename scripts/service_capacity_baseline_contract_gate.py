@@ -63,9 +63,7 @@ def validate_contract() -> list[str]:
     )
     errors = validate_service_capacity_baseline(artifact)
     expected_blockers = {
-        "production_like_environment_missing",
-        "minimum_sample_volume_missing",
-        "minimum_soak_window_missing",
+        "load_soak_attestation_missing",
         "dependency_recovery_attestation_missing",
         "postgres_saturation_evidence_missing",
         "cost_resource_evidence_missing",

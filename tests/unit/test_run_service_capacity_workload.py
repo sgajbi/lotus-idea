@@ -232,7 +232,7 @@ def test_cli_writes_source_safe_report_only_evidence(
     assert artifact["claimPosture"] == "report_only_baseline"
     assert artifact["scenarios"][0]["sampleCount"] == 2
     assert artifact["certificationReady"] is False
-    assert "scenario_coverage_incomplete" in artifact["certificationBlockers"]
+    assert "load_soak_attestation_missing" in artifact["certificationBlockers"]
 
 
 def test_cli_links_validated_threshold_proof_without_clearing_test_blocker(

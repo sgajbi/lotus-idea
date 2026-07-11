@@ -7,6 +7,8 @@ import pytest
 
 from app.application.capacity_evidence_qualification import (
     DEPENDENCY_RECOVERY_SIGNER_WORKFLOW,
+    LOAD_SOAK_SCENARIO_THRESHOLDS,
+    LOAD_SOAK_SIGNER_WORKFLOW,
     TRUSTED_REPOSITORY,
     TRUSTED_SIGNER_WORKFLOW,
     TRUSTED_SOURCE_REF,
@@ -106,6 +108,44 @@ def _dependency_recovery_proof() -> dict[str, Any]:
     )
 
 
+def _load_soak_attestation() -> VerifiedArtifactAttestation:
+    return VerifiedArtifactAttestation(
+        subject_sha256="d" * 64,
+        repository=TRUSTED_REPOSITORY,
+        signer_workflow=LOAD_SOAK_SIGNER_WORKFLOW,
+        source_ref=TRUSTED_SOURCE_REF,
+        source_commit_sha="abc123",
+    )
+
+
+def _load_soak_proof() -> dict[str, Any]:
+    return {
+        "schemaVersion": "lotus-idea.service-capacity-baseline.v1",
+        "repository": "lotus-idea",
+        "proofScope": "source_safe_service_capacity_baseline",
+        "claimPosture": "report_only_baseline",
+        "environmentProfile": "production-like",
+        "commitSha": "abc123",
+        "branch": "main",
+        "runId": "load-soak-proof-1",
+        "observedWindowSeconds": 3_600.0,
+        "scenarios": [
+            {
+                "scenario": scenario,
+                "sampleCount": 1_000,
+                "acceptedCount": 1_000,
+                "errorCount": 0,
+                "conflictCount": 0,
+                "errorRate": 0.0,
+                "latencyP95Seconds": thresholds[1],
+                "latencyP99Seconds": thresholds[2],
+            }
+            for scenario, thresholds in LOAD_SOAK_SCENARIO_THRESHOLDS.items()
+        ],
+        "supportedFeaturePromoted": False,
+    }
+
+
 def _resource_baseline() -> dict[str, object]:
     return build_service_resource_baseline(
         snapshots=[
@@ -143,9 +183,7 @@ def test_builds_ordered_source_safe_report_only_baseline() -> None:
     assert artifact["certificationReady"] is False
     assert artifact["supportedFeaturePromoted"] is False
     assert artifact["certificationBlockers"] == [
-        "production_like_environment_missing",
-        "minimum_sample_volume_missing",
-        "minimum_soak_window_missing",
+        "load_soak_attestation_missing",
         "dependency_recovery_attestation_missing",
         "postgres_saturation_evidence_missing",
         "cost_resource_evidence_missing",
@@ -167,14 +205,53 @@ def test_attested_mainline_proof_clears_only_saturation_blocker() -> None:
     )
 
     assert artifact["certificationBlockers"] == [
-        "scenario_coverage_incomplete",
-        "minimum_sample_volume_missing",
+        "load_soak_attestation_missing",
         "dependency_recovery_attestation_missing",
         "cost_resource_evidence_missing",
     ]
     assert artifact["resourceEvidence"]["postgresSaturationMeasured"] is True
     assert artifact["resourceEvidence"]["postgresThresholdProofValidated"] is True
     assert artifact["resourceEvidence"]["postgresThresholdAttestationVerified"] is True
+
+
+def test_attested_mainline_load_soak_proof_clears_only_load_blocker() -> None:
+    artifact = build_service_capacity_baseline(
+        measurements=[],
+        environment_profile="production-like",
+        generated_at_utc=GENERATED_AT,
+        commit_sha="abc123",
+        branch="main",
+        run_id="aggregate-1",
+        observed_window_seconds=1.0,
+        load_soak_proof=_load_soak_proof(),
+        load_soak_attestation=_load_soak_attestation(),
+    )
+
+    resource = artifact["resourceEvidence"]
+    assert resource["loadSoakAttestationVerified"] is True
+    assert resource["loadSoakProofRunId"] == "load-soak-proof-1"
+    assert "load_soak_attestation_missing" not in artifact["certificationBlockers"]
+    assert "dependency_recovery_attestation_missing" in artifact["certificationBlockers"]
+
+
+def test_mismatched_load_soak_attestation_cannot_clear_blocker() -> None:
+    attestation = VerifiedArtifactAttestation(
+        **{**_load_soak_attestation().__dict__, "source_commit_sha": "different"}
+    )
+    artifact = build_service_capacity_baseline(
+        measurements=[],
+        environment_profile="production-like",
+        generated_at_utc=GENERATED_AT,
+        commit_sha="abc123",
+        branch="main",
+        run_id="aggregate-1",
+        observed_window_seconds=1.0,
+        load_soak_proof=_load_soak_proof(),
+        load_soak_attestation=attestation,
+    )
+
+    assert artifact["resourceEvidence"]["loadSoakAttestationVerified"] is False
+    assert "load_soak_attestation_missing" in artifact["certificationBlockers"]
 
 
 def test_local_recovery_observation_cannot_clear_attestation_blocker() -> None:

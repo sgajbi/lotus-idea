@@ -12,6 +12,7 @@ from app.application.postgres_capacity_threshold_proof import (
 from app.application.capacity_evidence_qualification import (
     VerifiedArtifactAttestation,
     qualify_dependency_recovery_evidence,
+    qualify_load_soak_evidence,
     qualify_postgres_capacity_threshold_evidence,
 )
 from app.application.service_resource_baseline import validate_service_resource_baseline
@@ -28,8 +29,6 @@ SCENARIOS = (
 )
 ENVIRONMENT_PROFILES = frozenset({"test", "production-like", "production"})
 OUTCOMES = frozenset({"accepted", "conflict", "failed", "rejected", "timeout"})
-MINIMUM_CERTIFICATION_SAMPLES_PER_SCENARIO = 1_000
-MINIMUM_SOAK_SECONDS = 3_600.0
 FORBIDDEN_ARTIFACT_KEYS = frozenset(
     {
         "account_number",
@@ -94,6 +93,8 @@ def build_service_capacity_baseline(
     postgres_threshold_attestation: VerifiedArtifactAttestation | None = None,
     dependency_recovery_proof: dict[str, Any] | None = None,
     dependency_recovery_attestation: VerifiedArtifactAttestation | None = None,
+    load_soak_proof: dict[str, Any] | None = None,
+    load_soak_attestation: VerifiedArtifactAttestation | None = None,
     postgres_max_connection_utilization_fraction: float | None = None,
     resource_baseline: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
@@ -137,15 +138,20 @@ def build_service_capacity_baseline(
         run_id=run_id,
         commit_sha=commit_sha,
     )
+    load_soak_qualification = _load_soak_qualification(
+        proof=load_soak_proof,
+        attestation=load_soak_attestation,
+        generated_at_utc=generated_at_utc,
+        run_id=run_id,
+        commit_sha=commit_sha,
+    )
     resource_baseline_validated = _resource_baseline_is_valid(
         resource_baseline,
         commit_sha=commit_sha,
         branch=branch,
     )
     blockers = _certification_blockers(
-        environment_profile=environment_profile,
-        scenarios=scenarios,
-        observed_window_seconds=observed_window_seconds,
+        load_soak_attested=load_soak_qualification is not None,
         postgres_saturation_measured=postgres_saturation_measured,
         dependency_recovery_attested=dependency_recovery_qualification is not None,
         cost_resource_measured=False,
@@ -163,6 +169,12 @@ def build_service_capacity_baseline(
         "observedWindowSeconds": observed_window_seconds,
         "scenarios": scenarios,
         "resourceEvidence": {
+            "loadSoakAttestationVerified": load_soak_qualification is not None,
+            "loadSoakProofRunId": (
+                load_soak_qualification.get("capacityProofRunId")
+                if load_soak_qualification is not None
+                else None
+            ),
             "dependencyRecoveryObserved": _dependency_recovery_observed(scenarios),
             "dependencyRecoveryAttestationVerified": (
                 dependency_recovery_qualification is not None
@@ -268,22 +280,14 @@ def _scenario_summary(
 
 def _certification_blockers(
     *,
-    environment_profile: str,
-    scenarios: list[dict[str, Any]],
-    observed_window_seconds: float,
+    load_soak_attested: bool,
     postgres_saturation_measured: bool,
     dependency_recovery_attested: bool,
     cost_resource_measured: bool,
 ) -> list[str]:
     blockers: list[str] = []
-    if environment_profile == "test":
-        blockers.append("production_like_environment_missing")
-    if any(item["sampleCount"] == 0 for item in scenarios):
-        blockers.append("scenario_coverage_incomplete")
-    if any(item["sampleCount"] < MINIMUM_CERTIFICATION_SAMPLES_PER_SCENARIO for item in scenarios):
-        blockers.append("minimum_sample_volume_missing")
-    if observed_window_seconds < MINIMUM_SOAK_SECONDS:
-        blockers.append("minimum_soak_window_missing")
+    if not load_soak_attested:
+        blockers.append("load_soak_attestation_missing")
     if not dependency_recovery_attested:
         blockers.append("dependency_recovery_attestation_missing")
     if not postgres_saturation_measured:
@@ -330,6 +334,27 @@ def _dependency_recovery_qualification(
         return None
     try:
         return qualify_dependency_recovery_evidence(
+            capacity_proof=proof,
+            verified_attestation=attestation,
+            generated_at_utc=generated_at_utc,
+            qualification_run_id=run_id,
+        )
+    except ValueError:
+        return None
+
+
+def _load_soak_qualification(
+    *,
+    proof: dict[str, Any] | None,
+    attestation: VerifiedArtifactAttestation | None,
+    generated_at_utc: datetime,
+    run_id: str,
+    commit_sha: str,
+) -> dict[str, Any] | None:
+    if proof is None or attestation is None or proof.get("commitSha") != commit_sha:
+        return None
+    try:
+        return qualify_load_soak_evidence(
             capacity_proof=proof,
             verified_attestation=attestation,
             generated_at_utc=generated_at_utc,
