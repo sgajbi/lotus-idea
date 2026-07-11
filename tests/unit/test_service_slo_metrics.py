@@ -7,6 +7,9 @@ from app.observability.service_slo_metrics import (
     HTTP_DURATION_BUCKETS_SECONDS,
     HTTP_METRIC_LABELS,
     ServiceSloMetrics,
+    WORKFLOW_METRIC_LABELS,
+    WORKFLOW_OUTCOMES,
+    WORKFLOWS,
 )
 
 
@@ -55,3 +58,50 @@ def test_http_sli_metrics_reject_unbounded_or_invalid_observations(
 
     with pytest.raises(ValueError, match=message):
         ServiceSloMetrics(CollectorRegistry()).observe_http_request(**values)  # type: ignore[arg-type]
+
+
+def test_workflow_sli_metrics_capture_duration_and_throughput_with_closed_labels() -> None:
+    registry = CollectorRegistry()
+    metrics = ServiceSloMetrics(registry)
+
+    metrics.observe_workflow_run(
+        workflow="source_ingestion",
+        outcome="accepted",
+        duration_seconds=1.25,
+        item_count=8,
+    )
+    payload = generate_latest(registry).decode("utf-8")
+
+    assert WORKFLOW_METRIC_LABELS == ("workflow", "outcome")
+    assert WORKFLOWS == {"source_ingestion", "outbox_delivery"}
+    assert WORKFLOW_OUTCOMES == {"accepted", "blocked", "conflict", "failed", "replayed"}
+    assert 'workflow="source_ingestion"' in payload
+    assert 'outcome="accepted"' in payload
+    assert "lotus_idea_workflow_duration_seconds_sum" in payload
+    assert "lotus_idea_workflow_items_total" in payload
+    assert "tenant" not in payload
+
+
+@pytest.mark.parametrize(
+    ("changes", "message"),
+    [
+        ({"workflow": "portfolio_rebalance"}, "workflow is not governed"),
+        ({"outcome": "client-123"}, "workflow outcome is not governed"),
+        ({"duration_seconds": -1.0}, "duration_seconds must be non-negative"),
+        ({"item_count": True}, "item_count must be a non-negative integer"),
+    ],
+)
+def test_workflow_sli_metrics_reject_unbounded_or_invalid_observations(
+    changes: dict[str, object],
+    message: str,
+) -> None:
+    values: dict[str, object] = {
+        "workflow": "outbox_delivery",
+        "outcome": "accepted",
+        "duration_seconds": 0.5,
+        "item_count": 1,
+    }
+    values.update(changes)
+
+    with pytest.raises(ValueError, match=message):
+        ServiceSloMetrics(CollectorRegistry()).observe_workflow_run(**values)  # type: ignore[arg-type]

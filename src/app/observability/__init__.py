@@ -35,7 +35,15 @@ from app.observability.service_slo_metrics import (
     HTTP_METRIC_LABELS,
     HTTP_REQUESTS_METRIC,
     ServiceSloMetrics,
+    WORKFLOW_DURATION_BUCKETS_SECONDS,
+    WORKFLOW_DURATION_METRIC,
+    WORKFLOW_ITEMS_METRIC,
+    WORKFLOW_METRIC_LABELS,
+    WORKFLOW_OUTCOMES,
+    WORKFLOW_RUNS_METRIC,
+    WORKFLOWS,
     observe_http_request,
+    observe_workflow_run,
 )
 
 __all__ = [
@@ -69,5 +77,13 @@ __all__ = [
     "HTTP_METRIC_LABELS",
     "HTTP_REQUESTS_METRIC",
     "ServiceSloMetrics",
+    "WORKFLOW_DURATION_BUCKETS_SECONDS",
+    "WORKFLOW_DURATION_METRIC",
+    "WORKFLOW_ITEMS_METRIC",
+    "WORKFLOW_METRIC_LABELS",
+    "WORKFLOW_OUTCOMES",
+    "WORKFLOW_RUNS_METRIC",
+    "WORKFLOWS",
     "observe_http_request",
+    "observe_workflow_run",
 ]
