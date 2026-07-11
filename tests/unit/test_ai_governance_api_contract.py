@@ -12,6 +12,8 @@ from app.api.ai_governance import (
     AIWorkflowOutputRequest,
     AIWorkflowPackRequest,
 )
+from app.api.ai_governance_models import AIApprovedMetadataRequest
+from app.main import app
 from app.application.ai_governance import EvaluateAIExplanationToRepositoryCommand
 from app.domain import (
     AIFallbackReason,
@@ -126,6 +128,20 @@ def test_ai_explanation_request_rejects_blank_request_id_and_naive_time() -> Non
             workflowPack=workflow_pack(),
             requestedAtUtc=datetime(2026, 6, 21, 10, 12, tzinfo=UTC),
         )
+
+
+def test_ai_metadata_openapi_schema_is_closed_and_versioned_by_response_contract() -> None:
+    with pytest.raises(ValidationError):
+        AIApprovedMetadataRequest(customerEmail="client@example.com")
+
+    schema = app.openapi()
+    metadata_schema = schema["components"]["schemas"]["AIApprovedMetadataRequest"]
+    assert metadata_schema["additionalProperties"] is False
+    assert set(metadata_schema["properties"]) == {"channel", "audience"}
+    evaluation_schema = schema["components"]["schemas"]["AIExplanationEvaluationResponse"]
+    readiness_schema = schema["components"]["schemas"]["AIExplanationReadinessResponse"]
+    assert "metadataEnvelopeVersion" in evaluation_schema["required"]
+    assert "metadataEnvelopeVersion" in readiness_schema["required"]
     with pytest.raises(ValidationError):
         AIExplanationEvaluationRequest(
             requestId="ai-explanation-001",

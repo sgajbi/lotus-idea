@@ -1,6 +1,6 @@
 {
   "contract_id": "lotus-idea-ai-model-risk-operations",
-  "contract_version": "1.0.0",
+  "contract_version": "1.1.0",
   "repository": "lotus-idea",
   "lifecycle_status": "implemented_internal_foundation",
   "supportability_status": "not_certified",
@@ -10,12 +10,14 @@
   "action_content_policy_version": "lotus-idea.ai-action-content-policy.v1",
   "output_integrity_version": "lotus-idea.ai-output-integrity.v1",
   "execution_provenance_policy_version": "lotus-idea.ai-execution-provenance-policy.v1",
+  "metadata_envelope_version": "lotus-idea.ai-metadata-envelope.v1",
   "source_of_truth": {
     "ai_readiness_source": "src/app/application/ai_governance.py",
     "ai_api_source": "src/app/api/ai_governance.py",
     "action_policy_source": "src/app/domain/ai_action_policy.py",
     "output_integrity_source": "src/app/domain/ai_output_integrity.py",
     "execution_provenance_source": "src/app/domain/ai_execution_provenance.py",
+    "metadata_policy_source": "src/app/domain/ai_metadata_policy.py",
     "data_lifecycle_contract": "contracts/operations/lotus-idea-data-lifecycle.v1.json",
     "operation_metric_contract": "contracts/observability/lotus-idea-operation-metrics.v1.json",
     "contract_gate": "scripts/ai_model_risk_operations_contract_gate.py",
@@ -63,6 +65,36 @@
     "producer_blocker": "sgajbi/lotus-ai#113",
     "unattested_output_clears_runtime_proof": false,
     "pre_attestation_migration_posture": "explicitly_unverifiable"
+  },
+  "provider_safe_metadata": {
+    "classification": "non_sensitive_operational_routing",
+    "maximum_fields": 2,
+    "maximum_key_length": 32,
+    "maximum_value_length": 64,
+    "allowed_fields": {
+      "channel": {
+        "allowed_values": ["advisor-workbench"],
+        "allowed_purposes": [
+          "advisor_rationale_draft",
+          "meeting_preparation_draft",
+          "missing_evidence_check",
+          "unsupported_claim_verification"
+        ]
+      },
+      "audience": {
+        "allowed_values": ["internal_advisor_review"],
+        "allowed_purposes": [
+          "advisor_rationale_draft",
+          "meeting_preparation_draft"
+        ]
+      }
+    },
+    "unknown_field_posture": "reject_before_candidate_lookup_or_provider_call",
+    "unapproved_value_posture": "reject_before_candidate_lookup_or_provider_call",
+    "provider_forwarding": "approved_envelope_only",
+    "raw_values_persisted": false,
+    "raw_values_logged": false,
+    "retained_projection": "sorted_approved_field_names_only"
   },
   "model_risk_dashboard_controls": [
     {

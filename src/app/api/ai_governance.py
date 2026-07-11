@@ -403,6 +403,7 @@ AI_EXPLANATION_READINESS_ROUTE: RouteMetadata = {
                         "executionProvenancePolicyVersion": (
                             "lotus-idea.ai-execution-provenance-policy.v1"
                         ),
+                        "metadataEnvelopeVersion": "lotus-idea.ai-metadata-envelope.v1",
                         "durableAiLineageStoreBacked": False,
                         "modelRiskOperationsContractAvailable": True,
                         "modelRiskDashboardContractAvailable": True,
@@ -439,7 +440,8 @@ AI_EXPLANATION_ROUTE: RouteMetadata = {
         "Evaluates an internal AI explanation workflow result or deterministic fallback "
         "against a persisted idea candidate. The route applies redaction, source-product "
         "claim verification, forbidden-action blocking, source-safe lineage recording, "
-        "versioned output-content integrity, "
+        "versioned output-content integrity, and a purpose-scoped provider-safe metadata "
+        "allowlist, "
         "API Idempotency-Key replay/conflict protection, and bounded operation telemetry. "
         "It does not call an AI provider, execute lotus-ai runtime workflows, persist "
         "provider payloads or prompts, grant downstream authority, or promote a supported feature."
@@ -479,6 +481,7 @@ AI_EXPLANATION_ROUTE: RouteMetadata = {
                         "executionProvenancePolicyVersion": (
                             "lotus-idea.ai-execution-provenance-policy.v1"
                         ),
+                        "metadataEnvelopeVersion": "lotus-idea.ai-metadata-envelope.v1",
                         "redactedEvidence": {
                             "candidateId": "idea_high_cash_8d57adbf52f7f5a7",
                             "family": "high_cash",
@@ -545,6 +548,16 @@ AI_EXPLANATION_ROUTE: RouteMetadata = {
                         "The AI workflow output does not match the governed explanation request."
                     ),
                     description="AI workflow output did not match the governed request.",
+                ),
+                problem_response_metadata(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    code="invalid_ai_metadata",
+                    title="Invalid AI metadata",
+                    detail="Use only the versioned provider-safe AI metadata envelope.",
+                    description=(
+                        "AI metadata contains a field, value, or purpose combination outside "
+                        "the approved provider-safe envelope."
+                    ),
                 ),
                 problem_response_metadata(
                     status_code=status.HTTP_400_BAD_REQUEST,

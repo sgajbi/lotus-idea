@@ -129,6 +129,21 @@ def test_ai_model_risk_operations_contract_gate_blocks_execution_provenance_drif
     assert "AI model-risk execution_provenance must match code-owned trust posture" in errors
 
 
+def test_ai_model_risk_operations_contract_gate_blocks_metadata_policy_drift() -> None:
+    module = _load_gate()
+    payload = _current_payload(module)
+    payload["metadata_envelope_version"] = "local-policy"
+    payload["provider_safe_metadata"]["allowed_fields"]["channel"]["allowed_values"] = [
+        "client-supplied"
+    ]
+    payload["provider_safe_metadata"]["raw_values_persisted"] = True
+
+    errors = module.validate_ai_model_risk_operations_contract_payload(payload)
+
+    assert any("metadata_envelope_version" in error for error in errors)
+    assert "AI model-risk provider_safe_metadata must match code-owned boundary policy" in errors
+
+
 def test_ai_model_risk_operations_contract_gate_blocks_bad_source_truth() -> None:
     module = _load_gate()
     payload = _current_payload(module)

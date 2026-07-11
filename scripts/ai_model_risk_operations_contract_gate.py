@@ -21,6 +21,12 @@ from app.domain.ai_output_integrity import AI_OUTPUT_INTEGRITY_VERSION  # noqa: 
 from app.domain.ai_execution_provenance import (  # noqa: E402
     AI_EXECUTION_PROVENANCE_POLICY_VERSION,
 )
+from app.domain.ai_metadata_policy import (  # noqa: E402
+    AI_METADATA_ENVELOPE_VERSION,
+    AI_METADATA_MAX_FIELDS,
+    AI_METADATA_MAX_KEY_LENGTH,
+    AI_METADATA_MAX_VALUE_LENGTH,
+)
 
 try:
     from scripts.operations_contract_validators import (  # noqa: E402
@@ -87,7 +93,7 @@ def _validate_header(payload: dict[str, Any]) -> list[str]:
     errors: list[str] = []
     expected = {
         "contract_id": "lotus-idea-ai-model-risk-operations",
-        "contract_version": "1.0.0",
+        "contract_version": "1.1.0",
         "repository": "lotus-idea",
         "lifecycle_status": "implemented_internal_foundation",
         "supportability_status": "not_certified",
@@ -97,6 +103,7 @@ def _validate_header(payload: dict[str, Any]) -> list[str]:
         "action_content_policy_version": AI_ACTION_POLICY_VERSION,
         "output_integrity_version": AI_OUTPUT_INTEGRITY_VERSION,
         "execution_provenance_policy_version": AI_EXECUTION_PROVENANCE_POLICY_VERSION,
+        "metadata_envelope_version": AI_METADATA_ENVELOPE_VERSION,
     }
     for key, value in expected.items():
         if payload.get(key) != value:
@@ -116,6 +123,7 @@ def _validate_source_of_truth(
         "action_policy_source",
         "output_integrity_source",
         "execution_provenance_source",
+        "metadata_policy_source",
         "data_lifecycle_contract",
         "operation_metric_contract",
         "contract_gate",
@@ -206,6 +214,42 @@ def _validate_execution_provenance(payload: dict[str, Any]) -> list[str]:
     }
     if payload.get("execution_provenance") != expected:
         return ["AI model-risk execution_provenance must match code-owned trust posture"]
+    return []
+
+
+def _validate_provider_safe_metadata(payload: dict[str, Any]) -> list[str]:
+    expected = {
+        "classification": "non_sensitive_operational_routing",
+        "maximum_fields": AI_METADATA_MAX_FIELDS,
+        "maximum_key_length": AI_METADATA_MAX_KEY_LENGTH,
+        "maximum_value_length": AI_METADATA_MAX_VALUE_LENGTH,
+        "allowed_fields": {
+            "channel": {
+                "allowed_values": ["advisor-workbench"],
+                "allowed_purposes": [
+                    "advisor_rationale_draft",
+                    "meeting_preparation_draft",
+                    "missing_evidence_check",
+                    "unsupported_claim_verification",
+                ],
+            },
+            "audience": {
+                "allowed_values": ["internal_advisor_review"],
+                "allowed_purposes": [
+                    "advisor_rationale_draft",
+                    "meeting_preparation_draft",
+                ],
+            },
+        },
+        "unknown_field_posture": "reject_before_candidate_lookup_or_provider_call",
+        "unapproved_value_posture": "reject_before_candidate_lookup_or_provider_call",
+        "provider_forwarding": "approved_envelope_only",
+        "raw_values_persisted": False,
+        "raw_values_logged": False,
+        "retained_projection": "sorted_approved_field_names_only",
+    }
+    if payload.get("provider_safe_metadata") != expected:
+        return ["AI model-risk provider_safe_metadata must match code-owned boundary policy"]
     return []
 
 
@@ -312,6 +356,7 @@ OPERATIONS_CONTRACT_VALIDATORS = (
     _validate_action_content_policy,
     _validate_output_content_integrity,
     _validate_execution_provenance,
+    _validate_provider_safe_metadata,
     _validate_dashboard_controls,
     _validate_alert_candidates,
     _validate_non_proof_boundaries,

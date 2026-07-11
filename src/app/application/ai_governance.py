@@ -11,6 +11,7 @@ from app.domain.ai_execution_provenance import (
     AIWorkflowOutputTrustPolicy,
     UntrustedAIWorkflowOutput,
 )
+from app.domain.ai_metadata_policy import AI_METADATA_ENVELOPE_VERSION
 from app.domain import (
     AIFallbackReason,
     AIExplanationCommand,
@@ -49,6 +50,7 @@ class AIExplanationReadinessSnapshot:
     production_like_attestation_required: bool
     local_test_unattested_fixture_allowed: bool
     execution_provenance_policy_version: str
+    metadata_envelope_version: str
     durable_ai_lineage_store_backed: bool
     model_risk_operations_contract_available: bool
     model_risk_dashboard_contract_available: bool
@@ -115,6 +117,7 @@ def build_ai_explanation_readiness_snapshot(
         production_like_attestation_required=True,
         local_test_unattested_fixture_allowed=True,
         execution_provenance_policy_version=AI_EXECUTION_PROVENANCE_POLICY_VERSION,
+        metadata_envelope_version=AI_METADATA_ENVELOPE_VERSION,
         durable_ai_lineage_store_backed=durable_ai_lineage_store_backed,
         model_risk_operations_contract_available=True,
         model_risk_dashboard_contract_available=True,

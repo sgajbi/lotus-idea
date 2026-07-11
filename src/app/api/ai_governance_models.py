@@ -12,6 +12,7 @@ from app.domain.ai_execution_provenance import (
     AI_EXECUTION_PROVENANCE_POLICY_VERSION,
     AIWorkflowOutputTrustPolicy,
 )
+from app.domain.ai_metadata_policy import AI_METADATA_ENVELOPE_VERSION
 from app.application.ai_governance import (
     AIExplanationReadinessSnapshot,
     EvaluateAIExplanationToRepositoryCommand,
@@ -340,6 +341,7 @@ class AIExplanationEvaluationResponse(CamelModel):
         ...,
         alias="executionProvenancePolicyVersion",
     )
+    metadata_envelope_version: str = Field(..., alias="metadataEnvelopeVersion")
     redacted_evidence: RedactedIdeaEvidenceResponse = Field(..., alias="redactedEvidence")
     verified_output: AIWorkflowOutputSummaryResponse | None = Field(
         default=None,
@@ -380,6 +382,7 @@ class AIExplanationEvaluationResponse(CamelModel):
             outputContentDigest=result.output_integrity.digest,
             executionProvenancePosture=result.execution_provenance_posture.value,
             executionProvenancePolicyVersion=AI_EXECUTION_PROVENANCE_POLICY_VERSION,
+            metadataEnvelopeVersion=AI_METADATA_ENVELOPE_VERSION,
             redactedEvidence=RedactedIdeaEvidenceResponse.from_domain(
                 result.request.redacted_evidence
             ),
@@ -435,6 +438,7 @@ class AIExplanationReadinessResponse(CamelModel):
         ...,
         alias="executionProvenancePolicyVersion",
     )
+    metadata_envelope_version: str = Field(..., alias="metadataEnvelopeVersion")
     durable_ai_lineage_store_backed: bool = Field(..., alias="durableAiLineageStoreBacked")
     model_risk_operations_contract_available: bool = Field(
         ...,
@@ -476,6 +480,7 @@ class AIExplanationReadinessResponse(CamelModel):
             productionLikeAttestationRequired=snapshot.production_like_attestation_required,
             localTestUnattestedFixtureAllowed=(snapshot.local_test_unattested_fixture_allowed),
             executionProvenancePolicyVersion=snapshot.execution_provenance_policy_version,
+            metadataEnvelopeVersion=snapshot.metadata_envelope_version,
             durableAiLineageStoreBacked=snapshot.durable_ai_lineage_store_backed,
             modelRiskOperationsContractAvailable=(
                 snapshot.model_risk_operations_contract_available
