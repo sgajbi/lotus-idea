@@ -6,13 +6,17 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 import json
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
 
 import app.api.source_ingestion_readiness as source_ingestion_readiness_api
-from app.application.source_ingestion import HighCashSourceIngestionBatchResult
+from app.application.source_ingestion import (
+    HighCashSourceIngestionBatchResult,
+    HighCashSourceIngestionDecision,
+)
 from app.application.source_ingestion import SOURCE_INGESTION_RUN_ONCE_BATCH_CEILING
 from app.application.source_ingestion_readiness import (
     CORE_BASE_URL_ENV,
@@ -399,6 +403,12 @@ def test_source_ingestion_run_once_api_blocks_manifest_over_batch_ceiling(
 def test_source_ingestion_run_once_api_executes_configured_batch_source_safely(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    observations: list[dict[str, Any]] = []
+    monkeypatch.setattr(
+        source_ingestion_readiness_api,
+        "observe_workflow_run",
+        lambda **values: observations.append(values),
+    )
     repository = InMemoryIdeaRepository()
     reset_idea_repository_for_tests(repository=repository)
     source = RecordingCoreSource()
@@ -465,6 +475,11 @@ def test_source_ingestion_run_once_api_executes_configured_batch_source_safely(
     assert "PB_SG_GLOBAL_BAL_001" not in response.text
     assert "candidateId" not in response.text
     assert "idempotency" not in response.text.lower()
+    assert len(observations) == 1
+    assert observations[0]["workflow"] == "source_ingestion"
+    assert observations[0]["outcome"] == "accepted"
+    assert observations[0]["item_count"] == 1
+    assert observations[0]["duration_seconds"] >= 0
 
 
 def test_source_ingestion_run_once_api_closes_runtime_after_source_failure(
@@ -737,6 +752,15 @@ def test_source_ingestion_run_once_operation_events_use_bounded_count_buckets(
         ("accepted", None, {"work_item_count_bucket": "11-100"}),
         ("accepted", None, {"work_item_count_bucket": "100+"}),
     ]
+
+
+def test_source_ingestion_slo_outcome_distinguishes_empty_and_conflict() -> None:
+    empty = HighCashSourceIngestionBatchResult(item_results=())
+    conflict_result = SimpleNamespace(decision=HighCashSourceIngestionDecision.CONFLICT)
+    conflict = HighCashSourceIngestionBatchResult(item_results=(conflict_result,))  # type: ignore[arg-type]
+
+    assert source_ingestion_readiness_api._source_ingestion_slo_outcome(empty) == "blocked"
+    assert source_ingestion_readiness_api._source_ingestion_slo_outcome(conflict) == "conflict"
 
 
 def _source_ref(product_id: str) -> SourceRef:

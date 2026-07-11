@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import time
+
 from fastapi import FastAPI, Header, status
 from fastapi.responses import JSONResponse
 
@@ -34,6 +36,7 @@ from app.observability import (
     OperationSupportability,
     emit_operation_event,
 )
+from app.observability.service_slo_metrics import observe_workflow_run
 from app.security.caller_context import (
     CapabilityPolicy,
     PermissionDeniedError,
@@ -162,14 +165,31 @@ async def post_source_ingestion_run_once(
             ),
         )
 
+    started_at = time.perf_counter()
     try:
-        result = run_high_cash_source_ingestion_batch(
-            runtime.plan.command,
-            core_source=runtime.core_source,
-            repository=repository,
+        try:
+            result = run_high_cash_source_ingestion_batch(
+                runtime.plan.command,
+                core_source=runtime.core_source,
+                repository=repository,
+            )
+        except Exception:
+            observe_workflow_run(
+                workflow="source_ingestion",
+                outcome="failed",
+                duration_seconds=time.perf_counter() - started_at,
+                item_count=len(runtime.plan.command.work_items),
+            )
+            raise
+        operation_outcome = _source_ingestion_operation_outcome(result)
+        observe_workflow_run(
+            workflow="source_ingestion",
+            outcome=_source_ingestion_slo_outcome(result),
+            duration_seconds=time.perf_counter() - started_at,
+            item_count=result.total_count,
         )
         _emit_source_ingestion_run_event(
-            _source_ingestion_operation_outcome(result),
+            operation_outcome,
             durable_storage_backed=durable_storage_backed,
             total_count=result.total_count,
         )
@@ -254,6 +274,18 @@ def _source_ingestion_operation_outcome(
     if result.count(HighCashSourceIngestionDecision.BLOCKED) == result.total_count:
         return OperationOutcome.BLOCKED
     return OperationOutcome.ACCEPTED
+
+
+def _source_ingestion_slo_outcome(result: HighCashSourceIngestionBatchResult) -> str:
+    if result.total_count == 0:
+        return "blocked"
+    if result.count(HighCashSourceIngestionDecision.CONFLICT) > 0:
+        return "conflict"
+    if result.count(HighCashSourceIngestionDecision.BLOCKED) == result.total_count:
+        return "blocked"
+    if result.count(HighCashSourceIngestionDecision.REPLAYED) == result.total_count:
+        return "replayed"
+    return "accepted"
 
 
 SOURCE_INGESTION_READINESS_ROUTE: RouteMetadata = {

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import time
+
 from datetime import datetime
 from typing import Any, Mapping
 
@@ -51,6 +53,7 @@ from app.observability import (
     OperationSupportability,
     emit_operation_event,
 )
+from app.observability.service_slo_metrics import observe_workflow_run
 from app.ports.idea_repository import OutboxDeliveryRepository
 from app.ports.outbox_publisher import OutboxEventPublisher
 from app.security.caller_context import (
@@ -205,16 +208,32 @@ async def post_outbox_delivery_run_once(
             operator_run_reference=operator_run_reference,
         )
 
-    summary = _run_outbox_delivery_once_with_cleanup(
-        repository,
-        publisher_result,
-        limit=limit,
-        max_retry_count=max_retry_count,
-        idempotency_key=validated_idempotency_key,
-        request_payload=run_request_payload,
-        delivered_at_utc=delivered_at_utc,
-        durable_storage_backed=durable_storage_backed,
-        operator_run_reference=operator_run_reference,
+    started_at = time.perf_counter()
+    try:
+        summary = _run_outbox_delivery_once_with_cleanup(
+            repository,
+            publisher_result,
+            limit=limit,
+            max_retry_count=max_retry_count,
+            idempotency_key=validated_idempotency_key,
+            request_payload=run_request_payload,
+            delivered_at_utc=delivered_at_utc,
+            durable_storage_backed=durable_storage_backed,
+            operator_run_reference=operator_run_reference,
+        )
+    except Exception:
+        observe_workflow_run(
+            workflow="outbox_delivery",
+            outcome="failed",
+            duration_seconds=time.perf_counter() - started_at,
+            item_count=0,
+        )
+        raise
+    observe_workflow_run(
+        workflow="outbox_delivery",
+        outcome=_outbox_delivery_slo_outcome(summary.run_status),
+        duration_seconds=time.perf_counter() - started_at,
+        item_count=summary.attempted_count,
     )
     if summary.run_status is OutboxDeliveryRunStatus.CONFLICT:
         _emit_outbox_delivery_run_event(
@@ -238,6 +257,14 @@ async def post_outbox_delivery_run_once(
         summary,
         durable_storage_backed=durable_storage_backed,
     )
+
+
+def _outbox_delivery_slo_outcome(run_status: OutboxDeliveryRunStatus) -> str:
+    if run_status is OutboxDeliveryRunStatus.CONFLICT:
+        return "conflict"
+    if run_status is OutboxDeliveryRunStatus.REPLAYED:
+        return "replayed"
+    return "accepted"
 
 
 def _require_outbox_delivery_readiness_caller(caller: CallerContext) -> None:

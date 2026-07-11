@@ -264,6 +264,12 @@ def test_outbox_delivery_run_once_api_blocks_invalid_broker_configuration(
 def test_outbox_delivery_run_once_api_publishes_with_configured_publisher(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    observations: list[dict[str, Any]] = []
+    monkeypatch.setattr(
+        outbox_delivery_readiness_api,
+        "observe_workflow_run",
+        lambda **values: observations.append(values),
+    )
     event = pending_event("idea.candidate.persisted.v1")
     reset_idea_repository_for_tests(repository=repository_with_events(event))
     publisher = AcceptingPublisher()
@@ -304,6 +310,11 @@ def test_outbox_delivery_run_once_api_publishes_with_configured_publisher(
     assert "eventId" not in response.text
     assert "idea_high_cash_001" not in response.text
     assert "outbox-run:api:001" not in response.text
+    assert len(observations) == 1
+    assert observations[0]["workflow"] == "outbox_delivery"
+    assert observations[0]["outcome"] == "accepted"
+    assert observations[0]["item_count"] == 1
+    assert observations[0]["duration_seconds"] >= 0
 
 
 def test_outbox_delivery_run_once_api_requires_operator_permission() -> None:
