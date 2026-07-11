@@ -39,6 +39,7 @@ def run_scheduled_data_lifecycle_review(
     database_url: str,
     limit: int,
     output_path: Path,
+    execution_profile: str = "review_only",
     now: Any | None = None,
     connect: Any = psycopg.connect,
 ) -> ScheduledLifecycleReviewEvidence:
@@ -56,7 +57,7 @@ def run_scheduled_data_lifecycle_review(
         git_commit=os.environ.get("GITHUB_SHA", "local-uncommitted"),
         git_ref=os.environ.get("GITHUB_REF", "local"),
         ci_run_id=os.environ.get("GITHUB_RUN_ID", "local"),
-        execution_profile="review_only",
+        execution_profile=execution_profile,
         requested_limit=review.requested_limit,
         scanned_count=len(review.items),
         ready_for_authorized_purge_count=review.ready_count,
@@ -77,6 +78,11 @@ def _parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--limit", type=int, default=100)
     parser.add_argument("--output-path", type=Path, default=DEFAULT_OUTPUT_PATH)
+    parser.add_argument(
+        "--execution-profile",
+        choices=("review_only", "synthetic_disposable_postgres"),
+        default="review_only",
+    )
     return parser
 
 
@@ -91,6 +97,7 @@ def main() -> int:
             database_url=database_url,
             limit=args.limit,
             output_path=args.output_path,
+            execution_profile=args.execution_profile,
         )
     except (OSError, TypeError, ValueError, psycopg.Error) as exc:
         print(f"Scheduled data lifecycle review failed: {type(exc).__name__}")
