@@ -96,6 +96,8 @@ def test_runtime_trust_telemetry_preview_counts_source_safe_repository_state() -
     assert snapshot.freshness_counts == {"current": 8}
     assert snapshot.supportability_counts == {"ready": 2}
     assert snapshot.lifecycle_counts == {"generated": 2}
+    assert snapshot.data_lifecycle_state_counts == {"process_local_uncontrolled": 2}
+    assert snapshot.lifecycle_control_missing_count == 2
     assert snapshot.lineage_materialized is True
     assert (
         _product_posture(
@@ -112,6 +114,7 @@ def test_runtime_trust_telemetry_preview_counts_source_safe_repository_state() -
         is True
     )
     assert "durable_repository_not_configured" not in snapshot.certification_blockers
+    assert "data_lifecycle_controls_missing" in snapshot.certification_blockers
     assert "platform_mesh_certification_missing" in snapshot.certification_blockers
 
 
@@ -137,6 +140,9 @@ def test_runtime_trust_telemetry_uses_repository_projection_without_snapshot() -
     assert preview.freshness_counts == {"current": 7, "stale": 1}
     assert preview.supportability_counts == {"ready": 2}
     assert preview.lifecycle_counts == {"generated": 2}
+    assert preview.data_lifecycle_state_counts == {"active": 1, "held": 1}
+    assert preview.retention_expired_count == 1
+    assert preview.lifecycle_control_missing_count == 0
     assert preview.review_decision_count == 1
     assert preview.feedback_event_count == 1
     assert preview.conversion_intent_count == 2
@@ -146,6 +152,13 @@ def test_runtime_trust_telemetry_uses_repository_projection_without_snapshot() -
     assert snapshot["freshness"]["freshness_state"] == "stale"
     assert snapshot["freshness"]["age_seconds"] == 600
     assert snapshot["data_quality_status"] == "quality_warning"
+    assert snapshot["data_lifecycle"] == {
+        "state_counts": {"active": 1, "held": 1},
+        "retention_expired_count": 1,
+        "lifecycle_control_missing_count": 0,
+        "certification_status": "not_certified",
+        "supported_feature_promoted": False,
+    }
     assert snapshot["observed_trust_metadata"]["as_of_date"] == "2026-06-21"
 
 
@@ -435,6 +448,9 @@ class _ProjectionOnlyRuntimeTrustTelemetryRepository:
             data_quality_status="quality_warning",
             latest_source_generated_at_utc=datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
             source_as_of_dates=("2026-06-21",),
+            data_lifecycle_state_counts={"active": 1, "held": 1},
+            retention_expired_count=1,
+            lifecycle_control_missing_count=0,
         )
 
     def snapshot(self) -> IdeaRepositorySnapshot:

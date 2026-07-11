@@ -26,6 +26,9 @@ class RuntimeTrustTelemetryPreviewResponse(CamelModel):
     freshness_counts: Mapping[str, int] = Field(..., alias="freshnessCounts")
     supportability_counts: Mapping[str, int] = Field(..., alias="supportabilityCounts")
     lifecycle_counts: Mapping[str, int] = Field(..., alias="lifecycleCounts")
+    data_lifecycle_state_counts: Mapping[str, int] = Field(..., alias="dataLifecycleStateCounts")
+    retention_expired_count: int = Field(..., alias="retentionExpiredCount")
+    lifecycle_control_missing_count: int = Field(..., alias="lifecycleControlMissingCount")
     review_decision_count: int = Field(..., alias="reviewDecisionCount")
     feedback_event_count: int = Field(..., alias="feedbackEventCount")
     conversion_intent_count: int = Field(..., alias="conversionIntentCount")
@@ -59,6 +62,9 @@ class RuntimeTrustTelemetryPreviewResponse(CamelModel):
             freshnessCounts=dict(snapshot.freshness_counts),
             supportabilityCounts=dict(snapshot.supportability_counts),
             lifecycleCounts=dict(snapshot.lifecycle_counts),
+            dataLifecycleStateCounts=dict(snapshot.data_lifecycle_state_counts),
+            retentionExpiredCount=snapshot.retention_expired_count,
+            lifecycleControlMissingCount=snapshot.lifecycle_control_missing_count,
             reviewDecisionCount=snapshot.review_decision_count,
             feedbackEventCount=snapshot.feedback_event_count,
             conversionIntentCount=snapshot.conversion_intent_count,
@@ -142,6 +148,14 @@ class RuntimeTrustTelemetryLineageResponse(BaseModel):
     evidence_uris: list[str]
 
 
+class RuntimeTrustTelemetryDataLifecycleResponse(BaseModel):
+    state_counts: Mapping[str, int]
+    retention_expired_count: int
+    lifecycle_control_missing_count: int
+    certification_status: str
+    supported_feature_promoted: bool
+
+
 class RuntimeTrustTelemetryBlockingResponse(BaseModel):
     blocked: bool
     blocked_reason: str
@@ -189,6 +203,7 @@ class RuntimeTrustTelemetrySnapshotResponse(BaseModel):
     reconciliation_status: str
     data_quality_status: str
     lineage: RuntimeTrustTelemetryLineageResponse
+    data_lifecycle: RuntimeTrustTelemetryDataLifecycleResponse
     blocking: RuntimeTrustTelemetryBlockingResponse
     product_coverage: list[RuntimeTrustTelemetryProductCoverageSnapshotResponse]
     observed_trust_metadata: Mapping[str, str]
@@ -201,6 +216,7 @@ class RuntimeTrustTelemetrySnapshotResponse(BaseModel):
 
 __all__ = [
     "RuntimeTrustTelemetryBlockingResponse",
+    "RuntimeTrustTelemetryDataLifecycleResponse",
     "RuntimeTrustTelemetryEvidenceResponse",
     "RuntimeTrustTelemetryFreshnessResponse",
     "RuntimeTrustTelemetryLineageResponse",

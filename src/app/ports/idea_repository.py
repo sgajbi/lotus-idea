@@ -105,6 +105,9 @@ class RuntimeTrustTelemetryRepositorySummary:
     data_quality_status: str
     latest_source_generated_at_utc: datetime | None
     source_as_of_dates: tuple[str, ...]
+    data_lifecycle_state_counts: Mapping[str, int]
+    retention_expired_count: int
+    lifecycle_control_missing_count: int
 
 
 class CandidateSnapshotRepository(Protocol):

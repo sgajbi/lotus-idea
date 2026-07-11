@@ -238,6 +238,9 @@ RUNTIME_TRUST_TELEMETRY_PREVIEW_ROUTE: RouteMetadata = {
                         "freshnessCounts": {"current": 8},
                         "supportabilityCounts": {"ready": 2},
                         "lifecycleCounts": {"generated": 2},
+                        "dataLifecycleStateCounts": {"active": 2},
+                        "retentionExpiredCount": 0,
+                        "lifecycleControlMissingCount": 0,
                         "reviewDecisionCount": 0,
                         "feedbackEventCount": 0,
                         "conversionIntentCount": 0,
@@ -342,6 +345,13 @@ RUNTIME_TRUST_TELEMETRY_SNAPSHOT_ROUTE: RouteMetadata = {
                             "evidence_uris": [
                                 "lotus-idea://runtime/idea-candidate/source-owned-lineage"
                             ],
+                        },
+                        "data_lifecycle": {
+                            "state_counts": {"active": 2},
+                            "retention_expired_count": 0,
+                            "lifecycle_control_missing_count": 0,
+                            "certification_status": "not_certified",
+                            "supported_feature_promoted": False,
                         },
                         "blocking": {
                             "blocked": True,

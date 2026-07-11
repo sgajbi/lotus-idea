@@ -21,10 +21,13 @@ def load_runtime_trust_telemetry_summary(
             /* lotus-idea runtime-trust-telemetry-source-authority-counts */
             WITH source_ref_rows AS (
                 SELECT source_ref
-                FROM idea_candidate_record
+                FROM idea_candidate_record candidate
+                JOIN idea_data_lifecycle_control lifecycle
+                  ON lifecycle.candidate_id = candidate.candidate_id
                 CROSS JOIN LATERAL jsonb_array_elements(
                     candidate_json->'evidence_packet'->'source_refs'
                 ) AS source_ref
+                WHERE COALESCE(lifecycle.held_from_state, lifecycle.state) = 'active'
             )
             SELECT source_ref->>'source_system' AS label, COUNT(*)::integer AS count
             FROM source_ref_rows
@@ -37,10 +40,13 @@ def load_runtime_trust_telemetry_summary(
             /* lotus-idea runtime-trust-telemetry-freshness-counts */
             WITH source_ref_rows AS (
                 SELECT source_ref
-                FROM idea_candidate_record
+                FROM idea_candidate_record candidate
+                JOIN idea_data_lifecycle_control lifecycle
+                  ON lifecycle.candidate_id = candidate.candidate_id
                 CROSS JOIN LATERAL jsonb_array_elements(
                     candidate_json->'evidence_packet'->'source_refs'
                 ) AS source_ref
+                WHERE COALESCE(lifecycle.held_from_state, lifecycle.state) = 'active'
             )
             SELECT source_ref->>'freshness' AS label, COUNT(*)::integer AS count
             FROM source_ref_rows
@@ -53,7 +59,10 @@ def load_runtime_trust_telemetry_summary(
             /* lotus-idea runtime-trust-telemetry-supportability-counts */
             SELECT candidate_json->'evidence_packet'->>'supportability' AS label,
                    COUNT(*)::integer AS count
-            FROM idea_candidate_record
+            FROM idea_candidate_record candidate
+            JOIN idea_data_lifecycle_control lifecycle
+              ON lifecycle.candidate_id = candidate.candidate_id
+            WHERE COALESCE(lifecycle.held_from_state, lifecycle.state) = 'active'
             GROUP BY label
             """,
         )
@@ -62,8 +71,20 @@ def load_runtime_trust_telemetry_summary(
             """
             /* lotus-idea runtime-trust-telemetry-lifecycle-counts */
             SELECT lifecycle_status AS label, COUNT(*)::integer AS count
-            FROM idea_candidate_record
+            FROM idea_candidate_record candidate
+            JOIN idea_data_lifecycle_control lifecycle
+              ON lifecycle.candidate_id = candidate.candidate_id
+            WHERE COALESCE(lifecycle.held_from_state, lifecycle.state) = 'active'
             GROUP BY lifecycle_status
+            """,
+        )
+        data_lifecycle_state_counts = _load_count_map(
+            cursor,
+            """
+            /* lotus-idea runtime-trust-telemetry-data-lifecycle-counts */
+            SELECT state AS label, COUNT(*)::integer AS count
+            FROM idea_data_lifecycle_control
+            GROUP BY state
             """,
         )
 
@@ -102,6 +123,9 @@ def load_runtime_trust_telemetry_summary(
         source_as_of_dates=tuple(
             str(value) for value in (read_row_value(summary, "source_as_of_dates") or ())
         ),
+        data_lifecycle_state_counts=data_lifecycle_state_counts,
+        retention_expired_count=_int(summary, "retention_expired_count"),
+        lifecycle_control_missing_count=_int(summary, "lifecycle_control_missing_count"),
     )
 
 
@@ -110,7 +134,10 @@ def _summary_query() -> str:
         /* lotus-idea runtime-trust-telemetry-summary */
         WITH candidate_base AS (
             SELECT candidate_json
-            FROM idea_candidate_record
+            FROM idea_candidate_record candidate
+            JOIN idea_data_lifecycle_control lifecycle
+              ON lifecycle.candidate_id = candidate.candidate_id
+            WHERE COALESCE(lifecycle.held_from_state, lifecycle.state) = 'active'
         ),
         source_ref_rows AS (
             SELECT source_ref
@@ -172,14 +199,43 @@ def _summary_query() -> str:
                 ),
                 ARRAY[]::text[]
             ) AS source_as_of_dates,
-            (SELECT COUNT(*) FROM idea_review_decision)::integer AS review_decision_count,
-            (SELECT COUNT(*) FROM idea_feedback_event)::integer AS feedback_event_count,
-            (SELECT COUNT(*) FROM idea_conversion_intent)::integer AS conversion_intent_count,
-            (SELECT COUNT(*) FROM idea_conversion_outcome)::integer AS conversion_outcome_count,
             (
-                SELECT COUNT(*)
-                FROM idea_report_evidence_pack_request
+                SELECT COUNT(*) FROM idea_review_decision record
+                JOIN idea_data_lifecycle_control lifecycle USING (candidate_id)
+                WHERE COALESCE(lifecycle.held_from_state, lifecycle.state) = 'active'
+            )::integer AS review_decision_count,
+            (
+                SELECT COUNT(*) FROM idea_feedback_event record
+                JOIN idea_data_lifecycle_control lifecycle USING (candidate_id)
+                WHERE COALESCE(lifecycle.held_from_state, lifecycle.state) = 'active'
+            )::integer AS feedback_event_count,
+            (
+                SELECT COUNT(*) FROM idea_conversion_intent record
+                JOIN idea_data_lifecycle_control lifecycle USING (candidate_id)
+                WHERE COALESCE(lifecycle.held_from_state, lifecycle.state) = 'active'
+            )::integer AS conversion_intent_count,
+            (
+                SELECT COUNT(*) FROM idea_conversion_outcome outcome
+                JOIN idea_conversion_intent intent USING (conversion_intent_id)
+                JOIN idea_data_lifecycle_control lifecycle USING (candidate_id)
+                WHERE COALESCE(lifecycle.held_from_state, lifecycle.state) = 'active'
+            )::integer AS conversion_outcome_count,
+            (
+                SELECT COUNT(*) FROM idea_report_evidence_pack_request record
+                JOIN idea_data_lifecycle_control lifecycle USING (candidate_id)
+                WHERE COALESCE(lifecycle.held_from_state, lifecycle.state) = 'active'
             )::integer AS report_evidence_pack_count
+            ,(
+                SELECT COUNT(*) FROM idea_data_lifecycle_control
+                WHERE state = 'active' AND retention_expires_at_utc <= CURRENT_TIMESTAMP
+            )::integer AS retention_expired_count
+            ,(
+                SELECT COUNT(*)
+                FROM idea_candidate_record candidate
+                LEFT JOIN idea_data_lifecycle_control lifecycle
+                  ON lifecycle.candidate_id = candidate.candidate_id
+                WHERE lifecycle.candidate_id IS NULL
+            )::integer AS lifecycle_control_missing_count
     """
 
 

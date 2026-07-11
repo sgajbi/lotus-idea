@@ -4,6 +4,7 @@ from app.infrastructure.postgres_repository import PostgresIdeaRepository
 from tests.unit.postgres_repository_fake import FakePostgresConnection
 from tests.unit.test_postgres_repository import (
     EVALUATED_AT,
+    access_scope,
     high_cash_candidate,
 )
 
@@ -11,7 +12,7 @@ from tests.unit.test_postgres_repository import (
 def test_postgres_repository_uses_bounded_runtime_trust_telemetry_projection() -> None:
     connection = FakePostgresConnection()
     repository = PostgresIdeaRepository(connection)
-    candidate = high_cash_candidate()
+    candidate = high_cash_candidate(candidate_scope=access_scope())
     repository.persist_candidate(
         candidate,
         idempotency_key="runtime-trust-telemetry:test",
@@ -22,11 +23,19 @@ def test_postgres_repository_uses_bounded_runtime_trust_telemetry_projection() -
     candidate_json = connection.rows["idea_candidate_record"][0]["candidate_json"]
     candidate_json["evidence_packet"]["source_refs"][0]["freshness"] = "stale"
     candidate_json["evidence_packet"]["source_refs"][0]["data_quality_status"] = "stale"
-    connection.rows["idea_review_decision"] = [{}]
-    connection.rows["idea_feedback_event"] = [{}]
-    connection.rows["idea_conversion_intent"] = [{}, {}]
-    connection.rows["idea_conversion_outcome"] = [{}]
-    connection.rows["idea_report_evidence_pack_request"] = [{}, {}, {}]
+    candidate_id = candidate.candidate_id
+    connection.rows["idea_review_decision"] = [{"candidate_id": candidate_id}]
+    connection.rows["idea_feedback_event"] = [{"candidate_id": candidate_id}]
+    connection.rows["idea_conversion_intent"] = [
+        {"candidate_id": candidate_id, "conversion_intent_id": "conversion-001"},
+        {"candidate_id": candidate_id, "conversion_intent_id": "conversion-002"},
+    ]
+    connection.rows["idea_conversion_outcome"] = [{"conversion_intent_id": "conversion-001"}]
+    connection.rows["idea_report_evidence_pack_request"] = [
+        {"candidate_id": candidate_id},
+        {"candidate_id": candidate_id},
+        {"candidate_id": candidate_id},
+    ]
     connection.executed_sql.clear()
 
     summary = repository.runtime_trust_telemetry_summary()
@@ -39,6 +48,9 @@ def test_postgres_repository_uses_bounded_runtime_trust_telemetry_projection() -
     assert summary.freshness_counts == {"current": 3, "stale": 1}
     assert summary.supportability_counts == {"ready": 1}
     assert summary.lifecycle_counts == {"generated": 1}
+    assert summary.data_lifecycle_state_counts == {"active": 1}
+    assert summary.retention_expired_count == 0
+    assert summary.lifecycle_control_missing_count == 0
     assert summary.review_decision_count == 1
     assert summary.feedback_event_count == 1
     assert summary.conversion_intent_count == 2
@@ -56,6 +68,7 @@ def test_postgres_repository_uses_bounded_runtime_trust_telemetry_projection() -
     assert "from idea_conversion_intent" in executed_sql
     assert "from idea_conversion_outcome" in executed_sql
     assert "from idea_report_evidence_pack_request" in executed_sql
+    assert "runtime-trust-telemetry-data-lifecycle-counts" in executed_sql
     for unrelated_table in (
         "idea_audit_event",
         "idea_outbox_event",
@@ -65,3 +78,15 @@ def test_postgres_repository_uses_bounded_runtime_trust_telemetry_projection() -
         "idea_idempotency_record",
     ):
         assert unrelated_table not in executed_sql
+
+    connection.rows["idea_data_lifecycle_control"][0]["state"] = "erased"
+    erased_summary = repository.runtime_trust_telemetry_summary()
+
+    assert erased_summary.candidate_snapshot_count == 0
+    assert erased_summary.current_source_ref_count == 0
+    assert erased_summary.review_decision_count == 0
+    assert erased_summary.feedback_event_count == 0
+    assert erased_summary.conversion_intent_count == 0
+    assert erased_summary.conversion_outcome_count == 0
+    assert erased_summary.report_evidence_pack_count == 0
+    assert erased_summary.data_lifecycle_state_counts == {"erased": 1}

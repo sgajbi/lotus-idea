@@ -111,6 +111,10 @@ def test_postgres_data_lifecycle_survives_restart_and_redacts_atomically(
     with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
         repository = PostgresIdeaRepository(cast(PostgresConnection, connection))
         assert repository.candidate_record_by_id(candidate_id) is None
+        erased_telemetry = repository.runtime_trust_telemetry_summary()
+        assert erased_telemetry.candidate_snapshot_count == 0
+        assert erased_telemetry.data_lifecycle_state_counts == {"erased": 1}
+        assert erased_telemetry.lifecycle_control_missing_count == 0
 
     _expire_retention(postgres_database_url, candidate_id)
     purged = _action(
@@ -124,6 +128,11 @@ def test_postgres_data_lifecycle_survives_restart_and_redacts_atomically(
     )
     assert purged.json()["state"] == "purged"
     _assert_purged_graph(postgres_database_url, candidate_id)
+    with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
+        repository = PostgresIdeaRepository(cast(PostgresConnection, connection))
+        purged_telemetry = repository.runtime_trust_telemetry_summary()
+        assert purged_telemetry.candidate_snapshot_count == 0
+        assert purged_telemetry.data_lifecycle_state_counts == {"purged": 1}
 
 
 def test_postgres_erasure_and_delivery_claim_are_serialized(

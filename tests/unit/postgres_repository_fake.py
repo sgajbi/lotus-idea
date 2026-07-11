@@ -116,7 +116,15 @@ class FakePostgresCursor:
             return
         if normalized.startswith("/* lotus-idea runtime-trust-telemetry-lifecycle-counts */"):
             self._rows = table_count_rows(
-                self.connection.rows, "idea_candidate_record", "lifecycle_status"
+                self.connection.rows,
+                "idea_candidate_record",
+                "lifecycle_status",
+                active_candidates_only=True,
+            )
+            return
+        if normalized.startswith("/* lotus-idea runtime-trust-telemetry-data-lifecycle-counts */"):
+            self._rows = table_count_rows(
+                self.connection.rows, "idea_data_lifecycle_control", "state"
             )
             return
         if normalized.startswith("/* lotus-idea candidate-detail"):

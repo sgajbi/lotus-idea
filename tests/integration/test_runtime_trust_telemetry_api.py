@@ -95,6 +95,9 @@ def test_runtime_trust_telemetry_preview_api_returns_source_safe_aggregate_state
     assert payload["candidateSnapshotCount"] == 1
     assert payload["currentSourceRefCount"] == 4
     assert payload["sourceAuthorityCounts"] == {"lotus-core": 4}
+    assert payload["dataLifecycleStateCounts"] == {"process_local_uncontrolled": 1}
+    assert payload["retentionExpiredCount"] == 0
+    assert payload["lifecycleControlMissingCount"] == 1
     assert payload["runtimeTelemetryBacked"] is True
     assert payload["platformCertified"] is False
     assert payload["certificationStatus"] == "not_certified"

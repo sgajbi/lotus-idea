@@ -82,6 +82,9 @@ class RuntimeTrustTelemetryPreview:
     freshness_counts: MappingProxyType[str, int]
     supportability_counts: MappingProxyType[str, int]
     lifecycle_counts: MappingProxyType[str, int]
+    data_lifecycle_state_counts: MappingProxyType[str, int]
+    retention_expired_count: int
+    lifecycle_control_missing_count: int
     review_decision_count: int
     feedback_event_count: int
     conversion_intent_count: int
@@ -123,6 +126,7 @@ def build_runtime_trust_telemetry_preview(
         durable_storage_backed=durable_storage_backed,
         candidate_snapshot_count=summary.candidate_snapshot_count,
         stale_or_unavailable_source_ref_count=summary.stale_or_unavailable_source_ref_count,
+        lifecycle_control_missing_count=summary.lifecycle_control_missing_count,
         product_postures=product_postures,
     )
 
@@ -137,6 +141,9 @@ def build_runtime_trust_telemetry_preview(
         freshness_counts=_mapping_proxy(summary.freshness_counts),
         supportability_counts=_mapping_proxy(summary.supportability_counts),
         lifecycle_counts=_mapping_proxy(summary.lifecycle_counts),
+        data_lifecycle_state_counts=_mapping_proxy(summary.data_lifecycle_state_counts),
+        retention_expired_count=summary.retention_expired_count,
+        lifecycle_control_missing_count=summary.lifecycle_control_missing_count,
         review_decision_count=summary.review_decision_count,
         feedback_event_count=summary.feedback_event_count,
         conversion_intent_count=summary.conversion_intent_count,
@@ -196,6 +203,13 @@ def build_runtime_trust_telemetry_snapshot(
                     "lineage_materialized": preview.lineage_materialized,
                     "evidence_access_class": "operator_only",
                     "evidence_uris": lineage_evidence_uris,
+                },
+                "data_lifecycle": {
+                    "state_counts": dict(preview.data_lifecycle_state_counts),
+                    "retention_expired_count": preview.retention_expired_count,
+                    "lifecycle_control_missing_count": preview.lifecycle_control_missing_count,
+                    "certification_status": "not_certified",
+                    "supported_feature_promoted": False,
                 },
                 "blocking": {
                     "blocked": True,
@@ -455,6 +469,7 @@ def _certification_blockers(
     durable_storage_backed: bool,
     candidate_snapshot_count: int,
     stale_or_unavailable_source_ref_count: int,
+    lifecycle_control_missing_count: int,
     product_postures: tuple[RuntimeTrustTelemetryProductPosture, ...],
 ) -> tuple[str, ...]:
     blockers = [
@@ -472,6 +487,8 @@ def _certification_blockers(
         blockers.insert(0, "runtime_candidate_snapshot_missing")
     if stale_or_unavailable_source_ref_count > 0:
         blockers.insert(0, "stale_or_unavailable_source_refs_present")
+    if lifecycle_control_missing_count > 0:
+        blockers.insert(0, "data_lifecycle_controls_missing")
     return tuple(dict.fromkeys(blockers))
 
 
@@ -613,6 +630,9 @@ def _runtime_trust_telemetry_summary_from_records(
             record.candidate.evidence_packet.supportability.value for record in records
         ),
         lifecycle_counts=Counter(record.candidate.lifecycle_status.value for record in records),
+        data_lifecycle_state_counts={"process_local_uncontrolled": len(records)},
+        retention_expired_count=0,
+        lifecycle_control_missing_count=len(records),
         review_decision_count=sum(len(record.review_decisions) for record in records),
         feedback_event_count=sum(len(record.feedback_events) for record in records),
         conversion_intent_count=sum(len(record.conversion_intents) for record in records),
