@@ -737,7 +737,7 @@ supported feature or create a separately deployable service.
 
 ## Issue 343 PostgreSQL Disaster Recovery
 
-Issue `#343` adds a versioned disaster-recovery contract with 15-table schema
+Issue `#343` adds a versioned disaster-recovery contract with 17-table schema
 reconciliation, 15-minute RPO, 60-minute RTO, daily base-backup and continuous
 WAL expectations, jurisdiction/access/encryption controls, named ownership,
 cadence, and explicit certification blockers. A logical `pg_dump` drill and a

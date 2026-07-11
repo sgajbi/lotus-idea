@@ -26,7 +26,7 @@ An authorized cutover requires all of the following:
 
 1. approved backup identity, jurisdiction, operator, incident, and recovery
    point;
-2. restore validation with all 15 owned tables, source-safe hashes, valid
+2. restore validation with all 17 owned tables, source-safe hashes, valid
    constraints/indexes, and zero relationship/state violations;
 3. RPO no greater than 15 minutes and RTO no greater than 60 minutes;
 4. candidate and outbox recovery replay, downstream reconciliation fencing,

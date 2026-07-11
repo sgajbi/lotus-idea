@@ -43,6 +43,12 @@ from app.domain import (  # noqa: E402
     request_conversion_intent,
     request_report_evidence_pack,
 )
+from app.application.data_lifecycle import ExecuteDataLifecycle  # noqa: E402
+from app.domain.data_lifecycle import (  # noqa: E402
+    DataLifecycleAction,
+    DataLifecycleCommand,
+    DataLifecycleDecision,
+)
 from app.infrastructure.postgres_protocols import PostgresConnection  # noqa: E402
 from app.infrastructure.postgres_repository import PostgresIdeaRepository  # noqa: E402
 from scripts.postgres_disaster_recovery_fixture_data import (  # noqa: E402
@@ -73,6 +79,7 @@ def seed_disaster_recovery_fixture(
         _assert_empty_migrated_database(typed_connection)
         repository = PostgresIdeaRepository(typed_connection)
         review_ready, approved = _seed_workflow_records(repository)
+        _seed_data_lifecycle_operation(repository, review_ready)
         _seed_ai_lineage(repository, review_ready)
         _seed_downstream_submissions(repository)
         recovery_event_id = _seed_outbox_delivery_states(typed_connection)
@@ -88,7 +95,7 @@ def _assert_empty_migrated_database(connection: PostgresConnection) -> None:
             """SELECT COUNT(*) AS table_count FROM pg_catalog.pg_tables
                WHERE schemaname = 'public' AND tablename LIKE 'idea\\_%' ESCAPE '\\'"""
         )
-        if int(database_cursor.fetchone()["table_count"]) != 15:
+        if int(database_cursor.fetchone()["table_count"]) != 17:
             raise ValueError("all current Lotus Idea migrations must be applied before seeding")
         database_cursor.execute(
             """SELECT
@@ -191,6 +198,32 @@ def _persist_candidate(
     )
     if result.record is None:
         raise RuntimeError("fixture candidate was not persisted")
+
+
+def _seed_data_lifecycle_operation(
+    repository: PostgresIdeaRepository,
+    candidate: IdeaCandidate,
+) -> None:
+    result = ExecuteDataLifecycle(
+        repository,
+        now=lambda: FIXTURE_TIME + timedelta(minutes=2),
+    ).execute(
+        DataLifecycleCommand(
+            candidate_id=candidate.candidate_id,
+            tenant_id="tenant-dr-fixture",
+            action=DataLifecycleAction.APPLY_HOLD,
+            actor_subject="dr-fixture-records-operator",
+            authority_ref="bank-legal-and-records-governance:dr-fixture-001",
+            reason="restore_fixture_preview",
+            change_reference="dr-fixture-lifecycle-001",
+            idempotency_key="dr-fixture-data-lifecycle-preview",
+            request_fingerprint="d" * 64,
+            requested_at_utc=FIXTURE_TIME + timedelta(minutes=1),
+            dry_run=True,
+        )
+    )
+    if result.decision is not DataLifecycleDecision.PREVIEW:
+        raise RuntimeError("fixture data lifecycle preview was not persisted")
 
 
 def _seed_ai_lineage(repository: PostgresIdeaRepository, candidate: IdeaCandidate) -> None:
