@@ -18,6 +18,7 @@ from ci_e2e_contract import validate_e2e_suite  # noqa: E402
 from ci_release_evidence_contract import (  # noqa: E402
     validate_dependency_governance,
     validate_dockerfile_runtime,
+    validate_compose_build_identity,
     validate_release_evidence_targets,
 )
 from ci_script_target_expectations import SCRIPT_TARGET_EXPECTATIONS  # noqa: E402
@@ -30,6 +31,7 @@ from security_tab_governance_contract import validate_security_tab_governance_fi
 MAKEFILE_PATH = ROOT / "Makefile"
 DOCKERFILE_PATH = ROOT / "Dockerfile"
 DOCKERIGNORE_PATH = ROOT / ".dockerignore"
+DOCKER_COMPOSE_PATH = ROOT / "docker-compose.yml"
 PYPROJECT_PATH = ROOT / "pyproject.toml"
 CI_TOOLING_LOCK_PATH = ROOT / "requirements" / "ci-tooling.lock.txt"
 WORKFLOWS_DIR = ROOT / ".github" / "workflows"
@@ -334,6 +336,7 @@ def validate_makefile(makefile: str) -> list[str]:
         *_validate_install_target(makefile),
         *_validate_security_audit_target(makefile),
         *validate_release_evidence_targets(makefile),
+        *validate_compose_build_identity(DOCKER_COMPOSE_PATH.read_text(encoding="utf-8")),
         *_validate_script_targets(makefile),
         *_validate_support_targets(makefile),
     ]

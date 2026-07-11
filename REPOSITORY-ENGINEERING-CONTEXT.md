@@ -941,6 +941,10 @@ Recent issue-derived patterns to preserve:
     OCI labels, `/version`, all subjects, and the Kubernetes reference through
     `make release-image-identity-contract-gate`; Docker ARG/ENV names must
     reject secret-like build inputs.
+    Local Compose exposes the same seven non-secret identity inputs through
+    `LOTUS_IDEA_BUILD_*`; canonical Workbench automation must populate them
+    from exact Idea source/runtime truth. Default `unknown`/`local` values are
+    diagnostic local posture only and cannot satisfy cross-repository proof.
 28. duplicate-implementation controls now split report-only evidence from
     blocking enforcement. `make duplicate-implementation-inventory` scans exact
     first-party function-body duplicates across `src/app` and `scripts`, writes

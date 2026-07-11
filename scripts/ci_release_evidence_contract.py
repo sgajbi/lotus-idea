@@ -230,6 +230,25 @@ def validate_release_evidence_targets(makefile: str) -> list[str]:
     return errors
 
 
+def validate_compose_build_identity(compose: str) -> list[str]:
+    required = {
+        'GIT_COMMIT_SHA: "${LOTUS_IDEA_BUILD_GIT_COMMIT_SHA:-unknown}"': "commit SHA",
+        'GIT_BRANCH: "${LOTUS_IDEA_BUILD_GIT_BRANCH:-unknown}"': "Git branch",
+        'BUILD_TIMESTAMP: "${LOTUS_IDEA_BUILD_TIMESTAMP:-unknown}"': "build timestamp",
+        'REPO_URL: "${LOTUS_IDEA_BUILD_REPO_URL:-https://github.com/sgajbi/lotus-idea.git}"': (
+            "repository URL"
+        ),
+        'CI_RUN_ID: "${LOTUS_IDEA_BUILD_RUN_ID:-local}"': "run ID",
+        'IMAGE_BUILD_ID: "${LOTUS_IDEA_BUILD_IMAGE_ID:-local}"': "image build ID",
+        'SERVICE_VERSION: "${LOTUS_IDEA_BUILD_SERVICE_VERSION:-0.1.0}"': "service version",
+    }
+    return [
+        f"docker-compose.yml must pass governed {label} build identity"
+        for fragment, label in required.items()
+        if fragment not in compose
+    ]
+
+
 def validate_dockerfile_runtime(dockerfile: str) -> list[str]:
     errors: list[str] = []
     required_fragments = {

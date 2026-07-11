@@ -7,12 +7,37 @@ from types import ModuleType
 import pytest
 
 from scripts.ci_release_evidence_contract import (
+    validate_compose_build_identity,
     validate_dockerfile_runtime,
     validate_release_evidence_targets,
 )
 
-
 ROOT = Path(__file__).resolve().parents[2]
+
+
+def test_compose_passes_complete_non_secret_build_identity() -> None:
+    compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
+
+    assert validate_compose_build_identity(compose) == []
+    assert "SECRET" not in "\n".join(
+        line for line in compose.splitlines() if "LOTUS_IDEA_BUILD_" in line
+    )
+
+
+def test_compose_build_identity_rejects_missing_commit_and_run_id() -> None:
+    compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
+    degraded = compose.replace(
+        '        GIT_COMMIT_SHA: "${LOTUS_IDEA_BUILD_GIT_COMMIT_SHA:-unknown}"\n',
+        "",
+    ).replace(
+        '        CI_RUN_ID: "${LOTUS_IDEA_BUILD_RUN_ID:-local}"\n',
+        "",
+    )
+
+    errors = validate_compose_build_identity(degraded)
+
+    assert "docker-compose.yml must pass governed commit SHA build identity" in errors
+    assert "docker-compose.yml must pass governed run ID build identity" in errors
 
 
 def _load_ci_contract_gate() -> ModuleType:

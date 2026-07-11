@@ -1,6 +1,15 @@
 services:
   lotus-idea:
-    build: .
+    build:
+      context: .
+      args:
+        GIT_COMMIT_SHA: "${LOTUS_IDEA_BUILD_GIT_COMMIT_SHA:-unknown}"
+        GIT_BRANCH: "${LOTUS_IDEA_BUILD_GIT_BRANCH:-unknown}"
+        BUILD_TIMESTAMP: "${LOTUS_IDEA_BUILD_TIMESTAMP:-unknown}"
+        REPO_URL: "${LOTUS_IDEA_BUILD_REPO_URL:-https://github.com/sgajbi/lotus-idea.git}"
+        CI_RUN_ID: "${LOTUS_IDEA_BUILD_RUN_ID:-local}"
+        IMAGE_BUILD_ID: "${LOTUS_IDEA_BUILD_IMAGE_ID:-local}"
+        SERVICE_VERSION: "${LOTUS_IDEA_BUILD_SERVICE_VERSION:-0.1.0}"
     ports:
       - "8330:8330"
     env_file:

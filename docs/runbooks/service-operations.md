@@ -62,6 +62,14 @@ This path proves local container startup and operator ergonomics only. It does
 not certify production recovery, live source ingestion, Workbench support,
 data-mesh readiness, client publication, or supported-feature status.
 
+Compose accepts the seven non-secret `LOTUS_IDEA_BUILD_*` inputs declared in
+`docker-compose.yml`. Governed canonical automation supplies the exact commit,
+branch, UTC build time, repository URL, run ID, image build ID, and service
+version so `/version` can be reconciled to the running source. Ad hoc Compose
+builds may retain explicit `unknown`/`local` defaults, but that posture cannot
+serve as cross-repository provenance or release evidence. Credentials and
+secrets must never be added to this build-argument namespace.
+
 The built runtime image installs only runtime dependencies constrained by
 `requirements/runtime-resolved.lock.txt`, runs as the
 non-root `lotus` user, keeps only the service plus source-ingestion worker

@@ -231,6 +231,13 @@ mutable-tag deployment, subject drift, or digest mismatch fail the release.
 Published environments inject the resolved digest pair from governed release
 or deployment metadata; missing or invalid bindings make readiness degraded.
 
+Local Compose passes the same seven non-secret build-identity fields through
+the governed `LOTUS_IDEA_BUILD_*` namespace. Canonical Workbench automation
+must set exact Idea commit, branch, build time, repository, run, build, and
+version values before rebuilding. The default `unknown`/`local` posture is
+acceptable for ad hoc diagnostics only; it is not canonical provenance,
+release evidence, or permission to pass secrets through Docker build inputs.
+
 PR Merge Gate and Main Releasability also run `make container-runtime-smoke`
 after the Docker image build. The target starts the built image, probes
 `/health` and `/health/live` for `200`, requires `/health/ready` to be reachable
