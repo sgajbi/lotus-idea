@@ -14,6 +14,7 @@ from typing import Mapping
 from app.application.service_capacity_baseline import build_service_capacity_baseline
 from app.application.capacity_evidence_qualification import (
     DEPENDENCY_RECOVERY_SIGNER_WORKFLOW,
+    LOAD_SOAK_SIGNER_WORKFLOW,
     POSTGRES_CAPACITY_SIGNER_WORKFLOW,
     VerifiedArtifactAttestation,
 )
@@ -228,10 +229,12 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--run-id", required=True)
     parser.add_argument("--postgres-threshold-proof", type=Path)
     parser.add_argument("--dependency-recovery-proof", type=Path)
+    parser.add_argument("--load-soak-proof", type=Path)
     parser.add_argument("--downstream-capacity-seed", type=Path)
     parser.add_argument("--resource-baseline", type=Path)
     parser.add_argument("--verify-postgres-threshold-attestation", action="store_true")
     parser.add_argument("--verify-dependency-recovery-attestation", action="store_true")
+    parser.add_argument("--verify-load-soak-attestation", action="store_true")
     parser.add_argument(
         "--output",
         type=Path,
@@ -313,6 +316,15 @@ def main(argv: list[str] | None = None) -> int:
             signer_workflow=DEPENDENCY_RECOVERY_SIGNER_WORKFLOW,
             proof_name="dependency recovery proof",
         )
+        load_soak_proof = _read_optional_proof(args.load_soak_proof)
+        load_soak_attestation = _verify_optional_attestation(
+            verification_requested=args.verify_load_soak_attestation,
+            artifact_path=args.load_soak_proof,
+            proof=load_soak_proof,
+            environment_profile=args.environment_profile,
+            signer_workflow=LOAD_SOAK_SIGNER_WORKFLOW,
+            proof_name="load soak proof",
+        )
         artifact = build_service_capacity_baseline(
             measurements=measurements,
             environment_profile=args.environment_profile,
@@ -325,6 +337,8 @@ def main(argv: list[str] | None = None) -> int:
             postgres_threshold_attestation=threshold_attestation,
             dependency_recovery_proof=dependency_recovery_proof,
             dependency_recovery_attestation=dependency_recovery_attestation,
+            load_soak_proof=load_soak_proof,
+            load_soak_attestation=load_soak_attestation,
             resource_baseline=_read_optional_resource_baseline(args.resource_baseline),
             postgres_max_connection_utilization_fraction=postgres_max_utilization,
         )
