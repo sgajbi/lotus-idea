@@ -4,6 +4,7 @@ from datetime import datetime
 import json
 from typing import Protocol
 
+from app.application.ed25519_key_trust import select_trusted_ed25519_key
 from app.domain.lotus_ai_run_attestation import (
     ExpectedLotusAIRunAttestation,
     LotusAIAttestationKeyDiscovery,
@@ -58,7 +59,12 @@ def verify_lotus_ai_run_attestation(
         claims.issued_at_utc <= expected.verified_at_utc < claims.expires_at_utc,
         "attestation validity window",
     )
-    key = _trusted_key(envelope=envelope, key_discovery=key_discovery)
+    key = select_trusted_ed25519_key(
+        signature=envelope.signature,
+        keys=key_discovery.keys,
+        issued_at_utc=claims.issued_at_utc,
+        require=_require,
+    )
     _verify_signature(envelope=envelope, key=key, signature_verifier=signature_verifier)
     return VerifiedLotusAIRunAttestationReceipt(
         run_id=claims.run_id,
@@ -79,27 +85,6 @@ def verify_lotus_ai_run_attestation(
         expires_at_utc=claims.expires_at_utc,
         verified_at_utc=expected.verified_at_utc,
     )
-
-
-def _trusted_key(
-    *,
-    envelope: LotusAIRunAttestationEnvelope,
-    key_discovery: LotusAIAttestationKeyDiscovery,
-) -> LotusAIAttestationPublicKey:
-    signature = envelope.signature
-    _require(signature.algorithm == "EdDSA", "signature algorithm")
-    matches = tuple(key for key in key_discovery.keys if key.key_id == signature.key_id)
-    _require(len(matches) == 1, "known unique signing key")
-    key = matches[0]
-    _require(key.algorithm == "EdDSA" and key.curve == "Ed25519", "signing key algorithm")
-    _require(key.status in {"active", "rotated"}, "signing key status")
-    _require(key.rotation_epoch == signature.rotation_epoch, "rotation epoch")
-    _require(key.not_before_utc <= envelope.claims.issued_at_utc, "key validity start")
-    _require(
-        key.not_after_utc is None or envelope.claims.issued_at_utc < key.not_after_utc,
-        "key validity end",
-    )
-    return key
 
 
 def _verify_signature(
