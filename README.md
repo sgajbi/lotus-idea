@@ -235,8 +235,8 @@ Operator entrypoints:
 
 Operator details: [docs/runbooks/service-operations.md](docs/runbooks/service-operations.md),
 [docs/operations/observability.md](docs/operations/observability.md),
-[service SLO and capacity](docs/operations/service-slo-capacity.md),
-[persistence](docs/operations/persistence.md),
+[license and IP compliance](docs/operations/license-ip-compliance.md),
+[service SLO and capacity](docs/operations/service-slo-capacity.md), [persistence](docs/operations/persistence.md),
 [outbox lineage](docs/architecture/outbox-event-lineage.md),
 [outbox dead-letter recovery](docs/operations/outbox-dead-letter-recovery.md),
 [downstream realization](docs/operations/downstream-realization-readiness.md),

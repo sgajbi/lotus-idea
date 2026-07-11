@@ -21,6 +21,24 @@ promotion remain blocked.
 | Product-safe errors | RFC-7807 responses without raw source payloads or secrets. | `make api-problem-details-boundary-gate` |
 | Observability | Governed operation metrics and source-safe logs. | `make source-observability-contract-gate`, `make operation-metric-contract-gate` |
 | AI assistance | Deterministic evidence, workflow-pack allowlist, type-and-content action policy, canonical server-owned labels, verifier, lineage, and model-risk controls. | AI governance docs and gates |
+| License and IP | Exact runtime/CI inventory, SPDX policy, conditional obligations, deterministic notices, expiring exceptions, and digest-bound release evidence. | `make license-compliance-gate` and the operator runbook |
+
+## License And IP Governance
+
+`lotus-idea` service code is proprietary. The versioned compliance policy
+classifies every resolved runtime and CI component and fails closed on lock
+drift, unknown or denied licenses, missing conditional obligations, stale
+notices, and incomplete exceptions. Exceptions require application-owner,
+security, and legal approval, immutable evidence, and expiry.
+
+Main Releasability binds policy version, lock hashes, NOTICE digest, SBOM
+serial, exception IDs, and the final image digest in release evidence. The
+container also carries `LICENSE` and `THIRD_PARTY_NOTICES.md`. Repository
+`CODEOWNERS` routes review but does not replace legal or security authority;
+base-image package inventory and external asset rights remain distinct review
+boundaries. See
+[operator runbook](https://github.com/sgajbi/lotus-idea/blob/main/docs/operations/license-ip-compliance.md)
+for dependency changes, exceptions, escalation, and failure triage.
 
 Day-one standard:
 

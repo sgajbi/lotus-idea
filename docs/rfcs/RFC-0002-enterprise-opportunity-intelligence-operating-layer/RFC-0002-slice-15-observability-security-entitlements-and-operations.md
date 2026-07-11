@@ -6,6 +6,29 @@ Status: Partially Implemented - bounded operation events plus evidence replay, s
 
 Harden the service for production-grade operation, support, and secure use.
 
+## Issue 346 License And IP Compliance
+
+The service now has a versioned, fail-closed license and IP control for the
+complete resolved runtime and CI dependency closure:
+
+1. The policy records exact component versions, scopes, SPDX expressions,
+   authoritative source links, attribution, and conditional obligations.
+2. Lock hashes and deterministic `THIRD_PARTY_NOTICES.md` generation prevent
+   dependency and attribution drift. Unknown and denied expressions fail.
+3. Exceptions require application-owner, security, and legal approval,
+   immutable evidence, a bounded reason, and expiry. `CODEOWNERS` routes source
+   review but does not replace those decisions.
+4. Main Releasability records policy version, runtime/CI lock hashes, NOTICE
+   digest, SBOM serial, active exception IDs, and final image digest, then
+   verifies the exact binding before accepting release evidence.
+5. The image includes the proprietary service license and notices. Base-image
+   packages, generated code, model assets, and data assets retain explicit
+   independent review posture.
+
+This is release and governance hardening inside the existing service. It adds
+no customer capability, data-product certification, legal authority, or
+runtime boundary, and does not change supported-feature posture.
+
 ## Current Implementation Evidence
 
 RFC-0002 Slice 15 now has a first implementation-backed operation observability

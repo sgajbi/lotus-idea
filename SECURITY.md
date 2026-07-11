@@ -38,3 +38,10 @@ render/archive authority, or AI infrastructure.
 Security review must preserve this product boundary. Findings that affect upstream or downstream
 systems should identify the impacted Lotus repository without promoting lotus-idea into that
 system's authority.
+
+## License And IP Escalation
+
+Dependency, base-image, generated-code, model-asset, or data-asset licensing uncertainty must stop
+merge and release until the service owner, security, and legal reviewers resolve it. Follow
+`docs/operations/license-ip-compliance.md`; do not publish confidential legal advice, proprietary
+agreements, client data, or vendor-restricted material in issues or CI artifacts.

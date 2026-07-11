@@ -559,6 +559,8 @@ Security controls currently include:
 11. secret scanning and push protection where GitHub reports them enabled.
 12. versioned field classification, residency, retention, legal-hold,
     erasure, purge, and immutable tombstone controls for Idea-owned records.
+13. exact runtime/CI license inventory, SPDX classification, deterministic
+    notices, expiring exception governance, and digest-bound release evidence.
 
 These are foundation controls, not production identity-provider proof.
 Route-level capability checks consume caller-context headers inside the service
@@ -607,6 +609,19 @@ No raw source payloads, portfolio identifiers, client identifiers, request
 bodies, response bodies, raw entitlement failures, prompt text, provider output,
 database URLs, or local secrets belong in logs, operation events, proof
 artifacts, wiki, or PR evidence.
+
+License and IP truth is governed by
+`contracts/compliance/lotus-idea-license-policy.v1.json`. Every resolved
+runtime and CI dependency must have exact version, scope, SPDX expression,
+source, attribution, and obligations; unknown, denied, unlocked, or stale
+entries fail closed. Exceptions require application-owner, security, and legal
+approval, immutable evidence, and expiry. Main release evidence binds policy
+version, lock hashes, NOTICE digest, SBOM serial, exception IDs, and final image
+digest. `CODEOWNERS` provides repository routing only and cannot self-prove
+legal approval. Base-image package licensing and external generated/model/data
+asset rights remain distinct review boundaries. Use
+`docs/operations/license-ip-compliance.md`; this control adds no supported
+feature and no runtime deployable.
 
 ## Observability And Operability
 

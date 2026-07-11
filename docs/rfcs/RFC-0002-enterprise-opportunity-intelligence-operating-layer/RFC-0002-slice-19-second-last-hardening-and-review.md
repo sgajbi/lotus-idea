@@ -24,6 +24,16 @@ Perform the full engineering review before final closure.
 
 ## Current Implementation Evidence
 
+Issue `#346` adds deterministic release-compliance review evidence. The
+repository now reconciles exact runtime and CI locks to a versioned SPDX policy,
+generates notices reproducibly, fails closed on unapproved or incomplete
+exceptions, packages license material, and binds policy/NOTICE/SBOM truth to
+the digest-pinned release manifest. Focused mutation tests cover direct and
+transitive drift, unknown and denied licenses, conditional obligations,
+approval evidence, expiry, notices, external components, assets, and release
+binding. Legal approval and base-image package rights remain external review
+truth; a passing engineering gate cannot certify either.
+
 This slice now includes the first enterprise-quality hardening control over the
 bank-buyable scorecard itself:
 
