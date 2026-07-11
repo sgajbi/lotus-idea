@@ -46,23 +46,23 @@ class PrometheusResourceProbe:
             response.raise_for_status()
             if len(response.content) > MAXIMUM_METRICS_RESPONSE_BYTES:
                 raise ResourceProbeError("resource metrics response exceeds the size limit")
-            values = _metric_values(response.text)
+            measurements = _metric_measurements(response.text)
             return ProcessResourceSnapshot(
                 observed_at_utc=self._now(),
-                cpu_seconds_total=values["process_cpu_seconds_total"],
+                cpu_seconds_total=measurements["process_cpu_seconds_total"],
                 resident_memory_bytes=_whole_number(
-                    values["process_resident_memory_bytes"],
+                    measurements["process_resident_memory_bytes"],
                     "process_resident_memory_bytes",
                 ),
                 virtual_memory_bytes=_optional_whole_number(
-                    values.get("process_virtual_memory_bytes"),
+                    measurements.get("process_virtual_memory_bytes"),
                     "process_virtual_memory_bytes",
                 ),
                 open_file_descriptors=_optional_whole_number(
-                    values.get("process_open_fds"), "process_open_fds"
+                    measurements.get("process_open_fds"), "process_open_fds"
                 ),
                 max_file_descriptors=_optional_whole_number(
-                    values.get("process_max_fds"), "process_max_fds"
+                    measurements.get("process_max_fds"), "process_max_fds"
                 ),
             )
         except ResourceProbeError:
@@ -75,32 +75,32 @@ class PrometheusResourceProbe:
             self._client.close()
 
 
-def _metric_values(payload: str) -> dict[str, float]:
+def _metric_measurements(payload: str) -> dict[str, float]:
     requested = set(REQUIRED_METRICS + OPTIONAL_METRICS)
-    values: dict[str, float] = {}
+    measurements: dict[str, float] = {}
     for family in text_string_to_metric_families(payload):
         for sample in family.samples:
             if sample.name not in requested:
                 continue
-            if sample.labels or sample.name in values:
+            if sample.labels or sample.name in measurements:
                 raise ResourceProbeError("resource metric cardinality is not singular")
-            value = float(sample.value)
-            if not math.isfinite(value) or value < 0:
-                raise ResourceProbeError("resource metric value is invalid")
-            values[sample.name] = value
-    missing = sorted(set(REQUIRED_METRICS) - set(values))
+            measurement = float(sample.value)
+            if not math.isfinite(measurement) or measurement < 0:
+                raise ResourceProbeError("resource metric measurement is invalid")
+            measurements[sample.name] = measurement
+    missing = sorted(set(REQUIRED_METRICS) - set(measurements))
     if missing:
         raise ResourceProbeError("required resource metrics are missing")
-    if ("process_open_fds" in values) != ("process_max_fds" in values):
+    if ("process_open_fds" in measurements) != ("process_max_fds" in measurements):
         raise ResourceProbeError("file descriptor resource metrics are incomplete")
-    return values
+    return measurements
 
 
-def _whole_number(value: float, metric: str) -> int:
-    if not value.is_integer():
+def _whole_number(measurement: float, metric: str) -> int:
+    if not measurement.is_integer():
         raise ResourceProbeError(f"{metric} must be a whole number")
-    return int(value)
+    return int(measurement)
 
 
-def _optional_whole_number(value: float | None, metric: str) -> int | None:
-    return None if value is None else _whole_number(value, metric)
+def _optional_whole_number(measurement: float | None, metric: str) -> int | None:
+    return None if measurement is None else _whole_number(measurement, metric)

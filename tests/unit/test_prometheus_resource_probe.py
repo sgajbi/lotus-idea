@@ -61,7 +61,7 @@ lotus_idea_http_requests_total{tenant_id="not-consumed"} 9
         ),
         (
             "process_cpu_seconds_total NaN\nprocess_resident_memory_bytes 1\n",
-            "metric value is invalid",
+            "metric measurement is invalid",
         ),
         (
             "process_cpu_seconds_total 1\nprocess_resident_memory_bytes 1\nprocess_open_fds 1\n",
