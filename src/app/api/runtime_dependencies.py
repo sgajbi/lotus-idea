@@ -62,6 +62,10 @@ from app.runtime.lotus_ai_attestation_state import (
     close_lotus_ai_attestation_dependencies,
     get_lotus_ai_attestation_dependencies,
 )
+from app.runtime.lifecycle_authority_state import (
+    close_lifecycle_authority_dependencies,
+    get_lifecycle_authority_dependencies,
+)
 
 __all__ = [
     "DownstreamRealizationClientsUnavailableError",
@@ -114,5 +118,7 @@ __all__ = [
     "load_runtime_settings",
     "load_recovery_runtime_state",
     "close_lotus_ai_attestation_dependencies",
+    "close_lifecycle_authority_dependencies",
     "get_lotus_ai_attestation_dependencies",
+    "get_lifecycle_authority_dependencies",
 ]
