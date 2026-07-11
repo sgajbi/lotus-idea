@@ -9,6 +9,7 @@ from typing import Any, cast
 from scripts.license_compliance_policy import (
     POLICY_PATH,
     ROOT,
+    canonical_text_sha256,
     render_third_party_notice,
     validate_release_license_evidence,
     validate_license_policy,
@@ -213,7 +214,17 @@ def test_lock_hashes_are_lowercase_sha256() -> None:
     payload = current_policy()
     for lock_key in ("runtime_lock", "ci_lock"):
         path = ROOT / payload[lock_key]["path"]
-        assert payload[lock_key]["sha256"] == hashlib.sha256(path.read_bytes()).hexdigest()
+        assert payload[lock_key]["sha256"] == canonical_text_sha256(path.read_bytes())
+
+
+def test_lock_hashes_are_independent_of_checkout_line_endings() -> None:
+    lf_content = b"fastapi==0.138.2\ncryptography==49.0.0\n"
+    crlf_content = lf_content.replace(b"\n", b"\r\n")
+
+    assert canonical_text_sha256(lf_content) == canonical_text_sha256(crlf_content)
+    assert canonical_text_sha256(lf_content) != canonical_text_sha256(
+        b"fastapi==0.138.3\ncryptography==49.0.0\n"
+    )
 
 
 def test_release_license_evidence_binds_policy_notice_sbom_and_image() -> None:

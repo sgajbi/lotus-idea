@@ -15,6 +15,12 @@ SPDX_OPERATORS = {"AND", "OR", "WITH"}
 EXCEPTION_ID = re.compile(r"^LIC-EX-[0-9]{3,}$")
 
 
+def canonical_text_sha256(content: bytes) -> str:
+    """Hash UTF-8 governed text independently of checkout line endings."""
+    canonical = content.decode("utf-8").replace("\r\n", "\n").replace("\r", "\n")
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
 def validate_license_policy(
     payload: dict[str, Any],
     *,
@@ -172,7 +178,7 @@ def _load_governed_locks(
             errors.append(f"license policy {key}.path does not exist")
             continue
         content = path.read_bytes()
-        if hashlib.sha256(content).hexdigest() != contract.get("sha256"):
+        if canonical_text_sha256(content) != contract.get("sha256"):
             errors.append(f"license policy {key} hash does not match the resolved lock")
         locks[scope] = _parse_lock(content.decode("utf-8"))
     return locks, errors

@@ -4,7 +4,7 @@
   "service_license": "LicenseRef-Lotus-Proprietary",
   "runtime_lock": {
     "path": "requirements/runtime-resolved.lock.txt",
-    "sha256": "87468adf50da0ef0dc1a8304f2e06bf77d8311915aa6b6eb02ce1e324777e1b6"
+    "sha256": "8fba00b2e8b852a4c24bbe393f3e6bf0f713c0270d4cafcfa7e65d74d6ee43ac"
   },
   "ci_lock": {
     "path": "requirements/ci-tooling.lock.txt",
