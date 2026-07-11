@@ -36,7 +36,7 @@ EXPECTED_WORKFLOWS = {
     "postgresql",
 }
 REQUIRED_BLOCKERS = {
-    "workflow_sli_metrics_incomplete",
+    "postgres_saturation_metric_missing",
     "load_and_soak_baseline_missing",
     "dependency_failure_baseline_missing",
     "postgres_saturation_evidence_missing",
@@ -222,6 +222,7 @@ def _validate_source_truth(payload: dict[str, Any], repository_root: Path) -> li
         "baseline_evidence_model",
         "baseline_generator",
         "baseline_contract_gate",
+        "baseline_workload_runner",
         "operations_doc",
         "operations_wiki",
         "rfc_slice",

@@ -43,6 +43,9 @@ def test_service_slo_capacity_contract_names_baseline_automation() -> None:
     assert payload["source_of_truth"]["baseline_contract_gate"].endswith(
         "service_capacity_baseline_contract_gate.py"
     )
+    assert payload["source_of_truth"]["baseline_workload_runner"].endswith(
+        "run_service_capacity_workload.py"
+    )
 
 
 def test_service_slo_capacity_contract_blocks_false_certification() -> None:

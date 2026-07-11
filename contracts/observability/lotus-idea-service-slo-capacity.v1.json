@@ -122,12 +122,13 @@
     "baseline_evidence_model": "src/app/application/service_capacity_baseline.py",
     "baseline_generator": "scripts/generate_service_capacity_baseline.py",
     "baseline_contract_gate": "scripts/service_capacity_baseline_contract_gate.py",
+    "baseline_workload_runner": "scripts/run_service_capacity_workload.py",
     "operations_doc": "docs/operations/service-slo-capacity.md",
     "operations_wiki": "wiki/Service-SLO-And-Capacity.md",
     "rfc_slice": "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-15-observability-security-entitlements-and-operations.md"
   },
   "certification_blockers": [
-    "workflow_sli_metrics_incomplete",
+    "postgres_saturation_metric_missing",
     "load_and_soak_baseline_missing",
     "dependency_failure_baseline_missing",
     "postgres_saturation_evidence_missing",
