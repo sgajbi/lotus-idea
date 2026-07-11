@@ -81,8 +81,7 @@ class CapacityMeasurement:
         if self.retry_count < 0:
             raise ValueError("retry_count must not be negative")
         if self.observed_offset_seconds is not None and (
-            not math.isfinite(self.observed_offset_seconds)
-            or self.observed_offset_seconds < 0
+            not math.isfinite(self.observed_offset_seconds) or self.observed_offset_seconds < 0
         ):
             raise ValueError("observed_offset_seconds must be finite and not negative")
         if self.scenario != "dependency_failure" and self.recovered is not None:
@@ -114,12 +113,9 @@ def build_service_capacity_baseline(
         raise ValueError("generated_at_utc must be timezone-aware")
     if not math.isfinite(observed_window_seconds) or observed_window_seconds <= 0:
         raise ValueError("observed_window_seconds must be finite and positive")
-    if (
-        postgres_max_connection_utilization_fraction is not None
-        and (
-            not math.isfinite(postgres_max_connection_utilization_fraction)
-            or not 0 <= postgres_max_connection_utilization_fraction <= 1
-        )
+    if postgres_max_connection_utilization_fraction is not None and (
+        not math.isfinite(postgres_max_connection_utilization_fraction)
+        or not 0 <= postgres_max_connection_utilization_fraction <= 1
     ):
         raise ValueError(
             "postgres_max_connection_utilization_fraction must be finite and between zero and one"
