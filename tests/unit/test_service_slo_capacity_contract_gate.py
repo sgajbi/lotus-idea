@@ -204,3 +204,18 @@ def test_dependency_recovery_workflow_rejects_automatic_or_untrusted_shape(
     assert "dependency recovery workflow must not run on a schedule" in errors
     assert any("RUN_CONTROLLED_LOTUS_IDEA_DEPENDENCY_RECOVERY" in error for error in errors)
     assert any("capacity-production-like" in error for error in errors)
+
+
+def test_downstream_capacity_seed_gate_rejects_missing_layered_sources(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+
+    errors = module._validate_downstream_capacity_seed(tmp_path)
+
+    assert any("src/app/application/downstream_capacity_seed.py" in error for error in errors)
+    assert any(
+        "src/app/infrastructure/http_downstream_capacity_seed.py" in error for error in errors
+    )
+    assert any("scripts/seed_downstream_capacity_resource.py" in error for error in errors)
+    assert any("Makefile" in error for error in errors)

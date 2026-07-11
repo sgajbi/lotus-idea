@@ -111,6 +111,7 @@ def validate_payload(
     errors.extend(_validate_rule_file(payload, repository_root))
     errors.extend(_validate_dashboard(payload, repository_root))
     errors.extend(_validate_capacity_attestation_workflow(repository_root))
+    errors.extend(_validate_downstream_capacity_seed(repository_root))
     errors.extend(_validate_certification(payload))
     return sorted(errors)
 
@@ -236,6 +237,10 @@ def _validate_source_truth(payload: dict[str, Any], repository_root: Path) -> li
         "baseline_generator",
         "baseline_contract_gate",
         "baseline_workload_runner",
+        "downstream_capacity_seed_model",
+        "downstream_capacity_seed_port",
+        "downstream_capacity_seed_adapter",
+        "downstream_capacity_seed_runner",
         "resource_evidence_model",
         "resource_probe_port",
         "resource_probe_adapter",
@@ -332,6 +337,46 @@ def _validate_certification(payload: dict[str, Any]) -> list[str]:
     boundaries = payload.get("non_proof_boundaries")
     if not isinstance(boundaries, list) or len(boundaries) < 4:
         errors.append("service SLO non_proof_boundaries must remain explicit")
+    return errors
+
+
+def _validate_downstream_capacity_seed(repository_root: Path) -> list[str]:
+    required_tokens = {
+        "src/app/application/downstream_capacity_seed.py": (
+            "seed_only_not_capacity_evidence",
+            'productionCapacityCertified": False',
+            'supportedFeaturePromoted": False',
+        ),
+        "src/app/infrastructure/http_downstream_capacity_seed.py": (
+            "CAPACITY_SYNTHETIC_PORTFOLIO_001",
+            "MAX_RESPONSE_BYTES",
+            "idea.conversion.intent.record",
+        ),
+        "scripts/seed_downstream_capacity_resource.py": (
+            "SEED_SYNTHETIC_LOTUS_IDEA_CAPACITY_RESOURCE",
+            "_write_json_atomic",
+        ),
+        "scripts/run_service_capacity_workload.py": (
+            "--downstream-capacity-seed",
+            "downstream capacity seed provenance is invalid",
+        ),
+        "Makefile": (
+            "downstream-capacity-seed:",
+            "SERVICE_CAPACITY_DOWNSTREAM_SEED_ARG",
+        ),
+    }
+    errors: list[str] = []
+    for relative_path, tokens in required_tokens.items():
+        path = repository_root / relative_path
+        if not path.is_file():
+            errors.append(f"downstream capacity seed source missing {relative_path}")
+            continue
+        content = path.read_text(encoding="utf-8")
+        errors.extend(
+            f"downstream capacity seed source {relative_path} missing {token!r}"
+            for token in tokens
+            if token not in content
+        )
     return errors
 
 
