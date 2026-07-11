@@ -108,6 +108,7 @@ SCRIPT_TARGET_EXPECTATIONS = {
     "disaster-recovery-contract-gate": "scripts/disaster_recovery_contract_gate.py",
     "data-lifecycle-contract-gate": "scripts/data_lifecycle_contract_gate.py",
     "scheduled-data-lifecycle-review": "scripts/run_scheduled_data_lifecycle_review.py",
+    "scheduled-data-lifecycle-seed": "scripts/seed_scheduled_data_lifecycle_fixture.py",
     "scheduled-data-lifecycle-review-proof-gate": (
         "scripts/scheduled_data_lifecycle_review_proof_gate.py"
     ),
