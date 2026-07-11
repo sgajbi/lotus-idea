@@ -33,6 +33,7 @@ contracts, OpenAPI evidence, tests, documentation, wiki source, CI evidence on
 | Downstream intent | Conversion intent, source-versioned append-only outcome history, policy-valid current posture, report evidence-pack requests, outbox records, and Advise/Manage/Report route-proof consumption are bounded foundations. | Execution, report rendering, archive authority, and downstream materialization proof remain external; quarantined outcome history does not count as ready. |
 | AI-adjacent support | Explanation readiness, lineage-store proof, workflow-pack registration/runtime proof consumption, and model-risk operations evidence are governed. | `lotus-idea` does not own AI infrastructure, provider calls, RAG runtime, or model operations. |
 | Data mesh | Proposed product and consumer contracts, mesh policy proof, platform onboarding proof consumption, and runtime trust telemetry exist. | Data-product certification and supported-feature promotion remain blocked. |
+| Service reliability | Bounded API, workflow, dependency, and PostgreSQL SLIs plus code-owned error-budget rules, alerts, and dashboard are implemented internally. | Production load/soak, dependency-failure, PostgreSQL saturation, and cost/resource baselines remain blocked. |
 
 ## Product Boundary
 
@@ -232,9 +233,9 @@ Operator entrypoints:
 - Governance: implementation-proof, data-mesh, and runtime trust-telemetry preview/snapshot
 - Privacy lifecycle: governed hold, erasure, purge, replay, and aggregate lifecycle posture
 
-Operator details live in
-[docs/runbooks/service-operations.md](docs/runbooks/service-operations.md),
+Operator details: [docs/runbooks/service-operations.md](docs/runbooks/service-operations.md),
 [docs/operations/observability.md](docs/operations/observability.md),
+[service SLO and capacity](docs/operations/service-slo-capacity.md),
 [persistence](docs/operations/persistence.md),
 [outbox lineage](docs/architecture/outbox-event-lineage.md),
 [outbox dead-letter recovery](docs/operations/outbox-dead-letter-recovery.md),

@@ -1,0 +1,42 @@
+# Service SLO And Capacity
+
+Lotus Idea has a versioned internal service/workflow SLO foundation for API,
+source-ingestion, outbox-delivery, downstream-dependency, and PostgreSQL
+posture. This is separate from mesh data-product freshness, completeness,
+reconciliation, quality, and lineage policy.
+
+## Current Truth
+
+| Evidence | Current posture |
+| --- | --- |
+| HTTP request count and duration | Implemented with method, route-template, and status-class labels. |
+| Workflow run, duration, and item throughput | Implemented for source ingestion and outbox delivery. |
+| Dependency availability and duration | Implemented for governed dependencies as one logical call including retries. |
+| PostgreSQL duration and outcomes | Implemented for mutations, lifecycle actions, and snapshot reads. |
+| Error-budget rules and alerts | Implemented and tested with `promtool`. |
+| Grafana dashboard | Implemented from bounded metrics and recording rules. |
+| Production capacity certification | Blocked on load/soak, dependency-failure, pool-saturation, and cost/resource evidence. |
+
+No tenant, client, portfolio, candidate, event, request, idempotency,
+correlation, or trace identifier is permitted as a metric label.
+
+## First Response
+
+1. Freeze promotion when fast or sustained burn alerts fire.
+2. Compare API failures with dependency and PostgreSQL panels before assigning
+   fault or increasing capacity.
+3. Preserve lifecycle, health, readiness, and recovery operations; defer
+   nonessential background work when it amplifies saturation.
+4. Use outbox recovery and downstream reconciliation rather than manual
+   durable-state changes.
+5. Keep the posture `not_certified` until remaining evidence blockers clear.
+
+## Validation
+
+```powershell
+make service-slo-capacity-contract-gate
+make service-slo-rule-test
+```
+
+See `docs/operations/service-slo-capacity.md` for target values, alert response,
+capacity assumptions, and non-proof boundaries.

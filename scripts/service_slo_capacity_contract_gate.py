@@ -185,6 +185,7 @@ def _validate_source_truth(payload: dict[str, Any], repository_root: Path) -> li
         "dashboard",
         "contract_gate",
         "operations_doc",
+        "operations_wiki",
         "rfc_slice",
     }
     errors: list[str] = []

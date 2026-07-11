@@ -24,6 +24,7 @@
 ## Operations And Governance
 
 - [Operations Runbook](Operations-Runbook)
+- [Service SLO and Capacity](Service-SLO-And-Capacity)
 - [Data Lifecycle Operations](Data-Lifecycle-Operations)
 - [PostgreSQL Disaster Recovery](PostgreSQL-Disaster-Recovery)
 - [Troubleshooting](Troubleshooting)

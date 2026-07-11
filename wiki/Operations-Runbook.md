@@ -23,6 +23,7 @@ promoted.
 | Downstream realization is blocked | `/api/v1/downstream-realization/readiness` | `docs/operations/downstream-realization-readiness.md` |
 | AI explanation is blocked | `/api/v1/ai-explanations/readiness` | `docs/operations/ai-governance.md` |
 | Mesh posture is blocked | `/api/v1/data-mesh/readiness` | `docs/operations/mesh-readiness.md` |
+| Error budget is burning or latency is elevated | Service SLO dashboard, dependency and PostgreSQL panels | [Service SLO and Capacity](Service-SLO-And-Capacity) |
 
 ## Operator Evidence Map
 
@@ -36,6 +37,8 @@ promoted.
 | `make container-runtime-smoke` | Container startup and health smoke proof. |
 | `make supported-features-gate` | Confirms no unproved support claim is promoted. |
 | `make supported-feature-promotion-contract-gate` | Confirms gate, readiness API, and generated artifact use one promotion evaluator. |
+| `make service-slo-capacity-contract-gate` | Validates service objectives, capacity budgets, safe labels, dashboard, and rule inventory. |
+| `make service-slo-rule-test` | Evaluates healthy and breached error-budget scenarios with `promtool`. |
 
 ## Detailed Foundation Posture
 

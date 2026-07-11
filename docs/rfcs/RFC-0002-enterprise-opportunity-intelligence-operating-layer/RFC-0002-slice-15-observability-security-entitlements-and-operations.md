@@ -257,6 +257,28 @@ are limited to repository and governed state; event, client, portfolio,
 payload, request, and idempotency identity remain forbidden. This improves
 internal supportability only and does not certify a broker or consumer.
 
+## Issue 345 Service SLO And Capacity Foundation
+
+Lotus Idea now separates service/workflow reliability from mesh data-product
+quality through `lotus-idea-service-slo-capacity.v1.json`. The service contract
+defines initial API, source-ingestion, outbox-delivery, downstream-dependency,
+and PostgreSQL availability/latency budgets plus bounded capacity assumptions.
+
+Runtime metrics are implementation-backed for HTTP route-template latency and
+status classes, workflow duration/outcomes/item throughput, governed dependency
+logical calls including retries, and PostgreSQL mutation/lifecycle/snapshot
+duration and outcomes. Prometheus recording rules and multi-window burn alerts
+are tested with real `promtool` healthy and breached fixtures. A repo-owned
+Grafana dashboard separates service, dependency, database, workflow, and queue
+posture and retains explicit certification gaps.
+
+This is design modularity inside the existing process. No workload,
+failure-isolation, ownership, or operability evidence justifies a separate SLO
+service. Production certification remains blocked on representative load/soak,
+dependency-failure, PostgreSQL pool-saturation, and cost/resource baselines.
+The current injected/direct PostgreSQL connection must not be described as a
+measured pool, and no supported feature is promoted by this foundation.
+
 ## Required Work
 
 1. Add metrics, logs, traces, audit events, health/readiness diagnostics, and

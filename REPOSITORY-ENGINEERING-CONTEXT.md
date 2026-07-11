@@ -1393,7 +1393,9 @@ Current gaps remain explicit:
 6. no certified external broker publication,
 7. no platform mesh certification,
 8. no client-ready publication,
-9. no production capacity or back-pressure certification,
+9. bounded service/workflow SLIs, burn alerts, and dashboard exist, but no
+   production load/soak, PostgreSQL saturation, cost/resource, or back-pressure
+   certification,
 10. no AI provider-runtime certification,
 11. no full production identity-provider integration, signed caller assertion,
     or Workbench entitlement-denied proof for caller-context authorization,
@@ -1445,6 +1447,26 @@ Update this document when:
 Keep this file curated. Avoid appending every slice detail. Link to RFCs,
 runbooks, quality scorecards, and contracts for detailed history.
 
+## Service SLO And Capacity Rule
+
+Service/workflow SLOs are distinct from mesh data-product SLOs. Measure HTTP
+traffic only by method, route template, and status class; workflows only by
+governed workflow/outcome; dependencies only by code-owned dependency identity;
+and PostgreSQL only by bounded operation/outcome. Never use tenant, client,
+portfolio, candidate, event, request, idempotency, correlation, or trace
+identity as a metric label.
+
+Treat one dependency call including bounded retries as one logical SLI event.
+Keep dependency failure separate from Lotus Idea saturation. Replays are valid
+idempotent workflow outcomes; conflicts and configuration blocks must not be
+silently converted into service failures. Do not claim pool saturation when the
+runtime exposes only an injected/direct PostgreSQL connection.
+
+The contract, dashboard, and alert artifacts remain `not_certified` until
+representative load/soak, dependency-failure, PostgreSQL saturation, and
+cost/resource evidence exists. No runtime service split follows from adding
+observability; workload or failure-isolation evidence must justify it.
+
 ## Cross-Links
 
 Central context:
@@ -1470,3 +1492,4 @@ Repository-local anchors:
 9. `quality/quality_scorecard.md`
 10. `supported-features/supported-features.json`
 11. `wiki/Home.md`
+12. `docs/operations/service-slo-capacity.md`

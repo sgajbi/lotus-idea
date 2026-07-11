@@ -120,6 +120,7 @@
     "dashboard": "monitoring/grafana/dashboards/lotus-idea-service-slo.json",
     "contract_gate": "scripts/service_slo_capacity_contract_gate.py",
     "operations_doc": "docs/operations/service-slo-capacity.md",
+    "operations_wiki": "wiki/Service-SLO-And-Capacity.md",
     "rfc_slice": "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-15-observability-security-entitlements-and-operations.md"
   },
   "certification_blockers": [
