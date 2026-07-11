@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
+from datetime import UTC, datetime
 from enum import StrEnum
-from typing import Any, Mapping
+from typing import Any, Callable, Mapping
 
 from app.application.candidate_lookup import candidate_record_by_id
 from app.domain.ai_action_policy import AI_ACTION_POLICY_VERSION
@@ -24,6 +25,27 @@ from app.domain import (
     evaluate_ai_workflow_output,
 )
 from app.ports.idea_repository import AIExplanationRepository
+from app.ports.lotus_ai_attestation import LotusAIAttestationKeySource
+from app.domain.lotus_ai_execution_digest import (
+    LotusAIExecutionOutputContent,
+    lotus_ai_input_evidence_sha256,
+    lotus_ai_output_content_sha256,
+)
+from app.domain.lotus_ai_run_attestation import (
+    ExpectedLotusAIRunAttestation,
+    LotusAIRunAttestationEnvelope,
+)
+from app.application.lotus_ai_idea_explanation_output import (
+    map_lotus_ai_idea_workflow_output,
+)
+from app.application.lotus_ai_idea_explanation_request import (
+    build_lotus_ai_idea_explanation_input,
+)
+from app.application.lotus_ai_run_attestation_verification import (
+    LotusAIAttestationSignatureVerifier,
+    verify_lotus_ai_run_attestation,
+)
+from app.domain.ai_execution_provenance import AIExecutionProvenancePosture
 
 
 class AIExplanationEvaluationDecision(StrEnum):
@@ -70,6 +92,9 @@ class EvaluateAIExplanationToRepositoryCommand:
     idempotency_key: str
     idempotency_payload: Mapping[str, Any]
     workflow_output: AIWorkflowOutput | None = None
+    producer_run_id: str | None = None
+    producer_execution_output: LotusAIExecutionOutputContent | None = None
+    run_attestation: LotusAIRunAttestationEnvelope | None = None
     workflow_output_trust_policy: AIWorkflowOutputTrustPolicy = (
         AIWorkflowOutputTrustPolicy.LOTUS_AI_ATTESTATION_REQUIRED
     )
@@ -86,6 +111,21 @@ class EvaluateAIExplanationToRepositoryCommand:
         ):
             raise UntrustedAIWorkflowOutput(
                 "production-like workflow output requires verified lotus-ai provenance"
+            )
+        attested_values = (
+            self.producer_run_id,
+            self.producer_execution_output,
+            self.run_attestation,
+        )
+        if any(value is not None for value in attested_values) and not all(
+            value is not None for value in attested_values
+        ):
+            raise UntrustedAIWorkflowOutput(
+                "lotus-ai run id, execution output, and attestation must be provided together"
+            )
+        if self.run_attestation is not None and self.workflow_output is not None:
+            raise UntrustedAIWorkflowOutput(
+                "attested lotus-ai output cannot be combined with caller-mapped workflow output"
             )
 
 
@@ -141,6 +181,9 @@ def evaluate_ai_explanation_to_repository(
     command: EvaluateAIExplanationToRepositoryCommand,
     *,
     repository: AIExplanationRepository,
+    attestation_key_source: LotusAIAttestationKeySource | None = None,
+    signature_verifier: LotusAIAttestationSignatureVerifier | None = None,
+    verification_clock: Callable[[], datetime] | None = None,
 ) -> AIExplanationWorkflowResult:
     record = candidate_record_by_id(repository, command.candidate_id)
     if record is None:
@@ -150,7 +193,47 @@ def evaluate_ai_explanation_to_repository(
         )
 
     explanation_request = build_ai_explanation_request(record.candidate, command.explanation)
-    if command.workflow_output is None:
+    attestation_receipt = None
+    if command.run_attestation is not None:
+        if attestation_key_source is None or signature_verifier is None:
+            raise UntrustedAIWorkflowOutput(
+                "lotus-ai attestation trust infrastructure is unavailable"
+            )
+        assert command.producer_run_id is not None
+        assert command.producer_execution_output is not None
+        verified_at = (verification_clock or _utcnow)()
+        input_evidence = build_lotus_ai_idea_explanation_input(explanation_request)
+        try:
+            attestation_receipt = verify_lotus_ai_run_attestation(
+                envelope=command.run_attestation,
+                key_discovery=attestation_key_source.get_key_discovery(),
+                expected=ExpectedLotusAIRunAttestation(
+                    run_id=command.producer_run_id,
+                    consumer_request_id=explanation_request.request_id,
+                    input_evidence_sha256=lotus_ai_input_evidence_sha256(input_evidence),
+                    output_content_sha256=lotus_ai_output_content_sha256(
+                        command.producer_execution_output
+                    ),
+                    verified_at_utc=verified_at,
+                ),
+                signature_verifier=signature_verifier,
+            )
+            workflow_output = map_lotus_ai_idea_workflow_output(
+                command.producer_execution_output,
+                request_id=explanation_request.request_id,
+                workflow_pack_id=explanation_request.workflow_pack.workflow_pack_id,
+                workflow_pack_version=explanation_request.workflow_pack.workflow_pack_version,
+                verifier_ran_at_utc=verified_at,
+            )
+        except (RuntimeError, ValueError) as exc:
+            raise UntrustedAIWorkflowOutput("lotus-ai attestation verification failed") from exc
+        explanation_result = replace(
+            evaluate_ai_workflow_output(explanation_request, workflow_output),
+            execution_provenance_posture=(
+                AIExecutionProvenancePosture.LOTUS_AI_ATTESTATION_VERIFIED
+            ),
+        )
+    elif command.workflow_output is None:
         explanation_result = deterministic_ai_fallback(
             explanation_request,
             fallback_reason=command.fallback_reason,
@@ -166,6 +249,7 @@ def evaluate_ai_explanation_to_repository(
         explanation_result,
         idempotency_key=command.idempotency_key,
         payload=dict(command.idempotency_payload),
+        attestation_receipt=attestation_receipt,
     )
     if (
         lineage_persistence_result.decision is AIExplanationLineagePersistenceDecision.CONFLICT
@@ -182,3 +266,7 @@ def evaluate_ai_explanation_to_repository(
         explanation_result=explanation_result,
         lineage_persistence_result=lineage_persistence_result,
     )
+
+
+def _utcnow() -> datetime:
+    return datetime.now(UTC)
