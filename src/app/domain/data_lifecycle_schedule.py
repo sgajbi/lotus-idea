@@ -72,6 +72,75 @@ class ScheduledLifecycleReview:
         )
 
 
+@dataclass(frozen=True)
+class ScheduledLifecycleBlockerCount:
+    blocker: DataLifecycleBlocker
+    count: int
+
+    def __post_init__(self) -> None:
+        if self.count <= 0:
+            raise ValueError("scheduled lifecycle blocker count must be positive")
+
+
+@dataclass(frozen=True)
+class ScheduledLifecycleReviewEvidence:
+    schema_version: str
+    generated_at_utc: datetime
+    repository: str
+    git_commit: str
+    git_ref: str
+    ci_run_id: str
+    execution_profile: str
+    requested_limit: int
+    scanned_count: int
+    ready_for_authorized_purge_count: int
+    blocked_count: int
+    blocker_counts: tuple[ScheduledLifecycleBlockerCount, ...]
+    truncated: bool
+    review_only: bool = True
+    privacy_review_required: bool = True
+    production_authority_verified: bool = False
+    source_safe: bool = True
+    certification_status: str = "not_certified"
+    supported_feature_promoted: bool = False
+
+    def __post_init__(self) -> None:
+        _require_utc(self.generated_at_utc, "generated_at_utc")
+        validate_scheduled_lifecycle_review_limit(self.requested_limit)
+        for field_name in (
+            "schema_version",
+            "repository",
+            "git_commit",
+            "git_ref",
+            "ci_run_id",
+            "execution_profile",
+        ):
+            if not str(getattr(self, field_name)).strip():
+                raise ValueError(f"{field_name} is required")
+        for field_name in (
+            "scanned_count",
+            "ready_for_authorized_purge_count",
+            "blocked_count",
+        ):
+            value = getattr(self, field_name)
+            if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+                raise ValueError(f"{field_name} must be a non-negative integer")
+        if self.scanned_count != self.ready_for_authorized_purge_count + self.blocked_count:
+            raise ValueError("scheduled lifecycle evidence counts must reconcile")
+        if self.scanned_count > self.requested_limit:
+            raise ValueError("scheduled lifecycle evidence exceeds requested_limit")
+        if not self.review_only or not self.privacy_review_required:
+            raise ValueError("scheduled lifecycle evidence must remain review-only")
+        if self.production_authority_verified:
+            raise ValueError("scheduled lifecycle review cannot assert production authority")
+        if not self.source_safe:
+            raise ValueError("scheduled lifecycle evidence must remain source-safe")
+        if self.certification_status != "not_certified":
+            raise ValueError("scheduled lifecycle evidence must remain not_certified")
+        if self.supported_feature_promoted:
+            raise ValueError("scheduled lifecycle evidence must not promote a feature")
+
+
 def validate_scheduled_lifecycle_review_limit(limit: int) -> None:
     if isinstance(limit, bool) or not isinstance(limit, int):
         raise ValueError("scheduled lifecycle review limit must be an integer")
