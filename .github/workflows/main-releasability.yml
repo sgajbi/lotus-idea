@@ -182,12 +182,15 @@ jobs:
           release_image_repository="ghcr.io/${GITHUB_REPOSITORY,,}"
           release_image_tag="$GITHUB_SHA"
           release_image_ref="${release_image_repository}:${release_image_tag}"
+          build_timestamp="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          image_build_id="${GITHUB_SHA}.${GITHUB_RUN_ID}.${GITHUB_RUN_ATTEMPT}"
 
           {
             echo "CONTAINER_IMAGE_NAME=$release_image_ref"
             echo "RELEASE_IMAGE_REPOSITORY=$release_image_repository"
             echo "RELEASE_IMAGE_TAG=$release_image_tag"
-            echo "BUILD_IMAGE_DIGEST=registry-digest-resolved-in-release-evidence"
+            echo "BUILD_TIMESTAMP=$build_timestamp"
+            echo "BUILD_IMAGE_BUILD_ID=$image_build_id"
           } >> "$GITHUB_ENV"
 
           {
@@ -275,6 +278,21 @@ jobs:
             echo "image_digest=$release_image_digest"
             echo "image_digest_ref=$release_image_digest_ref"
           } >> "$GITHUB_OUTPUT"
+      - name: Inspect and run published digest
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          docker pull "$RELEASE_IMAGE_DIGEST_REF"
+          docker image inspect "$RELEASE_IMAGE_DIGEST_REF" \
+            --format '{{json .Config.Labels}}' > release-image-labels.json
+          ./.venv/bin/python scripts/container_runtime_smoke.py \
+            --image-name "$RELEASE_IMAGE_DIGEST_REF" \
+            --container-name lotus-idea-release-identity-smoke \
+            --host-port 18331 \
+            --release-image-digest "$RELEASE_IMAGE_DIGEST" \
+            --release-image-digest-reference "$RELEASE_IMAGE_DIGEST_REF" \
+            > release-runtime-smoke.json
       - uses: sigstore/cosign-installer@d7543c93d881b35a8faa02e8e3605f69b7a1ce62 # v3.10.0
         with:
           cosign-release: v2.6.0
@@ -311,6 +329,12 @@ jobs:
                   {
                       "repository": os.environ["GITHUB_REPOSITORY"],
                       "commit_sha": os.environ["GITHUB_SHA"],
+                      "branch": os.environ["GITHUB_REF_NAME"],
+                      "build_timestamp": os.environ["BUILD_TIMESTAMP"],
+                      "repository_url": f"https://github.com/{os.environ['GITHUB_REPOSITORY']}",
+                      "image_build_id": os.environ["BUILD_IMAGE_BUILD_ID"],
+                      "image_identity_contract": "lotus.image-identity.v1",
+                      "registry_digest_binding": "runtime_release_manifest",
                       "ref": os.environ["GITHUB_REF"],
                       "workflow": os.environ["GITHUB_WORKFLOW"],
                       "run_id": os.environ["GITHUB_RUN_ID"],
@@ -352,8 +376,9 @@ jobs:
                           {
                               "path": "sbom.cdx.json",
                               "scope": "runtime_python_dependencies",
-                              "target_artifact": os.environ["CONTAINER_IMAGE_NAME"],
+                              "target_artifact": os.environ["RELEASE_IMAGE_DIGEST_REF"],
                               "target_artifact_id": os.environ["CONTAINER_IMAGE_ID"],
+                              "target_artifact_digest": os.environ["RELEASE_IMAGE_DIGEST"],
                               "dependency_source": "requirements/runtime-resolved.lock.txt",
                               "project_metadata": "pyproject.toml",
                               "generator": "cyclonedx-bom==7.3.0",
@@ -381,6 +406,8 @@ jobs:
               ),
               encoding="utf-8",
           )
+      - name: Validate release image identity binding
+        run: make release-image-identity-contract-gate
       - name: Upload release evidence
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
@@ -389,6 +416,8 @@ jobs:
             sbom.cdx.json
             output/security/container-image-scan.trivy.json
             release-evidence.json
+            release-image-labels.json
+            release-runtime-smoke.json
           if-no-files-found: error
 
   ci-signal-evidence:

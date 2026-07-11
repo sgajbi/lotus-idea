@@ -20,6 +20,8 @@ class SmokeConfig:
     container_port: int
     startup_timeout_seconds: float
     probe_interval_seconds: float
+    release_image_digest: str | None = None
+    release_image_digest_reference: str | None = None
 
     @property
     def base_url(self) -> str:
@@ -36,6 +38,7 @@ PROBES: tuple[ProbeExpectation, ...] = (
     ProbeExpectation("/health", (200,)),
     ProbeExpectation("/health/live", (200,)),
     ProbeExpectation("/health/ready", (200, 503)),
+    ProbeExpectation("/version", (200,)),
 )
 
 
@@ -86,8 +89,17 @@ def run_container_smoke(
         config.container_name,
         "--publish",
         f"{config.host}:{config.host_port}:{config.container_port}",
-        config.image_name,
     ]
+    if config.release_image_digest is not None:
+        start_args.extend(["--env", f"LOTUS_RELEASE_IMAGE_DIGEST={config.release_image_digest}"])
+    if config.release_image_digest_reference is not None:
+        start_args.extend(
+            [
+                "--env",
+                (f"LOTUS_RELEASE_IMAGE_DIGEST_REFERENCE={config.release_image_digest_reference}"),
+            ]
+        )
+    start_args.append(config.image_name)
     remove_args = ["docker", "rm", "--force", config.container_name]
     try:
         run_command(remove_args, check=False, text=True, capture_output=True)
@@ -96,7 +108,9 @@ def run_container_smoke(
         last_error: Exception | None = None
         while monotonic() <= deadline:
             try:
-                return [probe(config.base_url, expectation) for expectation in PROBES]
+                results = [probe(config.base_url, expectation) for expectation in PROBES]
+                _validate_release_version_probe(config, results)
+                return results
             except Exception as exc:  # noqa: BLE001 - collect last startup failure for diagnostics.
                 last_error = exc
                 sleep(config.probe_interval_seconds)
@@ -128,6 +142,8 @@ def parse_args(argv: Sequence[str]) -> SmokeConfig:
     parser.add_argument("--container-port", type=int, default=8330)
     parser.add_argument("--startup-timeout-seconds", type=float, default=45.0)
     parser.add_argument("--probe-interval-seconds", type=float, default=1.0)
+    parser.add_argument("--release-image-digest")
+    parser.add_argument("--release-image-digest-reference")
     args = parser.parse_args(argv)
     return SmokeConfig(
         image_name=args.image_name,
@@ -137,7 +153,28 @@ def parse_args(argv: Sequence[str]) -> SmokeConfig:
         container_port=args.container_port,
         startup_timeout_seconds=args.startup_timeout_seconds,
         probe_interval_seconds=args.probe_interval_seconds,
+        release_image_digest=args.release_image_digest,
+        release_image_digest_reference=args.release_image_digest_reference,
     )
+
+
+def _validate_release_version_probe(
+    config: SmokeConfig,
+    results: list[dict[str, object]],
+) -> None:
+    if config.release_image_digest is None and config.release_image_digest_reference is None:
+        return
+    version_result = next(result for result in results if result["path"] == "/version")
+    payload = version_result.get("payload")
+    build = payload.get("build") if isinstance(payload, dict) else None
+    if not isinstance(build, dict):
+        raise RuntimeError("/version did not expose build identity metadata")
+    if build.get("imageDigest") != config.release_image_digest:
+        raise RuntimeError("/version image digest does not match the deployed digest")
+    if build.get("imageDigestReference") != config.release_image_digest_reference:
+        raise RuntimeError("/version image digest reference does not match the deployment")
+    if build.get("releaseIdentityStatus") != "digest_bound":
+        raise RuntimeError("/version did not report digest-bound release identity")
 
 
 def main(argv: Sequence[str] | None = None) -> int:

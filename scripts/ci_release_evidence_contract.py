@@ -79,6 +79,36 @@ def _validate_container_runtime_smoke_target(makefile: str) -> list[str]:
     return errors
 
 
+def _validate_release_identity_target(makefile: str) -> list[str]:
+    errors: list[str] = []
+    release_identity_gate = _target_block(makefile, "release-image-identity-contract-gate")
+    governed_paths = {
+        "RELEASE_IMAGE_IDENTITY_MANIFEST ?= release-evidence.json": (
+            "Makefile must govern the release identity manifest evidence path"
+        ),
+        "RELEASE_IMAGE_IDENTITY_LABELS ?= release-image-labels.json": (
+            "Makefile must govern the release identity OCI-label evidence path"
+        ),
+        "RELEASE_IMAGE_IDENTITY_RUNTIME_SMOKE ?= release-runtime-smoke.json": (
+            "Makefile must govern the release identity runtime evidence path"
+        ),
+    }
+    for fragment, error in governed_paths.items():
+        if fragment not in makefile:
+            errors.append(error)
+    for fragment in (
+        "scripts/release_image_identity_contract.py",
+        "--manifest $(RELEASE_IMAGE_IDENTITY_MANIFEST)",
+        "--labels $(RELEASE_IMAGE_IDENTITY_LABELS)",
+        "--runtime-smoke $(RELEASE_IMAGE_IDENTITY_RUNTIME_SMOKE)",
+    ):
+        if fragment not in release_identity_gate:
+            errors.append(
+                f"Makefile release image identity gate missing governed fragment `{fragment}`"
+            )
+    return errors
+
+
 def validate_release_evidence_targets(makefile: str) -> list[str]:
     errors: list[str] = []
     if "CONTAINER_BASE_IMAGE ?= python:3.12-slim" not in makefile:
@@ -112,8 +142,8 @@ def validate_release_evidence_targets(makefile: str) -> list[str]:
         "--build-arg CI_RUN_ID=$(BUILD_CI_RUN_ID)": (
             "Makefile docker-build target must pass CI run ID provenance"
         ),
-        "--build-arg IMAGE_DIGEST=$(BUILD_IMAGE_DIGEST)": (
-            "Makefile docker-build target must pass image digest provenance"
+        "--build-arg IMAGE_BUILD_ID=$(BUILD_IMAGE_BUILD_ID)": (
+            "Makefile docker-build target must pass non-self-referential image build identity"
         ),
         "--build-arg SERVICE_VERSION=$(BUILD_SERVICE_VERSION)": (
             "Makefile docker-build target must pass service version provenance"
@@ -123,6 +153,8 @@ def validate_release_evidence_targets(makefile: str) -> list[str]:
             errors.append(error)
 
     errors.extend(_validate_container_runtime_smoke_target(makefile))
+
+    errors.extend(_validate_release_identity_target(makefile))
 
     release_sbom = _target_block(makefile, "release-sbom")
     if "-m cyclonedx_py requirements" not in release_sbom:
@@ -220,7 +252,15 @@ def validate_dockerfile_runtime(dockerfile: str) -> list[str]:
         ),
         'org.opencontainers.image.source="${REPO_URL}"': "Dockerfile must label the repo URL",
         'io.lotus.image.ci.run_id="${CI_RUN_ID}"': "Dockerfile must label the CI run ID",
-        'io.lotus.image.digest="${IMAGE_DIGEST}"': "Dockerfile must label the image digest",
+        'io.lotus.image.build.id="${IMAGE_BUILD_ID}"': (
+            "Dockerfile must label the non-self-referential image build identity"
+        ),
+        'io.lotus.image.identity.contract="lotus.image-identity.v1"': (
+            "Dockerfile must label the image identity contract"
+        ),
+        'io.lotus.image.registry.digest.binding="runtime-release-manifest"': (
+            "Dockerfile must label the registry digest binding authority"
+        ),
         'LOTUS_GIT_COMMIT_SHA="${GIT_COMMIT_SHA}"': (
             "Dockerfile must expose Git commit SHA to runtime metadata"
         ),
@@ -232,8 +272,8 @@ def validate_dockerfile_runtime(dockerfile: str) -> list[str]:
         ),
         'LOTUS_REPO_URL="${REPO_URL}"': "Dockerfile must expose repo URL to runtime metadata",
         'LOTUS_CI_RUN_ID="${CI_RUN_ID}"': ("Dockerfile must expose CI run ID to runtime metadata"),
-        'LOTUS_IMAGE_DIGEST="${IMAGE_DIGEST}"': (
-            "Dockerfile must expose image digest to runtime metadata"
+        'LOTUS_IMAGE_BUILD_ID="${IMAGE_BUILD_ID}"': (
+            "Dockerfile must expose image build identity to runtime metadata"
         ),
         'LOTUS_SERVICE_VERSION="${SERVICE_VERSION}"': (
             "Dockerfile must expose service version to runtime metadata"
@@ -263,19 +303,7 @@ def validate_dockerfile_runtime(dockerfile: str) -> list[str]:
     for fragment, error in required_fragments.items():
         if fragment not in dockerfile:
             errors.append(error)
-    prohibited_fragments = {
-        'pip install --no-cache-dir -e ".[dev]"': (
-            "Dockerfile runtime image must not install development extras"
-        ),
-        'pip install --no-cache-dir ".[dev]"': (
-            "Dockerfile runtime image must not install development extras"
-        ),
-        "COPY scripts ./scripts": "Dockerfile runtime image must not copy CI/developer scripts",
-        "USER root": "Dockerfile runtime image must not run as root",
-    }
-    for fragment, error in prohibited_fragments.items():
-        if fragment in dockerfile:
-            errors.append(error)
+    errors.extend(_validate_prohibited_dockerfile_fragments(dockerfile))
     for line_number, line in enumerate(dockerfile.splitlines(), start=1):
         stripped = line.strip()
         if stripped.startswith("#"):
@@ -303,6 +331,29 @@ def validate_dockerfile_runtime(dockerfile: str) -> list[str]:
             "installing the local package"
         )
     return errors
+
+
+def _validate_prohibited_dockerfile_fragments(dockerfile: str) -> list[str]:
+    prohibited_fragments = {
+        "ARG IMAGE_DIGEST": (
+            "Dockerfile must not accept a self-referential registry digest build argument"
+        ),
+        "io.lotus.image.digest=": (
+            "Dockerfile must not claim a pre-publication value is the registry digest"
+        ),
+        "LOTUS_IMAGE_DIGEST=": (
+            "Dockerfile must not bake a registry digest placeholder into runtime metadata"
+        ),
+        'pip install --no-cache-dir -e ".[dev]"': (
+            "Dockerfile runtime image must not install development extras"
+        ),
+        'pip install --no-cache-dir ".[dev]"': (
+            "Dockerfile runtime image must not install development extras"
+        ),
+        "COPY scripts ./scripts": "Dockerfile runtime image must not copy CI/developer scripts",
+        "USER root": "Dockerfile runtime image must not run as root",
+    }
+    return [error for fragment, error in prohibited_fragments.items() if fragment in dockerfile]
 
 
 def validate_dependency_governance(pyproject: str, ci_tooling_lock: str) -> list[str]:

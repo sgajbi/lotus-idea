@@ -90,3 +90,56 @@ def test_container_runtime_smoke_removes_container_after_startup_failure() -> No
     assert commands[1][:2] == ["docker", "run"]
     assert "127.0.0.1:18330:8330" in commands[1]
     assert commands[-1] == ["docker", "rm", "--force", "lotus-idea-runtime-smoke-test"]
+
+
+def test_container_runtime_smoke_binds_and_verifies_release_digest() -> None:
+    commands: list[list[str]] = []
+    digest = f"sha256:{'a' * 64}"
+    reference = f"ghcr.io/sgajbi/lotus-idea@{digest}"
+
+    def run_command(
+        args: list[str],
+        *,
+        check: bool,
+        text: bool,
+        capture_output: bool,
+    ) -> subprocess.CompletedProcess[str]:
+        del check, text, capture_output
+        commands.append(args)
+        return subprocess.CompletedProcess(args, 0, stdout="", stderr="")
+
+    def probe(_base_url: str, expectation: ProbeExpectation) -> dict[str, object]:
+        payload: dict[str, object] = {"status": "ok"}
+        if expectation.path == "/version":
+            payload = {
+                "build": {
+                    "imageDigest": digest,
+                    "imageDigestReference": reference,
+                    "releaseIdentityStatus": "digest_bound",
+                }
+            }
+        return {"path": expectation.path, "statusCode": 200, "payload": payload}
+
+    results = run_container_smoke(
+        SmokeConfig(
+            image_name=reference,
+            container_name="lotus-idea-release-smoke",
+            host="127.0.0.1",
+            host_port=18331,
+            container_port=8330,
+            startup_timeout_seconds=1.0,
+            probe_interval_seconds=0.0,
+            release_image_digest=digest,
+            release_image_digest_reference=reference,
+        ),
+        run_command=run_command,
+        sleep=lambda _seconds: None,
+        monotonic=lambda: 0.0,
+        probe=probe,
+    )
+
+    assert any(result["path"] == "/version" for result in results)
+    run_args = commands[1]
+    assert f"LOTUS_RELEASE_IMAGE_DIGEST={digest}" in run_args
+    assert f"LOTUS_RELEASE_IMAGE_DIGEST_REFERENCE={reference}" in run_args
+    assert run_args[-1] == reference

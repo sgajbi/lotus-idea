@@ -255,14 +255,46 @@ def test_ci_contract_gate_blocks_removed_release_sbom_target_artifact(
     _copy_workflows(
         workflow_dir,
         "main-releasability.yml",
-        '"target_artifact": os.environ["CONTAINER_IMAGE_NAME"]',
+        '"target_artifact": os.environ["RELEASE_IMAGE_DIGEST_REF"]',
         '"target_artifact": "unknown"',
     )
 
     monkeypatch.setattr(module, "WORKFLOWS_DIR", workflow_dir)
 
     assert (
-        'main-releasability.yml missing `"target_artifact": os.environ["CONTAINER_IMAGE_NAME"]`'
+        'main-releasability.yml missing `"target_artifact": os.environ["RELEASE_IMAGE_DIGEST_REF"]`'
+        in module.validate_ci_contract()
+    )
+
+
+def test_ci_contract_gate_blocks_self_referential_image_digest_label() -> None:
+    dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
+    degraded = dockerfile.replace(
+        '      io.lotus.image.build.id="${IMAGE_BUILD_ID}" \\\n',
+        '      io.lotus.image.digest="${IMAGE_BUILD_ID}" \\\n',
+    )
+
+    errors = validate_dockerfile_runtime(degraded)
+
+    assert "Dockerfile must label the non-self-referential image build identity" in errors
+    assert "Dockerfile must not claim a pre-publication value is the registry digest" in errors
+
+
+def test_ci_contract_gate_blocks_removed_release_identity_validation(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    module = _load_ci_contract_gate()
+    workflow_dir = tmp_path / ".github" / "workflows"
+    _copy_workflows(
+        workflow_dir,
+        "main-releasability.yml",
+        "make release-image-identity-contract-gate",
+        "make removed-identity-contract-gate",
+    )
+    monkeypatch.setattr(module, "WORKFLOWS_DIR", workflow_dir)
+
+    assert (
+        "main-releasability.yml missing `make release-image-identity-contract-gate`"
         in module.validate_ci_contract()
     )
 
