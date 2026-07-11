@@ -113,3 +113,21 @@ def test_rejects_non_main_proof_and_ambiguous_qualification_provenance() -> None
             generated_at_utc=datetime(2026, 7, 11),
             qualification_run_id="qualification-1",
         )
+
+    with pytest.raises(ValueError, match="qualification_run_id"):
+        qualify_postgres_capacity_threshold_evidence(
+            threshold_proof=_proof(),
+            verified_attestation=_attestation(),
+            generated_at_utc=datetime(2026, 7, 11, tzinfo=UTC),
+            qualification_run_id=" ",
+        )
+
+    invalid_proof = _proof()
+    invalid_proof["claimPosture"] = "production_certified"
+    with pytest.raises(ValueError, match="claimPosture"):
+        qualify_postgres_capacity_threshold_evidence(
+            threshold_proof=invalid_proof,
+            verified_attestation=_attestation(),
+            generated_at_utc=datetime(2026, 7, 11, tzinfo=UTC),
+            qualification_run_id="qualification-1",
+        )
