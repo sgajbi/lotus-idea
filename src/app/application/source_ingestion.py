@@ -17,6 +17,7 @@ from app.domain import (
     CandidatePersistenceDecision,
     HighCashSignalPolicy,
     SignalEvaluationOutcome,
+    UnsupportedEvidenceReason,
 )
 from app.ports.core_sources import CoreOpportunitySourcePort
 from app.ports.idea_repository import CandidatePersistenceRepository
@@ -124,6 +125,23 @@ class HighCashSourceIngestionBatchResult:
         counts = Counter(result.decision.value for result in self.item_results)
         return {
             decision.value: counts[decision.value] for decision in HighCashSourceIngestionDecision
+        }
+
+    def source_failure_counts(self) -> dict[str, int]:
+        counts: Counter[str] = Counter()
+        for result in self.item_results:
+            if result.decision is not HighCashSourceIngestionDecision.BLOCKED:
+                continue
+            reasons = set(result.signal_result.evaluation.unsupported_reasons)
+            if UnsupportedEvidenceReason.SOURCE_UNAVAILABLE in reasons:
+                counts["source_unavailable"] += 1
+            elif UnsupportedEvidenceReason.ENTITLEMENT_DENIED in reasons:
+                counts["entitlement_denied"] += 1
+            else:
+                counts["other_blocked"] += 1
+        return {
+            failure_class: counts[failure_class]
+            for failure_class in ("source_unavailable", "entitlement_denied", "other_blocked")
         }
 
 

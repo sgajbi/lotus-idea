@@ -6,6 +6,7 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 
 from app.application.source_ingestion import (
+    HighCashSourceIngestionBatchResult,
     HighCashSourceIngestionDecision,
     HighCashSourceIngestionWorkItem,
     IngestHighCashSourceSignalCommand,
@@ -350,6 +351,13 @@ def test_blocks_source_ingestion_when_core_is_unavailable_without_persisting() -
     assert result.signal_result.source_diagnostic_codes == ("upstream_timeout",)
     assert len(repository.snapshot().candidate_records) == 0
 
+    batch = HighCashSourceIngestionBatchResult((result,))
+    assert batch.source_failure_counts() == {
+        "source_unavailable": 1,
+        "entitlement_denied": 0,
+        "other_blocked": 0,
+    }
+
 
 def test_blocks_source_ingestion_when_core_denies_entitlement_without_persisting() -> None:
     repository = InMemoryIdeaRepository()
@@ -368,6 +376,13 @@ def test_blocks_source_ingestion_when_core_denies_entitlement_without_persisting
     assert result.signal_result.persistence is None
     assert result.signal_result.source_diagnostic_codes == ("core_source_entitlement_denied",)
     assert len(repository.snapshot().candidate_records) == 0
+
+    batch = HighCashSourceIngestionBatchResult((result,))
+    assert batch.source_failure_counts() == {
+        "source_unavailable": 0,
+        "entitlement_denied": 1,
+        "other_blocked": 0,
+    }
 
 
 def test_blocks_source_ingestion_with_core_cash_weight_diagnostic_without_persisting() -> None:

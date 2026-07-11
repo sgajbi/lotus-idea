@@ -565,6 +565,11 @@ def test_source_ingestion_run_once_api_closes_runtime_after_source_failure(
     assert payload["runStatus"] == "completed"
     assert payload["decisionCounts"]["blocked"] == 1
     assert payload["decisionCounts"]["accepted"] == 0
+    assert payload["sourceFailureCounts"] == {
+        "source_unavailable": 1,
+        "entitlement_denied": 0,
+        "other_blocked": 0,
+    }
     assert source.seen_request is not None
     assert source.close_count == 1
     assert len(repository.snapshot().candidate_records) == 0

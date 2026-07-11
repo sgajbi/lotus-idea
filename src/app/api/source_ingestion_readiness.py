@@ -6,7 +6,7 @@ from fastapi import FastAPI, Header, status
 from fastapi.responses import JSONResponse
 
 from app.api.caller_headers import TRUSTED_CALLER_CONTEXT_HEADER, caller_context_from_headers
-from app.api.problem_details import permission_denied_metadata
+from app.api.problem_details import permission_denied_metadata, problem_response_metadata
 from app.api.route_metadata import RouteMetadata
 from app.api.runtime_dependencies import (
     SourceIngestionRuntime,
@@ -43,6 +43,7 @@ from app.security.caller_context import (
     PermissionDeniedError,
     require_role_and_capability,
 )
+from app.ports.core_sources import CoreSourceEntitlementDenied, CoreSourceUnavailable
 
 __all__ = (
     "SourceIngestionReadinessResponse",
@@ -193,6 +194,42 @@ async def post_source_ingestion_run_once(
                 runtime.plan.command,
                 core_source=runtime.core_source,
                 repository=repository,
+            )
+        except CoreSourceEntitlementDenied:
+            observe_workflow_run(
+                workflow="source_ingestion",
+                outcome="failed",
+                duration_seconds=time.perf_counter() - started_at,
+                item_count=len(runtime.plan.command.work_items),
+            )
+            _emit_source_ingestion_run_event(
+                OperationOutcome.BLOCKED,
+                "source_dependency_entitlement_denied",
+                durable_storage_backed=durable_storage_backed,
+            )
+            return problem_response(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                code="source_dependency_entitlement_denied",
+                title="Source dependency entitlement denied",
+                detail="The authoritative source rejected the configured service entitlement.",
+            )
+        except CoreSourceUnavailable:
+            observe_workflow_run(
+                workflow="source_ingestion",
+                outcome="failed",
+                duration_seconds=time.perf_counter() - started_at,
+                item_count=len(runtime.plan.command.work_items),
+            )
+            _emit_source_ingestion_run_event(
+                OperationOutcome.BLOCKED,
+                "source_dependency_unavailable",
+                durable_storage_backed=durable_storage_backed,
+            )
+            return problem_response(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                code="source_dependency_unavailable",
+                title="Source dependency unavailable",
+                detail="The authoritative source is unavailable for this ingestion run.",
             )
         except Exception:
             observe_workflow_run(
@@ -418,6 +455,11 @@ SOURCE_INGESTION_RUN_ONCE_ROUTE: RouteMetadata = {
                             "blocked": 0,
                             "suppressed": 0,
                         },
+                        "sourceFailureCounts": {
+                            "source_unavailable": 0,
+                            "entitlement_denied": 0,
+                            "other_blocked": 0,
+                        },
                         "configurationBlockers": ["durable_repository_not_configured"],
                         "certificationBlockers": [
                             "live_core_source_proof_missing",
@@ -435,6 +477,16 @@ SOURCE_INGESTION_RUN_ONCE_ROUTE: RouteMetadata = {
         **permission_denied_metadata(
             detail="The caller is not permitted to run source ingestion.",
             description="Caller lacks source-ingestion run permission.",
+        ),
+        **problem_response_metadata(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            code="source_dependency_unavailable",
+            title="Source dependency unavailable",
+            detail="The authoritative source is unavailable for this ingestion run.",
+            description=(
+                "The configured authoritative source was unavailable or rejected the service "
+                "entitlement. No candidate result is claimed."
+            ),
         ),
     },
 }

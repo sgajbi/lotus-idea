@@ -107,6 +107,7 @@ class SourceIngestionRunOnceResponse(CamelModel):
     )
     total_count: int = Field(..., alias="totalCount")
     decision_counts: dict[str, int] = Field(..., alias="decisionCounts")
+    source_failure_counts: dict[str, int] = Field(..., alias="sourceFailureCounts")
     configuration_blockers: tuple[str, ...] = Field(..., alias="configurationBlockers")
     certification_blockers: tuple[str, ...] = Field(..., alias="certificationBlockers")
     live_source_certified: bool = Field(False, alias="liveSourceCertified")
@@ -136,6 +137,7 @@ class SourceIngestionRunOnceResponse(CamelModel):
             coreQueryControlPlaneBaseUrlConfigured=core_query_control_plane_base_url_configured,
             totalCount=0,
             decisionCounts=_empty_decision_counts(),
+            sourceFailureCounts=_empty_source_failure_counts(),
             configurationBlockers=(blocker,),
             certificationBlockers=_source_ingestion_certification_blockers(),
             liveSourceCertified=False,
@@ -165,6 +167,7 @@ class SourceIngestionRunOnceResponse(CamelModel):
             ),
             totalCount=result.total_count,
             decisionCounts=result.decision_counts(),
+            sourceFailureCounts=result.source_failure_counts(),
             configurationBlockers=(),
             certificationBlockers=_source_ingestion_certification_blockers(),
             liveSourceCertified=False,
@@ -174,6 +177,14 @@ class SourceIngestionRunOnceResponse(CamelModel):
 
 def _empty_decision_counts() -> dict[str, int]:
     return {decision.value: 0 for decision in HighCashSourceIngestionDecision}
+
+
+def _empty_source_failure_counts() -> dict[str, int]:
+    return {
+        "source_unavailable": 0,
+        "entitlement_denied": 0,
+        "other_blocked": 0,
+    }
 
 
 def _source_ingestion_certification_blockers() -> tuple[str, ...]:
