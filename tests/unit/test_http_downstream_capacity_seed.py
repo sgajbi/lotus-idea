@@ -97,3 +97,26 @@ def test_adapter_fails_closed_on_untrusted_api_responses(
 
     assert "sensitive" not in str(captured.value)
     adapter.close()
+
+
+def test_adapter_rejects_invalid_timeout_and_sanitizes_transport_failure() -> None:
+    with pytest.raises(ValueError, match="timeout_seconds must be positive"):
+        HttpDownstreamCapacitySeed(base_url="https://idea.example", timeout_seconds=0)
+
+    def fail(request: httpx.Request) -> httpx.Response:
+        raise httpx.ConnectError("sensitive endpoint detail", request=request)
+
+    adapter = HttpDownstreamCapacitySeed(
+        base_url="https://idea.example",
+        timeout_seconds=2,
+        transport=httpx.MockTransport(fail),
+    )
+    with pytest.raises(ValueError, match="API request failed") as captured:
+        adapter.persist_candidate(
+            seed_key="abc123",
+            as_of_date=date(2026, 7, 11),
+            seeded_at_utc=datetime(2026, 7, 11, tzinfo=UTC),
+        )
+
+    assert "sensitive" not in str(captured.value)
+    adapter.close()

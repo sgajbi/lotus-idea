@@ -98,6 +98,41 @@ def test_seed_artifact_is_explicitly_synthetic_and_non_certifying() -> None:
 
 
 @pytest.mark.parametrize(
+    ("generated_at", "commit_sha", "branch", "run_id", "message"),
+    [
+        (datetime(2026, 7, 11), "a", "main", "run", "timezone-aware"),
+        (SEEDED_AT, " ", "main", "run", "commit_sha"),
+        (SEEDED_AT, "a", " ", "run", "branch"),
+        (SEEDED_AT, "a", "main", " ", "run_id"),
+    ],
+)
+def test_seed_artifact_rejects_ambiguous_provenance(
+    generated_at: datetime,
+    commit_sha: str,
+    branch: str,
+    run_id: str,
+    message: str,
+) -> None:
+    result = seed_downstream_capacity_resource(
+        SeedDownstreamCapacityResourceCommand(
+            run_id="capacity-run-1",
+            as_of_date=date(2026, 7, 11),
+            seeded_at_utc=SEEDED_AT,
+        ),
+        port=RecordingSeedPort(),
+    )
+
+    with pytest.raises(ValueError, match=message):
+        build_downstream_capacity_seed_artifact(
+            result,
+            generated_at_utc=generated_at,
+            commit_sha=commit_sha,
+            branch=branch,
+            run_id=run_id,
+        )
+
+
+@pytest.mark.parametrize(
     ("run_id", "seeded_at", "message"),
     [
         (" ", SEEDED_AT, "run_id"),
