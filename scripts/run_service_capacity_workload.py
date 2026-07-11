@@ -122,7 +122,7 @@ def _plan(
         "POST",
         "/api/v1/source-ingestion/run-once",
         workflow_headers,
-        {200, 502, 503},
+        {200, 502},
     )
     recovery_request = _request(
         "POST",
@@ -135,7 +135,7 @@ def _plan(
         (fault_request,) * request_count,
         concurrency,
         item_count_field="totalCount",
-        dependency_failure_expected=True,
+        expected_source_failure_class="source_unavailable",
         recovery_probe=recovery_request,
     )
 
@@ -229,7 +229,7 @@ def main(argv: list[str] | None = None) -> int:
                     requests=plan.requests,
                     max_concurrency=plan.max_concurrency,
                     item_count_field=plan.item_count_field,
-                    dependency_failure_expected=True,
+                    expected_source_failure_class=plan.expected_source_failure_class,
                 )
                 measurements.extend(execute_capacity_workload(fault_only, probe=probe))
                 time.sleep(args.dependency_recovery_delay_seconds)

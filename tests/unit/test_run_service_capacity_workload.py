@@ -65,9 +65,9 @@ def test_dependency_plan_has_explicit_fault_and_recovery_probes() -> None:
         allow_production_mutations=False,
     )[0]
 
-    assert plan.dependency_failure_expected is True
+    assert plan.expected_source_failure_class == "source_unavailable"
     assert len(plan.requests) == 3
-    assert plan.requests[0].expected_status_codes == frozenset({200, 502, 503})
+    assert plan.requests[0].expected_status_codes == frozenset({200, 502})
     assert plan.recovery_probe is not None
     assert plan.recovery_probe.expected_status_codes == frozenset({200})
 

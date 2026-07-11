@@ -16,7 +16,7 @@ class CapacityWorkloadPlan:
     max_concurrency: int
     item_count_field: str | None = None
     queue_age_field: str | None = None
-    dependency_failure_expected: bool = False
+    expected_source_failure_class: str | None = None
     recovery_probe: CapacityProbeRequest | None = None
 
     def __post_init__(self) -> None:
@@ -26,8 +26,12 @@ class CapacityWorkloadPlan:
             raise ValueError("capacity workload requests must not be empty")
         if self.max_concurrency <= 0 or self.max_concurrency > len(self.requests):
             raise ValueError("max_concurrency must be between one and request count")
-        if self.dependency_failure_expected != (self.scenario == "dependency_failure"):
-            raise ValueError("dependency failure posture must match dependency_failure scenario")
+        if (self.expected_source_failure_class is not None) != (
+            self.scenario == "dependency_failure"
+        ):
+            raise ValueError("source failure class must match dependency_failure scenario")
+        if self.expected_source_failure_class not in {None, "source_unavailable"}:
+            raise ValueError("unsupported source failure class")
         if self.recovery_probe is not None and self.scenario != "dependency_failure":
             raise ValueError("recovery_probe is only valid for dependency_failure")
 
@@ -101,7 +105,8 @@ def _measurement(
     outcome = _measurement_outcome(
         transport_outcome=result.transport_outcome,
         run_status=run_status if isinstance(run_status, str) else None,
-        dependency_failure_expected=plan.dependency_failure_expected,
+        response_summary=summary,
+        expected_source_failure_class=plan.expected_source_failure_class,
     )
     return CapacityMeasurement(
         scenario=plan.scenario,
@@ -119,10 +124,15 @@ def _recovery_measurement(
     result: CapacityProbeResult,
 ) -> CapacityMeasurement:
     summary = result.response_summary
-    accepted = result.transport_outcome == "accepted" and summary.get("runStatus") not in {
-        "blocked",
-        "conflict",
-    }
+    accepted = (
+        result.transport_outcome == "accepted"
+        and summary.get("runStatus") in {"completed", "replayed"}
+        and _source_failure_counts(summary) == {
+            "entitlement_denied": 0,
+            "other_blocked": 0,
+            "source_unavailable": 0,
+        }
+    )
     return CapacityMeasurement(
         scenario=plan.scenario,
         duration_seconds=result.duration_seconds,
@@ -137,7 +147,8 @@ def _measurement_outcome(
     *,
     transport_outcome: str,
     run_status: str | None,
-    dependency_failure_expected: bool,
+    response_summary: Mapping[str, object],
+    expected_source_failure_class: str | None,
 ) -> str:
     if transport_outcome == "timeout":
         return "timeout"
@@ -145,9 +156,45 @@ def _measurement_outcome(
         return "rejected"
     if run_status == "conflict":
         return "conflict"
+    if expected_source_failure_class is not None:
+        return (
+            "accepted"
+            if _is_expected_source_failure(
+                response_summary, expected_source_failure_class=expected_source_failure_class
+            )
+            else "rejected"
+        )
     if run_status == "blocked":
-        return "accepted" if dependency_failure_expected else "rejected"
+        return "rejected"
     return "accepted"
+
+
+def _is_expected_source_failure(
+    summary: Mapping[str, object], *, expected_source_failure_class: str
+) -> bool:
+    counts = _source_failure_counts(summary)
+    if counts is not None:
+        return (
+            counts[expected_source_failure_class] > 0
+            and sum(counts.values()) == counts[expected_source_failure_class]
+        )
+    expected_problem_code = {
+        "source_unavailable": "source_dependency_unavailable",
+    }[expected_source_failure_class]
+    return summary.get("code") == expected_problem_code
+
+
+def _source_failure_counts(summary: Mapping[str, object]) -> dict[str, int] | None:
+    value = summary.get("sourceFailureCounts")
+    expected = {"source_unavailable", "entitlement_denied", "other_blocked"}
+    if not isinstance(value, dict) or set(value) != expected:
+        return None
+    if any(
+        isinstance(count, bool) or not isinstance(count, int) or count < 0
+        for count in value.values()
+    ):
+        return None
+    return {failure_class: value[failure_class] for failure_class in sorted(expected)}
 
 
 def _bounded_int(value: object, *, default: int) -> int:

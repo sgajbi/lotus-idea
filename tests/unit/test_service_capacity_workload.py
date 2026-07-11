@@ -92,16 +92,35 @@ def test_maps_workflow_counts_queue_age_and_blocked_semantics() -> None:
 def test_dependency_failure_and_recovery_are_measured_separately() -> None:
     probe = StubProbe(
         [
-            _result(transport_outcome="rejected"),
-            _result(summary={"runStatus": "blocked"}),
-            _result(summary={"runStatus": "completed", "totalCount": 100}),
+            _result(summary={"code": "source_dependency_entitlement_denied"}),
+            _result(
+                summary={
+                    "runStatus": "completed",
+                    "sourceFailureCounts": {
+                        "source_unavailable": 2,
+                        "entitlement_denied": 0,
+                        "other_blocked": 0,
+                    },
+                }
+            ),
+            _result(
+                summary={
+                    "runStatus": "completed",
+                    "totalCount": 100,
+                    "sourceFailureCounts": {
+                        "source_unavailable": 0,
+                        "entitlement_denied": 0,
+                        "other_blocked": 0,
+                    },
+                }
+            ),
         ]
     )
     plan = CapacityWorkloadPlan(
         scenario="dependency_failure",
         requests=(REQUEST, REQUEST),
         max_concurrency=1,
-        dependency_failure_expected=True,
+        expected_source_failure_class="source_unavailable",
         recovery_probe=REQUEST,
         item_count_field="totalCount",
     )
@@ -115,13 +134,16 @@ def test_dependency_failure_and_recovery_are_measured_separately() -> None:
 
 def test_failed_recovery_is_not_misrepresented() -> None:
     probe = StubProbe(
-        [_result(transport_outcome="rejected"), _result(summary={"runStatus": "blocked"})]
+        [
+            _result(summary={"code": "source_dependency_unavailable"}),
+            _result(summary={"runStatus": "blocked"}),
+        ]
     )
     plan = CapacityWorkloadPlan(
         scenario="dependency_failure",
         requests=(REQUEST,),
         max_concurrency=1,
-        dependency_failure_expected=True,
+        expected_source_failure_class="source_unavailable",
         recovery_probe=REQUEST,
     )
 
@@ -147,13 +169,26 @@ def test_explicit_recovery_use_case_executes_only_recovery_probe() -> None:
         scenario="dependency_failure",
         requests=(REQUEST,),
         max_concurrency=1,
-        dependency_failure_expected=True,
+        expected_source_failure_class="source_unavailable",
         recovery_probe=REQUEST,
     )
 
     measurement = execute_capacity_recovery(
         plan,
-        probe=StubProbe([_result(summary={"runStatus": "completed"})]),
+        probe=StubProbe(
+            [
+                _result(
+                    summary={
+                        "runStatus": "completed",
+                        "sourceFailureCounts": {
+                            "source_unavailable": 0,
+                            "entitlement_denied": 0,
+                            "other_blocked": 0,
+                        },
+                    }
+                )
+            ]
+        ),
     )
 
     assert measurement.outcome == "accepted"
@@ -225,8 +260,16 @@ def test_workload_preserves_timeout_and_conflict_outcomes() -> None:
         ({"requests": ()}, "requests must not be empty"),
         ({"max_concurrency": 0}, "max_concurrency must be between"),
         ({"max_concurrency": 2}, "max_concurrency must be between"),
-        ({"scenario": "dependency_failure"}, "dependency failure posture must match"),
+        ({"scenario": "dependency_failure"}, "source failure class must match"),
         ({"recovery_probe": REQUEST}, "recovery_probe is only valid"),
+        ({"expected_source_failure_class": "source_unavailable"}, "must match"),
+        (
+            {
+                "scenario": "dependency_failure",
+                "expected_source_failure_class": "entitlement_denied",
+            },
+            "unsupported source failure class",
+        ),
     ],
 )
 def test_plan_fails_closed_on_invalid_scenario_or_concurrency(
