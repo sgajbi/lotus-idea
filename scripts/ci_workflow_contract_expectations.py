@@ -219,6 +219,18 @@ WORKFLOW_EXPECTATIONS: dict[str, tuple[str, ...]] = {
         "actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4.1.1",
         "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1",
     ),
+    "scheduled-data-lifecycle-review.yml": (
+        "schedule:",
+        "permissions:\n  contents: read\n  id-token: write\n  attestations: write",
+        "postgres:18-alpine",
+        "make migrate",
+        "make scheduled-data-lifecycle-seed",
+        "make scheduled-data-lifecycle-review",
+        "make scheduled-data-lifecycle-review-proof-gate",
+        "actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4.1.1",
+        "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1",
+        "retention-days: 90",
+    ),
 }
 
 PROHIBITED_WORKFLOW_PATTERNS: dict[str, tuple[str, ...]] = {
@@ -258,4 +270,9 @@ PROHIBITED_WORKFLOW_PATTERNS: dict[str, tuple[str, ...]] = {
     ),
     "pr-auto-merge.yml": ("continue-on-error:",),
     "merged-pr-main-releasability.yml": ("continue-on-error:",),
+    "scheduled-data-lifecycle-review.yml": (
+        "continue-on-error:",
+        "pull_request_target:",
+        "contents: write",
+    ),
 }
