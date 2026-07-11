@@ -1,6 +1,6 @@
 # RFC-0002 Slice 06: Persistence, Replay, Idempotency, And Audit
 
-Status: Partially implemented - internal persistence, replay, audit, durable downstream submission claim/finalize/reconciliation, source-safe outbox retry/dead-letter delivery, certified operator diagnostics/actions, schema/rollback contracts, PostgreSQL adapters, real concurrency/restart proof, real logical backup/restore plus no-duplicate resume proof, provider-restore validation, recovery-aware write gating, source-ingestion recovery, and bounded broker/consumer/mesh proof foundations are implemented; physical/WAL production recovery certification, external publication, downstream execution/materialization proof, retention/legal-hold/erasure closure, and supported-feature promotion remain blocked
+Status: Partially implemented - internal persistence, replay, audit, governed retention/legal-hold/erasure/purge enforcement, lifecycle trust telemetry, durable downstream submission claim/finalize/reconciliation, source-safe outbox retry/dead-letter delivery, certified operator diagnostics/actions, schema/rollback contracts, PostgreSQL adapters, real concurrency/restart proof, real logical backup/restore plus no-duplicate resume proof, provider-restore validation, recovery-aware write gating, source-ingestion recovery, and bounded broker/consumer/mesh proof foundations are implemented; physical/WAL production recovery certification, signed lifecycle authority integration, Report/Archive/AI retention conformance, scheduled purge proof, external publication, downstream execution/materialization proof, and supported-feature promotion remain blocked
 
 ## Outcome
 
@@ -22,6 +22,42 @@ behavior.
 2. Replay returns matching evidence hash or a clear stale-source posture.
 3. Every mutating action writes an audit event.
 4. Persistence tests cover conflict, replay, expiry, and recovery cases.
+
+## Governed Data Lifecycle Closure
+
+The local Slice 06 lifecycle boundary is implemented without introducing a
+new runtime service. Design modularity is provided by domain evaluation,
+application orchestration, a repository port, and PostgreSQL adapters; the
+evidence does not justify a separately scalable process boundary.
+
+Implemented evidence:
+
+1. `contracts/operations/lotus-idea-data-lifecycle.v1.json` classifies every
+   migrated table, applies versioned field-classification and residency
+   profiles, maps only the governed Report retention reference, and preserves
+   bank, Report, Archive, and AI authority boundaries.
+2. `POST /api/v1/data-lifecycle/candidates/{candidateId}/actions` requires
+   trusted role/capability context, exact tenant entitlement, idempotency,
+   governed authority, dry-run preview, and dual authorization where required.
+3. PostgreSQL controls make hold, release, erasure, purge, operation audit,
+   redaction, and tombstone updates atomic. Erased/purged candidates are hidden
+   from detail and downstream lookup paths; new delivery claims share the
+   lifecycle lock and cannot race into an erased aggregate.
+4. Real PostgreSQL tests prove restart replay/conflict, legal-hold precedence,
+   pseudonymized audit, expiry-gated purge, and safe erasure-versus-delivery
+   serialization.
+5. Runtime trust telemetry reports bounded lifecycle state, expired-retention,
+   and missing-control counts. Erased/purged tombstones do not inflate active
+   candidate or workflow product counts.
+6. `docs/runbooks/data-lifecycle-operations.md` defines operator workflow,
+   first response, evidence commands, research basis, and explicit
+   non-certification posture.
+
+Remaining lifecycle certification blockers are bank approval for durations
+and start events, signed authority integration, Report/Archive/AI conformance,
+scheduled expiry/purge proof with privacy review, mainline CI, and supported
+feature promotion. Lotus Idea enforces approved decisions; it does not own
+legal, privacy, archive, report-rendering, or AI-provider policy decisions.
 
 ## Implementation Evidence
 

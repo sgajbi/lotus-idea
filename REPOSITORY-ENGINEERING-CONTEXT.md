@@ -535,6 +535,13 @@ Runtime trust telemetry preview/snapshot endpoints and generated artifacts are
 source-safe readiness evidence. They are not certified data products and do not
 promote supported features.
 
+PostgreSQL trust projections count only lifecycle-active or held-from-active
+records as candidate and workflow data products. Erased and purged tombstones
+remain visible only through bounded `dataLifecycleStateCounts`,
+`retentionExpiredCount`, and `lifecycleControlMissingCount` posture. Missing
+controls block certification; process-local repositories report uncontrolled
+lifecycle posture rather than implying durable governance.
+
 ## Security And Privacy Posture
 
 Security controls currently include:
@@ -550,6 +557,8 @@ Security controls currently include:
 9. Dependabot/security-update governance,
 10. CodeQL default setup governance,
 11. secret scanning and push protection where GitHub reports them enabled.
+12. versioned field classification, residency, retention, legal-hold,
+    erasure, purge, and immutable tombstone controls for Idea-owned records.
 
 These are foundation controls, not production identity-provider proof.
 Route-level capability checks consume caller-context headers inside the service
@@ -560,6 +569,16 @@ request also carries `X-Lotus-Trusted-Caller-Context` matching
 provenance marker for service-to-service propagation; it is not an
 identity-provider integration, signed assertion, Workbench entitlement proof,
 client-publication proof, or supported-feature promotion.
+
+The data-lifecycle operator route requires `privacy_officer` or
+`records_manager`, `idea.data-lifecycle.manage`, exact trusted tenant scope,
+idempotency, governed authority, preview, and distinct approval for release,
+erase, and purge. Lotus Idea enforces externally approved decisions and must
+not self-authorize legal hold, privacy erasure, Report/Archive retention, or AI
+provider deletion. Erased and purged records must be excluded at every direct
+read projection, not only from whole-repository snapshots. New downstream
+claims participate in the lifecycle lock so erasure and delivery cannot create
+an unsafe terminal state.
 
 Caller-supplied opportunity signal routes and advisor-facing candidate detail /
 review queue reads require both the product role and the explicit `idea.*`
@@ -905,6 +924,18 @@ Recent issue-derived patterns to preserve:
     `make github-issue-closure-matrix-gate`; this context file should retain
     durable patterns, boundaries, commands, and routing rules instead of
     becoming a repeated per-issue evidence dump.
+32. Data-lifecycle controls must cover every access path and terminal phase,
+    not only the primary mutation. Direct detail and downstream lookups must
+    exclude erased/purged aggregates; new delivery claims must share the
+    lifecycle lock; erasure must pseudonymize both prior audit actors and the
+    erasure operation itself; purge must recover tenant authority from the
+    immutable terminal control after payload scope is redacted; and trust
+    telemetry must separate active products from tombstone posture. Pin these
+    invariants with real PostgreSQL restart and concurrency tests.
+33. Retention references are authority-bearing contract values. Never accept a
+    caller-chosen non-blank value as policy. Map only versioned, governed
+    external references to local policy, fail closed for unknown values, and
+    keep legal/privacy approval outside Lotus Idea.
 
 Recent GitHub issue categories should keep being worked category-wise so
 repeated defect patterns are fixed once and pinned with tests or gates:
@@ -1366,13 +1397,16 @@ Current gaps remain explicit:
     or Workbench entitlement-denied proof for caller-context authorization,
 12. no production multi-process PostgreSQL concurrency certification beyond
     adapter-level stale-write/idempotency proof and local real-PostgreSQL
-    two-connection review/feedback identity plus downstream-submission claim
-    collision proof,
+    two-connection review/feedback identity, downstream-submission claim
+    collision, and erasure-versus-delivery serialization proof,
 13. no full container-filesystem SBOM; release evidence includes
     runtime-dependency SBOM, Trivy image scan, registry digest capture, keyless
     image signature, and provenance/SBOM attestations,
 14. no deterministic freshness check for committed architecture boundary
     report evidence.
+15. no bank-approved jurisdiction policy, signed lifecycle decision
+    integration, Report/Archive/AI retention conformance, or scheduled
+    expiry/purge certification.
 
 These gaps are acceptable only while current-state surfaces keep them visible.
 
