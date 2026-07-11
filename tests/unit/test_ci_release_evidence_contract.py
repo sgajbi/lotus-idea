@@ -299,6 +299,34 @@ def test_ci_contract_gate_blocks_removed_release_identity_validation(
     )
 
 
+def test_ci_contract_gate_blocks_removed_release_license_binding(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    module = _load_ci_contract_gate()
+    workflow_dir = tmp_path / ".github" / "workflows"
+    _copy_workflows(
+        workflow_dir,
+        "main-releasability.yml",
+        "make license-release-evidence-gate",
+        "make removed-license-evidence-gate",
+    )
+    monkeypatch.setattr(module, "WORKFLOWS_DIR", workflow_dir)
+
+    assert (
+        "main-releasability.yml missing `make license-release-evidence-gate`"
+        in module.validate_ci_contract()
+    )
+
+
+def test_ci_contract_gate_blocks_missing_runtime_license_notices() -> None:
+    dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
+    degraded = dockerfile.replace(" LICENSE THIRD_PARTY_NOTICES.md", "")
+
+    assert "Dockerfile must include service license and third-party notices" in (
+        validate_dockerfile_runtime(degraded)
+    )
+
+
 def test_ci_contract_gate_blocks_unfinalized_cyclonedx_release_sbom() -> None:
     makefile = (
         (ROOT / "Makefile")

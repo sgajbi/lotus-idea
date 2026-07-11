@@ -1,6 +1,7 @@
 .PHONY: install dependency-refresh lint ci-contract-gate repository-hygiene-gate maintainability-gate duplicate-implementation-inventory duplicate-implementation-gate private-import-boundary-gate slice2-structure-gate documentation-contract-gate quality-scorecard-gate github-issue-closure-matrix-gate monetary-float-guard no-sensitive-content-guard runtime-dependency-closure-gate source-observability-contract-gate api-route-metadata-gate api-problem-details-boundary-gate api-idempotency-boundary-gate api-camel-model-boundary-gate api-signal-model-boundary-gate api-temporal-validation-boundary-gate openapi-problem-details-example-gate caller-context-contract-gate signal-api-contract-gate trusted-tenant-context-gate source-temporal-contract-gate review-queue-snapshot-contract-gate operation-metric-contract-gate service-slo-capacity-contract-gate ai-model-risk-ops-contract-gate ai-model-risk-operations-proof-contract-gate ci-signal-evidence-contract-gate implementation-truth-gate data-mesh-contract-gate mesh-policy-proof-contract-gate opportunity-archetype-contract-gate downstream-realization-contract-gate downstream-route-contract-proof-gate outbox-event-contract-gate outbox-consumer-contract-gate outbox-recovery-contract-gate migration-contract-gate migration-execution-gate durable-repository-proof-contract-gate runtime-trust-telemetry-proof-contract-gate ai-lineage-store-proof-contract-gate ai-workflow-pack-registration-proof-contract-gate ai-workflow-pack-runtime-execution-proof-contract-gate report-intake-route-proof-contract-gate report-materialization-proof-contract-gate workbench-read-path-proof-contract-gate gateway-workbench-operational-proof-contract-gate gateway-workbench-discovery-proof-contract-gate outbox-broker-proof-contract-gate outbox-consumer-runtime-proof-contract-gate outbox-platform-mesh-event-publication-proof-contract-gate platform-mesh-onboarding-proof-contract-gate source-ingestion-worker-check source-ingestion-scheduled-worker-check source-ingestion-live-proof-contract-gate canonical-opportunity-source-proofs canonical-signal-api-proof risk-concentration-live-proof-contract-gate high-volatility-live-proof-contract-gate risk-drawdown-live-proof-contract-gate core-benchmark-assignment-live-proof-contract-gate core-portfolio-state-live-proof-contract-gate bond-maturity-live-proof-contract-gate missing-benchmark-live-proof-contract-gate missing-benchmark-performance-readiness-proof-contract-gate low-income-core-cashflow-live-proof-contract-gate manage-mandate-live-proof-contract-gate mandate-restriction-live-proof-contract-gate mandate-restriction-source-product-proof-contract-gate missing-suitability-live-proof-contract-gate missing-risk-profile-source-product-proof-contract-gate missing-risk-profile-live-proof-contract-gate performance-underperformance-live-proof-contract-gate implementation-proof-readiness-check runtime-trust-telemetry-preview-check runtime-trust-telemetry-snapshot-check migrate migrate-rollback supported-features-gate endpoint-certification-gate postgres-integration-gate typecheck architecture-boundary-gate architecture-boundary-report quality-baseline openapi-gate test test-unit test-integration test-e2e test-unit-coverage test-integration-coverage test-e2e-coverage test-coverage security-audit check ci ci-release docker-build container-runtime-smoke release-sbom container-image-scan release-image-identity-contract-gate clean
 
 .PHONY: candidate-state-contract-gate review-identity-contract-gate conversion-outcome-contract-gate outbox-supportability-contract-gate outbox-supportability-rule-test service-slo-rule-test service-capacity-baseline-contract-gate service-load-soak-proof-gate service-resource-baseline-contract-gate service-resource-proof-gate service-capacity-workload downstream-capacity-seed service-resource-baseline postgres-capacity-threshold-proof supported-feature-promotion-contract-gate disaster-recovery-contract-gate disaster-recovery-proof-gate postgres-disaster-recovery-seed postgres-disaster-recovery-drill postgres-disaster-recovery-resume data-lifecycle-contract-gate
+.PHONY: license-compliance-gate license-release-evidence-gate
 
 VENV_DIR ?= .venv
 UNIT_TESTS ?= tests/unit
@@ -34,6 +35,8 @@ CONTAINER_SMOKE_PROBE_INTERVAL_SECONDS ?= 1
 RELEASE_IMAGE_IDENTITY_MANIFEST ?= release-evidence.json
 RELEASE_IMAGE_IDENTITY_LABELS ?= release-image-labels.json
 RELEASE_IMAGE_IDENTITY_RUNTIME_SMOKE ?= release-runtime-smoke.json
+LICENSE_RELEASE_MANIFEST ?= release-evidence.json
+LICENSE_RELEASE_SBOM ?= sbom.cdx.json
 TRIVY_IMAGE ?= aquasec/trivy:0.71.2
 PROMETHEUS_IMAGE ?= prom/prometheus:v2.47.2
 IMPLEMENTATION_PROOF_EVALUATED_AT_UTC ?= 2026-06-21T10:10:00Z
@@ -156,6 +159,7 @@ dependency-refresh:
 	$(VENV_PYTHON) -m pip install --upgrade pip
 	$(VENV_PYTHON) -m pip install -e ".[dev]"
 	$(VENV_PYTHON) -m scripts.refresh_runtime_dependency_locks
+	$(VENV_PYTHON) scripts/license_compliance_gate.py --write-notice
 
 lint:
 	$(VENV_PYTHON) -m ruff check .
@@ -172,6 +176,7 @@ lint:
 	$(MAKE) monetary-float-guard
 	$(MAKE) no-sensitive-content-guard
 	$(MAKE) runtime-dependency-closure-gate
+	$(MAKE) license-compliance-gate
 	$(MAKE) source-observability-contract-gate
 	$(MAKE) api-route-metadata-gate
 	$(MAKE) api-problem-details-boundary-gate
@@ -666,6 +671,12 @@ container-runtime-smoke:
 
 release-image-identity-contract-gate:
 	$(VENV_PYTHON) scripts/release_image_identity_contract.py --manifest $(RELEASE_IMAGE_IDENTITY_MANIFEST) --labels $(RELEASE_IMAGE_IDENTITY_LABELS) --runtime-smoke $(RELEASE_IMAGE_IDENTITY_RUNTIME_SMOKE)
+
+license-compliance-gate:
+	$(VENV_PYTHON) scripts/license_compliance_gate.py
+
+license-release-evidence-gate:
+	$(VENV_PYTHON) scripts/license_compliance_gate.py --release-manifest $(LICENSE_RELEASE_MANIFEST) --sbom $(LICENSE_RELEASE_SBOM)
 
 release-sbom:
 	$(VENV_PYTHON) -m cyclonedx_py requirements requirements/runtime-resolved.lock.txt --pyproject pyproject.toml --output-reproducible --output-format JSON --output-file sbom.cdx.json

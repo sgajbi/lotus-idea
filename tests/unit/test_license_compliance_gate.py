@@ -10,6 +10,7 @@ from scripts.license_compliance_gate import (
     POLICY_PATH,
     ROOT,
     render_third_party_notice,
+    validate_release_license_evidence,
     validate_license_policy,
 )
 
@@ -121,3 +122,33 @@ def test_lock_hashes_are_lowercase_sha256() -> None:
     for lock_key in ("runtime_lock", "ci_lock"):
         path = ROOT / payload[lock_key]["path"]
         assert payload[lock_key]["sha256"] == hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def test_release_license_evidence_binds_policy_notice_sbom_and_image() -> None:
+    payload = current_policy()
+    image = f"ghcr.io/sgajbi/lotus-idea@sha256:{'a' * 64}"
+    sbom = {"serialNumber": "urn:uuid:sbom-001"}
+    manifest = {
+        "container_image_digest_reference": image,
+        "license_compliance": {
+            "policy_contract": "contracts/compliance/lotus-idea-license-policy.v1.json",
+            "policy_version": "1.0.0",
+            "runtime_lock_sha256": payload["runtime_lock"]["sha256"],
+            "ci_lock_sha256": payload["ci_lock"]["sha256"],
+            "notice_path": "THIRD_PARTY_NOTICES.md",
+            "notice_sha256": hashlib.sha256(
+                (ROOT / "THIRD_PARTY_NOTICES.md").read_bytes()
+            ).hexdigest(),
+            "sbom_serial_number": "urn:uuid:sbom-001",
+            "exception_ids": [],
+            "target_artifact": image,
+        },
+    }
+
+    assert validate_release_license_evidence(payload, manifest, sbom) == []
+    manifest["license_compliance"]["target_artifact"] = "mutable:latest"
+    manifest["license_compliance"]["sbom_serial_number"] = "different"
+
+    errors = validate_release_license_evidence(payload, manifest, sbom)
+    assert "release license evidence target_artifact must match policy/SBOM/artifact" in errors
+    assert "release license evidence sbom_serial_number must match policy/SBOM/artifact" in errors

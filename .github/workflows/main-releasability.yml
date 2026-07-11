@@ -320,9 +320,18 @@ jobs:
           PROVENANCE_ATTESTATION_URL: ${{ steps.attest-provenance.outputs.attestation-url }}
           SBOM_ATTESTATION_URL: ${{ steps.attest-sbom.outputs.attestation-url }}
         run: |
+          import hashlib
           import json
           import os
           from pathlib import Path
+
+          policy = json.loads(
+              Path("contracts/compliance/lotus-idea-license-policy.v1.json").read_text(
+                  encoding="utf-8"
+              )
+          )
+          sbom = json.loads(Path("sbom.cdx.json").read_text(encoding="utf-8"))
+          notice_sha256 = hashlib.sha256(Path("THIRD_PARTY_NOTICES.md").read_bytes()).hexdigest()
 
           Path("release-evidence.json").write_text(
               json.dumps(
@@ -399,6 +408,21 @@ jobs:
                           "subject": os.environ["RELEASE_IMAGE_DIGEST_REF"],
                           "url": os.environ["SBOM_ATTESTATION_URL"],
                       },
+                      "license_compliance": {
+                          "policy_contract": (
+                              "contracts/compliance/lotus-idea-license-policy.v1.json"
+                          ),
+                          "policy_version": policy["contract_version"],
+                          "runtime_lock_sha256": policy["runtime_lock"]["sha256"],
+                          "ci_lock_sha256": policy["ci_lock"]["sha256"],
+                          "notice_path": policy["notice_path"],
+                          "notice_sha256": notice_sha256,
+                          "sbom_serial_number": sbom["serialNumber"],
+                          "exception_ids": sorted(
+                              item["exception_id"] for item in policy["exceptions"]
+                          ),
+                          "target_artifact": os.environ["RELEASE_IMAGE_DIGEST_REF"],
+                      },
                       "ci_signal_evidence_path": "ci-signal-evidence.json",
                       "ci_signal_evidence_artifact": "main-releasability-ci-signal-evidence",
                   },
@@ -408,6 +432,8 @@ jobs:
           )
       - name: Validate release image identity binding
         run: make release-image-identity-contract-gate
+      - name: Validate release license evidence binding
+        run: make license-release-evidence-gate
       - name: Upload release evidence
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
@@ -418,6 +444,9 @@ jobs:
             release-evidence.json
             release-image-labels.json
             release-runtime-smoke.json
+            LICENSE
+            THIRD_PARTY_NOTICES.md
+            contracts/compliance/lotus-idea-license-policy.v1.json
           if-no-files-found: error
 
   ci-signal-evidence:

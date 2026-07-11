@@ -117,6 +117,8 @@ SCRIPT_TARGET_EXPECTATIONS = {
     ),
     "private-import-boundary-gate": "scripts/private_import_boundary_gate.py",
     "runtime-dependency-closure-gate": "scripts/runtime_dependency_closure_gate.py",
+    "license-compliance-gate": "scripts/license_compliance_gate.py",
+    "license-release-evidence-gate": "scripts/license_compliance_gate.py",
     "duplicate-implementation-inventory": "scripts/duplicate_implementation_inventory.py",
     "github-issue-closure-matrix-gate": "scripts/github_issue_closure_matrix_gate.py",
     "dependency-refresh": "scripts.refresh_runtime_dependency_locks",

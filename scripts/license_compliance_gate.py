@@ -80,6 +80,42 @@ def render_third_party_notice(payload: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def validate_release_license_evidence(
+    policy: dict[str, Any],
+    manifest: dict[str, Any],
+    sbom: dict[str, Any],
+    *,
+    repository_root: Path = ROOT,
+) -> list[str]:
+    evidence = manifest.get("license_compliance")
+    if not isinstance(evidence, dict):
+        return ["release manifest license_compliance evidence is required"]
+    notice_path = policy.get("notice_path")
+    notice_digest = None
+    if isinstance(notice_path, str) and (repository_root / notice_path).exists():
+        notice_digest = hashlib.sha256((repository_root / notice_path).read_bytes()).hexdigest()
+    expected = {
+        "policy_contract": "contracts/compliance/lotus-idea-license-policy.v1.json",
+        "policy_version": policy.get("contract_version"),
+        "runtime_lock_sha256": _nested(policy, "runtime_lock", "sha256"),
+        "ci_lock_sha256": _nested(policy, "ci_lock", "sha256"),
+        "notice_path": notice_path,
+        "notice_sha256": notice_digest,
+        "sbom_serial_number": sbom.get("serialNumber"),
+        "exception_ids": sorted(
+            str(item.get("exception_id"))
+            for item in policy.get("exceptions", [])
+            if isinstance(item, dict)
+        ),
+        "target_artifact": manifest.get("container_image_digest_reference"),
+    }
+    return [
+        f"release license evidence {key} must match policy/SBOM/artifact"
+        for key, value in expected.items()
+        if evidence.get(key) != value
+    ]
+
+
 def _validate_header(payload: dict[str, Any]) -> list[str]:
     expected = {
         "contract_id": "lotus-idea-license-policy",
@@ -244,6 +280,11 @@ def _canonical_name(name: str) -> str:
     return re.sub(r"[-_.]+", "-", name).lower()
 
 
+def _nested(payload: dict[str, Any], section: str, key: str) -> object:
+    value = payload.get(section)
+    return value.get(key) if isinstance(value, dict) else None
+
+
 def _license_tokens(expression: str) -> set[str]:
     return {token for token in SPDX_TOKEN.findall(expression) if token not in SPDX_OPERATORS}
 
@@ -259,6 +300,8 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Validate Lotus Idea license/IP compliance.")
     parser.add_argument("--policy", type=Path, default=POLICY_PATH)
     parser.add_argument("--write-notice", action="store_true")
+    parser.add_argument("--release-manifest", type=Path)
+    parser.add_argument("--sbom", type=Path)
     return parser.parse_args()
 
 
@@ -270,6 +313,16 @@ def main() -> int:
         notice_path = ROOT / str(payload["notice_path"])
         notice_path.write_text(render_third_party_notice(payload), encoding="utf-8")
     errors = validate_license_policy(payload)
+    if (args.release_manifest is None) != (args.sbom is None):
+        errors.append("release manifest and SBOM must be supplied together")
+    elif args.release_manifest is not None and args.sbom is not None:
+        errors.extend(
+            validate_release_license_evidence(
+                payload,
+                _load_policy(args.release_manifest),
+                _load_policy(args.sbom),
+            )
+        )
     if errors:
         print("\n".join(errors), file=sys.stderr)
         return 1

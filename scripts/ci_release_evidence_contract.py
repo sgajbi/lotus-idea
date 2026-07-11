@@ -281,6 +281,9 @@ def validate_dockerfile_runtime(dockerfile: str) -> list[str]:
         "COPY requirements/runtime-resolved.lock.txt ./requirements/runtime-resolved.lock.txt": (
             "Dockerfile must copy the resolved runtime dependency lockfile"
         ),
+        "COPY pyproject.toml README.md LICENSE THIRD_PARTY_NOTICES.md ./": (
+            "Dockerfile must include service license and third-party notices"
+        ),
         (
             "python -m pip install --no-cache-dir --requirement "
             "requirements/runtime-resolved.lock.txt"
