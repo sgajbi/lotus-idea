@@ -14,6 +14,9 @@ from ci_contract_gate_expectations import (  # noqa: E402
     REQUIRED_TEST_SELECTORS,
     TEST_TARGET_EXPECTATIONS,
 )
+from ci_actionlint_contract import (  # noqa: E402
+    validate_actionlint_governance,
+)
 from ci_e2e_contract import validate_e2e_suite  # noqa: E402
 from ci_release_evidence_contract import (  # noqa: E402
     validate_dependency_governance,
@@ -34,7 +37,6 @@ DOCKERIGNORE_PATH = ROOT / ".dockerignore"
 DOCKER_COMPOSE_PATH = ROOT / "docker-compose.yml"
 PYPROJECT_PATH = ROOT / "pyproject.toml"
 CI_TOOLING_LOCK_PATH = ROOT / "requirements" / "ci-tooling.lock.txt"
-ACTIONLINT_CONFIG_PATH = ROOT / ".github" / "actionlint.yaml"
 WORKFLOWS_DIR = ROOT / ".github" / "workflows"
 E2E_TESTS_DIR = ROOT / "tests" / "e2e"
 ACTION_USE_RE = re.compile(r"uses:\s+(?P<action>[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)@(?P<ref>[^ \t#]+)")
@@ -362,19 +364,6 @@ def validate_workflows(workflows_dir: Path) -> list[str]:
     return errors
 
 
-def validate_actionlint_config(config: str) -> list[str]:
-    required_fragments = (
-        "self-hosted-runner:",
-        "  labels:",
-        "    - lotus-capacity-evidence",
-    )
-    return [
-        f".github/actionlint.yaml missing `{fragment.strip()}`"
-        for fragment in required_fragments
-        if fragment not in config
-    ]
-
-
 def _validate_action_pins(workflow_name: str, workflow: str) -> list[str]:
     errors: list[str] = []
     for line_number, line in enumerate(workflow.splitlines(), start=1):
@@ -475,12 +464,6 @@ def validate_ci_contract() -> list[str]:
         ci_tooling_lock = ""
     else:
         ci_tooling_lock = _read(CI_TOOLING_LOCK_PATH)
-    actionlint_errors: list[str] = []
-    if not ACTIONLINT_CONFIG_PATH.exists():
-        actionlint_errors.append("Missing .github/actionlint.yaml")
-        actionlint_config = ""
-    else:
-        actionlint_config = _read(ACTIONLINT_CONFIG_PATH)
     return [
         *validate_makefile(_read(MAKEFILE_PATH)),
         *dockerfile_errors,
@@ -489,8 +472,7 @@ def validate_ci_contract() -> list[str]:
         *validate_dockerignore(dockerignore),
         *dependency_errors,
         *validate_dependency_governance(pyproject, ci_tooling_lock),
-        *actionlint_errors,
-        *validate_actionlint_config(actionlint_config),
+        *validate_actionlint_governance(ROOT),
         *validate_security_tab_governance_files(ROOT),
         *validate_workflows(WORKFLOWS_DIR),
         *validate_e2e_suite(E2E_TESTS_DIR),

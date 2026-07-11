@@ -547,12 +547,17 @@ def test_ci_contract_gate_blocks_write_permissions_in_read_only_lanes(tmp_path: 
     assert "feature-lane.yml must not contain `contents: write`" in errors
 
 
-def test_ci_contract_gate_requires_capacity_runner_actionlint_label() -> None:
+def test_ci_contract_gate_requires_capacity_runner_actionlint_label(tmp_path: Path) -> None:
     module = _load_ci_contract_gate()
-
-    errors = module.validate_actionlint_config(
-        "self-hosted-runner:\n  labels:\n    - unrelated-runner\n"
+    assert module.validate_actionlint_governance(tmp_path) == ["Missing .github/actionlint.yaml"]
+    config_path = tmp_path / ".github" / "actionlint.yaml"
+    config_path.parent.mkdir()
+    config_path.write_text(
+        "self-hosted-runner:\n  labels:\n    - unrelated-runner\n",
+        encoding="utf-8",
     )
+
+    errors = module.validate_actionlint_governance(tmp_path)
 
     assert ".github/actionlint.yaml missing `- lotus-capacity-evidence`" in errors
 
