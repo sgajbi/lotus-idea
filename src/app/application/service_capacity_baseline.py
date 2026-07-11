@@ -22,6 +22,7 @@ SCENARIOS = (
     "api",
     "source_ingestion",
     "outbox_delivery",
+    "downstream_submission",
     "dependency_failure",
     "postgresql",
 )

@@ -5,6 +5,7 @@ from datetime import UTC, datetime
 import json
 import os
 from pathlib import Path
+import re
 import secrets
 import sys
 import time
@@ -32,10 +33,18 @@ SCENARIO_CHOICES = (
     "api",
     "source_ingestion",
     "outbox_delivery",
+    "downstream_submission",
     "dependency_failure",
     "postgresql",
 )
-MUTATING_SCENARIOS = frozenset({"source_ingestion", "outbox_delivery", "dependency_failure"})
+MUTATING_SCENARIOS = frozenset(
+    {"source_ingestion", "outbox_delivery", "downstream_submission", "dependency_failure"}
+)
+DOWNSTREAM_PATH_ENV = "LOTUS_IDEA_CAPACITY_DOWNSTREAM_PATH"
+DOWNSTREAM_PATH_PATTERN = re.compile(
+    r"^/api/v1/(?:conversion-intents|report-evidence-packs)/[A-Za-z0-9._-]{1,100}/"
+    r"downstream-submissions$"
+)
 HEADER_ENV = {
     "Authorization": "LOTUS_IDEA_CAPACITY_AUTHORIZATION",
     "X-Lotus-Trusted-Caller-Context": "LOTUS_IDEA_CAPACITY_TRUSTED_CALLER_CONTEXT",
@@ -51,6 +60,7 @@ def build_workload_plans(
     environment_profile: str,
     allow_mutating_workflows: bool,
     allow_production_mutations: bool,
+    downstream_submission_path: str | None = None,
 ) -> list[CapacityWorkloadPlan]:
     if not scenarios:
         raise ValueError("at least one scenario is required")
@@ -75,6 +85,7 @@ def build_workload_plans(
             request_count=request_count,
             concurrency=concurrency,
             headers=headers,
+            downstream_submission_path=downstream_submission_path,
         )
         for scenario in scenarios
         if scenario != "postgresql"
@@ -87,6 +98,7 @@ def _plan(
     request_count: int,
     concurrency: int,
     headers: Mapping[str, str],
+    downstream_submission_path: str | None,
 ) -> CapacityWorkloadPlan:
     if scenario == "api":
         request = _request("GET", "/health/ready", headers, {200})
@@ -122,6 +134,24 @@ def _plan(
             concurrency,
             item_count_field="attemptedCount",
         )
+    if scenario == "downstream_submission":
+        if downstream_submission_path is None or not DOWNSTREAM_PATH_PATTERN.fullmatch(
+            downstream_submission_path
+        ):
+            raise ValueError(
+                "downstream_submission requires a governed pre-seeded synthetic resource path"
+            )
+        workflow_headers = _workflow_headers(headers, "idea.downstream-realization.submit")
+        requests = tuple(
+            _request(
+                "POST",
+                downstream_submission_path,
+                {**workflow_headers, "Idempotency-Key": f"capacity-{secrets.token_hex(16)}"},
+                {200},
+            )
+            for _ in range(request_count)
+        )
+        return CapacityWorkloadPlan(scenario, requests, concurrency)
     workflow_headers = _workflow_headers(headers, "idea.source-ingestion.run")
     fault_request = _request(
         "POST",
@@ -220,6 +250,7 @@ def main(argv: list[str] | None = None) -> int:
             environment_profile=args.environment_profile,
             allow_mutating_workflows=args.allow_mutating_workflows,
             allow_production_mutations=args.allow_production_mutations,
+            downstream_submission_path=(os.getenv(DOWNSTREAM_PATH_ENV, "").strip() or None),
         )
         if args.timeout_seconds <= 0:
             raise ValueError("timeout_seconds must be positive")

@@ -71,6 +71,57 @@ def test_dependency_plan_has_explicit_fault_and_recovery_probes() -> None:
     assert plan.recovery_probe.expected_status_codes == frozenset({200})
 
 
+def test_downstream_plan_uses_preseeded_route_and_unique_idempotency_keys() -> None:
+    module = _load_script()
+    path = "/api/v1/conversion-intents/capacity-synthetic-001/downstream-submissions"
+
+    plan = module.build_workload_plans(
+        scenarios=("downstream_submission",),
+        request_count=3,
+        concurrency=1,
+        environment_profile="production-like",
+        allow_mutating_workflows=True,
+        allow_production_mutations=False,
+        downstream_submission_path=path,
+    )[0]
+
+    assert plan.scenario == "downstream_submission"
+    assert {request.path for request in plan.requests} == {path}
+    assert all(request.expected_status_codes == frozenset({200}) for request in plan.requests)
+    assert all(
+        request.headers["X-Caller-Capabilities"] == "idea.downstream-realization.submit"
+        for request in plan.requests
+    )
+    assert len({request.headers["Idempotency-Key"] for request in plan.requests}) == 3
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        None,
+        "https://idea.example/api/v1/conversion-intents/id/downstream-submissions",
+        "/api/v1/idea-candidates/id/downstream-submissions",
+        "/api/v1/conversion-intents/id/outcomes",
+        "/api/v1/conversion-intents/client/id/downstream-submissions",
+    ],
+)
+def test_downstream_plan_rejects_missing_or_ungoverned_resource_path(
+    path: str | None,
+) -> None:
+    module = _load_script()
+
+    with pytest.raises(ValueError, match="governed pre-seeded synthetic resource path"):
+        module.build_workload_plans(
+            scenarios=("downstream_submission",),
+            request_count=1,
+            concurrency=1,
+            environment_profile="test",
+            allow_mutating_workflows=True,
+            allow_production_mutations=False,
+            downstream_submission_path=path,
+        )
+
+
 def test_cli_writes_source_safe_report_only_evidence(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
