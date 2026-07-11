@@ -8,6 +8,7 @@ import subprocess
 
 from app.application.capacity_evidence_qualification import (
     DEPENDENCY_RECOVERY_SIGNER_WORKFLOW,
+    LOAD_SOAK_SIGNER_WORKFLOW,
     POSTGRES_CAPACITY_SIGNER_WORKFLOW,
     TRUSTED_REPOSITORY,
     TRUSTED_SOURCE_REF,
@@ -28,6 +29,7 @@ class GitHubCapacityAttestationVerifier:
         if signer_workflow not in {
             POSTGRES_CAPACITY_SIGNER_WORKFLOW,
             DEPENDENCY_RECOVERY_SIGNER_WORKFLOW,
+            LOAD_SOAK_SIGNER_WORKFLOW,
         }:
             raise ValueError("capacity evidence signer workflow is not trusted")
         self._command_runner = command_runner

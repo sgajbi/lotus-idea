@@ -6,11 +6,14 @@ import pytest
 
 from app.application.capacity_evidence_qualification import (
     DEPENDENCY_RECOVERY_SIGNER_WORKFLOW,
+    LOAD_SOAK_SCENARIO_THRESHOLDS,
+    LOAD_SOAK_SIGNER_WORKFLOW,
     TRUSTED_REPOSITORY,
     TRUSTED_SIGNER_WORKFLOW,
     TRUSTED_SOURCE_REF,
     VerifiedArtifactAttestation,
     qualify_dependency_recovery_evidence,
+    qualify_load_soak_evidence,
     qualify_postgres_capacity_threshold_evidence,
 )
 from app.application.postgres_capacity_threshold_proof import (
@@ -92,6 +95,30 @@ def _dependency_attestation(**overrides: str) -> VerifiedArtifactAttestation:
     )
 
 
+def _load_soak_proof() -> dict[str, object]:
+    proof = _dependency_proof()
+    proof["runId"] = "load-soak-proof-1"
+    proof["observedWindowSeconds"] = 3_600.0
+    proof["scenarios"] = [
+        {
+            "scenario": scenario,
+            "sampleCount": 1_000,
+            "acceptedCount": 1_000,
+            "errorCount": 0,
+            "conflictCount": 0,
+            "errorRate": 0.0,
+            "latencyP95Seconds": thresholds[1],
+            "latencyP99Seconds": thresholds[2],
+        }
+        for scenario, thresholds in LOAD_SOAK_SCENARIO_THRESHOLDS.items()
+    ]
+    return proof
+
+
+def _load_soak_attestation() -> VerifiedArtifactAttestation:
+    return _attestation(signer_workflow=LOAD_SOAK_SIGNER_WORKFLOW)
+
+
 def test_qualifies_only_attested_mainline_threshold_evidence() -> None:
     qualification = qualify_postgres_capacity_threshold_evidence(
         threshold_proof=_proof(),
@@ -120,6 +147,82 @@ def test_qualifies_only_attested_fault_and_clean_recovery_evidence() -> None:
     assert qualification["attestationVerified"] is True
     assert qualification["productionCapacityCertified"] is False
     assert qualification["supportedFeaturePromoted"] is False
+
+
+def test_qualifies_only_attested_load_soak_within_slo_thresholds() -> None:
+    qualification = qualify_load_soak_evidence(
+        capacity_proof=_load_soak_proof(),
+        verified_attestation=_load_soak_attestation(),
+        generated_at_utc=datetime(2026, 7, 11, 9, 0, tzinfo=UTC),
+        qualification_run_id="qualification-3",
+    )
+
+    assert qualification["proofScope"] == ("attested_service_load_soak_environment_qualification")
+    assert qualification["capacityProofRunId"] == "load-soak-proof-1"
+    assert qualification["qualifiedScenarios"] == list(LOAD_SOAK_SCENARIO_THRESHOLDS)
+    assert qualification["productionCapacityCertified"] is False
+    assert qualification["supportedFeaturePromoted"] is False
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "message"),
+    [
+        ("observedWindowSeconds", 3_599.9, "minimum observation window"),
+        ("observedWindowSeconds", True, "minimum observation window"),
+        ("scenarios", {}, "scenarios must be a list"),
+        ("scenarios", [], "scenario api is missing"),
+    ],
+)
+def test_load_soak_qualification_rejects_incomplete_proof(
+    field: str, value: object, message: str
+) -> None:
+    proof = {**_load_soak_proof(), field: value}
+
+    with pytest.raises(ValueError, match=message):
+        qualify_load_soak_evidence(
+            capacity_proof=proof,
+            verified_attestation=_load_soak_attestation(),
+            generated_at_utc=datetime(2026, 7, 11, tzinfo=UTC),
+            qualification_run_id="qualification-3",
+        )
+
+
+@pytest.mark.parametrize(
+    ("mutation", "scenario"),
+    [
+        ({"sampleCount": 999}, "api"),
+        ({"conflictCount": 1}, "source_ingestion"),
+        ({"errorRate": 0.002}, "outbox_delivery"),
+        ({"latencyP95Seconds": 2.01}, "downstream_submission"),
+        ({"latencyP99Seconds": 0.51}, "postgresql"),
+    ],
+)
+def test_load_soak_qualification_rejects_scenario_threshold_breach(
+    mutation: dict[str, object], scenario: str
+) -> None:
+    proof = _load_soak_proof()
+    scenarios = [dict(item) for item in proof["scenarios"]]  # type: ignore[union-attr]
+    target = next(item for item in scenarios if item["scenario"] == scenario)
+    target.update(mutation)
+    proof["scenarios"] = scenarios
+
+    with pytest.raises(ValueError, match=f"scenario {scenario} breaches"):
+        qualify_load_soak_evidence(
+            capacity_proof=proof,
+            verified_attestation=_load_soak_attestation(),
+            generated_at_utc=datetime(2026, 7, 11, tzinfo=UTC),
+            qualification_run_id="qualification-3",
+        )
+
+
+def test_load_soak_qualification_rejects_wrong_signer() -> None:
+    with pytest.raises(ValueError, match="workflow is not trusted"):
+        qualify_load_soak_evidence(
+            capacity_proof=_load_soak_proof(),
+            verified_attestation=_dependency_attestation(),
+            generated_at_utc=datetime(2026, 7, 11, tzinfo=UTC),
+            qualification_run_id="qualification-3",
+        )
 
 
 @pytest.mark.parametrize(

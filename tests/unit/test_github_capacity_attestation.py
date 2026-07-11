@@ -8,6 +8,7 @@ import pytest
 
 from app.application.capacity_evidence_qualification import (
     DEPENDENCY_RECOVERY_SIGNER_WORKFLOW,
+    LOAD_SOAK_SIGNER_WORKFLOW,
     TRUSTED_REPOSITORY,
     TRUSTED_SIGNER_WORKFLOW,
     TRUSTED_SOURCE_REF,
@@ -71,6 +72,12 @@ def test_verifies_dependency_artifact_with_dedicated_signer_policy(tmp_path: Pat
         DEPENDENCY_RECOVERY_SIGNER_WORKFLOW
     )
     assert receipt.signer_workflow == DEPENDENCY_RECOVERY_SIGNER_WORKFLOW
+
+
+def test_accepts_load_soak_signer_policy() -> None:
+    verifier = GitHubCapacityAttestationVerifier(signer_workflow=LOAD_SOAK_SIGNER_WORKFLOW)
+
+    assert verifier._signer_workflow == LOAD_SOAK_SIGNER_WORKFLOW
 
 
 @pytest.mark.parametrize(
