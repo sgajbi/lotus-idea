@@ -73,6 +73,7 @@ def test_release_identity_contract_rejects_digest_subject_and_runtime_drift() ->
     degraded_labels = deepcopy(labels)
     degraded_runtime = deepcopy(runtime)
     degraded_manifest["kubernetes_deployment_reference"] = "mutable:latest"
+    degraded_manifest["branch"] = "unknown"
     degraded_manifest["image_signature"] = {"subject": f"sha256:{'b' * 64}"}
     degraded_labels["io.lotus.image.digest"] = "registry-digest-resolved-in-release-evidence"
     probes = degraded_runtime["containerRuntimeSmoke"]
@@ -94,3 +95,18 @@ def test_release_identity_contract_rejects_digest_subject_and_runtime_drift() ->
     assert "OCI labels must not claim the self-referential registry digest" in errors
     assert "runtime /version imageDigest must match release identity" in errors
     assert "published release identity must not contain placeholder metadata" in errors
+
+
+def test_release_identity_contract_ignores_non_identity_unknown_posture() -> None:
+    manifest, labels, runtime = evidence()
+    probes = runtime["containerRuntimeSmoke"]
+    assert isinstance(probes, list)
+    probes.append(
+        {
+            "path": "/health/ready",
+            "statusCode": 200,
+            "payload": {"optionalDependencyPosture": "unknown"},
+        }
+    )
+
+    assert validate_release_image_identity(manifest, labels, runtime) == []
