@@ -39,6 +39,10 @@ Implemented in this slice:
 7. The verifier blocks unsupported source claims and forbidden actions such as
    suitability approval, compliance approval, mandate approval, trade/order
    instructions, final recommendations, and client communication.
+   It validates both the structured action type and untrusted label content
+   through `lotus-idea.ai-action-content-policy.v1`; accepted labels are
+   replaced with canonical server-owned wording, while rejected raw labels are
+   not persisted or returned.
 8. AI explanation results expose `grants_downstream_authority=False`, so AI
    output cannot approve suitability, compliance, mandate, execution, client
    communication, score, lifecycle, review, or conversion state.
@@ -124,6 +128,11 @@ Implemented in this slice:
     diagnostic reports durable AI lineage-store backing from the active
     repository while keeping supportability `not_certified`, blockers present,
     no `lotus-ai` runtime execution, and no supported-feature promotion.
+21. `src/app/domain/ai_action_policy.py` provides a deterministic, versioned,
+    fail-closed action-content boundary. Adversarial unit and API integration
+    tests cover directive hiding behind allowed enums, case/punctuation/common
+    substitution obfuscation, unsupported scripts, canonical-label projection,
+    source-safe audit, lineage versioning, and replay/conflict behavior.
 
 Validation evidence from the implementation slice:
 

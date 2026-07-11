@@ -624,6 +624,13 @@ AI model-risk operations proof is limited to implemented AI explanation
 telemetry. It does not certify `lotus-ai` runtime execution, provider calls,
 Workbench behavior, data-mesh certification, or supported-feature promotion.
 
+AI proposed-action labels are untrusted input even when the structured action
+enum is allowed. Enforce `lotus-idea.ai-action-content-policy.v1` in the domain
+before claim verification, return only canonical server-owned labels, and keep
+rejected raw labels out of persistence, audit attributes, and API responses.
+This is an Idea-owned deterministic output-governance boundary, not ownership
+of provider execution, prompts, RAG, or AI runtime infrastructure.
+
 Non-AI operator workflow operations proof is limited to source-safe dashboard
 and alert visibility over implemented source-ingestion, outbox delivery,
 downstream realization, runtime trust telemetry, and implementation-proof

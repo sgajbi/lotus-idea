@@ -46,6 +46,10 @@ RFC-0002 Slice 09 adds `src/app/domain/ai_governance.py`,
    `not_certified` supportability, and remaining certification blockers without
    invoking `lotus-ai` or exposing prompts, provider payloads, candidate
    identifiers, source routes, portfolio identifiers, or client identifiers.
+14. a versioned deterministic proposed-action policy that treats provider
+    labels as untrusted, validates both the action enum and normalized label
+    content, and replaces every accepted label with server-owned canonical
+    wording.
 
 The API preserves source authority: AI output cannot mutate candidate score,
 lifecycle, source facts, review state, conversion state, or downstream workflow
@@ -73,6 +77,28 @@ The readiness diagnostic always returns:
    storage,
 5. `lotusAiRuntimeExecuted=false`,
 6. `supportedFeaturePromoted=false`.
+7. `actionContentPolicyVersion=lotus-idea.ai-action-content-policy.v1`.
+
+## Proposed-Action Content Policy
+
+An allowed action enum is necessary but not sufficient. Provider-authored text
+can hide execution, approval, recommendation-publication, or client-contact
+instructions behind an otherwise allowed enum. The policy in
+`src/app/domain/ai_action_policy.py` therefore applies before claim
+verification and fails closed.
+
+| Decision | Result |
+| --- | --- |
+| Allowed enum and canonical safe intent | Accept the action and return a server-owned canonical label. |
+| Execution, rebalance, approval, final-recommendation, publication, or client-communication directive | Block with `forbidden_action_content`. |
+| Structurally forbidden enum | Block with `forbidden_action_type`. |
+| Oversized, unsupported-script, or non-canonical ambiguous content | Block with `ambiguous_action_content`. |
+
+Rejected raw labels are neither returned nor persisted. Audit and lineage use
+bounded reason codes and the policy version, preserving replay identity without
+retaining adversarial content. Normalization covers case, punctuation, Unicode
+compatibility forms, and common character substitution; unsupported scripts
+fail closed rather than relying on incomplete multilingual keyword lists.
 
 It also returns explicit model-risk operations posture:
 
@@ -150,7 +176,7 @@ The internal evaluator supports two modes:
    evidence envelope and that proposed actions are limited to advisor review or
    missing-evidence requests.
 
-Unsupported claims and forbidden actions return `200` with a blocked posture
+Unsupported claims and forbidden action types or content return `200` with a blocked posture
 because the verifier successfully evaluated and rejected the output. Missing
 candidates, permission failures, invalid request shape, forbidden metadata, and
 invalid candidate lifecycle posture return product-safe Problem Details.

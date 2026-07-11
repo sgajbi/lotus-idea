@@ -20,7 +20,7 @@ promotion remain blocked.
 | Idempotency | Required `Idempotency-Key` and replay/conflict posture. | `make api-idempotency-boundary-gate` |
 | Product-safe errors | RFC-7807 responses without raw source payloads or secrets. | `make api-problem-details-boundary-gate` |
 | Observability | Governed operation metrics and source-safe logs. | `make source-observability-contract-gate`, `make operation-metric-contract-gate` |
-| AI assistance | Deterministic evidence, workflow-pack allowlist, verifier, lineage, and model-risk controls. | AI governance docs and gates |
+| AI assistance | Deterministic evidence, workflow-pack allowlist, type-and-content action policy, canonical server-owned labels, verifier, lineage, and model-risk controls. | AI governance docs and gates |
 
 Day-one standard:
 
@@ -150,6 +150,14 @@ diagnostic for AI explanation model-risk supportability. It requires both the
 `not_certified` blockers, and returns `supportedFeaturePromoted=false`. It does
 not call `lotus-ai`, expose prompts or provider payloads, certify runtime AI
 lineage, or create Gateway/Workbench support.
+
+AI proposed-action labels are untrusted provider content. The versioned domain
+policy validates the enum and normalized label before claim verification,
+blocks execution, approval, final-recommendation, publication, and client-contact
+directives, and fails closed on ambiguous or unsupported-script content.
+Accepted actions use canonical server-owned labels. Rejected raw labels are not
+returned, persisted, or copied into audit attributes; bounded policy reasons
+and the policy version remain available for model-risk review and replay.
 
 Operation-event governance:
 

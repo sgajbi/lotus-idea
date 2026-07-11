@@ -9,7 +9,16 @@ Harden the service for production-grade operation, support, and secure use.
 ## Current Implementation Evidence
 
 RFC-0002 Slice 15 now has a first implementation-backed operation observability
-foundation:
+foundation. Its security posture includes
+`lotus-idea.ai-action-content-policy.v1`.
+
+Proposed AI actions are checked by type and untrusted content before claim
+verification, accepted labels are server-owned, and unsafe raw labels are
+excluded from responses, persistence, and audit attributes. The readiness
+endpoint and model-risk operations contract expose the same policy version
+without claiming provider-runtime or supported-feature readiness.
+
+Implementation evidence:
 
 1. `src/app/observability/logging.py` defines bounded operation, outcome, and
    supportability vocabulary for idea operations.
