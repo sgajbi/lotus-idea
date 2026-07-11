@@ -5,10 +5,10 @@ import pytest
 
 from app.domain.ai_governance import AIProposedActionType
 from app.domain.lotus_ai_execution_digest import lotus_ai_output_content_sha256
-from app.integration.lotus_ai_idea_explanation_output import (
-    LotusAIExecutionOutputEvidence,
+from app.application.lotus_ai_idea_explanation_output import (
     map_lotus_ai_idea_workflow_output,
 )
+from app.integration.lotus_ai_idea_explanation_output import LotusAIExecutionOutputEvidence
 
 
 VERIFIED_AT = datetime(2026, 7, 11, 10, 5, tzinfo=UTC)
@@ -18,7 +18,7 @@ def test_maps_exact_hashed_producer_output_to_idea_workflow_output() -> None:
     evidence = _evidence()
 
     output = map_lotus_ai_idea_workflow_output(
-        evidence,
+        evidence.to_domain(),
         request_id="request-001",
         workflow_pack_id="lotus-ai:idea-explanation:v1",
         workflow_pack_version="v1",
@@ -29,7 +29,7 @@ def test_maps_exact_hashed_producer_output_to_idea_workflow_output() -> None:
     assert output.explanation_text == evidence.message
     assert output.claims[0].source_product_ids == ("lotus-core:PortfolioStateSnapshot:v1",)
     assert output.proposed_actions[0].action_type is AIProposedActionType.ADVISOR_REVIEW
-    assert lotus_ai_output_content_sha256(evidence.digest_content()) == (
+    assert lotus_ai_output_content_sha256(evidence.to_domain()) == (
         "0894af1f1c81fe4e6991c605ed94ba8e68354fb45772910c0aed1cf0c27b90ec"
     )
 
@@ -65,7 +65,7 @@ def test_rejects_non_binding_or_malformed_producer_output(
 
     with pytest.raises(ValueError, match=message):
         map_lotus_ai_idea_workflow_output(
-            LotusAIExecutionOutputEvidence.model_validate(payload),
+            LotusAIExecutionOutputEvidence.model_validate(payload).to_domain(),
             request_id="request-001",
             workflow_pack_id="lotus-ai:idea-explanation:v1",
             workflow_pack_version="v1",
