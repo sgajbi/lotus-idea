@@ -53,6 +53,8 @@ from app.application.outbox_delivery_readiness import (
     OutboxDeliveryReadinessSnapshot,
     build_outbox_delivery_readiness_snapshot,
 )
+from app.application.capacity_posture import read_postgres_capacity_posture
+from app.domain.capacity_posture import PostgresCapacityPosture
 from app.domain.recovery_posture import ServiceRecoveryPosture, evaluate_recovery_readiness
 from app.runtime.downstream_realization_state import close_downstream_realization_clients
 from app.runtime.recovery_posture import load_recovery_runtime_state
@@ -61,6 +63,7 @@ from app.middleware.http_boundary import configure_http_boundary
 from app.observability import (
     configure_logging,
     configure_outbox_supportability_metrics,
+    configure_postgres_capacity_metrics,
     emit_request_diagnostic_event,
 )
 
@@ -86,6 +89,7 @@ def create_app() -> FastAPI:
     _register_platform_routes(application)
     Instrumentator().instrument(application).expose(application, include_in_schema=False)
     configure_outbox_supportability_metrics(_runtime_outbox_delivery_readiness)
+    configure_postgres_capacity_metrics(_runtime_postgres_capacity_posture)
     _configure_openapi_contract_overrides(application)
     application.router.add_event_handler("shutdown", close_downstream_realization_clients)
     configure_logging()
@@ -97,6 +101,10 @@ def _runtime_outbox_delivery_readiness() -> OutboxDeliveryReadinessSnapshot:
         repository=get_idea_repository(),
         durable_storage_backed=idea_repository_durable_storage_backed(),
     )
+
+
+def _runtime_postgres_capacity_posture() -> PostgresCapacityPosture:
+    return read_postgres_capacity_posture(get_idea_repository())
 
 
 def _register_product_routes(application: FastAPI) -> None:

@@ -29,6 +29,14 @@ from app.observability.outbox_supportability import (
     OutboxDeliverySupportabilityCollector,
     configure_outbox_supportability_metrics,
 )
+from app.observability.postgres_capacity import (
+    POSTGRES_CAPACITY_COLLECTION_SUCCESS_METRIC,
+    POSTGRES_CAPACITY_POSTURE_METRIC,
+    POSTGRES_CAPACITY_POSTURES,
+    POSTGRES_CONNECTION_UTILIZATION_METRIC,
+    PostgresCapacityCollector,
+    configure_postgres_capacity_metrics,
+)
 from app.observability.service_slo_metrics import (
     DEPENDENCIES,
     DEPENDENCY_DURATION_BUCKETS_SECONDS,
@@ -92,6 +100,12 @@ __all__ = [
     "OUTBOX_DELIVERY_STATES",
     "OutboxDeliverySupportabilityCollector",
     "configure_outbox_supportability_metrics",
+    "POSTGRES_CAPACITY_COLLECTION_SUCCESS_METRIC",
+    "POSTGRES_CAPACITY_POSTURE_METRIC",
+    "POSTGRES_CAPACITY_POSTURES",
+    "POSTGRES_CONNECTION_UTILIZATION_METRIC",
+    "PostgresCapacityCollector",
+    "configure_postgres_capacity_metrics",
     "HTTP_DURATION_BUCKETS_SECONDS",
     "HTTP_DURATION_METRIC",
     "HTTP_METRIC_LABELS",
