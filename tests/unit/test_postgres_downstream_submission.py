@@ -14,9 +14,12 @@ from app.domain import (
     DownstreamSubmissionRecord,
     DownstreamSubmissionResolution,
     DownstreamSubmissionResourceType,
+    IdeaRepositorySnapshot,
     SourceSystem,
     create_downstream_submission_claim,
+    downstream_submission_support_reference,
 )
+from app.infrastructure.postgres_repository_delta import _mutated_candidate_ids
 from app.infrastructure.postgres_repository import PostgresIdeaRepository
 from app.infrastructure.postgres_data_lifecycle import DataLifecycleWriteBlockedError
 from tests.unit.postgres_repository_fake import FakePostgresConnection
@@ -59,6 +62,35 @@ def test_postgres_claim_rejects_erased_resource_before_delivery_insert() -> None
     assert error.value.blocker == "candidate_erased"
     assert connection.rows["idea_downstream_submission"] == []
     assert connection.rollbacks == 1
+
+
+def test_new_downstream_submissions_resolve_candidates_for_lifecycle_fencing() -> None:
+    conversion_claim = _claim("fingerprint-conversion")
+    report_claim = replace(
+        _claim("fingerprint-report"),
+        idempotency_key="report-submission-key",
+        resource_type=DownstreamSubmissionResourceType.REPORT_EVIDENCE_PACK,
+        resource_id="report-pack-001",
+        support_reference=downstream_submission_support_reference("report-submission-key"),
+    )
+    before = IdeaRepositorySnapshot({}, {}, {})
+    after = IdeaRepositorySnapshot(
+        {},
+        {},
+        {},
+        conversion_intent_candidates={"conversion-001": "candidate-conversion"},
+        report_evidence_pack_candidates={"report-pack-001": "candidate-report"},
+        downstream_submission_records={
+            conversion_claim.idempotency_key: conversion_claim,
+            report_claim.idempotency_key: report_claim,
+        },
+    )
+
+    assert _mutated_candidate_ids(before, after) == {
+        "candidate-conversion",
+        "candidate-report",
+    }
+    assert _mutated_candidate_ids(after, after) == set()
 
 
 def test_postgres_finalization_failure_preserves_durable_in_flight_claim() -> None:

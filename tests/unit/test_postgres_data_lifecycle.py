@@ -17,13 +17,43 @@ from app.domain.data_lifecycle import (
     evaluate_data_lifecycle,
 )
 from app.infrastructure import postgres_data_lifecycle as module
-from app.infrastructure.postgres_data_lifecycle import PostgresDataLifecycleRepository
+from app.infrastructure.postgres_data_lifecycle import (
+    DataLifecycleWriteBlockedError,
+    PostgresDataLifecycleRepository,
+    assert_data_lifecycle_allows_candidate_writes,
+)
 from app.infrastructure.postgres_data_lifecycle_redaction import (
     purge_expired_candidate_payloads,
     redact_candidate_graph,
 )
+from tests.unit.postgres_repository_fake import FakePostgresConnection
 
 NOW = datetime(2026, 7, 11, 9, 0, tzinfo=UTC)
+
+
+@pytest.mark.parametrize(
+    ("control", "expected_blocker"),
+    [
+        (None, "lifecycle_control_missing"),
+        ({"state": "erased", "held_from_state": None}, "candidate_erased"),
+        ({"state": "held", "held_from_state": "purged"}, "candidate_erased"),
+    ],
+)
+def test_postgres_write_fence_rejects_missing_or_terminal_lifecycle_control(
+    control: dict[str, object] | None,
+    expected_blocker: str,
+) -> None:
+    connection = FakePostgresConnection()
+    connection.rows["idea_candidate_record"].append({"candidate_id": "candidate-fenced"})
+    if control is not None:
+        connection.rows["idea_data_lifecycle_control"].append(
+            {"candidate_id": "candidate-fenced", **control}
+        )
+
+    with connection.cursor() as cursor, pytest.raises(DataLifecycleWriteBlockedError) as error:
+        assert_data_lifecycle_allows_candidate_writes(cursor, {"candidate-fenced"})
+
+    assert error.value.blocker == expected_blocker
 
 
 class LifecycleCursor:

@@ -226,12 +226,29 @@ def test_purge_projects_bounded_payload_removal_and_replays_terminal_state() -> 
 
 
 def test_lifecycle_models_reject_incoherent_or_sensitive_evidence_shapes() -> None:
+    with pytest.raises(ValueError, match="version must be positive"):
+        replace(active_control(), version=0)
     with pytest.raises(ValueError, match="complete hold metadata"):
         replace(active_control(), state=DataLifecycleState.HELD)
+    with pytest.raises(ValueError, match="held_from_state cannot be held"):
+        replace(
+            held_control(),
+            held_from_state=DataLifecycleState.HELD,
+        )
     with pytest.raises(ValueError, match="forbids hold metadata"):
         replace(active_control(), hold_authority_ref="bank-legal:hold-001")
     with pytest.raises(ValueError, match="require erased_at_utc"):
         replace(active_control(), state=DataLifecycleState.ERASED)
+    with pytest.raises(ValueError, match="forbids erasure or purge timestamps"):
+        replace(active_control(), erased_at_utc=NOW)
+    with pytest.raises(ValueError, match="requires purged_at_utc"):
+        replace(erased_control(), state=DataLifecycleState.PURGED)
+    with pytest.raises(ValueError, match="forbids purged_at_utc"):
+        replace(erased_control(), purged_at_utc=NOW)
+    with pytest.raises(ValueError, match="tombstone_sha256"):
+        replace(erased_control(), tombstone_sha256="not-a-digest")
+    with pytest.raises(ValueError, match="timezone-aware UTC"):
+        replace(active_control(), updated_at_utc=NOW.replace(tzinfo=None))
     with pytest.raises(ValueError, match="non-negative integer"):
         replace(valid_context(), active_outbox_count=-1)
     with pytest.raises(ValueError, match="source-safe reference"):
@@ -245,6 +262,24 @@ def test_lifecycle_models_reject_incoherent_or_sensitive_evidence_shapes() -> No
         valid_result(audit_sha256="bad")
     with pytest.raises(ValueError, match="Idea-owned table"):
         valid_result(affected_row_counts={"foreign_table": 1})
+    with pytest.raises(ValueError, match="non-negative integers"):
+        valid_result(affected_row_counts={"idea_candidate_record": True})
+
+
+def test_release_and_purge_block_when_legal_hold_is_not_in_required_state() -> None:
+    release = evaluate_data_lifecycle(
+        valid_command(DataLifecycleAction.RELEASE_HOLD),
+        valid_context(),
+        evaluated_at_utc=NOW,
+    )
+    purge = evaluate_data_lifecycle(
+        valid_command(DataLifecycleAction.PURGE),
+        valid_context(control=held_control()),
+        evaluated_at_utc=NOW,
+    )
+
+    assert release.blockers == (DataLifecycleBlocker.LEGAL_HOLD_NOT_ACTIVE,)
+    assert purge.blockers == (DataLifecycleBlocker.LEGAL_HOLD_ACTIVE,)
 
 
 def test_application_keeps_evaluation_inside_repository_execution_boundary() -> None:

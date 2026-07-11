@@ -8,6 +8,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.api import data_lifecycle as api_module
+from app.api.durable_write_guard import durable_repository_not_configured_problem
 from app.domain.data_lifecycle import (
     REGULATED_ADVISORY_POLICY_REF,
     DataLifecycleAction,
@@ -179,6 +180,41 @@ def test_data_lifecycle_api_does_not_disclose_cross_tenant_candidate_existence(
     assert response.status_code == 404
     assert response.json()["code"] == "data_lifecycle_candidate_not_found"
     assert "tenant-001" not in response.text
+
+
+@pytest.mark.parametrize(
+    ("configuration_blocked", "expected_code"),
+    [
+        (True, "durable_repository_not_configured"),
+        (False, "data_lifecycle_repository_unavailable"),
+    ],
+)
+def test_data_lifecycle_api_fails_closed_without_durable_lifecycle_capability(
+    monkeypatch: pytest.MonkeyPatch,
+    configuration_blocked: bool,
+    expected_code: str,
+) -> None:
+    repository = type(
+        "RepositoryWithoutLifecycleCapability",
+        (),
+        {"durable_storage_backed": True},
+    )()
+    monkeypatch.setattr(api_module, "get_idea_repository", lambda: repository)
+    if configuration_blocked:
+        monkeypatch.setattr(
+            api_module,
+            "durable_write_problem",
+            lambda _repository: durable_repository_not_configured_problem(),
+        )
+
+    response = TestClient(app).post(
+        lifecycle_path(),
+        json=lifecycle_request(),
+        headers=lifecycle_headers(f"lifecycle-api-unavailable-{configuration_blocked}"),
+    )
+
+    assert response.status_code == 503
+    assert response.json()["code"] == expected_code
 
 
 def test_data_lifecycle_openapi_certifies_success_and_failure_contracts() -> None:
