@@ -438,6 +438,15 @@ not change.
 
 ## Required Work
 
+The AI metadata boundary is now allowlist-based rather than denylist-based.
+`lotus-idea.ai-metadata-envelope.v1` admits only code-owned, purpose-scoped
+operational routing values; unknown fields, unapproved values, length abuse,
+and control characters fail before candidate lookup or persistence. OpenAPI,
+readiness, model-risk contracts, API tests, and source-safe lineage retention
+are aligned. This closes the Idea-side defect tracked by `#341` without
+claiming a live `lotus-ai` provider call, runtime certification, or supported
+feature.
+
 1. Add metrics, logs, traces, audit events, health/readiness diagnostics, and
    supportability endpoints.
 2. Enforce fail-closed entitlements for direct service and Gateway paths.

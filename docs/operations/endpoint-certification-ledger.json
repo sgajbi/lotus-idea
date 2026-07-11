@@ -905,7 +905,7 @@
         "403 returns product-safe Problem Details when the caller lacks idea.ai-explanation.evaluate capability.",
         "404 returns product-safe Problem Details when the candidate is not found.",
         "409 returns product-safe Problem Details when rationale or meeting-preparation drafting is requested before ready evidence and review-ready lifecycle, when an AI request id is replayed with changed lineage, or when Idempotency-Key is reused for a different request fingerprint.",
-        "400 returns product-safe Problem Details when request validation fails, Idempotency-Key is absent or blank, approved metadata contains forbidden keys, workflow output is invalid, workflowPackId/workflowPackVersion/evaluationRef is not governed, or production-like workflow output lacks verified Lotus AI provenance.",
+        "400 returns product-safe Problem Details when request validation fails, Idempotency-Key is absent or blank, metadata is outside the versioned provider-safe allowlist, workflow output is invalid, workflowPackId/workflowPackVersion/evaluationRef is not governed, or production-like workflow output lacks verified Lotus AI provenance.",
         "400 ai_execution_provenance_required is returned before candidate lookup or lineage persistence for self-asserted workflow output in demo, staging, or production.",
         "400 invalid_ai_workflow_pack is returned before candidate lookup or lineage persistence and does not echo caller-supplied workflow text, candidate-sensitive details, prompts, or provider output."
       ],

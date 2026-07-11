@@ -102,7 +102,7 @@ Implemented in this slice:
 16. `tests/integration/test_ai_governance_api.py` covers deterministic
     fallback, verified-output acceptance, unsupported-claim blocking,
     forbidden-action blocking, permission denial, missing candidate handling,
-    invalid candidate state, forbidden metadata, unregistered workflow-pack
+    invalid candidate state, provider-unsafe metadata, unregistered workflow-pack
     id/version/evaluator rejection, and source-safe AI readiness diagnostics,
     plus API idempotency required/replay/conflict behavior and accepted/
     replayed/conflicting lineage persistence.
@@ -147,6 +147,14 @@ Implemented in this slice:
     self-asserted workflow output before candidate lookup or lineage write.
     Full attested acceptance remains blocked on producer-owned signed run/model
     provenance in `sgajbi/lotus-ai#113`; local fixtures cannot clear proof.
+24. `src/app/domain/ai_metadata_policy.py` implements
+    `lotus-idea.ai-metadata-envelope.v1` as a closed, purpose-scoped allowlist.
+    The typed request DTO rejects unknown fields, the domain rejects
+    unapproved values before candidate lookup or lineage persistence, OpenAPI
+    publishes the closed shape, and evaluation/readiness responses publish the
+    policy version. Lineage retains approved field names only. The model-risk
+    contract machine-checks classification, forwarding, retention, and
+    no-raw-value guarantees. No provider adapter or runtime split is claimed.
 
 Validation evidence from the implementation slice:
 

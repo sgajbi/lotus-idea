@@ -25,8 +25,9 @@ RFC-0002 Slice 09 adds `src/app/domain/ai_governance.py`,
    `idea_explanation.pack@v1`,
 3. product-safe fail-closed rejection of unregistered workflow-pack identity
    before candidate lookup or lineage persistence,
-4. approved metadata validation that rejects portfolio, client, raw prompt,
-   raw provider output, route, correlation, and trace identifiers,
+4. `lotus-idea.ai-metadata-envelope.v1`, a closed, purpose-scoped metadata
+   allowlist that accepts only code-owned operational routing values and
+   rejects unknown fields or values before candidate lookup or lineage writes,
 5. deterministic fallback records for AI-unavailable posture,
 6. verifier outcomes for unsupported claims and forbidden actions,
 7. safe audit events for AI explanation evaluation,
@@ -57,6 +58,9 @@ RFC-0002 Slice 09 adds `src/app/domain/ai_governance.py`,
     unattested workflow fixtures only in local/test and rejects workflow output
     in demo, staging, and production until a verified Lotus AI attestation is
     available.
+17. evaluation and readiness responses that expose
+    `metadataEnvelopeVersion=lotus-idea.ai-metadata-envelope.v1` so consumers
+    can verify the active boundary contract.
 
 The API preserves source authority: AI output cannot mutate candidate score,
 lifecycle, source facts, review state, conversion state, or downstream workflow
@@ -85,6 +89,30 @@ The readiness diagnostic always returns:
 5. `lotusAiRuntimeExecuted=false`,
 6. `supportedFeaturePromoted=false`.
 7. `actionContentPolicyVersion=lotus-idea.ai-action-content-policy.v1`.
+8. `metadataEnvelopeVersion=lotus-idea.ai-metadata-envelope.v1`.
+
+## Provider-Safe Metadata Envelope
+
+Metadata is operational routing data, not an extension point for client or
+portfolio context. The API schema is closed and the domain policy revalidates
+the mapped request before application orchestration proceeds.
+
+| Field | Allowed value | Allowed workflow purposes |
+| --- | --- | --- |
+| `channel` | `advisor-workbench` | All four governed purposes |
+| `audience` | `internal_advisor_review` | Advisor-rationale and meeting-preparation drafts only |
+
+The envelope permits at most two fields, limits key/value lengths, and rejects
+untrimmed or control-character content. Unknown keys and unapproved values
+return product-safe `400 invalid_ai_metadata`; API shape errors return the
+standard product-safe `400 invalid_request`. Neither path echoes submitted
+values. Lineage retains only sorted approved field names, never values.
+
+Local/test fixture policy does not broaden this envelope. Future `lotus-ai`
+integration may forward only the validated envelope and must not receive the
+original request mapping. This is an internal design boundary in the existing
+service; no workload, isolation, ownership, or operability evidence justifies
+another runtime process.
 
 ## Proposed-Action Content Policy
 
@@ -232,7 +260,8 @@ inventory, prompts, RAG, or AI runtime infrastructure.
 
 Unsupported claims and forbidden action types or content return `200` with a blocked posture
 because the verifier successfully evaluated and rejected the output. Missing
-candidates, permission failures, invalid request shape, forbidden metadata, and
+candidates, permission failures, invalid request shape, metadata outside the
+provider-safe envelope, and
 invalid candidate lifecycle posture return product-safe Problem Details.
 
 The write route requires `Idempotency-Key`. Same-key/same-request submissions

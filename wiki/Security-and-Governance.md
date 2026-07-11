@@ -174,6 +174,16 @@ workflow output before candidate lookup or lineage persistence; deterministic
 fallback remains available. Signed run/model attestation is producer-owned and
 tracked by `lotus-ai#113`, so readiness remains blocked.
 
+Provider-bound metadata is governed by
+`lotus-idea.ai-metadata-envelope.v1`. The closed API schema and domain policy
+allow only `channel=advisor-workbench` for governed workflows and
+`audience=internal_advisor_review` for the two drafting purposes. Unknown,
+oversized, untrimmed, control-character, or unapproved values fail before
+candidate lookup or lineage persistence. Responses and lineage expose only the
+policy version and approved field names; raw metadata values are not persisted
+or logged. Local/test fixtures use the same envelope and cannot clear model-risk
+or runtime-readiness blockers.
+
 Operation-event governance:
 
 1. high-cash, candidate persistence, candidate evidence replay, lifecycle,

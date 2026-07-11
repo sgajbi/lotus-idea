@@ -647,6 +647,17 @@ producer receipt exists. Deterministic fallback remains allowed. The signed
 run/model attestation, key distribution, provider/model approval, and runtime
 truth belong to `lotus-ai` and are tracked by `sgajbi/lotus-ai#113`.
 
+Provider-bound AI metadata uses the closed
+`lotus-idea.ai-metadata-envelope.v1` policy in
+`src/app/domain/ai_metadata_policy.py`. Request DTOs expose only approved
+`channel` and `audience` fields; the domain revalidates purpose and closed
+values before application lookup or persistence. Do not add generic metadata
+maps, denylists, client/portfolio identifiers, or free-form values. Future
+Lotus AI adapters may receive only this validated mapping. Lineage and logs may
+retain field names and policy version, never raw values. This is design
+modularity inside the Idea deployable; introduce a runtime boundary only with
+measured workload, failure-isolation, ownership, or operability evidence.
+
 Non-AI operator workflow operations proof is limited to source-safe dashboard
 and alert visibility over implemented source-ingestion, outbox delivery,
 downstream realization, runtime trust telemetry, and implementation-proof
