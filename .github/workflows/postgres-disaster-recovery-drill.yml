@@ -16,6 +16,7 @@ permissions:
 
 env:
   PIP_DISABLE_PIP_VERSION_CHECK: "1"
+  POSTGRESQL_MAJOR_VERSION: "18"
   PYTHONUNBUFFERED: "1"
   PYTHON_VERSION: "3.12"
   PGPASSWORD: lotus_idea_dr
@@ -50,10 +51,20 @@ jobs:
           cache: "pip"
       - name: Install
         run: make install
-      - name: Verify PostgreSQL client tools
+      - name: Install matching PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes "postgresql-client-${POSTGRESQL_MAJOR_VERSION}"
+          echo "/usr/lib/postgresql/${POSTGRESQL_MAJOR_VERSION}/bin" >> "$GITHUB_PATH"
+      - name: Verify PostgreSQL client and server compatibility
         run: |
           pg_dump --version
           pg_restore --version
+          pg_dump --version | grep -Eq " ${POSTGRESQL_MAJOR_VERSION}\\."
+          pg_restore --version | grep -Eq " ${POSTGRESQL_MAJOR_VERSION}\\."
+          psql "$LOTUS_IDEA_DR_SOURCE_DATABASE_URL" --tuples-only --no-align \
+            --command "SHOW server_version" \
+            | grep -Eq "^${POSTGRESQL_MAJOR_VERSION}\\."
       - name: Create clean restore target
         run: createdb --host localhost --port 5432 --username lotus_idea_dr lotus_idea_dr_target
       - name: Apply current source migrations
