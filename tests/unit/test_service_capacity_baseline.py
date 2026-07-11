@@ -9,6 +9,7 @@ from app.application.capacity_evidence_qualification import (
     DEPENDENCY_RECOVERY_SIGNER_WORKFLOW,
     LOAD_SOAK_SCENARIO_THRESHOLDS,
     LOAD_SOAK_SIGNER_WORKFLOW,
+    RESOURCE_SIGNER_WORKFLOW,
     TRUSTED_REPOSITORY,
     TRUSTED_SIGNER_WORKFLOW,
     TRUSTED_SOURCE_REF,
@@ -162,6 +163,34 @@ def _resource_baseline() -> dict[str, object]:
     )
 
 
+def _production_resource_baseline() -> dict[str, object]:
+    return build_service_resource_baseline(
+        snapshots=[
+            ProcessResourceSnapshot(
+                GENERATED_AT + timedelta(seconds=index * 60),
+                1.0 + index,
+                100 + index,
+            )
+            for index in range(61)
+        ],
+        environment_profile="production-like",
+        generated_at_utc=GENERATED_AT + timedelta(seconds=3_601),
+        commit_sha="abc123",
+        branch="main",
+        run_id="resource-production-like-1",
+    )
+
+
+def _resource_attestation() -> VerifiedArtifactAttestation:
+    return VerifiedArtifactAttestation(
+        subject_sha256="e" * 64,
+        repository=TRUSTED_REPOSITORY,
+        signer_workflow=RESOURCE_SIGNER_WORKFLOW,
+        source_ref=TRUSTED_SOURCE_REF,
+        source_commit_sha="abc123",
+    )
+
+
 def test_builds_ordered_source_safe_report_only_baseline() -> None:
     measurements = [_measurement(scenario, index) for scenario in SCENARIOS for index in range(10)]
 
@@ -189,7 +218,8 @@ def test_builds_ordered_source_safe_report_only_baseline() -> None:
         "load_soak_attestation_missing",
         "dependency_recovery_attestation_missing",
         "postgres_saturation_evidence_missing",
-        "cost_resource_evidence_missing",
+        "production_like_resource_attestation_missing",
+        "cost_attribution_evidence_missing",
     ]
     assert validate_service_capacity_baseline(artifact) == []
 
@@ -210,7 +240,8 @@ def test_attested_mainline_proof_clears_only_saturation_blocker() -> None:
     assert artifact["certificationBlockers"] == [
         "load_soak_attestation_missing",
         "dependency_recovery_attestation_missing",
-        "cost_resource_evidence_missing",
+        "production_like_resource_attestation_missing",
+        "cost_attribution_evidence_missing",
     ]
     assert artifact["resourceEvidence"]["postgresSaturationMeasured"] is True
     assert artifact["resourceEvidence"]["postgresThresholdProofValidated"] is True
@@ -373,8 +404,31 @@ def test_links_resource_observation_without_claiming_cost_evidence() -> None:
     resource = artifact["resourceEvidence"]
     assert resource["resourceBaselineValidated"] is True
     assert resource["resourceBaselineRunId"] == "resource-1"
-    assert resource["costResourceMeasured"] is False
-    assert "cost_resource_evidence_missing" in artifact["certificationBlockers"]
+    assert resource["resourceAttestationVerified"] is False
+    assert resource["costAttributionVerified"] is False
+    assert "production_like_resource_attestation_missing" in artifact["certificationBlockers"]
+    assert "cost_attribution_evidence_missing" in artifact["certificationBlockers"]
+
+
+def test_attested_resource_observation_clears_only_resource_blocker() -> None:
+    artifact = build_service_capacity_baseline(
+        measurements=[],
+        environment_profile="production-like",
+        generated_at_utc=GENERATED_AT + timedelta(hours=2),
+        commit_sha="abc123",
+        branch="main",
+        run_id="aggregate-resource-1",
+        observed_window_seconds=1.0,
+        resource_baseline=_production_resource_baseline(),
+        resource_attestation=_resource_attestation(),
+    )
+
+    resource = artifact["resourceEvidence"]
+    assert resource["resourceAttestationVerified"] is True
+    assert resource["resourceQualificationRunId"] == "aggregate-resource-1"
+    assert resource["costAttributionVerified"] is False
+    assert "production_like_resource_attestation_missing" not in artifact["certificationBlockers"]
+    assert "cost_attribution_evidence_missing" in artifact["certificationBlockers"]
 
 
 def test_rejects_resource_observation_from_another_commit() -> None:

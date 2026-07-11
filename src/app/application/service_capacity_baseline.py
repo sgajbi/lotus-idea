@@ -14,6 +14,7 @@ from app.application.capacity_evidence_qualification import (
     qualify_dependency_recovery_evidence,
     qualify_load_soak_evidence,
     qualify_postgres_capacity_threshold_evidence,
+    qualify_resource_evidence,
 )
 from app.application.service_resource_baseline import validate_service_resource_baseline
 
@@ -100,6 +101,7 @@ def build_service_capacity_baseline(
     load_soak_attestation: VerifiedArtifactAttestation | None = None,
     postgres_max_connection_utilization_fraction: float | None = None,
     resource_baseline: dict[str, Any] | None = None,
+    resource_attestation: VerifiedArtifactAttestation | None = None,
 ) -> dict[str, Any]:
     if environment_profile not in ENVIRONMENT_PROFILES:
         raise ValueError("environment_profile must be test, production-like, or production")
@@ -153,11 +155,19 @@ def build_service_capacity_baseline(
         commit_sha=commit_sha,
         branch=branch,
     )
+    resource_qualification = _resource_qualification(
+        proof=resource_baseline,
+        attestation=resource_attestation,
+        generated_at_utc=generated_at_utc,
+        run_id=run_id,
+        commit_sha=commit_sha,
+    )
     blockers = _certification_blockers(
         load_soak_attested=load_soak_qualification is not None,
         postgres_saturation_measured=postgres_saturation_measured,
         dependency_recovery_attested=dependency_recovery_qualification is not None,
-        cost_resource_measured=False,
+        production_like_resource_attested=resource_qualification is not None,
+        cost_attribution_verified=False,
     )
     artifact = {
         "schemaVersion": SCHEMA_VERSION,
@@ -184,6 +194,7 @@ def build_service_capacity_baseline(
             ),
             resource_baseline_validated=resource_baseline_validated,
             resource_baseline=resource_baseline,
+            resource_qualification=resource_qualification,
         ),
         "certificationReady": not blockers,
         "certificationBlockers": blockers,
@@ -207,6 +218,7 @@ def _resource_evidence(
     postgres_max_connection_utilization_fraction: float | None,
     resource_baseline_validated: bool,
     resource_baseline: dict[str, Any] | None,
+    resource_qualification: dict[str, Any] | None,
 ) -> dict[str, Any]:
     return {
         "loadSoakAttestationVerified": load_soak_qualification is not None,
@@ -236,7 +248,13 @@ def _resource_evidence(
             else None
         ),
         "postgresMaxConnectionUtilizationFraction": (postgres_max_connection_utilization_fraction),
-        "costResourceMeasured": False,
+        "resourceAttestationVerified": resource_qualification is not None,
+        "resourceQualificationRunId": (
+            resource_qualification.get("qualificationRunId")
+            if resource_qualification is not None
+            else None
+        ),
+        "costAttributionVerified": False,
         "resourceBaselineValidated": resource_baseline_validated,
         "resourceBaselineRunId": (
             resource_baseline.get("runId")
@@ -321,7 +339,8 @@ def _certification_blockers(
     load_soak_attested: bool,
     postgres_saturation_measured: bool,
     dependency_recovery_attested: bool,
-    cost_resource_measured: bool,
+    production_like_resource_attested: bool,
+    cost_attribution_verified: bool,
 ) -> list[str]:
     blockers: list[str] = []
     if not load_soak_attested:
@@ -330,8 +349,10 @@ def _certification_blockers(
         blockers.append("dependency_recovery_attestation_missing")
     if not postgres_saturation_measured:
         blockers.append("postgres_saturation_evidence_missing")
-    if not cost_resource_measured:
-        blockers.append("cost_resource_evidence_missing")
+    if not production_like_resource_attested:
+        blockers.append("production_like_resource_attestation_missing")
+    if not cost_attribution_verified:
+        blockers.append("cost_attribution_evidence_missing")
     return blockers
 
 
@@ -434,6 +455,27 @@ def _resource_baseline_is_valid(
         and baseline.get("commitSha") == commit_sha
         and baseline.get("branch") == branch
     )
+
+
+def _resource_qualification(
+    *,
+    proof: dict[str, Any] | None,
+    attestation: VerifiedArtifactAttestation | None,
+    generated_at_utc: datetime,
+    run_id: str,
+    commit_sha: str,
+) -> dict[str, Any] | None:
+    if proof is None or attestation is None or proof.get("commitSha") != commit_sha:
+        return None
+    try:
+        return qualify_resource_evidence(
+            resource_proof=proof,
+            verified_attestation=attestation,
+            generated_at_utc=generated_at_utc,
+            qualification_run_id=run_id,
+        )
+    except ValueError:
+        return None
 
 
 def _percentile(samples: list[float], percentile: float) -> float | None:

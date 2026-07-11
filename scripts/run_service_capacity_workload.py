@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import argparse
 from datetime import UTC, datetime
-import json
 import os
 from pathlib import Path
 import re
@@ -20,6 +19,7 @@ from app.application.capacity_evidence_qualification import (
     DEPENDENCY_RECOVERY_SIGNER_WORKFLOW,
     LOAD_SOAK_SIGNER_WORKFLOW,
     POSTGRES_CAPACITY_SIGNER_WORKFLOW,
+    RESOURCE_SIGNER_WORKFLOW,
     VerifiedArtifactAttestation,
     MINIMUM_LOAD_SOAK_SAMPLES,
     MINIMUM_LOAD_SOAK_SECONDS,
@@ -34,6 +34,12 @@ from app.application.service_capacity_workload import (
 )
 from app.infrastructure.http_capacity_probe import HttpCapacityProbe
 from app.infrastructure.github_capacity_attestation import GitHubCapacityAttestationVerifier
+from app.infrastructure.capacity_artifact_io import (
+    read_optional_capacity_proof as _read_optional_proof,
+    read_optional_json_object as _read_optional_json_object,
+    read_optional_resource_baseline as _read_optional_resource_baseline,
+    write_json_atomic as _write_json_atomic,
+)
 from app.infrastructure.postgres_capacity_probe import PostgresCapacityProbe
 from app.ports.capacity_probe import CapacityProbeRequest
 
@@ -242,6 +248,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--verify-postgres-threshold-attestation", action="store_true")
     parser.add_argument("--verify-dependency-recovery-attestation", action="store_true")
     parser.add_argument("--verify-load-soak-attestation", action="store_true")
+    parser.add_argument("--verify-resource-attestation", action="store_true")
     parser.add_argument(
         "--output",
         type=Path,
@@ -306,6 +313,15 @@ def main(argv: list[str] | None = None) -> int:
             signer_workflow=LOAD_SOAK_SIGNER_WORKFLOW,
             proof_name="load soak proof",
         )
+        resource_baseline = _read_optional_resource_baseline(args.resource_baseline)
+        resource_attestation = _verify_optional_attestation(
+            verification_requested=args.verify_resource_attestation,
+            artifact_path=args.resource_baseline,
+            proof=resource_baseline,
+            environment_profile=args.environment_profile,
+            signer_workflow=RESOURCE_SIGNER_WORKFLOW,
+            proof_name="resource baseline proof",
+        )
         artifact = build_service_capacity_baseline(
             measurements=measurements,
             environment_profile=args.environment_profile,
@@ -320,7 +336,8 @@ def main(argv: list[str] | None = None) -> int:
             dependency_recovery_attestation=dependency_recovery_attestation,
             load_soak_proof=load_soak_proof,
             load_soak_attestation=load_soak_attestation,
-            resource_baseline=_read_optional_resource_baseline(args.resource_baseline),
+            resource_baseline=resource_baseline,
+            resource_attestation=resource_attestation,
             postgres_max_connection_utilization_fraction=postgres_max_utilization,
         )
         _write_json_atomic(args.output, artifact)
@@ -391,13 +408,6 @@ def _execute_measurements(
     )
 
 
-def _write_json_atomic(path: Path, payload: dict[str, object]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_suffix(f"{path.suffix}.tmp")
-    temporary.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    temporary.replace(path)
-
-
 def validate_paced_load_soak_request(
     *,
     scenarios: tuple[str, ...],
@@ -423,10 +433,6 @@ def _required_database_url() -> str:
     return database_url
 
 
-def _read_optional_proof(path: Path | None) -> dict[str, object] | None:
-    return _read_optional_json_object(path, name="capacity proof")
-
-
 def _verify_optional_attestation(
     *,
     verification_requested: bool,
@@ -449,19 +455,6 @@ def _verify_optional_attestation(
         artifact_path=artifact_path,
         source_commit_sha=proof_commit,
     )
-
-
-def _read_optional_json_object(path: Path | None, *, name: str) -> dict[str, object] | None:
-    if path is None:
-        return None
-    payload = json.loads(path.read_text(encoding="utf-8"))
-    if not isinstance(payload, dict):
-        raise ValueError(f"{name} must be a JSON object")
-    return payload
-
-
-def _read_optional_resource_baseline(path: Path | None) -> dict[str, object] | None:
-    return _read_optional_json_object(path, name="resource baseline")
 
 
 def _downstream_submission_path(

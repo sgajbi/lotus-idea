@@ -499,6 +499,101 @@ def test_cli_requires_dedicated_attestation_to_clear_dependency_blocker(
     assert "dependency_recovery_attestation_missing" not in artifact["certificationBlockers"]
 
 
+def test_cli_requires_verified_resource_attestation_to_clear_resource_blocker(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    module = _load_script()
+    output = tmp_path / "capacity.json"
+    proof = tmp_path / "resource.json"
+    proof.write_text(
+        json.dumps(
+            {
+                "schemaVersion": "lotus-idea.service-resource-baseline.v1",
+                "repository": "lotus-idea",
+                "proofScope": "source_safe_process_resource_observation",
+                "claimPosture": "report_only_resource_observation",
+                "environmentProfile": "production-like",
+                "commitSha": "abc123",
+                "branch": "main",
+                "runId": "resource-proof-1",
+                "observedWindowSeconds": 3_600.0,
+                "sampleCount": 61,
+                "cpuCoreSecondsPerSecondAverage": 0.5,
+                "residentMemoryBytesAverage": 100,
+                "residentMemoryBytesMax": 120,
+                "virtualMemoryBytesMax": 200,
+                "openFileDescriptorUtilizationMax": 0.1,
+                "costAttributionVerified": False,
+                "resourceAttestationVerified": False,
+                "certificationReady": False,
+                "certificationBlockers": [
+                    "production_like_resource_attestation_missing",
+                    "cost_attribution_evidence_missing",
+                ],
+                "supportedFeaturePromoted": False,
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    class FakeProbe:
+        def __init__(self, **kwargs: object) -> None:
+            pass
+
+        def execute(self, request: CapacityProbeRequest) -> CapacityProbeResult:
+            return CapacityProbeResult(0.01, 200, "accepted", {})
+
+        def close(self) -> None:
+            pass
+
+    class FakeVerifier:
+        def __init__(self, *, signer_workflow: str) -> None:
+            self.signer_workflow = signer_workflow
+
+        def verify(self, **kwargs: object) -> VerifiedArtifactAttestation:
+            return VerifiedArtifactAttestation(
+                subject_sha256="e" * 64,
+                repository=TRUSTED_REPOSITORY,
+                signer_workflow=self.signer_workflow,
+                source_ref=TRUSTED_SOURCE_REF,
+                source_commit_sha="abc123",
+            )
+
+    monkeypatch.setattr(module, "HttpCapacityProbe", FakeProbe)
+    monkeypatch.setattr(module, "GitHubCapacityAttestationVerifier", FakeVerifier)
+
+    exit_code = module.main(
+        [
+            "--base-url",
+            "https://idea.example",
+            "--environment-profile",
+            "production-like",
+            "--scenario",
+            "api",
+            "--commit-sha",
+            "abc123",
+            "--branch",
+            "main",
+            "--run-id",
+            "aggregate-resource-1",
+            "--resource-baseline",
+            str(proof),
+            "--verify-resource-attestation",
+            "--output",
+            str(output),
+        ]
+    )
+
+    assert exit_code == 0
+    artifact = json.loads(output.read_text(encoding="utf-8"))
+    resource = artifact["resourceEvidence"]
+    assert resource["resourceAttestationVerified"] is True
+    assert resource["costAttributionVerified"] is False
+    assert "production_like_resource_attestation_missing" not in artifact["certificationBlockers"]
+    assert "cost_attribution_evidence_missing" in artifact["certificationBlockers"]
+
+
 def test_resource_baseline_reader_requires_json_object(tmp_path: Path) -> None:
     module = _load_script()
     valid = tmp_path / "resource.json"

@@ -66,7 +66,8 @@ def validate_contract() -> list[str]:
         "load_soak_attestation_missing",
         "dependency_recovery_attestation_missing",
         "postgres_saturation_evidence_missing",
-        "cost_resource_evidence_missing",
+        "production_like_resource_attestation_missing",
+        "cost_attribution_evidence_missing",
     }
     if set(artifact["certificationBlockers"]) != expected_blockers:
         errors.append("test-profile capacity baseline must preserve non-certification blockers")
