@@ -200,6 +200,7 @@ def test_postgres_lifecycle_erasure_redacts_and_audits_in_one_commit(
 ) -> None:
     connection = LifecycleConnection()
     redactions: list[tuple[str, str, str]] = []
+    observations: list[dict[str, object]] = []
 
     def redact(
         _cursor: Any, *, candidate_id: str, tenant_id: str, tombstone_sha256: str
@@ -208,12 +209,20 @@ def test_postgres_lifecycle_erasure_redacts_and_audits_in_one_commit(
         return {"idea_candidate_record": 1, "idea_audit_event": 2}
 
     monkeypatch.setattr(module, "redact_candidate_graph", redact)
+    monkeypatch.setattr(
+        module,
+        "observe_postgres_operation",
+        lambda **values: observations.append(values),
+    )
 
     result = execute(connection, valid_command(DataLifecycleAction.ERASE))
 
     assert result.decision is DataLifecycleDecision.APPLIED
     assert result.control is not None
     assert result.control.state is DataLifecycleState.ERASED
+    assert len(observations) == 1
+    assert observations[0]["operation"] == "lifecycle_action"
+    assert observations[0]["outcome"] == "accepted"
     assert len(result.control.tombstone_sha256 or "") == 64
     assert result.affected_row_counts == {
         "idea_candidate_record": 1,

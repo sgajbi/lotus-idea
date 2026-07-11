@@ -10,6 +10,12 @@ from app.infrastructure.postgres_candidate_writes import ConcurrentIdempotencyMu
 def test_postgres_mutation_retry_uses_fresh_snapshot_after_idempotency_race(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    observations: list[dict[str, object]] = []
+    monkeypatch.setattr(
+        mutation_retry,
+        "observe_postgres_operation",
+        lambda **values: observations.append(values),
+    )
     connection = RecordingConnection()
     snapshots = {
         "base": IdeaRepositorySnapshot(
@@ -46,11 +52,20 @@ def test_postgres_mutation_retry_uses_fresh_snapshot_after_idempotency_race(
     assert apply_attempts == 2
     assert connection.rollback_count == 1
     assert connection.commit_count == 1
+    assert len(observations) == 1
+    assert observations[0]["operation"] == "mutation"
+    assert observations[0]["outcome"] == "accepted"
 
 
 def test_postgres_mutation_retry_raises_after_second_idempotency_race(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    observations: list[dict[str, object]] = []
+    monkeypatch.setattr(
+        mutation_retry,
+        "observe_postgres_operation",
+        lambda **values: observations.append(values),
+    )
     connection = RecordingConnection()
     snapshot = IdeaRepositorySnapshot(
         candidate_records={},
@@ -75,6 +90,8 @@ def test_postgres_mutation_retry_raises_after_second_idempotency_race(
 
     assert connection.rollback_count == 2
     assert connection.commit_count == 0
+    assert len(observations) == 1
+    assert observations[0]["outcome"] == "conflict"
 
 
 class RecordingConnection:

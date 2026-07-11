@@ -4,6 +4,7 @@ from dataclasses import replace
 from datetime import datetime
 import hashlib
 import json
+import time
 from typing import Any, Mapping
 
 from psycopg.types.json import Jsonb
@@ -26,6 +27,7 @@ from app.infrastructure.postgres_data_lifecycle_redaction import (
     redact_candidate_graph,
 )
 from app.ports.data_lifecycle import DataLifecycleEvaluator
+from app.observability.service_slo_metrics import observe_postgres_operation
 
 
 class PostgresDataLifecycleRepository:
@@ -39,6 +41,7 @@ class PostgresDataLifecycleRepository:
         evaluated_at_utc: datetime,
         evaluator: DataLifecycleEvaluator,
     ) -> DataLifecycleOperationResult:
+        started_at = time.perf_counter()
         try:
             with self._connection.cursor() as cursor:
                 _lock_idempotency_key(cursor, command.idempotency_key)
@@ -59,9 +62,21 @@ class PostgresDataLifecycleRepository:
                         evaluated_at_utc=evaluated_at_utc,
                     )
             self._connection.commit()
+            observe_postgres_operation(
+                operation="lifecycle_action",
+                outcome=(
+                    "conflict" if result.decision is DataLifecycleDecision.CONFLICT else "accepted"
+                ),
+                duration_seconds=time.perf_counter() - started_at,
+            )
             return result
         except Exception:
             self._connection.rollback()
+            observe_postgres_operation(
+                operation="lifecycle_action",
+                outcome="failed",
+                duration_seconds=time.perf_counter() - started_at,
+            )
             raise
 
 

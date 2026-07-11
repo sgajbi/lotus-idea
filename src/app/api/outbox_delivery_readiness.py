@@ -208,32 +208,16 @@ async def post_outbox_delivery_run_once(
             operator_run_reference=operator_run_reference,
         )
 
-    started_at = time.perf_counter()
-    try:
-        summary = _run_outbox_delivery_once_with_cleanup(
-            repository,
-            publisher_result,
-            limit=limit,
-            max_retry_count=max_retry_count,
-            idempotency_key=validated_idempotency_key,
-            request_payload=run_request_payload,
-            delivered_at_utc=delivered_at_utc,
-            durable_storage_backed=durable_storage_backed,
-            operator_run_reference=operator_run_reference,
-        )
-    except Exception:
-        observe_workflow_run(
-            workflow="outbox_delivery",
-            outcome="failed",
-            duration_seconds=time.perf_counter() - started_at,
-            item_count=0,
-        )
-        raise
-    observe_workflow_run(
-        workflow="outbox_delivery",
-        outcome=_outbox_delivery_slo_outcome(summary.run_status),
-        duration_seconds=time.perf_counter() - started_at,
-        item_count=summary.attempted_count,
+    summary = _run_observed_outbox_delivery(
+        repository=repository,
+        publisher=publisher_result,
+        limit=limit,
+        max_retry_count=max_retry_count,
+        idempotency_key=validated_idempotency_key,
+        request_payload=run_request_payload,
+        delivered_at_utc=delivered_at_utc,
+        durable_storage_backed=durable_storage_backed,
+        operator_run_reference=operator_run_reference,
     )
     if summary.run_status is OutboxDeliveryRunStatus.CONFLICT:
         _emit_outbox_delivery_run_event(
@@ -265,6 +249,48 @@ def _outbox_delivery_slo_outcome(run_status: OutboxDeliveryRunStatus) -> str:
     if run_status is OutboxDeliveryRunStatus.REPLAYED:
         return "replayed"
     return "accepted"
+
+
+def _run_observed_outbox_delivery(
+    *,
+    repository: OutboxDeliveryRepository,
+    publisher: OutboxEventPublisher,
+    limit: int,
+    max_retry_count: int,
+    idempotency_key: str,
+    request_payload: Mapping[str, Any],
+    delivered_at_utc: datetime | None,
+    durable_storage_backed: bool,
+    operator_run_reference: str,
+) -> OutboxDeliveryRunSummary:
+    started_at = time.perf_counter()
+    try:
+        summary = _run_outbox_delivery_once_with_cleanup(
+            repository,
+            publisher,
+            limit=limit,
+            max_retry_count=max_retry_count,
+            idempotency_key=idempotency_key,
+            request_payload=request_payload,
+            delivered_at_utc=delivered_at_utc,
+            durable_storage_backed=durable_storage_backed,
+            operator_run_reference=operator_run_reference,
+        )
+    except Exception:
+        observe_workflow_run(
+            workflow="outbox_delivery",
+            outcome="failed",
+            duration_seconds=time.perf_counter() - started_at,
+            item_count=0,
+        )
+        raise
+    observe_workflow_run(
+        workflow="outbox_delivery",
+        outcome=_outbox_delivery_slo_outcome(summary.run_status),
+        duration_seconds=time.perf_counter() - started_at,
+        item_count=summary.attempted_count,
+    )
+    return summary
 
 
 def _require_outbox_delivery_readiness_caller(caller: CallerContext) -> None:

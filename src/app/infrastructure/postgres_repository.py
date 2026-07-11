@@ -113,6 +113,7 @@ from app.infrastructure.postgres_review_identity import ConcurrentReviewIdentity
 from app.infrastructure.postgres_runtime_trust_telemetry import (
     load_runtime_trust_telemetry_summary,
 )
+from app.infrastructure.postgres_slo import execute_observed_postgres_call
 from app.infrastructure.postgres_candidate_detail import load_candidate_record_by_id
 from app.infrastructure.postgres_data_lifecycle import (
     PostgresDataLifecycleRepository,
@@ -484,6 +485,9 @@ class PostgresIdeaRepository(
         )
 
     def snapshot(self) -> IdeaRepositorySnapshot:
+        return execute_observed_postgres_call("snapshot_read", self._load_snapshot)
+
+    def _load_snapshot(self) -> IdeaRepositorySnapshot:
         with self._connection.cursor() as cursor:
             candidate_records = self._load_candidate_records(cursor)
             idempotency_records, idempotency_candidates = self._load_idempotency(cursor)
