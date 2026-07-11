@@ -591,6 +591,12 @@ RFC-0002 will add support runbooks for:
 
 ## Current Operation Event Diagnostics
 
+Data lifecycle actions emit the fixed `data_lifecycle_action` operation with
+bounded outcome and blocker posture. Actor, tenant, candidate, case,
+correlation, and trace identifiers are forbidden as metric labels; use the
+[Data Lifecycle Operations](Data-Lifecycle-Operations) procedure for durable
+audit and first response.
+
 RFC-0002 Slice 15 now emits bounded operation-event logs and the
 `lotus_idea_operation_events_total` metric for high-cash signal evaluation,
 candidate persistence, candidate evidence replay, lifecycle transitions,

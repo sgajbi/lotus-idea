@@ -98,6 +98,12 @@
           "supportability_status": "foundation_only"
         },
         {
+          "operation": "data_lifecycle_action",
+          "scope": "Governed legal-hold, erasure, and purge operator workflow",
+          "source_authority": "lotus-idea",
+          "supportability_status": "not_certified"
+        },
+        {
           "operation": "review_queue_read",
           "scope": "Internal advisor review queue projection",
           "source_authority": "lotus-idea",

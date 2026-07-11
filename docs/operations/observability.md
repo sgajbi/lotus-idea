@@ -76,6 +76,7 @@ Current instrumented operations:
 | `candidate_persistence` | Internal high-cash candidate persistence and replay | `lotus-core` | `foundation_only` |
 | `candidate_evidence_replay` | Internal candidate evidence hash replay posture | `lotus-idea` | `foundation_only` |
 | `lifecycle_transition` | Internal candidate lifecycle transition recording | `lotus-idea` | `foundation_only` |
+| `data_lifecycle_action` | Governed hold, erasure, and purge operator workflow | `lotus-idea` | `not_certified` |
 | `ai_explanation` | Internal AI explanation fallback/verifier evaluation | `lotus-idea` | `foundation_only` |
 | `ai_explanation_readiness_read` | Internal AI explanation readiness diagnostic | `lotus-ai` | `not_certified` |
 | `review_queue_read` | Internal advisor review queue read projection | `lotus-idea` | `foundation_only` |
