@@ -122,6 +122,69 @@ def test_downstream_plan_rejects_missing_or_ungoverned_resource_path(
         )
 
 
+def test_downstream_seed_manifest_requires_exact_synthetic_provenance() -> None:
+    module = _load_script()
+    path = "/api/v1/conversion-intents/capacity-conversion-abc/downstream-submissions"
+    seed = {
+        "schemaVersion": "lotus-idea.downstream-capacity-seed.v1",
+        "proofScope": "synthetic_downstream_capacity_resource_seed",
+        "claimPosture": "seed_only_not_capacity_evidence",
+        "syntheticResource": True,
+        "productionCapacityCertified": False,
+        "supportedFeaturePromoted": False,
+        "commitSha": "abc123",
+        "branch": "main",
+        "downstreamSubmissionPath": path,
+    }
+
+    assert (
+        module._downstream_submission_path(
+            seed=seed,
+            commit_sha="abc123",
+            branch="main",
+            environment_path=None,
+        )
+        == path
+    )
+    for key, invalid in (
+        ("syntheticResource", False),
+        ("productionCapacityCertified", True),
+        ("supportedFeaturePromoted", True),
+        ("commitSha", "different"),
+        ("branch", "feature/capacity"),
+    ):
+        with pytest.raises(ValueError, match="provenance is invalid"):
+            module._downstream_submission_path(
+                seed={**seed, key: invalid},
+                commit_sha="abc123",
+                branch="main",
+                environment_path=None,
+            )
+
+
+def test_downstream_seed_manifest_rejects_ungoverned_path() -> None:
+    module = _load_script()
+    seed = {
+        "schemaVersion": "lotus-idea.downstream-capacity-seed.v1",
+        "proofScope": "synthetic_downstream_capacity_resource_seed",
+        "claimPosture": "seed_only_not_capacity_evidence",
+        "syntheticResource": True,
+        "productionCapacityCertified": False,
+        "supportedFeaturePromoted": False,
+        "commitSha": "abc123",
+        "branch": "main",
+        "downstreamSubmissionPath": "/api/v1/idea-candidates/client/downstream-submissions",
+    }
+
+    with pytest.raises(ValueError, match="seed path is invalid"):
+        module._downstream_submission_path(
+            seed=seed,
+            commit_sha="abc123",
+            branch="main",
+            environment_path=None,
+        )
+
+
 def test_cli_writes_source_safe_report_only_evidence(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

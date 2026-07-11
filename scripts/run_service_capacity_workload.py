@@ -228,6 +228,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--run-id", required=True)
     parser.add_argument("--postgres-threshold-proof", type=Path)
     parser.add_argument("--dependency-recovery-proof", type=Path)
+    parser.add_argument("--downstream-capacity-seed", type=Path)
     parser.add_argument("--resource-baseline", type=Path)
     parser.add_argument("--verify-postgres-threshold-attestation", action="store_true")
     parser.add_argument("--verify-dependency-recovery-attestation", action="store_true")
@@ -243,6 +244,9 @@ def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     probe: HttpCapacityProbe | None = None
     try:
+        downstream_capacity_seed = _read_optional_json_object(
+            args.downstream_capacity_seed, name="downstream capacity seed"
+        )
         plans = build_workload_plans(
             scenarios=tuple(args.scenario),
             request_count=args.request_count,
@@ -250,7 +254,12 @@ def main(argv: list[str] | None = None) -> int:
             environment_profile=args.environment_profile,
             allow_mutating_workflows=args.allow_mutating_workflows,
             allow_production_mutations=args.allow_production_mutations,
-            downstream_submission_path=(os.getenv(DOWNSTREAM_PATH_ENV, "").strip() or None),
+            downstream_submission_path=_downstream_submission_path(
+                seed=downstream_capacity_seed,
+                commit_sha=args.commit_sha,
+                branch=args.branch,
+                environment_path=os.getenv(DOWNSTREAM_PATH_ENV, "").strip() or None,
+            ),
         )
         if args.timeout_seconds <= 0:
             raise ValueError("timeout_seconds must be positive")
@@ -375,6 +384,33 @@ def _read_optional_json_object(path: Path | None, *, name: str) -> dict[str, obj
 
 def _read_optional_resource_baseline(path: Path | None) -> dict[str, object] | None:
     return _read_optional_json_object(path, name="resource baseline")
+
+
+def _downstream_submission_path(
+    *,
+    seed: dict[str, object] | None,
+    commit_sha: str,
+    branch: str,
+    environment_path: str | None,
+) -> str | None:
+    if seed is None:
+        return environment_path
+    required = {
+        "schemaVersion": "lotus-idea.downstream-capacity-seed.v1",
+        "proofScope": "synthetic_downstream_capacity_resource_seed",
+        "claimPosture": "seed_only_not_capacity_evidence",
+        "syntheticResource": True,
+        "productionCapacityCertified": False,
+        "supportedFeaturePromoted": False,
+        "commitSha": commit_sha,
+        "branch": branch,
+    }
+    if any(seed.get(key) != expected for key, expected in required.items()):
+        raise ValueError("downstream capacity seed provenance is invalid")
+    path = seed.get("downstreamSubmissionPath")
+    if not isinstance(path, str) or not DOWNSTREAM_PATH_PATTERN.fullmatch(path):
+        raise ValueError("downstream capacity seed path is invalid")
+    return path
 
 
 if __name__ == "__main__":
