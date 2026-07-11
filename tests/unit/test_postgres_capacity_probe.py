@@ -67,7 +67,8 @@ def test_probe_measures_read_only_query_and_connection_utilization() -> None:
     assert result.outcome == "accepted"
     assert result.connection_utilization_fraction == 0.25
     assert cursor.queries[0] == "SELECT 1"
-    assert "lotus-idea postgres-capacity-posture" in cursor.queries[1]
+    assert "pg_stat_clear_snapshot" in cursor.queries[1]
+    assert "lotus-idea postgres-capacity-posture" in cursor.queries[2]
     assert connection_args["application_name"] == "lotus-idea-capacity-probe"
     assert connection.closed is True
 
