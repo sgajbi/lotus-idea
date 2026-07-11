@@ -148,9 +148,7 @@ def test_validator_rejects_contract_identity_mutation(
         ({"commit_sha": " "}, "commit_sha must not be blank"),
     ],
 )
-def test_builder_rejects_ambiguous_provenance(
-    overrides: dict[str, object], message: str
-) -> None:
+def test_builder_rejects_ambiguous_provenance(overrides: dict[str, object], message: str) -> None:
     values: dict[str, object] = {
         "snapshots": [_snapshot(0, 1.0, 100), _snapshot(1, 1.1, 100)],
         "environment_profile": "test",
