@@ -6,10 +6,10 @@ import pytest
 
 import app.application.service_resource_baseline as baseline_module
 from app.application.service_resource_baseline import (
-    ProcessResourceSnapshot,
     build_service_resource_baseline,
     validate_service_resource_baseline,
 )
+from app.ports.resource_probe import ProcessResourceSnapshot
 
 
 START = datetime(2026, 7, 11, 8, 0, tzinfo=UTC)
