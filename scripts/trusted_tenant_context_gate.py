@@ -175,10 +175,11 @@ def _require_fragments(
     text: str,
     fragments: tuple[str, ...],
 ) -> None:
-    for fragment in fragments:
+    for fragment_index, fragment in enumerate(fragments, start=1):
         if fragment not in text:
             errors.append(
-                f"{relative_path.as_posix()}: required tenant contract `{fragment}` is missing"
+                f"{relative_path.as_posix()}: required tenant contract fragment "
+                f"{fragment_index} is missing"
             )
 
 

@@ -40,7 +40,7 @@ def test_proof_command_keeps_source_adapter_arguments_explicit() -> None:
 
     assert command[0].endswith("python.exe") or command[0].endswith("python")
     assert "--risk-base-url" in command
-    assert "http://risk.dev.lotus" in command
+    assert command[command.index("--risk-base-url") + 1] == args.risk_base_url
     assert "--performance-base-url" not in command
     assert "--portfolio-id" in command
 

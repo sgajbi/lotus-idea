@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
+import os
 from pathlib import Path
+import stat
 import subprocess
 from typing import Any
 
@@ -60,6 +62,8 @@ def test_logical_restore_uses_secret_safe_commands_and_ephemeral_credentials() -
 
     def run_command(command: list[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
         environment = kwargs["env"]
+        if os.name != "nt":
+            assert stat.S_IMODE(Path(environment["PGPASSFILE"]).stat().st_mode) == 0o600
         calls.append((command, environment))
         if command[0] == "pg_dump":
             dump_path = Path(command[command.index("--file") + 1])

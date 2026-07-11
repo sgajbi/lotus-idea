@@ -66,3 +66,19 @@ def test_trusted_tenant_context_gate_rejects_default_adapter_tenant(tmp_path: Pa
     errors = module.validate_trusted_tenant_context(tmp_path)
 
     assert any("hard-coded production tenant fallback" in error for error in errors)
+
+
+def test_required_fragment_diagnostic_does_not_echo_scanned_content() -> None:
+    module = _load_gate()
+    errors: list[str] = []
+    sensitive_fragment = "secret-token-value"
+
+    module._require_fragments(
+        errors,
+        Path("contract.py"),
+        "unrelated content",
+        (sensitive_fragment,),
+    )
+
+    assert errors == ["contract.py: required tenant contract fragment 1 is missing"]
+    assert sensitive_fragment not in errors[0]

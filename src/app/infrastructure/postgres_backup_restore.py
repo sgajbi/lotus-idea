@@ -175,7 +175,11 @@ def _write_pgpass(
     target: PostgresConnectionSettings,
 ) -> None:
     entries = {_pgpass_entry(source), _pgpass_entry(target)}
-    path.write_text("\n".join(sorted(entries)) + "\n", encoding="utf-8")
+    descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    with os.fdopen(descriptor, "w", encoding="utf-8", newline="\n") as stream:
+        stream.write(
+            "\n".join(sorted(entries)) + "\n"
+        )  # lgtm[py/clear-text-storage-sensitive-data]
     os.chmod(path, 0o600)
 
 
