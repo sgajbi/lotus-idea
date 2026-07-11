@@ -9,6 +9,9 @@ from app.observability.service_slo_metrics import (
     DEPENDENCY_OUTCOMES,
     HTTP_DURATION_BUCKETS_SECONDS,
     HTTP_METRIC_LABELS,
+    POSTGRES_METRIC_LABELS,
+    POSTGRES_OPERATIONS,
+    POSTGRES_OUTCOMES,
     ServiceSloMetrics,
     WORKFLOW_METRIC_LABELS,
     WORKFLOW_OUTCOMES,
@@ -160,3 +163,51 @@ def test_dependency_sli_metrics_reject_unbounded_or_invalid_observations(
 
     with pytest.raises(ValueError, match=message):
         ServiceSloMetrics(CollectorRegistry()).observe_dependency_request(**values)  # type: ignore[arg-type]
+
+
+def test_postgres_sli_metrics_capture_operation_without_resource_identity() -> None:
+    registry = CollectorRegistry()
+    metrics = ServiceSloMetrics(registry)
+
+    metrics.observe_postgres_operation(
+        operation="mutation",
+        outcome="accepted",
+        duration_seconds=0.02,
+    )
+    payload = generate_latest(registry).decode("utf-8")
+
+    assert POSTGRES_METRIC_LABELS == ("operation", "outcome")
+    assert POSTGRES_OPERATIONS == {
+        "lifecycle_action",
+        "mutation",
+        "projection_read",
+        "snapshot_read",
+    }
+    assert POSTGRES_OUTCOMES == {"accepted", "conflict", "failed"}
+    assert 'operation="mutation"' in payload
+    assert 'outcome="accepted"' in payload
+    assert "lotus_idea_postgres_operation_duration_seconds_sum" in payload
+    assert "candidate" not in payload
+
+
+@pytest.mark.parametrize(
+    ("changes", "message"),
+    [
+        ({"operation": "raw_query"}, "PostgreSQL operation is not governed"),
+        ({"outcome": "tenant-001"}, "PostgreSQL outcome is not governed"),
+        ({"duration_seconds": -1.0}, "duration_seconds must be non-negative"),
+    ],
+)
+def test_postgres_sli_metrics_reject_unbounded_or_invalid_observations(
+    changes: dict[str, object],
+    message: str,
+) -> None:
+    values: dict[str, object] = {
+        "operation": "projection_read",
+        "outcome": "accepted",
+        "duration_seconds": 0.01,
+    }
+    values.update(changes)
+
+    with pytest.raises(ValueError, match=message):
+        ServiceSloMetrics(CollectorRegistry()).observe_postgres_operation(**values)  # type: ignore[arg-type]

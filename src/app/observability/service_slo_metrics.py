@@ -66,6 +66,26 @@ DEPENDENCY_DURATION_BUCKETS_SECONDS = (
     5.0,
     10.0,
 )
+POSTGRES_OPERATIONS_METRIC = "lotus_idea_postgres_operations_total"
+POSTGRES_DURATION_METRIC = "lotus_idea_postgres_operation_duration_seconds"
+POSTGRES_METRIC_LABELS = ("operation", "outcome")
+POSTGRES_OPERATIONS = frozenset(
+    {"lifecycle_action", "mutation", "projection_read", "snapshot_read"}
+)
+POSTGRES_OUTCOMES = frozenset({"accepted", "conflict", "failed"})
+POSTGRES_DURATION_BUCKETS_SECONDS = (
+    0.001,
+    0.005,
+    0.01,
+    0.025,
+    0.05,
+    0.1,
+    0.25,
+    0.5,
+    1.0,
+    2.5,
+    5.0,
+)
 
 
 class ServiceSloMetrics:
@@ -113,6 +133,19 @@ class ServiceSloMetrics:
             "Lotus Idea logical dependency request duration including bounded retries.",
             DEPENDENCY_METRIC_LABELS,
             buckets=DEPENDENCY_DURATION_BUCKETS_SECONDS,
+            registry=registry,
+        )
+        self._postgres_operations = Counter(
+            POSTGRES_OPERATIONS_METRIC,
+            "Count of bounded Lotus Idea PostgreSQL operations.",
+            POSTGRES_METRIC_LABELS,
+            registry=registry,
+        )
+        self._postgres_duration = Histogram(
+            POSTGRES_DURATION_METRIC,
+            "Lotus Idea PostgreSQL operation duration by bounded operation and outcome.",
+            POSTGRES_METRIC_LABELS,
+            buckets=POSTGRES_DURATION_BUCKETS_SECONDS,
             registry=registry,
         )
 
@@ -187,6 +220,23 @@ class ServiceSloMetrics:
         self._dependency_requests.labels(**labels).inc()
         self._dependency_duration.labels(**labels).observe(duration_seconds)
 
+    def observe_postgres_operation(
+        self,
+        *,
+        operation: str,
+        outcome: str,
+        duration_seconds: float,
+    ) -> None:
+        if operation not in POSTGRES_OPERATIONS:
+            raise ValueError("PostgreSQL operation is not governed")
+        if outcome not in POSTGRES_OUTCOMES:
+            raise ValueError("PostgreSQL outcome is not governed")
+        if duration_seconds < 0:
+            raise ValueError("duration_seconds must be non-negative")
+        labels = {"operation": operation, "outcome": outcome}
+        self._postgres_operations.labels(**labels).inc()
+        self._postgres_duration.labels(**labels).observe(duration_seconds)
+
 
 _SERVICE_SLO_METRICS = ServiceSloMetrics()
 
@@ -231,6 +281,19 @@ def observe_dependency_request(
     _SERVICE_SLO_METRICS.observe_dependency_request(
         dependency=dependency,
         method=method,
+        outcome=outcome,
+        duration_seconds=duration_seconds,
+    )
+
+
+def observe_postgres_operation(
+    *,
+    operation: str,
+    outcome: str,
+    duration_seconds: float,
+) -> None:
+    _SERVICE_SLO_METRICS.observe_postgres_operation(
+        operation=operation,
         outcome=outcome,
         duration_seconds=duration_seconds,
     )
