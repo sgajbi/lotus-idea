@@ -4,7 +4,10 @@ from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 from enum import StrEnum
 import re
-from typing import Mapping
+from typing import TYPE_CHECKING, Mapping
+
+if TYPE_CHECKING:
+    from app.domain.lifecycle_authority import VerifiedLifecycleAuthorityReceipt
 
 REGULATED_ADVISORY_POLICY_REF = "lotus-idea:regulated-advisory-evidence:seven-year:v1"
 OPERATIONAL_DELIVERY_POLICY_REF = "lotus-idea:operational-delivery:four-hundred-day:v1"
@@ -54,6 +57,8 @@ class DataLifecycleBlocker(StrEnum):
     LIFECYCLE_CONTROL_MISSING = "lifecycle_control_missing"
     RETENTION_POLICY_UNKNOWN = "retention_policy_unknown"
     AUTHORITY_INVALID = "authority_invalid"
+    AUTHORITY_ATTESTATION_REQUIRED = "authority_attestation_required"
+    AUTHORITY_ATTESTATION_MISMATCH = "authority_attestation_mismatch"
     DUAL_AUTHORIZATION_REQUIRED = "dual_authorization_required"
     LEGAL_HOLD_ACTIVE = "legal_hold_active"
     LEGAL_HOLD_NOT_ACTIVE = "legal_hold_not_active"
@@ -123,6 +128,8 @@ class DataLifecycleCommand:
     requested_at_utc: datetime
     dry_run: bool
     approver_subject: str | None = None
+    authority_verification_required: bool = False
+    authority_receipt: VerifiedLifecycleAuthorityReceipt | None = None
 
     def __post_init__(self) -> None:
         for field_name in (
@@ -199,7 +206,7 @@ def evaluate_data_lifecycle(
         )
     if command.requested_at_utc > evaluated_at_utc:
         raise ValueError("requested_at_utc must not be after evaluated_at_utc")
-    blockers = _common_blockers(command, context)
+    blockers = _common_blockers(command, context, evaluated_at_utc=evaluated_at_utc)
     control = context.control
     if blockers or control is None:
         return _blocked(control, blockers)
@@ -216,6 +223,8 @@ def evaluate_data_lifecycle(
 def _common_blockers(
     command: DataLifecycleCommand,
     context: DataLifecycleCandidateContext,
+    *,
+    evaluated_at_utc: datetime,
 ) -> tuple[DataLifecycleBlocker, ...]:
     blockers: list[DataLifecycleBlocker] = []
     if context.candidate_tenant_id is None:
@@ -228,6 +237,13 @@ def _common_blockers(
         blockers.append(DataLifecycleBlocker.RETENTION_POLICY_UNKNOWN)
     if not _authority_matches(command):
         blockers.append(DataLifecycleBlocker.AUTHORITY_INVALID)
+    if command.authority_verification_required and command.authority_receipt is None:
+        blockers.append(DataLifecycleBlocker.AUTHORITY_ATTESTATION_REQUIRED)
+    elif command.authority_receipt is not None and not _authority_receipt_matches(
+        command,
+        evaluated_at_utc=evaluated_at_utc,
+    ):
+        blockers.append(DataLifecycleBlocker.AUTHORITY_ATTESTATION_MISMATCH)
     if not command.dry_run and _requires_dual_authorization(command.action):
         if command.approver_subject is None or command.approver_subject == command.actor_subject:
             blockers.append(DataLifecycleBlocker.DUAL_AUTHORIZATION_REQUIRED)
@@ -373,6 +389,29 @@ def _authority_matches(command: DataLifecycleCommand) -> bool:
         else "bank-privacy-governance:"
     )
     return command.authority_ref.startswith(prefix)
+
+
+def _authority_receipt_matches(
+    command: DataLifecycleCommand,
+    *,
+    evaluated_at_utc: datetime,
+) -> bool:
+    receipt = command.authority_receipt
+    assert receipt is not None
+    expected_domain = (
+        "legal_and_records"
+        if command.action in {DataLifecycleAction.APPLY_HOLD, DataLifecycleAction.RELEASE_HOLD}
+        else "privacy"
+    )
+    return (
+        receipt.tenant_id == command.tenant_id
+        and receipt.candidate_id == command.candidate_id
+        and receipt.action is command.action
+        and receipt.authority_ref == command.authority_ref
+        and receipt.change_reference == command.change_reference
+        and receipt.authority_domain.value == expected_domain
+        and receipt.effective_at_utc <= evaluated_at_utc < receipt.expires_at_utc
+    )
 
 
 def _requires_dual_authorization(action: DataLifecycleAction) -> bool:

@@ -21,6 +21,10 @@ from app.domain.data_lifecycle import (
     evaluate_data_lifecycle,
     resolve_external_retention_policy_ref,
 )
+from app.domain.lifecycle_authority import (
+    LifecycleAuthorityDomain,
+    VerifiedLifecycleAuthorityReceipt,
+)
 
 NOW = datetime(2026, 7, 11, 8, 0, tzinfo=UTC)
 
@@ -130,6 +134,42 @@ def test_erasure_fails_closed_on_scope_policy_or_authority(
 
     assert evaluation.decision is DataLifecycleDecision.BLOCKED
     assert blocker in evaluation.blockers
+
+
+def test_lifecycle_authority_receipt_is_required_and_request_bound() -> None:
+    required = replace(
+        valid_command(DataLifecycleAction.ERASE),
+        authority_verification_required=True,
+    )
+    mismatched = replace(
+        required,
+        authority_receipt=replace(valid_authority_receipt(), candidate_id="candidate-other"),
+    )
+    expired = replace(
+        required,
+        authority_receipt=replace(
+            valid_authority_receipt(),
+            issued_at_utc=NOW - timedelta(minutes=10),
+            effective_at_utc=NOW - timedelta(minutes=9),
+            expires_at_utc=NOW - timedelta(minutes=1),
+            verified_at_utc=NOW - timedelta(minutes=2),
+        ),
+    )
+    verified = replace(required, authority_receipt=valid_authority_receipt())
+
+    missing_result = evaluate_data_lifecycle(required, valid_context(), evaluated_at_utc=NOW)
+    mismatched_result = evaluate_data_lifecycle(
+        mismatched,
+        valid_context(),
+        evaluated_at_utc=NOW,
+    )
+    expired_result = evaluate_data_lifecycle(expired, valid_context(), evaluated_at_utc=NOW)
+    verified_result = evaluate_data_lifecycle(verified, valid_context(), evaluated_at_utc=NOW)
+
+    assert DataLifecycleBlocker.AUTHORITY_ATTESTATION_REQUIRED in missing_result.blockers
+    assert DataLifecycleBlocker.AUTHORITY_ATTESTATION_MISMATCH in mismatched_result.blockers
+    assert DataLifecycleBlocker.AUTHORITY_ATTESTATION_MISMATCH in expired_result.blockers
+    assert verified_result.decision is DataLifecycleDecision.APPLIED
 
 
 def test_erasure_blocks_holds_and_active_delivery_then_redacts_atomically() -> None:
@@ -399,3 +439,22 @@ def valid_result(**changes: Any) -> DataLifecycleOperationResult:
     }
     values.update(changes)
     return DataLifecycleOperationResult(**values)
+
+
+def valid_authority_receipt() -> VerifiedLifecycleAuthorityReceipt:
+    return VerifiedLifecycleAuthorityReceipt(
+        decision_id="privacy-decision-001",
+        replay_nonce="a" * 64,
+        tenant_id="tenant-001",
+        candidate_id="candidate-001",
+        action=DataLifecycleAction.ERASE,
+        authority_domain=LifecycleAuthorityDomain.PRIVACY,
+        authority_ref="bank-privacy-governance:decision-001",
+        change_reference="privacy-case-001",
+        key_id="lifecycle-key-001",
+        rotation_epoch=3,
+        issued_at_utc=NOW - timedelta(minutes=2),
+        effective_at_utc=NOW - timedelta(minutes=1),
+        expires_at_utc=NOW + timedelta(minutes=5),
+        verified_at_utc=NOW,
+    )
