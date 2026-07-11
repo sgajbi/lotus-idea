@@ -130,8 +130,11 @@ verification clears only the production-like resource blocker. Process
 telemetry must not be presented as cloud billing, unit economics,
 horizontal-scale evidence, or justification for a new runtime service.
 Official cost allocation and billing reconciliation remain owned by
-`lotus-platform#495`; Idea keeps `cost_attribution_evidence_missing` until that
-platform contract and attested artifact exist.
+`lotus-platform#495`. Producer and consumer foundations are implemented
+locally, but Idea keeps `cost_attribution_evidence_missing` until a protected
+platform mainline artifact verifies against the governed signer and binds to
+the exact attested Idea resource digest and run id. Idea does not recalculate
+or certify platform cost.
 
 See `docs/operations/service-slo-capacity.md` for target values, alert response,
 capacity assumptions, and non-proof boundaries.

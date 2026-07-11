@@ -1610,11 +1610,14 @@ commit during consumption. A verified resource receipt may clear only
 `production_like_resource_attestation_missing`.
 
 Aggregate capacity evidence may reference a validated resource baseline only
-when commit and branch provenance match. Keep `costAttributionVerified=false`
-and `cost_attribution_evidence_missing` until the platform-owned contract in
-`lotus-platform#495` provides independently attested provider/billing evidence.
-Lotus Idea must not implement official billing adapters, allocation, or cost
-reconciliation.
+when commit and branch provenance match. Platform issue `lotus-platform#495`
+owns billing adapters, allocation, decimal reconciliation, and protected
+attestation. Idea consumes only the source-safe platform artifact through a
+narrow verifier that pins repository, signer, main ref, commit, and digest and
+binds its resource digest/run id to Idea's already attested resource proof.
+Keep `cost_attribution_evidence_missing` until matching protected evidence is
+executed; schema-valid or branch-local JSON cannot clear it. Lotus Idea must
+not implement official billing adapters, allocation, or cost reconciliation.
 
 Durable PostgreSQL repositories expose capacity through a narrow repository
 port. Nonessential source-ingestion and outbox operator runs must evaluate that

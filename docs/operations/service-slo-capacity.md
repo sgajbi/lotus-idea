@@ -305,7 +305,9 @@ signer workflow, `refs/heads/main`, and source commit. The workflow and
 protected runtime must exist on `main` before qualifying evidence can be
 produced. Production-like resource evidence is co-observed and separately
 attested by the load/soak workflow. Official cost attribution remains governed
-by `lotus-platform#495` and cannot be produced by Idea.
+by `lotus-platform#495` and cannot be produced by Idea. The platform producer
+and Idea consumer are implemented locally, but only a protected platform
+mainline execution can create qualifying cost evidence.
 
 Validate the evidence boundary independently:
 
@@ -354,3 +356,20 @@ workflow, main ref, and exact commit. A valid receipt clears only
 `costAttributionVerified=false` and `cost_attribution_evidence_missing`.
 Official provider/platform billing allocation, decimal reconciliation, and
 attestation belong to `lotus-platform#495`, not Lotus Idea.
+
+After downloading a platform artifact, bind it to the same verified resource
+proof:
+
+```powershell
+make service-capacity-workload `
+  SERVICE_CAPACITY_RESOURCE_BASELINE_ARG="--resource-baseline <resource-path> --verify-resource-attestation" `
+  SERVICE_CAPACITY_COST_ATTRIBUTION_ARG="--cost-attribution-artifact <cost-path> --verify-cost-attribution-attestation"
+```
+
+Idea pins `sgajbi/lotus-platform`, the governed cost-attribution signer,
+`refs/heads/main`, the exact platform commit, and the artifact SHA-256. It then
+matches the platform artifact's resource schema, run id, and SHA-256 to the
+already attested Idea resource qualification. It does not parse allocations,
+recalculate cost, accept platform self-certification, or persist raw billing
+exports. Missing or mismatched evidence preserves
+`cost_attribution_evidence_missing`.
