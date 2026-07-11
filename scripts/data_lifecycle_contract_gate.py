@@ -48,6 +48,7 @@ REQUIRED_CONTROL_FLAGS = {
     "capability_and_role_required": True,
     "dual_authorization_required_for_release_erasure_and_purge": True,
     "idempotency_and_request_fingerprint_required": True,
+    "durable_correlation_trace_required": True,
     "dry_run_preview_required": True,
     "aggregate_lock_fences_concurrent_writes": True,
     "active_outbox_or_downstream_work_blocks_erasure": True,

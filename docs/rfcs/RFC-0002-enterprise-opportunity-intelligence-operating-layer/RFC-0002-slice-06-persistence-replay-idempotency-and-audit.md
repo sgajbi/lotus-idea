@@ -38,7 +38,8 @@ Implemented evidence:
    bank, Report, Archive, and AI authority boundaries.
 2. `POST /api/v1/data-lifecycle/candidates/{candidateId}/actions` requires
    trusted role/capability context, exact tenant entitlement, idempotency,
-   governed authority, dry-run preview, and dual authorization where required.
+   governed authority, durable sanitized correlation/trace, dry-run preview,
+   and dual authorization where required.
 3. PostgreSQL controls make hold, release, erasure, purge, operation audit,
    redaction, and tombstone updates atomic. Erased/purged candidates are hidden
    from detail and downstream lookup paths; new delivery claims share the

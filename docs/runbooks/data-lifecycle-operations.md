@@ -58,6 +58,7 @@ Use `POST /api/v1/data-lifecycle/candidates/{candidateId}/actions` with:
 | Capability | `idea.data-lifecycle.manage` |
 | Tenant | Request `tenantId` must exactly match trusted caller entitlements. |
 | Idempotency | A stable `Idempotency-Key`; changed content returns conflict. |
+| Audit lineage | Middleware-issued or sanitized correlation and trace identifiers persist with the operation. |
 | Authority | Legal/records authority for hold actions; privacy authority for erase/purge. |
 | Dual authorization | Distinct approver for release, erase, and purge. |
 | Preview | Set `dryRun=true` before an applied action. |
@@ -77,8 +78,9 @@ documents in request references, logs, metrics, or evidence artifacts.
 5. Submit the same governed decision with `dryRun=false` and a new action key.
 6. Retry the identical request after interruption; matching requests replay.
    Never reuse a key for changed content.
-7. Verify aggregate telemetry, operation audit hash, control version, and
-   affected row counts. Do not export redacted payloads as evidence.
+7. Verify aggregate telemetry, operation audit hash, correlation/trace,
+   control version, and affected row counts. Do not export redacted payloads
+   as evidence.
 
 Example request body:
 

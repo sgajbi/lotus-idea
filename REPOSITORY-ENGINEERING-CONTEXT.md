@@ -572,8 +572,8 @@ client-publication proof, or supported-feature promotion.
 
 The data-lifecycle operator route requires `privacy_officer` or
 `records_manager`, `idea.data-lifecycle.manage`, exact trusted tenant scope,
-idempotency, governed authority, preview, and distinct approval for release,
-erase, and purge. Lotus Idea enforces externally approved decisions and must
+idempotency, durable sanitized correlation/trace, governed authority, preview,
+and distinct approval for release, erase, and purge. Lotus Idea enforces externally approved decisions and must
 not self-authorize legal hold, privacy erasure, Report/Archive retention, or AI
 provider deletion. Erased and purged records must be excluded at every direct
 read projection, not only from whole-repository snapshots. New downstream
@@ -930,7 +930,9 @@ Recent issue-derived patterns to preserve:
     lifecycle lock; erasure must pseudonymize both prior audit actors and the
     erasure operation itself; purge must recover tenant authority from the
     immutable terminal control after payload scope is redacted; and trust
-    telemetry must separate active products from tombstone posture. Pin these
+    telemetry must separate active products from tombstone posture. Persist
+    sanitized correlation and trace on the immutable operation rather than
+    treating request logs as durable audit. Pin these
     invariants with real PostgreSQL restart and concurrency tests.
 33. Retention references are authority-bearing contract values. Never accept a
     caller-chosen non-blank value as policy. Map only versioned, governed

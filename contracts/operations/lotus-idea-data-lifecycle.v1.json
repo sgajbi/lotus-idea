@@ -299,6 +299,7 @@
     "capability_and_role_required": true,
     "dual_authorization_required_for_release_erasure_and_purge": true,
     "idempotency_and_request_fingerprint_required": true,
+    "durable_correlation_trace_required": true,
     "dry_run_preview_required": true,
     "aggregate_lock_fences_concurrent_writes": true,
     "active_outbox_or_downstream_work_blocks_erasure": true,
