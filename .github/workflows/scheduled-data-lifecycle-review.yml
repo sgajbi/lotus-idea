@@ -1,0 +1,68 @@
+name: Scheduled Data Lifecycle Review
+
+on:
+  schedule:
+    - cron: "43 2 * * 0"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write
+  attestations: write
+
+env:
+  LOTUS_IDEA_DATABASE_URL: postgresql://lotus_idea_lifecycle:lotus_idea_lifecycle@localhost:5432/lotus_idea_lifecycle
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+  PYTHONUNBUFFERED: "1"
+  PYTHON_VERSION: "3.12"
+
+jobs:
+  scheduled-review:
+    name: Scheduled Lifecycle / Review Proof
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_DB: lotus_idea_lifecycle
+          POSTGRES_PASSWORD: lotus_idea_lifecycle
+          POSTGRES_USER: lotus_idea_lifecycle
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U lotus_idea_lifecycle -d lotus_idea_lifecycle"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: "pip"
+      - name: Install
+        run: make install
+      - name: Apply current migrations
+        run: make migrate
+      - name: Seed synthetic lifecycle review states
+        run: make scheduled-data-lifecycle-seed
+      - name: Review expired lifecycle controls
+        run: make scheduled-data-lifecycle-review
+      - name: Validate source-safe review evidence
+        run: make scheduled-data-lifecycle-review-proof-gate
+      - name: Attest review evidence provenance
+        uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4.1.1
+        with:
+          subject-path: output/data-lifecycle/scheduled-review-evidence.json
+      - name: Upload review evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: scheduled-data-lifecycle-review-${{ github.run_id }}
+          path: output/data-lifecycle/scheduled-review-evidence.json
+          if-no-files-found: error
+          retention-days: 90
