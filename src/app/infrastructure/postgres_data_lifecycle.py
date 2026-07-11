@@ -179,6 +179,10 @@ def _load_candidate_context(cursor: Any, candidate_id: str) -> DataLifecycleCand
     access_scope = candidate_json.get("access_scope")
     tenant_id = access_scope.get("tenant_id") if isinstance(access_scope, dict) else None
     control = _load_control(cursor, candidate_id)
+    if tenant_id is None and control is not None:
+        effective_state = control.held_from_state or control.state
+        if effective_state in {DataLifecycleState.ERASED, DataLifecycleState.PURGED}:
+            tenant_id = control.tenant_id
     active_outbox_count, active_downstream_count = _active_delivery_counts(cursor, candidate_id)
     return DataLifecycleCandidateContext(
         candidate_exists=True,

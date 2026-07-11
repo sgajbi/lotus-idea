@@ -281,6 +281,21 @@ def test_postgres_lifecycle_rolls_back_when_control_lock_is_lost() -> None:
     assert connection.operations == {}
 
 
+def test_postgres_purge_uses_terminal_control_after_access_scope_redaction(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    connection = LifecycleConnection()
+    connection.candidate_tenant_id = None
+    connection.control = erased_control_row()
+    monkeypatch.setattr(module, "purge_expired_candidate_payloads", lambda *_args, **_kwargs: {})
+
+    result = execute(connection, valid_command(DataLifecycleAction.PURGE))
+
+    assert result.decision is DataLifecycleDecision.APPLIED
+    assert result.control is not None
+    assert result.control.state is DataLifecycleState.PURGED
+
+
 def test_postgres_lifecycle_not_found_is_source_safe_and_not_persisted() -> None:
     connection = LifecycleConnection()
     connection.candidate_exists = False
