@@ -1784,7 +1784,7 @@
         "No request body."
       ],
       "response_examples": [
-        "{\"service\":\"lotus-idea\",\"version\":\"0.1.0\",\"roundingPolicyVersion\":\"v1\",\"build\":{\"gitCommitSha\":\"unknown\",\"gitBranch\":\"unknown\",\"buildTimestamp\":\"unknown\",\"repoUrl\":\"unknown\",\"ciRunId\":\"local\",\"imageDigest\":\"local-unpublished\"}}"
+        "{\"service\":\"lotus-idea\",\"version\":\"0.1.0\",\"roundingPolicyVersion\":\"v1\",\"build\":{\"gitCommitSha\":\"unknown\",\"gitBranch\":\"unknown\",\"buildTimestamp\":\"unknown\",\"repoUrl\":\"unknown\",\"ciRunId\":\"local\",\"imageBuildId\":\"local\",\"imageIdentityContractVersion\":\"lotus.image-identity.v1\",\"registryDigestBinding\":\"runtime_release_manifest\",\"imageDigest\":null,\"imageDigestReference\":null,\"releaseIdentityStatus\":\"local_unpublished\"}}"
       ],
       "error_examples": [
         "Unhandled service errors return product-safe Problem Details."
@@ -1807,7 +1807,7 @@
         "No request body."
       ],
       "response_examples": [
-        "{\"service\":\"lotus-idea\",\"version\":\"0.1.0\",\"roundingPolicyVersion\":\"v1\",\"build\":{\"gitCommitSha\":\"unknown\",\"gitBranch\":\"unknown\",\"buildTimestamp\":\"unknown\",\"repoUrl\":\"unknown\",\"ciRunId\":\"local\",\"imageDigest\":\"local-unpublished\"}}"
+        "{\"service\":\"lotus-idea\",\"version\":\"0.1.0\",\"roundingPolicyVersion\":\"v1\",\"build\":{\"gitCommitSha\":\"unknown\",\"gitBranch\":\"unknown\",\"buildTimestamp\":\"unknown\",\"repoUrl\":\"unknown\",\"ciRunId\":\"local\",\"imageBuildId\":\"local\",\"imageIdentityContractVersion\":\"lotus.image-identity.v1\",\"registryDigestBinding\":\"runtime_release_manifest\",\"imageDigest\":null,\"imageDigestReference\":null,\"releaseIdentityStatus\":\"local_unpublished\"}}"
       ],
       "error_examples": [
         "Unhandled service errors return product-safe Problem Details."

@@ -214,6 +214,23 @@ GitHub provenance and SBOM attestations. Environments must promote the same
 `repository@sha256:<digest>` reference; deployment by mutable tag or
 environment rebuild is not a supported release path.
 
+### Image Identity Contract
+
+`lotus.image-identity.v1` separates immutable build identity from the final
+registry manifest digest. The image carries commit, branch, build timestamp,
+repository, CI run, and build ID labels plus an explicit
+`runtime-release-manifest` digest-binding label. It does not carry a value that
+pretends to be its own final digest.
+
+After publication, Main Releasability pulls and runs the exact
+`repository@sha256:<digest>` image, captures OCI labels and `/version`, and runs
+`make release-image-identity-contract-gate`. The gate compares build identity,
+registry digest, Kubernetes deployment reference, signature subject,
+provenance/SBOM attestation subjects, and runtime metadata. Placeholder values,
+mutable-tag deployment, subject drift, or digest mismatch fail the release.
+Published environments inject the resolved digest pair from governed release
+or deployment metadata; missing or invalid bindings make readiness degraded.
+
 PR Merge Gate and Main Releasability also run `make container-runtime-smoke`
 after the Docker image build. The target starts the built image, probes
 `/health` and `/health/live` for `200`, requires `/health/ready` to be reachable

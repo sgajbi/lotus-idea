@@ -66,13 +66,15 @@ The built runtime image installs only runtime dependencies constrained by
 `requirements/runtime-resolved.lock.txt`, runs as the
 non-root `lotus` user, keeps only the service plus source-ingestion worker
 entrypoint scripts from `scripts/`, and records service version, Git commit,
-Git branch, build timestamp, repository URL, CI run ID, and image digest
-metadata as OCI labels and runtime metadata. Main Releasability is the only
+Git branch, build timestamp, repository URL, CI run ID, and a build identity
+as OCI labels and runtime metadata. Main Releasability is the only
 registry-publish path: it lower-cases the GHCR image repository, tags the
 service image with the Git commit SHA, runs container smoke and Trivy scan
 before publication, pushes the image, resolves the registry digest, signs that
 digest with keyless Cosign, generates provenance and SBOM attestations, and
-records the digest reference in `release-evidence.json`.
+records the digest reference in `release-evidence.json`. It then pulls and runs
+that exact digest, captures OCI labels and `/version`, and executes
+`make release-image-identity-contract-gate` before release evidence is uploaded.
 
 The Main Releasability SBOM is explicitly scoped to runtime Python
 dependencies from `requirements/runtime-resolved.lock.txt` and is tied in
@@ -82,12 +84,48 @@ Trivy image scan, not by the runtime dependency SBOM. Development tooling, bulk
 CI helper scripts, and secret-like build inputs must not be copied into or
 passed through the runtime image.
 
+## Image Identity And Promotion
+
+An OCI image cannot contain its own final registry manifest digest: changing a
+label changes the image configuration and therefore changes the digest. Lotus
+Idea uses `lotus.image-identity.v1` to keep the two identities explicit.
+
+| Identity | Authority | Where exposed |
+| --- | --- | --- |
+| Build identity | Immutable image configuration | OCI commit/branch/time/repo/run/build labels and `/version` build fields |
+| Registry identity | Registry manifest plus signed release/deployment evidence | `release-evidence.json`, signature/attestation subjects, Kubernetes digest reference, runtime-injected `/version` digest fields |
+
+Local and PR images report `releaseIdentityStatus=local_unpublished` with null
+digest fields. Demo, staging, and production require both
+`LOTUS_RELEASE_IMAGE_DIGEST=sha256:<digest>` and
+`LOTUS_RELEASE_IMAGE_DIGEST_REFERENCE=<repository>@sha256:<digest>`; malformed,
+partial, missing, placeholder, or mismatched bindings degrade `/health/ready`.
+
+Operators verify a release with:
+
+```bash
+docker pull "${IMAGE_REPOSITORY}@${IMAGE_DIGEST}"
+docker image inspect "${IMAGE_REPOSITORY}@${IMAGE_DIGEST}" --format '{{json .Config.Labels}}'
+cosign verify "${IMAGE_REPOSITORY}@${IMAGE_DIGEST}" \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+  --certificate-identity-regexp '^https://github.com/sgajbi/lotus-idea/.github/workflows/main-releasability.yml@refs/heads/main$'
+curl -fsS "${SERVICE_URL}/version"
+```
+
+Compare the registry digest, `container_image_digest_reference`, Kubernetes
+deployment reference, Cosign subject, provenance subject, SBOM attestation
+subject, and `/version` digest reference. They must be identical. Promote that
+same digest reference across environments; never rebuild, mutate labels after
+push, or deploy by a mutable tag.
+
 `make container-runtime-smoke` is the packaged runtime startup proof used by PR
 Merge Gate and Main Releasability after `make docker-build`. It starts the
 built image on a governed local host port, requires `/health` and
 `/health/live` to return `200`, requires `/health/ready` to return reachable
-JSON with either `200` or the default-profile fail-closed `503`, prints
-container logs on failure, and removes the smoke container in all cases. This
+JSON with either `200` or the default-profile fail-closed `503`, probes
+`/version`, prints container logs on failure, and removes the smoke container
+in all cases. The post-push invocation additionally injects and verifies the
+resolved digest pair. This
 proves packaged entrypoint and health-surface behavior only; it does not
 certify production deployment, upstream source connectivity, Workbench,
 data-mesh readiness, client publication, or supported-feature status.

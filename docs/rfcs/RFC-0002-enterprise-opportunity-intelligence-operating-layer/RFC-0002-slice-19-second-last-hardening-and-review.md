@@ -309,6 +309,23 @@ This slice also hardens runtime Docker and release image identity governance:
    capacity, live source ingestion, Workbench support, data-product readiness,
    client publication, or supported-feature promotion.
 
+GitHub issue `#342` closes a remaining release-identity contradiction. An OCI
+image cannot embed its own final registry manifest digest because the embedded
+value changes the digest. `lotus.image-identity.v1` therefore separates the
+image's immutable build identity from registry/deployment identity. Docker OCI
+labels carry commit, branch, timestamp, repository, run, build ID, contract,
+and binding authority; they no longer carry a placeholder self-digest.
+
+Main Releasability resolves the digest after its single push, pulls and runs
+that exact digest reference, captures labels and `/version`, and validates the
+release manifest, Kubernetes reference, signature subject, provenance/SBOM
+attestation subjects, and runtime digest through
+`make release-image-identity-contract-gate`. Local/PR `/version` responses use
+null digest fields and explicit `local_unpublished` posture. Production-like
+readiness fails closed for missing, malformed, partial, placeholder, or
+mismatched digest bindings. The same image is promoted without rebuild or
+post-push mutation. This is internal runtime/CI modularity, not another service.
+
 This slice also hardens packaged container startup proof after GitHub issue
 `#270` showed Docker release gates built and scanned the image without starting
 the packaged service:

@@ -202,10 +202,10 @@ Common gates:
 | `make check` | Local PR-grade lane for routine feature work. |
 | `make ci-release` | Broad release evidence including implementation proof, Postgres, Docker, smoke, scan, and SBOM evidence. |
 
-The built image carries OCI labels for service version, Git commit, Git branch,
-build timestamp, repository URL, CI run ID, and image digest metadata. The
-runtime `/version` endpoint returns the same build metadata as `/metadata` for
-release inventory and deployment diagnostics.
+The image carries OCI version, commit, branch, timestamp, repository, CI run,
+and non-self-referential build identity labels. Main Releasability binds the
+final digest through signed evidence and verifies digest-pinned `/version`;
+see the [service operations runbook](docs/runbooks/service-operations.md#image-identity-and-promotion).
 
 For README, wiki, RFC, context, contract, CI, or supported-feature edits, run
 stranded-truth reconciliation first:

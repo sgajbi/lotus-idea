@@ -910,13 +910,22 @@ Recent issue-derived patterns to preserve:
     ordering, dependency reinstall drift, Docker-context generated-artifact
     parity drift, and declared-but-unpackaged worker assets.
 27. release images must be commit-tagged, CI-published only, signed, attested,
-    and promoted by digest. The Dockerfile must carry OCI labels for service
-    version, commit SHA, branch, build timestamp, repo URL, CI run ID, and image
-    digest metadata; `/version` must expose the same runtime build metadata as
-    `/metadata`; `release-evidence.json` must capture the registry digest,
+    and promoted by digest. Because an image cannot embed its own final
+    registry digest without changing that digest, `lotus.image-identity.v1`
+    separates OCI build identity from registry/deployment identity. The
+    Dockerfile must carry OCI labels for service version, commit SHA, branch,
+    build timestamp, repo URL, CI run ID, build ID, identity contract, and
+    runtime release-manifest binding; it must never carry a fake self-digest.
+    `/version` must expose null digest fields for unpublished local/PR images
+    and the runtime-bound digest pair for published deployments. Production-like
+    readiness fails closed when that pair is missing, malformed, partial, or
+    mismatched. `release-evidence.json` must capture the registry digest,
     digest deployment reference, keyless signature subject, provenance
     attestation, SBOM attestation, scan evidence, and same-digest promotion
-    policy; Docker ARG/ENV names must reject secret-like build inputs.
+    policy. Main Releasability must run the exact digest image and cross-check
+    OCI labels, `/version`, all subjects, and the Kubernetes reference through
+    `make release-image-identity-contract-gate`; Docker ARG/ENV names must
+    reject secret-like build inputs.
 28. duplicate-implementation controls now split report-only evidence from
     blocking enforcement. `make duplicate-implementation-inventory` scans exact
     first-party function-body duplicates across `src/app` and `scripts`, writes

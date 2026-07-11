@@ -471,6 +471,14 @@ certification, client-ready publication, or supported-feature promotion.
 
 ## Remaining Gap
 
+Release image identity now follows `lotus.image-identity.v1`. Issue `#342` is
+fixed locally by removing the pre-push digest placeholder, exposing explicit
+local versus digest-bound `/version` posture, degrading production-like
+readiness on invalid bindings, and cross-checking the published digest against
+OCI build labels, release evidence, signature/attestation subjects, Kubernetes
+reference, and the exact digest-pinned runtime. Mainline publication evidence
+is still required before the issue can close.
+
 1. Certify dashboard and alert references only after metric families are stable
    and implemented. The operation metric catalog and AI model-risk operations
    contract now prove code-owned, bounded, not-certified telemetry/control
