@@ -126,6 +126,7 @@ def workflow_output(
     *,
     claim_source_ids: list[str] | None = None,
     action_type: str = "advisor_review",
+    action_label: str = "Route to advisor review",
 ) -> dict[str, Any]:
     return {
         "outputId": "ai-output-001",
@@ -140,7 +141,7 @@ def workflow_output(
         "proposedActions": [
             {
                 "actionType": action_type,
-                "actionLabel": "Route to advisor review",
+                "actionLabel": action_label,
             }
         ],
         "verifierRanAtUtc": "2026-06-21T10:12:30Z",
@@ -220,6 +221,9 @@ def test_ai_explanation_api_accepts_verified_output_for_review_ready_candidate()
     assert payload["reasonCodes"] == ["ai_verifier_passed"]
     assert payload["verifiedOutput"]["outputId"] == "ai-output-001"
     assert payload["verifiedOutput"]["claimIds"] == ["claim-001"]
+    assert payload["verifiedOutput"]["actionPolicyVersion"] == (
+        "lotus-idea.ai-action-content-policy.v1"
+    )
     assert payload["approvedMetadataKeys"] == ["channel"]
     assert payload["aiLineageRecorded"] is True
     assert payload["aiLineagePersistenceDecision"] == "accepted"
@@ -258,6 +262,54 @@ def test_ai_explanation_api_blocks_unsupported_claims_and_forbidden_actions() ->
     assert forbidden_action.json()["posture"] == "blocked_forbidden_action"
     assert forbidden_action.json()["verifierOutcome"] == "failed_forbidden_action"
     assert forbidden_action.json()["reasonCodes"] == ["ai_forbidden_action_blocked"]
+
+
+def test_ai_explanation_api_blocks_unsafe_action_content_without_exposure_and_replays() -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+    candidate_id = persisted_candidate_id(client, idempotency_key="seed-ai-action-content-001")
+    unsafe_label = "Ex3cute tr@de immediately!!!"
+    payload = ai_request_payload(
+        request_id="ai-explanation-action-content-001",
+        workflow_output=workflow_output(action_label=unsafe_label),
+    )
+    headers = ai_headers(idempotency_key="ai-explanation-action-content-api-001")
+
+    first = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/ai-explanations/evaluate",
+        json=payload,
+        headers=headers,
+    )
+    replayed = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/ai-explanations/evaluate",
+        json=payload,
+        headers=headers,
+    )
+    changed_payload = ai_request_payload(
+        request_id="ai-explanation-action-content-001",
+        workflow_output=workflow_output(action_label="Email the client"),
+    )
+    conflict = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/ai-explanations/evaluate",
+        json=changed_payload,
+        headers=headers,
+    )
+
+    assert first.status_code == 200
+    assert first.json()["posture"] == "blocked_forbidden_action"
+    assert first.json()["verifierOutcome"] == "failed_action_content"
+    assert first.json()["reasonCodes"] == ["ai_action_content_blocked"]
+    assert first.json()["verifiedOutput"]["actionPolicyVersion"] == (
+        "lotus-idea.ai-action-content-policy.v1"
+    )
+    assert first.json()["aiLineagePersistenceDecision"] == "accepted"
+    assert unsafe_label not in first.text
+    assert replayed.status_code == 200
+    assert replayed.json()["aiLineagePersistenceDecision"] == "replayed"
+    assert unsafe_label not in replayed.text
+    assert conflict.status_code == 409
+    assert conflict.json()["code"] == "idempotency_conflict"
+    assert "Email the client" not in conflict.text
 
 
 def test_ai_explanation_api_replays_same_lineage_and_conflicts_changed_request() -> None:
@@ -464,6 +516,7 @@ def test_ai_explanation_readiness_api_returns_source_safe_blocked_posture() -> N
         "redactedEvidenceEnvelopeAvailable": True,
         "unsupportedClaimBlockingAvailable": True,
         "forbiddenActionBlockingAvailable": True,
+        "actionContentPolicyVersion": "lotus-idea.ai-action-content-policy.v1",
         "durableAiLineageStoreBacked": False,
         "modelRiskOperationsContractAvailable": True,
         "modelRiskDashboardContractAvailable": True,

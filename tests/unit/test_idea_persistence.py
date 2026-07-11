@@ -634,6 +634,9 @@ def test_ai_explanation_lineage_records_replays_and_conflicts_by_request_id() ->
     assert accepted.lineage_record.grants_downstream_authority is False
     assert accepted.lineage_record.claim_ids == ()
     assert accepted.lineage_record.proposed_action_types == ()
+    assert accepted.lineage_record.action_policy_version == (
+        "lotus-idea.ai-action-content-policy.v1"
+    )
     assert accepted.record is not None
     assert len(accepted.record.ai_explanation_lineage_records) == 1
     assert accepted.audit_event is not None

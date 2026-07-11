@@ -7,6 +7,7 @@ from pydantic import Field, field_validator
 
 from app.api.base_model import CamelModel
 from app.api.temporal_validation import require_timezone_aware
+from app.domain.ai_action_policy import AI_ACTION_POLICY_VERSION
 from app.application.ai_governance import (
     AIExplanationReadinessSnapshot,
     EvaluateAIExplanationToRepositoryCommand,
@@ -282,6 +283,7 @@ class AIWorkflowOutputSummaryResponse(CamelModel):
         alias="proposedActionTypes",
     )
     verifier_ran_at_utc: datetime = Field(..., alias="verifierRanAtUtc")
+    action_policy_version: str = Field(..., alias="actionPolicyVersion")
 
     @classmethod
     def from_domain(cls, output: AIWorkflowOutput) -> "AIWorkflowOutputSummaryResponse":
@@ -290,6 +292,7 @@ class AIWorkflowOutputSummaryResponse(CamelModel):
             claimIds=tuple(claim.claim_id for claim in output.claims),
             proposedActionTypes=tuple(action.action_type for action in output.proposed_actions),
             verifierRanAtUtc=output.verifier_ran_at_utc,
+            actionPolicyVersion=AI_ACTION_POLICY_VERSION,
         )
 
 
@@ -379,6 +382,7 @@ class AIExplanationReadinessResponse(CamelModel):
         ...,
         alias="forbiddenActionBlockingAvailable",
     )
+    action_content_policy_version: str = Field(..., alias="actionContentPolicyVersion")
     durable_ai_lineage_store_backed: bool = Field(..., alias="durableAiLineageStoreBacked")
     model_risk_operations_contract_available: bool = Field(
         ...,
@@ -415,6 +419,7 @@ class AIExplanationReadinessResponse(CamelModel):
             redactedEvidenceEnvelopeAvailable=snapshot.redacted_evidence_envelope_available,
             unsupportedClaimBlockingAvailable=snapshot.unsupported_claim_blocking_available,
             forbiddenActionBlockingAvailable=snapshot.forbidden_action_blocking_available,
+            actionContentPolicyVersion=snapshot.action_content_policy_version,
             durableAiLineageStoreBacked=snapshot.durable_ai_lineage_store_backed,
             modelRiskOperationsContractAvailable=(
                 snapshot.model_risk_operations_contract_available

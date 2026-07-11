@@ -138,6 +138,7 @@ def ai_lineage_record() -> AIExplanationLineageRecord:
         output_id=None,
         claim_ids=(),
         proposed_action_types=(),
+        action_policy_version="lotus-idea.ai-action-content-policy.v1",
         actor_subject="advisor-001",
         requested_at_utc=EVENT_TIME,
         evaluated_at_utc=EVENT_TIME + timedelta(minutes=1),

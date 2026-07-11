@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from enum import StrEnum
@@ -8,6 +8,12 @@ from types import MappingProxyType
 from typing import Mapping
 
 from app.domain.audit import AuditEvent, FORBIDDEN_ATTRIBUTE_KEYS
+from app.domain.ai_action_policy import (
+    AI_ACTION_POLICY_VERSION,
+    AIActionPolicyReason,
+    AIProposedActionType as AIProposedActionType,
+    evaluate_ai_action_policy,
+)
 from app.domain.ideas import (
     EvidenceFreshness,
     EvidenceSupportability,
@@ -78,6 +84,7 @@ class AIVerifierOutcome(StrEnum):
     PASSED = "passed"
     FAILED_UNSUPPORTED_CLAIM = "failed_unsupported_claim"
     FAILED_FORBIDDEN_ACTION = "failed_forbidden_action"
+    FAILED_ACTION_CONTENT = "failed_action_content"
 
 
 class AIFallbackReason(StrEnum):
@@ -85,17 +92,6 @@ class AIFallbackReason(StrEnum):
     UNSUPPORTED_EVIDENCE = "unsupported_evidence"
     REDACTION_REQUIRED = "redaction_required"
     WORKFLOW_NOT_APPROVED = "workflow_not_approved"
-
-
-class AIProposedActionType(StrEnum):
-    ADVISOR_REVIEW = "advisor_review"
-    REQUEST_MISSING_EVIDENCE = "request_missing_evidence"
-    FINAL_INVESTMENT_RECOMMENDATION = "final_investment_recommendation"
-    SUITABILITY_APPROVAL = "suitability_approval"
-    COMPLIANCE_APPROVAL = "compliance_approval"
-    MANDATE_APPROVAL = "mandate_approval"
-    TRADE_OR_ORDER = "trade_or_order"
-    CLIENT_COMMUNICATION = "client_communication"
 
 
 class InvalidAIExplanationRequest(ValueError):
@@ -411,47 +407,72 @@ def evaluate_ai_workflow_output(
     output: AIWorkflowOutput,
 ) -> AIExplanationResult:
     _ensure_output_matches_request(request, output)
-    forbidden_action_types = tuple(
-        action.action_type
+    action_decisions = tuple(
+        evaluate_ai_action_policy(action.action_type, action.action_label)
         for action in output.proposed_actions
-        if action.action_type not in _allowed_action_types()
     )
-    if forbidden_action_types:
+    sanitized_output = replace(
+        output,
+        proposed_actions=tuple(
+            AIProposedAction(action.action_type, decision.canonical_label)
+            for action, decision in zip(output.proposed_actions, action_decisions)
+        ),
+    )
+    if any(
+        decision.reason is AIActionPolicyReason.FORBIDDEN_ACTION_TYPE
+        for decision in action_decisions
+    ):
         return _blocked_ai_result(
             request=request,
-            output=output,
+            output=sanitized_output,
             posture=AIExplanationPosture.BLOCKED_FORBIDDEN_ACTION,
             verifier_outcome=AIVerifierOutcome.FAILED_FORBIDDEN_ACTION,
             reason_code=ReasonCode.AI_FORBIDDEN_ACTION_BLOCKED,
+            action_policy_reason=AIActionPolicyReason.FORBIDDEN_ACTION_TYPE,
+        )
+    rejected_content = next(
+        (decision for decision in action_decisions if not decision.allowed),
+        None,
+    )
+    if rejected_content is not None:
+        return _blocked_ai_result(
+            request=request,
+            output=sanitized_output,
+            posture=AIExplanationPosture.BLOCKED_FORBIDDEN_ACTION,
+            verifier_outcome=AIVerifierOutcome.FAILED_ACTION_CONTENT,
+            reason_code=ReasonCode.AI_ACTION_CONTENT_BLOCKED,
+            action_policy_reason=rejected_content.reason,
         )
     allowed_source_product_ids = request.redacted_evidence.source_product_ids
     unsupported_claims = tuple(
         claim
-        for claim in output.claims
+        for claim in sanitized_output.claims
         if not set(claim.source_product_ids).issubset(allowed_source_product_ids)
     )
     if unsupported_claims:
         return _blocked_ai_result(
             request=request,
-            output=output,
+            output=sanitized_output,
             posture=AIExplanationPosture.BLOCKED_UNSUPPORTED_CLAIM,
             verifier_outcome=AIVerifierOutcome.FAILED_UNSUPPORTED_CLAIM,
             reason_code=ReasonCode.AI_UNSUPPORTED_CLAIM_BLOCKED,
+            action_policy_reason=AIActionPolicyReason.ALLOWED,
         )
     return AIExplanationResult(
         request=request,
-        output=output,
+        output=sanitized_output,
         posture=AIExplanationPosture.READY_FOR_ADVISOR_REVIEW,
         verifier_outcome=AIVerifierOutcome.PASSED,
         fallback_reason=None,
-        explanation_text=output.explanation_text,
+        explanation_text=sanitized_output.explanation_text,
         reason_codes=(ReasonCode.AI_VERIFIER_PASSED,),
         audit_event=_ai_audit_event(
             request=request,
             posture=AIExplanationPosture.READY_FOR_ADVISOR_REVIEW,
             verifier_outcome=AIVerifierOutcome.PASSED,
             outcome="accepted",
-            occurred_at_utc=output.verifier_ran_at_utc,
+            occurred_at_utc=sanitized_output.verifier_ran_at_utc,
+            action_policy_reason=AIActionPolicyReason.ALLOWED,
         ),
     )
 
@@ -463,6 +484,7 @@ def _blocked_ai_result(
     posture: AIExplanationPosture,
     verifier_outcome: AIVerifierOutcome,
     reason_code: ReasonCode,
+    action_policy_reason: AIActionPolicyReason,
 ) -> AIExplanationResult:
     return AIExplanationResult(
         request=request,
@@ -478,6 +500,7 @@ def _blocked_ai_result(
             verifier_outcome=verifier_outcome,
             outcome="blocked",
             occurred_at_utc=output.verifier_ran_at_utc,
+            action_policy_reason=action_policy_reason,
         ),
     )
 
@@ -543,15 +566,6 @@ def _safe_metadata(metadata: Mapping[str, str]) -> Mapping[str, str]:
     return MappingProxyType(dict(metadata))
 
 
-def _allowed_action_types() -> frozenset[AIProposedActionType]:
-    return frozenset(
-        {
-            AIProposedActionType.ADVISOR_REVIEW,
-            AIProposedActionType.REQUEST_MISSING_EVIDENCE,
-        }
-    )
-
-
 def _ai_audit_event(
     *,
     request: AIExplanationRequest,
@@ -559,6 +573,7 @@ def _ai_audit_event(
     verifier_outcome: AIVerifierOutcome,
     outcome: str,
     occurred_at_utc: datetime,
+    action_policy_reason: AIActionPolicyReason | None = None,
 ) -> AuditEvent:
     return AuditEvent(
         event_type="idea.ai_explanation.evaluated",
@@ -573,5 +588,9 @@ def _ai_audit_event(
             "verifier_outcome": verifier_outcome.value,
             "workflow_pack_id": request.workflow_pack.workflow_pack_id,
             "workflow_pack_version": request.workflow_pack.workflow_pack_version,
+            "action_policy_version": AI_ACTION_POLICY_VERSION,
+            "action_policy_reason": (
+                action_policy_reason.value if action_policy_reason is not None else "not_run"
+            ),
         },
     )

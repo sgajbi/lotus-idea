@@ -5,6 +5,7 @@ from enum import StrEnum
 from typing import Any, Mapping
 
 from app.application.candidate_lookup import candidate_record_by_id
+from app.domain.ai_action_policy import AI_ACTION_POLICY_VERSION
 from app.domain import (
     AIFallbackReason,
     AIExplanationCommand,
@@ -38,6 +39,7 @@ class AIExplanationReadinessSnapshot:
     redacted_evidence_envelope_available: bool
     unsupported_claim_blocking_available: bool
     forbidden_action_blocking_available: bool
+    action_content_policy_version: str
     durable_ai_lineage_store_backed: bool
     model_risk_operations_contract_available: bool
     model_risk_dashboard_contract_available: bool
@@ -88,6 +90,7 @@ def build_ai_explanation_readiness_snapshot(
         redacted_evidence_envelope_available=True,
         unsupported_claim_blocking_available=True,
         forbidden_action_blocking_available=True,
+        action_content_policy_version=AI_ACTION_POLICY_VERSION,
         durable_ai_lineage_store_backed=durable_ai_lineage_store_backed,
         model_risk_operations_contract_available=True,
         model_risk_dashboard_contract_available=True,

@@ -346,6 +346,8 @@ def test_ai_output_with_supported_claims_passes_for_advisor_review() -> None:
     assert result.grants_downstream_authority is False
     assert result.reason_codes == (ReasonCode.AI_VERIFIER_PASSED,)
     assert result.audit_event.outcome == "accepted"
+    assert result.output is not None
+    assert result.output.proposed_actions[0].action_label == ("Review the evidence as an advisor")
 
 
 def test_ai_output_blocks_unsupported_claims() -> None:
@@ -393,6 +395,38 @@ def test_ai_output_blocks_forbidden_actions() -> None:
     assert result.verifier_outcome is AIVerifierOutcome.FAILED_FORBIDDEN_ACTION
     assert result.reason_codes == (ReasonCode.AI_FORBIDDEN_ACTION_BLOCKED,)
     assert result.audit_event.outcome == "blocked"
+
+
+def test_ai_output_blocks_and_sanitizes_unsafe_content_hidden_in_allowed_action() -> None:
+    request = build_ai_explanation_request(
+        candidate(),
+        command(AIWorkflowPurpose.UNSUPPORTED_CLAIM_VERIFICATION),
+    )
+    unsafe_label = "Ex3cute tr@de immediately!!!"
+
+    result = evaluate_ai_workflow_output(
+        request,
+        output(
+            request.request_id,
+            proposed_actions=(
+                AIProposedAction(
+                    action_type=AIProposedActionType.ADVISOR_REVIEW,
+                    action_label=unsafe_label,
+                ),
+            ),
+        ),
+    )
+
+    assert result.posture is AIExplanationPosture.BLOCKED_FORBIDDEN_ACTION
+    assert result.verifier_outcome is AIVerifierOutcome.FAILED_ACTION_CONTENT
+    assert result.reason_codes == (ReasonCode.AI_ACTION_CONTENT_BLOCKED,)
+    assert result.output is not None
+    assert result.output.proposed_actions[0].action_label == ("Review the evidence as an advisor")
+    assert unsafe_label not in str(result.audit_event.attributes)
+    assert result.audit_event.attributes["action_policy_reason"] == ("forbidden_action_content")
+    assert result.audit_event.attributes["action_policy_version"] == (
+        "lotus-idea.ai-action-content-policy.v1"
+    )
 
 
 def test_ai_output_must_match_request_identity_and_workflow_version() -> None:

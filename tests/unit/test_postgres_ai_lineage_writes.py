@@ -47,6 +47,7 @@ def _lineage_record(candidate_id: str) -> AIExplanationLineageRecord:
         output_id=None,
         claim_ids=(),
         proposed_action_types=(),
+        action_policy_version="lotus-idea.ai-action-content-policy.v1",
         actor_subject="advisor-001",
         requested_at_utc=evaluated_at,
         evaluated_at_utc=evaluated_at,

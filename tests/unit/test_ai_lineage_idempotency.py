@@ -91,6 +91,7 @@ def test_ai_lineage_lookup_returns_none_when_request_id_is_absent() -> None:
                 output_id=None,
                 claim_ids=(),
                 proposed_action_types=(),
+                action_policy_version="lotus-idea.ai-action-content-policy.v1",
                 actor_subject="advisor-001",
                 requested_at_utc=EVALUATED_AT,
                 evaluated_at_utc=EVALUATED_AT,

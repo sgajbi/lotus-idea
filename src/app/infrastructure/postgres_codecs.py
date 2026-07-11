@@ -435,6 +435,7 @@ def _ai_explanation_lineage_to_json(record: AIExplanationLineageRecord) -> dict[
         "output_id": record.output_id,
         "claim_ids": list(record.claim_ids),
         "proposed_action_types": list(record.proposed_action_types),
+        "action_policy_version": record.action_policy_version,
         "actor_subject": record.actor_subject,
         "requested_at_utc": record.requested_at_utc.isoformat(),
         "evaluated_at_utc": record.evaluated_at_utc.isoformat(),
@@ -466,6 +467,7 @@ def _ai_explanation_lineage_from_json(
         proposed_action_types=tuple(
             str(value) for value in payload.get("proposed_action_types", ())
         ),
+        action_policy_version=str(payload["action_policy_version"]),
         actor_subject=str(payload["actor_subject"]),
         requested_at_utc=_datetime(payload["requested_at_utc"]),
         evaluated_at_utc=_datetime(payload["evaluated_at_utc"]),

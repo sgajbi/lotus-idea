@@ -8,6 +8,7 @@ import json
 from typing import TYPE_CHECKING, Any, Mapping
 
 from app.domain.ai_governance import AIExplanationResult
+from app.domain.ai_action_policy import AI_ACTION_POLICY_VERSION
 from app.domain.audit import AuditEvent
 
 if TYPE_CHECKING:
@@ -38,6 +39,7 @@ class AIExplanationLineageRecord:
     output_id: str | None
     claim_ids: tuple[str, ...]
     proposed_action_types: tuple[str, ...]
+    action_policy_version: str
     actor_subject: str
     requested_at_utc: datetime
     evaluated_at_utc: datetime
@@ -56,6 +58,7 @@ class AIExplanationLineageRecord:
             "posture",
             "verifier_outcome",
             "actor_subject",
+            "action_policy_version",
             "lineage_hash",
         ):
             _require_text(str(getattr(self, field_name)), field_name)
@@ -103,6 +106,7 @@ def ai_explanation_lineage_record_from_result(
             if output is not None
             else []
         ),
+        "action_policy_version": AI_ACTION_POLICY_VERSION,
         "purpose": result.request.purpose.value,
         "reason_codes": [reason.value for reason in result.reason_codes],
         "request_id": result.request.request_id,
@@ -135,6 +139,7 @@ def ai_explanation_lineage_record_from_result(
             if output is not None
             else ()
         ),
+        action_policy_version=AI_ACTION_POLICY_VERSION,
         actor_subject=result.request.actor_subject,
         requested_at_utc=result.request.requested_at_utc,
         evaluated_at_utc=evaluated_at_utc,
