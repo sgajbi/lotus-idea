@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import Callable
+from typing import Callable, Generic, TypeVar
 
 from app.domain.data_lifecycle import (
     DataLifecycleCommand,
@@ -16,16 +16,21 @@ from app.domain.data_lifecycle_schedule import (
 from app.ports.data_lifecycle import DataLifecycleRepository, ScheduledDataLifecycleRepository
 
 
-class ExecuteDataLifecycle:
+_RepositoryT = TypeVar("_RepositoryT")
+
+
+class _TimedRepositoryUseCase(Generic[_RepositoryT]):
     def __init__(
         self,
-        repository: DataLifecycleRepository,
+        repository: _RepositoryT,
         *,
         now: Callable[[], datetime] | None = None,
     ) -> None:
         self._repository = repository
         self._now = now or (lambda: datetime.now(UTC))
 
+
+class ExecuteDataLifecycle(_TimedRepositoryUseCase[DataLifecycleRepository]):
     def execute(self, command: DataLifecycleCommand) -> DataLifecycleOperationResult:
         return self._repository.execute_data_lifecycle(
             command,
@@ -34,16 +39,7 @@ class ExecuteDataLifecycle:
         )
 
 
-class ReviewScheduledDataLifecycle:
-    def __init__(
-        self,
-        repository: ScheduledDataLifecycleRepository,
-        *,
-        now: Callable[[], datetime] | None = None,
-    ) -> None:
-        self._repository = repository
-        self._now = now or (lambda: datetime.now(UTC))
-
+class ReviewScheduledDataLifecycle(_TimedRepositoryUseCase[ScheduledDataLifecycleRepository]):
     def execute(self, *, limit: int) -> ScheduledLifecycleReview:
         validate_scheduled_lifecycle_review_limit(limit)
         evaluated_at_utc = self._now()
