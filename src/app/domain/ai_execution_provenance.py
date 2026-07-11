@@ -9,6 +9,7 @@ class AIExecutionProvenancePosture(StrEnum):
     NOT_APPLICABLE_FALLBACK = "not_applicable_fallback"
     UNATTESTED_LOCAL_TEST_FIXTURE = "unattested_local_test_fixture"
     PRE_ATTESTATION_UNVERIFIABLE = "pre_attestation_unverifiable"
+    LOTUS_AI_ATTESTATION_VERIFIED = "lotus_ai_attestation_verified"
 
 
 class AIWorkflowOutputTrustPolicy(StrEnum):

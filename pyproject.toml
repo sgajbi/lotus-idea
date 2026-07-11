@@ -19,6 +19,7 @@ dependencies = [
   "prometheus-fastapi-instrumentator==8.0.2",
   "httpx==0.28.1",
   "psycopg[binary]==3.3.4",
+  "cryptography==49.0.0",
 ]
 
 [project.optional-dependencies]
