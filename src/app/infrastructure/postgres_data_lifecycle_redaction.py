@@ -13,7 +13,7 @@ def redact_candidate_graph(
     tenant_id: str,
     tombstone_sha256: str,
 ) -> dict[str, int]:
-    actor_tombstone = _actor_tombstone(candidate_id, tenant_id)
+    actor_tombstone = data_lifecycle_actor_tombstone(candidate_id, tenant_id)
     payload = Jsonb(
         {
             "data_lifecycle_state": "erased",
@@ -102,6 +102,14 @@ def _advisory_redaction_statements(
             "idea_ai_explanation_lineage",
             "UPDATE idea_ai_explanation_lineage SET lineage_json = %s WHERE candidate_id = %s",
             (payload, candidate_id),
+        ),
+        (
+            "idea_data_lifecycle_operation",
+            """UPDATE idea_data_lifecycle_operation
+               SET actor_subject = %s,
+                   approver_subject = CASE WHEN approver_subject IS NULL THEN NULL ELSE %s END
+               WHERE candidate_id = %s""",
+            (actor_tombstone, actor_tombstone, candidate_id),
         ),
     )
 
@@ -243,6 +251,6 @@ def _execute_count(
     counts[table] = counts.get(table, 0) + max(int(getattr(cursor, "rowcount", 0)), 0)
 
 
-def _actor_tombstone(candidate_id: str, tenant_id: str) -> str:
+def data_lifecycle_actor_tombstone(candidate_id: str, tenant_id: str) -> str:
     digest = hashlib.sha256(f"{tenant_id}:{candidate_id}:actor".encode("utf-8")).hexdigest()
     return f"redacted-{digest[:24]}"

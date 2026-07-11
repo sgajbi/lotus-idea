@@ -192,6 +192,9 @@ def test_postgres_lifecycle_erasure_redacts_and_audits_in_one_commit(
     assert connection.commits == 1
     assert connection.rollbacks == 0
     assert len(connection.operations) == 1
+    operation = next(iter(connection.operations.values()))
+    assert operation["actor_subject"].startswith("redacted-")
+    assert operation["approver_subject"] == operation["actor_subject"]
 
 
 @pytest.mark.parametrize(
@@ -315,6 +318,7 @@ def test_redaction_and_purge_cover_the_declared_candidate_graph_without_raw_iden
         "idea_conversion_outcome_quarantine",
         "idea_report_evidence_pack_request",
         "idea_ai_explanation_lineage",
+        "idea_data_lifecycle_operation",
         "idea_outbox_event",
         "idea_outbox_recovery_audit",
         "idea_downstream_submission",
@@ -331,6 +335,7 @@ def test_redaction_and_purge_cover_the_declared_candidate_graph_without_raw_iden
     }
     serialized_params = repr([params for _, params in cursor.calls])
     assert "privacy-operator" not in serialized_params
+    assert "privacy-approver" not in serialized_params
     assert "redacted-" in serialized_params
 
 

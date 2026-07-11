@@ -21,6 +21,7 @@ from app.domain.data_lifecycle import (
 )
 from app.domain.persistence import CandidatePersistenceRecord
 from app.infrastructure.postgres_data_lifecycle_redaction import (
+    data_lifecycle_actor_tombstone,
     purge_expired_candidate_payloads,
     redact_candidate_graph,
 )
@@ -339,6 +340,14 @@ def _insert_operation(
     audit_sha256: str,
     evaluated_at_utc: datetime,
 ) -> None:
+    actor_subject = command.actor_subject
+    approver_subject = command.approver_subject
+    if control is not None and (
+        control.state in {DataLifecycleState.ERASED, DataLifecycleState.PURGED}
+        or control.held_from_state in {DataLifecycleState.ERASED, DataLifecycleState.PURGED}
+    ):
+        actor_subject = data_lifecycle_actor_tombstone(command.candidate_id, command.tenant_id)
+        approver_subject = actor_subject if approver_subject is not None else None
     cursor.execute(
         """INSERT INTO idea_data_lifecycle_operation (
                operation_id, idempotency_key, request_fingerprint, candidate_id,
@@ -359,8 +368,8 @@ def _insert_operation(
             command.action.value,
             evaluation.decision.value,
             command.dry_run,
-            command.actor_subject,
-            command.approver_subject,
+            actor_subject,
+            approver_subject,
             command.authority_ref,
             command.reason,
             command.change_reference,
