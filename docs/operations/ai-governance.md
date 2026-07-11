@@ -53,6 +53,10 @@ RFC-0002 Slice 09 adds `src/app/domain/ai_governance.py`,
 15. versioned output-content integrity that commits to ordered explanation,
     claim, action, workflow/evaluator, and policy content without persisting
     unrestricted provider-authored text.
+16. `lotus-idea.ai-execution-provenance-policy.v1`, which allows explicitly
+    unattested workflow fixtures only in local/test and rejects workflow output
+    in demo, staging, and production until a verified Lotus AI attestation is
+    available.
 
 The API preserves source authority: AI output cannot mutate candidate score,
 lifecycle, source facts, review state, conversion state, or downstream workflow
@@ -203,6 +207,28 @@ The internal evaluator supports two modes:
    that every claim references source products already present in the redacted
    evidence envelope and that proposed actions are limited to advisor review or
    missing-evidence requests.
+
+### Execution Provenance Boundary
+
+Self-asserted workflow output is never production evidence.
+
+| Runtime profile | Workflow output | Deterministic fallback |
+| --- | --- | --- |
+| `local`, `test` | Allowed only as `unattested_local_test_fixture`; cannot clear runtime proof. | Allowed. |
+| `demo`, `staging`, `production` | Rejected with `400 ai_execution_provenance_required` before candidate lookup or lineage persistence. | Allowed. |
+
+The evaluation response, audit attributes, and lineage record expose the bounded
+provenance posture. Migration `011` marks existing records
+`pre_attestation_unverifiable`; it does not infer that historical output came
+from Lotus AI. Readiness remains blocked with
+`lotus_ai_run_attestation_contract_missing`.
+
+The missing producer contract is tracked by `sgajbi/lotus-ai#113`. Lotus AI
+must own signed run/model provenance, issuer and audience, key rotation,
+provider/model approval, evaluator policy, evidence/output digest binding,
+issued/expiry time, and request/run replay identity. Idea will consume and
+verify that receipt; it will not own signing keys, provider execution, model
+inventory, prompts, RAG, or AI runtime infrastructure.
 
 Unsupported claims and forbidden action types or content return `200` with a blocked posture
 because the verifier successfully evaluated and rejected the output. Missing

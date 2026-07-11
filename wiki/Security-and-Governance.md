@@ -167,6 +167,13 @@ Exact governed replay verifies the digest without another provider call, while
 changed content conflicts. PostgreSQL reload rejects column/JSON/hash mismatch,
 and pre-v1 records remain explicitly unverifiable.
 
+`lotus-idea.ai-execution-provenance-policy.v1` prevents self-asserted AI output
+from crossing the production trust boundary. Local/test fixtures are visibly
+unattested and cannot clear runtime proof. Demo, staging, and production reject
+workflow output before candidate lookup or lineage persistence; deterministic
+fallback remains available. Signed run/model attestation is producer-owned and
+tracked by `lotus-ai#113`, so readiness remains blocked.
+
 Operation-event governance:
 
 1. high-cash, candidate persistence, candidate evidence replay, lifecycle,

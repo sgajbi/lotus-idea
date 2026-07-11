@@ -141,6 +141,12 @@ Implemented in this slice:
     PostgreSQL hydration verifies column/JSON parity and the enclosing lineage
     hash. Pre-v1 rows are explicitly unverifiable rather than retroactively
     certified.
+23. `lotus-idea.ai-execution-provenance-policy.v1` and migration `011`
+    distinguish deterministic fallback, local/test unattested fixtures, and
+    historical pre-attestation records. Demo, staging, and production reject
+    self-asserted workflow output before candidate lookup or lineage write.
+    Full attested acceptance remains blocked on producer-owned signed run/model
+    provenance in `sgajbi/lotus-ai#113`; local fixtures cannot clear proof.
 
 Validation evidence from the implementation slice:
 

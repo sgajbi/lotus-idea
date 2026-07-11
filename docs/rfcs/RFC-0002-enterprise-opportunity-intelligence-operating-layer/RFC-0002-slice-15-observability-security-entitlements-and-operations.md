@@ -25,6 +25,14 @@ text. Model-risk and lifecycle contracts govern digest semantics, access,
 seven-year regulated-advisory retention, and explicit pre-v1 unverifiable
 migration posture.
 
+Production-like AI output now fails closed under
+`lotus-idea.ai-execution-provenance-policy.v1`. Only local/test may accept an
+explicitly unattested fixture, and that posture is carried in API, audit, and
+lineage evidence without clearing runtime proof. Deterministic fallback remains
+available. Signed Lotus AI run/model attestation is still blocked on
+`sgajbi/lotus-ai#113`, so this is consumer-boundary hardening rather than live
+AI runtime completion.
+
 Implementation evidence:
 
 1. `src/app/observability/logging.py` defines bounded operation, outcome, and

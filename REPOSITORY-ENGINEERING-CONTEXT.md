@@ -639,6 +639,14 @@ and fail PostgreSQL hydration on column/JSON/hash mismatch. Pre-v1 rows are
 explicitly unverifiable and must never be described as retroactive content
 proof. Retention follows the Idea regulated-advisory lifecycle policy.
 
+AI workflow output trust is governed by
+`lotus-idea.ai-execution-provenance-policy.v1`. Local/test may accept only an
+explicit `unattested_local_test_fixture`; demo, staging, and production reject
+workflow output before candidate lookup or persistence until a verified
+producer receipt exists. Deterministic fallback remains allowed. The signed
+run/model attestation, key distribution, provider/model approval, and runtime
+truth belong to `lotus-ai` and are tracked by `sgajbi/lotus-ai#113`.
+
 Non-AI operator workflow operations proof is limited to source-safe dashboard
 and alert visibility over implemented source-ingestion, outbox delivery,
 downstream realization, runtime trust telemetry, and implementation-proof
