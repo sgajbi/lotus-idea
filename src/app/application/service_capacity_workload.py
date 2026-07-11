@@ -127,7 +127,8 @@ def _recovery_measurement(
     accepted = (
         result.transport_outcome == "accepted"
         and summary.get("runStatus") in {"completed", "replayed"}
-        and _source_failure_counts(summary) == {
+        and _source_failure_counts(summary)
+        == {
             "entitlement_denied": 0,
             "other_blocked": 0,
             "source_unavailable": 0,
