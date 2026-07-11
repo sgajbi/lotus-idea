@@ -329,6 +329,17 @@ The aggregate capacity baseline can now link a resource observation with exact
 commit/branch validation and source-safe run provenance. This linkage is
 informational and cannot set `costResourceMeasured` or remove the cost blocker.
 
+Dependency-failure evidence now uses closed source-failure classification
+instead of a caller-selected expectation boolean. The source-ingestion API
+publishes aggregate `sourceFailureCounts` and both governed 502 Problem Details
+contracts. The bounded HTTP adapter retains only those counters or governed
+codes. Workload qualification accepts only exclusive `source_unavailable`
+evidence and requires a completed or replayed recovery with all failure counts
+at zero. Entitlement denial, mixed failures, capacity/configuration blocks, and
+generic blocked responses fail closed. This clears the evidence-classification
+implementation gap only; controlled production-like fault injection, recovery
+execution, attestation, mainline CI, and review remain required.
+
 ## Required Work
 
 1. Add metrics, logs, traces, audit events, health/readiness diagnostics, and

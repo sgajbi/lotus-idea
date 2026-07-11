@@ -16,7 +16,7 @@ reconciliation, quality, and lineage policy.
 | PostgreSQL capacity posture | Aggregate utilization, collection success, one-hot posture, alerts, and nonessential source/outbox shedding are implemented. |
 | Error-budget rules and alerts | Implemented and tested with `promtool`. |
 | Grafana dashboard | Implemented from bounded metrics and recording rules. |
-| Source-safe baseline runner | Implemented for guarded API, source-ingestion, outbox, dependency-failure/recovery, and read-only PostgreSQL scenarios. |
+| Source-safe baseline runner | Implemented for guarded API, source-ingestion, outbox, exact source-unavailable failure/clean recovery, and read-only PostgreSQL scenarios. |
 | Controlled PostgreSQL threshold proof | Implemented with exact target identity, hard connection caps, mandatory acknowledgement, release/recovery checks, and proof-only baseline linkage. Test evidence is non-certifying. |
 | Process resource observation | Bounded CPU, memory, and optional file-descriptor collection is implemented through a narrow Prometheus adapter. Test observations are non-certifying and are not cost evidence. |
 | Production capacity certification | Blocked on load/soak, dependency-failure, pool-saturation, and cost/resource evidence. |
@@ -55,6 +55,13 @@ baseline. Mutating workflow scenarios require explicit flags and a second
 confirmation for production. Stored evidence is aggregate and report-only;
 observed PostgreSQL utilization and policy execution are not saturation stress
 or recovery certification.
+
+Dependency-failure evidence is fail closed. Only an exact
+`source_unavailable` classification qualifies; entitlement denial,
+configuration or capacity blocks, mixed failures, and generic blocked responses
+are rejected. Recovery requires a completed or replayed run with every source
+failure counter at zero. Production certification still requires controlled,
+attested fault injection and recovery execution.
 
 The PostgreSQL adapter refreshes its session-local statistics snapshot before
 reading aggregate connection utilization. This prevents a long-lived

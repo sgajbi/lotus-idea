@@ -142,7 +142,7 @@ scenario families:
 | `api` | `GET /health/ready` | Latency and accepted/error counts | Read-only; readiness is not business-feature proof. |
 | `source_ingestion` | Bounded run-once endpoint | Duration and aggregate item count | Mutating; maximum 100 manifest items. |
 | `outbox_delivery` | Bounded run-once endpoint | Duration, aggregate attempts, and retry posture | Mutating; unique transient idempotency keys and maximum 100 events. |
-| `dependency_failure` | Faulted source-ingestion call followed by recovery | Failure handling and explicit recovery outcome | Requires externally controlled fault injection; a blocked call is not recovery. |
+| `dependency_failure` | Faulted source-ingestion call followed by recovery | Exact source-unavailable classification and explicit clean recovery | Only `source_unavailable` qualifies. Entitlement denial, configuration/capacity blocks, mixed failures, and generic blocked responses fail closed. |
 | `postgresql` | Read-only `SELECT 1` plus aggregate connection posture | Query latency and maximum observed utilization | Observation does not prove a threshold stress/recovery exercise. |
 
 PostgreSQL statistics are transaction-snapshot scoped. The capacity adapter clears only its
@@ -177,6 +177,15 @@ Source-ingestion, outbox, and dependency-failure scenarios require
 Provide transient authorization or trusted-caller assertions only through
 `LOTUS_IDEA_CAPACITY_AUTHORIZATION` or
 `LOTUS_IDEA_CAPACITY_TRUSTED_CALLER_CONTEXT`.
+
+The dependency-failure scenario accepts only a classified source-unavailable
+outcome: either aggregate `sourceFailureCounts` containing one or more
+`source_unavailable` failures and zero other failure classes, or the governed
+`502 source_dependency_unavailable` Problem Details response. Entitlement
+denial and unrelated blocked outcomes never count as expected faults. Recovery
+requires `runStatus` `completed` or `replayed` with all source-failure counters
+at zero. This validates evidence semantics only; certification still requires
+externally controlled production-like fault injection and attested execution.
 
 The PostgreSQL scenario reads `LOTUS_IDEA_DATABASE_URL` transiently. It stores
 only query outcome, duration, and aggregate utilization. It does not retain the

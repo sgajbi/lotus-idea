@@ -1462,6 +1462,14 @@ idempotent workflow outcomes; conflicts and configuration blocks must not be
 silently converted into service failures. Do not claim pool saturation when the
 runtime exposes only an injected/direct PostgreSQL connection.
 
+Dependency-failure capacity evidence must name a closed source-failure class.
+For source-ingestion fault proof, accept only exclusive `source_unavailable`
+aggregate evidence or the governed `source_dependency_unavailable` Problem
+Details code. Reject entitlement denial, mixed failures, generic blocked
+responses, and configuration or capacity blockers. Recovery requires an
+explicit completed/replayed status and zero counts for every governed source
+failure class. A boolean "expected failure" assertion is not evidence.
+
 Capacity probes must cross a narrow port and return bounded aggregates only.
 Keep request and response bodies, URLs, DSNs, credentials, caller assertions,
 and business identifiers transient inside infrastructure adapters. Require an
