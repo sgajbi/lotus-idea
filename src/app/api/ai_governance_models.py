@@ -148,10 +148,25 @@ class AIWorkflowOutputRequest(CamelModel):
         )
 
 
+class AIApprovedMetadataRequest(CamelModel):
+    channel: str | None = None
+    audience: str | None = None
+
+    def to_mapping(self) -> dict[str, str]:
+        return {
+            key: value
+            for key, value in self.model_dump(exclude_none=True).items()
+            if isinstance(value, str)
+        }
+
+
 class AIExplanationEvaluationRequest(CamelModel):
     request_id: str = Field(..., alias="requestId")
     workflow_pack: AIWorkflowPackRequest = Field(..., alias="workflowPack")
-    approved_metadata: dict[str, str] = Field(default_factory=dict, alias="approvedMetadata")
+    approved_metadata: AIApprovedMetadataRequest = Field(
+        default_factory=AIApprovedMetadataRequest,
+        alias="approvedMetadata",
+    )
     requested_at_utc: datetime = Field(..., alias="requestedAtUtc")
     fallback_reason: AIFallbackReason = Field(
         default=AIFallbackReason.AI_UNAVAILABLE,
@@ -185,7 +200,7 @@ class AIExplanationEvaluationRequest(CamelModel):
                 request_id=self.request_id,
                 actor_subject=caller.subject,
                 workflow_pack=self.workflow_pack.to_domain(),
-                approved_metadata=self.approved_metadata,
+                approved_metadata=self.approved_metadata.to_mapping(),
                 requested_at_utc=self.requested_at_utc,
             ),
             fallback_reason=self.fallback_reason,

@@ -577,6 +577,71 @@ def test_ai_explanation_api_rejects_invalid_purpose_for_current_state_and_metada
     assert "summarize private client data" not in leaked_metadata.text
 
 
+@pytest.mark.parametrize("unknown_key", ["customerEmail", "accountNumber", "authorization"])
+def test_ai_explanation_api_rejects_unknown_metadata_before_route_execution(
+    unknown_key: str,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def fail_if_called(*args: Any, **kwargs: Any) -> None:
+        del args, kwargs
+        raise AssertionError("request validation must fail before route execution")
+
+    monkeypatch.setattr(
+        ai_governance_api,
+        "evaluate_ai_explanation_to_repository",
+        fail_if_called,
+    )
+    response = TestClient(app).post(
+        "/api/v1/idea-candidates/not-looked-up/ai-explanations/evaluate",
+        json=ai_request_payload(approved_metadata={unknown_key: "classified-value"}),
+        headers=ai_headers(idempotency_key=f"ai-metadata-unknown-{unknown_key}"),
+    )
+
+    assert response.status_code == 400
+    assert response.json()["code"] == "invalid_request"
+    assert unknown_key not in response.text
+    assert "classified-value" not in response.text
+
+
+@pytest.mark.parametrize(
+    "unsafe_value",
+    [
+        "client@example.com",
+        "ACCT-123",
+        "Bearer eyJhbGciOiJIUzI1NiJ9.secret",
+        "advisor-workbench\nAuthorization: secret",
+        "x" * 65,
+    ],
+)
+def test_ai_explanation_api_rejects_sensitive_metadata_values_without_lineage(
+    unsafe_value: str,
+) -> None:
+    repository = InMemoryIdeaRepository()
+    try:
+        reset_idea_repository_for_tests(repository=repository)
+        client = TestClient(app)
+        candidate_id = persisted_candidate_id(
+            client,
+            idempotency_key=f"seed-ai-metadata-{len(unsafe_value)}",
+        )
+
+        response = client.post(
+            f"/api/v1/idea-candidates/{candidate_id}/ai-explanations/evaluate",
+            json=ai_request_payload(approved_metadata={"channel": unsafe_value}),
+            headers=ai_headers(idempotency_key=f"ai-metadata-value-{len(unsafe_value)}"),
+        )
+
+        assert response.status_code == 400
+        assert response.json()["code"] == "invalid_ai_metadata"
+        assert unsafe_value not in response.text
+        assert (
+            repository.snapshot().candidate_records[candidate_id].ai_explanation_lineage_records
+            == ()
+        )
+    finally:
+        reset_idea_repository_for_tests()
+
+
 def test_ai_explanation_api_returns_product_safe_errors_for_invalid_output_and_metadata_value(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -609,7 +674,7 @@ def test_ai_explanation_api_returns_product_safe_errors_for_invalid_output_and_m
     assert invalid_output.json()["code"] == "invalid_ai_output"
     assert "request_id" not in invalid_output.text
     assert blank_metadata_value.status_code == 400
-    assert blank_metadata_value.json()["code"] == "invalid_request"
+    assert blank_metadata_value.json()["code"] == "invalid_ai_metadata"
 
 
 def test_ai_explanation_readiness_api_returns_source_safe_blocked_posture() -> None:

@@ -4,10 +4,9 @@ from dataclasses import dataclass, field, replace
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from enum import StrEnum
-from types import MappingProxyType
 from typing import Mapping
 
-from app.domain.audit import AuditEvent, FORBIDDEN_ATTRIBUTE_KEYS
+from app.domain.audit import AuditEvent
 from app.domain.ai_action_policy import (
     AI_ACTION_POLICY_VERSION,
     AIActionPolicyReason,
@@ -16,6 +15,7 @@ from app.domain.ai_action_policy import (
 )
 from app.domain.ai_output_integrity import AIOutputIntegrity, build_ai_output_integrity
 from app.domain.ai_execution_provenance import AIExecutionProvenancePosture
+from app.domain.ai_metadata_policy import validate_ai_metadata_envelope
 from app.domain.ideas import (
     EvidenceFreshness,
     EvidenceSupportability,
@@ -38,21 +38,6 @@ class GovernedAIWorkflowPackContract:
     allowed_purposes: frozenset["AIWorkflowPurpose"]
     workflow_authority_owner: str
     ai_capability_owner: str
-
-
-AI_FORBIDDEN_METADATA_KEYS = FORBIDDEN_ATTRIBUTE_KEYS.union(
-    {
-        "prompt",
-        "raw_prompt",
-        "raw_provider_output",
-        "raw_provider_response",
-        "provider_response",
-        "source_route",
-        "route",
-        "trace_id",
-        "correlation_id",
-    }
-)
 
 
 def _require_text(value: str, field_name: str) -> None:
@@ -240,7 +225,10 @@ class AIExplanationCommand:
         object.__setattr__(
             self,
             "approved_metadata",
-            _safe_metadata(self.approved_metadata),
+            validate_ai_metadata_envelope(
+                self.approved_metadata,
+                purpose=self.workflow_pack.purpose.value,
+            ),
         )
 
 
@@ -267,7 +255,10 @@ class AIExplanationRequest:
         object.__setattr__(
             self,
             "approved_metadata",
-            _safe_metadata(self.approved_metadata),
+            validate_ai_metadata_envelope(
+                self.approved_metadata,
+                purpose=self.workflow_pack.purpose.value,
+            ),
         )
         object.__setattr__(self, "reason_codes", tuple(self.reason_codes))
 
@@ -593,18 +584,6 @@ def ai_workflow_pack_is_governed(workflow_pack: AIWorkflowPackRef) -> bool:
 def require_governed_ai_workflow_pack(workflow_pack: AIWorkflowPackRef) -> None:
     if not ai_workflow_pack_is_governed(workflow_pack):
         raise InvalidAIWorkflowPack()
-
-
-def _safe_metadata(metadata: Mapping[str, str]) -> Mapping[str, str]:
-    leaked_keys = AI_FORBIDDEN_METADATA_KEYS.intersection(metadata)
-    if leaked_keys:
-        raise InvalidAIExplanationRequest(
-            f"AI metadata contains forbidden keys: {', '.join(sorted(leaked_keys))}"
-        )
-    for key, value in metadata.items():
-        _require_text(key, "metadata key")
-        _require_text(value, f"metadata[{key}]")
-    return MappingProxyType(dict(metadata))
 
 
 def _ai_audit_event(

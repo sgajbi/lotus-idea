@@ -11,6 +11,7 @@ from app.application.ai_governance import (
     EvaluateAIExplanationToRepositoryCommand,
     evaluate_ai_explanation_to_repository,
 )
+from app.domain.ai_metadata_policy import InvalidAIMetadataEnvelope
 from app.domain import (
     AIFallbackReason,
     AIExplanationPosture,
@@ -149,7 +150,7 @@ def command(
         request_id=f"ai-request-{purpose.value}",
         actor_subject="advisor-001",
         workflow_pack=workflow_pack(purpose),
-        approved_metadata=approved_metadata or {"audience": "internal_advisor_review"},
+        approved_metadata=approved_metadata or {"channel": "advisor-workbench"},
         requested_at_utc=REQUESTED_AT,
     )
 
@@ -236,7 +237,7 @@ def test_ai_explanation_uses_candidate_projection_without_snapshot() -> None:
 
 
 def test_ai_request_rejects_sensitive_metadata() -> None:
-    with pytest.raises(InvalidAIExplanationRequest, match="forbidden keys"):
+    with pytest.raises(InvalidAIMetadataEnvelope, match="unsupported fields"):
         build_ai_explanation_request(
             candidate(),
             command(approved_metadata={"portfolio_id": "PB_SG_GLOBAL_BAL_001"}),
@@ -552,7 +553,7 @@ def test_ai_request_and_output_validate_required_verifier_fields() -> None:
         command(AIWorkflowPurpose.UNSUPPORTED_CLAIM_VERIFICATION),
     )
 
-    with pytest.raises(ValueError, match="metadata\\[audience\\] is required"):
+    with pytest.raises(ValueError, match="metadata value must be non-blank"):
         command(approved_metadata={"audience": " "})
 
     with pytest.raises(ValueError, match="requested_at_utc must be timezone-aware"):

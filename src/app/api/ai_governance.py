@@ -52,6 +52,7 @@ from app.domain import (
     InvalidAIWorkflowOutput,
 )
 from app.domain.ai_execution_provenance import UntrustedAIWorkflowOutput
+from app.domain.ai_metadata_policy import InvalidAIMetadataEnvelope
 from app.api.problem_details import problem_details_response as problem_response
 from app.observability import (
     IdeaOperation,
@@ -182,6 +183,17 @@ async def evaluate_ai_explanation(
             code="ai_execution_provenance_required",
             title="AI execution provenance required",
             detail="Production-like profiles require verified Lotus AI execution provenance.",
+        )
+    except InvalidAIMetadataEnvelope:
+        _emit_ai_explanation_operation_event(
+            OperationOutcome.INVALID_REQUEST,
+            "invalid_ai_metadata",
+        )
+        return problem_response(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            code="invalid_ai_metadata",
+            title="Invalid AI metadata",
+            detail="Use only the versioned provider-safe AI metadata envelope.",
         )
     except InvalidAIWorkflowPack:
         _emit_ai_explanation_operation_event(
