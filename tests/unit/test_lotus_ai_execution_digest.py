@@ -100,13 +100,10 @@ def test_input_evidence_rejects_incomplete_digest_material(overrides: dict[str, 
 
 @pytest.mark.parametrize("field", ["status", "output_label", "message"])
 def test_output_content_rejects_incomplete_digest_material(field: str) -> None:
-    values = {
-        "status": "COMPLETED",
-        "output_label": "EXPLANATION_ONLY",
-        "message": "explanation",
-        "structured_output": {},
-    }
-    values[field] = " "
-
     with pytest.raises(ValueError):
-        LotusAIExecutionOutputContent(**values)
+        LotusAIExecutionOutputContent(
+            status=" " if field == "status" else "COMPLETED",
+            output_label=" " if field == "output_label" else "EXPLANATION_ONLY",
+            message=" " if field == "message" else "explanation",
+            structured_output={},
+        )
