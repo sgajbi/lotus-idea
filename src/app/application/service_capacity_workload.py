@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import dataclass
-from typing import Mapping
+from dataclasses import dataclass, replace
+import math
+import time
+from typing import Callable, Mapping, Sequence
 
 from app.application.service_capacity_baseline import CapacityMeasurement, SCENARIOS
 from app.ports.capacity_probe import CapacityProbePort, CapacityProbeRequest, CapacityProbeResult
@@ -40,6 +42,18 @@ class CapacityWorkloadPlan:
 class PostgresCapacityWorkloadResult:
     measurements: tuple[CapacityMeasurement, ...]
     max_connection_utilization_fraction: float | None
+
+
+@dataclass(frozen=True)
+class PacedCapacitySoakResult:
+    measurements: tuple[CapacityMeasurement, ...]
+    observed_window_seconds: float
+    postgres_max_connection_utilization_fraction: float | None
+
+
+STEADY_STATE_SCENARIOS = frozenset(
+    {"api", "source_ingestion", "outbox_delivery", "downstream_submission"}
+)
 
 
 def execute_capacity_workload(
@@ -93,6 +107,84 @@ def execute_postgres_capacity_workload(
             for result in results
         ),
         max_connection_utilization_fraction=max(utilization_values, default=None),
+    )
+
+
+def execute_paced_capacity_soak(
+    *,
+    plans: Sequence[CapacityWorkloadPlan],
+    http_probe: CapacityProbePort,
+    postgres_probe: PostgresCapacityProbePort,
+    postgres_request_count: int,
+    minimum_observation_seconds: float,
+    monotonic: Callable[[], float] = time.perf_counter,
+    sleeper: Callable[[float], None] = time.sleep,
+) -> PacedCapacitySoakResult:
+    indexed = {plan.scenario: plan for plan in plans}
+    if len(indexed) != len(plans) or set(indexed) != STEADY_STATE_SCENARIOS:
+        raise ValueError("paced soak requires each governed steady-state HTTP scenario exactly once")
+    if minimum_observation_seconds <= 0:
+        raise ValueError("minimum_observation_seconds must be positive")
+    request_counts = {len(plan.requests) for plan in plans}
+    if len(request_counts) != 1:
+        raise ValueError("paced soak HTTP scenarios must use the same request count")
+    request_count = request_counts.pop()
+    if postgres_request_count != request_count:
+        raise ValueError("paced soak PostgreSQL and HTTP request counts must match")
+    concurrency_values = {plan.max_concurrency for plan in plans}
+    if len(concurrency_values) != 1:
+        raise ValueError("paced soak HTTP scenarios must use the same concurrency")
+    concurrency = concurrency_values.pop()
+    rounds = math.ceil(request_count / concurrency)
+    if rounds < 2:
+        raise ValueError("paced soak requires at least two observation rounds")
+
+    started_at = monotonic()
+    measurements: list[CapacityMeasurement] = []
+    postgres_remaining = postgres_request_count
+    max_postgres_utilization: float | None = None
+    for round_index in range(rounds):
+        target_offset = minimum_observation_seconds * round_index / (rounds - 1)
+        delay = target_offset - (monotonic() - started_at)
+        if delay > 0:
+            sleeper(delay)
+        observed_offset = max(monotonic() - started_at, 0.0)
+        for plan in plans:
+            start = round_index * plan.max_concurrency
+            requests = plan.requests[start : start + plan.max_concurrency]
+            if not requests:
+                continue
+            batch = replace(plan, requests=requests, max_concurrency=len(requests))
+            measurements.extend(
+                replace(item, observed_offset_seconds=observed_offset)
+                for item in execute_capacity_workload(batch, probe=http_probe)
+            )
+        postgres_batch_size = min(
+            concurrency, postgres_remaining
+        )
+        if postgres_batch_size:
+            postgres_result = execute_postgres_capacity_workload(
+                probe=postgres_probe,
+                request_count=postgres_batch_size,
+                max_concurrency=postgres_batch_size,
+            )
+            measurements.extend(
+                replace(item, observed_offset_seconds=observed_offset)
+                for item in postgres_result.measurements
+            )
+            observed_utilization = postgres_result.max_connection_utilization_fraction
+            if observed_utilization is not None:
+                max_postgres_utilization = max(
+                    max_postgres_utilization or 0.0, observed_utilization
+                )
+            postgres_remaining -= postgres_batch_size
+    observed_window_seconds = monotonic() - started_at
+    if observed_window_seconds < minimum_observation_seconds:
+        raise ValueError("paced soak clock did not observe the minimum window")
+    return PacedCapacitySoakResult(
+        measurements=tuple(measurements),
+        observed_window_seconds=observed_window_seconds,
+        postgres_max_connection_utilization_fraction=max_postgres_utilization,
     )
 
 

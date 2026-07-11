@@ -8,6 +8,7 @@ from app.application.service_capacity_workload import (
     CapacityWorkloadPlan,
     execute_capacity_recovery,
     execute_capacity_workload,
+    execute_paced_capacity_soak,
     execute_postgres_capacity_workload,
 )
 from app.ports.capacity_probe import (
@@ -42,6 +43,19 @@ class StubPostgresProbe:
 
     def execute(self) -> PostgresCapacityProbeResult:
         return self.results.popleft()
+
+
+class FakeClock:
+    def __init__(self) -> None:
+        self.value = 0.0
+        self.sleeps: list[float] = []
+
+    def monotonic(self) -> float:
+        return self.value
+
+    def sleep(self, seconds: float) -> None:
+        self.sleeps.append(seconds)
+        self.value += seconds
 
 
 def _result(
@@ -210,6 +224,82 @@ def test_postgres_workload_preserves_query_outcomes_and_max_observed_utilization
 
     assert [item.outcome for item in result.measurements] == ["accepted", "failed", "accepted"]
     assert result.max_connection_utilization_fraction == 0.3
+
+
+def test_paced_soak_cycles_every_scenario_across_the_shared_window() -> None:
+    scenarios = ("api", "source_ingestion", "outbox_delivery", "downstream_submission")
+    plans = [
+        CapacityWorkloadPlan(scenario, (REQUEST,) * 4, 2) for scenario in scenarios
+    ]
+    clock = FakeClock()
+
+    result = execute_paced_capacity_soak(
+        plans=plans,
+        http_probe=StubProbe([_result() for _ in range(16)]),
+        postgres_probe=StubPostgresProbe(
+            [
+                PostgresCapacityProbeResult(0.01, "accepted", utilization)
+                for utilization in (0.1, 0.2, 0.3, 0.25)
+            ]
+        ),
+        postgres_request_count=4,
+        minimum_observation_seconds=10.0,
+        monotonic=clock.monotonic,
+        sleeper=clock.sleep,
+    )
+
+    assert result.observed_window_seconds == 10.0
+    assert clock.sleeps == [10.0]
+    assert result.postgres_max_connection_utilization_fraction == 0.3
+    for scenario in (*scenarios, "postgresql"):
+        offsets = [
+            item.observed_offset_seconds
+            for item in result.measurements
+            if item.scenario == scenario
+        ]
+        assert offsets == [0.0, 0.0, 10.0, 10.0]
+
+
+@pytest.mark.parametrize(
+    ("plans", "postgres_count", "window", "message"),
+    [
+        ([], 4, 10.0, "each governed steady-state"),
+        (
+            [CapacityWorkloadPlan("api", (REQUEST,) * 4, 2)] * 4,
+            4,
+            10.0,
+            "each governed steady-state",
+        ),
+        (
+            [
+                CapacityWorkloadPlan(scenario, (REQUEST,) * (3 if scenario == "api" else 4), 2)
+                for scenario in (
+                    "api",
+                    "source_ingestion",
+                    "outbox_delivery",
+                    "downstream_submission",
+                )
+            ],
+            4,
+            10.0,
+            "same request count",
+        ),
+    ],
+)
+def test_paced_soak_rejects_incomplete_or_inconsistent_plans(
+    plans: list[CapacityWorkloadPlan],
+    postgres_count: int,
+    window: float,
+    message: str,
+) -> None:
+    with pytest.raises(ValueError, match=message):
+        execute_paced_capacity_soak(
+            plans=plans,
+            http_probe=StubProbe([]),
+            postgres_probe=StubPostgresProbe([]),
+            postgres_request_count=postgres_count,
+            minimum_observation_seconds=window,
+        )
 
 
 @pytest.mark.parametrize(
