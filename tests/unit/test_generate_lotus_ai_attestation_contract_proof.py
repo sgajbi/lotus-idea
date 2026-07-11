@@ -2,10 +2,14 @@ import json
 from pathlib import Path
 
 from scripts.generate_lotus_ai_attestation_contract_proof import main
+from tests.support.lotus_ai_attestation_source_fixture import (
+    materialize_lotus_ai_attestation_source,
+)
 
 
 def test_generator_writes_source_safe_local_proof(tmp_path: Path) -> None:
     output = tmp_path / "lotus-ai-attestation-contract-proof.json"
+    lotus_ai_root = materialize_lotus_ai_attestation_source(tmp_path / "lotus-ai")
 
     result = main(
         [
@@ -13,6 +17,8 @@ def test_generator_writes_source_safe_local_proof(tmp_path: Path) -> None:
             "2026-07-11T12:00:00Z",
             "--output",
             str(output),
+            "--lotus-ai-root",
+            str(lotus_ai_root),
         ]
     )
 

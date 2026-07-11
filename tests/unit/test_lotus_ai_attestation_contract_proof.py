@@ -7,15 +7,19 @@ from app.application.lotus_ai_attestation_contract_proof import (
     lotus_ai_attestation_consumer_contract_is_valid,
     lotus_ai_attestation_contract_proof_is_valid,
 )
+from tests.support.lotus_ai_attestation_source_fixture import (
+    materialize_lotus_ai_attestation_source,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 
 
-def test_local_cross_repository_attestation_contract_is_source_proven() -> None:
+def test_local_cross_repository_attestation_contract_is_source_proven(tmp_path: Path) -> None:
+    lotus_ai_root = materialize_lotus_ai_attestation_source(tmp_path / "lotus-ai")
     proof = build_lotus_ai_attestation_contract_proof(
         generated_at_utc=datetime(2026, 7, 11, 12, 0, tzinfo=UTC),
         repository_root=ROOT,
-        lotus_ai_root=ROOT.parent / "lotus-ai",
+        lotus_ai_root=lotus_ai_root,
     )
 
     assert lotus_ai_attestation_contract_proof_is_valid(proof)
