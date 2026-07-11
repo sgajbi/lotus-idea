@@ -77,6 +77,7 @@ ROOT_CONTEXT_FILES = (
     "REPOSITORY-ENGINEERING-CONTEXT.md",
     "Makefile",
 )
+ALLOWED_STATUSES = frozenset({"`locally_fixed`", "`partially_fixed`"})
 
 
 def _split_row(line: str) -> list[str]:
@@ -149,20 +150,36 @@ def validate_issue_closure_matrix(path: Path = MATRIX_PATH) -> list[str]:
 
         if number not in ACTIONABLE_ISSUES:
             errors.append(f"#{number}: issue is not in the current actionable closure set")
-        if row["Status"] != "`locally_fixed`":
-            errors.append(f"#{number}: status must be `locally_fixed` before PR creation")
+        status = row["Status"]
+        if status not in ALLOWED_STATUSES:
+            errors.append(
+                f"#{number}: status must be `locally_fixed` or `partially_fixed` before PR creation"
+            )
         if not _has_path_or_command(row["Implementation Evidence"]):
             errors.append(f"#{number}: implementation evidence must cite code or contract paths")
         if not (
-            "tests/" in row["Test And Gate Evidence"] or "`make " in row["Test And Gate Evidence"]
+            "tests/" in row["Test And Gate Evidence"]
+            or "`make " in row["Test And Gate Evidence"]
+            or " dispatch `" in row["Test And Gate Evidence"].lower()
         ):
-            errors.append(f"#{number}: test and gate evidence must cite tests or make targets")
+            errors.append(
+                f"#{number}: test and gate evidence must cite tests, make targets, "
+                "or an executed workflow dispatch"
+            )
         if "same-pattern" not in row["Same-Pattern Scan"].lower():
             errors.append(f"#{number}: same-pattern scan evidence is required")
         if not _has_path_or_command(row["Docs/Wiki/Context"]):
             errors.append(f"#{number}: docs/wiki/context evidence or decision is required")
-        if f"Closes #{number}" not in row["PR Close Intent"]:
-            errors.append(f"#{number}: PR close intent must contain `Closes #{number}`")
+        if status == "`locally_fixed`" and f"Closes #{number}" not in row["PR Close Intent"]:
+            errors.append(f"#{number}: locally fixed intent must contain `Closes #{number}`")
+        if status == "`partially_fixed`" and not any(
+            phrase in row["PR Close Intent"]
+            for phrase in (f"Keep #{number} open", f"Keeps #{number} open")
+        ):
+            errors.append(
+                f"#{number}: partially fixed intent must contain `Keep #{number} open` "
+                f"or `Keeps #{number} open`"
+            )
 
     missing = sorted(ACTIONABLE_ISSUES - seen_issues)
     extra = sorted(seen_issues - ACTIONABLE_ISSUES)
