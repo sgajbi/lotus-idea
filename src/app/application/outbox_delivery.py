@@ -16,6 +16,8 @@ from app.domain.outbox_delivery_state import (
 from app.ports.idea_repository import OutboxDeliveryRepository
 from app.ports.outbox_publisher import OutboxEventPublisher, OutboxPublishOutcome
 
+OUTBOX_DELIVERY_RUN_ONCE_BATCH_CEILING = 100
+
 
 class OutboxDeliveryRunStatus(StrEnum):
     COMPLETED = "completed"
@@ -48,7 +50,7 @@ def outbox_delivery_run_request_payload(
     delivered_at_utc: datetime | None,
     caller_subject: str,
 ) -> dict[str, Any]:
-    _require_positive(limit, "limit")
+    _require_delivery_limit(limit)
     _require_positive(max_retry_count, "max_retry_count")
     _require_text(caller_subject, "caller_subject")
     if delivered_at_utc is not None:
@@ -71,7 +73,7 @@ def run_outbox_delivery_once(
     repository: OutboxDeliveryRepository,
     publisher: OutboxEventPublisher,
     *,
-    limit: int = 100,
+    limit: int = OUTBOX_DELIVERY_RUN_ONCE_BATCH_CEILING,
     max_retry_count: int = 3,
     idempotency_key: str,
     request_payload: Mapping[str, Any],
@@ -80,7 +82,7 @@ def run_outbox_delivery_once(
     lease_duration_seconds: int = 300,
     delivered_at_utc: datetime | None = None,
 ) -> OutboxDeliveryRunSummary:
-    _require_positive(limit, "limit")
+    _require_delivery_limit(limit)
     _require_positive(max_retry_count, "max_retry_count")
     _require_positive(lease_duration_seconds, "lease_duration_seconds")
     delivered_at = delivered_at_utc or datetime.now(UTC)
@@ -215,6 +217,12 @@ def publish_outbox_event_safely(
 def _require_positive(value: int, field_name: str) -> None:
     if value <= 0:
         raise ValueError(f"{field_name} must be positive")
+
+
+def _require_delivery_limit(limit: int) -> None:
+    _require_positive(limit, "limit")
+    if limit > OUTBOX_DELIVERY_RUN_ONCE_BATCH_CEILING:
+        raise ValueError("limit exceeds outbox_delivery_run_once_batch_ceiling")
 
 
 def _require_text(value: str, field_name: str) -> None:

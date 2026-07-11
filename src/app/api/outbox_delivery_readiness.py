@@ -35,6 +35,7 @@ from app.api.runtime_dependencies import (
 from app.api.telemetry_buckets import bounded_count_bucket
 from app.api.temporal_validation import is_utc_datetime
 from app.application.outbox_delivery import (
+    OUTBOX_DELIVERY_RUN_ONCE_BATCH_CEILING,
     OutboxDeliveryRunStatus,
     OutboxDeliveryRunSummary,
     operator_run_reference_for_idempotency_key,
@@ -116,7 +117,11 @@ async def get_outbox_delivery_readiness(
 
 
 async def post_outbox_delivery_run_once(
-    limit: int = Query(default=100, ge=1, le=1000),
+    limit: int = Query(
+        default=OUTBOX_DELIVERY_RUN_ONCE_BATCH_CEILING,
+        ge=1,
+        le=OUTBOX_DELIVERY_RUN_ONCE_BATCH_CEILING,
+    ),
     max_retry_count: int = Query(
         default=DEFAULT_OUTBOX_DELIVERY_MAX_RETRY_COUNT,
         alias="maxRetryCount",

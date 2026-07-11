@@ -60,6 +60,7 @@ def test_service_slo_capacity_contract_rejects_invalid_objectives_and_capacity()
     assert "source_ingestion latency objectives must be positive and ordered" in errors
     assert any("batch_max_items must be a positive integer" in error for error in errors)
     assert "PostgreSQL utilization thresholds must be ordered fractions" in errors
+    assert "source-ingestion capacity budget must match code-owned ceiling" in errors
 
 
 def test_service_slo_capacity_contract_rejects_sensitive_labels_and_mesh_alias() -> None:

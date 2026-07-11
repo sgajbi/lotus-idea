@@ -440,6 +440,18 @@ def test_run_outbox_delivery_once_rejects_non_positive_limit() -> None:
         )
 
 
+def test_run_outbox_delivery_once_rejects_limit_above_capacity_ceiling() -> None:
+    with pytest.raises(ValueError, match="outbox_delivery_run_once_batch_ceiling"):
+        run_outbox_delivery_once(
+            repository_with_events(outbox_event("idea.candidate.persisted.v1")),
+            AcceptingPublisher(),
+            lease_owner="worker-1",
+            lease_attempt_id="attempt-1",
+            limit=101,
+            **operator_run_kwargs("outbox-run:capacity-limit:001"),
+        )
+
+
 def test_run_outbox_delivery_once_rejects_non_positive_retry_limit() -> None:
     with pytest.raises(ValueError, match="max_retry_count must be positive"):
         run_outbox_delivery_once(

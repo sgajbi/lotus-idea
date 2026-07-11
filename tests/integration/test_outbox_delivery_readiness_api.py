@@ -371,6 +371,17 @@ def test_outbox_delivery_run_once_api_rejects_non_utc_delivery_time() -> None:
     assert response.json()["code"] == "invalid_request"
 
 
+def test_outbox_delivery_run_once_api_rejects_limit_above_capacity_ceiling() -> None:
+    response = TestClient(app).post(
+        "/api/v1/outbox-delivery/run-once",
+        params={"limit": 101},
+        headers=outbox_delivery_run_headers(),
+    )
+
+    assert response.status_code == 400
+    assert response.json()["code"] == "invalid_request"
+
+
 def test_outbox_delivery_run_once_api_replays_same_operator_run_without_mutating(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

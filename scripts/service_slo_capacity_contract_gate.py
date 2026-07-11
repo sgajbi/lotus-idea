@@ -4,10 +4,22 @@ import argparse
 import json
 from pathlib import Path
 import re
+import sys
 from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
+SRC = ROOT / "src"
+if str(SRC) not in sys.path:
+    sys.path.insert(0, str(SRC))
+
+from app.application.outbox_delivery import (  # noqa: E402
+    OUTBOX_DELIVERY_RUN_ONCE_BATCH_CEILING,
+)
+from app.application.source_ingestion import (  # noqa: E402
+    SOURCE_INGESTION_RUN_ONCE_BATCH_CEILING,
+)
+
 CONTRACT_PATH = Path("contracts/observability/lotus-idea-service-slo-capacity.v1.json")
 EXPECTED_WORKFLOWS = {
     "api",
@@ -146,6 +158,10 @@ def _validate_capacity(payload: dict[str, Any]) -> list[str]:
         value = capacity.get(key)
         if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
             errors.append(f"service SLO capacity {key} must be a positive integer")
+    if capacity.get("source_ingestion_batch_max_items") != SOURCE_INGESTION_RUN_ONCE_BATCH_CEILING:
+        errors.append("source-ingestion capacity budget must match code-owned ceiling")
+    if capacity.get("outbox_delivery_batch_max_items") != OUTBOX_DELIVERY_RUN_ONCE_BATCH_CEILING:
+        errors.append("outbox-delivery capacity budget must match code-owned ceiling")
     warn = capacity.get("postgres_pool_utilization_warn_fraction")
     shed = capacity.get("postgres_pool_utilization_shed_fraction")
     if not _fraction(warn) or not _fraction(shed) or warn >= shed:
