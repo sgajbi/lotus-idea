@@ -874,6 +874,9 @@ def test_postgres_repository_round_trips_ai_explanation_lineage() -> None:
         == (lineage_row["output_content_digest"])
     )
     assert lineage_row["execution_provenance_posture"] == "not_applicable_fallback"
+    assert lineage_row["lotus_ai_run_id"] is None
+    assert lineage_row["lotus_ai_replay_nonce"] is None
+    assert lineage_row["lotus_ai_attestation_key_id"] is None
     assert (
         lineage_row["lineage_json"]["execution_provenance_posture"]
         == (lineage_row["execution_provenance_posture"])

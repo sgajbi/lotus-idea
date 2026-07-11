@@ -114,7 +114,7 @@ class InMemoryIdeaRepository(
             self._lotus_ai_attestation_replay.restore(
                 (lineage.request_id, lineage.attestation_receipt)
                 for record in self._candidate_records.values()
-                for lineage in record.ai_explanation_lineage_records
+                for lineage in getattr(record, "ai_explanation_lineage_records", ())
                 if lineage.attestation_receipt is not None
             )
 
