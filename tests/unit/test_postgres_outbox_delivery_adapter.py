@@ -22,6 +22,7 @@ from app.infrastructure.postgres_repository import PostgresIdeaRepository
 from tests.unit.postgres_repository_fake import FakePostgresConnection
 from tests.unit.test_postgres_repository import (
     EVALUATED_AT,
+    access_scope,
     high_cash_candidate,
 )
 
@@ -41,7 +42,7 @@ class RecoveryClaim(TypedDict):
 
 def _postgres_dead_letter(connection: FakePostgresConnection) -> Any:
     repository = PostgresIdeaRepository(connection)
-    candidate = high_cash_candidate()
+    candidate = high_cash_candidate(candidate_scope=access_scope())
     repository.persist_candidate(
         candidate,
         idempotency_key="candidate:outbox-recovery-helper",
@@ -121,7 +122,7 @@ class RollbackAwareConnection:
 def test_postgres_outbox_adapter_reports_dead_lettered_delivery_races() -> None:
     connection = FakePostgresConnection()
     repository = PostgresIdeaRepository(connection)
-    candidate = high_cash_candidate()
+    candidate = high_cash_candidate(candidate_scope=access_scope())
     repository.persist_candidate(
         candidate,
         idempotency_key="candidate:outbox-dead-letter-race",
@@ -178,7 +179,7 @@ def test_postgres_outbox_adapter_validates_delivery_lease_inputs() -> None:
 def test_postgres_outbox_recovery_is_durable_idempotent_and_lease_fenced() -> None:
     connection = FakePostgresConnection()
     repository = PostgresIdeaRepository(connection)
-    candidate = high_cash_candidate()
+    candidate = high_cash_candidate(candidate_scope=access_scope())
     repository.persist_candidate(
         candidate,
         idempotency_key="candidate:outbox-recovery",
@@ -313,7 +314,7 @@ def test_postgres_outbox_recovery_classifies_terminal_and_policy_blockers(
     assert missing is not None
     assert missing.decision is OutboxRecoveryDecision.NOT_FOUND
     pending_repository = PostgresIdeaRepository(FakePostgresConnection())
-    candidate = high_cash_candidate()
+    candidate = high_cash_candidate(candidate_scope=access_scope())
     pending_repository.persist_candidate(
         candidate,
         idempotency_key="candidate:outbox-recovery-pending",

@@ -9,6 +9,7 @@ from tests.unit.postgres_repository_fake import FakePostgresConnection
 from tests.unit.test_postgres_repository import (
     EVALUATED_AT,
     StaleSnapshotRepository,
+    access_scope,
     feedback_command,
     high_cash_candidate,
     review_command,
@@ -19,7 +20,7 @@ def test_postgres_repository_retries_review_identity_collision_as_replay() -> No
     connection = FakePostgresConnection()
     repository = PostgresIdeaRepository(connection)
     candidate = replace(
-        high_cash_candidate(),
+        high_cash_candidate(candidate_scope=access_scope()),
         candidate_id="idea_high_cash_review_identity_replay",
         lifecycle_status=IdeaLifecycleStatus.READY_FOR_REVIEW,
     )
@@ -66,7 +67,7 @@ def test_postgres_repository_retries_changed_review_identity_as_typed_conflict()
     connection = FakePostgresConnection()
     repository = PostgresIdeaRepository(connection)
     candidate = replace(
-        high_cash_candidate(),
+        high_cash_candidate(candidate_scope=access_scope()),
         candidate_id="idea_high_cash_review_identity_conflict",
         lifecycle_status=IdeaLifecycleStatus.READY_FOR_REVIEW,
     )
@@ -116,7 +117,7 @@ def test_postgres_repository_retries_feedback_identity_collision_as_replay() -> 
     connection = FakePostgresConnection()
     repository = PostgresIdeaRepository(connection)
     candidate = replace(
-        high_cash_candidate(),
+        high_cash_candidate(candidate_scope=access_scope()),
         candidate_id="idea_high_cash_feedback_identity_replay",
         lifecycle_status=IdeaLifecycleStatus.READY_FOR_REVIEW,
     )

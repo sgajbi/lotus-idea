@@ -8,6 +8,7 @@ from app.infrastructure.postgres_repository import PostgresIdeaRepository
 from tests.unit.postgres_repository_fake import FakePostgresConnection
 from tests.unit.test_postgres_repository import (
     EVALUATED_AT,
+    access_scope,
     high_cash_candidate,
 )
 
@@ -15,7 +16,7 @@ from tests.unit.test_postgres_repository import (
 def test_postgres_repository_uses_outbox_only_readiness_projection() -> None:
     connection = FakePostgresConnection()
     repository = PostgresIdeaRepository(connection)
-    candidate = high_cash_candidate()
+    candidate = high_cash_candidate(candidate_scope=access_scope())
     repository.persist_candidate(
         candidate,
         idempotency_key="candidate:outbox-readiness-projection",

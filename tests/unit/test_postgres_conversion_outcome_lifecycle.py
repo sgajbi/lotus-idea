@@ -22,6 +22,7 @@ from tests.unit.postgres_repository_fake import FakePostgresConnection
 from tests.unit.test_postgres_repository import (
     EVALUATED_AT,
     StaleSnapshotRepository,
+    access_scope,
     conversion_command,
     conversion_outcome_command,
     high_cash_candidate,
@@ -36,7 +37,7 @@ def repository_with_conversion_intent() -> tuple[
     connection = FakePostgresConnection()
     repository = PostgresIdeaRepository(connection)
     candidate = replace(
-        high_cash_candidate(),
+        high_cash_candidate(candidate_scope=access_scope()),
         candidate_id="idea_conversion_outcome_lifecycle",
         lifecycle_status=IdeaLifecycleStatus.APPROVED,
         review_posture=ReviewPosture.APPROVED_FOR_CONVERSION,
