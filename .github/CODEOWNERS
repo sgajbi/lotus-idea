@@ -7,4 +7,5 @@
 /THIRD_PARTY_NOTICES.md @sgajbi
 /contracts/compliance/ @sgajbi
 /scripts/license_compliance_gate.py @sgajbi
+/scripts/license_compliance_policy.py @sgajbi
 /tests/unit/test_license_compliance_gate.py @sgajbi

@@ -4,9 +4,9 @@ from datetime import date
 import hashlib
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
-from scripts.license_compliance_gate import (
+from scripts.license_compliance_policy import (
     POLICY_PATH,
     ROOT,
     render_third_party_notice,
@@ -16,7 +16,9 @@ from scripts.license_compliance_gate import (
 
 
 def current_policy() -> dict[str, Any]:
-    return json.loads((ROOT / POLICY_PATH).read_text(encoding="utf-8"))
+    payload = json.loads((ROOT / POLICY_PATH).read_text(encoding="utf-8"))
+    assert isinstance(payload, dict)
+    return cast(dict[str, Any], payload)
 
 
 def materialize_policy(tmp_path: Path, payload: dict[str, Any]) -> None:
@@ -102,6 +104,11 @@ def test_license_policy_accepts_active_exception_and_rejects_expired_exception(
         repository_root=tmp_path,
         as_of_date=date(2026, 8, 1),
     )
+    assert "license exception LIC-EX-001 is expired" in validate_license_policy(
+        payload,
+        repository_root=tmp_path,
+        as_of_date=date(2026, 8, 1),
+    )
 
 
 def test_license_policy_rejects_incomplete_approval_governance(tmp_path: Path) -> None:
@@ -149,6 +156,45 @@ def test_license_policy_rejects_exception_without_all_approvals_or_evidence(
     )
 
 
+def test_license_policy_rejects_orphaned_duplicate_or_malformed_exceptions(
+    tmp_path: Path,
+) -> None:
+    payload = current_policy()
+    payload["exceptions"] = [
+        {
+            "exception_id": "LIC-EX-001",
+            "component": "missing-component",
+            "spdx": "GPL-3.0-only",
+            "approved_by": ["legal", "security", "lotus-idea-owners"],
+            "approval_evidence_ref": "not-an-immutable-reference",
+            "expires_on": "2026-07-31",
+            "reason": "",
+        },
+        {
+            "exception_id": "LIC-EX-001",
+            "component": "ruff",
+            "spdx": "GPL-3.0-only",
+            "approved_by": ["legal", "security", "lotus-idea-owners"],
+            "approval_evidence_ref": "https://github.com/sgajbi/lotus-idea/issues/999",
+            "expires_on": "invalid",
+            "reason": "Bounded evaluation",
+        },
+    ]
+    materialize_policy(tmp_path, payload)
+
+    errors = validate_license_policy(
+        payload,
+        repository_root=tmp_path,
+        as_of_date=date(2026, 7, 11),
+    )
+
+    assert "license exception LIC-EX-001 component must be inventoried" in errors
+    assert "license exception LIC-EX-001 requires immutable approval evidence" in errors
+    assert "license exception LIC-EX-001 requires a bounded reason" in errors
+    assert "duplicate license exception_id LIC-EX-001" in errors
+    assert "license exception LIC-EX-001 requires an ISO expiry date" in errors
+
+
 def test_license_policy_rejects_notice_external_and_asset_posture_drift(tmp_path: Path) -> None:
     payload = current_policy()
     materialize_policy(tmp_path, payload)
@@ -174,7 +220,7 @@ def test_release_license_evidence_binds_policy_notice_sbom_and_image() -> None:
     payload = current_policy()
     image = f"ghcr.io/sgajbi/lotus-idea@sha256:{'a' * 64}"
     sbom = {"serialNumber": "urn:uuid:sbom-001"}
-    manifest = {
+    manifest: dict[str, Any] = {
         "container_image_digest_reference": image,
         "license_compliance": {
             "policy_contract": "contracts/compliance/lotus-idea-license-policy.v1.json",
