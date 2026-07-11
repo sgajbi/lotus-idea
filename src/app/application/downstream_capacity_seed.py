@@ -8,6 +8,7 @@ from app.ports.downstream_capacity_seed import DownstreamCapacitySeedPort
 
 
 LIFECYCLE_SEQUENCE = ("enriched", "scored", "governance_checked", "ready_for_review")
+SYNTHETIC_CAPACITY_NAMESPACE = "CAPACITY_SYNTHETIC_PORTFOLIO_001"
 
 
 @dataclass(frozen=True)
@@ -90,6 +91,7 @@ def build_downstream_capacity_seed_artifact(
         "branch": branch,
         "runId": run_id,
         "syntheticResource": True,
+        "syntheticNamespace": SYNTHETIC_CAPACITY_NAMESPACE,
         "conversionIntentId": result.conversion_intent_id,
         "downstreamSubmissionPath": result.downstream_submission_path,
         "productionCapacityCertified": False,

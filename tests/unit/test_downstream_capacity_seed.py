@@ -90,10 +90,11 @@ def test_seed_artifact_is_explicitly_synthetic_and_non_certifying() -> None:
     )
 
     assert artifact["syntheticResource"] is True
+    assert artifact["syntheticNamespace"] == "CAPACITY_SYNTHETIC_PORTFOLIO_001"
     assert artifact["claimPosture"] == "seed_only_not_capacity_evidence"
     assert artifact["productionCapacityCertified"] is False
     assert artifact["supportedFeaturePromoted"] is False
-    assert "portfolio" not in str(artifact).lower()
+    assert "PB_SG_GLOBAL_BAL_001" not in str(artifact)
     assert "client" not in str(artifact).lower()
 
 
