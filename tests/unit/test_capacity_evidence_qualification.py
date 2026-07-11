@@ -9,6 +9,7 @@ from app.application.capacity_evidence_qualification import (
     DEPENDENCY_RECOVERY_SIGNER_WORKFLOW,
     LOAD_SOAK_SCENARIO_THRESHOLDS,
     LOAD_SOAK_SIGNER_WORKFLOW,
+    RESOURCE_SIGNER_WORKFLOW,
     TRUSTED_REPOSITORY,
     TRUSTED_SIGNER_WORKFLOW,
     TRUSTED_SOURCE_REF,
@@ -16,6 +17,7 @@ from app.application.capacity_evidence_qualification import (
     qualify_dependency_recovery_evidence,
     qualify_load_soak_evidence,
     qualify_postgres_capacity_threshold_evidence,
+    qualify_resource_evidence,
 )
 from app.application.postgres_capacity_threshold_proof import (
     execute_postgres_capacity_threshold_proof,
@@ -121,6 +123,38 @@ def _load_soak_attestation() -> VerifiedArtifactAttestation:
     return _attestation(signer_workflow=LOAD_SOAK_SIGNER_WORKFLOW)
 
 
+def _resource_proof() -> dict[str, object]:
+    return {
+        "schemaVersion": "lotus-idea.service-resource-baseline.v1",
+        "repository": "lotus-idea",
+        "proofScope": "source_safe_process_resource_observation",
+        "claimPosture": "report_only_resource_observation",
+        "environmentProfile": "production-like",
+        "commitSha": "a" * 40,
+        "branch": "main",
+        "runId": "resource-proof-1",
+        "observedWindowSeconds": 3_600.0,
+        "sampleCount": 61,
+        "cpuCoreSecondsPerSecondAverage": 0.5,
+        "residentMemoryBytesAverage": 100,
+        "residentMemoryBytesMax": 120,
+        "virtualMemoryBytesMax": 200,
+        "openFileDescriptorUtilizationMax": 0.1,
+        "costAttributionVerified": False,
+        "resourceAttestationVerified": False,
+        "certificationReady": False,
+        "certificationBlockers": [
+            "production_like_resource_attestation_missing",
+            "cost_attribution_evidence_missing",
+        ],
+        "supportedFeaturePromoted": False,
+    }
+
+
+def _resource_attestation() -> VerifiedArtifactAttestation:
+    return _attestation(signer_workflow=RESOURCE_SIGNER_WORKFLOW)
+
+
 def test_qualifies_only_attested_mainline_threshold_evidence() -> None:
     qualification = qualify_postgres_capacity_threshold_evidence(
         threshold_proof=_proof(),
@@ -164,6 +198,54 @@ def test_qualifies_only_attested_load_soak_within_slo_thresholds() -> None:
     assert qualification["qualifiedScenarios"] == list(LOAD_SOAK_SCENARIO_THRESHOLDS)
     assert qualification["productionCapacityCertified"] is False
     assert qualification["supportedFeaturePromoted"] is False
+
+
+def test_qualifies_attested_production_like_resource_observation_without_cost_claim() -> None:
+    qualification = qualify_resource_evidence(
+        resource_proof=_resource_proof(),
+        verified_attestation=_resource_attestation(),
+        generated_at_utc=datetime(2026, 7, 11, 9, 0, tzinfo=UTC),
+        qualification_run_id="qualification-resource-1",
+    )
+
+    assert qualification["proofScope"] == "attested_process_resource_environment_qualification"
+    assert qualification["resourceProofRunId"] == "resource-proof-1"
+    assert qualification["attestationVerified"] is True
+    assert qualification["costAttributionVerified"] is False
+    assert qualification["productionCapacityCertified"] is False
+
+
+@pytest.mark.parametrize(
+    ("mutation", "message"),
+    [
+        ({"environmentProfile": "test"}, "must be production-like"),
+        ({"sampleCount": 60}, "minimum sample count"),
+        ({"observedWindowSeconds": 3_599.9}, "minimum observation window"),
+        ({"costAttributionVerified": True}, "must not claim cost attribution"),
+    ],
+)
+def test_resource_qualification_rejects_unqualified_or_inflated_proof(
+    mutation: dict[str, object], message: str
+) -> None:
+    proof = {**_resource_proof(), **mutation}
+
+    with pytest.raises(ValueError, match=message):
+        qualify_resource_evidence(
+            resource_proof=proof,
+            verified_attestation=_resource_attestation(),
+            generated_at_utc=datetime(2026, 7, 11, tzinfo=UTC),
+            qualification_run_id="qualification-resource-1",
+        )
+
+
+def test_resource_qualification_rejects_non_resource_producer_attestation() -> None:
+    with pytest.raises(ValueError, match="workflow is not trusted"):
+        qualify_resource_evidence(
+            resource_proof=_resource_proof(),
+            verified_attestation=_dependency_attestation(),
+            generated_at_utc=datetime(2026, 7, 11, tzinfo=UTC),
+            qualification_run_id="qualification-resource-1",
+        )
 
 
 @pytest.mark.parametrize(

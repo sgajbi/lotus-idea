@@ -7,6 +7,7 @@ from typing import Any
 from app.application.postgres_capacity_threshold_proof import (
     validate_postgres_capacity_threshold_proof,
 )
+from app.application.service_resource_baseline import validate_service_resource_baseline
 
 
 SCHEMA_VERSION = "lotus-idea.capacity-evidence-qualification.v1"
@@ -18,10 +19,13 @@ DEPENDENCY_RECOVERY_SIGNER_WORKFLOW = (
     "sgajbi/lotus-idea/.github/workflows/service-dependency-recovery-evidence.yml"
 )
 LOAD_SOAK_SIGNER_WORKFLOW = "sgajbi/lotus-idea/.github/workflows/service-load-soak-evidence.yml"
+RESOURCE_SIGNER_WORKFLOW = LOAD_SOAK_SIGNER_WORKFLOW
 TRUSTED_SIGNER_WORKFLOW = POSTGRES_CAPACITY_SIGNER_WORKFLOW
 TRUSTED_SOURCE_REF = "refs/heads/main"
 MINIMUM_LOAD_SOAK_SAMPLES = 1_000
 MINIMUM_LOAD_SOAK_SECONDS = 3_600.0
+MINIMUM_RESOURCE_SAMPLES = 61
+MINIMUM_RESOURCE_SECONDS = 3_600.0
 LOAD_SOAK_SCENARIO_THRESHOLDS = {
     "api": (0.001, 0.5, 1.5),
     "source_ingestion": (0.01, 300.0, 600.0),
@@ -145,6 +149,41 @@ def qualify_load_soak_evidence(
     }
 
 
+def qualify_resource_evidence(
+    *,
+    resource_proof: dict[str, Any],
+    verified_attestation: VerifiedArtifactAttestation,
+    generated_at_utc: datetime,
+    qualification_run_id: str,
+) -> dict[str, Any]:
+    _validate_qualification_inputs(generated_at_utc, qualification_run_id)
+    _validate_resource_proof(resource_proof)
+    _validate_attestation(
+        verified_attestation,
+        resource_proof,
+        trusted_signer_workflow=RESOURCE_SIGNER_WORKFLOW,
+    )
+    return {
+        "schemaVersion": SCHEMA_VERSION,
+        "repository": "lotus-idea",
+        "proofScope": "attested_process_resource_environment_qualification",
+        "claimPosture": "production_like_environment_qualified",
+        "generatedAtUtc": generated_at_utc.astimezone(UTC).isoformat().replace("+00:00", "Z"),
+        "qualificationRunId": qualification_run_id,
+        "resourceProofRunId": resource_proof["runId"],
+        "resourceProofSha256": verified_attestation.subject_sha256,
+        "commitSha": verified_attestation.source_commit_sha,
+        "sourceRef": verified_attestation.source_ref,
+        "signerWorkflow": verified_attestation.signer_workflow,
+        "attestationRepository": verified_attestation.repository,
+        "attestationVerified": True,
+        "environmentProfile": "production-like",
+        "costAttributionVerified": False,
+        "productionCapacityCertified": False,
+        "supportedFeaturePromoted": False,
+    }
+
+
 def _validate_attestation(
     attestation: VerifiedArtifactAttestation,
     proof: dict[str, Any],
@@ -225,6 +264,28 @@ def validate_load_soak_proof(proof: dict[str, Any]) -> None:
         if not isinstance(scenario, dict):
             raise ValueError(f"load soak proof scenario {scenario_name} is missing")
         _validate_load_soak_scenario(scenario_name, scenario, thresholds)
+
+
+def _validate_resource_proof(proof: dict[str, Any]) -> None:
+    errors = validate_service_resource_baseline(proof)
+    if errors:
+        raise ValueError("; ".join(errors))
+    sample_count = proof.get("sampleCount")
+    observed_window = proof.get("observedWindowSeconds")
+    if proof.get("environmentProfile") != "production-like":
+        raise ValueError("resource proof must be production-like")
+    if (
+        isinstance(sample_count, bool)
+        or not isinstance(sample_count, int)
+        or sample_count < MINIMUM_RESOURCE_SAMPLES
+    ):
+        raise ValueError("resource proof does not meet the minimum sample count")
+    if (
+        isinstance(observed_window, bool)
+        or not isinstance(observed_window, (int, float))
+        or observed_window < MINIMUM_RESOURCE_SECONDS
+    ):
+        raise ValueError("resource proof does not meet the minimum observation window")
 
 
 def _validate_load_soak_scenario(
