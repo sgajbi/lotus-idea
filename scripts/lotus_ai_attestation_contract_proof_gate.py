@@ -44,9 +44,7 @@ _validate_source_safety = forbidden_content_validator(
 )
 
 
-def validate_lotus_ai_attestation_contract_proof(
-    *, lotus_ai_root: Path | None = None
-) -> list[str]:
+def validate_lotus_ai_attestation_contract_proof(*, lotus_ai_root: Path | None = None) -> list[str]:
     proof = build_lotus_ai_attestation_contract_proof(
         generated_at_utc=datetime(2026, 7, 11, 12, 0, tzinfo=UTC),
         repository_root=ROOT,

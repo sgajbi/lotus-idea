@@ -164,9 +164,7 @@ async def evaluate_ai_explanation(
             except RuntimeError as exc:
                 raise UntrustedAIWorkflowOutput(
                     "lotus-ai attestation trust infrastructure is unavailable",
-                    reason=(
-                        AIWorkflowProvenanceRejectionReason.TRUST_INFRASTRUCTURE_UNAVAILABLE
-                    ),
+                    reason=(AIWorkflowProvenanceRejectionReason.TRUST_INFRASTRUCTURE_UNAVAILABLE),
                 ) from exc
         result = evaluate_ai_explanation_to_repository(
             command,

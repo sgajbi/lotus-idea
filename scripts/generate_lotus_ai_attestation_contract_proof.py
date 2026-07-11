@@ -26,9 +26,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--output")
     args = parser.parse_args(argv)
     try:
-        generated_at_utc = datetime.fromisoformat(
-            args.generated_at_utc.replace("Z", "+00:00")
-        )
+        generated_at_utc = datetime.fromisoformat(args.generated_at_utc.replace("Z", "+00:00"))
         if generated_at_utc.tzinfo is None or generated_at_utc.utcoffset() is None:
             raise ValueError("--generated-at-utc must be timezone-aware")
         payload = build_lotus_ai_attestation_contract_proof(
