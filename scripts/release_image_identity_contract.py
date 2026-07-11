@@ -79,10 +79,30 @@ def validate_release_image_identity(
             if build.get(key) != expected:
                 errors.append(f"runtime /version {key} must match release identity")
 
-    if (
-        _contains_placeholder(manifest)
-        or _contains_placeholder(labels)
-        or _contains_placeholder(runtime_smoke)
+    manifest_identity = {
+        key: manifest.get(key)
+        for key in (
+            "commit_sha",
+            "branch",
+            "build_timestamp",
+            "repository_url",
+            "run_id",
+            "image_build_id",
+            "container_image_repository",
+            "container_image_tag",
+            "container_image_id",
+            "container_image_digest",
+            "container_image_digest_reference",
+            "kubernetes_deployment_reference",
+        )
+    }
+    governed_labels = {key: labels.get(key) for key in expected_labels}
+    governed_runtime_build = (
+        {key: build.get(key) for key in runtime_expected} if isinstance(build, dict) else {}
+    )
+    if any(
+        _contains_placeholder(identity)
+        for identity in (manifest_identity, governed_labels, governed_runtime_build)
     ):
         errors.append("published release identity must not contain placeholder metadata")
     return errors
