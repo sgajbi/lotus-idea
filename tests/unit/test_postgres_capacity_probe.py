@@ -109,3 +109,33 @@ def test_probe_does_not_claim_invalid_utilization() -> None:
 
         assert result.outcome == "accepted"
         assert result.connection_utilization_fraction is None
+
+
+@pytest.mark.parametrize(
+    ("kwargs", "message"),
+    [
+        ({"database_url": " "}, "database_url must not be blank"),
+        ({"database_url": "postgresql://example", "connect_timeout_seconds": 0}, "positive"),
+    ],
+)
+def test_probe_rejects_invalid_connection_configuration(
+    kwargs: dict[str, object],
+    message: str,
+) -> None:
+    with pytest.raises(ValueError, match=message):
+        PostgresCapacityProbe(**kwargs)  # type: ignore[arg-type]
+
+
+def test_probe_uses_default_psycopg_connection_factory(monkeypatch: pytest.MonkeyPatch) -> None:
+    connection = StubConnection(StubCursor([(1,), None]))
+    monkeypatch.setattr(
+        "app.infrastructure.postgres_capacity_probe.psycopg.connect",
+        lambda *args, **kwargs: connection,
+    )
+    probe = PostgresCapacityProbe(database_url="postgresql://example")
+
+    result = probe.execute()
+
+    assert result.outcome == "accepted"
+    assert result.connection_utilization_fraction is None
+    assert connection.closed is True

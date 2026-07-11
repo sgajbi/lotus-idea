@@ -10,6 +10,7 @@ from app.application.service_capacity_baseline import (
     build_service_capacity_baseline,
     validate_service_capacity_baseline,
 )
+import app.application.service_capacity_baseline as baseline_module
 
 
 GENERATED_AT = datetime(2026, 7, 11, 3, 0, tzinfo=UTC)
@@ -147,6 +148,69 @@ def test_build_rejects_ambiguous_provenance() -> None:
             run_id="run-1",
             observed_window_seconds=1.0,
             postgres_max_connection_utilization_fraction=1.1,
+        )
+
+
+def test_build_rejects_non_positive_window_and_blank_provenance() -> None:
+    common = {
+        "measurements": [],
+        "environment_profile": "test",
+        "generated_at_utc": GENERATED_AT,
+        "commit_sha": "abc123",
+        "branch": "main",
+        "run_id": "run-1",
+        "observed_window_seconds": 1.0,
+    }
+    with pytest.raises(ValueError, match="observed_window_seconds must be positive"):
+        build_service_capacity_baseline(**{**common, "observed_window_seconds": 0})
+    with pytest.raises(ValueError, match="commit_sha must not be blank"):
+        build_service_capacity_baseline(**{**common, "commit_sha": " "})
+
+
+def test_validator_rejects_schema_scope_and_scenario_shape() -> None:
+    artifact = build_service_capacity_baseline(
+        measurements=[],
+        environment_profile="test",
+        generated_at_utc=GENERATED_AT,
+        commit_sha="abc123",
+        branch="main",
+        run_id="run-1",
+        observed_window_seconds=1.0,
+    )
+    artifact["schemaVersion"] = "unknown"
+    artifact["proofScope"] = "unsafe"
+    artifact["scenarios"] = "not-a-list"
+
+    errors = validate_service_capacity_baseline(artifact)
+
+    assert any("schemaVersion must be" in error for error in errors)
+    assert "proofScope must remain source-safe and capacity-baseline-only" in errors
+    assert "scenarios must be a list" in errors
+
+    artifact["scenarios"] = [{"scenario": "api"}]
+    assert "scenarios must match the governed capacity vocabulary and order" in (
+        validate_service_capacity_baseline(artifact)
+    )
+
+
+def test_builder_fails_closed_if_final_artifact_validation_fails(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        baseline_module,
+        "validate_service_capacity_baseline",
+        lambda artifact: ["forced contract failure"],
+    )
+
+    with pytest.raises(ValueError, match="forced contract failure"):
+        build_service_capacity_baseline(
+            measurements=[],
+            environment_profile="test",
+            generated_at_utc=GENERATED_AT,
+            commit_sha="abc123",
+            branch="main",
+            run_id="run-1",
+            observed_window_seconds=1.0,
         )
     with pytest.raises(ValueError, match="timezone-aware"):
         build_service_capacity_baseline(

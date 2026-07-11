@@ -142,6 +142,24 @@ def test_recovery_use_case_requires_explicit_dependency_recovery_probe() -> None
         execute_capacity_recovery(plan, probe=StubProbe([]))
 
 
+def test_explicit_recovery_use_case_executes_only_recovery_probe() -> None:
+    plan = CapacityWorkloadPlan(
+        scenario="dependency_failure",
+        requests=(REQUEST,),
+        max_concurrency=1,
+        dependency_failure_expected=True,
+        recovery_probe=REQUEST,
+    )
+
+    measurement = execute_capacity_recovery(
+        plan,
+        probe=StubProbe([_result(summary={"runStatus": "completed"})]),
+    )
+
+    assert measurement.outcome == "accepted"
+    assert measurement.recovered is True
+
+
 def test_postgres_workload_preserves_query_outcomes_and_max_observed_utilization() -> None:
     result = execute_postgres_capacity_workload(
         probe=StubPostgresProbe(
@@ -157,6 +175,47 @@ def test_postgres_workload_preserves_query_outcomes_and_max_observed_utilization
 
     assert [item.outcome for item in result.measurements] == ["accepted", "failed", "accepted"]
     assert result.max_connection_utilization_fraction == 0.3
+
+
+@pytest.mark.parametrize(
+    ("request_count", "max_concurrency", "message"),
+    [
+        (0, 1, "request_count must be positive"),
+        (1, 0, "max_concurrency must be between"),
+        (1, 2, "max_concurrency must be between"),
+    ],
+)
+def test_postgres_workload_rejects_invalid_volume_or_concurrency(
+    request_count: int,
+    max_concurrency: int,
+    message: str,
+) -> None:
+    with pytest.raises(ValueError, match=message):
+        execute_postgres_capacity_workload(
+            probe=StubPostgresProbe([]),
+            request_count=request_count,
+            max_concurrency=max_concurrency,
+        )
+
+
+def test_workload_preserves_timeout_and_conflict_outcomes() -> None:
+    plan = CapacityWorkloadPlan(
+        scenario="outbox_delivery",
+        requests=(REQUEST, REQUEST),
+        max_concurrency=1,
+    )
+
+    measurements = execute_capacity_workload(
+        plan,
+        probe=StubProbe(
+            [
+                _result(transport_outcome="timeout"),
+                _result(summary={"runStatus": "conflict"}),
+            ]
+        ),
+    )
+
+    assert [item.outcome for item in measurements] == ["timeout", "conflict"]
 
 
 @pytest.mark.parametrize(
