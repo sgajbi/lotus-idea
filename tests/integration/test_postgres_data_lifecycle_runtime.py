@@ -1,16 +1,31 @@
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime, timedelta
+from threading import Barrier
 from typing import Any, cast
 
 import psycopg
 from fastapi.testclient import TestClient
 from psycopg.rows import dict_row
 
+from app.application.data_lifecycle import ExecuteDataLifecycle
+from app.domain import DownstreamSubmissionClaimDecision
+from app.domain.data_lifecycle import (
+    DataLifecycleAction,
+    DataLifecycleCommand,
+    DataLifecycleDecision,
+)
+from app.infrastructure.postgres_data_lifecycle import DataLifecycleWriteBlockedError
 from app.infrastructure.postgres_repository import PostgresConnection, PostgresIdeaRepository
 from app.main import app
 from app.runtime.repository_state import reset_idea_repository_for_tests
-from tests.integration.postgres_runtime_support import high_cash_payload, persistence_headers
+from tests.integration.postgres_runtime_support import (
+    high_cash_payload,
+    persistence_headers,
+    seed_active_conversion_resource,
+)
+from tests.unit.downstream_submission_helpers import build_downstream_submission_claim
 
 
 TENANT_ID = "tenant-private-bank-sg"
@@ -109,6 +124,83 @@ def test_postgres_data_lifecycle_survives_restart_and_redacts_atomically(
     )
     assert purged.json()["state"] == "purged"
     _assert_purged_graph(postgres_database_url, candidate_id)
+
+
+def test_postgres_erasure_and_delivery_claim_are_serialized(
+    postgres_database_url: str,
+) -> None:
+    conversion_id = "conversion-lifecycle-race"
+    candidate_id = seed_active_conversion_resource(postgres_database_url, conversion_id)
+    barrier = Barrier(2)
+    evaluated_at = datetime.now(UTC)
+
+    def erase() -> DataLifecycleDecision:
+        with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
+            repository = PostgresIdeaRepository(cast(PostgresConnection, connection))
+            command = DataLifecycleCommand(
+                candidate_id=candidate_id,
+                tenant_id=TENANT_ID,
+                action=DataLifecycleAction.ERASE,
+                actor_subject="privacy-operator-race",
+                approver_subject="privacy-approver-race",
+                authority_ref="bank-privacy-governance:race-001",
+                reason="approved_lifecycle_request",
+                change_reference="privacy-case-race-001",
+                idempotency_key="lifecycle-race-erase-001",
+                request_fingerprint="a" * 64,
+                requested_at_utc=evaluated_at - timedelta(seconds=1),
+                dry_run=False,
+            )
+            barrier.wait(timeout=5)
+            return (
+                ExecuteDataLifecycle(repository, now=lambda: evaluated_at).execute(command).decision
+            )
+
+    def claim() -> str:
+        with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
+            repository = PostgresIdeaRepository(cast(PostgresConnection, connection))
+            record = build_downstream_submission_claim(
+                idempotency_key="lifecycle-race-claim-001",
+                request_fingerprint="sha256:lifecycle-race-claim",
+                resource_id=conversion_id,
+                submitted_at_utc=evaluated_at,
+            )
+            barrier.wait(timeout=5)
+            try:
+                return repository.claim_downstream_submission(record).decision.value
+            except DataLifecycleWriteBlockedError as error:
+                return error.blocker
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        erase_future = executor.submit(erase)
+        claim_future = executor.submit(claim)
+        erase_decision = erase_future.result(timeout=10)
+        claim_decision = claim_future.result(timeout=10)
+
+    with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT state FROM idea_data_lifecycle_control WHERE candidate_id = %s",
+                (candidate_id,),
+            )
+            control = cursor.fetchone()
+            cursor.execute(
+                """SELECT COUNT(*) AS submission_count FROM idea_downstream_submission
+                   WHERE resource_id = %s""",
+                (conversion_id,),
+            )
+            submission_count = cursor.fetchone()
+    assert control is not None
+    assert submission_count is not None
+    observed = (erase_decision.value, claim_decision)
+    assert observed in {
+        (DataLifecycleDecision.APPLIED.value, "candidate_erased"),
+        (
+            DataLifecycleDecision.BLOCKED.value,
+            DownstreamSubmissionClaimDecision.ACCEPTED.value,
+        ),
+    }
+    assert not (control["state"] == "erased" and submission_count["submission_count"] != 0)
 
 
 def _action(
