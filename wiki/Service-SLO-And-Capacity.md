@@ -47,5 +47,10 @@ confirmation for production. Stored evidence is aggregate and report-only;
 observed PostgreSQL utilization and policy execution are not saturation stress
 or recovery certification.
 
+The PostgreSQL adapter refreshes its session-local statistics snapshot before
+reading aggregate connection utilization. This prevents a long-lived
+transaction from masking a threshold crossing while preserving the caller's
+business transaction boundary.
+
 See `docs/operations/service-slo-capacity.md` for target values, alert response,
 capacity assumptions, and non-proof boundaries.

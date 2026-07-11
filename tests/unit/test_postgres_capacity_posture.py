@@ -10,10 +10,10 @@ class StubCursor:
     def __init__(self, row: object = None, *, failure: Exception | None = None) -> None:
         self.row = row
         self.failure = failure
-        self.query = ""
+        self.queries: list[str] = []
 
     def execute(self, query: str, params: object = None) -> None:
-        self.query = query
+        self.queries.append(query)
         if self.failure is not None:
             raise self.failure
 
@@ -42,13 +42,16 @@ class StubConnection:
 
 
 def test_capacity_projection_supports_tuple_and_mapping_rows() -> None:
-    tuple_posture = load_postgres_capacity_posture(StubConnection([StubCursor((0.71,))]))
+    tuple_cursor = StubCursor((0.71,))
+    tuple_posture = load_postgres_capacity_posture(StubConnection([tuple_cursor]))
     mapping_posture = load_postgres_capacity_posture(
         StubConnection([StubCursor({"connection_utilization_fraction": 0.91})])
     )
 
     assert tuple_posture.posture is CapacityPosture.WARNING
     assert mapping_posture.posture is CapacityPosture.SHED
+    assert "pg_stat_clear_snapshot" in tuple_cursor.queries[0]
+    assert "pg_stat_activity" in tuple_cursor.queries[1]
 
 
 def test_capacity_projection_fails_closed_on_query_or_shape_failure() -> None:

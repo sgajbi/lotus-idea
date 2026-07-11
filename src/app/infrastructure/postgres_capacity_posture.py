@@ -17,6 +17,7 @@ SELECT COUNT(*)::double precision /
        AS connection_utilization_fraction
 FROM pg_stat_activity
 """
+POSTGRES_STATISTICS_SNAPSHOT_REFRESH_QUERY = "SELECT pg_stat_clear_snapshot()"
 
 
 class PostgresCapacityRepositoryMixin:
@@ -31,6 +32,7 @@ def load_postgres_capacity_posture(
 ) -> PostgresCapacityPosture:
     try:
         with connection.cursor() as cursor:
+            cursor.execute(POSTGRES_STATISTICS_SNAPSHOT_REFRESH_QUERY)
             cursor.execute(POSTGRES_CAPACITY_POSTURE_QUERY)
             rows = cursor.fetchall()
     except Exception:

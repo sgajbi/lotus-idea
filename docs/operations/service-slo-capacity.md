@@ -145,6 +145,12 @@ scenario families:
 | `dependency_failure` | Faulted source-ingestion call followed by recovery | Failure handling and explicit recovery outcome | Requires externally controlled fault injection; a blocked call is not recovery. |
 | `postgresql` | Read-only `SELECT 1` plus aggregate connection posture | Query latency and maximum observed utilization | Observation does not prove a threshold stress/recovery exercise. |
 
+PostgreSQL statistics are transaction-snapshot scoped. The capacity adapter clears only its
+session-local statistics snapshot with `pg_stat_clear_snapshot()` immediately before reading
+`pg_stat_activity`; otherwise a long-lived transaction can repeatedly report stale utilization
+and fail to shed nonessential work. The adapter does not commit or roll back the caller's business
+transaction.
+
 Artifacts use `lotus-idea.service-capacity-baseline.v1` and contain aggregate
 measurements only. Request or response bodies, URLs, DSNs, credentials, caller
 assertions, and business identifiers are rejected or discarded.
