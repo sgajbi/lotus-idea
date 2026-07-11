@@ -84,6 +84,8 @@ def test_logical_restore_uses_secret_safe_commands_and_ephemeral_credentials() -
     assert len(result.backup_artifact_sha256) == 64
     assert result.recovery_point_utc == CHECKPOINT
     assert [call[0][0] for call in calls] == ["pg_dump", "pg_restore"]
+    assert "--dbname" not in calls[0][0]
+    assert calls[1][0][calls[1][0].index("--dbname") + 1] == "target_idea"
     flattened_commands = " ".join(part for command, _ in calls for part in command)
     assert "secret" not in flattened_commands
     assert "postgresql://" not in flattened_commands

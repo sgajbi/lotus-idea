@@ -100,6 +100,8 @@ class PostgresLogicalBackupRestore:
                     "--exit-on-error",
                     "--no-owner",
                     "--no-privileges",
+                    "--dbname",
+                    target.database,
                     str(dump_path),
                 ],
                 environment=_postgres_environment(target, passfile),
