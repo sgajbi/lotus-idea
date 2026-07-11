@@ -62,6 +62,8 @@ CREATE TABLE IF NOT EXISTS idea_data_lifecycle_operation (
     operation_id TEXT PRIMARY KEY,
     idempotency_key TEXT NOT NULL UNIQUE,
     request_fingerprint TEXT NOT NULL,
+    correlation_id TEXT NOT NULL,
+    trace_id TEXT NOT NULL,
     candidate_id TEXT NOT NULL REFERENCES idea_candidate_record(candidate_id),
     tenant_id TEXT NOT NULL,
     action TEXT NOT NULL,
@@ -88,7 +90,13 @@ CREATE TABLE IF NOT EXISTS idea_data_lifecycle_operation (
     CONSTRAINT ck_idea_data_lifecycle_operation_control_version
         CHECK (control_version IS NULL OR control_version > 0),
     CONSTRAINT ck_idea_data_lifecycle_operation_audit_hash
-        CHECK (audit_sha256 ~ '^[a-f0-9]{64}$')
+        CHECK (audit_sha256 ~ '^[a-f0-9]{64}$'),
+    CONSTRAINT ck_idea_data_lifecycle_operation_lineage
+        CHECK (
+            BTRIM(correlation_id) <> ''
+            AND BTRIM(trace_id) <> ''
+            AND correlation_id <> trace_id
+        )
 );
 
 INSERT INTO idea_data_lifecycle_control (

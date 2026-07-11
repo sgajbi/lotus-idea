@@ -355,19 +355,22 @@ def _insert_operation(
     cursor.execute(
         """INSERT INTO idea_data_lifecycle_operation (
                operation_id, idempotency_key, request_fingerprint, candidate_id,
-               tenant_id, action, decision, dry_run, actor_subject,
+               correlation_id, trace_id, tenant_id, action, decision, dry_run, actor_subject,
                approver_subject, authority_ref, reason, change_reference,
                blockers_json, affected_row_counts_json, audit_sha256,
                requested_at_utc, evaluated_at_utc, control_version
            ) VALUES (
                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-               %s, %s, %s, %s, %s, %s, %s, %s, %s
+               %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+               %s
            )""",
         (
             operation_id,
             command.idempotency_key,
             command.request_fingerprint,
             command.candidate_id,
+            command.correlation_id,
+            command.trace_id,
             command.tenant_id,
             command.action.value,
             evaluation.decision.value,

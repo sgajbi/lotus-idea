@@ -99,6 +99,8 @@ class LifecycleCursor:
                         "idempotency_key",
                         "request_fingerprint",
                         "candidate_id",
+                        "correlation_id",
+                        "trace_id",
                         "tenant_id",
                         "action",
                         "decision",
@@ -195,6 +197,8 @@ def test_postgres_lifecycle_erasure_redacts_and_audits_in_one_commit(
     operation = next(iter(connection.operations.values()))
     assert operation["actor_subject"].startswith("redacted-")
     assert operation["approver_subject"] == operation["actor_subject"]
+    assert operation["correlation_id"] == "corr-data-lifecycle-001"
+    assert operation["trace_id"] == "trace-data-lifecycle-001"
 
 
 @pytest.mark.parametrize(
@@ -386,6 +390,8 @@ def valid_command(
         change_reference="privacy-case-001",
         idempotency_key=f"lifecycle-{action.value}-001",
         request_fingerprint="a" * 64,
+        correlation_id="corr-data-lifecycle-001",
+        trace_id="trace-data-lifecycle-001",
         requested_at_utc=NOW - timedelta(minutes=1),
         dry_run=dry_run,
     )

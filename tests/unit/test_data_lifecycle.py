@@ -236,6 +236,11 @@ def test_lifecycle_models_reject_incoherent_or_sensitive_evidence_shapes() -> No
         replace(valid_context(), active_outbox_count=-1)
     with pytest.raises(ValueError, match="source-safe reference"):
         replace(valid_command(DataLifecycleAction.ERASE), actor_subject="raw user name")
+    with pytest.raises(ValueError, match="must be distinct"):
+        replace(
+            valid_command(DataLifecycleAction.ERASE),
+            trace_id="corr-data-lifecycle-001",
+        )
     with pytest.raises(ValueError, match="lowercase SHA-256"):
         valid_result(audit_sha256="bad")
     with pytest.raises(ValueError, match="Idea-owned table"):
@@ -340,6 +345,8 @@ def valid_command(
         change_reference="privacy-case-001",
         idempotency_key="lifecycle-idempotency-001",
         request_fingerprint="a" * 64,
+        correlation_id="corr-data-lifecycle-001",
+        trace_id="trace-data-lifecycle-001",
         requested_at_utc=NOW - timedelta(minutes=1),
         dry_run=dry_run,
     )

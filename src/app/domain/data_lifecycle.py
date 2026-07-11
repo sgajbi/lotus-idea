@@ -118,6 +118,8 @@ class DataLifecycleCommand:
     change_reference: str
     idempotency_key: str
     request_fingerprint: str
+    correlation_id: str
+    trace_id: str
     requested_at_utc: datetime
     dry_run: bool
     approver_subject: str | None = None
@@ -132,10 +134,14 @@ class DataLifecycleCommand:
             "change_reference",
             "idempotency_key",
             "request_fingerprint",
+            "correlation_id",
+            "trace_id",
         ):
             _require_reference(str(getattr(self, field_name)), field_name)
         if self.approver_subject is not None:
             _require_reference(self.approver_subject, "approver_subject")
+        if self.correlation_id == self.trace_id:
+            raise ValueError("correlation_id and trace_id must be distinct")
         _require_utc(self.requested_at_utc, "requested_at_utc")
 
 

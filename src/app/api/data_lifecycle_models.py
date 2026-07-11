@@ -17,6 +17,7 @@ from app.domain.data_lifecycle import (
     DataLifecycleState,
 )
 from app.security.caller_context import CallerContext
+from app.domain.events import EventLineageContext
 
 SOURCE_SAFE_REFERENCE = r"^[A-Za-z0-9][A-Za-z0-9._:/-]{2,255}$"
 
@@ -50,6 +51,7 @@ class DataLifecycleActionRequest(CamelModel):
         candidate_id: str,
         caller: CallerContext,
         idempotency_key: str,
+        event_lineage: EventLineageContext,
     ) -> DataLifecycleCommand:
         payload = {
             "action": self.action.value,
@@ -74,6 +76,8 @@ class DataLifecycleActionRequest(CamelModel):
             change_reference=self.change_reference,
             idempotency_key=idempotency_key,
             request_fingerprint=hashlib.sha256(canonical.encode("utf-8")).hexdigest(),
+            correlation_id=event_lineage.correlation_id,
+            trace_id=event_lineage.trace_id,
             requested_at_utc=self.requested_at_utc,
             dry_run=self.dry_run,
         )

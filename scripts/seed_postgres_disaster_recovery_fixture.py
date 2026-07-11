@@ -218,6 +218,8 @@ def _seed_data_lifecycle_operation(
             change_reference="dr-fixture-lifecycle-001",
             idempotency_key="dr-fixture-data-lifecycle-preview",
             request_fingerprint="d" * 64,
+            correlation_id="corr-dr-fixture-lifecycle-001",
+            trace_id="trace-dr-fixture-lifecycle-001",
             requested_at_utc=FIXTURE_TIME + timedelta(minutes=1),
             dry_run=True,
         )

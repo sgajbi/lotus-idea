@@ -30,6 +30,7 @@ class ApiLifecycleRepository:
     def __init__(self, context: DataLifecycleCandidateContext | None = None) -> None:
         self.context = context or valid_context()
         self.results_by_key: dict[str, tuple[str, DataLifecycleOperationResult]] = {}
+        self.commands: list[DataLifecycleCommand] = []
         self.calls = 0
 
     def execute_data_lifecycle(
@@ -40,6 +41,7 @@ class ApiLifecycleRepository:
         evaluator: DataLifecycleEvaluator,
     ) -> DataLifecycleOperationResult:
         self.calls += 1
+        self.commands.append(command)
         existing = self.results_by_key.get(command.idempotency_key)
         if existing is not None:
             fingerprint, result = existing
@@ -104,6 +106,8 @@ def test_data_lifecycle_api_previews_replays_and_conflicts_source_safely(
     assert conflict.json()["code"] == "data_lifecycle_idempotency_conflict"
     assert "privacy-operator-001" not in preview.text
     assert "tenant-001" not in preview.text
+    assert repository.commands[0].correlation_id == "corr-lifecycle-api-001"
+    assert repository.commands[0].trace_id == "trace-lifecycle-api-001"
 
 
 def test_data_lifecycle_api_requires_role_capability_and_exact_tenant(
@@ -248,4 +252,6 @@ def lifecycle_headers(idempotency_key: str) -> dict[str, str]:
         "X-Caller-Roles": "privacy_officer",
         "X-Caller-Capabilities": "idea.data-lifecycle.manage",
         "X-Caller-Tenant-Ids": "tenant-001",
+        "X-Correlation-Id": "corr-lifecycle-api-001",
+        "X-Trace-Id": "trace-lifecycle-api-001",
     }

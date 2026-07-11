@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from fastapi import FastAPI, Header, Path, status
+from fastapi import FastAPI, Header, Path, Request, status
 from fastapi.responses import JSONResponse
 
 from app.api.caller_headers import TRUSTED_CALLER_CONTEXT_HEADER, caller_context_from_headers
@@ -12,6 +12,7 @@ from app.api.durable_write_guard import (
     durable_repository_write_unavailable_metadata,
     durable_write_problem,
 )
+from app.api.event_lineage import event_lineage_from_request
 from app.api.idempotency import validate_idempotency_key
 from app.api.operation_events import emit_api_foundation_operation_event as _emit_event
 from app.api.problem_details import (
@@ -45,6 +46,7 @@ _MANAGE_POLICY = CapabilityPolicy.for_roles(
 
 async def post_data_lifecycle_action(
     request: DataLifecycleActionRequest,
+    http_request: Request,
     candidate_id: str = Path(..., alias="candidateId", pattern=r"^[A-Za-z0-9][A-Za-z0-9._:-]+$"),
     idempotency_key: str = Header(..., alias="Idempotency-Key"),
     x_caller_subject: str | None = Header(default=None, alias="X-Caller-Subject"),
@@ -81,6 +83,7 @@ async def post_data_lifecycle_action(
             candidate_id=candidate_id,
             caller=caller,
             idempotency_key=idempotency_key,
+            event_lineage=event_lineage_from_request(http_request),
         )
     except ValueError:
         _emit_event(IdeaOperation.DATA_LIFECYCLE_ACTION, OperationOutcome.INVALID_REQUEST)

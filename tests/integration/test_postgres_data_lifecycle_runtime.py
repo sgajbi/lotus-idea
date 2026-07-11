@@ -157,6 +157,8 @@ def test_postgres_erasure_and_delivery_claim_are_serialized(
                 change_reference="privacy-case-race-001",
                 idempotency_key="lifecycle-race-erase-001",
                 request_fingerprint="a" * 64,
+                correlation_id="corr-lifecycle-race-001",
+                trace_id="trace-lifecycle-race-001",
                 requested_at_utc=evaluated_at - timedelta(seconds=1),
                 dry_run=False,
             )
@@ -227,6 +229,8 @@ def _action(
             "X-Caller-Roles": "privacy_officer",
             "X-Caller-Capabilities": "idea.data-lifecycle.manage",
             "X-Caller-Tenant-Ids": TENANT_ID,
+            "X-Correlation-Id": "corr-lifecycle-runtime-001",
+            "X-Trace-Id": "trace-lifecycle-runtime-001",
         },
     )
 
@@ -277,7 +281,8 @@ def _assert_erased_graph(database_url: str, candidate_id: str) -> None:
             assert candidate["candidate_json"]["data_lifecycle_state"] == "erased"
             assert "access_scope" not in candidate["candidate_json"]
             cursor.execute(
-                """SELECT state, actor_subject, approver_subject
+                """SELECT state, actor_subject, approver_subject,
+                          correlation_id, trace_id
                    FROM idea_data_lifecycle_control control
                    JOIN idea_data_lifecycle_operation operation USING (candidate_id)
                    WHERE candidate_id = %s""",
@@ -291,6 +296,8 @@ def _assert_erased_graph(database_url: str, candidate_id: str) -> None:
         row["approver_subject"] is None or str(row["approver_subject"]).startswith("redacted-")
         for row in operations
     )
+    assert {row["correlation_id"] for row in operations} == {"corr-lifecycle-runtime-001"}
+    assert {row["trace_id"] for row in operations} == {"trace-lifecycle-runtime-001"}
 
 
 def _expire_retention(database_url: str, candidate_id: str) -> None:
