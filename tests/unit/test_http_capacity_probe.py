@@ -28,6 +28,11 @@ def test_probe_returns_only_bounded_operational_response_fields() -> None:
                 "failedCount": 2,
                 "durableStorageBacked": True,
                 "oldestDeliveryReadyAgeSeconds": 12.5,
+                "sourceFailureCounts": {
+                    "source_unavailable": 1,
+                    "entitlement_denied": 0,
+                    "other_blocked": 0,
+                },
                 "configurationBlockers": ["attacker-controlled-detail"],
                 "operatorRunReference": "must-not-leak",
                 "candidateId": "must-not-leak",
@@ -55,6 +60,11 @@ def test_probe_returns_only_bounded_operational_response_fields() -> None:
         "failedCount": 2,
         "durableStorageBacked": True,
         "oldestDeliveryReadyAgeSeconds": 12.5,
+        "sourceFailureCounts": {
+            "entitlement_denied": 0,
+            "other_blocked": 0,
+            "source_unavailable": 1,
+        },
     }
     probe.close()
 
@@ -76,6 +86,33 @@ def test_probe_classifies_unexpected_status_without_preserving_problem_detail() 
     assert result.status_code == 503
     assert result.transport_outcome == "rejected"
     assert result.response_summary == {}
+
+
+def test_probe_preserves_only_governed_dependency_problem_code() -> None:
+    request = CapacityProbeRequest(
+        method="POST",
+        path="/api/v1/source-ingestion/run-once",
+        headers={},
+        expected_status_codes=frozenset({502}),
+    )
+    probe = HttpCapacityProbe(
+        base_url="https://idea.example",
+        timeout_seconds=2.0,
+        transport=httpx.MockTransport(
+            lambda raw_request: httpx.Response(
+                502,
+                json={
+                    "code": "source_dependency_unavailable",
+                    "detail": "must-not-leak",
+                },
+            )
+        ),
+    )
+
+    result = probe.execute(request)
+
+    assert result.transport_outcome == "accepted"
+    assert result.response_summary == {"code": "source_dependency_unavailable"}
 
 
 def test_probe_classifies_timeout_and_transport_failure_without_raw_errors() -> None:

@@ -13,6 +13,7 @@ ALLOWED_RESPONSE_FIELDS = frozenset(
     {
         "attemptedCount",
         "blocker",
+        "code",
         "deliveredCount",
         "deliveryReadyCount",
         "durableStorageBacked",
@@ -21,6 +22,7 @@ ALLOWED_RESPONSE_FIELDS = frozenset(
         "oldestDeliveryReadyAgeSeconds",
         "retryDeferredCount",
         "runStatus",
+        "sourceFailureCounts",
         "totalCount",
     }
 )
@@ -97,26 +99,38 @@ def _bounded_response_summary(response: httpx.Response) -> dict[str, object]:
         return {}
     summary: dict[str, object] = {}
     for key, value in payload.items():
-        bounded = _bounded_value(value)
+        bounded = _bounded_value(key, value)
         if key in ALLOWED_RESPONSE_FIELDS and bounded is not None:
             summary[key] = bounded
     return summary
 
 
-def _bounded_value(value: Any) -> object | None:
+def _bounded_value(key: str, value: Any) -> object | None:
     if isinstance(value, bool):
         return value
     if isinstance(value, int) and 0 <= value <= 1_000_000:
         return value
     if isinstance(value, float) and 0 <= value <= 31_536_000:
         return value
-    if isinstance(value, str) and value in {
-        "blocked",
-        "completed",
-        "conflict",
-        "replayed",
-    }:
-        return value
+    if isinstance(value, str):
+        if key == "runStatus" and value in {"blocked", "completed", "conflict", "replayed"}:
+            return value
+        if key in {"code", "blocker"} and value in {
+            "source_dependency_unavailable",
+            "source_dependency_entitlement_denied",
+        }:
+            return value
+        return None
+    if key == "sourceFailureCounts" and isinstance(value, dict):
+        expected = {"source_unavailable", "entitlement_denied", "other_blocked"}
+        if set(value) != expected:
+            return None
+        if any(
+            isinstance(count, bool) or not isinstance(count, int) or not 0 <= count <= 1_000_000
+            for count in value.values()
+        ):
+            return None
+        return {failure_class: value[failure_class] for failure_class in sorted(expected)}
     if isinstance(value, list) and all(
         isinstance(item, str) and 0 < len(item) <= 100 for item in value
     ):
