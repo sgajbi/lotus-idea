@@ -93,6 +93,19 @@ def test_service_slo_capacity_contract_rejects_recording_and_alert_rule_drift() 
     assert "service SLO rule expressions contain sensitive labels: portfolio_id" in errors
 
 
+def test_service_slo_capacity_contract_rejects_incomplete_or_sensitive_dashboard() -> None:
+    module = _load_gate()
+    dashboard = {
+        "uid": "wrong",
+        "panels": [{"targets": [{"expr": "lotus_idea_http_requests_total{tenant_id='unsafe'}"}]}],
+    }
+
+    errors = module.validate_dashboard_payload(dashboard)
+
+    assert "service SLO dashboard uid must be lotus-idea-service-slo" in errors
+    assert "service SLO dashboard must contain all governed panels" in errors
+
+
 def test_service_slo_capacity_contract_loader_rejects_non_object(tmp_path: Path) -> None:
     module = _load_gate()
     path = tmp_path / "contract.json"

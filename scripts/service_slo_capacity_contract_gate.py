@@ -18,7 +18,6 @@ EXPECTED_WORKFLOWS = {
 }
 REQUIRED_BLOCKERS = {
     "workflow_sli_metrics_incomplete",
-    "slo_dashboard_missing",
     "load_and_soak_baseline_missing",
     "dependency_failure_baseline_missing",
     "postgres_saturation_evidence_missing",
@@ -84,6 +83,7 @@ def validate_payload(
     errors.extend(_validate_labels(payload))
     errors.extend(_validate_source_truth(payload, repository_root))
     errors.extend(_validate_rule_file(payload, repository_root))
+    errors.extend(_validate_dashboard(payload, repository_root))
     errors.extend(_validate_certification(payload))
     return sorted(errors)
 
@@ -182,6 +182,7 @@ def _validate_source_truth(payload: dict[str, Any], repository_root: Path) -> li
         "sli_metric_source",
         "recording_alert_rules",
         "rule_tests",
+        "dashboard",
         "contract_gate",
         "operations_doc",
         "rfc_slice",
@@ -240,6 +241,51 @@ def validate_rule_text(rule_text: str) -> list[str]:
     leaked = sorted(label for label in FORBIDDEN_LABELS if label in rule_text)
     if leaked:
         errors.append(f"service SLO rule expressions contain sensitive labels: {', '.join(leaked)}")
+    return errors
+
+
+def _validate_dashboard(payload: dict[str, Any], repository_root: Path) -> list[str]:
+    source = payload.get("source_of_truth")
+    if not isinstance(source, dict) or not isinstance(source.get("dashboard"), str):
+        return []
+    path = repository_root / source["dashboard"]
+    if not path.is_file():
+        return []
+    dashboard = json.loads(path.read_text(encoding="utf-8"))
+    return validate_dashboard_payload(dashboard)
+
+
+def validate_dashboard_payload(payload: Any) -> list[str]:
+    if not isinstance(payload, dict):
+        return ["service SLO dashboard must be a JSON object"]
+    errors: list[str] = []
+    if payload.get("uid") != "lotus-idea-service-slo":
+        errors.append("service SLO dashboard uid must be lotus-idea-service-slo")
+    panels = payload.get("panels")
+    if not isinstance(panels, list) or len(panels) < 9:
+        return [*errors, "service SLO dashboard must contain all governed panels"]
+    expressions = " ".join(
+        str(target.get("expr", ""))
+        for panel in panels
+        if isinstance(panel, dict)
+        for target in panel.get("targets", [])
+        if isinstance(target, dict)
+    )
+    for metric in (
+        "lotus_idea:http_error_ratio:rate6h",
+        "lotus_idea_http_request_duration_seconds_bucket",
+        "lotus_idea_workflow_duration_seconds_bucket",
+        "lotus_idea_dependency_requests_total",
+        "lotus_idea_postgres_operations_total",
+        "lotus_idea_outbox_delivery_oldest_ready_age_seconds",
+    ):
+        if metric not in expressions:
+            errors.append(f"service SLO dashboard must consume {metric}")
+    leaked = sorted(label for label in FORBIDDEN_LABELS if label in expressions)
+    if leaked:
+        errors.append(
+            f"service SLO dashboard expressions contain sensitive labels: {', '.join(leaked)}"
+        )
     return errors
 
 

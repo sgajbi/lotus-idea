@@ -1,0 +1,119 @@
+{
+  "uid": "lotus-idea-service-slo",
+  "title": "Lotus Idea Service SLO And Capacity",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "1m",
+  "tags": ["lotus-idea", "slo", "capacity", "not-certified"],
+  "time": {"from": "now-6h", "to": "now"},
+  "templating": {"list": []},
+  "annotations": {"list": []},
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "API Availability (6h)",
+      "description": "Successful request ratio over valid HTTP traffic. Contract target: 99.9%; low-volume periods remain uncertified.",
+      "gridPos": {"h": 7, "w": 6, "x": 0, "y": 0},
+      "targets": [{"refId": "A", "expr": "1 - lotus_idea:http_error_ratio:rate6h"}],
+      "fieldConfig": {"defaults": {"unit": "percentunit", "min": 0, "max": 1}, "overrides": []},
+      "options": {"reduceOptions": {"calcs": ["lastNotNull"], "values": false}}
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "API Error-Budget Burn",
+      "description": "Fast and sustained HTTP error ratios. Dependency and PostgreSQL failures are shown separately below.",
+      "gridPos": {"h": 7, "w": 9, "x": 6, "y": 0},
+      "targets": [
+        {"refId": "A", "expr": "lotus_idea:http_error_ratio:rate5m / 0.001", "legendFormat": "5m burn"},
+        {"refId": "B", "expr": "lotus_idea:http_error_ratio:rate1h / 0.001", "legendFormat": "1h burn"},
+        {"refId": "C", "expr": "lotus_idea:http_error_ratio:rate6h / 0.001", "legendFormat": "6h burn"}
+      ],
+      "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []}
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "API Latency p95 / p99",
+      "description": "Route-template latency. Contract target: p95 <= 500 ms and p99 <= 1.5 s.",
+      "gridPos": {"h": 7, "w": 9, "x": 15, "y": 0},
+      "targets": [
+        {"refId": "A", "expr": "histogram_quantile(0.95, sum by (le) (rate(lotus_idea_http_request_duration_seconds_bucket[5m])))", "legendFormat": "p95"},
+        {"refId": "B", "expr": "histogram_quantile(0.99, sum by (le) (rate(lotus_idea_http_request_duration_seconds_bucket[5m])))", "legendFormat": "p99"}
+      ],
+      "fieldConfig": {"defaults": {"unit": "s"}, "overrides": []}
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Workflow Error Ratios",
+      "description": "Failed logical runs divided by accepted, replayed, and failed runs; blocked and conflict requests do not consume the workflow error budget.",
+      "gridPos": {"h": 8, "w": 8, "x": 0, "y": 7},
+      "targets": [
+        {"refId": "A", "expr": "lotus_idea:workflow_error_ratio:rate5m", "legendFormat": "{{workflow}} 5m"},
+        {"refId": "B", "expr": "lotus_idea:workflow_error_ratio:rate1h", "legendFormat": "{{workflow}} 1h"}
+      ],
+      "fieldConfig": {"defaults": {"unit": "percentunit", "min": 0}, "overrides": []}
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Workflow Duration And Throughput",
+      "description": "Logical run p95 duration and processed item rate for source ingestion and outbox delivery.",
+      "gridPos": {"h": 8, "w": 8, "x": 8, "y": 7},
+      "targets": [
+        {"refId": "A", "expr": "histogram_quantile(0.95, sum by (workflow, le) (rate(lotus_idea_workflow_duration_seconds_bucket[5m])))", "legendFormat": "{{workflow}} p95 seconds"},
+        {"refId": "B", "expr": "sum by (workflow) (rate(lotus_idea_workflow_items_total[5m]))", "legendFormat": "{{workflow}} items/sec"}
+      ],
+      "fieldConfig": {"defaults": {}, "overrides": []}
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Dependency Availability And Latency",
+      "description": "Logical dependency outcomes include bounded retries and remain distinct from Lotus Idea saturation.",
+      "gridPos": {"h": 8, "w": 8, "x": 16, "y": 7},
+      "targets": [
+        {"refId": "A", "expr": "sum by (dependency) (rate(lotus_idea_dependency_requests_total{outcome=\"accepted\"}[5m])) / clamp_min(sum by (dependency) (rate(lotus_idea_dependency_requests_total[5m])), 0.000001)", "legendFormat": "{{dependency}} availability"},
+        {"refId": "B", "expr": "histogram_quantile(0.95, sum by (dependency, le) (rate(lotus_idea_dependency_request_duration_seconds_bucket[5m])))", "legendFormat": "{{dependency}} p95 seconds"}
+      ],
+      "fieldConfig": {"defaults": {}, "overrides": []}
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "PostgreSQL Operation Posture",
+      "description": "Logical mutation, lifecycle, and snapshot outcomes. Pool saturation remains an explicit certification gap.",
+      "gridPos": {"h": 8, "w": 8, "x": 0, "y": 15},
+      "targets": [
+        {"refId": "A", "expr": "histogram_quantile(0.95, sum by (operation, le) (rate(lotus_idea_postgres_operation_duration_seconds_bucket[5m])))", "legendFormat": "{{operation}} p95"},
+        {"refId": "B", "expr": "sum by (operation, outcome) (rate(lotus_idea_postgres_operations_total[5m]))", "legendFormat": "{{operation}} {{outcome}}/sec"}
+      ],
+      "fieldConfig": {"defaults": {}, "overrides": []}
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "Outbox Queue Age And Ready Count",
+      "description": "Queue supportability independent of operator API traffic. Warn at 300 seconds; critical at 900 seconds.",
+      "gridPos": {"h": 8, "w": 8, "x": 8, "y": 15},
+      "targets": [
+        {"refId": "A", "expr": "lotus_idea_outbox_delivery_oldest_ready_age_seconds{repository=\"lotus-idea\"}", "legendFormat": "oldest ready seconds"},
+        {"refId": "B", "expr": "lotus_idea_outbox_delivery_events{repository=\"lotus-idea\",state=\"delivery_ready\"}", "legendFormat": "delivery ready"}
+      ],
+      "fieldConfig": {"defaults": {}, "overrides": []}
+    },
+    {
+      "id": 9,
+      "type": "text",
+      "title": "Certification Posture",
+      "description": "This dashboard is implementation-backed but does not certify production capacity.",
+      "gridPos": {"h": 8, "w": 8, "x": 16, "y": 15},
+      "options": {
+        "mode": "markdown",
+        "content": "**Not certified.** Remaining evidence: load/soak baseline, dependency-failure baseline, PostgreSQL saturation, and cost/resource baseline. Freeze promotion when error budgets are exhausted."
+      }
+    }
+  ]
+}
