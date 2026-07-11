@@ -104,6 +104,18 @@ def test_ai_model_risk_operations_contract_gate_blocks_action_policy_drift() -> 
     assert "AI model-risk action_content_policy must match code-owned safety posture" in errors
 
 
+def test_ai_model_risk_operations_contract_gate_blocks_output_integrity_drift() -> None:
+    module = _load_gate()
+    payload = _current_payload(module)
+    payload["output_integrity_version"] = "local-integrity"
+    payload["output_content_integrity"]["persisted_content"] = "raw_provider_output"
+
+    errors = module.validate_ai_model_risk_operations_contract_payload(payload)
+
+    assert any("output_integrity_version" in error for error in errors)
+    assert "AI model-risk output_content_integrity must match code-owned audit posture" in errors
+
+
 def test_ai_model_risk_operations_contract_gate_blocks_bad_source_truth() -> None:
     module = _load_gate()
     payload = _current_payload(module)

@@ -228,7 +228,7 @@
       "field_classification_profile_ref": "regulated_payload:v1",
       "residency_policy_ref": "bank-approved-primary-and-dr-regions:v1",
       "data_classes": ["restricted_ai_governance", "restricted_advisory_evidence"],
-      "purpose": "governed_ai_prompt_output_and_evidence_lineage",
+      "purpose": "governed_ai_output_integrity_and_evidence_lineage",
       "policy_ref": "lotus-idea:regulated-advisory-evidence:seven-year:v1",
       "hold_behavior": "freeze_expiry_erasure_and_purge",
       "erasure_policy": "redact_payload_preserve_model_risk_tombstone",

@@ -17,6 +17,7 @@ from app.domain.ai_action_policy import (  # noqa: E402
     AI_ACTION_POLICY_VERSION,
     AIActionPolicyReason,
 )
+from app.domain.ai_output_integrity import AI_OUTPUT_INTEGRITY_VERSION  # noqa: E402
 
 try:
     from scripts.operations_contract_validators import (  # noqa: E402
@@ -91,6 +92,7 @@ def _validate_header(payload: dict[str, Any]) -> list[str]:
         "dashboard_certified": True,
         "alert_certified": True,
         "action_content_policy_version": AI_ACTION_POLICY_VERSION,
+        "output_integrity_version": AI_OUTPUT_INTEGRITY_VERSION,
     }
     for key, value in expected.items():
         if payload.get(key) != value:
@@ -108,6 +110,8 @@ def _validate_source_of_truth(
         "ai_readiness_source",
         "ai_api_source",
         "action_policy_source",
+        "output_integrity_source",
+        "data_lifecycle_contract",
         "operation_metric_contract",
         "contract_gate",
         "proof_contract_gate",
@@ -162,6 +166,26 @@ def _validate_action_content_policy(payload: dict[str, Any]) -> list[str]:
     }
     if policy != expected:
         return ["AI model-risk action_content_policy must match code-owned safety posture"]
+    return []
+
+
+def _validate_output_content_integrity(payload: dict[str, Any]) -> list[str]:
+    expected = {
+        "algorithm": "sha256",
+        "canonicalization": "unicode_nfc_line_endings_order_preserving",
+        "content_scope": [
+            "explanation_text",
+            "ordered_claim_id_text_and_source_bindings",
+            "ordered_action_type_and_submitted_label",
+            "workflow_pack_evaluator_and_policy_metadata",
+        ],
+        "persisted_content": "digest_and_version_only",
+        "retention_policy_ref": "lotus-idea:regulated-advisory-evidence:seven-year:v1",
+        "access_posture": "governed_evaluation_replay_or_authorized_lineage_store",
+        "pre_v1_migration_posture": "explicitly_unverifiable_no_retroactive_claim",
+    }
+    if payload.get("output_content_integrity") != expected:
+        return ["AI model-risk output_content_integrity must match code-owned audit posture"]
     return []
 
 
@@ -266,6 +290,7 @@ OPERATIONS_CONTRACT_VALIDATORS = (
     _validate_header,
     _validate_source_of_truth,
     _validate_action_content_policy,
+    _validate_output_content_integrity,
     _validate_dashboard_controls,
     _validate_alert_candidates,
     _validate_non_proof_boundaries,

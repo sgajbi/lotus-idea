@@ -8,10 +8,13 @@
   "dashboard_certified": true,
   "alert_certified": true,
   "action_content_policy_version": "lotus-idea.ai-action-content-policy.v1",
+  "output_integrity_version": "lotus-idea.ai-output-integrity.v1",
   "source_of_truth": {
     "ai_readiness_source": "src/app/application/ai_governance.py",
     "ai_api_source": "src/app/api/ai_governance.py",
     "action_policy_source": "src/app/domain/ai_action_policy.py",
+    "output_integrity_source": "src/app/domain/ai_output_integrity.py",
+    "data_lifecycle_contract": "contracts/operations/lotus-idea-data-lifecycle.v1.json",
     "operation_metric_contract": "contracts/observability/lotus-idea-operation-metrics.v1.json",
     "contract_gate": "scripts/ai_model_risk_operations_contract_gate.py",
     "proof_contract_gate": "scripts/ai_model_risk_operations_proof_contract_gate.py",
@@ -35,6 +38,20 @@
     ],
     "raw_rejected_label_persisted": false,
     "raw_rejected_label_returned": false
+  },
+  "output_content_integrity": {
+    "algorithm": "sha256",
+    "canonicalization": "unicode_nfc_line_endings_order_preserving",
+    "content_scope": [
+      "explanation_text",
+      "ordered_claim_id_text_and_source_bindings",
+      "ordered_action_type_and_submitted_label",
+      "workflow_pack_evaluator_and_policy_metadata"
+    ],
+    "persisted_content": "digest_and_version_only",
+    "retention_policy_ref": "lotus-idea:regulated-advisory-evidence:seven-year:v1",
+    "access_posture": "governed_evaluation_replay_or_authorized_lineage_store",
+    "pre_v1_migration_posture": "explicitly_unverifiable_no_retroactive_claim"
   },
   "model_risk_dashboard_controls": [
     {
