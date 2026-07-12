@@ -18,7 +18,7 @@ MIGRATIONS_PATH = Path("migrations")
 
 EXPECTED_HEADER = {
     "contract_id": "lotus-idea-data-lifecycle",
-    "contract_version": "1.0.0",
+    "contract_version": "1.1.0",
     "repository": "lotus-idea",
     "data_owner": "lotus-idea",
     "certification_status": "not_certified",
@@ -70,6 +70,36 @@ EXPECTED_SCHEDULED_REVIEW_PROOF = {
     "certification_status": "not_certified",
     "supported_feature_promoted": False,
 }
+EXPECTED_SIGNED_AUTHORITY_VERIFICATION = {
+    "decision_schema": "lotus.lifecycle-authority-decision.v1",
+    "key_discovery_schema": "lotus.lifecycle-authority-keys.v1",
+    "issuer": "bank-lifecycle-governance",
+    "audience": "lotus-idea",
+    "key_discovery_path": "/.well-known/lotus-lifecycle-authority-keys",
+    "signature_algorithm": "EdDSA",
+    "signature_curve": "Ed25519",
+    "required_runtime_profiles": ["demo", "staging", "production"],
+    "bound_claims": [
+        "tenant_id",
+        "candidate_id",
+        "action",
+        "authority_domain",
+        "authority_ref",
+        "change_reference",
+        "validity_window",
+    ],
+    "legal_and_records_actions": ["apply_hold", "release_hold"],
+    "privacy_actions": ["erase", "purge"],
+    "accepted_key_statuses": ["active", "rotated"],
+    "revoked_or_unknown_keys_fail_closed": True,
+    "dry_run_reserves_decision": False,
+    "applied_decision_and_nonce_single_use": True,
+    "persistence_migration": "013_lifecycle_authority_receipt",
+    "trust_configuration": [
+        "LOTUS_IDEA_LIFECYCLE_AUTHORITY_BASE_URL",
+        "LOTUS_IDEA_LIFECYCLE_AUTHORITY_TIMEOUT_SECONDS",
+    ],
+}
 REQUIRED_RECORD_FIELDS = {
     "table",
     "field_classification_profile_ref",
@@ -117,6 +147,13 @@ def validate_data_lifecycle_contract(
             payload.get("scheduled_review_proof"),
             EXPECTED_SCHEDULED_REVIEW_PROOF,
             "scheduled review proof",
+        )
+    )
+    errors.extend(
+        _expected_values(
+            payload.get("signed_authority_verification"),
+            EXPECTED_SIGNED_AUTHORITY_VERIFICATION,
+            "signed authority verification",
         )
     )
     errors.extend(_validate_scheduled_review_sources(payload, repository_root))
