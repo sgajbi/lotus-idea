@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 from copy import deepcopy
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 import json
 from typing import Any
@@ -16,6 +17,7 @@ from app.domain.ai_provider_retention import (
     ExpectedAIProviderRetention,
     VerifiedAIProviderRetentionReceipt,
 )
+from app.domain.ai_provider_retention_replay import AIProviderRetentionReplayIndex
 from app.domain.lotus_ai_run_attestation import (
     LotusAIAttestationKeyDiscovery,
     LotusAIAttestationPublicKey,
@@ -55,7 +57,7 @@ def test_verifies_source_safe_deletion_confirmation_against_run_and_tenant() -> 
 )
 def test_rejects_substituted_identity_or_sensitive_content(
     field: str,
-    value: object,
+    value: Any,
     message: str,
 ) -> None:
     payload = _payload()
@@ -100,6 +102,72 @@ def test_rejects_expired_revoked_and_canonically_tampered_confirmation() -> None
             expected=_expected(NOW),
             signature_verifier=Ed25519LotusAIAttestationSignatureVerifier(),
         )
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "message"),
+    [
+        ("confirmation_id", "unsafe reference", "source-safe reference"),
+        ("provider_failure_code", "unsafe code", "source-safe reference"),
+        ("evidence_sha256", "not-a-digest", "lowercase SHA-256"),
+        ("replay_nonce", "A" * 64, "lowercase SHA-256"),
+        ("issued_at_utc", datetime(2026, 7, 12, 4, 0), "timezone-aware UTC"),
+        ("expires_at_utc", NOW, "validity window"),
+    ],
+)
+def test_claims_reject_unsafe_or_temporally_invalid_provider_evidence(
+    field: str,
+    value: Any,
+    message: str,
+) -> None:
+    claims = map_lotus_ai_provider_retention_confirmation(_signed_payload()).claims
+
+    with pytest.raises(ValueError, match=message):
+        replace(claims, **{field: value})
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "message"),
+    [
+        ("confirmation_id", "unsafe reference", "source-safe reference"),
+        ("evidence_sha256", "not-a-digest", "lowercase SHA-256"),
+        ("rotation_epoch", 0, "rotation_epoch must be positive"),
+        ("verified_at_utc", datetime(2026, 7, 12, 4, 0), "timezone-aware UTC"),
+        ("verified_at_utc", NOW + timedelta(minutes=6), "outside its validity window"),
+    ],
+)
+def test_verified_receipt_rejects_invalid_persisted_identity_or_time(
+    field: str,
+    value: Any,
+    message: str,
+) -> None:
+    receipt = _verify(_signed_payload())
+
+    with pytest.raises(ValueError, match=message):
+        replace(receipt, **{field: value})
+
+
+def test_replay_snapshot_restore_rejects_identity_reuse_across_requests() -> None:
+    receipt = _verify(_signed_payload())
+    index = AIProviderRetentionReplayIndex()
+
+    with pytest.raises(ValueError, match="duplicate AI provider retention identity"):
+        index.restore((("request-001", receipt), ("request-002", receipt)))
+
+
+def test_provider_failure_requires_blocked_supportability() -> None:
+    payload = _payload()
+    payload["claims"].update(
+        {
+            "outcome": "PROVIDER_FAILURE",
+            "provider_failure_code": "PROVIDER_TIMEOUT",
+            "deletion_confirmed": False,
+            "supportability_status": "READY",
+        }
+    )
+
+    with pytest.raises(ValueError, match="provider failure supportability"):
+        _verify(_signed_payload(payload))
 
 
 def _verify(
