@@ -20,6 +20,12 @@ from app.domain.data_lifecycle.authority import (
     LifecycleAuthorityDomain,
     VerifiedLifecycleAuthorityReceipt,
 )
+from app.domain.data_lifecycle.archive_posture import (
+    ArchiveLegalHoldStatus,
+    ArchiveLifecycleAction,
+    ArchivePurgeStatus,
+    VerifiedArchiveLifecycleReceipt,
+)
 from app.infrastructure.data_lifecycle import postgres_policy as module
 from app.infrastructure.data_lifecycle.postgres_policy import (
     DataLifecycleWriteBlockedError,
@@ -82,7 +88,20 @@ class LifecycleCursor:
             return
         if "from idea_data_lifecycle_operation" in normalized:
             assert params is not None
-            if "where authority_decision_id" in normalized:
+            if "archive_decision_id" in normalized:
+                operation = next(
+                    (
+                        row
+                        for row in self.connection.operations.values()
+                        if row.get("decision") == "applied"
+                        and (
+                            row.get("archive_decision_id") == params[0]
+                            or row.get("archive_payload_digest") == params[1]
+                        )
+                    ),
+                    None,
+                )
+            elif "where authority_decision_id" in normalized:
                 operation = next(
                     (
                         row
@@ -172,6 +191,12 @@ class LifecycleCursor:
                         "authority_key_id",
                         "authority_rotation_epoch",
                         "authority_verified_at_utc",
+                        "archive_decision_id",
+                        "archive_document_id",
+                        "archive_evidence_pack_id",
+                        "archive_payload_digest",
+                        "archive_key_id",
+                        "archive_verified_at_utc",
                     ),
                     values,
                     strict=True,
@@ -371,6 +396,49 @@ def test_postgres_lifecycle_reserves_applied_authority_but_not_preview(
     assert applied_row["authority_key_id"] == receipt.key_id
 
 
+def test_postgres_lifecycle_reserves_applied_archive_posture_but_not_preview(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    connection = LifecycleConnection()
+    connection.linked_report_evidence_pack_ids = ["report-pack-001"]
+    monkeypatch.setattr(
+        module,
+        "redact_candidate_graph",
+        lambda *_args, **_kwargs: {"idea_candidate_record": 1},
+    )
+    receipt = valid_archive_receipt()
+    preview_command = replace(
+        valid_command(DataLifecycleAction.ERASE, dry_run=True),
+        archive_lifecycle_receipt=receipt,
+    )
+    apply_command = replace(
+        valid_command(DataLifecycleAction.ERASE),
+        idempotency_key="lifecycle-erase-archive-apply-001",
+        archive_lifecycle_receipt=receipt,
+    )
+
+    preview = execute(connection, preview_command)
+    applied = execute(connection, apply_command)
+    replayed = execute(connection, apply_command)
+    reused = execute(
+        connection,
+        replace(apply_command, idempotency_key="lifecycle-erase-archive-reuse-001"),
+    )
+
+    assert preview.decision is DataLifecycleDecision.PREVIEW
+    assert applied.decision is DataLifecycleDecision.APPLIED
+    assert replayed.decision is DataLifecycleDecision.REPLAYED
+    assert reused.decision is DataLifecycleDecision.CONFLICT
+    assert reused.blockers == (DataLifecycleBlocker.ARCHIVE_POSTURE_REPLAY,)
+    preview_row = connection.operations[preview_command.idempotency_key]
+    applied_row = connection.operations[apply_command.idempotency_key]
+    assert preview_row["archive_decision_id"] is None
+    assert applied_row["archive_decision_id"] == receipt.decision_id
+    assert applied_row["archive_document_id"] == receipt.document_id
+    assert applied_row["archive_evidence_pack_id"] == receipt.evidence_pack_id
+    assert applied_row["archive_payload_digest"] == receipt.payload_digest
+
+
 def test_postgres_lifecycle_purge_removes_only_governed_payload_rows(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -544,6 +612,25 @@ def valid_authority_receipt(
         issued_at_utc=NOW - timedelta(minutes=3),
         effective_at_utc=NOW - timedelta(minutes=2),
         expires_at_utc=NOW + timedelta(minutes=5),
+        verified_at_utc=NOW - timedelta(minutes=1),
+    )
+
+
+def valid_archive_receipt() -> VerifiedArchiveLifecycleReceipt:
+    return VerifiedArchiveLifecycleReceipt(
+        decision_id="archive-decision-001",
+        document_id="document-001",
+        evidence_pack_id="report-pack-001",
+        candidate_id="candidate-001",
+        tenant_id="tenant-001",
+        retention_policy_id="generated-report-standard",
+        legal_hold_status=ArchiveLegalHoldStatus.CLEAR,
+        purge_status=ArchivePurgeStatus.NOT_ELIGIBLE,
+        lifecycle_action=ArchiveLifecycleAction.RETAIN,
+        payload_digest="sha256:" + "f" * 64,
+        key_id="archive-key-001",
+        issued_at_utc=NOW - timedelta(minutes=2),
+        expires_at_utc=NOW + timedelta(minutes=3),
         verified_at_utc=NOW - timedelta(minutes=1),
     )
 

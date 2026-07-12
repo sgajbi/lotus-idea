@@ -263,6 +263,13 @@ def _action_response(
             detail="No tenant-scoped Idea candidate matches the supplied identifier.",
         )
     if result.decision is DataLifecycleDecision.CONFLICT:
+        if DataLifecycleBlocker.ARCHIVE_POSTURE_REPLAY in result.blockers:
+            return problem_details_response(
+                status_code=status.HTTP_409_CONFLICT,
+                code="archive_lifecycle_posture_replay_conflict",
+                title="Archive lifecycle posture replay conflict",
+                detail="The signed Archive lifecycle posture has already authorized an action.",
+            )
         if DataLifecycleBlocker.AUTHORITY_ATTESTATION_REPLAY in result.blockers:
             return problem_details_response(
                 status_code=status.HTTP_409_CONFLICT,
@@ -375,6 +382,14 @@ DATA_LIFECYCLE_ACTION_ROUTE: RouteMetadata = {
                     title="Lifecycle authority replay conflict",
                     detail="The signed lifecycle authority decision has already been applied.",
                     description="Applied lifecycle authority decision or nonce reuse was rejected.",
+                ),
+                conflict_metadata(
+                    code="archive_lifecycle_posture_replay_conflict",
+                    title="Archive lifecycle posture replay conflict",
+                    detail=(
+                        "The signed Archive lifecycle posture has already authorized an action."
+                    ),
+                    description="Applied Archive decision or payload digest reuse was rejected.",
                 ),
             ),
         ),

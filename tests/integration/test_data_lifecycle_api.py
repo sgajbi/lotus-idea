@@ -379,6 +379,23 @@ def test_data_lifecycle_api_reports_authority_replay_as_distinct_conflict() -> N
     assert response.body
     assert b'"code":"lifecycle_authority_replay_conflict"' in response.body
 
+    archive_response = api_module._action_response(
+        DataLifecycleOperationResult(
+            operation_id="lifecycle-operation-archive-replay-001",
+            decision=DataLifecycleDecision.CONFLICT,
+            control=valid_context().control,
+            blockers=(DataLifecycleBlocker.ARCHIVE_POSTURE_REPLAY,),
+            dry_run=False,
+            audit_sha256="b" * 64,
+            affected_row_counts={},
+        ),
+        request=DataLifecycleActionRequest.model_validate(lifecycle_request()),
+        durable_storage_backed=True,
+    )
+    assert isinstance(archive_response, JSONResponse)
+    assert archive_response.status_code == 409
+    assert b'"code":"archive_lifecycle_posture_replay_conflict"' in archive_response.body
+
 
 def test_data_lifecycle_api_verifies_archive_posture_before_linked_erasure(
     monkeypatch: pytest.MonkeyPatch,
@@ -493,6 +510,7 @@ def test_data_lifecycle_openapi_certifies_success_and_failure_contracts() -> Non
         "data_lifecycle_action_blocked",
         "data_lifecycle_idempotency_conflict",
         "lifecycle_authority_replay_conflict",
+        "archive_lifecycle_posture_replay_conflict",
     }
     assert "lifecycle_authority_unavailable" in {
         example["value"]["code"]

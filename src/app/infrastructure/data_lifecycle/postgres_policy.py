@@ -57,18 +57,26 @@ class PostgresDataLifecycleRepository:
                             authority_operation,
                         )
                     else:
-                        context = _load_candidate_context(cursor, command.candidate_id)
-                        evaluation = evaluator(
-                            command,
-                            context,
-                            evaluated_at_utc=evaluated_at_utc,
-                        )
-                        result = _apply_evaluation(
-                            cursor,
-                            command=command,
-                            evaluation=evaluation,
-                            evaluated_at_utc=evaluated_at_utc,
-                        )
+                        archive_operation = _claimable_archive_operation(cursor, command)
+                        if archive_operation is not None:
+                            result = _archive_posture_replay_conflict(
+                                cursor,
+                                command,
+                                archive_operation,
+                            )
+                        else:
+                            context = _load_candidate_context(cursor, command.candidate_id)
+                            evaluation = evaluator(
+                                command,
+                                context,
+                                evaluated_at_utc=evaluated_at_utc,
+                            )
+                            result = _apply_evaluation(
+                                cursor,
+                                command=command,
+                                evaluation=evaluation,
+                                evaluated_at_utc=evaluated_at_utc,
+                            )
             self._connection.commit()
             observe_postgres_operation(
                 operation="lifecycle_action",
@@ -200,6 +208,31 @@ def _claimable_authority_operation(
            ORDER BY evaluated_at_utc, operation_id
            LIMIT 1""",
         (receipt.decision_id, receipt.replay_nonce),
+    )
+    row = cursor.fetchone()
+    return row if isinstance(row, Mapping) else None
+
+
+def _claimable_archive_operation(
+    cursor: Any,
+    command: DataLifecycleCommand,
+) -> Mapping[str, Any] | None:
+    receipt = command.archive_lifecycle_receipt
+    if receipt is None or command.dry_run:
+        return None
+    cursor.execute(
+        "SELECT pg_advisory_xact_lock(hashtextextended(%s, 0))",
+        (f"archive-lifecycle:{receipt.decision_id}:{receipt.payload_digest}",),
+    )
+    cursor.execute(
+        """SELECT operation_id, request_fingerprint, candidate_id, decision,
+                  dry_run, audit_sha256, blockers_json, affected_row_counts_json
+           FROM idea_data_lifecycle_operation
+           WHERE decision = 'applied'
+             AND (archive_decision_id = %s OR archive_payload_digest = %s)
+           ORDER BY evaluated_at_utc, operation_id
+           LIMIT 1""",
+        (receipt.decision_id, receipt.payload_digest),
     )
     row = cursor.fetchone()
     return row if isinstance(row, Mapping) else None
@@ -418,6 +451,7 @@ def _insert_operation(
         actor_subject = data_lifecycle_actor_tombstone(command.candidate_id, command.tenant_id)
         approver_subject = actor_subject if approver_subject is not None else None
     receipt = command.authority_receipt if not command.dry_run else None
+    archive_receipt = command.archive_lifecycle_receipt if not command.dry_run else None
     cursor.execute(
         """INSERT INTO idea_data_lifecycle_operation (
                operation_id, idempotency_key, request_fingerprint, candidate_id,
@@ -426,11 +460,14 @@ def _insert_operation(
                blockers_json, affected_row_counts_json, audit_sha256,
                requested_at_utc, evaluated_at_utc, control_version,
                authority_decision_id, authority_replay_nonce, authority_key_id,
-               authority_rotation_epoch, authority_verified_at_utc
+               authority_rotation_epoch, authority_verified_at_utc,
+               archive_decision_id, archive_document_id, archive_evidence_pack_id,
+               archive_payload_digest, archive_key_id, archive_verified_at_utc
            ) VALUES (
                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-               %s, %s, %s, %s, %s, %s
+               %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+               %s, %s
            )""",
         (
             operation_id,
@@ -459,6 +496,12 @@ def _insert_operation(
             receipt.key_id if receipt is not None else None,
             receipt.rotation_epoch if receipt is not None else None,
             receipt.verified_at_utc if receipt is not None else None,
+            archive_receipt.decision_id if archive_receipt is not None else None,
+            archive_receipt.document_id if archive_receipt is not None else None,
+            archive_receipt.evidence_pack_id if archive_receipt is not None else None,
+            archive_receipt.payload_digest if archive_receipt is not None else None,
+            archive_receipt.key_id if archive_receipt is not None else None,
+            archive_receipt.verified_at_utc if archive_receipt is not None else None,
         ),
     )
 
@@ -497,6 +540,23 @@ def _authority_replay_conflict(
         decision=DataLifecycleDecision.CONFLICT,
         control=control,
         blockers=(DataLifecycleBlocker.AUTHORITY_ATTESTATION_REPLAY,),
+        dry_run=bool(existing["dry_run"]),
+        audit_sha256=str(existing["audit_sha256"]),
+        affected_row_counts=_integer_mapping(existing["affected_row_counts_json"]),
+    )
+
+
+def _archive_posture_replay_conflict(
+    cursor: Any,
+    command: DataLifecycleCommand,
+    existing: Mapping[str, Any],
+) -> DataLifecycleOperationResult:
+    control = _load_control(cursor, command.candidate_id)
+    return DataLifecycleOperationResult(
+        operation_id=str(existing["operation_id"]),
+        decision=DataLifecycleDecision.CONFLICT,
+        control=control,
+        blockers=(DataLifecycleBlocker.ARCHIVE_POSTURE_REPLAY,),
         dry_run=bool(existing["dry_run"]),
         audit_sha256=str(existing["audit_sha256"]),
         affected_row_counts=_integer_mapping(existing["affected_row_counts_json"]),
@@ -603,6 +663,17 @@ def _audit_sha256(
                 "rotation_epoch": command.authority_receipt.rotation_epoch,
             }
             if command.authority_receipt is not None
+            else None
+        ),
+        "archive_lifecycle_receipt": (
+            {
+                "decision_id": command.archive_lifecycle_receipt.decision_id,
+                "document_id": command.archive_lifecycle_receipt.document_id,
+                "evidence_pack_id": command.archive_lifecycle_receipt.evidence_pack_id,
+                "key_id": command.archive_lifecycle_receipt.key_id,
+                "payload_digest": command.archive_lifecycle_receipt.payload_digest,
+            }
+            if command.archive_lifecycle_receipt is not None
             else None
         ),
     }
