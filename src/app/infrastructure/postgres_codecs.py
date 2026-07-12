@@ -7,6 +7,7 @@ from typing import Any, Mapping
 from app.domain.access_scope import ReviewAccessScope
 from app.domain.ai_lineage_persistence import (
     AIExplanationLineageRecord,
+    ai_provider_retention_receipt_to_mapping,
     verify_ai_explanation_lineage_record_integrity,
 )
 from app.domain.conversion_governance import (
@@ -479,7 +480,7 @@ def _ai_explanation_lineage_to_json(record: AIExplanationLineageRecord) -> dict[
             else None
         ),
         "provider_retention_receipt": (
-            _provider_retention_receipt_to_json(record.provider_retention_receipt)
+            ai_provider_retention_receipt_to_mapping(record.provider_retention_receipt)
             if record.provider_retention_receipt is not None
             else None
         ),
@@ -577,30 +578,6 @@ def _attestation_receipt_from_json(
         expires_at_utc=_datetime(payload["expires_at_utc"]),
         verified_at_utc=_datetime(payload["verified_at_utc"]),
     )
-
-
-def _provider_retention_receipt_to_json(
-    receipt: VerifiedAIProviderRetentionReceipt,
-) -> dict[str, object]:
-    return {
-        "confirmation_id": receipt.confirmation_id,
-        "workflow_run_id": receipt.workflow_run_id,
-        "tenant_id": receipt.tenant_id,
-        "provider_confirmation_ref": receipt.provider_confirmation_ref,
-        "retention_policy_id": receipt.retention_policy_id,
-        "outcome": receipt.outcome.value,
-        "evidence_sha256": receipt.evidence_sha256,
-        "provider_failure_code": receipt.provider_failure_code,
-        "deletion_confirmed": receipt.deletion_confirmed,
-        "supportability_status": receipt.supportability_status,
-        "replay_nonce": receipt.replay_nonce,
-        "key_id": receipt.key_id,
-        "rotation_epoch": receipt.rotation_epoch,
-        "provider_decision_at_utc": receipt.provider_decision_at_utc.isoformat(),
-        "issued_at_utc": receipt.issued_at_utc.isoformat(),
-        "expires_at_utc": receipt.expires_at_utc.isoformat(),
-        "verified_at_utc": receipt.verified_at_utc.isoformat(),
-    }
 
 
 def _provider_retention_receipt_from_json(
