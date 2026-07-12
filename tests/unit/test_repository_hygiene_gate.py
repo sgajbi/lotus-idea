@@ -20,8 +20,11 @@ def _load_repository_hygiene_gate() -> ModuleType:
 
 def test_repository_hygiene_gate_passes_current_tracked_files() -> None:
     module = _load_repository_hygiene_gate()
+    tracked_paths = module._tracked_paths()
 
-    assert module.find_repository_hygiene_violations(module._tracked_paths()) == []
+    assert module.find_repository_hygiene_violations(tracked_paths) == []
+    assert module.find_bounded_module_placement_violations(tracked_paths) == []
+    assert module.find_executable_naming_violations(tracked_paths) == []
 
 
 def test_repository_hygiene_gate_blocks_python_cache_artifacts() -> None:
@@ -73,4 +76,38 @@ def test_repository_hygiene_gate_blocks_build_outputs_and_databases() -> None:
         "dist/lotus_idea-0.1.0.tar.gz: "
         "generated or dependency directory content must not be tracked",
         "local/test.db: generated or local-only file type must not be tracked",
+    ]
+
+
+def test_repository_hygiene_gate_enforces_lifecycle_bounded_module_placement() -> None:
+    module = _load_repository_hygiene_gate()
+    tracked_paths = sorted(
+        module.REQUIRED_BOUNDED_MODULE_PATHS - {"src/app/domain/data_lifecycle/authority.py"}
+        | {"src/app/domain/lifecycle_authority.py"}
+    )
+
+    violations = module.find_bounded_module_placement_violations(tracked_paths)
+
+    assert violations == [
+        "src/app/domain/data_lifecycle/authority.py: required bounded-module path is missing",
+        "src/app/domain/lifecycle_authority.py: legacy flat-module path must not be reintroduced",
+    ]
+
+
+def test_repository_hygiene_gate_rejects_rfc_coupled_executable_names() -> None:
+    module = _load_repository_hygiene_gate()
+
+    violations = module.find_executable_naming_violations(
+        [
+            "scripts/rfc_0002_validator.py",
+            "tests/unit/test_slice_06_lifecycle.py",
+            "docs/rfcs/RFC-0002-slice-06.md",
+        ]
+    )
+
+    assert violations == [
+        "scripts/rfc_0002_validator.py: executable artifact must be named for its capability, "
+        "not an RFC or slice",
+        "tests/unit/test_slice_06_lifecycle.py: executable artifact must be named for its "
+        "capability, not an RFC or slice",
     ]

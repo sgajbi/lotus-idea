@@ -8,7 +8,7 @@ from app.domain.data_lifecycle import (
     DataLifecycleOperationResult,
     evaluate_data_lifecycle,
 )
-from app.domain.data_lifecycle_schedule import (
+from app.domain.data_lifecycle.schedule import (
     ScheduledLifecycleReview,
     evaluate_scheduled_lifecycle_control,
     validate_scheduled_lifecycle_review_limit,

@@ -16,18 +16,18 @@ REQUIRED_DOCUMENTATION_FRAGMENTS = {
     ),
     "REPOSITORY-ENGINEERING-CONTEXT.md": (
         "No externally supported product feature is promoted yet.",
-        "make slice2-structure-gate",
+        "make foundation-structure-gate",
     ),
     "docs/rfcs/README.md": (
         "currently in foundation state",
-        "Slice 2 structure gate",
+        "Foundation structure gate",
     ),
     "wiki/Supported-Features.md": (
         "Current posture: no business feature is supported yet.",
         "`current_posture` | `foundation_only`",
     ),
     "wiki/Validation-and-CI.md": (
-        "make slice2-structure-gate",
+        "make foundation-structure-gate",
         "RFC-0002 Slice 2",
     ),
 }
@@ -59,11 +59,11 @@ def _validate_supported_feature_posture(root: Path) -> list[str]:
         return errors
     if payload.get("current_posture") != "foundation_only":
         errors.append(
-            "supported-features current_posture must remain `foundation_only` for Slice 2"
+            "supported-features current_posture must remain `foundation_only` for the foundation posture"
         )
     features = payload.get("features")
     if features != []:
-        errors.append("supported-features features[] must remain empty for Slice 2")
+        errors.append("supported-features features[] must remain empty for the foundation posture")
     planned_capabilities = payload.get("planned_capabilities")
     if not isinstance(planned_capabilities, list) or not planned_capabilities:
         errors.append("supported-features planned_capabilities[] must remain populated")
@@ -108,7 +108,7 @@ def _validate_architecture_truth(
     ]
 
 
-def validate_slice2_structure(
+def validate_foundation_structure(
     root: Path = ROOT,
     *,
     architecture_violations: list[dict[str, str]] | None = None,
@@ -122,11 +122,11 @@ def validate_slice2_structure(
 
 
 def main() -> int:
-    errors = validate_slice2_structure(ROOT)
+    errors = validate_foundation_structure(ROOT)
     if errors:
         print("\n".join(errors))
         return 1
-    print("Slice 2 structure gate passed")
+    print("Foundation structure gate passed")
     return 0
 
 

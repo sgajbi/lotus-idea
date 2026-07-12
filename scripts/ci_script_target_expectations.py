@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 SCRIPT_TARGET_EXPECTATIONS = {
-    "slice2-structure-gate": "scripts/slice2_structure_gate.py",
+    "foundation-structure-gate": "scripts/foundation_structure_gate.py",
     "source-ingestion-worker-check": "scripts/source_ingestion_worker_contract_gate.py",
     "source-ingestion-scheduled-worker-check": (
         "scripts/source_ingestion_scheduled_worker_contract_gate.py"

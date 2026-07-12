@@ -24,7 +24,7 @@ from app.domain.data_lifecycle import (
     DataLifecycleOperationResult,
     DataLifecycleState,
 )
-from app.domain.lifecycle_authority import (
+from app.domain.data_lifecycle.authority import (
     LifecycleAuthorityKeyDiscovery,
     LifecycleAuthorityPublicKey,
 )

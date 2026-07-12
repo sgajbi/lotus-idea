@@ -9,7 +9,7 @@ from types import ModuleType
 import pytest
 
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 
 
 def test_scheduled_lifecycle_fixture_requires_disposable_confirmation() -> None:

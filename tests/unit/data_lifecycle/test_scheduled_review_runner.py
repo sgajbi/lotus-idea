@@ -10,10 +10,10 @@ from types import ModuleType
 from typing import Any
 
 from app.domain.data_lifecycle import DataLifecycleState
-from app.domain.data_lifecycle_schedule import ScheduledLifecycleControlSnapshot
+from app.domain.data_lifecycle.schedule import ScheduledLifecycleControlSnapshot
 
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 NOW = datetime(2026, 7, 12, 3, 0, tzinfo=UTC)
 
 

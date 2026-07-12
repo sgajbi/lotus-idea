@@ -11,7 +11,7 @@ from app.application.lifecycle_authority_verification import (
     verify_lifecycle_authority_decision,
 )
 from app.domain.data_lifecycle import DataLifecycleAction
-from app.domain.lifecycle_authority import (
+from app.domain.data_lifecycle.authority import (
     LIFECYCLE_AUTHORITY_AUDIENCE,
     LIFECYCLE_AUTHORITY_ISSUER,
     LIFECYCLE_AUTHORITY_KEY_DISCOVERY_PATH,

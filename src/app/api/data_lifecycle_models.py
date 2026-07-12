@@ -18,7 +18,7 @@ from app.domain.data_lifecycle import (
 )
 from app.security.caller_context import CallerContext
 from app.domain.events import EventLineageContext
-from app.domain.lifecycle_authority import VerifiedLifecycleAuthorityReceipt
+from app.domain.data_lifecycle.authority import VerifiedLifecycleAuthorityReceipt
 from app.integration.lifecycle_authority_contract import LifecycleAuthorityProducerDecision
 
 SOURCE_SAFE_REFERENCE = r"^[A-Za-z0-9][A-Za-z0-9._:/-]{2,255}$"

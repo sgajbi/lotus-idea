@@ -1,7 +1,7 @@
 from datetime import UTC, datetime
 
 from app.domain.data_lifecycle import DataLifecycleAction
-from app.domain.lifecycle_authority import LifecycleAuthorityDomain
+from app.domain.data_lifecycle.authority import LifecycleAuthorityDomain
 from app.integration.lifecycle_authority_contract import (
     map_lifecycle_authority_decision,
     map_lifecycle_authority_key_discovery,

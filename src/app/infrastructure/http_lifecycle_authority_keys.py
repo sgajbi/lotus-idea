@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import httpx
 
-from app.domain.lifecycle_authority import (
+from app.domain.data_lifecycle.authority import (
     LIFECYCLE_AUTHORITY_KEY_DISCOVERY_PATH,
     LifecycleAuthorityKeyDiscovery,
 )

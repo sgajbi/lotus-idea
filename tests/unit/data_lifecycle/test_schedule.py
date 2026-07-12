@@ -8,7 +8,7 @@ import pytest
 
 from app.application.data_lifecycle import ReviewScheduledDataLifecycle
 from app.domain.data_lifecycle import DataLifecycleBlocker, DataLifecycleState
-from app.domain.data_lifecycle_schedule import (
+from app.domain.data_lifecycle.schedule import (
     ScheduledLifecycleBlockerCount,
     ScheduledLifecycleControlSnapshot,
     ScheduledLifecycleReview,

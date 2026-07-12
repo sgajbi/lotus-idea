@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -32,6 +33,34 @@ PROHIBITED_SUFFIXES = {
     ".pyc",
     ".pyo",
 }
+
+REQUIRED_BOUNDED_MODULE_PATHS = {
+    "src/app/domain/data_lifecycle/__init__.py",
+    "src/app/domain/data_lifecycle/authority.py",
+    "src/app/domain/data_lifecycle/schedule.py",
+    "tests/unit/data_lifecycle/test_authority_verification.py",
+    "tests/unit/data_lifecycle/test_policy.py",
+    "tests/unit/data_lifecycle/test_schedule.py",
+}
+
+PROHIBITED_LEGACY_MODULE_PATHS = {
+    "src/app/domain/data_lifecycle.py",
+    "src/app/domain/data_lifecycle_schedule.py",
+    "src/app/domain/lifecycle_authority.py",
+    "tests/unit/test_data_lifecycle.py",
+    "tests/unit/test_data_lifecycle_schedule.py",
+    "tests/unit/test_lifecycle_authority_verification.py",
+}
+
+EXECUTABLE_PATH_PREFIXES = (
+    ".github/workflows/",
+    "contracts/",
+    "migrations/",
+    "scripts/",
+    "src/",
+    "tests/",
+)
+RFC_COUPLED_EXECUTABLE_NAME = re.compile(r"(^|[/_-])(rfc|slice)[-_]?\d", re.IGNORECASE)
 
 
 def _tracked_paths() -> list[str]:
@@ -72,8 +101,35 @@ def find_repository_hygiene_violations(tracked_paths: list[str]) -> list[str]:
     return sorted(violations)
 
 
+def find_bounded_module_placement_violations(tracked_paths: list[str]) -> list[str]:
+    normalised_paths = {_normalise(path) for path in tracked_paths}
+    violations = [
+        f"{path}: required bounded-module path is missing"
+        for path in REQUIRED_BOUNDED_MODULE_PATHS - normalised_paths
+    ]
+    violations.extend(
+        f"{path}: legacy flat-module path must not be reintroduced"
+        for path in PROHIBITED_LEGACY_MODULE_PATHS & normalised_paths
+    )
+    return sorted(violations)
+
+
+def find_executable_naming_violations(tracked_paths: list[str]) -> list[str]:
+    return sorted(
+        f"{path}: executable artifact must be named for its capability, not an RFC or slice"
+        for tracked_path in tracked_paths
+        if (path := _normalise(tracked_path)).startswith(EXECUTABLE_PATH_PREFIXES)
+        and RFC_COUPLED_EXECUTABLE_NAME.search(path)
+    )
+
+
 def main() -> int:
-    violations = find_repository_hygiene_violations(_tracked_paths())
+    tracked_paths = _tracked_paths()
+    violations = [
+        *find_repository_hygiene_violations(tracked_paths),
+        *find_bounded_module_placement_violations(tracked_paths),
+        *find_executable_naming_violations(tracked_paths),
+    ]
     if violations:
         print("Repository hygiene gate failed:")
         print("\n".join(violations))

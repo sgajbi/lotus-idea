@@ -42,7 +42,7 @@ from app.domain.data_lifecycle import (
     DataLifecycleDecision,
     DataLifecycleOperationResult,
 )
-from app.domain.lifecycle_authority import (
+from app.domain.data_lifecycle.authority import (
     ExpectedLifecycleAuthorityDecision,
     VerifiedLifecycleAuthorityReceipt,
 )

@@ -16,7 +16,7 @@ from app.domain.data_lifecycle import (
     DataLifecycleState,
     evaluate_data_lifecycle,
 )
-from app.domain.lifecycle_authority import (
+from app.domain.data_lifecycle.authority import (
     LifecycleAuthorityDomain,
     VerifiedLifecycleAuthorityReceipt,
 )

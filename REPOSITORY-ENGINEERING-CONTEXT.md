@@ -712,11 +712,11 @@ make typecheck
 make test-unit
 make documentation-contract-gate
 make implementation-truth-gate
-make slice2-structure-gate
+make foundation-structure-gate
 make supported-features-gate
 ```
 
-`make slice2-structure-gate` is the RFC-0002 Slice 2 closure guard. It keeps
+`make foundation-structure-gate` is the foundation-posture guard introduced by RFC-0002 Slice 2. It keeps
 the supported-feature registry in foundation-only posture, requires README,
 repo context, RFC index, and wiki support truth to agree, and reuses the
 architecture boundary gate so domain/API modularity does not drift while later

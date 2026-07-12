@@ -7,7 +7,7 @@ import re
 from typing import TYPE_CHECKING, Mapping
 
 if TYPE_CHECKING:
-    from app.domain.lifecycle_authority import VerifiedLifecycleAuthorityReceipt
+    from app.domain.data_lifecycle.authority import VerifiedLifecycleAuthorityReceipt
 
 REGULATED_ADVISORY_POLICY_REF = "lotus-idea:regulated-advisory-evidence:seven-year:v1"
 OPERATIONAL_DELIVERY_POLICY_REF = "lotus-idea:operational-delivery:four-hundred-day:v1"

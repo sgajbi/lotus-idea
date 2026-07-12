@@ -1,6 +1,6 @@
 from typing import Protocol
 
-from app.domain.lifecycle_authority import LifecycleAuthorityKeyDiscovery
+from app.domain.data_lifecycle.authority import LifecycleAuthorityKeyDiscovery
 
 
 class LifecycleAuthorityKeySource(Protocol):
