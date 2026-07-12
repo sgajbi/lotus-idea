@@ -150,6 +150,36 @@ def test_expected_and_verified_receipts_reject_malformed_persisted_identity() ->
         replace(receipt, verified_at_utc=receipt.expires_at_utc)
 
 
+def test_archive_posture_domain_rejects_malformed_claim_envelope_and_key_state() -> None:
+    envelope = map_archive_lifecycle_decision(_signed_payload())
+    with pytest.raises(ValueError, match="source-safe region code"):
+        replace(envelope.claims, residency_region="singapore")
+    with pytest.raises(ValueError, match="non-negative integer"):
+        replace(envelope.claims, legal_hold_count=True)
+    with pytest.raises(ValueError, match="non-negative integer"):
+        replace(envelope.claims, legal_hold_count=-1)
+    with pytest.raises(ValueError, match="validity window is invalid"):
+        replace(envelope.claims, expires_at_utc=envelope.claims.issued_at_utc)
+    with pytest.raises(ValueError, match="prefixed lowercase SHA-256"):
+        replace(envelope, payload_digest="invalid")
+    with pytest.raises(ValueError, match="Ed25519 envelope prefix"):
+        replace(envelope, signature="invalid")
+
+    key = ArchiveLifecycleTrustedKey(
+        key_id="archive-lifecycle-2026-07",
+        public_key_base64url="public-key",
+        status="active",
+        not_before_utc=NOW - timedelta(days=1),
+        not_after_utc=NOW + timedelta(days=1),
+    )
+    with pytest.raises(ValueError, match="source-safe reference"):
+        replace(key, key_id="invalid key")
+    with pytest.raises(ValueError, match="public_key_base64url is required"):
+        replace(key, public_key_base64url="")
+    with pytest.raises(ValueError, match="validity window is invalid"):
+        replace(key, not_after_utc=key.not_before_utc)
+
+
 def _verify(
     payload: dict[str, Any],
     *,
