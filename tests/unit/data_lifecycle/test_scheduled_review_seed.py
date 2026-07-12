@@ -23,7 +23,9 @@ def test_scheduled_lifecycle_fixture_requires_disposable_confirmation() -> None:
 
 
 def test_scheduled_lifecycle_fixture_is_synthetic_and_non_destructive() -> None:
-    source = (ROOT / "scripts/data_lifecycle/seed_scheduled_review_fixture.py").read_text(encoding="utf-8")
+    source = (ROOT / "scripts/data_lifecycle/seed_scheduled_review_fixture.py").read_text(
+        encoding="utf-8"
+    )
 
     assert "PB_SG_GLOBAL_BAL_001" not in source
     assert "idea_scheduled_lifecycle_fixture" in source

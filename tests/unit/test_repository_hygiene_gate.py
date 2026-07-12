@@ -111,3 +111,15 @@ def test_repository_hygiene_gate_rejects_rfc_coupled_executable_names() -> None:
         "tests/unit/test_slice_06_lifecycle.py: executable artifact must be named for its "
         "capability, not an RFC or slice",
     ]
+
+
+def test_repository_hygiene_gate_allows_explicit_rfc_tracking_artifact() -> None:
+    module = _load_repository_hygiene_gate()
+    tracking_workflow = ".github/workflows/rfc-0002-closure.yml"
+
+    violations = module.find_executable_naming_violations(
+        [tracking_workflow, "contracts/rfc-0002-closure.json"],
+        rfc_tracking_paths=frozenset({tracking_workflow}),
+    )
+
+    assert violations == []
