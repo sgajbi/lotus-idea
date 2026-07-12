@@ -25,6 +25,12 @@ from app.domain.data_lifecycle.authority import (
     LifecycleAuthorityDomain,
     VerifiedLifecycleAuthorityReceipt,
 )
+from app.domain.data_lifecycle.archive_posture import (
+    ArchiveLegalHoldStatus,
+    ArchiveLifecycleAction,
+    ArchivePurgeStatus,
+    VerifiedArchiveLifecycleReceipt,
+)
 
 NOW = datetime(2026, 7, 11, 8, 0, tzinfo=UTC)
 
@@ -172,6 +178,77 @@ def test_lifecycle_authority_receipt_is_required_and_request_bound() -> None:
     assert verified_result.decision is DataLifecycleDecision.APPLIED
 
 
+def test_linked_report_evidence_requires_exact_archive_posture() -> None:
+    linked_context = valid_context(
+        linked_report_evidence_pack_ids=("report-pack-001",),
+    )
+    command = valid_command(DataLifecycleAction.ERASE)
+    unrelated = replace(command, archive_lifecycle_receipt=valid_archive_receipt())
+    mismatched_context = valid_context()
+
+    missing = evaluate_data_lifecycle(command, linked_context, evaluated_at_utc=NOW)
+    mismatched = evaluate_data_lifecycle(unrelated, mismatched_context, evaluated_at_utc=NOW)
+    verified = evaluate_data_lifecycle(unrelated, linked_context, evaluated_at_utc=NOW)
+
+    assert missing.blockers == (DataLifecycleBlocker.ARCHIVE_POSTURE_REQUIRED,)
+    assert mismatched.blockers == (DataLifecycleBlocker.ARCHIVE_POSTURE_MISMATCH,)
+    assert verified.decision is DataLifecycleDecision.APPLIED
+
+
+def test_archive_hold_and_disposal_posture_fail_closed_by_action() -> None:
+    linked_context = valid_context(
+        linked_report_evidence_pack_ids=("report-pack-001",),
+    )
+    active_hold = replace(
+        valid_archive_receipt(),
+        legal_hold_status=ArchiveLegalHoldStatus.ACTIVE,
+        lifecycle_action=ArchiveLifecycleAction.LEGAL_HOLD,
+    )
+    retain = valid_archive_receipt()
+
+    erase_held = evaluate_data_lifecycle(
+        replace(valid_command(DataLifecycleAction.ERASE), archive_lifecycle_receipt=active_hold),
+        linked_context,
+        evaluated_at_utc=NOW,
+    )
+    apply_without_archive_hold = evaluate_data_lifecycle(
+        replace(valid_command(DataLifecycleAction.APPLY_HOLD), archive_lifecycle_receipt=retain),
+        linked_context,
+        evaluated_at_utc=NOW,
+    )
+    purge_before_archive = evaluate_data_lifecycle(
+        replace(valid_command(DataLifecycleAction.PURGE), archive_lifecycle_receipt=retain),
+        valid_context(
+            control=erased_control(),
+            linked_report_evidence_pack_ids=("report-pack-001",),
+        ),
+        evaluated_at_utc=NOW,
+    )
+    purged_archive = replace(
+        retain,
+        purge_status=ArchivePurgeStatus.PURGED,
+        lifecycle_action=ArchiveLifecycleAction.DISPOSAL_EXECUTED,
+    )
+    purge_allowed = evaluate_data_lifecycle(
+        replace(
+            valid_command(DataLifecycleAction.PURGE),
+            archive_lifecycle_receipt=purged_archive,
+        ),
+        valid_context(
+            control=erased_control(),
+            linked_report_evidence_pack_ids=("report-pack-001",),
+        ),
+        evaluated_at_utc=NOW,
+    )
+
+    assert erase_held.blockers == (DataLifecycleBlocker.ARCHIVE_LEGAL_HOLD_ACTIVE,)
+    assert apply_without_archive_hold.blockers == (DataLifecycleBlocker.ARCHIVE_POSTURE_MISMATCH,)
+    assert purge_before_archive.blockers == (
+        DataLifecycleBlocker.ARCHIVE_DISPOSAL_NOT_EXECUTED,
+    )
+    assert purge_allowed.decision is DataLifecycleDecision.APPLIED
+
+
 def test_erasure_blocks_holds_and_active_delivery_then_redacts_atomically() -> None:
     held = evaluate_data_lifecycle(
         valid_command(DataLifecycleAction.ERASE),
@@ -291,6 +368,11 @@ def test_lifecycle_models_reject_incoherent_or_sensitive_evidence_shapes() -> No
         replace(active_control(), updated_at_utc=NOW.replace(tzinfo=None))
     with pytest.raises(ValueError, match="non-negative integer"):
         replace(valid_context(), active_outbox_count=-1)
+    with pytest.raises(ValueError, match="must be unique"):
+        replace(
+            valid_context(),
+            linked_report_evidence_pack_ids=("report-pack-001", "report-pack-001"),
+        )
     with pytest.raises(ValueError, match="source-safe reference"):
         replace(valid_command(DataLifecycleAction.ERASE), actor_subject="raw user name")
     with pytest.raises(ValueError, match="must be distinct"):
@@ -456,5 +538,24 @@ def valid_authority_receipt() -> VerifiedLifecycleAuthorityReceipt:
         issued_at_utc=NOW - timedelta(minutes=2),
         effective_at_utc=NOW - timedelta(minutes=1),
         expires_at_utc=NOW + timedelta(minutes=5),
+        verified_at_utc=NOW,
+    )
+
+
+def valid_archive_receipt() -> VerifiedArchiveLifecycleReceipt:
+    return VerifiedArchiveLifecycleReceipt(
+        decision_id="archive-decision-001",
+        document_id="document-001",
+        evidence_pack_id="report-pack-001",
+        candidate_id="candidate-001",
+        tenant_id="tenant-001",
+        retention_policy_id="generated-report-standard",
+        legal_hold_status=ArchiveLegalHoldStatus.CLEAR,
+        purge_status=ArchivePurgeStatus.NOT_ELIGIBLE,
+        lifecycle_action=ArchiveLifecycleAction.RETAIN,
+        payload_digest="sha256:" + "c" * 64,
+        key_id="archive-key-001",
+        issued_at_utc=NOW - timedelta(minutes=1),
+        expires_at_utc=NOW + timedelta(minutes=4),
         verified_at_utc=NOW,
     )
