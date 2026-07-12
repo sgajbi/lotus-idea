@@ -1,15 +1,16 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, Mapping
+from typing import Any, Literal, Mapping
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.domain.data_lifecycle.archive_posture import (
     ArchiveLegalHoldStatus,
     ArchiveLifecycleAction,
     ArchiveLifecycleDecisionClaims,
     ArchiveLifecycleDecisionEnvelope,
+    ArchiveLifecycleTrustedKey,
     ArchivePurgeStatus,
 )
 
@@ -61,3 +62,30 @@ def map_archive_lifecycle_decision(
     payload: Mapping[str, Any],
 ) -> ArchiveLifecycleDecisionEnvelope:
     return ArchiveLifecycleProducerDecision.model_validate(payload).to_domain()
+
+
+class ArchiveLifecycleTrustedKeyConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    key_id: str
+    public_key_base64url: str
+    status: str
+    not_before_utc: datetime
+    not_after_utc: datetime | None = None
+
+    def to_domain(self) -> ArchiveLifecycleTrustedKey:
+        return ArchiveLifecycleTrustedKey(**self.model_dump())
+
+
+class ArchiveLifecycleTrustBundle(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    schema_version: Literal["lotus-idea.archive-lifecycle-trust-bundle.v1"]
+    keys: tuple[ArchiveLifecycleTrustedKeyConfig, ...] = Field(min_length=1)
+
+    def to_domain(self) -> tuple[ArchiveLifecycleTrustedKey, ...]:
+        return tuple(key.to_domain() for key in self.keys)
+
+
+def map_archive_lifecycle_trust_bundle(payload: object) -> tuple[ArchiveLifecycleTrustedKey, ...]:
+    return ArchiveLifecycleTrustBundle.model_validate(payload).to_domain()

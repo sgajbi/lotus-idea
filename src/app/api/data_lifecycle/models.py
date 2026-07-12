@@ -19,7 +19,11 @@ from app.domain.data_lifecycle import (
 from app.security.caller_context import CallerContext
 from app.domain.events import EventLineageContext
 from app.domain.data_lifecycle.authority import VerifiedLifecycleAuthorityReceipt
+from app.domain.data_lifecycle.archive_posture import VerifiedArchiveLifecycleReceipt
 from app.integration.data_lifecycle.authority_contract import LifecycleAuthorityProducerDecision
+from app.integration.data_lifecycle.archive_posture_contract import (
+    ArchiveLifecycleProducerDecision,
+)
 
 SOURCE_SAFE_REFERENCE = r"^[A-Za-z0-9][A-Za-z0-9._:/-]{2,255}$"
 
@@ -45,6 +49,10 @@ class DataLifecycleActionRequest(CamelModel):
         default=None,
         alias="authorityDecision",
     )
+    archive_lifecycle_decision: ArchiveLifecycleProducerDecision | None = Field(
+        default=None,
+        alias="archiveLifecycleDecision",
+    )
 
     @field_validator("requested_at_utc")
     @classmethod
@@ -60,6 +68,7 @@ class DataLifecycleActionRequest(CamelModel):
         event_lineage: EventLineageContext,
         authority_verification_required: bool = False,
         authority_receipt: VerifiedLifecycleAuthorityReceipt | None = None,
+        archive_lifecycle_receipt: VerifiedArchiveLifecycleReceipt | None = None,
     ) -> DataLifecycleCommand:
         payload = {
             "action": self.action.value,
@@ -72,6 +81,9 @@ class DataLifecycleActionRequest(CamelModel):
             "requested_at_utc": self.requested_at_utc.isoformat(),
             "tenant_id": self.tenant_id,
             "authority_decision_sha256": _authority_decision_sha256(self.authority_decision),
+            "archive_lifecycle_decision_sha256": _archive_lifecycle_decision_sha256(
+                self.archive_lifecycle_decision
+            ),
         }
         canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"))
         return DataLifecycleCommand(
@@ -91,11 +103,26 @@ class DataLifecycleActionRequest(CamelModel):
             dry_run=self.dry_run,
             authority_verification_required=authority_verification_required,
             authority_receipt=authority_receipt,
+            archive_lifecycle_receipt=archive_lifecycle_receipt,
         )
 
 
 def _authority_decision_sha256(
     decision: LifecycleAuthorityProducerDecision | None,
+) -> str | None:
+    if decision is None:
+        return None
+    canonical = json.dumps(
+        decision.model_dump(mode="json"),
+        ensure_ascii=True,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    return hashlib.sha256(canonical.encode("ascii")).hexdigest()
+
+
+def _archive_lifecycle_decision_sha256(
+    decision: ArchiveLifecycleProducerDecision | None,
 ) -> str | None:
     if decision is None:
         return None

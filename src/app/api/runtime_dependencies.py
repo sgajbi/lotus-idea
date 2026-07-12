@@ -66,6 +66,10 @@ from app.runtime.data_lifecycle.authority_state import (
     close_lifecycle_authority_dependencies,
     get_lifecycle_authority_dependencies,
 )
+from app.runtime.data_lifecycle.archive_posture_state import (
+    ArchiveLifecycleTrustUnavailableError,
+    get_archive_lifecycle_dependencies,
+)
 
 __all__ = [
     "DownstreamRealizationClientsUnavailableError",
@@ -121,4 +125,6 @@ __all__ = [
     "close_lifecycle_authority_dependencies",
     "get_lotus_ai_attestation_dependencies",
     "get_lifecycle_authority_dependencies",
+    "ArchiveLifecycleTrustUnavailableError",
+    "get_archive_lifecycle_dependencies",
 ]
