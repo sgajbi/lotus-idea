@@ -36,6 +36,13 @@ input/output digests before domain mapping or lineage persistence.
 | `lotus-ai` | Provider execution, model approval, attestation issuance, signing keys, and rotation. |
 | `lotus-idea` | Evidence binding, signature verification, replay protection, bounded receipt persistence, and human review. |
 
+For attested Idea explanations, an optional Lotus AI provider-retention
+confirmation is verified against the same governed key discovery family and
+bound to the candidate tenant plus verified run/provider/model identity before
+atomic persistence. Confirmation, provider-reference, and nonce replay are
+fenced. The posture remains `not_certified`; provider-native evidence,
+managed-key/production-SQL proof, and bank approvals are still required.
+
 Run id and replay nonce are durable unique identities. Operation events expose
 only bounded verification/rejection posture; they exclude signatures, keys,
 run ids, prompts, provider payloads, and client data. Local proof is enforced

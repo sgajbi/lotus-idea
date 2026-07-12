@@ -16,6 +16,18 @@ It can verify a signed Lotus AI workflow-run attestation supplied with
 producer output, bind that output to the exact Idea request, and persist a
 bounded verification receipt. This does not make Idea the AI runtime owner.
 
+An attested result may also include a separately signed Lotus AI
+provider-retention confirmation. Idea binds it to the verified run, candidate
+tenant, provider, provider mode, model, and model version and persists only a
+bounded receipt in the same lineage transaction. Prompts, outputs, client
+identifiers, and provider secrets are excluded; `PROVIDER_FAILURE` remains
+blocked posture and never becomes deletion proof.
+
+This receipt does not grant legal/privacy lifecycle authority, Report policy
+authority, Archive posture, suitability, advice, execution, or client
+publication. Validate the consumer boundary with
+`make ai-provider-retention-contract-gate`.
+
 ## Current Implementation
 
 RFC-0002 Slice 09 adds `src/app/domain/ai_governance.py`,

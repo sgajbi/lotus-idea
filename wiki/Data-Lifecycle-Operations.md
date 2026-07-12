@@ -8,6 +8,12 @@ for Idea-owned PostgreSQL records. The capability is internal and **not
 certified**; it does not authorize legal/privacy decisions or replace Report,
 Archive, or AI-provider retention controls.
 
+Idea can verify and persist a source-safe signed Lotus AI provider-retention
+receipt alongside attested explanation lineage. It binds the receipt to the
+candidate tenant and verified run/provider/model identity. This is consumer
+conformance only: provider failure is not deletion proof, and the receipt does
+not authorize legal hold, erasure, purge, Report policy, or Archive posture.
+
 | Reader | Start here |
 | --- | --- |
 | Privacy or records operator | Review the action matrix and follow the deep runbook. |

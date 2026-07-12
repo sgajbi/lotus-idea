@@ -681,6 +681,14 @@ available, but must retain `lotus_ai_run_attestation_mainline_proof_missing`
 until producer and consumer mainline/CI evidence exists. Local source proof
 clears no aggregate blocker.
 
+Idea also independently verifies and atomically persists the bounded
+`lotus-ai:ProviderRetentionConfirmation:v1` receipt with attested explanation
+lineage. Run, candidate tenant, provider, mode, and model identities must match;
+confirmation/reference/nonce replay is fenced. The receipt reports provider
+posture only and never authorizes bank lifecycle actions or substitutes for
+Report/Archive conformance. Provider-native evidence and approvals remain
+external blockers under `sgajbi/lotus-ai#115`.
+
 Provider-bound AI metadata uses the closed
 `lotus-idea.ai-metadata-envelope.v1` policy in
 `src/app/domain/ai_metadata_policy.py`. Request DTOs expose only approved
