@@ -221,6 +221,7 @@ def _load_candidate_context(cursor: Any, candidate_id: str) -> DataLifecycleCand
             control=None,
             active_outbox_count=0,
             active_downstream_count=0,
+            linked_report_evidence_pack_ids=(),
         )
     candidate_json = _json_object(candidate_row["candidate_json"])
     access_scope = candidate_json.get("access_scope")
@@ -231,12 +232,14 @@ def _load_candidate_context(cursor: Any, candidate_id: str) -> DataLifecycleCand
         if effective_state in {DataLifecycleState.ERASED, DataLifecycleState.PURGED}:
             tenant_id = control.tenant_id
     active_outbox_count, active_downstream_count = _active_delivery_counts(cursor, candidate_id)
+    linked_report_evidence_pack_ids = _linked_report_evidence_pack_ids(cursor, candidate_id)
     return DataLifecycleCandidateContext(
         candidate_exists=True,
         candidate_tenant_id=str(tenant_id) if tenant_id else None,
         control=control,
         active_outbox_count=active_outbox_count,
         active_downstream_count=active_downstream_count,
+        linked_report_evidence_pack_ids=linked_report_evidence_pack_ids,
     )
 
 
@@ -284,6 +287,21 @@ def _active_delivery_counts(cursor: Any, candidate_id: str) -> tuple[int, int]:
         (candidate_id, candidate_id),
     )
     return outbox_count, _count_from_row(cursor.fetchone())
+
+
+def _linked_report_evidence_pack_ids(cursor: Any, candidate_id: str) -> tuple[str, ...]:
+    cursor.execute(
+        """SELECT report_evidence_pack_id
+           FROM idea_report_evidence_pack_request
+           WHERE candidate_id = %s
+           ORDER BY report_evidence_pack_id""",
+        (candidate_id,),
+    )
+    return tuple(
+        str(row["report_evidence_pack_id"])
+        for row in cursor.fetchall()
+        if isinstance(row, Mapping)
+    )
 
 
 def _apply_evaluation(

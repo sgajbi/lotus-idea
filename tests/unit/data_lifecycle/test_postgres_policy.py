@@ -116,6 +116,12 @@ class LifecycleCursor:
         if "from idea_downstream_submission" in normalized:
             self.rows = [{"active_count": self.connection.active_downstream_count}]
             return
+        if "from idea_report_evidence_pack_request" in normalized:
+            self.rows = [
+                {"report_evidence_pack_id": evidence_pack_id}
+                for evidence_pack_id in sorted(self.connection.linked_report_evidence_pack_ids)
+            ]
+            return
         if normalized.startswith("update idea_data_lifecycle_control"):
             assert params is not None
             self.rowcount = self.connection.control_update_rowcount
@@ -191,6 +197,7 @@ class LifecycleConnection:
         self.operations: dict[str, dict[str, Any]] = {}
         self.active_outbox_count = 0
         self.active_downstream_count = 0
+        self.linked_report_evidence_pack_ids: list[str] = []
         self.control_update_rowcount = 1
         self.commits = 0
         self.rollbacks = 0
@@ -258,6 +265,16 @@ def test_postgres_lifecycle_erasure_redacts_and_audits_in_one_commit(
     assert operation["approver_subject"] == operation["actor_subject"]
     assert operation["correlation_id"] == "corr-data-lifecycle-001"
     assert operation["trace_id"] == "trace-data-lifecycle-001"
+
+
+def test_postgres_lifecycle_loads_exact_linked_report_evidence_pack_ids() -> None:
+    connection = LifecycleConnection()
+    connection.linked_report_evidence_pack_ids = ["report-pack-002", "report-pack-001"]
+
+    result = execute(connection, valid_command(DataLifecycleAction.ERASE))
+
+    assert result.decision is DataLifecycleDecision.BLOCKED
+    assert result.blockers == (DataLifecycleBlocker.ARCHIVE_POSTURE_REQUIRED,)
 
 
 @pytest.mark.parametrize(
