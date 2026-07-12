@@ -6,7 +6,7 @@ from typing import Any
 
 import pytest
 
-from app.application.lifecycle_authority_verification import (
+from app.application.data_lifecycle.authority_verification import (
     canonical_lifecycle_authority_claims,
     verify_lifecycle_authority_decision,
 )

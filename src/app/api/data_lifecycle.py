@@ -33,7 +33,7 @@ from app.api.runtime_dependencies import (
     idea_repository_durable_storage_backed,
     load_runtime_settings,
 )
-from app.application.lifecycle_authority_verification import (
+from app.application.data_lifecycle.authority_verification import (
     verify_lifecycle_authority_decision,
 )
 from app.application.data_lifecycle import ExecuteDataLifecycle
