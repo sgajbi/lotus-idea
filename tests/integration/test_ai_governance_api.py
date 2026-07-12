@@ -6,7 +6,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 import app.api.ai_governance as ai_governance_api
-from app.runtime.repository_state import reset_idea_repository_for_tests
+from app.runtime.repository_state import get_idea_repository, reset_idea_repository_for_tests
 from app.domain import InMemoryIdeaRepository, InvalidAIWorkflowOutput
 from app.main import app
 
@@ -37,6 +37,12 @@ def high_cash_payload() -> dict[str, Any]:
             "cashflowProjectionRef": source_ref("lotus-core:PortfolioCashflowProjection:v1"),
         },
         "entitlementAllowed": True,
+        "accessScope": {
+            "tenantId": "tenant-private-bank-sg",
+            "bookId": "book-advisor-001",
+            "portfolioId": "PB_SG_GLOBAL_BAL_001",
+            "clientId": "client-001",
+        },
     }
 
 
@@ -67,6 +73,7 @@ def ai_headers(
         "X-Caller-Capabilities": capabilities,
         "Idempotency-Key": idempotency_key,
         "X-Correlation-Id": "corr-ai-governance-api",
+        "X-Caller-Tenant-Ids": "tenant-private-bank-sg",
     }
 
 
@@ -206,6 +213,25 @@ def test_ai_explanation_api_returns_deterministic_fallback_without_runtime_claim
     assert payload["supportedFeaturePromoted"] is False
     assert payload["redactedEvidence"]["candidateId"] == candidate_id
     assert "route" not in response.text
+
+
+def test_ai_explanation_api_rejects_cross_tenant_candidate_access_before_write() -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+    candidate_id = persisted_candidate_id(client, idempotency_key="seed-ai-cross-tenant-001")
+    headers = ai_headers(idempotency_key="ai-cross-tenant-001")
+    headers["X-Caller-Tenant-Ids"] = "tenant-other"
+
+    response = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/ai-explanations/evaluate",
+        json=ai_request_payload(request_id="ai-cross-tenant-001"),
+        headers=headers,
+    )
+
+    assert response.status_code == 403
+    assert response.json()["code"] == "permission_denied"
+    record = get_idea_repository().snapshot().candidate_records[candidate_id]
+    assert record.ai_explanation_lineage_records == ()
 
 
 def test_production_like_ai_output_requires_provenance_before_lineage_write(

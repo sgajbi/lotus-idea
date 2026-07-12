@@ -40,6 +40,9 @@ def test_api_accepts_signed_bound_lotus_ai_output(
     reset_idea_repository_for_tests()
     client = TestClient(app)
     candidate_id = persisted_candidate_id(client, idempotency_key="seed-attested-api-001")
+    candidate = get_idea_repository().snapshot().candidate_records[candidate_id].candidate
+    assert candidate.access_scope is not None
+    assert candidate.access_scope.tenant_id == "tenant-private-bank-sg"
     transition_candidate_to_review_ready(client, candidate_id)
     request_id = "attested-api-request-001"
     producer_output = _producer_output()
@@ -76,21 +79,30 @@ def test_api_accepts_signed_bound_lotus_ai_output(
             "producerRunId": "packrun_idea_explanation_attested-api-request-001",
             "producerExecutionOutput": producer_output,
             "runAttestation": attestation,
+            "providerRetentionConfirmation": _provider_retention_payload(issued_at),
         }
     )
-
     response = client.post(
         f"/api/v1/idea-candidates/{candidate_id}/ai-explanations/evaluate",
         json=payload,
         headers=ai_headers(idempotency_key="attested-api-request-001"),
     )
+    replay = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/ai-explanations/evaluate",
+        json=payload,
+        headers=ai_headers(idempotency_key="attested-api-request-001"),
+    )
 
-    assert response.status_code == 200
+    assert response.status_code == 200, response.text
     body = response.json()
     assert body["posture"] == "ready_for_advisor_review"
     assert body["executionProvenancePosture"] == "lotus_ai_attestation_verified"
     assert body["lotusAiRuntimeExecuted"] is True
     assert body["grantsDownstreamAuthority"] is False
+    assert body["providerRetentionConfirmationRecorded"] is True
+    assert replay.status_code == 200
+    assert replay.json()["aiLineagePersistenceDecision"] == "replayed"
+    assert replay.json()["providerRetentionConfirmationRecorded"] is True
     assert body["supportedFeaturePromoted"] is False
     lineage = (
         get_idea_repository()
@@ -100,7 +112,58 @@ def test_api_accepts_signed_bound_lotus_ai_output(
     )
     assert lineage.attestation_receipt is not None
     assert lineage.attestation_receipt.run_id == "packrun_idea_explanation_attested-api-request-001"
-    assert operation_attributes == [{"ai_execution_provenance_posture": "verified"}]
+    assert lineage.provider_retention_receipt is not None
+    assert lineage.provider_retention_receipt.tenant_id == "tenant-private-bank-sg"
+    assert lineage.provider_retention_receipt.deletion_confirmed is True
+    assert operation_attributes == [
+        {"ai_execution_provenance_posture": "verified"},
+        {"ai_execution_provenance_posture": "verified"},
+    ]
+    reset_idea_repository_for_tests()
+
+
+def test_api_rejects_wrong_tenant_provider_confirmation_before_lineage_write(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+    candidate_id = persisted_candidate_id(client, idempotency_key="seed-retention-tenant-001")
+    transition_candidate_to_review_ready(client, candidate_id)
+    issued_at = datetime.now(UTC) - timedelta(seconds=5)
+    producer_output = _producer_output()
+    request_id = "retention-wrong-tenant-001"
+    retention = _provider_retention_payload(issued_at)
+    cast(dict[str, object], retention["claims"])["tenant_id"] = "tenant-other"
+    monkeypatch.setattr(
+        ai_governance_api,
+        "get_lotus_ai_attestation_dependencies",
+        lambda: (StaticKeySource(issued_at), AcceptingSignatureVerifier()),
+    )
+    payload = ai_request_payload(request_id=request_id, purpose="advisor_rationale_draft")
+    payload.update(
+        {
+            "producerRunId": "packrun_idea_explanation_attested-api-request-001",
+            "producerExecutionOutput": producer_output,
+            "runAttestation": _attestation_payload(
+                candidate_id=candidate_id,
+                request_id=request_id,
+                producer_output=producer_output,
+                issued_at=issued_at,
+            ),
+            "providerRetentionConfirmation": retention,
+        }
+    )
+
+    response = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/ai-explanations/evaluate",
+        json=payload,
+        headers=ai_headers(idempotency_key="retention-wrong-tenant-001"),
+    )
+
+    assert response.status_code == 400
+    assert response.json()["code"] == "ai_execution_provenance_required"
+    record = get_idea_repository().snapshot().candidate_records[candidate_id]
+    assert record.ai_explanation_lineage_records == ()
     reset_idea_repository_for_tests()
 
 
@@ -198,6 +261,48 @@ def _attestation_payload(
     }
     return {
         "claims": claims,
+        "signature": {
+            "algorithm": "EdDSA",
+            "key_id": "attestation-key-1",
+            "rotation_epoch": 1,
+            "signature_base64url": "c2lnbmF0dXJl",
+        },
+        "key_discovery_path": "/.well-known/lotus-ai-workflow-attestation-keys",
+    }
+
+
+def _provider_retention_payload(issued_at: datetime) -> dict[str, object]:
+    return {
+        "claims": {
+            "schema_version": "lotus-ai.provider-retention-confirmation.v1",
+            "issuer": "lotus-ai",
+            "audience": "lotus-idea",
+            "recorded_by": "lotus-ai-provider-operations",
+            "confirmation_id": "provider-retention-attested-api-001",
+            "workflow_run_id": "packrun_idea_explanation_attested-api-request-001",
+            "workflow_pack_id": "idea_explanation.pack",
+            "tenant_id": "tenant-private-bank-sg",
+            "provider_id": "text.openai",
+            "provider_mode": "openai",
+            "model_id": "gpt-5.4",
+            "model_version": "2026-06-01",
+            "provider_confirmation_ref": "provider-confirmation-attested-api-001",
+            "retention_policy_id": "idea-provider-zero-retention-v1",
+            "outcome": "DELETION_CONFIRMED",
+            "provider_decision_at_utc": (issued_at - timedelta(seconds=1))
+            .isoformat()
+            .replace("+00:00", "Z"),
+            "evidence_sha256": "e" * 64,
+            "provider_failure_code": None,
+            "deletion_confirmed": True,
+            "raw_prompt_included": False,
+            "raw_output_included": False,
+            "client_identifier_included": False,
+            "supportability_status": "READY",
+            "issued_at_utc": issued_at.isoformat().replace("+00:00", "Z"),
+            "expires_at_utc": (issued_at + timedelta(minutes=5)).isoformat().replace("+00:00", "Z"),
+            "replay_nonce": "b" * 64,
+        },
         "signature": {
             "algorithm": "EdDSA",
             "key_id": "attestation-key-1",

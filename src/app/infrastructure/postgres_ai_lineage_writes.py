@@ -30,8 +30,10 @@ def insert_ai_explanation_lineage_record(
             purpose, posture, verifier_outcome, fallback_used, fallback_reason,
             output_integrity_version, output_content_digest, lineage_hash,
             execution_provenance_posture, lotus_ai_run_id, lotus_ai_replay_nonce,
-            lotus_ai_attestation_key_id, lineage_json, requested_at_utc, evaluated_at_utc
-        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            lotus_ai_attestation_key_id, provider_retention_confirmation_id,
+            provider_retention_confirmation_ref, provider_retention_replay_nonce,
+            lineage_json, requested_at_utc, evaluated_at_utc
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """,
         (
             lineage_record.request_id,
@@ -62,6 +64,21 @@ def insert_ai_explanation_lineage_record(
             (
                 lineage_record.attestation_receipt.key_id
                 if lineage_record.attestation_receipt is not None
+                else None
+            ),
+            (
+                lineage_record.provider_retention_receipt.confirmation_id
+                if lineage_record.provider_retention_receipt is not None
+                else None
+            ),
+            (
+                lineage_record.provider_retention_receipt.provider_confirmation_ref
+                if lineage_record.provider_retention_receipt is not None
+                else None
+            ),
+            (
+                lineage_record.provider_retention_receipt.replay_nonce
+                if lineage_record.provider_retention_receipt is not None
                 else None
             ),
             Jsonb(ai_explanation_lineage_to_json(lineage_record)),

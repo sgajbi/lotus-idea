@@ -7,6 +7,10 @@ from typing import Any, Sequence
 from app.domain.ai_lineage_persistence import AIExplanationLineageRecord
 from app.domain.persistence import CandidatePersistenceRecord
 from app.domain.lotus_ai_run_attestation import VerifiedLotusAIRunAttestationReceipt
+from app.domain.ai_provider_retention import (
+    AIProviderRetentionOutcome,
+    VerifiedAIProviderRetentionReceipt,
+)
 from app.infrastructure.postgres_ai_lineage_writes import insert_ai_explanation_lineage_records
 from tests.unit.test_postgres_repository import high_cash_candidate
 
@@ -41,6 +45,7 @@ def test_insert_verified_ai_lineage_writes_replay_protection_columns() -> None:
         _lineage_record(candidate.candidate_id),
         execution_provenance_posture="lotus_ai_attestation_verified",
         attestation_receipt=receipt,
+        provider_retention_receipt=_provider_retention_receipt(),
     )
     record = CandidatePersistenceRecord(
         candidate=candidate,
@@ -57,6 +62,9 @@ def test_insert_verified_ai_lineage_writes_replay_protection_columns() -> None:
     assert params[15] == receipt.run_id
     assert params[16] == receipt.replay_nonce
     assert params[17] == receipt.key_id
+    assert params[18] == "provider-retention-001"
+    assert params[19] == "provider-confirmation-001"
+    assert params[20] == "d" * 64
 
 
 def _lineage_record(candidate_id: str) -> AIExplanationLineageRecord:
@@ -106,6 +114,29 @@ def _verified_receipt() -> VerifiedLotusAIRunAttestationReceipt:
         evaluator_policy_version="idea-explanation-policy.v1",
         input_evidence_sha256="b" * 64,
         output_content_sha256="c" * 64,
+        issued_at_utc=verified_at - timedelta(seconds=5),
+        expires_at_utc=verified_at + timedelta(minutes=5),
+        verified_at_utc=verified_at,
+    )
+
+
+def _provider_retention_receipt() -> VerifiedAIProviderRetentionReceipt:
+    verified_at = datetime(2026, 7, 11, 10, 5, tzinfo=UTC)
+    return VerifiedAIProviderRetentionReceipt(
+        confirmation_id="provider-retention-001",
+        workflow_run_id="packrun_idea_explanation_request-001",
+        tenant_id="tenant-private-bank-sg",
+        provider_confirmation_ref="provider-confirmation-001",
+        retention_policy_id="idea-provider-zero-retention-v1",
+        outcome=AIProviderRetentionOutcome.DELETION_CONFIRMED,
+        evidence_sha256="e" * 64,
+        provider_failure_code=None,
+        deletion_confirmed=True,
+        supportability_status="READY",
+        replay_nonce="d" * 64,
+        key_id="attestation-key-1",
+        rotation_epoch=1,
+        provider_decision_at_utc=verified_at - timedelta(seconds=10),
         issued_at_utc=verified_at - timedelta(seconds=5),
         expires_at_utc=verified_at + timedelta(minutes=5),
         verified_at_utc=verified_at,

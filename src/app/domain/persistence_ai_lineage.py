@@ -16,6 +16,8 @@ from app.domain.ai_lineage_persistence import (
 from app.domain.idempotency import IdempotencyRecord
 from app.domain.lotus_ai_attestation_replay import LotusAIAttestationReplayIndex
 from app.domain.lotus_ai_run_attestation import VerifiedLotusAIRunAttestationReceipt
+from app.domain.ai_provider_retention import VerifiedAIProviderRetentionReceipt
+from app.domain.ai_provider_retention_replay import AIProviderRetentionReplayIndex
 from app.domain.persistence_models import CandidatePersistenceRecord
 
 
@@ -25,6 +27,7 @@ class InMemoryAIExplanationRepositoryMixin:
     _idempotency_candidates: dict[str, str]
     _ai_explanation_lineage_candidates: dict[str, str]
     _lotus_ai_attestation_replay: LotusAIAttestationReplayIndex
+    _ai_provider_retention_replay: AIProviderRetentionReplayIndex
 
     def _record_for_idempotency_key(
         self, idempotency_key: str
@@ -36,10 +39,12 @@ class InMemoryAIExplanationRepositoryMixin:
         result: AIExplanationResult,
         *,
         attestation_receipt: VerifiedLotusAIRunAttestationReceipt | None = None,
+        provider_retention_receipt: VerifiedAIProviderRetentionReceipt | None = None,
     ) -> AIExplanationLineagePersistenceResult:
         lineage_record = ai_explanation_lineage_record_from_result(
             result,
             attestation_receipt=attestation_receipt,
+            provider_retention_receipt=provider_retention_receipt,
         )
         candidate_id = lineage_record.candidate_id
         record = self._candidate_records.get(candidate_id)
@@ -52,6 +57,15 @@ class InMemoryAIExplanationRepositoryMixin:
         if attestation_receipt is not None and self._lotus_ai_attestation_replay.conflicts(
             request_id=lineage_record.request_id,
             receipt=attestation_receipt,
+        ):
+            return AIExplanationLineagePersistenceResult(
+                decision=AIExplanationLineagePersistenceDecision.CONFLICT,
+                record=record,
+                lineage_record=None,
+            )
+        if provider_retention_receipt is not None and self._ai_provider_retention_replay.conflicts(
+            request_id=lineage_record.request_id,
+            receipt=provider_retention_receipt,
         ):
             return AIExplanationLineagePersistenceResult(
                 decision=AIExplanationLineagePersistenceDecision.CONFLICT,
@@ -95,6 +109,11 @@ class InMemoryAIExplanationRepositoryMixin:
                 request_id=lineage_record.request_id,
                 receipt=attestation_receipt,
             )
+        if provider_retention_receipt is not None:
+            self._ai_provider_retention_replay.record(
+                request_id=lineage_record.request_id,
+                receipt=provider_retention_receipt,
+            )
         return AIExplanationLineagePersistenceResult(
             decision=AIExplanationLineagePersistenceDecision.ACCEPTED,
             record=updated,
@@ -109,6 +128,7 @@ class InMemoryAIExplanationRepositoryMixin:
         idempotency_key: str,
         payload: Mapping[str, Any],
         attestation_receipt: VerifiedLotusAIRunAttestationReceipt | None = None,
+        provider_retention_receipt: VerifiedAIProviderRetentionReceipt | None = None,
     ) -> AIExplanationLineagePersistenceResult:
         return record_ai_explanation_lineage_request_with_idempotency(
             result,
@@ -119,4 +139,5 @@ class InMemoryAIExplanationRepositoryMixin:
             record_for_idempotency_key=self._record_for_idempotency_key,
             record_lineage=self.record_ai_explanation_lineage,
             attestation_receipt=attestation_receipt,
+            provider_retention_receipt=provider_retention_receipt,
         )

@@ -11,6 +11,7 @@ from app.domain.ai_lineage_persistence import (
 )
 from app.domain.idempotency import IdempotencyDecision, IdempotencyRecord, evaluate_idempotency
 from app.domain.lotus_ai_run_attestation import VerifiedLotusAIRunAttestationReceipt
+from app.domain.ai_provider_retention import VerifiedAIProviderRetentionReceipt
 
 
 class AIExplanationLineageCarrier(Protocol):
@@ -24,6 +25,7 @@ class AIExplanationLineageRecorder(Protocol):
         result: AIExplanationResult,
         *,
         attestation_receipt: VerifiedLotusAIRunAttestationReceipt | None = None,
+        provider_retention_receipt: VerifiedAIProviderRetentionReceipt | None = None,
     ) -> AIExplanationLineagePersistenceResult: ...
 
 
@@ -37,6 +39,7 @@ def record_ai_explanation_lineage_request_with_idempotency(
     record_for_idempotency_key: Callable[[str], Any],
     record_lineage: AIExplanationLineageRecorder,
     attestation_receipt: VerifiedLotusAIRunAttestationReceipt | None = None,
+    provider_retention_receipt: VerifiedAIProviderRetentionReceipt | None = None,
 ) -> AIExplanationLineagePersistenceResult:
     if not idempotency_key.strip():
         raise ValueError("idempotency_key is required")
@@ -52,7 +55,24 @@ def record_ai_explanation_lineage_request_with_idempotency(
             lineage_record=None,
             audit_event=None,
         )
-    lineage_result = record_lineage(result, attestation_receipt=attestation_receipt)
+    if idempotency_decision is IdempotencyDecision.REPLAYED:
+        existing_record = record_for_idempotency_key(idempotency_key)
+        existing_lineage = (
+            ai_explanation_lineage_by_request_id(existing_record, result.request.request_id)
+            if existing_record is not None
+            else None
+        )
+        return AIExplanationLineagePersistenceResult(
+            decision=AIExplanationLineagePersistenceDecision.REPLAYED,
+            record=existing_record,
+            lineage_record=existing_lineage,
+            audit_event=None,
+        )
+    lineage_result = record_lineage(
+        result,
+        attestation_receipt=attestation_receipt,
+        provider_retention_receipt=provider_retention_receipt,
+    )
     if idempotency_decision is IdempotencyDecision.ACCEPTED and (
         lineage_result.decision is AIExplanationLineagePersistenceDecision.ACCEPTED
     ):

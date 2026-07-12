@@ -39,6 +39,7 @@ from app.api.runtime_dependencies import (
     load_runtime_settings,
 )
 from app.application.ai_governance import (
+    AIExplanationEntitlementDenied,
     AIExplanationEvaluationDecision,
     AIExplanationWorkflowResult,
     EvaluateAIExplanationToRepositoryCommand,
@@ -126,6 +127,7 @@ async def evaluate_ai_explanation(
     x_caller_subject: str | None = Header(default=None, alias="X-Caller-Subject"),
     x_caller_roles: str | None = Header(default=None, alias="X-Caller-Roles"),
     x_caller_capabilities: str | None = Header(default=None, alias="X-Caller-Capabilities"),
+    x_caller_tenant_ids: str | None = Header(default=None, alias="X-Caller-Tenant-Ids"),
     x_lotus_trusted_caller_context: str | None = Header(
         default=None,
         alias=TRUSTED_CALLER_CONTEXT_HEADER,
@@ -135,6 +137,7 @@ async def evaluate_ai_explanation(
         subject=x_caller_subject,
         roles=x_caller_roles,
         capabilities=x_caller_capabilities,
+        tenant_ids=x_caller_tenant_ids,
         trusted_caller_context=x_lotus_trusted_caller_context,
     )
     try:
@@ -159,7 +162,7 @@ async def evaluate_ai_explanation(
             )
             return configuration_problem
         result = _evaluate_ai_explanation_command(command, repository=repository)
-    except PermissionDeniedError:
+    except (PermissionDeniedError, AIExplanationEntitlementDenied):
         _emit_ai_explanation_operation_event(
             OperationOutcome.PERMISSION_DENIED,
             "permission_denied",
@@ -260,6 +263,11 @@ def _successful_ai_explanation_response(
         ai_lineage_recorded=result.lineage_persistence_result.lineage_record is not None,
         ai_lineage_persistence_decision=result.lineage_persistence_result.decision.value,
         durable_storage_backed=durable_storage_backed,
+        provider_retention_confirmation_recorded=(
+            result.lineage_persistence_result.lineage_record is not None
+            and result.lineage_persistence_result.lineage_record.provider_retention_receipt
+            is not None
+        ),
     )
 
 
