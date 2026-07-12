@@ -7,7 +7,7 @@ from app.domain.data_lifecycle.authority import (
     LifecycleAuthorityKeyDiscovery,
 )
 from app.infrastructure.http_well_known_key_source import HttpWellKnownKeySource
-from app.integration.lifecycle_authority_contract import (
+from app.integration.data_lifecycle.authority_contract import (
     map_lifecycle_authority_key_discovery,
 )
 

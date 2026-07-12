@@ -1,6 +1,6 @@
 import pytest
 
-from app.runtime.lifecycle_authority_state import (
+from app.runtime.data_lifecycle.authority_state import (
     LIFECYCLE_AUTHORITY_BASE_URL_ENV,
     LIFECYCLE_AUTHORITY_TIMEOUT_SECONDS_ENV,
     get_lifecycle_authority_dependencies,
