@@ -131,6 +131,15 @@ class ExpectedArchiveLifecyclePosture:
     linked_evidence_pack_ids: frozenset[str]
     verified_at_utc: datetime
 
+    def __post_init__(self) -> None:
+        _require_reference(self.tenant_id, "tenant_id")
+        _require_reference(self.candidate_id, "candidate_id")
+        if not self.linked_evidence_pack_ids:
+            raise ValueError("linked_evidence_pack_ids is required")
+        for evidence_pack_id in self.linked_evidence_pack_ids:
+            _require_reference(evidence_pack_id, "linked_evidence_pack_id")
+        _require_utc(self.verified_at_utc, "verified_at_utc")
+
 
 @dataclass(frozen=True)
 class VerifiedArchiveLifecycleReceipt:
@@ -149,7 +158,30 @@ class VerifiedArchiveLifecycleReceipt:
     expires_at_utc: datetime
     verified_at_utc: datetime
 
+    def __post_init__(self) -> None:
+        for field_name in (
+            "decision_id",
+            "document_id",
+            "evidence_pack_id",
+            "candidate_id",
+            "tenant_id",
+            "retention_policy_id",
+            "key_id",
+        ):
+            _require_reference(str(getattr(self, field_name)), field_name)
+        if not _SHA256.fullmatch(self.payload_digest):
+            raise ValueError("payload_digest must be a prefixed lowercase SHA-256 digest")
+        for field_name in ("issued_at_utc", "expires_at_utc", "verified_at_utc"):
+            _require_utc(getattr(self, field_name), field_name)
+        if not self.issued_at_utc <= self.verified_at_utc < self.expires_at_utc:
+            raise ValueError("verified Archive lifecycle receipt is outside its validity window")
+
 
 def _require_utc(value: datetime, field_name: str) -> None:
     if value.tzinfo is None or value.utcoffset() != UTC.utcoffset(value):
         raise ValueError(f"{field_name} must be timezone-aware UTC")
+
+
+def _require_reference(value: str, field_name: str) -> None:
+    if not _REFERENCE.fullmatch(value):
+        raise ValueError(f"{field_name} must be a source-safe reference")

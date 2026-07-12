@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 from copy import deepcopy
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 import hashlib
 import json
@@ -127,6 +128,26 @@ def test_strict_mapper_rejects_unknown_or_source_unsafe_fields() -> None:
     payload["document_id"] = "unsafe document id"
     with pytest.raises(ValueError, match="source-safe reference"):
         map_archive_lifecycle_decision(_signed_payload(payload))
+
+
+def test_expected_and_verified_receipts_reject_malformed_persisted_identity() -> None:
+    with pytest.raises(ValueError, match="linked_evidence_pack_ids is required"):
+        ExpectedArchiveLifecyclePosture(
+            tenant_id="tenant-001",
+            candidate_id="candidate-001",
+            linked_evidence_pack_ids=frozenset(),
+            verified_at_utc=NOW,
+        )
+
+    receipt = _verify(_signed_payload())
+    with pytest.raises(ValueError, match="source-safe reference"):
+        replace(receipt, document_id="unsafe document id")
+    with pytest.raises(ValueError, match="prefixed lowercase SHA-256"):
+        replace(receipt, payload_digest="not-a-digest")
+    with pytest.raises(ValueError, match="timezone-aware UTC"):
+        replace(receipt, verified_at_utc=NOW.replace(tzinfo=None))
+    with pytest.raises(ValueError, match="outside its validity window"):
+        replace(receipt, verified_at_utc=receipt.expires_at_utc)
 
 
 def _verify(
