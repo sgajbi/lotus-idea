@@ -1,0 +1,37 @@
+{
+  "contract_id": "lotus-idea-lifecycle-authority-consumer",
+  "contract_version": "1.0.0",
+  "consumer_repository": "lotus-idea",
+  "platform_repository": "lotus-platform",
+  "decision_contract": {
+    "schema_version": "lotus.lifecycle-authority-decision.v1",
+    "platform_path": "platform-contracts/lifecycle-authority/lifecycle-authority-decision.schema.json",
+    "sha256": "70e8e9a7ce96b0d77b85dcbdf7491f4fff1d2c575c2704deedd443fb418868ca"
+  },
+  "key_discovery_contract": {
+    "schema_version": "lotus.lifecycle-authority-keys.v1",
+    "platform_path": "platform-contracts/lifecycle-authority/lifecycle-authority-key-discovery.schema.json",
+    "sha256": "7651791b44c2dcecc7be0818b777976814547215d81648b6d2b84d8e2ca7802e"
+  },
+  "producer_certification_contract": {
+    "contract_id": "lotus-platform:lifecycle-authority-producer-certification:v1",
+    "platform_path": "platform-contracts/lifecycle-authority/producer-certification.v1.json",
+    "sha256": "05f5991eb7fa41193f510109d57da84e0157ad21b5ebd2d542c687c7ca5bd4df"
+  },
+  "consumer_implementation": {
+    "request_mapper": "src/app/integration/data_lifecycle/authority_contract.py",
+    "application_verifier": "src/app/application/data_lifecycle/authority_verification.py",
+    "key_source_port": "src/app/ports/data_lifecycle/authority.py",
+    "http_key_source_adapter": "src/app/infrastructure/data_lifecycle/authority_key_source.py",
+    "receipt_migration": "migrations/013_lifecycle_authority_receipt.sql"
+  },
+  "authority_boundary": {
+    "consumer_may_issue_decisions": false,
+    "consumer_may_self_authorize_lifecycle_actions": false,
+    "platform_may_issue_substantive_decisions": false,
+    "bank_controlled_producer_required": true
+  },
+  "certification_status": "not_certified",
+  "production_authority_verified": false,
+  "supported_feature_promoted": false
+}

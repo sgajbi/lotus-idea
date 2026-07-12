@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 from pathlib import Path
 import re
@@ -15,6 +16,44 @@ except ModuleNotFoundError:  # pragma: no cover - direct script execution path
 ROOT = Path(__file__).resolve().parents[1]
 CONTRACT_PATH = Path("contracts/operations/lotus-idea-data-lifecycle.v1.json")
 MIGRATIONS_PATH = Path("migrations")
+INTEROPERABILITY_PATH = Path("contracts/integrations/lifecycle-authority-consumer.v1.json")
+DEFAULT_PLATFORM_ROOT = ROOT.parent / "lotus-platform"
+EXPECTED_INTEROPERABILITY_HEADER = {
+    "contract_id": "lotus-idea-lifecycle-authority-consumer",
+    "contract_version": "1.0.0",
+    "consumer_repository": "lotus-idea",
+    "platform_repository": "lotus-platform",
+    "certification_status": "not_certified",
+    "production_authority_verified": False,
+    "supported_feature_promoted": False,
+}
+EXPECTED_INTEROPERABILITY_BOUNDARY = {
+    "consumer_may_issue_decisions": False,
+    "consumer_may_self_authorize_lifecycle_actions": False,
+    "platform_may_issue_substantive_decisions": False,
+    "bank_controlled_producer_required": True,
+}
+EXPECTED_PLATFORM_CONTRACTS = {
+    "decision_contract": {
+        "schema_version": "lotus.lifecycle-authority-decision.v1",
+        "platform_path": (
+            "platform-contracts/lifecycle-authority/lifecycle-authority-decision.schema.json"
+        ),
+        "sha256": "70e8e9a7ce96b0d77b85dcbdf7491f4fff1d2c575c2704deedd443fb418868ca",
+    },
+    "key_discovery_contract": {
+        "schema_version": "lotus.lifecycle-authority-keys.v1",
+        "platform_path": (
+            "platform-contracts/lifecycle-authority/lifecycle-authority-key-discovery.schema.json"
+        ),
+        "sha256": "7651791b44c2dcecc7be0818b777976814547215d81648b6d2b84d8e2ca7802e",
+    },
+    "producer_certification_contract": {
+        "contract_id": "lotus-platform:lifecycle-authority-producer-certification:v1",
+        "platform_path": ("platform-contracts/lifecycle-authority/producer-certification.v1.json"),
+        "sha256": "05f5991eb7fa41193f510109d57da84e0157ad21b5ebd2d542c687c7ca5bd4df",
+    },
+}
 
 EXPECTED_HEADER = {
     "contract_id": "lotus-idea-data-lifecycle",
@@ -121,7 +160,10 @@ SECRET_PATTERNS = (
 
 
 def validate_data_lifecycle_contract(
-    *, repository_root: Path = ROOT, contract_path: Path = CONTRACT_PATH
+    *,
+    repository_root: Path = ROOT,
+    contract_path: Path = CONTRACT_PATH,
+    platform_root: Path | None = DEFAULT_PLATFORM_ROOT,
 ) -> list[str]:
     path = contract_path if contract_path.is_absolute() else repository_root / contract_path
     try:
@@ -158,8 +200,77 @@ def validate_data_lifecycle_contract(
     )
     errors.extend(_validate_scheduled_review_sources(payload, repository_root))
     errors.extend(_validate_remaining_proof(payload))
+    errors.extend(
+        _validate_lifecycle_authority_interoperability(
+            repository_root=repository_root,
+            platform_root=platform_root,
+        )
+    )
     errors.extend(_validate_no_embedded_secrets(payload))
     return sorted(errors)
+
+
+def _validate_lifecycle_authority_interoperability(
+    *, repository_root: Path, platform_root: Path | None
+) -> list[str]:
+    path = repository_root / INTEROPERABILITY_PATH
+    try:
+        declaration = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        return [f"lifecycle authority consumer contract is unreadable: {exc}"]
+    if not isinstance(declaration, dict):
+        return ["lifecycle authority consumer contract must be an object"]
+
+    errors = _expected_values(
+        declaration, EXPECTED_INTEROPERABILITY_HEADER, "authority interoperability header"
+    )
+    errors.extend(
+        _expected_values(
+            declaration.get("authority_boundary"),
+            EXPECTED_INTEROPERABILITY_BOUNDARY,
+            "authority interoperability boundary",
+        )
+    )
+    for section, expected in EXPECTED_PLATFORM_CONTRACTS.items():
+        errors.extend(
+            _expected_values(
+                declaration.get(section),
+                expected,
+                f"authority interoperability {section}",
+            )
+        )
+    implementation = declaration.get("consumer_implementation")
+    if not isinstance(implementation, dict) or not implementation:
+        errors.append("lifecycle authority consumer implementation must be declared")
+    else:
+        for name, relative_path in implementation.items():
+            if (
+                not isinstance(relative_path, str)
+                or Path(relative_path).is_absolute()
+                or ".." in Path(relative_path).parts
+                or not (repository_root / relative_path).is_file()
+            ):
+                errors.append(f"lifecycle authority consumer implementation {name} must resolve")
+
+    if platform_root is None or not platform_root.is_dir():
+        return errors
+    for section in EXPECTED_PLATFORM_CONTRACTS:
+        contract = declaration.get(section)
+        if not isinstance(contract, dict):
+            continue
+        relative_path = contract.get("platform_path")
+        expected_digest = contract.get("sha256")
+        if not isinstance(relative_path, str) or not isinstance(expected_digest, str):
+            continue
+        platform_path = platform_root / relative_path
+        try:
+            actual_digest = hashlib.sha256(platform_path.read_bytes()).hexdigest()
+        except OSError as exc:
+            errors.append(f"platform lifecycle authority contract {section} is unreadable: {exc}")
+            continue
+        if actual_digest != expected_digest:
+            errors.append(f"platform lifecycle authority contract {section} digest drifted")
+    return errors
 
 
 def _validate_scheduled_review_sources(payload: dict[str, Any], repository_root: Path) -> list[str]:

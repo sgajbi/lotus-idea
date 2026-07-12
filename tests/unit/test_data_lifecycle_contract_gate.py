@@ -127,6 +127,57 @@ def test_data_lifecycle_contract_reports_malformed_json(tmp_path: Path) -> None:
     assert errors[0].startswith("data lifecycle contract is unreadable:")
 
 
+def test_lifecycle_authority_consumer_rejects_false_authority_and_digest_drift(
+    tmp_path: Path,
+) -> None:
+    module = load_gate()
+    repository_root = tmp_path / "lotus-idea"
+    platform_root = tmp_path / "lotus-platform"
+    source_contract = ROOT / module.INTEROPERABILITY_PATH
+    declaration = json.loads(source_contract.read_text(encoding="utf-8"))
+    declaration["authority_boundary"]["consumer_may_issue_decisions"] = True
+    declaration["certification_status"] = "certified"
+    declaration["decision_contract"]["sha256"] = "0" * 64
+    contract_path = repository_root / module.INTEROPERABILITY_PATH
+    contract_path.parent.mkdir(parents=True)
+    contract_path.write_text(json.dumps(declaration), encoding="utf-8")
+    for relative_path in declaration["consumer_implementation"].values():
+        implementation_path = repository_root / relative_path
+        implementation_path.parent.mkdir(parents=True, exist_ok=True)
+        implementation_path.write_text("# proof", encoding="utf-8")
+    for section in module.EXPECTED_PLATFORM_CONTRACTS:
+        expected = module.EXPECTED_PLATFORM_CONTRACTS[section]
+        platform_path = platform_root / expected["platform_path"]
+        platform_path.parent.mkdir(parents=True, exist_ok=True)
+        platform_path.write_text("{}", encoding="utf-8")
+
+    errors = module._validate_lifecycle_authority_interoperability(
+        repository_root=repository_root,
+        platform_root=platform_root,
+    )
+
+    assert (
+        "data lifecycle authority interoperability header certification_status "
+        "must be 'not_certified'"
+    ) in errors
+    assert (
+        "data lifecycle authority interoperability boundary "
+        "consumer_may_issue_decisions must be False"
+    ) in errors
+    assert "platform lifecycle authority contract decision_contract digest drifted" in errors
+
+
+def test_lifecycle_authority_consumer_matches_merged_platform_contracts() -> None:
+    module = load_gate()
+
+    errors = module._validate_lifecycle_authority_interoperability(
+        repository_root=ROOT,
+        platform_root=ROOT.parent / "lotus-platform",
+    )
+
+    assert errors == []
+
+
 def load_contract(module: ModuleType) -> dict[str, Any]:
     return cast(
         dict[str, Any],
