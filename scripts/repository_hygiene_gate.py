@@ -35,6 +35,8 @@ PROHIBITED_SUFFIXES = {
 }
 
 REQUIRED_BOUNDED_MODULE_PATHS = {
+    "src/app/application/data_lifecycle/__init__.py",
+    "src/app/application/data_lifecycle/authority_verification.py",
     "src/app/domain/data_lifecycle/__init__.py",
     "src/app/domain/data_lifecycle/authority.py",
     "src/app/domain/data_lifecycle/schedule.py",
@@ -44,6 +46,8 @@ REQUIRED_BOUNDED_MODULE_PATHS = {
 }
 
 PROHIBITED_LEGACY_MODULE_PATHS = {
+    "src/app/application/data_lifecycle.py",
+    "src/app/application/lifecycle_authority_verification.py",
     "src/app/domain/data_lifecycle.py",
     "src/app/domain/data_lifecycle_schedule.py",
     "src/app/domain/lifecycle_authority.py",
