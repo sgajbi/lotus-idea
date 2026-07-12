@@ -39,6 +39,22 @@ and digests across restart. This is consumer conformance only: the bank remains
 the lifecycle-action authority, Archive remains archive/disposal authority, and
 Idea remains authority only for mutation of its own records.
 
+### Bank Lifecycle Authority
+
+| Concern | Governed source |
+| --- | --- |
+| Decision and key-discovery interface | `lotus-platform/platform-contracts/lifecycle-authority/` |
+| Idea consumer binding | `contracts/integrations/lifecycle-authority-consumer.v1.json` |
+| Request mapping | `src/app/integration/data_lifecycle/authority_contract.py` |
+| Signature and claim verification | `src/app/application/data_lifecycle/authority_verification.py` |
+| Durable replay fencing | Migration `013_lifecycle_authority_receipt` |
+
+The consumer declaration pins platform artifacts by path and SHA-256 digest. The data-lifecycle
+contract gate recomputes those digests when the sibling platform repository is available, so
+contract drift fails before lifecycle mutation code is promoted. This does not make Idea or
+Platform a legal/privacy decision issuer. A bank-controlled producer, managed keys, approvals, and
+production-authorized purge evidence remain required for certification.
+
 ## Integration Reader Map
 
 | Need | Section |

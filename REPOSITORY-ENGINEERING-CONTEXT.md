@@ -708,6 +708,13 @@ The producer/consumer contract foundations are merged and mainline-proven as of
 This clears branch-local contract delivery only. It does not clear provider-native
 confirmation, managed-key/production-store proof, bank privacy/legal/model-risk
 approval, live bank lifecycle authority, or production-authorized purge blockers.
+Slice 06 lifecycle-authority consumption is now contract-bound to
+`lotus-platform/platform-contracts/lifecycle-authority/` through
+`contracts/integrations/lifecycle-authority-consumer.v1.json`. The existing data-lifecycle gate
+pins and, when the sibling platform repository is available, verifies the decision, key-discovery,
+and producer-certification artifact digests. This is consumer interoperability evidence only;
+bank legal/privacy governance remains the substantive authority and production certification stays
+blocked.
 Idea scheduled lifecycle review run `29180046362` also passed on `f496c442`
 with PostgreSQL 18, source-safe proof validation, provenance attestation, and
 artifact upload. That artifact is review-only and `not_certified`; it is not
