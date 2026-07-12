@@ -7,13 +7,16 @@ from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
+from fastapi.responses import JSONResponse
 
 from app.api import data_lifecycle as api_module
 from app.api.caller_headers import TRUSTED_CALLER_CONTEXT_HEADER, TRUSTED_CALLER_CONTEXT_TOKEN_ENV
+from app.api.data_lifecycle_models import DataLifecycleActionRequest
 from app.api.durable_write_guard import durable_repository_not_configured_problem
 from app.domain.data_lifecycle import (
     REGULATED_ADVISORY_POLICY_REF,
     DataLifecycleAction,
+    DataLifecycleBlocker,
     DataLifecycleCandidateContext,
     DataLifecycleCommand,
     DataLifecycleControl,
@@ -347,6 +350,27 @@ def test_data_lifecycle_api_reports_authority_trust_outage_source_safely(
     assert repository.calls == 0
 
 
+def test_data_lifecycle_api_reports_authority_replay_as_distinct_conflict() -> None:
+    response = api_module._action_response(
+        DataLifecycleOperationResult(
+            operation_id="lifecycle-operation-authority-replay-001",
+            decision=DataLifecycleDecision.CONFLICT,
+            control=valid_context().control,
+            blockers=(DataLifecycleBlocker.AUTHORITY_ATTESTATION_REPLAY,),
+            dry_run=False,
+            audit_sha256="a" * 64,
+            affected_row_counts={},
+        ),
+        request=DataLifecycleActionRequest.model_validate(lifecycle_request()),
+        durable_storage_backed=True,
+    )
+
+    assert isinstance(response, JSONResponse)
+    assert response.status_code == 409
+    assert response.body
+    assert b'"code":"lifecycle_authority_replay_conflict"' in response.body
+
+
 def test_data_lifecycle_openapi_certifies_success_and_failure_contracts() -> None:
     operation = app.openapi()["paths"][lifecycle_route_path()]["post"]
 
@@ -369,6 +393,7 @@ def test_data_lifecycle_openapi_certifies_success_and_failure_contracts() -> Non
     } == {
         "data_lifecycle_action_blocked",
         "data_lifecycle_idempotency_conflict",
+        "lifecycle_authority_replay_conflict",
     }
     assert "lifecycle_authority_unavailable" in {
         example["value"]["code"]

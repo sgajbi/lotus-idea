@@ -37,7 +37,11 @@ from app.application.lifecycle_authority_verification import (
     verify_lifecycle_authority_decision,
 )
 from app.application.data_lifecycle import ExecuteDataLifecycle
-from app.domain.data_lifecycle import DataLifecycleDecision, DataLifecycleOperationResult
+from app.domain.data_lifecycle import (
+    DataLifecycleBlocker,
+    DataLifecycleDecision,
+    DataLifecycleOperationResult,
+)
 from app.domain.lifecycle_authority import (
     ExpectedLifecycleAuthorityDecision,
     VerifiedLifecycleAuthorityReceipt,
@@ -198,6 +202,13 @@ def _action_response(
             detail="No tenant-scoped Idea candidate matches the supplied identifier.",
         )
     if result.decision is DataLifecycleDecision.CONFLICT:
+        if DataLifecycleBlocker.AUTHORITY_ATTESTATION_REPLAY in result.blockers:
+            return problem_details_response(
+                status_code=status.HTTP_409_CONFLICT,
+                code="lifecycle_authority_replay_conflict",
+                title="Lifecycle authority replay conflict",
+                detail="The signed lifecycle authority decision has already been applied.",
+            )
         return problem_details_response(
             status_code=status.HTTP_409_CONFLICT,
             code="data_lifecycle_idempotency_conflict",
@@ -283,6 +294,12 @@ DATA_LIFECYCLE_ACTION_ROUTE: RouteMetadata = {
                         "The Idempotency-Key is already bound to a different lifecycle request."
                     ),
                     description="Idempotency-Key request fingerprint conflict.",
+                ),
+                conflict_metadata(
+                    code="lifecycle_authority_replay_conflict",
+                    title="Lifecycle authority replay conflict",
+                    detail="The signed lifecycle authority decision has already been applied.",
+                    description="Applied lifecycle authority decision or nonce reuse was rejected.",
                 ),
             ),
         ),
