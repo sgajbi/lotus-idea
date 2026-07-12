@@ -2,9 +2,10 @@ from __future__ import annotations
 
 from datetime import datetime
 import json
-from typing import Protocol
-
-from app.application.ed25519_key_trust import select_trusted_ed25519_key
+from app.application.ed25519_key_trust import (
+    Ed25519SignatureVerifier,
+    select_trusted_ed25519_key,
+)
 from app.domain.data_lifecycle.authority import (
     LIFECYCLE_AUTHORITY_AUDIENCE,
     LIFECYCLE_AUTHORITY_ISSUER,
@@ -20,22 +21,12 @@ from app.domain.data_lifecycle.authority import (
 )
 
 
-class LifecycleAuthoritySignatureVerifier(Protocol):
-    def verify(
-        self,
-        *,
-        public_key_base64url: str,
-        signature_base64url: str,
-        canonical_payload: bytes,
-    ) -> None: ...
-
-
 def verify_lifecycle_authority_decision(
     *,
     envelope: LifecycleAuthorityDecisionEnvelope,
     key_discovery: LifecycleAuthorityKeyDiscovery,
     expected: ExpectedLifecycleAuthorityDecision,
-    signature_verifier: LifecycleAuthoritySignatureVerifier,
+    signature_verifier: Ed25519SignatureVerifier,
 ) -> VerifiedLifecycleAuthorityReceipt:
     claims = envelope.claims
     _require(
@@ -94,7 +85,7 @@ def _verify_signature(
     *,
     envelope: LifecycleAuthorityDecisionEnvelope,
     key: LifecycleAuthorityPublicKey,
-    signature_verifier: LifecycleAuthoritySignatureVerifier,
+    signature_verifier: Ed25519SignatureVerifier,
 ) -> None:
     canonical_claims = _canonical_claim_values(envelope)
     _require(dict(envelope.canonical_claims) == canonical_claims, "canonical claim mapping")

@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 
+from app.application.ed25519_key_trust import Ed25519SignatureVerifier as SignatureVerifierPort
 from app.domain.data_lifecycle.archive_posture import ArchiveLifecycleTrustedKey
 from app.infrastructure.ed25519_signature_verifier import Ed25519SignatureVerifier
 from app.integration.data_lifecycle.archive_posture_contract import (
@@ -21,7 +22,7 @@ class ArchiveLifecycleTrustUnavailableError(RuntimeError):
 
 def get_archive_lifecycle_dependencies() -> tuple[
     tuple[ArchiveLifecycleTrustedKey, ...],
-    Ed25519SignatureVerifier,
+    SignatureVerifierPort,
 ]:
     raw = os.getenv(ARCHIVE_LIFECYCLE_TRUST_BUNDLE_ENV, "").strip()
     if not raw:

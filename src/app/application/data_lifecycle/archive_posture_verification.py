@@ -4,6 +4,7 @@ import hashlib
 import json
 from datetime import datetime
 
+from app.application.ed25519_key_trust import Ed25519SignatureVerifier
 from app.domain.data_lifecycle.archive_posture import (
     ARCHIVE_LIFECYCLE_SCHEMA_VERSION,
     ArchiveLegalHoldStatus,
@@ -14,8 +15,6 @@ from app.domain.data_lifecycle.archive_posture import (
     ExpectedArchiveLifecyclePosture,
     VerifiedArchiveLifecycleReceipt,
 )
-from app.infrastructure.ed25519_signature_verifier import Ed25519SignatureVerifier
-
 
 _EXPECTED_POSTURES = {
     ArchiveLifecycleAction.RETAIN: (

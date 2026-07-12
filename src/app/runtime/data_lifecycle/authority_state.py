@@ -2,9 +2,7 @@ from __future__ import annotations
 
 import os
 
-from app.application.data_lifecycle.authority_verification import (
-    LifecycleAuthoritySignatureVerifier,
-)
+from app.application.ed25519_key_trust import Ed25519SignatureVerifier as SignatureVerifierPort
 from app.infrastructure.ed25519_signature_verifier import Ed25519SignatureVerifier
 from app.infrastructure.data_lifecycle.authority_key_source import HttpLifecycleAuthorityKeySource
 from app.ports.data_lifecycle.authority import LifecycleAuthorityKeySource
@@ -19,7 +17,7 @@ _SIGNATURE_VERIFIER = Ed25519SignatureVerifier()
 
 def get_lifecycle_authority_dependencies() -> tuple[
     LifecycleAuthorityKeySource,
-    LifecycleAuthoritySignatureVerifier,
+    SignatureVerifierPort,
 ]:
     global _KEY_SOURCE
     if _KEY_SOURCE is None:
