@@ -6,7 +6,13 @@ from enum import StrEnum
 import re
 from typing import TYPE_CHECKING, Mapping
 
+from app.domain.data_lifecycle.archive_posture import (
+    ArchiveLegalHoldStatus,
+    ArchiveLifecycleAction,
+)
+
 if TYPE_CHECKING:
+    from app.domain.data_lifecycle.archive_posture import VerifiedArchiveLifecycleReceipt
     from app.domain.data_lifecycle.authority import VerifiedLifecycleAuthorityReceipt
 
 REGULATED_ADVISORY_POLICY_REF = "lotus-idea:regulated-advisory-evidence:seven-year:v1"
@@ -60,6 +66,10 @@ class DataLifecycleBlocker(StrEnum):
     AUTHORITY_ATTESTATION_REQUIRED = "authority_attestation_required"
     AUTHORITY_ATTESTATION_MISMATCH = "authority_attestation_mismatch"
     AUTHORITY_ATTESTATION_REPLAY = "authority_attestation_replay"
+    ARCHIVE_POSTURE_REQUIRED = "archive_posture_required"
+    ARCHIVE_POSTURE_MISMATCH = "archive_posture_mismatch"
+    ARCHIVE_LEGAL_HOLD_ACTIVE = "archive_legal_hold_active"
+    ARCHIVE_DISPOSAL_NOT_EXECUTED = "archive_disposal_not_executed"
     DUAL_AUTHORIZATION_REQUIRED = "dual_authorization_required"
     LEGAL_HOLD_ACTIVE = "legal_hold_active"
     LEGAL_HOLD_NOT_ACTIVE = "legal_hold_not_active"
@@ -103,6 +113,7 @@ class DataLifecycleCandidateContext:
     control: DataLifecycleControl | None
     active_outbox_count: int
     active_downstream_count: int
+    linked_report_evidence_pack_ids: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         if self.candidate_tenant_id is not None:
@@ -111,6 +122,12 @@ class DataLifecycleCandidateContext:
             value = getattr(self, field_name)
             if isinstance(value, bool) or not isinstance(value, int) or value < 0:
                 raise ValueError(f"{field_name} must be a non-negative integer")
+        for evidence_pack_id in self.linked_report_evidence_pack_ids:
+            _require_reference(evidence_pack_id, "linked_report_evidence_pack_id")
+        if len(set(self.linked_report_evidence_pack_ids)) != len(
+            self.linked_report_evidence_pack_ids
+        ):
+            raise ValueError("linked_report_evidence_pack_ids must be unique")
 
 
 @dataclass(frozen=True)
@@ -131,6 +148,7 @@ class DataLifecycleCommand:
     approver_subject: str | None = None
     authority_verification_required: bool = False
     authority_receipt: VerifiedLifecycleAuthorityReceipt | None = None
+    archive_lifecycle_receipt: VerifiedArchiveLifecycleReceipt | None = None
 
     def __post_init__(self) -> None:
         for field_name in (
@@ -245,6 +263,7 @@ def _common_blockers(
         evaluated_at_utc=evaluated_at_utc,
     ):
         blockers.append(DataLifecycleBlocker.AUTHORITY_ATTESTATION_MISMATCH)
+    blockers.extend(_archive_posture_blockers(command, context, evaluated_at_utc))
     if not command.dry_run and _requires_dual_authorization(command.action):
         if command.approver_subject is None or command.approver_subject == command.actor_subject:
             blockers.append(DataLifecycleBlocker.DUAL_AUTHORIZATION_REQUIRED)
@@ -413,6 +432,42 @@ def _authority_receipt_matches(
         and receipt.authority_domain.value == expected_domain
         and receipt.effective_at_utc <= evaluated_at_utc < receipt.expires_at_utc
     )
+
+
+def _archive_posture_blockers(
+    command: DataLifecycleCommand,
+    context: DataLifecycleCandidateContext,
+    evaluated_at_utc: datetime,
+) -> tuple[DataLifecycleBlocker, ...]:
+    linked_pack_ids = frozenset(context.linked_report_evidence_pack_ids)
+    receipt = command.archive_lifecycle_receipt
+    if not linked_pack_ids:
+        return (
+            (DataLifecycleBlocker.ARCHIVE_POSTURE_MISMATCH,) if receipt is not None else ()
+        )
+    if receipt is None:
+        return (DataLifecycleBlocker.ARCHIVE_POSTURE_REQUIRED,)
+    if not (
+        receipt.tenant_id == command.tenant_id
+        and receipt.candidate_id == command.candidate_id
+        and receipt.evidence_pack_id in linked_pack_ids
+        and receipt.issued_at_utc <= evaluated_at_utc < receipt.expires_at_utc
+    ):
+        return (DataLifecycleBlocker.ARCHIVE_POSTURE_MISMATCH,)
+    if command.action is DataLifecycleAction.APPLY_HOLD:
+        return (
+            ()
+            if receipt.lifecycle_action is ArchiveLifecycleAction.LEGAL_HOLD
+            else (DataLifecycleBlocker.ARCHIVE_POSTURE_MISMATCH,)
+        )
+    if receipt.legal_hold_status is ArchiveLegalHoldStatus.ACTIVE:
+        return (DataLifecycleBlocker.ARCHIVE_LEGAL_HOLD_ACTIVE,)
+    if (
+        command.action is DataLifecycleAction.PURGE
+        and receipt.lifecycle_action is not ArchiveLifecycleAction.DISPOSAL_EXECUTED
+    ):
+        return (DataLifecycleBlocker.ARCHIVE_DISPOSAL_NOT_EXECUTED,)
+    return ()
 
 
 def _requires_dual_authorization(action: DataLifecycleAction) -> bool:
