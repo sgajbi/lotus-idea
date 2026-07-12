@@ -96,7 +96,7 @@ def write_evidence(tmp_path: Path, payload: dict[str, Any]) -> Path:
 
 
 def load_gate() -> ModuleType:
-    path = ROOT / "scripts/scheduled_data_lifecycle_review_proof_gate.py"
+    path = ROOT / "scripts/data_lifecycle/scheduled_review_proof_gate.py"
     spec = importlib.util.spec_from_file_location(
         "scheduled_data_lifecycle_review_proof_gate", path
     )

@@ -23,7 +23,7 @@ def test_scheduled_lifecycle_fixture_requires_disposable_confirmation() -> None:
 
 
 def test_scheduled_lifecycle_fixture_is_synthetic_and_non_destructive() -> None:
-    source = (ROOT / "scripts/seed_scheduled_data_lifecycle_fixture.py").read_text(encoding="utf-8")
+    source = (ROOT / "scripts/data_lifecycle/seed_scheduled_review_fixture.py").read_text(encoding="utf-8")
 
     assert "PB_SG_GLOBAL_BAL_001" not in source
     assert "idea_scheduled_lifecycle_fixture" in source
@@ -37,7 +37,7 @@ def test_scheduled_lifecycle_fixture_entrypoint_loads() -> None:
     completed = subprocess.run(
         [
             sys.executable,
-            str(ROOT / "scripts/seed_scheduled_data_lifecycle_fixture.py"),
+            str(ROOT / "scripts/data_lifecycle/seed_scheduled_review_fixture.py"),
             "--help",
         ],
         check=False,
@@ -50,7 +50,7 @@ def test_scheduled_lifecycle_fixture_entrypoint_loads() -> None:
 
 
 def load_script() -> ModuleType:
-    path = ROOT / "scripts/seed_scheduled_data_lifecycle_fixture.py"
+    path = ROOT / "scripts/data_lifecycle/seed_scheduled_review_fixture.py"
     spec = importlib.util.spec_from_file_location("seed_scheduled_data_lifecycle_fixture", path)
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)

@@ -9,7 +9,7 @@ import sys
 from typing import Any
 
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_EVIDENCE_PATH = ROOT / "output/data-lifecycle/scheduled-review-evidence.json"
 ALLOWED_BLOCKERS = frozenset(
     {

@@ -400,13 +400,13 @@ data-lifecycle-contract-gate:
 	$(VENV_PYTHON) scripts/data_lifecycle_contract_gate.py
 
 scheduled-data-lifecycle-review:
-	$(VENV_PYTHON) scripts/run_scheduled_data_lifecycle_review.py --execution-profile synthetic_disposable_postgres --output-path $(SCHEDULED_LIFECYCLE_REVIEW_EVIDENCE)
+	$(VENV_PYTHON) scripts/data_lifecycle/run_scheduled_review.py --execution-profile synthetic_disposable_postgres --output-path $(SCHEDULED_LIFECYCLE_REVIEW_EVIDENCE)
 
 scheduled-data-lifecycle-seed:
-	$(VENV_PYTHON) scripts/seed_scheduled_data_lifecycle_fixture.py --confirm-disposable-database
+	$(VENV_PYTHON) scripts/data_lifecycle/seed_scheduled_review_fixture.py --confirm-disposable-database
 
 scheduled-data-lifecycle-review-proof-gate:
-	$(VENV_PYTHON) scripts/scheduled_data_lifecycle_review_proof_gate.py --evidence $(SCHEDULED_LIFECYCLE_REVIEW_EVIDENCE)
+	$(VENV_PYTHON) scripts/data_lifecycle/scheduled_review_proof_gate.py --evidence $(SCHEDULED_LIFECYCLE_REVIEW_EVIDENCE)
 
 postgres-disaster-recovery-seed:
 	$(VENV_PYTHON) scripts/seed_postgres_disaster_recovery_fixture.py --confirm-disposable-database

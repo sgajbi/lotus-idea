@@ -62,7 +62,7 @@ EXPECTED_SCHEDULED_REVIEW_PROOF = {
     "database_runtime": "postgresql-18",
     "workflow": ".github/workflows/scheduled-data-lifecycle-review.yml",
     "evidence_schema": "lotus-idea.scheduled-lifecycle-review-evidence.v1",
-    "proof_gate": "scripts/scheduled_data_lifecycle_review_proof_gate.py",
+    "proof_gate": "scripts/data_lifecycle/scheduled_review_proof_gate.py",
     "automatic_lifecycle_mutation": False,
     "production_authority_verified": False,
     "privacy_review_required": True,

@@ -77,7 +77,7 @@ def test_scheduled_lifecycle_review_writes_source_safe_aggregate(
 
 def test_scheduled_lifecycle_review_entrypoint_loads() -> None:
     completed = subprocess.run(
-        [sys.executable, str(ROOT / "scripts/run_scheduled_data_lifecycle_review.py"), "--help"],
+        [sys.executable, str(ROOT / "scripts/data_lifecycle/run_scheduled_review.py"), "--help"],
         check=False,
         capture_output=True,
         text=True,
@@ -106,7 +106,7 @@ def snapshot(
 
 
 def load_script() -> ModuleType:
-    path = ROOT / "scripts/run_scheduled_data_lifecycle_review.py"
+    path = ROOT / "scripts/data_lifecycle/run_scheduled_review.py"
     spec = importlib.util.spec_from_file_location("run_scheduled_data_lifecycle_review", path)
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)

@@ -11,12 +11,15 @@ from typing import Any
 import psycopg
 from psycopg.rows import dict_row
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 SRC = ROOT / "src"
+SCRIPTS = ROOT / "scripts"
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
 
 from app.application.data_lifecycle import ReviewScheduledDataLifecycle  # noqa: E402
 from app.domain.data_lifecycle.schedule import (  # noqa: E402
@@ -26,7 +29,7 @@ from app.domain.data_lifecycle.schedule import (  # noqa: E402
 from app.infrastructure.data_lifecycle.postgres_schedule import (  # noqa: E402
     PostgresScheduledDataLifecycleRepository,
 )
-from scripts.disaster_recovery_evidence_io import (  # noqa: E402
+from disaster_recovery_evidence_io import (  # noqa: E402
     write_dataclass_evidence_atomic,
 )
 

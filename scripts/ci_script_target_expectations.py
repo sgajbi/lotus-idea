@@ -107,10 +107,10 @@ SCRIPT_TARGET_EXPECTATIONS = {
     "outbox-supportability-contract-gate": "scripts/outbox_supportability_contract_gate.py",
     "disaster-recovery-contract-gate": "scripts/disaster_recovery_contract_gate.py",
     "data-lifecycle-contract-gate": "scripts/data_lifecycle_contract_gate.py",
-    "scheduled-data-lifecycle-review": "scripts/run_scheduled_data_lifecycle_review.py",
-    "scheduled-data-lifecycle-seed": "scripts/seed_scheduled_data_lifecycle_fixture.py",
+    "scheduled-data-lifecycle-review": "scripts/data_lifecycle/run_scheduled_review.py",
+    "scheduled-data-lifecycle-seed": "scripts/data_lifecycle/seed_scheduled_review_fixture.py",
     "scheduled-data-lifecycle-review-proof-gate": (
-        "scripts/scheduled_data_lifecycle_review_proof_gate.py"
+        "scripts/data_lifecycle/scheduled_review_proof_gate.py"
     ),
     "disaster-recovery-proof-gate": "scripts/disaster_recovery_proof_contract_gate.py",
     "postgres-disaster-recovery-seed": ("scripts/seed_postgres_disaster_recovery_fixture.py"),

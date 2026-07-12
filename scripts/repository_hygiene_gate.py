@@ -35,6 +35,10 @@ PROHIBITED_SUFFIXES = {
 }
 
 REQUIRED_BOUNDED_MODULE_PATHS = {
+    "scripts/data_lifecycle/__init__.py",
+    "scripts/data_lifecycle/run_scheduled_review.py",
+    "scripts/data_lifecycle/scheduled_review_proof_gate.py",
+    "scripts/data_lifecycle/seed_scheduled_review_fixture.py",
     "src/app/api/data_lifecycle/__init__.py",
     "src/app/api/data_lifecycle/models.py",
     "src/app/application/data_lifecycle/__init__.py",
@@ -59,6 +63,9 @@ REQUIRED_BOUNDED_MODULE_PATHS = {
 }
 
 PROHIBITED_LEGACY_MODULE_PATHS = {
+    "scripts/run_scheduled_data_lifecycle_review.py",
+    "scripts/scheduled_data_lifecycle_review_proof_gate.py",
+    "scripts/seed_scheduled_data_lifecycle_fixture.py",
     "src/app/api/data_lifecycle.py",
     "src/app/api/data_lifecycle_models.py",
     "src/app/application/data_lifecycle.py",
