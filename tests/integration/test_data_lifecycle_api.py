@@ -28,6 +28,15 @@ from app.domain.data_lifecycle.authority import (
     LifecycleAuthorityKeyDiscovery,
     LifecycleAuthorityPublicKey,
 )
+from app.domain.data_lifecycle.archive_posture import (
+    ArchiveLegalHoldStatus,
+    ArchiveLifecycleAction,
+    ArchivePurgeStatus,
+    VerifiedArchiveLifecycleReceipt,
+)
+from app.runtime.data_lifecycle.archive_posture_state import (
+    ArchiveLifecycleTrustUnavailableError,
+)
 from app.main import app
 from app.ports.data_lifecycle import DataLifecycleEvaluator
 from tests.support.lifecycle_authority_fixture import lifecycle_authority_decision_payload
@@ -371,6 +380,90 @@ def test_data_lifecycle_api_reports_authority_replay_as_distinct_conflict() -> N
     assert b'"code":"lifecycle_authority_replay_conflict"' in response.body
 
 
+def test_data_lifecycle_api_verifies_archive_posture_before_linked_erasure(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    repository = ApiLifecycleRepository(
+        replace(valid_context(), linked_report_evidence_pack_ids=("report-pack-001",))
+    )
+    monkeypatch.setattr(api_module, "get_idea_repository", lambda: repository)
+    monkeypatch.setattr(
+        api_module,
+        "get_archive_lifecycle_dependencies",
+        lambda: ((object(),), object()),
+    )
+    monkeypatch.setattr(
+        api_module,
+        "verify_archive_lifecycle_decision",
+        lambda **_: valid_archive_receipt(),
+    )
+
+    missing = TestClient(app).post(
+        lifecycle_path(),
+        json=lifecycle_request(),
+        headers=lifecycle_headers("lifecycle-api-archive-missing-001"),
+    )
+    accepted = TestClient(app).post(
+        lifecycle_path(),
+        json={
+            **lifecycle_request(),
+            "archiveLifecycleDecision": archive_decision_for_request(),
+        },
+        headers=lifecycle_headers("lifecycle-api-archive-accepted-001"),
+    )
+
+    assert missing.status_code == 409
+    assert accepted.status_code == 200
+    assert repository.commands[-1].archive_lifecycle_receipt is not None
+
+
+def test_data_lifecycle_api_reports_archive_verification_failures_source_safely(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    repository = ApiLifecycleRepository()
+    monkeypatch.setattr(api_module, "get_idea_repository", lambda: repository)
+    request = {
+        **lifecycle_request(),
+        "archiveLifecycleDecision": archive_decision_for_request(),
+    }
+    monkeypatch.setattr(
+        api_module,
+        "get_archive_lifecycle_dependencies",
+        lambda: ((object(),), object()),
+    )
+    monkeypatch.setattr(
+        api_module,
+        "verify_archive_lifecycle_decision",
+        lambda **_: (_ for _ in ()).throw(ValueError("raw signature detail")),
+    )
+
+    invalid = TestClient(app).post(
+        lifecycle_path(),
+        json=request,
+        headers=lifecycle_headers("lifecycle-api-archive-invalid-001"),
+    )
+    monkeypatch.setattr(
+        api_module,
+        "get_archive_lifecycle_dependencies",
+        lambda: (_ for _ in ()).throw(
+            ArchiveLifecycleTrustUnavailableError("raw trust detail")
+        ),
+    )
+    unavailable = TestClient(app).post(
+        lifecycle_path(),
+        json=request,
+        headers=lifecycle_headers("lifecycle-api-archive-unavailable-001"),
+    )
+
+    assert invalid.status_code == 400
+    assert invalid.json()["code"] == "archive_lifecycle_posture_invalid"
+    assert "raw signature detail" not in invalid.text
+    assert unavailable.status_code == 503
+    assert unavailable.json()["code"] == "archive_lifecycle_trust_unavailable"
+    assert "raw trust detail" not in unavailable.text
+    assert repository.calls == 0
+
+
 def test_data_lifecycle_openapi_certifies_success_and_failure_contracts() -> None:
     operation = app.openapi()["paths"][lifecycle_route_path()]["post"]
 
@@ -385,6 +478,12 @@ def test_data_lifecycle_openapi_certifies_success_and_failure_contracts() -> Non
     ]
     assert "exactly match" in operation["x-lotus-caller-context"]["entitlementScope"]
     assert set(operation["responses"]) == {"200", "400", "403", "404", "409", "422", "503"}
+    assert "archive_lifecycle_posture_invalid" in {
+        example["value"]["code"]
+        for example in operation["responses"]["400"]["content"]["application/json"][
+            "examples"
+        ].values()
+    }
     assert {
         example["value"]["code"]
         for example in operation["responses"]["409"]["content"]["application/json"][
@@ -396,6 +495,12 @@ def test_data_lifecycle_openapi_certifies_success_and_failure_contracts() -> Non
         "lifecycle_authority_replay_conflict",
     }
     assert "lifecycle_authority_unavailable" in {
+        example["value"]["code"]
+        for example in operation["responses"]["503"]["content"]["application/json"][
+            "examples"
+        ].values()
+    }
+    assert "archive_lifecycle_trust_unavailable" in {
         example["value"]["code"]
         for example in operation["responses"]["503"]["content"]["application/json"][
             "examples"
@@ -460,6 +565,36 @@ def authority_decision_for_request() -> dict[str, Any]:
     return payload
 
 
+def archive_decision_for_request() -> dict[str, Any]:
+    now = datetime.now(UTC)
+    return {
+        "contract_version": "lotus-archive:IdeaEvidenceLifecycleDecision:v1",
+        "decision_id": "archive-decision-001",
+        "document_id": "document-001",
+        "idea_evidence_pack_id": "report-pack-001",
+        "idea_candidate_id": "candidate-001",
+        "source_correlation_ref": "source-correlation-001",
+        "tenant_id": "tenant-001",
+        "residency_region": "SG",
+        "retention_policy_id": "generated-report-standard",
+        "legal_hold_status": "clear",
+        "legal_hold_count": 0,
+        "purge_status": "not_eligible",
+        "lifecycle_action": "RETAIN",
+        "disposal_authorized": False,
+        "decision_reason_code": "retention_period_active",
+        "authority": "lotus-archive",
+        "issued_at_utc": (now - timedelta(minutes=1)).isoformat(),
+        "expires_at_utc": (now + timedelta(minutes=4)).isoformat(),
+        "correlation_id": "archive-correlation-001",
+        "trace_id": "archive-trace-001",
+        "signing_algorithm": "Ed25519",
+        "signing_key_id": "archive-key-001",
+        "payload_digest": "sha256:" + "c" * 64,
+        "signature": "ed25519:c2lnbmF0dXJl",
+    }
+
+
 def lifecycle_headers(idempotency_key: str) -> dict[str, str]:
     return {
         "Idempotency-Key": idempotency_key,
@@ -477,3 +612,23 @@ def trusted_lifecycle_headers(idempotency_key: str) -> dict[str, str]:
         **lifecycle_headers(idempotency_key),
         TRUSTED_CALLER_CONTEXT_HEADER: "gateway-secret",
     }
+
+
+def valid_archive_receipt() -> VerifiedArchiveLifecycleReceipt:
+    now = datetime.now(UTC)
+    return VerifiedArchiveLifecycleReceipt(
+        decision_id="archive-decision-001",
+        document_id="document-001",
+        evidence_pack_id="report-pack-001",
+        candidate_id="candidate-001",
+        tenant_id="tenant-001",
+        retention_policy_id="generated-report-standard",
+        legal_hold_status=ArchiveLegalHoldStatus.CLEAR,
+        purge_status=ArchivePurgeStatus.NOT_ELIGIBLE,
+        lifecycle_action=ArchiveLifecycleAction.RETAIN,
+        payload_digest="sha256:" + "c" * 64,
+        key_id="archive-key-001",
+        issued_at_utc=now - timedelta(minutes=1),
+        expires_at_utc=now + timedelta(minutes=4),
+        verified_at_utc=now,
+    )

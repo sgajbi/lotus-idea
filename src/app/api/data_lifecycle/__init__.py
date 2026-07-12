@@ -23,15 +23,21 @@ from app.api.problem_details import (
     merged_problem_response_metadata,
     not_found_metadata,
     permission_denied_metadata,
+    problem_response_metadata,
     problem_details_response,
     service_unavailable_metadata,
 )
 from app.api.route_metadata import RouteMetadata
 from app.api.runtime_dependencies import (
+    ArchiveLifecycleTrustUnavailableError,
+    get_archive_lifecycle_dependencies,
     get_lifecycle_authority_dependencies,
     get_idea_repository,
     idea_repository_durable_storage_backed,
     load_runtime_settings,
+)
+from app.application.data_lifecycle.archive_posture_verification import (
+    verify_archive_lifecycle_decision,
 )
 from app.application.data_lifecycle.authority_verification import (
     verify_lifecycle_authority_decision,
@@ -46,6 +52,10 @@ from app.domain.data_lifecycle.authority import (
     ExpectedLifecycleAuthorityDecision,
     VerifiedLifecycleAuthorityReceipt,
 )
+from app.domain.data_lifecycle.archive_posture import (
+    ExpectedArchiveLifecyclePosture,
+    VerifiedArchiveLifecycleReceipt,
+)
 from app.observability import IdeaOperation, OperationOutcome
 from app.ports.data_lifecycle import DataLifecycleRepository
 from app.security.caller_context import (
@@ -59,6 +69,11 @@ _MANAGE_POLICY = CapabilityPolicy.for_roles(
     allowed_roles=("privacy_officer", "records_manager"),
 )
 _LIFECYCLE_AUTHORITY_UNAVAILABLE_DETAIL = "Signed lifecycle authority could not be verified."
+_ARCHIVE_LIFECYCLE_UNAVAILABLE_DETAIL = "Archive lifecycle posture could not be verified."
+
+
+class ArchiveLifecycleVerificationError(ValueError):
+    pass
 
 
 async def post_data_lifecycle_action(
@@ -104,6 +119,10 @@ async def post_data_lifecycle_action(
             candidate_id=candidate_id,
             required=authority_required,
         )
+        archive_lifecycle_receipt = _verify_archive_lifecycle_decision(
+            request=request,
+            candidate_id=candidate_id,
+        )
         command = request.to_command(
             candidate_id=candidate_id,
             caller=caller,
@@ -111,6 +130,23 @@ async def post_data_lifecycle_action(
             event_lineage=event_lineage_from_request(http_request),
             authority_verification_required=authority_required,
             authority_receipt=authority_receipt,
+            archive_lifecycle_receipt=archive_lifecycle_receipt,
+        )
+    except ArchiveLifecycleTrustUnavailableError:
+        _emit_event(IdeaOperation.DATA_LIFECYCLE_ACTION, OperationOutcome.BLOCKED)
+        return problem_details_response(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            code="archive_lifecycle_trust_unavailable",
+            title="Archive lifecycle trust unavailable",
+            detail=_ARCHIVE_LIFECYCLE_UNAVAILABLE_DETAIL,
+        )
+    except ArchiveLifecycleVerificationError:
+        _emit_event(IdeaOperation.DATA_LIFECYCLE_ACTION, OperationOutcome.INVALID_REQUEST)
+        return problem_details_response(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            code="archive_lifecycle_posture_invalid",
+            title="Archive lifecycle posture invalid",
+            detail="The signed Archive lifecycle posture could not be accepted.",
         )
     except RuntimeError:
         _emit_event(IdeaOperation.DATA_LIFECYCLE_ACTION, OperationOutcome.BLOCKED)
@@ -171,6 +207,31 @@ def _verify_authority_decision(
         ),
         signature_verifier=signature_verifier,
     )
+
+
+def _verify_archive_lifecycle_decision(
+    *,
+    request: DataLifecycleActionRequest,
+    candidate_id: str,
+) -> VerifiedArchiveLifecycleReceipt | None:
+    decision = request.archive_lifecycle_decision
+    if decision is None:
+        return None
+    trusted_keys, signature_verifier = get_archive_lifecycle_dependencies()
+    try:
+        return verify_archive_lifecycle_decision(
+            envelope=decision.to_domain(),
+            trusted_keys=trusted_keys,
+            expected=ExpectedArchiveLifecyclePosture(
+                tenant_id=request.tenant_id,
+                candidate_id=candidate_id,
+                linked_evidence_pack_ids=frozenset({decision.idea_evidence_pack_id}),
+                verified_at_utc=datetime.now(UTC),
+            ),
+            signature_verifier=signature_verifier,
+        )
+    except ValueError as exc:
+        raise ArchiveLifecycleVerificationError from exc
 
 
 def _action_response(
@@ -262,9 +323,22 @@ DATA_LIFECYCLE_ACTION_ROUTE: RouteMetadata = {
                 }
             },
         },
-        **invalid_request_metadata(
-            detail="The lifecycle action or Idempotency-Key is invalid.",
-            description="Lifecycle action validation failed.",
+        **merged_problem_response_metadata(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            description="Lifecycle action or signed posture validation failed.",
+            responses=(
+                invalid_request_metadata(
+                    detail="The lifecycle action or Idempotency-Key is invalid.",
+                    description="Lifecycle action validation failed.",
+                ),
+                problem_response_metadata(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    code="archive_lifecycle_posture_invalid",
+                    title="Archive lifecycle posture invalid",
+                    detail="The signed Archive lifecycle posture could not be accepted.",
+                    description="Archive signature, identity, digest, or posture validation failed.",
+                ),
+            ),
         ),
         **permission_denied_metadata(
             detail="The caller is not permitted to manage this tenant's data lifecycle.",
@@ -314,6 +388,12 @@ DATA_LIFECYCLE_ACTION_ROUTE: RouteMetadata = {
                     title="Lifecycle authority unavailable",
                     detail=_LIFECYCLE_AUTHORITY_UNAVAILABLE_DETAIL,
                     description="Signed lifecycle authority trust infrastructure is unavailable.",
+                ),
+                service_unavailable_metadata(
+                    code="archive_lifecycle_trust_unavailable",
+                    title="Archive lifecycle trust unavailable",
+                    detail=_ARCHIVE_LIFECYCLE_UNAVAILABLE_DETAIL,
+                    description="Archive lifecycle consumer trust bundle is unavailable.",
                 ),
             ),
         ),
