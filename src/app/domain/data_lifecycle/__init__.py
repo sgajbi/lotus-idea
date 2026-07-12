@@ -70,6 +70,7 @@ class DataLifecycleBlocker(StrEnum):
     ARCHIVE_POSTURE_MISMATCH = "archive_posture_mismatch"
     ARCHIVE_LEGAL_HOLD_ACTIVE = "archive_legal_hold_active"
     ARCHIVE_DISPOSAL_NOT_EXECUTED = "archive_disposal_not_executed"
+    ARCHIVE_POSTURE_REPLAY = "archive_posture_replay"
     DUAL_AUTHORIZATION_REQUIRED = "dual_authorization_required"
     LEGAL_HOLD_ACTIVE = "legal_hold_active"
     LEGAL_HOLD_NOT_ACTIVE = "legal_hold_not_active"
