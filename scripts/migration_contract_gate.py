@@ -259,6 +259,26 @@ REQUIRED_MIGRATIONS = (
             "ON CONFLICT (candidate_id) DO NOTHING",
         ),
     ),
+    MigrationContract(
+        version="014",
+        forward_path=MIGRATIONS_DIR / "014_ai_provider_retention_receipt.sql",
+        rollback_path=MIGRATIONS_DIR / "014_ai_provider_retention_receipt.rollback.sql",
+        required_tables=(),
+        required_indexes=(),
+        required_forward_fragments=(
+            "provider_retention_confirmation_id TEXT",
+            "provider_retention_confirmation_ref TEXT",
+            "provider_retention_replay_nonce TEXT",
+            "ck_idea_ai_lineage_provider_retention_receipt",
+            "uq_idea_ai_lineage_provider_retention_confirmation",
+            "uq_idea_ai_lineage_provider_retention_reference",
+            "uq_idea_ai_lineage_provider_retention_nonce",
+        ),
+        required_rollback_fragments=(
+            "DROP CONSTRAINT IF EXISTS ck_idea_ai_lineage_provider_retention_receipt",
+            "DROP COLUMN IF EXISTS provider_retention_confirmation_id",
+        ),
+    ),
 )
 
 

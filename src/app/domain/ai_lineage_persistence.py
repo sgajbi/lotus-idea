@@ -13,6 +13,7 @@ from app.domain.ai_output_integrity import AIOutputIntegrity
 from app.domain.ai_execution_provenance import AIExecutionProvenancePosture
 from app.domain.audit import AuditEvent
 from app.domain.lotus_ai_run_attestation import VerifiedLotusAIRunAttestationReceipt
+from app.domain.ai_provider_retention import VerifiedAIProviderRetentionReceipt
 
 if TYPE_CHECKING:
     from app.domain.persistence import CandidatePersistenceRecord
@@ -52,6 +53,7 @@ class AIExplanationLineageRecord:
     grants_downstream_authority: bool
     lineage_hash: str
     attestation_receipt: VerifiedLotusAIRunAttestationReceipt | None = None
+    provider_retention_receipt: VerifiedAIProviderRetentionReceipt | None = None
 
     def __post_init__(self) -> None:
         for field_name in (
@@ -108,12 +110,18 @@ def ai_explanation_lineage_record_from_result(
     result: AIExplanationResult,
     *,
     attestation_receipt: VerifiedLotusAIRunAttestationReceipt | None = None,
+    provider_retention_receipt: VerifiedAIProviderRetentionReceipt | None = None,
 ) -> AIExplanationLineageRecord:
     if (
         attestation_receipt is not None
         and attestation_receipt.consumer_request_id != result.request.request_id
     ):
         raise ValueError("attestation receipt request does not match AI explanation request")
+    if provider_retention_receipt is not None:
+        if attestation_receipt is None:
+            raise ValueError("provider retention receipt requires a verified run attestation")
+        if provider_retention_receipt.workflow_run_id != attestation_receipt.run_id:
+            raise ValueError("provider retention receipt run does not match run attestation")
     output = result.output
     evaluated_at_utc = (
         output.verifier_ran_at_utc if output is not None else result.audit_event.occurred_at_utc
@@ -151,6 +159,10 @@ def ai_explanation_lineage_record_from_result(
     }
     if attestation_receipt is not None:
         record_payload["attestation_receipt"] = _attestation_receipt_payload(attestation_receipt)
+    if provider_retention_receipt is not None:
+        record_payload["provider_retention_receipt"] = _provider_retention_receipt_payload(
+            provider_retention_receipt
+        )
     lineage_hash = _hash_payload(record_payload)
     return AIExplanationLineageRecord(
         request_id=result.request.request_id,
@@ -184,6 +196,7 @@ def ai_explanation_lineage_record_from_result(
         grants_downstream_authority=result.grants_downstream_authority,
         lineage_hash=lineage_hash,
         attestation_receipt=attestation_receipt,
+        provider_retention_receipt=provider_retention_receipt,
     )
 
 
@@ -226,6 +239,10 @@ def verify_ai_explanation_lineage_record_integrity(
         expected_payload["attestation_receipt"] = _attestation_receipt_payload(
             record.attestation_receipt
         )
+    if record.provider_retention_receipt is not None:
+        expected_payload["provider_retention_receipt"] = _provider_retention_receipt_payload(
+            record.provider_retention_receipt
+        )
     expected = _hash_payload(expected_payload)
     if record.lineage_hash != expected:
         raise ValueError("AI explanation lineage hash does not match persisted content")
@@ -256,6 +273,30 @@ def _attestation_receipt_payload(
         "evaluator_policy_version": receipt.evaluator_policy_version,
         "input_evidence_sha256": receipt.input_evidence_sha256,
         "output_content_sha256": receipt.output_content_sha256,
+        "issued_at_utc": receipt.issued_at_utc.isoformat(),
+        "expires_at_utc": receipt.expires_at_utc.isoformat(),
+        "verified_at_utc": receipt.verified_at_utc.isoformat(),
+    }
+
+
+def _provider_retention_receipt_payload(
+    receipt: VerifiedAIProviderRetentionReceipt,
+) -> dict[str, object]:
+    return {
+        "confirmation_id": receipt.confirmation_id,
+        "workflow_run_id": receipt.workflow_run_id,
+        "tenant_id": receipt.tenant_id,
+        "provider_confirmation_ref": receipt.provider_confirmation_ref,
+        "retention_policy_id": receipt.retention_policy_id,
+        "outcome": receipt.outcome.value,
+        "evidence_sha256": receipt.evidence_sha256,
+        "provider_failure_code": receipt.provider_failure_code,
+        "deletion_confirmed": receipt.deletion_confirmed,
+        "supportability_status": receipt.supportability_status,
+        "replay_nonce": receipt.replay_nonce,
+        "key_id": receipt.key_id,
+        "rotation_epoch": receipt.rotation_epoch,
+        "provider_decision_at_utc": receipt.provider_decision_at_utc.isoformat(),
         "issued_at_utc": receipt.issued_at_utc.isoformat(),
         "expires_at_utc": receipt.expires_at_utc.isoformat(),
         "verified_at_utc": receipt.verified_at_utc.isoformat(),

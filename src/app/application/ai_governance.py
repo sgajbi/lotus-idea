@@ -47,12 +47,23 @@ from app.application.lotus_ai_run_attestation_verification import (
     verify_lotus_ai_run_attestation,
 )
 from app.domain.ai_execution_provenance import AIExecutionProvenancePosture
+from app.domain.ai_provider_retention import (
+    AIProviderRetentionEnvelope,
+    ExpectedAIProviderRetention,
+)
+from app.application.ai_provider_retention_verification import (
+    verify_ai_provider_retention_confirmation,
+)
 
 
 class AIExplanationEvaluationDecision(StrEnum):
     ACCEPTED = "accepted"
     IDEMPOTENCY_CONFLICT = "idempotency_conflict"
     NOT_FOUND = "not_found"
+
+
+class AIExplanationEntitlementDenied(PermissionError):
+    pass
 
 
 @dataclass(frozen=True)
@@ -96,6 +107,8 @@ class EvaluateAIExplanationToRepositoryCommand:
     producer_run_id: str | None = None
     producer_execution_output: LotusAIExecutionOutputContent | None = None
     run_attestation: LotusAIRunAttestationEnvelope | None = None
+    provider_retention_confirmation: AIProviderRetentionEnvelope | None = None
+    caller_tenant_ids: tuple[str, ...] = ()
     workflow_output_trust_policy: AIWorkflowOutputTrustPolicy = (
         AIWorkflowOutputTrustPolicy.LOTUS_AI_ATTESTATION_REQUIRED
     )
@@ -131,6 +144,12 @@ class EvaluateAIExplanationToRepositoryCommand:
                 "attested lotus-ai output cannot be combined with caller-mapped workflow output",
                 reason=AIWorkflowProvenanceRejectionReason.CONFLICTING_OUTPUT_SOURCES,
             )
+        if self.provider_retention_confirmation is not None and self.run_attestation is None:
+            raise UntrustedAIWorkflowOutput(
+                "provider retention confirmation requires a complete attested execution bundle",
+                reason=AIWorkflowProvenanceRejectionReason.INCOMPLETE_ATTESTATION_BUNDLE,
+            )
+        object.__setattr__(self, "caller_tenant_ids", tuple(self.caller_tenant_ids))
 
 
 @dataclass(frozen=True)
@@ -195,9 +214,15 @@ def evaluate_ai_explanation_to_repository(
             decision=AIExplanationEvaluationDecision.NOT_FOUND,
             explanation_result=None,
         )
+    candidate_scope = record.candidate.access_scope
+    if candidate_scope is not None and candidate_scope.tenant_id not in command.caller_tenant_ids:
+        raise AIExplanationEntitlementDenied(
+            "caller tenant entitlement does not include the idea candidate"
+        )
 
     explanation_request = build_ai_explanation_request(record.candidate, command.explanation)
     attestation_receipt = None
+    provider_retention_receipt = None
     if command.run_attestation is not None:
         if attestation_key_source is None or signature_verifier is None:
             raise UntrustedAIWorkflowOutput(
@@ -223,6 +248,23 @@ def evaluate_ai_explanation_to_repository(
                 ),
                 signature_verifier=signature_verifier,
             )
+            if command.provider_retention_confirmation is not None:
+                if candidate_scope is None:
+                    raise ValueError("candidate tenant scope is required for provider retention")
+                provider_retention_receipt = verify_ai_provider_retention_confirmation(
+                    envelope=command.provider_retention_confirmation,
+                    key_discovery=attestation_key_source.get_key_discovery(),
+                    expected=ExpectedAIProviderRetention(
+                        workflow_run_id=attestation_receipt.run_id,
+                        tenant_id=candidate_scope.tenant_id,
+                        provider_id=attestation_receipt.provider_id,
+                        provider_mode=attestation_receipt.provider_mode,
+                        model_id=attestation_receipt.model_id,
+                        model_version=attestation_receipt.model_version,
+                        verified_at_utc=verified_at,
+                    ),
+                    signature_verifier=signature_verifier,
+                )
             workflow_output = map_lotus_ai_idea_workflow_output(
                 command.producer_execution_output,
                 request_id=explanation_request.request_id,
@@ -258,6 +300,7 @@ def evaluate_ai_explanation_to_repository(
         idempotency_key=command.idempotency_key,
         payload=dict(command.idempotency_payload),
         attestation_receipt=attestation_receipt,
+        provider_retention_receipt=provider_retention_receipt,
     )
     if (
         lineage_persistence_result.decision is AIExplanationLineagePersistenceDecision.CONFLICT

@@ -37,6 +37,9 @@ from app.domain import (
 from app.security.caller_context import CallerContext
 from app.integration.lotus_ai_attestation_contract import LotusAIProducerAttestation
 from app.integration.lotus_ai_idea_explanation_output import LotusAIExecutionOutputEvidence
+from app.integration.lotus_ai_provider_retention_contract import (
+    LotusAIProviderRetentionConfirmation,
+)
 
 
 class AIWorkflowPackRequest(CamelModel):
@@ -182,6 +185,10 @@ class AIExplanationEvaluationRequest(CamelModel):
         default=None, alias="producerExecutionOutput"
     )
     run_attestation: LotusAIProducerAttestation | None = Field(default=None, alias="runAttestation")
+    provider_retention_confirmation: LotusAIProviderRetentionConfirmation | None = Field(
+        default=None,
+        alias="providerRetentionConfirmation",
+    )
 
     @field_validator("request_id")
     @classmethod
@@ -235,6 +242,12 @@ class AIExplanationEvaluationRequest(CamelModel):
             run_attestation=(
                 self.run_attestation.to_domain() if self.run_attestation is not None else None
             ),
+            provider_retention_confirmation=(
+                self.provider_retention_confirmation.to_domain()
+                if self.provider_retention_confirmation is not None
+                else None
+            ),
+            caller_tenant_ids=caller.entitlement_scope.tenant_ids,
             workflow_output_trust_policy=(
                 AIWorkflowOutputTrustPolicy.UNATTESTED_LOCAL_TEST_FIXTURE_ALLOWED
                 if allow_unattested_workflow_fixture
@@ -370,6 +383,10 @@ class AIExplanationEvaluationResponse(CamelModel):
         default=None,
         alias="aiLineagePersistenceDecision",
     )
+    provider_retention_confirmation_recorded: bool = Field(
+        False,
+        alias="providerRetentionConfirmationRecorded",
+    )
     durable_storage_backed: bool = Field(False, alias="durableStorageBacked")
     lotus_ai_runtime_executed: bool = Field(False, alias="lotusAiRuntimeExecuted")
     supported_feature_promoted: bool = Field(False, alias="supportedFeaturePromoted")
@@ -382,6 +399,7 @@ class AIExplanationEvaluationResponse(CamelModel):
         ai_lineage_recorded: bool,
         ai_lineage_persistence_decision: str | None,
         durable_storage_backed: bool,
+        provider_retention_confirmation_recorded: bool = False,
     ) -> "AIExplanationEvaluationResponse":
         return cls(
             requestId=result.request.request_id,
@@ -412,6 +430,7 @@ class AIExplanationEvaluationResponse(CamelModel):
             aiLineageRecorded=ai_lineage_recorded,
             aiLineagePersistenceDecision=ai_lineage_persistence_decision,
             durableStorageBacked=durable_storage_backed,
+            providerRetentionConfirmationRecorded=provider_retention_confirmation_recorded,
             lotusAiRuntimeExecuted=(
                 result.execution_provenance_posture
                 is AIExecutionProvenancePosture.LOTUS_AI_ATTESTATION_VERIFIED

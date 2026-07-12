@@ -72,6 +72,7 @@ from app.domain.conversion_outcome_policy import (
 )
 from app.domain.report_evidence import ReportEvidencePackResult
 from app.domain.lotus_ai_attestation_replay import LotusAIAttestationReplayIndex
+from app.domain.ai_provider_retention_replay import AIProviderRetentionReplayIndex
 from app.domain.review_governance import (
     FeedbackResult,
     ReviewActionResult,
@@ -97,6 +98,7 @@ class InMemoryIdeaRepository(
         self._report_evidence_pack_candidates: dict[str, str] = {}
         self._ai_explanation_lineage_candidates: dict[str, str] = {}
         self._lotus_ai_attestation_replay = LotusAIAttestationReplayIndex()
+        self._ai_provider_retention_replay = AIProviderRetentionReplayIndex()
         self._outbox_events: dict[str, OutboxEventRecord] = {}
         self._outbox_recovery_records: dict[str, OutboxRecoveryAuditRecord] = {}
         self._downstream_submission_records: dict[str, DownstreamSubmissionRecord] = {}
@@ -116,6 +118,12 @@ class InMemoryIdeaRepository(
                 for record in self._candidate_records.values()
                 for lineage in getattr(record, "ai_explanation_lineage_records", ())
                 if lineage.attestation_receipt is not None
+            )
+            self._ai_provider_retention_replay.restore(
+                (lineage.request_id, lineage.provider_retention_receipt)
+                for record in self._candidate_records.values()
+                for lineage in getattr(record, "ai_explanation_lineage_records", ())
+                if lineage.provider_retention_receipt is not None
             )
 
     def persist_candidate(

@@ -35,6 +35,10 @@ from app.domain.ideas import (
     UnsupportedEvidenceReason,
 )
 from app.domain.lotus_ai_run_attestation import VerifiedLotusAIRunAttestationReceipt
+from app.domain.ai_provider_retention import (
+    AIProviderRetentionOutcome,
+    VerifiedAIProviderRetentionReceipt,
+)
 from app.domain.report_evidence import (
     GovernedReportEvidencePack,
     ReportEvidencePackBoundary,
@@ -474,6 +478,11 @@ def _ai_explanation_lineage_to_json(record: AIExplanationLineageRecord) -> dict[
             if record.attestation_receipt is not None
             else None
         ),
+        "provider_retention_receipt": (
+            _provider_retention_receipt_to_json(record.provider_retention_receipt)
+            if record.provider_retention_receipt is not None
+            else None
+        ),
     }
 
 
@@ -512,6 +521,11 @@ def _ai_explanation_lineage_from_json(
         attestation_receipt=(
             _attestation_receipt_from_json(payload["attestation_receipt"])
             if payload.get("attestation_receipt") is not None
+            else None
+        ),
+        provider_retention_receipt=(
+            _provider_retention_receipt_from_json(payload["provider_retention_receipt"])
+            if payload.get("provider_retention_receipt") is not None
             else None
         ),
     )
@@ -559,6 +573,58 @@ def _attestation_receipt_from_json(
         evaluator_policy_version=str(payload["evaluator_policy_version"]),
         input_evidence_sha256=str(payload["input_evidence_sha256"]),
         output_content_sha256=str(payload["output_content_sha256"]),
+        issued_at_utc=_datetime(payload["issued_at_utc"]),
+        expires_at_utc=_datetime(payload["expires_at_utc"]),
+        verified_at_utc=_datetime(payload["verified_at_utc"]),
+    )
+
+
+def _provider_retention_receipt_to_json(
+    receipt: VerifiedAIProviderRetentionReceipt,
+) -> dict[str, object]:
+    return {
+        "confirmation_id": receipt.confirmation_id,
+        "workflow_run_id": receipt.workflow_run_id,
+        "tenant_id": receipt.tenant_id,
+        "provider_confirmation_ref": receipt.provider_confirmation_ref,
+        "retention_policy_id": receipt.retention_policy_id,
+        "outcome": receipt.outcome.value,
+        "evidence_sha256": receipt.evidence_sha256,
+        "provider_failure_code": receipt.provider_failure_code,
+        "deletion_confirmed": receipt.deletion_confirmed,
+        "supportability_status": receipt.supportability_status,
+        "replay_nonce": receipt.replay_nonce,
+        "key_id": receipt.key_id,
+        "rotation_epoch": receipt.rotation_epoch,
+        "provider_decision_at_utc": receipt.provider_decision_at_utc.isoformat(),
+        "issued_at_utc": receipt.issued_at_utc.isoformat(),
+        "expires_at_utc": receipt.expires_at_utc.isoformat(),
+        "verified_at_utc": receipt.verified_at_utc.isoformat(),
+    }
+
+
+def _provider_retention_receipt_from_json(
+    payload: Mapping[str, Any],
+) -> VerifiedAIProviderRetentionReceipt:
+    return VerifiedAIProviderRetentionReceipt(
+        confirmation_id=str(payload["confirmation_id"]),
+        workflow_run_id=str(payload["workflow_run_id"]),
+        tenant_id=str(payload["tenant_id"]),
+        provider_confirmation_ref=str(payload["provider_confirmation_ref"]),
+        retention_policy_id=str(payload["retention_policy_id"]),
+        outcome=AIProviderRetentionOutcome(str(payload["outcome"])),
+        evidence_sha256=str(payload["evidence_sha256"]),
+        provider_failure_code=(
+            str(payload["provider_failure_code"])
+            if payload.get("provider_failure_code") is not None
+            else None
+        ),
+        deletion_confirmed=bool(payload["deletion_confirmed"]),
+        supportability_status=str(payload["supportability_status"]),
+        replay_nonce=str(payload["replay_nonce"]),
+        key_id=str(payload["key_id"]),
+        rotation_epoch=int(payload["rotation_epoch"]),
+        provider_decision_at_utc=_datetime(payload["provider_decision_at_utc"]),
         issued_at_utc=_datetime(payload["issued_at_utc"]),
         expires_at_utc=_datetime(payload["expires_at_utc"]),
         verified_at_utc=_datetime(payload["verified_at_utc"]),
