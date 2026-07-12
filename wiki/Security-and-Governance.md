@@ -43,6 +43,15 @@ atomic persistence. Confirmation, provider-reference, and nonce replay are
 fenced. The posture remains `not_certified`; provider-native evidence,
 managed-key/production-SQL proof, and bank approvals are still required.
 
+Linked report evidence uses an independent Archive trust boundary. Idea accepts
+only a strict signed `IdeaEvidenceLifecycleDecision` bound to exact Idea-owned
+linkage, a maximum five-minute TTL, canonical SHA-256, and an active or rotated
+Ed25519 key. Applied decision and digest replay are fenced durably. Archive hold
+can block local action, but the receipt cannot authorize that action: signed
+bank authority, tenant entitlement, dual approval, retention, and local state
+remain mandatory. Raw documents, evidence content, and client identifiers are
+excluded from the receipt and audit projection.
+
 Run id and replay nonce are durable unique identities. Operation events expose
 only bounded verification/rejection posture; they exclude signatures, keys,
 run ids, prompts, provider payloads, and client data. Local proof is enforced

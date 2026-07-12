@@ -23,6 +23,31 @@ and retain the external authority decision.
 | Report and Archive records | `lotus-report`, `lotus-archive` | Preserve local references; do not claim rendering or archive authority. |
 | AI provider retention | `lotus-ai` provider operations | Verify the signed source-safe confirmation against attested run/candidate tenant/provider/model identity and persist only its bounded receipt. Provider failure is blocked posture, not deletion proof. |
 
+### Archive Posture For Linked Report Evidence
+
+When a candidate has a local report evidence-pack request, the lifecycle action
+must also carry a signed `lotus-archive:IdeaEvidenceLifecycleDecision:v1`
+envelope. Configure the JSON trust bundle through
+`LOTUS_IDEA_ARCHIVE_LIFECYCLE_TRUST_BUNDLE_JSON`; malformed, missing, unknown,
+expired, revoked, digest-mismatched, or signature-invalid evidence fails closed.
+
+| Local action | Required Archive posture |
+| --- | --- |
+| `apply_hold` | `LEGAL_HOLD` for the exact linked evidence pack |
+| `release_hold`, `erase` | No active Archive legal hold |
+| `purge` | `DISPOSAL_EXECUTED`; `DISPOSAL_ELIGIBLE` is insufficient |
+
+The receipt must bind the exact tenant, candidate, Idea evidence-pack ID,
+document, retention policy, action, digest, signing key, and a TTL no longer
+than five minutes. `disposalAuthorized` must be false because Archive posture
+does not authorize the Idea mutation. The independently signed bank decision,
+dual approval, entitlement, retention, and local state checks still apply.
+
+Applied Archive decision IDs and payload digests are single-use. An exact retry
+under the same idempotency key replays; reuse through a different key returns
+`archive_lifecycle_posture_replay_conflict`. Blocked operations do not consume
+the receipt.
+
 Idea-local AI lineage retains only governed identifiers, output-integrity
 digest/version, bounded posture, and audit metadata under the seven-year
 regulated-advisory policy. It does not retain raw prompts or unrestricted
@@ -132,6 +157,9 @@ Example request body:
 | `permission_denied` | Role, capability, trusted provenance, or tenant entitlement failed. | Correct identity propagation; do not retry with broader self-asserted scope. |
 | `data_lifecycle_candidate_not_found` | No candidate exists in the authorized tenant scope. | Confirm the source-safe reference and tenant; do not probe other tenants. |
 | `data_lifecycle_idempotency_conflict` | The key is bound to different content. | Stop and reconcile the original operation before issuing a new key. |
+| `archive_lifecycle_posture_invalid` | Archive evidence is malformed, stale, mismatched, or cryptographically invalid. | Reconcile with Archive; do not substitute caller assertions or broaden linkage. |
+| `archive_lifecycle_trust_unavailable` | The governed Archive trust bundle is absent or unusable. | Restore approved key distribution; do not bypass verification. |
+| `archive_lifecycle_posture_replay_conflict` | An applied Archive decision or digest was reused under another operation key. | Stop and investigate duplicate or replay activity before any retry. |
 | `data_lifecycle_action_blocked` | Hold, delivery, expiry, authority, approval, policy, or state prerequisite failed. | Read the operation audit and resolve the governing prerequisite. |
 | `data_lifecycle_repository_unavailable` | Governed durable operations are unavailable. | Restore PostgreSQL readiness; no process-local fallback is permitted. |
 | `data_lifecycle_controls_missing` | Trust telemetry found durable candidates without controls. | Block certification and backfill only from explicit tenant/policy authority. |
@@ -188,6 +216,7 @@ Run the governed validation lanes:
 
 ```powershell
 make data-lifecycle-contract-gate
+make archive-lifecycle-posture-contract-gate
 make migration-contract-gate
 make migration-execution-gate
 make endpoint-certification-gate
@@ -197,7 +226,8 @@ make no-sensitive-content-guard
 ```
 
 The PostgreSQL gate proves restart replay/conflict, hold precedence, dual
-authorization, atomic redaction, expiry-gated purge, pseudonymized audit, and
+authorization, exact linked report-pack loading, Archive receipt persistence
+and single use, atomic redaction, expiry-gated purge, pseudonymized audit, and
 delivery-claim serialization.
 
 ## Certification Blockers
@@ -208,7 +238,8 @@ following remain external or production-evidence blockers:
 1. Jurisdiction-specific approval of each duration and start event.
 2. Live bank lifecycle-authority producer, key-discovery, and mainline
    signature proof.
-3. Report and Archive policy-reference conformance evidence.
+3. Managed Archive durable-store, signing-key rotation, trust-distribution,
+   and production policy-reference conformance evidence.
 4. Provider-native AI retention/deletion evidence, managed-key and production-SQL proof, and bank privacy/outsourcing/model-risk approval. Idea-side signed receipt verification alone does not clear these controls.
 5. Mainline scheduled expiry-review evidence and production authorized purge
    evidence with signed privacy authority.

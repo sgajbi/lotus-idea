@@ -23,6 +23,22 @@ Lotus AI (`51a8e8e`), Lotus Report (`59385c5`), Lotus Archive (`e5e9253`), and
 Lotus Idea (`f496c442`). This is contract-delivery evidence, not production
 provider, privacy/legal, retention, archive, or purge certification.
 
+### Lotus Archive Lifecycle Posture
+
+For linked report evidence, Idea consumes
+`lotus-archive:IdeaEvidenceLifecycleDecision:v1`. It verifies canonical digest,
+Ed25519 signature, trusted-key window, five-minute TTL, tenant, candidate,
+evidence-pack, document, retention-policy, and action bindings before domain
+policy runs. Exact linkage comes from Idea-owned PostgreSQL state inside the
+same transaction, not from caller claims.
+
+Archive legal hold blocks local release, erasure, and purge. Local purge
+requires Archive `DISPOSAL_EXECUTED`; eligibility alone is insufficient.
+Migration `015` stores bounded receipt lineage and fences applied decision IDs
+and digests across restart. This is consumer conformance only: the bank remains
+the lifecycle-action authority, Archive remains archive/disposal authority, and
+Idea remains authority only for mutation of its own records.
+
 ## Integration Reader Map
 
 | Need | Section |
