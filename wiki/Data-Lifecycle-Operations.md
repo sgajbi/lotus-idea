@@ -37,6 +37,13 @@ flowchart LR
 | Erase | Bank privacy governance | Distinct approver; no active delivery | Payloads redact, actors pseudonymize, tombstones remain. |
 | Purge | Bank privacy governance | Prior erasure, expiry, distinct approver | Eligible payload rows delete; regulated audit remains. |
 
+Production-like requests also require an approved, unexpired Ed25519
+`authorityDecision` bound to the exact tenant, candidate, action, authority
+domain/reference, and change reference. Applied decisions are single-use by
+decision ID and replay nonce; previews verify without consuming them. Unknown,
+revoked, stale, substituted, or reused authority returns a source-safe failure
+before another mutation.
+
 ## First Response
 
 | Condition | Operator action |
@@ -86,7 +93,8 @@ represent those rows as content-level audit proof.
 ## Remaining Blockers
 
 - Bank approval for jurisdiction-specific durations and start events.
-- Signed legal/privacy decision integration.
+- Live bank lifecycle-authority producer, key-discovery, and mainline
+  signature proof.
 - Report, Archive, and AI-provider conformance evidence.
 - Mainline scheduled expiry-review evidence and production authorized purge
   evidence with signed privacy authority.

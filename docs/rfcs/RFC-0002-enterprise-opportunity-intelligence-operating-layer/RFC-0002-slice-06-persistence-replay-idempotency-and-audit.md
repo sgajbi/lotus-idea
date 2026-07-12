@@ -1,6 +1,6 @@
 # RFC-0002 Slice 06: Persistence, Replay, Idempotency, And Audit
 
-Status: Partially implemented - internal persistence, replay, audit, governed retention/legal-hold/erasure/purge enforcement, lifecycle trust telemetry, bounded scheduled expiry review, durable downstream submission claim/finalize/reconciliation, source-safe outbox retry/dead-letter delivery, certified operator diagnostics/actions, schema/rollback contracts, PostgreSQL adapters, real concurrency/restart proof, real logical backup/restore plus no-duplicate resume proof, provider-restore validation, recovery-aware write gating, source-ingestion recovery, and bounded broker/consumer/mesh proof foundations are implemented; physical/WAL production recovery certification, signed lifecycle authority integration, Report/Archive/AI retention conformance, production authorized purge proof, external publication, downstream execution/materialization proof, and supported-feature promotion remain blocked
+Status: Partially implemented - internal persistence, replay, audit, governed retention/legal-hold/erasure/purge enforcement, lifecycle trust telemetry, bounded scheduled expiry review, signed lifecycle-authority verification and replay fencing, durable downstream submission claim/finalize/reconciliation, source-safe outbox retry/dead-letter delivery, certified operator diagnostics/actions, schema/rollback contracts, PostgreSQL adapters, real concurrency/restart proof, real logical backup/restore plus no-duplicate resume proof, provider-restore validation, recovery-aware write gating, source-ingestion recovery, and bounded broker/consumer/mesh proof foundations are implemented; physical/WAL production recovery certification, live bank lifecycle-authority producer proof, Report/Archive/AI retention conformance, production authorized purge proof, external publication, downstream execution/materialization proof, and supported-feature promotion remain blocked
 
 ## Outcome
 
@@ -55,10 +55,31 @@ Implemented evidence:
    non-certification posture.
 
 Remaining lifecycle certification blockers are bank approval for durations
-and start events, signed authority integration, Report/Archive/AI conformance,
-production authorized purge proof with privacy review, mainline CI, and
+and start events, live bank authority producer/key-discovery proof,
+Report/Archive/AI conformance, production authorized purge proof with privacy review, mainline CI, and
 supported feature promotion. Lotus Idea enforces approved decisions; it does not own
 legal, privacy, archive, report-rendering, or AI-provider policy decisions.
+
+### Signed Lifecycle Authority Consumer
+
+Production-like profiles now require a signed `authorityDecision` before a
+lifecycle command can reach the repository. The consumer verifies an Ed25519
+signature against a configured no-redirect well-known key source and binds the
+approved decision to issuer, audience, tenant, candidate, action,
+legal-or-privacy authority domain, authority reference, change reference, and
+effective/expiry window. Unknown, duplicate, revoked, wrong-curve, stale, or
+substituted claims fail before mutation.
+
+Migration `013_lifecycle_authority_receipt` stores decision ID, replay nonce,
+key ID, rotation epoch, and verification time for applied operations. A dry-run
+preview verifies but does not consume the decision. The first applied command
+claims decision and nonce under an advisory lock and partial unique indexes;
+same-key retries replay, while new-key reuse returns
+`lifecycle_authority_replay_conflict` without another lifecycle mutation.
+Real PostgreSQL 18 tests prove apply, reconnect replay, single-use conflict,
+and durable receipt identity. This is consumer-side enforcement, not evidence
+that a bank authority producer is live or that a legal/privacy decision was
+substantively correct.
 
 ### Scheduled Expiry Review Foundation
 
