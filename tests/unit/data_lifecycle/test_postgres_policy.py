@@ -20,13 +20,13 @@ from app.domain.data_lifecycle.authority import (
     LifecycleAuthorityDomain,
     VerifiedLifecycleAuthorityReceipt,
 )
-from app.infrastructure import postgres_data_lifecycle as module
-from app.infrastructure.postgres_data_lifecycle import (
+from app.infrastructure.data_lifecycle import postgres_policy as module
+from app.infrastructure.data_lifecycle.postgres_policy import (
     DataLifecycleWriteBlockedError,
     PostgresDataLifecycleRepository,
     assert_data_lifecycle_allows_candidate_writes,
 )
-from app.infrastructure.postgres_data_lifecycle_redaction import (
+from app.infrastructure.data_lifecycle.postgres_redaction import (
     purge_expired_candidate_payloads,
     redact_candidate_graph,
 )

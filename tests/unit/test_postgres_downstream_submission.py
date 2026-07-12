@@ -21,7 +21,7 @@ from app.domain import (
 )
 from app.infrastructure.postgres_repository_delta import _mutated_candidate_ids
 from app.infrastructure.postgres_repository import PostgresIdeaRepository
-from app.infrastructure.postgres_data_lifecycle import DataLifecycleWriteBlockedError
+from app.infrastructure.data_lifecycle.postgres_policy import DataLifecycleWriteBlockedError
 from tests.unit.postgres_repository_fake import FakePostgresConnection
 
 

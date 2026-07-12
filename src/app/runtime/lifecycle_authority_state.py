@@ -6,7 +6,7 @@ from app.application.data_lifecycle.authority_verification import (
     LifecycleAuthoritySignatureVerifier,
 )
 from app.infrastructure.ed25519_signature_verifier import Ed25519SignatureVerifier
-from app.infrastructure.http_lifecycle_authority_keys import HttpLifecycleAuthorityKeySource
+from app.infrastructure.data_lifecycle.authority_key_source import HttpLifecycleAuthorityKeySource
 from app.ports.data_lifecycle.authority import LifecycleAuthorityKeySource
 
 

@@ -23,7 +23,7 @@ from app.domain.data_lifecycle.schedule import (  # noqa: E402
     ScheduledLifecycleBlockerCount,
     ScheduledLifecycleReviewEvidence,
 )
-from app.infrastructure.postgres_data_lifecycle_schedule import (  # noqa: E402
+from app.infrastructure.data_lifecycle.postgres_schedule import (  # noqa: E402
     PostgresScheduledDataLifecycleRepository,
 )
 from scripts.disaster_recovery_evidence_io import (  # noqa: E402

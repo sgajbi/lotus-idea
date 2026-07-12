@@ -6,8 +6,8 @@ from typing import Any
 import pytest
 
 from app.domain.data_lifecycle import DataLifecycleState
-from app.infrastructure import postgres_data_lifecycle_schedule as module
-from app.infrastructure.postgres_data_lifecycle_schedule import (
+from app.infrastructure.data_lifecycle import postgres_schedule as module
+from app.infrastructure.data_lifecycle.postgres_schedule import (
     PostgresScheduledDataLifecycleRepository,
 )
 

@@ -58,7 +58,7 @@ from app.domain.persistence import (
     ReviewPersistenceDecision,
 )
 from app.infrastructure.postgres_repository import PostgresIdeaRepository
-from app.infrastructure.postgres_data_lifecycle import DataLifecycleWriteBlockedError
+from app.infrastructure.data_lifecycle.postgres_policy import DataLifecycleWriteBlockedError
 from tests.unit.downstream_submission_helpers import build_downstream_submission_claim
 from app.infrastructure.postgres_mutation_metadata import idempotency_created_at
 from app.infrastructure.postgres_candidate_writes import StaleCandidateMutationError

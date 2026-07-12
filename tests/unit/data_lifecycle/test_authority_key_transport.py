@@ -3,7 +3,7 @@ from __future__ import annotations
 import httpx
 import pytest
 
-from app.infrastructure.http_lifecycle_authority_keys import (
+from app.infrastructure.data_lifecycle.authority_key_source import (
     HttpLifecycleAuthorityKeySource,
 )
 from tests.support.lifecycle_authority_fixture import (

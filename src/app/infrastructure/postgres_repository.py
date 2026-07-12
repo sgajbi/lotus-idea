@@ -111,7 +111,7 @@ from app.infrastructure.postgres_runtime_trust_telemetry import (
 from app.infrastructure.postgres_slo import execute_observed_postgres_call
 from app.infrastructure.postgres_capacity_posture import PostgresCapacityRepositoryMixin
 from app.infrastructure.postgres_candidate_detail import PostgresCandidateDetailRepositoryMixin
-from app.infrastructure.postgres_data_lifecycle import (
+from app.infrastructure.data_lifecycle.postgres_policy import (
     PostgresDataLifecycleRepository,
     assert_data_lifecycle_allows_candidate_writes,
     insert_data_lifecycle_control_for_candidate,
