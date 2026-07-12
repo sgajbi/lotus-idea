@@ -1,6 +1,6 @@
 # RFC-0002 Slice 06: Persistence, Replay, Idempotency, And Audit
 
-Status: Partially implemented - internal persistence, replay, audit, governed retention/legal-hold/erasure/purge enforcement, lifecycle trust telemetry, bounded scheduled expiry review, signed lifecycle-authority verification and replay fencing, durable downstream submission claim/finalize/reconciliation, source-safe outbox retry/dead-letter delivery, certified operator diagnostics/actions, schema/rollback contracts, PostgreSQL adapters, real concurrency/restart proof, real logical backup/restore plus no-duplicate resume proof, provider-restore validation, recovery-aware write gating, source-ingestion recovery, and bounded broker/consumer/mesh proof foundations are implemented; physical/WAL production recovery certification, live bank lifecycle-authority producer proof, Report/Archive/AI retention conformance, production authorized purge proof, external publication, downstream execution/materialization proof, and supported-feature promotion remain blocked
+Status: Partially implemented - internal persistence, replay, audit, governed retention/legal-hold/erasure/purge enforcement, lifecycle trust telemetry, bounded scheduled expiry review, signed lifecycle-authority verification and replay fencing, independently signed Lotus AI provider-retention receipt verification/persistence, durable downstream submission claim/finalize/reconciliation, source-safe outbox retry/dead-letter delivery, certified operator diagnostics/actions, schema/rollback contracts, PostgreSQL adapters, real concurrency/restart proof, real logical backup/restore plus no-duplicate resume proof, provider-restore validation, recovery-aware write gating, source-ingestion recovery, and bounded broker/consumer/mesh proof foundations are implemented; physical/WAL production recovery certification, live bank lifecycle-authority producer proof, provider-native AI confirmation/approval, Report/Archive production conformance, production authorized purge proof, external publication, downstream execution/materialization proof, and supported-feature promotion remain blocked
 
 ## Outcome
 
@@ -99,6 +99,26 @@ for 90 days. The artifact is explicitly `reviewOnly=true`,
 Mainline workflow evidence remains required before this foundation can be
 claimed as merged proof; production purge remains blocked on signed privacy
 authority, dual review, and cross-service conformance.
+
+### Lotus AI Provider-Retention Consumer
+
+Attested AI explanation evaluation may now carry a separately signed
+`lotus-ai:ProviderRetentionConfirmation:v1` envelope. Idea verifies the shared
+Ed25519 trust bundle and binds run, tenant, provider, provider mode, model, and
+model version to the already verified execution receipt and candidate access
+scope before one atomic lineage write. Migration
+`014_ai_provider_retention_receipt` persists bounded confirmation, provider
+reference, and replay-nonce identities with uniqueness fencing; raw prompts,
+outputs, client identifiers, and provider secrets remain excluded.
+
+`PROVIDER_FAILURE` is accepted only as `BLOCKED` posture with
+`deletionConfirmed=false`. The receipt reports Lotus AI/provider operations
+posture only: it cannot authorize Idea hold, erasure, or purge, cannot replace
+the bank lifecycle-authority decision, and cannot stand in for Report or
+Archive conformance. The consumer contract is enforced by
+`make ai-provider-retention-contract-gate`. Provider-native confirmation,
+managed-key/production-SQL proof, bank privacy/outsourcing/model-risk approval,
+mainline cross-repository proof, and production-authorized purge remain blocked.
 
 ## Implementation Evidence
 

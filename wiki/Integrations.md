@@ -8,6 +8,16 @@ exist. They do not certify source-owned calculations, downstream execution,
 Report/Render/Archive materialization, full Gateway/Workbench product support,
 data-product certification, or supported-feature promotion.
 
+### Lotus AI Provider-Retention Receipt
+
+An attested AI explanation may include the signed
+`lotus-ai:ProviderRetentionConfirmation:v1` envelope. Idea verifies it against
+the governed Lotus AI key-discovery contract, binds it to candidate tenant and
+verified run/provider/model identity, and stores only a bounded receipt with AI
+lineage. It does not call the provider, record the outcome on Lotus AI's behalf,
+or gain lifecycle authority. Provider-native and bank-approval evidence remain
+required before certification.
+
 ## Integration Reader Map
 
 | Need | Section |

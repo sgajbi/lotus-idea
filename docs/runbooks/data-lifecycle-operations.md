@@ -21,7 +21,7 @@ and retain the external authority decision.
 | Legal hold | Bank legal and records governance | Validate the authority reference and prevent erasure or purge while held. |
 | Subject erasure | Bank privacy governance | Validate the authority reference, tenant scope, and dual authorization. |
 | Report and Archive records | `lotus-report`, `lotus-archive` | Preserve local references; do not claim rendering or archive authority. |
-| AI provider retention | `lotus-ai` and the approved provider owner | Redact local lineage; require external deletion confirmation for certification. |
+| AI provider retention | `lotus-ai` provider operations | Verify the signed source-safe confirmation against attested run/candidate tenant/provider/model identity and persist only its bounded receipt. Provider failure is blocked posture, not deletion proof. |
 
 Idea-local AI lineage retains only governed identifiers, output-integrity
 digest/version, bounded posture, and audit metadata under the seven-year
@@ -209,7 +209,7 @@ following remain external or production-evidence blockers:
 2. Live bank lifecycle-authority producer, key-discovery, and mainline
    signature proof.
 3. Report and Archive policy-reference conformance evidence.
-4. AI-provider retention and deletion confirmation.
+4. Provider-native AI retention/deletion evidence, managed-key and production-SQL proof, and bank privacy/outsourcing/model-risk approval. Idea-side signed receipt verification alone does not clear these controls.
 5. Mainline scheduled expiry-review evidence and production authorized purge
    evidence with signed privacy authority.
 

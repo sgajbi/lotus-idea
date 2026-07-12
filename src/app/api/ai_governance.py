@@ -519,7 +519,10 @@ AI_EXPLANATION_ROUTE: RouteMetadata = {
         "API Idempotency-Key replay/conflict protection, and bounded operation telemetry. "
         "When supplied together, producer execution output and a signed lotus-ai run attestation "
         "are verified against trusted keys and bound to the Idea request before a bounded "
-        "verification receipt is persisted. The route does not call an AI provider or execute "
+        "verification receipt is persisted. An optional signed provider-retention confirmation "
+        "is independently bound to the verified run, candidate tenant, provider, and model and "
+        "persisted with the same lineage; provider failure never proves deletion. The route does "
+        "not call an AI provider or execute "
         "lotus-ai runtime workflows, persist provider payloads or prompts, grant downstream "
         "authority, or promote a supported feature."
     ),
@@ -593,6 +596,7 @@ AI_EXPLANATION_ROUTE: RouteMetadata = {
                         "approvedMetadataKeys": ["channel"],
                         "aiLineageRecorded": True,
                         "aiLineagePersistenceDecision": "accepted",
+                        "providerRetentionConfirmationRecorded": False,
                         "durableStorageBacked": False,
                         "lotusAiRuntimeExecuted": False,
                         "supportedFeaturePromoted": False,

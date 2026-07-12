@@ -49,6 +49,15 @@ published from `main` when needed, and branch hygiene is complete.
 
 ## Closure Rules
 
+Slice 06 AI conformance now additionally verifies and persists
+`lotus-ai:ProviderRetentionConfirmation:v1` through migration `014`, with
+tenant/run/provider/model binding, confirmation/reference/nonce replay fencing,
+source-safe lineage hashing, and explicit non-authority semantics. Focused
+verification, API, codec, migration, replay, and cross-tenant no-write tests
+pass. Issue #344 remains `partially_fixed`: provider-native evidence,
+managed-key/production-SQL proof, bank approvals, Report/Archive production
+conformance, authorized purge, and mainline proof remain open.
+
 1. `#225` remains the campaign ledger and is intentionally excluded from the
    actionable closure set.
 2. A row can be `locally_fixed` only when implementation, meaningful tests,
