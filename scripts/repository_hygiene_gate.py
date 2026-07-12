@@ -88,13 +88,13 @@ PROHIBITED_LEGACY_MODULE_PATHS = {
 
 EXECUTABLE_PATH_PREFIXES = (
     ".github/workflows/",
-    "contracts/",
     "migrations/",
     "scripts/",
     "src/",
     "tests/",
 )
 RFC_COUPLED_EXECUTABLE_NAME = re.compile(r"(^|[/_-])(rfc|slice)[-_]?\d", re.IGNORECASE)
+RFC_TRACKING_EXECUTABLE_PATHS: frozenset[str] = frozenset()
 
 
 def _tracked_paths() -> list[str]:
@@ -148,11 +148,16 @@ def find_bounded_module_placement_violations(tracked_paths: list[str]) -> list[s
     return sorted(violations)
 
 
-def find_executable_naming_violations(tracked_paths: list[str]) -> list[str]:
+def find_executable_naming_violations(
+    tracked_paths: list[str],
+    *,
+    rfc_tracking_paths: frozenset[str] = RFC_TRACKING_EXECUTABLE_PATHS,
+) -> list[str]:
     return sorted(
         f"{path}: executable artifact must be named for its capability, not an RFC or slice"
         for tracked_path in tracked_paths
         if (path := _normalise(tracked_path)).startswith(EXECUTABLE_PATH_PREFIXES)
+        and path not in rfc_tracking_paths
         and RFC_COUPLED_EXECUTABLE_NAME.search(path)
     )
 
