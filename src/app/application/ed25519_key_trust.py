@@ -4,6 +4,16 @@ from datetime import datetime
 from typing import Callable, Protocol, TypeVar
 
 
+class Ed25519SignatureVerifier(Protocol):
+    def verify(
+        self,
+        *,
+        public_key_base64url: str,
+        signature_base64url: str,
+        canonical_payload: bytes,
+    ) -> None: ...
+
+
 class Ed25519SignatureReference(Protocol):
     @property
     def algorithm(self) -> str: ...
