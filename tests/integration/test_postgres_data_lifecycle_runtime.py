@@ -9,6 +9,7 @@ from typing import Any, cast
 import psycopg
 from fastapi.testclient import TestClient
 from psycopg.rows import dict_row
+from psycopg.types.json import Jsonb
 
 from app.application.data_lifecycle import ExecuteDataLifecycle, ReviewScheduledDataLifecycle
 from app.domain import DownstreamSubmissionClaimDecision
@@ -21,6 +22,12 @@ from app.domain.data_lifecycle import (
 from app.domain.data_lifecycle.authority import (
     LifecycleAuthorityDomain,
     VerifiedLifecycleAuthorityReceipt,
+)
+from app.domain.data_lifecycle.archive_posture import (
+    ArchiveLegalHoldStatus,
+    ArchiveLifecycleAction,
+    ArchivePurgeStatus,
+    VerifiedArchiveLifecycleReceipt,
 )
 from app.infrastructure.data_lifecycle.postgres_policy import DataLifecycleWriteBlockedError
 from app.infrastructure.data_lifecycle.postgres_schedule import (
@@ -316,6 +323,90 @@ def test_postgres_lifecycle_authority_receipt_is_restart_safe_and_single_use(
     assert rows[0]["authority_verified_at_utc"] == receipt.verified_at_utc
 
 
+def test_postgres_archive_posture_receipt_is_restart_safe_and_single_use(
+    postgres_database_url: str,
+) -> None:
+    conversion_id = "conversion-archive-posture-runtime"
+    candidate_id = seed_active_conversion_resource(postgres_database_url, conversion_id)
+    evidence_pack_id = "report-evidence-pack-archive-runtime-001"
+    evaluated_at = datetime.now(UTC)
+    _seed_report_evidence_pack(
+        postgres_database_url,
+        candidate_id=candidate_id,
+        conversion_intent_id=conversion_id,
+        evidence_pack_id=evidence_pack_id,
+        requested_at_utc=evaluated_at - timedelta(minutes=5),
+    )
+    receipt = VerifiedArchiveLifecycleReceipt(
+        decision_id="archive-decision-runtime-001",
+        document_id="archive-document-runtime-001",
+        evidence_pack_id=evidence_pack_id,
+        candidate_id=candidate_id,
+        tenant_id=TENANT_ID,
+        retention_policy_id="lotus-report:idea-evidence-retention:v1",
+        legal_hold_status=ArchiveLegalHoldStatus.CLEAR,
+        purge_status=ArchivePurgeStatus.NOT_ELIGIBLE,
+        lifecycle_action=ArchiveLifecycleAction.RETAIN,
+        payload_digest=f"sha256:{'a' * 64}",
+        key_id="archive-lifecycle-key-runtime-001",
+        issued_at_utc=evaluated_at - timedelta(minutes=2),
+        expires_at_utc=evaluated_at + timedelta(minutes=3),
+        verified_at_utc=evaluated_at,
+    )
+    command = DataLifecycleCommand(
+        candidate_id=candidate_id,
+        tenant_id=TENANT_ID,
+        action=DataLifecycleAction.ERASE,
+        actor_subject="privacy-operator-archive-runtime",
+        approver_subject="privacy-approver-archive-runtime",
+        authority_ref="bank-privacy-governance:archive-runtime-001",
+        reason="approved_lifecycle_request",
+        change_reference="privacy-case-archive-runtime-001",
+        idempotency_key="lifecycle-archive-runtime-apply-001",
+        request_fingerprint="a" * 64,
+        correlation_id="corr-lifecycle-archive-runtime-001",
+        trace_id="trace-lifecycle-archive-runtime-001",
+        requested_at_utc=evaluated_at - timedelta(seconds=1),
+        dry_run=False,
+        archive_lifecycle_receipt=receipt,
+    )
+
+    with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
+        first = ExecuteDataLifecycle(
+            PostgresIdeaRepository(cast(PostgresConnection, connection)),
+            now=lambda: evaluated_at,
+        ).execute(command)
+    with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
+        repository = PostgresIdeaRepository(cast(PostgresConnection, connection))
+        replay = ExecuteDataLifecycle(repository, now=lambda: evaluated_at).execute(command)
+        reused = ExecuteDataLifecycle(repository, now=lambda: evaluated_at).execute(
+            replace(command, idempotency_key="lifecycle-archive-runtime-reuse-001")
+        )
+
+    assert first.decision is DataLifecycleDecision.APPLIED
+    assert replay.decision is DataLifecycleDecision.REPLAYED
+    assert reused.decision is DataLifecycleDecision.CONFLICT
+    assert reused.blockers == (DataLifecycleBlocker.ARCHIVE_POSTURE_REPLAY,)
+    with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """SELECT archive_decision_id, archive_document_id,
+                          archive_evidence_pack_id, archive_payload_digest,
+                          archive_key_id, archive_verified_at_utc
+                   FROM idea_data_lifecycle_operation
+                   WHERE candidate_id = %s AND archive_decision_id IS NOT NULL""",
+                (candidate_id,),
+            )
+            rows = cursor.fetchall()
+    assert len(rows) == 1
+    assert rows[0]["archive_decision_id"] == receipt.decision_id
+    assert rows[0]["archive_document_id"] == receipt.document_id
+    assert rows[0]["archive_evidence_pack_id"] == evidence_pack_id
+    assert rows[0]["archive_payload_digest"] == receipt.payload_digest
+    assert rows[0]["archive_key_id"] == receipt.key_id
+    assert rows[0]["archive_verified_at_utc"] == receipt.verified_at_utc
+
+
 def _action(
     client: TestClient,
     candidate_id: str,
@@ -368,6 +459,36 @@ def _complete_outbox_delivery(database_url: str, candidate_id: str) -> None:
                    lease_attempt_id = NULL, lease_expires_at_utc = NULL
                WHERE aggregate_type = 'idea_candidate' AND aggregate_id = %s""",
             (candidate_id,),
+        )
+
+
+def _seed_report_evidence_pack(
+    database_url: str,
+    *,
+    candidate_id: str,
+    conversion_intent_id: str,
+    evidence_pack_id: str,
+    requested_at_utc: datetime,
+) -> None:
+    with psycopg.connect(database_url) as connection, connection.cursor() as cursor:
+        cursor.execute(
+            """INSERT INTO idea_report_evidence_pack_request (
+                   report_evidence_pack_id, candidate_id, conversion_intent_id,
+                   purpose, evidence_hash, evidence_pack_json, requested_at_utc
+               ) VALUES (%s, %s, %s, 'lifecycle_runtime_proof', %s, %s, %s)""",
+            (
+                evidence_pack_id,
+                candidate_id,
+                conversion_intent_id,
+                "sha256:archive-lifecycle-runtime-proof",
+                Jsonb(
+                    {
+                        "retention_policy_ref": "lotus-report:idea-evidence-retention:v1",
+                        "source_authority": "lotus-report",
+                    }
+                ),
+                requested_at_utc,
+            ),
         )
 
 
