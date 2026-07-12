@@ -21,7 +21,7 @@ from app.domain.data_lifecycle import (
     evaluate_data_lifecycle,
     resolve_external_retention_policy_ref,
 )
-from app.domain.lifecycle_authority import (
+from app.domain.data_lifecycle.authority import (
     LifecycleAuthorityDomain,
     VerifiedLifecycleAuthorityReceipt,
 )

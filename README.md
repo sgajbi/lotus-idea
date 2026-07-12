@@ -195,7 +195,7 @@ Common gates:
 | `make test-e2e` | Deterministic end-to-end tests; override `E2E_TESTS` for focused work. |
 | `make documentation-contract-gate` | README, repo context, docs, wiki, demo, and evidence-surface contract truth. |
 | `make implementation-truth-gate` | Blocks overclaims about support, certification, live source proof, Workbench, and client readiness. |
-| `make slice2-structure-gate` | Enforces RFC-0002 Slice 2 foundation-only posture, documentation truth, and architecture-boundary agreement. |
+| `make foundation-structure-gate` | Enforces foundation-only posture, documentation truth, and architecture-boundary agreement. |
 | `make quality-scorecard-gate` | Keeps quality posture aligned with implementation truth. |
 | `make supported-features-gate` | Ensures supported-feature registry entries are implementation-backed only. |
 | `make endpoint-certification-gate` | Validates endpoint certification evidence and OpenAPI caller-context truth. |

@@ -5,7 +5,7 @@ import time
 from typing import Any, Mapping
 
 from app.domain.data_lifecycle import DataLifecycleState
-from app.domain.data_lifecycle_schedule import ScheduledLifecycleControlSnapshot
+from app.domain.data_lifecycle.schedule import ScheduledLifecycleControlSnapshot
 from app.observability.service_slo_metrics import observe_postgres_operation
 
 

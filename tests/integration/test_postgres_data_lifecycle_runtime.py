@@ -18,7 +18,7 @@ from app.domain.data_lifecycle import (
     DataLifecycleCommand,
     DataLifecycleDecision,
 )
-from app.domain.lifecycle_authority import (
+from app.domain.data_lifecycle.authority import (
     LifecycleAuthorityDomain,
     VerifiedLifecycleAuthorityReceipt,
 )

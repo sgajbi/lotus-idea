@@ -9,7 +9,7 @@ from app.domain.data_lifecycle import (
     DataLifecycleEvaluation,
     DataLifecycleOperationResult,
 )
-from app.domain.data_lifecycle_schedule import ScheduledLifecycleControlSnapshot
+from app.domain.data_lifecycle.schedule import ScheduledLifecycleControlSnapshot
 
 
 class DataLifecycleEvaluator(Protocol):

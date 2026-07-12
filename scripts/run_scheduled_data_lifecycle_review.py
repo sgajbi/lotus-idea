@@ -19,7 +19,7 @@ if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
 from app.application.data_lifecycle import ReviewScheduledDataLifecycle  # noqa: E402
-from app.domain.data_lifecycle_schedule import (  # noqa: E402
+from app.domain.data_lifecycle.schedule import (  # noqa: E402
     ScheduledLifecycleBlockerCount,
     ScheduledLifecycleReviewEvidence,
 )

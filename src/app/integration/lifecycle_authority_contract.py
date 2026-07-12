@@ -6,7 +6,7 @@ from typing import Any, Mapping
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.domain.data_lifecycle import DataLifecycleAction
-from app.domain.lifecycle_authority import (
+from app.domain.data_lifecycle.authority import (
     LifecycleAuthorityDecisionClaims,
     LifecycleAuthorityDecisionEnvelope,
     LifecycleAuthorityDomain,

@@ -1722,7 +1722,7 @@
         "tests/integration/test_data_lifecycle_api.py::test_data_lifecycle_api_rejects_invalid_request_and_blocks_unsafe_erasure",
         "tests/integration/test_data_lifecycle_api.py::test_data_lifecycle_api_does_not_disclose_cross_tenant_candidate_existence",
         "tests/integration/test_data_lifecycle_api.py::test_data_lifecycle_openapi_certifies_success_and_failure_contracts",
-        "tests/unit/test_postgres_data_lifecycle.py::test_postgres_lifecycle_erasure_redacts_and_audits_in_one_commit"
+        "tests/unit/data_lifecycle/test_postgres_policy.py::test_postgres_lifecycle_erasure_redacts_and_audits_in_one_commit"
       ],
       "openapi_evidence": "scripts/openapi_quality_gate.py validates operation identity, summary, description, Operations tag, source-safe success example, and complete 400/403/404/409/503 Problem Details metadata. Live PostgreSQL concurrency/restart and cross-service authority proof remain blockers."
     },

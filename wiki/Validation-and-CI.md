@@ -73,7 +73,7 @@ target and must not carry durable truth that is absent from `main`.
 | Group | Primary commands | Use |
 | --- | --- | --- |
 | Aggregate lanes | `make check`, `make ci`, `make ci-release` | Routine local proof, broad CI-equivalent proof, and release evidence. |
-| Contract and documentation | `make ci-contract-gate`, `make slice2-structure-gate`, `make documentation-contract-gate`, `make implementation-truth-gate`, `make supported-features-gate` | Prevent workflow, docs, support, and certification drift. |
+| Contract and documentation | `make ci-contract-gate`, `make foundation-structure-gate`, `make documentation-contract-gate`, `make implementation-truth-gate`, `make supported-features-gate` | Prevent workflow, docs, support, and certification drift. |
 | API and OpenAPI | `make openapi-gate`, `make endpoint-certification-gate`, `make api-route-metadata-gate`, `make caller-context-contract-gate` | Keep runtime API and published contract truth aligned. |
 | Persistence and runtime | `make migration-contract-gate`, `make migration-execution-gate`, `make postgres-integration-gate`, `make disaster-recovery-contract-gate`, `make disaster-recovery-proof-gate`, `make container-runtime-smoke` | Prove durable storage, migration, restore/resume, and runtime behavior. |
 | Mesh and proof artifacts | `make data-mesh-contract-gate`, `make mesh-policy-proof-contract-gate`, `make implementation-proof-readiness-check`, `make canonical-opportunity-source-proofs`, `make runtime-trust-telemetry-snapshot-check` | Validate data-mesh, source-proof, and proof-readiness posture. |
@@ -698,7 +698,7 @@ serialization codec APIs. The gate is intentionally scoped to measured
 boundaries and does not claim complete application-helper or adapter-internal
 codec cleanup.
 
-`make slice2-structure-gate` is the RFC-0002 Slice 2 closure guard. It keeps
+`make foundation-structure-gate` is the foundation-posture guard introduced by RFC-0002 Slice 2. It keeps
 the current surface in foundation-only posture by checking the support registry,
 README, repository context, RFC index, supported-features wiki, and this
 validation page against the same planned-versus-supported truth. It also

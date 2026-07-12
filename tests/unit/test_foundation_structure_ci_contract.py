@@ -17,19 +17,19 @@ def _load_ci_contract_gate() -> ModuleType:
     return module
 
 
-def test_ci_contract_gate_blocks_missing_slice2_structure_gate() -> None:
+def test_ci_contract_gate_blocks_missing_foundation_structure_gate() -> None:
     module = _load_ci_contract_gate()
     makefile = (
         (ROOT / "Makefile")
         .read_text(encoding="utf-8")
-        .replace("$(MAKE) slice2-structure-gate\n", "")
-        .replace("scripts/slice2_structure_gate.py", "scripts/removed.py")
+        .replace("$(MAKE) foundation-structure-gate\n", "")
+        .replace("scripts/foundation_structure_gate.py", "scripts/removed.py")
     )
 
     errors = module.validate_makefile(makefile)
 
-    assert "Makefile lint target must call `$(MAKE) slice2-structure-gate`" in errors
+    assert "Makefile lint target must call `$(MAKE) foundation-structure-gate`" in errors
     assert (
-        "Makefile slice2-structure-gate target must run `scripts/slice2_structure_gate.py`"
+        "Makefile foundation-structure-gate target must run `scripts/foundation_structure_gate.py`"
         in errors
     )

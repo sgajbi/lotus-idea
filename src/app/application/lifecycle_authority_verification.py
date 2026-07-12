@@ -5,7 +5,7 @@ import json
 from typing import Protocol
 
 from app.application.ed25519_key_trust import select_trusted_ed25519_key
-from app.domain.lifecycle_authority import (
+from app.domain.data_lifecycle.authority import (
     LIFECYCLE_AUTHORITY_AUDIENCE,
     LIFECYCLE_AUTHORITY_ISSUER,
     LIFECYCLE_AUTHORITY_KEY_DISCOVERY_PATH,

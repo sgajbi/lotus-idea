@@ -6,7 +6,7 @@ REQUIRED_LINT_TARGETS = (
     "maintainability-gate",
     "duplicate-implementation-gate",
     "private-import-boundary-gate",
-    "slice2-structure-gate",
+    "foundation-structure-gate",
     "documentation-contract-gate",
     "quality-scorecard-gate",
     "github-issue-closure-matrix-gate",
