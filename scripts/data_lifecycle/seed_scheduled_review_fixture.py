@@ -11,12 +11,15 @@ from typing import Any, cast
 import psycopg
 from psycopg.rows import dict_row
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 SRC = ROOT / "src"
+SCRIPTS = ROOT / "scripts"
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
 
 from app.application.data_lifecycle import ExecuteDataLifecycle  # noqa: E402
 from app.domain.data_lifecycle import (  # noqa: E402
@@ -29,7 +32,7 @@ from app.infrastructure.postgres_repository import (  # noqa: E402
     PostgresConnection,
     PostgresIdeaRepository,
 )
-from scripts.postgres_disaster_recovery_fixture_data import (  # noqa: E402
+from postgres_disaster_recovery_fixture_data import (  # noqa: E402
     high_cash_candidate,
 )
 
