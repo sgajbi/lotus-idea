@@ -1021,6 +1021,7 @@ def _ai_explanation_headers(idempotency_key: str) -> dict[str, str]:
         "X-Caller-Subject": "advisor-001",
         "X-Caller-Roles": "advisor",
         "X-Caller-Capabilities": "idea.ai-explanation.evaluate",
+        "X-Caller-Tenant-Ids": "tenant-private-bank-sg",
         "X-Correlation-Id": "corr-postgres-runtime-proof-ai-lineage",
         "Idempotency-Key": idempotency_key,
     }
