@@ -28,6 +28,13 @@ authority, Archive posture, suitability, advice, execution, or client
 publication. Validate the consumer boundary with
 `make ai-provider-retention-contract-gate`.
 
+The provider-retention producer and consumer foundations are merged and
+mainline-proven at Lotus AI `51a8e8e` (run `29179866214`) and Lotus Idea
+`f496c442` (run `29179489433`). This proves contract delivery, signature and
+replay controls, and CI posture only. Provider-native evidence, managed-key and
+production-store proof, and bank privacy/outsourcing/model-risk approval remain
+required before certification.
+
 ## Current Implementation
 
 RFC-0002 Slice 09 adds `src/app/domain/ai_governance.py`,

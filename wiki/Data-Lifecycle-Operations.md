@@ -14,6 +14,15 @@ candidate tenant and verified run/provider/model identity. This is consumer
 conformance only: provider failure is not deletion proof, and the receipt does
 not authorize legal hold, erasure, purge, Report policy, or Archive posture.
 
+The Idea, Report, Archive, and AI contract foundations are merged and
+mainline-proven. Production-authorized policy sources, provider-native evidence,
+managed keys/stores, bank approvals, and production purge execution remain
+certification blockers.
+
+Scheduled review run `29180046362` passed on Idea main SHA `f496c442` with
+PostgreSQL 18 and an attested source-safe artifact. The artifact remains
+review-only and `not_certified`; it does not authorize purge.
+
 | Reader | Start here |
 | --- | --- |
 | Privacy or records operator | Review the action matrix and follow the deep runbook. |
