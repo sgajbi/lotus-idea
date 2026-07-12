@@ -33,6 +33,17 @@ def test_local_cross_repository_attestation_contract_is_source_proven(tmp_path: 
     assert proof["supportedFeaturePromoted"] is False
 
 
+def test_consumer_verification_proof_tracks_stable_security_interfaces(tmp_path: Path) -> None:
+    lotus_ai_root = materialize_lotus_ai_attestation_source(tmp_path / "lotus-ai")
+    proof = build_lotus_ai_attestation_contract_proof(
+        generated_at_utc=datetime(2026, 7, 11, 12, 0, tzinfo=UTC),
+        repository_root=ROOT,
+        lotus_ai_root=lotus_ai_root,
+    )
+
+    assert proof["proofChecks"]["consumerVerificationImplemented"] is True
+
+
 def test_missing_producer_repository_fails_closed(tmp_path: Path) -> None:
     proof = build_lotus_ai_attestation_contract_proof(
         generated_at_utc=datetime(2026, 7, 11, 12, 0, tzinfo=UTC),
