@@ -160,7 +160,7 @@ def ai_explanation_lineage_record_from_result(
     if attestation_receipt is not None:
         record_payload["attestation_receipt"] = _attestation_receipt_payload(attestation_receipt)
     if provider_retention_receipt is not None:
-        record_payload["provider_retention_receipt"] = _provider_retention_receipt_payload(
+        record_payload["provider_retention_receipt"] = ai_provider_retention_receipt_to_mapping(
             provider_retention_receipt
         )
     lineage_hash = _hash_payload(record_payload)
@@ -240,7 +240,7 @@ def verify_ai_explanation_lineage_record_integrity(
             record.attestation_receipt
         )
     if record.provider_retention_receipt is not None:
-        expected_payload["provider_retention_receipt"] = _provider_retention_receipt_payload(
+        expected_payload["provider_retention_receipt"] = ai_provider_retention_receipt_to_mapping(
             record.provider_retention_receipt
         )
     expected = _hash_payload(expected_payload)
@@ -279,7 +279,7 @@ def _attestation_receipt_payload(
     }
 
 
-def _provider_retention_receipt_payload(
+def ai_provider_retention_receipt_to_mapping(
     receipt: VerifiedAIProviderRetentionReceipt,
 ) -> dict[str, object]:
     return {
