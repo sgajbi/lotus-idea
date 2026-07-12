@@ -8,6 +8,7 @@
   "source_of_truth": {
     "migrations": "migrations",
     "persistence": "docs/operations/persistence.md",
+    "lifecycle_authority_consumer": "contracts/integrations/lifecycle-authority-consumer.v1.json",
     "slice": "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-06-persistence-replay-idempotency-and-audit.md"
   },
   "authority_boundaries": {
