@@ -16,6 +16,10 @@ from app.domain.data_lifecycle import (
     DataLifecycleState,
     evaluate_data_lifecycle,
 )
+from app.domain.lifecycle_authority import (
+    LifecycleAuthorityDomain,
+    VerifiedLifecycleAuthorityReceipt,
+)
 from app.infrastructure import postgres_data_lifecycle as module
 from app.infrastructure.postgres_data_lifecycle import (
     DataLifecycleWriteBlockedError,
@@ -78,7 +82,18 @@ class LifecycleCursor:
             return
         if "from idea_data_lifecycle_operation" in normalized:
             assert params is not None
-            operation = self.connection.operations.get(str(params[0]))
+            if "where authority_decision_id" in normalized:
+                operation = next(
+                    (
+                        row
+                        for row in self.connection.operations.values()
+                        if row.get("authority_decision_id") == params[0]
+                        or row.get("authority_replay_nonce") == params[1]
+                    ),
+                    None,
+                )
+            else:
+                operation = self.connection.operations.get(str(params[0]))
             self.rows = [operation] if operation is not None else []
             return
         if "select candidate_json" in normalized:
@@ -146,6 +161,11 @@ class LifecycleCursor:
                         "requested_at_utc",
                         "evaluated_at_utc",
                         "control_version",
+                        "authority_decision_id",
+                        "authority_replay_nonce",
+                        "authority_key_id",
+                        "authority_rotation_epoch",
+                        "authority_verified_at_utc",
                     ),
                     values,
                     strict=True,
@@ -288,6 +308,50 @@ def test_postgres_lifecycle_replays_matching_key_and_conflicts_changed_request()
     assert conflict.decision is DataLifecycleDecision.CONFLICT
     assert conflict.blockers == (DataLifecycleBlocker.IDEMPOTENCY_CONFLICT,)
     assert len(connection.operations) == 1
+
+
+def test_postgres_lifecycle_reserves_applied_authority_but_not_preview(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    connection = LifecycleConnection()
+    monkeypatch.setattr(
+        module,
+        "redact_candidate_graph",
+        lambda *_args, **_kwargs: {"idea_candidate_record": 1},
+    )
+    receipt = valid_authority_receipt(DataLifecycleAction.ERASE)
+    preview_command = replace(
+        valid_command(DataLifecycleAction.ERASE, dry_run=True),
+        authority_verification_required=True,
+        authority_receipt=receipt,
+    )
+    apply_command = replace(
+        valid_command(DataLifecycleAction.ERASE),
+        idempotency_key="lifecycle-erase-authorized-apply-001",
+        authority_verification_required=True,
+        authority_receipt=receipt,
+    )
+
+    preview = execute(connection, preview_command)
+    applied = execute(connection, apply_command)
+    replayed = execute(connection, apply_command)
+    reused = execute(
+        connection,
+        replace(apply_command, idempotency_key="lifecycle-erase-authority-reuse-001"),
+    )
+
+    assert preview.decision is DataLifecycleDecision.PREVIEW
+    assert applied.decision is DataLifecycleDecision.APPLIED
+    assert replayed.decision is DataLifecycleDecision.REPLAYED
+    assert reused.decision is DataLifecycleDecision.CONFLICT
+    assert reused.blockers == (DataLifecycleBlocker.AUTHORITY_ATTESTATION_REPLAY,)
+    assert len(connection.operations) == 2
+    preview_row = connection.operations[preview_command.idempotency_key]
+    applied_row = connection.operations[apply_command.idempotency_key]
+    assert preview_row["authority_decision_id"] is None
+    assert applied_row["authority_decision_id"] == receipt.decision_id
+    assert applied_row["authority_replay_nonce"] == receipt.replay_nonce
+    assert applied_row["authority_key_id"] == receipt.key_id
 
 
 def test_postgres_lifecycle_purge_removes_only_governed_payload_rows(
@@ -433,6 +497,37 @@ def valid_command(
         trace_id="trace-data-lifecycle-001",
         requested_at_utc=NOW - timedelta(minutes=1),
         dry_run=dry_run,
+    )
+
+
+def valid_authority_receipt(
+    action: DataLifecycleAction,
+) -> VerifiedLifecycleAuthorityReceipt:
+    authority_domain = (
+        LifecycleAuthorityDomain.LEGAL_AND_RECORDS
+        if action in {DataLifecycleAction.APPLY_HOLD, DataLifecycleAction.RELEASE_HOLD}
+        else LifecycleAuthorityDomain.PRIVACY
+    )
+    authority_ref = (
+        "bank-legal-and-records-governance:decision-001"
+        if authority_domain is LifecycleAuthorityDomain.LEGAL_AND_RECORDS
+        else "bank-privacy-governance:decision-001"
+    )
+    return VerifiedLifecycleAuthorityReceipt(
+        decision_id=f"lifecycle-decision-{action.value}-001",
+        replay_nonce="e" * 64,
+        tenant_id="tenant-001",
+        candidate_id="candidate-001",
+        action=action,
+        authority_domain=authority_domain,
+        authority_ref=authority_ref,
+        change_reference="privacy-case-001",
+        key_id="lifecycle-key-001",
+        rotation_epoch=3,
+        issued_at_utc=NOW - timedelta(minutes=3),
+        effective_at_utc=NOW - timedelta(minutes=2),
+        expires_at_utc=NOW + timedelta(minutes=5),
+        verified_at_utc=NOW - timedelta(minutes=1),
     )
 
 

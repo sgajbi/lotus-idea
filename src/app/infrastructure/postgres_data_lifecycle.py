@@ -49,18 +49,26 @@ class PostgresDataLifecycleRepository:
                 if existing is not None:
                     result = _replay_or_conflict(cursor, command, existing)
                 else:
-                    context = _load_candidate_context(cursor, command.candidate_id)
-                    evaluation = evaluator(
-                        command,
-                        context,
-                        evaluated_at_utc=evaluated_at_utc,
-                    )
-                    result = _apply_evaluation(
-                        cursor,
-                        command=command,
-                        evaluation=evaluation,
-                        evaluated_at_utc=evaluated_at_utc,
-                    )
+                    authority_operation = _claimable_authority_operation(cursor, command)
+                    if authority_operation is not None:
+                        result = _authority_replay_conflict(
+                            cursor,
+                            command,
+                            authority_operation,
+                        )
+                    else:
+                        context = _load_candidate_context(cursor, command.candidate_id)
+                        evaluation = evaluator(
+                            command,
+                            context,
+                            evaluated_at_utc=evaluated_at_utc,
+                        )
+                        result = _apply_evaluation(
+                            cursor,
+                            command=command,
+                            evaluation=evaluation,
+                            evaluated_at_utc=evaluated_at_utc,
+                        )
             self._connection.commit()
             observe_postgres_operation(
                 operation="lifecycle_action",
@@ -168,6 +176,30 @@ def _load_operation(cursor: Any, idempotency_key: str) -> Mapping[str, Any] | No
            FROM idea_data_lifecycle_operation
            WHERE idempotency_key = %s""",
         (idempotency_key,),
+    )
+    row = cursor.fetchone()
+    return row if isinstance(row, Mapping) else None
+
+
+def _claimable_authority_operation(
+    cursor: Any,
+    command: DataLifecycleCommand,
+) -> Mapping[str, Any] | None:
+    receipt = command.authority_receipt
+    if receipt is None or command.dry_run:
+        return None
+    cursor.execute(
+        "SELECT pg_advisory_xact_lock(hashtextextended(%s, 0))",
+        (f"lifecycle-authority:{receipt.decision_id}:{receipt.replay_nonce}",),
+    )
+    cursor.execute(
+        """SELECT operation_id, request_fingerprint, candidate_id, decision,
+                  dry_run, audit_sha256, blockers_json, affected_row_counts_json
+           FROM idea_data_lifecycle_operation
+           WHERE authority_decision_id = %s OR authority_replay_nonce = %s
+           ORDER BY evaluated_at_utc, operation_id
+           LIMIT 1""",
+        (receipt.decision_id, receipt.replay_nonce),
     )
     row = cursor.fetchone()
     return row if isinstance(row, Mapping) else None
@@ -367,17 +399,20 @@ def _insert_operation(
     ):
         actor_subject = data_lifecycle_actor_tombstone(command.candidate_id, command.tenant_id)
         approver_subject = actor_subject if approver_subject is not None else None
+    receipt = command.authority_receipt if not command.dry_run else None
     cursor.execute(
         """INSERT INTO idea_data_lifecycle_operation (
                operation_id, idempotency_key, request_fingerprint, candidate_id,
                correlation_id, trace_id, tenant_id, action, decision, dry_run, actor_subject,
                approver_subject, authority_ref, reason, change_reference,
                blockers_json, affected_row_counts_json, audit_sha256,
-               requested_at_utc, evaluated_at_utc, control_version
+               requested_at_utc, evaluated_at_utc, control_version,
+               authority_decision_id, authority_replay_nonce, authority_key_id,
+               authority_rotation_epoch, authority_verified_at_utc
            ) VALUES (
                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-               %s
+               %s, %s, %s, %s, %s, %s
            )""",
         (
             operation_id,
@@ -401,6 +436,11 @@ def _insert_operation(
             command.requested_at_utc,
             evaluated_at_utc,
             control.version if control is not None else None,
+            receipt.decision_id if receipt is not None else None,
+            receipt.replay_nonce if receipt is not None else None,
+            receipt.key_id if receipt is not None else None,
+            receipt.rotation_epoch if receipt is not None else None,
+            receipt.verified_at_utc if receipt is not None else None,
         ),
     )
 
@@ -422,6 +462,23 @@ def _replay_or_conflict(
         decision=decision,
         control=control,
         blockers=blockers,
+        dry_run=bool(existing["dry_run"]),
+        audit_sha256=str(existing["audit_sha256"]),
+        affected_row_counts=_integer_mapping(existing["affected_row_counts_json"]),
+    )
+
+
+def _authority_replay_conflict(
+    cursor: Any,
+    command: DataLifecycleCommand,
+    existing: Mapping[str, Any],
+) -> DataLifecycleOperationResult:
+    control = _load_control(cursor, command.candidate_id)
+    return DataLifecycleOperationResult(
+        operation_id=str(existing["operation_id"]),
+        decision=DataLifecycleDecision.CONFLICT,
+        control=control,
+        blockers=(DataLifecycleBlocker.AUTHORITY_ATTESTATION_REPLAY,),
         dry_run=bool(existing["dry_run"]),
         audit_sha256=str(existing["audit_sha256"]),
         affected_row_counts=_integer_mapping(existing["affected_row_counts_json"]),
@@ -520,6 +577,16 @@ def _audit_sha256(
         "request_fingerprint": command.request_fingerprint,
         "tenant_id": command.tenant_id,
         "affected_row_counts": dict(sorted(affected.items())),
+        "authority_receipt": (
+            {
+                "decision_id": command.authority_receipt.decision_id,
+                "key_id": command.authority_receipt.key_id,
+                "replay_nonce": command.authority_receipt.replay_nonce,
+                "rotation_epoch": command.authority_receipt.rotation_epoch,
+            }
+            if command.authority_receipt is not None
+            else None
+        ),
     }
     canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"))
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
