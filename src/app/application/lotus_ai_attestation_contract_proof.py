@@ -78,7 +78,13 @@ def build_lotus_ai_attestation_contract_proof(
     )
     consumer_verification_implemented = text_file_contains_all(
         repository_root / "src/app/application/lotus_ai_run_attestation_verification.py",
-        ("verify_lotus_ai_run_attestation", "input digest", "output digest", "Ed25519"),
+        (
+            "verify_lotus_ai_run_attestation",
+            "select_trusted_ed25519_key",
+            "signature_verifier.verify",
+            "input digest",
+            "output digest",
+        ),
     )
     consumer_replay_persistence_implemented = (
         text_file_contains_all(
