@@ -23,9 +23,7 @@ def test_archive_lifecycle_consumer_contract_is_strict_and_non_promotional() -> 
     ("mutation", "expected_error"),
     [
         (
-            lambda payload: payload["verification_controls"].update(
-                {"maximum_ttl_seconds": 3600}
-            ),
+            lambda payload: payload["verification_controls"].update({"maximum_ttl_seconds": 3600}),
             "Archive receipt verification controls must remain strict and source-bound",
         ),
         (
@@ -35,9 +33,7 @@ def test_archive_lifecycle_consumer_contract_is_strict_and_non_promotional() -> 
             "Archive hold, purge, and unlinked-candidate policy must remain fail closed",
         ),
         (
-            lambda payload: payload["authority"].update(
-                {"archive_disposal_authority": "granted"}
-            ),
+            lambda payload: payload["authority"].update({"archive_disposal_authority": "granted"}),
             "consumer must preserve bank, Archive, Report, and Idea authority boundaries",
         ),
         (

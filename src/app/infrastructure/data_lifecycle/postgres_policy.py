@@ -331,9 +331,7 @@ def _linked_report_evidence_pack_ids(cursor: Any, candidate_id: str) -> tuple[st
         (candidate_id,),
     )
     return tuple(
-        str(row["report_evidence_pack_id"])
-        for row in cursor.fetchall()
-        if isinstance(row, Mapping)
+        str(row["report_evidence_pack_id"]) for row in cursor.fetchall() if isinstance(row, Mapping)
     )
 
 

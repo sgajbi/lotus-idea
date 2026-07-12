@@ -33,7 +33,9 @@ def validate_contract(path: Path = CONTRACT) -> list[str]:
     ):
         errors.append("consumer must use the governed strict Archive trust bundle")
     if set(payload.get("required_bindings", ())) != REQUIRED_BINDINGS:
-        errors.append("receipt must bind tenant, candidate, evidence pack, document, policy, and action")
+        errors.append(
+            "receipt must bind tenant, candidate, evidence pack, document, policy, and action"
+        )
 
     verification = payload.get("verification_controls", {})
     expected_verification = {

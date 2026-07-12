@@ -188,9 +188,9 @@ def _signed_payload(payload: dict[str, Any] | None = None) -> dict[str, Any]:
         separators=(",", ":"),
     ).encode("utf-8")
     result["payload_digest"] = "sha256:" + hashlib.sha256(canonical).hexdigest()
-    result["signature"] = "ed25519:" + base64.urlsafe_b64encode(
-        PRIVATE_KEY.sign(canonical)
-    ).decode("ascii")
+    result["signature"] = "ed25519:" + base64.urlsafe_b64encode(PRIVATE_KEY.sign(canonical)).decode(
+        "ascii"
+    )
     return result
 
 
