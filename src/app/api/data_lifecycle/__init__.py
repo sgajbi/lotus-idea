@@ -6,7 +6,7 @@ from fastapi import FastAPI, Header, Path, Request, status
 from fastapi.responses import JSONResponse
 
 from app.api.caller_headers import TRUSTED_CALLER_CONTEXT_HEADER, caller_context_from_headers
-from app.api.data_lifecycle_models import (
+from app.api.data_lifecycle.models import (
     DataLifecycleActionRequest,
     DataLifecycleActionResponse,
 )

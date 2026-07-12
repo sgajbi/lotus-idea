@@ -11,7 +11,7 @@ from fastapi.responses import JSONResponse
 
 from app.api import data_lifecycle as api_module
 from app.api.caller_headers import TRUSTED_CALLER_CONTEXT_HEADER, TRUSTED_CALLER_CONTEXT_TOKEN_ENV
-from app.api.data_lifecycle_models import DataLifecycleActionRequest
+from app.api.data_lifecycle.models import DataLifecycleActionRequest
 from app.api.durable_write_guard import durable_repository_not_configured_problem
 from app.domain.data_lifecycle import (
     REGULATED_ADVISORY_POLICY_REF,
