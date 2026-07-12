@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
+from typing import Any, Callable
 
 import pytest
 
@@ -49,7 +51,9 @@ def test_archive_lifecycle_consumer_contract_is_strict_and_non_promotional() -> 
     ],
 )
 def test_archive_lifecycle_contract_gate_rejects_weakened_controls(
-    tmp_path, mutation, expected_error: str
+    tmp_path: Path,
+    mutation: Callable[[dict[str, Any]], None],
+    expected_error: str,
 ) -> None:
     payload = json.loads(CONTRACT.read_text(encoding="utf-8"))
     mutation(payload)
