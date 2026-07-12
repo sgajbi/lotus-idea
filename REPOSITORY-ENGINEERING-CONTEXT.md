@@ -246,6 +246,13 @@ runtime modularity:
    operator helpers, including
    `run_canonical_opportunity_source_proofs.py` for source-specific live proof
    aggregation.
+8. `data_lifecycle/` is the first capability-package pilot repeated inside the
+   existing `api`, `application`, `domain`, `ports`, `infrastructure`,
+   `integration`, and `runtime` layers. It groups lifecycle policy, signed
+   authority verification, DTO mapping, ports, PostgreSQL/HTTP adapters, and
+   composition without allowing cross-layer shortcuts. Focused tests mirror the
+   package under `tests/unit/data_lifecycle/`. Repository hygiene blocks the
+   retired flat paths and RFC/slice-coupled executable filenames.
 
 Design modularity does not imply runtime modularity. Do not introduce a new
 process, service, queue, worker class, or separately scalable boundary unless
