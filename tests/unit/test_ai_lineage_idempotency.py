@@ -14,6 +14,7 @@ from app.domain.ai_lineage_persistence import (
 from app.domain.ai_governance import AIFallbackReason, AIExplanationResult
 from app.domain.idempotency import IdempotencyRecord
 from app.domain.lotus_ai_run_attestation import VerifiedLotusAIRunAttestationReceipt
+from app.domain.ai_provider_retention import VerifiedAIProviderRetentionReceipt
 from app.domain.persistence import CandidatePersistenceRecord
 from tests.unit.test_ai_governance import EVALUATED_AT, candidate, command
 from app.domain import build_ai_explanation_request, deterministic_ai_fallback
@@ -33,9 +34,10 @@ def test_ai_lineage_request_idempotency_returns_conflict_without_recording_linea
         result: AIExplanationResult,
         *,
         attestation_receipt: VerifiedLotusAIRunAttestationReceipt | None = None,
+        provider_retention_receipt: VerifiedAIProviderRetentionReceipt | None = None,
     ) -> AIExplanationLineagePersistenceResult:
         nonlocal record_calls
-        del result, attestation_receipt
+        del result, attestation_receipt, provider_retention_receipt
         record_calls += 1
         raise AssertionError("conflict must not record lineage")
 
@@ -62,8 +64,9 @@ def test_ai_lineage_request_idempotency_rejects_blank_key() -> None:
         result: AIExplanationResult,
         *,
         attestation_receipt: VerifiedLotusAIRunAttestationReceipt | None = None,
+        provider_retention_receipt: VerifiedAIProviderRetentionReceipt | None = None,
     ) -> AIExplanationLineagePersistenceResult:
-        del result, attestation_receipt
+        del result, attestation_receipt, provider_retention_receipt
         return AIExplanationLineagePersistenceResult(
             decision=AIExplanationLineagePersistenceDecision.ACCEPTED,
             record=None,
