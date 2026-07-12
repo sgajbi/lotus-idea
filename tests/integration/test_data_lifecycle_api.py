@@ -462,9 +462,7 @@ def test_data_lifecycle_api_reports_archive_verification_failures_source_safely(
     monkeypatch.setattr(
         api_module,
         "get_archive_lifecycle_dependencies",
-        lambda: (_ for _ in ()).throw(
-            ArchiveLifecycleTrustUnavailableError("raw trust detail")
-        ),
+        lambda: (_ for _ in ()).throw(ArchiveLifecycleTrustUnavailableError("raw trust detail")),
     )
     unavailable = TestClient(app).post(
         lifecycle_path(),

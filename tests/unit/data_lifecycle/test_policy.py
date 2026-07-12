@@ -243,9 +243,7 @@ def test_archive_hold_and_disposal_posture_fail_closed_by_action() -> None:
 
     assert erase_held.blockers == (DataLifecycleBlocker.ARCHIVE_LEGAL_HOLD_ACTIVE,)
     assert apply_without_archive_hold.blockers == (DataLifecycleBlocker.ARCHIVE_POSTURE_MISMATCH,)
-    assert purge_before_archive.blockers == (
-        DataLifecycleBlocker.ARCHIVE_DISPOSAL_NOT_EXECUTED,
-    )
+    assert purge_before_archive.blockers == (DataLifecycleBlocker.ARCHIVE_DISPOSAL_NOT_EXECUTED,)
     assert purge_allowed.decision is DataLifecycleDecision.APPLIED
 
 

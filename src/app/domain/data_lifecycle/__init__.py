@@ -443,9 +443,7 @@ def _archive_posture_blockers(
     linked_pack_ids = frozenset(context.linked_report_evidence_pack_ids)
     receipt = command.archive_lifecycle_receipt
     if not linked_pack_ids:
-        return (
-            (DataLifecycleBlocker.ARCHIVE_POSTURE_MISMATCH,) if receipt is not None else ()
-        )
+        return (DataLifecycleBlocker.ARCHIVE_POSTURE_MISMATCH,) if receipt is not None else ()
     if receipt is None:
         return (DataLifecycleBlocker.ARCHIVE_POSTURE_REQUIRED,)
     if not (
