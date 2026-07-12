@@ -62,7 +62,7 @@ from app.runtime.lotus_ai_attestation_state import (
     close_lotus_ai_attestation_dependencies,
     get_lotus_ai_attestation_dependencies,
 )
-from app.runtime.lifecycle_authority_state import (
+from app.runtime.data_lifecycle.authority_state import (
     close_lifecycle_authority_dependencies,
     get_lifecycle_authority_dependencies,
 )
