@@ -1,0 +1,63 @@
+{
+  "schema_version": "lotus-idea.archive-lifecycle-posture-consumer.v1",
+  "repository": "lotus-idea",
+  "producer": "lotus-archive",
+  "producer_product_id": "lotus-archive:IdeaEvidenceLifecycleDecision:v1",
+  "consumer_boundary": "linked_report_evidence_lifecycle_posture",
+  "trust_bundle_environment": "LOTUS_IDEA_ARCHIVE_LIFECYCLE_TRUST_BUNDLE_JSON",
+  "required_bindings": [
+    "tenant_id",
+    "candidate_id",
+    "evidence_pack_id",
+    "document_id",
+    "retention_policy_ref",
+    "lifecycle_action"
+  ],
+  "verification_controls": {
+    "signature_algorithm": "Ed25519",
+    "digest_algorithm": "sha256",
+    "maximum_ttl_seconds": 300,
+    "active_or_rotated_trusted_key_required": true,
+    "exact_linked_evidence_pack_required": true,
+    "disposal_authorized_must_be_false": true
+  },
+  "policy": {
+    "archive_legal_hold_blocks_release_erase_and_purge": true,
+    "apply_hold_requires_archive_action": "LEGAL_HOLD",
+    "purge_requires_archive_action": "DISPOSAL_EXECUTED",
+    "unlinked_candidate_requires_absent_receipt": true
+  },
+  "source_safety": {
+    "raw_document_included": false,
+    "raw_evidence_content_included": false,
+    "client_identifier_included": false
+  },
+  "authority": {
+    "archive_lifecycle_posture": "lotus-archive",
+    "idea_owned_record_mutation": "lotus-idea",
+    "bank_lifecycle_action": "independent_signed_authority_required",
+    "archive_disposal_authority": "not_granted",
+    "report_retention_policy_authority": "not_granted"
+  },
+  "persistence": {
+    "migration": "015_archive_lifecycle_posture_receipt",
+    "applied_decision_replay_fence": "archive_decision_id",
+    "applied_digest_replay_fence": "archive_payload_digest",
+    "blocked_attempt_consumes_receipt": false
+  },
+  "supportability_status": "not_certified",
+  "blockers_cleared": [
+    "lotus_archive_lifecycle_consumer_verification_missing",
+    "lotus_archive_lifecycle_receipt_persistence_missing",
+    "lotus_archive_lifecycle_receipt_replay_fencing_missing"
+  ],
+  "remaining_blockers": [
+    "lotus_archive_managed_durable_store_proof_missing",
+    "lotus_archive_managed_key_rotation_proof_missing",
+    "lotus_archive_production_trust_distribution_missing",
+    "bank_privacy_legal_records_authority_missing",
+    "production_authorized_purge_proof_missing",
+    "mainline_cross_repository_proof_missing"
+  ],
+  "supported_feature_promoted": false
+}
