@@ -2,20 +2,24 @@ from __future__ import annotations
 
 import os
 
+from app.application.data_lifecycle.authority_verification import (
+    LifecycleAuthoritySignatureVerifier,
+)
 from app.infrastructure.ed25519_signature_verifier import Ed25519SignatureVerifier
 from app.infrastructure.http_lifecycle_authority_keys import HttpLifecycleAuthorityKeySource
+from app.ports.data_lifecycle.authority import LifecycleAuthorityKeySource
 
 
 LIFECYCLE_AUTHORITY_BASE_URL_ENV = "LOTUS_IDEA_LIFECYCLE_AUTHORITY_BASE_URL"
 LIFECYCLE_AUTHORITY_TIMEOUT_SECONDS_ENV = "LOTUS_IDEA_LIFECYCLE_AUTHORITY_TIMEOUT_SECONDS"
 
-_KEY_SOURCE: HttpLifecycleAuthorityKeySource | None = None
+_KEY_SOURCE: LifecycleAuthorityKeySource | None = None
 _SIGNATURE_VERIFIER = Ed25519SignatureVerifier()
 
 
 def get_lifecycle_authority_dependencies() -> tuple[
-    HttpLifecycleAuthorityKeySource,
-    Ed25519SignatureVerifier,
+    LifecycleAuthorityKeySource,
+    LifecycleAuthoritySignatureVerifier,
 ]:
     global _KEY_SOURCE
     if _KEY_SOURCE is None:
