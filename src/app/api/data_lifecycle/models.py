@@ -80,8 +80,8 @@ class DataLifecycleActionRequest(CamelModel):
             "reason": self.reason,
             "requested_at_utc": self.requested_at_utc.isoformat(),
             "tenant_id": self.tenant_id,
-            "authority_decision_sha256": _authority_decision_sha256(self.authority_decision),
-            "archive_lifecycle_decision_sha256": _archive_lifecycle_decision_sha256(
+            "authority_decision_sha256": _producer_decision_sha256(self.authority_decision),
+            "archive_lifecycle_decision_sha256": _producer_decision_sha256(
                 self.archive_lifecycle_decision
             ),
         }
@@ -107,22 +107,8 @@ class DataLifecycleActionRequest(CamelModel):
         )
 
 
-def _authority_decision_sha256(
-    decision: LifecycleAuthorityProducerDecision | None,
-) -> str | None:
-    if decision is None:
-        return None
-    canonical = json.dumps(
-        decision.model_dump(mode="json"),
-        ensure_ascii=True,
-        sort_keys=True,
-        separators=(",", ":"),
-    )
-    return hashlib.sha256(canonical.encode("ascii")).hexdigest()
-
-
-def _archive_lifecycle_decision_sha256(
-    decision: ArchiveLifecycleProducerDecision | None,
+def _producer_decision_sha256(
+    decision: LifecycleAuthorityProducerDecision | ArchiveLifecycleProducerDecision | None,
 ) -> str | None:
     if decision is None:
         return None
