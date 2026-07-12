@@ -1,6 +1,6 @@
 {
   "contract_id": "lotus-idea-data-lifecycle",
-  "contract_version": "1.0.0",
+  "contract_version": "1.1.0",
   "repository": "lotus-idea",
   "data_owner": "lotus-idea",
   "certification_status": "not_certified",
@@ -307,6 +307,36 @@
     "raw_sensitive_values_in_logs_metrics_or_evidence_forbidden": true,
     "cross_service_decision_reference_required": true
   },
+  "signed_authority_verification": {
+    "decision_schema": "lotus.lifecycle-authority-decision.v1",
+    "key_discovery_schema": "lotus.lifecycle-authority-keys.v1",
+    "issuer": "bank-lifecycle-governance",
+    "audience": "lotus-idea",
+    "key_discovery_path": "/.well-known/lotus-lifecycle-authority-keys",
+    "signature_algorithm": "EdDSA",
+    "signature_curve": "Ed25519",
+    "required_runtime_profiles": ["demo", "staging", "production"],
+    "bound_claims": [
+      "tenant_id",
+      "candidate_id",
+      "action",
+      "authority_domain",
+      "authority_ref",
+      "change_reference",
+      "validity_window"
+    ],
+    "legal_and_records_actions": ["apply_hold", "release_hold"],
+    "privacy_actions": ["erase", "purge"],
+    "accepted_key_statuses": ["active", "rotated"],
+    "revoked_or_unknown_keys_fail_closed": true,
+    "dry_run_reserves_decision": false,
+    "applied_decision_and_nonce_single_use": true,
+    "persistence_migration": "013_lifecycle_authority_receipt",
+    "trust_configuration": [
+      "LOTUS_IDEA_LIFECYCLE_AUTHORITY_BASE_URL",
+      "LOTUS_IDEA_LIFECYCLE_AUTHORITY_TIMEOUT_SECONDS"
+    ]
+  },
   "scheduled_review_proof": {
     "execution_mode": "review_only",
     "maximum_batch_size": 100,
@@ -328,7 +358,7 @@
   ],
   "certification_blockers": [
     "jurisdiction-specific legal and records approval for each duration",
-    "signed legal-hold and erasure decision integration",
+    "live bank lifecycle-authority producer, key-discovery, and mainline signature proof",
     "lotus-report and lotus-archive policy-reference conformance proof",
     "lotus-ai provider-retention and deletion confirmation proof",
     "production PostgreSQL concurrent lifecycle and restart proof",

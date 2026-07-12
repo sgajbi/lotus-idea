@@ -29,6 +29,8 @@ def test_data_lifecycle_contract_rejects_false_certification_and_weakened_contro
     payload["authority_boundaries"]["idea_may_self_authorize_legal_hold_or_erasure"] = True
     payload["scheduled_review_proof"]["automatic_lifecycle_mutation"] = True
     payload["scheduled_review_proof"]["production_authority_verified"] = True
+    payload["signed_authority_verification"]["applied_decision_and_nonce_single_use"] = False
+    payload["signed_authority_verification"]["dry_run_reserves_decision"] = True
 
     errors = validate_payload(module, tmp_path, payload)
 
@@ -47,6 +49,14 @@ def test_data_lifecycle_contract_rejects_false_certification_and_weakened_contro
     )
     assert (
         "data lifecycle scheduled review proof production_authority_verified must be False"
+        in errors
+    )
+    assert (
+        "data lifecycle signed authority verification "
+        "applied_decision_and_nonce_single_use must be True" in errors
+    )
+    assert (
+        "data lifecycle signed authority verification dry_run_reserves_decision must be False"
         in errors
     )
 
