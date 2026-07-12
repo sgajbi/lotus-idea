@@ -96,9 +96,11 @@ states through production repository/application paths, emits aggregate-only
 evidence, runs a fail-closed proof gate, attests the artifact, and retains it
 for 90 days. The artifact is explicitly `reviewOnly=true`,
 `productionAuthorityVerified=false`, `not_certified`, and non-promotional.
-Mainline workflow evidence remains required before this foundation can be
-claimed as merged proof; production purge remains blocked on signed privacy
-authority, dual review, and cross-service conformance.
+Mainline run `29180046362` passed against exact Idea SHA `f496c442`: PostgreSQL
+18 migration, synthetic seeding, bounded review, source-safe proof validation,
+provenance attestation, and artifact upload all succeeded. This proves the
+merged review-only foundation; production purge remains blocked on signed
+privacy authority, dual review, and production cross-service conformance.
 
 ### Lotus AI Provider-Retention Consumer
 
@@ -118,7 +120,16 @@ the bank lifecycle-authority decision, and cannot stand in for Report or
 Archive conformance. The consumer contract is enforced by
 `make ai-provider-retention-contract-gate`. Provider-native confirmation,
 managed-key/production-SQL proof, bank privacy/outsourcing/model-risk approval,
-mainline cross-repository proof, and production-authorized purge remain blocked.
+and production-authorized purge remain blocked.
+
+The bounded cross-repository contract foundations are now merged and
+mainline-proven: Lotus AI `51a8e8e` / run `29179866214`, Lotus Report
+`59385c5` / run `29179900038`, Lotus Archive `e5e9253` / run `29179849407`,
+and Lotus Idea `f496c442` / run `29179489433`. Repo-authored wiki publication
+is synchronized in all four repositories. These proofs establish producer and
+consumer contract delivery; they do not certify provider-native deletion,
+managed production keys or stores, bank lifecycle authority, legal/privacy
+approval, or production purge execution.
 
 ## Implementation Evidence
 

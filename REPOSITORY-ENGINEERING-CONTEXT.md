@@ -689,6 +689,18 @@ posture only and never authorizes bank lifecycle actions or substitutes for
 Report/Archive conformance. Provider-native evidence and approvals remain
 external blockers under `sgajbi/lotus-ai#115`.
 
+The producer/consumer contract foundations are merged and mainline-proven as of
+2026-07-12: Lotus AI `51a8e8e` (run `29179866214`), Lotus Report `59385c5`
+(run `29179900038`), Lotus Archive `e5e9253` (run `29179849407`), and Lotus Idea
+`f496c442` (run `29179489433`). Their repo-authored wikis are synchronized.
+This clears branch-local contract delivery only. It does not clear provider-native
+confirmation, managed-key/production-store proof, bank privacy/legal/model-risk
+approval, live bank lifecycle authority, or production-authorized purge blockers.
+Idea scheduled lifecycle review run `29180046362` also passed on `f496c442`
+with PostgreSQL 18, source-safe proof validation, provenance attestation, and
+artifact upload. That artifact is review-only and `not_certified`; it is not
+production purge or privacy-authority evidence.
+
 Provider-bound AI metadata uses the closed
 `lotus-idea.ai-metadata-envelope.v1` policy in
 `src/app/domain/ai_metadata_policy.py`. Request DTOs expose only approved

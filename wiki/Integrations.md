@@ -18,6 +18,11 @@ lineage. It does not call the provider, record the outcome on Lotus AI's behalf,
 or gain lifecycle authority. Provider-native and bank-approval evidence remain
 required before certification.
 
+The bounded producer/consumer foundations are merged and mainline-proven in
+Lotus AI (`51a8e8e`), Lotus Report (`59385c5`), Lotus Archive (`e5e9253`), and
+Lotus Idea (`f496c442`). This is contract-delivery evidence, not production
+provider, privacy/legal, retention, archive, or purge certification.
+
 ## Integration Reader Map
 
 | Need | Section |
