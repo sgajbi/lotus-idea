@@ -438,6 +438,7 @@ def ai_headers(idempotency_key: str = "operation-ai-explanation-001") -> dict[st
         "X-Caller-Subject": "advisor-001",
         "X-Caller-Roles": "advisor",
         "X-Caller-Capabilities": "idea.ai-explanation.evaluate",
+        "X-Caller-Tenant-Ids": "tenant-private-bank-sg",
         "X-Correlation-Id": "corr-operation-ai-api",
         "Idempotency-Key": idempotency_key,
     }
