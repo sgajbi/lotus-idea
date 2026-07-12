@@ -81,6 +81,17 @@ and durable receipt identity. This is consumer-side enforcement, not evidence
 that a bank authority producer is live or that a legal/privacy decision was
 substantively correct.
 
+The consumer is explicitly bound to the platform-owned interoperability family
+through `contracts/integrations/lifecycle-authority-consumer.v1.json`. The
+declaration pins the merged decision schema, key-discovery schema, and
+producer-certification contract by platform path and SHA-256 digest; maps them
+to Idea's request mapper, application verifier, key-source port/adapter, and
+receipt migration; and keeps production authority and supported-feature
+posture false. The existing `data-lifecycle-contract-gate` validates that
+declaration and, when the sibling platform repository is present, recomputes
+all three authoritative digests. This prevents consumer/platform drift without
+copying bank decision authority or introducing another runtime process.
+
 ### Scheduled Expiry Review Foundation
 
 The scheduled review path preserves the external decision boundary. A bounded
