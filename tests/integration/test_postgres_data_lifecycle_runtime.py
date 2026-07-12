@@ -22,8 +22,8 @@ from app.domain.data_lifecycle.authority import (
     LifecycleAuthorityDomain,
     VerifiedLifecycleAuthorityReceipt,
 )
-from app.infrastructure.postgres_data_lifecycle import DataLifecycleWriteBlockedError
-from app.infrastructure.postgres_data_lifecycle_schedule import (
+from app.infrastructure.data_lifecycle.postgres_policy import DataLifecycleWriteBlockedError
+from app.infrastructure.data_lifecycle.postgres_schedule import (
     PostgresScheduledDataLifecycleRepository,
 )
 from app.infrastructure.postgres_disaster_recovery import REFERENTIAL_CHECKS

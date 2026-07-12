@@ -23,7 +23,7 @@ from app.domain import (
     reconcile_downstream_submission,
 )
 from app.infrastructure.postgres_codecs import decode_datetime, read_row_value
-from app.infrastructure.postgres_data_lifecycle import DataLifecycleWriteBlockedError
+from app.infrastructure.data_lifecycle.postgres_policy import DataLifecycleWriteBlockedError
 from app.infrastructure.postgres_protocols import PostgresConnection, PostgresCursor
 
 

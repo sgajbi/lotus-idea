@@ -21,7 +21,7 @@ from app.domain.data_lifecycle import (
     DataLifecycleState,
 )
 from app.domain.persistence import CandidatePersistenceRecord
-from app.infrastructure.postgres_data_lifecycle_redaction import (
+from app.infrastructure.data_lifecycle.postgres_redaction import (
     data_lifecycle_actor_tombstone,
     purge_expired_candidate_payloads,
     redact_candidate_graph,
