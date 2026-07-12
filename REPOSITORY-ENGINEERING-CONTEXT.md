@@ -252,7 +252,10 @@ runtime modularity:
    authority verification, DTO mapping, ports, PostgreSQL/HTTP adapters, and
    composition without allowing cross-layer shortcuts. Focused tests mirror the
    package under `tests/unit/data_lifecycle/`. Repository hygiene blocks the
-   retired flat paths and RFC/slice-coupled executable filenames.
+   retired flat paths and RFC/slice-coupled executable filenames. Scheduled
+   review, proof-gate, and disposable-seed entrypoints are grouped under
+   `scripts/data_lifecycle/`; they remain thin callers of application/domain
+   policy and support direct Windows and CI execution.
 
 Design modularity does not imply runtime modularity. Do not introduce a new
 process, service, queue, worker class, or separately scalable boundary unless
