@@ -1712,19 +1712,25 @@
         "400 invalid_request for malformed action metadata or Idempotency-Key.",
         "403 permission_denied for missing role, idea.data-lifecycle.manage, trusted provenance, or exact tenant entitlement.",
         "404 data_lifecycle_candidate_not_found without cross-tenant existence disclosure.",
+        "400 archive_lifecycle_posture_invalid for malformed, stale, mismatched, or cryptographically invalid Archive evidence.",
         "409 data_lifecycle_action_blocked for hold, active delivery, retention, approval, authority, policy, or state prerequisites.",
         "409 data_lifecycle_idempotency_conflict when an Idempotency-Key is reused with changed content.",
-        "503 durable or lifecycle repository unavailable; no process-local mutation fallback is permitted."
+        "409 archive_lifecycle_posture_replay_conflict when an applied Archive decision or digest is reused under another operation key.",
+        "503 durable or lifecycle repository unavailable; no process-local mutation fallback is permitted.",
+        "503 archive_lifecycle_trust_unavailable when the governed Archive trust bundle cannot be loaded."
       ],
       "test_evidence": [
         "tests/integration/test_data_lifecycle_api.py::test_data_lifecycle_api_previews_replays_and_conflicts_source_safely",
         "tests/integration/test_data_lifecycle_api.py::test_data_lifecycle_api_requires_role_capability_and_exact_tenant",
         "tests/integration/test_data_lifecycle_api.py::test_data_lifecycle_api_rejects_invalid_request_and_blocks_unsafe_erasure",
         "tests/integration/test_data_lifecycle_api.py::test_data_lifecycle_api_does_not_disclose_cross_tenant_candidate_existence",
+        "tests/integration/test_data_lifecycle_api.py::test_data_lifecycle_api_verifies_archive_posture_before_linked_erasure",
         "tests/integration/test_data_lifecycle_api.py::test_data_lifecycle_openapi_certifies_success_and_failure_contracts",
+        "tests/integration/test_postgres_data_lifecycle_runtime.py::test_postgres_archive_posture_receipt_is_restart_safe_and_single_use",
+        "tests/unit/data_lifecycle/test_archive_posture_verification.py::test_verifies_archive_posture_without_granting_disposal_authority",
         "tests/unit/data_lifecycle/test_postgres_policy.py::test_postgres_lifecycle_erasure_redacts_and_audits_in_one_commit"
       ],
-      "openapi_evidence": "scripts/openapi_quality_gate.py validates operation identity, summary, description, Operations tag, source-safe success example, and complete 400/403/404/409/503 Problem Details metadata. Live PostgreSQL concurrency/restart and cross-service authority proof remain blockers."
+      "openapi_evidence": "scripts/openapi_quality_gate.py validates operation identity, summary, description, Operations tag, source-safe success example, and complete 400/403/404/409/503 Problem Details metadata, including Archive trust, validation, and replay errors. Live bank authority and production Archive trust/store proof remain blockers."
     },
     {
       "method": "GET",

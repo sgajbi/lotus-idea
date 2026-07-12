@@ -593,6 +593,18 @@ read projection, not only from whole-repository snapshots. New downstream
 claims participate in the lifecycle lock so erasure and delivery cannot create
 an unsafe terminal state.
 
+When a candidate has an Idea-owned report evidence-pack request, lifecycle
+actions also consume an independently signed
+`lotus-archive:IdeaEvidenceLifecycleDecision:v1` posture. The API verifies the
+strict trust bundle from `LOTUS_IDEA_ARCHIVE_LIFECYCLE_TRUST_BUNDLE_JSON`; the
+domain reconciles the receipt against exact report-pack IDs loaded inside the
+same PostgreSQL transaction. Active Archive hold blocks release, erase, and
+purge; local hold requires Archive `LEGAL_HOLD`; local purge requires
+`DISPOSAL_EXECUTED`. Migration `015` persists source-safe receipt lineage and
+fences applied decision IDs and payload digests across restart. This consumer
+control stays inside the existing deployable service. It does not grant Archive
+disposal authority or replace the independent signed bank decision.
+
 Caller-supplied opportunity signal routes and advisor-facing candidate detail /
 review queue reads require both the product role and the explicit `idea.*`
 capability published for the route. `app.api.signal_api_support` requires

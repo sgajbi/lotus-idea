@@ -131,6 +131,32 @@ consumer contract delivery; they do not certify provider-native deletion,
 managed production keys or stores, bank lifecycle authority, legal/privacy
 approval, or production purge execution.
 
+### Signed Archive Posture Consumer
+
+Linked Idea report evidence now requires a separate signed
+`lotus-archive:IdeaEvidenceLifecycleDecision:v1` posture. The request DTO maps
+the producer envelope, the application verifier validates canonical SHA-256 and
+Ed25519 evidence against the strict Archive trust bundle, and the domain policy
+reconciles that receipt with exact report evidence-pack IDs loaded by the
+PostgreSQL adapter inside the lifecycle transaction.
+
+The receipt binds tenant, candidate, Idea evidence-pack ID, Archive document,
+retention policy, lifecycle action, five-minute maximum TTL, digest, and signing
+key. Active Archive hold blocks release, erase, and purge. Applying a local hold
+requires Archive `LEGAL_HOLD`; purging local Idea content requires Archive
+`DISPOSAL_EXECUTED`, not eligibility alone. An unlinked candidate rejects an
+Archive receipt rather than accepting unrelated authority.
+
+Migration `015_archive_lifecycle_posture_receipt` persists only bounded receipt
+lineage and fences applied decision IDs and payload digests across repository
+restart. Blocked attempts remain auditable without consuming a receipt. The
+contract is enforced by `make archive-lifecycle-posture-contract-gate`, and the
+real PostgreSQL suite proves linked-pack loading, persistence, exact replay, and
+cross-idempotency conflict. Archive posture remains independent of the signed
+bank lifecycle decision and never grants Archive disposal authority to Idea.
+Managed Archive durability, key rotation, trust distribution, bank approval,
+and production-authorized purge evidence remain certification blockers.
+
 ## Implementation Evidence
 
 Implemented first-wave internal scope:

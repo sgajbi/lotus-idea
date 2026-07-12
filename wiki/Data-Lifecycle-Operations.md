@@ -14,6 +14,14 @@ candidate tenant and verified run/provider/model identity. This is consumer
 conformance only: provider failure is not deletion proof, and the receipt does
 not authorize legal hold, erasure, purge, Report policy, or Archive posture.
 
+For candidates with linked report evidence, Idea also verifies a signed Archive
+posture against the exact tenant, candidate, evidence pack, document, policy,
+action, digest, TTL, and trusted key. Active Archive hold blocks release,
+erasure, and purge; local hold requires `LEGAL_HOLD`; purge requires
+`DISPOSAL_EXECUTED`. Applied decision IDs and digests are restart-safe and
+single-use. This independent source posture never replaces the signed bank
+lifecycle decision or grants Archive disposal authority to Idea.
+
 The Idea, Report, Archive, and AI contract foundations are merged and
 mainline-proven. Production-authorized policy sources, provider-native evidence,
 managed keys/stores, bank approvals, and production purge execution remain
@@ -89,12 +97,14 @@ distinct approval, exact tenant entitlement, and cross-service conformance.
 | --- | --- |
 | Deep operator procedure | [Data Lifecycle Operations runbook](https://github.com/sgajbi/lotus-idea/blob/main/docs/runbooks/data-lifecycle-operations.md) |
 | Versioned inventory and authority contract | [Lifecycle contract](https://github.com/sgajbi/lotus-idea/blob/main/contracts/operations/lotus-idea-data-lifecycle.v1.json) |
+| Archive consumer contract | [Archive lifecycle posture contract](https://github.com/sgajbi/lotus-idea/blob/main/contracts/operations/lotus-archive-lifecycle-posture-consumer.v1.json) |
 | API posture | [API Surface](API-Surface) |
 | Persistence and recovery | [PostgreSQL Disaster Recovery](PostgreSQL-Disaster-Recovery) |
 | Security boundary | [Security and Governance](Security-and-Governance) |
 | RFC implementation truth | [RFC Index](RFC-Index) |
 
 Implementation evidence includes real PostgreSQL restart, replay/conflict,
+exact linked report-pack loading, Archive receipt persistence and single use,
 atomic redaction, purge, and concurrent delivery-claim serialization tests.
 Telemetry publishes aggregate state, expired-retention, and missing-control
 counts without candidate, tenant, client, or portfolio identifiers.
@@ -110,7 +120,7 @@ represent those rows as content-level audit proof.
 - Bank approval for jurisdiction-specific durations and start events.
 - Live bank lifecycle-authority producer, key-discovery, and mainline
   signature proof.
-- Report, Archive, and AI-provider conformance evidence.
+- Managed Archive store/key/trust evidence and AI-provider conformance evidence.
 - Mainline scheduled expiry-review evidence and production authorized purge
   evidence with signed privacy authority.
 - Mainline CI and supported-feature promotion evidence.
