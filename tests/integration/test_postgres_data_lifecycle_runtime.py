@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from threading import Barrier
 from typing import Any, cast
@@ -12,9 +13,14 @@ from psycopg.rows import dict_row
 from app.application.data_lifecycle import ExecuteDataLifecycle, ReviewScheduledDataLifecycle
 from app.domain import DownstreamSubmissionClaimDecision
 from app.domain.data_lifecycle import (
+    DataLifecycleBlocker,
     DataLifecycleAction,
     DataLifecycleCommand,
     DataLifecycleDecision,
+)
+from app.domain.lifecycle_authority import (
+    LifecycleAuthorityDomain,
+    VerifiedLifecycleAuthorityReceipt,
 )
 from app.infrastructure.postgres_data_lifecycle import DataLifecycleWriteBlockedError
 from app.infrastructure.postgres_data_lifecycle_schedule import (
@@ -226,6 +232,88 @@ def test_postgres_erasure_and_delivery_claim_are_serialized(
         ),
     }
     assert not (control["state"] == "erased" and submission_count["submission_count"] != 0)
+
+
+def test_postgres_lifecycle_authority_receipt_is_restart_safe_and_single_use(
+    postgres_database_url: str,
+) -> None:
+    persisted = TestClient(app).post(
+        "/api/v1/idea-signals/high-cash/evaluate-and-persist",
+        json=high_cash_payload(),
+        headers=persistence_headers("lifecycle-authority-runtime-candidate-001"),
+    )
+    assert persisted.status_code == 200
+    candidate_id = str(persisted.json()["persistence"]["candidateId"])
+    _complete_outbox_delivery(postgres_database_url, candidate_id)
+    evaluated_at = datetime.now(UTC)
+    receipt = VerifiedLifecycleAuthorityReceipt(
+        decision_id="privacy-decision-runtime-001",
+        replay_nonce="f" * 64,
+        tenant_id=TENANT_ID,
+        candidate_id=candidate_id,
+        action=DataLifecycleAction.ERASE,
+        authority_domain=LifecycleAuthorityDomain.PRIVACY,
+        authority_ref="bank-privacy-governance:decision-runtime-001",
+        change_reference="privacy-case-runtime-authority-001",
+        key_id="lifecycle-key-runtime-001",
+        rotation_epoch=4,
+        issued_at_utc=evaluated_at - timedelta(minutes=3),
+        effective_at_utc=evaluated_at - timedelta(minutes=2),
+        expires_at_utc=evaluated_at + timedelta(minutes=5),
+        verified_at_utc=evaluated_at,
+    )
+    command = DataLifecycleCommand(
+        candidate_id=candidate_id,
+        tenant_id=TENANT_ID,
+        action=DataLifecycleAction.ERASE,
+        actor_subject="privacy-operator-authority-runtime",
+        approver_subject="privacy-approver-authority-runtime",
+        authority_ref=receipt.authority_ref,
+        reason="approved_lifecycle_request",
+        change_reference=receipt.change_reference,
+        idempotency_key="lifecycle-authority-runtime-apply-001",
+        request_fingerprint="f" * 64,
+        correlation_id="corr-lifecycle-authority-runtime-001",
+        trace_id="trace-lifecycle-authority-runtime-001",
+        requested_at_utc=evaluated_at - timedelta(seconds=1),
+        dry_run=False,
+        authority_verification_required=True,
+        authority_receipt=receipt,
+    )
+
+    with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
+        first = ExecuteDataLifecycle(
+            PostgresIdeaRepository(cast(PostgresConnection, connection)),
+            now=lambda: evaluated_at,
+        ).execute(command)
+    with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
+        repository = PostgresIdeaRepository(cast(PostgresConnection, connection))
+        replay = ExecuteDataLifecycle(repository, now=lambda: evaluated_at).execute(command)
+        reused = ExecuteDataLifecycle(repository, now=lambda: evaluated_at).execute(
+            replace(command, idempotency_key="lifecycle-authority-runtime-reuse-001")
+        )
+
+    assert first.decision is DataLifecycleDecision.APPLIED
+    assert replay.decision is DataLifecycleDecision.REPLAYED
+    assert reused.decision is DataLifecycleDecision.CONFLICT
+    assert reused.blockers == (DataLifecycleBlocker.AUTHORITY_ATTESTATION_REPLAY,)
+    with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """SELECT authority_decision_id, authority_replay_nonce,
+                          authority_key_id, authority_rotation_epoch,
+                          authority_verified_at_utc
+                   FROM idea_data_lifecycle_operation
+                   WHERE candidate_id = %s AND authority_decision_id IS NOT NULL""",
+                (candidate_id,),
+            )
+            rows = cursor.fetchall()
+    assert len(rows) == 1
+    assert rows[0]["authority_decision_id"] == receipt.decision_id
+    assert rows[0]["authority_replay_nonce"] == receipt.replay_nonce
+    assert rows[0]["authority_key_id"] == receipt.key_id
+    assert rows[0]["authority_rotation_epoch"] == receipt.rotation_epoch
+    assert rows[0]["authority_verified_at_utc"] == receipt.verified_at_utc
 
 
 def _action(

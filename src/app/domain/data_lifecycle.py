@@ -59,6 +59,7 @@ class DataLifecycleBlocker(StrEnum):
     AUTHORITY_INVALID = "authority_invalid"
     AUTHORITY_ATTESTATION_REQUIRED = "authority_attestation_required"
     AUTHORITY_ATTESTATION_MISMATCH = "authority_attestation_mismatch"
+    AUTHORITY_ATTESTATION_REPLAY = "authority_attestation_replay"
     DUAL_AUTHORIZATION_REQUIRED = "dual_authorization_required"
     LEGAL_HOLD_ACTIVE = "legal_hold_active"
     LEGAL_HOLD_NOT_ACTIVE = "legal_hold_not_active"
