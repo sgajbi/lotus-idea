@@ -24,6 +24,8 @@ from app.domain.lifecycle_authority import (
     LifecycleAuthorityKeyDiscovery,
     LifecycleAuthorityPublicKey,
     LifecycleAuthoritySignature,
+    VerifiedLifecycleAuthorityReceipt,
+    expected_authority_domain,
 )
 
 
@@ -245,3 +247,50 @@ def test_lifecycle_authority_claims_reject_malformed_decisions(
 ) -> None:
     with pytest.raises(ValueError, match=message):
         replace(claims(), **claim_changes)
+
+
+@pytest.mark.parametrize(
+    ("receipt_changes", "message"),
+    [
+        ({"decision_id": ""}, "decision_id must be a source-safe reference"),
+        ({"replay_nonce": "short"}, "replay_nonce must be a lowercase SHA-256 digest"),
+        ({"rotation_epoch": 0}, "rotation_epoch must be positive"),
+        (
+            {"effective_at_utc": NOW + timedelta(minutes=1)},
+            "receipt is not yet effective",
+        ),
+        ({"expires_at_utc": NOW}, "receipt is expired"),
+    ],
+)
+def test_verified_receipt_rejects_invalid_persistence_state(
+    receipt_changes: dict[str, Any], message: str
+) -> None:
+    receipt = VerifiedLifecycleAuthorityReceipt(
+        decision_id="privacy-decision-001",
+        replay_nonce="a" * 64,
+        tenant_id="tenant-private-bank-sg",
+        candidate_id="candidate-expired-001",
+        action=DataLifecycleAction.PURGE,
+        authority_domain=LifecycleAuthorityDomain.PRIVACY,
+        authority_ref="bank-privacy-governance:decision-001",
+        change_reference="privacy-case-001",
+        key_id="lifecycle-key-001",
+        rotation_epoch=3,
+        issued_at_utc=NOW - timedelta(minutes=2),
+        effective_at_utc=NOW - timedelta(minutes=1),
+        expires_at_utc=NOW + timedelta(minutes=5),
+        verified_at_utc=NOW,
+    )
+
+    with pytest.raises(ValueError, match=message):
+        replace(receipt, **receipt_changes)
+
+
+@pytest.mark.parametrize(
+    "action",
+    [DataLifecycleAction.APPLY_HOLD, DataLifecycleAction.RELEASE_HOLD],
+)
+def test_legal_hold_actions_require_legal_and_records_authority(
+    action: DataLifecycleAction,
+) -> None:
+    assert expected_authority_domain(action) is LifecycleAuthorityDomain.LEGAL_AND_RECORDS
