@@ -1,0 +1,53 @@
+{
+  "schema_version": "lotus-idea.ai-provider-retention-consumer.v1",
+  "repository": "lotus-idea",
+  "producer": "lotus-ai",
+  "producer_product_id": "lotus-ai:ProviderRetentionConfirmation:v1",
+  "consumer_boundary": "attested_ai_explanation_lineage",
+  "key_discovery_path": "/.well-known/lotus-ai-workflow-attestation-keys",
+  "required_bindings": [
+    "workflow_run_id",
+    "tenant_id",
+    "provider_id",
+    "provider_mode",
+    "model_id",
+    "model_version"
+  ],
+  "replay_fences": [
+    "confirmation_id",
+    "provider_confirmation_ref",
+    "replay_nonce"
+  ],
+  "source_safety": {
+    "raw_prompt_included": false,
+    "raw_output_included": false,
+    "client_identifier_included": false
+  },
+  "authority": {
+    "provider_retention_posture": "lotus-ai-provider-operations",
+    "idea_lineage_receipt": "lotus-idea",
+    "bank_lifecycle_action": "not_granted",
+    "archive_lifecycle_posture": "not_granted",
+    "report_retention_policy": "not_granted"
+  },
+  "failure_policy": {
+    "outcome": "PROVIDER_FAILURE",
+    "supportability_status": "BLOCKED",
+    "deletion_confirmed": false
+  },
+  "persistence_migration": "014_ai_provider_retention_receipt",
+  "supportability_status": "not_certified",
+  "blockers_cleared": [
+    "lotus_ai_provider_retention_consumer_verification_missing",
+    "lotus_ai_provider_retention_receipt_persistence_missing"
+  ],
+  "remaining_blockers": [
+    "lotus_ai_provider_native_confirmation_missing",
+    "lotus_ai_managed_key_runtime_proof_missing",
+    "lotus_ai_production_sql_proof_missing",
+    "bank_privacy_outsourcing_model_risk_approval_missing",
+    "mainline_cross_repository_proof_missing",
+    "production_authorized_purge_proof_missing"
+  ],
+  "supported_feature_promoted": false
+}
