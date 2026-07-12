@@ -65,13 +65,35 @@ Use `POST /api/v1/data-lifecycle/candidates/{candidateId}/actions` with:
 | Tenant | Request `tenantId` must exactly match trusted caller entitlements. |
 | Idempotency | A stable `Idempotency-Key`; changed content returns conflict. |
 | Audit lineage | Middleware-issued or sanitized correlation and trace identifiers persist with the operation. |
-| Authority | Legal/records authority for hold actions; privacy authority for erase/purge. |
+| Authority | Legal/records authority for hold actions; privacy authority for erase/purge. Production-like profiles require the matching signed `authorityDecision`. |
 | Dual authorization | Distinct approver for release, erase, and purge. |
 | Preview | Set `dryRun=true` before an applied action. |
 
 Production-like profiles also require trusted ingress provenance. Do not place
 client names, portfolio identifiers, free-form case narratives, or raw legal
 documents in request references, logs, metrics, or evidence artifacts.
+
+### Signed Decision Verification
+
+For `demo`, `staging`, and `production`, configure:
+
+| Setting | Purpose |
+| --- | --- |
+| `LOTUS_IDEA_LIFECYCLE_AUTHORITY_BASE_URL` | Bank-controlled lifecycle-authority key source. |
+| `LOTUS_IDEA_LIFECYCLE_AUTHORITY_TIMEOUT_SECONDS` | Bounded key-discovery timeout; greater than zero and at most 10 seconds. |
+
+The request's `authorityDecision` must be an approved, unexpired
+`lotus.lifecycle-authority-decision.v1` envelope for audience `lotus-idea`.
+Its tenant, candidate, action, authority domain/reference, and change reference
+must exactly match the requested operation. Keys are read only from
+`/.well-known/lotus-lifecycle-authority-keys`; redirects, unknown/revoked keys,
+rotation mismatch, invalid Ed25519 signatures, and stale claims fail closed.
+
+Dry-run verification does not reserve the external decision. An applied
+operation persists the decision ID, replay nonce, key identity, rotation epoch,
+and verification time. Exact same-key retries replay. Reuse with a different
+idempotency key returns `lifecycle_authority_replay_conflict` and must be
+investigated as a duplicate or replay attempt.
 
 ## Controlled Procedure
 
@@ -184,7 +206,8 @@ Local implementation does not establish legal or regulatory compliance. The
 following remain external or production-evidence blockers:
 
 1. Jurisdiction-specific approval of each duration and start event.
-2. Signed legal-hold and erasure decision integration.
+2. Live bank lifecycle-authority producer, key-discovery, and mainline
+   signature proof.
 3. Report and Archive policy-reference conformance evidence.
 4. AI-provider retention and deletion confirmation.
 5. Mainline scheduled expiry-review evidence and production authorized purge

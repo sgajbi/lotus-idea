@@ -1492,11 +1492,12 @@ Current gaps remain explicit:
     image signature, and provenance/SBOM attestations,
 14. no deterministic freshness check for committed architecture boundary
     report evidence.
-15. no bank-approved jurisdiction policy, signed lifecycle decision
-    integration, Report/Archive/AI retention conformance, or production
-    authorized purge certification. A bounded scheduled expiry review and
-    synthetic PostgreSQL proof exist, but they do not mutate records or grant
-    privacy authority.
+15. no bank-approved jurisdiction policy, live bank lifecycle-authority
+    producer/key-discovery proof, Report/Archive/AI retention conformance, or
+    production authorized purge certification. Production-like consumers now
+    verify and durably fence signed decisions; a bounded scheduled expiry
+    review and synthetic PostgreSQL proof also exist. Neither control grants
+    privacy or legal authority.
 
 These gaps are acceptable only while current-state surfaces keep them visible.
 

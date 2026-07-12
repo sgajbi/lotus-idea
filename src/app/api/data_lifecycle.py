@@ -232,7 +232,8 @@ DATA_LIFECYCLE_ACTION_ROUTE: RouteMetadata = {
     "description": (
         "Previews or applies a tenant-scoped legal hold, hold release, erasure, or purge. "
         "The operation requires a durable repository, role plus capability, governed authority "
-        "reference, idempotency, and dual approval where policy requires it. Responses expose "
+        "reference, idempotency, and dual approval where policy requires it. Production-like "
+        "profiles also require a signed, request-bound lifecycle authority decision. Responses expose "
         "source-safe control evidence only and do not claim legal or privacy certification."
     ),
     "status_code": status.HTTP_200_OK,
