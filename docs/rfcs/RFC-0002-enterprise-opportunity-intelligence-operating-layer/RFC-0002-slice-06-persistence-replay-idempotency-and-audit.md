@@ -453,14 +453,17 @@ Implemented first-wave internal scope:
     rollback, rollback/reapply, concurrent execution, CLI evidence, and
     append-only event enforcement. Protected environment execution and rollout
     health evidence remain absent, so production certification and supported
-    feature posture remain false.
+    feature posture remain false. Issue `#375` tracks the missing protected
+    environments, deployment runner, runtime database secret, governed target,
+    execution attestation, and same-digest rollout-health evidence.
 
 Not implemented yet:
 
 1. protected-environment execution of the exact-image migration workflow plus
-   attested rollout-health evidence; the runner, contract, and disposable
-   PostgreSQL behavior are implemented but have not yet produced live protected
-   deployment evidence,
+   attested rollout-health evidence; issue `#375` records that the repository
+   currently has zero GitHub environments and zero self-hosted runners, while
+   the contract and disposable PostgreSQL behavior are implemented but have
+   not produced live protected deployment evidence,
 2. certified long-running scheduled daemon runtime and live-service recovery proof,
 3. live source adapter and live source-ingestion proof against a running Core service,
 4. data-product certification,
@@ -703,10 +706,10 @@ Prior Slice 06 validation:
     identity inspection, deployment migration CLI/evidence-gate closure,
     CycloneDX 1.6 SBOM generation with `27` components, and a blocking Trivy
     scan with zero HIGH/CRITICAL vulnerabilities or detected secrets.
-34. Protected workflow execution, exact-main release proof, and wiki
-    publication remain required. Local image proof does not substitute for a
-    signed, attested, registry-digest-bound execution from a protected
-    environment.
+34. Before PR `#373` merged, protected workflow execution, exact-main release
+    proof, and wiki publication remained required. Local image proof did not
+    substitute for a signed, attested, registry-digest-bound execution from a
+    protected environment.
 35. PR `#373` merged by rebase at exact main SHA `6ba9618a`; Main
     Releasability run `29261043056` and CodeQL run `29261035371` passed. The
     published release manifest binds digest
@@ -718,8 +721,10 @@ Prior Slice 06 validation:
     migration execution, approved production change, and rollout-health proof
     remain unclaimed certification blockers.
 
-GitHub PR validation and wiki publication remain required before mainline
-closure.
+Repository implementation, PR validation, exact-main validation, wiki
+publication, and branch cleanup are complete. Issue `#375` remains the
+external configuration and execution blocker; closing repository issue `#372`
+does not certify protected migration execution or rollout health.
 
 ## Issue 334 Durable Downstream Submission Recovery
 

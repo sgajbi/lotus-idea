@@ -52,7 +52,9 @@ proof, downstream proof, supported-feature evidence, and mainline CI all agree.
    remain open. Repository implementation merged through PR `#373`; exact-main
    Main Releasability `29261043056`, CodeQL `29261035371`, and synchronized
    wiki publication prove the release and documentation posture without
-   claiming protected environment execution,
+   claiming protected environment execution. [Issue #375](https://github.com/sgajbi/lotus-idea/issues/375)
+   tracks the missing protected environments, deployment runner, database
+   secret, governed target, and same-digest rollout evidence,
 10. RFC-0002 Slice 07 partially implements internal deterministic scoring,
    priority buckets, stable queue projection, snooze, suppression,
    deduplication, expiry, unsupported-evidence, unscored-candidate exclusions,
