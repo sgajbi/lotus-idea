@@ -35,7 +35,7 @@ REQUIRED_LOTUS_AI_ATTESTATION_EVIDENCE_REFS = (
 )
 
 REMAINING_LOTUS_AI_ATTESTATION_BLOCKERS = (
-    "lotus_ai_run_attestation_mainline_proof_missing",
+    "lotus_ai_runtime_execution_missing",
     "certified_runtime_trust_telemetry_missing",
     "workbench_product_proof_missing",
     "supported_feature_promotion_missing",

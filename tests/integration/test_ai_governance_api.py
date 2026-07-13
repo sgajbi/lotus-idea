@@ -746,7 +746,6 @@ def test_ai_explanation_readiness_api_returns_source_safe_blocked_posture() -> N
             "lotus_ai_runtime_execution_missing",
             "certified_ai_lineage_store_missing",
             "workflow_pack_runtime_contract_not_certified",
-            "lotus_ai_run_attestation_mainline_proof_missing",
             "certified_runtime_trust_telemetry_missing",
             "workbench_product_proof_missing",
         ],

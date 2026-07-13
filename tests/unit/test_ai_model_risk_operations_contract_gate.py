@@ -120,7 +120,8 @@ def test_ai_model_risk_operations_contract_gate_blocks_execution_provenance_drif
     module = _load_gate()
     payload = _current_payload(module)
     payload["execution_provenance_policy_version"] = "local-policy"
-    payload["execution_provenance"]["producer_attestation_available"] = True
+    payload["execution_provenance"]["producer_attestation_available"] = False
+    payload["execution_provenance"]["live_runtime_execution_certified"] = True
     payload["execution_provenance"]["unattested_output_clears_runtime_proof"] = True
 
     errors = module.validate_ai_model_risk_operations_contract_payload(payload)

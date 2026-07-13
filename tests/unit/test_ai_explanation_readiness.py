@@ -1,4 +1,11 @@
+import json
+from pathlib import Path
+
+from app.api.ai_governance_models import AIExplanationReadinessResponse
 from app.application.ai_governance import build_ai_explanation_readiness_snapshot
+
+
+ROOT = Path(__file__).resolve().parents[2]
 
 
 def test_ai_explanation_readiness_reports_blocked_not_certified_posture() -> None:
@@ -34,7 +41,6 @@ def test_ai_explanation_readiness_reports_blocked_not_certified_posture() -> Non
         "lotus_ai_runtime_execution_missing",
         "certified_ai_lineage_store_missing",
         "workflow_pack_runtime_contract_not_certified",
-        "lotus_ai_run_attestation_mainline_proof_missing",
         "certified_runtime_trust_telemetry_missing",
         "workbench_product_proof_missing",
     )
@@ -52,3 +58,24 @@ def test_ai_explanation_readiness_reports_durable_lineage_store_without_certific
     assert "lotus_ai_runtime_execution_missing" in snapshot.certification_blockers
     assert "certified_ai_lineage_store_missing" in snapshot.certification_blockers
     assert snapshot.supported_feature_promoted is False
+
+
+def test_ai_explanation_readiness_ledger_example_matches_runtime_contract() -> None:
+    ledger = json.loads(
+        (ROOT / "docs/operations/endpoint-certification-ledger.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    endpoint = next(
+        entry
+        for entry in ledger["endpoints"]
+        if entry["method"] == "GET" and entry["path"] == "/api/v1/ai-explanations/readiness"
+    )
+    documented = json.loads(endpoint["response_examples"][0])
+    runtime = json.loads(
+        AIExplanationReadinessResponse.from_domain(
+            build_ai_explanation_readiness_snapshot()
+        ).model_dump_json(by_alias=True)
+    )
+
+    assert documented == runtime
