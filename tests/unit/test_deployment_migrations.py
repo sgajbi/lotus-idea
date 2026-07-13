@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 from app.application.deployment_migrations import deployment_migration_evidence
+from app.application.deployment_migration_contract import load_deployment_migration_contract
 from app.domain.deployment_migrations import (
     MIGRATION_EVIDENCE_SCHEMA_VERSION,
     DeploymentEnvironmentClass,
@@ -18,6 +19,10 @@ from app.infrastructure.migrations import discover_migrations, migration_bundle_
 
 
 ROOT = Path(__file__).resolve().parents[2]
+MIGRATION_CONTRACT_PATH = (
+    ROOT / "contracts" / "operations" / "lotus-idea-deployment-migrations.v1.json"
+)
+MIGRATION_BUNDLE_SHA256 = migration_bundle_sha256(discover_migrations(ROOT / "migrations"))
 
 
 def test_release_identity_requires_exact_main_and_immutable_idea_digest() -> None:
@@ -38,12 +43,23 @@ def test_rollback_and_adoption_inputs_are_explicit_and_bounded() -> None:
         DeploymentMigrationCommand(
             operation=DeploymentMigrationOperation.ROLLBACK,
             release=release,
+            expected_migration_bundle_sha256=MIGRATION_BUNDLE_SHA256,
         )
     with pytest.raises(ValueError, match="expected_schema_fingerprint is required"):
         DeploymentMigrationCommand(
             operation=DeploymentMigrationOperation.ADOPT,
             release=release,
+            expected_migration_bundle_sha256=MIGRATION_BUNDLE_SHA256,
         )
+
+
+def test_deployment_contract_pins_current_bundle_and_legacy_schema() -> None:
+    contract = load_deployment_migration_contract(MIGRATION_CONTRACT_PATH)
+
+    assert contract.migration_bundle_sha256 == MIGRATION_BUNDLE_SHA256
+    assert contract.migration_count == 15
+    assert contract.current_migration_version == "015"
+    assert contract.schema_fingerprint_sha256.startswith("sha256:")
 
 
 def test_migration_bundle_hash_binds_forward_and_rollback_content(tmp_path: Path) -> None:
@@ -98,4 +114,6 @@ def _release_identity(
         ci_run_id=run_id,
         image_digest_reference=image_digest_reference,
         environment_class=DeploymentEnvironmentClass.STAGING,
+        change_reference="CHG-123456",
+        deployment_actor="lotus-release",
     )

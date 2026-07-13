@@ -9,6 +9,9 @@ from app.application.deployment_migrations import (
     deployment_migration_evidence,
     run_deployment_migrations,
 )
+from app.application.deployment_migration_contract import (
+    load_deployment_migration_contract,
+)
 from app.domain.deployment_migrations import (
     DeploymentEnvironmentClass,
     DeploymentMigrationCommand,
@@ -24,6 +27,7 @@ from app.infrastructure.postgres_deployment_migrations import (
 
 ROOT = Path(__file__).resolve().parents[1]
 MIGRATIONS_DIR = ROOT / "migrations"
+CONTRACT_PATH = ROOT / "contracts" / "operations" / "lotus-idea-deployment-migrations.v1.json"
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -41,7 +45,6 @@ def _parser() -> argparse.ArgumentParser:
         required=True,
     )
     parser.add_argument("--rollback-count", type=int, default=0)
-    parser.add_argument("--expected-schema-fingerprint")
     parser.add_argument("--evidence-output", type=Path, required=True)
     return parser
 
@@ -53,11 +56,18 @@ def main() -> int:
         print("deployment_migration_database_url_missing", file=sys.stderr)
         return 2
     try:
+        contract = load_deployment_migration_contract(CONTRACT_PATH)
+        operation = DeploymentMigrationOperation(args.operation)
         command = DeploymentMigrationCommand(
-            operation=DeploymentMigrationOperation(args.operation),
+            operation=operation,
             release=_release_identity(args.environment_class),
+            expected_migration_bundle_sha256=contract.migration_bundle_sha256,
             rollback_count=args.rollback_count,
-            expected_schema_fingerprint=args.expected_schema_fingerprint,
+            expected_schema_fingerprint=(
+                contract.schema_fingerprint_sha256
+                if operation is DeploymentMigrationOperation.ADOPT
+                else None
+            ),
         )
         import psycopg
 
@@ -89,6 +99,8 @@ def _release_identity(environment_class: str) -> MigrationReleaseIdentity:
         ci_run_id=os.getenv("GITHUB_RUN_ID", ""),
         image_digest_reference=os.getenv("LOTUS_RELEASE_IMAGE_DIGEST_REFERENCE", ""),
         environment_class=DeploymentEnvironmentClass(environment_class),
+        change_reference=os.getenv("LOTUS_DEPLOYMENT_CHANGE_REFERENCE", ""),
+        deployment_actor=os.getenv("GITHUB_ACTOR", ""),
     )
 
 

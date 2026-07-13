@@ -1,8 +1,12 @@
 from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
+import json
+import os
 from pathlib import Path
 import shutil
+import subprocess
+import sys
 from typing import cast
 
 import psycopg
@@ -20,12 +24,20 @@ from app.infrastructure.postgres_deployment_migrations import (
     PostgresDeploymentMigrationExecutor,
 )
 from app.infrastructure.postgres_schema_fingerprint import postgres_idea_schema_fingerprint
+from app.infrastructure.migrations import (
+    MigrationDirection,
+    discover_migrations,
+    migration_bundle_sha256,
+)
+from scripts.deployment_migration_evidence_gate import (
+    validate_deployment_migration_evidence,
+)
 from tests.integration.postgres_runtime_support import execute_migrations
-from app.infrastructure.migrations import MigrationDirection
 
 
 ROOT = Path(__file__).resolve().parents[3]
 MIGRATIONS_DIR = ROOT / "migrations"
+MIGRATION_BUNDLE_SHA256 = migration_bundle_sha256(discover_migrations(MIGRATIONS_DIR))
 
 
 def test_existing_schema_requires_validated_adoption_and_rejects_drift(
@@ -116,15 +128,23 @@ def test_failed_fresh_plan_rolls_back_schema_and_history(
             migrations_dir=altered_migrations,
         )
         with pytest.raises(psycopg.errors.UndefinedFunction):
-            executor.execute(_command(DeploymentMigrationOperation.APPLY))
+            executor.execute(
+                _command(
+                    DeploymentMigrationOperation.APPLY,
+                    expected_migration_bundle_sha256=migration_bundle_sha256(
+                        discover_migrations(altered_migrations)
+                    ),
+                )
+            )
         with connection.cursor() as cursor:
             cursor.execute(
                 "SELECT to_regclass('public.idea_candidate_record'), "
-                "to_regclass('public.lotus_idea_schema_migration')"
+                "to_regclass('public.lotus_idea_schema_migration'), "
+                "to_regprocedure('public.lotus_idea_reject_schema_migration_event_mutation()')"
             )
             row = cursor.fetchone()
 
-    assert row == (None, None)
+    assert row == (None, None, None)
 
 
 def test_concurrent_fresh_deploys_are_serialized(postgres_database_url: str) -> None:
@@ -172,10 +192,90 @@ def test_applied_content_drift_fails_before_schema_mutation(
             migrations_dir=altered_migrations,
         )
         with pytest.raises(DeploymentMigrationError, match="immutable image bundle"):
-            executor.execute(_command(DeploymentMigrationOperation.APPLY, run_id="123457"))
+            executor.execute(
+                _command(
+                    DeploymentMigrationOperation.APPLY,
+                    run_id="123457",
+                    expected_migration_bundle_sha256=migration_bundle_sha256(
+                        discover_migrations(altered_migrations)
+                    ),
+                )
+            )
         with connection.cursor() as cursor:
             cursor.execute("SELECT count(*) FROM lotus_idea_schema_migration_event")
             assert cursor.fetchone() == (15,)
+
+
+def test_exact_cli_persists_release_lineage_and_emits_validated_evidence(
+    postgres_database_url: str,
+    tmp_path: Path,
+) -> None:
+    _prepare_empty_database(postgres_database_url)
+    evidence_path = tmp_path / "deployment-migration-evidence.json"
+    env = {
+        **os.environ,
+        "LOTUS_IDEA_DATABASE_URL": postgres_database_url,
+        "GITHUB_REPOSITORY": "sgajbi/lotus-idea",
+        "GITHUB_SHA": "1" * 40,
+        "GITHUB_REF": "refs/heads/main",
+        "GITHUB_RUN_ID": "123456",
+        "GITHUB_ACTOR": "lotus-release",
+        "LOTUS_RELEASE_IMAGE_DIGEST_REFERENCE": (f"ghcr.io/sgajbi/lotus-idea@sha256:{'a' * 64}"),
+        "LOTUS_DEPLOYMENT_CHANGE_REFERENCE": "CHG-123456",
+    }
+
+    completed = subprocess.run(
+        (
+            sys.executable,
+            "scripts/run_deployment_migrations.py",
+            "--operation",
+            "apply",
+            "--environment-class",
+            "staging",
+            "--evidence-output",
+            str(evidence_path),
+        ),
+        cwd=ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=30,
+        check=False,
+    )
+
+    assert completed.returncode == 0, completed.stderr
+    payload = json.loads(evidence_path.read_text(encoding="utf-8"))
+    assert validate_deployment_migration_evidence(payload) == []
+    with psycopg.connect(postgres_database_url) as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT environment_class, change_reference, deployment_actor, "
+                "count(*) FROM lotus_idea_schema_migration "
+                "GROUP BY environment_class, change_reference, deployment_actor"
+            )
+            assert cursor.fetchone() == ("staging", "CHG-123456", "lotus-release", 15)
+
+
+@pytest.mark.parametrize("statement", ["UPDATE", "DELETE"])
+def test_migration_event_history_rejects_mutation(
+    postgres_database_url: str,
+    statement: str,
+) -> None:
+    _prepare_empty_database(postgres_database_url)
+    with psycopg.connect(postgres_database_url) as connection:
+        _executor(connection).execute(_command(DeploymentMigrationOperation.APPLY))
+        with connection.cursor() as cursor:
+            query = (
+                "UPDATE lotus_idea_schema_migration_event SET migration_name = 'changed' "
+                "WHERE migration_event_id = 1"
+                if statement == "UPDATE"
+                else "DELETE FROM lotus_idea_schema_migration_event WHERE migration_event_id = 1"
+            )
+            with pytest.raises(
+                psycopg.errors.ObjectNotInPrerequisiteState,
+                match="append-only",
+            ):
+                cursor.execute(query)
 
 
 def _executor(connection: psycopg.Connection[object]) -> PostgresDeploymentMigrationExecutor:
@@ -191,6 +291,7 @@ def _command(
     run_id: str = "123456",
     rollback_count: int = 0,
     expected_schema_fingerprint: str | None = None,
+    expected_migration_bundle_sha256: str = MIGRATION_BUNDLE_SHA256,
 ) -> DeploymentMigrationCommand:
     return DeploymentMigrationCommand(
         operation=operation,
@@ -201,7 +302,10 @@ def _command(
             ci_run_id=run_id,
             image_digest_reference=f"ghcr.io/sgajbi/lotus-idea@sha256:{'a' * 64}",
             environment_class=DeploymentEnvironmentClass.STAGING,
+            change_reference="CHG-123456",
+            deployment_actor="lotus-release",
         ),
+        expected_migration_bundle_sha256=expected_migration_bundle_sha256,
         rollback_count=rollback_count,
         expected_schema_fingerprint=expected_schema_fingerprint,
     )
@@ -217,3 +321,6 @@ def _drop_deployment_history(database_url: str) -> None:
         with connection.cursor() as cursor:
             cursor.execute("DROP TABLE IF EXISTS lotus_idea_schema_migration_event")
             cursor.execute("DROP TABLE IF EXISTS lotus_idea_schema_migration")
+            cursor.execute(
+                "DROP FUNCTION IF EXISTS lotus_idea_reject_schema_migration_event_mutation()"
+            )

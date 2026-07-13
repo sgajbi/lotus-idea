@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from app.domain.deployment_migrations import (
+    DEPLOYMENT_MIGRATION_CONTRACT_VERSION,
     MIGRATION_EVIDENCE_SCHEMA_VERSION,
     DeploymentMigrationCommand,
     DeploymentMigrationResult,
@@ -21,6 +22,7 @@ def run_deployment_migrations(
 def deployment_migration_evidence(result: DeploymentMigrationResult) -> dict[str, Any]:
     return {
         "schemaVersion": MIGRATION_EVIDENCE_SCHEMA_VERSION,
+        "migrationContractVersion": DEPLOYMENT_MIGRATION_CONTRACT_VERSION,
         "repository": result.release.repository,
         "proofScope": "deployment_migration_execution",
         "operation": result.operation.value,
@@ -29,7 +31,10 @@ def deployment_migration_evidence(result: DeploymentMigrationResult) -> dict[str
         "gitRef": result.release.git_ref,
         "ciRunId": result.release.ci_run_id,
         "imageDigestReference": result.release.image_digest_reference,
+        "changeReference": result.release.change_reference,
+        "deploymentActor": result.release.deployment_actor,
         "migrationBundleSha256": result.migration_bundle_sha256,
+        "postgresMajorVersion": result.postgres_major_version,
         "previousVersion": result.previous_version,
         "currentVersion": result.current_version,
         "appliedVersions": list(result.applied_versions),
