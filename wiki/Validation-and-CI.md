@@ -52,12 +52,12 @@ Main Releasability run `29261043056` and CodeQL run `29261035371` passed on
 SHA tag, OCI labels, `/version`, SBOM, scan, and digest-only deployment posture.
 Protected migration execution and rollout-health evidence remain separate
 certification requirements. [Issue #375](https://github.com/sgajbi/lotus-idea/issues/375)
-tracks the current execution-plane gap: no protected GitHub environments,
-environment-scoped database secret, governed target, or live rollout evidence
-is configured. The workflow now uses GitHub's ephemeral `ubuntu-latest` runner,
-consistent with the other Lotus applications. Protected environment approval,
-runtime-only secret injection, and an approved encrypted database path remain
-mandatory.
+tracks the remaining execution gap. Protected staging and production
+environments now exist with protected-branch rules, and production requires
+reviewer approval. The environment-scoped database secret, governed target,
+approved connectivity path, and live rollout evidence remain absent. The
+workflow uses GitHub's ephemeral `ubuntu-latest` runner, consistent with the
+other Lotus applications; runtime-only secret injection remains mandatory.
 
 ```mermaid
 flowchart LR

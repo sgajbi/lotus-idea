@@ -84,7 +84,7 @@ Current RFC-0002 implementation-start baseline:
    official source calculations remain with their owning services. Later-slice
    Gateway/Workbench, mesh certification, and supported-feature promotion stay
    blocked.
-7. Slice 06 partially implements internal candidate persistence records,
+7. Slice 06 implements the repository-owned candidate persistence records,
    evidence replay posture, certified evidence replay API foundation,
    idempotency conflict handling, idempotent lifecycle transition recording,
    lifecycle audit history, snapshot recovery, and a central repository

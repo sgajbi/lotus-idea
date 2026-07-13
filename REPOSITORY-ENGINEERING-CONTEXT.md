@@ -883,9 +883,10 @@ Do not add a migration service or split the database without concrete workload,
 failure-isolation, ownership, or operability evidence. The implemented workflow
 is still non-certifying until a protected environment run, approved change,
 same-digest rollout health proof, mainline validation, and retained attestation
-exist. Issue `#375` is the durable tracker: the repository currently has no
-GitHub deployment environments, environment-scoped database secret, governed
-target, or live rollout evidence. The workflow uses the same GitHub-hosted
+exist. Issue `#375` is the durable tracker. Protected staging and production
+environments now exist with protected-branch rules, and production requires
+reviewer approval. No environment-scoped database secret, governed target,
+approved connectivity path, or live rollout evidence exists. The workflow uses the same GitHub-hosted
 `ubuntu-latest` execution plane as other Lotus apps; a private runner is not a
 current prerequisite. Database reachability must use an approved encrypted
 path and must not be obtained by broadly exposing PostgreSQL.
