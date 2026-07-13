@@ -6,9 +6,23 @@ from dataclasses import dataclass
 from pathlib import Path
 
 try:
+    from documentation.quality_contract import (
+        code_fence_count,
+        has_heading,
+        markdown_table_count,
+        mermaid_fence_count,
+        non_empty_lines,
+    )
     from documentation_stale_claims import PROHIBITED_STALE_CLAIMS, PROOF_READINESS_HEADINGS
     from wiki_navigation_contract import same_wiki_page_link_errors
 except ModuleNotFoundError:
+    from scripts.documentation.quality_contract import (
+        code_fence_count,
+        has_heading,
+        markdown_table_count,
+        mermaid_fence_count,
+        non_empty_lines,
+    )
     from scripts.documentation_stale_claims import (
         PROHIBITED_STALE_CLAIMS,
         PROOF_READINESS_HEADINGS,
@@ -396,34 +410,6 @@ POLISHED_SURFACES = (
 PROHIBITED_PLACEHOLDERS = ("TODO", "TBD", "lorem ipsum", "coming soon")
 
 
-def _non_empty_lines(content: str) -> list[str]:
-    return [line for line in content.splitlines() if line.strip()]
-
-
-def _markdown_table_count(content: str) -> int:
-    lines = content.splitlines()
-    table_count = 0
-    for index, line in enumerate(lines[:-1]):
-        if not line.strip().startswith("|"):
-            continue
-        separator = lines[index + 1].strip()
-        if separator.startswith("|") and "---" in separator:
-            table_count += 1
-    return table_count
-
-
-def _code_fence_count(content: str) -> int:
-    return content.count("```") // 2
-
-
-def _mermaid_fence_count(content: str) -> int:
-    return content.count("```mermaid")
-
-
-def _has_heading(content: str, heading: str) -> bool:
-    return content.startswith(f"{heading}\n") or f"\n{heading}\n" in content
-
-
 def validate_documentation_contract(
     *,
     root: Path = ROOT,
@@ -437,7 +423,7 @@ def validate_documentation_contract(
             errors.append(f"{surface.relative_path}: required documentation surface is missing")
             continue
         content = path.read_text(encoding="utf-8")
-        non_empty_count = len(_non_empty_lines(content))
+        non_empty_count = len(non_empty_lines(content))
         if non_empty_count < surface.min_non_empty_lines:
             errors.append(
                 f"{surface.relative_path}: has {non_empty_count} non-empty lines; "
@@ -469,21 +455,21 @@ def validate_documentation_contract(
             continue
         content = path.read_text(encoding="utf-8")
         for heading in surface.required_headings:
-            if not _has_heading(content, heading):
+            if not has_heading(content, heading):
                 errors.append(f"{surface.relative_path}: missing polished heading `{heading}`")
-        table_count = _markdown_table_count(content)
+        table_count = markdown_table_count(content)
         if table_count < surface.min_markdown_tables:
             errors.append(
                 f"{surface.relative_path}: has {table_count} markdown tables; "
                 f"minimum is {surface.min_markdown_tables}"
             )
-        code_fence_count = _code_fence_count(content)
-        if code_fence_count < surface.min_code_fences:
+        fence_count = code_fence_count(content)
+        if fence_count < surface.min_code_fences:
             errors.append(
-                f"{surface.relative_path}: has {code_fence_count} code fences; "
+                f"{surface.relative_path}: has {fence_count} code fences; "
                 f"minimum is {surface.min_code_fences}"
             )
-        mermaid_count = _mermaid_fence_count(content)
+        mermaid_count = mermaid_fence_count(content)
         if mermaid_count < surface.min_mermaid_fences:
             errors.append(
                 f"{surface.relative_path}: has {mermaid_count} Mermaid diagrams; "
