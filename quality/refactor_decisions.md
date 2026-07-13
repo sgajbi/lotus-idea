@@ -221,18 +221,21 @@ Evidence:
    README, supported-feature, seed, automation, or platform skill change is
    justified by this internal modularity slice.
 
-## Candidate Persistence Mutation Boundary
+## Aggregate Persistence Mutation Boundary
 
-Candidate ingestion previously reused the generic whole-repository snapshot
-mutation path. The adapter now composes only requested and idempotency-linked
-candidate state under ordered transaction-scoped locks before applying the
-existing domain decision and atomic row delta.
+Candidate ingestion first exposed the generic whole-repository snapshot cost.
+The same-pattern fix now covers lifecycle, review, feedback, conversion, report
+evidence, AI lineage, outbox run idempotency, evidence replay, and report
+precheck. Aggregate snapshot composition, PostgreSQL mutation orchestration,
+and replay projections are separate internal modules with stable interfaces.
 
-This is a data-access and design-modularity change inside one deployable and one
-Idea-owned PostgreSQL database. It does not create a database-per-module,
-microservice, schema, API, source-authority, or supported-feature boundary.
-Focused query-shape and real-concurrency tests provide the evidence; the
-remaining generic mutation families are the next measured Slice 06 work.
+Identity, sorted candidate, and idempotency locks fence exact state before the
+unchanged domain decision and atomic row delta. Full snapshots remain explicit
+administrative/test/DR operations. Query-shape tests and all 17 disposable
+PostgreSQL 18 tests pass. This is design and data-access modularity inside one
+deployable and one Idea-owned database; it creates no database-per-module,
+microservice, schema, API, migration, source-authority, or supported-feature
+boundary.
 
 ## 2026-07-13: Outbox Capability Packages Inside Existing Layers
 

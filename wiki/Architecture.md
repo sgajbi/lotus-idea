@@ -712,15 +712,16 @@ updates rather than table-wide snapshot replacement, preserving unrelated rows
 when independent mutations are applied from the same starting state. Candidate
 updates use an optimistic `updated_at_utc` compare-and-set guard to reject
 stale same-candidate snapshots before detail rows or outbox events commit.
-Idempotency inserts use PostgreSQL conflict detection and retry once from a
-fresh database snapshot so concurrent same-key races return governed replay or
-conflict posture instead of raw primary-key failures. Candidate creation uses
-the focused `app.infrastructure.persistence` adapter: it locks candidate and
-idempotency identities in fixed order, loads only requested/idempotency-linked
-aggregates, executes the existing domain decision, and writes one atomic delta.
-Real PostgreSQL proof covers same-key replay and different-key
-duplicate-candidate races. This does not yet certify every generic mutation
-path as bounded.
+Idempotency inserts retain PostgreSQL conflict detection as a final race guard.
+The focused `app.infrastructure.persistence` package now composes every
+ordinary mutation from exact identity, sorted candidate, and idempotency locks;
+it loads only command or identity-linked aggregates before the existing domain
+decision and atomic delta. Outbox run requests are idempotency-row-only,
+evidence replay is candidate-only, and report precheck is exact-key plus linked
+candidate. Full snapshots remain explicit administrative/test/DR behavior.
+A disposable PostgreSQL 18 lane passes all 17 required tests. No database,
+schema, process, API, migration, source-authority, or supported-feature boundary
+was added.
 
 The real PostgreSQL runtime proof now covers high-cash evaluate-and-persist
 replay plus the first internal advisor queue, review, feedback, conversion,

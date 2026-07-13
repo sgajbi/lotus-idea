@@ -85,7 +85,7 @@ existing deployable service.
 | `src/app/application/` | Use-case orchestration for signal evaluation, lifecycle, review, feedback, conversion, readiness, replay, and proof updates. |
 | `src/app/domain/` | Framework-free domain policy and state; cohesive families such as `data_lifecycle/` and `outbox/` repeat inside layers without creating services. |
 | `src/app/ports/` | Repository, source-service, downstream, and publisher protocols. |
-| `src/app/infrastructure/` | Source adapters, PostgreSQL repository, bounded candidate-mutation persistence, migrations, codecs, HTTP clients, and outbox publisher adapter. |
+| `src/app/infrastructure/` | Source adapters, PostgreSQL repository, bounded aggregate mutation/replay modules, migrations, codecs, HTTP clients, and outbox publisher adapter. |
 | `src/app/middleware/` | Correlation, trusted hosts, CORS, request-size limits, JSON write controls, and security headers. |
 | `src/app/observability/` | Structured logging, metrics, tracing, correlation, and operation events. |
 | `contracts/` | Data-mesh, SLO, access, evidence-policy, downstream, trust telemetry, and readiness contracts. |
