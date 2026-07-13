@@ -1,11 +1,15 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+import json
 from pathlib import Path
 
 import pytest
 
-from app.application.deployment_migrations import deployment_migration_evidence
+from app.application.deployment_migrations import (
+    deployment_migration_evidence,
+    run_deployment_migrations,
+)
 from app.application.deployment_migration_contract import load_deployment_migration_contract
 from app.domain.deployment_migrations import (
     MIGRATION_EVIDENCE_SCHEMA_VERSION,
@@ -99,6 +103,138 @@ def test_deployment_evidence_is_release_bound_and_source_safe() -> None:
     assert "database_url" not in rendered
     assert "password" not in rendered
     assert "hostname" not in rendered
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "message"),
+    [
+        ("repository", "other/idea", "repository must identify"),
+        ("git_commit_sha", "ABC", "lowercase 40-character SHA"),
+        ("ci_run_id", "0", "positive numeric GitHub run id"),
+        ("change_reference", "bad", "bounded uppercase change identifier"),
+        ("deployment_actor", "bad actor", "valid bounded GitHub actor"),
+    ],
+)
+def test_release_identity_rejects_invalid_release_fields(
+    field: str,
+    value: str,
+    message: str,
+) -> None:
+    values = {
+        "repository": "sgajbi/lotus-idea",
+        "git_commit_sha": "1" * 40,
+        "git_ref": "refs/heads/main",
+        "ci_run_id": "123456",
+        "image_digest_reference": f"ghcr.io/sgajbi/lotus-idea@sha256:{'a' * 64}",
+        "environment_class": DeploymentEnvironmentClass.STAGING,
+        "change_reference": "CHG-123456",
+        "deployment_actor": "lotus-release",
+    }
+    values[field] = value
+
+    with pytest.raises(ValueError, match=message):
+        MigrationReleaseIdentity(**values)  # type: ignore[arg-type]
+
+
+def test_command_rejects_cross_operation_inputs_and_invalid_bundle() -> None:
+    release = _release_identity()
+
+    with pytest.raises(ValueError, match="must be a SHA-256 digest"):
+        DeploymentMigrationCommand(
+            operation=DeploymentMigrationOperation.APPLY,
+            release=release,
+            expected_migration_bundle_sha256="latest",
+        )
+    with pytest.raises(ValueError, match="valid only for rollback"):
+        DeploymentMigrationCommand(
+            operation=DeploymentMigrationOperation.APPLY,
+            release=release,
+            expected_migration_bundle_sha256=MIGRATION_BUNDLE_SHA256,
+            rollback_count=1,
+        )
+    with pytest.raises(ValueError, match="valid only for adoption"):
+        DeploymentMigrationCommand(
+            operation=DeploymentMigrationOperation.APPLY,
+            release=release,
+            expected_migration_bundle_sha256=MIGRATION_BUNDLE_SHA256,
+            expected_schema_fingerprint=f"sha256:{'f' * 64}",
+        )
+
+
+def test_application_use_case_delegates_to_executor() -> None:
+    command = DeploymentMigrationCommand(
+        operation=DeploymentMigrationOperation.APPLY,
+        release=_release_identity(),
+        expected_migration_bundle_sha256=MIGRATION_BUNDLE_SHA256,
+    )
+    expected = DeploymentMigrationResult(
+        operation=DeploymentMigrationOperation.APPLY,
+        release=command.release,
+        migration_bundle_sha256=MIGRATION_BUNDLE_SHA256,
+        previous_version=None,
+        current_version=None,
+        applied_versions=(),
+        rolled_back_versions=(),
+        adopted_versions=(),
+        executed_at_utc=datetime(2026, 7, 13, 12, 0, tzinfo=UTC),
+    )
+
+    class Executor:
+        def execute(self, received: DeploymentMigrationCommand) -> DeploymentMigrationResult:
+            assert received is command
+            return expected
+
+    assert run_deployment_migrations(command, executor=Executor()) is expected
+
+
+@pytest.mark.parametrize(
+    ("mutate", "message"),
+    [
+        (lambda payload: [], "must be an object"),
+        (
+            lambda payload: {**payload, "repository": "other/idea"},
+            "contract repository must be sgajbi/lotus-idea",
+        ),
+        (
+            lambda payload: {**payload, "legacyAdoption": None},
+            "legacyAdoption must be an object",
+        ),
+        (
+            lambda payload: {**payload, "certificationPosture": None},
+            "certificationPosture must be an object",
+        ),
+        (
+            lambda payload: {
+                **payload,
+                "certificationPosture": {
+                    **payload["certificationPosture"],
+                    "remainingBlockers": [],
+                },
+            },
+            "remainingBlockers must be a non-empty text list",
+        ),
+        (
+            lambda payload: {**payload, "migrationCount": True},
+            "migrationCount must be an integer",
+        ),
+        (
+            lambda payload: {**payload, "currentMigrationVersion": ""},
+            "currentMigrationVersion must be non-empty text",
+        ),
+    ],
+)
+def test_contract_loader_fails_closed_on_malformed_contract(
+    tmp_path: Path,
+    mutate: object,
+    message: str,
+) -> None:
+    payload = json.loads(MIGRATION_CONTRACT_PATH.read_text(encoding="utf-8"))
+    altered = mutate(payload)  # type: ignore[operator]
+    path = tmp_path / "contract.json"
+    path.write_text(json.dumps(altered), encoding="utf-8")
+
+    with pytest.raises(ValueError, match=message):
+        load_deployment_migration_contract(path)
 
 
 def _release_identity(
