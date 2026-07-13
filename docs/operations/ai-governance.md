@@ -121,8 +121,9 @@ The readiness diagnostic always returns:
 6. `supportedFeaturePromoted=false`.
 7. `actionContentPolicyVersion=lotus-idea.ai-action-content-policy.v1`.
 8. `metadataEnvelopeVersion=lotus-idea.ai-metadata-envelope.v1`.
-9. `lotusAiRunAttestationAvailable=true`, while certification remains blocked
-   by `lotus_ai_run_attestation_mainline_proof_missing`.
+9. `lotusAiRunAttestationAvailable=true`; producer and consumer mainline
+   contract proof is complete, while live runtime execution and the other
+   certification blockers remain explicit.
 
 ## Provider-Safe Metadata Envelope
 
@@ -286,19 +287,24 @@ Self-asserted workflow output is never production evidence.
 The evaluation response, audit attributes, and lineage record expose the bounded
 provenance posture. Migration `011` marks existing records
 `pre_attestation_unverifiable`; it does not infer that historical output came
-from Lotus AI. Readiness reports the verifier as available but remains blocked
-with `lotus_ai_run_attestation_mainline_proof_missing`.
+from Lotus AI. Readiness reports the verifier as available and no longer reports
+the completed mainline contract proof as missing. It remains blocked on live
+Lotus AI runtime execution, certified lineage-store and runtime-trust proof,
+workflow-pack runtime certification, and Workbench product proof.
 
-The producer delivery is tracked by `sgajbi/lotus-ai#113`. Local source-safe
+The producer delivery was completed under `sgajbi/lotus-ai#113` at producer
+main commit `162df803a7a835813dc17116be674842f12aa544`, with Main Releasability
+run `29153879884`. The Idea consumer is mainline-proven through commit
+`f496c4429178eaa5679767bc8f1c3102e17d5eb2` and run `29179489433`. Local source-safe
 proof is generated with `make lotus-ai-attestation-contract-proof` and enforced
 by `make lotus-ai-attestation-contract-proof-gate`. In isolated repository CI,
 where the sibling producer checkout is unavailable, the gate validates only
-lotus-idea-owned verification and replay controls and retains producer and
-mainline certification as false. Supplying a producer checkout makes the same
+lotus-idea-owned verification and replay controls; it does not attempt to
+re-prove immutable GitHub mainline history. Supplying a producer checkout makes the same
 gate require the complete cross-repository contract proof. It clears no
-aggregate blocker because branch-local source inspection does not prove merged
-producer/consumer CI, live-provider rollout, Workbench behavior, or
-supported-feature promotion. Idea does not own signing keys, provider
+aggregate blocker because branch-local source inspection does not prove
+live-provider rollout, Workbench behavior, or supported-feature promotion.
+Idea does not own signing keys, provider
 execution, model inventory, prompts, RAG, or AI runtime infrastructure.
 
 Unsupported claims and forbidden action types or content return `200` with a blocked posture

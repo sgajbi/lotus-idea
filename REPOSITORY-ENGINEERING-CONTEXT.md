@@ -707,16 +707,18 @@ AI workflow output trust is governed by
 explicit `unattested_local_test_fixture`; demo, staging, and production reject
 workflow output before candidate lookup or persistence until a verified
 producer receipt exists. Deterministic fallback remains allowed. Signed
-run/model attestation issuance, key distribution, provider/model approval, and
-runtime truth belong to `lotus-ai` and are tracked by `sgajbi/lotus-ai#113`.
+run/model attestation issuance and key distribution belong to `lotus-ai`; the
+producer contract was completed under `sgajbi/lotus-ai#113`. Live
+provider/model approval and runtime truth remain external and do not become
+Idea authority.
 Idea consumes the exact producer envelope through `app.integration`, discovers
 keys only at the fixed well-known path, verifies Ed25519 signatures and
 deterministic input/output bindings, maps verified output through the
 application use case, and atomically persists a bounded receipt. Run id and
-replay nonce remain unique across restart. Readiness may report the verifier as
-available, but must retain `lotus_ai_run_attestation_mainline_proof_missing`
-until producer and consumer mainline/CI evidence exists. Local source proof
-clears no aggregate blocker.
+replay nonce remain unique across restart. Producer and consumer mainline/CI
+evidence exists, so readiness reports the verifier as available without a
+missing-mainline-proof claim. Local source proof still clears no live-runtime,
+Workbench, or promotion blocker.
 
 Idea also independently verifies and atomically persists the bounded
 `lotus-ai:ProviderRetentionConfirmation:v1` receipt with attested explanation

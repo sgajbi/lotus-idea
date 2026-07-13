@@ -229,7 +229,10 @@ from crossing the production trust boundary. Local/test fixtures are visibly
 unattested and cannot clear runtime proof. Demo, staging, and production reject
 workflow output before candidate lookup or lineage persistence; deterministic
 fallback remains available. Signed run/model attestation is producer-owned and
-tracked by `lotus-ai#113`, so readiness remains blocked.
+was completed under `lotus-ai#113`; Idea-side verification and replay fencing
+are also mainline-proven. Readiness remains blocked on live runtime execution,
+runtime trust, Workbench proof, and supported-feature promotion rather than a
+missing attestation contract.
 
 Provider-bound metadata is governed by
 `lotus-idea.ai-metadata-envelope.v1`. The closed API schema and domain policy
