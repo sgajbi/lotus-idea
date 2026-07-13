@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Protocol
 
 from fastapi import status
 from fastapi.responses import JSONResponse
@@ -29,10 +28,9 @@ from app.domain import (
 )
 from app.observability import IdeaOperation, OperationOutcome
 from app.ports.idea_repository import ReviewWorkflowRepository
-from app.security.caller_context import CallerContext, CallerEntitlementScope, PermissionDeniedError
+from app.security.caller_context import CallerContext, PermissionDeniedError
 
 __all__ = [
-    "AuthorizedReviewScope",
     "ReviewWorkflowCallerHeaders",
     "ReviewWorkflowMutationContext",
     "build_review_actor_context",
@@ -42,13 +40,8 @@ __all__ = [
     "permission_denied",
     "prepare_review_workflow_mutation",
     "problem_for_review_persistence",
-    "require_body_scope_claim_within_caller_entitlements",
     "require_mutating_review_workflow_caller",
 ]
-
-
-class AuthorizedReviewScope(Protocol):
-    def is_subset_of_entitlement_scope(self, scope: CallerEntitlementScope) -> bool: ...
 
 
 @dataclass(frozen=True)
@@ -74,7 +67,6 @@ class ReviewWorkflowMutationContext:
 def prepare_review_workflow_mutation(
     *,
     headers: ReviewWorkflowCallerHeaders,
-    authorized_scope: AuthorizedReviewScope,
     capability: str,
     idempotency_key: str,
     operation: IdeaOperation,
@@ -90,10 +82,6 @@ def prepare_review_workflow_mutation(
         trusted_caller_context=headers.trusted_caller_context,
     )
     role = require_mutating_review_workflow_caller(caller, capability=capability)
-    require_body_scope_claim_within_caller_entitlements(
-        caller=caller,
-        authorized_scope=authorized_scope,
-    )
     validate_idempotency_key(idempotency_key)
     repository = get_idea_repository()
     durable_storage_backed = idea_repository_durable_storage_backed(repository)
@@ -143,15 +131,6 @@ def build_review_actor_context(
         portfolio_ids=frozenset(scope.portfolio_ids),
         client_ids=frozenset(scope.client_ids),
     )
-
-
-def require_body_scope_claim_within_caller_entitlements(
-    *,
-    caller: CallerContext,
-    authorized_scope: AuthorizedReviewScope,
-) -> None:
-    if not authorized_scope.is_subset_of_entitlement_scope(caller.entitlement_scope):
-        raise PermissionDeniedError("idea.review.entitlement_scope")
 
 
 def problem_for_review_persistence(

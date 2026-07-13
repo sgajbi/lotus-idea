@@ -144,25 +144,13 @@ def access_scope() -> dict[str, str]:
     }
 
 
-def authorized_scope(portfolio_id: str = "PB_SG_GLOBAL_BAL_001") -> dict[str, list[str]]:
-    return {
-        "tenantIds": ["tenant-private-bank-sg"],
-        "bookIds": ["book-advisor-001"],
-        "portfolioIds": [portfolio_id],
-        "clientIds": ["client-001"],
-    }
-
-
 def suppress_review_payload(
     *,
     review_id: str = "review-suppress-001",
-    portfolio_id: str = "PB_SG_GLOBAL_BAL_001",
 ) -> dict[str, Any]:
     return {
         "reviewId": review_id,
         "action": "suppress",
-        "accessScope": access_scope(),
-        "authorizedScope": authorized_scope(portfolio_id),
         "reasonCodes": ["review_required"],
         "decidedAtUtc": "2026-06-21T10:05:00Z",
         "suppressionReason": "manual_suppression",
@@ -173,8 +161,6 @@ def approve_review_payload() -> dict[str, Any]:
     return {
         "reviewId": "review-approve-001",
         "action": "approve_for_conversion",
-        "accessScope": access_scope(),
-        "authorizedScope": authorized_scope(),
         "reasonCodes": ["review_required"],
         "decidedAtUtc": "2026-06-21T10:05:00Z",
     }
@@ -187,8 +173,6 @@ def feedback_payload(
 ) -> dict[str, Any]:
     return {
         "feedbackId": feedback_id,
-        "accessScope": access_scope(),
-        "authorizedScope": authorized_scope(),
         "outcome": outcome,
         "reasonCodes": ["review_required"],
         "recordedAtUtc": "2026-06-21T10:06:00Z",
@@ -648,10 +632,12 @@ def test_review_action_api_requires_mutating_capability_and_scope() -> None:
         json=suppress_review_payload(),
         headers=review_headers("review-action-api-denied-001", capabilities="idea.signal.evaluate"),
     )
+    denied_scope_headers = review_headers("review-action-api-denied-002")
+    denied_scope_headers["X-Caller-Portfolio-Ids"] = "different-portfolio"
     denied_by_scope = client.post(
         f"/api/v1/idea-candidates/{candidate_id}/review-actions",
-        json=suppress_review_payload(portfolio_id="different-portfolio"),
-        headers=review_headers("review-action-api-denied-002"),
+        json=suppress_review_payload(),
+        headers=denied_scope_headers,
     )
 
     assert denied_by_capability.status_code == 403
@@ -666,7 +652,7 @@ def test_review_action_api_validation_errors_are_product_safe() -> None:
     client = TestClient(app)
     candidate_id = persisted_candidate_id(client, idempotency_key="seed-review-validation-001")
     payload = suppress_review_payload()
-    payload["accessScope"]["tenantId"] = " "
+    payload["accessScope"] = access_scope() | {"tenantId": " "}
 
     response = client.post(
         f"/api/v1/idea-candidates/{candidate_id}/review-actions",
@@ -716,23 +702,28 @@ def test_review_action_api_rejects_invalid_identity_time_idempotency_and_actor_r
     assert ambiguous_role_response.status_code == 403
 
 
-def test_review_action_api_rejects_invalid_authorized_scope_sets() -> None:
+def test_review_action_api_rejects_legacy_body_scope_claims() -> None:
     reset_idea_repository_for_tests()
     client = TestClient(app)
     candidate_id = persisted_candidate_id(client, idempotency_key="seed-review-scope-001")
-    empty_scope = suppress_review_payload()
-    empty_scope["authorizedScope"]["tenantIds"] = []
-    blank_scope = suppress_review_payload()
-    blank_scope["authorizedScope"]["portfolioIds"] = [" "]
+    access_scope_claim = suppress_review_payload()
+    access_scope_claim["accessScope"] = access_scope()
+    authorized_scope_claim = suppress_review_payload()
+    authorized_scope_claim["authorizedScope"] = {
+        "tenantIds": ["tenant-private-bank-sg"],
+        "bookIds": ["book-advisor-001"],
+        "portfolioIds": ["PB_SG_GLOBAL_BAL_001"],
+        "clientIds": ["client-001"],
+    }
 
     empty_response = client.post(
         f"/api/v1/idea-candidates/{candidate_id}/review-actions",
-        json=empty_scope,
+        json=access_scope_claim,
         headers=review_headers("review-action-api-empty-scope-001"),
     )
     blank_response = client.post(
         f"/api/v1/idea-candidates/{candidate_id}/review-actions",
-        json=blank_scope,
+        json=authorized_scope_claim,
         headers=review_headers("review-action-api-blank-scope-001"),
     )
 
@@ -749,12 +740,12 @@ def test_feedback_api_returns_not_found_and_permission_denied_safely() -> None:
         json=feedback_payload(),
         headers=review_headers("feedback-api-denied-001", capabilities="idea.review.record"),
     )
-    denied_payload = feedback_payload()
-    denied_payload["authorizedScope"]["portfolioIds"] = ["different-portfolio"]
+    denied_headers = feedback_headers("feedback-api-denied-002")
+    denied_headers["X-Caller-Portfolio-Ids"] = "different-portfolio"
     denied_by_scope = client.post(
         f"/api/v1/idea-candidates/{candidate_id}/feedback",
-        json=denied_payload,
-        headers=feedback_headers("feedback-api-denied-002"),
+        json=feedback_payload(),
+        headers=denied_headers,
     )
     not_found = client.post(
         "/api/v1/idea-candidates/missing-candidate/feedback",

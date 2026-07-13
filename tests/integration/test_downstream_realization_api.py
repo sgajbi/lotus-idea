@@ -1064,8 +1064,6 @@ def approve_review_payload(review_id: str) -> dict[str, Any]:
     return {
         "reviewId": review_id,
         "action": "approve_for_conversion",
-        "accessScope": access_scope(),
-        "authorizedScope": authorized_scope(),
         "reasonCodes": ["review_required"],
         "decidedAtUtc": "2026-06-21T10:05:00Z",
     }
@@ -1077,13 +1075,4 @@ def access_scope() -> dict[str, str]:
         "bookId": "book-advisor-001",
         "portfolioId": "PB_SG_GLOBAL_BAL_001",
         "clientId": "client-001",
-    }
-
-
-def authorized_scope() -> dict[str, list[str]]:
-    return {
-        "tenantIds": ["tenant-private-bank-sg"],
-        "bookIds": ["book-advisor-001"],
-        "portfolioIds": ["PB_SG_GLOBAL_BAL_001"],
-        "clientIds": ["client-001"],
     }

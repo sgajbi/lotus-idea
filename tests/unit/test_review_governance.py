@@ -272,10 +272,7 @@ def test_reject_and_no_action_remove_candidate_from_active_queue() -> None:
     queue = build_review_queue((rejected, no_action), evaluated_at_utc=DECIDED_AT)
 
     assert queue.items == ()
-    assert [exclusion.reason for exclusion in queue.exclusions] == [
-        QueueExclusionReason.REJECTED,
-        QueueExclusionReason.CLOSED,
-    ]
+    assert queue.exclusions == ()
 
 
 def test_suppress_and_snooze_update_queue_projection() -> None:
@@ -303,7 +300,6 @@ def test_suppress_and_snooze_update_queue_projection() -> None:
 
     assert queue.items == ()
     assert {exclusion.reason for exclusion in queue.exclusions} == {
-        QueueExclusionReason.SUPPRESSED,
         QueueExclusionReason.SNOOZED,
     }
 

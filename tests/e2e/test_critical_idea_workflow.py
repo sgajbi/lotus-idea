@@ -34,15 +34,6 @@ def _access_scope() -> dict[str, str]:
     }
 
 
-def _authorized_scope() -> dict[str, list[str]]:
-    return {
-        "tenantIds": ["tenant-private-bank-sg"],
-        "bookIds": ["book-advisor-001"],
-        "portfolioIds": [PORTFOLIO_ID],
-        "clientIds": ["client-001"],
-    }
-
-
 def _high_cash_payload() -> dict[str, Any]:
     return {
         "asOfDate": "2026-06-21",
@@ -122,8 +113,6 @@ def _approve_review_payload() -> dict[str, Any]:
     return {
         "reviewId": "critical-e2e-review-approve-001",
         "action": "approve_for_conversion",
-        "accessScope": _access_scope(),
-        "authorizedScope": _authorized_scope(),
         "reasonCodes": ["review_required"],
         "decidedAtUtc": "2026-06-21T10:05:00Z",
     }

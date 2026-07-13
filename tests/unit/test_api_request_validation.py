@@ -72,8 +72,6 @@ def test_mutating_workflow_requests_reject_empty_reason_codes() -> None:
             {
                 "reviewId": "review-suppress-001",
                 "action": ReviewAction.SUPPRESS,
-                "accessScope": _access_scope_payload(),
-                "authorizedScope": _authorized_scope_payload(),
                 "reasonCodes": [],
                 "decidedAtUtc": REQUESTED_AT,
             }
@@ -81,8 +79,6 @@ def test_mutating_workflow_requests_reject_empty_reason_codes() -> None:
         lambda: FeedbackRequest.model_validate(
             {
                 "feedbackId": "feedback-useful-001",
-                "accessScope": _access_scope_payload(),
-                "authorizedScope": _authorized_scope_payload(),
                 "outcome": FeedbackOutcome.USEFUL,
                 "reasonCodes": [],
                 "recordedAtUtc": REQUESTED_AT,
@@ -101,13 +97,4 @@ def _access_scope_payload() -> dict[str, str]:
         "bookId": "book-advisor-001",
         "portfolioId": "PB_SG_GLOBAL_BAL_001",
         "clientId": "client-001",
-    }
-
-
-def _authorized_scope_payload() -> dict[str, list[str]]:
-    return {
-        "tenantIds": ["tenant-private-bank-sg"],
-        "bookIds": ["book-advisor-001"],
-        "portfolioIds": ["PB_SG_GLOBAL_BAL_001"],
-        "clientIds": ["client-001"],
     }

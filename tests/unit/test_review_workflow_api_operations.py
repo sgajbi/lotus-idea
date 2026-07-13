@@ -15,17 +15,8 @@ from app.domain import (
 from app.observability import IdeaOperation, OperationOutcome
 from app.security.caller_context import (
     CallerContext,
-    CallerEntitlementScope,
     PermissionDeniedError,
 )
-
-
-class BodyAuthorizedScope:
-    def __init__(self, *, portfolio_ids: tuple[str, ...] = ("PB_SG_GLOBAL_BAL_001",)) -> None:
-        self._portfolio_ids = portfolio_ids
-
-    def is_subset_of_entitlement_scope(self, scope: CallerEntitlementScope) -> bool:
-        return set(self._portfolio_ids).issubset(scope.portfolio_ids)
 
 
 def caller_headers(
@@ -59,7 +50,6 @@ def test_prepare_review_workflow_mutation_builds_context_without_runtime_split(
 
     context = operations.prepare_review_workflow_mutation(
         headers=caller_headers(),
-        authorized_scope=BodyAuthorizedScope(),
         capability="idea.review.record",
         idempotency_key="review-workflow-api-ops-001",
         operation=IdeaOperation.REVIEW_ACTION,
@@ -70,17 +60,6 @@ def test_prepare_review_workflow_mutation_builds_context_without_runtime_split(
     assert context.role is ReviewActorRole.ADVISOR
     assert context.repository is repository
     assert context.durable_storage_backed is True
-
-
-def test_prepare_review_workflow_mutation_rejects_scope_claim_outside_entitlements() -> None:
-    with pytest.raises(PermissionDeniedError, match="Permission denied"):
-        operations.prepare_review_workflow_mutation(
-            headers=caller_headers(portfolio_ids="PB_SG_GLOBAL_BAL_001"),
-            authorized_scope=BodyAuthorizedScope(portfolio_ids=("PB_SG_DIFFERENT_999",)),
-            capability="idea.review.record",
-            idempotency_key="review-workflow-api-ops-denied-001",
-            operation=IdeaOperation.REVIEW_ACTION,
-        )
 
 
 def test_build_review_actor_context_rejects_unscoped_mutating_actor() -> None:
@@ -124,7 +103,6 @@ def test_prepare_review_workflow_mutation_returns_product_safe_durable_write_pro
 
     response = operations.prepare_review_workflow_mutation(
         headers=caller_headers(),
-        authorized_scope=BodyAuthorizedScope(),
         capability="idea.review.record",
         idempotency_key="review-workflow-api-ops-durable-001",
         operation=IdeaOperation.REVIEW_ACTION,
