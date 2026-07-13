@@ -152,7 +152,7 @@ criteria in this slice.
 Current branch evidence:
 
 1. Focused score registry, queue policy, application, PostgreSQL, API, snapshot
-   mutation, and repository-hygiene suites pass with `87 passed`.
+   mutation, and repository-hygiene suites pass with `89 passed`.
 2. Ruff passes for every changed Python module and focused test.
 3. `make typecheck` passes across `766` source files.
 4. Architecture, repository-hygiene, maintainability, review-queue snapshot,
