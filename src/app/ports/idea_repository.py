@@ -34,6 +34,7 @@ from app.domain import (
     OutboxRecoveryAuditRecord,
     OutboxRecoveryClaimResult,
     QueueAccessScopeFilter,
+    ReviewQueueAudience,
     ReportEvidencePackResult,
     ReviewActionResult,
     ReviewMutationIdentity,
@@ -127,6 +128,7 @@ class ReviewQueueProjectionRepository(Protocol):
         self,
         *,
         evaluated_at_utc: datetime,
+        audience: ReviewQueueAudience,
         expected_snapshot_token: str | None,
         queue_policy_version: str,
         rankable_score_policy_versions: tuple[str, ...],
@@ -142,6 +144,7 @@ class ReviewQueueReadinessProjectionRepository(Protocol):
         self,
         *,
         evaluated_at_utc: datetime,
+        audience: ReviewQueueAudience,
         rankable_score_policy_versions: tuple[str, ...],
         access_scope_filter: QueueAccessScopeFilter | None,
     ) -> ReviewQueueReadinessRepositorySummary: ...

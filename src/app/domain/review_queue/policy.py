@@ -42,6 +42,20 @@ class QueuePriorityBucket(StrEnum):
     WATCHLIST = "watchlist"
 
 
+class ReviewQueueAudience(StrEnum):
+    ADVISOR = "advisor"
+    PORTFOLIO_MANAGER = "portfolio_manager"
+    COMPLIANCE = "compliance"
+
+    @property
+    def required_posture(self) -> ReviewPosture:
+        return {
+            ReviewQueueAudience.ADVISOR: ReviewPosture.ADVISOR_REVIEW_REQUIRED,
+            ReviewQueueAudience.PORTFOLIO_MANAGER: ReviewPosture.PM_REVIEW_REQUIRED,
+            ReviewQueueAudience.COMPLIANCE: ReviewPosture.COMPLIANCE_REVIEW_REQUIRED,
+        }[self]
+
+
 class QueueExclusionReason(StrEnum):
     INVALID_STATE = "invalid_state"
     SUPPRESSED = "suppressed"
@@ -141,6 +155,7 @@ class ReviewQueueItem:
 
 @dataclass(frozen=True)
 class ReviewQueueProjection:
+    audience: ReviewQueueAudience
     policy_version: str
     evaluated_at_utc: datetime
     items: tuple[ReviewQueueItem, ...]
@@ -162,6 +177,7 @@ DEFAULT_REVIEW_QUEUE_POLICY = ReviewQueuePolicy(
 def build_review_queue(
     candidates: tuple[IdeaCandidate, ...],
     *,
+    audience: ReviewQueueAudience = ReviewQueueAudience.ADVISOR,
     policy: ReviewQueuePolicy = DEFAULT_REVIEW_QUEUE_POLICY,
     evaluated_at_utc: datetime | None = None,
     snoozes: tuple[QueueSnooze, ...] = (),
@@ -175,6 +191,8 @@ def build_review_queue(
     exclusions: list[QueueExclusion] = []
     eligible_candidates: list[IdeaCandidate] = []
     for candidate in candidates:
+        if candidate.review_posture is not audience.required_posture:
+            continue
         exclusion = _queue_exclusion_for_candidate(
             candidate,
             active_snoozes,
@@ -215,6 +233,7 @@ def build_review_queue(
         for index, candidate in enumerate(ranked_candidates)
     )
     return ReviewQueueProjection(
+        audience=audience,
         policy_version=policy.policy_version,
         evaluated_at_utc=evaluated_at,
         items=items,

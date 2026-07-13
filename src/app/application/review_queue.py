@@ -14,6 +14,7 @@ from app.domain import (
     QueueSnooze,
     ReviewQueueSnapshotTokenRequiredError,
     ReviewQueueItem,
+    ReviewQueueAudience,
     ReviewQueueProjection,
     ReviewQueuePolicy,
     build_review_queue_snapshot_identity,
@@ -39,6 +40,7 @@ MAX_REVIEW_QUEUE_PAGE_LIMIT = 100
 @dataclass(frozen=True)
 class BuildReviewQueueFromRepositoryCommand:
     evaluated_at_utc: datetime
+    audience: ReviewQueueAudience = ReviewQueueAudience.ADVISOR
     snoozes: tuple[QueueSnooze, ...] = ()
     access_scope_filter: QueueAccessScopeFilter | None = None
     limit: int = DEFAULT_REVIEW_QUEUE_PAGE_LIMIT
@@ -145,6 +147,7 @@ def build_review_queue_from_repository(
     if not command.snoozes and isinstance(repository, ReviewQueueProjectionRepository):
         repository_page = repository.review_queue_candidate_page(
             evaluated_at_utc=command.evaluated_at_utc,
+            audience=command.audience,
             expected_snapshot_token=command.snapshot_token,
             queue_policy_version=policy.policy_version,
             rankable_score_policy_versions=policy.rankable_score_policy_versions,
@@ -177,6 +180,7 @@ def build_review_queue_readiness_snapshot(
         readiness_repository = cast(ReviewQueueReadinessProjectionRepository, repository)
         readiness_summary = readiness_repository.review_queue_readiness_summary(
             evaluated_at_utc=command.evaluated_at_utc,
+            audience=command.audience,
             rankable_score_policy_versions=policy.rankable_score_policy_versions,
             access_scope_filter=command.access_scope_filter,
         )
@@ -295,6 +299,7 @@ def _page_repository_review_queue(
 ) -> ReviewQueuePage:
     queue = build_review_queue(
         tuple(record.candidate for record in repository_page.candidate_records),
+        audience=command.audience,
         policy=policy,
         evaluated_at_utc=command.evaluated_at_utc,
         access_scope_filter=command.access_scope_filter,
@@ -310,6 +315,7 @@ def _page_repository_review_queue(
     has_next_page = next_offset < total_window_count
     return ReviewQueuePage(
         projection=ReviewQueueProjection(
+            audience=queue.audience,
             policy_version=queue.policy_version,
             evaluated_at_utc=queue.evaluated_at_utc,
             items=ranked_items,
@@ -337,11 +343,13 @@ def _build_review_queue_from_snapshot(
 ) -> tuple[ReviewQueueProjection, str]:
     visible_records = visible_review_queue_candidate_records(
         tuple(snapshot.candidate_records.values()),
+        audience=command.audience,
         evaluated_at_utc=command.evaluated_at_utc,
     )
     candidates = tuple(record.candidate for record in visible_records)
     queue = build_review_queue(
         candidates,
+        audience=command.audience,
         policy=policy,
         evaluated_at_utc=command.evaluated_at_utc,
         snoozes=command.snoozes,
@@ -349,6 +357,7 @@ def _build_review_queue_from_snapshot(
     )
     snapshot_identity = build_review_queue_snapshot_identity(
         fingerprint=review_queue_candidate_fingerprint(visible_records),
+        audience=command.audience,
         evaluated_at_utc=command.evaluated_at_utc,
         policy_version=queue.policy_version,
         rankable_score_policy_versions=policy.rankable_score_policy_versions,
@@ -375,6 +384,7 @@ def _page_review_queue(
     has_next_page = next_offset < total_window_count
     return ReviewQueuePage(
         projection=ReviewQueueProjection(
+            audience=queue.audience,
             policy_version=queue.policy_version,
             evaluated_at_utc=queue.evaluated_at_utc,
             items=item_window,
