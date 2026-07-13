@@ -707,6 +707,16 @@ Prior Slice 06 validation:
     publication remain required. Local image proof does not substitute for a
     signed, attested, registry-digest-bound execution from a protected
     environment.
+35. PR `#373` merged by rebase at exact main SHA `6ba9618a`; Main
+    Releasability run `29261043056` and CodeQL run `29261035371` passed. The
+    published release manifest binds digest
+    `sha256:24cff4c4528f6d06eba2f87e2d151f104e6e2303785ccfcfef589511f0ad46b7` to the
+    full-SHA tag, OCI labels, matching `/version`, zero-finding vulnerability
+    and secret scan, CycloneDX SBOM, Cosign signature, provenance and SBOM
+    attestations, Kubernetes digest reference, and same-image promotion
+    policy. Wiki publication `bda1965` has zero source drift. Protected
+    migration execution, approved production change, and rollout-health proof
+    remain unclaimed certification blockers.
 
 GitHub PR validation and wiki publication remain required before mainline
 closure.

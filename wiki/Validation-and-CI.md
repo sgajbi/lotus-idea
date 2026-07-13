@@ -46,6 +46,13 @@ clean branch hygiene.
 | Scheduled PostgreSQL DR | Real logical backup/restore, resume proof, evidence attestation | Weekly recovery regression detection; not provider PITR certification |
 | Local contract gates | Makefile, docs, source safety, mesh, endpoint certification | Future-agent drift and unsupported claims |
 
+Deployment-migration repository controls merged through PR `#373`. Exact-main
+Main Releasability run `29261043056` and CodeQL run `29261035371` passed on
+`6ba9618a`; release evidence binds the signed and attested image digest to its
+SHA tag, OCI labels, `/version`, SBOM, scan, and digest-only deployment posture.
+Protected migration execution and rollout-health evidence remain separate
+certification requirements.
+
 ```mermaid
 flowchart LR
     Local["Local contract gates"]

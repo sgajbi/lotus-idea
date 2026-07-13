@@ -49,7 +49,10 @@ proof, downstream proof, supported-feature evidence, and mainline CI all agree.
    adds durable release-bound history, locking, pending-only apply, drift
    rejection, explicit legacy adoption, bounded rollback, source-safe evidence,
    and anti-bypass governance; protected execution and rollout health proof
-   remain open,
+   remain open. Repository implementation merged through PR `#373`; exact-main
+   Main Releasability `29261043056`, CodeQL `29261035371`, and synchronized
+   wiki publication prove the release and documentation posture without
+   claiming protected environment execution,
 10. RFC-0002 Slice 07 partially implements internal deterministic scoring,
    priority buckets, stable queue projection, snooze, suppression,
    deduplication, expiry, unsupported-evidence, unscored-candidate exclusions,
