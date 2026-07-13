@@ -121,3 +121,22 @@ def test_github_issue_closure_matrix_gate_rejects_unproven_merged_main_status(
     assert "#357: merged main evidence must cite Main Releasability and CodeQL" in errors
     assert "#357: merged main evidence must cite wiki publication" in errors
     assert "#357: merged main intent must record closed issue and branch cleanup" in errors
+
+
+def test_github_issue_closure_matrix_gate_rejects_merged_main_status_regression(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    matrix = tmp_path / "matrix.md"
+    content = module.MATRIX_PATH.read_text(encoding="utf-8")
+    content = content.replace(
+        "| [#357](https://github.com/sgajbi/lotus-idea/issues/357) "
+        "Introduce governed feature-bounded packages within Idea runtime layers | `merged_main` |",
+        "| [#357](https://github.com/sgajbi/lotus-idea/issues/357) "
+        "Introduce governed feature-bounded packages within Idea runtime layers | `locally_fixed` |",
+    )
+    matrix.write_text(content, encoding="utf-8")
+
+    errors = module.validate_issue_closure_matrix(matrix)
+
+    assert "#357: merged-main issue cannot regress to `locally_fixed`" in errors

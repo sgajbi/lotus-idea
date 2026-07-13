@@ -81,6 +81,48 @@ ROOT_CONTEXT_FILES = (
     "Makefile",
 )
 ALLOWED_STATUSES = frozenset({"`locally_fixed`", "`partially_fixed`", "`merged_main`"})
+MERGED_MAIN_ISSUES = frozenset(
+    {
+        301,
+        302,
+        303,
+        306,
+        307,
+        308,
+        309,
+        310,
+        311,
+        312,
+        313,
+        314,
+        315,
+        316,
+        317,
+        318,
+        319,
+        320,
+        326,
+        327,
+        328,
+        329,
+        330,
+        331,
+        332,
+        333,
+        334,
+        335,
+        336,
+        337,
+        338,
+        339,
+        341,
+        342,
+        346,
+        357,
+        363,
+        364,
+    }
+)
 
 
 def _split_row(line: str) -> list[str]:
@@ -158,6 +200,8 @@ def validate_issue_closure_matrix(path: Path = MATRIX_PATH) -> list[str]:
             errors.append(
                 f"#{number}: status must be `locally_fixed`, `partially_fixed`, or `merged_main`"
             )
+        if number in MERGED_MAIN_ISSUES and status != "`merged_main`":
+            errors.append(f"#{number}: merged-main issue cannot regress to {status}")
         if not _has_path_or_command(row["Implementation Evidence"]):
             errors.append(f"#{number}: implementation evidence must cite code or contract paths")
         if not (
