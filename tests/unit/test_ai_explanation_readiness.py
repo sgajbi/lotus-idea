@@ -62,9 +62,7 @@ def test_ai_explanation_readiness_reports_durable_lineage_store_without_certific
 
 def test_ai_explanation_readiness_ledger_example_matches_runtime_contract() -> None:
     ledger = json.loads(
-        (ROOT / "docs/operations/endpoint-certification-ledger.json").read_text(
-            encoding="utf-8"
-        )
+        (ROOT / "docs/operations/endpoint-certification-ledger.json").read_text(encoding="utf-8")
     )
     endpoint = next(
         entry
