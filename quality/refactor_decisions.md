@@ -248,15 +248,21 @@ Decisions:
 5. Supported features, seed data, runtime topology, and external broker,
    consumer, and platform-mesh certification remain unchanged.
 
-Evidence before aggregate validation:
+Validation evidence:
 
 1. Focused outbox, domain, integration, and hygiene suite: `293 passed`, one
    environment-dependent PostgreSQL skip.
 2. Ruff, focused MyPy, architecture, private-import, maintainability,
    duplicate-implementation, repository-hygiene, and all seven outbox contract
    gates pass.
-3. Full repository, disposable PostgreSQL, wheel/package, and container smoke
-   proof remain required before commit and PR.
+3. Final `make ci`: MyPy over 739 files; 3,567 unit tests; 430 integration
+   tests passed with 19 environment-dependent skips; 4 E2E tests; 99.02%
+   coverage over 23,779 statements; no known dependency vulnerabilities.
+4. Disposable PostgreSQL 18: all 16 required persistence, recovery, queue,
+   downstream, and lifecycle tests passed.
+5. A clean isolated wheel contains and imports the canonical package paths with
+   no retired modules. SHA-tagged Docker build, container package imports,
+   health/version smoke, and OCI label inspection passed.
 
 ## 2026-07-04: Review Workflow API Model Boundary
 

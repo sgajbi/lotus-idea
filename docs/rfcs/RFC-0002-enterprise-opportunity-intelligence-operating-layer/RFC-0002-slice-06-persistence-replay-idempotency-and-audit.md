@@ -904,3 +904,11 @@ modules and 22 focused test/helper modules without changing runtime topology. Th
 and optional worker roles continue to share one Idea-owned PostgreSQL boundary.
 No broker, consumer, mesh, Gateway/Workbench, data-product, or supported-feature
 certification is implied.
+
+Local closure evidence is green: `make ci` passed with MyPy over 739 files,
+3,567 unit tests, 430 integration tests passed with 19 environment-dependent
+skips, 4 E2E tests, 99.02% coverage over 23,779 statements, and no known
+dependency vulnerabilities. A separate disposable PostgreSQL 18 run passed all
+16 required runtime tests. Clean wheel contents/imports and a SHA-tagged Docker
+build with container package, health, `/version`, and OCI-label smoke also
+passed. Mainline CI and wiki publication remain required before issue closure.
