@@ -4,8 +4,8 @@ WORKFLOW_EXPECTATIONS: dict[str, tuple[str, ...]] = {
     "deployment-migration-evidence.yml": (
         "runs-on: [self-hosted, linux, lotus-deployment]",
         "environment: lotus-idea-${{ inputs.environment_class }}",
-        "gh attestation verify \"oci://${IMAGE_DIGEST_REFERENCE}\"",
-        "cosign verify \"$IMAGE_DIGEST_REFERENCE\"",
+        'gh attestation verify "oci://${IMAGE_DIGEST_REFERENCE}"',
+        'cosign verify "$IMAGE_DIGEST_REFERENCE"',
         "python scripts/run_deployment_migrations.py",
         "python scripts/deployment_migration_evidence_gate.py",
         "actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373",
