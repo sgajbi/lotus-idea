@@ -248,9 +248,7 @@ def test_tracked_migration_rollback_removes_history_in_reverse_order() -> None:
 
     records = execute_tracked_migration_plan(connection, rollback_plan)
 
-    assert [record.version for record in records] == [
-        step.version for step in rollback_plan.steps
-    ]
+    assert [record.version for record in records] == [step.version for step in rollback_plan.steps]
     assert connection.history == []
 
 

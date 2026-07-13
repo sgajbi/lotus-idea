@@ -165,9 +165,7 @@ def execute_tracked_migration_plan(
                 ORDER BY migration_version
                 """
             )
-            history = tuple(
-                (str(row[0]), str(row[1]), str(row[2])) for row in cursor.fetchall()
-            )
+            history = tuple((str(row[0]), str(row[1]), str(row[2])) for row in cursor.fetchall())
             ascending_steps = (
                 plan.steps
                 if plan.direction is MigrationDirection.APPLY
