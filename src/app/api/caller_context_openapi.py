@@ -173,6 +173,11 @@ PROTECTED_OPERATION_REQUIREMENTS = (
         "GET", "/api/v1/review-queues/advisor/readiness", "idea.review.queue.readiness.read"
     ),
     _operator_requirement(
+        "GET",
+        "/api/v1/review-queues/operator/exceptions",
+        "idea.review.queue.exceptions.read",
+    ),
+    _operator_requirement(
         "GET", "/api/v1/source-ingestion/readiness", "idea.source-ingestion.readiness.read"
     ),
     _operator_requirement("POST", "/api/v1/source-ingestion/run-once", "idea.source-ingestion.run"),
