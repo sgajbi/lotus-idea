@@ -51,6 +51,7 @@ COPY scripts/proof_generator_io.py ./scripts/proof_generator_io.py
 COPY scripts/run_source_ingestion_worker.py ./scripts/run_source_ingestion_worker.py
 COPY scripts/run_scheduled_source_ingestion_worker.py ./scripts/run_scheduled_source_ingestion_worker.py
 COPY scripts/run_deployment_migrations.py ./scripts/run_deployment_migrations.py
+COPY scripts/deployment_migration_evidence_gate.py ./scripts/deployment_migration_evidence_gate.py
 
 RUN groupadd --system lotus \
     && useradd --system --gid lotus --home-dir /app --shell /usr/sbin/nologin lotus \

@@ -40,6 +40,7 @@
     "postgresAdapter": "src/app/infrastructure/postgres_deployment_migrations.py",
     "schemaFingerprint": "src/app/infrastructure/postgres_schema_fingerprint.py",
     "operatorCli": "scripts/run_deployment_migrations.py",
+    "evidenceGate": "scripts/deployment_migration_evidence_gate.py",
     "migrations": "migrations"
   },
   "certificationPosture": {
