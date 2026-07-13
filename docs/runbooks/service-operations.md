@@ -41,16 +41,26 @@
 
 ## Local Docker Compose
 
-`docker compose up --build` works from a clean checkout because
-`docker-compose.yml` loads committed safe defaults from `.env.example` and then
-overlays ignored `.env` values when that file exists. Create `.env` only when a
-local run needs overrides such as `LOTUS_IDEA_DATABASE_URL`, Core source URLs,
-or local logging changes:
+`docker compose up -d --build` is the app-owned standalone runtime. It provisions
+PostgreSQL 18, stores data in `lotus-idea-postgres-data`, waits for database
+health, runs a one-shot pending-only migration job, and starts the API only
+after migration success. The default local profile still reports its
+non-release posture truthfully, but repository responses report
+`durableStorageBacked=true`. Workbench canonical automation orchestrates this
+same contract; it does not supply Idea persistence.
+
+Committed safe defaults come from `.env.example`; ignored `.env` values may
+override source URLs, the database URL, host port, or local logging:
 
 ```powershell
 Copy-Item .env.example .env
 docker compose up --build
 ```
+
+Repeated `docker compose up -d` validates migration history and skips applied
+versions. The local history stores version, name, and content checksum under an
+advisory transaction lock; non-contiguous or changed history fails closed. This
+local mechanism does not replace release-attested deployment migrations.
 
 The scheduled source-ingestion worker remains opt-in:
 
@@ -58,9 +68,10 @@ The scheduled source-ingestion worker remains opt-in:
 docker compose --profile worker up --build
 ```
 
-This path proves local container startup and operator ergonomics only. It does
-not certify production recovery, live source ingestion, Workbench support,
-data-mesh readiness, client publication, or supported-feature status.
+This path proves standalone startup, durable local persistence, restart-safe
+migrations, and operator ergonomics only. It does not certify production
+recovery, live source ingestion, Workbench support, data-mesh readiness, client
+publication, or supported-feature status.
 
 Compose accepts the seven non-secret `LOTUS_IDEA_BUILD_*` inputs declared in
 `docker-compose.yml`. Governed canonical automation supplies the exact commit,

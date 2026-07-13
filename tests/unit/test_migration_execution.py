@@ -12,6 +12,7 @@ from app.infrastructure.migrations import (
     discover_migrations,
     dry_run_migration_plan,
     execute_migration_plan,
+    execute_tracked_migration_plan,
 )
 
 
@@ -22,8 +23,11 @@ class RecordingCursor:
     def __init__(self) -> None:
         self.statements: list[str] = []
 
-    def execute(self, query: str) -> None:
+    def execute(self, query: str, params: object = None) -> None:
         self.statements.append(query)
+
+    def fetchall(self) -> list[tuple[object, ...]]:
+        return []
 
     def __enter__(self) -> RecordingCursor:
         return self
@@ -49,8 +53,8 @@ class RecordingConnection:
 
 
 class FailingCursor(RecordingCursor):
-    def execute(self, query: str) -> None:
-        super().execute(query)
+    def execute(self, query: str, params: object = None) -> None:
+        super().execute(query, params)
         raise RuntimeError("database rejected statement")
 
 
@@ -58,6 +62,43 @@ class FailingConnection(RecordingConnection):
     def __init__(self) -> None:
         super().__init__()
         self.cursor_instance = FailingCursor()
+
+
+class TrackedMigrationCursor(RecordingCursor):
+    def __init__(self, history: list[tuple[str, str, str]]) -> None:
+        super().__init__()
+        self.history = history
+
+    def execute(self, query: str, params: object = None) -> None:
+        super().execute(query, params)
+        values = tuple(params) if isinstance(params, tuple) else ()
+        if "INSERT INTO lotus_idea_local_schema_migration" in query:
+            self.history.append((str(values[0]), str(values[1]), str(values[2])))
+        elif "DELETE FROM lotus_idea_local_schema_migration" in query:
+            version = str(values[0])
+            self.history[:] = [record for record in self.history if record[0] != version]
+
+    def fetchall(self) -> list[tuple[object, ...]]:
+        return list(self.history)
+
+
+class TrackedMigrationConnection:
+    def __init__(self, history: list[tuple[str, str, str]] | None = None) -> None:
+        self.history = history or []
+        self.cursors: list[TrackedMigrationCursor] = []
+        self.commit_count = 0
+        self.rollback_count = 0
+
+    def cursor(self) -> TrackedMigrationCursor:
+        cursor = TrackedMigrationCursor(self.history)
+        self.cursors.append(cursor)
+        return cursor
+
+    def commit(self) -> None:
+        self.commit_count += 1
+
+    def rollback(self) -> None:
+        self.rollback_count += 1
 
 
 def test_discover_migrations_requires_rollbacks() -> None:
@@ -169,6 +210,48 @@ def test_execute_migration_plan_rolls_back_on_error() -> None:
 
     assert connection.committed is False
     assert connection.rolled_back is True
+
+
+def test_tracked_migration_apply_is_pending_only_and_restart_safe() -> None:
+    connection = TrackedMigrationConnection()
+    plan = build_migration_plan(ROOT / "migrations", MigrationDirection.APPLY)
+
+    first_records = execute_tracked_migration_plan(connection, plan)
+    second_records = execute_tracked_migration_plan(connection, plan)
+
+    assert [record.version for record in first_records] == [step.version for step in plan.steps]
+    assert second_records == ()
+    assert [record[0] for record in connection.history] == [step.version for step in plan.steps]
+    assert connection.commit_count == 2
+    assert connection.rollback_count == 0
+
+
+def test_tracked_migration_apply_fails_closed_on_content_drift() -> None:
+    plan = build_migration_plan(ROOT / "migrations", MigrationDirection.APPLY)
+    first_step = plan.steps[0]
+    connection = TrackedMigrationConnection(
+        [(first_step.version, first_step.name, "sha256:" + "0" * 64)]
+    )
+
+    with pytest.raises(ValueError, match="content drift"):
+        execute_tracked_migration_plan(connection, plan)
+
+    assert connection.commit_count == 0
+    assert connection.rollback_count == 1
+
+
+def test_tracked_migration_rollback_removes_history_in_reverse_order() -> None:
+    connection = TrackedMigrationConnection()
+    apply_plan = build_migration_plan(ROOT / "migrations", MigrationDirection.APPLY)
+    rollback_plan = build_migration_plan(ROOT / "migrations", MigrationDirection.ROLLBACK)
+    execute_tracked_migration_plan(connection, apply_plan)
+
+    records = execute_tracked_migration_plan(connection, rollback_plan)
+
+    assert [record.version for record in records] == [
+        step.version for step in rollback_plan.steps
+    ]
+    assert connection.history == []
 
 
 def test_run_migrations_dry_run_cli_does_not_require_database_url() -> None:

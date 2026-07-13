@@ -1036,6 +1036,29 @@ This is database-access and design modularity inside the existing deployable
 and one Idea-owned PostgreSQL database. It adds no service, database, schema,
 API/OpenAPI change, migration, source authority, or supported feature.
 
+## Issue 381 Standalone Durable Runtime
+
+Issue `#381` closes the app-local composition gap without introducing another
+application boundary. `docker-compose.yml` now owns a dedicated PostgreSQL 18
+container, major-version-correct named volume, one-shot migration dependency,
+API, and optional worker wiring. API and worker roles still share one
+Idea-owned database.
+
+Local migration execution now records a strict version/name/content-checksum
+prefix under a PostgreSQL advisory transaction lock. Apply executes pending
+versions only; rollback removes tracked versions in reverse order; history
+ahead of the image, gaps, and content drift fail closed atomically. The
+release-attested staging/production migration use case and evidence contract
+remain separate and unchanged.
+
+Live local proof built the actual image, started a fresh PostgreSQL 18 volume,
+applied migrations `001` through `015`, reached ready durable posture, repeated
+Compose startup without replay, persisted a high-cash candidate through the
+API, restarted the API container, and read the same candidate from the advisor
+queue with `durableStorageBacked=true`. This proves standalone local durability
+only; it does not promote a supported feature or certify production storage,
+recovery, Workbench, data mesh, or client publication.
+
 PR `#365` merged this increment by repository-approved rebase to exact main
 SHA `6932606474caa32308f09a0e96969da0bb1eaafa`. Main Releasability run
 `29239140276` and CodeQL run `29239134509` passed for that SHA. The release

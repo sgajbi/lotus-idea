@@ -64,10 +64,11 @@ read-only Gateway publication exists for advisor queue and candidate detail
 only. A versioned
 migration/rollback schema contract exists for the durable repository and is
 enforced by `make migration-contract-gate`.
-`make migration-execution-gate` dry-runs apply and rollback execution plans, and
-`make migrate` / `make migrate-rollback` execute against PostgreSQL when
-`LOTUS_IDEA_DATABASE_URL` is configured. Those commands are local/disposable
-fixture tools, not production deployment authority.
+`make migration-execution-gate` dry-runs apply and rollback execution plans.
+`make migrate` / `make migrate-rollback` execute checksum-tracked local plans
+against PostgreSQL when `LOTUS_IDEA_DATABASE_URL` is configured. Local history
+is pending-only, transactionally advisory-locked, and fails closed on drift;
+these remain local/disposable tools, not production deployment authority.
 
 Production-like changes use the protected deployment-migration workflow with
 an exact signed and attested mainline image digest. It validates release labels,
@@ -128,15 +129,15 @@ cash-weight supportability without recomputing source-owned values or exposing
 Core payloads.
 `scripts/run_scheduled_source_ingestion_worker.py` adds a bounded scheduled
 worker entrypoint over the same run-once worker path, and `docker-compose.yml`
-declares the opt-in `lotus-idea-source-ingestion-worker` service under the
-`worker` profile. The local Compose contract loads safe defaults from
-`.env.example` and overlays ignored `.env` values when present, so
-`docker compose up --build` is executable from a clean checkout and
-`docker compose --profile worker up --build` remains the opt-in worker path.
-Create `.env` from `.env.example` only for local overrides such as PostgreSQL or
-source-service URLs. Compose startup is local runtime-parity evidence only; it
-does not certify production recovery, live source ingestion, Workbench support,
-data-mesh readiness, client publication, or supported-feature status.
+declares the opt-in `lotus-idea-source-ingestion-worker` service. The app-owned
+Compose contract starts PostgreSQL 18 with a named volume at
+`/var/lib/postgresql`, runs migrations once, and then starts the API.
+`docker compose up -d --build` is standalone; canonical Workbench automation
+orchestrates the same contract rather than supplying Idea persistence.
+`docker compose --profile worker up -d --build` adds the worker against the same
+database. Compose proves durable local restart behavior only; it does not
+certify production recovery, live ingestion, Workbench support, data mesh,
+client publication, or supported-feature status.
 `make source-ingestion-scheduled-worker-check` validates the
 deploy contract and source-safe proof shape without calling Core. A valid proof
 artifact referenced through

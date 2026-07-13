@@ -1,9 +1,11 @@
 # Persistence And Migration Operations
 
-Current posture: `lotus-idea` has internal in-memory repository behavior, a
-versioned SQL schema, rollback contract, PostgreSQL migration execution CLI, a
-tested PostgreSQL repository adapter foundation, and opt-in API repository
-wiring through `LOTUS_IDEA_DATABASE_URL`. Accepted internal repository
+Current posture: `lotus-idea` keeps internal in-memory repository behavior for
+explicit ephemeral local/test use and owns a standalone PostgreSQL 18 Compose
+runtime with a versioned SQL schema, rollback contract, tracked local migration
+execution, and tested PostgreSQL repository adapter. Direct process startup may
+opt into PostgreSQL through `LOTUS_IDEA_DATABASE_URL`; Compose configures it by
+default. Accepted internal repository
 mutations now also create source-safe pending outbox records in the active
 repository snapshot, with internal retry/dead-letter delivery state semantics
 over a publisher port and a source-safe HTTP broker-publisher adapter
@@ -49,6 +51,15 @@ configured, repository-backed API responses and operation events report
 certification, data-product certification, live source integration proof,
 downstream realization proof, certified live broker runtime, or supported-feature
 promotion.
+The standalone Compose path uses one Idea-owned database and named volume. A
+one-shot migration container waits for database health; API and optional worker
+roles wait for successful migration completion and use the same explicit URL.
+Local migration history is pending-only, advisory-lock serialized, atomic, and
+bound to migration name/content checksums. Repeated Compose startup therefore
+does not replay schema changes, while drift or a non-contiguous prefix fails
+closed. PostgreSQL 18 mounts the volume at `/var/lib/postgresql`, matching the
+official major-version layout. This local history does not impersonate the
+release-bound staging/production migration history or evidence contract.
 The PostgreSQL adapter now applies normal mutating repository operations as
 row-delta inserts and candidate-row updates inside the repository transaction
 instead of deleting and reinserting unrelated repository tables. This preserves

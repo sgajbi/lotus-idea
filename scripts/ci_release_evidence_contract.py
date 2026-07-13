@@ -260,6 +260,31 @@ def validate_compose_runtime_contract(compose: str) -> list[str]:
         for fragment, label in required_realization.items()
         if fragment not in compose
     )
+    required_persistence = {
+        "  lotus-idea-postgres:": "a dedicated PostgreSQL service",
+        "    image: postgres:18-alpine": "the governed PostgreSQL image",
+        "      - lotus-idea-postgres-data:/var/lib/postgresql\n": (
+            "a PostgreSQL 18-compatible durable volume"
+        ),
+        "  lotus-idea-migrations:": "a separate migration runner",
+        '    command: ["python", "scripts/run_migrations.py", "--direction", "apply"]': (
+            "the app-owned migration command"
+        ),
+        "        condition: service_completed_successfully": (
+            "migration completion before application startup"
+        ),
+        '  LOTUS_IDEA_RUNTIME_PROFILE: "${LOTUS_IDEA_RUNTIME_PROFILE:-local}"': (
+            "an explicit standalone runtime profile"
+        ),
+        '  LOTUS_IDEA_DATABASE_URL: "${LOTUS_IDEA_DATABASE_URL:-postgresql://': (
+            "the PostgreSQL repository URL"
+        ),
+    }
+    errors.extend(
+        f"docker-compose.yml must configure {label}"
+        for fragment, label in required_persistence.items()
+        if fragment not in compose
+    )
     return errors
 
 
@@ -335,6 +360,9 @@ def validate_dockerfile_runtime(dockerfile: str) -> list[str]:
             "COPY scripts/run_scheduled_source_ingestion_worker.py "
             "./scripts/run_scheduled_source_ingestion_worker.py"
         ): "Dockerfile must keep the runtime scheduled-worker entrypoint available",
+        "COPY scripts/run_migrations.py ./scripts/run_migrations.py": (
+            "Dockerfile must include the standalone migration entrypoint"
+        ),
     }
     for fragment, error in required_fragments.items():
         if fragment not in dockerfile:
