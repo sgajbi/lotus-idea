@@ -94,13 +94,6 @@ class HttpDownstreamCapacitySeed:
             payload={
                 "reviewId": f"capacity-{seed_key}-review",
                 "action": "approve_for_conversion",
-                "accessScope": _access_scope(),
-                "authorizedScope": {
-                    "tenantIds": [SYNTHETIC_TENANT_ID],
-                    "bookIds": [SYNTHETIC_BOOK_ID],
-                    "portfolioIds": [SYNTHETIC_PORTFOLIO_ID],
-                    "clientIds": [SYNTHETIC_CLIENT_ID],
-                },
                 "reasonCodes": ["review_required"],
                 "decidedAtUtc": _utc_text(decided_at_utc),
             },

@@ -183,7 +183,7 @@ class ReviewDecisionCommand:
     review_id: str
     action: ReviewAction
     actor: ReviewActorContext
-    access_scope: ReviewAccessScope
+    access_scope: ReviewAccessScope | None
     reason_codes: tuple[ReasonCode, ...]
     decided_at_utc: datetime
     suppression_reason: SuppressionReason | None = None
@@ -254,7 +254,7 @@ class ReviewActionResult:
 class FeedbackCommand:
     feedback_id: str
     actor: ReviewActorContext
-    access_scope: ReviewAccessScope
+    access_scope: ReviewAccessScope | None
     outcome: FeedbackOutcome
     reason_codes: tuple[ReasonCode, ...]
     recorded_at_utc: datetime
@@ -617,10 +617,14 @@ def _ensure_actor_scope(
     candidate_id: str,
     action: ReviewAction,
     actor: ReviewActorContext,
-    access_scope: ReviewAccessScope,
+    access_scope: ReviewAccessScope | None,
     policy: ReviewActionPolicy,
 ) -> None:
-    if not actor.can_access(access_scope) or not policy.allows(actor, action):
+    if (
+        access_scope is None
+        or not actor.can_access(access_scope)
+        or not policy.allows(actor, action)
+    ):
         raise ReviewEntitlementDenied(candidate_id)
 
 

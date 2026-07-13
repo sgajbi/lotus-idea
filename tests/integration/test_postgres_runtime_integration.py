@@ -1027,15 +1027,6 @@ def _access_scope() -> dict[str, str]:
     }
 
 
-def _authorized_scope() -> dict[str, list[str]]:
-    return {
-        "tenantIds": ["tenant-private-bank-sg"],
-        "bookIds": ["book-advisor-001"],
-        "portfolioIds": ["PB_SG_GLOBAL_BAL_001"],
-        "clientIds": ["client-001"],
-    }
-
-
 def _lifecycle_payload(
     *,
     transition_id: str,
@@ -1054,8 +1045,6 @@ def _approve_review_payload() -> dict[str, Any]:
     return {
         "reviewId": "review-approve-001",
         "action": "approve_for_conversion",
-        "accessScope": _access_scope(),
-        "authorizedScope": _authorized_scope(),
         "reasonCodes": ["review_required"],
         "decidedAtUtc": "2026-06-21T10:05:00Z",
     }
@@ -1064,8 +1053,6 @@ def _approve_review_payload() -> dict[str, Any]:
 def _feedback_payload() -> dict[str, Any]:
     return {
         "feedbackId": "feedback-useful-001",
-        "accessScope": _access_scope(),
-        "authorizedScope": _authorized_scope(),
         "outcome": "useful",
         "reasonCodes": ["review_required"],
         "recordedAtUtc": "2026-06-21T10:06:00Z",

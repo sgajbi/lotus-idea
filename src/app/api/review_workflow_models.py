@@ -4,7 +4,6 @@ from datetime import datetime
 
 from pydantic import Field, field_validator
 
-from app.api.access_scope_models import ReviewAccessScopeRequest
 from app.api.base_model import CamelModel
 from app.api.persistence_summary import persistence_summary_payload
 from app.api.request_validation import require_non_empty_reason_codes
@@ -22,60 +21,18 @@ from app.domain import (
     GovernedReviewDecision,
     ReasonCode,
     ReviewAction,
-    ReviewActorContext,
     ReviewActorRole,
     ReviewDecisionCommand,
     ReviewPersistenceDecision,
     ReviewPersistenceResult,
     SuppressionReason,
 )
-from app.security.caller_context import CallerContext, CallerEntitlementScope
-
-
-class ReviewActorScopeRequest(CamelModel):
-    tenant_ids: tuple[str, ...] = Field(..., alias="tenantIds")
-    book_ids: tuple[str, ...] = Field(..., alias="bookIds")
-    portfolio_ids: tuple[str, ...] = Field(..., alias="portfolioIds")
-    client_ids: tuple[str, ...] = Field(..., alias="clientIds")
-
-    @field_validator("tenant_ids", "book_ids", "portfolio_ids", "client_ids")
-    @classmethod
-    def _scope_set_must_not_be_empty_or_blank(cls, value: tuple[str, ...]) -> tuple[str, ...]:
-        if not value:
-            raise ValueError("authorized scope fields cannot be empty")
-        if any(not item.strip() for item in value):
-            raise ValueError("authorized scope fields cannot contain blank values")
-        return tuple(value)
-
-    def to_actor_context(
-        self,
-        *,
-        caller: CallerContext,
-        role: ReviewActorRole,
-    ) -> ReviewActorContext:
-        return ReviewActorContext(
-            actor_subject=caller.subject,
-            role=role,
-            tenant_ids=frozenset(self.tenant_ids),
-            book_ids=frozenset(self.book_ids),
-            portfolio_ids=frozenset(self.portfolio_ids),
-            client_ids=frozenset(self.client_ids),
-        )
-
-    def is_subset_of_entitlement_scope(self, scope: CallerEntitlementScope) -> bool:
-        return (
-            _values_are_subset(self.tenant_ids, scope.tenant_ids)
-            and _values_are_subset(self.book_ids, scope.book_ids)
-            and _values_are_subset(self.portfolio_ids, scope.portfolio_ids)
-            and _values_are_subset(self.client_ids, scope.client_ids)
-        )
+from app.security.caller_context import CallerContext
 
 
 class ReviewActionRequest(CamelModel):
     review_id: str = Field(..., alias="reviewId")
     action: ReviewAction
-    access_scope: ReviewAccessScopeRequest = Field(..., alias="accessScope")
-    authorized_scope: ReviewActorScopeRequest = Field(..., alias="authorizedScope")
     reason_codes: tuple[ReasonCode, ...] = Field(..., alias="reasonCodes")
     decided_at_utc: datetime = Field(..., alias="decidedAtUtc")
     suppression_reason: SuppressionReason | None = Field(default=None, alias="suppressionReason")
@@ -118,7 +75,7 @@ class ReviewActionRequest(CamelModel):
                 review_id=self.review_id,
                 action=self.action,
                 actor=build_review_actor_context(caller=caller, role=role),
-                access_scope=self.access_scope.to_domain(),
+                access_scope=None,
                 reason_codes=self.reason_codes,
                 decided_at_utc=self.decided_at_utc,
                 suppression_reason=self.suppression_reason,
@@ -131,8 +88,6 @@ class ReviewActionRequest(CamelModel):
 
 class FeedbackRequest(CamelModel):
     feedback_id: str = Field(..., alias="feedbackId")
-    access_scope: ReviewAccessScopeRequest = Field(..., alias="accessScope")
-    authorized_scope: ReviewActorScopeRequest = Field(..., alias="authorizedScope")
     outcome: FeedbackOutcome
     reason_codes: tuple[ReasonCode, ...] = Field(..., alias="reasonCodes")
     recorded_at_utc: datetime = Field(..., alias="recordedAtUtc")
@@ -167,7 +122,7 @@ class FeedbackRequest(CamelModel):
             feedback=FeedbackCommand(
                 feedback_id=self.feedback_id,
                 actor=build_review_actor_context(caller=caller, role=role),
-                access_scope=self.access_scope.to_domain(),
+                access_scope=None,
                 outcome=self.outcome,
                 reason_codes=self.reason_codes,
                 recorded_at_utc=self.recorded_at_utc,
@@ -258,17 +213,12 @@ class FeedbackResponse(CamelModel):
     supported_feature_promoted: bool = Field(False, alias="supportedFeaturePromoted")
 
 
-def _values_are_subset(values: tuple[str, ...], allowed_values: tuple[str, ...]) -> bool:
-    return bool(allowed_values) and set(values).issubset(allowed_values)
-
-
 __all__ = [
     "FeedbackEventResponse",
     "FeedbackRequest",
     "FeedbackResponse",
     "ReviewActionRequest",
     "ReviewActionResponse",
-    "ReviewActorScopeRequest",
     "ReviewDecisionResponse",
     "ReviewPersistenceSummaryResponse",
 ]
