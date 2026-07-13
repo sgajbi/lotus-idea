@@ -61,13 +61,13 @@ from app.infrastructure.postgres_repository import PostgresIdeaRepository
 from app.infrastructure.data_lifecycle.postgres_policy import DataLifecycleWriteBlockedError
 from tests.unit.downstream_submission_helpers import build_downstream_submission_claim
 from app.infrastructure.postgres_mutation_metadata import idempotency_created_at
-from app.infrastructure.postgres_candidate_writes import StaleCandidateMutationError
 from app.infrastructure.postgres_codecs import (
     decode_datetime,
     read_json_object,
     read_row_value,
 )
 from tests.unit.postgres_repository_fake import FakePostgresConnection
+from tests.unit.postgres_repository_query_assertions import assert_no_whole_store_snapshot
 
 
 AS_OF_DATE = datetime(2026, 6, 21, 10, 0, tzinfo=UTC).date()
@@ -90,19 +90,6 @@ def test_postgres_repository_rejects_unscoped_durable_candidate_atomically() -> 
     assert exc_info.value.blocker == "tenant_scope_missing"
     assert connection.rows["idea_candidate_record"] == []
     assert connection.rows["idea_data_lifecycle_control"] == []
-
-
-class StaleSnapshotRepository(PostgresIdeaRepository):
-    def __init__(
-        self,
-        stale_connection: FakePostgresConnection,
-        stale_snapshot: IdeaRepositorySnapshot,
-    ) -> None:
-        super().__init__(stale_connection)
-        self._stale_snapshot = stale_snapshot
-
-    def snapshot(self) -> IdeaRepositorySnapshot:
-        return self._stale_snapshot
 
 
 def test_postgres_repository_persists_replays_and_hydrates_candidate_state() -> None:
@@ -288,6 +275,7 @@ def test_postgres_repository_round_trips_mutating_workflow_details() -> None:
     loaded_conversion_record = repository.candidate_record_for_conversion_intent(
         "conversion-report-001"
     )
+    bounded_workflow_sql = tuple(connection.executed_sql)
     _append_orphan_detail_rows(connection)
 
     recovered = PostgresIdeaRepository(connection).snapshot()
@@ -300,6 +288,7 @@ def test_postgres_repository_round_trips_mutating_workflow_details() -> None:
     assert conversion.decision is ConversionPersistenceDecision.ACCEPTED
     assert outcome.decision is ConversionPersistenceDecision.ACCEPTED
     assert pack.decision is EvidencePackPersistenceDecision.ACCEPTED
+    assert_no_whole_store_snapshot(bounded_workflow_sql)
     assert replay.status is EvidenceReplayStatus.MATCHED
     assert review_precheck is not None
     assert review_precheck.decision is ReviewPersistenceDecision.REPLAYED
@@ -434,8 +423,6 @@ def test_postgres_repository_row_scoped_mutations_preserve_independent_rows() ->
         actor_subject="signal-ingestion-worker",
         occurred_at_utc=EVALUATED_AT,
     )
-    base_snapshot = PostgresIdeaRepository(connection).snapshot()
-
     first_review = apply_review_action(
         first_candidate,
         review_command(review_id="review-row-scoped-first"),
@@ -445,12 +432,12 @@ def test_postgres_repository_row_scoped_mutations_preserve_independent_rows() ->
         review_command(review_id="review-row-scoped-second"),
     )
 
-    StaleSnapshotRepository(connection, base_snapshot).record_review_action(
+    repository.record_review_action(
         first_review,
         idempotency_key="review:row-scoped-first",
         payload={"reviewId": first_review.decision.review_id},
     )
-    StaleSnapshotRepository(connection, base_snapshot).record_review_action(
+    repository.record_review_action(
         second_review,
         idempotency_key="review:row-scoped-second",
         payload={"reviewId": second_review.decision.review_id},
@@ -466,7 +453,7 @@ def test_postgres_repository_row_scoped_mutations_preserve_independent_rows() ->
     assert len(connection.rows["idea_review_decision"]) == 2
 
 
-def test_postgres_repository_rejects_stale_same_candidate_snapshot_write() -> None:
+def test_postgres_repository_serializes_same_candidate_mutations_from_fresh_state() -> None:
     connection = FakePostgresConnection()
     repository = PostgresIdeaRepository(connection)
     candidate = replace(
@@ -481,8 +468,6 @@ def test_postgres_repository_rejects_stale_same_candidate_snapshot_write() -> No
         actor_subject="signal-ingestion-worker",
         occurred_at_utc=EVALUATED_AT,
     )
-    base_snapshot = PostgresIdeaRepository(connection).snapshot()
-
     first_review = apply_review_action(
         candidate,
         review_command(review_id="review-stale-same-candidate-first"),
@@ -492,36 +477,35 @@ def test_postgres_repository_rejects_stale_same_candidate_snapshot_write() -> No
         review_command(review_id="review-stale-same-candidate-second"),
     )
 
-    StaleSnapshotRepository(connection, base_snapshot).record_review_action(
+    repository.record_review_action(
         first_review,
         idempotency_key="review:stale-same-candidate-first",
         payload={"reviewId": first_review.decision.review_id},
     )
-    with pytest.raises(
-        StaleCandidateMutationError,
-        match="stale candidate mutation rejected for idea_high_cash_stale_same_candidate",
-    ):
-        StaleSnapshotRepository(connection, base_snapshot).record_review_action(
-            second_review,
-            idempotency_key="review:stale-same-candidate-second",
-            payload={"reviewId": second_review.decision.review_id},
-        )
+    repository.record_review_action(
+        second_review,
+        idempotency_key="review:stale-same-candidate-second",
+        payload={"reviewId": second_review.decision.review_id},
+    )
 
     recovered = PostgresIdeaRepository(connection).snapshot()
 
-    assert connection.commits == 2
-    assert connection.rollbacks == 1
+    assert connection.commits == 3
+    assert connection.rollbacks == 0
     assert [
         decision.review_id
         for decision in recovered.candidate_records[candidate.candidate_id].review_decisions
-    ] == ["review-stale-same-candidate-first"]
-    assert not any(
+    ] == [
+        "review-stale-same-candidate-first",
+        "review-stale-same-candidate-second",
+    ]
+    assert any(
         row["idempotency_key"] == "review:stale-same-candidate-second"
         for row in connection.rows["idea_idempotency_record"]
     )
 
 
-def test_postgres_repository_retries_idempotency_collision_as_replay() -> None:
+def test_postgres_repository_reads_exact_idempotency_state_as_replay() -> None:
     connection = FakePostgresConnection()
     repository = PostgresIdeaRepository(connection)
     candidate = replace(
@@ -536,18 +520,16 @@ def test_postgres_repository_retries_idempotency_collision_as_replay() -> None:
         actor_subject="signal-ingestion-worker",
         occurred_at_utc=EVALUATED_AT,
     )
-    base_snapshot = PostgresIdeaRepository(connection).snapshot()
-
     review = apply_review_action(
         candidate,
         review_command(review_id="review-idempotency-collision-replay"),
     )
-    first = StaleSnapshotRepository(connection, base_snapshot).record_review_action(
+    first = repository.record_review_action(
         review,
         idempotency_key="review:idempotency-collision-replay",
         payload={"reviewId": review.decision.review_id},
     )
-    replayed = StaleSnapshotRepository(connection, base_snapshot).record_review_action(
+    replayed = repository.record_review_action(
         review,
         idempotency_key="review:idempotency-collision-replay",
         payload={"reviewId": review.decision.review_id},
@@ -556,7 +538,7 @@ def test_postgres_repository_retries_idempotency_collision_as_replay() -> None:
 
     assert first.decision is ReviewPersistenceDecision.ACCEPTED
     assert replayed.decision is ReviewPersistenceDecision.REPLAYED
-    assert connection.rollbacks == 1
+    assert connection.rollbacks == 0
     assert connection.commits == 3
     assert [
         decision.review_id
@@ -569,7 +551,7 @@ def test_postgres_repository_retries_idempotency_collision_as_replay() -> None:
     ] == ["review:idempotency-collision-replay"]
 
 
-def test_postgres_repository_retries_idempotency_collision_as_conflict() -> None:
+def test_postgres_repository_reads_exact_idempotency_state_as_conflict() -> None:
     connection = FakePostgresConnection()
     repository = PostgresIdeaRepository(connection)
     candidate = replace(
@@ -584,18 +566,16 @@ def test_postgres_repository_retries_idempotency_collision_as_conflict() -> None
         actor_subject="signal-ingestion-worker",
         occurred_at_utc=EVALUATED_AT,
     )
-    base_snapshot = PostgresIdeaRepository(connection).snapshot()
-
     review = apply_review_action(
         candidate,
         review_command(review_id="review-idempotency-collision-conflict"),
     )
-    first = StaleSnapshotRepository(connection, base_snapshot).record_review_action(
+    first = repository.record_review_action(
         review,
         idempotency_key="review:idempotency-collision-conflict",
         payload={"reviewId": review.decision.review_id},
     )
-    conflict = StaleSnapshotRepository(connection, base_snapshot).record_review_action(
+    conflict = repository.record_review_action(
         review,
         idempotency_key="review:idempotency-collision-conflict",
         payload={"reviewId": "different-review-payload"},
@@ -606,7 +586,7 @@ def test_postgres_repository_retries_idempotency_collision_as_conflict() -> None
     assert conflict.decision is ReviewPersistenceDecision.CONFLICT
     assert conflict.record is not None
     assert conflict.record.candidate.candidate_id == candidate.candidate_id
-    assert connection.rollbacks == 1
+    assert connection.rollbacks == 0
     assert connection.commits == 3
     assert [
         decision.review_id
@@ -848,6 +828,10 @@ def test_postgres_repository_round_trips_ai_explanation_lineage() -> None:
     explanation_result = ai_explanation_result_for_candidate(candidate)
 
     accepted = repository.record_ai_explanation_lineage(explanation_result)
+    assert_no_whole_store_snapshot(tuple(connection.executed_sql))
+    assert any(
+        "ai-lineage-identity-candidates" in sql for sql in connection.executed_sql
+    )
     recovered = PostgresIdeaRepository(connection).snapshot()
     replayed = PostgresIdeaRepository(connection).record_ai_explanation_lineage(explanation_result)
 

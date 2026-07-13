@@ -21,7 +21,6 @@ from app.infrastructure.postgres_conversion_outcome import (
 from tests.unit.postgres_repository_fake import FakePostgresConnection
 from tests.unit.test_postgres_repository import (
     EVALUATED_AT,
-    StaleSnapshotRepository,
     access_scope,
     conversion_command,
     conversion_outcome_command,
@@ -58,17 +57,16 @@ def repository_with_conversion_intent() -> tuple[
     return connection, repository, intent_result.conversion_intent
 
 
-def test_postgres_retries_equivalent_conversion_outcome_identity_as_replay() -> None:
+def test_postgres_reads_equivalent_conversion_outcome_identity_as_replay() -> None:
     connection, repository, intent = repository_with_conversion_intent()
-    base_snapshot = repository.snapshot()
     outcome = record_conversion_outcome(intent, conversion_outcome_command())
 
-    first = StaleSnapshotRepository(connection, base_snapshot).record_conversion_outcome(
+    first = repository.record_conversion_outcome(
         outcome,
         idempotency_key="outcome:postgres-identity:first",
         payload={"conversionOutcomeId": outcome.conversion_outcome.outcome.conversion_outcome_id},
     )
-    replayed = StaleSnapshotRepository(connection, base_snapshot).record_conversion_outcome(
+    replayed = repository.record_conversion_outcome(
         outcome,
         idempotency_key="outcome:postgres-identity:retry",
         payload={"conversionOutcomeId": outcome.conversion_outcome.outcome.conversion_outcome_id},
@@ -78,15 +76,14 @@ def test_postgres_retries_equivalent_conversion_outcome_identity_as_replay() -> 
 
     assert first.decision is ConversionPersistenceDecision.ACCEPTED
     assert replayed.decision is ConversionPersistenceDecision.REPLAYED
-    assert connection.rollbacks == 1
+    assert connection.rollbacks == 0
     assert len(record.conversion_outcomes) == 1
     assert len(record.audit_events) == 3
     assert len(recovered.outbox_events) == 3
 
 
-def test_postgres_retries_changed_conversion_outcome_identity_as_conflict() -> None:
+def test_postgres_reads_changed_conversion_outcome_identity_as_conflict() -> None:
     connection, repository, intent = repository_with_conversion_intent()
-    base_snapshot = repository.snapshot()
     accepted_command = conversion_outcome_command()
     accepted = record_conversion_outcome(intent, accepted_command)
     changed = record_conversion_outcome(
@@ -98,12 +95,12 @@ def test_postgres_retries_changed_conversion_outcome_identity_as_conflict() -> N
         ),
     )
 
-    first = StaleSnapshotRepository(connection, base_snapshot).record_conversion_outcome(
+    first = repository.record_conversion_outcome(
         accepted,
         idempotency_key="outcome:postgres-conflict:first",
         payload={"status": "accepted"},
     )
-    conflict = StaleSnapshotRepository(connection, base_snapshot).record_conversion_outcome(
+    conflict = repository.record_conversion_outcome(
         changed,
         idempotency_key="outcome:postgres-conflict:changed",
         payload={"status": "rejected"},
@@ -113,7 +110,7 @@ def test_postgres_retries_changed_conversion_outcome_identity_as_conflict() -> N
 
     assert first.decision is ConversionPersistenceDecision.ACCEPTED
     assert conflict.decision is ConversionPersistenceDecision.OUTCOME_CONFLICT
-    assert connection.rollbacks == 1
+    assert connection.rollbacks == 0
     assert [outcome.outcome.status for outcome in record.conversion_outcomes] == [
         ConversionOutcomeStatus.ACCEPTED
     ]
@@ -123,7 +120,6 @@ def test_postgres_retries_changed_conversion_outcome_identity_as_conflict() -> N
 
 def test_postgres_serializes_competing_ids_for_the_same_source_version() -> None:
     connection, repository, intent = repository_with_conversion_intent()
-    base_snapshot = repository.snapshot()
     accepted_command = conversion_outcome_command()
     accepted = record_conversion_outcome(intent, accepted_command)
     competing = record_conversion_outcome(
@@ -136,12 +132,12 @@ def test_postgres_serializes_competing_ids_for_the_same_source_version() -> None
         ),
     )
 
-    first = StaleSnapshotRepository(connection, base_snapshot).record_conversion_outcome(
+    first = repository.record_conversion_outcome(
         accepted,
         idempotency_key="outcome:postgres-version:first",
         payload={"sourceEventVersion": 1, "status": "accepted"},
     )
-    conflict = StaleSnapshotRepository(connection, base_snapshot).record_conversion_outcome(
+    conflict = repository.record_conversion_outcome(
         competing,
         idempotency_key="outcome:postgres-version:competing",
         payload={"sourceEventVersion": 1, "status": "rejected"},
@@ -151,7 +147,7 @@ def test_postgres_serializes_competing_ids_for_the_same_source_version() -> None
 
     assert first.decision is ConversionPersistenceDecision.ACCEPTED
     assert conflict.decision is ConversionPersistenceDecision.OUTCOME_CONFLICT
-    assert connection.rollbacks == 1
+    assert connection.rollbacks == 0
     assert len(record.conversion_outcomes) == 1
     assert len(record.audit_events) == 3
     assert len(recovered.outbox_events) == 3

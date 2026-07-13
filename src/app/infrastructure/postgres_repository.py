@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 from datetime import datetime
-from typing import Any, Callable, Mapping, TypeVar
+from typing import Any, Mapping
 
 from psycopg.types.json import Jsonb
 
@@ -16,7 +16,7 @@ from app.domain.conversion_governance import (
     GovernedConversionIntent,
 )
 from app.domain.conversion_outcome_policy import ConversionOutcomeIdentity
-from app.domain.ideas import IdeaCandidate, IdeaLifecycleStatus, SourceRef
+from app.domain.ideas import IdeaCandidate, IdeaLifecycleStatus
 from app.domain.idempotency import IdempotencyDecision, IdempotencyRecord
 from app.domain.outbox.delivery import OutboxDeliveryResult
 from app.domain.persistence import (
@@ -24,8 +24,6 @@ from app.domain.persistence import (
     CandidatePersistenceResult,
     ConversionPersistenceResult,
     EvidencePackPersistenceResult,
-    EvidenceReplayResult,
-    InMemoryIdeaRepository,
     IdeaRepositorySnapshot,
     LifecycleHistoryEntry,
     LifecyclePersistenceResult,
@@ -99,7 +97,6 @@ from app.infrastructure.postgres_idempotency_precheck import (
     precheck_postgres_conversion_mutation,
     precheck_postgres_review_mutation,
 )
-from app.infrastructure.postgres_mutation_retry import execute_postgres_mutation
 from app.infrastructure.postgres_review_queue import (
     PostgresReviewQueueRepositoryMixin,
     candidate_record_from_row,
@@ -111,7 +108,12 @@ from app.infrastructure.postgres_runtime_trust_telemetry import (
 from app.infrastructure.postgres_slo import execute_observed_postgres_call
 from app.infrastructure.postgres_capacity_posture import PostgresCapacityRepositoryMixin
 from app.infrastructure.postgres_candidate_detail import PostgresCandidateDetailRepositoryMixin
-from app.infrastructure.persistence import load_candidate_persistence_snapshot
+from app.infrastructure.persistence.postgres_mutation import (
+    PostgresBoundedMutationRepositoryMixin,
+)
+from app.infrastructure.persistence.postgres_replay import (
+    PostgresEvidenceReplayRepositoryMixin,
+)
 from app.infrastructure.data_lifecycle.postgres_policy import (
     PostgresDataLifecycleRepository,
     assert_data_lifecycle_allows_candidate_writes,
@@ -123,10 +125,9 @@ from app.domain.data_lifecycle import DataLifecycleCommand, DataLifecycleOperati
 from app.ports.data_lifecycle import DataLifecycleEvaluator
 
 
-_T = TypeVar("_T")
-
-
 class PostgresIdeaRepository(
+    PostgresBoundedMutationRepositoryMixin,
+    PostgresEvidenceReplayRepositoryMixin,
     PostgresAIExplanationWriteMixin,
     PostgresCapacityRepositoryMixin,
     PostgresCandidateDetailRepositoryMixin,
@@ -173,19 +174,10 @@ class PostgresIdeaRepository(
         occurred_at_utc: datetime | None = None,
         event_lineage: EventLineageContext | None = None,
     ) -> CandidatePersistenceResult:
-        def snapshot_loader() -> IdeaRepositorySnapshot:
-            return load_candidate_persistence_snapshot(
-                self._connection,
-                candidate_id=candidate.candidate_id,
-                idempotency_key=idempotency_key,
-            )
-
-        return execute_postgres_mutation(
-            self,
-            self._connection,
-            snapshot_loader,
-            snapshot_loader,
-            lambda repository: repository.persist_candidate(
+        return self._mutate_candidate(
+            candidate_ids=(candidate.candidate_id,),
+            idempotency_key=idempotency_key,
+            operation=lambda repository: repository.persist_candidate(
                 candidate,
                 idempotency_key=idempotency_key,
                 payload=payload,
@@ -201,8 +193,9 @@ class PostgresIdeaRepository(
         idempotency_key: str,
         payload: dict[str, Any],
     ) -> IdempotencyDecision:
-        return self._mutate(
-            lambda repository: repository.record_outbox_delivery_run_request(
+        return self._mutate_idempotency(
+            idempotency_key,
+            operation=lambda repository: repository.record_outbox_delivery_run_request(
                 idempotency_key=idempotency_key,
                 payload=payload,
             )
@@ -221,8 +214,11 @@ class PostgresIdeaRepository(
         reason_codes: tuple[str, ...] = (),
         event_lineage: EventLineageContext | None = None,
     ) -> LifecyclePersistenceResult:
-        return self._mutate(
-            lambda repository: repository.record_lifecycle_transition(
+        return self._mutate_candidate(
+            candidate_ids=(candidate_id,),
+            idempotency_key=idempotency_key,
+            identity_keys=(f"lifecycle-transition:{transition_id or idempotency_key}",),
+            operation=lambda repository: repository.record_lifecycle_transition(
                 candidate_id,
                 target_status,
                 idempotency_key=idempotency_key,
@@ -233,20 +229,6 @@ class PostgresIdeaRepository(
                 reason_codes=reason_codes,
                 event_lineage=event_lineage,
             )
-        )
-
-    def replay_evidence(
-        self,
-        candidate_id: str,
-        *,
-        current_source_refs: tuple[SourceRef, ...],
-        evaluated_at_utc: datetime | None = None,
-    ) -> EvidenceReplayResult:
-        repository = InMemoryIdeaRepository(self.snapshot())
-        return repository.replay_evidence(
-            candidate_id,
-            current_source_refs=current_source_refs,
-            evaluated_at_utc=evaluated_at_utc,
         )
 
     def precheck_review_mutation(
@@ -271,8 +253,13 @@ class PostgresIdeaRepository(
         payload: Mapping[str, Any],
         event_lineage: EventLineageContext | None = None,
     ) -> ReviewPersistenceResult:
-        return self._mutate(
-            lambda repository: repository.record_review_action(
+        identity = result.decision.mutation_identity
+        return self._mutate_candidate(
+            candidate_ids=(result.decision.candidate_id,),
+            idempotency_key=idempotency_key,
+            identity_keys=(f"{identity.mutation_type.value}:{identity.resource_id}",),
+            related_candidate_ids_loader=lambda: self._review_identity_candidate_ids(identity),
+            operation=lambda repository: repository.record_review_action(
                 result,
                 idempotency_key=idempotency_key,
                 payload=payload,
@@ -288,8 +275,13 @@ class PostgresIdeaRepository(
         payload: Mapping[str, Any],
         event_lineage: EventLineageContext | None = None,
     ) -> ReviewPersistenceResult:
-        return self._mutate(
-            lambda repository: repository.record_feedback_event(
+        identity = result.feedback_event.mutation_identity
+        return self._mutate_candidate(
+            candidate_ids=(result.feedback_event.candidate_id,),
+            idempotency_key=idempotency_key,
+            identity_keys=(f"{identity.mutation_type.value}:{identity.resource_id}",),
+            related_candidate_ids_loader=lambda: self._review_identity_candidate_ids(identity),
+            operation=lambda repository: repository.record_feedback_event(
                 result,
                 idempotency_key=idempotency_key,
                 payload=payload,
@@ -317,8 +309,16 @@ class PostgresIdeaRepository(
         payload: Mapping[str, Any],
         event_lineage: EventLineageContext | None = None,
     ) -> ConversionPersistenceResult:
-        return self._mutate(
-            lambda repository: repository.record_conversion_intent(
+        candidate_id = result.conversion_intent.intent.candidate_id
+        conversion_intent_id = result.conversion_intent.intent.conversion_intent_id
+        return self._mutate_candidate(
+            candidate_ids=(candidate_id,),
+            idempotency_key=idempotency_key,
+            identity_keys=(f"conversion-intent:{conversion_intent_id}",),
+            related_candidate_ids_loader=lambda: self._conversion_intent_candidate_ids(
+                conversion_intent_id
+            ),
+            operation=lambda repository: repository.record_conversion_intent(
                 result,
                 idempotency_key=idempotency_key,
                 payload=payload,
@@ -363,25 +363,23 @@ class PostgresIdeaRepository(
         payload: Mapping[str, Any],
         event_lineage: EventLineageContext | None = None,
     ) -> ConversionPersistenceResult:
-        return self._mutate(
-            lambda repository: repository.record_conversion_outcome(
+        identity = result.conversion_outcome.identity
+        return self._mutate_candidate(
+            candidate_ids=(),
+            idempotency_key=idempotency_key,
+            identity_keys=(
+                f"conversion-intent:{identity.conversion_intent_id}",
+                f"conversion-outcome:{identity.conversion_outcome_id}",
+            ),
+            related_candidate_ids_loader=lambda: self._conversion_outcome_candidate_ids(
+                identity
+            ),
+            operation=lambda repository: repository.record_conversion_outcome(
                 result,
                 idempotency_key=idempotency_key,
                 payload=payload,
                 event_lineage=event_lineage,
             )
-        )
-
-    def precheck_evidence_pack_mutation(
-        self,
-        *,
-        idempotency_key: str,
-        payload: Mapping[str, Any],
-    ) -> EvidencePackPersistenceResult | None:
-        repository = InMemoryIdeaRepository(self.snapshot())
-        return repository.precheck_evidence_pack_mutation(
-            idempotency_key=idempotency_key,
-            payload=payload,
         )
 
     def candidate_record_for_conversion_intent(
@@ -404,8 +402,14 @@ class PostgresIdeaRepository(
         payload: Mapping[str, Any],
         event_lineage: EventLineageContext | None = None,
     ) -> EvidencePackPersistenceResult:
-        return self._mutate(
-            lambda repository: repository.record_report_evidence_pack(
+        candidate_id = result.evidence_pack.candidate_id
+        return self._mutate_candidate(
+            candidate_ids=(candidate_id,),
+            idempotency_key=idempotency_key,
+            identity_keys=(
+                f"report-evidence-pack:{result.evidence_pack.report_evidence_pack_id}",
+            ),
+            operation=lambda repository: repository.record_report_evidence_pack(
                 result,
                 idempotency_key=idempotency_key,
                 payload=payload,
@@ -547,18 +551,6 @@ class PostgresIdeaRepository(
         except Exception:
             self._connection.rollback()
             raise
-
-    def _mutate(self, operation: Callable[[InMemoryIdeaRepository], _T]) -> _T:
-        return execute_postgres_mutation(
-            self,
-            self._connection,
-            self.snapshot,
-            self._database_snapshot,
-            operation,
-        )
-
-    def _database_snapshot(self) -> IdeaRepositorySnapshot:
-        return PostgresIdeaRepository(self._connection).snapshot()
 
     def _load_candidate_records(
         self,
