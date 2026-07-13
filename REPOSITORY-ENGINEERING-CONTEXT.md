@@ -875,7 +875,7 @@ environment class, change reference, deployment actor, migration-bundle digest,
 and version transition. `make migrate` and `make migrate-rollback` remain
 local/disposable fixture tools, not deployment authority. Direct workflow use
 is restricted to the governed disposable lifecycle-review and DR-seed paths;
-new production-like workflows must use the protected exact-image runner.
+new production-like workflows must use the protected exact-image workflow.
 
 This is design and operability modularity inside the existing deployable. The
 API and optional worker continue to share one Idea-owned PostgreSQL database.
@@ -884,9 +884,11 @@ failure-isolation, ownership, or operability evidence. The implemented workflow
 is still non-certifying until a protected environment run, approved change,
 same-digest rollout health proof, mainline validation, and retained attestation
 exist. Issue `#375` is the durable tracker: the repository currently has no
-GitHub deployment environments and no self-hosted runner matching
-`[self-hosted, linux, lotus-deployment]`, so no environment-scoped database
-secret or governed target can be exercised yet.
+GitHub deployment environments, environment-scoped database secret, governed
+target, or live rollout evidence. The workflow uses the same GitHub-hosted
+`ubuntu-latest` execution plane as other Lotus apps; a private runner is not a
+current prerequisite. Database reachability must use an approved encrypted
+path and must not be obtained by broadly exposing PostgreSQL.
 
 PostgreSQL disaster-recovery evidence uses distinct disposable source and
 target databases:

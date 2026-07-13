@@ -53,8 +53,11 @@ SHA tag, OCI labels, `/version`, SBOM, scan, and digest-only deployment posture.
 Protected migration execution and rollout-health evidence remain separate
 certification requirements. [Issue #375](https://github.com/sgajbi/lotus-idea/issues/375)
 tracks the current execution-plane gap: no protected GitHub environments,
-matching self-hosted deployment runner, environment-scoped database secret, or
-governed target is configured.
+environment-scoped database secret, governed target, or live rollout evidence
+is configured. The workflow now uses GitHub's ephemeral `ubuntu-latest` runner,
+consistent with the other Lotus applications. Protected environment approval,
+runtime-only secret injection, and an approved encrypted database path remain
+mandatory.
 
 ```mermaid
 flowchart LR
