@@ -921,3 +921,27 @@ labels, registry digest, keyless signature, SBOM, vulnerability scan, provenance
 and SBOM attestations, digest-only Kubernetes reference, and `/version` response.
 Wiki publication commit `5534db5` has zero source drift. Issue `#357` is closed
 with `status/merged-main`; its local and remote feature branches are removed.
+
+## Bounded Candidate Persistence
+
+Issue `#363` removes whole-store hydration from the candidate-creation write
+path. A persistence capability module acquires transaction-scoped candidate and
+idempotency locks in fixed order, then loads only the requested candidate and
+the candidate linked to the supplied idempotency key. The existing domain
+repository still decides accepted, replayed, conflict, and duplicate-candidate
+posture; the existing delta writer still commits candidate, lifecycle control,
+idempotency, audit, and outbox records atomically.
+
+Focused fake-adapter tests prove no review, feedback, conversion, report,
+outbox-history, or unrelated candidate query occurs. Real PostgreSQL 18 proof
+serializes same-key writers into accepted plus replayed and different-key
+writers for one candidate into accepted plus duplicate-candidate, without raw
+uniqueness errors or duplicate audit/outbox side effects. Repository hygiene and
+the PostgreSQL CI target require the capability package and runtime proof.
+
+This is database-access and design modularity inside the existing deployable.
+It adds no service, database, schema, API/OpenAPI change, source authority, or
+supported feature. The same-pattern scan found remaining lifecycle, review,
+feedback, conversion, report-evidence, AI-lineage, evidence-replay,
+evidence-pack-precheck, and operator-run snapshot paths; those remain explicit
+Slice 06 work rather than being hidden by the candidate-only improvement.

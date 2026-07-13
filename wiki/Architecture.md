@@ -714,10 +714,18 @@ updates use an optimistic `updated_at_utc` compare-and-set guard to reject
 stale same-candidate snapshots before detail rows or outbox events commit.
 Idempotency inserts use PostgreSQL conflict detection and retry once from a
 fresh database snapshot so concurrent same-key races return governed replay or
-conflict posture instead of raw primary-key failures. The real
-PostgreSQL runtime proof now covers high-cash evaluate-and-persist replay plus the first internal advisor
-queue, review, feedback, conversion, report evidence-pack workflow path, and
-internal source-ingestion replay/conflict recovery. Unit tests also prove the
+conflict posture instead of raw primary-key failures. Candidate creation uses
+the focused `app.infrastructure.persistence` adapter: it locks candidate and
+idempotency identities in fixed order, loads only requested/idempotency-linked
+aggregates, executes the existing domain decision, and writes one atomic delta.
+Real PostgreSQL proof covers same-key replay and different-key
+duplicate-candidate races. This does not yet certify every generic mutation
+path as bounded.
+
+The real PostgreSQL runtime proof now covers high-cash evaluate-and-persist
+replay plus the first internal advisor queue, review, feedback, conversion,
+report evidence-pack workflow path, and internal source-ingestion
+replay/conflict recovery. Unit tests also prove the
 bounded run-once source-ingestion batch worker foundation and the
 manifest-backed worker CLI check-only contract. Integration tests now prove the
 operator run-once route's durable-storage guard, runtime-configuration guard,
