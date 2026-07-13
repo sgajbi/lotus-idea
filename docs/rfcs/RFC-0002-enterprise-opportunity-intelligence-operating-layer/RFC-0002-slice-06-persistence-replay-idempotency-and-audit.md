@@ -454,16 +454,18 @@ Implemented first-wave internal scope:
     append-only event enforcement. Protected environment execution and rollout
     health evidence remain absent, so production certification and supported
     feature posture remain false. Issue `#375` tracks the missing protected
-    environments, deployment runner, runtime database secret, governed target,
+    environments, runtime database secret, governed target,
     execution attestation, and same-digest rollout-health evidence.
 
 Not implemented yet:
 
 1. protected-environment execution of the exact-image migration workflow plus
    attested rollout-health evidence; issue `#375` records that the repository
-   currently has zero GitHub environments and zero self-hosted runners, while
-   the contract and disposable PostgreSQL behavior are implemented but have
-   not produced live protected deployment evidence,
+   currently has zero GitHub environments, no environment-scoped runtime
+   database secret, and no governed target. The workflow uses GitHub's
+   ephemeral `ubuntu-latest` runner, while the contract and disposable
+   PostgreSQL behavior are implemented but have not produced live protected
+   deployment evidence,
 2. certified long-running scheduled daemon runtime and live-service recovery proof,
 3. live source adapter and live source-ingestion proof against a running Core service,
 4. data-product certification,

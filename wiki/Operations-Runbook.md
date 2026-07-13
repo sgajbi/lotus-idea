@@ -79,6 +79,10 @@ fingerprinted adoption; rollback is bounded and distinct from restore. A
 successful protected environment run, approved change, and rollout-health
 evidence remain required for certification.
 
+Execution uses GitHub's ephemeral `ubuntu-latest` runner. The target database
+must be reachable through an approved encrypted path; broad public PostgreSQL
+exposure is not an acceptable substitute for governed connectivity.
+
 `make postgres-integration-gate` proves
 the high-cash API persistence/replay path and the first internal review,
 feedback, conversion, report evidence-pack, and advisor queue workflow path

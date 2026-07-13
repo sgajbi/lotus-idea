@@ -414,6 +414,13 @@ signature, confirms OCI commit/branch/repository labels, injects
 same digest, validates the resulting evidence with that image, attests the
 evidence, and retains it for 90 days.
 
+The workflow runs on GitHub's ephemeral `ubuntu-latest` runner, consistent with
+the other Lotus application workflows. The protected target database must be
+reachable from that execution plane through an approved encrypted path; do not
+make a database broadly public to satisfy the workflow. When Lotus provisions a
+governed private runner pool, changing execution planes requires updating this
+workflow and its blocking contract tests together.
+
 | Control | Enforced behavior |
 | --- | --- |
 | Release identity | Main ref, 40-character commit, numeric CI run, exact GHCR digest, environment, change reference, and deployment actor are mandatory. |
@@ -424,6 +431,7 @@ evidence, and retains it for 90 days.
 | Rollback | Explicit, bounded, latest-first, audited, and distinct from backup restore. |
 | Audit | Release lineage is stored in history and database-enforced append-only migration events. |
 | Source safety | DSNs, hosts, database names, credentials, and secret-shaped fields are excluded from evidence. |
+| Execution plane | GitHub-hosted ephemeral Linux runner; protected environment approval and environment-scoped secret injection remain mandatory. |
 
 Repository validation:
 
