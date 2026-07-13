@@ -157,6 +157,18 @@ PROTECTED_OPERATION_REQUIREMENTS = (
         required_capabilities=("idea.review.queue.read",),
         required_roles=("advisor",),
     ),
+    CallerContextOpenApiRequirement(
+        method="GET",
+        path="/api/v1/review-queues/portfolio-manager",
+        required_capabilities=("idea.review.queue.portfolio-manager.read",),
+        required_roles=("portfolio_manager",),
+    ),
+    CallerContextOpenApiRequirement(
+        method="GET",
+        path="/api/v1/review-queues/compliance",
+        required_capabilities=("idea.review.queue.compliance.read",),
+        required_roles=("compliance",),
+    ),
     _operator_requirement(
         "GET", "/api/v1/review-queues/advisor/readiness", "idea.review.queue.readiness.read"
     ),

@@ -991,6 +991,38 @@ def test_lifecycle_queue_review_and_feedback_emit_operation_events(
     ]
 
 
+def test_role_specific_review_queues_emit_operation_events(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+    events = capture_operation_events(monkeypatch, review_queues_api)
+
+    portfolio_manager_response = client.get(
+        "/api/v1/review-queues/portfolio-manager",
+        headers={
+            "X-Caller-Subject": "portfolio-manager-001",
+            "X-Caller-Roles": "portfolio_manager",
+            "X-Caller-Capabilities": "idea.review.queue.portfolio-manager.read",
+        },
+    )
+    compliance_response = client.get(
+        "/api/v1/review-queues/compliance",
+        headers={
+            "X-Caller-Subject": "compliance-001",
+            "X-Caller-Roles": "compliance",
+            "X-Caller-Capabilities": "idea.review.queue.compliance.read",
+        },
+    )
+
+    assert portfolio_manager_response.status_code == 200
+    assert compliance_response.status_code == 200
+    assert events == [
+        ("review_queue_read", "accepted", "lotus-idea", False, None),
+        ("review_queue_read", "accepted", "lotus-idea", False, None),
+    ]
+
+
 def test_ai_explanation_api_emits_bounded_operation_event(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
