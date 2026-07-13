@@ -10,7 +10,7 @@ from app.domain.ai_lineage_persistence import AIExplanationLineageRecord
 from app.domain.audit import AuditEvent
 from app.domain.conversion_governance import GovernedConversionIntent, GovernedConversionOutcome
 from app.domain.downstream_submission import DownstreamSubmissionRecord
-from app.domain.events import OutboxEventRecord
+from app.domain.outbox.events import OutboxEventRecord
 from app.domain.idempotency import IdempotencyRecord
 from app.domain.ideas import IdeaCandidate, IdeaLifecycleStatus
 from app.domain.report_evidence import GovernedReportEvidencePack

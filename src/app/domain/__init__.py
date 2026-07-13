@@ -66,7 +66,7 @@ from app.domain.conversion_outcome_policy import (
     validate_conversion_outcome_history,
     validate_conversion_outcome_progression,
 )
-from app.domain.events import (
+from app.domain.outbox.events import (
     OUTBOX_EVENT_AGGREGATE_TYPE,
     OUTBOX_EVENT_SCHEMA_VERSION,
     SUPPORTED_OUTBOX_EVENT_TYPES,
@@ -158,11 +158,11 @@ from app.domain.low_income_signal import (
     LowIncomeSignalPolicy,
     evaluate_low_income_signal,
 )
-from app.domain.outbox_delivery_state import (
+from app.domain.outbox.delivery import (
     OutboxDeliveryDecision,
     OutboxDeliveryResult,
 )
-from app.domain.outbox_recovery import (
+from app.domain.outbox.recovery import (
     MAX_OUTBOX_RECOVERY_ATTEMPTS,
     OUTBOX_RECOVERY_OWNER,
     OutboxDeadLetterSummary,

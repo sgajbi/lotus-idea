@@ -519,7 +519,7 @@ activate producer products, publish product routes, certify full Workbench
 product behavior, or promote supported features.
 
 Outbox broker proof is captured by
-`scripts/generate_outbox_broker_proof.py`. A valid artifact referenced through
+`scripts/outbox/generate_broker_proof.py`. A valid artifact referenced through
 `LOTUS_IDEA_OUTBOX_BROKER_PROOF` or passed with `--outbox-broker-proof` clears
 only the aggregate `outbox_broker_not_configured` and
 `external_broker_runtime_proof_missing` blockers inside generated
@@ -540,7 +540,7 @@ blocker from `downstream_consumer_contracts_missing` to
 `downstream_consumer_runtime_proof_missing` without promoting support.
 
 Outbox consumer runtime proof is captured by
-`scripts/generate_outbox_consumer_runtime_proof.py`. The repo-native
+`scripts/outbox/generate_consumer_runtime_proof.py`. The repo-native
 `make implementation-proof-readiness-check` target now generates the default
 artifact under `LOTUS_IDEA_OUTBOX_CONSUMER_RUNTIME_PROOF_OUTPUT` and passes it
 into aggregate readiness when `LOTUS_IDEA_OUTBOX_CONSUMER_RUNTIME_PROOF` is not
@@ -553,7 +553,7 @@ event publication, Gateway/Workbench behavior, downstream delivery,
 client-ready publication, or supported-feature promotion.
 
 Outbox platform mesh event publication proof is captured by
-`scripts/generate_outbox_platform_mesh_event_publication_proof.py`. The
+`scripts/outbox/generate_platform_mesh_event_publication_proof.py`. The
 repo-native `make implementation-proof-readiness-check` target now generates
 the default artifact from repo-owned outbox event/consumer contracts and
 sibling `lotus-platform` source-manifest/catalog evidence under
@@ -937,23 +937,23 @@ Implementation-backed evidence:
 1. Gateway/Workbench discovery proof contract gate:
     `make gateway-workbench-discovery-proof-contract-gate`,
 1. outbox broker proof generator:
-    `scripts/generate_outbox_broker_proof.py`,
+    `scripts/outbox/generate_broker_proof.py`,
 1. outbox consumer contract gate:
     `make outbox-consumer-contract-gate`,
 1. outbox consumer runtime proof generator:
-    `scripts/generate_outbox_consumer_runtime_proof.py`,
+    `scripts/outbox/generate_consumer_runtime_proof.py`,
 1. outbox consumer runtime proof contract gate:
     `make outbox-consumer-runtime-proof-contract-gate`,
 1. outbox consumer runtime proof tests:
-    `tests/unit/test_outbox_consumer_runtime_proof.py`,
+    `tests/unit/outbox/test_outbox_consumer_runtime_proof.py`,
 1. outbox broker proof contract gate:
     `make outbox-broker-proof-contract-gate`,
 1. outbox platform mesh event publication proof generator:
-    `scripts/generate_outbox_platform_mesh_event_publication_proof.py`,
+    `scripts/outbox/generate_platform_mesh_event_publication_proof.py`,
 1. outbox platform mesh event publication proof contract gate:
     `make outbox-platform-mesh-event-publication-proof-contract-gate`,
 1. outbox platform mesh event publication proof tests:
-    `tests/unit/test_outbox_platform_mesh_event_publication_proof.py`,
+    `tests/unit/outbox/test_outbox_platform_mesh_event_publication_proof.py`,
 1. Advise proposal route proof generator:
     `scripts/generate_advise_proposal_route_proof.py`,
 1. Manage action route proof generator:
@@ -975,7 +975,7 @@ Implementation-backed evidence:
 1. report materialization proof tests:
     `tests/unit/test_report_materialization_proof.py`,
 1. outbox broker proof tests:
-    `tests/unit/test_outbox_broker_proof.py`,
+    `tests/unit/outbox/test_outbox_broker_proof.py`,
 1. platform mesh onboarding proof generator:
     `scripts/generate_platform_mesh_onboarding_proof.py`,
 1. platform mesh onboarding proof contract gate:

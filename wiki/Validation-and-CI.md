@@ -430,9 +430,9 @@ Persistence adapter validation:
     aggregate readiness consumes to clear only
     `gateway_workbench_discovery_proof_missing` for data-mesh and runtime
     trust telemetry proof families.
-14. `tests/unit/test_outbox_broker_proof.py`,
-    `tests/unit/test_outbox_consumer_runtime_proof.py`,
-    `tests/unit/test_outbox_platform_mesh_event_publication_proof.py`,
+14. `tests/unit/outbox/test_outbox_broker_proof.py`,
+    `tests/unit/outbox/test_outbox_consumer_runtime_proof.py`,
+    `tests/unit/outbox/test_outbox_platform_mesh_event_publication_proof.py`,
     `make outbox-consumer-contract-gate`,
     `make outbox-broker-proof-contract-gate`, and
     `make outbox-consumer-runtime-proof-contract-gate`, and
@@ -608,9 +608,9 @@ Persistence adapter validation:
    request-id conflict-checks, and API idempotency-gates source-safe AI
    explanation lineage through the API without promoting `lotus-ai` runtime
    execution or AI explanation support.
-21. `tests/unit/test_outbox_delivery_readiness.py` and
-   `tests/unit/test_postgres_outbox_readiness.py`, plus
-   `tests/integration/test_outbox_delivery_readiness_api.py`, prove the
+21. `tests/unit/outbox/test_outbox_delivery_readiness.py` and
+   `tests/unit/outbox/test_postgres_readiness.py`, plus
+   `tests/integration/outbox/test_delivery_readiness_api.py`, prove the
    outbox delivery readiness diagnostic and run-once operator action for
    aggregate backlog/status posture, durable repository posture, broker
    configuration posture, publisher-adapter presence, blocked-without-broker

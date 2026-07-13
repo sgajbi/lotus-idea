@@ -6,7 +6,7 @@ may depend on HTTP clients, databases, queues, or files, but domain and applicat
 Current adapters include:
 
 1. `lotus_core_sources.py` for source-owned Core evidence retrieval.
-2. `outbox_publisher.py` for the source-safe HTTP broker-publisher adapter
+2. `outbox/publisher.py` for the source-safe HTTP broker-publisher adapter
    foundation. It is not certified live broker runtime until downstream
    consumers, platform mesh event publication proof, Gateway/Workbench proof, and
    supported-feature evidence exist.

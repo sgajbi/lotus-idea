@@ -32,7 +32,7 @@ from app.application.operator_workflows_operations_proof import (
     REMAINING_OPERATOR_WORKFLOWS_OPERATIONS_BLOCKERS,
     REQUIRED_OPERATOR_WORKFLOWS_OPERATIONS_EVIDENCE_REFS,
 )
-from app.application.outbox_delivery_readiness import (
+from app.application.outbox.readiness import (
     OutboxDeliveryReadinessSnapshot,
     build_outbox_delivery_readiness_snapshot,
 )
@@ -442,10 +442,10 @@ def _outbox_delivery_capability(
         readiness_status=snapshot.readiness_status,
         supportability_status=snapshot.supportability_status,
         evidence_refs=(
-            "src/app/application/outbox_delivery.py",
-            "src/app/application/outbox_delivery_readiness.py",
-            "src/app/ports/outbox_publisher.py",
-            "src/app/infrastructure/outbox_publisher.py",
+            "src/app/application/outbox/delivery.py",
+            "src/app/application/outbox/readiness.py",
+            "src/app/ports/outbox/publisher.py",
+            "src/app/infrastructure/outbox/publisher.py",
             "contracts/outbox-events/lotus-idea-outbox-events.v1.json",
             "contracts/outbox-events/lotus-idea-outbox-consumers.v1.json",
             "make outbox-event-contract-gate",

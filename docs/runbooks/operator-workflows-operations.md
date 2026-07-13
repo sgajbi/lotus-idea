@@ -190,7 +190,7 @@ Certification evidence must include:
 3. `monitoring/grafana/dashboards/lotus-idea-operator-workflows-operations.json`,
 4. `monitoring/prometheus/rules/lotus-idea-operator-workflows-operations.rules.yml`,
 5. `scripts/operator_workflows_operations_contract_gate.py`,
-6. `scripts/outbox_supportability_contract_gate.py`,
+6. `scripts/outbox/supportability_contract_gate.py`,
 7. `scripts/operator_workflows_operations_proof_contract_gate.py`,
 8. `make operator-workflows-ops-contract-gate`,
 9. `make outbox-supportability-contract-gate`,

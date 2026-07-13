@@ -27,8 +27,8 @@ from app.application.low_income_core_cashflow_live_proof import (
 from app.application.operator_workflows_operations_proof import (
     OPERATOR_WORKFLOWS_OPERATIONS_PROOF_ENV,
 )
-from app.application.outbox_broker_proof import OUTBOX_BROKER_PROOF_ENV
-from app.application.outbox_platform_mesh_event_publication_proof import (
+from app.application.outbox.broker_proof import OUTBOX_BROKER_PROOF_ENV
+from app.application.outbox.platform_mesh_event_publication_proof import (
     OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF_ENV,
 )
 from app.application.platform_mesh_onboarding_proof import PLATFORM_MESH_ONBOARDING_PROOF_ENV

@@ -47,7 +47,7 @@ Prove the complete supported opportunity journey end to end.
    orchestration surface and fail-closed broker configuration behavior without
    exposing event identifiers, exposing raw idempotency keys, exposing broker
    payloads, or claiming downstream delivery.
-   `scripts/generate_outbox_broker_proof.py` and
+   `scripts/outbox/generate_broker_proof.py` and
    `make outbox-broker-proof-contract-gate` now generate and validate the
    bounded outbox broker proof artifact consumed by aggregate
    implementation-proof readiness. A valid artifact clears only
@@ -61,14 +61,14 @@ Prove the complete supported opportunity journey end to end.
    removes the stale missing-contract posture while leaving runtime proof to the
    bounded downstream consumer runtime proof artifact and keeping downstream
    delivery unsupported.
-9. `scripts/generate_outbox_consumer_runtime_proof.py` and
+9. `scripts/outbox/generate_consumer_runtime_proof.py` and
    `make outbox-consumer-runtime-proof-contract-gate` now generate and validate
    the bounded downstream consumer runtime proof artifact consumed by aggregate
    implementation-proof readiness. A valid artifact clears only
    `downstream_consumer_runtime_proof_missing`; platform mesh event,
    Gateway/Workbench, downstream delivery, and supported-feature blockers
    remain.
-10. `scripts/generate_outbox_platform_mesh_event_publication_proof.py` and
+10. `scripts/outbox/generate_platform_mesh_event_publication_proof.py` and
     `make outbox-platform-mesh-event-publication-proof-contract-gate` now
     generate and validate the bounded outbox platform mesh event publication
     proof artifact consumed by aggregate implementation-proof readiness. A

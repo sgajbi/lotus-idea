@@ -75,9 +75,9 @@
   "sourceOfTruth": {
     "producer_event_contract": "contracts/outbox-events/lotus-idea-outbox-events.v1.json",
     "consumer_contract": "contracts/outbox-events/lotus-idea-outbox-consumers.v1.json",
-    "consumer_contract_gate": "scripts/outbox_consumer_contract_gate.py",
+    "consumer_contract_gate": "scripts/outbox/consumer_contract_gate.py",
     "make_target": "make outbox-consumer-contract-gate",
-    "outbox_delivery_readiness": "src/app/application/outbox_delivery_readiness.py",
+    "outbox_delivery_readiness": "src/app/application/outbox/readiness.py",
     "rfc_slice_06": "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-06-persistence-replay-idempotency-and-audit.md",
     "rfc_slice_14": "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-14-data-product-promotion-trust-telemetry-and-platform-hardening.md",
     "rfc_slice_17": "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-17-implementation-proof-and-live-validation.md"

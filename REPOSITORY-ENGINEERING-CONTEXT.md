@@ -256,6 +256,15 @@ runtime modularity:
    review, proof-gate, and disposable-seed entrypoints are grouped under
    `scripts/data_lifecycle/`; they remain thin callers of application/domain
    policy and support direct Windows and CI execution.
+9. `outbox/` is the second measured capability package. It groups operator API
+   DTOs/routes, delivery and recovery use cases, event/lineage and state
+   policies, the publisher port, PostgreSQL/HTTP adapters, publisher runtime
+   composition, supportability metrics, proof generators, contract gates, and
+   focused tests. The root `app.domain` surface continues to export stable
+   public event types, but internal consumers use `app.domain.outbox`. Broader
+   implementation-proof consumers remain with their owning capability. No
+   compatibility modules, broker service, worker process, database boundary,
+   or supported-feature claim was added.
 
 Design modularity does not imply runtime modularity. Do not introduce a new
 process, service, queue, worker class, or separately scalable boundary unless
@@ -284,9 +293,9 @@ Use shared API helpers instead of route-local clones:
    `app.api.conversion_governance` route surface,
 9. `app.api.ai_governance_models` for AI explanation request/response DTOs
    behind the existing `app.api.ai_governance` import surface,
-10. `app.api.outbox_delivery_readiness_models` for outbox delivery readiness
+10. `app.api.outbox.delivery_models` for outbox delivery readiness
    and run-once response DTOs behind the existing
-   `app.api.outbox_delivery_readiness` route surface,
+   `app.api.outbox.delivery` route surface,
 11. `app.api.source_ingestion_readiness_models` for source-ingestion readiness
    and run-once response DTOs behind the existing
    `app.api.source_ingestion_readiness` route surface,
@@ -1325,7 +1334,7 @@ repeated defect patterns are fixed once and pinned with tests or gates:
     exceptions retain the generic `request_rejected` fallback. This is a
     shared in-process API boundary, not a separately scalable runtime service.
 25. Governed outbox dead-letter recovery: GitHub issue `#337` is addressed by
-    the `app.domain.outbox_recovery` bounded module, application use case,
+    the `app.domain.outbox.recovery` bounded module, application use case,
     `OutboxRecoveryRepository` port, in-memory/PostgreSQL adapters, migration
     `004`, and operator routes. Recovery preserves original failure history,
     creates a new fenced lease, permits one publication attempt, and leaves

@@ -10,13 +10,13 @@ from app.domain.downstream_submission import (
     DownstreamSubmissionPosture,
     DownstreamSubmissionRecord,
 )
-from app.domain.events import (
+from app.domain.outbox.events import (
     EventLineageContext,
     EventLineageOrigin,
     OutboxEventRecord,
     build_candidate_outbox_event,
 )
-from app.domain.outbox_delivery_state import (
+from app.domain.outbox.delivery import (
     OutboxDeliveryDecision,
     claim_outbox_events_for_delivery,
     mark_owned_outbox_event_failed,

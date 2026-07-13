@@ -646,7 +646,7 @@ def test_ci_contract_gate_blocks_missing_outbox_consumer_runtime_proof_generatio
     makefile = (
         (ROOT / "Makefile")
         .read_text(encoding="utf-8")
-        .replace("scripts/generate_outbox_consumer_runtime_proof.py", "scripts/removed.py")
+        .replace("scripts/outbox/generate_consumer_runtime_proof.py", "scripts/removed.py")
     )
 
     errors = module.validate_makefile(makefile)
@@ -1145,7 +1145,7 @@ def test_ci_contract_gate_blocks_missing_outbox_broker_proof_gate() -> None:
         (ROOT / "Makefile")
         .read_text(encoding="utf-8")
         .replace(
-            "scripts/outbox_broker_proof_contract_gate.py",
+            "scripts/outbox/broker_proof_contract_gate.py",
             "scripts/removed.py",
         )
     )
@@ -1154,7 +1154,7 @@ def test_ci_contract_gate_blocks_missing_outbox_broker_proof_gate() -> None:
 
     assert (
         "Makefile outbox-broker-proof-contract-gate target must run "
-        "`scripts/outbox_broker_proof_contract_gate.py`"
+        "`scripts/outbox/broker_proof_contract_gate.py`"
     ) in errors
 
 
@@ -1164,7 +1164,7 @@ def test_ci_contract_gate_blocks_missing_outbox_consumer_runtime_proof_gate() ->
         (ROOT / "Makefile")
         .read_text(encoding="utf-8")
         .replace(
-            "scripts/outbox_consumer_runtime_proof_contract_gate.py",
+            "scripts/outbox/consumer_runtime_proof_contract_gate.py",
             "scripts/removed.py",
         )
     )
@@ -1173,7 +1173,7 @@ def test_ci_contract_gate_blocks_missing_outbox_consumer_runtime_proof_gate() ->
 
     assert (
         "Makefile outbox-consumer-runtime-proof-contract-gate target must run "
-        "`scripts/outbox_consumer_runtime_proof_contract_gate.py`"
+        "`scripts/outbox/consumer_runtime_proof_contract_gate.py`"
     ) in errors
 
 
