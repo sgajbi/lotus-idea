@@ -53,10 +53,10 @@ Production-like AI output now fails closed under
 explicitly unattested fixture, and that posture is carried in API, audit, and
 lineage evidence without clearing runtime proof. Deterministic fallback remains
 available. Signed Lotus AI run/model attestation issuance and Idea-side
-verification are implemented locally with bounded success/rejection telemetry.
-Cross-repository mainline proof remains blocked on `sgajbi/lotus-ai#113`, so
-this is implementation-backed consumer hardening rather than live AI runtime
-or supported-feature completion.
+verification are mainline-proven with bounded success/rejection telemetry;
+producer issue `sgajbi/lotus-ai#113` is closed. This remains
+implementation-backed consumer hardening rather than live AI runtime or
+supported-feature completion.
 
 Implementation evidence:
 

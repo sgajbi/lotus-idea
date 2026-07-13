@@ -15,13 +15,14 @@ The dashboard and alert rules certify operational visibility over implemented
 `lotus-ai` live-provider execution, Workbench product behavior, data-mesh
 publication, client-ready use, or supported-feature promotion.
 
-Production-like workflow output must currently fail with
-`ai_execution_provenance_required`. Treat acceptance in demo, staging, or
-production as a security incident until the signed producer contract in
-`lotus-ai#113` is implemented and consumed. Local/test output must report
+Production-like self-asserted workflow output must fail with
+`ai_execution_provenance_required`. Signed producer and consumer attestation
+contracts are mainline-proven, but only a bundle that passes issuer, audience,
+signature, time, replay, workflow, evidence, output, model, and policy checks
+may enter the verified path. Local/test output must report
 `unattested_local_test_fixture`; it is test evidence only and cannot clear the
-runtime-execution blocker. Deterministic fallback remains valid because it does
-not claim an AI run.
+live-runtime blocker. Deterministic fallback remains valid because it does not
+claim an AI run.
 
 ## Dashboard Panels
 

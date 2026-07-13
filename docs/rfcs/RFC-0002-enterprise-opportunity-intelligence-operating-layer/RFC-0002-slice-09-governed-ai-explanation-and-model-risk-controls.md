@@ -148,9 +148,11 @@ Implemented in this slice:
     Signed producer/consumer contracts are implemented locally: Lotus AI issues
     Ed25519 run attestations and fixed-path key discovery, while Idea verifies
     exact claims and digests, maps producer output, persists a bounded receipt,
-    and rejects run-id or nonce replay. Mainline cross-repository proof remains
-    tracked by `sgajbi/lotus-ai#113`; local fixtures and source inspection
-    cannot clear it.
+    and rejects run-id or nonce replay. Producer issue `sgajbi/lotus-ai#113`
+    is closed with producer main commit `162df803` and Main Releasability run
+    `29153879884`; the Idea consumer is mainline-proven through `f496c442` and
+    run `29179489433`. Local fixtures and source inspection still cannot clear
+    live-provider execution, runtime trust, Workbench, or promotion blockers.
 24. `src/app/domain/ai_metadata_policy.py` implements
     `lotus-idea.ai-metadata-envelope.v1` as a closed, purpose-scoped allowlist.
     The typed request DTO rejects unknown fields, the domain rejects
@@ -214,17 +216,15 @@ tests, RFC evidence, supported-features ledger, CI, and published wiki source.
 This slice is not yet a supported AI explanation product. Remaining work
 includes:
 
-1. merge and mainline CI proof for both signed-attestation producer and
-   consumer implementations,
-2. prompt registry, RAG, evaluation, and provider telemetry owned by
+1. prompt registry, RAG, evaluation, and provider telemetry owned by
    `lotus-ai`,
-3. live-provider execution and workflow-pack runtime certification beyond
+2. live-provider execution and workflow-pack runtime certification beyond
    the current source-safe AI lineage store proof and certified repo-owned
    model-risk operations dashboard/alert artifacts,
-4. Gateway/Workbench proof,
-5. certified runtime trust telemetry beyond the current model-risk operations
+3. Gateway/Workbench proof,
+4. certified runtime trust telemetry beyond the current model-risk operations
    dashboard, alert-rule, and runbook artifacts,
-6. supported-feature promotion after runtime proof.
+5. supported-feature promotion after runtime proof.
 
 ## Required Work
 
