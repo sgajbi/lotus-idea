@@ -158,6 +158,10 @@ def test_advisor_review_queue_api_projects_persisted_candidates() -> None:
         [first, second]
     )
     assert [item["rank"] for item in payload["items"]] == [1, 2]
+    assert {item["policyVersion"] for item in payload["items"]} == {"idea-deterministic-ranking-v1"}
+    assert {item["candidate"]["scorePolicyVersion"] for item in payload["items"]} == {
+        "idle-liquidity-v1"
+    }
     assert payload["exclusions"] == []
     assert payload["page"] | {"snapshotToken": None} == {
         "limit": 25,
@@ -626,6 +630,7 @@ def test_advisor_review_queue_readiness_api_returns_source_safe_operator_posture
             "unsupported_evidence": 0,
             "snoozed": 0,
             "unscored": 0,
+            "unrankable_score_policy": 0,
             "non_reviewable_status": 0,
             "access_scope_mismatch": 0,
         },

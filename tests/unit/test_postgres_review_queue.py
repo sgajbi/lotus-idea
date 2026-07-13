@@ -33,6 +33,7 @@ from tests.unit.test_postgres_repository import (
 
 QUEUE_EVALUATED_AT = EVALUATED_AT + timedelta(days=1)
 QUEUE_POLICY_VERSION = "idea-deterministic-ranking-v1"
+RANKABLE_SCORE_POLICY_VERSIONS = ("idle-liquidity-v1",)
 
 
 def test_postgres_repository_review_queue_page_uses_bounded_candidate_projection() -> None:
@@ -64,7 +65,8 @@ def test_postgres_repository_review_queue_page_uses_bounded_candidate_projection
     page = PostgresIdeaRepository(connection).review_queue_candidate_page(
         evaluated_at_utc=QUEUE_EVALUATED_AT,
         expected_snapshot_token=None,
-        policy_version=QUEUE_POLICY_VERSION,
+        queue_policy_version=QUEUE_POLICY_VERSION,
+        rankable_score_policy_versions=RANKABLE_SCORE_POLICY_VERSIONS,
         access_scope_filter=QueueAccessScopeFilter(portfolio_id="portfolio-001"),
         limit=2,
         offset=1,
@@ -87,6 +89,56 @@ def test_postgres_repository_review_queue_page_uses_bounded_candidate_projection
     assert "idea_ai_explanation_lineage" not in executed_sql
 
 
+def test_postgres_review_queue_excludes_unknown_and_missing_score_policies() -> None:
+    connection = FakePostgresConnection()
+    repository = PostgresIdeaRepository(connection)
+    current = queue_candidate(index=1, candidate_scope=access_scope())
+    stale = queue_candidate(index=2, candidate_scope=access_scope())
+    assert stale.score is not None
+    stale = replace(
+        stale,
+        score=replace(stale.score, policy_version="idea-deterministic-ranking-v0"),
+    )
+    missing_policy = queue_candidate(index=3, candidate_scope=access_scope())
+    for candidate in (current, stale, missing_policy):
+        repository.persist_candidate(
+            candidate,
+            idempotency_key=f"signal-ingestion:high-cash:{candidate.candidate_id}",
+            payload={"candidateId": candidate.candidate_id},
+            actor_subject="signal-ingestion-worker",
+            occurred_at_utc=EVALUATED_AT,
+        )
+    missing_policy_row = next(
+        row
+        for row in connection.rows["idea_candidate_record"]
+        if row["candidate_id"] == missing_policy.candidate_id
+    )
+    missing_policy_row["candidate_json"]["score"].pop("policy_version")
+
+    page = repository.review_queue_candidate_page(
+        evaluated_at_utc=QUEUE_EVALUATED_AT,
+        expected_snapshot_token=None,
+        queue_policy_version=QUEUE_POLICY_VERSION,
+        rankable_score_policy_versions=RANKABLE_SCORE_POLICY_VERSIONS,
+        access_scope_filter=None,
+        limit=10,
+        offset=0,
+    )
+    readiness = repository.review_queue_readiness_summary(
+        evaluated_at_utc=QUEUE_EVALUATED_AT,
+        rankable_score_policy_versions=RANKABLE_SCORE_POLICY_VERSIONS,
+        access_scope_filter=None,
+    )
+
+    assert [record.candidate.candidate_id for record in page.candidate_records] == [
+        current.candidate_id
+    ]
+    assert page.total_reviewable_item_count == 1
+    assert page.total_excluded_candidate_count == 2
+    assert readiness.reviewable_item_count == 1
+    assert readiness.exclusion_counts["unrankable_score_policy"] == 2
+
+
 def test_postgres_review_queue_rejects_stale_token_after_backdated_insert() -> None:
     connection = FakePostgresConnection()
     repository = PostgresIdeaRepository(connection)
@@ -103,7 +155,8 @@ def test_postgres_review_queue_rejects_stale_token_after_backdated_insert() -> N
     first_page = repository.review_queue_candidate_page(
         evaluated_at_utc=evaluated_at_utc,
         expected_snapshot_token=None,
-        policy_version=QUEUE_POLICY_VERSION,
+        queue_policy_version=QUEUE_POLICY_VERSION,
+        rankable_score_policy_versions=RANKABLE_SCORE_POLICY_VERSIONS,
         access_scope_filter=None,
         limit=1,
         offset=0,
@@ -121,7 +174,8 @@ def test_postgres_review_queue_rejects_stale_token_after_backdated_insert() -> N
         repository.review_queue_candidate_page(
             evaluated_at_utc=evaluated_at_utc,
             expected_snapshot_token=first_page.snapshot_token,
-            policy_version=QUEUE_POLICY_VERSION,
+            queue_policy_version=QUEUE_POLICY_VERSION,
+            rankable_score_policy_versions=RANKABLE_SCORE_POLICY_VERSIONS,
             access_scope_filter=None,
             limit=1,
             offset=1,
@@ -144,7 +198,8 @@ def test_postgres_review_queue_token_ignores_insert_after_as_of_boundary() -> No
     first_page = repository.review_queue_candidate_page(
         evaluated_at_utc=evaluated_at_utc,
         expected_snapshot_token=None,
-        policy_version=QUEUE_POLICY_VERSION,
+        queue_policy_version=QUEUE_POLICY_VERSION,
+        rankable_score_policy_versions=RANKABLE_SCORE_POLICY_VERSIONS,
         access_scope_filter=None,
         limit=1,
         offset=0,
@@ -161,7 +216,8 @@ def test_postgres_review_queue_token_ignores_insert_after_as_of_boundary() -> No
     second_page = repository.review_queue_candidate_page(
         evaluated_at_utc=evaluated_at_utc,
         expected_snapshot_token=first_page.snapshot_token,
-        policy_version=QUEUE_POLICY_VERSION,
+        queue_policy_version=QUEUE_POLICY_VERSION,
+        rankable_score_policy_versions=RANKABLE_SCORE_POLICY_VERSIONS,
         access_scope_filter=None,
         limit=1,
         offset=1,
@@ -194,13 +250,15 @@ def test_postgres_review_queue_quarantines_contradictory_raw_candidate_state() -
     page = repository.review_queue_candidate_page(
         evaluated_at_utc=QUEUE_EVALUATED_AT,
         expected_snapshot_token=None,
-        policy_version=QUEUE_POLICY_VERSION,
+        queue_policy_version=QUEUE_POLICY_VERSION,
+        rankable_score_policy_versions=RANKABLE_SCORE_POLICY_VERSIONS,
         access_scope_filter=None,
         limit=10,
         offset=0,
     )
     readiness = repository.review_queue_readiness_summary(
         evaluated_at_utc=QUEUE_EVALUATED_AT,
+        rankable_score_policy_versions=RANKABLE_SCORE_POLICY_VERSIONS,
         access_scope_filter=None,
     )
 
@@ -245,7 +303,8 @@ def test_postgres_review_queue_scope_filters_cover_all_indexed_fields_and_stable
     page = PostgresIdeaRepository(connection).review_queue_candidate_page(
         evaluated_at_utc=QUEUE_EVALUATED_AT,
         expected_snapshot_token=None,
-        policy_version=QUEUE_POLICY_VERSION,
+        queue_policy_version=QUEUE_POLICY_VERSION,
+        rankable_score_policy_versions=RANKABLE_SCORE_POLICY_VERSIONS,
         access_scope_filter=QueueAccessScopeFilter(
             tenant_id="tenant-001",
             book_id="book-001",
@@ -312,6 +371,7 @@ def test_postgres_review_queue_readiness_summary_uses_bounded_candidate_aggregat
     summary = load_review_queue_readiness_summary(
         connection,
         evaluated_at_utc=QUEUE_EVALUATED_AT,
+        rankable_score_policy_versions=RANKABLE_SCORE_POLICY_VERSIONS,
         access_scope_filter=QueueAccessScopeFilter(portfolio_id="portfolio-001"),
     )
 
@@ -344,9 +404,22 @@ def test_review_queue_candidate_page_rejects_unsafe_page_controls() -> None:
             connection,
             evaluated_at_utc=QUEUE_EVALUATED_AT,
             expected_snapshot_token=None,
-            policy_version=QUEUE_POLICY_VERSION,
+            queue_policy_version=QUEUE_POLICY_VERSION,
+            rankable_score_policy_versions=RANKABLE_SCORE_POLICY_VERSIONS,
             access_scope_filter=None,
             limit=0,
+            offset=0,
+        )
+
+    with pytest.raises(ValueError, match="rankable_score_policy_versions is required"):
+        load_review_queue_candidate_page(
+            connection,
+            evaluated_at_utc=QUEUE_EVALUATED_AT,
+            expected_snapshot_token=None,
+            queue_policy_version=QUEUE_POLICY_VERSION,
+            rankable_score_policy_versions=(),
+            access_scope_filter=None,
+            limit=1,
             offset=0,
         )
     with pytest.raises(ValueError, match="offset must be greater than or equal to zero"):
@@ -354,7 +427,8 @@ def test_review_queue_candidate_page_rejects_unsafe_page_controls() -> None:
             connection,
             evaluated_at_utc=QUEUE_EVALUATED_AT,
             expected_snapshot_token=None,
-            policy_version=QUEUE_POLICY_VERSION,
+            queue_policy_version=QUEUE_POLICY_VERSION,
+            rankable_score_policy_versions=RANKABLE_SCORE_POLICY_VERSIONS,
             access_scope_filter=None,
             limit=1,
             offset=-1,
@@ -364,18 +438,21 @@ def test_review_queue_candidate_page_rejects_unsafe_page_controls() -> None:
 def test_review_queue_predicates_use_postgres_array_parameters() -> None:
     _predicate_sql, params = _review_queue_candidate_predicates(
         evaluated_at_utc=QUEUE_EVALUATED_AT,
+        rankable_score_policy_versions=RANKABLE_SCORE_POLICY_VERSIONS,
         access_scope_filter=QueueAccessScopeFilter(portfolio_id="portfolio-001"),
     )
 
     assert params[0] == QUEUE_EVALUATED_AT
     assert isinstance(params[1], list)
-    assert isinstance(params[4], list)
-    assert params[4] == ["portfolio-001"]
+    assert params[3] == ["idle-liquidity-v1"]
+    assert isinstance(params[5], list)
+    assert params[5] == ["portfolio-001"]
 
 
 def test_review_queue_predicates_keep_scope_parameter_order_aligned_to_indexes() -> None:
     predicate_sql, params = _review_queue_candidate_predicates(
         evaluated_at_utc=QUEUE_EVALUATED_AT,
+        rankable_score_policy_versions=RANKABLE_SCORE_POLICY_VERSIONS,
         access_scope_filter=QueueAccessScopeFilter(
             tenant_id="tenant-001",
             book_id="book-001",
@@ -397,7 +474,7 @@ def test_review_queue_predicates_keep_scope_parameter_order_aligned_to_indexes()
         predicate_sql.index(f"->>'{field_name}'")
         for field_name in REVIEW_QUEUE_ACCESS_SCOPE_FILTER_FIELDS
     )
-    assert params[4:] == (
+    assert params[5:] == (
         ["tenant-001"],
         ["book-001"],
         ["portfolio-001"],
@@ -412,7 +489,8 @@ def test_review_queue_candidate_page_handles_empty_count_result() -> None:
         connection,
         evaluated_at_utc=QUEUE_EVALUATED_AT,
         expected_snapshot_token=None,
-        policy_version=QUEUE_POLICY_VERSION,
+        queue_policy_version=QUEUE_POLICY_VERSION,
+        rankable_score_policy_versions=RANKABLE_SCORE_POLICY_VERSIONS,
         access_scope_filter=None,
         limit=10,
         offset=0,

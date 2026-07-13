@@ -23,6 +23,7 @@ from app.domain import (
     QueueSnooze,
     ReasonCode,
     ReviewQueueItem,
+    ReviewQueuePolicy,
     ReviewPosture,
     SourceRef,
     SourceSystem,
@@ -37,7 +38,11 @@ from app.domain import (
 
 AS_OF_DATE = date(2026, 6, 21)
 EVALUATED_AT = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
-POLICY = IdeaScoringPolicy(policy_version="idea-deterministic-ranking-v1")
+SCORING_POLICY = IdeaScoringPolicy(policy_version="idea-weighted-evidence-score-v1")
+QUEUE_POLICY = ReviewQueuePolicy(
+    policy_version="idea-deterministic-ranking-v1",
+    rankable_score_policy_versions=(SCORING_POLICY.policy_version,),
+)
 
 
 def source_ref(product_id: str = "lotus-core:PortfolioStateSnapshot:v1") -> SourceRef:
@@ -89,6 +94,7 @@ def candidate(
     review_posture: ReviewPosture = ReviewPosture.ADVISOR_REVIEW_REQUIRED,
     suppression_reason: SuppressionReason | None = None,
     supportability: EvidenceSupportability = EvidenceSupportability.READY,
+    score_policy_version: str = SCORING_POLICY.policy_version,
 ) -> IdeaCandidate:
     return IdeaCandidate(
         candidate_id=candidate_id,
@@ -99,7 +105,7 @@ def candidate(
         source_signal_ids=source_signal_ids or (f"signal:{candidate_id}",),
         score=(
             IdeaScore(
-                policy_version=POLICY.policy_version,
+                policy_version=score_policy_version,
                 score=score,
                 reason_codes=(ReasonCode.HIGH_CASH_RATIO, ReasonCode.REVIEW_REQUIRED),
             )
@@ -128,11 +134,11 @@ def scoring_inputs(**overrides: Decimal | bool) -> IdeaScoringInputs:
 
 
 def test_score_inputs_are_deterministic_versioned_and_explainable() -> None:
-    first = score_inputs(scoring_inputs(), policy=POLICY)
-    second = score_inputs(scoring_inputs(), policy=POLICY)
+    first = score_inputs(scoring_inputs(), policy=SCORING_POLICY)
+    second = score_inputs(scoring_inputs(), policy=SCORING_POLICY)
 
     assert first == second
-    assert first.policy_version == "idea-deterministic-ranking-v1"
+    assert first.policy_version == "idea-weighted-evidence-score-v1"
     assert first.final_score == Decimal("80.75")
     assert first.reason_codes == (
         ReasonCode.MATERIALITY_SCORE,
@@ -155,7 +161,7 @@ def test_score_inputs_are_deterministic_versioned_and_explainable() -> None:
 
 
 def test_conflict_flags_apply_bounded_reasoned_penalty() -> None:
-    breakdown = score_inputs(scoring_inputs(has_conflict_flags=True), policy=POLICY)
+    breakdown = score_inputs(scoring_inputs(has_conflict_flags=True), policy=SCORING_POLICY)
 
     assert breakdown.final_score == Decimal("65.75")
     assert breakdown.conflict_penalty_applied == Decimal("15")
@@ -168,14 +174,14 @@ def test_score_candidate_attaches_policy_score_without_changing_lifecycle() -> N
     scored, breakdown = score_candidate(
         unscored,
         scoring_inputs(),
-        policy=POLICY,
+        policy=SCORING_POLICY,
         scored_at_utc=datetime(2026, 6, 21, 10, 5, tzinfo=UTC),
     )
 
     assert scored.lifecycle_status is IdeaLifecycleStatus.GENERATED
     assert scored.score is not None
     assert scored.score.score == breakdown.final_score
-    assert scored.score.policy_version == POLICY.policy_version
+    assert scored.score.policy_version == SCORING_POLICY.policy_version
     assert scored.updated_at_utc == datetime(2026, 6, 21, 10, 5, tzinfo=UTC)
 
 
@@ -198,7 +204,7 @@ def test_review_queue_ranking_is_stable_and_priority_bucketed() -> None:
 
     queue = build_review_queue(
         (newer_same_score, newer_high_score, older_same_score),
-        policy=POLICY,
+        policy=QUEUE_POLICY,
         evaluated_at_utc=EVALUATED_AT,
     )
 
@@ -210,6 +216,44 @@ def test_review_queue_ranking_is_stable_and_priority_bucketed() -> None:
     assert [item.rank for item in queue.items] == [1, 2, 3]
     assert queue.items[0].priority_bucket is QueuePriorityBucket.CRITICAL
     assert queue.items[1].priority_bucket is QueuePriorityBucket.HIGH
+
+
+def test_review_queue_ranks_candidates_from_explicitly_approved_score_policies() -> None:
+    queue_policy = ReviewQueuePolicy(
+        policy_version="idea-deterministic-ranking-v1",
+        rankable_score_policy_versions=(
+            "concentration-attention-v1",
+            "idle-liquidity-v1",
+        ),
+    )
+    high_cash = candidate(
+        "idea-high-cash",
+        score=Decimal("80"),
+        score_policy_version="idle-liquidity-v1",
+    )
+    concentration = candidate(
+        "idea-concentration",
+        score=Decimal("90"),
+        score_policy_version="concentration-attention-v1",
+    )
+
+    queue = build_review_queue(
+        (high_cash, concentration),
+        policy=queue_policy,
+        evaluated_at_utc=EVALUATED_AT,
+    )
+
+    assert [item.candidate.candidate_id for item in queue.items] == [
+        "idea-concentration",
+        "idea-high-cash",
+    ]
+    assert {
+        item.candidate.score.policy_version for item in queue.items if item.candidate.score
+    } == {
+        "concentration-attention-v1",
+        "idle-liquidity-v1",
+    }
+    assert {item.policy_version for item in queue.items} == {queue_policy.policy_version}
 
 
 def test_review_queue_excludes_suppressed_blocked_expired_snoozed_and_unscored() -> None:
@@ -229,7 +273,7 @@ def test_review_queue_excludes_suppressed_blocked_expired_snoozed_and_unscored()
 
     queue = build_review_queue(
         (active, suppressed, blocked, expired, snoozed, unscored),
-        policy=POLICY,
+        policy=QUEUE_POLICY,
         evaluated_at_utc=EVALUATED_AT,
         snoozes=(
             QueueSnooze(
@@ -250,6 +294,31 @@ def test_review_queue_excludes_suppressed_blocked_expired_snoozed_and_unscored()
     }
 
 
+def test_review_queue_excludes_scores_from_a_different_policy_version() -> None:
+    current = candidate("idea-current-policy", score=Decimal("70"))
+    stale = candidate(
+        "idea-stale-policy",
+        score=Decimal("99"),
+        score_policy_version="retired-score-policy-v0",
+    )
+
+    queue = build_review_queue(
+        (stale, current),
+        policy=QUEUE_POLICY,
+        evaluated_at_utc=EVALUATED_AT,
+    )
+
+    assert [item.candidate.candidate_id for item in queue.items] == ["idea-current-policy"]
+    assert queue.policy_version == QUEUE_POLICY.policy_version
+    assert queue.exclusions == (
+        QueueExclusion(
+            candidate_id="idea-stale-policy",
+            reason=QueueExclusionReason.UNRANKABLE_SCORE_POLICY,
+            detail="candidate score policy is not rankable under the active queue policy",
+        ),
+    )
+
+
 def test_review_queue_deduplicates_source_signals_and_keeps_highest_ranked_candidate() -> None:
     lower_duplicate = candidate(
         "idea-duplicate-lower",
@@ -264,7 +333,7 @@ def test_review_queue_deduplicates_source_signals_and_keeps_highest_ranked_candi
 
     queue = build_review_queue(
         (lower_duplicate, higher_duplicate),
-        policy=POLICY,
+        policy=QUEUE_POLICY,
         evaluated_at_utc=EVALUATED_AT,
     )
 
@@ -278,7 +347,7 @@ def test_expired_snooze_returns_candidate_to_queue() -> None:
 
     queue = build_review_queue(
         (snoozed,),
-        policy=POLICY,
+        policy=QUEUE_POLICY,
         evaluated_at_utc=EVALUATED_AT,
         snoozes=(
             QueueSnooze(
@@ -307,10 +376,23 @@ def test_scoring_inputs_and_policy_reject_invalid_values() -> None:
         )
 
     with pytest.raises(ValueError, match="priority thresholds must be descending"):
-        IdeaScoringPolicy(
+        ReviewQueuePolicy(
             policy_version="bad-threshold-policy",
+            rankable_score_policy_versions=(SCORING_POLICY.policy_version,),
             critical_threshold=Decimal("70"),
             high_threshold=Decimal("80"),
+        )
+
+    with pytest.raises(ValueError, match="rankable_score_policy_versions is required"):
+        ReviewQueuePolicy(
+            policy_version="missing-score-policies",
+            rankable_score_policy_versions=(),
+        )
+
+    with pytest.raises(ValueError, match="rankable_score_policy_versions must be unique"):
+        ReviewQueuePolicy(
+            policy_version="duplicate-score-policies",
+            rankable_score_policy_versions=("score-v1", "score-v1"),
         )
 
     with pytest.raises(ValueError, match="snoozed_until_utc must be timezone-aware"):
@@ -335,7 +417,7 @@ def test_queue_excludes_non_reviewable_post_review_status() -> None:
         review_posture=ReviewPosture.APPROVED_FOR_CONVERSION,
     )
 
-    queue = build_review_queue((approved,), policy=POLICY, evaluated_at_utc=EVALUATED_AT)
+    queue = build_review_queue((approved,), policy=QUEUE_POLICY, evaluated_at_utc=EVALUATED_AT)
 
     assert queue.items == ()
     assert queue.exclusions[0].reason is QueueExclusionReason.NON_REVIEWABLE_STATUS
@@ -353,7 +435,9 @@ def test_queue_excludes_closed_and_rejected_terminal_statuses() -> None:
         review_posture=ReviewPosture.REJECTED,
     )
 
-    queue = build_review_queue((closed, rejected), policy=POLICY, evaluated_at_utc=EVALUATED_AT)
+    queue = build_review_queue(
+        (closed, rejected), policy=QUEUE_POLICY, evaluated_at_utc=EVALUATED_AT
+    )
 
     assert queue.items == ()
     assert [exclusion.reason for exclusion in queue.exclusions] == [
@@ -371,7 +455,7 @@ def test_queue_item_and_exclusion_validate_required_fields() -> None:
             candidate=active_candidate,
             score=Decimal("75"),
             priority_bucket=QueuePriorityBucket.HIGH,
-            policy_version=POLICY.policy_version,
+            policy_version=QUEUE_POLICY.policy_version,
             reason_codes=(ReasonCode.QUEUE_PRIORITY,),
         )
 
@@ -381,7 +465,7 @@ def test_queue_item_and_exclusion_validate_required_fields() -> None:
             candidate=active_candidate,
             score=Decimal("75"),
             priority_bucket=QueuePriorityBucket.HIGH,
-            policy_version=POLICY.policy_version,
+            policy_version=QUEUE_POLICY.policy_version,
             reason_codes=(),
         )
 
@@ -394,7 +478,11 @@ def test_queue_item_and_exclusion_validate_required_fields() -> None:
 
 
 def test_priority_bucket_boundaries_include_standard_and_watchlist() -> None:
-    assert priority_bucket_for_score(Decimal("50"), policy=POLICY) is QueuePriorityBucket.STANDARD
     assert (
-        priority_bucket_for_score(Decimal("49.99"), policy=POLICY) is QueuePriorityBucket.WATCHLIST
+        priority_bucket_for_score(Decimal("50"), policy=QUEUE_POLICY)
+        is QueuePriorityBucket.STANDARD
+    )
+    assert (
+        priority_bucket_for_score(Decimal("49.99"), policy=QUEUE_POLICY)
+        is QueuePriorityBucket.WATCHLIST
     )

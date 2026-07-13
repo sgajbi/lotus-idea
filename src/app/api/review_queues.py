@@ -38,7 +38,7 @@ from app.application.review_queue import (
     build_review_queue_readiness_snapshot,
 )
 from app.domain.access_scope import QueueAccessScopeFilter
-from app.domain.review_queue_snapshot import (
+from app.domain.review_queue import (
     InvalidReviewQueueSnapshotTokenError,
     ReviewQueueSnapshotConflictError,
     ReviewQueueSnapshotTokenRequiredError,
@@ -384,7 +384,8 @@ ADVISOR_REVIEW_QUEUE_ROUTE: RouteMetadata = {
         f"limit of {DEFAULT_REVIEW_QUEUE_PAGE_LIMIT} and maximum limit of "
         f"{MAX_REVIEW_QUEUE_PAGE_LIMIT}. "
         "Page metadata returns an opaque snapshotToken bound to the evaluation time, "
-        "entitled scope, ranking policy, and queue state. Requests with offset greater "
+        "entitled scope, ranking policy, rankable score-policy set, and queue state. "
+        "Requests with offset greater "
         "than zero must return that token; changed queue state returns a 409 snapshot "
         "conflict so consumers restart without silent skips or duplicates. "
         "When platform caller-context scope headers are present, the route applies "
@@ -422,7 +423,7 @@ ADVISOR_REVIEW_QUEUE_ROUTE: RouteMetadata = {
                                 },
                                 "score": "82",
                                 "priorityBucket": "high",
-                                "policyVersion": "idle-liquidity-v1",
+                                "policyVersion": "idea-deterministic-ranking-v1",
                                 "reasonCodes": ["high_cash_ratio", "review_required"],
                             }
                         ],

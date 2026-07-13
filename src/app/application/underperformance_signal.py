@@ -5,6 +5,7 @@ from datetime import date, datetime
 from decimal import Decimal
 
 from app.domain import (
+    CandidateScorePolicyVersion,
     OpportunityFamily,
     ReasonCode,
     SignalEvaluationOutcome,
@@ -51,7 +52,7 @@ class EvaluateUnderperformanceFromPerformanceCommand:
 
 
 DEFAULT_UNDERPERFORMANCE_POLICY = UnderperformanceSignalPolicy(
-    policy_version="underperformance-review-v1",
+    policy_version=CandidateScorePolicyVersion.UNDERPERFORMANCE.value,
     active_return_threshold=Decimal("-0.005"),
     candidate_score=Decimal("74"),
 )

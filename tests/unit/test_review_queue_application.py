@@ -28,6 +28,7 @@ from app.domain import (
     QueueSnooze,
     ReasonCode,
     ReviewQueueSnapshotConflictError,
+    ReviewQueuePolicy,
     SourceRef,
     SourceSystem,
     visible_review_queue_candidate_records,
@@ -305,7 +306,8 @@ def test_build_review_queue_from_repository_uses_repository_side_page_projection
             *,
             evaluated_at_utc: datetime,
             expected_snapshot_token: str | None,
-            policy_version: str,
+            queue_policy_version: str,
+            rankable_score_policy_versions: tuple[str, ...],
             access_scope_filter: QueueAccessScopeFilter | None,
             limit: int,
             offset: int,
@@ -313,7 +315,8 @@ def test_build_review_queue_from_repository_uses_repository_side_page_projection
             assert access_scope_filter is None
             assert evaluated_at_utc == EVALUATED_AT
             assert expected_snapshot_token == "rqs1_" + "a" * 64
-            assert policy_version == "idea-deterministic-ranking-v1"
+            assert queue_policy_version == "idea-deterministic-ranking-v1"
+            assert "idle-liquidity-v1" in rankable_score_policy_versions
             self.requested_limit = limit
             self.requested_offset = offset
             return ReviewQueueRepositoryPage(
@@ -346,6 +349,36 @@ def test_build_review_queue_from_repository_uses_repository_side_page_projection
     assert page.page.total_reviewable_item_count == 3
     assert page.page.returned_item_count == 1
     assert page.page.next_offset == 2
+
+
+def test_queue_snapshot_binds_rankable_score_policy_set() -> None:
+    repository = InMemoryIdeaRepository()
+    persist_high_cash_candidate(repository)
+    current_policy = ReviewQueuePolicy(
+        policy_version="idea-deterministic-ranking-v1",
+        rankable_score_policy_versions=("idle-liquidity-v1",),
+    )
+    expanded_policy = ReviewQueuePolicy(
+        policy_version="idea-deterministic-ranking-v1",
+        rankable_score_policy_versions=(
+            "concentration-attention-v1",
+            "idle-liquidity-v1",
+        ),
+    )
+    command = BuildReviewQueueFromRepositoryCommand(evaluated_at_utc=EVALUATED_AT)
+
+    current_page = build_review_queue_from_repository(
+        command,
+        repository=repository,
+        policy=current_policy,
+    )
+    expanded_page = build_review_queue_from_repository(
+        command,
+        repository=repository,
+        policy=expanded_policy,
+    )
+
+    assert current_page.page.snapshot_token != expanded_page.page.snapshot_token
 
 
 def test_build_review_queue_from_repository_pages_scope_filtered_items_and_exclusions() -> None:
@@ -625,6 +658,42 @@ def test_build_review_queue_readiness_snapshot_preserves_non_storage_blockers() 
     assert "workbench_product_proof_missing" in snapshot.certification_blockers
 
 
+def test_review_queue_readiness_blocks_unrankable_score_policy() -> None:
+    repository = InMemoryIdeaRepository()
+    candidate_id = persist_high_cash_candidate(repository, suffix="-stale-policy")
+    original = repository.snapshot()
+    record = original.candidate_records[candidate_id]
+    assert record.candidate.score is not None
+    stale_record = replace(
+        record,
+        candidate=replace(
+            record.candidate,
+            score=replace(
+                record.candidate.score,
+                policy_version="idea-deterministic-ranking-v0",
+            ),
+        ),
+    )
+    stale_snapshot = replace(
+        original,
+        candidate_records={candidate_id: stale_record},
+    )
+
+    class StaleScoreRepository:
+        def snapshot(self) -> IdeaRepositorySnapshot:
+            return stale_snapshot
+
+    snapshot = build_review_queue_readiness_snapshot(
+        BuildReviewQueueFromRepositoryCommand(evaluated_at_utc=EVALUATED_AT),
+        repository=StaleScoreRepository(),
+        durable_storage_backed=False,
+    )
+
+    assert snapshot.reviewable_item_count == 0
+    assert snapshot.exclusion_counts["unrankable_score_policy"] == 1
+    assert "review_queue_score_policy_coverage_incomplete" in snapshot.certification_blockers
+
+
 def test_build_review_queue_readiness_snapshot_clears_repository_side_pagination_blocker() -> None:
     class RepositorySideReadinessRepository:
         def __init__(self) -> None:
@@ -637,10 +706,12 @@ def test_build_review_queue_readiness_snapshot_clears_repository_side_pagination
             self,
             *,
             evaluated_at_utc: datetime,
+            rankable_score_policy_versions: tuple[str, ...],
             access_scope_filter: QueueAccessScopeFilter | None,
         ) -> ReviewQueueReadinessRepositorySummary:
             assert access_scope_filter is None
             assert evaluated_at_utc == EVALUATED_AT
+            assert "idle-liquidity-v1" in rankable_score_policy_versions
             self.readiness_summary_count += 1
             return ReviewQueueReadinessRepositorySummary(
                 candidate_snapshot_count=2,

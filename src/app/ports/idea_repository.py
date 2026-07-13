@@ -128,7 +128,8 @@ class ReviewQueueProjectionRepository(Protocol):
         *,
         evaluated_at_utc: datetime,
         expected_snapshot_token: str | None,
-        policy_version: str,
+        queue_policy_version: str,
+        rankable_score_policy_versions: tuple[str, ...],
         access_scope_filter: QueueAccessScopeFilter | None,
         limit: int,
         offset: int,
@@ -141,6 +142,7 @@ class ReviewQueueReadinessProjectionRepository(Protocol):
         self,
         *,
         evaluated_at_utc: datetime,
+        rankable_score_policy_versions: tuple[str, ...],
         access_scope_filter: QueueAccessScopeFilter | None,
     ) -> ReviewQueueReadinessRepositorySummary: ...
 

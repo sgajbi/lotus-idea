@@ -6,6 +6,7 @@ from decimal import Decimal
 from typing import Any
 
 from app.domain import (
+    CandidateScorePolicyVersion,
     CandidatePersistenceResult,
     EventLineageContext,
     HighCashSignalInput,
@@ -79,7 +80,7 @@ class HighCashSignalPersistenceResult:
 
 
 DEFAULT_HIGH_CASH_POLICY = HighCashSignalPolicy(
-    policy_version="idle-liquidity-v1",
+    policy_version=CandidateScorePolicyVersion.HIGH_CASH.value,
     cash_weight_threshold=Decimal("0.12"),
     candidate_score=Decimal("82"),
 )

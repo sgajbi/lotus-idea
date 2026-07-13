@@ -5,6 +5,7 @@ from datetime import date, datetime
 from decimal import Decimal
 
 from app.domain import (
+    CandidateScorePolicyVersion,
     BondMaturitySignalInput,
     BondMaturitySignalPolicy,
     OpportunityFamily,
@@ -52,7 +53,7 @@ class EvaluateBondMaturityFromCoreCommand:
 
 
 DEFAULT_BOND_MATURITY_POLICY = BondMaturitySignalPolicy(
-    policy_version="bond-maturity-review-v1",
+    policy_version=CandidateScorePolicyVersion.BOND_MATURITY.value,
     maturity_window_days=30,
     candidate_score=Decimal("70"),
 )

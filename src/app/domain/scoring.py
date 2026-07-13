@@ -5,18 +5,10 @@ from datetime import UTC, datetime
 from decimal import Decimal, ROUND_HALF_UP
 from enum import StrEnum
 
-from app.domain.access_scope import QueueAccessScopeFilter
-from app.domain.candidate_state import (
-    REVIEWABLE_LIFECYCLE_STATUSES,
-    candidate_state_is_compatible,
-)
 from app.domain.ideas import (
-    EvidenceSupportability,
     IdeaCandidate,
-    IdeaLifecycleStatus,
     IdeaScore,
     ReasonCode,
-    ReviewPosture,
 )
 
 
@@ -49,25 +41,25 @@ class ScoreComponent(StrEnum):
     DOWNSTREAM_FIT = "downstream_fit"
 
 
-class QueuePriorityBucket(StrEnum):
-    CRITICAL = "critical"
-    HIGH = "high"
-    STANDARD = "standard"
-    WATCHLIST = "watchlist"
+class CandidateScorePolicyVersion(StrEnum):
+    ALLOCATION_DRIFT = "allocation-drift-mandate-review-v1"
+    BOND_MATURITY = "bond-maturity-review-v1"
+    LOW_INCOME = "cashflow-liquidity-review-v1"
+    CONCENTRATION = "concentration-attention-v1"
+    DRAWDOWN_REVIEW = "drawdown-review-attention-v1"
+    HIGH_VOLATILITY = "high-volatility-attention-v1"
+    WEIGHTED_EVIDENCE = "idea-weighted-evidence-score-v1"
+    HIGH_CASH = "idle-liquidity-v1"
+    MANDATE_RESTRICTION = "mandate-restriction-review-v1"
+    MISSING_BENCHMARK = "missing-benchmark-review-v1"
+    MISSING_RISK_PROFILE = "missing-risk-profile-review-v1"
+    MISSING_SUITABILITY = "missing-suitability-context-review-v1"
+    UNDERPERFORMANCE = "underperformance-review-v1"
 
 
-class QueueExclusionReason(StrEnum):
-    INVALID_STATE = "invalid_state"
-    SUPPRESSED = "suppressed"
-    DUPLICATE = "duplicate"
-    EXPIRED = "expired"
-    CLOSED = "closed"
-    REJECTED = "rejected"
-    UNSUPPORTED_EVIDENCE = "unsupported_evidence"
-    SNOOZED = "snoozed"
-    UNSCORED = "unscored"
-    NON_REVIEWABLE_STATUS = "non_reviewable_status"
-    ACCESS_SCOPE_MISMATCH = "access_scope_mismatch"
+DEFAULT_RANKABLE_SCORE_POLICY_VERSIONS: tuple[str, ...] = tuple(
+    version.value for version in CandidateScorePolicyVersion
+)
 
 
 @dataclass(frozen=True)
@@ -105,9 +97,6 @@ class IdeaScoringPolicy:
     relevance_weight: Decimal = Decimal("0.10")
     downstream_fit_weight: Decimal = Decimal("0.15")
     conflict_penalty: Decimal = Decimal("15")
-    critical_threshold: Decimal = Decimal("85")
-    high_threshold: Decimal = Decimal("70")
-    standard_threshold: Decimal = Decimal("50")
 
     def __post_init__(self) -> None:
         _require_text(self.policy_version, "policy_version")
@@ -122,20 +111,7 @@ class IdeaScoringPolicy:
         )
         if sum(weights, Decimal("0")) != Decimal("1.00"):
             raise ValueError("score weights must sum to 1.00")
-        for field_name, value in (
-            ("conflict_penalty", self.conflict_penalty),
-            ("critical_threshold", self.critical_threshold),
-            ("high_threshold", self.high_threshold),
-            ("standard_threshold", self.standard_threshold),
-        ):
-            _require_score(value, field_name)
-        if not (
-            self.critical_threshold
-            >= self.high_threshold
-            >= self.standard_threshold
-            >= Decimal("0")
-        ):
-            raise ValueError("priority thresholds must be descending")
+        _require_score(self.conflict_penalty, "conflict_penalty")
 
 
 @dataclass(frozen=True)
@@ -155,65 +131,9 @@ class ScoreBreakdown:
     conflict_penalty_applied: Decimal = Decimal("0")
 
 
-@dataclass(frozen=True)
-class QueueSnooze:
-    candidate_id: str
-    snoozed_until_utc: datetime
-    reason_codes: tuple[ReasonCode, ...]
-
-    def __post_init__(self) -> None:
-        _require_text(self.candidate_id, "candidate_id")
-        _require_aware_utc(self.snoozed_until_utc, "snoozed_until_utc")
-        if not self.reason_codes:
-            raise ValueError("reason_codes is required")
-        object.__setattr__(self, "reason_codes", tuple(self.reason_codes))
-
-
-@dataclass(frozen=True)
-class QueueExclusion:
-    candidate_id: str
-    reason: QueueExclusionReason
-    detail: str
-
-    def __post_init__(self) -> None:
-        _require_text(self.candidate_id, "candidate_id")
-        _require_text(self.detail, "detail")
-
-
-@dataclass(frozen=True)
-class ReviewQueueItem:
-    rank: int
-    candidate: IdeaCandidate
-    score: Decimal
-    priority_bucket: QueuePriorityBucket
-    policy_version: str
-    reason_codes: tuple[ReasonCode, ...]
-
-    def __post_init__(self) -> None:
-        if self.rank < 1:
-            raise ValueError("rank must be greater than zero")
-        _require_text(self.policy_version, "policy_version")
-        _require_score(self.score, "score")
-        if not self.reason_codes:
-            raise ValueError("reason_codes is required")
-        object.__setattr__(self, "reason_codes", tuple(self.reason_codes))
-
-
-@dataclass(frozen=True)
-class ReviewQueueProjection:
-    policy_version: str
-    evaluated_at_utc: datetime
-    items: tuple[ReviewQueueItem, ...]
-    exclusions: tuple[QueueExclusion, ...]
-
-    def __post_init__(self) -> None:
-        _require_text(self.policy_version, "policy_version")
-        _require_aware_utc(self.evaluated_at_utc, "evaluated_at_utc")
-        object.__setattr__(self, "items", tuple(self.items))
-        object.__setattr__(self, "exclusions", tuple(self.exclusions))
-
-
-DEFAULT_SCORING_POLICY = IdeaScoringPolicy(policy_version="idea-deterministic-ranking-v1")
+DEFAULT_SCORING_POLICY = IdeaScoringPolicy(
+    policy_version=CandidateScorePolicyVersion.WEIGHTED_EVIDENCE.value
+)
 
 _SCORE_REASON_CODES: tuple[ReasonCode, ...] = (
     ReasonCode.MATERIALITY_SCORE,
@@ -288,164 +208,3 @@ def score_inputs(
         contributions=contributions,
         conflict_penalty_applied=penalty,
     )
-
-
-def build_review_queue(
-    candidates: tuple[IdeaCandidate, ...],
-    *,
-    policy: IdeaScoringPolicy = DEFAULT_SCORING_POLICY,
-    evaluated_at_utc: datetime | None = None,
-    snoozes: tuple[QueueSnooze, ...] = (),
-    access_scope_filter: QueueAccessScopeFilter | None = None,
-) -> ReviewQueueProjection:
-    evaluated_at = evaluated_at_utc or datetime.now(UTC)
-    _require_aware_utc(evaluated_at, "evaluated_at_utc")
-    active_snoozes = {
-        snooze.candidate_id: snooze for snooze in snoozes if snooze.snoozed_until_utc > evaluated_at
-    }
-    exclusions: list[QueueExclusion] = []
-    eligible_candidates: list[IdeaCandidate] = []
-    for candidate in candidates:
-        exclusion = _queue_exclusion_for_candidate(
-            candidate,
-            active_snoozes,
-            access_scope_filter,
-        )
-        if exclusion is None:
-            eligible_candidates.append(candidate)
-        else:
-            exclusions.append(exclusion)
-
-    winners_by_signal: dict[tuple[str, ...], IdeaCandidate] = {}
-    for candidate in sorted(eligible_candidates, key=_queue_sort_key):
-        signal_key = tuple(sorted(candidate.source_signal_ids))
-        if signal_key in winners_by_signal:
-            exclusions.append(
-                QueueExclusion(
-                    candidate_id=candidate.candidate_id,
-                    reason=QueueExclusionReason.DUPLICATE,
-                    detail=f"duplicate source signals already represented by {signal_key}",
-                )
-            )
-            continue
-        winners_by_signal[signal_key] = candidate
-
-    ranked_candidates = sorted(winners_by_signal.values(), key=_queue_sort_key)
-    items = tuple(
-        ReviewQueueItem(
-            rank=index + 1,
-            candidate=candidate,
-            score=_candidate_score(candidate),
-            priority_bucket=priority_bucket_for_score(_candidate_score(candidate), policy=policy),
-            policy_version=candidate.score.policy_version
-            if candidate.score
-            else policy.policy_version,
-            reason_codes=(
-                candidate.score.reason_codes if candidate.score else (ReasonCode.QUEUE_PRIORITY,)
-            ),
-        )
-        for index, candidate in enumerate(ranked_candidates)
-    )
-    return ReviewQueueProjection(
-        policy_version=policy.policy_version,
-        evaluated_at_utc=evaluated_at,
-        items=items,
-        exclusions=tuple(exclusions),
-    )
-
-
-def priority_bucket_for_score(
-    score: Decimal,
-    *,
-    policy: IdeaScoringPolicy = DEFAULT_SCORING_POLICY,
-) -> QueuePriorityBucket:
-    _require_score(score, "score")
-    if score >= policy.critical_threshold:
-        return QueuePriorityBucket.CRITICAL
-    if score >= policy.high_threshold:
-        return QueuePriorityBucket.HIGH
-    if score >= policy.standard_threshold:
-        return QueuePriorityBucket.STANDARD
-    return QueuePriorityBucket.WATCHLIST
-
-
-def _queue_exclusion_for_candidate(
-    candidate: IdeaCandidate,
-    active_snoozes: dict[str, QueueSnooze],
-    access_scope_filter: QueueAccessScopeFilter | None,
-) -> QueueExclusion | None:
-    if access_scope_filter is not None and not access_scope_filter.matches(candidate.access_scope):
-        return QueueExclusion(
-            candidate_id=candidate.candidate_id,
-            reason=QueueExclusionReason.ACCESS_SCOPE_MISMATCH,
-            detail="candidate is outside the requested advisor access scope",
-        )
-    if not candidate_state_is_compatible(candidate.lifecycle_status, candidate.review_posture):
-        return QueueExclusion(
-            candidate_id=candidate.candidate_id,
-            reason=QueueExclusionReason.INVALID_STATE,
-            detail="candidate lifecycle and review posture are incompatible",
-        )
-    if candidate.candidate_id in active_snoozes:
-        snooze = active_snoozes[candidate.candidate_id]
-        return QueueExclusion(
-            candidate_id=candidate.candidate_id,
-            reason=QueueExclusionReason.SNOOZED,
-            detail=f"snoozed until {snooze.snoozed_until_utc.isoformat()}",
-        )
-    if (
-        candidate.suppression_reason is not None
-        or candidate.review_posture is ReviewPosture.SUPPRESSED
-    ):
-        return QueueExclusion(
-            candidate_id=candidate.candidate_id,
-            reason=QueueExclusionReason.SUPPRESSED,
-            detail="candidate is suppressed",
-        )
-    if candidate.lifecycle_status is IdeaLifecycleStatus.EXPIRED:
-        return QueueExclusion(
-            candidate_id=candidate.candidate_id,
-            reason=QueueExclusionReason.EXPIRED,
-            detail="candidate lifecycle is expired",
-        )
-    if candidate.lifecycle_status is IdeaLifecycleStatus.CLOSED:
-        return QueueExclusion(
-            candidate_id=candidate.candidate_id,
-            reason=QueueExclusionReason.CLOSED,
-            detail="candidate lifecycle is closed",
-        )
-    if candidate.lifecycle_status is IdeaLifecycleStatus.REJECTED:
-        return QueueExclusion(
-            candidate_id=candidate.candidate_id,
-            reason=QueueExclusionReason.REJECTED,
-            detail="candidate lifecycle is rejected",
-        )
-    if candidate.evidence_packet.supportability is EvidenceSupportability.BLOCKED:
-        return QueueExclusion(
-            candidate_id=candidate.candidate_id,
-            reason=QueueExclusionReason.UNSUPPORTED_EVIDENCE,
-            detail="candidate evidence is blocked",
-        )
-    if candidate.score is None:
-        return QueueExclusion(
-            candidate_id=candidate.candidate_id,
-            reason=QueueExclusionReason.UNSCORED,
-            detail="candidate has no score",
-        )
-    if candidate.lifecycle_status not in REVIEWABLE_LIFECYCLE_STATUSES:
-        return QueueExclusion(
-            candidate_id=candidate.candidate_id,
-            reason=QueueExclusionReason.NON_REVIEWABLE_STATUS,
-            detail=f"candidate lifecycle is {candidate.lifecycle_status.value}",
-        )
-    return None
-
-
-def _queue_sort_key(candidate: IdeaCandidate) -> tuple[Decimal, datetime, str]:
-    return (-_candidate_score(candidate), candidate.created_at_utc, candidate.candidate_id)
-
-
-def _candidate_score(candidate: IdeaCandidate) -> Decimal:
-    if candidate.score is None:
-        return Decimal("0")
-    return candidate.score.score

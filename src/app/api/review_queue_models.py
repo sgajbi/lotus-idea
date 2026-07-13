@@ -40,7 +40,11 @@ class ReviewQueueItemResponse(CamelModel):
     candidate: ReviewQueueCandidateResponse
     score: str
     priority_bucket: str = Field(..., alias="priorityBucket")
-    policy_version: str = Field(..., alias="policyVersion")
+    policy_version: str = Field(
+        ...,
+        alias="policyVersion",
+        description="Review-queue ranking policy applied to this item.",
+    )
     reason_codes: tuple[str, ...] = Field(..., alias="reasonCodes")
 
     @classmethod
@@ -97,7 +101,11 @@ class ReviewQueuePageResponse(CamelModel):
 
 
 class AdvisorReviewQueueResponse(CamelModel):
-    policy_version: str = Field(..., alias="policyVersion")
+    policy_version: str = Field(
+        ...,
+        alias="policyVersion",
+        description="Review-queue ranking policy applied to this projection.",
+    )
     evaluated_at_utc: datetime = Field(..., alias="evaluatedAtUtc")
     items: tuple[ReviewQueueItemResponse, ...]
     exclusions: tuple[ReviewQueueExclusionResponse, ...]

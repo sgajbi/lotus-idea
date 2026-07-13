@@ -130,6 +130,20 @@ def test_repository_hygiene_gate_enforces_persistence_bounded_module_placement()
     assert violations == [f"{required_path}: required bounded-module path is missing"]
 
 
+def test_repository_hygiene_gate_enforces_review_queue_domain_package() -> None:
+    module = _load_repository_hygiene_gate()
+    required_path = "src/app/domain/review_queue/snapshot.py"
+    retired_path = "src/app/domain/review_queue_snapshot.py"
+    tracked_paths = sorted(module.REQUIRED_BOUNDED_MODULE_PATHS - {required_path} | {retired_path})
+
+    violations = module.find_bounded_module_placement_violations(tracked_paths)
+
+    assert violations == [
+        f"{required_path}: required bounded-module path is missing",
+        f"{retired_path}: legacy flat-module path must not be reintroduced",
+    ]
+
+
 def test_repository_hygiene_gate_rejects_rfc_coupled_executable_names() -> None:
     module = _load_repository_hygiene_gate()
 

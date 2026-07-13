@@ -5,6 +5,7 @@ from datetime import date, datetime
 from decimal import Decimal
 
 from app.domain import (
+    CandidateScorePolicyVersion,
     MissingSuitabilityContextSignalInput,
     MissingSuitabilityContextSignalPolicy,
     OpportunityFamily,
@@ -53,7 +54,7 @@ class EvaluateMissingSuitabilityContextFromAdviseCommand:
 
 
 DEFAULT_MISSING_SUITABILITY_CONTEXT_POLICY = MissingSuitabilityContextSignalPolicy(
-    policy_version="missing-suitability-context-review-v1",
+    policy_version=CandidateScorePolicyVersion.MISSING_SUITABILITY.value,
     minimum_open_requirement_count=1,
     candidate_score=Decimal("68"),
 )

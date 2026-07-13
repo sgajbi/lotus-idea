@@ -5,6 +5,7 @@ from datetime import date, datetime
 from decimal import Decimal
 
 from app.domain import (
+    CandidateScorePolicyVersion,
     MissingBenchmarkSignalInput,
     MissingBenchmarkSignalPolicy,
     OpportunityFamily,
@@ -53,7 +54,7 @@ class EvaluateMissingBenchmarkFromCoreCommand:
 
 
 DEFAULT_MISSING_BENCHMARK_POLICY = MissingBenchmarkSignalPolicy(
-    policy_version="missing-benchmark-review-v1",
+    policy_version=CandidateScorePolicyVersion.MISSING_BENCHMARK.value,
     candidate_score=Decimal("68"),
 )
 
