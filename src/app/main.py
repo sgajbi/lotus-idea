@@ -32,7 +32,7 @@ from app.api.missing_suitability_signals import register_missing_suitability_sig
 from app.api.outbox.delivery import register_outbox_delivery_readiness_routes
 from app.api.outbox.recovery import register_outbox_recovery_routes
 from app.api.report_evidence import register_report_evidence_routes
-from app.api.review_queues import register_review_queue_routes
+from app.api.review_queue.routes import register_review_queue_routes
 from app.api.review_workflow import register_review_workflow_routes
 from app.api.runtime_trust_telemetry import register_runtime_trust_telemetry_routes
 from app.api.source_ingestion_readiness import register_source_ingestion_readiness_routes

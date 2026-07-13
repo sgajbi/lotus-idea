@@ -202,6 +202,7 @@ def build_review_queue_readiness_snapshot(
         record.candidate
         for record in visible_review_queue_candidate_records(
             tuple(snapshot.candidate_records.values()),
+            audience=command.audience,
             evaluated_at_utc=command.evaluated_at_utc,
         )
     )

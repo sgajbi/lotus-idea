@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import datetime
+from typing import Annotated
 
-from fastapi import Header, Query
+from fastapi import Depends, Header, Query
 
 from app.api.caller_headers import TRUSTED_CALLER_CONTEXT_HEADER
 from app.application.review_queue import (
@@ -13,15 +14,12 @@ from app.application.review_queue import (
 
 
 @dataclass(frozen=True)
-class ReviewQueueRequest:
+class ReviewQueueScopeRequest:
     evaluated_at_utc: datetime | None
     tenant_id: str | None
     book_id: str | None
     portfolio_id: str | None
     client_id: str | None
-    limit: int
-    offset: int
-    snapshot_token: str | None
     caller_subject: str | None
     caller_roles: str | None
     caller_capabilities: str | None
@@ -32,19 +30,19 @@ class ReviewQueueRequest:
     trusted_caller_context: str | None
 
 
-def review_queue_request_from_http(
+@dataclass(frozen=True)
+class ReviewQueueRequest(ReviewQueueScopeRequest):
+    limit: int
+    offset: int
+    snapshot_token: str | None
+
+
+def review_queue_scope_request_from_http(
     evaluated_at_utc: datetime | None = Query(default=None, alias="evaluatedAtUtc"),
     tenant_id: str | None = Query(default=None, alias="tenantId"),
     book_id: str | None = Query(default=None, alias="bookId"),
     portfolio_id: str | None = Query(default=None, alias="portfolioId"),
     client_id: str | None = Query(default=None, alias="clientId"),
-    limit: int = Query(
-        default=DEFAULT_REVIEW_QUEUE_PAGE_LIMIT,
-        ge=1,
-        le=MAX_REVIEW_QUEUE_PAGE_LIMIT,
-    ),
-    offset: int = Query(default=0, ge=0),
-    snapshot_token: str | None = Query(default=None, alias="snapshotToken", max_length=69),
     x_caller_subject: str | None = Header(default=None, alias="X-Caller-Subject"),
     x_caller_roles: str | None = Header(default=None, alias="X-Caller-Roles"),
     x_caller_capabilities: str | None = Header(default=None, alias="X-Caller-Capabilities"),
@@ -56,16 +54,13 @@ def review_queue_request_from_http(
         default=None,
         alias=TRUSTED_CALLER_CONTEXT_HEADER,
     ),
-) -> ReviewQueueRequest:
-    return ReviewQueueRequest(
+) -> ReviewQueueScopeRequest:
+    return ReviewQueueScopeRequest(
         evaluated_at_utc=evaluated_at_utc,
         tenant_id=tenant_id,
         book_id=book_id,
         portfolio_id=portfolio_id,
         client_id=client_id,
-        limit=limit,
-        offset=offset,
-        snapshot_token=snapshot_token,
         caller_subject=x_caller_subject,
         caller_roles=x_caller_roles,
         caller_capabilities=x_caller_capabilities,
@@ -75,3 +70,29 @@ def review_queue_request_from_http(
         caller_client_ids=x_caller_client_ids,
         trusted_caller_context=x_lotus_trusted_caller_context,
     )
+
+
+def review_queue_request_from_http(
+    request: Annotated[ReviewQueueScopeRequest, Depends(review_queue_scope_request_from_http)],
+    limit: int = Query(
+        default=DEFAULT_REVIEW_QUEUE_PAGE_LIMIT,
+        ge=1,
+        le=MAX_REVIEW_QUEUE_PAGE_LIMIT,
+    ),
+    offset: int = Query(default=0, ge=0),
+    snapshot_token: str | None = Query(default=None, alias="snapshotToken", max_length=69),
+) -> ReviewQueueRequest:
+    return ReviewQueueRequest(
+        **asdict(request),
+        limit=limit,
+        offset=offset,
+        snapshot_token=snapshot_token,
+    )
+
+
+__all__ = [
+    "ReviewQueueRequest",
+    "ReviewQueueScopeRequest",
+    "review_queue_request_from_http",
+    "review_queue_scope_request_from_http",
+]
