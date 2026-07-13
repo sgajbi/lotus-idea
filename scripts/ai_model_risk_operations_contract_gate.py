@@ -93,7 +93,7 @@ def _validate_header(payload: dict[str, Any]) -> list[str]:
     errors: list[str] = []
     expected = {
         "contract_id": "lotus-idea-ai-model-risk-operations",
-        "contract_version": "1.1.0",
+        "contract_version": "1.2.0",
         "repository": "lotus-idea",
         "lifecycle_status": "implemented_internal_foundation",
         "supportability_status": "not_certified",
@@ -207,8 +207,19 @@ def _validate_execution_provenance(payload: dict[str, Any]) -> list[str]:
         "production_like_policy": "verified_lotus_ai_attestation_required",
         "local_test_policy": "unattested_fixture_allowed_non_production_only",
         "fallback_policy": "deterministic_fallback_allowed_without_ai_execution",
-        "producer_attestation_available": False,
-        "producer_blocker": "sgajbi/lotus-ai#113",
+        "producer_attestation_available": True,
+        "producer_contract": {
+            "issue_ref": "sgajbi/lotus-ai#113",
+            "main_commit_sha": "162df803a7a835813dc17116be674842f12aa544",
+            "main_releasability_run_id": "29153879884",
+        },
+        "consumer_attestation_verification_available": True,
+        "consumer_mainline_evidence": {
+            "main_commit_sha": "f496c4429178eaa5679767bc8f1c3102e17d5eb2",
+            "main_releasability_run_id": "29179489433",
+        },
+        "live_runtime_execution_certified": False,
+        "remaining_certification_issue_ref": "sgajbi/lotus-idea#340",
         "unattested_output_clears_runtime_proof": False,
         "pre_attestation_migration_posture": "explicitly_unverifiable",
     }
