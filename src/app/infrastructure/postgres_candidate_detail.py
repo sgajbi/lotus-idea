@@ -33,16 +33,33 @@ def load_candidate_record_by_id(
 ) -> CandidatePersistenceRecord | None:
     with connection.cursor() as cursor:
         record = _load_base_candidate_record(cursor, candidate_id)
-        if record is None:
-            return None
-        record = _attach_lifecycle_history(cursor, record)
-        record = _attach_audit_events(cursor, record)
-        record = _attach_review_decisions(cursor, record)
-        record = _attach_feedback_events(cursor, record)
-        record = _attach_conversion_intents(cursor, record)
-        record = _attach_conversion_outcomes(cursor, record)
-        record = _attach_report_evidence_packs(cursor, record)
-        return _attach_ai_explanation_lineage_records(cursor, record)
+        return _attach_candidate_details(cursor, record)
+
+
+def load_candidate_record_for_mutation(
+    connection: PostgresConnection,
+    candidate_id: str,
+) -> CandidatePersistenceRecord | None:
+    """Load one mutation-visible aggregate without hydrating unrelated candidates."""
+    with connection.cursor() as cursor:
+        record = _load_mutation_base_candidate_record(cursor, candidate_id)
+        return _attach_candidate_details(cursor, record)
+
+
+def _attach_candidate_details(
+    cursor: PostgresCursor,
+    record: CandidatePersistenceRecord | None,
+) -> CandidatePersistenceRecord | None:
+    if record is None:
+        return None
+    record = _attach_lifecycle_history(cursor, record)
+    record = _attach_audit_events(cursor, record)
+    record = _attach_review_decisions(cursor, record)
+    record = _attach_feedback_events(cursor, record)
+    record = _attach_conversion_intents(cursor, record)
+    record = _attach_conversion_outcomes(cursor, record)
+    record = _attach_report_evidence_packs(cursor, record)
+    return _attach_ai_explanation_lineage_records(cursor, record)
 
 
 def _load_base_candidate_record(
@@ -59,6 +76,30 @@ def _load_base_candidate_record(
           ON lifecycle.candidate_id = candidate.candidate_id
         WHERE candidate.candidate_id = %s
           AND COALESCE(lifecycle.held_from_state, lifecycle.state) = 'active'
+        """,
+        (candidate_id,),
+    )
+    rows = cursor.fetchall()
+    if not rows:
+        return None
+    return candidate_record_from_row(rows[0])
+
+
+def _load_mutation_base_candidate_record(
+    cursor: PostgresCursor,
+    candidate_id: str,
+) -> CandidatePersistenceRecord | None:
+    cursor.execute(
+        """
+        /* lotus-idea candidate-detail-mutation-base */
+        SELECT candidate.candidate_id, candidate.evidence_hash,
+               candidate.candidate_json, candidate.persisted_at_utc
+        FROM idea_candidate_record candidate
+        LEFT JOIN idea_data_lifecycle_control lifecycle
+          ON lifecycle.candidate_id = candidate.candidate_id
+        WHERE candidate.candidate_id = %s
+          AND COALESCE(lifecycle.held_from_state, lifecycle.state, 'active')
+              NOT IN ('erased', 'purged')
         """,
         (candidate_id,),
     )

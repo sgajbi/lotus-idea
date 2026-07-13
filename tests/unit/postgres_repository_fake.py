@@ -47,6 +47,9 @@ class FakePostgresCursor:
         normalized = " ".join(query.lower().split())
         self.connection.executed_sql.append(normalized)
         self.rowcount = 0
+        if normalized.startswith("/* lotus-idea candidate-persistence-"):
+            self._rows = []
+            return
         if _execute_data_lifecycle_query(self, normalized, params):
             return
         if execute_downstream_submission_query(self, normalized, params):

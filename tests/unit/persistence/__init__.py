@@ -1,0 +1,1 @@
+"""Focused persistence infrastructure tests."""
