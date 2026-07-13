@@ -149,6 +149,17 @@ REQUIRED_SURFACES = (
         ("Default Signals", "Sensitive-Content Rule", "Idea Operation Events"),
     ),
     DocumentationSurface(
+        "docs/research/advisor-intelligence-product-differentiation.md",
+        70,
+        (
+            "not implementation or supported-feature evidence",
+            "Differentiation Hypotheses",
+            "Bank-Buyability Controls",
+            "Research-To-Delivery Gate",
+            "`lotus-ai`",
+        ),
+    ),
+    DocumentationSurface(
         "quality/ci_quality_gates.md",
         25,
         ("make documentation-contract-gate", "implementation-truth-gate"),

@@ -208,6 +208,12 @@ reference points:
 3. 2026 OCC/Federal Reserve/FDIC revised model-risk management guidance:
    `https://www.occ.gov/news-issuances/bulletins/2026/bulletin-2026-13.html`
 
+Product research and differentiation decisions are governed by
+`docs/research/advisor-intelligence-product-differentiation.md`. Its candidate
+capabilities are hypotheses, not implementation or supported-feature evidence.
+Refresh its primary-source research and satisfy its research-to-delivery gate
+before resuming material Slice 09 capability implementation.
+
 These references shape controls only. Lotus product truth remains the code,
 tests, RFC evidence, supported-features ledger, CI, and published wiki source.
 
