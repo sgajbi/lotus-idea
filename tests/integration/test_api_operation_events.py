@@ -21,7 +21,8 @@ import app.api.missing_benchmark_signals as missing_benchmark_signals_api
 import app.api.missing_risk_profile_signals as missing_risk_profile_signals_api
 import app.api.missing_suitability_signals as missing_suitability_signals_api
 import app.api.report_evidence as report_evidence_api
-import app.api.review_queues as review_queues_api
+import app.api.review_queue.routes as review_queues_api
+import app.api.review_queue.operator_exceptions as review_queue_exceptions_api
 import app.api.review_workflow as review_workflow_api
 import app.api.underperformance_signals as underperformance_signals_api
 from app.runtime.source_ingestion_state import (
@@ -1005,6 +1006,27 @@ def test_role_specific_review_queues_emit_operation_events(
     assert events == [
         ("review_queue_read", "accepted", "lotus-idea", False, None),
         ("review_queue_read", "accepted", "lotus-idea", False, None),
+    ]
+
+
+def test_operator_review_queue_exceptions_emit_bounded_operation_event(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    reset_idea_repository_for_tests()
+    events = capture_operation_events(monkeypatch, review_queue_exceptions_api)
+
+    response = TestClient(app).get(
+        "/api/v1/review-queues/operator/exceptions",
+        headers={
+            "X-Caller-Subject": "platform-operator",
+            "X-Caller-Roles": "operator",
+            "X-Caller-Capabilities": "idea.review.queue.exceptions.read",
+        },
+    )
+
+    assert response.status_code == 200
+    assert events == [
+        ("review_queue_exception_read", "accepted", "lotus-idea", False, None),
     ]
 
 

@@ -106,6 +106,23 @@ def readiness_headers(
     }
 
 
+def operator_exception_headers(
+    *,
+    role: str = "operator",
+    capability: str = "idea.review.queue.exceptions.read",
+) -> dict[str, str]:
+    headers = role_queue_headers(role=role, capability=capability)
+    headers.update(
+        {
+            "X-Caller-Tenant-Ids": "tenant-private-bank-sg",
+            "X-Caller-Book-Ids": "book-advisor-001",
+            "X-Caller-Portfolio-Ids": "PB_SG_GLOBAL_BAL_001",
+            "X-Caller-Client-Ids": "client-001",
+        }
+    )
+    return headers
+
+
 def role_queue_headers(*, role: str, capability: str) -> dict[str, str]:
     return {
         "X-Caller-Subject": f"{role}-001",
@@ -294,6 +311,82 @@ def test_role_specific_review_queues_reject_cross_role_callers(
 
     assert response.status_code == 403
     assert response.json()["code"] == "permission_denied"
+
+
+def test_operator_exception_queue_reports_support_posture_by_audience() -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+    candidate_ids = tuple(
+        persist_candidate(
+            client,
+            cash_weight=f"0.{18 + index}",
+            suffix=f"-operator-exception-{index}",
+            idempotency_key=f"seed-review-queue-operator-exception-{index}",
+            candidate_scope=access_scope(),
+        )
+        for index in range(3)
+    )
+    snapshot = get_idea_repository().snapshot()
+    routed_records = dict(snapshot.candidate_records)
+    for candidate_id, posture in zip(
+        candidate_ids,
+        (
+            ReviewPosture.ADVISOR_REVIEW_REQUIRED,
+            ReviewPosture.PM_REVIEW_REQUIRED,
+            ReviewPosture.COMPLIANCE_REVIEW_REQUIRED,
+        ),
+        strict=True,
+    ):
+        record = routed_records[candidate_id]
+        routed_records[candidate_id] = replace(
+            record,
+            candidate=replace(record.candidate, review_posture=posture, score=None),
+        )
+    reset_idea_repository_for_tests(
+        InMemoryIdeaRepository(replace(snapshot, candidate_records=routed_records))
+    )
+
+    response = client.get(
+        "/api/v1/review-queues/operator/exceptions?evaluatedAtUtc=2026-06-21T10:10:00Z",
+        headers=operator_exception_headers(),
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert [audience["audience"] for audience in payload["audiences"]] == [
+        "advisor",
+        "portfolio_manager",
+        "compliance",
+    ]
+    assert [audience["candidateSnapshotCount"] for audience in payload["audiences"]] == [1, 1, 1]
+    assert [audience["exceptionCounts"]["unscored"] for audience in payload["audiences"]] == [
+        1,
+        1,
+        1,
+    ]
+    assert payload["totalExceptionCount"] == 3
+    assert payload["supportabilityStatus"] == "not_certified"
+    assert payload["supportedFeaturePromoted"] is False
+    assert all(candidate_id not in response.text for candidate_id in candidate_ids)
+
+
+def test_operator_exception_queue_enforces_role_and_entitled_scope() -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+
+    wrong_role = client.get(
+        "/api/v1/review-queues/operator/exceptions",
+        headers=operator_exception_headers(role="advisor"),
+    )
+    broader_query = client.get(
+        "/api/v1/review-queues/operator/exceptions?portfolioId=PB_SG_OTHER_002",
+        headers=operator_exception_headers(),
+    )
+
+    assert wrong_role.status_code == 403
+    assert wrong_role.json()["code"] == "permission_denied"
+    assert broader_query.status_code == 403
+    assert broader_query.json()["code"] == "permission_denied"
 
 
 def test_advisor_review_queue_api_defaults_to_active_queue_snapshot() -> None:

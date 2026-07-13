@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Annotated
 
 from fastapi import Depends, FastAPI, Header, Query, status
@@ -17,7 +17,10 @@ from app.api.problem_details import (
     invalid_request_metadata,
     permission_denied_metadata,
 )
-from app.api.review_queue import ReviewQueueRequest, review_queue_request_from_http
+from app.api.review_queue.requests import ReviewQueueRequest, review_queue_request_from_http
+from app.api.review_queue.access import effective_queue_scope_filter
+from app.api.review_queue.constants import ACTIVE_REVIEW_QUEUE_EVALUATED_AT_UTC
+from app.api.review_queue.operator_exceptions import register_review_queue_exception_route
 from app.api.review_queue_models import (
     BusinessReviewQueueResponse,
     ReviewQueueCandidateResponse,
@@ -94,9 +97,6 @@ _READ_QUEUE_READINESS_POLICY = CapabilityPolicy.for_roles(
     required_capability="idea.review.queue.readiness.read",
     allowed_roles=("operator",),
 )
-
-ACTIVE_REVIEW_QUEUE_EVALUATED_AT_UTC = datetime(2026, 6, 21, 10, 10, tzinfo=UTC)
-
 
 async def get_advisor_review_queue(
     request: Annotated[ReviewQueueRequest, Depends(review_queue_request_from_http)],
@@ -192,7 +192,7 @@ def _get_business_review_queue(
             title="Invalid request",
             detail="Scope query fields cannot be blank.",
         )
-    effective_scope_filter = _effective_queue_scope_filter(
+    effective_scope_filter = effective_queue_scope_filter(
         requested_scope_filter=requested_scope_filter,
         caller_scope_filter=caller_access_scope_filter(caller),
     )
@@ -297,23 +297,6 @@ async def get_advisor_review_queue_readiness(
         durable_storage_backed=durable_storage_backed,
     )
     return ReviewQueueReadinessResponse.from_domain(snapshot)
-
-
-def _effective_queue_scope_filter(
-    *,
-    requested_scope_filter: QueueAccessScopeFilter,
-    caller_scope_filter: QueueAccessScopeFilter | None,
-) -> QueueAccessScopeFilter | None:
-    if caller_scope_filter is None:
-        return requested_scope_filter
-    if not requested_scope_filter.is_subset_of(caller_scope_filter):
-        return None
-    return QueueAccessScopeFilter(
-        tenant_id=requested_scope_filter.tenant_id or caller_scope_filter.tenant_id,
-        book_id=requested_scope_filter.book_id or caller_scope_filter.book_id,
-        portfolio_id=requested_scope_filter.portfolio_id or caller_scope_filter.portfolio_id,
-        client_id=requested_scope_filter.client_id or caller_scope_filter.client_id,
-    )
 
 
 def _queue_permission_denied_detail(audience: ReviewQueueAudience) -> str:
@@ -713,3 +696,4 @@ def register_review_queue_routes(app: FastAPI) -> None:
         tags=ADVISOR_REVIEW_QUEUE_READINESS_ROUTE["tags"],
         responses=ADVISOR_REVIEW_QUEUE_READINESS_ROUTE["responses"],
     )(get_advisor_review_queue_readiness)
+    register_review_queue_exception_route(app)

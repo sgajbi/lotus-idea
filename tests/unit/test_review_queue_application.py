@@ -17,6 +17,7 @@ from app.application.review_queue import (
     build_review_queue_from_repository,
     build_review_queue_readiness_snapshot,
 )
+from app.application.review_queue_exceptions import build_review_queue_exception_snapshot
 from app.domain import (
     CandidatePersistenceDecision,
     CandidatePersistenceRecord,
@@ -181,6 +182,49 @@ def test_review_queue_routes_candidates_only_to_the_responsible_audience() -> No
         audience=ReviewQueueAudience.PORTFOLIO_MANAGER,
         evaluated_at_utc=EVALUATED_AT,
     ).items == ()
+
+
+def test_operator_exception_snapshot_keeps_audience_counts_isolated() -> None:
+    repository = InMemoryIdeaRepository()
+    candidate_ids = tuple(
+        persist_high_cash_candidate(
+            repository,
+            suffix=f"-operator-exception-{index}",
+            idempotency_key=f"signal-ingestion:high-cash:operator-exception-{index}",
+        )
+        for index in range(3)
+    )
+    snapshot = repository.snapshot()
+    routed_records = dict(snapshot.candidate_records)
+    for candidate_id, posture in zip(
+        candidate_ids,
+        (
+            ReviewPosture.ADVISOR_REVIEW_REQUIRED,
+            ReviewPosture.PM_REVIEW_REQUIRED,
+            ReviewPosture.COMPLIANCE_REVIEW_REQUIRED,
+        ),
+        strict=True,
+    ):
+        record = routed_records[candidate_id]
+        routed_records[candidate_id] = replace(
+            record,
+            candidate=replace(record.candidate, review_posture=posture, score=None),
+        )
+    repository = InMemoryIdeaRepository(replace(snapshot, candidate_records=routed_records))
+
+    exceptions = build_review_queue_exception_snapshot(
+        evaluated_at_utc=EVALUATED_AT,
+        repository=repository,
+        durable_storage_backed=False,
+    )
+
+    assert [summary.audience for summary in exceptions.audiences] == list(ReviewQueueAudience)
+    assert [summary.candidate_snapshot_count for summary in exceptions.audiences] == [1, 1, 1]
+    assert [summary.exception_count for summary in exceptions.audiences] == [1, 1, 1]
+    assert [summary.exception_counts["unscored"] for summary in exceptions.audiences] == [1, 1, 1]
+    assert exceptions.total_exception_count == 3
+    assert exceptions.supportability_status == "not_certified"
+    assert exceptions.supported_feature_promoted is False
 
 
 def test_build_review_queue_from_repository_pages_reviewable_items_deterministically() -> None:
