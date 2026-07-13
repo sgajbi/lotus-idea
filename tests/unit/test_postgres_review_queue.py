@@ -11,6 +11,7 @@ from app.domain import (
     IdeaCandidate,
     IdeaLifecycleStatus,
     QueueAccessScopeFilter,
+    ReviewQueueAudience,
     ReviewQueueSnapshotConflictError,
     ReviewAccessScope,
     ReviewPosture,
@@ -33,6 +34,7 @@ from tests.unit.test_postgres_repository import (
 
 QUEUE_EVALUATED_AT = EVALUATED_AT + timedelta(days=1)
 QUEUE_POLICY_VERSION = "idea-deterministic-ranking-v1"
+QUEUE_AUDIENCE = ReviewQueueAudience.ADVISOR
 RANKABLE_SCORE_POLICY_VERSIONS = ("idle-liquidity-v1",)
 
 
@@ -64,6 +66,7 @@ def test_postgres_repository_review_queue_page_uses_bounded_candidate_projection
 
     page = PostgresIdeaRepository(connection).review_queue_candidate_page(
         evaluated_at_utc=QUEUE_EVALUATED_AT,
+        audience=QUEUE_AUDIENCE,
         expected_snapshot_token=None,
         queue_policy_version=QUEUE_POLICY_VERSION,
         rankable_score_policy_versions=RANKABLE_SCORE_POLICY_VERSIONS,
@@ -117,6 +120,7 @@ def test_postgres_review_queue_excludes_unknown_and_missing_score_policies() -> 
 
     page = repository.review_queue_candidate_page(
         evaluated_at_utc=QUEUE_EVALUATED_AT,
+        audience=QUEUE_AUDIENCE,
         expected_snapshot_token=None,
         queue_policy_version=QUEUE_POLICY_VERSION,
         rankable_score_policy_versions=RANKABLE_SCORE_POLICY_VERSIONS,
@@ -126,6 +130,7 @@ def test_postgres_review_queue_excludes_unknown_and_missing_score_policies() -> 
     )
     readiness = repository.review_queue_readiness_summary(
         evaluated_at_utc=QUEUE_EVALUATED_AT,
+        audience=QUEUE_AUDIENCE,
         rankable_score_policy_versions=RANKABLE_SCORE_POLICY_VERSIONS,
         access_scope_filter=None,
     )
@@ -154,6 +159,7 @@ def test_postgres_review_queue_rejects_stale_token_after_backdated_insert() -> N
     evaluated_at_utc = EVALUATED_AT + timedelta(minutes=10)
     first_page = repository.review_queue_candidate_page(
         evaluated_at_utc=evaluated_at_utc,
+        audience=QUEUE_AUDIENCE,
         expected_snapshot_token=None,
         queue_policy_version=QUEUE_POLICY_VERSION,
         rankable_score_policy_versions=RANKABLE_SCORE_POLICY_VERSIONS,
@@ -173,6 +179,7 @@ def test_postgres_review_queue_rejects_stale_token_after_backdated_insert() -> N
     with pytest.raises(ReviewQueueSnapshotConflictError):
         repository.review_queue_candidate_page(
             evaluated_at_utc=evaluated_at_utc,
+            audience=QUEUE_AUDIENCE,
             expected_snapshot_token=first_page.snapshot_token,
             queue_policy_version=QUEUE_POLICY_VERSION,
             rankable_score_policy_versions=RANKABLE_SCORE_POLICY_VERSIONS,
@@ -197,6 +204,7 @@ def test_postgres_review_queue_token_ignores_insert_after_as_of_boundary() -> No
     evaluated_at_utc = EVALUATED_AT + timedelta(minutes=10)
     first_page = repository.review_queue_candidate_page(
         evaluated_at_utc=evaluated_at_utc,
+        audience=QUEUE_AUDIENCE,
         expected_snapshot_token=None,
         queue_policy_version=QUEUE_POLICY_VERSION,
         rankable_score_policy_versions=RANKABLE_SCORE_POLICY_VERSIONS,
@@ -215,6 +223,7 @@ def test_postgres_review_queue_token_ignores_insert_after_as_of_boundary() -> No
 
     second_page = repository.review_queue_candidate_page(
         evaluated_at_utc=evaluated_at_utc,
+        audience=QUEUE_AUDIENCE,
         expected_snapshot_token=first_page.snapshot_token,
         queue_policy_version=QUEUE_POLICY_VERSION,
         rankable_score_policy_versions=RANKABLE_SCORE_POLICY_VERSIONS,
@@ -249,6 +258,7 @@ def test_postgres_review_queue_quarantines_contradictory_raw_candidate_state() -
 
     page = repository.review_queue_candidate_page(
         evaluated_at_utc=QUEUE_EVALUATED_AT,
+        audience=ReviewQueueAudience.PORTFOLIO_MANAGER,
         expected_snapshot_token=None,
         queue_policy_version=QUEUE_POLICY_VERSION,
         rankable_score_policy_versions=RANKABLE_SCORE_POLICY_VERSIONS,
@@ -258,6 +268,7 @@ def test_postgres_review_queue_quarantines_contradictory_raw_candidate_state() -
     )
     readiness = repository.review_queue_readiness_summary(
         evaluated_at_utc=QUEUE_EVALUATED_AT,
+        audience=ReviewQueueAudience.PORTFOLIO_MANAGER,
         rankable_score_policy_versions=RANKABLE_SCORE_POLICY_VERSIONS,
         access_scope_filter=None,
     )
@@ -302,6 +313,7 @@ def test_postgres_review_queue_scope_filters_cover_all_indexed_fields_and_stable
 
     page = PostgresIdeaRepository(connection).review_queue_candidate_page(
         evaluated_at_utc=QUEUE_EVALUATED_AT,
+        audience=QUEUE_AUDIENCE,
         expected_snapshot_token=None,
         queue_policy_version=QUEUE_POLICY_VERSION,
         rankable_score_policy_versions=RANKABLE_SCORE_POLICY_VERSIONS,
@@ -371,19 +383,20 @@ def test_postgres_review_queue_readiness_summary_uses_bounded_candidate_aggregat
     summary = load_review_queue_readiness_summary(
         connection,
         evaluated_at_utc=QUEUE_EVALUATED_AT,
+        audience=QUEUE_AUDIENCE,
         rankable_score_policy_versions=RANKABLE_SCORE_POLICY_VERSIONS,
         access_scope_filter=QueueAccessScopeFilter(portfolio_id="portfolio-001"),
     )
 
-    assert summary.candidate_snapshot_count == 6
+    assert summary.candidate_snapshot_count == 5
     assert summary.reviewable_item_count == 1
-    assert summary.excluded_candidate_count == 5
+    assert summary.excluded_candidate_count == 4
     assert summary.exclusion_counts["duplicate"] == 1
-    assert summary.exclusion_counts["expired"] == 1
+    assert summary.exclusion_counts["expired"] == 0
     assert summary.exclusion_counts["unsupported_evidence"] == 1
     assert summary.exclusion_counts["unscored"] == 1
     assert summary.exclusion_counts["access_scope_mismatch"] == 1
-    assert summary.scored_candidate_count == 5
+    assert summary.scored_candidate_count == 4
     assert summary.unscored_candidate_count == 1
     executed_sql = " ".join(connection.executed_sql)
     assert "/* lotus-idea review-queue-readiness-summary */" in executed_sql
@@ -403,6 +416,7 @@ def test_review_queue_candidate_page_rejects_unsafe_page_controls() -> None:
         load_review_queue_candidate_page(
             connection,
             evaluated_at_utc=QUEUE_EVALUATED_AT,
+            audience=QUEUE_AUDIENCE,
             expected_snapshot_token=None,
             queue_policy_version=QUEUE_POLICY_VERSION,
             rankable_score_policy_versions=RANKABLE_SCORE_POLICY_VERSIONS,
@@ -415,6 +429,7 @@ def test_review_queue_candidate_page_rejects_unsafe_page_controls() -> None:
         load_review_queue_candidate_page(
             connection,
             evaluated_at_utc=QUEUE_EVALUATED_AT,
+            audience=QUEUE_AUDIENCE,
             expected_snapshot_token=None,
             queue_policy_version=QUEUE_POLICY_VERSION,
             rankable_score_policy_versions=(),
@@ -426,6 +441,7 @@ def test_review_queue_candidate_page_rejects_unsafe_page_controls() -> None:
         load_review_queue_candidate_page(
             connection,
             evaluated_at_utc=QUEUE_EVALUATED_AT,
+            audience=QUEUE_AUDIENCE,
             expected_snapshot_token=None,
             queue_policy_version=QUEUE_POLICY_VERSION,
             rankable_score_policy_versions=RANKABLE_SCORE_POLICY_VERSIONS,
@@ -438,20 +454,23 @@ def test_review_queue_candidate_page_rejects_unsafe_page_controls() -> None:
 def test_review_queue_predicates_use_postgres_array_parameters() -> None:
     _predicate_sql, params = _review_queue_candidate_predicates(
         evaluated_at_utc=QUEUE_EVALUATED_AT,
+        audience=QUEUE_AUDIENCE,
         rankable_score_policy_versions=RANKABLE_SCORE_POLICY_VERSIONS,
         access_scope_filter=QueueAccessScopeFilter(portfolio_id="portfolio-001"),
     )
 
     assert params[0] == QUEUE_EVALUATED_AT
-    assert isinstance(params[1], list)
-    assert params[3] == ["idle-liquidity-v1"]
-    assert isinstance(params[5], list)
-    assert params[5] == ["portfolio-001"]
+    assert params[1] == ReviewPosture.ADVISOR_REVIEW_REQUIRED.value
+    assert isinstance(params[2], list)
+    assert params[4] == ["idle-liquidity-v1"]
+    assert isinstance(params[6], list)
+    assert params[6] == ["portfolio-001"]
 
 
 def test_review_queue_predicates_keep_scope_parameter_order_aligned_to_indexes() -> None:
     predicate_sql, params = _review_queue_candidate_predicates(
         evaluated_at_utc=QUEUE_EVALUATED_AT,
+        audience=QUEUE_AUDIENCE,
         rankable_score_policy_versions=RANKABLE_SCORE_POLICY_VERSIONS,
         access_scope_filter=QueueAccessScopeFilter(
             tenant_id="tenant-001",
@@ -474,7 +493,7 @@ def test_review_queue_predicates_keep_scope_parameter_order_aligned_to_indexes()
         predicate_sql.index(f"->>'{field_name}'")
         for field_name in REVIEW_QUEUE_ACCESS_SCOPE_FILTER_FIELDS
     )
-    assert params[5:] == (
+    assert params[6:] == (
         ["tenant-001"],
         ["book-001"],
         ["portfolio-001"],
@@ -488,6 +507,7 @@ def test_review_queue_candidate_page_handles_empty_count_result() -> None:
     page = load_review_queue_candidate_page(
         connection,
         evaluated_at_utc=QUEUE_EVALUATED_AT,
+        audience=QUEUE_AUDIENCE,
         expected_snapshot_token=None,
         queue_policy_version=QUEUE_POLICY_VERSION,
         rankable_score_policy_versions=RANKABLE_SCORE_POLICY_VERSIONS,

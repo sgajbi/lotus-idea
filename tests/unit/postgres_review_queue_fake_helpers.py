@@ -23,7 +23,11 @@ def review_queue_count_rows(
     query: str,
     params: Sequence[Any],
 ) -> list[dict[str, Any]]:
-    visible_rows = _review_queue_visible_rows(connection, params[0])
+    visible_rows = _review_queue_visible_rows(
+        connection,
+        params[0],
+        required_posture=params[1],
+    )
     rows = _review_queue_ordered_rows(connection, query, params)
     return [
         {
@@ -56,11 +60,12 @@ def review_queue_readiness_summary_rows(
         if f"->>'{field_name}'" in query
     )
     evaluated_at_utc = params[0]
+    required_posture = params[1]
     scope_values = {
         field_name: set(values)
-        for field_name, values in zip(scope_fields, params[1 : 1 + len(scope_fields)], strict=True)
+        for field_name, values in zip(scope_fields, params[2 : 2 + len(scope_fields)], strict=True)
     }
-    offset = 1 + len(scope_fields)
+    offset = 2 + len(scope_fields)
     suppressed_posture = params[offset]
     expired_status = params[offset + 1]
     closed_status = params[offset + 2]
@@ -72,7 +77,11 @@ def review_queue_readiness_summary_rows(
     eligible_rows: list[dict[str, Any]] = []
     scored_candidate_count = 0
     unscored_candidate_count = 0
-    visible_rows = _review_queue_visible_rows(connection, evaluated_at_utc)
+    visible_rows = _review_queue_visible_rows(
+        connection,
+        evaluated_at_utc,
+        required_posture=required_posture,
+    )
     for row in visible_rows:
         candidate_json = row["candidate_json"]
         if candidate_json.get("score") is None:
@@ -119,21 +128,26 @@ def _review_queue_ordered_rows(
     params: Sequence[Any],
 ) -> list[dict[str, Any]]:
     evaluated_at_utc = params[0]
-    lifecycle_statuses = set(params[1])
-    suppressed_posture = params[2]
-    blocked_supportability = params[3]
-    rankable_score_policy_versions = set(params[3])
+    required_posture = params[1]
+    lifecycle_statuses = set(params[2])
+    suppressed_posture = params[3]
+    rankable_score_policy_versions = set(params[4])
+    blocked_supportability = params[5]
     scope_fields = tuple(
         field_name
         for field_name in ("tenant_id", "book_id", "portfolio_id", "client_id")
         if f"->>'{field_name}'" in query
     )
     scope_values = {
-        field_name: set(values) for field_name, values in zip(scope_fields, params[5:], strict=True)
+        field_name: set(values) for field_name, values in zip(scope_fields, params[6:], strict=True)
     }
     eligible_rows = [
         row
-        for row in _review_queue_visible_rows(connection, evaluated_at_utc)
+        for row in _review_queue_visible_rows(
+            connection,
+            evaluated_at_utc,
+            required_posture=required_posture,
+        )
         if _review_queue_row_is_eligible(
             row,
             lifecycle_statuses=lifecycle_statuses,
@@ -153,11 +167,14 @@ def _review_queue_ordered_rows(
 def _review_queue_visible_rows(
     connection: FakeReviewQueueConnection,
     evaluated_at_utc: datetime,
+    *,
+    required_posture: str | None = None,
 ) -> list[dict[str, Any]]:
     return [
         row
         for row in connection.rows["idea_candidate_record"]
         if datetime.fromisoformat(row["candidate_json"]["created_at_utc"]) <= evaluated_at_utc
+        and (required_posture is None or row["review_posture"] == required_posture)
     ]
 
 

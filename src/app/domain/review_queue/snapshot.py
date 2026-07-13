@@ -11,7 +11,7 @@ from typing import Any, Mapping
 
 from app.domain.access_scope import QueueAccessScopeFilter
 from app.domain.persistence_models import CandidatePersistenceRecord
-from app.domain.review_queue.policy import QueueSnooze
+from app.domain.review_queue.policy import QueueSnooze, ReviewQueueAudience
 
 
 REVIEW_QUEUE_SNAPSHOT_TOKEN_VERSION = "rqs1"
@@ -48,11 +48,15 @@ def validate_review_queue_snapshot_token(token: str) -> str:
 def visible_review_queue_candidate_records(
     records: tuple[CandidatePersistenceRecord, ...],
     *,
+    audience: ReviewQueueAudience = ReviewQueueAudience.ADVISOR,
     evaluated_at_utc: datetime,
 ) -> tuple[CandidatePersistenceRecord, ...]:
     _require_aware_datetime(evaluated_at_utc, "evaluated_at_utc")
     return tuple(
-        record for record in records if record.candidate.created_at_utc <= evaluated_at_utc
+        record
+        for record in records
+        if record.candidate.created_at_utc <= evaluated_at_utc
+        and record.candidate.review_posture is audience.required_posture
     )
 
 
@@ -72,6 +76,7 @@ def review_queue_candidate_fingerprint(
 def build_review_queue_snapshot_identity(
     *,
     fingerprint: str,
+    audience: ReviewQueueAudience = ReviewQueueAudience.ADVISOR,
     evaluated_at_utc: datetime,
     policy_version: str,
     rankable_score_policy_versions: tuple[str, ...],
@@ -94,6 +99,7 @@ def build_review_queue_snapshot_identity(
         raise ValueError("rankable_score_policy_versions must be unique")
     token_material = {
         "accessScopeFilter": access_scope_filter,
+        "audience": audience,
         "candidateFingerprint": fingerprint,
         "evaluatedAtUtc": evaluated_at_utc,
         "policyVersion": policy_version,
@@ -117,7 +123,7 @@ def require_matching_review_queue_snapshot(
         return
     if validate_review_queue_snapshot_token(expected_token) != actual_token:
         raise ReviewQueueSnapshotConflictError(
-            "advisor review queue state changed after the requested snapshot"
+            "review queue state changed after the requested snapshot"
         )
 
 

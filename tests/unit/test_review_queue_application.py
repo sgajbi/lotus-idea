@@ -29,8 +29,11 @@ from app.domain import (
     ReasonCode,
     ReviewQueueSnapshotConflictError,
     ReviewQueuePolicy,
+    ReviewQueueAudience,
+    ReviewPosture,
     SourceRef,
     SourceSystem,
+    build_review_queue,
     build_review_queue_snapshot_identity,
     visible_review_queue_candidate_records,
 )
@@ -144,6 +147,40 @@ def test_build_review_queue_from_repository_projects_persisted_candidates() -> N
     assert queue.page.total_reviewable_item_count == 2
     assert queue.page.next_offset is None
     assert queue.page.has_next_page is False
+
+
+def test_review_queue_routes_candidates_only_to_the_responsible_audience() -> None:
+    repository = InMemoryIdeaRepository()
+    candidate_id = persist_high_cash_candidate(repository)
+    record = repository.snapshot().candidate_records[candidate_id]
+
+    advisor_queue = build_review_queue(
+        (record.candidate,),
+        audience=ReviewQueueAudience.ADVISOR,
+        evaluated_at_utc=EVALUATED_AT,
+    )
+    pm_queue = build_review_queue(
+        (replace(record.candidate, review_posture=ReviewPosture.PM_REVIEW_REQUIRED),),
+        audience=ReviewQueueAudience.PORTFOLIO_MANAGER,
+        evaluated_at_utc=EVALUATED_AT,
+    )
+    compliance_queue = build_review_queue(
+        (replace(record.candidate, review_posture=ReviewPosture.COMPLIANCE_REVIEW_REQUIRED),),
+        audience=ReviewQueueAudience.COMPLIANCE,
+        evaluated_at_utc=EVALUATED_AT,
+    )
+
+    assert advisor_queue.audience is ReviewQueueAudience.ADVISOR
+    assert [item.candidate.candidate_id for item in advisor_queue.items] == [candidate_id]
+    assert pm_queue.audience is ReviewQueueAudience.PORTFOLIO_MANAGER
+    assert [item.candidate.candidate_id for item in pm_queue.items] == [candidate_id]
+    assert compliance_queue.audience is ReviewQueueAudience.COMPLIANCE
+    assert [item.candidate.candidate_id for item in compliance_queue.items] == [candidate_id]
+    assert build_review_queue(
+        (record.candidate,),
+        audience=ReviewQueueAudience.PORTFOLIO_MANAGER,
+        evaluated_at_utc=EVALUATED_AT,
+    ).items == ()
 
 
 def test_build_review_queue_from_repository_pages_reviewable_items_deterministically() -> None:
@@ -306,6 +343,7 @@ def test_build_review_queue_from_repository_uses_repository_side_page_projection
             self,
             *,
             evaluated_at_utc: datetime,
+            audience: ReviewQueueAudience,
             expected_snapshot_token: str | None,
             queue_policy_version: str,
             rankable_score_policy_versions: tuple[str, ...],
@@ -313,6 +351,7 @@ def test_build_review_queue_from_repository_uses_repository_side_page_projection
             limit: int,
             offset: int,
         ) -> ReviewQueueRepositoryPage:
+            assert audience is ReviewQueueAudience.ADVISOR
             assert access_scope_filter is None
             assert evaluated_at_utc == EVALUATED_AT
             assert expected_snapshot_token == "rqs1_" + "a" * 64
@@ -380,6 +419,27 @@ def test_queue_snapshot_binds_rankable_score_policy_set() -> None:
     )
 
     assert current_page.page.snapshot_token != expanded_page.page.snapshot_token
+
+
+def test_review_queue_snapshot_identity_binds_queue_audience() -> None:
+    common = {
+        "fingerprint": "candidate-state-sha256",
+        "evaluated_at_utc": EVALUATED_AT,
+        "policy_version": "idea-deterministic-ranking-v1",
+        "rankable_score_policy_versions": ("idle-liquidity-v1",),
+        "access_scope_filter": None,
+    }
+
+    advisor = build_review_queue_snapshot_identity(
+        **common,
+        audience=ReviewQueueAudience.ADVISOR,
+    )
+    portfolio_manager = build_review_queue_snapshot_identity(
+        **common,
+        audience=ReviewQueueAudience.PORTFOLIO_MANAGER,
+    )
+
+    assert advisor.token != portfolio_manager.token
 
 
 def test_review_queue_snapshot_identity_rejects_incomplete_policy_material() -> None:
@@ -572,7 +632,7 @@ def test_queue_access_scope_filter_allows_unbounded_entitlement_dimensions() -> 
     assert requested.is_subset_of(unbounded) is True
 
 
-def test_build_review_queue_from_repository_excludes_expired_candidate_records() -> None:
+def test_build_review_queue_from_repository_removes_terminal_candidate_from_active_audience() -> None:
     repository = InMemoryIdeaRepository()
     candidate_id = persist_high_cash_candidate(repository)
     repository.transition_candidate(
@@ -590,8 +650,7 @@ def test_build_review_queue_from_repository_excludes_expired_candidate_records()
     )
 
     assert queue.items == ()
-    assert queue.exclusions[0].candidate_id == candidate_id
-    assert queue.exclusions[0].reason is QueueExclusionReason.EXPIRED
+    assert queue.exclusions == ()
 
 
 def test_build_review_queue_from_repository_applies_snooze_projection() -> None:
@@ -665,12 +724,12 @@ def test_build_review_queue_readiness_snapshot_reports_aggregate_queue_posture()
     assert snapshot.repository == "lotus-idea"
     assert snapshot.policy_version == "idea-deterministic-ranking-v1"
     assert snapshot.queue_projection_available is True
-    assert snapshot.candidate_snapshot_count == 2
+    assert snapshot.candidate_snapshot_count == 1
     assert snapshot.reviewable_item_count == 1
-    assert snapshot.excluded_candidate_count == 1
-    assert snapshot.exclusion_counts["expired"] == 1
+    assert snapshot.excluded_candidate_count == 0
+    assert snapshot.exclusion_counts["expired"] == 0
     assert snapshot.exclusion_counts["unsupported_evidence"] == 0
-    assert snapshot.scored_candidate_count == 2
+    assert snapshot.scored_candidate_count == 1
     assert snapshot.unscored_candidate_count == 0
     assert snapshot.durable_storage_backed is False
     assert snapshot.repository_side_pagination_certified is False
@@ -753,9 +812,11 @@ def test_build_review_queue_readiness_snapshot_clears_repository_side_pagination
             self,
             *,
             evaluated_at_utc: datetime,
+            audience: ReviewQueueAudience,
             rankable_score_policy_versions: tuple[str, ...],
             access_scope_filter: QueueAccessScopeFilter | None,
         ) -> ReviewQueueReadinessRepositorySummary:
+            assert audience is ReviewQueueAudience.ADVISOR
             assert access_scope_filter is None
             assert evaluated_at_utc == EVALUATED_AT
             assert "idle-liquidity-v1" in rankable_score_policy_versions

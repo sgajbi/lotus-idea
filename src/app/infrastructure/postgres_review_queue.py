@@ -7,6 +7,7 @@ from app.domain.access_scope import QueueAccessScopeFilter
 from app.domain.ideas import EvidenceSupportability, IdeaLifecycleStatus, ReviewPosture
 from app.domain.review_queue import (
     QueueExclusionReason,
+    ReviewQueueAudience,
     ReviewQueueSnapshotConflictError,
     build_review_queue_snapshot_identity,
     require_matching_review_queue_snapshot,
@@ -42,6 +43,7 @@ class PostgresReviewQueueRepositoryMixin:
         self,
         *,
         evaluated_at_utc: datetime,
+        audience: ReviewQueueAudience,
         expected_snapshot_token: str | None,
         queue_policy_version: str,
         rankable_score_policy_versions: tuple[str, ...],
@@ -52,6 +54,7 @@ class PostgresReviewQueueRepositoryMixin:
         return load_review_queue_candidate_page(
             self._connection,
             evaluated_at_utc=evaluated_at_utc,
+            audience=audience,
             expected_snapshot_token=expected_snapshot_token,
             queue_policy_version=queue_policy_version,
             rankable_score_policy_versions=rankable_score_policy_versions,
@@ -64,12 +67,14 @@ class PostgresReviewQueueRepositoryMixin:
         self,
         *,
         evaluated_at_utc: datetime,
+        audience: ReviewQueueAudience,
         rankable_score_policy_versions: tuple[str, ...],
         access_scope_filter: QueueAccessScopeFilter | None,
     ) -> ReviewQueueReadinessRepositorySummary:
         return load_review_queue_readiness_summary(
             self._connection,
             evaluated_at_utc=evaluated_at_utc,
+            audience=audience,
             rankable_score_policy_versions=rankable_score_policy_versions,
             access_scope_filter=access_scope_filter,
         )
@@ -79,6 +84,7 @@ def load_review_queue_candidate_page(
     connection: PostgresConnection,
     *,
     evaluated_at_utc: datetime,
+    audience: ReviewQueueAudience,
     expected_snapshot_token: str | None,
     queue_policy_version: str,
     rankable_score_policy_versions: tuple[str, ...],
@@ -96,6 +102,7 @@ def load_review_queue_candidate_page(
 
     predicate_sql, predicate_params = _review_queue_candidate_predicates(
         evaluated_at_utc=evaluated_at_utc,
+        audience=audience,
         rankable_score_policy_versions=rankable_score_policy_versions,
         access_scope_filter=access_scope_filter,
     )
@@ -116,6 +123,7 @@ def load_review_queue_candidate_page(
         fingerprint = _snapshot_fingerprint(count_rows)
         snapshot_identity = build_review_queue_snapshot_identity(
             fingerprint=fingerprint,
+            audience=audience,
             evaluated_at_utc=evaluated_at_utc,
             policy_version=queue_policy_version,
             rankable_score_policy_versions=rankable_score_policy_versions,
@@ -136,6 +144,7 @@ def load_review_queue_candidate_page(
         verification_rows = cursor.fetchall()
         verification_identity = build_review_queue_snapshot_identity(
             fingerprint=_snapshot_fingerprint(verification_rows),
+            audience=audience,
             evaluated_at_utc=evaluated_at_utc,
             policy_version=queue_policy_version,
             rankable_score_policy_versions=rankable_score_policy_versions,
@@ -158,6 +167,7 @@ def load_review_queue_readiness_summary(
     connection: PostgresConnection,
     *,
     evaluated_at_utc: datetime,
+    audience: ReviewQueueAudience,
     rankable_score_policy_versions: tuple[str, ...],
     access_scope_filter: QueueAccessScopeFilter | None,
 ) -> ReviewQueueReadinessRepositorySummary:
@@ -169,6 +179,7 @@ def load_review_queue_readiness_summary(
     )
     params = (
         evaluated_at_utc,
+        audience.required_posture.value,
         *access_scope_params,
         ReviewPosture.SUPPRESSED.value,
         IdeaLifecycleStatus.EXPIRED.value,
@@ -248,6 +259,7 @@ def _normalize_rankable_score_policy_versions(
 def _review_queue_candidate_predicates(
     *,
     evaluated_at_utc: datetime,
+    audience: ReviewQueueAudience,
     rankable_score_policy_versions: tuple[str, ...],
     access_scope_filter: QueueAccessScopeFilter | None,
 ) -> tuple[str, tuple[Any, ...]]:
@@ -262,6 +274,7 @@ def _review_queue_candidate_predicates(
     ]
     params: list[Any] = [
         evaluated_at_utc,
+        audience.required_posture.value,
         [
             status.value
             for status in (
@@ -334,6 +347,7 @@ def _review_queue_candidate_cte(predicate_sql: str) -> str:
                    (candidate_json->>'created_at_utc') AS queue_created_at_utc
             FROM idea_candidate_record
             WHERE (candidate_json->>'created_at_utc')::timestamptz <= %s
+              AND review_posture = %s
         ),
         eligible AS (
             SELECT *
@@ -393,6 +407,7 @@ def _review_queue_readiness_summary_query(access_scope_mismatch_sql: str) -> str
                    (candidate_json->>'created_at_utc') AS queue_created_at_utc
             FROM idea_candidate_record
             WHERE (candidate_json->>'created_at_utc')::timestamptz <= %s
+              AND review_posture = %s
         ),
         classified AS (
             SELECT *,
