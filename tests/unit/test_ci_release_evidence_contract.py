@@ -60,10 +60,7 @@ def test_compose_runtime_contract_rejects_missing_realization_wiring() -> None:
         (
             "      - lotus-idea-postgres-data:/var/lib/postgresql",
             "      - lotus-idea-postgres-data:/var/lib/postgresql/data",
-            (
-                "docker-compose.yml must configure a PostgreSQL 18-compatible "
-                "durable volume"
-            ),
+            ("docker-compose.yml must configure a PostgreSQL 18-compatible durable volume"),
         ),
         (
             '    command: ["python", "scripts/run_migrations.py", "--direction", "apply"]',
@@ -73,10 +70,7 @@ def test_compose_runtime_contract_rejects_missing_realization_wiring() -> None:
         (
             "        condition: service_completed_successfully",
             "        condition: service_started",
-            (
-                "docker-compose.yml must configure migration completion before "
-                "application startup"
-            ),
+            ("docker-compose.yml must configure migration completion before application startup"),
         ),
         (
             '  LOTUS_IDEA_RUNTIME_PROFILE: "${LOTUS_IDEA_RUNTIME_PROFILE:-local}"',
