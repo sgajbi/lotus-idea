@@ -265,11 +265,13 @@ runtime modularity:
    implementation-proof consumers remain with their owning capability. No
    compatibility modules, broker service, worker process, database boundary,
    or supported-feature claim was added.
-10. `infrastructure/persistence/` begins the durable-write capability boundary.
-    Candidate creation uses a bounded requested/idempotency-linked aggregate
-    projection plus ordered transaction locks instead of whole-store snapshot
-    hydration. Focused unit and PostgreSQL tests mirror the package. Remaining
-    generic mutation families are still explicitly under Slice 06 review.
+10. `infrastructure/persistence/` owns bounded durable mutation and replay
+    composition. Aggregate, PostgreSQL orchestration, and replay modules load
+    only command, exact identity, and idempotency-linked candidates under
+    identity/candidate/idempotency transaction locks. Outbox run idempotency is
+    row-only; evidence replay is candidate-only. Full snapshots are reserved
+    for explicit administrative/test/DR behavior. Focused unit and PostgreSQL
+    tests mirror the package.
 
 Design modularity does not imply runtime modularity. Do not introduce a new
 process, service, queue, worker class, or separately scalable boundary unless
@@ -427,12 +429,14 @@ roll back and retry once from a fresh database snapshot so same-payload reuse
 returns governed replay posture and changed-payload reuse returns governed
 conflict posture.
 
-Candidate creation additionally acquires transaction-scoped candidate and
-idempotency locks before bounded mutation-state reads. This preserves accepted,
-replayed, conflict, and duplicate-candidate domain outcomes under concurrency
-without loading unrelated state families. Do not infer that other generic
-mutation paths are bounded until their own query-shape and real-PostgreSQL proof
-exists.
+Ordinary PostgreSQL mutations acquire transaction-scoped identity locks, sorted
+candidate locks, and the exact idempotency lock before bounded state reads.
+Candidate, lifecycle, review, feedback, conversion, report evidence, and AI
+lineage operations hydrate only command or exact identity-linked aggregates;
+the outbox delivery-run request hydrates only its idempotency row. Evidence
+replay and report precheck use candidate-only and idempotency-linked projections.
+The 17-test disposable PostgreSQL 18 lane proves the resulting restart,
+concurrency, recovery, queue, downstream, lifecycle, and nullable-bind posture.
 
 ## Outbound HTTP Resilience Pattern
 

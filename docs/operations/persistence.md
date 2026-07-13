@@ -61,16 +61,23 @@ storage certification, and future adapter work should continue moving hot
 precheck/replay paths toward database-native conditional reads and writes where
 that reduces contention.
 
-Candidate creation no longer hydrates a whole repository snapshot. The
-`app.infrastructure.persistence` adapter loads only the requested candidate and
-the candidate linked to the supplied idempotency key, if different. It acquires
-transaction-scoped candidate and idempotency locks in a fixed order before the
-bounded reads, runs the unchanged domain decision, and applies candidate,
-lifecycle-control, idempotency, audit, and outbox deltas atomically. Same-key
-concurrency returns accepted plus replayed; different-key concurrency for one
-candidate returns accepted plus duplicate-candidate without exposing a database
-uniqueness error. Other generic mutation/replay paths remain under explicit
-Slice 06 review and are not represented as bounded by this first write-path fix.
+Ordinary repository mutations no longer hydrate a whole repository snapshot.
+The `app.infrastructure.persistence` package resolves exact review, feedback,
+conversion, report, AI request, and AI replay-nonce identities; acquires
+identity, sorted candidate, and idempotency transaction locks in fixed order;
+and hydrates only reachable candidate aggregates. Candidate creation,
+lifecycle, review, feedback, conversion, report evidence, and AI lineage retain
+the existing domain decisions and atomic row-delta writer. The outbox delivery
+run request loads only its exact idempotency row. Evidence replay loads one
+candidate, while report evidence precheck loads one idempotency row and its
+linked candidate.
+
+Full `snapshot()` and `replace_snapshot()` remain explicit administrative,
+test, and disaster-recovery operations. Query-shape tests reject their markers
+on ordinary paths. A disposable PostgreSQL 18 run passes all 17 required tests,
+including nullable AI replay-nonce lookup, restart, concurrency, recovery,
+queue, downstream, and lifecycle proof. This changes no schema, migration,
+API/OpenAPI contract, supported feature, or runtime process boundary.
 
 Review and feedback resources also have identity independent of the HTTP
 `Idempotency-Key`. Equivalent `reviewId` or `feedbackId` submissions under a

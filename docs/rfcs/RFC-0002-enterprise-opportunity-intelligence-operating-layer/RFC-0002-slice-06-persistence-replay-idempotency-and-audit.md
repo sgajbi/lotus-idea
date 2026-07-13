@@ -922,26 +922,33 @@ and SBOM attestations, digest-only Kubernetes reference, and `/version` response
 Wiki publication commit `5534db5` has zero source drift. Issue `#357` is closed
 with `status/merged-main`; its local and remote feature branches are removed.
 
-## Bounded Candidate Persistence
+## Bounded Aggregate Mutations And Replay
 
-Issue `#363` removes whole-store hydration from the candidate-creation write
-path. A persistence capability module acquires transaction-scoped candidate and
-idempotency locks in fixed order, then loads only the requested candidate and
-the candidate linked to the supplied idempotency key. The existing domain
-repository still decides accepted, replayed, conflict, and duplicate-candidate
-posture; the existing delta writer still commits candidate, lifecycle control,
-idempotency, audit, and outbox records atomically.
+Issues `#363` and `#364` remove whole-store hydration from ordinary PostgreSQL
+mutation and replay paths. `app.infrastructure.persistence` now separates:
 
-Focused fake-adapter tests prove no review, feedback, conversion, report,
-outbox-history, or unrelated candidate query occurs. Real PostgreSQL 18 proof
-serializes same-key writers into accepted plus replayed and different-key
-writers for one candidate into accepted plus duplicate-candidate, without raw
-uniqueness errors or duplicate audit/outbox side effects. Repository hygiene and
-the PostgreSQL CI target require the capability package and runtime proof.
+1. aggregate snapshot composition,
+2. PostgreSQL mutation orchestration,
+3. evidence replay and idempotency prechecks.
 
-This is database-access and design modularity inside the existing deployable.
-It adds no service, database, schema, API/OpenAPI change, source authority, or
-supported feature. The same-pattern scan found remaining lifecycle, review,
-feedback, conversion, report-evidence, AI-lineage, evidence-replay,
-evidence-pack-precheck, and operator-run snapshot paths; those remain explicit
-Slice 06 work rather than being hidden by the candidate-only improvement.
+Mutation identity locks are acquired before sorted candidate locks and the
+exact idempotency lock. The loader then hydrates only command candidates,
+exact identity-linked candidates, and the candidate linked to the supplied
+idempotency key. This covers candidate creation, lifecycle, review, feedback,
+conversion intent/outcome, report evidence, AI request and replay-nonce
+lineage, plus idempotency-only outbox delivery-run requests. Evidence replay
+loads one candidate; report precheck loads one exact idempotency row and its
+linked candidate. The existing domain repository still decides typed outcomes,
+and the existing delta writer still commits candidate, lifecycle, idempotency,
+audit, outbox, conversion, report, and AI-lineage changes atomically.
+
+Query-shape tests reject whole-store candidate, idempotency, and outbox markers.
+A disposable PostgreSQL 18 run passes all 17 required persistence, recovery,
+queue, downstream, and lifecycle tests. It also caught and now protects an
+explicit `text` cast required for nullable AI replay-nonce bind parameters.
+Full `snapshot()` and `replace_snapshot()` remain administrative/test/DR
+operations; ordinary API and application paths do not call them.
+
+This is database-access and design modularity inside the existing deployable
+and one Idea-owned PostgreSQL database. It adds no service, database, schema,
+API/OpenAPI change, migration, source authority, or supported feature.
