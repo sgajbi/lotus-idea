@@ -1,6 +1,6 @@
 # RFC-0002 Slice 07: Scoring, Ranking, Suppression, And Queue Policy
 
-Status: Implementation complete on branch - pending merge, mainline CI, wiki publication, and branch-hygiene closure; no supported-feature promotion
+Status: Implemented on `main` - PR `#383` merged at `4f4e0985`; exact-main validation and authored wiki closure are complete; no supported-feature promotion
 
 ## Outcome
 
@@ -158,6 +158,9 @@ Current branch evidence:
 4. Architecture, repository-hygiene, maintainability, review-queue snapshot,
    GitHub issue closure, endpoint certification, OpenAPI, documentation, and
    supported-features gates pass.
-5. `make test-unit` passes with `3,631 passed`.
-6. Merge CI, exact-main validation, and wiki publication remain required before
-   changing this status from branch-complete to merged-main.
+5. Exact-main `make check` passes with `3,633` unit tests.
+6. PR Merge Gate run `29290924654` passed workflow lint, static/security,
+   unit, integration, E2E, combined coverage, PostgreSQL runtime, Docker build,
+   and CI-signal evidence for the final branch SHA.
+7. Main Releasability run `29291215703` passed the same release lanes for exact
+   main SHA `4f4e09854a076392e5cbbd0c413a2e433de04224`.
