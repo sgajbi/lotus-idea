@@ -92,3 +92,32 @@ def test_github_issue_closure_matrix_gate_rejects_partial_status_with_close_inte
     assert (
         "#343: partially fixed intent must contain `Keep #343 open` or `Keeps #343 open`" in errors
     )
+
+
+def test_github_issue_closure_matrix_gate_rejects_unproven_merged_main_status(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    matrix = tmp_path / "matrix.md"
+    content = module.MATRIX_PATH.read_text(encoding="utf-8")
+    content = (
+        content.replace(
+            "PR `#362` merged by rebase and Main Releasability `29235051710` plus CodeQL `29235047521` passed on `eba19925`.",
+            "PR merged and checks passed.",
+        )
+        .replace(
+            "Wiki publication commit `5534db5` has zero source drift.",
+            "Wiki checked.",
+        )
+        .replace(
+            "Closed on merged `main`; local and remote feature branches were deleted.",
+            "Implementation complete.",
+        )
+    )
+    matrix.write_text(content, encoding="utf-8")
+
+    errors = module.validate_issue_closure_matrix(matrix)
+
+    assert "#357: merged main evidence must cite Main Releasability and CodeQL" in errors
+    assert "#357: merged main evidence must cite wiki publication" in errors
+    assert "#357: merged main intent must record closed issue and branch cleanup" in errors
