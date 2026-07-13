@@ -78,7 +78,7 @@ ROOT_CONTEXT_FILES = (
     "REPOSITORY-ENGINEERING-CONTEXT.md",
     "Makefile",
 )
-ALLOWED_STATUSES = frozenset({"`locally_fixed`", "`partially_fixed`"})
+ALLOWED_STATUSES = frozenset({"`locally_fixed`", "`partially_fixed`", "`merged_main`"})
 
 
 def _split_row(line: str) -> list[str]:
@@ -154,7 +154,7 @@ def validate_issue_closure_matrix(path: Path = MATRIX_PATH) -> list[str]:
         status = row["Status"]
         if status not in ALLOWED_STATUSES:
             errors.append(
-                f"#{number}: status must be `locally_fixed` or `partially_fixed` before PR creation"
+                f"#{number}: status must be `locally_fixed`, `partially_fixed`, or `merged_main`"
             )
         if not _has_path_or_command(row["Implementation Evidence"]):
             errors.append(f"#{number}: implementation evidence must cite code or contract paths")
@@ -181,6 +181,22 @@ def validate_issue_closure_matrix(path: Path = MATRIX_PATH) -> list[str]:
                 f"#{number}: partially fixed intent must contain `Keep #{number} open` "
                 f"or `Keeps #{number} open`"
             )
+        if status == "`merged_main`":
+            test_evidence = row["Test And Gate Evidence"].lower()
+            docs_evidence = row["Docs/Wiki/Context"].lower()
+            close_evidence = row["PR Close Intent"].lower()
+            if "main releasability" not in test_evidence or "codeql" not in test_evidence:
+                errors.append(
+                    f"#{number}: merged main evidence must cite Main Releasability and CodeQL"
+                )
+            if "wiki" not in docs_evidence or not any(
+                phrase in docs_evidence for phrase in ("published", "publication")
+            ):
+                errors.append(f"#{number}: merged main evidence must cite wiki publication")
+            if not all(term in close_evidence for term in ("closed", "main", "branch")):
+                errors.append(
+                    f"#{number}: merged main intent must record closed issue and branch cleanup"
+                )
 
     missing = sorted(ACTIONABLE_ISSUES - seen_issues)
     extra = sorted(seen_issues - ACTIONABLE_ISSUES)

@@ -911,4 +911,13 @@ skips, 4 E2E tests, 99.02% coverage over 23,779 statements, and no known
 dependency vulnerabilities. A separate disposable PostgreSQL 18 run passed all
 16 required runtime tests. Clean wheel contents/imports and a SHA-tagged Docker
 build with container package, health, `/version`, and OCI-label smoke also
-passed. Mainline CI and wiki publication remain required before issue closure.
+passed.
+
+PR `#362` then merged by repository-approved rebase. Main Releasability run
+`29235051710` and CodeQL run `29235047521` passed on exact main commit
+`eba199252488638d46e24d833215c02989679a86`. The release manifest binds the
+same commit, `main` branch, build timestamp, repository, CI run, SHA tag, OCI
+labels, registry digest, keyless signature, SBOM, vulnerability scan, provenance
+and SBOM attestations, digest-only Kubernetes reference, and `/version` response.
+Wiki publication commit `5534db5` has zero source drift. Issue `#357` is closed
+with `status/merged-main`; its local and remote feature branches are removed.
