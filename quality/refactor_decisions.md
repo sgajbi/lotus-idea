@@ -237,6 +237,10 @@ deployable and one Idea-owned database; it creates no database-per-module,
 microservice, schema, API, migration, source-authority, or supported-feature
 boundary.
 
+PR `#365` merged the bounded mutation family to main SHA `69326064`; Main
+Releasability `29239140276`, CodeQL `29239134509`, and wiki publication
+`8386705` provide exact merged-main closure evidence.
+
 ## 2026-07-13: Outbox Capability Packages Inside Existing Layers
 
 Outbox ownership now uses an `outbox/` package inside each applicable runtime
