@@ -6,7 +6,7 @@ from pydantic import Field
 
 from app.api.base_model import CamelModel
 from app.application.review_queue import ReviewQueuePage, ReviewQueueReadinessSnapshot
-from app.domain import QueueExclusion, ReviewQueueItem
+from app.domain import QueueExclusion, ReviewQueueAudience, ReviewQueueItem
 
 
 class ReviewQueueCandidateResponse(CamelModel):
@@ -100,7 +100,8 @@ class ReviewQueuePageResponse(CamelModel):
         )
 
 
-class AdvisorReviewQueueResponse(CamelModel):
+class BusinessReviewQueueResponse(CamelModel):
+    audience: ReviewQueueAudience
     policy_version: str = Field(
         ...,
         alias="policyVersion",
@@ -119,8 +120,9 @@ class AdvisorReviewQueueResponse(CamelModel):
         queue: ReviewQueuePage,
         *,
         durable_storage_backed: bool = False,
-    ) -> "AdvisorReviewQueueResponse":
+    ) -> "BusinessReviewQueueResponse":
         return cls(
+            audience=queue.projection.audience,
             policyVersion=queue.projection.policy_version,
             evaluatedAtUtc=queue.projection.evaluated_at_utc,
             items=tuple(

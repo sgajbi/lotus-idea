@@ -1,12 +1,14 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
 
 from app.api.caller_headers import TRUSTED_CALLER_CONTEXT_HEADER, TRUSTED_CALLER_CONTEXT_TOKEN_ENV
-from app.runtime.repository_state import reset_idea_repository_for_tests
+from app.domain import InMemoryIdeaRepository, ReviewPosture
+from app.runtime.repository_state import get_idea_repository, reset_idea_repository_for_tests
 from app.main import app
 
 
@@ -104,6 +106,15 @@ def readiness_headers(
     }
 
 
+def role_queue_headers(*, role: str, capability: str) -> dict[str, str]:
+    return {
+        "X-Caller-Subject": f"{role}-001",
+        "X-Caller-Roles": role,
+        "X-Caller-Capabilities": capability,
+        "X-Correlation-Id": f"corr-{role}-review-queue",
+    }
+
+
 def persist_candidate(
     client: TestClient,
     *,
@@ -125,6 +136,22 @@ def persist_candidate(
     )
     assert response.status_code == 200
     return str(response.json()["persistence"]["candidateId"])
+
+
+def route_persisted_candidates_by_posture(
+    postures_by_candidate_id: dict[str, ReviewPosture],
+) -> None:
+    snapshot = get_idea_repository().snapshot()
+    routed_records = dict(snapshot.candidate_records)
+    for candidate_id, posture in postures_by_candidate_id.items():
+        record = routed_records[candidate_id]
+        routed_records[candidate_id] = replace(
+            record,
+            candidate=replace(record.candidate, review_posture=posture),
+        )
+    reset_idea_repository_for_tests(
+        InMemoryIdeaRepository(replace(snapshot, candidate_records=routed_records))
+    )
 
 
 def test_advisor_review_queue_api_projects_persisted_candidates() -> None:
@@ -175,6 +202,98 @@ def test_advisor_review_queue_api_projects_persisted_candidates() -> None:
         "snapshotToken": None,
     }
     assert payload["page"]["snapshotToken"].startswith("rqs1_")
+
+
+def test_business_review_queue_apis_route_only_the_responsible_audience() -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+    advisor_candidate = persist_candidate(
+        client,
+        cash_weight="0.18",
+        suffix="-advisor-audience",
+        idempotency_key="seed-review-queue-advisor-audience-001",
+    )
+    pm_candidate = persist_candidate(
+        client,
+        cash_weight="0.19",
+        suffix="-pm-audience",
+        idempotency_key="seed-review-queue-pm-audience-001",
+    )
+    compliance_candidate = persist_candidate(
+        client,
+        cash_weight="0.20",
+        suffix="-compliance-audience",
+        idempotency_key="seed-review-queue-compliance-audience-001",
+    )
+    route_persisted_candidates_by_posture(
+        {
+            pm_candidate: ReviewPosture.PM_REVIEW_REQUIRED,
+            compliance_candidate: ReviewPosture.COMPLIANCE_REVIEW_REQUIRED,
+        }
+    )
+
+    cases = (
+        (
+            "/api/v1/review-queues/advisor",
+            queue_headers(),
+            "advisor",
+            advisor_candidate,
+            "advisor_review_required",
+        ),
+        (
+            "/api/v1/review-queues/portfolio-manager",
+            role_queue_headers(
+                role="portfolio_manager",
+                capability="idea.review.queue.portfolio-manager.read",
+            ),
+            "portfolio_manager",
+            pm_candidate,
+            "pm_review_required",
+        ),
+        (
+            "/api/v1/review-queues/compliance",
+            role_queue_headers(
+                role="compliance",
+                capability="idea.review.queue.compliance.read",
+            ),
+            "compliance",
+            compliance_candidate,
+            "compliance_review_required",
+        ),
+    )
+
+    for path, headers, audience, candidate_id, posture in cases:
+        response = client.get(f"{path}?evaluatedAtUtc=2026-06-21T10:10:00Z", headers=headers)
+        assert response.status_code == 200
+        payload = response.json()
+        assert payload["audience"] == audience
+        assert [item["candidate"]["candidateId"] for item in payload["items"]] == [candidate_id]
+        assert {item["candidate"]["reviewPosture"] for item in payload["items"]} == {posture}
+        assert payload["exclusions"] == []
+
+
+@pytest.mark.parametrize(
+    ("path", "headers"),
+    (
+        (
+            "/api/v1/review-queues/portfolio-manager",
+            role_queue_headers(role="advisor", capability="idea.review.queue.portfolio-manager.read"),
+        ),
+        (
+            "/api/v1/review-queues/compliance",
+            role_queue_headers(role="portfolio_manager", capability="idea.review.queue.compliance.read"),
+        ),
+    ),
+)
+def test_role_specific_review_queues_reject_cross_role_callers(
+    path: str,
+    headers: dict[str, str],
+) -> None:
+    reset_idea_repository_for_tests()
+    response = TestClient(app).get(path, headers=headers)
+
+    assert response.status_code == 403
+    assert response.json()["code"] == "permission_denied"
 
 
 def test_advisor_review_queue_api_defaults_to_active_queue_snapshot() -> None:

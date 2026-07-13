@@ -824,6 +824,61 @@
     },
     {
       "method": "GET",
+      "path": "/api/v1/review-queues/portfolio-manager",
+      "certification_status": "certified",
+      "owner": "lotus-idea owners",
+      "purpose": "Return the deterministic portfolio-manager review queue over persisted candidates routed to pm_review_required posture.",
+      "when_to_use": "Use as the RFC-0002 Slice 08 internal foundation when an entitled portfolio manager needs bounded, snapshot-consistent review work routed to that audience.",
+      "when_not_to_use": "Do not use as advisor work, compliance approval, Manage rebalance authority, execution authority, Gateway integration proof, Workbench proof, data-product certification, or supported-feature promotion.",
+      "request_examples": [
+        "GET /api/v1/review-queues/portfolio-manager?evaluatedAtUtc=2026-06-21T10:10:00Z with X-Caller-Roles: portfolio_manager and X-Caller-Capabilities: idea.review.queue.portfolio-manager.read"
+      ],
+      "response_examples": [
+        "{\"audience\":\"portfolio_manager\",\"policyVersion\":\"idea-deterministic-ranking-v1\",\"evaluatedAtUtc\":\"2026-06-21T10:10:00Z\",\"items\":[],\"exclusions\":[],\"page\":{\"limit\":25,\"offset\":0,\"returnedItemCount\":0,\"totalReviewableItemCount\":0,\"returnedExclusionCount\":0,\"totalExcludedCandidateCount\":0,\"nextOffset\":null,\"hasNextPage\":false,\"snapshotToken\":\"rqs1_0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\"},\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}"
+      ],
+      "error_examples": [
+        "403 returns product-safe Problem Details when the caller lacks portfolio_manager role, the role-specific capability, trusted provenance, or entitled scope.",
+        "400 returns product-safe Problem Details for invalid paging, time, scope, or snapshot-token input.",
+        "409 returns review_queue_snapshot_conflict when audience-bound visible queue state no longer matches the supplied token."
+      ],
+      "test_evidence": [
+        "tests/integration/test_review_queue_api.py::test_business_review_queue_apis_route_only_the_responsible_audience",
+        "tests/integration/test_review_queue_api.py::test_role_specific_review_queues_reject_cross_role_callers",
+        "tests/integration/test_api_operation_events.py::test_role_specific_review_queues_emit_operation_events",
+        "tests/unit/test_review_queue_application.py::test_review_queue_snapshot_identity_binds_queue_audience",
+        "tests/unit/test_postgres_review_queue.py::test_postgres_review_queue_quarantines_contradictory_raw_candidate_state"
+      ],
+      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, role-specific caller context, responses, and examples."
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/review-queues/compliance",
+      "certification_status": "certified",
+      "owner": "lotus-idea owners",
+      "purpose": "Return the deterministic compliance-review queue over persisted candidates routed to compliance_review_required posture.",
+      "when_to_use": "Use as the RFC-0002 Slice 08 internal foundation when an entitled compliance reviewer needs bounded, snapshot-consistent evidence-gap work routed to that audience.",
+      "when_not_to_use": "Do not interpret queue presence as compliance approval or suitability clearance. Do not use as advisor work, execution authority, Gateway integration proof, Workbench proof, data-product certification, or supported-feature promotion.",
+      "request_examples": [
+        "GET /api/v1/review-queues/compliance?evaluatedAtUtc=2026-06-21T10:10:00Z with X-Caller-Roles: compliance and X-Caller-Capabilities: idea.review.queue.compliance.read"
+      ],
+      "response_examples": [
+        "{\"audience\":\"compliance\",\"policyVersion\":\"idea-deterministic-ranking-v1\",\"evaluatedAtUtc\":\"2026-06-21T10:10:00Z\",\"items\":[],\"exclusions\":[],\"page\":{\"limit\":25,\"offset\":0,\"returnedItemCount\":0,\"totalReviewableItemCount\":0,\"returnedExclusionCount\":0,\"totalExcludedCandidateCount\":0,\"nextOffset\":null,\"hasNextPage\":false,\"snapshotToken\":\"rqs1_0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\"},\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}"
+      ],
+      "error_examples": [
+        "403 returns product-safe Problem Details when the caller lacks compliance role, the role-specific capability, trusted provenance, or entitled scope.",
+        "400 returns product-safe Problem Details for invalid paging, time, scope, or snapshot-token input.",
+        "409 returns review_queue_snapshot_conflict when audience-bound visible queue state no longer matches the supplied token."
+      ],
+      "test_evidence": [
+        "tests/integration/test_review_queue_api.py::test_business_review_queue_apis_route_only_the_responsible_audience",
+        "tests/integration/test_review_queue_api.py::test_role_specific_review_queues_reject_cross_role_callers",
+        "tests/integration/test_api_operation_events.py::test_role_specific_review_queues_emit_operation_events",
+        "tests/unit/test_review_queue_application.py::test_review_queue_snapshot_identity_binds_queue_audience"
+      ],
+      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, role-specific caller context, responses, and examples."
+    },
+    {
+      "method": "GET",
       "path": "/api/v1/idea-candidates/{candidateId}",
       "certification_status": "certified",
       "owner": "lotus-idea owners",
@@ -1259,7 +1314,7 @@
       "owner": "lotus-idea owners",
       "purpose": "Return a deterministic advisor queue page over persisted candidates using candidate creation time as an inclusive as-of boundary and opaque snapshot-bound continuation paging.",
       "when_to_use": "Use as the RFC-0002 Slice 07 and Slice 10 API foundation when an authorized internal caller or Gateway needs a bounded, entitlement-scoped queue traversal that fails closed instead of silently shifting under visible inserts or mutations.",
-      "when_not_to_use": "Read-only Gateway publication exists through lotus-gateway GET /api/v1/ideas/review-queues/advisor, and durable PostgreSQL providers use repository-side bounded candidate projection with expression-index-backed tenant/book/portfolio/client scope predicates for ordinary page reads. Do not use as Workbench product proof, data-product certification proof, PM/compliance/operator queue surface, client-ready publication, or supported-feature promotion.",
+      "when_not_to_use": "Read-only Gateway publication exists through lotus-gateway GET /api/v1/ideas/review-queues/advisor, and durable PostgreSQL providers use repository-side bounded candidate projection with expression-index-backed tenant/book/portfolio/client scope predicates for ordinary page reads. Do not use as the portfolio-manager, compliance, or operator queue, Workbench product proof, data-product certification proof, client-ready publication, or supported-feature promotion.",
       "request_examples": [
         "GET /api/v1/review-queues/advisor?evaluatedAtUtc=2026-06-21T10:10:00Z with X-Caller-Capabilities: idea.review.queue.read",
         "GET /api/v1/review-queues/advisor?evaluatedAtUtc=2026-06-21T10:10:00Z&limit=25&offset=0 with X-Caller-Capabilities: idea.review.queue.read",
@@ -1268,8 +1323,8 @@
         "GET /api/v1/review-queues/advisor?evaluatedAtUtc=2026-06-21T10:10:00Z with X-Caller-Capabilities: idea.review.queue.read and X-Caller-Portfolio-Ids: PB_SG_GLOBAL_BAL_001"
       ],
       "response_examples": [
-        "{\"policyVersion\":\"idea-deterministic-ranking-v1\",\"evaluatedAtUtc\":\"2026-06-21T10:10:00Z\",\"items\":[{\"rank\":1,\"candidate\":{\"candidateId\":\"idea_high_cash_8d57adbf52f7f5a7\",\"family\":\"high_cash\",\"lifecycleStatus\":\"generated\",\"reviewPosture\":\"advisor_review_required\",\"evidencePacketId\":\"iep_high_cash_8d57adbf52f7f5a7\",\"score\":\"82\",\"scorePolicyVersion\":\"idle-liquidity-v1\",\"sourceSignalIds\":[\"signal_high_cash_8d57adbf52f7f5a7\"]},\"score\":\"82\",\"priorityBucket\":\"high\",\"policyVersion\":\"idea-deterministic-ranking-v1\",\"reasonCodes\":[\"high_cash_ratio\",\"review_required\"]}],\"exclusions\":[],\"page\":{\"limit\":25,\"offset\":0,\"returnedItemCount\":1,\"totalReviewableItemCount\":1,\"returnedExclusionCount\":0,\"totalExcludedCandidateCount\":0,\"nextOffset\":null,\"hasNextPage\":false,\"snapshotToken\":\"rqs1_0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\"},\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}",
-        "{\"policyVersion\":\"idea-deterministic-ranking-v1\",\"evaluatedAtUtc\":\"2026-06-21T10:10:00Z\",\"items\":[],\"exclusions\":[],\"page\":{\"limit\":25,\"offset\":0,\"returnedItemCount\":0,\"totalReviewableItemCount\":0,\"returnedExclusionCount\":0,\"totalExcludedCandidateCount\":0,\"nextOffset\":null,\"hasNextPage\":false,\"snapshotToken\":\"rqs1_0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\"},\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}"
+        "{\"audience\":\"advisor\",\"policyVersion\":\"idea-deterministic-ranking-v1\",\"evaluatedAtUtc\":\"2026-06-21T10:10:00Z\",\"items\":[{\"rank\":1,\"candidate\":{\"candidateId\":\"idea_high_cash_8d57adbf52f7f5a7\",\"family\":\"high_cash\",\"lifecycleStatus\":\"generated\",\"reviewPosture\":\"advisor_review_required\",\"evidencePacketId\":\"iep_high_cash_8d57adbf52f7f5a7\",\"score\":\"82\",\"scorePolicyVersion\":\"idle-liquidity-v1\",\"sourceSignalIds\":[\"signal_high_cash_8d57adbf52f7f5a7\"]},\"score\":\"82\",\"priorityBucket\":\"high\",\"policyVersion\":\"idea-deterministic-ranking-v1\",\"reasonCodes\":[\"high_cash_ratio\",\"review_required\"]}],\"exclusions\":[],\"page\":{\"limit\":25,\"offset\":0,\"returnedItemCount\":1,\"totalReviewableItemCount\":1,\"returnedExclusionCount\":0,\"totalExcludedCandidateCount\":0,\"nextOffset\":null,\"hasNextPage\":false,\"snapshotToken\":\"rqs1_0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\"},\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}",
+        "{\"audience\":\"advisor\",\"policyVersion\":\"idea-deterministic-ranking-v1\",\"evaluatedAtUtc\":\"2026-06-21T10:10:00Z\",\"items\":[],\"exclusions\":[],\"page\":{\"limit\":25,\"offset\":0,\"returnedItemCount\":0,\"totalReviewableItemCount\":0,\"returnedExclusionCount\":0,\"totalExcludedCandidateCount\":0,\"nextOffset\":null,\"hasNextPage\":false,\"snapshotToken\":\"rqs1_0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\"},\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}"
       ],
       "error_examples": [
         "403 returns product-safe Problem Details when the caller lacks idea.review.queue.read capability or advisor role.",

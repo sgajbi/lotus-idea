@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from app.api.review_queue_models import AdvisorReviewQueueResponse, ReviewQueueReadinessResponse
+from app.api.review_queue_models import BusinessReviewQueueResponse, ReviewQueueReadinessResponse
 from app.application.review_queue import ReviewQueuePage, ReviewQueuePageMetadata
 from app.application.review_queue import ReviewQueueReadinessSnapshot
 from app.domain import QueueExclusionReason, build_review_queue
@@ -32,11 +32,12 @@ def test_advisor_review_queue_response_maps_source_safe_page() -> None:
         ),
     )
 
-    response = AdvisorReviewQueueResponse.from_domain(
+    response = BusinessReviewQueueResponse.from_domain(
         page,
         durable_storage_backed=True,
     ).model_dump(by_alias=True)
 
+    assert response["audience"] == "advisor"
     assert response["policyVersion"] == "idea-deterministic-ranking-v1"
     assert response["evaluatedAtUtc"] == EVALUATED_AT
     assert response["durableStorageBacked"] is True
