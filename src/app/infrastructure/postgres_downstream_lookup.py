@@ -65,6 +65,24 @@ def load_candidate_record_for_conversion_intent(
     return load_candidate_record_by_id(connection, read_row_value(rows[0], "candidate_id"))
 
 
+def load_candidate_id_for_conversion_intent_mutation(
+    connection: PostgresConnection,
+    conversion_intent_id: str,
+) -> str | None:
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            /* lotus-idea mutation-lookup-conversion-candidate */
+            SELECT candidate_id
+            FROM idea_conversion_intent
+            WHERE conversion_intent_id = %s
+            """,
+            (conversion_intent_id,),
+        )
+        rows = cursor.fetchall()
+    return read_row_value(rows[0], "candidate_id") if rows else None
+
+
 def load_report_evidence_pack_by_id(
     connection: PostgresConnection,
     report_evidence_pack_id: str,

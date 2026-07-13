@@ -113,7 +113,7 @@ def precheck_postgres_conversion_outcome_mutation(
             record=record,
         )
 
-    existing_identity = _load_postgres_conversion_outcome_identity(
+    existing_identity = load_postgres_conversion_outcome_identity(
         connection,
         identity.conversion_outcome_id,
     )
@@ -151,7 +151,7 @@ def precheck_postgres_conversion_outcome_mutation(
     )
 
 
-def _load_postgres_conversion_outcome_identity(
+def load_postgres_conversion_outcome_identity(
     connection: PostgresConnection,
     conversion_outcome_id: str,
 ) -> ConversionOutcomeIdentity | None:

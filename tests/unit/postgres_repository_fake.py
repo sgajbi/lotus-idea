@@ -7,6 +7,9 @@ from app.domain.outbox.recovery import outbox_dead_letter_support_reference
 from tests.unit.postgres_downstream_submission_fake_helpers import (
     execute_downstream_submission_query,
 )
+from tests.unit.postgres_bounded_mutation_fake_helpers import (
+    execute_bounded_mutation_query,
+)
 from tests.unit.outbox.postgres_fake_helpers import (
     claim_outbox_event_rows,
     fail_outbox_event_row,
@@ -47,8 +50,7 @@ class FakePostgresCursor:
         normalized = " ".join(query.lower().split())
         self.connection.executed_sql.append(normalized)
         self.rowcount = 0
-        if normalized.startswith("/* lotus-idea candidate-persistence-"):
-            self._rows = []
+        if execute_bounded_mutation_query(self, normalized, params):
             return
         if _execute_data_lifecycle_query(self, normalized, params):
             return

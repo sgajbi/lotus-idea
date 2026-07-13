@@ -8,7 +8,6 @@ from app.infrastructure.postgres_repository import PostgresIdeaRepository
 from tests.unit.postgres_repository_fake import FakePostgresConnection
 from tests.unit.test_postgres_repository import (
     EVALUATED_AT,
-    StaleSnapshotRepository,
     access_scope,
     feedback_command,
     high_cash_candidate,
@@ -16,7 +15,7 @@ from tests.unit.test_postgres_repository import (
 )
 
 
-def test_postgres_repository_retries_review_identity_collision_as_replay() -> None:
+def test_postgres_repository_reads_review_identity_collision_as_replay() -> None:
     connection = FakePostgresConnection()
     repository = PostgresIdeaRepository(connection)
     candidate = replace(
@@ -31,18 +30,17 @@ def test_postgres_repository_retries_review_identity_collision_as_replay() -> No
         actor_subject="signal-ingestion-worker",
         occurred_at_utc=EVALUATED_AT,
     )
-    base_snapshot = repository.snapshot()
     review = apply_review_action(
         candidate,
         review_command(review_id="review-resource-identity-replay"),
     )
 
-    first = StaleSnapshotRepository(connection, base_snapshot).record_review_action(
+    first = repository.record_review_action(
         review,
         idempotency_key="review:resource-identity:first",
         payload={"reviewId": review.decision.review_id},
     )
-    replayed = StaleSnapshotRepository(connection, base_snapshot).record_review_action(
+    replayed = repository.record_review_action(
         review,
         idempotency_key="review:resource-identity:retry",
         payload={"reviewId": review.decision.review_id},
@@ -52,7 +50,7 @@ def test_postgres_repository_retries_review_identity_collision_as_replay() -> No
 
     assert first.decision is ReviewPersistenceDecision.ACCEPTED
     assert replayed.decision is ReviewPersistenceDecision.REPLAYED
-    assert connection.rollbacks == 1
+    assert connection.rollbacks == 0
     assert len(record.review_decisions) == 1
     assert len(record.audit_events) == 2
     assert len(recovered.outbox_events) == 2
@@ -63,7 +61,7 @@ def test_postgres_repository_retries_review_identity_collision_as_replay() -> No
     } == {"review:resource-identity:first", "review:resource-identity:retry"}
 
 
-def test_postgres_repository_retries_changed_review_identity_as_typed_conflict() -> None:
+def test_postgres_repository_reads_changed_review_identity_as_typed_conflict() -> None:
     connection = FakePostgresConnection()
     repository = PostgresIdeaRepository(connection)
     candidate = replace(
@@ -78,7 +76,6 @@ def test_postgres_repository_retries_changed_review_identity_as_typed_conflict()
         actor_subject="signal-ingestion-worker",
         occurred_at_utc=EVALUATED_AT,
     )
-    base_snapshot = repository.snapshot()
     review_id = "review-resource-identity-conflict"
     first_review = apply_review_action(candidate, review_command(review_id=review_id))
     changed_review = apply_review_action(
@@ -86,12 +83,12 @@ def test_postgres_repository_retries_changed_review_identity_as_typed_conflict()
         replace(review_command(review_id=review_id), action=ReviewAction.REJECT),
     )
 
-    first = StaleSnapshotRepository(connection, base_snapshot).record_review_action(
+    first = repository.record_review_action(
         first_review,
         idempotency_key="review:resource-conflict:first",
         payload={"reviewId": review_id, "action": "approve_for_conversion"},
     )
-    conflict = StaleSnapshotRepository(connection, base_snapshot).record_review_action(
+    conflict = repository.record_review_action(
         changed_review,
         idempotency_key="review:resource-conflict:changed",
         payload={"reviewId": review_id, "action": "reject"},
@@ -101,7 +98,7 @@ def test_postgres_repository_retries_changed_review_identity_as_typed_conflict()
 
     assert first.decision is ReviewPersistenceDecision.ACCEPTED
     assert conflict.decision is ReviewPersistenceDecision.IDENTITY_CONFLICT
-    assert connection.rollbacks == 1
+    assert connection.rollbacks == 0
     assert [decision.action for decision in record.review_decisions] == [
         ReviewAction.APPROVE_FOR_CONVERSION
     ]
@@ -113,7 +110,7 @@ def test_postgres_repository_retries_changed_review_identity_as_typed_conflict()
     )
 
 
-def test_postgres_repository_retries_feedback_identity_collision_as_replay() -> None:
+def test_postgres_repository_reads_feedback_identity_collision_as_replay() -> None:
     connection = FakePostgresConnection()
     repository = PostgresIdeaRepository(connection)
     candidate = replace(
@@ -128,15 +125,14 @@ def test_postgres_repository_retries_feedback_identity_collision_as_replay() -> 
         actor_subject="signal-ingestion-worker",
         occurred_at_utc=EVALUATED_AT,
     )
-    base_snapshot = repository.snapshot()
     feedback = record_feedback(candidate, feedback_command())
 
-    first = StaleSnapshotRepository(connection, base_snapshot).record_feedback_event(
+    first = repository.record_feedback_event(
         feedback,
         idempotency_key="feedback:resource-identity:first",
         payload={"feedbackId": feedback.feedback_event.feedback.feedback_id},
     )
-    replayed = StaleSnapshotRepository(connection, base_snapshot).record_feedback_event(
+    replayed = repository.record_feedback_event(
         feedback,
         idempotency_key="feedback:resource-identity:retry",
         payload={"feedbackId": feedback.feedback_event.feedback.feedback_id},
@@ -146,7 +142,7 @@ def test_postgres_repository_retries_feedback_identity_collision_as_replay() -> 
 
     assert first.decision is ReviewPersistenceDecision.ACCEPTED
     assert replayed.decision is ReviewPersistenceDecision.REPLAYED
-    assert connection.rollbacks == 1
+    assert connection.rollbacks == 0
     assert len(record.feedback_events) == 1
     assert len(record.audit_events) == 2
     assert len(recovered.outbox_events) == 2
