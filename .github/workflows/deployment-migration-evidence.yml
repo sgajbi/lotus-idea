@@ -1,0 +1,172 @@
+name: Deployment Migration Evidence
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment_class:
+        description: Protected target environment class
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+      operation:
+        description: Governed migration operation
+        required: true
+        type: choice
+        options:
+          - apply
+          - adopt
+          - rollback
+      image_digest_reference:
+        description: Exact ghcr.io/sgajbi/lotus-idea@sha256 digest reference
+        required: true
+        type: string
+      expected_commit_sha:
+        description: Exact 40-character main commit carried by the image
+        required: true
+        type: string
+      change_reference:
+        description: Approved uppercase change identifier, for example CHG-123456
+        required: true
+        type: string
+      rollback_count:
+        description: Number of latest migrations to roll back; zero for apply/adopt
+        required: true
+        default: "0"
+        type: string
+      confirmation:
+        description: Enter MIGRATE lotus-idea <environment> <operation>
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  packages: read
+  attestations: write
+  id-token: write
+
+concurrency:
+  group: lotus-idea-deployment-migrations-${{ inputs.environment_class }}
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    name: Execute exact-image deployment migrations
+    runs-on: [self-hosted, linux, lotus-deployment]
+    environment: lotus-idea-${{ inputs.environment_class }}
+    timeout-minutes: 30
+    env:
+      LOTUS_IDEA_DATABASE_URL: ${{ secrets.LOTUS_IDEA_DATABASE_URL }}
+      IMAGE_DIGEST_REFERENCE: ${{ inputs.image_digest_reference }}
+      EXPECTED_COMMIT_SHA: ${{ inputs.expected_commit_sha }}
+      CHANGE_REFERENCE: ${{ inputs.change_reference }}
+      INPUT_ENVIRONMENT_CLASS: ${{ inputs.environment_class }}
+      INPUT_OPERATION: ${{ inputs.operation }}
+      INPUT_ROLLBACK_COUNT: ${{ inputs.rollback_count }}
+      INPUT_CONFIRMATION: ${{ inputs.confirmation }}
+    steps:
+      - name: Checkout governed workflow source
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Validate protected execution request
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected_confirmation="MIGRATE lotus-idea ${INPUT_ENVIRONMENT_CLASS} ${INPUT_OPERATION}"
+          [[ "$GITHUB_REF" == "refs/heads/main" ]]
+          [[ "$INPUT_CONFIRMATION" == "$expected_confirmation" ]]
+          [[ "$EXPECTED_COMMIT_SHA" =~ ^[0-9a-f]{40}$ ]]
+          [[ "$IMAGE_DIGEST_REFERENCE" =~ ^ghcr\.io/sgajbi/lotus-idea@sha256:[0-9a-f]{64}$ ]]
+          [[ "$CHANGE_REFERENCE" =~ ^[A-Z0-9][A-Z0-9._/-]{5,63}$ ]]
+          [[ "$INPUT_ROLLBACK_COUNT" =~ ^[0-9]+$ ]]
+          if [[ "$INPUT_OPERATION" == "rollback" ]]; then
+            (( INPUT_ROLLBACK_COUNT >= 1 && INPUT_ROLLBACK_COUNT <= 15 ))
+          else
+            [[ "$INPUT_ROLLBACK_COUNT" == "0" ]]
+          fi
+          [[ -n "$LOTUS_IDEA_DATABASE_URL" ]]
+
+      - name: Authenticate to GHCR
+        shell: bash
+        env:
+          GHCR_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          echo "$GHCR_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+
+      - uses: sigstore/cosign-installer@d7543c93d881b35a8faa02e8e3605f69b7a1ce62 # v3.10.0
+        with:
+          cosign-release: v2.6.0
+
+      - name: Verify image signature and GitHub provenance
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh attestation verify "oci://${IMAGE_DIGEST_REFERENCE}" -R "$GITHUB_REPOSITORY"
+          cosign verify "$IMAGE_DIGEST_REFERENCE" \
+            --certificate-identity "https://github.com/sgajbi/lotus-idea/.github/workflows/main-releasability.yml@refs/heads/main" \
+            --certificate-oidc-issuer "https://token.actions.githubusercontent.com"
+
+      - name: Pull and validate immutable image identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker pull "$IMAGE_DIGEST_REFERENCE"
+          revision="$(docker image inspect "$IMAGE_DIGEST_REFERENCE" --format '{{index .Config.Labels "org.opencontainers.image.revision"}}')"
+          branch="$(docker image inspect "$IMAGE_DIGEST_REFERENCE" --format '{{index .Config.Labels "io.lotus.image.git.branch"}}')"
+          source="$(docker image inspect "$IMAGE_DIGEST_REFERENCE" --format '{{index .Config.Labels "org.opencontainers.image.source"}}')"
+          [[ "$revision" == "$EXPECTED_COMMIT_SHA" ]]
+          [[ "$branch" == "main" ]]
+          [[ "$source" == "https://github.com/sgajbi/lotus-idea" ]]
+
+      - name: Execute migrations from exact image
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p output/deployment-migrations
+          migration_args=(
+            --operation "$INPUT_OPERATION"
+            --environment-class "$INPUT_ENVIRONMENT_CLASS"
+            --rollback-count "$INPUT_ROLLBACK_COUNT"
+            --evidence-output /evidence/deployment-migration-evidence.json
+          )
+          docker run --rm \
+            --user "$(id -u):$(id -g)" \
+            --env LOTUS_IDEA_DATABASE_URL \
+            --env GITHUB_REPOSITORY \
+            --env GITHUB_RUN_ID \
+            --env GITHUB_ACTOR \
+            --env GITHUB_REF=refs/heads/main \
+            --env GITHUB_SHA="$EXPECTED_COMMIT_SHA" \
+            --env LOTUS_RELEASE_IMAGE_DIGEST_REFERENCE="$IMAGE_DIGEST_REFERENCE" \
+            --env LOTUS_DEPLOYMENT_CHANGE_REFERENCE="$CHANGE_REFERENCE" \
+            --volume "$PWD/output/deployment-migrations:/evidence" \
+            "$IMAGE_DIGEST_REFERENCE" \
+            python scripts/run_deployment_migrations.py "${migration_args[@]}"
+
+      - name: Validate evidence with exact image
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run --rm \
+            --user "$(id -u):$(id -g)" \
+            --volume "$PWD/output/deployment-migrations:/evidence:ro" \
+            "$IMAGE_DIGEST_REFERENCE" \
+            python scripts/deployment_migration_evidence_gate.py \
+              /evidence/deployment-migration-evidence.json
+
+      - name: Attest migration evidence
+        uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4.1.1
+        with:
+          subject-path: output/deployment-migrations/deployment-migration-evidence.json
+
+      - name: Upload migration evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: deployment-migration-evidence-${{ inputs.environment_class }}-${{ github.run_id }}
+          path: output/deployment-migrations/deployment-migration-evidence.json
+          if-no-files-found: error
+          retention-days: 90

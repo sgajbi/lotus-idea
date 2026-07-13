@@ -1,3 +1,4 @@
 self-hosted-runner:
   labels:
     - lotus-capacity-evidence
+    - lotus-deployment

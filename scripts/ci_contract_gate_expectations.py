@@ -45,6 +45,7 @@ REQUIRED_LINT_TARGETS = (
     "outbox-consumer-contract-gate",
     "migration-contract-gate",
     "migration-execution-gate",
+    "deployment-migration-contract-gate",
     "durable-repository-proof-contract-gate",
     "runtime-trust-telemetry-proof-contract-gate",
     "ai-lineage-store-proof-contract-gate",
