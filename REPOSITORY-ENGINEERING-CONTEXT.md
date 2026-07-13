@@ -883,7 +883,10 @@ Do not add a migration service or split the database without concrete workload,
 failure-isolation, ownership, or operability evidence. The implemented workflow
 is still non-certifying until a protected environment run, approved change,
 same-digest rollout health proof, mainline validation, and retained attestation
-exist.
+exist. Issue `#375` is the durable tracker: the repository currently has no
+GitHub deployment environments and no self-hosted runner matching
+`[self-hosted, linux, lotus-deployment]`, so no environment-scoped database
+secret or governed target can be exercised yet.
 
 PostgreSQL disaster-recovery evidence uses distinct disposable source and
 target databases:

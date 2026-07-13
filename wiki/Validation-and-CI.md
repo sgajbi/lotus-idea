@@ -51,7 +51,10 @@ Main Releasability run `29261043056` and CodeQL run `29261035371` passed on
 `6ba9618a`; release evidence binds the signed and attested image digest to its
 SHA tag, OCI labels, `/version`, SBOM, scan, and digest-only deployment posture.
 Protected migration execution and rollout-health evidence remain separate
-certification requirements.
+certification requirements. [Issue #375](https://github.com/sgajbi/lotus-idea/issues/375)
+tracks the current execution-plane gap: no protected GitHub environments,
+matching self-hosted deployment runner, environment-scoped database secret, or
+governed target is configured.
 
 ```mermaid
 flowchart LR
