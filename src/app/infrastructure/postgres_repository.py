@@ -198,7 +198,7 @@ class PostgresIdeaRepository(
             operation=lambda repository: repository.record_outbox_delivery_run_request(
                 idempotency_key=idempotency_key,
                 payload=payload,
-            )
+            ),
         )
 
     def record_lifecycle_transition(
@@ -228,7 +228,7 @@ class PostgresIdeaRepository(
                 transition_id=transition_id,
                 reason_codes=reason_codes,
                 event_lineage=event_lineage,
-            )
+            ),
         )
 
     def precheck_review_mutation(
@@ -264,7 +264,7 @@ class PostgresIdeaRepository(
                 idempotency_key=idempotency_key,
                 payload=payload,
                 event_lineage=event_lineage,
-            )
+            ),
         )
 
     def record_feedback_event(
@@ -286,7 +286,7 @@ class PostgresIdeaRepository(
                 idempotency_key=idempotency_key,
                 payload=payload,
                 event_lineage=event_lineage,
-            )
+            ),
         )
 
     def precheck_conversion_mutation(
@@ -323,7 +323,7 @@ class PostgresIdeaRepository(
                 idempotency_key=idempotency_key,
                 payload=payload,
                 event_lineage=event_lineage,
-            )
+            ),
         )
 
     def conversion_intent_by_id(
@@ -371,15 +371,13 @@ class PostgresIdeaRepository(
                 f"conversion-intent:{identity.conversion_intent_id}",
                 f"conversion-outcome:{identity.conversion_outcome_id}",
             ),
-            related_candidate_ids_loader=lambda: self._conversion_outcome_candidate_ids(
-                identity
-            ),
+            related_candidate_ids_loader=lambda: self._conversion_outcome_candidate_ids(identity),
             operation=lambda repository: repository.record_conversion_outcome(
                 result,
                 idempotency_key=idempotency_key,
                 payload=payload,
                 event_lineage=event_lineage,
-            )
+            ),
         )
 
     def candidate_record_for_conversion_intent(
@@ -406,15 +404,13 @@ class PostgresIdeaRepository(
         return self._mutate_candidate(
             candidate_ids=(candidate_id,),
             idempotency_key=idempotency_key,
-            identity_keys=(
-                f"report-evidence-pack:{result.evidence_pack.report_evidence_pack_id}",
-            ),
+            identity_keys=(f"report-evidence-pack:{result.evidence_pack.report_evidence_pack_id}",),
             operation=lambda repository: repository.record_report_evidence_pack(
                 result,
                 idempotency_key=idempotency_key,
                 payload=payload,
                 event_lineage=event_lineage,
-            )
+            ),
         )
 
     def claim_outbox_events_for_delivery(
