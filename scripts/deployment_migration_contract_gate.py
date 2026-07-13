@@ -96,6 +96,11 @@ def validate_deployment_migration_contract(
         errors.append(f"missing deployment workflow: {WORKFLOW_RELATIVE_PATH.as_posix()}")
     else:
         errors.extend(validate_deployment_migration_workflow(workflow_path.read_text("utf-8")))
+    workflow_sources = {
+        path.name: path.read_text(encoding="utf-8")
+        for path in (root / ".github" / "workflows").glob("*.yml")
+    }
+    errors.extend(validate_production_migration_entrypoints(workflow_sources))
     return errors
 
 
@@ -242,6 +247,27 @@ def validate_deployment_migration_workflow(workflow: str) -> list[str]:
                 "through job environment variables"
             )
             break
+    return errors
+
+
+def validate_production_migration_entrypoints(
+    workflows: Mapping[str, str],
+) -> list[str]:
+    disposable_fixture_workflows = {
+        "postgres-disaster-recovery-drill.yml",
+        "scheduled-data-lifecycle-review.yml",
+    }
+    errors: list[str] = []
+    for name, workflow in workflows.items():
+        if name in disposable_fixture_workflows:
+            continue
+        if name == WORKFLOW_RELATIVE_PATH.name:
+            continue
+        if "make migrate" in workflow or "scripts/run_migrations.py" in workflow:
+            errors.append(
+                f"{name} must use the governed exact-image deployment migration workflow; "
+                "direct migration execution is reserved for approved disposable fixtures"
+            )
     return errors
 
 
