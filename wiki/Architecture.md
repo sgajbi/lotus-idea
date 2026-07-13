@@ -457,8 +457,9 @@ candidate projection with expression-index-backed tenant/book/portfolio/client
 scope predicates instead of whole-store snapshot hydration. `evaluatedAtUtc`
 is the inclusive candidate-created-at boundary, while source as-of and evidence
 generation dates retain their source-authority meaning. Page metadata carries
-opaque identity bound to evaluation time, scope, ranking policy, and visible
-candidate state; continuation offsets require it and changed state fails with
+opaque identity bound to evaluation time, scope, queue ranking policy, accepted
+candidate score-policy set, and visible candidate state; continuation offsets
+require it and changed state fails with
 a stable snapshot conflict. PostgreSQL verifies the fingerprint before and
 after each page query. This remains a
 bounded foundation API rather than a production queue-store claim.
@@ -470,6 +471,16 @@ Advisor queue and readiness response DTOs live in
 authorization, entitlement narrowing, repository access, operation events, and
 route metadata. This is an internal design boundary, not a separate queue
 service or Workbench product boundary.
+
+Scoring and queue policy are deliberately separate. `app.domain.scoring` owns
+candidate score provenance and the closed current score-policy registry;
+`app.domain.review_queue.policy` owns comparability, exclusions, priority
+thresholds, and ordering; `app.domain.review_queue.snapshot` owns continuation
+identity. Unknown score-policy versions fail closed in both process-local and
+PostgreSQL paths and surface only an aggregate readiness blocker. API
+`policyVersion` therefore means queue policy, while candidate
+`scorePolicyVersion` remains score provenance. These are internal bounded
+modules in the existing deployable, not a queue microservice.
 
 `GET /api/v1/review-queues/advisor/readiness` is the certified internal
 operator diagnostic for queue supportability. Durable PostgreSQL providers use
