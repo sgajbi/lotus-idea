@@ -50,6 +50,20 @@ def test_deployment_migration_workflow_rejects_mutable_or_injected_execution() -
     assert any("job environment variables" in error for error in errors)
 
 
+def test_deployment_migration_workflow_rejects_unavailable_self_hosted_runner() -> None:
+    module = _load_gate()
+    workflow = WORKFLOW_PATH.read_text(encoding="utf-8").replace(
+        "runs-on: ubuntu-latest",
+        "runs-on: [self-hosted, linux, lotus-deployment]",
+    )
+
+    errors = module.validate_deployment_migration_workflow(workflow)
+
+    assert any("runs-on: ubuntu-latest" in error for error in errors)
+    assert any("self-hosted" in error for error in errors)
+    assert any("lotus-deployment" in error for error in errors)
+
+
 def test_contract_gate_rejects_direct_migration_in_other_workflows() -> None:
     module = _load_gate()
 

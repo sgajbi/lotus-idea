@@ -53,7 +53,7 @@ concurrency:
 jobs:
   migrate:
     name: Execute exact-image deployment migrations
-    runs-on: [self-hosted, linux, lotus-deployment]
+    runs-on: ubuntu-latest
     environment: lotus-idea-${{ inputs.environment_class }}
     timeout-minutes: 30
     env:
