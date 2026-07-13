@@ -37,7 +37,7 @@ proof, downstream proof, supported-feature evidence, and mainline CI all agree.
    deterministic signal policies, conservative source adapters, and governed
    source-backed APIs span Core, Risk, Performance, Advise, and Manage without
    duplicating source-owned calculations,
-9. RFC-0002 Slice 06 partially implements internal persistence, replay,
+9. RFC-0002 Slice 06 implements repository-owned persistence, replay,
    transport idempotency, review/feedback/conversion-outcome resource identity,
    source-version lifecycle and legacy-history quarantine, lifecycle audit
    history, recovery primitives, and high-cash
@@ -48,13 +48,16 @@ proof, downstream proof, supported-feature evidence, and mainline CI all agree.
    concurrency/restart proof. Protected exact-image migration automation now
    adds durable release-bound history, locking, pending-only apply, drift
    rejection, explicit legacy adoption, bounded rollback, source-safe evidence,
-   and anti-bypass governance; protected execution and rollout health proof
-   remain open. Repository implementation merged through PR `#373`; exact-main
+   and anti-bypass governance. Managed infrastructure, external authority,
+   protected execution, and rollout health certification remain tracked under
+   issues `#340`, `#343`-`#345`, `#375`, and `#378`-`#380`. Repository
+   implementation merged through PR `#373`; exact-main
    Main Releasability `29261043056`, CodeQL `29261035371`, and synchronized
    wiki publication prove the release and documentation posture without
    claiming protected environment execution. [Issue #375](https://github.com/sgajbi/lotus-idea/issues/375)
-   tracks the missing protected environments, deployment runner, database
-   secret, governed target, and same-digest rollout evidence,
+   tracks the governed database, encrypted connectivity, runtime secret, and
+   same-digest rollout evidence; protected environments are configured and PR
+   `#377` moves execution to the standard GitHub-hosted runner,
 10. RFC-0002 Slice 07 partially implements internal deterministic scoring,
    priority buckets, stable queue projection, snooze, suppression,
    deduplication, expiry, unsupported-evidence, unscored-candidate exclusions,

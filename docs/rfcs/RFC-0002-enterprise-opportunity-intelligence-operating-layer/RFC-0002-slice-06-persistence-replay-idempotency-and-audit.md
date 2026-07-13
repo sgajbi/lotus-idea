@@ -1,6 +1,6 @@
 # RFC-0002 Slice 06: Persistence, Replay, Idempotency, And Audit
 
-Status: Partially implemented - internal persistence, replay, audit, governed retention/legal-hold/erasure/purge enforcement, lifecycle trust telemetry, bounded scheduled expiry review, signed lifecycle-authority verification and replay fencing, independently signed Lotus AI provider-retention receipt verification/persistence, durable downstream submission claim/finalize/reconciliation, source-safe outbox retry/dead-letter delivery, certified operator diagnostics/actions, schema/rollback contracts, PostgreSQL adapters, real concurrency/restart proof, real logical backup/restore plus no-duplicate resume proof, provider-restore validation, recovery-aware write gating, source-ingestion recovery, and bounded broker/consumer/mesh proof foundations are implemented; physical/WAL production recovery certification, live bank lifecycle-authority producer proof, provider-native AI confirmation/approval, Report/Archive production conformance, production authorized purge proof, external publication, downstream execution/materialization proof, and supported-feature promotion remain blocked
+Status: Implemented - repository-owned persistence, replay, idempotency, audit, lifecycle control, recovery, deployment-migration, and proof foundations are complete; external authority, managed infrastructure, live production certification, product publication, and supported-feature promotion remain fail-closed and tracked separately
 
 ## Outcome
 
@@ -453,30 +453,39 @@ Implemented first-wave internal scope:
     rollback, rollback/reapply, concurrent execution, CLI evidence, and
     append-only event enforcement. Protected environment execution and rollout
     health evidence remain absent, so production certification and supported
-    feature posture remain false. Issue `#375` tracks the missing protected
-    environments, runtime database secret, governed target,
+    feature posture remain false. The `lotus-idea-staging` and
+    `lotus-idea-production` environments now exist with protected-branch rules;
+    production also requires reviewer approval. Issue `#375` tracks the
+    remaining runtime database secret, governed target, encrypted connectivity,
     execution attestation, and same-digest rollout-health evidence.
 
-Not implemented yet:
+External certification backlog (not repository-implementation blockers):
 
 1. protected-environment execution of the exact-image migration workflow plus
-   attested rollout-health evidence; issue `#375` records that the repository
-   currently has zero GitHub environments, no environment-scoped runtime
-   database secret, and no governed target. The workflow uses GitHub's
-   ephemeral `ubuntu-latest` runner, while the contract and disposable
-   PostgreSQL behavior are implemented but have not produced live protected
-   deployment evidence,
-2. certified long-running scheduled daemon runtime and live-service recovery proof,
-3. live source adapter and live source-ingestion proof against a running Core service,
-4. data-product certification,
+   attested rollout-health evidence; issue `#375` records the absent governed
+   PostgreSQL target, environment-scoped runtime secret, approved encrypted
+   connectivity, and live evidence. The protected environments exist and the
+   workflow uses GitHub's ephemeral `ubuntu-latest` runner,
+2. physical/WAL provider recovery and live-service recovery certification,
+   tracked by issues `#343` and `#345`,
+3. bank-owned lifecycle authority, authorized purge, and provider-native AI
+   confirmation/approval, tracked by issues `#344` and `#340`,
+4. Report/Archive production authority and data-product certification, tracked
+   by issues `#378` and `#380`,
 5. certified external broker publication and downstream delivery beyond the
    aggregate outbox readiness diagnostic, HTTP
    publisher adapter foundation, repo-owned outbox event and consumer
    contracts, bounded outbox broker proof artifact, bounded downstream
    consumer runtime proof artifact, and bounded outbox platform mesh event
-   publication proof artifact,
-6. Gateway/Workbench/downstream proof,
-7. supported-feature promotion.
+   publication proof artifact; issue `#379` tracks live authoritative outcomes,
+6. Gateway/Workbench product proof and supported-feature promotion, tracked by
+   issue `#380` and the owning later RFC slices.
+
+This backlog does not transfer source authority into Lotus Idea and does not
+permit a support claim. It records work that requires managed infrastructure,
+another Lotus authority, a production approval, or cross-application live
+evidence. Repository implementation closure therefore advances the RFC while
+readiness and supported-feature evaluators continue to fail closed.
 
 ## Migration And Rollback Posture
 
