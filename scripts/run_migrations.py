@@ -16,7 +16,7 @@ from app.infrastructure.migrations import (  # noqa: E402
     MigrationDirection,
     build_migration_plan,
     dry_run_migration_plan,
-    execute_migration_plan,
+    execute_tracked_migration_plan,
 )
 
 
@@ -57,7 +57,7 @@ def main() -> int:
     import psycopg
 
     with psycopg.connect(args.database_url) as connection:
-        records = execute_migration_plan(cast(MigrationConnection, connection), plan)
+        records = execute_tracked_migration_plan(cast(MigrationConnection, connection), plan)
     for record in records:
         print(
             f"{record.direction.value} {record.version}_{record.name}: "

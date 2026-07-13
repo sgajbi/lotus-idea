@@ -27,10 +27,10 @@ def test_compose_passes_complete_runtime_contract() -> None:
 def test_compose_build_identity_rejects_missing_commit_and_run_id() -> None:
     compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
     degraded = compose.replace(
-        '        GIT_COMMIT_SHA: "${LOTUS_IDEA_BUILD_GIT_COMMIT_SHA:-unknown}"\n',
+        '    GIT_COMMIT_SHA: "${LOTUS_IDEA_BUILD_GIT_COMMIT_SHA:-unknown}"\n',
         "",
     ).replace(
-        '        CI_RUN_ID: "${LOTUS_IDEA_BUILD_RUN_ID:-local}"\n',
+        '    CI_RUN_ID: "${LOTUS_IDEA_BUILD_RUN_ID:-local}"\n',
         "",
     )
 
@@ -47,6 +47,54 @@ def test_compose_runtime_contract_rejects_missing_realization_wiring() -> None:
     assert "docker-compose.yml must configure governed Advise realization base URL" in (
         validate_compose_runtime_contract(degraded)
     )
+
+
+@pytest.mark.parametrize(
+    ("current", "replacement", "expected_error"),
+    [
+        (
+            "  lotus-idea-postgres:",
+            "  removed-postgres:",
+            "docker-compose.yml must configure a dedicated PostgreSQL service",
+        ),
+        (
+            "      - lotus-idea-postgres-data:/var/lib/postgresql",
+            "      - lotus-idea-postgres-data:/var/lib/postgresql/data",
+            (
+                "docker-compose.yml must configure a PostgreSQL 18-compatible "
+                "durable volume"
+            ),
+        ),
+        (
+            '    command: ["python", "scripts/run_migrations.py", "--direction", "apply"]',
+            '    command: ["python", "-c", "print(\'skip\')"]',
+            "docker-compose.yml must configure the app-owned migration command",
+        ),
+        (
+            "        condition: service_completed_successfully",
+            "        condition: service_started",
+            (
+                "docker-compose.yml must configure migration completion before "
+                "application startup"
+            ),
+        ),
+        (
+            '  LOTUS_IDEA_RUNTIME_PROFILE: "${LOTUS_IDEA_RUNTIME_PROFILE:-local}"',
+            '  LOTUS_IDEA_RUNTIME_PROFILE: "test"',
+            "docker-compose.yml must configure an explicit standalone runtime profile",
+        ),
+    ],
+)
+def test_compose_runtime_contract_rejects_ephemeral_persistence_posture(
+    current: str,
+    replacement: str,
+    expected_error: str,
+) -> None:
+    compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
+    degraded = compose.replace(current, replacement)
+
+    assert degraded != compose
+    assert expected_error in validate_compose_runtime_contract(degraded)
 
 
 def _load_ci_contract_gate() -> ModuleType:
@@ -357,6 +405,18 @@ def test_ci_contract_gate_blocks_missing_runtime_license_notices() -> None:
     degraded = dockerfile.replace(" LICENSE THIRD_PARTY_NOTICES.md", "")
 
     assert "Dockerfile must include service license and third-party notices" in (
+        validate_dockerfile_runtime(degraded)
+    )
+
+
+def test_ci_contract_gate_blocks_missing_standalone_migration_entrypoint() -> None:
+    dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
+    degraded = dockerfile.replace(
+        "COPY scripts/run_migrations.py ./scripts/run_migrations.py\n",
+        "",
+    )
+
+    assert "Dockerfile must include the standalone migration entrypoint" in (
         validate_dockerfile_runtime(degraded)
     )
 

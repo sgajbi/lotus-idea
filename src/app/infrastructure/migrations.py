@@ -4,7 +4,10 @@ from dataclasses import dataclass
 from enum import StrEnum
 import hashlib
 from pathlib import Path
-from typing import Any, Protocol
+from typing import Any, Protocol, Sequence
+
+
+LOCAL_MIGRATION_ADVISORY_LOCK_ID = 3_688_460_714_239_083_374
 
 
 class MigrationDirection(StrEnum):
@@ -50,7 +53,9 @@ class MigrationExecutionRecord:
 
 
 class Cursor(Protocol):
-    def execute(self, query: str) -> object: ...
+    def execute(self, query: str, params: Sequence[object] | None = None) -> object: ...
+
+    def fetchall(self) -> Sequence[Sequence[Any]]: ...
 
     def __enter__(self) -> Cursor: ...
 
@@ -140,6 +145,77 @@ def execute_migration_plan(
     return tuple(records)
 
 
+def execute_tracked_migration_plan(
+    connection: MigrationConnection,
+    plan: MigrationExecutionPlan,
+) -> tuple[MigrationExecutionRecord, ...]:
+    """Execute pending local migrations with durable checksum tracking."""
+    records: list[MigrationExecutionRecord] = []
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT pg_advisory_xact_lock(%s)",
+                (LOCAL_MIGRATION_ADVISORY_LOCK_ID,),
+            )
+            cursor.execute(_CREATE_LOCAL_MIGRATION_HISTORY_SQL)
+            cursor.execute(
+                """
+                SELECT migration_version, migration_name, content_sha256
+                FROM lotus_idea_local_schema_migration
+                ORDER BY migration_version
+                """
+            )
+            history = tuple(
+                (str(row[0]), str(row[1]), str(row[2])) for row in cursor.fetchall()
+            )
+            ascending_steps = (
+                plan.steps
+                if plan.direction is MigrationDirection.APPLY
+                else tuple(reversed(plan.steps))
+            )
+            _validate_tracked_history(history, ascending_steps)
+            history_versions = {version for version, _, _ in history}
+            steps = (
+                plan.steps[len(history) :]
+                if plan.direction is MigrationDirection.APPLY
+                else tuple(step for step in plan.steps if step.version in history_versions)
+            )
+            for step in steps:
+                statements = migration_statements(step, plan.direction)
+                for statement in statements:
+                    cursor.execute(statement)
+                if plan.direction is MigrationDirection.APPLY:
+                    cursor.execute(
+                        """
+                        INSERT INTO lotus_idea_local_schema_migration (
+                            migration_version, migration_name, content_sha256
+                        ) VALUES (%s, %s, %s)
+                        """,
+                        (step.version, step.name, step.content_sha256),
+                    )
+                else:
+                    cursor.execute(
+                        """
+                        DELETE FROM lotus_idea_local_schema_migration
+                        WHERE migration_version = %s
+                        """,
+                        (step.version,),
+                    )
+                records.append(
+                    MigrationExecutionRecord(
+                        version=step.version,
+                        name=step.name,
+                        direction=plan.direction,
+                        statement_count=len(statements),
+                    )
+                )
+        connection.commit()
+    except Exception:
+        connection.rollback()
+        raise
+    return tuple(records)
+
+
 def dry_run_migration_plan(plan: MigrationExecutionPlan) -> tuple[MigrationExecutionRecord, ...]:
     records: list[MigrationExecutionRecord] = []
     for step in plan.steps:
@@ -162,6 +238,20 @@ def _parse_migration_identity(path: Path) -> tuple[str, str]:
     return version, name
 
 
+def _validate_tracked_history(
+    history: tuple[tuple[str, str, str], ...],
+    steps: tuple[MigrationStep, ...],
+) -> None:
+    if len(history) > len(steps):
+        raise ValueError("local migration history is ahead of the current image")
+    for index, actual in enumerate(history):
+        expected = steps[index]
+        if actual[0] != expected.version:
+            raise ValueError("local migration history is not a contiguous image prefix")
+        if actual[1:] != (expected.name, expected.content_sha256):
+            raise ValueError(f"local migration {actual[0]} content drift detected")
+
+
 def _sql_statements(sql: str) -> tuple[str, ...]:
     cleaned_lines = []
     for line in sql.splitlines():
@@ -172,3 +262,17 @@ def _sql_statements(sql: str) -> tuple[str, ...]:
     cleaned_sql = "\n".join(cleaned_lines)
     statements = [statement.strip() for statement in cleaned_sql.split(";")]
     return tuple(f"{statement};" for statement in statements if statement)
+
+
+_CREATE_LOCAL_MIGRATION_HISTORY_SQL = """
+CREATE TABLE IF NOT EXISTS lotus_idea_local_schema_migration (
+    migration_version TEXT PRIMARY KEY,
+    migration_name TEXT NOT NULL,
+    content_sha256 TEXT NOT NULL,
+    applied_at_utc TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT ck_lotus_idea_local_schema_migration_version
+        CHECK (migration_version ~ '^[0-9]{3}$'),
+    CONSTRAINT ck_lotus_idea_local_schema_migration_content_sha256
+        CHECK (content_sha256 ~ '^sha256:[0-9a-f]{64}$')
+)
+"""

@@ -144,30 +144,25 @@ make typecheck
 make test-unit
 ```
 
-Run the service locally:
+Run an explicitly ephemeral development process:
 
 ```powershell
 uvicorn app.main:app --reload --port 8330
 ```
 
-Run with PostgreSQL after applying migrations:
+Run the standalone durable local stack:
 
 ```powershell
-$env:LOTUS_IDEA_DATABASE_URL = "postgresql://lotus_idea:lotus_idea@localhost:5432/lotus_idea"
-make migrate
-uvicorn app.main:app --reload --port 8330
+docker compose up -d --build
+Invoke-RestMethod http://127.0.0.1:8330/health/ready
 ```
 
-Run the Docker profile:
-
-```powershell
-docker compose up --build
-```
-
-Compose is runtime-parity evidence for local validation. It is not production
-deployment evidence, Workbench proof, data-product certification, client
-publication, or supported-feature promotion. Post-merge Main Releasability is
-the only registry-publish path: it builds the image under the Git commit SHA,
+The app-owned Compose stack provisions PostgreSQL 18 on host port `55433`,
+persists it in a named volume, applies only pending checksum-verified migrations,
+and starts the API after migration success. The `worker` profile uses the same
+database. This is local runtime evidence, not production deployment, Workbench,
+data-product, client-publication, or supported-feature proof. Post-merge Main
+Releasability is the only registry-publish path: it builds the image under the Git commit SHA,
 pushes it to GHCR, records the registry digest in `release-evidence.json`,
 generates the runtime-dependency SBOM, passes the Trivy image scan, signs the
 digest with keyless Cosign, and publishes provenance and SBOM attestations.

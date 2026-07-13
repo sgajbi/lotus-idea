@@ -855,6 +855,16 @@ make postgres-integration-gate
 Run it only with a disposable PostgreSQL URL configured through the repo's
 expected environment variable.
 
+The app-owned `docker-compose.yml` is independently operable: it provisions
+PostgreSQL 18, mounts the named volume at the major-version-supported
+`/var/lib/postgresql` path, executes a one-shot migration dependency, and starts
+API/optional worker roles against one explicit database URL. Local migration
+history is pending-only, advisory-lock serialized, transactional, and bound to
+version/name/content checksums so repeated Compose startup is safe and drift
+fails closed. Direct `uvicorn` without a database remains an explicitly
+ephemeral local/test path. Canonical Workbench automation consumes this app
+contract and must not replace its persistence or migration ownership.
+
 Deployment migrations are a separate production-like control. Use
 `contracts/operations/lotus-idea-deployment-migrations.v1.json` and
 `make deployment-migration-contract-gate` as contract truth. Protected
@@ -879,8 +889,10 @@ new production-like workflows must use the protected exact-image workflow.
 
 This is design and operability modularity inside the existing deployable. The
 API and optional worker continue to share one Idea-owned PostgreSQL database.
-Do not add a migration service or split the database without concrete workload,
-failure-isolation, ownership, or operability evidence. The implemented workflow
+Do not add a separately deployed long-running migration service or split the
+database without concrete workload, failure-isolation, ownership, or operability
+evidence. The app-local one-shot Compose migration job is startup orchestration,
+not a new runtime boundary. The implemented production workflow
 is still non-certifying until a protected environment run, approved change,
 same-digest rollout health proof, mainline validation, and retained attestation
 exist. Issue `#375` is the durable tracker. Protected staging and production

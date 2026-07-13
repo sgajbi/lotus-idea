@@ -1,15 +1,49 @@
+x-lotus-idea-build: &lotus-idea-build
+  context: .
+  args:
+    GIT_COMMIT_SHA: "${LOTUS_IDEA_BUILD_GIT_COMMIT_SHA:-unknown}"
+    GIT_BRANCH: "${LOTUS_IDEA_BUILD_GIT_BRANCH:-unknown}"
+    BUILD_TIMESTAMP: "${LOTUS_IDEA_BUILD_TIMESTAMP:-unknown}"
+    REPO_URL: "${LOTUS_IDEA_BUILD_REPO_URL:-https://github.com/sgajbi/lotus-idea.git}"
+    CI_RUN_ID: "${LOTUS_IDEA_BUILD_RUN_ID:-local}"
+    IMAGE_BUILD_ID: "${LOTUS_IDEA_BUILD_IMAGE_ID:-local}"
+    SERVICE_VERSION: "${LOTUS_IDEA_BUILD_SERVICE_VERSION:-0.1.0}"
+
+x-lotus-idea-runtime-environment: &lotus-idea-runtime-environment
+  LOTUS_IDEA_DATABASE_URL: "${LOTUS_IDEA_DATABASE_URL:-postgresql://lotus_idea:lotus_idea@lotus-idea-postgres:5432/lotus_idea}"
+  LOTUS_IDEA_RUNTIME_PROFILE: "${LOTUS_IDEA_RUNTIME_PROFILE:-local}"
+
 services:
+  lotus-idea-postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: lotus_idea
+      POSTGRES_USER: lotus_idea
+      POSTGRES_PASSWORD: lotus_idea
+    ports:
+      - "${LOTUS_IDEA_POSTGRES_HOST_PORT:-55433}:5432"
+    volumes:
+      - lotus-idea-postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lotus_idea -d lotus_idea"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  lotus-idea-migrations:
+    image: lotus-idea:local
+    build: *lotus-idea-build
+    environment:
+      LOTUS_IDEA_DATABASE_URL: "${LOTUS_IDEA_DATABASE_URL:-postgresql://lotus_idea:lotus_idea@lotus-idea-postgres:5432/lotus_idea}"
+    depends_on:
+      lotus-idea-postgres:
+        condition: service_healthy
+    command: ["python", "scripts/run_migrations.py", "--direction", "apply"]
+    restart: "no"
+
   lotus-idea:
-    build:
-      context: .
-      args:
-        GIT_COMMIT_SHA: "${LOTUS_IDEA_BUILD_GIT_COMMIT_SHA:-unknown}"
-        GIT_BRANCH: "${LOTUS_IDEA_BUILD_GIT_BRANCH:-unknown}"
-        BUILD_TIMESTAMP: "${LOTUS_IDEA_BUILD_TIMESTAMP:-unknown}"
-        REPO_URL: "${LOTUS_IDEA_BUILD_REPO_URL:-https://github.com/sgajbi/lotus-idea.git}"
-        CI_RUN_ID: "${LOTUS_IDEA_BUILD_RUN_ID:-local}"
-        IMAGE_BUILD_ID: "${LOTUS_IDEA_BUILD_IMAGE_ID:-local}"
-        SERVICE_VERSION: "${LOTUS_IDEA_BUILD_SERVICE_VERSION:-0.1.0}"
+    image: lotus-idea:local
+    build: *lotus-idea-build
     ports:
       - "8330:8330"
     env_file:
@@ -18,6 +52,7 @@ services:
       - path: .env
         required: false
     environment:
+      <<: *lotus-idea-runtime-environment
       LOTUS_CORE_QUERY_BASE_URL: "${LOTUS_CORE_QUERY_BASE_URL:-http://host.docker.internal:8201}"
       LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL: "${LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL:-http://host.docker.internal:8202}"
       LOTUS_RISK_BASE_URL: "${LOTUS_RISK_BASE_URL:-http://host.docker.internal:8130}"
@@ -30,13 +65,17 @@ services:
       LOTUS_IDEA_MANAGE_REALIZATION_SUBMIT_PATH: "${LOTUS_IDEA_MANAGE_REALIZATION_SUBMIT_PATH:-/api/v1/rebalance/idea-action-intake}"
       LOTUS_IDEA_REPORT_REALIZATION_BASE_URL: "${LOTUS_IDEA_REPORT_REALIZATION_BASE_URL:-http://host.docker.internal:8300}"
       LOTUS_IDEA_REPORT_REALIZATION_SUBMIT_PATH: "${LOTUS_IDEA_REPORT_REALIZATION_SUBMIT_PATH:-/reports/idea-evidence-packs}"
+    depends_on:
+      lotus-idea-migrations:
+        condition: service_completed_successfully
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8330/health/ready')"]
       interval: 15s
       timeout: 3s
       retries: 10
   lotus-idea-source-ingestion-worker:
-    build: .
+    image: lotus-idea:local
+    build: *lotus-idea-build
     restart: on-failure
     profiles:
       - worker
@@ -46,10 +85,17 @@ services:
       - path: .env
         required: false
     environment:
+      <<: *lotus-idea-runtime-environment
       LOTUS_IDEA_SOURCE_INGESTION_MANIFEST: /app/docs/examples/source-ingestion/canonical-high-cash-worker.manifest.json
       LOTUS_CORE_QUERY_BASE_URL: "${LOTUS_CORE_QUERY_BASE_URL:-http://host.docker.internal:8201}"
       LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL: "${LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL:-http://host.docker.internal:8202}"
+    depends_on:
+      lotus-idea-migrations:
+        condition: service_completed_successfully
     command:
       - python
       - scripts/run_scheduled_source_ingestion_worker.py
       - --run-forever
+
+volumes:
+  lotus-idea-postgres-data:
