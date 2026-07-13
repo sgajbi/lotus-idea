@@ -695,9 +695,18 @@ Prior Slice 06 validation:
     disposable `postgres:18-alpine` service, including concurrent lock,
     drift, adoption, atomic failure, rollback/reapply, exact CLI evidence, and
     append-only event mutation cases.
-32. `make deployment-migration-contract-gate` and `make ci-contract-gate`
-    pass locally. Full branch CI, protected workflow execution, exact-main
-    release proof, and wiki publication remain required.
+32. Full `make ci` passes with `3,611` unit tests, `430` integration tests
+    passed and `28` environment-dependent PostgreSQL skips, `4` e2e tests,
+    `99.01%` coverage over `24,237` statements, and no known dependency
+    vulnerabilities.
+33. The SHA-tagged image passes runtime smoke, OCI-label and `/version`
+    identity inspection, deployment migration CLI/evidence-gate closure,
+    CycloneDX 1.6 SBOM generation with `27` components, and a blocking Trivy
+    scan with zero HIGH/CRITICAL vulnerabilities or detected secrets.
+34. Protected workflow execution, exact-main release proof, and wiki
+    publication remain required. Local image proof does not substitute for a
+    signed, attested, registry-digest-bound execution from a protected
+    environment.
 
 GitHub PR validation and wiki publication remain required before mainline
 closure.
