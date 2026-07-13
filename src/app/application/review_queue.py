@@ -6,8 +6,7 @@ from types import MappingProxyType
 from typing import Mapping, cast
 
 from app.domain import (
-    DEFAULT_SCORING_POLICY,
-    IdeaScoringPolicy,
+    DEFAULT_REVIEW_QUEUE_POLICY,
     IdeaRepositorySnapshot,
     QueueExclusion,
     QueueExclusionReason,
@@ -16,6 +15,7 @@ from app.domain import (
     ReviewQueueSnapshotTokenRequiredError,
     ReviewQueueItem,
     ReviewQueueProjection,
+    ReviewQueuePolicy,
     build_review_queue_snapshot_identity,
     build_review_queue,
     require_matching_review_queue_snapshot,
@@ -140,13 +140,14 @@ def build_review_queue_from_repository(
     command: BuildReviewQueueFromRepositoryCommand,
     *,
     repository: CandidateSnapshotRepository,
-    policy: IdeaScoringPolicy = DEFAULT_SCORING_POLICY,
+    policy: ReviewQueuePolicy = DEFAULT_REVIEW_QUEUE_POLICY,
 ) -> ReviewQueuePage:
     if not command.snoozes and isinstance(repository, ReviewQueueProjectionRepository):
         repository_page = repository.review_queue_candidate_page(
             evaluated_at_utc=command.evaluated_at_utc,
             expected_snapshot_token=command.snapshot_token,
-            policy_version=policy.policy_version,
+            queue_policy_version=policy.policy_version,
+            rankable_score_policy_versions=policy.rankable_score_policy_versions,
             access_scope_filter=command.access_scope_filter,
             limit=command.limit,
             offset=command.offset,
@@ -166,7 +167,7 @@ def build_review_queue_readiness_snapshot(
     *,
     repository: CandidateSnapshotRepository,
     durable_storage_backed: bool,
-    policy: IdeaScoringPolicy = DEFAULT_SCORING_POLICY,
+    policy: ReviewQueuePolicy = DEFAULT_REVIEW_QUEUE_POLICY,
 ) -> ReviewQueueReadinessSnapshot:
     repository_side_pagination_certified = durable_storage_backed and isinstance(
         repository,
@@ -176,6 +177,7 @@ def build_review_queue_readiness_snapshot(
         readiness_repository = cast(ReviewQueueReadinessProjectionRepository, repository)
         readiness_summary = readiness_repository.review_queue_readiness_summary(
             evaluated_at_utc=command.evaluated_at_utc,
+            rankable_score_policy_versions=policy.rankable_score_policy_versions,
             access_scope_filter=command.access_scope_filter,
         )
         return _review_queue_readiness_snapshot_from_summary(
@@ -202,6 +204,9 @@ def build_review_queue_readiness_snapshot(
     certification_blockers = _review_queue_certification_blockers(
         durable_storage_backed=durable_storage_backed,
         repository_side_pagination_certified=repository_side_pagination_certified,
+        unrankable_score_policy_count=exclusion_counts[
+            QueueExclusionReason.UNRANKABLE_SCORE_POLICY.value
+        ],
     )
     return ReviewQueueReadinessSnapshot(
         repository="lotus-idea",
@@ -229,11 +234,15 @@ def _review_queue_readiness_snapshot_from_summary(
     readiness_summary: ReviewQueueReadinessRepositorySummary,
     durable_storage_backed: bool,
     repository_side_pagination_certified: bool,
-    policy: IdeaScoringPolicy,
+    policy: ReviewQueuePolicy,
 ) -> ReviewQueueReadinessSnapshot:
     certification_blockers = _review_queue_certification_blockers(
         durable_storage_backed=durable_storage_backed,
         repository_side_pagination_certified=repository_side_pagination_certified,
+        unrankable_score_policy_count=readiness_summary.exclusion_counts.get(
+            QueueExclusionReason.UNRANKABLE_SCORE_POLICY.value,
+            0,
+        ),
     )
     return ReviewQueueReadinessSnapshot(
         repository="lotus-idea",
@@ -259,12 +268,15 @@ def _review_queue_certification_blockers(
     *,
     durable_storage_backed: bool,
     repository_side_pagination_certified: bool,
+    unrankable_score_policy_count: int,
 ) -> tuple[str, ...]:
     blockers: list[str] = []
     if not durable_storage_backed:
         blockers.append("durable_repository_not_configured")
     if not repository_side_pagination_certified:
         blockers.append("repository_side_queue_pagination_not_certified")
+    if unrankable_score_policy_count > 0:
+        blockers.append("review_queue_score_policy_coverage_incomplete")
     blockers.extend(
         (
             "workbench_product_proof_missing",
@@ -279,7 +291,7 @@ def _page_repository_review_queue(
     repository_page: ReviewQueueRepositoryPage,
     *,
     command: BuildReviewQueueFromRepositoryCommand,
-    policy: IdeaScoringPolicy,
+    policy: ReviewQueuePolicy,
 ) -> ReviewQueuePage:
     queue = build_review_queue(
         tuple(record.candidate for record in repository_page.candidate_records),
@@ -321,7 +333,7 @@ def _build_review_queue_from_snapshot(
     command: BuildReviewQueueFromRepositoryCommand,
     *,
     snapshot: IdeaRepositorySnapshot,
-    policy: IdeaScoringPolicy,
+    policy: ReviewQueuePolicy,
 ) -> tuple[ReviewQueueProjection, str]:
     visible_records = visible_review_queue_candidate_records(
         tuple(snapshot.candidate_records.values()),
@@ -339,6 +351,7 @@ def _build_review_queue_from_snapshot(
         fingerprint=review_queue_candidate_fingerprint(visible_records),
         evaluated_at_utc=command.evaluated_at_utc,
         policy_version=queue.policy_version,
+        rankable_score_policy_versions=policy.rankable_score_policy_versions,
         access_scope_filter=command.access_scope_filter,
         snoozes=command.snoozes,
     )

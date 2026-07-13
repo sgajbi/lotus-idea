@@ -21,7 +21,7 @@ from app.domain.ideas import (
     SuppressionReason,
     transition_candidate,
 )
-from app.domain.scoring import QueueSnooze
+from app.domain.review_queue import QueueSnooze
 
 
 def _require_text(value: str, field_name: str) -> None:

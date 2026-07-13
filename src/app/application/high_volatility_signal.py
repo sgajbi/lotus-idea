@@ -5,6 +5,7 @@ from datetime import date, datetime
 from decimal import Decimal
 
 from app.domain import (
+    CandidateScorePolicyVersion,
     HighVolatilitySignalInput,
     HighVolatilitySignalPolicy,
     OpportunityFamily,
@@ -50,7 +51,7 @@ class EvaluateHighVolatilityFromRiskCommand:
 
 
 DEFAULT_HIGH_VOLATILITY_POLICY = HighVolatilitySignalPolicy(
-    policy_version="high-volatility-attention-v1",
+    policy_version=CandidateScorePolicyVersion.HIGH_VOLATILITY.value,
     volatility_threshold=Decimal("12.00"),
     candidate_score=Decimal("72"),
 )

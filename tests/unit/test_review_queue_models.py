@@ -57,6 +57,8 @@ def test_advisor_review_queue_response_maps_source_safe_page() -> None:
     assert item["rank"] == 1
     assert item["candidate"]["family"] == "high_cash"
     assert item["candidate"]["score"] == "82"
+    assert item["candidate"]["scorePolicyVersion"] == "idle-liquidity-v1"
+    assert item["policyVersion"] == "idea-deterministic-ranking-v1"
     assert item["reasonCodes"] == ("high_cash_ratio", "review_required")
     assert response["exclusions"] == ()
     assert "route" not in str(response)

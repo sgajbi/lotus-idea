@@ -66,7 +66,8 @@ def review_queue_readiness_summary_rows(
     closed_status = params[offset + 2]
     rejected_status = params[offset + 3]
     blocked_supportability = params[offset + 4]
-    lifecycle_statuses = set(params[offset + 5])
+    rankable_score_policy_versions = set(params[offset + 5])
+    lifecycle_statuses = set(params[offset + 6])
     exclusion_counts = {reason.value: 0 for reason in QueueExclusionReason}
     eligible_rows: list[dict[str, Any]] = []
     scored_candidate_count = 0
@@ -86,6 +87,7 @@ def review_queue_readiness_summary_rows(
             closed_status=closed_status,
             rejected_status=rejected_status,
             blocked_supportability=blocked_supportability,
+            rankable_score_policy_versions=rankable_score_policy_versions,
             scope_values=scope_values,
         )
         if exclusion_reason is None:
@@ -120,13 +122,14 @@ def _review_queue_ordered_rows(
     lifecycle_statuses = set(params[1])
     suppressed_posture = params[2]
     blocked_supportability = params[3]
+    rankable_score_policy_versions = set(params[3])
     scope_fields = tuple(
         field_name
         for field_name in ("tenant_id", "book_id", "portfolio_id", "client_id")
         if f"->>'{field_name}'" in query
     )
     scope_values = {
-        field_name: set(values) for field_name, values in zip(scope_fields, params[4:], strict=True)
+        field_name: set(values) for field_name, values in zip(scope_fields, params[5:], strict=True)
     }
     eligible_rows = [
         row
@@ -136,6 +139,7 @@ def _review_queue_ordered_rows(
             lifecycle_statuses=lifecycle_statuses,
             suppressed_posture=suppressed_posture,
             blocked_supportability=blocked_supportability,
+            rankable_score_policy_versions=rankable_score_policy_versions,
             scope_values=scope_values,
         )
     ]
@@ -180,6 +184,7 @@ def _review_queue_row_exclusion_reason(
     closed_status: str,
     rejected_status: str,
     blocked_supportability: str,
+    rankable_score_policy_versions: set[str],
     scope_values: dict[str, set[str]],
 ) -> str | None:
     candidate_json = row["candidate_json"]
@@ -205,6 +210,8 @@ def _review_queue_row_exclusion_reason(
         return QueueExclusionReason.UNSUPPORTED_EVIDENCE.value
     if candidate_json.get("score") is None:
         return QueueExclusionReason.UNSCORED.value
+    if candidate_json["score"].get("policy_version") not in rankable_score_policy_versions:
+        return QueueExclusionReason.UNRANKABLE_SCORE_POLICY.value
     if row["lifecycle_status"] not in lifecycle_statuses:
         return QueueExclusionReason.NON_REVIEWABLE_STATUS.value
     return None
@@ -216,6 +223,7 @@ def _review_queue_row_is_eligible(
     lifecycle_statuses: set[str],
     suppressed_posture: str,
     blocked_supportability: str,
+    rankable_score_policy_versions: set[str],
     scope_values: dict[str, set[str]],
 ) -> bool:
     candidate_json = row["candidate_json"]
@@ -228,6 +236,8 @@ def _review_queue_row_is_eligible(
     if candidate_json.get("suppression_reason") is not None:
         return False
     if candidate_json.get("score") is None:
+        return False
+    if candidate_json["score"].get("policy_version") not in rankable_score_policy_versions:
         return False
     if candidate_json["evidence_packet"]["supportability"] == blocked_supportability:
         return False

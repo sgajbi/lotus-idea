@@ -11,7 +11,7 @@ from typing import Any, Mapping
 
 from app.domain.access_scope import QueueAccessScopeFilter
 from app.domain.persistence_models import CandidatePersistenceRecord
-from app.domain.scoring import QueueSnooze
+from app.domain.review_queue.policy import QueueSnooze
 
 
 REVIEW_QUEUE_SNAPSHOT_TOKEN_VERSION = "rqs1"
@@ -74,6 +74,7 @@ def build_review_queue_snapshot_identity(
     fingerprint: str,
     evaluated_at_utc: datetime,
     policy_version: str,
+    rankable_score_policy_versions: tuple[str, ...],
     access_scope_filter: QueueAccessScopeFilter | None,
     snoozes: tuple[QueueSnooze, ...] = (),
 ) -> ReviewQueueSnapshotIdentity:
@@ -82,11 +83,21 @@ def build_review_queue_snapshot_identity(
         raise ValueError("fingerprint is required")
     if not policy_version.strip():
         raise ValueError("policy_version is required")
+    normalized_score_policy_versions = tuple(
+        sorted(version.strip() for version in rankable_score_policy_versions)
+    )
+    if not normalized_score_policy_versions or any(
+        not version for version in normalized_score_policy_versions
+    ):
+        raise ValueError("rankable_score_policy_versions is required")
+    if len(set(normalized_score_policy_versions)) != len(normalized_score_policy_versions):
+        raise ValueError("rankable_score_policy_versions must be unique")
     token_material = {
         "accessScopeFilter": access_scope_filter,
         "candidateFingerprint": fingerprint,
         "evaluatedAtUtc": evaluated_at_utc,
         "policyVersion": policy_version,
+        "rankableScorePolicyVersions": normalized_score_policy_versions,
         "snoozes": tuple(snoozes),
         "tokenVersion": REVIEW_QUEUE_SNAPSHOT_TOKEN_VERSION,
     }

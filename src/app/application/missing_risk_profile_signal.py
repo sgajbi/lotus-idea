@@ -6,6 +6,7 @@ from decimal import Decimal
 from enum import StrEnum
 
 from app.domain import (
+    CandidateScorePolicyVersion,
     MissingRiskProfileSignalInput,
     MissingRiskProfileSignalPolicy,
     OpportunityFamily,
@@ -59,7 +60,7 @@ class EvaluateMissingRiskProfileFromAdviseCommand:
 
 
 DEFAULT_MISSING_RISK_PROFILE_POLICY = MissingRiskProfileSignalPolicy(
-    policy_version="missing-risk-profile-review-v1",
+    policy_version=CandidateScorePolicyVersion.MISSING_RISK_PROFILE.value,
     candidate_score=Decimal("64"),
 )
 

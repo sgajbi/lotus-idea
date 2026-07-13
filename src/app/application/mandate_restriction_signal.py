@@ -5,6 +5,7 @@ from datetime import date, datetime
 from decimal import Decimal
 
 from app.domain import (
+    CandidateScorePolicyVersion,
     MandateRestrictionSignalInput,
     MandateRestrictionSignalPolicy,
     OpportunityFamily,
@@ -67,7 +68,7 @@ class EvaluateMandateRestrictionFromAdviseCommand:
 
 
 DEFAULT_MANDATE_RESTRICTION_POLICY = MandateRestrictionSignalPolicy(
-    policy_version="mandate-restriction-review-v1",
+    policy_version=CandidateScorePolicyVersion.MANDATE_RESTRICTION.value,
     candidate_score=Decimal("66"),
 )
 

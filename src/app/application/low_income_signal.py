@@ -5,6 +5,7 @@ from datetime import date, datetime
 from decimal import Decimal
 
 from app.domain import (
+    CandidateScorePolicyVersion,
     LowIncomeSignalInput,
     LowIncomeSignalPolicy,
     OpportunityFamily,
@@ -52,7 +53,7 @@ class EvaluateLowIncomeFromCoreCommand:
 
 
 DEFAULT_LOW_INCOME_POLICY = LowIncomeSignalPolicy(
-    policy_version="cashflow-liquidity-review-v1",
+    policy_version=CandidateScorePolicyVersion.LOW_INCOME.value,
     projected_cumulative_cashflow_threshold=Decimal("-10000"),
     candidate_score=Decimal("68"),
 )

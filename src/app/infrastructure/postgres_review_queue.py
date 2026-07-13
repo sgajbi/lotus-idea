@@ -5,12 +5,12 @@ from typing import Any, Mapping, Sequence
 
 from app.domain.access_scope import QueueAccessScopeFilter
 from app.domain.ideas import EvidenceSupportability, IdeaLifecycleStatus, ReviewPosture
-from app.domain.review_queue_snapshot import (
+from app.domain.review_queue import (
+    QueueExclusionReason,
     ReviewQueueSnapshotConflictError,
     build_review_queue_snapshot_identity,
     require_matching_review_queue_snapshot,
 )
-from app.domain.scoring import QueueExclusionReason
 from app.domain.persistence import CandidatePersistenceRecord
 from app.infrastructure.postgres_codecs import (
     idea_candidate_from_json,
@@ -43,7 +43,8 @@ class PostgresReviewQueueRepositoryMixin:
         *,
         evaluated_at_utc: datetime,
         expected_snapshot_token: str | None,
-        policy_version: str,
+        queue_policy_version: str,
+        rankable_score_policy_versions: tuple[str, ...],
         access_scope_filter: QueueAccessScopeFilter | None,
         limit: int,
         offset: int,
@@ -52,7 +53,8 @@ class PostgresReviewQueueRepositoryMixin:
             self._connection,
             evaluated_at_utc=evaluated_at_utc,
             expected_snapshot_token=expected_snapshot_token,
-            policy_version=policy_version,
+            queue_policy_version=queue_policy_version,
+            rankable_score_policy_versions=rankable_score_policy_versions,
             access_scope_filter=access_scope_filter,
             limit=limit,
             offset=offset,
@@ -62,11 +64,13 @@ class PostgresReviewQueueRepositoryMixin:
         self,
         *,
         evaluated_at_utc: datetime,
+        rankable_score_policy_versions: tuple[str, ...],
         access_scope_filter: QueueAccessScopeFilter | None,
     ) -> ReviewQueueReadinessRepositorySummary:
         return load_review_queue_readiness_summary(
             self._connection,
             evaluated_at_utc=evaluated_at_utc,
+            rankable_score_policy_versions=rankable_score_policy_versions,
             access_scope_filter=access_scope_filter,
         )
 
@@ -76,7 +80,8 @@ def load_review_queue_candidate_page(
     *,
     evaluated_at_utc: datetime,
     expected_snapshot_token: str | None,
-    policy_version: str,
+    queue_policy_version: str,
+    rankable_score_policy_versions: tuple[str, ...],
     access_scope_filter: QueueAccessScopeFilter | None,
     limit: int,
     offset: int,
@@ -85,9 +90,13 @@ def load_review_queue_candidate_page(
         raise ValueError("limit must be positive")
     if offset < 0:
         raise ValueError("offset must be greater than or equal to zero")
+    rankable_score_policy_versions = _normalize_rankable_score_policy_versions(
+        rankable_score_policy_versions
+    )
 
     predicate_sql, predicate_params = _review_queue_candidate_predicates(
         evaluated_at_utc=evaluated_at_utc,
+        rankable_score_policy_versions=rankable_score_policy_versions,
         access_scope_filter=access_scope_filter,
     )
     with connection.cursor() as cursor:
@@ -108,7 +117,8 @@ def load_review_queue_candidate_page(
         snapshot_identity = build_review_queue_snapshot_identity(
             fingerprint=fingerprint,
             evaluated_at_utc=evaluated_at_utc,
-            policy_version=policy_version,
+            policy_version=queue_policy_version,
+            rankable_score_policy_versions=rankable_score_policy_versions,
             access_scope_filter=access_scope_filter,
         )
         require_matching_review_queue_snapshot(
@@ -127,7 +137,8 @@ def load_review_queue_candidate_page(
         verification_identity = build_review_queue_snapshot_identity(
             fingerprint=_snapshot_fingerprint(verification_rows),
             evaluated_at_utc=evaluated_at_utc,
-            policy_version=policy_version,
+            policy_version=queue_policy_version,
+            rankable_score_policy_versions=rankable_score_policy_versions,
             access_scope_filter=access_scope_filter,
         )
         if verification_identity.token != snapshot_identity.token:
@@ -147,8 +158,12 @@ def load_review_queue_readiness_summary(
     connection: PostgresConnection,
     *,
     evaluated_at_utc: datetime,
+    rankable_score_policy_versions: tuple[str, ...],
     access_scope_filter: QueueAccessScopeFilter | None,
 ) -> ReviewQueueReadinessRepositorySummary:
+    rankable_score_policy_versions = _normalize_rankable_score_policy_versions(
+        rankable_score_policy_versions
+    )
     access_scope_mismatch_sql, access_scope_params = _access_scope_mismatch_predicate(
         access_scope_filter,
     )
@@ -160,6 +175,7 @@ def load_review_queue_readiness_summary(
         IdeaLifecycleStatus.CLOSED.value,
         IdeaLifecycleStatus.REJECTED.value,
         EvidenceSupportability.BLOCKED.value,
+        list(rankable_score_policy_versions),
         [
             status.value
             for status in (
@@ -218,9 +234,21 @@ def _snapshot_fingerprint(rows: Sequence[Any]) -> str:
     return str(read_row_value(rows[0], "snapshot_fingerprint"))
 
 
+def _normalize_rankable_score_policy_versions(
+    policy_versions: tuple[str, ...],
+) -> tuple[str, ...]:
+    normalized = tuple(sorted(version.strip() for version in policy_versions))
+    if not normalized or any(not version for version in normalized):
+        raise ValueError("rankable_score_policy_versions is required")
+    if len(set(normalized)) != len(normalized):
+        raise ValueError("rankable_score_policy_versions must be unique")
+    return normalized
+
+
 def _review_queue_candidate_predicates(
     *,
     evaluated_at_utc: datetime,
+    rankable_score_policy_versions: tuple[str, ...],
     access_scope_filter: QueueAccessScopeFilter | None,
 ) -> tuple[str, tuple[Any, ...]]:
     predicates = [
@@ -229,6 +257,7 @@ def _review_queue_candidate_predicates(
         "review_posture <> %s",
         "(candidate_json->>'suppression_reason') IS NULL",
         "(candidate_json->'score') IS NOT NULL",
+        "(candidate_json->'score'->>'policy_version') = ANY(%s)",
         "(candidate_json->'evidence_packet'->>'supportability') <> %s",
     ]
     params: list[Any] = [
@@ -244,6 +273,7 @@ def _review_queue_candidate_predicates(
             )
         ],
         ReviewPosture.SUPPRESSED.value,
+        list(rankable_score_policy_versions),
         EvidenceSupportability.BLOCKED.value,
     ]
     if access_scope_filter is not None:
@@ -382,9 +412,12 @@ def _review_queue_readiness_summary_query(access_scope_mismatch_sql: str) -> str
                            THEN '{QueueExclusionReason.REJECTED.value}'
                        WHEN (candidate_json->'evidence_packet'->>'supportability') = %s
                            THEN '{QueueExclusionReason.UNSUPPORTED_EVIDENCE.value}'
-                       WHEN (candidate_json->'score') IS NULL
-                           THEN '{QueueExclusionReason.UNSCORED.value}'
-                       WHEN NOT (lifecycle_status = ANY(%s))
+                        WHEN (candidate_json->'score') IS NULL
+                            THEN '{QueueExclusionReason.UNSCORED.value}'
+                        WHEN (candidate_json->'score'->>'policy_version') IS NULL
+                            OR NOT ((candidate_json->'score'->>'policy_version') = ANY(%s))
+                            THEN '{QueueExclusionReason.UNRANKABLE_SCORE_POLICY.value}'
+                        WHEN NOT (lifecycle_status = ANY(%s))
                            THEN '{QueueExclusionReason.NON_REVIEWABLE_STATUS.value}'
                        ELSE NULL
                    END AS exclusion_reason
@@ -440,6 +473,9 @@ def _review_queue_readiness_summary_query(access_scope_mismatch_sql: str) -> str
             (SELECT COUNT(*) FROM classified
                 WHERE exclusion_reason = '{QueueExclusionReason.UNSCORED.value}')::integer
                 AS unscored,
+            (SELECT COUNT(*) FROM classified
+                WHERE exclusion_reason = '{QueueExclusionReason.UNRANKABLE_SCORE_POLICY.value}')::integer
+                AS unrankable_score_policy,
             (SELECT COUNT(*) FROM classified
                 WHERE exclusion_reason = '{QueueExclusionReason.NON_REVIEWABLE_STATUS.value}')::integer
                 AS non_reviewable_status,

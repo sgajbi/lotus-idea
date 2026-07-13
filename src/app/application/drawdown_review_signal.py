@@ -5,6 +5,7 @@ from datetime import date, datetime
 from decimal import Decimal
 
 from app.domain import (
+    CandidateScorePolicyVersion,
     DrawdownReviewSignalInput,
     DrawdownReviewSignalPolicy,
     OpportunityFamily,
@@ -50,7 +51,7 @@ class EvaluateDrawdownReviewFromRiskCommand:
 
 
 DEFAULT_DRAWDOWN_REVIEW_POLICY = DrawdownReviewSignalPolicy(
-    policy_version="drawdown-review-attention-v1",
+    policy_version=CandidateScorePolicyVersion.DRAWDOWN_REVIEW.value,
     max_drawdown_threshold=Decimal("-0.08"),
     candidate_score=Decimal("72"),
 )

@@ -35,6 +35,9 @@ PROHIBITED_SUFFIXES = {
 }
 
 REQUIRED_BOUNDED_MODULE_PATHS = {
+    "src/app/domain/review_queue/__init__.py",
+    "src/app/domain/review_queue/policy.py",
+    "src/app/domain/review_queue/snapshot.py",
     "src/app/infrastructure/persistence/__init__.py",
     "src/app/infrastructure/persistence/aggregate_mutation.py",
     "src/app/infrastructure/persistence/postgres_mutation.py",
@@ -122,6 +125,7 @@ REQUIRED_BOUNDED_MODULE_PATHS = {
 }
 
 PROHIBITED_LEGACY_MODULE_PATHS = {
+    "src/app/domain/review_queue_snapshot.py",
     "scripts/generate_outbox_broker_proof.py",
     "scripts/generate_outbox_consumer_runtime_proof.py",
     "scripts/generate_outbox_platform_mesh_event_publication_proof.py",

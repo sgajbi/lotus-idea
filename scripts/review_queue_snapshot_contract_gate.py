@@ -6,40 +6,83 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+DOMAIN_POLICY_MODULE = Path("src/app/domain/review_queue/policy.py")
+DOMAIN_SNAPSHOT_MODULE = Path("src/app/domain/review_queue/snapshot.py")
 APPLICATION_MODULE = Path("src/app/application/review_queue.py")
 PORT_MODULE = Path("src/app/ports/idea_repository.py")
 POSTGRES_MODULE = Path("src/app/infrastructure/postgres_review_queue.py")
 API_MODULE = Path("src/app/api/review_queues.py")
 API_MODEL_MODULE = Path("src/app/api/review_queue_models.py")
+CONTRACT_MODULES = (
+    DOMAIN_POLICY_MODULE,
+    DOMAIN_SNAPSHOT_MODULE,
+    APPLICATION_MODULE,
+    PORT_MODULE,
+    POSTGRES_MODULE,
+    API_MODULE,
+    API_MODEL_MODULE,
+)
 
 
 def validate_review_queue_snapshot_contract(root: Path = ROOT) -> list[str]:
     errors: list[str] = []
     modules = {
         relative_path: _read_module(root, relative_path, errors)
-        for relative_path in (
-            APPLICATION_MODULE,
-            PORT_MODULE,
-            POSTGRES_MODULE,
-            API_MODULE,
-            API_MODEL_MODULE,
-        )
+        for relative_path in CONTRACT_MODULES
     }
     if any(tree is None for tree in modules.values()):
         return sorted(errors)
 
     _require_function_arguments(
+        modules[DOMAIN_SNAPSHOT_MODULE],
+        DOMAIN_SNAPSHOT_MODULE,
+        "build_review_queue_snapshot_identity",
+        {"policy_version", "rankable_score_policy_versions"},
+        errors,
+    )
+    _require_class_fields(
+        modules[DOMAIN_POLICY_MODULE],
+        DOMAIN_POLICY_MODULE,
+        "ReviewQueuePolicy",
+        {"policy_version", "rankable_score_policy_versions"},
+        errors,
+    )
+    _require_function_arguments(
         modules[PORT_MODULE],
         PORT_MODULE,
         "review_queue_candidate_page",
-        {"evaluated_at_utc", "expected_snapshot_token", "policy_version"},
+        {
+            "evaluated_at_utc",
+            "expected_snapshot_token",
+            "queue_policy_version",
+            "rankable_score_policy_versions",
+        },
         errors,
     )
     _require_function_arguments(
         modules[POSTGRES_MODULE],
         POSTGRES_MODULE,
         "load_review_queue_candidate_page",
-        {"evaluated_at_utc", "expected_snapshot_token", "policy_version"},
+        {
+            "evaluated_at_utc",
+            "expected_snapshot_token",
+            "queue_policy_version",
+            "rankable_score_policy_versions",
+        },
+        errors,
+    )
+    _require_function_arguments(
+        modules[PORT_MODULE],
+        PORT_MODULE,
+        "review_queue_readiness_summary",
+        {"evaluated_at_utc", "rankable_score_policy_versions"},
+        errors,
+    )
+    _require_function_arguments(
+        modules[POSTGRES_MODULE],
+        POSTGRES_MODULE,
+        "load_review_queue_readiness_summary",
+        {"evaluated_at_utc", "rankable_score_policy_versions"},
         errors,
     )
     _require_function_arguments(
@@ -64,17 +107,23 @@ def validate_review_queue_snapshot_contract(root: Path = ROOT) -> list[str]:
         errors,
     )
 
-    application_source = (root / APPLICATION_MODULE).read_text(encoding="utf-8")
-    postgres_source = (root / POSTGRES_MODULE).read_text(encoding="utf-8")
-    api_source = (root / API_MODULE).read_text(encoding="utf-8")
     required_fragments = {
+        DOMAIN_POLICY_MODULE: (
+            "UNRANKABLE_SCORE_POLICY",
+            "accepts_score_policy",
+        ),
+        DOMAIN_SNAPSHOT_MODULE: ("rankableScorePolicyVersions",),
         APPLICATION_MODULE: (
             "ReviewQueueSnapshotTokenRequiredError",
             "require_matching_review_queue_snapshot",
             "visible_review_queue_candidate_records",
+            "rankable_score_policy_versions=policy.rankable_score_policy_versions",
         ),
         POSTGRES_MODULE: (
             "(candidate_json->>'created_at_utc')::timestamptz <= %s",
+            "(candidate_json->'score'->>'policy_version') = ANY(%s)",
+            "(candidate_json->'score'->>'policy_version') IS NULL",
+            "_normalize_rankable_score_policy_versions",
             "snapshot_fingerprint",
             "verification_identity.token != snapshot_identity.token",
         ),
@@ -85,9 +134,8 @@ def validate_review_queue_snapshot_contract(root: Path = ROOT) -> list[str]:
         ),
     }
     sources = {
-        APPLICATION_MODULE: application_source,
-        POSTGRES_MODULE: postgres_source,
-        API_MODULE: api_source,
+        relative_path: (root / relative_path).read_text(encoding="utf-8")
+        for relative_path in required_fragments
     }
     for relative_path, fragments in required_fragments.items():
         for fragment in fragments:

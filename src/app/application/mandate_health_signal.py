@@ -5,6 +5,7 @@ from datetime import date, datetime
 from decimal import Decimal
 
 from app.domain import (
+    CandidateScorePolicyVersion,
     MandateHealthSignalInput,
     MandateHealthSignalPolicy,
     OpportunityFamily,
@@ -53,7 +54,7 @@ class EvaluateMandateHealthFromManageCommand:
 
 
 DEFAULT_MANDATE_HEALTH_POLICY = MandateHealthSignalPolicy(
-    policy_version="allocation-drift-mandate-review-v1",
+    policy_version=CandidateScorePolicyVersion.ALLOCATION_DRIFT.value,
     minimum_workflow_decision_count=1,
     minimum_lineage_edge_count=1,
     candidate_score=Decimal("70"),
