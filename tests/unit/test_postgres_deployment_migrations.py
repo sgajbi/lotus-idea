@@ -269,7 +269,7 @@ def _executor(
     migrations: Path,
 ) -> PostgresDeploymentMigrationExecutor:
     return PostgresDeploymentMigrationExecutor(
-        connection,  # type: ignore[arg-type]
+        connection,
         migrations_dir=migrations,
         clock=lambda: datetime(2026, 7, 13, 12, 0, tzinfo=UTC),
     )
