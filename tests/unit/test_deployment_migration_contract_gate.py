@@ -50,6 +50,22 @@ def test_deployment_migration_workflow_rejects_mutable_or_injected_execution() -
     assert any("job environment variables" in error for error in errors)
 
 
+def test_contract_gate_rejects_direct_migration_in_other_workflows() -> None:
+    module = _load_gate()
+
+    errors = module.validate_production_migration_entrypoints(
+        {
+            "production-rollout.yml": "steps:\n  - run: make migrate\n",
+            "scheduled-data-lifecycle-review.yml": "steps:\n  - run: make migrate\n",
+        }
+    )
+
+    assert errors == [
+        "production-rollout.yml must use the governed exact-image deployment migration "
+        "workflow; direct migration execution is reserved for approved disposable fixtures"
+    ]
+
+
 def _load_gate() -> ModuleType:
     script = ROOT / "scripts" / "deployment_migration_contract_gate.py"
     spec = importlib.util.spec_from_file_location("deployment_migration_contract_gate", script)
