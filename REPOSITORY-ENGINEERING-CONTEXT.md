@@ -265,6 +265,11 @@ runtime modularity:
    implementation-proof consumers remain with their owning capability. No
    compatibility modules, broker service, worker process, database boundary,
    or supported-feature claim was added.
+10. `infrastructure/persistence/` begins the durable-write capability boundary.
+    Candidate creation uses a bounded requested/idempotency-linked aggregate
+    projection plus ordered transaction locks instead of whole-store snapshot
+    hydration. Focused unit and PostgreSQL tests mirror the package. Remaining
+    generic mutation families are still explicitly under Slice 06 review.
 
 Design modularity does not imply runtime modularity. Do not introduce a new
 process, service, queue, worker class, or separately scalable boundary unless
@@ -421,6 +426,13 @@ are inserted with PostgreSQL conflict detection; concurrent duplicate-key races
 roll back and retry once from a fresh database snapshot so same-payload reuse
 returns governed replay posture and changed-payload reuse returns governed
 conflict posture.
+
+Candidate creation additionally acquires transaction-scoped candidate and
+idempotency locks before bounded mutation-state reads. This preserves accepted,
+replayed, conflict, and duplicate-candidate domain outcomes under concurrency
+without loading unrelated state families. Do not infer that other generic
+mutation paths are bounded until their own query-shape and real-PostgreSQL proof
+exists.
 
 ## Outbound HTTP Resilience Pattern
 

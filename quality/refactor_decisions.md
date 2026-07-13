@@ -221,6 +221,19 @@ Evidence:
    README, supported-feature, seed, automation, or platform skill change is
    justified by this internal modularity slice.
 
+## Candidate Persistence Mutation Boundary
+
+Candidate ingestion previously reused the generic whole-repository snapshot
+mutation path. The adapter now composes only requested and idempotency-linked
+candidate state under ordered transaction-scoped locks before applying the
+existing domain decision and atomic row delta.
+
+This is a data-access and design-modularity change inside one deployable and one
+Idea-owned PostgreSQL database. It does not create a database-per-module,
+microservice, schema, API, source-authority, or supported-feature boundary.
+Focused query-shape and real-concurrency tests provide the evidence; the
+remaining generic mutation families are the next measured Slice 06 work.
+
 ## 2026-07-13: Outbox Capability Packages Inside Existing Layers
 
 Outbox ownership now uses an `outbox/` package inside each applicable runtime

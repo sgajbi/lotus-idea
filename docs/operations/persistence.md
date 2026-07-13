@@ -61,6 +61,17 @@ storage certification, and future adapter work should continue moving hot
 precheck/replay paths toward database-native conditional reads and writes where
 that reduces contention.
 
+Candidate creation no longer hydrates a whole repository snapshot. The
+`app.infrastructure.persistence` adapter loads only the requested candidate and
+the candidate linked to the supplied idempotency key, if different. It acquires
+transaction-scoped candidate and idempotency locks in a fixed order before the
+bounded reads, runs the unchanged domain decision, and applies candidate,
+lifecycle-control, idempotency, audit, and outbox deltas atomically. Same-key
+concurrency returns accepted plus replayed; different-key concurrency for one
+candidate returns accepted plus duplicate-candidate without exposing a database
+uniqueness error. Other generic mutation/replay paths remain under explicit
+Slice 06 review and are not represented as bounded by this first write-path fix.
+
 Review and feedback resources also have identity independent of the HTTP
 `Idempotency-Key`. Equivalent `reviewId` or `feedbackId` submissions under a
 new key replay without candidate, audit, or outbox duplication. Changed
