@@ -1,11 +1,9 @@
 from __future__ import annotations
 
-from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from decimal import Decimal
-from threading import Barrier
-from typing import Any, Callable, TypeVar, cast
+from typing import Any, cast
 
 import psycopg
 import pytest
@@ -57,6 +55,7 @@ from tests.integration.postgres_runtime_support import (
     execute_migrations,
     high_cash_payload,
     persistence_headers,
+    run_concurrent_repository_mutations,
 )
 
 
@@ -74,8 +73,6 @@ POSTGRES_SCHEMA_TABLES = (
     "idea_report_evidence_pack_request",
     "idea_ai_explanation_lineage",
 )
-
-_T = TypeVar("_T")
 
 
 def test_postgres_runtime_provider_persists_api_state_across_reloaded_connections(
@@ -550,7 +547,7 @@ def test_postgres_runtime_serializes_concurrent_review_and_feedback_resource_ide
     before_audit = _table_count(postgres_database_url, "idea_audit_event")
     before_outbox = _table_count(postgres_database_url, "idea_outbox_event")
 
-    review_decisions = _run_concurrent_repository_mutations(
+    review_decisions = run_concurrent_repository_mutations(
         postgres_database_url,
         lambda repository, key: (
             repository.record_review_action(
@@ -589,7 +586,7 @@ def test_postgres_runtime_serializes_concurrent_review_and_feedback_resource_ide
     before_audit = _table_count(postgres_database_url, "idea_audit_event")
     before_outbox = _table_count(postgres_database_url, "idea_outbox_event")
 
-    feedback_decisions = _run_concurrent_repository_mutations(
+    feedback_decisions = run_concurrent_repository_mutations(
         postgres_database_url,
         lambda repository, key: (
             repository.record_feedback_event(
@@ -653,7 +650,7 @@ def test_postgres_runtime_serializes_conversion_outcome_identity_and_source_vers
     before_audit = _table_count(postgres_database_url, "idea_audit_event")
     before_outbox = _table_count(postgres_database_url, "idea_outbox_event")
 
-    identity_decisions = _run_concurrent_repository_mutations(
+    identity_decisions = run_concurrent_repository_mutations(
         postgres_database_url,
         lambda repository, key: (
             repository.record_conversion_outcome(
@@ -705,7 +702,7 @@ def test_postgres_runtime_serializes_conversion_outcome_identity_and_source_vers
     before_audit = _table_count(postgres_database_url, "idea_audit_event")
     before_outbox = _table_count(postgres_database_url, "idea_outbox_event")
 
-    version_decisions = _run_concurrent_repository_mutations(
+    version_decisions = run_concurrent_repository_mutations(
         postgres_database_url,
         lambda repository, key: (
             repository.record_conversion_outcome(
@@ -823,27 +820,6 @@ def _table_count(database_url: str, table_name: str) -> int:
     if row is None:
         raise AssertionError(f"No count returned for {table_name}")
     return int(row[0])
-
-
-def _run_concurrent_repository_mutations(
-    database_url: str,
-    mutation: Callable[[PostgresIdeaRepository, str], _T],
-    idempotency_keys: tuple[str, str],
-) -> tuple[_T, _T]:
-    barrier = Barrier(2)
-
-    def run(idempotency_key: str) -> _T:
-        with psycopg.connect(database_url, row_factory=dict_row) as connection:
-            repository = PostgresIdeaRepository(cast(Any, connection))
-            barrier.wait(timeout=10)
-            return mutation(repository, idempotency_key)
-
-    with ThreadPoolExecutor(max_workers=2) as executor:
-        futures = tuple(executor.submit(run, key) for key in idempotency_keys)
-        return cast(
-            tuple[_T, _T],
-            tuple(future.result(timeout=20) for future in futures),
-        )
 
 
 def _ai_lineage_row(database_url: str) -> dict[str, Any]:

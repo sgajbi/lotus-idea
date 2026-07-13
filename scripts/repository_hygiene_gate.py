@@ -35,6 +35,12 @@ PROHIBITED_SUFFIXES = {
 }
 
 REQUIRED_BOUNDED_MODULE_PATHS = {
+    "src/app/infrastructure/persistence/__init__.py",
+    "src/app/infrastructure/persistence/candidate_mutation.py",
+    "tests/integration/persistence/__init__.py",
+    "tests/integration/persistence/test_candidate_persistence_runtime.py",
+    "tests/unit/persistence/__init__.py",
+    "tests/unit/persistence/test_candidate_mutation.py",
     "scripts/outbox/__init__.py",
     "scripts/outbox/_bootstrap.py",
     "scripts/outbox/broker_proof_contract_gate.py",

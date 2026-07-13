@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from datetime import UTC, datetime, timedelta
-from typing import Any, cast
+from threading import Barrier
+from typing import Any, Callable, TypeVar, cast
 
 import psycopg
 from psycopg.rows import dict_row
@@ -14,12 +16,14 @@ from app.infrastructure.migrations import (
     build_migration_plan,
     execute_migration_plan,
 )
+from app.infrastructure.postgres_repository import PostgresIdeaRepository
 
 
 ROOT = Path(__file__).resolve().parents[2]
 MIGRATIONS_DIR = ROOT / "migrations"
 POSTGRES_URL_ENV = "LOTUS_IDEA_POSTGRES_INTEGRATION_URL"
 POSTGRES_REQUIRED_ENV = "LOTUS_IDEA_POSTGRES_INTEGRATION_REQUIRED"
+_T = TypeVar("_T")
 
 
 def execute_migrations(database_url: str, direction: MigrationDirection) -> None:
@@ -100,6 +104,27 @@ def seed_active_conversion_resource(database_url: str, conversion_intent_id: str
             (conversion_intent_id, candidate_id, recorded_at),
         )
     return candidate_id
+
+
+def run_concurrent_repository_mutations(
+    database_url: str,
+    mutation: Callable[[PostgresIdeaRepository, str], _T],
+    idempotency_keys: tuple[str, str],
+) -> tuple[_T, _T]:
+    barrier = Barrier(2)
+
+    def run(idempotency_key: str) -> _T:
+        with psycopg.connect(database_url, row_factory=dict_row) as connection:
+            repository = PostgresIdeaRepository(cast(Any, connection))
+            barrier.wait(timeout=10)
+            return mutation(repository, idempotency_key)
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        futures = tuple(executor.submit(run, key) for key in idempotency_keys)
+        return cast(
+            tuple[_T, _T],
+            tuple(future.result(timeout=20) for future in futures),
+        )
 
 
 def _source_ref(product_id: str) -> dict[str, str]:

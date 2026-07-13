@@ -85,6 +85,7 @@ def test_architecture_boundary_gate_is_blocking_in_local_ci() -> None:
     )
     assert "postgres-integration-gate:" in makefile
     assert "tests/integration/test_postgres_runtime_integration.py" in makefile
+    assert "tests/integration/persistence/test_candidate_persistence_runtime.py" in makefile
     assert (
         "check: lint typecheck architecture-boundary-gate openapi-gate "
         "migration-contract-gate migration-execution-gate"

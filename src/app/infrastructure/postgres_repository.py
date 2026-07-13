@@ -111,6 +111,7 @@ from app.infrastructure.postgres_runtime_trust_telemetry import (
 from app.infrastructure.postgres_slo import execute_observed_postgres_call
 from app.infrastructure.postgres_capacity_posture import PostgresCapacityRepositoryMixin
 from app.infrastructure.postgres_candidate_detail import PostgresCandidateDetailRepositoryMixin
+from app.infrastructure.persistence import load_candidate_persistence_snapshot
 from app.infrastructure.data_lifecycle.postgres_policy import (
     PostgresDataLifecycleRepository,
     assert_data_lifecycle_allows_candidate_writes,
@@ -172,7 +173,18 @@ class PostgresIdeaRepository(
         occurred_at_utc: datetime | None = None,
         event_lineage: EventLineageContext | None = None,
     ) -> CandidatePersistenceResult:
-        return self._mutate(
+        def snapshot_loader() -> IdeaRepositorySnapshot:
+            return load_candidate_persistence_snapshot(
+                self._connection,
+                candidate_id=candidate.candidate_id,
+                idempotency_key=idempotency_key,
+            )
+
+        return execute_postgres_mutation(
+            self,
+            self._connection,
+            snapshot_loader,
+            snapshot_loader,
             lambda repository: repository.persist_candidate(
                 candidate,
                 idempotency_key=idempotency_key,
@@ -180,7 +192,7 @@ class PostgresIdeaRepository(
                 actor_subject=actor_subject,
                 occurred_at_utc=occurred_at_utc,
                 event_lineage=event_lineage,
-            )
+            ),
         )
 
     def record_outbox_delivery_run_request(

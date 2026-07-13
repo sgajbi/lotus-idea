@@ -120,6 +120,16 @@ def test_repository_hygiene_gate_enforces_outbox_bounded_module_placement() -> N
     ]
 
 
+def test_repository_hygiene_gate_enforces_persistence_bounded_module_placement() -> None:
+    module = _load_repository_hygiene_gate()
+    required_path = "src/app/infrastructure/persistence/candidate_mutation.py"
+    tracked_paths = sorted(module.REQUIRED_BOUNDED_MODULE_PATHS - {required_path})
+
+    violations = module.find_bounded_module_placement_violations(tracked_paths)
+
+    assert violations == [f"{required_path}: required bounded-module path is missing"]
+
+
 def test_repository_hygiene_gate_rejects_rfc_coupled_executable_names() -> None:
     module = _load_repository_hygiene_gate()
 
