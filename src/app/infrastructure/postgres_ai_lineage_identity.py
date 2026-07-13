@@ -18,8 +18,11 @@ def load_ai_lineage_identity_candidate_ids(
             SELECT DISTINCT candidate_id
             FROM idea_ai_explanation_lineage
             WHERE ai_explanation_request_id = %s
-               OR (%s IS NOT NULL AND lotus_ai_replay_nonce = %s)
-               OR (%s IS NOT NULL AND provider_retention_replay_nonce = %s)
+               OR (%s::text IS NOT NULL AND lotus_ai_replay_nonce = %s::text)
+               OR (
+                    %s::text IS NOT NULL
+                    AND provider_retention_replay_nonce = %s::text
+               )
             ORDER BY candidate_id
             """,
             (
