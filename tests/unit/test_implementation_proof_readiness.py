@@ -43,7 +43,7 @@ from app.application.implementation_proof_opportunity_archetype_proofs import (
     _apply_risk_concentration_live_proof,
 )
 from app.application.mesh_policy_proof import build_mesh_policy_proof_payload
-from app.application.outbox_broker_proof import build_outbox_broker_proof_payload
+from app.application.outbox.broker_proof import build_outbox_broker_proof_payload
 from app.application.platform_mesh_onboarding_proof import (
     REQUIRED_CONSUMER_DEPENDENCIES,
     REQUIRED_PRODUCER_PRODUCTS,
@@ -337,7 +337,7 @@ def test_implementation_proof_readiness_capabilities_are_source_safe() -> None:
     )
     assert "GET /api/v1/outbox-delivery/readiness" in outbox_delivery.evidence_refs
     assert "POST /api/v1/outbox-delivery/run-once" in outbox_delivery.evidence_refs
-    assert "src/app/infrastructure/outbox_publisher.py" in outbox_delivery.evidence_refs
+    assert "src/app/infrastructure/outbox/publisher.py" in outbox_delivery.evidence_refs
     assert "make outbox-broker-proof-contract-gate" in outbox_delivery.evidence_refs
     assert "make outbox-platform-mesh-event-publication-proof-contract-gate" in (
         outbox_delivery.evidence_refs

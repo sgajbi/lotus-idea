@@ -76,14 +76,14 @@ SCRIPT_TARGET_EXPECTATIONS = {
     "gateway-workbench-discovery-proof-contract-gate": (
         "scripts/gateway_workbench_discovery_proof_contract_gate.py"
     ),
-    "outbox-broker-proof-contract-gate": "scripts/outbox_broker_proof_contract_gate.py",
+    "outbox-broker-proof-contract-gate": "scripts/outbox/broker_proof_contract_gate.py",
     "outbox-consumer-runtime-proof-contract-gate": (
-        "scripts/outbox_consumer_runtime_proof_contract_gate.py"
+        "scripts/outbox/consumer_runtime_proof_contract_gate.py"
     ),
     "outbox-platform-mesh-event-publication-proof-contract-gate": (
-        "scripts/outbox_platform_mesh_event_publication_proof_contract_gate.py"
+        "scripts/outbox/platform_mesh_event_publication_proof_contract_gate.py"
     ),
-    "outbox-consumer-contract-gate": "scripts/outbox_consumer_contract_gate.py",
+    "outbox-consumer-contract-gate": "scripts/outbox/consumer_contract_gate.py",
     "api-route-metadata-gate": "scripts/api_route_metadata_gate.py",
     "api-problem-details-boundary-gate": "scripts/api_problem_details_boundary_gate.py",
     "api-idempotency-boundary-gate": "scripts/api_idempotency_boundary_gate.py",
@@ -104,7 +104,7 @@ SCRIPT_TARGET_EXPECTATIONS = {
         "scripts/ai_model_risk_operations_proof_contract_gate.py"
     ),
     "operator-workflows-ops-contract-gate": "scripts/operator_workflows_operations_contract_gate.py",
-    "outbox-supportability-contract-gate": "scripts/outbox_supportability_contract_gate.py",
+    "outbox-supportability-contract-gate": "scripts/outbox/supportability_contract_gate.py",
     "disaster-recovery-contract-gate": "scripts/disaster_recovery_contract_gate.py",
     "data-lifecycle-contract-gate": "scripts/data_lifecycle_contract_gate.py",
     "scheduled-data-lifecycle-review": "scripts/data_lifecycle/run_scheduled_review.py",

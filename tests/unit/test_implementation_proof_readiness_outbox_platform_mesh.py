@@ -6,7 +6,7 @@ from pathlib import Path
 from app.application.implementation_proof_readiness import (
     build_implementation_proof_readiness_snapshot,
 )
-from app.application.outbox_platform_mesh_event_publication_proof import (
+from app.application.outbox.platform_mesh_event_publication_proof import (
     build_outbox_platform_mesh_event_publication_proof_payload,
 )
 from app.domain import InMemoryIdeaRepository

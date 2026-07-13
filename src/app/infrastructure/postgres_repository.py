@@ -7,7 +7,7 @@ from typing import Any, Callable, Mapping, TypeVar
 from psycopg.types.json import Jsonb
 
 from app.domain.audit import AuditEvent
-from app.domain.events import EventLineageContext, OutboxEventRecord
+from app.domain.outbox.events import EventLineageContext, OutboxEventRecord
 from app.domain.downstream_submission import DownstreamSubmissionRecord
 from app.domain.conversion_governance import (
     ConversionIntentResult,
@@ -18,7 +18,7 @@ from app.domain.conversion_governance import (
 from app.domain.conversion_outcome_policy import ConversionOutcomeIdentity
 from app.domain.ideas import IdeaCandidate, IdeaLifecycleStatus, SourceRef
 from app.domain.idempotency import IdempotencyDecision, IdempotencyRecord
-from app.domain.outbox_delivery_state import OutboxDeliveryResult
+from app.domain.outbox.delivery import OutboxDeliveryResult
 from app.domain.persistence import (
     CandidatePersistenceRecord,
     CandidatePersistenceResult,
@@ -68,15 +68,15 @@ from app.infrastructure.postgres_codecs import (
     review_decision_to_json,
 )
 from app.infrastructure.postgres_ai_lineage_writes import insert_ai_explanation_lineage_records
-from app.infrastructure.postgres_outbox_delivery import (
+from app.infrastructure.outbox.postgres_delivery import (
     claim_outbox_events_for_delivery as claim_postgres_outbox_events_for_delivery,
     mark_outbox_event_failed as mark_postgres_outbox_event_failed,
     mark_outbox_event_published as mark_postgres_outbox_event_published,
     outbox_event_from_row,
 )
-from app.infrastructure.postgres_outbox_repository import PostgresOutboxRepositoryMixin
+from app.infrastructure.outbox.postgres_repository import PostgresOutboxRepositoryMixin
 from app.infrastructure.postgres_mutation_metadata import idempotency_created_at, operation_name
-from app.infrastructure.postgres_outbox_recovery import PostgresOutboxRecoveryRepositoryMixin
+from app.infrastructure.outbox.postgres_recovery import PostgresOutboxRecoveryRepositoryMixin
 from app.infrastructure.postgres_protocols import PostgresConnection as PostgresConnection
 from app.infrastructure.postgres_protocols import PostgresCursor
 from app.infrastructure.postgres_downstream_lookup import (

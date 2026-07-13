@@ -40,7 +40,7 @@ REQUIRED_OPERATOR_WORKFLOWS_OPERATIONS_EVIDENCE_REFS = (
     "monitoring/prometheus/tests/lotus-idea-outbox-supportability.test.yml",
     "docs/runbooks/operator-workflows-operations.md",
     "src/app/observability/logging.py",
-    "src/app/observability/outbox_supportability.py",
+    "src/app/observability/outbox/supportability.py",
     "tests/unit/test_operator_workflows_operations_proof.py",
     "make operator-workflows-ops-contract-gate",
     "make outbox-supportability-contract-gate",

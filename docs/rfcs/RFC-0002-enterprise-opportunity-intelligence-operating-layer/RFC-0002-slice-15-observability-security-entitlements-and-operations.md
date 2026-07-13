@@ -185,7 +185,7 @@ Implementation evidence:
     readiness projection without `snapshot()` hydration, role plus capability
     enforcement, product-safe payloads, and operation-event behavior for the
     downstream realization readiness diagnostic.
-27. `src/app/application/outbox_delivery_readiness.py` and
+27. `src/app/application/outbox/readiness.py` and
     `GET /api/v1/outbox-delivery/readiness` expose certified internal outbox
     delivery readiness for aggregate backlog, status counts, due retry posture,
     retry-deferred failed-row counts, durable repository posture, broker configuration posture,
@@ -198,9 +198,9 @@ Implementation evidence:
     delivery-ready only when their `next_attempt_at_utc` is due and report
     failed events still cooling down separately, instead of materializing
     unrelated repository snapshots.
-28. `tests/unit/test_outbox_delivery_readiness.py` and
-    `tests/unit/test_postgres_outbox_readiness.py`, plus
-    `tests/integration/test_outbox_delivery_readiness_api.py`, prove the
+28. `tests/unit/outbox/test_outbox_delivery_readiness.py` and
+    `tests/unit/outbox/test_postgres_readiness.py`, plus
+    `tests/integration/outbox/test_delivery_readiness_api.py`, prove the
     blocked/not-certified posture, broker-configured still-blocked posture,
     invalid retry-limit guard, retry-deferred count posture, repository-side
     projection without snapshot hydration, role plus capability enforcement,
@@ -213,7 +213,7 @@ Implementation evidence:
     configuration, records first/last failure timing plus a deterministic
     capped next-attempt schedule for failed publication attempts, and returns
     aggregate counts only.
-30. `tests/integration/test_outbox_delivery_readiness_api.py` proves the
+30. `tests/integration/outbox/test_delivery_readiness_api.py` proves the
     run-once action's blocked-without-broker posture, configured publisher
     delivery path, permission denial, UTC validation, product-safe response
     shape, and `not_certified` operation-event behavior.

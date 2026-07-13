@@ -50,12 +50,12 @@ from app.application.operator_workflows_operations_proof import (
     OPERATOR_WORKFLOWS_OPERATIONS_BLOCKERS_CLEARED,
     operator_workflows_operations_proof_is_valid,
 )
-from app.application.outbox_broker_proof import outbox_broker_proof_is_valid
-from app.application.outbox_consumer_runtime_proof import (
+from app.application.outbox.broker_proof import outbox_broker_proof_is_valid
+from app.application.outbox.consumer_runtime_proof import (
     OUTBOX_CONSUMER_RUNTIME_BLOCKERS_CLEARED,
     outbox_consumer_runtime_proof_is_valid,
 )
-from app.application.outbox_platform_mesh_event_publication_proof import (
+from app.application.outbox.platform_mesh_event_publication_proof import (
     OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_BLOCKERS_CLEARED,
     outbox_platform_mesh_event_publication_proof_is_valid,
 )

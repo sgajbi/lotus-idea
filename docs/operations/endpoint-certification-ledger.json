@@ -1411,20 +1411,20 @@
         "GET /api/v1/outbox-delivery/readiness with X-Caller-Roles: operator and X-Caller-Capabilities: idea.outbox-delivery.readiness.read"
       ],
       "response_examples": [
-        "{\"repository\":\"lotus-idea\",\"readinessStatus\":\"blocked\",\"supportabilityStatus\":\"not_certified\",\"certificationReady\":false,\"durableStorageBacked\":false,\"externalBrokerConfigured\":false,\"externalBrokerPublisherAdapterPresent\":true,\"deliveryReadyCount\":0,\"retryDeferredCount\":0,\"expiredLeaseCount\":0,\"maxRetryCount\":3,\"statusCounts\":{\"pendingCount\":0,\"leasedCount\":0,\"failedCount\":0,\"publishedCount\":0,\"deadLetterCount\":0,\"totalCount\":0},\"sourceOfTruth\":{\"outbox_delivery\":\"src/app/application/outbox_delivery.py\",\"outbox_readiness\":\"src/app/application/outbox_delivery_readiness.py\",\"publisher_port\":\"src/app/ports/outbox_publisher.py\",\"publisher_adapter\":\"src/app/infrastructure/outbox_publisher.py\",\"repository_port\":\"src/app/ports/idea_repository.py\",\"outbox_event_contract\":\"contracts/outbox-events/lotus-idea-outbox-events.v1.json\",\"outbox_event_contract_gate\":\"make outbox-event-contract-gate\",\"outbox_consumer_contract\":\"contracts/outbox-events/lotus-idea-outbox-consumers.v1.json\",\"outbox_consumer_contract_gate\":\"make outbox-consumer-contract-gate\",\"rfc_slice_06\":\"docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-06-persistence-replay-idempotency-and-audit.md\"},\"configurationBlockers\":[\"outbox_broker_not_configured\"],\"certificationBlockers\":[\"external_broker_runtime_proof_missing\",\"downstream_consumer_runtime_proof_missing\",\"platform_mesh_event_publication_proof_missing\",\"gateway_workbench_proof_missing\",\"supported_feature_promotion_missing\"],\"supportedFeaturePromoted\":false}"
+        "{\"repository\":\"lotus-idea\",\"readinessStatus\":\"blocked\",\"supportabilityStatus\":\"not_certified\",\"certificationReady\":false,\"durableStorageBacked\":false,\"externalBrokerConfigured\":false,\"externalBrokerPublisherAdapterPresent\":true,\"deliveryReadyCount\":0,\"retryDeferredCount\":0,\"expiredLeaseCount\":0,\"maxRetryCount\":3,\"statusCounts\":{\"pendingCount\":0,\"leasedCount\":0,\"failedCount\":0,\"publishedCount\":0,\"deadLetterCount\":0,\"totalCount\":0},\"sourceOfTruth\":{\"outbox_delivery\":\"src/app/application/outbox/delivery.py\",\"outbox_readiness\":\"src/app/application/outbox/readiness.py\",\"publisher_port\":\"src/app/ports/outbox/publisher.py\",\"publisher_adapter\":\"src/app/infrastructure/outbox/publisher.py\",\"repository_port\":\"src/app/ports/idea_repository.py\",\"outbox_event_contract\":\"contracts/outbox-events/lotus-idea-outbox-events.v1.json\",\"outbox_event_contract_gate\":\"make outbox-event-contract-gate\",\"outbox_consumer_contract\":\"contracts/outbox-events/lotus-idea-outbox-consumers.v1.json\",\"outbox_consumer_contract_gate\":\"make outbox-consumer-contract-gate\",\"rfc_slice_06\":\"docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-06-persistence-replay-idempotency-and-audit.md\"},\"configurationBlockers\":[\"outbox_broker_not_configured\"],\"certificationBlockers\":[\"external_broker_runtime_proof_missing\",\"downstream_consumer_runtime_proof_missing\",\"platform_mesh_event_publication_proof_missing\",\"gateway_workbench_proof_missing\",\"supported_feature_promotion_missing\"],\"supportedFeaturePromoted\":false}"
       ],
       "error_examples": [
         "403 returns product-safe Problem Details when the caller lacks the operator role or idea.outbox-delivery.readiness.read capability."
       ],
       "test_evidence": [
-        "tests/unit/test_outbox_delivery_readiness.py::test_outbox_delivery_readiness_reports_blocked_foundation_posture",
-        "tests/unit/test_outbox_delivery_readiness.py::test_outbox_delivery_readiness_keeps_certification_blocked_with_broker_config",
-        "tests/unit/test_outbox_delivery_readiness.py::test_outbox_delivery_readiness_uses_repository_projection_without_snapshot",
-        "tests/unit/test_outbox_delivery_readiness.py::test_outbox_delivery_readiness_rejects_invalid_retry_limit",
-        "tests/unit/test_postgres_outbox_readiness.py::test_postgres_repository_uses_outbox_only_readiness_projection",
-        "tests/integration/test_outbox_delivery_readiness_api.py::test_outbox_delivery_readiness_api_returns_source_safe_blocked_posture",
-        "tests/integration/test_outbox_delivery_readiness_api.py::test_outbox_delivery_readiness_api_requires_operator_permission",
-        "tests/integration/test_outbox_delivery_readiness_api.py::test_outbox_delivery_readiness_api_emits_not_certified_operation_event"
+        "tests/unit/outbox/test_outbox_delivery_readiness.py::test_outbox_delivery_readiness_reports_blocked_foundation_posture",
+        "tests/unit/outbox/test_outbox_delivery_readiness.py::test_outbox_delivery_readiness_keeps_certification_blocked_with_broker_config",
+        "tests/unit/outbox/test_outbox_delivery_readiness.py::test_outbox_delivery_readiness_uses_repository_projection_without_snapshot",
+        "tests/unit/outbox/test_outbox_delivery_readiness.py::test_outbox_delivery_readiness_rejects_invalid_retry_limit",
+        "tests/unit/outbox/test_postgres_readiness.py::test_postgres_repository_uses_outbox_only_readiness_projection",
+        "tests/integration/outbox/test_delivery_readiness_api.py::test_outbox_delivery_readiness_api_returns_source_safe_blocked_posture",
+        "tests/integration/outbox/test_delivery_readiness_api.py::test_outbox_delivery_readiness_api_requires_operator_permission",
+        "tests/integration/outbox/test_delivery_readiness_api.py::test_outbox_delivery_readiness_api_emits_not_certified_operation_event"
       ],
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
     },
@@ -1448,18 +1448,18 @@
         "409 returns product-safe Problem Details when Idempotency-Key is reused with a different safe request payload."
       ],
       "test_evidence": [
-        "tests/unit/test_outbox_delivery.py::test_run_outbox_delivery_once_marks_published_events_source_safely",
-        "tests/unit/test_outbox_delivery.py::test_run_outbox_delivery_once_retries_then_dead_letters_failed_events",
-        "tests/unit/test_outbox_delivery.py::test_run_outbox_delivery_once_maps_exceptions_to_bounded_failure_reason",
-        "tests/integration/test_outbox_delivery_readiness_api.py::test_outbox_delivery_run_once_api_blocks_without_broker_configuration",
-        "tests/integration/test_outbox_delivery_readiness_api.py::test_outbox_delivery_run_once_api_blocks_invalid_broker_configuration",
-        "tests/integration/test_outbox_delivery_readiness_api.py::test_outbox_delivery_run_once_api_publishes_with_configured_publisher",
-        "tests/integration/test_outbox_delivery_readiness_api.py::test_outbox_delivery_run_once_api_requires_idempotency_key",
-        "tests/integration/test_outbox_delivery_readiness_api.py::test_outbox_delivery_run_once_api_replays_same_operator_run_without_mutating",
-        "tests/integration/test_outbox_delivery_readiness_api.py::test_outbox_delivery_run_once_api_preserves_results_when_publisher_close_fails",
-        "tests/integration/test_outbox_delivery_readiness_api.py::test_outbox_delivery_run_once_api_conflicts_same_operator_run_with_different_parameters",
-        "tests/integration/test_outbox_delivery_readiness_api.py::test_outbox_delivery_run_once_api_requires_operator_permission",
-        "tests/integration/test_outbox_delivery_readiness_api.py::test_outbox_delivery_run_once_api_emits_not_certified_operation_event"
+        "tests/unit/outbox/test_outbox_delivery.py::test_run_outbox_delivery_once_marks_published_events_source_safely",
+        "tests/unit/outbox/test_outbox_delivery.py::test_run_outbox_delivery_once_retries_then_dead_letters_failed_events",
+        "tests/unit/outbox/test_outbox_delivery.py::test_run_outbox_delivery_once_maps_exceptions_to_bounded_failure_reason",
+        "tests/integration/outbox/test_delivery_readiness_api.py::test_outbox_delivery_run_once_api_blocks_without_broker_configuration",
+        "tests/integration/outbox/test_delivery_readiness_api.py::test_outbox_delivery_run_once_api_blocks_invalid_broker_configuration",
+        "tests/integration/outbox/test_delivery_readiness_api.py::test_outbox_delivery_run_once_api_publishes_with_configured_publisher",
+        "tests/integration/outbox/test_delivery_readiness_api.py::test_outbox_delivery_run_once_api_requires_idempotency_key",
+        "tests/integration/outbox/test_delivery_readiness_api.py::test_outbox_delivery_run_once_api_replays_same_operator_run_without_mutating",
+        "tests/integration/outbox/test_delivery_readiness_api.py::test_outbox_delivery_run_once_api_preserves_results_when_publisher_close_fails",
+        "tests/integration/outbox/test_delivery_readiness_api.py::test_outbox_delivery_run_once_api_conflicts_same_operator_run_with_different_parameters",
+        "tests/integration/outbox/test_delivery_readiness_api.py::test_outbox_delivery_run_once_api_requires_operator_permission",
+        "tests/integration/outbox/test_delivery_readiness_api.py::test_outbox_delivery_run_once_api_emits_not_certified_operation_event"
       ],
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
     },
@@ -1481,10 +1481,10 @@
         "403 returns product-safe Problem Details when the caller lacks the operator role or idea.outbox-recovery.read capability."
       ],
       "test_evidence": [
-        "tests/unit/test_outbox_recovery.py::test_dead_letter_summary_is_source_safe_and_recovery_eligible",
-        "tests/unit/test_postgres_outbox_delivery_adapter.py::test_postgres_outbox_recovery_is_durable_idempotent_and_lease_fenced",
-        "tests/integration/test_outbox_recovery_api.py::test_dead_letter_inspection_denied_for_non_operator_and_is_source_safe",
-        "tests/integration/test_outbox_recovery_api.py::test_outbox_recovery_api_emits_bounded_operation_events"
+        "tests/unit/outbox/test_outbox_recovery.py::test_dead_letter_summary_is_source_safe_and_recovery_eligible",
+        "tests/unit/outbox/test_postgres_delivery_adapter.py::test_postgres_outbox_recovery_is_durable_idempotent_and_lease_fenced",
+        "tests/integration/outbox/test_recovery_api.py::test_dead_letter_inspection_denied_for_non_operator_and_is_source_safe",
+        "tests/integration/outbox/test_recovery_api.py::test_outbox_recovery_api_emits_bounded_operation_events"
       ],
       "openapi_evidence": "scripts/openapi_quality_gate.py and make outbox-recovery-contract-gate validate metadata, source-safe fields, and recovery boundaries."
     },
@@ -1510,12 +1510,12 @@
         "503 returns product-safe configuration posture before mutation when durable storage or publisher wiring is unavailable."
       ],
       "test_evidence": [
-        "tests/unit/test_outbox_recovery_application.py::test_recovery_publishes_once_and_replays_without_second_publication",
-        "tests/unit/test_outbox_recovery_application.py::test_recovery_failure_returns_to_quarantine_without_automatic_retry",
-        "tests/integration/test_outbox_recovery_api.py::test_dead_letter_redrive_publishes_once_and_replays_without_mutation",
-        "tests/integration/test_outbox_recovery_api.py::test_dead_letter_redrive_conflict_and_publisher_failure_remain_quarantined",
-        "tests/integration/test_outbox_recovery_api.py::test_production_redrive_rejects_untrusted_caller_before_mutation",
-        "tests/integration/test_outbox_recovery_api.py::test_outbox_recovery_api_emits_bounded_operation_events"
+        "tests/unit/outbox/test_outbox_recovery_application.py::test_recovery_publishes_once_and_replays_without_second_publication",
+        "tests/unit/outbox/test_outbox_recovery_application.py::test_recovery_failure_returns_to_quarantine_without_automatic_retry",
+        "tests/integration/outbox/test_recovery_api.py::test_dead_letter_redrive_publishes_once_and_replays_without_mutation",
+        "tests/integration/outbox/test_recovery_api.py::test_dead_letter_redrive_conflict_and_publisher_failure_remain_quarantined",
+        "tests/integration/outbox/test_recovery_api.py::test_production_redrive_rejects_untrusted_caller_before_mutation",
+        "tests/integration/outbox/test_recovery_api.py::test_outbox_recovery_api_emits_bounded_operation_events"
       ],
       "openapi_evidence": "scripts/openapi_quality_gate.py, scripts/api_idempotency_boundary_gate.py, and make outbox-recovery-contract-gate validate the route contract."
     },

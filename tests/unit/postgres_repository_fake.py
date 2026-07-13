@@ -3,11 +3,11 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any, Sequence
 
-from app.domain.outbox_recovery import outbox_dead_letter_support_reference
+from app.domain.outbox.recovery import outbox_dead_letter_support_reference
 from tests.unit.postgres_downstream_submission_fake_helpers import (
     execute_downstream_submission_query,
 )
-from tests.unit.postgres_outbox_fake_helpers import (
+from tests.unit.outbox.postgres_fake_helpers import (
     claim_outbox_event_rows,
     fail_outbox_event_row,
     outbox_delivery_ready_rows,

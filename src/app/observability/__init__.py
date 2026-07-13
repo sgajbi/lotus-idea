@@ -20,7 +20,7 @@ from app.observability.correlation_context import (
     is_product_safe_context_id,
     sanitize_or_generate_context_id,
 )
-from app.observability.outbox_supportability import (
+from app.observability.outbox.supportability import (
     OUTBOX_DELIVERY_COLLECTION_SUCCESS_METRIC,
     OUTBOX_DELIVERY_CONFIGURATION_READY_METRIC,
     OUTBOX_DELIVERY_OLDEST_READY_AGE_METRIC,

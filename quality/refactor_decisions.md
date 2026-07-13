@@ -182,8 +182,8 @@ Evidence:
 ## 2026-07-04: Outbox Delivery API Model Boundary
 
 Outbox delivery readiness, status-count, and run-once response DTOs now live in
-`src/app/api/outbox_delivery_readiness_models.py`.
-`src/app/api/outbox_delivery_readiness.py` imports those DTOs while keeping
+`src/app/api/outbox/delivery_models.py`.
+`src/app/api/outbox/delivery.py` imports those DTOs while keeping
 caller authorization, idempotency validation, durable-write blocking, publisher
 cleanup, operation-event emission, route metadata, and response handling in the
 existing route module.
@@ -208,18 +208,55 @@ Private-banking and operating boundaries preserved:
 
 Evidence:
 
-1. Code: `src/app/api/outbox_delivery_readiness.py`,
-   `src/app/api/outbox_delivery_readiness_models.py`.
+1. Code: `src/app/api/outbox/delivery.py`,
+   `src/app/api/outbox/delivery_models.py`.
 2. Focused validation passed:
    `.venv\Scripts\python.exe -m pytest tests\integration\test_outbox_delivery_readiness_api.py tests\unit\test_outbox_delivery_readiness.py -q`
    (`19 passed`), plus targeted ruff and mypy over the changed modules.
-3. Maintainability impact: `src/app/api/outbox_delivery_readiness.py` moved
-   from 625 to 494 lines; `src/app/api/outbox_delivery_readiness_models.py`
+3. Maintainability impact: `src/app/api/outbox/delivery.py` moved
+   from 625 to 494 lines; `src/app/api/outbox/delivery_models.py`
    is 145 lines.
 4. Documentation/context decision: repository context, quality scorecard,
    review ledger, refactor decision log, and wiki source were updated. No
    README, supported-feature, seed, automation, or platform skill change is
    justified by this internal modularity slice.
+
+## 2026-07-13: Outbox Capability Packages Inside Existing Layers
+
+Outbox ownership now uses an `outbox/` package inside each applicable runtime
+layer and support area. The migration covers API routes/DTOs, application use
+cases and proof evaluators, domain event/lineage/delivery/recovery policy, the
+publisher port, PostgreSQL and HTTP adapters, runtime composition,
+observability, operator scripts, and focused tests.
+
+This is design modularity inside the existing `lotus-idea` deployable. API and
+optional worker roles still use one Idea-owned PostgreSQL boundary. Folder
+cohesion does not justify another service, broker ownership, or independently
+scalable process.
+
+Decisions:
+
+1. Internal consumers use explicit capability paths; stable public domain
+   exports remain available through `app.domain` without legacy module aliases.
+2. Event lineage, in-memory writes, PostgreSQL fake behavior, and event-lineage
+   integration proof move with the outbox capability. Aggregate
+   implementation-proof consumers remain with their actual owning capability.
+3. Direct scripts share `scripts/outbox/_bootstrap.py` so package and Windows
+   direct execution resolve the repository consistently.
+4. Repository hygiene requires canonical package paths and rejects every
+   retired flat path. It does not impose directory-size limits.
+5. Supported features, seed data, runtime topology, and external broker,
+   consumer, and platform-mesh certification remain unchanged.
+
+Evidence before aggregate validation:
+
+1. Focused outbox, domain, integration, and hygiene suite: `293 passed`, one
+   environment-dependent PostgreSQL skip.
+2. Ruff, focused MyPy, architecture, private-import, maintainability,
+   duplicate-implementation, repository-hygiene, and all seven outbox contract
+   gates pass.
+3. Full repository, disposable PostgreSQL, wheel/package, and container smoke
+   proof remain required before commit and PR.
 
 ## 2026-07-04: Review Workflow API Model Boundary
 

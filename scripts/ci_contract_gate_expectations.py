@@ -127,13 +127,13 @@ GENERATED_READINESS_ARTIFACTS = (
         "an AI workflow-pack runtime execution proof artifact",
     ),
     ("scripts/generate_workbench_read_path_proof.py", "Workbench read-path proof artifact"),
-    ("scripts/generate_outbox_broker_proof.py", "outbox broker proof artifact"),
+    ("scripts/outbox/generate_broker_proof.py", "outbox broker proof artifact"),
     (
-        "scripts/generate_outbox_consumer_runtime_proof.py",
+        "scripts/outbox/generate_consumer_runtime_proof.py",
         "an outbox consumer runtime proof artifact",
     ),
     (
-        "scripts/generate_outbox_platform_mesh_event_publication_proof.py",
+        "scripts/outbox/generate_platform_mesh_event_publication_proof.py",
         "an outbox platform mesh event publication proof artifact",
     ),
     ("scripts/generate_advise_proposal_route_proof.py", "an Advise proposal route proof artifact"),

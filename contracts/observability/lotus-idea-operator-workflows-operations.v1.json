@@ -10,7 +10,7 @@
   "source_of_truth": {
     "operation_metric_contract": "contracts/observability/lotus-idea-operation-metrics.v1.json",
     "outbox_supportability_contract": "contracts/observability/lotus-idea-outbox-supportability.v1.json",
-    "outbox_supportability_contract_gate": "scripts/outbox_supportability_contract_gate.py",
+    "outbox_supportability_contract_gate": "scripts/outbox/supportability_contract_gate.py",
     "contract_gate": "scripts/operator_workflows_operations_contract_gate.py",
     "proof_contract_gate": "scripts/operator_workflows_operations_proof_contract_gate.py",
     "dashboard": "monitoring/grafana/dashboards/lotus-idea-operator-workflows-operations.json",
@@ -20,7 +20,7 @@
     "service_operations_runbook": "docs/runbooks/service-operations.md",
     "operations_wiki": "wiki/Operations-Runbook.md",
     "source_ingestion_source": "src/app/application/source_ingestion_readiness.py",
-    "outbox_delivery_source": "src/app/application/outbox_delivery_readiness.py",
+    "outbox_delivery_source": "src/app/application/outbox/readiness.py",
     "downstream_realization_source": "src/app/application/downstream_realization_readiness.py",
     "runtime_trust_source": "src/app/application/runtime_trust_telemetry.py",
     "implementation_proof_source": "src/app/application/implementation_proof_readiness.py",

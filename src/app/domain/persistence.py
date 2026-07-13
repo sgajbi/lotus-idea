@@ -5,21 +5,21 @@ from datetime import UTC, datetime
 from typing import Any, Mapping
 
 from app.domain.audit import AuditEvent
-from app.domain.events import (
+from app.domain.outbox.events import (
     EventLineageContext,
     OutboxEventRecord,
 )
 from app.domain.evidence_hashing import evidence_hash_for_candidate, evidence_hash_for_source_refs
 from app.domain.downstream_submission import DownstreamSubmissionRecord
 from app.domain.idempotency import IdempotencyDecision, IdempotencyRecord, evaluate_idempotency
-from app.domain.outbox_delivery_state import (
+from app.domain.outbox.delivery import (
     OutboxDeliveryResult,
     claim_outbox_events_for_delivery,
     mark_owned_outbox_event_failed,
     mark_owned_outbox_event_published,
     outbox_events_for_delivery,
 )
-from app.domain.outbox_recovery import (
+from app.domain.outbox.recovery import (
     MAX_OUTBOX_RECOVERY_ATTEMPTS,
     OutboxDeadLetterSummary,
     OutboxRecoveryAuditRecord,
@@ -29,7 +29,7 @@ from app.domain.outbox_recovery import (
 )
 from app.domain.persistence_lookups import InMemoryIdeaLookupMixin
 from app.domain.persistence_ai_lineage import InMemoryAIExplanationRepositoryMixin
-from app.domain.persistence_outbox import InMemoryOutboxWriteMixin
+from app.domain.outbox.persistence import InMemoryOutboxWriteMixin
 from app.domain.persistence_downstream_submission import (
     InMemoryDownstreamSubmissionRepositoryMixin,
 )

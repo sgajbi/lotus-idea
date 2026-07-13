@@ -176,7 +176,7 @@ Implemented first-wave internal scope:
    records, lifecycle history entries, idempotent candidate persistence
    decisions, replay status vocabulary, evidence hash helpers, source-safe
    pending outbox snapshots, repository snapshots, and an
-   `InMemoryIdeaRepository` internal adapter. `src/app/domain/events.py`
+   `InMemoryIdeaRepository` internal adapter. `src/app/domain/outbox/events.py`
    defines the typed outbox event envelope, status vocabulary, deterministic
    event identity, hashed idempotency fingerprint, and forbidden payload-key
    guard for source/client-sensitive fields.
@@ -284,9 +284,9 @@ Implemented first-wave internal scope:
     remain non-publishing and do not create duplicate outbox work. This is an
     internal outbox foundation only; no external broker, Gateway event, platform
     mesh event, or downstream publication is claimed.
-19. `src/app/domain/events.py`, `src/app/domain/persistence.py`,
-    `src/app/application/outbox_delivery.py`,
-    `src/app/ports/outbox_publisher.py`, and
+19. `src/app/domain/outbox/events.py`, `src/app/domain/persistence.py`,
+    `src/app/application/outbox/delivery.py`,
+    `src/app/ports/outbox/publisher.py`, and
     `src/app/ports/idea_repository.py` now add the first internal outbox
     delivery semantics. Delivery-ready reads include pending events, retryable
     failed events below the configured retry limit only after their durable
@@ -299,7 +299,7 @@ Implemented first-wave internal scope:
     limit is reached. Publisher exceptions are mapped to bounded
     `publisher_unavailable` failure reason codes, failure reasons reject
     source/client-sensitive marker names, and run summaries expose aggregate
-    counts only. `src/app/infrastructure/outbox_publisher.py` adds a
+    counts only. `src/app/infrastructure/outbox/publisher.py` adds a
     source-safe HTTP broker-publisher adapter foundation with bounded envelopes,
     trace headers, and product-safe failure reasons. `PostgresIdeaRepository`
     persists claim/lease metadata, failure timing, and next-attempt eligibility
@@ -312,8 +312,8 @@ Implemented first-wave internal scope:
     `contracts/outbox-events/lotus-idea-outbox-events.v1.json` and
     `make outbox-event-contract-gate` now define and enforce the repo-owned
     outbox event envelope, event families, payload safety policy, and remaining
-    certification blockers. `src/app/application/outbox_broker_proof.py`,
-    `scripts/generate_outbox_broker_proof.py`, and
+    certification blockers. `src/app/application/outbox/broker_proof.py`,
+    `scripts/outbox/generate_broker_proof.py`, and
     `make outbox-broker-proof-contract-gate` now add a source-safe bounded
     outbox broker proof artifact for aggregate implementation-readiness
     evidence. It clears only the aggregate broker configuration/runtime-proof
@@ -324,15 +324,15 @@ Implemented first-wave internal scope:
     and Report as governed downstream consumers with source-authority
     boundaries. The contract clears the missing-contract posture only; all
     consumers remain `contract_declared_not_runtime_certified`.
-    `src/app/application/outbox_consumer_runtime_proof.py`,
-    `scripts/generate_outbox_consumer_runtime_proof.py`, and
+    `src/app/application/outbox/consumer_runtime_proof.py`,
+    `scripts/outbox/generate_consumer_runtime_proof.py`, and
     `make outbox-consumer-runtime-proof-contract-gate` now add a source-safe
     bounded downstream consumer runtime proof artifact. It clears only
     `downstream_consumer_runtime_proof_missing` and preserves platform mesh
     event publication, Gateway/Workbench, downstream delivery, and
     supported-feature blockers.
-    `src/app/application/outbox_platform_mesh_event_publication_proof.py`,
-    `scripts/generate_outbox_platform_mesh_event_publication_proof.py`, and
+    `src/app/application/outbox/platform_mesh_event_publication_proof.py`,
+    `scripts/outbox/generate_platform_mesh_event_publication_proof.py`, and
     `make outbox-platform-mesh-event-publication-proof-contract-gate` now add a
     source-safe bounded outbox platform mesh event publication proof artifact.
     It clears only `platform_mesh_event_publication_proof_missing` after the
@@ -340,7 +340,7 @@ Implemented first-wave internal scope:
     and catalog evidence validate. It preserves external broker publication,
     downstream delivery, Gateway/Workbench, client-ready publication, and
     supported-feature blockers.
-20. `src/app/application/outbox_delivery_readiness.py` and
+20. `src/app/application/outbox/readiness.py` and
     `GET /api/v1/outbox-delivery/readiness` now expose the outbox delivery
     foundation through a certified internal operator diagnostic. The endpoint
     requires the `operator` role and `idea.outbox-delivery.readiness.read`,
@@ -384,7 +384,7 @@ Implemented first-wave internal scope:
     feedback, conversion intent/outcome, report evidence-pack requests, pending
     outbox hydration, bounded review/feedback/conversion replay-conflict
     prechecks, and rollback behavior with a fake Postgres cursor.
-    `tests/unit/test_postgres_outbox_readiness.py` proves the outbox readiness
+    `tests/unit/outbox/test_postgres_readiness.py` proves the outbox readiness
     projection avoids whole-repository snapshot hydration.
 24. `src/app/infrastructure/postgres_codecs.py` now isolates PostgreSQL JSON
     serialization/deserialization helpers from the repository adapter so future
@@ -881,3 +881,26 @@ managed-provider physical base-backup/WAL exercise is captured. This is
 internal design modularity and operator automation; database backup
 infrastructure remains platform/provider owned and no new runtime service is
 introduced.
+
+## Outbox Capability-Package Hardening
+
+Issue `#357` is implemented for the second measured capability family. Outbox
+routes and DTOs, use cases, event/lineage and recovery policy, publisher port,
+PostgreSQL and HTTP adapters, runtime composition, supportability metrics,
+proof generators, contract gates, and focused tests now live in `outbox/`
+packages inside their existing layers. Event construction and the in-memory
+outbox write mixin moved with the domain package; the PostgreSQL fake behavior
+and event-lineage API proof moved with focused outbox tests.
+
+The migration is atomic: internal imports and contract source-of-truth paths
+use the new package, public `app.domain` exports remain stable, and no legacy
+module alias remains. Repository hygiene requires the canonical paths and
+rejects every retired flat path. Broader implementation-readiness tests remain
+outside the package because they own aggregate proof consumption rather than
+outbox behavior.
+
+This reduces navigation and ownership ambiguity across 34 production/support
+modules and 22 focused test/helper modules without changing runtime topology. The API
+and optional worker roles continue to share one Idea-owned PostgreSQL boundary.
+No broker, consumer, mesh, Gateway/Workbench, data-product, or supported-feature
+certification is implied.

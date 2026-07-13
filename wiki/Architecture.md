@@ -536,8 +536,8 @@ payloads, execute `lotus-ai` runtime workflows, grant downstream authority, or
 promote a supported feature.
 
 Outbox delivery readiness, status-count, and run-once response DTOs live in
-`src/app/api/outbox_delivery_readiness_models.py`, while
-`src/app/api/outbox_delivery_readiness.py` keeps operator caller checks,
+`src/app/api/outbox/delivery_models.py`, while
+`src/app/api/outbox/delivery.py` keeps operator caller checks,
 idempotency validation, durable-write blocking, publisher cleanup,
 operation-event emission, route metadata, and response handling. This is an
 internal design-modularity boundary inside the same runtime deployable, not a
@@ -546,6 +546,28 @@ runtime. The route remains an internal operator foundation and still does not
 certify live broker publication, downstream consumer runtime, platform mesh
 event publication, Gateway/Workbench support, data-product certification, or
 supported-feature promotion.
+
+### Outbox Capability Ownership
+
+Outbox code is grouped by capability inside the existing runtime layers:
+
+| Layer | Ownership |
+| --- | --- |
+| `app.api.outbox` | Protected delivery, readiness, recovery routes, and DTOs. |
+| `app.application.outbox` | Delivery/recovery orchestration and bounded proof evaluation. |
+| `app.domain.outbox` | Event lineage, delivery/recovery transitions, and in-memory write behavior. |
+| `app.ports.outbox` | Broker publisher protocol. |
+| `app.infrastructure.outbox` | PostgreSQL persistence and source-safe HTTP publisher adapter. |
+| `app.runtime.outbox` | Process-local publisher composition. |
+| `app.observability.outbox` | Aggregate supportability metrics. |
+| `scripts/outbox` | Proof generators and contract gates. |
+
+Focused unit and integration proofs mirror the capability under
+`tests/*/outbox/`. The package adds no deployable or database: API and optional
+worker roles still use one Idea-owned PostgreSQL boundary, and external broker,
+consumer-runtime, and platform-mesh certification remain explicit blockers.
+Shared implementation-proof consumers remain outside the package because
+their primary ownership is proof aggregation, not outbox state.
 
 Runtime trust telemetry preview, product posture, snapshot, freshness, lineage,
 blocking, and evidence response DTOs live in
@@ -705,19 +727,19 @@ Accepted internal mutations now also append source-safe outbox records through
 the same repository snapshot contract. The repository port and PostgreSQL
 adapter support delivery-ready reads, lease claims, owner-aware published
 status, failed retry status, and dead-letter status, while
-`src/app/application/outbox_delivery.py` orchestrates a run-once
+`src/app/application/outbox/delivery.py` orchestrates a run-once
 publisher-port pass that claims a bounded batch before broker publication and
 returns aggregate source-safe counts.
-`src/app/ports/outbox_publisher.py` owns the publisher port, and
-`src/app/infrastructure/outbox_publisher.py` provides the source-safe HTTP
+`src/app/ports/outbox/publisher.py` owns the publisher port, and
+`src/app/infrastructure/outbox/publisher.py` provides the source-safe HTTP
 publisher adapter foundation with bounded envelopes, trace headers, and
 product-safe failure reasons.
-`src/app/domain/events.py`, the PostgreSQL foundation schema,
+`src/app/domain/outbox/events.py`, the PostgreSQL foundation schema,
 `003_outbox_event_contract_constraints.sql`, and
 `make outbox-event-contract-gate` now enforce the same v1 event-family,
 candidate aggregate-type, schema-version, and source-safe payload contract at
 construction, replay, database-upgrade, and governance time.
-`src/app/application/outbox_delivery_readiness.py` and
+`src/app/application/outbox/readiness.py` and
 `GET /api/v1/outbox-delivery/readiness` add aggregate operator visibility over
 that foundation, including leased and expired-lease posture, without mutating
 records or publishing events.

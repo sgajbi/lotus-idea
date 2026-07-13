@@ -15,7 +15,7 @@ Current implemented port:
    Slice 05 application orchestration. It accepts Core source refs and a
    source-reported cash-weight value only; `lotus-idea` must not infer that
    weight from Core cash totals or market values.
-3. `outbox_publisher.py` defines the outbox event publisher port and bounded
+3. `outbox/publisher.py` defines the outbox event publisher port and bounded
    publish outcome used by the run-once outbox delivery orchestration.
    Infrastructure adapters must return product-safe failure reasons and must
    not expose raw broker responses to domain or application code.

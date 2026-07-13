@@ -65,7 +65,7 @@ outbox work.
 
 ```powershell
 make outbox-recovery-contract-gate
-.\.venv\Scripts\python.exe -m pytest tests/unit/test_outbox_recovery.py tests/unit/test_outbox_recovery_application.py tests/unit/test_postgres_outbox_delivery_adapter.py tests/integration/test_outbox_recovery_api.py -q
+.\.venv\Scripts\python.exe -m pytest tests/unit/outbox/test_outbox_recovery.py tests/unit/outbox/test_outbox_recovery_application.py tests/unit/outbox/test_postgres_delivery_adapter.py tests/integration/outbox/test_recovery_api.py -q
 make postgres-integration-gate
 ```
 

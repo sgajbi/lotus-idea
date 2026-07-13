@@ -393,7 +393,7 @@ operator-workflows-ops-contract-gate:
 	$(VENV_PYTHON) scripts/operator_workflows_operations_contract_gate.py
 
 outbox-supportability-contract-gate:
-	$(VENV_PYTHON) scripts/outbox_supportability_contract_gate.py
+	$(VENV_PYTHON) scripts/outbox/supportability_contract_gate.py
 
 disaster-recovery-contract-gate:
 	$(VENV_PYTHON) scripts/disaster_recovery_contract_gate.py
@@ -450,13 +450,13 @@ downstream-route-contract-proof-gate:
 	$(VENV_PYTHON) scripts/downstream_route_contract_proof_gate.py
 
 outbox-event-contract-gate:
-	$(VENV_PYTHON) scripts/outbox_event_contract_gate.py
+	$(VENV_PYTHON) scripts/outbox/event_contract_gate.py
 
 outbox-consumer-contract-gate:
-	$(VENV_PYTHON) scripts/outbox_consumer_contract_gate.py
+	$(VENV_PYTHON) scripts/outbox/consumer_contract_gate.py
 
 outbox-recovery-contract-gate:
-	$(VENV_PYTHON) scripts/outbox_recovery_contract_gate.py
+	$(VENV_PYTHON) scripts/outbox/recovery_contract_gate.py
 
 migration-contract-gate:
 	$(VENV_PYTHON) scripts/migration_contract_gate.py
@@ -508,13 +508,13 @@ gateway-workbench-discovery-proof-contract-gate:
 	$(VENV_PYTHON) scripts/gateway_workbench_discovery_proof_contract_gate.py
 
 outbox-broker-proof-contract-gate:
-	$(VENV_PYTHON) scripts/outbox_broker_proof_contract_gate.py
+	$(VENV_PYTHON) scripts/outbox/broker_proof_contract_gate.py
 
 outbox-consumer-runtime-proof-contract-gate:
-	$(VENV_PYTHON) scripts/outbox_consumer_runtime_proof_contract_gate.py
+	$(VENV_PYTHON) scripts/outbox/consumer_runtime_proof_contract_gate.py
 
 outbox-platform-mesh-event-publication-proof-contract-gate:
-	$(VENV_PYTHON) scripts/outbox_platform_mesh_event_publication_proof_contract_gate.py
+	$(VENV_PYTHON) scripts/outbox/platform_mesh_event_publication_proof_contract_gate.py
 
 platform-mesh-onboarding-proof-contract-gate:
 	$(VENV_PYTHON) scripts/platform_mesh_onboarding_proof_contract_gate.py
@@ -593,9 +593,9 @@ implementation-proof-readiness-check:
 	$(VENV_PYTHON) scripts/generate_ai_workflow_pack_runtime_execution_proof.py --generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --lotus-ai-root $(LOTUS_AI_ROOT) --output $(LOTUS_IDEA_AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF_OUTPUT) --allow-missing-evidence
 	$(VENV_PYTHON) scripts/generate_workbench_read_path_proof.py --generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --output output/workbench/workbench-read-path-proof.json
 	$(VENV_PYTHON) scripts/generate_gateway_workbench_operational_proof.py --generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --workbench-read-path-proof output/workbench/workbench-read-path-proof.json --output $(LOTUS_IDEA_GATEWAY_WORKBENCH_OPERATIONAL_PROOF_OUTPUT)
-	$(VENV_PYTHON) scripts/generate_outbox_broker_proof.py --generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --output output/outbox/outbox-broker-proof.json
-	$(VENV_PYTHON) scripts/generate_outbox_consumer_runtime_proof.py --generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --output $(LOTUS_IDEA_OUTBOX_CONSUMER_RUNTIME_PROOF_OUTPUT)
-	$(VENV_PYTHON) scripts/generate_outbox_platform_mesh_event_publication_proof.py --generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --platform-root $(LOTUS_PLATFORM_ROOT) --output $(LOTUS_IDEA_OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF_OUTPUT) --allow-missing-evidence
+	$(VENV_PYTHON) scripts/outbox/generate_broker_proof.py --generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --output output/outbox/outbox-broker-proof.json
+	$(VENV_PYTHON) scripts/outbox/generate_consumer_runtime_proof.py --generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --output $(LOTUS_IDEA_OUTBOX_CONSUMER_RUNTIME_PROOF_OUTPUT)
+	$(VENV_PYTHON) scripts/outbox/generate_platform_mesh_event_publication_proof.py --generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --platform-root $(LOTUS_PLATFORM_ROOT) --output $(LOTUS_IDEA_OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF_OUTPUT) --allow-missing-evidence
 	$(VENV_PYTHON) scripts/generate_advise_proposal_route_proof.py --generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --advise-root $(LOTUS_ADVISE_ROOT) --output $(LOTUS_IDEA_ADVISE_PROPOSAL_ROUTE_PROOF_OUTPUT) --allow-missing-evidence
 	$(VENV_PYTHON) scripts/generate_manage_action_route_proof.py --generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --manage-root $(LOTUS_MANAGE_ROOT) --output $(LOTUS_IDEA_MANAGE_ACTION_ROUTE_PROOF_OUTPUT) --allow-missing-evidence
 	$(VENV_PYTHON) scripts/generate_report_intake_route_proof.py --generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --report-root $(LOTUS_REPORT_ROOT) --output $(LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF_OUTPUT) --allow-missing-evidence
@@ -630,7 +630,7 @@ endpoint-certification-gate:
 	$(VENV_PYTHON) scripts/endpoint_certification_gate.py
 
 postgres-integration-gate:
-	$(VENV_PYTHON) -m pytest tests/integration/test_postgres_runtime_integration.py tests/integration/test_postgres_outbox_recovery_runtime.py tests/integration/test_postgres_review_queue_runtime.py tests/integration/test_postgres_downstream_submission_runtime.py tests/integration/test_postgres_data_lifecycle_runtime.py
+	$(VENV_PYTHON) -m pytest tests/integration/test_postgres_runtime_integration.py tests/integration/outbox/test_postgres_recovery_runtime.py tests/integration/test_postgres_review_queue_runtime.py tests/integration/test_postgres_downstream_submission_runtime.py tests/integration/test_postgres_data_lifecycle_runtime.py
 
 typecheck:
 	$(VENV_PYTHON) -m mypy --config-file mypy.ini

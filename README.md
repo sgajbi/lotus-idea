@@ -83,7 +83,7 @@ existing deployable service.
 | --- | --- |
 | `src/app/api/` | FastAPI routes, DTOs, caller context, idempotency, route metadata, and API boundary helpers. |
 | `src/app/application/` | Use-case orchestration for signal evaluation, lifecycle, review, feedback, conversion, readiness, replay, and proof updates. |
-| `src/app/domain/` | Framework-free domain models, policies, scoring, lifecycle rules, persistence records, idempotency, audit, replay, and outbox state. |
+| `src/app/domain/` | Framework-free domain policy and state; cohesive families such as `data_lifecycle/` and `outbox/` repeat inside layers without creating services. |
 | `src/app/ports/` | Repository, source-service, downstream, and publisher protocols. |
 | `src/app/infrastructure/` | Source adapters, PostgreSQL repository, migrations, codecs, HTTP clients, and outbox publisher adapter. |
 | `src/app/middleware/` | Correlation, trusted hosts, CORS, request-size limits, JSON write controls, and security headers. |

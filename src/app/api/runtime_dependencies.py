@@ -6,7 +6,7 @@ from app.runtime.downstream_realization_state import (
     get_conversion_realization_clients,
     get_report_evidence_pack_realization_client,
 )
-from app.runtime.outbox_publisher_state import build_outbox_publisher_from_environment
+from app.runtime.outbox.publisher_state import build_outbox_publisher_from_environment
 from app.runtime.proof_artifacts import (
     ConfiguredImplementationProofArtifacts,
     configured_implementation_proof_artifacts,

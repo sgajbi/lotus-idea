@@ -117,7 +117,7 @@ alignment, the PostgreSQL foundation schema, and
 family, aggregate type, and schema version match the v1 contract.
 The same gate now requires correlation, trace, lineage origin, API mapper
 coverage, PostgreSQL wiring, and correct publisher trace semantics.
-`scripts/generate_outbox_broker_proof.py` and
+`scripts/outbox/generate_broker_proof.py` and
 `make outbox-broker-proof-contract-gate` provide a source-safe outbox broker
 proof artifact for aggregate RFC implementation-readiness evidence. The artifact
 cites the implemented outbox delivery orchestration, publisher port, HTTP
@@ -132,7 +132,7 @@ for Gateway, Advise, Manage, and Report without certifying runtime consumption.
 Readiness therefore reports `downstream_consumer_runtime_proof_missing` instead
 of a missing-contract blocker until a bounded consumer runtime proof artifact is
 supplied.
-`scripts/generate_outbox_consumer_runtime_proof.py` and
+`scripts/outbox/generate_consumer_runtime_proof.py` and
 `make outbox-consumer-runtime-proof-contract-gate` now provide the bounded
 consumer runtime proof artifact consumed by aggregate RFC implementation
 readiness. The artifact validates declared consumer coverage, consumed event
@@ -140,7 +140,7 @@ type coverage, and source-authority boundaries, clearing only
 `downstream_consumer_runtime_proof_missing`. It does not certify external
 publication, platform mesh event publication, Gateway/Workbench behavior,
 downstream delivery, or supported features.
-`scripts/generate_outbox_platform_mesh_event_publication_proof.py` and
+`scripts/outbox/generate_platform_mesh_event_publication_proof.py` and
 `make outbox-platform-mesh-event-publication-proof-contract-gate` now provide
 the bounded outbox platform mesh event publication proof artifact consumed by
 aggregate RFC implementation readiness. The artifact validates repo-owned
@@ -214,7 +214,7 @@ flowchart LR
    `003_outbox_event_contract_constraints.sql` retrofits named outbox event
    family, aggregate-type, and schema-version constraints onto existing
    `idea_outbox_event` tables.
-6. `src/app/domain/events.py` defines the outbox event envelope,
+6. `src/app/domain/outbox/events.py` defines the outbox event envelope,
    deterministic event identity, status vocabulary, hashed idempotency
    fingerprint, forbidden payload-key guard, governed event-family allowlist,
    v1 schema-version guard, fixed candidate aggregate-type guard, published
@@ -269,15 +269,15 @@ flowchart LR
     boundary for the same source-ingestion batch foundation. It requires
     durable repository configuration and blocks before mutation when runtime
     inputs are missing or invalid.
-15. `src/app/application/outbox_delivery.py` adds the first run-once delivery
+15. `src/app/application/outbox/delivery.py` adds the first run-once delivery
     orchestration over a publisher port and the governed repository port. It
     reads pending and retryable failed events, marks accepted publications as
     published, marks rejected publications as failed for retry, dead-letters
     events at the configured retry limit, maps publisher exceptions to bounded
     `publisher_unavailable` failure reasons, and returns aggregate counts only.
     `InMemoryIdeaRepository` and `PostgresIdeaRepository` expose the same
-    delivery-ready query and status-update contract. `src/app/ports/outbox_publisher.py`
-    now owns the publisher protocol, and `src/app/infrastructure/outbox_publisher.py`
+    delivery-ready query and status-update contract. `src/app/ports/outbox/publisher.py`
+    now owns the publisher protocol, and `src/app/infrastructure/outbox/publisher.py`
     implements a source-safe HTTP adapter that posts bounded event envelopes,
     propagates correlation/causation headers, and maps broker failures to
     bounded publisher reasons. The broker publisher uses the shared downstream
@@ -294,7 +294,7 @@ flowchart LR
     replayed, conflict, or bounded blocked run-once responses. This is internal
     recoverability and adapter foundation only; certified live broker runtime,
     downstream consumers, and event-publication support remain unimplemented.
-16. `src/app/application/outbox_delivery_readiness.py` and
+16. `src/app/application/outbox/readiness.py` and
     `GET /api/v1/outbox-delivery/readiness` expose source-safe outbox
     delivery readiness for operators. The diagnostic reports aggregate status
     counts, adapter presence, and blockers only, so operators can see backlog

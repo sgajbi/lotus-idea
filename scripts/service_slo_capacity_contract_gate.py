@@ -16,7 +16,7 @@ if str(SRC) not in sys.path:
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
-from app.application.outbox_delivery import (  # noqa: E402
+from app.application.outbox.delivery import (  # noqa: E402
     OUTBOX_DELIVERY_RUN_ONCE_BATCH_CEILING,
 )
 from app.application.source_ingestion import (  # noqa: E402

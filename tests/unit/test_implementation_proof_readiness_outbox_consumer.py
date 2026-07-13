@@ -6,8 +6,8 @@ from pathlib import Path
 from app.application.implementation_proof_readiness import (
     build_implementation_proof_readiness_snapshot,
 )
-from app.application.outbox_broker_proof import build_outbox_broker_proof_payload
-from app.application.outbox_consumer_runtime_proof import (
+from app.application.outbox.broker_proof import build_outbox_broker_proof_payload
+from app.application.outbox.consumer_runtime_proof import (
     build_outbox_consumer_runtime_proof_payload,
 )
 from app.domain import InMemoryIdeaRepository

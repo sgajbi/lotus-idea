@@ -94,6 +94,34 @@ def test_repository_hygiene_gate_enforces_lifecycle_bounded_module_placement() -
     ]
 
 
+def test_repository_hygiene_gate_enforces_outbox_bounded_module_placement() -> None:
+    module = _load_repository_hygiene_gate()
+    required_paths = {
+        "src/app/domain/outbox/delivery.py",
+        "src/app/domain/outbox/events.py",
+        "tests/unit/outbox/postgres_fake_helpers.py",
+    }
+    retired_paths = {
+        "src/app/domain/events.py",
+        "src/app/domain/outbox_delivery_state.py",
+        "tests/unit/postgres_outbox_fake_helpers.py",
+    }
+    tracked_paths = sorted(
+        module.REQUIRED_BOUNDED_MODULE_PATHS - required_paths | retired_paths
+    )
+
+    violations = module.find_bounded_module_placement_violations(tracked_paths)
+
+    assert violations == [
+        "src/app/domain/events.py: legacy flat-module path must not be reintroduced",
+        "src/app/domain/outbox/delivery.py: required bounded-module path is missing",
+        "src/app/domain/outbox/events.py: required bounded-module path is missing",
+        "src/app/domain/outbox_delivery_state.py: legacy flat-module path must not be reintroduced",
+        "tests/unit/outbox/postgres_fake_helpers.py: required bounded-module path is missing",
+        "tests/unit/postgres_outbox_fake_helpers.py: legacy flat-module path must not be reintroduced",
+    ]
+
+
 def test_repository_hygiene_gate_rejects_rfc_coupled_executable_names() -> None:
     module = _load_repository_hygiene_gate()
 

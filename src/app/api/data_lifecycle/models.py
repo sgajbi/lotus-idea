@@ -17,7 +17,7 @@ from app.domain.data_lifecycle import (
     DataLifecycleState,
 )
 from app.security.caller_context import CallerContext
-from app.domain.events import EventLineageContext
+from app.domain.outbox.events import EventLineageContext
 from app.domain.data_lifecycle.authority import VerifiedLifecycleAuthorityReceipt
 from app.domain.data_lifecycle.archive_posture import VerifiedArchiveLifecycleReceipt
 from app.integration.data_lifecycle.authority_contract import LifecycleAuthorityProducerDecision
