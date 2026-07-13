@@ -126,6 +126,7 @@
   "sourceOfTruth": {
     "event_domain_model": "src/app/domain/outbox/events.py",
     "persistence_event_writers": "src/app/domain/persistence.py",
+    "review_persistence_event_writers": "src/app/domain/persistence_review_workflow.py",
     "publisher_port": "src/app/ports/outbox/publisher.py",
     "publisher_adapter": "src/app/infrastructure/outbox/publisher.py",
     "outbox_delivery": "src/app/application/outbox/delivery.py",

@@ -90,6 +90,74 @@ def test_outbox_event_contract_gate_rejects_trace_causation_substitution(
     assert "outbox publisher must not substitute causation_id for trace_id" in errors
 
 
+def test_outbox_event_contract_gate_scans_every_persistence_writer(tmp_path: Path) -> None:
+    module = _load_contract_gate_script()
+    _write_persistence_event_writers(module, tmp_path, omit_last_event=True)
+    original_root = getattr(module, "ROOT")
+    setattr(module, "ROOT", tmp_path)
+    try:
+        errors: list[str] = []
+        module._validate_persistence_event_writers(errors)
+    finally:
+        setattr(module, "ROOT", original_root)
+
+    assert (
+        f"implemented persistence event type missing: {module.REQUIRED_EVENT_TYPES[-1]}" in errors
+    )
+
+
+def test_outbox_event_contract_gate_rejects_missing_lineage_in_extracted_writer(
+    tmp_path: Path,
+) -> None:
+    module = _load_contract_gate_script()
+    _write_persistence_event_writers(module, tmp_path, omit_lineage_from_last_event=True)
+    original_root = getattr(module, "ROOT")
+    setattr(module, "ROOT", tmp_path)
+    try:
+        errors: list[str] = []
+        module._validate_persistence_event_writers(errors)
+    finally:
+        setattr(module, "ROOT", original_root)
+
+    assert any(
+        module.REQUIRED_EVENT_TYPES[-1] in error and error.endswith("must pass event_lineage")
+        for error in errors
+    )
+
+
+def _write_persistence_event_writers(
+    module: ModuleType,
+    root: Path,
+    *,
+    omit_last_event: bool = False,
+    omit_lineage_from_last_event: bool = False,
+) -> None:
+    event_types = list(module.REQUIRED_EVENT_TYPES)
+    split_at = len(event_types) - 2
+    writer_event_types = (event_types[:split_at], event_types[split_at:])
+    for relative_path, assigned_event_types in zip(
+        module.PERSISTENCE_EVENT_WRITER_PATHS, writer_event_types, strict=True
+    ):
+        calls: list[str] = []
+        for event_type in assigned_event_types:
+            if omit_last_event and event_type == event_types[-1]:
+                continue
+            lineage = (
+                "None"
+                if omit_lineage_from_last_event and event_type == event_types[-1]
+                else "event_lineage"
+            )
+            calls.append(
+                f'self._append_outbox_event(event_type="{event_type}", event_lineage={lineage})'
+            )
+        source_path = root / relative_path
+        source_path.parent.mkdir(parents=True, exist_ok=True)
+        source_path.write_text(
+            "def write(self, event_lineage):\n    " + "\n    ".join(calls) + "\n",
+            encoding="utf-8",
+        )
+
+
 def _load_contract_gate_script() -> ModuleType:
     script_path = ROOT / "scripts" / "outbox" / "event_contract_gate.py"
     spec = importlib.util.spec_from_file_location("outbox_event_contract_gate", script_path)

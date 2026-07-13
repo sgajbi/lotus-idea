@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 import json
 from collections.abc import Mapping, Sequence
 from pathlib import Path
@@ -30,6 +31,12 @@ OUTBOX_MIGRATION_PATHS = (
     ROOT / "migrations" / "007_outbox_event_lineage.sql",
 )
 
+PERSISTENCE_EVENT_WRITER_SOURCES = {
+    "persistence_event_writers": "src/app/domain/persistence.py",
+    "review_persistence_event_writers": "src/app/domain/persistence_review_workflow.py",
+}
+PERSISTENCE_EVENT_WRITER_PATHS = tuple(PERSISTENCE_EVENT_WRITER_SOURCES.values())
+
 REQUIRED_EVENT_TYPES = SUPPORTED_OUTBOX_EVENT_TYPES
 
 REQUIRED_ENVELOPE_FIELDS = (
@@ -57,7 +64,7 @@ FORBIDDEN_PAYLOAD_KEYS = tuple(FORBIDDEN_OUTBOX_PAYLOAD_KEYS)
 
 REQUIRED_SOURCE_OF_TRUTH_KEYS = {
     "event_domain_model",
-    "persistence_event_writers",
+    *PERSISTENCE_EVENT_WRITER_SOURCES,
     "publisher_port",
     "publisher_adapter",
     "outbox_delivery",
@@ -220,6 +227,9 @@ def _validate_source_of_truth(payload: Mapping[str, Any], errors: list[str]) -> 
     missing_keys = sorted(REQUIRED_SOURCE_OF_TRUTH_KEYS - set(source_of_truth))
     if missing_keys:
         errors.append("sourceOfTruth missing keys: " + ", ".join(missing_keys))
+    for key, expected_path in PERSISTENCE_EVENT_WRITER_SOURCES.items():
+        if source_of_truth.get(key) != expected_path:
+            errors.append(f"sourceOfTruth.{key} must be {expected_path}")
     for key, value in sorted(source_of_truth.items()):
         if not isinstance(value, str) or not value.strip():
             errors.append(f"sourceOfTruth.{key} must be non-empty text")
@@ -239,9 +249,6 @@ def _validate_source_of_truth(payload: Mapping[str, Any], errors: list[str]) -> 
 
 def _validate_source_code_alignment(errors: list[str]) -> None:
     try:
-        persistence_text = (ROOT / "src" / "app" / "domain" / "persistence.py").read_text(
-            encoding="utf-8"
-        )
         event_text = (ROOT / "src" / "app" / "domain" / "outbox" / "events.py").read_text(
             encoding="utf-8"
         )
@@ -251,9 +258,7 @@ def _validate_source_code_alignment(errors: list[str]) -> None:
     except OSError as exc:
         errors.append(f"source alignment read failed: {exc}")
         return
-    for event_type in REQUIRED_EVENT_TYPES:
-        if event_type not in persistence_text:
-            errors.append(f"implemented persistence event type missing: {event_type}")
+    _validate_persistence_event_writers(errors)
     for forbidden_key in FORBIDDEN_PAYLOAD_KEYS:
         if f'"{forbidden_key}"' not in event_text:
             errors.append(f"domain forbidden payload key missing: {forbidden_key}")
@@ -267,6 +272,47 @@ def _validate_source_code_alignment(errors: list[str]) -> None:
     ):
         if constant not in event_text:
             errors.append(f"domain outbox contract constant missing: {constant}")
+
+
+def _validate_persistence_event_writers(errors: list[str]) -> None:
+    event_type_counts: dict[str, int] = {}
+    for relative_path in PERSISTENCE_EVENT_WRITER_PATHS:
+        source_text = _read_source_text(relative_path, errors)
+        if source_text is None:
+            continue
+        try:
+            source_tree = ast.parse(source_text, filename=relative_path)
+        except SyntaxError as exc:
+            errors.append(f"persistence event writer is not valid Python: {relative_path}: {exc}")
+            continue
+        for node in ast.walk(source_tree):
+            if not isinstance(node, ast.Call) or not (
+                isinstance(node.func, ast.Attribute) and node.func.attr == "_append_outbox_event"
+            ):
+                continue
+            keywords = {keyword.arg: keyword.value for keyword in node.keywords if keyword.arg}
+            event_type_node = keywords.get("event_type")
+            if not (
+                isinstance(event_type_node, ast.Constant) and isinstance(event_type_node.value, str)
+            ):
+                errors.append(
+                    f"{relative_path}:{node.lineno} outbox event_type must be a string literal"
+                )
+                continue
+            event_type = event_type_node.value
+            event_type_counts[event_type] = event_type_counts.get(event_type, 0) + 1
+            lineage_node = keywords.get("event_lineage")
+            if not (isinstance(lineage_node, ast.Name) and lineage_node.id == "event_lineage"):
+                errors.append(f"{relative_path}:{node.lineno} {event_type} must pass event_lineage")
+
+    for event_type in REQUIRED_EVENT_TYPES:
+        count = event_type_counts.get(event_type, 0)
+        if count == 0:
+            errors.append(f"implemented persistence event type missing: {event_type}")
+        elif count > 1:
+            errors.append(f"implemented persistence event type duplicated: {event_type}")
+    for event_type in sorted(set(event_type_counts) - set(REQUIRED_EVENT_TYPES)):
+        errors.append(f"ungoverned persistence event type implemented: {event_type}")
 
 
 def _validate_migration_alignment(errors: list[str]) -> None:
@@ -296,6 +342,9 @@ def _validate_lineage_implementation_alignment(errors: list[str]) -> None:
             "lineage_origin: EventLineageOrigin",
         ),
         "src/app/domain/persistence.py": ("event_lineage: EventLineageContext | None",),
+        "src/app/domain/persistence_review_workflow.py": (
+            "event_lineage: EventLineageContext | None",
+        ),
         "src/app/domain/outbox/persistence.py": ("lineage=event_lineage",),
         "src/app/ports/idea_repository.py": ("EventLineageContext",),
         "src/app/infrastructure/outbox/postgres_writes.py": (
@@ -340,12 +389,6 @@ def _validate_lineage_implementation_alignment(errors: list[str]) -> None:
             )
         if "EventCausationHeader" not in source_text:
             errors.append(f"{relative_path} must expose the governed causation header")
-
-    persistence_text = _read_source_text("src/app/domain/persistence.py", errors)
-    if persistence_text is not None and persistence_text.count("event_lineage=event_lineage") < len(
-        REQUIRED_EVENT_TYPES
-    ):
-        errors.append("domain persistence must pass lineage to every outbox event family")
 
 
 def _require_source_fragments(
