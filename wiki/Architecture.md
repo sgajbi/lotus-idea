@@ -723,6 +723,12 @@ A disposable PostgreSQL 18 lane passes all 17 required tests. No database,
 schema, process, API, migration, source-authority, or supported-feature boundary
 was added.
 
+This bounded mutation increment is merged on main through PR `#365` at
+`69326064`. Main Releasability `29239140276` and CodeQL `29239134509` passed
+for that exact commit, and wiki publication `8386705` is synchronized. Issues
+`#363` and `#364` are closed; external Slice 06 certification blockers remain
+explicitly separate from this internal database-access hardening.
+
 The real PostgreSQL runtime proof now covers high-cash evaluate-and-persist
 replay plus the first internal advisor queue, review, feedback, conversion,
 report evidence-pack workflow path, and internal source-ingestion

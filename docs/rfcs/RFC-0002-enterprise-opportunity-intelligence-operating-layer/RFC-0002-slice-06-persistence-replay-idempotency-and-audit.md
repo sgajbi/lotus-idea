@@ -952,3 +952,14 @@ operations; ordinary API and application paths do not call them.
 This is database-access and design modularity inside the existing deployable
 and one Idea-owned PostgreSQL database. It adds no service, database, schema,
 API/OpenAPI change, migration, source authority, or supported feature.
+
+PR `#365` merged this increment by repository-approved rebase to exact main
+SHA `6932606474caa32308f09a0e96969da0bb1eaafa`. Main Releasability run
+`29239140276` and CodeQL run `29239134509` passed for that SHA. The release
+lane also built and pushed the SHA-tagged image in CI, scanned it, generated
+its SBOM, signed its digest, generated provenance and SBOM attestations, and
+validated the published digest against runtime release identity. Wiki
+publication commit `8386705` has zero source drift. Issues `#363` and `#364`
+are closed with `status/merged-main`; the implementation branch is absent
+locally and remotely. Slice 06 remains partially implemented only because the
+external certification blockers listed in this RFC are still unresolved.
