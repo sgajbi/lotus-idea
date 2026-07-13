@@ -115,14 +115,15 @@ Current RFC-0002 implementation-start baseline:
    source-safe evidence validation without adding a service or database.
    Protected execution and rollout-health proof remain open. This does not claim
    downstream execution or supported-feature readiness.
-8. Slice 07 implementation is complete on its branch, pending merge and
-   mainline closure. Candidate score policies and queue ranking policy are
+8. Slice 07 is implemented on `main` through PR `#383`. Candidate score
+   policies and queue ranking policy are
    separately versioned; unknown policies fail closed across process-local and
    PostgreSQL providers; priority, suppression, deduplication, expiry, scope,
    readiness, and snapshot behavior are deterministic and contract-gated.
    Gateway read-only publication exists, but Workbench product proof,
    data-product certification, and supported-feature promotion remain later,
-   independently gated work.
+   independently gated work. Exact-main SHA `4f4e0985` passed Main
+   Releasability run `29291215703`.
 9. Slice 08 partially implements internal advisor review and feedback
    governance with fail-closed scope checks, review actions, safe audit events,
    source provenance, queue projection interaction, repository-backed
