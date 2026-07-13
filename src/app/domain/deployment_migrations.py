@@ -8,10 +8,14 @@ import re
 
 MIGRATION_EVIDENCE_SCHEMA_VERSION = "lotus-idea.deployment-migration-evidence.v1"
 MIGRATION_HISTORY_SCHEMA_VERSION = "lotus-idea.schema-migration-history.v1"
+DEPLOYMENT_MIGRATION_CONTRACT_VERSION = "lotus-idea.deployment-migrations.v1"
+SUPPORTED_DEPLOYMENT_POSTGRES_MAJOR = 18
 
 _COMMIT_SHA_PATTERN = re.compile(r"^[0-9a-f]{40}$")
 _DIGEST_REFERENCE_PATTERN = re.compile(r"^ghcr\.io/sgajbi/lotus-idea@sha256:[0-9a-f]{64}$")
 _RUN_ID_PATTERN = re.compile(r"^[1-9][0-9]*$")
+_CHANGE_REFERENCE_PATTERN = re.compile(r"^[A-Z0-9][A-Z0-9._/-]{5,63}$")
+_DEPLOYMENT_ACTOR_PATTERN = re.compile(r"^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})$")
 
 
 class DeploymentMigrationOperation(StrEnum):
@@ -33,6 +37,8 @@ class MigrationReleaseIdentity:
     ci_run_id: str
     image_digest_reference: str
     environment_class: DeploymentEnvironmentClass
+    change_reference: str
+    deployment_actor: str
 
     def __post_init__(self) -> None:
         if self.repository != "sgajbi/lotus-idea":
@@ -45,16 +51,23 @@ class MigrationReleaseIdentity:
             raise ValueError("ci_run_id must be a positive numeric GitHub run id")
         if not _DIGEST_REFERENCE_PATTERN.fullmatch(self.image_digest_reference):
             raise ValueError("image_digest_reference must be the immutable Lotus Idea GHCR digest")
+        if not _CHANGE_REFERENCE_PATTERN.fullmatch(self.change_reference):
+            raise ValueError("change_reference must be a bounded uppercase change identifier")
+        if not _DEPLOYMENT_ACTOR_PATTERN.fullmatch(self.deployment_actor):
+            raise ValueError("deployment_actor must be a valid bounded GitHub actor")
 
 
 @dataclass(frozen=True)
 class DeploymentMigrationCommand:
     operation: DeploymentMigrationOperation
     release: MigrationReleaseIdentity
+    expected_migration_bundle_sha256: str
     rollback_count: int = 0
     expected_schema_fingerprint: str | None = None
 
     def __post_init__(self) -> None:
+        if not re.fullmatch(r"sha256:[0-9a-f]{64}", self.expected_migration_bundle_sha256):
+            raise ValueError("expected_migration_bundle_sha256 must be a SHA-256 digest")
         if self.operation is DeploymentMigrationOperation.ROLLBACK:
             if self.rollback_count < 1 or self.rollback_count > 15:
                 raise ValueError("rollback_count must be between 1 and 15")
@@ -79,6 +92,7 @@ class DeploymentMigrationResult:
     adopted_versions: tuple[str, ...]
     executed_at_utc: datetime
     advisory_lock_held: bool = True
+    postgres_major_version: int = SUPPORTED_DEPLOYMENT_POSTGRES_MAJOR
 
 
 class DeploymentMigrationError(RuntimeError):

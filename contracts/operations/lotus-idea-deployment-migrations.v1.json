@@ -1,0 +1,54 @@
+{
+  "schemaVersion": "lotus-idea.deployment-migrations.v1",
+  "repository": "sgajbi/lotus-idea",
+  "owner": "lotus-idea",
+  "databaseBoundary": "one_lotus_idea_owned_postgresql_database",
+  "runtimeTopology": "existing_api_and_optional_worker_roles_only",
+  "migrationHistorySchemaVersion": "lotus-idea.schema-migration-history.v1",
+  "evidenceSchemaVersion": "lotus-idea.deployment-migration-evidence.v1",
+  "postgresMajorVersion": 18,
+  "migrationCount": 15,
+  "currentMigrationVersion": "015",
+  "migrationBundleSha256": "sha256:3d61f39f595d832e8710ce8dcefe69737234010f95faa96f7a5224109db940f7",
+  "legacyAdoption": {
+    "allowedOnlyWhenHistoryIsAbsent": true,
+    "schemaFingerprintAlgorithm": "postgresql-structural-inventory-v1",
+    "schemaFingerprintSha256": "sha256:dab6721048763622fbffbc23ae43f60a7179e1863fb3a0a4e473d73b4423033d",
+    "ideaTableCount": 17,
+    "columnCount": 204,
+    "constraintCount": 230,
+    "indexCount": 68,
+    "silentAdoptionAllowed": false
+  },
+  "executionPolicy": {
+    "requiredGitRef": "refs/heads/main",
+    "requiredImageRepository": "ghcr.io/sgajbi/lotus-idea",
+    "immutableDigestRequired": true,
+    "advisoryTransactionLockRequired": true,
+    "pendingOnlyApplyRequired": true,
+    "contentDriftFailsClosed": true,
+    "atomicPlanRequired": true,
+    "serviceStartupSchemaMutationAllowed": false,
+    "databaseUrlCliArgumentAllowed": false,
+    "databaseCredentialsInEvidenceAllowed": false,
+    "rollbackIsDatabaseRestore": false
+  },
+  "sourceOfTruth": {
+    "domainContract": "src/app/domain/deployment_migrations.py",
+    "applicationUseCase": "src/app/application/deployment_migrations.py",
+    "executorPort": "src/app/ports/deployment_migrations.py",
+    "postgresAdapter": "src/app/infrastructure/postgres_deployment_migrations.py",
+    "schemaFingerprint": "src/app/infrastructure/postgres_schema_fingerprint.py",
+    "operatorCli": "scripts/run_deployment_migrations.py",
+    "migrations": "migrations"
+  },
+  "certificationPosture": {
+    "productionCertified": false,
+    "supportedFeaturePromoted": false,
+    "remainingBlockers": [
+      "protected_environment_execution_attestation_missing",
+      "deployment_rollout_health_proof_missing",
+      "production_change_approval_missing"
+    ]
+  }
+}

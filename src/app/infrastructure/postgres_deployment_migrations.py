@@ -5,6 +5,7 @@ from typing import Any, Callable, Protocol, Sequence
 
 from app.domain.deployment_migrations import (
     MIGRATION_HISTORY_SCHEMA_VERSION,
+    SUPPORTED_DEPLOYMENT_POSTGRES_MAJOR,
     DeploymentMigrationCommand,
     DeploymentMigrationError,
     DeploymentMigrationOperation,
@@ -58,16 +59,23 @@ class PostgresDeploymentMigrationExecutor:
     def execute(self, command: DeploymentMigrationCommand) -> DeploymentMigrationResult:
         steps = discover_migrations(self._migrations_dir)
         bundle_sha256 = migration_bundle_sha256(steps)
+        if bundle_sha256 != command.expected_migration_bundle_sha256:
+            raise DeploymentMigrationError(
+                "migration_bundle_contract_mismatch",
+                "immutable image migration bundle does not match the governed contract",
+            )
         try:
             with self._connection.cursor() as cursor:
                 cursor.execute(
                     "SELECT pg_advisory_xact_lock(%s)",
                     (DEPLOYMENT_MIGRATION_ADVISORY_LOCK_ID,),
                 )
+                self._validate_postgres_version(cursor)
                 history_exists = self._relation_exists(cursor, "lotus_idea_schema_migration")
                 idea_schema_exists = self._relation_exists(cursor, "idea_candidate_record")
                 cursor.execute(_CREATE_MIGRATION_HISTORY_SQL)
                 cursor.execute(_CREATE_MIGRATION_EVENT_SQL)
+                self._ensure_event_append_only(cursor)
                 history = self._load_history(cursor)
                 self._validate_history(history, steps)
                 previous_version = history[-1][0] if history else None
@@ -132,10 +140,39 @@ class PostgresDeploymentMigrationExecutor:
         )
 
     @staticmethod
+    def _validate_postgres_version(cursor: DeploymentMigrationCursor) -> None:
+        cursor.execute("SHOW server_version_num")
+        row = cursor.fetchone()
+        major = int(str(row[0])) // 10_000 if row else 0
+        if major != SUPPORTED_DEPLOYMENT_POSTGRES_MAJOR:
+            raise DeploymentMigrationError(
+                "deployment_postgres_version_unsupported",
+                f"deployment migrations require PostgreSQL {SUPPORTED_DEPLOYMENT_POSTGRES_MAJOR}",
+            )
+
+    @staticmethod
     def _relation_exists(cursor: DeploymentMigrationCursor, relation_name: str) -> bool:
         cursor.execute("SELECT to_regclass(%s) IS NOT NULL", (f"public.{relation_name}",))
         row = cursor.fetchone()
         return bool(row and row[0])
+
+    @staticmethod
+    def _ensure_event_append_only(cursor: DeploymentMigrationCursor) -> None:
+        cursor.execute(_CREATE_EVENT_MUTATION_GUARD_FUNCTION_SQL)
+        cursor.execute(
+            """
+            SELECT EXISTS (
+                SELECT 1
+                FROM pg_trigger
+                WHERE tgname = 'trg_lotus_idea_schema_migration_event_append_only'
+                  AND tgrelid = 'public.lotus_idea_schema_migration_event'::regclass
+                  AND NOT tgisinternal
+            )
+            """
+        )
+        row = cursor.fetchone()
+        if not row or row[0] is not True:
+            cursor.execute(_CREATE_EVENT_MUTATION_GUARD_TRIGGER_SQL)
 
     @staticmethod
     def _load_history(
@@ -260,6 +297,9 @@ class PostgresDeploymentMigrationExecutor:
                 command.release.git_ref,
                 command.release.ci_run_id,
                 command.release.image_digest_reference,
+                command.release.environment_class.value,
+                command.release.change_reference,
+                command.release.deployment_actor,
                 bundle_sha256,
                 adopted,
             ),
@@ -283,6 +323,9 @@ class PostgresDeploymentMigrationExecutor:
                 command.release.git_ref,
                 command.release.ci_run_id,
                 command.release.image_digest_reference,
+                command.release.environment_class.value,
+                command.release.change_reference,
+                command.release.deployment_actor,
                 bundle_sha256,
             ),
         )
@@ -299,6 +342,9 @@ CREATE TABLE IF NOT EXISTS lotus_idea_schema_migration (
     git_ref TEXT NOT NULL,
     ci_run_id TEXT NOT NULL,
     image_digest_reference TEXT NOT NULL,
+    environment_class TEXT NOT NULL CHECK (environment_class IN ('staging', 'production')),
+    change_reference TEXT NOT NULL,
+    deployment_actor TEXT NOT NULL,
     migration_bundle_sha256 TEXT NOT NULL,
     adopted BOOLEAN NOT NULL DEFAULT FALSE,
     CONSTRAINT ck_lotus_idea_schema_migration_version
@@ -320,8 +366,30 @@ CREATE TABLE IF NOT EXISTS lotus_idea_schema_migration_event (
     git_ref TEXT NOT NULL,
     ci_run_id TEXT NOT NULL,
     image_digest_reference TEXT NOT NULL,
+    environment_class TEXT NOT NULL CHECK (environment_class IN ('staging', 'production')),
+    change_reference TEXT NOT NULL,
+    deployment_actor TEXT NOT NULL,
     migration_bundle_sha256 TEXT NOT NULL
 )
+"""
+
+_CREATE_EVENT_MUTATION_GUARD_FUNCTION_SQL = """
+CREATE OR REPLACE FUNCTION lotus_idea_reject_schema_migration_event_mutation()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RAISE EXCEPTION 'lotus_idea_schema_migration_event is append-only'
+        USING ERRCODE = '55000';
+END;
+$$
+"""
+
+_CREATE_EVENT_MUTATION_GUARD_TRIGGER_SQL = """
+CREATE TRIGGER trg_lotus_idea_schema_migration_event_append_only
+BEFORE UPDATE OR DELETE ON lotus_idea_schema_migration_event
+FOR EACH ROW
+EXECUTE FUNCTION lotus_idea_reject_schema_migration_event_mutation()
 """
 
 _INSERT_MIGRATION_HISTORY_SQL = """
@@ -334,9 +402,12 @@ INSERT INTO lotus_idea_schema_migration (
     git_ref,
     ci_run_id,
     image_digest_reference,
+    environment_class,
+    change_reference,
+    deployment_actor,
     migration_bundle_sha256,
     adopted
-) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
 """
 
 _INSERT_MIGRATION_EVENT_SQL = """
@@ -349,6 +420,9 @@ INSERT INTO lotus_idea_schema_migration_event (
     git_ref,
     ci_run_id,
     image_digest_reference,
+    environment_class,
+    change_reference,
+    deployment_actor,
     migration_bundle_sha256
-) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
 """
