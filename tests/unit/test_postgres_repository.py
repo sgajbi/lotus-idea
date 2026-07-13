@@ -829,9 +829,7 @@ def test_postgres_repository_round_trips_ai_explanation_lineage() -> None:
 
     accepted = repository.record_ai_explanation_lineage(explanation_result)
     assert_no_whole_store_snapshot(tuple(connection.executed_sql))
-    assert any(
-        "ai-lineage-identity-candidates" in sql for sql in connection.executed_sql
-    )
+    assert any("ai-lineage-identity-candidates" in sql for sql in connection.executed_sql)
     ai_identity_query = next(
         sql for sql in connection.executed_sql if "ai-lineage-identity-candidates" in sql
     )

@@ -51,9 +51,7 @@ class PostgresAIExplanationWriteMixin:
                 self._connection,
                 request_id=request_id,
                 attestation_replay_nonce=(
-                    attestation_receipt.replay_nonce
-                    if attestation_receipt is not None
-                    else None
+                    attestation_receipt.replay_nonce if attestation_receipt is not None else None
                 ),
                 provider_replay_nonce=(
                     provider_retention_receipt.replay_nonce
@@ -65,7 +63,7 @@ class PostgresAIExplanationWriteMixin:
                 result,
                 attestation_receipt=attestation_receipt,
                 provider_retention_receipt=provider_retention_receipt,
-            )
+            ),
         )
 
     def record_ai_explanation_lineage_request(
@@ -91,9 +89,7 @@ class PostgresAIExplanationWriteMixin:
                 self._connection,
                 request_id=request_id,
                 attestation_replay_nonce=(
-                    attestation_receipt.replay_nonce
-                    if attestation_receipt is not None
-                    else None
+                    attestation_receipt.replay_nonce if attestation_receipt is not None else None
                 ),
                 provider_replay_nonce=(
                     provider_retention_receipt.replay_nonce
@@ -107,7 +103,7 @@ class PostgresAIExplanationWriteMixin:
                 payload=payload,
                 attestation_receipt=attestation_receipt,
                 provider_retention_receipt=provider_retention_receipt,
-            )
+            ),
         )
 
 

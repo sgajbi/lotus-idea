@@ -92,9 +92,7 @@ class PostgresBoundedMutationRepositoryMixin:
         self,
         identity: ConversionOutcomeIdentity,
     ) -> tuple[str, ...]:
-        candidate_ids = set(
-            self._conversion_intent_candidate_ids(identity.conversion_intent_id)
-        )
+        candidate_ids = set(self._conversion_intent_candidate_ids(identity.conversion_intent_id))
         existing = load_postgres_conversion_outcome_identity(
             self._connection,
             identity.conversion_outcome_id,
