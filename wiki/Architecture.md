@@ -343,7 +343,8 @@ worker entrypoint and opt-in Docker Compose worker profile validated by
 `make source-ingestion-scheduled-worker-check`, plus a source-safe live Core
 proof artifact contract validated by
 `make source-ingestion-live-proof-contract-gate`. Production storage readiness
-still requires deploy migration evidence, mesh certification, platform mesh
+still requires protected migration execution and rollout-health evidence, mesh
+certification, platform mesh
 event publication proof, downstream delivery evidence, and live
 event-publication evidence beyond the internal outbox retry/dead-letter,
 publisher-adapter, bounded broker proof, and bounded downstream consumer
@@ -722,6 +723,28 @@ candidate. Full snapshots remain explicit administrative/test/DR behavior.
 A disposable PostgreSQL 18 lane passes all 17 required tests. No database,
 schema, process, API, migration, source-authority, or supported-feature boundary
 was added.
+
+### Deployment Migration Boundary
+
+Production-like schema changes now use a bounded deployment-migration module
+through domain contract, application use case, executor port, and PostgreSQL
+adapter. The adapter serializes plans with a transaction advisory lock, accepts
+only PostgreSQL 18, applies a strict pending migration prefix, rejects immutable
+bundle or applied-history drift, and commits schema, history, and append-only
+events atomically. Legacy schemas require explicit structural-fingerprint
+adoption; bounded rollback is an audited schema action, not database restore.
+
+The protected workflow runs the exact signed and attested mainline image digest
+and validates source-safe evidence with that same image. Database credentials
+exist only as runtime secret input. Local `make migrate` commands remain
+disposable-fixture tools and cannot establish deployment authority. Static
+governance rejects future workflow bypass except the scheduled lifecycle-review
+and DR-seed fixtures.
+
+This adds no service or database. API and optional worker roles continue to use
+one Idea-owned PostgreSQL boundary. Protected execution, approved change, and
+same-digest rollout-health evidence are still required before production
+certification or supported-feature promotion.
 
 This bounded mutation increment is merged on main through PR `#365` at
 `69326064`. Main Releasability `29239140276` and CodeQL `29239134509` passed

@@ -45,7 +45,11 @@ proof, downstream proof, supported-feature evidence, and mainline CI all agree.
    source-ingestion worker CLI and check-only gate. It now also includes
    durable claim-before-call downstream submission, uncertain-outcome
    quarantine/reconciliation, operator audit controls, and real PostgreSQL
-   concurrency/restart proof,
+   concurrency/restart proof. Protected exact-image migration automation now
+   adds durable release-bound history, locking, pending-only apply, drift
+   rejection, explicit legacy adoption, bounded rollback, source-safe evidence,
+   and anti-bypass governance; protected execution and rollout health proof
+   remain open,
 10. RFC-0002 Slice 07 partially implements internal deterministic scoring,
    priority buckets, stable queue projection, snooze, suppression,
    deduplication, expiry, unsupported-evidence, unscored-candidate exclusions,
@@ -99,8 +103,9 @@ First implementation program:
    weight,
 5. extend the current manifest-backed run-once source-ingestion worker,
    check-only gate, and PostgreSQL replay/conflict recovery proof into
-   certified long-running scheduled source-ingestion runtime, deploy migration
-   evidence, live Core source-adapter proof, and durable operational procedures,
+   certified long-running scheduled source-ingestion runtime, protected
+   migration execution and rollout-health evidence, live Core source-adapter
+   proof, and durable operational procedures,
 6. extend the first bounded read-only Gateway publication into Workbench
    product surfaces only after certified live source-worker adapters, durable
    state, and supportability proof exist,

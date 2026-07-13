@@ -42,6 +42,7 @@ clean branch hygiene.
 | Feature Lane | Fast lint, typecheck, unit, action lint | Branch feedback without write permissions |
 | PR Merge Gate | Integration, coverage, Docker, PostgreSQL, security | Merge readiness and runtime parity |
 | Main Releasability | Release evidence, SBOM, Docker, PostgreSQL | Post-merge truth on `main` |
+| Protected deployment migration | Exact signed digest, release-bound PostgreSQL history, source-safe attested evidence | Controlled schema change eligibility; not rollout certification by itself |
 | Scheduled PostgreSQL DR | Real logical backup/restore, resume proof, evidence attestation | Weekly recovery regression detection; not provider PITR certification |
 | Local contract gates | Makefile, docs, source safety, mesh, endpoint certification | Future-agent drift and unsupported claims |
 
@@ -75,7 +76,7 @@ target and must not carry durable truth that is absent from `main`.
 | Aggregate lanes | `make check`, `make ci`, `make ci-release` | Routine local proof, broad CI-equivalent proof, and release evidence. |
 | Contract and documentation | `make ci-contract-gate`, `make foundation-structure-gate`, `make documentation-contract-gate`, `make implementation-truth-gate`, `make supported-features-gate` | Prevent workflow, docs, support, and certification drift. |
 | API and OpenAPI | `make openapi-gate`, `make endpoint-certification-gate`, `make api-route-metadata-gate`, `make caller-context-contract-gate` | Keep runtime API and published contract truth aligned. |
-| Persistence and runtime | `make migration-contract-gate`, `make migration-execution-gate`, `make postgres-integration-gate`, `make disaster-recovery-contract-gate`, `make disaster-recovery-proof-gate`, `make container-runtime-smoke` | Prove durable storage, migration, restore/resume, and runtime behavior. |
+| Persistence and runtime | `make migration-contract-gate`, `make migration-execution-gate`, `make deployment-migration-contract-gate`, `make postgres-integration-gate`, `make disaster-recovery-contract-gate`, `make disaster-recovery-proof-gate`, `make container-runtime-smoke` | Prove durable storage, local migration plans, protected exact-image migration controls, restore/resume, and runtime behavior. |
 | Mesh and proof artifacts | `make data-mesh-contract-gate`, `make mesh-policy-proof-contract-gate`, `make implementation-proof-readiness-check`, `make canonical-opportunity-source-proofs`, `make runtime-trust-telemetry-snapshot-check` | Validate data-mesh, source-proof, and proof-readiness posture. |
 | Quality and maintainability | `make maintainability-gate`, `make duplicate-implementation-gate`, `make quality-scorecard-gate`, `make architecture-boundary-gate` | Prevent modularity and maintainability regression. |
 
@@ -108,7 +109,8 @@ OpenAPI quality, source-observability contract enforcement, API route metadata g
 AI model-risk operations contract enforcement, AI model-risk operations proof contract enforcement,
 unit tests, integration tests, e2e tests, data-mesh contract validation,
 mesh policy proof contract validation, migration contract validation, coverage gate,
-safe migration execution dry-run validation, PostgreSQL runtime proof in PR/main GitHub lanes,
+safe migration execution dry-run validation, protected exact-image deployment
+migration contract validation, PostgreSQL runtime proof in PR/main GitHub lanes,
 durable repository proof contract validation,
 runtime trust telemetry proof contract validation,
 Risk high-volatility and drawdown live-proof contract validation,

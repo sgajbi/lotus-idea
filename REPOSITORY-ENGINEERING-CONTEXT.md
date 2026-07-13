@@ -855,6 +855,36 @@ make postgres-integration-gate
 Run it only with a disposable PostgreSQL URL configured through the repo's
 expected environment variable.
 
+Deployment migrations are a separate production-like control. Use
+`contracts/operations/lotus-idea-deployment-migrations.v1.json` and
+`make deployment-migration-contract-gate` as contract truth. Protected
+execution runs `scripts/run_deployment_migrations.py` from an exact signed and
+attested mainline image digest through
+`.github/workflows/deployment-migration-evidence.yml`; it must never run as API
+or worker startup behavior. The application use case delegates through the
+deployment-migration port to the PostgreSQL adapter, which owns the advisory
+transaction lock, PostgreSQL 18 check, strict durable-history prefix,
+name/content drift rejection, pending-only apply, explicit fingerprinted
+legacy adoption, bounded rollback, and atomic history/event writes. Migration
+events are database-enforced append-only.
+
+The database URL is a runtime deployment secret only. It must not be accepted
+as a CLI argument or appear in image build inputs, logs, evidence, or
+attestations. Evidence binds the main ref, commit, CI run, exact image digest,
+environment class, change reference, deployment actor, migration-bundle digest,
+and version transition. `make migrate` and `make migrate-rollback` remain
+local/disposable fixture tools, not deployment authority. Direct workflow use
+is restricted to the governed disposable lifecycle-review and DR-seed paths;
+new production-like workflows must use the protected exact-image runner.
+
+This is design and operability modularity inside the existing deployable. The
+API and optional worker continue to share one Idea-owned PostgreSQL database.
+Do not add a migration service or split the database without concrete workload,
+failure-isolation, ownership, or operability evidence. The implemented workflow
+is still non-certifying until a protected environment run, approved change,
+same-digest rollout health proof, mainline validation, and retained attestation
+exist.
+
 PostgreSQL disaster-recovery evidence uses distinct disposable source and
 target databases:
 

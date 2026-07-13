@@ -109,7 +109,11 @@ Current RFC-0002 implementation-start baseline:
    Downstream handoffs now also claim durably before an external call, preserve
    uncertain outcomes without automatic retry, expose source-safe operator
    reconciliation by opaque support reference, and carry real PostgreSQL
-   concurrency/restart proof. This closes issue `#334` locally without claiming
+   concurrency/restart proof. Protected exact-image migration automation adds
+   release-bound history, advisory locking, pending-only apply, drift rejection,
+   explicit legacy adoption, bounded rollback, append-only events, and
+   source-safe evidence validation without adding a service or database.
+   Protected execution and rollout-health proof remain open. This does not claim
    downstream execution or supported-feature readiness.
 8. Slice 07 partially implements internal deterministic scoring, score reason
    codes, priority buckets, stable queue projection, snooze, suppression,
