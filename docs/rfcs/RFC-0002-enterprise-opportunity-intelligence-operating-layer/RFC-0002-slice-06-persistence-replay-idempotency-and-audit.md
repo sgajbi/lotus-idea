@@ -172,14 +172,18 @@ and production-authorized purge evidence remain certification blockers.
 
 Implemented first-wave internal scope:
 
-1. `src/app/domain/persistence.py` defines immutable candidate persistence
-   records, lifecycle history entries, idempotent candidate persistence
-   decisions, replay status vocabulary, evidence hash helpers, source-safe
-   pending outbox snapshots, repository snapshots, and an
-   `InMemoryIdeaRepository` internal adapter. `src/app/domain/outbox/events.py`
-   defines the typed outbox event envelope, status vocabulary, deterministic
-   event identity, hashed idempotency fingerprint, and forbidden payload-key
-   guard for source/client-sensitive fields.
+1. `src/app/domain/persistence_models.py` defines immutable persistence
+   records, lifecycle history, decisions, replay vocabulary, and repository
+   snapshots. `src/app/domain/persistence.py` composes the in-memory behavioral
+   reference repository from bounded lookup, AI-lineage, outbox, review,
+   downstream-submission, and root candidate/lifecycle/conversion/report
+   behavior. Review and feedback persistence, identity fencing, idempotency,
+   audit, lifecycle history, and outbox emission now have one owner in
+   `src/app/domain/persistence_review_workflow.py`. The API and optional worker
+   still use one Idea repository port and one PostgreSQL database boundary.
+   `src/app/domain/outbox/events.py` defines the typed outbox envelope, status
+   vocabulary, deterministic event identity, hashed idempotency fingerprint,
+   and forbidden payload-key guard for source/client-sensitive fields.
 2. Candidate persistence now evaluates idempotency keys and payload hashes
    before writing. Matching keys and matching payloads replay the existing
    candidate record; matching keys with different payloads return conflict; a
