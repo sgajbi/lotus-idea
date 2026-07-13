@@ -23,6 +23,23 @@ from app.domain import (
 EVALUATED_AT = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
 
 
+def test_in_memory_outbox_repository_behavior_is_owned_by_outbox_package() -> None:
+    methods = (
+        "_append_outbox_event",
+        "outbox_events_for_delivery",
+        "claim_outbox_events_for_delivery",
+        "mark_outbox_event_published",
+        "mark_outbox_event_failed",
+        "dead_letter_summaries",
+        "claim_dead_letter_for_recovery",
+        "outbox_recovery_audit_records",
+    )
+
+    assert {getattr(InMemoryIdeaRepository, method_name).__module__ for method_name in methods} == {
+        "app.domain.outbox.persistence"
+    }
+
+
 def outbox_repository() -> tuple[InMemoryIdeaRepository, OutboxEventRecord]:
     event = build_candidate_outbox_event(
         event_type="idea.candidate.persisted.v1",
