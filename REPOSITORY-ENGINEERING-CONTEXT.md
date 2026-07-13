@@ -394,7 +394,8 @@ Advisor queue paging uses one temporal contract across both providers:
 2. source `asOfDate` and evidence `generatedAtUtc` retain source-authority
    semantics and are not queue visibility fields,
 3. page zero issues opaque identity bound to evaluation time, effective scope,
-   ranking policy, snoozes, and visible candidate state,
+   queue ranking policy, accepted candidate score-policy set, snoozes, and
+   visible candidate state,
 4. positive offsets require that identity and fail with a stable conflict when
    visible state changes,
 5. PostgreSQL verifies the fingerprint around the bounded page query, while
@@ -405,6 +406,24 @@ Advisor queue paging uses one temporal contract across both providers:
 Keep this as domain policy plus an internal adapter boundary. A separately
 deployed queue service requires measured scaling, failure-isolation, ownership,
 or operability evidence.
+
+Candidate scoring and queue ranking are distinct versioned policies:
+
+1. `app.domain.scoring` owns weighted score calculation and the closed current
+   candidate score-policy registry,
+2. `app.domain.review_queue.policy` owns comparable score-policy versions,
+   priority thresholds, exclusions, deduplication, and ordering,
+3. `app.domain.review_queue.snapshot` owns continuation identity,
+4. unknown or missing score-policy versions fail closed as
+   `unrankable_score_policy` in both process-local and PostgreSQL providers,
+5. readiness exposes only the aggregate
+   `review_queue_score_policy_coverage_incomplete` blocker,
+6. API `policyVersion` names the queue policy while candidate
+   `scorePolicyVersion` preserves score provenance.
+
+This package is design modularity inside the existing `lotus-idea` deployable.
+Do not flatten it back into generic scoring or create a queue microservice
+without measured workload, ownership, isolation, or operability evidence.
 
 For mutation workflows, preserve idempotency, audit, operation events, source
 authority, and supportability posture. Do not bypass repository mutation

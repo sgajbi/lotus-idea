@@ -115,14 +115,14 @@ Current RFC-0002 implementation-start baseline:
    source-safe evidence validation without adding a service or database.
    Protected execution and rollout-health proof remain open. This does not claim
    downstream execution or supported-feature readiness.
-8. Slice 07 partially implements internal deterministic scoring, score reason
-   codes, priority buckets, stable queue projection, snooze, suppression,
-   deduplication, expiry, unsupported-evidence, and unscored-candidate
-   exclusions plus a certified internal advisor queue API foundation. Queue
-   traversal now uses candidate-created-at as-of visibility and opaque
-   snapshot-bound continuation tokens with real PostgreSQL conflict proof.
+8. Slice 07 implementation is complete on its branch, pending merge and
+   mainline closure. Candidate score policies and queue ranking policy are
+   separately versioned; unknown policies fail closed across process-local and
+   PostgreSQL providers; priority, suppression, deduplication, expiry, scope,
+   readiness, and snapshot behavior are deterministic and contract-gated.
    Gateway read-only publication exists, but Workbench product proof,
-   data-product certification, and supported-feature promotion remain blocked.
+   data-product certification, and supported-feature promotion remain later,
+   independently gated work.
 9. Slice 08 partially implements internal advisor review and feedback
    governance with fail-closed scope checks, review actions, safe audit events,
    source provenance, queue projection interaction, repository-backed
