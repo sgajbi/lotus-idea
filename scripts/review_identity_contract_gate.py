@@ -16,7 +16,7 @@ REQUIRED_FRAGMENTS = {
         "identity=review_mutation_identity_from_command(",
         "identity=feedback_mutation_identity_from_command(",
     ),
-    "src/app/domain/persistence.py": (
+    "src/app/domain/persistence_review_workflow.py": (
         "ReviewPersistenceDecision.IDENTITY_CONFLICT",
         "def _review_identity_result",
         "def _review_identity_record",
