@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import StrEnum
+import hashlib
 from pathlib import Path
 from typing import Any, Protocol
 
@@ -17,6 +18,21 @@ class MigrationStep:
     name: str
     forward_path: Path
     rollback_path: Path
+
+    @property
+    def content_sha256(self) -> str:
+        digest = hashlib.sha256()
+        for value in (
+            self.version.encode("utf-8"),
+            b"\0",
+            self.name.encode("utf-8"),
+            b"\0",
+            self.forward_path.read_bytes(),
+            b"\0",
+            self.rollback_path.read_bytes(),
+        ):
+            digest.update(value)
+        return f"sha256:{digest.hexdigest()}"
 
 
 @dataclass(frozen=True)
@@ -82,6 +98,22 @@ def build_migration_plan(
     return MigrationExecutionPlan(direction=direction, steps=steps)
 
 
+def migration_bundle_sha256(steps: tuple[MigrationStep, ...]) -> str:
+    digest = hashlib.sha256()
+    for step in steps:
+        digest.update(step.content_sha256.encode("ascii"))
+        digest.update(b"\n")
+    return f"sha256:{digest.hexdigest()}"
+
+
+def migration_statements(
+    step: MigrationStep,
+    direction: MigrationDirection,
+) -> tuple[str, ...]:
+    sql_path = step.forward_path if direction is MigrationDirection.APPLY else step.rollback_path
+    return _sql_statements(sql_path.read_text(encoding="utf-8"))
+
+
 def execute_migration_plan(
     connection: MigrationConnection,
     plan: MigrationExecutionPlan,
@@ -89,10 +121,7 @@ def execute_migration_plan(
     records: list[MigrationExecutionRecord] = []
     try:
         for step in plan.steps:
-            sql_path = step.forward_path
-            if plan.direction is MigrationDirection.ROLLBACK:
-                sql_path = step.rollback_path
-            statements = _sql_statements(sql_path.read_text(encoding="utf-8"))
+            statements = migration_statements(step, plan.direction)
             with connection.cursor() as cursor:
                 for statement in statements:
                     cursor.execute(statement)
@@ -114,15 +143,13 @@ def execute_migration_plan(
 def dry_run_migration_plan(plan: MigrationExecutionPlan) -> tuple[MigrationExecutionRecord, ...]:
     records: list[MigrationExecutionRecord] = []
     for step in plan.steps:
-        sql_path = step.forward_path
-        if plan.direction is MigrationDirection.ROLLBACK:
-            sql_path = step.rollback_path
+        statements = migration_statements(step, plan.direction)
         records.append(
             MigrationExecutionRecord(
                 version=step.version,
                 name=step.name,
                 direction=plan.direction,
-                statement_count=len(_sql_statements(sql_path.read_text(encoding="utf-8"))),
+                statement_count=len(statements),
             )
         )
     return tuple(records)
