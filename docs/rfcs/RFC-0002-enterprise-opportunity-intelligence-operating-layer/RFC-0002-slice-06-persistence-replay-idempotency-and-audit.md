@@ -889,8 +889,11 @@ routes and DTOs, use cases, event/lineage and recovery policy, publisher port,
 PostgreSQL and HTTP adapters, runtime composition, supportability metrics,
 proof generators, contract gates, and focused tests now live in `outbox/`
 packages inside their existing layers. Event construction and the in-memory
-outbox write mixin moved with the domain package; the PostgreSQL fake behavior
-and event-lineage API proof moved with focused outbox tests.
+outbox repository behavior moved with the domain package: event writes,
+delivery selection and leasing, publish/failure transitions, dead-letter
+summaries, and operator recovery are now owned by one bounded outbox mixin. The
+PostgreSQL fake behavior and event-lineage API proof moved with focused outbox
+tests.
 
 The migration is atomic: internal imports and contract source-of-truth paths
 use the new package, public `app.domain` exports remain stable, and no legacy
