@@ -1646,6 +1646,20 @@ Update this document when:
 Keep this file curated. Avoid appending every slice detail. Link to RFCs,
 runbooks, quality scorecards, and contracts for detailed history.
 
+## AI Product Research Rule
+
+Before material Slice 09 or later AI-assisted product design, read
+`docs/research/advisor-intelligence-product-differentiation.md`. Refresh its
+dated primary-source research, state a falsifiable differentiation hypothesis,
+and define deterministic anchors, source authority, evaluation, failure,
+fallback, human review, and operability evidence before implementation.
+
+Treat the charter's candidate capabilities as research hypotheses. They do not
+change current implementation truth, runtime ownership, or supported-feature
+status. AI workflow execution remains owned by `lotus-ai`; `lotus-idea`
+retains deterministic opportunity, evidence, lifecycle, review, feedback, and
+conversion-intent truth.
+
 ## Service SLO And Capacity Rule
 
 Service/workflow SLOs are distinct from mesh data-product SLOs. Measure HTTP
@@ -1793,3 +1807,4 @@ Repository-local anchors:
 10. `supported-features/supported-features.json`
 11. `wiki/Home.md`
 12. `docs/operations/service-slo-capacity.md`
+13. `docs/research/advisor-intelligence-product-differentiation.md`
