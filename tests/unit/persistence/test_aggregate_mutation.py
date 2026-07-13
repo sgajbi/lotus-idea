@@ -96,8 +96,13 @@ def test_outbox_run_idempotency_does_not_load_candidate_or_event_state() -> None
         idempotency_key="outbox-run:bounded",
         payload={"maxEvents": 25},
     )
+    replayed = repository.record_outbox_delivery_run_request(
+        idempotency_key="outbox-run:bounded",
+        payload={"maxEvents": 25},
+    )
 
     assert decision is IdempotencyDecision.ACCEPTED
+    assert replayed is IdempotencyDecision.REPLAYED
     assert "aggregate-mutation-idempotency-lock" in connection.executed_sql[0]
     assert any("idempotency-lookup" in sql for sql in connection.executed_sql)
     assert not any("candidate-detail" in sql for sql in connection.executed_sql)
@@ -118,6 +123,10 @@ def test_replay_and_idempotency_precheck_use_exact_candidate_state() -> None:
     )
     connection.executed_sql.clear()
 
+    absent_precheck = repository.precheck_evidence_pack_mutation(
+        idempotency_key="report-pack:absent",
+        payload={"reportEvidencePackId": "missing"},
+    )
     replay = repository.replay_evidence(
         candidate.candidate_id,
         current_source_refs=candidate.evidence_packet.source_refs,
@@ -128,6 +137,7 @@ def test_replay_and_idempotency_precheck_use_exact_candidate_state() -> None:
         payload=payload,
     )
 
+    assert absent_precheck is None
     assert replay.status is EvidenceReplayStatus.MATCHED
     assert precheck is not None
     assert any("candidate-detail-mutation-base" in sql for sql in connection.executed_sql)
