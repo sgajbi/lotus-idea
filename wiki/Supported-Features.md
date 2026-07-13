@@ -55,6 +55,14 @@ operator action over the same batch foundation, but it requires durable
 repository posture plus configured manifest and Core settings, returns
 aggregate decision counts only, isolates route-owned runtime cleanup failures
 into source-safe suppressed operation events, and remains `not_certified`.
+The database foundation also includes protected exact-image deployment
+migration automation with PostgreSQL advisory locking, durable release-bound
+history, pending-only apply, checksum drift rejection, explicit legacy schema
+adoption, bounded rollback, append-only events, and source-safe attested
+evidence validation. This is implementation and operator-control evidence only.
+No protected environment execution or rollout-health attestation has been
+accepted, so `supported-features/supported-features.json` correctly remains
+`foundation_only` with an empty `features[]` list.
 Accepted internal mutations now create source-safe outbox records with
 required correlation and trace lineage, optional parent-event causation,
 lease-fenced delivery state, durable retry scheduling, retryable failed status,

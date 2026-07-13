@@ -433,10 +433,34 @@ Implemented first-wave internal scope:
     stale durable-repository proof blockers; it does not configure runtime
     storage, certify production storage, replace `make postgres-integration-gate`,
     or promote support.
+29. `contracts/operations/lotus-idea-deployment-migrations.v1.json` and the
+    layered deployment-migration domain, application, port, and PostgreSQL
+    adapter now govern production-like schema changes without adding a service
+    or database. The executor acquires a transaction-scoped advisory lock,
+    validates PostgreSQL 18, binds the 15-migration bundle to an immutable
+    digest, applies only a strict pending prefix, rejects name/content drift,
+    commits schema and history atomically, and records release lineage in
+    durable history plus database-enforced append-only events. Existing legacy
+    schemas require an explicit structural-fingerprint adoption operation;
+    rollback is explicit, bounded, audited, and never represented as restore.
+    `.github/workflows/deployment-migration-evidence.yml` accepts only an exact
+    signed and GitHub-attested mainline image digest in a protected environment,
+    injects the database URL only at runtime, validates source-safe evidence
+    with the same image, attests it, and retains it for 90 days. The contract
+    gate blocks mutable-image, secret-input, direct-workflow bypass, Docker
+    closure, bundle, lock, and evidence drift. Real disposable PostgreSQL tests
+    prove fresh apply, exact replay, adoption, checksum drift, failed-plan
+    rollback, rollback/reapply, concurrent execution, CLI evidence, and
+    append-only event enforcement. Protected environment execution and rollout
+    health evidence remain absent, so production certification and supported
+    feature posture remain false.
 
 Not implemented yet:
 
-1. deploy-pipeline migration execution proof against a real PostgreSQL service,
+1. protected-environment execution of the exact-image migration workflow plus
+   attested rollout-health evidence; the runner, contract, and disposable
+   PostgreSQL behavior are implemented but have not yet produced live protected
+   deployment evidence,
 2. certified long-running scheduled daemon runtime and live-service recovery proof,
 3. live source adapter and live source-ingestion proof against a running Core service,
 4. data-product certification,
@@ -451,15 +475,22 @@ Not implemented yet:
 
 ## Migration And Rollback Posture
 
-The slice now introduces the first explicit schema, rollback contract,
-executable migration path, adapter, opt-in runtime repository wiring, and a real
-PostgreSQL API persistence/replay proof plus migration rollback/reapply
-recovery proof. CI dry-runs the apply and rollback plans and separately runs the
-PostgreSQL runtime proof in PR/main lanes. Real service execution still requires
-`LOTUS_IDEA_DATABASE_URL`. This is intentionally ahead of production storage
-promotion so schema, rollback, indexing, relationship posture, execution command
-shape, adapter behavior, runtime selection, and the first durable replay path
-become CI-visible before any supported database-backed product claim is made.
+The slice has an explicit schema and rollback contract, a local/disposable
+migration planner, a governed deployment executor, opt-in runtime repository
+wiring, and real PostgreSQL API persistence/replay plus rollback/reapply proof.
+The deployment executor is the only production-like path: it runs from the
+exact published image, uses durable history and an advisory transaction lock,
+applies only pending migrations, rejects immutable-bundle or applied-history
+drift, requires explicit fingerprinted legacy adoption, and emits source-safe
+release evidence. `make migrate` and `make migrate-rollback` remain
+local/disposable fixture tools and are not deployment authority. CI dry-runs
+those plans, runs real PostgreSQL behavior tests, and statically prevents other
+workflows from bypassing the protected exact-image path. Database credentials
+are runtime-only secret input and are excluded from CLI arguments and evidence.
+This is intentionally ahead of production storage promotion so schema,
+rollback, indexing, relationship posture, execution command shape, adapter
+behavior, runtime selection, and durable replay become CI-visible before any
+supported database-backed product claim is made.
 The current proof now also exercises the first internal review, queue,
 conversion, report evidence-pack workflow, pending outbox persistence, and
 internal source-ingestion replay/conflict recovery path against PostgreSQL. The
@@ -479,10 +510,10 @@ without valid broker configuration, leaves records untouched when blocked, and
 returns aggregate delivery counts without event identifiers, aggregate ids, raw
 idempotency keys, source payloads, broker payloads, or downstream claims. This
 does not certify external publication, Gateway/Workbench consumption, or
-downstream delivery. The next durable
-persistence slices must still
-prove certified long-running scheduled daemon behavior, deploy-pipeline
-migration evidence, live Core source-adapter behavior against that service,
+downstream delivery. The next durable persistence slices must still prove
+certified long-running scheduled daemon behavior, execute the protected
+migration workflow and retain rollout-health evidence, prove live Core
+source-adapter behavior against that service,
 certified external broker event-publication proof before any supported event
 publication claim, and keep API responses truthful:
 `durableStorageBacked=true` means the configured repository adapter is active,
@@ -657,6 +688,16 @@ Prior Slice 06 validation:
     and dependency audit reporting no known vulnerabilities.
 29. `make docker-build` passed for `backend-service:ci-test` after broadening
     the PostgreSQL runtime proof and synchronizing docs/wiki truth.
+30. The deployment-migration unit, evidence, contract, and CI meta-contract
+    suites pass with `121 passed`; the focused workflow/CI set separately
+    passes with `112 passed`.
+31. The deployment-migration adapter suite passes with `8 passed` against a
+    disposable `postgres:18-alpine` service, including concurrent lock,
+    drift, adoption, atomic failure, rollback/reapply, exact CLI evidence, and
+    append-only event mutation cases.
+32. `make deployment-migration-contract-gate` and `make ci-contract-gate`
+    pass locally. Full branch CI, protected workflow execution, exact-main
+    release proof, and wiki publication remain required.
 
 GitHub PR validation and wiki publication remain required before mainline
 closure.

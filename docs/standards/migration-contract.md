@@ -7,8 +7,11 @@
 - `make migration-execution-gate` dry-runs apply and rollback execution plans
   through `scripts/run_migrations.py` and is also blocking through `make lint`,
   `make check`, and `make ci`.
-- `make migrate` and `make migrate-rollback` require `LOTUS_IDEA_DATABASE_URL`
-  and execute the same plans against PostgreSQL.
+- `make migrate` and `make migrate-rollback` require `LOTUS_IDEA_DATABASE_URL`,
+  execute the same plans against PostgreSQL, and are limited to
+  local/disposable fixture use. Production-like execution uses the protected
+  exact-image deployment migration workflow and is guarded by
+  `make deployment-migration-contract-gate`.
 - Every migration that introduces persistence shape must include a rollback
   file, required table/index coverage, source relationships, UTC timestamps, and
   JSONB payload columns where domain payload snapshots are stored.

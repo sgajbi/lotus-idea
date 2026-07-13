@@ -400,6 +400,53 @@ make migrate
 make migrate-rollback
 ```
 
+These commands are local/disposable fixture tools. They execute the complete
+plan and do not provide durable deployment history, release identity, or
+production migration authority.
+
+## Deployment-Safe Migration Execution
+
+Production-like schema changes use the protected
+`deployment-migration-evidence.yml` workflow and the exact published Idea image
+digest. The workflow verifies GitHub provenance and the keyless image
+signature, confirms OCI commit/branch/repository labels, injects
+`LOTUS_IDEA_DATABASE_URL` only at runtime, runs the migration command from that
+same digest, validates the resulting evidence with that image, attests the
+evidence, and retains it for 90 days.
+
+| Control | Enforced behavior |
+| --- | --- |
+| Release identity | Main ref, 40-character commit, numeric CI run, exact GHCR digest, environment, change reference, and deployment actor are mandatory. |
+| Serialization | A transaction-scoped PostgreSQL advisory lock permits one migration plan at a time. |
+| History and drift | Durable version/name/content hashes must form a strict image prefix; edited or ahead-of-image history fails before schema mutation. |
+| Apply | Only pending versions run, in order, in the same transaction as history and event records. |
+| Legacy adoption | Allowed only when Idea tables exist without history and the PostgreSQL structural fingerprint exactly matches the pinned contract. |
+| Rollback | Explicit, bounded, latest-first, audited, and distinct from backup restore. |
+| Audit | Release lineage is stored in history and database-enforced append-only migration events. |
+| Source safety | DSNs, hosts, database names, credentials, and secret-shaped fields are excluded from evidence. |
+
+Repository validation:
+
+```powershell
+make deployment-migration-contract-gate
+```
+
+The contract pins PostgreSQL 18, all 15 migration files and rollback content,
+the legacy structural fingerprint, Docker image closure, protected workflow,
+evidence schema, and non-certification blockers. Direct migration execution in
+other GitHub workflows is rejected except for the two explicit disposable
+fixture paths used by scheduled lifecycle review and disaster-recovery seeding.
+
+Protected execution is intentionally not a service startup hook. The API and
+optional worker remain roles of one deployable over one Idea-owned PostgreSQL
+database. A separate migration service or database is not justified by current
+workload, ownership, failure-isolation, or operability evidence.
+
+The workflow foundation and disposable PostgreSQL behavior do not certify a
+production deployment. Certification still requires a successful protected
+environment execution, approved change, retained attestation, and rollout
+health proof for the same digest.
+
 Run the API with the PostgreSQL adapter after migrations have been applied:
 
 ```powershell
@@ -440,7 +487,8 @@ later slices add:
 
 1. approved managed-provider physical base-backup/WAL topology, encrypted
    backup evidence, and a successful PITR cutover exercise,
-2. deploy-pipeline migration evidence,
+2. protected-environment migration execution attestation and same-digest
+   rollout-health evidence,
 3. certified long-running scheduled source-ingestion worker proof against the real service,
 4. live source adapter proof against a running Core service,
 5. certified external broker publication and production event-publication

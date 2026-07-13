@@ -17,7 +17,8 @@ promoted.
 | Service is unavailable | `/health/live`, container logs, runtime profile | [Getting Started](Getting-Started), `docs/runbooks/service-operations.md` |
 | Readiness is degraded | `/health/ready`, `/api/v1/implementation-proof/readiness` | [Troubleshooting](Troubleshooting), `docs/operations/implementation-proof-readiness.md` |
 | Database recovery or cutover is active | `/health/ready`, `LOTUS_IDEA_RECOVERY_POSTURE` | [PostgreSQL Disaster Recovery](PostgreSQL-Disaster-Recovery) |
-| Durable writes fail | `LOTUS_IDEA_DATABASE_URL`, `make migration-execution-gate` | `docs/operations/persistence.md` |
+| Durable writes fail | `LOTUS_IDEA_DATABASE_URL`, repository readiness, migration history | `docs/operations/persistence.md` |
+| Deployment migration is requested | Exact mainline image digest, approved change, protected environment | `make deployment-migration-contract-gate`, `docs/operations/persistence.md` |
 | Source ingestion is blocked | `/api/v1/source-ingestion/readiness` | `docs/operations/source-ingestion-run-once.md` |
 | Outbox delivery is blocked | `/api/v1/outbox-delivery/readiness` | [Operator Map](#operator-map) |
 | Downstream realization is blocked | `/api/v1/downstream-realization/readiness` | `docs/operations/downstream-realization-readiness.md` |
@@ -33,6 +34,7 @@ promoted.
 | `make implementation-proof-readiness-check` | Aggregate blocker and proof posture. |
 | `make runtime-trust-telemetry-snapshot-check` | Runtime trust telemetry snapshot. |
 | `make postgres-integration-gate` | PostgreSQL-backed runtime proof when configured. |
+| `make deployment-migration-contract-gate` | Exact-image migration workflow, history, evidence, Docker closure, and anti-bypass contract. |
 | `make disaster-recovery-proof-gate` | Restore integrity, RPO/RTO, replay, fencing, and no-mutation evidence. |
 | `make container-runtime-smoke` | Container startup and health smoke proof. |
 | `make supported-features-gate` | Confirms no unproved support claim is promoted. |
@@ -64,7 +66,20 @@ migration/rollback schema contract exists for the durable repository and is
 enforced by `make migration-contract-gate`.
 `make migration-execution-gate` dry-runs apply and rollback execution plans, and
 `make migrate` / `make migrate-rollback` execute against PostgreSQL when
-`LOTUS_IDEA_DATABASE_URL` is configured. `make postgres-integration-gate` proves
+`LOTUS_IDEA_DATABASE_URL` is configured. Those commands are local/disposable
+fixture tools, not production deployment authority.
+
+Production-like changes use the protected deployment-migration workflow with
+an exact signed and attested mainline image digest. It validates release labels,
+injects the database URL only at runtime, serializes execution through a
+PostgreSQL advisory transaction lock, applies only pending versions, records
+durable release-bound history and append-only events, validates evidence with
+the same image, and attests the artifact. Legacy schemas require explicit
+fingerprinted adoption; rollback is bounded and distinct from restore. A
+successful protected environment run, approved change, and rollout-health
+evidence remain required for certification.
+
+`make postgres-integration-gate` proves
 the high-cash API persistence/replay path and the first internal review,
 feedback, conversion, report evidence-pack, and advisor queue workflow path
 against a real PostgreSQL 18 service when
