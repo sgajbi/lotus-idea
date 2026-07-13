@@ -832,6 +832,10 @@ def test_postgres_repository_round_trips_ai_explanation_lineage() -> None:
     assert any(
         "ai-lineage-identity-candidates" in sql for sql in connection.executed_sql
     )
+    ai_identity_query = next(
+        sql for sql in connection.executed_sql if "ai-lineage-identity-candidates" in sql
+    )
+    assert ai_identity_query.count("%s::text") == 4
     recovered = PostgresIdeaRepository(connection).snapshot()
     replayed = PostgresIdeaRepository(connection).record_ai_explanation_lineage(explanation_result)
 
