@@ -106,9 +106,7 @@ def test_repository_hygiene_gate_enforces_outbox_bounded_module_placement() -> N
         "src/app/domain/outbox_delivery_state.py",
         "tests/unit/postgres_outbox_fake_helpers.py",
     }
-    tracked_paths = sorted(
-        module.REQUIRED_BOUNDED_MODULE_PATHS - required_paths | retired_paths
-    )
+    tracked_paths = sorted(module.REQUIRED_BOUNDED_MODULE_PATHS - required_paths | retired_paths)
 
     violations = module.find_bounded_module_placement_violations(tracked_paths)
 

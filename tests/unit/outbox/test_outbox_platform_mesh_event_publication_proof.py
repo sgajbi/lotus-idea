@@ -497,9 +497,7 @@ def _valid_consumer_contract_payload() -> dict[str, Any]:
 
 
 def _load_generator_script() -> ModuleType:
-    script_path = (
-        ROOT / "scripts" / "outbox" / "generate_platform_mesh_event_publication_proof.py"
-    )
+    script_path = ROOT / "scripts" / "outbox" / "generate_platform_mesh_event_publication_proof.py"
     spec = importlib.util.spec_from_file_location(
         "generate_outbox_platform_mesh_event_publication_proof",
         script_path,
@@ -513,10 +511,7 @@ def _load_generator_script() -> ModuleType:
 
 def _load_contract_gate_script() -> ModuleType:
     script_path = (
-        ROOT
-        / "scripts"
-        / "outbox"
-        / "platform_mesh_event_publication_proof_contract_gate.py"
+        ROOT / "scripts" / "outbox" / "platform_mesh_event_publication_proof_contract_gate.py"
     )
     spec = importlib.util.spec_from_file_location(
         "outbox_platform_mesh_event_publication_proof_contract_gate",
