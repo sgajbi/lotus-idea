@@ -242,9 +242,9 @@ def _validate_source_code_alignment(errors: list[str]) -> None:
         persistence_text = (ROOT / "src" / "app" / "domain" / "persistence.py").read_text(
             encoding="utf-8"
         )
-        event_text = (
-            ROOT / "src" / "app" / "domain" / "outbox" / "events.py"
-        ).read_text(encoding="utf-8")
+        event_text = (ROOT / "src" / "app" / "domain" / "outbox" / "events.py").read_text(
+            encoding="utf-8"
+        )
         publisher_text = (
             ROOT / "src" / "app" / "infrastructure" / "outbox" / "publisher.py"
         ).read_text(encoding="utf-8")

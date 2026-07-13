@@ -20,6 +20,7 @@ try:
 except ImportError:  # pragma: no cover - supports direct script execution
     from proof_generator_io import write_json_payload  # type: ignore[import-not-found,no-redef]
 
+
 def main(argv: list[str] | None = None) -> int:
     parser = _parser()
     args = parser.parse_args(argv)
