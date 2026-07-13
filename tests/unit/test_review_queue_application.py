@@ -31,6 +31,7 @@ from app.domain import (
     ReviewQueuePolicy,
     SourceRef,
     SourceSystem,
+    build_review_queue_snapshot_identity,
     visible_review_queue_candidate_records,
 )
 from app.domain.access_scope import QueueAccessScopeFilter, ReviewAccessScope
@@ -379,6 +380,52 @@ def test_queue_snapshot_binds_rankable_score_policy_set() -> None:
     )
 
     assert current_page.page.snapshot_token != expanded_page.page.snapshot_token
+
+
+def test_review_queue_snapshot_identity_rejects_incomplete_policy_material() -> None:
+    with pytest.raises(ValueError, match="fingerprint is required"):
+        build_review_queue_snapshot_identity(
+            fingerprint=" ",
+            evaluated_at_utc=EVALUATED_AT,
+            policy_version="idea-deterministic-ranking-v1",
+            rankable_score_policy_versions=("idle-liquidity-v1",),
+            access_scope_filter=None,
+        )
+    with pytest.raises(ValueError, match="policy_version is required"):
+        build_review_queue_snapshot_identity(
+            fingerprint="candidate-state-sha256",
+            evaluated_at_utc=EVALUATED_AT,
+            policy_version=" ",
+            rankable_score_policy_versions=("idle-liquidity-v1",),
+            access_scope_filter=None,
+        )
+    with pytest.raises(ValueError, match="rankable_score_policy_versions is required"):
+        build_review_queue_snapshot_identity(
+            fingerprint="candidate-state-sha256",
+            evaluated_at_utc=EVALUATED_AT,
+            policy_version="idea-deterministic-ranking-v1",
+            rankable_score_policy_versions=(" ",),
+            access_scope_filter=None,
+        )
+    with pytest.raises(ValueError, match="rankable_score_policy_versions must be unique"):
+        build_review_queue_snapshot_identity(
+            fingerprint="candidate-state-sha256",
+            evaluated_at_utc=EVALUATED_AT,
+            policy_version="idea-deterministic-ranking-v1",
+            rankable_score_policy_versions=(
+                "idle-liquidity-v1",
+                "idle-liquidity-v1",
+            ),
+            access_scope_filter=None,
+        )
+    with pytest.raises(ValueError, match="evaluated_at_utc must be timezone-aware"):
+        build_review_queue_snapshot_identity(
+            fingerprint="candidate-state-sha256",
+            evaluated_at_utc=datetime(2026, 6, 21, 10, 0),
+            policy_version="idea-deterministic-ranking-v1",
+            rankable_score_policy_versions=("idle-liquidity-v1",),
+            access_scope_filter=None,
+        )
 
 
 def test_build_review_queue_from_repository_pages_scope_filtered_items_and_exclusions() -> None:

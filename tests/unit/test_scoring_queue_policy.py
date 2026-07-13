@@ -185,6 +185,16 @@ def test_score_candidate_attaches_policy_score_without_changing_lifecycle() -> N
     assert scored.updated_at_utc == datetime(2026, 6, 21, 10, 5, tzinfo=UTC)
 
 
+def test_score_candidate_rejects_naive_score_timestamp() -> None:
+    with pytest.raises(ValueError, match="scored_at_utc must be timezone-aware"):
+        score_candidate(
+            candidate("idea-naive-score-time", score=None),
+            scoring_inputs(),
+            policy=SCORING_POLICY,
+            scored_at_utc=datetime(2026, 6, 21, 10, 5),
+        )
+
+
 def test_review_queue_ranking_is_stable_and_priority_bucketed() -> None:
     newer_high_score = candidate(
         "idea-newer-high",
@@ -387,6 +397,19 @@ def test_scoring_inputs_and_policy_reject_invalid_values() -> None:
         ReviewQueuePolicy(
             policy_version="missing-score-policies",
             rankable_score_policy_versions=(),
+        )
+
+    with pytest.raises(ValueError, match="cannot contain blank values"):
+        ReviewQueuePolicy(
+            policy_version="blank-score-policy",
+            rankable_score_policy_versions=("score-v1", " "),
+        )
+
+    with pytest.raises(ValueError, match="critical_threshold must be between 0 and 100"):
+        ReviewQueuePolicy(
+            policy_version="out-of-range-threshold-policy",
+            rankable_score_policy_versions=(SCORING_POLICY.policy_version,),
+            critical_threshold=Decimal("101"),
         )
 
     with pytest.raises(ValueError, match="rankable_score_policy_versions must be unique"):
