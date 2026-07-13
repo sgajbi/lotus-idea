@@ -2,7 +2,7 @@ from __future__ import annotations
 
 WORKFLOW_EXPECTATIONS: dict[str, tuple[str, ...]] = {
     "deployment-migration-evidence.yml": (
-        "runs-on: [self-hosted, linux, lotus-deployment]",
+        "runs-on: ubuntu-latest",
         "environment: lotus-idea-${{ inputs.environment_class }}",
         'gh attestation verify "oci://${IMAGE_DIGEST_REFERENCE}"',
         'cosign verify "$IMAGE_DIGEST_REFERENCE"',
@@ -249,6 +249,8 @@ PROHIBITED_WORKFLOW_PATTERNS: dict[str, tuple[str, ...]] = {
         "docker build ",
         "docker push ",
         ":latest",
+        "self-hosted",
+        "lotus-deployment",
     ),
     "feature-lane.yml": (
         "pull_request_target:",

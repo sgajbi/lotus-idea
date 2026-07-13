@@ -32,7 +32,7 @@ _REQUIRED_WORKFLOW_FRAGMENTS = (
     "permissions:\n  contents: read\n  packages: read\n  attestations: write\n  id-token: write",
     "group: lotus-idea-deployment-migrations-${{ inputs.environment_class }}",
     "cancel-in-progress: false",
-    "runs-on: [self-hosted, linux, lotus-deployment]",
+    "runs-on: ubuntu-latest",
     "environment: lotus-idea-${{ inputs.environment_class }}",
     "LOTUS_IDEA_DATABASE_URL: ${{ secrets.LOTUS_IDEA_DATABASE_URL }}",
     'gh attestation verify "oci://${IMAGE_DIGEST_REFERENCE}" -R "$GITHUB_REPOSITORY"',
@@ -52,6 +52,8 @@ _PROHIBITED_WORKFLOW_FRAGMENTS = (
     "docker push ",
     ":latest",
     "LOTUS_IDEA_DATABASE_URL: ${{ inputs.",
+    "self-hosted",
+    "lotus-deployment",
 )
 
 
@@ -217,7 +219,6 @@ def _validate_source_contracts(root: Path, errors: list[str]) -> None:
             "COPY scripts/run_deployment_migrations.py",
             "COPY scripts/deployment_migration_evidence_gate.py",
         ),
-        ".github/actionlint.yaml": ("- lotus-deployment",),
     }
     for relative_path, fragments in required_fragments.items():
         content = (root / relative_path).read_text(encoding="utf-8")

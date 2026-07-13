@@ -11,7 +11,6 @@ def validate_actionlint_config(config: str) -> list[str]:
         "self-hosted-runner:",
         "  labels:",
         "    - lotus-capacity-evidence",
-        "    - lotus-deployment",
     )
     return [
         f".github/actionlint.yaml missing `{fragment.strip()}`"
