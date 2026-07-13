@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 SCRIPT_TARGET_EXPECTATIONS = {
+    "deployment-migration-contract-gate": "scripts/deployment_migration_contract_gate.py",
     "foundation-structure-gate": "scripts/foundation_structure_gate.py",
     "source-ingestion-worker-check": "scripts/source_ingestion_worker_contract_gate.py",
     "source-ingestion-scheduled-worker-check": (

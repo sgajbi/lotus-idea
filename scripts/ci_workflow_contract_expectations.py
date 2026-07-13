@@ -1,6 +1,16 @@
 from __future__ import annotations
 
 WORKFLOW_EXPECTATIONS: dict[str, tuple[str, ...]] = {
+    "deployment-migration-evidence.yml": (
+        "runs-on: [self-hosted, linux, lotus-deployment]",
+        "environment: lotus-idea-${{ inputs.environment_class }}",
+        "gh attestation verify \"oci://${IMAGE_DIGEST_REFERENCE}\"",
+        "cosign verify \"$IMAGE_DIGEST_REFERENCE\"",
+        "python scripts/run_deployment_migrations.py",
+        "python scripts/deployment_migration_evidence_gate.py",
+        "actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373",
+        "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+    ),
     "feature-lane.yml": (
         "permissions:\n  contents: read\n  actions: read",
         "actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0",
@@ -234,6 +244,12 @@ WORKFLOW_EXPECTATIONS: dict[str, tuple[str, ...]] = {
 }
 
 PROHIBITED_WORKFLOW_PATTERNS: dict[str, tuple[str, ...]] = {
+    "deployment-migration-evidence.yml": (
+        "continue-on-error:",
+        "docker build ",
+        "docker push ",
+        ":latest",
+    ),
     "feature-lane.yml": (
         "pull_request_target:",
         "contents: write",

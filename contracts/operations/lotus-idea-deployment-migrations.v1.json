@@ -41,7 +41,9 @@
     "schemaFingerprint": "src/app/infrastructure/postgres_schema_fingerprint.py",
     "operatorCli": "scripts/run_deployment_migrations.py",
     "evidenceGate": "scripts/deployment_migration_evidence_gate.py",
-    "migrations": "migrations"
+    "migrations": "migrations",
+    "contractGate": "scripts/deployment_migration_contract_gate.py",
+    "workflow": ".github/workflows/deployment-migration-evidence.yml"
   },
   "certificationPosture": {
     "productionCertified": false,
