@@ -147,8 +147,14 @@ def _write_report(
 
 
 def _load_generator_script() -> ModuleType:
-    script_path = Path(__file__).resolve().parents[3] / "scripts" / "generate_postgres_ci_execution_receipt.py"
-    spec = importlib.util.spec_from_file_location("generate_postgres_ci_execution_receipt", script_path)
+    script_path = (
+        Path(__file__).resolve().parents[3]
+        / "scripts"
+        / "generate_postgres_ci_execution_receipt.py"
+    )
+    spec = importlib.util.spec_from_file_location(
+        "generate_postgres_ci_execution_receipt", script_path
+    )
     assert spec is not None
     assert spec.loader is not None
     module = importlib.util.module_from_spec(spec)

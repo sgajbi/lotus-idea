@@ -44,7 +44,9 @@ def build_ai_lineage_store_proof_payload(
     repository_root: Path,
     ci_execution_receipt: CIExecutionReceipt | None = None,
 ) -> dict[str, Any]:
-    timezone_aware = generated_at_utc.tzinfo is not None and generated_at_utc.utcoffset() is not None
+    timezone_aware = (
+        generated_at_utc.tzinfo is not None and generated_at_utc.utcoffset() is not None
+    )
     evidence_refs = tuple(REQUIRED_AI_LINEAGE_STORE_EVIDENCE_REFS)
     source_contract_present = required_file_evidence_present(
         repository_root=repository_root,
@@ -56,8 +58,7 @@ def build_ai_lineage_store_proof_payload(
         evidence_refs=evidence_refs,
     )
     receipt_valid = bool(
-        ci_execution_receipt
-        and _receipt_satisfies_ai_lineage_policy(ci_execution_receipt)
+        ci_execution_receipt and _receipt_satisfies_ai_lineage_policy(ci_execution_receipt)
     )
     proof_valid = timezone_aware and source_contract_present and receipt_valid
     receipt_payload = asdict(ci_execution_receipt) if ci_execution_receipt else None
@@ -118,10 +119,14 @@ def ai_lineage_store_proof_is_valid(payload: Mapping[str, Any]) -> bool:
         "supportedFeaturePromoted",
         "proofClosed",
     }
-    if not required_fields <= set(payload) <= {
-        *required_fields,
-        AGGREGATE_PROOF_PROVENANCE_KEY,
-    }:
+    if (
+        not required_fields
+        <= set(payload)
+        <= {
+            *required_fields,
+            AGGREGATE_PROOF_PROVENANCE_KEY,
+        }
+    ):
         return False
     receipt_payload = payload.get("ciExecutionReceipt")
     if not isinstance(receipt_payload, Mapping):
