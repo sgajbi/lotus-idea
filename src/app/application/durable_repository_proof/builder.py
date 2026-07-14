@@ -66,7 +66,7 @@ def build_durable_repository_proof_payload(
         )
     )
     proof_valid = timezone_aware and source_contract_present and receipt_valid
-    remaining_blockers = REMAINING_DURABLE_REPOSITORY_CERTIFICATION_BLOCKERS
+    remaining_blockers: tuple[str, ...] = REMAINING_DURABLE_REPOSITORY_CERTIFICATION_BLOCKERS
     if not proof_valid:
         remaining_blockers = (
             *DURABLE_REPOSITORY_BLOCKERS_CLEARED,
