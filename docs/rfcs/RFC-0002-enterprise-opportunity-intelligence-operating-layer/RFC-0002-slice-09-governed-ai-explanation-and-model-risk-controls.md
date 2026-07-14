@@ -206,6 +206,16 @@ Validation evidence from the implementation slice:
     lint, maintainability, duplicate, security, contract, proof, migration,
     OpenAPI, type, architecture, endpoint, and supported-feature gates plus
     `3365 passed` unit tests. Supported-feature promotion remained blocked.
+15. Issue `#389` local closure passed `172` focused AI governance, attestation,
+    integrity, lineage, persistence, API, and operation-event tests; all `17`
+    cases in `make postgres-integration-gate` against an isolated PostgreSQL 18
+    database; `make check`; and `make ci`. The final CI-parity lane passed
+    `3642` unit tests, `451` integration tests with `28` environment-dependent
+    PostgreSQL skips, `4` E2E tests, MyPy over `776` source files, `99.02%`
+    coverage over `24545` statements, OpenAPI/model-risk/issue/documentation/
+    repository-organization gates, and dependency audit with no known
+    vulnerabilities. The skipped integration cases are covered by the separate
+    required PostgreSQL run.
 
 ## Current Governance References
 
