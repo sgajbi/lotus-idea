@@ -2,7 +2,7 @@ import json
 import logging
 
 from fastapi import HTTPException
-from fastapi.testclient import TestClient
+from tests.support.http import managed_test_client
 import psycopg
 import pytest
 from _pytest.logging import LogCaptureFixture
@@ -20,27 +20,27 @@ def test_create_app_returns_isolated_application_instance() -> None:
         return {"status": "test-only"}
 
     assert isolated is not app
-    assert TestClient(isolated).get("/__test_only").status_code == 200
-    assert TestClient(app).get("/__test_only").status_code == 404
+    assert managed_test_client(isolated).get("/__test_only").status_code == 200
+    assert managed_test_client(app).get("/__test_only").status_code == 404
 
 
 def test_create_app_keeps_readiness_state_isolated() -> None:
     isolated = create_app()
     isolated.state.is_draining = True
 
-    assert TestClient(isolated).get("/health/ready").status_code == 503
-    assert TestClient(app).get("/health/ready").status_code == 200
+    assert managed_test_client(isolated).get("/health/ready").status_code == 503
+    assert managed_test_client(app).get("/health/ready").status_code == 200
 
 
 def test_health_endpoints() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     assert client.get("/health").status_code == 200
     assert client.get("/health/live").status_code == 200
     assert client.get("/health/ready").status_code == 200
 
 
 def test_correlation_and_trace_header_propagation() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     response = client.get(
         "/health",
         headers={"X-Correlation-Id": "corr-123", "X-Trace-Id": "trace-123"},
@@ -51,7 +51,7 @@ def test_correlation_and_trace_header_propagation() -> None:
 
 
 def test_correlation_and_trace_headers_are_generated() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     response = client.get("/health")
     assert response.status_code == 200
     assert response.headers["X-Correlation-Id"]
@@ -61,7 +61,7 @@ def test_correlation_and_trace_headers_are_generated() -> None:
 
 
 def test_unsafe_correlation_and_trace_headers_are_replaced() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     response = client.get(
         "/health",
         headers={
@@ -80,7 +80,7 @@ def test_unsafe_correlation_and_trace_headers_are_replaced() -> None:
 
 
 def test_not_found_error_is_product_safe() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     response = client.get("/does-not-exist")
     assert response.status_code == 404
     assert "portfolio" not in response.text.lower()
@@ -94,7 +94,7 @@ def test_validation_error_is_product_safe() -> None:
     async def _test_validation_route(item_id: int) -> dict[str, int]:
         return {"item_id": item_id}
 
-    client = TestClient(isolated)
+    client = managed_test_client(isolated)
     response = client.get("/__test_validation/not-an-int")
     assert response.status_code == 400
     body = response.text.lower()
@@ -112,7 +112,7 @@ def test_validation_error_log_includes_response_correlation_id(
     async def _test_validation_route(item_id: int) -> dict[str, int]:
         return {"item_id": item_id}
 
-    client = TestClient(isolated)
+    client = managed_test_client(isolated)
     with caplog.at_level(logging.INFO, logger="lotus-idea"):
         response = client.get(
             "/__test_validation/not-an-int",
@@ -143,7 +143,7 @@ def test_validation_error_log_uses_sanitized_correlation_id(
 
     raw_correlation_id = "PB_SG_GLOBAL_BAL_001"
     raw_trace_id = "client_secret:abc123"
-    client = TestClient(isolated)
+    client = managed_test_client(isolated)
     with caplog.at_level(logging.INFO, logger="lotus-idea"):
         response = client.get(
             "/__test_validation/not-an-int",
@@ -174,7 +174,7 @@ def test_unhandled_error_is_product_safe() -> None:
     async def _test_unhandled_error_route() -> None:
         raise RuntimeError("raw internal detail")
 
-    client = TestClient(isolated, raise_server_exceptions=False)
+    client = managed_test_client(isolated, raise_server_exceptions=False)
     response = client.get("/__test_unhandled_error")
     assert response.status_code == 500
     body = response.text.lower()
@@ -189,14 +189,14 @@ def test_http_exception_is_product_safe() -> None:
     async def _test_http_exception_route() -> None:
         raise HTTPException(status_code=403, detail="raw entitlement detail")
 
-    client = TestClient(isolated)
+    client = managed_test_client(isolated)
     response = client.get("/__test_http_exception")
     assert response.status_code == 403
     assert "raw entitlement detail" not in response.text.lower()
 
 
 def test_readiness_reports_draining_state() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     app.state.is_draining = True
     try:
         response = client.get("/health/ready")
@@ -213,7 +213,7 @@ def test_readiness_degrades_when_production_profile_lacks_durable_repository(
     monkeypatch.setenv("LOTUS_IDEA_RUNTIME_PROFILE", "production")
     monkeypatch.delenv(DATABASE_URL_ENV, raising=False)
     reset_idea_repository_for_tests(reload_from_environment=True)
-    client = TestClient(create_app())
+    client = managed_test_client(create_app())
 
     try:
         response = client.get("/health/ready")
@@ -251,7 +251,7 @@ def test_readiness_degrades_when_configured_postgres_cannot_initialize(
     )
     monkeypatch.setattr("app.runtime.repository_state.psycopg.connect", fake_connect)
     reset_idea_repository_for_tests(reload_from_environment=True)
-    client = TestClient(create_app(), raise_server_exceptions=False)
+    client = managed_test_client(create_app(), raise_server_exceptions=False)
 
     try:
         response = client.get("/health/ready")
@@ -296,7 +296,7 @@ def test_readiness_fails_closed_for_recovery_posture(
 ) -> None:
     monkeypatch.setenv(RECOVERY_POSTURE_ENV, configured)
 
-    response = TestClient(create_app()).get("/health/ready")
+    response = managed_test_client(create_app()).get("/health/ready")
 
     assert response.status_code == 503
     assert response.json()["status"] == expected_status

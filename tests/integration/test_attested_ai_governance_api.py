@@ -2,7 +2,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Mapping, cast
 
 import pytest
-from fastapi.testclient import TestClient
+from tests.support.http import managed_test_client
 
 import app.api.ai_governance as ai_governance_api
 from app.application.lotus_ai_idea_explanation_request import (
@@ -38,7 +38,7 @@ def test_api_accepts_signed_bound_lotus_ai_output(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_id = persisted_candidate_id(client, idempotency_key="seed-attested-api-001")
     candidate = get_idea_repository().snapshot().candidate_records[candidate_id].candidate
     assert candidate.access_scope is not None
@@ -126,7 +126,7 @@ def test_api_rejects_wrong_tenant_provider_confirmation_before_lineage_write(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_id = persisted_candidate_id(client, idempotency_key="seed-retention-tenant-001")
     transition_candidate_to_review_ready(client, candidate_id)
     issued_at = datetime.now(UTC) - timedelta(seconds=5)

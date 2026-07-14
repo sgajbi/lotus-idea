@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import pytest
-from fastapi.testclient import TestClient
+from tests.support.http import managed_test_client
 
 from app.main import app
 from app.runtime.repository_state import reset_idea_repository_for_tests
@@ -16,7 +16,7 @@ from tests.integration.test_review_workflow_api import (
 
 def test_review_action_api_enforces_trusted_caller_entitlement_scope() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_id = persisted_candidate_id(client, idempotency_key="seed-review-entitlement-001")
     missing_entitlements = review_headers("review-action-api-missing-entitlements-001")
     for header_name in (
@@ -63,7 +63,7 @@ def test_review_action_api_enforces_trusted_caller_entitlement_scope() -> None:
 
 def test_feedback_api_enforces_trusted_caller_entitlement_scope() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_id = persisted_candidate_id(client, idempotency_key="seed-feedback-entitlement-001")
     missing_entitlements = feedback_headers("feedback-api-missing-entitlements-001")
     for header_name in (
@@ -124,7 +124,7 @@ def test_review_mutations_fail_closed_for_each_entitlement_dimension(
     mismatched_value: str,
 ) -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_id = persisted_candidate_id(
         client,
         idempotency_key=f"seed-{mutation}-{header_name.lower()}-mismatch-001",
@@ -144,7 +144,7 @@ def test_review_mutations_accept_candidate_scope_within_multi_value_entitlements
     mutation: str,
 ) -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_id = persisted_candidate_id(
         client,
         idempotency_key=f"seed-{mutation}-multi-value-scope-001",

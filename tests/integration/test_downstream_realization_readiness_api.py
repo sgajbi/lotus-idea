@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from fastapi.testclient import TestClient
+from tests.support.http import managed_test_client
 
 import app.api.downstream_realization_readiness as downstream_readiness_api
 from app.application.report_intake_route_proof import (
@@ -38,7 +38,7 @@ def test_downstream_realization_readiness_api_returns_blocked_operator_posture(
 ) -> None:
     monkeypatch.delenv(REPORT_INTAKE_ROUTE_PROOF_ENV, raising=False)
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.get(
         "/api/v1/downstream-realization/readiness",
@@ -117,7 +117,7 @@ def test_downstream_realization_readiness_api_consumes_report_route_proof(
     proof_path.write_text(json.dumps(_valid_report_intake_route_proof()), encoding="utf-8")
     monkeypatch.setenv(REPORT_INTAKE_ROUTE_PROOF_ENV, str(proof_path))
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.get(
         "/api/v1/downstream-realization/readiness",
@@ -148,7 +148,7 @@ def test_downstream_realization_readiness_api_consumes_report_route_proof(
 
 
 def test_downstream_realization_readiness_api_requires_operator_permission() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     role_denied = client.get(
         "/api/v1/downstream-realization/readiness",
@@ -186,7 +186,7 @@ def test_downstream_realization_readiness_api_emits_not_certified_operation_even
 
     monkeypatch.setattr(downstream_readiness_api, "emit_operation_event", capture)
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.get(
         "/api/v1/downstream-realization/readiness",

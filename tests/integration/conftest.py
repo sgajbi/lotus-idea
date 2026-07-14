@@ -12,6 +12,13 @@ from tests.integration.postgres_runtime_support import (
     POSTGRES_URL_ENV,
     execute_migrations,
 )
+from tests.support.http import managed_test_client_scope
+
+
+@pytest.fixture(autouse=True)
+def _close_integration_test_clients() -> Iterator[None]:
+    with managed_test_client_scope():
+        yield
 
 
 @pytest.fixture

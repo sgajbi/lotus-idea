@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
-from fastapi.testclient import TestClient
+from tests.support.http import managed_test_client
 
 import app.api.data_mesh_readiness as data_mesh_readiness_api
 from app.main import app
@@ -23,7 +23,7 @@ def mesh_readiness_headers(
 
 
 def test_data_mesh_readiness_api_returns_not_certified_operator_posture() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.get("/api/v1/data-mesh/readiness", headers=mesh_readiness_headers())
 
@@ -59,7 +59,7 @@ def test_data_mesh_readiness_api_returns_not_certified_operator_posture() -> Non
 
 
 def test_data_mesh_readiness_api_requires_operator_permission() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.get("/api/v1/data-mesh/readiness")
     role_denied = client.get(
@@ -98,7 +98,7 @@ def test_data_mesh_readiness_api_emits_not_certified_operation_event(
         )
 
     monkeypatch.setattr(data_mesh_readiness_api, "emit_operation_event", capture)
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.get("/api/v1/data-mesh/readiness", headers=mesh_readiness_headers())
 
@@ -130,7 +130,7 @@ def test_data_mesh_readiness_api_reports_unavailable_contracts_safely(
         data_mesh_readiness_api, "build_data_mesh_readiness_snapshot", fail_snapshot
     )
     monkeypatch.setattr(data_mesh_readiness_api, "emit_operation_event", capture)
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.get("/api/v1/data-mesh/readiness", headers=mesh_readiness_headers())
 

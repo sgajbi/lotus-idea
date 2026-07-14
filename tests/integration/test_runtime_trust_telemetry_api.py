@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
-from fastapi.testclient import TestClient
+from tests.support.http import managed_test_client
 
 import app.api.runtime_trust_telemetry as runtime_trust_telemetry_api
 from app.domain import InMemoryIdeaRepository
@@ -52,7 +52,7 @@ def reset_repository() -> None:
 
 
 def test_runtime_trust_telemetry_preview_api_returns_source_safe_aggregate_state() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     persist_response = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
         headers=high_cash_headers(),
@@ -111,7 +111,7 @@ def test_runtime_trust_telemetry_preview_api_returns_source_safe_aggregate_state
 
 
 def test_runtime_trust_telemetry_preview_api_requires_operator_permission() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.get("/api/v1/data-mesh/trust-telemetry/runtime-preview")
     role_denied = client.get(
@@ -132,7 +132,7 @@ def test_runtime_trust_telemetry_preview_api_requires_operator_permission() -> N
 
 
 def test_runtime_trust_telemetry_preview_api_rejects_naive_generation_time() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.get(
         "/api/v1/data-mesh/trust-telemetry/runtime-preview",
@@ -162,7 +162,7 @@ def test_runtime_trust_telemetry_preview_api_emits_not_certified_operation_event
         )
 
     monkeypatch.setattr(runtime_trust_telemetry_api, "emit_operation_event", capture)
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.get(
         "/api/v1/data-mesh/trust-telemetry/runtime-preview",
@@ -183,7 +183,7 @@ def test_runtime_trust_telemetry_preview_api_emits_not_certified_operation_event
 
 
 def test_runtime_trust_telemetry_snapshot_api_returns_source_safe_contract_state() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     persist_response = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
         headers=high_cash_headers(),
@@ -234,7 +234,7 @@ def test_runtime_trust_telemetry_snapshot_api_returns_source_safe_contract_state
 
 
 def test_runtime_trust_telemetry_snapshot_api_requires_operator_permission() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.get("/api/v1/data-mesh/trust-telemetry/runtime-snapshot")
     role_denied = client.get(
@@ -255,7 +255,7 @@ def test_runtime_trust_telemetry_snapshot_api_requires_operator_permission() -> 
 
 
 def test_runtime_trust_telemetry_snapshot_api_rejects_naive_generation_time() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.get(
         "/api/v1/data-mesh/trust-telemetry/runtime-snapshot",
@@ -285,7 +285,7 @@ def test_runtime_trust_telemetry_snapshot_api_emits_not_certified_operation_even
         )
 
     monkeypatch.setattr(runtime_trust_telemetry_api, "emit_operation_event", capture)
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.get(
         "/api/v1/data-mesh/trust-telemetry/runtime-snapshot",

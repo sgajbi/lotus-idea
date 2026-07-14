@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from typing import Any
 
-from fastapi.testclient import TestClient
+from tests.support.http import managed_test_client
 import pytest
 from pytest import MonkeyPatch
 
@@ -48,7 +48,7 @@ class RecordingManageMandateHealthSource:
 
 
 def test_allocation_drift_signal_api_returns_pm_review_candidate() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/idea-signals/allocation-drift/evaluate",
@@ -74,7 +74,7 @@ def test_allocation_drift_signal_api_returns_pm_review_candidate() -> None:
 
 
 def test_allocation_drift_signal_api_reports_below_threshold_not_eligible() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     payload = allocation_drift_payload()
     payload["workflowDecisionCount"] = 0
 
@@ -97,7 +97,7 @@ def test_allocation_drift_signal_api_reports_below_threshold_not_eligible() -> N
 
 
 def test_allocation_drift_signal_api_blocks_store_wide_manage_posture() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     payload = allocation_drift_payload()
     payload["portfolioScopeConfirmed"] = False
 
@@ -120,7 +120,7 @@ def test_allocation_drift_signal_api_blocks_store_wide_manage_posture() -> None:
 
 
 def test_allocation_drift_signal_api_reports_non_ready_source_blocker() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     payload = allocation_drift_payload()
     payload["manageSupportabilityState"] = "degraded"
 
@@ -143,7 +143,7 @@ def test_allocation_drift_signal_api_reports_non_ready_source_blocker() -> None:
 
 
 def test_allocation_drift_signal_api_reports_stale_source_blocker() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     payload = allocation_drift_payload()
     payload["actionRegisterRef"]["freshness"] = "stale"
 
@@ -196,7 +196,7 @@ def test_allocation_drift_signal_api_rejects_wrong_source_contract(
     expected_source_authority: str,
 ) -> None:
     reset_idea_repository_for_tests(InMemoryIdeaRepository())
-    client = TestClient(app)
+    client = managed_test_client(app)
     payload = allocation_drift_payload()
     payload[field_name] = source_ref_payload(
         product_id=product_id,
@@ -239,7 +239,7 @@ def test_allocation_drift_signal_api_rejects_wrong_source_contract(
 
 
 def test_allocation_drift_signal_api_requires_signal_permission() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/idea-signals/allocation-drift/evaluate",
@@ -264,7 +264,7 @@ def test_allocation_drift_signal_api_requires_signal_permission() -> None:
 def test_allocation_drift_signal_from_source_api_returns_pm_review_candidate(
     monkeypatch: MonkeyPatch,
 ) -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     manage_source = RecordingManageMandateHealthSource()
     monkeypatch.setattr(
         allocation_drift_api,
@@ -306,7 +306,7 @@ def test_allocation_drift_signal_from_source_api_returns_pm_review_candidate(
 def test_allocation_drift_signal_from_source_blocks_when_runtime_not_configured(
     monkeypatch: MonkeyPatch,
 ) -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     monkeypatch.setattr(
         allocation_drift_api,
         "_build_manage_mandate_health_source_runtime_from_environment",
@@ -333,7 +333,7 @@ def test_allocation_drift_signal_from_source_blocks_when_runtime_not_configured(
 def test_allocation_drift_signal_from_source_checks_scope_before_runtime(
     monkeypatch: MonkeyPatch,
 ) -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     def fail_if_called() -> ManageMandateHealthSourceRuntimeBlocker:
         raise AssertionError("runtime must not be built when caller scope is denied")
@@ -359,7 +359,7 @@ def test_allocation_drift_signal_from_source_checks_scope_before_runtime(
 def test_allocation_drift_signal_from_source_closes_runtime_on_source_blocker(
     monkeypatch: MonkeyPatch,
 ) -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     manage_source = RecordingManageMandateHealthSource(
         error=ManageSourceUnavailable(code="manage_source_unavailable")
     )

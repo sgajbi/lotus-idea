@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
-from fastapi.testclient import TestClient
+from tests.support.http import ManagedTestClient, managed_test_client
 
 import app.api.ai_governance as ai_governance_api
 from app.runtime.repository_state import get_idea_repository, reset_idea_repository_for_tests
@@ -157,7 +157,7 @@ def workflow_output(
     }
 
 
-def persisted_candidate_id(client: TestClient, *, idempotency_key: str) -> str:
+def persisted_candidate_id(client: ManagedTestClient, *, idempotency_key: str) -> str:
     response = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
         json=high_cash_payload(),
@@ -167,7 +167,7 @@ def persisted_candidate_id(client: TestClient, *, idempotency_key: str) -> str:
     return str(response.json()["persistence"]["candidateId"])
 
 
-def transition_candidate_to_review_ready(client: TestClient, candidate_id: str) -> None:
+def transition_candidate_to_review_ready(client: ManagedTestClient, candidate_id: str) -> None:
     for index, target_status in enumerate(
         ("enriched", "scored", "governance_checked", "ready_for_review"),
         start=1,
@@ -182,7 +182,7 @@ def transition_candidate_to_review_ready(client: TestClient, candidate_id: str) 
 
 def test_ai_explanation_api_returns_deterministic_fallback_without_runtime_claim() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_id = persisted_candidate_id(client, idempotency_key="seed-ai-fallback-001")
 
     response = client.post(
@@ -217,7 +217,7 @@ def test_ai_explanation_api_returns_deterministic_fallback_without_runtime_claim
 
 def test_ai_explanation_api_rejects_cross_tenant_candidate_access_before_write() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_id = persisted_candidate_id(client, idempotency_key="seed-ai-cross-tenant-001")
     headers = ai_headers(idempotency_key="ai-cross-tenant-001")
     headers["X-Caller-Tenant-Ids"] = "tenant-other"
@@ -240,7 +240,7 @@ def test_production_like_ai_output_requires_provenance_before_lineage_write(
     repository = DurableInMemoryIdeaRepository()
     try:
         reset_idea_repository_for_tests(repository=repository)
-        client = TestClient(app)
+        client = managed_test_client(app)
         candidate_id = persisted_candidate_id(
             client,
             idempotency_key="seed-ai-production-provenance-001",
@@ -292,7 +292,7 @@ def test_production_like_ai_output_requires_provenance_before_lineage_write(
 
 def test_ai_explanation_api_accepts_verified_output_for_review_ready_candidate() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_id = persisted_candidate_id(client, idempotency_key="seed-ai-accepted-001")
     transition_candidate_to_review_ready(client, candidate_id)
 
@@ -352,7 +352,7 @@ def test_ai_explanation_api_accepts_verified_output_for_review_ready_candidate()
 
 def test_ai_explanation_api_blocks_unsupported_claims_and_forbidden_actions() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_id = persisted_candidate_id(client, idempotency_key="seed-ai-blocked-001")
 
     unsupported_claim = client.post(
@@ -388,7 +388,7 @@ def test_ai_explanation_api_blocks_unsupported_claims_and_forbidden_actions() ->
 
 def test_ai_explanation_api_blocks_unsafe_action_content_without_exposure_and_replays() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_id = persisted_candidate_id(client, idempotency_key="seed-ai-action-content-001")
     unsafe_label = "Ex3cute tr@de immediately!!!"
     payload = ai_request_payload(
@@ -436,7 +436,7 @@ def test_ai_explanation_api_blocks_unsafe_action_content_without_exposure_and_re
 
 def test_ai_explanation_api_replays_same_lineage_and_conflicts_changed_request() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_id = persisted_candidate_id(client, idempotency_key="seed-ai-replay-001")
     payload = ai_request_payload(request_id="ai-explanation-replay-001")
 
@@ -486,7 +486,7 @@ def test_ai_explanation_api_conflicts_reused_request_identity_when_content_chang
     changed_text: str,
 ) -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_id = persisted_candidate_id(
         client,
         idempotency_key=f"seed-ai-integrity-{changed_output['claims'][0]['claimText']}",
@@ -521,7 +521,7 @@ def test_ai_explanation_api_conflicts_reused_request_identity_when_content_chang
 
 def test_ai_explanation_api_requires_idempotency_key() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_id = persisted_candidate_id(client, idempotency_key="seed-ai-idempotency-001")
     headers = ai_headers(idempotency_key="ai-explanation-missing-api-001")
     headers.pop("Idempotency-Key")
@@ -557,7 +557,7 @@ def test_ai_explanation_api_rejects_unregistered_workflow_pack_identity(
     field_value: str,
 ) -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     field_slug = field_name.lower()
     candidate_id = persisted_candidate_id(
         client,
@@ -588,7 +588,7 @@ def test_ai_explanation_api_rejects_unregistered_workflow_pack_identity(
 
 def test_ai_explanation_api_requires_permission_and_existing_candidate() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_id = persisted_candidate_id(client, idempotency_key="seed-ai-permission-001")
 
     denied = client.post(
@@ -610,7 +610,7 @@ def test_ai_explanation_api_requires_permission_and_existing_candidate() -> None
 
 def test_ai_explanation_api_rejects_invalid_purpose_for_current_state_and_metadata() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_id = persisted_candidate_id(client, idempotency_key="seed-ai-invalid-001")
 
     invalid_state = client.post(
@@ -645,7 +645,7 @@ def test_ai_explanation_api_rejects_unknown_metadata_before_route_execution(
         "evaluate_ai_explanation_to_repository",
         fail_if_called,
     )
-    response = TestClient(app).post(
+    response = managed_test_client(app).post(
         "/api/v1/idea-candidates/not-looked-up/ai-explanations/evaluate",
         json=ai_request_payload(approved_metadata={unknown_key: "classified-value"}),
         headers=ai_headers(idempotency_key=f"ai-metadata-unknown-{unknown_key}"),
@@ -673,7 +673,7 @@ def test_ai_explanation_api_rejects_sensitive_metadata_values_without_lineage(
     repository = InMemoryIdeaRepository()
     try:
         reset_idea_repository_for_tests(repository=repository)
-        client = TestClient(app)
+        client = managed_test_client(app)
         candidate_id = persisted_candidate_id(
             client,
             idempotency_key=f"seed-ai-metadata-{len(unsafe_value)}",
@@ -700,7 +700,7 @@ def test_ai_explanation_api_returns_product_safe_errors_for_invalid_output_and_m
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_id = persisted_candidate_id(client, idempotency_key="seed-ai-safe-errors-001")
 
     def raise_invalid_output(*_: Any, **__: Any) -> None:
@@ -733,7 +733,7 @@ def test_ai_explanation_api_returns_product_safe_errors_for_invalid_output_and_m
 
 def test_ai_explanation_readiness_api_returns_source_safe_blocked_posture() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.get(
         "/api/v1/ai-explanations/readiness",
@@ -805,7 +805,7 @@ def test_ai_explanation_readiness_api_reports_durable_repository_lineage_posture
             )
 
         monkeypatch.setattr(ai_governance_api, "emit_operation_event", capture)
-        client = TestClient(app)
+        client = managed_test_client(app)
 
         response = client.get(
             "/api/v1/ai-explanations/readiness",
@@ -838,7 +838,7 @@ def test_ai_explanation_readiness_api_reports_durable_repository_lineage_posture
 
 def test_ai_explanation_readiness_api_requires_operator_role_and_capability() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     missing_role = client.get(
         "/api/v1/ai-explanations/readiness",

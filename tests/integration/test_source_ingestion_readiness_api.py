@@ -11,7 +11,7 @@ from typing import Any
 
 import pytest
 from fastapi.responses import JSONResponse
-from fastapi.testclient import TestClient
+from tests.support.http import managed_test_client
 
 import app.api.source_ingestion_readiness as source_ingestion_readiness_api
 from app.application.source_ingestion import (
@@ -208,7 +208,7 @@ def test_source_ingestion_readiness_api_returns_blocked_operator_posture(
     monkeypatch.delenv(LIVE_PROOF_ENV, raising=False)
     monkeypatch.delenv(SCHEDULED_WORKER_PROOF_ENV, raising=False)
     monkeypatch.delenv(DATABASE_URL_ENV, raising=False)
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.get(
         "/api/v1/source-ingestion/readiness",
@@ -252,7 +252,7 @@ def test_source_ingestion_readiness_api_returns_blocked_operator_posture(
 
 
 def test_source_ingestion_readiness_api_requires_operator_permission() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.get("/api/v1/source-ingestion/readiness")
     role_denied = client.get(
@@ -298,7 +298,7 @@ def test_source_ingestion_readiness_api_emits_not_certified_operation_event(
         )
 
     monkeypatch.setattr(source_ingestion_readiness_api, "emit_operation_event", capture)
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.get(
         "/api/v1/source-ingestion/readiness",
@@ -344,7 +344,7 @@ def test_source_ingestion_readiness_api_emits_configured_run_once_event(
         )
 
     monkeypatch.setattr(source_ingestion_readiness_api, "emit_operation_event", capture)
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.get(
         "/api/v1/source-ingestion/readiness",
@@ -385,7 +385,7 @@ def test_source_ingestion_run_once_api_blocks_without_durable_repository(
         "_build_source_ingestion_runtime_from_environment",
         fail_if_called,
     )
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/source-ingestion/run-once",
@@ -426,7 +426,7 @@ def test_source_ingestion_run_once_api_sheds_before_runtime_construction(
         lambda: pytest.fail("shed workflow must not construct source runtime"),
     )
 
-    response = TestClient(app).post(
+    response = managed_test_client(app).post(
         "/api/v1/source-ingestion/run-once",
         headers=source_ingestion_run_headers(),
     )
@@ -458,7 +458,7 @@ def test_source_ingestion_run_once_api_blocks_runtime_configuration_without_muta
             core_query_control_plane_base_url_configured=False,
         ),
     )
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/source-ingestion/run-once",
@@ -509,7 +509,7 @@ def test_source_ingestion_run_once_api_blocks_manifest_over_batch_ceiling(
         "idea_repository_durable_storage_backed",
         lambda _repository: True,
     )
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/source-ingestion/run-once",
@@ -569,7 +569,7 @@ def test_source_ingestion_run_once_api_executes_configured_batch_source_safely(
         "_build_source_ingestion_runtime_from_environment",
         lambda: runtime,
     )
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/source-ingestion/run-once",
@@ -645,7 +645,7 @@ def test_source_ingestion_run_once_api_closes_runtime_after_source_failure(
         "_build_source_ingestion_runtime_from_environment",
         lambda: runtime,
     )
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/source-ingestion/run-once",
@@ -721,7 +721,7 @@ def test_source_ingestion_run_once_api_preserves_bounded_result_when_runtime_clo
         )
 
     monkeypatch.setattr(source_ingestion_readiness_api, "emit_operation_event", capture)
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/source-ingestion/run-once",
@@ -754,7 +754,7 @@ def test_source_ingestion_run_once_api_preserves_bounded_result_when_runtime_clo
 
 
 def test_source_ingestion_run_once_api_requires_operator_permission() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post("/api/v1/source-ingestion/run-once")
     role_denied = client.post(
@@ -827,7 +827,7 @@ def test_source_ingestion_run_once_api_emits_not_certified_operation_event(
         )
 
     monkeypatch.setattr(source_ingestion_readiness_api, "emit_operation_event", capture)
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/source-ingestion/run-once",

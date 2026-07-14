@@ -4,7 +4,7 @@ from dataclasses import replace
 from typing import Any
 
 import pytest
-from fastapi.testclient import TestClient
+from tests.support.http import ManagedTestClient, managed_test_client
 
 from app.api.caller_headers import TRUSTED_CALLER_CONTEXT_HEADER, TRUSTED_CALLER_CONTEXT_TOKEN_ENV
 from app.domain import InMemoryIdeaRepository, ReviewPosture
@@ -133,7 +133,7 @@ def role_queue_headers(*, role: str, capability: str) -> dict[str, str]:
 
 
 def persist_candidate(
-    client: TestClient,
+    client: ManagedTestClient,
     *,
     cash_weight: str,
     suffix: str,
@@ -173,7 +173,7 @@ def route_persisted_candidates_by_posture(
 
 def test_advisor_review_queue_api_projects_persisted_candidates() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     first = persist_candidate(
         client,
         cash_weight="0.18",
@@ -223,7 +223,7 @@ def test_advisor_review_queue_api_projects_persisted_candidates() -> None:
 
 def test_business_review_queue_apis_route_only_the_responsible_audience() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     advisor_candidate = persist_candidate(
         client,
         cash_weight="0.18",
@@ -311,7 +311,7 @@ def test_role_specific_review_queues_reject_cross_role_callers(
     headers: dict[str, str],
 ) -> None:
     reset_idea_repository_for_tests()
-    response = TestClient(app).get(path, headers=headers)
+    response = managed_test_client(app).get(path, headers=headers)
 
     assert response.status_code == 403
     assert response.json()["code"] == "permission_denied"
@@ -319,7 +319,7 @@ def test_role_specific_review_queues_reject_cross_role_callers(
 
 def test_operator_exception_queue_reports_support_posture_by_audience() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_ids = tuple(
         persist_candidate(
             client,
@@ -376,7 +376,7 @@ def test_operator_exception_queue_reports_support_posture_by_audience() -> None:
 
 def test_operator_exception_queue_enforces_role_and_entitled_scope() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     wrong_role = client.get(
         "/api/v1/review-queues/operator/exceptions",
@@ -409,7 +409,7 @@ def test_operator_exception_queue_rejects_malformed_scope_inputs(
     headers = operator_exception_headers()
     headers.update(header_overrides)
 
-    response = TestClient(app).get(
+    response = managed_test_client(app).get(
         f"/api/v1/review-queues/operator/exceptions{query}",
         headers=headers,
     )
@@ -420,7 +420,7 @@ def test_operator_exception_queue_rejects_malformed_scope_inputs(
 
 def test_advisor_review_queue_api_defaults_to_active_queue_snapshot() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_id = persist_candidate(
         client,
         cash_weight="0.18",
@@ -442,7 +442,7 @@ def test_advisor_review_queue_api_defaults_to_active_queue_snapshot() -> None:
 
 def test_advisor_review_queue_api_returns_bounded_page_metadata() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_ids = [
         persist_candidate(
             client,
@@ -488,7 +488,7 @@ def test_advisor_review_queue_api_returns_bounded_page_metadata() -> None:
 
 def test_advisor_review_queue_api_requires_snapshot_token_for_continuation() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.get(
         "/api/v1/review-queues/advisor?evaluatedAtUtc=2026-06-21T10:10:00Z&offset=1",
@@ -501,7 +501,7 @@ def test_advisor_review_queue_api_requires_snapshot_token_for_continuation() -> 
 
 def test_advisor_review_queue_api_rejects_malformed_snapshot_token() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.get(
         (
@@ -517,7 +517,7 @@ def test_advisor_review_queue_api_rejects_malformed_snapshot_token() -> None:
 
 def test_advisor_review_queue_api_rejects_stale_snapshot_after_backdated_insert() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     persist_candidate(
         client,
         cash_weight="0.18",
@@ -550,7 +550,7 @@ def test_advisor_review_queue_api_rejects_stale_snapshot_after_backdated_insert(
 
 def test_advisor_review_queue_snapshot_ignores_candidates_created_after_as_of() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     visible_ids = [
         persist_candidate(
             client,
@@ -590,7 +590,7 @@ def test_advisor_review_queue_snapshot_ignores_candidates_created_after_as_of() 
 
 def test_advisor_review_queue_api_rejects_page_size_above_maximum() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.get(
         "/api/v1/review-queues/advisor?evaluatedAtUtc=2026-06-21T10:10:00Z&limit=101",
@@ -609,7 +609,7 @@ def test_advisor_review_queue_api_rejects_page_size_above_maximum() -> None:
 
 def test_advisor_review_queue_api_filters_candidates_by_access_scope() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     included = persist_candidate(
         client,
         cash_weight="0.18",
@@ -648,7 +648,7 @@ def test_advisor_review_queue_api_filters_candidates_by_access_scope() -> None:
 
 def test_advisor_review_queue_api_applies_caller_entitlement_scope_without_query_filters() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     included = persist_candidate(
         client,
         cash_weight="0.18",
@@ -683,7 +683,7 @@ def test_advisor_review_queue_api_applies_caller_entitlement_scope_without_query
 
 def test_advisor_review_queue_api_rejects_query_scope_outside_caller_entitlements() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     persist_candidate(
         client,
         cash_weight="0.18",
@@ -715,7 +715,7 @@ def test_advisor_review_queue_api_rejects_query_scope_outside_caller_entitlement
 
 def test_advisor_review_queue_api_returns_empty_queue_without_candidates() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.get(
         "/api/v1/review-queues/advisor?evaluatedAtUtc=2026-06-21T10:10:00Z",
@@ -729,7 +729,7 @@ def test_advisor_review_queue_api_returns_empty_queue_without_candidates() -> No
 
 def test_advisor_review_queue_api_requires_read_permission() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.get(
         "/api/v1/review-queues/advisor?evaluatedAtUtc=2026-06-21T10:10:00Z",
@@ -752,7 +752,7 @@ def test_advisor_review_queue_api_requires_read_permission() -> None:
 
 def test_advisor_review_queue_api_rejects_advisor_role_without_read_capability() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.get(
         "/api/v1/review-queues/advisor?evaluatedAtUtc=2026-06-21T10:10:00Z",
@@ -774,7 +774,7 @@ def test_advisor_review_queue_api_rejects_advisor_role_without_read_capability()
 
 def test_advisor_review_queue_api_rejects_naive_evaluation_time_safely() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.get(
         "/api/v1/review-queues/advisor?evaluatedAtUtc=2026-06-21T10:10:00",
@@ -793,7 +793,7 @@ def test_advisor_review_queue_api_rejects_naive_evaluation_time_safely() -> None
 
 def test_advisor_review_queue_api_rejects_blank_scope_filter_safely() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.get(
         "/api/v1/review-queues/advisor?evaluatedAtUtc=2026-06-21T10:10:00Z&portfolioId=",
@@ -812,7 +812,7 @@ def test_advisor_review_queue_api_rejects_blank_scope_filter_safely() -> None:
 
 def test_advisor_review_queue_api_rejects_blank_caller_scope_header_safely() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.get(
         "/api/v1/review-queues/advisor?evaluatedAtUtc=2026-06-21T10:10:00Z",
@@ -831,7 +831,7 @@ def test_advisor_review_queue_api_rejects_blank_caller_scope_header_safely() -> 
 
 def test_advisor_review_queue_readiness_api_returns_source_safe_operator_posture() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     first = persist_candidate(
         client,
         cash_weight="0.18",
@@ -898,7 +898,7 @@ def test_advisor_review_queue_readiness_api_returns_source_safe_operator_posture
 
 def test_advisor_review_queue_readiness_api_requires_operator_permission() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.get(
         "/api/v1/review-queues/advisor/readiness?evaluatedAtUtc=2026-06-21T10:10:00Z",
@@ -933,7 +933,7 @@ def test_production_profile_rejects_self_asserted_caller_context_headers(
     reset_idea_repository_for_tests()
     monkeypatch.setenv("LOTUS_IDEA_RUNTIME_PROFILE", "production")
     monkeypatch.delenv(TRUSTED_CALLER_CONTEXT_TOKEN_ENV, raising=False)
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     read_response = client.get(
         "/api/v1/review-queues/advisor/readiness?evaluatedAtUtc=2026-06-21T10:10:00Z",
@@ -957,7 +957,7 @@ def test_production_profile_accepts_trusted_caller_context_headers(
     reset_idea_repository_for_tests()
     monkeypatch.setenv("LOTUS_IDEA_RUNTIME_PROFILE", "production")
     monkeypatch.setenv(TRUSTED_CALLER_CONTEXT_TOKEN_ENV, "gateway-secret")
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.get(
         "/api/v1/review-queues/advisor/readiness?evaluatedAtUtc=2026-06-21T10:10:00Z",
@@ -973,7 +973,7 @@ def test_production_profile_accepts_trusted_caller_context_headers(
 
 def test_advisor_review_queue_readiness_api_rejects_naive_evaluation_time_safely() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.get(
         "/api/v1/review-queues/advisor/readiness?evaluatedAtUtc=2026-06-21T10:10:00",

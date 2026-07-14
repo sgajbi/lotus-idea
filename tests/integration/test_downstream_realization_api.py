@@ -7,7 +7,7 @@ from typing import Any
 
 import pytest
 from _pytest.logging import LogCaptureFixture
-from fastapi.testclient import TestClient
+from tests.support.http import ManagedTestClient, managed_test_client
 
 import app.api.downstream_realization as downstream_realization_api
 from app.runtime.repository_state import reset_idea_repository_for_tests
@@ -28,7 +28,7 @@ from app.ports.downstream_realization import DownstreamRealizationOutcome
 def test_downstream_submission_operation_log_includes_request_correlation_id(
     caplog: LogCaptureFixture,
 ) -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     with caplog.at_level(logging.INFO, logger="lotus-idea"):
         response = client.post(
@@ -115,7 +115,7 @@ def test_conversion_downstream_submission_api_accepts_advise_intent_with_support
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     advise_client = CapturingConversionClient(DownstreamRealizationOutcome.accepted_by_downstream())
     manage_client = CapturingConversionClient(DownstreamRealizationOutcome.accepted_by_downstream())
     monkeypatch.setattr(
@@ -174,7 +174,7 @@ def test_conversion_downstream_submission_api_replays_same_idempotency_key(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     advise_client = CapturingConversionClient(DownstreamRealizationOutcome.accepted_by_downstream())
     manage_client = CapturingConversionClient(DownstreamRealizationOutcome.accepted_by_downstream())
     monkeypatch.setattr(
@@ -216,7 +216,7 @@ def test_conversion_downstream_submission_api_rejects_idempotency_conflict(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     advise_client = CapturingConversionClient(DownstreamRealizationOutcome.accepted_by_downstream())
     manage_client = CapturingConversionClient(DownstreamRealizationOutcome.accepted_by_downstream())
     monkeypatch.setattr(
@@ -269,7 +269,7 @@ def test_report_downstream_submission_api_accepts_pack_with_support_reference(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     report_client = CapturingReportClient(DownstreamRealizationOutcome.accepted_by_downstream())
     monkeypatch.setattr(
         downstream_realization_api,
@@ -330,7 +330,7 @@ def test_report_downstream_submission_api_replays_same_idempotency_key(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     report_client = CapturingReportClient(DownstreamRealizationOutcome.accepted_by_downstream())
     monkeypatch.setattr(
         downstream_realization_api,
@@ -376,7 +376,7 @@ def test_report_downstream_submission_api_rejects_idempotency_conflict(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     report_client = CapturingReportClient(DownstreamRealizationOutcome.accepted_by_downstream())
     monkeypatch.setattr(
         downstream_realization_api,
@@ -436,7 +436,7 @@ def test_downstream_submission_api_fails_closed_without_adapter_configuration(
         REPORT_SUBMIT_PATH_ENV,
     ):
         monkeypatch.delenv(env_name, raising=False)
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_id = seed_approved_candidate(
         client,
         suffix="-advise-downstream-unconfigured",
@@ -461,7 +461,7 @@ def test_downstream_submission_api_fails_closed_without_adapter_configuration(
 
 
 def test_downstream_submission_api_requires_submission_capability() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/conversion-intents/missing-conversion/downstream-submissions",
@@ -478,7 +478,7 @@ def test_downstream_submission_api_requires_submission_capability() -> None:
 
 
 def test_report_downstream_submission_api_requires_submission_capability() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/report-evidence-packs/missing-pack/downstream-submissions",
@@ -504,7 +504,7 @@ def test_downstream_submission_api_rejects_blank_idempotency_key(
         "get_conversion_realization_clients",
         lambda: ConversionRealizationClients(advise_client, manage_client),
     )
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/conversion-intents/missing-conversion/downstream-submissions",
@@ -526,7 +526,7 @@ def test_report_downstream_submission_api_rejects_blank_idempotency_key(
         "get_report_evidence_pack_realization_client",
         lambda: report_client,
     )
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/report-evidence-packs/missing-pack/downstream-submissions",
@@ -549,7 +549,7 @@ def test_conversion_downstream_submission_api_returns_not_found_with_configured_
         lambda: ConversionRealizationClients(advise_client, manage_client),
     )
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/conversion-intents/missing-conversion/downstream-submissions",
@@ -566,7 +566,7 @@ def test_conversion_downstream_submission_api_returns_bounded_rejection(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     advise_client = CapturingConversionClient(DownstreamRealizationOutcome.accepted_by_downstream())
     manage_client = CapturingConversionClient(
         DownstreamRealizationOutcome.rejected_by_downstream("downstream_rejected")
@@ -619,7 +619,7 @@ def test_conversion_downstream_submission_api_returns_durable_uncertain_posture(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     advise_client = CapturingConversionClient(
         DownstreamRealizationOutcome.unknown("downstream_timeout")
     )
@@ -669,7 +669,7 @@ def test_conversion_downstream_submission_api_rejects_report_target_on_conversio
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     advise_client = CapturingConversionClient(DownstreamRealizationOutcome.accepted_by_downstream())
     manage_client = CapturingConversionClient(DownstreamRealizationOutcome.accepted_by_downstream())
     monkeypatch.setattr(
@@ -711,7 +711,7 @@ def test_report_downstream_submission_api_returns_not_found_with_configured_clie
         "get_report_evidence_pack_realization_client",
         lambda: report_client,
     )
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/report-evidence-packs/missing-pack/downstream-submissions",
@@ -727,7 +727,7 @@ def test_report_downstream_submission_api_returns_bounded_rejection(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     report_client = CapturingReportClient(
         DownstreamRealizationOutcome.rejected_by_downstream("downstream_rejected")
     )
@@ -784,7 +784,7 @@ def test_report_downstream_submission_api_fails_closed_without_adapter_configura
     reset_downstream_realization_clients_for_tests(conversion_clients=None, report_client=None)
     monkeypatch.delenv(REPORT_BASE_URL_ENV, raising=False)
     monkeypatch.setenv(REPORT_SUBMIT_PATH_ENV, "/reports/idea-evidence-intake")
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_id = seed_approved_candidate(
         client,
         suffix="-report-downstream-unconfigured",
@@ -817,7 +817,7 @@ def test_downstream_submission_api_emits_not_certified_operation_event(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     events: list[tuple[str, str, str, str, bool, str | None]] = []
     advise_client = CapturingConversionClient(DownstreamRealizationOutcome.accepted_by_downstream())
     manage_client = CapturingConversionClient(DownstreamRealizationOutcome.accepted_by_downstream())
@@ -872,7 +872,7 @@ def test_downstream_submission_api_emits_not_certified_operation_event(
 
 
 def seed_approved_candidate(
-    client: TestClient,
+    client: ManagedTestClient,
     *,
     suffix: str,
     idempotency_prefix: str,
@@ -908,7 +908,7 @@ def seed_approved_candidate(
 
 
 def record_conversion_intent(
-    client: TestClient,
+    client: ManagedTestClient,
     candidate_id: str,
     *,
     conversion_intent_id: str,
@@ -929,7 +929,7 @@ def record_conversion_intent(
 
 
 def record_report_evidence_pack(
-    client: TestClient,
+    client: ManagedTestClient,
     *,
     conversion_intent_id: str,
     report_evidence_pack_id: str,

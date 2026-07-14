@@ -35,6 +35,13 @@ PROHIBITED_SUFFIXES = {
 }
 
 REQUIRED_BOUNDED_MODULE_PATHS = {
+    "scripts/testing/__init__.py",
+    "scripts/testing/test_client_lifecycle_gate.py",
+    "tests/integration/conftest.py",
+    "tests/support/http/__init__.py",
+    "tests/support/http/managed_client.py",
+    "tests/unit/testing/__init__.py",
+    "tests/unit/testing/test_test_client_lifecycle_gate.py",
     "src/app/application/ci_execution_evidence/__init__.py",
     "src/app/application/ci_execution_evidence/artifact_digest.py",
     "src/app/application/ci_execution_evidence/junit_report.py",

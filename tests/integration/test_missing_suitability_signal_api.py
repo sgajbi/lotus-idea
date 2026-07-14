@@ -4,7 +4,7 @@ from datetime import UTC, date, datetime
 from typing import Any
 
 import pytest
-from fastapi.testclient import TestClient
+from tests.support.http import managed_test_client
 
 import app.api.missing_suitability_signals as missing_suitability_api
 from app.ports.advise_sources import (
@@ -46,7 +46,7 @@ class RecordingAdvisePolicyEvaluationSource:
 
 
 def test_missing_suitability_signal_api_returns_compliance_review_candidate() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/idea-signals/missing-suitability/evaluate",
@@ -71,7 +71,7 @@ def test_missing_suitability_signal_api_returns_compliance_review_candidate() ->
 
 
 def test_missing_suitability_signal_api_reports_uncertified_publication_blocker() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     payload = missing_suitability_payload()
     payload["clientReadyPublication"] = "READY"
 
@@ -97,7 +97,7 @@ def test_missing_suitability_signal_api_rejects_wrong_source_contract(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     reset_idea_repository_for_tests(InMemoryIdeaRepository())
-    client = TestClient(app)
+    client = managed_test_client(app)
     payload = missing_suitability_payload()
     payload["policyRef"] = {
         **payload["policyRef"],
@@ -142,7 +142,7 @@ def test_missing_suitability_signal_api_rejects_wrong_source_contract(
 
 
 def test_missing_suitability_signal_api_requires_signal_permission() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/idea-signals/missing-suitability/evaluate",
@@ -167,7 +167,7 @@ def test_missing_suitability_signal_api_requires_signal_permission() -> None:
 def test_missing_suitability_signal_from_source_api_returns_compliance_review_candidate(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     advise_source = RecordingAdvisePolicyEvaluationSource()
     monkeypatch.setattr(
         missing_suitability_api,
@@ -208,7 +208,7 @@ def test_missing_suitability_signal_from_source_api_returns_compliance_review_ca
 def test_missing_suitability_signal_from_source_blocks_when_runtime_not_configured(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     monkeypatch.setattr(
         missing_suitability_api,
         "_build_advise_policy_evaluation_source_runtime_from_environment",
@@ -237,7 +237,7 @@ def test_missing_suitability_signal_from_source_blocks_when_runtime_not_configur
 def test_missing_suitability_signal_from_source_checks_scope_before_runtime(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     def fail_if_called() -> AdvisePolicyEvaluationSourceRuntimeBlocker:
         raise AssertionError("runtime must not be built when caller scope is denied")
@@ -263,7 +263,7 @@ def test_missing_suitability_signal_from_source_checks_scope_before_runtime(
 def test_missing_suitability_signal_from_source_closes_runtime_on_source_blocker(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     advise_source = RecordingAdvisePolicyEvaluationSource(
         error=AdviseSourceUnavailable(code="advise_policy_workflow_unavailable")
     )

@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
-from fastapi.testclient import TestClient
+from tests.support.http import managed_test_client
 
 from app.domain import (
     OutboxEventStatus,
@@ -27,7 +27,7 @@ def test_postgres_outbox_recovery_resolves_exact_support_reference_after_restart
     postgres_database_url: str,
 ) -> None:
     del postgres_database_url
-    client = TestClient(app)
+    client = managed_test_client(app)
     response = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
         json=high_cash_payload(),

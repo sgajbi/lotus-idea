@@ -5,7 +5,7 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 from typing import Any
 
-from fastapi.testclient import TestClient
+from tests.support.http import managed_test_client
 import psycopg
 
 import app.api.idea_signals as idea_signals_api
@@ -177,7 +177,7 @@ def test_high_cash_source_api_fetches_core_evidence_without_persistence(
         "_build_core_high_cash_source_runtime_from_environment",
         lambda: runtime,
     )
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-from-source",
@@ -238,7 +238,7 @@ def test_high_cash_source_api_blocks_temporally_mismatched_adapter_evidence(
         lambda: runtime,
     )
 
-    response = TestClient(app).post(
+    response = managed_test_client(app).post(
         "/api/v1/idea-signals/high-cash/evaluate-from-source",
         json=high_cash_source_payload(),
         headers=source_evaluation_headers(),
@@ -267,7 +267,7 @@ def test_high_cash_source_api_requires_portfolio_entitlement(
         "_build_core_high_cash_source_runtime_from_environment",
         fail_if_called,
     )
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-from-source",
@@ -296,7 +296,7 @@ def test_high_cash_source_api_requires_one_trusted_tenant_before_runtime(
         "_build_core_high_cash_source_runtime_from_environment",
         fail_if_called,
     )
-    response = TestClient(app).post(
+    response = managed_test_client(app).post(
         "/api/v1/idea-signals/high-cash/evaluate-from-source",
         json=high_cash_source_payload(),
         headers=source_evaluation_headers(tenant_ids=None),
@@ -322,7 +322,7 @@ def test_high_cash_source_api_rejects_ambiguous_tenant_context(
         "_build_core_high_cash_source_runtime_from_environment",
         fail_if_called,
     )
-    response = TestClient(app).post(
+    response = managed_test_client(app).post(
         "/api/v1/idea-signals/high-cash/evaluate-from-source",
         json=high_cash_source_payload(),
         headers=source_evaluation_headers(tenant_ids="tenant-a,tenant-b"),
@@ -350,7 +350,7 @@ def test_high_cash_source_api_rejects_untrusted_tenant_override_before_runtime(
         "_build_core_high_cash_source_runtime_from_environment",
         fail_if_called,
     )
-    response = TestClient(app).post(
+    response = managed_test_client(app).post(
         "/api/v1/idea-signals/high-cash/evaluate-from-source",
         json=high_cash_source_payload(),
         headers=source_evaluation_headers(tenant_ids="tenant-attacker"),
@@ -377,7 +377,7 @@ def test_high_cash_source_api_rejects_body_tenant_override_before_runtime(
         "_build_core_high_cash_source_runtime_from_environment",
         fail_if_called,
     )
-    response = TestClient(app).post(
+    response = managed_test_client(app).post(
         "/api/v1/idea-signals/high-cash/evaluate-from-source",
         json={**high_cash_source_payload(), "tenantId": "tenant-attacker"},
         headers=source_evaluation_headers(tenant_ids="tenant-a"),
@@ -402,7 +402,7 @@ def test_high_cash_source_api_blocks_when_core_runtime_is_not_configured(
             core_query_control_plane_base_url_configured=False,
         ),
     )
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-from-source",
@@ -437,7 +437,7 @@ def test_high_cash_source_api_returns_blocked_posture_for_core_unavailable(
         "_build_core_high_cash_source_runtime_from_environment",
         lambda: runtime,
     )
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-from-source",
@@ -484,7 +484,7 @@ def test_high_cash_source_api_emits_bounded_tenant_scope_operation_event(
         lambda: runtime,
     )
     monkeypatch.setattr(idea_signals_api, "emit_foundation_operation_event", capture_event)
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-from-source",
@@ -526,7 +526,7 @@ def test_high_cash_source_api_suppresses_runtime_close_failure(
         lambda: runtime,
     )
     monkeypatch.setattr(idea_signals_api, "emit_foundation_operation_event", capture_event)
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-from-source",
@@ -543,7 +543,7 @@ def test_high_cash_source_api_suppresses_runtime_close_failure(
 
 
 def test_high_cash_api_creates_candidate_from_source_owned_evidence() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/idea-signals/high-cash/evaluate",
@@ -573,7 +573,7 @@ def test_high_cash_api_creates_candidate_from_source_owned_evidence() -> None:
 
 
 def test_high_cash_api_returns_blocked_posture_for_source_entitlement_denial() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/idea-signals/high-cash/evaluate",
@@ -593,7 +593,7 @@ def test_high_cash_api_blocks_mismatched_source_business_date() -> None:
     payload = high_cash_payload()
     payload["sourceEvidence"]["portfolioStateRef"]["asOfDate"] = "2026-06-20"
 
-    response = TestClient(app).post(
+    response = managed_test_client(app).post(
         "/api/v1/idea-signals/high-cash/evaluate",
         json=payload,
         headers=authorized_headers(),
@@ -608,7 +608,7 @@ def test_high_cash_api_blocks_mismatched_source_business_date() -> None:
 
 
 def test_high_cash_api_returns_blocked_posture_for_stale_source_evidence() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/idea-signals/high-cash/evaluate",
@@ -625,7 +625,7 @@ def test_high_cash_api_returns_blocked_posture_for_stale_source_evidence() -> No
 
 def test_high_cash_api_rejects_wrong_core_product_id(monkeypatch: Any) -> None:
     reset_idea_repository_for_tests(InMemoryIdeaRepository())
-    client = TestClient(app)
+    client = managed_test_client(app)
     payload = high_cash_payload()
     payload["sourceEvidence"]["portfolioStateRef"]["productId"] = (
         "lotus-core:BenchmarkAssignment:v1"
@@ -655,7 +655,7 @@ def test_high_cash_api_rejects_wrong_core_product_id(monkeypatch: Any) -> None:
 
 def test_high_cash_api_rejects_non_core_source_ref(monkeypatch: Any) -> None:
     reset_idea_repository_for_tests(InMemoryIdeaRepository())
-    client = TestClient(app)
+    client = managed_test_client(app)
     payload = high_cash_payload()
     payload["sourceEvidence"]["portfolioStateRef"]["sourceSystem"] = "lotus-risk"
     payload["sourceEvidence"]["portfolioStateRef"]["productId"] = (
@@ -685,7 +685,7 @@ def test_high_cash_api_rejects_non_core_source_ref(monkeypatch: Any) -> None:
 
 
 def test_high_cash_api_requires_signal_evaluation_capability() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/idea-signals/high-cash/evaluate",
@@ -728,7 +728,7 @@ def _core_evidence() -> CoreHighCashEvidence:
 
 
 def test_high_cash_api_rejects_advisor_role_without_signal_evaluation_capability() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/idea-signals/high-cash/evaluate",
@@ -751,7 +751,7 @@ def test_high_cash_api_rejects_advisor_role_without_signal_evaluation_capability
 
 
 def test_high_cash_api_validation_error_is_product_safe() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     payload = high_cash_payload(cash_weight="1.1")
 
     response = client.post(
@@ -769,7 +769,7 @@ def test_high_cash_api_validation_error_is_product_safe() -> None:
 
 def test_high_cash_persist_api_persists_created_candidate_with_audit_posture() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
@@ -793,7 +793,7 @@ def test_high_cash_persist_api_persists_created_candidate_with_audit_posture() -
 
 def test_high_cash_persist_api_rejects_wrong_source_contract_before_persistence() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     payload = high_cash_payload()
     payload["sourceEvidence"]["portfolioStateRef"]["sourceSystem"] = "lotus-risk"
     payload["sourceEvidence"]["portfolioStateRef"]["productId"] = (
@@ -815,7 +815,7 @@ def test_high_cash_persist_api_rejects_wrong_source_contract_before_persistence(
 
 def test_high_cash_persist_api_reports_durable_storage_when_repository_is_durable() -> None:
     reset_idea_repository_for_tests(DurableInMemoryIdeaRepository())
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
@@ -834,7 +834,7 @@ def test_high_cash_persist_api_fails_closed_when_durable_repository_is_required(
     monkeypatch.setenv(TRUSTED_CALLER_CONTEXT_TOKEN_ENV, "gateway-secret")
     monkeypatch.delenv(DATABASE_URL_ENV, raising=False)
     reset_idea_repository_for_tests(reload_from_environment=True)
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     try:
         response = client.post(
@@ -879,7 +879,7 @@ def test_high_cash_persist_api_fails_closed_when_durable_repository_unavailable(
     )
     monkeypatch.setattr("app.runtime.repository_state.psycopg.connect", fake_connect)
     reset_idea_repository_for_tests(reload_from_environment=True)
-    client = TestClient(app, raise_server_exceptions=False)
+    client = managed_test_client(app, raise_server_exceptions=False)
 
     try:
         response = client.post(
@@ -913,7 +913,7 @@ def test_high_cash_persist_api_fails_closed_when_durable_repository_unavailable(
 
 def test_high_cash_persist_api_replays_same_idempotency_payload() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     headers = persistence_headers("persist-high-cash-api-replay-001")
     first = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
@@ -937,7 +937,7 @@ def test_high_cash_persist_api_replays_same_idempotency_payload() -> None:
 
 def test_high_cash_persist_api_returns_conflict_for_changed_idempotency_payload() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     headers = persistence_headers("persist-high-cash-api-conflict-001")
     client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
@@ -963,7 +963,7 @@ def test_high_cash_persist_api_returns_conflict_for_changed_idempotency_payload(
 
 def test_high_cash_persist_api_does_not_persist_blocked_evaluation() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
@@ -980,7 +980,7 @@ def test_high_cash_persist_api_does_not_persist_blocked_evaluation() -> None:
 
 def test_high_cash_persist_api_requires_candidate_persistence_capability() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
@@ -1004,7 +1004,7 @@ def test_high_cash_persist_api_requires_candidate_persistence_capability() -> No
 
 def test_high_cash_persist_api_rejects_blank_idempotency_key_safely() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",

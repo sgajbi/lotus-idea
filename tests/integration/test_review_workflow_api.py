@@ -5,7 +5,7 @@ import logging
 from typing import Any
 
 import pytest
-from fastapi.testclient import TestClient
+from tests.support.http import ManagedTestClient, managed_test_client
 
 from app.runtime.repository_state import get_idea_repository, reset_idea_repository_for_tests
 from app.main import app
@@ -237,7 +237,7 @@ def lifecycle_payload(
     }
 
 
-def persisted_candidate_id(client: TestClient, *, idempotency_key: str) -> str:
+def persisted_candidate_id(client: ManagedTestClient, *, idempotency_key: str) -> str:
     response = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
         json=high_cash_payload(),
@@ -250,7 +250,7 @@ def persisted_candidate_id(client: TestClient, *, idempotency_key: str) -> str:
 
 
 def transition_candidate(
-    client: TestClient,
+    client: ManagedTestClient,
     candidate_id: str,
     *,
     target_status: str,
@@ -273,7 +273,7 @@ def transition_candidate(
     assert payload["persistence"]["lifecycleStatus"] == target_status
 
 
-def transition_candidate_to_review_ready(client: TestClient, candidate_id: str) -> None:
+def transition_candidate_to_review_ready(client: ManagedTestClient, candidate_id: str) -> None:
     for index, target_status in enumerate(
         ("enriched", "scored", "governance_checked", "ready_for_review"),
         start=1,
@@ -288,7 +288,7 @@ def transition_candidate_to_review_ready(client: TestClient, candidate_id: str) 
         )
 
 
-def approve_candidate_for_conversion(client: TestClient, candidate_id: str) -> None:
+def approve_candidate_for_conversion(client: ManagedTestClient, candidate_id: str) -> None:
     transition_candidate_to_review_ready(client, candidate_id)
     response = client.post(
         f"/api/v1/idea-candidates/{candidate_id}/review-actions",
@@ -303,7 +303,7 @@ def approve_candidate_for_conversion(client: TestClient, candidate_id: str) -> N
 
 def test_lifecycle_transition_api_records_idempotent_transition() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_id = persisted_candidate_id(client, idempotency_key="seed-lifecycle-api-001")
     headers = lifecycle_headers("lifecycle-api-replay-001")
     request = lifecycle_payload()
@@ -337,7 +337,7 @@ def test_lifecycle_transition_api_records_idempotent_transition() -> None:
 
 def test_lifecycle_transition_api_returns_safe_conflicts_and_not_found() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_id = persisted_candidate_id(client, idempotency_key="seed-lifecycle-conflict-001")
     headers = lifecycle_headers("lifecycle-api-conflict-001")
     client.post(
@@ -375,7 +375,7 @@ def test_lifecycle_transition_api_returns_safe_conflicts_and_not_found() -> None
 
 def test_lifecycle_transition_api_requires_permission_and_valid_request() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_id = persisted_candidate_id(client, idempotency_key="seed-lifecycle-invalid-001")
     blank_transition = lifecycle_payload(transition_id=" ")
     naive_time = lifecycle_payload(changed_at_utc="2026-06-21T10:01:00")
@@ -417,7 +417,7 @@ def test_lifecycle_transition_api_requires_permission_and_valid_request() -> Non
 
 def test_lifecycle_transition_api_rejects_downstream_authority_statuses_without_outbox() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_id = persisted_candidate_id(
         client,
         idempotency_key="seed-lifecycle-downstream-authority-001",
@@ -463,7 +463,7 @@ def test_lifecycle_transition_api_rejects_downstream_authority_statuses_without_
 
 def test_lifecycle_transition_api_enables_review_approval_without_bypassing_state() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_id = persisted_candidate_id(client, idempotency_key="seed-lifecycle-approval-001")
     transition_candidate_to_review_ready(client, candidate_id)
 
@@ -484,7 +484,7 @@ def test_lifecycle_transition_api_enables_review_approval_without_bypassing_stat
 
 def test_review_action_api_persists_suppression_with_audit_posture() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_id = persisted_candidate_id(client, idempotency_key="seed-review-action-001")
 
     response = client.post(
@@ -508,7 +508,7 @@ def test_review_action_api_persists_suppression_with_audit_posture() -> None:
 
 def test_review_action_api_replays_same_idempotency_payload() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_id = persisted_candidate_id(client, idempotency_key="seed-review-replay-001")
     headers = review_headers("review-action-api-replay-001")
     first = client.post(
@@ -532,7 +532,7 @@ def test_review_action_api_replays_same_idempotency_payload() -> None:
 
 def test_review_action_api_returns_conflict_for_changed_idempotency_payload() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_id = persisted_candidate_id(client, idempotency_key="seed-review-conflict-001")
     headers = review_headers("review-action-api-conflict-001")
     client.post(
@@ -555,7 +555,7 @@ def test_review_action_api_returns_state_conflict_for_generated_candidate_approv
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_id = persisted_candidate_id(client, idempotency_key="seed-review-state-001")
 
     with caplog.at_level(logging.INFO, logger="lotus-idea"):
@@ -588,7 +588,7 @@ def test_review_action_api_returns_state_conflict_for_generated_candidate_approv
 
 def test_feedback_api_persists_source_provenanced_feedback() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_id = persisted_candidate_id(client, idempotency_key="seed-feedback-001")
 
     response = client.post(
@@ -610,7 +610,7 @@ def test_feedback_api_persists_source_provenanced_feedback() -> None:
 
 def test_review_action_api_returns_not_found_for_missing_candidate() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/idea-candidates/missing-candidate/review-actions",
@@ -624,7 +624,7 @@ def test_review_action_api_returns_not_found_for_missing_candidate() -> None:
 
 def test_review_action_api_requires_mutating_capability_and_scope() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_id = persisted_candidate_id(client, idempotency_key="seed-review-denied-001")
 
     denied_by_capability = client.post(
@@ -649,7 +649,7 @@ def test_review_action_api_requires_mutating_capability_and_scope() -> None:
 
 def test_review_action_api_validation_errors_are_product_safe() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_id = persisted_candidate_id(client, idempotency_key="seed-review-validation-001")
     payload = suppress_review_payload()
     payload["accessScope"] = access_scope() | {"tenantId": " "}
@@ -667,7 +667,7 @@ def test_review_action_api_validation_errors_are_product_safe() -> None:
 
 def test_review_action_api_rejects_invalid_identity_time_idempotency_and_actor_role() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_id = persisted_candidate_id(client, idempotency_key="seed-review-invalid-001")
     blank_review = suppress_review_payload(review_id=" ")
     naive_time = suppress_review_payload()
@@ -704,7 +704,7 @@ def test_review_action_api_rejects_invalid_identity_time_idempotency_and_actor_r
 
 def test_review_action_api_rejects_legacy_body_scope_claims() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_id = persisted_candidate_id(client, idempotency_key="seed-review-scope-001")
     access_scope_claim = suppress_review_payload()
     access_scope_claim["accessScope"] = access_scope()
@@ -733,7 +733,7 @@ def test_review_action_api_rejects_legacy_body_scope_claims() -> None:
 
 def test_feedback_api_returns_not_found_and_permission_denied_safely() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_id = persisted_candidate_id(client, idempotency_key="seed-feedback-denied-001")
     denied_by_capability = client.post(
         f"/api/v1/idea-candidates/{candidate_id}/feedback",
@@ -762,7 +762,7 @@ def test_feedback_api_returns_not_found_and_permission_denied_safely() -> None:
 
 def test_feedback_api_rejects_invalid_identity_time_and_idempotency() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_id = persisted_candidate_id(client, idempotency_key="seed-feedback-invalid-001")
     blank_feedback = feedback_payload()
     blank_feedback["feedbackId"] = " "
@@ -794,7 +794,7 @@ def test_conversion_intent_api_records_review_approved_candidate_without_downstr
     None
 ):
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_id = persisted_candidate_id(client, idempotency_key="seed-conversion-intent-001")
     approve_candidate_for_conversion(client, candidate_id)
 
@@ -823,7 +823,7 @@ def test_conversion_intent_api_records_review_approved_candidate_without_downstr
 
 def test_conversion_intent_api_replays_and_conflicts_idempotently() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_id = persisted_candidate_id(client, idempotency_key="seed-conversion-replay-001")
     approve_candidate_for_conversion(client, candidate_id)
     headers = conversion_intent_headers("conversion-intent-api-replay-001")
@@ -854,7 +854,7 @@ def test_conversion_intent_api_replays_and_conflicts_idempotently() -> None:
 
 def test_conversion_intent_api_requires_approved_state_permission_and_valid_request() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_id = persisted_candidate_id(client, idempotency_key="seed-conversion-invalid-001")
 
     invalid_state = client.post(
@@ -914,7 +914,7 @@ def test_conversion_intent_api_requires_approved_state_permission_and_valid_requ
 
 def test_conversion_outcome_api_records_source_authorized_result() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_id = persisted_candidate_id(client, idempotency_key="seed-conversion-outcome-001")
     approve_candidate_for_conversion(client, candidate_id)
     intent = client.post(
@@ -948,7 +948,7 @@ def test_conversion_outcome_api_records_source_authorized_result() -> None:
 
 def test_conversion_outcome_api_rejects_wrong_source_not_found_permission_and_replays() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_id = persisted_candidate_id(
         client, idempotency_key="seed-conversion-outcome-invalid-001"
     )
@@ -1037,7 +1037,7 @@ def test_conversion_outcome_api_rejects_wrong_source_not_found_permission_and_re
 
 def test_report_evidence_pack_api_records_request_without_render_or_archive_authority() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_id = persisted_candidate_id(client, idempotency_key="seed-report-pack-001")
     approve_candidate_for_conversion(client, candidate_id)
     intent = client.post(
@@ -1078,7 +1078,7 @@ def test_report_evidence_pack_api_records_request_without_render_or_archive_auth
 
 def test_report_evidence_pack_api_replays_conflicts_and_blocks_client_ready_publication() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_id = persisted_candidate_id(client, idempotency_key="seed-report-pack-invalid-001")
     approve_candidate_for_conversion(client, candidate_id)
     intent = client.post(

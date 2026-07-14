@@ -5,7 +5,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import pytest
-from fastapi.testclient import TestClient
+from tests.support.http import ManagedTestClient, managed_test_client
 from fastapi.responses import JSONResponse
 
 import app.api.outbox.recovery as recovery_api
@@ -38,7 +38,7 @@ def reset_repository_provider() -> Iterator[None]:
 def test_dead_letter_inspection_denied_for_non_operator_and_is_source_safe() -> None:
     event = _dead_lettered_event()
     reset_idea_repository_for_tests(repository=_repository_with_event(event))
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     denied = client.get("/api/v1/outbox-delivery/dead-letters")
     response = client.get(
@@ -69,7 +69,7 @@ def test_dead_letter_redrive_publishes_once_and_replays_without_mutation(
     reset_idea_repository_for_tests(repository=repository)
     publisher = RecordingPublisher(accepted=True)
     monkeypatch.setattr(recovery_api, "build_outbox_publisher_from_environment", lambda: publisher)
-    client = TestClient(app)
+    client = managed_test_client(app)
     support_reference = _support_reference(client)
     headers = _headers(
         capability="idea.outbox-recovery.redrive",
@@ -111,7 +111,7 @@ def test_dead_letter_redrive_conflict_and_publisher_failure_remain_quarantined(
     reset_idea_repository_for_tests(repository=repository)
     publisher = RecordingPublisher(accepted=False)
     monkeypatch.setattr(recovery_api, "build_outbox_publisher_from_environment", lambda: publisher)
-    client = TestClient(app)
+    client = managed_test_client(app)
     support_reference = _support_reference(client)
     headers = _headers(
         capability="idea.outbox-recovery.redrive",
@@ -142,7 +142,7 @@ def test_dead_letter_redrive_conflict_and_publisher_failure_remain_quarantined(
 def test_dead_letter_redrive_requires_capability_and_idempotency_key() -> None:
     event = _dead_lettered_event()
     reset_idea_repository_for_tests(repository=_repository_with_event(event))
-    client = TestClient(app)
+    client = managed_test_client(app)
     support_reference = _support_reference(client)
     path = f"/api/v1/outbox-delivery/dead-letters/{support_reference}/redrive"
     body = {"reason": "broker_route_corrected", "changeReference": "CHG-2026-0710"}
@@ -168,7 +168,7 @@ def test_production_redrive_rejects_untrusted_caller_before_mutation(
     event = _dead_lettered_event()
     repository = _repository_with_event(event)
     reset_idea_repository_for_tests(repository=repository)
-    client = TestClient(app)
+    client = managed_test_client(app)
     support_reference = "outbox-dlq-1234567890abcdef12345678"
 
     response = client.post(
@@ -196,7 +196,7 @@ def test_outbox_recovery_api_emits_bounded_operation_events(
     monkeypatch.setattr(recovery_api, "build_outbox_publisher_from_environment", lambda: publisher)
     emitted: list[OperationEvent] = []
     monkeypatch.setattr(recovery_api, "emit_operation_event", emitted.append)
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     support_reference = _support_reference(client)
     response = client.post(
@@ -221,7 +221,7 @@ def test_outbox_recovery_api_emits_bounded_operation_events(
 def test_redrive_reports_unconfigured_publisher_and_missing_dead_letter(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     support_reference = "outbox-dlq-000000000000000000000000"
     path = f"/api/v1/outbox-delivery/dead-letters/{support_reference}/redrive"
     headers = _headers(
@@ -254,7 +254,7 @@ def test_redrive_suppresses_publisher_cleanup_failure(monkeypatch: pytest.Monkey
     reset_idea_repository_for_tests(repository=_repository_with_event(event))
     publisher = CleanupFailingPublisher(accepted=True)
     monkeypatch.setattr(recovery_api, "build_outbox_publisher_from_environment", lambda: publisher)
-    client = TestClient(app)
+    client = managed_test_client(app)
     support_reference = _support_reference(client)
 
     response = client.post(
@@ -277,7 +277,7 @@ def test_redrive_blocks_without_durable_storage_and_quarantines_unknown_contract
     event = _dead_lettered_event()
     repository = _repository_with_event(event)
     reset_idea_repository_for_tests(repository=repository)
-    client = TestClient(app)
+    client = managed_test_client(app)
     support_reference = _support_reference(client)
     path = f"/api/v1/outbox-delivery/dead-letters/{support_reference}/redrive"
     headers = _headers(
@@ -332,7 +332,7 @@ class CleanupFailingPublisher(RecordingPublisher):
         raise RuntimeError("cleanup failed")
 
 
-def _support_reference(client: TestClient) -> str:
+def _support_reference(client: ManagedTestClient) -> str:
     response = client.get(
         "/api/v1/outbox-delivery/dead-letters",
         headers=_headers(capability="idea.outbox-recovery.read"),

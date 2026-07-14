@@ -4,7 +4,7 @@ from datetime import UTC, date, datetime
 from typing import Any
 
 import pytest
-from fastapi.testclient import TestClient
+from tests.support.http import managed_test_client
 
 import app.api.idea_signals as idea_signals_api
 from app.domain import EvidenceFreshness, InMemoryIdeaRepository, SourceRef, SourceSystem
@@ -46,7 +46,7 @@ class RecordingAdvisePolicyEvaluationSource:
 
 
 def test_mandate_restriction_signal_api_returns_review_candidate() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/idea-signals/mandate-restriction/evaluate",
@@ -71,7 +71,7 @@ def test_mandate_restriction_signal_api_returns_review_candidate() -> None:
 
 
 def test_mandate_restriction_signal_api_reports_stale_source_blocker() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     payload = mandate_restriction_payload()
     payload["restrictionRef"]["freshness"] = "stale"
 
@@ -105,7 +105,7 @@ def test_mandate_restriction_signal_api_accepts_governed_source_contracts(
     source_system: str,
     product_id: str,
 ) -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     payload = mandate_restriction_payload()
     payload["restrictionRef"]["sourceSystem"] = source_system
     payload["restrictionRef"]["productId"] = product_id
@@ -127,7 +127,7 @@ def test_mandate_restriction_signal_api_rejects_unknown_source_contract(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     reset_idea_repository_for_tests(InMemoryIdeaRepository())
-    client = TestClient(app)
+    client = managed_test_client(app)
     payload = mandate_restriction_payload()
     payload["restrictionRef"]["sourceSystem"] = "lotus-risk"
     payload["restrictionRef"]["productId"] = "lotus-risk:MandateRiskHealthContext:v1"
@@ -167,7 +167,7 @@ def test_mandate_restriction_signal_api_rejects_unknown_source_contract(
 
 
 def test_mandate_restriction_signal_api_rejects_wrong_advise_product_id() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     payload = mandate_restriction_payload()
     payload["restrictionRef"]["productId"] = "lotus-advise:AdvisoryProposal:v1"
 
@@ -184,7 +184,7 @@ def test_mandate_restriction_signal_api_rejects_wrong_advise_product_id() -> Non
 
 
 def test_mandate_restriction_signal_api_requires_signal_permission() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/idea-signals/mandate-restriction/evaluate",
@@ -209,7 +209,7 @@ def test_mandate_restriction_signal_api_requires_signal_permission() -> None:
 def test_mandate_restriction_signal_from_source_api_returns_review_candidate(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     advise_source = RecordingAdvisePolicyEvaluationSource()
     monkeypatch.setattr(
         idea_signals_api,
@@ -250,7 +250,7 @@ def test_mandate_restriction_signal_from_source_api_returns_review_candidate(
 def test_mandate_restriction_signal_from_source_blocks_when_runtime_not_configured(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     monkeypatch.setattr(
         idea_signals_api,
         "_build_advise_policy_evaluation_source_runtime_from_environment",
@@ -279,7 +279,7 @@ def test_mandate_restriction_signal_from_source_blocks_when_runtime_not_configur
 def test_mandate_restriction_signal_from_source_checks_scope_before_runtime(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     def fail_if_called() -> AdvisePolicyEvaluationSourceRuntimeBlocker:
         raise AssertionError("runtime must not be built when caller scope is denied")
@@ -305,7 +305,7 @@ def test_mandate_restriction_signal_from_source_checks_scope_before_runtime(
 def test_mandate_restriction_signal_from_source_closes_runtime_on_source_blocker(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     advise_source = RecordingAdvisePolicyEvaluationSource(
         error=AdviseSourceUnavailable(code="advise_policy_workflow_unavailable")
     )

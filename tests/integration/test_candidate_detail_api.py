@@ -4,7 +4,7 @@ import asyncio
 from typing import Any
 
 from fastapi.responses import JSONResponse
-from fastapi.testclient import TestClient
+from tests.support.http import ManagedTestClient, managed_test_client
 
 from app.api.candidate_detail import get_idea_candidate_detail
 from app.runtime.repository_state import reset_idea_repository_for_tests
@@ -143,7 +143,7 @@ def access_scope() -> dict[str, str]:
 
 
 def persisted_candidate_id(
-    client: TestClient,
+    client: ManagedTestClient,
     *,
     idempotency_key: str,
     scoped: bool = False,
@@ -166,7 +166,7 @@ def lifecycle_payload(target_status: str, *, minute: int) -> dict[str, Any]:
     }
 
 
-def transition_candidate_to_review_ready(client: TestClient, candidate_id: str) -> None:
+def transition_candidate_to_review_ready(client: ManagedTestClient, candidate_id: str) -> None:
     for minute, target_status in enumerate(
         ("enriched", "scored", "governance_checked", "ready_for_review"),
         start=1,
@@ -228,7 +228,7 @@ def report_evidence_pack_payload() -> dict[str, Any]:
     }
 
 
-def seed_full_candidate_workflow(client: TestClient, candidate_id: str) -> None:
+def seed_full_candidate_workflow(client: ManagedTestClient, candidate_id: str) -> None:
     transition_candidate_to_review_ready(client, candidate_id)
     assert (
         client.post(
@@ -274,7 +274,7 @@ def seed_full_candidate_workflow(client: TestClient, candidate_id: str) -> None:
 
 def test_candidate_detail_api_returns_source_safe_persisted_candidate_detail() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_id = persisted_candidate_id(client, idempotency_key="detail-seed-basic-001")
 
     response = client.get(
@@ -300,7 +300,7 @@ def test_candidate_detail_api_returns_source_safe_persisted_candidate_detail() -
 
 def test_candidate_detail_api_returns_workflow_summaries_without_authority_promotion() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_id = persisted_candidate_id(
         client,
         idempotency_key="detail-seed-workflow-001",
@@ -344,7 +344,7 @@ def test_candidate_detail_api_returns_workflow_summaries_without_authority_promo
 
 def test_candidate_detail_api_requires_permission_and_existing_candidate() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     denied = client.get(
         "/api/v1/idea-candidates/missing-candidate",
@@ -379,7 +379,7 @@ def test_candidate_detail_api_requires_permission_and_existing_candidate() -> No
 
 def test_candidate_detail_api_rejects_advisor_role_without_detail_capability() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.get(
         "/api/v1/idea-candidates/missing-candidate",
@@ -401,7 +401,7 @@ def test_candidate_detail_api_rejects_advisor_role_without_detail_capability() -
 
 def test_candidate_detail_api_applies_caller_entitlement_scope_fail_closed() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_id = persisted_candidate_id(
         client,
         idempotency_key="detail-seed-scope-001",
@@ -433,7 +433,7 @@ def test_candidate_detail_api_applies_caller_entitlement_scope_fail_closed() -> 
 
 def test_candidate_detail_api_rejects_blank_entitlement_scope_header_safely() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.get(
         "/api/v1/idea-candidates/idea_high_cash_scope",

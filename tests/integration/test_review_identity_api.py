@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from fastapi.testclient import TestClient
+from tests.support.http import managed_test_client
 
 from app.main import app
 from app.runtime.repository_state import get_idea_repository, reset_idea_repository_for_tests
@@ -15,7 +15,7 @@ from tests.integration.test_review_workflow_api import (
 
 def test_review_action_api_governs_resource_identity_across_transport_keys() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_id = persisted_candidate_id(client, idempotency_key="seed-review-identity-001")
     resource_id = "review-resource-identity-api-001"
     request = suppress_review_payload(review_id=resource_id)
@@ -53,7 +53,7 @@ def test_review_action_api_governs_resource_identity_across_transport_keys() -> 
 
 def test_feedback_api_governs_resource_identity_across_transport_keys() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_id = persisted_candidate_id(client, idempotency_key="seed-feedback-identity-001")
     resource_id = "feedback-resource-identity-api-001"
     request = feedback_payload(feedback_id=resource_id)

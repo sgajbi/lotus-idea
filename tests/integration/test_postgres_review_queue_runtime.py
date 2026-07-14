@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi.testclient import TestClient
+from tests.support.http import managed_test_client
 
 from app.main import app
 
@@ -11,7 +11,7 @@ def test_postgres_review_queue_preserves_snapshot_across_future_insert_and_rejec
     postgres_database_url: str,
 ) -> None:
     del postgres_database_url
-    client = TestClient(app)
+    client = managed_test_client(app)
     visible_candidate_ids = []
     for index in range(2):
         persisted = client.post(

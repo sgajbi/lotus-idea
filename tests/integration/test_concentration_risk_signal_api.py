@@ -5,7 +5,7 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 from typing import Any
 
-from fastapi.testclient import TestClient
+from tests.support.http import managed_test_client
 from pytest import MonkeyPatch
 
 import app.api.concentration_risk_signals as concentration_risk_api
@@ -49,7 +49,7 @@ class RecordingRiskSource:
 
 
 def test_concentration_risk_signal_api_returns_review_candidate() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/idea-signals/concentration-risk/evaluate",
@@ -75,7 +75,7 @@ def test_concentration_risk_signal_api_returns_review_candidate() -> None:
 
 
 def test_concentration_risk_signal_api_reports_below_threshold_not_eligible() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     payload = concentration_payload()
     payload["topPositionWeightCurrent"] = "0.05"
     payload["topIssuerWeightCurrent"] = "0.08"
@@ -99,7 +99,7 @@ def test_concentration_risk_signal_api_reports_below_threshold_not_eligible() ->
 
 
 def test_concentration_risk_signal_api_reports_partial_issuer_coverage_blocker() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     payload = concentration_payload()
     payload["issuerCoverageStatus"] = "partial"
 
@@ -122,7 +122,7 @@ def test_concentration_risk_signal_api_reports_partial_issuer_coverage_blocker()
 
 
 def test_concentration_risk_signal_api_reports_stale_source_blocker() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     payload = concentration_payload()
     payload["concentrationRef"]["freshness"] = "stale"
 
@@ -148,7 +148,7 @@ def test_concentration_risk_signal_api_rejects_wrong_source_contract(
     monkeypatch: MonkeyPatch,
 ) -> None:
     reset_idea_repository_for_tests(InMemoryIdeaRepository())
-    client = TestClient(app)
+    client = managed_test_client(app)
     payload = concentration_payload()
     payload["concentrationRef"] = {
         **payload["concentrationRef"],
@@ -193,7 +193,7 @@ def test_concentration_risk_signal_api_rejects_wrong_source_contract(
 
 
 def test_concentration_risk_signal_api_rejects_wrong_risk_product_id() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     payload = concentration_payload()
     payload["concentrationRef"]["productId"] = "lotus-risk:RiskMetricsReport:v1"
 
@@ -209,7 +209,7 @@ def test_concentration_risk_signal_api_rejects_wrong_risk_product_id() -> None:
 
 
 def test_concentration_risk_signal_api_requires_signal_permission() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/idea-signals/concentration-risk/evaluate",
@@ -232,7 +232,7 @@ def test_concentration_risk_signal_api_requires_signal_permission() -> None:
 
 
 def test_concentration_risk_signal_api_rejects_out_of_scope_access_scope() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     headers = evaluate_headers()
     headers["X-Caller-Portfolio-Ids"] = "PB_SG_OTHER_002"
 
@@ -255,7 +255,7 @@ def test_concentration_risk_signal_api_rejects_out_of_scope_access_scope() -> No
 
 
 def test_concentration_risk_signal_api_rejects_blank_entitlement_scope_header() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     headers = evaluate_headers()
     headers["X-Caller-Portfolio-Ids"] = "PB_SG_GLOBAL_BAL_001, "
 
@@ -278,7 +278,7 @@ def test_concentration_risk_signal_api_rejects_blank_entitlement_scope_header() 
 def test_concentration_risk_signal_from_source_api_returns_review_candidate(
     monkeypatch: MonkeyPatch,
 ) -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     risk_source = RecordingRiskSource()
     monkeypatch.setattr(
         concentration_risk_api,
@@ -318,7 +318,7 @@ def test_concentration_risk_signal_from_source_api_returns_review_candidate(
 def test_concentration_risk_signal_from_source_blocks_when_runtime_not_configured(
     monkeypatch: MonkeyPatch,
 ) -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     monkeypatch.setattr(
         concentration_risk_api,
         "_build_risk_concentration_source_runtime_from_environment",
@@ -345,7 +345,7 @@ def test_concentration_risk_signal_from_source_blocks_when_runtime_not_configure
 def test_concentration_risk_signal_from_source_checks_scope_before_runtime(
     monkeypatch: MonkeyPatch,
 ) -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     def fail_if_called() -> RiskConcentrationSourceRuntimeBlocker:
         raise AssertionError("runtime must not be built when caller scope is denied")
@@ -371,7 +371,7 @@ def test_concentration_risk_signal_from_source_checks_scope_before_runtime(
 def test_concentration_risk_signal_from_source_closes_runtime_on_source_blocker(
     monkeypatch: MonkeyPatch,
 ) -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     risk_source = RecordingRiskSource(error=RiskSourceUnavailable(code="risk_source_unavailable"))
     monkeypatch.setattr(
         concentration_risk_api,
