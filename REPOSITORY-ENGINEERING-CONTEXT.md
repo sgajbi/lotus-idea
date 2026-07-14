@@ -37,6 +37,14 @@ Gateway serving, Workbench consumption, entitlement, and browser evidence may
 clear that runtime blocker. This is design modularity inside the existing
 service, not evidence for a runtime split.
 
+Repo-owned mesh readiness, SLO, access, and evidence-policy declarations are
+v2 digest-bound `source_contract` evidence only. Keep their builder, generator,
+gate, and focused tests under capability-owned `data_mesh/` packages. A valid
+current artifact may add supporting evidence, but it must not clear SLO,
+access, or evidence-policy certification blockers without a separately
+authority-bound certification artifact. This is design modularity inside the
+existing Idea service; it does not justify a runtime split.
+
 The supported-feature registry remains `foundation_only` with an empty
 `features` list. Keep it that way until code, tests, contracts, OpenAPI,
 docs/wiki, runtime proof, CI proof, and mainline validation exist for an

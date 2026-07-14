@@ -272,8 +272,9 @@ materialization source contracts through `LOTUS_REPORT_ROOT`,
 `LOTUS_IDEA_REPORT_MATERIALIZATION_SOURCE_CONTRACT_PROOF_OUTPUT`, default
 platform catalog source contract through `LOTUS_PLATFORM_ROOT` and
 `LOTUS_IDEA_PLATFORM_CATALOG_SOURCE_CONTRACT_PROOF_OUTPUT`, default AI lineage
-store proof through `LOTUS_IDEA_AI_LINEAGE_STORE_PROOF_OUTPUT`, default mesh policy
-proof through `LOTUS_IDEA_MESH_POLICY_PROOF_OUTPUT`, and optional
+store proof through `LOTUS_IDEA_AI_LINEAGE_STORE_PROOF_OUTPUT`, default mesh
+policy source contract through
+`LOTUS_IDEA_MESH_POLICY_SOURCE_CONTRACT_PROOF_OUTPUT`, and optional
 `IMPLEMENTATION_PROOF_OUTPUT`, preserving the canonical local command while
 allowing live release-proof evidence when the stack is available. Missing
 sibling Advise, Manage, Report, or platform evidence writes an invalid
@@ -829,7 +830,7 @@ missing risk-profile source-product proof artifact, missing risk-profile live
 Advise proof artifact, Manage mandate live proof artifact, Core benchmark assignment live
 proof artifact, Core portfolio-state live proof artifact, Manage action route proof artifact,
 Report intake route source-contract artifact, Report materialization source-contract artifact,
-mesh policy proof artifact, platform mesh
+mesh policy source-contract artifact, platform catalog
 onboarding proof artifact, AI lineage store proof artifact, AI workflow-pack registration proof artifact,
 AI workflow-pack runtime execution proof artifact,
 and the same source-safe readiness snapshot without running the HTTP service.
@@ -858,8 +859,8 @@ artifact paths configured through
 `LOTUS_IDEA_REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF`,
 `LOTUS_IDEA_REPORT_MATERIALIZATION_SOURCE_CONTRACT_PROOF_OUTPUT`,
 `LOTUS_IDEA_REPORT_MATERIALIZATION_SOURCE_CONTRACT_PROOF`,
-`LOTUS_IDEA_MESH_POLICY_PROOF_OUTPUT`,
-`LOTUS_IDEA_MESH_POLICY_PROOF`,
+`LOTUS_IDEA_MESH_POLICY_SOURCE_CONTRACT_PROOF_OUTPUT`,
+`LOTUS_IDEA_MESH_POLICY_SOURCE_CONTRACT_PROOF`,
 `LOTUS_PLATFORM_ROOT`,
 `LOTUS_IDEA_PLATFORM_CATALOG_SOURCE_CONTRACT_PROOF_OUTPUT` and
 `LOTUS_IDEA_PLATFORM_CATALOG_SOURCE_CONTRACT_PROOF`,
@@ -868,7 +869,8 @@ artifact paths configured through
 `LOTUS_IDEA_AI_WORKFLOW_PACK_REGISTRATION_PROOF`,
 `LOTUS_IDEA_AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF_OUTPUT`, and
 `LOTUS_IDEA_AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF`, clearing only the matching
-aggregate proof blockers. Use these artifacts as CI or async operator evidence
+aggregate proof blockers where their evidence class permits. The mesh policy
+source contract adds supporting evidence only. Use these artifacts as CI or async operator evidence
 only; they are not live scheduler certification, runtime database
 configuration, production storage certification, production recovery readiness,
 platform mesh certification, product activation, Gateway/Workbench discovery,

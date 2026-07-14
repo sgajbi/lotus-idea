@@ -24,7 +24,7 @@ Blocking scaffold commands:
 15. `make ai-model-risk-operations-proof-contract-gate`
 16. `make implementation-truth-gate`
 17. `make data-mesh-contract-gate`
-18. `make mesh-policy-proof-contract-gate`
+18. `make mesh-policy-source-contract-proof-gate`
 19. `make opportunity-archetype-contract-gate`
 20. `make downstream-realization-contract-gate`
 21. `make migration-contract-gate`
@@ -84,7 +84,7 @@ Release and review evidence commands:
    Gateway/Workbench contract proof artifact, Gateway/Workbench discovery
    proof artifact, outbox broker source-contract proof artifact, default Advise proposal route
    proof artifact, default Manage action route proof artifact, default Report
-   intake route proof artifact, default mesh policy proof artifact, and default
+   intake route proof artifact, default mesh policy source-contract artifact, and default
    platform catalog source contract artifact, plus AI lineage store and AI
    workflow-pack registration proof artifacts and optional Core
    portfolio-state, Manage mandate, Advise mandate/restriction,
@@ -105,7 +105,7 @@ deterministic.
 the Makefile and GitHub workflow lanes still include architecture boundaries, maintainability,
 OpenAPI quality,
 supported-feature promotion control, endpoint certification, data-mesh contract validation,
-mesh policy proof contract validation,
+mesh policy source-contract validation,
 opportunity archetype contract validation,
 downstream realization contract validation, migration contract validation,
 migration execution dry-run validation,

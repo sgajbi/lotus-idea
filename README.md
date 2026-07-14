@@ -122,10 +122,10 @@ Authoritative contract files:
 - [docs/operations/mesh-readiness.md](docs/operations/mesh-readiness.md)
 - [Lotus Data Mesh Standard](../lotus-platform/docs/standards/Lotus%20Data%20Mesh%20Standard.md)
 
-Repo-owned mesh policy proof validates SLO, access, evidence, and readiness
-contracts only. Platform onboarding proof validates catalog visibility only.
-Neither proof certifies supported features, Workbench behavior, client
-publication, or external data-product activation by itself.
+The digest-bound mesh policy source contract validates repo-owned SLO, access,
+evidence, and readiness policy declarations only. The platform catalog source contract validates catalog visibility only. Neither source contract certifies
+policy operation, supported features, Workbench behavior, client publication,
+or external data-product activation.
 
 ## Quick Start
 

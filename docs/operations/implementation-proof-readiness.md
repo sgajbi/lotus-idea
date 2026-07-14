@@ -217,8 +217,8 @@ taxonomy and the #393 same-pattern campaign.
 | `LOTUS_IDEA_REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF` | Overrides the default generated report-intake route proof artifact passed into aggregate readiness. |
 | `LOTUS_IDEA_REPORT_MATERIALIZATION_SOURCE_CONTRACT_PROOF_OUTPUT` | Selects the default generated report materialization source-contract artifact consumed by aggregate readiness when no override is set. Defaults to `output/report/materialization-source-contract-proof.json`. |
 | `LOTUS_IDEA_REPORT_MATERIALIZATION_SOURCE_CONTRACT_PROOF` | Overrides the default report materialization source-contract artifact passed into aggregate readiness. |
-| `LOTUS_IDEA_MESH_POLICY_PROOF_OUTPUT` | Selects the default generated mesh policy proof artifact consumed by aggregate readiness when no override is set. Defaults to `output/data-mesh/mesh-policy-proof.json`. |
-| `LOTUS_IDEA_MESH_POLICY_PROOF` | Overrides the default generated mesh policy proof artifact passed into aggregate readiness. |
+| `LOTUS_IDEA_MESH_POLICY_SOURCE_CONTRACT_PROOF_OUTPUT` | Selects the default generated mesh policy source-contract artifact consumed by aggregate readiness when no override is set. Defaults to `output/data-mesh/mesh-policy-source-contract.json`. |
+| `LOTUS_IDEA_MESH_POLICY_SOURCE_CONTRACT_PROOF` | Overrides the default generated mesh policy source-contract artifact passed into aggregate readiness. |
 | `LOTUS_PLATFORM_ROOT` | Selects the sibling `lotus-platform` checkout used to generate the default source-safe platform catalog source contract. Defaults to `../lotus-platform`. |
 | `LOTUS_IDEA_PLATFORM_CATALOG_SOURCE_CONTRACT_PROOF_OUTPUT` | Selects the default generated platform catalog source contract artifact consumed by aggregate readiness when no override is set. Defaults to `output/data-mesh/platform-catalog-source-contract.json`. |
 | `LOTUS_IDEA_PLATFORM_CATALOG_SOURCE_CONTRACT_PROOF` | Overrides the default generated platform catalog source contract artifact passed into aggregate readiness. |
@@ -679,23 +679,27 @@ support. Missing sibling evidence writes an invalid non-proof artifact and
 keeps both blockers; drift in present sibling evidence remains a failing
 contract condition.
 
-Mesh policy proof is captured by `scripts/generate_mesh_policy_proof.py`. The
-repo-native `make implementation-proof-readiness-check` target now generates
-the default artifact under `LOTUS_IDEA_MESH_POLICY_PROOF_OUTPUT` and passes it
-into aggregate readiness when `LOTUS_IDEA_MESH_POLICY_PROOF` is not set. A valid
-artifact clears only the repo-owned policy blockers:
+Mesh policy source-contract evidence is captured by
+`scripts/data_mesh/generate_mesh_policy_source_contract.py`. The repo-native
+`make implementation-proof-readiness-check` target generates the default
+artifact under `LOTUS_IDEA_MESH_POLICY_SOURCE_CONTRACT_PROOF_OUTPUT` and passes
+it into aggregate readiness when
+`LOTUS_IDEA_MESH_POLICY_SOURCE_CONTRACT_PROOF` is not set. A valid current
+artifact adds a supporting evidence reference and clears no blocker. The
+following policy-certification blockers remain:
 
 1. `mesh_slo_policy_certification_missing`,
 2. `mesh_access_policy_certification_missing`,
 3. `mesh_evidence_policy_certification_missing`.
 
-It cites the mesh readiness, SLO, access, and evidence-pack policy contracts
-plus the repo-native gates. It does not certify the platform mesh, activate
-producer products, prove platform source-manifest/catalog inclusion,
-Gateway/Workbench discovery, client-ready publication, or supported-feature
-promotion. `make mesh-policy-proof-contract-gate` validates the artifact shape,
-source-safe evidence refs, and three-blocker clearance boundary before the proof
-is consumed by aggregate readiness.
+It digest-binds the mesh readiness, SLO, access, and evidence-pack policy
+sources and cites the repo-native gates. It does not certify policy execution,
+the platform mesh, producer activation, platform source-manifest/catalog
+inclusion, Gateway/Workbench discovery, deployment, production readiness,
+client publication, or supported-feature promotion.
+`make mesh-policy-source-contract-proof-gate` validates the closed artifact
+shape, authority digests, source-safe evidence refs, and zero-blocker-clearance
+boundary before consumption.
 
 AI lineage store proof is captured by
 `scripts/generate_ai_lineage_store_proof.py`. The repo-native
