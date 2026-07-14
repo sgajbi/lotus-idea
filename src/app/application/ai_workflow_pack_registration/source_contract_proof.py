@@ -21,9 +21,7 @@ AI_WORKFLOW_PACK_REGISTRATION_PROOF_SCHEMA_VERSION = (
     "lotus-idea.ai-workflow-pack-registration-proof.v2"
 )
 
-AI_WORKFLOW_PACK_REGISTRATION_REQUIRED_BLOCKER_EVIDENCE_CLASSES: tuple[
-    tuple[str, str], ...
-] = ()
+AI_WORKFLOW_PACK_REGISTRATION_REQUIRED_BLOCKER_EVIDENCE_CLASSES: tuple[tuple[str, str], ...] = ()
 AI_WORKFLOW_PACK_REGISTRATION_BLOCKERS_CLEARED: tuple[str, ...] = ()
 
 REMAINING_AI_WORKFLOW_PACK_REGISTRATION_BLOCKERS = (
@@ -169,13 +167,9 @@ def ai_workflow_pack_registration_proof_is_valid(payload: Mapping[str, Any]) -> 
         return False
     if payload.get("repository") != "lotus-idea":
         return False
-    if payload.get("proofType") != (
-        "lotus_ai_idea_workflow_pack_registration_source_contract"
-    ):
+    if payload.get("proofType") != ("lotus_ai_idea_workflow_pack_registration_source_contract"):
         return False
-    if payload.get("proofScope") != (
-        "source_safe_workflow_pack_registration_contract_only"
-    ):
+    if payload.get("proofScope") != ("source_safe_workflow_pack_registration_contract_only"):
         return False
     if payload.get("evidenceClass") != EvidenceClass.SOURCE_CONTRACT.value:
         return False

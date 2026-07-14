@@ -264,10 +264,7 @@ def _valid_ai_workflow_pack_registration_proof(tmp_path: Path) -> dict[str, obje
 
 def _load_generator_script() -> ModuleType:
     script_path = (
-        ROOT
-        / "scripts"
-        / "ai_workflow_pack_registration"
-        / "generate_source_contract_proof.py"
+        ROOT / "scripts" / "ai_workflow_pack_registration" / "generate_source_contract_proof.py"
     )
     spec = importlib.util.spec_from_file_location(
         "generate_ai_workflow_pack_registration_proof",
@@ -282,10 +279,7 @@ def _load_generator_script() -> ModuleType:
 
 def _load_contract_gate_script() -> ModuleType:
     script_path = (
-        ROOT
-        / "scripts"
-        / "ai_workflow_pack_registration"
-        / "source_contract_proof_gate.py"
+        ROOT / "scripts" / "ai_workflow_pack_registration" / "source_contract_proof_gate.py"
     )
     spec = importlib.util.spec_from_file_location(
         "ai_workflow_pack_registration_proof_contract_gate",
