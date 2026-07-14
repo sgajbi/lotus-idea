@@ -279,14 +279,14 @@ def _proof_artifact_inputs(args: argparse.Namespace) -> dict[str, ProofArtifactI
             ref_name="AI workflow-pack runtime execution proof artifact",
         ),
         "advise_proposal_route": _proof_artifact_input(
-            args.advise_proposal_route_proof,
-            artifact_name="Advise proposal route proof",
-            ref_name="Advise proposal route proof artifact",
+            args.advise_proposal_route_source_contract_proof,
+            artifact_name="Advise proposal route source contract",
+            ref_name="Advise proposal route source-contract artifact",
         ),
         "manage_action_route": _proof_artifact_input(
-            args.manage_action_route_proof,
-            artifact_name="Manage action route proof",
-            ref_name="Manage action route proof artifact",
+            args.manage_action_route_source_contract_proof,
+            artifact_name="Manage action route source contract",
+            ref_name="Manage action route source-contract artifact",
         ),
         "report_intake_route_source_contract": _proof_artifact_input(
             args.report_intake_route_source_contract_proof,

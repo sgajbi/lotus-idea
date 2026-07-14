@@ -21,7 +21,6 @@ from app.application.implementation_proof_consumption import (
     _apply_ai_lineage_store_proof,
     _apply_ai_workflow_pack_registration_proof,
     _apply_ai_workflow_pack_runtime_execution_proof,
-    _apply_downstream_route_contract_proof,
     _apply_mesh_policy_source_contract,
     _apply_platform_catalog_source_contract,
     _apply_report_materialization_source_contract,
@@ -75,7 +74,6 @@ from app.application.source_ingestion_readiness import (
     MANIFEST_ENV,
     SCHEDULED_WORKER_PROOF_ENV,
 )
-from app.application.downstream_route_contract_proof import ADVISE_ROUTE_BLOCKERS_CLEARED
 from app.application.workbench.read_path_source_contract import (
     build_workbench_read_path_source_contract_proof_payload,
 )
@@ -89,9 +87,9 @@ from tests.support.ai_lineage_store_proof import valid_ai_lineage_ci_execution_r
 from tests.unit.source_ingestion_proof_helpers import (
     valid_scheduled_worker_proof as _valid_scheduled_worker_proof,
 )
-from tests.support.downstream_route_contract_fixtures import (
-    valid_advise_route_proof,
-    valid_manage_route_proof,
+from tests.unit.downstream_realization.fixtures import (
+    valid_advise_route_source_contract,
+    valid_manage_route_source_contract,
 )
 from tests.support.proof_provenance import bound_aggregate_proof as _bound_aggregate_proof
 
@@ -139,68 +137,6 @@ def test_implementation_proof_application_is_noop_when_target_blocker_is_absent(
     result = apply_proof(capability, "new-proof.json")  # type: ignore[operator]
 
     assert result is capability
-
-
-def test_downstream_route_contract_proof_application_is_noop_for_other_capability() -> None:
-    capability = build_capability_readiness(
-        "ai-explanation",
-        "AI explanation",
-        readiness_status="blocked",
-        supportability_status="not_certified",
-        evidence_refs=("existing-proof.json",),
-        blockers=("advise_live_contract_proof_missing",),
-    )
-
-    result = _apply_downstream_route_contract_proof(
-        capability,
-        capability_id="downstream-realization",
-        blockers_cleared=ADVISE_ROUTE_BLOCKERS_CLEARED,
-        proof_ref="output/downstream/advise-proposal-route-proof.json",
-    )
-
-    assert result is capability
-
-
-def test_downstream_route_contract_proof_application_is_noop_without_matching_blocker() -> None:
-    capability = build_capability_readiness(
-        "downstream-realization",
-        "Downstream realization",
-        readiness_status="blocked",
-        supportability_status="not_certified",
-        evidence_refs=("existing-proof.json",),
-        blockers=("client_publication_authority_blocked",),
-    )
-
-    result = _apply_downstream_route_contract_proof(
-        capability,
-        capability_id="downstream-realization",
-        blockers_cleared=ADVISE_ROUTE_BLOCKERS_CLEARED,
-        proof_ref="output/downstream/advise-proposal-route-proof.json",
-    )
-
-    assert result is capability
-
-
-def test_downstream_route_contract_proof_application_preserves_refs_without_proof_ref() -> None:
-    capability = build_capability_readiness(
-        "downstream-realization",
-        "Downstream realization",
-        readiness_status="blocked",
-        supportability_status="not_certified",
-        evidence_refs=("existing-proof.json",),
-        blockers=("advise_live_contract_proof_missing", "client_publication_authority_blocked"),
-    )
-
-    result = _apply_downstream_route_contract_proof(
-        capability,
-        capability_id="downstream-realization",
-        blockers_cleared=ADVISE_ROUTE_BLOCKERS_CLEARED,
-        proof_ref=None,
-    )
-
-    assert "advise_live_contract_proof_missing" not in result.blockers
-    assert "client_publication_authority_blocked" in result.blockers
-    assert result.evidence_refs == ("existing-proof.json",)
 
 
 def test_report_materialization_source_contract_is_noop_for_other_capability() -> None:
@@ -932,29 +868,27 @@ def test_readiness_uses_report_intake_route_source_contract_proof_without_materi
     assert "output/report/intake-route-source-contract-proof.json" in downstream.evidence_refs
 
 
-def test_implementation_proof_readiness_uses_advise_and_manage_route_proofs_without_authority() -> (
-    None
-):
-    advise_proof_ref = "output/downstream/advise-proposal-route-proof.json"
-    manage_proof_ref = "output/downstream/manage-action-route-proof.json"
+def test_route_source_contracts_add_evidence_without_clearing_live_or_authority_blockers() -> None:
+    advise_proof_ref = "output/downstream/advise-route-source-contract-proof.json"
+    manage_proof_ref = "output/downstream/manage-route-source-contract-proof.json"
     snapshot = build_implementation_proof_readiness_snapshot(
         evaluated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
         repository=InMemoryIdeaRepository(),
         durable_storage_backed=False,
         advise_proposal_route_proof=_bound_aggregate_proof(
-            valid_advise_route_proof(),
+            valid_advise_route_source_contract(),
             advise_proof_ref,
         ),
         advise_proposal_route_proof_ref=advise_proof_ref,
         manage_action_route_proof=_bound_aggregate_proof(
-            valid_manage_route_proof(),
+            valid_manage_route_source_contract(),
             manage_proof_ref,
         ),
         manage_action_route_proof_ref=manage_proof_ref,
     )
 
-    assert "advise_live_contract_proof_missing" not in snapshot.overall_blockers
-    assert "manage_live_contract_proof_missing" not in snapshot.overall_blockers
+    assert "advise_live_contract_proof_missing" in snapshot.overall_blockers
+    assert "manage_live_contract_proof_missing" in snapshot.overall_blockers
     assert "suitability_policy_authority_remains_lotus_advise" in snapshot.overall_blockers
     assert "rebalance_execution_authority_remains_lotus_manage" in snapshot.overall_blockers
     downstream = next(
@@ -962,11 +896,11 @@ def test_implementation_proof_readiness_uses_advise_and_manage_route_proofs_with
         for capability in snapshot.capabilities
         if capability.capability_id == "downstream-realization"
     )
-    assert "advise_live_contract_proof_missing" not in downstream.blockers
-    assert "manage_live_contract_proof_missing" not in downstream.blockers
+    assert "advise_live_contract_proof_missing" in downstream.blockers
+    assert "manage_live_contract_proof_missing" in downstream.blockers
     assert "client_publication_authority_blocked" in downstream.blockers
-    assert "output/downstream/advise-proposal-route-proof.json" in downstream.evidence_refs
-    assert "output/downstream/manage-action-route-proof.json" in downstream.evidence_refs
+    assert advise_proof_ref in downstream.evidence_refs
+    assert manage_proof_ref in downstream.evidence_refs
 
 
 def test_source_contract_adds_evidence_without_clearing_runtime_or_publication_blockers() -> None:

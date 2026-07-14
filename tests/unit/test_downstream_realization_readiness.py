@@ -7,7 +7,7 @@ from typing import Any, cast
 from app.application.downstream_realization_readiness import (
     build_downstream_realization_readiness_snapshot,
 )
-from app.application.downstream_route_contract_proof import (
+from app.application.downstream_realization.route_source_contract import (
     ADVISE_PROPOSAL_ROUTE,
     MANAGE_ACTION_ROUTE,
 )
@@ -34,9 +34,9 @@ from app.domain import (
     SourceSystem,
 )
 from app.ports.idea_repository import DownstreamRealizationReadinessRepositorySummary
-from tests.support.downstream_route_contract_fixtures import (
-    valid_advise_route_proof,
-    valid_manage_route_proof,
+from tests.unit.downstream_realization.fixtures import (
+    valid_advise_route_source_contract,
+    valid_manage_route_source_contract,
 )
 
 
@@ -377,32 +377,30 @@ def test_materialization_source_contract_preserves_runtime_posture_and_adds_evid
     assert source_contract_ref in report_contract.evidence_refs
 
 
-def test_downstream_realization_readiness_uses_advise_and_manage_route_proofs_without_authority() -> (
-    None
-):
+def test_route_source_contracts_preserve_live_and_authority_blockers() -> None:
     snapshot = build_downstream_realization_readiness_snapshot(
         repository=InMemoryIdeaRepository(),
         durable_storage_backed=False,
-        advise_proposal_route_proof=valid_advise_route_proof(),
-        advise_proposal_route_proof_ref="output/downstream/advise-proposal-route-proof.json",
-        manage_action_route_proof=valid_manage_route_proof(),
-        manage_action_route_proof_ref="output/downstream/manage-action-route-proof.json",
+        advise_proposal_route_proof=valid_advise_route_source_contract(),
+        advise_proposal_route_proof_ref="output/downstream/advise-route-source-contract-proof.json",
+        manage_action_route_proof=valid_manage_route_source_contract(),
+        manage_action_route_proof_ref="output/downstream/manage-route-source-contract-proof.json",
     )
 
-    assert "advise_live_contract_proof_missing" not in snapshot.blockers
-    assert "manage_live_contract_proof_missing" not in snapshot.blockers
+    assert "advise_live_contract_proof_missing" in snapshot.blockers
+    assert "manage_live_contract_proof_missing" in snapshot.blockers
     assert "suitability_policy_authority_remains_lotus_advise" in snapshot.blockers
     assert "rebalance_execution_authority_remains_lotus_manage" in snapshot.blockers
     assert snapshot.readiness_status == "blocked"
     assert snapshot.supportability_status == "not_certified"
     capabilities = {capability.capability_id: capability for capability in snapshot.capabilities}
-    assert "advise_live_contract_proof_missing" not in (
+    assert "advise_live_contract_proof_missing" in (
         capabilities["advise-proposal-realization"].blockers
     )
     assert "suitability_policy_authority_remains_lotus_advise" in (
         capabilities["advise-proposal-realization"].blockers
     )
-    assert "manage_live_contract_proof_missing" not in (
+    assert "manage_live_contract_proof_missing" in (
         capabilities["manage-action-realization"].blockers
     )
     assert "rebalance_execution_authority_remains_lotus_manage" in (
@@ -413,10 +411,12 @@ def test_downstream_realization_readiness_uses_advise_and_manage_route_proofs_wi
     manage_contract = contracts["lotus-idea-to-lotus-manage-action-intake:v1"]
     assert advise_contract.target_route == ADVISE_PROPOSAL_ROUTE
     assert manage_contract.target_route == MANAGE_ACTION_ROUTE
-    assert advise_contract.route_fit_status == "route_foundation_proven_not_certified"
-    assert manage_contract.route_fit_status == "route_foundation_proven_not_certified"
-    assert "output/downstream/advise-proposal-route-proof.json" in (advise_contract.evidence_refs)
-    assert "output/downstream/manage-action-route-proof.json" in manage_contract.evidence_refs
+    assert "output/downstream/advise-route-source-contract-proof.json" in (
+        advise_contract.evidence_refs
+    )
+    assert "output/downstream/manage-route-source-contract-proof.json" in (
+        manage_contract.evidence_refs
+    )
 
 
 class _ProjectionOnlyDownstreamReadinessRepository:

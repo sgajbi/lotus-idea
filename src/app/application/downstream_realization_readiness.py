@@ -8,13 +8,11 @@ from app.application.downstream_realization_contracts import (
     DownstreamRealizationContractPlanRecord,
     load_downstream_realization_contract_plan,
 )
-from app.application.downstream_route_contract_proof import (
+from app.application.downstream_realization.route_source_contract import (
     ADVISE_PROPOSAL_ROUTE,
-    ADVISE_ROUTE_BLOCKERS_CLEARED,
     MANAGE_ACTION_ROUTE,
-    MANAGE_ROUTE_BLOCKERS_CLEARED,
-    advise_proposal_route_proof_is_valid,
-    manage_action_route_proof_is_valid,
+    advise_route_source_contract_is_valid,
+    manage_route_source_contract_is_valid,
 )
 from app.application.report.intake_route_source_contract import (
     report_intake_route_source_contract_proof_is_valid,
@@ -237,25 +235,25 @@ def _apply_available_downstream_proofs(
     tuple[DownstreamRealizationCapabilityReadiness, ...],
     tuple[DownstreamRealizationContractReadiness, ...],
 ]:
-    if advise_proposal_route_proof and advise_proposal_route_proof_is_valid(
+    if advise_proposal_route_proof and advise_route_source_contract_is_valid(
         advise_proposal_route_proof
     ):
-        capabilities, downstream_contracts = _apply_downstream_route_proof(
+        capabilities, downstream_contracts = _apply_route_source_contract(
             capabilities=capabilities,
             downstream_contracts=downstream_contracts,
             capability_id="advise-proposal-realization",
             contract_id="lotus-idea-to-lotus-advise-proposal-intake:v1",
-            blockers_cleared=ADVISE_ROUTE_BLOCKERS_CLEARED,
             proof_ref=advise_proposal_route_proof_ref,
             target_route=ADVISE_PROPOSAL_ROUTE,
         )
-    if manage_action_route_proof and manage_action_route_proof_is_valid(manage_action_route_proof):
-        capabilities, downstream_contracts = _apply_downstream_route_proof(
+    if manage_action_route_proof and manage_route_source_contract_is_valid(
+        manage_action_route_proof
+    ):
+        capabilities, downstream_contracts = _apply_route_source_contract(
             capabilities=capabilities,
             downstream_contracts=downstream_contracts,
             capability_id="manage-action-realization",
             contract_id="lotus-idea-to-lotus-manage-action-intake:v1",
-            blockers_cleared=MANAGE_ROUTE_BLOCKERS_CLEARED,
             proof_ref=manage_action_route_proof_ref,
             target_route=MANAGE_ACTION_ROUTE,
         )
@@ -302,13 +300,12 @@ def _apply_available_downstream_proofs(
     return capabilities, downstream_contracts
 
 
-def _apply_downstream_route_proof(
+def _apply_route_source_contract(
     *,
     capabilities: tuple[DownstreamRealizationCapabilityReadiness, ...],
     downstream_contracts: tuple[DownstreamRealizationContractReadiness, ...],
     capability_id: str,
     contract_id: str,
-    blockers_cleared: tuple[str, ...],
     proof_ref: str | None,
     target_route: str,
 ) -> tuple[
@@ -317,19 +314,17 @@ def _apply_downstream_route_proof(
 ]:
     return (
         tuple(
-            _apply_route_proof_to_capability(
+            _apply_route_source_contract_to_capability(
                 capability,
                 capability_id=capability_id,
-                blockers_cleared=blockers_cleared,
                 proof_ref=proof_ref,
             )
             for capability in capabilities
         ),
         tuple(
-            _apply_route_proof_to_contract(
+            _apply_route_source_contract_to_contract(
                 contract,
                 contract_id=contract_id,
-                blockers_cleared=blockers_cleared,
                 proof_ref=proof_ref,
                 target_route=target_route,
             )
@@ -429,16 +424,14 @@ def _downstream_contract_from_plan(
     )
 
 
-def _apply_route_proof_to_capability(
+def _apply_route_source_contract_to_capability(
     capability: DownstreamRealizationCapabilityReadiness,
     *,
     capability_id: str,
-    blockers_cleared: tuple[str, ...],
     proof_ref: str | None,
 ) -> DownstreamRealizationCapabilityReadiness:
     if capability.capability_id != capability_id:
         return capability
-    blockers_to_clear = set(blockers_cleared)
     evidence_refs = capability.evidence_refs
     if proof_ref:
         evidence_refs = tuple(dict.fromkeys((*evidence_refs, proof_ref)))
@@ -447,24 +440,18 @@ def _apply_route_proof_to_capability(
         capability.name,
         capability.source_authority,
         evidence_refs=evidence_refs,
-        blockers=tuple(
-            blocker for blocker in capability.blockers if blocker not in blockers_to_clear
-        ),
+        blockers=capability.blockers,
     )
 
 
-def _apply_route_proof_to_contract(
+def _apply_route_source_contract_to_contract(
     contract: DownstreamRealizationContractReadiness,
     *,
     contract_id: str,
-    blockers_cleared: tuple[str, ...],
     proof_ref: str | None,
     target_route: str,
 ) -> DownstreamRealizationContractReadiness:
     if contract.contract_id != contract_id:
-        return contract
-    blockers_to_clear = set(blockers_cleared)
-    if not blockers_to_clear.intersection(contract.blockers):
         return contract
     evidence_refs = contract.evidence_refs
     if proof_ref:
@@ -474,12 +461,10 @@ def _apply_route_proof_to_contract(
         owner_repository=contract.owner_repository,
         source_authority=contract.source_authority,
         target_route=target_route,
-        route_fit_status="route_foundation_proven_not_certified",
+        route_fit_status=contract.route_fit_status,
         adapter_status=contract.adapter_status,
         evidence_refs=evidence_refs,
-        blockers=tuple(
-            blocker for blocker in contract.blockers if blocker not in blockers_to_clear
-        ),
+        blockers=contract.blockers,
     )
 
 
