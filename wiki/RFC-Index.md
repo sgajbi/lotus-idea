@@ -165,6 +165,14 @@ Current RFC-0002 implementation-start baseline:
    v2 consumer artifact is `source_contract` evidence, records authority
    boundaries, and clears no runtime blocker. Observed consumer execution
    remains required for `downstream_consumer_runtime_proof_missing`.
+   Gateway/Workbench discovery declarations follow the same rule after #408:
+   PR #409 merged and exact-main validation passed at `5a12dea7`; source
+   evidence cannot prove publication, serving, consumption, or discovery.
+   Issue #411 now applies the taxonomy to AI model-risk operations. Dashboard,
+   alert-rule, runbook, and validator source may be valid while dashboard
+   provisioning/query execution and alert-rule loading/evaluation/delivery
+   remain blocked. The capability-owned source-contract proof clears no
+   aggregate blocker and promotes no supported feature.
 11. Slice 10 partially implements certified internal API foundations for
    high-cash evaluation, high-cash evaluate-and-persist, candidate lifecycle
    transitions, source-safe candidate detail, candidate evidence replay,

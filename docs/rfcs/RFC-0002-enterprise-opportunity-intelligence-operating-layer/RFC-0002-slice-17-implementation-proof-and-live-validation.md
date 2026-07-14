@@ -199,8 +199,8 @@ Prove the complete supported opportunity journey end to end.
     `contracts/observability/lotus-idea-ai-model-risk-operations.v1.json` and
     `make ai-model-risk-ops-contract-gate`. This makes the not-certified
     dashboard-control and alert-candidate posture visible in proof-readiness
-    evidence without clearing the certified dashboard, alert, `lotus-ai`
-    runtime, runtime trust telemetry, Workbench, or
+    evidence without clearing dashboard provisioning, alert-rule runtime,
+    `lotus-ai` runtime, runtime trust telemetry, Workbench, or
     supported-feature blockers.
 20. `src/app/application/ai_lineage_store_proof.py`,
     `scripts/generate_ai_lineage_store_proof.py`, and
@@ -265,7 +265,7 @@ Prove the complete supported opportunity journey end to end.
     `workflow_pack_runtime_contract_not_certified`, while preserving
     `lotus-ai` runtime execution, provider invocation, runtime trust telemetry,
     Workbench, client-publication, and supported-feature blockers. Model-risk
-    dashboard and alert artifact certification is handled by the separate
+    dashboard and alert source validation is handled by the separate
     model-risk operations proof gate.
 26. `src/app/application/ai_runtime_proof/`,
     `src/app/ports/lotus_ai_runtime.py`,
@@ -280,7 +280,7 @@ Prove the complete supported opportunity journey end to end.
     `lotus_ai_live_provider_execution_missing`, preserving workflow-pack
     registration, provider rollout, runtime trust telemetry, Workbench,
     client-publication, and supported-feature blockers.
-    Model-risk dashboard and alert artifact certification is handled by the
+    Model-risk dashboard and alert source validation is handled by the
     separate model-risk operations proof gate.
 27. The aggregate readiness diagnostic now includes an
     `opportunity-archetype-scenarios` capability built from
@@ -459,8 +459,9 @@ without relying on chat memory.
    `lotus-ai` workflow-pack registration, actual deterministic runtime
    execution, live-provider execution, runtime trust telemetry, Workbench proof,
    and supported-feature promotion remain pending unless corresponding proof
-   artifacts are present and valid. Repo-owned model-risk dashboard/alert artifact
-   certification is now covered by the model-risk operations proof gate.
+   artifacts are present and valid. Repo-owned model-risk dashboard/alert source
+   validation is now covered by the model-risk operations proof gate; runtime
+   provisioning, evaluation, and delivery remain blocked.
 10. AI workflow-pack registration proof is now explicit in aggregate readiness
    evidence, but it proves only the governed sibling registration,
    binding, queue policy, supportability, and test coverage for

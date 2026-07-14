@@ -236,14 +236,15 @@ Implementation evidence:
     Gateway/Workbench, or supported-feature claims.
 34. `contracts/observability/lotus-idea-ai-model-risk-operations.v1.json`,
     `scripts/ai_model_risk_operations_contract_gate.py`,
-    `scripts/ai_model_risk_operations_proof_contract_gate.py`,
+    `scripts/ai_model_risk_operations/source_contract_proof_gate.py`,
     `monitoring/grafana/dashboards/lotus-idea-ai-model-risk-operations.json`,
     `monitoring/prometheus/rules/lotus-idea-ai-model-risk-operations.rules.yml`,
     and `make ai-model-risk-operations-proof-contract-gate` now define and
-    enforce certified repo-owned AI model-risk dashboard, alert-rule, and
-    runbook artifacts for implemented AI explanation and readiness telemetry.
-    The proof blocks premature `lotus-ai`, Workbench, client-ready, data-mesh,
-    or supported-feature certification claims.
+    validate repo-owned AI model-risk dashboard, alert-rule, and runbook source
+    contracts for implemented AI explanation and readiness telemetry. The v2
+    proof is `source_contract` evidence, clears no aggregate blocker, and blocks
+    premature dashboard-runtime, alert-runtime, `lotus-ai`, Workbench,
+    client-ready, data-mesh, or supported-feature certification claims.
 
 This foundation remains internal and `foundation_only`. It does not prove
 production durable-storage certification, data-product certification,
@@ -264,7 +265,8 @@ fail-closed against the persisted candidate scope, and the bounded Gateway
 candidate detail route forwards those headers without interpreting them.
 The AI explanation readiness diagnostic is explicitly `not_certified` until
 `lotus-ai` runtime workflow execution, workflow-pack runtime certification,
-certified model-risk operations dashboards and alerts, runtime trust telemetry,
+model-risk dashboard provisioning/query proof, alert-rule
+loading/evaluation/delivery proof, runtime trust telemetry,
 and Workbench proof exist. The current AI lineage store proof clears only the
 aggregate lineage-store blocker, and the current AI model-risk operations
 contract narrows the prior dashboard gap to a not-certified contract posture;
@@ -512,10 +514,11 @@ OCI build labels, release evidence, signature/attestation subjects, Kubernetes
 reference, and the exact digest-pinned runtime. Mainline publication evidence
 is still required before the issue can close.
 
-1. Certify dashboard and alert references only after metric families are stable
-   and implemented. The operation metric catalog and AI model-risk operations
-   contract now prove code-owned, bounded, not-certified telemetry/control
-   posture, but dashboards and alerts remain uncertified.
+1. Certify dashboard and alert runtime behavior only after the source-valid
+   artifacts are provisioned and environment-bound query, rule-evaluation, and
+   delivery evidence exists. The operation metric catalog and AI model-risk
+   operations source contract prove only code-owned, bounded telemetry/control
+   source posture.
 2. Add live runtime source-readiness proof after Core source adapters and
    deployable worker runtime exist.
 3. Add product-scope entitlement proof for Workbench and any broader Gateway

@@ -704,8 +704,15 @@ Metrics and operation-event vocabulary are governed by
 `contracts/observability/lotus-idea-operation-metrics.v1.json`.
 
 AI model-risk operations proof is limited to implemented AI explanation
-telemetry. It does not certify `lotus-ai` runtime execution, provider calls,
-Workbench behavior, data-mesh certification, or supported-feature promotion.
+telemetry and is classified as `source_contract`. Keep its builder, thin
+generator, gate, and focused tests under capability-oriented
+`ai_model_risk_operations/` packages. A valid artifact adds an aggregate
+evidence reference but clears no blocker and must retain dashboard provisioning
+and alert-rule evaluation/delivery blockers. It does not certify deployment,
+`lotus-ai` runtime execution, provider calls, Workbench behavior, data-mesh
+certification, or supported-feature promotion. This is internal design
+modularity; no runtime split is justified without workload, failure-isolation,
+ownership, security, or operability evidence.
 
 AI workflow-pack runtime evidence is a separate v2 execution-receipt boundary.
 `app.application.ai_runtime_proof` builds the synthetic redacted request and
@@ -1121,10 +1128,12 @@ Recent issue-derived patterns to preserve:
 23. supportability, readiness, health-state, and data-quality vocabulary must
     not be treated as freshness-current evidence unless a source-owned freshness
     field explicitly uses governed freshness vocabulary.
-24. dashboard and alert certification should be pattern-backed with a
+24. dashboard and alert source-contract validation should be pattern-backed with a
     machine-readable contract, concrete Grafana/Prometheus/runbook artifacts,
-    proof gates, drift tests, and explicit non-proof boundaries; do not rely on
-    a metric catalog alone for operator visibility claims.
+    proof gates, drift tests, and explicit non-proof boundaries. Runtime
+    certification additionally requires environment-bound provisioning, query,
+    rule-evaluation, delivery, and deployment evidence; do not rely on a metric
+    catalog or static files alone for operator visibility claims.
 25. mutating workflow idempotency must be true in both runtime behavior and
     OpenAPI contract truth. Routes that require `Idempotency-Key` should use the
     shared `app.api.idempotency` route list and validation helpers, and

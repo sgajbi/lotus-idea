@@ -91,9 +91,11 @@ explanation evaluator accepts only the governed
 request identity to proof identity `idea_explanation.pack@v1`; arbitrary
 caller-supplied workflow-pack identities are rejected before candidate lookup
 or lineage persistence. The AI
-model-risk operations proof certifies repo-owned dashboard, alert-rule, and
-runbook artifacts against implemented operation telemetry without certifying
-Workbench, client-ready publication, or supported-feature promotion. Source-safe AI explanation lineage persistence has
+model-risk operations source-contract proof validates repo-owned dashboard,
+alert-rule, and runbook source against implemented operation telemetry. It
+clears no readiness blocker and does not prove provisioning, rule evaluation,
+alert delivery, Workbench behavior, client-ready publication, or
+supported-feature promotion. Source-safe AI explanation lineage persistence has
 PostgreSQL runtime proof for accepted, replayed, and conflicting request ids,
 and the readiness diagnostic reports durable lineage backing when the active
 repository is durable. That proof is repository durability evidence, not
