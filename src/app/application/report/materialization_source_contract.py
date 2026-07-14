@@ -11,20 +11,28 @@ from app.application.source_safe_cross_repo_proof import (
     is_timezone_aware_datetime_text,
     required_file_evidence_present,
 )
+from app.application.proof_provenance import AGGREGATE_PROOF_PROVENANCE_KEY
+from app.domain.proof_evidence import EvidenceClass
 
 _is_timezone_aware_datetime_text = is_timezone_aware_datetime_text
 _required_file_evidence_present = required_file_evidence_present
 
-REPORT_MATERIALIZATION_PROOF_ENV = "LOTUS_IDEA_REPORT_MATERIALIZATION_PROOF"
-REPORT_MATERIALIZATION_PROOF_SCHEMA_VERSION = "lotus-idea.report-materialization-proof.v1"
+REPORT_MATERIALIZATION_SOURCE_CONTRACT_ENV = (
+    "LOTUS_IDEA_REPORT_MATERIALIZATION_SOURCE_CONTRACT_PROOF"
+)
+REPORT_MATERIALIZATION_SOURCE_CONTRACT_SCHEMA_VERSION = (
+    "lotus-idea.report-materialization-source-contract.v2"
+)
 
-REPORT_MATERIALIZATION_BLOCKERS_CLEARED = (
+REPORT_MATERIALIZATION_BLOCKERS_CLEARED: tuple[str, ...] = ()
+
+REMAINING_REPORT_MATERIALIZATION_BLOCKERS = (
     "report_evidence_pack_live_materialization_proof_missing",
     "rendered_output_creation_missing",
     "archive_record_creation_missing",
+    "client_publication_authority_blocked",
+    "supported_feature_promotion_missing",
 )
-
-REMAINING_REPORT_MATERIALIZATION_BLOCKERS = ("client_publication_authority_blocked",)
 
 REPORT_MATERIALIZATION_ROUTE = "POST /reports/idea-evidence-packs/materializations"
 
@@ -46,8 +54,40 @@ REQUIRED_REPORT_MATERIALIZATION_EVIDENCE_REFS = (
     "GET /api/v1/implementation-proof/readiness",
 )
 
+_SOURCE_CONTRACT_FIELDS = frozenset(
+    {
+        "schemaVersion",
+        "repository",
+        "generatedAtUtc",
+        "proofType",
+        "proofScope",
+        "evidenceClass",
+        "sourceContractValid",
+        "aggregateBlockersCleared",
+        "evidenceRefs",
+        "targetRoute",
+        "contractChecks",
+        "remainingCertificationBlockers",
+        "reportMaterializationProven",
+        "renderedOutputCreated",
+        "archiveRecordCreated",
+        "clientPublicationAuthorityGranted",
+        "supportedFeaturePromoted",
+        "certificationClosed",
+    }
+)
 
-def build_report_materialization_proof_payload(
+_SOURCE_CONTRACT_CHECK_FIELDS = frozenset(
+    {
+        "timezoneAwareGeneratedAtUtc",
+        "fileEvidencePresent",
+        "reportContractDeclaresMaterialization",
+        "reportContractPreservesNonProofBoundaries",
+    }
+)
+
+
+def build_report_materialization_source_contract_payload(
     *,
     generated_at_utc: datetime,
     repository_root: Path,
@@ -67,75 +107,77 @@ def build_report_materialization_proof_payload(
         evidence_refs=REQUIRED_REPORT_MATERIALIZATION_EVIDENCE_REFS,
         non_file_ref_prefixes=("GET ", "POST ", "make "),
     )
-    report_contract_proves_materialization = _report_contract_proves_materialization(contract)
+    report_contract_declares_materialization = _report_contract_declares_materialization(contract)
     report_contract_preserves_non_proof_boundaries = (
         _report_contract_preserves_non_proof_boundaries(contract)
     )
-    report_contract_retains_publication_blocker = _report_contract_retains_publication_blocker(
-        contract
-    )
-    proof_valid = (
+    source_contract_valid = (
         timezone_aware_generated_at_utc
         and file_evidence_present
-        and report_contract_proves_materialization
+        and report_contract_declares_materialization
         and report_contract_preserves_non_proof_boundaries
-        and report_contract_retains_publication_blocker
     )
     return {
-        "schemaVersion": REPORT_MATERIALIZATION_PROOF_SCHEMA_VERSION,
+        "schemaVersion": REPORT_MATERIALIZATION_SOURCE_CONTRACT_SCHEMA_VERSION,
         "repository": "lotus-idea",
         "generatedAtUtc": generated_at_utc.isoformat(),
-        "proofType": "lotus_report_idea_evidence_materialization_contract",
-        "proofScope": "source_safe_report_render_archive_materialization",
-        "reportMaterializationProofValid": proof_valid,
+        "proofType": "lotus_report_idea_evidence_materialization_source_contract",
+        "proofScope": "report_materialization_declaration_and_contract_compatibility",
+        "evidenceClass": EvidenceClass.SOURCE_CONTRACT.value,
+        "sourceContractValid": source_contract_valid,
         "aggregateBlockersCleared": REPORT_MATERIALIZATION_BLOCKERS_CLEARED,
         "evidenceRefs": REQUIRED_REPORT_MATERIALIZATION_EVIDENCE_REFS,
         "targetRoute": REPORT_MATERIALIZATION_ROUTE,
-        "proofChecks": {
+        "contractChecks": {
             "timezoneAwareGeneratedAtUtc": timezone_aware_generated_at_utc,
             "fileEvidencePresent": file_evidence_present,
-            "reportContractProvesMaterialization": report_contract_proves_materialization,
+            "reportContractDeclaresMaterialization": report_contract_declares_materialization,
             "reportContractPreservesNonProofBoundaries": (
                 report_contract_preserves_non_proof_boundaries
             ),
-            "reportContractRetainsPublicationBlocker": (
-                report_contract_retains_publication_blocker
-            ),
         },
         "remainingCertificationBlockers": REMAINING_REPORT_MATERIALIZATION_BLOCKERS,
-        "reportMaterializationProven": True,
-        "renderedOutputCreated": True,
-        "archiveRecordCreated": True,
+        "reportMaterializationProven": False,
+        "renderedOutputCreated": False,
+        "archiveRecordCreated": False,
         "clientPublicationAuthorityGranted": False,
         "supportedFeaturePromoted": False,
-        "proofClosed": False,
+        "certificationClosed": False,
     }
 
 
-def report_materialization_proof_is_valid(payload: Mapping[str, Any]) -> bool:
-    if payload.get("schemaVersion") != REPORT_MATERIALIZATION_PROOF_SCHEMA_VERSION:
+def report_materialization_source_contract_is_valid(payload: Mapping[str, Any]) -> bool:
+    payload_fields = set(payload)
+    if payload_fields not in (
+        _SOURCE_CONTRACT_FIELDS,
+        _SOURCE_CONTRACT_FIELDS | {AGGREGATE_PROOF_PROVENANCE_KEY},
+    ):
+        return False
+    if payload.get("schemaVersion") != REPORT_MATERIALIZATION_SOURCE_CONTRACT_SCHEMA_VERSION:
         return False
     if payload.get("repository") != "lotus-idea":
         return False
-    if payload.get("proofType") != "lotus_report_idea_evidence_materialization_contract":
+    if payload.get("proofType") != "lotus_report_idea_evidence_materialization_source_contract":
         return False
-    if payload.get("proofScope") != "source_safe_report_render_archive_materialization":
+    if payload.get("proofScope") != "report_materialization_declaration_and_contract_compatibility":
         return False
-    if payload.get("reportMaterializationProofValid") is not True:
+    if payload.get("evidenceClass") != EvidenceClass.SOURCE_CONTRACT.value:
+        return False
+    if payload.get("sourceContractValid") is not True:
         return False
     if payload.get("targetRoute") != REPORT_MATERIALIZATION_ROUTE:
         return False
-    if payload.get("reportMaterializationProven") is not True:
+    if payload.get("reportMaterializationProven") is not False:
         return False
-    if payload.get("renderedOutputCreated") is not True:
+    if payload.get("renderedOutputCreated") is not False:
         return False
-    if payload.get("archiveRecordCreated") is not True:
+    if payload.get("archiveRecordCreated") is not False:
         return False
     if payload.get("clientPublicationAuthorityGranted") is not False:
         return False
     if payload.get("supportedFeaturePromoted") is not False:
         return False
-    if payload.get("proofClosed") is not False:
+    if payload.get("certificationClosed") is not False:
         return False
     if not _is_timezone_aware_datetime_text(payload.get("generatedAtUtc")):
         return False
@@ -149,29 +191,34 @@ def report_materialization_proof_is_valid(payload: Mapping[str, Any]) -> bool:
         REMAINING_REPORT_MATERIALIZATION_BLOCKERS
     ):
         return False
-    proof_checks = payload.get("proofChecks")
-    if not isinstance(proof_checks, Mapping):
+    contract_checks = payload.get("contractChecks")
+    if not isinstance(contract_checks, Mapping):
+        return False
+    if set(contract_checks) != _SOURCE_CONTRACT_CHECK_FIELDS:
         return False
     return all(
-        proof_checks.get(check_name) is True
+        contract_checks.get(check_name) is True
         for check_name in (
             "timezoneAwareGeneratedAtUtc",
             "fileEvidencePresent",
-            "reportContractProvesMaterialization",
+            "reportContractDeclaresMaterialization",
             "reportContractPreservesNonProofBoundaries",
-            "reportContractRetainsPublicationBlocker",
         )
     )
 
 
-def load_report_materialization_proof_from_env() -> tuple[dict[str, Any] | None, str | None]:
-    path_value = os.getenv(REPORT_MATERIALIZATION_PROOF_ENV)
+def load_report_materialization_source_contract_from_env() -> (
+    tuple[dict[str, Any] | None, str | None]
+):
+    path_value = os.getenv(REPORT_MATERIALIZATION_SOURCE_CONTRACT_ENV)
     if not path_value:
         return None, None
     path = Path(path_value)
     payload = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(payload, dict):
-        raise ValueError(f"{REPORT_MATERIALIZATION_PROOF_ENV} must reference a JSON object")
+        raise ValueError(
+            f"{REPORT_MATERIALIZATION_SOURCE_CONTRACT_ENV} must reference a JSON object"
+        )
     return payload, _source_safe_artifact_ref(path)
 
 
@@ -186,10 +233,10 @@ def _source_safe_artifact_ref(path: Path) -> str:
     try:
         return path.resolve().relative_to(Path.cwd().resolve()).as_posix()
     except ValueError:
-        return "report materialization proof artifact"
+        return "report materialization source contract artifact"
 
 
-def _report_contract_proves_materialization(payload: dict[str, Any] | None) -> bool:
+def _report_contract_declares_materialization(payload: dict[str, Any] | None) -> bool:
     if payload is None:
         return False
     return (
@@ -200,10 +247,6 @@ def _report_contract_proves_materialization(payload: dict[str, Any] | None) -> b
         and payload.get("owned_product") == "lotus-report:ClientReportEvidencePack:v1"
         and payload.get("lifecycle_status") == "implemented"
         and payload.get("supportability_status") == "not_certified"
-        and payload.get("route_existence_proven") is True
-        and payload.get("materialization_proven") is True
-        and payload.get("rendered_output_creation_proven") is True
-        and payload.get("archive_record_creation_proven") is True
         and payload.get("client_publication_authority_granted") is False
         and payload.get("supported_feature_promoted") is False
         and payload.get("target_route") == REPORT_MATERIALIZATION_ROUTE
@@ -215,19 +258,8 @@ def _report_contract_preserves_non_proof_boundaries(payload: dict[str, Any] | No
         return False
     boundaries = " ".join(str(boundary) for boundary in payload.get("non_proof_boundaries", ()))
     required_fragments = (
-        "Proves report-owned materialization",
         "Does not grant suitability",
         "Does not recompute lotus-idea evidence",
         "Does not promote a supported feature",
     )
     return all(fragment in boundaries for fragment in required_fragments)
-
-
-def _report_contract_retains_publication_blocker(payload: dict[str, Any] | None) -> bool:
-    if payload is None:
-        return False
-    blockers = set(payload.get("certification_blockers", ()))
-    return blockers == {
-        "client_publication_authority_blocked",
-        "supported_feature_promotion_missing",
-    }

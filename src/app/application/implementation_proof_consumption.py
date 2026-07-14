@@ -32,6 +32,7 @@ from app.application.workbench.contract_proof import (
 )
 from app.application.implementation_proof_capability_updates import (
     apply_blocker_proof,
+    apply_supporting_evidence,
     build_capability_readiness,
 )
 from app.application.implementation_proof_models import (
@@ -62,8 +63,7 @@ from app.application.platform_mesh_onboarding_proof import (
 )
 from app.application.proof_provenance import aggregate_proof_artifact_is_current
 from app.application.report.materialization_source_contract import (
-    REPORT_MATERIALIZATION_BLOCKERS_CLEARED,
-    report_materialization_proof_is_valid,
+    report_materialization_source_contract_is_valid,
 )
 from app.application.runtime_trust_telemetry_proof import (
     runtime_trust_telemetry_proof_is_valid,
@@ -113,8 +113,8 @@ def _apply_available_proofs(
     advise_proposal_route_proof_ref: str | None,
     manage_action_route_proof: Mapping[str, object] | None,
     manage_action_route_proof_ref: str | None,
-    report_materialization_proof: Mapping[str, object] | None,
-    report_materialization_proof_ref: str | None,
+    report_materialization_source_contract_proof: Mapping[str, object] | None,
+    report_materialization_source_contract_proof_ref: str | None,
     mesh_policy_proof: Mapping[str, object] | None,
     mesh_policy_proof_ref: str | None,
     outbox_broker_source_contract_proof: Mapping[str, object] | None,
@@ -194,8 +194,10 @@ def _apply_available_proofs(
         advise_proposal_route_proof_ref=advise_proposal_route_proof_ref,
         manage_action_route_proof=manage_action_route_proof,
         manage_action_route_proof_ref=manage_action_route_proof_ref,
-        report_materialization_proof=report_materialization_proof,
-        report_materialization_proof_ref=report_materialization_proof_ref,
+        report_materialization_source_contract_proof=report_materialization_source_contract_proof,
+        report_materialization_source_contract_proof_ref=(
+            report_materialization_source_contract_proof_ref
+        ),
     )
     capabilities = _apply_platform_surface_and_operator_proofs(
         capabilities=capabilities,
@@ -343,8 +345,8 @@ def _apply_downstream_proofs(
     advise_proposal_route_proof_ref: str | None,
     manage_action_route_proof: Mapping[str, object] | None,
     manage_action_route_proof_ref: str | None,
-    report_materialization_proof: Mapping[str, object] | None,
-    report_materialization_proof_ref: str | None,
+    report_materialization_source_contract_proof: Mapping[str, object] | None,
+    report_materialization_source_contract_proof_ref: str | None,
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
     if _proof_can_clear_blockers(
         advise_proposal_route_proof,
@@ -376,14 +378,17 @@ def _apply_downstream_proofs(
             )
             for capability in capabilities
         )
-    if _proof_can_clear_blockers(
-        report_materialization_proof,
-        report_materialization_proof_ref,
+    if _proof_is_valid_and_current(
+        report_materialization_source_contract_proof,
+        report_materialization_source_contract_proof_ref,
         evaluated_at_utc=evaluated_at_utc,
-        proof_is_valid=report_materialization_proof_is_valid,
+        proof_is_valid=report_materialization_source_contract_is_valid,
     ):
         capabilities = tuple(
-            _apply_report_materialization_proof(capability, report_materialization_proof_ref)
+            _apply_report_materialization_source_contract(
+                capability,
+                report_materialization_source_contract_proof_ref,
+            )
             for capability in capabilities
         )
     return capabilities
@@ -609,15 +614,14 @@ def _apply_downstream_route_contract_proof(
     )
 
 
-def _apply_report_materialization_proof(
+def _apply_report_materialization_source_contract(
     capability: ImplementationProofCapabilityReadiness,
-    report_materialization_proof_ref: str | None,
+    report_materialization_source_contract_ref: str | None,
 ) -> ImplementationProofCapabilityReadiness:
-    return apply_blocker_proof(
+    return apply_supporting_evidence(
         capability,
         capability_ids=("downstream-realization",),
-        blockers_cleared=REPORT_MATERIALIZATION_BLOCKERS_CLEARED,
-        proof_ref=report_materialization_proof_ref,
+        evidence_ref=report_materialization_source_contract_ref,
     )
 
 

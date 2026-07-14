@@ -20,11 +20,12 @@ except ModuleNotFoundError:
 from app.application.report.materialization_source_contract import (  # noqa: E402
     REMAINING_REPORT_MATERIALIZATION_BLOCKERS,
     REPORT_MATERIALIZATION_BLOCKERS_CLEARED,
-    REPORT_MATERIALIZATION_PROOF_SCHEMA_VERSION,
+    REPORT_MATERIALIZATION_SOURCE_CONTRACT_SCHEMA_VERSION,
     REQUIRED_REPORT_MATERIALIZATION_EVIDENCE_REFS,
-    build_report_materialization_proof_payload,
-    report_materialization_proof_is_valid,
+    build_report_materialization_source_contract_payload,
+    report_materialization_source_contract_is_valid,
 )
+from app.domain.proof_evidence import EvidenceClass  # noqa: E402
 
 FORBIDDEN_KEYS = {
     "accountId",
@@ -62,32 +63,34 @@ _validate_forbidden_content = forbidden_content_validator(
 )
 
 
-def validate_report_materialization_proof_contract() -> list[str]:
+def validate_report_materialization_source_contract() -> list[str]:
     errors: list[str] = []
-    with TemporaryDirectory(prefix="lotus-idea-report-materialization-proof-") as temp_dir:
-        proof = build_report_materialization_proof_payload(
+    with TemporaryDirectory(prefix="lotus-idea-report-materialization-source-") as temp_dir:
+        artifact = build_report_materialization_source_contract_payload(
             generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
             repository_root=ROOT,
             report_root=_write_report_fixture(Path(temp_dir)),
         )
-    if proof.get("schemaVersion") != REPORT_MATERIALIZATION_PROOF_SCHEMA_VERSION:
+    if artifact.get("schemaVersion") != REPORT_MATERIALIZATION_SOURCE_CONTRACT_SCHEMA_VERSION:
         errors.append(
-            "report materialization proof schema must be "
-            f"{REPORT_MATERIALIZATION_PROOF_SCHEMA_VERSION}"
+            "report materialization source-contract schema must be "
+            f"{REPORT_MATERIALIZATION_SOURCE_CONTRACT_SCHEMA_VERSION}"
         )
-    if tuple(proof.get("evidenceRefs") or ()) != REQUIRED_REPORT_MATERIALIZATION_EVIDENCE_REFS:
-        errors.append("report materialization proof evidence refs must match the contract")
-    if tuple(proof.get("aggregateBlockersCleared") or ()) != (
+    if artifact.get("evidenceClass") != EvidenceClass.SOURCE_CONTRACT.value:
+        errors.append("report materialization artifact must declare source_contract evidence")
+    if tuple(artifact.get("evidenceRefs") or ()) != REQUIRED_REPORT_MATERIALIZATION_EVIDENCE_REFS:
+        errors.append("report materialization source-contract refs must match the contract")
+    if tuple(artifact.get("aggregateBlockersCleared") or ()) != (
         REPORT_MATERIALIZATION_BLOCKERS_CLEARED
     ):
-        errors.append("report materialization proof must clear only materialization blockers")
-    if tuple(proof.get("remainingCertificationBlockers") or ()) != (
+        errors.append("report materialization source contract must clear no blockers")
+    if tuple(artifact.get("remainingCertificationBlockers") or ()) != (
         REMAINING_REPORT_MATERIALIZATION_BLOCKERS
     ):
-        errors.append("report materialization proof must retain publication blockers")
-    if not report_materialization_proof_is_valid(proof):
-        errors.append("report materialization proof must validate against report contract truth")
-    validate_forbidden_content(proof, errors, FORBIDDEN_KEYS, FORBIDDEN_TEXT_FRAGMENTS)
+        errors.append("report materialization source contract must retain runtime blockers")
+    if not report_materialization_source_contract_is_valid(artifact):
+        errors.append("report materialization artifact must validate as a source contract")
+    validate_forbidden_content(artifact, errors, FORBIDDEN_KEYS, FORBIDDEN_TEXT_FRAGMENTS)
     return errors
 
 
@@ -143,11 +146,11 @@ def _report_contract_payload() -> dict[str, object]:
 
 
 def main() -> int:
-    errors = validate_report_materialization_proof_contract()
+    errors = validate_report_materialization_source_contract()
     if errors:
         print("\n".join(errors))
         return 1
-    print("Report materialization proof contract gate passed")
+    print("Report materialization source contract gate passed")
     return 0
 
 

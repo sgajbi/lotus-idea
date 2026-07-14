@@ -56,7 +56,7 @@ REQUIRED_LINT_TARGETS = (
     "ai-provider-retention-contract-gate",
     "archive-lifecycle-posture-contract-gate",
     "report-intake-route-source-contract-proof-gate",
-    "report-materialization-proof-contract-gate",
+    "report-materialization-source-contract-proof-gate",
     "workbench-read-path-source-contract-proof-gate",
     "gateway-workbench-contract-proof-contract-gate",
     "gateway-workbench-discovery-contract-proof-contract-gate",
@@ -153,7 +153,10 @@ GENERATED_READINESS_ARTIFACTS = (
         "scripts/report/generate_intake_route_source_contract.py",
         "a Report intake-route source-contract proof artifact",
     ),
-    ("scripts/report/generate_materialization_source_contract.py", "a report materialization proof artifact"),
+    (
+        "scripts/report/generate_materialization_source_contract.py",
+        "a report materialization source-contract artifact",
+    ),
     ("scripts/generate_mesh_policy_proof.py", "mesh policy proof artifact"),
     (
         "scripts/generate_platform_mesh_onboarding_proof.py",
@@ -195,7 +198,10 @@ PASSED_READINESS_ARTIFACTS = (
         "--report-intake-route-source-contract-proof",
         "Report intake-route source-contract proof artifact",
     ),
-    ("--report-materialization-proof", "report materialization proof artifact"),
+    (
+        "--report-materialization-source-contract-proof",
+        "report materialization source contract artifact",
+    ),
     ("--mesh-policy-proof", "mesh policy proof artifact"),
     (
         "--workbench-read-path-source-contract-proof",
@@ -250,8 +256,14 @@ REQUIRED_READINESS_WIRING = (
         "LOTUS_IDEA_REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF_OUTPUT",
         "pass the default Report intake-route source-contract proof into readiness generation",
     ),
-    ("LOTUS_IDEA_REPORT_MATERIALIZATION_PROOF_OUTPUT", "pass default materialization proof"),
-    ("LOTUS_IDEA_REPORT_MATERIALIZATION_PROOF", "support optional materialization proof"),
+    (
+        "LOTUS_IDEA_REPORT_MATERIALIZATION_SOURCE_CONTRACT_PROOF_OUTPUT",
+        "pass default materialization source contract",
+    ),
+    (
+        "LOTUS_IDEA_REPORT_MATERIALIZATION_SOURCE_CONTRACT_PROOF",
+        "support optional materialization source contract",
+    ),
     ("LOTUS_IDEA_MESH_POLICY_PROOF_OUTPUT", "pass default mesh policy proof"),
     ("LOTUS_IDEA_MESH_POLICY_PROOF", "support optional mesh policy proof"),
     (

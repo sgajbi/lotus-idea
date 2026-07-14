@@ -293,10 +293,10 @@ def _proof_artifact_inputs(args: argparse.Namespace) -> dict[str, ProofArtifactI
             artifact_name="Report intake-route source-contract proof",
             ref_name="Report intake-route source-contract proof artifact",
         ),
-        "report_materialization": _proof_artifact_input(
-            args.report_materialization_proof,
-            artifact_name="report materialization proof",
-            ref_name="report materialization proof artifact",
+        "report_materialization_source_contract": _proof_artifact_input(
+            args.report_materialization_source_contract_proof,
+            artifact_name="report materialization source contract",
+            ref_name="report materialization source contract artifact",
         ),
         "mesh_policy": _proof_artifact_input(
             args.mesh_policy_proof,

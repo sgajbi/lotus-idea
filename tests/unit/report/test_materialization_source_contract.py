@@ -12,57 +12,91 @@ import pytest
 from app.application.report.materialization_source_contract import (
     REMAINING_REPORT_MATERIALIZATION_BLOCKERS,
     REPORT_MATERIALIZATION_BLOCKERS_CLEARED,
-    REPORT_MATERIALIZATION_PROOF_ENV,
-    REPORT_MATERIALIZATION_PROOF_SCHEMA_VERSION,
+    REPORT_MATERIALIZATION_SOURCE_CONTRACT_ENV,
+    REPORT_MATERIALIZATION_SOURCE_CONTRACT_SCHEMA_VERSION,
     REPORT_MATERIALIZATION_ROUTE,
     REQUIRED_REPORT_MATERIALIZATION_EVIDENCE_REFS,
-    build_report_materialization_proof_payload,
-    load_report_materialization_proof_from_env,
-    report_materialization_proof_is_valid,
+    build_report_materialization_source_contract_payload,
+    load_report_materialization_source_contract_from_env,
+    report_materialization_source_contract_is_valid,
 )
+from app.domain.proof_evidence import EvidenceClass
 
 ROOT = Path(__file__).resolve().parents[3]
 
 
-def test_builds_source_safe_report_materialization_proof(tmp_path: Path) -> None:
-    proof = _valid_report_materialization_proof(tmp_path)
+def test_builds_source_safe_report_materialization_source_contract(tmp_path: Path) -> None:
+    artifact = _valid_report_materialization_source_contract(tmp_path)
 
-    assert proof["schemaVersion"] == REPORT_MATERIALIZATION_PROOF_SCHEMA_VERSION
-    assert proof["repository"] == "lotus-idea"
-    assert proof["proofType"] == "lotus_report_idea_evidence_materialization_contract"
-    assert proof["proofScope"] == "source_safe_report_render_archive_materialization"
-    assert proof["reportMaterializationProofValid"] is True
-    assert proof["targetRoute"] == REPORT_MATERIALIZATION_ROUTE
-    assert tuple(proof["aggregateBlockersCleared"]) == REPORT_MATERIALIZATION_BLOCKERS_CLEARED
-    assert tuple(proof["evidenceRefs"]) == REQUIRED_REPORT_MATERIALIZATION_EVIDENCE_REFS
-    assert tuple(proof["remainingCertificationBlockers"]) == (
+    assert artifact["schemaVersion"] == REPORT_MATERIALIZATION_SOURCE_CONTRACT_SCHEMA_VERSION
+    assert artifact["repository"] == "lotus-idea"
+    assert artifact["proofType"] == "lotus_report_idea_evidence_materialization_source_contract"
+    assert artifact["proofScope"] == "report_materialization_declaration_and_contract_compatibility"
+    assert artifact["evidenceClass"] == EvidenceClass.SOURCE_CONTRACT.value
+    assert artifact["sourceContractValid"] is True
+    assert artifact["targetRoute"] == REPORT_MATERIALIZATION_ROUTE
+    assert tuple(artifact["aggregateBlockersCleared"]) == REPORT_MATERIALIZATION_BLOCKERS_CLEARED
+    assert tuple(artifact["evidenceRefs"]) == REQUIRED_REPORT_MATERIALIZATION_EVIDENCE_REFS
+    assert tuple(artifact["remainingCertificationBlockers"]) == (
         REMAINING_REPORT_MATERIALIZATION_BLOCKERS
     )
-    assert proof["reportMaterializationProven"] is True
-    assert proof["renderedOutputCreated"] is True
-    assert proof["archiveRecordCreated"] is True
-    assert proof["clientPublicationAuthorityGranted"] is False
-    assert proof["supportedFeaturePromoted"] is False
-    assert proof["proofClosed"] is False
-    assert report_materialization_proof_is_valid(proof) is True
-    serialized = json.dumps(proof)
+    assert artifact["reportMaterializationProven"] is False
+    assert artifact["renderedOutputCreated"] is False
+    assert artifact["archiveRecordCreated"] is False
+    assert artifact["clientPublicationAuthorityGranted"] is False
+    assert artifact["supportedFeaturePromoted"] is False
+    assert artifact["certificationClosed"] is False
+    assert report_materialization_source_contract_is_valid(artifact) is True
+    serialized = json.dumps(artifact)
     assert "PB_SG_GLOBAL_BAL_001" not in serialized
     assert "portfolio_id" not in serialized
     assert "client_id" not in serialized
     assert "requestBody" not in serialized
 
 
-def test_rejects_report_materialization_proof_when_report_evidence_is_missing(
+@pytest.mark.parametrize(
+    "inflated_claim",
+    [
+        "runtimeExecutionProven",
+        "deploymentCertified",
+        "productionCertified",
+        "clientPublicationReady",
+        "retentionAuthorityGranted",
+    ],
+)
+def test_rejects_additional_runtime_or_authority_claims(
+    inflated_claim: str,
     tmp_path: Path,
 ) -> None:
-    proof = build_report_materialization_proof_payload(
+    artifact = _valid_report_materialization_source_contract(tmp_path)
+    artifact[inflated_claim] = True
+
+    assert report_materialization_source_contract_is_valid(artifact) is False
+
+
+def test_does_not_infer_runtime_execution_from_report_contract_declarations(
+    tmp_path: Path,
+) -> None:
+    artifact = _valid_report_materialization_source_contract(tmp_path)
+
+    assert _report_contract_payload()["materialization_proven"] is True
+    assert artifact["reportMaterializationProven"] is False
+    assert artifact["renderedOutputCreated"] is False
+    assert artifact["archiveRecordCreated"] is False
+    assert tuple(artifact["aggregateBlockersCleared"]) == ()
+
+
+def test_rejects_source_contract_when_report_contract_evidence_is_missing(
+    tmp_path: Path,
+) -> None:
+    artifact = build_report_materialization_source_contract_payload(
         generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
         repository_root=ROOT,
         report_root=tmp_path,
     )
 
-    assert proof["reportMaterializationProofValid"] is False
-    assert report_materialization_proof_is_valid(proof) is False
+    assert artifact["sourceContractValid"] is False
+    assert report_materialization_source_contract_is_valid(artifact) is False
 
 
 @pytest.mark.parametrize(
@@ -72,47 +106,48 @@ def test_rejects_report_materialization_proof_when_report_evidence_is_missing(
         ("repository", "lotus-report"),
         ("proofType", "route"),
         ("proofScope", "publication"),
-        ("reportMaterializationProofValid", False),
+        ("evidenceClass", EvidenceClass.RUNTIME_EXECUTION.value),
+        ("sourceContractValid", False),
         ("targetRoute", "planned:lotus-report-idea-evidence-pack-materialization"),
-        ("reportMaterializationProven", False),
-        ("renderedOutputCreated", False),
-        ("archiveRecordCreated", False),
+        ("reportMaterializationProven", True),
+        ("renderedOutputCreated", True),
+        ("archiveRecordCreated", True),
         ("clientPublicationAuthorityGranted", True),
         ("supportedFeaturePromoted", True),
-        ("proofClosed", True),
+        ("certificationClosed", True),
         ("generatedAtUtc", "not-a-datetime"),
     ],
 )
-def test_rejects_report_materialization_proof_with_invalid_top_level_fields(
+def test_rejects_source_contract_with_invalid_top_level_fields(
     field_name: str,
     bad_value: object,
     tmp_path: Path,
 ) -> None:
-    proof = _valid_report_materialization_proof(tmp_path)
-    proof[field_name] = bad_value
+    artifact = _valid_report_materialization_source_contract(tmp_path)
+    artifact[field_name] = bad_value
 
-    assert report_materialization_proof_is_valid(proof) is False
+    assert report_materialization_source_contract_is_valid(artifact) is False
 
 
 @pytest.mark.parametrize(
     ("field_name", "bad_value"),
     [
-        ("aggregateBlockersCleared", ("wrong",)),
+        ("aggregateBlockersCleared", ("rendered_output_creation_missing",)),
         ("evidenceRefs", ("wrong",)),
         ("remainingCertificationBlockers", ("wrong",)),
-        ("proofChecks", None),
+        ("contractChecks", None),
         ("generatedAtUtc", ""),
     ],
 )
-def test_rejects_report_materialization_proof_with_invalid_collections(
+def test_rejects_source_contract_with_invalid_collections(
     field_name: str,
     bad_value: object,
     tmp_path: Path,
 ) -> None:
-    proof = _valid_report_materialization_proof(tmp_path)
-    proof[field_name] = bad_value
+    artifact = _valid_report_materialization_source_contract(tmp_path)
+    artifact[field_name] = bad_value
 
-    assert report_materialization_proof_is_valid(proof) is False
+    assert report_materialization_source_contract_is_valid(artifact) is False
 
 
 @pytest.mark.parametrize(
@@ -120,27 +155,26 @@ def test_rejects_report_materialization_proof_with_invalid_collections(
     [
         "timezoneAwareGeneratedAtUtc",
         "fileEvidencePresent",
-        "reportContractProvesMaterialization",
+        "reportContractDeclaresMaterialization",
         "reportContractPreservesNonProofBoundaries",
-        "reportContractRetainsPublicationBlocker",
     ],
 )
-def test_rejects_report_materialization_proof_with_invalid_proof_checks(
+def test_rejects_source_contract_with_invalid_contract_checks(
     check_name: str,
     tmp_path: Path,
 ) -> None:
-    proof = _valid_report_materialization_proof(tmp_path)
-    proof_checks = dict(cast(Mapping[str, object], proof["proofChecks"]))
-    proof_checks[check_name] = False
-    proof["proofChecks"] = proof_checks
+    artifact = _valid_report_materialization_source_contract(tmp_path)
+    contract_checks = dict(cast(Mapping[str, object], artifact["contractChecks"]))
+    contract_checks[check_name] = False
+    artifact["contractChecks"] = contract_checks
 
-    assert report_materialization_proof_is_valid(proof) is False
+    assert report_materialization_source_contract_is_valid(artifact) is False
 
 
-def test_report_materialization_proof_cli_writes_valid_artifact(tmp_path: Path) -> None:
+def test_source_contract_cli_writes_valid_artifact(tmp_path: Path) -> None:
     module = _load_generator_script()
     report_root = _write_report_fixture(tmp_path)
-    output_path = tmp_path / "proof" / "report-materialization-proof.json"
+    output_path = tmp_path / "report" / "materialization-source-contract-proof.json"
 
     result = module.main(
         [
@@ -154,11 +188,11 @@ def test_report_materialization_proof_cli_writes_valid_artifact(tmp_path: Path) 
     )
 
     assert result == 0
-    proof = json.loads(output_path.read_text(encoding="utf-8"))
-    assert report_materialization_proof_is_valid(proof) is True
+    artifact = json.loads(output_path.read_text(encoding="utf-8"))
+    assert report_materialization_source_contract_is_valid(artifact) is True
 
 
-def test_report_materialization_proof_contract_gate_scans_tuple_content() -> None:
+def test_source_contract_gate_scans_tuple_content() -> None:
     module = _load_contract_gate_script()
     errors: list[str] = []
 
@@ -167,45 +201,45 @@ def test_report_materialization_proof_contract_gate_scans_tuple_content() -> Non
     assert errors == ["$[0]: forbidden source-sensitive text `portfolio_id` is present"]
 
 
-def test_load_report_materialization_proof_from_env_returns_none_when_unset(
+def test_load_source_contract_from_env_returns_none_when_unset(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.delenv(REPORT_MATERIALIZATION_PROOF_ENV, raising=False)
+    monkeypatch.delenv(REPORT_MATERIALIZATION_SOURCE_CONTRACT_ENV, raising=False)
 
-    assert load_report_materialization_proof_from_env() == (None, None)
+    assert load_report_materialization_source_contract_from_env() == (None, None)
 
 
-def test_load_report_materialization_proof_from_env_requires_object(
+def test_load_source_contract_from_env_requires_object(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
     proof_path = tmp_path / "proof.json"
     proof_path.write_text("[]", encoding="utf-8")
-    monkeypatch.setenv(REPORT_MATERIALIZATION_PROOF_ENV, str(proof_path))
+    monkeypatch.setenv(REPORT_MATERIALIZATION_SOURCE_CONTRACT_ENV, str(proof_path))
 
     with pytest.raises(ValueError, match="must reference a JSON object"):
-        load_report_materialization_proof_from_env()
+        load_report_materialization_source_contract_from_env()
 
 
-def test_load_report_materialization_proof_from_env_returns_source_safe_ref(
+def test_load_source_contract_from_env_returns_source_safe_ref(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
     proof_path = tmp_path / "proof.json"
     proof_path.write_text(
-        json.dumps(_valid_report_materialization_proof(tmp_path)), encoding="utf-8"
+        json.dumps(_valid_report_materialization_source_contract(tmp_path)), encoding="utf-8"
     )
     monkeypatch.chdir(tmp_path)
-    monkeypatch.setenv(REPORT_MATERIALIZATION_PROOF_ENV, str(proof_path))
+    monkeypatch.setenv(REPORT_MATERIALIZATION_SOURCE_CONTRACT_ENV, str(proof_path))
 
-    proof, proof_ref = load_report_materialization_proof_from_env()
+    artifact, artifact_ref = load_report_materialization_source_contract_from_env()
 
-    assert proof is not None
-    assert report_materialization_proof_is_valid(proof) is True
-    assert proof_ref == "proof.json"
+    assert artifact is not None
+    assert report_materialization_source_contract_is_valid(artifact) is True
+    assert artifact_ref == "proof.json"
 
 
-def test_load_report_materialization_proof_from_env_hides_foreign_path(
+def test_load_source_contract_from_env_hides_foreign_path(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
@@ -214,19 +248,19 @@ def test_load_report_materialization_proof_from_env_hides_foreign_path(
     proof_path = tmp_path / "outside" / "proof.json"
     proof_path.parent.mkdir()
     proof_path.write_text(
-        json.dumps(_valid_report_materialization_proof(tmp_path)), encoding="utf-8"
+        json.dumps(_valid_report_materialization_source_contract(tmp_path)), encoding="utf-8"
     )
     monkeypatch.chdir(cwd)
-    monkeypatch.setenv(REPORT_MATERIALIZATION_PROOF_ENV, str(proof_path))
+    monkeypatch.setenv(REPORT_MATERIALIZATION_SOURCE_CONTRACT_ENV, str(proof_path))
 
-    proof, proof_ref = load_report_materialization_proof_from_env()
+    artifact, artifact_ref = load_report_materialization_source_contract_from_env()
 
-    assert proof is not None
-    assert proof_ref == "report materialization proof artifact"
+    assert artifact is not None
+    assert artifact_ref == "report materialization source contract artifact"
 
 
-def _valid_report_materialization_proof(tmp_path: Path) -> dict[str, Any]:
-    return build_report_materialization_proof_payload(
+def _valid_report_materialization_source_contract(tmp_path: Path) -> dict[str, Any]:
+    return build_report_materialization_source_contract_payload(
         generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
         repository_root=ROOT,
         report_root=_write_report_fixture(tmp_path),
@@ -287,7 +321,7 @@ def _report_contract_payload() -> dict[str, object]:
 def _load_generator_script() -> ModuleType:
     script_path = ROOT / "scripts" / "report" / "generate_materialization_source_contract.py"
     spec = importlib.util.spec_from_file_location(
-        "generate_report_materialization_proof",
+        "generate_materialization_source_contract",
         script_path,
     )
     assert spec is not None
@@ -300,7 +334,7 @@ def _load_generator_script() -> ModuleType:
 def _load_contract_gate_script() -> ModuleType:
     script_path = ROOT / "scripts" / "report" / "materialization_source_contract_gate.py"
     spec = importlib.util.spec_from_file_location(
-        "report_materialization_proof_contract_gate",
+        "materialization_source_contract_gate",
         script_path,
     )
     assert spec is not None
