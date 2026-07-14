@@ -216,6 +216,14 @@ Validation evidence from the implementation slice:
     repository-organization gates, and dependency audit with no known
     vulnerabilities. The skipped integration cases are covered by the separate
     required PostgreSQL run.
+16. PR `#390` merged the grounded-narrative capability by rebase to exact main
+    SHA `67a6e005`. Main Releasability run `29300549721` and CodeQL run
+    `29300546423` passed. The releasability lane also validated the SHA-tagged
+    digest image, runtime metadata, vulnerability scan, SBOM, signature,
+    provenance, release manifest, and digest-bound deployment evidence. Wiki
+    publication `f86a57c` synchronized the three changed pages with zero drift.
+    Issue `#389` is implementation-complete; Slice 09 remains partial only for
+    the separate live-runtime, Gateway/Workbench, and promotion blockers below.
 
 ## Current Governance References
 
