@@ -82,6 +82,27 @@ def test_ci_contract_gate_blocks_raw_main_coverage_combine(tmp_path: Path) -> No
     assert "main-releasability.yml must not contain `coverage combine coverage-data`" in errors
 
 
+def test_ci_contract_gate_requires_receipt_bound_durable_repository_proof(
+    tmp_path: Path,
+) -> None:
+    module = _load_ci_contract_gate()
+    workflow_dir = _copy_workflows(tmp_path)
+    main_releasability = workflow_dir / "main-releasability.yml"
+    main_releasability.write_text(
+        main_releasability.read_text(encoding="utf-8").replace(
+            "make durable-repository-ci-proof",
+            "echo skipped durable repository proof",
+        ),
+        encoding="utf-8",
+    )
+
+    errors = module.validate_workflows(workflow_dir)
+
+    assert (
+        "main-releasability.yml missing `make durable-repository-ci-proof`" in errors
+    )
+
+
 def _copy_workflows(tmp_path: Path) -> Path:
     workflow_dir = tmp_path / ".github" / "workflows"
     workflow_dir.mkdir(parents=True)
