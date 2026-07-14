@@ -475,17 +475,19 @@ Persistence adapter validation:
 14. `tests/unit/outbox/broker/test_source_contract_proof.py`,
     `tests/unit/outbox/broker/test_readiness_consumption.py`,
     `tests/unit/outbox/test_outbox_consumer_contract_proof.py`,
-    `tests/unit/outbox/test_outbox_platform_mesh_event_publication_proof.py`,
+    `tests/unit/outbox/platform_mesh/test_source_contract_proof.py`,
+    `tests/unit/outbox/platform_mesh/test_readiness_consumption.py`,
     `make outbox-consumer-contract-gate`,
     `make outbox-broker-source-contract-proof-gate`,
     `make outbox-consumer-contract-proof-contract-gate`, and
-    `make outbox-platform-mesh-event-publication-proof-contract-gate` prove the
+    `make outbox-platform-mesh-event-source-contract-proof-gate` prove the
     declared downstream consumer contract, source-safe bounded outbox broker
-    source contract that clears no readiness blocker, bounded downstream consumer source-contract
-    proof, and bounded outbox platform mesh event publication proof contract.
-    Aggregate readiness records the consumer contract evidence without clearing
-    `downstream_consumer_runtime_proof_missing`; the other proof families clear
-    only blockers matching their governed evidence class.
+    source contract that clears no readiness blocker, bounded downstream
+    consumer source-contract proof, and bounded platform-mesh event
+    source-contract proof. Aggregate readiness records all three source
+    evidence references without clearing runtime blockers. In particular,
+    `platform_mesh_event_publication_proof_missing` remains until runtime
+    publication evidence exists.
 15. `tests/unit/test_report_intake_route_proof.py`,
     `tests/unit/test_downstream_realization_readiness.py`,
     `tests/integration/test_downstream_realization_readiness_api.py`, and
@@ -1049,7 +1051,7 @@ The internal outbox-delivery-readiness and outbox-delivery-run-once endpoints
 are covered by OpenAPI, endpoint certification, unit tests, and integration
 tests. Passing checks certify the diagnostic route and bounded operator action
 only; they do not certify live broker runtime, downstream consumer delivery,
-platform mesh event publication proof, Gateway/Workbench support, data-product
+platform-mesh event runtime publication evidence, Gateway/Workbench support, data-product
 promotion, client-ready publication, or supported-feature promotion.
 
 `make outbox-recovery-contract-gate` protects operator authorization,

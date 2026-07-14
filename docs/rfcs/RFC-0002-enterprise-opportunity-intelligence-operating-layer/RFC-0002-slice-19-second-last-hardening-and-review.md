@@ -881,7 +881,7 @@ now closes its route-owned broker publisher after execution begins, including
 accepted, replayed, failed, and idempotency-conflict outcomes. This prevents
 HTTP client resource leakage during repeated operator runs while preserving the
 existing `not_certified` posture for live broker publication, downstream
-consumer proof, platform mesh event publication, Gateway/Workbench support, and
+consumer proof, platform-mesh event runtime publication, Gateway/Workbench support, and
 supported-feature promotion.
 
 GitHub issue `#314` hardens the cleanup pattern itself. Route-owned cleanup is

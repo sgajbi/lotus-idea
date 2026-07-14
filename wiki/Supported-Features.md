@@ -74,7 +74,7 @@ aggregate identifiers, raw idempotency keys, source payloads, broker payloads,
 or downstream claims; route-owned publisher cleanup failures are suppressed into
 source-safe diagnostics without masking completed, replayed, conflict, or
 bounded blocked responses. That is recoverability foundation only; no certified live
-broker runtime, Gateway event, platform mesh event publication, downstream
+broker runtime, Gateway event, platform-mesh event runtime publication, downstream
 delivery, or supported event publication exists. `lotus-gateway` now publishes bounded
 read-only advisor queue and candidate detail routes with caller
 entitlement-scope forwarding, and `lotus-workbench` now renders the bounded

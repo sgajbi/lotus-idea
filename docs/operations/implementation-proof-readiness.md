@@ -8,7 +8,7 @@
 | Required capability | `idea.implementation-proof.readiness.read` |
 | Required query | Timezone-aware `evaluatedAtUtc` |
 | Supportability | `not_certified` while blockers remain |
-| Product claim | Bounded live source-ingestion, runtime trust telemetry, default Advise proposal route, Manage action route, Report intake route, Report materialization, outbox broker, outbox consumer runtime, outbox platform mesh event publication, Gateway/Workbench source contracts, Gateway/Workbench discovery, mesh policy, platform mesh onboarding, receipt-bound mainline AI lineage-store CI execution, AI workflow-pack registration/runtime execution proof artifacts, and opportunity archetype scenario readiness can be consumed; Risk concentration, high-volatility, Risk drawdown, Performance underperformance, missing-benchmark Performance readiness, Core benchmark assignment, Core portfolio-state, missing-benchmark Core, low-income Core cashflow, Manage mandate, typed Advise mandate/restriction source-product, Advise mandate/restriction live, Advise missing-suitability, typed Advise missing risk-profile source-product, and Advise missing risk-profile live proof artifacts clear only source-specific blockers; the Gateway/Workbench source-contract proof adds evidence references but clears no runtime blocker; no full live journey, live AI provider execution, suitability/rebalance/risk-profile/restriction-clearance/benchmark-assignment authority, platform mesh certification, external broker publication, downstream delivery, full Gateway/Workbench product proof, live archetype replay proof, client-ready publication, or supported-feature promotion |
+| Product claim | Bounded live source-ingestion, runtime trust telemetry, default Advise proposal route, Manage action route, Report intake route, Report materialization, outbox broker, outbox consumer, platform-mesh event, Gateway/Workbench source contracts, Gateway/Workbench discovery, mesh policy, platform mesh onboarding, receipt-bound mainline AI lineage-store CI execution, AI workflow-pack registration/runtime execution proof artifacts, and opportunity archetype scenario readiness can be consumed; Risk concentration, high-volatility, Risk drawdown, Performance underperformance, missing-benchmark Performance readiness, Core benchmark assignment, Core portfolio-state, missing-benchmark Core, low-income Core cashflow, Manage mandate, typed Advise mandate/restriction source-product, Advise mandate/restriction live, Advise missing-suitability, typed Advise missing risk-profile source-product, and Advise missing risk-profile live proof artifacts clear only source-specific blockers; the platform-mesh event and Gateway/Workbench source-contract proofs add evidence references but clear no runtime blocker; no full live journey, live AI provider execution, suitability/rebalance/risk-profile/restriction-clearance/benchmark-assignment authority, platform mesh certification, external broker or platform-mesh event publication, downstream delivery, full Gateway/Workbench product proof, live archetype replay proof, client-ready publication, or supported-feature promotion |
 
 `GET /api/v1/implementation-proof/readiness` is the internal operator
 diagnostic for RFC-0002 implementation proof posture.
@@ -90,7 +90,7 @@ validated through the owning repositories and platform gates:
    deploy-contract artifact,
 3. platform mesh certification, active producer products, and Gateway/Workbench discovery,
 4. certified downstream delivery evidence beyond the bounded consumer-runtime proof artifact,
-5. certified external broker publication and production event-publication evidence beyond the bounded platform mesh event publication proof artifact,
+5. certified external broker publication and production event-publication evidence beyond the bounded platform-mesh event source-contract artifact,
 6. `lotus-ai` live-provider rollout and runtime trust certification,
 7. Workbench panel and browser proof,
 8. downstream Advise and Manage realization authority,
@@ -223,8 +223,8 @@ taxonomy and the #393 same-pattern campaign.
 | `LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF` | Overrides the default generated platform mesh onboarding proof artifact passed into aggregate readiness. |
 | `LOTUS_IDEA_OUTBOX_CONSUMER_CONTRACT_PROOF_OUTPUT` | Selects the default generated outbox consumer source-contract proof consumed by aggregate readiness when no override is set. Defaults to `output/outbox/outbox-consumer-contract-proof.json`. |
 | `LOTUS_IDEA_OUTBOX_CONSUMER_CONTRACT_PROOF` | Overrides the default generated outbox consumer source-contract proof passed into aggregate readiness. |
-| `LOTUS_IDEA_OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF_OUTPUT` | Selects the default generated outbox platform mesh event publication proof artifact consumed by aggregate readiness when no override is set. Defaults to `output/outbox/outbox-platform-mesh-event-publication-proof.json`. |
-| `LOTUS_IDEA_OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF` | Overrides the default generated outbox platform mesh event publication proof artifact passed into aggregate readiness. |
+| `LOTUS_IDEA_OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_PROOF_OUTPUT` | Selects the default generated outbox platform-mesh event source-contract proof consumed by aggregate readiness when no override is set. Defaults to `output/outbox/platform-mesh/event-source-contract-proof.json`. |
+| `LOTUS_IDEA_OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_PROOF` | Overrides the default generated outbox platform-mesh event source-contract proof passed into aggregate readiness. |
 | `LOTUS_IDEA_GATEWAY_WORKBENCH_CONTRACT_PROOF_OUTPUT` | Selects the default generated Gateway/Workbench contract proof artifact consumed by aggregate readiness when no override is set. Defaults to `output/workbench/gateway-workbench-contract-proof.json`. |
 | `LOTUS_IDEA_GATEWAY_WORKBENCH_CONTRACT_PROOF` | Overrides the default generated Gateway/Workbench contract proof artifact passed into aggregate readiness. |
 | `LOTUS_IDEA_GATEWAY_WORKBENCH_DISCOVERY_CONTRACT_PROOF_OUTPUT` | Selects the default generated Gateway/Workbench discovery contract proof artifact consumed by aggregate readiness when no override is set. Defaults to `output/workbench/gateway-workbench-discovery-contract-proof.json`. |
@@ -581,23 +581,20 @@ broker publication, consumer execution, platform mesh event publication,
 Gateway/Workbench behavior, downstream delivery, client-ready publication, or
 supported-feature promotion.
 
-Outbox platform mesh event publication proof is captured by
-`scripts/outbox/generate_platform_mesh_event_publication_proof.py`. The
+Outbox platform-mesh event source-contract proof is captured by
+`scripts/outbox/platform_mesh/generate_source_contract_proof.py`. The
 repo-native `make implementation-proof-readiness-check` target now generates
 the default artifact from repo-owned outbox event/consumer contracts and
 sibling `lotus-platform` source-manifest/catalog evidence under
-`LOTUS_IDEA_OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF_OUTPUT`, then passes
+`LOTUS_IDEA_OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_PROOF_OUTPUT`, then passes
 it into aggregate readiness when
-`LOTUS_IDEA_OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF` is not set. A valid
-artifact clears only `platform_mesh_event_publication_proof_missing` inside
-aggregate implementation-proof readiness. It proves the source-safe event
-contract, declared consumer contract coverage, platform source-manifest
-inclusion, and generated catalog mapping for proposed `lotus-idea` products.
-It does not certify external broker publication, downstream delivery,
-Gateway/Workbench behavior, client-ready publication, or supported-feature
-promotion. Missing sibling evidence writes an invalid non-proof artifact and
-keeps the blocker so CI remains stable without treating absence as proof;
-drift in present sibling evidence still exits non-zero.
+`LOTUS_IDEA_OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_PROOF` is not set. A valid
+artifact is `source_contract` evidence. It records the source-safe event
+contract, declared consumer coverage, platform source-manifest inclusion, and
+generated catalog mapping for proposed `lotus-idea` products. It adds a
+provenance reference but clears no aggregate blocker;
+`platform_mesh_event_publication_proof_missing` remains until runtime
+publication evidence exists. The artifact does not establish runtime execution, a publication receipt, external broker publication, downstream delivery, deployment, production certification, Gateway/Workbench behavior, client-ready publication, or supported-feature promotion. Missing sibling evidence writes an invalid non-proof artifact; drift in present sibling evidence still exits non-zero.
 
 Advise proposal route proof and Manage action route proof are captured by
 `scripts/generate_advise_proposal_route_proof.py` and
@@ -984,12 +981,13 @@ Implementation-backed evidence:
     `tests/unit/outbox/test_outbox_consumer_contract_proof.py`,
 1. outbox broker source-contract proof gate:
     `make outbox-broker-source-contract-proof-gate`,
-1. outbox platform mesh event publication proof generator:
-    `scripts/outbox/generate_platform_mesh_event_publication_proof.py`,
-1. outbox platform mesh event publication proof contract gate:
-    `make outbox-platform-mesh-event-publication-proof-contract-gate`,
-1. outbox platform mesh event publication proof tests:
-    `tests/unit/outbox/test_outbox_platform_mesh_event_publication_proof.py`,
+1. outbox platform-mesh event source-contract proof generator:
+    `scripts/outbox/platform_mesh/generate_source_contract_proof.py`,
+1. outbox platform-mesh event source-contract proof gate:
+    `make outbox-platform-mesh-event-source-contract-proof-gate`,
+1. outbox platform-mesh event source-contract proof tests:
+    `tests/unit/outbox/platform_mesh/test_source_contract_proof.py` and
+    `tests/unit/outbox/platform_mesh/test_readiness_consumption.py`,
 1. Advise proposal route proof generator:
     `scripts/generate_advise_proposal_route_proof.py`,
 1. Manage action route proof generator:
@@ -1089,7 +1087,7 @@ $env:LOTUS_REPORT_ROOT = "..\lotus-report"
 $env:LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF_OUTPUT = "output/downstream/report-intake-route-proof.json"
 $env:LOTUS_IDEA_REPORT_MATERIALIZATION_PROOF_OUTPUT = "output/downstream/report-materialization-proof.json"
 $env:LOTUS_IDEA_OUTBOX_CONSUMER_CONTRACT_PROOF_OUTPUT = "output/outbox/outbox-consumer-contract-proof.json"
-$env:LOTUS_IDEA_OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF_OUTPUT = "output/outbox/outbox-platform-mesh-event-publication-proof.json"
+$env:LOTUS_IDEA_OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_PROOF_OUTPUT = "output/outbox/platform-mesh/event-source-contract-proof.json"
 $env:LOTUS_IDEA_GATEWAY_WORKBENCH_CONTRACT_PROOF_OUTPUT = "output/workbench/gateway-workbench-contract-proof.json"
 $env:LOTUS_IDEA_GATEWAY_WORKBENCH_DISCOVERY_CONTRACT_PROOF_OUTPUT = "output/workbench/gateway-workbench-discovery-contract-proof.json"
 $env:IMPLEMENTATION_PROOF_OUTPUT = "output/implementation-proof/implementation-proof-readiness.json"
@@ -1100,7 +1098,7 @@ make runtime-trust-telemetry-proof-contract-gate
 make ai-workflow-pack-registration-proof-contract-gate
 make outbox-broker-source-contract-proof-gate
 make outbox-consumer-contract-proof-contract-gate
-make outbox-platform-mesh-event-publication-proof-contract-gate
+make outbox-platform-mesh-event-source-contract-proof-gate
 make downstream-route-contract-proof-gate
 make report-intake-route-proof-contract-gate
 make report-materialization-proof-contract-gate
