@@ -11,29 +11,32 @@ from app.application.source_safe_cross_repo_proof import (
     required_file_evidence_present,
     required_make_target_evidence_present,
 )
+from app.domain.proof_evidence import EvidenceClass, evidence_class_can_clear
 
 _is_timezone_aware_datetime_text = is_timezone_aware_datetime_text
 _required_file_evidence_present = required_file_evidence_present
 _required_make_target_evidence_present = required_make_target_evidence_present
 
 
-OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF_ENV = (
-    "LOTUS_IDEA_OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF"
+OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_PROOF_ENV = (
+    "LOTUS_IDEA_OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_PROOF"
 )
-OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF_SCHEMA_VERSION = (
-    "lotus-idea.outbox-platform-mesh-event-publication-proof.v1"
+OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_PROOF_SCHEMA_VERSION = (
+    "lotus-idea.outbox-platform-mesh-event-source-contract-proof.v2"
 )
 
-OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_BLOCKERS_CLEARED = (
+OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_REQUIRED_BLOCKER_EVIDENCE_CLASSES: tuple[
+    tuple[str, str], ...
+] = ()
+OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_BLOCKERS_CLEARED: tuple[str, ...] = ()
+
+REMAINING_OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_BLOCKERS = (
     "platform_mesh_event_publication_proof_missing",
-)
-
-REMAINING_OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_BLOCKERS = (
     "gateway_workbench_proof_missing",
     "supported_feature_promotion_missing",
 )
 
-REQUIRED_OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_EVIDENCE_REFS = (
+REQUIRED_OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_EVIDENCE_REFS = (
     "contracts/outbox-events/lotus-idea-outbox-events.v1.json",
     "contracts/outbox-events/lotus-idea-outbox-consumers.v1.json",
     "../lotus-platform/platform-contracts/domain-data-products/domain-product-source-manifest.v1.json",
@@ -42,12 +45,13 @@ REQUIRED_OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_EVIDENCE_REFS = (
     "src/app/domain/outbox/events.py",
     "src/app/application/outbox/delivery.py",
     "src/app/application/outbox/readiness.py",
-    "src/app/application/outbox/platform_mesh_event_publication_proof.py",
+    "src/app/application/outbox/platform_mesh/source_contract_proof.py",
     "scripts/outbox/event_contract_gate.py",
-    "scripts/outbox/platform_mesh_event_publication_proof_contract_gate.py",
-    "tests/unit/outbox/test_outbox_platform_mesh_event_publication_proof.py",
+    "scripts/outbox/platform_mesh/source_contract_proof_gate.py",
+    "tests/unit/outbox/platform_mesh/test_source_contract_proof.py",
+    "tests/unit/outbox/platform_mesh/test_readiness_consumption.py",
     "make outbox-event-contract-gate",
-    "make outbox-platform-mesh-event-publication-proof-contract-gate",
+    "make outbox-platform-mesh-event-source-contract-proof-gate",
     "GET /api/v1/outbox-delivery/readiness",
     "POST /api/v1/outbox-delivery/run-once",
 )
@@ -73,7 +77,7 @@ REQUIRED_PLATFORM_PRODUCT_IDS = (
 )
 
 
-def build_outbox_platform_mesh_event_publication_proof_payload(
+def build_outbox_platform_mesh_event_source_contract_proof_payload(
     *,
     generated_at_utc: datetime,
     repository_root: Path,
@@ -83,7 +87,7 @@ def build_outbox_platform_mesh_event_publication_proof_payload(
     timezone_aware_generated_at_utc = (
         generated_at_utc.tzinfo is not None and generated_at_utc.utcoffset() is not None
     )
-    evidence_refs = tuple(REQUIRED_OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_EVIDENCE_REFS)
+    evidence_refs = tuple(REQUIRED_OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_EVIDENCE_REFS)
     file_evidence_present = _required_file_evidence_present(
         repository_root=repository_root,
         sibling_roots={"../lotus-platform/": platform_root},
@@ -113,6 +117,15 @@ def build_outbox_platform_mesh_event_publication_proof_payload(
     )
     platform_onboarding_present = _platform_source_manifest_includes_lotus_idea(source_manifest)
     platform_catalog_maps_idea_products = _platform_catalog_maps_idea_products(catalog)
+    evidence_class_matches_blockers = all(
+        evidence_class_can_clear(
+            actual=EvidenceClass.SOURCE_CONTRACT,
+            required=EvidenceClass(required_class),
+        )
+        for _blocker, required_class in (
+            OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_REQUIRED_BLOCKER_EVIDENCE_CLASSES
+        )
+    )
     proof_valid = (
         timezone_aware_generated_at_utc
         and file_evidence_present
@@ -122,15 +135,20 @@ def build_outbox_platform_mesh_event_publication_proof_payload(
         and consumer_contract_links_events
         and platform_onboarding_present
         and platform_catalog_maps_idea_products
+        and evidence_class_matches_blockers
     )
     return {
-        "schemaVersion": OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF_SCHEMA_VERSION,
+        "schemaVersion": OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_PROOF_SCHEMA_VERSION,
         "repository": "lotus-idea",
         "generatedAtUtc": generated_at_utc.isoformat(),
-        "proofType": "outbox_platform_mesh_event_publication_contract",
-        "proofScope": "bounded_source_safe_event_contract_and_platform_onboarding",
-        "outboxPlatformMeshEventPublicationProofValid": proof_valid,
-        "aggregateBlockersCleared": OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_BLOCKERS_CLEARED,
+        "proofType": "outbox_platform_mesh_event_source_contract",
+        "proofScope": "event_contract_consumer_declarations_and_platform_onboarding",
+        "evidenceClass": EvidenceClass.SOURCE_CONTRACT.value,
+        "requiredBlockerEvidenceClasses": dict(
+            OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_REQUIRED_BLOCKER_EVIDENCE_CLASSES
+        ),
+        "outboxPlatformMeshEventSourceContractValid": proof_valid,
+        "aggregateBlockersCleared": OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_BLOCKERS_CLEARED,
         "evidenceRefs": evidence_refs,
         "eventTypeCount": len(REQUIRED_OUTBOX_EVENT_TYPES),
         "platformProductCount": len(REQUIRED_PLATFORM_PRODUCT_IDS),
@@ -143,56 +161,75 @@ def build_outbox_platform_mesh_event_publication_proof_payload(
             "consumerContractLinksDeclaredEvents": consumer_contract_links_events,
             "platformSourceManifestIncludesLotusIdea": platform_onboarding_present,
             "platformCatalogMapsIdeaProducts": platform_catalog_maps_idea_products,
+            "evidenceClassMatchesBlockers": evidence_class_matches_blockers,
         },
-        "remainingCertificationBlockers": (
-            REMAINING_OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_BLOCKERS
-        ),
+        "remainingCertificationBlockers": REMAINING_OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_BLOCKERS,
+        "sourceContractStatus": "valid" if proof_valid else "invalid",
+        "runtimeExecutionObserved": False,
+        "platformMeshEventPublished": False,
+        "publicationReceiptObserved": False,
         "externalBrokerPublicationSupported": False,
         "downstreamConsumersCertified": False,
+        "deploymentObserved": False,
+        "productionCertificationGranted": False,
         "gatewayWorkbenchProofPresent": False,
         "supportedFeaturePromoted": False,
         "proofClosed": False,
     }
 
 
-def outbox_platform_mesh_event_publication_proof_is_valid(payload: Mapping[str, Any]) -> bool:
-    if payload.get("schemaVersion") != OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF_SCHEMA_VERSION:
+def outbox_platform_mesh_event_source_contract_proof_is_valid(
+    payload: Mapping[str, Any],
+) -> bool:
+    expected_values = {
+        "schemaVersion": OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_PROOF_SCHEMA_VERSION,
+        "repository": "lotus-idea",
+        "proofType": "outbox_platform_mesh_event_source_contract",
+        "proofScope": "event_contract_consumer_declarations_and_platform_onboarding",
+        "evidenceClass": EvidenceClass.SOURCE_CONTRACT.value,
+        "outboxPlatformMeshEventSourceContractValid": True,
+        "sourceContractStatus": "valid",
+    }
+    if any(payload.get(key) != value for key, value in expected_values.items()):
         return False
-    if payload.get("repository") != "lotus-idea":
-        return False
-    if payload.get("proofType") != "outbox_platform_mesh_event_publication_contract":
-        return False
-    if payload.get("proofScope") != "bounded_source_safe_event_contract_and_platform_onboarding":
-        return False
-    if payload.get("outboxPlatformMeshEventPublicationProofValid") is not True:
-        return False
-    if payload.get("externalBrokerPublicationSupported") is not False:
-        return False
-    if payload.get("downstreamConsumersCertified") is not False:
-        return False
-    if payload.get("gatewayWorkbenchProofPresent") is not False:
-        return False
-    if payload.get("supportedFeaturePromoted") is not False:
-        return False
-    if payload.get("proofClosed") is not False:
+    false_claims = (
+        "runtimeExecutionObserved",
+        "platformMeshEventPublished",
+        "publicationReceiptObserved",
+        "externalBrokerPublicationSupported",
+        "downstreamConsumersCertified",
+        "deploymentObserved",
+        "productionCertificationGranted",
+        "gatewayWorkbenchProofPresent",
+        "supportedFeaturePromoted",
+        "proofClosed",
+    )
+    if any(payload.get(field_name) is not False for field_name in false_claims):
         return False
     if not _is_timezone_aware_datetime_text(payload.get("generatedAtUtc")):
         return False
     if tuple(payload.get("aggregateBlockersCleared") or ()) != (
-        OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_BLOCKERS_CLEARED
+        OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_BLOCKERS_CLEARED
     ):
         return False
     if tuple(payload.get("evidenceRefs") or ()) != (
-        REQUIRED_OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_EVIDENCE_REFS
+        REQUIRED_OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_EVIDENCE_REFS
     ):
         return False
     if tuple(payload.get("remainingCertificationBlockers") or ()) != (
-        REMAINING_OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_BLOCKERS
+        REMAINING_OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_BLOCKERS
     ):
         return False
     if payload.get("eventTypeCount") != len(REQUIRED_OUTBOX_EVENT_TYPES):
         return False
     if payload.get("platformProductCount") != len(REQUIRED_PLATFORM_PRODUCT_IDS):
+        return False
+    required_classes = payload.get("requiredBlockerEvidenceClasses")
+    if not isinstance(required_classes, Mapping):
+        return False
+    if tuple(required_classes.items()) != (
+        OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_REQUIRED_BLOCKER_EVIDENCE_CLASSES
+    ):
         return False
     proof_checks = payload.get("proofChecks")
     if not isinstance(proof_checks, Mapping):
@@ -208,6 +245,7 @@ def outbox_platform_mesh_event_publication_proof_is_valid(payload: Mapping[str, 
             "consumerContractLinksDeclaredEvents",
             "platformSourceManifestIncludesLotusIdea",
             "platformCatalogMapsIdeaProducts",
+            "evidenceClassMatchesBlockers",
         )
     )
 

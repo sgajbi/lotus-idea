@@ -6,32 +6,27 @@ import json
 from pathlib import Path
 import sys
 
-try:
-    from scripts.outbox._bootstrap import ROOT
-except ModuleNotFoundError:  # pragma: no cover - direct script execution
-    from _bootstrap import ROOT  # type: ignore[import-not-found,no-redef]
+ROOT = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(ROOT))
 
-from app.application.outbox.platform_mesh_event_publication_proof import (  # noqa: E402
-    build_outbox_platform_mesh_event_publication_proof_payload,
+from app.application.outbox.platform_mesh.source_contract_proof import (  # noqa: E402
+    build_outbox_platform_mesh_event_source_contract_proof_payload,
 )
 
-try:
-    from scripts.proof_generator_io import write_json_payload
-except ImportError:  # pragma: no cover - supports direct script execution
-    from proof_generator_io import write_json_payload  # type: ignore[import-not-found,no-redef]
+from scripts.proof_generator_io import write_json_payload  # noqa: E402
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = _parser()
     args = parser.parse_args(argv)
     try:
-        payload = build_outbox_platform_mesh_event_publication_proof_payload(
+        payload = build_outbox_platform_mesh_event_source_contract_proof_payload(
             generated_at_utc=_aware_datetime(args.generated_at_utc),
             repository_root=ROOT,
             platform_root=Path(args.platform_root) if args.platform_root else None,
         )
     except (OSError, ValueError, json.JSONDecodeError) as exc:
-        print(f"outbox platform mesh event publication proof error: {exc}", file=sys.stderr)
+        print(f"outbox platform mesh event source-contract proof error: {exc}", file=sys.stderr)
         return 2
 
     write_json_payload(payload, output=args.output)
@@ -42,14 +37,12 @@ def main(argv: list[str] | None = None) -> int:
         and proof_checks.get("fileEvidencePresent") is False
     ):
         return 0
-    return 0 if payload["outboxPlatformMeshEventPublicationProofValid"] else 1
+    return 0 if payload["outboxPlatformMeshEventSourceContractValid"] else 1
 
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description=(
-            "Generate a source-safe lotus-idea outbox platform mesh event publication proof."
-        )
+        description=("Generate a lotus-idea outbox platform-mesh event source-contract proof.")
     )
     parser.add_argument("--generated-at-utc", required=True)
     parser.add_argument("--platform-root")

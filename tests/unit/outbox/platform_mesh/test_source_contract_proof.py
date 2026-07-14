@@ -9,48 +9,55 @@ from typing import Any, Mapping, cast
 
 import pytest
 
-from app.application.outbox import platform_mesh_event_publication_proof as proof_module
-from app.application.outbox.platform_mesh_event_publication_proof import (
-    OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_BLOCKERS_CLEARED,
-    OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF_SCHEMA_VERSION,
-    REMAINING_OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_BLOCKERS,
+from app.application.outbox.platform_mesh import source_contract_proof as proof_module
+from app.application.outbox.platform_mesh.source_contract_proof import (
+    OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_BLOCKERS_CLEARED,
+    OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_PROOF_SCHEMA_VERSION,
+    REMAINING_OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_BLOCKERS,
     REQUIRED_OUTBOX_EVENT_TYPES,
-    REQUIRED_OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_EVIDENCE_REFS,
+    REQUIRED_OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_EVIDENCE_REFS,
     REQUIRED_PLATFORM_PRODUCT_IDS,
-    build_outbox_platform_mesh_event_publication_proof_payload,
-    outbox_platform_mesh_event_publication_proof_is_valid,
+    build_outbox_platform_mesh_event_source_contract_proof_payload,
+    outbox_platform_mesh_event_source_contract_proof_is_valid,
 )
 
-ROOT = Path(__file__).resolve().parents[3]
+ROOT = Path(__file__).resolve().parents[4]
 
 
-def test_builds_source_safe_outbox_platform_mesh_event_publication_proof(
+def test_builds_source_safe_outbox_platform_mesh_event_source_contract_proof(
     tmp_path: Path,
 ) -> None:
-    proof = _valid_outbox_platform_mesh_event_publication_proof(tmp_path)
+    proof = _valid_outbox_platform_mesh_event_source_contract_proof(tmp_path)
 
-    assert proof["schemaVersion"] == OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF_SCHEMA_VERSION
+    assert proof["schemaVersion"] == OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_PROOF_SCHEMA_VERSION
     assert proof["repository"] == "lotus-idea"
-    assert proof["proofType"] == "outbox_platform_mesh_event_publication_contract"
-    assert proof["proofScope"] == "bounded_source_safe_event_contract_and_platform_onboarding"
-    assert proof["outboxPlatformMeshEventPublicationProofValid"] is True
+    assert proof["proofType"] == "outbox_platform_mesh_event_source_contract"
+    assert proof["proofScope"] == "event_contract_consumer_declarations_and_platform_onboarding"
+    assert proof["evidenceClass"] == "source_contract"
+    assert proof["requiredBlockerEvidenceClasses"] == {}
+    assert proof["outboxPlatformMeshEventSourceContractValid"] is True
     assert tuple(proof["aggregateBlockersCleared"]) == (
-        OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_BLOCKERS_CLEARED
+        OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_BLOCKERS_CLEARED
     )
     assert tuple(proof["evidenceRefs"]) == (
-        REQUIRED_OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_EVIDENCE_REFS
+        REQUIRED_OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_EVIDENCE_REFS
     )
     assert tuple(proof["remainingCertificationBlockers"]) == (
-        REMAINING_OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_BLOCKERS
+        REMAINING_OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_BLOCKERS
     )
     assert proof["eventTypeCount"] == len(REQUIRED_OUTBOX_EVENT_TYPES)
     assert proof["platformProductCount"] == len(REQUIRED_PLATFORM_PRODUCT_IDS)
     assert proof["externalBrokerPublicationSupported"] is False
+    assert proof["runtimeExecutionObserved"] is False
+    assert proof["platformMeshEventPublished"] is False
+    assert proof["publicationReceiptObserved"] is False
+    assert proof["deploymentObserved"] is False
+    assert proof["productionCertificationGranted"] is False
     assert proof["downstreamConsumersCertified"] is False
     assert proof["gatewayWorkbenchProofPresent"] is False
     assert proof["supportedFeaturePromoted"] is False
     assert proof["proofClosed"] is False
-    assert outbox_platform_mesh_event_publication_proof_is_valid(proof) is True
+    assert outbox_platform_mesh_event_source_contract_proof_is_valid(proof) is True
     serialized = json.dumps(proof)
     assert "PB_SG_GLOBAL_BAL_001" not in serialized
     assert "idea_high_cash_001" not in serialized
@@ -59,30 +66,30 @@ def test_builds_source_safe_outbox_platform_mesh_event_publication_proof(
     assert "idempotency" not in serialized
 
 
-def test_rejects_outbox_platform_mesh_event_publication_proof_when_evidence_is_missing(
+def test_rejects_outbox_platform_mesh_event_source_contract_proof_when_evidence_is_missing(
     tmp_path: Path,
 ) -> None:
-    proof = build_outbox_platform_mesh_event_publication_proof_payload(
+    proof = build_outbox_platform_mesh_event_source_contract_proof_payload(
         generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
         repository_root=tmp_path,
         platform_root=tmp_path / "missing-platform",
     )
 
-    assert proof["outboxPlatformMeshEventPublicationProofValid"] is False
-    assert outbox_platform_mesh_event_publication_proof_is_valid(proof) is False
+    assert proof["outboxPlatformMeshEventSourceContractValid"] is False
+    assert outbox_platform_mesh_event_source_contract_proof_is_valid(proof) is False
 
 
-def test_rejects_outbox_platform_mesh_event_publication_proof_with_naive_timestamp(
+def test_rejects_outbox_platform_mesh_event_source_contract_proof_with_naive_timestamp(
     tmp_path: Path,
 ) -> None:
-    proof = build_outbox_platform_mesh_event_publication_proof_payload(
+    proof = build_outbox_platform_mesh_event_source_contract_proof_payload(
         generated_at_utc=datetime(2026, 6, 27, 0, 0),
         repository_root=ROOT,
         platform_root=_write_platform_fixture(tmp_path),
     )
 
-    assert proof["outboxPlatformMeshEventPublicationProofValid"] is False
-    assert outbox_platform_mesh_event_publication_proof_is_valid(proof) is False
+    assert proof["outboxPlatformMeshEventSourceContractValid"] is False
+    assert outbox_platform_mesh_event_source_contract_proof_is_valid(proof) is False
 
 
 @pytest.mark.parametrize(
@@ -92,9 +99,19 @@ def test_rejects_outbox_platform_mesh_event_publication_proof_with_naive_timesta
         ("repository", "lotus-core"),
         ("proofType", "outbox"),
         ("proofScope", "production_event_publication"),
-        ("outboxPlatformMeshEventPublicationProofValid", False),
+        ("evidenceClass", "runtime_execution"),
+        (
+            "requiredBlockerEvidenceClasses",
+            {"platform_mesh_event_publication_proof_missing": "runtime_execution"},
+        ),
+        ("outboxPlatformMeshEventSourceContractValid", False),
+        ("runtimeExecutionObserved", True),
+        ("platformMeshEventPublished", True),
+        ("publicationReceiptObserved", True),
         ("externalBrokerPublicationSupported", True),
         ("downstreamConsumersCertified", True),
+        ("deploymentObserved", True),
+        ("productionCertificationGranted", True),
         ("gatewayWorkbenchProofPresent", True),
         ("supportedFeaturePromoted", True),
         ("proofClosed", True),
@@ -102,21 +119,21 @@ def test_rejects_outbox_platform_mesh_event_publication_proof_with_naive_timesta
         ("generatedAtUtc", None),
     ],
 )
-def test_rejects_outbox_platform_mesh_event_publication_proof_top_level_drift(
+def test_rejects_outbox_platform_mesh_event_source_contract_proof_top_level_drift(
     field_name: str,
     bad_value: object,
     tmp_path: Path,
 ) -> None:
-    proof = _valid_outbox_platform_mesh_event_publication_proof(tmp_path)
+    proof = _valid_outbox_platform_mesh_event_source_contract_proof(tmp_path)
     proof[field_name] = bad_value
 
-    assert outbox_platform_mesh_event_publication_proof_is_valid(proof) is False
+    assert outbox_platform_mesh_event_source_contract_proof_is_valid(proof) is False
 
 
 @pytest.mark.parametrize(
     ("field_name", "bad_value"),
     [
-        ("aggregateBlockersCleared", []),
+        ("aggregateBlockersCleared", ["platform_mesh_event_publication_proof_missing"]),
         ("evidenceRefs", []),
         ("remainingCertificationBlockers", []),
         ("eventTypeCount", 0),
@@ -124,15 +141,15 @@ def test_rejects_outbox_platform_mesh_event_publication_proof_top_level_drift(
         ("proofChecks", []),
     ],
 )
-def test_rejects_outbox_platform_mesh_event_publication_proof_contract_drift(
+def test_rejects_outbox_platform_mesh_event_source_contract_proof_contract_drift(
     field_name: str,
     bad_value: object,
     tmp_path: Path,
 ) -> None:
-    proof = _valid_outbox_platform_mesh_event_publication_proof(tmp_path)
+    proof = _valid_outbox_platform_mesh_event_source_contract_proof(tmp_path)
     proof[field_name] = bad_value
 
-    assert outbox_platform_mesh_event_publication_proof_is_valid(proof) is False
+    assert outbox_platform_mesh_event_source_contract_proof_is_valid(proof) is False
 
 
 @pytest.mark.parametrize(
@@ -146,25 +163,26 @@ def test_rejects_outbox_platform_mesh_event_publication_proof_contract_drift(
         "consumerContractLinksDeclaredEvents",
         "platformSourceManifestIncludesLotusIdea",
         "platformCatalogMapsIdeaProducts",
+        "evidenceClassMatchesBlockers",
     ],
 )
-def test_rejects_outbox_platform_mesh_event_publication_proof_invalid_checks(
+def test_rejects_outbox_platform_mesh_event_source_contract_proof_invalid_checks(
     check_name: str,
     tmp_path: Path,
 ) -> None:
-    proof = _valid_outbox_platform_mesh_event_publication_proof(tmp_path)
+    proof = _valid_outbox_platform_mesh_event_source_contract_proof(tmp_path)
     proof_checks = dict(cast(Mapping[str, object], proof["proofChecks"]))
     proof_checks[check_name] = False
     proof["proofChecks"] = proof_checks
 
-    assert outbox_platform_mesh_event_publication_proof_is_valid(proof) is False
+    assert outbox_platform_mesh_event_source_contract_proof_is_valid(proof) is False
 
 
-def test_outbox_platform_mesh_event_publication_cli_writes_valid_artifact(
+def test_outbox_platform_mesh_event_source_contract_cli_writes_valid_artifact(
     tmp_path: Path,
 ) -> None:
     module = _load_generator_script()
-    output_path = tmp_path / "proof" / "outbox-platform-mesh-event-publication-proof.json"
+    output_path = tmp_path / "proof" / "outbox-platform-mesh-event-source-contract-proof.json"
 
     result = module.main(
         [
@@ -179,10 +197,10 @@ def test_outbox_platform_mesh_event_publication_cli_writes_valid_artifact(
 
     assert result == 0
     proof = json.loads(output_path.read_text(encoding="utf-8"))
-    assert outbox_platform_mesh_event_publication_proof_is_valid(proof) is True
+    assert outbox_platform_mesh_event_source_contract_proof_is_valid(proof) is True
 
 
-def test_outbox_platform_mesh_event_publication_contract_gate_scans_tuple_content() -> None:
+def test_outbox_platform_mesh_event_source_contract_contract_gate_scans_tuple_content() -> None:
     module = _load_contract_gate_script()
     errors: list[str] = []
 
@@ -191,7 +209,7 @@ def test_outbox_platform_mesh_event_publication_contract_gate_scans_tuple_conten
     assert errors == ["$[0]: forbidden source-sensitive text `event_id` is present"]
 
 
-def test_outbox_platform_mesh_event_publication_rejects_non_object_payload(
+def test_outbox_platform_mesh_event_source_contract_rejects_non_object_payload(
     tmp_path: Path,
 ) -> None:
     contract_path = tmp_path / "contract.json"
@@ -215,7 +233,7 @@ def test_outbox_platform_mesh_event_publication_rejects_non_object_payload(
         ("payloadSafetyPolicy", {"forbiddenPayloadKeys": ["portfolio_id"]}),
     ],
 )
-def test_outbox_platform_mesh_event_publication_rejects_source_safety_drift(
+def test_outbox_platform_mesh_event_source_contract_rejects_source_safety_drift(
     field_name: str,
     bad_value: object,
 ) -> None:
@@ -253,7 +271,7 @@ def test_outbox_platform_mesh_event_publication_rejects_source_safety_drift(
         ],
     ],
 )
-def test_outbox_platform_mesh_event_publication_rejects_event_family_drift(
+def test_outbox_platform_mesh_event_source_contract_rejects_event_family_drift(
     event_families: object,
 ) -> None:
     event_contract = _valid_event_contract_payload()
@@ -274,7 +292,7 @@ def test_outbox_platform_mesh_event_publication_rejects_event_family_drift(
         "consumed_types_not_sequence",
     ],
 )
-def test_outbox_platform_mesh_event_publication_rejects_consumer_contract_drift(
+def test_outbox_platform_mesh_event_source_contract_rejects_consumer_contract_drift(
     case_name: str,
 ) -> None:
     consumer_contract: Mapping[str, Any] | None
@@ -327,7 +345,7 @@ def test_outbox_platform_mesh_event_publication_rejects_consumer_contract_drift(
     )
 
 
-def test_outbox_platform_mesh_event_publication_rejects_consumer_event_drift() -> None:
+def test_outbox_platform_mesh_event_source_contract_rejects_consumer_event_drift() -> None:
     event_contract = _valid_event_contract_payload()
     consumer_contract = _valid_consumer_contract_payload()
     consumer_contract["declaredConsumers"][0]["consumedEventTypes"] = ["unknown"]
@@ -360,13 +378,13 @@ def test_outbox_platform_mesh_event_publication_rejects_consumer_event_drift() -
         },
     ],
 )
-def test_outbox_platform_mesh_event_publication_rejects_source_manifest_drift(
+def test_outbox_platform_mesh_event_source_contract_rejects_source_manifest_drift(
     source_manifest: Mapping[str, Any] | None,
 ) -> None:
     assert proof_module._platform_source_manifest_includes_lotus_idea(source_manifest) is False
 
 
-def test_outbox_platform_mesh_event_publication_rejects_platform_catalog_drift() -> None:
+def test_outbox_platform_mesh_event_source_contract_rejects_platform_catalog_drift() -> None:
     catalog = {
         "products": [
             {
@@ -408,20 +426,20 @@ def test_outbox_platform_mesh_event_publication_rejects_platform_catalog_drift()
         },
     ],
 )
-def test_outbox_platform_mesh_event_publication_rejects_catalog_shape_drift(
+def test_outbox_platform_mesh_event_source_contract_rejects_catalog_shape_drift(
     catalog: Mapping[str, Any] | None,
 ) -> None:
     assert proof_module._platform_catalog_maps_idea_products(catalog) is False
 
 
-def test_outbox_platform_mesh_event_publication_rejects_invalid_timestamp_text() -> None:
+def test_outbox_platform_mesh_event_source_contract_rejects_invalid_timestamp_text() -> None:
     assert proof_module._is_timezone_aware_datetime_text("not-a-date") is False
 
 
-def _valid_outbox_platform_mesh_event_publication_proof(
+def _valid_outbox_platform_mesh_event_source_contract_proof(
     tmp_path: Path,
 ) -> dict[str, Any]:
-    return build_outbox_platform_mesh_event_publication_proof_payload(
+    return build_outbox_platform_mesh_event_source_contract_proof_payload(
         generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
         repository_root=ROOT,
         platform_root=_write_platform_fixture(tmp_path),
@@ -470,7 +488,7 @@ def _write_platform_fixture(tmp_path: Path) -> Path:
         ),
         encoding="utf-8",
     )
-    handoff_path.write_text("lotus-idea future-wave event publication proof\n", encoding="utf-8")
+    handoff_path.write_text("lotus-idea event source-contract evidence\n", encoding="utf-8")
     return platform_root
 
 
@@ -497,9 +515,11 @@ def _valid_consumer_contract_payload() -> dict[str, Any]:
 
 
 def _load_generator_script() -> ModuleType:
-    script_path = ROOT / "scripts" / "outbox" / "generate_platform_mesh_event_publication_proof.py"
+    script_path = (
+        ROOT / "scripts" / "outbox" / "platform_mesh" / "generate_source_contract_proof.py"
+    )
     spec = importlib.util.spec_from_file_location(
-        "generate_outbox_platform_mesh_event_publication_proof",
+        "generate_outbox_platform_mesh_event_source_contract_proof",
         script_path,
     )
     assert spec is not None
@@ -510,11 +530,9 @@ def _load_generator_script() -> ModuleType:
 
 
 def _load_contract_gate_script() -> ModuleType:
-    script_path = (
-        ROOT / "scripts" / "outbox" / "platform_mesh_event_publication_proof_contract_gate.py"
-    )
+    script_path = ROOT / "scripts" / "outbox" / "platform_mesh" / "source_contract_proof_gate.py"
     spec = importlib.util.spec_from_file_location(
-        "outbox_platform_mesh_event_publication_proof_contract_gate",
+        "outbox_platform_mesh_event_source_contract_proof_contract_gate",
         script_path,
     )
     assert spec is not None
