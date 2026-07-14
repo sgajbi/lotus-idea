@@ -41,9 +41,8 @@ from app.application.implementation_proof_models import (
 from app.application.implementation_proof_opportunity_archetype_proofs import (
     apply_opportunity_archetype_proofs_from_scope,
 )
-from app.application.mesh_policy_proof import (
-    MESH_POLICY_BLOCKERS_CLEARED,
-    mesh_policy_proof_is_valid,
+from app.application.data_mesh.mesh_policy_source_contract import (
+    mesh_policy_source_contract_is_valid,
 )
 from app.application.operator_workflows_operations.source_contract_proof import (
     operator_workflows_operations_proof_is_valid,
@@ -115,8 +114,8 @@ def _apply_available_proofs(
     manage_action_route_proof_ref: str | None,
     report_materialization_source_contract_proof: Mapping[str, object] | None,
     report_materialization_source_contract_proof_ref: str | None,
-    mesh_policy_proof: Mapping[str, object] | None,
-    mesh_policy_proof_ref: str | None,
+    mesh_policy_source_contract_proof: Mapping[str, object] | None,
+    mesh_policy_source_contract_proof_ref: str | None,
     outbox_broker_source_contract_proof: Mapping[str, object] | None,
     outbox_broker_source_contract_proof_ref: str | None,
     outbox_consumer_contract_proof: Mapping[str, object] | None,
@@ -398,8 +397,8 @@ def _apply_platform_and_surface_proofs(
     *,
     capabilities: tuple[ImplementationProofCapabilityReadiness, ...],
     evaluated_at_utc: datetime,
-    mesh_policy_proof: Mapping[str, object] | None,
-    mesh_policy_proof_ref: str | None,
+    mesh_policy_source_contract_proof: Mapping[str, object] | None,
+    mesh_policy_source_contract_proof_ref: str | None,
     outbox_broker_source_contract_proof: Mapping[str, object] | None,
     outbox_broker_source_contract_proof_ref: str | None,
     outbox_consumer_contract_proof: Mapping[str, object] | None,
@@ -417,14 +416,17 @@ def _apply_platform_and_surface_proofs(
     operator_workflows_operations_proof: Mapping[str, object] | None,
     operator_workflows_operations_proof_ref: str | None,
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
-    if _proof_can_clear_blockers(
-        mesh_policy_proof,
-        mesh_policy_proof_ref,
+    if _proof_is_valid_and_current(
+        mesh_policy_source_contract_proof,
+        mesh_policy_source_contract_proof_ref,
         evaluated_at_utc=evaluated_at_utc,
-        proof_is_valid=mesh_policy_proof_is_valid,
+        proof_is_valid=mesh_policy_source_contract_is_valid,
     ):
         capabilities = tuple(
-            _apply_mesh_policy_proof(capability, mesh_policy_proof_ref)
+            _apply_mesh_policy_source_contract(
+                capability,
+                mesh_policy_source_contract_proof_ref,
+            )
             for capability in capabilities
         )
     if _proof_is_valid_and_current(
@@ -641,15 +643,14 @@ def _apply_report_materialization_source_contract(
     )
 
 
-def _apply_mesh_policy_proof(
+def _apply_mesh_policy_source_contract(
     capability: ImplementationProofCapabilityReadiness,
-    mesh_policy_proof_ref: str | None,
+    mesh_policy_source_contract_proof_ref: str | None,
 ) -> ImplementationProofCapabilityReadiness:
-    return apply_blocker_proof(
+    return apply_supporting_evidence(
         capability,
         capability_ids=("data-mesh-certification", "operator-workflows-operations"),
-        blockers_cleared=MESH_POLICY_BLOCKERS_CLEARED,
-        proof_ref=mesh_policy_proof_ref,
+        evidence_ref=mesh_policy_source_contract_proof_ref,
     )
 
 

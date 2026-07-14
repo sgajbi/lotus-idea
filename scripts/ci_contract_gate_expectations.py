@@ -38,7 +38,7 @@ REQUIRED_LINT_TARGETS = (
     "ci-signal-evidence-contract-gate",
     "implementation-truth-gate",
     "data-mesh-contract-gate",
-    "mesh-policy-proof-contract-gate",
+    "mesh-policy-source-contract-proof-gate",
     "opportunity-archetype-contract-gate",
     "downstream-realization-contract-gate",
     "downstream-route-contract-proof-gate",
@@ -157,7 +157,10 @@ GENERATED_READINESS_ARTIFACTS = (
         "scripts/report/generate_materialization_source_contract.py",
         "a report materialization source-contract artifact",
     ),
-    ("scripts/generate_mesh_policy_proof.py", "mesh policy proof artifact"),
+    (
+        "scripts/data_mesh/generate_mesh_policy_source_contract.py",
+        "mesh policy source-contract artifact",
+    ),
     (
         "scripts/data_mesh/generate_platform_catalog_source_contract.py",
         "a platform catalog source contract artifact",
@@ -202,7 +205,7 @@ PASSED_READINESS_ARTIFACTS = (
         "--report-materialization-source-contract-proof",
         "report materialization source contract artifact",
     ),
-    ("--mesh-policy-proof", "mesh policy proof artifact"),
+    ("--mesh-policy-source-contract-proof", "mesh policy source-contract artifact"),
     (
         "--workbench-read-path-source-contract-proof",
         "Workbench read-path source-contract proof artifact",
@@ -264,8 +267,14 @@ REQUIRED_READINESS_WIRING = (
         "LOTUS_IDEA_REPORT_MATERIALIZATION_SOURCE_CONTRACT_PROOF",
         "support optional materialization source contract",
     ),
-    ("LOTUS_IDEA_MESH_POLICY_PROOF_OUTPUT", "pass default mesh policy proof"),
-    ("LOTUS_IDEA_MESH_POLICY_PROOF", "support optional mesh policy proof"),
+    (
+        "LOTUS_IDEA_MESH_POLICY_SOURCE_CONTRACT_PROOF_OUTPUT",
+        "pass default mesh policy source contract",
+    ),
+    (
+        "LOTUS_IDEA_MESH_POLICY_SOURCE_CONTRACT_PROOF",
+        "support optional mesh policy source contract",
+    ),
     (
         "LOTUS_PLATFORM_ROOT",
         "support default platform root wiring for platform catalog source contract generation",

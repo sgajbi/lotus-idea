@@ -178,8 +178,12 @@ REQUIRED_BOUNDED_MODULE_PATHS = {
     "tests/unit/report/test_intake_route_source_contract.py",
     "tests/unit/report/test_materialization_source_contract.py",
     "scripts/data_mesh/generate_platform_catalog_source_contract.py",
+    "scripts/data_mesh/generate_mesh_policy_source_contract.py",
+    "scripts/data_mesh/mesh_policy_source_contract_gate.py",
     "scripts/data_mesh/platform_catalog_source_contract_gate.py",
+    "src/app/application/data_mesh/mesh_policy_source_contract.py",
     "src/app/application/data_mesh/platform_catalog_source_contract.py",
+    "tests/unit/data_mesh/test_mesh_policy_source_contract.py",
     "tests/unit/data_mesh/test_platform_catalog_source_contract.py",
     "scripts/data_lifecycle/__init__.py",
     "scripts/data_lifecycle/run_scheduled_review.py",
@@ -209,6 +213,10 @@ REQUIRED_BOUNDED_MODULE_PATHS = {
 }
 
 PROHIBITED_LEGACY_MODULE_PATHS = {
+    "scripts/generate_mesh_policy_proof.py",
+    "scripts/mesh_policy_proof_contract_gate.py",
+    "src/app/application/mesh_policy_proof.py",
+    "tests/unit/test_mesh_policy_proof.py",
     "scripts/generate_report_intake_route_proof.py",
     "scripts/report_intake_route_proof_contract_gate.py",
     "src/app/application/report_intake_route_proof.py",

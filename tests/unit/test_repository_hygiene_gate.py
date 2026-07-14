@@ -344,6 +344,35 @@ def test_repository_hygiene_gate_enforces_platform_catalog_source_contract_packa
     )
 
 
+def test_repository_hygiene_gate_enforces_mesh_policy_source_contract_package() -> None:
+    module = _load_repository_hygiene_gate()
+    required_paths = {
+        "scripts/data_mesh/generate_mesh_policy_source_contract.py",
+        "scripts/data_mesh/mesh_policy_source_contract_gate.py",
+        "src/app/application/data_mesh/mesh_policy_source_contract.py",
+        "tests/unit/data_mesh/test_mesh_policy_source_contract.py",
+    }
+    retired_paths = {
+        "scripts/generate_mesh_policy_proof.py",
+        "scripts/mesh_policy_proof_contract_gate.py",
+        "src/app/application/mesh_policy_proof.py",
+        "tests/unit/test_mesh_policy_proof.py",
+    }
+    tracked_paths = sorted(module.REQUIRED_BOUNDED_MODULE_PATHS - required_paths | retired_paths)
+
+    violations = module.find_bounded_module_placement_violations(tracked_paths)
+
+    assert violations == sorted(
+        [
+            *(
+                f"{path}: legacy flat-module path must not be reintroduced"
+                for path in retired_paths
+            ),
+            *(f"{path}: required bounded-module path is missing" for path in required_paths),
+        ]
+    )
+
+
 def test_repository_hygiene_gate_enforces_review_queue_domain_package() -> None:
     module = _load_repository_hygiene_gate()
     required_path = "src/app/domain/review_queue/snapshot.py"

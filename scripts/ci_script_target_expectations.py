@@ -49,7 +49,9 @@ SCRIPT_TARGET_EXPECTATIONS = {
     "missing-risk-profile-live-proof-contract-gate": (
         "scripts/missing_risk_profile_live_proof_contract_gate.py"
     ),
-    "mesh-policy-proof-contract-gate": "scripts/mesh_policy_proof_contract_gate.py",
+    "mesh-policy-source-contract-proof-gate": (
+        "scripts/data_mesh/mesh_policy_source_contract_gate.py"
+    ),
     "opportunity-archetype-contract-gate": "scripts/opportunity_archetype_contract_gate.py",
     "durable-repository-proof-contract-gate": (
         "scripts/persistence/durable_repository_proof_contract_gate.py"

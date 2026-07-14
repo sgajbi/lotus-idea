@@ -37,7 +37,9 @@ from app.application.mandate_restriction_live_proof import MANDATE_RESTRICTION_L
 from app.application.mandate_restriction_source_product_proof import (
     MANDATE_RESTRICTION_SOURCE_PRODUCT_PROOF_ENV,
 )
-from app.application.mesh_policy_proof import MESH_POLICY_PROOF_ENV
+from app.application.data_mesh.mesh_policy_source_contract import (
+    MESH_POLICY_SOURCE_CONTRACT_ENV,
+)
 from app.application.missing_benchmark_live_proof import MISSING_BENCHMARK_LIVE_PROOF_ENV
 from app.application.missing_benchmark_performance_readiness_proof import (
     MISSING_BENCHMARK_PERFORMANCE_READINESS_PROOF_ENV,
@@ -137,9 +139,9 @@ PROOF_ARTIFACT_ARGS: tuple[tuple[str, str, str], ...] = (
         "Optional lotus-report idea evidence materialization source-contract artifact path.",
     ),
     (
-        "--mesh-policy-proof",
-        MESH_POLICY_PROOF_ENV,
-        "Optional repo-owned mesh SLO, access, and evidence policy proof artifact path.",
+        "--mesh-policy-source-contract-proof",
+        MESH_POLICY_SOURCE_CONTRACT_ENV,
+        "Optional digest-bound repo-owned mesh policy source-contract artifact path.",
     ),
     (
         "--workbench-read-path-source-contract-proof",
