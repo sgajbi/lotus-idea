@@ -8,7 +8,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
-from app.application.workbench.read_path_source_contract import (
+from app.application.workbench.read_path_source_contract import (  # noqa: E402
     build_workbench_read_path_source_contract_proof_payload,
 )
 

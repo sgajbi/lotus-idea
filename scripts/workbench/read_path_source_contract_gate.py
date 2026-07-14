@@ -7,7 +7,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
-from app.application.workbench.read_path_source_contract import (
+from app.application.workbench.read_path_source_contract import (  # noqa: E402
     REMAINING_WORKBENCH_READ_PATH_CERTIFICATION_BLOCKERS,
     REQUIRED_WORKBENCH_READ_PATH_ROUTE_DECLARATIONS,
     REQUIRED_WORKBENCH_READ_PATH_SOURCE_CONTRACT_LOCAL_EVIDENCE_REFS,
@@ -16,7 +16,7 @@ from app.application.workbench.read_path_source_contract import (
     build_workbench_read_path_source_contract_proof_payload,
     workbench_read_path_source_contract_proof_is_valid,
 )
-from app.domain.proof_evidence import EvidenceClass
+from app.domain.proof_evidence import EvidenceClass  # noqa: E402
 
 try:
     from scripts.proof_source_safety import forbidden_content_validator, validate_forbidden_content
