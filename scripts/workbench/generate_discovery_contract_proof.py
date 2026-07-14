@@ -6,17 +6,17 @@ import json
 import sys
 from pathlib import Path
 
-from app.application.gateway_workbench_discovery_proof import (
-    build_gateway_workbench_discovery_proof_payload,
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT))
+
+from app.application.workbench.discovery_contract_proof import (  # noqa: E402
+    build_gateway_workbench_discovery_contract_proof_payload,
 )
 
 try:
     from scripts.proof_generator_io import write_json_payload
 except ImportError:  # pragma: no cover - supports direct script execution
     from proof_generator_io import write_json_payload  # type: ignore[import-not-found,no-redef]
-
-
-ROOT = Path(__file__).resolve().parents[1]
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -35,7 +35,7 @@ def main(argv: list[str] | None = None) -> int:
             Path(args.gateway_workbench_contract_proof),
             artifact_name="Gateway/Workbench contract proof",
         )
-        payload = build_gateway_workbench_discovery_proof_payload(
+        payload = build_gateway_workbench_discovery_contract_proof_payload(
             generated_at_utc=_aware_datetime(args.generated_at_utc),
             repository_root=ROOT,
             platform_root=Path(args.platform_root),
@@ -56,18 +56,18 @@ def main(argv: list[str] | None = None) -> int:
             ),
         )
     except (OSError, ValueError, json.JSONDecodeError) as exc:
-        print(f"Gateway/Workbench discovery proof error: {exc}", file=sys.stderr)
+        print(f"Gateway/Workbench discovery contract proof error: {exc}", file=sys.stderr)
         return 2
 
     write_json_payload(payload, output=args.output)
-    if payload["gatewayWorkbenchDiscoveryProofValid"] or args.allow_missing_evidence:
+    if payload["gatewayWorkbenchDiscoveryContractProofValid"] or args.allow_missing_evidence:
         return 0
     return 1
 
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Generate a source-safe lotus-idea Gateway/Workbench discovery proof."
+        description="Generate a source-safe lotus-idea Gateway/Workbench discovery contract proof."
     )
     parser.add_argument("--generated-at-utc", required=True)
     parser.add_argument("--platform-root", default=str(ROOT.parent / "lotus-platform"))

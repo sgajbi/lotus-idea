@@ -21,8 +21,8 @@ from app.application.durable_repository_proof import build_durable_repository_pr
 from app.application.workbench.contract_proof import (
     build_gateway_workbench_contract_proof_payload,
 )
-from app.application.gateway_workbench_discovery_proof import (
-    build_gateway_workbench_discovery_proof_payload,
+from app.application.workbench.discovery_contract_proof import (
+    build_gateway_workbench_discovery_contract_proof_payload,
 )
 from app.application.high_volatility_live_proof import build_high_volatility_live_proof_payload
 from app.application.implementation_proof_readiness import (
@@ -74,7 +74,7 @@ from tests.support.ai_lineage_store_proof import valid_ai_lineage_ci_execution_r
 from tests.unit.source_ingestion_proof_helpers import (
     valid_scheduled_worker_proof as _valid_scheduled_worker_proof,
 )
-from tests.unit.test_gateway_workbench_discovery_proof import _write_platform_fixture
+from tests.unit.workbench.test_discovery_contract_proof import _write_platform_fixture
 
 
 def test_implementation_proof_readiness_payload_is_source_safe() -> None:
@@ -660,7 +660,7 @@ def test_generate_implementation_proof_readiness_uses_explicit_gateway_workbench
     assert payload["supportedFeaturePromoted"] is False
 
 
-def test_generate_implementation_proof_readiness_uses_explicit_gateway_workbench_discovery_proof(
+def test_generate_implementation_proof_readiness_uses_explicit_gateway_workbench_discovery_contract_proof(
     tmp_path: Path,
 ) -> None:
     repository_root = Path(__file__).resolve().parents[2]
@@ -675,10 +675,12 @@ def test_generate_implementation_proof_readiness_uses_explicit_gateway_workbench
         workbench_read_path_proof=workbench_proof_payload,
         workbench_read_path_proof_ref="output/workbench/workbench-read-path-proof.json",
     )
-    gateway_workbench_discovery_proof = tmp_path / "gateway-workbench-discovery-proof.json"
-    gateway_workbench_discovery_proof.write_text(
+    gateway_workbench_discovery_contract_proof = (
+        tmp_path / "gateway-workbench-discovery-contract-proof.json"
+    )
+    gateway_workbench_discovery_contract_proof.write_text(
         json.dumps(
-            build_gateway_workbench_discovery_proof_payload(
+            build_gateway_workbench_discovery_contract_proof_payload(
                 generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
                 repository_root=repository_root,
                 platform_root=platform_root,
@@ -706,8 +708,8 @@ def test_generate_implementation_proof_readiness_uses_explicit_gateway_workbench
         [
             "--evaluated-at-utc",
             "2026-06-21T10:10:00Z",
-            "--gateway-workbench-discovery-proof",
-            str(gateway_workbench_discovery_proof),
+            "--gateway-workbench-discovery-contract-proof",
+            str(gateway_workbench_discovery_contract_proof),
             "--output",
             str(output_path),
         ]
@@ -715,7 +717,7 @@ def test_generate_implementation_proof_readiness_uses_explicit_gateway_workbench
 
     assert result == 0
     payload = json.loads(output_path.read_text(encoding="utf-8"))
-    assert "gateway_workbench_discovery_proof_missing" not in payload["overallBlockers"]
+    assert "gateway_workbench_discovery_proof_missing" in payload["overallBlockers"]
     assert "data_mesh_not_certified" in payload["overallBlockers"]
     assert "producer_products_not_active" in payload["overallBlockers"]
     assert "platform_mesh_certification_missing" in payload["overallBlockers"]

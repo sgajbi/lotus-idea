@@ -164,6 +164,39 @@ def test_repository_hygiene_gate_enforces_workbench_proof_package() -> None:
     ]
 
 
+def test_repository_hygiene_gate_enforces_workbench_discovery_contract_package() -> None:
+    module = _load_repository_hygiene_gate()
+    required_paths = {
+        "scripts/workbench/discovery_contract_proof_gate.py",
+        "scripts/workbench/generate_discovery_contract_proof.py",
+        "src/app/application/workbench/discovery_contract_proof.py",
+        "tests/unit/workbench/test_discovery_contract_proof.py",
+    }
+    retired_paths = {
+        "scripts/gateway_workbench_discovery_proof_contract_gate.py",
+        "scripts/gateway_workbench_discovery_contract_proof_contract_gate.py",
+        "scripts/generate_gateway_workbench_discovery_proof.py",
+        "scripts/generate_gateway_workbench_discovery_contract_proof.py",
+        "src/app/application/gateway_workbench_discovery_proof.py",
+        "src/app/application/gateway_workbench_discovery_contract_proof.py",
+        "tests/unit/test_gateway_workbench_discovery_proof.py",
+        "tests/unit/test_gateway_workbench_discovery_contract_proof.py",
+    }
+    tracked_paths = sorted(module.REQUIRED_BOUNDED_MODULE_PATHS - required_paths | retired_paths)
+
+    violations = module.find_bounded_module_placement_violations(tracked_paths)
+
+    assert violations == sorted(
+        [
+            *(
+                f"{path}: legacy flat-module path must not be reintroduced"
+                for path in retired_paths
+            ),
+            *(f"{path}: required bounded-module path is missing" for path in required_paths),
+        ]
+    )
+
+
 def test_repository_hygiene_gate_enforces_review_queue_domain_package() -> None:
     module = _load_repository_hygiene_gate()
     required_path = "src/app/domain/review_queue/snapshot.py"

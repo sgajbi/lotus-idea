@@ -746,30 +746,30 @@ def test_ci_contract_gate_blocks_missing_gateway_workbench_contract_proof_wiring
     ) in errors
 
 
-def test_ci_contract_gate_blocks_missing_gateway_workbench_discovery_proof_generation() -> None:
+def test_ci_gate_requires_gateway_workbench_discovery_contract_generation() -> None:
     module = _load_ci_contract_gate()
     makefile = (
         (ROOT / "Makefile")
         .read_text(encoding="utf-8")
-        .replace("scripts/generate_gateway_workbench_discovery_proof.py", "scripts/removed.py")
+        .replace("scripts/workbench/generate_discovery_contract_proof.py", "scripts/removed.py")
     )
 
     errors = module.validate_makefile(makefile)
 
     assert (
         "Makefile implementation-proof-readiness-check target must generate "
-        "a Gateway/Workbench discovery proof artifact"
+        "a Gateway/Workbench discovery contract proof artifact"
     ) in errors
 
 
-def test_ci_contract_gate_blocks_missing_gateway_workbench_discovery_proof_wiring() -> None:
+def test_ci_gate_requires_gateway_workbench_discovery_contract_wiring() -> None:
     module = _load_ci_contract_gate()
     makefile = (
         (ROOT / "Makefile")
         .read_text(encoding="utf-8")
         .replace(
-            "--gateway-workbench-discovery-proof",
-            "--removed-gateway-workbench-discovery-proof",
+            "--gateway-workbench-discovery-contract-proof",
+            "--removed-gateway-workbench-discovery-contract-proof",
         )
     )
 
@@ -777,18 +777,18 @@ def test_ci_contract_gate_blocks_missing_gateway_workbench_discovery_proof_wirin
 
     assert (
         "Makefile implementation-proof-readiness-check target must pass the "
-        "Gateway/Workbench discovery proof artifact into readiness generation"
+        "Gateway/Workbench discovery contract proof artifact into readiness generation"
     ) in errors
 
 
-def test_ci_contract_gate_blocks_missing_gateway_workbench_discovery_proof_gate() -> None:
+def test_ci_gate_requires_gateway_workbench_discovery_contract_gate() -> None:
     module = _load_ci_contract_gate()
     makefile = (
         (ROOT / "Makefile")
         .read_text(encoding="utf-8")
-        .replace("$(MAKE) gateway-workbench-discovery-proof-contract-gate\n", "")
+        .replace("$(MAKE) gateway-workbench-discovery-contract-proof-contract-gate\n", "")
         .replace(
-            "scripts/gateway_workbench_discovery_proof_contract_gate.py",
+            "scripts/workbench/discovery_contract_proof_gate.py",
             "scripts/removed.py",
         )
     )
@@ -796,11 +796,11 @@ def test_ci_contract_gate_blocks_missing_gateway_workbench_discovery_proof_gate(
     errors = module.validate_makefile(makefile)
 
     assert (
-        "Makefile lint target must call `$(MAKE) gateway-workbench-discovery-proof-contract-gate`"
+        "Makefile lint target must call `$(MAKE) gateway-workbench-discovery-contract-proof-contract-gate`"
     ) in errors
     assert (
-        "Makefile gateway-workbench-discovery-proof-contract-gate target must run "
-        "`scripts/gateway_workbench_discovery_proof_contract_gate.py`"
+        "Makefile gateway-workbench-discovery-contract-proof-contract-gate target must run "
+        "`scripts/workbench/discovery_contract_proof_gate.py`"
     ) in errors
 
 

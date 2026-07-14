@@ -74,8 +74,8 @@ SCRIPT_TARGET_EXPECTATIONS = {
     ),
     "workbench-read-path-proof-contract-gate": "scripts/workbench_read_path_proof_contract_gate.py",
     "gateway-workbench-contract-proof-contract-gate": ("scripts/workbench/contract_proof_gate.py"),
-    "gateway-workbench-discovery-proof-contract-gate": (
-        "scripts/gateway_workbench_discovery_proof_contract_gate.py"
+    "gateway-workbench-discovery-contract-proof-contract-gate": (
+        "scripts/workbench/discovery_contract_proof_gate.py"
     ),
     "outbox-broker-proof-contract-gate": "scripts/outbox/broker_proof_contract_gate.py",
     "outbox-consumer-contract-proof-contract-gate": (
