@@ -33,9 +33,9 @@ _WORKFLOW_SURFACE = "idea-explanation-evidence"
 _TASK_ID = "explain.v1"
 _ENVIRONMENT = "DEVELOPMENT"
 _CALLER_IDENTITY_CLASS = "INTERNAL_SERVICE"
-_EVIDENCE_CONTENT_HASH = "sha256:" + hashlib.sha256(
-    b"lotus-idea-ai-runtime-proof-redacted-evidence-v1"
-).hexdigest()
+_EVIDENCE_CONTENT_HASH = (
+    "sha256:" + hashlib.sha256(b"lotus-idea-ai-runtime-proof-redacted-evidence-v1").hexdigest()
+)
 
 
 class InvalidAIRuntimeExecutionReceipt(ValueError):
@@ -121,8 +121,7 @@ def build_ai_workflow_pack_runtime_execution_proof_payload(
             ),
             "callerIdentityBound": receipt.caller_app == _CALLER_APP,
             "executionCompleted": (
-                receipt.runtime_state == "COMPLETED"
-                and receipt.execution_status == "COMPLETED"
+                receipt.runtime_state == "COMPLETED" and receipt.execution_status == "COMPLETED"
             ),
             "humanReviewEnforced": (
                 receipt.review_required
