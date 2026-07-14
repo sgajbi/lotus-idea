@@ -150,6 +150,36 @@ def test_repository_hygiene_gate_enforces_outbox_broker_proof_package() -> None:
     )
 
 
+def test_repository_hygiene_gate_enforces_outbox_platform_mesh_proof_package() -> None:
+    module = _load_repository_hygiene_gate()
+    required_paths = {
+        "scripts/outbox/platform_mesh/generate_source_contract_proof.py",
+        "scripts/outbox/platform_mesh/source_contract_proof_gate.py",
+        "src/app/application/outbox/platform_mesh/source_contract_proof.py",
+        "tests/unit/outbox/platform_mesh/test_readiness_consumption.py",
+        "tests/unit/outbox/platform_mesh/test_source_contract_proof.py",
+    }
+    retired_paths = {
+        "scripts/outbox/generate_platform_mesh_event_publication_proof.py",
+        "scripts/outbox/platform_mesh_event_publication_proof_contract_gate.py",
+        "src/app/application/outbox/platform_mesh_event_publication_proof.py",
+        "tests/unit/outbox/test_outbox_platform_mesh_event_publication_proof.py",
+    }
+    tracked_paths = sorted(module.REQUIRED_BOUNDED_MODULE_PATHS - required_paths | retired_paths)
+
+    violations = module.find_bounded_module_placement_violations(tracked_paths)
+
+    assert violations == sorted(
+        [
+            *(
+                f"{path}: legacy flat-module path must not be reintroduced"
+                for path in retired_paths
+            ),
+            *(f"{path}: required bounded-module path is missing" for path in required_paths),
+        ]
+    )
+
+
 def test_repository_hygiene_gate_enforces_persistence_bounded_module_placement() -> None:
     module = _load_repository_hygiene_gate()
     required_path = "src/app/infrastructure/persistence/aggregate_mutation.py"

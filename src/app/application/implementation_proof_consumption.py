@@ -53,9 +53,8 @@ from app.application.outbox.broker.source_contract_proof import (
 from app.application.outbox.consumer_contract_proof import (
     outbox_consumer_contract_proof_is_valid,
 )
-from app.application.outbox.platform_mesh_event_publication_proof import (
-    OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_BLOCKERS_CLEARED,
-    outbox_platform_mesh_event_publication_proof_is_valid,
+from app.application.outbox.platform_mesh.source_contract_proof import (
+    outbox_platform_mesh_event_source_contract_proof_is_valid,
 )
 from app.application.platform_mesh_onboarding_proof import (
     PLATFORM_MESH_ONBOARDING_BLOCKERS_CLEARED,
@@ -120,8 +119,8 @@ def _apply_available_proofs(
     outbox_broker_source_contract_proof_ref: str | None,
     outbox_consumer_contract_proof: Mapping[str, object] | None,
     outbox_consumer_contract_proof_ref: str | None,
-    outbox_platform_mesh_event_publication_proof: Mapping[str, object] | None,
-    outbox_platform_mesh_event_publication_proof_ref: str | None,
+    outbox_platform_mesh_event_source_contract_proof: Mapping[str, object] | None,
+    outbox_platform_mesh_event_source_contract_proof_ref: str | None,
     platform_mesh_onboarding_proof: Mapping[str, object] | None,
     platform_mesh_onboarding_proof_ref: str | None,
     workbench_read_path_proof: Mapping[str, object] | None,
@@ -398,8 +397,8 @@ def _apply_platform_and_surface_proofs(
     outbox_broker_source_contract_proof_ref: str | None,
     outbox_consumer_contract_proof: Mapping[str, object] | None,
     outbox_consumer_contract_proof_ref: str | None,
-    outbox_platform_mesh_event_publication_proof: Mapping[str, object] | None,
-    outbox_platform_mesh_event_publication_proof_ref: str | None,
+    outbox_platform_mesh_event_source_contract_proof: Mapping[str, object] | None,
+    outbox_platform_mesh_event_source_contract_proof_ref: str | None,
     platform_mesh_onboarding_proof: Mapping[str, object] | None,
     platform_mesh_onboarding_proof_ref: str | None,
     workbench_read_path_proof: Mapping[str, object] | None,
@@ -447,18 +446,16 @@ def _apply_platform_and_surface_proofs(
             )
             for capability in capabilities
         )
-    if _proof_can_clear_blockers(
-        outbox_platform_mesh_event_publication_proof,
-        outbox_platform_mesh_event_publication_proof_ref,
+    if _proof_is_valid_and_current(
+        outbox_platform_mesh_event_source_contract_proof,
+        outbox_platform_mesh_event_source_contract_proof_ref,
         evaluated_at_utc=evaluated_at_utc,
-        proof_is_valid=outbox_platform_mesh_event_publication_proof_is_valid,
+        proof_is_valid=outbox_platform_mesh_event_source_contract_proof_is_valid,
     ):
         capabilities = tuple(
-            _apply_downstream_route_contract_proof(
+            _apply_outbox_platform_mesh_event_source_contract(
                 capability,
-                capability_id="outbox-delivery",
-                blockers_cleared=OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_BLOCKERS_CLEARED,
-                proof_ref=outbox_platform_mesh_event_publication_proof_ref,
+                outbox_platform_mesh_event_source_contract_proof_ref,
             )
             for capability in capabilities
         )
@@ -884,6 +881,26 @@ def _apply_outbox_consumer_contract_proof(
     evidence_refs = capability.evidence_refs
     if outbox_consumer_contract_proof_ref:
         evidence_refs = tuple(dict.fromkeys((*evidence_refs, outbox_consumer_contract_proof_ref)))
+    return build_capability_readiness(
+        capability.capability_id,
+        capability.name,
+        readiness_status=capability.readiness_status,
+        supportability_status=capability.supportability_status,
+        evidence_refs=evidence_refs,
+        blockers=capability.blockers,
+        supported_feature_promoted=capability.supported_feature_promoted,
+    )
+
+
+def _apply_outbox_platform_mesh_event_source_contract(
+    capability: ImplementationProofCapabilityReadiness,
+    proof_ref: str | None,
+) -> ImplementationProofCapabilityReadiness:
+    if capability.capability_id != "outbox-delivery":
+        return capability
+    evidence_refs = capability.evidence_refs
+    if proof_ref:
+        evidence_refs = tuple(dict.fromkeys((*evidence_refs, proof_ref)))
     return build_capability_readiness(
         capability.capability_id,
         capability.name,

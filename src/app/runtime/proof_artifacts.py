@@ -32,8 +32,8 @@ from app.application.operator_workflows_operations.source_contract_proof import 
 from app.application.outbox.broker.source_contract_proof import (
     OUTBOX_BROKER_SOURCE_CONTRACT_PROOF_ENV,
 )
-from app.application.outbox.platform_mesh_event_publication_proof import (
-    OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF_ENV,
+from app.application.outbox.platform_mesh.source_contract_proof import (
+    OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_PROOF_ENV,
 )
 from app.application.platform_mesh_onboarding_proof import PLATFORM_MESH_ONBOARDING_PROOF_ENV
 from app.application.proof_provenance import bind_aggregate_proof_provenance
@@ -65,8 +65,8 @@ class ConfiguredImplementationProofArtifacts:
     ai_workflow_pack_runtime_execution_proof_ref: str | None
     outbox_broker_source_contract_proof: dict[str, Any] | None
     outbox_broker_source_contract_proof_ref: str | None
-    outbox_platform_mesh_event_publication_proof: dict[str, Any] | None
-    outbox_platform_mesh_event_publication_proof_ref: str | None
+    outbox_platform_mesh_event_source_contract_proof: dict[str, Any] | None
+    outbox_platform_mesh_event_source_contract_proof_ref: str | None
     report_intake_route_proof: dict[str, Any] | None
     report_intake_route_proof_ref: str | None
     platform_mesh_onboarding_proof: dict[str, Any] | None
@@ -147,10 +147,10 @@ _JSON_PROOF_ARTIFACTS: tuple[tuple[str, str, str, str], ...] = (
         "outbox broker source-contract proof",
     ),
     (
-        OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF_ENV,
-        "outbox_platform_mesh_event_publication_proof",
-        "outbox_platform_mesh_event_publication_proof_ref",
-        "outbox platform mesh event publication proof",
+        OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_PROOF_ENV,
+        "outbox_platform_mesh_event_source_contract_proof",
+        "outbox_platform_mesh_event_source_contract_proof_ref",
+        "outbox platform mesh event source-contract proof",
     ),
     (
         REPORT_INTAKE_ROUTE_PROOF_ENV,

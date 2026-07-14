@@ -254,11 +254,11 @@ def _build_readiness_snapshot_from_configured_artifacts(
         outbox_broker_source_contract_proof_ref=(
             proof_artifacts.outbox_broker_source_contract_proof_ref
         ),
-        outbox_platform_mesh_event_publication_proof=(
-            proof_artifacts.outbox_platform_mesh_event_publication_proof
+        outbox_platform_mesh_event_source_contract_proof=(
+            proof_artifacts.outbox_platform_mesh_event_source_contract_proof
         ),
-        outbox_platform_mesh_event_publication_proof_ref=(
-            proof_artifacts.outbox_platform_mesh_event_publication_proof_ref
+        outbox_platform_mesh_event_source_contract_proof_ref=(
+            proof_artifacts.outbox_platform_mesh_event_source_contract_proof_ref
         ),
         report_intake_route_proof=proof_artifacts.report_intake_route_proof,
         report_intake_route_proof_ref=proof_artifacts.report_intake_route_proof_ref,

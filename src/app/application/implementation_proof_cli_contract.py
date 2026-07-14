@@ -58,8 +58,8 @@ from app.application.outbox.broker.source_contract_proof import (
 from app.application.outbox.consumer_contract_proof import (
     OUTBOX_CONSUMER_CONTRACT_PROOF_ENV,
 )
-from app.application.outbox.platform_mesh_event_publication_proof import (
-    OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF_ENV,
+from app.application.outbox.platform_mesh.source_contract_proof import (
+    OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_PROOF_ENV,
 )
 from app.application.platform_mesh_onboarding_proof import (
     PLATFORM_MESH_ONBOARDING_PROOF_ENV,
@@ -161,9 +161,9 @@ PROOF_ARTIFACT_ARGS: tuple[tuple[str, str, str], ...] = (
         "Optional bounded outbox downstream consumer contract proof artifact path.",
     ),
     (
-        "--outbox-platform-mesh-event-publication-proof",
-        OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF_ENV,
-        "Optional bounded outbox platform mesh event publication proof artifact path.",
+        "--outbox-platform-mesh-event-source-contract-proof",
+        OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_PROOF_ENV,
+        "Optional bounded outbox platform-mesh event source-contract proof artifact path.",
     ),
     (
         "--platform-mesh-onboarding-proof",

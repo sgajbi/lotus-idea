@@ -322,7 +322,7 @@ def test_implementation_proof_readiness_capabilities_are_source_safe() -> None:
     assert "POST /api/v1/outbox-delivery/run-once" in outbox_delivery.evidence_refs
     assert "src/app/infrastructure/outbox/publisher.py" in outbox_delivery.evidence_refs
     assert "make outbox-broker-source-contract-proof-gate" in outbox_delivery.evidence_refs
-    assert "make outbox-platform-mesh-event-publication-proof-contract-gate" in (
+    assert "make outbox-platform-mesh-event-source-contract-proof-gate" in (
         outbox_delivery.evidence_refs
     )
     assert "outbox_broker_not_configured" in outbox_delivery.blockers

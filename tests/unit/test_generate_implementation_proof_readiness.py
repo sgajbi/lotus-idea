@@ -39,9 +39,9 @@ from app.application.outbox.broker.source_contract_proof import (
 from app.application.outbox.consumer_contract_proof import (
     build_outbox_consumer_contract_proof_payload,
 )
-from app.application.outbox.platform_mesh_event_publication_proof import (
+from app.application.outbox.platform_mesh.source_contract_proof import (
     REQUIRED_PLATFORM_PRODUCT_IDS,
-    build_outbox_platform_mesh_event_publication_proof_payload,
+    build_outbox_platform_mesh_event_source_contract_proof_payload,
 )
 from app.application.performance_underperformance_live_proof import (
     build_performance_underperformance_live_proof_payload,
@@ -813,14 +813,14 @@ def test_consumer_contract_proof_keeps_runtime_readiness_blocked(
     assert payload["supportedFeaturePromoted"] is False
 
 
-def test_generate_implementation_proof_readiness_uses_explicit_outbox_platform_mesh_event_proof(
+def test_generate_implementation_proof_readiness_uses_explicit_outbox_platform_mesh_source_contract(
     tmp_path: Path,
 ) -> None:
     platform_root = _write_outbox_platform_fixture(tmp_path)
-    event_proof = tmp_path / "outbox-platform-mesh-event-publication-proof.json"
+    event_proof = tmp_path / "outbox-platform-mesh-event-source-contract-proof.json"
     event_proof.write_text(
         json.dumps(
-            build_outbox_platform_mesh_event_publication_proof_payload(
+            build_outbox_platform_mesh_event_source_contract_proof_payload(
                 generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
                 repository_root=Path(__file__).resolve().parents[2],
                 platform_root=platform_root,
@@ -834,7 +834,7 @@ def test_generate_implementation_proof_readiness_uses_explicit_outbox_platform_m
         [
             "--evaluated-at-utc",
             "2026-06-27T00:00:00Z",
-            "--outbox-platform-mesh-event-publication-proof",
+            "--outbox-platform-mesh-event-source-contract-proof",
             str(event_proof),
             "--output",
             str(output_path),
@@ -843,11 +843,20 @@ def test_generate_implementation_proof_readiness_uses_explicit_outbox_platform_m
 
     assert result == 0
     payload = json.loads(output_path.read_text(encoding="utf-8"))
-    assert "platform_mesh_event_publication_proof_missing" not in payload["overallBlockers"]
+    assert "platform_mesh_event_publication_proof_missing" in payload["overallBlockers"]
     assert "gateway_workbench_proof_missing" in payload["overallBlockers"]
     assert "supported_feature_promotion_missing" in payload["overallBlockers"]
     assert payload["readinessStatus"] == "blocked"
     assert payload["supportedFeaturePromoted"] is False
+    outbox_delivery = next(
+        capability
+        for capability in payload["capabilities"]
+        if capability["capabilityId"] == "outbox-delivery"
+    )
+    assert (
+        "outbox platform-mesh event source-contract proof artifact"
+        in outbox_delivery["evidenceRefs"]
+    )
 
 
 def test_generate_implementation_proof_readiness_uses_explicit_mesh_policy_proof(

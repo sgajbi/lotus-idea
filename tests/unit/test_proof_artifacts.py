@@ -26,8 +26,8 @@ from app.application.low_income_core_cashflow_live_proof import (
 from app.application.outbox.broker.source_contract_proof import (
     OUTBOX_BROKER_SOURCE_CONTRACT_PROOF_ENV,
 )
-from app.application.outbox.platform_mesh_event_publication_proof import (
-    OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF_ENV,
+from app.application.outbox.platform_mesh.source_contract_proof import (
+    OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_PROOF_ENV,
 )
 from app.application.platform_mesh_onboarding_proof import PLATFORM_MESH_ONBOARDING_PROOF_ENV
 from app.application.runtime_trust_telemetry_proof import RUNTIME_TRUST_TELEMETRY_PROOF_ENV
@@ -59,7 +59,7 @@ def test_configured_implementation_proof_artifacts_loads_relative_source_safe_re
     )
     outbox_path = tmp_path / "output" / "outbox" / "broker" / "source-contract-proof.json"
     outbox_mesh_event_path = (
-        tmp_path / "output" / "outbox" / "outbox-platform-mesh-event-publication-proof.json"
+        tmp_path / "output" / "outbox" / "platform-mesh" / "event-source-contract-proof.json"
     )
     platform_mesh_path = tmp_path / "output" / "data-mesh" / "platform-mesh-onboarding-proof.json"
     low_income_path = (
@@ -147,11 +147,11 @@ def test_configured_implementation_proof_artifacts_loads_relative_source_safe_re
         "output/outbox/broker/source-contract-proof.json"
     )
     _assert_bound_artifact(
-        artifacts.outbox_platform_mesh_event_publication_proof,
-        "outbox-platform-mesh-event-publication-proof.json",
+        artifacts.outbox_platform_mesh_event_source_contract_proof,
+        "event-source-contract-proof.json",
     )
-    assert artifacts.outbox_platform_mesh_event_publication_proof_ref == (
-        "output/outbox/outbox-platform-mesh-event-publication-proof.json"
+    assert artifacts.outbox_platform_mesh_event_source_contract_proof_ref == (
+        "output/outbox/platform-mesh/event-source-contract-proof.json"
     )
     _assert_bound_artifact(
         artifacts.platform_mesh_onboarding_proof,
@@ -215,8 +215,8 @@ def _configure_relative_artifact_env(monkeypatch: pytest.MonkeyPatch) -> None:
         OUTBOX_BROKER_SOURCE_CONTRACT_PROOF_ENV: (
             "output/outbox/broker/source-contract-proof.json"
         ),
-        OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF_ENV: (
-            "output/outbox/outbox-platform-mesh-event-publication-proof.json"
+        OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_PROOF_ENV: (
+            "output/outbox/platform-mesh/event-source-contract-proof.json"
         ),
         PLATFORM_MESH_ONBOARDING_PROOF_ENV: (
             "output/data-mesh/platform-mesh-onboarding-proof.json"

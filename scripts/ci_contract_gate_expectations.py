@@ -62,7 +62,7 @@ REQUIRED_LINT_TARGETS = (
     "gateway-workbench-discovery-contract-proof-contract-gate",
     "outbox-broker-source-contract-proof-gate",
     "outbox-consumer-contract-proof-contract-gate",
-    "outbox-platform-mesh-event-publication-proof-contract-gate",
+    "outbox-platform-mesh-event-source-contract-proof-gate",
     "platform-mesh-onboarding-proof-contract-gate",
     "source-ingestion-worker-check",
     "source-ingestion-scheduled-worker-check",
@@ -141,8 +141,8 @@ GENERATED_READINESS_ARTIFACTS = (
         "an outbox consumer contract proof artifact",
     ),
     (
-        "scripts/outbox/generate_platform_mesh_event_publication_proof.py",
-        "an outbox platform mesh event publication proof artifact",
+        "scripts/outbox/platform_mesh/generate_source_contract_proof.py",
+        "an outbox platform-mesh event source-contract proof artifact",
     ),
     ("scripts/generate_advise_proposal_route_proof.py", "an Advise proposal route proof artifact"),
     ("scripts/generate_manage_action_route_proof.py", "a Manage action route proof artifact"),
@@ -192,8 +192,8 @@ PASSED_READINESS_ARTIFACTS = (
     ),
     ("--outbox-consumer-contract-proof", "outbox consumer contract proof artifact"),
     (
-        "--outbox-platform-mesh-event-publication-proof",
-        "outbox platform mesh event publication proof artifact",
+        "--outbox-platform-mesh-event-source-contract-proof",
+        "outbox platform-mesh event source-contract proof artifact",
     ),
     ("--platform-mesh-onboarding-proof", "platform mesh onboarding proof artifact"),
     ("--gateway-workbench-contract-proof", "Gateway/Workbench contract proof artifact"),
@@ -267,12 +267,12 @@ REQUIRED_READINESS_WIRING = (
     ("LOTUS_IDEA_OUTBOX_CONSUMER_CONTRACT_PROOF_OUTPUT", "pass default outbox proof"),
     ("LOTUS_IDEA_OUTBOX_CONSUMER_CONTRACT_PROOF", "support optional outbox proof"),
     (
-        "LOTUS_IDEA_OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF_OUTPUT",
-        "pass default outbox platform mesh event publication proof",
+        "LOTUS_IDEA_OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_PROOF_OUTPUT",
+        "pass default outbox platform-mesh event source-contract proof",
     ),
     (
-        "LOTUS_IDEA_OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF",
-        "support optional outbox platform mesh event publication proof",
+        "LOTUS_IDEA_OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_PROOF",
+        "support optional outbox platform-mesh event source-contract proof",
     ),
     (
         "--allow-missing-evidence",
