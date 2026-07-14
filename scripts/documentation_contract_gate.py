@@ -441,10 +441,7 @@ def evidence_classification_inventory_errors(*, root: Path = ROOT) -> list[str]:
         return []
     formatted = ", ".join(f"#{issue_number}" for issue_number in missing)
     inventory_label = EVIDENCE_CLASSIFICATION_INVENTORY_PATH.as_posix()
-    return [
-        f"{inventory_label}: missing completed campaign "
-        f"occurrences: {formatted}"
-    ]
+    return [f"{inventory_label}: missing completed campaign occurrences: {formatted}"]
 
 
 def validate_documentation_contract(
