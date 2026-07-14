@@ -66,8 +66,7 @@ _validate_forbidden_content = forbidden_content_validator(
 )
 
 
-def validate_ai_workflow_pack_runtime_execution_proof_contract(
-) -> list[str]:
+def validate_ai_workflow_pack_runtime_execution_proof_contract() -> list[str]:
     errors: list[str] = []
     proof = build_ai_workflow_pack_runtime_execution_proof_payload(
         generated_at_utc=datetime(2026, 6, 26, 0, 0, tzinfo=UTC),
