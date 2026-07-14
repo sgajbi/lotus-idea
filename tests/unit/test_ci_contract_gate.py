@@ -287,9 +287,9 @@ def test_ci_contract_gate_blocks_missing_ai_workflow_pack_proof_readiness_wiring
     errors = module.validate_makefile(makefile)
 
     assert (
-            "Makefile implementation-proof-readiness-check target must pass the "
-            "AI workflow-pack registration source-contract proof artifact into readiness "
-            "generation"
+        "Makefile implementation-proof-readiness-check target must pass the "
+        "AI workflow-pack registration source-contract proof artifact into readiness "
+        "generation"
     ) in errors
 
 
@@ -307,8 +307,8 @@ def test_ci_contract_gate_blocks_missing_ai_workflow_pack_proof_generation() -> 
     errors = module.validate_makefile(makefile)
 
     assert (
-            "Makefile implementation-proof-readiness-check target must generate "
-            "an AI workflow-pack registration source-contract proof artifact"
+        "Makefile implementation-proof-readiness-check target must generate "
+        "an AI workflow-pack registration source-contract proof artifact"
     ) in errors
 
 

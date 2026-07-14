@@ -491,9 +491,7 @@ def test_generate_implementation_proof_readiness_uses_explicit_ai_model_risk_ope
 def test_generate_implementation_proof_readiness_uses_explicit_ai_workflow_pack_registration_proof(
     tmp_path: Path,
 ) -> None:
-    ai_workflow_pack_proof = (
-        tmp_path / "ai-workflow-pack-registration-source-contract-proof.json"
-    )
+    ai_workflow_pack_proof = tmp_path / "ai-workflow-pack-registration-source-contract-proof.json"
     ai_workflow_pack_proof.write_text(
         json.dumps(
             build_ai_workflow_pack_registration_proof_payload(

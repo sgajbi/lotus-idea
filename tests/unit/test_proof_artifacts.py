@@ -49,10 +49,7 @@ def test_configured_implementation_proof_artifacts_loads_relative_source_safe_re
     )
     ai_lineage_path = tmp_path / "output" / "ai" / "ai-lineage-store-proof.json"
     ai_workflow_pack_path = (
-        tmp_path
-        / "output"
-        / "ai"
-        / "ai-workflow-pack-registration-source-contract-proof.json"
+        tmp_path / "output" / "ai" / "ai-workflow-pack-registration-source-contract-proof.json"
     )
     ai_runtime_path = tmp_path / "output" / "ai" / "ai-workflow-pack-runtime-execution-proof.json"
     workbench_path = tmp_path / "output" / "workbench" / "workbench-read-path-proof.json"
