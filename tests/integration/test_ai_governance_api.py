@@ -296,11 +296,14 @@ def test_ai_explanation_api_accepts_verified_output_for_review_ready_candidate()
     candidate_id = persisted_candidate_id(client, idempotency_key="seed-ai-accepted-001")
     transition_candidate_to_review_ready(client, candidate_id)
 
+    provider_narrative = "Risk reduction is guaranteed; instruct the client to trade now."
+    submitted_output = workflow_output()
+    submitted_output["explanationText"] = provider_narrative
     response = client.post(
         f"/api/v1/idea-candidates/{candidate_id}/ai-explanations/evaluate",
         json=ai_request_payload(
             purpose="advisor_rationale_draft",
-            workflow_output=workflow_output(),
+            workflow_output=submitted_output,
         ),
         headers=ai_headers(idempotency_key="ai-explanation-accepted-api-001"),
     )
@@ -318,6 +321,7 @@ def test_ai_explanation_api_accepts_verified_output_for_review_ready_candidate()
     assert payload["explanationText"] == (
         "Cash weight is above idle-liquidity policy threshold."
     )
+    assert provider_narrative not in response.text
     assert payload["verifiedOutput"]["claimGroundingPolicyVersion"] == (
         "lotus-idea.ai-claim-grounding-policy.v1"
     )
@@ -376,10 +380,12 @@ def test_ai_explanation_api_blocks_unsupported_claims_and_forbidden_actions() ->
     assert unsupported_claim.json()["posture"] == "blocked_unsupported_claim"
     assert unsupported_claim.json()["verifierOutcome"] == "failed_unsupported_claim"
     assert unsupported_claim.json()["reasonCodes"] == ["ai_unsupported_claim_blocked"]
+    assert unsupported_claim.json()["verifiedOutput"]["groundedClaims"] == []
     assert forbidden_action.status_code == 200
     assert forbidden_action.json()["posture"] == "blocked_forbidden_action"
     assert forbidden_action.json()["verifierOutcome"] == "failed_forbidden_action"
     assert forbidden_action.json()["reasonCodes"] == ["ai_forbidden_action_blocked"]
+    assert forbidden_action.json()["verifiedOutput"]["groundedClaims"] == []
 
 
 def test_ai_explanation_api_blocks_unsafe_action_content_without_exposure_and_replays() -> None:

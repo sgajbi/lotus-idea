@@ -512,7 +512,8 @@ AI_EXPLANATION_ROUTE: RouteMetadata = {
     "description": (
         "Evaluates an internal AI explanation workflow result or deterministic fallback "
         "against a persisted idea candidate. The route applies redaction, source-product "
-        "claim verification, forbidden-action blocking, source-safe lineage recording, "
+        "claim verification, deterministic advisor narrative rendering from verified claims, "
+        "source-safe claim grounding, forbidden-action blocking, source-safe lineage recording, "
         "versioned output-content integrity, and a purpose-scoped provider-safe metadata "
         "allowlist, "
         "API Idempotency-Key replay/conflict protection, and bounded operation telemetry. "
@@ -546,8 +547,7 @@ AI_EXPLANATION_ROUTE: RouteMetadata = {
                         "posture": "ready_for_advisor_review",
                         "verifierOutcome": "passed",
                         "explanationText": (
-                            "Candidate has elevated idle cash and source-ready evidence "
-                            "for advisor review."
+                            "Cash weight is above idle-liquidity policy threshold."
                         ),
                         "reasonCodes": ["ai_verifier_passed"],
                         "fallbackUsed": False,
@@ -591,6 +591,29 @@ AI_EXPLANATION_ROUTE: RouteMetadata = {
                             "proposedActionTypes": ["advisor_review"],
                             "verifierRanAtUtc": "2026-06-21T10:12:00Z",
                             "actionPolicyVersion": "lotus-idea.ai-action-content-policy.v1",
+                            "claimGroundingPolicyVersion": (
+                                "lotus-idea.ai-claim-grounding-policy.v1"
+                            ),
+                            "groundedClaims": [
+                                {
+                                    "claimId": "claim-001",
+                                    "claimText": (
+                                        "Cash weight is above idle-liquidity policy threshold."
+                                    ),
+                                    "sourceRefs": [
+                                        {
+                                            "productId": (
+                                                "lotus-core:PortfolioStateSnapshot:v1"
+                                            ),
+                                            "sourceSystem": "lotus-core",
+                                            "productVersion": "v1",
+                                            "asOfDate": "2026-06-21",
+                                            "freshness": "current",
+                                            "dataQualityStatus": "complete",
+                                        }
+                                    ],
+                                }
+                            ],
                         },
                         "approvedMetadataKeys": ["channel"],
                         "aiLineageRecorded": True,
