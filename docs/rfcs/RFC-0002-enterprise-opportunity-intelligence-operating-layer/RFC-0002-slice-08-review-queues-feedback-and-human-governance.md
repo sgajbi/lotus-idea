@@ -1,6 +1,6 @@
 # RFC-0002 Slice 08: Review Queues, Feedback, And Human Governance
 
-Status: Implementation complete on feature branch; mainline closure and supported-feature promotion remain pending
+Status: Implemented on `main`; supported-feature promotion remains pending
 
 ## Outcome
 
@@ -111,19 +111,25 @@ Implemented in this slice:
 
 Validation evidence from the implementation slice:
 
-1. `make check` passed lint, canonical formatting, 773-file MyPy analysis,
+1. PR `#387` merged by rebase to exact-main SHA
+   `d5be2390065171a36fc8fbc19f40cc4aa3cded87`. Main Releasability run
+   `29297787754` and CodeQL run `29297783153` passed for that SHA.
+2. `make check` passed lint, canonical formatting, 773-file MyPy analysis,
    architecture and API gates, and 3,637 unit tests.
-2. `make ci` passed 451 integration tests with 28 environment-dependent
+3. `make ci` passed 451 integration tests with 28 environment-dependent
    PostgreSQL tests skipped, four end-to-end tests, all three coverage shards,
    the 99.02% combined coverage gate, and dependency audit against the resolved
    runtime and CI tooling lock files. The coverage threshold was not reduced.
-3. `LOTUS_IDEA_POSTGRES_INTEGRATION_REQUIRED=1 make postgres-integration-gate`
+4. `LOTUS_IDEA_POSTGRES_INTEGRATION_REQUIRED=1 make postgres-integration-gate`
    passed all 17 tests against an isolated PostgreSQL 18 database, including
    review-queue projection, restart/replay, downstream submission, and data
    lifecycle paths. The database was removed after validation.
-4. Focused audience, workflow, malformed-scope, snapshot, caller-context,
+5. Focused audience, workflow, malformed-scope, snapshot, caller-context,
    OpenAPI, endpoint-certification, observability, maintainability,
    documentation, issue-closure, and supported-feature gates passed.
+6. Repo-authored wiki source was published after merge at wiki commit
+   `3ad971d`; the post-publication synchronization check reported zero drift.
+   The implementation branch was deleted locally and remotely.
 
 ## Later-Slice Promotion Dependencies
 
