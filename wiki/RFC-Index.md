@@ -146,6 +146,9 @@ Current RFC-0002 implementation-start baseline:
    persisted, and blocked output exposes no grounded claims. This remains
    without `lotus-ai` runtime execution, Gateway,
    Workbench, or supported-feature promotion.
+   PR `#390` merged this bounded capability to exact-main SHA `67a6e005`;
+   Main Releasability `29300549721` and CodeQL `29300546423` passed. Slice 09
+   remains partial for its separate live-runtime and product-realization gates.
 11. Slice 10 partially implements certified internal API foundations for
    high-cash evaluation, high-cash evaluate-and-persist, candidate lifecycle
    transitions, source-safe candidate detail, candidate evidence replay,
