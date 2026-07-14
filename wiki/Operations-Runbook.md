@@ -228,12 +228,12 @@ provisioning/query execution, alert-rule loading/evaluation/delivery,
 It also records the non-AI operator workflow operations contract,
 `make operator-workflows-ops-contract-gate`, and
 `make operator-workflows-operations-proof-contract-gate` in the
-`operator-workflows-operations` capability evidence. A current proof clears
-only `operator_workflow_dashboard_not_certified` and
-`operator_workflow_alerts_not_certified`; source-ingestion certification,
-external broker runtime, downstream execution authority, Gateway/Workbench,
-data-mesh, and supported-feature blockers stay controlled by their owning proof
-artifacts.
+`operator-workflows-operations` capability evidence. A current source-contract
+proof adds provenance but clears no aggregate blocker. Dashboard provisioning
+and query execution, alert-rule loading/evaluation/delivery, source-ingestion
+certification, external broker runtime, downstream execution authority,
+Gateway/Workbench, data-mesh, and supported-feature blockers stay controlled by
+their owning proof artifacts.
 It also records the generated AI lineage store proof when
 `make ai-lineage-store-proof-contract-gate` passes, clearing only
 `certified_ai_lineage_store_missing` while preserving `lotus-ai` runtime,
@@ -722,12 +722,14 @@ The non-AI operator workflow dashboard and alert pack lives at
 `monitoring/prometheus/rules/lotus-idea-operator-workflows-operations.rules.yml`,
 and `docs/runbooks/operator-workflows-operations.md`. Use
 `make operator-workflows-ops-contract-gate` and
-`make operator-workflows-operations-proof-contract-gate` to certify source-safe
-dashboard/alert visibility over implemented source-ingestion, outbox,
-downstream-realization, runtime-trust, and implementation-proof readiness
-telemetry. The gates fail closed if the contract, dashboard, or alert artifacts
-drift away from the code-owned source-authority vocabulary. This is not live
-source, external broker, downstream execution, Gateway/Workbench, data-mesh, or
+`make operator-workflows-operations-proof-contract-gate` to validate the
+source-safe dashboard, alert-rule, and runbook contract over implemented
+source-ingestion, outbox, downstream-realization, runtime-trust, and
+implementation-proof readiness telemetry. The gates fail closed if those
+artifacts drift from the code-owned source-authority vocabulary. Static
+validation does not prove dashboard provisioning/query execution, alert-rule
+loading/evaluation/delivery, deployment, production behavior, live source,
+external broker, downstream execution, Gateway/Workbench, data mesh, or
 supported-feature certification.
 
 ### Outbox Runtime Posture

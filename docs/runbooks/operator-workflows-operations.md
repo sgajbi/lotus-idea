@@ -9,11 +9,12 @@ trust telemetry, and aggregate implementation-proof readiness.
 
 ## Operating Boundary
 
-The dashboard and alert rules certify operational visibility over implemented
-operation-event telemetry and the bounded outbox readiness projection. They do not certify live
-source ingestion, external broker publication, downstream execution outcomes,
-data-mesh certification, Gateway or Workbench behavior, client-ready use, or
-supported-feature promotion.
+The dashboard and alert-rule files provide a valid, source-safe observability contract over
+implemented operation-event telemetry and the bounded outbox readiness projection. Static
+validation does not prove dashboard provisioning or query execution, alert-rule loading,
+evaluation or delivery, deployment, production behavior, live source ingestion, external broker
+publication, downstream execution outcomes, data-mesh certification, Gateway or Workbench
+behavior, client-ready use, or supported-feature promotion.
 
 The `source_authority` metric label is governed by
 `OPERATION_EVENT_SOURCE_AUTHORITIES` in `src/app/observability/logging.py`.
@@ -191,7 +192,7 @@ Certification evidence must include:
 4. `monitoring/prometheus/rules/lotus-idea-operator-workflows-operations.rules.yml`,
 5. `scripts/operator_workflows_operations_contract_gate.py`,
 6. `scripts/outbox/supportability_contract_gate.py`,
-7. `scripts/operator_workflows_operations_proof_contract_gate.py`,
+7. `scripts/operator_workflows_operations/source_contract_proof_gate.py`,
 8. `make operator-workflows-ops-contract-gate`,
 9. `make outbox-supportability-contract-gate`,
 10. `make operator-workflows-operations-proof-contract-gate`.

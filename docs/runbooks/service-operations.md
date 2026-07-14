@@ -391,11 +391,13 @@ The non-AI operator workflow dashboard and alert pack lives in
 `monitoring/prometheus/rules/lotus-idea-operator-workflows-operations.rules.yml`,
 and `docs/runbooks/operator-workflows-operations.md`.
 `make operator-workflows-ops-contract-gate` and
-`make operator-workflows-operations-proof-contract-gate` certify only
-source-safe dashboard/alert visibility over implemented operation telemetry.
-Live source ingestion, external broker publication, downstream execution
-outcomes, data-mesh certification, Gateway/Workbench proof, and
-supported-feature promotion remain separate blockers.
+`make operator-workflows-operations-proof-contract-gate` validate only the
+source-safe dashboard, alert-rule, and runbook contract over implemented
+operation telemetry. They do not prove dashboard provisioning/query execution,
+live rule loading/evaluation/delivery, deployment, or production behavior.
+Those runtime blockers remain alongside live source ingestion, external broker
+publication, downstream execution outcomes, data-mesh certification,
+Gateway/Workbench proof, and supported-feature promotion.
 
 Use the operation `outcome` before inspecting payload-level evidence:
 

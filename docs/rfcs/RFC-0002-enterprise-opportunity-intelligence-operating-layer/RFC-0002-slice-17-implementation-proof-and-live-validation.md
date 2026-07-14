@@ -462,19 +462,24 @@ without relying on chat memory.
    artifacts are present and valid. Repo-owned model-risk dashboard/alert source
    validation is now covered by the model-risk operations proof gate; runtime
    provisioning, evaluation, and delivery remain blocked.
-10. AI workflow-pack registration proof is now explicit in aggregate readiness
+12. Non-AI operator-workflows dashboard, alert-rule, runbook, and fixture source
+    validation is covered by a v2 `source_contract` proof. It adds a traceable
+    aggregate evidence reference but clears no blocker; dashboard provisioning
+    and query execution, live rule loading/evaluation/delivery, deployment, and
+    production certification remain separately blocked under issue `#412`.
+13. AI workflow-pack registration proof is now explicit in aggregate readiness
    evidence, but it proves only the governed sibling registration,
    binding, queue policy, supportability, and test coverage for
    `idea_explanation.pack@v1`; runtime execution, provider calls, model-risk
    operations certification, runtime trust telemetry, Workbench proof, and
    supported-feature promotion remain pending unless separately proven.
-11. AI workflow-pack runtime execution proof is now explicit in aggregate
+14. AI workflow-pack runtime execution proof is now explicit in aggregate
     readiness evidence, but it proves only an observed deterministic runtime
     invocation with a source-safe receipt, guardrails, stub-provider routing,
     and restricted `lotus-idea` caller policy; live provider execution,
     provider rollout, model-risk operations certification, runtime trust
     telemetry, Workbench proof, and supported-feature promotion remain pending.
-12. Opportunity archetype scenario readiness is now explicit in aggregate
+15. Opportunity archetype scenario readiness is now explicit in aggregate
     readiness, but it proves only governed taxonomy, bounded concentration
     source/policy foundation, bounded high-volatility / drawdown source/policy
     foundation, bounded missing suitability context source/policy foundation,

@@ -1281,18 +1281,19 @@ repeated defect patterns are fixed once and pinned with tests or gates:
    rather than only direct requirements. The gate also keeps the GitHub
    Dependency Graph requirements manifest mirrored to the resolved runtime lock
    so Security-tab graph updates stay parseable.
-5. Operator observability certification: GitHub issue `#282` is addressed by
-   the non-AI operator workflow operations contract and proof gates, which
-   certify source-safe dashboard/alert artifacts over implemented operation
-   telemetry while preserving live-source, external-broker, downstream
-   execution, Gateway/Workbench, data-mesh, and supported-feature blockers.
+5. Operator observability source contract: GitHub issues `#282` and `#412` are
+   addressed by the non-AI operator workflow operations contract and proof
+   gates, which validate source-safe dashboard, alert-rule, runbook, and
+   fixture artifacts over implemented telemetry. Static evidence clears no
+   aggregate blocker and does not prove provisioning/query execution, rule
+   loading/evaluation/delivery, deployment, or production behavior.
 6. Aggregate operator workflow proof consumption: GitHub issue `#292` is
    addressed by a distinct `operator-workflows-operations` implementation-proof
    readiness capability, CLI/env/API proof-artifact consumption, and regression
-   tests that clear only operator dashboard/alert blockers while retaining
-   live-source, external-broker, downstream execution, Gateway/Workbench,
-   data-mesh, and supported-feature blockers unless their owning proof artifacts
-   are also present.
+   tests that add the source-contract proof reference while retaining operator
+   dashboard/alert runtime, live-source, external-broker, downstream execution,
+   Gateway/Workbench, data-mesh, and supported-feature blockers unless their
+   owning runtime or authority proof artifacts are also present.
 7. Outbox delivery operability: GitHub issue `#297` is addressed by durable
    outbox failure timing and next-attempt eligibility state. Failed rows below
    the retry limit are not claimable until `next_attempt_at_utc` is due,

@@ -889,7 +889,11 @@ source ingestion, outbox delivery, downstream realization, runtime trust, and
 implementation-proof readiness telemetry. They block unsupported operation
 names, sensitive labels, missing runbook refs, unimplemented metrics, and
 premature live-source, external-broker, downstream-execution,
-Gateway/Workbench, data-mesh, or supported-feature claims.
+Gateway/Workbench, data-mesh, or supported-feature claims. The proof artifact
+is classified as `source_contract`, adds provenance without clearing aggregate
+blockers, and rejects claims of dashboard provisioning/query execution,
+alert-rule loading/evaluation/delivery, deployment, or production
+certification.
 
 The AI workflow-pack registration proof contract gate validates the bounded
 cross-repo `lotus-ai` workflow-pack registration proof consumed by aggregate
