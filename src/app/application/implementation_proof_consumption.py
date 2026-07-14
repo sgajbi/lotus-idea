@@ -466,19 +466,12 @@ def _apply_platform_and_surface_proofs(
             )
             for capability in capabilities
         )
-    if _proof_can_clear_blockers(
-        platform_catalog_source_contract_proof,
-        platform_catalog_source_contract_proof_ref,
+    capabilities = _apply_platform_catalog_source_contract_if_valid(
+        capabilities=capabilities,
         evaluated_at_utc=evaluated_at_utc,
-        proof_is_valid=platform_catalog_source_contract_is_valid,
-    ):
-        capabilities = tuple(
-            _apply_platform_catalog_source_contract(
-                capability,
-                platform_catalog_source_contract_proof_ref,
-            )
-            for capability in capabilities
-        )
+        proof=platform_catalog_source_contract_proof,
+        proof_ref=platform_catalog_source_contract_proof_ref,
+    )
     if _proof_is_valid_and_current(
         workbench_read_path_source_contract_proof,
         workbench_read_path_source_contract_proof_ref,
@@ -525,6 +518,26 @@ def _apply_platform_and_surface_proofs(
         operator_workflows_operations_proof_ref=operator_workflows_operations_proof_ref,
     )
     return capabilities
+
+
+def _apply_platform_catalog_source_contract_if_valid(
+    *,
+    capabilities: tuple[ImplementationProofCapabilityReadiness, ...],
+    evaluated_at_utc: datetime,
+    proof: Mapping[str, object] | None,
+    proof_ref: str | None,
+) -> tuple[ImplementationProofCapabilityReadiness, ...]:
+    if not _proof_can_clear_blockers(
+        proof,
+        proof_ref,
+        evaluated_at_utc=evaluated_at_utc,
+        proof_is_valid=platform_catalog_source_contract_is_valid,
+    ):
+        return capabilities
+    return tuple(
+        _apply_platform_catalog_source_contract(capability, proof_ref)
+        for capability in capabilities
+    )
 
 
 def _apply_operator_workflows_operations_proof_if_valid(
