@@ -439,7 +439,7 @@ Persistence adapter validation:
    optional missing-benchmark Performance readiness proof consumption,
    default Report intake route source-contract generation and consumption, default
    Report materialization source-contract generation and consumption, default
-   platform mesh onboarding proof generation and
+   platform catalog source contract generation and
    consumption, AI lineage store proof generation and consumption, and AI
    workflow-pack registration/runtime execution proof generation and consumption,
    plus opportunity archetype scenario readiness from the governed contract, can be
@@ -974,11 +974,13 @@ Data-mesh foundation checks:
 5. optional sibling platform catalog/source-manifest evidence is used to catch
    source-product drift and validate governed `lotus-idea` onboarding without
    treating catalog visibility as certification,
-6. `make platform-mesh-onboarding-proof-contract-gate` validates the bounded
-   cross-repo proof when a sibling `lotus-platform` checkout is available,
-   while `make implementation-proof-readiness-check` generates an invalid
-   non-proof artifact and keeps blockers when sibling platform evidence is
-   absent,
+6. `make platform-catalog-source-contract-proof-gate` validates the bounded
+   cross-repo v2 `source_contract` when a sibling `lotus-platform` checkout is
+   available. It checks closed fields, exact blocker scope, explicit false
+   runtime/certification claims, and repository/ref/SHA-256 authority for the
+   source manifest, catalog, dependency graph, and maturity matrix. The
+   aggregate readiness command generates an invalid non-proof artifact and
+   keeps blockers when sibling platform evidence is absent,
 7. the sibling [Lotus Data Mesh Standard](https://github.com/sgajbi/lotus-platform/blob/main/docs/standards/Lotus%20Data%20Mesh%20Standard.md)
    remains the controlling platform rule,
 8. platform mesh certification is required before any supported mesh claim.
@@ -991,8 +993,10 @@ and must continue to name SLO certification, access-policy certification,
 evidence-policy certification, Gateway/Workbench runtime discovery evidence,
 and supported-feature promotion until those are implementation-backed and
 platform-certified. Source-manifest and catalog-inclusion blockers may be
-cleared only by the bounded platform mesh onboarding proof; that proof is not
-mesh certification.
+cleared only by a valid, current platform catalog source contract. That
+contract is not runtime publication, policy certification, platform mesh
+certification, product activation, Gateway/Workbench discovery, deployment,
+production certification, or supported-feature evidence.
 
 The internal runtime trust telemetry preview endpoint is covered by OpenAPI,
 endpoint certification, unit tests, integration tests, and a repo-native

@@ -223,14 +223,18 @@ documentation across opportunity signal APIs.
     blocker-clearance scope, and its remaining external broker publication,
     downstream delivery, Gateway/Workbench, client-ready publication, and
     supported-feature boundaries.
-23. README, repository context,
+23. Repository context,
     `docs/operations/implementation-proof-readiness.md`,
     `docs/operations/mesh-readiness.md`, service runbooks, quality gate docs,
-    RFC evidence, and wiki source now describe default platform mesh onboarding
-    proof generation and aggregate consumption while preserving the boundary
-    that missing sibling evidence is a non-proof artifact and no platform mesh
-    certification, active product declaration, Gateway/Workbench discovery, or
-    supported-feature promotion is implied.
+    RFC evidence, and wiki source now describe the v2 platform catalog source
+    contract, digest-bound authority, default generation, and aggregate
+    consumption. They preserve the boundary that missing sibling evidence is a
+    non-proof artifact and no runtime publication, platform certification,
+    active product declaration, Gateway/Workbench discovery certification,
+    deployment, production certification, or supported-feature promotion is
+    implied. The README data-mesh capability row now uses the bounded
+    source-contract name and blocker posture. OpenAPI, migrations, database
+    ownership, runtime topology, and supported-feature truth remain unchanged.
 24. README, repository context,
     `docs/operations/implementation-proof-readiness.md`,
     `docs/operations/mesh-readiness.md`, quality gate docs, RFC evidence, and

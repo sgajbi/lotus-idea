@@ -1,6 +1,6 @@
 # RFC-0002 Slice 14: Data Product Promotion, Trust Telemetry, And Platform Hardening
 
-Status: Partially implemented - internal not-certified mesh readiness, runtime telemetry preview, source-safe runtime snapshot diagnostics, runtime telemetry proof contract, repo-owned mesh policy proof, and bounded platform onboarding proof
+Status: Partially implemented - internal not-certified mesh readiness, runtime telemetry preview, source-safe runtime snapshot diagnostics, runtime telemetry proof contract, repo-owned mesh policy proof, and a digest-bound platform catalog source contract
 
 ## Outcome
 
@@ -77,10 +77,15 @@ not hydrate audit, outbox, downstream-submission, lifecycle-history,
 idempotency, or AI-lineage state.
 16. `src/app/application/data_mesh/platform_catalog_source_contract.py`,
     `scripts/data_mesh/generate_platform_catalog_source_contract.py`, and
-    `make platform-mesh-onboarding-proof-contract-gate` validate bounded
+    `make platform-catalog-source-contract-proof-gate` validate bounded
     sibling `lotus-platform` source-manifest, generated catalog, dependency
-    graph, maturity matrix, and handoff evidence. The proof clears only
-    source-manifest and catalog-inclusion blockers from aggregate readiness.
+    graph, maturity matrix, and handoff evidence. Issue `#443` replaces the
+    ambiguous v1 onboarding proof with a closed-field v2 `source_contract`,
+    binds the four authority files by repository/ref/SHA-256, and permits only
+    source-manifest and catalog-inclusion blockers to be satisfied. Runtime
+    publication, platform certification, product activation, deployment,
+    Gateway/Workbench discovery certification, production certification, and
+    supported-feature promotion remain explicitly unproved.
 17. `src/app/application/mesh_policy_proof.py`,
     `scripts/generate_mesh_policy_proof.py`, and
     `make mesh-policy-proof-contract-gate` validate the repo-owned
@@ -155,7 +160,8 @@ implementation-backed active product declarations, Gateway/Workbench discovery
 proof, certified consumer contracts, platform mesh certification, and
 supported-feature evidence. Until those exist, `lotus-idea` remains a planned
 data-mesh producer/consumer with repo-native anti-drift controls, source-safe
-runtime telemetry evidence, and bounded platform onboarding proof only.
+runtime telemetry evidence, and bounded platform catalog source-contract
+evidence only.
 
 ## Acceptance Gate
 

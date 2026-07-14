@@ -269,10 +269,10 @@ proof through `LOTUS_MANAGE_ROOT` and
 `LOTUS_IDEA_MANAGE_ACTION_ROUTE_PROOF_OUTPUT`, default Report intake route and
 materialization source contracts through `LOTUS_REPORT_ROOT`,
 `LOTUS_IDEA_REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF_OUTPUT`, and
-`LOTUS_IDEA_REPORT_MATERIALIZATION_SOURCE_CONTRACT_PROOF_OUTPUT`, default platform mesh onboarding
-proof through `LOTUS_PLATFORM_ROOT` and
-`LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF_OUTPUT`, default AI lineage store
-proof through `LOTUS_IDEA_AI_LINEAGE_STORE_PROOF_OUTPUT`, default mesh policy
+`LOTUS_IDEA_REPORT_MATERIALIZATION_SOURCE_CONTRACT_PROOF_OUTPUT`, default
+platform catalog source contract through `LOTUS_PLATFORM_ROOT` and
+`LOTUS_IDEA_PLATFORM_CATALOG_SOURCE_CONTRACT_PROOF_OUTPUT`, default AI lineage
+store proof through `LOTUS_IDEA_AI_LINEAGE_STORE_PROOF_OUTPUT`, default mesh policy
 proof through `LOTUS_IDEA_MESH_POLICY_PROOF_OUTPUT`, and optional
 `IMPLEMENTATION_PROOF_OUTPUT`, preserving the canonical local command while
 allowing live release-proof evidence when the stack is available. Missing
@@ -842,8 +842,9 @@ evidence. Capability readiness and supportability are derived after proof
 artifact consumption, so a proof family can report `ready` and `supported` only
 when its blocker list is empty. The live operator API also honors aggregate-current source-ingestion live,
 source-ingestion scheduled-worker, durable repository, runtime trust telemetry,
-Workbench read-path source contract, report-intake route, report materialization source contract, platform mesh
-onboarding, AI lineage store, AI workflow-pack registration proof, and AI workflow-pack runtime execution proof
+Workbench read-path source contract, report-intake route, report materialization
+source contract, platform catalog source contract, AI lineage store, AI
+workflow-pack registration proof, and AI workflow-pack runtime execution proof
 artifact paths configured through
 `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF`,
 `LOTUS_IDEA_SOURCE_INGESTION_SCHEDULED_WORKER_PROOF`,
@@ -860,8 +861,8 @@ artifact paths configured through
 `LOTUS_IDEA_MESH_POLICY_PROOF_OUTPUT`,
 `LOTUS_IDEA_MESH_POLICY_PROOF`,
 `LOTUS_PLATFORM_ROOT`,
-`LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF_OUTPUT`, and
-`LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF`,
+`LOTUS_IDEA_PLATFORM_CATALOG_SOURCE_CONTRACT_PROOF_OUTPUT` and
+`LOTUS_IDEA_PLATFORM_CATALOG_SOURCE_CONTRACT_PROOF`,
 `LOTUS_AI_ROOT`,
 `LOTUS_IDEA_AI_WORKFLOW_PACK_REGISTRATION_PROOF_OUTPUT`, and
 `LOTUS_IDEA_AI_WORKFLOW_PACK_REGISTRATION_PROOF`,
@@ -874,6 +875,12 @@ platform mesh certification, product activation, Gateway/Workbench discovery,
 live AI provider execution, model-risk operations certification,
 client-ready report publication, full Workbench proof, or supported-feature
 promotion.
+The v2 platform catalog artifact declares `source_contract` evidence and binds
+the exact sibling source manifest, catalog, dependency graph, and maturity
+matrix by repository/ref/SHA-256. Its closed-field validator permits only the
+source-manifest and catalog-inclusion blockers to be satisfied. It cannot
+certify runtime publication, policy or platform operation, product activation,
+Gateway/Workbench discovery, deployment, production readiness, or support.
 For runtime trust telemetry specifically, the current proof artifact clears
 only `runtime_candidate_snapshot_missing`; it preserves
 `runtime_trust_telemetry_product_coverage_incomplete`,
