@@ -238,13 +238,14 @@ Validation evidence from the implementation slice:
     Issue `#389` is implementation-complete; Slice 09 remains partial only for
     the separate live-provider/production, Gateway/Workbench, and promotion
     blockers below.
-17. Issue `#392` focused validation passes with `36` runtime-proof and HTTP
-    adapter tests plus `87` aggregate-readiness tests. A running canonical
-    Lotus AI service on port `8140` returned a completed, review-gated
-    deterministic stub run; the generated v2 proof validated and retained no
-    request body or generated output. The first live calls correctly failed on
-    an unregistered workflow surface and incomplete supportability vocabulary,
-    proving that source-authority policy was exercised rather than bypassed.
+17. Issue `#392` closed through PR `#394` with `65` focused runtime-proof and
+    HTTP-adapter tests covering the changed boundary at `100%`; full local
+    coverage passed at `99.03%`. A running canonical Lotus AI service returned
+    a completed, review-gated deterministic stub run bound to clean commit
+    `f296f4eb`; the generated v2 proof retained no request body or generated
+    output. PR `#394` merged to exact-main SHA `b892d5d6`; Main Releasability
+    `29303651841`, CodeQL `29303648849`, and wiki publication `48fd63a` passed.
+    Live-provider/production approval and the other blockers below remain.
 
 ## Current Governance References
 

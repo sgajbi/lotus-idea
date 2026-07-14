@@ -144,10 +144,11 @@ Current RFC-0002 implementation-start baseline:
    internal AI explanation evaluator API plus a not-certified AI explanation
    readiness diagnostic. Submitted provider narrative is not advisor-visible or
    persisted, and blocked output exposes no grounded claims. This remains
-   Issue `#392` additionally proves actual review-gated deterministic-stub
-   execution through `idea_explanation.pack@v1` with a bounded receipt. Live
-   provider execution, production model-risk approval, Gateway, Workbench, and
-   supported-feature promotion remain absent.
+   PR `#394` additionally proves actual review-gated deterministic-stub
+   execution through `idea_explanation.pack@v1` with a bounded receipt on
+   exact-main SHA `b892d5d6`; Main Releasability `29303651841` and CodeQL
+   `29303648849` passed. Live-provider execution, production model-risk
+   approval, Gateway, Workbench, and supported-feature promotion remain absent.
    PR `#390` merged this bounded capability to exact-main SHA `67a6e005`;
    Main Releasability `29300549721` and CodeQL `29300546423` passed. Slice 09
    remains partial for its separate live-provider/production and
