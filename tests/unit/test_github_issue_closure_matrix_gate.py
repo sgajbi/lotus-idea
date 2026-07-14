@@ -310,3 +310,20 @@ def test_github_issue_closure_matrix_gate_freezes_platform_catalog_source_contra
     errors = module.validate_issue_closure_matrix(matrix)
 
     assert "#443: merged-main issue cannot regress to `locally_fixed`" in errors
+
+
+def test_github_issue_closure_matrix_gate_freezes_mesh_policy_source_contract_closure(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    matrix = tmp_path / "matrix.md"
+    content = module.MATRIX_PATH.read_text(encoding="utf-8")
+    content = content.replace(
+        "Stop static mesh policies from clearing certification blockers | `merged_main` |",
+        "Stop static mesh policies from clearing certification blockers | `locally_fixed` |",
+    )
+    matrix.write_text(content, encoding="utf-8")
+
+    errors = module.validate_issue_closure_matrix(matrix)
+
+    assert "#444: merged-main issue cannot regress to `locally_fixed`" in errors
