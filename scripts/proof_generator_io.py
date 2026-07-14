@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from app.application.proof_provenance import bind_aggregate_proof_provenance
+from app.domain.proof_evidence import CIExecutionReceipt, ci_execution_receipt_from_mapping
 
 
 def required_base_url_from_args(
@@ -100,3 +101,19 @@ def write_json_payload(payload: dict[str, Any], *, output: str | None) -> None:
         output_path.write_text(f"{rendered}\n", encoding="utf-8")
         return
     print(rendered)
+
+
+def load_ci_execution_receipt(
+    path: str | None,
+    *,
+    option_name: str = "--ci-execution-receipt",
+) -> CIExecutionReceipt | None:
+    if path is None:
+        return None
+    payload = json.loads(Path(path).read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError(f"{option_name} must contain a JSON object")
+    receipt = ci_execution_receipt_from_mapping(payload)
+    if receipt is None:
+        raise ValueError(f"{option_name} failed contract validation")
+    return receipt

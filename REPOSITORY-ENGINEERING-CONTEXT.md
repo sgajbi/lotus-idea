@@ -1207,6 +1207,10 @@ Recent issue-derived patterns to preserve:
     set; source files, Make targets, job names, PR refs, stale/future receipts,
     and mismatched commits fail closed. This evidence does not certify a
     deployed production database or promote a supported feature.
+    Generic artifact-digest normalization, JUnit assertion extraction, and
+    receipt JSON loading are shared through `app.application.ci_execution_evidence`
+    and `scripts.proof_generator_io`; capability packages retain only their
+    own trusted workflow, assertion, blocker, and no-claim policy.
 
 Recent GitHub issue categories should keep being worked category-wise so
 repeated defect patterns are fixed once and pinned with tests or gates:

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import argparse
 from datetime import datetime
-import json
 from pathlib import Path
 import sys
 
@@ -12,8 +11,7 @@ except ModuleNotFoundError:
     import _bootstrap  # type: ignore[import-not-found,no-redef]  # noqa: F401
 
 from app.application.durable_repository_proof import build_durable_repository_proof_payload
-from app.domain.proof_evidence import CIExecutionReceipt, ci_execution_receipt_from_mapping
-from scripts.proof_generator_io import write_json_payload
+from scripts.proof_generator_io import load_ci_execution_receipt, write_json_payload
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -26,9 +24,9 @@ def main(argv: list[str] | None = None) -> int:
             generated_at_utc=_aware_datetime(args.generated_at_utc),
             repository_root=ROOT,
             source_commit_sha=args.source_commit_sha,
-            ci_execution_receipt=_load_receipt(args.ci_execution_receipt),
+            ci_execution_receipt=load_ci_execution_receipt(args.ci_execution_receipt),
         )
-    except (OSError, ValueError, json.JSONDecodeError) as exc:
+    except (OSError, ValueError) as exc:
         print(f"durable repository proof error: {exc}", file=sys.stderr)
         return 2
 
@@ -45,18 +43,6 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--ci-execution-receipt")
     parser.add_argument("--output")
     return parser
-
-
-def _load_receipt(path: str | None) -> CIExecutionReceipt | None:
-    if path is None:
-        return None
-    payload = json.loads(Path(path).read_text(encoding="utf-8"))
-    if not isinstance(payload, dict):
-        raise ValueError("--ci-execution-receipt must contain a JSON object")
-    receipt = ci_execution_receipt_from_mapping(payload)
-    if receipt is None:
-        raise ValueError("--ci-execution-receipt failed contract validation")
-    return receipt
 
 
 def _aware_datetime(value: str) -> datetime:

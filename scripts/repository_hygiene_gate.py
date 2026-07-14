@@ -35,6 +35,9 @@ PROHIBITED_SUFFIXES = {
 }
 
 REQUIRED_BOUNDED_MODULE_PATHS = {
+    "src/app/application/ci_execution_evidence/__init__.py",
+    "src/app/application/ci_execution_evidence/artifact_digest.py",
+    "src/app/application/ci_execution_evidence/junit_report.py",
     "scripts/persistence/__init__.py",
     "scripts/persistence/_bootstrap.py",
     "scripts/persistence/durable_repository_proof_contract_gate.py",
