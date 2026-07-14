@@ -641,29 +641,29 @@ def test_ci_contract_gate_blocks_missing_outbox_broker_proof_readiness_wiring() 
     ) in errors
 
 
-def test_ci_contract_gate_blocks_missing_outbox_consumer_runtime_proof_generation() -> None:
+def test_ci_contract_gate_blocks_missing_outbox_consumer_contract_proof_generation() -> None:
     module = _load_ci_contract_gate()
     makefile = (
         (ROOT / "Makefile")
         .read_text(encoding="utf-8")
-        .replace("scripts/outbox/generate_consumer_runtime_proof.py", "scripts/removed.py")
+        .replace("scripts/outbox/generate_consumer_contract_proof.py", "scripts/removed.py")
     )
 
     errors = module.validate_makefile(makefile)
 
     assert (
         "Makefile implementation-proof-readiness-check target must generate "
-        "an outbox consumer runtime proof artifact"
+        "an outbox consumer contract proof artifact"
     ) in errors
 
 
-def test_ci_contract_gate_blocks_missing_outbox_consumer_runtime_proof_readiness_wiring() -> None:
+def test_ci_contract_gate_blocks_missing_outbox_consumer_contract_proof_readiness_wiring() -> None:
     module = _load_ci_contract_gate()
     makefile = (
         (ROOT / "Makefile")
         .read_text(encoding="utf-8")
         .replace(
-            "--outbox-consumer-runtime-proof",
+            "--outbox-consumer-contract-proof",
             "",
         )
     )
@@ -672,7 +672,7 @@ def test_ci_contract_gate_blocks_missing_outbox_consumer_runtime_proof_readiness
 
     assert (
         "Makefile implementation-proof-readiness-check target must pass the "
-        "outbox consumer runtime proof artifact into readiness generation"
+        "outbox consumer contract proof artifact into readiness generation"
     ) in errors
 
 
@@ -1158,13 +1158,13 @@ def test_ci_contract_gate_blocks_missing_outbox_broker_proof_gate() -> None:
     ) in errors
 
 
-def test_ci_contract_gate_blocks_missing_outbox_consumer_runtime_proof_gate() -> None:
+def test_ci_contract_gate_blocks_missing_outbox_consumer_contract_proof_gate() -> None:
     module = _load_ci_contract_gate()
     makefile = (
         (ROOT / "Makefile")
         .read_text(encoding="utf-8")
         .replace(
-            "scripts/outbox/consumer_runtime_proof_contract_gate.py",
+            "scripts/outbox/consumer_contract_proof_contract_gate.py",
             "scripts/removed.py",
         )
     )
@@ -1172,8 +1172,8 @@ def test_ci_contract_gate_blocks_missing_outbox_consumer_runtime_proof_gate() ->
     errors = module.validate_makefile(makefile)
 
     assert (
-        "Makefile outbox-consumer-runtime-proof-contract-gate target must run "
-        "`scripts/outbox/consumer_runtime_proof_contract_gate.py`"
+        "Makefile outbox-consumer-contract-proof-contract-gate target must run "
+        "`scripts/outbox/consumer_contract_proof_contract_gate.py`"
     ) in errors
 
 

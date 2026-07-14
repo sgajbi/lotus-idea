@@ -323,10 +323,10 @@ def _proof_artifact_inputs(args: argparse.Namespace) -> dict[str, ProofArtifactI
             artifact_name="outbox broker proof",
             ref_name="outbox broker proof artifact",
         ),
-        "outbox_consumer_runtime": _proof_artifact_input(
-            args.outbox_consumer_runtime_proof,
-            artifact_name="outbox consumer runtime proof",
-            ref_name="outbox consumer runtime proof artifact",
+        "outbox_consumer_contract": _proof_artifact_input(
+            args.outbox_consumer_contract_proof,
+            artifact_name="outbox consumer contract proof",
+            ref_name="outbox consumer contract proof artifact",
         ),
         "outbox_platform_mesh_event_publication": _proof_artifact_input(
             args.outbox_platform_mesh_event_publication_proof,

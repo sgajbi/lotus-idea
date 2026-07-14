@@ -9,8 +9,8 @@ try:
 except ModuleNotFoundError:  # pragma: no cover - direct script execution
     from _bootstrap import ROOT  # type: ignore[import-not-found,no-redef]
 
-from app.application.outbox.consumer_runtime_proof import (  # noqa: E402
-    build_outbox_consumer_runtime_proof_payload,
+from app.application.outbox.consumer_contract_proof import (  # noqa: E402
+    build_outbox_consumer_contract_proof_payload,
 )
 
 try:
@@ -23,22 +23,22 @@ def main(argv: list[str] | None = None) -> int:
     parser = _parser()
     args = parser.parse_args(argv)
     try:
-        payload = build_outbox_consumer_runtime_proof_payload(
+        payload = build_outbox_consumer_contract_proof_payload(
             generated_at_utc=_aware_datetime(args.generated_at_utc),
             repository_root=ROOT,
         )
     except ValueError as exc:
-        print(f"outbox consumer runtime proof error: {exc}", file=sys.stderr)
+        print(f"outbox consumer contract proof error: {exc}", file=sys.stderr)
         return 2
 
     write_json_payload(payload, output=args.output)
-    return 0 if payload["outboxConsumerRuntimeProofValid"] else 1
+    return 0 if payload["outboxConsumerContractProofValid"] else 1
 
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
-            "Generate a source-safe lotus-idea downstream consumer runtime proof artifact."
+            "Generate a source-safe lotus-idea downstream consumer contract proof artifact."
         )
     )
     parser.add_argument("--generated-at-utc", required=True)

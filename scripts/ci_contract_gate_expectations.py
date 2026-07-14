@@ -60,7 +60,7 @@ REQUIRED_LINT_TARGETS = (
     "gateway-workbench-operational-proof-contract-gate",
     "gateway-workbench-discovery-proof-contract-gate",
     "outbox-broker-proof-contract-gate",
-    "outbox-consumer-runtime-proof-contract-gate",
+    "outbox-consumer-contract-proof-contract-gate",
     "outbox-platform-mesh-event-publication-proof-contract-gate",
     "platform-mesh-onboarding-proof-contract-gate",
     "source-ingestion-worker-check",
@@ -133,8 +133,8 @@ GENERATED_READINESS_ARTIFACTS = (
     ("scripts/generate_workbench_read_path_proof.py", "Workbench read-path proof artifact"),
     ("scripts/outbox/generate_broker_proof.py", "outbox broker proof artifact"),
     (
-        "scripts/outbox/generate_consumer_runtime_proof.py",
-        "an outbox consumer runtime proof artifact",
+        "scripts/outbox/generate_consumer_contract_proof.py",
+        "an outbox consumer contract proof artifact",
     ),
     (
         "scripts/outbox/generate_platform_mesh_event_publication_proof.py",
@@ -183,7 +183,7 @@ PASSED_READINESS_ARTIFACTS = (
     ("--mesh-policy-proof", "mesh policy proof artifact"),
     ("--workbench-read-path-proof", "Workbench read-path proof artifact"),
     ("--outbox-broker-proof", "outbox broker proof artifact"),
-    ("--outbox-consumer-runtime-proof", "outbox consumer runtime proof artifact"),
+    ("--outbox-consumer-contract-proof", "outbox consumer contract proof artifact"),
     (
         "--outbox-platform-mesh-event-publication-proof",
         "outbox platform mesh event publication proof artifact",
@@ -254,8 +254,8 @@ REQUIRED_READINESS_WIRING = (
         "LOTUS_IDEA_GATEWAY_WORKBENCH_DISCOVERY_PROOF",
         "support optional Gateway/Workbench discovery proof wiring",
     ),
-    ("LOTUS_IDEA_OUTBOX_CONSUMER_RUNTIME_PROOF_OUTPUT", "pass default outbox proof"),
-    ("LOTUS_IDEA_OUTBOX_CONSUMER_RUNTIME_PROOF", "support optional outbox proof"),
+    ("LOTUS_IDEA_OUTBOX_CONSUMER_CONTRACT_PROOF_OUTPUT", "pass default outbox proof"),
+    ("LOTUS_IDEA_OUTBOX_CONSUMER_CONTRACT_PROOF", "support optional outbox proof"),
     (
         "LOTUS_IDEA_OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF_OUTPUT",
         "pass default outbox platform mesh event publication proof",

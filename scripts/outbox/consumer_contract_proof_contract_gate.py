@@ -8,13 +8,13 @@ try:
 except ModuleNotFoundError:  # pragma: no cover - direct script execution
     from _bootstrap import ROOT  # type: ignore[import-not-found,no-redef]
 
-from app.application.outbox.consumer_runtime_proof import (  # noqa: E402
-    OUTBOX_CONSUMER_RUNTIME_BLOCKERS_CLEARED,
-    OUTBOX_CONSUMER_RUNTIME_PROOF_SCHEMA_VERSION,
-    REMAINING_OUTBOX_CONSUMER_RUNTIME_CERTIFICATION_BLOCKERS,
-    REQUIRED_OUTBOX_CONSUMER_RUNTIME_EVIDENCE_REFS,
-    build_outbox_consumer_runtime_proof_payload,
-    outbox_consumer_runtime_proof_is_valid,
+from app.application.outbox.consumer_contract_proof import (  # noqa: E402
+    OUTBOX_CONSUMER_CONTRACT_BLOCKERS_CLEARED,
+    OUTBOX_CONSUMER_CONTRACT_PROOF_SCHEMA_VERSION,
+    REMAINING_OUTBOX_CONSUMER_CONTRACT_CERTIFICATION_BLOCKERS,
+    REQUIRED_OUTBOX_CONSUMER_CONTRACT_EVIDENCE_REFS,
+    build_outbox_consumer_contract_proof_payload,
+    outbox_consumer_contract_proof_is_valid,
 )
 
 try:
@@ -66,41 +66,41 @@ _validate_forbidden_content = forbidden_content_validator(
 )
 
 
-def validate_outbox_consumer_runtime_proof_contract() -> list[str]:
+def validate_outbox_consumer_contract_proof_contract() -> list[str]:
     errors: list[str] = []
-    proof = build_outbox_consumer_runtime_proof_payload(
+    proof = build_outbox_consumer_contract_proof_payload(
         generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
         repository_root=ROOT,
     )
-    if proof.get("schemaVersion") != OUTBOX_CONSUMER_RUNTIME_PROOF_SCHEMA_VERSION:
+    if proof.get("schemaVersion") != OUTBOX_CONSUMER_CONTRACT_PROOF_SCHEMA_VERSION:
         errors.append(
-            "outbox consumer runtime proof schema must be "
-            f"{OUTBOX_CONSUMER_RUNTIME_PROOF_SCHEMA_VERSION}"
+            "outbox consumer contract proof schema must be "
+            f"{OUTBOX_CONSUMER_CONTRACT_PROOF_SCHEMA_VERSION}"
         )
-    if tuple(proof.get("evidenceRefs") or ()) != (REQUIRED_OUTBOX_CONSUMER_RUNTIME_EVIDENCE_REFS):
-        errors.append("outbox consumer runtime proof evidence refs must match the contract")
+    if tuple(proof.get("evidenceRefs") or ()) != (REQUIRED_OUTBOX_CONSUMER_CONTRACT_EVIDENCE_REFS):
+        errors.append("outbox consumer contract proof evidence refs must match the contract")
     if tuple(proof.get("aggregateBlockersCleared") or ()) != (
-        OUTBOX_CONSUMER_RUNTIME_BLOCKERS_CLEARED
+        OUTBOX_CONSUMER_CONTRACT_BLOCKERS_CLEARED
     ):
-        errors.append("outbox consumer runtime proof must clear only consumer runtime proof")
+        errors.append("outbox consumer contract proof must not clear runtime blockers")
     if tuple(proof.get("remainingCertificationBlockers") or ()) != (
-        REMAINING_OUTBOX_CONSUMER_RUNTIME_CERTIFICATION_BLOCKERS
+        REMAINING_OUTBOX_CONSUMER_CONTRACT_CERTIFICATION_BLOCKERS
     ):
         errors.append(
-            "outbox consumer runtime proof must retain mesh, Workbench, and support blockers"
+            "outbox consumer contract proof must retain runtime, mesh, Workbench, and support blockers"
         )
-    if not outbox_consumer_runtime_proof_is_valid(proof):
-        errors.append("outbox consumer runtime proof must validate against its contract")
+    if not outbox_consumer_contract_proof_is_valid(proof):
+        errors.append("outbox consumer contract proof must validate against its contract")
     validate_forbidden_content(proof, errors, FORBIDDEN_KEYS, FORBIDDEN_TEXT_FRAGMENTS)
     return errors
 
 
 def main() -> int:
-    errors = validate_outbox_consumer_runtime_proof_contract()
+    errors = validate_outbox_consumer_contract_proof_contract()
     if errors:
         print("\n".join(errors))
         return 1
-    print("Outbox consumer runtime proof contract gate passed")
+    print("Outbox consumer contract proof contract gate passed")
     return 0
 
 

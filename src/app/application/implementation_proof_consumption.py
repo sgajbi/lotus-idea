@@ -51,9 +51,8 @@ from app.application.operator_workflows_operations_proof import (
     operator_workflows_operations_proof_is_valid,
 )
 from app.application.outbox.broker_proof import outbox_broker_proof_is_valid
-from app.application.outbox.consumer_runtime_proof import (
-    OUTBOX_CONSUMER_RUNTIME_BLOCKERS_CLEARED,
-    outbox_consumer_runtime_proof_is_valid,
+from app.application.outbox.consumer_contract_proof import (
+    outbox_consumer_contract_proof_is_valid,
 )
 from app.application.outbox.platform_mesh_event_publication_proof import (
     OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_BLOCKERS_CLEARED,
@@ -120,8 +119,8 @@ def _apply_available_proofs(
     mesh_policy_proof_ref: str | None,
     outbox_broker_proof: Mapping[str, object] | None,
     outbox_broker_proof_ref: str | None,
-    outbox_consumer_runtime_proof: Mapping[str, object] | None,
-    outbox_consumer_runtime_proof_ref: str | None,
+    outbox_consumer_contract_proof: Mapping[str, object] | None,
+    outbox_consumer_contract_proof_ref: str | None,
     outbox_platform_mesh_event_publication_proof: Mapping[str, object] | None,
     outbox_platform_mesh_event_publication_proof_ref: str | None,
     platform_mesh_onboarding_proof: Mapping[str, object] | None,
@@ -398,8 +397,8 @@ def _apply_platform_and_surface_proofs(
     mesh_policy_proof_ref: str | None,
     outbox_broker_proof: Mapping[str, object] | None,
     outbox_broker_proof_ref: str | None,
-    outbox_consumer_runtime_proof: Mapping[str, object] | None,
-    outbox_consumer_runtime_proof_ref: str | None,
+    outbox_consumer_contract_proof: Mapping[str, object] | None,
+    outbox_consumer_contract_proof_ref: str | None,
     outbox_platform_mesh_event_publication_proof: Mapping[str, object] | None,
     outbox_platform_mesh_event_publication_proof_ref: str | None,
     platform_mesh_onboarding_proof: Mapping[str, object] | None,
@@ -433,14 +432,17 @@ def _apply_platform_and_surface_proofs(
             _apply_outbox_broker_proof(capability, outbox_broker_proof_ref)
             for capability in capabilities
         )
-    if _proof_can_clear_blockers(
-        outbox_consumer_runtime_proof,
-        outbox_consumer_runtime_proof_ref,
+    if _proof_is_valid_and_current(
+        outbox_consumer_contract_proof,
+        outbox_consumer_contract_proof_ref,
         evaluated_at_utc=evaluated_at_utc,
-        proof_is_valid=outbox_consumer_runtime_proof_is_valid,
+        proof_is_valid=outbox_consumer_contract_proof_is_valid,
     ):
         capabilities = tuple(
-            _apply_outbox_consumer_runtime_proof(capability, outbox_consumer_runtime_proof_ref)
+            _apply_outbox_consumer_contract_proof(
+                capability,
+                outbox_consumer_contract_proof_ref,
+            )
             for capability in capabilities
         )
     if _proof_can_clear_blockers(
@@ -539,6 +541,21 @@ def _apply_operator_workflows_operations_proof_if_valid(
 
 
 def _proof_can_clear_blockers(
+    proof: Mapping[str, object] | None,
+    proof_ref: str | None,
+    *,
+    evaluated_at_utc: datetime,
+    proof_is_valid: Any,
+) -> bool:
+    return _proof_is_valid_and_current(
+        proof,
+        proof_ref,
+        evaluated_at_utc=evaluated_at_utc,
+        proof_is_valid=proof_is_valid,
+    )
+
+
+def _proof_is_valid_and_current(
     proof: Mapping[str, object] | None,
     proof_ref: str | None,
     *,
@@ -826,27 +843,22 @@ def _apply_outbox_broker_proof(
     )
 
 
-def _apply_outbox_consumer_runtime_proof(
+def _apply_outbox_consumer_contract_proof(
     capability: ImplementationProofCapabilityReadiness,
-    outbox_consumer_runtime_proof_ref: str | None,
+    outbox_consumer_contract_proof_ref: str | None,
 ) -> ImplementationProofCapabilityReadiness:
     if capability.capability_id != "outbox-delivery":
         return capability
-    blockers_to_clear = set(OUTBOX_CONSUMER_RUNTIME_BLOCKERS_CLEARED)
-    if not blockers_to_clear.intersection(capability.blockers):
-        return capability
     evidence_refs = capability.evidence_refs
-    if outbox_consumer_runtime_proof_ref:
-        evidence_refs = tuple(dict.fromkeys((*evidence_refs, outbox_consumer_runtime_proof_ref)))
+    if outbox_consumer_contract_proof_ref:
+        evidence_refs = tuple(dict.fromkeys((*evidence_refs, outbox_consumer_contract_proof_ref)))
     return build_capability_readiness(
         capability.capability_id,
         capability.name,
         readiness_status=capability.readiness_status,
         supportability_status=capability.supportability_status,
         evidence_refs=evidence_refs,
-        blockers=tuple(
-            blocker for blocker in capability.blockers if blocker not in blockers_to_clear
-        ),
+        blockers=capability.blockers,
         supported_feature_promoted=capability.supported_feature_promoted,
     )
 

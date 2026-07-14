@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 from typing import Any
 
+from app.domain.proof_evidence import EvidenceClass
 from app.application.source_safe_cross_repo_proof import (
     is_timezone_aware_datetime_text,
     required_file_evidence_present,
@@ -17,34 +18,35 @@ _required_file_evidence_present = required_file_evidence_present
 _required_make_target_evidence_present = required_make_target_evidence_present
 
 
-OUTBOX_CONSUMER_RUNTIME_PROOF_ENV = "LOTUS_IDEA_OUTBOX_CONSUMER_RUNTIME_PROOF"
-OUTBOX_CONSUMER_RUNTIME_PROOF_SCHEMA_VERSION = "lotus-idea.outbox-consumer-runtime-proof.v1"
+OUTBOX_CONSUMER_CONTRACT_PROOF_ENV = "LOTUS_IDEA_OUTBOX_CONSUMER_CONTRACT_PROOF"
+OUTBOX_CONSUMER_CONTRACT_PROOF_SCHEMA_VERSION = "lotus-idea.outbox-consumer-contract-proof.v2"
 
-OUTBOX_CONSUMER_RUNTIME_BLOCKERS_CLEARED = ("downstream_consumer_runtime_proof_missing",)
+OUTBOX_CONSUMER_CONTRACT_BLOCKERS_CLEARED: tuple[str, ...] = ()
 
-REMAINING_OUTBOX_CONSUMER_RUNTIME_CERTIFICATION_BLOCKERS = (
+REMAINING_OUTBOX_CONSUMER_CONTRACT_CERTIFICATION_BLOCKERS = (
+    "downstream_consumer_runtime_proof_missing",
     "platform_mesh_event_publication_proof_missing",
     "gateway_workbench_proof_missing",
     "supported_feature_promotion_missing",
 )
 
-REQUIRED_OUTBOX_CONSUMER_RUNTIME_EVIDENCE_REFS = (
+REQUIRED_OUTBOX_CONSUMER_CONTRACT_EVIDENCE_REFS = (
     "contracts/outbox-events/lotus-idea-outbox-events.v1.json",
     "contracts/outbox-events/lotus-idea-outbox-consumers.v1.json",
     "scripts/outbox/consumer_contract_gate.py",
-    "scripts/outbox/consumer_runtime_proof_contract_gate.py",
+    "scripts/outbox/consumer_contract_proof_contract_gate.py",
     "src/app/application/outbox/readiness.py",
-    "src/app/application/outbox/consumer_runtime_proof.py",
+    "src/app/application/outbox/consumer_contract_proof.py",
     "tests/unit/outbox/test_outbox_delivery_readiness.py",
-    "tests/unit/outbox/test_outbox_consumer_runtime_proof.py",
+    "tests/unit/outbox/test_outbox_consumer_contract_proof.py",
     "make outbox-consumer-contract-gate",
-    "make outbox-consumer-runtime-proof-contract-gate",
+    "make outbox-consumer-contract-proof-contract-gate",
 )
 
 REQUIRED_CONSUMERS = ("lotus-gateway", "lotus-advise", "lotus-manage", "lotus-report")
 
 
-def build_outbox_consumer_runtime_proof_payload(
+def build_outbox_consumer_contract_proof_payload(
     *,
     generated_at_utc: datetime,
     repository_root: Path,
@@ -52,7 +54,7 @@ def build_outbox_consumer_runtime_proof_payload(
     timezone_aware_generated_at_utc = (
         generated_at_utc.tzinfo is not None and generated_at_utc.utcoffset() is not None
     )
-    evidence_refs = tuple(REQUIRED_OUTBOX_CONSUMER_RUNTIME_EVIDENCE_REFS)
+    evidence_refs = tuple(REQUIRED_OUTBOX_CONSUMER_CONTRACT_EVIDENCE_REFS)
     file_evidence_present = _required_file_evidence_present(
         repository_root=repository_root,
         sibling_roots={},
@@ -84,13 +86,14 @@ def build_outbox_consumer_runtime_proof_payload(
         and authority_boundaries_preserved
     )
     return {
-        "schemaVersion": OUTBOX_CONSUMER_RUNTIME_PROOF_SCHEMA_VERSION,
+        "schemaVersion": OUTBOX_CONSUMER_CONTRACT_PROOF_SCHEMA_VERSION,
         "repository": "lotus-idea",
         "generatedAtUtc": generated_at_utc.isoformat(),
-        "proofType": "outbox_downstream_consumer_runtime_contract",
-        "proofScope": "bounded_declared_consumer_runtime_proof",
-        "outboxConsumerRuntimeProofValid": proof_valid,
-        "aggregateBlockersCleared": OUTBOX_CONSUMER_RUNTIME_BLOCKERS_CLEARED,
+        "proofType": "outbox_downstream_consumer_contract",
+        "proofScope": "source_contract_declaration",
+        "evidenceClass": EvidenceClass.SOURCE_CONTRACT.value,
+        "outboxConsumerContractProofValid": proof_valid,
+        "aggregateBlockersCleared": OUTBOX_CONSUMER_CONTRACT_BLOCKERS_CLEARED,
         "evidenceRefs": evidence_refs,
         "proofChecks": {
             "timezoneAwareGeneratedAtUtc": timezone_aware_generated_at_utc,
@@ -101,8 +104,10 @@ def build_outbox_consumer_runtime_proof_payload(
             "authorityBoundariesPreserved": authority_boundaries_preserved,
         },
         "remainingCertificationBlockers": (
-            REMAINING_OUTBOX_CONSUMER_RUNTIME_CERTIFICATION_BLOCKERS
+            REMAINING_OUTBOX_CONSUMER_CONTRACT_CERTIFICATION_BLOCKERS
         ),
+        "consumerCertificationStatus": "contract_declared_not_runtime_certified",
+        "runtimeExecutionObserved": False,
         "externalBrokerPublicationSupported": False,
         "platformMeshEventCertified": False,
         "gatewayWorkbenchProofPresent": False,
@@ -111,16 +116,22 @@ def build_outbox_consumer_runtime_proof_payload(
     }
 
 
-def outbox_consumer_runtime_proof_is_valid(payload: Mapping[str, Any]) -> bool:
-    if payload.get("schemaVersion") != OUTBOX_CONSUMER_RUNTIME_PROOF_SCHEMA_VERSION:
+def outbox_consumer_contract_proof_is_valid(payload: Mapping[str, Any]) -> bool:
+    if payload.get("schemaVersion") != OUTBOX_CONSUMER_CONTRACT_PROOF_SCHEMA_VERSION:
         return False
     if payload.get("repository") != "lotus-idea":
         return False
-    if payload.get("proofType") != "outbox_downstream_consumer_runtime_contract":
+    if payload.get("proofType") != "outbox_downstream_consumer_contract":
         return False
-    if payload.get("proofScope") != "bounded_declared_consumer_runtime_proof":
+    if payload.get("proofScope") != "source_contract_declaration":
         return False
-    if payload.get("outboxConsumerRuntimeProofValid") is not True:
+    if payload.get("evidenceClass") != EvidenceClass.SOURCE_CONTRACT.value:
+        return False
+    if payload.get("outboxConsumerContractProofValid") is not True:
+        return False
+    if payload.get("consumerCertificationStatus") != "contract_declared_not_runtime_certified":
+        return False
+    if payload.get("runtimeExecutionObserved") is not False:
         return False
     if payload.get("externalBrokerPublicationSupported") is not False:
         return False
@@ -135,13 +146,15 @@ def outbox_consumer_runtime_proof_is_valid(payload: Mapping[str, Any]) -> bool:
     if not _is_timezone_aware_datetime_text(payload.get("generatedAtUtc")):
         return False
     if tuple(payload.get("aggregateBlockersCleared") or ()) != (
-        OUTBOX_CONSUMER_RUNTIME_BLOCKERS_CLEARED
+        OUTBOX_CONSUMER_CONTRACT_BLOCKERS_CLEARED
     ):
         return False
-    if tuple(payload.get("evidenceRefs") or ()) != (REQUIRED_OUTBOX_CONSUMER_RUNTIME_EVIDENCE_REFS):
+    if tuple(payload.get("evidenceRefs") or ()) != (
+        REQUIRED_OUTBOX_CONSUMER_CONTRACT_EVIDENCE_REFS
+    ):
         return False
     if tuple(payload.get("remainingCertificationBlockers") or ()) != (
-        REMAINING_OUTBOX_CONSUMER_RUNTIME_CERTIFICATION_BLOCKERS
+        REMAINING_OUTBOX_CONSUMER_CONTRACT_CERTIFICATION_BLOCKERS
     ):
         return False
     proof_checks = payload.get("proofChecks")

@@ -53,8 +53,8 @@ from app.application.operator_workflows_operations_proof import (
     OPERATOR_WORKFLOWS_OPERATIONS_PROOF_ENV,
 )
 from app.application.outbox.broker_proof import OUTBOX_BROKER_PROOF_ENV
-from app.application.outbox.consumer_runtime_proof import (
-    OUTBOX_CONSUMER_RUNTIME_PROOF_ENV,
+from app.application.outbox.consumer_contract_proof import (
+    OUTBOX_CONSUMER_CONTRACT_PROOF_ENV,
 )
 from app.application.outbox.platform_mesh_event_publication_proof import (
     OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF_ENV,
@@ -154,9 +154,9 @@ PROOF_ARTIFACT_ARGS: tuple[tuple[str, str, str], ...] = (
         "Optional bounded outbox broker runtime proof artifact path.",
     ),
     (
-        "--outbox-consumer-runtime-proof",
-        OUTBOX_CONSUMER_RUNTIME_PROOF_ENV,
-        "Optional bounded outbox downstream consumer runtime proof artifact path.",
+        "--outbox-consumer-contract-proof",
+        OUTBOX_CONSUMER_CONTRACT_PROOF_ENV,
+        "Optional bounded outbox downstream consumer contract proof artifact path.",
     ),
     (
         "--outbox-platform-mesh-event-publication-proof",
