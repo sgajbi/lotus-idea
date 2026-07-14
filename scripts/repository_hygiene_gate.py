@@ -41,6 +41,7 @@ REQUIRED_BOUNDED_MODULE_PATHS = {
     "tests/support/http/__init__.py",
     "tests/support/http/managed_client.py",
     "tests/unit/testing/__init__.py",
+    "tests/unit/testing/test_managed_test_client.py",
     "tests/unit/testing/test_test_client_lifecycle_gate.py",
     "src/app/application/ci_execution_evidence/__init__.py",
     "src/app/application/ci_execution_evidence/artifact_digest.py",

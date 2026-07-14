@@ -10,6 +10,11 @@ contract posture, migration safety, supported-feature promotion control, endpoin
 security audit, coverage, PostgreSQL runtime proof, workflow timeout posture, no soft-failed
 critical CI jobs, immutable GitHub Action SHA pins with version provenance,
 repository hygiene, and implementation-truth claims in README/docs/wiki current-state surfaces.
+Integration tests also use one managed HTTP-client lifecycle contract. The
+support-owned factory enters application lifespan, the integration fixture
+closes every client after each test, and `make test-client-lifecycle-gate`
+rejects direct FastAPI/Starlette `TestClient` construction before cumulative
+socket pressure can make local Windows CI nondeterministic.
 Protected `main` requires the strict PR Merge Gate status set, including
 `PR Merge Gate / PostgreSQL Runtime Proof`, before merge.
 

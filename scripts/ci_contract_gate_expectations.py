@@ -3,6 +3,7 @@ from __future__ import annotations
 REQUIRED_LINT_TARGETS = (
     "ci-contract-gate",
     "repository-hygiene-gate",
+    "test-client-lifecycle-gate",
     "maintainability-gate",
     "duplicate-implementation-gate",
     "private-import-boundary-gate",

@@ -34,6 +34,7 @@ promoted.
 | `make implementation-proof-readiness-check` | Aggregate blocker and proof posture. |
 | `make runtime-trust-telemetry-snapshot-check` | Runtime trust telemetry snapshot. |
 | `make postgres-integration-gate` | PostgreSQL-backed runtime proof when configured. |
+| `make test-client-lifecycle-gate` | Verify integration HTTP clients use deterministic lifespan and shutdown management. |
 | `make deployment-migration-contract-gate` | Exact-image migration workflow, history, evidence, Docker closure, and anti-bypass contract. |
 | `make disaster-recovery-proof-gate` | Restore integrity, RPO/RTO, replay, fencing, and no-mutation evidence. |
 | `make container-runtime-smoke` | Container startup and health smoke proof. |
