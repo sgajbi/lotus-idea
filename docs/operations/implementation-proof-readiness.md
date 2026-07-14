@@ -655,7 +655,7 @@ client-publication authority, suitability authority, mandate action, execution
 instruction, production certification, or a supported feature.
 
 Platform mesh onboarding proof is captured by
-`scripts/generate_platform_mesh_onboarding_proof.py`. The repo-native
+`scripts/data_mesh/generate_platform_catalog_source_contract.py`. The repo-native
 `make implementation-proof-readiness-check` target now generates the default
 artifact from `LOTUS_PLATFORM_ROOT` under
 `LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF_OUTPUT` and passes it into aggregate
@@ -1031,11 +1031,11 @@ Implementation-backed evidence:
     `tests/unit/outbox/broker/test_source_contract_proof.py`,
     `tests/unit/outbox/broker/test_readiness_consumption.py`,
 1. platform mesh onboarding proof generator:
-    `scripts/generate_platform_mesh_onboarding_proof.py`,
+    `scripts/data_mesh/generate_platform_catalog_source_contract.py`,
 1. platform mesh onboarding proof contract gate:
     `make platform-mesh-onboarding-proof-contract-gate`,
 1. platform mesh onboarding proof tests:
-    `tests/unit/test_platform_mesh_onboarding_proof.py`,
+    `tests/unit/data_mesh/test_platform_catalog_source_contract.py`,
 1. Workbench read-path source-contract proof tests:
     `tests/unit/workbench/test_read_path_source_contract.py`,
 1. runtime trust telemetry proof tests:

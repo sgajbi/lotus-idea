@@ -168,7 +168,7 @@ preview counts from the active repository provider. It remains
 `not_certified` until mesh certification, Gateway/Workbench discovery, and
 supported-feature evidence exist. Platform source-manifest and generated
 catalog onboarding can be proven separately by
-`scripts/generate_platform_mesh_onboarding_proof.py`; that proof clears only
+`scripts/data_mesh/generate_platform_catalog_source_contract.py`; that proof clears only
 platform inclusion blockers in aggregate readiness and does not certify the
 mesh.
 `make runtime-trust-telemetry-snapshot-check` generates the corresponding

@@ -6,16 +6,20 @@ import json
 import sys
 from pathlib import Path
 
-from app.application.platform_mesh_onboarding_proof import (
+ROOT = Path(__file__).resolve().parents[2]
+SRC = ROOT / "src"
+for path in (ROOT, SRC):
+    if str(path) not in sys.path:
+        sys.path.insert(0, str(path))
+
+from app.application.data_mesh.platform_catalog_source_contract import (  # noqa: E402
     build_platform_mesh_onboarding_proof_payload,
 )
 
 try:
-    from scripts.proof_generator_io import write_json_payload
+    from scripts.proof_generator_io import write_json_payload  # noqa: E402
 except ImportError:  # pragma: no cover - supports direct script execution
-    from proof_generator_io import write_json_payload  # type: ignore[import-not-found,no-redef]
-
-ROOT = Path(__file__).resolve().parents[1]
+    from proof_generator_io import write_json_payload  # type: ignore[import-not-found,no-redef]  # noqa: E402
 
 
 def main(argv: list[str] | None = None) -> int:

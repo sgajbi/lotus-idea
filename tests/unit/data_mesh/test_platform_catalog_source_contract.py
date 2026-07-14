@@ -9,7 +9,7 @@ from typing import Any, Mapping, cast
 
 import pytest
 
-from app.application.platform_mesh_onboarding_proof import (
+from app.application.data_mesh.platform_catalog_source_contract import (
     PLATFORM_MESH_ONBOARDING_BLOCKERS_CLEARED,
     PLATFORM_MESH_ONBOARDING_PROOF_SCHEMA_VERSION,
     REMAINING_PLATFORM_MESH_ONBOARDING_BLOCKERS,
@@ -24,7 +24,7 @@ from app.application.platform_mesh_onboarding_proof import (
     platform_mesh_onboarding_proof_is_valid,
 )
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 
 
 def test_builds_source_safe_platform_mesh_onboarding_proof(tmp_path: Path) -> None:
@@ -513,7 +513,7 @@ def _maturity_payload() -> dict[str, object]:
 
 
 def _load_generator_script() -> ModuleType:
-    script_path = ROOT / "scripts" / "generate_platform_mesh_onboarding_proof.py"
+    script_path = ROOT / "scripts/data_mesh/generate_platform_catalog_source_contract.py"
     spec = importlib.util.spec_from_file_location(
         "generate_platform_mesh_onboarding_proof",
         script_path,
@@ -526,7 +526,7 @@ def _load_generator_script() -> ModuleType:
 
 
 def _load_contract_gate_script() -> ModuleType:
-    script_path = ROOT / "scripts" / "platform_mesh_onboarding_proof_contract_gate.py"
+    script_path = ROOT / "scripts/data_mesh/platform_catalog_source_contract_gate.py"
     spec = importlib.util.spec_from_file_location(
         "platform_mesh_onboarding_proof_contract_gate",
         script_path,

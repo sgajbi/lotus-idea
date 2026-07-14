@@ -75,8 +75,8 @@ through `RuntimeTrustTelemetryProjectionRepository` over
 `idea_report_evidence_pack_request` only. Ordinary preview/snapshot reads do
 not hydrate audit, outbox, downstream-submission, lifecycle-history,
 idempotency, or AI-lineage state.
-16. `src/app/application/platform_mesh_onboarding_proof.py`,
-    `scripts/generate_platform_mesh_onboarding_proof.py`, and
+16. `src/app/application/data_mesh/platform_catalog_source_contract.py`,
+    `scripts/data_mesh/generate_platform_catalog_source_contract.py`, and
     `make platform-mesh-onboarding-proof-contract-gate` validate bounded
     sibling `lotus-platform` source-manifest, generated catalog, dependency
     graph, maturity matrix, and handoff evidence. The proof clears only
@@ -104,8 +104,8 @@ Evidence:
 9. `scripts/openapi_quality_gate.py`
 10. `tests/unit/test_runtime_trust_telemetry_proof.py`
 11. `scripts/runtime_trust_telemetry_proof_contract_gate.py`
-12. `tests/unit/test_platform_mesh_onboarding_proof.py`
-13. `scripts/platform_mesh_onboarding_proof_contract_gate.py`
+12. `tests/unit/data_mesh/test_platform_catalog_source_contract.py`
+13. `scripts/data_mesh/platform_catalog_source_contract_gate.py`
 14. `tests/unit/test_mesh_policy_proof.py`
 15. `scripts/mesh_policy_proof_contract_gate.py`
 

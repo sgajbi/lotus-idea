@@ -159,7 +159,7 @@ GENERATED_READINESS_ARTIFACTS = (
     ),
     ("scripts/generate_mesh_policy_proof.py", "mesh policy proof artifact"),
     (
-        "scripts/generate_platform_mesh_onboarding_proof.py",
+        "scripts/data_mesh/generate_platform_catalog_source_contract.py",
         "a platform mesh onboarding proof artifact",
     ),
     (

@@ -29,7 +29,7 @@ from app.application.outbox.broker.source_contract_proof import (
 from app.application.outbox.platform_mesh.source_contract_proof import (
     OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_PROOF_ENV,
 )
-from app.application.platform_mesh_onboarding_proof import PLATFORM_MESH_ONBOARDING_PROOF_ENV
+from app.application.data_mesh.platform_catalog_source_contract import PLATFORM_MESH_ONBOARDING_PROOF_ENV
 from app.application.runtime_trust_telemetry_proof import RUNTIME_TRUST_TELEMETRY_PROOF_ENV
 from app.application.source_ingestion_readiness import LIVE_PROOF_ENV
 from app.application.workbench.read_path_source_contract import (

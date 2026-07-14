@@ -57,7 +57,7 @@ from app.application.outbox.consumer_contract_proof import (
 from app.application.outbox.platform_mesh.source_contract_proof import (
     outbox_platform_mesh_event_source_contract_proof_is_valid,
 )
-from app.application.platform_mesh_onboarding_proof import (
+from app.application.data_mesh.platform_catalog_source_contract import (
     PLATFORM_MESH_ONBOARDING_BLOCKERS_CLEARED,
     platform_mesh_onboarding_proof_is_valid,
 )

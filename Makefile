@@ -541,7 +541,7 @@ outbox-platform-mesh-event-source-contract-proof-gate:
 	$(VENV_PYTHON) scripts/outbox/platform_mesh/source_contract_proof_gate.py
 
 platform-mesh-onboarding-proof-contract-gate:
-	$(VENV_PYTHON) scripts/platform_mesh_onboarding_proof_contract_gate.py
+	$(VENV_PYTHON) scripts/data_mesh/platform_catalog_source_contract_gate.py
 
 source-ingestion-worker-check:
 	$(VENV_PYTHON) scripts/source_ingestion_worker_contract_gate.py
@@ -625,7 +625,7 @@ implementation-proof-readiness-check:
 	$(VENV_PYTHON) scripts/report/generate_intake_route_source_contract.py --generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --report-root $(LOTUS_REPORT_ROOT) --output $(LOTUS_IDEA_REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF_OUTPUT) --allow-missing-evidence
 	$(VENV_PYTHON) scripts/report/generate_materialization_source_contract.py --generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --report-root $(LOTUS_REPORT_ROOT) --output $(LOTUS_IDEA_REPORT_MATERIALIZATION_SOURCE_CONTRACT_PROOF_OUTPUT) --allow-missing-evidence
 	$(VENV_PYTHON) scripts/generate_mesh_policy_proof.py --generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --output $(LOTUS_IDEA_MESH_POLICY_PROOF_OUTPUT)
-	$(VENV_PYTHON) scripts/generate_platform_mesh_onboarding_proof.py --generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --platform-root $(LOTUS_PLATFORM_ROOT) --output $(LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF_OUTPUT) --allow-missing-evidence
+	$(VENV_PYTHON) scripts/data_mesh/generate_platform_catalog_source_contract.py --generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --platform-root $(LOTUS_PLATFORM_ROOT) --output $(LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF_OUTPUT) --allow-missing-evidence
 	$(VENV_PYTHON) scripts/workbench/generate_discovery_contract_proof.py --generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --platform-root $(LOTUS_PLATFORM_ROOT) --platform-mesh-onboarding-proof $(LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF_OUTPUT) --workbench-read-path-source-contract-proof output/workbench/read-path-source-contract-proof.json --gateway-workbench-contract-proof $(LOTUS_IDEA_GATEWAY_WORKBENCH_CONTRACT_PROOF_OUTPUT) --output $(LOTUS_IDEA_GATEWAY_WORKBENCH_DISCOVERY_CONTRACT_PROOF_OUTPUT) --allow-missing-evidence
 	$(VENV_PYTHON) scripts/generate_mandate_restriction_source_product_proof.py --generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --output $(LOTUS_IDEA_MANDATE_RESTRICTION_SOURCE_PRODUCT_PROOF_OUTPUT)
 	$(VENV_PYTHON) scripts/generate_missing_risk_profile_source_product_proof.py --generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --output $(LOTUS_IDEA_MISSING_RISK_PROFILE_SOURCE_PRODUCT_PROOF_OUTPUT)
