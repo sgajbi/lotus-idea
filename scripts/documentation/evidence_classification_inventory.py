@@ -9,6 +9,7 @@ EVIDENCE_CLASSIFICATION_INVENTORY_PATH = Path(
 )
 ISSUE_CLOSURE_MATRIX_PATH = Path("docs/architecture/GITHUB-ISSUE-CLOSURE-MATRIX.md")
 _ISSUE_NUMBER_RE = re.compile(r"\[#(?P<number>\d+)\]")
+_CAMPAIGN_OCCURRENCE_EXCLUSION = "campaign occurrence: no"
 
 
 def evidence_classification_inventory_errors(*, root: Path) -> list[str]:
@@ -22,6 +23,8 @@ def evidence_classification_inventory_errors(*, root: Path) -> list[str]:
         if not line.startswith("| [#") or "| `merged_main` |" not in line:
             continue
         if "#393" not in line and "evidence-classification campaign" not in line:
+            continue
+        if _CAMPAIGN_OCCURRENCE_EXCLUSION in line.lower():
             continue
         match = _ISSUE_NUMBER_RE.search(line)
         if match is not None:
