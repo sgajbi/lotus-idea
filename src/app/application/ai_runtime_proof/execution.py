@@ -7,6 +7,7 @@ import hashlib
 import json
 from typing import Any
 
+from app.domain.proof_evidence import is_timezone_aware_datetime_text
 from app.ports.lotus_ai_runtime import LotusAIWorkflowRuntime
 
 
@@ -229,7 +230,7 @@ def ai_workflow_pack_runtime_execution_proof_is_valid(payload: Mapping[str, Any]
         )
     ):
         return False
-    if not _is_timezone_aware_datetime_text(payload.get("generatedAtUtc")):
+    if not is_timezone_aware_datetime_text(payload.get("generatedAtUtc")):
         return False
     if tuple(payload.get("aggregateBlockersCleared") or ()) != (
         AI_WORKFLOW_PACK_RUNTIME_EXECUTION_BLOCKERS_CLEARED
@@ -431,7 +432,7 @@ def _receipt_is_valid(receipt: AIRuntimeExecutionReceipt) -> bool:
         and receipt.human_review_required
         and receipt.client_ready_publication == "BLOCKED"
         and receipt.downstream_authority == "BLOCKED"
-        and _is_timezone_aware_datetime_text(receipt.completed_at_utc)
+        and is_timezone_aware_datetime_text(receipt.completed_at_utc)
     )
 
 
@@ -463,16 +464,6 @@ def _boolean(mapping: Mapping[str, object], field_name: str) -> bool:
     if not isinstance(value, bool):
         raise InvalidAIRuntimeExecutionReceipt(f"{field_name} must be boolean")
     return value
-
-
-def _is_timezone_aware_datetime_text(value: object) -> bool:
-    if not isinstance(value, str):
-        return False
-    try:
-        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
-    except ValueError:
-        return False
-    return parsed.tzinfo is not None and parsed.utcoffset() is not None
 
 
 def _sha256(payload: Mapping[str, object]) -> str:

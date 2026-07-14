@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import asdict, dataclass
-from datetime import datetime
 import hashlib
 import json
 import re
-from typing import Any
+
+from app.domain.proof_evidence.temporal import is_timezone_aware_datetime_text
 
 
 _COMMIT_SHA = re.compile(r"[0-9a-f]{40}")
@@ -77,7 +77,7 @@ def ci_execution_receipt_is_well_formed(receipt: CIExecutionReceipt) -> bool:
         and isinstance(receipt.source_ref, str)
         and receipt.source_ref.startswith("refs/")
         and receipt.conclusion == "success"
-        and _timezone_aware_datetime(receipt.completed_at_utc)
+        and is_timezone_aware_datetime_text(receipt.completed_at_utc)
         and isinstance(receipt.artifact_name, str)
         and bool(receipt.artifact_name.strip())
         and isinstance(receipt.artifact_sha256, str)
@@ -118,13 +118,3 @@ def _text_tuple(payload: Mapping[str, object], key: str) -> tuple[str, ...]:
     if not isinstance(value, (list, tuple)) or not all(isinstance(item, str) for item in value):
         raise ValueError(f"{key} must be a text sequence")
     return tuple(value)
-
-
-def _timezone_aware_datetime(value: Any) -> bool:
-    if not isinstance(value, str):
-        return False
-    try:
-        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
-    except ValueError:
-        return False
-    return parsed.tzinfo is not None and parsed.utcoffset() is not None
