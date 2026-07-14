@@ -69,7 +69,7 @@ SCRIPT_TARGET_EXPECTATIONS = {
     ),
     "downstream-route-contract-proof-gate": "scripts/downstream_route_contract_proof_gate.py",
     "report-intake-route-source-contract-proof-gate": "scripts/report/intake_route_source_contract_gate.py",
-    "report-materialization-proof-contract-gate": (
+    "report-materialization-source-contract-proof-gate": (
         "scripts/report/materialization_source_contract_gate.py"
     ),
     "workbench-read-path-source-contract-proof-gate": (

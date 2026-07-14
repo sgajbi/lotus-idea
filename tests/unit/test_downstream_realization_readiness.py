@@ -18,6 +18,13 @@ from app.application.report.intake_route_source_contract import (
     REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF_SCHEMA_VERSION,
     REQUIRED_REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_EVIDENCE_REFS,
 )
+from app.application.report.materialization_source_contract import (
+    REMAINING_REPORT_MATERIALIZATION_BLOCKERS,
+    REPORT_MATERIALIZATION_BLOCKERS_CLEARED,
+    REPORT_MATERIALIZATION_ROUTE,
+    REPORT_MATERIALIZATION_SOURCE_CONTRACT_SCHEMA_VERSION,
+    REQUIRED_REPORT_MATERIALIZATION_EVIDENCE_REFS,
+)
 from app.domain import (
     ConversionOutcomeIdentity,
     ConversionOutcomeStatus,
@@ -322,6 +329,54 @@ def test_downstream_readiness_adds_report_source_contract_without_clearing_runti
     assert "output/report/intake-route-source-contract-proof.json" in report_contract.evidence_refs
 
 
+def test_materialization_source_contract_preserves_runtime_posture_and_adds_evidence() -> None:
+    source_contract_ref = "output/report/materialization-source-contract-proof.json"
+    baseline = build_downstream_realization_readiness_snapshot(
+        repository=InMemoryIdeaRepository(),
+        durable_storage_backed=False,
+    )
+    snapshot = build_downstream_realization_readiness_snapshot(
+        repository=InMemoryIdeaRepository(),
+        durable_storage_backed=False,
+        report_materialization_source_contract_proof=(
+            _valid_report_materialization_source_contract_proof()
+        ),
+        report_materialization_source_contract_proof_ref=source_contract_ref,
+    )
+
+    assert snapshot.blockers == baseline.blockers
+    assert snapshot.readiness_status == baseline.readiness_status
+    assert snapshot.supportability_status == baseline.supportability_status
+    baseline_capability = next(
+        capability
+        for capability in baseline.capabilities
+        if capability.capability_id == "report-render-archive-realization"
+    )
+    report_capability = next(
+        capability
+        for capability in snapshot.capabilities
+        if capability.capability_id == "report-render-archive-realization"
+    )
+    assert report_capability.blockers == baseline_capability.blockers
+    assert report_capability.readiness_status == baseline_capability.readiness_status
+    assert report_capability.supportability_status == baseline_capability.supportability_status
+    assert source_contract_ref in report_capability.evidence_refs
+    baseline_contract = next(
+        contract
+        for contract in baseline.downstream_contracts
+        if contract.contract_id == "lotus-idea-to-lotus-report-evidence-pack-intake:v1"
+    )
+    report_contract = next(
+        contract
+        for contract in snapshot.downstream_contracts
+        if contract.contract_id == "lotus-idea-to-lotus-report-evidence-pack-intake:v1"
+    )
+    assert report_contract.target_route == baseline_contract.target_route
+    assert report_contract.route_fit_status == baseline_contract.route_fit_status
+    assert report_contract.blockers == baseline_contract.blockers
+    assert source_contract_ref in report_contract.evidence_refs
+
+
 def test_downstream_realization_readiness_uses_advise_and_manage_route_proofs_without_authority() -> (
     None
 ):
@@ -408,4 +463,32 @@ def _valid_report_intake_route_source_contract_proof() -> dict[str, object]:
         "clientPublicationAuthorityGranted": False,
         "supportedFeaturePromoted": False,
         "proofClosed": False,
+    }
+
+
+def _valid_report_materialization_source_contract_proof() -> dict[str, object]:
+    return {
+        "schemaVersion": REPORT_MATERIALIZATION_SOURCE_CONTRACT_SCHEMA_VERSION,
+        "repository": "lotus-idea",
+        "generatedAtUtc": "2026-06-27T00:00:00+00:00",
+        "proofType": "lotus_report_idea_evidence_materialization_source_contract",
+        "proofScope": "report_materialization_declaration_and_contract_compatibility",
+        "evidenceClass": "source_contract",
+        "sourceContractValid": True,
+        "aggregateBlockersCleared": REPORT_MATERIALIZATION_BLOCKERS_CLEARED,
+        "evidenceRefs": REQUIRED_REPORT_MATERIALIZATION_EVIDENCE_REFS,
+        "targetRoute": REPORT_MATERIALIZATION_ROUTE,
+        "contractChecks": {
+            "timezoneAwareGeneratedAtUtc": True,
+            "fileEvidencePresent": True,
+            "reportContractDeclaresMaterialization": True,
+            "reportContractPreservesNonProofBoundaries": True,
+        },
+        "remainingCertificationBlockers": REMAINING_REPORT_MATERIALIZATION_BLOCKERS,
+        "reportMaterializationProven": False,
+        "renderedOutputCreated": False,
+        "archiveRecordCreated": False,
+        "clientPublicationAuthorityGranted": False,
+        "supportedFeaturePromoted": False,
+        "certificationClosed": False,
     }

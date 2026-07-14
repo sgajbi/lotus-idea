@@ -33,6 +33,26 @@ def apply_blocker_proof(
     )
 
 
+def apply_supporting_evidence(
+    capability: ImplementationProofCapabilityReadiness,
+    *,
+    capability_ids: tuple[str, ...],
+    evidence_ref: str | None,
+) -> ImplementationProofCapabilityReadiness:
+    """Attach bounded evidence without changing readiness or blocker posture."""
+    if capability.capability_id not in capability_ids or not evidence_ref:
+        return capability
+    return build_capability_readiness(
+        capability.capability_id,
+        capability.name,
+        readiness_status=capability.readiness_status,
+        supportability_status=capability.supportability_status,
+        evidence_refs=tuple(dict.fromkeys((*capability.evidence_refs, evidence_ref))),
+        blockers=capability.blockers,
+        supported_feature_promoted=capability.supported_feature_promoted,
+    )
+
+
 def build_capability_readiness(
     capability_id: str,
     name: str,

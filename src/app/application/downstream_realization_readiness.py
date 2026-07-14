@@ -20,9 +20,7 @@ from app.application.report.intake_route_source_contract import (
     report_intake_route_source_contract_proof_is_valid,
 )
 from app.application.report.materialization_source_contract import (
-    REPORT_MATERIALIZATION_BLOCKERS_CLEARED,
-    REPORT_MATERIALIZATION_ROUTE,
-    report_materialization_proof_is_valid,
+    report_materialization_source_contract_is_valid,
 )
 from app.domain.conversion_governance import GovernedConversionOutcome
 from app.domain.conversion_outcome_policy import current_conversion_outcome_identity
@@ -114,8 +112,8 @@ def build_downstream_realization_readiness_snapshot(
     manage_action_route_proof_ref: str | None = None,
     report_intake_route_source_contract_proof: Mapping[str, object] | None = None,
     report_intake_route_source_contract_proof_ref: str | None = None,
-    report_materialization_proof: Mapping[str, object] | None = None,
-    report_materialization_proof_ref: str | None = None,
+    report_materialization_source_contract_proof: Mapping[str, object] | None = None,
+    report_materialization_source_contract_proof_ref: str | None = None,
 ) -> DownstreamRealizationReadinessSnapshot:
     readiness_summary = _downstream_realization_readiness_summary(repository)
     capabilities: tuple[DownstreamRealizationCapabilityReadiness, ...] = (
@@ -136,8 +134,10 @@ def build_downstream_realization_readiness_snapshot(
         manage_action_route_proof_ref=manage_action_route_proof_ref,
         report_intake_route_source_contract_proof=report_intake_route_source_contract_proof,
         report_intake_route_source_contract_proof_ref=report_intake_route_source_contract_proof_ref,
-        report_materialization_proof=report_materialization_proof,
-        report_materialization_proof_ref=report_materialization_proof_ref,
+        report_materialization_source_contract_proof=report_materialization_source_contract_proof,
+        report_materialization_source_contract_proof_ref=(
+            report_materialization_source_contract_proof_ref
+        ),
     )
     capability_blockers = tuple(
         blocker for capability in capabilities for blocker in capability.blockers
@@ -231,8 +231,8 @@ def _apply_available_downstream_proofs(
     manage_action_route_proof_ref: str | None,
     report_intake_route_source_contract_proof: Mapping[str, object] | None,
     report_intake_route_source_contract_proof_ref: str | None,
-    report_materialization_proof: Mapping[str, object] | None,
-    report_materialization_proof_ref: str | None,
+    report_materialization_source_contract_proof: Mapping[str, object] | None,
+    report_materialization_source_contract_proof_ref: str | None,
 ) -> tuple[
     tuple[DownstreamRealizationCapabilityReadiness, ...],
     tuple[DownstreamRealizationContractReadiness, ...],
@@ -279,20 +279,23 @@ def _apply_available_downstream_proofs(
             )
             for contract in downstream_contracts
         )
-    if report_materialization_proof and report_materialization_proof_is_valid(
-        report_materialization_proof
+    if (
+        report_materialization_source_contract_proof
+        and report_materialization_source_contract_is_valid(
+            report_materialization_source_contract_proof
+        )
     ):
         capabilities = tuple(
-            _apply_report_materialization_proof_to_capability(
+            _apply_report_materialization_source_contract_to_capability(
                 capability,
-                report_materialization_proof_ref,
+                report_materialization_source_contract_proof_ref,
             )
             for capability in capabilities
         )
         downstream_contracts = tuple(
-            _apply_report_materialization_proof_to_contract(
+            _apply_report_materialization_source_contract_to_contract(
                 contract,
-                report_materialization_proof_ref,
+                report_materialization_source_contract_proof_ref,
             )
             for contract in downstream_contracts
         )
@@ -523,48 +526,44 @@ def _apply_report_intake_route_source_contract_proof_to_contract(
     )
 
 
-def _apply_report_materialization_proof_to_capability(
+def _apply_report_materialization_source_contract_to_capability(
     capability: DownstreamRealizationCapabilityReadiness,
-    report_materialization_proof_ref: str | None,
+    report_materialization_source_contract_ref: str | None,
 ) -> DownstreamRealizationCapabilityReadiness:
     if capability.capability_id != "report-render-archive-realization":
         return capability
-    blockers_to_clear = set(REPORT_MATERIALIZATION_BLOCKERS_CLEARED)
     evidence_refs = capability.evidence_refs
-    if report_materialization_proof_ref:
-        evidence_refs = tuple(dict.fromkeys((*evidence_refs, report_materialization_proof_ref)))
+    if report_materialization_source_contract_ref:
+        evidence_refs = tuple(
+            dict.fromkeys((*evidence_refs, report_materialization_source_contract_ref))
+        )
     return _capability(
         capability.capability_id,
         capability.name,
         capability.source_authority,
         evidence_refs=evidence_refs,
-        blockers=tuple(
-            blocker for blocker in capability.blockers if blocker not in blockers_to_clear
-        ),
+        blockers=capability.blockers,
     )
 
 
-def _apply_report_materialization_proof_to_contract(
+def _apply_report_materialization_source_contract_to_contract(
     contract: DownstreamRealizationContractReadiness,
-    report_materialization_proof_ref: str | None,
+    report_materialization_source_contract_ref: str | None,
 ) -> DownstreamRealizationContractReadiness:
     if contract.contract_id != "lotus-idea-to-lotus-report-evidence-pack-intake:v1":
         return contract
-    blockers_to_clear = set(REPORT_MATERIALIZATION_BLOCKERS_CLEARED)
-    if not blockers_to_clear.intersection(contract.blockers):
-        return contract
     evidence_refs = contract.evidence_refs
-    if report_materialization_proof_ref:
-        evidence_refs = tuple(dict.fromkeys((*evidence_refs, report_materialization_proof_ref)))
+    if report_materialization_source_contract_ref:
+        evidence_refs = tuple(
+            dict.fromkeys((*evidence_refs, report_materialization_source_contract_ref))
+        )
     return DownstreamRealizationContractReadiness(
         contract_id=contract.contract_id,
         owner_repository=contract.owner_repository,
         source_authority=contract.source_authority,
-        target_route=REPORT_MATERIALIZATION_ROUTE,
-        route_fit_status="materialization_proven_not_certified",
+        target_route=contract.target_route,
+        route_fit_status=contract.route_fit_status,
         adapter_status=contract.adapter_status,
         evidence_refs=evidence_refs,
-        blockers=tuple(
-            blocker for blocker in contract.blockers if blocker not in blockers_to_clear
-        ),
+        blockers=contract.blockers,
     )

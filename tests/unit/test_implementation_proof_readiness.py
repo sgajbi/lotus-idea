@@ -24,7 +24,7 @@ from app.application.implementation_proof_consumption import (
     _apply_downstream_route_contract_proof,
     _apply_mesh_policy_proof,
     _apply_platform_mesh_onboarding_proof,
-    _apply_report_materialization_proof,
+    _apply_report_materialization_source_contract,
 )
 from app.application.implementation_proof_readiness import (
     build_implementation_proof_readiness_snapshot,
@@ -56,10 +56,11 @@ from app.application.report.intake_route_source_contract import (
 from app.application.report.materialization_source_contract import (
     REMAINING_REPORT_MATERIALIZATION_BLOCKERS,
     REPORT_MATERIALIZATION_BLOCKERS_CLEARED,
-    REPORT_MATERIALIZATION_PROOF_SCHEMA_VERSION,
+    REPORT_MATERIALIZATION_SOURCE_CONTRACT_SCHEMA_VERSION,
     REPORT_MATERIALIZATION_ROUTE,
     REQUIRED_REPORT_MATERIALIZATION_EVIDENCE_REFS,
 )
+from app.domain.proof_evidence import EvidenceClass
 from app.application.runtime_trust_telemetry_proof import (
     build_runtime_trust_telemetry_proof_payload,
 )
@@ -201,7 +202,7 @@ def test_downstream_route_contract_proof_application_preserves_refs_without_proo
     assert result.evidence_refs == ("existing-proof.json",)
 
 
-def test_report_materialization_proof_application_is_noop_for_other_capability() -> None:
+def test_report_materialization_source_contract_is_noop_for_other_capability() -> None:
     capability = build_capability_readiness(
         "ai-explanation",
         "AI explanation",
@@ -211,15 +212,15 @@ def test_report_materialization_proof_application_is_noop_for_other_capability()
         blockers=("report_evidence_pack_live_materialization_proof_missing",),
     )
 
-    result = _apply_report_materialization_proof(
+    result = _apply_report_materialization_source_contract(
         capability,
-        "output/downstream/report-materialization-proof.json",
+        "output/report/materialization-source-contract-proof.json",
     )
 
     assert result is capability
 
 
-def test_report_materialization_proof_application_preserves_refs_without_proof_ref() -> None:
+def test_report_materialization_source_contract_without_ref_preserves_capability() -> None:
     capability = build_capability_readiness(
         "downstream-realization",
         "Downstream realization",
@@ -232,9 +233,9 @@ def test_report_materialization_proof_application_preserves_refs_without_proof_r
         ),
     )
 
-    result = _apply_report_materialization_proof(capability, None)
+    result = _apply_report_materialization_source_contract(capability, None)
 
-    assert "report_evidence_pack_live_materialization_proof_missing" not in result.blockers
+    assert "report_evidence_pack_live_materialization_proof_missing" in result.blockers
     assert "client_publication_authority_blocked" in result.blockers
     assert result.evidence_refs == ("existing-proof.json",)
 
@@ -877,11 +878,9 @@ def test_implementation_proof_readiness_uses_advise_and_manage_route_proofs_with
     assert "output/downstream/manage-action-route-proof.json" in downstream.evidence_refs
 
 
-def test_implementation_proof_readiness_uses_report_materialization_proof_without_publication() -> (
-    None
-):
+def test_source_contract_adds_evidence_without_clearing_runtime_or_publication_blockers() -> None:
     report_intake_proof_ref = "output/report/intake-route-source-contract-proof.json"
-    report_materialization_proof_ref = "output/downstream/report-materialization-proof.json"
+    materialization_contract_ref = "output/report/materialization-source-contract-proof.json"
     snapshot = build_implementation_proof_readiness_snapshot(
         evaluated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
         repository=InMemoryIdeaRepository(),
@@ -891,19 +890,17 @@ def test_implementation_proof_readiness_uses_report_materialization_proof_withou
             report_intake_proof_ref,
         ),
         report_intake_route_source_contract_proof_ref=report_intake_proof_ref,
-        report_materialization_proof=_bound_aggregate_proof(
-            _valid_report_materialization_proof(),
-            report_materialization_proof_ref,
+        report_materialization_source_contract_proof=_bound_aggregate_proof(
+            _valid_report_materialization_source_contract(),
+            materialization_contract_ref,
         ),
-        report_materialization_proof_ref=report_materialization_proof_ref,
+        report_materialization_source_contract_proof_ref=materialization_contract_ref,
     )
 
     assert "lotus_report_live_intake_route_proof_missing" in snapshot.overall_blockers
-    assert "report_evidence_pack_live_materialization_proof_missing" not in (
-        snapshot.overall_blockers
-    )
-    assert "rendered_output_creation_missing" not in snapshot.overall_blockers
-    assert "archive_record_creation_missing" not in snapshot.overall_blockers
+    assert "report_evidence_pack_live_materialization_proof_missing" in snapshot.overall_blockers
+    assert "rendered_output_creation_missing" in snapshot.overall_blockers
+    assert "archive_record_creation_missing" in snapshot.overall_blockers
     assert "client_publication_authority_blocked" in snapshot.overall_blockers
     assert "no_supported_features_promoted" in snapshot.overall_blockers
     assert snapshot.readiness_status == "blocked"
@@ -914,11 +911,11 @@ def test_implementation_proof_readiness_uses_report_materialization_proof_withou
         for capability in snapshot.capabilities
         if capability.capability_id == "downstream-realization"
     )
-    assert "report_evidence_pack_live_materialization_proof_missing" not in downstream.blockers
-    assert "rendered_output_creation_missing" not in downstream.blockers
-    assert "archive_record_creation_missing" not in downstream.blockers
+    assert "report_evidence_pack_live_materialization_proof_missing" in downstream.blockers
+    assert "rendered_output_creation_missing" in downstream.blockers
+    assert "archive_record_creation_missing" in downstream.blockers
     assert "client_publication_authority_blocked" in downstream.blockers
-    assert "output/downstream/report-materialization-proof.json" in downstream.evidence_refs
+    assert materialization_contract_ref in downstream.evidence_refs
 
 
 def test_implementation_proof_readiness_rejects_naive_evaluation_time() -> None:
@@ -1067,29 +1064,29 @@ def _valid_report_intake_route_source_contract_proof() -> dict[str, object]:
     }
 
 
-def _valid_report_materialization_proof() -> dict[str, object]:
+def _valid_report_materialization_source_contract() -> dict[str, object]:
     return {
-        "schemaVersion": REPORT_MATERIALIZATION_PROOF_SCHEMA_VERSION,
+        "schemaVersion": REPORT_MATERIALIZATION_SOURCE_CONTRACT_SCHEMA_VERSION,
         "repository": "lotus-idea",
         "generatedAtUtc": "2026-06-27T00:00:00+00:00",
-        "proofType": "lotus_report_idea_evidence_materialization_contract",
-        "proofScope": "source_safe_report_render_archive_materialization",
-        "reportMaterializationProofValid": True,
+        "proofType": "lotus_report_idea_evidence_materialization_source_contract",
+        "proofScope": "report_materialization_declaration_and_contract_compatibility",
+        "evidenceClass": EvidenceClass.SOURCE_CONTRACT.value,
+        "sourceContractValid": True,
         "aggregateBlockersCleared": REPORT_MATERIALIZATION_BLOCKERS_CLEARED,
         "evidenceRefs": REQUIRED_REPORT_MATERIALIZATION_EVIDENCE_REFS,
         "targetRoute": REPORT_MATERIALIZATION_ROUTE,
-        "proofChecks": {
+        "contractChecks": {
             "timezoneAwareGeneratedAtUtc": True,
             "fileEvidencePresent": True,
-            "reportContractProvesMaterialization": True,
+            "reportContractDeclaresMaterialization": True,
             "reportContractPreservesNonProofBoundaries": True,
-            "reportContractRetainsPublicationBlocker": True,
         },
         "remainingCertificationBlockers": REMAINING_REPORT_MATERIALIZATION_BLOCKERS,
-        "reportMaterializationProven": True,
-        "renderedOutputCreated": True,
-        "archiveRecordCreated": True,
+        "reportMaterializationProven": False,
+        "renderedOutputCreated": False,
+        "archiveRecordCreated": False,
         "clientPublicationAuthorityGranted": False,
         "supportedFeaturePromoted": False,
-        "proofClosed": False,
+        "certificationClosed": False,
     }

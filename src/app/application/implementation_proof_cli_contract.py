@@ -70,7 +70,9 @@ from app.application.performance_underperformance_live_proof import (
 from app.application.report.intake_route_source_contract import (
     REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF_ENV,
 )
-from app.application.report.materialization_source_contract import REPORT_MATERIALIZATION_PROOF_ENV
+from app.application.report.materialization_source_contract import (
+    REPORT_MATERIALIZATION_SOURCE_CONTRACT_ENV,
+)
 from app.application.risk_concentration_live_proof import RISK_CONCENTRATION_LIVE_PROOF_ENV
 from app.application.risk_drawdown_live_proof import RISK_DRAWDOWN_LIVE_PROOF_ENV
 from app.application.runtime_trust_telemetry_proof import RUNTIME_TRUST_TELEMETRY_PROOF_ENV
@@ -130,9 +132,9 @@ PROOF_ARTIFACT_ARGS: tuple[tuple[str, str, str], ...] = (
         "Optional lotus-report idea evidence intake route proof artifact path.",
     ),
     (
-        "--report-materialization-proof",
-        REPORT_MATERIALIZATION_PROOF_ENV,
-        "Optional lotus-report idea evidence materialization proof artifact path.",
+        "--report-materialization-source-contract-proof",
+        REPORT_MATERIALIZATION_SOURCE_CONTRACT_ENV,
+        "Optional lotus-report idea evidence materialization source-contract artifact path.",
     ),
     (
         "--mesh-policy-proof",
