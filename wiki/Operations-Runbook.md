@@ -515,7 +515,7 @@ the operator entrypoints by purpose so this page stays readable.
 | Durable storage proof | `make postgres-integration-gate`, `make durable-repository-proof-contract-gate` | Validate PostgreSQL-backed repository and proof-artifact posture. |
 | Source proof | `make source-ingestion-worker-check`, `make source-ingestion-scheduled-worker-check`, `make source-ingestion-live-proof-contract-gate` | Validate ingestion worker contracts and live-proof artifact shape. |
 | Upstream source-product proof | `make risk-concentration-live-proof-contract-gate`, `make high-volatility-live-proof-contract-gate`, `make risk-drawdown-live-proof-contract-gate`, `make core-benchmark-assignment-live-proof-contract-gate`, `make core-portfolio-state-live-proof-contract-gate`, `make manage-mandate-live-proof-contract-gate`, `make mandate-restriction-live-proof-contract-gate`, `make missing-suitability-live-proof-contract-gate`, `make missing-risk-profile-live-proof-contract-gate`, `make performance-underperformance-live-proof-contract-gate` | Validate bounded sibling source-proof artifacts without promoting support by command existence alone. |
-| Runtime trust and implementation proof | `make runtime-trust-telemetry-proof-contract-gate`, `make implementation-proof-readiness-check`, `make runtime-trust-telemetry-preview-check`, `make runtime-trust-telemetry-snapshot-check` | Inspect aggregate blocker and runtime telemetry posture. |
+| Runtime trust and implementation proof | `make runtime-trust-telemetry-test-execution-contract-gate`, `make implementation-proof-readiness-check`, `make runtime-trust-telemetry-preview-check`, `make runtime-trust-telemetry-snapshot-check` | Validate in-memory test evidence and inspect durable runtime posture without clearing certification blockers. |
 | Downstream proof | `make downstream-route-source-contract-proof-gate`, `make report-intake-route-source-contract-proof-gate`, `make report-materialization-source-contract-proof-gate` | Validate bounded Advise, Manage, and Report contract artifacts. |
 | Local hygiene | `make clean` | Remove ignored generated residue before branch hygiene checks. |
 
@@ -824,7 +824,7 @@ downstream delivery, data-product certification, Workbench proof,
 client-ready publication, or supported-feature promotion.
 `make implementation-proof-readiness-check` generates the scheduled
 source-ingestion worker deploy-proof artifact, durable repository proof
-artifact, runtime trust telemetry proof artifact, Workbench read-path source contract,
+artifact, runtime trust telemetry test-execution artifact, Workbench read-path source contract,
 Advise route source-contract artifact, missing-suitability live Advise proof
 artifact, typed mandate/restriction source-product proof artifact, typed
 missing risk-profile source-product proof artifact, missing risk-profile live
@@ -851,7 +851,7 @@ artifact paths configured through
 `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF`,
 `LOTUS_IDEA_SOURCE_INGESTION_SCHEDULED_WORKER_PROOF`,
 `LOTUS_IDEA_DURABLE_REPOSITORY_PROOF`,
-`LOTUS_IDEA_RUNTIME_TRUST_TELEMETRY_PROOF`,
+`LOTUS_IDEA_RUNTIME_TRUST_TELEMETRY_TEST_EXECUTION`,
 `LOTUS_IDEA_WORKBENCH_READ_PATH_SOURCE_CONTRACT_PROOF`,
 `LOTUS_IDEA_MANAGE_MANDATE_LIVE_PROOF`,
 `LOTUS_IDEA_CORE_PORTFOLIO_STATE_LIVE_PROOF`,

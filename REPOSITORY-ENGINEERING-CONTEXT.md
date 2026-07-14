@@ -917,7 +917,7 @@ make data-mesh-contract-gate
 make downstream-realization-contract-gate
 make downstream-route-source-contract-proof-gate
 make outbox-broker-source-contract-proof-gate
-make runtime-trust-telemetry-proof-contract-gate
+make runtime-trust-telemetry-test-execution-contract-gate
 make source-ingestion-live-proof-contract-gate
 make canonical-opportunity-source-proofs
 make source-ingestion-scheduled-worker-check
@@ -1093,9 +1093,10 @@ Recent issue-derived patterns to preserve:
    not only `Content-Length`,
 3. outbound HTTP retry/backoff must be centralized and idempotency-gated,
 4. GitHub Security posture must be checked live before claiming current state,
-5. runtime trust telemetry proof must not clear aggregate certification blockers
-   while declared product coverage remains incomplete; product-level blockers
-   and aggregate readiness must stay semantically aligned,
+5. deterministic runtime trust telemetry tests are `test_execution` evidence,
+   must use explicit in-memory/non-durable posture, and must clear no runtime or
+   certification blocker; product-level and aggregate readiness must stay
+   semantically aligned,
 6. conversion intent idempotency must have one owning key at the
    application/domain boundary; never allow repository replay evidence and the
    persisted governed intent to diverge,

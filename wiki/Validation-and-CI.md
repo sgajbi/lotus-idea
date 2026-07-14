@@ -150,7 +150,7 @@ mesh policy source-contract validation, migration contract validation, coverage 
 safe migration execution dry-run validation, protected exact-image deployment
 migration contract validation, PostgreSQL runtime proof in PR/main GitHub lanes,
 durable repository proof contract validation,
-runtime trust telemetry proof contract validation,
+runtime trust telemetry test-execution contract validation,
 Risk high-volatility and drawdown live-proof contract validation,
 Advise mandate/restriction live-proof contract validation,
 Advise mandate/restriction source-product proof contract validation,
@@ -425,8 +425,8 @@ Persistence adapter validation:
 9. `tests/unit/test_generate_implementation_proof_readiness.py` and
    `make implementation-proof-readiness-check` prove the aggregate RFC-0002
    implementation-proof readiness artifact, including source-ingestion proof
-   artifact refs, durable repository proof, runtime trust telemetry proof
-   consumption, non-AI operator workflow operations proof consumption,
+   artifact refs, durable repository proof, runtime trust telemetry
+   test-execution supporting evidence, non-AI operator workflow operations proof consumption,
    Workbench read-path source-contract proof consumption, Gateway/Workbench
    source-contract proof consumption, Gateway/Workbench discovery contract
    proof consumption, bounded outbox broker source-contract proof consumption,
@@ -446,11 +446,11 @@ Persistence adapter validation:
    generated without starting the service and
    without exposing candidate, portfolio, client, prompt, outbox event, raw
    idempotency, broker, or source payload identifiers.
-10. `tests/unit/test_runtime_trust_telemetry_proof.py` and
-    `make runtime-trust-telemetry-proof-contract-gate` prove the source-safe
-    runtime trust telemetry proof contract that aggregate readiness consumes to
-    clear only the seeded candidate-snapshot blocker
-    `runtime_candidate_snapshot_missing` while preserving
+10. `tests/unit/runtime_trust_telemetry/test_test_execution_contract.py` and
+    `make runtime-trust-telemetry-test-execution-contract-gate` validate the
+    source-safe v2 `test_execution` contract. Aggregate readiness records valid
+    current evidence as provenance but clears no blocker, preserving
+    `runtime_candidate_snapshot_missing`, `durable_repository_not_configured`,
     `runtime_trust_telemetry_product_coverage_incomplete`,
     `certified_runtime_trust_telemetry_missing`, and
     `data_mesh_runtime_telemetry_not_certified` until declared product coverage
@@ -526,8 +526,8 @@ Persistence adapter validation:
     aggregate readiness, adds `lotus_ai_live_provider_execution_missing`, and
     preserves workflow-pack registration, Workbench, client-ready, and
     supported-feature blockers.
-20. `tests/unit/test_runtime_trust_telemetry.py`,
-    `tests/unit/test_generate_runtime_trust_telemetry_snapshot.py`,
+20. `tests/unit/runtime_trust_telemetry/test_telemetry.py`,
+    `tests/unit/runtime_trust_telemetry/test_snapshot_cli.py`,
     `tests/integration/test_runtime_trust_telemetry_api.py`,
     `make runtime-trust-telemetry-preview-check`, and
     `make runtime-trust-telemetry-snapshot-check` prove the source-safe runtime
@@ -704,7 +704,7 @@ boundaries. `make test-unit`, `make test-integration`, and
 `UNIT_TESTS`, `INTEGRATION_TESTS`, and `E2E_TESTS` overrides:
 
 ```powershell
-make test-unit UNIT_TESTS=tests/unit/test_runtime_trust_telemetry.py
+make test-unit UNIT_TESTS=tests/unit/runtime_trust_telemetry/test_telemetry.py
 make test-integration INTEGRATION_TESTS=tests/integration/test_runtime_trust_telemetry_api.py
 make test-e2e E2E_TESTS=tests/e2e/test_critical_idea_workflow.py
 ```

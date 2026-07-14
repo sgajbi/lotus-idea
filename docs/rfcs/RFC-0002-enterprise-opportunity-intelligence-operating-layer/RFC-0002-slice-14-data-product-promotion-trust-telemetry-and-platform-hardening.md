@@ -1,6 +1,6 @@
 # RFC-0002 Slice 14: Data Product Promotion, Trust Telemetry, And Platform Hardening
 
-Status: Partially implemented - internal not-certified mesh readiness, runtime telemetry preview, source-safe runtime snapshot diagnostics, runtime telemetry proof contract, digest-bound repo-owned mesh policy source-contract evidence, and a digest-bound platform catalog source contract
+Status: Partially implemented - internal not-certified mesh readiness, runtime telemetry preview, source-safe runtime snapshot diagnostics, runtime telemetry test-execution contract, digest-bound repo-owned mesh policy source-contract evidence, and a digest-bound platform catalog source contract
 
 ## Outcome
 
@@ -32,41 +32,43 @@ This slice now has internal operator diagnostic foundations only:
    diagnostics use the same repo-authored contract truth as local validation.
 7. `docs/operations/endpoint-certification-ledger.json` certifies the endpoint
    as an internal diagnostic operation, not as mesh certification.
-8. `src/app/application/runtime_trust_telemetry.py` builds a source-safe
+8. `src/app/application/runtime_trust_telemetry/telemetry.py` builds a source-safe
    runtime trust telemetry preview from the active repository provider.
 9. `GET /api/v1/data-mesh/trust-telemetry/runtime-preview` exposes aggregate
    candidate, source-authority, freshness, supportability, lifecycle, review,
    feedback, conversion, and report evidence-pack counts to callers with the
    `operator` role and `idea.mesh.trust-telemetry.preview.read` capability.
-10. `scripts/generate_runtime_trust_telemetry_preview.py` and
+10. `scripts/runtime_trust_telemetry/generate_preview.py` and
     `make runtime-trust-telemetry-preview-check` generate the same
     pre-certification preview as source-safe automation evidence.
-11. The preview returns `runtimeTelemetryBacked=true` for the diagnostic
-    artifact while preserving `certificationStatus=not_certified`,
+11. The preview derives `runtimeTelemetryBacked` from the active repository's
+    durable-storage posture while preserving `certificationStatus=not_certified`,
     `platformCertified=false`, `certificationReady=false`, and
     `supportedFeaturePromoted=false`.
 12. `GET /api/v1/data-mesh/trust-telemetry/runtime-snapshot` exposes the same
     contract-shaped runtime trust telemetry snapshot to callers with the
     `operator` role and `idea.mesh.trust-telemetry.snapshot.read` capability.
-13. `scripts/generate_runtime_trust_telemetry_snapshot.py` and
+13. `scripts/runtime_trust_telemetry/generate_snapshot.py` and
     `make runtime-trust-telemetry-snapshot-check` generate a contract-shaped
     runtime trust telemetry snapshot under ignored
     `output/trust-telemetry/runtime/idea-candidate.telemetry.v1.json`.
 14. The endpoint and generated snapshot use platform trust telemetry fields for
     `lotus-idea:IdeaCandidate:v1`, remain blocked, and omit candidate ids,
     portfolio ids, client ids, raw source routes, and raw evidence hashes.
-15. `src/app/application/runtime_trust_telemetry_proof.py`,
-    `scripts/generate_runtime_trust_telemetry_proof.py`, and
-    `make runtime-trust-telemetry-proof-contract-gate` define and enforce a
-    source-safe runtime trust telemetry proof contract for aggregate
-    implementation readiness. The proof currently clears only the seeded
-    candidate-snapshot blocker (`runtime_candidate_snapshot_missing`) and
-    carries product-coverage posture so incomplete declared-product coverage
-    preserves `runtime_trust_telemetry_product_coverage_incomplete`,
+15. `src/app/application/runtime_trust_telemetry/test_execution_contract.py`,
+    `scripts/runtime_trust_telemetry/generate_test_execution_contract.py`, and
+    `make runtime-trust-telemetry-test-execution-contract-gate` define and enforce a
+    closed-field v2 `test_execution` contract for aggregate implementation
+    readiness. It uses an in-memory repository, clears no blocker, and carries
+    product-coverage posture so `runtime_candidate_snapshot_missing`,
+    `durable_repository_not_configured`,
+    `runtime_trust_telemetry_product_coverage_incomplete`,
     `certified_runtime_trust_telemetry_missing`, and
     `data_mesh_runtime_telemetry_not_certified`. It keeps platform
     source-manifest, mesh certification, active producer product,
-    Gateway/Workbench discovery, and supported-feature blockers in place.
+    Gateway/Workbench discovery, and supported-feature blockers in place. It
+    cannot claim durable runtime, deployment, production, certification, or
+    promotion authority.
 
 Durable PostgreSQL providers compute runtime trust telemetry aggregate counts
 through `RuntimeTrustTelemetryProjectionRepository` over
@@ -99,15 +101,15 @@ Evidence:
 
 1. `tests/unit/test_data_mesh_readiness.py`
 2. `tests/integration/test_data_mesh_readiness_api.py`
-3. `tests/unit/test_runtime_trust_telemetry.py`
+3. `tests/unit/runtime_trust_telemetry/test_telemetry.py`
 4. `tests/integration/test_runtime_trust_telemetry_api.py`
-5. `scripts/generate_runtime_trust_telemetry_preview.py`
-6. `scripts/generate_runtime_trust_telemetry_snapshot.py`
-7. `tests/unit/test_generate_runtime_trust_telemetry_snapshot.py`
+5. `scripts/runtime_trust_telemetry/generate_preview.py`
+6. `scripts/runtime_trust_telemetry/generate_snapshot.py`
+7. `tests/unit/runtime_trust_telemetry/test_snapshot_cli.py`
 8. `scripts/endpoint_certification_gate.py`
 9. `scripts/openapi_quality_gate.py`
-10. `tests/unit/test_runtime_trust_telemetry_proof.py`
-11. `scripts/runtime_trust_telemetry_proof_contract_gate.py`
+10. `tests/unit/runtime_trust_telemetry/test_test_execution_contract.py`
+11. `scripts/runtime_trust_telemetry/test_execution_contract_gate.py`
 12. `tests/unit/data_mesh/test_platform_catalog_source_contract.py`
 13. `scripts/data_mesh/platform_catalog_source_contract_gate.py`
 14. `tests/unit/data_mesh/test_mesh_policy_source_contract.py`
@@ -151,7 +153,7 @@ Evidence:
 
 The diagnostic endpoints deliberately report blocked / not-certified posture.
 The runtime telemetry preview, runtime snapshot endpoint, generated
-snapshot, runtime telemetry proof contract, mesh policy source contract, and platform
+snapshot, runtime telemetry test-execution contract, mesh policy source contract, and platform
 onboarding proof are implementation-backed pre-certification evidence, but they do not
 activate producer declarations or replace the blocked static fallback for
 platform mesh certification. Full Slice 14 completion still requires

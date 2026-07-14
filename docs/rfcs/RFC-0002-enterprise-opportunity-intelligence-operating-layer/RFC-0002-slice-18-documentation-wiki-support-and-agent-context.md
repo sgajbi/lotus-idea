@@ -1,6 +1,6 @@
 # RFC-0002 Slice 18: Documentation, Wiki, Support, And Agent Context
 
-Status: Partially implemented - API certification, outbox readiness, implementation-proof, live source-proof contract, scheduled-worker proof contract, durable repository proof contract, runtime telemetry proof contract, bounded Workbench read-path source contract, bounded Gateway/Workbench contract proof, bounded Gateway/Workbench discovery contract proof, digest-bound Advise/Manage route source contracts, bounded Report intake route source contract, bounded outbox broker source-contract proof, bounded outbox platform-mesh event source-contract proof, digest-bound mesh policy source contract, AI lineage store proof, Manage mandate live proof, Core portfolio-state live proof, low-income Core cashflow live proof, typed Advise mandate/restriction source-product proof, Advise mandate/restriction live proof, typed Advise missing risk-profile source-product proof, missing risk-profile live proof, underperformance, allocation-drift, and drawdown-review API foundation truth, bond-maturity, mandate/restriction, and missing-benchmark policy foundation truth, client-demo process, and downstream contract documentation synchronized
+Status: Partially implemented - API certification, outbox readiness, implementation-proof, live source-proof contract, scheduled-worker proof contract, durable repository proof contract, runtime telemetry test-execution contract, bounded Workbench read-path source contract, bounded Gateway/Workbench contract proof, bounded Gateway/Workbench discovery contract proof, digest-bound Advise/Manage route source contracts, bounded Report intake route source contract, bounded outbox broker source-contract proof, bounded outbox platform-mesh event source-contract proof, digest-bound mesh policy source contract, AI lineage store proof, Manage mandate live proof, Core portfolio-state live proof, low-income Core cashflow live proof, typed Advise mandate/restriction source-product proof, Advise mandate/restriction live proof, typed Advise missing risk-profile source-product proof, missing risk-profile live proof, underperformance, allocation-drift, and drawdown-review API foundation truth, bond-maturity, mandate/restriction, and missing-benchmark policy foundation truth, client-demo process, and downstream contract documentation synchronized
 
 ## Outcome
 
@@ -163,10 +163,10 @@ documentation across opportunity signal APIs.
     supported feature.
 17. README, repository context, `docs/operations/implementation-proof-readiness.md`,
     `docs/operations/mesh-readiness.md`, quality gate docs, RFC evidence, and
-    wiki source now describe the runtime trust telemetry proof artifact contract
-    and `make runtime-trust-telemetry-proof-contract-gate`, while preserving the
-    boundary that a valid artifact clears only the aggregate candidate-snapshot
-    blocker and does not certify the platform mesh or promote support.
+    wiki source now describe the runtime trust telemetry v2 `test_execution`
+    contract and `make runtime-trust-telemetry-test-execution-contract-gate`.
+    Valid current evidence adds provenance only, clears no blocker, and cannot
+    certify durable runtime, the platform mesh, or supported-feature promotion.
 18. README, repository context, API certification docs, demo claims, RFC
     evidence, and wiki source now describe `lotus-workbench` PR #391 as
     bounded read-only Workbench queue/detail rendering through Gateway, while
@@ -196,7 +196,7 @@ documentation across opportunity signal APIs.
     evidence, and wiki source now describe the Gateway/Workbench discovery
     contract proof artifact and
     `make gateway-workbench-discovery-contract-proof-contract-gate`. A valid
-    artifact adds evidence to data-mesh and runtime trust telemetry proof
+    artifact adds evidence to data-mesh and runtime trust telemetry test-execution evidence
     families but clears no blocker. The
     `gateway_workbench_discovery_proof_missing` blocker remains, and the
     artifact does not certify data-mesh products, activate producer products,

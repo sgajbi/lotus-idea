@@ -1,6 +1,6 @@
 # RFC-0002 Slice 17: Implementation Proof And Live Validation
 
-Status: Partially implemented - aggregate proof-readiness diagnostic, bounded live source-ingestion proof artifact contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry proof artifact, Workbench read-path source-contract proof artifact, Gateway/Workbench contract proof artifact, Gateway/Workbench discovery contract proof artifact, digest-bound Advise and Manage route source contracts, Manage mandate live proof artifact, Core portfolio-state live proof artifact, Report intake route and materialization source-contract artifacts, bounded outbox broker source-contract proof artifact, bounded downstream consumer source-contract proof artifact, bounded outbox platform-mesh event source-contract proof, digest-bound mesh policy source-contract artifact, platform catalog source contract artifact, AI lineage store proof artifact, AI workflow-pack registration proof artifact, AI workflow-pack runtime execution proof artifact, high-volatility and drawdown live Risk proof artifact contracts, low-income Core cashflow live proof artifact contract, bond-maturity policy foundation, and opportunity archetype scenario readiness with source/policy foundations available. Slice evidence now includes live canonical Risk concentration, Performance underperformance, and Performance benchmark-readiness source proofs for `PB_SG_GLOBAL_BAL_001`; observed Advise/Manage route serving and acceptance, policy certification, Report intake and materialization execution, rendered output, archive creation, external broker publication, platform-mesh event publication, downstream consumer execution, full live opportunity-journey proof, data-mesh certification, Workbench product proof, client-publication approval, and supported-feature promotion remain pending.
+Status: Partially implemented - aggregate proof-readiness diagnostic, bounded live source-ingestion proof artifact contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry test-execution artifact, Workbench read-path source-contract proof artifact, Gateway/Workbench contract proof artifact, Gateway/Workbench discovery contract proof artifact, digest-bound Advise and Manage route source contracts, Manage mandate live proof artifact, Core portfolio-state live proof artifact, Report intake route and materialization source-contract artifacts, bounded outbox broker source-contract proof artifact, bounded downstream consumer source-contract proof artifact, bounded outbox platform-mesh event source-contract proof, digest-bound mesh policy source-contract artifact, platform catalog source contract artifact, AI lineage store proof artifact, AI workflow-pack registration proof artifact, AI workflow-pack runtime execution proof artifact, high-volatility and drawdown live Risk proof artifact contracts, low-income Core cashflow live proof artifact contract, bond-maturity policy foundation, and opportunity archetype scenario readiness with source/policy foundations available. Slice evidence now includes live canonical Risk concentration, Performance underperformance, and Performance benchmark-readiness source proofs for `PB_SG_GLOBAL_BAL_001`; observed Advise/Manage route serving and acceptance, policy certification, Report intake and materialization execution, rendered output, archive creation, external broker publication, platform-mesh event publication, downstream consumer execution, full live opportunity-journey proof, data-mesh certification, Workbench product proof, client-publication approval, and supported-feature promotion remain pending.
 
 ## Outcome
 
@@ -83,7 +83,7 @@ Prove the complete supported opportunity journey end to end.
    family, so proof blockers stay source-authority preserving and cannot be
    rewritten as route-existence or downstream-execution claims.
 9. `GET /api/v1/data-mesh/trust-telemetry/runtime-snapshot` now supplies the
-   contract-shaped runtime trust telemetry proof family used by operators and
+   contract-shaped runtime trust telemetry test-execution evidence family used by operators and
    certification reviewers before platform mesh promotion. It remains blocked
    and not certified, omits source-sensitive identifiers, and does not replace
    platform certification or supported-feature promotion.
@@ -137,13 +137,14 @@ Prove the complete supported opportunity journey end to end.
     `repository_side_queue_pagination_not_certified` proof blockers while
     preserving live Core, production storage, runtime trust telemetry,
     data-mesh, Gateway/Workbench, downstream, and supported-feature blockers.
-15. `src/app/application/runtime_trust_telemetry_proof.py`,
-    `scripts/generate_runtime_trust_telemetry_proof.py`, and
-    `make runtime-trust-telemetry-proof-contract-gate` now define and enforce a
-    source-safe runtime trust telemetry proof artifact. The aggregate
-    implementation-readiness generator consumes that artifact to clear only
-    the seeded candidate-snapshot blocker
-    (`runtime_candidate_snapshot_missing`), while preserving product-coverage
+15. `src/app/application/runtime_trust_telemetry/test_execution_contract.py`,
+    `scripts/runtime_trust_telemetry/generate_test_execution_contract.py`, and
+    `make runtime-trust-telemetry-test-execution-contract-gate` now define and enforce a
+    source-safe v2 runtime trust telemetry `test_execution` artifact. The
+    aggregate implementation-readiness generator records valid current
+    evidence as provenance but clears no blocker. It preserves
+    `runtime_candidate_snapshot_missing`, `durable_repository_not_configured`,
+    and product-coverage
     blockers (`runtime_trust_telemetry_product_coverage_incomplete`,
     `certified_runtime_trust_telemetry_missing`, and
     `data_mesh_runtime_telemetry_not_certified`) plus platform source-manifest,
@@ -183,7 +184,7 @@ Prove the complete supported opportunity journey end to end.
     `make gateway-workbench-discovery-contract-proof-contract-gate` now define
     and enforce a source-safe Gateway/Workbench discovery contract proof
     artifact. The aggregate implementation-readiness generator records that
-    artifact as evidence for data-mesh and runtime trust telemetry proof
+    artifact as evidence for data-mesh and runtime trust telemetry test-execution evidence
     families without clearing `gateway_workbench_discovery_proof_missing`.
     Data-mesh certification, producer product activation, platform mesh
     certification, Workbench product proof, client publication, and
@@ -440,9 +441,9 @@ without relying on chat memory.
 5. Durable repository proof is now explicit in aggregate readiness evidence, but
     deploy migration evidence, backup/restore, recovery operations, and
     production storage certification remain pending.
-6. Runtime telemetry candidate-snapshot proof is now explicit in aggregate
-   readiness evidence, but platform mesh certification and product discovery
-   proof remain pending.
+6. Runtime telemetry deterministic test execution is now explicit supporting
+   evidence in aggregate readiness, but it clears no blocker; durable runtime,
+   platform mesh certification, and product discovery proof remain pending.
 7. Workbench read-path source-contract evidence is now explicit in aggregate
    readiness, but `workbench_gateway_bff_consumption_proof_missing`, full panel
    proof, browser accessibility proof, canonical demo runtime proof,
@@ -550,12 +551,12 @@ The runtime trust telemetry snapshot endpoint narrows the trust-evidence proof
 gap from "generated artifact only" to "API-certified diagnostic plus generated
 artifact"; it does not close platform mesh certification, Gateway/Workbench
 discovery, or supported-feature proof gaps.
-The runtime telemetry proof artifact narrows the aggregate readiness gap from
-"runtime candidate snapshot missing" to "repo-owned source-safe candidate
-snapshot telemetry proof is validated"; it does not close product-coverage,
-certified-runtime-telemetry, data-mesh-runtime, platform mesh certification,
-active producer product, Gateway/Workbench discovery, or supported-feature
-proof gaps.
+The runtime telemetry v2 `test_execution` artifact proves only that a
+source-safe deterministic fixture exercises the telemetry contract. It does
+not narrow runtime readiness and preserves candidate-snapshot,
+durable-repository, product-coverage, certified-runtime-telemetry,
+data-mesh-runtime, platform mesh, active-product, Gateway/Workbench discovery,
+and supported-feature gaps.
 The Workbench read-path v2 source-contract artifact records bounded queue/detail
 declarations without narrowing the runtime-readiness gap. It does not prove
 Gateway serving, Workbench consumption, entitlement enforcement, browser

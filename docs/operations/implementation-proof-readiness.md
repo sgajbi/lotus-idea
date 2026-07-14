@@ -40,7 +40,7 @@ It returns:
 4. AI explanation readiness posture,
 5. data-mesh readiness posture,
 6. runtime trust telemetry preview, snapshot endpoint, generated snapshot, and
-   candidate-snapshot proof posture,
+   candidate-snapshot test-execution posture,
 7. outbox delivery readiness and run-once posture,
 8. Workbench realization blockers,
 9. opportunity archetype scenario blockers from the governed contract,
@@ -488,25 +488,22 @@ behavior, or promote a supported feature. Runtime readiness endpoints continue
 to report missing durable repository posture when `LOTUS_IDEA_DATABASE_URL` is
 absent.
 
-Runtime trust telemetry proof is captured by
-`scripts/generate_runtime_trust_telemetry_proof.py`. A valid artifact
-referenced through `LOTUS_IDEA_RUNTIME_TRUST_TELEMETRY_PROOF` or passed with
-`--runtime-trust-telemetry-proof` currently clears only the seeded
-candidate-snapshot runtime blocker inside generated implementation-proof
-readiness evidence and the operator API readiness snapshot:
+Runtime trust telemetry test execution is captured by
+`scripts/runtime_trust_telemetry/generate_test_execution_contract.py`. A valid v2
+artifact referenced through `LOTUS_IDEA_RUNTIME_TRUST_TELEMETRY_TEST_EXECUTION`
+or passed with `--runtime-trust-telemetry-test-execution` declares
+`evidenceClass=test_execution` and `repositoryAdapter=in_memory`. It exercises
+a deterministic, source-safe candidate fixture, but satisfies no aggregate
+blocker. Aggregate readiness may record the artifact as supporting evidence
+only.
 
-1. `runtime_candidate_snapshot_missing`.
-
-It exercises a deterministic, source-safe candidate snapshot through the
-runtime trust telemetry builder and records the proof artifact as aggregate
-evidence. The artifact also records product-coverage posture from the runtime
-telemetry preview, and while any declared producer product remains incomplete
-it preserves `runtime_trust_telemetry_product_coverage_incomplete`,
-`certified_runtime_trust_telemetry_missing`, and
-`data_mesh_runtime_telemetry_not_certified`. It does not certify the platform
-source manifest, platform mesh, active producer products, SLO/access/evidence
-policy, Gateway or Workbench discovery, client-ready publication, or
-supported-feature promotion.
+The closed-field validator requires `runtime_candidate_snapshot_missing`,
+`durable_repository_not_configured`, product-coverage, mesh-certification, and
+promotion blockers to remain. It rejects claims of runtime repository use,
+durable storage, API or tenant execution, deployment, production operation,
+certification, and promotion. Runtime trust telemetry certification therefore
+requires separate evidence from an authorized durable runtime; deterministic
+test execution cannot substitute for it.
 
 Workbench read-path source-contract proof is captured by
 `scripts/workbench/generate_read_path_source_contract.py`. A valid v2 artifact
@@ -863,7 +860,7 @@ Implementation-backed evidence:
 1. runtime artifact loader: `src/app/runtime/proof_artifacts.py`,
 1. artifact generator: `scripts/generate_implementation_proof_readiness.py`,
 1. repo-native check that generates and consumes the scheduled-worker
-   deploy-proof, durable repository proof, runtime telemetry proof, Workbench
+   deploy-proof, durable repository proof, runtime telemetry test-execution evidence, Workbench
    read-path proof, Advise and Manage route source contracts,
    Report intake route source contract, Report materialization source contract, outbox broker
    proof, outbox consumer contract proof, and outbox platform mesh event
@@ -983,10 +980,10 @@ Implementation-backed evidence:
     `scripts/persistence/generate_durable_repository_proof.py`,
 1. durable repository proof contract gate:
     `make durable-repository-proof-contract-gate`,
-1. runtime trust telemetry proof generator:
-    `scripts/generate_runtime_trust_telemetry_proof.py`,
-1. runtime trust telemetry proof contract gate:
-    `make runtime-trust-telemetry-proof-contract-gate`,
+1. runtime trust telemetry test-execution evidence generator:
+    `scripts/runtime_trust_telemetry/generate_test_execution_contract.py`,
+1. runtime trust telemetry test-execution evidence contract gate:
+    `make runtime-trust-telemetry-test-execution-contract-gate`,
 1. Workbench read-path source-contract proof generator:
     `scripts/workbench/generate_read_path_source_contract.py`,
 1. Workbench read-path source-contract proof gate:
@@ -1049,8 +1046,8 @@ Implementation-backed evidence:
     `tests/unit/data_mesh/test_platform_catalog_source_contract.py`,
 1. Workbench read-path source-contract proof tests:
     `tests/unit/workbench/test_read_path_source_contract.py`,
-1. runtime trust telemetry proof tests:
-    `tests/unit/test_runtime_trust_telemetry_proof.py`,
+1. runtime trust telemetry test-execution evidence tests:
+    `tests/unit/runtime_trust_telemetry/test_test_execution_contract.py`,
 1. outbox delivery run-once endpoint:
     `POST /api/v1/outbox-delivery/run-once`,
 1. operation event: `implementation_proof_readiness_read`,
@@ -1124,7 +1121,7 @@ $env:IMPLEMENTATION_PROOF_OUTPUT = "output/implementation-proof/implementation-p
 make implementation-proof-readiness-check
 
 make durable-repository-proof-contract-gate
-make runtime-trust-telemetry-proof-contract-gate
+make runtime-trust-telemetry-test-execution-contract-gate
 make ai-workflow-pack-registration-proof-contract-gate
 make outbox-broker-source-contract-proof-gate
 make outbox-consumer-contract-proof-contract-gate

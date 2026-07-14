@@ -101,7 +101,8 @@ The response includes:
    `contracts/domain-data-products/lotus-idea-products.v1.json`,
 6. explicit `coverageStatus`, source-safe counts, lineage/materialization
    posture, consumer exposure posture, and certification blockers per product,
-7. `runtimeTelemetryBacked: true` for the preview artifact,
+7. `runtimeTelemetryBacked` derived from the active repository's durable
+   storage posture,
 8. `platformCertified: false`,
 9. `certificationStatus: not_certified`,
 10. explicit certification blockers.
@@ -171,18 +172,19 @@ sibling platform evidence writes an invalid non-proof artifact and keeps the
 blockers; drift in present sibling evidence remains a failing contract
 condition.
 
-`make runtime-trust-telemetry-proof-contract-gate` validates the separate
-source-safe runtime trust telemetry proof contract used by aggregate
-implementation readiness. The generated proof under ignored
-`output/trust-telemetry/runtime/runtime-trust-telemetry-proof.json` can clear
-only the seeded candidate-snapshot blocker
-`runtime_candidate_snapshot_missing` while declared product coverage remains
-incomplete. Its product-coverage summary preserves
+`make runtime-trust-telemetry-test-execution-contract-gate` validates the
+separate source-safe test-execution contract used by aggregate implementation
+readiness. The generated artifact under ignored
+`output/trust-telemetry/test-execution/runtime-trust-telemetry-test-execution.json`
+declares `evidenceClass=test_execution`, uses an in-memory repository, and
+clears no aggregate blocker. Its product-coverage summary preserves
+`runtime_candidate_snapshot_missing`, `durable_repository_not_configured`,
 `runtime_trust_telemetry_product_coverage_incomplete`,
 `certified_runtime_trust_telemetry_missing`, and
 `data_mesh_runtime_telemetry_not_certified` until every declared producer
-product has complete runtime coverage. It is not platform mesh certification
-and does not promote `IdeaCandidate:v1` from proposed posture.
+product has complete runtime coverage. It is neither durable runtime evidence
+nor platform mesh certification and does not promote `IdeaCandidate:v1` from
+proposed posture.
 
 `scripts/data_mesh/generate_mesh_policy_source_contract.py` validates and
 SHA-256 binds the repo-owned readiness, SLO, access, and evidence-pack policy
@@ -213,7 +215,7 @@ Run:
 make data-mesh-contract-gate
 make mesh-policy-source-contract-proof-gate
 make platform-catalog-source-contract-proof-gate
-make runtime-trust-telemetry-proof-contract-gate
+make runtime-trust-telemetry-test-execution-contract-gate
 make runtime-trust-telemetry-preview-check
 make runtime-trust-telemetry-snapshot-check
 ```
@@ -238,8 +240,9 @@ The gate validates:
 9. the mesh policy source contract remains source-safe, deterministic, and
    limited to supporting evidence while all SLO/access/evidence policy
    certification blockers remain.
-10. the runtime telemetry proof contract remains source-safe, deterministic, and
-   limited to clearing repo-owned runtime telemetry blockers.
+10. the runtime telemetry test-execution contract remains source-safe,
+    deterministic, explicitly in-memory, and incapable of clearing runtime or
+    certification blockers.
 
 This gate is not mesh certification. It is a pre-certification guardrail so
 future implementation slices cannot accidentally promote proposed contracts or

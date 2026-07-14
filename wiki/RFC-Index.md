@@ -193,7 +193,7 @@ Current RFC-0002 implementation-start baseline:
    realization, and supported-feature promotion.
    `make implementation-proof-readiness-check` generates and consumes the
    scheduled source-ingestion worker deploy-proof artifact, durable repository
-   proof artifact, runtime telemetry proof artifact, Gateway/Workbench
+   proof artifact, runtime telemetry test-execution artifact, Gateway/Workbench
    source-contract proof artifact, Gateway/Workbench discovery contract proof
    artifact, report-intake route proof artifact, mesh policy source-contract artifact, platform catalog source
    contract artifact, AI lineage store proof artifact, Core portfolio-state
