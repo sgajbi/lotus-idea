@@ -53,6 +53,8 @@ LOTUS_IDEA_AI_MODEL_RISK_OPERATIONS_PROOF_OUTPUT ?= output/ai/ai-model-risk-oper
 LOTUS_IDEA_OPERATOR_WORKFLOWS_OPERATIONS_PROOF ?=
 LOTUS_IDEA_OPERATOR_WORKFLOWS_OPERATIONS_PROOF_OUTPUT ?= output/operations/operator-workflows-operations-proof.json
 LOTUS_AI_ROOT ?= ../lotus-ai
+LOTUS_AI_BASE_URL ?= http://127.0.0.1:8140
+LOTUS_IDEA_AI_RUNTIME_PROOF_TIMEOUT_SECONDS ?= 2
 LOTUS_IDEA_AI_WORKFLOW_PACK_REGISTRATION_PROOF ?=
 LOTUS_IDEA_AI_WORKFLOW_PACK_REGISTRATION_PROOF_OUTPUT ?= output/ai/ai-workflow-pack-registration-proof.json
 LOTUS_IDEA_AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF ?=
@@ -594,7 +596,7 @@ implementation-proof-readiness-check:
 	$(VENV_PYTHON) scripts/generate_ai_model_risk_operations_proof.py --generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --output $(LOTUS_IDEA_AI_MODEL_RISK_OPERATIONS_PROOF_OUTPUT)
 	$(VENV_PYTHON) scripts/generate_operator_workflows_operations_proof.py --generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --output $(LOTUS_IDEA_OPERATOR_WORKFLOWS_OPERATIONS_PROOF_OUTPUT)
 	$(VENV_PYTHON) scripts/generate_ai_workflow_pack_registration_proof.py --generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --lotus-ai-root $(LOTUS_AI_ROOT) --output $(LOTUS_IDEA_AI_WORKFLOW_PACK_REGISTRATION_PROOF_OUTPUT) --allow-missing-evidence
-	$(VENV_PYTHON) scripts/generate_ai_workflow_pack_runtime_execution_proof.py --generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --lotus-ai-root $(LOTUS_AI_ROOT) --output $(LOTUS_IDEA_AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF_OUTPUT) --allow-missing-evidence
+	$(VENV_PYTHON) scripts/generate_ai_workflow_pack_runtime_execution_proof.py --generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --lotus-ai-base-url $(LOTUS_AI_BASE_URL) --timeout-seconds $(LOTUS_IDEA_AI_RUNTIME_PROOF_TIMEOUT_SECONDS) --output $(LOTUS_IDEA_AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF_OUTPUT) --allow-runtime-unavailable
 	$(VENV_PYTHON) scripts/generate_workbench_read_path_proof.py --generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --output output/workbench/workbench-read-path-proof.json
 	$(VENV_PYTHON) scripts/generate_gateway_workbench_operational_proof.py --generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --workbench-read-path-proof output/workbench/workbench-read-path-proof.json --output $(LOTUS_IDEA_GATEWAY_WORKBENCH_OPERATIONAL_PROOF_OUTPUT)
 	$(VENV_PYTHON) scripts/outbox/generate_broker_proof.py --generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --output output/outbox/outbox-broker-proof.json

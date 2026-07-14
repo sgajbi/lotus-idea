@@ -4,40 +4,40 @@ import argparse
 from datetime import datetime
 import json
 import sys
-from pathlib import Path
 
-from app.application.ai_workflow_pack_runtime_execution_proof import (
-    build_ai_workflow_pack_runtime_execution_proof_payload,
+from app.application.ai_runtime_proof import (
+    build_unavailable_ai_workflow_pack_runtime_execution_proof_payload,
+    execute_ai_workflow_pack_runtime_proof,
 )
+from app.infrastructure.lotus_ai import HttpLotusAIWorkflowRuntime
 
 try:
     from scripts.proof_generator_io import write_json_payload
 except ImportError:  # pragma: no cover - supports direct script execution
     from proof_generator_io import write_json_payload  # type: ignore[import-not-found,no-redef]
 
-ROOT = Path(__file__).resolve().parents[1]
-
-
 def main(argv: list[str] | None = None) -> int:
     parser = _parser()
     args = parser.parse_args(argv)
+    generated_at_utc = _aware_datetime(args.generated_at_utc)
     try:
-        payload = build_ai_workflow_pack_runtime_execution_proof_payload(
-            generated_at_utc=_aware_datetime(args.generated_at_utc),
-            repository_root=ROOT,
-            lotus_ai_root=Path(args.lotus_ai_root) if args.lotus_ai_root else None,
+        payload = execute_ai_workflow_pack_runtime_proof(
+            generated_at_utc=generated_at_utc,
+            runtime=HttpLotusAIWorkflowRuntime(
+                base_url=args.lotus_ai_base_url,
+                timeout_seconds=args.timeout_seconds,
+            ),
         )
-    except (OSError, ValueError, json.JSONDecodeError) as exc:
+    except (OSError, RuntimeError, ValueError, json.JSONDecodeError) as exc:
         print(f"AI workflow-pack runtime execution proof error: {exc}", file=sys.stderr)
-        return 2
+        if not args.allow_runtime_unavailable:
+            return 2
+        payload = build_unavailable_ai_workflow_pack_runtime_execution_proof_payload(
+            generated_at_utc=generated_at_utc
+        )
 
     write_json_payload(payload, output=args.output)
-    proof_checks = payload.get("proofChecks")
-    if (
-        args.allow_missing_evidence
-        and isinstance(proof_checks, dict)
-        and proof_checks.get("fileEvidencePresent") is False
-    ):
+    if args.allow_runtime_unavailable and not payload["aiWorkflowPackRuntimeExecutionProofValid"]:
         return 0
     return 0 if payload["aiWorkflowPackRuntimeExecutionProofValid"] else 1
 
@@ -47,14 +47,15 @@ def _parser() -> argparse.ArgumentParser:
         description="Generate a source-safe lotus-idea AI workflow-pack runtime execution proof."
     )
     parser.add_argument("--generated-at-utc", required=True)
-    parser.add_argument("--lotus-ai-root")
+    parser.add_argument("--lotus-ai-base-url", required=True)
+    parser.add_argument("--timeout-seconds", type=float, default=10.0)
     parser.add_argument("--output")
     parser.add_argument(
-        "--allow-missing-evidence",
+        "--allow-runtime-unavailable",
         action="store_true",
         help=(
-            "Write an invalid non-proof artifact and exit 0 when sibling lotus-ai evidence is "
-            "absent; contract drift still exits non-zero once required evidence files are present."
+            "Reserved for aggregate local automation. Runtime unavailability still emits no valid "
+            "proof and cannot clear a readiness blocker."
         ),
     )
     return parser

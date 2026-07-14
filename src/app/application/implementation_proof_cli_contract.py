@@ -8,7 +8,7 @@ from app.application.ai_model_risk_operations_proof import (
 from app.application.ai_workflow_pack_registration_proof import (
     AI_WORKFLOW_PACK_REGISTRATION_PROOF_ENV,
 )
-from app.application.ai_workflow_pack_runtime_execution_proof import (
+from app.application.ai_runtime_proof import (
     AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF_ENV,
 )
 from app.application.core_benchmark_assignment_live_proof import (

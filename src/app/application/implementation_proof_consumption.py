@@ -11,7 +11,7 @@ from app.application.ai_model_risk_operations_proof import (
 from app.application.ai_workflow_pack_registration_proof import (
     ai_workflow_pack_registration_proof_is_valid,
 )
-from app.application.ai_workflow_pack_runtime_execution_proof import (
+from app.application.ai_runtime_proof import (
     ai_workflow_pack_runtime_execution_proof_is_valid,
 )
 from app.application.downstream_route_contract_proof import (
@@ -783,9 +783,16 @@ def _apply_ai_workflow_pack_runtime_execution_proof(
         supportability_status=capability.supportability_status,
         evidence_refs=evidence_refs,
         blockers=tuple(
-            blocker
-            for blocker in capability.blockers
-            if blocker != "lotus_ai_runtime_execution_missing"
+            dict.fromkeys(
+                (
+                    *(
+                        blocker
+                        for blocker in capability.blockers
+                        if blocker != "lotus_ai_runtime_execution_missing"
+                    ),
+                    "lotus_ai_live_provider_execution_missing",
+                )
+            )
         ),
         supported_feature_promoted=capability.supported_feature_promoted,
     )

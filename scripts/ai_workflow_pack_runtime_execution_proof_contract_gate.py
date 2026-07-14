@@ -1,15 +1,13 @@
 from __future__ import annotations
 
-from collections.abc import Mapping
 from datetime import UTC, datetime
-from pathlib import Path
 import sys
 
-from app.application.ai_workflow_pack_runtime_execution_proof import (
+from app.application.ai_runtime_proof import (
     AI_WORKFLOW_PACK_RUNTIME_EXECUTION_BLOCKERS_CLEARED,
     AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF_SCHEMA_VERSION,
     REMAINING_AI_WORKFLOW_PACK_RUNTIME_EXECUTION_BLOCKERS,
-    REQUIRED_AI_WORKFLOW_PACK_RUNTIME_EXECUTION_EVIDENCE_REFS,
+    AIRuntimeExecutionReceipt,
     ai_workflow_pack_runtime_execution_proof_is_valid,
     build_ai_workflow_pack_runtime_execution_proof_payload,
 )
@@ -19,22 +17,32 @@ try:
 except ModuleNotFoundError:
     from proof_source_safety import forbidden_content_validator, validate_forbidden_content  # type: ignore[import-not-found,no-redef]
 
-ROOT = Path(__file__).resolve().parents[1]
-
 FORBIDDEN_KEYS = {
     "accountId",
+    "account_id",
     "candidateId",
+    "candidate_id",
     "clientId",
+    "client_id",
     "correlationId",
+    "correlation_id",
     "holdingId",
+    "holding_id",
     "portfolioId",
+    "portfolio_id",
     "prompt",
     "providerResponse",
+    "provider_response",
     "rawPayload",
+    "raw_payload",
     "requestBody",
+    "request_body",
     "responseBody",
+    "response_body",
     "sourcePayload",
+    "source_payload",
     "traceId",
+    "trace_id",
 }
 
 FORBIDDEN_TEXT_FRAGMENTS = {
@@ -59,25 +67,16 @@ _validate_forbidden_content = forbidden_content_validator(
 
 
 def validate_ai_workflow_pack_runtime_execution_proof_contract(
-    *,
-    lotus_ai_root: Path | None = None,
 ) -> list[str]:
     errors: list[str] = []
     proof = build_ai_workflow_pack_runtime_execution_proof_payload(
         generated_at_utc=datetime(2026, 6, 26, 0, 0, tzinfo=UTC),
-        repository_root=ROOT,
-        lotus_ai_root=lotus_ai_root,
+        receipt=_contract_receipt(),
     )
     if proof.get("schemaVersion") != AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF_SCHEMA_VERSION:
         errors.append(
             "AI workflow-pack runtime execution proof schema must be "
             f"{AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF_SCHEMA_VERSION}"
-        )
-    if tuple(proof.get("evidenceRefs") or ()) != (
-        REQUIRED_AI_WORKFLOW_PACK_RUNTIME_EXECUTION_EVIDENCE_REFS
-    ):
-        errors.append(
-            "AI workflow-pack runtime execution proof evidence refs must match the contract"
         )
     if tuple(proof.get("aggregateBlockersCleared") or ()) != (
         AI_WORKFLOW_PACK_RUNTIME_EXECUTION_BLOCKERS_CLEARED
@@ -89,22 +88,43 @@ def validate_ai_workflow_pack_runtime_execution_proof_contract(
         REMAINING_AI_WORKFLOW_PACK_RUNTIME_EXECUTION_BLOCKERS
     ):
         errors.append("AI workflow-pack runtime execution proof must retain non-runtime blockers")
-    proof_checks = proof.get("proofChecks")
-    file_evidence_present = (
-        isinstance(proof_checks, Mapping) and proof_checks.get("fileEvidencePresent") is True
-    )
-    if file_evidence_present and not ai_workflow_pack_runtime_execution_proof_is_valid(proof):
-        errors.append(
-            "AI workflow-pack runtime execution proof must validate against sibling "
-            "lotus-ai truth when sibling evidence is present"
-        )
-    if (
-        not file_evidence_present
-        and proof.get("aiWorkflowPackRuntimeExecutionProofValid") is not False
-    ):
-        errors.append("missing sibling lotus-ai evidence must remain an invalid non-proof artifact")
+    if not ai_workflow_pack_runtime_execution_proof_is_valid(proof):
+        errors.append("AI workflow-pack runtime execution proof contract must validate")
     validate_forbidden_content(proof, errors, FORBIDDEN_KEYS, FORBIDDEN_TEXT_FRAGMENTS)
     return errors
+
+
+def _contract_receipt() -> AIRuntimeExecutionReceipt:
+    return AIRuntimeExecutionReceipt(
+        service="lotus-ai",
+        service_version="contract-test",
+        endpoint_path="/platform/workflow-packs/execute",
+        workflow_pack_id="idea_explanation.pack",
+        workflow_pack_version="v1",
+        registration_ref="idea_explanation.pack@v1",
+        run_id="wpr_contract_test",
+        request_id="req_contract_test",
+        caller_app="lotus-idea",
+        workflow_surface="idea-explanation-evidence",
+        environment="DEVELOPMENT",
+        caller_identity_class="INTERNAL_SERVICE",
+        task_id="explain.v1",
+        runtime_state="COMPLETED",
+        review_state="AWAITING_REVIEW",
+        supportability_status="ACTION_REQUIRED",
+        review_required=True,
+        execution_status="COMPLETED",
+        output_label="EXPLANATION_ONLY",
+        provider_mode="stub",
+        provider_id="stub-text-provider",
+        model_id=None,
+        model_version=None,
+        stubbed=True,
+        human_review_required=True,
+        client_ready_publication="BLOCKED",
+        downstream_authority="BLOCKED",
+        completed_at_utc="2026-06-26T00:00:00Z",
+    )
 
 
 def main() -> int:
