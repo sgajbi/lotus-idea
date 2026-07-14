@@ -38,8 +38,8 @@ def test_builds_source_safe_ci_execution_bound_durable_repository_proof() -> Non
     assert proof["proofScope"] == "mainline_ci_execution_receipt"
     assert proof["evidenceClass"] == EvidenceClass.CI_EXECUTION.value
     assert proof["durableRepositoryProofValid"] is True
-    assert tuple(proof["aggregateBlockersCleared"]) == DURABLE_REPOSITORY_BLOCKERS_CLEARED
-    assert tuple(proof["evidenceRefs"]) == REQUIRED_DURABLE_REPOSITORY_EVIDENCE_REFS
+    assert proof["aggregateBlockersCleared"] == DURABLE_REPOSITORY_BLOCKERS_CLEARED
+    assert proof["evidenceRefs"] == REQUIRED_DURABLE_REPOSITORY_EVIDENCE_REFS
     assert proof["productionStorageCertified"] is False
     assert proof["supportedFeaturePromoted"] is False
     assert proof["proofClosed"] is False
