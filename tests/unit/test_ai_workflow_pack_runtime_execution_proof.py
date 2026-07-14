@@ -72,7 +72,11 @@ def test_builds_source_safe_proof_from_actual_execution_receipt() -> None:
 
 
 def test_executes_governed_runtime_and_maps_only_bounded_receipt() -> None:
-    runtime = RecordingRuntime(lotus_ai_runtime_execution_response())
+    response = lotus_ai_runtime_execution_response()
+    audit = cast(dict[str, object], cast(dict[str, object], response["execution"])["audit"])
+    audit["model_id"] = "deterministic-proof-model"
+    audit["model_version"] = "v1"
+    runtime = RecordingRuntime(response)
 
     proof = execute_ai_workflow_pack_runtime_proof(
         runtime=runtime,
@@ -87,6 +91,8 @@ def test_executes_governed_runtime_and_maps_only_bounded_receipt() -> None:
     assert request["workflow_surface"] == "idea-explanation-evidence"
     receipt = cast(Mapping[str, object], proof["runtimeReceipt"])
     assert receipt["run_id"] == "wpr_runtime_proof_001"
+    assert receipt["model_id"] == "deterministic-proof-model"
+    assert receipt["model_version"] == "v1"
     assert "result" not in receipt
     assert "output_preview" not in receipt
 
@@ -127,14 +133,42 @@ def test_rejects_receipt_that_does_not_prove_guarded_stub_execution(
 @pytest.mark.parametrize(
     ("path", "bad_value"),
     [
+        (("eligibility", "pack_id"), "other.pack"),
         (("eligibility", "allowed"), False),
         (("eligibility", "caller_app"), "other-app"),
         (("execution", "audit", "workflow_pack_run_id"), "wrong-run"),
         (("execution", "result", "structured_output", "evidence_content_hash"), "sha256:bad"),
         (("workflow_pack_run", "pack_version"), "v2"),
+        (("workflow_pack_run", "runtime_state"), "FAILED"),
     ],
 )
 def test_rejects_tampered_runtime_response(path: tuple[str, ...], bad_value: object) -> None:
+    response = lotus_ai_runtime_execution_response()
+    target: dict[str, object] = response
+    for key in path[:-1]:
+        target = cast(dict[str, object], target[key])
+    target[path[-1]] = bad_value
+
+    with pytest.raises(InvalidAIRuntimeExecutionReceipt):
+        execute_ai_workflow_pack_runtime_proof(
+            runtime=RecordingRuntime(response),
+            generated_at_utc=datetime(2026, 7, 14, 0, 0, tzinfo=UTC),
+        )
+
+
+@pytest.mark.parametrize(
+    ("path", "bad_value"),
+    [
+        (("execution", "audit"), None),
+        (("workflow_pack_run", "run_id"), ""),
+        (("execution", "audit", "model_id"), ""),
+        (("workflow_pack_run", "review_required"), "true"),
+    ],
+)
+def test_rejects_malformed_runtime_response_field_types(
+    path: tuple[str, ...],
+    bad_value: object,
+) -> None:
     response = lotus_ai_runtime_execution_response()
     target: dict[str, object] = response
     for key in path[:-1]:
@@ -172,6 +206,64 @@ def test_unavailable_runtime_artifact_cannot_clear_blocker() -> None:
 def test_rejects_receipt_digest_tamper() -> None:
     proof = _valid_proof()
     proof["runtimeReceiptSha256"] = "sha256:" + "0" * 64
+
+    assert ai_workflow_pack_runtime_execution_proof_is_valid(proof) is False
+
+
+@pytest.mark.parametrize(
+    ("field_name", "bad_value"),
+    [
+        ("schemaVersion", "v1"),
+        ("repository", "lotus-ai"),
+        ("proofType", "source_scan"),
+        ("proofScope", "live_provider_execution"),
+        ("aiWorkflowPackRuntimeExecutionProofValid", False),
+        ("workflowPackId", "other.pack@v1"),
+        ("workflowAuthorityOwner", "lotus-ai"),
+        ("aiCapabilityOwner", "lotus-idea"),
+        ("workflowPackRuntimeExecutionCertified", False),
+        ("lotusAiRuntimeExecuted", False),
+        ("deterministicStubExecution", False),
+        ("liveProviderExecuted", True),
+        ("providerRolloutCertified", True),
+        ("generatedAtUtc", 123),
+        ("aggregateBlockersCleared", []),
+        ("remainingCertificationBlockers", []),
+        ("runtimeReceipt", None),
+        ("evidenceRefs", []),
+        ("proofChecks", None),
+    ],
+)
+def test_rejects_tampered_authority_bearing_proof_claim(
+    field_name: str,
+    bad_value: object,
+) -> None:
+    proof = _valid_proof()
+    proof[field_name] = bad_value
+
+    assert ai_workflow_pack_runtime_execution_proof_is_valid(proof) is False
+
+
+def test_rejects_unknown_or_invalid_receipt_fields_in_serialized_proof() -> None:
+    proof = _valid_proof()
+    receipt = dict(cast(Mapping[str, object], proof["runtimeReceipt"]))
+    receipt["unknown_field"] = "unexpected"
+    proof["runtimeReceipt"] = receipt
+
+    assert ai_workflow_pack_runtime_execution_proof_is_valid(proof) is False
+
+    receipt.pop("unknown_field")
+    receipt["runtime_state"] = "FAILED"
+    proof["runtimeReceipt"] = receipt
+
+    assert ai_workflow_pack_runtime_execution_proof_is_valid(proof) is False
+
+
+def test_rejects_false_individual_proof_check() -> None:
+    proof = _valid_proof()
+    proof_checks = dict(cast(Mapping[str, object], proof["proofChecks"]))
+    proof_checks["callerIdentityBound"] = False
+    proof["proofChecks"] = proof_checks
 
     assert ai_workflow_pack_runtime_execution_proof_is_valid(proof) is False
 
