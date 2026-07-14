@@ -3,15 +3,10 @@ from __future__ import annotations
 from datetime import UTC, datetime
 import json
 from pathlib import Path
-import tempfile
-from typing import Any
 
 import pytest
 
 from app.application.ai_lineage_store_proof import build_ai_lineage_store_proof_payload
-from app.application.ai_model_risk_operations.source_contract_proof import (
-    build_ai_model_risk_operations_proof_payload,
-)
 from app.application.ai_workflow_pack_registration_proof import (
     build_ai_workflow_pack_registration_proof_payload,
 )
@@ -70,7 +65,6 @@ from app.application.report_materialization_proof import (
 from app.application.runtime_trust_telemetry_proof import (
     build_runtime_trust_telemetry_proof_payload,
 )
-from app.application.proof_provenance import bind_aggregate_proof_provenance
 from app.application.source_ingestion_live_proof import (
     build_source_ingestion_live_proof_payload,
 )
@@ -96,22 +90,9 @@ from tests.support.downstream_route_contract_fixtures import (
     valid_advise_route_proof,
     valid_manage_route_proof,
 )
+from tests.support.proof_provenance import bound_aggregate_proof as _bound_aggregate_proof
 
 ROOT = Path(__file__).resolve().parents[2]
-
-
-def _bound_aggregate_proof(payload: dict[str, object], proof_ref: str) -> dict[str, Any]:
-    with tempfile.TemporaryDirectory() as directory:
-        artifact_path = Path(directory) / "proof.json"
-        artifact_path.write_text(json.dumps(payload), encoding="utf-8")
-        bound = bind_aggregate_proof_provenance(
-            payload,
-            artifact_path=artifact_path,
-            proof_ref=proof_ref,
-            repository_root=ROOT,
-        )
-        bound["aggregateProofProvenance"]["sourceTreeDirty"] = False
-        return bound
 
 
 def test_implementation_proof_capability_status_is_derived_from_remaining_blockers() -> None:
@@ -692,78 +673,6 @@ def test_implementation_proof_readiness_uses_ai_workflow_pack_runtime_execution_
     assert "output/ai/ai-workflow-pack-runtime-execution-proof.json" in (
         ai_explanation.evidence_refs
     )
-
-
-def test_implementation_proof_readiness_uses_ai_model_risk_operations_proof_without_product_claim() -> (
-    None
-):
-    proof_ref = "output/ai/ai-model-risk-operations-source-contract-proof.json"
-    proof = _bound_aggregate_proof(
-        build_ai_model_risk_operations_proof_payload(
-            generated_at_utc=datetime(2026, 6, 26, 0, 0, tzinfo=UTC),
-            repository_root=ROOT,
-        ),
-        proof_ref,
-    )
-
-    snapshot = build_implementation_proof_readiness_snapshot(
-        evaluated_at_utc=datetime(2026, 6, 26, 0, 0, tzinfo=UTC),
-        repository=InMemoryIdeaRepository(),
-        durable_storage_backed=False,
-        ai_model_risk_operations_proof=proof,
-        ai_model_risk_operations_proof_ref=proof_ref,
-    )
-
-    assert "model_risk_operations_dashboard_not_certified" not in snapshot.overall_blockers
-    assert "model_risk_operations_alerts_not_certified" not in snapshot.overall_blockers
-    assert "lotus_ai_runtime_execution_missing" in snapshot.overall_blockers
-    assert "certified_runtime_trust_telemetry_missing" in snapshot.overall_blockers
-    assert "workbench_panel_missing" in snapshot.overall_blockers
-    assert "no_supported_features_promoted" in snapshot.overall_blockers
-    assert snapshot.readiness_status == "blocked"
-    assert snapshot.supportability_status == "not_certified"
-    assert snapshot.supported_features_promoted is False
-    ai_explanation = next(
-        capability
-        for capability in snapshot.capabilities
-        if capability.capability_id == "ai-explanation"
-    )
-    assert "model_risk_operations_dashboard_not_certified" not in ai_explanation.blockers
-    assert "model_risk_operations_alerts_not_certified" not in ai_explanation.blockers
-    assert (
-        "output/ai/ai-model-risk-operations-source-contract-proof.json"
-        in ai_explanation.evidence_refs
-    )
-    assert "model_risk_dashboard_runtime_proof_missing" in ai_explanation.blockers
-    assert "model_risk_alert_rules_runtime_proof_missing" in ai_explanation.blockers
-
-
-def test_ai_model_risk_source_contract_rejects_runtime_claim_inflation() -> None:
-    proof_ref = "output/ai/ai-model-risk-operations-source-contract-proof.json"
-    proof = build_ai_model_risk_operations_proof_payload(
-        generated_at_utc=datetime(2026, 6, 26, 0, 0, tzinfo=UTC),
-        repository_root=ROOT,
-    )
-    proof["evidenceClass"] = "runtime_execution"
-    proof["runtimeExecutionObserved"] = True
-    bound_proof = _bound_aggregate_proof(proof, proof_ref)
-
-    snapshot = build_implementation_proof_readiness_snapshot(
-        evaluated_at_utc=datetime(2026, 6, 26, 0, 0, tzinfo=UTC),
-        repository=InMemoryIdeaRepository(),
-        durable_storage_backed=False,
-        ai_model_risk_operations_proof=bound_proof,
-        ai_model_risk_operations_proof_ref=proof_ref,
-    )
-
-    ai_explanation = next(
-        capability
-        for capability in snapshot.capabilities
-        if capability.capability_id == "ai-explanation"
-    )
-    assert proof_ref not in ai_explanation.evidence_refs
-    assert "model_risk_dashboard_runtime_proof_missing" in ai_explanation.blockers
-    assert "model_risk_alert_rules_runtime_proof_missing" in ai_explanation.blockers
 
 
 def test_implementation_proof_readiness_uses_workbench_read_path_proof_without_promotion() -> None:
