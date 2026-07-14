@@ -266,7 +266,7 @@ def test_review_queue_ranks_candidates_from_explicitly_approved_score_policies()
     assert {item.policy_version for item in queue.items} == {queue_policy.policy_version}
 
 
-def test_review_queue_excludes_suppressed_blocked_expired_snoozed_and_unscored() -> None:
+def test_review_queue_excludes_in_audience_failures_and_omits_other_audiences() -> None:
     active = candidate("idea-active")
     suppressed = candidate(
         "idea-suppressed",
@@ -298,10 +298,10 @@ def test_review_queue_excludes_suppressed_blocked_expired_snoozed_and_unscored()
     assert {exclusion.reason for exclusion in queue.exclusions} == {
         QueueExclusionReason.SUPPRESSED,
         QueueExclusionReason.UNSUPPORTED_EVIDENCE,
-        QueueExclusionReason.EXPIRED,
         QueueExclusionReason.SNOOZED,
         QueueExclusionReason.UNSCORED,
     }
+    assert all(exclusion.candidate_id != "idea-expired" for exclusion in queue.exclusions)
 
 
 def test_review_queue_excludes_scores_from_a_different_policy_version() -> None:
@@ -433,7 +433,7 @@ def test_scoring_inputs_and_policy_reject_invalid_values() -> None:
         )
 
 
-def test_queue_excludes_non_reviewable_post_review_status() -> None:
+def test_queue_omits_post_review_candidate_outside_advisor_audience() -> None:
     approved = replace(
         candidate("idea-approved"),
         lifecycle_status=IdeaLifecycleStatus.APPROVED,
@@ -443,10 +443,10 @@ def test_queue_excludes_non_reviewable_post_review_status() -> None:
     queue = build_review_queue((approved,), policy=QUEUE_POLICY, evaluated_at_utc=EVALUATED_AT)
 
     assert queue.items == ()
-    assert queue.exclusions[0].reason is QueueExclusionReason.NON_REVIEWABLE_STATUS
+    assert queue.exclusions == ()
 
 
-def test_queue_excludes_closed_and_rejected_terminal_statuses() -> None:
+def test_queue_omits_terminal_candidates_outside_advisor_audience() -> None:
     closed = candidate(
         "idea-closed",
         lifecycle_status=IdeaLifecycleStatus.CLOSED,
@@ -463,10 +463,7 @@ def test_queue_excludes_closed_and_rejected_terminal_statuses() -> None:
     )
 
     assert queue.items == ()
-    assert [exclusion.reason for exclusion in queue.exclusions] == [
-        QueueExclusionReason.CLOSED,
-        QueueExclusionReason.REJECTED,
-    ]
+    assert queue.exclusions == ()
 
 
 def test_queue_item_and_exclusion_validate_required_fields() -> None:
