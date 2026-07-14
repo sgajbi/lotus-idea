@@ -837,10 +837,7 @@ def test_readiness_uses_report_intake_route_source_contract_proof_without_materi
     assert "rendered_output_creation_missing" in downstream.blockers
     assert "archive_record_creation_missing" in downstream.blockers
     assert "client_publication_authority_blocked" in downstream.blockers
-    assert (
-        "output/report/intake-route-source-contract-proof.json"
-        in downstream.evidence_refs
-    )
+    assert "output/report/intake-route-source-contract-proof.json" in downstream.evidence_refs
 
 
 def test_implementation_proof_readiness_uses_advise_and_manage_route_proofs_without_authority() -> (
