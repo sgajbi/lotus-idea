@@ -70,7 +70,7 @@ from app.application.performance_underperformance_live_proof import (
 from app.application.report.intake_route_source_contract import (
     REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF_ENV,
 )
-from app.application.report_materialization_proof import REPORT_MATERIALIZATION_PROOF_ENV
+from app.application.report.materialization_source_contract import REPORT_MATERIALIZATION_PROOF_ENV
 from app.application.risk_concentration_live_proof import RISK_CONCENTRATION_LIVE_PROOF_ENV
 from app.application.risk_drawdown_live_proof import RISK_DRAWDOWN_LIVE_PROOF_ENV
 from app.application.runtime_trust_telemetry_proof import RUNTIME_TRUST_TELEMETRY_PROOF_ENV

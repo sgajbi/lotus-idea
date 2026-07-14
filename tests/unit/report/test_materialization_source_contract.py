@@ -9,7 +9,7 @@ from typing import Any, Mapping, cast
 
 import pytest
 
-from app.application.report_materialization_proof import (
+from app.application.report.materialization_source_contract import (
     REMAINING_REPORT_MATERIALIZATION_BLOCKERS,
     REPORT_MATERIALIZATION_BLOCKERS_CLEARED,
     REPORT_MATERIALIZATION_PROOF_ENV,
@@ -21,7 +21,7 @@ from app.application.report_materialization_proof import (
     report_materialization_proof_is_valid,
 )
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 
 
 def test_builds_source_safe_report_materialization_proof(tmp_path: Path) -> None:
@@ -285,7 +285,7 @@ def _report_contract_payload() -> dict[str, object]:
 
 
 def _load_generator_script() -> ModuleType:
-    script_path = ROOT / "scripts" / "generate_report_materialization_proof.py"
+    script_path = ROOT / "scripts" / "report" / "generate_materialization_source_contract.py"
     spec = importlib.util.spec_from_file_location(
         "generate_report_materialization_proof",
         script_path,
@@ -298,7 +298,7 @@ def _load_generator_script() -> ModuleType:
 
 
 def _load_contract_gate_script() -> ModuleType:
-    script_path = ROOT / "scripts" / "report_materialization_proof_contract_gate.py"
+    script_path = ROOT / "scripts" / "report" / "materialization_source_contract_gate.py"
     spec = importlib.util.spec_from_file_location(
         "report_materialization_proof_contract_gate",
         script_path,

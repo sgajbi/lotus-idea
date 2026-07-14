@@ -63,7 +63,7 @@ Implemented in the first Slice 13 foundation:
    materialization, render, archive, client-publication authority, or a
    supported feature.
    The merged `lotus-report` materialization path can now also be proven through
-   `scripts/generate_report_materialization_proof.py` and
+   `scripts/report/generate_materialization_source_contract.py` and
    `make report-materialization-proof-contract-gate`. A valid artifact clears
    only `report_evidence_pack_live_materialization_proof_missing`,
    `rendered_output_creation_missing`, and `archive_record_creation_missing`;
