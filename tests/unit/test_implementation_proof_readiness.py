@@ -249,6 +249,11 @@ def test_implementation_proof_readiness_capabilities_are_source_safe() -> None:
     assert "make runtime-trust-telemetry-preview-check" in runtime_telemetry.evidence_refs
     assert "make runtime-trust-telemetry-snapshot-check" in runtime_telemetry.evidence_refs
     assert (
+        "src/app/application/runtime_trust_telemetry/telemetry.py"
+        in runtime_telemetry.evidence_refs
+    )
+    assert "src/app/application/runtime_trust_telemetry.py" not in runtime_telemetry.evidence_refs
+    assert (
         "GET /api/v1/data-mesh/trust-telemetry/runtime-snapshot" in runtime_telemetry.evidence_refs
     )
     assert (
