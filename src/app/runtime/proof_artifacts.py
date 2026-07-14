@@ -9,7 +9,7 @@ from app.application.ai_lineage_store_proof import AI_LINEAGE_STORE_PROOF_ENV
 from app.application.ai_model_risk_operations.source_contract_proof import (
     AI_MODEL_RISK_OPERATIONS_PROOF_ENV,
 )
-from app.application.ai_workflow_pack_registration_proof import (
+from app.application.ai_workflow_pack_registration.source_contract_proof import (
     AI_WORKFLOW_PACK_REGISTRATION_PROOF_ENV,
 )
 from app.application.ai_runtime_proof import (
@@ -132,7 +132,7 @@ _JSON_PROOF_ARTIFACTS: tuple[tuple[str, str, str, str], ...] = (
         AI_WORKFLOW_PACK_REGISTRATION_PROOF_ENV,
         "ai_workflow_pack_registration_proof",
         "ai_workflow_pack_registration_proof_ref",
-        "AI workflow-pack registration proof",
+        "AI workflow-pack registration source-contract proof",
     ),
     (
         AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF_ENV,

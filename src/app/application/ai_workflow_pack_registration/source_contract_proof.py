@@ -13,16 +13,21 @@ from app.application.source_safe_cross_repo_proof import (
     text_file_contains_all,
 )
 from app.domain import GOVERNED_IDEA_EXPLANATION_WORKFLOW_PACK
+from app.domain.proof_evidence import EvidenceClass, evidence_class_can_clear
 
 
 AI_WORKFLOW_PACK_REGISTRATION_PROOF_ENV = "LOTUS_IDEA_AI_WORKFLOW_PACK_REGISTRATION_PROOF"
 AI_WORKFLOW_PACK_REGISTRATION_PROOF_SCHEMA_VERSION = (
-    "lotus-idea.ai-workflow-pack-registration-proof.v1"
+    "lotus-idea.ai-workflow-pack-registration-proof.v2"
 )
 
-AI_WORKFLOW_PACK_REGISTRATION_BLOCKERS_CLEARED = ("workflow_pack_runtime_contract_not_certified",)
+AI_WORKFLOW_PACK_REGISTRATION_REQUIRED_BLOCKER_EVIDENCE_CLASSES: tuple[
+    tuple[str, str], ...
+] = ()
+AI_WORKFLOW_PACK_REGISTRATION_BLOCKERS_CLEARED: tuple[str, ...] = ()
 
 REMAINING_AI_WORKFLOW_PACK_REGISTRATION_BLOCKERS = (
+    "workflow_pack_runtime_contract_not_certified",
     "certified_ai_lineage_store_missing",
     "lotus_ai_runtime_execution_missing",
     "certified_runtime_trust_telemetry_missing",
@@ -42,8 +47,12 @@ REQUIRED_AI_WORKFLOW_PACK_EVIDENCE_REFS = (
     "../lotus-ai/tests/unit/test_workflow_pack_runtime_status.py",
     "../lotus-ai/tests/integration/test_workflow_pack_registry_api_contract.py",
     "src/app/application/ai_governance.py",
+    "src/app/application/ai_workflow_pack_registration/source_contract_proof.py",
     "src/app/domain/ai_lineage_persistence.py",
     "tests/unit/test_ai_governance.py",
+    "scripts/ai_workflow_pack_registration/generate_source_contract_proof.py",
+    "scripts/ai_workflow_pack_registration/source_contract_proof_gate.py",
+    "tests/unit/ai_workflow_pack_registration/test_source_contract_proof.py",
     "make ai-workflow-pack-registration-proof-contract-gate",
     "lotus-ai make check",
     "lotus-ai PR Merge Gate / Lint Typecheck Security",
@@ -88,6 +97,15 @@ def build_ai_workflow_pack_registration_proof_payload(
         ("idea_explanation.pack@v1", "lotus-idea"),
     )
     tests_cover_idea_pack = _tests_cover_idea_pack(lotus_ai_root)
+    evidence_class_matches_blockers = all(
+        evidence_class_can_clear(
+            actual=EvidenceClass.SOURCE_CONTRACT,
+            required=EvidenceClass(required_class),
+        )
+        for _blocker, required_class in (
+            AI_WORKFLOW_PACK_REGISTRATION_REQUIRED_BLOCKER_EVIDENCE_CLASSES
+        )
+    )
     proof_valid = (
         timezone_aware_generated_at_utc
         and file_evidence_present
@@ -98,13 +116,18 @@ def build_ai_workflow_pack_registration_proof_payload(
         and queue_policy_includes_idea_pack
         and supportability_surface_includes_idea_pack
         and tests_cover_idea_pack
+        and evidence_class_matches_blockers
     )
     return {
         "schemaVersion": AI_WORKFLOW_PACK_REGISTRATION_PROOF_SCHEMA_VERSION,
         "repository": "lotus-idea",
         "generatedAtUtc": generated_at_utc.isoformat(),
-        "proofType": "lotus_ai_idea_workflow_pack_registration_contract",
-        "proofScope": "source_safe_workflow_pack_registration_only",
+        "proofType": "lotus_ai_idea_workflow_pack_registration_source_contract",
+        "proofScope": "source_safe_workflow_pack_registration_contract_only",
+        "evidenceClass": EvidenceClass.SOURCE_CONTRACT.value,
+        "requiredBlockerEvidenceClasses": dict(
+            AI_WORKFLOW_PACK_REGISTRATION_REQUIRED_BLOCKER_EVIDENCE_CLASSES
+        ),
         "aiWorkflowPackRegistrationProofValid": proof_valid,
         "aggregateBlockersCleared": AI_WORKFLOW_PACK_REGISTRATION_BLOCKERS_CLEARED,
         "evidenceRefs": evidence_refs,
@@ -118,6 +141,7 @@ def build_ai_workflow_pack_registration_proof_payload(
             "queuePolicyIncludesIdeaPack": queue_policy_includes_idea_pack,
             "supportabilitySurfaceIncludesIdeaPack": supportability_surface_includes_idea_pack,
             "testsCoverIdeaPack": tests_cover_idea_pack,
+            "evidenceClassMatchesBlockers": evidence_class_matches_blockers,
         },
         "remainingCertificationBlockers": REMAINING_AI_WORKFLOW_PACK_REGISTRATION_BLOCKERS,
         "workflowPackId": GOVERNED_IDEA_EXPLANATION_WORKFLOW_PACK.proof_workflow_pack_id,
@@ -125,7 +149,10 @@ def build_ai_workflow_pack_registration_proof_payload(
             GOVERNED_IDEA_EXPLANATION_WORKFLOW_PACK.workflow_authority_owner
         ),
         "aiCapabilityOwner": GOVERNED_IDEA_EXPLANATION_WORKFLOW_PACK.ai_capability_owner,
-        "workflowPackRegistrationContractCertified": proof_valid,
+        "workflowPackRegistrationSourceContractValid": proof_valid,
+        "runtimeExecutionObserved": False,
+        "deploymentObserved": False,
+        "productionCertificationGranted": False,
         "workflowPackRuntimeExecutionCertified": False,
         "lotusAiRuntimeExecuted": False,
         "modelRiskDashboardCertified": False,
@@ -142,9 +169,22 @@ def ai_workflow_pack_registration_proof_is_valid(payload: Mapping[str, Any]) -> 
         return False
     if payload.get("repository") != "lotus-idea":
         return False
-    if payload.get("proofType") != "lotus_ai_idea_workflow_pack_registration_contract":
+    if payload.get("proofType") != (
+        "lotus_ai_idea_workflow_pack_registration_source_contract"
+    ):
         return False
-    if payload.get("proofScope") != "source_safe_workflow_pack_registration_only":
+    if payload.get("proofScope") != (
+        "source_safe_workflow_pack_registration_contract_only"
+    ):
+        return False
+    if payload.get("evidenceClass") != EvidenceClass.SOURCE_CONTRACT.value:
+        return False
+    required_classes = payload.get("requiredBlockerEvidenceClasses")
+    if not isinstance(required_classes, Mapping):
+        return False
+    if tuple(required_classes.items()) != (
+        AI_WORKFLOW_PACK_REGISTRATION_REQUIRED_BLOCKER_EVIDENCE_CLASSES
+    ):
         return False
     if payload.get("aiWorkflowPackRegistrationProofValid") is not True:
         return False
@@ -160,7 +200,13 @@ def ai_workflow_pack_registration_proof_is_valid(payload: Mapping[str, Any]) -> 
         GOVERNED_IDEA_EXPLANATION_WORKFLOW_PACK.ai_capability_owner
     ):
         return False
-    if payload.get("workflowPackRegistrationContractCertified") is not True:
+    if payload.get("workflowPackRegistrationSourceContractValid") is not True:
+        return False
+    if payload.get("runtimeExecutionObserved") is not False:
+        return False
+    if payload.get("deploymentObserved") is not False:
+        return False
+    if payload.get("productionCertificationGranted") is not False:
         return False
     if payload.get("workflowPackRuntimeExecutionCertified") is not False:
         return False
@@ -205,6 +251,7 @@ def ai_workflow_pack_registration_proof_is_valid(payload: Mapping[str, Any]) -> 
             "queuePolicyIncludesIdeaPack",
             "supportabilitySurfaceIncludesIdeaPack",
             "testsCoverIdeaPack",
+            "evidenceClassMatchesBlockers",
         )
     )
 

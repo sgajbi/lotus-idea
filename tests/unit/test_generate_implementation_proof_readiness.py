@@ -11,7 +11,7 @@ from app.application.ai_lineage_store_proof import build_ai_lineage_store_proof_
 from app.application.ai_model_risk_operations.source_contract_proof import (
     build_ai_model_risk_operations_proof_payload,
 )
-from app.application.ai_workflow_pack_registration_proof import (
+from app.application.ai_workflow_pack_registration.source_contract_proof import (
     build_ai_workflow_pack_registration_proof_payload,
 )
 from app.application.ai_runtime_proof import (
@@ -491,7 +491,9 @@ def test_generate_implementation_proof_readiness_uses_explicit_ai_model_risk_ope
 def test_generate_implementation_proof_readiness_uses_explicit_ai_workflow_pack_registration_proof(
     tmp_path: Path,
 ) -> None:
-    ai_workflow_pack_proof = tmp_path / "ai-workflow-pack-registration-proof.json"
+    ai_workflow_pack_proof = (
+        tmp_path / "ai-workflow-pack-registration-source-contract-proof.json"
+    )
     ai_workflow_pack_proof.write_text(
         json.dumps(
             build_ai_workflow_pack_registration_proof_payload(
@@ -522,10 +524,13 @@ def test_generate_implementation_proof_readiness_uses_explicit_ai_workflow_pack_
         for capability in payload["capabilities"]
         if capability["capabilityId"] == "ai-explanation"
     )
-    assert "workflow_pack_runtime_contract_not_certified" not in ai_explanation["blockers"]
-    assert "workflow_pack_runtime_contract_not_certified" not in payload["overallBlockers"]
+    assert "workflow_pack_runtime_contract_not_certified" in ai_explanation["blockers"]
+    assert "workflow_pack_runtime_contract_not_certified" in payload["overallBlockers"]
     assert "lotus_ai_runtime_execution_missing" in ai_explanation["blockers"]
-    assert "AI workflow-pack registration proof artifact" in ai_explanation["evidenceRefs"]
+    assert (
+        "AI workflow-pack registration source-contract proof artifact"
+        in ai_explanation["evidenceRefs"]
+    )
     assert payload["readinessStatus"] == "blocked"
     assert payload["supportedFeaturePromoted"] is False
 

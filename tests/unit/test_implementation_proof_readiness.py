@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from app.application.ai_lineage_store_proof import build_ai_lineage_store_proof_payload
-from app.application.ai_workflow_pack_registration_proof import (
+from app.application.ai_workflow_pack_registration.source_contract_proof import (
     build_ai_workflow_pack_registration_proof_payload,
 )
 from app.application.ai_runtime_proof import (
@@ -587,10 +587,10 @@ def test_implementation_proof_readiness_uses_ai_lineage_store_proof_without_runt
     assert "output/ai/ai-lineage-store-proof.json" in ai_explanation.evidence_refs
 
 
-def test_implementation_proof_readiness_uses_ai_workflow_pack_registration_proof_without_runtime_claim(
+def test_ai_workflow_pack_registration_source_contract_adds_evidence_without_clearing_runtime_blocker(
     tmp_path: Path,
 ) -> None:
-    proof_ref = "output/ai/ai-workflow-pack-registration-proof.json"
+    proof_ref = "output/ai/ai-workflow-pack-registration-source-contract-proof.json"
     proof = _bound_aggregate_proof(
         build_ai_workflow_pack_registration_proof_payload(
             generated_at_utc=datetime(2026, 6, 25, 0, 0, tzinfo=UTC),
@@ -608,7 +608,7 @@ def test_implementation_proof_readiness_uses_ai_workflow_pack_registration_proof
         ai_workflow_pack_registration_proof_ref=proof_ref,
     )
 
-    assert "workflow_pack_runtime_contract_not_certified" not in snapshot.overall_blockers
+    assert "workflow_pack_runtime_contract_not_certified" in snapshot.overall_blockers
     assert "certified_ai_lineage_store_missing" in snapshot.overall_blockers
     assert "lotus_ai_runtime_execution_missing" in snapshot.overall_blockers
     assert "model_risk_operations_dashboard_not_certified" not in snapshot.overall_blockers
@@ -623,9 +623,11 @@ def test_implementation_proof_readiness_uses_ai_workflow_pack_registration_proof
         for capability in snapshot.capabilities
         if capability.capability_id == "ai-explanation"
     )
-    assert "workflow_pack_runtime_contract_not_certified" not in ai_explanation.blockers
+    assert "workflow_pack_runtime_contract_not_certified" in ai_explanation.blockers
     assert "lotus_ai_runtime_execution_missing" in ai_explanation.blockers
-    assert "output/ai/ai-workflow-pack-registration-proof.json" in (ai_explanation.evidence_refs)
+    assert "output/ai/ai-workflow-pack-registration-source-contract-proof.json" in (
+        ai_explanation.evidence_refs
+    )
 
 
 def test_implementation_proof_readiness_uses_ai_workflow_pack_runtime_execution_proof_without_publication_claim(

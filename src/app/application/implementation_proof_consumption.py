@@ -8,7 +8,7 @@ from app.application.ai_lineage_store_proof import ai_lineage_store_proof_is_val
 from app.application.ai_model_risk_operations.source_contract_proof import (
     ai_model_risk_operations_proof_is_valid,
 )
-from app.application.ai_workflow_pack_registration_proof import (
+from app.application.ai_workflow_pack_registration.source_contract_proof import (
     ai_workflow_pack_registration_proof_is_valid,
 )
 from app.application.ai_runtime_proof import (
@@ -806,11 +806,7 @@ def _apply_ai_workflow_pack_registration_proof(
         readiness_status=capability.readiness_status,
         supportability_status=capability.supportability_status,
         evidence_refs=evidence_refs,
-        blockers=tuple(
-            blocker
-            for blocker in capability.blockers
-            if blocker != "workflow_pack_runtime_contract_not_certified"
-        ),
+        blockers=capability.blockers,
         supported_feature_promoted=capability.supported_feature_promoted,
     )
 

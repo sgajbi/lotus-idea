@@ -270,8 +270,8 @@ def _proof_artifact_inputs(args: argparse.Namespace) -> dict[str, ProofArtifactI
         ),
         "ai_workflow_pack_registration": _proof_artifact_input(
             args.ai_workflow_pack_registration_proof,
-            artifact_name="AI workflow-pack registration proof",
-            ref_name="AI workflow-pack registration proof artifact",
+            artifact_name="AI workflow-pack registration source-contract proof",
+            ref_name="AI workflow-pack registration source-contract proof artifact",
         ),
         "ai_workflow_pack_runtime_execution": _proof_artifact_input(
             args.ai_workflow_pack_runtime_execution_proof,

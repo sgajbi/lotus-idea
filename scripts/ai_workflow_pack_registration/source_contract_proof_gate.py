@@ -5,21 +5,24 @@ from datetime import UTC, datetime
 from pathlib import Path
 import sys
 
-from app.application.ai_workflow_pack_registration_proof import (
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT))
+
+from app.application.ai_workflow_pack_registration.source_contract_proof import (  # noqa: E402
     AI_WORKFLOW_PACK_REGISTRATION_BLOCKERS_CLEARED,
     AI_WORKFLOW_PACK_REGISTRATION_PROOF_SCHEMA_VERSION,
+    AI_WORKFLOW_PACK_REGISTRATION_REQUIRED_BLOCKER_EVIDENCE_CLASSES,
     REMAINING_AI_WORKFLOW_PACK_REGISTRATION_BLOCKERS,
     REQUIRED_AI_WORKFLOW_PACK_EVIDENCE_REFS,
     ai_workflow_pack_registration_proof_is_valid,
     build_ai_workflow_pack_registration_proof_payload,
 )
+from app.domain.proof_evidence import EvidenceClass  # noqa: E402
 
 try:
     from scripts.proof_source_safety import forbidden_content_validator, validate_forbidden_content
 except ModuleNotFoundError:
     from proof_source_safety import forbidden_content_validator, validate_forbidden_content  # type: ignore[import-not-found,no-redef]
-
-ROOT = Path(__file__).resolve().parents[1]
 
 FORBIDDEN_KEYS = {
     "accountId",
@@ -78,11 +81,17 @@ def validate_ai_workflow_pack_registration_proof_contract(
     if tuple(proof.get("aggregateBlockersCleared") or ()) != (
         AI_WORKFLOW_PACK_REGISTRATION_BLOCKERS_CLEARED
     ):
-        errors.append("AI workflow-pack registration proof must clear only registration blockers")
+        errors.append("AI workflow-pack registration source contract must clear no blockers")
+    if proof.get("evidenceClass") != EvidenceClass.SOURCE_CONTRACT.value:
+        errors.append("AI workflow-pack registration proof must remain source-contract evidence")
+    if proof.get("requiredBlockerEvidenceClasses") != dict(
+        AI_WORKFLOW_PACK_REGISTRATION_REQUIRED_BLOCKER_EVIDENCE_CLASSES
+    ):
+        errors.append("AI workflow-pack registration source contract must map no cleared blockers")
     if tuple(proof.get("remainingCertificationBlockers") or ()) != (
         REMAINING_AI_WORKFLOW_PACK_REGISTRATION_BLOCKERS
     ):
-        errors.append("AI workflow-pack registration proof must retain non-registration blockers")
+        errors.append("AI workflow-pack registration proof must retain runtime blockers")
     proof_checks = proof.get("proofChecks")
     file_evidence_present = (
         isinstance(proof_checks, Mapping) and proof_checks.get("fileEvidencePresent") is True
@@ -103,7 +112,7 @@ def main() -> int:
     if errors:
         print("\n".join(errors))
         return 1
-    print("AI workflow-pack registration proof contract gate passed")
+    print("AI workflow-pack registration source-contract proof gate passed")
     return 0
 
 

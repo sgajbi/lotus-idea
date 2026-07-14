@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from app.application.ai_lineage_store_proof import AI_LINEAGE_STORE_PROOF_ENV
-from app.application.ai_workflow_pack_registration_proof import (
+from app.application.ai_workflow_pack_registration.source_contract_proof import (
     AI_WORKFLOW_PACK_REGISTRATION_PROOF_ENV,
 )
 from app.application.ai_runtime_proof import (
@@ -48,7 +48,12 @@ def test_configured_implementation_proof_artifacts_loads_relative_source_safe_re
         tmp_path / "output" / "trust-telemetry" / "runtime" / "runtime-trust-telemetry-proof.json"
     )
     ai_lineage_path = tmp_path / "output" / "ai" / "ai-lineage-store-proof.json"
-    ai_workflow_pack_path = tmp_path / "output" / "ai" / "ai-workflow-pack-registration-proof.json"
+    ai_workflow_pack_path = (
+        tmp_path
+        / "output"
+        / "ai"
+        / "ai-workflow-pack-registration-source-contract-proof.json"
+    )
     ai_runtime_path = tmp_path / "output" / "ai" / "ai-workflow-pack-runtime-execution-proof.json"
     workbench_path = tmp_path / "output" / "workbench" / "workbench-read-path-proof.json"
     gateway_workbench_path = (
@@ -109,10 +114,10 @@ def test_configured_implementation_proof_artifacts_loads_relative_source_safe_re
     assert artifacts.ai_lineage_store_proof_ref == "output/ai/ai-lineage-store-proof.json"
     _assert_bound_artifact(
         artifacts.ai_workflow_pack_registration_proof,
-        "ai-workflow-pack-registration-proof.json",
+        "ai-workflow-pack-registration-source-contract-proof.json",
     )
     assert artifacts.ai_workflow_pack_registration_proof_ref == (
-        "output/ai/ai-workflow-pack-registration-proof.json"
+        "output/ai/ai-workflow-pack-registration-source-contract-proof.json"
     )
     _assert_bound_artifact(
         artifacts.ai_workflow_pack_runtime_execution_proof,
@@ -200,7 +205,7 @@ def _configure_relative_artifact_env(monkeypatch: pytest.MonkeyPatch) -> None:
         ),
         AI_LINEAGE_STORE_PROOF_ENV: "output/ai/ai-lineage-store-proof.json",
         AI_WORKFLOW_PACK_REGISTRATION_PROOF_ENV: (
-            "output/ai/ai-workflow-pack-registration-proof.json"
+            "output/ai/ai-workflow-pack-registration-source-contract-proof.json"
         ),
         AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF_ENV: (
             "output/ai/ai-workflow-pack-runtime-execution-proof.json"
