@@ -1740,8 +1740,8 @@
       "test_evidence": [
         "tests/unit/test_implementation_proof_readiness.py::test_implementation_proof_readiness_reports_blocked_foundation_posture",
         "tests/unit/test_implementation_proof_readiness.py::test_implementation_proof_readiness_capabilities_are_source_safe",
-        "tests/unit/test_operator_workflows_implementation_proof_readiness.py::test_implementation_proof_readiness_uses_operator_workflows_operations_proof_without_product_claim",
-        "tests/unit/test_operator_workflows_implementation_proof_readiness.py::test_generate_implementation_proof_readiness_uses_explicit_operator_workflows_operations_proof",
+        "tests/unit/operator_workflows_operations/test_readiness_consumption.py::test_implementation_proof_readiness_uses_operator_workflows_operations_proof_without_product_claim",
+        "tests/unit/operator_workflows_operations/test_readiness_consumption.py::test_generate_implementation_proof_readiness_uses_explicit_operator_workflows_operations_proof",
         "tests/unit/test_implementation_proof_readiness.py::test_implementation_proof_readiness_rejects_naive_evaluation_time",
         "tests/integration/test_implementation_proof_readiness_api.py::test_implementation_proof_readiness_api_returns_blocked_operator_posture",
         "tests/integration/test_implementation_proof_readiness_api.py::test_implementation_proof_readiness_api_requires_operator_permission",
