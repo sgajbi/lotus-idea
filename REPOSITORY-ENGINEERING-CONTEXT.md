@@ -915,7 +915,7 @@ make endpoint-certification-gate
 make openapi-quality-gate
 make data-mesh-contract-gate
 make downstream-realization-contract-gate
-make downstream-route-contract-proof-gate
+make downstream-route-source-contract-proof-gate
 make outbox-broker-source-contract-proof-gate
 make runtime-trust-telemetry-proof-contract-gate
 make source-ingestion-live-proof-contract-gate
@@ -926,6 +926,15 @@ make repository-hygiene-gate
 make runtime-dependency-closure-gate
 make github-security-posture-check
 ```
+
+Advise and Manage route source contracts are declaration evidence only. The
+capability-owned `app.application.downstream_realization.route_source_contract`
+module binds sibling contract, route, and service sources by repository/ref and
+SHA-256. Aggregate and downstream readiness may attach a valid current artifact
+as supporting evidence, but must preserve `advise_live_contract_proof_missing`
+and `manage_live_contract_proof_missing` until an owning runtime supplies a
+governed serving-and-acceptance receipt. Do not infer route execution from
+source files, Make targets, or sibling contract status.
 
 Current repo-native aggregate command posture:
 

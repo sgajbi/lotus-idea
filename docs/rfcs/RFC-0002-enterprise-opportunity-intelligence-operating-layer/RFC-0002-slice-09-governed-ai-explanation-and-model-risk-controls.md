@@ -376,6 +376,18 @@ rejects report-job, render, archive, retention, publication, deployment,
 certification, and promotion claim inflation. Runtime evidence remains owned
 by the Report/Render/Archive execution path; no runtime split is introduced.
 
+Issue `#449` applies the taxonomy to the remaining static Advise and Manage
+route declarations. The capability-owned
+`application/downstream_realization/route_source_contract.py` implementation
+binds each owning repository's contract, route, and service declarations by
+ref/SHA-256 and emits closed-field v2 `source_contract` artifacts. Valid current
+artifacts add supporting provenance only, clear no blocker, and preserve
+`advise_live_contract_proof_missing` and `manage_live_contract_proof_missing`.
+Route serving, authorization, tenant isolation, request acceptance, downstream
+records, suitability/rebalance authority, production certification, and
+supported-feature promotion remain unproven. This is design modularity within
+the existing deployable, not a new runtime service.
+
 PR `#439` merged this occurrence by rebase to exact-main SHA `1a64ef69`.
 Main Releasability `29356075075` and CodeQL `29356064752` passed on that exact
 commit, and wiki publication `4a43d9d` has zero source drift. Issue `#437` is

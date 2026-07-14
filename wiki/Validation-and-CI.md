@@ -429,9 +429,9 @@ Persistence adapter validation:
    consumption, non-AI operator workflow operations proof consumption,
    Workbench read-path source-contract proof consumption, Gateway/Workbench
    source-contract proof consumption, Gateway/Workbench discovery contract
-   proof consumption, bounded outbox broker source-contract proof consumption, default Advise
-   proposal route proof generation and
-   consumption, default Manage action route proof generation and consumption,
+   proof consumption, bounded outbox broker source-contract proof consumption,
+   default digest-bound Advise and Manage route source-contract generation and
+   supporting-evidence consumption without live-blocker clearance,
    optional Manage mandate live proof consumption,
    optional Core benchmark assignment live proof consumption,
    optional Core portfolio-state live proof consumption,

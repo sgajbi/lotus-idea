@@ -103,8 +103,8 @@ artifact that CI validates.
 
 | Contract | Owner | Target Route Posture | Current Status |
 | --- | --- | --- | --- |
-| `lotus-idea-to-lotus-advise-proposal-intake:v1` | `lotus-advise` | `planned:lotus-advise-proposal-intake` when proof is invalid or absent; `POST /advisory/proposals/idea-intake` when the generated or overridden Advise proposal route proof is valid | `not_certified`; adapter foundation present; source-safe route proof can clear only the route-existence blocker |
-| `lotus-idea-to-lotus-manage-action-intake:v1` | `lotus-manage` | `planned:lotus-manage-action-intake` when proof is invalid or absent; `POST /api/v1/rebalance/idea-action-intake` when the generated or overridden Manage action route proof is valid | `not_certified`; adapter foundation present; source-safe route proof can clear only the route-existence blocker |
+| `lotus-idea-to-lotus-advise-proposal-intake:v1` | `lotus-advise` | Contract-plan target remains unchanged when Advise source-contract evidence is present | `not_certified`; static declarations add provenance but do not prove serving or acceptance |
+| `lotus-idea-to-lotus-manage-action-intake:v1` | `lotus-manage` | Contract-plan target remains unchanged when Manage source-contract evidence is present | `not_certified`; static declarations add provenance but do not prove serving or acceptance |
 | `lotus-idea-to-lotus-report-evidence-pack-intake:v1` | `lotus-report` | `planned:lotus-report-idea-evidence-pack-intake`; a valid source-contract artifact may cite the declared `POST /reports/idea-evidence-packs` route as provenance but cannot make it a current runtime target | `not_certified`; adapter foundation present; source-contract evidence clears no blocker |
 
 These contract records are planning and certification evidence only. They are
@@ -114,8 +114,8 @@ existence blockers:
 
 | Proof | Blocker it may clear | Boundaries that remain |
 | --- | --- | --- |
-| Advise proposal route proof | `advise_live_contract_proof_missing` | Candidate evidence source authority remains with `lotus-idea`; suitability, policy approval, proposal lifecycle certification, client communication, and supported-feature promotion remain with `lotus-advise`. |
-| Manage action route proof | `manage_live_contract_proof_missing` | Mandate/rebalance action authority, execution, order creation, settlement, client communication, and supported-feature promotion remain with `lotus-manage`. |
+| Advise route source contract | `advise_live_contract_proof_missing` | Source declarations do not prove serving, authorization, tenant isolation, request acceptance, or a downstream proposal record. Suitability and proposal authority remain with `lotus-advise`. |
+| Manage route source contract | `manage_live_contract_proof_missing` | Source declarations do not prove serving, authorization, tenant isolation, request acceptance, or a downstream action record. Rebalance/execution authority remains with `lotus-manage`. |
 | Report intake route source contract | None | `lotus_report_live_intake_route_proof_missing` remains, together with report materialization, render output, archive record creation, client publication, and supported-feature promotion boundaries owned by Report/Render/Archive. |
 | Report materialization source contract | None | Materialization execution, rendered output creation, archive record creation, client publication, and supported-feature promotion remain blocked; `lotus-report`, `lotus-render`, and `lotus-archive` retain downstream authority. |
 
@@ -145,44 +145,45 @@ validated through the owning repositories and platform gates:
 6. client-publication authority is explicitly granted by owning services,
 7. supported-feature promotion evidence is present.
 
-## Advise And Manage Route Proofs
+## Advise And Manage Route Source Contracts
 
-`scripts/generate_advise_proposal_route_proof.py` and
-`scripts/generate_manage_action_route_proof.py` can read sibling `lotus-advise`
-and `lotus-manage` contracts and produce source-safe route-foundation artifacts:
+`scripts/downstream_realization/generate_advise_route_source_contract.py` and
+`scripts/downstream_realization/generate_manage_route_source_contract.py` can read sibling `lotus-advise`
+and `lotus-manage` declarations and produce digest-bound `source_contract`
+artifacts:
 
 ```powershell
-python scripts/generate_advise_proposal_route_proof.py `
+python scripts/downstream_realization/generate_advise_route_source_contract.py `
   --generated-at-utc 2026-06-27T00:00:00Z `
   --advise-root ..\lotus-advise `
-  --output output\downstream\advise-proposal-route-proof.json
+  --output output\downstream\advise-route-source-contract-proof.json
 
-python scripts/generate_manage_action_route_proof.py `
+python scripts/downstream_realization/generate_manage_route_source_contract.py `
   --generated-at-utc 2026-06-27T00:00:00Z `
   --manage-root ..\lotus-manage `
-  --output output\downstream\manage-action-route-proof.json
+  --output output\downstream\manage-route-source-contract-proof.json
 ```
 
 `make implementation-proof-readiness-check` generates both artifacts by
 default from `LOTUS_ADVISE_ROOT=../lotus-advise` and
 `LOTUS_MANAGE_ROOT=../lotus-manage`, then passes them to aggregate readiness.
-Set `LOTUS_IDEA_ADVISE_PROPOSAL_ROUTE_PROOF` or
-`LOTUS_IDEA_MANAGE_ACTION_ROUTE_PROOF` only when you need to override the
+Set `LOTUS_IDEA_ADVISE_ROUTE_SOURCE_CONTRACT_PROOF` or
+`LOTUS_IDEA_MANAGE_ROUTE_SOURCE_CONTRACT_PROOF` only when you need to override the
 generated artifact. Missing sibling evidence writes an invalid non-proof
 artifact and keeps the corresponding blocker. Drift in present sibling
 evidence exits non-zero so contract mismatch is not hidden.
 
-A valid Advise artifact proves only that `lotus-advise` owns a live route for
-source-safe idea proposal intake, with `lotus-idea` retained as the candidate
-evidence source authority and `lotus-advise` retained as proposal and
-suitability authority. The artifact records that split as
-`sourceAuthority: lotus-idea` and `downstreamAuthority: lotus-advise`.
-A valid Manage artifact proves only that
-`lotus-manage` owns a live route for source-safe idea action intake. Both
-artifacts deliberately keep these blockers:
+A valid artifact proves only that the owning repository contains the declared
+contract and route/service source at the bound SHA-256 values. It does not
+observe route serving, caller authorization, tenant isolation, request
+execution, or downstream record acceptance. Aggregate and downstream readiness
+attach the artifact reference as supporting evidence without changing blocker
+or route-fit posture. Both artifacts deliberately keep these blockers:
 
 | Remaining blocker | Why it remains |
 | --- | --- |
+| `advise_live_contract_proof_missing` | No governed runtime receipt proves the Advise route served and accepted a bounded request. |
+| `manage_live_contract_proof_missing` | No governed runtime receipt proves the Manage route served and accepted a bounded request. |
 | `suitability_policy_authority_remains_lotus_advise` | `lotus-advise` remains the downstream authority for suitability, policy approval, advisory proposal lifecycle, and client communication. |
 | `rebalance_execution_authority_remains_lotus_manage` | `lotus-manage` remains the source authority for action-register, DPM/rebalance workflow, order/execution, and settlement posture. |
 | `client_publication_authority_blocked` | No client-ready communication authority is granted. |
@@ -359,17 +360,19 @@ Implementation-backed evidence:
 9. report-owned planned intake contract:
    `lotus-report/contracts/idea-evidence-intake/lotus-report-idea-evidence-pack-intake.v1.json`,
 10. contract gate: `scripts/downstream_realization_contract_gate.py`,
-11. downstream route proof generator:
-   `src/app/application/downstream_route_contract_proof.py`,
+11. downstream route source-contract implementation:
+   `src/app/application/downstream_realization/route_source_contract.py`,
 12. Advise route proof generator:
-    `scripts/generate_advise_proposal_route_proof.py`,
+    `scripts/downstream_realization/generate_advise_route_source_contract.py`,
 13. Manage route proof generator:
-    `scripts/generate_manage_action_route_proof.py`,
-14. downstream route proof gate:
-    `scripts/downstream_route_contract_proof_gate.py`,
-15. report intake source-contract generator:
+    `scripts/downstream_realization/generate_manage_route_source_contract.py`,
+14. downstream route source-contract gate:
+    `scripts/downstream_realization/route_source_contract_gate.py`,
+15. focused downstream route source-contract tests:
+    `tests/unit/downstream_realization/test_route_source_contract.py`,
+16. report intake source-contract generator:
    `scripts/report/generate_intake_route_source_contract.py`,
-16. report intake source-contract gate:
+17. report intake source-contract gate:
     `scripts/report/intake_route_source_contract_gate.py`,
 17. report materialization source-contract generator:
    `scripts/report/generate_materialization_source_contract.py`,
@@ -391,7 +394,7 @@ Implementation-backed evidence:
 25. gate tests:
    `tests/unit/test_downstream_realization_contract_gate.py`,
 26. route proof tests:
-    `tests/unit/test_downstream_route_contract_proof.py`,
+    `tests/unit/downstream_realization/test_route_source_contract.py`,
 27. report intake source-contract tests:
     `tests/unit/report/test_intake_route_source_contract.py`,
 28. report materialization source-contract tests:
@@ -408,7 +411,7 @@ Run:
 ```powershell
 python -m pytest tests/unit/test_downstream_realization_application.py tests/unit/test_downstream_realization_adapters.py tests/unit/test_downstream_realization_readiness.py tests/integration/test_downstream_realization_api.py tests/integration/test_downstream_realization_readiness_api.py -q
 make downstream-realization-contract-gate
-make downstream-route-contract-proof-gate
+make downstream-route-source-contract-proof-gate
 make report-intake-route-source-contract-proof-gate
 make report-materialization-source-contract-proof-gate
 make endpoint-certification-gate

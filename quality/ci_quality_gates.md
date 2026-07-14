@@ -39,7 +39,7 @@ Blocking scaffold commands:
 30. `make gateway-workbench-discovery-contract-proof-contract-gate`
 31. `make outbox-broker-source-contract-proof-gate`
 32. `make platform-catalog-source-contract-proof-gate`
-33. `make downstream-route-contract-proof-gate`
+33. `make downstream-route-source-contract-proof-gate`
 34. `make source-ingestion-worker-check`
 35. `make source-ingestion-scheduled-worker-check`
 36. `make source-ingestion-live-proof-contract-gate`
@@ -82,8 +82,8 @@ Release and review evidence commands:
    deploy-proof artifact, durable repository proof artifact, runtime trust
    telemetry proof artifact, Workbench read-path source-contract proof artifact,
    Gateway/Workbench contract proof artifact, Gateway/Workbench discovery
-   proof artifact, outbox broker source-contract proof artifact, default Advise proposal route
-   proof artifact, default Manage action route proof artifact, default Report
+   proof artifact, outbox broker source-contract proof artifact, default digest-bound Advise and
+   Manage route source-contract artifacts, default Report
    intake route proof artifact, default mesh policy source-contract artifact, and default
    platform catalog source contract artifact, plus AI lineage store and AI
    workflow-pack registration proof artifacts and optional Core

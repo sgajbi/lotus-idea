@@ -1,6 +1,6 @@
 # RFC-0002 Slice 17: Implementation Proof And Live Validation
 
-Status: Partially implemented - aggregate proof-readiness diagnostic, bounded live source-ingestion proof artifact contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry proof artifact, Workbench read-path source-contract proof artifact, Gateway/Workbench contract proof artifact, Gateway/Workbench discovery contract proof artifact, Advise proposal route proof artifact, Manage action route proof artifact, Manage mandate live proof artifact, Core portfolio-state live proof artifact, Report intake route and materialization source-contract artifacts, bounded outbox broker source-contract proof artifact, bounded downstream consumer source-contract proof artifact, bounded outbox platform-mesh event source-contract proof, digest-bound mesh policy source-contract artifact, platform catalog source contract artifact, AI lineage store proof artifact, AI workflow-pack registration proof artifact, AI workflow-pack runtime execution proof artifact, high-volatility and drawdown live Risk proof artifact contracts, low-income Core cashflow live proof artifact contract, bond-maturity policy foundation, and opportunity archetype scenario readiness with source/policy foundations available. Slice evidence now includes live canonical Risk concentration, Performance underperformance, and Performance benchmark-readiness source proofs for `PB_SG_GLOBAL_BAL_001`; observed policy certification, Report intake and materialization execution, rendered output, archive creation, external broker publication, platform-mesh event publication, downstream consumer execution, full live opportunity-journey proof, data-mesh certification, Workbench product proof, client-publication approval, and supported-feature promotion remain pending.
+Status: Partially implemented - aggregate proof-readiness diagnostic, bounded live source-ingestion proof artifact contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry proof artifact, Workbench read-path source-contract proof artifact, Gateway/Workbench contract proof artifact, Gateway/Workbench discovery contract proof artifact, digest-bound Advise and Manage route source contracts, Manage mandate live proof artifact, Core portfolio-state live proof artifact, Report intake route and materialization source-contract artifacts, bounded outbox broker source-contract proof artifact, bounded downstream consumer source-contract proof artifact, bounded outbox platform-mesh event source-contract proof, digest-bound mesh policy source-contract artifact, platform catalog source contract artifact, AI lineage store proof artifact, AI workflow-pack registration proof artifact, AI workflow-pack runtime execution proof artifact, high-volatility and drawdown live Risk proof artifact contracts, low-income Core cashflow live proof artifact contract, bond-maturity policy foundation, and opportunity archetype scenario readiness with source/policy foundations available. Slice evidence now includes live canonical Risk concentration, Performance underperformance, and Performance benchmark-readiness source proofs for `PB_SG_GLOBAL_BAL_001`; observed Advise/Manage route serving and acceptance, policy certification, Report intake and materialization execution, rendered output, archive creation, external broker publication, platform-mesh event publication, downstream consumer execution, full live opportunity-journey proof, data-mesh certification, Workbench product proof, client-publication approval, and supported-feature promotion remain pending.
 
 ## Outcome
 
@@ -245,15 +245,14 @@ Prove the complete supported opportunity journey end to end.
     evidence-policy, mesh certification, product activation, platform catalog,
     Gateway/Workbench, deployment, production, and supported-feature blockers
     remain intact.
-23. `src/app/application/downstream_route_contract_proof.py`,
-    `scripts/generate_advise_proposal_route_proof.py`,
-    `scripts/generate_manage_action_route_proof.py`, and
-    `make downstream-route-contract-proof-gate` now define and enforce
-    source-safe Advise proposal and Manage action route-foundation proof
-    artifacts. The aggregate implementation-readiness generator and operator
-    API consume valid artifacts to clear only
-    `advise_live_contract_proof_missing` and
-    `manage_live_contract_proof_missing`, while preserving suitability,
+23. `src/app/application/downstream_realization/route_source_contract.py`,
+    `scripts/downstream_realization/generate_advise_route_source_contract.py`,
+    `scripts/downstream_realization/generate_manage_route_source_contract.py`, and
+    `make downstream-route-source-contract-proof-gate` now define and enforce
+    digest-bound Advise and Manage route `source_contract` artifacts. The
+    aggregate implementation-readiness generator and operator API consume valid
+    artifacts as supporting evidence while preserving
+    `advise_live_contract_proof_missing`, `manage_live_contract_proof_missing`, suitability,
     policy approval, mandate/rebalance authority, execution, order creation,
     client-publication, and supported-feature blockers.
 24. `src/app/application/report/intake_route_source_contract.py`,
@@ -449,9 +448,9 @@ without relying on chat memory.
    proof, browser accessibility proof, canonical demo runtime proof,
    entitlement-denied proof, mutation affordances, and supported-feature
    promotion remain pending.
-8. Advise proposal and Manage action route proofs are now explicit in
-   aggregate readiness evidence, but they prove only source-safe sibling route
-   foundations. Suitability, policy approval, mandate/rebalance authority,
+8. Advise and Manage route source contracts are explicit in aggregate readiness
+   evidence, but prove only digest-bound sibling declarations and clear no live
+   blocker. Route serving/acceptance, suitability, policy approval, mandate/rebalance authority,
    execution, order creation, client communication, and supported-feature
    promotion remain pending.
 9. Manage mandate live proof is now explicit in aggregate readiness evidence,
@@ -577,9 +576,9 @@ supported-feature proof gaps.
 The runtime proof-artifact loader narrows the operator-readiness gap from
 "generator-only artifact consumption" to "HTTP and generated readiness share
 the same configured proof evidence." It now includes source-ingestion live and
-scheduled proof artifact refs plus default Advise proposal route, Manage action
-route, Report intake route and materialization source contracts, and platform
-mesh onboarding refs as auditable evidence; the Report source contracts clear
+scheduled proof artifact refs plus default Advise and Manage route, Report
+intake route and materialization source contracts, and platform
+mesh onboarding refs as auditable evidence; the route source contracts clear
 no blocker. It
 does not certify storage, live scheduler operations, mesh, Workbench,
 Report/Render/Archive materialization, or supported-feature readiness.
@@ -588,11 +587,11 @@ gap by linking sibling-owned routes into readiness provenance. They do not
 prove route serving, request execution, Report package creation, rendered
 output, archive record, retention/legal-hold posture, client publication,
 certification, or supported-feature promotion, and clear no blocker.
-The Advise/Manage route proofs narrow the downstream proof gap from "no sibling
-route-foundation evidence" to "proposal and action intake route foundations can
-be source-safely proven and linked into readiness." They do not close
-suitability, policy approval, mandate/rebalance authority, execution, order
-creation, client communication, or supported-feature proof.
+The Advise/Manage source contracts narrow the declaration gap by binding the
+proposal and action intake contract/route/service sources to exact digests. They
+do not prove route serving, authorization, tenant isolation, request acceptance,
+downstream records, suitability, mandate, rebalance, execution, order,
+client-publication, production support, or supported-feature promotion.
 The AI model-risk operations contract refs narrow the model-risk proof index
 gap from "contract exists outside aggregate readiness" to "contract and gate are
 visible in the `ai-explanation` capability evidence." They do not certify a
