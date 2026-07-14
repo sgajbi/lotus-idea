@@ -43,7 +43,9 @@ Implemented evidence:
 3. PostgreSQL controls make hold, release, erasure, purge, operation audit,
    redaction, and tombstone updates atomic. Erased/purged candidates are hidden
    from detail and downstream lookup paths; new delivery claims share the
-   lifecycle lock and cannot race into an erased aggregate.
+   lifecycle lock and cannot race into an erased aggregate. Lifecycle decisions
+   lock the candidate row and lifecycle-control row, in that order, before
+   evaluating active outbox and downstream-delivery posture.
 4. Real PostgreSQL tests prove restart replay/conflict, legal-hold precedence,
    pseudonymized audit, expiry-gated purge, and safe erasure-versus-delivery
    serialization.

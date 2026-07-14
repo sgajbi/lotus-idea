@@ -60,6 +60,14 @@ flowchart LR
 | Erase | Bank privacy governance | Distinct approver; no active delivery | Payloads redact, actors pseudonymize, tombstones remain. |
 | Purge | Bank privacy governance | Prior erasure, expiry, distinct approver | Eligible payload rows delete; regulated audit remains. |
 
+### Transaction Fencing
+
+Lifecycle mutations lock the candidate row and then its lifecycle-control row
+before evaluating active outbox and downstream-delivery work. New downstream
+claims share the control-row fence. The resulting serial order permits either
+the claim or erasure to proceed, but never an erased candidate with a newly
+accepted submission. Replay-only lifecycle reads do not take the mutation lock.
+
 Production-like requests also require an approved, unexpired Ed25519
 `authorityDecision` bound to the exact tenant, candidate, action, authority
 domain/reference, and change reference. Applied decisions are single-use by
