@@ -66,6 +66,7 @@ from tests.support.ai_workflow_pack_fixture import (
     write_lotus_ai_workflow_pack_fixture,
 )
 from tests.support.ai_runtime_proof import ai_runtime_execution_receipt
+from tests.support.ai_lineage_store_proof import valid_ai_lineage_ci_execution_receipt
 from tests.unit.source_ingestion_proof_helpers import (
     valid_scheduled_worker_proof as _valid_scheduled_worker_proof,
 )
@@ -404,6 +405,7 @@ def test_generate_implementation_proof_readiness_uses_explicit_ai_lineage_store_
             build_ai_lineage_store_proof_payload(
                 generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
                 repository_root=Path(__file__).resolve().parents[2],
+                ci_execution_receipt=valid_ai_lineage_ci_execution_receipt(),
             )
         ),
         encoding="utf-8",

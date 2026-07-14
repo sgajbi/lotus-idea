@@ -66,6 +66,7 @@ from app.application.workbench_read_path_proof import (
 )
 from app.runtime.repository_state import reset_idea_repository_for_tests
 from app.main import app
+from tests.support.ai_lineage_store_proof import valid_ai_lineage_ci_execution_receipt
 from tests.support.proof_provenance import bind_clean_aggregate_proof_provenance
 from tests.unit.test_supported_features_gate import (
     _base_registry,
@@ -533,6 +534,7 @@ def _configure_readiness_proof_artifacts(
         build_ai_lineage_store_proof_payload(
             generated_at_utc=evaluated_at_utc,
             repository_root=ROOT,
+            ci_execution_receipt=valid_ai_lineage_ci_execution_receipt(),
         ),
     )
     _write_proof(

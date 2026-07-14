@@ -84,6 +84,7 @@ from tests.support.ai_workflow_pack_fixture import (
     write_lotus_ai_workflow_pack_fixture,
 )
 from tests.support.ai_runtime_proof import ai_runtime_execution_receipt
+from tests.support.ai_lineage_store_proof import valid_ai_lineage_ci_execution_receipt
 from tests.unit.source_ingestion_proof_helpers import (
     valid_scheduled_worker_proof as _valid_scheduled_worker_proof,
 )
@@ -566,6 +567,7 @@ def test_implementation_proof_readiness_uses_ai_lineage_store_proof_without_runt
         build_ai_lineage_store_proof_payload(
             generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
             repository_root=ROOT,
+            ci_execution_receipt=valid_ai_lineage_ci_execution_receipt(),
         ),
         proof_ref,
     )
@@ -597,6 +599,34 @@ def test_implementation_proof_readiness_uses_ai_lineage_store_proof_without_runt
     assert "lotus_ai_runtime_execution_missing" in ai_explanation.blockers
     assert "workflow_pack_runtime_contract_not_certified" in ai_explanation.blockers
     assert "output/ai/ai-lineage-store-proof.json" in ai_explanation.evidence_refs
+
+
+def test_source_only_ai_lineage_proof_cannot_clear_aggregate_certification() -> None:
+    proof_ref = "output/ai/source-only-lineage-proof.json"
+    proof = _bound_aggregate_proof(
+        build_ai_lineage_store_proof_payload(
+            generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
+            repository_root=ROOT,
+        ),
+        proof_ref,
+    )
+
+    snapshot = build_implementation_proof_readiness_snapshot(
+        evaluated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
+        repository=InMemoryIdeaRepository(),
+        durable_storage_backed=False,
+        ai_lineage_store_proof=proof,
+        ai_lineage_store_proof_ref=proof_ref,
+    )
+
+    ai_explanation = next(
+        capability
+        for capability in snapshot.capabilities
+        if capability.capability_id == "ai-explanation"
+    )
+    assert "certified_ai_lineage_store_missing" in ai_explanation.blockers
+    assert proof_ref not in ai_explanation.evidence_refs
+    assert snapshot.supported_features_promoted is False
 
 
 def test_implementation_proof_readiness_uses_ai_workflow_pack_registration_proof_without_runtime_claim(
