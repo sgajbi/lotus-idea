@@ -33,7 +33,9 @@ from tests.support.durable_repository_proof import (
     SOURCE_COMMIT_SHA,
     valid_durable_repository_ci_execution_receipt,
 )
-from app.application.outbox.broker_proof import build_outbox_broker_proof_payload
+from app.application.outbox.broker.source_contract_proof import (
+    build_outbox_broker_source_contract_proof_payload,
+)
 from app.application.outbox.consumer_contract_proof import (
     build_outbox_consumer_contract_proof_payload,
 )
@@ -726,13 +728,13 @@ def test_generate_implementation_proof_readiness_uses_explicit_gateway_workbench
     assert payload["supportedFeaturePromoted"] is False
 
 
-def test_generate_implementation_proof_readiness_uses_explicit_outbox_broker_proof(
+def test_generate_implementation_proof_readiness_uses_explicit_outbox_broker_source_contract_proof(
     tmp_path: Path,
 ) -> None:
-    outbox_proof = tmp_path / "outbox-broker-proof.json"
+    outbox_proof = tmp_path / "outbox-broker-source-contract-proof.json"
     outbox_proof.write_text(
         json.dumps(
-            build_outbox_broker_proof_payload(
+            build_outbox_broker_source_contract_proof_payload(
                 generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
                 repository_root=Path(__file__).resolve().parents[2],
             )
@@ -745,7 +747,7 @@ def test_generate_implementation_proof_readiness_uses_explicit_outbox_broker_pro
         [
             "--evaluated-at-utc",
             "2026-06-21T10:10:00Z",
-            "--outbox-broker-proof",
+            "--outbox-broker-source-contract-proof",
             str(outbox_proof),
             "--output",
             str(output_path),
@@ -754,8 +756,8 @@ def test_generate_implementation_proof_readiness_uses_explicit_outbox_broker_pro
 
     assert result == 0
     payload = json.loads(output_path.read_text(encoding="utf-8"))
-    assert "outbox_broker_not_configured" not in payload["overallBlockers"]
-    assert "external_broker_runtime_proof_missing" not in payload["overallBlockers"]
+    assert "outbox_broker_not_configured" in payload["overallBlockers"]
+    assert "external_broker_runtime_proof_missing" in payload["overallBlockers"]
     assert "downstream_consumer_runtime_proof_missing" in payload["overallBlockers"]
     assert "platform_mesh_event_publication_proof_missing" in payload["overallBlockers"]
     assert payload["readinessStatus"] == "blocked"
@@ -765,10 +767,10 @@ def test_generate_implementation_proof_readiness_uses_explicit_outbox_broker_pro
 def test_consumer_contract_proof_keeps_runtime_readiness_blocked(
     tmp_path: Path,
 ) -> None:
-    outbox_proof = tmp_path / "outbox-broker-proof.json"
+    outbox_proof = tmp_path / "outbox-broker-source-contract-proof.json"
     outbox_proof.write_text(
         json.dumps(
-            build_outbox_broker_proof_payload(
+            build_outbox_broker_source_contract_proof_payload(
                 generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
                 repository_root=Path(__file__).resolve().parents[2],
             )
@@ -791,7 +793,7 @@ def test_consumer_contract_proof_keeps_runtime_readiness_blocked(
         [
             "--evaluated-at-utc",
             "2026-06-21T10:10:00Z",
-            "--outbox-broker-proof",
+            "--outbox-broker-source-contract-proof",
             str(outbox_proof),
             "--outbox-consumer-contract-proof",
             str(consumer_proof),
@@ -802,8 +804,8 @@ def test_consumer_contract_proof_keeps_runtime_readiness_blocked(
 
     assert result == 0
     payload = json.loads(output_path.read_text(encoding="utf-8"))
-    assert "outbox_broker_not_configured" not in payload["overallBlockers"]
-    assert "external_broker_runtime_proof_missing" not in payload["overallBlockers"]
+    assert "outbox_broker_not_configured" in payload["overallBlockers"]
+    assert "external_broker_runtime_proof_missing" in payload["overallBlockers"]
     assert "downstream_consumer_runtime_proof_missing" in payload["overallBlockers"]
     assert "platform_mesh_event_publication_proof_missing" in payload["overallBlockers"]
     assert "gateway_workbench_proof_missing" in payload["overallBlockers"]

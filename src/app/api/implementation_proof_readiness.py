@@ -250,8 +250,10 @@ def _build_readiness_snapshot_from_configured_artifacts(
         ai_workflow_pack_runtime_execution_proof_ref=(
             proof_artifacts.ai_workflow_pack_runtime_execution_proof_ref
         ),
-        outbox_broker_proof=proof_artifacts.outbox_broker_proof,
-        outbox_broker_proof_ref=proof_artifacts.outbox_broker_proof_ref,
+        outbox_broker_source_contract_proof=proof_artifacts.outbox_broker_source_contract_proof,
+        outbox_broker_source_contract_proof_ref=(
+            proof_artifacts.outbox_broker_source_contract_proof_ref
+        ),
         outbox_platform_mesh_event_publication_proof=(
             proof_artifacts.outbox_platform_mesh_event_publication_proof
         ),

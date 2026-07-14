@@ -47,7 +47,9 @@ from app.application.mesh_policy_proof import (
 from app.application.operator_workflows_operations.source_contract_proof import (
     operator_workflows_operations_proof_is_valid,
 )
-from app.application.outbox.broker_proof import outbox_broker_proof_is_valid
+from app.application.outbox.broker.source_contract_proof import (
+    outbox_broker_source_contract_proof_is_valid,
+)
 from app.application.outbox.consumer_contract_proof import (
     outbox_consumer_contract_proof_is_valid,
 )
@@ -114,8 +116,8 @@ def _apply_available_proofs(
     report_materialization_proof_ref: str | None,
     mesh_policy_proof: Mapping[str, object] | None,
     mesh_policy_proof_ref: str | None,
-    outbox_broker_proof: Mapping[str, object] | None,
-    outbox_broker_proof_ref: str | None,
+    outbox_broker_source_contract_proof: Mapping[str, object] | None,
+    outbox_broker_source_contract_proof_ref: str | None,
     outbox_consumer_contract_proof: Mapping[str, object] | None,
     outbox_consumer_contract_proof_ref: str | None,
     outbox_platform_mesh_event_publication_proof: Mapping[str, object] | None,
@@ -392,8 +394,8 @@ def _apply_platform_and_surface_proofs(
     evaluated_at_utc: datetime,
     mesh_policy_proof: Mapping[str, object] | None,
     mesh_policy_proof_ref: str | None,
-    outbox_broker_proof: Mapping[str, object] | None,
-    outbox_broker_proof_ref: str | None,
+    outbox_broker_source_contract_proof: Mapping[str, object] | None,
+    outbox_broker_source_contract_proof_ref: str | None,
     outbox_consumer_contract_proof: Mapping[str, object] | None,
     outbox_consumer_contract_proof_ref: str | None,
     outbox_platform_mesh_event_publication_proof: Mapping[str, object] | None,
@@ -419,14 +421,17 @@ def _apply_platform_and_surface_proofs(
             _apply_mesh_policy_proof(capability, mesh_policy_proof_ref)
             for capability in capabilities
         )
-    if _proof_can_clear_blockers(
-        outbox_broker_proof,
-        outbox_broker_proof_ref,
+    if _proof_is_valid_and_current(
+        outbox_broker_source_contract_proof,
+        outbox_broker_source_contract_proof_ref,
         evaluated_at_utc=evaluated_at_utc,
-        proof_is_valid=outbox_broker_proof_is_valid,
+        proof_is_valid=outbox_broker_source_contract_proof_is_valid,
     ):
         capabilities = tuple(
-            _apply_outbox_broker_proof(capability, outbox_broker_proof_ref)
+            _apply_outbox_broker_source_contract(
+                capability,
+                outbox_broker_source_contract_proof_ref,
+            )
             for capability in capabilities
         )
     if _proof_is_valid_and_current(
@@ -848,30 +853,24 @@ def _apply_ai_workflow_pack_runtime_execution_proof(
     )
 
 
-def _apply_outbox_broker_proof(
+def _apply_outbox_broker_source_contract(
     capability: ImplementationProofCapabilityReadiness,
-    outbox_broker_proof_ref: str | None,
+    outbox_broker_source_contract_proof_ref: str | None,
 ) -> ImplementationProofCapabilityReadiness:
     if capability.capability_id not in {"outbox-delivery", "operator-workflows-operations"}:
         return capability
-    blockers_to_clear = {
-        "outbox_broker_not_configured",
-        "external_broker_runtime_proof_missing",
-    }
-    if not blockers_to_clear.intersection(capability.blockers):
-        return capability
     evidence_refs = capability.evidence_refs
-    if outbox_broker_proof_ref:
-        evidence_refs = tuple(dict.fromkeys((*evidence_refs, outbox_broker_proof_ref)))
+    if outbox_broker_source_contract_proof_ref:
+        evidence_refs = tuple(
+            dict.fromkeys((*evidence_refs, outbox_broker_source_contract_proof_ref))
+        )
     return build_capability_readiness(
         capability.capability_id,
         capability.name,
         readiness_status=capability.readiness_status,
         supportability_status=capability.supportability_status,
         evidence_refs=evidence_refs,
-        blockers=tuple(
-            blocker for blocker in capability.blockers if blocker not in blockers_to_clear
-        ),
+        blockers=capability.blockers,
         supported_feature_promoted=capability.supported_feature_promoted,
     )
 

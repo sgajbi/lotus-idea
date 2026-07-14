@@ -120,6 +120,36 @@ def test_repository_hygiene_gate_enforces_outbox_bounded_module_placement() -> N
     ]
 
 
+def test_repository_hygiene_gate_enforces_outbox_broker_proof_package() -> None:
+    module = _load_repository_hygiene_gate()
+    required_paths = {
+        "scripts/outbox/broker/generate_source_contract_proof.py",
+        "scripts/outbox/broker/source_contract_proof_gate.py",
+        "src/app/application/outbox/broker/source_contract_proof.py",
+        "tests/unit/outbox/broker/test_readiness_consumption.py",
+        "tests/unit/outbox/broker/test_source_contract_proof.py",
+    }
+    retired_paths = {
+        "scripts/outbox/broker_proof_contract_gate.py",
+        "scripts/outbox/generate_broker_proof.py",
+        "src/app/application/outbox/broker_proof.py",
+        "tests/unit/outbox/test_outbox_broker_proof.py",
+    }
+    tracked_paths = sorted(module.REQUIRED_BOUNDED_MODULE_PATHS - required_paths | retired_paths)
+
+    violations = module.find_bounded_module_placement_violations(tracked_paths)
+
+    assert violations == sorted(
+        [
+            *(
+                f"{path}: legacy flat-module path must not be reintroduced"
+                for path in retired_paths
+            ),
+            *(f"{path}: required bounded-module path is missing" for path in required_paths),
+        ]
+    )
+
+
 def test_repository_hygiene_gate_enforces_persistence_bounded_module_placement() -> None:
     module = _load_repository_hygiene_gate()
     required_path = "src/app/infrastructure/persistence/aggregate_mutation.py"

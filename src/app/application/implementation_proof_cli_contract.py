@@ -52,7 +52,9 @@ from app.application.missing_risk_profile_source_product_proof import (
 from app.application.operator_workflows_operations.source_contract_proof import (
     OPERATOR_WORKFLOWS_OPERATIONS_PROOF_ENV,
 )
-from app.application.outbox.broker_proof import OUTBOX_BROKER_PROOF_ENV
+from app.application.outbox.broker.source_contract_proof import (
+    OUTBOX_BROKER_SOURCE_CONTRACT_PROOF_ENV,
+)
 from app.application.outbox.consumer_contract_proof import (
     OUTBOX_CONSUMER_CONTRACT_PROOF_ENV,
 )
@@ -149,9 +151,9 @@ PROOF_ARTIFACT_ARGS: tuple[tuple[str, str, str], ...] = (
         "Optional bounded Gateway/Workbench discovery contract proof artifact path.",
     ),
     (
-        "--outbox-broker-proof",
-        OUTBOX_BROKER_PROOF_ENV,
-        "Optional bounded outbox broker runtime proof artifact path.",
+        "--outbox-broker-source-contract-proof",
+        OUTBOX_BROKER_SOURCE_CONTRACT_PROOF_ENV,
+        "Optional outbox broker source-contract proof artifact path.",
     ),
     (
         "--outbox-consumer-contract-proof",
