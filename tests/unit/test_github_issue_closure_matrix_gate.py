@@ -259,3 +259,20 @@ def test_github_issue_closure_matrix_gate_freezes_workbench_source_contract_clos
     errors = module.validate_issue_closure_matrix(matrix)
 
     assert "#434: merged-main issue cannot regress to `locally_fixed`" in errors
+
+
+def test_github_issue_closure_matrix_gate_freezes_report_intake_source_contract_closure(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    matrix = tmp_path / "matrix.md"
+    content = module.MATRIX_PATH.read_text(encoding="utf-8")
+    content = content.replace(
+        "Stop static Report route declarations from clearing live intake proof | `merged_main` |",
+        "Stop static Report route declarations from clearing live intake proof | `locally_fixed` |",
+    )
+    matrix.write_text(content, encoding="utf-8")
+
+    errors = module.validate_issue_closure_matrix(matrix)
+
+    assert "#437: merged-main issue cannot regress to `locally_fixed`" in errors
