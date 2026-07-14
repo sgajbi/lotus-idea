@@ -7,28 +7,34 @@ from pathlib import Path
 import sys
 from tempfile import TemporaryDirectory
 
-from app.application.downstream_route_contract_proof import (
+ROOT = Path(__file__).resolve().parents[2]
+SRC = ROOT / "src"
+for path in (ROOT, SRC):
+    if str(path) not in sys.path:
+        sys.path.insert(0, str(path))
+
+from app.application.downstream_realization.route_source_contract import (  # noqa: E402
     ADVISE_PROPOSAL_ROUTE,
-    ADVISE_PROPOSAL_ROUTE_PROFILE,
-    ADVISE_ROUTE_BLOCKERS_CLEARED,
-    DOWNSTREAM_ROUTE_CONTRACT_PROOF_SCHEMA_VERSION,
+    ADVISE_ROUTE_PROFILE,
     MANAGE_ACTION_ROUTE,
-    MANAGE_ACTION_ROUTE_PROFILE,
-    MANAGE_ROUTE_BLOCKERS_CLEARED,
+    MANAGE_ROUTE_PROFILE,
     REMAINING_ADVISE_ROUTE_BLOCKERS,
     REMAINING_MANAGE_ROUTE_BLOCKERS,
-    build_advise_proposal_route_proof_payload,
-    build_manage_action_route_proof_payload,
-    advise_proposal_route_proof_is_valid,
-    manage_action_route_proof_is_valid,
+    ROUTE_SOURCE_CONTRACT_BLOCKERS_SATISFIED,
+    ROUTE_SOURCE_CONTRACT_SCHEMA_VERSION,
+    advise_route_source_contract_is_valid,
+    build_advise_route_source_contract_payload,
+    build_manage_route_source_contract_payload,
+    manage_route_source_contract_is_valid,
 )
 
 try:
-    from scripts.proof_source_safety import forbidden_content_validator, validate_forbidden_content
+    from scripts.proof_source_safety import (  # noqa: E402
+        forbidden_content_validator,
+        validate_forbidden_content,
+    )
 except ModuleNotFoundError:
-    from proof_source_safety import forbidden_content_validator, validate_forbidden_content  # type: ignore[import-not-found,no-redef]
-
-ROOT = Path(__file__).resolve().parents[1]
+    from proof_source_safety import forbidden_content_validator, validate_forbidden_content  # type: ignore[import-not-found,no-redef]  # noqa: E402
 
 FORBIDDEN_KEYS = {
     "accountId",
@@ -66,16 +72,16 @@ _validate_forbidden_content = forbidden_content_validator(
 )
 
 
-def validate_downstream_route_contract_proofs() -> list[str]:
+def validate_route_source_contracts() -> list[str]:
     errors: list[str] = []
     with TemporaryDirectory(prefix="lotus-idea-downstream-route-proof-") as temp_dir:
         temp_root = Path(temp_dir)
-        advise_proof = build_advise_proposal_route_proof_payload(
+        advise_proof = build_advise_route_source_contract_payload(
             generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
             repository_root=ROOT,
             advise_root=_write_advise_fixture(temp_root),
         )
-        manage_proof = build_manage_action_route_proof_payload(
+        manage_proof = build_manage_route_source_contract_payload(
             generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
             repository_root=ROOT,
             manage_root=_write_manage_fixture(temp_root),
@@ -83,20 +89,18 @@ def validate_downstream_route_contract_proofs() -> list[str]:
 
     _validate_profile_proof(
         advise_proof,
-        route_valid_field="adviseProposalRouteProofValid",
+        contract_name="Advise route source contract",
         target_route=ADVISE_PROPOSAL_ROUTE,
-        blockers_cleared=ADVISE_ROUTE_BLOCKERS_CLEARED,
         remaining_blockers=REMAINING_ADVISE_ROUTE_BLOCKERS,
-        valid=advise_proposal_route_proof_is_valid,
+        valid=advise_route_source_contract_is_valid,
         errors=errors,
     )
     _validate_profile_proof(
         manage_proof,
-        route_valid_field="manageActionRouteProofValid",
+        contract_name="Manage route source contract",
         target_route=MANAGE_ACTION_ROUTE,
-        blockers_cleared=MANAGE_ROUTE_BLOCKERS_CLEARED,
         remaining_blockers=REMAINING_MANAGE_ROUTE_BLOCKERS,
-        valid=manage_action_route_proof_is_valid,
+        valid=manage_route_source_contract_is_valid,
         errors=errors,
     )
     return errors
@@ -105,50 +109,48 @@ def validate_downstream_route_contract_proofs() -> list[str]:
 def _validate_profile_proof(
     proof: Mapping[str, object],
     *,
-    route_valid_field: str,
+    contract_name: str,
     target_route: str,
-    blockers_cleared: tuple[str, ...],
     remaining_blockers: tuple[str, ...],
     valid: Callable[[Mapping[str, object]], bool],
     errors: list[str],
 ) -> None:
-    if proof.get("schemaVersion") != DOWNSTREAM_ROUTE_CONTRACT_PROOF_SCHEMA_VERSION:
-        errors.append("downstream route proof schema version is incorrect")
-    if proof.get(route_valid_field) is not True:
-        errors.append(f"{route_valid_field} must be true for contract fixtures")
+    if proof.get("schemaVersion") != ROUTE_SOURCE_CONTRACT_SCHEMA_VERSION:
+        errors.append(f"{contract_name} schema version is incorrect")
+    if proof.get("sourceContractValid") is not True:
+        errors.append(f"{contract_name} must be valid for contract fixtures")
     if proof.get("targetRoute") != target_route:
-        errors.append(f"{route_valid_field} target route mismatch")
-    if tuple(proof.get("aggregateBlockersCleared") or ()) != blockers_cleared:
-        errors.append(f"{route_valid_field} must clear only its route blocker")
+        errors.append(f"{contract_name} target route mismatch")
+    if tuple(proof.get("sourceContractBlockersSatisfied") or ()) != (
+        ROUTE_SOURCE_CONTRACT_BLOCKERS_SATISFIED
+    ):
+        errors.append(f"{contract_name} must not satisfy live blockers")
     if tuple(proof.get("remainingCertificationBlockers") or ()) != remaining_blockers:
-        errors.append(f"{route_valid_field} must retain downstream authority blockers")
+        errors.append(f"{contract_name} must retain live and authority blockers")
     if not valid(proof):
-        errors.append(f"{route_valid_field} must validate against downstream contract truth")
+        errors.append(f"{contract_name} must validate against downstream contract truth")
     validate_forbidden_content(proof, errors, FORBIDDEN_KEYS, FORBIDDEN_TEXT_FRAGMENTS)
 
 
 def _write_advise_fixture(temp_root: Path) -> Path:
     advise_root = temp_root / "lotus-advise"
-    _write_required_files(advise_root, ADVISE_PROPOSAL_ROUTE_PROFILE.evidence_refs)
-    contract_path = advise_root / ADVISE_PROPOSAL_ROUTE_PROFILE.contract_path
+    _write_required_files(advise_root, ADVISE_ROUTE_PROFILE.source_refs)
+    contract_path = advise_root / ADVISE_ROUTE_PROFILE.contract_path
     contract_path.write_text(json.dumps(_advise_contract_payload()), encoding="utf-8")
     return advise_root
 
 
 def _write_manage_fixture(temp_root: Path) -> Path:
     manage_root = temp_root / "lotus-manage"
-    _write_required_files(manage_root, MANAGE_ACTION_ROUTE_PROFILE.evidence_refs)
-    contract_path = manage_root / MANAGE_ACTION_ROUTE_PROFILE.contract_path
+    _write_required_files(manage_root, MANAGE_ROUTE_PROFILE.source_refs)
+    contract_path = manage_root / MANAGE_ROUTE_PROFILE.contract_path
     contract_path.write_text(json.dumps(_manage_contract_payload()), encoding="utf-8")
     return manage_root
 
 
-def _write_required_files(root: Path, evidence_refs: tuple[str, ...]) -> None:
-    for ref in evidence_refs:
-        if not ref.startswith("../"):
-            continue
-        relative = ref.split("/", maxsplit=2)[2]
-        path = root / relative
+def _write_required_files(root: Path, source_refs: tuple[str, ...]) -> None:
+    for ref in source_refs:
+        path = root / ref
         path.parent.mkdir(parents=True, exist_ok=True)
         if not path.exists():
             path.write_text("# source-safe fixture\n", encoding="utf-8")
@@ -204,11 +206,11 @@ def _manage_contract_payload() -> dict[str, object]:
 
 
 def main() -> int:
-    errors = validate_downstream_route_contract_proofs()
+    errors = validate_route_source_contracts()
     if errors:
         print("\n".join(errors))
         return 1
-    print("Downstream route contract proof gate passed")
+    print("Downstream route source-contract gate passed")
     return 0
 
 

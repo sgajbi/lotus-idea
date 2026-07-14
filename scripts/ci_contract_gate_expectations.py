@@ -41,7 +41,7 @@ REQUIRED_LINT_TARGETS = (
     "mesh-policy-source-contract-proof-gate",
     "opportunity-archetype-contract-gate",
     "downstream-realization-contract-gate",
-    "downstream-route-contract-proof-gate",
+    "downstream-route-source-contract-proof-gate",
     "outbox-event-contract-gate",
     "outbox-consumer-contract-gate",
     "migration-contract-gate",
@@ -147,8 +147,14 @@ GENERATED_READINESS_ARTIFACTS = (
         "scripts/outbox/platform_mesh/generate_source_contract_proof.py",
         "an outbox platform-mesh event source-contract proof artifact",
     ),
-    ("scripts/generate_advise_proposal_route_proof.py", "an Advise proposal route proof artifact"),
-    ("scripts/generate_manage_action_route_proof.py", "a Manage action route proof artifact"),
+    (
+        "scripts/downstream_realization/generate_advise_route_source_contract.py",
+        "an Advise route source-contract artifact",
+    ),
+    (
+        "scripts/downstream_realization/generate_manage_route_source_contract.py",
+        "a Manage route source-contract artifact",
+    ),
     (
         "scripts/report/generate_intake_route_source_contract.py",
         "a Report intake-route source-contract proof artifact",
@@ -195,8 +201,14 @@ PASSED_READINESS_ARTIFACTS = (
         "--ai-workflow-pack-runtime-execution-proof",
         "AI workflow-pack runtime execution proof artifact",
     ),
-    ("--advise-proposal-route-proof", "Advise proposal route proof artifact"),
-    ("--manage-action-route-proof", "Manage action route proof artifact"),
+    (
+        "--advise-proposal-route-source-contract-proof",
+        "Advise route source-contract artifact",
+    ),
+    (
+        "--manage-action-route-source-contract-proof",
+        "Manage route source-contract artifact",
+    ),
     (
         "--report-intake-route-source-contract-proof",
         "Report intake-route source-contract proof artifact",
@@ -250,11 +262,23 @@ REQUIRED_READINESS_WIRING = (
     ),
     ("LOTUS_IDEA_AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF", "support AI runtime proof"),
     ("LOTUS_ADVISE_ROOT", "support default lotus-advise root wiring"),
-    ("LOTUS_IDEA_ADVISE_PROPOSAL_ROUTE_PROOF_OUTPUT", "pass default Advise proof"),
-    ("LOTUS_IDEA_ADVISE_PROPOSAL_ROUTE_PROOF", "support optional Advise proof"),
+    (
+        "LOTUS_IDEA_ADVISE_ROUTE_SOURCE_CONTRACT_PROOF_OUTPUT",
+        "pass the default Advise route source contract",
+    ),
+    (
+        "LOTUS_IDEA_ADVISE_ROUTE_SOURCE_CONTRACT_PROOF",
+        "support an optional Advise route source contract",
+    ),
     ("LOTUS_MANAGE_ROOT", "support default lotus-manage root wiring"),
-    ("LOTUS_IDEA_MANAGE_ACTION_ROUTE_PROOF_OUTPUT", "pass default Manage proof"),
-    ("LOTUS_IDEA_MANAGE_ACTION_ROUTE_PROOF", "support optional Manage proof"),
+    (
+        "LOTUS_IDEA_MANAGE_ROUTE_SOURCE_CONTRACT_PROOF_OUTPUT",
+        "pass the default Manage route source contract",
+    ),
+    (
+        "LOTUS_IDEA_MANAGE_ROUTE_SOURCE_CONTRACT_PROOF",
+        "support an optional Manage route source contract",
+    ),
     (
         "LOTUS_IDEA_REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF_OUTPUT",
         "pass the default Report intake-route source-contract proof into readiness generation",

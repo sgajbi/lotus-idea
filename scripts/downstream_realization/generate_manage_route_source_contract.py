@@ -6,33 +6,37 @@ import json
 from pathlib import Path
 import sys
 
-from app.application.downstream_route_contract_proof import (
-    build_advise_proposal_route_proof_payload,
+ROOT = Path(__file__).resolve().parents[2]
+SRC = ROOT / "src"
+for path in (ROOT, SRC):
+    if str(path) not in sys.path:
+        sys.path.insert(0, str(path))
+
+from app.application.downstream_realization.route_source_contract import (  # noqa: E402
+    build_manage_route_source_contract_payload,
 )
 
 try:
-    from scripts.proof_generator_io import write_json_payload
+    from scripts.proof_generator_io import write_json_payload  # noqa: E402
 except ImportError:  # pragma: no cover - supports direct script execution
-    from proof_generator_io import write_json_payload  # type: ignore[import-not-found,no-redef]
-
-ROOT = Path(__file__).resolve().parents[1]
+    from proof_generator_io import write_json_payload  # type: ignore[import-not-found,no-redef]  # noqa: E402
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = _parser()
     args = parser.parse_args(argv)
     try:
-        payload = build_advise_proposal_route_proof_payload(
+        payload = build_manage_route_source_contract_payload(
             generated_at_utc=_aware_datetime(args.generated_at_utc),
             repository_root=ROOT,
-            advise_root=Path(args.advise_root) if args.advise_root else None,
+            manage_root=Path(args.manage_root) if args.manage_root else None,
         )
     except (OSError, ValueError, json.JSONDecodeError) as exc:
-        print(f"advise proposal route proof error: {exc}", file=sys.stderr)
+        print(f"Manage route source-contract error: {exc}", file=sys.stderr)
         return 2
 
     write_json_payload(payload, output=args.output)
-    if payload["adviseProposalRouteProofValid"]:
+    if payload["sourceContractValid"]:
         return 0
     proof_checks = payload.get("proofChecks")
     if (
@@ -46,16 +50,16 @@ def main(argv: list[str] | None = None) -> int:
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Generate a source-safe proof for the lotus-advise idea proposal route."
+        description="Generate the digest-bound lotus-manage route source contract."
     )
     parser.add_argument("--generated-at-utc", required=True)
-    parser.add_argument("--advise-root")
+    parser.add_argument("--manage-root")
     parser.add_argument("--output")
     parser.add_argument(
         "--allow-missing-evidence",
         action="store_true",
         help=(
-            "Write an invalid non-proof artifact and exit 0 when sibling lotus-advise "
+            "Write an invalid non-proof artifact and exit 0 when sibling lotus-manage "
             "evidence is absent. Contract drift still exits non-zero once required "
             "evidence files are present."
         ),

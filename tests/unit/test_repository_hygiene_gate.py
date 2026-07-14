@@ -179,6 +179,43 @@ def test_repository_hygiene_gate_enforces_report_intake_source_contract_package(
     )
 
 
+def test_repository_hygiene_gate_enforces_downstream_route_source_contract_package() -> None:
+    module = _load_repository_hygiene_gate()
+    required_paths = {
+        "scripts/downstream_realization/__init__.py",
+        "scripts/downstream_realization/generate_advise_route_source_contract.py",
+        "scripts/downstream_realization/generate_manage_route_source_contract.py",
+        "scripts/downstream_realization/route_source_contract_gate.py",
+        "src/app/application/downstream_realization/__init__.py",
+        "src/app/application/downstream_realization/route_source_contract.py",
+        "tests/unit/downstream_realization/__init__.py",
+        "tests/unit/downstream_realization/fixtures.py",
+        "tests/unit/downstream_realization/test_route_source_contract.py",
+    }
+    retired_paths = {
+        "scripts/downstream_route_contract_proof_gate.py",
+        "scripts/generate_advise_proposal_route_proof.py",
+        "scripts/generate_manage_action_route_proof.py",
+        "src/app/application/downstream_route_contract_proof.py",
+        "tests/support/downstream_route_contract_fixtures.py",
+        "tests/support/downstream_route_source_contract_fixtures.py",
+        "tests/unit/test_downstream_route_contract_proof.py",
+    }
+    tracked_paths = sorted(module.REQUIRED_BOUNDED_MODULE_PATHS - required_paths | retired_paths)
+
+    violations = module.find_bounded_module_placement_violations(tracked_paths)
+
+    assert violations == sorted(
+        [
+            *(
+                f"{path}: legacy flat-module path must not be reintroduced"
+                for path in retired_paths
+            ),
+            *(f"{path}: required bounded-module path is missing" for path in required_paths),
+        ]
+    )
+
+
 def test_repository_hygiene_gate_enforces_report_materialization_source_contract_package() -> None:
     module = _load_repository_hygiene_gate()
     required_paths = {

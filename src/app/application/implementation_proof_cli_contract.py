@@ -17,9 +17,9 @@ from app.application.core_benchmark_assignment_live_proof import (
 from app.application.core_portfolio_state_live_proof import (
     CORE_PORTFOLIO_STATE_LIVE_PROOF_ENV,
 )
-from app.application.downstream_route_contract_proof import (
-    ADVISE_PROPOSAL_ROUTE_PROOF_ENV,
-    MANAGE_ACTION_ROUTE_PROOF_ENV,
+from app.application.downstream_realization.route_source_contract import (
+    ADVISE_ROUTE_SOURCE_CONTRACT_ENV,
+    MANAGE_ROUTE_SOURCE_CONTRACT_ENV,
 )
 from app.application.durable_repository_proof import DURABLE_REPOSITORY_PROOF_ENV
 from app.application.workbench.discovery_contract_proof import (
@@ -119,14 +119,14 @@ PROOF_ARTIFACT_ARGS: tuple[tuple[str, str, str], ...] = (
         "Optional lotus-ai idea workflow-pack runtime execution proof artifact path.",
     ),
     (
-        "--advise-proposal-route-proof",
-        ADVISE_PROPOSAL_ROUTE_PROOF_ENV,
-        "Optional lotus-advise idea proposal route proof artifact path.",
+        "--advise-proposal-route-source-contract-proof",
+        ADVISE_ROUTE_SOURCE_CONTRACT_ENV,
+        "Optional digest-bound lotus-advise route source-contract artifact path.",
     ),
     (
-        "--manage-action-route-proof",
-        MANAGE_ACTION_ROUTE_PROOF_ENV,
-        "Optional lotus-manage idea action route proof artifact path.",
+        "--manage-action-route-source-contract-proof",
+        MANAGE_ROUTE_SOURCE_CONTRACT_ENV,
+        "Optional digest-bound lotus-manage route source-contract artifact path.",
     ),
     (
         "--report-intake-route-source-contract-proof",

@@ -14,11 +14,9 @@ from app.application.ai_workflow_pack_registration.source_contract_proof import 
 from app.application.ai_runtime_proof import (
     ai_workflow_pack_runtime_execution_proof_is_valid,
 )
-from app.application.downstream_route_contract_proof import (
-    ADVISE_ROUTE_BLOCKERS_CLEARED,
-    MANAGE_ROUTE_BLOCKERS_CLEARED,
-    advise_proposal_route_proof_is_valid,
-    manage_action_route_proof_is_valid,
+from app.application.downstream_realization.route_source_contract import (
+    advise_route_source_contract_is_valid,
+    manage_route_source_contract_is_valid,
 )
 from app.application.durable_repository_proof import (
     DURABLE_REPOSITORY_BLOCKERS_CLEARED,
@@ -246,7 +244,7 @@ def _apply_storage_and_runtime_proofs(
     runtime_trust_telemetry_proof: Mapping[str, object] | None,
     runtime_trust_telemetry_proof_ref: str | None,
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
-    if _proof_can_clear_blockers(
+    if _proof_is_valid_and_current(
         durable_repository_proof,
         durable_repository_proof_ref,
         evaluated_at_utc=evaluated_at_utc,
@@ -351,29 +349,27 @@ def _apply_downstream_proofs(
         advise_proposal_route_proof,
         advise_proposal_route_proof_ref,
         evaluated_at_utc=evaluated_at_utc,
-        proof_is_valid=advise_proposal_route_proof_is_valid,
+        proof_is_valid=advise_route_source_contract_is_valid,
     ):
         capabilities = tuple(
-            _apply_downstream_route_contract_proof(
+            apply_supporting_evidence(
                 capability,
-                capability_id="downstream-realization",
-                blockers_cleared=ADVISE_ROUTE_BLOCKERS_CLEARED,
-                proof_ref=advise_proposal_route_proof_ref,
+                capability_ids=("downstream-realization",),
+                evidence_ref=advise_proposal_route_proof_ref,
             )
             for capability in capabilities
         )
-    if _proof_can_clear_blockers(
+    if _proof_is_valid_and_current(
         manage_action_route_proof,
         manage_action_route_proof_ref,
         evaluated_at_utc=evaluated_at_utc,
-        proof_is_valid=manage_action_route_proof_is_valid,
+        proof_is_valid=manage_route_source_contract_is_valid,
     ):
         capabilities = tuple(
-            _apply_downstream_route_contract_proof(
+            apply_supporting_evidence(
                 capability,
-                capability_id="downstream-realization",
-                blockers_cleared=MANAGE_ROUTE_BLOCKERS_CLEARED,
-                proof_ref=manage_action_route_proof_ref,
+                capability_ids=("downstream-realization",),
+                evidence_ref=manage_action_route_proof_ref,
             )
             for capability in capabilities
         )
@@ -614,21 +610,6 @@ def _proof_is_valid_and_current(
             evaluated_at_utc=evaluated_at_utc,
             proof_ref=proof_ref,
         )
-    )
-
-
-def _apply_downstream_route_contract_proof(
-    capability: ImplementationProofCapabilityReadiness,
-    *,
-    capability_id: str,
-    blockers_cleared: tuple[str, ...],
-    proof_ref: str | None,
-) -> ImplementationProofCapabilityReadiness:
-    return apply_blocker_proof(
-        capability,
-        capability_ids=(capability_id,),
-        blockers_cleared=blockers_cleared,
-        proof_ref=proof_ref,
     )
 
 
