@@ -393,6 +393,31 @@ def test_operator_exception_queue_enforces_role_and_entitled_scope() -> None:
     assert broader_query.json()["code"] == "permission_denied"
 
 
+@pytest.mark.parametrize(
+    ("query", "header_overrides"),
+    (
+        ("", {"X-Caller-Tenant-Ids": " "}),
+        ("?evaluatedAtUtc=2026-06-21T10:10:00", {}),
+        ("?portfolioId=%20", {}),
+    ),
+)
+def test_operator_exception_queue_rejects_malformed_scope_inputs(
+    query: str,
+    header_overrides: dict[str, str],
+) -> None:
+    reset_idea_repository_for_tests()
+    headers = operator_exception_headers()
+    headers.update(header_overrides)
+
+    response = TestClient(app).get(
+        f"/api/v1/review-queues/operator/exceptions{query}",
+        headers=headers,
+    )
+
+    assert response.status_code == 400
+    assert response.json()["code"] == "invalid_request"
+
+
 def test_advisor_review_queue_api_defaults_to_active_queue_snapshot() -> None:
     reset_idea_repository_for_tests()
     client = TestClient(app)
