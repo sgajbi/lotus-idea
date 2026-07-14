@@ -258,13 +258,17 @@ Validation evidence from the implementation slice:
     output. PR `#394` merged to exact-main SHA `b892d5d6`; Main Releasability
     `29303651841`, CodeQL `29303648849`, and wiki publication `48fd63a` passed.
     Live-provider/production approval and the other blockers below remain.
-18. Issue `#396` local validation passed `121` focused proof tests, all `17`
-    disposable PostgreSQL 18 integration tests, and `make check` with `3704`
-    unit tests. The focused test set covers closed receipt typing, artifact and
-    assertion binding, repository/workflow/job/ref/conclusion mismatch,
-    tampering, aggregate consumption, and source-contract non-promotion.
-    Mainline execution, release-artifact inspection, and exact-main CI remain
-    required before this capability is closed.
+18. Issue `#396` validation passed `121` focused proof tests, all `17`
+    disposable PostgreSQL 18 integration tests, and full local `make ci` with
+    `3704` unit, `451` integration, and `4` E2E tests at `99.01%` coverage.
+    PR `#397` merged the capability; failed exact-main run `29306713267`
+    correctly rejected GitHub's non-canonical artifact-digest representation.
+    Fix-forward PR `#398` added strict canonical mapping and regression tests.
+    Exact-main SHA `5cf7592b` then passed Main Releasability `29307190040` and
+    CodeQL `29307186825`. The downloaded v2 proof passed the production
+    validator, bound the exact repository/workflow/job/run/commit/main ref and
+    PostgreSQL artifact digest, and cleared only
+    `certified_ai_lineage_store_missing`.
 
 ## Current Governance References
 
