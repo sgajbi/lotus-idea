@@ -714,6 +714,17 @@ rejected raw labels out of persistence, audit attributes, and API responses.
 This is an Idea-owned deterministic output-governance boundary, not ownership
 of provider execution, prompts, RAG, or AI runtime infrastructure.
 
+AI explanation text is also untrusted input. Enforce
+`lotus-idea.ai-claim-grounding-policy.v1` after deterministic source-product and
+action verification. Accepted advisor-visible narrative must be server-rendered
+from ordered verified claims and must carry source-safe product/version, as-of,
+freshness, and quality references. Blocked output returns no grounded claims.
+Keep submitted narrative out of responses and persistence; bind its digest and
+the grounding policy into output integrity so replay conflicts remain exact.
+This policy belongs to the internal `app.domain.ai_explanation` capability and
+does not justify a separate runtime or transfer AI infrastructure ownership from
+`lotus-ai`.
+
 AI explanation replay identity must include
 `lotus-idea.ai-output-integrity.v1`. Commit to ordered explanation, claim,
 action, workflow/evaluator, and policy content; persist only the source-safe

@@ -531,7 +531,10 @@ supported feature.
 certified internal AI explanation evaluator foundation. It evaluates
 deterministic fallback or supplied workflow output against persisted candidate
 evidence, redacts source refs, blocks unsupported claims and forbidden actions,
-requires `Idempotency-Key`, records source-safe lineage through the active
+and renders accepted advisor narrative only from verified ordered claims. Each
+grounded claim carries source-safe product/version, as-of, freshness, and quality
+references; blocked output carries no grounding. The evaluator requires
+`Idempotency-Key`, records source-safe lineage through the active
 repository mutation path, and emits bounded `ai_explanation` operation events.
 Same-key/same-request calls replay without duplicate lineage writes,
 same-key/different-request calls return product-safe
@@ -544,6 +547,12 @@ AI lineage store proof artifact.
 
 AI explanation request and response DTOs live in
 `src/app/api/ai_governance_models.py`, while
+`src/app/domain/ai_explanation/grounding.py` owns deterministic claim narrative
+projection and its versioned policy. Submitted provider narrative is attested
+input only: it is not returned or persisted, while output integrity binds its
+digest and the grounding policy for exact replay. This capability package avoids
+adding another flat domain file.
+
 `src/app/api/ai_governance.py` keeps authorization, idempotency,
 durable-write checks, operation-event emission, route metadata, and response
 handling. This is an internal design-modularity boundary inside the same

@@ -136,11 +136,15 @@ Current RFC-0002 implementation-start baseline:
    `29297787754` and CodeQL run `29297783153`.
 10. Slice 09 partially implements internal AI governance with redacted evidence
    envelopes, forbidden metadata rejection, deterministic fallback,
-   unsupported-claim and forbidden-action verifier outcomes, safe audit events,
-   no AI downstream authority, governed `lotus-ai:idea-explanation:v1` workflow
+   unsupported-claim and forbidden-action verifier outcomes, evidence-grounded
+   server-rendered claim narrative with source-safe freshness/quality bindings,
+   safe audit events, no AI downstream authority, governed
+   `lotus-ai:idea-explanation:v1` workflow
    identity rejection for arbitrary caller-supplied packs, and a certified
    internal AI explanation evaluator API plus a not-certified AI explanation
-   readiness diagnostic without `lotus-ai` runtime execution, Gateway,
+   readiness diagnostic. Submitted provider narrative is not advisor-visible or
+   persisted, and blocked output exposes no grounded claims. This remains
+   without `lotus-ai` runtime execution, Gateway,
    Workbench, or supported-feature promotion.
 11. Slice 10 partially implements certified internal API foundations for
    high-cash evaluation, high-cash evaluate-and-persist, candidate lifecycle
