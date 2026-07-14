@@ -7,7 +7,7 @@ import importlib.util
 import json
 from pathlib import Path
 from types import ModuleType
-from typing import cast
+from typing import Any, cast
 
 import pytest
 
@@ -50,11 +50,10 @@ def test_builds_source_safe_proof_from_actual_execution_receipt() -> None:
     assert proof["schemaVersion"] == AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF_SCHEMA_VERSION
     assert proof["proofScope"] == "actual_deterministic_stub_runtime_execution"
     assert proof["aiWorkflowPackRuntimeExecutionProofValid"] is True
-    assert tuple(proof["aggregateBlockersCleared"]) == (
-        AI_WORKFLOW_PACK_RUNTIME_EXECUTION_BLOCKERS_CLEARED
-    )
-    assert tuple(proof["remainingCertificationBlockers"]) == (
-        REMAINING_AI_WORKFLOW_PACK_RUNTIME_EXECUTION_BLOCKERS
+    assert proof["aggregateBlockersCleared"] == AI_WORKFLOW_PACK_RUNTIME_EXECUTION_BLOCKERS_CLEARED
+    assert (
+        proof["remainingCertificationBlockers"]
+        == REMAINING_AI_WORKFLOW_PACK_RUNTIME_EXECUTION_BLOCKERS
     )
     assert proof["lotusAiRuntimeExecuted"] is True
     assert proof["deterministicStubExecution"] is True
@@ -112,7 +111,10 @@ def test_rejects_receipt_that_does_not_prove_guarded_stub_execution(
     field_name: str,
     bad_value: object,
 ) -> None:
-    receipt = replace(ai_runtime_execution_receipt(), **{field_name: bad_value})
+    receipt = replace(
+        ai_runtime_execution_receipt(),
+        **cast(Any, {field_name: bad_value}),
+    )
     proof = build_ai_workflow_pack_runtime_execution_proof_payload(
         generated_at_utc=datetime(2026, 7, 14, 0, 0, tzinfo=UTC),
         receipt=receipt,
