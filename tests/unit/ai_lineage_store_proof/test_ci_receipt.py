@@ -95,7 +95,7 @@ def test_ci_receipt_cli_binds_uploaded_artifact_digest(tmp_path: Path) -> None:
             "--completed-at-utc",
             "2026-07-14T04:00:00Z",
             "--artifact-sha256",
-            f"sha256:{'c' * 64}",
+            "c" * 64,
             "--output",
             str(output),
         ]
@@ -105,6 +105,44 @@ def test_ci_receipt_cli_binds_uploaded_artifact_digest(tmp_path: Path) -> None:
     receipt = json.loads(output.read_text(encoding="utf-8"))
     assert receipt["artifact_sha256"] == f"sha256:{'c' * 64}"
     assert receipt["source_commit_sha"] == "a" * 40
+
+
+def test_ci_receipt_cli_rejects_malformed_uploaded_artifact_digest(tmp_path: Path) -> None:
+    report = _write_report(tmp_path)
+    module = _load_generator_script()
+
+    result = module.main(
+        [
+            "--test-report",
+            str(report),
+            "--repository",
+            "sgajbi/lotus-idea",
+            "--workflow-path",
+            ".github/workflows/main-releasability.yml",
+            "--workflow-name",
+            "Main Releasability Gate",
+            "--job-name",
+            "Main Releasability / PostgreSQL Runtime Proof",
+            "--run-id",
+            "123",
+            "--run-attempt",
+            "1",
+            "--source-commit-sha",
+            "a" * 40,
+            "--source-ref",
+            "refs/heads/main",
+            "--conclusion",
+            "success",
+            "--completed-at-utc",
+            "2026-07-14T04:00:00Z",
+            "--artifact-sha256",
+            "not-a-digest",
+            "--output",
+            str(tmp_path / "receipt.json"),
+        ]
+    )
+
+    assert result == 2
 
 
 def _build(report: Path) -> CIExecutionReceipt:
