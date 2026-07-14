@@ -124,14 +124,15 @@ Current RFC-0002 implementation-start baseline:
    data-product certification, and supported-feature promotion remain later,
    independently gated work. Exact-main SHA `4f4e0985` passed Main
    Releasability run `29291215703`.
-9. Slice 08 implementation is in validation on its feature branch pending
-   mainline closure. Advisor, portfolio-manager, and compliance queues are audience-bound;
-   the operator surface exposes aggregate support exceptions without business
-   authority; review and feedback mutations derive authorization from trusted
-   caller entitlements plus persisted candidate scope. Lifecycle, audit,
-   resource-identity, replay/conflict, and PostgreSQL foundations remain
-   internal and unpromoted. Gateway/Workbench product proof, mesh certification,
-   and supported-feature promotion remain later-slice gates.
+9. Slice 08 implementation is complete and locally validated on its feature
+   branch, pending mainline closure. Advisor, portfolio-manager, and compliance
+   queues are audience-bound; the operator surface exposes aggregate support
+   exceptions without business authority; review and feedback mutations derive
+   authorization from trusted caller entitlements plus persisted candidate
+   scope. Lifecycle, audit, resource-identity, replay/conflict, and PostgreSQL
+   foundations remain internal and unpromoted. Gateway/Workbench product proof,
+   mesh certification, and supported-feature promotion remain later-slice
+   gates.
 10. Slice 09 partially implements internal AI governance with redacted evidence
    envelopes, forbidden metadata rejection, deterministic fallback,
    unsupported-claim and forbidden-action verifier outcomes, safe audit events,
