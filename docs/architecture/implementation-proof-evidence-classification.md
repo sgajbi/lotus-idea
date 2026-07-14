@@ -56,7 +56,7 @@ the next starts.
 | Proof family | Current classification finding | Tracking |
 | --- | --- | --- |
 | AI workflow execution | Actual `runtime_execution` receipt implemented. | #392, merged |
-| AI lineage store | Mainline digest-bound `ci_execution` receipt implemented in the current capability. | #396 |
+| AI lineage store | Mainline digest-bound `ci_execution` receipt implemented and exact-main validated. | #396, PRs #397/#398 |
 | Outbox consumer runtime | Source contract currently implies runtime execution. | #393, remediation pending |
 | Durable repository | Source/Make/CI narrative currently implies durable runtime certification. | #393, remediation pending |
 | Gateway/Workbench operational | Local and fixed cross-repo references currently imply operational proof. | #393, remediation pending |

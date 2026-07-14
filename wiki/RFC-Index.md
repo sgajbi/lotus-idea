@@ -153,10 +153,10 @@ Current RFC-0002 implementation-start baseline:
    Main Releasability `29300549721` and CodeQL `29300546423` passed. Slice 09
    remains partial for its separate live-provider/production and
    product-realization gates.
-   Issue `#396` additionally requires a digest-bound exact-main CI execution
-   receipt before durable AI lineage-store certification can clear. Source
-   files and workflow text remain non-certifying. Local implementation is
-   complete; exact-main CI and publication evidence are pending.
+   PRs `#397`/`#398` additionally require and validate a digest-bound exact-main
+   CI execution receipt before durable AI lineage-store certification can
+   clear. Exact-main SHA `5cf7592b` passed Main Releasability `29307190040` and
+   CodeQL `29307186825`; source files and workflow text remain non-certifying.
 11. Slice 10 partially implements certified internal API foundations for
    high-cash evaluation, high-cash evaluate-and-persist, candidate lifecycle
    transitions, source-safe candidate detail, candidate evidence replay,
