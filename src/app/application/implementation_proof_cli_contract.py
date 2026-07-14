@@ -77,7 +77,7 @@ from app.application.report.materialization_source_contract import (
 )
 from app.application.risk_concentration_live_proof import RISK_CONCENTRATION_LIVE_PROOF_ENV
 from app.application.risk_drawdown_live_proof import RISK_DRAWDOWN_LIVE_PROOF_ENV
-from app.application.runtime_trust_telemetry_proof import RUNTIME_TRUST_TELEMETRY_PROOF_ENV
+from app.application.runtime_trust_telemetry.test_execution_contract import RUNTIME_TRUST_TELEMETRY_TEST_EXECUTION_ENV
 from app.application.workbench.read_path_source_contract import (
     WORKBENCH_READ_PATH_SOURCE_CONTRACT_PROOF_ENV,
 )
@@ -89,9 +89,9 @@ PROOF_ARTIFACT_ARGS: tuple[tuple[str, str, str], ...] = (
         "Optional durable PostgreSQL repository proof artifact path.",
     ),
     (
-        "--runtime-trust-telemetry-proof",
-        RUNTIME_TRUST_TELEMETRY_PROOF_ENV,
-        "Optional runtime trust telemetry candidate snapshot proof artifact path.",
+        "--runtime-trust-telemetry-test-execution",
+        RUNTIME_TRUST_TELEMETRY_TEST_EXECUTION_ENV,
+        "Optional deterministic in-memory runtime trust telemetry test-execution artifact path.",
     ),
     (
         "--ai-lineage-store-proof",

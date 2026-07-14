@@ -7,19 +7,22 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from app.application.runtime_trust_telemetry import (
+ROOT = Path(__file__).resolve().parents[2]
+SRC = ROOT / "src"
+for path in (ROOT, SRC):
+    if str(path) not in sys.path:
+        sys.path.insert(0, str(path))
+
+from app.application.runtime_trust_telemetry import (  # noqa: E402
     RuntimeTrustTelemetryPreview,
     build_runtime_trust_telemetry_preview,
 )
-from app.runtime.repository_state import (
+from app.runtime.repository_state import (  # noqa: E402
     get_idea_repository,
     idea_repository_durable_storage_backed,
 )
 
-try:
-    from scripts.proof_generator_io import parse_generated_at_utc
-except ModuleNotFoundError:
-    from proof_generator_io import parse_generated_at_utc  # type: ignore[import-not-found,no-redef]
+from scripts.proof_generator_io import parse_generated_at_utc  # noqa: E402
 
 
 def main(argv: list[str] | None = None) -> int:

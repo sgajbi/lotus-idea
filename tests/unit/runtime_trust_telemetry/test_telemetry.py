@@ -26,7 +26,7 @@ from app.domain import (
     SourceSystem,
     evaluate_high_cash_signal,
 )
-from scripts.generate_runtime_trust_telemetry_preview import (
+from scripts.runtime_trust_telemetry.generate_preview import (
     runtime_trust_telemetry_preview_payload,
 )
 
@@ -68,7 +68,8 @@ def test_runtime_trust_telemetry_preview_reports_empty_blocked_posture() -> None
     assert snapshot.current_source_ref_count == 0
     assert snapshot.stale_or_unavailable_source_ref_count == 0
     assert snapshot.lineage_materialized is False
-    assert snapshot.runtime_telemetry_backed is True
+    assert snapshot.runtime_telemetry_backed is False
+    assert "durable_repository_not_configured" in snapshot.certification_blockers
     assert snapshot.platform_certified is False
     assert snapshot.certification_status == "not_certified"
     assert snapshot.certification_ready is False
@@ -91,6 +92,7 @@ def test_runtime_trust_telemetry_preview_counts_source_safe_repository_state() -
     )
 
     assert first != second
+    assert snapshot.runtime_telemetry_backed is True
     assert snapshot.candidate_snapshot_count == 2
     assert snapshot.current_source_ref_count == 8
     assert snapshot.stale_or_unavailable_source_ref_count == 0
@@ -348,7 +350,7 @@ def _snapshot_product_posture(snapshot: dict[str, object], product_id: str) -> d
 def _declared_product_ids() -> set[str]:
     contract = json.loads(
         (
-            Path(__file__).resolve().parents[2]
+            Path(__file__).resolve().parents[3]
             / "contracts/domain-data-products/lotus-idea-products.v1.json"
         ).read_text(encoding="utf-8")
     )

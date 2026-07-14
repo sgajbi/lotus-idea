@@ -62,8 +62,8 @@ from app.application.report.materialization_source_contract import (
     REQUIRED_REPORT_MATERIALIZATION_EVIDENCE_REFS,
 )
 from app.domain.proof_evidence import EvidenceClass
-from app.application.runtime_trust_telemetry_proof import (
-    build_runtime_trust_telemetry_proof_payload,
+from app.application.runtime_trust_telemetry.test_execution_contract import (
+    build_runtime_trust_telemetry_test_execution_payload,
 )
 from app.application.source_ingestion_live_proof import (
     build_source_ingestion_live_proof_payload,
@@ -251,7 +251,10 @@ def test_implementation_proof_readiness_capabilities_are_source_safe() -> None:
     assert (
         "GET /api/v1/data-mesh/trust-telemetry/runtime-snapshot" in runtime_telemetry.evidence_refs
     )
-    assert "scripts/generate_runtime_trust_telemetry_snapshot.py" in runtime_telemetry.evidence_refs
+    assert (
+        "scripts/runtime_trust_telemetry/generate_snapshot.py"
+        in runtime_telemetry.evidence_refs
+    )
     assert "platform_mesh_certification_missing" in runtime_telemetry.blockers
     outbox_delivery = next(
         capability
@@ -452,12 +455,12 @@ def test_implementation_proof_readiness_lists_valid_source_ingestion_proof_refs_
     assert snapshot.supported_features_promoted is False
 
 
-def test_implementation_proof_readiness_uses_runtime_trust_telemetry_proof_without_mesh_certification() -> (
+def test_runtime_trust_telemetry_test_execution_adds_evidence_without_clearing_runtime() -> (
     None
 ):
-    proof_ref = "output/trust-telemetry/runtime/runtime-trust-telemetry-proof.json"
+    proof_ref = "output/trust-telemetry/test-execution/runtime-trust-telemetry-test-execution.json"
     proof = _bound_aggregate_proof(
-        build_runtime_trust_telemetry_proof_payload(
+        build_runtime_trust_telemetry_test_execution_payload(
             generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
             repository_root=ROOT,
         ),
@@ -468,11 +471,11 @@ def test_implementation_proof_readiness_uses_runtime_trust_telemetry_proof_witho
         evaluated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
         repository=InMemoryIdeaRepository(),
         durable_storage_backed=False,
-        runtime_trust_telemetry_proof=proof,
-        runtime_trust_telemetry_proof_ref=proof_ref,
+        runtime_trust_telemetry_test_execution=proof,
+        runtime_trust_telemetry_test_execution_ref=proof_ref,
     )
 
-    assert "runtime_candidate_snapshot_missing" not in snapshot.overall_blockers
+    assert "runtime_candidate_snapshot_missing" in snapshot.overall_blockers
     assert "certified_runtime_trust_telemetry_missing" in snapshot.overall_blockers
     assert "data_mesh_runtime_telemetry_not_certified" in snapshot.overall_blockers
     assert "runtime_trust_telemetry_product_coverage_incomplete" in (snapshot.overall_blockers)
@@ -483,6 +486,12 @@ def test_implementation_proof_readiness_uses_runtime_trust_telemetry_proof_witho
     assert snapshot.readiness_status == "blocked"
     assert snapshot.supportability_status == "not_certified"
     assert snapshot.supported_features_promoted is False
+    capabilities = {capability.capability_id: capability for capability in snapshot.capabilities}
+    assert proof_ref in capabilities["runtime-trust-telemetry-preview"].evidence_refs
+    assert proof_ref in capabilities["data-mesh-certification"].evidence_refs
+    assert "runtime_candidate_snapshot_missing" in (
+        capabilities["runtime-trust-telemetry-preview"].blockers
+    )
 
 
 def test_implementation_proof_readiness_uses_ai_lineage_store_proof_without_runtime_claim() -> None:

@@ -174,7 +174,7 @@ def test_ci_contract_gate_blocks_missing_runtime_trust_telemetry_preview_gate() 
     errors = module.validate_makefile(
         _makefile_without(
             "$(MAKE) runtime-trust-telemetry-preview-check\n",
-            "scripts/generate_runtime_trust_telemetry_preview.py",
+            "scripts/runtime_trust_telemetry/generate_preview.py",
         )
     )
 
@@ -183,5 +183,5 @@ def test_ci_contract_gate_blocks_missing_runtime_trust_telemetry_preview_gate() 
     ) in errors
     assert (
         "Makefile runtime-trust-telemetry-preview-check target must run "
-        "`scripts/generate_runtime_trust_telemetry_preview.py`"
+        "`scripts/runtime_trust_telemetry/generate_preview.py`"
     ) in errors

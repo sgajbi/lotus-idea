@@ -56,8 +56,8 @@ SCRIPT_TARGET_EXPECTATIONS = {
     "durable-repository-proof-contract-gate": (
         "scripts/persistence/durable_repository_proof_contract_gate.py"
     ),
-    "runtime-trust-telemetry-proof-contract-gate": (
-        "scripts/runtime_trust_telemetry_proof_contract_gate.py"
+    "runtime-trust-telemetry-test-execution-contract-gate": (
+        "scripts/runtime_trust_telemetry/test_execution_contract_gate.py"
     ),
     "ai-lineage-store-proof-contract-gate": "scripts/ai_lineage_store_proof_contract_gate.py",
     "ai-workflow-pack-registration-proof-contract-gate": (

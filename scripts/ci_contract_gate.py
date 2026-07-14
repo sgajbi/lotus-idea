@@ -300,16 +300,16 @@ def _validate_script_targets(makefile: str) -> list[str]:
 def _validate_support_targets(makefile: str) -> list[str]:
     errors = _validate_implementation_proof_readiness_target(makefile)
     runtime_preview_check = _target_block(makefile, "runtime-trust-telemetry-preview-check")
-    if "scripts/generate_runtime_trust_telemetry_preview.py" not in runtime_preview_check:
+    if "scripts/runtime_trust_telemetry/generate_preview.py" not in runtime_preview_check:
         errors.append(
             "Makefile runtime-trust-telemetry-preview-check target must run "
-            "`scripts/generate_runtime_trust_telemetry_preview.py`"
+            "`scripts/runtime_trust_telemetry/generate_preview.py`"
         )
     runtime_snapshot_check = _target_block(makefile, "runtime-trust-telemetry-snapshot-check")
-    if "scripts/generate_runtime_trust_telemetry_snapshot.py" not in runtime_snapshot_check:
+    if "scripts/runtime_trust_telemetry/generate_snapshot.py" not in runtime_snapshot_check:
         errors.append(
             "Makefile runtime-trust-telemetry-snapshot-check target must run "
-            "`scripts/generate_runtime_trust_telemetry_snapshot.py`"
+            "`scripts/runtime_trust_telemetry/generate_snapshot.py`"
         )
     clean_block = _target_block(makefile, "clean")
     if "scripts/clean_generated_artifacts.py" not in clean_block:

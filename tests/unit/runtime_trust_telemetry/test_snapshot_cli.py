@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 
 from app.application.runtime_trust_telemetry import build_runtime_trust_telemetry_snapshot
 from app.domain import InMemoryIdeaRepository
-from scripts.generate_runtime_trust_telemetry_snapshot import (
+from scripts.runtime_trust_telemetry.generate_snapshot import (
     validate_runtime_trust_telemetry_snapshot_payload,
 )
 

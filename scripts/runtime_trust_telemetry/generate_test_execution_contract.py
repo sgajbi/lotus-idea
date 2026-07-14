@@ -2,41 +2,42 @@ from __future__ import annotations
 
 import argparse
 from datetime import datetime
-import sys
 from pathlib import Path
+import sys
 
-from app.application.runtime_trust_telemetry_proof import (
-    build_runtime_trust_telemetry_proof_payload,
+ROOT = Path(__file__).resolve().parents[2]
+SRC = ROOT / "src"
+for path in (ROOT, SRC):
+    if str(path) not in sys.path:
+        sys.path.insert(0, str(path))
+
+from app.application.runtime_trust_telemetry.test_execution_contract import (  # noqa: E402
+    build_runtime_trust_telemetry_test_execution_payload,
 )
-
-try:
-    from scripts.proof_generator_io import write_json_payload
-except ImportError:  # pragma: no cover - supports direct script execution
-    from proof_generator_io import write_json_payload  # type: ignore[import-not-found,no-redef]
-
-ROOT = Path(__file__).resolve().parents[1]
+from scripts.proof_generator_io import write_json_payload  # noqa: E402
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = _parser()
     args = parser.parse_args(argv)
     try:
-        payload = build_runtime_trust_telemetry_proof_payload(
+        payload = build_runtime_trust_telemetry_test_execution_payload(
             generated_at_utc=_aware_datetime(args.generated_at_utc),
             repository_root=ROOT,
         )
     except ValueError as exc:
-        print(f"runtime trust telemetry proof error: {exc}", file=sys.stderr)
+        print(f"runtime trust telemetry test execution error: {exc}", file=sys.stderr)
         return 2
 
     write_json_payload(payload, output=args.output)
-    return 0 if payload["runtimeTrustTelemetryProofValid"] else 1
+    return 0 if payload["testExecutionValid"] else 1
 
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
-            "Generate a source-safe lotus-idea runtime trust telemetry candidate snapshot proof."
+            "Generate a source-safe deterministic runtime trust telemetry test-execution "
+            "contract."
         )
     )
     parser.add_argument("--generated-at-utc", required=True)

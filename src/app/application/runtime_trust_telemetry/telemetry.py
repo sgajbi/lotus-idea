@@ -23,7 +23,7 @@ REPOSITORY = "lotus-idea"
 RUNTIME_TELEMETRY_OUTPUT_PATH = "output/trust-telemetry/runtime/idea-candidate.telemetry.v1.json"
 DAILY_MAX_ALLOWED_AGE_SECONDS = 86_400
 PRODUCER_DECLARATION_PATH = Path("contracts/domain-data-products/lotus-idea-products.v1.json")
-REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
+REPOSITORY_ROOT = Path(__file__).resolve().parents[4]
 COMMON_PRODUCT_CERTIFICATION_BLOCKERS = (
     "platform_source_manifest_inclusion_missing",
     "platform_mesh_certification_missing",
@@ -150,7 +150,7 @@ def build_runtime_trust_telemetry_preview(
         conversion_outcome_count=summary.conversion_outcome_count,
         report_evidence_pack_count=summary.report_evidence_pack_count,
         lineage_materialized=summary.lineage_materialized,
-        runtime_telemetry_backed=True,
+        runtime_telemetry_backed=durable_storage_backed,
         platform_certified=False,
         certification_status="not_certified",
         certification_ready=False,

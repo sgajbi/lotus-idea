@@ -42,7 +42,7 @@ from app.application.proof_provenance import bind_aggregate_proof_provenance
 from app.application.report.intake_route_source_contract import (
     REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF_ENV,
 )
-from app.application.runtime_trust_telemetry_proof import RUNTIME_TRUST_TELEMETRY_PROOF_ENV
+from app.application.runtime_trust_telemetry.test_execution_contract import RUNTIME_TRUST_TELEMETRY_TEST_EXECUTION_ENV
 from app.application.source_ingestion_readiness import LIVE_PROOF_ENV, SCHEDULED_WORKER_PROOF_ENV
 from app.application.workbench.read_path_source_contract import (
     WORKBENCH_READ_PATH_SOURCE_CONTRACT_PROOF_ENV,
@@ -57,8 +57,8 @@ class ConfiguredImplementationProofArtifacts:
     source_ingestion_scheduled_worker_proof_ref: str | None
     durable_repository_proof: dict[str, Any] | None
     durable_repository_proof_ref: str | None
-    runtime_trust_telemetry_proof: dict[str, Any] | None
-    runtime_trust_telemetry_proof_ref: str | None
+    runtime_trust_telemetry_test_execution: dict[str, Any] | None
+    runtime_trust_telemetry_test_execution_ref: str | None
     ai_lineage_store_proof: dict[str, Any] | None
     ai_lineage_store_proof_ref: str | None
     ai_model_risk_operations_proof: dict[str, Any] | None
@@ -111,10 +111,10 @@ _JSON_PROOF_ARTIFACTS: tuple[tuple[str, str, str, str], ...] = (
         "durable repository proof",
     ),
     (
-        RUNTIME_TRUST_TELEMETRY_PROOF_ENV,
-        "runtime_trust_telemetry_proof",
-        "runtime_trust_telemetry_proof_ref",
-        "runtime trust telemetry proof",
+        RUNTIME_TRUST_TELEMETRY_TEST_EXECUTION_ENV,
+        "runtime_trust_telemetry_test_execution",
+        "runtime_trust_telemetry_test_execution_ref",
+        "runtime trust telemetry test execution",
     ),
     (
         AI_LINEAGE_STORE_PROOF_ENV,

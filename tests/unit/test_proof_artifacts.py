@@ -32,7 +32,7 @@ from app.application.outbox.platform_mesh.source_contract_proof import (
 from app.application.data_mesh.platform_catalog_source_contract import (
     PLATFORM_CATALOG_SOURCE_CONTRACT_ENV,
 )
-from app.application.runtime_trust_telemetry_proof import RUNTIME_TRUST_TELEMETRY_PROOF_ENV
+from app.application.runtime_trust_telemetry.test_execution_contract import RUNTIME_TRUST_TELEMETRY_TEST_EXECUTION_ENV
 from app.application.source_ingestion_readiness import LIVE_PROOF_ENV
 from app.application.workbench.read_path_source_contract import (
     WORKBENCH_READ_PATH_SOURCE_CONTRACT_PROOF_ENV,
@@ -49,7 +49,11 @@ def test_configured_implementation_proof_artifacts_loads_relative_source_safe_re
         tmp_path / "output" / "source-ingestion" / "source-ingestion-live-proof.json"
     )
     runtime_path = (
-        tmp_path / "output" / "trust-telemetry" / "runtime" / "runtime-trust-telemetry-proof.json"
+        tmp_path
+        / "output"
+        / "trust-telemetry"
+        / "test-execution"
+        / "runtime-trust-telemetry-test-execution.json"
     )
     ai_lineage_path = tmp_path / "output" / "ai" / "ai-lineage-store-proof.json"
     ai_workflow_pack_path = (
@@ -106,10 +110,10 @@ def test_configured_implementation_proof_artifacts_loads_relative_source_safe_re
         "output/persistence/durable-repository-proof.json"
     )
     _assert_bound_artifact(
-        artifacts.runtime_trust_telemetry_proof, "runtime-trust-telemetry-proof.json"
+        artifacts.runtime_trust_telemetry_test_execution, "runtime-trust-telemetry-test-execution.json"
     )
-    assert artifacts.runtime_trust_telemetry_proof_ref == (
-        "output/trust-telemetry/runtime/runtime-trust-telemetry-proof.json"
+    assert artifacts.runtime_trust_telemetry_test_execution_ref == (
+        "output/trust-telemetry/test-execution/runtime-trust-telemetry-test-execution.json"
     )
     _assert_bound_artifact(artifacts.ai_lineage_store_proof, "ai-lineage-store-proof.json")
     assert artifacts.ai_lineage_store_proof_ref == "output/ai/ai-lineage-store-proof.json"
@@ -205,8 +209,8 @@ def _configure_relative_artifact_env(monkeypatch: pytest.MonkeyPatch) -> None:
     env_paths = {
         DURABLE_REPOSITORY_PROOF_ENV: "output/persistence/durable-repository-proof.json",
         LIVE_PROOF_ENV: "output/source-ingestion/source-ingestion-live-proof.json",
-        RUNTIME_TRUST_TELEMETRY_PROOF_ENV: (
-            "output/trust-telemetry/runtime/runtime-trust-telemetry-proof.json"
+        RUNTIME_TRUST_TELEMETRY_TEST_EXECUTION_ENV: (
+            "output/trust-telemetry/test-execution/runtime-trust-telemetry-test-execution.json"
         ),
         AI_LINEAGE_STORE_PROOF_ENV: "output/ai/ai-lineage-store-proof.json",
         AI_WORKFLOW_PACK_REGISTRATION_PROOF_ENV: (
