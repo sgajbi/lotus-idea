@@ -140,3 +140,20 @@ def test_github_issue_closure_matrix_gate_rejects_merged_main_status_regression(
     errors = module.validate_issue_closure_matrix(matrix)
 
     assert "#357: merged-main issue cannot regress to `locally_fixed`" in errors
+
+
+def test_github_issue_closure_matrix_gate_freezes_lifecycle_serialization_closure(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    matrix = tmp_path / "matrix.md"
+    content = module.MATRIX_PATH.read_text(encoding="utf-8")
+    content = content.replace(
+        "Serialize lifecycle erasure against concurrent downstream claims | `merged_main` |",
+        "Serialize lifecycle erasure against concurrent downstream claims | `locally_fixed` |",
+    )
+    matrix.write_text(content, encoding="utf-8")
+
+    errors = module.validate_issue_closure_matrix(matrix)
+
+    assert "#414: merged-main issue cannot regress to `locally_fixed`" in errors
