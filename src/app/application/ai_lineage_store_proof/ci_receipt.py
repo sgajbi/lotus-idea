@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 import hashlib
 from pathlib import Path
+import re
 import xml.etree.ElementTree as ET
 
 from app.application.ai_lineage_store_proof.contract import (
@@ -14,6 +15,8 @@ from app.domain.proof_evidence import CIExecutionReceipt
 
 _AI_LINEAGE_TEST_CLASS = "tests.integration.test_postgres_runtime_integration"
 _AI_LINEAGE_TEST_NAME = "test_postgres_runtime_provider_persists_ai_explanation_lineage"
+_BARE_SHA256 = re.compile(r"[0-9a-f]{64}")
+_CANONICAL_SHA256 = re.compile(r"sha256:[0-9a-f]{64}")
 
 
 def build_postgres_ci_execution_receipt(
@@ -44,11 +47,22 @@ def build_postgres_ci_execution_receipt(
         conclusion=conclusion,
         completed_at_utc=completed_at_utc.isoformat(),
         artifact_name=TRUSTED_AI_LINEAGE_STORE_ARTIFACT_NAME,
-        artifact_sha256=(
-            artifact_sha256 or f"sha256:{hashlib.sha256(test_report_path.read_bytes()).hexdigest()}"
+        artifact_sha256=_canonical_artifact_sha256(
+            artifact_sha256,
+            fallback_path=test_report_path,
         ),
         assertions=REQUIRED_AI_LINEAGE_STORE_ASSERTIONS,
     )
+
+
+def _canonical_artifact_sha256(value: str | None, *, fallback_path: Path) -> str:
+    if value is None:
+        return f"sha256:{hashlib.sha256(fallback_path.read_bytes()).hexdigest()}"
+    if _BARE_SHA256.fullmatch(value) is not None:
+        return f"sha256:{value}"
+    if _CANONICAL_SHA256.fullmatch(value) is not None:
+        return value
+    raise ValueError("artifact SHA-256 must be 64 lowercase hex characters")
 
 
 def _require_successful_ai_lineage_test(test_report_path: Path) -> None:
