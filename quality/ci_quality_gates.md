@@ -30,7 +30,7 @@ Blocking scaffold commands:
 21. `make migration-contract-gate`
 22. `make migration-execution-gate`
 23. `make durable-repository-proof-contract-gate`
-24. `make runtime-trust-telemetry-proof-contract-gate`
+24. `make runtime-trust-telemetry-test-execution-contract-gate`
 25. `make ai-lineage-store-proof-contract-gate`
 26. `make ai-workflow-pack-registration-proof-contract-gate`
 27. `make ai-workflow-pack-runtime-execution-proof-contract-gate`
@@ -114,7 +114,7 @@ scheduled source-ingestion worker deploy-contract validation,
 source-ingestion live-proof contract validation with aggregate blocked-reason
 diagnostics,
 durable repository proof contract validation,
-runtime trust telemetry proof contract validation,
+runtime trust telemetry test-execution contract validation,
 AI lineage store proof contract validation,
 AI workflow-pack registration proof contract validation,
 AI model-risk operations proof validation,
@@ -258,7 +258,7 @@ the blocking gate.
 Focused test runs must stay on the Makefile surface instead of bypassing repository governance:
 
 ```powershell
-make test-unit UNIT_TESTS=tests/unit/test_runtime_trust_telemetry.py
+make test-unit UNIT_TESTS=tests/unit/runtime_trust_telemetry/test_telemetry.py
 make test-integration INTEGRATION_TESTS=tests/integration/test_runtime_trust_telemetry_api.py
 make test-e2e E2E_TESTS=tests/e2e/test_service_contract.py
 ```

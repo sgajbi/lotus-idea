@@ -24,7 +24,7 @@
 | `make missing-risk-profile-source-product-proof-contract-gate` | Source-safe typed Lotus Advise missing risk-profile source-product proof artifact contract for opportunity-archetype readiness without live Advise source proof, risk profiling, suitability, policy, proposal, client-publication, data-mesh, Workbench, or supported-feature promotion. |
 | `make missing-risk-profile-live-proof-contract-gate` | Source-safe Lotus Advise missing risk-profile live-proof artifact contract for opportunity-archetype readiness without risk profiling, suitability, policy, proposal, client-publication, typed source-product, data-mesh, Workbench, or supported-feature promotion. |
 | `make missing-benchmark-performance-readiness-proof-contract-gate` | Source-safe Lotus Performance benchmark-readiness proof artifact contract for missing-benchmark review without benchmark assignment, performance or benchmark return calculation, methodology certification, client-publication, data-mesh, Workbench, or supported-feature promotion. |
-| `make runtime-trust-telemetry-proof-contract-gate` | Source-safe runtime trust telemetry proof contract for aggregate readiness. |
+| `make runtime-trust-telemetry-test-execution-contract-gate` | Validate deterministic in-memory `test_execution` evidence; no runtime or certification blocker is cleared. |
 | `make downstream-route-source-contract-proof-gate` | Source-safe Advise proposal and Manage action route-proof contract for aggregate readiness without granting suitability, rebalance/execution, or supported-feature authority. |
 | `make ai-lineage-store-proof-contract-gate` | Source-safe AI lineage store proof contract without, by itself, certifying `lotus-ai` runtime, Workbench, or supported-feature promotion. |
 | `make ai-model-risk-operations-proof-contract-gate` | Source-safe AI model-risk operations proof contract for repo-owned dashboard, alert-rule, and runbook artifacts without certifying `lotus-ai`, Workbench, client-ready publication, or supported-feature promotion. |
@@ -352,10 +352,10 @@ the only runtime path marked as read-only retryable without one.
     supported product claim.
 15. For source-safe runtime trust telemetry preview evidence without running
     the service, run `make runtime-trust-telemetry-preview-check` or
-    `scripts/generate_runtime_trust_telemetry_preview.py --generated-at-utc <timestamp>`.
+    `scripts/runtime_trust_telemetry/generate_preview.py --generated-at-utc <timestamp>`.
 16. For contract-shaped runtime trust telemetry snapshot evidence without
     running the service, run `make runtime-trust-telemetry-snapshot-check` or
-    `scripts/generate_runtime_trust_telemetry_snapshot.py --generated-at-utc <timestamp>`.
+    `scripts/runtime_trust_telemetry/generate_snapshot.py --generated-at-utc <timestamp>`.
     The generated file is ignored under `output/trust-telemetry/runtime/` and
     includes product coverage posture. It remains blocked until product coverage
     is complete and platform mesh certification is complete.

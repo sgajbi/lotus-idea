@@ -22,7 +22,7 @@
     "source_ingestion_source": "src/app/application/source_ingestion_readiness.py",
     "outbox_delivery_source": "src/app/application/outbox/readiness.py",
     "downstream_realization_source": "src/app/application/downstream_realization_readiness.py",
-    "runtime_trust_source": "src/app/application/runtime_trust_telemetry.py",
+    "runtime_trust_source": "src/app/application/runtime_trust_telemetry/telemetry.py",
     "implementation_proof_source": "src/app/application/implementation_proof_readiness.py",
     "rfc_slice_15": "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-15-observability-security-entitlements-and-operations.md",
     "rfc_slice_17": "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-17-implementation-proof-and-live-validation.md"

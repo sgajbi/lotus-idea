@@ -1647,11 +1647,11 @@
         "400 returns product-safe Problem Details when generatedAtUtc is present but not timezone-aware."
       ],
       "test_evidence": [
-        "tests/unit/test_runtime_trust_telemetry.py::test_runtime_trust_telemetry_preview_reports_empty_blocked_posture",
-        "tests/unit/test_runtime_trust_telemetry.py::test_runtime_trust_telemetry_preview_counts_source_safe_repository_state",
-        "tests/unit/test_runtime_trust_telemetry.py::test_runtime_trust_telemetry_preview_payload_is_source_safe",
-        "tests/unit/test_runtime_trust_telemetry.py::test_runtime_trust_telemetry_uses_repository_projection_without_snapshot",
-        "tests/unit/test_postgres_runtime_trust_telemetry.py::test_postgres_repository_uses_bounded_runtime_trust_telemetry_projection",
+        "tests/unit/runtime_trust_telemetry/test_telemetry.py::test_runtime_trust_telemetry_preview_reports_empty_blocked_posture",
+        "tests/unit/runtime_trust_telemetry/test_telemetry.py::test_runtime_trust_telemetry_preview_counts_source_safe_repository_state",
+        "tests/unit/runtime_trust_telemetry/test_telemetry.py::test_runtime_trust_telemetry_preview_payload_is_source_safe",
+        "tests/unit/runtime_trust_telemetry/test_telemetry.py::test_runtime_trust_telemetry_uses_repository_projection_without_snapshot",
+        "tests/unit/runtime_trust_telemetry/test_postgres_projection.py::test_postgres_repository_uses_bounded_runtime_trust_telemetry_projection",
         "tests/integration/test_postgres_data_lifecycle_runtime.py::test_postgres_data_lifecycle_survives_restart_and_redacts_atomically",
         "tests/integration/test_runtime_trust_telemetry_api.py::test_runtime_trust_telemetry_preview_api_returns_source_safe_aggregate_state",
         "tests/integration/test_runtime_trust_telemetry_api.py::test_runtime_trust_telemetry_preview_api_requires_operator_permission",
@@ -1678,10 +1678,10 @@
         "400 returns product-safe Problem Details when generatedAtUtc is present but not timezone-aware."
       ],
       "test_evidence": [
-        "tests/unit/test_runtime_trust_telemetry.py::test_runtime_trust_telemetry_snapshot_reports_empty_blocked_contract_posture",
-        "tests/unit/test_runtime_trust_telemetry.py::test_runtime_trust_telemetry_snapshot_materializes_source_safe_runtime_evidence",
-        "tests/unit/test_runtime_trust_telemetry.py::test_runtime_trust_telemetry_uses_repository_projection_without_snapshot",
-        "tests/unit/test_postgres_runtime_trust_telemetry.py::test_postgres_repository_uses_bounded_runtime_trust_telemetry_projection",
+        "tests/unit/runtime_trust_telemetry/test_telemetry.py::test_runtime_trust_telemetry_snapshot_reports_empty_blocked_contract_posture",
+        "tests/unit/runtime_trust_telemetry/test_telemetry.py::test_runtime_trust_telemetry_snapshot_materializes_source_safe_runtime_evidence",
+        "tests/unit/runtime_trust_telemetry/test_telemetry.py::test_runtime_trust_telemetry_uses_repository_projection_without_snapshot",
+        "tests/unit/runtime_trust_telemetry/test_postgres_projection.py::test_postgres_repository_uses_bounded_runtime_trust_telemetry_projection",
         "tests/integration/test_postgres_data_lifecycle_runtime.py::test_postgres_data_lifecycle_survives_restart_and_redacts_atomically",
         "tests/integration/test_runtime_trust_telemetry_api.py::test_runtime_trust_telemetry_snapshot_api_returns_source_safe_contract_state",
         "tests/integration/test_runtime_trust_telemetry_api.py::test_runtime_trust_telemetry_snapshot_api_requires_operator_permission",

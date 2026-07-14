@@ -388,6 +388,15 @@ records, suitability/rebalance authority, production certification, and
 supported-feature promotion remain unproven. This is design modularity within
 the existing deployable, not a new runtime service.
 
+Issue `#452` applies the same evidence-authority rule to runtime trust
+telemetry. A deterministic `InMemoryIdeaRepository` exercise is now explicit
+v2 `test_execution` evidence, clears no aggregate blocker, and preserves
+candidate-snapshot, durable-repository, product-coverage, runtime
+certification, deployment, production, and promotion boundaries. Runtime
+telemetry implementation, automation, and tests are capability-owned under
+`runtime_trust_telemetry/`; this is design modularity inside the existing
+deployable, not a new service.
+
 PR `#439` merged this occurrence by rebase to exact-main SHA `1a64ef69`.
 Main Releasability `29356075075` and CodeQL `29356064752` passed on that exact
 commit, and wiki publication `4a43d9d` has zero source drift. Issue `#437` is
