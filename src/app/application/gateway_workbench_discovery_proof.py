@@ -6,8 +6,8 @@ import json
 from pathlib import Path
 from typing import Any
 
-from app.application.gateway_workbench_operational_proof import (
-    gateway_workbench_operational_proof_is_valid,
+from app.application.workbench.contract_proof import (
+    gateway_workbench_contract_proof_is_valid,
 )
 from app.application.platform_mesh_onboarding_proof import (
     REQUIRED_PRODUCER_PRODUCTS,
@@ -35,13 +35,13 @@ REQUIRED_GATEWAY_WORKBENCH_DISCOVERY_LOCAL_EVIDENCE_REFS = (
     "contracts/domain-data-products/mesh-readiness.v1.json",
     "src/app/application/platform_mesh_onboarding_proof.py",
     "src/app/application/workbench_read_path_proof.py",
-    "src/app/application/gateway_workbench_operational_proof.py",
+    "src/app/application/workbench/contract_proof.py",
     "docs/operations/implementation-proof-readiness.md",
     "wiki/Supported-Features.md",
     "make data-mesh-contract-gate",
     "make platform-mesh-onboarding-proof-contract-gate",
     "make workbench-read-path-proof-contract-gate",
-    "make gateway-workbench-operational-proof-contract-gate",
+    "make gateway-workbench-contract-proof-contract-gate",
     "make gateway-workbench-discovery-proof-contract-gate",
     "make implementation-proof-readiness-check",
 )
@@ -70,10 +70,10 @@ def build_gateway_workbench_discovery_proof_payload(
     platform_root: Path | None = None,
     platform_mesh_onboarding_proof: Mapping[str, Any] | None,
     workbench_read_path_proof: Mapping[str, Any] | None,
-    gateway_workbench_operational_proof: Mapping[str, Any] | None,
+    gateway_workbench_contract_proof: Mapping[str, Any] | None,
     platform_mesh_onboarding_proof_ref: str | None,
     workbench_read_path_proof_ref: str | None,
-    gateway_workbench_operational_proof_ref: str | None,
+    gateway_workbench_contract_proof_ref: str | None,
 ) -> dict[str, Any]:
     platform_root = platform_root or repository_root.parent / "lotus-platform"
     catalog = _optional_json(platform_root / "generated/domain-product-catalog.json")
@@ -92,8 +92,8 @@ def build_gateway_workbench_discovery_proof_payload(
         workbench_read_path_proof and workbench_read_path_proof_is_valid(workbench_read_path_proof)
     )
     gateway_operational_valid = bool(
-        gateway_workbench_operational_proof
-        and gateway_workbench_operational_proof_is_valid(gateway_workbench_operational_proof)
+        gateway_workbench_contract_proof
+        and gateway_workbench_contract_proof_is_valid(gateway_workbench_contract_proof)
     )
     catalog_exposes_gateway_visible_products = _catalog_exposes_gateway_visible_idea_products(
         catalog
@@ -116,7 +116,7 @@ def build_gateway_workbench_discovery_proof_payload(
         "aggregateBlockersCleared": GATEWAY_WORKBENCH_DISCOVERY_BLOCKERS_CLEARED,
         "platformMeshOnboardingProofRef": platform_mesh_onboarding_proof_ref,
         "workbenchReadPathProofRef": workbench_read_path_proof_ref,
-        "gatewayWorkbenchOperationalProofRef": gateway_workbench_operational_proof_ref,
+        "gatewayWorkbenchContractProofRef": gateway_workbench_contract_proof_ref,
         "localEvidenceRefs": REQUIRED_GATEWAY_WORKBENCH_DISCOVERY_LOCAL_EVIDENCE_REFS,
         "platformEvidenceRefs": REQUIRED_GATEWAY_WORKBENCH_DISCOVERY_PLATFORM_EVIDENCE_REFS,
         "discoveredProductCount": len(REQUIRED_PRODUCER_PRODUCTS),
@@ -126,7 +126,7 @@ def build_gateway_workbench_discovery_proof_payload(
             "fileEvidencePresent": file_evidence_present,
             "platformMeshOnboardingProofValid": platform_onboarding_valid,
             "workbenchReadPathProofValid": workbench_read_path_valid,
-            "gatewayWorkbenchOperationalProofValid": gateway_operational_valid,
+            "gatewayWorkbenchContractProofValid": gateway_operational_valid,
             "catalogExposesGatewayVisibleIdeaProducts": (catalog_exposes_gateway_visible_products),
             "productsRemainProposed": True,
             "routesRemainUnpublished": True,
@@ -186,7 +186,7 @@ def gateway_workbench_discovery_proof_is_valid(payload: Mapping[str, Any]) -> bo
     for ref_field in (
         "platformMeshOnboardingProofRef",
         "workbenchReadPathProofRef",
-        "gatewayWorkbenchOperationalProofRef",
+        "gatewayWorkbenchContractProofRef",
     ):
         if not isinstance(payload.get(ref_field), str):
             return False
@@ -200,7 +200,7 @@ def gateway_workbench_discovery_proof_is_valid(payload: Mapping[str, Any]) -> bo
             "fileEvidencePresent",
             "platformMeshOnboardingProofValid",
             "workbenchReadPathProofValid",
-            "gatewayWorkbenchOperationalProofValid",
+            "gatewayWorkbenchContractProofValid",
             "catalogExposesGatewayVisibleIdeaProducts",
             "productsRemainProposed",
             "routesRemainUnpublished",

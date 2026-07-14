@@ -6,14 +6,14 @@ from pathlib import Path
 import tempfile
 from typing import Any
 
-from app.application.gateway_workbench_operational_proof import (
-    build_gateway_workbench_operational_proof_payload,
+from app.application.workbench.contract_proof import (
+    build_gateway_workbench_contract_proof_payload,
 )
 from app.application.implementation_proof_capability_updates import (
     build_capability_readiness,
 )
 from app.application.implementation_proof_consumption import (
-    _apply_gateway_workbench_operational_proof,
+    _apply_gateway_workbench_contract_proof,
 )
 from app.application.implementation_proof_readiness import (
     build_implementation_proof_readiness_snapshot,
@@ -40,7 +40,7 @@ def _bound_aggregate_proof(payload: dict[str, object], proof_ref: str) -> dict[s
         return bound
 
 
-def test_gateway_workbench_operational_proof_application_is_noop_for_other_capability() -> None:
+def test_gateway_workbench_contract_proof_application_is_noop_for_other_capability() -> None:
     capability = build_capability_readiness(
         "workbench-product-proof",
         "Workbench product realization",
@@ -50,18 +50,18 @@ def test_gateway_workbench_operational_proof_application_is_noop_for_other_capab
         blockers=("gateway_workbench_proof_missing", "workbench_panel_missing"),
     )
 
-    result = _apply_gateway_workbench_operational_proof(
+    result = _apply_gateway_workbench_contract_proof(
         capability,
-        "output/workbench/gateway-workbench-operational-proof.json",
+        "output/workbench/gateway-workbench-contract-proof.json",
     )
 
     assert result is capability
 
 
-def test_readiness_uses_gateway_workbench_operational_proof_without_support_promotion() -> None:
-    proof_ref = "output/workbench/gateway-workbench-operational-proof.json"
+def test_readiness_uses_gateway_workbench_contract_proof_without_support_promotion() -> None:
+    proof_ref = "output/workbench/gateway-workbench-contract-proof.json"
     proof = _bound_aggregate_proof(
-        _valid_gateway_workbench_operational_proof(),
+        _valid_gateway_workbench_contract_proof(),
         proof_ref,
     )
 
@@ -69,11 +69,11 @@ def test_readiness_uses_gateway_workbench_operational_proof_without_support_prom
         evaluated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
         repository=InMemoryIdeaRepository(),
         durable_storage_backed=False,
-        gateway_workbench_operational_proof=proof,
-        gateway_workbench_operational_proof_ref=proof_ref,
+        gateway_workbench_contract_proof=proof,
+        gateway_workbench_contract_proof_ref=proof_ref,
     )
 
-    assert "gateway_workbench_proof_missing" not in snapshot.overall_blockers
+    assert "gateway_workbench_proof_missing" in snapshot.overall_blockers
     assert "workbench_product_proof_missing" in snapshot.overall_blockers
     assert "workbench_panel_missing" in snapshot.overall_blockers
     assert "gateway_workbench_discovery_proof_missing" in snapshot.overall_blockers
@@ -93,13 +93,13 @@ def test_readiness_uses_gateway_workbench_operational_proof_without_support_prom
         for capability in snapshot.capabilities
         if capability.capability_id == "workbench-product-proof"
     )
-    assert "gateway_workbench_proof_missing" not in source_ingestion.blockers
-    assert "gateway_workbench_proof_missing" not in outbox_delivery.blockers
+    assert "gateway_workbench_proof_missing" in source_ingestion.blockers
+    assert "gateway_workbench_proof_missing" in outbox_delivery.blockers
     assert "workbench_panel_missing" in workbench.blockers
-    assert "output/workbench/gateway-workbench-operational-proof.json" in (
+    assert "output/workbench/gateway-workbench-contract-proof.json" in (
         source_ingestion.evidence_refs
     )
-    assert "output/workbench/gateway-workbench-operational-proof.json" in (
+    assert "output/workbench/gateway-workbench-contract-proof.json" in (
         outbox_delivery.evidence_refs
     )
     assert snapshot.readiness_status == "blocked"
@@ -107,12 +107,12 @@ def test_readiness_uses_gateway_workbench_operational_proof_without_support_prom
     assert snapshot.supported_features_promoted is False
 
 
-def _valid_gateway_workbench_operational_proof() -> dict[str, object]:
+def _valid_gateway_workbench_contract_proof() -> dict[str, object]:
     workbench_read_path_proof = build_workbench_read_path_proof_payload(
         generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
         repository_root=ROOT,
     )
-    return build_gateway_workbench_operational_proof_payload(
+    return build_gateway_workbench_contract_proof_payload(
         generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
         repository_root=ROOT,
         workbench_read_path_proof=workbench_read_path_proof,

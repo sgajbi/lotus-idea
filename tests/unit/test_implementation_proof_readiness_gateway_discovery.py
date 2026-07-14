@@ -9,8 +9,8 @@ from typing import Any
 from app.application.gateway_workbench_discovery_proof import (
     build_gateway_workbench_discovery_proof_payload,
 )
-from app.application.gateway_workbench_operational_proof import (
-    build_gateway_workbench_operational_proof_payload,
+from app.application.workbench.contract_proof import (
+    build_gateway_workbench_contract_proof_payload,
 )
 from app.application.implementation_proof_capability_updates import (
     build_capability_readiness,
@@ -126,7 +126,7 @@ def _valid_gateway_workbench_discovery_proof(tmp_path: Path) -> dict[str, object
             platform_root=platform_root,
         ),
         workbench_read_path_proof=workbench_read_path_proof,
-        gateway_workbench_operational_proof=build_gateway_workbench_operational_proof_payload(
+        gateway_workbench_contract_proof=build_gateway_workbench_contract_proof_payload(
             generated_at_utc=GENERATED_AT_UTC,
             repository_root=ROOT,
             workbench_read_path_proof=workbench_read_path_proof,
@@ -134,7 +134,7 @@ def _valid_gateway_workbench_discovery_proof(tmp_path: Path) -> dict[str, object
         ),
         platform_mesh_onboarding_proof_ref="output/data-mesh/platform-mesh-onboarding-proof.json",
         workbench_read_path_proof_ref="output/workbench/workbench-read-path-proof.json",
-        gateway_workbench_operational_proof_ref=(
-            "output/workbench/gateway-workbench-operational-proof.json"
+        gateway_workbench_contract_proof_ref=(
+            "output/workbench/gateway-workbench-contract-proof.json"
         ),
     )

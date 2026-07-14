@@ -1,0 +1,1 @@
+"""Workbench application contract tests."""

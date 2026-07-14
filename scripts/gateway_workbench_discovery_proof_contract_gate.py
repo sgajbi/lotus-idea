@@ -14,8 +14,8 @@ from app.application.gateway_workbench_discovery_proof import (
     build_gateway_workbench_discovery_proof_payload,
     gateway_workbench_discovery_proof_is_valid,
 )
-from app.application.gateway_workbench_operational_proof import (
-    build_gateway_workbench_operational_proof_payload,
+from app.application.workbench.contract_proof import (
+    build_gateway_workbench_contract_proof_payload,
 )
 from app.application.platform_mesh_onboarding_proof import (
     build_platform_mesh_onboarding_proof_payload,
@@ -83,7 +83,7 @@ def validate_gateway_workbench_discovery_proof_contract(
         generated_at_utc=generated_at_utc,
         repository_root=ROOT,
     )
-    gateway_workbench_operational_proof = build_gateway_workbench_operational_proof_payload(
+    gateway_workbench_contract_proof = build_gateway_workbench_contract_proof_payload(
         generated_at_utc=generated_at_utc,
         repository_root=ROOT,
         workbench_read_path_proof=workbench_read_path_proof,
@@ -100,11 +100,11 @@ def validate_gateway_workbench_discovery_proof_contract(
         platform_root=effective_platform_root,
         platform_mesh_onboarding_proof=platform_mesh_onboarding_proof,
         workbench_read_path_proof=workbench_read_path_proof,
-        gateway_workbench_operational_proof=gateway_workbench_operational_proof,
+        gateway_workbench_contract_proof=gateway_workbench_contract_proof,
         platform_mesh_onboarding_proof_ref="output/data-mesh/platform-mesh-onboarding-proof.json",
         workbench_read_path_proof_ref="output/workbench/workbench-read-path-proof.json",
-        gateway_workbench_operational_proof_ref=(
-            "output/workbench/gateway-workbench-operational-proof.json"
+        gateway_workbench_contract_proof_ref=(
+            "output/workbench/gateway-workbench-contract-proof.json"
         ),
     )
     if proof.get("schemaVersion") != GATEWAY_WORKBENCH_DISCOVERY_PROOF_SCHEMA_VERSION:

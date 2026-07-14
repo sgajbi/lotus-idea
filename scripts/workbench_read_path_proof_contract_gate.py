@@ -67,7 +67,7 @@ def validate_workbench_read_path_proof_contract() -> list[str]:
         REQUIRED_WORKBENCH_READ_PATH_LOCAL_EVIDENCE_REFS
     ):
         errors.append("workbench read-path local evidence refs must match the governed contract")
-    if tuple(proof.get("externalEvidenceRefs") or ()) != (
+    if tuple(proof.get("declaredRouteRefs") or ()) != (
         REQUIRED_WORKBENCH_READ_PATH_EXTERNAL_EVIDENCE_REFS
     ):
         errors.append("workbench read-path external evidence refs must match the governed contract")

@@ -25,8 +25,8 @@ from app.application.durable_repository_proof import DURABLE_REPOSITORY_PROOF_EN
 from app.application.gateway_workbench_discovery_proof import (
     GATEWAY_WORKBENCH_DISCOVERY_PROOF_ENV,
 )
-from app.application.gateway_workbench_operational_proof import (
-    GATEWAY_WORKBENCH_OPERATIONAL_PROOF_ENV,
+from app.application.workbench.contract_proof import (
+    GATEWAY_WORKBENCH_CONTRACT_PROOF_ENV,
 )
 from app.application.high_volatility_live_proof import HIGH_VOLATILITY_LIVE_PROOF_ENV
 from app.application.low_income_core_cashflow_live_proof import (
@@ -139,9 +139,9 @@ PROOF_ARTIFACT_ARGS: tuple[tuple[str, str, str], ...] = (
         "Optional bounded Workbench read-path proof artifact path.",
     ),
     (
-        "--gateway-workbench-operational-proof",
-        GATEWAY_WORKBENCH_OPERATIONAL_PROOF_ENV,
-        "Optional bounded Gateway/Workbench operational proof artifact path.",
+        "--gateway-workbench-contract-proof",
+        GATEWAY_WORKBENCH_CONTRACT_PROOF_ENV,
+        "Optional bounded Gateway/Workbench contract proof artifact path.",
     ),
     (
         "--gateway-workbench-discovery-proof",

@@ -5,6 +5,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from app.domain.proof_evidence import EvidenceClass
 from app.application.source_safe_cross_repo_proof import (
     is_timezone_aware_datetime_text,
     required_file_evidence_present,
@@ -20,14 +21,15 @@ _is_timezone_aware_datetime_text = is_timezone_aware_datetime_text
 _required_file_evidence_present = required_file_evidence_present
 _required_make_target_evidence_present = required_make_target_evidence_present
 
-GATEWAY_WORKBENCH_OPERATIONAL_PROOF_ENV = "LOTUS_IDEA_GATEWAY_WORKBENCH_OPERATIONAL_PROOF"
-GATEWAY_WORKBENCH_OPERATIONAL_PROOF_SCHEMA_VERSION = (
-    "lotus-idea.gateway-workbench-operational-proof.v1"
-)
+GATEWAY_WORKBENCH_CONTRACT_PROOF_ENV = "LOTUS_IDEA_GATEWAY_WORKBENCH_CONTRACT_PROOF"
+GATEWAY_WORKBENCH_CONTRACT_PROOF_SCHEMA_VERSION = "lotus-idea.gateway-workbench-contract-proof.v2"
 
-GATEWAY_WORKBENCH_OPERATIONAL_BLOCKERS_CLEARED = ("gateway_workbench_proof_missing",)
+GATEWAY_WORKBENCH_CONTRACT_BLOCKERS_CLEARED: tuple[str, ...] = ()
 
-REQUIRED_GATEWAY_WORKBENCH_OPERATIONAL_LOCAL_EVIDENCE_REFS = (
+REQUIRED_GATEWAY_WORKBENCH_CONTRACT_LOCAL_EVIDENCE_REFS = (
+    "src/app/application/workbench/contract_proof.py",
+    "scripts/workbench/generate_contract_proof.py",
+    "scripts/workbench/contract_proof_gate.py",
     "src/app/application/workbench_read_path_proof.py",
     "scripts/generate_workbench_read_path_proof.py",
     "scripts/workbench_read_path_proof_contract_gate.py",
@@ -35,18 +37,17 @@ REQUIRED_GATEWAY_WORKBENCH_OPERATIONAL_LOCAL_EVIDENCE_REFS = (
     "docs/operations/implementation-proof-readiness.md",
     "wiki/Supported-Features.md",
     "make workbench-read-path-proof-contract-gate",
-    "make gateway-workbench-operational-proof-contract-gate",
+    "make gateway-workbench-contract-proof-contract-gate",
     "make implementation-proof-readiness-check",
 )
 
-REQUIRED_GATEWAY_WORKBENCH_OPERATIONAL_EXTERNAL_EVIDENCE_REFS = (
+REQUIRED_GATEWAY_WORKBENCH_CONTRACT_ROUTE_DECLARATIONS = (
     "lotus-gateway GET /api/v1/ideas/review-queues/advisor",
     "lotus-gateway GET /api/v1/ideas/candidates/{candidate_id}",
-    "lotus-workbench PR #391",
-    "lotus-workbench main 56ce0614875e8b6ecd4df259ef14a1631ea8a4ac",
 )
 
-REMAINING_GATEWAY_WORKBENCH_OPERATIONAL_BLOCKERS = (
+REMAINING_GATEWAY_WORKBENCH_CONTRACT_BLOCKERS = (
+    "gateway_workbench_proof_missing",
     "workbench_product_proof_missing",
     "workbench_panel_missing",
     "browser_accessibility_proof_missing",
@@ -57,14 +58,14 @@ REMAINING_GATEWAY_WORKBENCH_OPERATIONAL_BLOCKERS = (
 )
 
 
-def build_gateway_workbench_operational_proof_payload(
+def build_gateway_workbench_contract_proof_payload(
     *,
     generated_at_utc: datetime,
     repository_root: Path,
     workbench_read_path_proof: Mapping[str, Any] | None,
     workbench_read_path_proof_ref: str | None,
 ) -> dict[str, Any]:
-    local_evidence_refs = REQUIRED_GATEWAY_WORKBENCH_OPERATIONAL_LOCAL_EVIDENCE_REFS
+    local_evidence_refs = REQUIRED_GATEWAY_WORKBENCH_CONTRACT_LOCAL_EVIDENCE_REFS
     workbench_read_path_valid = bool(
         workbench_read_path_proof and workbench_read_path_proof_is_valid(workbench_read_path_proof)
     )
@@ -84,17 +85,18 @@ def build_gateway_workbench_operational_proof_payload(
         and workbench_read_path_valid
     )
     return {
-        "schemaVersion": GATEWAY_WORKBENCH_OPERATIONAL_PROOF_SCHEMA_VERSION,
+        "schemaVersion": GATEWAY_WORKBENCH_CONTRACT_PROOF_SCHEMA_VERSION,
         "repository": "lotus-idea",
         "generatedAtUtc": generated_at_utc.isoformat(),
-        "proofType": "gateway_workbench_operational_contract",
-        "proofScope": "bounded_queue_detail_gateway_bff_consumption",
-        "gatewayWorkbenchOperationalProofValid": proof_valid,
-        "aggregateBlockersCleared": GATEWAY_WORKBENCH_OPERATIONAL_BLOCKERS_CLEARED,
+        "proofType": "gateway_workbench_contract",
+        "proofScope": "source_contract_declaration",
+        "evidenceClass": EvidenceClass.SOURCE_CONTRACT.value,
+        "gatewayWorkbenchContractProofValid": proof_valid,
+        "aggregateBlockersCleared": GATEWAY_WORKBENCH_CONTRACT_BLOCKERS_CLEARED,
         "workbenchReadPathProofSchemaVersion": WORKBENCH_READ_PATH_PROOF_SCHEMA_VERSION,
         "workbenchReadPathProofRef": workbench_read_path_proof_ref,
         "localEvidenceRefs": local_evidence_refs,
-        "externalEvidenceRefs": REQUIRED_GATEWAY_WORKBENCH_OPERATIONAL_EXTERNAL_EVIDENCE_REFS,
+        "declaredRouteRefs": REQUIRED_GATEWAY_WORKBENCH_CONTRACT_ROUTE_DECLARATIONS,
         "proofChecks": {
             "timezoneAwareGeneratedAtUtc": generated_at_utc.tzinfo is not None
             and generated_at_utc.utcoffset() is not None,
@@ -109,37 +111,40 @@ def build_gateway_workbench_operational_proof_payload(
                 evidence_refs=local_evidence_refs,
             ),
             "workbenchReadPathProofValid": workbench_read_path_valid,
-            "readOnlyQueueRouteRecorded": "lotus-gateway GET /api/v1/ideas/review-queues/advisor",
-            "readOnlyDetailRouteRecorded": (
+            "readOnlyQueueRouteDeclared": "lotus-gateway GET /api/v1/ideas/review-queues/advisor",
+            "readOnlyDetailRouteDeclared": (
                 "lotus-gateway GET /api/v1/ideas/candidates/{candidate_id}"
             ),
         },
-        "remainingCertificationBlockers": REMAINING_GATEWAY_WORKBENCH_OPERATIONAL_BLOCKERS,
+        "remainingCertificationBlockers": REMAINING_GATEWAY_WORKBENCH_CONTRACT_BLOCKERS,
         "sourceIngestionSupported": False,
         "outboxDeliverySupported": False,
         "fullWorkbenchProductCertified": False,
         "gatewayWorkbenchDiscoveryCertified": False,
         "canonicalDemoRuntimeCertified": False,
+        "runtimeExecutionObserved": False,
         "supportedFeaturePromoted": False,
         "proofClosed": False,
     }
 
 
-def gateway_workbench_operational_proof_is_valid(payload: Mapping[str, Any]) -> bool:
-    if payload.get("schemaVersion") != GATEWAY_WORKBENCH_OPERATIONAL_PROOF_SCHEMA_VERSION:
+def gateway_workbench_contract_proof_is_valid(payload: Mapping[str, Any]) -> bool:
+    if payload.get("schemaVersion") != GATEWAY_WORKBENCH_CONTRACT_PROOF_SCHEMA_VERSION:
         return False
     if payload.get("repository") != "lotus-idea":
         return False
-    if payload.get("proofType") != "gateway_workbench_operational_contract":
+    if payload.get("proofType") != "gateway_workbench_contract":
         return False
-    if payload.get("proofScope") != "bounded_queue_detail_gateway_bff_consumption":
+    if payload.get("proofScope") != "source_contract_declaration":
         return False
-    if payload.get("gatewayWorkbenchOperationalProofValid") is not True:
+    if payload.get("evidenceClass") != EvidenceClass.SOURCE_CONTRACT.value:
+        return False
+    if payload.get("gatewayWorkbenchContractProofValid") is not True:
         return False
     if not _is_timezone_aware_datetime_text(payload.get("generatedAtUtc")):
         return False
     if tuple(payload.get("aggregateBlockersCleared") or ()) != (
-        GATEWAY_WORKBENCH_OPERATIONAL_BLOCKERS_CLEARED
+        GATEWAY_WORKBENCH_CONTRACT_BLOCKERS_CLEARED
     ):
         return False
     if payload.get("workbenchReadPathProofSchemaVersion") != (
@@ -149,15 +154,15 @@ def gateway_workbench_operational_proof_is_valid(payload: Mapping[str, Any]) -> 
     if not isinstance(payload.get("workbenchReadPathProofRef"), str):
         return False
     if tuple(payload.get("localEvidenceRefs") or ()) != (
-        REQUIRED_GATEWAY_WORKBENCH_OPERATIONAL_LOCAL_EVIDENCE_REFS
+        REQUIRED_GATEWAY_WORKBENCH_CONTRACT_LOCAL_EVIDENCE_REFS
     ):
         return False
-    if tuple(payload.get("externalEvidenceRefs") or ()) != (
-        REQUIRED_GATEWAY_WORKBENCH_OPERATIONAL_EXTERNAL_EVIDENCE_REFS
+    if tuple(payload.get("declaredRouteRefs") or ()) != (
+        REQUIRED_GATEWAY_WORKBENCH_CONTRACT_ROUTE_DECLARATIONS
     ):
         return False
     if tuple(payload.get("remainingCertificationBlockers") or ()) != (
-        REMAINING_GATEWAY_WORKBENCH_OPERATIONAL_BLOCKERS
+        REMAINING_GATEWAY_WORKBENCH_CONTRACT_BLOCKERS
     ):
         return False
     if payload.get("sourceIngestionSupported") is not False:
@@ -169,6 +174,8 @@ def gateway_workbench_operational_proof_is_valid(payload: Mapping[str, Any]) -> 
     if payload.get("gatewayWorkbenchDiscoveryCertified") is not False:
         return False
     if payload.get("canonicalDemoRuntimeCertified") is not False:
+        return False
+    if payload.get("runtimeExecutionObserved") is not False:
         return False
     if payload.get("supportedFeaturePromoted") is not False:
         return False
@@ -182,8 +189,8 @@ def gateway_workbench_operational_proof_is_valid(payload: Mapping[str, Any]) -> 
         and proof_checks.get("fileEvidencePresent") is True
         and proof_checks.get("makeTargetEvidencePresent") is True
         and proof_checks.get("workbenchReadPathProofValid") is True
-        and proof_checks.get("readOnlyQueueRouteRecorded")
+        and proof_checks.get("readOnlyQueueRouteDeclared")
         == "lotus-gateway GET /api/v1/ideas/review-queues/advisor"
-        and proof_checks.get("readOnlyDetailRouteRecorded")
+        and proof_checks.get("readOnlyDetailRouteDeclared")
         == "lotus-gateway GET /api/v1/ideas/candidates/{candidate_id}"
     )

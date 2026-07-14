@@ -57,7 +57,7 @@ REQUIRED_LINT_TARGETS = (
     "report-intake-route-proof-contract-gate",
     "report-materialization-proof-contract-gate",
     "workbench-read-path-proof-contract-gate",
-    "gateway-workbench-operational-proof-contract-gate",
+    "gateway-workbench-contract-proof-contract-gate",
     "gateway-workbench-discovery-proof-contract-gate",
     "outbox-broker-proof-contract-gate",
     "outbox-consumer-contract-proof-contract-gate",
@@ -150,8 +150,8 @@ GENERATED_READINESS_ARTIFACTS = (
         "a platform mesh onboarding proof artifact",
     ),
     (
-        "scripts/generate_gateway_workbench_operational_proof.py",
-        "a Gateway/Workbench operational proof artifact",
+        "scripts/workbench/generate_contract_proof.py",
+        "a Gateway/Workbench contract proof artifact",
     ),
     (
         "scripts/generate_gateway_workbench_discovery_proof.py",
@@ -189,7 +189,7 @@ PASSED_READINESS_ARTIFACTS = (
         "outbox platform mesh event publication proof artifact",
     ),
     ("--platform-mesh-onboarding-proof", "platform mesh onboarding proof artifact"),
-    ("--gateway-workbench-operational-proof", "Gateway/Workbench operational proof artifact"),
+    ("--gateway-workbench-contract-proof", "Gateway/Workbench contract proof artifact"),
     ("--gateway-workbench-discovery-proof", "Gateway/Workbench discovery proof artifact"),
     (
         "--mandate-restriction-source-product-proof",
@@ -239,12 +239,12 @@ REQUIRED_READINESS_WIRING = (
     ),
     ("LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF", "support optional onboarding proof"),
     (
-        "LOTUS_IDEA_GATEWAY_WORKBENCH_OPERATIONAL_PROOF_OUTPUT",
-        "pass the default Gateway/Workbench operational proof output into readiness generation",
+        "LOTUS_IDEA_GATEWAY_WORKBENCH_CONTRACT_PROOF_OUTPUT",
+        "pass the default Gateway/Workbench contract proof output into readiness generation",
     ),
     (
-        "LOTUS_IDEA_GATEWAY_WORKBENCH_OPERATIONAL_PROOF",
-        "support optional Gateway/Workbench operational proof wiring",
+        "LOTUS_IDEA_GATEWAY_WORKBENCH_CONTRACT_PROOF",
+        "support optional Gateway/Workbench contract proof wiring",
     ),
     (
         "LOTUS_IDEA_GATEWAY_WORKBENCH_DISCOVERY_PROOF_OUTPUT",
