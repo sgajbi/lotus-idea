@@ -256,10 +256,7 @@ def test_implementation_proof_readiness_capabilities_are_source_safe() -> None:
     assert (
         "GET /api/v1/data-mesh/trust-telemetry/runtime-snapshot" in runtime_telemetry.evidence_refs
     )
-    assert (
-        "scripts/runtime_trust_telemetry/generate_snapshot.py"
-        in runtime_telemetry.evidence_refs
-    )
+    assert "scripts/runtime_trust_telemetry/generate_snapshot.py" in runtime_telemetry.evidence_refs
     assert "platform_mesh_certification_missing" in runtime_telemetry.blockers
     outbox_delivery = next(
         capability
@@ -460,9 +457,7 @@ def test_implementation_proof_readiness_lists_valid_source_ingestion_proof_refs_
     assert snapshot.supported_features_promoted is False
 
 
-def test_runtime_trust_telemetry_test_execution_adds_evidence_without_clearing_runtime() -> (
-    None
-):
+def test_runtime_trust_telemetry_test_execution_adds_evidence_without_clearing_runtime() -> None:
     proof_ref = "output/trust-telemetry/test-execution/runtime-trust-telemetry-test-execution.json"
     proof = _bound_aggregate_proof(
         build_runtime_trust_telemetry_test_execution_payload(

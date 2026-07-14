@@ -36,8 +36,7 @@ def main(argv: list[str] | None = None) -> int:
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
-            "Generate a source-safe deterministic runtime trust telemetry test-execution "
-            "contract."
+            "Generate a source-safe deterministic runtime trust telemetry test-execution contract."
         )
     )
     parser.add_argument("--generated-at-utc", required=True)

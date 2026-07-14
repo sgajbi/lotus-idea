@@ -170,7 +170,9 @@ def test_ci_contract_gate_blocks_missing_durable_repository_proof_readiness_wiri
     ) in errors
 
 
-def test_ci_contract_gate_blocks_missing_runtime_trust_telemetry_test_execution_readiness_wiring() -> None:
+def test_ci_contract_gate_blocks_missing_runtime_trust_telemetry_test_execution_readiness_wiring() -> (
+    None
+):
     module = _load_ci_contract_gate()
     makefile = (
         (ROOT / "Makefile")
