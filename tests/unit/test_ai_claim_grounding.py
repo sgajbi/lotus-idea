@@ -27,9 +27,7 @@ def test_grounded_narrative_is_an_ordered_projection_of_verified_claims() -> Non
         )
     )
 
-    assert narrative == (
-        "Cash is above the governed threshold. Advisor review is warranted."
-    )
+    assert narrative == ("Cash is above the governed threshold. Advisor review is warranted.")
     assert AI_CLAIM_GROUNDING_POLICY_VERSION.endswith(".v1")
 
 

@@ -602,9 +602,7 @@ AI_EXPLANATION_ROUTE: RouteMetadata = {
                                     ),
                                     "sourceRefs": [
                                         {
-                                            "productId": (
-                                                "lotus-core:PortfolioStateSnapshot:v1"
-                                            ),
+                                            "productId": ("lotus-core:PortfolioStateSnapshot:v1"),
                                             "sourceSystem": "lotus-core",
                                             "productVersion": "v1",
                                             "asOfDate": "2026-06-21",

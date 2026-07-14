@@ -212,9 +212,7 @@ def _validate_claim_grounding(payload: dict[str, Any]) -> list[str]:
         "claim_identity_posture": "unique_and_order_preserving",
         "source_binding_posture": "redacted_evidence_source_products_only",
         "provider_output_binding": "digest_only_no_raw_provider_narrative_persistence",
-        "advisor_projection": (
-            "claim_text_plus_source_product_version_freshness_and_quality"
-        ),
+        "advisor_projection": ("claim_text_plus_source_product_version_freshness_and_quality"),
         "unsupported_or_blocked_grounding_returned": False,
     }
     if payload.get("claim_grounding") != expected:
