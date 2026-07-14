@@ -35,11 +35,20 @@ def validate_review_queue_snapshot_contract(root: Path = ROOT) -> list[str]:
     if any(tree is None for tree in modules.values()):
         return sorted(errors)
 
+    _validate_snapshot_signatures(modules, errors)
+    _validate_required_fragments(root, errors)
+    return sorted(errors)
+
+
+def _validate_snapshot_signatures(
+    modules: dict[Path, ast.Module | None],
+    errors: list[str],
+) -> None:
     _require_function_arguments(
         modules[DOMAIN_SNAPSHOT_MODULE],
         DOMAIN_SNAPSHOT_MODULE,
         "build_review_queue_snapshot_identity",
-        {"policy_version", "rankable_score_policy_versions"},
+        {"audience", "policy_version", "rankable_score_policy_versions"},
         errors,
     )
     _require_class_fields(
@@ -54,6 +63,7 @@ def validate_review_queue_snapshot_contract(root: Path = ROOT) -> list[str]:
         PORT_MODULE,
         "review_queue_candidate_page",
         {
+            "audience",
             "evaluated_at_utc",
             "expected_snapshot_token",
             "queue_policy_version",
@@ -66,6 +76,7 @@ def validate_review_queue_snapshot_contract(root: Path = ROOT) -> list[str]:
         POSTGRES_MODULE,
         "load_review_queue_candidate_page",
         {
+            "audience",
             "evaluated_at_utc",
             "expected_snapshot_token",
             "queue_policy_version",
@@ -77,14 +88,14 @@ def validate_review_queue_snapshot_contract(root: Path = ROOT) -> list[str]:
         modules[PORT_MODULE],
         PORT_MODULE,
         "review_queue_readiness_summary",
-        {"evaluated_at_utc", "rankable_score_policy_versions"},
+        {"audience", "evaluated_at_utc", "rankable_score_policy_versions"},
         errors,
     )
     _require_function_arguments(
         modules[POSTGRES_MODULE],
         POSTGRES_MODULE,
         "load_review_queue_readiness_summary",
-        {"evaluated_at_utc", "rankable_score_policy_versions"},
+        {"audience", "evaluated_at_utc", "rankable_score_policy_versions"},
         errors,
     )
     _require_class_fields(
@@ -105,7 +116,7 @@ def validate_review_queue_snapshot_contract(root: Path = ROOT) -> list[str]:
         modules[APPLICATION_MODULE],
         APPLICATION_MODULE,
         "BuildReviewQueueFromRepositoryCommand",
-        {"evaluated_at_utc", "snapshot_token"},
+        {"audience", "evaluated_at_utc", "snapshot_token"},
         errors,
     )
     _require_class_fields(
@@ -116,6 +127,8 @@ def validate_review_queue_snapshot_contract(root: Path = ROOT) -> list[str]:
         errors,
     )
 
+
+def _validate_required_fragments(root: Path, errors: list[str]) -> None:
     required_fragments = {
         DOMAIN_POLICY_MODULE: (
             "UNRANKABLE_SCORE_POLICY",
@@ -152,7 +165,6 @@ def validate_review_queue_snapshot_contract(root: Path = ROOT) -> list[str]:
                 errors.append(
                     f"{relative_path.as_posix()}: required snapshot contract `{fragment}` is missing"
                 )
-    return sorted(errors)
 
 
 def _read_module(root: Path, relative_path: Path, errors: list[str]) -> ast.Module | None:

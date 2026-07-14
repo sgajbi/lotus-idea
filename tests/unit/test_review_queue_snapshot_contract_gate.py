@@ -77,6 +77,30 @@ def test_review_queue_snapshot_contract_gate_requires_rankable_policy_input(
     assert any("must accept `rankable_score_policy_versions`" in error for error in errors)
 
 
+def test_review_queue_snapshot_contract_gate_requires_audience_on_repository_port(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    for relative_path in module.CONTRACT_MODULES:
+        source = (ROOT / relative_path).read_text(encoding="utf-8")
+        target = tmp_path / relative_path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(source, encoding="utf-8")
+    port_path = tmp_path / module.PORT_MODULE
+    port_path.write_text(
+        port_path.read_text(encoding="utf-8").replace(
+            "        audience: ReviewQueueAudience,\n",
+            "",
+            1,
+        ),
+        encoding="utf-8",
+    )
+
+    errors = module.validate_review_queue_snapshot_contract(tmp_path)
+
+    assert any("must accept `audience`" in error for error in errors)
+
+
 def test_review_queue_snapshot_contract_gate_requires_policy_binding_in_snapshot(
     tmp_path: Path,
 ) -> None:
