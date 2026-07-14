@@ -764,6 +764,37 @@ def test_implementation_proof_readiness_uses_platform_catalog_source_contract_wi
     )
 
 
+def test_implementation_proof_readiness_rejects_stale_platform_catalog_source_contract(
+    tmp_path: Path,
+) -> None:
+    proof_ref = "output/data-mesh/platform-catalog-source-contract.json"
+    proof = _bound_aggregate_proof(
+        build_platform_catalog_source_contract_payload(
+            generated_at_utc=datetime(2026, 6, 22, 0, 0, tzinfo=UTC),
+            repository_root=ROOT,
+            platform_root=_write_platform_mesh_fixture(tmp_path),
+        ),
+        proof_ref,
+    )
+
+    snapshot = build_implementation_proof_readiness_snapshot(
+        evaluated_at_utc=datetime(2026, 6, 24, 0, 0, tzinfo=UTC),
+        repository=InMemoryIdeaRepository(),
+        durable_storage_backed=False,
+        platform_catalog_source_contract_proof=proof,
+        platform_catalog_source_contract_proof_ref=proof_ref,
+    )
+
+    data_mesh = next(
+        capability
+        for capability in snapshot.capabilities
+        if capability.capability_id == "data-mesh-certification"
+    )
+    assert "platform_source_manifest_inclusion_missing" in data_mesh.blockers
+    assert "platform_catalog_inclusion_missing" in data_mesh.blockers
+    assert proof_ref not in data_mesh.evidence_refs
+
+
 def test_implementation_proof_readiness_uses_mesh_policy_proof_without_certification() -> None:
     proof_ref = "output/data-mesh/mesh-policy-proof.json"
     proof = _bound_aggregate_proof(
