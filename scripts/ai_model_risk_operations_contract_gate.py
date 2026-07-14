@@ -94,13 +94,13 @@ def _validate_header(payload: dict[str, Any]) -> list[str]:
     errors: list[str] = []
     expected = {
         "contract_id": "lotus-idea-ai-model-risk-operations",
-        "contract_version": "1.3.0",
+        "contract_version": "1.4.0",
         "repository": "lotus-idea",
         "lifecycle_status": "implemented_internal_foundation",
         "supportability_status": "not_certified",
         "supported_feature_promoted": False,
-        "dashboard_certified": True,
-        "alert_certified": True,
+        "dashboard_source_contract_valid": True,
+        "alert_rules_source_contract_valid": True,
         "action_content_policy_version": AI_ACTION_POLICY_VERSION,
         "claim_grounding_policy_version": AI_CLAIM_GROUNDING_POLICY_VERSION,
         "output_integrity_version": AI_OUTPUT_INTEGRITY_VERSION,
@@ -302,8 +302,8 @@ def _validate_dashboard_controls(payload: dict[str, Any]) -> list[str]:
             errors.append(f"{control_id}: operator_question is required")
         if control.get("implemented_metric_family") != EXPECTED_METRIC_NAME:
             errors.append(f"{control_id}: implemented_metric_family must be {EXPECTED_METRIC_NAME}")
-        if control.get("certification_status") != "certified":
-            errors.append(f"{control_id}: certification_status must be certified")
+        if control.get("source_contract_status") != "valid":
+            errors.append(f"{control_id}: source_contract_status must be valid")
         if not control.get("required_endpoint"):
             errors.append(f"{control_id}: required_endpoint is required")
         errors.extend(validate_required_operations(control_id, control.get("required_operations")))
@@ -341,8 +341,8 @@ def _validate_alert_candidates(payload: dict[str, Any]) -> list[str]:
         observed.add(alert_id)
         if alert.get("implemented_metric_family") != EXPECTED_METRIC_NAME:
             errors.append(f"{alert_id}: implemented_metric_family must be {EXPECTED_METRIC_NAME}")
-        if alert.get("certification_status") != "certified":
-            errors.append(f"{alert_id}: certification_status must be certified")
+        if alert.get("source_contract_status") != "valid":
+            errors.append(f"{alert_id}: source_contract_status must be valid")
         if not alert.get("operator_response"):
             errors.append(f"{alert_id}: operator_response is required")
         errors.extend(validate_required_operations(alert_id, alert.get("required_operations")))

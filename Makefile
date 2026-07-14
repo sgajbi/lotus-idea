@@ -55,7 +55,7 @@ LOTUS_IDEA_DURABLE_REPOSITORY_PROOF_OUTPUT ?= output/persistence/durable-reposit
 LOTUS_IDEA_DURABLE_REPOSITORY_CI_RECEIPT ?=
 DURABLE_REPOSITORY_CI_RECEIPT_OUTPUT ?= output/persistence/durable-repository-ci-execution-receipt.json
 LOTUS_IDEA_AI_MODEL_RISK_OPERATIONS_PROOF ?=
-LOTUS_IDEA_AI_MODEL_RISK_OPERATIONS_PROOF_OUTPUT ?= output/ai/ai-model-risk-operations-proof.json
+LOTUS_IDEA_AI_MODEL_RISK_OPERATIONS_PROOF_OUTPUT ?= output/ai/ai-model-risk-operations-source-contract-proof.json
 LOTUS_IDEA_OPERATOR_WORKFLOWS_OPERATIONS_PROOF ?=
 LOTUS_IDEA_OPERATOR_WORKFLOWS_OPERATIONS_PROOF_OUTPUT ?= output/operations/operator-workflows-operations-proof.json
 LOTUS_AI_ROOT ?= ../lotus-ai
@@ -400,7 +400,7 @@ ai-model-risk-ops-contract-gate:
 	$(VENV_PYTHON) scripts/ai_model_risk_operations_contract_gate.py
 
 ai-model-risk-operations-proof-contract-gate:
-	$(VENV_PYTHON) scripts/ai_model_risk_operations_proof_contract_gate.py
+	$(VENV_PYTHON) scripts/ai_model_risk_operations/source_contract_proof_gate.py
 
 operator-workflows-ops-contract-gate:
 	$(VENV_PYTHON) scripts/operator_workflows_operations_contract_gate.py
@@ -611,7 +611,7 @@ implementation-proof-readiness-check:
 	$(VENV_PYTHON) scripts/persistence/generate_durable_repository_proof.py --generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --source-commit-sha "$(BUILD_GIT_COMMIT_SHA)" $(if $(LOTUS_IDEA_DURABLE_REPOSITORY_CI_RECEIPT),--ci-execution-receipt $(LOTUS_IDEA_DURABLE_REPOSITORY_CI_RECEIPT),) --output $(LOTUS_IDEA_DURABLE_REPOSITORY_PROOF_OUTPUT)
 	$(VENV_PYTHON) scripts/generate_runtime_trust_telemetry_proof.py --generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --output output/trust-telemetry/runtime/runtime-trust-telemetry-proof.json
 	$(VENV_PYTHON) scripts/generate_ai_lineage_store_proof.py --generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) $(if $(LOTUS_IDEA_AI_LINEAGE_STORE_CI_RECEIPT),--ci-execution-receipt $(LOTUS_IDEA_AI_LINEAGE_STORE_CI_RECEIPT),) --output $(LOTUS_IDEA_AI_LINEAGE_STORE_PROOF_OUTPUT)
-	$(VENV_PYTHON) scripts/generate_ai_model_risk_operations_proof.py --generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --output $(LOTUS_IDEA_AI_MODEL_RISK_OPERATIONS_PROOF_OUTPUT)
+	$(VENV_PYTHON) scripts/ai_model_risk_operations/generate_source_contract_proof.py --generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --output $(LOTUS_IDEA_AI_MODEL_RISK_OPERATIONS_PROOF_OUTPUT)
 	$(VENV_PYTHON) scripts/generate_operator_workflows_operations_proof.py --generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --output $(LOTUS_IDEA_OPERATOR_WORKFLOWS_OPERATIONS_PROOF_OUTPUT)
 	$(VENV_PYTHON) scripts/generate_ai_workflow_pack_registration_proof.py --generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --lotus-ai-root $(LOTUS_AI_ROOT) --output $(LOTUS_IDEA_AI_WORKFLOW_PACK_REGISTRATION_PROOF_OUTPUT) --allow-missing-evidence
 	$(VENV_PYTHON) scripts/generate_ai_workflow_pack_runtime_execution_proof.py --generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --lotus-ai-base-url $(LOTUS_AI_BASE_URL) --timeout-seconds $(LOTUS_IDEA_AI_RUNTIME_PROOF_TIMEOUT_SECONDS) --output $(LOTUS_IDEA_AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF_OUTPUT) --allow-runtime-unavailable

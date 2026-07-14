@@ -10,7 +10,8 @@ from typing import cast
 
 import pytest
 
-from app.application.ai_model_risk_operations_proof import (
+from app.domain.proof_evidence import EvidenceClass
+from app.application.ai_model_risk_operations.source_contract_proof import (
     AI_MODEL_RISK_OPERATIONS_BLOCKERS_CLEARED,
     AI_MODEL_RISK_OPERATIONS_PROOF_SCHEMA_VERSION,
     EXPECTED_ALERT_IDS,
@@ -18,15 +19,15 @@ from app.application.ai_model_risk_operations_proof import (
     EXPECTED_METRIC_NAME,
     REMAINING_AI_MODEL_RISK_OPERATIONS_BLOCKERS,
     REQUIRED_AI_MODEL_RISK_OPERATIONS_EVIDENCE_REFS,
-    _alert_rules_artifact_certified,
-    _dashboard_artifact_certified,
-    _operations_contract_certified,
-    _runbook_artifact_certified,
+    _alert_rules_source_contract_is_valid,
+    _dashboard_source_contract_is_valid,
+    _operations_source_contract_is_valid,
+    _runbook_source_contract_is_valid,
     ai_model_risk_operations_proof_is_valid,
     build_ai_model_risk_operations_proof_payload,
 )
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 
 
 def test_builds_source_safe_ai_model_risk_operations_proof() -> None:
@@ -37,8 +38,10 @@ def test_builds_source_safe_ai_model_risk_operations_proof() -> None:
 
     assert proof["schemaVersion"] == AI_MODEL_RISK_OPERATIONS_PROOF_SCHEMA_VERSION
     assert proof["repository"] == "lotus-idea"
-    assert proof["proofType"] == "ai_model_risk_operations_dashboard_alert_certification"
-    assert proof["proofScope"] == "source_safe_operations_artifact_certification"
+    assert proof["proofType"] == "ai_model_risk_operations_source_contract"
+    assert proof["proofScope"] == "source_safe_operations_artifact_contract"
+    assert proof["evidenceClass"] == EvidenceClass.SOURCE_CONTRACT.value
+    assert proof["requiredBlockerEvidenceClasses"] == {}
     assert proof["aiModelRiskOperationsProofValid"] is True
     assert tuple(proof["aggregateBlockersCleared"]) == (AI_MODEL_RISK_OPERATIONS_BLOCKERS_CLEARED)
     assert tuple(proof["evidenceRefs"]) == REQUIRED_AI_MODEL_RISK_OPERATIONS_EVIDENCE_REFS
@@ -48,8 +51,11 @@ def test_builds_source_safe_ai_model_risk_operations_proof() -> None:
     assert proof["metricFamily"] == EXPECTED_METRIC_NAME
     assert proof["dashboardUid"] == EXPECTED_DASHBOARD_UID
     assert tuple(proof["alertIds"]) == EXPECTED_ALERT_IDS
-    assert proof["modelRiskDashboardCertified"] is True
-    assert proof["modelRiskAlertsCertified"] is True
+    assert proof["modelRiskDashboardSourceContractValid"] is True
+    assert proof["modelRiskAlertRulesSourceContractValid"] is True
+    assert proof["runtimeExecutionObserved"] is False
+    assert proof["deploymentObserved"] is False
+    assert proof["productionCertificationGranted"] is False
     assert proof["lotusAiRuntimeExecuted"] is False
     assert proof["liveProviderExecuted"] is False
     assert proof["runtimeTrustTelemetryCertified"] is False
@@ -83,12 +89,20 @@ def test_rejects_ai_model_risk_operations_proof_with_naive_timestamp() -> None:
         ("repository", "lotus-ai"),
         ("proofType", "dashboard_only"),
         ("proofScope", "provider_runtime"),
+        ("evidenceClass", EvidenceClass.RUNTIME_EXECUTION.value),
+        (
+            "requiredBlockerEvidenceClasses",
+            {"model_risk_dashboard_runtime_proof_missing": "source_contract"},
+        ),
         ("aiModelRiskOperationsProofValid", False),
         ("metricFamily", "local_metric_total"),
         ("dashboardUid", "local-dashboard"),
         ("alertIds", []),
-        ("modelRiskDashboardCertified", False),
-        ("modelRiskAlertsCertified", False),
+        ("modelRiskDashboardSourceContractValid", False),
+        ("modelRiskAlertRulesSourceContractValid", False),
+        ("runtimeExecutionObserved", True),
+        ("deploymentObserved", True),
+        ("productionCertificationGranted", True),
         ("lotusAiRuntimeExecuted", True),
         ("liveProviderExecuted", True),
         ("runtimeTrustTelemetryCertified", True),
@@ -113,7 +127,7 @@ def test_rejects_ai_model_risk_operations_proof_with_invalid_top_level_fields(
 @pytest.mark.parametrize(
     ("field_name", "bad_value"),
     [
-        ("aggregateBlockersCleared", []),
+        ("aggregateBlockersCleared", ["model_risk_dashboard_runtime_proof_missing"]),
         ("evidenceRefs", []),
         ("remainingCertificationBlockers", []),
         ("proofChecks", []),
@@ -135,10 +149,11 @@ def test_rejects_ai_model_risk_operations_proof_with_invalid_contract_fields(
         "timezoneAwareGeneratedAtUtc",
         "fileEvidencePresent",
         "makeTargetEvidencePresent",
-        "dashboardArtifactCertified",
-        "alertRulesArtifactCertified",
-        "runbookArtifactCertified",
-        "operationsContractCertified",
+        "dashboardSourceContractValid",
+        "alertRulesSourceContractValid",
+        "runbookSourceContractValid",
+        "operationsSourceContractValid",
+        "evidenceClassMatchesBlockers",
     ],
 )
 def test_rejects_ai_model_risk_operations_proof_with_invalid_proof_checks(
@@ -152,9 +167,9 @@ def test_rejects_ai_model_risk_operations_proof_with_invalid_proof_checks(
     assert ai_model_risk_operations_proof_is_valid(proof) is False
 
 
-def test_ai_model_risk_operations_proof_cli_writes_valid_artifact(tmp_path: Path) -> None:
+def test_source_contract_proof_cli_writes_valid_artifact(tmp_path: Path) -> None:
     module = _load_generator_script()
-    output_path = tmp_path / "proof" / "ai-model-risk-operations-proof.json"
+    output_path = tmp_path / "proof" / "ai-model-risk-operations-source-contract-proof.json"
 
     result = module.main(
         [
@@ -170,7 +185,7 @@ def test_ai_model_risk_operations_proof_cli_writes_valid_artifact(tmp_path: Path
     assert ai_model_risk_operations_proof_is_valid(proof) is True
 
 
-def test_ai_model_risk_operations_proof_contract_gate_scans_tuple_content() -> None:
+def test_source_contract_proof_gate_scans_tuple_content() -> None:
     module = _load_contract_gate_script()
     errors: list[str] = []
 
@@ -179,10 +194,26 @@ def test_ai_model_risk_operations_proof_contract_gate_scans_tuple_content() -> N
     assert errors == ["$[0]: forbidden source-sensitive text `portfolio_id` is present"]
 
 
-def test_ai_model_risk_operations_proof_contract_gate_passes_current_artifacts() -> None:
+def test_source_contract_proof_gate_passes_current_artifacts() -> None:
     module = _load_contract_gate_script()
 
     assert module.validate_ai_model_risk_operations_proof_contract() == []
+
+
+def test_runbook_validation_requires_explicit_runtime_non_proof_boundary(
+    tmp_path: Path,
+) -> None:
+    runbook_path = tmp_path / "docs" / "runbooks" / "ai-model-risk-operations.md"
+    runbook_path.parent.mkdir(parents=True)
+    source = (ROOT / "docs" / "runbooks" / "ai-model-risk-operations.md").read_text(
+        encoding="utf-8"
+    )
+    runbook_path.write_text(
+        source.replace("Static validation\ndoes not prove", "The files fully prove"),
+        encoding="utf-8",
+    )
+
+    assert _runbook_source_contract_is_valid(tmp_path) is False
 
 
 @pytest.mark.parametrize(
@@ -237,18 +268,18 @@ def test_dashboard_artifact_certification_fails_closed(
     path.parent.mkdir(parents=True)
     path.write_text(json.dumps(mutation(dashboard)), encoding="utf-8")  # type: ignore[operator]
 
-    assert _dashboard_artifact_certified(tmp_path) is expected_valid
+    assert _dashboard_source_contract_is_valid(tmp_path) is expected_valid
 
 
 def test_dashboard_artifact_certification_rejects_missing_or_invalid_json(
     tmp_path: Path,
 ) -> None:
-    assert _dashboard_artifact_certified(tmp_path) is False
+    assert _dashboard_source_contract_is_valid(tmp_path) is False
     path = tmp_path / "monitoring/grafana/dashboards/lotus-idea-ai-model-risk-operations.json"
     path.parent.mkdir(parents=True)
     path.write_text("{not-json", encoding="utf-8")
 
-    assert _dashboard_artifact_certified(tmp_path) is False
+    assert _dashboard_source_contract_is_valid(tmp_path) is False
 
 
 @pytest.mark.parametrize(
@@ -281,29 +312,41 @@ def test_alert_rules_artifact_certification_fails_closed(
     path.parent.mkdir(parents=True)
     path.write_text(text, encoding="utf-8")
 
-    assert _alert_rules_artifact_certified(tmp_path) is False
+    assert _alert_rules_source_contract_is_valid(tmp_path) is False
 
 
 def test_runbook_artifact_certification_rejects_missing_or_forbidden_content(
     tmp_path: Path,
 ) -> None:
-    assert _runbook_artifact_certified(tmp_path) is False
+    assert _runbook_source_contract_is_valid(tmp_path) is False
     path = tmp_path / "docs/runbooks/ai-model-risk-operations.md"
     path.parent.mkdir(parents=True)
     path.write_text("portfolio_id", encoding="utf-8")
 
-    assert _runbook_artifact_certified(tmp_path) is False
+    assert _runbook_source_contract_is_valid(tmp_path) is False
 
 
 @pytest.mark.parametrize(
     "payload",
     [
-        {"dashboard_certified": False, "alert_certified": True, "source_of_truth": {}},
-        {"dashboard_certified": True, "alert_certified": False, "source_of_truth": {}},
-        {"dashboard_certified": True, "alert_certified": True, "source_of_truth": []},
         {
-            "dashboard_certified": True,
-            "alert_certified": True,
+            "dashboard_source_contract_valid": False,
+            "alert_rules_source_contract_valid": True,
+            "source_of_truth": {},
+        },
+        {
+            "dashboard_source_contract_valid": True,
+            "alert_rules_source_contract_valid": False,
+            "source_of_truth": {},
+        },
+        {
+            "dashboard_source_contract_valid": True,
+            "alert_rules_source_contract_valid": True,
+            "source_of_truth": [],
+        },
+        {
+            "dashboard_source_contract_valid": True,
+            "alert_rules_source_contract_valid": True,
             "source_of_truth": {"dashboard": "wrong"},
         },
     ],
@@ -316,18 +359,18 @@ def test_operations_contract_certification_fails_closed(
     path.parent.mkdir(parents=True)
     path.write_text(json.dumps(payload), encoding="utf-8")
 
-    assert _operations_contract_certified(tmp_path) is False
+    assert _operations_source_contract_is_valid(tmp_path) is False
 
 
 def test_operations_contract_certification_rejects_missing_or_invalid_json(
     tmp_path: Path,
 ) -> None:
-    assert _operations_contract_certified(tmp_path) is False
+    assert _operations_source_contract_is_valid(tmp_path) is False
     path = tmp_path / "contracts/observability/lotus-idea-ai-model-risk-operations.v1.json"
     path.parent.mkdir(parents=True)
     path.write_text("{not-json", encoding="utf-8")
 
-    assert _operations_contract_certified(tmp_path) is False
+    assert _operations_source_contract_is_valid(tmp_path) is False
 
 
 def _valid_ai_model_risk_operations_proof() -> dict[str, object]:
@@ -338,9 +381,11 @@ def _valid_ai_model_risk_operations_proof() -> dict[str, object]:
 
 
 def _load_generator_script() -> ModuleType:
-    script_path = ROOT / "scripts" / "generate_ai_model_risk_operations_proof.py"
+    script_path = (
+        ROOT / "scripts" / "ai_model_risk_operations" / "generate_source_contract_proof.py"
+    )
     spec = importlib.util.spec_from_file_location(
-        "generate_ai_model_risk_operations_proof",
+        "generate_ai_model_risk_operations_source_contract_proof",
         script_path,
     )
     assert spec is not None
@@ -351,9 +396,9 @@ def _load_generator_script() -> ModuleType:
 
 
 def _load_contract_gate_script() -> ModuleType:
-    script_path = ROOT / "scripts" / "ai_model_risk_operations_proof_contract_gate.py"
+    script_path = ROOT / "scripts" / "ai_model_risk_operations" / "source_contract_proof_gate.py"
     spec = importlib.util.spec_from_file_location(
-        "ai_model_risk_operations_proof_contract_gate",
+        "ai_model_risk_operations_source_contract_proof_gate",
         script_path,
     )
     assert spec is not None

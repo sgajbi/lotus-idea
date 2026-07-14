@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 import scripts.generate_implementation_proof_readiness as proof_report
 from app.application.ai_lineage_store_proof import build_ai_lineage_store_proof_payload
-from app.application.ai_model_risk_operations_proof import (
+from app.application.ai_model_risk_operations.source_contract_proof import (
     build_ai_model_risk_operations_proof_payload,
 )
 from app.application.ai_workflow_pack_registration_proof import (
@@ -448,7 +448,7 @@ def test_generate_implementation_proof_readiness_uses_explicit_ai_lineage_store_
 def test_generate_implementation_proof_readiness_uses_explicit_ai_model_risk_operations_proof(
     tmp_path: Path,
 ) -> None:
-    ai_model_risk_proof = tmp_path / "ai-model-risk-operations-proof.json"
+    ai_model_risk_proof = tmp_path / "ai-model-risk-operations-source-contract-proof.json"
     ai_model_risk_proof.write_text(
         json.dumps(
             build_ai_model_risk_operations_proof_payload(

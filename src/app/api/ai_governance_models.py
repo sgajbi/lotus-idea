@@ -559,8 +559,12 @@ class AIExplanationReadinessResponse(CamelModel):
         ...,
         alias="modelRiskAlertContractAvailable",
     )
-    model_risk_dashboard_certified: bool = Field(..., alias="modelRiskDashboardCertified")
-    model_risk_alert_certified: bool = Field(..., alias="modelRiskAlertCertified")
+    model_risk_dashboard_source_contract_valid: bool = Field(
+        ..., alias="modelRiskDashboardSourceContractValid"
+    )
+    model_risk_alert_rules_source_contract_valid: bool = Field(
+        ..., alias="modelRiskAlertRulesSourceContractValid"
+    )
     lotus_ai_runtime_executed: bool = Field(..., alias="lotusAiRuntimeExecuted")
     certification_blockers: tuple[str, ...] = Field(..., alias="certificationBlockers")
     supported_feature_promoted: bool = Field(..., alias="supportedFeaturePromoted")
@@ -596,8 +600,12 @@ class AIExplanationReadinessResponse(CamelModel):
             ),
             modelRiskDashboardContractAvailable=(snapshot.model_risk_dashboard_contract_available),
             modelRiskAlertContractAvailable=snapshot.model_risk_alert_contract_available,
-            modelRiskDashboardCertified=snapshot.model_risk_dashboard_certified,
-            modelRiskAlertCertified=snapshot.model_risk_alert_certified,
+            modelRiskDashboardSourceContractValid=(
+                snapshot.model_risk_dashboard_source_contract_valid
+            ),
+            modelRiskAlertRulesSourceContractValid=(
+                snapshot.model_risk_alert_rules_source_contract_valid
+            ),
             lotusAiRuntimeExecuted=snapshot.lotus_ai_runtime_executed,
             certificationBlockers=snapshot.certification_blockers,
             supportedFeaturePromoted=snapshot.supported_feature_promoted,

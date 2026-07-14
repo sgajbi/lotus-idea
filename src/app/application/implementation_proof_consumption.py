@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any, Mapping, cast
 
 from app.application.ai_lineage_store_proof import ai_lineage_store_proof_is_valid
-from app.application.ai_model_risk_operations_proof import (
+from app.application.ai_model_risk_operations.source_contract_proof import (
     ai_model_risk_operations_proof_is_valid,
 )
 from app.application.ai_workflow_pack_registration_proof import (
@@ -755,10 +755,6 @@ def _apply_ai_model_risk_operations_proof(
 ) -> ImplementationProofCapabilityReadiness:
     if capability.capability_id != "ai-explanation":
         return capability
-    blockers_to_clear = {
-        "model_risk_operations_dashboard_not_certified",
-        "model_risk_operations_alerts_not_certified",
-    }
     evidence_refs = capability.evidence_refs
     if ai_model_risk_operations_proof_ref:
         evidence_refs = tuple(dict.fromkeys((*evidence_refs, ai_model_risk_operations_proof_ref)))
@@ -768,9 +764,7 @@ def _apply_ai_model_risk_operations_proof(
         readiness_status=capability.readiness_status,
         supportability_status=capability.supportability_status,
         evidence_refs=evidence_refs,
-        blockers=tuple(
-            blocker for blocker in capability.blockers if blocker not in blockers_to_clear
-        ),
+        blockers=capability.blockers,
         supported_feature_promoted=capability.supported_feature_promoted,
     )
 

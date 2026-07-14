@@ -30,7 +30,7 @@ def test_ci_contract_gate_blocks_missing_ai_model_risk_operations_proof_gate() -
     errors = module.validate_makefile(
         _makefile_without(
             "$(MAKE) ai-model-risk-operations-proof-contract-gate\n",
-            "scripts/ai_model_risk_operations_proof_contract_gate.py",
+            "scripts/ai_model_risk_operations/source_contract_proof_gate.py",
         )
     )
 
@@ -39,7 +39,7 @@ def test_ci_contract_gate_blocks_missing_ai_model_risk_operations_proof_gate() -
     ) in errors
     assert (
         "Makefile ai-model-risk-operations-proof-contract-gate target must run "
-        "`scripts/ai_model_risk_operations_proof_contract_gate.py`"
+        "`scripts/ai_model_risk_operations/source_contract_proof_gate.py`"
     ) in errors
 
 
