@@ -64,9 +64,9 @@ from app.application.source_ingestion_worker import (
     MANIFEST_SCHEMA_VERSION,
     source_ingestion_worker_plan_from_manifest,
 )
-from app.application.workbench_read_path_proof import (
-    WORKBENCH_READ_PATH_PROOF_ENV,
-    build_workbench_read_path_proof_payload,
+from app.application.workbench.read_path_source_contract import (
+    WORKBENCH_READ_PATH_SOURCE_CONTRACT_PROOF_ENV,
+    build_workbench_read_path_source_contract_proof_payload,
 )
 from app.runtime.repository_state import reset_idea_repository_for_tests
 from app.main import app
@@ -107,7 +107,7 @@ def test_implementation_proof_readiness_api_returns_blocked_operator_posture(
     monkeypatch.delenv(RUNTIME_TRUST_TELEMETRY_PROOF_ENV, raising=False)
     monkeypatch.delenv(AI_MODEL_RISK_OPERATIONS_PROOF_ENV, raising=False)
     monkeypatch.delenv(OPERATOR_WORKFLOWS_OPERATIONS_PROOF_ENV, raising=False)
-    monkeypatch.delenv(WORKBENCH_READ_PATH_PROOF_ENV, raising=False)
+    monkeypatch.delenv(WORKBENCH_READ_PATH_SOURCE_CONTRACT_PROOF_ENV, raising=False)
     monkeypatch.delenv(REPORT_INTAKE_ROUTE_PROOF_ENV, raising=False)
     monkeypatch.delenv(BOND_MATURITY_LIVE_PROOF_ENV, raising=False)
     reset_idea_repository_for_tests()
@@ -303,7 +303,7 @@ def test_implementation_proof_readiness_api_consumes_configured_proof_artifacts(
     assert "certified_ai_lineage_store_missing" not in payload["overallBlockers"]
     assert "operator_workflow_dashboard_runtime_proof_missing" in payload["overallBlockers"]
     assert "operator_workflow_alert_rules_runtime_proof_missing" in payload["overallBlockers"]
-    assert "workbench_gateway_bff_consumption_proof_missing" not in payload["overallBlockers"]
+    assert "workbench_gateway_bff_consumption_proof_missing" in payload["overallBlockers"]
     assert "lotus_report_live_intake_route_proof_missing" not in payload["overallBlockers"]
     assert (
         "opportunity_archetype_maturity_live_core_source_proof_missing"
@@ -355,7 +355,7 @@ def test_implementation_proof_readiness_api_consumes_configured_proof_artifacts(
         in (capabilities["operator-workflows-operations"]["blockers"])
     )
     assert (
-        "workbench read-path proof artifact"
+        "Workbench read-path source-contract proof artifact"
         in capabilities["workbench-product-proof"]["evidenceRefs"]
     )
     assert "report intake route proof artifact" in " ".join(
@@ -497,7 +497,7 @@ def _configure_readiness_proof_artifacts(
     operator_workflows_proof_path = (
         tmp_path / "operator-workflows-operations-source-contract-proof.json"
     )
-    workbench_proof_path = tmp_path / "workbench-read-path-proof.json"
+    workbench_proof_path = tmp_path / "read-path-source-contract-proof.json"
     report_route_proof_path = tmp_path / "report-intake-route-proof.json"
     bond_maturity_live_proof_path = tmp_path / "bond-maturity-live-proof.json"
 
@@ -561,7 +561,7 @@ def _configure_readiness_proof_artifacts(
     )
     _write_proof(
         workbench_proof_path,
-        build_workbench_read_path_proof_payload(
+        build_workbench_read_path_source_contract_proof_payload(
             generated_at_utc=evaluated_at_utc,
             repository_root=ROOT,
         ),
@@ -581,7 +581,10 @@ def _configure_readiness_proof_artifacts(
     monkeypatch.setenv(AI_LINEAGE_STORE_PROOF_ENV, str(ai_lineage_proof_path))
     monkeypatch.setenv(AI_MODEL_RISK_OPERATIONS_PROOF_ENV, str(ai_model_risk_proof_path))
     monkeypatch.setenv(OPERATOR_WORKFLOWS_OPERATIONS_PROOF_ENV, str(operator_workflows_proof_path))
-    monkeypatch.setenv(WORKBENCH_READ_PATH_PROOF_ENV, str(workbench_proof_path))
+    monkeypatch.setenv(
+        WORKBENCH_READ_PATH_SOURCE_CONTRACT_PROOF_ENV,
+        str(workbench_proof_path),
+    )
     monkeypatch.setenv(REPORT_INTAKE_ROUTE_PROOF_ENV, str(report_route_proof_path))
     monkeypatch.setenv(BOND_MATURITY_LIVE_PROOF_ENV, str(bond_maturity_live_proof_path))
 

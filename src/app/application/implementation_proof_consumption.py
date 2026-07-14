@@ -72,7 +72,9 @@ from app.application.source_ingestion_live_proof import (
     source_ingestion_live_proof_can_clear_aggregate_blockers,
 )
 from app.application.source_ingestion_readiness import SourceIngestionReadinessSnapshot
-from app.application.workbench_read_path_proof import workbench_read_path_proof_is_valid
+from app.application.workbench.read_path_source_contract import (
+    workbench_read_path_source_contract_proof_is_valid,
+)
 
 
 def apply_available_proofs_from_scope(
@@ -123,8 +125,8 @@ def _apply_available_proofs(
     outbox_platform_mesh_event_source_contract_proof_ref: str | None,
     platform_mesh_onboarding_proof: Mapping[str, object] | None,
     platform_mesh_onboarding_proof_ref: str | None,
-    workbench_read_path_proof: Mapping[str, object] | None,
-    workbench_read_path_proof_ref: str | None,
+    workbench_read_path_source_contract_proof: Mapping[str, object] | None,
+    workbench_read_path_source_contract_proof_ref: str | None,
     gateway_workbench_contract_proof: Mapping[str, object] | None,
     gateway_workbench_contract_proof_ref: str | None,
     gateway_workbench_discovery_contract_proof: Mapping[str, object] | None,
@@ -401,8 +403,8 @@ def _apply_platform_and_surface_proofs(
     outbox_platform_mesh_event_source_contract_proof_ref: str | None,
     platform_mesh_onboarding_proof: Mapping[str, object] | None,
     platform_mesh_onboarding_proof_ref: str | None,
-    workbench_read_path_proof: Mapping[str, object] | None,
-    workbench_read_path_proof_ref: str | None,
+    workbench_read_path_source_contract_proof: Mapping[str, object] | None,
+    workbench_read_path_source_contract_proof_ref: str | None,
     gateway_workbench_contract_proof: Mapping[str, object] | None,
     gateway_workbench_contract_proof_ref: str | None,
     gateway_workbench_discovery_contract_proof: Mapping[str, object] | None,
@@ -469,14 +471,17 @@ def _apply_platform_and_surface_proofs(
             _apply_platform_mesh_onboarding_proof(capability, platform_mesh_onboarding_proof_ref)
             for capability in capabilities
         )
-    if _proof_can_clear_blockers(
-        workbench_read_path_proof,
-        workbench_read_path_proof_ref,
+    if _proof_is_valid_and_current(
+        workbench_read_path_source_contract_proof,
+        workbench_read_path_source_contract_proof_ref,
         evaluated_at_utc=evaluated_at_utc,
-        proof_is_valid=workbench_read_path_proof_is_valid,
+        proof_is_valid=workbench_read_path_source_contract_proof_is_valid,
     ):
         capabilities = tuple(
-            _apply_workbench_read_path_proof(capability, workbench_read_path_proof_ref)
+            _apply_workbench_read_path_source_contract(
+                capability,
+                workbench_read_path_source_contract_proof_ref,
+            )
             for capability in capabilities
         )
     if _proof_is_valid_and_current(
@@ -668,26 +673,22 @@ def _apply_runtime_trust_telemetry_proof(
     )
 
 
-def _apply_workbench_read_path_proof(
+def _apply_workbench_read_path_source_contract(
     capability: ImplementationProofCapabilityReadiness,
-    workbench_read_path_proof_ref: str | None,
+    workbench_read_path_source_contract_proof_ref: str | None,
 ) -> ImplementationProofCapabilityReadiness:
-    if "workbench_gateway_bff_consumption_proof_missing" not in capability.blockers:
-        return capability
     evidence_refs = capability.evidence_refs
-    if workbench_read_path_proof_ref:
-        evidence_refs = tuple(dict.fromkeys((*evidence_refs, workbench_read_path_proof_ref)))
+    if workbench_read_path_source_contract_proof_ref:
+        evidence_refs = tuple(
+            dict.fromkeys((*evidence_refs, workbench_read_path_source_contract_proof_ref))
+        )
     return build_capability_readiness(
         capability.capability_id,
         capability.name,
         readiness_status=capability.readiness_status,
         supportability_status=capability.supportability_status,
         evidence_refs=evidence_refs,
-        blockers=tuple(
-            blocker
-            for blocker in capability.blockers
-            if blocker != "workbench_gateway_bff_consumption_proof_missing"
-        ),
+        blockers=capability.blockers,
         supported_feature_promoted=capability.supported_feature_promoted,
     )
 

@@ -32,7 +32,9 @@ from app.application.outbox.platform_mesh.source_contract_proof import (
 from app.application.platform_mesh_onboarding_proof import PLATFORM_MESH_ONBOARDING_PROOF_ENV
 from app.application.runtime_trust_telemetry_proof import RUNTIME_TRUST_TELEMETRY_PROOF_ENV
 from app.application.source_ingestion_readiness import LIVE_PROOF_ENV
-from app.application.workbench_read_path_proof import WORKBENCH_READ_PATH_PROOF_ENV
+from app.application.workbench.read_path_source_contract import (
+    WORKBENCH_READ_PATH_SOURCE_CONTRACT_PROOF_ENV,
+)
 from app.runtime.proof_artifacts import configured_implementation_proof_artifacts
 
 
@@ -52,7 +54,7 @@ def test_configured_implementation_proof_artifacts_loads_relative_source_safe_re
         tmp_path / "output" / "ai" / "ai-workflow-pack-registration-source-contract-proof.json"
     )
     ai_runtime_path = tmp_path / "output" / "ai" / "ai-workflow-pack-runtime-execution-proof.json"
-    workbench_path = tmp_path / "output" / "workbench" / "workbench-read-path-proof.json"
+    workbench_path = tmp_path / "output" / "workbench" / "read-path-source-contract-proof.json"
     gateway_workbench_path = (
         tmp_path / "output" / "workbench" / "gateway-workbench-contract-proof.json"
     )
@@ -123,9 +125,13 @@ def test_configured_implementation_proof_artifacts_loads_relative_source_safe_re
     assert artifacts.ai_workflow_pack_runtime_execution_proof_ref == (
         "output/ai/ai-workflow-pack-runtime-execution-proof.json"
     )
-    _assert_bound_artifact(artifacts.workbench_read_path_proof, "workbench-read-path-proof.json")
+    _assert_bound_artifact(
+        artifacts.workbench_read_path_source_contract_proof,
+        "read-path-source-contract-proof.json",
+    )
     assert (
-        artifacts.workbench_read_path_proof_ref == "output/workbench/workbench-read-path-proof.json"
+        artifacts.workbench_read_path_source_contract_proof_ref
+        == "output/workbench/read-path-source-contract-proof.json"
     )
     _assert_bound_artifact(
         artifacts.gateway_workbench_contract_proof,
@@ -207,7 +213,9 @@ def _configure_relative_artifact_env(monkeypatch: pytest.MonkeyPatch) -> None:
         AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF_ENV: (
             "output/ai/ai-workflow-pack-runtime-execution-proof.json"
         ),
-        WORKBENCH_READ_PATH_PROOF_ENV: "output/workbench/workbench-read-path-proof.json",
+        WORKBENCH_READ_PATH_SOURCE_CONTRACT_PROOF_ENV: (
+            "output/workbench/read-path-source-contract-proof.json"
+        ),
         GATEWAY_WORKBENCH_CONTRACT_PROOF_ENV: (
             "output/workbench/gateway-workbench-contract-proof.json"
         ),

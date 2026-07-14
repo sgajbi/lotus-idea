@@ -16,8 +16,8 @@ from app.application.workbench.contract_proof import (  # noqa: E402
     build_gateway_workbench_contract_proof_payload,
     gateway_workbench_contract_proof_is_valid,
 )
-from app.application.workbench_read_path_proof import (  # noqa: E402
-    build_workbench_read_path_proof_payload,
+from app.application.workbench.read_path_source_contract import (  # noqa: E402
+    build_workbench_read_path_source_contract_proof_payload,
 )
 
 
@@ -69,15 +69,17 @@ _validate_forbidden_content = forbidden_content_validator(
 
 def validate_gateway_workbench_contract_proof_contract() -> list[str]:
     errors: list[str] = []
-    workbench_read_path_proof = build_workbench_read_path_proof_payload(
+    read_path_source_contract_proof = build_workbench_read_path_source_contract_proof_payload(
         generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
         repository_root=ROOT,
     )
     proof = build_gateway_workbench_contract_proof_payload(
         generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
         repository_root=ROOT,
-        workbench_read_path_proof=workbench_read_path_proof,
-        workbench_read_path_proof_ref="output/workbench/workbench-read-path-proof.json",
+        workbench_read_path_source_contract_proof=read_path_source_contract_proof,
+        workbench_read_path_source_contract_proof_ref=(
+            "output/workbench/read-path-source-contract-proof.json"
+        ),
     )
     if proof.get("schemaVersion") != GATEWAY_WORKBENCH_CONTRACT_PROOF_SCHEMA_VERSION:
         errors.append(

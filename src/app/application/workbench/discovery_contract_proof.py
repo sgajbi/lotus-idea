@@ -19,7 +19,9 @@ from app.application.source_safe_cross_repo_proof import (
     required_file_evidence_present,
     required_make_target_evidence_present,
 )
-from app.application.workbench_read_path_proof import workbench_read_path_proof_is_valid
+from app.application.workbench.read_path_source_contract import (
+    workbench_read_path_source_contract_proof_is_valid,
+)
 
 
 _is_timezone_aware_datetime_text = is_timezone_aware_datetime_text
@@ -39,7 +41,7 @@ REQUIRED_GATEWAY_WORKBENCH_DISCOVERY_LOCAL_EVIDENCE_REFS = (
     "contracts/domain-data-products/lotus-idea-consumers.v1.json",
     "contracts/domain-data-products/mesh-readiness.v1.json",
     "src/app/application/platform_mesh_onboarding_proof.py",
-    "src/app/application/workbench_read_path_proof.py",
+    "src/app/application/workbench/read_path_source_contract.py",
     "src/app/application/workbench/contract_proof.py",
     "src/app/application/workbench/discovery_contract_proof.py",
     "scripts/workbench/generate_discovery_contract_proof.py",
@@ -48,7 +50,7 @@ REQUIRED_GATEWAY_WORKBENCH_DISCOVERY_LOCAL_EVIDENCE_REFS = (
     "wiki/Supported-Features.md",
     "make data-mesh-contract-gate",
     "make platform-mesh-onboarding-proof-contract-gate",
-    "make workbench-read-path-proof-contract-gate",
+    "make workbench-read-path-source-contract-proof-gate",
     "make gateway-workbench-contract-proof-contract-gate",
     "make gateway-workbench-discovery-contract-proof-contract-gate",
     "make implementation-proof-readiness-check",
@@ -78,10 +80,10 @@ def build_gateway_workbench_discovery_contract_proof_payload(
     repository_root: Path,
     platform_root: Path | None = None,
     platform_mesh_onboarding_proof: Mapping[str, Any] | None,
-    workbench_read_path_proof: Mapping[str, Any] | None,
+    workbench_read_path_source_contract_proof: Mapping[str, Any] | None,
     gateway_workbench_contract_proof: Mapping[str, Any] | None,
     platform_mesh_onboarding_proof_ref: str | None,
-    workbench_read_path_proof_ref: str | None,
+    workbench_read_path_source_contract_proof_ref: str | None,
     gateway_workbench_contract_proof_ref: str | None,
 ) -> dict[str, Any]:
     platform_root = platform_root or repository_root.parent / "lotus-platform"
@@ -97,8 +99,11 @@ def build_gateway_workbench_discovery_contract_proof_payload(
         platform_mesh_onboarding_proof
         and platform_mesh_onboarding_proof_is_valid(platform_mesh_onboarding_proof)
     )
-    workbench_read_path_valid = bool(
-        workbench_read_path_proof and workbench_read_path_proof_is_valid(workbench_read_path_proof)
+    workbench_read_path_source_contract_valid = bool(
+        workbench_read_path_source_contract_proof
+        and workbench_read_path_source_contract_proof_is_valid(
+            workbench_read_path_source_contract_proof
+        )
     )
     gateway_contract_valid = bool(
         gateway_workbench_contract_proof
@@ -111,7 +116,7 @@ def build_gateway_workbench_discovery_contract_proof_payload(
         timezone_aware_generated_at_utc
         and file_evidence_present
         and platform_onboarding_valid
-        and workbench_read_path_valid
+        and workbench_read_path_source_contract_valid
         and gateway_contract_valid
         and catalog_declares_gateway_consumable_products
     )
@@ -125,7 +130,7 @@ def build_gateway_workbench_discovery_contract_proof_payload(
         "gatewayWorkbenchDiscoveryContractProofValid": proof_valid,
         "aggregateBlockersCleared": GATEWAY_WORKBENCH_DISCOVERY_CONTRACT_BLOCKERS_CLEARED,
         "platformMeshOnboardingProofRef": platform_mesh_onboarding_proof_ref,
-        "workbenchReadPathProofRef": workbench_read_path_proof_ref,
+        "workbenchReadPathSourceContractProofRef": (workbench_read_path_source_contract_proof_ref),
         "gatewayWorkbenchContractProofRef": gateway_workbench_contract_proof_ref,
         "localEvidenceRefs": REQUIRED_GATEWAY_WORKBENCH_DISCOVERY_LOCAL_EVIDENCE_REFS,
         "platformEvidenceRefs": REQUIRED_GATEWAY_WORKBENCH_DISCOVERY_PLATFORM_EVIDENCE_REFS,
@@ -135,7 +140,9 @@ def build_gateway_workbench_discovery_contract_proof_payload(
             "timezoneAwareGeneratedAtUtc": timezone_aware_generated_at_utc,
             "fileEvidencePresent": file_evidence_present,
             "platformMeshOnboardingProofValid": platform_onboarding_valid,
-            "workbenchReadPathProofValid": workbench_read_path_valid,
+            "workbenchReadPathSourceContractProofValid": (
+                workbench_read_path_source_contract_valid
+            ),
             "gatewayWorkbenchContractProofValid": gateway_contract_valid,
             "catalogDeclaresGatewayConsumableIdeaProducts": (
                 catalog_declares_gateway_consumable_products
@@ -209,7 +216,7 @@ def gateway_workbench_discovery_contract_proof_is_valid(payload: Mapping[str, An
         return False
     for ref_field in (
         "platformMeshOnboardingProofRef",
-        "workbenchReadPathProofRef",
+        "workbenchReadPathSourceContractProofRef",
         "gatewayWorkbenchContractProofRef",
     ):
         if not isinstance(payload.get(ref_field), str):
@@ -223,7 +230,7 @@ def gateway_workbench_discovery_contract_proof_is_valid(payload: Mapping[str, An
             "timezoneAwareGeneratedAtUtc",
             "fileEvidencePresent",
             "platformMeshOnboardingProofValid",
-            "workbenchReadPathProofValid",
+            "workbenchReadPathSourceContractProofValid",
             "gatewayWorkbenchContractProofValid",
             "catalogDeclaresGatewayConsumableIdeaProducts",
             "productsRemainProposed",

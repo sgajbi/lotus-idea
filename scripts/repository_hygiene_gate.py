@@ -159,12 +159,16 @@ REQUIRED_BOUNDED_MODULE_PATHS = {
     "scripts/workbench/discovery_contract_proof_gate.py",
     "scripts/workbench/generate_contract_proof.py",
     "scripts/workbench/generate_discovery_contract_proof.py",
+    "scripts/workbench/generate_read_path_source_contract.py",
+    "scripts/workbench/read_path_source_contract_gate.py",
     "src/app/application/workbench/__init__.py",
     "src/app/application/workbench/contract_proof.py",
     "src/app/application/workbench/discovery_contract_proof.py",
+    "src/app/application/workbench/read_path_source_contract.py",
     "tests/unit/workbench/__init__.py",
     "tests/unit/workbench/test_contract_proof.py",
     "tests/unit/workbench/test_discovery_contract_proof.py",
+    "tests/unit/workbench/test_read_path_source_contract.py",
     "scripts/data_lifecycle/__init__.py",
     "scripts/data_lifecycle/run_scheduled_review.py",
     "scripts/data_lifecycle/scheduled_review_proof_gate.py",
@@ -193,6 +197,10 @@ REQUIRED_BOUNDED_MODULE_PATHS = {
 }
 
 PROHIBITED_LEGACY_MODULE_PATHS = {
+    "scripts/generate_workbench_read_path_proof.py",
+    "scripts/workbench_read_path_proof_contract_gate.py",
+    "src/app/application/workbench_read_path_proof.py",
+    "tests/unit/test_workbench_read_path_proof.py",
     "scripts/ai_workflow_pack_registration_proof_contract_gate.py",
     "scripts/generate_ai_workflow_pack_registration_proof.py",
     "src/app/application/ai_workflow_pack_registration_proof.py",

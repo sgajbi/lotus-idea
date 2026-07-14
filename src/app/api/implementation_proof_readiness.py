@@ -264,8 +264,12 @@ def _build_readiness_snapshot_from_configured_artifacts(
         report_intake_route_proof_ref=proof_artifacts.report_intake_route_proof_ref,
         platform_mesh_onboarding_proof=proof_artifacts.platform_mesh_onboarding_proof,
         platform_mesh_onboarding_proof_ref=proof_artifacts.platform_mesh_onboarding_proof_ref,
-        workbench_read_path_proof=proof_artifacts.workbench_read_path_proof,
-        workbench_read_path_proof_ref=proof_artifacts.workbench_read_path_proof_ref,
+        workbench_read_path_source_contract_proof=(
+            proof_artifacts.workbench_read_path_source_contract_proof
+        ),
+        workbench_read_path_source_contract_proof_ref=(
+            proof_artifacts.workbench_read_path_source_contract_proof_ref
+        ),
         gateway_workbench_contract_proof=proof_artifacts.gateway_workbench_contract_proof,
         gateway_workbench_contract_proof_ref=(proof_artifacts.gateway_workbench_contract_proof_ref),
         gateway_workbench_discovery_contract_proof=proof_artifacts.gateway_workbench_discovery_contract_proof,

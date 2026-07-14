@@ -5,7 +5,12 @@ from datetime import datetime
 import sys
 from pathlib import Path
 
-from app.application.workbench_read_path_proof import build_workbench_read_path_proof_payload
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT))
+
+from app.application.workbench.read_path_source_contract import (
+    build_workbench_read_path_source_contract_proof_payload,
+)
 
 try:
     from scripts.proof_generator_io import write_json_payload
@@ -13,28 +18,25 @@ except ImportError:  # pragma: no cover - supports direct script execution
     from proof_generator_io import write_json_payload  # type: ignore[import-not-found,no-redef]
 
 
-ROOT = Path(__file__).resolve().parents[1]
-
-
 def main(argv: list[str] | None = None) -> int:
     parser = _parser()
     args = parser.parse_args(argv)
     try:
-        payload = build_workbench_read_path_proof_payload(
+        payload = build_workbench_read_path_source_contract_proof_payload(
             generated_at_utc=_aware_datetime(args.generated_at_utc),
             repository_root=ROOT,
         )
     except ValueError as exc:
-        print(f"workbench read-path proof error: {exc}", file=sys.stderr)
+        print(f"Workbench read-path source-contract proof error: {exc}", file=sys.stderr)
         return 2
 
     write_json_payload(payload, output=args.output)
-    return 0 if payload["workbenchReadPathProofValid"] else 1
+    return 0 if payload["workbenchReadPathSourceContractValid"] else 1
 
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Generate a source-safe lotus-idea Workbench read-path proof."
+        description="Generate the lotus-idea Workbench read-path source-contract proof."
     )
     parser.add_argument("--generated-at-utc", required=True)
     parser.add_argument("--output")
