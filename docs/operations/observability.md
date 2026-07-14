@@ -136,19 +136,21 @@ feature.
 `contracts/observability/lotus-idea-ai-model-risk-operations.v1.json` defines
 the current model-risk operations contract for the AI explanation foundation.
 It is validated by `make ai-model-risk-ops-contract-gate`. The concrete
-dashboard, alert rules, and runbook are certified by
+dashboard, alert rules, and runbook source contracts are validated by
 `make ai-model-risk-operations-proof-contract-gate`.
 
 | Contract area | Implemented evidence | Boundary |
 | --- | --- | --- |
-| Dashboard controls | AI explanation readiness posture, verifier posture, and lineage durability posture over implemented operation telemetry | Certified source-safe dashboard artifact |
-| Alert rules | Unsupported-claim block-rate and readiness-blocked rules over implemented operation telemetry | Certified source-safe alert artifact |
+| Dashboard controls | AI explanation readiness posture, verifier posture, and lineage durability posture over implemented operation telemetry | Source-valid artifact; provisioning and query execution remain unproved |
+| Alert rules | Unsupported-claim block-rate and readiness-blocked rules over implemented operation telemetry | Source-valid artifact; rule loading, evaluation, and delivery remain unproved |
 | Source-of-truth paths | AI readiness source, AI API source, operation metric contract, AI governance docs, runbook, and RFC slices | No runtime `lotus-ai` execution proof |
 
 This contract narrows the model-risk operations gap from "candidate controls"
-to certified source-safe dashboard and alert artifacts. It still does not prove
+to source-valid dashboard and alert artifacts. It clears no aggregate blocker
+and does not prove
 `lotus-ai` runtime execution, Workbench product surface, data-mesh
-certification, client-ready publication, or supported-feature promotion. AI
+certification, dashboard provisioning, alert evaluation/delivery, client-ready
+publication, or supported-feature promotion. AI
 lineage store proof remains a separate source-safe persistence artifact
 consumed by aggregate implementation-proof readiness.
 

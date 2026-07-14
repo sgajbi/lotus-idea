@@ -220,10 +220,11 @@ It also records the AI model-risk operations contract and
 `make ai-model-risk-ops-contract-gate` in the `ai-explanation` capability
 evidence, so reviewers can see dashboard-control and alert-candidate posture
 without treating the readiness endpoint itself as product support proof.
-`make ai-model-risk-operations-proof-contract-gate` now certifies the repo-owned
-dashboard, alert-rule, and runbook artifacts against implemented operation
-telemetry while leaving `lotus-ai`, Workbench, client-ready, and
-supported-feature blockers intact.
+`make ai-model-risk-operations-proof-contract-gate` validates the repo-owned
+dashboard, alert-rule, and runbook source against implemented operation
+telemetry. The source-contract artifact clears no aggregate blocker: dashboard
+provisioning/query execution, alert-rule loading/evaluation/delivery,
+`lotus-ai`, Workbench, client-ready, and supported-feature proof remain open.
 It also records the non-AI operator workflow operations contract,
 `make operator-workflows-ops-contract-gate`, and
 `make operator-workflows-operations-proof-contract-gate` in the

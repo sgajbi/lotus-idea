@@ -878,7 +878,9 @@ against implemented AI explanation and readiness telemetry. It blocks missing
 dashboard controls, missing alert candidates, sensitive labels, unsupported
 operation names, missing source-of-truth paths, and premature model-risk
 dashboard, alert, `lotus-ai`, Workbench, or supported-feature certification
-claims.
+claims. The companion source-contract proof gate validates file content and
+adds a readiness evidence reference, but clears no blocker and cannot prove
+dashboard provisioning, rule evaluation, alert delivery, or deployment.
 
 The operator workflows operations contract gates validate
 `contracts/observability/lotus-idea-operator-workflows-operations.v1.json`
@@ -1033,7 +1035,7 @@ the diagnostic route only; they do not certify `lotus-ai` runtime execution,
 provider invocation, Gateway/Workbench support, data-product promotion,
 client-ready publication, or supported-feature promotion. The AI lineage store
 proof is consumed only by aggregate implementation-proof readiness. The AI
-model-risk operations proof certifies repo-owned dashboard, alert-rule, and
+model-risk operations source-contract proof validates repo-owned dashboard, alert-rule, and
 runbook artifacts against implemented operation telemetry while still leaving
 `lotus-ai` runtime, live provider, Workbench, client-ready, and supported-feature
 gaps unpromoted.

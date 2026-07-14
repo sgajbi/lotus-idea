@@ -1052,11 +1052,11 @@ Implementation-backed evidence:
     `tests/integration/test_implementation_proof_readiness_api.py`.
 
 The `ai-explanation` capability evidence includes the AI model-risk operations
-contract, certified dashboard, certified Prometheus alert rules, runbook, and
-proof gate. Those refs clear only the model-risk dashboard/alert operations
-blockers. They do not clear `lotus-ai` runtime execution, runtime trust
-telemetry, Workbench product proof, client-ready publication, or
-supported-feature promotion.
+contract, source-valid dashboard, source-valid Prometheus alert rules, runbook,
+and proof gate. The v2 source-contract proof adds its evidence reference but
+clears no aggregate blocker. It preserves dashboard runtime, alert-rule
+runtime, `lotus-ai` execution, runtime trust telemetry, Workbench product,
+client-ready publication, and supported-feature promotion blockers.
 
 The non-AI operator workflow operations evidence includes the source-safe
 dashboard, Prometheus alert rules, runbook, and proof gates for implemented

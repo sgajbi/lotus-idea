@@ -6,7 +6,7 @@ providers, does not execute `lotus-ai` runtime workflows, and does not promote
 AI-assisted explanation as a supported feature. The evaluator now records
 source-safe lineage through the repository port behind API `Idempotency-Key`
 replay/conflict protection; when PostgreSQL is configured that lineage is
-stored durably. The repo now also carries certified source-safe model-risk
+stored durably. The repo now also carries source-valid model-risk
 operations dashboard and alert artifacts over
 implemented AI explanation telemetry. None of this is certified `lotus-ai`
 runtime lineage, live-provider execution, Workbench product proof, or
@@ -212,8 +212,8 @@ It also returns explicit model-risk operations posture:
 | `modelRiskOperationsContractAvailable` | `true` | A repo-owned model-risk operations contract exists and is validated by `make ai-model-risk-ops-contract-gate`. |
 | `modelRiskDashboardContractAvailable` | `true` | Dashboard control requirements are declared for implemented AI explanation/readiness telemetry. |
 | `modelRiskAlertContractAvailable` | `true` | Alert candidate requirements are declared for implemented AI explanation/readiness telemetry. |
-| `modelRiskDashboardCertified` | `true` | The repo-owned Grafana dashboard references only implemented, bounded AI explanation telemetry. |
-| `modelRiskAlertCertified` | `true` | The repo-owned Prometheus alert rules reference only implemented, bounded AI explanation telemetry and runbook anchors. |
+| `modelRiskDashboardSourceContractValid` | `true` | The repo-owned Grafana dashboard source references only implemented, bounded AI explanation telemetry; provisioning and runtime execution are not claimed. |
+| `modelRiskAlertRulesSourceContractValid` | `true` | The repo-owned Prometheus alert-rule source references only implemented telemetry and runbook anchors; rule loading, evaluation, and delivery are not claimed. |
 
 It requires both the `operator` role and
 `idea.ai-explanation.readiness.read` capability.

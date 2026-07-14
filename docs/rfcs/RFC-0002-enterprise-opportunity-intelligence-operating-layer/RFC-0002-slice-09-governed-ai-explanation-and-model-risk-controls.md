@@ -302,13 +302,22 @@ Validation evidence from the implementation slice:
     publication, serving, consumption, and entitlement evidence. The builder,
     generator, gate, and tests are grouped under `workbench/` without adding a
     deployable service.
+23. Issue `#411` applies the rule to AI model-risk operations evidence. Grafana
+    dashboard JSON, Prometheus rule YAML, the runbook, and static validators now
+    produce a v2 `source_contract` artifact with explicit non-execution and
+    non-deployment posture. Aggregate readiness records the evidence reference
+    but clears no blocker; dashboard provisioning/query execution and alert-rule
+    loading/evaluation/delivery remain required. The builder, thin generator,
+    gate, and tests are grouped under capability-oriented
+    `ai_model_risk_operations/` packages without adding a deployable service.
 
-Issue `#408` changes an internal proof contract and its operator tooling only.
-It adds no route or response schema, so no OpenAPI change is warranted; it
+Issue `#411` changes the AI readiness response vocabulary from certification
+claims to source-contract validity and therefore changes OpenAPI truth. It
 changes no persisted state, so no migration is warranted; it promotes no
 supported feature; and it does not change README onboarding or top-level
 product navigation. Operations docs, RFC truth, repository context, quality
-evidence, and repo-authored wiki source carry the changed operator contract.
+evidence, endpoint certification, and repo-authored wiki source carry the
+changed operator contract.
 
 ## Current Governance References
 
@@ -340,10 +349,11 @@ includes:
    `lotus-ai`,
 2. live-provider execution and production workflow-pack certification beyond
    the current actual deterministic-stub runtime proof, source-safe AI lineage
-   store proof, and certified repo-owned model-risk operations artifacts,
+   store proof, and source-valid repo-owned model-risk operations artifacts,
 3. Gateway/Workbench proof,
-4. certified runtime trust telemetry beyond the current model-risk operations
-   dashboard, alert-rule, and runbook artifacts,
+4. runtime trust telemetry plus environment-bound dashboard provisioning,
+   query execution, alert-rule evaluation, and delivery evidence beyond the
+   current source-valid model-risk operations artifacts,
 5. supported-feature promotion after runtime proof.
 
 ## Required Work

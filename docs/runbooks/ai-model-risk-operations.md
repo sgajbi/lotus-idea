@@ -10,10 +10,13 @@ identifiers, or correlation identifiers.
 
 ## Operating Boundary
 
-The dashboard and alert rules certify operational visibility over implemented
-`lotus_idea_operation_events_total` telemetry only. They do not certify
-`lotus-ai` live-provider execution, Workbench product behavior, data-mesh
-publication, client-ready use, or supported-feature promotion.
+The repository validates that the dashboard and alert-rule source references
+implemented `lotus_idea_operation_events_total` telemetry. Static validation
+does not prove that Grafana provisioned the dashboard, Prometheus loaded or
+evaluated the rules, an alert was delivered, or either artifact ran in a
+deployed environment. It also does not certify `lotus-ai` live-provider
+execution, Workbench product behavior, data-mesh publication, client-ready use,
+or supported-feature promotion.
 
 Production-like self-asserted workflow output must fail with
 `ai_execution_provenance_required`. Signed producer and consumer attestation
@@ -57,7 +60,8 @@ Trigger: `ai_explanation_readiness_read` operation events with
 Response:
 
 1. Inspect the readiness payload certification blockers.
-2. Separate already-certified evidence from remaining blockers:
+2. Separate source-valid artifacts from runtime blockers: dashboard
+   provisioning and query execution, alert-rule loading/evaluation/delivery,
    `lotus-ai` runtime execution, runtime trust telemetry, Workbench product
    proof, and supported-feature promotion.
 3. Do not promote the feature unless implementation-proof readiness, OpenAPI
@@ -65,12 +69,18 @@ Response:
 
 ## Evidence Requirements
 
-Certification evidence must include:
+Source-contract validation evidence must include:
 
 1. `contracts/observability/lotus-idea-ai-model-risk-operations.v1.json`,
 2. `monitoring/grafana/dashboards/lotus-idea-ai-model-risk-operations.json`,
 3. `monitoring/prometheus/rules/lotus-idea-ai-model-risk-operations.rules.yml`,
-4. `scripts/ai_model_risk_operations_proof_contract_gate.py`,
+4. `scripts/ai_model_risk_operations/source_contract_proof_gate.py`,
 5. `make ai-model-risk-operations-proof-contract-gate`,
-6. implementation-proof readiness output showing only the dashboard and alert
-   blockers cleared by this proof.
+6. implementation-proof readiness output retaining
+   `model_risk_dashboard_runtime_proof_missing` and
+   `model_risk_alert_rules_runtime_proof_missing`.
+
+Runtime certification requires separate environment-bound evidence for
+dashboard provisioning and query execution, rule loading and evaluation, alert
+delivery, deployment identity, and the applicable model-risk approval. This
+source-contract proof clears no aggregate readiness blocker.
