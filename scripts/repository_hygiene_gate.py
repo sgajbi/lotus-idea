@@ -35,6 +35,18 @@ PROHIBITED_SUFFIXES = {
 }
 
 REQUIRED_BOUNDED_MODULE_PATHS = {
+    "scripts/persistence/__init__.py",
+    "scripts/persistence/_bootstrap.py",
+    "scripts/persistence/durable_repository_proof_contract_gate.py",
+    "scripts/persistence/generate_ci_execution_receipt.py",
+    "scripts/persistence/generate_durable_repository_proof.py",
+    "src/app/application/durable_repository_proof/__init__.py",
+    "src/app/application/durable_repository_proof/builder.py",
+    "src/app/application/durable_repository_proof/ci_receipt.py",
+    "src/app/application/durable_repository_proof/contract.py",
+    "tests/unit/durable_repository_proof/__init__.py",
+    "tests/unit/durable_repository_proof/test_builder.py",
+    "tests/unit/durable_repository_proof/test_ci_receipt.py",
     "src/app/domain/review_queue/__init__.py",
     "src/app/domain/review_queue/policy.py",
     "src/app/domain/review_queue/snapshot.py",
@@ -125,6 +137,10 @@ REQUIRED_BOUNDED_MODULE_PATHS = {
 }
 
 PROHIBITED_LEGACY_MODULE_PATHS = {
+    "scripts/durable_repository_proof_contract_gate.py",
+    "scripts/generate_durable_repository_proof.py",
+    "src/app/application/durable_repository_proof.py",
+    "tests/unit/test_durable_repository_proof.py",
     "src/app/domain/review_queue_snapshot.py",
     "scripts/generate_outbox_broker_proof.py",
     "scripts/generate_outbox_consumer_runtime_proof.py",

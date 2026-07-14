@@ -17,6 +17,7 @@ from app.application.proof_provenance import current_source_revision
 from app.application.proof_provenance import SOURCE_REVISION_ENV
 from app.application.proof_provenance import SOURCE_REVISION_UNAVAILABLE
 from app.domain import InMemoryIdeaRepository
+from tests.support.durable_repository_proof import SOURCE_COMMIT_SHA
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -25,6 +26,7 @@ def test_implementation_proof_readiness_preserves_blocker_without_aggregate_prov
     raw_proof = build_durable_repository_proof_payload(
         generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
         repository_root=ROOT,
+        source_commit_sha=SOURCE_COMMIT_SHA,
     )
 
     snapshot = build_implementation_proof_readiness_snapshot(
@@ -47,6 +49,7 @@ def test_implementation_proof_readiness_preserves_blocker_for_stale_proof(
             build_durable_repository_proof_payload(
                 generated_at_utc=datetime(2026, 6, 20, 9, 0, tzinfo=UTC),
                 repository_root=ROOT,
+                source_commit_sha=SOURCE_COMMIT_SHA,
             )
         ),
         encoding="utf-8",
@@ -76,6 +79,7 @@ def test_implementation_proof_readiness_preserves_blocker_for_source_revision_mi
     raw_proof = build_durable_repository_proof_payload(
         generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
         repository_root=ROOT,
+        source_commit_sha=SOURCE_COMMIT_SHA,
     )
     proof_path.write_text(json.dumps(raw_proof), encoding="utf-8")
     bound_proof = bind_aggregate_proof_provenance(
@@ -105,6 +109,7 @@ def test_implementation_proof_readiness_preserves_blocker_for_dirty_source_proof
     raw_proof = build_durable_repository_proof_payload(
         generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
         repository_root=ROOT,
+        source_commit_sha=SOURCE_COMMIT_SHA,
     )
     proof_path.write_text(json.dumps(raw_proof), encoding="utf-8")
     bound_proof = bind_aggregate_proof_provenance(

@@ -4,20 +4,32 @@ import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
+try:
+    from scripts.persistence import _bootstrap  # noqa: F401
+except ModuleNotFoundError:
+    import _bootstrap  # type: ignore[import-not-found,no-redef]  # noqa: F401
+
 from app.application.durable_repository_proof import (
     DURABLE_REPOSITORY_PROOF_SCHEMA_VERSION,
+    REQUIRED_DURABLE_REPOSITORY_ASSERTIONS,
     REQUIRED_DURABLE_REPOSITORY_EVIDENCE_REFS,
     build_durable_repository_proof_payload,
     durable_repository_proof_is_valid,
 )
+from app.application.durable_repository_proof.contract import (
+    TRUSTED_DURABLE_REPOSITORY_ARTIFACT_NAME,
+    TRUSTED_DURABLE_REPOSITORY_CI_JOB_NAME,
+    TRUSTED_DURABLE_REPOSITORY_CI_REPOSITORY,
+    TRUSTED_DURABLE_REPOSITORY_CI_SOURCE_REF,
+    TRUSTED_DURABLE_REPOSITORY_CI_WORKFLOW_NAME,
+    TRUSTED_DURABLE_REPOSITORY_CI_WORKFLOW_PATH,
+)
+from app.domain.proof_evidence import CIExecutionReceipt
+from scripts.proof_source_safety import forbidden_content_validator, validate_forbidden_content
 
 
-try:
-    from scripts.proof_source_safety import forbidden_content_validator, validate_forbidden_content
-except ModuleNotFoundError:
-    from proof_source_safety import forbidden_content_validator, validate_forbidden_content  # type: ignore[import-not-found,no-redef]
-
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
+SOURCE_COMMIT_SHA = "a" * 40
 
 FORBIDDEN_KEYS = {
     "accountId",
@@ -43,7 +55,6 @@ FORBIDDEN_TEXT_FRAGMENTS = {
     "/source/",
 }
 
-
 _validate_forbidden_content = forbidden_content_validator(
     FORBIDDEN_KEYS,
     FORBIDDEN_TEXT_FRAGMENTS,
@@ -55,6 +66,8 @@ def validate_durable_repository_proof_contract() -> list[str]:
     proof = build_durable_repository_proof_payload(
         generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
         repository_root=ROOT,
+        source_commit_sha=SOURCE_COMMIT_SHA,
+        ci_execution_receipt=_contract_receipt(),
     )
     if proof.get("schemaVersion") != DURABLE_REPOSITORY_PROOF_SCHEMA_VERSION:
         errors.append(
@@ -66,6 +79,24 @@ def validate_durable_repository_proof_contract() -> list[str]:
         errors.append("durable repository proof must validate against its contract")
     validate_forbidden_content(proof, errors, FORBIDDEN_KEYS, FORBIDDEN_TEXT_FRAGMENTS)
     return errors
+
+
+def _contract_receipt() -> CIExecutionReceipt:
+    return CIExecutionReceipt(
+        repository=TRUSTED_DURABLE_REPOSITORY_CI_REPOSITORY,
+        workflow_path=TRUSTED_DURABLE_REPOSITORY_CI_WORKFLOW_PATH,
+        workflow_name=TRUSTED_DURABLE_REPOSITORY_CI_WORKFLOW_NAME,
+        job_name=TRUSTED_DURABLE_REPOSITORY_CI_JOB_NAME,
+        run_id=1,
+        run_attempt=1,
+        source_commit_sha=SOURCE_COMMIT_SHA,
+        source_ref=TRUSTED_DURABLE_REPOSITORY_CI_SOURCE_REF,
+        conclusion="success",
+        completed_at_utc="2026-06-21T10:00:00+00:00",
+        artifact_name=TRUSTED_DURABLE_REPOSITORY_ARTIFACT_NAME,
+        artifact_sha256=f"sha256:{'b' * 64}",
+        assertions=REQUIRED_DURABLE_REPOSITORY_ASSERTIONS,
+    )
 
 
 def main() -> int:

@@ -1,7 +1,7 @@
 .PHONY: install dependency-refresh lint ci-contract-gate repository-hygiene-gate maintainability-gate duplicate-implementation-inventory duplicate-implementation-gate private-import-boundary-gate foundation-structure-gate documentation-contract-gate quality-scorecard-gate github-issue-closure-matrix-gate monetary-float-guard no-sensitive-content-guard runtime-dependency-closure-gate source-observability-contract-gate api-route-metadata-gate api-problem-details-boundary-gate api-idempotency-boundary-gate api-camel-model-boundary-gate api-signal-model-boundary-gate api-temporal-validation-boundary-gate openapi-problem-details-example-gate caller-context-contract-gate signal-api-contract-gate trusted-tenant-context-gate source-temporal-contract-gate review-queue-snapshot-contract-gate operation-metric-contract-gate service-slo-capacity-contract-gate ai-model-risk-ops-contract-gate ai-model-risk-operations-proof-contract-gate ci-signal-evidence-contract-gate implementation-truth-gate data-mesh-contract-gate mesh-policy-proof-contract-gate opportunity-archetype-contract-gate downstream-realization-contract-gate downstream-route-contract-proof-gate outbox-event-contract-gate outbox-consumer-contract-gate outbox-recovery-contract-gate migration-contract-gate migration-execution-gate deployment-migration-contract-gate durable-repository-proof-contract-gate runtime-trust-telemetry-proof-contract-gate ai-lineage-store-proof-contract-gate ai-workflow-pack-registration-proof-contract-gate ai-workflow-pack-runtime-execution-proof-contract-gate report-intake-route-proof-contract-gate report-materialization-proof-contract-gate workbench-read-path-proof-contract-gate gateway-workbench-operational-proof-contract-gate gateway-workbench-discovery-proof-contract-gate outbox-broker-proof-contract-gate outbox-consumer-runtime-proof-contract-gate outbox-platform-mesh-event-publication-proof-contract-gate platform-mesh-onboarding-proof-contract-gate source-ingestion-worker-check source-ingestion-scheduled-worker-check source-ingestion-live-proof-contract-gate canonical-opportunity-source-proofs canonical-signal-api-proof risk-concentration-live-proof-contract-gate high-volatility-live-proof-contract-gate risk-drawdown-live-proof-contract-gate core-benchmark-assignment-live-proof-contract-gate core-portfolio-state-live-proof-contract-gate bond-maturity-live-proof-contract-gate missing-benchmark-live-proof-contract-gate missing-benchmark-performance-readiness-proof-contract-gate low-income-core-cashflow-live-proof-contract-gate manage-mandate-live-proof-contract-gate mandate-restriction-live-proof-contract-gate mandate-restriction-source-product-proof-contract-gate missing-suitability-live-proof-contract-gate missing-risk-profile-source-product-proof-contract-gate missing-risk-profile-live-proof-contract-gate performance-underperformance-live-proof-contract-gate implementation-proof-readiness-check runtime-trust-telemetry-preview-check runtime-trust-telemetry-snapshot-check migrate migrate-rollback deployment-migrate supported-features-gate endpoint-certification-gate postgres-integration-gate typecheck architecture-boundary-gate architecture-boundary-report quality-baseline openapi-gate test test-unit test-integration test-e2e test-unit-coverage test-integration-coverage test-e2e-coverage test-coverage security-audit check ci ci-release docker-build container-runtime-smoke release-sbom container-image-scan release-image-identity-contract-gate clean
 
 .PHONY: candidate-state-contract-gate review-identity-contract-gate conversion-outcome-contract-gate outbox-supportability-contract-gate outbox-supportability-rule-test service-slo-rule-test service-capacity-baseline-contract-gate service-load-soak-proof-gate service-resource-baseline-contract-gate service-resource-proof-gate service-capacity-workload downstream-capacity-seed service-resource-baseline postgres-capacity-threshold-proof supported-feature-promotion-contract-gate disaster-recovery-contract-gate disaster-recovery-proof-gate postgres-disaster-recovery-seed postgres-disaster-recovery-drill postgres-disaster-recovery-resume data-lifecycle-contract-gate scheduled-data-lifecycle-seed scheduled-data-lifecycle-review scheduled-data-lifecycle-review-proof-gate
-.PHONY: license-compliance-gate license-release-evidence-gate lotus-ai-attestation-contract-proof lotus-ai-attestation-contract-proof-gate ai-provider-retention-contract-gate archive-lifecycle-posture-contract-gate ai-lineage-store-ci-proof
+.PHONY: license-compliance-gate license-release-evidence-gate lotus-ai-attestation-contract-proof lotus-ai-attestation-contract-proof-gate ai-provider-retention-contract-gate archive-lifecycle-posture-contract-gate ai-lineage-store-ci-proof durable-repository-ci-proof
 
 VENV_DIR ?= .venv
 UNIT_TESTS ?= tests/unit
@@ -51,6 +51,9 @@ LOTUS_IDEA_AI_LINEAGE_STORE_PROOF_OUTPUT ?= output/ai/ai-lineage-store-proof.jso
 LOTUS_IDEA_AI_LINEAGE_STORE_CI_RECEIPT ?=
 POSTGRES_RUNTIME_PROOF_JUNIT ?= output/persistence/postgres-runtime-proof.junit.xml
 POSTGRES_CI_EXECUTION_RECEIPT_OUTPUT ?= output/persistence/postgres-ci-execution-receipt.json
+LOTUS_IDEA_DURABLE_REPOSITORY_PROOF_OUTPUT ?= output/persistence/durable-repository-proof.json
+LOTUS_IDEA_DURABLE_REPOSITORY_CI_RECEIPT ?=
+DURABLE_REPOSITORY_CI_RECEIPT_OUTPUT ?= output/persistence/durable-repository-ci-execution-receipt.json
 LOTUS_IDEA_AI_MODEL_RISK_OPERATIONS_PROOF ?=
 LOTUS_IDEA_AI_MODEL_RISK_OPERATIONS_PROOF_OUTPUT ?= output/ai/ai-model-risk-operations-proof.json
 LOTUS_IDEA_OPERATOR_WORKFLOWS_OPERATIONS_PROOF ?=
@@ -475,7 +478,7 @@ deployment-migration-contract-gate:
 	$(VENV_PYTHON) scripts/deployment_migration_contract_gate.py
 
 durable-repository-proof-contract-gate:
-	$(VENV_PYTHON) scripts/durable_repository_proof_contract_gate.py
+	$(VENV_PYTHON) scripts/persistence/durable_repository_proof_contract_gate.py
 
 runtime-trust-telemetry-proof-contract-gate:
 	$(VENV_PYTHON) scripts/runtime_trust_telemetry_proof_contract_gate.py
@@ -486,6 +489,10 @@ ai-lineage-store-proof-contract-gate:
 ai-lineage-store-ci-proof:
 	$(VENV_PYTHON) scripts/generate_postgres_ci_execution_receipt.py --test-report "$(POSTGRES_RUNTIME_PROOF_JUNIT)" --repository "$(GITHUB_REPOSITORY)" --workflow-path "$(CI_WORKFLOW_PATH)" --workflow-name "$(GITHUB_WORKFLOW)" --job-name "$(CI_JOB_NAME)" --run-id "$(GITHUB_RUN_ID)" --run-attempt "$(GITHUB_RUN_ATTEMPT)" --source-commit-sha "$(GITHUB_SHA)" --source-ref "$(GITHUB_REF)" --conclusion success --completed-at-utc "$(BUILD_TIMESTAMP)" --artifact-sha256 "$(CI_ARTIFACT_SHA256)" --output "$(POSTGRES_CI_EXECUTION_RECEIPT_OUTPUT)"
 	$(VENV_PYTHON) scripts/generate_ai_lineage_store_proof.py --generated-at-utc "$(BUILD_TIMESTAMP)" --ci-execution-receipt "$(POSTGRES_CI_EXECUTION_RECEIPT_OUTPUT)" --output "$(LOTUS_IDEA_AI_LINEAGE_STORE_PROOF_OUTPUT)"
+
+durable-repository-ci-proof:
+	$(VENV_PYTHON) scripts/persistence/generate_ci_execution_receipt.py --test-report "$(POSTGRES_RUNTIME_PROOF_JUNIT)" --repository "$(GITHUB_REPOSITORY)" --workflow-path "$(CI_WORKFLOW_PATH)" --workflow-name "$(GITHUB_WORKFLOW)" --job-name "$(CI_JOB_NAME)" --run-id "$(GITHUB_RUN_ID)" --run-attempt "$(GITHUB_RUN_ATTEMPT)" --source-commit-sha "$(GITHUB_SHA)" --source-ref "$(GITHUB_REF)" --conclusion success --completed-at-utc "$(BUILD_TIMESTAMP)" --artifact-sha256 "$(CI_ARTIFACT_SHA256)" --output "$(DURABLE_REPOSITORY_CI_RECEIPT_OUTPUT)"
+	$(VENV_PYTHON) scripts/persistence/generate_durable_repository_proof.py --generated-at-utc "$(BUILD_TIMESTAMP)" --source-commit-sha "$(GITHUB_SHA)" --ci-execution-receipt "$(DURABLE_REPOSITORY_CI_RECEIPT_OUTPUT)" --output "$(LOTUS_IDEA_DURABLE_REPOSITORY_PROOF_OUTPUT)"
 
 ai-workflow-pack-registration-proof-contract-gate:
 	$(VENV_PYTHON) scripts/ai_workflow_pack_registration_proof_contract_gate.py
@@ -597,7 +604,7 @@ bond-maturity-live-proof-contract-gate:
 
 implementation-proof-readiness-check:
 	$(VENV_PYTHON) scripts/generate_scheduled_source_ingestion_worker_proof.py --manifest docs/examples/source-ingestion/high-cash-worker-manifest.example.json --generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --run-forever --output output/source-ingestion/scheduled-worker-proof.json
-	$(VENV_PYTHON) scripts/generate_durable_repository_proof.py --generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --output output/persistence/durable-repository-proof.json
+	$(VENV_PYTHON) scripts/persistence/generate_durable_repository_proof.py --generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --source-commit-sha "$(BUILD_GIT_COMMIT_SHA)" $(if $(LOTUS_IDEA_DURABLE_REPOSITORY_CI_RECEIPT),--ci-execution-receipt $(LOTUS_IDEA_DURABLE_REPOSITORY_CI_RECEIPT),) --output $(LOTUS_IDEA_DURABLE_REPOSITORY_PROOF_OUTPUT)
 	$(VENV_PYTHON) scripts/generate_runtime_trust_telemetry_proof.py --generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --output output/trust-telemetry/runtime/runtime-trust-telemetry-proof.json
 	$(VENV_PYTHON) scripts/generate_ai_lineage_store_proof.py --generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) $(if $(LOTUS_IDEA_AI_LINEAGE_STORE_CI_RECEIPT),--ci-execution-receipt $(LOTUS_IDEA_AI_LINEAGE_STORE_CI_RECEIPT),) --output $(LOTUS_IDEA_AI_LINEAGE_STORE_PROOF_OUTPUT)
 	$(VENV_PYTHON) scripts/generate_ai_model_risk_operations_proof.py --generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --output $(LOTUS_IDEA_AI_MODEL_RISK_OPERATIONS_PROOF_OUTPUT)

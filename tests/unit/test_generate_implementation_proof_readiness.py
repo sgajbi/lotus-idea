@@ -29,6 +29,10 @@ from app.application.implementation_proof_readiness import (
     build_implementation_proof_readiness_snapshot,
 )
 from app.application.mesh_policy_proof import build_mesh_policy_proof_payload
+from tests.support.durable_repository_proof import (
+    SOURCE_COMMIT_SHA,
+    valid_durable_repository_ci_execution_receipt,
+)
 from app.application.outbox.broker_proof import build_outbox_broker_proof_payload
 from app.application.outbox.consumer_runtime_proof import (
     build_outbox_consumer_runtime_proof_payload,
@@ -308,6 +312,8 @@ def test_generate_implementation_proof_readiness_uses_explicit_durable_repositor
             build_durable_repository_proof_payload(
                 generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
                 repository_root=Path(__file__).resolve().parents[2],
+                source_commit_sha=SOURCE_COMMIT_SHA,
+                ci_execution_receipt=valid_durable_repository_ci_execution_receipt(),
             )
         ),
         encoding="utf-8",

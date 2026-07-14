@@ -116,7 +116,10 @@ GENERATED_READINESS_ARTIFACTS = (
         "scripts/generate_scheduled_source_ingestion_worker_proof.py",
         "a scheduled source-ingestion worker proof artifact",
     ),
-    ("scripts/generate_durable_repository_proof.py", "durable repository proof artifact"),
+    (
+        "scripts/persistence/generate_durable_repository_proof.py",
+        "durable repository proof artifact",
+    ),
     ("scripts/generate_runtime_trust_telemetry_proof.py", "runtime telemetry proof artifact"),
     ("scripts/generate_ai_lineage_store_proof.py", "an AI lineage store proof artifact"),
     (
