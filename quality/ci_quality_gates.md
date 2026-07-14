@@ -37,7 +37,7 @@ Blocking scaffold commands:
 28. `make workbench-read-path-proof-contract-gate`
 29. `make gateway-workbench-contract-proof-contract-gate`
 30. `make gateway-workbench-discovery-contract-proof-contract-gate`
-31. `make outbox-broker-proof-contract-gate`
+31. `make outbox-broker-source-contract-proof-gate`
 32. `make platform-mesh-onboarding-proof-contract-gate`
 33. `make downstream-route-contract-proof-gate`
 34. `make source-ingestion-worker-check`
@@ -82,7 +82,7 @@ Release and review evidence commands:
    deploy-proof artifact, durable repository proof artifact, runtime trust
    telemetry proof artifact, Workbench read-path proof artifact,
    Gateway/Workbench contract proof artifact, Gateway/Workbench discovery
-   proof artifact, outbox broker proof artifact, default Advise proposal route
+   proof artifact, outbox broker source-contract proof artifact, default Advise proposal route
    proof artifact, default Manage action route proof artifact, default Report
    intake route proof artifact, default mesh policy proof artifact, and default
    platform mesh onboarding proof artifact, plus AI lineage store and AI
@@ -123,7 +123,7 @@ Risk high-volatility and drawdown live-proof contract validation,
 Advise mandate/restriction live-proof contract validation,
 Workbench read-path proof contract validation,
 Gateway/Workbench discovery contract proof contract validation,
-outbox broker proof contract validation,
+outbox broker source-contract proof validation,
 implementation-proof readiness target wiring and release-lane placement, runtime trust telemetry preview generation, runtime trust telemetry snapshot release-lane placement,
 source-observability contract validation, API route metadata validation,
 API ProblemDetails boundary validation, OpenAPI ProblemDetails example validation,
@@ -413,12 +413,15 @@ artifact's aggregate `blockReasonCounts`. This keeps Core-runtime proof
 failures diagnosable while blocking raw portfolio identifiers, source payloads,
 idempotency keys, candidate identifiers, and premature support claims.
 
-`make outbox-broker-proof-contract-gate` validates the bounded outbox broker
-proof artifact used by aggregate implementation-proof readiness. It blocks
-source-sensitive event, aggregate, idempotency, payload, portfolio, client,
-trace, and broker-content leakage while preserving the boundary that external
-publication, downstream consumers, platform mesh events, Gateway/Workbench
-proof, and supported-feature promotion remain uncertified.
+`make outbox-broker-source-contract-proof-gate` validates the bounded outbox
+broker source-contract artifact used by aggregate implementation-proof
+readiness. It rejects runtime, deployment, production, support, and
+blocker-clearance claim inflation; uses AST-backed publisher port and adapter
+checks instead of scanning test-source fragments; and blocks source-sensitive
+event, aggregate, idempotency, payload, portfolio, client, trace, and broker
+content. External broker configuration/publication, downstream consumers,
+platform mesh events, Gateway/Workbench proof, and supported-feature promotion
+remain uncertified.
 
 `make downstream-realization-contract-gate` validates
 `contracts/downstream-realization/lotus-idea-downstream-contracts.v1.json`.

@@ -318,13 +318,15 @@ Implemented first-wave internal scope:
     `contracts/outbox-events/lotus-idea-outbox-events.v1.json` and
     `make outbox-event-contract-gate` now define and enforce the repo-owned
     outbox event envelope, event families, payload safety policy, and remaining
-    certification blockers. `src/app/application/outbox/broker_proof.py`,
-    `scripts/outbox/generate_broker_proof.py`, and
-    `make outbox-broker-proof-contract-gate` now add a source-safe bounded
-    outbox broker proof artifact for aggregate implementation-readiness
-    evidence. It clears only the aggregate broker configuration/runtime-proof
-    blockers and preserves downstream consumer runtime, platform mesh event
-    publication, Gateway/Workbench, and supported-feature blockers.
+    certification blockers.
+    `src/app/application/outbox/broker/source_contract_proof.py`,
+    `scripts/outbox/broker/generate_source_contract_proof.py`, and
+    `make outbox-broker-source-contract-proof-gate` add a source-safe bounded
+    outbox broker source-contract artifact for aggregate
+    implementation-readiness evidence. It adds provenance and clears no
+    blocker. External broker configuration/runtime, downstream consumer
+    runtime, platform mesh publication, Gateway/Workbench, and
+    supported-feature blockers remain.
     `contracts/outbox-events/lotus-idea-outbox-consumers.v1.json` and
     `make outbox-consumer-contract-gate` now declare Gateway, Advise, Manage,
     and Report as governed downstream consumers with source-authority
@@ -485,7 +487,7 @@ External certification backlog (not repository-implementation blockers):
 5. certified external broker publication and downstream delivery beyond the
    aggregate outbox readiness diagnostic, HTTP
    publisher adapter foundation, repo-owned outbox event and consumer
-   contracts, bounded outbox broker proof artifact, bounded downstream
+   contracts, bounded outbox broker source-contract artifact, bounded downstream
    consumer source-contract proof artifact, and bounded outbox platform mesh event
    publication proof artifact; issue `#379` tracks live authoritative outcomes,
 6. Gateway/Workbench product proof and supported-feature promotion, tracked by

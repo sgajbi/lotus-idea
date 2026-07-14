@@ -59,8 +59,9 @@ Current implementation includes these bounded foundations:
 7. downstream conversion/report submission foundations that record local
    submission posture and never grant downstream source authority,
 8. source-safe outbox event publication foundations with retry/dead-letter
-   state, idempotent operator run-once identity, and bounded broker proof
-   artifacts,
+   state, idempotent operator run-once identity, and a bounded broker
+   source-contract proof that never substitutes for external broker runtime
+   evidence,
 9. AI explanation foundations with deterministic evidence, API-idempotent
    lineage storage, signed Lotus AI run-attestation verification and replay
    protection, model-risk operations evidence, and no provider-runtime
@@ -898,7 +899,7 @@ make openapi-quality-gate
 make data-mesh-contract-gate
 make downstream-realization-contract-gate
 make downstream-route-contract-proof-gate
-make outbox-broker-proof-contract-gate
+make outbox-broker-source-contract-proof-gate
 make runtime-trust-telemetry-proof-contract-gate
 make source-ingestion-live-proof-contract-gate
 make canonical-opportunity-source-proofs
