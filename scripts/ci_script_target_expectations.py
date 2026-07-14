@@ -118,7 +118,7 @@ SCRIPT_TARGET_EXPECTATIONS = {
     "postgres-disaster-recovery-drill": ("scripts/run_postgres_disaster_recovery_drill.py"),
     "postgres-disaster-recovery-resume": ("scripts/validate_postgres_disaster_recovery_resume.py"),
     "operator-workflows-operations-proof-contract-gate": (
-        "scripts/operator_workflows_operations_proof_contract_gate.py"
+        "scripts/operator_workflows_operations/source_contract_proof_gate.py"
     ),
     "ci-signal-evidence-contract-gate": "scripts/ci_signal_evidence_contract_gate.py",
     "high-volatility-live-proof-contract-gate": (

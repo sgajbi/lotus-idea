@@ -44,8 +44,7 @@ from app.application.mesh_policy_proof import (
     MESH_POLICY_BLOCKERS_CLEARED,
     mesh_policy_proof_is_valid,
 )
-from app.application.operator_workflows_operations_proof import (
-    OPERATOR_WORKFLOWS_OPERATIONS_BLOCKERS_CLEARED,
+from app.application.operator_workflows_operations.source_contract_proof import (
     operator_workflows_operations_proof_is_valid,
 )
 from app.application.outbox.broker_proof import outbox_broker_proof_is_valid
@@ -520,7 +519,7 @@ def _apply_operator_workflows_operations_proof_if_valid(
     operator_workflows_operations_proof: Mapping[str, object] | None,
     operator_workflows_operations_proof_ref: str | None,
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
-    if not _proof_can_clear_blockers(
+    if not _proof_is_valid_and_current(
         operator_workflows_operations_proof,
         operator_workflows_operations_proof_ref,
         evaluated_at_utc=evaluated_at_utc,
@@ -528,13 +527,30 @@ def _apply_operator_workflows_operations_proof_if_valid(
     ):
         return capabilities
     return tuple(
-        _apply_downstream_route_contract_proof(
-            capability,
-            capability_id="operator-workflows-operations",
-            blockers_cleared=OPERATOR_WORKFLOWS_OPERATIONS_BLOCKERS_CLEARED,
-            proof_ref=operator_workflows_operations_proof_ref,
+        _apply_operator_workflows_operations_source_contract(
+            capability, operator_workflows_operations_proof_ref
         )
         for capability in capabilities
+    )
+
+
+def _apply_operator_workflows_operations_source_contract(
+    capability: ImplementationProofCapabilityReadiness,
+    proof_ref: str | None,
+) -> ImplementationProofCapabilityReadiness:
+    if capability.capability_id != "operator-workflows-operations":
+        return capability
+    evidence_refs = capability.evidence_refs
+    if proof_ref:
+        evidence_refs = tuple(dict.fromkeys((*evidence_refs, proof_ref)))
+    return build_capability_readiness(
+        capability.capability_id,
+        capability.name,
+        readiness_status=capability.readiness_status,
+        supportability_status=capability.supportability_status,
+        evidence_refs=evidence_refs,
+        blockers=capability.blockers,
+        supported_feature_promoted=capability.supported_feature_promoted,
     )
 
 

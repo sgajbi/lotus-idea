@@ -49,7 +49,7 @@ from app.application.missing_risk_profile_live_proof import (
 from app.application.missing_risk_profile_source_product_proof import (
     MISSING_RISK_PROFILE_SOURCE_PRODUCT_PROOF_ENV,
 )
-from app.application.operator_workflows_operations_proof import (
+from app.application.operator_workflows_operations.source_contract_proof import (
     OPERATOR_WORKFLOWS_OPERATIONS_PROOF_ENV,
 )
 from app.application.outbox.broker_proof import OUTBOX_BROKER_PROOF_ENV

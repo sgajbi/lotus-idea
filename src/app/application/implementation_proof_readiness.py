@@ -27,7 +27,7 @@ from app.application.opportunity_archetype_contracts import OPPORTUNITY_ARCHETYP
 from app.application.opportunity_archetype_readiness import (
     build_opportunity_archetype_scenario_readiness,
 )
-from app.application.operator_workflows_operations_proof import (
+from app.application.operator_workflows_operations.source_contract_proof import (
     OPERATOR_WORKFLOWS_OPERATIONS_BLOCKERS_CLEARED,
     REMAINING_OPERATOR_WORKFLOWS_OPERATIONS_BLOCKERS,
     REQUIRED_OPERATOR_WORKFLOWS_OPERATIONS_EVIDENCE_REFS,

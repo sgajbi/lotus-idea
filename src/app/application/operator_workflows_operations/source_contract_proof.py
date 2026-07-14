@@ -13,17 +13,20 @@ from app.application.source_safe_cross_repo_proof import (
     required_file_evidence_present,
     required_make_target_evidence_present,
 )
+from app.domain.proof_evidence import EvidenceClass, evidence_class_can_clear
 from app.observability import OPERATION_EVENT_SOURCE_AUTHORITIES
 
 OPERATOR_WORKFLOWS_OPERATIONS_PROOF_SCHEMA_VERSION = (
-    "lotus-idea.operator-workflows-operations-proof.v1"
+    "lotus-idea.operator-workflows-operations-proof.v2"
 )
 OPERATOR_WORKFLOWS_OPERATIONS_PROOF_ENV = "LOTUS_IDEA_OPERATOR_WORKFLOWS_OPERATIONS_PROOF"
-OPERATOR_WORKFLOWS_OPERATIONS_BLOCKERS_CLEARED = (
-    "operator_workflow_dashboard_not_certified",
-    "operator_workflow_alerts_not_certified",
-)
+OPERATOR_WORKFLOWS_OPERATIONS_REQUIRED_BLOCKER_EVIDENCE_CLASSES: tuple[
+    tuple[str, str], ...
+] = ()
+OPERATOR_WORKFLOWS_OPERATIONS_BLOCKERS_CLEARED: tuple[str, ...] = ()
 REMAINING_OPERATOR_WORKFLOWS_OPERATIONS_BLOCKERS = (
+    "operator_workflow_dashboard_runtime_proof_missing",
+    "operator_workflow_alert_rules_runtime_proof_missing",
     "live_source_ingestion_certification_missing",
     "external_broker_runtime_proof_missing",
     "downstream_execution_outcome_authority_missing",
@@ -41,7 +44,10 @@ REQUIRED_OPERATOR_WORKFLOWS_OPERATIONS_EVIDENCE_REFS = (
     "docs/runbooks/operator-workflows-operations.md",
     "src/app/observability/logging.py",
     "src/app/observability/outbox/supportability.py",
-    "tests/unit/test_operator_workflows_operations_proof.py",
+    "src/app/application/operator_workflows_operations/source_contract_proof.py",
+    "scripts/operator_workflows_operations/generate_source_contract_proof.py",
+    "scripts/operator_workflows_operations/source_contract_proof_gate.py",
+    "tests/unit/operator_workflows_operations/test_source_contract_proof.py",
     "make operator-workflows-ops-contract-gate",
     "make outbox-supportability-contract-gate",
     "make outbox-supportability-rule-test",
@@ -117,25 +123,39 @@ def build_operator_workflows_operations_proof_payload(
         repository_root=repository_root,
         evidence_refs=evidence_refs,
     )
-    dashboard_certified = _dashboard_artifact_certified(repository_root)
-    alert_rules_certified = _alert_rules_artifact_certified(repository_root)
-    runbook_certified = _runbook_artifact_certified(repository_root)
-    operations_contract_certified = _operations_contract_certified(repository_root)
+    dashboard_source_contract_valid = _dashboard_source_contract_is_valid(repository_root)
+    alert_rules_source_contract_valid = _alert_rules_source_contract_is_valid(repository_root)
+    runbook_source_contract_valid = _runbook_source_contract_is_valid(repository_root)
+    operations_source_contract_valid = _operations_source_contract_is_valid(repository_root)
+    evidence_class_matches_blockers = all(
+        evidence_class_can_clear(
+            actual=EvidenceClass.SOURCE_CONTRACT,
+            required=EvidenceClass(required_class),
+        )
+        for _blocker, required_class in (
+            OPERATOR_WORKFLOWS_OPERATIONS_REQUIRED_BLOCKER_EVIDENCE_CLASSES
+        )
+    )
     proof_valid = (
         timezone_aware_generated_at_utc
         and file_evidence_present
         and make_target_evidence_present
-        and dashboard_certified
-        and alert_rules_certified
-        and runbook_certified
-        and operations_contract_certified
+        and dashboard_source_contract_valid
+        and alert_rules_source_contract_valid
+        and runbook_source_contract_valid
+        and operations_source_contract_valid
+        and evidence_class_matches_blockers
     )
     return {
         "schemaVersion": OPERATOR_WORKFLOWS_OPERATIONS_PROOF_SCHEMA_VERSION,
         "repository": "lotus-idea",
         "generatedAtUtc": generated_at_utc.isoformat(),
-        "proofType": "operator_workflows_dashboard_alert_certification",
-        "proofScope": "source_safe_operations_artifact_certification",
+        "proofType": "operator_workflows_operations_source_contract",
+        "proofScope": "source_safe_operations_artifact_contract",
+        "evidenceClass": EvidenceClass.SOURCE_CONTRACT.value,
+        "requiredBlockerEvidenceClasses": dict(
+            OPERATOR_WORKFLOWS_OPERATIONS_REQUIRED_BLOCKER_EVIDENCE_CLASSES
+        ),
         "operatorWorkflowsOperationsProofValid": proof_valid,
         "aggregateBlockersCleared": OPERATOR_WORKFLOWS_OPERATIONS_BLOCKERS_CLEARED,
         "evidenceRefs": evidence_refs,
@@ -143,18 +163,22 @@ def build_operator_workflows_operations_proof_payload(
             "timezoneAwareGeneratedAtUtc": timezone_aware_generated_at_utc,
             "fileEvidencePresent": file_evidence_present,
             "makeTargetEvidencePresent": make_target_evidence_present,
-            "dashboardArtifactCertified": dashboard_certified,
-            "alertRulesArtifactCertified": alert_rules_certified,
-            "runbookArtifactCertified": runbook_certified,
-            "operationsContractCertified": operations_contract_certified,
+            "dashboardSourceContractValid": dashboard_source_contract_valid,
+            "alertRulesSourceContractValid": alert_rules_source_contract_valid,
+            "runbookSourceContractValid": runbook_source_contract_valid,
+            "operationsSourceContractValid": operations_source_contract_valid,
+            "evidenceClassMatchesBlockers": evidence_class_matches_blockers,
         },
         "remainingCertificationBlockers": REMAINING_OPERATOR_WORKFLOWS_OPERATIONS_BLOCKERS,
         "metricFamily": EXPECTED_METRIC_NAME,
         "outboxSupportabilityMetricFamilies": EXPECTED_OUTBOX_SUPPORTABILITY_METRICS,
         "dashboardUid": EXPECTED_DASHBOARD_UID,
         "alertIds": EXPECTED_ALERT_IDS,
-        "operatorDashboardCertified": proof_valid,
-        "operatorAlertsCertified": proof_valid,
+        "operatorDashboardSourceContractValid": dashboard_source_contract_valid,
+        "operatorAlertRulesSourceContractValid": alert_rules_source_contract_valid,
+        "runtimeExecutionObserved": False,
+        "deploymentObserved": False,
+        "productionCertificationGranted": False,
         "liveSourceIngestionCertified": False,
         "externalBrokerRuntimeCertified": False,
         "downstreamExecutionOutcomeAuthorityCertified": False,
@@ -168,6 +192,9 @@ def build_operator_workflows_operations_proof_payload(
 
 def operator_workflows_operations_proof_is_valid(payload: Mapping[str, Any]) -> bool:
     expected_false_fields = (
+        "runtimeExecutionObserved",
+        "deploymentObserved",
+        "productionCertificationGranted",
         "liveSourceIngestionCertified",
         "externalBrokerRuntimeCertified",
         "downstreamExecutionOutcomeAuthorityCertified",
@@ -180,17 +207,25 @@ def operator_workflows_operations_proof_is_valid(payload: Mapping[str, Any]) -> 
     expected_values = {
         "schemaVersion": OPERATOR_WORKFLOWS_OPERATIONS_PROOF_SCHEMA_VERSION,
         "repository": "lotus-idea",
-        "proofType": "operator_workflows_dashboard_alert_certification",
-        "proofScope": "source_safe_operations_artifact_certification",
+        "proofType": "operator_workflows_operations_source_contract",
+        "proofScope": "source_safe_operations_artifact_contract",
+        "evidenceClass": EvidenceClass.SOURCE_CONTRACT.value,
         "operatorWorkflowsOperationsProofValid": True,
         "metricFamily": EXPECTED_METRIC_NAME,
         "dashboardUid": EXPECTED_DASHBOARD_UID,
-        "operatorDashboardCertified": True,
-        "operatorAlertsCertified": True,
+        "operatorDashboardSourceContractValid": True,
+        "operatorAlertRulesSourceContractValid": True,
     }
     if any(payload.get(key) != value for key, value in expected_values.items()):
         return False
     if any(payload.get(field_name) is not False for field_name in expected_false_fields):
+        return False
+    required_classes = payload.get("requiredBlockerEvidenceClasses")
+    if not isinstance(required_classes, Mapping):
+        return False
+    if tuple(required_classes.items()) != (
+        OPERATOR_WORKFLOWS_OPERATIONS_REQUIRED_BLOCKER_EVIDENCE_CLASSES
+    ):
         return False
     if tuple(payload.get("alertIds") or ()) != EXPECTED_ALERT_IDS:
         return False
@@ -221,15 +256,16 @@ def operator_workflows_operations_proof_is_valid(payload: Mapping[str, Any]) -> 
             "timezoneAwareGeneratedAtUtc",
             "fileEvidencePresent",
             "makeTargetEvidencePresent",
-            "dashboardArtifactCertified",
-            "alertRulesArtifactCertified",
-            "runbookArtifactCertified",
-            "operationsContractCertified",
+            "dashboardSourceContractValid",
+            "alertRulesSourceContractValid",
+            "runbookSourceContractValid",
+            "operationsSourceContractValid",
+            "evidenceClassMatchesBlockers",
         )
     )
 
 
-def _dashboard_artifact_certified(repository_root: Path) -> bool:
+def _dashboard_source_contract_is_valid(repository_root: Path) -> bool:
     path = (
         repository_root
         / "monitoring/grafana/dashboards/lotus-idea-operator-workflows-operations.json"
@@ -256,7 +292,7 @@ def _dashboard_artifact_certified(repository_root: Path) -> bool:
     return isinstance(panels, list) and len(panels) == 7
 
 
-def _alert_rules_artifact_certified(repository_root: Path) -> bool:
+def _alert_rules_source_contract_is_valid(repository_root: Path) -> bool:
     path = (
         repository_root
         / "monitoring/prometheus/rules/lotus-idea-operator-workflows-operations.rules.yml"
@@ -274,19 +310,21 @@ def _alert_rules_artifact_certified(repository_root: Path) -> bool:
     return all(operation in text for operation in EXPECTED_DASHBOARD_OPERATIONS)
 
 
-def _runbook_artifact_certified(repository_root: Path) -> bool:
+def _runbook_source_contract_is_valid(repository_root: Path) -> bool:
     text = read_text(repository_root / "docs/runbooks/operator-workflows-operations.md")
     if not text or _contains_forbidden_observability_fragment(text):
         return False
+    normalized_text = " ".join(text.split())
     required_fragments = tuple(f"## {alert_id}" for alert_id in EXPECTED_ALERT_IDS) + (
         "supported-feature promotion",
         "downstream execution outcomes",
         "external broker publication",
+        "Static validation does not prove",
     )
-    return all(fragment in text for fragment in required_fragments)
+    return all(fragment in normalized_text for fragment in required_fragments)
 
 
-def _operations_contract_certified(repository_root: Path) -> bool:
+def _operations_source_contract_is_valid(repository_root: Path) -> bool:
     path = (
         repository_root / "contracts/observability/lotus-idea-operator-workflows-operations.v1.json"
     )
@@ -294,9 +332,9 @@ def _operations_contract_certified(repository_root: Path) -> bool:
         payload = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
         return False
-    if payload.get("dashboard_certified") is not True:
+    if payload.get("dashboard_source_contract_valid") is not True:
         return False
-    if payload.get("alert_certified") is not True:
+    if payload.get("alert_rules_source_contract_valid") is not True:
         return False
     source_of_truth = payload.get("source_of_truth")
     if not isinstance(source_of_truth, Mapping):
@@ -306,21 +344,21 @@ def _operations_contract_certified(repository_root: Path) -> bool:
         "alert_rules": "monitoring/prometheus/rules/"
         "lotus-idea-operator-workflows-operations.rules.yml",
         "operator_runbook": "docs/runbooks/operator-workflows-operations.md",
-        "proof_contract_gate": "scripts/operator_workflows_operations_proof_contract_gate.py",
+        "proof_contract_gate": "scripts/operator_workflows_operations/source_contract_proof_gate.py",
     }
     if any(source_of_truth.get(key) != value for key, value in expected_paths.items()):
         return False
     dashboard_statuses = {
-        control.get("certification_status")
+        control.get("source_contract_status")
         for control in payload.get("operator_dashboard_controls", ())
         if isinstance(control, Mapping)
     }
     alert_statuses = {
-        alert.get("certification_status")
+        alert.get("source_contract_status")
         for alert in payload.get("operator_alert_candidates", ())
         if isinstance(alert, Mapping)
     }
-    return dashboard_statuses == {"certified"} and alert_statuses == {"certified"}
+    return dashboard_statuses == {"valid"} and alert_statuses == {"valid"}
 
 
 def _contains_forbidden_observability_fragment(text: str) -> bool:

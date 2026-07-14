@@ -315,8 +315,8 @@ IMPLEMENTATION_PROOF_READINESS_ROUTE: RouteMetadata = {
                         "supportedFeaturesPromoted": False,
                         "overallBlockers": [
                             "source_ingestion_manifest_not_configured",
-                            "operator_workflow_dashboard_not_certified",
-                            "operator_workflow_alerts_not_certified",
+                            "operator_workflow_dashboard_runtime_proof_missing",
+                            "operator_workflow_alert_rules_runtime_proof_missing",
                             "workbench_panel_missing",
                             "no_supported_features_promoted",
                         ],
@@ -343,8 +343,8 @@ IMPLEMENTATION_PROOF_READINESS_ROUTE: RouteMetadata = {
                                     "make operator-workflows-operations-proof-contract-gate",
                                 ],
                                 "blockers": [
-                                    "operator_workflow_dashboard_not_certified",
-                                    "operator_workflow_alerts_not_certified",
+                                    "operator_workflow_dashboard_runtime_proof_missing",
+                                    "operator_workflow_alert_rules_runtime_proof_missing",
                                     "external_broker_runtime_proof_missing",
                                     "gateway_workbench_proof_missing",
                                     "supported_feature_promotion_missing",
