@@ -25,7 +25,9 @@ from app.application.platform_mesh_onboarding_proof import (
     build_platform_mesh_onboarding_proof_payload,
 )
 from app.application.proof_provenance import bind_aggregate_proof_provenance
-from app.application.workbench_read_path_proof import build_workbench_read_path_proof_payload
+from app.application.workbench.read_path_source_contract import (
+    build_workbench_read_path_source_contract_proof_payload,
+)
 from app.domain import InMemoryIdeaRepository
 from tests.unit.workbench.test_discovery_contract_proof import _write_platform_fixture
 
@@ -118,7 +120,7 @@ def test_readiness_uses_gateway_workbench_discovery_contract_proof_without_suppo
 
 def _valid_gateway_workbench_discovery_contract_proof(tmp_path: Path) -> dict[str, object]:
     platform_root = _write_platform_fixture(tmp_path)
-    workbench_read_path_proof = build_workbench_read_path_proof_payload(
+    read_path_source_contract_proof = build_workbench_read_path_source_contract_proof_payload(
         generated_at_utc=GENERATED_AT_UTC,
         repository_root=ROOT,
     )
@@ -131,15 +133,19 @@ def _valid_gateway_workbench_discovery_contract_proof(tmp_path: Path) -> dict[st
             repository_root=ROOT,
             platform_root=platform_root,
         ),
-        workbench_read_path_proof=workbench_read_path_proof,
+        workbench_read_path_source_contract_proof=read_path_source_contract_proof,
         gateway_workbench_contract_proof=build_gateway_workbench_contract_proof_payload(
             generated_at_utc=GENERATED_AT_UTC,
             repository_root=ROOT,
-            workbench_read_path_proof=workbench_read_path_proof,
-            workbench_read_path_proof_ref="output/workbench/workbench-read-path-proof.json",
+            workbench_read_path_source_contract_proof=read_path_source_contract_proof,
+            workbench_read_path_source_contract_proof_ref=(
+                "output/workbench/read-path-source-contract-proof.json"
+            ),
         ),
         platform_mesh_onboarding_proof_ref="output/data-mesh/platform-mesh-onboarding-proof.json",
-        workbench_read_path_proof_ref="output/workbench/workbench-read-path-proof.json",
+        workbench_read_path_source_contract_proof_ref=(
+            "output/workbench/read-path-source-contract-proof.json"
+        ),
         gateway_workbench_contract_proof_ref=(
             "output/workbench/gateway-workbench-contract-proof.json"
         ),

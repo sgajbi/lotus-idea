@@ -19,8 +19,8 @@ from app.application.workbench.contract_proof import (
     build_gateway_workbench_contract_proof_payload,
     gateway_workbench_contract_proof_is_valid,
 )
-from app.application.workbench_read_path_proof import (
-    build_workbench_read_path_proof_payload,
+from app.application.workbench.read_path_source_contract import (
+    build_workbench_read_path_source_contract_proof_payload,
 )
 
 
@@ -68,8 +68,8 @@ def test_rejects_gateway_workbench_contract_proof_without_read_path_proof() -> N
     proof = build_gateway_workbench_contract_proof_payload(
         generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
         repository_root=ROOT,
-        workbench_read_path_proof=None,
-        workbench_read_path_proof_ref=None,
+        workbench_read_path_source_contract_proof=None,
+        workbench_read_path_source_contract_proof_ref=None,
     )
 
     assert proof["gatewayWorkbenchContractProofValid"] is False
@@ -82,8 +82,10 @@ def test_rejects_gateway_workbench_contract_proof_when_evidence_is_missing(
     proof = build_gateway_workbench_contract_proof_payload(
         generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
         repository_root=tmp_path,
-        workbench_read_path_proof=_valid_workbench_read_path_proof(),
-        workbench_read_path_proof_ref="output/workbench/workbench-read-path-proof.json",
+        workbench_read_path_source_contract_proof=_valid_read_path_source_contract_proof(),
+        workbench_read_path_source_contract_proof_ref=(
+            "output/workbench/read-path-source-contract-proof.json"
+        ),
     )
 
     assert proof["gatewayWorkbenchContractProofValid"] is False
@@ -108,7 +110,7 @@ def test_rejects_gateway_workbench_contract_proof_when_evidence_is_missing(
         ("supportedFeaturePromoted", True),
         ("proofClosed", True),
         ("generatedAtUtc", "not-a-datetime"),
-        ("workbenchReadPathProofRef", None),
+        ("workbenchReadPathSourceContractProofRef", None),
     ],
 )
 def test_rejects_gateway_workbench_contract_proof_with_invalid_top_level_fields(
@@ -147,7 +149,7 @@ def test_rejects_gateway_workbench_contract_proof_with_invalid_contract_fields(
         "timezoneAwareGeneratedAtUtc",
         "fileEvidencePresent",
         "makeTargetEvidencePresent",
-        "workbenchReadPathProofValid",
+        "workbenchReadPathSourceContractProofValid",
         "readOnlyQueueRouteDeclared",
         "readOnlyDetailRouteDeclared",
     ],
@@ -165,15 +167,18 @@ def test_rejects_gateway_workbench_contract_proof_with_invalid_proof_checks(
 
 def test_gateway_workbench_contract_proof_cli_writes_valid_artifact(tmp_path: Path) -> None:
     module = _load_generator_script()
-    read_path_proof = tmp_path / "workbench-read-path-proof.json"
-    read_path_proof.write_text(json.dumps(_valid_workbench_read_path_proof()), encoding="utf-8")
+    read_path_proof = tmp_path / "read-path-source-contract-proof.json"
+    read_path_proof.write_text(
+        json.dumps(_valid_read_path_source_contract_proof()),
+        encoding="utf-8",
+    )
     output_path = tmp_path / "proof" / "gateway-workbench-contract-proof.json"
 
     result = module.main(
         [
             "--generated-at-utc",
             "2026-06-21T10:10:00Z",
-            "--workbench-read-path-proof",
+            "--workbench-read-path-source-contract-proof",
             str(read_path_proof),
             "--output",
             str(output_path),
@@ -198,13 +203,15 @@ def _valid_gateway_workbench_contract_proof() -> dict[str, Any]:
     return build_gateway_workbench_contract_proof_payload(
         generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
         repository_root=ROOT,
-        workbench_read_path_proof=_valid_workbench_read_path_proof(),
-        workbench_read_path_proof_ref="output/workbench/workbench-read-path-proof.json",
+        workbench_read_path_source_contract_proof=_valid_read_path_source_contract_proof(),
+        workbench_read_path_source_contract_proof_ref=(
+            "output/workbench/read-path-source-contract-proof.json"
+        ),
     )
 
 
-def _valid_workbench_read_path_proof() -> dict[str, Any]:
-    return build_workbench_read_path_proof_payload(
+def _valid_read_path_source_contract_proof() -> dict[str, Any]:
+    return build_workbench_read_path_source_contract_proof_payload(
         generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
         repository_root=ROOT,
     )

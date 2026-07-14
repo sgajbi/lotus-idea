@@ -73,7 +73,9 @@ from app.application.source_ingestion_readiness import (
     SCHEDULED_WORKER_PROOF_ENV,
 )
 from app.application.downstream_route_contract_proof import ADVISE_ROUTE_BLOCKERS_CLEARED
-from app.application.workbench_read_path_proof import build_workbench_read_path_proof_payload
+from app.application.workbench.read_path_source_contract import (
+    build_workbench_read_path_source_contract_proof_payload,
+)
 from app.domain import InMemoryIdeaRepository
 from app.runtime.repository_state import DATABASE_URL_ENV
 from tests.support.ai_workflow_pack_fixture import (
@@ -674,10 +676,10 @@ def test_implementation_proof_readiness_uses_ai_workflow_pack_runtime_execution_
     )
 
 
-def test_implementation_proof_readiness_uses_workbench_read_path_proof_without_promotion() -> None:
-    proof_ref = "output/workbench/workbench-read-path-proof.json"
+def test_workbench_read_path_source_contract_adds_evidence_without_clearing_runtime() -> None:
+    proof_ref = "output/workbench/read-path-source-contract-proof.json"
     proof = _bound_aggregate_proof(
-        build_workbench_read_path_proof_payload(
+        build_workbench_read_path_source_contract_proof_payload(
             generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
             repository_root=ROOT,
         ),
@@ -688,11 +690,11 @@ def test_implementation_proof_readiness_uses_workbench_read_path_proof_without_p
         evaluated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
         repository=InMemoryIdeaRepository(),
         durable_storage_backed=False,
-        workbench_read_path_proof=proof,
-        workbench_read_path_proof_ref=proof_ref,
+        workbench_read_path_source_contract_proof=proof,
+        workbench_read_path_source_contract_proof_ref=proof_ref,
     )
 
-    assert "workbench_gateway_bff_consumption_proof_missing" not in snapshot.overall_blockers
+    assert "workbench_gateway_bff_consumption_proof_missing" in snapshot.overall_blockers
     assert "workbench_panel_missing" in snapshot.overall_blockers
     assert "browser_accessibility_proof_missing" in snapshot.overall_blockers
     assert "canonical_demo_runtime_proof_missing" in snapshot.overall_blockers
@@ -705,9 +707,9 @@ def test_implementation_proof_readiness_uses_workbench_read_path_proof_without_p
         for capability in snapshot.capabilities
         if capability.capability_id == "workbench-product-proof"
     )
-    assert "workbench_gateway_bff_consumption_proof_missing" not in workbench.blockers
+    assert "workbench_gateway_bff_consumption_proof_missing" in workbench.blockers
     assert "workbench_panel_missing" in workbench.blockers
-    assert "output/workbench/workbench-read-path-proof.json" in workbench.evidence_refs
+    assert "output/workbench/read-path-source-contract-proof.json" in workbench.evidence_refs
 
 
 def test_implementation_proof_readiness_uses_platform_mesh_onboarding_proof_without_certification(

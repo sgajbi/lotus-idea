@@ -72,7 +72,9 @@ from app.application.report_materialization_proof import REPORT_MATERIALIZATION_
 from app.application.risk_concentration_live_proof import RISK_CONCENTRATION_LIVE_PROOF_ENV
 from app.application.risk_drawdown_live_proof import RISK_DRAWDOWN_LIVE_PROOF_ENV
 from app.application.runtime_trust_telemetry_proof import RUNTIME_TRUST_TELEMETRY_PROOF_ENV
-from app.application.workbench_read_path_proof import WORKBENCH_READ_PATH_PROOF_ENV
+from app.application.workbench.read_path_source_contract import (
+    WORKBENCH_READ_PATH_SOURCE_CONTRACT_PROOF_ENV,
+)
 
 PROOF_ARTIFACT_ARGS: tuple[tuple[str, str, str], ...] = (
     (
@@ -136,9 +138,9 @@ PROOF_ARTIFACT_ARGS: tuple[tuple[str, str, str], ...] = (
         "Optional repo-owned mesh SLO, access, and evidence policy proof artifact path.",
     ),
     (
-        "--workbench-read-path-proof",
-        WORKBENCH_READ_PATH_PROOF_ENV,
-        "Optional bounded Workbench read-path proof artifact path.",
+        "--workbench-read-path-source-contract-proof",
+        WORKBENCH_READ_PATH_SOURCE_CONTRACT_PROOF_ENV,
+        "Optional Workbench read-path source-contract proof artifact path.",
     ),
     (
         "--gateway-workbench-contract-proof",

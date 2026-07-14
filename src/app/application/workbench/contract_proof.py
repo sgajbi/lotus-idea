@@ -11,9 +11,9 @@ from app.application.source_safe_cross_repo_proof import (
     required_file_evidence_present,
     required_make_target_evidence_present,
 )
-from app.application.workbench_read_path_proof import (
-    WORKBENCH_READ_PATH_PROOF_SCHEMA_VERSION,
-    workbench_read_path_proof_is_valid,
+from app.application.workbench.read_path_source_contract import (
+    WORKBENCH_READ_PATH_SOURCE_CONTRACT_PROOF_SCHEMA_VERSION,
+    workbench_read_path_source_contract_proof_is_valid,
 )
 
 
@@ -30,13 +30,13 @@ REQUIRED_GATEWAY_WORKBENCH_CONTRACT_LOCAL_EVIDENCE_REFS = (
     "src/app/application/workbench/contract_proof.py",
     "scripts/workbench/generate_contract_proof.py",
     "scripts/workbench/contract_proof_gate.py",
-    "src/app/application/workbench_read_path_proof.py",
-    "scripts/generate_workbench_read_path_proof.py",
-    "scripts/workbench_read_path_proof_contract_gate.py",
+    "src/app/application/workbench/read_path_source_contract.py",
+    "scripts/workbench/generate_read_path_source_contract.py",
+    "scripts/workbench/read_path_source_contract_gate.py",
     "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-11-workbench-product-realization.md",
     "docs/operations/implementation-proof-readiness.md",
     "wiki/Supported-Features.md",
-    "make workbench-read-path-proof-contract-gate",
+    "make workbench-read-path-source-contract-proof-gate",
     "make gateway-workbench-contract-proof-contract-gate",
     "make implementation-proof-readiness-check",
 )
@@ -62,12 +62,15 @@ def build_gateway_workbench_contract_proof_payload(
     *,
     generated_at_utc: datetime,
     repository_root: Path,
-    workbench_read_path_proof: Mapping[str, Any] | None,
-    workbench_read_path_proof_ref: str | None,
+    workbench_read_path_source_contract_proof: Mapping[str, Any] | None,
+    workbench_read_path_source_contract_proof_ref: str | None,
 ) -> dict[str, Any]:
     local_evidence_refs = REQUIRED_GATEWAY_WORKBENCH_CONTRACT_LOCAL_EVIDENCE_REFS
-    workbench_read_path_valid = bool(
-        workbench_read_path_proof and workbench_read_path_proof_is_valid(workbench_read_path_proof)
+    workbench_read_path_source_contract_valid = bool(
+        workbench_read_path_source_contract_proof
+        and workbench_read_path_source_contract_proof_is_valid(
+            workbench_read_path_source_contract_proof
+        )
     )
     proof_valid = (
         generated_at_utc.tzinfo is not None
@@ -82,7 +85,7 @@ def build_gateway_workbench_contract_proof_payload(
             repository_root=repository_root,
             evidence_refs=local_evidence_refs,
         )
-        and workbench_read_path_valid
+        and workbench_read_path_source_contract_valid
     )
     return {
         "schemaVersion": GATEWAY_WORKBENCH_CONTRACT_PROOF_SCHEMA_VERSION,
@@ -93,8 +96,10 @@ def build_gateway_workbench_contract_proof_payload(
         "evidenceClass": EvidenceClass.SOURCE_CONTRACT.value,
         "gatewayWorkbenchContractProofValid": proof_valid,
         "aggregateBlockersCleared": GATEWAY_WORKBENCH_CONTRACT_BLOCKERS_CLEARED,
-        "workbenchReadPathProofSchemaVersion": WORKBENCH_READ_PATH_PROOF_SCHEMA_VERSION,
-        "workbenchReadPathProofRef": workbench_read_path_proof_ref,
+        "workbenchReadPathSourceContractProofSchemaVersion": (
+            WORKBENCH_READ_PATH_SOURCE_CONTRACT_PROOF_SCHEMA_VERSION
+        ),
+        "workbenchReadPathSourceContractProofRef": (workbench_read_path_source_contract_proof_ref),
         "localEvidenceRefs": local_evidence_refs,
         "declaredRouteRefs": REQUIRED_GATEWAY_WORKBENCH_CONTRACT_ROUTE_DECLARATIONS,
         "proofChecks": {
@@ -110,7 +115,9 @@ def build_gateway_workbench_contract_proof_payload(
                 repository_root=repository_root,
                 evidence_refs=local_evidence_refs,
             ),
-            "workbenchReadPathProofValid": workbench_read_path_valid,
+            "workbenchReadPathSourceContractProofValid": (
+                workbench_read_path_source_contract_valid
+            ),
             "readOnlyQueueRouteDeclared": "lotus-gateway GET /api/v1/ideas/review-queues/advisor",
             "readOnlyDetailRouteDeclared": (
                 "lotus-gateway GET /api/v1/ideas/candidates/{candidate_id}"
@@ -147,11 +154,11 @@ def gateway_workbench_contract_proof_is_valid(payload: Mapping[str, Any]) -> boo
         GATEWAY_WORKBENCH_CONTRACT_BLOCKERS_CLEARED
     ):
         return False
-    if payload.get("workbenchReadPathProofSchemaVersion") != (
-        WORKBENCH_READ_PATH_PROOF_SCHEMA_VERSION
+    if payload.get("workbenchReadPathSourceContractProofSchemaVersion") != (
+        WORKBENCH_READ_PATH_SOURCE_CONTRACT_PROOF_SCHEMA_VERSION
     ):
         return False
-    if not isinstance(payload.get("workbenchReadPathProofRef"), str):
+    if not isinstance(payload.get("workbenchReadPathSourceContractProofRef"), str):
         return False
     if tuple(payload.get("localEvidenceRefs") or ()) != (
         REQUIRED_GATEWAY_WORKBENCH_CONTRACT_LOCAL_EVIDENCE_REFS
@@ -188,7 +195,7 @@ def gateway_workbench_contract_proof_is_valid(payload: Mapping[str, Any]) -> boo
         proof_checks.get("timezoneAwareGeneratedAtUtc") is True
         and proof_checks.get("fileEvidencePresent") is True
         and proof_checks.get("makeTargetEvidencePresent") is True
-        and proof_checks.get("workbenchReadPathProofValid") is True
+        and proof_checks.get("workbenchReadPathSourceContractProofValid") is True
         and proof_checks.get("readOnlyQueueRouteDeclared")
         == "lotus-gateway GET /api/v1/ideas/review-queues/advisor"
         and proof_checks.get("readOnlyDetailRouteDeclared")

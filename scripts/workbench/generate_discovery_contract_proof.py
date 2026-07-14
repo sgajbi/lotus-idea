@@ -27,9 +27,9 @@ def main(argv: list[str] | None = None) -> int:
             Path(args.platform_mesh_onboarding_proof),
             artifact_name="platform mesh onboarding proof",
         )
-        workbench_read_path_proof = _read_json_object(
-            Path(args.workbench_read_path_proof),
-            artifact_name="workbench read-path proof",
+        read_path_source_contract_proof = _read_json_object(
+            Path(args.workbench_read_path_source_contract_proof),
+            artifact_name="Workbench read-path source-contract proof",
         )
         gateway_workbench_contract_proof = _read_json_object(
             Path(args.gateway_workbench_contract_proof),
@@ -40,15 +40,15 @@ def main(argv: list[str] | None = None) -> int:
             repository_root=ROOT,
             platform_root=Path(args.platform_root),
             platform_mesh_onboarding_proof=platform_mesh_onboarding_proof,
-            workbench_read_path_proof=workbench_read_path_proof,
+            workbench_read_path_source_contract_proof=read_path_source_contract_proof,
             gateway_workbench_contract_proof=gateway_workbench_contract_proof,
             platform_mesh_onboarding_proof_ref=_source_safe_artifact_ref(
                 Path(args.platform_mesh_onboarding_proof),
                 artifact_name="platform mesh onboarding proof artifact",
             ),
-            workbench_read_path_proof_ref=_source_safe_artifact_ref(
-                Path(args.workbench_read_path_proof),
-                artifact_name="workbench read-path proof artifact",
+            workbench_read_path_source_contract_proof_ref=_source_safe_artifact_ref(
+                Path(args.workbench_read_path_source_contract_proof),
+                artifact_name="Workbench read-path source-contract proof artifact",
             ),
             gateway_workbench_contract_proof_ref=_source_safe_artifact_ref(
                 Path(args.gateway_workbench_contract_proof),
@@ -72,7 +72,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--generated-at-utc", required=True)
     parser.add_argument("--platform-root", default=str(ROOT.parent / "lotus-platform"))
     parser.add_argument("--platform-mesh-onboarding-proof", required=True)
-    parser.add_argument("--workbench-read-path-proof", required=True)
+    parser.add_argument("--workbench-read-path-source-contract-proof", required=True)
     parser.add_argument("--gateway-workbench-contract-proof", required=True)
     parser.add_argument("--output")
     parser.add_argument(

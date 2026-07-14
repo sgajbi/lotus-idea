@@ -23,17 +23,17 @@ def main(argv: list[str] | None = None) -> int:
     parser = _parser()
     args = parser.parse_args(argv)
     try:
-        workbench_read_path_proof = _read_json_object(
-            Path(args.workbench_read_path_proof),
-            artifact_name="workbench read-path proof",
+        read_path_source_contract_proof = _read_json_object(
+            Path(args.workbench_read_path_source_contract_proof),
+            artifact_name="Workbench read-path source-contract proof",
         )
         payload = build_gateway_workbench_contract_proof_payload(
             generated_at_utc=_aware_datetime(args.generated_at_utc),
             repository_root=ROOT,
-            workbench_read_path_proof=workbench_read_path_proof,
-            workbench_read_path_proof_ref=_source_safe_artifact_ref(
-                Path(args.workbench_read_path_proof),
-                artifact_name="workbench read-path proof artifact",
+            workbench_read_path_source_contract_proof=read_path_source_contract_proof,
+            workbench_read_path_source_contract_proof_ref=_source_safe_artifact_ref(
+                Path(args.workbench_read_path_source_contract_proof),
+                artifact_name="Workbench read-path source-contract proof artifact",
             ),
         )
     except (OSError, ValueError, json.JSONDecodeError) as exc:
@@ -50,9 +50,9 @@ def _parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--generated-at-utc", required=True)
     parser.add_argument(
-        "--workbench-read-path-proof",
+        "--workbench-read-path-source-contract-proof",
         required=True,
-        help="Validated Workbench read-path proof artifact to consume.",
+        help="Validated Workbench read-path source-contract proof artifact to consume.",
     )
     parser.add_argument("--output")
     return parser

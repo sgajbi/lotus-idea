@@ -57,7 +57,7 @@ REQUIRED_LINT_TARGETS = (
     "archive-lifecycle-posture-contract-gate",
     "report-intake-route-proof-contract-gate",
     "report-materialization-proof-contract-gate",
-    "workbench-read-path-proof-contract-gate",
+    "workbench-read-path-source-contract-proof-gate",
     "gateway-workbench-contract-proof-contract-gate",
     "gateway-workbench-discovery-contract-proof-contract-gate",
     "outbox-broker-source-contract-proof-gate",
@@ -131,7 +131,10 @@ GENERATED_READINESS_ARTIFACTS = (
         "scripts/generate_ai_workflow_pack_runtime_execution_proof.py",
         "an AI workflow-pack runtime execution proof artifact",
     ),
-    ("scripts/generate_workbench_read_path_proof.py", "Workbench read-path proof artifact"),
+    (
+        "scripts/workbench/generate_read_path_source_contract.py",
+        "Workbench read-path source-contract proof artifact",
+    ),
     (
         "scripts/outbox/broker/generate_source_contract_proof.py",
         "outbox broker source-contract proof artifact",
@@ -188,7 +191,10 @@ PASSED_READINESS_ARTIFACTS = (
     ("--report-intake-route-proof", "report intake route proof artifact"),
     ("--report-materialization-proof", "report materialization proof artifact"),
     ("--mesh-policy-proof", "mesh policy proof artifact"),
-    ("--workbench-read-path-proof", "Workbench read-path proof artifact"),
+    (
+        "--workbench-read-path-source-contract-proof",
+        "Workbench read-path source-contract proof artifact",
+    ),
     (
         "--outbox-broker-source-contract-proof",
         "outbox broker source-contract proof artifact",

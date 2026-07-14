@@ -40,7 +40,9 @@ from app.application.proof_provenance import bind_aggregate_proof_provenance
 from app.application.report_intake_route_proof import REPORT_INTAKE_ROUTE_PROOF_ENV
 from app.application.runtime_trust_telemetry_proof import RUNTIME_TRUST_TELEMETRY_PROOF_ENV
 from app.application.source_ingestion_readiness import LIVE_PROOF_ENV, SCHEDULED_WORKER_PROOF_ENV
-from app.application.workbench_read_path_proof import WORKBENCH_READ_PATH_PROOF_ENV
+from app.application.workbench.read_path_source_contract import (
+    WORKBENCH_READ_PATH_SOURCE_CONTRACT_PROOF_ENV,
+)
 from app.runtime.proof_artifact_files import read_optional_json_object
 
 
@@ -71,8 +73,8 @@ class ConfiguredImplementationProofArtifacts:
     report_intake_route_proof_ref: str | None
     platform_mesh_onboarding_proof: dict[str, Any] | None
     platform_mesh_onboarding_proof_ref: str | None
-    workbench_read_path_proof: dict[str, Any] | None
-    workbench_read_path_proof_ref: str | None
+    workbench_read_path_source_contract_proof: dict[str, Any] | None
+    workbench_read_path_source_contract_proof_ref: str | None
     gateway_workbench_contract_proof: dict[str, Any] | None
     gateway_workbench_contract_proof_ref: str | None
     gateway_workbench_discovery_contract_proof: dict[str, Any] | None
@@ -165,10 +167,10 @@ _JSON_PROOF_ARTIFACTS: tuple[tuple[str, str, str, str], ...] = (
         "platform mesh onboarding proof",
     ),
     (
-        WORKBENCH_READ_PATH_PROOF_ENV,
-        "workbench_read_path_proof",
-        "workbench_read_path_proof_ref",
-        "workbench read-path proof",
+        WORKBENCH_READ_PATH_SOURCE_CONTRACT_PROOF_ENV,
+        "workbench_read_path_source_contract_proof",
+        "workbench_read_path_source_contract_proof_ref",
+        "Workbench read-path source-contract proof",
     ),
     (
         GATEWAY_WORKBENCH_CONTRACT_PROOF_ENV,

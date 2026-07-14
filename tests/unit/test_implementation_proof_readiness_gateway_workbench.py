@@ -19,7 +19,9 @@ from app.application.implementation_proof_readiness import (
     build_implementation_proof_readiness_snapshot,
 )
 from app.application.proof_provenance import bind_aggregate_proof_provenance
-from app.application.workbench_read_path_proof import build_workbench_read_path_proof_payload
+from app.application.workbench.read_path_source_contract import (
+    build_workbench_read_path_source_contract_proof_payload,
+)
 from app.domain import InMemoryIdeaRepository
 
 
@@ -108,13 +110,15 @@ def test_readiness_uses_gateway_workbench_contract_proof_without_support_promoti
 
 
 def _valid_gateway_workbench_contract_proof() -> dict[str, object]:
-    workbench_read_path_proof = build_workbench_read_path_proof_payload(
+    read_path_source_contract_proof = build_workbench_read_path_source_contract_proof_payload(
         generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
         repository_root=ROOT,
     )
     return build_gateway_workbench_contract_proof_payload(
         generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
         repository_root=ROOT,
-        workbench_read_path_proof=workbench_read_path_proof,
-        workbench_read_path_proof_ref="output/workbench/workbench-read-path-proof.json",
+        workbench_read_path_source_contract_proof=read_path_source_contract_proof,
+        workbench_read_path_source_contract_proof_ref=(
+            "output/workbench/read-path-source-contract-proof.json"
+        ),
     )
