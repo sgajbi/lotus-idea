@@ -36,7 +36,7 @@ def test_builds_source_safe_workbench_read_path_proof() -> None:
         tuple(cast(tuple[str, ...], proof["localEvidenceRefs"]))
         == REQUIRED_WORKBENCH_READ_PATH_LOCAL_EVIDENCE_REFS
     )
-    assert tuple(cast(tuple[str, ...], proof["externalEvidenceRefs"])) == (
+    assert tuple(cast(tuple[str, ...], proof["declaredRouteRefs"])) == (
         REQUIRED_WORKBENCH_READ_PATH_EXTERNAL_EVIDENCE_REFS
     )
     assert tuple(cast(tuple[str, ...], proof["remainingCertificationBlockers"])) == (
@@ -105,7 +105,7 @@ def test_rejects_workbench_read_path_proof_with_invalid_top_level_fields(
     [
         ("aggregateBlockersCleared", []),
         ("localEvidenceRefs", []),
-        ("externalEvidenceRefs", []),
+        ("declaredRouteRefs", []),
         ("remainingCertificationBlockers", []),
         ("proofChecks", []),
     ],
@@ -126,8 +126,8 @@ def test_rejects_workbench_read_path_proof_with_invalid_contract_fields(
         "timezoneAwareGeneratedAtUtc",
         "fileEvidencePresent",
         "makeTargetEvidencePresent",
-        "readOnlyQueueRouteRecorded",
-        "readOnlyDetailRouteRecorded",
+        "readOnlyQueueRouteDeclared",
+        "readOnlyDetailRouteDeclared",
         "workbenchMergedPrRecorded",
     ],
 )

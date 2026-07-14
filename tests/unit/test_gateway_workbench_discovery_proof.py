@@ -22,8 +22,8 @@ from app.application.gateway_workbench_discovery_proof import (
     build_gateway_workbench_discovery_proof_payload,
     gateway_workbench_discovery_proof_is_valid,
 )
-from app.application.gateway_workbench_operational_proof import (
-    build_gateway_workbench_operational_proof_payload,
+from app.application.workbench.contract_proof import (
+    build_gateway_workbench_contract_proof_payload,
 )
 from app.application.platform_mesh_onboarding_proof import (
     REQUIRED_CONSUMER_DEPENDENCIES,
@@ -137,7 +137,7 @@ def test_rejects_gateway_workbench_discovery_proof_with_invalid_contract_fields(
         ("approvedConsumer", "lotus-workbench"),
         ("platformMeshOnboardingProofRef", None),
         ("workbenchReadPathProofRef", None),
-        ("gatewayWorkbenchOperationalProofRef", None),
+        ("gatewayWorkbenchContractProofRef", None),
     ],
 )
 def test_rejects_gateway_workbench_discovery_proof_with_invalid_evidence_fields(
@@ -158,7 +158,7 @@ def test_rejects_gateway_workbench_discovery_proof_with_invalid_evidence_fields(
         "fileEvidencePresent",
         "platformMeshOnboardingProofValid",
         "workbenchReadPathProofValid",
-        "gatewayWorkbenchOperationalProofValid",
+        "gatewayWorkbenchContractProofValid",
         "catalogExposesGatewayVisibleIdeaProducts",
         "productsRemainProposed",
         "routesRemainUnpublished",
@@ -296,8 +296,8 @@ def test_gateway_workbench_discovery_proof_cli_writes_valid_artifact(tmp_path: P
             str(dependency_proofs["platform_mesh_onboarding"]),
             "--workbench-read-path-proof",
             str(dependency_proofs["workbench_read_path"]),
-            "--gateway-workbench-operational-proof",
-            str(dependency_proofs["gateway_workbench_operational"]),
+            "--gateway-workbench-contract-proof",
+            str(dependency_proofs["gateway_workbench_contract"]),
             "--output",
             str(output_path),
         ]
@@ -357,11 +357,11 @@ def _gateway_workbench_discovery_proof(platform_root: Path) -> dict[str, Any]:
         platform_root=platform_root,
         platform_mesh_onboarding_proof=dependency_proofs["platform_mesh_onboarding"],
         workbench_read_path_proof=dependency_proofs["workbench_read_path"],
-        gateway_workbench_operational_proof=dependency_proofs["gateway_workbench_operational"],
+        gateway_workbench_contract_proof=dependency_proofs["gateway_workbench_contract"],
         platform_mesh_onboarding_proof_ref="output/data-mesh/platform-mesh-onboarding-proof.json",
         workbench_read_path_proof_ref="output/workbench/workbench-read-path-proof.json",
-        gateway_workbench_operational_proof_ref=(
-            "output/workbench/gateway-workbench-operational-proof.json"
+        gateway_workbench_contract_proof_ref=(
+            "output/workbench/gateway-workbench-contract-proof.json"
         ),
     )
 
@@ -378,7 +378,7 @@ def _dependency_proofs(platform_root: Path) -> dict[str, dict[str, Any]]:
             platform_root=platform_root,
         ),
         "workbench_read_path": workbench_read_path_proof,
-        "gateway_workbench_operational": build_gateway_workbench_operational_proof_payload(
+        "gateway_workbench_contract": build_gateway_workbench_contract_proof_payload(
             generated_at_utc=GENERATED_AT_UTC,
             repository_root=ROOT,
             workbench_read_path_proof=workbench_read_path_proof,
@@ -391,7 +391,7 @@ def _write_dependency_proofs(tmp_path: Path, platform_root: Path) -> dict[str, P
     proof_paths = {
         "platform_mesh_onboarding": tmp_path / "platform-mesh-onboarding-proof.json",
         "workbench_read_path": tmp_path / "workbench-read-path-proof.json",
-        "gateway_workbench_operational": tmp_path / "gateway-workbench-operational-proof.json",
+        "gateway_workbench_contract": tmp_path / "gateway-workbench-contract-proof.json",
     }
     for name, payload in _dependency_proofs(platform_root).items():
         proof_paths[name].write_text(json.dumps(payload), encoding="utf-8")

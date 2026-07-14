@@ -31,9 +31,9 @@ def main(argv: list[str] | None = None) -> int:
             Path(args.workbench_read_path_proof),
             artifact_name="workbench read-path proof",
         )
-        gateway_workbench_operational_proof = _read_json_object(
-            Path(args.gateway_workbench_operational_proof),
-            artifact_name="Gateway/Workbench operational proof",
+        gateway_workbench_contract_proof = _read_json_object(
+            Path(args.gateway_workbench_contract_proof),
+            artifact_name="Gateway/Workbench contract proof",
         )
         payload = build_gateway_workbench_discovery_proof_payload(
             generated_at_utc=_aware_datetime(args.generated_at_utc),
@@ -41,7 +41,7 @@ def main(argv: list[str] | None = None) -> int:
             platform_root=Path(args.platform_root),
             platform_mesh_onboarding_proof=platform_mesh_onboarding_proof,
             workbench_read_path_proof=workbench_read_path_proof,
-            gateway_workbench_operational_proof=gateway_workbench_operational_proof,
+            gateway_workbench_contract_proof=gateway_workbench_contract_proof,
             platform_mesh_onboarding_proof_ref=_source_safe_artifact_ref(
                 Path(args.platform_mesh_onboarding_proof),
                 artifact_name="platform mesh onboarding proof artifact",
@@ -50,9 +50,9 @@ def main(argv: list[str] | None = None) -> int:
                 Path(args.workbench_read_path_proof),
                 artifact_name="workbench read-path proof artifact",
             ),
-            gateway_workbench_operational_proof_ref=_source_safe_artifact_ref(
-                Path(args.gateway_workbench_operational_proof),
-                artifact_name="Gateway/Workbench operational proof artifact",
+            gateway_workbench_contract_proof_ref=_source_safe_artifact_ref(
+                Path(args.gateway_workbench_contract_proof),
+                artifact_name="Gateway/Workbench contract proof artifact",
             ),
         )
     except (OSError, ValueError, json.JSONDecodeError) as exc:
@@ -73,7 +73,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--platform-root", default=str(ROOT.parent / "lotus-platform"))
     parser.add_argument("--platform-mesh-onboarding-proof", required=True)
     parser.add_argument("--workbench-read-path-proof", required=True)
-    parser.add_argument("--gateway-workbench-operational-proof", required=True)
+    parser.add_argument("--gateway-workbench-contract-proof", required=True)
     parser.add_argument("--output")
     parser.add_argument(
         "--allow-missing-evidence",

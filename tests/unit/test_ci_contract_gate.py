@@ -711,30 +711,30 @@ def test_ci_contract_gate_blocks_missing_platform_mesh_onboarding_proof_wiring()
     ) in errors
 
 
-def test_ci_contract_gate_blocks_missing_gateway_workbench_operational_proof_generation() -> None:
+def test_ci_contract_gate_blocks_missing_gateway_workbench_contract_proof_generation() -> None:
     module = _load_ci_contract_gate()
     makefile = (
         (ROOT / "Makefile")
         .read_text(encoding="utf-8")
-        .replace("scripts/generate_gateway_workbench_operational_proof.py", "scripts/removed.py")
+        .replace("scripts/workbench/generate_contract_proof.py", "scripts/removed.py")
     )
 
     errors = module.validate_makefile(makefile)
 
     assert (
         "Makefile implementation-proof-readiness-check target must generate "
-        "a Gateway/Workbench operational proof artifact"
+        "a Gateway/Workbench contract proof artifact"
     ) in errors
 
 
-def test_ci_contract_gate_blocks_missing_gateway_workbench_operational_proof_wiring() -> None:
+def test_ci_contract_gate_blocks_missing_gateway_workbench_contract_proof_wiring() -> None:
     module = _load_ci_contract_gate()
     makefile = (
         (ROOT / "Makefile")
         .read_text(encoding="utf-8")
         .replace(
-            "--gateway-workbench-operational-proof",
-            "--removed-gateway-workbench-operational-proof",
+            "--gateway-workbench-contract-proof",
+            "--removed-gateway-workbench-contract-proof",
         )
     )
 
@@ -742,7 +742,7 @@ def test_ci_contract_gate_blocks_missing_gateway_workbench_operational_proof_wir
 
     assert (
         "Makefile implementation-proof-readiness-check target must pass the "
-        "Gateway/Workbench operational proof artifact into readiness generation"
+        "Gateway/Workbench contract proof artifact into readiness generation"
     ) in errors
 
 

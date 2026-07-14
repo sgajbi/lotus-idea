@@ -73,9 +73,7 @@ SCRIPT_TARGET_EXPECTATIONS = {
         "scripts/report_materialization_proof_contract_gate.py"
     ),
     "workbench-read-path-proof-contract-gate": "scripts/workbench_read_path_proof_contract_gate.py",
-    "gateway-workbench-operational-proof-contract-gate": (
-        "scripts/gateway_workbench_operational_proof_contract_gate.py"
-    ),
+    "gateway-workbench-contract-proof-contract-gate": ("scripts/workbench/contract_proof_gate.py"),
     "gateway-workbench-discovery-proof-contract-gate": (
         "scripts/gateway_workbench_discovery_proof_contract_gate.py"
     ),

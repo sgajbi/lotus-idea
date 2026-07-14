@@ -113,6 +113,13 @@ REQUIRED_BOUNDED_MODULE_PATHS = {
     "tests/unit/outbox/test_outbox_recovery.py",
     "tests/unit/outbox/test_outbox_publisher_adapter.py",
     "tests/unit/outbox/test_postgres_delivery_adapter.py",
+    "scripts/workbench/__init__.py",
+    "scripts/workbench/contract_proof_gate.py",
+    "scripts/workbench/generate_contract_proof.py",
+    "src/app/application/workbench/__init__.py",
+    "src/app/application/workbench/contract_proof.py",
+    "tests/unit/workbench/__init__.py",
+    "tests/unit/workbench/test_contract_proof.py",
     "scripts/data_lifecycle/__init__.py",
     "scripts/data_lifecycle/run_scheduled_review.py",
     "scripts/data_lifecycle/scheduled_review_proof_gate.py",
@@ -141,6 +148,14 @@ REQUIRED_BOUNDED_MODULE_PATHS = {
 }
 
 PROHIBITED_LEGACY_MODULE_PATHS = {
+    "scripts/gateway_workbench_operational_proof_contract_gate.py",
+    "scripts/gateway_workbench_contract_proof_contract_gate.py",
+    "scripts/generate_gateway_workbench_operational_proof.py",
+    "scripts/generate_gateway_workbench_contract_proof.py",
+    "src/app/application/gateway_workbench_operational_proof.py",
+    "src/app/application/gateway_workbench_contract_proof.py",
+    "tests/unit/test_gateway_workbench_operational_proof.py",
+    "tests/unit/test_gateway_workbench_contract_proof.py",
     "scripts/durable_repository_proof_contract_gate.py",
     "scripts/generate_durable_repository_proof.py",
     "src/app/application/durable_repository_proof.py",

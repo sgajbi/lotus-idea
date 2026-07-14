@@ -308,10 +308,10 @@ def _proof_artifact_inputs(args: argparse.Namespace) -> dict[str, ProofArtifactI
             artifact_name="workbench read-path proof",
             ref_name="workbench read-path proof artifact",
         ),
-        "gateway_workbench_operational": _proof_artifact_input(
-            args.gateway_workbench_operational_proof,
-            artifact_name="Gateway/Workbench operational proof",
-            ref_name="Gateway/Workbench operational proof artifact",
+        "gateway_workbench_contract": _proof_artifact_input(
+            args.gateway_workbench_contract_proof,
+            artifact_name="Gateway/Workbench contract proof",
+            ref_name="Gateway/Workbench contract proof artifact",
         ),
         "gateway_workbench_discovery": _proof_artifact_input(
             args.gateway_workbench_discovery_proof,

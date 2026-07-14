@@ -18,8 +18,8 @@ from app.application.ai_runtime_proof import (
     build_ai_workflow_pack_runtime_execution_proof_payload,
 )
 from app.application.durable_repository_proof import build_durable_repository_proof_payload
-from app.application.gateway_workbench_operational_proof import (
-    build_gateway_workbench_operational_proof_payload,
+from app.application.workbench.contract_proof import (
+    build_gateway_workbench_contract_proof_payload,
 )
 from app.application.gateway_workbench_discovery_proof import (
     build_gateway_workbench_discovery_proof_payload,
@@ -606,17 +606,17 @@ def test_generate_implementation_proof_readiness_uses_explicit_workbench_read_pa
     assert payload["supportedFeaturePromoted"] is False
 
 
-def test_generate_implementation_proof_readiness_uses_explicit_gateway_workbench_operational_proof(
+def test_generate_implementation_proof_readiness_uses_explicit_gateway_workbench_contract_proof(
     tmp_path: Path,
 ) -> None:
     workbench_proof_payload = build_workbench_read_path_proof_payload(
         generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
         repository_root=Path(__file__).resolve().parents[2],
     )
-    gateway_workbench_proof = tmp_path / "gateway-workbench-operational-proof.json"
+    gateway_workbench_proof = tmp_path / "gateway-workbench-contract-proof.json"
     gateway_workbench_proof.write_text(
         json.dumps(
-            build_gateway_workbench_operational_proof_payload(
+            build_gateway_workbench_contract_proof_payload(
                 generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
                 repository_root=Path(__file__).resolve().parents[2],
                 workbench_read_path_proof=workbench_proof_payload,
@@ -631,7 +631,7 @@ def test_generate_implementation_proof_readiness_uses_explicit_gateway_workbench
         [
             "--evaluated-at-utc",
             "2026-06-21T10:10:00Z",
-            "--gateway-workbench-operational-proof",
+            "--gateway-workbench-contract-proof",
             str(gateway_workbench_proof),
             "--output",
             str(output_path),
@@ -640,7 +640,7 @@ def test_generate_implementation_proof_readiness_uses_explicit_gateway_workbench
 
     assert result == 0
     payload = json.loads(output_path.read_text(encoding="utf-8"))
-    assert "gateway_workbench_proof_missing" not in payload["overallBlockers"]
+    assert "gateway_workbench_proof_missing" in payload["overallBlockers"]
     assert "workbench_product_proof_missing" in payload["overallBlockers"]
     assert "workbench_panel_missing" in payload["overallBlockers"]
     assert "gateway_workbench_discovery_proof_missing" in payload["overallBlockers"]
@@ -654,8 +654,8 @@ def test_generate_implementation_proof_readiness_uses_explicit_gateway_workbench
         for capability in payload["capabilities"]
         if capability["capabilityId"] == "outbox-delivery"
     )
-    assert "Gateway/Workbench operational proof artifact" in source_ingestion["evidenceRefs"]
-    assert "Gateway/Workbench operational proof artifact" in outbox_delivery["evidenceRefs"]
+    assert "Gateway/Workbench contract proof artifact" in source_ingestion["evidenceRefs"]
+    assert "Gateway/Workbench contract proof artifact" in outbox_delivery["evidenceRefs"]
     assert payload["readinessStatus"] == "blocked"
     assert payload["supportedFeaturePromoted"] is False
 
@@ -669,7 +669,7 @@ def test_generate_implementation_proof_readiness_uses_explicit_gateway_workbench
         generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
         repository_root=repository_root,
     )
-    gateway_workbench_operational_proof_payload = build_gateway_workbench_operational_proof_payload(
+    gateway_workbench_contract_proof_payload = build_gateway_workbench_contract_proof_payload(
         generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
         repository_root=repository_root,
         workbench_read_path_proof=workbench_proof_payload,
@@ -688,13 +688,13 @@ def test_generate_implementation_proof_readiness_uses_explicit_gateway_workbench
                     platform_root=platform_root,
                 ),
                 workbench_read_path_proof=workbench_proof_payload,
-                gateway_workbench_operational_proof=gateway_workbench_operational_proof_payload,
+                gateway_workbench_contract_proof=gateway_workbench_contract_proof_payload,
                 platform_mesh_onboarding_proof_ref=(
                     "output/data-mesh/platform-mesh-onboarding-proof.json"
                 ),
                 workbench_read_path_proof_ref="output/workbench/workbench-read-path-proof.json",
-                gateway_workbench_operational_proof_ref=(
-                    "output/workbench/gateway-workbench-operational-proof.json"
+                gateway_workbench_contract_proof_ref=(
+                    "output/workbench/gateway-workbench-contract-proof.json"
                 ),
             )
         ),

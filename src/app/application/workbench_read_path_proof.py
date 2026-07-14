@@ -76,14 +76,14 @@ def build_workbench_read_path_proof_payload(
         "workbenchReadPathProofValid": proof_valid,
         "aggregateBlockersCleared": ("workbench_gateway_bff_consumption_proof_missing",),
         "localEvidenceRefs": local_evidence_refs,
-        "externalEvidenceRefs": REQUIRED_WORKBENCH_READ_PATH_EXTERNAL_EVIDENCE_REFS,
+        "declaredRouteRefs": REQUIRED_WORKBENCH_READ_PATH_EXTERNAL_EVIDENCE_REFS,
         "proofChecks": {
             "timezoneAwareGeneratedAtUtc": generated_at_utc.tzinfo is not None
             and generated_at_utc.utcoffset() is not None,
             "fileEvidencePresent": file_evidence_present,
             "makeTargetEvidencePresent": make_target_evidence_present,
-            "readOnlyQueueRouteRecorded": "lotus-gateway GET /api/v1/ideas/review-queues/advisor",
-            "readOnlyDetailRouteRecorded": "lotus-gateway GET /api/v1/ideas/candidates/{candidate_id}",
+            "readOnlyQueueRouteDeclared": "lotus-gateway GET /api/v1/ideas/review-queues/advisor",
+            "readOnlyDetailRouteDeclared": "lotus-gateway GET /api/v1/ideas/candidates/{candidate_id}",
             "workbenchMergedPrRecorded": "lotus-workbench PR #391",
         },
         "remainingCertificationBlockers": REMAINING_WORKBENCH_READ_PATH_CERTIFICATION_BLOCKERS,
@@ -123,7 +123,7 @@ def workbench_read_path_proof_is_valid(payload: Mapping[str, Any]) -> bool:
         REQUIRED_WORKBENCH_READ_PATH_LOCAL_EVIDENCE_REFS
     ):
         return False
-    if tuple(payload.get("externalEvidenceRefs") or ()) != (
+    if tuple(payload.get("declaredRouteRefs") or ()) != (
         REQUIRED_WORKBENCH_READ_PATH_EXTERNAL_EVIDENCE_REFS
     ):
         return False
@@ -140,11 +140,11 @@ def workbench_read_path_proof_is_valid(payload: Mapping[str, Any]) -> bool:
         return False
     if proof_checks.get("makeTargetEvidencePresent") is not True:
         return False
-    if proof_checks.get("readOnlyQueueRouteRecorded") != (
+    if proof_checks.get("readOnlyQueueRouteDeclared") != (
         "lotus-gateway GET /api/v1/ideas/review-queues/advisor"
     ):
         return False
-    if proof_checks.get("readOnlyDetailRouteRecorded") != (
+    if proof_checks.get("readOnlyDetailRouteDeclared") != (
         "lotus-gateway GET /api/v1/ideas/candidates/{candidate_id}"
     ):
         return False

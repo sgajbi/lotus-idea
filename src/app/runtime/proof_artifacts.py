@@ -15,8 +15,8 @@ from app.application.ai_runtime_proof import (
 )
 from app.application.bond_maturity_live_proof import BOND_MATURITY_LIVE_PROOF_ENV
 from app.application.durable_repository_proof import DURABLE_REPOSITORY_PROOF_ENV
-from app.application.gateway_workbench_operational_proof import (
-    GATEWAY_WORKBENCH_OPERATIONAL_PROOF_ENV,
+from app.application.workbench.contract_proof import (
+    GATEWAY_WORKBENCH_CONTRACT_PROOF_ENV,
 )
 from app.application.gateway_workbench_discovery_proof import (
     GATEWAY_WORKBENCH_DISCOVERY_PROOF_ENV,
@@ -69,8 +69,8 @@ class ConfiguredImplementationProofArtifacts:
     platform_mesh_onboarding_proof_ref: str | None
     workbench_read_path_proof: dict[str, Any] | None
     workbench_read_path_proof_ref: str | None
-    gateway_workbench_operational_proof: dict[str, Any] | None
-    gateway_workbench_operational_proof_ref: str | None
+    gateway_workbench_contract_proof: dict[str, Any] | None
+    gateway_workbench_contract_proof_ref: str | None
     gateway_workbench_discovery_proof: dict[str, Any] | None
     gateway_workbench_discovery_proof_ref: str | None
     bond_maturity_live_proof: dict[str, Any] | None
@@ -167,10 +167,10 @@ _JSON_PROOF_ARTIFACTS: tuple[tuple[str, str, str, str], ...] = (
         "workbench read-path proof",
     ),
     (
-        GATEWAY_WORKBENCH_OPERATIONAL_PROOF_ENV,
-        "gateway_workbench_operational_proof",
-        "gateway_workbench_operational_proof_ref",
-        "Gateway/Workbench operational proof",
+        GATEWAY_WORKBENCH_CONTRACT_PROOF_ENV,
+        "gateway_workbench_contract_proof",
+        "gateway_workbench_contract_proof_ref",
+        "Gateway/Workbench contract proof",
     ),
     (
         GATEWAY_WORKBENCH_DISCOVERY_PROOF_ENV,
