@@ -44,7 +44,7 @@ agents cannot treat the day-one contract baseline as runtime certification.
 The runtime telemetry preview and generated snapshot described below are
 implementation-backed diagnostic evidence, but they remain pre-certification
 evidence until mesh certification, Gateway discovery, Workbench discovery, and
-supported-feature promotion evidence exist. The platform onboarding proof path
+supported-feature promotion evidence exist. The platform catalog source-contract path
 can validate source-manifest and catalog inclusion separately; that is catalog
 visibility, not mesh certification.
 The mesh policy proof path validates local SLO, access, and evidence-pack
@@ -152,19 +152,24 @@ products, or certifies the platform mesh.
 
 `scripts/data_mesh/generate_platform_catalog_source_contract.py` reads sibling
 `lotus-platform` source-manifest, generated catalog, dependency graph, maturity
-matrix, and mesh handoff evidence. A valid proof clears only
+matrix, and mesh handoff evidence. The v2 artifact is explicitly
+`source_contract` evidence and binds the first four authority files by
+repository, ref, and SHA-256. A valid, current artifact satisfies only
 `platform_source_manifest_inclusion_missing` and
 `platform_catalog_inclusion_missing` in aggregate readiness. It preserves
 `data_mesh_not_certified`, `producer_products_not_active`,
 SLO/access/evidence certification, Gateway/Workbench discovery, and
-supported-feature blockers.
+supported-feature blockers. Its closed-field validator also requires runtime
+publication, deployment, production certification, and product-support claims
+to remain absent or false.
 `make implementation-proof-readiness-check` now generates this default proof
 from `LOTUS_PLATFORM_ROOT=../lotus-platform` into ignored
-`output/data-mesh/platform-mesh-onboarding-proof.json` and consumes it in the
+`output/data-mesh/platform-catalog-source-contract.json` and consumes it in the
 aggregate readiness artifact unless
-`LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF` overrides the path. Missing sibling
-platform evidence writes an invalid non-proof artifact and keeps the blockers;
-drift in present sibling evidence remains a failing contract condition.
+`LOTUS_IDEA_PLATFORM_CATALOG_SOURCE_CONTRACT_PROOF` overrides the path. Missing
+sibling platform evidence writes an invalid non-proof artifact and keeps the
+blockers; drift in present sibling evidence remains a failing contract
+condition.
 
 `make runtime-trust-telemetry-proof-contract-gate` validates the separate
 source-safe runtime trust telemetry proof contract used by aggregate
@@ -204,7 +209,7 @@ Run:
 ```powershell
 make data-mesh-contract-gate
 make mesh-policy-proof-contract-gate
-make platform-mesh-onboarding-proof-contract-gate
+make platform-catalog-source-contract-proof-gate
 make runtime-trust-telemetry-proof-contract-gate
 make runtime-trust-telemetry-preview-check
 make runtime-trust-telemetry-snapshot-check

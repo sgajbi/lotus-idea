@@ -8,7 +8,7 @@
 | Required capability | `idea.implementation-proof.readiness.read` |
 | Required query | Timezone-aware `evaluatedAtUtc` |
 | Supportability | `not_certified` while blockers remain |
-| Product claim | Bounded live source-ingestion, runtime trust telemetry, default Advise proposal route, Manage action route, Report intake route, Report materialization, outbox broker, outbox consumer, platform-mesh event, Gateway/Workbench source contracts, Gateway/Workbench discovery, mesh policy, platform mesh onboarding, receipt-bound mainline AI lineage-store CI execution, AI workflow-pack registration/runtime execution proof artifacts, and opportunity archetype scenario readiness can be consumed; Risk concentration, high-volatility, Risk drawdown, Performance underperformance, missing-benchmark Performance readiness, Core benchmark assignment, Core portfolio-state, missing-benchmark Core, low-income Core cashflow, Manage mandate, typed Advise mandate/restriction source-product, Advise mandate/restriction live, Advise missing-suitability, typed Advise missing risk-profile source-product, and Advise missing risk-profile live proof artifacts clear only source-specific blockers; the platform-mesh event and Gateway/Workbench source-contract proofs add evidence references but clear no runtime blocker; no full live journey, live AI provider execution, suitability/rebalance/risk-profile/restriction-clearance/benchmark-assignment authority, platform mesh certification, external broker or platform-mesh event publication, downstream delivery, full Gateway/Workbench product proof, live archetype replay proof, client-ready publication, or supported-feature promotion |
+| Product claim | Bounded live source-ingestion, runtime trust telemetry, default Advise proposal route, Manage action route, Report intake route, Report materialization, outbox broker, outbox consumer, platform-mesh event, Gateway/Workbench source contracts, Gateway/Workbench discovery, mesh policy, platform catalog source contract, receipt-bound mainline AI lineage-store CI execution, AI workflow-pack registration/runtime execution proof artifacts, and opportunity archetype scenario readiness can be consumed; Risk concentration, high-volatility, Risk drawdown, Performance underperformance, missing-benchmark Performance readiness, Core benchmark assignment, Core portfolio-state, missing-benchmark Core, low-income Core cashflow, Manage mandate, typed Advise mandate/restriction source-product, Advise mandate/restriction live, Advise missing-suitability, typed Advise missing risk-profile source-product, and Advise missing risk-profile live proof artifacts clear only source-specific blockers; the platform-mesh event and Gateway/Workbench source-contract proofs add evidence references but clear no runtime blocker; no full live journey, live AI provider execution, suitability/rebalance/risk-profile/restriction-clearance/benchmark-assignment authority, platform mesh certification, external broker or platform-mesh event publication, downstream delivery, full Gateway/Workbench product proof, live archetype replay proof, client-ready publication, or supported-feature promotion |
 
 `GET /api/v1/implementation-proof/readiness` is the internal operator
 diagnostic for RFC-0002 implementation proof posture.
@@ -219,9 +219,9 @@ taxonomy and the #393 same-pattern campaign.
 | `LOTUS_IDEA_REPORT_MATERIALIZATION_SOURCE_CONTRACT_PROOF` | Overrides the default report materialization source-contract artifact passed into aggregate readiness. |
 | `LOTUS_IDEA_MESH_POLICY_PROOF_OUTPUT` | Selects the default generated mesh policy proof artifact consumed by aggregate readiness when no override is set. Defaults to `output/data-mesh/mesh-policy-proof.json`. |
 | `LOTUS_IDEA_MESH_POLICY_PROOF` | Overrides the default generated mesh policy proof artifact passed into aggregate readiness. |
-| `LOTUS_PLATFORM_ROOT` | Selects the sibling `lotus-platform` checkout used to generate the default source-safe platform mesh onboarding proof. Defaults to `../lotus-platform`. |
-| `LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF_OUTPUT` | Selects the default generated platform mesh onboarding proof artifact consumed by aggregate readiness when no override is set. Defaults to `output/data-mesh/platform-mesh-onboarding-proof.json`. |
-| `LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF` | Overrides the default generated platform mesh onboarding proof artifact passed into aggregate readiness. |
+| `LOTUS_PLATFORM_ROOT` | Selects the sibling `lotus-platform` checkout used to generate the default source-safe platform catalog source contract. Defaults to `../lotus-platform`. |
+| `LOTUS_IDEA_PLATFORM_CATALOG_SOURCE_CONTRACT_PROOF_OUTPUT` | Selects the default generated platform catalog source contract artifact consumed by aggregate readiness when no override is set. Defaults to `output/data-mesh/platform-catalog-source-contract.json`. |
+| `LOTUS_IDEA_PLATFORM_CATALOG_SOURCE_CONTRACT_PROOF` | Overrides the default generated platform catalog source contract artifact passed into aggregate readiness. |
 | `LOTUS_IDEA_OUTBOX_CONSUMER_CONTRACT_PROOF_OUTPUT` | Selects the default generated outbox consumer source-contract proof consumed by aggregate readiness when no override is set. Defaults to `output/outbox/outbox-consumer-contract-proof.json`. |
 | `LOTUS_IDEA_OUTBOX_CONSUMER_CONTRACT_PROOF` | Overrides the default generated outbox consumer source-contract proof passed into aggregate readiness. |
 | `LOTUS_IDEA_OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_PROOF_OUTPUT` | Selects the default generated outbox platform-mesh event source-contract proof consumed by aggregate readiness when no override is set. Defaults to `output/outbox/platform-mesh/event-source-contract-proof.json`. |
@@ -654,22 +654,30 @@ or legal-hold policy was applied. The artifact also does not grant
 client-publication authority, suitability authority, mandate action, execution
 instruction, production certification, or a supported feature.
 
-Platform mesh onboarding proof is captured by
-`scripts/data_mesh/generate_platform_catalog_source_contract.py`. The repo-native
-`make implementation-proof-readiness-check` target now generates the default
-artifact from `LOTUS_PLATFORM_ROOT` under
-`LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF_OUTPUT` and passes it into aggregate
-readiness when `LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF` is not set. A valid
-artifact clears only
-`platform_source_manifest_inclusion_missing` and
-`platform_catalog_inclusion_missing` from data-mesh aggregate readiness. It
-cites sibling `lotus-platform` source-manifest, generated catalog, dependency
-graph, maturity matrix, and mesh handoff evidence. It does not certify the
-platform mesh, activate producer products, certify SLO/access/evidence policy,
-prove Gateway/Workbench discovery, or promote a supported feature.
-Missing sibling evidence writes an invalid non-proof artifact and keeps the
-blockers so CI remains stable without treating absence as proof; drift in
-present sibling evidence still exits non-zero.
+The platform catalog source contract is generated by
+`scripts/data_mesh/generate_platform_catalog_source_contract.py`. The
+repo-native `make implementation-proof-readiness-check` target reads the
+sibling checkout selected by `LOTUS_PLATFORM_ROOT`, writes the default artifact
+to `LOTUS_IDEA_PLATFORM_CATALOG_SOURCE_CONTRACT_PROOF_OUTPUT`, and consumes it
+unless `LOTUS_IDEA_PLATFORM_CATALOG_SOURCE_CONTRACT_PROOF` provides an explicit
+artifact.
+
+The v2 artifact declares `evidenceClass=source_contract` and binds the exact
+platform source manifest, generated catalog, dependency graph, and maturity
+matrix with repository, ref, and SHA-256 metadata. Its closed-field validator
+rejects unknown claims and requires runtime publication, mesh certification,
+producer activation, discovery certification, production certification,
+supported-feature promotion, and closure fields to remain false. A valid,
+current aggregate artifact can therefore satisfy only:
+
+1. `platform_source_manifest_inclusion_missing`,
+2. `platform_catalog_inclusion_missing`.
+
+It does not certify SLO/access/evidence policy, platform runtime publication,
+Gateway/Workbench discovery, deployment, production readiness, or product
+support. Missing sibling evidence writes an invalid non-proof artifact and
+keeps both blockers; drift in present sibling evidence remains a failing
+contract condition.
 
 Mesh policy proof is captured by `scripts/generate_mesh_policy_proof.py`. The
 repo-native `make implementation-proof-readiness-check` target now generates
@@ -1030,11 +1038,11 @@ Implementation-backed evidence:
 1. outbox broker source-contract proof tests:
     `tests/unit/outbox/broker/test_source_contract_proof.py`,
     `tests/unit/outbox/broker/test_readiness_consumption.py`,
-1. platform mesh onboarding proof generator:
+1. platform catalog source contract generator:
     `scripts/data_mesh/generate_platform_catalog_source_contract.py`,
-1. platform mesh onboarding proof contract gate:
-    `make platform-mesh-onboarding-proof-contract-gate`,
-1. platform mesh onboarding proof tests:
+1. platform catalog source contract contract gate:
+    `make platform-catalog-source-contract-proof-gate`,
+1. platform catalog source contract tests:
     `tests/unit/data_mesh/test_platform_catalog_source_contract.py`,
 1. Workbench read-path source-contract proof tests:
     `tests/unit/workbench/test_read_path_source_contract.py`,

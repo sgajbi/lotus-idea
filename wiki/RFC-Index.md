@@ -195,9 +195,9 @@ Current RFC-0002 implementation-start baseline:
    scheduled source-ingestion worker deploy-proof artifact, durable repository
    proof artifact, runtime telemetry proof artifact, Gateway/Workbench
    source-contract proof artifact, Gateway/Workbench discovery contract proof
-   artifact, report-intake route proof artifact, platform mesh onboarding proof
-   artifact, AI lineage store proof
-   artifact, Core portfolio-state live-proof artifact, and AI model-risk
+   artifact, report-intake route proof artifact, platform catalog source
+   contract artifact, AI lineage store proof artifact, Core portfolio-state
+   live-proof artifact, and AI model-risk
    operations contract refs before producing the same source-safe posture as
    repo-native automation evidence.
    Bounded live source-ingestion proof, read-only Gateway publication, and

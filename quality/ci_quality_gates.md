@@ -38,7 +38,7 @@ Blocking scaffold commands:
 29. `make gateway-workbench-contract-proof-contract-gate`
 30. `make gateway-workbench-discovery-contract-proof-contract-gate`
 31. `make outbox-broker-source-contract-proof-gate`
-32. `make platform-mesh-onboarding-proof-contract-gate`
+32. `make platform-catalog-source-contract-proof-gate`
 33. `make downstream-route-contract-proof-gate`
 34. `make source-ingestion-worker-check`
 35. `make source-ingestion-scheduled-worker-check`
@@ -85,7 +85,7 @@ Release and review evidence commands:
    proof artifact, outbox broker source-contract proof artifact, default Advise proposal route
    proof artifact, default Manage action route proof artifact, default Report
    intake route proof artifact, default mesh policy proof artifact, and default
-   platform mesh onboarding proof artifact, plus AI lineage store and AI
+   platform catalog source contract artifact, plus AI lineage store and AI
    workflow-pack registration proof artifacts and optional Core
    portfolio-state, Manage mandate, Advise mandate/restriction,
    missing-suitability, and missing risk-profile live proof, then consumes all

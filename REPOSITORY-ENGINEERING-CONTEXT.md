@@ -1308,6 +1308,17 @@ Recent issue-derived patterns to preserve:
     evidence from the owning Report/Render/Archive runtime can change those
     blockers; source declarations must never be projected into a current target
     route, readiness status, or supportability status.
+41. Platform source-manifest and generated-catalog inclusion are
+    `source_contract` claims. Keep this family under capability-owned
+    `data_mesh/` application, script, and test packages. Bind each authoritative
+    sibling platform input by repository, ref, and SHA-256, reject unknown
+    fields, and allow a valid current artifact to satisfy only
+    `platform_source_manifest_inclusion_missing` and
+    `platform_catalog_inclusion_missing`. It cannot prove platform runtime
+    publication, mesh certification, producer activation, policy
+    certification, Gateway/Workbench discovery, deployment, production
+    certification, or supported-feature promotion. This remains design
+    modularity inside the existing Lotus Idea deployable.
 
 Recent GitHub issue categories should keep being worked category-wise so
 repeated defect patterns are fixed once and pinned with tests or gates:

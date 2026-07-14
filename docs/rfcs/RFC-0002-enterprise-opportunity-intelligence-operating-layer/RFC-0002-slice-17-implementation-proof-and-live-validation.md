@@ -1,6 +1,6 @@
 # RFC-0002 Slice 17: Implementation Proof And Live Validation
 
-Status: Partially implemented - aggregate proof-readiness diagnostic, bounded live source-ingestion proof artifact contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry proof artifact, Workbench read-path source-contract proof artifact, Gateway/Workbench contract proof artifact, Gateway/Workbench discovery contract proof artifact, Advise proposal route proof artifact, Manage action route proof artifact, Manage mandate live proof artifact, Core portfolio-state live proof artifact, Report intake route and materialization source-contract artifacts, bounded outbox broker source-contract proof artifact, bounded downstream consumer source-contract proof artifact, bounded outbox platform-mesh event source-contract proof, mesh policy proof artifact, platform mesh onboarding proof artifact, AI lineage store proof artifact, AI workflow-pack registration proof artifact, AI workflow-pack runtime execution proof artifact, high-volatility and drawdown live Risk proof artifact contracts, low-income Core cashflow live proof artifact contract, bond-maturity policy foundation, and opportunity archetype scenario readiness with source/policy foundations available. Slice evidence now includes live canonical Risk concentration, Performance underperformance, and Performance benchmark-readiness source proofs for `PB_SG_GLOBAL_BAL_001`; observed Report intake and materialization execution, rendered output, archive creation, external broker publication, platform-mesh event publication, downstream consumer execution, full live opportunity-journey proof, data-mesh certification, Workbench product proof, client-publication approval, and supported-feature promotion remain pending.
+Status: Partially implemented - aggregate proof-readiness diagnostic, bounded live source-ingestion proof artifact contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry proof artifact, Workbench read-path source-contract proof artifact, Gateway/Workbench contract proof artifact, Gateway/Workbench discovery contract proof artifact, Advise proposal route proof artifact, Manage action route proof artifact, Manage mandate live proof artifact, Core portfolio-state live proof artifact, Report intake route and materialization source-contract artifacts, bounded outbox broker source-contract proof artifact, bounded downstream consumer source-contract proof artifact, bounded outbox platform-mesh event source-contract proof, mesh policy proof artifact, platform catalog source contract artifact, AI lineage store proof artifact, AI workflow-pack registration proof artifact, AI workflow-pack runtime execution proof artifact, high-volatility and drawdown live Risk proof artifact contracts, low-income Core cashflow live proof artifact contract, bond-maturity policy foundation, and opportunity archetype scenario readiness with source/policy foundations available. Slice evidence now includes live canonical Risk concentration, Performance underperformance, and Performance benchmark-readiness source proofs for `PB_SG_GLOBAL_BAL_001`; observed Report intake and materialization execution, rendered output, archive creation, external broker publication, platform-mesh event publication, downstream consumer execution, full live opportunity-journey proof, data-mesh certification, Workbench product proof, client-publication approval, and supported-feature promotion remain pending.
 
 ## Outcome
 
@@ -192,7 +192,7 @@ Prove the complete supported opportunity journey end to end.
     the same source-safe artifact-ref path as the aggregate generator for
     source-ingestion live proof, source-ingestion scheduled-worker proof,
     durable repository, runtime trust telemetry, Workbench read-path, outbox
-    broker, platform mesh onboarding, and AI lineage store proofs. `tests/unit/test_proof_artifacts.py`,
+    broker, platform catalog source contract, and AI lineage store proofs. `tests/unit/test_proof_artifacts.py`,
     `tests/unit/test_implementation_proof_readiness.py`, and
     `tests/integration/test_implementation_proof_readiness_api.py` prove that
     configured valid artifacts clear only their intended aggregate blockers,
@@ -216,17 +216,23 @@ Prove the complete supported opportunity journey end to end.
     publication, and supported-feature blockers.
 21. `src/app/application/data_mesh/platform_catalog_source_contract.py`,
     `scripts/data_mesh/generate_platform_catalog_source_contract.py`, and
-    `make platform-mesh-onboarding-proof-contract-gate` now define and enforce
-    a bounded cross-repo platform onboarding proof. The repo-native
+    `make platform-catalog-source-contract-proof-gate` now define and enforce
+    a bounded cross-repo platform catalog source contract. Issue `#443`
+    classifies it as `source_contract`, binds the exact source manifest,
+    catalog, dependency graph, and maturity matrix by SHA-256, and closes the
+    accepted field vocabulary against claim inflation. The repo-native
     `make implementation-proof-readiness-check` target generates the default
     artifact from `LOTUS_PLATFORM_ROOT`, tolerates absent sibling evidence by
     writing an invalid non-proof artifact, and passes it into aggregate
-    readiness unless `LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF` overrides the
-    path. The aggregate readiness generator consumes that artifact to clear only
+    readiness unless `LOTUS_IDEA_PLATFORM_CATALOG_SOURCE_CONTRACT_PROOF`
+    overrides the path. The aggregate readiness generator consumes a valid,
+    current artifact to satisfy only
     `platform_source_manifest_inclusion_missing` and
     `platform_catalog_inclusion_missing`, while preserving mesh certification,
-    product activation, SLO/access/evidence, Gateway/Workbench, and
-    supported-feature blockers.
+    product activation, SLO/access/evidence, Gateway/Workbench, deployment,
+    production-certification, and supported-feature blockers. The dependent
+    Workbench discovery contract consumes the renamed source contract without
+    treating it as runtime discovery evidence.
 22. `src/app/application/mesh_policy_proof.py`,
     `scripts/generate_mesh_policy_proof.py`, and
     `make mesh-policy-proof-contract-gate` now define and enforce the
@@ -563,7 +569,7 @@ Because this is source-contract evidence rather than observed execution, it
 does not close `gateway_workbench_proof_missing` or any full Workbench product, panel,
 browser accessibility proof, canonical demo runtime proof, Gateway/Workbench
 data-product discovery, client-publication, or supported-feature proof.
-The default platform mesh onboarding proof narrows the aggregate readiness gap
+The default platform catalog source contract narrows the aggregate readiness gap
 from "no platform source-manifest/catalog proof" to "catalog-visible proposed
 products and consumer dependencies can be generated and consumed through the
 canonical readiness command"; it does not close mesh certification, active
