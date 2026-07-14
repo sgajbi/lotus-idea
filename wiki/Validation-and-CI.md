@@ -20,6 +20,7 @@ clean branch hygiene.
 | Persistence or migration change | `make migration-contract-gate`, `make migration-execution-gate`, focused repository tests | Apply/rollback and query-shape proof. |
 | PostgreSQL recovery change | `make disaster-recovery-contract-gate`, real restore/resume proof, `make disaster-recovery-proof-gate` | RPO/RTO, restored invariants, replay/fencing, and no-mutation evidence. |
 | Canonical source-proof run | `make canonical-opportunity-source-proofs` with governed runtime arguments | Source-specific live evidence, traceability, and fail-closed blocker posture. |
+| Lotus AI runtime proof | `python scripts/generate_ai_workflow_pack_runtime_execution_proof.py --generated-at-utc <utc> --lotus-ai-base-url <lotus-ai-base-url> --output output/ai/ai-workflow-pack-runtime-execution-proof.json` | Actual review-gated `idea_explanation.pack@v1` execution and a source-safe receipt; live provider remains blocked. |
 | Release-grade local proof | `make ci-release` | Full local release evidence. |
 | Wiki source change | wiki audit, wiki check-only, publish after merge | Repo source and published wiki agree. |
 
@@ -484,13 +485,15 @@ Persistence adapter validation:
     artifact clears only `workflow_pack_runtime_contract_not_certified` in
     aggregate readiness while preserving `lotus-ai` runtime execution,
     provider-call, Workbench, client-ready, and supported-feature blockers.
-16. `tests/unit/test_ai_workflow_pack_runtime_execution_proof.py` and
+16. `tests/unit/test_ai_workflow_pack_runtime_execution_proof.py`,
+    `tests/unit/test_lotus_ai_workflow_runtime.py`, and
     `make ai-workflow-pack-runtime-execution-proof-contract-gate` prove the
-    bounded sibling `lotus-ai` deterministic runtime execution proof contract.
+    actual deterministic `lotus-ai` runtime execution receipt contract.
     A valid artifact clears only `lotus_ai_runtime_execution_missing` in
-    aggregate readiness while preserving workflow-pack registration, live
-    provider, Workbench, client-ready, and supported-feature blockers.
-16. `tests/unit/test_runtime_trust_telemetry.py`,
+    aggregate readiness, adds `lotus_ai_live_provider_execution_missing`, and
+    preserves workflow-pack registration, Workbench, client-ready, and
+    supported-feature blockers.
+17. `tests/unit/test_runtime_trust_telemetry.py`,
     `tests/unit/test_generate_runtime_trust_telemetry_snapshot.py`,
     `tests/integration/test_runtime_trust_telemetry_api.py`,
     `make runtime-trust-telemetry-preview-check`, and

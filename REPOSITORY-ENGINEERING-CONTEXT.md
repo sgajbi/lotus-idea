@@ -707,6 +707,18 @@ AI model-risk operations proof is limited to implemented AI explanation
 telemetry. It does not certify `lotus-ai` runtime execution, provider calls,
 Workbench behavior, data-mesh certification, or supported-feature promotion.
 
+AI workflow-pack runtime evidence is a separate v2 execution-receipt boundary.
+`app.application.ai_runtime_proof` builds the synthetic redacted request and
+validates the bounded receipt, `app.ports.lotus_ai_runtime` owns the stable
+execution interface, and `app.infrastructure.lotus_ai.workflow_runtime` owns
+HTTP transport. Static sibling-source inspection is registration/design
+evidence only and must never set `lotusAiRuntimeExecuted` or clear a runtime
+blocker. A deterministic stub receipt clears only the generic runtime seam and
+must add `lotus_ai_live_provider_execution_missing`; it is not provider,
+production approval, Workbench, client-publication, or supported-feature proof.
+Issue `#393` tracks the same evidence-classification audit across other proof
+builders.
+
 AI proposed-action labels are untrusted input even when the structured action
 enum is allowed. Enforce `lotus-idea.ai-action-content-policy.v1` in the domain
 before claim verification, return only canonical server-owned labels, and keep

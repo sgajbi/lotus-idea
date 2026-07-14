@@ -144,11 +144,14 @@ Current RFC-0002 implementation-start baseline:
    internal AI explanation evaluator API plus a not-certified AI explanation
    readiness diagnostic. Submitted provider narrative is not advisor-visible or
    persisted, and blocked output exposes no grounded claims. This remains
-   without `lotus-ai` runtime execution, Gateway,
-   Workbench, or supported-feature promotion.
+   Issue `#392` additionally proves actual review-gated deterministic-stub
+   execution through `idea_explanation.pack@v1` with a bounded receipt. Live
+   provider execution, production model-risk approval, Gateway, Workbench, and
+   supported-feature promotion remain absent.
    PR `#390` merged this bounded capability to exact-main SHA `67a6e005`;
    Main Releasability `29300549721` and CodeQL `29300546423` passed. Slice 09
-   remains partial for its separate live-runtime and product-realization gates.
+   remains partial for its separate live-provider/production and
+   product-realization gates.
 11. Slice 10 partially implements certified internal API foundations for
    high-cash evaluation, high-cash evaluate-and-persist, candidate lifecycle
    transitions, source-safe candidate detail, candidate evidence replay,

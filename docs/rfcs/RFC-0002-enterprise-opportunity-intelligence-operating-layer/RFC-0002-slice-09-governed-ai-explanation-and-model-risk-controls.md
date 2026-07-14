@@ -172,6 +172,19 @@ Implemented in this slice:
     model-risk contract and readiness endpoint expose the active grounding
     posture. Duplicate claim or source-product identities fail closed. This is
     design modularity inside the existing Idea process, not an AI runtime split.
+26. Issue `#392` replaces the static source-scan runtime claim with an actual
+    `idea_explanation.pack@v1` execution proof. The layered path is automation
+    input -> `app.application.ai_runtime_proof` ->
+    `app.ports.lotus_ai_runtime` ->
+    `app.infrastructure.lotus_ai.workflow_runtime` -> Lotus AI. A valid v2
+    proof binds eligible caller/pack/run/task identity, the synthetic redacted
+    evidence hash, completed execution, `ACTION_REQUIRED` review posture, and
+    blocked client-publication/downstream authority into a source-safe receipt
+    digest. Deterministic stub execution clears only the generic runtime seam;
+    live-provider execution, production attestation acceptance, runtime-trust
+    certification, Workbench proof, and feature promotion remain blocked. This
+    is design modularity and automation around the existing runtimes, not a new
+    Idea service.
 
 Validation evidence from the implementation slice:
 
@@ -223,7 +236,15 @@ Validation evidence from the implementation slice:
     provenance, release manifest, and digest-bound deployment evidence. Wiki
     publication `f86a57c` synchronized the three changed pages with zero drift.
     Issue `#389` is implementation-complete; Slice 09 remains partial only for
-    the separate live-runtime, Gateway/Workbench, and promotion blockers below.
+    the separate live-provider/production, Gateway/Workbench, and promotion
+    blockers below.
+17. Issue `#392` focused validation passes with `36` runtime-proof and HTTP
+    adapter tests plus `87` aggregate-readiness tests. A running canonical
+    Lotus AI service on port `8140` returned a completed, review-gated
+    deterministic stub run; the generated v2 proof validated and retained no
+    request body or generated output. The first live calls correctly failed on
+    an unregistered workflow surface and incomplete supportability vocabulary,
+    proving that source-authority policy was exercised rather than bypassed.
 
 ## Current Governance References
 
@@ -253,9 +274,9 @@ includes:
 
 1. prompt registry, RAG, evaluation, and provider telemetry owned by
    `lotus-ai`,
-2. live-provider execution and workflow-pack runtime certification beyond
-   the current source-safe AI lineage store proof and certified repo-owned
-   model-risk operations dashboard/alert artifacts,
+2. live-provider execution and production workflow-pack certification beyond
+   the current actual deterministic-stub runtime proof, source-safe AI lineage
+   store proof, and certified repo-owned model-risk operations artifacts,
 3. Gateway/Workbench proof,
 4. certified runtime trust telemetry beyond the current model-risk operations
    dashboard, alert-rule, and runbook artifacts,

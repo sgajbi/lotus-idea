@@ -238,8 +238,9 @@ supportability surface, and test evidence. It still does not execute
 `lotus-ai`, invoke a provider, certify model-risk operations, prove Workbench
 behavior, or make an AI explanation claim client-ready.
 
-The AI workflow-pack runtime execution proof gate validates deterministic
-review-gated sibling `lotus-ai` execution, guardrails, stub-provider routing,
+The AI workflow-pack runtime execution proof gate validates an actual
+review-gated `lotus-ai` invocation, exact workflow/run/task identity,
+evidence-hash binding, guardrails, deterministic stub-provider routing,
 and restricted `lotus-idea` caller policy. It still does not certify live AI
 provider rollout, model-risk operations, Workbench behavior, client-ready
 publication, or supported-feature promotion.

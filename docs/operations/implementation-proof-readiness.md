@@ -215,7 +215,9 @@ supported-feature promotion.
 | `LOTUS_IDEA_GATEWAY_WORKBENCH_DISCOVERY_PROOF` | Overrides the default generated Gateway/Workbench discovery proof artifact passed into aggregate readiness. |
 | `LOTUS_IDEA_AI_LINEAGE_STORE_PROOF_OUTPUT` | Selects the default generated AI lineage store proof artifact consumed by aggregate readiness when no override is set. Defaults to `output/ai/ai-lineage-store-proof.json`. |
 | `LOTUS_IDEA_AI_LINEAGE_STORE_PROOF` | Overrides the default generated AI lineage store proof artifact passed into aggregate readiness. |
-| `LOTUS_AI_ROOT` | Selects the sibling `lotus-ai` checkout used to generate default workflow-pack registration and runtime execution proof artifacts. Defaults to `../lotus-ai`. |
+| `LOTUS_AI_ROOT` | Selects the sibling `lotus-ai` checkout used to generate the workflow-pack registration source-contract proof. Defaults to `../lotus-ai`. |
+| `LOTUS_AI_BASE_URL` | Selects the governed Lotus AI runtime used for actual workflow-pack execution proof. Defaults to `http://127.0.0.1:8140`. |
+| `LOTUS_IDEA_AI_RUNTIME_PROOF_TIMEOUT_SECONDS` | Bounds the runtime-proof HTTP call. Defaults to `2`; accepted values are greater than zero and at most `30`. |
 | `LOTUS_IDEA_AI_WORKFLOW_PACK_REGISTRATION_PROOF_OUTPUT` | Selects the default generated AI workflow-pack registration proof artifact consumed by aggregate readiness when no override is set. Defaults to `output/ai/ai-workflow-pack-registration-proof.json`. |
 | `LOTUS_IDEA_AI_WORKFLOW_PACK_REGISTRATION_PROOF` | Overrides the default generated AI workflow-pack registration proof artifact passed into aggregate readiness. |
 | `LOTUS_IDEA_AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF_OUTPUT` | Selects the default generated AI workflow-pack runtime execution proof artifact consumed by aggregate readiness when no override is set. Defaults to `output/ai/ai-workflow-pack-runtime-execution-proof.json`. |
@@ -697,22 +699,29 @@ proof is consumed by aggregate readiness.
 AI workflow-pack runtime execution proof is captured by
 `scripts/generate_ai_workflow_pack_runtime_execution_proof.py`. The repo-native
 `make implementation-proof-readiness-check` target now generates the default
-artifact from `LOTUS_AI_ROOT` under
+artifact by invoking `LOTUS_AI_BASE_URL` under
 `LOTUS_IDEA_AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF_OUTPUT` and passes it into
 aggregate readiness when `LOTUS_IDEA_AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF`
 is not set. A valid artifact clears only
-`lotus_ai_runtime_execution_missing` from the AI explanation capability. It
-cites the sibling `lotus-ai` deterministic idea explanation stub, source-safe
-guardrails, workflow-pack execution path, stub provider routing, restricted
-`lotus-idea` caller policy, migration seed, and tests. It does not execute a
-live AI provider, certify provider rollout, certify runtime trust telemetry,
-prove Workbench behavior,
-authorize client-ready publication, or promote a supported feature. Missing
-sibling evidence writes an invalid non-proof artifact and keeps the blocker so
-CI remains stable without treating absence as proof; drift in present sibling
-evidence still exits non-zero. `make ai-workflow-pack-runtime-execution-proof-contract-gate`
-validates the artifact shape, source-safe evidence refs, and one-blocker
-clearance boundary before the proof is consumed by aggregate readiness.
+`lotus_ai_runtime_execution_missing` from the AI explanation capability and
+adds `lotus_ai_live_provider_execution_missing`. The application use case sends
+a synthetic redacted evidence packet through the governed
+`idea_explanation.pack@v1` route. It accepts only a completed, eligible,
+`lotus-idea`-scoped run whose task audit and run identity agree, whose evidence
+hash matches the request, and whose review, client-publication, and downstream
+authority posture remains fail-closed.
+
+The artifact retains a bounded receipt and its digest, not the request body,
+prompt, generated narrative, provider payload, candidate identity, portfolio
+identity, client identity, tenant identity, or correlation identity. A
+deterministic stub run proves the runtime seam and guardrails only. It does not
+prove live-provider execution, signed production output acceptance, provider
+rollout, runtime-trust certification, Workbench behavior, client-ready
+publication, or supported-feature promotion. An unavailable or invalid runtime
+writes an explicit invalid non-proof and clears no blocker.
+`make ai-workflow-pack-runtime-execution-proof-contract-gate` validates the v2
+receipt schema, source-safety boundary, digest binding, and one-blocker
+clearance before aggregate readiness can consume it.
 
 ## Response Shape
 

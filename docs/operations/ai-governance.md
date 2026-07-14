@@ -132,8 +132,8 @@ The readiness diagnostic always returns:
 7. `actionContentPolicyVersion=lotus-idea.ai-action-content-policy.v1`.
 8. `metadataEnvelopeVersion=lotus-idea.ai-metadata-envelope.v1`.
 9. `lotusAiRunAttestationAvailable=true`; producer and consumer mainline
-    contract proof is complete, while live runtime execution and the other
-    certification blockers remain explicit.
+    contract proof is complete, while live-provider/production runtime
+    certification and the other blockers remain explicit.
 10. `claimGroundingAvailable=true` and
     `claimGroundingPolicyVersion=lotus-idea.ai-claim-grounding-policy.v1`.
 
@@ -292,8 +292,10 @@ model-risk operating evidence. Durable repository-backed lineage persistence
 is necessary proof, but it is not sufficient certification. The source-safe AI
 lineage store proof can clear only the lineage-store blocker in aggregate proof
 readiness. The readiness diagnostic therefore remains `not_certified` until
-`lotus-ai` runtime execution, workflow-pack runtime certification, runtime
-trust telemetry, and Workbench proof exist.
+live-provider workflow-pack certification, runtime trust telemetry, and
+Workbench proof exist. Aggregate implementation readiness may consume a
+separate actual deterministic-stub execution receipt; that receipt does not
+change this endpoint's production-certification posture.
 
 ## API Behavior
 
@@ -324,9 +326,9 @@ The evaluation response, audit attributes, and lineage record expose the bounded
 provenance posture. Migration `011` marks existing records
 `pre_attestation_unverifiable`; it does not infer that historical output came
 from Lotus AI. Readiness reports the verifier as available and no longer reports
-the completed mainline contract proof as missing. It remains blocked on live
-Lotus AI runtime execution, certified lineage-store and runtime-trust proof,
-workflow-pack runtime certification, and Workbench product proof.
+the completed mainline contract proof as missing. It remains blocked on
+live-provider Lotus AI certification, certified lineage-store and runtime-trust
+proof, production workflow-pack certification, and Workbench product proof.
 
 The producer delivery was completed under `sgajbi/lotus-ai#113` at producer
 main commit `162df803a7a835813dc17116be674842f12aa544`, with Main Releasability
