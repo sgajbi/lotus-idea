@@ -44,6 +44,7 @@ REQUIRED_BOUNDED_MODULE_PATHS = {
     "src/app/application/runtime_trust_telemetry/telemetry.py",
     "src/app/application/runtime_trust_telemetry/test_execution_contract.py",
     "tests/unit/runtime_trust_telemetry/__init__.py",
+    "tests/unit/runtime_trust_telemetry/test_implementation_proof_generation.py",
     "tests/unit/runtime_trust_telemetry/test_postgres_projection.py",
     "tests/unit/runtime_trust_telemetry/test_snapshot_cli.py",
     "tests/unit/runtime_trust_telemetry/test_telemetry.py",
