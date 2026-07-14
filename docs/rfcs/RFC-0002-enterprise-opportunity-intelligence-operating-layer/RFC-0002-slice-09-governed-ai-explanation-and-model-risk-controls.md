@@ -292,6 +292,23 @@ Validation evidence from the implementation slice:
     evidence exists. The builder, generator, gate, and focused tests are grouped
     under capability-oriented `workbench/` packages; this improves design
     modularity without introducing another deployable service.
+22. Issue `#408` applies the rule to Gateway/Workbench discovery evidence.
+    Proposed catalog entries, approved-consumer declarations, generated
+    platform files, and source-contract dependencies now produce only a v2
+    `source_contract` artifact. Aggregate readiness records the artifact for
+    data-mesh and runtime-trust capabilities but clears no blocker;
+    `gateway_workbench_discovery_proof_missing` remains until the owning
+    platform, Gateway, and Workbench runtimes provide machine-verifiable
+    publication, serving, consumption, and entitlement evidence. The builder,
+    generator, gate, and tests are grouped under `workbench/` without adding a
+    deployable service.
+
+Issue `#408` changes an internal proof contract and its operator tooling only.
+It adds no route or response schema, so no OpenAPI change is warranted; it
+changes no persisted state, so no migration is warranted; it promotes no
+supported feature; and it does not change README onboarding or top-level
+product navigation. Operations docs, RFC truth, repository context, quality
+evidence, and repo-authored wiki source carry the changed operator contract.
 
 ## Current Governance References
 

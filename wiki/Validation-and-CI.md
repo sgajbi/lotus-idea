@@ -157,7 +157,7 @@ Advise mandate/restriction source-product proof contract validation,
 report-intake route proof contract validation,
 Workbench read-path proof contract validation,
 Gateway/Workbench contract proof contract validation,
-Gateway/Workbench discovery proof contract validation,
+Gateway/Workbench discovery contract proof contract validation,
 AI lineage store proof contract validation,
 AI workflow-pack registration proof contract validation,
 AI workflow-pack runtime execution proof contract validation,
@@ -428,8 +428,9 @@ Persistence adapter validation:
    artifact refs, durable repository proof, runtime trust telemetry proof
    consumption, non-AI operator workflow operations proof consumption,
    Workbench read-path proof consumption, Gateway/Workbench
-   source-contract proof consumption, Gateway/Workbench discovery proof consumption, bounded outbox broker
-   proof consumption, default Advise proposal route proof generation and
+   source-contract proof consumption, Gateway/Workbench discovery contract
+   proof consumption, bounded outbox broker proof consumption, default Advise
+   proposal route proof generation and
    consumption, default Manage action route proof generation and consumption,
    optional Manage mandate live proof consumption,
    optional Core benchmark assignment live proof consumption,
@@ -465,12 +466,12 @@ Persistence adapter validation:
     records the `source_contract` evidence reference but preserves
     `gateway_workbench_proof_missing` for source-ingestion and outbox-delivery
     until machine-verifiable runtime execution evidence exists.
-13. `tests/unit/test_gateway_workbench_discovery_proof.py` and
-    `make gateway-workbench-discovery-proof-contract-gate` prove the
-    source-safe bounded Gateway/Workbench discovery proof contract that
-    aggregate readiness consumes to clear only
-    `gateway_workbench_discovery_proof_missing` for data-mesh and runtime
-    trust telemetry proof families.
+13. `tests/unit/workbench/test_discovery_contract_proof.py` and
+    `make gateway-workbench-discovery-contract-proof-contract-gate` prove the
+    source-safe bounded Gateway/Workbench discovery contract proof. Aggregate
+    readiness adds its reference to data-mesh and runtime-trust evidence but
+    preserves `gateway_workbench_discovery_proof_missing` until
+    machine-verifiable runtime evidence exists.
 14. `tests/unit/outbox/test_outbox_broker_proof.py`,
     `tests/unit/outbox/test_outbox_consumer_contract_proof.py`,
     `tests/unit/outbox/test_outbox_platform_mesh_event_publication_proof.py`,
@@ -964,8 +965,8 @@ certification, unit tests, and integration tests. Its passing checks certify the
 diagnostic route only; they do not certify the data products it reports as
 blocked. The endpoint's blocker contract is part of the anti-promotion control
 and must continue to name SLO certification, access-policy certification,
-evidence-policy certification, Gateway/Workbench discovery proof, and
-supported-feature promotion until those are implementation-backed and
+evidence-policy certification, Gateway/Workbench runtime discovery evidence,
+and supported-feature promotion until those are implementation-backed and
 platform-certified. Source-manifest and catalog-inclusion blockers may be
 cleared only by the bounded platform mesh onboarding proof; that proof is not
 mesh certification.

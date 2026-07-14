@@ -57,9 +57,10 @@ the next starts.
 | --- | --- | --- |
 | AI workflow execution | Actual `runtime_execution` receipt implemented. | #392, merged |
 | AI lineage store | Mainline digest-bound `ci_execution` receipt implemented and exact-main validated. | #396, PRs #397/#398 |
-| Outbox consumer runtime | Source contract currently implies runtime execution. | #393, remediation pending |
-| Durable repository | Source/Make/CI narrative currently implies durable runtime certification. | #393, remediation pending |
-| Gateway/Workbench contract | Local declarations are classified as `source_contract`, add evidence references only, and preserve runtime blockers. | #393, #406 implemented locally; mainline validation pending |
+| Outbox consumer runtime | Consumer declarations are `source_contract` evidence, add evidence references only, and preserve `downstream_consumer_runtime_proof_missing`. | #404, PR #405 merged and exact-main validated at `794d8616` |
+| Durable repository | Exact-main, digest-bound PostgreSQL `ci_execution` receipts are required; source evidence cannot clear durable-runtime blockers. | #401, PR #403 merged and exact-main validated at `3daa14a6` |
+| Gateway/Workbench contract | Local declarations are `source_contract` evidence, add evidence references only, and preserve `gateway_workbench_proof_missing`. | #406, PR #407 merged and exact-main validated at `e09b4ffc` |
+| Gateway/Workbench discovery contract | Proposed catalog entries and consumer declarations are `source_contract` evidence; they cannot prove active publication, Gateway serving, Workbench consumption, or runtime discovery. | #408 implemented locally; mainline validation pending |
 | Other aggregate proof builders | Classification audit remains open; no unreviewed family is promoted by this capability. | #393 |
 
 ## Operating Commands

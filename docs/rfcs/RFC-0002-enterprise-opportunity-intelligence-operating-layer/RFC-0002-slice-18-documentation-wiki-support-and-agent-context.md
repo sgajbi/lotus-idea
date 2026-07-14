@@ -1,6 +1,6 @@
 # RFC-0002 Slice 18: Documentation, Wiki, Support, And Agent Context
 
-Status: Partially implemented - API certification, outbox readiness, implementation-proof, live source-proof contract, scheduled-worker proof contract, durable repository proof contract, runtime telemetry proof contract, bounded Workbench read-path proof, bounded Gateway/Workbench contract proof, bounded Gateway/Workbench discovery proof, bounded downstream route proof, bounded outbox broker proof, bounded outbox platform mesh event publication proof, mesh policy proof, AI lineage store proof, Manage mandate live proof, Core portfolio-state live proof, low-income Core cashflow live proof, typed Advise mandate/restriction source-product proof, Advise mandate/restriction live proof, typed Advise missing risk-profile source-product proof, missing risk-profile live proof, underperformance, allocation-drift, and drawdown-review API foundation truth, bond-maturity, mandate/restriction, and missing-benchmark policy foundation truth, client-demo process, and downstream contract documentation synchronized
+Status: Partially implemented - API certification, outbox readiness, implementation-proof, live source-proof contract, scheduled-worker proof contract, durable repository proof contract, runtime telemetry proof contract, bounded Workbench read-path proof, bounded Gateway/Workbench contract proof, bounded Gateway/Workbench discovery contract proof, bounded downstream route proof, bounded outbox broker proof, bounded outbox platform mesh event publication proof, mesh policy proof, AI lineage store proof, Manage mandate live proof, Core portfolio-state live proof, low-income Core cashflow live proof, typed Advise mandate/restriction source-product proof, Advise mandate/restriction live proof, typed Advise missing risk-profile source-product proof, missing risk-profile live proof, underperformance, allocation-drift, and drawdown-review API foundation truth, bond-maturity, mandate/restriction, and missing-benchmark policy foundation truth, client-demo process, and downstream contract documentation synchronized
 
 ## Outcome
 
@@ -192,12 +192,13 @@ documentation across opportunity signal APIs.
 21. README, repository context,
     `docs/operations/implementation-proof-readiness.md`, quality gate docs, RFC
     evidence, and wiki source now describe the Gateway/Workbench discovery
-    proof artifact and `make gateway-workbench-discovery-proof-contract-gate`,
-    while preserving the boundary that a valid artifact clears only
-    `gateway_workbench_discovery_proof_missing` for data-mesh and runtime trust
-    telemetry proof families and does not certify data-mesh products, activate
-    producer products, certify full Workbench product behavior, or promote
-    supported features.
+    contract proof artifact and
+    `make gateway-workbench-discovery-contract-proof-contract-gate`. A valid
+    artifact adds evidence to data-mesh and runtime trust telemetry proof
+    families but clears no blocker. The
+    `gateway_workbench_discovery_proof_missing` blocker remains, and the
+    artifact does not certify data-mesh products, activate producer products,
+    certify full Workbench product behavior, or promote supported features.
 21. README, repository context,
     `docs/operations/implementation-proof-readiness.md`, RFC evidence, and
     wiki source now describe that the live implementation-proof readiness API
@@ -302,7 +303,7 @@ documentation across opportunity signal APIs.
 
 This documentation slice does not promote any supported feature. It records
 bounded Workbench read-path proof, Gateway/Workbench contract proof, and
-Gateway/Workbench discovery proof only; it does not add full
+Gateway/Workbench discovery contract proof only; it does not add full
 Gateway/Workbench live proof, data-product certification, downstream
 realization, live source certification, or certified long-running scheduled
 runtime proof. The bond-maturity / reinvestment update records only
