@@ -6,9 +6,14 @@ AI_CLAIM_GROUNDING_POLICY_VERSION = "lotus-idea.ai-claim-grounding-policy.v1"
 
 
 class GroundableClaim(Protocol):
-    claim_id: str
-    claim_text: str
-    source_product_ids: tuple[str, ...]
+    @property
+    def claim_id(self) -> str: ...
+
+    @property
+    def claim_text(self) -> str: ...
+
+    @property
+    def source_product_ids(self) -> tuple[str, ...]: ...
 
 
 def render_grounded_claim_narrative(claims: Sequence[GroundableClaim]) -> str:
