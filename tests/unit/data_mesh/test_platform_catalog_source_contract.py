@@ -195,6 +195,24 @@ def test_rejects_source_authority_substitution(field_name: str, tmp_path: Path) 
     assert platform_catalog_source_contract_is_valid(proof) is False
 
 
+def test_rejects_malformed_source_authority_entry(tmp_path: Path) -> None:
+    proof = _valid_platform_catalog_source_contract(tmp_path)
+    source_authority = list(proof["sourceAuthority"])
+    source_authority[0] = "../lotus-platform/generated/domain-product-catalog.json"
+    proof["sourceAuthority"] = source_authority
+
+    assert platform_catalog_source_contract_is_valid(proof) is False
+
+
+def test_rejects_non_hex_source_authority_digest(tmp_path: Path) -> None:
+    proof = _valid_platform_catalog_source_contract(tmp_path)
+    source_authority = [dict(item) for item in proof["sourceAuthority"]]
+    source_authority[0]["sha256"] = "z" * 64
+    proof["sourceAuthority"] = source_authority
+
+    assert platform_catalog_source_contract_is_valid(proof) is False
+
+
 def test_source_authority_digest_changes_with_catalog_content(tmp_path: Path) -> None:
     platform_root = _write_platform_fixture(tmp_path)
     original = build_platform_catalog_source_contract_payload(
