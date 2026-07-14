@@ -124,14 +124,14 @@ Current RFC-0002 implementation-start baseline:
    data-product certification, and supported-feature promotion remain later,
    independently gated work. Exact-main SHA `4f4e0985` passed Main
    Releasability run `29291215703`.
-9. Slice 08 partially implements internal advisor review and feedback
-   governance with fail-closed scope checks, review actions, safe audit events,
-   source provenance, queue projection interaction, repository-backed
-   persistence orchestration, and certified internal review/feedback API
-   foundations with lifecycle-state and resource-identity contract gates plus
-   PostgreSQL-backed internal workflow proof but without
-   Gateway, Workbench, PM/compliance/operator queue surfaces, mesh
-   certification, or supported-feature promotion.
+9. Slice 08 implementation is in validation on its feature branch pending
+   mainline closure. Advisor, portfolio-manager, and compliance queues are audience-bound;
+   the operator surface exposes aggregate support exceptions without business
+   authority; review and feedback mutations derive authorization from trusted
+   caller entitlements plus persisted candidate scope. Lifecycle, audit,
+   resource-identity, replay/conflict, and PostgreSQL foundations remain
+   internal and unpromoted. Gateway/Workbench product proof, mesh certification,
+   and supported-feature promotion remain later-slice gates.
 10. Slice 09 partially implements internal AI governance with redacted evidence
    envelopes, forbidden metadata rejection, deterministic fallback,
    unsupported-claim and forbidden-action verifier outcomes, safe audit events,

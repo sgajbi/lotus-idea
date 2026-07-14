@@ -55,7 +55,7 @@ Implemented on the Slice 07 branch:
 8. `tests/unit/test_review_queue_application.py` proves snapshot-backed queue
    projection, expired-record exclusion, snooze exclusion, access-scope
    filtering, and timezone-aware evaluation validation.
-9. `src/app/api/review_queues.py` exposes the certified internal
+9. `src/app/api/review_queue/routes.py` exposes the certified internal
    `GET /api/v1/review-queues/advisor` API foundation over persisted candidate
    snapshots.
 10. The advisor queue API requires `idea.review.queue.read` capability or
