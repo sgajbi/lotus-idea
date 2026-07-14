@@ -353,6 +353,18 @@ entitlement, certification, and promotion claim inflation, and preserves
 by the Gateway/Workbench execution path. The reorganization improves design
 modularity without introducing a separately deployable service.
 
+Issue `#437` applies the taxonomy to the static `lotus-report` intake route
+declaration. The capability-owned
+`application/report/intake_route_source_contract.py`,
+`scripts/report/generate_intake_route_source_contract.py`, and
+`tests/unit/report/test_intake_route_source_contract.py` family emits v2
+`source_contract` evidence. It adds sibling-contract provenance but clears no
+blocker and preserves `lotus_report_live_intake_route_proof_missing` until
+machine-verifiable Report serving, authorization, tenant isolation, and request
+execution evidence exists. The validator rejects materialization, render,
+archive, publication, certification, and supported-feature claim inflation.
+This is design modularity inside the existing Idea deployable.
+
 ## Current Governance References
 
 The Slice 09 implementation is aligned to current official AI/model-risk

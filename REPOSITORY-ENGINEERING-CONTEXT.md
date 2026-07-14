@@ -1287,6 +1287,15 @@ Recent issue-derived patterns to preserve:
     `workflow_pack_runtime_contract_not_certified`; it cannot claim runtime
     registry observation, deployment, production certification, provider
     execution, Workbench proof, client publication, or feature promotion.
+39. A sibling Report contract and static route declaration are
+    `source_contract` evidence, not live intake proof. Keep the application
+    policy, thin generator, gate, and focused tests under capability-owned
+    `report/` packages. A valid artifact adds provenance only, clears no
+    blocker, and must preserve `lotus_report_live_intake_route_proof_missing`.
+    Live proof requires machine-verifiable serving, authorization, tenant
+    isolation, and request-execution evidence from the owning Report runtime.
+    Never infer materialization, render, archive, publication, certification,
+    or supported-feature posture from route declarations.
 
 Recent GitHub issue categories should keep being worked category-wise so
 repeated defect patterns are fixed once and pinned with tests or gates:

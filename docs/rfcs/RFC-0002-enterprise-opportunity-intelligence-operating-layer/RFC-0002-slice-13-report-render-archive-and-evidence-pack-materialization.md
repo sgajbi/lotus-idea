@@ -55,8 +55,10 @@ Implemented in the first Slice 13 foundation:
    The report-owned intake contract now exists at
    `lotus-report/contracts/idea-evidence-intake/lotus-report-idea-evidence-pack-intake.v1.json`.
    The merged `lotus-report` route foundation can now be proven through
-   `scripts/generate_report_intake_route_proof.py` and
-   `make report-intake-route-proof-contract-gate`. A valid artifact clears only
+   `scripts/report/generate_intake_route_source_contract.py` and
+   `make report-intake-route-source-contract-proof-gate`. Issue `#437`
+   classifies the resulting artifact as v2 `source_contract` evidence. It adds
+   declaration provenance, clears no blocker, and preserves
    `lotus_report_live_intake_route_proof_missing`; it does not prove
    materialization, render, archive, client-publication authority, or a
    supported feature.
@@ -156,9 +158,10 @@ Not yet satisfied:
    only inside the opt-in runtime proof.
 
 The downstream-realization readiness diagnostic and report submission API are
-certified as internal foundations. With a valid report-intake route proof, they
-can cite `POST /reports/idea-evidence-packs` as a route-foundation proof, but
-they are still not materialization proof. With a valid report-materialization
+certified as internal foundations. With a valid report-intake source contract,
+they can cite `POST /reports/idea-evidence-packs` only as a declared sibling
+route; the runtime target remains planned and the live-intake blocker remains.
+With a valid report-materialization
 proof, they can also cite
 `POST /reports/idea-evidence-packs/materializations` as report-owned
 materialization/render/archive evidence. They keep Report/Render/Archive

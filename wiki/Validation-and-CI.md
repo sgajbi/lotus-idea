@@ -437,7 +437,7 @@ Persistence adapter validation:
    optional Core portfolio-state live proof consumption,
    optional missing-benchmark live Core proof consumption,
    optional missing-benchmark Performance readiness proof consumption,
-   default Report intake route proof generation and consumption, default
+   default Report intake route source-contract generation and consumption, default
    Report materialization proof generation and consumption, default
    platform mesh onboarding proof generation and
    consumption, AI lineage store proof generation and consumption, and AI
@@ -489,13 +489,15 @@ Persistence adapter validation:
     evidence references without clearing runtime blockers. In particular,
     `platform_mesh_event_publication_proof_missing` remains until runtime
     publication evidence exists.
-15. `tests/unit/test_report_intake_route_proof.py`,
+15. `tests/unit/report/test_intake_route_source_contract.py`,
     `tests/unit/test_downstream_realization_readiness.py`,
     `tests/integration/test_downstream_realization_readiness_api.py`, and
-    `make report-intake-route-proof-contract-gate` prove the source-safe
-    `lotus-report` intake route proof contract that downstream and aggregate
-    readiness consume to clear only
-    `lotus_report_live_intake_route_proof_missing`.
+    `make report-intake-route-source-contract-proof-gate` prove the source-safe
+    `lotus-report` intake route source contract that downstream and aggregate
+    readiness consume as provenance without clearing a blocker. The tests prove
+    `lotus_report_live_intake_route_proof_missing` remains and reject inflated
+    runtime, authorization, tenant-isolation, materialization, render, archive,
+    publication, certification, and promotion claims.
 16. `tests/unit/test_report_materialization_proof.py` and
     `make report-materialization-proof-contract-gate` prove the source-safe
     `lotus-report` materialization proof contract that downstream and aggregate
