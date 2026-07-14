@@ -15,6 +15,10 @@ from app.domain.ai_action_policy import (
 )
 from app.domain.ai_output_integrity import AIOutputIntegrity, build_ai_output_integrity
 from app.domain.ai_execution_provenance import AIExecutionProvenancePosture
+from app.domain.ai_explanation import (
+    AI_CLAIM_GROUNDING_POLICY_VERSION,
+    render_grounded_claim_narrative,
+)
 from app.domain.ai_metadata_policy import validate_ai_metadata_envelope
 from app.domain.ideas import (
     EvidenceFreshness,
@@ -276,6 +280,8 @@ class AIOutputClaim:
             raise ValueError("source_product_ids is required")
         if any(not source_product_id.strip() for source_product_id in self.source_product_ids):
             raise ValueError("source_product_ids cannot contain blank values")
+        if len(set(self.source_product_ids)) != len(self.source_product_ids):
+            raise ValueError("source_product_ids must be unique")
         object.__setattr__(self, "source_product_ids", tuple(self.source_product_ids))
 
 
@@ -308,6 +314,8 @@ class AIWorkflowOutput:
         _require_aware_utc(self.verifier_ran_at_utc, "verifier_ran_at_utc")
         if not self.claims:
             raise ValueError("claims is required")
+        if len({claim.claim_id for claim in self.claims}) != len(self.claims):
+            raise ValueError("claim_ids must be unique")
         if not self.proposed_actions:
             raise ValueError("proposed_actions is required")
         object.__setattr__(self, "claims", tuple(self.claims))
@@ -483,24 +491,33 @@ def evaluate_ai_workflow_output(
             action_policy_reason=AIActionPolicyReason.ALLOWED,
             output_integrity=output_integrity,
         )
+    grounded_output = replace(
+        sanitized_output,
+        explanation_text=render_grounded_claim_narrative(sanitized_output.claims),
+    )
+    grounded_output_integrity = _workflow_output_integrity(
+        request,
+        grounded_output,
+        provider_output_digest=output_integrity.digest,
+    )
     return AIExplanationResult(
         request=request,
-        output=sanitized_output,
+        output=grounded_output,
         posture=AIExplanationPosture.READY_FOR_ADVISOR_REVIEW,
         verifier_outcome=AIVerifierOutcome.PASSED,
         fallback_reason=None,
-        explanation_text=sanitized_output.explanation_text,
+        explanation_text=grounded_output.explanation_text,
         reason_codes=(ReasonCode.AI_VERIFIER_PASSED,),
-        output_integrity=output_integrity,
+        output_integrity=grounded_output_integrity,
         execution_provenance_posture=(AIExecutionProvenancePosture.UNATTESTED_LOCAL_TEST_FIXTURE),
         audit_event=_ai_audit_event(
             request=request,
             posture=AIExplanationPosture.READY_FOR_ADVISOR_REVIEW,
             verifier_outcome=AIVerifierOutcome.PASSED,
             outcome="accepted",
-            occurred_at_utc=sanitized_output.verifier_ran_at_utc,
+            occurred_at_utc=grounded_output.verifier_ran_at_utc,
             action_policy_reason=AIActionPolicyReason.ALLOWED,
-            output_integrity=output_integrity,
+            output_integrity=grounded_output_integrity,
         ),
     )
 
@@ -627,7 +644,15 @@ def _ai_audit_event(
 def _workflow_output_integrity(
     request: AIExplanationRequest,
     output: AIWorkflowOutput,
+    *,
+    provider_output_digest: str | None = None,
 ) -> AIOutputIntegrity:
+    policy_metadata = {
+        "claim_grounding_policy": AI_CLAIM_GROUNDING_POLICY_VERSION,
+        "verifier_policy": "deterministic_source_and_action_verifier.v1",
+    }
+    if provider_output_digest is not None:
+        policy_metadata["provider_output_digest"] = provider_output_digest
     return build_ai_output_integrity(
         explanation_text=output.explanation_text,
         claims=tuple(
@@ -650,5 +675,5 @@ def _workflow_output_integrity(
         evaluation_ref=request.workflow_pack.evaluation_ref,
         action_policy_version=AI_ACTION_POLICY_VERSION,
         output_kind="workflow_output",
-        policy_metadata={"verifier_policy": "deterministic_source_and_action_verifier.v1"},
+        policy_metadata=policy_metadata,
     )

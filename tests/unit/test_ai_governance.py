@@ -353,6 +353,30 @@ def test_ai_output_with_supported_claims_passes_for_advisor_review() -> None:
     assert result.output.proposed_actions[0].action_label == ("Review the evidence as an advisor")
 
 
+def test_ai_output_cannot_launder_unsupported_narrative_around_verified_claims() -> None:
+    request = build_ai_explanation_request(
+        candidate(),
+        command(AIWorkflowPurpose.UNSUPPORTED_CLAIM_VERIFICATION),
+    )
+    submitted_output = replace(
+        output(request.request_id),
+        explanation_text=(
+            "Risk reduction is guaranteed and the client should trade immediately."
+        ),
+    )
+
+    result = evaluate_ai_workflow_output(request, submitted_output)
+
+    assert result.posture is AIExplanationPosture.READY_FOR_ADVISOR_REVIEW
+    assert result.explanation_text == (
+        "Cash attention is supported by Core portfolio state."
+    )
+    assert "guaranteed" not in result.explanation_text
+    assert "trade" not in result.explanation_text
+    assert result.output is not None
+    assert result.output.explanation_text == result.explanation_text
+
+
 def test_ai_output_blocks_unsupported_claims() -> None:
     request = build_ai_explanation_request(
         candidate(),

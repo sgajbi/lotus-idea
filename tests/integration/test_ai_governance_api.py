@@ -315,6 +315,28 @@ def test_ai_explanation_api_accepts_verified_output_for_review_ready_candidate()
     assert payload["verifiedOutput"]["actionPolicyVersion"] == (
         "lotus-idea.ai-action-content-policy.v1"
     )
+    assert payload["explanationText"] == (
+        "Cash weight is above idle-liquidity policy threshold."
+    )
+    assert payload["verifiedOutput"]["claimGroundingPolicyVersion"] == (
+        "lotus-idea.ai-claim-grounding-policy.v1"
+    )
+    assert payload["verifiedOutput"]["groundedClaims"] == [
+        {
+            "claimId": "claim-001",
+            "claimText": "Cash weight is above idle-liquidity policy threshold.",
+            "sourceRefs": [
+                {
+                    "productId": "lotus-core:PortfolioStateSnapshot:v1",
+                    "sourceSystem": "lotus-core",
+                    "productVersion": "v1",
+                    "asOfDate": "2026-06-21",
+                    "freshness": "current",
+                    "dataQualityStatus": "complete",
+                }
+            ],
+        }
+    ]
     assert payload["approvedMetadataKeys"] == ["channel"]
     assert payload["aiLineageRecorded"] is True
     assert payload["aiLineagePersistenceDecision"] == "accepted"
