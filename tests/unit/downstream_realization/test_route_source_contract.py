@@ -100,6 +100,7 @@ def test_source_mutation_changes_bound_digest(tmp_path: Path) -> None:
     ("field", "value"),
     [
         ("evidenceClass", EvidenceClass.RUNTIME_EXECUTION.value),
+        ("generatedAtUtc", "2026-07-15T00:00:00"),
         ("sourceContractBlockersSatisfied", ["advise_live_contract_proof_missing"]),
         ("routeServingObserved", True),
         ("requestAuthorizationObserved", True),
@@ -138,6 +139,18 @@ def test_validator_rejects_unknown_fields_and_source_authority_substitution(
     assert manage_route_source_contract_is_valid(payload) is False
 
 
+def test_validator_rejects_malformed_source_authority_collection(tmp_path: Path) -> None:
+    payload = _valid_payload(tmp_path, "manage")
+    payload["sourceAuthority"] = ()
+    assert manage_route_source_contract_is_valid(payload) is False
+
+    payload = _valid_payload(tmp_path, "manage")
+    source_authority = list(_source_authority(payload))
+    source_authority[0] = {"repository": "lotus-manage"}
+    payload["sourceAuthority"] = source_authority
+    assert manage_route_source_contract_is_valid(payload) is False
+
+
 def test_contract_requires_live_and_authority_blockers(tmp_path: Path) -> None:
     root = _write_fixture(tmp_path, "advise")
     contract_path = root / ADVISE_ROUTE_PROFILE.contract_path
@@ -173,6 +186,27 @@ def test_environment_loader_is_optional_and_requires_an_object(
     monkeypatch.setenv(env_name, str(artifact))
     with pytest.raises(ValueError, match="must reference a JSON object"):
         loader()  # type: ignore[operator]
+
+
+def test_environment_loader_reports_relative_and_external_artifact_refs(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    artifact = tmp_path / "proof.json"
+    artifact.write_text('{"schemaVersion": "test"}', encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv(ADVISE_ROUTE_SOURCE_CONTRACT_ENV, artifact.name)
+
+    payload, artifact_ref = load_advise_route_source_contract_from_env()
+
+    assert payload == {"schemaVersion": "test"}
+    assert artifact_ref == "proof.json"
+
+    monkeypatch.chdir(ROOT)
+    monkeypatch.setenv(MANAGE_ROUTE_SOURCE_CONTRACT_ENV, str(artifact))
+    payload, artifact_ref = load_manage_route_source_contract_from_env()
+
+    assert payload == {"schemaVersion": "test"}
+    assert artifact_ref == f"{MANAGE_ROUTE_SOURCE_CONTRACT_ENV} artifact"
 
 
 def test_contract_gate_passes_closed_source_contracts() -> None:
