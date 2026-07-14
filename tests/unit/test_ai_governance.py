@@ -360,17 +360,13 @@ def test_ai_output_cannot_launder_unsupported_narrative_around_verified_claims()
     )
     submitted_output = replace(
         output(request.request_id),
-        explanation_text=(
-            "Risk reduction is guaranteed and the client should trade immediately."
-        ),
+        explanation_text=("Risk reduction is guaranteed and the client should trade immediately."),
     )
 
     result = evaluate_ai_workflow_output(request, submitted_output)
 
     assert result.posture is AIExplanationPosture.READY_FOR_ADVISOR_REVIEW
-    assert result.explanation_text == (
-        "Cash attention is supported by Core portfolio state."
-    )
+    assert result.explanation_text == ("Cash attention is supported by Core portfolio state.")
     assert "guaranteed" not in result.explanation_text
     assert "trade" not in result.explanation_text
     assert result.output is not None

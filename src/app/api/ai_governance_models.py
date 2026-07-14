@@ -403,8 +403,7 @@ class AIWorkflowOutputSummaryResponse(CamelModel):
             claimGroundingPolicyVersion=AI_CLAIM_GROUNDING_POLICY_VERSION,
             groundedClaims=(
                 tuple(
-                    GroundedAIClaimResponse.from_domain(claim, evidence)
-                    for claim in output.claims
+                    GroundedAIClaimResponse.from_domain(claim, evidence) for claim in output.claims
                 )
                 if include_grounding
                 else ()
