@@ -45,8 +45,7 @@ def build_postgres_ci_execution_receipt(
         completed_at_utc=completed_at_utc.isoformat(),
         artifact_name=TRUSTED_AI_LINEAGE_STORE_ARTIFACT_NAME,
         artifact_sha256=(
-            artifact_sha256
-            or f"sha256:{hashlib.sha256(test_report_path.read_bytes()).hexdigest()}"
+            artifact_sha256 or f"sha256:{hashlib.sha256(test_report_path.read_bytes()).hexdigest()}"
         ),
         assertions=REQUIRED_AI_LINEAGE_STORE_ASSERTIONS,
     )
@@ -72,7 +71,11 @@ def _require_successful_ai_lineage_test(test_report_path: Path) -> None:
 
 
 def _count(root: ET.Element, field: str) -> int:
-    values = [element.get(field, "0") for element in root.iter() if element.tag in {"testsuite", "testsuites"}]
+    values = [
+        element.get(field, "0")
+        for element in root.iter()
+        if element.tag in {"testsuite", "testsuites"}
+    ]
     try:
         return max((int(value) for value in values), default=0)
     except ValueError as exc:
