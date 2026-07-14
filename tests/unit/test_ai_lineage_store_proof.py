@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from dataclasses import asdict, replace
 import importlib.util
 import json
 from pathlib import Path
@@ -15,6 +16,8 @@ from app.application.ai_lineage_store_proof import (
     ai_lineage_store_proof_is_valid,
     build_ai_lineage_store_proof_payload,
 )
+from app.domain.proof_evidence import EvidenceClass
+from tests.support.ai_lineage_store_proof import valid_ai_lineage_ci_execution_receipt
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -24,12 +27,14 @@ def test_builds_source_safe_ai_lineage_store_proof() -> None:
     proof = build_ai_lineage_store_proof_payload(
         generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
         repository_root=ROOT,
+        ci_execution_receipt=valid_ai_lineage_ci_execution_receipt(),
     )
 
     assert proof["schemaVersion"] == AI_LINEAGE_STORE_PROOF_SCHEMA_VERSION
     assert proof["repository"] == "lotus-idea"
-    assert proof["proofType"] == "postgres_runtime_ai_lineage_store_contract"
-    assert proof["proofScope"] == "repo_native_ci_runtime_proof"
+    assert proof["proofType"] == "postgres_ai_lineage_ci_execution"
+    assert proof["proofScope"] == "mainline_ci_execution_receipt"
+    assert proof["evidenceClass"] == EvidenceClass.CI_EXECUTION.value
     assert proof["aiLineageStoreProofValid"] is True
     assert tuple(proof["aggregateBlockersCleared"]) == ("certified_ai_lineage_store_missing",)
     assert tuple(proof["evidenceRefs"]) == REQUIRED_AI_LINEAGE_STORE_EVIDENCE_REFS
@@ -49,6 +54,7 @@ def test_rejects_ai_lineage_store_proof_when_evidence_is_missing(tmp_path: Path)
     proof = build_ai_lineage_store_proof_payload(
         generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
         repository_root=tmp_path,
+        ci_execution_receipt=valid_ai_lineage_ci_execution_receipt(),
     )
 
     assert proof["aiLineageStoreProofValid"] is False
@@ -59,6 +65,7 @@ def test_rejects_ai_lineage_store_proof_with_naive_timestamp() -> None:
     proof = build_ai_lineage_store_proof_payload(
         generated_at_utc=datetime(2026, 6, 21, 10, 10),
         repository_root=ROOT,
+        ci_execution_receipt=valid_ai_lineage_ci_execution_receipt(),
     )
 
     assert proof["aiLineageStoreProofValid"] is False
@@ -72,6 +79,8 @@ def test_rejects_ai_lineage_store_proof_with_naive_timestamp() -> None:
         ("repository", "lotus-core"),
         ("proofType", "runtime"),
         ("proofScope", "production"),
+        ("evidenceClass", "source_contract"),
+        ("requiredEvidenceClass", "runtime_execution"),
         ("aiLineageStoreProofValid", False),
         ("durableAiLineageStoreBacked", False),
         ("lotusAiRuntimeExecuted", True),
@@ -98,6 +107,8 @@ def test_rejects_ai_lineage_store_proof_with_invalid_top_level_fields(
         ("evidenceRefs", []),
         ("remainingCertificationBlockers", []),
         ("proofChecks", []),
+        ("ciExecutionReceipt", []),
+        ("ciExecutionReceiptSha256", "sha256:invalid"),
     ],
 )
 def test_rejects_ai_lineage_store_proof_with_invalid_contract_fields(
@@ -114,9 +125,10 @@ def test_rejects_ai_lineage_store_proof_with_invalid_contract_fields(
     "check_name",
     [
         "timezoneAwareGeneratedAtUtc",
-        "fileEvidencePresent",
-        "makeTargetEvidencePresent",
-        "postgresRuntimeProofCiLane",
+        "sourceContractEvidencePresent",
+        "ciExecutionReceiptPresent",
+        "ciExecutionReceiptValid",
+        "evidenceClassMatchesBlocker",
     ],
 )
 def test_rejects_ai_lineage_store_proof_with_invalid_proof_checks(check_name: str) -> None:
@@ -131,11 +143,19 @@ def test_rejects_ai_lineage_store_proof_with_invalid_proof_checks(check_name: st
 def test_ai_lineage_store_proof_cli_writes_valid_artifact(tmp_path: Path) -> None:
     module = _load_generator_script()
     output_path = tmp_path / "proof" / "ai-lineage-store-proof.json"
+    receipt_path = tmp_path / "proof" / "ci-execution-receipt.json"
+    receipt_path.parent.mkdir(parents=True)
+    receipt_path.write_text(
+        json.dumps(asdict(valid_ai_lineage_ci_execution_receipt())),
+        encoding="utf-8",
+    )
 
     result = module.main(
         [
             "--generated-at-utc",
             "2026-06-21T10:10:00Z",
+            "--ci-execution-receipt",
+            str(receipt_path),
             "--output",
             str(output_path),
         ]
@@ -144,6 +164,57 @@ def test_ai_lineage_store_proof_cli_writes_valid_artifact(tmp_path: Path) -> Non
     assert result == 0
     proof = json.loads(output_path.read_text(encoding="utf-8"))
     assert ai_lineage_store_proof_is_valid(proof) is True
+
+
+def test_source_contract_without_ci_receipt_cannot_clear_certification_blocker() -> None:
+    proof = build_ai_lineage_store_proof_payload(
+        generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
+        repository_root=ROOT,
+    )
+
+    assert proof["aiLineageStoreProofValid"] is False
+    assert proof["aggregateBlockersCleared"] == ()
+    assert "certified_ai_lineage_store_missing" in proof["remainingCertificationBlockers"]
+    assert proof["durableAiLineageStoreBacked"] is False
+
+
+@pytest.mark.parametrize(
+    ("field_name", "bad_value"),
+    [
+        ("repository", "sgajbi/lotus-core"),
+        ("workflow_path", ".github/workflows/pr-merge-gate.yml"),
+        ("workflow_name", "PR Merge Gate"),
+        ("job_name", "PR Merge Gate / PostgreSQL Runtime Proof"),
+        ("source_ref", "refs/pull/396/merge"),
+        ("conclusion", "failure"),
+        ("artifact_name", "unrelated-artifact"),
+        ("artifact_sha256", "sha256:invalid"),
+        ("assertions", ("ai_lineage_schema_applied",)),
+    ],
+)
+def test_wrong_or_failed_ci_evidence_cannot_clear_lineage_certification(
+    field_name: str,
+    bad_value: object,
+) -> None:
+    receipt = replace(valid_ai_lineage_ci_execution_receipt(), **{field_name: bad_value})
+    proof = build_ai_lineage_store_proof_payload(
+        generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
+        repository_root=ROOT,
+        ci_execution_receipt=receipt,
+    )
+
+    assert proof["aiLineageStoreProofValid"] is False
+    assert proof["aggregateBlockersCleared"] == ()
+    assert ai_lineage_store_proof_is_valid(proof) is False
+
+
+def test_serialized_receipt_tamper_invalidates_enclosing_proof() -> None:
+    proof = _valid_ai_lineage_store_proof()
+    receipt = dict(cast(Mapping[str, object], proof["ciExecutionReceipt"]))
+    receipt["run_id"] = 999
+    proof["ciExecutionReceipt"] = receipt
+
+    assert ai_lineage_store_proof_is_valid(proof) is False
 
 
 def test_ai_lineage_store_proof_contract_gate_scans_tuple_content() -> None:
@@ -159,6 +230,7 @@ def _valid_ai_lineage_store_proof() -> dict[str, object]:
     return build_ai_lineage_store_proof_payload(
         generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
         repository_root=ROOT,
+        ci_execution_receipt=valid_ai_lineage_ci_execution_receipt(),
     )
 
 
