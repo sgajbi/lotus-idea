@@ -47,7 +47,7 @@ from app.application.performance_underperformance_live_proof import (
     build_performance_underperformance_live_proof_payload,
 )
 from app.application.data_mesh.platform_catalog_source_contract import (
-    build_platform_mesh_onboarding_proof_payload,
+    build_platform_catalog_source_contract_payload,
 )
 from app.application.runtime_trust_telemetry_proof import (
     build_runtime_trust_telemetry_proof_payload,
@@ -701,15 +701,15 @@ def test_generate_implementation_proof_readiness_uses_explicit_gateway_workbench
                 generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
                 repository_root=repository_root,
                 platform_root=platform_root,
-                platform_mesh_onboarding_proof=build_platform_mesh_onboarding_proof_payload(
+                platform_catalog_source_contract=build_platform_catalog_source_contract_payload(
                     generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
                     repository_root=repository_root,
                     platform_root=platform_root,
                 ),
                 workbench_read_path_source_contract_proof=workbench_proof_payload,
                 gateway_workbench_contract_proof=gateway_workbench_contract_proof_payload,
-                platform_mesh_onboarding_proof_ref=(
-                    "output/data-mesh/platform-mesh-onboarding-proof.json"
+                platform_catalog_source_contract_ref=(
+                    "output/data-mesh/platform-catalog-source-contract.json"
                 ),
                 workbench_read_path_source_contract_proof_ref=(
                     "output/workbench/read-path-source-contract-proof.json"

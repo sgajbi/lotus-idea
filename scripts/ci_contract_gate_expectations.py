@@ -63,7 +63,7 @@ REQUIRED_LINT_TARGETS = (
     "outbox-broker-source-contract-proof-gate",
     "outbox-consumer-contract-proof-contract-gate",
     "outbox-platform-mesh-event-source-contract-proof-gate",
-    "platform-mesh-onboarding-proof-contract-gate",
+    "platform-catalog-source-contract-proof-gate",
     "source-ingestion-worker-check",
     "source-ingestion-scheduled-worker-check",
     "source-ingestion-live-proof-contract-gate",
@@ -160,7 +160,7 @@ GENERATED_READINESS_ARTIFACTS = (
     ("scripts/generate_mesh_policy_proof.py", "mesh policy proof artifact"),
     (
         "scripts/data_mesh/generate_platform_catalog_source_contract.py",
-        "a platform mesh onboarding proof artifact",
+        "a platform catalog source contract artifact",
     ),
     (
         "scripts/workbench/generate_contract_proof.py",
@@ -216,7 +216,7 @@ PASSED_READINESS_ARTIFACTS = (
         "--outbox-platform-mesh-event-source-contract-proof",
         "outbox platform-mesh event source-contract proof artifact",
     ),
-    ("--platform-mesh-onboarding-proof", "platform mesh onboarding proof artifact"),
+    ("--platform-catalog-source-contract-proof", "platform catalog source contract artifact"),
     ("--gateway-workbench-contract-proof", "Gateway/Workbench contract proof artifact"),
     (
         "--gateway-workbench-discovery-contract-proof",
@@ -268,13 +268,16 @@ REQUIRED_READINESS_WIRING = (
     ("LOTUS_IDEA_MESH_POLICY_PROOF", "support optional mesh policy proof"),
     (
         "LOTUS_PLATFORM_ROOT",
-        "support default platform root wiring for platform mesh onboarding proof generation",
+        "support default platform root wiring for platform catalog source contract generation",
     ),
     (
-        "LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF_OUTPUT",
-        "pass the default platform mesh onboarding proof output into readiness generation",
+        "LOTUS_IDEA_PLATFORM_CATALOG_SOURCE_CONTRACT_PROOF_OUTPUT",
+        "pass the default platform catalog source contract output into readiness generation",
     ),
-    ("LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF", "support optional onboarding proof"),
+    (
+        "LOTUS_IDEA_PLATFORM_CATALOG_SOURCE_CONTRACT_PROOF",
+        "support optional platform catalog source contract",
+    ),
     (
         "LOTUS_IDEA_GATEWAY_WORKBENCH_CONTRACT_PROOF_OUTPUT",
         "pass the default Gateway/Workbench contract proof output into readiness generation",

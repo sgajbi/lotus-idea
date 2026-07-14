@@ -23,7 +23,7 @@ from app.application.implementation_proof_consumption import (
     _apply_ai_workflow_pack_runtime_execution_proof,
     _apply_downstream_route_contract_proof,
     _apply_mesh_policy_proof,
-    _apply_platform_mesh_onboarding_proof,
+    _apply_platform_catalog_source_contract,
     _apply_report_materialization_source_contract,
 )
 from app.application.implementation_proof_readiness import (
@@ -44,7 +44,7 @@ from app.application.mesh_policy_proof import build_mesh_policy_proof_payload
 from app.application.data_mesh.platform_catalog_source_contract import (
     REQUIRED_CONSUMER_DEPENDENCIES,
     REQUIRED_PRODUCER_PRODUCTS,
-    build_platform_mesh_onboarding_proof_payload,
+    build_platform_catalog_source_contract_payload,
 )
 from app.application.report.intake_route_source_contract import (
     REMAINING_REPORT_INTAKE_ROUTE_CERTIFICATION_BLOCKERS,
@@ -118,7 +118,7 @@ def test_implementation_proof_capability_status_is_derived_from_remaining_blocke
         (_apply_ai_lineage_store_proof, "ai-explanation"),
         (_apply_ai_workflow_pack_registration_proof, "ai-explanation"),
         (_apply_ai_workflow_pack_runtime_execution_proof, "ai-explanation"),
-        (_apply_platform_mesh_onboarding_proof, "runtime-trust-telemetry-preview"),
+        (_apply_platform_catalog_source_contract, "runtime-trust-telemetry-preview"),
         (_apply_risk_concentration_live_proof, "opportunity-archetype-scenarios"),
     ],
 )
@@ -713,12 +713,12 @@ def test_workbench_read_path_source_contract_adds_evidence_without_clearing_runt
     assert "output/workbench/read-path-source-contract-proof.json" in workbench.evidence_refs
 
 
-def test_implementation_proof_readiness_uses_platform_mesh_onboarding_proof_without_certification(
+def test_implementation_proof_readiness_uses_platform_catalog_source_contract_without_certification(
     tmp_path: Path,
 ) -> None:
-    proof_ref = "output/data-mesh/platform-mesh-onboarding-proof.json"
+    proof_ref = "output/data-mesh/platform-catalog-source-contract.json"
     proof = _bound_aggregate_proof(
-        build_platform_mesh_onboarding_proof_payload(
+        build_platform_catalog_source_contract_payload(
             generated_at_utc=datetime(2026, 6, 24, 0, 0, tzinfo=UTC),
             repository_root=ROOT,
             platform_root=_write_platform_mesh_fixture(tmp_path),
@@ -730,8 +730,8 @@ def test_implementation_proof_readiness_uses_platform_mesh_onboarding_proof_with
         evaluated_at_utc=datetime(2026, 6, 24, 0, 0, tzinfo=UTC),
         repository=InMemoryIdeaRepository(),
         durable_storage_backed=False,
-        platform_mesh_onboarding_proof=proof,
-        platform_mesh_onboarding_proof_ref=proof_ref,
+        platform_catalog_source_contract_proof=proof,
+        platform_catalog_source_contract_proof_ref=proof_ref,
     )
 
     assert "platform_source_manifest_inclusion_missing" not in snapshot.overall_blockers
@@ -758,8 +758,8 @@ def test_implementation_proof_readiness_uses_platform_mesh_onboarding_proof_with
     assert "mesh_slo_policy_certification_missing" in data_mesh.blockers
     assert "platform_source_manifest_inclusion_missing" not in runtime_telemetry.blockers
     assert "platform_mesh_certification_missing" in runtime_telemetry.blockers
-    assert "output/data-mesh/platform-mesh-onboarding-proof.json" in data_mesh.evidence_refs
-    assert "output/data-mesh/platform-mesh-onboarding-proof.json" in (
+    assert "output/data-mesh/platform-catalog-source-contract.json" in data_mesh.evidence_refs
+    assert "output/data-mesh/platform-catalog-source-contract.json" in (
         runtime_telemetry.evidence_refs
     )
 

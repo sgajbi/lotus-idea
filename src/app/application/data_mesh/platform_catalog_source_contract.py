@@ -2,28 +2,31 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import datetime
+import hashlib
 import json
 from pathlib import Path
 from typing import Any
 
+from app.application.proof_provenance import AGGREGATE_PROOF_PROVENANCE_KEY
 from app.application.source_safe_cross_repo_proof import (
     is_timezone_aware_datetime_text,
     required_file_evidence_present,
 )
+from app.domain.proof_evidence import EvidenceClass
 
 _is_timezone_aware_datetime_text = is_timezone_aware_datetime_text
 _required_file_evidence_present = required_file_evidence_present
 
 
-PLATFORM_MESH_ONBOARDING_PROOF_ENV = "LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF"
-PLATFORM_MESH_ONBOARDING_PROOF_SCHEMA_VERSION = "lotus-idea.platform-mesh-onboarding-proof.v1"
+PLATFORM_CATALOG_SOURCE_CONTRACT_ENV = "LOTUS_IDEA_PLATFORM_CATALOG_SOURCE_CONTRACT_PROOF"
+PLATFORM_CATALOG_SOURCE_CONTRACT_SCHEMA_VERSION = "lotus-idea.platform-catalog-source-contract.v2"
 
-PLATFORM_MESH_ONBOARDING_BLOCKERS_CLEARED = (
+PLATFORM_CATALOG_SOURCE_BLOCKERS_SATISFIED = (
     "platform_source_manifest_inclusion_missing",
     "platform_catalog_inclusion_missing",
 )
 
-REMAINING_PLATFORM_MESH_ONBOARDING_BLOCKERS = (
+REMAINING_PLATFORM_CATALOG_CERTIFICATION_BLOCKERS = (
     "data_mesh_not_certified",
     "producer_products_not_active",
     "certified_runtime_trust_telemetry_missing",
@@ -34,7 +37,7 @@ REMAINING_PLATFORM_MESH_ONBOARDING_BLOCKERS = (
     "supported_feature_promotion_missing",
 )
 
-REQUIRED_PLATFORM_MESH_EVIDENCE_REFS = (
+REQUIRED_PLATFORM_CATALOG_EVIDENCE_REFS = (
     "../lotus-platform/platform-contracts/domain-data-products/domain-product-source-manifest.v1.json",
     "../lotus-platform/generated/domain-product-catalog.json",
     "../lotus-platform/generated/domain-product-dependency-graph.json",
@@ -46,6 +49,54 @@ REQUIRED_PLATFORM_MESH_EVIDENCE_REFS = (
     "GET /api/v1/data-mesh/readiness",
     "GET /api/v1/implementation-proof/readiness",
 )
+
+PLATFORM_SOURCE_AUTHORITY_REFS = (
+    "../lotus-platform/platform-contracts/domain-data-products/"
+    "domain-product-source-manifest.v1.json",
+    "../lotus-platform/generated/domain-product-catalog.json",
+    "../lotus-platform/generated/domain-product-dependency-graph.json",
+    "../lotus-platform/generated/enterprise-mesh-maturity-matrix.json",
+)
+
+_SOURCE_CONTRACT_FIELDS = frozenset(
+    {
+        "schemaVersion",
+        "repository",
+        "generatedAtUtc",
+        "proofType",
+        "proofScope",
+        "evidenceClass",
+        "sourceContractValid",
+        "sourceContractBlockersSatisfied",
+        "evidenceRefs",
+        "sourceAuthority",
+        "producerProductCount",
+        "consumerDependencyCount",
+        "contractChecks",
+        "remainingCertificationBlockers",
+        "platformRuntimePublicationObserved",
+        "platformMeshCertified",
+        "producerProductsActive",
+        "gatewayWorkbenchDiscoveryCertified",
+        "productionCertificationGranted",
+        "supportedFeaturePromoted",
+        "certificationClosed",
+    }
+)
+
+_CONTRACT_CHECK_FIELDS = frozenset(
+    {
+        "timezoneAwareGeneratedAtUtc",
+        "fileEvidencePresent",
+        "sourceAuthorityDigestBound",
+        "platformSourceManifestIncludesIdea",
+        "platformCatalogIncludesIdeaProducts",
+        "platformCatalogIncludesIdeaConsumer",
+        "platformMaturityKeepsIdeaDeferred",
+    }
+)
+
+_SOURCE_AUTHORITY_FIELDS = frozenset({"repository", "ref", "sha256"})
 
 REQUIRED_PRODUCER_PRODUCTS = (
     "lotus-idea:AdvisorOpportunityQueue:v1",
@@ -79,7 +130,7 @@ REQUIRED_CONSUMER_DEPENDENCIES = (
 )
 
 
-def build_platform_mesh_onboarding_proof_payload(
+def build_platform_catalog_source_contract_payload(
     *,
     generated_at_utc: datetime,
     repository_root: Path,
@@ -97,7 +148,7 @@ def build_platform_mesh_onboarding_proof_payload(
     maturity_matrix = _optional_json(
         platform_root / "generated/enterprise-mesh-maturity-matrix.json"
     )
-    evidence_refs = tuple(REQUIRED_PLATFORM_MESH_EVIDENCE_REFS)
+    evidence_refs = tuple(REQUIRED_PLATFORM_CATALOG_EVIDENCE_REFS)
     file_evidence_present = _required_file_evidence_present(
         repository_root=repository_root,
         sibling_roots={"../lotus-platform/": platform_root},
@@ -108,52 +159,72 @@ def build_platform_mesh_onboarding_proof_payload(
     platform_catalog_includes_idea_products = _catalog_includes_idea_products(catalog)
     platform_catalog_includes_idea_consumer = _catalog_includes_idea_consumer(catalog)
     platform_maturity_keeps_idea_deferred = _maturity_matrix_keeps_idea_deferred(maturity_matrix)
-    proof_valid = (
+    source_authority = _source_authority(platform_root)
+    source_authority_digest_bound = all(
+        isinstance(item["sha256"], str) for item in source_authority
+    )
+    source_contract_valid = (
         timezone_aware_generated_at_utc
         and file_evidence_present
+        and source_authority_digest_bound
         and platform_source_manifest_includes_idea
         and platform_catalog_includes_idea_products
         and platform_catalog_includes_idea_consumer
         and platform_maturity_keeps_idea_deferred
     )
     return {
-        "schemaVersion": PLATFORM_MESH_ONBOARDING_PROOF_SCHEMA_VERSION,
+        "schemaVersion": PLATFORM_CATALOG_SOURCE_CONTRACT_SCHEMA_VERSION,
         "repository": "lotus-idea",
         "generatedAtUtc": generated_at_utc.isoformat(),
-        "proofType": "platform_mesh_onboarding_contract",
-        "proofScope": "platform_source_manifest_and_catalog_inclusion",
-        "platformMeshOnboardingProofValid": proof_valid,
-        "aggregateBlockersCleared": PLATFORM_MESH_ONBOARDING_BLOCKERS_CLEARED,
+        "proofType": "platform_catalog_source_contract",
+        "proofScope": "platform_source_manifest_catalog_and_deferred_maturity",
+        "evidenceClass": EvidenceClass.SOURCE_CONTRACT.value,
+        "sourceContractValid": source_contract_valid,
+        "sourceContractBlockersSatisfied": PLATFORM_CATALOG_SOURCE_BLOCKERS_SATISFIED,
         "evidenceRefs": evidence_refs,
+        "sourceAuthority": source_authority,
         "producerProductCount": len(REQUIRED_PRODUCER_PRODUCTS),
         "consumerDependencyCount": len(REQUIRED_CONSUMER_DEPENDENCIES),
-        "proofChecks": {
+        "contractChecks": {
             "timezoneAwareGeneratedAtUtc": timezone_aware_generated_at_utc,
             "fileEvidencePresent": file_evidence_present,
+            "sourceAuthorityDigestBound": source_authority_digest_bound,
             "platformSourceManifestIncludesIdea": platform_source_manifest_includes_idea,
             "platformCatalogIncludesIdeaProducts": platform_catalog_includes_idea_products,
             "platformCatalogIncludesIdeaConsumer": platform_catalog_includes_idea_consumer,
             "platformMaturityKeepsIdeaDeferred": platform_maturity_keeps_idea_deferred,
         },
-        "remainingCertificationBlockers": REMAINING_PLATFORM_MESH_ONBOARDING_BLOCKERS,
+        "remainingCertificationBlockers": REMAINING_PLATFORM_CATALOG_CERTIFICATION_BLOCKERS,
+        "platformRuntimePublicationObserved": False,
         "platformMeshCertified": False,
         "producerProductsActive": False,
         "gatewayWorkbenchDiscoveryCertified": False,
+        "productionCertificationGranted": False,
         "supportedFeaturePromoted": False,
-        "proofClosed": False,
+        "certificationClosed": False,
     }
 
 
-def platform_mesh_onboarding_proof_is_valid(payload: Mapping[str, Any]) -> bool:
-    if payload.get("schemaVersion") != PLATFORM_MESH_ONBOARDING_PROOF_SCHEMA_VERSION:
+def platform_catalog_source_contract_is_valid(payload: Mapping[str, Any]) -> bool:
+    payload_fields = set(payload)
+    if payload_fields not in (
+        _SOURCE_CONTRACT_FIELDS,
+        _SOURCE_CONTRACT_FIELDS | {AGGREGATE_PROOF_PROVENANCE_KEY},
+    ):
+        return False
+    if payload.get("schemaVersion") != PLATFORM_CATALOG_SOURCE_CONTRACT_SCHEMA_VERSION:
         return False
     if payload.get("repository") != "lotus-idea":
         return False
-    if payload.get("proofType") != "platform_mesh_onboarding_contract":
+    if payload.get("proofType") != "platform_catalog_source_contract":
         return False
-    if payload.get("proofScope") != "platform_source_manifest_and_catalog_inclusion":
+    if payload.get("proofScope") != "platform_source_manifest_catalog_and_deferred_maturity":
         return False
-    if payload.get("platformMeshOnboardingProofValid") is not True:
+    if payload.get("evidenceClass") != EvidenceClass.SOURCE_CONTRACT.value:
+        return False
+    if payload.get("sourceContractValid") is not True:
+        return False
+    if payload.get("platformRuntimePublicationObserved") is not False:
         return False
     if payload.get("platformMeshCertified") is not False:
         return False
@@ -161,40 +232,81 @@ def platform_mesh_onboarding_proof_is_valid(payload: Mapping[str, Any]) -> bool:
         return False
     if payload.get("gatewayWorkbenchDiscoveryCertified") is not False:
         return False
+    if payload.get("productionCertificationGranted") is not False:
+        return False
     if payload.get("supportedFeaturePromoted") is not False:
         return False
-    if payload.get("proofClosed") is not False:
+    if payload.get("certificationClosed") is not False:
         return False
     if not _is_timezone_aware_datetime_text(payload.get("generatedAtUtc")):
         return False
-    if tuple(payload.get("aggregateBlockersCleared") or ()) != (
-        PLATFORM_MESH_ONBOARDING_BLOCKERS_CLEARED
+    if tuple(payload.get("sourceContractBlockersSatisfied") or ()) != (
+        PLATFORM_CATALOG_SOURCE_BLOCKERS_SATISFIED
     ):
         return False
-    if tuple(payload.get("evidenceRefs") or ()) != REQUIRED_PLATFORM_MESH_EVIDENCE_REFS:
+    if tuple(payload.get("evidenceRefs") or ()) != REQUIRED_PLATFORM_CATALOG_EVIDENCE_REFS:
         return False
     if tuple(payload.get("remainingCertificationBlockers") or ()) != (
-        REMAINING_PLATFORM_MESH_ONBOARDING_BLOCKERS
+        REMAINING_PLATFORM_CATALOG_CERTIFICATION_BLOCKERS
     ):
         return False
     if payload.get("producerProductCount") != len(REQUIRED_PRODUCER_PRODUCTS):
         return False
     if payload.get("consumerDependencyCount") != len(REQUIRED_CONSUMER_DEPENDENCIES):
         return False
-    proof_checks = payload.get("proofChecks")
-    if not isinstance(proof_checks, Mapping):
+    if not _source_authority_is_valid(payload.get("sourceAuthority")):
+        return False
+    contract_checks = payload.get("contractChecks")
+    if not isinstance(contract_checks, Mapping):
+        return False
+    if set(contract_checks) != _CONTRACT_CHECK_FIELDS:
         return False
     return all(
-        proof_checks.get(check_name) is True
+        contract_checks.get(check_name) is True
         for check_name in (
             "timezoneAwareGeneratedAtUtc",
             "fileEvidencePresent",
+            "sourceAuthorityDigestBound",
             "platformSourceManifestIncludesIdea",
             "platformCatalogIncludesIdeaProducts",
             "platformCatalogIncludesIdeaConsumer",
             "platformMaturityKeepsIdeaDeferred",
         )
     )
+
+
+def _source_authority(platform_root: Path) -> tuple[dict[str, str | None], ...]:
+    prefix = "../lotus-platform/"
+    return tuple(
+        {
+            "repository": "lotus-platform",
+            "ref": ref,
+            "sha256": _sha256(platform_root / ref.removeprefix(prefix)),
+        }
+        for ref in PLATFORM_SOURCE_AUTHORITY_REFS
+    )
+
+
+def _source_authority_is_valid(value: object) -> bool:
+    if not isinstance(value, (list, tuple)) or len(value) != len(PLATFORM_SOURCE_AUTHORITY_REFS):
+        return False
+    for item, expected_ref in zip(value, PLATFORM_SOURCE_AUTHORITY_REFS, strict=True):
+        if not isinstance(item, Mapping) or set(item) != _SOURCE_AUTHORITY_FIELDS:
+            return False
+        if item.get("repository") != "lotus-platform" or item.get("ref") != expected_ref:
+            return False
+        digest = item.get("sha256")
+        if not isinstance(digest, str) or len(digest) != 64:
+            return False
+        if any(character not in "0123456789abcdef" for character in digest):
+            return False
+    return True
+
+
+def _sha256(path: Path) -> str | None:
+    if not path.is_file():
+        return None
+    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def _optional_json(path: Path) -> dict[str, Any] | None:

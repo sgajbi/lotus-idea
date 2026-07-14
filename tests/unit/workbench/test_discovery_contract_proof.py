@@ -29,7 +29,7 @@ from app.application.workbench.contract_proof import (
 from app.application.data_mesh.platform_catalog_source_contract import (
     REQUIRED_CONSUMER_DEPENDENCIES,
     REQUIRED_PRODUCER_PRODUCTS,
-    build_platform_mesh_onboarding_proof_payload,
+    build_platform_catalog_source_contract_payload,
 )
 from app.application.workbench.read_path_source_contract import (
     build_workbench_read_path_source_contract_proof_payload,
@@ -159,7 +159,7 @@ def test_rejects_gateway_workbench_discovery_contract_proof_without_explicit_cle
     [
         ("declaredProductCount", 0),
         ("declaredConsumer", "lotus-workbench"),
-        ("platformMeshOnboardingProofRef", None),
+        ("platformCatalogSourceContractRef", None),
         ("workbenchReadPathSourceContractProofRef", None),
         ("gatewayWorkbenchContractProofRef", None),
     ],
@@ -180,7 +180,7 @@ def test_rejects_gateway_workbench_discovery_contract_proof_with_invalid_evidenc
     [
         "timezoneAwareGeneratedAtUtc",
         "fileEvidencePresent",
-        "platformMeshOnboardingProofValid",
+        "platformCatalogSourceContractValid",
         "workbenchReadPathSourceContractProofValid",
         "gatewayWorkbenchContractProofValid",
         "catalogDeclaresGatewayConsumableIdeaProducts",
@@ -318,8 +318,8 @@ def test_gateway_workbench_discovery_contract_proof_cli_writes_valid_artifact(
             "2026-06-21T10:10:00Z",
             "--platform-root",
             str(platform_root),
-            "--platform-mesh-onboarding-proof",
-            str(dependency_proofs["platform_mesh_onboarding"]),
+            "--platform-catalog-source-contract-proof",
+            str(dependency_proofs["platform_catalog_source_contract"]),
             "--workbench-read-path-source-contract-proof",
             str(dependency_proofs["workbench_read_path_source_contract"]),
             "--gateway-workbench-contract-proof",
@@ -381,12 +381,12 @@ def _gateway_workbench_discovery_contract_proof(platform_root: Path) -> dict[str
         generated_at_utc=GENERATED_AT_UTC,
         repository_root=ROOT,
         platform_root=platform_root,
-        platform_mesh_onboarding_proof=dependency_proofs["platform_mesh_onboarding"],
+        platform_catalog_source_contract=dependency_proofs["platform_catalog_source_contract"],
         workbench_read_path_source_contract_proof=(
             dependency_proofs["workbench_read_path_source_contract"]
         ),
         gateway_workbench_contract_proof=dependency_proofs["gateway_workbench_contract"],
-        platform_mesh_onboarding_proof_ref="output/data-mesh/platform-mesh-onboarding-proof.json",
+        platform_catalog_source_contract_ref="output/data-mesh/platform-catalog-source-contract.json",
         workbench_read_path_source_contract_proof_ref=(
             "output/workbench/read-path-source-contract-proof.json"
         ),
@@ -402,7 +402,7 @@ def _dependency_proofs(platform_root: Path) -> dict[str, dict[str, Any]]:
         repository_root=ROOT,
     )
     return {
-        "platform_mesh_onboarding": build_platform_mesh_onboarding_proof_payload(
+        "platform_catalog_source_contract": build_platform_catalog_source_contract_payload(
             generated_at_utc=GENERATED_AT_UTC,
             repository_root=ROOT,
             platform_root=platform_root,
@@ -421,7 +421,7 @@ def _dependency_proofs(platform_root: Path) -> dict[str, dict[str, Any]]:
 
 def _write_dependency_proofs(tmp_path: Path, platform_root: Path) -> dict[str, Path]:
     proof_paths = {
-        "platform_mesh_onboarding": tmp_path / "platform-mesh-onboarding-proof.json",
+        "platform_catalog_source_contract": tmp_path / "platform-catalog-source-contract.json",
         "workbench_read_path_source_contract": (tmp_path / "read-path-source-contract-proof.json"),
         "gateway_workbench_contract": tmp_path / "gateway-workbench-contract-proof.json",
     }

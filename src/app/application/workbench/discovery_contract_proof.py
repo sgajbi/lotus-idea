@@ -12,7 +12,7 @@ from app.application.workbench.contract_proof import (
 )
 from app.application.data_mesh.platform_catalog_source_contract import (
     REQUIRED_PRODUCER_PRODUCTS,
-    platform_mesh_onboarding_proof_is_valid,
+    platform_catalog_source_contract_is_valid,
 )
 from app.application.source_safe_cross_repo_proof import (
     is_timezone_aware_datetime_text,
@@ -49,7 +49,7 @@ REQUIRED_GATEWAY_WORKBENCH_DISCOVERY_LOCAL_EVIDENCE_REFS = (
     "docs/operations/implementation-proof-readiness.md",
     "wiki/Supported-Features.md",
     "make data-mesh-contract-gate",
-    "make platform-mesh-onboarding-proof-contract-gate",
+    "make platform-catalog-source-contract-proof-gate",
     "make workbench-read-path-source-contract-proof-gate",
     "make gateway-workbench-contract-proof-contract-gate",
     "make gateway-workbench-discovery-contract-proof-contract-gate",
@@ -79,10 +79,10 @@ def build_gateway_workbench_discovery_contract_proof_payload(
     generated_at_utc: datetime,
     repository_root: Path,
     platform_root: Path | None = None,
-    platform_mesh_onboarding_proof: Mapping[str, Any] | None,
+    platform_catalog_source_contract: Mapping[str, Any] | None,
     workbench_read_path_source_contract_proof: Mapping[str, Any] | None,
     gateway_workbench_contract_proof: Mapping[str, Any] | None,
-    platform_mesh_onboarding_proof_ref: str | None,
+    platform_catalog_source_contract_ref: str | None,
     workbench_read_path_source_contract_proof_ref: str | None,
     gateway_workbench_contract_proof_ref: str | None,
 ) -> dict[str, Any]:
@@ -95,9 +95,9 @@ def build_gateway_workbench_discovery_contract_proof_payload(
         repository_root=repository_root,
         platform_root=platform_root,
     )
-    platform_onboarding_valid = bool(
-        platform_mesh_onboarding_proof
-        and platform_mesh_onboarding_proof_is_valid(platform_mesh_onboarding_proof)
+    platform_catalog_source_contract_valid = bool(
+        platform_catalog_source_contract
+        and platform_catalog_source_contract_is_valid(platform_catalog_source_contract)
     )
     workbench_read_path_source_contract_valid = bool(
         workbench_read_path_source_contract_proof
@@ -115,7 +115,7 @@ def build_gateway_workbench_discovery_contract_proof_payload(
     proof_valid = (
         timezone_aware_generated_at_utc
         and file_evidence_present
-        and platform_onboarding_valid
+        and platform_catalog_source_contract_valid
         and workbench_read_path_source_contract_valid
         and gateway_contract_valid
         and catalog_declares_gateway_consumable_products
@@ -129,7 +129,7 @@ def build_gateway_workbench_discovery_contract_proof_payload(
         "evidenceClass": EvidenceClass.SOURCE_CONTRACT.value,
         "gatewayWorkbenchDiscoveryContractProofValid": proof_valid,
         "aggregateBlockersCleared": GATEWAY_WORKBENCH_DISCOVERY_CONTRACT_BLOCKERS_CLEARED,
-        "platformMeshOnboardingProofRef": platform_mesh_onboarding_proof_ref,
+        "platformCatalogSourceContractRef": platform_catalog_source_contract_ref,
         "workbenchReadPathSourceContractProofRef": (workbench_read_path_source_contract_proof_ref),
         "gatewayWorkbenchContractProofRef": gateway_workbench_contract_proof_ref,
         "localEvidenceRefs": REQUIRED_GATEWAY_WORKBENCH_DISCOVERY_LOCAL_EVIDENCE_REFS,
@@ -139,7 +139,7 @@ def build_gateway_workbench_discovery_contract_proof_payload(
         "proofChecks": {
             "timezoneAwareGeneratedAtUtc": timezone_aware_generated_at_utc,
             "fileEvidencePresent": file_evidence_present,
-            "platformMeshOnboardingProofValid": platform_onboarding_valid,
+            "platformCatalogSourceContractValid": platform_catalog_source_contract_valid,
             "workbenchReadPathSourceContractProofValid": (
                 workbench_read_path_source_contract_valid
             ),
@@ -215,7 +215,7 @@ def gateway_workbench_discovery_contract_proof_is_valid(payload: Mapping[str, An
     if payload.get("proofClosed") is not False:
         return False
     for ref_field in (
-        "platformMeshOnboardingProofRef",
+        "platformCatalogSourceContractRef",
         "workbenchReadPathSourceContractProofRef",
         "gatewayWorkbenchContractProofRef",
     ):
@@ -229,7 +229,7 @@ def gateway_workbench_discovery_contract_proof_is_valid(payload: Mapping[str, An
         for check_name in (
             "timezoneAwareGeneratedAtUtc",
             "fileEvidencePresent",
-            "platformMeshOnboardingProofValid",
+            "platformCatalogSourceContractValid",
             "workbenchReadPathSourceContractProofValid",
             "gatewayWorkbenchContractProofValid",
             "catalogDeclaresGatewayConsumableIdeaProducts",

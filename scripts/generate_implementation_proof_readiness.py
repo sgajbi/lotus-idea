@@ -333,10 +333,10 @@ def _proof_artifact_inputs(args: argparse.Namespace) -> dict[str, ProofArtifactI
             artifact_name="outbox platform-mesh event source-contract proof",
             ref_name="outbox platform-mesh event source-contract proof artifact",
         ),
-        "platform_mesh_onboarding": _proof_artifact_input(
-            args.platform_mesh_onboarding_proof,
-            artifact_name="platform mesh onboarding proof",
-            ref_name="platform mesh onboarding proof artifact",
+        "platform_catalog_source_contract": _proof_artifact_input(
+            args.platform_catalog_source_contract_proof,
+            artifact_name="platform catalog source contract",
+            ref_name="platform catalog source contract artifact",
         ),
         **_opportunity_archetype_proof_artifact_inputs(args),
     }

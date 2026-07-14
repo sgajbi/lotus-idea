@@ -35,7 +35,7 @@ from app.application.outbox.broker.source_contract_proof import (
 from app.application.outbox.platform_mesh.source_contract_proof import (
     OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_PROOF_ENV,
 )
-from app.application.data_mesh.platform_catalog_source_contract import PLATFORM_MESH_ONBOARDING_PROOF_ENV
+from app.application.data_mesh.platform_catalog_source_contract import PLATFORM_CATALOG_SOURCE_CONTRACT_ENV
 from app.application.proof_provenance import bind_aggregate_proof_provenance
 from app.application.report.intake_route_source_contract import (
     REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF_ENV,
@@ -73,8 +73,8 @@ class ConfiguredImplementationProofArtifacts:
     outbox_platform_mesh_event_source_contract_proof_ref: str | None
     report_intake_route_source_contract_proof: dict[str, Any] | None
     report_intake_route_source_contract_proof_ref: str | None
-    platform_mesh_onboarding_proof: dict[str, Any] | None
-    platform_mesh_onboarding_proof_ref: str | None
+    platform_catalog_source_contract: dict[str, Any] | None
+    platform_catalog_source_contract_ref: str | None
     workbench_read_path_source_contract_proof: dict[str, Any] | None
     workbench_read_path_source_contract_proof_ref: str | None
     gateway_workbench_contract_proof: dict[str, Any] | None
@@ -163,10 +163,10 @@ _JSON_PROOF_ARTIFACTS: tuple[tuple[str, str, str, str], ...] = (
         "Report intake-route source-contract proof",
     ),
     (
-        PLATFORM_MESH_ONBOARDING_PROOF_ENV,
-        "platform_mesh_onboarding_proof",
-        "platform_mesh_onboarding_proof_ref",
-        "platform mesh onboarding proof",
+        PLATFORM_CATALOG_SOURCE_CONTRACT_ENV,
+        "platform_catalog_source_contract",
+        "platform_catalog_source_contract_ref",
+        "platform catalog source contract",
     ),
     (
         WORKBENCH_READ_PATH_SOURCE_CONTRACT_PROOF_ENV,

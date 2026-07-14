@@ -58,8 +58,8 @@ from app.application.outbox.platform_mesh.source_contract_proof import (
     outbox_platform_mesh_event_source_contract_proof_is_valid,
 )
 from app.application.data_mesh.platform_catalog_source_contract import (
-    PLATFORM_MESH_ONBOARDING_BLOCKERS_CLEARED,
-    platform_mesh_onboarding_proof_is_valid,
+    PLATFORM_CATALOG_SOURCE_BLOCKERS_SATISFIED,
+    platform_catalog_source_contract_is_valid,
 )
 from app.application.proof_provenance import aggregate_proof_artifact_is_current
 from app.application.report.materialization_source_contract import (
@@ -123,8 +123,8 @@ def _apply_available_proofs(
     outbox_consumer_contract_proof_ref: str | None,
     outbox_platform_mesh_event_source_contract_proof: Mapping[str, object] | None,
     outbox_platform_mesh_event_source_contract_proof_ref: str | None,
-    platform_mesh_onboarding_proof: Mapping[str, object] | None,
-    platform_mesh_onboarding_proof_ref: str | None,
+    platform_catalog_source_contract_proof: Mapping[str, object] | None,
+    platform_catalog_source_contract_proof_ref: str | None,
     workbench_read_path_source_contract_proof: Mapping[str, object] | None,
     workbench_read_path_source_contract_proof_ref: str | None,
     gateway_workbench_contract_proof: Mapping[str, object] | None,
@@ -406,8 +406,8 @@ def _apply_platform_and_surface_proofs(
     outbox_consumer_contract_proof_ref: str | None,
     outbox_platform_mesh_event_source_contract_proof: Mapping[str, object] | None,
     outbox_platform_mesh_event_source_contract_proof_ref: str | None,
-    platform_mesh_onboarding_proof: Mapping[str, object] | None,
-    platform_mesh_onboarding_proof_ref: str | None,
+    platform_catalog_source_contract_proof: Mapping[str, object] | None,
+    platform_catalog_source_contract_proof_ref: str | None,
     workbench_read_path_source_contract_proof: Mapping[str, object] | None,
     workbench_read_path_source_contract_proof_ref: str | None,
     gateway_workbench_contract_proof: Mapping[str, object] | None,
@@ -467,13 +467,16 @@ def _apply_platform_and_surface_proofs(
             for capability in capabilities
         )
     if _proof_can_clear_blockers(
-        platform_mesh_onboarding_proof,
-        platform_mesh_onboarding_proof_ref,
+        platform_catalog_source_contract_proof,
+        platform_catalog_source_contract_proof_ref,
         evaluated_at_utc=evaluated_at_utc,
-        proof_is_valid=platform_mesh_onboarding_proof_is_valid,
+        proof_is_valid=platform_catalog_source_contract_is_valid,
     ):
         capabilities = tuple(
-            _apply_platform_mesh_onboarding_proof(capability, platform_mesh_onboarding_proof_ref)
+            _apply_platform_catalog_source_contract(
+                capability,
+                platform_catalog_source_contract_proof_ref,
+            )
             for capability in capabilities
         )
     if _proof_is_valid_and_current(
@@ -913,29 +916,17 @@ def _apply_outbox_platform_mesh_event_source_contract(
     )
 
 
-def _apply_platform_mesh_onboarding_proof(
+def _apply_platform_catalog_source_contract(
     capability: ImplementationProofCapabilityReadiness,
-    platform_mesh_onboarding_proof_ref: str | None,
+    platform_catalog_source_contract_ref: str | None,
 ) -> ImplementationProofCapabilityReadiness:
     if capability.capability_id not in {
         "data-mesh-certification",
         "runtime-trust-telemetry-preview",
     }:
         return capability
-    blockers_to_clear = set(PLATFORM_MESH_ONBOARDING_BLOCKERS_CLEARED)
-    if not blockers_to_clear.intersection(capability.blockers):
-        return capability
-    evidence_refs = capability.evidence_refs
-    if platform_mesh_onboarding_proof_ref:
-        evidence_refs = tuple(dict.fromkeys((*evidence_refs, platform_mesh_onboarding_proof_ref)))
-    return build_capability_readiness(
-        capability.capability_id,
-        capability.name,
-        readiness_status=capability.readiness_status,
-        supportability_status=capability.supportability_status,
-        evidence_refs=evidence_refs,
-        blockers=tuple(
-            blocker for blocker in capability.blockers if blocker not in blockers_to_clear
-        ),
-        supported_feature_promoted=capability.supported_feature_promoted,
+    return apply_blocker_proof(
+        capability,
+        blockers_cleared=PLATFORM_CATALOG_SOURCE_BLOCKERS_SATISFIED,
+        proof_ref=platform_catalog_source_contract_ref,
     )

@@ -13,7 +13,7 @@ for path in (ROOT, SRC):
         sys.path.insert(0, str(path))
 
 from app.application.data_mesh.platform_catalog_source_contract import (  # noqa: E402
-    build_platform_mesh_onboarding_proof_payload,
+    build_platform_catalog_source_contract_payload,
 )
 
 try:
@@ -26,29 +26,29 @@ def main(argv: list[str] | None = None) -> int:
     parser = _parser()
     args = parser.parse_args(argv)
     try:
-        payload = build_platform_mesh_onboarding_proof_payload(
+        payload = build_platform_catalog_source_contract_payload(
             generated_at_utc=_aware_datetime(args.generated_at_utc),
             repository_root=ROOT,
             platform_root=Path(args.platform_root) if args.platform_root else None,
         )
     except (OSError, ValueError, json.JSONDecodeError) as exc:
-        print(f"platform mesh onboarding proof error: {exc}", file=sys.stderr)
+        print(f"platform catalog source contract error: {exc}", file=sys.stderr)
         return 2
 
     write_json_payload(payload, output=args.output)
-    proof_checks = payload.get("proofChecks")
+    contract_checks = payload.get("contractChecks")
     if (
         args.allow_missing_evidence
-        and isinstance(proof_checks, dict)
-        and proof_checks.get("fileEvidencePresent") is False
+        and isinstance(contract_checks, dict)
+        and contract_checks.get("fileEvidencePresent") is False
     ):
         return 0
-    return 0 if payload["platformMeshOnboardingProofValid"] else 1
+    return 0 if payload["sourceContractValid"] else 1
 
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Generate a source-safe lotus-idea platform mesh onboarding proof."
+        description="Generate the source-safe lotus-idea platform catalog source contract."
     )
     parser.add_argument("--generated-at-utc", required=True)
     parser.add_argument("--platform-root")
