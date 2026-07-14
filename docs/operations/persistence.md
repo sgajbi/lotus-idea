@@ -121,16 +121,19 @@ scope after bounded candidate lookup. Request `accessScope` remains request
 shape, but it is not the runtime authorization target; trusted caller
 entitlement headers and persisted candidate scope are the enforced source of
 truth.
-`scripts/generate_durable_repository_proof.py` and
-`make durable-repository-proof-contract-gate` now provide a source-safe proof
-artifact for aggregate RFC implementation-readiness evidence. The artifact
-cites migration contracts, the PostgreSQL adapter, the bounded PostgreSQL
-advisor review-queue projection, and the GitHub PostgreSQL runtime proof lane;
-it can clear the aggregate durable-repository and repository-side
-queue-pagination proof blockers. It does not connect to a database, replace
-`make postgres-integration-gate`, certify production storage, or make runtime
-endpoints report durable storage unless `LOTUS_IDEA_DATABASE_URL` is actually
-configured.
+`scripts/persistence/generate_durable_repository_proof.py` and
+`make durable-repository-proof-contract-gate` provide a source-safe aggregate
+proof artifact. File presence and workflow naming establish only the source
+contract. Clearing the durable-repository and repository-side queue-pagination
+blockers additionally requires the exact-main receipt produced by
+`make durable-repository-ci-proof` after the governed PostgreSQL tests pass.
+The receipt binds the repository, workflow/job, run id and attempt, commit and
+main ref, successful conclusion, uploaded artifact digest, and the exact
+persistence assertions observed in the JUnit report. Missing, PR-ref, failed,
+future-dated, wrong-commit, incomplete, or tampered receipts fail closed. This
+proof does not configure a database, certify deployment migrations or
+production storage, or make runtime endpoints report durable storage unless
+`LOTUS_IDEA_DATABASE_URL` is actually configured.
 `GET /api/v1/outbox-delivery/readiness` now exposes the outbox delivery
 foundation as a certified internal operator diagnostic. It reports aggregate
 outbox status counts, delivery-ready backlog, retry-deferred failed rows that

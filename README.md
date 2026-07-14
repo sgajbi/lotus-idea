@@ -195,6 +195,8 @@ Common gates:
 | `make quality-scorecard-gate` | Keeps quality posture aligned with implementation truth. |
 | `make supported-features-gate` | Ensures supported-feature registry entries are implementation-backed only. |
 | `make endpoint-certification-gate` | Validates endpoint certification evidence and OpenAPI caller-context truth. |
+| `make durable-repository-proof-contract-gate` | Validates the source-safe persistence proof schema and fail-closed CI-receipt policy. |
+| `make durable-repository-ci-proof` | Mainline PostgreSQL job only: binds governed persistence tests, exact commit/ref, run identity, and uploaded artifact digest. |
 | `make check` | Local PR-grade lane for routine feature work. |
 | `make ci-release` | Broad release evidence including implementation proof, Postgres, Docker, smoke, scan, and SBOM evidence. |
 
