@@ -7,6 +7,10 @@ from types import ModuleType
 
 
 ROOT = Path(__file__).resolve().parents[2]
+EVIDENCE_CLASSIFICATION_INVENTORY_PATH = Path(
+    "docs/architecture/implementation-proof-evidence-classification.md"
+)
+ISSUE_CLOSURE_MATRIX_PATH = Path("docs/architecture/GITHUB-ISSUE-CLOSURE-MATRIX.md")
 
 
 def _load_gate() -> ModuleType:
@@ -32,14 +36,14 @@ def test_documentation_contract_gate_blocks_missing_campaign_inventory_occurrenc
     module = _load_gate()
     architecture = tmp_path / "docs" / "architecture"
     architecture.mkdir(parents=True)
-    inventory_source = ROOT / module.EVIDENCE_CLASSIFICATION_INVENTORY_PATH
-    matrix_source = ROOT / module.ISSUE_CLOSURE_MATRIX_PATH
+    inventory_source = ROOT / EVIDENCE_CLASSIFICATION_INVENTORY_PATH
+    matrix_source = ROOT / ISSUE_CLOSURE_MATRIX_PATH
     inventory = inventory_source.read_text(encoding="utf-8").replace("#428", "issue 428")
-    (tmp_path / module.EVIDENCE_CLASSIFICATION_INVENTORY_PATH).write_text(
+    (tmp_path / EVIDENCE_CLASSIFICATION_INVENTORY_PATH).write_text(
         inventory,
         encoding="utf-8",
     )
-    (tmp_path / module.ISSUE_CLOSURE_MATRIX_PATH).write_text(
+    (tmp_path / ISSUE_CLOSURE_MATRIX_PATH).write_text(
         matrix_source.read_text(encoding="utf-8"),
         encoding="utf-8",
     )
