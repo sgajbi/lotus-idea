@@ -429,7 +429,7 @@ Persistence adapter validation:
    consumption, non-AI operator workflow operations proof consumption,
    Workbench read-path proof consumption, Gateway/Workbench
    source-contract proof consumption, Gateway/Workbench discovery contract
-   proof consumption, bounded outbox broker proof consumption, default Advise
+   proof consumption, bounded outbox broker source-contract proof consumption, default Advise
    proposal route proof generation and
    consumption, default Manage action route proof generation and consumption,
    optional Manage mandate live proof consumption,
@@ -472,15 +472,16 @@ Persistence adapter validation:
     readiness adds its reference to data-mesh and runtime-trust evidence but
     preserves `gateway_workbench_discovery_proof_missing` until
     machine-verifiable runtime evidence exists.
-14. `tests/unit/outbox/test_outbox_broker_proof.py`,
+14. `tests/unit/outbox/broker/test_source_contract_proof.py`,
+    `tests/unit/outbox/broker/test_readiness_consumption.py`,
     `tests/unit/outbox/test_outbox_consumer_contract_proof.py`,
     `tests/unit/outbox/test_outbox_platform_mesh_event_publication_proof.py`,
     `make outbox-consumer-contract-gate`,
-    `make outbox-broker-proof-contract-gate`, and
+    `make outbox-broker-source-contract-proof-gate`,
     `make outbox-consumer-contract-proof-contract-gate`, and
     `make outbox-platform-mesh-event-publication-proof-contract-gate` prove the
     declared downstream consumer contract, source-safe bounded outbox broker
-    proof contract, source-safe bounded downstream consumer source-contract
+    source contract that clears no readiness blocker, bounded downstream consumer source-contract
     proof, and bounded outbox platform mesh event publication proof contract.
     Aggregate readiness records the consumer contract evidence without clearing
     `downstream_consumer_runtime_proof_missing`; the other proof families clear

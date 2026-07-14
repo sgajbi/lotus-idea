@@ -547,18 +547,18 @@ Workbench consumption, and entitlement enforcement. The artifact does not
 certify data-mesh products, activate producer products, publish product routes,
 certify canonical Workbench behavior, or promote supported features.
 
-Outbox broker proof is captured by
-`scripts/outbox/generate_broker_proof.py`. A valid artifact referenced through
-`LOTUS_IDEA_OUTBOX_BROKER_PROOF` or passed with `--outbox-broker-proof` clears
-only the aggregate `outbox_broker_not_configured` and
-`external_broker_runtime_proof_missing` blockers inside generated
-implementation-proof readiness evidence and the operator API readiness
-snapshot. It cites the implemented outbox delivery orchestration, publisher
-port, HTTP publisher adapter foundation, readiness endpoint, run-once endpoint,
-configured-publisher API proof, and `make outbox-broker-proof-contract-gate`.
-It does not certify external broker publication support, downstream consumer
-execution, platform mesh event publication, Gateway/Workbench behavior,
-client-ready publication, or supported-feature promotion.
+Outbox broker source-contract proof is captured by
+`scripts/outbox/broker/generate_source_contract_proof.py`. A valid artifact
+referenced through `LOTUS_IDEA_OUTBOX_BROKER_SOURCE_CONTRACT_PROOF` or passed
+with `--outbox-broker-source-contract-proof` adds a traceable evidence reference
+to outbox-delivery and operator-workflow readiness. It clears no blocker.
+`outbox_broker_not_configured` and `external_broker_runtime_proof_missing`
+remain until separately governed runtime evidence proves external broker
+configuration and publication. The artifact validates the publisher port, HTTP
+adapter source contract, operator API surface, event contracts, and
+`make outbox-broker-source-contract-proof-gate`; it does not certify runtime
+execution, deployment, external publication, downstream consumption, platform
+mesh publication, Gateway/Workbench behavior, or supported-feature promotion.
 
 Downstream outbox consumer contract posture is enforced by
 `contracts/outbox-events/lotus-idea-outbox-consumers.v1.json` and
@@ -972,8 +972,8 @@ Implementation-backed evidence:
     `scripts/workbench/generate_discovery_contract_proof.py`,
 1. Gateway/Workbench discovery contract proof contract gate:
     `make gateway-workbench-discovery-contract-proof-contract-gate`,
-1. outbox broker proof generator:
-    `scripts/outbox/generate_broker_proof.py`,
+1. outbox broker source-contract proof generator:
+    `scripts/outbox/broker/generate_source_contract_proof.py`,
 1. outbox consumer contract gate:
     `make outbox-consumer-contract-gate`,
 1. outbox consumer contract proof generator:
@@ -982,8 +982,8 @@ Implementation-backed evidence:
     `make outbox-consumer-contract-proof-contract-gate`,
 1. outbox consumer contract proof tests:
     `tests/unit/outbox/test_outbox_consumer_contract_proof.py`,
-1. outbox broker proof contract gate:
-    `make outbox-broker-proof-contract-gate`,
+1. outbox broker source-contract proof gate:
+    `make outbox-broker-source-contract-proof-gate`,
 1. outbox platform mesh event publication proof generator:
     `scripts/outbox/generate_platform_mesh_event_publication_proof.py`,
 1. outbox platform mesh event publication proof contract gate:
@@ -1010,8 +1010,9 @@ Implementation-backed evidence:
     `make report-materialization-proof-contract-gate`,
 1. report materialization proof tests:
     `tests/unit/test_report_materialization_proof.py`,
-1. outbox broker proof tests:
-    `tests/unit/outbox/test_outbox_broker_proof.py`,
+1. outbox broker source-contract proof tests:
+    `tests/unit/outbox/broker/test_source_contract_proof.py`,
+    `tests/unit/outbox/broker/test_readiness_consumption.py`,
 1. platform mesh onboarding proof generator:
     `scripts/generate_platform_mesh_onboarding_proof.py`,
 1. platform mesh onboarding proof contract gate:
@@ -1097,7 +1098,7 @@ make implementation-proof-readiness-check
 make durable-repository-proof-contract-gate
 make runtime-trust-telemetry-proof-contract-gate
 make ai-workflow-pack-registration-proof-contract-gate
-make outbox-broker-proof-contract-gate
+make outbox-broker-source-contract-proof-gate
 make outbox-consumer-contract-proof-contract-gate
 make outbox-platform-mesh-event-publication-proof-contract-gate
 make downstream-route-contract-proof-gate
