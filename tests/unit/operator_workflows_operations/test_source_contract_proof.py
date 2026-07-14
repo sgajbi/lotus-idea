@@ -164,9 +164,7 @@ def test_rejects_operator_workflows_operations_proof_with_non_mapping_checks() -
 
 def test_operator_workflows_operations_proof_cli_writes_valid_artifact(tmp_path: Path) -> None:
     module = _load_generator_script()
-    output_path = (
-        tmp_path / "proof" / "operator-workflows-operations-source-contract-proof.json"
-    )
+    output_path = tmp_path / "proof" / "operator-workflows-operations-source-contract-proof.json"
 
     result = module.main(
         [
@@ -342,9 +340,7 @@ def test_runbook_artifact_certification_rejects_forbidden_and_missing_text(
 
 
 def test_runbook_source_contract_rejects_runtime_claim_inflation(tmp_path: Path) -> None:
-    source = (ROOT / "docs/runbooks/operator-workflows-operations.md").read_text(
-        encoding="utf-8"
-    )
+    source = (ROOT / "docs/runbooks/operator-workflows-operations.md").read_text(encoding="utf-8")
     path = tmp_path / "docs/runbooks/operator-workflows-operations.md"
     path.parent.mkdir(parents=True)
     path.write_text(
@@ -440,9 +436,7 @@ def _valid_operations_contract_payload() -> dict[str, object]:
 
 
 def _load_generator_script() -> ModuleType:
-    script_path = (
-        ROOT / "scripts/operator_workflows_operations/generate_source_contract_proof.py"
-    )
+    script_path = ROOT / "scripts/operator_workflows_operations/generate_source_contract_proof.py"
     spec = importlib.util.spec_from_file_location(
         "generate_operator_workflows_operations_source_contract_proof",
         script_path,
