@@ -26,6 +26,8 @@ def test_architecture_boundary_gate_is_blocking_in_local_ci() -> None:
     assert "scripts.refresh_runtime_dependency_locks" in makefile
     assert "repository-hygiene-gate:" in makefile
     assert "$(MAKE) repository-hygiene-gate" in makefile
+    assert "test-client-lifecycle-gate:" in makefile
+    assert "$(MAKE) test-client-lifecycle-gate" in makefile
     assert "maintainability-gate:" in makefile
     assert "$(MAKE) maintainability-gate" in makefile
     assert "duplicate-implementation-inventory:" in makefile
@@ -368,6 +370,15 @@ def test_ci_contract_gate_blocks_missing_repository_hygiene_gate() -> None:
     errors = module.validate_makefile(makefile)
 
     assert "Makefile lint target must call `$(MAKE) repository-hygiene-gate`" in errors
+
+
+def test_ci_contract_gate_blocks_missing_test_client_lifecycle_gate() -> None:
+    module = _load_ci_contract_gate()
+    makefile = _read("Makefile").replace("$(MAKE) test-client-lifecycle-gate", "")
+
+    errors = module.validate_makefile(makefile)
+
+    assert "Makefile lint target must call `$(MAKE) test-client-lifecycle-gate`" in errors
 
 
 def test_ci_contract_gate_blocks_missing_private_import_boundary_gate() -> None:

@@ -5,6 +5,7 @@
 | Command | Operator use |
 | --- | --- |
 | `make lint` | Fast local governance and contract gates. |
+| `make test-client-lifecycle-gate` | Reject unmanaged integration HTTP clients that bypass deterministic lifespan shutdown. |
 | `make typecheck` | Static typing proof for service code. |
 | `make ci` | Broad local aggregate suite without Docker/PostgreSQL release proof. |
 | `make ci-release` | Full local release-lane proof when Docker and disposable PostgreSQL are available. |

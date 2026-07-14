@@ -1241,6 +1241,13 @@ Recent issue-derived patterns to preserve:
     receipt JSON loading are shared through `app.application.ci_execution_evidence`
     and `scripts.proof_generator_io`; capability packages retain only their
     own trusted workflow, assertion, blocker, and no-claim policy.
+36. Integration API clients must be created through
+    `tests.support.http.managed_test_client`. The autouse integration fixture
+    owns application lifespan and deterministic client shutdown per test;
+    direct FastAPI or Starlette `TestClient` construction is blocked by
+    `make test-client-lifecycle-gate` through `make lint`. This prevents
+    cumulative event-loop socket exhaustion on Windows and ensures shutdown
+    hooks are exercised without scattering cleanup logic across test modules.
 
 Recent GitHub issue categories should keep being worked category-wise so
 repeated defect patterns are fixed once and pinned with tests or gates:
