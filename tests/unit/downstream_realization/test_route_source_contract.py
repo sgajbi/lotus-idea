@@ -5,6 +5,7 @@ import importlib.util
 import json
 from pathlib import Path
 from types import ModuleType
+from typing import cast
 
 import pytest
 
@@ -48,13 +49,13 @@ def test_builds_digest_bound_source_contract_without_clearing_live_blockers(
     assert payload["evidenceClass"] == EvidenceClass.SOURCE_CONTRACT.value
     assert payload["sourceContractValid"] is True
     assert payload["sourceContractBlockersSatisfied"] == ()
-    assert tuple(payload["remainingCertificationBlockers"]) == profile.remaining_blockers
+    remaining_blockers = cast(tuple[str, ...], payload["remainingCertificationBlockers"])
+    source_authority = _source_authority(payload)
+    assert remaining_blockers == profile.remaining_blockers
     assert payload["runtimeExecutionObserved"] is False
     assert payload["downstreamRecordAccepted"] is False
-    assert all(
-        item["repository"] == profile.owner_repository for item in payload["sourceAuthority"]
-    )
-    assert all(len(item["sha256"]) == 64 for item in payload["sourceAuthority"])
+    assert all(item["repository"] == profile.owner_repository for item in source_authority)
+    assert all(len(cast(str, item["sha256"])) == 64 for item in source_authority)
     assert validator(payload) is True
 
 
@@ -129,11 +130,11 @@ def test_validator_rejects_unknown_fields_and_source_authority_substitution(
     assert manage_route_source_contract_is_valid(payload) is False
 
     payload = _valid_payload(tmp_path, "manage")
-    payload["sourceAuthority"][0]["repository"] = "lotus-idea"
+    _source_authority(payload)[0]["repository"] = "lotus-idea"
     assert manage_route_source_contract_is_valid(payload) is False
 
     payload = _valid_payload(tmp_path, "manage")
-    payload["sourceAuthority"][0]["sha256"] = "not-a-digest"
+    _source_authority(payload)[0]["sha256"] = "not-a-digest"
     assert manage_route_source_contract_is_valid(payload) is False
 
 
@@ -189,6 +190,13 @@ def _valid_payload(tmp_path: Path, family: str) -> dict[str, object]:
     return build_manage_route_source_contract_payload(
         generated_at_utc=GENERATED_AT, repository_root=ROOT, manage_root=root
     )
+
+
+def _source_authority(payload: dict[str, object]) -> tuple[dict[str, object], ...]:
+    value = payload["sourceAuthority"]
+    assert isinstance(value, (list, tuple))
+    assert all(isinstance(item, dict) for item in value)
+    return tuple(cast(dict[str, object], item) for item in value)
 
 
 def _write_fixture(tmp_path: Path, family: str) -> Path:
