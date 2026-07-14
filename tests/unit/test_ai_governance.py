@@ -614,6 +614,24 @@ def test_ai_request_and_output_validate_required_verifier_fields() -> None:
             source_product_ids=(" ",),
         )
 
+    with pytest.raises(ValueError, match="source_product_ids must be unique"):
+        AIOutputClaim(
+            claim_id="claim-duplicate-source",
+            claim_text="Duplicate source.",
+            source_product_ids=(
+                "lotus-core:PortfolioStateSnapshot:v1",
+                "lotus-core:PortfolioStateSnapshot:v1",
+            ),
+        )
+
+    duplicate_claim = AIOutputClaim(
+        claim_id="claim-duplicate",
+        claim_text="Duplicate identity.",
+        source_product_ids=("lotus-core:PortfolioStateSnapshot:v1",),
+    )
+    with pytest.raises(ValueError, match="claim_ids must be unique"):
+        output(request.request_id, claims=(duplicate_claim, duplicate_claim))
+
     with pytest.raises(ValueError, match="claims is required"):
         AIWorkflowOutput(
             output_id="ai-output-no-claims",

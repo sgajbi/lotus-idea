@@ -72,6 +72,24 @@ def test_ai_workflow_output_request_rejects_unsafe_shape() -> None:
                 "lotus-core:PortfolioStateSnapshot:v1",
             ),
         )
+    duplicate_claim = AIOutputClaimRequest(
+        claimId="claim-duplicate",
+        claimText="Source-backed claim",
+        sourceProductIds=("lotus-core:PortfolioStateSnapshot:v1",),
+    )
+    with pytest.raises(ValidationError, match="claimIds must be unique"):
+        AIWorkflowOutputRequest(
+            outputId="ai-output-duplicate-claims",
+            explanationText="Source-backed explanation",
+            claims=(duplicate_claim, duplicate_claim),
+            proposedActions=(
+                AIProposedActionRequest(
+                    actionType=AIProposedActionType.ADVISOR_REVIEW,
+                    actionLabel="Route to advisor review",
+                ),
+            ),
+            verifierRanAtUtc=datetime(2026, 6, 21, 10, 12, 30, tzinfo=UTC),
+        )
     with pytest.raises(ValidationError):
         AIProposedActionRequest(
             actionType=AIProposedActionType.ADVISOR_REVIEW,
