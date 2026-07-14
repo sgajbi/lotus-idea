@@ -234,7 +234,9 @@ dashboard or alert, prove Workbench behavior, or promote a supported feature.
 
 The AI workflow-pack registration proof gate validates that sibling `lotus-ai`
 has a governed `idea_explanation.pack@v1` registration, binding, queue policy,
-supportability surface, and test evidence. It still does not execute
+supportability surface, and test evidence. This is `source_contract` evidence:
+it adds provenance, clears no blocker, and retains
+`workflow_pack_runtime_contract_not_certified`. It does not execute
 `lotus-ai`, invoke a provider, certify model-risk operations, prove Workbench
 behavior, or make an AI explanation claim client-ready.
 

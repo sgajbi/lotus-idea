@@ -400,12 +400,14 @@ operations monitoring as `lotus-ai`, Workbench, data-mesh, client-ready, or
 supported-feature certification.
 
 `make ai-workflow-pack-registration-proof-contract-gate` validates the bounded
-sibling `lotus-ai` workflow-pack registration proof used by aggregate
+sibling `lotus-ai` workflow-pack registration source contract used by aggregate
 implementation-proof readiness. It blocks source-unsafe evidence refs, missing
-registry/binding/queue-policy/supportability/test proof, and any attempt to
-treat registration as `lotus-ai` runtime execution, provider invocation,
-Workbench proof, or supported-feature promotion. Model-risk dashboard and
-alert artifact certification remains owned by
+registry/binding/queue-policy/supportability/test evidence, non-`source_contract`
+classification, non-empty blocker clearance, and any attempt to claim runtime
+execution, deployment, production certification, provider invocation,
+Workbench proof, or supported-feature promotion. A valid artifact adds
+provenance while retaining `workflow_pack_runtime_contract_not_certified`.
+Model-risk dashboard and alert artifact certification remains owned by
 `make ai-model-risk-operations-proof-contract-gate`.
 
 `make source-ingestion-live-proof-contract-gate` also protects the live-proof

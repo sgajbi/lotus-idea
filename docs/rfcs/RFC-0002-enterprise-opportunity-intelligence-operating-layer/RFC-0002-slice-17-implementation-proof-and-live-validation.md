@@ -257,13 +257,13 @@ Prove the complete supported opportunity journey end to end.
     to clear only `lotus_report_live_intake_route_proof_missing`, while
     preserving report materialization, render output, archive record,
     client-publication, and supported-feature blockers.
-25. `src/app/application/ai_workflow_pack_registration_proof.py`,
-    `scripts/generate_ai_workflow_pack_registration_proof.py`, and
+25. `src/app/application/ai_workflow_pack_registration/source_contract_proof.py`,
+    `scripts/ai_workflow_pack_registration/generate_source_contract_proof.py`, and
     `make ai-workflow-pack-registration-proof-contract-gate` now define and
-    enforce a source-safe sibling `lotus-ai` workflow-pack registration proof
+    enforce a v2 source-safe sibling `lotus-ai` workflow-pack registration source contract
     artifact. The aggregate implementation-readiness generator and operator
-    API consume that artifact to clear only
-    `workflow_pack_runtime_contract_not_certified`, while preserving
+    API consume that artifact as an evidence reference while preserving
+    `workflow_pack_runtime_contract_not_certified`,
     `lotus-ai` runtime execution, provider invocation, runtime trust telemetry,
     Workbench, client-publication, and supported-feature blockers. Model-risk
     dashboard and alert source validation is handled by the separate
@@ -587,10 +587,11 @@ gap from "contract exists outside aggregate readiness" to "contract and gate are
 visible in the `ai-explanation` capability evidence." They do not certify a
 dashboard, alert pack, `lotus-ai` runtime workflow, AI lineage store,
 Workbench surface, or supported feature.
-The AI workflow-pack registration proof narrows the workflow authority gap from
+The AI workflow-pack registration source contract narrows the source-authority evidence gap from
 "no durable `lotus-ai` registration evidence" to "`idea_explanation.pack@v1`
 is registered, bound, queue-governed, supportability-visible, and test-backed
-in `lotus-ai`." It does not close runtime workflow execution, provider
+in `lotus-ai`." It clears no aggregate blocker and does not close runtime
+registry observation, runtime workflow execution, provider
 invocation, certified model-risk operations, Workbench proof, or supported
 feature proof.
 The AI workflow-pack runtime execution proof narrows the execution gap from

@@ -1270,6 +1270,14 @@ Recent issue-derived patterns to preserve:
     certification, downstream delivery, or supported-feature promotion. Keep
     this proof family under capability-owned `outbox/platform_mesh/` packages;
     repository hygiene prohibits the retired flat publication-proof paths.
+38. Lotus AI workflow-pack phase specs, registry seed declarations, bindings,
+    queue policy, supportability source, and tests are `source_contract`
+    evidence. Keep this family under capability-owned
+    `ai_workflow_pack_registration/` application, script, and test packages.
+    A valid artifact adds provenance only and must retain
+    `workflow_pack_runtime_contract_not_certified`; it cannot claim runtime
+    registry observation, deployment, production certification, provider
+    execution, Workbench proof, client publication, or feature promotion.
 
 Recent GitHub issue categories should keep being worked category-wise so
 repeated defect patterns are fixed once and pinned with tests or gates:

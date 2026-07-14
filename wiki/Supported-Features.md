@@ -100,9 +100,11 @@ PostgreSQL runtime proof for accepted, replayed, and conflicting request ids,
 and the readiness diagnostic reports durable lineage backing when the active
 repository is durable. That proof is repository durability evidence, not
 `lotus-ai` runtime execution or AI product certification. The bounded
-AI workflow-pack registration proof validates sibling `lotus-ai`
+AI workflow-pack registration source-contract proof validates sibling `lotus-ai`
 `idea_explanation.pack@v1` registration, binding, queue policy,
-supportability, and tests only; it is not provider execution, model-risk
+supportability, and tests only. It adds evidence without clearing
+`workflow_pack_runtime_contract_not_certified`; it is not runtime registry
+observation, provider execution, model-risk
 operations certification, Workbench proof, or supported-feature promotion. The
 bounded AI workflow-pack runtime execution proof validates an actual
 deterministic review-gated invocation, receipt identity, evidence-hash binding,

@@ -392,7 +392,7 @@ provider payloads, candidate identifiers, source routes, portfolio identifiers,
 or client identifiers. It remains `not_certified` until `lotus-ai` runtime
 workflow execution, workflow-pack runtime certification, certified model-risk
 dashboard and alert evidence, runtime trust telemetry, and Workbench proof
-exist. The current AI lineage store proof, AI workflow-pack registration proof,
+exist. The current AI lineage store proof, AI workflow-pack registration source contract,
 and AI model-risk operations contract are enforced and source-safe, but they
 are not `lotus-ai` runtime, provider-call, dashboard, alert, Workbench,
 client-ready, or supported-feature certification.
