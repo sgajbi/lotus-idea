@@ -1262,6 +1262,14 @@ Recent issue-derived patterns to preserve:
     `make test-client-lifecycle-gate` through `make lint`. This prevents
     cumulative event-loop socket exhaustion on Windows and ensures shutdown
     hooks are exercised without scattering cleanup logic across test modules.
+37. Platform-mesh event contracts, declared consumers, source-manifest entries,
+    and generated catalog entries are `source_contract` evidence. They may add
+    provenance to outbox readiness but must not clear
+    `platform_mesh_event_publication_proof_missing` or claim runtime execution,
+    event publication, a publication receipt, deployment, production
+    certification, downstream delivery, or supported-feature promotion. Keep
+    this proof family under capability-owned `outbox/platform_mesh/` packages;
+    repository hygiene prohibits the retired flat publication-proof paths.
 
 Recent GitHub issue categories should keep being worked category-wise so
 repeated defect patterns are fixed once and pinned with tests or gates:

@@ -203,7 +203,7 @@ Private-banking and operating boundaries preserved:
    repository and publisher adapter, returns aggregate counts only, and emits
    source-safe operation events.
 3. The route still does not certify live broker publication, downstream
-   consumer runtime, platform mesh event publication, Gateway/Workbench support,
+   consumer runtime, platform-mesh event runtime publication, Gateway/Workbench support,
    data-product certification, or supported-feature promotion.
 
 Evidence:

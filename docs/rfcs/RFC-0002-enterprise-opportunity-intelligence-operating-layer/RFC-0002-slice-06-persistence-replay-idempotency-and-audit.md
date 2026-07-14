@@ -340,15 +340,16 @@ Implemented first-wave internal scope:
     runtime certified, and clears no blocker. Observed downstream execution,
     platform mesh event publication, Gateway/Workbench, downstream delivery,
     and supported-feature blockers remain fail-closed.
-    `src/app/application/outbox/platform_mesh_event_publication_proof.py`,
-    `scripts/outbox/generate_platform_mesh_event_publication_proof.py`, and
-    `make outbox-platform-mesh-event-publication-proof-contract-gate` now add a
-    source-safe bounded outbox platform mesh event publication proof artifact.
-    It clears only `platform_mesh_event_publication_proof_missing` after the
-    repo-owned event/consumer contracts and sibling platform source-manifest
-    and catalog evidence validate. It preserves external broker publication,
-    downstream delivery, Gateway/Workbench, client-ready publication, and
-    supported-feature blockers.
+    `src/app/application/outbox/platform_mesh/source_contract_proof.py`,
+    `scripts/outbox/platform_mesh/generate_source_contract_proof.py`, and
+    `make outbox-platform-mesh-event-source-contract-proof-gate` now add a
+    bounded outbox platform-mesh event source-contract proof. It declares
+    `evidenceClass=source_contract`, adds provenance, and clears no blocker
+    after the repo-owned event/consumer contracts and sibling platform
+    source-manifest and catalog evidence validate. The runtime
+    `platform_mesh_event_publication_proof_missing` blocker remains, together
+    with external broker publication, downstream delivery, Gateway/Workbench,
+    client-ready publication, and supported-feature blockers.
 20. `src/app/application/outbox/readiness.py` and
     `GET /api/v1/outbox-delivery/readiness` now expose the outbox delivery
     foundation through a certified internal operator diagnostic. The endpoint

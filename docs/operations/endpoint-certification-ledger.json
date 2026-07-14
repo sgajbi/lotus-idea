@@ -1487,7 +1487,7 @@
       "owner": "lotus-idea owners",
       "purpose": "Return source-safe operator readiness for the internal outbox delivery foundation, including aggregate outbox status counts, leased and expired-lease posture, repository-side PostgreSQL readiness projection when durable storage is active, publisher-adapter presence, and broker/downstream certification blockers.",
       "when_to_use": "Use for internal platform/operator validation when a caller has idea.outbox-delivery.readiness.read capability and needs aggregate outbox backlog posture before live broker runtime or downstream consumer proof exists.",
-      "when_not_to_use": "Do not use as certified live broker runtime proof, downstream delivery proof, platform mesh event publication proof, Gateway contract, Workbench product proof, business product discovery, client-ready publication, or supported-feature promotion.",
+      "when_not_to_use": "Do not use as certified live broker runtime proof, downstream delivery proof, platform-mesh event runtime publication evidence, Gateway contract, Workbench product proof, business product discovery, client-ready publication, or supported-feature promotion.",
       "request_examples": [
         "GET /api/v1/outbox-delivery/readiness with X-Caller-Roles: operator and X-Caller-Capabilities: idea.outbox-delivery.readiness.read"
       ],
@@ -1516,7 +1516,7 @@
       "owner": "lotus-idea owners",
       "purpose": "Run one bounded internal outbox delivery pass for operators using the active repository provider, configured publisher adapter, explicit operator run identity, route-owned publisher cleanup, and source-safe cleanup-failure isolation while returning aggregate counts only.",
       "when_to_use": "Use for internal operator validation when a caller has idea.outbox-delivery.run capability and Idempotency-Key and needs to exercise outbox delivery orchestration without exposing raw idempotency keys, event identifiers, or claiming live broker certification.",
-      "when_not_to_use": "Do not use as certified live broker runtime proof, downstream delivery proof, platform mesh event publication proof, Gateway contract, Workbench product proof, business product discovery, client-ready publication, or supported-feature promotion.",
+      "when_not_to_use": "Do not use as certified live broker runtime proof, downstream delivery proof, platform-mesh event runtime publication evidence, Gateway contract, Workbench product proof, business product discovery, client-ready publication, or supported-feature promotion.",
       "request_examples": [
         "POST /api/v1/outbox-delivery/run-once?deliveredAtUtc=2026-06-21T10:05:00Z&limit=10 with X-Caller-Roles: operator, X-Caller-Capabilities: idea.outbox-delivery.run, and Idempotency-Key"
       ],
