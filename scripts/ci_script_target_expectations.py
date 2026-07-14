@@ -59,7 +59,7 @@ SCRIPT_TARGET_EXPECTATIONS = {
     ),
     "ai-lineage-store-proof-contract-gate": "scripts/ai_lineage_store_proof_contract_gate.py",
     "ai-workflow-pack-registration-proof-contract-gate": (
-        "scripts/ai_workflow_pack_registration_proof_contract_gate.py"
+        "scripts/ai_workflow_pack_registration/source_contract_proof_gate.py"
     ),
     "ai-workflow-pack-runtime-execution-proof-contract-gate": (
         "scripts/ai_workflow_pack_runtime_execution_proof_contract_gate.py"

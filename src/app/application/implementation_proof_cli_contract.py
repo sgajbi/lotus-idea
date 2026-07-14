@@ -5,7 +5,7 @@ from app.application.ai_lineage_store_proof import AI_LINEAGE_STORE_PROOF_ENV
 from app.application.ai_model_risk_operations.source_contract_proof import (
     AI_MODEL_RISK_OPERATIONS_PROOF_ENV,
 )
-from app.application.ai_workflow_pack_registration_proof import (
+from app.application.ai_workflow_pack_registration.source_contract_proof import (
     AI_WORKFLOW_PACK_REGISTRATION_PROOF_ENV,
 )
 from app.application.ai_runtime_proof import (
@@ -103,7 +103,7 @@ PROOF_ARTIFACT_ARGS: tuple[tuple[str, str, str], ...] = (
     (
         "--ai-workflow-pack-registration-proof",
         AI_WORKFLOW_PACK_REGISTRATION_PROOF_ENV,
-        "Optional lotus-ai idea workflow-pack registration proof artifact path.",
+        "Optional Lotus AI idea workflow-pack registration source-contract proof path.",
     ),
     (
         "--ai-workflow-pack-runtime-execution-proof",

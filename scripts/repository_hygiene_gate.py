@@ -35,6 +35,13 @@ PROHIBITED_SUFFIXES = {
 }
 
 REQUIRED_BOUNDED_MODULE_PATHS = {
+    "scripts/ai_workflow_pack_registration/__init__.py",
+    "scripts/ai_workflow_pack_registration/generate_source_contract_proof.py",
+    "scripts/ai_workflow_pack_registration/source_contract_proof_gate.py",
+    "src/app/application/ai_workflow_pack_registration/__init__.py",
+    "src/app/application/ai_workflow_pack_registration/source_contract_proof.py",
+    "tests/unit/ai_workflow_pack_registration/__init__.py",
+    "tests/unit/ai_workflow_pack_registration/test_source_contract_proof.py",
     "scripts/outbox/broker/__init__.py",
     "scripts/outbox/broker/generate_source_contract_proof.py",
     "scripts/outbox/broker/source_contract_proof_gate.py",
@@ -185,6 +192,10 @@ REQUIRED_BOUNDED_MODULE_PATHS = {
 }
 
 PROHIBITED_LEGACY_MODULE_PATHS = {
+    "scripts/ai_workflow_pack_registration_proof_contract_gate.py",
+    "scripts/generate_ai_workflow_pack_registration_proof.py",
+    "src/app/application/ai_workflow_pack_registration_proof.py",
+    "tests/unit/test_ai_workflow_pack_registration_proof.py",
     "scripts/outbox/broker_proof_contract_gate.py",
     "scripts/outbox/generate_broker_proof.py",
     "src/app/application/outbox/broker_proof.py",

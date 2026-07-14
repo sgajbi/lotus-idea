@@ -6,7 +6,10 @@ import json
 import sys
 from pathlib import Path
 
-from app.application.ai_workflow_pack_registration_proof import (
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT))
+
+from app.application.ai_workflow_pack_registration.source_contract_proof import (  # noqa: E402
     build_ai_workflow_pack_registration_proof_payload,
 )
 
@@ -14,9 +17,6 @@ try:
     from scripts.proof_generator_io import write_json_payload
 except ImportError:  # pragma: no cover - supports direct script execution
     from proof_generator_io import write_json_payload  # type: ignore[import-not-found,no-redef]
-
-ROOT = Path(__file__).resolve().parents[1]
-
 
 def main(argv: list[str] | None = None) -> int:
     parser = _parser()
@@ -44,7 +44,9 @@ def main(argv: list[str] | None = None) -> int:
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Generate a source-safe lotus-idea AI workflow-pack registration proof."
+        description=(
+            "Generate source-contract evidence for the Lotus AI idea workflow-pack registration."
+        )
     )
     parser.add_argument("--generated-at-utc", required=True)
     parser.add_argument("--lotus-ai-root")

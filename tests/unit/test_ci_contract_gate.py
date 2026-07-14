@@ -287,8 +287,9 @@ def test_ci_contract_gate_blocks_missing_ai_workflow_pack_proof_readiness_wiring
     errors = module.validate_makefile(makefile)
 
     assert (
-        "Makefile implementation-proof-readiness-check target must pass the "
-        "AI workflow-pack registration proof artifact into readiness generation"
+            "Makefile implementation-proof-readiness-check target must pass the "
+            "AI workflow-pack registration source-contract proof artifact into readiness "
+            "generation"
     ) in errors
 
 
@@ -297,14 +298,17 @@ def test_ci_contract_gate_blocks_missing_ai_workflow_pack_proof_generation() -> 
     makefile = (
         (ROOT / "Makefile")
         .read_text(encoding="utf-8")
-        .replace("scripts/generate_ai_workflow_pack_registration_proof.py", "scripts/removed.py")
+        .replace(
+            "scripts/ai_workflow_pack_registration/generate_source_contract_proof.py",
+            "scripts/removed.py",
+        )
     )
 
     errors = module.validate_makefile(makefile)
 
     assert (
-        "Makefile implementation-proof-readiness-check target must generate "
-        "an AI workflow-pack registration proof artifact"
+            "Makefile implementation-proof-readiness-check target must generate "
+            "an AI workflow-pack registration source-contract proof artifact"
     ) in errors
 
 
@@ -346,7 +350,7 @@ def test_ci_contract_gate_blocks_missing_ai_workflow_pack_proof_gate() -> None:
         .read_text(encoding="utf-8")
         .replace("$(MAKE) ai-workflow-pack-registration-proof-contract-gate\n", "")
         .replace(
-            "scripts/ai_workflow_pack_registration_proof_contract_gate.py",
+            "scripts/ai_workflow_pack_registration/source_contract_proof_gate.py",
             "scripts/removed.py",
         )
     )
@@ -358,7 +362,7 @@ def test_ci_contract_gate_blocks_missing_ai_workflow_pack_proof_gate() -> None:
     ) in errors
     assert (
         "Makefile ai-workflow-pack-registration-proof-contract-gate target must run "
-        "`scripts/ai_workflow_pack_registration_proof_contract_gate.py`"
+        "`scripts/ai_workflow_pack_registration/source_contract_proof_gate.py`"
     ) in errors
 
 

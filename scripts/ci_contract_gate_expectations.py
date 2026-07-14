@@ -124,8 +124,8 @@ GENERATED_READINESS_ARTIFACTS = (
     ("scripts/generate_runtime_trust_telemetry_proof.py", "runtime telemetry proof artifact"),
     ("scripts/generate_ai_lineage_store_proof.py", "an AI lineage store proof artifact"),
     (
-        "scripts/generate_ai_workflow_pack_registration_proof.py",
-        "an AI workflow-pack registration proof artifact",
+        "scripts/ai_workflow_pack_registration/generate_source_contract_proof.py",
+        "an AI workflow-pack registration source-contract proof artifact",
     ),
     (
         "scripts/generate_ai_workflow_pack_runtime_execution_proof.py",
@@ -175,7 +175,10 @@ PASSED_READINESS_ARTIFACTS = (
     ("--durable-repository-proof", "durable repository proof artifact"),
     ("--runtime-trust-telemetry-proof", "runtime trust telemetry proof artifact"),
     ("--ai-lineage-store-proof", "AI lineage store proof artifact"),
-    ("--ai-workflow-pack-registration-proof", "AI workflow-pack registration proof artifact"),
+    (
+        "--ai-workflow-pack-registration-proof",
+        "AI workflow-pack registration source-contract proof artifact",
+    ),
     (
         "--ai-workflow-pack-runtime-execution-proof",
         "AI workflow-pack runtime execution proof artifact",

@@ -9,17 +9,19 @@ from typing import Mapping, cast
 
 import pytest
 
-from app.application.ai_workflow_pack_registration_proof import (
+from app.application.ai_workflow_pack_registration.source_contract_proof import (
     AI_WORKFLOW_PACK_REGISTRATION_BLOCKERS_CLEARED,
     AI_WORKFLOW_PACK_REGISTRATION_PROOF_SCHEMA_VERSION,
+    AI_WORKFLOW_PACK_REGISTRATION_REQUIRED_BLOCKER_EVIDENCE_CLASSES,
     REMAINING_AI_WORKFLOW_PACK_REGISTRATION_BLOCKERS,
     REQUIRED_AI_WORKFLOW_PACK_EVIDENCE_REFS,
     ai_workflow_pack_registration_proof_is_valid,
     build_ai_workflow_pack_registration_proof_payload,
 )
+from app.domain.proof_evidence import EvidenceClass
 from tests.support.ai_workflow_pack_fixture import write_lotus_ai_workflow_pack_fixture
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 
 
 def test_builds_source_safe_ai_workflow_pack_registration_proof(tmp_path: Path) -> None:
@@ -31,8 +33,12 @@ def test_builds_source_safe_ai_workflow_pack_registration_proof(tmp_path: Path) 
 
     assert proof["schemaVersion"] == AI_WORKFLOW_PACK_REGISTRATION_PROOF_SCHEMA_VERSION
     assert proof["repository"] == "lotus-idea"
-    assert proof["proofType"] == "lotus_ai_idea_workflow_pack_registration_contract"
-    assert proof["proofScope"] == "source_safe_workflow_pack_registration_only"
+    assert proof["proofType"] == "lotus_ai_idea_workflow_pack_registration_source_contract"
+    assert proof["proofScope"] == "source_safe_workflow_pack_registration_contract_only"
+    assert proof["evidenceClass"] == EvidenceClass.SOURCE_CONTRACT.value
+    assert proof["requiredBlockerEvidenceClasses"] == dict(
+        AI_WORKFLOW_PACK_REGISTRATION_REQUIRED_BLOCKER_EVIDENCE_CLASSES
+    )
     assert proof["aiWorkflowPackRegistrationProofValid"] is True
     assert tuple(proof["aggregateBlockersCleared"]) == (
         AI_WORKFLOW_PACK_REGISTRATION_BLOCKERS_CLEARED
@@ -44,7 +50,10 @@ def test_builds_source_safe_ai_workflow_pack_registration_proof(tmp_path: Path) 
     assert proof["workflowPackId"] == "idea_explanation.pack@v1"
     assert proof["workflowAuthorityOwner"] == "lotus-idea"
     assert proof["aiCapabilityOwner"] == "lotus-ai"
-    assert proof["workflowPackRegistrationContractCertified"] is True
+    assert proof["workflowPackRegistrationSourceContractValid"] is True
+    assert proof["runtimeExecutionObserved"] is False
+    assert proof["deploymentObserved"] is False
+    assert proof["productionCertificationGranted"] is False
     assert proof["workflowPackRuntimeExecutionCertified"] is False
     assert proof["lotusAiRuntimeExecuted"] is False
     assert proof["modelRiskDashboardCertified"] is False
@@ -96,11 +105,19 @@ def test_rejects_ai_workflow_pack_registration_proof_with_naive_timestamp(
         ("repository", "lotus-ai"),
         ("proofType", "runtime"),
         ("proofScope", "provider_execution"),
+        ("evidenceClass", EvidenceClass.RUNTIME_EXECUTION.value),
+        (
+            "requiredBlockerEvidenceClasses",
+            {"workflow_pack_runtime_contract_not_certified": "source_contract"},
+        ),
         ("aiWorkflowPackRegistrationProofValid", False),
         ("workflowPackId", "other.pack@v1"),
         ("workflowAuthorityOwner", "lotus-ai"),
         ("aiCapabilityOwner", "lotus-idea"),
-        ("workflowPackRegistrationContractCertified", False),
+        ("workflowPackRegistrationSourceContractValid", False),
+        ("runtimeExecutionObserved", True),
+        ("deploymentObserved", True),
+        ("productionCertificationGranted", True),
         ("workflowPackRuntimeExecutionCertified", True),
         ("lotusAiRuntimeExecuted", True),
         ("modelRiskDashboardCertified", True),
@@ -127,7 +144,7 @@ def test_rejects_ai_workflow_pack_registration_proof_with_invalid_top_level_fiel
 @pytest.mark.parametrize(
     ("field_name", "bad_value"),
     [
-        ("aggregateBlockersCleared", []),
+        ("aggregateBlockersCleared", ["workflow_pack_runtime_contract_not_certified"]),
         ("evidenceRefs", []),
         ("remainingCertificationBlockers", []),
         ("proofChecks", []),
@@ -156,6 +173,7 @@ def test_rejects_ai_workflow_pack_registration_proof_with_invalid_contract_field
         "queuePolicyIncludesIdeaPack",
         "supportabilitySurfaceIncludesIdeaPack",
         "testsCoverIdeaPack",
+        "evidenceClassMatchesBlockers",
     ],
 )
 def test_rejects_ai_workflow_pack_registration_proof_with_invalid_proof_checks(
@@ -172,7 +190,7 @@ def test_rejects_ai_workflow_pack_registration_proof_with_invalid_proof_checks(
 
 def test_ai_workflow_pack_registration_proof_cli_writes_valid_artifact(tmp_path: Path) -> None:
     module = _load_generator_script()
-    output_path = tmp_path / "proof" / "ai-workflow-pack-registration-proof.json"
+    output_path = tmp_path / "proof" / "ai-workflow-pack-registration-source-contract-proof.json"
 
     result = module.main(
         [
@@ -245,7 +263,12 @@ def _valid_ai_workflow_pack_registration_proof(tmp_path: Path) -> dict[str, obje
 
 
 def _load_generator_script() -> ModuleType:
-    script_path = ROOT / "scripts" / "generate_ai_workflow_pack_registration_proof.py"
+    script_path = (
+        ROOT
+        / "scripts"
+        / "ai_workflow_pack_registration"
+        / "generate_source_contract_proof.py"
+    )
     spec = importlib.util.spec_from_file_location(
         "generate_ai_workflow_pack_registration_proof",
         script_path,
@@ -258,7 +281,12 @@ def _load_generator_script() -> ModuleType:
 
 
 def _load_contract_gate_script() -> ModuleType:
-    script_path = ROOT / "scripts" / "ai_workflow_pack_registration_proof_contract_gate.py"
+    script_path = (
+        ROOT
+        / "scripts"
+        / "ai_workflow_pack_registration"
+        / "source_contract_proof_gate.py"
+    )
     spec = importlib.util.spec_from_file_location(
         "ai_workflow_pack_registration_proof_contract_gate",
         script_path,
