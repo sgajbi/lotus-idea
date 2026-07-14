@@ -8,7 +8,7 @@
 | Required capability | `idea.implementation-proof.readiness.read` |
 | Required query | Timezone-aware `evaluatedAtUtc` |
 | Supportability | `not_certified` while blockers remain |
-| Product claim | Bounded live source-ingestion, runtime trust telemetry, default Advise proposal route, Manage action route, Report intake route, Report materialization, outbox broker, outbox consumer runtime, outbox platform mesh event publication, Gateway/Workbench operational, Gateway/Workbench discovery, mesh policy, platform mesh onboarding, receipt-bound mainline AI lineage-store CI execution, AI workflow-pack registration/runtime execution proof artifacts, and opportunity archetype scenario readiness can be consumed; Risk concentration, high-volatility, Risk drawdown, Performance underperformance, missing-benchmark Performance readiness, Core benchmark assignment, Core portfolio-state, missing-benchmark Core, low-income Core cashflow, Manage mandate, typed Advise mandate/restriction source-product, Advise mandate/restriction live, Advise missing-suitability, typed Advise missing risk-profile source-product, and Advise missing risk-profile live proof artifacts clear only source-specific blockers; no full live journey, live AI provider execution, suitability/rebalance/risk-profile/restriction-clearance/benchmark-assignment authority, platform mesh certification, external broker publication, downstream delivery, full Gateway/Workbench product proof, live archetype replay proof, client-ready publication, or supported-feature promotion |
+| Product claim | Bounded live source-ingestion, runtime trust telemetry, default Advise proposal route, Manage action route, Report intake route, Report materialization, outbox broker, outbox consumer runtime, outbox platform mesh event publication, Gateway/Workbench source contracts, Gateway/Workbench discovery, mesh policy, platform mesh onboarding, receipt-bound mainline AI lineage-store CI execution, AI workflow-pack registration/runtime execution proof artifacts, and opportunity archetype scenario readiness can be consumed; Risk concentration, high-volatility, Risk drawdown, Performance underperformance, missing-benchmark Performance readiness, Core benchmark assignment, Core portfolio-state, missing-benchmark Core, low-income Core cashflow, Manage mandate, typed Advise mandate/restriction source-product, Advise mandate/restriction live, Advise missing-suitability, typed Advise missing risk-profile source-product, and Advise missing risk-profile live proof artifacts clear only source-specific blockers; the Gateway/Workbench source-contract proof adds evidence references but clears no runtime blocker; no full live journey, live AI provider execution, suitability/rebalance/risk-profile/restriction-clearance/benchmark-assignment authority, platform mesh certification, external broker publication, downstream delivery, full Gateway/Workbench product proof, live archetype replay proof, client-ready publication, or supported-feature promotion |
 
 `GET /api/v1/implementation-proof/readiness` is the internal operator
 diagnostic for RFC-0002 implementation proof posture.
@@ -225,8 +225,8 @@ taxonomy and the #393 same-pattern campaign.
 | `LOTUS_IDEA_OUTBOX_CONSUMER_CONTRACT_PROOF` | Overrides the default generated outbox consumer source-contract proof passed into aggregate readiness. |
 | `LOTUS_IDEA_OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF_OUTPUT` | Selects the default generated outbox platform mesh event publication proof artifact consumed by aggregate readiness when no override is set. Defaults to `output/outbox/outbox-platform-mesh-event-publication-proof.json`. |
 | `LOTUS_IDEA_OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF` | Overrides the default generated outbox platform mesh event publication proof artifact passed into aggregate readiness. |
-| `LOTUS_IDEA_GATEWAY_WORKBENCH_OPERATIONAL_PROOF_OUTPUT` | Selects the default generated Gateway/Workbench operational proof artifact consumed by aggregate readiness when no override is set. Defaults to `output/workbench/gateway-workbench-operational-proof.json`. |
-| `LOTUS_IDEA_GATEWAY_WORKBENCH_OPERATIONAL_PROOF` | Overrides the default generated Gateway/Workbench operational proof artifact passed into aggregate readiness. |
+| `LOTUS_IDEA_GATEWAY_WORKBENCH_CONTRACT_PROOF_OUTPUT` | Selects the default generated Gateway/Workbench contract proof artifact consumed by aggregate readiness when no override is set. Defaults to `output/workbench/gateway-workbench-contract-proof.json`. |
+| `LOTUS_IDEA_GATEWAY_WORKBENCH_CONTRACT_PROOF` | Overrides the default generated Gateway/Workbench contract proof artifact passed into aggregate readiness. |
 | `LOTUS_IDEA_GATEWAY_WORKBENCH_DISCOVERY_PROOF_OUTPUT` | Selects the default generated Gateway/Workbench discovery proof artifact consumed by aggregate readiness when no override is set. Defaults to `output/workbench/gateway-workbench-discovery-proof.json`. |
 | `LOTUS_IDEA_GATEWAY_WORKBENCH_DISCOVERY_PROOF` | Overrides the default generated Gateway/Workbench discovery proof artifact passed into aggregate readiness. |
 | `LOTUS_IDEA_AI_LINEAGE_STORE_PROOF_OUTPUT` | Selects the default generated AI lineage store proof artifact consumed by aggregate readiness when no override is set. Defaults to `output/ai/ai-lineage-store-proof.json`. |
@@ -518,14 +518,17 @@ path from `lotus-workbench` PR #391. It does not certify a full Workbench
 panel, browser accessibility proof, canonical demo runtime proof, data-product
 certification, client-ready publication, or supported-feature promotion.
 
-Gateway/Workbench operational proof is captured by
-`scripts/generate_gateway_workbench_operational_proof.py`. The repo-native
+Gateway/Workbench contract proof is captured by
+`scripts/workbench/generate_contract_proof.py`. The repo-native
 `make implementation-proof-readiness-check` target now generates the default
-artifact under `LOTUS_IDEA_GATEWAY_WORKBENCH_OPERATIONAL_PROOF_OUTPUT` from the
+artifact under `LOTUS_IDEA_GATEWAY_WORKBENCH_CONTRACT_PROOF_OUTPUT` from the
 validated Workbench read-path proof and passes it into aggregate readiness when
-`LOTUS_IDEA_GATEWAY_WORKBENCH_OPERATIONAL_PROOF` is not set. A valid artifact
-clears only `gateway_workbench_proof_missing` from the source-ingestion and
-outbox-delivery proof families. It does not clear full Workbench product proof,
+`LOTUS_IDEA_GATEWAY_WORKBENCH_CONTRACT_PROOF` is not set. A valid artifact is
+classified as `source_contract`: aggregate readiness may record its evidence
+reference, but it clears no blocker. In particular,
+`gateway_workbench_proof_missing` remains on the source-ingestion and
+outbox-delivery proof families until machine-verifiable runtime execution
+evidence exists. The artifact does not clear full Workbench product proof,
 Workbench panel proof, browser accessibility proof, canonical demo runtime
 proof, Gateway/Workbench data-product discovery proof, client-ready
 publication, or supported-feature promotion.
@@ -535,7 +538,7 @@ Gateway/Workbench discovery proof is captured by
 `make implementation-proof-readiness-check` target now generates the default
 artifact under `LOTUS_IDEA_GATEWAY_WORKBENCH_DISCOVERY_PROOF_OUTPUT` from
 platform catalog/onboarding evidence, the Workbench read-path proof, and the
-Gateway/Workbench operational proof. A valid artifact clears only
+Gateway/Workbench contract proof. A valid artifact clears only
 `gateway_workbench_discovery_proof_missing` from the data-mesh and runtime
 trust telemetry proof families. It does not certify data-mesh products,
 activate producer products, publish product routes, certify full Workbench
@@ -958,10 +961,10 @@ Implementation-backed evidence:
     `scripts/generate_workbench_read_path_proof.py`,
 1. Workbench read-path proof contract gate:
     `make workbench-read-path-proof-contract-gate`,
-1. Gateway/Workbench operational proof generator:
-    `scripts/generate_gateway_workbench_operational_proof.py`,
-1. Gateway/Workbench operational proof contract gate:
-    `make gateway-workbench-operational-proof-contract-gate`,
+1. Gateway/Workbench contract proof generator:
+    `scripts/workbench/generate_contract_proof.py`,
+1. Gateway/Workbench contract proof contract gate:
+    `make gateway-workbench-contract-proof-contract-gate`,
 1. Gateway/Workbench discovery proof generator:
     `scripts/generate_gateway_workbench_discovery_proof.py`,
 1. Gateway/Workbench discovery proof contract gate:
@@ -1083,7 +1086,7 @@ $env:LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF_OUTPUT = "output/downstream/report-int
 $env:LOTUS_IDEA_REPORT_MATERIALIZATION_PROOF_OUTPUT = "output/downstream/report-materialization-proof.json"
 $env:LOTUS_IDEA_OUTBOX_CONSUMER_CONTRACT_PROOF_OUTPUT = "output/outbox/outbox-consumer-contract-proof.json"
 $env:LOTUS_IDEA_OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF_OUTPUT = "output/outbox/outbox-platform-mesh-event-publication-proof.json"
-$env:LOTUS_IDEA_GATEWAY_WORKBENCH_OPERATIONAL_PROOF_OUTPUT = "output/workbench/gateway-workbench-operational-proof.json"
+$env:LOTUS_IDEA_GATEWAY_WORKBENCH_CONTRACT_PROOF_OUTPUT = "output/workbench/gateway-workbench-contract-proof.json"
 $env:LOTUS_IDEA_GATEWAY_WORKBENCH_DISCOVERY_PROOF_OUTPUT = "output/workbench/gateway-workbench-discovery-proof.json"
 $env:IMPLEMENTATION_PROOF_OUTPUT = "output/implementation-proof/implementation-proof-readiness.json"
 make implementation-proof-readiness-check
@@ -1098,7 +1101,7 @@ make downstream-route-contract-proof-gate
 make report-intake-route-proof-contract-gate
 make report-materialization-proof-contract-gate
 make workbench-read-path-proof-contract-gate
-make gateway-workbench-operational-proof-contract-gate
+make gateway-workbench-contract-proof-contract-gate
 make gateway-workbench-discovery-proof-contract-gate
 make source-ingestion-scheduled-worker-check
 make source-ingestion-live-proof-contract-gate

@@ -35,7 +35,7 @@ Blocking scaffold commands:
 26. `make ai-workflow-pack-registration-proof-contract-gate`
 27. `make ai-workflow-pack-runtime-execution-proof-contract-gate`
 28. `make workbench-read-path-proof-contract-gate`
-29. `make gateway-workbench-operational-proof-contract-gate`
+29. `make gateway-workbench-contract-proof-contract-gate`
 30. `make gateway-workbench-discovery-proof-contract-gate`
 31. `make outbox-broker-proof-contract-gate`
 32. `make platform-mesh-onboarding-proof-contract-gate`
@@ -81,7 +81,7 @@ Release and review evidence commands:
 1. `make implementation-proof-readiness-check` generates the scheduled-worker
    deploy-proof artifact, durable repository proof artifact, runtime trust
    telemetry proof artifact, Workbench read-path proof artifact,
-   Gateway/Workbench operational proof artifact, Gateway/Workbench discovery
+   Gateway/Workbench contract proof artifact, Gateway/Workbench discovery
    proof artifact, outbox broker proof artifact, default Advise proposal route
    proof artifact, default Manage action route proof artifact, default Report
    intake route proof artifact, default mesh policy proof artifact, and default
