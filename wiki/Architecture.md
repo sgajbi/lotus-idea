@@ -680,10 +680,10 @@ readiness, and blocker groups for `lotus-advise`, `lotus-manage`,
 name the owning repository and adapter posture from
 `contracts/downstream-realization/lotus-idea-downstream-contracts.v1.json`, and
 `make downstream-realization-contract-gate` keeps them planned and
-not-certified. Source-safe route-foundation proof artifacts can move the
-Advise, Manage, or Report target route from planned posture to the proved
-route only when merged sibling evidence is present. These artifacts are route
-evidence only; they are not suitability, mandate/rebalance, execution,
+not-certified. Digest-bound Advise, Manage, and Report source contracts can add
+sibling declaration provenance, but cannot move target-route, blocker, or
+supportability posture. They are not route-serving, authorization,
+tenant-isolation, request-acceptance, suitability, mandate/rebalance, execution,
 materialization, or supported-feature proof.
 When PostgreSQL is active, the readiness counts come from a repository-side
 projection over `idea_conversion_intent`, `idea_conversion_outcome`, and

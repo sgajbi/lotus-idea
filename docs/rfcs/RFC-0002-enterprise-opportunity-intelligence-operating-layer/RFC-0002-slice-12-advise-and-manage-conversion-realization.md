@@ -1,6 +1,6 @@
 # RFC-0002 Slice 12: Advise And Manage Conversion Realization
 
-Status: Partially implemented - internal conversion governance, source-versioned outcome lifecycle and correction policy, atomic repository-provider parity, durable claim-before-call submission and operator reconciliation, certified API/current-posture foundation, source-safe adapter foundations, governed downstream contract-plan gate, and bounded Advise/Manage route-foundation proof consumption; live execution and supported product proof remain blocked
+Status: Partially implemented - internal conversion governance, source-versioned outcome lifecycle and correction policy, atomic repository-provider parity, durable claim-before-call submission and operator reconciliation, certified API/current-posture foundation, source-safe adapter foundations, governed downstream contract-plan gate, and digest-bound Advise/Manage route source-contract consumption; live execution and supported product proof remain blocked
 
 ## Outcome
 
@@ -149,27 +149,27 @@ Implemented in this slice:
     idempotency replay, idempotency conflict, permission denial, report-target
     rejection on the conversion route, not-certified operation-event emission,
     and absence of downstream outcome recording or supported-feature promotion.
-24. `src/app/application/downstream_route_contract_proof.py`,
-    `scripts/generate_advise_proposal_route_proof.py`,
-    `scripts/generate_manage_action_route_proof.py`, and
-    `make downstream-route-contract-proof-gate` now define and enforce
-    source-safe Advise proposal and Manage action route-foundation proof
-    artifacts. Valid artifacts can clear only
-    `advise_live_contract_proof_missing` or
-    `manage_live_contract_proof_missing` after merged sibling contracts prove
-    the intake route foundation. Missing sibling evidence writes invalid
-    non-proof artifacts and preserves blockers.
+24. `src/app/application/downstream_realization/route_source_contract.py`,
+    `scripts/downstream_realization/generate_advise_route_source_contract.py`,
+    `scripts/downstream_realization/generate_manage_route_source_contract.py`, and
+    `make downstream-route-source-contract-proof-gate` now define and enforce
+    closed-field, digest-bound Advise and Manage route `source_contract`
+    artifacts. They clear no blocker and explicitly preserve
+    `advise_live_contract_proof_missing` and
+    `manage_live_contract_proof_missing`. Missing sibling evidence writes
+    invalid non-proof artifacts and preserves blockers.
 25. `src/app/application/downstream_realization_readiness.py` consumes valid
-    Advise/Manage route proofs and updates only the target route and
-    route-existence blocker posture. It keeps
+    Advise/Manage source contracts as supporting evidence only. It keeps both
+    live-route blockers together with
     `suitability_policy_authority_remains_lotus_advise` and
     `rebalance_execution_authority_remains_lotus_manage` intact, so route
     evidence cannot become suitability, rebalance, execution, or supported
     product proof.
-26. `tests/unit/test_downstream_route_contract_proof.py` and
+26. `tests/unit/downstream_realization/test_route_source_contract.py` and
     `tests/unit/test_downstream_realization_readiness.py` prove source-safe
     payloads, fail-closed missing sibling evidence, anti-overclaim flags,
-    route-only blocker clearance, and retained downstream authority blockers.
+    digest binding, closed-field validation, zero blocker clearance, and
+    retained live-route and downstream-authority blockers.
 27. `tests/unit/test_downstream_realization_lookup.py` and
     `tests/unit/test_postgres_downstream_lookup.py` prove the bounded lookup
     path bypasses `snapshot()` while preserving idempotency posture and direct
@@ -201,10 +201,10 @@ supported-feature authority moves into `lotus-idea`.
 This slice is not yet a supported conversion product. Remaining work includes:
 
 1. Gateway/Workbench proof,
-2. `lotus-advise` suitability, policy, proposal lifecycle, and client
-   communication certification beyond route-foundation evidence,
-3. `lotus-manage` mandate, DPM/rebalance/action, execution, and settlement
-   certification beyond route-foundation evidence,
+2. `lotus-advise` live route acceptance, suitability, policy, proposal
+   lifecycle, and client communication certification beyond source declarations,
+3. `lotus-manage` live route acceptance, mandate, DPM/rebalance/action,
+   execution, and settlement certification beyond source declarations,
 4. `lotus-report` report-evidence package intake proof for the first
    report-only conversion path,
 5. downstream failure/rejection/completion integration tests across owning
@@ -216,11 +216,11 @@ The downstream-realization readiness diagnostic and submission API are blocker
 and submission-posture foundations only. They do not create proposals,
 suitability records, manage action-register records, rebalance records, orders,
 client communications, reports, rendered output, or archive records. Planned
-contract-readiness records and configured adapter calls are not route-existence
-proof in the downstream repositories. Valid Advise and Manage route-foundation
-artifacts prove only that the sibling service exposes the agreed source-safe
-intake route; they are not acceptance, suitability, rebalance, execution,
-client-publication, or supported-feature proof.
+contract-readiness records and configured adapter calls are not runtime proof.
+Valid Advise and Manage source contracts prove only that governed declarations
+exist at bound digests; they are not route-serving, acceptance, authorization,
+tenant-isolation, suitability, rebalance, execution, client-publication, or
+supported-feature proof.
 
 ## Required Work
 

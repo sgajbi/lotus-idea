@@ -13,7 +13,7 @@ proof, downstream proof, supported-feature evidence, and mainline CI all agree.
 | --- | --- | --- |
 | Can a business feature be promoted? | No; all business features remain planned. | `supported-features/`, RFC-0002 slice evidence, CI gates |
 | Can Gateway/Workbench be treated as complete? | No; bounded read-only queue/detail proof exists, but full product-surface proof remains gated. | [Supported Features](Supported-Features), [API Surface](API-Surface) |
-| Can downstream realization be marketed as execution? | No; submission posture, Advise/Manage route proofs, and Report source contracts do not grant suitability, execution, reporting, render, or archive authority. | [Integrations](Integrations), [Operations Runbook](Operations-Runbook) |
+| Can downstream realization be marketed as execution? | No; submission posture and digest-bound Advise/Manage/Report source contracts do not prove route serving or acceptance and do not grant suitability, execution, reporting, render, or archive authority. | [Integrations](Integrations), [Operations Runbook](Operations-Runbook) |
 | Can data mesh be claimed as certified? | No; contracts and runtime diagnostics are preparatory evidence only. | [Security and Governance](Security-and-Governance), mesh proof gates |
 
 ## Current State
