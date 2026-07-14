@@ -1,7 +1,10 @@
 from __future__ import annotations
 
-from datetime import datetime
 from pathlib import Path
+
+from app.domain.proof_evidence import (
+    is_timezone_aware_datetime_text as is_timezone_aware_datetime_text,
+)
 
 
 def required_file_evidence_present(
@@ -52,16 +55,6 @@ def read_text(path: Path) -> str:
         return path.read_text(encoding="utf-8")
     except OSError:
         return ""
-
-
-def is_timezone_aware_datetime_text(value: object) -> bool:
-    if not isinstance(value, str) or not value.strip():
-        return False
-    try:
-        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
-    except ValueError:
-        return False
-    return parsed.tzinfo is not None and parsed.utcoffset() is not None
 
 
 def _evidence_path(
