@@ -598,7 +598,9 @@ def test_ci_contract_gate_blocks_missing_platform_catalog_source_contract_genera
     makefile = (
         (ROOT / "Makefile")
         .read_text(encoding="utf-8")
-        .replace("scripts/data_mesh/generate_platform_catalog_source_contract.py", "scripts/removed.py")
+        .replace(
+            "scripts/data_mesh/generate_platform_catalog_source_contract.py", "scripts/removed.py"
+        )
     )
 
     errors = module.validate_makefile(makefile)

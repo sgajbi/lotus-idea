@@ -213,9 +213,7 @@ def test_source_authority_digest_changes_with_catalog_content(tmp_path: Path) ->
         platform_root=platform_root,
     )
 
-    assert original["sourceAuthority"][1]["sha256"] != (
-        changed["sourceAuthority"][1]["sha256"]
-    )
+    assert original["sourceAuthority"][1]["sha256"] != (changed["sourceAuthority"][1]["sha256"])
     assert platform_catalog_source_contract_is_valid(changed) is True
 
 
