@@ -113,18 +113,15 @@ Validation evidence from the implementation slice:
 
 1. `make check` passed lint, canonical formatting, 773-file MyPy analysis,
    architecture and API gates, and 3,637 unit tests.
-2. The repository-native CI suites passed 451 integration tests with 28
-   environment-dependent PostgreSQL tests skipped, four end-to-end tests, and
-   all three coverage shards.
-3. `make coverage-gate` passed at 99.02% line coverage after malformed trusted
-   operator-scope cases were added; the threshold was not reduced.
-4. `make security-audit` passed against the resolved runtime and CI tooling
-   lock files.
-5. `LOTUS_IDEA_POSTGRES_INTEGRATION_REQUIRED=1 make postgres-integration-gate`
+2. `make ci` passed 451 integration tests with 28 environment-dependent
+   PostgreSQL tests skipped, four end-to-end tests, all three coverage shards,
+   the 99.02% combined coverage gate, and dependency audit against the resolved
+   runtime and CI tooling lock files. The coverage threshold was not reduced.
+3. `LOTUS_IDEA_POSTGRES_INTEGRATION_REQUIRED=1 make postgres-integration-gate`
    passed all 17 tests against an isolated PostgreSQL 18 database, including
    review-queue projection, restart/replay, downstream submission, and data
    lifecycle paths. The database was removed after validation.
-6. Focused audience, workflow, malformed-scope, snapshot, caller-context,
+4. Focused audience, workflow, malformed-scope, snapshot, caller-context,
    OpenAPI, endpoint-certification, observability, maintainability,
    documentation, issue-closure, and supported-feature gates passed.
 
