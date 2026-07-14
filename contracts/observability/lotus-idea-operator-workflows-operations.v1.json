@@ -1,18 +1,18 @@
 {
   "contract_id": "lotus-idea-operator-workflows-operations",
-  "contract_version": "1.0.0",
+  "contract_version": "1.1.0",
   "repository": "lotus-idea",
   "lifecycle_status": "implemented_internal_foundation",
   "supportability_status": "not_certified",
   "supported_feature_promoted": false,
-  "dashboard_certified": true,
-  "alert_certified": true,
+  "dashboard_source_contract_valid": true,
+  "alert_rules_source_contract_valid": true,
   "source_of_truth": {
     "operation_metric_contract": "contracts/observability/lotus-idea-operation-metrics.v1.json",
     "outbox_supportability_contract": "contracts/observability/lotus-idea-outbox-supportability.v1.json",
     "outbox_supportability_contract_gate": "scripts/outbox/supportability_contract_gate.py",
     "contract_gate": "scripts/operator_workflows_operations_contract_gate.py",
-    "proof_contract_gate": "scripts/operator_workflows_operations_proof_contract_gate.py",
+    "proof_contract_gate": "scripts/operator_workflows_operations/source_contract_proof_gate.py",
     "dashboard": "monitoring/grafana/dashboards/lotus-idea-operator-workflows-operations.json",
     "alert_rules": "monitoring/prometheus/rules/lotus-idea-operator-workflows-operations.rules.yml",
     "operator_runbook": "docs/runbooks/operator-workflows-operations.md",
@@ -66,7 +66,7 @@
         "GET /api/v1/source-ingestion/readiness",
         "POST /api/v1/source-ingestion/run-once"
       ],
-      "certification_status": "certified"
+      "source_contract_status": "valid"
     },
     {
       "control_id": "outbox-delivery-backlog-and-recovery-posture",
@@ -94,7 +94,7 @@
         "GET /api/v1/outbox-delivery/readiness",
         "POST /api/v1/outbox-delivery/run-once"
       ],
-      "certification_status": "certified"
+      "source_contract_status": "valid"
     },
     {
       "control_id": "downstream-realization-readiness-and-submission-posture",
@@ -121,7 +121,7 @@
         "POST /api/v1/report-evidence-packs/{reportEvidencePackId}/downstream-submissions",
         "POST /api/v1/downstream-submissions/reconciliation/{supportReference}"
       ],
-      "certification_status": "certified"
+      "source_contract_status": "valid"
     },
     {
       "control_id": "runtime-trust-and-implementation-proof-readiness-posture",
@@ -147,7 +147,7 @@
         "GET /api/v1/data-mesh/trust-telemetry/runtime-snapshot",
         "GET /api/v1/implementation-proof/readiness"
       ],
-      "certification_status": "certified"
+      "source_contract_status": "valid"
     }
   ],
   "operator_alert_candidates": [
@@ -163,7 +163,7 @@
         "invalid_state"
       ],
       "operator_response": "Use the source-ingestion readiness endpoint and configured manifest proof to separate missing configuration, unavailable Core query/control-plane URLs, and unproven scheduled-worker posture.",
-      "certification_status": "certified"
+      "source_contract_status": "valid"
     },
     {
       "alert_id": "outbox-delivery-readiness-blocked",
@@ -177,7 +177,7 @@
         "invalid_state"
       ],
       "operator_response": "Inspect outbox readiness and run-once posture before retrying; preserve idempotent operator run identity and do not inspect raw downstream payloads.",
-      "certification_status": "certified"
+      "source_contract_status": "valid"
     },
     {
       "alert_id": "downstream-realization-readiness-blocked",
@@ -194,7 +194,7 @@
         "permission_denied"
       ],
       "operator_response": "Inspect the source-safe reconciliation queue and resolve uncertain submissions by opaque support reference only after verifying the source-owned receipt; never retry the downstream call or infer execution, suitability, mandate, report rendering, or archive outcomes.",
-      "certification_status": "certified"
+      "source_contract_status": "valid"
     },
     {
       "alert_id": "implementation-proof-readiness-blocked",
@@ -209,10 +209,13 @@
         "blocked"
       ],
       "operator_response": "Use implementation-proof readiness to identify remaining blockers and preserve not-certified/support-promotion boundaries until all source, runtime, Gateway, Workbench, and CI evidence exists.",
-      "certification_status": "certified"
+      "source_contract_status": "valid"
     }
   ],
   "non_proof_boundaries": [
+    "This contract is not dashboard provisioning or query-execution proof.",
+    "This contract is not alert-rule loading, evaluation, or delivery proof.",
+    "This contract is not deployment or production certification.",
     "This contract is not live source-ingestion certification.",
     "This contract is not external broker runtime certification.",
     "This contract is not downstream execution outcome authority.",

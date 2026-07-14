@@ -10,24 +10,26 @@ from typing import cast
 
 import pytest
 
-from app.application.operator_workflows_operations_proof import (
+from app.application.operator_workflows_operations.source_contract_proof import (
     EXPECTED_ALERT_IDS,
     EXPECTED_DASHBOARD_OPERATIONS,
     EXPECTED_DASHBOARD_UID,
     EXPECTED_METRIC_NAME,
     OPERATOR_WORKFLOWS_OPERATIONS_BLOCKERS_CLEARED,
     OPERATOR_WORKFLOWS_OPERATIONS_PROOF_SCHEMA_VERSION,
+    OPERATOR_WORKFLOWS_OPERATIONS_REQUIRED_BLOCKER_EVIDENCE_CLASSES,
     REMAINING_OPERATOR_WORKFLOWS_OPERATIONS_BLOCKERS,
     REQUIRED_OPERATOR_WORKFLOWS_OPERATIONS_EVIDENCE_REFS,
-    _alert_rules_artifact_certified,
-    _dashboard_artifact_certified,
-    _operations_contract_certified,
-    _runbook_artifact_certified,
+    _alert_rules_source_contract_is_valid,
+    _dashboard_source_contract_is_valid,
+    _operations_source_contract_is_valid,
+    _runbook_source_contract_is_valid,
     build_operator_workflows_operations_proof_payload,
     operator_workflows_operations_proof_is_valid,
 )
+from app.domain.proof_evidence import EvidenceClass
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 
 
 def test_builds_source_safe_operator_workflows_operations_proof() -> None:
@@ -38,6 +40,12 @@ def test_builds_source_safe_operator_workflows_operations_proof() -> None:
 
     assert proof["schemaVersion"] == OPERATOR_WORKFLOWS_OPERATIONS_PROOF_SCHEMA_VERSION
     assert proof["repository"] == "lotus-idea"
+    assert proof["proofType"] == "operator_workflows_operations_source_contract"
+    assert proof["proofScope"] == "source_safe_operations_artifact_contract"
+    assert proof["evidenceClass"] == EvidenceClass.SOURCE_CONTRACT.value
+    assert tuple(proof["requiredBlockerEvidenceClasses"].items()) == (
+        OPERATOR_WORKFLOWS_OPERATIONS_REQUIRED_BLOCKER_EVIDENCE_CLASSES
+    )
     assert proof["operatorWorkflowsOperationsProofValid"] is True
     assert tuple(proof["aggregateBlockersCleared"]) == (
         OPERATOR_WORKFLOWS_OPERATIONS_BLOCKERS_CLEARED
@@ -49,8 +57,11 @@ def test_builds_source_safe_operator_workflows_operations_proof() -> None:
     assert proof["metricFamily"] == EXPECTED_METRIC_NAME
     assert proof["dashboardUid"] == EXPECTED_DASHBOARD_UID
     assert tuple(proof["alertIds"]) == EXPECTED_ALERT_IDS
-    assert proof["operatorDashboardCertified"] is True
-    assert proof["operatorAlertsCertified"] is True
+    assert proof["operatorDashboardSourceContractValid"] is True
+    assert proof["operatorAlertRulesSourceContractValid"] is True
+    assert proof["runtimeExecutionObserved"] is False
+    assert proof["deploymentObserved"] is False
+    assert proof["productionCertificationGranted"] is False
     assert proof["liveSourceIngestionCertified"] is False
     assert proof["externalBrokerRuntimeCertified"] is False
     assert proof["downstreamExecutionOutcomeAuthorityCertified"] is False
@@ -83,12 +94,19 @@ def test_rejects_operator_workflows_operations_proof_with_naive_timestamp() -> N
     [
         ("schemaVersion", "wrong"),
         ("repository", "lotus-ai"),
+        ("proofType", "operator_workflows_dashboard_alert_certification"),
+        ("proofScope", "runtime_certification"),
+        ("evidenceClass", EvidenceClass.RUNTIME_EXECUTION.value),
+        ("requiredBlockerEvidenceClasses", {"blocker": "source_contract"}),
         ("operatorWorkflowsOperationsProofValid", False),
         ("metricFamily", "local_metric_total"),
         ("dashboardUid", "local-dashboard"),
         ("alertIds", []),
-        ("operatorDashboardCertified", False),
-        ("operatorAlertsCertified", False),
+        ("operatorDashboardSourceContractValid", False),
+        ("operatorAlertRulesSourceContractValid", False),
+        ("runtimeExecutionObserved", True),
+        ("deploymentObserved", True),
+        ("productionCertificationGranted", True),
         ("liveSourceIngestionCertified", True),
         ("externalBrokerRuntimeCertified", True),
         ("downstreamExecutionOutcomeAuthorityCertified", True),
@@ -113,25 +131,26 @@ def test_rejects_operator_workflows_operations_proof_with_invalid_top_level_fiel
 def test_rejects_operator_workflows_operations_proof_with_invalid_proof_checks() -> None:
     proof = _valid_operator_workflows_operations_proof()
     proof_checks = dict(cast(Mapping[str, object], proof["proofChecks"]))
-    proof_checks["dashboardArtifactCertified"] = False
+    proof_checks["dashboardSourceContractValid"] = False
     proof["proofChecks"] = proof_checks
 
     assert operator_workflows_operations_proof_is_valid(proof) is False
 
 
 @pytest.mark.parametrize(
-    "field_name",
+    ("field_name", "bad_value"),
     [
-        "aggregateBlockersCleared",
-        "evidenceRefs",
-        "remainingCertificationBlockers",
+        ("aggregateBlockersCleared", ("operator_workflow_dashboard_runtime_proof_missing",)),
+        ("evidenceRefs", ()),
+        ("remainingCertificationBlockers", ()),
     ],
 )
 def test_rejects_operator_workflows_operations_proof_with_invalid_blocker_lists(
     field_name: str,
+    bad_value: object,
 ) -> None:
     proof = _valid_operator_workflows_operations_proof()
-    proof[field_name] = ()
+    proof[field_name] = bad_value
 
     assert operator_workflows_operations_proof_is_valid(proof) is False
 
@@ -145,7 +164,9 @@ def test_rejects_operator_workflows_operations_proof_with_non_mapping_checks() -
 
 def test_operator_workflows_operations_proof_cli_writes_valid_artifact(tmp_path: Path) -> None:
     module = _load_generator_script()
-    output_path = tmp_path / "proof" / "operator-workflows-operations-proof.json"
+    output_path = (
+        tmp_path / "proof" / "operator-workflows-operations-source-contract-proof.json"
+    )
 
     result = module.main(
         [
@@ -176,11 +197,11 @@ def test_operator_workflows_operations_proof_contract_gate_passes_current_artifa
     assert module.validate_operator_workflows_operations_proof_contract() == []
 
 
-def test_artifact_certification_fails_closed(tmp_path: Path) -> None:
-    assert _dashboard_artifact_certified(tmp_path) is False
-    assert _alert_rules_artifact_certified(tmp_path) is False
-    assert _runbook_artifact_certified(tmp_path) is False
-    assert _operations_contract_certified(tmp_path) is False
+def test_source_contract_validation_fails_closed(tmp_path: Path) -> None:
+    assert _dashboard_source_contract_is_valid(tmp_path) is False
+    assert _alert_rules_source_contract_is_valid(tmp_path) is False
+    assert _runbook_source_contract_is_valid(tmp_path) is False
+    assert _operations_source_contract_is_valid(tmp_path) is False
 
     dashboard_path = (
         tmp_path / "monitoring/grafana/dashboards/lotus-idea-operator-workflows-operations.json"
@@ -188,7 +209,7 @@ def test_artifact_certification_fails_closed(tmp_path: Path) -> None:
     dashboard_path.parent.mkdir(parents=True)
     dashboard_path.write_text('{"uid": "wrong"}', encoding="utf-8")
 
-    assert _dashboard_artifact_certified(tmp_path) is False
+    assert _dashboard_source_contract_is_valid(tmp_path) is False
 
 
 @pytest.mark.parametrize(
@@ -215,7 +236,7 @@ def test_dashboard_artifact_certification_rejects_invalid_metadata(
     payload.update(mutation)
     _write_dashboard_payload(tmp_path, payload)
 
-    assert _dashboard_artifact_certified(tmp_path) is expected
+    assert _dashboard_source_contract_is_valid(tmp_path) is expected
 
 
 def test_dashboard_artifact_certification_rejects_unexpected_metric(tmp_path: Path) -> None:
@@ -229,7 +250,7 @@ def test_dashboard_artifact_certification_rejects_unexpected_metric(tmp_path: Pa
     ]
     _write_dashboard_payload(tmp_path, payload)
 
-    assert _dashboard_artifact_certified(tmp_path) is False
+    assert _dashboard_source_contract_is_valid(tmp_path) is False
 
 
 def test_dashboard_artifact_certification_rejects_unknown_source_authority(tmp_path: Path) -> None:
@@ -239,7 +260,7 @@ def test_dashboard_artifact_certification_rejects_unknown_source_authority(tmp_p
     targets[0]["expr"] = f'{EXPECTED_METRIC_NAME}{{source_authority="client-123"}}'
     _write_dashboard_payload(tmp_path, payload)
 
-    assert _dashboard_artifact_certified(tmp_path) is False
+    assert _dashboard_source_contract_is_valid(tmp_path) is False
 
 
 def test_dashboard_artifact_certification_rejects_missing_operation(tmp_path: Path) -> None:
@@ -257,7 +278,7 @@ def test_dashboard_artifact_certification_rejects_missing_operation(tmp_path: Pa
     ]
     _write_dashboard_payload(tmp_path, payload)
 
-    assert _dashboard_artifact_certified(tmp_path) is False
+    assert _dashboard_source_contract_is_valid(tmp_path) is False
 
 
 def test_alert_rules_artifact_certification_rejects_missing_runbook_refs(
@@ -269,7 +290,7 @@ def test_alert_rules_artifact_certification_rejects_missing_runbook_refs(
     path.parent.mkdir(parents=True)
     path.write_text("\n".join(f"alert_id: {alert_id}" for alert_id in EXPECTED_ALERT_IDS))
 
-    assert _alert_rules_artifact_certified(tmp_path) is False
+    assert _alert_rules_source_contract_is_valid(tmp_path) is False
 
 
 def test_alert_rules_artifact_certification_rejects_missing_alert_id(tmp_path: Path) -> None:
@@ -287,7 +308,7 @@ def test_alert_rules_artifact_certification_rejects_missing_alert_id(tmp_path: P
         encoding="utf-8",
     )
 
-    assert _alert_rules_artifact_certified(tmp_path) is False
+    assert _alert_rules_source_contract_is_valid(tmp_path) is False
 
 
 def test_alert_rules_artifact_certification_rejects_unknown_source_authority(
@@ -308,7 +329,7 @@ def test_alert_rules_artifact_certification_rejects_unknown_source_authority(
         encoding="utf-8",
     )
 
-    assert _alert_rules_artifact_certified(tmp_path) is False
+    assert _alert_rules_source_contract_is_valid(tmp_path) is False
 
 
 def test_runbook_artifact_certification_rejects_forbidden_and_missing_text(
@@ -317,19 +338,33 @@ def test_runbook_artifact_certification_rejects_forbidden_and_missing_text(
     path = tmp_path / "docs/runbooks/operator-workflows-operations.md"
     path.parent.mkdir(parents=True)
     path.write_text("portfolio_id", encoding="utf-8")
-    assert _runbook_artifact_certified(tmp_path) is False
+    assert _runbook_source_contract_is_valid(tmp_path) is False
+
+
+def test_runbook_source_contract_rejects_runtime_claim_inflation(tmp_path: Path) -> None:
+    source = (ROOT / "docs/runbooks/operator-workflows-operations.md").read_text(
+        encoding="utf-8"
+    )
+    path = tmp_path / "docs/runbooks/operator-workflows-operations.md"
+    path.parent.mkdir(parents=True)
+    path.write_text(
+        source.replace("Static\nvalidation does not prove", "The files fully prove"),
+        encoding="utf-8",
+    )
+
+    assert _runbook_source_contract_is_valid(tmp_path) is False
 
     path.write_text(
         "\n".join(f"## {alert_id}" for alert_id in EXPECTED_ALERT_IDS), encoding="utf-8"
     )
-    assert _runbook_artifact_certified(tmp_path) is False
+    assert _runbook_source_contract_is_valid(tmp_path) is False
 
 
 @pytest.mark.parametrize(
     "mutation",
     [
-        {"dashboard_certified": False},
-        {"alert_certified": False},
+        {"dashboard_source_contract_valid": False},
+        {"alert_rules_source_contract_valid": False},
         {"source_of_truth": []},
         {
             "source_of_truth": {
@@ -337,11 +372,11 @@ def test_runbook_artifact_certification_rejects_forbidden_and_missing_text(
                 "alert_rules": "monitoring/prometheus/rules/"
                 "lotus-idea-operator-workflows-operations.rules.yml",
                 "operator_runbook": "docs/runbooks/operator-workflows-operations.md",
-                "proof_contract_gate": "scripts/operator_workflows_operations_proof_contract_gate.py",
+                "proof_contract_gate": "scripts/operator_workflows_operations/source_contract_proof_gate.py",
             },
         },
-        {"operator_dashboard_controls": [{"certification_status": "pending"}]},
-        {"operator_alert_candidates": [{"certification_status": "pending"}]},
+        {"operator_dashboard_controls": [{"source_contract_status": "pending"}]},
+        {"operator_alert_candidates": [{"source_contract_status": "pending"}]},
     ],
 )
 def test_operations_contract_certification_rejects_invalid_contract_fields(
@@ -354,7 +389,7 @@ def test_operations_contract_certification_rejects_invalid_contract_fields(
     path.parent.mkdir(parents=True)
     path.write_text(json.dumps(payload), encoding="utf-8")
 
-    assert _operations_contract_certified(tmp_path) is False
+    assert _operations_source_contract_is_valid(tmp_path) is False
 
 
 def _valid_operator_workflows_operations_proof() -> dict[str, object]:
@@ -390,24 +425,26 @@ def _write_dashboard_payload(tmp_path: Path, payload: Mapping[str, object]) -> N
 
 def _valid_operations_contract_payload() -> dict[str, object]:
     return {
-        "dashboard_certified": True,
-        "alert_certified": True,
+        "dashboard_source_contract_valid": True,
+        "alert_rules_source_contract_valid": True,
         "source_of_truth": {
             "dashboard": "monitoring/grafana/dashboards/lotus-idea-operator-workflows-operations.json",
             "alert_rules": "monitoring/prometheus/rules/"
             "lotus-idea-operator-workflows-operations.rules.yml",
             "operator_runbook": "docs/runbooks/operator-workflows-operations.md",
-            "proof_contract_gate": "scripts/operator_workflows_operations_proof_contract_gate.py",
+            "proof_contract_gate": "scripts/operator_workflows_operations/source_contract_proof_gate.py",
         },
-        "operator_dashboard_controls": [{"certification_status": "certified"}],
-        "operator_alert_candidates": [{"certification_status": "certified"}],
+        "operator_dashboard_controls": [{"source_contract_status": "valid"}],
+        "operator_alert_candidates": [{"source_contract_status": "valid"}],
     }
 
 
 def _load_generator_script() -> ModuleType:
-    script_path = ROOT / "scripts" / "generate_operator_workflows_operations_proof.py"
+    script_path = (
+        ROOT / "scripts/operator_workflows_operations/generate_source_contract_proof.py"
+    )
     spec = importlib.util.spec_from_file_location(
-        "generate_operator_workflows_operations_proof",
+        "generate_operator_workflows_operations_source_contract_proof",
         script_path,
     )
     assert spec is not None
@@ -418,9 +455,9 @@ def _load_generator_script() -> ModuleType:
 
 
 def _load_contract_gate_script() -> ModuleType:
-    script_path = ROOT / "scripts" / "operator_workflows_operations_proof_contract_gate.py"
+    script_path = ROOT / "scripts/operator_workflows_operations/source_contract_proof_gate.py"
     spec = importlib.util.spec_from_file_location(
-        "operator_workflows_operations_proof_contract_gate",
+        "operator_workflows_operations_source_contract_proof_gate",
         script_path,
     )
     assert spec is not None

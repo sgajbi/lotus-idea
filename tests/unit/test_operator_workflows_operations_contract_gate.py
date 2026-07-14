@@ -51,9 +51,9 @@ def test_operator_workflows_operations_contract_gate_blocks_overclaiming() -> No
     payload = _current_payload(module)
     payload["supportability_status"] = "supported"
     payload["supported_feature_promoted"] = True
-    payload["dashboard_certified"] = False
-    payload["alert_certified"] = False
-    payload["operator_dashboard_controls"][0]["certification_status"] = "not_certified"
+    payload["dashboard_source_contract_valid"] = False
+    payload["alert_rules_source_contract_valid"] = False
+    payload["operator_dashboard_controls"][0]["source_contract_status"] = "certified"
 
     errors = module.validate_operator_workflows_operations_contract_payload(payload)
 
@@ -64,9 +64,15 @@ def test_operator_workflows_operations_contract_gate_blocks_overclaiming() -> No
     assert "operator workflows operations contract supported_feature_promoted must be False" in (
         errors
     )
-    assert "operator workflows operations contract dashboard_certified must be True" in errors
-    assert "operator workflows operations contract alert_certified must be True" in errors
-    assert any("certification_status must be certified" in error for error in errors)
+    assert (
+        "operator workflows operations contract dashboard_source_contract_valid must be True"
+        in errors
+    )
+    assert (
+        "operator workflows operations contract alert_rules_source_contract_valid must be True"
+        in errors
+    )
+    assert any("source_contract_status must be valid" in error for error in errors)
 
 
 def test_operator_workflows_operations_contract_gate_blocks_control_drift() -> None:

@@ -4,24 +4,28 @@ from datetime import UTC, datetime
 import sys
 from pathlib import Path
 
-from app.application.operator_workflows_operations_proof import (
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT))
+
+from app.application.operator_workflows_operations.source_contract_proof import (  # noqa: E402
     EXPECTED_ALERT_IDS,
     EXPECTED_DASHBOARD_UID,
     EXPECTED_METRIC_NAME,
     OPERATOR_WORKFLOWS_OPERATIONS_BLOCKERS_CLEARED,
     OPERATOR_WORKFLOWS_OPERATIONS_PROOF_SCHEMA_VERSION,
+    OPERATOR_WORKFLOWS_OPERATIONS_REQUIRED_BLOCKER_EVIDENCE_CLASSES,
     REMAINING_OPERATOR_WORKFLOWS_OPERATIONS_BLOCKERS,
     REQUIRED_OPERATOR_WORKFLOWS_OPERATIONS_EVIDENCE_REFS,
     build_operator_workflows_operations_proof_payload,
     operator_workflows_operations_proof_is_valid,
 )
+from app.domain.proof_evidence import EvidenceClass  # noqa: E402
 
 try:
     from scripts.proof_source_safety import forbidden_content_validator, validate_forbidden_content
 except ModuleNotFoundError:
     from proof_source_safety import forbidden_content_validator, validate_forbidden_content  # type: ignore[import-not-found,no-redef]
 
-ROOT = Path(__file__).resolve().parents[1]
 FORBIDDEN_KEYS = {
     "accountId",
     "candidateId",
@@ -79,9 +83,13 @@ def validate_operator_workflows_operations_proof_contract() -> list[str]:
     if tuple(proof.get("aggregateBlockersCleared") or ()) != (
         OPERATOR_WORKFLOWS_OPERATIONS_BLOCKERS_CLEARED
     ):
-        errors.append(
-            "operator workflows operations proof must clear only dashboard/alert blockers"
-        )
+        errors.append("operator workflows operations source proof must not clear runtime blockers")
+    if proof.get("evidenceClass") != EvidenceClass.SOURCE_CONTRACT.value:
+        errors.append("operator workflows operations proof evidence class must be source_contract")
+    if tuple((proof.get("requiredBlockerEvidenceClasses") or {}).items()) != (
+        OPERATOR_WORKFLOWS_OPERATIONS_REQUIRED_BLOCKER_EVIDENCE_CLASSES
+    ):
+        errors.append("operator workflows operations proof blocker evidence classes drifted")
     if tuple(proof.get("remainingCertificationBlockers") or ()) != (
         REMAINING_OPERATOR_WORKFLOWS_OPERATIONS_BLOCKERS
     ):

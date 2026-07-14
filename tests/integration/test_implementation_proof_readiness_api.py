@@ -26,7 +26,7 @@ from app.application.durable_repository_proof import (
     DURABLE_REPOSITORY_PROOF_ENV,
     build_durable_repository_proof_payload,
 )
-from app.application.operator_workflows_operations_proof import (
+from app.application.operator_workflows_operations.source_contract_proof import (
     OPERATOR_WORKFLOWS_OPERATIONS_PROOF_ENV,
     build_operator_workflows_operations_proof_payload,
 )
@@ -176,8 +176,8 @@ def test_implementation_proof_readiness_api_returns_blocked_operator_posture(
         "contracts/observability/lotus-idea-operator-workflows-operations.v1.json"
         in operator_workflows["evidenceRefs"]
     )
-    assert "operator_workflow_dashboard_not_certified" in operator_workflows["blockers"]
-    assert "operator_workflow_alerts_not_certified" in operator_workflows["blockers"]
+    assert "operator_workflow_dashboard_runtime_proof_missing" in operator_workflows["blockers"]
+    assert "operator_workflow_alert_rules_runtime_proof_missing" in operator_workflows["blockers"]
     archetype_scenarios = capabilities["opportunity-archetype-scenarios"]
     assert (
         "contracts/opportunity-archetypes/lotus-idea-opportunity-archetypes.v1.json"
@@ -301,8 +301,8 @@ def test_implementation_proof_readiness_api_consumes_configured_proof_artifacts(
     assert "data_mesh_runtime_telemetry_not_certified" in payload["overallBlockers"]
     assert "runtime_trust_telemetry_product_coverage_incomplete" in payload["overallBlockers"]
     assert "certified_ai_lineage_store_missing" not in payload["overallBlockers"]
-    assert "operator_workflow_dashboard_not_certified" not in payload["overallBlockers"]
-    assert "operator_workflow_alerts_not_certified" not in payload["overallBlockers"]
+    assert "operator_workflow_dashboard_runtime_proof_missing" in payload["overallBlockers"]
+    assert "operator_workflow_alert_rules_runtime_proof_missing" in payload["overallBlockers"]
     assert "workbench_gateway_bff_consumption_proof_missing" not in payload["overallBlockers"]
     assert "lotus_report_live_intake_route_proof_missing" not in payload["overallBlockers"]
     assert (
@@ -494,7 +494,9 @@ def _configure_readiness_proof_artifacts(
     runtime_proof_path = tmp_path / "runtime-trust-telemetry-proof.json"
     ai_lineage_proof_path = tmp_path / "ai-lineage-store-proof.json"
     ai_model_risk_proof_path = tmp_path / "ai-model-risk-operations-source-contract-proof.json"
-    operator_workflows_proof_path = tmp_path / "operator-workflows-operations-proof.json"
+    operator_workflows_proof_path = (
+        tmp_path / "operator-workflows-operations-source-contract-proof.json"
+    )
     workbench_proof_path = tmp_path / "workbench-read-path-proof.json"
     report_route_proof_path = tmp_path / "report-intake-route-proof.json"
     bond_maturity_live_proof_path = tmp_path / "bond-maturity-live-proof.json"

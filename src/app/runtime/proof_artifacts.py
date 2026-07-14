@@ -26,7 +26,7 @@ from app.application.workbench.discovery_contract_proof import (
 from app.application.low_income_core_cashflow_live_proof import (
     LOW_INCOME_CORE_CASHFLOW_LIVE_PROOF_ENV,
 )
-from app.application.operator_workflows_operations_proof import (
+from app.application.operator_workflows_operations.source_contract_proof import (
     OPERATOR_WORKFLOWS_OPERATIONS_PROOF_ENV,
 )
 from app.application.outbox.broker_proof import OUTBOX_BROKER_PROOF_ENV

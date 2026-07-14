@@ -13,13 +13,13 @@ import scripts.generate_implementation_proof_readiness as proof_report
 from app.application.implementation_proof_readiness import (
     build_implementation_proof_readiness_snapshot,
 )
-from app.application.operator_workflows_operations_proof import (
+from app.application.operator_workflows_operations.source_contract_proof import (
     build_operator_workflows_operations_proof_payload,
 )
 from app.application.proof_provenance import bind_aggregate_proof_provenance
 from app.domain import InMemoryIdeaRepository
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 
 
 def test_implementation_proof_readiness_reports_operator_workflows_operations_capability() -> None:
@@ -40,8 +40,8 @@ def test_implementation_proof_readiness_reports_operator_workflows_operations_ca
         "make operator-workflows-operations-proof-contract-gate",
     }.issubset(operator_workflows.evidence_refs)
     assert {
-        "operator_workflow_dashboard_not_certified",
-        "operator_workflow_alerts_not_certified",
+        "operator_workflow_dashboard_runtime_proof_missing",
+        "operator_workflow_alert_rules_runtime_proof_missing",
         "external_broker_runtime_proof_missing",
     }.issubset(operator_workflows.blockers)
 
@@ -49,7 +49,7 @@ def test_implementation_proof_readiness_reports_operator_workflows_operations_ca
 def test_implementation_proof_readiness_uses_operator_workflows_operations_proof_without_product_claim() -> (
     None
 ):
-    proof_ref = "output/operations/operator-workflows-operations-proof.json"
+    proof_ref = "output/operations/operator-workflows-operations-source-contract-proof.json"
     proof = _bound_aggregate_proof(
         build_operator_workflows_operations_proof_payload(
             generated_at_utc=datetime(2026, 6, 26, 0, 0, tzinfo=UTC),
@@ -66,8 +66,8 @@ def test_implementation_proof_readiness_uses_operator_workflows_operations_proof
         operator_workflows_operations_proof_ref=proof_ref,
     )
 
-    assert "operator_workflow_dashboard_not_certified" not in snapshot.overall_blockers
-    assert "operator_workflow_alerts_not_certified" not in snapshot.overall_blockers
+    assert "operator_workflow_dashboard_runtime_proof_missing" in snapshot.overall_blockers
+    assert "operator_workflow_alert_rules_runtime_proof_missing" in snapshot.overall_blockers
     assert "external_broker_runtime_proof_missing" in snapshot.overall_blockers
     assert "downstream_execution_outcome_authority_missing" in snapshot.overall_blockers
     assert "data_mesh_certification_missing" in snapshot.overall_blockers
@@ -82,8 +82,8 @@ def test_implementation_proof_readiness_uses_operator_workflows_operations_proof
         for capability in snapshot.capabilities
         if capability.capability_id == "operator-workflows-operations"
     )
-    assert "operator_workflow_dashboard_not_certified" not in operator_workflows.blockers
-    assert "operator_workflow_alerts_not_certified" not in operator_workflows.blockers
+    assert "operator_workflow_dashboard_runtime_proof_missing" in operator_workflows.blockers
+    assert "operator_workflow_alert_rules_runtime_proof_missing" in operator_workflows.blockers
     assert "external_broker_runtime_proof_missing" in operator_workflows.blockers
     assert proof_ref in operator_workflows.evidence_refs
 
@@ -102,7 +102,7 @@ def test_generate_implementation_proof_readiness_uses_explicit_operator_workflow
         "bind_aggregate_proof_provenance",
         bind_clean_aggregate_proof_provenance,
     )
-    operator_proof = tmp_path / "operator-workflows-operations-proof.json"
+    operator_proof = tmp_path / "operator-workflows-operations-source-contract-proof.json"
     operator_proof.write_text(
         json.dumps(
             build_operator_workflows_operations_proof_payload(
@@ -132,8 +132,8 @@ def test_generate_implementation_proof_readiness_uses_explicit_operator_workflow
         for capability in payload["capabilities"]
         if capability["capabilityId"] == "operator-workflows-operations"
     )
-    assert "operator_workflow_dashboard_not_certified" not in operator_workflows["blockers"]
-    assert "operator_workflow_alerts_not_certified" not in operator_workflows["blockers"]
+    assert "operator_workflow_dashboard_runtime_proof_missing" in operator_workflows["blockers"]
+    assert "operator_workflow_alert_rules_runtime_proof_missing" in operator_workflows["blockers"]
     assert "operator workflows operations proof artifact" in operator_workflows["evidenceRefs"]
     assert "external_broker_runtime_proof_missing" in operator_workflows["blockers"]
     assert payload["readinessStatus"] == "blocked"

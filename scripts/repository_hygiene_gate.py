@@ -35,6 +35,14 @@ PROHIBITED_SUFFIXES = {
 }
 
 REQUIRED_BOUNDED_MODULE_PATHS = {
+    "scripts/operator_workflows_operations/__init__.py",
+    "scripts/operator_workflows_operations/generate_source_contract_proof.py",
+    "scripts/operator_workflows_operations/source_contract_proof_gate.py",
+    "src/app/application/operator_workflows_operations/__init__.py",
+    "src/app/application/operator_workflows_operations/source_contract_proof.py",
+    "tests/unit/operator_workflows_operations/__init__.py",
+    "tests/unit/operator_workflows_operations/test_readiness_consumption.py",
+    "tests/unit/operator_workflows_operations/test_source_contract_proof.py",
     "scripts/ai_model_risk_operations/__init__.py",
     "scripts/ai_model_risk_operations/generate_source_contract_proof.py",
     "scripts/ai_model_risk_operations/source_contract_proof_gate.py",
@@ -167,6 +175,11 @@ REQUIRED_BOUNDED_MODULE_PATHS = {
 }
 
 PROHIBITED_LEGACY_MODULE_PATHS = {
+    "scripts/generate_operator_workflows_operations_proof.py",
+    "scripts/operator_workflows_operations_proof_contract_gate.py",
+    "src/app/application/operator_workflows_operations_proof.py",
+    "tests/unit/test_operator_workflows_implementation_proof_readiness.py",
+    "tests/unit/test_operator_workflows_operations_proof.py",
     "scripts/ai_model_risk_operations_proof_contract_gate.py",
     "scripts/generate_ai_model_risk_operations_proof.py",
     "src/app/application/ai_model_risk_operations_proof.py",
