@@ -157,6 +157,27 @@ jobs:
         run: make install
       - name: Run PostgreSQL runtime proof
         run: make postgres-integration-gate
+      - name: Upload PostgreSQL runtime evidence
+        id: postgres-runtime-evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: postgres-runtime-proof-evidence
+          path: output/persistence/postgres-runtime-proof.junit.xml
+          if-no-files-found: error
+      - name: Generate receipt-bound AI lineage proof
+        env:
+          CI_ARTIFACT_SHA256: ${{ steps.postgres-runtime-evidence.outputs.artifact-digest }}
+          CI_JOB_NAME: Main Releasability / PostgreSQL Runtime Proof
+          CI_WORKFLOW_PATH: .github/workflows/main-releasability.yml
+        run: make ai-lineage-store-ci-proof
+      - name: Upload AI lineage certification proof
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ai-lineage-store-certification-proof
+          path: |
+            output/ai/ai-lineage-store-proof.json
+            output/persistence/postgres-ci-execution-receipt.json
+          if-no-files-found: error
 
   docker-build:
     name: Main Releasability / Validate Docker Build
