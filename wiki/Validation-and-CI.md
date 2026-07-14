@@ -21,6 +21,7 @@ clean branch hygiene.
 | PostgreSQL recovery change | `make disaster-recovery-contract-gate`, real restore/resume proof, `make disaster-recovery-proof-gate` | RPO/RTO, restored invariants, replay/fencing, and no-mutation evidence. |
 | Canonical source-proof run | `make canonical-opportunity-source-proofs` with governed runtime arguments | Source-specific live evidence, traceability, and fail-closed blocker posture. |
 | Lotus AI runtime proof | `python scripts/generate_ai_workflow_pack_runtime_execution_proof.py --generated-at-utc <utc> --lotus-ai-base-url <lotus-ai-base-url> --output output/ai/ai-workflow-pack-runtime-execution-proof.json` | Actual review-gated `idea_explanation.pack@v1` execution and a source-safe receipt; live provider remains blocked. |
+| AI lineage-store certification | Main Releasability `make postgres-integration-gate`, then `make ai-lineage-store-ci-proof` | Exact-main PostgreSQL behavior, uploaded test-artifact digest, and a closed CI execution receipt; no live-provider or supported-feature claim. |
 | Release-grade local proof | `make ci-release` | Full local release evidence. |
 | Wiki source change | wiki audit, wiki check-only, publish after merge | Repo source and published wiki agree. |
 
@@ -46,6 +47,20 @@ clean branch hygiene.
 | Protected deployment migration | Exact signed digest, release-bound PostgreSQL history, source-safe attested evidence | Controlled schema change eligibility; not rollout certification by itself |
 | Scheduled PostgreSQL DR | Real logical backup/restore, resume proof, evidence attestation | Weekly recovery regression detection; not provider PITR certification |
 | Local contract gates | Makefile, docs, source safety, mesh, endpoint certification | Future-agent drift and unsupported claims |
+
+### Evidence Classes
+
+Proof consumers distinguish source contracts, test execution, CI execution,
+runtime execution, deployment, and production certification. A lower class
+cannot clear a blocker owned by a higher class. In particular, source files,
+Make targets, and workflow text cannot prove that a test ran successfully.
+
+AI lineage-store certification requires the closed
+`lotus-idea.ai-lineage-store-ci-execution-receipt.v1` receipt. It binds the
+trusted repository, workflow, PostgreSQL job, run id and attempt, exact main
+commit and ref, successful conclusion, uploaded artifact SHA-256, and the exact
+lineage persistence assertion. The aggregate proof remains blocked when the
+receipt is absent, malformed, or inconsistent.
 
 Deployment-migration repository controls merged through PR `#373`. Exact-main
 Main Releasability run `29261043056` and CodeQL run `29261035371` passed on

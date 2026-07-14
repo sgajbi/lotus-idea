@@ -185,6 +185,18 @@ Implemented in this slice:
     certification, Workbench proof, and feature promotion remain blocked. This
     is design modularity and automation around the existing runtimes, not a new
     Idea service.
+27. Issue `#396` replaces source-contract inference for durable AI lineage with
+    a closed `ci_execution` receipt. `src/app/domain/proof_evidence/` owns the
+    evidence taxonomy and receipt integrity; the organized
+    `src/app/application/ai_lineage_store_proof/` package owns proof assembly
+    and receipt consumption. Main Releasability runs the exact PostgreSQL
+    lineage test, uploads its JUnit artifact, binds the server-reported artifact
+    digest and exact mainline run identity into the receipt, and only then
+    clears `certified_ai_lineage_store_missing`. Missing, malformed, tampered,
+    non-mainline, failed, or wrong-job evidence fails closed. Source files and
+    Make targets remain useful `source_contract` evidence but cannot prove
+    execution. This is design modularity inside the existing Idea process, not
+    a separately scalable service boundary.
 
 Validation evidence from the implementation slice:
 
@@ -246,6 +258,13 @@ Validation evidence from the implementation slice:
     output. PR `#394` merged to exact-main SHA `b892d5d6`; Main Releasability
     `29303651841`, CodeQL `29303648849`, and wiki publication `48fd63a` passed.
     Live-provider/production approval and the other blockers below remain.
+18. Issue `#396` local validation passed `121` focused proof tests, all `17`
+    disposable PostgreSQL 18 integration tests, and `make check` with `3704`
+    unit tests. The focused test set covers closed receipt typing, artifact and
+    assertion binding, repository/workflow/job/ref/conclusion mismatch,
+    tampering, aggregate consumption, and source-contract non-promotion.
+    Mainline execution, release-artifact inspection, and exact-main CI remain
+    required before this capability is closed.
 
 ## Current Governance References
 
@@ -299,6 +318,7 @@ includes:
 4. AI output cannot change score, lifecycle, source facts, review state, or
    conversion state.
 
-Runtime `lotus-ai` workflow execution remains planned until a later slice adds
-ports/adapters, runtime lineage certification, Gateway/Workbench contracts, and
-cross-repository proof.
+Generic deterministic-stub `lotus-ai` workflow execution and mainline durable
+lineage-store CI certification are implemented. Live-provider and production
+model-risk approval, Gateway/Workbench realization, and supported-feature
+promotion remain planned and blocked.
