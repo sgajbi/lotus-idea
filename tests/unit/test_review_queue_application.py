@@ -469,21 +469,21 @@ def test_queue_snapshot_binds_rankable_score_policy_set() -> None:
 
 
 def test_review_queue_snapshot_identity_binds_queue_audience() -> None:
-    common = {
-        "fingerprint": "candidate-state-sha256",
-        "evaluated_at_utc": EVALUATED_AT,
-        "policy_version": "idea-deterministic-ranking-v1",
-        "rankable_score_policy_versions": ("idle-liquidity-v1",),
-        "access_scope_filter": None,
-    }
-
     advisor = build_review_queue_snapshot_identity(
-        **common,
+        fingerprint="candidate-state-sha256",
         audience=ReviewQueueAudience.ADVISOR,
+        evaluated_at_utc=EVALUATED_AT,
+        policy_version="idea-deterministic-ranking-v1",
+        rankable_score_policy_versions=("idle-liquidity-v1",),
+        access_scope_filter=None,
     )
     portfolio_manager = build_review_queue_snapshot_identity(
-        **common,
+        fingerprint="candidate-state-sha256",
         audience=ReviewQueueAudience.PORTFOLIO_MANAGER,
+        evaluated_at_utc=EVALUATED_AT,
+        policy_version="idea-deterministic-ranking-v1",
+        rankable_score_policy_versions=("idle-liquidity-v1",),
+        access_scope_filter=None,
     )
 
     assert advisor.token != portfolio_manager.token

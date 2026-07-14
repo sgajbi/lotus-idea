@@ -8,6 +8,8 @@ from types import ModuleType
 
 import pytest
 
+from scripts.postgres_disaster_recovery_fixture_data import feedback_command, review_command
+
 ROOT = Path(__file__).resolve().parents[2]
 
 
@@ -38,6 +40,16 @@ def test_disaster_recovery_fixture_uses_source_safe_synthetic_identifiers() -> N
     assert 'approved_metadata={"audience": "internal_advisor_review"}' not in source
     assert "DELETE FROM" not in source.upper()
     assert "TRUNCATE" not in source.upper()
+
+
+def test_disaster_recovery_fixture_mutations_keep_scope_on_actor_context() -> None:
+    review = review_command()
+    feedback = feedback_command()
+
+    assert review.actor.portfolio_ids == frozenset({"portfolio-dr-fixture"})
+    assert feedback.actor.client_ids == frozenset({"client-dr-fixture"})
+    assert not hasattr(review, "access_scope")
+    assert not hasattr(feedback, "access_scope")
 
 
 def test_disaster_recovery_fixture_direct_entrypoint_loads() -> None:

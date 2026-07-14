@@ -60,7 +60,6 @@ def review_command() -> ReviewDecisionCommand:
         review_id="dr-fixture-review-001",
         action=ReviewAction.APPROVE_FOR_CONVERSION,
         actor=_actor(),
-        access_scope=_access_scope(),
         reason_codes=(ReasonCode.REVIEW_APPROVED_FOR_CONVERSION,),
         decided_at_utc=FIXTURE_TIME + timedelta(minutes=2),
     )
@@ -70,7 +69,6 @@ def feedback_command() -> FeedbackCommand:
     return FeedbackCommand(
         feedback_id="dr-fixture-feedback-001",
         actor=_actor(),
-        access_scope=_access_scope(),
         outcome=FeedbackOutcome.USEFUL,
         reason_codes=(ReasonCode.FEEDBACK_RECORDED,),
         recorded_at_utc=FIXTURE_TIME + timedelta(minutes=3),
