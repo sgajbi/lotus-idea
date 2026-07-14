@@ -77,7 +77,9 @@ SCRIPT_TARGET_EXPECTATIONS = {
     "gateway-workbench-discovery-contract-proof-contract-gate": (
         "scripts/workbench/discovery_contract_proof_gate.py"
     ),
-    "outbox-broker-proof-contract-gate": "scripts/outbox/broker_proof_contract_gate.py",
+    "outbox-broker-source-contract-proof-gate": (
+        "scripts/outbox/broker/source_contract_proof_gate.py"
+    ),
     "outbox-consumer-contract-proof-contract-gate": (
         "scripts/outbox/consumer_contract_proof_contract_gate.py"
     ),

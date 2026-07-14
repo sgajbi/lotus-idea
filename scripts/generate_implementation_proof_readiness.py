@@ -318,10 +318,10 @@ def _proof_artifact_inputs(args: argparse.Namespace) -> dict[str, ProofArtifactI
             artifact_name="Gateway/Workbench discovery contract proof",
             ref_name="Gateway/Workbench discovery contract proof artifact",
         ),
-        "outbox_broker": _proof_artifact_input(
-            args.outbox_broker_proof,
-            artifact_name="outbox broker proof",
-            ref_name="outbox broker proof artifact",
+        "outbox_broker_source_contract": _proof_artifact_input(
+            args.outbox_broker_source_contract_proof,
+            artifact_name="outbox broker source-contract proof",
+            ref_name="outbox broker source-contract proof artifact",
         ),
         "outbox_consumer_contract": _proof_artifact_input(
             args.outbox_consumer_contract_proof,

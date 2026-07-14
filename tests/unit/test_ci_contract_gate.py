@@ -622,13 +622,15 @@ def test_ci_contract_gate_blocks_missing_workbench_read_path_proof_readiness_wir
     ) in errors
 
 
-def test_ci_contract_gate_blocks_missing_outbox_broker_proof_readiness_wiring() -> None:
+def test_ci_contract_gate_blocks_missing_outbox_broker_source_contract_proof_readiness_wiring() -> (
+    None
+):
     module = _load_ci_contract_gate()
     makefile = (
         (ROOT / "Makefile")
         .read_text(encoding="utf-8")
         .replace(
-            "--outbox-broker-proof output/outbox/outbox-broker-proof.json",
+            "--outbox-broker-source-contract-proof output/outbox/broker/source-contract-proof.json",
             "",
         )
     )
@@ -637,7 +639,7 @@ def test_ci_contract_gate_blocks_missing_outbox_broker_proof_readiness_wiring() 
 
     assert (
         "Makefile implementation-proof-readiness-check target must pass the "
-        "outbox broker proof artifact into readiness generation"
+        "outbox broker source-contract proof artifact into readiness generation"
     ) in errors
 
 
@@ -1139,13 +1141,13 @@ def test_ci_contract_gate_blocks_missing_workbench_read_path_proof_gate() -> Non
     ) in errors
 
 
-def test_ci_contract_gate_blocks_missing_outbox_broker_proof_gate() -> None:
+def test_ci_contract_gate_blocks_missing_outbox_broker_source_contract_proof_gate() -> None:
     module = _load_ci_contract_gate()
     makefile = (
         (ROOT / "Makefile")
         .read_text(encoding="utf-8")
         .replace(
-            "scripts/outbox/broker_proof_contract_gate.py",
+            "scripts/outbox/broker/source_contract_proof_gate.py",
             "scripts/removed.py",
         )
     )
@@ -1153,8 +1155,8 @@ def test_ci_contract_gate_blocks_missing_outbox_broker_proof_gate() -> None:
     errors = module.validate_makefile(makefile)
 
     assert (
-        "Makefile outbox-broker-proof-contract-gate target must run "
-        "`scripts/outbox/broker_proof_contract_gate.py`"
+        "Makefile outbox-broker-source-contract-proof-gate target must run "
+        "`scripts/outbox/broker/source_contract_proof_gate.py`"
     ) in errors
 
 

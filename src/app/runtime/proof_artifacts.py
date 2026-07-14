@@ -29,7 +29,9 @@ from app.application.low_income_core_cashflow_live_proof import (
 from app.application.operator_workflows_operations.source_contract_proof import (
     OPERATOR_WORKFLOWS_OPERATIONS_PROOF_ENV,
 )
-from app.application.outbox.broker_proof import OUTBOX_BROKER_PROOF_ENV
+from app.application.outbox.broker.source_contract_proof import (
+    OUTBOX_BROKER_SOURCE_CONTRACT_PROOF_ENV,
+)
 from app.application.outbox.platform_mesh_event_publication_proof import (
     OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF_ENV,
 )
@@ -61,8 +63,8 @@ class ConfiguredImplementationProofArtifacts:
     ai_workflow_pack_registration_proof_ref: str | None
     ai_workflow_pack_runtime_execution_proof: dict[str, Any] | None
     ai_workflow_pack_runtime_execution_proof_ref: str | None
-    outbox_broker_proof: dict[str, Any] | None
-    outbox_broker_proof_ref: str | None
+    outbox_broker_source_contract_proof: dict[str, Any] | None
+    outbox_broker_source_contract_proof_ref: str | None
     outbox_platform_mesh_event_publication_proof: dict[str, Any] | None
     outbox_platform_mesh_event_publication_proof_ref: str | None
     report_intake_route_proof: dict[str, Any] | None
@@ -139,10 +141,10 @@ _JSON_PROOF_ARTIFACTS: tuple[tuple[str, str, str, str], ...] = (
         "AI workflow-pack runtime execution proof",
     ),
     (
-        OUTBOX_BROKER_PROOF_ENV,
-        "outbox_broker_proof",
-        "outbox_broker_proof_ref",
-        "outbox broker proof",
+        OUTBOX_BROKER_SOURCE_CONTRACT_PROOF_ENV,
+        "outbox_broker_source_contract_proof",
+        "outbox_broker_source_contract_proof_ref",
+        "outbox broker source-contract proof",
     ),
     (
         OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF_ENV,

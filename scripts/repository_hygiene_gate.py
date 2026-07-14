@@ -35,6 +35,14 @@ PROHIBITED_SUFFIXES = {
 }
 
 REQUIRED_BOUNDED_MODULE_PATHS = {
+    "scripts/outbox/broker/__init__.py",
+    "scripts/outbox/broker/generate_source_contract_proof.py",
+    "scripts/outbox/broker/source_contract_proof_gate.py",
+    "src/app/application/outbox/broker/__init__.py",
+    "src/app/application/outbox/broker/source_contract_proof.py",
+    "tests/unit/outbox/broker/__init__.py",
+    "tests/unit/outbox/broker/test_readiness_consumption.py",
+    "tests/unit/outbox/broker/test_source_contract_proof.py",
     "scripts/operator_workflows_operations/__init__.py",
     "scripts/operator_workflows_operations/generate_source_contract_proof.py",
     "scripts/operator_workflows_operations/source_contract_proof_gate.py",
@@ -86,11 +94,9 @@ REQUIRED_BOUNDED_MODULE_PATHS = {
     "tests/unit/persistence/test_aggregate_mutation.py",
     "scripts/outbox/__init__.py",
     "scripts/outbox/_bootstrap.py",
-    "scripts/outbox/broker_proof_contract_gate.py",
     "scripts/outbox/consumer_contract_gate.py",
     "scripts/outbox/consumer_contract_proof_contract_gate.py",
     "scripts/outbox/event_contract_gate.py",
-    "scripts/outbox/generate_broker_proof.py",
     "scripts/outbox/generate_consumer_contract_proof.py",
     "scripts/outbox/generate_platform_mesh_event_publication_proof.py",
     "scripts/outbox/platform_mesh_event_publication_proof_contract_gate.py",
@@ -102,7 +108,6 @@ REQUIRED_BOUNDED_MODULE_PATHS = {
     "src/app/api/outbox/recovery.py",
     "src/app/api/outbox/recovery_models.py",
     "src/app/application/outbox/__init__.py",
-    "src/app/application/outbox/broker_proof.py",
     "src/app/application/outbox/consumer_contract_proof.py",
     "src/app/application/outbox/delivery.py",
     "src/app/application/outbox/platform_mesh_event_publication_proof.py",
@@ -175,6 +180,10 @@ REQUIRED_BOUNDED_MODULE_PATHS = {
 }
 
 PROHIBITED_LEGACY_MODULE_PATHS = {
+    "scripts/outbox/broker_proof_contract_gate.py",
+    "scripts/outbox/generate_broker_proof.py",
+    "src/app/application/outbox/broker_proof.py",
+    "tests/unit/outbox/test_outbox_broker_proof.py",
     "scripts/generate_operator_workflows_operations_proof.py",
     "scripts/operator_workflows_operations_proof_contract_gate.py",
     "src/app/application/operator_workflows_operations_proof.py",
