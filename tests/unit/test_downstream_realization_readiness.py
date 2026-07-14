@@ -308,8 +308,7 @@ def test_downstream_readiness_adds_report_source_contract_without_clearing_runti
     )
     assert "report_evidence_pack_live_materialization_proof_missing" in (report_capability.blockers)
     assert (
-        "output/report/intake-route-source-contract-proof.json"
-        in report_capability.evidence_refs
+        "output/report/intake-route-source-contract-proof.json" in report_capability.evidence_refs
     )
     report_contract = next(
         contract
@@ -320,10 +319,7 @@ def test_downstream_readiness_adds_report_source_contract_without_clearing_runti
     assert report_contract.route_fit_status == "not_certified"
     assert "lotus_report_live_intake_route_proof_missing" in report_contract.blockers
     assert "report_evidence_pack_live_materialization_proof_missing" in report_contract.blockers
-    assert (
-        "output/report/intake-route-source-contract-proof.json"
-        in report_contract.evidence_refs
-    )
+    assert "output/report/intake-route-source-contract-proof.json" in report_contract.evidence_refs
 
 
 def test_downstream_realization_readiness_uses_advise_and_manage_route_proofs_without_authority() -> (

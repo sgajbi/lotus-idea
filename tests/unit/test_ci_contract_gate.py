@@ -373,7 +373,7 @@ def test_ci_contract_gate_blocks_missing_report_intake_route_source_contract_pro
 
     assert (
         "Makefile implementation-proof-readiness-check target must pass the "
-            "Report intake-route source-contract proof artifact into readiness generation"
+        "Report intake-route source-contract proof artifact into readiness generation"
     ) in errors
 
 
@@ -495,7 +495,7 @@ def test_ci_contract_gate_blocks_missing_report_intake_route_default_output_wiri
 
     assert (
         "Makefile implementation-proof-readiness-check target must pass the default "
-            "Report intake-route source-contract proof into readiness generation"
+        "Report intake-route source-contract proof into readiness generation"
     ) in errors
 
 
