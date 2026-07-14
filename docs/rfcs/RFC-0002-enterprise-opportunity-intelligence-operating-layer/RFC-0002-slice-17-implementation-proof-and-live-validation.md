@@ -1,6 +1,6 @@
 # RFC-0002 Slice 17: Implementation Proof And Live Validation
 
-Status: Partially implemented - aggregate proof-readiness diagnostic, bounded live source-ingestion proof artifact contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry proof artifact, Workbench read-path proof artifact, Gateway/Workbench operational proof artifact, Gateway/Workbench discovery proof artifact, Advise proposal route proof artifact, Manage action route proof artifact, Manage mandate live proof artifact, Core portfolio-state live proof artifact, Report intake route proof artifact, bounded outbox broker proof artifact, bounded downstream consumer runtime proof artifact, bounded outbox platform mesh event publication proof artifact, mesh policy proof artifact, platform mesh onboarding proof artifact, AI lineage store proof artifact, AI workflow-pack registration proof artifact, AI workflow-pack runtime execution proof artifact, high-volatility and drawdown live Risk proof artifact contracts, low-income Core cashflow live proof artifact contract, bond-maturity policy foundation, and opportunity archetype scenario readiness with source/policy foundations available. Slice evidence now includes live canonical Risk concentration, Performance underperformance, and Performance benchmark-readiness source proofs for `PB_SG_GLOBAL_BAL_001`; full live opportunity-journey proof, data-mesh certification, Workbench product proof, client-publication approval, and supported-feature promotion remain pending.
+Status: Partially implemented - aggregate proof-readiness diagnostic, bounded live source-ingestion proof artifact contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry proof artifact, Workbench read-path proof artifact, Gateway/Workbench operational proof artifact, Gateway/Workbench discovery proof artifact, Advise proposal route proof artifact, Manage action route proof artifact, Manage mandate live proof artifact, Core portfolio-state live proof artifact, Report intake route proof artifact, bounded outbox broker proof artifact, bounded downstream consumer source-contract proof artifact, bounded outbox platform mesh event publication proof artifact, mesh policy proof artifact, platform mesh onboarding proof artifact, AI lineage store proof artifact, AI workflow-pack registration proof artifact, AI workflow-pack runtime execution proof artifact, high-volatility and drawdown live Risk proof artifact contracts, low-income Core cashflow live proof artifact contract, bond-maturity policy foundation, and opportunity archetype scenario readiness with source/policy foundations available. Slice evidence now includes live canonical Risk concentration, Performance underperformance, and Performance benchmark-readiness source proofs for `PB_SG_GLOBAL_BAL_001`; observed downstream consumer execution, full live opportunity-journey proof, data-mesh certification, Workbench product proof, client-publication approval, and supported-feature promotion remain pending.
 
 ## Outcome
 
@@ -58,16 +58,16 @@ Prove the complete supported opportunity journey end to end.
 8. `contracts/outbox-events/lotus-idea-outbox-consumers.v1.json` and
    `make outbox-consumer-contract-gate` now declare the Gateway, Advise,
    Manage, and Report outbox consumers with source-authority boundaries. This
-   removes the stale missing-contract posture while leaving runtime proof to the
-   bounded downstream consumer runtime proof artifact and keeping downstream
-   delivery unsupported.
-9. `scripts/outbox/generate_consumer_runtime_proof.py` and
-   `make outbox-consumer-runtime-proof-contract-gate` now generate and validate
-   the bounded downstream consumer runtime proof artifact consumed by aggregate
-   implementation-proof readiness. A valid artifact clears only
-   `downstream_consumer_runtime_proof_missing`; platform mesh event,
-   Gateway/Workbench, downstream delivery, and supported-feature blockers
-   remain.
+   removes the stale missing-contract posture while leaving observed runtime
+   execution and downstream delivery unsupported.
+9. `scripts/outbox/generate_consumer_contract_proof.py` and
+   `make outbox-consumer-contract-proof-contract-gate` generate and validate
+   the bounded downstream consumer source-contract artifact consumed by
+   aggregate implementation-proof readiness. A valid v2 artifact is useful
+   evidence of declared coverage and authority boundaries, but clears no
+   runtime blocker. `downstream_consumer_runtime_proof_missing`, platform mesh
+   event, Gateway/Workbench, downstream delivery, and supported-feature
+   blockers remain.
 10. `scripts/outbox/generate_platform_mesh_event_publication_proof.py` and
     `make outbox-platform-mesh-event-publication-proof-contract-gate` now
     generate and validate the bounded outbox platform mesh event publication

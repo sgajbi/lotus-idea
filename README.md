@@ -5,8 +5,6 @@ service for private-banking workflows. It turns source-owned evidence into
 reviewable opportunity candidates, evidence packs, scores, review queues,
 feedback records, conversion intent, and readiness posture.
 
-Service profile: `domain-service`
-
 | Start with | Use it for |
 | --- | --- |
 | [REPOSITORY-ENGINEERING-CONTEXT.md](REPOSITORY-ENGINEERING-CONTEXT.md) | Current implementation truth, repo-local rules, and issue-derived patterns. |
@@ -197,6 +195,7 @@ Common gates:
 | `make endpoint-certification-gate` | Validates endpoint certification evidence and OpenAPI caller-context truth. |
 | `make durable-repository-proof-contract-gate` | Validates the source-safe persistence proof schema and fail-closed CI-receipt policy. |
 | `make durable-repository-ci-proof` | Mainline PostgreSQL job only: binds governed persistence tests, exact commit/ref, run identity, and uploaded artifact digest. |
+| `make outbox-consumer-contract-proof-contract-gate` | Validates declared consumer coverage and authority boundaries as source-contract evidence; it cannot clear downstream runtime readiness. |
 | `make check` | Local PR-grade lane for routine feature work. |
 | `make ci-release` | Broad release evidence including implementation proof, Postgres, Docker, smoke, scan, and SBOM evidence. |
 

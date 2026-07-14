@@ -719,6 +719,15 @@ production approval, Workbench, client-publication, or supported-feature proof.
 Issue `#393` tracks the same evidence-classification audit across other proof
 builders.
 
+Outbox consumer declarations are source-contract evidence. Keep their builder,
+generator, contract gate, and tests under the existing `outbox/` capability
+directories with `consumer_contract_proof` naming. A valid declaration may add
+an aggregate evidence reference, but it must clear no runtime blocker. Only an
+observed, machine-verifiable consumer execution receipt may satisfy
+`downstream_consumer_runtime_proof_missing`; file presence, Make targets,
+consumer names, and authority-boundary text cannot be promoted into runtime
+truth.
+
 AI proposed-action labels are untrusted input even when the structured action
 enum is allowed. Enforce `lotus-idea.ai-action-content-policy.v1` in the domain
 before claim verification, return only canonical server-owned labels, and keep

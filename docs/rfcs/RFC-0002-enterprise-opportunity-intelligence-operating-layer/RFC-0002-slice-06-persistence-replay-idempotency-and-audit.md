@@ -328,13 +328,14 @@ Implemented first-wave internal scope:
     and Report as governed downstream consumers with source-authority
     boundaries. The contract clears the missing-contract posture only; all
     consumers remain `contract_declared_not_runtime_certified`.
-    `src/app/application/outbox/consumer_runtime_proof.py`,
-    `scripts/outbox/generate_consumer_runtime_proof.py`, and
-    `make outbox-consumer-runtime-proof-contract-gate` now add a source-safe
-    bounded downstream consumer runtime proof artifact. It clears only
-    `downstream_consumer_runtime_proof_missing` and preserves platform mesh
-    event publication, Gateway/Workbench, downstream delivery, and
-    supported-feature blockers.
+    `src/app/application/outbox/consumer_contract_proof.py`,
+    `scripts/outbox/generate_consumer_contract_proof.py`, and
+    `make outbox-consumer-contract-proof-contract-gate` now add a source-safe
+    bounded downstream consumer source-contract proof artifact. Its v2 schema
+    declares `evidenceClass=source_contract`, records that consumers are not
+    runtime certified, and clears no blocker. Observed downstream execution,
+    platform mesh event publication, Gateway/Workbench, downstream delivery,
+    and supported-feature blockers remain fail-closed.
     `src/app/application/outbox/platform_mesh_event_publication_proof.py`,
     `scripts/outbox/generate_platform_mesh_event_publication_proof.py`, and
     `make outbox-platform-mesh-event-publication-proof-contract-gate` now add a
@@ -483,7 +484,7 @@ External certification backlog (not repository-implementation blockers):
    aggregate outbox readiness diagnostic, HTTP
    publisher adapter foundation, repo-owned outbox event and consumer
    contracts, bounded outbox broker proof artifact, bounded downstream
-   consumer runtime proof artifact, and bounded outbox platform mesh event
+   consumer source-contract proof artifact, and bounded outbox platform mesh event
    publication proof artifact; issue `#379` tracks live authoritative outcomes,
 6. Gateway/Workbench product proof and supported-feature promotion, tracked by
    issue `#380` and the owning later RFC slices.
