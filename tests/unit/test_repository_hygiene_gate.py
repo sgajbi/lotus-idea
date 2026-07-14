@@ -101,6 +101,7 @@ def test_repository_hygiene_gate_enforces_runtime_trust_telemetry_package() -> N
         "scripts/runtime_trust_telemetry/test_execution_contract_gate.py",
         "src/app/application/runtime_trust_telemetry/telemetry.py",
         "src/app/application/runtime_trust_telemetry/test_execution_contract.py",
+        "tests/unit/runtime_trust_telemetry/test_implementation_proof_generation.py",
         "tests/unit/runtime_trust_telemetry/test_telemetry.py",
         "tests/unit/runtime_trust_telemetry/test_test_execution_contract.py",
     }

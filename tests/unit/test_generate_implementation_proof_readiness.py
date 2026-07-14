@@ -51,9 +51,6 @@ from app.application.performance_underperformance_live_proof import (
 from app.application.data_mesh.platform_catalog_source_contract import (
     build_platform_catalog_source_contract_payload,
 )
-from app.application.runtime_trust_telemetry.test_execution_contract import (
-    build_runtime_trust_telemetry_test_execution_payload,
-)
 from app.application.risk_concentration_live_proof import (
     build_risk_concentration_live_proof_payload,
 )
@@ -352,61 +349,6 @@ def test_generate_implementation_proof_readiness_uses_explicit_durable_repositor
     assert "workbench_product_proof_missing" in advisor_queue["blockers"]
     assert "data_product_certification_missing" in advisor_queue["blockers"]
     assert "certified_runtime_trust_telemetry_missing" in advisor_queue["blockers"]
-    assert payload["readinessStatus"] == "blocked"
-    assert payload["supportedFeaturePromoted"] is False
-
-
-def test_generate_implementation_proof_readiness_uses_explicit_runtime_trust_telemetry_test_execution(
-    tmp_path: Path,
-) -> None:
-    telemetry_proof = tmp_path / "runtime-trust-telemetry-test-execution.json"
-    telemetry_proof.write_text(
-        json.dumps(
-            build_runtime_trust_telemetry_test_execution_payload(
-                generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
-                repository_root=Path(__file__).resolve().parents[2],
-            )
-        ),
-        encoding="utf-8",
-    )
-    output_path = tmp_path / "proof" / "readiness.json"
-
-    result = proof_report.main(
-        [
-            "--evaluated-at-utc",
-            "2026-06-21T10:10:00Z",
-            "--runtime-trust-telemetry-test-execution",
-            str(telemetry_proof),
-            "--output",
-            str(output_path),
-        ]
-    )
-
-    assert result == 0
-    payload = json.loads(output_path.read_text(encoding="utf-8"))
-    assert "runtime_candidate_snapshot_missing" in payload["overallBlockers"]
-    assert "certified_runtime_trust_telemetry_missing" in payload["overallBlockers"]
-    assert "data_mesh_runtime_telemetry_not_certified" in payload["overallBlockers"]
-    assert "runtime_trust_telemetry_product_coverage_incomplete" in payload["overallBlockers"]
-    assert "platform_mesh_certification_missing" in payload["overallBlockers"]
-    capabilities = {
-        capability["capabilityId"]: capability for capability in payload["capabilities"]
-    }
-    assert (
-        "runtime_candidate_snapshot_missing"
-        in (capabilities["runtime-trust-telemetry-preview"]["blockers"])
-    )
-    assert (
-        "certified_runtime_trust_telemetry_missing"
-        in (capabilities["runtime-trust-telemetry-preview"]["blockers"])
-    )
-    assert (
-        "runtime_trust_telemetry_product_coverage_incomplete"
-        in (capabilities["data-mesh-certification"]["blockers"])
-    )
-    evidence_ref = "runtime trust telemetry test execution artifact"
-    assert evidence_ref in capabilities["runtime-trust-telemetry-preview"]["evidenceRefs"]
-    assert evidence_ref in capabilities["data-mesh-certification"]["evidenceRefs"]
     assert payload["readinessStatus"] == "blocked"
     assert payload["supportedFeaturePromoted"] is False
 
