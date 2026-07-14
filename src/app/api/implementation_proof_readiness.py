@@ -260,8 +260,8 @@ def _build_readiness_snapshot_from_configured_artifacts(
         outbox_platform_mesh_event_source_contract_proof_ref=(
             proof_artifacts.outbox_platform_mesh_event_source_contract_proof_ref
         ),
-        report_intake_route_proof=proof_artifacts.report_intake_route_proof,
-        report_intake_route_proof_ref=proof_artifacts.report_intake_route_proof_ref,
+        report_intake_route_source_contract_proof=proof_artifacts.report_intake_route_source_contract_proof,
+        report_intake_route_source_contract_proof_ref=proof_artifacts.report_intake_route_source_contract_proof_ref,
         platform_mesh_onboarding_proof=proof_artifacts.platform_mesh_onboarding_proof,
         platform_mesh_onboarding_proof_ref=proof_artifacts.platform_mesh_onboarding_proof_ref,
         workbench_read_path_source_contract_proof=(

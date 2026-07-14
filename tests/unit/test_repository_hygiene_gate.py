@@ -150,6 +150,35 @@ def test_repository_hygiene_gate_enforces_outbox_broker_proof_package() -> None:
     )
 
 
+def test_repository_hygiene_gate_enforces_report_intake_source_contract_package() -> None:
+    module = _load_repository_hygiene_gate()
+    required_paths = {
+        "scripts/report/generate_intake_route_source_contract.py",
+        "scripts/report/intake_route_source_contract_gate.py",
+        "src/app/application/report/intake_route_source_contract.py",
+        "tests/unit/report/test_intake_route_source_contract.py",
+    }
+    retired_paths = {
+        "scripts/generate_report_intake_route_proof.py",
+        "scripts/report_intake_route_proof_contract_gate.py",
+        "src/app/application/report_intake_route_proof.py",
+        "tests/unit/test_report_intake_route_proof.py",
+    }
+    tracked_paths = sorted(module.REQUIRED_BOUNDED_MODULE_PATHS - required_paths | retired_paths)
+
+    violations = module.find_bounded_module_placement_violations(tracked_paths)
+
+    assert violations == sorted(
+        [
+            *(
+                f"{path}: legacy flat-module path must not be reintroduced"
+                for path in retired_paths
+            ),
+            *(f"{path}: required bounded-module path is missing" for path in required_paths),
+        ]
+    )
+
+
 def test_repository_hygiene_gate_enforces_outbox_platform_mesh_proof_package() -> None:
     module = _load_repository_hygiene_gate()
     required_paths = {

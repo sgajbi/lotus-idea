@@ -11,11 +11,12 @@ from app.application.downstream_route_contract_proof import (
     ADVISE_PROPOSAL_ROUTE,
     MANAGE_ACTION_ROUTE,
 )
-from app.application.report_intake_route_proof import (
-    REMAINING_REPORT_INTAKE_ROUTE_BLOCKERS,
+from app.application.report.intake_route_source_contract import (
+    REMAINING_REPORT_INTAKE_ROUTE_CERTIFICATION_BLOCKERS,
     REPORT_INTAKE_ROUTE,
-    REPORT_INTAKE_ROUTE_BLOCKERS_CLEARED,
-    REPORT_INTAKE_ROUTE_PROOF_SCHEMA_VERSION,
+    REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_BLOCKERS_CLEARED,
+    REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF_SCHEMA_VERSION,
+    REQUIRED_REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_EVIDENCE_REFS,
 )
 from app.domain import (
     ConversionOutcomeIdentity,
@@ -285,15 +286,15 @@ def test_downstream_realization_readiness_contracts_preserve_downstream_authorit
     )
 
 
-def test_downstream_realization_readiness_uses_report_route_proof_without_materialization() -> None:
+def test_downstream_readiness_adds_report_source_contract_without_clearing_runtime() -> None:
     snapshot = build_downstream_realization_readiness_snapshot(
         repository=InMemoryIdeaRepository(),
         durable_storage_backed=False,
-        report_intake_route_proof=_valid_report_intake_route_proof(),
-        report_intake_route_proof_ref="output/downstream/report-intake-route-proof.json",
+        report_intake_route_source_contract_proof=_valid_report_intake_route_source_contract_proof(),
+        report_intake_route_source_contract_proof_ref="output/report/intake-route-source-contract-proof.json",
     )
 
-    assert "lotus_report_live_intake_route_proof_missing" not in snapshot.blockers
+    assert "lotus_report_live_intake_route_proof_missing" in snapshot.blockers
     assert "report_evidence_pack_live_materialization_proof_missing" in snapshot.blockers
     assert "rendered_output_creation_missing" in snapshot.blockers
     assert "archive_record_creation_missing" in snapshot.blockers
@@ -305,19 +306,24 @@ def test_downstream_realization_readiness_uses_report_route_proof_without_materi
         for capability in snapshot.capabilities
         if capability.capability_id == "report-render-archive-realization"
     )
-    assert "lotus_report_live_intake_route_proof_missing" not in report_capability.blockers
     assert "report_evidence_pack_live_materialization_proof_missing" in (report_capability.blockers)
-    assert "output/downstream/report-intake-route-proof.json" in report_capability.evidence_refs
+    assert (
+        "output/report/intake-route-source-contract-proof.json"
+        in report_capability.evidence_refs
+    )
     report_contract = next(
         contract
         for contract in snapshot.downstream_contracts
         if contract.contract_id == "lotus-idea-to-lotus-report-evidence-pack-intake:v1"
     )
-    assert report_contract.target_route == REPORT_INTAKE_ROUTE
-    assert report_contract.route_fit_status == "route_foundation_proven_not_certified"
-    assert "lotus_report_live_intake_route_proof_missing" not in report_contract.blockers
+    assert report_contract.target_route == "planned:lotus-report-idea-evidence-pack-intake"
+    assert report_contract.route_fit_status == "not_certified"
+    assert "lotus_report_live_intake_route_proof_missing" in report_contract.blockers
     assert "report_evidence_pack_live_materialization_proof_missing" in report_contract.blockers
-    assert "output/downstream/report-intake-route-proof.json" in report_contract.evidence_refs
+    assert (
+        "output/report/intake-route-source-contract-proof.json"
+        in report_contract.evidence_refs
+    )
 
 
 def test_downstream_realization_readiness_uses_advise_and_manage_route_proofs_without_authority() -> (
@@ -377,36 +383,29 @@ class _ProjectionOnlyDownstreamReadinessRepository:
         raise AssertionError("downstream readiness projection must not call snapshot")
 
 
-def _valid_report_intake_route_proof() -> dict[str, object]:
+def _valid_report_intake_route_source_contract_proof() -> dict[str, object]:
     return {
-        "schemaVersion": REPORT_INTAKE_ROUTE_PROOF_SCHEMA_VERSION,
+        "schemaVersion": REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF_SCHEMA_VERSION,
         "repository": "lotus-idea",
         "generatedAtUtc": "2026-06-24T00:00:00+00:00",
-        "proofType": "lotus_report_idea_evidence_intake_route_contract",
-        "proofScope": "source_safe_report_intake_route_only",
-        "reportIntakeRouteProofValid": True,
-        "aggregateBlockersCleared": REPORT_INTAKE_ROUTE_BLOCKERS_CLEARED,
-        "evidenceRefs": (
-            "../lotus-report/contracts/idea-evidence-intake/lotus-report-idea-evidence-pack-intake.v1.json",
-            "../lotus-report/src/app/idea_evidence_intake/models.py",
-            "../lotus-report/src/app/idea_evidence_intake/service.py",
-            "../lotus-report/src/app/routers/idea_evidence_intake.py",
-            "../lotus-report/tests/unit/test_idea_evidence_intake_service.py",
-            "../lotus-report/tests/integration/test_idea_evidence_intake_api.py",
-            "contracts/downstream-realization/lotus-idea-downstream-contracts.v1.json",
-            "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-13-report-render-archive-and-evidence-pack-materialization.md",
-            "GET /api/v1/downstream-realization/readiness",
-            "GET /api/v1/implementation-proof/readiness",
-        ),
+        "proofType": "lotus_report_idea_evidence_intake_route_source_contract",
+        "proofScope": "report_intake_route_declaration_and_contract_compatibility",
+        "evidenceClass": "source_contract",
+        "reportIntakeRouteSourceContractValid": True,
+        "aggregateBlockersCleared": REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_BLOCKERS_CLEARED,
+        "evidenceRefs": REQUIRED_REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_EVIDENCE_REFS,
         "targetRoute": REPORT_INTAKE_ROUTE,
         "proofChecks": {
             "timezoneAwareGeneratedAtUtc": True,
             "fileEvidencePresent": True,
-            "reportContractProvesRoute": True,
+            "reportContractDeclaresCompatibleRoute": True,
             "reportContractPreservesNonProofBoundaries": True,
-            "reportContractRetainsMaterializationBlockers": True,
         },
-        "remainingCertificationBlockers": REMAINING_REPORT_INTAKE_ROUTE_BLOCKERS,
+        "remainingCertificationBlockers": REMAINING_REPORT_INTAKE_ROUTE_CERTIFICATION_BLOCKERS,
+        "reportRouteServingObserved": False,
+        "requestAuthorizationObserved": False,
+        "tenantIsolationObserved": False,
+        "runtimeExecutionObserved": False,
         "reportMaterializationProven": False,
         "renderedOutputCreated": False,
         "archiveRecordCreated": False,

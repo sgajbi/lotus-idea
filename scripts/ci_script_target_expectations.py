@@ -68,7 +68,7 @@ SCRIPT_TARGET_EXPECTATIONS = {
         "scripts/lotus_ai_attestation_contract_proof_gate.py"
     ),
     "downstream-route-contract-proof-gate": "scripts/downstream_route_contract_proof_gate.py",
-    "report-intake-route-proof-contract-gate": "scripts/report_intake_route_proof_contract_gate.py",
+    "report-intake-route-source-contract-proof-gate": "scripts/report/intake_route_source_contract_gate.py",
     "report-materialization-proof-contract-gate": (
         "scripts/report_materialization_proof_contract_gate.py"
     ),

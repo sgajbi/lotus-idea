@@ -67,7 +67,9 @@ from app.application.platform_mesh_onboarding_proof import (
 from app.application.performance_underperformance_live_proof import (
     PERFORMANCE_UNDERPERFORMANCE_LIVE_PROOF_ENV,
 )
-from app.application.report_intake_route_proof import REPORT_INTAKE_ROUTE_PROOF_ENV
+from app.application.report.intake_route_source_contract import (
+    REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF_ENV,
+)
 from app.application.report_materialization_proof import REPORT_MATERIALIZATION_PROOF_ENV
 from app.application.risk_concentration_live_proof import RISK_CONCENTRATION_LIVE_PROOF_ENV
 from app.application.risk_drawdown_live_proof import RISK_DRAWDOWN_LIVE_PROOF_ENV
@@ -123,8 +125,8 @@ PROOF_ARTIFACT_ARGS: tuple[tuple[str, str, str], ...] = (
         "Optional lotus-manage idea action route proof artifact path.",
     ),
     (
-        "--report-intake-route-proof",
-        REPORT_INTAKE_ROUTE_PROOF_ENV,
+        "--report-intake-route-source-contract-proof",
+        REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF_ENV,
         "Optional lotus-report idea evidence intake route proof artifact path.",
     ),
     (

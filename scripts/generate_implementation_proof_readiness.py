@@ -288,10 +288,10 @@ def _proof_artifact_inputs(args: argparse.Namespace) -> dict[str, ProofArtifactI
             artifact_name="Manage action route proof",
             ref_name="Manage action route proof artifact",
         ),
-        "report_intake_route": _proof_artifact_input(
-            args.report_intake_route_proof,
-            artifact_name="report intake route proof",
-            ref_name="report intake route proof artifact",
+        "report_intake_route_source_contract": _proof_artifact_input(
+            args.report_intake_route_source_contract_proof,
+            artifact_name="Report intake-route source-contract proof",
+            ref_name="Report intake-route source-contract proof artifact",
         ),
         "report_materialization": _proof_artifact_input(
             args.report_materialization_proof,

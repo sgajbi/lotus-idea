@@ -16,10 +16,8 @@ from app.application.downstream_route_contract_proof import (
     advise_proposal_route_proof_is_valid,
     manage_action_route_proof_is_valid,
 )
-from app.application.report_intake_route_proof import (
-    REPORT_INTAKE_ROUTE,
-    REPORT_INTAKE_ROUTE_BLOCKERS_CLEARED,
-    report_intake_route_proof_is_valid,
+from app.application.report.intake_route_source_contract import (
+    report_intake_route_source_contract_proof_is_valid,
 )
 from app.application.report_materialization_proof import (
     REPORT_MATERIALIZATION_BLOCKERS_CLEARED,
@@ -114,8 +112,8 @@ def build_downstream_realization_readiness_snapshot(
     advise_proposal_route_proof_ref: str | None = None,
     manage_action_route_proof: Mapping[str, object] | None = None,
     manage_action_route_proof_ref: str | None = None,
-    report_intake_route_proof: Mapping[str, object] | None = None,
-    report_intake_route_proof_ref: str | None = None,
+    report_intake_route_source_contract_proof: Mapping[str, object] | None = None,
+    report_intake_route_source_contract_proof_ref: str | None = None,
     report_materialization_proof: Mapping[str, object] | None = None,
     report_materialization_proof_ref: str | None = None,
 ) -> DownstreamRealizationReadinessSnapshot:
@@ -136,8 +134,8 @@ def build_downstream_realization_readiness_snapshot(
         advise_proposal_route_proof_ref=advise_proposal_route_proof_ref,
         manage_action_route_proof=manage_action_route_proof,
         manage_action_route_proof_ref=manage_action_route_proof_ref,
-        report_intake_route_proof=report_intake_route_proof,
-        report_intake_route_proof_ref=report_intake_route_proof_ref,
+        report_intake_route_source_contract_proof=report_intake_route_source_contract_proof,
+        report_intake_route_source_contract_proof_ref=report_intake_route_source_contract_proof_ref,
         report_materialization_proof=report_materialization_proof,
         report_materialization_proof_ref=report_materialization_proof_ref,
     )
@@ -231,8 +229,8 @@ def _apply_available_downstream_proofs(
     advise_proposal_route_proof_ref: str | None,
     manage_action_route_proof: Mapping[str, object] | None,
     manage_action_route_proof_ref: str | None,
-    report_intake_route_proof: Mapping[str, object] | None,
-    report_intake_route_proof_ref: str | None,
+    report_intake_route_source_contract_proof: Mapping[str, object] | None,
+    report_intake_route_source_contract_proof_ref: str | None,
     report_materialization_proof: Mapping[str, object] | None,
     report_materialization_proof_ref: str | None,
 ) -> tuple[
@@ -261,18 +259,23 @@ def _apply_available_downstream_proofs(
             proof_ref=manage_action_route_proof_ref,
             target_route=MANAGE_ACTION_ROUTE,
         )
-    if report_intake_route_proof and report_intake_route_proof_is_valid(report_intake_route_proof):
+    if (
+        report_intake_route_source_contract_proof
+        and report_intake_route_source_contract_proof_is_valid(
+            report_intake_route_source_contract_proof
+        )
+    ):
         capabilities = tuple(
-            _apply_report_intake_route_proof_to_capability(
+            _apply_report_intake_route_source_contract_proof_to_capability(
                 capability,
-                report_intake_route_proof_ref,
+                report_intake_route_source_contract_proof_ref,
             )
             for capability in capabilities
         )
         downstream_contracts = tuple(
-            _apply_report_intake_route_proof_to_contract(
+            _apply_report_intake_route_source_contract_proof_to_contract(
                 contract,
-                report_intake_route_proof_ref,
+                report_intake_route_source_contract_proof_ref,
             )
             for contract in downstream_contracts
         )
@@ -477,50 +480,46 @@ def _apply_route_proof_to_contract(
     )
 
 
-def _apply_report_intake_route_proof_to_capability(
+def _apply_report_intake_route_source_contract_proof_to_capability(
     capability: DownstreamRealizationCapabilityReadiness,
-    report_intake_route_proof_ref: str | None,
+    report_intake_route_source_contract_proof_ref: str | None,
 ) -> DownstreamRealizationCapabilityReadiness:
     if capability.capability_id != "report-render-archive-realization":
         return capability
-    blockers_to_clear = set(REPORT_INTAKE_ROUTE_BLOCKERS_CLEARED)
     evidence_refs = capability.evidence_refs
-    if report_intake_route_proof_ref:
-        evidence_refs = tuple(dict.fromkeys((*evidence_refs, report_intake_route_proof_ref)))
+    if report_intake_route_source_contract_proof_ref:
+        evidence_refs = tuple(
+            dict.fromkeys((*evidence_refs, report_intake_route_source_contract_proof_ref))
+        )
     return _capability(
         capability.capability_id,
         capability.name,
         capability.source_authority,
         evidence_refs=evidence_refs,
-        blockers=tuple(
-            blocker for blocker in capability.blockers if blocker not in blockers_to_clear
-        ),
+        blockers=capability.blockers,
     )
 
 
-def _apply_report_intake_route_proof_to_contract(
+def _apply_report_intake_route_source_contract_proof_to_contract(
     contract: DownstreamRealizationContractReadiness,
-    report_intake_route_proof_ref: str | None,
+    report_intake_route_source_contract_proof_ref: str | None,
 ) -> DownstreamRealizationContractReadiness:
     if contract.contract_id != "lotus-idea-to-lotus-report-evidence-pack-intake:v1":
         return contract
-    blockers_to_clear = set(REPORT_INTAKE_ROUTE_BLOCKERS_CLEARED)
-    if not blockers_to_clear.intersection(contract.blockers):
-        return contract
     evidence_refs = contract.evidence_refs
-    if report_intake_route_proof_ref:
-        evidence_refs = tuple(dict.fromkeys((*evidence_refs, report_intake_route_proof_ref)))
+    if report_intake_route_source_contract_proof_ref:
+        evidence_refs = tuple(
+            dict.fromkeys((*evidence_refs, report_intake_route_source_contract_proof_ref))
+        )
     return DownstreamRealizationContractReadiness(
         contract_id=contract.contract_id,
         owner_repository=contract.owner_repository,
         source_authority=contract.source_authority,
-        target_route=REPORT_INTAKE_ROUTE,
-        route_fit_status="route_foundation_proven_not_certified",
+        target_route=contract.target_route,
+        route_fit_status=contract.route_fit_status,
         adapter_status=contract.adapter_status,
         evidence_refs=evidence_refs,
-        blockers=tuple(
-            blocker for blocker in contract.blockers if blocker not in blockers_to_clear
-        ),
+        blockers=contract.blockers,
     )
 
 

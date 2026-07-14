@@ -55,7 +55,7 @@ REQUIRED_LINT_TARGETS = (
     "lotus-ai-attestation-contract-proof-gate",
     "ai-provider-retention-contract-gate",
     "archive-lifecycle-posture-contract-gate",
-    "report-intake-route-proof-contract-gate",
+    "report-intake-route-source-contract-proof-gate",
     "report-materialization-proof-contract-gate",
     "workbench-read-path-source-contract-proof-gate",
     "gateway-workbench-contract-proof-contract-gate",
@@ -149,7 +149,10 @@ GENERATED_READINESS_ARTIFACTS = (
     ),
     ("scripts/generate_advise_proposal_route_proof.py", "an Advise proposal route proof artifact"),
     ("scripts/generate_manage_action_route_proof.py", "a Manage action route proof artifact"),
-    ("scripts/generate_report_intake_route_proof.py", "a report intake route proof artifact"),
+    (
+        "scripts/report/generate_intake_route_source_contract.py",
+        "a Report intake-route source-contract proof artifact",
+    ),
     ("scripts/generate_report_materialization_proof.py", "a report materialization proof artifact"),
     ("scripts/generate_mesh_policy_proof.py", "mesh policy proof artifact"),
     (
@@ -188,7 +191,10 @@ PASSED_READINESS_ARTIFACTS = (
     ),
     ("--advise-proposal-route-proof", "Advise proposal route proof artifact"),
     ("--manage-action-route-proof", "Manage action route proof artifact"),
-    ("--report-intake-route-proof", "report intake route proof artifact"),
+    (
+        "--report-intake-route-source-contract-proof",
+        "Report intake-route source-contract proof artifact",
+    ),
     ("--report-materialization-proof", "report materialization proof artifact"),
     ("--mesh-policy-proof", "mesh policy proof artifact"),
     (
@@ -241,8 +247,8 @@ REQUIRED_READINESS_WIRING = (
     ("LOTUS_IDEA_MANAGE_ACTION_ROUTE_PROOF_OUTPUT", "pass default Manage proof"),
     ("LOTUS_IDEA_MANAGE_ACTION_ROUTE_PROOF", "support optional Manage proof"),
     (
-        "LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF_OUTPUT",
-        "pass the default report intake route proof output into readiness generation",
+        "LOTUS_IDEA_REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF_OUTPUT",
+        "pass the default Report intake-route source-contract proof into readiness generation",
     ),
     ("LOTUS_IDEA_REPORT_MATERIALIZATION_PROOF_OUTPUT", "pass default materialization proof"),
     ("LOTUS_IDEA_REPORT_MATERIALIZATION_PROOF", "support optional materialization proof"),
