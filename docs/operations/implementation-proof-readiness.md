@@ -106,11 +106,12 @@ The downstream realization capability now also cites the internal submission
 routes for Advise/Manage conversion intents and Report evidence-pack requests,
 plus the report-owned planned intake contract at
 `lotus-report/contracts/idea-evidence-intake/lotus-report-idea-evidence-pack-intake.v1.json`.
-Default source-safe Advise proposal route, Manage action route, Report intake
-route, and Report materialization proof artifacts can clear only their
-corresponding bounded blockers when merged sibling evidence is present. Those
-refs do not clear suitability policy authority, rebalance/action authority,
-client-publication authority, or supported-feature blockers.
+Default source-safe Advise proposal and Manage action route proofs can clear
+only their corresponding bounded route blockers when merged sibling evidence
+is present. Report intake and materialization source contracts add declaration
+provenance but clear no blocker. Those refs do not clear runtime execution,
+render/archive, suitability policy, rebalance/action, client-publication,
+certification, or supported-feature blockers.
 
 Source-ingestion live proof is captured by
 `scripts/generate_source_ingestion_live_proof.py`. The source-ingestion
@@ -214,8 +215,8 @@ taxonomy and the #393 same-pattern campaign.
 | `LOTUS_REPORT_ROOT` | Selects the sibling `lotus-report` checkout used to generate the default source-safe report-intake route proof. Defaults to `../lotus-report`. |
 | `LOTUS_IDEA_REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF_OUTPUT` | Selects the default generated report-intake route proof artifact consumed by aggregate readiness when no override is set. Defaults to `output/report/intake-route-source-contract-proof.json`. |
 | `LOTUS_IDEA_REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF` | Overrides the default generated report-intake route proof artifact passed into aggregate readiness. |
-| `LOTUS_IDEA_REPORT_MATERIALIZATION_PROOF_OUTPUT` | Selects the default generated report materialization proof artifact consumed by aggregate readiness when no override is set. Defaults to `output/downstream/report-materialization-proof.json`. |
-| `LOTUS_IDEA_REPORT_MATERIALIZATION_PROOF` | Overrides the default generated report materialization proof artifact passed into aggregate readiness. |
+| `LOTUS_IDEA_REPORT_MATERIALIZATION_SOURCE_CONTRACT_PROOF_OUTPUT` | Selects the default generated report materialization source-contract artifact consumed by aggregate readiness when no override is set. Defaults to `output/report/materialization-source-contract-proof.json`. |
+| `LOTUS_IDEA_REPORT_MATERIALIZATION_SOURCE_CONTRACT_PROOF` | Overrides the default report materialization source-contract artifact passed into aggregate readiness. |
 | `LOTUS_IDEA_MESH_POLICY_PROOF_OUTPUT` | Selects the default generated mesh policy proof artifact consumed by aggregate readiness when no override is set. Defaults to `output/data-mesh/mesh-policy-proof.json`. |
 | `LOTUS_IDEA_MESH_POLICY_PROOF` | Overrides the default generated mesh policy proof artifact passed into aggregate readiness. |
 | `LOTUS_PLATFORM_ROOT` | Selects the sibling `lotus-platform` checkout used to generate the default source-safe platform mesh onboarding proof. Defaults to `../lotus-platform`. |
@@ -632,23 +633,26 @@ contract, and the readiness endpoints. It does not create a report job, render
 output, archive record, client publication, suitability decision, mandate
 action, execution instruction, or supported feature.
 
-Report materialization proof is captured by
+Report materialization source-contract evidence is captured by
 `scripts/report/generate_materialization_source_contract.py`. The repo-native
 `make implementation-proof-readiness-check` target now generates the default
 artifact from `LOTUS_REPORT_ROOT` under
-`LOTUS_IDEA_REPORT_MATERIALIZATION_PROOF_OUTPUT` and passes it into aggregate
-readiness when `LOTUS_IDEA_REPORT_MATERIALIZATION_PROOF` is not set. A valid
-artifact clears only `report_evidence_pack_live_materialization_proof_missing`,
-`rendered_output_creation_missing`, and `archive_record_creation_missing`
-inside downstream realization and aggregate implementation-proof readiness.
-Missing sibling evidence writes an invalid non-proof artifact and keeps those
-blockers so CI remains stable without treating absence as proof. It cites the
+`LOTUS_IDEA_REPORT_MATERIALIZATION_SOURCE_CONTRACT_PROOF_OUTPUT` and passes it
+into aggregate readiness when
+`LOTUS_IDEA_REPORT_MATERIALIZATION_SOURCE_CONTRACT_PROOF` is not set. A valid
+artifact clears no blocker. It can add a source-safe evidence reference while
+preserving runtime materialization, rendered-output, archive-record,
+client-publication, certification, and supported-feature blockers. Missing
+sibling evidence writes an invalid source-contract artifact and keeps those
+blockers. It cites the
 merged `lotus-report` materialization contract for
 `POST /reports/idea-evidence-packs/materializations`, report-owned
 materialization/render/archive modules and tests, the `lotus-idea` downstream
-contract, and the readiness endpoints. It does not grant client-publication
-authority, suitability authority, mandate action, execution instruction, or a
-supported feature.
+contract, and the readiness endpoints. Sibling declarations do not prove that
+a job ran, output was rendered, an archive record was created, or a retention
+or legal-hold policy was applied. The artifact also does not grant
+client-publication authority, suitability authority, mandate action, execution
+instruction, production certification, or a supported feature.
 
 Platform mesh onboarding proof is captured by
 `scripts/generate_platform_mesh_onboarding_proof.py`. The repo-native
@@ -850,7 +854,7 @@ Implementation-backed evidence:
 1. repo-native check that generates and consumes the scheduled-worker
    deploy-proof, durable repository proof, runtime telemetry proof, Workbench
    read-path proof, Advise proposal route proof, Manage action route proof,
-   Report intake route source contract, Report materialization proof, outbox broker
+   Report intake route source contract, Report materialization source contract, outbox broker
    proof, outbox consumer contract proof, and outbox platform mesh event
    publication proof artifacts, generates default AI model-risk and non-AI
    operator workflow operations proof artifacts unless explicit artifacts are
@@ -1017,11 +1021,11 @@ Implementation-backed evidence:
     `make report-intake-route-source-contract-proof-gate`,
 1. report intake route source-contract tests:
     `tests/unit/report/test_intake_route_source_contract.py`,
-1. report materialization proof generator:
+1. report materialization source-contract generator:
     `scripts/report/generate_materialization_source_contract.py`,
-1. report materialization proof contract gate:
-    `make report-materialization-proof-contract-gate`,
-1. report materialization proof tests:
+1. report materialization source-contract gate:
+    `make report-materialization-source-contract-proof-gate`,
+1. report materialization source-contract tests:
     `tests/unit/report/test_materialization_source_contract.py`,
 1. outbox broker source-contract proof tests:
     `tests/unit/outbox/broker/test_source_contract_proof.py`,
@@ -1100,7 +1104,7 @@ $env:LOTUS_MANAGE_ROOT = "..\lotus-manage"
 $env:LOTUS_IDEA_MANAGE_ACTION_ROUTE_PROOF_OUTPUT = "output/downstream/manage-action-route-proof.json"
 $env:LOTUS_REPORT_ROOT = "..\lotus-report"
 $env:LOTUS_IDEA_REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF_OUTPUT = "output/report/intake-route-source-contract-proof.json"
-$env:LOTUS_IDEA_REPORT_MATERIALIZATION_PROOF_OUTPUT = "output/downstream/report-materialization-proof.json"
+$env:LOTUS_IDEA_REPORT_MATERIALIZATION_SOURCE_CONTRACT_PROOF_OUTPUT = "output/report/materialization-source-contract-proof.json"
 $env:LOTUS_IDEA_OUTBOX_CONSUMER_CONTRACT_PROOF_OUTPUT = "output/outbox/outbox-consumer-contract-proof.json"
 $env:LOTUS_IDEA_OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_PROOF_OUTPUT = "output/outbox/platform-mesh/event-source-contract-proof.json"
 $env:LOTUS_IDEA_GATEWAY_WORKBENCH_CONTRACT_PROOF_OUTPUT = "output/workbench/gateway-workbench-contract-proof.json"
@@ -1116,7 +1120,7 @@ make outbox-consumer-contract-proof-contract-gate
 make outbox-platform-mesh-event-source-contract-proof-gate
 make downstream-route-contract-proof-gate
 make report-intake-route-source-contract-proof-gate
-make report-materialization-proof-contract-gate
+make report-materialization-source-contract-proof-gate
 make workbench-read-path-source-contract-proof-gate
 make gateway-workbench-contract-proof-contract-gate
 make gateway-workbench-discovery-contract-proof-contract-gate

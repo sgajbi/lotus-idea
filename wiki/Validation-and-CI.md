@@ -438,7 +438,7 @@ Persistence adapter validation:
    optional missing-benchmark live Core proof consumption,
    optional missing-benchmark Performance readiness proof consumption,
    default Report intake route source-contract generation and consumption, default
-   Report materialization proof generation and consumption, default
+   Report materialization source-contract generation and consumption, default
    platform mesh onboarding proof generation and
    consumption, AI lineage store proof generation and consumption, and AI
    workflow-pack registration/runtime execution proof generation and consumption,
@@ -499,11 +499,13 @@ Persistence adapter validation:
     runtime, authorization, tenant-isolation, materialization, render, archive,
     publication, certification, and promotion claims.
 16. `tests/unit/report/test_materialization_source_contract.py` and
-    `make report-materialization-proof-contract-gate` prove the source-safe
-    `lotus-report` materialization proof contract that downstream and aggregate
-    readiness consume to clear only
+    `make report-materialization-source-contract-proof-gate` validate the
+    source-safe `lotus-report` materialization source contract. Downstream and
+    aggregate readiness may cite the artifact but clear no blocker. Tests keep
     `report_evidence_pack_live_materialization_proof_missing`,
-    `rendered_output_creation_missing`, and `archive_record_creation_missing`.
+    `rendered_output_creation_missing`, `archive_record_creation_missing`,
+    client-publication, certification, and promotion blockers, and reject
+    inflated runtime or authority claims.
 17. `tests/unit/test_ai_lineage_store_proof.py` and
     `make ai-lineage-store-proof-contract-gate` prove the source-safe AI
     lineage store proof contract that aggregate readiness consumes to clear
@@ -1070,8 +1072,9 @@ publication or downstream receipt.
 The internal downstream-realization-readiness endpoint is covered by OpenAPI,
 endpoint certification, unit tests, and integration tests. Its passing checks
 certify the diagnostic route only; planned contract records are not downstream
-route-existence proof. Bounded route/materialization proof artifacts clear only
-their named blockers. These checks do not certify Advise suitability,
+route-existence proof. Report intake and materialization source-contract
+artifacts clear no blocker. These checks do not certify report-job execution,
+rendered output, archive creation, Advise suitability,
 Manage rebalance/action authority, Gateway/Workbench support, data-product
 promotion, client-ready publication, or supported-feature promotion.
 

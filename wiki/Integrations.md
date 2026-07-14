@@ -294,10 +294,12 @@ submission `Idempotency-Key`. Client/business failures, malformed responses,
 and local idempotency conflicts are not retried. Computed backoff delays use a
 fixed central 20% downward jitter window; valid upstream `Retry-After` values
 remain capped but are not jittered.
-When the generated or overridden report-intake route proof is valid, the Report contract row
-uses `POST /reports/idea-evidence-packs` and reports
-`route_foundation_proven_not_certified`; it still remains blocked for
-materialization, render, archive, and publication proof.
+Valid Report intake and materialization source contracts add source-safe
+declaration refs for `POST /reports/idea-evidence-packs` and
+`POST /reports/idea-evidence-packs/materializations`. They do not change the
+planned target route, route-fit status, readiness, supportability, or blockers.
+Serving/acceptance, materialization execution, rendered output, archive record,
+retention/legal hold, and publication require owning-runtime evidence.
 
 The planned contract rows are authored in
 `contracts/downstream-realization/lotus-idea-downstream-contracts.v1.json` and

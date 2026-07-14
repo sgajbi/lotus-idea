@@ -1,6 +1,6 @@
 # RFC-0002 Slice 17: Implementation Proof And Live Validation
 
-Status: Partially implemented - aggregate proof-readiness diagnostic, bounded live source-ingestion proof artifact contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry proof artifact, Workbench read-path source-contract proof artifact, Gateway/Workbench contract proof artifact, Gateway/Workbench discovery contract proof artifact, Advise proposal route proof artifact, Manage action route proof artifact, Manage mandate live proof artifact, Core portfolio-state live proof artifact, Report intake route source-contract artifact, bounded outbox broker source-contract proof artifact, bounded downstream consumer source-contract proof artifact, bounded outbox platform-mesh event source-contract proof, mesh policy proof artifact, platform mesh onboarding proof artifact, AI lineage store proof artifact, AI workflow-pack registration proof artifact, AI workflow-pack runtime execution proof artifact, high-volatility and drawdown live Risk proof artifact contracts, low-income Core cashflow live proof artifact contract, bond-maturity policy foundation, and opportunity archetype scenario readiness with source/policy foundations available. Slice evidence now includes live canonical Risk concentration, Performance underperformance, and Performance benchmark-readiness source proofs for `PB_SG_GLOBAL_BAL_001`; observed Report intake execution, external broker publication, platform-mesh event publication, downstream consumer execution, full live opportunity-journey proof, data-mesh certification, Workbench product proof, client-publication approval, and supported-feature promotion remain pending.
+Status: Partially implemented - aggregate proof-readiness diagnostic, bounded live source-ingestion proof artifact contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry proof artifact, Workbench read-path source-contract proof artifact, Gateway/Workbench contract proof artifact, Gateway/Workbench discovery contract proof artifact, Advise proposal route proof artifact, Manage action route proof artifact, Manage mandate live proof artifact, Core portfolio-state live proof artifact, Report intake route and materialization source-contract artifacts, bounded outbox broker source-contract proof artifact, bounded downstream consumer source-contract proof artifact, bounded outbox platform-mesh event source-contract proof, mesh policy proof artifact, platform mesh onboarding proof artifact, AI lineage store proof artifact, AI workflow-pack registration proof artifact, AI workflow-pack runtime execution proof artifact, high-volatility and drawdown live Risk proof artifact contracts, low-income Core cashflow live proof artifact contract, bond-maturity policy foundation, and opportunity archetype scenario readiness with source/policy foundations available. Slice evidence now includes live canonical Risk concentration, Performance underperformance, and Performance benchmark-readiness source proofs for `PB_SG_GLOBAL_BAL_001`; observed Report intake and materialization execution, rendered output, archive creation, external broker publication, platform-mesh event publication, downstream consumer execution, full live opportunity-journey proof, data-mesh certification, Workbench product proof, client-publication approval, and supported-feature promotion remain pending.
 
 ## Outcome
 
@@ -573,14 +573,16 @@ The runtime proof-artifact loader narrows the operator-readiness gap from
 "generator-only artifact consumption" to "HTTP and generated readiness share
 the same configured proof evidence." It now includes source-ingestion live and
 scheduled proof artifact refs plus default Advise proposal route, Manage action
-route, Report intake route, and platform mesh onboarding proof refs as
-auditable evidence when those blockers clear; it
+route, Report intake route and materialization source contracts, and platform
+mesh onboarding refs as auditable evidence; the Report source contracts clear
+no blocker. It
 does not certify storage, live scheduler operations, mesh, Workbench,
 Report/Render/Archive materialization, or supported-feature readiness.
-The report-intake route proof narrows the downstream proof gap from "no
-route-foundation evidence" to "`lotus-report` intake route is source-safely
-proven and linked into readiness." It does not close Report package creation,
-rendered output, archive record, client-publication, or supported-feature proof.
+The Report intake and materialization source contracts narrow the declaration
+gap by linking sibling-owned routes into readiness provenance. They do not
+prove route serving, request execution, Report package creation, rendered
+output, archive record, retention/legal-hold posture, client publication,
+certification, or supported-feature promotion, and clear no blocker.
 The Advise/Manage route proofs narrow the downstream proof gap from "no sibling
 route-foundation evidence" to "proposal and action intake route foundations can
 be source-safely proven and linked into readiness." They do not close

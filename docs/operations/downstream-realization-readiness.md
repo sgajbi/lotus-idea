@@ -7,7 +7,7 @@
 | Required role | `operator` |
 | Required capability | `idea.downstream-realization.readiness.read` |
 | Supportability | `not_certified` |
-| Product claim | Internal submission posture plus default source-safe `lotus-advise`, `lotus-manage`, and `lotus-report` route-foundation proof consumption when sibling evidence is present; default source-safe `lotus-report` materialization proof can clear only Report/Render/Archive materialization blockers; no suitability, rebalance/execution, client publication, or supported-feature promotion |
+| Product claim | Internal submission posture plus default source-safe `lotus-advise`, `lotus-manage`, and `lotus-report` route-foundation evidence when sibling contracts are present; the `lotus-report` materialization source contract clears no blocker; no report-job execution, rendered output, archive record, suitability, rebalance/execution, client publication, or supported-feature promotion |
 
 `GET /api/v1/downstream-realization/readiness` reports source-safe readiness
 for realizing approved ideas through `lotus-advise`, `lotus-manage`,
@@ -41,9 +41,9 @@ It returns:
     evidence is present,
 11. default source-safe proof that `lotus-report` exposes
     `POST /reports/idea-evidence-packs` for idea evidence-pack intake,
-12. default source-safe proof that `lotus-report` exposes
-    `POST /reports/idea-evidence-packs/materializations` and has report-owned
-    materialization/render/archive evidence when sibling evidence is present,
+12. default source-contract evidence that `lotus-report` declares
+    `POST /reports/idea-evidence-packs/materializations` as a report-owned route
+    without asserting runtime execution, rendered output, or archive creation,
 13. `not_certified` supportability until downstream live contracts and product
    proof exist.
 
@@ -117,7 +117,7 @@ existence blockers:
 | Advise proposal route proof | `advise_live_contract_proof_missing` | Candidate evidence source authority remains with `lotus-idea`; suitability, policy approval, proposal lifecycle certification, client communication, and supported-feature promotion remain with `lotus-advise`. |
 | Manage action route proof | `manage_live_contract_proof_missing` | Mandate/rebalance action authority, execution, order creation, settlement, client communication, and supported-feature promotion remain with `lotus-manage`. |
 | Report intake route source contract | None | `lotus_report_live_intake_route_proof_missing` remains, together with report materialization, render output, archive record creation, client publication, and supported-feature promotion boundaries owned by Report/Render/Archive. |
-| Report materialization proof | `report_evidence_pack_live_materialization_proof_missing`, `rendered_output_creation_missing`, `archive_record_creation_missing` | Client publication and supported-feature promotion remain blocked; `lotus-report`, `lotus-render`, and `lotus-archive` retain downstream authority. |
+| Report materialization source contract | None | Materialization execution, rendered output creation, archive record creation, client publication, and supported-feature promotion remain blocked; `lotus-report`, `lotus-render`, and `lotus-archive` retain downstream authority. |
 
 `make downstream-realization-contract-gate` blocks:
 
@@ -187,7 +187,7 @@ artifacts deliberately keep these blockers:
 | `rebalance_execution_authority_remains_lotus_manage` | `lotus-manage` remains the source authority for action-register, DPM/rebalance workflow, order/execution, and settlement posture. |
 | `client_publication_authority_blocked` | No client-ready communication authority is granted. |
 
-## Report Materialization Proof
+## Report Materialization Source Contract
 
 `scripts/report/generate_materialization_source_contract.py` can read the sibling
 `lotus-report` materialization contract and produce a source-safe artifact such
@@ -197,24 +197,28 @@ as:
 python scripts/report/generate_materialization_source_contract.py `
   --generated-at-utc 2026-06-27T00:00:00Z `
   --report-root ..\lotus-report `
-  --output output\downstream\report-materialization-proof.json
+  --output output\report\materialization-source-contract-proof.json
 ```
 
 `make implementation-proof-readiness-check` generates this artifact by default
 from `LOTUS_REPORT_ROOT=../lotus-report` into
-`LOTUS_IDEA_REPORT_MATERIALIZATION_PROOF_OUTPUT=output/downstream/report-materialization-proof.json`
+`LOTUS_IDEA_REPORT_MATERIALIZATION_SOURCE_CONTRACT_PROOF_OUTPUT=output/report/materialization-source-contract-proof.json`
 and passes it to aggregate readiness. Set
-`LOTUS_IDEA_REPORT_MATERIALIZATION_PROOF` only when you need to override that
-artifact. Missing sibling evidence writes an invalid non-proof artifact and
-keeps the materialization blockers. A valid artifact proves only that
-`lotus-report` owns the materialization route and downstream evidence chain for
-report materialization, rendered-output creation, and archive-record creation.
+`LOTUS_IDEA_REPORT_MATERIALIZATION_SOURCE_CONTRACT_PROOF` only when you need to
+override that artifact. Missing sibling evidence writes an invalid
+source-contract artifact. A valid artifact confirms only the declared
+`lotus-report` owner, route, product compatibility, and non-proof boundaries.
+It is `source_contract` evidence: aggregate readiness may cite it but must not
+change target routes, readiness status, supportability status, or blockers.
 It deliberately keeps these blockers:
 
 | Remaining blocker | Why it remains |
 | --- | --- |
+| `report_evidence_pack_live_materialization_proof_missing` | A source declaration is not execution evidence from a report materialization job. |
+| `rendered_output_creation_missing` | No rendered output instance or digest was observed. |
+| `archive_record_creation_missing` | No archive record, retention policy, or legal-hold posture was observed. |
 | `client_publication_authority_blocked` | No client-ready communication authority is granted. |
-| `supported_feature_promotion_missing` | Materialization evidence is not supported-feature promotion. |
+| `supported_feature_promotion_missing` | Source-contract compatibility is not supported-feature promotion. |
 
 ## Report Intake Route Source Contract
 
@@ -367,9 +371,9 @@ Implementation-backed evidence:
    `scripts/report/generate_intake_route_source_contract.py`,
 16. report intake source-contract gate:
     `scripts/report/intake_route_source_contract_gate.py`,
-17. report materialization proof generator:
+17. report materialization source-contract generator:
    `scripts/report/generate_materialization_source_contract.py`,
-18. report materialization proof gate:
+18. report materialization source-contract gate:
     `scripts/report/materialization_source_contract_gate.py`,
 19. readiness API route: `src/app/api/downstream_realization_readiness.py`,
 20. operation events:
@@ -390,7 +394,7 @@ Implementation-backed evidence:
     `tests/unit/test_downstream_route_contract_proof.py`,
 27. report intake source-contract tests:
     `tests/unit/report/test_intake_route_source_contract.py`,
-28. report materialization proof tests:
+28. report materialization source-contract tests:
     `tests/unit/report/test_materialization_source_contract.py`,
 29. submission reconciliation and real PostgreSQL tests:
    `tests/integration/test_downstream_submission_reconciliation_api.py` and
@@ -406,7 +410,7 @@ python -m pytest tests/unit/test_downstream_realization_application.py tests/uni
 make downstream-realization-contract-gate
 make downstream-route-contract-proof-gate
 make report-intake-route-source-contract-proof-gate
-make report-materialization-proof-contract-gate
+make report-materialization-source-contract-proof-gate
 make endpoint-certification-gate
 make openapi-gate
 ```

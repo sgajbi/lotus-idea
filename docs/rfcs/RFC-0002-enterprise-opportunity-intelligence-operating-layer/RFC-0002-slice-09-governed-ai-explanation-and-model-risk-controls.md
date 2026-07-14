@@ -365,6 +365,17 @@ execution evidence exists. The validator rejects materialization, render,
 archive, publication, certification, and supported-feature claim inflation.
 This is design modularity inside the existing Idea deployable.
 
+Issue `#438` applies the same taxonomy to the static `lotus-report`
+materialization declaration. The capability-owned
+`application/report/materialization_source_contract.py`,
+`scripts/report/generate_materialization_source_contract.py`, and
+`tests/unit/report/test_materialization_source_contract.py` family emits a
+closed-field v2 `source_contract` artifact. It adds provenance but clears no
+blocker, preserves downstream target/readiness/supportability posture, and
+rejects report-job, render, archive, retention, publication, deployment,
+certification, and promotion claim inflation. Runtime evidence remains owned
+by the Report/Render/Archive execution path; no runtime split is introduced.
+
 PR `#439` merged this occurrence by rebase to exact-main SHA `1a64ef69`.
 Main Releasability `29356075075` and CodeQL `29356064752` passed on that exact
 commit, and wiki publication `4a43d9d` has zero source drift. Issue `#437` is
