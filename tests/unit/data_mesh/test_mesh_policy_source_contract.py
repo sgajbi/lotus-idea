@@ -161,6 +161,13 @@ def test_rejects_source_authority_substitution() -> None:
     assert mesh_policy_source_contract_is_valid(proof) is False
 
 
+def test_rejects_missing_source_authority_entry() -> None:
+    proof = _build_proof(ROOT)
+    proof["sourceAuthority"] = proof["sourceAuthority"][:-1]
+
+    assert mesh_policy_source_contract_is_valid(proof) is False
+
+
 def test_rejects_source_authority_ref_substitution() -> None:
     proof = _build_proof(ROOT)
     proof["sourceAuthority"][0]["ref"] = "contracts/mesh-slo/other.json"
@@ -171,6 +178,13 @@ def test_rejects_source_authority_ref_substitution() -> None:
 def test_rejects_non_hex_source_authority_digest() -> None:
     proof = _build_proof(ROOT)
     proof["sourceAuthority"][0]["sha256"] = "g" * 64
+
+    assert mesh_policy_source_contract_is_valid(proof) is False
+
+
+def test_rejects_truncated_source_authority_digest() -> None:
+    proof = _build_proof(ROOT)
+    proof["sourceAuthority"][0]["sha256"] = "a" * 63
 
     assert mesh_policy_source_contract_is_valid(proof) is False
 
