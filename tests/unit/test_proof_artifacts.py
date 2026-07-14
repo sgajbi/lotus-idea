@@ -29,7 +29,7 @@ from app.application.outbox.broker.source_contract_proof import (
 from app.application.outbox.platform_mesh.source_contract_proof import (
     OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_PROOF_ENV,
 )
-from app.application.data_mesh.platform_catalog_source_contract import PLATFORM_MESH_ONBOARDING_PROOF_ENV
+from app.application.data_mesh.platform_catalog_source_contract import PLATFORM_CATALOG_SOURCE_CONTRACT_ENV
 from app.application.runtime_trust_telemetry_proof import RUNTIME_TRUST_TELEMETRY_PROOF_ENV
 from app.application.source_ingestion_readiness import LIVE_PROOF_ENV
 from app.application.workbench.read_path_source_contract import (
@@ -65,7 +65,7 @@ def test_configured_implementation_proof_artifacts_loads_relative_source_safe_re
     outbox_mesh_event_path = (
         tmp_path / "output" / "outbox" / "platform-mesh" / "event-source-contract-proof.json"
     )
-    platform_mesh_path = tmp_path / "output" / "data-mesh" / "platform-mesh-onboarding-proof.json"
+    platform_mesh_path = tmp_path / "output" / "data-mesh" / "platform-catalog-source-contract.json"
     low_income_path = (
         tmp_path / "output" / "opportunity-archetypes" / "low-income-core-cashflow-live-proof.json"
     )
@@ -162,11 +162,11 @@ def test_configured_implementation_proof_artifacts_loads_relative_source_safe_re
         "output/outbox/platform-mesh/event-source-contract-proof.json"
     )
     _assert_bound_artifact(
-        artifacts.platform_mesh_onboarding_proof,
-        "platform-mesh-onboarding-proof.json",
+        artifacts.platform_catalog_source_contract,
+        "platform-catalog-source-contract.json",
     )
-    assert artifacts.platform_mesh_onboarding_proof_ref == (
-        "output/data-mesh/platform-mesh-onboarding-proof.json"
+    assert artifacts.platform_catalog_source_contract_ref == (
+        "output/data-mesh/platform-catalog-source-contract.json"
     )
     _assert_bound_artifact(artifacts.bond_maturity_live_proof, "bond-maturity-live-proof.json")
     assert artifacts.bond_maturity_live_proof_ref == (
@@ -228,8 +228,8 @@ def _configure_relative_artifact_env(monkeypatch: pytest.MonkeyPatch) -> None:
         OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_PROOF_ENV: (
             "output/outbox/platform-mesh/event-source-contract-proof.json"
         ),
-        PLATFORM_MESH_ONBOARDING_PROOF_ENV: (
-            "output/data-mesh/platform-mesh-onboarding-proof.json"
+        PLATFORM_CATALOG_SOURCE_CONTRACT_ENV: (
+            "output/data-mesh/platform-catalog-source-contract.json"
         ),
         BOND_MATURITY_LIVE_PROOF_ENV: (
             "output/opportunity-archetypes/bond-maturity-live-proof.json"

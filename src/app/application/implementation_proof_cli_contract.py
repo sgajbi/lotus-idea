@@ -62,7 +62,7 @@ from app.application.outbox.platform_mesh.source_contract_proof import (
     OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_PROOF_ENV,
 )
 from app.application.data_mesh.platform_catalog_source_contract import (
-    PLATFORM_MESH_ONBOARDING_PROOF_ENV,
+    PLATFORM_CATALOG_SOURCE_CONTRACT_ENV,
 )
 from app.application.performance_underperformance_live_proof import (
     PERFORMANCE_UNDERPERFORMANCE_LIVE_PROOF_ENV,
@@ -172,9 +172,9 @@ PROOF_ARTIFACT_ARGS: tuple[tuple[str, str, str], ...] = (
         "Optional bounded outbox platform-mesh event source-contract proof artifact path.",
     ),
     (
-        "--platform-mesh-onboarding-proof",
-        PLATFORM_MESH_ONBOARDING_PROOF_ENV,
-        "Optional platform source-manifest and catalog onboarding proof artifact path.",
+        "--platform-catalog-source-contract-proof",
+        PLATFORM_CATALOG_SOURCE_CONTRACT_ENV,
+        "Optional digest-bound platform catalog source-contract artifact path.",
     ),
     (
         "--risk-concentration-live-proof",

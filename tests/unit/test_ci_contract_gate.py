@@ -593,7 +593,7 @@ def test_ci_contract_gate_blocks_missing_outbox_consumer_contract_proof_readines
     ) in errors
 
 
-def test_ci_contract_gate_blocks_missing_platform_mesh_onboarding_proof_generation() -> None:
+def test_ci_contract_gate_blocks_missing_platform_catalog_source_contract_generation() -> None:
     module = _load_ci_contract_gate()
     makefile = (
         (ROOT / "Makefile")
@@ -605,18 +605,18 @@ def test_ci_contract_gate_blocks_missing_platform_mesh_onboarding_proof_generati
 
     assert (
         "Makefile implementation-proof-readiness-check target must generate "
-        "a platform mesh onboarding proof artifact"
+        "a platform catalog source contract artifact"
     ) in errors
 
 
-def test_ci_contract_gate_blocks_missing_platform_mesh_onboarding_proof_wiring() -> None:
+def test_ci_contract_gate_blocks_missing_platform_catalog_source_contract_wiring() -> None:
     module = _load_ci_contract_gate()
     makefile = (
         (ROOT / "Makefile")
         .read_text(encoding="utf-8")
         .replace(
-            "--platform-mesh-onboarding-proof",
-            "--removed-platform-mesh-onboarding-proof",
+            "--platform-catalog-source-contract-proof",
+            "--removed-platform-catalog-source-contract",
         )
     )
 
@@ -624,7 +624,7 @@ def test_ci_contract_gate_blocks_missing_platform_mesh_onboarding_proof_wiring()
 
     assert (
         "Makefile implementation-proof-readiness-check target must pass the "
-        "platform mesh onboarding proof artifact into readiness generation"
+        "platform catalog source contract artifact into readiness generation"
     ) in errors
 
 
@@ -721,13 +721,13 @@ def test_ci_gate_requires_gateway_workbench_discovery_contract_gate() -> None:
     ) in errors
 
 
-def test_ci_contract_gate_blocks_missing_platform_mesh_onboarding_output_wiring() -> None:
+def test_ci_contract_gate_blocks_missing_platform_catalog_source_contract_output_wiring() -> None:
     module = _load_ci_contract_gate()
     makefile = (
         (ROOT / "Makefile")
         .read_text(encoding="utf-8")
         .replace(
-            "LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF_OUTPUT",
+            "LOTUS_IDEA_PLATFORM_CATALOG_SOURCE_CONTRACT_PROOF_OUTPUT",
             "REMOVED_PLATFORM_MESH_PROOF_OUTPUT",
         )
     )
@@ -736,7 +736,7 @@ def test_ci_contract_gate_blocks_missing_platform_mesh_onboarding_output_wiring(
 
     assert (
         "Makefile implementation-proof-readiness-check target must pass the default "
-        "platform mesh onboarding proof output into readiness generation"
+        "platform catalog source contract output into readiness generation"
     ) in errors
 
 
@@ -750,7 +750,7 @@ def test_ci_contract_gate_blocks_missing_platform_mesh_root_wiring() -> None:
 
     assert (
         "Makefile implementation-proof-readiness-check target must support default "
-        "platform root wiring for platform mesh onboarding proof generation"
+        "platform root wiring for platform catalog source contract generation"
     ) in errors
 
 

@@ -12,13 +12,14 @@ for path in (ROOT, SRC):
         sys.path.insert(0, str(path))
 
 from app.application.data_mesh.platform_catalog_source_contract import (  # noqa: E402
-    PLATFORM_MESH_ONBOARDING_BLOCKERS_CLEARED,
-    PLATFORM_MESH_ONBOARDING_PROOF_SCHEMA_VERSION,
-    REMAINING_PLATFORM_MESH_ONBOARDING_BLOCKERS,
-    REQUIRED_PLATFORM_MESH_EVIDENCE_REFS,
-    build_platform_mesh_onboarding_proof_payload,
-    platform_mesh_onboarding_proof_is_valid,
+    PLATFORM_CATALOG_SOURCE_BLOCKERS_SATISFIED,
+    PLATFORM_CATALOG_SOURCE_CONTRACT_SCHEMA_VERSION,
+    REMAINING_PLATFORM_CATALOG_CERTIFICATION_BLOCKERS,
+    REQUIRED_PLATFORM_CATALOG_EVIDENCE_REFS,
+    build_platform_catalog_source_contract_payload,
+    platform_catalog_source_contract_is_valid,
 )
+from app.domain.proof_evidence import EvidenceClass  # noqa: E402
 
 try:
     from scripts.proof_source_safety import (  # noqa: E402
@@ -64,52 +65,57 @@ _validate_forbidden_content = forbidden_content_validator(
 )
 
 
-def validate_platform_mesh_onboarding_proof_contract(
+def validate_platform_catalog_source_contract(
     *,
     platform_root: Path | None = None,
 ) -> list[str]:
     errors: list[str] = []
-    proof = build_platform_mesh_onboarding_proof_payload(
+    proof = build_platform_catalog_source_contract_payload(
         generated_at_utc=datetime(2026, 6, 24, 0, 0, tzinfo=UTC),
         repository_root=ROOT,
         platform_root=platform_root,
     )
-    if proof.get("schemaVersion") != PLATFORM_MESH_ONBOARDING_PROOF_SCHEMA_VERSION:
+    if proof.get("schemaVersion") != PLATFORM_CATALOG_SOURCE_CONTRACT_SCHEMA_VERSION:
         errors.append(
-            "platform mesh onboarding proof schema must be "
-            f"{PLATFORM_MESH_ONBOARDING_PROOF_SCHEMA_VERSION}"
+            "platform catalog source contract schema must be "
+            f"{PLATFORM_CATALOG_SOURCE_CONTRACT_SCHEMA_VERSION}"
         )
-    if tuple(proof.get("evidenceRefs") or ()) != REQUIRED_PLATFORM_MESH_EVIDENCE_REFS:
-        errors.append("platform mesh onboarding proof evidence refs must match the contract")
-    if tuple(proof.get("aggregateBlockersCleared") or ()) != (
-        PLATFORM_MESH_ONBOARDING_BLOCKERS_CLEARED
+    if tuple(proof.get("evidenceRefs") or ()) != REQUIRED_PLATFORM_CATALOG_EVIDENCE_REFS:
+        errors.append("platform catalog source contract evidence refs must match the contract")
+    if proof.get("evidenceClass") != EvidenceClass.SOURCE_CONTRACT.value:
+        errors.append("platform catalog source contract must declare source_contract evidence")
+    if tuple(proof.get("sourceContractBlockersSatisfied") or ()) != (
+        PLATFORM_CATALOG_SOURCE_BLOCKERS_SATISFIED
     ):
-        errors.append("platform mesh onboarding proof must clear only platform inclusion blockers")
-    if tuple(proof.get("remainingCertificationBlockers") or ()) != (
-        REMAINING_PLATFORM_MESH_ONBOARDING_BLOCKERS
-    ):
-        errors.append("platform mesh onboarding proof must retain certification blockers")
-    proof_checks = proof.get("proofChecks")
-    file_evidence_present = (
-        isinstance(proof_checks, Mapping) and proof_checks.get("fileEvidencePresent") is True
-    )
-    if file_evidence_present and not platform_mesh_onboarding_proof_is_valid(proof):
         errors.append(
-            "platform mesh onboarding proof must validate against sibling platform truth when "
+            "platform catalog source contract must satisfy only platform inclusion blockers"
+        )
+    if tuple(proof.get("remainingCertificationBlockers") or ()) != (
+        REMAINING_PLATFORM_CATALOG_CERTIFICATION_BLOCKERS
+    ):
+        errors.append("platform catalog source contract must retain certification blockers")
+    contract_checks = proof.get("contractChecks")
+    file_evidence_present = (
+        isinstance(contract_checks, Mapping)
+        and contract_checks.get("fileEvidencePresent") is True
+    )
+    if file_evidence_present and not platform_catalog_source_contract_is_valid(proof):
+        errors.append(
+            "platform catalog source contract must validate against sibling platform truth when "
             "sibling evidence is present"
         )
-    if not file_evidence_present and proof.get("platformMeshOnboardingProofValid") is not False:
+    if not file_evidence_present and proof.get("sourceContractValid") is not False:
         errors.append("missing sibling platform evidence must remain an invalid non-proof artifact")
     validate_forbidden_content(proof, errors, FORBIDDEN_KEYS, FORBIDDEN_TEXT_FRAGMENTS)
     return errors
 
 
 def main() -> int:
-    errors = validate_platform_mesh_onboarding_proof_contract()
+    errors = validate_platform_catalog_source_contract()
     if errors:
         print("\n".join(errors))
         return 1
-    print("Platform mesh onboarding proof contract gate passed")
+    print("Platform catalog source contract gate passed")
     return 0
 
 

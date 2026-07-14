@@ -21,7 +21,7 @@ from app.application.workbench.contract_proof import (  # noqa: E402
     build_gateway_workbench_contract_proof_payload,
 )
 from app.application.data_mesh.platform_catalog_source_contract import (  # noqa: E402
-    build_platform_mesh_onboarding_proof_payload,
+    build_platform_catalog_source_contract_payload,
 )
 from app.application.workbench.read_path_source_contract import (  # noqa: E402
     build_workbench_read_path_source_contract_proof_payload,
@@ -95,7 +95,7 @@ def validate_gateway_workbench_discovery_contract_proof_contract(
             "output/workbench/read-path-source-contract-proof.json"
         ),
     )
-    platform_mesh_onboarding_proof = build_platform_mesh_onboarding_proof_payload(
+    platform_catalog_source_contract = build_platform_catalog_source_contract_payload(
         generated_at_utc=generated_at_utc,
         repository_root=ROOT,
         platform_root=effective_platform_root,
@@ -104,10 +104,10 @@ def validate_gateway_workbench_discovery_contract_proof_contract(
         generated_at_utc=generated_at_utc,
         repository_root=ROOT,
         platform_root=effective_platform_root,
-        platform_mesh_onboarding_proof=platform_mesh_onboarding_proof,
+        platform_catalog_source_contract=platform_catalog_source_contract,
         workbench_read_path_source_contract_proof=read_path_source_contract_proof,
         gateway_workbench_contract_proof=gateway_workbench_contract_proof,
-        platform_mesh_onboarding_proof_ref="output/data-mesh/platform-mesh-onboarding-proof.json",
+        platform_catalog_source_contract_ref="output/data-mesh/platform-catalog-source-contract.json",
         workbench_read_path_source_contract_proof_ref=(
             "output/workbench/read-path-source-contract-proof.json"
         ),

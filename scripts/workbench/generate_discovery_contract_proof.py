@@ -23,9 +23,9 @@ def main(argv: list[str] | None = None) -> int:
     parser = _parser()
     args = parser.parse_args(argv)
     try:
-        platform_mesh_onboarding_proof = _read_json_object(
-            Path(args.platform_mesh_onboarding_proof),
-            artifact_name="platform mesh onboarding proof",
+        platform_catalog_source_contract = _read_json_object(
+            Path(args.platform_catalog_source_contract_proof),
+            artifact_name="platform catalog source contract",
         )
         read_path_source_contract_proof = _read_json_object(
             Path(args.workbench_read_path_source_contract_proof),
@@ -39,12 +39,12 @@ def main(argv: list[str] | None = None) -> int:
             generated_at_utc=_aware_datetime(args.generated_at_utc),
             repository_root=ROOT,
             platform_root=Path(args.platform_root),
-            platform_mesh_onboarding_proof=platform_mesh_onboarding_proof,
+            platform_catalog_source_contract=platform_catalog_source_contract,
             workbench_read_path_source_contract_proof=read_path_source_contract_proof,
             gateway_workbench_contract_proof=gateway_workbench_contract_proof,
-            platform_mesh_onboarding_proof_ref=_source_safe_artifact_ref(
-                Path(args.platform_mesh_onboarding_proof),
-                artifact_name="platform mesh onboarding proof artifact",
+            platform_catalog_source_contract_ref=_source_safe_artifact_ref(
+                Path(args.platform_catalog_source_contract_proof),
+                artifact_name="platform catalog source contract artifact",
             ),
             workbench_read_path_source_contract_proof_ref=_source_safe_artifact_ref(
                 Path(args.workbench_read_path_source_contract_proof),
@@ -71,7 +71,7 @@ def _parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--generated-at-utc", required=True)
     parser.add_argument("--platform-root", default=str(ROOT.parent / "lotus-platform"))
-    parser.add_argument("--platform-mesh-onboarding-proof", required=True)
+    parser.add_argument("--platform-catalog-source-contract-proof", required=True)
     parser.add_argument("--workbench-read-path-source-contract-proof", required=True)
     parser.add_argument("--gateway-workbench-contract-proof", required=True)
     parser.add_argument("--output")
