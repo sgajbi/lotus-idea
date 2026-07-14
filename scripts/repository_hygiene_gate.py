@@ -41,6 +41,7 @@ REQUIRED_BOUNDED_MODULE_PATHS = {
     "src/app/application/ai_workflow_pack_registration/__init__.py",
     "src/app/application/ai_workflow_pack_registration/source_contract_proof.py",
     "tests/unit/ai_workflow_pack_registration/__init__.py",
+    "tests/unit/ai_workflow_pack_registration/test_ci_contract.py",
     "tests/unit/ai_workflow_pack_registration/test_source_contract_proof.py",
     "scripts/outbox/broker/__init__.py",
     "scripts/outbox/broker/generate_source_contract_proof.py",
