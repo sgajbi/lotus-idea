@@ -6,13 +6,14 @@ import json
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 SRC = ROOT / "src"
-if str(SRC) not in sys.path:
-    sys.path.insert(0, str(SRC))
+for path in (ROOT, SRC):
+    if str(path) not in sys.path:
+        sys.path.insert(0, str(path))
 
-from app.application.report_intake_route_proof import (  # noqa: E402
-    build_report_intake_route_proof_payload,
+from app.application.report.intake_route_source_contract import (  # noqa: E402
+    build_report_intake_route_source_contract_proof_payload,
 )
 
 try:
@@ -25,17 +26,17 @@ def main(argv: list[str] | None = None) -> int:
     parser = _parser()
     args = parser.parse_args(argv)
     try:
-        payload = build_report_intake_route_proof_payload(
+        payload = build_report_intake_route_source_contract_proof_payload(
             generated_at_utc=_aware_datetime(args.generated_at_utc),
             repository_root=ROOT,
             report_root=Path(args.report_root) if args.report_root else None,
         )
     except (OSError, ValueError, json.JSONDecodeError) as exc:
-        print(f"report intake route proof error: {exc}", file=sys.stderr)
+        print(f"Report intake-route source-contract proof error: {exc}", file=sys.stderr)
         return 2
 
     write_json_payload(payload, output=args.output)
-    if payload["reportIntakeRouteProofValid"]:
+    if payload["reportIntakeRouteSourceContractValid"]:
         return 0
     proof_checks = payload.get("proofChecks")
     if (
@@ -49,7 +50,7 @@ def main(argv: list[str] | None = None) -> int:
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Generate a source-safe lotus-idea proof for the lotus-report intake route."
+        description="Generate the lotus-idea Report intake-route source-contract proof."
     )
     parser.add_argument("--generated-at-utc", required=True)
     parser.add_argument("--report-root")

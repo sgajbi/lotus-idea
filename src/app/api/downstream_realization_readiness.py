@@ -20,7 +20,9 @@ from app.application.downstream_realization_readiness import (
     DownstreamRealizationReadinessSnapshot,
     build_downstream_realization_readiness_snapshot,
 )
-from app.application.report_intake_route_proof import load_report_intake_route_proof_from_env
+from app.application.report.intake_route_source_contract import (
+    load_report_intake_route_source_contract_proof_from_env,
+)
 from app.api.problem_details import problem_details_response as problem_response
 from app.observability import (
     IdeaOperation,
@@ -182,14 +184,14 @@ async def get_downstream_realization_readiness(
 
     repository = get_idea_repository()
     durable_storage_backed = idea_repository_durable_storage_backed(repository)
-    report_intake_route_proof, report_intake_route_proof_ref = (
-        load_report_intake_route_proof_from_env()
+    report_intake_route_source_contract_proof, report_intake_route_source_contract_proof_ref = (
+        load_report_intake_route_source_contract_proof_from_env()
     )
     snapshot = build_downstream_realization_readiness_snapshot(
         repository=repository,
         durable_storage_backed=durable_storage_backed,
-        report_intake_route_proof=report_intake_route_proof,
-        report_intake_route_proof_ref=report_intake_route_proof_ref,
+        report_intake_route_source_contract_proof=report_intake_route_source_contract_proof,
+        report_intake_route_source_contract_proof_ref=report_intake_route_source_contract_proof_ref,
     )
     _emit_downstream_realization_readiness_event(
         OperationOutcome.ACCEPTED if snapshot.certification_ready else OperationOutcome.BLOCKED,
@@ -231,8 +233,9 @@ DOWNSTREAM_REALIZATION_READINESS_ROUTE: RouteMetadata = {
         "The endpoint reports lotus-idea-owned conversion intent, conversion outcome, "
         "report evidence-pack request counts, planned Advise/Manage/Report downstream "
         "contract posture, source-safe adapter-foundation presence, and explicit "
-        "downstream blockers. A configured report intake route proof can clear only "
-        "the lotus-report live intake route blocker. It does not call downstream systems, "
+        "downstream blockers. A configured Report intake source contract adds declared "
+        "route provenance but does not clear the lotus-report live intake blocker. "
+        "It does not call downstream systems, "
         "create proposals, create manage actions, render documents, archive records, "
         "authorize client publication, or promote a supported feature."
     ),

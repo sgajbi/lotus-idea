@@ -46,12 +46,12 @@ from app.application.platform_mesh_onboarding_proof import (
     REQUIRED_PRODUCER_PRODUCTS,
     build_platform_mesh_onboarding_proof_payload,
 )
-from app.application.report_intake_route_proof import (
-    REMAINING_REPORT_INTAKE_ROUTE_BLOCKERS,
+from app.application.report.intake_route_source_contract import (
+    REMAINING_REPORT_INTAKE_ROUTE_CERTIFICATION_BLOCKERS,
     REPORT_INTAKE_ROUTE,
-    REPORT_INTAKE_ROUTE_BLOCKERS_CLEARED,
-    REPORT_INTAKE_ROUTE_PROOF_SCHEMA_VERSION,
-    REQUIRED_REPORT_INTAKE_ROUTE_EVIDENCE_REFS,
+    REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_BLOCKERS_CLEARED,
+    REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF_SCHEMA_VERSION,
+    REQUIRED_REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_EVIDENCE_REFS,
 )
 from app.application.report_materialization_proof import (
     REMAINING_REPORT_MATERIALIZATION_BLOCKERS,
@@ -805,20 +805,20 @@ def test_implementation_proof_readiness_uses_mesh_policy_proof_without_certifica
     assert snapshot.supported_features_promoted is False
 
 
-def test_readiness_uses_report_intake_route_proof_without_materialization() -> None:
-    proof_ref = "output/downstream/report-intake-route-proof.json"
+def test_readiness_uses_report_intake_route_source_contract_proof_without_materialization() -> None:
+    proof_ref = "output/report/intake-route-source-contract-proof.json"
     snapshot = build_implementation_proof_readiness_snapshot(
         evaluated_at_utc=datetime(2026, 6, 24, 0, 0, tzinfo=UTC),
         repository=InMemoryIdeaRepository(),
         durable_storage_backed=False,
-        report_intake_route_proof=_bound_aggregate_proof(
-            _valid_report_intake_route_proof(),
+        report_intake_route_source_contract_proof=_bound_aggregate_proof(
+            _valid_report_intake_route_source_contract_proof(),
             proof_ref,
         ),
-        report_intake_route_proof_ref=proof_ref,
+        report_intake_route_source_contract_proof_ref=proof_ref,
     )
 
-    assert "lotus_report_live_intake_route_proof_missing" not in snapshot.overall_blockers
+    assert "lotus_report_live_intake_route_proof_missing" in snapshot.overall_blockers
     assert "report_evidence_pack_live_materialization_proof_missing" in snapshot.overall_blockers
     assert "rendered_output_creation_missing" in snapshot.overall_blockers
     assert "archive_record_creation_missing" in snapshot.overall_blockers
@@ -832,12 +832,15 @@ def test_readiness_uses_report_intake_route_proof_without_materialization() -> N
         for capability in snapshot.capabilities
         if capability.capability_id == "downstream-realization"
     )
-    assert "lotus_report_live_intake_route_proof_missing" not in downstream.blockers
+    assert "lotus_report_live_intake_route_proof_missing" in downstream.blockers
     assert "report_evidence_pack_live_materialization_proof_missing" in downstream.blockers
     assert "rendered_output_creation_missing" in downstream.blockers
     assert "archive_record_creation_missing" in downstream.blockers
     assert "client_publication_authority_blocked" in downstream.blockers
-    assert "output/downstream/report-intake-route-proof.json" in downstream.evidence_refs
+    assert (
+        "output/report/intake-route-source-contract-proof.json"
+        in downstream.evidence_refs
+    )
 
 
 def test_implementation_proof_readiness_uses_advise_and_manage_route_proofs_without_authority() -> (
@@ -880,17 +883,17 @@ def test_implementation_proof_readiness_uses_advise_and_manage_route_proofs_with
 def test_implementation_proof_readiness_uses_report_materialization_proof_without_publication() -> (
     None
 ):
-    report_intake_proof_ref = "output/downstream/report-intake-route-proof.json"
+    report_intake_proof_ref = "output/report/intake-route-source-contract-proof.json"
     report_materialization_proof_ref = "output/downstream/report-materialization-proof.json"
     snapshot = build_implementation_proof_readiness_snapshot(
         evaluated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
         repository=InMemoryIdeaRepository(),
         durable_storage_backed=False,
-        report_intake_route_proof=_bound_aggregate_proof(
-            _valid_report_intake_route_proof(),
+        report_intake_route_source_contract_proof=_bound_aggregate_proof(
+            _valid_report_intake_route_source_contract_proof(),
             report_intake_proof_ref,
         ),
-        report_intake_route_proof_ref=report_intake_proof_ref,
+        report_intake_route_source_contract_proof_ref=report_intake_proof_ref,
         report_materialization_proof=_bound_aggregate_proof(
             _valid_report_materialization_proof(),
             report_materialization_proof_ref,
@@ -898,7 +901,7 @@ def test_implementation_proof_readiness_uses_report_materialization_proof_withou
         report_materialization_proof_ref=report_materialization_proof_ref,
     )
 
-    assert "lotus_report_live_intake_route_proof_missing" not in snapshot.overall_blockers
+    assert "lotus_report_live_intake_route_proof_missing" in snapshot.overall_blockers
     assert "report_evidence_pack_live_materialization_proof_missing" not in (
         snapshot.overall_blockers
     )
@@ -1035,25 +1038,29 @@ def _write_platform_mesh_fixture(tmp_path: Path) -> Path:
     return platform_root
 
 
-def _valid_report_intake_route_proof() -> dict[str, object]:
+def _valid_report_intake_route_source_contract_proof() -> dict[str, object]:
     return {
-        "schemaVersion": REPORT_INTAKE_ROUTE_PROOF_SCHEMA_VERSION,
+        "schemaVersion": REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF_SCHEMA_VERSION,
         "repository": "lotus-idea",
         "generatedAtUtc": "2026-06-24T00:00:00+00:00",
-        "proofType": "lotus_report_idea_evidence_intake_route_contract",
-        "proofScope": "source_safe_report_intake_route_only",
-        "reportIntakeRouteProofValid": True,
-        "aggregateBlockersCleared": REPORT_INTAKE_ROUTE_BLOCKERS_CLEARED,
-        "evidenceRefs": REQUIRED_REPORT_INTAKE_ROUTE_EVIDENCE_REFS,
+        "proofType": "lotus_report_idea_evidence_intake_route_source_contract",
+        "proofScope": "report_intake_route_declaration_and_contract_compatibility",
+        "evidenceClass": "source_contract",
+        "reportIntakeRouteSourceContractValid": True,
+        "aggregateBlockersCleared": REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_BLOCKERS_CLEARED,
+        "evidenceRefs": REQUIRED_REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_EVIDENCE_REFS,
         "targetRoute": REPORT_INTAKE_ROUTE,
         "proofChecks": {
             "timezoneAwareGeneratedAtUtc": True,
             "fileEvidencePresent": True,
-            "reportContractProvesRoute": True,
+            "reportContractDeclaresCompatibleRoute": True,
             "reportContractPreservesNonProofBoundaries": True,
-            "reportContractRetainsMaterializationBlockers": True,
         },
-        "remainingCertificationBlockers": REMAINING_REPORT_INTAKE_ROUTE_BLOCKERS,
+        "remainingCertificationBlockers": REMAINING_REPORT_INTAKE_ROUTE_CERTIFICATION_BLOCKERS,
+        "reportRouteServingObserved": False,
+        "requestAuthorizationObserved": False,
+        "tenantIsolationObserved": False,
+        "runtimeExecutionObserved": False,
         "reportMaterializationProven": False,
         "renderedOutputCreated": False,
         "archiveRecordCreated": False,

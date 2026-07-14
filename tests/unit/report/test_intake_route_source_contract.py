@@ -9,40 +9,51 @@ from typing import Any, Mapping, cast
 
 import pytest
 
-from app.application.report_intake_route_proof import (
-    REMAINING_REPORT_INTAKE_ROUTE_BLOCKERS,
+from app.application.report.intake_route_source_contract import (
+    REMAINING_REPORT_INTAKE_ROUTE_CERTIFICATION_BLOCKERS,
     REPORT_INTAKE_ROUTE,
-    REPORT_INTAKE_ROUTE_BLOCKERS_CLEARED,
-    REPORT_INTAKE_ROUTE_PROOF_SCHEMA_VERSION,
-    REQUIRED_REPORT_INTAKE_ROUTE_EVIDENCE_REFS,
-    build_report_intake_route_proof_payload,
-    report_intake_route_proof_is_valid,
+    REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_BLOCKERS_CLEARED,
+    REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF_SCHEMA_VERSION,
+    REQUIRED_REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_EVIDENCE_REFS,
+    build_report_intake_route_source_contract_proof_payload,
+    report_intake_route_source_contract_proof_is_valid,
 )
+from app.domain.proof_evidence import EvidenceClass
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 
 
-def test_builds_source_safe_report_intake_route_proof(tmp_path: Path) -> None:
-    proof = _valid_report_intake_route_proof(tmp_path)
+def test_builds_source_safe_report_intake_route_source_contract_proof(tmp_path: Path) -> None:
+    proof = _valid_report_intake_route_source_contract_proof(tmp_path)
 
-    assert proof["schemaVersion"] == REPORT_INTAKE_ROUTE_PROOF_SCHEMA_VERSION
+    assert proof["schemaVersion"] == REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF_SCHEMA_VERSION
     assert proof["repository"] == "lotus-idea"
-    assert proof["proofType"] == "lotus_report_idea_evidence_intake_route_contract"
-    assert proof["proofScope"] == "source_safe_report_intake_route_only"
-    assert proof["reportIntakeRouteProofValid"] is True
+    assert proof["proofType"] == "lotus_report_idea_evidence_intake_route_source_contract"
+    assert proof["proofScope"] == "report_intake_route_declaration_and_contract_compatibility"
+    assert proof["evidenceClass"] == EvidenceClass.SOURCE_CONTRACT.value
+    assert proof["reportIntakeRouteSourceContractValid"] is True
     assert proof["targetRoute"] == REPORT_INTAKE_ROUTE
-    assert tuple(proof["aggregateBlockersCleared"]) == REPORT_INTAKE_ROUTE_BLOCKERS_CLEARED
-    assert tuple(proof["evidenceRefs"]) == REQUIRED_REPORT_INTAKE_ROUTE_EVIDENCE_REFS
-    assert tuple(proof["remainingCertificationBlockers"]) == (
-        REMAINING_REPORT_INTAKE_ROUTE_BLOCKERS
+    assert (
+        tuple(proof["aggregateBlockersCleared"])
+        == REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_BLOCKERS_CLEARED
     )
+    assert (
+        tuple(proof["evidenceRefs"]) == REQUIRED_REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_EVIDENCE_REFS
+    )
+    assert tuple(proof["remainingCertificationBlockers"]) == (
+        REMAINING_REPORT_INTAKE_ROUTE_CERTIFICATION_BLOCKERS
+    )
+    assert proof["reportRouteServingObserved"] is False
+    assert proof["requestAuthorizationObserved"] is False
+    assert proof["tenantIsolationObserved"] is False
+    assert proof["runtimeExecutionObserved"] is False
     assert proof["reportMaterializationProven"] is False
     assert proof["renderedOutputCreated"] is False
     assert proof["archiveRecordCreated"] is False
     assert proof["clientPublicationAuthorityGranted"] is False
     assert proof["supportedFeaturePromoted"] is False
     assert proof["proofClosed"] is False
-    assert report_intake_route_proof_is_valid(proof) is True
+    assert report_intake_route_source_contract_proof_is_valid(proof) is True
     serialized = json.dumps(proof)
     assert "PB_SG_GLOBAL_BAL_001" not in serialized
     assert "portfolio_id" not in serialized
@@ -50,20 +61,20 @@ def test_builds_source_safe_report_intake_route_proof(tmp_path: Path) -> None:
     assert "requestBody" not in serialized
 
 
-def test_rejects_report_intake_route_proof_when_report_evidence_is_missing(
+def test_rejects_report_intake_route_source_contract_proof_when_report_evidence_is_missing(
     tmp_path: Path,
 ) -> None:
-    proof = build_report_intake_route_proof_payload(
+    proof = build_report_intake_route_source_contract_proof_payload(
         generated_at_utc=datetime(2026, 6, 24, 0, 0, tzinfo=UTC),
         repository_root=ROOT,
         report_root=tmp_path,
     )
 
-    assert proof["reportIntakeRouteProofValid"] is False
-    assert report_intake_route_proof_is_valid(proof) is False
+    assert proof["reportIntakeRouteSourceContractValid"] is False
+    assert report_intake_route_source_contract_proof_is_valid(proof) is False
 
 
-def test_rejects_report_intake_route_proof_when_route_blocker_is_still_present(
+def test_source_contract_retains_live_route_blocker_when_sibling_contract_omits_it(
     tmp_path: Path,
 ) -> None:
     report_root = _write_report_fixture(tmp_path)
@@ -72,20 +83,20 @@ def test_rejects_report_intake_route_proof_when_route_blocker_is_still_present(
         / "contracts/idea-evidence-intake/lotus-report-idea-evidence-pack-intake.v1.json"
     )
     contract = json.loads(contract_path.read_text(encoding="utf-8"))
-    contract["certification_blockers"] = [
-        "lotus_report_live_intake_route_proof_missing",
-        *REMAINING_REPORT_INTAKE_ROUTE_BLOCKERS,
-    ]
+    contract["certification_blockers"] = list(
+        REMAINING_REPORT_INTAKE_ROUTE_CERTIFICATION_BLOCKERS[1:]
+    )
     contract_path.write_text(json.dumps(contract), encoding="utf-8")
 
-    proof = build_report_intake_route_proof_payload(
+    proof = build_report_intake_route_source_contract_proof_payload(
         generated_at_utc=datetime(2026, 6, 24, 0, 0, tzinfo=UTC),
         repository_root=ROOT,
         report_root=report_root,
     )
 
-    assert proof["reportIntakeRouteProofValid"] is False
-    assert report_intake_route_proof_is_valid(proof) is False
+    assert proof["reportIntakeRouteSourceContractValid"] is True
+    assert "lotus_report_live_intake_route_proof_missing" in proof["remainingCertificationBlockers"]
+    assert report_intake_route_source_contract_proof_is_valid(proof) is True
 
 
 @pytest.mark.parametrize(
@@ -95,8 +106,13 @@ def test_rejects_report_intake_route_proof_when_route_blocker_is_still_present(
         ("repository", "lotus-report"),
         ("proofType", "route"),
         ("proofScope", "materialization"),
-        ("reportIntakeRouteProofValid", False),
+        ("evidenceClass", "runtime_execution"),
+        ("reportIntakeRouteSourceContractValid", False),
         ("targetRoute", "planned:lotus-report-idea-evidence-pack-intake"),
+        ("reportRouteServingObserved", True),
+        ("requestAuthorizationObserved", True),
+        ("tenantIsolationObserved", True),
+        ("runtimeExecutionObserved", True),
         ("reportMaterializationProven", True),
         ("renderedOutputCreated", True),
         ("archiveRecordCreated", True),
@@ -106,35 +122,35 @@ def test_rejects_report_intake_route_proof_when_route_blocker_is_still_present(
         ("generatedAtUtc", "not-a-datetime"),
     ],
 )
-def test_rejects_report_intake_route_proof_with_invalid_top_level_fields(
+def test_rejects_report_intake_route_source_contract_proof_with_invalid_top_level_fields(
     field_name: str,
     bad_value: object,
     tmp_path: Path,
 ) -> None:
-    proof = _valid_report_intake_route_proof(tmp_path)
+    proof = _valid_report_intake_route_source_contract_proof(tmp_path)
     proof[field_name] = bad_value
 
-    assert report_intake_route_proof_is_valid(proof) is False
+    assert report_intake_route_source_contract_proof_is_valid(proof) is False
 
 
 @pytest.mark.parametrize(
     ("field_name", "bad_value"),
     [
-        ("aggregateBlockersCleared", []),
+        ("aggregateBlockersCleared", ["lotus_report_live_intake_route_proof_missing"]),
         ("evidenceRefs", []),
         ("remainingCertificationBlockers", []),
         ("proofChecks", []),
     ],
 )
-def test_rejects_report_intake_route_proof_with_invalid_contract_fields(
+def test_rejects_report_intake_route_source_contract_proof_with_invalid_contract_fields(
     field_name: str,
     bad_value: object,
     tmp_path: Path,
 ) -> None:
-    proof = _valid_report_intake_route_proof(tmp_path)
+    proof = _valid_report_intake_route_source_contract_proof(tmp_path)
     proof[field_name] = bad_value
 
-    assert report_intake_route_proof_is_valid(proof) is False
+    assert report_intake_route_source_contract_proof_is_valid(proof) is False
 
 
 @pytest.mark.parametrize(
@@ -142,27 +158,28 @@ def test_rejects_report_intake_route_proof_with_invalid_contract_fields(
     [
         "timezoneAwareGeneratedAtUtc",
         "fileEvidencePresent",
-        "reportContractProvesRoute",
+        "reportContractDeclaresCompatibleRoute",
         "reportContractPreservesNonProofBoundaries",
-        "reportContractRetainsMaterializationBlockers",
     ],
 )
-def test_rejects_report_intake_route_proof_with_invalid_proof_checks(
+def test_rejects_report_intake_route_source_contract_proof_with_invalid_proof_checks(
     check_name: str,
     tmp_path: Path,
 ) -> None:
-    proof = _valid_report_intake_route_proof(tmp_path)
+    proof = _valid_report_intake_route_source_contract_proof(tmp_path)
     proof_checks = dict(cast(Mapping[str, object], proof["proofChecks"]))
     proof_checks[check_name] = False
     proof["proofChecks"] = proof_checks
 
-    assert report_intake_route_proof_is_valid(proof) is False
+    assert report_intake_route_source_contract_proof_is_valid(proof) is False
 
 
-def test_report_intake_route_proof_cli_writes_valid_artifact(tmp_path: Path) -> None:
+def test_intake_route_source_contract_cli_writes_valid_artifact(
+    tmp_path: Path,
+) -> None:
     module = _load_generator_script()
     report_root = _write_report_fixture(tmp_path)
-    output_path = tmp_path / "proof" / "report-intake-route-proof.json"
+    output_path = tmp_path / "proof" / "report-intake-route-source-contract-proof.json"
 
     result = module.main(
         [
@@ -177,14 +194,14 @@ def test_report_intake_route_proof_cli_writes_valid_artifact(tmp_path: Path) -> 
 
     assert result == 0
     proof = json.loads(output_path.read_text(encoding="utf-8"))
-    assert report_intake_route_proof_is_valid(proof) is True
+    assert report_intake_route_source_contract_proof_is_valid(proof) is True
 
 
-def test_report_intake_route_proof_cli_allows_missing_sibling_evidence_for_default_readiness(
+def test_intake_route_source_contract_cli_allows_missing_sibling_evidence(
     tmp_path: Path,
 ) -> None:
     module = _load_generator_script()
-    output_path = tmp_path / "proof" / "report-intake-route-proof.json"
+    output_path = tmp_path / "proof" / "report-intake-route-source-contract-proof.json"
 
     result = module.main(
         [
@@ -200,12 +217,12 @@ def test_report_intake_route_proof_cli_allows_missing_sibling_evidence_for_defau
 
     assert result == 0
     proof = json.loads(output_path.read_text(encoding="utf-8"))
-    assert proof["reportIntakeRouteProofValid"] is False
+    assert proof["reportIntakeRouteSourceContractValid"] is False
     assert proof["proofChecks"]["fileEvidencePresent"] is False
-    assert report_intake_route_proof_is_valid(proof) is False
+    assert report_intake_route_source_contract_proof_is_valid(proof) is False
 
 
-def test_report_intake_route_proof_cli_still_fails_contract_drift_when_evidence_exists(
+def test_intake_route_source_contract_cli_fails_when_sibling_contract_drifts(
     tmp_path: Path,
 ) -> None:
     module = _load_generator_script()
@@ -217,7 +234,7 @@ def test_report_intake_route_proof_cli_still_fails_contract_drift_when_evidence_
     contract = json.loads(contract_path.read_text(encoding="utf-8"))
     contract["supported_feature_promoted"] = True
     contract_path.write_text(json.dumps(contract), encoding="utf-8")
-    output_path = tmp_path / "proof" / "report-intake-route-proof.json"
+    output_path = tmp_path / "proof" / "report-intake-route-source-contract-proof.json"
 
     result = module.main(
         [
@@ -234,10 +251,10 @@ def test_report_intake_route_proof_cli_still_fails_contract_drift_when_evidence_
     assert result == 1
     proof = json.loads(output_path.read_text(encoding="utf-8"))
     assert proof["proofChecks"]["fileEvidencePresent"] is True
-    assert proof["proofChecks"]["reportContractProvesRoute"] is False
+    assert proof["proofChecks"]["reportContractDeclaresCompatibleRoute"] is False
 
 
-def test_report_intake_route_proof_contract_gate_scans_tuple_content() -> None:
+def test_intake_route_source_contract_gate_scans_tuple_content() -> None:
     module = _load_contract_gate_script()
     errors: list[str] = []
 
@@ -246,8 +263,8 @@ def test_report_intake_route_proof_contract_gate_scans_tuple_content() -> None:
     assert errors == ["$[0]: forbidden source-sensitive text `portfolio_id` is present"]
 
 
-def _valid_report_intake_route_proof(tmp_path: Path) -> dict[str, Any]:
-    return build_report_intake_route_proof_payload(
+def _valid_report_intake_route_source_contract_proof(tmp_path: Path) -> dict[str, Any]:
+    return build_report_intake_route_source_contract_proof_payload(
         generated_at_utc=datetime(2026, 6, 24, 0, 0, tzinfo=UTC),
         repository_root=ROOT,
         report_root=_write_report_fixture(tmp_path),
@@ -292,13 +309,16 @@ def _report_contract_payload() -> dict[str, object]:
             "Does not grant suitability, advisory, mandate, execution, or client-communication authority.",
             "Does not promote a supported feature in lotus-report or lotus-idea.",
         ],
-        "certification_blockers": list(REMAINING_REPORT_INTAKE_ROUTE_BLOCKERS),
+        "certification_blockers": list(REMAINING_REPORT_INTAKE_ROUTE_CERTIFICATION_BLOCKERS),
     }
 
 
 def _load_generator_script() -> ModuleType:
-    script_path = ROOT / "scripts" / "generate_report_intake_route_proof.py"
-    spec = importlib.util.spec_from_file_location("generate_report_intake_route_proof", script_path)
+    script_path = ROOT / "scripts" / "report" / "generate_intake_route_source_contract.py"
+    spec = importlib.util.spec_from_file_location(
+        "generate_intake_route_source_contract",
+        script_path,
+    )
     assert spec is not None
     assert spec.loader is not None
     module = importlib.util.module_from_spec(spec)
@@ -307,9 +327,9 @@ def _load_generator_script() -> ModuleType:
 
 
 def _load_contract_gate_script() -> ModuleType:
-    script_path = ROOT / "scripts" / "report_intake_route_proof_contract_gate.py"
+    script_path = ROOT / "scripts" / "report" / "intake_route_source_contract_gate.py"
     spec = importlib.util.spec_from_file_location(
-        "report_intake_route_proof_contract_gate",
+        "report_intake_route_source_contract_gate",
         script_path,
     )
     assert spec is not None

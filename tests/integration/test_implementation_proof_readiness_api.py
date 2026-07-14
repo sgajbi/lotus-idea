@@ -38,13 +38,13 @@ from tests.support.durable_repository_proof import (
     SOURCE_COMMIT_SHA,
     valid_durable_repository_ci_execution_receipt,
 )
-from app.application.report_intake_route_proof import (
-    REMAINING_REPORT_INTAKE_ROUTE_BLOCKERS,
+from app.application.report.intake_route_source_contract import (
+    REMAINING_REPORT_INTAKE_ROUTE_CERTIFICATION_BLOCKERS,
     REPORT_INTAKE_ROUTE,
-    REPORT_INTAKE_ROUTE_BLOCKERS_CLEARED,
-    REPORT_INTAKE_ROUTE_PROOF_ENV,
-    REPORT_INTAKE_ROUTE_PROOF_SCHEMA_VERSION,
-    REQUIRED_REPORT_INTAKE_ROUTE_EVIDENCE_REFS,
+    REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_BLOCKERS_CLEARED,
+    REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF_ENV,
+    REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF_SCHEMA_VERSION,
+    REQUIRED_REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_EVIDENCE_REFS,
 )
 from app.application.source_ingestion_live_proof import (
     build_source_ingestion_live_proof_payload,
@@ -108,7 +108,7 @@ def test_implementation_proof_readiness_api_returns_blocked_operator_posture(
     monkeypatch.delenv(AI_MODEL_RISK_OPERATIONS_PROOF_ENV, raising=False)
     monkeypatch.delenv(OPERATOR_WORKFLOWS_OPERATIONS_PROOF_ENV, raising=False)
     monkeypatch.delenv(WORKBENCH_READ_PATH_SOURCE_CONTRACT_PROOF_ENV, raising=False)
-    monkeypatch.delenv(REPORT_INTAKE_ROUTE_PROOF_ENV, raising=False)
+    monkeypatch.delenv(REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF_ENV, raising=False)
     monkeypatch.delenv(BOND_MATURITY_LIVE_PROOF_ENV, raising=False)
     reset_idea_repository_for_tests()
     client = managed_test_client(app)
@@ -304,7 +304,7 @@ def test_implementation_proof_readiness_api_consumes_configured_proof_artifacts(
     assert "operator_workflow_dashboard_runtime_proof_missing" in payload["overallBlockers"]
     assert "operator_workflow_alert_rules_runtime_proof_missing" in payload["overallBlockers"]
     assert "workbench_gateway_bff_consumption_proof_missing" in payload["overallBlockers"]
-    assert "lotus_report_live_intake_route_proof_missing" not in payload["overallBlockers"]
+    assert "lotus_report_live_intake_route_proof_missing" in payload["overallBlockers"]
     assert (
         "opportunity_archetype_maturity_live_core_source_proof_missing"
         not in payload["overallBlockers"]
@@ -358,7 +358,7 @@ def test_implementation_proof_readiness_api_consumes_configured_proof_artifacts(
         "Workbench read-path source-contract proof artifact"
         in capabilities["workbench-product-proof"]["evidenceRefs"]
     )
-    assert "report intake route proof artifact" in " ".join(
+    assert "Report intake-route source-contract proof artifact" in " ".join(
         capabilities["downstream-realization"]["evidenceRefs"]
     )
     assert (
@@ -498,7 +498,7 @@ def _configure_readiness_proof_artifacts(
         tmp_path / "operator-workflows-operations-source-contract-proof.json"
     )
     workbench_proof_path = tmp_path / "read-path-source-contract-proof.json"
-    report_route_proof_path = tmp_path / "report-intake-route-proof.json"
+    report_route_proof_path = tmp_path / "report-intake-route-source-contract-proof.json"
     bond_maturity_live_proof_path = tmp_path / "bond-maturity-live-proof.json"
 
     manifest_path.write_text("{}", encoding="utf-8")
@@ -566,7 +566,7 @@ def _configure_readiness_proof_artifacts(
             repository_root=ROOT,
         ),
     )
-    _write_proof(report_route_proof_path, _valid_report_intake_route_proof())
+    _write_proof(report_route_proof_path, _valid_report_intake_route_source_contract_proof())
     _write_proof(
         bond_maturity_live_proof_path,
         _valid_bond_maturity_live_proof(generated_at_utc=evaluated_at_utc),
@@ -585,7 +585,7 @@ def _configure_readiness_proof_artifacts(
         WORKBENCH_READ_PATH_SOURCE_CONTRACT_PROOF_ENV,
         str(workbench_proof_path),
     )
-    monkeypatch.setenv(REPORT_INTAKE_ROUTE_PROOF_ENV, str(report_route_proof_path))
+    monkeypatch.setenv(REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF_ENV, str(report_route_proof_path))
     monkeypatch.setenv(BOND_MATURITY_LIVE_PROOF_ENV, str(bond_maturity_live_proof_path))
 
 
@@ -621,25 +621,29 @@ def _valid_scheduled_worker_proof(*, generated_at_utc: datetime) -> dict[str, ob
     )
 
 
-def _valid_report_intake_route_proof() -> dict[str, object]:
+def _valid_report_intake_route_source_contract_proof() -> dict[str, object]:
     return {
-        "schemaVersion": REPORT_INTAKE_ROUTE_PROOF_SCHEMA_VERSION,
+        "schemaVersion": REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF_SCHEMA_VERSION,
         "repository": "lotus-idea",
         "generatedAtUtc": "2026-06-24T00:00:00+00:00",
-        "proofType": "lotus_report_idea_evidence_intake_route_contract",
-        "proofScope": "source_safe_report_intake_route_only",
-        "reportIntakeRouteProofValid": True,
-        "aggregateBlockersCleared": REPORT_INTAKE_ROUTE_BLOCKERS_CLEARED,
-        "evidenceRefs": REQUIRED_REPORT_INTAKE_ROUTE_EVIDENCE_REFS,
+        "proofType": "lotus_report_idea_evidence_intake_route_source_contract",
+        "proofScope": "report_intake_route_declaration_and_contract_compatibility",
+        "evidenceClass": "source_contract",
+        "reportIntakeRouteSourceContractValid": True,
+        "aggregateBlockersCleared": REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_BLOCKERS_CLEARED,
+        "evidenceRefs": REQUIRED_REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_EVIDENCE_REFS,
         "targetRoute": REPORT_INTAKE_ROUTE,
         "proofChecks": {
             "timezoneAwareGeneratedAtUtc": True,
             "fileEvidencePresent": True,
-            "reportContractProvesRoute": True,
+            "reportContractDeclaresCompatibleRoute": True,
             "reportContractPreservesNonProofBoundaries": True,
-            "reportContractRetainsMaterializationBlockers": True,
         },
-        "remainingCertificationBlockers": REMAINING_REPORT_INTAKE_ROUTE_BLOCKERS,
+        "remainingCertificationBlockers": REMAINING_REPORT_INTAKE_ROUTE_CERTIFICATION_BLOCKERS,
+        "reportRouteServingObserved": False,
+        "requestAuthorizationObserved": False,
+        "tenantIsolationObserved": False,
+        "runtimeExecutionObserved": False,
         "reportMaterializationProven": False,
         "renderedOutputCreated": False,
         "archiveRecordCreated": False,

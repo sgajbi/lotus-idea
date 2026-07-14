@@ -37,7 +37,9 @@ from app.application.outbox.platform_mesh.source_contract_proof import (
 )
 from app.application.platform_mesh_onboarding_proof import PLATFORM_MESH_ONBOARDING_PROOF_ENV
 from app.application.proof_provenance import bind_aggregate_proof_provenance
-from app.application.report_intake_route_proof import REPORT_INTAKE_ROUTE_PROOF_ENV
+from app.application.report.intake_route_source_contract import (
+    REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF_ENV,
+)
 from app.application.runtime_trust_telemetry_proof import RUNTIME_TRUST_TELEMETRY_PROOF_ENV
 from app.application.source_ingestion_readiness import LIVE_PROOF_ENV, SCHEDULED_WORKER_PROOF_ENV
 from app.application.workbench.read_path_source_contract import (
@@ -69,8 +71,8 @@ class ConfiguredImplementationProofArtifacts:
     outbox_broker_source_contract_proof_ref: str | None
     outbox_platform_mesh_event_source_contract_proof: dict[str, Any] | None
     outbox_platform_mesh_event_source_contract_proof_ref: str | None
-    report_intake_route_proof: dict[str, Any] | None
-    report_intake_route_proof_ref: str | None
+    report_intake_route_source_contract_proof: dict[str, Any] | None
+    report_intake_route_source_contract_proof_ref: str | None
     platform_mesh_onboarding_proof: dict[str, Any] | None
     platform_mesh_onboarding_proof_ref: str | None
     workbench_read_path_source_contract_proof: dict[str, Any] | None
@@ -155,10 +157,10 @@ _JSON_PROOF_ARTIFACTS: tuple[tuple[str, str, str, str], ...] = (
         "outbox platform mesh event source-contract proof",
     ),
     (
-        REPORT_INTAKE_ROUTE_PROOF_ENV,
-        "report_intake_route_proof",
-        "report_intake_route_proof_ref",
-        "report intake route proof",
+        REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF_ENV,
+        "report_intake_route_source_contract_proof",
+        "report_intake_route_source_contract_proof_ref",
+        "Report intake-route source-contract proof",
     ),
     (
         PLATFORM_MESH_ONBOARDING_PROOF_ENV,

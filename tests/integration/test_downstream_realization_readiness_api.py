@@ -8,13 +8,13 @@ import pytest
 from tests.support.http import managed_test_client
 
 import app.api.downstream_realization_readiness as downstream_readiness_api
-from app.application.report_intake_route_proof import (
-    REMAINING_REPORT_INTAKE_ROUTE_BLOCKERS,
+from app.application.report.intake_route_source_contract import (
+    REMAINING_REPORT_INTAKE_ROUTE_CERTIFICATION_BLOCKERS,
     REPORT_INTAKE_ROUTE,
-    REPORT_INTAKE_ROUTE_BLOCKERS_CLEARED,
-    REPORT_INTAKE_ROUTE_PROOF_ENV,
-    REPORT_INTAKE_ROUTE_PROOF_SCHEMA_VERSION,
-    REQUIRED_REPORT_INTAKE_ROUTE_EVIDENCE_REFS,
+    REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_BLOCKERS_CLEARED,
+    REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF_ENV,
+    REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF_SCHEMA_VERSION,
+    REQUIRED_REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_EVIDENCE_REFS,
 )
 from app.runtime.repository_state import reset_idea_repository_for_tests
 from app.main import app
@@ -36,7 +36,7 @@ def downstream_readiness_headers(
 def test_downstream_realization_readiness_api_returns_blocked_operator_posture(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.delenv(REPORT_INTAKE_ROUTE_PROOF_ENV, raising=False)
+    monkeypatch.delenv(REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF_ENV, raising=False)
     reset_idea_repository_for_tests()
     client = managed_test_client(app)
 
@@ -109,13 +109,15 @@ def test_downstream_realization_readiness_api_returns_blocked_operator_posture(
     assert "requestBody" not in response.text
 
 
-def test_downstream_realization_readiness_api_consumes_report_route_proof(
+def test_downstream_readiness_api_adds_report_source_contract_without_runtime_clearance(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    proof_path = tmp_path / "report-intake-route-proof.json"
-    proof_path.write_text(json.dumps(_valid_report_intake_route_proof()), encoding="utf-8")
-    monkeypatch.setenv(REPORT_INTAKE_ROUTE_PROOF_ENV, str(proof_path))
+    proof_path = tmp_path / "report-intake-route-source-contract-proof.json"
+    proof_path.write_text(
+        json.dumps(_valid_report_intake_route_source_contract_proof()), encoding="utf-8"
+    )
+    monkeypatch.setenv(REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF_ENV, str(proof_path))
     reset_idea_repository_for_tests()
     client = managed_test_client(app)
 
@@ -126,7 +128,7 @@ def test_downstream_realization_readiness_api_consumes_report_route_proof(
 
     assert response.status_code == 200
     payload = response.json()
-    assert "lotus_report_live_intake_route_proof_missing" not in payload["blockers"]
+    assert "lotus_report_live_intake_route_proof_missing" in payload["blockers"]
     assert "report_evidence_pack_live_materialization_proof_missing" in payload["blockers"]
     assert "rendered_output_creation_missing" in payload["blockers"]
     assert "archive_record_creation_missing" in payload["blockers"]
@@ -136,13 +138,13 @@ def test_downstream_realization_readiness_api_consumes_report_route_proof(
         for contract in payload["downstreamContracts"]
         if contract["contractId"] == "lotus-idea-to-lotus-report-evidence-pack-intake:v1"
     )
-    assert report_contract["targetRoute"] == REPORT_INTAKE_ROUTE
-    assert report_contract["routeFitStatus"] == "route_foundation_proven_not_certified"
-    assert "lotus_report_live_intake_route_proof_missing" not in report_contract["blockers"]
+    assert report_contract["targetRoute"] == "planned:lotus-report-idea-evidence-pack-intake"
+    assert report_contract["routeFitStatus"] == "not_certified"
+    assert "lotus_report_live_intake_route_proof_missing" in report_contract["blockers"]
     assert (
         "report_evidence_pack_live_materialization_proof_missing" in (report_contract["blockers"])
     )
-    assert "report intake route proof artifact" in response.text
+    assert "report intake route source contract proof artifact" in response.text
     assert "client_id" not in response.text
     assert "portfolio_id" not in response.text
 
@@ -206,25 +208,29 @@ def test_downstream_realization_readiness_api_emits_not_certified_operation_even
     ]
 
 
-def _valid_report_intake_route_proof() -> dict[str, object]:
+def _valid_report_intake_route_source_contract_proof() -> dict[str, object]:
     return {
-        "schemaVersion": REPORT_INTAKE_ROUTE_PROOF_SCHEMA_VERSION,
+        "schemaVersion": REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF_SCHEMA_VERSION,
         "repository": "lotus-idea",
         "generatedAtUtc": "2026-06-24T00:00:00+00:00",
-        "proofType": "lotus_report_idea_evidence_intake_route_contract",
-        "proofScope": "source_safe_report_intake_route_only",
-        "reportIntakeRouteProofValid": True,
-        "aggregateBlockersCleared": REPORT_INTAKE_ROUTE_BLOCKERS_CLEARED,
-        "evidenceRefs": REQUIRED_REPORT_INTAKE_ROUTE_EVIDENCE_REFS,
+        "proofType": "lotus_report_idea_evidence_intake_route_source_contract",
+        "proofScope": "report_intake_route_declaration_and_contract_compatibility",
+        "evidenceClass": "source_contract",
+        "reportIntakeRouteSourceContractValid": True,
+        "aggregateBlockersCleared": REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_BLOCKERS_CLEARED,
+        "evidenceRefs": REQUIRED_REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_EVIDENCE_REFS,
         "targetRoute": REPORT_INTAKE_ROUTE,
         "proofChecks": {
             "timezoneAwareGeneratedAtUtc": True,
             "fileEvidencePresent": True,
-            "reportContractProvesRoute": True,
+            "reportContractDeclaresCompatibleRoute": True,
             "reportContractPreservesNonProofBoundaries": True,
-            "reportContractRetainsMaterializationBlockers": True,
         },
-        "remainingCertificationBlockers": REMAINING_REPORT_INTAKE_ROUTE_BLOCKERS,
+        "remainingCertificationBlockers": REMAINING_REPORT_INTAKE_ROUTE_CERTIFICATION_BLOCKERS,
+        "reportRouteServingObserved": False,
+        "requestAuthorizationObserved": False,
+        "tenantIsolationObserved": False,
+        "runtimeExecutionObserved": False,
         "reportMaterializationProven": False,
         "renderedOutputCreated": False,
         "archiveRecordCreated": False,

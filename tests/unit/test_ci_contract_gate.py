@@ -354,15 +354,17 @@ def test_ci_contract_gate_blocks_missing_ai_workflow_pack_runtime_execution_gate
     ) in errors
 
 
-def test_ci_contract_gate_blocks_missing_report_intake_route_proof_readiness_wiring() -> None:
+def test_ci_contract_gate_blocks_missing_report_intake_route_source_contract_proof_readiness_wiring() -> (
+    None
+):
     module = _load_ci_contract_gate()
     makefile = (
         (ROOT / "Makefile")
         .read_text(encoding="utf-8")
         .replace(
-            "$(if $(LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF),"
-            "--report-intake-route-proof $(LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF),"
-            "--report-intake-route-proof $(LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF_OUTPUT)) ",
+            "$(if $(LOTUS_IDEA_REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF),"
+            "--report-intake-route-source-contract-proof $(LOTUS_IDEA_REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF),"
+            "--report-intake-route-source-contract-proof $(LOTUS_IDEA_REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF_OUTPUT)) ",
             "",
         )
     )
@@ -371,7 +373,7 @@ def test_ci_contract_gate_blocks_missing_report_intake_route_proof_readiness_wir
 
     assert (
         "Makefile implementation-proof-readiness-check target must pass the "
-        "report intake route proof artifact into readiness generation"
+            "Report intake-route source-contract proof artifact into readiness generation"
     ) in errors
 
 
@@ -460,19 +462,21 @@ def test_ci_contract_gate_blocks_missing_downstream_route_contract_proof_gate() 
     ) in errors
 
 
-def test_ci_contract_gate_blocks_missing_report_intake_route_proof_generation() -> None:
+def test_ci_contract_gate_blocks_missing_report_intake_route_source_contract_proof_generation() -> (
+    None
+):
     module = _load_ci_contract_gate()
     makefile = (
         (ROOT / "Makefile")
         .read_text(encoding="utf-8")
-        .replace("scripts/generate_report_intake_route_proof.py", "scripts/removed.py")
+        .replace("scripts/report/generate_intake_route_source_contract.py", "scripts/removed.py")
     )
 
     errors = module.validate_makefile(makefile)
 
     assert (
         "Makefile implementation-proof-readiness-check target must generate "
-        "a report intake route proof artifact"
+        "a Report intake-route source-contract proof artifact"
     ) in errors
 
 
@@ -481,14 +485,17 @@ def test_ci_contract_gate_blocks_missing_report_intake_route_default_output_wiri
     makefile = (
         (ROOT / "Makefile")
         .read_text(encoding="utf-8")
-        .replace("LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF_OUTPUT", "REMOVED_REPORT_PROOF_OUTPUT")
+        .replace(
+            "LOTUS_IDEA_REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF_OUTPUT",
+            "REMOVED_REPORT_PROOF_OUTPUT",
+        )
     )
 
     errors = module.validate_makefile(makefile)
 
     assert (
         "Makefile implementation-proof-readiness-check target must pass the default "
-        "report intake route proof output into readiness generation"
+            "Report intake-route source-contract proof into readiness generation"
     ) in errors
 
 
@@ -1007,14 +1014,14 @@ def test_ci_contract_gate_blocks_missing_runtime_trust_telemetry_proof_gate() ->
     ) in errors
 
 
-def test_ci_contract_gate_blocks_missing_report_intake_route_proof_gate() -> None:
+def test_ci_contract_gate_blocks_missing_report_intake_route_source_contract_proof_gate() -> None:
     module = _load_ci_contract_gate()
     makefile = (
         (ROOT / "Makefile")
         .read_text(encoding="utf-8")
-        .replace("$(MAKE) report-intake-route-proof-contract-gate\n", "")
+        .replace("$(MAKE) report-intake-route-source-contract-proof-gate\n", "")
         .replace(
-            "scripts/report_intake_route_proof_contract_gate.py",
+            "scripts/report/intake_route_source_contract_gate.py",
             "scripts/removed.py",
         )
     )
@@ -1022,11 +1029,12 @@ def test_ci_contract_gate_blocks_missing_report_intake_route_proof_gate() -> Non
     errors = module.validate_makefile(makefile)
 
     assert (
-        "Makefile lint target must call `$(MAKE) report-intake-route-proof-contract-gate`" in errors
+        "Makefile lint target must call `$(MAKE) report-intake-route-source-contract-proof-gate`"
+        in errors
     )
     assert (
-        "Makefile report-intake-route-proof-contract-gate target must run "
-        "`scripts/report_intake_route_proof_contract_gate.py`"
+        "Makefile report-intake-route-source-contract-proof-gate target must run "
+        "`scripts/report/intake_route_source_contract_gate.py`"
     ) in errors
 
 

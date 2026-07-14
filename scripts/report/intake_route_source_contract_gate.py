@@ -6,24 +6,26 @@ from pathlib import Path
 import sys
 from tempfile import TemporaryDirectory
 
+ROOT = Path(__file__).resolve().parents[2]
+SRC = ROOT / "src"
+for path in (ROOT, SRC):
+    if str(path) not in sys.path:
+        sys.path.insert(0, str(path))
+
 try:
     from scripts.proof_source_safety import forbidden_content_validator, validate_forbidden_content
 except ModuleNotFoundError:
     from proof_source_safety import forbidden_content_validator, validate_forbidden_content  # type: ignore[import-not-found,no-redef]
 
-ROOT = Path(__file__).resolve().parents[1]
-SRC = ROOT / "src"
-if str(SRC) not in sys.path:
-    sys.path.insert(0, str(SRC))
-
-from app.application.report_intake_route_proof import (  # noqa: E402
-    REMAINING_REPORT_INTAKE_ROUTE_BLOCKERS,
-    REPORT_INTAKE_ROUTE_BLOCKERS_CLEARED,
-    REPORT_INTAKE_ROUTE_PROOF_SCHEMA_VERSION,
-    REQUIRED_REPORT_INTAKE_ROUTE_EVIDENCE_REFS,
-    build_report_intake_route_proof_payload,
-    report_intake_route_proof_is_valid,
+from app.application.report.intake_route_source_contract import (  # noqa: E402
+    REMAINING_REPORT_INTAKE_ROUTE_CERTIFICATION_BLOCKERS,
+    REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_BLOCKERS_CLEARED,
+    REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF_SCHEMA_VERSION,
+    REQUIRED_REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_EVIDENCE_REFS,
+    build_report_intake_route_source_contract_proof_payload,
+    report_intake_route_source_contract_proof_is_valid,
 )
+from app.domain.proof_evidence import EvidenceClass  # noqa: E402
 
 FORBIDDEN_KEYS = {
     "accountId",
@@ -61,28 +63,35 @@ _validate_forbidden_content = forbidden_content_validator(
 )
 
 
-def validate_report_intake_route_proof_contract() -> list[str]:
+def validate_report_intake_route_source_contract() -> list[str]:
     errors: list[str] = []
     with TemporaryDirectory(prefix="lotus-idea-report-intake-proof-") as temp_dir:
-        proof = build_report_intake_route_proof_payload(
+        proof = build_report_intake_route_source_contract_proof_payload(
             generated_at_utc=datetime(2026, 6, 24, 0, 0, tzinfo=UTC),
             repository_root=ROOT,
             report_root=_write_report_fixture(Path(temp_dir)),
         )
-    if proof.get("schemaVersion") != REPORT_INTAKE_ROUTE_PROOF_SCHEMA_VERSION:
+    if proof.get("schemaVersion") != REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF_SCHEMA_VERSION:
         errors.append(
-            f"report intake route proof schema must be {REPORT_INTAKE_ROUTE_PROOF_SCHEMA_VERSION}"
+            "Report intake-route source-contract proof schema must be "
+            f"{REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF_SCHEMA_VERSION}"
         )
-    if tuple(proof.get("evidenceRefs") or ()) != REQUIRED_REPORT_INTAKE_ROUTE_EVIDENCE_REFS:
-        errors.append("report intake route proof evidence refs must match the contract")
-    if tuple(proof.get("aggregateBlockersCleared") or ()) != (REPORT_INTAKE_ROUTE_BLOCKERS_CLEARED):
-        errors.append("report intake route proof must clear only the live route blocker")
-    if tuple(proof.get("remainingCertificationBlockers") or ()) != (
-        REMAINING_REPORT_INTAKE_ROUTE_BLOCKERS
+    if proof.get("evidenceClass") != EvidenceClass.SOURCE_CONTRACT.value:
+        errors.append("Report intake-route proof must declare source_contract evidence")
+    if tuple(proof.get("evidenceRefs") or ()) != (
+        REQUIRED_REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_EVIDENCE_REFS
     ):
-        errors.append("report intake route proof must retain materialization blockers")
-    if not report_intake_route_proof_is_valid(proof):
-        errors.append("report intake route proof must validate against report contract truth")
+        errors.append("Report intake-route source-contract evidence refs must match the contract")
+    if tuple(proof.get("aggregateBlockersCleared") or ()) != (
+        REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_BLOCKERS_CLEARED
+    ):
+        errors.append("Report intake-route source-contract proof must clear no blocker")
+    if tuple(proof.get("remainingCertificationBlockers") or ()) != (
+        REMAINING_REPORT_INTAKE_ROUTE_CERTIFICATION_BLOCKERS
+    ):
+        errors.append("Report intake-route source contract must retain runtime blockers")
+    if not report_intake_route_source_contract_proof_is_valid(proof):
+        errors.append("Report intake-route source contract must validate against declaration truth")
     validate_forbidden_content(proof, errors, FORBIDDEN_KEYS, FORBIDDEN_TEXT_FRAGMENTS)
     return errors
 
@@ -126,6 +135,7 @@ def _report_contract_payload() -> dict[str, object]:
             "Does not promote a supported feature in lotus-report or lotus-idea.",
         ],
         "certification_blockers": [
+            "lotus_report_live_intake_route_proof_missing",
             "report_evidence_pack_live_materialization_proof_missing",
             "rendered_output_creation_missing",
             "archive_record_creation_missing",
@@ -135,11 +145,11 @@ def _report_contract_payload() -> dict[str, object]:
 
 
 def main() -> int:
-    errors = validate_report_intake_route_proof_contract()
+    errors = validate_report_intake_route_source_contract()
     if errors:
         print("\n".join(errors))
         return 1
-    print("Report intake route proof contract gate passed")
+    print("Report intake-route source-contract gate passed")
     return 0
 
 
