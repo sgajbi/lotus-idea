@@ -56,6 +56,32 @@ def test_documentation_contract_gate_blocks_missing_campaign_inventory_occurrenc
     ]
 
 
+def test_documentation_contract_gate_requires_explicit_governance_exclusion(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    architecture = tmp_path / "docs" / "architecture"
+    architecture.mkdir(parents=True)
+    inventory_source = ROOT / EVIDENCE_CLASSIFICATION_INVENTORY_PATH
+    matrix_source = ROOT / ISSUE_CLOSURE_MATRIX_PATH
+    (tmp_path / EVIDENCE_CLASSIFICATION_INVENTORY_PATH).write_text(
+        inventory_source.read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+    matrix = matrix_source.read_text(encoding="utf-8").replace(
+        "Campaign occurrence: no;",
+        "Campaign relation: governance;",
+    )
+    (tmp_path / ISSUE_CLOSURE_MATRIX_PATH).write_text(matrix, encoding="utf-8")
+
+    errors = module.evidence_classification_inventory_errors(root=tmp_path)
+
+    assert errors == [
+        "docs/architecture/implementation-proof-evidence-classification.md: "
+        "missing completed campaign occurrences: #431"
+    ]
+
+
 def test_documentation_contract_gate_blocks_missing_surface(tmp_path: Path) -> None:
     module = _load_gate()
     surface = module.DocumentationSurface(
