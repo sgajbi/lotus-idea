@@ -6,6 +6,9 @@ from dataclasses import dataclass
 from pathlib import Path
 
 try:
+    from documentation.evidence_classification_inventory import (
+        evidence_classification_inventory_errors,
+    )
     from documentation.quality_contract import (
         code_fence_count,
         has_heading,
@@ -16,6 +19,9 @@ try:
     from documentation_stale_claims import PROHIBITED_STALE_CLAIMS, PROOF_READINESS_HEADINGS
     from wiki_navigation_contract import same_wiki_page_link_errors
 except ModuleNotFoundError:
+    from scripts.documentation.evidence_classification_inventory import (
+        evidence_classification_inventory_errors,
+    )
     from scripts.documentation.quality_contract import (
         code_fence_count,
         has_heading,
@@ -408,40 +414,6 @@ POLISHED_SURFACES = (
 )
 
 PROHIBITED_PLACEHOLDERS = ("TODO", "TBD", "lorem ipsum", "coming soon")
-EVIDENCE_CLASSIFICATION_INVENTORY_PATH = Path(
-    "docs/architecture/implementation-proof-evidence-classification.md"
-)
-ISSUE_CLOSURE_MATRIX_PATH = Path("docs/architecture/GITHUB-ISSUE-CLOSURE-MATRIX.md")
-ISSUE_NUMBER_RE = re.compile(r"\[#(?P<number>\d+)\]")
-
-
-def evidence_classification_inventory_errors(*, root: Path = ROOT) -> list[str]:
-    inventory_path = root / EVIDENCE_CLASSIFICATION_INVENTORY_PATH
-    matrix_path = root / ISSUE_CLOSURE_MATRIX_PATH
-    if not inventory_path.exists() or not matrix_path.exists():
-        return []
-
-    completed_occurrences: set[int] = set()
-    for line in matrix_path.read_text(encoding="utf-8").splitlines():
-        if not line.startswith("| [#") or "| `merged_main` |" not in line:
-            continue
-        if "#393" not in line and "evidence-classification campaign" not in line:
-            continue
-        match = ISSUE_NUMBER_RE.search(line)
-        if match is not None:
-            completed_occurrences.add(int(match.group("number")))
-
-    inventory = inventory_path.read_text(encoding="utf-8")
-    missing = sorted(
-        issue_number
-        for issue_number in completed_occurrences
-        if f"#{issue_number}" not in inventory
-    )
-    if not missing:
-        return []
-    formatted = ", ".join(f"#{issue_number}" for issue_number in missing)
-    inventory_label = EVIDENCE_CLASSIFICATION_INVENTORY_PATH.as_posix()
-    return [f"{inventory_label}: missing completed campaign occurrences: {formatted}"]
 
 
 def validate_documentation_contract(
