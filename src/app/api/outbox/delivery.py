@@ -554,7 +554,7 @@ OUTBOX_DELIVERY_RUN_ONCE_ROUTE: RouteMetadata = {
         "calls without mutation while rejecting same-key/different-request calls with 409. The "
         "endpoint uses the active repository provider and configured outbox publisher adapter, "
         "returns aggregate counts only, and remains not certified until live broker runtime, "
-        "downstream consumer runtime proof, platform mesh event publication proof, "
+        "observed downstream consumer execution evidence, platform mesh event publication proof, "
         "Gateway/Workbench proof, and supported-feature promotion exist. If the broker is not "
         "configured or invalid, the endpoint fails closed without mutating pending outbox records."
     ),
