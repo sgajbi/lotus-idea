@@ -62,8 +62,8 @@ from app.application.proof_provenance import aggregate_proof_artifact_is_current
 from app.application.report.materialization_source_contract import (
     report_materialization_source_contract_is_valid,
 )
-from app.application.runtime_trust_telemetry_proof import (
-    runtime_trust_telemetry_proof_is_valid,
+from app.application.runtime_trust_telemetry.test_execution_contract import (
+    runtime_trust_telemetry_test_execution_is_valid,
 )
 from app.application.source_ingestion_live_proof import (
     source_ingestion_live_proof_can_clear_aggregate_blockers,
@@ -94,8 +94,8 @@ def _apply_available_proofs(
     repository_root: Path,
     durable_repository_proof: Mapping[str, object] | None,
     durable_repository_proof_ref: str | None,
-    runtime_trust_telemetry_proof: Mapping[str, object] | None,
-    runtime_trust_telemetry_proof_ref: str | None,
+    runtime_trust_telemetry_test_execution: Mapping[str, object] | None,
+    runtime_trust_telemetry_test_execution_ref: str | None,
     ai_lineage_store_proof: Mapping[str, object] | None,
     ai_lineage_store_proof_ref: str | None,
     ai_model_risk_operations_proof: Mapping[str, object] | None,
@@ -169,8 +169,8 @@ def _apply_available_proofs(
         evaluated_at_utc=evaluated_at_utc,
         durable_repository_proof=durable_repository_proof,
         durable_repository_proof_ref=durable_repository_proof_ref,
-        runtime_trust_telemetry_proof=runtime_trust_telemetry_proof,
-        runtime_trust_telemetry_proof_ref=runtime_trust_telemetry_proof_ref,
+        runtime_trust_telemetry_test_execution=runtime_trust_telemetry_test_execution,
+        runtime_trust_telemetry_test_execution_ref=runtime_trust_telemetry_test_execution_ref,
     )
     capabilities = _apply_ai_proofs(
         capabilities=capabilities,
@@ -241,8 +241,8 @@ def _apply_storage_and_runtime_proofs(
     evaluated_at_utc: datetime,
     durable_repository_proof: Mapping[str, object] | None,
     durable_repository_proof_ref: str | None,
-    runtime_trust_telemetry_proof: Mapping[str, object] | None,
-    runtime_trust_telemetry_proof_ref: str | None,
+    runtime_trust_telemetry_test_execution: Mapping[str, object] | None,
+    runtime_trust_telemetry_test_execution_ref: str | None,
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
     if _proof_is_valid_and_current(
         durable_repository_proof,
@@ -254,18 +254,16 @@ def _apply_storage_and_runtime_proofs(
             _apply_durable_repository_proof(capability, durable_repository_proof_ref)
             for capability in capabilities
         )
-    if _proof_can_clear_blockers(
-        runtime_trust_telemetry_proof,
-        runtime_trust_telemetry_proof_ref,
+    if _proof_is_valid_and_current(
+        runtime_trust_telemetry_test_execution,
+        runtime_trust_telemetry_test_execution_ref,
         evaluated_at_utc=evaluated_at_utc,
-        proof_is_valid=runtime_trust_telemetry_proof_is_valid,
+        proof_is_valid=runtime_trust_telemetry_test_execution_is_valid,
     ):
-        assert runtime_trust_telemetry_proof is not None
         capabilities = tuple(
-            _apply_runtime_trust_telemetry_proof(
+            _apply_runtime_trust_telemetry_test_execution(
                 capability,
-                runtime_trust_telemetry_proof,
-                runtime_trust_telemetry_proof_ref,
+                runtime_trust_telemetry_test_execution_ref,
             )
             for capability in capabilities
         )
@@ -659,19 +657,14 @@ def _apply_durable_repository_proof(
     )
 
 
-def _apply_runtime_trust_telemetry_proof(
+def _apply_runtime_trust_telemetry_test_execution(
     capability: ImplementationProofCapabilityReadiness,
-    runtime_trust_telemetry_proof: Mapping[str, object],
-    runtime_trust_telemetry_proof_ref: str | None,
+    runtime_trust_telemetry_test_execution_ref: str | None,
 ) -> ImplementationProofCapabilityReadiness:
-    blockers_cleared_value = runtime_trust_telemetry_proof.get("aggregateBlockersCleared", ())
-    blockers_cleared = (
-        blockers_cleared_value if isinstance(blockers_cleared_value, (list, tuple)) else ()
-    )
-    return apply_blocker_proof(
+    return apply_supporting_evidence(
         capability,
-        blockers_cleared=tuple(str(blocker) for blocker in blockers_cleared),
-        proof_ref=runtime_trust_telemetry_proof_ref,
+        capability_ids=("runtime-trust-telemetry-preview", "data-mesh-certification"),
+        evidence_ref=runtime_trust_telemetry_test_execution_ref,
     )
 
 

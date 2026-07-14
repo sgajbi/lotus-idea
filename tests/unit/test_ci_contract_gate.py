@@ -170,14 +170,14 @@ def test_ci_contract_gate_blocks_missing_durable_repository_proof_readiness_wiri
     ) in errors
 
 
-def test_ci_contract_gate_blocks_missing_runtime_trust_telemetry_proof_readiness_wiring() -> None:
+def test_ci_contract_gate_blocks_missing_runtime_trust_telemetry_test_execution_readiness_wiring() -> None:
     module = _load_ci_contract_gate()
     makefile = (
         (ROOT / "Makefile")
         .read_text(encoding="utf-8")
         .replace(
-            "--runtime-trust-telemetry-proof "
-            "output/trust-telemetry/runtime/runtime-trust-telemetry-proof.json",
+            "--runtime-trust-telemetry-test-execution "
+            "output/trust-telemetry/test-execution/runtime-trust-telemetry-test-execution.json",
             "",
         )
     )
@@ -186,7 +186,7 @@ def test_ci_contract_gate_blocks_missing_runtime_trust_telemetry_proof_readiness
 
     assert (
         "Makefile implementation-proof-readiness-check target must pass the "
-        "runtime trust telemetry proof artifact into readiness generation"
+        "runtime trust telemetry test execution artifact into readiness generation"
     ) in errors
 
 
@@ -1006,13 +1006,13 @@ def test_ci_contract_gate_blocks_missing_implementation_proof_output_wiring() ->
     ) in errors
 
 
-def test_ci_contract_gate_blocks_missing_runtime_trust_telemetry_proof_gate() -> None:
+def test_ci_contract_gate_blocks_missing_runtime_trust_telemetry_test_execution_gate() -> None:
     module = _load_ci_contract_gate()
     makefile = (
         (ROOT / "Makefile")
         .read_text(encoding="utf-8")
         .replace(
-            "scripts/runtime_trust_telemetry_proof_contract_gate.py",
+            "scripts/runtime_trust_telemetry/test_execution_contract_gate.py",
             "scripts/removed.py",
         )
     )
@@ -1020,8 +1020,8 @@ def test_ci_contract_gate_blocks_missing_runtime_trust_telemetry_proof_gate() ->
     errors = module.validate_makefile(makefile)
 
     assert (
-        "Makefile runtime-trust-telemetry-proof-contract-gate target must run "
-        "`scripts/runtime_trust_telemetry_proof_contract_gate.py`"
+        "Makefile runtime-trust-telemetry-test-execution-contract-gate target must run "
+        "`scripts/runtime_trust_telemetry/test_execution_contract_gate.py`"
     ) in errors
 
 

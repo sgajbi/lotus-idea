@@ -94,6 +94,40 @@ def test_repository_hygiene_gate_enforces_lifecycle_bounded_module_placement() -
     ]
 
 
+def test_repository_hygiene_gate_enforces_runtime_trust_telemetry_package() -> None:
+    module = _load_repository_hygiene_gate()
+    required_paths = {
+        "scripts/runtime_trust_telemetry/generate_test_execution_contract.py",
+        "scripts/runtime_trust_telemetry/test_execution_contract_gate.py",
+        "src/app/application/runtime_trust_telemetry/telemetry.py",
+        "src/app/application/runtime_trust_telemetry/test_execution_contract.py",
+        "tests/unit/runtime_trust_telemetry/test_telemetry.py",
+        "tests/unit/runtime_trust_telemetry/test_test_execution_contract.py",
+    }
+    retired_paths = {
+        "scripts/generate_runtime_trust_telemetry_preview.py",
+        "scripts/generate_runtime_trust_telemetry_proof.py",
+        "scripts/runtime_trust_telemetry_proof_contract_gate.py",
+        "src/app/application/runtime_trust_telemetry.py",
+        "src/app/application/runtime_trust_telemetry_proof.py",
+        "tests/unit/test_runtime_trust_telemetry.py",
+        "tests/unit/test_runtime_trust_telemetry_proof.py",
+    }
+    tracked_paths = sorted(module.REQUIRED_BOUNDED_MODULE_PATHS - required_paths | retired_paths)
+
+    violations = module.find_bounded_module_placement_violations(tracked_paths)
+
+    assert violations == sorted(
+        [
+            *(
+                f"{path}: legacy flat-module path must not be reintroduced"
+                for path in retired_paths
+            ),
+            *(f"{path}: required bounded-module path is missing" for path in required_paths),
+        ]
+    )
+
+
 def test_repository_hygiene_gate_enforces_outbox_bounded_module_placement() -> None:
     module = _load_repository_hygiene_gate()
     required_paths = {

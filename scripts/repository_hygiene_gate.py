@@ -35,6 +35,19 @@ PROHIBITED_SUFFIXES = {
 }
 
 REQUIRED_BOUNDED_MODULE_PATHS = {
+    "scripts/runtime_trust_telemetry/__init__.py",
+    "scripts/runtime_trust_telemetry/generate_preview.py",
+    "scripts/runtime_trust_telemetry/generate_snapshot.py",
+    "scripts/runtime_trust_telemetry/generate_test_execution_contract.py",
+    "scripts/runtime_trust_telemetry/test_execution_contract_gate.py",
+    "src/app/application/runtime_trust_telemetry/__init__.py",
+    "src/app/application/runtime_trust_telemetry/telemetry.py",
+    "src/app/application/runtime_trust_telemetry/test_execution_contract.py",
+    "tests/unit/runtime_trust_telemetry/__init__.py",
+    "tests/unit/runtime_trust_telemetry/test_postgres_projection.py",
+    "tests/unit/runtime_trust_telemetry/test_snapshot_cli.py",
+    "tests/unit/runtime_trust_telemetry/test_telemetry.py",
+    "tests/unit/runtime_trust_telemetry/test_test_execution_contract.py",
     "scripts/ai_workflow_pack_registration/__init__.py",
     "scripts/ai_workflow_pack_registration/generate_source_contract_proof.py",
     "scripts/ai_workflow_pack_registration/source_contract_proof_gate.py",
@@ -223,6 +236,16 @@ REQUIRED_BOUNDED_MODULE_PATHS = {
 }
 
 PROHIBITED_LEGACY_MODULE_PATHS = {
+    "scripts/generate_runtime_trust_telemetry_preview.py",
+    "scripts/generate_runtime_trust_telemetry_snapshot.py",
+    "scripts/generate_runtime_trust_telemetry_proof.py",
+    "scripts/runtime_trust_telemetry_proof_contract_gate.py",
+    "src/app/application/runtime_trust_telemetry.py",
+    "src/app/application/runtime_trust_telemetry_proof.py",
+    "tests/unit/test_generate_runtime_trust_telemetry_snapshot.py",
+    "tests/unit/test_postgres_runtime_trust_telemetry.py",
+    "tests/unit/test_runtime_trust_telemetry.py",
+    "tests/unit/test_runtime_trust_telemetry_proof.py",
     "scripts/downstream_route_contract_proof_gate.py",
     "scripts/generate_advise_proposal_route_proof.py",
     "scripts/generate_manage_action_route_proof.py",

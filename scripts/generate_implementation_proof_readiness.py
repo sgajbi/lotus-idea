@@ -121,8 +121,13 @@ def _capability_payload(
 def _proof_payload_kwargs(input_: Mapping[str, ProofArtifactInput]) -> dict[str, Any]:
     kwargs: dict[str, Any] = {}
     for field_name, artifact in input_.items():
-        kwargs[f"{field_name}_proof"] = artifact.payload
-        kwargs[f"{field_name}_proof_ref"] = _proof_ref(artifact)
+        argument_name = (
+            field_name
+            if field_name == "runtime_trust_telemetry_test_execution"
+            else f"{field_name}_proof"
+        )
+        kwargs[argument_name] = artifact.payload
+        kwargs[f"{argument_name}_ref"] = _proof_ref(artifact)
     return kwargs
 
 
@@ -248,10 +253,10 @@ def _proof_artifact_inputs(args: argparse.Namespace) -> dict[str, ProofArtifactI
             artifact_name="durable repository proof",
             ref_name="durable repository proof artifact",
         ),
-        "runtime_trust_telemetry": _proof_artifact_input(
-            args.runtime_trust_telemetry_proof,
-            artifact_name="runtime trust telemetry proof",
-            ref_name="runtime trust telemetry proof artifact",
+        "runtime_trust_telemetry_test_execution": _proof_artifact_input(
+            args.runtime_trust_telemetry_test_execution,
+            artifact_name="runtime trust telemetry test execution",
+            ref_name="runtime trust telemetry test execution artifact",
         ),
         "ai_lineage_store": _proof_artifact_input(
             args.ai_lineage_store_proof,

@@ -48,7 +48,7 @@ REQUIRED_LINT_TARGETS = (
     "migration-execution-gate",
     "deployment-migration-contract-gate",
     "durable-repository-proof-contract-gate",
-    "runtime-trust-telemetry-proof-contract-gate",
+    "runtime-trust-telemetry-test-execution-contract-gate",
     "ai-lineage-store-proof-contract-gate",
     "ai-workflow-pack-registration-proof-contract-gate",
     "ai-workflow-pack-runtime-execution-proof-contract-gate",
@@ -121,7 +121,10 @@ GENERATED_READINESS_ARTIFACTS = (
         "scripts/persistence/generate_durable_repository_proof.py",
         "durable repository proof artifact",
     ),
-    ("scripts/generate_runtime_trust_telemetry_proof.py", "runtime telemetry proof artifact"),
+    (
+        "scripts/runtime_trust_telemetry/generate_test_execution_contract.py",
+        "runtime telemetry test-execution artifact",
+    ),
     ("scripts/generate_ai_lineage_store_proof.py", "an AI lineage store proof artifact"),
     (
         "scripts/ai_workflow_pack_registration/generate_source_contract_proof.py",
@@ -191,7 +194,7 @@ PASSED_READINESS_ARTIFACTS = (
         "scheduled source-ingestion worker proof artifact",
     ),
     ("--durable-repository-proof", "durable repository proof artifact"),
-    ("--runtime-trust-telemetry-proof", "runtime trust telemetry proof artifact"),
+    ("--runtime-trust-telemetry-test-execution", "runtime trust telemetry test execution artifact"),
     ("--ai-lineage-store-proof", "AI lineage store proof artifact"),
     (
         "--ai-workflow-pack-registration-proof",

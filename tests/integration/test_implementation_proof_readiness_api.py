@@ -30,9 +30,9 @@ from app.application.operator_workflows_operations.source_contract_proof import 
     OPERATOR_WORKFLOWS_OPERATIONS_PROOF_ENV,
     build_operator_workflows_operations_proof_payload,
 )
-from app.application.runtime_trust_telemetry_proof import (
-    RUNTIME_TRUST_TELEMETRY_PROOF_ENV,
-    build_runtime_trust_telemetry_proof_payload,
+from app.application.runtime_trust_telemetry.test_execution_contract import (
+    RUNTIME_TRUST_TELEMETRY_TEST_EXECUTION_ENV,
+    build_runtime_trust_telemetry_test_execution_payload,
 )
 from tests.support.durable_repository_proof import (
     SOURCE_COMMIT_SHA,
@@ -104,7 +104,7 @@ def test_implementation_proof_readiness_api_returns_blocked_operator_posture(
     monkeypatch.delenv("LOTUS_CORE_BASE_URL", raising=False)
     monkeypatch.delenv("LOTUS_IDEA_DATABASE_URL", raising=False)
     monkeypatch.delenv(DURABLE_REPOSITORY_PROOF_ENV, raising=False)
-    monkeypatch.delenv(RUNTIME_TRUST_TELEMETRY_PROOF_ENV, raising=False)
+    monkeypatch.delenv(RUNTIME_TRUST_TELEMETRY_TEST_EXECUTION_ENV, raising=False)
     monkeypatch.delenv(AI_MODEL_RISK_OPERATIONS_PROOF_ENV, raising=False)
     monkeypatch.delenv(OPERATOR_WORKFLOWS_OPERATIONS_PROOF_ENV, raising=False)
     monkeypatch.delenv(WORKBENCH_READ_PATH_SOURCE_CONTRACT_PROOF_ENV, raising=False)
@@ -296,7 +296,7 @@ def test_implementation_proof_readiness_api_consumes_configured_proof_artifacts(
     assert "live_core_source_proof_missing" not in payload["overallBlockers"]
     assert "scheduled_worker_deploy_proof_missing" not in payload["overallBlockers"]
     assert "durable_repository_not_configured" not in payload["overallBlockers"]
-    assert "runtime_candidate_snapshot_missing" not in payload["overallBlockers"]
+    assert "runtime_candidate_snapshot_missing" in payload["overallBlockers"]
     assert "certified_runtime_trust_telemetry_missing" in payload["overallBlockers"]
     assert "data_mesh_runtime_telemetry_not_certified" in payload["overallBlockers"]
     assert "runtime_trust_telemetry_product_coverage_incomplete" in payload["overallBlockers"]
@@ -325,12 +325,12 @@ def test_implementation_proof_readiness_api_consumes_configured_proof_artifacts(
     )
     assert "durable repository proof artifact" in capabilities["source-ingestion"]["evidenceRefs"]
     assert (
-        "runtime trust telemetry proof artifact"
+        "runtime trust telemetry test execution artifact"
         in capabilities["runtime-trust-telemetry-preview"]["evidenceRefs"]
     )
     assert (
         "runtime_candidate_snapshot_missing"
-        not in (capabilities["runtime-trust-telemetry-preview"]["blockers"])
+        in (capabilities["runtime-trust-telemetry-preview"]["blockers"])
     )
     assert (
         "certified_runtime_trust_telemetry_missing"
@@ -491,7 +491,7 @@ def _configure_readiness_proof_artifacts(
     live_proof_path = tmp_path / "source-ingestion-live-proof.json"
     scheduled_proof_path = tmp_path / "source-ingestion-scheduled-worker-proof.json"
     durable_proof_path = tmp_path / "durable-repository-proof.json"
-    runtime_proof_path = tmp_path / "runtime-trust-telemetry-proof.json"
+    runtime_proof_path = tmp_path / "runtime-trust-telemetry-test-execution.json"
     ai_lineage_proof_path = tmp_path / "ai-lineage-store-proof.json"
     ai_model_risk_proof_path = tmp_path / "ai-model-risk-operations-source-contract-proof.json"
     operator_workflows_proof_path = (
@@ -532,7 +532,7 @@ def _configure_readiness_proof_artifacts(
     )
     _write_proof(
         runtime_proof_path,
-        build_runtime_trust_telemetry_proof_payload(
+        build_runtime_trust_telemetry_test_execution_payload(
             generated_at_utc=evaluated_at_utc,
             repository_root=ROOT,
         ),
@@ -577,7 +577,7 @@ def _configure_readiness_proof_artifacts(
     monkeypatch.setenv(SCHEDULED_WORKER_PROOF_ENV, str(scheduled_proof_path))
     monkeypatch.setenv(CORE_BASE_URL_ENV, "http://localhost:8310")
     monkeypatch.setenv(DURABLE_REPOSITORY_PROOF_ENV, str(durable_proof_path))
-    monkeypatch.setenv(RUNTIME_TRUST_TELEMETRY_PROOF_ENV, str(runtime_proof_path))
+    monkeypatch.setenv(RUNTIME_TRUST_TELEMETRY_TEST_EXECUTION_ENV, str(runtime_proof_path))
     monkeypatch.setenv(AI_LINEAGE_STORE_PROOF_ENV, str(ai_lineage_proof_path))
     monkeypatch.setenv(AI_MODEL_RISK_OPERATIONS_PROOF_ENV, str(ai_model_risk_proof_path))
     monkeypatch.setenv(OPERATOR_WORKFLOWS_OPERATIONS_PROOF_ENV, str(operator_workflows_proof_path))
