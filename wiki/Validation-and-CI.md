@@ -507,12 +507,12 @@ Persistence adapter validation:
     only `certified_ai_lineage_store_missing`, without leaking prompt,
     provider response, candidate, portfolio, client, request-body,
     response-body, or database URL material.
-18. `tests/unit/test_ai_workflow_pack_registration_proof.py` and
+18. `tests/unit/ai_workflow_pack_registration/test_source_contract_proof.py` and
     `make ai-workflow-pack-registration-proof-contract-gate` prove the bounded
-    sibling `lotus-ai` workflow-pack registration proof contract. A valid
-    artifact clears only `workflow_pack_runtime_contract_not_certified` in
-    aggregate readiness while preserving `lotus-ai` runtime execution,
-    provider-call, Workbench, client-ready, and supported-feature blockers.
+    sibling `lotus-ai` workflow-pack registration source contract. A valid v2
+    artifact adds an evidence reference but clears no aggregate blocker. It
+    preserves `workflow_pack_runtime_contract_not_certified`, `lotus-ai`
+    runtime/provider, Workbench, client-ready, and supported-feature blockers.
 19. `tests/unit/test_ai_workflow_pack_runtime_execution_proof.py`,
     `tests/unit/test_lotus_ai_workflow_runtime.py`, and
     `make ai-workflow-pack-runtime-execution-proof-contract-gate` prove the
@@ -899,12 +899,13 @@ alert-rule loading/evaluation/delivery, deployment, or production
 certification.
 
 The AI workflow-pack registration proof contract gate validates the bounded
-cross-repo `lotus-ai` workflow-pack registration proof consumed by aggregate
-implementation-proof readiness. It checks source-safe evidence refs, sibling
-registry/binding/queue-policy/supportability/test coverage, and one-blocker
-clearance so registration cannot be mistaken for `lotus-ai` runtime execution,
-provider invocation, model-risk operations certification, Workbench proof, or
-supported-feature promotion.
+cross-repo `lotus-ai` workflow-pack registration source contract consumed by
+aggregate implementation-proof readiness. It checks source-safe evidence refs,
+sibling registry/binding/queue-policy/supportability/test coverage,
+`source_contract` classification, empty blocker clearance, and explicit
+non-execution/non-deployment posture. Runtime registry observation, provider
+invocation, model-risk operations certification, Workbench proof, and
+supported-feature promotion remain blocked.
 
 The implementation-truth gate scans README, repository context, operations/demo docs, quality docs,
 and wiki source for unqualified current-state claims that imply demo readiness, production support,

@@ -224,7 +224,7 @@ Validation evidence from the implementation slice:
     reporting.
 12. `.venv\Scripts\python.exe -m pytest tests/unit/test_ai_governance.py::test_ai_explanation_uses_candidate_projection_without_snapshot`
     is the focused bounded candidate lookup proof for explanation evaluation.
-13. `python -m pytest tests/unit/test_ai_governance.py tests/unit/test_ai_governance_api_contract.py tests/unit/test_ai_workflow_pack_registration_proof.py tests/integration/test_ai_governance_api.py -q`
+13. `python -m pytest tests/unit/test_ai_governance.py tests/unit/test_ai_governance_api_contract.py tests/unit/ai_workflow_pack_registration/test_source_contract_proof.py tests/integration/test_ai_governance_api.py -q`
     passed with `74 passed` after adding the governed workflow-pack allowlist
     and product-safe `invalid_ai_workflow_pack` API rejection.
 14. `make check` passed after the signed-attestation consumer slice with all
@@ -323,8 +323,18 @@ PR `#413` merged this occurrence by rebase. Exact-main validation exposed the
 independent lifecycle serialization defect `#414`; fix-forward PR `#415`
 resolved it without changing the AI evidence contract. Final exact-main SHA
 `971b3c33` passed Main Releasability `29326244284` and CodeQL `29326239670`.
-Issue `#412` is the next evidence-classification occurrence; campaign `#393`
-remains open.
+Issue `#412` was the next evidence-classification occurrence identified at that
+point in the campaign; campaign `#393` remains open.
+
+Issue `#428` classifies sibling Lotus AI workflow-pack registration files,
+registry seed declarations, bindings, queue policy, supportability source, and
+tests as v2 `source_contract` evidence. The capability-owned
+`ai_workflow_pack_registration/` application, script, and test packages replace
+the flat proof paths. A valid artifact adds provenance only, clears no blocker,
+and retains `workflow_pack_runtime_contract_not_certified`; runtime registry
+observation, deployment, production approval, provider execution, Workbench
+proof, client publication, and feature promotion remain blocked. This is
+design modularity inside the existing Idea process, not a runtime service split.
 
 ## Current Governance References
 
