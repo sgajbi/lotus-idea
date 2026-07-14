@@ -26,6 +26,32 @@ def test_documentation_contract_gate_passes_current_repository_truth() -> None:
     assert module.validate_documentation_contract() == []
 
 
+def test_documentation_contract_gate_blocks_missing_campaign_inventory_occurrence(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    architecture = tmp_path / "docs" / "architecture"
+    architecture.mkdir(parents=True)
+    inventory_source = ROOT / module.EVIDENCE_CLASSIFICATION_INVENTORY_PATH
+    matrix_source = ROOT / module.ISSUE_CLOSURE_MATRIX_PATH
+    inventory = inventory_source.read_text(encoding="utf-8").replace("#428", "issue 428")
+    (tmp_path / module.EVIDENCE_CLASSIFICATION_INVENTORY_PATH).write_text(
+        inventory,
+        encoding="utf-8",
+    )
+    (tmp_path / module.ISSUE_CLOSURE_MATRIX_PATH).write_text(
+        matrix_source.read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+
+    errors = module.evidence_classification_inventory_errors(root=tmp_path)
+
+    assert errors == [
+        "docs/architecture/implementation-proof-evidence-classification.md: "
+        "missing completed campaign occurrences: #428"
+    ]
+
+
 def test_documentation_contract_gate_blocks_missing_surface(tmp_path: Path) -> None:
     module = _load_gate()
     surface = module.DocumentationSurface(
