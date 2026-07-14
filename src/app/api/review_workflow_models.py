@@ -75,7 +75,6 @@ class ReviewActionRequest(CamelModel):
                 review_id=self.review_id,
                 action=self.action,
                 actor=build_review_actor_context(caller=caller, role=role),
-                access_scope=None,
                 reason_codes=self.reason_codes,
                 decided_at_utc=self.decided_at_utc,
                 suppression_reason=self.suppression_reason,
@@ -122,7 +121,6 @@ class FeedbackRequest(CamelModel):
             feedback=FeedbackCommand(
                 feedback_id=self.feedback_id,
                 actor=build_review_actor_context(caller=caller, role=role),
-                access_scope=None,
                 outcome=self.outcome,
                 reason_codes=self.reason_codes,
                 recorded_at_utc=self.recorded_at_utc,

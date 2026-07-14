@@ -106,6 +106,7 @@ def candidate(
             score=Decimal("82"),
             reason_codes=(ReasonCode.HIGH_CASH_RATIO, ReasonCode.REVIEW_REQUIRED),
         ),
+        access_scope=access_scope(),
         created_at_utc=EVALUATED_AT,
         updated_at_utc=EVALUATED_AT,
     )
@@ -142,7 +143,6 @@ def decision_command(
         review_id=f"review-{action.value}",
         action=action,
         actor=actor or advisor_context(),
-        access_scope=access_scope(),
         reason_codes=(ReasonCode.REVIEW_REQUIRED,),
         decided_at_utc=DECIDED_AT,
         suppression_reason=suppression_reason,
@@ -205,7 +205,6 @@ def test_feedback_resource_identity_matches_the_persisted_event() -> None:
     command = FeedbackCommand(
         feedback_id="feedback-identity-001",
         actor=advisor_context(),
-        access_scope=access_scope(),
         outcome=FeedbackOutcome.USEFUL,
         reason_codes=(ReasonCode.REVIEW_REQUIRED,),
         recorded_at_utc=DECIDED_AT,
@@ -326,7 +325,6 @@ def test_feedback_event_is_source_provenanced_and_audited_without_sensitive_scop
         FeedbackCommand(
             feedback_id="feedback-001",
             actor=advisor_context(),
-            access_scope=access_scope(),
             outcome=FeedbackOutcome.USEFUL,
             reason_codes=(ReasonCode.REVIEW_REQUIRED,),
             recorded_at_utc=DECIDED_AT,
@@ -401,7 +399,6 @@ def test_review_and_feedback_commands_validate_required_reason_and_time_fields()
             review_id="review-naive",
             action=ReviewAction.REJECT,
             actor=advisor_context(),
-            access_scope=access_scope(),
             reason_codes=(ReasonCode.REVIEW_REQUIRED,),
             decided_at_utc=datetime(2026, 6, 21, 10, 0),
         )
@@ -411,7 +408,6 @@ def test_review_and_feedback_commands_validate_required_reason_and_time_fields()
             review_id="review-no-reason",
             action=ReviewAction.REJECT,
             actor=advisor_context(),
-            access_scope=access_scope(),
             reason_codes=(),
             decided_at_utc=DECIDED_AT,
         )
@@ -434,7 +430,6 @@ def test_review_and_feedback_commands_validate_required_reason_and_time_fields()
         FeedbackCommand(
             feedback_id="feedback-no-reason",
             actor=advisor_context(),
-            access_scope=access_scope(),
             outcome=FeedbackOutcome.NOT_USEFUL,
             reason_codes=(),
             recorded_at_utc=DECIDED_AT,

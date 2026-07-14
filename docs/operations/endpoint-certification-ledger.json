@@ -1068,7 +1068,7 @@
         "tests/unit/test_postgres_review_identity.py::test_postgres_repository_reads_review_identity_collision_as_replay",
         "tests/unit/test_postgres_review_identity.py::test_postgres_repository_reads_changed_review_identity_as_typed_conflict",
         "tests/integration/test_postgres_runtime_integration.py::test_postgres_runtime_serializes_concurrent_review_and_feedback_resource_identity",
-        "tests/unit/test_review_workflow_application.py::test_apply_review_action_uses_persisted_candidate_scope_not_command_scope",
+        "tests/unit/test_review_workflow_application.py::test_apply_review_action_authorizes_actor_against_persisted_candidate_scope",
         "tests/unit/test_review_workflow_application.py::test_apply_review_action_uses_candidate_projection_without_snapshot"
       ],
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
@@ -1103,7 +1103,7 @@
         "tests/unit/test_postgres_idempotency_precheck.py::test_postgres_review_and_conversion_idempotency_prechecks_are_bounded",
         "tests/unit/test_postgres_review_identity.py::test_postgres_repository_reads_feedback_identity_collision_as_replay",
         "tests/integration/test_postgres_runtime_integration.py::test_postgres_runtime_serializes_concurrent_review_and_feedback_resource_identity",
-        "tests/unit/test_review_workflow_application.py::test_record_feedback_uses_persisted_candidate_scope_not_command_scope",
+        "tests/unit/test_review_workflow_application.py::test_record_feedback_authorizes_actor_against_persisted_candidate_scope",
         "tests/unit/test_review_workflow_application.py::test_record_feedback_uses_candidate_projection_without_snapshot"
       ],
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
