@@ -62,6 +62,7 @@ the next starts.
 | Gateway/Workbench contract | Local declarations are `source_contract` evidence, add evidence references only, and preserve `gateway_workbench_proof_missing`. | #406, PR #407 merged and exact-main validated at `e09b4ffc` |
 | Gateway/Workbench discovery contract | Proposed catalog entries and consumer declarations are `source_contract` evidence; they cannot prove active publication, Gateway serving, Workbench consumption, or runtime discovery. | #408, PR #409 merged and exact-main validated at `5a12dea7` |
 | AI model-risk dashboard and alert source | Grafana JSON, Prometheus rule YAML, the runbook, and their static validators are `source_contract` evidence. They add a traceable evidence reference but cannot prove provisioning, rule loading/evaluation, alert delivery, deployment, or production certification and clear no aggregate blocker. | #411 merged through PR #413; exact-main validation passed at `971b3c33` after fix-forward PR #415 |
+| Operator-workflows dashboard and alert source | Grafana JSON, Prometheus rule YAML, `promtool` fixtures, the runbook, and static validators are `source_contract` evidence. They add provenance but cannot prove dashboard provisioning/query execution, live rule loading/evaluation/delivery, deployment, or production certification and clear no aggregate blocker. | #412 fixed locally; PR and exact-main evidence pending |
 | Other aggregate proof builders | Classification audit remains open; no unreviewed family is promoted by this capability. | #393 |
 
 ## Operating Commands

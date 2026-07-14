@@ -516,9 +516,11 @@ is still required before the issue can close.
 
 1. Certify dashboard and alert runtime behavior only after the source-valid
    artifacts are provisioned and environment-bound query, rule-evaluation, and
-   delivery evidence exists. The operation metric catalog and AI model-risk
-   operations source contract prove only code-owned, bounded telemetry/control
-   source posture.
+   delivery evidence exists. The operation metric catalog, AI model-risk
+   operations source contract, and non-AI operator-workflows operations source
+   contract prove only code-owned, bounded telemetry/control source posture.
+   Issue `#412` preserves the dashboard and alert runtime blockers until their
+   owning runtime/deployment evidence exists.
 2. Add live runtime source-readiness proof after Core source adapters and
    deployable worker runtime exist.
 3. Add product-scope entitlement proof for Workbench and any broader Gateway

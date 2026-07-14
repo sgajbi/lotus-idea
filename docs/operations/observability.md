@@ -16,7 +16,7 @@ This repository starts from the Lotus platform observability scaffold.
 | Request diagnostic events | Validation, HTTP, and unhandled error triage | Route templates, not raw URL paths |
 | Operation metric contract | Machine-readable inventory of implemented operation metric vocabulary | Not dashboard, alert, mesh, or supported-feature certification |
 | AI model-risk operations contract | Machine-readable dashboard-control and alert posture for AI explanation operations, backed by repo-owned dashboard/rule/runbook artifacts | Not `lotus-ai`, Workbench, data-mesh, client-ready, or supported-feature certification |
-| Operator workflows operations contract | Machine-readable dashboard-control and alert posture for non-AI operator workflows, backed by repo-owned dashboard/rule/runbook artifacts | Not live source, external broker, downstream execution, Gateway/Workbench, data-mesh, or supported-feature certification |
+| Operator workflows operations contract | Machine-readable source contract for non-AI operator-workflow dashboard, alert-rule, fixture, and runbook artifacts | Not dashboard provisioning/query execution, live rule loading/evaluation/delivery, deployment, production behavior, live source, external broker, downstream execution, Gateway/Workbench, data mesh, or supported-feature certification |
 | Outbox supportability contract | Code-aligned state, age, configuration, collection, dashboard, and sustained-alert contract | Not broker publication, consumer delivery, or supported-feature certification |
 
 ## Sensitive-Content Rule
@@ -161,20 +161,22 @@ defines the current non-AI operator workflow operations contract for source
 ingestion, outbox delivery, downstream realization, runtime trust telemetry,
 and aggregate implementation-proof readiness. It is validated by
 `make operator-workflows-ops-contract-gate`. The concrete dashboard, alert
-rules, and runbook are certified by
+rules, and runbook source contract is validated by
 `make operator-workflows-operations-proof-contract-gate`.
 
 | Contract area | Implemented evidence | Boundary |
 | --- | --- | --- |
-| Dashboard controls | Operation activity remains separate from outbox durable state, oldest due age, and configuration/collection posture | Certified source-safe dashboard artifact |
-| Alert rules | Blocked operation posture plus sustained collection, dead-letter, lease, backlog, age, and retry-pressure conditions | Certified source-safe alert artifact with `promtool` fixture proof |
+| Dashboard controls | Operation activity remains separate from outbox durable state, oldest due age, and configuration/collection posture | Source contract valid; provisioning and query execution remain unproven |
+| Alert rules | Blocked operation posture plus sustained collection, dead-letter, lease, backlog, age, and retry-pressure conditions | Source contract valid with `promtool` fixture proof; live rule loading, evaluation, and delivery remain unproven |
 | Source-of-truth paths | Operation metric contract, operator runbook, source-ingestion, outbox, downstream, runtime-trust, implementation-proof source modules, and RFC slices | No live source, external broker, downstream execution, Gateway/Workbench, or support-promotion proof |
 | Source-authority policy | Dashboard and alert artifacts may group by the governed `source_authority` label; any explicit matcher must use the code-owned vocabulary above | No client, portfolio, account, request, response, raw entitlement, or ad hoc source labels |
 
-This contract closes the non-AI dashboard/alert certification gap raised by
-GitHub issue `#282` without changing runtime modularity or feature support
-posture. It certifies operator visibility over existing bounded operation
-telemetry only.
+This contract closes the source-artifact portion of the non-AI dashboard/alert
+gap raised by GitHub issue `#282` without changing runtime modularity or
+feature support posture. GitHub issue `#412` corrected the evidence class: the
+artifact is `source_contract` proof, clears no aggregate blocker, and cannot
+prove provisioning, dashboard query execution, live alert evaluation or
+delivery, deployment, or production behavior.
 
 The outbox-specific metric and threshold inventory is owned by
 `contracts/observability/lotus-idea-outbox-supportability.v1.json`. Run
