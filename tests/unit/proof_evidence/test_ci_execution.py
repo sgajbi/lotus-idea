@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict, replace
+from typing import Any, cast
 
 import pytest
 
@@ -59,7 +60,10 @@ def test_ci_execution_receipt_rejects_malformed_identity(
     field_name: str,
     bad_value: object,
 ) -> None:
-    receipt = replace(valid_ai_lineage_ci_execution_receipt(), **{field_name: bad_value})
+    receipt = cast(Any, replace)(
+        valid_ai_lineage_ci_execution_receipt(),
+        **{field_name: bad_value},
+    )
 
     assert not ci_execution_receipt_is_well_formed(receipt)
     assert ci_execution_receipt_from_mapping(asdict(receipt)) is None
