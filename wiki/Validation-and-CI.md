@@ -155,7 +155,7 @@ Risk high-volatility and drawdown live-proof contract validation,
 Advise mandate/restriction live-proof contract validation,
 Advise mandate/restriction source-product proof contract validation,
 report-intake route proof contract validation,
-Workbench read-path proof contract validation,
+Workbench read-path source-contract proof validation,
 Gateway/Workbench contract proof contract validation,
 Gateway/Workbench discovery contract proof contract validation,
 AI lineage store proof contract validation,
@@ -427,7 +427,7 @@ Persistence adapter validation:
    implementation-proof readiness artifact, including source-ingestion proof
    artifact refs, durable repository proof, runtime trust telemetry proof
    consumption, non-AI operator workflow operations proof consumption,
-   Workbench read-path proof consumption, Gateway/Workbench
+   Workbench read-path source-contract proof consumption, Gateway/Workbench
    source-contract proof consumption, Gateway/Workbench discovery contract
    proof consumption, bounded outbox broker source-contract proof consumption, default Advise
    proposal route proof generation and
@@ -455,11 +455,12 @@ Persistence adapter validation:
     `certified_runtime_trust_telemetry_missing`, and
     `data_mesh_runtime_telemetry_not_certified` until declared product coverage
     is complete.
-11. `tests/unit/test_workbench_read_path_proof.py` and
-    `make workbench-read-path-proof-contract-gate` prove the source-safe
-    bounded Workbench queue/detail read-path proof contract that aggregate
-    readiness consumes to clear only
-    `workbench_gateway_bff_consumption_proof_missing`.
+11. `tests/unit/workbench/test_read_path_source_contract.py` and
+    `make workbench-read-path-source-contract-proof-gate` prove the source-safe
+    Workbench queue/detail read-path v2 `source_contract`. Aggregate readiness
+    records its evidence reference but preserves
+    `workbench_gateway_bff_consumption_proof_missing` until runtime serving,
+    consumption, entitlement, and browser evidence exists.
 12. `tests/unit/workbench/test_contract_proof.py` and
     `make gateway-workbench-contract-proof-contract-gate` prove the
     source-safe bounded Gateway/Workbench contract proof. Aggregate readiness

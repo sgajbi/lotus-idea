@@ -1,6 +1,6 @@
 # RFC-0002 Slice 18: Documentation, Wiki, Support, And Agent Context
 
-Status: Partially implemented - API certification, outbox readiness, implementation-proof, live source-proof contract, scheduled-worker proof contract, durable repository proof contract, runtime telemetry proof contract, bounded Workbench read-path proof, bounded Gateway/Workbench contract proof, bounded Gateway/Workbench discovery contract proof, bounded downstream route proof, bounded outbox broker source-contract proof, bounded outbox platform-mesh event source-contract proof, mesh policy proof, AI lineage store proof, Manage mandate live proof, Core portfolio-state live proof, low-income Core cashflow live proof, typed Advise mandate/restriction source-product proof, Advise mandate/restriction live proof, typed Advise missing risk-profile source-product proof, missing risk-profile live proof, underperformance, allocation-drift, and drawdown-review API foundation truth, bond-maturity, mandate/restriction, and missing-benchmark policy foundation truth, client-demo process, and downstream contract documentation synchronized
+Status: Partially implemented - API certification, outbox readiness, implementation-proof, live source-proof contract, scheduled-worker proof contract, durable repository proof contract, runtime telemetry proof contract, bounded Workbench read-path source contract, bounded Gateway/Workbench contract proof, bounded Gateway/Workbench discovery contract proof, bounded downstream route proof, bounded outbox broker source-contract proof, bounded outbox platform-mesh event source-contract proof, mesh policy proof, AI lineage store proof, Manage mandate live proof, Core portfolio-state live proof, low-income Core cashflow live proof, typed Advise mandate/restriction source-product proof, Advise mandate/restriction live proof, typed Advise missing risk-profile source-product proof, missing risk-profile live proof, underperformance, allocation-drift, and drawdown-review API foundation truth, bond-maturity, mandate/restriction, and missing-benchmark policy foundation truth, client-demo process, and downstream contract documentation synchronized
 
 ## Outcome
 
@@ -175,11 +175,13 @@ documentation across opportunity signal APIs.
     and supported-feature promotion remain blocked.
 19. README, repository context,
     `docs/operations/implementation-proof-readiness.md`, quality gate docs, RFC
-    evidence, and wiki source now describe the Workbench read-path proof
-    artifact contract and `make workbench-read-path-proof-contract-gate`, while
-    preserving the boundary that a valid artifact clears only
-    `workbench_gateway_bff_consumption_proof_missing` and does not certify a
-    full Workbench panel, canonical demo runtime, or supported feature.
+    evidence, and wiki source now describe the Workbench read-path v2
+    `source_contract` artifact and
+    `make workbench-read-path-source-contract-proof-gate`. The artifact adds
+    provenance but clears no blocker, so
+    `workbench_gateway_bff_consumption_proof_missing` remains until observed
+    Gateway serving, Workbench consumption, entitlement, and browser evidence
+    exists.
 20. README, repository context,
     `docs/operations/implementation-proof-readiness.md`, quality gate docs, RFC
     evidence, and wiki source now describe the Gateway/Workbench source-contract
@@ -203,7 +205,7 @@ documentation across opportunity signal APIs.
     `docs/operations/implementation-proof-readiness.md`, RFC evidence, and
     wiki source now describe that the live implementation-proof readiness API
     consumes configured source-ingestion live, source-ingestion scheduled-worker,
-    durable repository, runtime trust telemetry, and Workbench read-path proof
+    durable repository, runtime trust telemetry, and Workbench read-path source-contract proof
     artifact paths, records validated source-safe artifact refs in capability
     evidence, and preserves the boundary that only matching aggregate blockers
     are cleared and no certification or supported-feature promotion is implied.
@@ -302,7 +304,7 @@ documentation across opportunity signal APIs.
     supported feature.
 
 This documentation slice does not promote any supported feature. It records
-bounded Workbench read-path proof, Gateway/Workbench contract proof, and
+bounded Workbench read-path source contract, Gateway/Workbench contract proof, and
 Gateway/Workbench discovery contract proof only; it does not add full
 Gateway/Workbench live proof, data-product certification, downstream
 realization, live source certification, or certified long-running scheduled

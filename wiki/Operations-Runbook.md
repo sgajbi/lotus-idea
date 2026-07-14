@@ -820,7 +820,7 @@ downstream delivery, data-product certification, Workbench proof,
 client-ready publication, or supported-feature promotion.
 `make implementation-proof-readiness-check` generates the scheduled
 source-ingestion worker deploy-proof artifact, durable repository proof
-artifact, runtime trust telemetry proof artifact, Workbench read-path proof,
+artifact, runtime trust telemetry proof artifact, Workbench read-path source contract,
 Advise proposal route proof artifact, missing-suitability live Advise proof
 artifact, typed mandate/restriction source-product proof artifact, typed
 missing risk-profile source-product proof artifact, missing risk-profile live
@@ -840,14 +840,14 @@ evidence. Capability readiness and supportability are derived after proof
 artifact consumption, so a proof family can report `ready` and `supported` only
 when its blocker list is empty. The live operator API also honors aggregate-current source-ingestion live,
 source-ingestion scheduled-worker, durable repository, runtime trust telemetry,
-Workbench read-path, report-intake route, report materialization, platform mesh
+Workbench read-path source contract, report-intake route, report materialization, platform mesh
 onboarding, AI lineage store, AI workflow-pack registration proof, and AI workflow-pack runtime execution proof
 artifact paths configured through
 `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF`,
 `LOTUS_IDEA_SOURCE_INGESTION_SCHEDULED_WORKER_PROOF`,
 `LOTUS_IDEA_DURABLE_REPOSITORY_PROOF`,
 `LOTUS_IDEA_RUNTIME_TRUST_TELEMETRY_PROOF`,
-`LOTUS_IDEA_WORKBENCH_READ_PATH_PROOF`,
+`LOTUS_IDEA_WORKBENCH_READ_PATH_SOURCE_CONTRACT_PROOF`,
 `LOTUS_IDEA_MANAGE_MANDATE_LIVE_PROOF`,
 `LOTUS_IDEA_CORE_PORTFOLIO_STATE_LIVE_PROOF`,
 `LOTUS_REPORT_ROOT`,

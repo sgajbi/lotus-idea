@@ -28,6 +28,15 @@ Security governance, and repo-native CI guardrails.
 
 No externally supported product feature is promoted yet.
 
+Workbench read-path declarations are v2 `source_contract` evidence only. Keep
+the builder, generator, gate, and focused tests under capability-owned
+`workbench/` packages. Static files, Make targets, route strings, and historical
+PR/SHA references must never clear
+`workbench_gateway_bff_consumption_proof_missing`; only machine-verifiable
+Gateway serving, Workbench consumption, entitlement, and browser evidence may
+clear that runtime blocker. This is design modularity inside the existing
+service, not evidence for a runtime split.
+
 The supported-feature registry remains `foundation_only` with an empty
 `features` list. Keep it that way until code, tests, contracts, OpenAPI,
 docs/wiki, runtime proof, CI proof, and mainline validation exist for an

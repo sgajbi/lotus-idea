@@ -126,7 +126,7 @@ preview/snapshot endpoint and evidence, outbox delivery, Workbench,
 opportunity archetype scenarios, downstream realization, and supported-feature
 promotion. It consumes a
   source-safe bounded live source-ingestion proof artifact, mesh policy proof
-  artifact, bounded Workbench read-path proof artifact, bounded
+  artifact, bounded Workbench read-path source-contract artifact, bounded
   Gateway/Workbench source-contract proof artifact, and bounded
   Gateway/Workbench discovery contract proof artifact. Both artifacts add
   evidence references without clearing runtime blockers:
