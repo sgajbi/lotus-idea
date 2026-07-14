@@ -62,13 +62,14 @@ Implemented in the first Slice 13 foundation:
    `lotus_report_live_intake_route_proof_missing`; it does not prove
    materialization, render, archive, client-publication authority, or a
    supported feature.
-   The merged `lotus-report` materialization path can now also be proven through
+   The merged `lotus-report` materialization declaration can also be validated through
    `scripts/report/generate_materialization_source_contract.py` and
-   `make report-materialization-proof-contract-gate`. A valid artifact clears
-   only `report_evidence_pack_live_materialization_proof_missing`,
-   `rendered_output_creation_missing`, and `archive_record_creation_missing`;
-   it does not grant client-publication authority or promote a supported
-   feature.
+   `make report-materialization-source-contract-proof-gate`. Issue `#438`
+   classifies the resulting v2 artifact as `source_contract` evidence. It
+   clears no blocker and cannot infer report-job execution, rendered-output
+   creation, archive-record creation, retention/legal-hold posture,
+   client-publication authority, production certification, or supported-feature
+   promotion from sibling declarations.
 9. `src/app/ports/downstream_realization.py` and
    `src/app/infrastructure/downstream_realization.py` add a source-safe HTTP
    adapter foundation for Report evidence-pack request handoff envelopes. The
@@ -161,13 +162,14 @@ The downstream-realization readiness diagnostic and report submission API are
 certified as internal foundations. With a valid report-intake source contract,
 they can cite `POST /reports/idea-evidence-packs` only as a declared sibling
 route; the runtime target remains planned and the live-intake blocker remains.
-With a valid report-materialization
-proof, they can also cite
-`POST /reports/idea-evidence-packs/materializations` as report-owned
-materialization/render/archive evidence. They keep Report/Render/Archive
-ownership outside `lotus-idea` and remain `not_certified` until client
-publication, Gateway/Workbench product proof, data-mesh certification, and
-supported-feature promotion are implemented and validated.
+With a valid report-materialization source contract, they can cite
+`POST /reports/idea-evidence-packs/materializations` only as a declared
+report-owned route. The runtime target, readiness status, supportability status,
+and all materialization/render/archive blockers remain unchanged. They keep
+Report/Render/Archive ownership outside `lotus-idea` and remain `not_certified`
+until live execution, client publication, Gateway/Workbench product proof,
+data-mesh certification, and supported-feature promotion are implemented and
+validated.
 
 ## Boundary Decision
 

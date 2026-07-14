@@ -1296,6 +1296,18 @@ Recent issue-derived patterns to preserve:
     isolation, and request-execution evidence from the owning Report runtime.
     Never infer materialization, render, archive, publication, certification,
     or supported-feature posture from route declarations.
+40. A sibling Report materialization contract is also `source_contract`
+    evidence, even when that sibling contract declares an implemented route or
+    records report-owned execution claims. Keep this family under the
+    capability-owned `report/` application, script, and test packages. The v2
+    artifact may add a source-safe evidence reference, but it clears no blocker
+    and must preserve materialization execution, rendered-output creation,
+    archive-record creation, retention/legal-hold, client-publication,
+    certification, and promotion posture. Its validator rejects additional
+    runtime or authority claim fields. Only machine-verifiable execution
+    evidence from the owning Report/Render/Archive runtime can change those
+    blockers; source declarations must never be projected into a current target
+    route, readiness status, or supportability status.
 
 Recent GitHub issue categories should keep being worked category-wise so
 repeated defect patterns are fixed once and pinned with tests or gates:

@@ -77,7 +77,7 @@ Downstream HTTP runtime posture:
    downstream submission is attempted.
 6. This lifecycle and resource-control posture is not downstream route
    existence proof, downstream execution certification, suitability authority,
-   report materialization proof, client publication authority, or
+   report materialization runtime proof, client publication authority, or
    supported-feature promotion.
 
 Implementation source:
