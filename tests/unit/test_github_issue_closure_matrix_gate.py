@@ -191,3 +191,20 @@ def test_github_issue_closure_matrix_gate_freezes_outbox_broker_proof_closure(
     errors = module.validate_issue_closure_matrix(matrix)
 
     assert "#419: merged-main issue cannot regress to `locally_fixed`" in errors
+
+
+def test_github_issue_closure_matrix_gate_freezes_closure_guard_fix(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    matrix = tmp_path / "matrix.md"
+    content = module.MATRIX_PATH.read_text(encoding="utf-8")
+    content = content.replace(
+        "Freeze merged-main closure status for issue #419 in the matrix gate | `merged_main` |",
+        "Freeze merged-main closure status for issue #419 in the matrix gate | `locally_fixed` |",
+    )
+    matrix.write_text(content, encoding="utf-8")
+
+    errors = module.validate_issue_closure_matrix(matrix)
+
+    assert "#424: merged-main issue cannot regress to `locally_fixed`" in errors
