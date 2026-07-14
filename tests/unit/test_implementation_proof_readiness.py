@@ -39,6 +39,10 @@ from app.application.supported_feature_promotion import (
     SUPPORTED_FEATURE_REGISTRY_INVALID,
     evaluate_supported_feature_promotion,
 )
+from tests.support.durable_repository_proof import (
+    SOURCE_COMMIT_SHA,
+    valid_durable_repository_ci_execution_receipt,
+)
 from app.application.implementation_proof_opportunity_archetype_proofs import (
     _apply_risk_concentration_live_proof,
 )
@@ -436,6 +440,8 @@ def test_implementation_proof_readiness_uses_durable_repository_proof_without_su
         build_durable_repository_proof_payload(
             generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
             repository_root=ROOT,
+            source_commit_sha=SOURCE_COMMIT_SHA,
+            ci_execution_receipt=valid_durable_repository_ci_execution_receipt(),
         ),
         proof_ref,
     )

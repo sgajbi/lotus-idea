@@ -51,7 +51,9 @@ SCRIPT_TARGET_EXPECTATIONS = {
     ),
     "mesh-policy-proof-contract-gate": "scripts/mesh_policy_proof_contract_gate.py",
     "opportunity-archetype-contract-gate": "scripts/opportunity_archetype_contract_gate.py",
-    "durable-repository-proof-contract-gate": "scripts/durable_repository_proof_contract_gate.py",
+    "durable-repository-proof-contract-gate": (
+        "scripts/persistence/durable_repository_proof_contract_gate.py"
+    ),
     "runtime-trust-telemetry-proof-contract-gate": (
         "scripts/runtime_trust_telemetry_proof_contract_gate.py"
     ),

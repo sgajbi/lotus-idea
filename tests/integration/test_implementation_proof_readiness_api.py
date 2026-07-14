@@ -34,6 +34,10 @@ from app.application.runtime_trust_telemetry_proof import (
     RUNTIME_TRUST_TELEMETRY_PROOF_ENV,
     build_runtime_trust_telemetry_proof_payload,
 )
+from tests.support.durable_repository_proof import (
+    SOURCE_COMMIT_SHA,
+    valid_durable_repository_ci_execution_receipt,
+)
 from app.application.report_intake_route_proof import (
     REMAINING_REPORT_INTAKE_ROUTE_BLOCKERS,
     REPORT_INTAKE_ROUTE,
@@ -520,6 +524,8 @@ def _configure_readiness_proof_artifacts(
         build_durable_repository_proof_payload(
             generated_at_utc=evaluated_at_utc,
             repository_root=ROOT,
+            source_commit_sha=SOURCE_COMMIT_SHA,
+            ci_execution_receipt=valid_durable_repository_ci_execution_receipt(),
         ),
     )
     _write_proof(
