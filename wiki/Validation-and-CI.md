@@ -22,6 +22,7 @@ clean branch hygiene.
 | Canonical source-proof run | `make canonical-opportunity-source-proofs` with governed runtime arguments | Source-specific live evidence, traceability, and fail-closed blocker posture. |
 | Lotus AI runtime proof | `python scripts/generate_ai_workflow_pack_runtime_execution_proof.py --generated-at-utc <utc> --lotus-ai-base-url <lotus-ai-base-url> --output output/ai/ai-workflow-pack-runtime-execution-proof.json` | Actual review-gated `idea_explanation.pack@v1` execution and a source-safe receipt; live provider remains blocked. |
 | AI lineage-store certification | Main Releasability `make postgres-integration-gate`, then `make ai-lineage-store-ci-proof` | Exact-main PostgreSQL behavior, uploaded test-artifact digest, and a closed CI execution receipt; no live-provider or supported-feature claim. |
+| Durable repository CI proof | Main Releasability `make postgres-integration-gate`, then `make durable-repository-ci-proof` | Exact-main migration, persistence/replay, concurrency/audit/outbox, and repository-side pagination assertions bound to the uploaded test artifact. |
 | Release-grade local proof | `make ci-release` | Full local release evidence. |
 | Wiki source change | wiki audit, wiki check-only, publish after merge | Repo source and published wiki agree. |
 
@@ -61,6 +62,14 @@ trusted repository, workflow, PostgreSQL job, run id and attempt, exact main
 commit and ref, successful conclusion, uploaded artifact SHA-256, and the exact
 lineage persistence assertion. The aggregate proof remains blocked when the
 receipt is absent, malformed, or inconsistent.
+
+Durable repository proof follows the same evidence class without sharing AI
+policy. Its persistence-specific receipt is derived from governed PostgreSQL
+JUnit cases and must match the trusted mainline workflow/job, exact commit and
+main ref, run identity, successful conclusion, artifact digest, proof time, and
+complete assertion set. Source files, Make targets, PR runs, stale receipts,
+or a named CI lane cannot clear the two persistence blockers. Production
+database deployment and supported-feature promotion remain separate.
 
 Deployment-migration repository controls merged through PR `#373`. Exact-main
 Main Releasability run `29261043056` and CodeQL run `29261035371` passed on

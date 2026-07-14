@@ -424,15 +424,22 @@ Implemented first-wave internal scope:
     repo-native command, and PR Merge Gate / Main Releasability run it against
     `postgres:18-alpine` with
     `LOTUS_IDEA_POSTGRES_INTEGRATION_REQUIRED=1`.
-28. `src/app/application/durable_repository_proof.py`,
-    `scripts/generate_durable_repository_proof.py`, and
-    `make durable-repository-proof-contract-gate` now define and validate a
-    source-safe durable repository proof artifact for aggregate RFC proof
-    readiness. The artifact cites migration contracts, the PostgreSQL adapter,
-    and the GitHub PostgreSQL runtime proof lane. It clears only aggregate
-    stale durable-repository proof blockers; it does not configure runtime
-    storage, certify production storage, replace `make postgres-integration-gate`,
-    or promote support.
+28. `src/app/application/durable_repository_proof/` now separates proof
+    contract, PostgreSQL JUnit receipt mapping, and aggregate proof assembly.
+    `scripts/persistence/` groups its generator and contract gate instead of
+    adding more flat entrypoints. Source files, Make targets, and workflow text
+    are necessary source-contract evidence but cannot clear persistence runtime
+    blockers. A valid v2 proof also requires the exact-main
+    `Main Releasability / PostgreSQL Runtime Proof` receipt, including trusted
+    repository/workflow/job identity, run id and attempt, commit SHA and main
+    ref, successful conclusion, uploaded artifact digest, and observed tests
+    for migration rollback/reapply, persistence/reload/idempotent replay,
+    concurrent identity/audit/outbox integrity, and repository-side queue
+    pagination. It clears only `durable_repository_not_configured` and
+    `repository_side_queue_pagination_not_certified` in aggregate
+    implementation evidence. It does not configure a running database,
+    certify deployment migrations or production storage, replace
+    `make postgres-integration-gate`, or promote support.
 29. `contracts/operations/lotus-idea-deployment-migrations.v1.json` and the
     layered deployment-migration domain, application, port, and PostgreSQL
     adapter now govern production-like schema changes without adding a service

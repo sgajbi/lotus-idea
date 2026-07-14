@@ -157,6 +157,10 @@ Current RFC-0002 implementation-start baseline:
    CI execution receipt before durable AI lineage-store certification can
    clear. Exact-main SHA `5cf7592b` passed Main Releasability `29307190040` and
    CodeQL `29307186825`; source files and workflow text remain non-certifying.
+   The same rule now protects durable repository readiness: a
+   persistence-specific exact-main PostgreSQL receipt is required before the
+   aggregate durable-storage and repository-side pagination blockers clear.
+   Production deployment and product support remain blocked.
 11. Slice 10 partially implements certified internal API foundations for
    high-cash evaluation, high-cash evaluate-and-persist, candidate lifecycle
    transitions, source-safe candidate detail, candidate evidence replay,

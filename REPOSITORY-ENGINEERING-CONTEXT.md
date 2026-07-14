@@ -1198,6 +1198,15 @@ Recent issue-derived patterns to preserve:
     uploaded artifact digest. Keep this taxonomy in a domain package and each
     proof builder in its own application capability package; do not create a
     separate runtime service without workload or failure-isolation evidence.
+35. Durable repository proof is owned by the bounded
+    `app.application.durable_repository_proof` package, with contract, JUnit
+    receipt mapping, and builder modules. Its entrypoints live under
+    `scripts/persistence/`, and repository hygiene blocks the retired flat
+    paths. The two aggregate persistence blockers require an exact-main,
+    digest-bound PostgreSQL CI receipt with the complete governed assertion
+    set; source files, Make targets, job names, PR refs, stale/future receipts,
+    and mismatched commits fail closed. This evidence does not certify a
+    deployed production database or promote a supported feature.
 
 Recent GitHub issue categories should keep being worked category-wise so
 repeated defect patterns are fixed once and pinned with tests or gates:

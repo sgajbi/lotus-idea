@@ -127,8 +127,8 @@ Prove the complete supported opportunity journey end to end.
     cleared. The same valid live Core source-ingestion artifact can now clear
     only `opportunity_archetype_live_core_source_proof_missing` for the
     high-cash scenario inside aggregate opportunity-archetype readiness.
-14. `src/app/application/durable_repository_proof.py`,
-    `scripts/generate_durable_repository_proof.py`, and
+14. `src/app/application/durable_repository_proof/`,
+    `scripts/persistence/generate_durable_repository_proof.py`, and
     `make durable-repository-proof-contract-gate` now define and enforce a
     source-safe durable repository proof artifact. The aggregate
     implementation-readiness generator can consume that artifact to clear only

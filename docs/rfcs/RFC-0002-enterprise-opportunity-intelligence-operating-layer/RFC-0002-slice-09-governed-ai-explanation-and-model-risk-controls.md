@@ -269,6 +269,15 @@ Validation evidence from the implementation slice:
     validator, bound the exact repository/workflow/job/run/commit/main ref and
     PostgreSQL artifact digest, and cleared only
     `certified_ai_lineage_store_missing`.
+19. Issue `#401` applies the same evidence-classification rule to persistence.
+    The durable repository proof is now a capability package rather than a
+    flat application module, and source/design evidence alone cannot clear its
+    runtime-backed blockers. Only an exact-main, digest-bound PostgreSQL CI
+    receipt derived from the governed migration, persistence, idempotency,
+    audit/outbox, concurrency, and repository-side queue-pagination tests can
+    clear them. Production database deployment, runtime trust telemetry,
+    Gateway/Workbench realization, and supported-feature promotion remain
+    explicitly blocked.
 
 ## Current Governance References
 

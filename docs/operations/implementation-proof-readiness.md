@@ -465,7 +465,7 @@ suitability, policy, proposal, client-publication, data-mesh, Workbench, and
 supported-feature blockers.
 
 Durable repository proof is captured by
-`scripts/generate_durable_repository_proof.py`. A valid artifact referenced
+`scripts/persistence/generate_durable_repository_proof.py`. A valid artifact referenced
 through `LOTUS_IDEA_DURABLE_REPOSITORY_PROOF` or passed with
 `--durable-repository-proof` clears only these aggregate blockers inside
 generated implementation-proof readiness evidence and the operator API
@@ -474,13 +474,18 @@ readiness snapshot:
 1. `durable_repository_not_configured`,
 2. `repository_side_queue_pagination_not_certified`.
 
-The second blocker is cleared only because the proof contract cites the
-PostgreSQL review-queue projection implementation and tests. The proof does not
-configure the running service, connect to PostgreSQL, certify production
-storage, prove deploy migrations, certify live Core ingestion, certify runtime
-trust telemetry, prove Gateway or Workbench behavior, or promote a supported
-feature. Runtime readiness endpoints continue to report missing durable
-repository posture when `LOTUS_IDEA_DATABASE_URL` is absent.
+Both blockers require CI-execution evidence, not a source-file inventory or CI
+job name. Main Releasability derives a receipt from the governed PostgreSQL
+JUnit report and binds it to the exact repository, workflow/job, run id and
+attempt, commit SHA and main ref, successful conclusion, and uploaded artifact
+digest. The receipt must include observed migration rollback/reapply,
+candidate persistence/reload and replay, concurrent identity/audit/outbox, and
+repository-side queue-pagination assertions. The proof does not configure the
+running service, certify production storage or deployment migrations, certify
+live Core ingestion or runtime trust telemetry, prove Gateway/Workbench
+behavior, or promote a supported feature. Runtime readiness endpoints continue
+to report missing durable repository posture when `LOTUS_IDEA_DATABASE_URL` is
+absent.
 
 Runtime trust telemetry proof is captured by
 `scripts/generate_runtime_trust_telemetry_proof.py`. A valid artifact
@@ -942,7 +947,7 @@ Implementation-backed evidence:
 1. Low-income Core cashflow live-proof tests:
     `tests/unit/test_low_income_core_cashflow_live_proof.py`,
 1. durable repository proof generator:
-    `scripts/generate_durable_repository_proof.py`,
+    `scripts/persistence/generate_durable_repository_proof.py`,
 1. durable repository proof contract gate:
     `make durable-repository-proof-contract-gate`,
 1. runtime trust telemetry proof generator:
@@ -1021,7 +1026,8 @@ Implementation-backed evidence:
 1. unit tests:
     `tests/unit/test_implementation_proof_readiness.py`,
 1. durable repository proof tests:
-    `tests/unit/test_durable_repository_proof.py`,
+    `tests/unit/durable_repository_proof/test_builder.py` and
+    `tests/unit/durable_repository_proof/test_ci_receipt.py`,
 1. generator tests:
     `tests/unit/test_generate_implementation_proof_readiness.py`,
 1. AI workflow-pack registration proof generator:
