@@ -28,7 +28,9 @@ from app.application.high_volatility_live_proof import build_high_volatility_liv
 from app.application.implementation_proof_readiness import (
     build_implementation_proof_readiness_snapshot,
 )
-from app.application.mesh_policy_proof import build_mesh_policy_proof_payload
+from app.application.data_mesh.mesh_policy_source_contract import (
+    build_mesh_policy_source_contract_payload,
+)
 from tests.support.durable_repository_proof import (
     SOURCE_COMMIT_SHA,
     valid_durable_repository_ci_execution_receipt,
@@ -876,13 +878,13 @@ def test_generate_implementation_proof_readiness_uses_explicit_outbox_platform_m
     )
 
 
-def test_generate_implementation_proof_readiness_uses_explicit_mesh_policy_proof(
+def test_generate_implementation_proof_readiness_uses_explicit_mesh_policy_source_contract(
     tmp_path: Path,
 ) -> None:
-    mesh_policy_proof = tmp_path / "mesh-policy-proof.json"
-    mesh_policy_proof.write_text(
+    mesh_policy_source_contract = tmp_path / "mesh-policy-source-contract.json"
+    mesh_policy_source_contract.write_text(
         json.dumps(
-            build_mesh_policy_proof_payload(
+            build_mesh_policy_source_contract_payload(
                 generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
                 repository_root=Path(__file__).resolve().parents[2],
             )
@@ -895,8 +897,8 @@ def test_generate_implementation_proof_readiness_uses_explicit_mesh_policy_proof
         [
             "--evaluated-at-utc",
             "2026-06-27T00:00:00Z",
-            "--mesh-policy-proof",
-            str(mesh_policy_proof),
+            "--mesh-policy-source-contract-proof",
+            str(mesh_policy_source_contract),
             "--output",
             str(output_path),
         ]
@@ -909,11 +911,11 @@ def test_generate_implementation_proof_readiness_uses_explicit_mesh_policy_proof
         for capability in payload["capabilities"]
         if capability["capabilityId"] == "data-mesh-certification"
     )
-    assert "mesh_slo_policy_certification_missing" not in data_mesh["blockers"]
-    assert "mesh_access_policy_certification_missing" not in data_mesh["blockers"]
-    assert "mesh_evidence_policy_certification_missing" not in data_mesh["blockers"]
+    assert "mesh_slo_policy_certification_missing" in data_mesh["blockers"]
+    assert "mesh_access_policy_certification_missing" in data_mesh["blockers"]
+    assert "mesh_evidence_policy_certification_missing" in data_mesh["blockers"]
     assert "data_mesh_not_certified" in data_mesh["blockers"]
-    assert "mesh policy proof artifact" in data_mesh["evidenceRefs"]
+    assert "mesh policy source-contract artifact" in data_mesh["evidenceRefs"]
     assert payload["readinessStatus"] == "blocked"
     assert payload["supportedFeaturePromoted"] is False
 

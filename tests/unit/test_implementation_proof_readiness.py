@@ -22,7 +22,7 @@ from app.application.implementation_proof_consumption import (
     _apply_ai_workflow_pack_registration_proof,
     _apply_ai_workflow_pack_runtime_execution_proof,
     _apply_downstream_route_contract_proof,
-    _apply_mesh_policy_proof,
+    _apply_mesh_policy_source_contract,
     _apply_platform_catalog_source_contract,
     _apply_report_materialization_source_contract,
 )
@@ -40,7 +40,9 @@ from tests.support.durable_repository_proof import (
 from app.application.implementation_proof_opportunity_archetype_proofs import (
     _apply_risk_concentration_live_proof,
 )
-from app.application.mesh_policy_proof import build_mesh_policy_proof_payload
+from app.application.data_mesh.mesh_policy_source_contract import (
+    build_mesh_policy_source_contract_payload,
+)
 from app.application.data_mesh.platform_catalog_source_contract import (
     REQUIRED_CONSUMER_DEPENDENCIES,
     REQUIRED_PRODUCER_PRODUCTS,
@@ -114,7 +116,6 @@ def test_implementation_proof_capability_status_is_derived_from_remaining_blocke
 @pytest.mark.parametrize(
     ("apply_proof", "capability_id"),
     [
-        (_apply_mesh_policy_proof, "data-mesh-certification"),
         (_apply_ai_lineage_store_proof, "ai-explanation"),
         (_apply_ai_workflow_pack_registration_proof, "ai-explanation"),
         (_apply_ai_workflow_pack_runtime_execution_proof, "ai-explanation"),
@@ -795,10 +796,12 @@ def test_implementation_proof_readiness_rejects_stale_platform_catalog_source_co
     assert proof_ref not in data_mesh.evidence_refs
 
 
-def test_implementation_proof_readiness_uses_mesh_policy_proof_without_certification() -> None:
-    proof_ref = "output/data-mesh/mesh-policy-proof.json"
+def test_implementation_proof_readiness_uses_mesh_policy_source_contract_as_supporting_evidence() -> (
+    None
+):
+    proof_ref = "output/data-mesh/mesh-policy-source-contract.json"
     proof = _bound_aggregate_proof(
-        build_mesh_policy_proof_payload(
+        build_mesh_policy_source_contract_payload(
             generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
             repository_root=ROOT,
         ),
@@ -809,13 +812,13 @@ def test_implementation_proof_readiness_uses_mesh_policy_proof_without_certifica
         evaluated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
         repository=InMemoryIdeaRepository(),
         durable_storage_backed=False,
-        mesh_policy_proof=proof,
-        mesh_policy_proof_ref=proof_ref,
+        mesh_policy_source_contract_proof=proof,
+        mesh_policy_source_contract_proof_ref=proof_ref,
     )
 
-    assert "mesh_slo_policy_certification_missing" not in snapshot.overall_blockers
-    assert "mesh_access_policy_certification_missing" not in snapshot.overall_blockers
-    assert "mesh_evidence_policy_certification_missing" not in snapshot.overall_blockers
+    assert "mesh_slo_policy_certification_missing" in snapshot.overall_blockers
+    assert "mesh_access_policy_certification_missing" in snapshot.overall_blockers
+    assert "mesh_evidence_policy_certification_missing" in snapshot.overall_blockers
     assert "data_mesh_not_certified" in snapshot.overall_blockers
     assert "producer_products_not_active" in snapshot.overall_blockers
     assert "platform_source_manifest_inclusion_missing" in snapshot.overall_blockers
@@ -827,14 +830,71 @@ def test_implementation_proof_readiness_uses_mesh_policy_proof_without_certifica
         for capability in snapshot.capabilities
         if capability.capability_id == "data-mesh-certification"
     )
-    assert "mesh_slo_policy_certification_missing" not in data_mesh.blockers
-    assert "mesh_access_policy_certification_missing" not in data_mesh.blockers
-    assert "mesh_evidence_policy_certification_missing" not in data_mesh.blockers
+    assert "mesh_slo_policy_certification_missing" in data_mesh.blockers
+    assert "mesh_access_policy_certification_missing" in data_mesh.blockers
+    assert "mesh_evidence_policy_certification_missing" in data_mesh.blockers
     assert "data_mesh_not_certified" in data_mesh.blockers
-    assert "output/data-mesh/mesh-policy-proof.json" in data_mesh.evidence_refs
+    assert proof_ref in data_mesh.evidence_refs
+    operator_workflows = next(
+        capability
+        for capability in snapshot.capabilities
+        if capability.capability_id == "operator-workflows-operations"
+    )
+    assert proof_ref in operator_workflows.evidence_refs
     assert snapshot.readiness_status == "blocked"
     assert snapshot.supportability_status == "not_certified"
     assert snapshot.supported_features_promoted is False
+
+
+def test_mesh_policy_source_contract_application_preserves_capability_state() -> None:
+    capability = build_capability_readiness(
+        "data-mesh-certification",
+        "Data mesh",
+        readiness_status="blocked",
+        supportability_status="not_certified",
+        evidence_refs=("existing.json",),
+        blockers=("mesh_slo_policy_certification_missing",),
+    )
+
+    result = _apply_mesh_policy_source_contract(capability, "source-contract.json")
+
+    assert result.blockers == capability.blockers
+    assert result.readiness_status == capability.readiness_status
+    assert result.supportability_status == capability.supportability_status
+    assert result.evidence_refs == ("existing.json", "source-contract.json")
+
+
+def test_implementation_proof_readiness_rejects_stale_mesh_policy_source_contract() -> None:
+    proof_ref = "output/data-mesh/mesh-policy-source-contract.json"
+    proof = _bound_aggregate_proof(
+        build_mesh_policy_source_contract_payload(
+            generated_at_utc=datetime(2026, 6, 22, 0, 0, tzinfo=UTC),
+            repository_root=ROOT,
+        ),
+        proof_ref,
+    )
+
+    snapshot = build_implementation_proof_readiness_snapshot(
+        evaluated_at_utc=datetime(2026, 6, 24, 0, 0, tzinfo=UTC),
+        repository=InMemoryIdeaRepository(),
+        durable_storage_backed=False,
+        mesh_policy_source_contract_proof=proof,
+        mesh_policy_source_contract_proof_ref=proof_ref,
+    )
+
+    data_mesh = next(
+        capability
+        for capability in snapshot.capabilities
+        if capability.capability_id == "data-mesh-certification"
+    )
+    operator_workflows = next(
+        capability
+        for capability in snapshot.capabilities
+        if capability.capability_id == "operator-workflows-operations"
+    )
+    assert proof_ref not in data_mesh.evidence_refs
+    assert proof_ref not in operator_workflows.evidence_refs
+    assert "mesh_slo_policy_certification_missing" in data_mesh.blockers
 
 
 def test_readiness_uses_report_intake_route_source_contract_proof_without_materialization() -> None:
