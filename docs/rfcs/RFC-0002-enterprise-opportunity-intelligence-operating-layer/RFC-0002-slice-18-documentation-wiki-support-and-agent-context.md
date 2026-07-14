@@ -1,6 +1,6 @@
 # RFC-0002 Slice 18: Documentation, Wiki, Support, And Agent Context
 
-Status: Partially implemented - API certification, outbox readiness, implementation-proof, live source-proof contract, scheduled-worker proof contract, durable repository proof contract, runtime telemetry proof contract, bounded Workbench read-path source contract, bounded Gateway/Workbench contract proof, bounded Gateway/Workbench discovery contract proof, bounded downstream route proof, bounded outbox broker source-contract proof, bounded outbox platform-mesh event source-contract proof, mesh policy proof, AI lineage store proof, Manage mandate live proof, Core portfolio-state live proof, low-income Core cashflow live proof, typed Advise mandate/restriction source-product proof, Advise mandate/restriction live proof, typed Advise missing risk-profile source-product proof, missing risk-profile live proof, underperformance, allocation-drift, and drawdown-review API foundation truth, bond-maturity, mandate/restriction, and missing-benchmark policy foundation truth, client-demo process, and downstream contract documentation synchronized
+Status: Partially implemented - API certification, outbox readiness, implementation-proof, live source-proof contract, scheduled-worker proof contract, durable repository proof contract, runtime telemetry proof contract, bounded Workbench read-path source contract, bounded Gateway/Workbench contract proof, bounded Gateway/Workbench discovery contract proof, bounded downstream route proof, bounded Report intake route source contract, bounded outbox broker source-contract proof, bounded outbox platform-mesh event source-contract proof, mesh policy proof, AI lineage store proof, Manage mandate live proof, Core portfolio-state live proof, low-income Core cashflow live proof, typed Advise mandate/restriction source-product proof, Advise mandate/restriction live proof, typed Advise missing risk-profile source-product proof, missing risk-profile live proof, underperformance, allocation-drift, and drawdown-review API foundation truth, bond-maturity, mandate/restriction, and missing-benchmark policy foundation truth, client-demo process, and downstream contract documentation synchronized
 
 ## Outcome
 
@@ -302,6 +302,13 @@ documentation across opportunity signal APIs.
     implementation-backed API posture, problem-response expectations, wiki
     publication handling, and first-response diagnostics without promoting a
     supported feature.
+34. Issue `#437` synchronizes the Report intake route artifact as v2
+    `source_contract` evidence across repository context, implementation-proof
+    and downstream-readiness guides, RFC evidence, quality truth, demo claims,
+    and wiki source. Static sibling declarations add provenance but clear no
+    blocker; `lotus_report_live_intake_route_proof_missing` remains until the
+    owning Report runtime supplies machine-verifiable serving, authorization,
+    tenant-isolation, and request-execution evidence.
 
 This documentation slice does not promote any supported feature. It records
 bounded Workbench read-path source contract, Gateway/Workbench contract proof, and

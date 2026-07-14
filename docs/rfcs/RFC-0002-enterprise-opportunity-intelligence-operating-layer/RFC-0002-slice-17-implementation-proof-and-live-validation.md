@@ -1,6 +1,6 @@
 # RFC-0002 Slice 17: Implementation Proof And Live Validation
 
-Status: Partially implemented - aggregate proof-readiness diagnostic, bounded live source-ingestion proof artifact contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry proof artifact, Workbench read-path source-contract proof artifact, Gateway/Workbench contract proof artifact, Gateway/Workbench discovery contract proof artifact, Advise proposal route proof artifact, Manage action route proof artifact, Manage mandate live proof artifact, Core portfolio-state live proof artifact, Report intake route proof artifact, bounded outbox broker source-contract proof artifact, bounded downstream consumer source-contract proof artifact, bounded outbox platform-mesh event source-contract proof, mesh policy proof artifact, platform mesh onboarding proof artifact, AI lineage store proof artifact, AI workflow-pack registration proof artifact, AI workflow-pack runtime execution proof artifact, high-volatility and drawdown live Risk proof artifact contracts, low-income Core cashflow live proof artifact contract, bond-maturity policy foundation, and opportunity archetype scenario readiness with source/policy foundations available. Slice evidence now includes live canonical Risk concentration, Performance underperformance, and Performance benchmark-readiness source proofs for `PB_SG_GLOBAL_BAL_001`; observed external broker publication, platform-mesh event publication, downstream consumer execution, full live opportunity-journey proof, data-mesh certification, Workbench product proof, client-publication approval, and supported-feature promotion remain pending.
+Status: Partially implemented - aggregate proof-readiness diagnostic, bounded live source-ingestion proof artifact contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry proof artifact, Workbench read-path source-contract proof artifact, Gateway/Workbench contract proof artifact, Gateway/Workbench discovery contract proof artifact, Advise proposal route proof artifact, Manage action route proof artifact, Manage mandate live proof artifact, Core portfolio-state live proof artifact, Report intake route source-contract artifact, bounded outbox broker source-contract proof artifact, bounded downstream consumer source-contract proof artifact, bounded outbox platform-mesh event source-contract proof, mesh policy proof artifact, platform mesh onboarding proof artifact, AI lineage store proof artifact, AI workflow-pack registration proof artifact, AI workflow-pack runtime execution proof artifact, high-volatility and drawdown live Risk proof artifact contracts, low-income Core cashflow live proof artifact contract, bond-maturity policy foundation, and opportunity archetype scenario readiness with source/policy foundations available. Slice evidence now includes live canonical Risk concentration, Performance underperformance, and Performance benchmark-readiness source proofs for `PB_SG_GLOBAL_BAL_001`; observed Report intake execution, external broker publication, platform-mesh event publication, downstream consumer execution, full live opportunity-journey proof, data-mesh certification, Workbench product proof, client-publication approval, and supported-feature promotion remain pending.
 
 ## Outcome
 
@@ -251,12 +251,13 @@ Prove the complete supported opportunity journey end to end.
     `manage_live_contract_proof_missing`, while preserving suitability,
     policy approval, mandate/rebalance authority, execution, order creation,
     client-publication, and supported-feature blockers.
-24. `src/app/application/report_intake_route_proof.py`,
-    `scripts/generate_report_intake_route_proof.py`, and
-    `make report-intake-route-proof-contract-gate` now define and enforce a
-    source-safe `lotus-report` route-foundation proof artifact. The aggregate
-    implementation-readiness generator and operator API consume that artifact
-    to clear only `lotus_report_live_intake_route_proof_missing`, while
+24. `src/app/application/report/intake_route_source_contract.py`,
+    `scripts/report/generate_intake_route_source_contract.py`, and
+    `make report-intake-route-source-contract-proof-gate` now define and enforce a
+    v2 `source_contract` artifact for the declared `lotus-report` intake route.
+    The aggregate implementation-readiness generator and operator API consume
+    that artifact as provenance while clearing no blocker and preserving
+    `lotus_report_live_intake_route_proof_missing`, together with
     preserving report materialization, render output, archive record,
     client-publication, and supported-feature blockers.
 25. `src/app/application/ai_workflow_pack_registration/source_contract_proof.py`,
