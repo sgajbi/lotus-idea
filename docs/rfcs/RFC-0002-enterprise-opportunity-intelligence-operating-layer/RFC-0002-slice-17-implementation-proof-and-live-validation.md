@@ -214,8 +214,8 @@ Prove the complete supported opportunity journey end to end.
     `lotus-ai` runtime execution, workflow-pack runtime, model-risk
     dashboard/alert, runtime trust telemetry, Workbench, client-ready
     publication, and supported-feature blockers.
-21. `src/app/application/platform_mesh_onboarding_proof.py`,
-    `scripts/generate_platform_mesh_onboarding_proof.py`, and
+21. `src/app/application/data_mesh/platform_catalog_source_contract.py`,
+    `scripts/data_mesh/generate_platform_catalog_source_contract.py`, and
     `make platform-mesh-onboarding-proof-contract-gate` now define and enforce
     a bounded cross-repo platform onboarding proof. The repo-native
     `make implementation-proof-readiness-check` target generates the default

@@ -26,7 +26,7 @@ from app.application.workbench.discovery_contract_proof import (
 from app.application.workbench.contract_proof import (
     build_gateway_workbench_contract_proof_payload,
 )
-from app.application.platform_mesh_onboarding_proof import (
+from app.application.data_mesh.platform_catalog_source_contract import (
     REQUIRED_CONSUMER_DEPENDENCIES,
     REQUIRED_PRODUCER_PRODUCTS,
     build_platform_mesh_onboarding_proof_payload,

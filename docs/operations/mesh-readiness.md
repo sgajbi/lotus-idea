@@ -150,7 +150,7 @@ explicit certification blockers. The generated file is ignored by Git. Neither
 surface replaces the checked-in static fallback contract, promotes producer
 products, or certifies the platform mesh.
 
-`scripts/generate_platform_mesh_onboarding_proof.py` reads sibling
+`scripts/data_mesh/generate_platform_catalog_source_contract.py` reads sibling
 `lotus-platform` source-manifest, generated catalog, dependency graph, maturity
 matrix, and mesh handoff evidence. A valid proof clears only
 `platform_source_manifest_inclusion_missing` and

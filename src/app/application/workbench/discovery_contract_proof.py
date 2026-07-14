@@ -10,7 +10,7 @@ from app.domain.proof_evidence import EvidenceClass
 from app.application.workbench.contract_proof import (
     gateway_workbench_contract_proof_is_valid,
 )
-from app.application.platform_mesh_onboarding_proof import (
+from app.application.data_mesh.platform_catalog_source_contract import (
     REQUIRED_PRODUCER_PRODUCTS,
     platform_mesh_onboarding_proof_is_valid,
 )
@@ -40,7 +40,7 @@ REQUIRED_GATEWAY_WORKBENCH_DISCOVERY_LOCAL_EVIDENCE_REFS = (
     "contracts/domain-data-products/lotus-idea-products.v1.json",
     "contracts/domain-data-products/lotus-idea-consumers.v1.json",
     "contracts/domain-data-products/mesh-readiness.v1.json",
-    "src/app/application/platform_mesh_onboarding_proof.py",
+    "src/app/application/data_mesh/platform_catalog_source_contract.py",
     "src/app/application/workbench/read_path_source_contract.py",
     "src/app/application/workbench/contract_proof.py",
     "src/app/application/workbench/discovery_contract_proof.py",

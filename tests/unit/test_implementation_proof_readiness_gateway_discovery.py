@@ -21,7 +21,7 @@ from app.application.implementation_proof_consumption import (
 from app.application.implementation_proof_readiness import (
     build_implementation_proof_readiness_snapshot,
 )
-from app.application.platform_mesh_onboarding_proof import (
+from app.application.data_mesh.platform_catalog_source_contract import (
     build_platform_mesh_onboarding_proof_payload,
 )
 from app.application.proof_provenance import bind_aggregate_proof_provenance

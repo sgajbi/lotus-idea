@@ -46,7 +46,7 @@ from app.application.outbox.platform_mesh.source_contract_proof import (
 from app.application.performance_underperformance_live_proof import (
     build_performance_underperformance_live_proof_payload,
 )
-from app.application.platform_mesh_onboarding_proof import (
+from app.application.data_mesh.platform_catalog_source_contract import (
     build_platform_mesh_onboarding_proof_payload,
 )
 from app.application.runtime_trust_telemetry_proof import (

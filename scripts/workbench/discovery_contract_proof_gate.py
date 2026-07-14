@@ -20,7 +20,7 @@ from app.application.workbench.discovery_contract_proof import (  # noqa: E402
 from app.application.workbench.contract_proof import (  # noqa: E402
     build_gateway_workbench_contract_proof_payload,
 )
-from app.application.platform_mesh_onboarding_proof import (  # noqa: E402
+from app.application.data_mesh.platform_catalog_source_contract import (  # noqa: E402
     build_platform_mesh_onboarding_proof_payload,
 )
 from app.application.workbench.read_path_source_contract import (  # noqa: E402

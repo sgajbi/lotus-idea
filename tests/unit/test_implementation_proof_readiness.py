@@ -41,7 +41,7 @@ from app.application.implementation_proof_opportunity_archetype_proofs import (
     _apply_risk_concentration_live_proof,
 )
 from app.application.mesh_policy_proof import build_mesh_policy_proof_payload
-from app.application.platform_mesh_onboarding_proof import (
+from app.application.data_mesh.platform_catalog_source_contract import (
     REQUIRED_CONSUMER_DEPENDENCIES,
     REQUIRED_PRODUCER_PRODUCTS,
     build_platform_mesh_onboarding_proof_payload,

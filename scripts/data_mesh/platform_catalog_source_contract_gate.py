@@ -5,7 +5,13 @@ from datetime import UTC, datetime
 from pathlib import Path
 import sys
 
-from app.application.platform_mesh_onboarding_proof import (
+ROOT = Path(__file__).resolve().parents[2]
+SRC = ROOT / "src"
+for path in (ROOT, SRC):
+    if str(path) not in sys.path:
+        sys.path.insert(0, str(path))
+
+from app.application.data_mesh.platform_catalog_source_contract import (  # noqa: E402
     PLATFORM_MESH_ONBOARDING_BLOCKERS_CLEARED,
     PLATFORM_MESH_ONBOARDING_PROOF_SCHEMA_VERSION,
     REMAINING_PLATFORM_MESH_ONBOARDING_BLOCKERS,
@@ -15,11 +21,12 @@ from app.application.platform_mesh_onboarding_proof import (
 )
 
 try:
-    from scripts.proof_source_safety import forbidden_content_validator, validate_forbidden_content
+    from scripts.proof_source_safety import (  # noqa: E402
+        forbidden_content_validator,
+        validate_forbidden_content,
+    )
 except ModuleNotFoundError:
-    from proof_source_safety import forbidden_content_validator, validate_forbidden_content  # type: ignore[import-not-found,no-redef]
-
-ROOT = Path(__file__).resolve().parents[1]
+    from proof_source_safety import forbidden_content_validator, validate_forbidden_content  # type: ignore[import-not-found,no-redef]  # noqa: E402
 
 FORBIDDEN_KEYS = {
     "accountId",
