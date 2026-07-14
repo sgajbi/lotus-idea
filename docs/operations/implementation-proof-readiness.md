@@ -8,7 +8,7 @@
 | Required capability | `idea.implementation-proof.readiness.read` |
 | Required query | Timezone-aware `evaluatedAtUtc` |
 | Supportability | `not_certified` while blockers remain |
-| Product claim | Bounded live source-ingestion, runtime trust telemetry, default Advise proposal route, Manage action route, Report intake route, Report materialization, outbox broker, outbox consumer runtime, outbox platform mesh event publication, Gateway/Workbench operational, Gateway/Workbench discovery, mesh policy, platform mesh onboarding, AI lineage store, AI workflow-pack registration/runtime execution proof artifacts, and opportunity archetype scenario readiness can be consumed; Risk concentration, high-volatility, Risk drawdown, Performance underperformance, missing-benchmark Performance readiness, Core benchmark assignment, Core portfolio-state, missing-benchmark Core, low-income Core cashflow, Manage mandate, typed Advise mandate/restriction source-product, Advise mandate/restriction live, Advise missing-suitability, typed Advise missing risk-profile source-product, and Advise missing risk-profile live proof artifacts clear only source-specific blockers; no full live journey, live AI provider execution, suitability/rebalance/risk-profile/restriction-clearance/benchmark-assignment authority, platform mesh certification, external broker publication, downstream delivery, full Gateway/Workbench product proof, live archetype replay proof, client-ready publication, or supported-feature promotion |
+| Product claim | Bounded live source-ingestion, runtime trust telemetry, default Advise proposal route, Manage action route, Report intake route, Report materialization, outbox broker, outbox consumer runtime, outbox platform mesh event publication, Gateway/Workbench operational, Gateway/Workbench discovery, mesh policy, platform mesh onboarding, receipt-bound mainline AI lineage-store CI execution, AI workflow-pack registration/runtime execution proof artifacts, and opportunity archetype scenario readiness can be consumed; Risk concentration, high-volatility, Risk drawdown, Performance underperformance, missing-benchmark Performance readiness, Core benchmark assignment, Core portfolio-state, missing-benchmark Core, low-income Core cashflow, Manage mandate, typed Advise mandate/restriction source-product, Advise mandate/restriction live, Advise missing-suitability, typed Advise missing risk-profile source-product, and Advise missing risk-profile live proof artifacts clear only source-specific blockers; no full live journey, live AI provider execution, suitability/rebalance/risk-profile/restriction-clearance/benchmark-assignment authority, platform mesh certification, external broker publication, downstream delivery, full Gateway/Workbench product proof, live archetype replay proof, client-ready publication, or supported-feature promotion |
 
 `GET /api/v1/implementation-proof/readiness` is the internal operator
 diagnostic for RFC-0002 implementation proof posture.
@@ -165,6 +165,22 @@ identifier when they expect optional proof artifacts to clear aggregate
 readiness blockers. This provenance binding is internal implementation
 evidence; it is not data-mesh certification, client-publication approval, or
 supported-feature promotion.
+
+## Evidence-Class Boundary
+
+Proof authority is classified as source contract, local test execution, CI
+execution, runtime execution, deployment, or production certification. These
+classes are exact, not cumulative. A proof can clear only a blocker that
+requires the same class.
+
+The AI lineage-store v2 proof requires mainline `ci_execution`. It binds the
+Main Releasability PostgreSQL workflow/job, run and attempt, exact commit and
+main ref, successful conclusion, completion timestamp, GitHub artifact digest,
+and the named lineage persistence assertions. Repository files and Make target
+presence remain design evidence and cannot clear
+`certified_ai_lineage_store_missing` alone. See
+`docs/architecture/implementation-proof-evidence-classification.md` for the
+taxonomy and the #393 same-pattern campaign.
 
 | Variable | Effect |
 | --- | --- |

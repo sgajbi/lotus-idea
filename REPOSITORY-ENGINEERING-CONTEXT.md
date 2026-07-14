@@ -1189,6 +1189,15 @@ Recent issue-derived patterns to preserve:
     caller-chosen non-blank value as policy. Map only versioned, governed
     external references to local policy, fail closed for unknown values, and
     keep legal/privacy approval outside Lotus Idea.
+34. Blocker-clearing proof must declare exactly one evidence class:
+    `source_contract`, `test_execution`, `ci_execution`, `runtime_execution`,
+    `deployment`, or `production_certification`. File presence, Make target
+    text, and workflow narrative are source-contract evidence, not execution.
+    CI execution evidence must bind the repository, trusted workflow and job,
+    run id and attempt, exact commit and ref, successful conclusion, and
+    uploaded artifact digest. Keep this taxonomy in a domain package and each
+    proof builder in its own application capability package; do not create a
+    separate runtime service without workload or failure-isolation evidence.
 
 Recent GitHub issue categories should keep being worked category-wise so
 repeated defect patterns are fixed once and pinned with tests or gates:
