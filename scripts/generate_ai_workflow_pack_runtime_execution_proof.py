@@ -19,8 +19,8 @@ except ImportError:  # pragma: no cover - supports direct script execution
 def main(argv: list[str] | None = None) -> int:
     parser = _parser()
     args = parser.parse_args(argv)
-    generated_at_utc = _aware_datetime(args.generated_at_utc)
     try:
+        generated_at_utc = _aware_datetime(args.generated_at_utc)
         payload = execute_ai_workflow_pack_runtime_proof(
             generated_at_utc=generated_at_utc,
             runtime=HttpLotusAIWorkflowRuntime(
