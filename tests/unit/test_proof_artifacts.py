@@ -9,7 +9,7 @@ from app.application.ai_lineage_store_proof import AI_LINEAGE_STORE_PROOF_ENV
 from app.application.ai_workflow_pack_registration_proof import (
     AI_WORKFLOW_PACK_REGISTRATION_PROOF_ENV,
 )
-from app.application.ai_workflow_pack_runtime_execution_proof import (
+from app.application.ai_runtime_proof import (
     AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF_ENV,
 )
 from app.application.bond_maturity_live_proof import BOND_MATURITY_LIVE_PROOF_ENV

@@ -15,7 +15,7 @@ from app.application.ai_model_risk_operations_proof import (
 from app.application.ai_workflow_pack_registration_proof import (
     build_ai_workflow_pack_registration_proof_payload,
 )
-from app.application.ai_workflow_pack_runtime_execution_proof import (
+from app.application.ai_runtime_proof import (
     build_ai_workflow_pack_runtime_execution_proof_payload,
 )
 from app.application.durable_repository_proof import build_durable_repository_proof_payload
@@ -82,8 +82,8 @@ from app.domain import InMemoryIdeaRepository
 from app.runtime.repository_state import DATABASE_URL_ENV
 from tests.support.ai_workflow_pack_fixture import (
     write_lotus_ai_workflow_pack_fixture,
-    write_lotus_ai_workflow_pack_runtime_execution_fixture,
 )
+from tests.support.ai_runtime_proof import ai_runtime_execution_receipt
 from tests.unit.source_ingestion_proof_helpers import (
     valid_scheduled_worker_proof as _valid_scheduled_worker_proof,
 )
@@ -647,8 +647,7 @@ def test_implementation_proof_readiness_uses_ai_workflow_pack_runtime_execution_
     proof = _bound_aggregate_proof(
         build_ai_workflow_pack_runtime_execution_proof_payload(
             generated_at_utc=datetime(2026, 6, 26, 0, 0, tzinfo=UTC),
-            repository_root=ROOT,
-            lotus_ai_root=write_lotus_ai_workflow_pack_runtime_execution_fixture(tmp_path),
+            receipt=ai_runtime_execution_receipt(),
         ),
         proof_ref,
     )
@@ -662,6 +661,7 @@ def test_implementation_proof_readiness_uses_ai_workflow_pack_runtime_execution_
     )
 
     assert "lotus_ai_runtime_execution_missing" not in snapshot.overall_blockers
+    assert "lotus_ai_live_provider_execution_missing" in snapshot.overall_blockers
     assert "certified_ai_lineage_store_missing" in snapshot.overall_blockers
     assert "workflow_pack_runtime_contract_not_certified" in snapshot.overall_blockers
     assert "model_risk_operations_dashboard_not_certified" not in snapshot.overall_blockers
@@ -677,6 +677,7 @@ def test_implementation_proof_readiness_uses_ai_workflow_pack_runtime_execution_
         if capability.capability_id == "ai-explanation"
     )
     assert "lotus_ai_runtime_execution_missing" not in ai_explanation.blockers
+    assert "lotus_ai_live_provider_execution_missing" in ai_explanation.blockers
     assert "workflow_pack_runtime_contract_not_certified" in ai_explanation.blockers
     assert "output/ai/ai-workflow-pack-runtime-execution-proof.json" in (
         ai_explanation.evidence_refs

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import replace
 from datetime import UTC, datetime
 import importlib.util
 import json
@@ -10,255 +11,252 @@ from typing import cast
 
 import pytest
 
-from app.application.ai_workflow_pack_runtime_execution_proof import (
+from app.application.ai_runtime_proof import (
     AI_WORKFLOW_PACK_RUNTIME_EXECUTION_BLOCKERS_CLEARED,
     AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF_SCHEMA_VERSION,
     REMAINING_AI_WORKFLOW_PACK_RUNTIME_EXECUTION_BLOCKERS,
-    REQUIRED_AI_WORKFLOW_PACK_RUNTIME_EXECUTION_EVIDENCE_REFS,
+    InvalidAIRuntimeExecutionReceipt,
     ai_workflow_pack_runtime_execution_proof_is_valid,
     build_ai_workflow_pack_runtime_execution_proof_payload,
+    build_unavailable_ai_workflow_pack_runtime_execution_proof_payload,
+    execute_ai_workflow_pack_runtime_proof,
 )
-from tests.support.ai_workflow_pack_fixture import (
-    write_lotus_ai_workflow_pack_runtime_execution_fixture,
+from tests.support.ai_runtime_proof import (
+    ai_runtime_execution_receipt,
+    lotus_ai_runtime_execution_response,
 )
 
 ROOT = Path(__file__).resolve().parents[2]
 
 
-def test_builds_source_safe_ai_workflow_pack_runtime_execution_proof(tmp_path: Path) -> None:
-    proof = build_ai_workflow_pack_runtime_execution_proof_payload(
-        generated_at_utc=datetime(2026, 6, 26, 0, 0, tzinfo=UTC),
-        repository_root=ROOT,
-        lotus_ai_root=write_lotus_ai_workflow_pack_runtime_execution_fixture(tmp_path),
-    )
+class RecordingRuntime:
+    def __init__(self, response: Mapping[str, object]) -> None:
+        self.response = response
+        self.requests: list[tuple[Mapping[str, object], str]] = []
+
+    def execute_workflow_pack(
+        self,
+        request: Mapping[str, object],
+        *,
+        caller_app: str,
+    ) -> Mapping[str, object]:
+        self.requests.append((request, caller_app))
+        return self.response
+
+
+def test_builds_source_safe_proof_from_actual_execution_receipt() -> None:
+    proof = _valid_proof()
 
     assert proof["schemaVersion"] == AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF_SCHEMA_VERSION
-    assert proof["repository"] == "lotus-idea"
-    assert proof["proofType"] == "lotus_ai_idea_workflow_pack_runtime_execution"
-    assert proof["proofScope"] == "source_safe_runtime_execution_proof_only"
+    assert proof["proofScope"] == "actual_deterministic_stub_runtime_execution"
     assert proof["aiWorkflowPackRuntimeExecutionProofValid"] is True
     assert tuple(proof["aggregateBlockersCleared"]) == (
         AI_WORKFLOW_PACK_RUNTIME_EXECUTION_BLOCKERS_CLEARED
     )
-    assert tuple(proof["evidenceRefs"]) == (
-        REQUIRED_AI_WORKFLOW_PACK_RUNTIME_EXECUTION_EVIDENCE_REFS
-    )
     assert tuple(proof["remainingCertificationBlockers"]) == (
         REMAINING_AI_WORKFLOW_PACK_RUNTIME_EXECUTION_BLOCKERS
     )
-    assert proof["workflowPackId"] == "idea_explanation.pack@v1"
-    assert proof["workflowAuthorityOwner"] == "lotus-idea"
-    assert proof["aiCapabilityOwner"] == "lotus-ai"
-    assert proof["workflowPackRuntimeExecutionCertified"] is True
     assert proof["lotusAiRuntimeExecuted"] is True
     assert proof["deterministicStubExecution"] is True
     assert proof["liveProviderExecuted"] is False
-    assert proof["providerRolloutCertified"] is False
-    assert proof["modelRiskDashboardCertified"] is False
-    assert proof["modelRiskAlertsCertified"] is False
-    assert proof["workbenchProductProofCertified"] is False
-    assert proof["clientReadyPublicationAuthorized"] is False
-    assert proof["supportedFeaturePromoted"] is False
-    assert proof["proofClosed"] is False
     assert ai_workflow_pack_runtime_execution_proof_is_valid(proof) is True
     serialized = json.dumps(proof)
-    assert "PB_SG_GLOBAL_BAL_001" not in serialized
-    assert "portfolioId" not in serialized
-    assert "candidateId" not in serialized
-    assert "requestBody" not in serialized
-    assert "responseBody" not in serialized
+    for forbidden in (
+        "PB_SG_GLOBAL_BAL_001",
+        "portfolioId",
+        "candidateId",
+        "requestBody",
+        "responseBody",
+        "runtime-proof-candidate",
+    ):
+        assert forbidden not in serialized
 
 
-def test_rejects_ai_workflow_pack_runtime_execution_proof_when_ai_evidence_is_missing(
-    tmp_path: Path,
-) -> None:
-    proof = build_ai_workflow_pack_runtime_execution_proof_payload(
-        generated_at_utc=datetime(2026, 6, 26, 0, 0, tzinfo=UTC),
-        repository_root=ROOT,
-        lotus_ai_root=tmp_path / "missing-lotus-ai",
+def test_executes_governed_runtime_and_maps_only_bounded_receipt() -> None:
+    runtime = RecordingRuntime(lotus_ai_runtime_execution_response())
+
+    proof = execute_ai_workflow_pack_runtime_proof(
+        runtime=runtime,
+        generated_at_utc=datetime(2026, 7, 14, 0, 0, tzinfo=UTC),
     )
 
-    assert proof["aiWorkflowPackRuntimeExecutionProofValid"] is False
-    assert proof["proofChecks"]["fileEvidencePresent"] is False
-    assert ai_workflow_pack_runtime_execution_proof_is_valid(proof) is False
-
-
-def test_rejects_ai_workflow_pack_runtime_execution_proof_with_naive_timestamp(
-    tmp_path: Path,
-) -> None:
-    proof = build_ai_workflow_pack_runtime_execution_proof_payload(
-        generated_at_utc=datetime(2026, 6, 26, 0, 0),
-        repository_root=ROOT,
-        lotus_ai_root=write_lotus_ai_workflow_pack_runtime_execution_fixture(tmp_path),
-    )
-
-    assert proof["aiWorkflowPackRuntimeExecutionProofValid"] is False
-    assert ai_workflow_pack_runtime_execution_proof_is_valid(proof) is False
-
-
-@pytest.mark.parametrize(
-    ("field_name", "bad_value"),
-    [
-        ("schemaVersion", "wrong"),
-        ("repository", "lotus-ai"),
-        ("proofType", "registration"),
-        ("proofScope", "provider_execution"),
-        ("aiWorkflowPackRuntimeExecutionProofValid", False),
-        ("workflowPackId", "other.pack@v1"),
-        ("workflowAuthorityOwner", "lotus-ai"),
-        ("aiCapabilityOwner", "lotus-idea"),
-        ("workflowPackRuntimeExecutionCertified", False),
-        ("lotusAiRuntimeExecuted", False),
-        ("deterministicStubExecution", False),
-        ("liveProviderExecuted", True),
-        ("providerRolloutCertified", True),
-        ("modelRiskDashboardCertified", True),
-        ("modelRiskAlertsCertified", True),
-        ("workbenchProductProofCertified", True),
-        ("clientReadyPublicationAuthorized", True),
-        ("supportedFeaturePromoted", True),
-        ("proofClosed", True),
-        ("generatedAtUtc", "not-a-datetime"),
-        ("generatedAtUtc", None),
-    ],
-)
-def test_rejects_ai_workflow_pack_runtime_execution_proof_with_invalid_top_level_fields(
-    field_name: str,
-    bad_value: object,
-    tmp_path: Path,
-) -> None:
-    proof = _valid_ai_workflow_pack_runtime_execution_proof(tmp_path)
-    proof[field_name] = bad_value
-
-    assert ai_workflow_pack_runtime_execution_proof_is_valid(proof) is False
-
-
-@pytest.mark.parametrize(
-    ("field_name", "bad_value"),
-    [
-        ("aggregateBlockersCleared", []),
-        ("evidenceRefs", []),
-        ("remainingCertificationBlockers", []),
-        ("proofChecks", []),
-    ],
-)
-def test_rejects_ai_workflow_pack_runtime_execution_proof_with_invalid_contract_fields(
-    field_name: str,
-    bad_value: object,
-    tmp_path: Path,
-) -> None:
-    proof = _valid_ai_workflow_pack_runtime_execution_proof(tmp_path)
-    proof[field_name] = bad_value
-
-    assert ai_workflow_pack_runtime_execution_proof_is_valid(proof) is False
-
-
-@pytest.mark.parametrize(
-    "check_name",
-    [
-        "timezoneAwareGeneratedAtUtc",
-        "fileEvidencePresent",
-        "makeTargetEvidencePresent",
-        "ideaProviderStubImplemented",
-        "ideaGuardrailsImplemented",
-        "workflowExecutionInvokesIdeaGuardrails",
-        "stubProviderRoutesIdeaPack",
-        "callerPolicyAuthorizesIdeaWithoutControlPrivilege",
-        "testsCoverIdeaRuntimeExecution",
-    ],
-)
-def test_rejects_ai_workflow_pack_runtime_execution_proof_with_invalid_proof_checks(
-    check_name: str,
-    tmp_path: Path,
-) -> None:
-    proof = _valid_ai_workflow_pack_runtime_execution_proof(tmp_path)
-    proof_checks = dict(cast(Mapping[str, object], proof["proofChecks"]))
-    proof_checks[check_name] = False
-    proof["proofChecks"] = proof_checks
-
-    assert ai_workflow_pack_runtime_execution_proof_is_valid(proof) is False
-
-
-def test_ai_workflow_pack_runtime_execution_proof_cli_writes_valid_artifact(
-    tmp_path: Path,
-) -> None:
-    module = _load_generator_script()
-    output_path = tmp_path / "proof" / "ai-workflow-pack-runtime-execution-proof.json"
-
-    result = module.main(
-        [
-            "--generated-at-utc",
-            "2026-06-26T00:00:00Z",
-            "--lotus-ai-root",
-            str(write_lotus_ai_workflow_pack_runtime_execution_fixture(tmp_path)),
-            "--output",
-            str(output_path),
-        ]
-    )
-
-    assert result == 0
-    proof = json.loads(output_path.read_text(encoding="utf-8"))
     assert ai_workflow_pack_runtime_execution_proof_is_valid(proof) is True
+    request, caller_app = runtime.requests[0]
+    assert caller_app == "lotus-idea"
+    assert request["pack_id"] == "idea_explanation.pack"
+    assert request["version"] == "v1"
+    assert request["workflow_surface"] == "idea-explanation-evidence"
+    receipt = cast(Mapping[str, object], proof["runtimeReceipt"])
+    assert receipt["run_id"] == "wpr_runtime_proof_001"
+    assert "result" not in receipt
+    assert "output_preview" not in receipt
 
 
-def test_ai_workflow_pack_runtime_execution_proof_cli_allows_missing_evidence(
-    tmp_path: Path,
+@pytest.mark.parametrize(
+    ("field_name", "bad_value"),
+    [
+        ("workflow_pack_id", "other.pack"),
+        ("workflow_pack_version", "v2"),
+        ("caller_app", "lotus-gateway"),
+        ("runtime_state", "FAILED"),
+        ("review_state", "ACCEPTED"),
+        ("review_required", False),
+        ("stubbed", False),
+        ("human_review_required", False),
+        ("client_ready_publication", "ALLOWED"),
+        ("downstream_authority", "ALLOWED"),
+        ("completed_at_utc", "not-a-timestamp"),
+    ],
+)
+def test_rejects_receipt_that_does_not_prove_guarded_stub_execution(
+    field_name: str,
+    bad_value: object,
 ) -> None:
-    module = _load_generator_script()
-    output_path = tmp_path / "proof" / "missing-ai-runtime-proof.json"
-
-    result = module.main(
-        [
-            "--generated-at-utc",
-            "2026-06-26T00:00:00Z",
-            "--lotus-ai-root",
-            str(tmp_path / "missing-lotus-ai"),
-            "--output",
-            str(output_path),
-            "--allow-missing-evidence",
-        ]
+    receipt = replace(ai_runtime_execution_receipt(), **{field_name: bad_value})
+    proof = build_ai_workflow_pack_runtime_execution_proof_payload(
+        generated_at_utc=datetime(2026, 7, 14, 0, 0, tzinfo=UTC),
+        receipt=receipt,
     )
 
-    assert result == 0
-    proof = json.loads(output_path.read_text(encoding="utf-8"))
     assert proof["aiWorkflowPackRuntimeExecutionProofValid"] is False
-    assert proof["proofChecks"]["fileEvidencePresent"] is False
     assert ai_workflow_pack_runtime_execution_proof_is_valid(proof) is False
 
 
-def test_ai_workflow_pack_runtime_execution_proof_contract_gate_scans_tuple_content() -> None:
+@pytest.mark.parametrize(
+    ("path", "bad_value"),
+    [
+        (("eligibility", "allowed"), False),
+        (("eligibility", "caller_app"), "other-app"),
+        (("execution", "audit", "workflow_pack_run_id"), "wrong-run"),
+        (("execution", "result", "structured_output", "evidence_content_hash"), "sha256:bad"),
+        (("workflow_pack_run", "pack_version"), "v2"),
+    ],
+)
+def test_rejects_tampered_runtime_response(path: tuple[str, ...], bad_value: object) -> None:
+    response = lotus_ai_runtime_execution_response()
+    target: dict[str, object] = response
+    for key in path[:-1]:
+        target = cast(dict[str, object], target[key])
+    target[path[-1]] = bad_value
+
+    with pytest.raises(InvalidAIRuntimeExecutionReceipt):
+        execute_ai_workflow_pack_runtime_proof(
+            runtime=RecordingRuntime(response),
+            generated_at_utc=datetime(2026, 7, 14, 0, 0, tzinfo=UTC),
+        )
+
+
+def test_rejects_naive_generation_timestamp() -> None:
+    proof = build_ai_workflow_pack_runtime_execution_proof_payload(
+        generated_at_utc=datetime(2026, 7, 14, 0, 0),
+        receipt=ai_runtime_execution_receipt(),
+    )
+
+    assert proof["aiWorkflowPackRuntimeExecutionProofValid"] is False
+    assert ai_workflow_pack_runtime_execution_proof_is_valid(proof) is False
+
+
+def test_unavailable_runtime_artifact_cannot_clear_blocker() -> None:
+    proof = build_unavailable_ai_workflow_pack_runtime_execution_proof_payload(
+        generated_at_utc=datetime(2026, 7, 14, 0, 0, tzinfo=UTC)
+    )
+
+    assert proof["aiWorkflowPackRuntimeExecutionProofValid"] is False
+    assert proof["aggregateBlockersCleared"] == ()
+    assert proof["lotusAiRuntimeExecuted"] is False
+    assert ai_workflow_pack_runtime_execution_proof_is_valid(proof) is False
+
+
+def test_rejects_receipt_digest_tamper() -> None:
+    proof = _valid_proof()
+    proof["runtimeReceiptSha256"] = "sha256:" + "0" * 64
+
+    assert ai_workflow_pack_runtime_execution_proof_is_valid(proof) is False
+
+
+def test_runtime_proof_contract_gate_passes_without_sibling_source_scan() -> None:
+    module = _load_contract_gate_script()
+
+    assert module.validate_ai_workflow_pack_runtime_execution_proof_contract() == []
+
+
+def test_runtime_proof_contract_gate_scans_nested_content() -> None:
     module = _load_contract_gate_script()
     errors: list[str] = []
 
-    module._validate_forbidden_content(("portfolio_id",), errors)
+    module._validate_forbidden_content({"receipt": {"portfolio_id": "secret"}}, errors)
 
-    assert errors == ["$[0]: forbidden source-sensitive text `portfolio_id` is present"]
+    assert errors == ["$.receipt.portfolio_id: forbidden source-sensitive key is present"]
 
 
-def test_ai_workflow_pack_runtime_execution_proof_contract_gate_allows_missing_sibling_evidence(
+def test_runtime_proof_cli_invokes_configured_runtime_and_writes_proof(
+    monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    module = _load_contract_gate_script()
+    module = _load_generator_script()
+    runtime = RecordingRuntime(lotus_ai_runtime_execution_response())
+    monkeypatch.setattr(module, "HttpLotusAIWorkflowRuntime", lambda **_: runtime)
+    output_path = tmp_path / "runtime-proof.json"
 
-    errors = module.validate_ai_workflow_pack_runtime_execution_proof_contract(
-        lotus_ai_root=tmp_path / "missing-lotus-ai"
+    result = module.main(
+        [
+            "--generated-at-utc",
+            "2026-07-14T00:00:00Z",
+            "--lotus-ai-base-url",
+            "http://lotus-ai.internal:8140",
+            "--output",
+            str(output_path),
+        ]
     )
 
-    assert errors == []
+    assert result == 0
+    assert ai_workflow_pack_runtime_execution_proof_is_valid(
+        json.loads(output_path.read_text(encoding="utf-8"))
+    )
+    assert len(runtime.requests) == 1
 
 
-def _valid_ai_workflow_pack_runtime_execution_proof(tmp_path: Path) -> dict[str, object]:
+def test_runtime_proof_cli_writes_invalid_non_proof_when_runtime_is_unavailable(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    module = _load_generator_script()
+    monkeypatch.setattr(
+        module,
+        "execute_ai_workflow_pack_runtime_proof",
+        lambda **_: (_ for _ in ()).throw(RuntimeError("unavailable")),
+    )
+    output_path = tmp_path / "runtime-unavailable.json"
+
+    result = module.main(
+        [
+            "--generated-at-utc",
+            "2026-07-14T00:00:00Z",
+            "--lotus-ai-base-url",
+            "http://lotus-ai.internal:8140",
+            "--output",
+            str(output_path),
+            "--allow-runtime-unavailable",
+        ]
+    )
+
+    assert result == 0
+    proof = json.loads(output_path.read_text(encoding="utf-8"))
+    assert proof["aiWorkflowPackRuntimeExecutionProofValid"] is False
+    assert proof["aggregateBlockersCleared"] == []
+
+
+def _valid_proof() -> dict[str, object]:
     return build_ai_workflow_pack_runtime_execution_proof_payload(
-        generated_at_utc=datetime(2026, 6, 26, 0, 0, tzinfo=UTC),
-        repository_root=ROOT,
-        lotus_ai_root=write_lotus_ai_workflow_pack_runtime_execution_fixture(tmp_path),
+        generated_at_utc=datetime(2026, 7, 14, 0, 0, tzinfo=UTC),
+        receipt=ai_runtime_execution_receipt(),
     )
 
 
-def _load_generator_script() -> ModuleType:
-    script_path = ROOT / "scripts" / "generate_ai_workflow_pack_runtime_execution_proof.py"
+def _load_contract_gate_script() -> ModuleType:
+    script_path = ROOT / "scripts" / "ai_workflow_pack_runtime_execution_proof_contract_gate.py"
     spec = importlib.util.spec_from_file_location(
-        "generate_ai_workflow_pack_runtime_execution_proof",
+        "ai_workflow_pack_runtime_execution_proof_contract_gate",
         script_path,
     )
     assert spec is not None
@@ -268,10 +266,10 @@ def _load_generator_script() -> ModuleType:
     return module
 
 
-def _load_contract_gate_script() -> ModuleType:
-    script_path = ROOT / "scripts" / "ai_workflow_pack_runtime_execution_proof_contract_gate.py"
+def _load_generator_script() -> ModuleType:
+    script_path = ROOT / "scripts" / "generate_ai_workflow_pack_runtime_execution_proof.py"
     spec = importlib.util.spec_from_file_location(
-        "ai_workflow_pack_runtime_execution_proof_contract_gate",
+        "generate_ai_workflow_pack_runtime_execution_proof",
         script_path,
     )
     assert spec is not None
