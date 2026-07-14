@@ -47,9 +47,9 @@ evidence until mesh certification, Gateway discovery, Workbench discovery, and
 supported-feature promotion evidence exist. The platform catalog source-contract path
 can validate source-manifest and catalog inclusion separately; that is catalog
 visibility, not mesh certification.
-The mesh policy proof path validates local SLO, access, and evidence-pack
-policy contracts separately; that is repo-owned policy proof, not platform mesh
-certification.
+The mesh policy source-contract path validates and digest-binds local readiness,
+SLO, access, and evidence-pack policy declarations separately; that is source
+provenance, not policy or platform-mesh certification.
 
 The controlling platform standard is
 [Lotus Data Mesh Standard](../../../lotus-platform/docs/standards/Lotus%20Data%20Mesh%20Standard.md).
@@ -184,18 +184,21 @@ incomplete. Its product-coverage summary preserves
 product has complete runtime coverage. It is not platform mesh certification
 and does not promote `IdeaCandidate:v1` from proposed posture.
 
-`scripts/generate_mesh_policy_proof.py` validates the repo-owned SLO, access,
-and evidence-pack policy contracts for `lotus-idea:IdeaCandidate:v1`. A valid
-artifact clears only these aggregate implementation-readiness blockers:
+`scripts/data_mesh/generate_mesh_policy_source_contract.py` validates and
+SHA-256 binds the repo-owned readiness, SLO, access, and evidence-pack policy
+sources for `lotus-idea:IdeaCandidate:v1`. The artifact declares
+`evidenceClass=source_contract`; it proves source presence and coherence, not
+policy certification. A valid current artifact adds supporting evidence while
+retaining these aggregate implementation-readiness blockers:
 
 1. `mesh_slo_policy_certification_missing`,
 2. `mesh_access_policy_certification_missing`,
 3. `mesh_evidence_policy_certification_missing`.
 
-`make implementation-proof-readiness-check` now generates this default proof
-under ignored `output/data-mesh/mesh-policy-proof.json` and consumes it in the
-aggregate readiness artifact unless `LOTUS_IDEA_MESH_POLICY_PROOF` overrides
-the path. The proof keeps `data_mesh_not_certified`,
+`make implementation-proof-readiness-check` generates this default source
+contract under ignored `output/data-mesh/mesh-policy-source-contract.json` and
+consumes it unless `LOTUS_IDEA_MESH_POLICY_SOURCE_CONTRACT_PROOF` overrides the
+path. It keeps `data_mesh_not_certified`,
 `producer_products_not_active`, platform source-manifest/catalog,
 Gateway/Workbench discovery, and supported-feature blockers intact.
 
@@ -208,7 +211,7 @@ Run:
 
 ```powershell
 make data-mesh-contract-gate
-make mesh-policy-proof-contract-gate
+make mesh-policy-source-contract-proof-gate
 make platform-catalog-source-contract-proof-gate
 make runtime-trust-telemetry-proof-contract-gate
 make runtime-trust-telemetry-preview-check
@@ -232,8 +235,9 @@ The gate validates:
    not-certified evidence from the active repository provider.
 8. the runtime telemetry snapshot endpoint and generator still emit
    contract-shaped, source-safe, blocked runtime snapshot evidence.
-9. the mesh policy proof contract remains source-safe, deterministic, and
-   limited to clearing repo-owned SLO/access/evidence policy blockers.
+9. the mesh policy source contract remains source-safe, deterministic, and
+   limited to supporting evidence while all SLO/access/evidence policy
+   certification blockers remain.
 10. the runtime telemetry proof contract remains source-safe, deterministic, and
    limited to clearing repo-owned runtime telemetry blockers.
 

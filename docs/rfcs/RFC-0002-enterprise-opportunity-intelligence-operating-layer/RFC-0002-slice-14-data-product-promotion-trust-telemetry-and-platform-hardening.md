@@ -1,6 +1,6 @@
 # RFC-0002 Slice 14: Data Product Promotion, Trust Telemetry, And Platform Hardening
 
-Status: Partially implemented - internal not-certified mesh readiness, runtime telemetry preview, source-safe runtime snapshot diagnostics, runtime telemetry proof contract, repo-owned mesh policy proof, and a digest-bound platform catalog source contract
+Status: Partially implemented - internal not-certified mesh readiness, runtime telemetry preview, source-safe runtime snapshot diagnostics, runtime telemetry proof contract, digest-bound repo-owned mesh policy source-contract evidence, and a digest-bound platform catalog source contract
 
 ## Outcome
 
@@ -86,15 +86,14 @@ idempotency, or AI-lineage state.
     publication, platform certification, product activation, deployment,
     Gateway/Workbench discovery certification, production certification, and
     supported-feature promotion remain explicitly unproved.
-17. `src/app/application/mesh_policy_proof.py`,
-    `scripts/generate_mesh_policy_proof.py`, and
-    `make mesh-policy-proof-contract-gate` validate the repo-owned
-    SLO/access/evidence policy proof for `lotus-idea:IdeaCandidate:v1`. The
-    proof clears only `mesh_slo_policy_certification_missing`,
-    `mesh_access_policy_certification_missing`, and
-    `mesh_evidence_policy_certification_missing` from aggregate readiness while
-    leaving platform mesh certification, producer activation, Gateway/Workbench
-    discovery, and supported-feature blockers in place.
+17. `src/app/application/data_mesh/mesh_policy_source_contract.py`,
+    capability-owned `scripts/data_mesh/` automation, and
+    `make mesh-policy-source-contract-proof-gate` define a closed-field v2
+    `source_contract` for the repo-owned readiness, SLO, access, and evidence
+    policy sources. It binds each source by repository/ref/SHA-256, contributes
+    supporting evidence only, and preserves all three policy-certification
+    blockers plus platform, activation, discovery, deployment, production, and
+    supported-feature boundaries.
 
 Evidence:
 
@@ -111,8 +110,8 @@ Evidence:
 11. `scripts/runtime_trust_telemetry_proof_contract_gate.py`
 12. `tests/unit/data_mesh/test_platform_catalog_source_contract.py`
 13. `scripts/data_mesh/platform_catalog_source_contract_gate.py`
-14. `tests/unit/test_mesh_policy_proof.py`
-15. `scripts/mesh_policy_proof_contract_gate.py`
+14. `tests/unit/data_mesh/test_mesh_policy_source_contract.py`
+15. `scripts/data_mesh/mesh_policy_source_contract_gate.py`
 
 ## Current Non-Goals
 
@@ -152,7 +151,7 @@ Evidence:
 
 The diagnostic endpoints deliberately report blocked / not-certified posture.
 The runtime telemetry preview, runtime snapshot endpoint, generated
-snapshot, runtime telemetry proof contract, mesh policy proof, and platform
+snapshot, runtime telemetry proof contract, mesh policy source contract, and platform
 onboarding proof are implementation-backed pre-certification evidence, but they do not
 activate producer declarations or replace the blocked static fallback for
 platform mesh certification. Full Slice 14 completion still requires
