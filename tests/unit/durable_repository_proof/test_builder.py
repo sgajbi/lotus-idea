@@ -216,9 +216,7 @@ def test_proof_cli_writes_valid_receipt_bound_artifact(tmp_path: Path) -> None:
     )
 
     assert result == 0
-    assert durable_repository_proof_is_valid(
-        json.loads(output_path.read_text(encoding="utf-8"))
-    )
+    assert durable_repository_proof_is_valid(json.loads(output_path.read_text(encoding="utf-8")))
 
 
 def test_proof_cli_writes_blocked_artifact_without_receipt(tmp_path: Path) -> None:
@@ -236,9 +234,9 @@ def test_proof_cli_writes_blocked_artifact_without_receipt(tmp_path: Path) -> No
     )
 
     assert result == 0
-    assert json.loads(output_path.read_text(encoding="utf-8"))[
-        "durableRepositoryProofValid"
-    ] is False
+    assert (
+        json.loads(output_path.read_text(encoding="utf-8"))["durableRepositoryProofValid"] is False
+    )
 
 
 def test_proof_cli_rejects_invalid_receipt_json(tmp_path: Path) -> None:

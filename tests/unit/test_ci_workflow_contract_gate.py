@@ -98,9 +98,7 @@ def test_ci_contract_gate_requires_receipt_bound_durable_repository_proof(
 
     errors = module.validate_workflows(workflow_dir)
 
-    assert (
-        "main-releasability.yml missing `make durable-repository-ci-proof`" in errors
-    )
+    assert "main-releasability.yml missing `make durable-repository-ci-proof`" in errors
 
 
 def _copy_workflows(tmp_path: Path) -> Path:

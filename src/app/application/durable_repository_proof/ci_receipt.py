@@ -87,8 +87,12 @@ def _require_successful_durable_repository_tests(test_report_path: Path) -> None
             raise ValueError(
                 "PostgreSQL test report must contain each governed durable repository test once"
             )
-        if any(matching[0].find(outcome) is not None for outcome in ("failure", "error", "skipped")):
-            raise ValueError(f"Governed durable repository PostgreSQL test did not pass: {test_name}")
+        if any(
+            matching[0].find(outcome) is not None for outcome in ("failure", "error", "skipped")
+        ):
+            raise ValueError(
+                f"Governed durable repository PostgreSQL test did not pass: {test_name}"
+            )
     if any(_count(root, field) for field in ("failures", "errors")):
         raise ValueError("PostgreSQL runtime proof report contains failed tests")
 

@@ -160,8 +160,7 @@ def durable_repository_proof_is_valid(payload: Mapping[str, Any]) -> bool:
         and payload.get("proofType") == "postgres_repository_ci_execution"
         and payload.get("proofScope") == "mainline_ci_execution_receipt"
         and payload.get("evidenceClass") == EvidenceClass.CI_EXECUTION.value
-        and payload.get("requiredEvidenceClass")
-        == DURABLE_REPOSITORY_REQUIRED_EVIDENCE_CLASS.value
+        and payload.get("requiredEvidenceClass") == DURABLE_REPOSITORY_REQUIRED_EVIDENCE_CLASS.value
         and payload.get("durableRepositoryProofValid") is True
         and tuple(payload.get("aggregateBlockersCleared") or ())
         == DURABLE_REPOSITORY_BLOCKERS_CLEARED
