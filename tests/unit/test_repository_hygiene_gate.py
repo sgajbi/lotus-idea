@@ -179,9 +179,7 @@ def test_repository_hygiene_gate_enforces_report_intake_source_contract_package(
     )
 
 
-def test_repository_hygiene_gate_enforces_report_materialization_source_contract_package() -> (
-    None
-):
+def test_repository_hygiene_gate_enforces_report_materialization_source_contract_package() -> None:
     module = _load_repository_hygiene_gate()
     required_paths = {
         "scripts/report/generate_materialization_source_contract.py",

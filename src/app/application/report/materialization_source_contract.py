@@ -207,9 +207,9 @@ def report_materialization_source_contract_is_valid(payload: Mapping[str, Any]) 
     )
 
 
-def load_report_materialization_source_contract_from_env() -> (
-    tuple[dict[str, Any] | None, str | None]
-):
+def load_report_materialization_source_contract_from_env() -> tuple[
+    dict[str, Any] | None, str | None
+]:
     path_value = os.getenv(REPORT_MATERIALIZATION_SOURCE_CONTRACT_ENV)
     if not path_value:
         return None, None
