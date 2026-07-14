@@ -342,7 +342,7 @@ Implementation-backed evidence:
 1. application builder:
    `src/app/application/downstream_realization_readiness.py`,
 2. downstream realization orchestration:
-   `src/app/application/downstream_realization.py`,
+   `src/app/application/downstream_realization/submission_use_cases.py`,
 3. downstream submission API:
    `src/app/api/downstream_realization.py`,
 4. downstream adapter port:

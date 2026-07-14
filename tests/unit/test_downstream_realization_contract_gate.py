@@ -116,10 +116,8 @@ def test_downstream_realization_contract_gate_blocks_call_before_claim_regressio
     tmp_path: Path,
 ) -> None:
     module = _load_downstream_realization_contract_gate()
-    source = (ROOT / "src" / "app" / "application" / "downstream_realization.py").read_text(
-        encoding="utf-8"
-    )
-    relative = Path("src/app/application/downstream_realization.py")
+    relative = Path("src/app/application/downstream_realization/submission_use_cases.py")
+    source = (ROOT / relative).read_text(encoding="utf-8")
     target = tmp_path / relative
     target.parent.mkdir(parents=True)
     target.write_text(

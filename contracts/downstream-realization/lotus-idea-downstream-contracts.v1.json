@@ -13,7 +13,7 @@
   "source_of_truth": {
     "readiness_builder": "src/app/application/downstream_realization_readiness.py",
     "contract_loader": "src/app/application/downstream_realization_contracts.py",
-    "downstream_realization_orchestration": "src/app/application/downstream_realization.py",
+    "downstream_realization_orchestration": "src/app/application/downstream_realization/submission_use_cases.py",
     "downstream_realization_api": "src/app/api/downstream_realization.py",
     "downstream_adapter_port": "src/app/ports/downstream_realization.py",
     "downstream_adapter_foundation": "src/app/infrastructure/downstream_realization.py",
