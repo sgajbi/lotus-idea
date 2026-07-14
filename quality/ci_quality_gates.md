@@ -36,7 +36,7 @@ Blocking scaffold commands:
 27. `make ai-workflow-pack-runtime-execution-proof-contract-gate`
 28. `make workbench-read-path-proof-contract-gate`
 29. `make gateway-workbench-contract-proof-contract-gate`
-30. `make gateway-workbench-discovery-proof-contract-gate`
+30. `make gateway-workbench-discovery-contract-proof-contract-gate`
 31. `make outbox-broker-proof-contract-gate`
 32. `make platform-mesh-onboarding-proof-contract-gate`
 33. `make downstream-route-contract-proof-gate`
@@ -122,7 +122,7 @@ Core portfolio-state live-proof contract validation,
 Risk high-volatility and drawdown live-proof contract validation,
 Advise mandate/restriction live-proof contract validation,
 Workbench read-path proof contract validation,
-Gateway/Workbench discovery proof contract validation,
+Gateway/Workbench discovery contract proof contract validation,
 outbox broker proof contract validation,
 implementation-proof readiness target wiring and release-lane placement, runtime trust telemetry preview generation, runtime trust telemetry snapshot release-lane placement,
 source-observability contract validation, API route metadata validation,

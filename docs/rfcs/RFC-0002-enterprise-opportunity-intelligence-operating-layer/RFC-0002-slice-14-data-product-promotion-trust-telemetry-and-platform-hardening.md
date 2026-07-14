@@ -22,7 +22,8 @@ This slice now has internal operator diagnostic foundations only:
    `certified_runtime_trust_telemetry_missing`, plus platform-aligned
    promotion blockers for source-manifest inclusion, catalog inclusion, SLO
    certification, access-policy certification, evidence-policy certification,
-   Gateway/Workbench discovery proof, and supported-feature promotion.
+   Gateway/Workbench runtime discovery evidence, and supported-feature
+   promotion.
 4. The endpoint returns `runtimeTelemetryBacked=false`,
    `platformCertified=false`, and `supportedFeaturePromoted=false`.
 5. The endpoint emits a bounded `mesh_readiness_read` operation event with

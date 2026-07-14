@@ -729,6 +729,17 @@ modularity inside the existing deployable service. Do not introduce a separate
 runtime service without workload, failure-isolation, ownership, security, or
 operability evidence.
 
+Gateway/Workbench catalog entries, approved-consumer declarations, and sibling
+platform generated files are also `source_contract` evidence. Keep the
+discovery contract builder, generator, gate, and focused tests in the same
+capability-oriented `workbench/` packages. A valid discovery contract artifact
+may add evidence references to data-mesh and runtime-trust readiness, but it
+must clear no blocker and must preserve
+`gateway_workbench_discovery_proof_missing`. Active catalog publication,
+Gateway serving, Workbench consumption, entitlement enforcement, and canonical
+runtime behavior require machine-verifiable evidence from their owning
+runtimes. No separate Lotus Idea service is justified by this design boundary.
+
 Outbox consumer declarations are source-contract evidence. Keep their builder,
 generator, contract gate, and tests under the existing `outbox/` capability
 directories with `consumer_contract_proof` naming. A valid declaration may add

@@ -26,6 +26,13 @@ read-path contract as evidence, but it clears no runtime blocker and does not
 replace machine-verifiable Gateway serving, Workbench rendering, entitlement,
 accessibility, or canonical front-office runtime proof.
 
+The repo-owned discovery contract artifact is also `source_contract` evidence.
+It validates proposed product declarations and declared Gateway consumption,
+but clears no blocker and preserves `gateway_workbench_discovery_proof_missing`.
+Active catalog publication, Gateway discovery, Workbench consumption,
+entitlement enforcement, and product support still require runtime evidence
+from the owning applications.
+
 ## Outcome
 
 Make supported opportunity intelligence visible in `lotus-workbench` through

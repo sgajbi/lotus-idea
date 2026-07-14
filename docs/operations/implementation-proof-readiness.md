@@ -227,8 +227,8 @@ taxonomy and the #393 same-pattern campaign.
 | `LOTUS_IDEA_OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF` | Overrides the default generated outbox platform mesh event publication proof artifact passed into aggregate readiness. |
 | `LOTUS_IDEA_GATEWAY_WORKBENCH_CONTRACT_PROOF_OUTPUT` | Selects the default generated Gateway/Workbench contract proof artifact consumed by aggregate readiness when no override is set. Defaults to `output/workbench/gateway-workbench-contract-proof.json`. |
 | `LOTUS_IDEA_GATEWAY_WORKBENCH_CONTRACT_PROOF` | Overrides the default generated Gateway/Workbench contract proof artifact passed into aggregate readiness. |
-| `LOTUS_IDEA_GATEWAY_WORKBENCH_DISCOVERY_PROOF_OUTPUT` | Selects the default generated Gateway/Workbench discovery proof artifact consumed by aggregate readiness when no override is set. Defaults to `output/workbench/gateway-workbench-discovery-proof.json`. |
-| `LOTUS_IDEA_GATEWAY_WORKBENCH_DISCOVERY_PROOF` | Overrides the default generated Gateway/Workbench discovery proof artifact passed into aggregate readiness. |
+| `LOTUS_IDEA_GATEWAY_WORKBENCH_DISCOVERY_CONTRACT_PROOF_OUTPUT` | Selects the default generated Gateway/Workbench discovery contract proof artifact consumed by aggregate readiness when no override is set. Defaults to `output/workbench/gateway-workbench-discovery-contract-proof.json`. |
+| `LOTUS_IDEA_GATEWAY_WORKBENCH_DISCOVERY_CONTRACT_PROOF` | Overrides the default generated Gateway/Workbench discovery contract proof artifact passed into aggregate readiness. |
 | `LOTUS_IDEA_AI_LINEAGE_STORE_PROOF_OUTPUT` | Selects the default generated AI lineage store proof artifact consumed by aggregate readiness when no override is set. Defaults to `output/ai/ai-lineage-store-proof.json`. |
 | `LOTUS_IDEA_AI_LINEAGE_STORE_PROOF` | Overrides the default generated AI lineage store proof artifact passed into aggregate readiness. |
 | `LOTUS_AI_ROOT` | Selects the sibling `lotus-ai` checkout used to generate the workflow-pack registration source-contract proof. Defaults to `../lotus-ai`. |
@@ -533,16 +533,19 @@ Workbench panel proof, browser accessibility proof, canonical demo runtime
 proof, Gateway/Workbench data-product discovery proof, client-ready
 publication, or supported-feature promotion.
 
-Gateway/Workbench discovery proof is captured by
-`scripts/generate_gateway_workbench_discovery_proof.py`. The repo-native
+Gateway/Workbench discovery contract proof is captured by
+`scripts/workbench/generate_discovery_contract_proof.py`. The repo-native
 `make implementation-proof-readiness-check` target now generates the default
-artifact under `LOTUS_IDEA_GATEWAY_WORKBENCH_DISCOVERY_PROOF_OUTPUT` from
+artifact under `LOTUS_IDEA_GATEWAY_WORKBENCH_DISCOVERY_CONTRACT_PROOF_OUTPUT` from
 platform catalog/onboarding evidence, the Workbench read-path proof, and the
-Gateway/Workbench contract proof. A valid artifact clears only
-`gateway_workbench_discovery_proof_missing` from the data-mesh and runtime
-trust telemetry proof families. It does not certify data-mesh products,
-activate producer products, publish product routes, certify full Workbench
-product behavior, or promote supported features.
+Gateway/Workbench contract proof. A valid v2 artifact is classified as
+`source_contract`: aggregate readiness may add its evidence reference to the
+data-mesh and runtime-trust telemetry capabilities, but it clears no blocker.
+`gateway_workbench_discovery_proof_missing` remains until machine-verifiable
+runtime evidence proves active catalog publication, Gateway serving,
+Workbench consumption, and entitlement enforcement. The artifact does not
+certify data-mesh products, activate producer products, publish product routes,
+certify canonical Workbench behavior, or promote supported features.
 
 Outbox broker proof is captured by
 `scripts/outbox/generate_broker_proof.py`. A valid artifact referenced through
@@ -965,10 +968,10 @@ Implementation-backed evidence:
     `scripts/workbench/generate_contract_proof.py`,
 1. Gateway/Workbench contract proof contract gate:
     `make gateway-workbench-contract-proof-contract-gate`,
-1. Gateway/Workbench discovery proof generator:
-    `scripts/generate_gateway_workbench_discovery_proof.py`,
-1. Gateway/Workbench discovery proof contract gate:
-    `make gateway-workbench-discovery-proof-contract-gate`,
+1. Gateway/Workbench discovery contract proof generator:
+    `scripts/workbench/generate_discovery_contract_proof.py`,
+1. Gateway/Workbench discovery contract proof contract gate:
+    `make gateway-workbench-discovery-contract-proof-contract-gate`,
 1. outbox broker proof generator:
     `scripts/outbox/generate_broker_proof.py`,
 1. outbox consumer contract gate:
@@ -1087,7 +1090,7 @@ $env:LOTUS_IDEA_REPORT_MATERIALIZATION_PROOF_OUTPUT = "output/downstream/report-
 $env:LOTUS_IDEA_OUTBOX_CONSUMER_CONTRACT_PROOF_OUTPUT = "output/outbox/outbox-consumer-contract-proof.json"
 $env:LOTUS_IDEA_OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF_OUTPUT = "output/outbox/outbox-platform-mesh-event-publication-proof.json"
 $env:LOTUS_IDEA_GATEWAY_WORKBENCH_CONTRACT_PROOF_OUTPUT = "output/workbench/gateway-workbench-contract-proof.json"
-$env:LOTUS_IDEA_GATEWAY_WORKBENCH_DISCOVERY_PROOF_OUTPUT = "output/workbench/gateway-workbench-discovery-proof.json"
+$env:LOTUS_IDEA_GATEWAY_WORKBENCH_DISCOVERY_CONTRACT_PROOF_OUTPUT = "output/workbench/gateway-workbench-discovery-contract-proof.json"
 $env:IMPLEMENTATION_PROOF_OUTPUT = "output/implementation-proof/implementation-proof-readiness.json"
 make implementation-proof-readiness-check
 
@@ -1102,7 +1105,7 @@ make report-intake-route-proof-contract-gate
 make report-materialization-proof-contract-gate
 make workbench-read-path-proof-contract-gate
 make gateway-workbench-contract-proof-contract-gate
-make gateway-workbench-discovery-proof-contract-gate
+make gateway-workbench-discovery-contract-proof-contract-gate
 make source-ingestion-scheduled-worker-check
 make source-ingestion-live-proof-contract-gate
 make risk-concentration-live-proof-contract-gate

@@ -26,7 +26,7 @@ worked around by weakening blockers or promoting unsupported claims.
 | Outbox delivery is blocked | `GET /api/v1/outbox-delivery/readiness` | Broker configuration, publisher adapter, durable repository posture, consumer runtime proof, platform mesh event proof. |
 | Outbox event cannot be correlated to a request | `make outbox-event-contract-gate` | Authorized durable row and publisher envelope must contain distinct `correlationId` and `traceId`; `causationId` is optional parent-event identity only. Do not copy raw broker payloads or identifiers into tickets. |
 | Downstream realization is blocked | `GET /api/v1/downstream-realization/readiness` | Advise/Manage/Report route proof, Report materialization proof, adapter configuration, unsupported client-publication blockers. |
-| Data-mesh posture is blocked | `GET /api/v1/data-mesh/readiness` | Platform source-manifest/catalog proof, SLO/access/evidence policy, runtime telemetry, Gateway/Workbench discovery proof. |
+| Data-mesh posture is blocked | `GET /api/v1/data-mesh/readiness` | Platform source-manifest/catalog proof, SLO/access/evidence policy, runtime telemetry, and machine-verifiable Gateway/Workbench discovery evidence. |
 | AI explanation is blocked | `GET /api/v1/ai-explanations/readiness` | Guardrails, model-risk operations proof, AI lineage store proof, `lotus-ai` workflow-pack registration/runtime execution proof. |
 
 ## Local Validation Path
