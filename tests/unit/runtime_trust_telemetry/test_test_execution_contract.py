@@ -52,9 +52,7 @@ def test_builds_truthful_in_memory_test_execution_contract() -> None:
             "runtime_product_records_missing",
         ),
     }
-    assert tuple(contract["evidenceRefs"]) == (
-        REQUIRED_RUNTIME_TRUST_TELEMETRY_TEST_EVIDENCE_REFS
-    )
+    assert tuple(contract["evidenceRefs"]) == (REQUIRED_RUNTIME_TRUST_TELEMETRY_TEST_EVIDENCE_REFS)
     assert tuple(contract["remainingCertificationBlockers"]) == (
         REMAINING_RUNTIME_TRUST_TELEMETRY_BLOCKERS
     )

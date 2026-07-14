@@ -42,7 +42,9 @@ from app.application.proof_provenance import bind_aggregate_proof_provenance
 from app.application.report.intake_route_source_contract import (
     REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF_ENV,
 )
-from app.application.runtime_trust_telemetry.test_execution_contract import RUNTIME_TRUST_TELEMETRY_TEST_EXECUTION_ENV
+from app.application.runtime_trust_telemetry.test_execution_contract import (
+    RUNTIME_TRUST_TELEMETRY_TEST_EXECUTION_ENV,
+)
 from app.application.source_ingestion_readiness import LIVE_PROOF_ENV, SCHEDULED_WORKER_PROOF_ENV
 from app.application.workbench.read_path_source_contract import (
     WORKBENCH_READ_PATH_SOURCE_CONTRACT_PROOF_ENV,

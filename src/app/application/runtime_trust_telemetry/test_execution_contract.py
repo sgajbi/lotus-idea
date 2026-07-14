@@ -25,9 +25,7 @@ from app.domain import (
 )
 from app.domain.proof_evidence import EvidenceClass
 
-RUNTIME_TRUST_TELEMETRY_TEST_EXECUTION_ENV = (
-    "LOTUS_IDEA_RUNTIME_TRUST_TELEMETRY_TEST_EXECUTION"
-)
+RUNTIME_TRUST_TELEMETRY_TEST_EXECUTION_ENV = "LOTUS_IDEA_RUNTIME_TRUST_TELEMETRY_TEST_EXECUTION"
 RUNTIME_TRUST_TELEMETRY_TEST_EXECUTION_SCHEMA_VERSION = (
     "lotus-idea.runtime-trust-telemetry-test-execution.v2"
 )
@@ -176,9 +174,7 @@ def build_runtime_trust_telemetry_test_execution_payload(
         "proofScope": "deterministic_in_memory_contract_exercise",
         "evidenceClass": EvidenceClass.TEST_EXECUTION.value,
         "testExecutionValid": test_execution_valid,
-        "aggregateBlockersSatisfied": (
-            RUNTIME_TRUST_TELEMETRY_TEST_EXECUTION_BLOCKERS_SATISFIED
-        ),
+        "aggregateBlockersSatisfied": (RUNTIME_TRUST_TELEMETRY_TEST_EXECUTION_BLOCKERS_SATISFIED),
         **preview_counts,
         "productCoverage": product_coverage,
         "evidenceRefs": evidence_refs,
@@ -285,8 +281,12 @@ def _product_coverage_summary(product_postures: tuple[Any, ...]) -> dict[str, An
         "coverageStatus": "incomplete",
         "productCoverageComplete": False,
         "declaredProductCount": len(product_postures),
-        "runtimeBackedProductCount": sum(1 for posture in product_postures if posture.runtime_backed),
-        "blockedProductCount": sum(1 for posture in product_postures if posture.certification_blockers),
+        "runtimeBackedProductCount": sum(
+            1 for posture in product_postures if posture.runtime_backed
+        ),
+        "blockedProductCount": sum(
+            1 for posture in product_postures if posture.certification_blockers
+        ),
         "coverageBlockers": coverage_blockers,
     }
 
