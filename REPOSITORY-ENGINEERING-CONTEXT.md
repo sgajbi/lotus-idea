@@ -635,7 +635,11 @@ not self-authorize legal hold, privacy erasure, Report/Archive retention, or AI
 provider deletion. Erased and purged records must be excluded at every direct
 read projection, not only from whole-repository snapshots. New downstream
 claims participate in the lifecycle lock so erasure and delivery cannot create
-an unsafe terminal state.
+an unsafe terminal state. Lifecycle mutations lock the candidate row and then
+the lifecycle-control row before reading active outbox or downstream-delivery
+posture. This ordered fence prevents a concurrent claim from being accepted
+after erasure evaluated stale delivery state; replay-only reads do not take the
+mutation lock.
 
 When a candidate has an Idea-owned report evidence-pack request, lifecycle
 actions also consume an independently signed
