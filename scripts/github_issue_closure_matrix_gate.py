@@ -128,6 +128,7 @@ MERGED_MAIN_ISSUES = frozenset(
         357,
         363,
         364,
+        392,
     }
 )
 
