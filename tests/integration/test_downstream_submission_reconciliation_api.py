@@ -7,7 +7,7 @@ import logging
 
 import pytest
 from _pytest.logging import LogCaptureFixture
-from fastapi.testclient import TestClient
+from tests.support.http import managed_test_client
 
 from app.domain import (
     DownstreamSubmissionPosture,
@@ -31,7 +31,7 @@ def reset_repository_provider() -> Iterator[None]:
 def test_operator_inspection_denied_for_unauthorized_and_is_source_safe() -> None:
     repository = _repository_with_uncertain_submission()
     reset_idea_repository_for_tests(repository=repository)
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     denied = client.get("/api/v1/downstream-submissions/reconciliation")
     response = client.get(
@@ -60,7 +60,7 @@ def test_operator_reconciliation_is_replay_safe_and_conflict_aware() -> None:
         0
     ].support_reference
     reset_idea_repository_for_tests(repository=repository)
-    client = TestClient(app)
+    client = managed_test_client(app)
     headers = _headers(
         "idea.downstream-reconciliation.resolve",
         idempotency_key="CHG-334-API-001",
@@ -109,7 +109,7 @@ def test_reconciliation_requires_matching_mutation_identity() -> None:
         0
     ].support_reference
     reset_idea_repository_for_tests(repository=repository)
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         f"/api/v1/downstream-submissions/reconciliation/{support_reference}",
@@ -130,7 +130,7 @@ def test_reconciliation_requires_matching_mutation_identity() -> None:
 
 
 def test_reconciliation_denies_unauthorized_mutation_and_reports_missing_reference() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     support_reference = "downstream-submission-000000000000000000000000"
     request = {
         "resolution": "quarantined",
@@ -165,7 +165,7 @@ def test_downstream_reconciliation_api_emits_bounded_operation_events(
         0
     ].support_reference
     reset_idea_repository_for_tests(repository=repository)
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     with caplog.at_level(logging.INFO, logger="lotus-idea"):
         read = client.get(

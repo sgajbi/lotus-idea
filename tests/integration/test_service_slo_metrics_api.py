@@ -1,10 +1,10 @@
-from fastapi.testclient import TestClient
+from tests.support.http import managed_test_client
 
 from app.main import app
 
 
 def test_http_sli_scrape_uses_route_templates_without_resource_identity() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_id = "sensitive-candidate-identity"
 
     response = client.get(

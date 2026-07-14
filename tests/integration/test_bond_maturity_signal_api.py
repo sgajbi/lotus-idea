@@ -5,7 +5,7 @@ from datetime import UTC, date, datetime
 from typing import Any
 
 import pytest
-from fastapi.testclient import TestClient
+from tests.support.http import managed_test_client
 
 import app.api.bond_maturity_signals as bond_maturity_signals_api
 from app.domain import EvidenceFreshness, InMemoryIdeaRepository, SourceRef, SourceSystem
@@ -66,7 +66,7 @@ def test_bond_maturity_source_api_fetches_core_evidence_without_persistence(
         "_build_core_bond_maturity_source_runtime_from_environment",
         lambda: runtime,
     )
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/idea-signals/bond-maturity/evaluate-from-source",
@@ -114,7 +114,7 @@ def test_bond_maturity_source_api_requires_portfolio_entitlement(
         "_build_core_bond_maturity_source_runtime_from_environment",
         fail_if_called,
     )
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/idea-signals/bond-maturity/evaluate-from-source",
@@ -141,7 +141,7 @@ def test_bond_maturity_source_api_blocks_when_core_runtime_is_not_configured(
             core_query_control_plane_base_url_configured=False,
         ),
     )
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/idea-signals/bond-maturity/evaluate-from-source",
@@ -178,7 +178,7 @@ def test_bond_maturity_source_api_returns_blocked_posture_for_core_unavailable(
         "_build_core_bond_maturity_source_runtime_from_environment",
         lambda: runtime,
     )
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/idea-signals/bond-maturity/evaluate-from-source",
@@ -228,7 +228,7 @@ def test_bond_maturity_source_api_emits_bounded_operation_events(
         "emit_foundation_operation_event",
         capture_event,
     )
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/idea-signals/bond-maturity/evaluate-from-source",
@@ -265,7 +265,7 @@ def test_bond_maturity_source_api_suppresses_runtime_close_failure(
         "emit_foundation_operation_event",
         capture_event,
     )
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/idea-signals/bond-maturity/evaluate-from-source",
@@ -282,7 +282,7 @@ def test_bond_maturity_source_api_suppresses_runtime_close_failure(
 
 
 def test_bond_maturity_signal_api_returns_review_candidate() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/idea-signals/bond-maturity/evaluate",
@@ -309,7 +309,7 @@ def test_bond_maturity_signal_api_returns_review_candidate() -> None:
 
 
 def test_bond_maturity_signal_api_reports_outside_window_not_eligible() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     payload = bond_maturity_payload()
     payload["sourceReportedNextMaturityDate"] = "2026-08-15"
 
@@ -332,7 +332,7 @@ def test_bond_maturity_signal_api_reports_outside_window_not_eligible() -> None:
 
 
 def test_bond_maturity_signal_api_reports_stale_source_blocker() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     payload = bond_maturity_payload()
     payload["holdingsRef"]["freshness"] = "stale"
 
@@ -360,7 +360,7 @@ def test_bond_maturity_signal_api_rejects_wrong_source_contract(
     field_name: str,
 ) -> None:
     reset_idea_repository_for_tests(InMemoryIdeaRepository())
-    client = TestClient(app)
+    client = managed_test_client(app)
     payload = bond_maturity_payload()
     payload[field_name] = {
         **payload[field_name],
@@ -405,7 +405,7 @@ def test_bond_maturity_signal_api_rejects_wrong_source_contract(
 
 
 def test_bond_maturity_signal_api_requires_signal_permission() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/idea-signals/bond-maturity/evaluate",

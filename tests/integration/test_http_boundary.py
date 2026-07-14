@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
-from fastapi.testclient import TestClient
+from tests.support.http import managed_test_client
 
 from app.main import create_app
 from app.middleware.http_boundary import (
@@ -22,7 +22,7 @@ from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 
 def test_http_boundary_adds_secure_response_headers() -> None:
-    response = TestClient(create_app()).get("/health")
+    response = managed_test_client(create_app()).get("/health")
 
     assert response.status_code == 200
     assert response.headers["Strict-Transport-Security"] == "max-age=31536000; includeSubDomains"
@@ -36,7 +36,7 @@ def test_http_boundary_adds_secure_response_headers() -> None:
 
 
 def test_cors_is_denied_by_default() -> None:
-    response = TestClient(create_app()).get(
+    response = managed_test_client(create_app()).get(
         "/health",
         headers={"Origin": "https://workbench.example"},
     )
@@ -48,7 +48,7 @@ def test_cors_is_denied_by_default() -> None:
 def test_configured_cors_allowlist_is_explicit(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv(CORS_ALLOWED_ORIGINS_ENV, "https://workbench.example")
 
-    response = TestClient(create_app()).get(
+    response = managed_test_client(create_app()).get(
         "/health",
         headers={"Origin": "https://workbench.example"},
     )
@@ -62,7 +62,7 @@ def test_configured_trusted_hosts_reject_untrusted_host(
 ) -> None:
     monkeypatch.setenv(TRUSTED_HOSTS_ENV, "testserver")
 
-    response = TestClient(create_app()).get("/health", headers={"Host": "evil.example"})
+    response = managed_test_client(create_app()).get("/health", headers={"Host": "evil.example"})
 
     assert response.status_code == 400
     assert response.headers["X-Correlation-Id"]
@@ -77,7 +77,7 @@ def test_oversized_request_is_rejected_before_body_or_secret_leakage(
     monkeypatch.setenv(MAX_REQUEST_BODY_BYTES_ENV, "32")
     body = b'{"portfolioId":"PB_SG_GLOBAL_BAL_001","secret":"token-value"}'
 
-    response = TestClient(create_app()).post(
+    response = managed_test_client(create_app()).post(
         "/api/v1/conversion-intents/oversized/downstream-submissions",
         content=body,
         headers={
@@ -97,7 +97,7 @@ def test_oversized_request_is_rejected_before_body_or_secret_leakage(
 
 
 def test_json_write_request_rejects_unsupported_content_type() -> None:
-    response = TestClient(create_app()).post(
+    response = managed_test_client(create_app()).post(
         "/api/v1/conversion-intents/plain/downstream-submissions",
         content="raw prompt or portfolio PB_SG_GLOBAL_BAL_001",
         headers={

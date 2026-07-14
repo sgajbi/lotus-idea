@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from fastapi.testclient import TestClient
+from tests.support.http import managed_test_client
 
 from app.domain import OutboxEventRecord
 from app.main import app
@@ -27,7 +27,7 @@ from tests.integration.test_review_workflow_api import (
 
 def test_candidate_and_lifecycle_api_preserve_parent_lineage_across_replay() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_id = persisted_candidate_id(client, idempotency_key="lineage-candidate-001")
     headers = lifecycle_headers("lineage-lifecycle-001")
     headers["X-Causation-Id"] = "event-candidate-persisted-001"
@@ -55,7 +55,7 @@ def test_candidate_and_lifecycle_api_preserve_parent_lineage_across_replay() -> 
 
 def test_review_and_feedback_apis_persist_distinct_request_lineage() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     review_candidate_id = persisted_candidate_id(client, idempotency_key="lineage-review-seed-001")
     review = client.post(
         f"/api/v1/idea-candidates/{review_candidate_id}/review-actions",
@@ -88,7 +88,7 @@ def test_review_and_feedback_apis_persist_distinct_request_lineage() -> None:
 
 def test_conversion_and_report_apis_persist_lineage_for_each_event_family() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_id = persisted_candidate_id(client, idempotency_key="lineage-conversion-seed-001")
     approve_candidate_for_conversion(client, candidate_id)
     intent_id = "lineage-conversion-intent-001"
@@ -129,7 +129,7 @@ def test_conversion_and_report_apis_persist_lineage_for_each_event_family() -> N
 
 def test_mutation_api_rejects_sensitive_causation_without_event_write() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_id = persisted_candidate_id(client, idempotency_key="lineage-sensitive-seed-001")
     headers = lifecycle_headers("lineage-sensitive-causation-001")
     headers["X-Causation-Id"] = "bearer-secret-token"

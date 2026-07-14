@@ -5,7 +5,7 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 from typing import Any
 
-from fastapi.testclient import TestClient
+from tests.support.http import managed_test_client
 from pytest import MonkeyPatch
 
 import app.api.high_volatility_signals as high_volatility_api
@@ -48,7 +48,7 @@ class RecordingRiskVolatilitySource:
 
 
 def test_high_volatility_signal_api_returns_review_candidate() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/idea-signals/high-volatility/evaluate",
@@ -74,7 +74,7 @@ def test_high_volatility_signal_api_returns_review_candidate() -> None:
 
 
 def test_high_volatility_signal_api_reports_below_threshold_not_eligible() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     payload = high_volatility_payload()
     payload["sourceReportedVolatility"] = "8.50"
 
@@ -97,7 +97,7 @@ def test_high_volatility_signal_api_reports_below_threshold_not_eligible() -> No
 
 
 def test_high_volatility_signal_api_reports_non_ready_source_blocker() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     payload = high_volatility_payload()
     payload["riskSupportabilityState"] = "degraded"
 
@@ -120,7 +120,7 @@ def test_high_volatility_signal_api_reports_non_ready_source_blocker() -> None:
 
 
 def test_high_volatility_signal_api_reports_stale_source_blocker() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     payload = high_volatility_payload()
     payload["riskRef"]["freshness"] = "stale"
 
@@ -146,7 +146,7 @@ def test_high_volatility_signal_api_rejects_wrong_source_contract(
     monkeypatch: MonkeyPatch,
 ) -> None:
     reset_idea_repository_for_tests(InMemoryIdeaRepository())
-    client = TestClient(app)
+    client = managed_test_client(app)
     payload = high_volatility_payload()
     payload["riskRef"] = {
         **payload["riskRef"],
@@ -191,7 +191,7 @@ def test_high_volatility_signal_api_rejects_wrong_source_contract(
 
 
 def test_high_volatility_signal_api_requires_signal_permission() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/idea-signals/high-volatility/evaluate",
@@ -216,7 +216,7 @@ def test_high_volatility_signal_api_requires_signal_permission() -> None:
 def test_high_volatility_signal_from_source_api_returns_review_candidate(
     monkeypatch: MonkeyPatch,
 ) -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     risk_source = RecordingRiskVolatilitySource()
     monkeypatch.setattr(
         high_volatility_api,
@@ -258,7 +258,7 @@ def test_high_volatility_signal_from_source_api_returns_review_candidate(
 def test_high_volatility_signal_from_source_blocks_when_runtime_not_configured(
     monkeypatch: MonkeyPatch,
 ) -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     monkeypatch.setattr(
         high_volatility_api,
         "_build_risk_volatility_source_runtime_from_environment",
@@ -285,7 +285,7 @@ def test_high_volatility_signal_from_source_blocks_when_runtime_not_configured(
 def test_high_volatility_signal_from_source_checks_scope_before_runtime(
     monkeypatch: MonkeyPatch,
 ) -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     def fail_if_called() -> RiskVolatilitySourceRuntimeBlocker:
         raise AssertionError("runtime must not be built when caller scope is denied")
@@ -311,7 +311,7 @@ def test_high_volatility_signal_from_source_checks_scope_before_runtime(
 def test_high_volatility_signal_from_source_closes_runtime_on_source_blocker(
     monkeypatch: MonkeyPatch,
 ) -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     risk_source = RecordingRiskVolatilitySource(
         error=RiskSourceUnavailable(code="risk_source_unavailable")
     )

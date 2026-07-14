@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
-from fastapi.testclient import TestClient
+from tests.support.http import managed_test_client
 
 import app.api.allocation_drift_signals as allocation_drift_signals_api
 import app.api.drawdown_review_signals as drawdown_review_signals_api
@@ -35,7 +35,7 @@ def test_allocation_drift_source_api_emits_blocked_operation_event(
         lambda: ManageMandateHealthSourceRuntimeBlocker("lotus_manage_base_url_not_configured"),
     )
 
-    response = TestClient(app).post(
+    response = managed_test_client(app).post(
         "/api/v1/idea-signals/allocation-drift/evaluate-from-source",
         json=allocation_drift_source_payload(),
         headers=source_signal_headers(),
@@ -63,7 +63,7 @@ def test_drawdown_review_source_api_emits_blocked_operation_event(
         lambda: RiskDrawdownSourceRuntimeBlocker("lotus_risk_base_url_not_configured"),
     )
 
-    response = TestClient(app).post(
+    response = managed_test_client(app).post(
         "/api/v1/idea-signals/drawdown-review/evaluate-from-source",
         json=signal_source_payload(),
         headers=source_signal_headers(),
@@ -91,7 +91,7 @@ def test_high_volatility_source_api_emits_blocked_operation_event(
         lambda: RiskVolatilitySourceRuntimeBlocker("lotus_risk_base_url_not_configured"),
     )
 
-    response = TestClient(app).post(
+    response = managed_test_client(app).post(
         "/api/v1/idea-signals/high-volatility/evaluate-from-source",
         json=signal_source_payload(),
         headers=source_signal_headers(),
@@ -121,7 +121,7 @@ def test_underperformance_source_api_emits_blocked_operation_event(
         ),
     )
 
-    response = TestClient(app).post(
+    response = managed_test_client(app).post(
         "/api/v1/idea-signals/underperformance/evaluate-from-source",
         json=signal_source_payload(),
         headers=source_signal_headers(),
@@ -149,7 +149,7 @@ def test_missing_suitability_source_api_emits_blocked_operation_event(
         lambda: AdvisePolicyEvaluationSourceRuntimeBlocker("lotus_advise_base_url_not_configured"),
     )
 
-    response = TestClient(app).post(
+    response = managed_test_client(app).post(
         "/api/v1/idea-signals/missing-suitability/evaluate-from-source",
         json=missing_suitability_source_payload(),
         headers=source_signal_headers(),
@@ -177,7 +177,7 @@ def test_mandate_restriction_source_api_emits_blocked_operation_event(
         lambda: AdvisePolicyEvaluationSourceRuntimeBlocker("lotus_advise_base_url_not_configured"),
     )
 
-    response = TestClient(app).post(
+    response = managed_test_client(app).post(
         "/api/v1/idea-signals/mandate-restriction/evaluate-from-source",
         json=missing_suitability_source_payload(),
         headers=source_signal_headers(),
@@ -205,7 +205,7 @@ def test_missing_risk_profile_source_api_emits_blocked_operation_event(
         lambda: AdvisePolicyEvaluationSourceRuntimeBlocker("lotus_advise_base_url_not_configured"),
     )
 
-    response = TestClient(app).post(
+    response = managed_test_client(app).post(
         "/api/v1/idea-signals/missing-risk-profile/evaluate-from-source",
         json=missing_suitability_source_payload(),
         headers=source_signal_headers(),

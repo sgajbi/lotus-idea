@@ -5,7 +5,7 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 from typing import Any
 
-from fastapi.testclient import TestClient
+from tests.support.http import managed_test_client
 from pytest import MonkeyPatch
 
 import app.api.underperformance_signals as underperformance_api
@@ -48,7 +48,7 @@ class RecordingPerformanceUnderperformanceSource:
 
 
 def test_underperformance_signal_api_returns_review_candidate() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/idea-signals/underperformance/evaluate",
@@ -74,7 +74,7 @@ def test_underperformance_signal_api_returns_review_candidate() -> None:
 
 
 def test_underperformance_signal_api_reports_above_threshold_not_eligible() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     payload = underperformance_payload()
     payload["sourceReportedActiveReturn"] = "-0.001"
 
@@ -97,7 +97,7 @@ def test_underperformance_signal_api_reports_above_threshold_not_eligible() -> N
 
 
 def test_underperformance_signal_api_reports_missing_benchmark_context_blocker() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     payload = underperformance_payload()
     payload["benchmarkContextAvailable"] = False
 
@@ -120,7 +120,7 @@ def test_underperformance_signal_api_reports_missing_benchmark_context_blocker()
 
 
 def test_underperformance_signal_api_reports_stale_source_blocker() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     payload = underperformance_payload()
     payload["performanceRef"]["freshness"] = "stale"
 
@@ -146,7 +146,7 @@ def test_underperformance_signal_api_rejects_wrong_source_contract(
     monkeypatch: MonkeyPatch,
 ) -> None:
     reset_idea_repository_for_tests(InMemoryIdeaRepository())
-    client = TestClient(app)
+    client = managed_test_client(app)
     payload = underperformance_payload()
     payload["performanceRef"] = {
         **payload["performanceRef"],
@@ -191,7 +191,7 @@ def test_underperformance_signal_api_rejects_wrong_source_contract(
 
 
 def test_underperformance_signal_api_rejects_wrong_performance_product_id() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     payload = underperformance_payload()
     payload["performanceRef"]["productId"] = "lotus-performance:MandatePerformanceHealthContext:v1"
 
@@ -207,7 +207,7 @@ def test_underperformance_signal_api_rejects_wrong_performance_product_id() -> N
 
 
 def test_underperformance_signal_api_requires_signal_permission() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/idea-signals/underperformance/evaluate",
@@ -232,7 +232,7 @@ def test_underperformance_signal_api_requires_signal_permission() -> None:
 def test_underperformance_signal_from_source_api_returns_review_candidate(
     monkeypatch: MonkeyPatch,
 ) -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     performance_source = RecordingPerformanceUnderperformanceSource()
     monkeypatch.setattr(
         underperformance_api,
@@ -275,7 +275,7 @@ def test_underperformance_signal_from_source_api_returns_review_candidate(
 def test_underperformance_signal_from_source_blocks_when_runtime_not_configured(
     monkeypatch: MonkeyPatch,
 ) -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     monkeypatch.setattr(
         underperformance_api,
         "_build_performance_underperformance_source_runtime_from_environment",
@@ -306,7 +306,7 @@ def test_underperformance_signal_from_source_blocks_when_runtime_not_configured(
 def test_underperformance_signal_from_source_checks_scope_before_runtime(
     monkeypatch: MonkeyPatch,
 ) -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     def fail_if_called() -> PerformanceUnderperformanceSourceRuntimeBlocker:
         raise AssertionError("runtime must not be built when caller scope is denied")
@@ -332,7 +332,7 @@ def test_underperformance_signal_from_source_checks_scope_before_runtime(
 def test_underperformance_signal_from_source_closes_runtime_on_source_blocker(
     monkeypatch: MonkeyPatch,
 ) -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     performance_source = RecordingPerformanceUnderperformanceSource(
         error=PerformanceSourceUnavailable(code="performance_source_unavailable")
     )

@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any, Mapping
 
 import pytest
-from fastapi.testclient import TestClient
+from tests.support.http import ManagedTestClient, managed_test_client
 
 import app.api.ai_governance as ai_governance_api
 import app.api.allocation_drift_signals as allocation_drift_signals_api
@@ -626,7 +626,7 @@ def capture_operation_events(
     return events
 
 
-def persist_candidate(client: TestClient, *, suffix: str, idempotency_key: str) -> str:
+def persist_candidate(client: ManagedTestClient, *, suffix: str, idempotency_key: str) -> str:
     response = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
         json=high_cash_payload(suffix=suffix, scoped=True),
@@ -639,7 +639,7 @@ def persist_candidate(client: TestClient, *, suffix: str, idempotency_key: str) 
 
 
 def transition_candidate(
-    client: TestClient,
+    client: ManagedTestClient,
     candidate_id: str,
     *,
     target_status: str,
@@ -660,7 +660,7 @@ def transition_candidate(
     assert response.json()["persistence"]["decision"] == "accepted"
 
 
-def approve_candidate_for_conversion(client: TestClient, candidate_id: str) -> None:
+def approve_candidate_for_conversion(client: ManagedTestClient, candidate_id: str) -> None:
     for index, target_status in enumerate(
         ("enriched", "scored", "governance_checked", "ready_for_review"),
         start=1,
@@ -686,7 +686,7 @@ def test_signal_and_candidate_persistence_emit_bounded_operation_events(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     events = capture_operation_events(monkeypatch, idea_signals_api)
 
     signal_response = client.post(
@@ -711,7 +711,7 @@ def test_signal_and_candidate_persistence_emit_bounded_operation_events(
 def test_mandate_restriction_signal_api_emits_bounded_operation_event(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     events = capture_operation_events(monkeypatch, idea_signals_api)
 
     response = client.post(
@@ -727,7 +727,7 @@ def test_mandate_restriction_signal_api_emits_bounded_operation_event(
 def test_missing_risk_profile_signal_api_emits_bounded_operation_event(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     events = capture_operation_events(monkeypatch, missing_risk_profile_signals_api)
 
     response = client.post(
@@ -743,7 +743,7 @@ def test_missing_risk_profile_signal_api_emits_bounded_operation_event(
 def test_missing_benchmark_signal_api_emits_bounded_operation_event(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     events = capture_operation_events(monkeypatch, missing_benchmark_signals_api)
 
     response = client.post(
@@ -759,7 +759,7 @@ def test_missing_benchmark_signal_api_emits_bounded_operation_event(
 def test_low_income_signal_api_emits_bounded_operation_event(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     events = capture_operation_events(monkeypatch, low_income_signals_api)
 
     response = client.post(
@@ -775,7 +775,7 @@ def test_low_income_signal_api_emits_bounded_operation_event(
 def test_bond_maturity_signal_api_emits_bounded_operation_event(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     events = capture_operation_events(monkeypatch, bond_maturity_signals_api)
 
     response = client.post(
@@ -791,7 +791,7 @@ def test_bond_maturity_signal_api_emits_bounded_operation_event(
 def test_concentration_risk_signal_api_emits_bounded_operation_event(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     events = capture_operation_events(monkeypatch, concentration_risk_signals_api)
 
     response = client.post(
@@ -807,7 +807,7 @@ def test_concentration_risk_signal_api_emits_bounded_operation_event(
 def test_concentration_risk_source_api_emits_blocked_operation_event(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     events = capture_operation_events(monkeypatch, concentration_risk_signals_api)
     monkeypatch.setattr(
         concentration_risk_signals_api,
@@ -841,7 +841,7 @@ def test_concentration_risk_source_api_emits_blocked_operation_event(
 def test_drawdown_review_signal_api_emits_bounded_operation_event(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     events = capture_operation_events(monkeypatch, drawdown_review_signals_api)
 
     response = client.post(
@@ -857,7 +857,7 @@ def test_drawdown_review_signal_api_emits_bounded_operation_event(
 def test_high_volatility_signal_api_emits_bounded_operation_event(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     events = capture_operation_events(monkeypatch, high_volatility_signals_api)
 
     response = client.post(
@@ -873,7 +873,7 @@ def test_high_volatility_signal_api_emits_bounded_operation_event(
 def test_underperformance_signal_api_emits_bounded_operation_event(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     events = capture_operation_events(monkeypatch, underperformance_signals_api)
 
     response = client.post(
@@ -889,7 +889,7 @@ def test_underperformance_signal_api_emits_bounded_operation_event(
 def test_missing_suitability_signal_api_emits_bounded_operation_event(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     events = capture_operation_events(monkeypatch, missing_suitability_signals_api)
 
     response = client.post(
@@ -905,7 +905,7 @@ def test_missing_suitability_signal_api_emits_bounded_operation_event(
 def test_allocation_drift_signal_api_emits_bounded_operation_event(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     events = capture_operation_events(monkeypatch, allocation_drift_signals_api)
 
     response = client.post(
@@ -922,7 +922,7 @@ def test_lifecycle_queue_review_and_feedback_emit_operation_events(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     lifecycle_events = capture_operation_events(monkeypatch, candidate_lifecycle_api)
     queue_events = capture_operation_events(monkeypatch, review_queues_api)
     review_events = capture_operation_events(monkeypatch, review_workflow_api)
@@ -981,7 +981,7 @@ def test_role_specific_review_queues_emit_operation_events(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     events = capture_operation_events(monkeypatch, review_queues_api)
 
     portfolio_manager_response = client.get(
@@ -1015,7 +1015,7 @@ def test_operator_review_queue_exceptions_emit_bounded_operation_event(
     reset_idea_repository_for_tests()
     events = capture_operation_events(monkeypatch, review_queue_exceptions_api)
 
-    response = TestClient(app).get(
+    response = managed_test_client(app).get(
         "/api/v1/review-queues/operator/exceptions",
         headers={
             "X-Caller-Subject": "platform-operator",
@@ -1034,7 +1034,7 @@ def test_ai_explanation_api_emits_bounded_operation_event(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     events = capture_operation_events(monkeypatch, ai_governance_api)
     candidate_id = persist_candidate(
         client,
@@ -1055,7 +1055,7 @@ def test_ai_explanation_api_emits_bounded_operation_event(
 def test_ai_explanation_readiness_api_emits_not_certified_operation_event(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     events: list[tuple[str, str, str, str, bool, str | None]] = []
 
     def capture_event(event: Any) -> None:
@@ -1094,7 +1094,7 @@ def test_candidate_detail_api_emits_bounded_operation_event(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     events = capture_operation_events(monkeypatch, candidate_detail_api)
     candidate_id = persist_candidate(
         client,
@@ -1115,7 +1115,7 @@ def test_candidate_evidence_replay_api_emits_bounded_operation_event(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     events = capture_operation_events(monkeypatch, candidate_evidence_replay_api)
     candidate_id = persist_candidate(
         client,
@@ -1137,7 +1137,7 @@ def test_conversion_and_report_workflow_emit_operation_events(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     conversion_events = capture_operation_events(monkeypatch, conversion_governance_api)
     report_events = capture_operation_events(monkeypatch, report_evidence_api)
     candidate_id = persist_candidate(

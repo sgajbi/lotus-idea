@@ -7,7 +7,7 @@ from threading import Barrier
 from typing import Any, cast
 
 import psycopg
-from fastapi.testclient import TestClient
+from tests.support.http import ManagedTestClient, managed_test_client
 from psycopg.rows import dict_row
 from psycopg.types.json import Jsonb
 
@@ -51,7 +51,7 @@ TENANT_ID = "tenant-private-bank-sg"
 def test_postgres_data_lifecycle_survives_restart_and_redacts_atomically(
     postgres_database_url: str,
 ) -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     persisted = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
         json=high_cash_payload(),
@@ -244,7 +244,7 @@ def test_postgres_erasure_and_delivery_claim_are_serialized(
 def test_postgres_lifecycle_authority_receipt_is_restart_safe_and_single_use(
     postgres_database_url: str,
 ) -> None:
-    persisted = TestClient(app).post(
+    persisted = managed_test_client(app).post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
         json=high_cash_payload(),
         headers=persistence_headers("lifecycle-authority-runtime-candidate-001"),
@@ -408,7 +408,7 @@ def test_postgres_archive_posture_receipt_is_restart_safe_and_single_use(
 
 
 def _action(
-    client: TestClient,
+    client: ManagedTestClient,
     candidate_id: str,
     idempotency_key: str,
     payload: dict[str, Any],

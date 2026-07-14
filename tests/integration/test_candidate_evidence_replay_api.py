@@ -4,7 +4,7 @@ from copy import deepcopy
 from datetime import UTC, datetime
 from typing import Any
 
-from fastapi.testclient import TestClient
+from tests.support.http import ManagedTestClient, managed_test_client
 
 from app.runtime.repository_state import get_idea_repository, reset_idea_repository_for_tests
 from app.domain import IdeaLifecycleStatus
@@ -86,7 +86,7 @@ def replay_payload(*, suffix: str = "", freshness: str = "current") -> dict[str,
     }
 
 
-def persisted_candidate_id(client: TestClient, *, suffix: str, idempotency_key: str) -> str:
+def persisted_candidate_id(client: ManagedTestClient, *, suffix: str, idempotency_key: str) -> str:
     response = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
         json=high_cash_payload(suffix=suffix),
@@ -98,7 +98,7 @@ def persisted_candidate_id(client: TestClient, *, suffix: str, idempotency_key: 
 
 def test_candidate_evidence_replay_api_returns_matched_posture_without_source_payloads() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_id = persisted_candidate_id(
         client,
         suffix="-matched",
@@ -129,7 +129,7 @@ def test_candidate_evidence_replay_api_returns_matched_posture_without_source_pa
 
 def test_candidate_evidence_replay_api_reports_hash_mismatch_and_stale_source() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_id = persisted_candidate_id(
         client,
         suffix="-compare",
@@ -160,7 +160,7 @@ def test_candidate_evidence_replay_api_reports_hash_mismatch_and_stale_source() 
 
 def test_candidate_evidence_replay_api_reports_expired_posture() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_id = persisted_candidate_id(
         client,
         suffix="-expired",
@@ -190,7 +190,7 @@ def test_candidate_evidence_replay_api_requires_operator_permission_and_existing
     None
 ):
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     denied = client.post(
         "/api/v1/idea-candidates/missing-candidate/evidence-replay",
@@ -241,7 +241,7 @@ def test_candidate_evidence_replay_api_requires_operator_permission_and_existing
 
 def test_candidate_evidence_replay_api_rejects_missing_current_source_refs() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_id = persisted_candidate_id(
         client,
         suffix="-invalid",
@@ -260,7 +260,7 @@ def test_candidate_evidence_replay_api_rejects_missing_current_source_refs() -> 
 
 def test_candidate_evidence_replay_api_rejects_naive_timestamp_and_blank_candidate() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     naive_timestamp = client.post(
         "/api/v1/idea-candidates/missing-candidate/evidence-replay",

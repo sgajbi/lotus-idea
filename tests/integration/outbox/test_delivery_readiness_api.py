@@ -6,7 +6,7 @@ from typing import Any
 from types import SimpleNamespace
 
 import pytest
-from fastapi.testclient import TestClient
+from tests.support.http import managed_test_client
 
 import app.api.outbox.delivery as outbox_delivery_readiness_api
 from app.api.caller_headers import TRUSTED_CALLER_CONTEXT_HEADER, TRUSTED_CALLER_CONTEXT_TOKEN_ENV
@@ -74,7 +74,7 @@ def test_outbox_delivery_readiness_api_returns_source_safe_blocked_posture(
             deferred_failed_event("idea.feedback.recorded.v1"),
         )
     )
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.get(
         "/api/v1/outbox-delivery/readiness",
@@ -113,7 +113,7 @@ def test_outbox_delivery_readiness_api_returns_source_safe_blocked_posture(
 
 def test_outbox_delivery_readiness_api_requires_operator_permission() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.get("/api/v1/outbox-delivery/readiness")
     role_denied = client.get(
@@ -158,7 +158,7 @@ def test_outbox_delivery_readiness_api_emits_not_certified_operation_event(
         )
 
     monkeypatch.setattr(outbox_delivery_readiness_api, "emit_operation_event", capture)
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.get(
         "/api/v1/outbox-delivery/readiness",
@@ -184,7 +184,7 @@ def test_outbox_delivery_run_once_api_blocks_without_broker_configuration(
     monkeypatch.delenv(OUTBOX_BROKER_URL_ENV, raising=False)
     event = pending_event("idea.candidate.persisted.v1")
     reset_idea_repository_for_tests(repository=repository_with_events(event))
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/outbox-delivery/run-once",
@@ -217,7 +217,7 @@ def test_outbox_delivery_run_once_api_blocks_when_durable_repository_is_required
     monkeypatch.setenv(OUTBOX_BROKER_URL_ENV, "https://broker.example.invalid")
     event = pending_event("idea.candidate.persisted.v1")
     reset_idea_repository_for_tests(repository=repository_with_events(event))
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/outbox-delivery/run-once",
@@ -241,7 +241,7 @@ def test_outbox_delivery_run_once_api_blocks_invalid_broker_configuration(
     monkeypatch.setenv(OUTBOX_BROKER_URL_ENV, "not-a-url")
     event = pending_event("idea.candidate.persisted.v1")
     reset_idea_repository_for_tests(repository=repository_with_events(event))
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/outbox-delivery/run-once",
@@ -279,7 +279,7 @@ def test_outbox_delivery_run_once_api_publishes_with_configured_publisher(
         "_build_outbox_publisher_from_environment",
         lambda: publisher,
     )
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/outbox-delivery/run-once",
@@ -319,7 +319,7 @@ def test_outbox_delivery_run_once_api_publishes_with_configured_publisher(
 
 
 def test_outbox_delivery_run_once_api_requires_operator_permission() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post("/api/v1/outbox-delivery/run-once")
     role_denied = client.post(
@@ -342,7 +342,7 @@ def test_outbox_delivery_run_once_api_requires_operator_permission() -> None:
 
 
 def test_outbox_delivery_run_once_api_requires_idempotency_key() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     headers = outbox_delivery_run_headers()
     headers.pop("Idempotency-Key")
 
@@ -360,7 +360,7 @@ def test_outbox_delivery_run_once_api_requires_idempotency_key() -> None:
 
 
 def test_outbox_delivery_run_once_api_rejects_non_utc_delivery_time() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/outbox-delivery/run-once",
@@ -373,7 +373,7 @@ def test_outbox_delivery_run_once_api_rejects_non_utc_delivery_time() -> None:
 
 
 def test_outbox_delivery_run_once_api_rejects_limit_above_capacity_ceiling() -> None:
-    response = TestClient(app).post(
+    response = managed_test_client(app).post(
         "/api/v1/outbox-delivery/run-once",
         params={"limit": 101},
         headers=outbox_delivery_run_headers(),
@@ -400,7 +400,7 @@ def test_outbox_delivery_run_once_api_sheds_before_publisher_construction(
         lambda: pytest.fail("shed workflow must not construct publisher"),
     )
 
-    response = TestClient(app).post(
+    response = managed_test_client(app).post(
         "/api/v1/outbox-delivery/run-once",
         headers=outbox_delivery_run_headers(idempotency_key="capacity-shed:001"),
     )
@@ -422,7 +422,7 @@ def test_outbox_delivery_run_once_api_replays_same_operator_run_without_mutating
         "_build_outbox_publisher_from_environment",
         lambda: publisher,
     )
-    client = TestClient(app)
+    client = managed_test_client(app)
     headers = outbox_delivery_run_headers(idempotency_key="outbox-run:api-replay:001")
 
     first = client.post(
@@ -474,7 +474,7 @@ def test_outbox_delivery_run_once_api_preserves_results_when_publisher_close_fai
         )
 
     monkeypatch.setattr(outbox_delivery_readiness_api, "emit_operation_event", capture)
-    client = TestClient(app)
+    client = managed_test_client(app)
     headers = outbox_delivery_run_headers(idempotency_key="outbox-run:close-failure:001")
 
     completed = client.post(
@@ -529,7 +529,7 @@ def test_outbox_delivery_run_once_api_conflicts_same_operator_run_with_different
         "_build_outbox_publisher_from_environment",
         lambda: publisher,
     )
-    client = TestClient(app)
+    client = managed_test_client(app)
     headers = outbox_delivery_run_headers(idempotency_key="outbox-run:api-conflict:001")
 
     first = client.post(
@@ -579,7 +579,7 @@ def test_outbox_delivery_run_once_api_emits_not_certified_operation_event(
         )
 
     monkeypatch.setattr(outbox_delivery_readiness_api, "emit_operation_event", capture)
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/outbox-delivery/run-once",

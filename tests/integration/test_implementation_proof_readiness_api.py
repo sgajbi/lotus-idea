@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from fastapi.testclient import TestClient
+from tests.support.http import managed_test_client
 
 import app.api.implementation_proof_readiness as implementation_proof_readiness_api
 import app.application.implementation_proof_readiness as implementation_proof_readiness_application
@@ -111,7 +111,7 @@ def test_implementation_proof_readiness_api_returns_blocked_operator_posture(
     monkeypatch.delenv(REPORT_INTAKE_ROUTE_PROOF_ENV, raising=False)
     monkeypatch.delenv(BOND_MATURITY_LIVE_PROOF_ENV, raising=False)
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.get(readiness_url(), headers=proof_readiness_headers())
 
@@ -217,7 +217,7 @@ def test_implementation_proof_readiness_api_blocks_invalid_registry_safely(
     )
     reset_idea_repository_for_tests()
 
-    response = TestClient(app).get(
+    response = managed_test_client(app).get(
         readiness_url(evaluated_at_utc="2026-07-10T00:00:00Z"),
         headers=proof_readiness_headers(),
     )
@@ -253,7 +253,7 @@ def test_implementation_proof_readiness_api_reports_valid_promotion_consistently
     )
     reset_idea_repository_for_tests()
 
-    response = TestClient(app).get(
+    response = managed_test_client(app).get(
         readiness_url(evaluated_at_utc="2026-07-10T00:00:00Z"),
         headers=proof_readiness_headers(),
     )
@@ -284,7 +284,7 @@ def test_implementation_proof_readiness_api_consumes_configured_proof_artifacts(
     )
     monkeypatch.delenv("LOTUS_IDEA_DATABASE_URL", raising=False)
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.get(readiness_url(), headers=proof_readiness_headers())
 
@@ -373,7 +373,7 @@ def test_implementation_proof_readiness_api_consumes_configured_proof_artifacts(
 
 
 def test_implementation_proof_readiness_api_requires_operator_permission() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.get(readiness_url())
     role_denied = client.get(
@@ -395,7 +395,7 @@ def test_implementation_proof_readiness_api_requires_operator_permission() -> No
 
 
 def test_implementation_proof_readiness_api_rejects_naive_evaluation_time() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.get(
         readiness_url(evaluated_at_utc="2026-06-21T10:10:00"),
@@ -426,7 +426,7 @@ def test_implementation_proof_readiness_api_emits_not_certified_operation_event(
 
     monkeypatch.setattr(implementation_proof_readiness_api, "emit_operation_event", capture)
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.get(readiness_url(), headers=proof_readiness_headers())
 
@@ -461,7 +461,7 @@ def test_implementation_proof_readiness_api_reports_unavailable_contracts_safely
     )
     monkeypatch.setattr(implementation_proof_readiness_api, "emit_operation_event", capture)
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.get(readiness_url(), headers=proof_readiness_headers())
 

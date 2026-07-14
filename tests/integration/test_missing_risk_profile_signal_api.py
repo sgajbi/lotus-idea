@@ -4,7 +4,7 @@ from datetime import UTC, date, datetime
 from typing import Any
 
 import pytest
-from fastapi.testclient import TestClient
+from tests.support.http import managed_test_client
 
 import app.api.missing_risk_profile_signals as missing_risk_profile_api
 from app.domain import EvidenceFreshness, InMemoryIdeaRepository, SourceRef, SourceSystem
@@ -46,7 +46,7 @@ class RecordingAdvisePolicyEvaluationSource:
 
 
 def test_missing_risk_profile_signal_api_returns_review_candidate() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/idea-signals/missing-risk-profile/evaluate",
@@ -71,7 +71,7 @@ def test_missing_risk_profile_signal_api_returns_review_candidate() -> None:
 
 
 def test_missing_risk_profile_signal_api_reports_stale_source_blocker() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     payload = missing_risk_profile_payload()
     payload["riskProfileRef"]["freshness"] = "stale"
 
@@ -97,7 +97,7 @@ def test_missing_risk_profile_signal_api_rejects_wrong_source_contract(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     reset_idea_repository_for_tests(InMemoryIdeaRepository())
-    client = TestClient(app)
+    client = managed_test_client(app)
     payload = missing_risk_profile_payload()
     payload["riskProfileRef"] = {
         **payload["riskProfileRef"],
@@ -142,7 +142,7 @@ def test_missing_risk_profile_signal_api_rejects_wrong_source_contract(
 
 
 def test_missing_risk_profile_signal_api_rejects_wrong_advise_product_id() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     payload = missing_risk_profile_payload()
     payload["riskProfileRef"]["productId"] = "lotus-advise:ProposalReadinessRecord:v1"
 
@@ -158,7 +158,7 @@ def test_missing_risk_profile_signal_api_rejects_wrong_advise_product_id() -> No
 
 
 def test_missing_risk_profile_signal_api_requires_signal_permission() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         "/api/v1/idea-signals/missing-risk-profile/evaluate",
@@ -183,7 +183,7 @@ def test_missing_risk_profile_signal_api_requires_signal_permission() -> None:
 def test_missing_risk_profile_signal_from_source_api_returns_review_candidate(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     advise_source = RecordingAdvisePolicyEvaluationSource()
     monkeypatch.setattr(
         missing_risk_profile_api,
@@ -224,7 +224,7 @@ def test_missing_risk_profile_signal_from_source_api_returns_review_candidate(
 def test_missing_risk_profile_signal_from_source_blocks_when_runtime_not_configured(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     monkeypatch.setattr(
         missing_risk_profile_api,
         "_build_advise_policy_evaluation_source_runtime_from_environment",
@@ -253,7 +253,7 @@ def test_missing_risk_profile_signal_from_source_blocks_when_runtime_not_configu
 def test_missing_risk_profile_signal_from_source_checks_scope_before_runtime(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     def fail_if_called() -> AdvisePolicyEvaluationSourceRuntimeBlocker:
         raise AssertionError("runtime must not be built when caller scope is denied")
@@ -279,7 +279,7 @@ def test_missing_risk_profile_signal_from_source_checks_scope_before_runtime(
 def test_missing_risk_profile_signal_from_source_closes_runtime_on_source_blocker(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     advise_source = RecordingAdvisePolicyEvaluationSource(
         error=AdviseSourceUnavailable(code="advise_policy_workflow_unavailable")
     )

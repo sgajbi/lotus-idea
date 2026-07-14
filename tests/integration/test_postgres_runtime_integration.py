@@ -7,7 +7,7 @@ from typing import Any, cast
 
 import psycopg
 import pytest
-from fastapi.testclient import TestClient
+from tests.support.http import ManagedTestClient, managed_test_client
 from psycopg.rows import dict_row
 
 from app.application.source_ingestion import (
@@ -78,7 +78,7 @@ POSTGRES_SCHEMA_TABLES = (
 def test_postgres_runtime_provider_persists_api_state_across_reloaded_connections(
     postgres_database_url: str,
 ) -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     headers = persistence_headers("postgres-runtime-proof-high-cash-001")
     payload = high_cash_payload()
 
@@ -131,7 +131,7 @@ def test_postgres_runtime_provider_persists_api_state_across_reloaded_connection
 def test_outbox_lineage_migration_preserves_and_sanitizes_legacy_event(
     postgres_database_url: str,
 ) -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     response = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
         json=high_cash_payload(),
@@ -267,7 +267,7 @@ def test_postgres_migration_rollback_and_reapply_restores_runtime_contract(
     assert _schema_tables_exist(postgres_database_url) is True
 
     reset_idea_repository_for_tests(reload_from_environment=True)
-    client = TestClient(app)
+    client = managed_test_client(app)
     recovered = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
         json=high_cash_payload(),
@@ -333,7 +333,7 @@ def test_postgres_runtime_provider_recovers_source_ingestion_replay_and_conflict
 def test_postgres_runtime_provider_persists_review_conversion_and_report_workflow(
     postgres_database_url: str,
 ) -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     persist_headers = persistence_headers("postgres-runtime-proof-workflow-persist-001")
     high_cash_request = high_cash_payload()
 
@@ -509,7 +509,7 @@ def test_postgres_runtime_provider_persists_review_conversion_and_report_workflo
 def test_postgres_runtime_serializes_concurrent_review_and_feedback_resource_identity(
     postgres_database_url: str,
 ) -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     persisted = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
         json=high_cash_payload(),
@@ -608,7 +608,7 @@ def test_postgres_runtime_serializes_concurrent_review_and_feedback_resource_ide
 def test_postgres_runtime_serializes_conversion_outcome_identity_and_source_version(
     postgres_database_url: str,
 ) -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     persisted = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
         json=high_cash_payload(),
@@ -724,7 +724,7 @@ def test_postgres_runtime_serializes_conversion_outcome_identity_and_source_vers
 def test_postgres_runtime_provider_persists_ai_explanation_lineage(
     postgres_database_url: str,
 ) -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     persisted = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
         json=high_cash_payload(),
@@ -1088,7 +1088,7 @@ def _report_evidence_pack_payload() -> dict[str, Any]:
     }
 
 
-def _transition_candidate_to_review_ready(client: TestClient, candidate_id: str) -> None:
+def _transition_candidate_to_review_ready(client: ManagedTestClient, candidate_id: str) -> None:
     for index, target_status in enumerate(
         ("enriched", "scored", "governance_checked", "ready_for_review"),
         start=1,

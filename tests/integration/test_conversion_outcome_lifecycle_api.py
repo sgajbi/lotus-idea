@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi.testclient import TestClient
+from tests.support.http import ManagedTestClient, managed_test_client
 
 from app.main import app
 from app.runtime.repository_state import get_idea_repository, reset_idea_repository_for_tests
@@ -16,7 +16,7 @@ from tests.integration.test_review_workflow_api import (
 )
 
 
-def setup_conversion_intent(client: TestClient, seed: str) -> tuple[str, str]:
+def setup_conversion_intent(client: ManagedTestClient, seed: str) -> tuple[str, str]:
     candidate_id = persisted_candidate_id(client, idempotency_key=f"seed-{seed}")
     approve_candidate_for_conversion(client, candidate_id)
     intent_id = f"intent-{seed}"
@@ -55,7 +55,7 @@ def outcome_payload(
 
 def test_conversion_outcome_api_replays_identity_and_rejects_changed_source_fact() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     _, intent_id = setup_conversion_intent(client, "outcome-identity")
     route = f"/api/v1/conversion-intents/{intent_id}/outcomes"
     request = outcome_payload(
@@ -99,7 +99,7 @@ def test_conversion_outcome_api_replays_identity_and_rejects_changed_source_fact
 
 def test_conversion_outcome_api_enforces_progression_and_append_only_correction() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
     candidate_id, intent_id = setup_conversion_intent(client, "outcome-lifecycle")
     route = f"/api/v1/conversion-intents/{intent_id}/outcomes"
 

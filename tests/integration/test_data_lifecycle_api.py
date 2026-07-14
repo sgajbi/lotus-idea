@@ -6,7 +6,7 @@ import hashlib
 from typing import Any
 
 import pytest
-from fastapi.testclient import TestClient
+from tests.support.http import managed_test_client
 from fastapi.responses import JSONResponse
 
 from app.api import data_lifecycle as api_module
@@ -100,7 +100,7 @@ def test_data_lifecycle_api_previews_replays_and_conflicts_source_safely(
 ) -> None:
     repository = ApiLifecycleRepository()
     monkeypatch.setattr(api_module, "get_idea_repository", lambda: repository)
-    client = TestClient(app)
+    client = managed_test_client(app)
     request = lifecycle_request(dry_run=True)
     headers = lifecycle_headers("lifecycle-api-preview-001")
 
@@ -135,7 +135,7 @@ def test_data_lifecycle_api_requires_role_capability_and_exact_tenant(
 ) -> None:
     repository = ApiLifecycleRepository()
     monkeypatch.setattr(api_module, "get_idea_repository", lambda: repository)
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     denied = client.post(
         lifecycle_path(),
@@ -161,7 +161,7 @@ def test_data_lifecycle_api_rejects_invalid_request_and_blocks_unsafe_erasure(
 ) -> None:
     repository = ApiLifecycleRepository(replace(valid_context(), active_outbox_count=1))
     monkeypatch.setattr(api_module, "get_idea_repository", lambda: repository)
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     invalid_key = client.post(
         lifecycle_path(),
@@ -188,7 +188,7 @@ def test_data_lifecycle_api_does_not_disclose_cross_tenant_candidate_existence(
         replace(valid_context(), candidate_exists=False, control=None)
     )
     monkeypatch.setattr(api_module, "get_idea_repository", lambda: repository)
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     response = client.post(
         lifecycle_path(),
@@ -226,7 +226,7 @@ def test_data_lifecycle_api_fails_closed_without_durable_lifecycle_capability(
             lambda _repository: durable_repository_not_configured_problem(),
         )
 
-    response = TestClient(app).post(
+    response = managed_test_client(app).post(
         lifecycle_path(),
         json=lifecycle_request(),
         headers=lifecycle_headers(f"lifecycle-api-unavailable-{configuration_blocked}"),
@@ -283,12 +283,12 @@ def test_data_lifecycle_api_requires_and_binds_signed_authority_in_staging(
     monkeypatch.setenv(TRUSTED_CALLER_CONTEXT_TOKEN_ENV, "gateway-secret")
     request = lifecycle_request(dry_run=True)
 
-    missing = TestClient(app).post(
+    missing = managed_test_client(app).post(
         lifecycle_path(),
         json=request,
         headers=trusted_lifecycle_headers("lifecycle-api-authority-missing-001"),
     )
-    accepted = TestClient(app).post(
+    accepted = managed_test_client(app).post(
         lifecycle_path(),
         json={**request, "authorityDecision": authority_decision_for_request()},
         headers=trusted_lifecycle_headers("lifecycle-api-authority-accepted-001"),
@@ -320,7 +320,7 @@ def test_data_lifecycle_api_rejects_signed_claim_substitution_before_mutation(
     assert isinstance(claims, dict)
     claims["candidate_id"] = "candidate-other"
 
-    response = TestClient(app).post(
+    response = managed_test_client(app).post(
         lifecycle_path(),
         json={**lifecycle_request(), "authorityDecision": decision},
         headers=trusted_lifecycle_headers("lifecycle-api-authority-substitution-001"),
@@ -344,7 +344,7 @@ def test_data_lifecycle_api_reports_authority_trust_outage_source_safely(
     monkeypatch.setenv("LOTUS_IDEA_RUNTIME_PROFILE", "staging")
     monkeypatch.setenv(TRUSTED_CALLER_CONTEXT_TOKEN_ENV, "gateway-secret")
 
-    response = TestClient(app).post(
+    response = managed_test_client(app).post(
         lifecycle_path(),
         json={
             **lifecycle_request(),
@@ -415,12 +415,12 @@ def test_data_lifecycle_api_verifies_archive_posture_before_linked_erasure(
         lambda **_: valid_archive_receipt(),
     )
 
-    missing = TestClient(app).post(
+    missing = managed_test_client(app).post(
         lifecycle_path(),
         json=lifecycle_request(),
         headers=lifecycle_headers("lifecycle-api-archive-missing-001"),
     )
-    accepted = TestClient(app).post(
+    accepted = managed_test_client(app).post(
         lifecycle_path(),
         json={
             **lifecycle_request(),
@@ -454,7 +454,7 @@ def test_data_lifecycle_api_reports_archive_verification_failures_source_safely(
         lambda **_: (_ for _ in ()).throw(ValueError("raw signature detail")),
     )
 
-    invalid = TestClient(app).post(
+    invalid = managed_test_client(app).post(
         lifecycle_path(),
         json=request,
         headers=lifecycle_headers("lifecycle-api-archive-invalid-001"),
@@ -464,7 +464,7 @@ def test_data_lifecycle_api_reports_archive_verification_failures_source_safely(
         "get_archive_lifecycle_dependencies",
         lambda: (_ for _ in ()).throw(ArchiveLifecycleTrustUnavailableError("raw trust detail")),
     )
-    unavailable = TestClient(app).post(
+    unavailable = managed_test_client(app).post(
         lifecycle_path(),
         json=request,
         headers=lifecycle_headers("lifecycle-api-archive-unavailable-001"),

@@ -6,7 +6,7 @@ import logging
 from typing import Any
 
 from _pytest.logging import LogCaptureFixture
-from fastapi.testclient import TestClient
+from tests.support.http import ManagedTestClient, managed_test_client
 from httpx2 import Response
 import pytest
 
@@ -121,7 +121,7 @@ MALFORMED_SCOPE_CASES = (
 @pytest.mark.parametrize("case", MALFORMED_SCOPE_CASES, ids=lambda case: case.path)
 def test_caller_context_boundary_preserves_invalid_scope_problem(case: ProtectedRequest) -> None:
     response = _request(
-        TestClient(create_app()),
+        managed_test_client(create_app()),
         case,
         headers={**_caller_headers(), "X-Caller-Tenant-Ids": "tenant-sensitive, "},
     )
@@ -147,7 +147,7 @@ def test_caller_context_boundary_preserves_permission_problem_across_routes(
     monkeypatch.setenv("LOTUS_IDEA_RUNTIME_PROFILE", "production")
     monkeypatch.setenv(TRUSTED_CALLER_CONTEXT_TOKEN_ENV, "trusted-gateway-secret")
     response = _request(
-        TestClient(create_app()),
+        managed_test_client(create_app()),
         case,
         headers={
             **_caller_headers(),
@@ -177,7 +177,7 @@ def test_caller_context_boundary_logs_safe_specific_category(
     monkeypatch.setenv(TRUSTED_CALLER_CONTEXT_TOKEN_ENV, "trusted-gateway-secret")
     with caplog.at_level(logging.INFO, logger="lotus-idea"):
         response = _request(
-            TestClient(create_app()),
+            managed_test_client(create_app()),
             PROVENANCE_CASES[0],
             headers={
                 **_caller_headers(),
@@ -213,7 +213,7 @@ def _caller_headers() -> dict[str, str]:
 
 
 def _request(
-    client: TestClient,
+    client: ManagedTestClient,
     case: ProtectedRequest,
     *,
     headers: dict[str, str],
