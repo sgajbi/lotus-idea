@@ -319,6 +319,13 @@ product navigation. Operations docs, RFC truth, repository context, quality
 evidence, endpoint certification, and repo-authored wiki source carry the
 changed operator contract.
 
+PR `#413` merged this occurrence by rebase. Exact-main validation exposed the
+independent lifecycle serialization defect `#414`; fix-forward PR `#415`
+resolved it without changing the AI evidence contract. Final exact-main SHA
+`971b3c33` passed Main Releasability `29326244284` and CodeQL `29326239670`.
+Issue `#412` is the next evidence-classification occurrence; campaign `#393`
+remains open.
+
 ## Current Governance References
 
 The Slice 09 implementation is aligned to current official AI/model-risk
