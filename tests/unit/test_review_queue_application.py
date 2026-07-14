@@ -177,11 +177,14 @@ def test_review_queue_routes_candidates_only_to_the_responsible_audience() -> No
     assert [item.candidate.candidate_id for item in pm_queue.items] == [candidate_id]
     assert compliance_queue.audience is ReviewQueueAudience.COMPLIANCE
     assert [item.candidate.candidate_id for item in compliance_queue.items] == [candidate_id]
-    assert build_review_queue(
-        (record.candidate,),
-        audience=ReviewQueueAudience.PORTFOLIO_MANAGER,
-        evaluated_at_utc=EVALUATED_AT,
-    ).items == ()
+    assert (
+        build_review_queue(
+            (record.candidate,),
+            audience=ReviewQueueAudience.PORTFOLIO_MANAGER,
+            evaluated_at_utc=EVALUATED_AT,
+        ).items
+        == ()
+    )
 
 
 def test_operator_exception_snapshot_keeps_audience_counts_isolated() -> None:
@@ -676,7 +679,9 @@ def test_queue_access_scope_filter_allows_unbounded_entitlement_dimensions() -> 
     assert requested.is_subset_of(unbounded) is True
 
 
-def test_build_review_queue_from_repository_removes_terminal_candidate_from_active_audience() -> None:
+def test_build_review_queue_from_repository_removes_terminal_candidate_from_active_audience() -> (
+    None
+):
     repository = InMemoryIdeaRepository()
     candidate_id = persist_high_cash_candidate(repository)
     repository.transition_candidate(

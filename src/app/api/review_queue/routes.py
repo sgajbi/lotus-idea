@@ -98,6 +98,7 @@ _READ_QUEUE_READINESS_POLICY = CapabilityPolicy.for_roles(
     allowed_roles=("operator",),
 )
 
+
 async def get_advisor_review_queue(
     request: Annotated[ReviewQueueRequest, Depends(review_queue_request_from_http)],
 ) -> BusinessReviewQueueResponse | JSONResponse:
@@ -169,9 +170,7 @@ def _get_business_review_queue(
             title="Permission denied",
             detail=_queue_permission_denied_detail(audience),
         )
-    resolved_evaluated_at_utc = (
-        request.evaluated_at_utc or ACTIVE_REVIEW_QUEUE_EVALUATED_AT_UTC
-    )
+    resolved_evaluated_at_utc = request.evaluated_at_utc or ACTIVE_REVIEW_QUEUE_EVALUATED_AT_UTC
     if not is_timezone_aware(resolved_evaluated_at_utc):
         return _invalid_review_queue_evaluation_time_problem()
     try:

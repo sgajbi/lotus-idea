@@ -294,11 +294,15 @@ def test_business_review_queue_apis_route_only_the_responsible_audience() -> Non
     (
         (
             "/api/v1/review-queues/portfolio-manager",
-            role_queue_headers(role="advisor", capability="idea.review.queue.portfolio-manager.read"),
+            role_queue_headers(
+                role="advisor", capability="idea.review.queue.portfolio-manager.read"
+            ),
         ),
         (
             "/api/v1/review-queues/compliance",
-            role_queue_headers(role="portfolio_manager", capability="idea.review.queue.compliance.read"),
+            role_queue_headers(
+                role="portfolio_manager", capability="idea.review.queue.compliance.read"
+            ),
         ),
     ),
 )
