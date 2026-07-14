@@ -750,6 +750,8 @@ def test_ai_explanation_readiness_api_returns_source_safe_blocked_posture() -> N
         "verifierAvailable": True,
         "redactedEvidenceEnvelopeAvailable": True,
         "unsupportedClaimBlockingAvailable": True,
+        "claimGroundingAvailable": True,
+        "claimGroundingPolicyVersion": "lotus-idea.ai-claim-grounding-policy.v1",
         "forbiddenActionBlockingAvailable": True,
         "actionContentPolicyVersion": "lotus-idea.ai-action-content-policy.v1",
         "lotusAiRunAttestationAvailable": True,

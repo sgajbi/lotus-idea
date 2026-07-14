@@ -13,6 +13,7 @@ from app.domain.ai_execution_provenance import (
     AIWorkflowOutputTrustPolicy,
     UntrustedAIWorkflowOutput,
 )
+from app.domain.ai_explanation import AI_CLAIM_GROUNDING_POLICY_VERSION
 from app.domain.ai_metadata_policy import AI_METADATA_ENVELOPE_VERSION
 from app.domain import (
     AIFallbackReason,
@@ -78,6 +79,8 @@ class AIExplanationReadinessSnapshot:
     verifier_available: bool
     redacted_evidence_envelope_available: bool
     unsupported_claim_blocking_available: bool
+    claim_grounding_available: bool
+    claim_grounding_policy_version: str
     forbidden_action_blocking_available: bool
     action_content_policy_version: str
     lotus_ai_run_attestation_available: bool
@@ -174,6 +177,8 @@ def build_ai_explanation_readiness_snapshot(
         verifier_available=True,
         redacted_evidence_envelope_available=True,
         unsupported_claim_blocking_available=True,
+        claim_grounding_available=True,
+        claim_grounding_policy_version=AI_CLAIM_GROUNDING_POLICY_VERSION,
         forbidden_action_blocking_available=True,
         action_content_policy_version=AI_ACTION_POLICY_VERSION,
         lotus_ai_run_attestation_available=True,

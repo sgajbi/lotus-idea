@@ -520,6 +520,11 @@ class AIExplanationReadinessResponse(CamelModel):
         ...,
         alias="unsupportedClaimBlockingAvailable",
     )
+    claim_grounding_available: bool = Field(..., alias="claimGroundingAvailable")
+    claim_grounding_policy_version: str = Field(
+        ...,
+        alias="claimGroundingPolicyVersion",
+    )
     forbidden_action_blocking_available: bool = Field(
         ...,
         alias="forbiddenActionBlockingAvailable",
@@ -577,6 +582,8 @@ class AIExplanationReadinessResponse(CamelModel):
             verifierAvailable=snapshot.verifier_available,
             redactedEvidenceEnvelopeAvailable=snapshot.redacted_evidence_envelope_available,
             unsupportedClaimBlockingAvailable=snapshot.unsupported_claim_blocking_available,
+            claimGroundingAvailable=snapshot.claim_grounding_available,
+            claimGroundingPolicyVersion=snapshot.claim_grounding_policy_version,
             forbiddenActionBlockingAvailable=snapshot.forbidden_action_blocking_available,
             actionContentPolicyVersion=snapshot.action_content_policy_version,
             lotusAiRunAttestationAvailable=snapshot.lotus_ai_run_attestation_available,

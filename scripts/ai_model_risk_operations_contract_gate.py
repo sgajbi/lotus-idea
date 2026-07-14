@@ -21,6 +21,7 @@ from app.domain.ai_output_integrity import AI_OUTPUT_INTEGRITY_VERSION  # noqa: 
 from app.domain.ai_execution_provenance import (  # noqa: E402
     AI_EXECUTION_PROVENANCE_POLICY_VERSION,
 )
+from app.domain.ai_explanation import AI_CLAIM_GROUNDING_POLICY_VERSION  # noqa: E402
 from app.domain.ai_metadata_policy import (  # noqa: E402
     AI_METADATA_ENVELOPE_VERSION,
     AI_METADATA_MAX_FIELDS,
@@ -93,7 +94,7 @@ def _validate_header(payload: dict[str, Any]) -> list[str]:
     errors: list[str] = []
     expected = {
         "contract_id": "lotus-idea-ai-model-risk-operations",
-        "contract_version": "1.2.0",
+        "contract_version": "1.3.0",
         "repository": "lotus-idea",
         "lifecycle_status": "implemented_internal_foundation",
         "supportability_status": "not_certified",
@@ -101,6 +102,7 @@ def _validate_header(payload: dict[str, Any]) -> list[str]:
         "dashboard_certified": True,
         "alert_certified": True,
         "action_content_policy_version": AI_ACTION_POLICY_VERSION,
+        "claim_grounding_policy_version": AI_CLAIM_GROUNDING_POLICY_VERSION,
         "output_integrity_version": AI_OUTPUT_INTEGRITY_VERSION,
         "execution_provenance_policy_version": AI_EXECUTION_PROVENANCE_POLICY_VERSION,
         "metadata_envelope_version": AI_METADATA_ENVELOPE_VERSION,
@@ -121,6 +123,7 @@ def _validate_source_of_truth(
         "ai_readiness_source",
         "ai_api_source",
         "action_policy_source",
+        "claim_grounding_policy_source",
         "output_integrity_source",
         "execution_provenance_source",
         "metadata_policy_source",
@@ -199,6 +202,23 @@ def _validate_output_content_integrity(payload: dict[str, Any]) -> list[str]:
     }
     if payload.get("output_content_integrity") != expected:
         return ["AI model-risk output_content_integrity must match code-owned audit posture"]
+    return []
+
+
+def _validate_claim_grounding(payload: dict[str, Any]) -> list[str]:
+    expected = {
+        "submitted_narrative_posture": "attested_input_not_advisor_visible",
+        "accepted_narrative_posture": "server_rendered_from_verified_claims",
+        "claim_identity_posture": "unique_and_order_preserving",
+        "source_binding_posture": "redacted_evidence_source_products_only",
+        "provider_output_binding": "digest_only_no_raw_provider_narrative_persistence",
+        "advisor_projection": (
+            "claim_text_plus_source_product_version_freshness_and_quality"
+        ),
+        "unsupported_or_blocked_grounding_returned": False,
+    }
+    if payload.get("claim_grounding") != expected:
+        return ["AI model-risk claim_grounding must match code-owned evidence posture"]
     return []
 
 
@@ -366,6 +386,7 @@ OPERATIONS_CONTRACT_VALIDATORS = (
     _validate_source_of_truth,
     _validate_action_content_policy,
     _validate_output_content_integrity,
+    _validate_claim_grounding,
     _validate_execution_provenance,
     _validate_provider_safe_metadata,
     _validate_dashboard_controls,

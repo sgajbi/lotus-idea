@@ -116,6 +116,19 @@ def test_ai_model_risk_operations_contract_gate_blocks_output_integrity_drift() 
     assert "AI model-risk output_content_integrity must match code-owned audit posture" in errors
 
 
+def test_ai_model_risk_operations_contract_gate_blocks_claim_grounding_drift() -> None:
+    module = _load_gate()
+    payload = _current_payload(module)
+    payload["claim_grounding_policy_version"] = "local-policy"
+    payload["claim_grounding"]["accepted_narrative_posture"] = "provider_authored"
+    payload["claim_grounding"]["unsupported_or_blocked_grounding_returned"] = True
+
+    errors = module.validate_ai_model_risk_operations_contract_payload(payload)
+
+    assert any("claim_grounding_policy_version" in error for error in errors)
+    assert "AI model-risk claim_grounding must match code-owned evidence posture" in errors
+
+
 def test_ai_model_risk_operations_contract_gate_blocks_execution_provenance_drift() -> None:
     module = _load_gate()
     payload = _current_payload(module)

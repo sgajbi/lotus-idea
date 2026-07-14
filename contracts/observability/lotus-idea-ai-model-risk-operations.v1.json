@@ -1,6 +1,6 @@
 {
   "contract_id": "lotus-idea-ai-model-risk-operations",
-  "contract_version": "1.2.0",
+  "contract_version": "1.3.0",
   "repository": "lotus-idea",
   "lifecycle_status": "implemented_internal_foundation",
   "supportability_status": "not_certified",
@@ -8,6 +8,7 @@
   "dashboard_certified": true,
   "alert_certified": true,
   "action_content_policy_version": "lotus-idea.ai-action-content-policy.v1",
+  "claim_grounding_policy_version": "lotus-idea.ai-claim-grounding-policy.v1",
   "output_integrity_version": "lotus-idea.ai-output-integrity.v1",
   "execution_provenance_policy_version": "lotus-idea.ai-execution-provenance-policy.v1",
   "metadata_envelope_version": "lotus-idea.ai-metadata-envelope.v1",
@@ -15,6 +16,7 @@
     "ai_readiness_source": "src/app/application/ai_governance.py",
     "ai_api_source": "src/app/api/ai_governance.py",
     "action_policy_source": "src/app/domain/ai_action_policy.py",
+    "claim_grounding_policy_source": "src/app/domain/ai_explanation/grounding.py",
     "output_integrity_source": "src/app/domain/ai_output_integrity.py",
     "execution_provenance_source": "src/app/domain/ai_execution_provenance.py",
     "metadata_policy_source": "src/app/domain/ai_metadata_policy.py",
@@ -56,6 +58,15 @@
     "retention_policy_ref": "lotus-idea:regulated-advisory-evidence:seven-year:v1",
     "access_posture": "governed_evaluation_replay_or_authorized_lineage_store",
     "pre_v1_migration_posture": "explicitly_unverifiable_no_retroactive_claim"
+  },
+  "claim_grounding": {
+    "submitted_narrative_posture": "attested_input_not_advisor_visible",
+    "accepted_narrative_posture": "server_rendered_from_verified_claims",
+    "claim_identity_posture": "unique_and_order_preserving",
+    "source_binding_posture": "redacted_evidence_source_products_only",
+    "provider_output_binding": "digest_only_no_raw_provider_narrative_persistence",
+    "advisor_projection": "claim_text_plus_source_product_version_freshness_and_quality",
+    "unsupported_or_blocked_grounding_returned": false
   },
   "execution_provenance": {
     "production_like_policy": "verified_lotus_ai_attestation_required",
