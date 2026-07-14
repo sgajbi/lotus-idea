@@ -411,8 +411,10 @@ original durable lineage. See the repository architecture decision
 `POST /api/v1/idea-candidates/{candidateId}/review-actions` and
 `POST /api/v1/idea-candidates/{candidateId}/feedback` are certified internal
 review workflow API foundations. They require mutating capabilities, caller
-role, upstream-authorized tenant/book/portfolio/client scope, and
-`Idempotency-Key`. They record review decisions or feedback through the active
+role, trusted tenant/book/portfolio/client entitlement headers, and
+`Idempotency-Key`. Request bodies cannot assert access or authorization scope;
+the application loads candidate scope from persisted truth before domain
+authorization. They record review decisions or feedback through the active
 repository provider and return product-safe conflict, not-found, and permission
 posture without granting downstream suitability, compliance, mandate, execution,
 or client-communication authority.
@@ -447,30 +449,33 @@ submission source-authority contracts. The lifecycle route does not grant
 downstream proposal, manage-review, report, execution, or client-communication
 authority.
 
-`GET /api/v1/review-queues/advisor` is the certified internal advisor queue API
-foundation. It projects persisted candidate snapshots through the deterministic
-Slice 07 queue policy, applies optional tenant/book/portfolio/client scope
-filters, applies platform caller-context entitlement scope when provided, and
+The advisor, portfolio-manager, and compliance review routes are certified
+internal audience-specific queue foundations. Each route selects only its
+responsible review posture through the shared deterministic Slice 07 queue
+policy. They apply optional tenant/book/portfolio/client scope filters,
+platform caller-context entitlement scope when provided, and
 returns ranked items plus exclusions through bounded `limit`/`offset` paging
 with default 25 and max 100. Durable PostgreSQL providers use a repository-side
 candidate projection with expression-index-backed tenant/book/portfolio/client
 scope predicates instead of whole-store snapshot hydration. `evaluatedAtUtc`
 is the inclusive candidate-created-at boundary, while source as-of and evidence
 generation dates retain their source-authority meaning. Page metadata carries
-opaque identity bound to evaluation time, scope, queue ranking policy, accepted
+opaque identity bound to audience, evaluation time, scope, queue ranking policy, accepted
 candidate score-policy set, and visible candidate state; continuation offsets
 require it and changed state fails with
 a stable snapshot conflict. PostgreSQL verifies the fingerprint before and
 after each page query. This remains a
 bounded foundation API rather than a production queue-store claim.
-`lotus-gateway` publishes this as a
+`lotus-gateway` publishes the advisor route as a
 bounded read-only route at `GET /api/v1/ideas/review-queues/advisor`, forwards
 the caller entitlement-scope headers, and does not generate or rank ideas.
-Advisor queue and readiness response DTOs live in
-`src/app/api/review_queue_models.py`; `src/app/api/review_queues.py` retains
-authorization, entitlement narrowing, repository access, operation events, and
-route metadata. This is an internal design boundary, not a separate queue
-service or Workbench product boundary.
+The operator-only `GET /api/v1/review-queues/operator/exceptions` route reports
+aggregate support exceptions by audience without candidate identifiers,
+business ranking, or review/compliance authority. Review queue request mapping,
+access narrowing, business routes, and operator exception models are grouped in
+`src/app/api/review_queue/`; shared application policies remain under
+`src/app/application/` and `src/app/domain/review_queue/`. This is an internal
+design boundary, not a separate queue service or Workbench product boundary.
 
 Scoring and queue policy are deliberately separate. `app.domain.scoring` owns
 candidate score provenance and the closed current score-policy registry;
@@ -829,12 +834,13 @@ supported-feature promotion.
 
 ## Review Queue Projection Foundation
 
-The internal application layer can project persisted candidate snapshots into
-deterministic advisor review queues by delegating to the Slice 07 scoring and
-queue policy. The projection preserves score-versioned ordering, suppression,
-expiry, snooze, unsupported-evidence, and duplicate exclusions without adding a
-second queue implementation. It is not yet a public API, Workbench surface,
-database-backed queue product, or certified data product.
+The application layer projects persisted candidate snapshots into deterministic
+advisor, portfolio-manager, and compliance queues through one Slice 07 ranking
+policy parameterized by audience. Audience is bound into repository queries,
+readiness counts, and snapshot identity. A separate operator projection reports
+aggregate support exceptions without candidate identities or business decision
+authority. These are certified internal APIs, not a Workbench product,
+independent queue service, or certified data product.
 
 ## Review Workflow Persistence Foundation
 

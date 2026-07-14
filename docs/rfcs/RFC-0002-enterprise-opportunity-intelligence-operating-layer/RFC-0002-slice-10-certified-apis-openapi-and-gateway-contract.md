@@ -212,9 +212,9 @@ Implementation files:
 16. `src/app/api/review_workflow.py`: review-action and feedback DTOs,
     authorization/scope mapping, product-safe errors, idempotency-conflict
     handling, OpenAPI examples, and route registration.
-17. `src/app/api/review_queues.py`: advisor queue DTOs, authorization mapping,
-    optional tenant/book/portfolio/client scope filters, product-safe errors,
-    OpenAPI examples, and route registration.
+17. `src/app/api/review_queue/`: audience-specific business queue routes,
+    operator exception posture, request mapping, entitlement narrowing,
+    product-safe errors, OpenAPI examples, and route registration.
 18. `src/app/api/caller_headers.py`: shared API caller-header parsing used by
     signal and review routes.
 19. `src/app/api/candidate_lifecycle.py`: lifecycle transition DTOs,
@@ -314,15 +314,15 @@ The review-action endpoint is permissioned by `idea.review.record` plus one
 recognized review actor role. The feedback endpoint is permissioned by
 `idea.feedback.record` plus one recognized review actor role. Both endpoints
 require trusted platform caller-context tenant/book/portfolio/client
-entitlement headers covering the persisted candidate scope. Request
-`authorizedScope` is retained as an audited caller claim but must stay within
-the trusted caller entitlements, and runtime governance evaluates the persisted
-candidate access scope rather than caller-supplied request `accessScope`.
+entitlement headers covering the persisted candidate scope. Request scope
+fields are rejected; runtime governance evaluates persisted candidate access
+scope against trusted caller entitlements.
 Scope, permission, missing candidate, idempotency conflict, and invalid
 candidate-state failures return product-safe Problem Details.
 
-The advisor review queue endpoint is permissioned by
-advisor role plus `idea.review.queue.read` capability. It requires a
+The advisor, portfolio-manager, and compliance review queue endpoints use
+role-specific capabilities and select only their responsible review posture.
+The advisor route requires a
 timezone-aware `evaluatedAtUtc` query parameter, accepts optional
 tenant/book/portfolio/client scope filters, applies platform caller-context
 entitlement scope headers automatically when present, rejects query scopes

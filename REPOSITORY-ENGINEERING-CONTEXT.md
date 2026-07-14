@@ -313,9 +313,9 @@ Use shared API helpers instead of route-local clones:
    evidence, lifecycle, review, feedback, conversion, report evidence-pack,
    and audit-summary response DTOs behind the existing
    `app.api.candidate_detail` route surface,
-14. `app.api.review_queue_models` for advisor review queue and review queue
-   readiness response DTOs behind the existing `app.api.review_queues` route
-   surface,
+14. `app.api.review_queue_models` for business review queue and readiness DTOs,
+   with request mapping, access narrowing, audience routes, and operator
+   exception models grouped under `app.api.review_queue`,
 15. `app.api.signal_api_support` for caller context, scope checks, source-ref
    validation, the ordered caller-supplied and source-backed signal boundaries,
    source-ref rendering, signal outcome mapping, source runtime cleanup, and
@@ -653,9 +653,10 @@ Caller-supplied opportunity signal routes and advisor-facing candidate detail /
 review queue reads require both the product role and the explicit `idea.*`
 capability published for the route. `app.api.signal_api_support` requires
 advisor role plus `idea.signal.evaluate` before evaluating source-owned
-evidence, and `src/app/api/candidate_detail.py` and
-`src/app/api/review_queues.py` require advisor/operator role plus the read
-capability before returning source-safe candidate or queue data. The signal API
+evidence. `src/app/api/candidate_detail.py` and the capability-grouped
+`src/app/api/review_queue/` package require route-specific business or operator
+roles and read capabilities before returning source-safe candidate, audience
+queue, or aggregate exception data. The signal API
 contract gate blocks route-local signal permission policies, and the caller
 context contract gate blocks route policies that name both `allowed_roles` and
 an `idea.*` capability but authorize through role-or-capability semantics.
@@ -1236,15 +1237,23 @@ repeated defect patterns are fixed once and pinned with tests or gates:
     lookup plus candidate-detail projection for the associated candidate only.
     Review, feedback, and conversion-intent replay/conflict decisions must not
     hydrate whole repository snapshots or unrelated outbox/downstream tables.
-12. Review/feedback trusted entitlement scope: GitHub issue `#318` is addressed
-    by binding review-action and feedback mutation actor scope to trusted
-    `X-Caller-Tenant-Ids`, `X-Caller-Book-Ids`,
-    `X-Caller-Portfolio-Ids`, and `X-Caller-Client-Ids` headers, requiring
-    request `authorizedScope` to stay within those entitlements, and applying
-    domain review/feedback checks against the persisted candidate access scope
-    instead of caller-supplied request `accessScope`. Missing or mismatched
-    entitlement headers fail closed with product-safe permission denial and no
-    raw portfolio/client disclosure.
+12. Review/feedback trusted entitlement scope: GitHub issues `#318` and `#386`
+    are addressed by binding review-action and feedback mutation actor scope to
+    trusted `X-Caller-Tenant-Ids`, `X-Caller-Book-Ids`,
+    `X-Caller-Portfolio-Ids`, and `X-Caller-Client-Ids` headers. Review and
+    feedback request bodies expose neither `accessScope` nor `authorizedScope`;
+    the application loads persisted candidate scope and the domain evaluates it
+    against trusted caller entitlements. Missing, partial, or mismatched headers
+    fail closed across every dimension with product-safe permission denial and
+    no raw portfolio/client disclosure.
+    Audience-specific queue routing from GitHub issue `#385` makes
+    advisor, portfolio-manager, and compliance audience part of the domain,
+    application, repository, PostgreSQL, snapshot, and API contracts. Business
+    queues select only their responsible review posture. The operator endpoint
+    returns aggregate support-exception counts by audience and never ranks work
+    or grants review/compliance authority. Process-local and PostgreSQL readiness
+    counts apply the same audience predicate. This remains design modularity
+    inside the existing service, not a separate queue process.
 13. Dirty aggregate proof rejection: GitHub issue `#306` is addressed by
     requiring aggregate proof provenance to carry `sourceTreeDirty=false`
     before `aggregate_proof_artifact_is_current()` can return true. Dirty or

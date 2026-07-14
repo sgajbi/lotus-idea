@@ -924,10 +924,9 @@ semantics.
 GitHub issue `#318` hardens review and feedback mutation entitlements. Review
 actions and feedback now bind `ReviewActorContext` to trusted
 `X-Caller-Tenant-Ids`, `X-Caller-Book-Ids`, `X-Caller-Portfolio-Ids`, and
-`X-Caller-Client-Ids` headers, require request `authorizedScope` to be a subset
-of those entitlements, and evaluate review/feedback governance against the
-persisted candidate access scope rather than caller-supplied request
-`accessScope`. Missing or mismatched entitlement headers fail closed with
+`X-Caller-Client-Ids` headers and evaluate review/feedback governance against
+persisted candidate access scope. Request bodies cannot assert `accessScope` or
+`authorizedScope`. Missing or mismatched entitlement headers fail closed with
 product-safe `403 permission_denied` responses and no raw portfolio/client
 values in the response.
 

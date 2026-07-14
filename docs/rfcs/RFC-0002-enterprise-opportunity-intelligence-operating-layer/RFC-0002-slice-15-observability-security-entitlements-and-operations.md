@@ -84,7 +84,7 @@ Implementation evidence:
    permission-denied, invalid-request, and invalid-state outcomes.
 9. `src/app/api/idea_signals.py`, `src/app/api/candidate_lifecycle.py`,
    `src/app/api/candidate_evidence_replay.py`,
-   `src/app/api/ai_governance.py`, `src/app/api/review_queues.py`, and
+   `src/app/api/ai_governance.py`, `src/app/api/review_queue/`, and
    `src/app/api/review_workflow.py` emit bounded operation events for
    high-cash evaluation, candidate persistence, lifecycle transitions,
    candidate evidence replay, AI explanation fallback/verifier evaluation,
@@ -494,11 +494,10 @@ forwarding and unsupported-feature blocking proof in `lotus-gateway`. The
 advisor queue and candidate detail routes also forward platform
 entitlement-scope headers. `lotus-idea` enforces them fail-closed against queue
 query filters and candidate-detail access scope before returning candidate
-detail. Review-action and feedback mutation routes now use the same trusted
-caller-context entitlement headers as the actor scope, require request
-`authorizedScope` to be inside those entitlements, and apply governance against
-the persisted candidate access scope instead of caller-supplied request
-`accessScope`. `make
+detail. Review-action and feedback mutation routes use trusted caller-context
+entitlement headers as actor scope and apply governance against persisted
+candidate scope. Request bodies cannot assert access or authorization scope.
+`make
 endpoint-certification-gate` requires the `lotus-idea` endpoint ledger to name
 the exact Gateway route without implying Workbench proof, data-product
 certification, client-ready publication, or supported-feature promotion.

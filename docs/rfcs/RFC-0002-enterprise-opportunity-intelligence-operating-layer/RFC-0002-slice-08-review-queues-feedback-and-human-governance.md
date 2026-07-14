@@ -1,6 +1,6 @@
 # RFC-0002 Slice 08: Review Queues, Feedback, And Human Governance
 
-Status: Partially implemented - internal advisor review/feedback governance plus certified API foundations only
+Status: Implementation in validation on feature branch; mainline closure and supported-feature promotion remain pending
 
 ## Outcome
 
@@ -89,6 +89,25 @@ Implemented in this slice:
     process-local adapter, API, fake adapter suite, real PostgreSQL two-connection
     integration proof, OpenAPI named examples, and
     `make review-identity-contract-gate`.
+22. GitHub issue `#385` makes queue audience explicit across domain policy,
+    application commands, repository ports, PostgreSQL predicates, readiness
+    aggregation, snapshot identity, and API contracts. Advisor,
+    portfolio-manager, and compliance routes select only their responsible
+    review posture and share one deterministic ranking implementation.
+23. `GET /api/v1/review-queues/operator/exceptions` exposes aggregate,
+    entitlement-scoped support exceptions by audience. It omits candidate
+    identifiers, does not rank business work, and grants no review, compliance,
+    suitability, mandate, or execution authority.
+24. GitHub issue `#386` removes `accessScope` and `authorizedScope` from review
+    and feedback bodies. Trusted caller headers define actor entitlements; the
+    application loads persisted candidate scope before domain authorization.
+    Tests cover every scope dimension, multi-value membership, legacy-field
+    rejection, product-safe denial, and OpenAPI schema truth.
+25. Review queue API modules are grouped under `src/app/api/review_queue/`, and
+    operator exception orchestration lives in
+    `src/app/application/review_queue_exceptions.py`. These are design
+    modularity improvements inside the existing deployable service, not a new
+    queue process or service.
 
 Validation evidence from the implementation slice:
 
@@ -106,17 +125,21 @@ Validation evidence from the implementation slice:
 9. `.venv\Scripts\python.exe -m pytest tests\integration\test_review_workflow_api.py tests\unit\test_service_contract.py -q`
 10. `.venv\Scripts\python.exe scripts\endpoint_certification_gate.py`
 11. `.venv\Scripts\python.exe -m pytest tests/unit/test_review_workflow_application.py::test_apply_review_action_uses_candidate_projection_without_snapshot tests/unit/test_review_workflow_application.py::test_record_feedback_uses_candidate_projection_without_snapshot`
+12. `.venv\Scripts\python.exe -m pytest tests/unit/test_review_queue_application.py tests/unit/test_review_queue_policy.py tests/unit/test_review_queue_snapshot.py tests/integration/test_review_queue_api.py`
+13. `.venv\Scripts\python.exe -m pytest tests/unit/test_review_workflow_application.py tests/unit/test_review_governance.py tests/integration/test_review_workflow_api.py`
+14. `make review-queue-snapshot-contract-gate`
+15. `make caller-context-contract-gate endpoint-certification-gate openapi-gate`
+16. `make maintainability-gate architecture-boundary-gate documentation-contract-gate supported-features-gate`
 
-## Remaining Work
+## Later-Slice Promotion Dependencies
 
-This slice is not yet a supported review product. Remaining work includes:
+Slice 08 implementation does not promote a supported review product. The
+following evidence remains owned by later RFC-0002 slices:
 
 1. Gateway/Workbench integration proof,
-2. PM, compliance, and operator queue surfaces and permission policy,
-3. richer platform runtime caller-context entitlement integration so scope does
-   not need to be supplied by upstream-authorized request payloads,
-4. feedback data-product declaration promotion and mesh certification,
-5. trust telemetry, operational support, and supported-feature promotion.
+2. feedback data-product declaration promotion and mesh certification,
+3. trust telemetry and production operational support,
+4. supported-feature promotion after mainline and live-product proof.
 
 ## Required Work
 

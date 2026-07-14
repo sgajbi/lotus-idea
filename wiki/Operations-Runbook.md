@@ -373,6 +373,11 @@ supported-feature promotion exist. The first bounded Gateway
 advisor queue route now forwards platform caller-context scope headers, and the
 internal queue API enforces those entitlements fail-closed while limiting
 advisor queue responses with default page size 25 and max page size 100.
+`GET /api/v1/review-queues/operator/exceptions` requires operator role plus
+`idea.review.queue.exceptions.read`. It reports aggregate invalid-state,
+unsupported-evidence, unscored, unrankable-policy, and non-reviewable counts by
+advisor, portfolio-manager, and compliance audience. It does not expose
+candidate identities, rank business work, or grant review/compliance authority.
 The internal `GET /api/v1/ai-explanations/readiness` diagnostic is available
 for operators with `idea.ai-explanation.readiness.read` to inspect AI
 explanation guardrail availability, model-risk supportability posture, and
