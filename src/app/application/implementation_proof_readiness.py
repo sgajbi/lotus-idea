@@ -423,7 +423,7 @@ def _runtime_trust_telemetry_capability(
         readiness_status=("ready" if snapshot.certification_ready else "blocked"),
         supportability_status=snapshot.certification_status,
         evidence_refs=(
-            "src/app/application/runtime_trust_telemetry.py",
+            "src/app/application/runtime_trust_telemetry/telemetry.py",
             "GET /api/v1/data-mesh/trust-telemetry/runtime-preview",
             "GET /api/v1/data-mesh/trust-telemetry/runtime-snapshot",
             "scripts/runtime_trust_telemetry/generate_preview.py",
