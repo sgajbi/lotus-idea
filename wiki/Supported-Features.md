@@ -121,10 +121,12 @@ advisor queue, AI explanation, data mesh, runtime trust telemetry
 preview/snapshot endpoint and evidence, outbox delivery, Workbench,
 opportunity archetype scenarios, downstream realization, and supported-feature
 promotion. It consumes a
-source-safe bounded live source-ingestion proof artifact, mesh policy proof
-artifact, bounded Workbench read-path proof artifact, bounded
-Gateway/Workbench operational proof artifact, and bounded Gateway/Workbench
-discovery proof artifact, but it does not
+  source-safe bounded live source-ingestion proof artifact, mesh policy proof
+  artifact, bounded Workbench read-path proof artifact, bounded
+  Gateway/Workbench source-contract proof artifact, and bounded
+  Gateway/Workbench discovery proof artifact. The source-contract artifact adds
+  an evidence reference but preserves `gateway_workbench_proof_missing` until
+  observed runtime evidence exists; the diagnostic does not
 provide full live implementation proof, external broker publication, downstream
 delivery, full Gateway/Workbench live proof, data-product certification, or
 supported-feature promotion. The opportunity archetype scenario readiness

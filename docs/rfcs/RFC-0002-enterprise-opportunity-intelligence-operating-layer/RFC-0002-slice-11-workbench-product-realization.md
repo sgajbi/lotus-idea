@@ -20,6 +20,12 @@ review actions, feedback, conversion affordances, entitlement-denied panel
 proof, full canonical live stack proof, data-product certification, demo-ready
 screenshots, or supported-feature promotion.
 
+The repo-owned Gateway/Workbench contract artifact is classified as
+`source_contract`. It can record the declared queue/detail routes and bounded
+read-path contract as evidence, but it clears no runtime blocker and does not
+replace machine-verifiable Gateway serving, Workbench rendering, entitlement,
+accessibility, or canonical front-office runtime proof.
+
 ## Outcome
 
 Make supported opportunity intelligence visible in `lotus-workbench` through

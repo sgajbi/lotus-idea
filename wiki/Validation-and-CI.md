@@ -156,7 +156,7 @@ Advise mandate/restriction live-proof contract validation,
 Advise mandate/restriction source-product proof contract validation,
 report-intake route proof contract validation,
 Workbench read-path proof contract validation,
-Gateway/Workbench operational proof contract validation,
+Gateway/Workbench contract proof contract validation,
 Gateway/Workbench discovery proof contract validation,
 AI lineage store proof contract validation,
 AI workflow-pack registration proof contract validation,
@@ -428,7 +428,7 @@ Persistence adapter validation:
    artifact refs, durable repository proof, runtime trust telemetry proof
    consumption, non-AI operator workflow operations proof consumption,
    Workbench read-path proof consumption, Gateway/Workbench
-   operational proof consumption, Gateway/Workbench discovery proof consumption, bounded outbox broker
+   source-contract proof consumption, Gateway/Workbench discovery proof consumption, bounded outbox broker
    proof consumption, default Advise proposal route proof generation and
    consumption, default Manage action route proof generation and consumption,
    optional Manage mandate live proof consumption,
@@ -459,11 +459,12 @@ Persistence adapter validation:
     bounded Workbench queue/detail read-path proof contract that aggregate
     readiness consumes to clear only
     `workbench_gateway_bff_consumption_proof_missing`.
-12. `tests/unit/test_gateway_workbench_operational_proof.py` and
-    `make gateway-workbench-operational-proof-contract-gate` prove the
-    source-safe bounded Gateway/Workbench operational proof contract that
-    aggregate readiness consumes to clear only `gateway_workbench_proof_missing`
-    for source-ingestion and outbox-delivery proof families.
+12. `tests/unit/workbench/test_contract_proof.py` and
+    `make gateway-workbench-contract-proof-contract-gate` prove the
+    source-safe bounded Gateway/Workbench contract proof. Aggregate readiness
+    records the `source_contract` evidence reference but preserves
+    `gateway_workbench_proof_missing` for source-ingestion and outbox-delivery
+    until machine-verifiable runtime execution evidence exists.
 13. `tests/unit/test_gateway_workbench_discovery_proof.py` and
     `make gateway-workbench-discovery-proof-contract-gate` prove the
     source-safe bounded Gateway/Workbench discovery proof contract that

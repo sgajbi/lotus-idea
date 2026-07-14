@@ -719,6 +719,16 @@ production approval, Workbench, client-publication, or supported-feature proof.
 Issue `#393` tracks the same evidence-classification audit across other proof
 builders.
 
+Gateway/Workbench route declarations and local file or Make-target checks are
+also source-contract evidence. Keep their application policy, thin generator,
+contract gate, and focused tests under capability-oriented `workbench/`
+packages. A valid contract artifact may add aggregate evidence references but
+must preserve `gateway_workbench_proof_missing`; only machine-verifiable
+runtime execution evidence can clear that blocker. This is internal design
+modularity inside the existing deployable service. Do not introduce a separate
+runtime service without workload, failure-isolation, ownership, security, or
+operability evidence.
+
 Outbox consumer declarations are source-contract evidence. Keep their builder,
 generator, contract gate, and tests under the existing `outbox/` capability
 directories with `consumer_contract_proof` naming. A valid declaration may add

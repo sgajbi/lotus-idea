@@ -1,6 +1,6 @@
 # RFC-0002 Slice 17: Implementation Proof And Live Validation
 
-Status: Partially implemented - aggregate proof-readiness diagnostic, bounded live source-ingestion proof artifact contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry proof artifact, Workbench read-path proof artifact, Gateway/Workbench operational proof artifact, Gateway/Workbench discovery proof artifact, Advise proposal route proof artifact, Manage action route proof artifact, Manage mandate live proof artifact, Core portfolio-state live proof artifact, Report intake route proof artifact, bounded outbox broker proof artifact, bounded downstream consumer source-contract proof artifact, bounded outbox platform mesh event publication proof artifact, mesh policy proof artifact, platform mesh onboarding proof artifact, AI lineage store proof artifact, AI workflow-pack registration proof artifact, AI workflow-pack runtime execution proof artifact, high-volatility and drawdown live Risk proof artifact contracts, low-income Core cashflow live proof artifact contract, bond-maturity policy foundation, and opportunity archetype scenario readiness with source/policy foundations available. Slice evidence now includes live canonical Risk concentration, Performance underperformance, and Performance benchmark-readiness source proofs for `PB_SG_GLOBAL_BAL_001`; observed downstream consumer execution, full live opportunity-journey proof, data-mesh certification, Workbench product proof, client-publication approval, and supported-feature promotion remain pending.
+Status: Partially implemented - aggregate proof-readiness diagnostic, bounded live source-ingestion proof artifact contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry proof artifact, Workbench read-path proof artifact, Gateway/Workbench contract proof artifact, Gateway/Workbench discovery proof artifact, Advise proposal route proof artifact, Manage action route proof artifact, Manage mandate live proof artifact, Core portfolio-state live proof artifact, Report intake route proof artifact, bounded outbox broker proof artifact, bounded downstream consumer source-contract proof artifact, bounded outbox platform mesh event publication proof artifact, mesh policy proof artifact, platform mesh onboarding proof artifact, AI lineage store proof artifact, AI workflow-pack registration proof artifact, AI workflow-pack runtime execution proof artifact, high-volatility and drawdown live Risk proof artifact contracts, low-income Core cashflow live proof artifact contract, bond-maturity policy foundation, and opportunity archetype scenario readiness with source/policy foundations available. Slice evidence now includes live canonical Risk concentration, Performance underperformance, and Performance benchmark-readiness source proofs for `PB_SG_GLOBAL_BAL_001`; observed downstream consumer execution, full live opportunity-journey proof, data-mesh certification, Workbench product proof, client-publication approval, and supported-feature promotion remain pending.
 
 ## Outcome
 
@@ -165,13 +165,14 @@ Prove the complete supported opportunity journey end to end.
     `workbench_gateway_bff_consumption_proof_missing`, while preserving full
     panel, browser accessibility, canonical demo runtime, data-product, and
     supported-feature blockers.
-18. `src/app/application/gateway_workbench_operational_proof.py`,
-    `scripts/generate_gateway_workbench_operational_proof.py`, and
-    `make gateway-workbench-operational-proof-contract-gate` now define and
-    enforce a source-safe Gateway/Workbench operational proof artifact. The
-    aggregate implementation-readiness generator consumes that artifact to
-    clear only `gateway_workbench_proof_missing` for source-ingestion and
-    outbox-delivery proof families, while preserving Workbench product,
+18. `src/app/application/workbench/contract_proof.py`,
+    `scripts/workbench/generate_contract_proof.py`, and
+    `make gateway-workbench-contract-proof-contract-gate` now define and
+    enforce a source-safe Gateway/Workbench contract proof artifact. The
+    artifact declares evidence class `source_contract`; aggregate
+    implementation readiness records its reference without clearing
+    `gateway_workbench_proof_missing` for either source-ingestion or
+    outbox-delivery. It also preserves Workbench product,
     panel, browser accessibility, canonical demo runtime, data-product
     discovery, client-publication, and supported-feature blockers.
 19. `src/app/application/gateway_workbench_discovery_proof.py`,
@@ -545,10 +546,10 @@ The Workbench read-path proof artifact narrows the aggregate readiness gap from
 queue/detail consumption has a source-safe proof artifact"; it does not close
 full Workbench product proof, browser proof, canonical demo proof, mutation
 affordances, or supported-feature proof.
-The Gateway/Workbench operational proof artifact narrows the generic
-source-ingestion and outbox readiness gap from "Gateway/Workbench proof
-missing" to "bounded read-only queue/detail consumption is linked into those
-proof families." It does not close full Workbench product proof, panel proof,
+The Gateway/Workbench contract proof artifact records that bounded read-only
+queue/detail contracts are linked into source-ingestion and outbox evidence.
+Because this is source-contract evidence rather than observed execution, it
+does not close `gateway_workbench_proof_missing` or any full Workbench product, panel,
 browser accessibility proof, canonical demo runtime proof, Gateway/Workbench
 data-product discovery, client-publication, or supported-feature proof.
 The default platform mesh onboarding proof narrows the aggregate readiness gap

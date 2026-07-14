@@ -284,6 +284,14 @@ Validation evidence from the implementation slice:
     artifact can be recorded as design evidence but clears no blocker;
     `downstream_consumer_runtime_proof_missing` remains until machine-verifiable
     execution evidence is supplied by the consumer runtimes.
+21. Issue `#406` applies the same rule to Gateway/Workbench contract evidence.
+    Route declarations, local file checks, Make targets, and the bounded
+    Workbench read-path artifact are now a v2 `source_contract` proof. Aggregate
+    readiness records the proof reference but preserves
+    `gateway_workbench_proof_missing` until machine-verifiable runtime execution
+    evidence exists. The builder, generator, gate, and focused tests are grouped
+    under capability-oriented `workbench/` packages; this improves design
+    modularity without introducing another deployable service.
 
 ## Current Governance References
 
