@@ -6,7 +6,7 @@ import importlib.util
 import json
 from pathlib import Path
 from types import ModuleType
-from typing import Mapping, cast
+from typing import Any, Mapping, cast
 
 import pytest
 
@@ -196,7 +196,10 @@ def test_wrong_or_failed_ci_evidence_cannot_clear_lineage_certification(
     field_name: str,
     bad_value: object,
 ) -> None:
-    receipt = replace(valid_ai_lineage_ci_execution_receipt(), **{field_name: bad_value})
+    receipt = cast(Any, replace)(
+        valid_ai_lineage_ci_execution_receipt(),
+        **{field_name: bad_value},
+    )
     proof = build_ai_lineage_store_proof_payload(
         generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
         repository_root=ROOT,
