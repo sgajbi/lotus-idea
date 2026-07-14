@@ -17,8 +17,8 @@ from app.application.durable_repository_proof import DURABLE_REPOSITORY_PROOF_EN
 from app.application.workbench.contract_proof import (
     GATEWAY_WORKBENCH_CONTRACT_PROOF_ENV,
 )
-from app.application.gateway_workbench_discovery_proof import (
-    GATEWAY_WORKBENCH_DISCOVERY_PROOF_ENV,
+from app.application.workbench.discovery_contract_proof import (
+    GATEWAY_WORKBENCH_DISCOVERY_CONTRACT_PROOF_ENV,
 )
 from app.application.low_income_core_cashflow_live_proof import (
     LOW_INCOME_CORE_CASHFLOW_LIVE_PROOF_ENV,
@@ -53,7 +53,7 @@ def test_configured_implementation_proof_artifacts_loads_relative_source_safe_re
         tmp_path / "output" / "workbench" / "gateway-workbench-contract-proof.json"
     )
     gateway_workbench_discovery_path = (
-        tmp_path / "output" / "workbench" / "gateway-workbench-discovery-proof.json"
+        tmp_path / "output" / "workbench" / "gateway-workbench-discovery-contract-proof.json"
     )
     outbox_path = tmp_path / "output" / "outbox" / "outbox-broker-proof.json"
     outbox_mesh_event_path = (
@@ -131,11 +131,11 @@ def test_configured_implementation_proof_artifacts_loads_relative_source_safe_re
         "output/workbench/gateway-workbench-contract-proof.json"
     )
     _assert_bound_artifact(
-        artifacts.gateway_workbench_discovery_proof,
-        "gateway-workbench-discovery-proof.json",
+        artifacts.gateway_workbench_discovery_contract_proof,
+        "gateway-workbench-discovery-contract-proof.json",
     )
-    assert artifacts.gateway_workbench_discovery_proof_ref == (
-        "output/workbench/gateway-workbench-discovery-proof.json"
+    assert artifacts.gateway_workbench_discovery_contract_proof_ref == (
+        "output/workbench/gateway-workbench-discovery-contract-proof.json"
     )
     _assert_bound_artifact(artifacts.outbox_broker_proof, "outbox-broker-proof.json")
     assert artifacts.outbox_broker_proof_ref == "output/outbox/outbox-broker-proof.json"
@@ -202,8 +202,8 @@ def _configure_relative_artifact_env(monkeypatch: pytest.MonkeyPatch) -> None:
         GATEWAY_WORKBENCH_CONTRACT_PROOF_ENV: (
             "output/workbench/gateway-workbench-contract-proof.json"
         ),
-        GATEWAY_WORKBENCH_DISCOVERY_PROOF_ENV: (
-            "output/workbench/gateway-workbench-discovery-proof.json"
+        GATEWAY_WORKBENCH_DISCOVERY_CONTRACT_PROOF_ENV: (
+            "output/workbench/gateway-workbench-discovery-contract-proof.json"
         ),
         OUTBOX_BROKER_PROOF_ENV: "output/outbox/outbox-broker-proof.json",
         OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF_ENV: (

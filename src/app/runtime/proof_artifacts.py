@@ -18,8 +18,8 @@ from app.application.durable_repository_proof import DURABLE_REPOSITORY_PROOF_EN
 from app.application.workbench.contract_proof import (
     GATEWAY_WORKBENCH_CONTRACT_PROOF_ENV,
 )
-from app.application.gateway_workbench_discovery_proof import (
-    GATEWAY_WORKBENCH_DISCOVERY_PROOF_ENV,
+from app.application.workbench.discovery_contract_proof import (
+    GATEWAY_WORKBENCH_DISCOVERY_CONTRACT_PROOF_ENV,
 )
 from app.application.low_income_core_cashflow_live_proof import (
     LOW_INCOME_CORE_CASHFLOW_LIVE_PROOF_ENV,
@@ -71,8 +71,8 @@ class ConfiguredImplementationProofArtifacts:
     workbench_read_path_proof_ref: str | None
     gateway_workbench_contract_proof: dict[str, Any] | None
     gateway_workbench_contract_proof_ref: str | None
-    gateway_workbench_discovery_proof: dict[str, Any] | None
-    gateway_workbench_discovery_proof_ref: str | None
+    gateway_workbench_discovery_contract_proof: dict[str, Any] | None
+    gateway_workbench_discovery_contract_proof_ref: str | None
     bond_maturity_live_proof: dict[str, Any] | None
     bond_maturity_live_proof_ref: str | None
     low_income_core_cashflow_live_proof: dict[str, Any] | None
@@ -173,10 +173,10 @@ _JSON_PROOF_ARTIFACTS: tuple[tuple[str, str, str, str], ...] = (
         "Gateway/Workbench contract proof",
     ),
     (
-        GATEWAY_WORKBENCH_DISCOVERY_PROOF_ENV,
-        "gateway_workbench_discovery_proof",
-        "gateway_workbench_discovery_proof_ref",
-        "Gateway/Workbench discovery proof",
+        GATEWAY_WORKBENCH_DISCOVERY_CONTRACT_PROOF_ENV,
+        "gateway_workbench_discovery_contract_proof",
+        "gateway_workbench_discovery_contract_proof_ref",
+        "Gateway/Workbench discovery contract proof",
     ),
     (
         BOND_MATURITY_LIVE_PROOF_ENV,

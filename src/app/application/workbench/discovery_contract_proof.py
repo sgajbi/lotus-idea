@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 from typing import Any
 
+from app.domain.proof_evidence import EvidenceClass
 from app.application.workbench.contract_proof import (
     gateway_workbench_contract_proof_is_valid,
 )
@@ -24,10 +25,14 @@ from app.application.workbench_read_path_proof import workbench_read_path_proof_
 _is_timezone_aware_datetime_text = is_timezone_aware_datetime_text
 _required_make_target_evidence_present = required_make_target_evidence_present
 
-GATEWAY_WORKBENCH_DISCOVERY_PROOF_ENV = "LOTUS_IDEA_GATEWAY_WORKBENCH_DISCOVERY_PROOF"
-GATEWAY_WORKBENCH_DISCOVERY_PROOF_SCHEMA_VERSION = "lotus-idea.gateway-workbench-discovery-proof.v1"
+GATEWAY_WORKBENCH_DISCOVERY_CONTRACT_PROOF_ENV = (
+    "LOTUS_IDEA_GATEWAY_WORKBENCH_DISCOVERY_CONTRACT_PROOF"
+)
+GATEWAY_WORKBENCH_DISCOVERY_CONTRACT_PROOF_SCHEMA_VERSION = (
+    "lotus-idea.gateway-workbench-discovery-contract-proof.v2"
+)
 
-GATEWAY_WORKBENCH_DISCOVERY_BLOCKERS_CLEARED = ("gateway_workbench_discovery_proof_missing",)
+GATEWAY_WORKBENCH_DISCOVERY_CONTRACT_BLOCKERS_CLEARED: tuple[str, ...] = ()
 
 REQUIRED_GATEWAY_WORKBENCH_DISCOVERY_LOCAL_EVIDENCE_REFS = (
     "contracts/domain-data-products/lotus-idea-products.v1.json",
@@ -36,13 +41,16 @@ REQUIRED_GATEWAY_WORKBENCH_DISCOVERY_LOCAL_EVIDENCE_REFS = (
     "src/app/application/platform_mesh_onboarding_proof.py",
     "src/app/application/workbench_read_path_proof.py",
     "src/app/application/workbench/contract_proof.py",
+    "src/app/application/workbench/discovery_contract_proof.py",
+    "scripts/workbench/generate_discovery_contract_proof.py",
+    "scripts/workbench/discovery_contract_proof_gate.py",
     "docs/operations/implementation-proof-readiness.md",
     "wiki/Supported-Features.md",
     "make data-mesh-contract-gate",
     "make platform-mesh-onboarding-proof-contract-gate",
     "make workbench-read-path-proof-contract-gate",
     "make gateway-workbench-contract-proof-contract-gate",
-    "make gateway-workbench-discovery-proof-contract-gate",
+    "make gateway-workbench-discovery-contract-proof-contract-gate",
     "make implementation-proof-readiness-check",
 )
 
@@ -52,6 +60,7 @@ REQUIRED_GATEWAY_WORKBENCH_DISCOVERY_PLATFORM_EVIDENCE_REFS = (
 )
 
 REMAINING_GATEWAY_WORKBENCH_DISCOVERY_BLOCKERS = (
+    "gateway_workbench_discovery_proof_missing",
     "data_mesh_not_certified",
     "producer_products_not_active",
     "platform_mesh_certification_missing",
@@ -63,7 +72,7 @@ REMAINING_GATEWAY_WORKBENCH_DISCOVERY_BLOCKERS = (
 )
 
 
-def build_gateway_workbench_discovery_proof_payload(
+def build_gateway_workbench_discovery_contract_proof_payload(
     *,
     generated_at_utc: datetime,
     repository_root: Path,
@@ -91,43 +100,46 @@ def build_gateway_workbench_discovery_proof_payload(
     workbench_read_path_valid = bool(
         workbench_read_path_proof and workbench_read_path_proof_is_valid(workbench_read_path_proof)
     )
-    gateway_operational_valid = bool(
+    gateway_contract_valid = bool(
         gateway_workbench_contract_proof
         and gateway_workbench_contract_proof_is_valid(gateway_workbench_contract_proof)
     )
-    catalog_exposes_gateway_visible_products = _catalog_exposes_gateway_visible_idea_products(
-        catalog
+    catalog_declares_gateway_consumable_products = (
+        _catalog_declares_gateway_consumable_idea_products(catalog)
     )
     proof_valid = (
         timezone_aware_generated_at_utc
         and file_evidence_present
         and platform_onboarding_valid
         and workbench_read_path_valid
-        and gateway_operational_valid
-        and catalog_exposes_gateway_visible_products
+        and gateway_contract_valid
+        and catalog_declares_gateway_consumable_products
     )
     return {
-        "schemaVersion": GATEWAY_WORKBENCH_DISCOVERY_PROOF_SCHEMA_VERSION,
+        "schemaVersion": GATEWAY_WORKBENCH_DISCOVERY_CONTRACT_PROOF_SCHEMA_VERSION,
         "repository": "lotus-idea",
         "generatedAtUtc": generated_at_utc.isoformat(),
         "proofType": "gateway_workbench_discovery_contract",
-        "proofScope": "source_safe_catalog_visibility_and_read_path_discovery",
-        "gatewayWorkbenchDiscoveryProofValid": proof_valid,
-        "aggregateBlockersCleared": GATEWAY_WORKBENCH_DISCOVERY_BLOCKERS_CLEARED,
+        "proofScope": "source_catalog_and_consumer_declaration",
+        "evidenceClass": EvidenceClass.SOURCE_CONTRACT.value,
+        "gatewayWorkbenchDiscoveryContractProofValid": proof_valid,
+        "aggregateBlockersCleared": GATEWAY_WORKBENCH_DISCOVERY_CONTRACT_BLOCKERS_CLEARED,
         "platformMeshOnboardingProofRef": platform_mesh_onboarding_proof_ref,
         "workbenchReadPathProofRef": workbench_read_path_proof_ref,
         "gatewayWorkbenchContractProofRef": gateway_workbench_contract_proof_ref,
         "localEvidenceRefs": REQUIRED_GATEWAY_WORKBENCH_DISCOVERY_LOCAL_EVIDENCE_REFS,
         "platformEvidenceRefs": REQUIRED_GATEWAY_WORKBENCH_DISCOVERY_PLATFORM_EVIDENCE_REFS,
-        "discoveredProductCount": len(REQUIRED_PRODUCER_PRODUCTS),
-        "approvedConsumer": "lotus-gateway",
+        "declaredProductCount": len(REQUIRED_PRODUCER_PRODUCTS),
+        "declaredConsumer": "lotus-gateway",
         "proofChecks": {
             "timezoneAwareGeneratedAtUtc": timezone_aware_generated_at_utc,
             "fileEvidencePresent": file_evidence_present,
             "platformMeshOnboardingProofValid": platform_onboarding_valid,
             "workbenchReadPathProofValid": workbench_read_path_valid,
-            "gatewayWorkbenchContractProofValid": gateway_operational_valid,
-            "catalogExposesGatewayVisibleIdeaProducts": (catalog_exposes_gateway_visible_products),
+            "gatewayWorkbenchContractProofValid": gateway_contract_valid,
+            "catalogDeclaresGatewayConsumableIdeaProducts": (
+                catalog_declares_gateway_consumable_products
+            ),
             "productsRemainProposed": True,
             "routesRemainUnpublished": True,
         },
@@ -135,27 +147,33 @@ def build_gateway_workbench_discovery_proof_payload(
         "dataMeshCertified": False,
         "producerProductsActive": False,
         "fullWorkbenchProductCertified": False,
+        "gatewayWorkbenchDiscoveryCertified": False,
+        "canonicalDemoRuntimeCertified": False,
+        "runtimeExecutionObserved": False,
         "supportedFeaturePromoted": False,
         "proofClosed": False,
     }
 
 
-def gateway_workbench_discovery_proof_is_valid(payload: Mapping[str, Any]) -> bool:
-    if payload.get("schemaVersion") != GATEWAY_WORKBENCH_DISCOVERY_PROOF_SCHEMA_VERSION:
+def gateway_workbench_discovery_contract_proof_is_valid(payload: Mapping[str, Any]) -> bool:
+    if payload.get("schemaVersion") != GATEWAY_WORKBENCH_DISCOVERY_CONTRACT_PROOF_SCHEMA_VERSION:
         return False
     if payload.get("repository") != "lotus-idea":
         return False
     if payload.get("proofType") != "gateway_workbench_discovery_contract":
         return False
-    if payload.get("proofScope") != "source_safe_catalog_visibility_and_read_path_discovery":
+    if payload.get("proofScope") != "source_catalog_and_consumer_declaration":
         return False
-    if payload.get("gatewayWorkbenchDiscoveryProofValid") is not True:
+    if payload.get("evidenceClass") != EvidenceClass.SOURCE_CONTRACT.value:
+        return False
+    if payload.get("gatewayWorkbenchDiscoveryContractProofValid") is not True:
         return False
     if not _is_timezone_aware_datetime_text(payload.get("generatedAtUtc")):
         return False
-    if tuple(payload.get("aggregateBlockersCleared") or ()) != (
-        GATEWAY_WORKBENCH_DISCOVERY_BLOCKERS_CLEARED
-    ):
+    blockers_cleared = payload.get("aggregateBlockersCleared")
+    if not isinstance(blockers_cleared, (list, tuple)):
+        return False
+    if tuple(blockers_cleared) != (GATEWAY_WORKBENCH_DISCOVERY_CONTRACT_BLOCKERS_CLEARED):
         return False
     if tuple(payload.get("localEvidenceRefs") or ()) != (
         REQUIRED_GATEWAY_WORKBENCH_DISCOVERY_LOCAL_EVIDENCE_REFS
@@ -169,15 +187,21 @@ def gateway_workbench_discovery_proof_is_valid(payload: Mapping[str, Any]) -> bo
         REMAINING_GATEWAY_WORKBENCH_DISCOVERY_BLOCKERS
     ):
         return False
-    if payload.get("discoveredProductCount") != len(REQUIRED_PRODUCER_PRODUCTS):
+    if payload.get("declaredProductCount") != len(REQUIRED_PRODUCER_PRODUCTS):
         return False
-    if payload.get("approvedConsumer") != "lotus-gateway":
+    if payload.get("declaredConsumer") != "lotus-gateway":
         return False
     if payload.get("dataMeshCertified") is not False:
         return False
     if payload.get("producerProductsActive") is not False:
         return False
     if payload.get("fullWorkbenchProductCertified") is not False:
+        return False
+    if payload.get("gatewayWorkbenchDiscoveryCertified") is not False:
+        return False
+    if payload.get("canonicalDemoRuntimeCertified") is not False:
+        return False
+    if payload.get("runtimeExecutionObserved") is not False:
         return False
     if payload.get("supportedFeaturePromoted") is not False:
         return False
@@ -201,14 +225,14 @@ def gateway_workbench_discovery_proof_is_valid(payload: Mapping[str, Any]) -> bo
             "platformMeshOnboardingProofValid",
             "workbenchReadPathProofValid",
             "gatewayWorkbenchContractProofValid",
-            "catalogExposesGatewayVisibleIdeaProducts",
+            "catalogDeclaresGatewayConsumableIdeaProducts",
             "productsRemainProposed",
             "routesRemainUnpublished",
         )
     )
 
 
-def _catalog_exposes_gateway_visible_idea_products(payload: dict[str, Any] | None) -> bool:
+def _catalog_declares_gateway_consumable_idea_products(payload: dict[str, Any] | None) -> bool:
     if payload is None:
         return False
     products = payload.get("products")

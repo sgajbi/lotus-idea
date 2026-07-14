@@ -22,8 +22,8 @@ from app.application.downstream_route_contract_proof import (
     MANAGE_ACTION_ROUTE_PROOF_ENV,
 )
 from app.application.durable_repository_proof import DURABLE_REPOSITORY_PROOF_ENV
-from app.application.gateway_workbench_discovery_proof import (
-    GATEWAY_WORKBENCH_DISCOVERY_PROOF_ENV,
+from app.application.workbench.discovery_contract_proof import (
+    GATEWAY_WORKBENCH_DISCOVERY_CONTRACT_PROOF_ENV,
 )
 from app.application.workbench.contract_proof import (
     GATEWAY_WORKBENCH_CONTRACT_PROOF_ENV,
@@ -144,9 +144,9 @@ PROOF_ARTIFACT_ARGS: tuple[tuple[str, str, str], ...] = (
         "Optional bounded Gateway/Workbench contract proof artifact path.",
     ),
     (
-        "--gateway-workbench-discovery-proof",
-        GATEWAY_WORKBENCH_DISCOVERY_PROOF_ENV,
-        "Optional bounded Gateway/Workbench discovery proof artifact path.",
+        "--gateway-workbench-discovery-contract-proof",
+        GATEWAY_WORKBENCH_DISCOVERY_CONTRACT_PROOF_ENV,
+        "Optional bounded Gateway/Workbench discovery contract proof artifact path.",
     ),
     (
         "--outbox-broker-proof",

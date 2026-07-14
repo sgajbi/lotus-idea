@@ -266,9 +266,9 @@ def _build_readiness_snapshot_from_configured_artifacts(
         workbench_read_path_proof_ref=proof_artifacts.workbench_read_path_proof_ref,
         gateway_workbench_contract_proof=proof_artifacts.gateway_workbench_contract_proof,
         gateway_workbench_contract_proof_ref=(proof_artifacts.gateway_workbench_contract_proof_ref),
-        gateway_workbench_discovery_proof=proof_artifacts.gateway_workbench_discovery_proof,
-        gateway_workbench_discovery_proof_ref=(
-            proof_artifacts.gateway_workbench_discovery_proof_ref
+        gateway_workbench_discovery_contract_proof=proof_artifacts.gateway_workbench_discovery_contract_proof,
+        gateway_workbench_discovery_contract_proof_ref=(
+            proof_artifacts.gateway_workbench_discovery_contract_proof_ref
         ),
         bond_maturity_live_proof=proof_artifacts.bond_maturity_live_proof,
         bond_maturity_live_proof_ref=proof_artifacts.bond_maturity_live_proof_ref,

@@ -566,7 +566,7 @@ def _blocked_reason(preview: RuntimeTrustTelemetryPreview) -> str:
         )
     return (
         "Runtime trust telemetry snapshot generated for IdeaCandidate:v1, but platform source "
-        "manifest inclusion, platform mesh certification, Gateway/Workbench discovery proof, and "
+        "manifest inclusion, platform mesh certification, Gateway/Workbench runtime discovery evidence, and "
         f"supported-feature promotion remain pending; blockers: {blockers}."
     )
 

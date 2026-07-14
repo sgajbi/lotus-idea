@@ -24,9 +24,8 @@ from app.application.durable_repository_proof import (
     DURABLE_REPOSITORY_BLOCKERS_CLEARED,
     durable_repository_proof_is_valid,
 )
-from app.application.gateway_workbench_discovery_proof import (
-    GATEWAY_WORKBENCH_DISCOVERY_BLOCKERS_CLEARED,
-    gateway_workbench_discovery_proof_is_valid,
+from app.application.workbench.discovery_contract_proof import (
+    gateway_workbench_discovery_contract_proof_is_valid,
 )
 from app.application.workbench.contract_proof import (
     gateway_workbench_contract_proof_is_valid,
@@ -128,8 +127,8 @@ def _apply_available_proofs(
     workbench_read_path_proof_ref: str | None,
     gateway_workbench_contract_proof: Mapping[str, object] | None,
     gateway_workbench_contract_proof_ref: str | None,
-    gateway_workbench_discovery_proof: Mapping[str, object] | None,
-    gateway_workbench_discovery_proof_ref: str | None,
+    gateway_workbench_discovery_contract_proof: Mapping[str, object] | None,
+    gateway_workbench_discovery_contract_proof_ref: str | None,
     source_ingestion_live_proof: Mapping[str, object] | None,
     source_ingestion_live_proof_ref: str | None,
     source_ingestion: SourceIngestionReadinessSnapshot,
@@ -406,8 +405,8 @@ def _apply_platform_and_surface_proofs(
     workbench_read_path_proof_ref: str | None,
     gateway_workbench_contract_proof: Mapping[str, object] | None,
     gateway_workbench_contract_proof_ref: str | None,
-    gateway_workbench_discovery_proof: Mapping[str, object] | None,
-    gateway_workbench_discovery_proof_ref: str | None,
+    gateway_workbench_discovery_contract_proof: Mapping[str, object] | None,
+    gateway_workbench_discovery_contract_proof_ref: str | None,
     operator_workflows_operations_proof: Mapping[str, object] | None,
     operator_workflows_operations_proof_ref: str | None,
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
@@ -492,16 +491,16 @@ def _apply_platform_and_surface_proofs(
             )
             for capability in capabilities
         )
-    if _proof_can_clear_blockers(
-        gateway_workbench_discovery_proof,
-        gateway_workbench_discovery_proof_ref,
+    if _proof_is_valid_and_current(
+        gateway_workbench_discovery_contract_proof,
+        gateway_workbench_discovery_contract_proof_ref,
         evaluated_at_utc=evaluated_at_utc,
-        proof_is_valid=gateway_workbench_discovery_proof_is_valid,
+        proof_is_valid=gateway_workbench_discovery_contract_proof_is_valid,
     ):
         capabilities = tuple(
-            _apply_gateway_workbench_discovery_proof(
+            _apply_gateway_workbench_discovery_contract_proof(
                 capability,
-                gateway_workbench_discovery_proof_ref,
+                gateway_workbench_discovery_contract_proof_ref,
             )
             for capability in capabilities
         )
@@ -699,15 +698,28 @@ def _apply_gateway_workbench_contract_proof(
     )
 
 
-def _apply_gateway_workbench_discovery_proof(
+def _apply_gateway_workbench_discovery_contract_proof(
     capability: ImplementationProofCapabilityReadiness,
-    gateway_workbench_discovery_proof_ref: str | None,
+    gateway_workbench_discovery_contract_proof_ref: str | None,
 ) -> ImplementationProofCapabilityReadiness:
-    return apply_blocker_proof(
-        capability,
-        capability_ids=("data-mesh-certification", "runtime-trust-telemetry-preview"),
-        blockers_cleared=GATEWAY_WORKBENCH_DISCOVERY_BLOCKERS_CLEARED,
-        proof_ref=gateway_workbench_discovery_proof_ref,
+    if capability.capability_id not in (
+        "data-mesh-certification",
+        "runtime-trust-telemetry-preview",
+    ):
+        return capability
+    evidence_refs = capability.evidence_refs
+    if gateway_workbench_discovery_contract_proof_ref:
+        evidence_refs = tuple(
+            dict.fromkeys((*evidence_refs, gateway_workbench_discovery_contract_proof_ref))
+        )
+    return build_capability_readiness(
+        capability.capability_id,
+        capability.name,
+        readiness_status=capability.readiness_status,
+        supportability_status=capability.supportability_status,
+        evidence_refs=evidence_refs,
+        blockers=capability.blockers,
+        supported_feature_promoted=capability.supported_feature_promoted,
     )
 
 

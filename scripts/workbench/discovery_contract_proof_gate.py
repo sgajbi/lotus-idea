@@ -5,22 +5,27 @@ from datetime import UTC, datetime
 from pathlib import Path
 import sys
 
-from app.application.gateway_workbench_discovery_proof import (
-    GATEWAY_WORKBENCH_DISCOVERY_BLOCKERS_CLEARED,
-    GATEWAY_WORKBENCH_DISCOVERY_PROOF_SCHEMA_VERSION,
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT))
+
+from app.application.workbench.discovery_contract_proof import (  # noqa: E402
+    GATEWAY_WORKBENCH_DISCOVERY_CONTRACT_BLOCKERS_CLEARED,
+    GATEWAY_WORKBENCH_DISCOVERY_CONTRACT_PROOF_SCHEMA_VERSION,
     REMAINING_GATEWAY_WORKBENCH_DISCOVERY_BLOCKERS,
     REQUIRED_GATEWAY_WORKBENCH_DISCOVERY_LOCAL_EVIDENCE_REFS,
     REQUIRED_GATEWAY_WORKBENCH_DISCOVERY_PLATFORM_EVIDENCE_REFS,
-    build_gateway_workbench_discovery_proof_payload,
-    gateway_workbench_discovery_proof_is_valid,
+    build_gateway_workbench_discovery_contract_proof_payload,
+    gateway_workbench_discovery_contract_proof_is_valid,
 )
-from app.application.workbench.contract_proof import (
+from app.application.workbench.contract_proof import (  # noqa: E402
     build_gateway_workbench_contract_proof_payload,
 )
-from app.application.platform_mesh_onboarding_proof import (
+from app.application.platform_mesh_onboarding_proof import (  # noqa: E402
     build_platform_mesh_onboarding_proof_payload,
 )
-from app.application.workbench_read_path_proof import build_workbench_read_path_proof_payload
+from app.application.workbench_read_path_proof import (  # noqa: E402
+    build_workbench_read_path_proof_payload,
+)
 
 
 try:
@@ -28,7 +33,6 @@ try:
 except ModuleNotFoundError:
     from proof_source_safety import forbidden_content_validator, validate_forbidden_content  # type: ignore[import-not-found,no-redef]
 
-ROOT = Path(__file__).resolve().parents[1]
 PLATFORM_ROOT = ROOT.parent / "lotus-platform"
 
 FORBIDDEN_KEYS = {
@@ -72,7 +76,7 @@ _validate_forbidden_content = forbidden_content_validator(
 )
 
 
-def validate_gateway_workbench_discovery_proof_contract(
+def validate_gateway_workbench_discovery_contract_proof_contract(
     *,
     platform_root: Path | None = None,
 ) -> list[str]:
@@ -94,7 +98,7 @@ def validate_gateway_workbench_discovery_proof_contract(
         repository_root=ROOT,
         platform_root=effective_platform_root,
     )
-    proof = build_gateway_workbench_discovery_proof_payload(
+    proof = build_gateway_workbench_discovery_contract_proof_payload(
         generated_at_utc=generated_at_utc,
         repository_root=ROOT,
         platform_root=effective_platform_root,
@@ -107,15 +111,15 @@ def validate_gateway_workbench_discovery_proof_contract(
             "output/workbench/gateway-workbench-contract-proof.json"
         ),
     )
-    if proof.get("schemaVersion") != GATEWAY_WORKBENCH_DISCOVERY_PROOF_SCHEMA_VERSION:
+    if proof.get("schemaVersion") != GATEWAY_WORKBENCH_DISCOVERY_CONTRACT_PROOF_SCHEMA_VERSION:
         errors.append(
-            "Gateway/Workbench discovery proof schema must be "
-            f"{GATEWAY_WORKBENCH_DISCOVERY_PROOF_SCHEMA_VERSION}"
+            "Gateway/Workbench discovery contract proof schema must be "
+            f"{GATEWAY_WORKBENCH_DISCOVERY_CONTRACT_PROOF_SCHEMA_VERSION}"
         )
     if tuple(proof.get("aggregateBlockersCleared") or ()) != (
-        GATEWAY_WORKBENCH_DISCOVERY_BLOCKERS_CLEARED
+        GATEWAY_WORKBENCH_DISCOVERY_CONTRACT_BLOCKERS_CLEARED
     ):
-        errors.append("Gateway/Workbench discovery proof must clear only discovery blocker")
+        errors.append("Gateway/Workbench discovery contract proof must clear no runtime blocker")
     if tuple(proof.get("localEvidenceRefs") or ()) != (
         REQUIRED_GATEWAY_WORKBENCH_DISCOVERY_LOCAL_EVIDENCE_REFS
     ):
@@ -127,28 +131,33 @@ def validate_gateway_workbench_discovery_proof_contract(
     if tuple(proof.get("remainingCertificationBlockers") or ()) != (
         REMAINING_GATEWAY_WORKBENCH_DISCOVERY_BLOCKERS
     ):
-        errors.append("Gateway/Workbench discovery proof must retain certification blockers")
+        errors.append(
+            "Gateway/Workbench discovery contract proof must retain certification blockers"
+        )
     proof_checks = proof.get("proofChecks")
     file_evidence_present = (
         isinstance(proof_checks, Mapping) and proof_checks.get("fileEvidencePresent") is True
     )
-    if file_evidence_present and not gateway_workbench_discovery_proof_is_valid(proof):
+    if file_evidence_present and not gateway_workbench_discovery_contract_proof_is_valid(proof):
         errors.append(
-            "Gateway/Workbench discovery proof must validate against sibling platform truth when "
+            "Gateway/Workbench discovery contract proof must validate against sibling platform truth when "
             "sibling evidence is present"
         )
-    if not file_evidence_present and proof.get("gatewayWorkbenchDiscoveryProofValid") is not False:
+    if (
+        not file_evidence_present
+        and proof.get("gatewayWorkbenchDiscoveryContractProofValid") is not False
+    ):
         errors.append("missing sibling platform evidence must remain an invalid non-proof artifact")
     validate_forbidden_content(proof, errors, FORBIDDEN_KEYS, FORBIDDEN_TEXT_FRAGMENTS)
     return errors
 
 
 def main() -> int:
-    errors = validate_gateway_workbench_discovery_proof_contract()
+    errors = validate_gateway_workbench_discovery_contract_proof_contract()
     if errors:
         print("\n".join(errors))
         return 1
-    print("Gateway/Workbench discovery proof contract gate passed")
+    print("Gateway/Workbench discovery contract proof contract gate passed")
     return 0
 
 

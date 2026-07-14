@@ -9,18 +9,19 @@ from typing import Any, Mapping, cast
 
 import pytest
 
-from app.application.gateway_workbench_discovery_proof import (
-    GATEWAY_WORKBENCH_DISCOVERY_BLOCKERS_CLEARED,
-    GATEWAY_WORKBENCH_DISCOVERY_PROOF_SCHEMA_VERSION,
+from app.domain.proof_evidence import EvidenceClass
+from app.application.workbench.discovery_contract_proof import (
+    GATEWAY_WORKBENCH_DISCOVERY_CONTRACT_BLOCKERS_CLEARED,
+    GATEWAY_WORKBENCH_DISCOVERY_CONTRACT_PROOF_SCHEMA_VERSION,
     REMAINING_GATEWAY_WORKBENCH_DISCOVERY_BLOCKERS,
     REQUIRED_GATEWAY_WORKBENCH_DISCOVERY_LOCAL_EVIDENCE_REFS,
     REQUIRED_GATEWAY_WORKBENCH_DISCOVERY_PLATFORM_EVIDENCE_REFS,
-    _catalog_exposes_gateway_visible_idea_products,
+    _catalog_declares_gateway_consumable_idea_products,
     _is_timezone_aware_datetime_text,
     _optional_json,
     _required_file_evidence_present,
-    build_gateway_workbench_discovery_proof_payload,
-    gateway_workbench_discovery_proof_is_valid,
+    build_gateway_workbench_discovery_contract_proof_payload,
+    gateway_workbench_discovery_contract_proof_is_valid,
 )
 from app.application.workbench.contract_proof import (
     build_gateway_workbench_contract_proof_payload,
@@ -33,20 +34,21 @@ from app.application.platform_mesh_onboarding_proof import (
 from app.application.workbench_read_path_proof import build_workbench_read_path_proof_payload
 
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 GENERATED_AT_UTC = datetime(2026, 6, 21, 10, 10, tzinfo=UTC)
 
 
-def test_builds_source_safe_gateway_workbench_discovery_proof(tmp_path: Path) -> None:
-    proof = _valid_gateway_workbench_discovery_proof(tmp_path)
+def test_builds_source_safe_gateway_workbench_discovery_contract_proof(tmp_path: Path) -> None:
+    proof = _valid_gateway_workbench_discovery_contract_proof(tmp_path)
 
-    assert proof["schemaVersion"] == GATEWAY_WORKBENCH_DISCOVERY_PROOF_SCHEMA_VERSION
+    assert proof["schemaVersion"] == GATEWAY_WORKBENCH_DISCOVERY_CONTRACT_PROOF_SCHEMA_VERSION
     assert proof["repository"] == "lotus-idea"
     assert proof["proofType"] == "gateway_workbench_discovery_contract"
-    assert proof["proofScope"] == "source_safe_catalog_visibility_and_read_path_discovery"
-    assert proof["gatewayWorkbenchDiscoveryProofValid"] is True
+    assert proof["proofScope"] == "source_catalog_and_consumer_declaration"
+    assert proof["evidenceClass"] == EvidenceClass.SOURCE_CONTRACT.value
+    assert proof["gatewayWorkbenchDiscoveryContractProofValid"] is True
     assert tuple(proof["aggregateBlockersCleared"]) == (
-        GATEWAY_WORKBENCH_DISCOVERY_BLOCKERS_CLEARED
+        GATEWAY_WORKBENCH_DISCOVERY_CONTRACT_BLOCKERS_CLEARED
     )
     assert tuple(proof["localEvidenceRefs"]) == (
         REQUIRED_GATEWAY_WORKBENCH_DISCOVERY_LOCAL_EVIDENCE_REFS
@@ -57,14 +59,17 @@ def test_builds_source_safe_gateway_workbench_discovery_proof(tmp_path: Path) ->
     assert tuple(proof["remainingCertificationBlockers"]) == (
         REMAINING_GATEWAY_WORKBENCH_DISCOVERY_BLOCKERS
     )
-    assert proof["discoveredProductCount"] == len(REQUIRED_PRODUCER_PRODUCTS)
-    assert proof["approvedConsumer"] == "lotus-gateway"
+    assert proof["declaredProductCount"] == len(REQUIRED_PRODUCER_PRODUCTS)
+    assert proof["declaredConsumer"] == "lotus-gateway"
     assert proof["dataMeshCertified"] is False
     assert proof["producerProductsActive"] is False
     assert proof["fullWorkbenchProductCertified"] is False
+    assert proof["gatewayWorkbenchDiscoveryCertified"] is False
+    assert proof["canonicalDemoRuntimeCertified"] is False
+    assert proof["runtimeExecutionObserved"] is False
     assert proof["supportedFeaturePromoted"] is False
     assert proof["proofClosed"] is False
-    assert gateway_workbench_discovery_proof_is_valid(proof) is True
+    assert gateway_workbench_discovery_contract_proof_is_valid(proof) is True
     serialized = json.dumps(proof)
     assert "PB_SG_GLOBAL_BAL_001" not in serialized
     assert "portfolio_id" not in serialized
@@ -72,15 +77,15 @@ def test_builds_source_safe_gateway_workbench_discovery_proof(tmp_path: Path) ->
     assert "requestBody" not in serialized
 
 
-def test_rejects_gateway_workbench_discovery_proof_when_catalog_routes_are_published(
+def test_rejects_gateway_workbench_discovery_contract_proof_when_catalog_routes_are_published(
     tmp_path: Path,
 ) -> None:
     platform_root = _write_platform_fixture(tmp_path, publish_routes=True)
-    proof = _gateway_workbench_discovery_proof(platform_root)
+    proof = _gateway_workbench_discovery_contract_proof(platform_root)
 
-    assert proof["gatewayWorkbenchDiscoveryProofValid"] is False
-    assert proof["proofChecks"]["catalogExposesGatewayVisibleIdeaProducts"] is False
-    assert gateway_workbench_discovery_proof_is_valid(proof) is False
+    assert proof["gatewayWorkbenchDiscoveryContractProofValid"] is False
+    assert proof["proofChecks"]["catalogDeclaresGatewayConsumableIdeaProducts"] is False
+    assert gateway_workbench_discovery_contract_proof_is_valid(proof) is False
 
 
 @pytest.mark.parametrize(
@@ -90,24 +95,28 @@ def test_rejects_gateway_workbench_discovery_proof_when_catalog_routes_are_publi
         ("repository", "lotus-core"),
         ("proofType", "mesh"),
         ("proofScope", "certified"),
-        ("gatewayWorkbenchDiscoveryProofValid", False),
+        ("evidenceClass", EvidenceClass.RUNTIME_EXECUTION.value),
+        ("gatewayWorkbenchDiscoveryContractProofValid", False),
         ("dataMeshCertified", True),
         ("producerProductsActive", True),
         ("fullWorkbenchProductCertified", True),
+        ("gatewayWorkbenchDiscoveryCertified", True),
+        ("canonicalDemoRuntimeCertified", True),
+        ("runtimeExecutionObserved", True),
         ("supportedFeaturePromoted", True),
         ("proofClosed", True),
         ("generatedAtUtc", "not-a-datetime"),
     ],
 )
-def test_rejects_gateway_workbench_discovery_proof_with_invalid_top_level_fields(
+def test_rejects_gateway_workbench_discovery_contract_proof_with_invalid_top_level_fields(
     field_name: str,
     bad_value: object,
     tmp_path: Path,
 ) -> None:
-    proof = _valid_gateway_workbench_discovery_proof(tmp_path)
+    proof = _valid_gateway_workbench_discovery_contract_proof(tmp_path)
     proof[field_name] = bad_value
 
-    assert gateway_workbench_discovery_proof_is_valid(proof) is False
+    assert gateway_workbench_discovery_contract_proof_is_valid(proof) is False
 
 
 @pytest.mark.parametrize(
@@ -120,35 +129,48 @@ def test_rejects_gateway_workbench_discovery_proof_with_invalid_top_level_fields
         "proofChecks",
     ],
 )
-def test_rejects_gateway_workbench_discovery_proof_with_invalid_contract_fields(
+def test_rejects_gateway_workbench_discovery_contract_proof_with_invalid_contract_fields(
     field_name: str,
     tmp_path: Path,
 ) -> None:
-    proof = _valid_gateway_workbench_discovery_proof(tmp_path)
-    proof[field_name] = []
+    proof = _valid_gateway_workbench_discovery_contract_proof(tmp_path)
+    proof[field_name] = (
+        ["gateway_workbench_discovery_proof_missing"]
+        if field_name == "aggregateBlockersCleared"
+        else []
+    )
 
-    assert gateway_workbench_discovery_proof_is_valid(proof) is False
+    assert gateway_workbench_discovery_contract_proof_is_valid(proof) is False
+
+
+def test_rejects_gateway_workbench_discovery_contract_proof_without_explicit_clearance_list(
+    tmp_path: Path,
+) -> None:
+    proof = _valid_gateway_workbench_discovery_contract_proof(tmp_path)
+    del proof["aggregateBlockersCleared"]
+
+    assert gateway_workbench_discovery_contract_proof_is_valid(proof) is False
 
 
 @pytest.mark.parametrize(
     ("field_name", "bad_value"),
     [
-        ("discoveredProductCount", 0),
-        ("approvedConsumer", "lotus-workbench"),
+        ("declaredProductCount", 0),
+        ("declaredConsumer", "lotus-workbench"),
         ("platformMeshOnboardingProofRef", None),
         ("workbenchReadPathProofRef", None),
         ("gatewayWorkbenchContractProofRef", None),
     ],
 )
-def test_rejects_gateway_workbench_discovery_proof_with_invalid_evidence_fields(
+def test_rejects_gateway_workbench_discovery_contract_proof_with_invalid_evidence_fields(
     field_name: str,
     bad_value: object,
     tmp_path: Path,
 ) -> None:
-    proof = _valid_gateway_workbench_discovery_proof(tmp_path)
+    proof = _valid_gateway_workbench_discovery_contract_proof(tmp_path)
     proof[field_name] = bad_value
 
-    assert gateway_workbench_discovery_proof_is_valid(proof) is False
+    assert gateway_workbench_discovery_contract_proof_is_valid(proof) is False
 
 
 @pytest.mark.parametrize(
@@ -159,21 +181,21 @@ def test_rejects_gateway_workbench_discovery_proof_with_invalid_evidence_fields(
         "platformMeshOnboardingProofValid",
         "workbenchReadPathProofValid",
         "gatewayWorkbenchContractProofValid",
-        "catalogExposesGatewayVisibleIdeaProducts",
+        "catalogDeclaresGatewayConsumableIdeaProducts",
         "productsRemainProposed",
         "routesRemainUnpublished",
     ],
 )
-def test_rejects_gateway_workbench_discovery_proof_with_invalid_proof_checks(
+def test_rejects_gateway_workbench_discovery_contract_proof_with_invalid_proof_checks(
     check_name: str,
     tmp_path: Path,
 ) -> None:
-    proof = _valid_gateway_workbench_discovery_proof(tmp_path)
+    proof = _valid_gateway_workbench_discovery_contract_proof(tmp_path)
     proof_checks = dict(cast(Mapping[str, object], proof["proofChecks"]))
     proof_checks[check_name] = False
     proof["proofChecks"] = proof_checks
 
-    assert gateway_workbench_discovery_proof_is_valid(proof) is False
+    assert gateway_workbench_discovery_contract_proof_is_valid(proof) is False
 
 
 @pytest.mark.parametrize(
@@ -187,7 +209,7 @@ def test_rejects_gateway_workbench_discovery_proof_with_invalid_proof_checks(
         "missing_gateway_consumer",
     ],
 )
-def test_catalog_visibility_helper_rejects_non_certifiable_catalog_payloads(
+def test_catalog_declaration_helper_rejects_non_contract_catalog_payloads(
     case_name: str,
 ) -> None:
     catalog_payload: dict[str, Any] | None
@@ -231,7 +253,7 @@ def test_catalog_visibility_helper_rejects_non_certifiable_catalog_payloads(
         case _:
             raise AssertionError(f"Unhandled catalog case: {case_name}")
 
-    assert _catalog_exposes_gateway_visible_idea_products(catalog_payload) is False
+    assert _catalog_declares_gateway_consumable_idea_products(catalog_payload) is False
 
 
 def test_required_file_evidence_rejects_missing_local_evidence(tmp_path: Path) -> None:
@@ -280,11 +302,13 @@ def test_optional_json_and_datetime_helpers_reject_missing_or_invalid_values(
     assert _is_timezone_aware_datetime_text(None) is False
 
 
-def test_gateway_workbench_discovery_proof_cli_writes_valid_artifact(tmp_path: Path) -> None:
+def test_gateway_workbench_discovery_contract_proof_cli_writes_valid_artifact(
+    tmp_path: Path,
+) -> None:
     module = _load_generator_script()
     platform_root = _write_platform_fixture(tmp_path)
     dependency_proofs = _write_dependency_proofs(tmp_path, platform_root)
-    output_path = tmp_path / "proof" / "gateway-workbench-discovery-proof.json"
+    output_path = tmp_path / "proof" / "gateway-workbench-discovery-contract-proof.json"
 
     result = module.main(
         [
@@ -305,7 +329,7 @@ def test_gateway_workbench_discovery_proof_cli_writes_valid_artifact(tmp_path: P
 
     assert result == 0
     proof = json.loads(output_path.read_text(encoding="utf-8"))
-    assert gateway_workbench_discovery_proof_is_valid(proof) is True
+    assert gateway_workbench_discovery_contract_proof_is_valid(proof) is True
 
 
 def test_gateway_workbench_discovery_contract_gate_scans_tuple_content() -> None:
@@ -322,7 +346,7 @@ def test_gateway_workbench_discovery_contract_gate_accepts_missing_platform_chec
 ) -> None:
     module = _load_contract_gate_script()
 
-    errors = module.validate_gateway_workbench_discovery_proof_contract(
+    errors = module.validate_gateway_workbench_discovery_contract_proof_contract(
         platform_root=tmp_path / "missing-lotus-platform",
     )
 
@@ -335,23 +359,23 @@ def test_gateway_workbench_discovery_contract_gate_rejects_invalid_present_platf
     module = _load_contract_gate_script()
     platform_root = _write_platform_fixture(tmp_path, publish_routes=True)
 
-    errors = module.validate_gateway_workbench_discovery_proof_contract(
+    errors = module.validate_gateway_workbench_discovery_contract_proof_contract(
         platform_root=platform_root,
     )
 
     assert errors == [
-        "Gateway/Workbench discovery proof must validate against sibling platform truth when "
+        "Gateway/Workbench discovery contract proof must validate against sibling platform truth when "
         "sibling evidence is present"
     ]
 
 
-def _valid_gateway_workbench_discovery_proof(tmp_path: Path) -> dict[str, Any]:
-    return _gateway_workbench_discovery_proof(_write_platform_fixture(tmp_path))
+def _valid_gateway_workbench_discovery_contract_proof(tmp_path: Path) -> dict[str, Any]:
+    return _gateway_workbench_discovery_contract_proof(_write_platform_fixture(tmp_path))
 
 
-def _gateway_workbench_discovery_proof(platform_root: Path) -> dict[str, Any]:
+def _gateway_workbench_discovery_contract_proof(platform_root: Path) -> dict[str, Any]:
     dependency_proofs = _dependency_proofs(platform_root)
-    return build_gateway_workbench_discovery_proof_payload(
+    return build_gateway_workbench_discovery_contract_proof_payload(
         generated_at_utc=GENERATED_AT_UTC,
         repository_root=ROOT,
         platform_root=platform_root,
@@ -491,9 +515,9 @@ def _write_json(path: Path, payload: dict[str, Any]) -> None:
 
 
 def _load_generator_script() -> ModuleType:
-    script_path = ROOT / "scripts" / "generate_gateway_workbench_discovery_proof.py"
+    script_path = ROOT / "scripts" / "workbench" / "generate_discovery_contract_proof.py"
     spec = importlib.util.spec_from_file_location(
-        "generate_gateway_workbench_discovery_proof",
+        "generate_gateway_workbench_discovery_contract_proof",
         script_path,
     )
     assert spec is not None
@@ -504,9 +528,9 @@ def _load_generator_script() -> ModuleType:
 
 
 def _load_contract_gate_script() -> ModuleType:
-    script_path = ROOT / "scripts" / "gateway_workbench_discovery_proof_contract_gate.py"
+    script_path = ROOT / "scripts" / "workbench" / "discovery_contract_proof_gate.py"
     spec = importlib.util.spec_from_file_location(
-        "gateway_workbench_discovery_proof_contract_gate",
+        "gateway_workbench_discovery_contract_proof_contract_gate",
         script_path,
     )
     assert spec is not None
