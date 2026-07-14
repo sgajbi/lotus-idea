@@ -1076,7 +1076,7 @@ route-existence proof. Report intake and materialization source-contract
 artifacts clear no blocker. These checks do not certify report-job execution,
 rendered output, archive creation, Advise suitability,
 Manage rebalance/action authority, Gateway/Workbench support, data-product
-promotion, client-ready publication, or supported-feature promotion.
+promotion, authorize client publication, or promote a supported feature.
 
 The downstream-realization contract gate validates
 `contracts/downstream-realization/lotus-idea-downstream-contracts.v1.json`.
