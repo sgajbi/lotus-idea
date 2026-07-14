@@ -471,45 +471,44 @@ Persistence adapter validation:
     `gateway_workbench_discovery_proof_missing` for data-mesh and runtime
     trust telemetry proof families.
 14. `tests/unit/outbox/test_outbox_broker_proof.py`,
-    `tests/unit/outbox/test_outbox_consumer_runtime_proof.py`,
+    `tests/unit/outbox/test_outbox_consumer_contract_proof.py`,
     `tests/unit/outbox/test_outbox_platform_mesh_event_publication_proof.py`,
     `make outbox-consumer-contract-gate`,
     `make outbox-broker-proof-contract-gate`, and
-    `make outbox-consumer-runtime-proof-contract-gate`, and
+    `make outbox-consumer-contract-proof-contract-gate`, and
     `make outbox-platform-mesh-event-publication-proof-contract-gate` prove the
     declared downstream consumer contract, source-safe bounded outbox broker
-    proof contract, source-safe bounded downstream consumer runtime proof
-    contract, and bounded outbox platform mesh event publication proof contract
-    that aggregate readiness consumes to clear only
-    `outbox_broker_not_configured`, `external_broker_runtime_proof_missing`,
-    `downstream_consumer_runtime_proof_missing`, and
-    `platform_mesh_event_publication_proof_missing`.
-13. `tests/unit/test_report_intake_route_proof.py`,
+    proof contract, source-safe bounded downstream consumer source-contract
+    proof, and bounded outbox platform mesh event publication proof contract.
+    Aggregate readiness records the consumer contract evidence without clearing
+    `downstream_consumer_runtime_proof_missing`; the other proof families clear
+    only blockers matching their governed evidence class.
+15. `tests/unit/test_report_intake_route_proof.py`,
     `tests/unit/test_downstream_realization_readiness.py`,
     `tests/integration/test_downstream_realization_readiness_api.py`, and
     `make report-intake-route-proof-contract-gate` prove the source-safe
     `lotus-report` intake route proof contract that downstream and aggregate
     readiness consume to clear only
     `lotus_report_live_intake_route_proof_missing`.
-14. `tests/unit/test_report_materialization_proof.py` and
+16. `tests/unit/test_report_materialization_proof.py` and
     `make report-materialization-proof-contract-gate` prove the source-safe
     `lotus-report` materialization proof contract that downstream and aggregate
     readiness consume to clear only
     `report_evidence_pack_live_materialization_proof_missing`,
     `rendered_output_creation_missing`, and `archive_record_creation_missing`.
-15. `tests/unit/test_ai_lineage_store_proof.py` and
+17. `tests/unit/test_ai_lineage_store_proof.py` and
     `make ai-lineage-store-proof-contract-gate` prove the source-safe AI
     lineage store proof contract that aggregate readiness consumes to clear
     only `certified_ai_lineage_store_missing`, without leaking prompt,
     provider response, candidate, portfolio, client, request-body,
     response-body, or database URL material.
-15. `tests/unit/test_ai_workflow_pack_registration_proof.py` and
+18. `tests/unit/test_ai_workflow_pack_registration_proof.py` and
     `make ai-workflow-pack-registration-proof-contract-gate` prove the bounded
     sibling `lotus-ai` workflow-pack registration proof contract. A valid
     artifact clears only `workflow_pack_runtime_contract_not_certified` in
     aggregate readiness while preserving `lotus-ai` runtime execution,
     provider-call, Workbench, client-ready, and supported-feature blockers.
-16. `tests/unit/test_ai_workflow_pack_runtime_execution_proof.py`,
+19. `tests/unit/test_ai_workflow_pack_runtime_execution_proof.py`,
     `tests/unit/test_lotus_ai_workflow_runtime.py`, and
     `make ai-workflow-pack-runtime-execution-proof-contract-gate` prove the
     actual deterministic `lotus-ai` runtime execution receipt contract.
@@ -517,7 +516,7 @@ Persistence adapter validation:
     aggregate readiness, adds `lotus_ai_live_provider_execution_missing`, and
     preserves workflow-pack registration, Workbench, client-ready, and
     supported-feature blockers.
-17. `tests/unit/test_runtime_trust_telemetry.py`,
+20. `tests/unit/test_runtime_trust_telemetry.py`,
     `tests/unit/test_generate_runtime_trust_telemetry_snapshot.py`,
     `tests/integration/test_runtime_trust_telemetry_api.py`,
     `make runtime-trust-telemetry-preview-check`, and
@@ -527,7 +526,7 @@ Persistence adapter validation:
     candidate identifiers, source routes, evidence hashes, portfolio
     identifiers, or client identifiers, and without promoting mesh
     certification.
-16. `tests/unit/test_opportunity_archetype_contract_gate.py` and
+21. `tests/unit/test_opportunity_archetype_contract_gate.py` and
     `make opportunity-archetype-contract-gate` prove the governed opportunity
     archetype/scenario contract preserves source-authority ownership, keeps
     high cash / idle liquidity as the first partially implemented journey, and

@@ -161,6 +161,10 @@ Current RFC-0002 implementation-start baseline:
    persistence-specific exact-main PostgreSQL receipt is required before the
    aggregate durable-storage and repository-side pagination blockers clear.
    Production deployment and product support remain blocked.
+   Outbox downstream consumer declarations now follow the same taxonomy: the
+   v2 consumer artifact is `source_contract` evidence, records authority
+   boundaries, and clears no runtime blocker. Observed consumer execution
+   remains required for `downstream_consumer_runtime_proof_missing`.
 11. Slice 10 partially implements certified internal API foundations for
    high-cash evaluation, high-cash evaluate-and-persist, candidate lifecycle
    transitions, source-safe candidate detail, candidate evidence replay,

@@ -162,16 +162,18 @@ supported features.
 `make outbox-consumer-contract-gate` now declare governed downstream consumers
 for Gateway, Advise, Manage, and Report without certifying runtime consumption.
 Readiness therefore reports `downstream_consumer_runtime_proof_missing` instead
-of a missing-contract blocker until a bounded consumer runtime proof artifact is
+of a missing-contract blocker until observed downstream execution evidence is
 supplied.
-`scripts/outbox/generate_consumer_runtime_proof.py` and
-`make outbox-consumer-runtime-proof-contract-gate` now provide the bounded
-consumer runtime proof artifact consumed by aggregate RFC implementation
-readiness. The artifact validates declared consumer coverage, consumed event
-type coverage, and source-authority boundaries, clearing only
-`downstream_consumer_runtime_proof_missing`. It does not certify external
-publication, platform mesh event publication, Gateway/Workbench behavior,
-downstream delivery, or supported features.
+`scripts/outbox/generate_consumer_contract_proof.py` and
+`make outbox-consumer-contract-proof-contract-gate` provide the bounded
+consumer source-contract artifact consumed by aggregate RFC implementation
+readiness. The v2 artifact validates declared consumer coverage, consumed event
+type coverage, and source-authority boundaries. It declares
+`evidenceClass=source_contract`, records
+`contract_declared_not_runtime_certified`, and clears no runtime blocker.
+External publication, actual consumer execution, platform mesh event
+publication, Gateway/Workbench behavior, downstream delivery, and supported
+features remain uncertified.
 `scripts/outbox/generate_platform_mesh_event_publication_proof.py` and
 `make outbox-platform-mesh-event-publication-proof-contract-gate` now provide
 the bounded outbox platform mesh event publication proof artifact consumed by
@@ -206,7 +208,7 @@ supported feature.
 | --- | --- | --- |
 | Repository provider | `local`/`test` may use process-local writes; `demo`/`staging`/`production` require PostgreSQL through `LOTUS_IDEA_DATABASE_URL` and fail closed when it is absent | Not production recovery certification |
 | Disaster recovery | Versioned 17-table contract through lifecycle migration `009`, real logical backup/restore, provider-restore validator, replay/fencing/no-mutation proof, recovery-aware write guard, and weekly attested CI drill | Logical evidence has `pitrProof=false`; managed physical base-backup/WAL topology and exercise remain required for production certification |
-| Outbox delivery foundation | Source-safe records, durable retry scheduling with first/last failure timing and due retry eligibility, retryable failure status, published status, dead-letter status, HTTP publisher adapter foundation, repo-owned outbox event and downstream consumer contracts, aggregate readiness diagnostic, bounded run-once operator action, source-safe outbox broker proof artifact, bounded downstream consumer runtime proof artifact, and bounded outbox platform mesh event publication proof artifact | No certified external broker publication, downstream delivery, Gateway/Workbench behavior, client-ready publication, or supported-feature promotion |
+| Outbox delivery foundation | Source-safe records, durable retry scheduling with first/last failure timing and due retry eligibility, retryable failure status, published status, dead-letter status, HTTP publisher adapter foundation, repo-owned outbox event and downstream consumer contracts, aggregate readiness diagnostic, bounded run-once operator action, source-safe outbox broker proof artifact, bounded downstream consumer source-contract proof artifact, and bounded outbox platform mesh event publication proof artifact | No observed downstream consumer execution, certified external broker publication, downstream delivery, Gateway/Workbench behavior, client-ready publication, or supported-feature promotion |
 | Source-ingestion worker check | Manifest plus source-safe check-only output contract | No Core call or repository write |
 | Source-ingestion run-once API | Durable-repository-only operator action over the configured manifest and Core adapter | No live Core certification, scheduler proof, or supported product claim |
 | AI explanation lineage | Source-safe request/result lineage through the repository port, PostgreSQL migration `002`, API `Idempotency-Key` replay/conflict protection, and PostgreSQL runtime API proof | No `lotus-ai` runtime execution, prompt/provider telemetry, Workbench proof, or supported product claim |

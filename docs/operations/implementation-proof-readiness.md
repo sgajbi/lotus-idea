@@ -221,8 +221,8 @@ taxonomy and the #393 same-pattern campaign.
 | `LOTUS_PLATFORM_ROOT` | Selects the sibling `lotus-platform` checkout used to generate the default source-safe platform mesh onboarding proof. Defaults to `../lotus-platform`. |
 | `LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF_OUTPUT` | Selects the default generated platform mesh onboarding proof artifact consumed by aggregate readiness when no override is set. Defaults to `output/data-mesh/platform-mesh-onboarding-proof.json`. |
 | `LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF` | Overrides the default generated platform mesh onboarding proof artifact passed into aggregate readiness. |
-| `LOTUS_IDEA_OUTBOX_CONSUMER_RUNTIME_PROOF_OUTPUT` | Selects the default generated outbox consumer runtime proof artifact consumed by aggregate readiness when no override is set. Defaults to `output/outbox/outbox-consumer-runtime-proof.json`. |
-| `LOTUS_IDEA_OUTBOX_CONSUMER_RUNTIME_PROOF` | Overrides the default generated outbox consumer runtime proof artifact passed into aggregate readiness. |
+| `LOTUS_IDEA_OUTBOX_CONSUMER_CONTRACT_PROOF_OUTPUT` | Selects the default generated outbox consumer source-contract proof consumed by aggregate readiness when no override is set. Defaults to `output/outbox/outbox-consumer-contract-proof.json`. |
+| `LOTUS_IDEA_OUTBOX_CONSUMER_CONTRACT_PROOF` | Overrides the default generated outbox consumer source-contract proof passed into aggregate readiness. |
 | `LOTUS_IDEA_OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF_OUTPUT` | Selects the default generated outbox platform mesh event publication proof artifact consumed by aggregate readiness when no override is set. Defaults to `output/outbox/outbox-platform-mesh-event-publication-proof.json`. |
 | `LOTUS_IDEA_OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF` | Overrides the default generated outbox platform mesh event publication proof artifact passed into aggregate readiness. |
 | `LOTUS_IDEA_GATEWAY_WORKBENCH_OPERATIONAL_PROOF_OUTPUT` | Selects the default generated Gateway/Workbench operational proof artifact consumed by aggregate readiness when no override is set. Defaults to `output/workbench/gateway-workbench-operational-proof.json`. |
@@ -551,7 +551,7 @@ snapshot. It cites the implemented outbox delivery orchestration, publisher
 port, HTTP publisher adapter foundation, readiness endpoint, run-once endpoint,
 configured-publisher API proof, and `make outbox-broker-proof-contract-gate`.
 It does not certify external broker publication support, downstream consumer
-runtime proof, platform mesh event publication, Gateway/Workbench behavior,
+execution, platform mesh event publication, Gateway/Workbench behavior,
 client-ready publication, or supported-feature promotion.
 
 Downstream outbox consumer contract posture is enforced by
@@ -562,18 +562,18 @@ consumer `contract_declared_not_runtime_certified`; it changes the outbox
 blocker from `downstream_consumer_contracts_missing` to
 `downstream_consumer_runtime_proof_missing` without promoting support.
 
-Outbox consumer runtime proof is captured by
-`scripts/outbox/generate_consumer_runtime_proof.py`. The repo-native
+Outbox consumer source-contract proof is captured by
+`scripts/outbox/generate_consumer_contract_proof.py`. The repo-native
 `make implementation-proof-readiness-check` target now generates the default
-artifact under `LOTUS_IDEA_OUTBOX_CONSUMER_RUNTIME_PROOF_OUTPUT` and passes it
-into aggregate readiness when `LOTUS_IDEA_OUTBOX_CONSUMER_RUNTIME_PROOF` is not
-set. A valid artifact clears only `downstream_consumer_runtime_proof_missing`
-inside aggregate implementation-proof readiness. It proves the declared
-Gateway, Advise, Manage, and Report consumer contract coverage, consumed event
-type coverage, and source-authority boundaries remain runtime-checkable and
-source-safe. It does not certify external broker publication, platform mesh
-event publication, Gateway/Workbench behavior, downstream delivery,
-client-ready publication, or supported-feature promotion.
+artifact under `LOTUS_IDEA_OUTBOX_CONSUMER_CONTRACT_PROOF_OUTPUT` and passes it
+into aggregate readiness when `LOTUS_IDEA_OUTBOX_CONSUMER_CONTRACT_PROOF` is not
+set. A valid v2 artifact is `source_contract` evidence. It proves declared
+Gateway, Advise, Manage, and Report consumer coverage, consumed event types,
+and authority boundaries, while explicitly retaining
+`downstream_consumer_runtime_proof_missing`. It does not certify external
+broker publication, consumer execution, platform mesh event publication,
+Gateway/Workbench behavior, downstream delivery, client-ready publication, or
+supported-feature promotion.
 
 Outbox platform mesh event publication proof is captured by
 `scripts/outbox/generate_platform_mesh_event_publication_proof.py`. The
@@ -833,7 +833,7 @@ Implementation-backed evidence:
    deploy-proof, durable repository proof, runtime telemetry proof, Workbench
    read-path proof, Advise proposal route proof, Manage action route proof,
    Report intake route proof, Report materialization proof, outbox broker
-   proof, outbox consumer runtime proof, and outbox platform mesh event
+   proof, outbox consumer contract proof, and outbox platform mesh event
    publication proof artifacts, generates default AI model-risk and non-AI
    operator workflow operations proof artifacts unless explicit artifacts are
    supplied, and records validated proof refs in capability evidence:
@@ -970,12 +970,12 @@ Implementation-backed evidence:
     `scripts/outbox/generate_broker_proof.py`,
 1. outbox consumer contract gate:
     `make outbox-consumer-contract-gate`,
-1. outbox consumer runtime proof generator:
-    `scripts/outbox/generate_consumer_runtime_proof.py`,
-1. outbox consumer runtime proof contract gate:
-    `make outbox-consumer-runtime-proof-contract-gate`,
-1. outbox consumer runtime proof tests:
-    `tests/unit/outbox/test_outbox_consumer_runtime_proof.py`,
+1. outbox consumer contract proof generator:
+    `scripts/outbox/generate_consumer_contract_proof.py`,
+1. outbox consumer contract proof contract gate:
+    `make outbox-consumer-contract-proof-contract-gate`,
+1. outbox consumer contract proof tests:
+    `tests/unit/outbox/test_outbox_consumer_contract_proof.py`,
 1. outbox broker proof contract gate:
     `make outbox-broker-proof-contract-gate`,
 1. outbox platform mesh event publication proof generator:
@@ -1081,7 +1081,7 @@ $env:LOTUS_IDEA_MANAGE_ACTION_ROUTE_PROOF_OUTPUT = "output/downstream/manage-act
 $env:LOTUS_REPORT_ROOT = "..\lotus-report"
 $env:LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF_OUTPUT = "output/downstream/report-intake-route-proof.json"
 $env:LOTUS_IDEA_REPORT_MATERIALIZATION_PROOF_OUTPUT = "output/downstream/report-materialization-proof.json"
-$env:LOTUS_IDEA_OUTBOX_CONSUMER_RUNTIME_PROOF_OUTPUT = "output/outbox/outbox-consumer-runtime-proof.json"
+$env:LOTUS_IDEA_OUTBOX_CONSUMER_CONTRACT_PROOF_OUTPUT = "output/outbox/outbox-consumer-contract-proof.json"
 $env:LOTUS_IDEA_OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF_OUTPUT = "output/outbox/outbox-platform-mesh-event-publication-proof.json"
 $env:LOTUS_IDEA_GATEWAY_WORKBENCH_OPERATIONAL_PROOF_OUTPUT = "output/workbench/gateway-workbench-operational-proof.json"
 $env:LOTUS_IDEA_GATEWAY_WORKBENCH_DISCOVERY_PROOF_OUTPUT = "output/workbench/gateway-workbench-discovery-proof.json"
@@ -1092,7 +1092,7 @@ make durable-repository-proof-contract-gate
 make runtime-trust-telemetry-proof-contract-gate
 make ai-workflow-pack-registration-proof-contract-gate
 make outbox-broker-proof-contract-gate
-make outbox-consumer-runtime-proof-contract-gate
+make outbox-consumer-contract-proof-contract-gate
 make outbox-platform-mesh-event-publication-proof-contract-gate
 make downstream-route-contract-proof-gate
 make report-intake-route-proof-contract-gate

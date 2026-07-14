@@ -278,6 +278,12 @@ Validation evidence from the implementation slice:
     clear them. Production database deployment, runtime trust telemetry,
     Gateway/Workbench realization, and supported-feature promotion remain
     explicitly blocked.
+20. Issue `#404` applies the taxonomy to outbox consumer evidence. Declared
+    Gateway, Advise, Manage, and Report coverage is now a v2
+    `source_contract` proof, not runtime proof. A valid, provenance-bound
+    artifact can be recorded as design evidence but clears no blocker;
+    `downstream_consumer_runtime_proof_missing` remains until machine-verifiable
+    execution evidence is supplied by the consumer runtimes.
 
 ## Current Governance References
 

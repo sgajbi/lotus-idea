@@ -348,7 +348,8 @@ certification, platform mesh
 event publication proof, downstream delivery evidence, and live
 event-publication evidence beyond the internal outbox retry/dead-letter,
 publisher-adapter, bounded broker proof, and bounded downstream consumer
-runtime proof foundations.
+source-contract proof foundations. Consumer runtime execution remains external
+and uncertified.
 `GET /api/v1/source-ingestion/readiness` now exposes the internal operator
 readiness posture for that run-once worker configuration and certification
 blockers without calling Core, certifying live source ingestion, or promoting a
