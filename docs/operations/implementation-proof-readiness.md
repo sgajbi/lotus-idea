@@ -507,22 +507,23 @@ source manifest, platform mesh, active producer products, SLO/access/evidence
 policy, Gateway or Workbench discovery, client-ready publication, or
 supported-feature promotion.
 
-Workbench read-path proof is captured by
-`scripts/generate_workbench_read_path_proof.py`. A valid artifact referenced
-through `LOTUS_IDEA_WORKBENCH_READ_PATH_PROOF` or passed with
-`--workbench-read-path-proof` clears only the aggregate
-`workbench_gateway_bff_consumption_proof_missing` blocker inside generated
-implementation-proof readiness evidence and the operator API readiness
-snapshot. It records the bounded Gateway-backed Workbench queue/detail read
-path from `lotus-workbench` PR #391. It does not certify a full Workbench
-panel, browser accessibility proof, canonical demo runtime proof, data-product
-certification, client-ready publication, or supported-feature promotion.
+Workbench read-path source-contract proof is captured by
+`scripts/workbench/generate_read_path_source_contract.py`. A valid v2 artifact
+referenced through `LOTUS_IDEA_WORKBENCH_READ_PATH_SOURCE_CONTRACT_PROOF` or
+passed with `--workbench-read-path-source-contract-proof` records bounded
+queue/detail route declarations as `source_contract` evidence. It clears no
+blocker, so `workbench_gateway_bff_consumption_proof_missing` remains in
+generated and operator API readiness until machine-verifiable evidence proves
+Gateway serving, Workbench consumption, and entitlement enforcement. It also
+does not certify a panel, browser accessibility, canonical demo runtime,
+data-product publication, client-ready publication, or supported-feature
+promotion.
 
 Gateway/Workbench contract proof is captured by
 `scripts/workbench/generate_contract_proof.py`. The repo-native
 `make implementation-proof-readiness-check` target now generates the default
 artifact under `LOTUS_IDEA_GATEWAY_WORKBENCH_CONTRACT_PROOF_OUTPUT` from the
-validated Workbench read-path proof and passes it into aggregate readiness when
+validated Workbench read-path source contract and passes it into aggregate readiness when
 `LOTUS_IDEA_GATEWAY_WORKBENCH_CONTRACT_PROOF` is not set. A valid artifact is
 classified as `source_contract`: aggregate readiness may record its evidence
 reference, but it clears no blocker. In particular,
@@ -537,7 +538,7 @@ Gateway/Workbench discovery contract proof is captured by
 `scripts/workbench/generate_discovery_contract_proof.py`. The repo-native
 `make implementation-proof-readiness-check` target now generates the default
 artifact under `LOTUS_IDEA_GATEWAY_WORKBENCH_DISCOVERY_CONTRACT_PROOF_OUTPUT` from
-platform catalog/onboarding evidence, the Workbench read-path proof, and the
+platform catalog/onboarding evidence, the Workbench read-path source contract, and the
 Gateway/Workbench contract proof. A valid v2 artifact is classified as
 `source_contract`: aggregate readiness may add its evidence reference to the
 data-mesh and runtime-trust telemetry capabilities, but it clears no blocker.
@@ -970,10 +971,10 @@ Implementation-backed evidence:
     `scripts/generate_runtime_trust_telemetry_proof.py`,
 1. runtime trust telemetry proof contract gate:
     `make runtime-trust-telemetry-proof-contract-gate`,
-1. Workbench read-path proof generator:
-    `scripts/generate_workbench_read_path_proof.py`,
-1. Workbench read-path proof contract gate:
-    `make workbench-read-path-proof-contract-gate`,
+1. Workbench read-path source-contract proof generator:
+    `scripts/workbench/generate_read_path_source_contract.py`,
+1. Workbench read-path source-contract proof gate:
+    `make workbench-read-path-source-contract-proof-gate`,
 1. Gateway/Workbench contract proof generator:
     `scripts/workbench/generate_contract_proof.py`,
 1. Gateway/Workbench contract proof contract gate:
@@ -1030,8 +1031,8 @@ Implementation-backed evidence:
     `make platform-mesh-onboarding-proof-contract-gate`,
 1. platform mesh onboarding proof tests:
     `tests/unit/test_platform_mesh_onboarding_proof.py`,
-1. Workbench read-path proof tests:
-    `tests/unit/test_workbench_read_path_proof.py`,
+1. Workbench read-path source-contract proof tests:
+    `tests/unit/workbench/test_read_path_source_contract.py`,
 1. runtime trust telemetry proof tests:
     `tests/unit/test_runtime_trust_telemetry_proof.py`,
 1. outbox delivery run-once endpoint:
@@ -1115,7 +1116,7 @@ make outbox-platform-mesh-event-source-contract-proof-gate
 make downstream-route-contract-proof-gate
 make report-intake-route-proof-contract-gate
 make report-materialization-proof-contract-gate
-make workbench-read-path-proof-contract-gate
+make workbench-read-path-source-contract-proof-gate
 make gateway-workbench-contract-proof-contract-gate
 make gateway-workbench-discovery-contract-proof-contract-gate
 make source-ingestion-scheduled-worker-check

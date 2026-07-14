@@ -343,6 +343,16 @@ closed; campaign `#393` remains open because live-provider, production runtime,
 Gateway/Workbench, publication, and supported-feature evidence are still
 absent.
 
+Issue `#434` applies the same evidence taxonomy to the bounded Workbench
+read-path declaration. Local files, Make targets, route strings, and historical
+PR/SHA references cannot prove Gateway serving or Workbench consumption. The
+capability-owned `workbench/read_path_source_contract.py` implementation emits
+v2 `source_contract` evidence, clears no blocker, rejects runtime, browser,
+entitlement, certification, and promotion claim inflation, and preserves
+`workbench_gateway_bff_consumption_proof_missing`. Runtime proof remains owned
+by the Gateway/Workbench execution path. The reorganization improves design
+modularity without introducing a separately deployable service.
+
 ## Current Governance References
 
 The Slice 09 implementation is aligned to current official AI/model-risk
