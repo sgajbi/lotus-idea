@@ -336,6 +336,13 @@ observation, deployment, production approval, provider execution, Workbench
 proof, client publication, and feature promotion remain blocked. This is
 design modularity inside the existing Idea process, not a runtime service split.
 
+PR `#429` merged this occurrence by rebase to exact-main SHA `97c77006`.
+Main Releasability `29343992344` and CodeQL `29343983463` passed on that exact
+commit, and wiki publication `d002b1c` has zero source drift. Issue `#428` is
+closed; campaign `#393` remains open because live-provider, production runtime,
+Gateway/Workbench, publication, and supported-feature evidence are still
+absent.
+
 ## Current Governance References
 
 The Slice 09 implementation is aligned to current official AI/model-risk
