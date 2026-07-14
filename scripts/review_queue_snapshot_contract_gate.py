@@ -11,7 +11,8 @@ DOMAIN_SNAPSHOT_MODULE = Path("src/app/domain/review_queue/snapshot.py")
 APPLICATION_MODULE = Path("src/app/application/review_queue.py")
 PORT_MODULE = Path("src/app/ports/idea_repository.py")
 POSTGRES_MODULE = Path("src/app/infrastructure/postgres_review_queue.py")
-API_MODULE = Path("src/app/api/review_queues.py")
+API_MODULE = Path("src/app/api/review_queue/routes.py")
+API_REQUEST_MODULE = Path("src/app/api/review_queue/requests.py")
 API_MODEL_MODULE = Path("src/app/api/review_queue_models.py")
 CONTRACT_MODULES = (
     DOMAIN_POLICY_MODULE,
@@ -20,6 +21,7 @@ CONTRACT_MODULES = (
     PORT_MODULE,
     POSTGRES_MODULE,
     API_MODULE,
+    API_REQUEST_MODULE,
     API_MODEL_MODULE,
 )
 
@@ -85,11 +87,18 @@ def validate_review_queue_snapshot_contract(root: Path = ROOT) -> list[str]:
         {"evaluated_at_utc", "rankable_score_policy_versions"},
         errors,
     )
-    _require_function_arguments(
-        modules[API_MODULE],
-        API_MODULE,
-        "get_advisor_review_queue",
-        {"evaluated_at_utc", "snapshot_token"},
+    _require_class_fields(
+        modules[API_REQUEST_MODULE],
+        API_REQUEST_MODULE,
+        "ReviewQueueScopeRequest",
+        {"evaluated_at_utc"},
+        errors,
+    )
+    _require_class_fields(
+        modules[API_REQUEST_MODULE],
+        API_REQUEST_MODULE,
+        "ReviewQueueRequest",
+        {"snapshot_token"},
         errors,
     )
     _require_class_fields(

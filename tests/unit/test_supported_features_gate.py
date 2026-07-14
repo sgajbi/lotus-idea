@@ -75,7 +75,7 @@ def _valid_implemented_feature() -> dict[str, object]:
         "promotion_evidence": {
             "code_modules": [
                 "src/app/application/review_queue.py",
-                "src/app/api/review_queues.py",
+                "src/app/api/review_queue/routes.py",
             ],
             "api_contracts": [
                 "docs/operations/endpoint-certification-ledger.json",
