@@ -1,6 +1,6 @@
 # RFC-0002 Slice 08: Review Queues, Feedback, And Human Governance
 
-Status: Implementation in validation on feature branch; mainline closure and supported-feature promotion remain pending
+Status: Implementation complete on feature branch; mainline closure and supported-feature promotion remain pending
 
 ## Outcome
 
@@ -111,25 +111,22 @@ Implemented in this slice:
 
 Validation evidence from the implementation slice:
 
-1. `.venv\Scripts\python.exe -m ruff check src\app\domain\review_governance.py src\app\domain\ideas.py src\app\domain\__init__.py tests\unit\test_review_governance.py`
-2. `.venv\Scripts\python.exe -m mypy --config-file mypy.ini`
-3. `.venv\Scripts\python.exe -m pytest tests/unit/test_review_governance.py`
-4. `.venv\Scripts\python.exe -m pytest tests\unit\test_review_workflow_application.py tests\unit\test_review_governance.py tests\unit\test_idea_persistence.py -q`
-5. `.venv\Scripts\python.exe -m ruff check src\app\domain\persistence.py src\app\application\review_workflow.py tests\unit\test_review_workflow_application.py`
-6. `make check` - passed with 187 unit tests plus lint, format, typecheck,
-   architecture, OpenAPI, supported-feature, endpoint-certification,
-   data-mesh, and contract gates.
-7. `make ci` - passed with integration tests, e2e tests, coverage gate at
-   99.17%, and dependency audit.
-8. `.venv\Scripts\python.exe -m ruff check src\app\api\caller_headers.py src\app\api\review_workflow.py src\app\api\idea_signals.py src\app\main.py tests\integration\test_review_workflow_api.py tests\unit\test_service_contract.py`
-9. `.venv\Scripts\python.exe -m pytest tests\integration\test_review_workflow_api.py tests\unit\test_service_contract.py -q`
-10. `.venv\Scripts\python.exe scripts\endpoint_certification_gate.py`
-11. `.venv\Scripts\python.exe -m pytest tests/unit/test_review_workflow_application.py::test_apply_review_action_uses_candidate_projection_without_snapshot tests/unit/test_review_workflow_application.py::test_record_feedback_uses_candidate_projection_without_snapshot`
-12. `.venv\Scripts\python.exe -m pytest tests/unit/test_review_queue_application.py tests/unit/test_review_queue_policy.py tests/unit/test_review_queue_snapshot.py tests/integration/test_review_queue_api.py`
-13. `.venv\Scripts\python.exe -m pytest tests/unit/test_review_workflow_application.py tests/unit/test_review_governance.py tests/integration/test_review_workflow_api.py`
-14. `make review-queue-snapshot-contract-gate`
-15. `make caller-context-contract-gate endpoint-certification-gate openapi-gate`
-16. `make maintainability-gate architecture-boundary-gate documentation-contract-gate supported-features-gate`
+1. `make check` passed lint, canonical formatting, 773-file MyPy analysis,
+   architecture and API gates, and 3,637 unit tests.
+2. The repository-native CI suites passed 451 integration tests with 28
+   environment-dependent PostgreSQL tests skipped, four end-to-end tests, and
+   all three coverage shards.
+3. `make coverage-gate` passed at 99.02% line coverage after malformed trusted
+   operator-scope cases were added; the threshold was not reduced.
+4. `make security-audit` passed against the resolved runtime and CI tooling
+   lock files.
+5. `LOTUS_IDEA_POSTGRES_INTEGRATION_REQUIRED=1 make postgres-integration-gate`
+   passed all 17 tests against an isolated PostgreSQL 18 database, including
+   review-queue projection, restart/replay, downstream submission, and data
+   lifecycle paths. The database was removed after validation.
+6. Focused audience, workflow, malformed-scope, snapshot, caller-context,
+   OpenAPI, endpoint-certification, observability, maintainability,
+   documentation, issue-closure, and supported-feature gates passed.
 
 ## Later-Slice Promotion Dependencies
 

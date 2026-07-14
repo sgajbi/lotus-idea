@@ -64,11 +64,13 @@ proof, downstream proof, supported-feature evidence, and mainline CI all agree.
    candidate-created-at as-of visibility, opaque snapshot-bound continuation,
    and durable PostgreSQL repository-side queue projection with before/after
    conflict detection,
-11. RFC-0002 Slice 08 partially implements internal advisor review and feedback
-   governance plus workflow persistence with fail-closed scope checks, review
-    actions, safe audit events, source provenance, idempotency replay/conflict,
-    business-resource replay/conflict across transport keys, atomic persistence,
-    and queue projection interaction,
+11. RFC-0002 Slice 08 is implementation-complete on its feature branch pending
+    mainline closure. It provides audience-bound advisor, portfolio-manager,
+    and compliance queues; aggregate-only operator exception posture;
+    trusted-context review and feedback authorization; safe audit events;
+    source provenance; transport and resource-identity replay/conflict; atomic
+    persistence; and process-local/PostgreSQL queue parity. It remains an
+    internal, unpromoted foundation until later product-proof gates pass,
 12. RFC-0002 Slice 09 partially implements internal AI governance with redacted
     evidence envelopes, verifier/fallback controls, safe audit events,
     certified internal AI explanation evaluator API, a not-certified AI
