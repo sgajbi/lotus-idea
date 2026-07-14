@@ -247,6 +247,36 @@ class RecordingMutationCursor:
         self.calls.append((" ".join(query.split()), params))
 
 
+def test_postgres_lifecycle_locks_control_before_evaluating_delivery_posture() -> None:
+    connection = LifecycleConnection()
+
+    execute(connection, valid_command(DataLifecycleAction.APPLY_HOLD))
+
+    statements = connection.cursor_instance.executed
+    candidate_lock = next(
+        index
+        for index, statement in enumerate(statements)
+        if "select candidate_json from idea_candidate_record" in statement
+    )
+    control_lock = next(
+        index
+        for index, statement in enumerate(statements)
+        if "from idea_data_lifecycle_control" in statement
+    )
+    outbox_read = next(
+        index for index, statement in enumerate(statements) if "from idea_outbox_event" in statement
+    )
+    downstream_read = next(
+        index
+        for index, statement in enumerate(statements)
+        if "from idea_downstream_submission" in statement
+    )
+
+    assert "for update" in statements[candidate_lock]
+    assert "for update" in statements[control_lock]
+    assert candidate_lock < control_lock < outbox_read < downstream_read
+
+
 def test_postgres_lifecycle_erasure_redacts_and_audits_in_one_commit(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

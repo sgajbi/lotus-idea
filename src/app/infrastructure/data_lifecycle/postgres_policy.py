@@ -259,7 +259,7 @@ def _load_candidate_context(cursor: Any, candidate_id: str) -> DataLifecycleCand
     candidate_json = _json_object(candidate_row["candidate_json"])
     access_scope = candidate_json.get("access_scope")
     tenant_id = access_scope.get("tenant_id") if isinstance(access_scope, dict) else None
-    control = _load_control(cursor, candidate_id)
+    control = _load_control(cursor, candidate_id, for_update=True)
     if tenant_id is None and control is not None:
         effective_state = control.held_from_state or control.state
         if effective_state in {DataLifecycleState.ERASED, DataLifecycleState.PURGED}:
@@ -276,14 +276,21 @@ def _load_candidate_context(cursor: Any, candidate_id: str) -> DataLifecycleCand
     )
 
 
-def _load_control(cursor: Any, candidate_id: str) -> DataLifecycleControl | None:
+def _load_control(
+    cursor: Any,
+    candidate_id: str,
+    *,
+    for_update: bool = False,
+) -> DataLifecycleControl | None:
+    lock_clause = "FOR UPDATE" if for_update else ""
     cursor.execute(
-        """SELECT candidate_id, tenant_id, policy_ref, state,
+        f"""SELECT candidate_id, tenant_id, policy_ref, state,
                   retention_expires_at_utc, version, updated_at_utc,
                   held_from_state, hold_authority_ref, hold_change_reference,
                   held_at_utc, erased_at_utc, purged_at_utc, tombstone_sha256
            FROM idea_data_lifecycle_control
-           WHERE candidate_id = %s""",
+           WHERE candidate_id = %s
+           {lock_clause}""",
         (candidate_id,),
     )
     row = cursor.fetchone()
