@@ -96,8 +96,7 @@ def validate_platform_catalog_source_contract(
         errors.append("platform catalog source contract must retain certification blockers")
     contract_checks = proof.get("contractChecks")
     file_evidence_present = (
-        isinstance(contract_checks, Mapping)
-        and contract_checks.get("fileEvidencePresent") is True
+        isinstance(contract_checks, Mapping) and contract_checks.get("fileEvidencePresent") is True
     )
     if file_evidence_present and not platform_catalog_source_contract_is_valid(proof):
         errors.append(
