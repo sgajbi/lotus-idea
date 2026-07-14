@@ -21,6 +21,10 @@ def test_ai_explanation_readiness_reports_blocked_not_certified_posture() -> Non
     assert snapshot.verifier_available is True
     assert snapshot.redacted_evidence_envelope_available is True
     assert snapshot.unsupported_claim_blocking_available is True
+    assert snapshot.claim_grounding_available is True
+    assert snapshot.claim_grounding_policy_version == (
+        "lotus-idea.ai-claim-grounding-policy.v1"
+    )
     assert snapshot.forbidden_action_blocking_available is True
     assert snapshot.action_content_policy_version == ("lotus-idea.ai-action-content-policy.v1")
     assert snapshot.lotus_ai_run_attestation_available is True
