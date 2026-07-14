@@ -79,7 +79,8 @@ Current instrumented operations:
 | `data_lifecycle_action` | Governed hold, erasure, and purge operator workflow | `lotus-idea` | `not_certified` |
 | `ai_explanation` | Internal AI explanation fallback/verifier evaluation | `lotus-idea` | `foundation_only` |
 | `ai_explanation_readiness_read` | Internal AI explanation readiness diagnostic | `lotus-ai` | `not_certified` |
-| `review_queue_read` | Internal advisor review queue read projection | `lotus-idea` | `foundation_only` |
+| `review_queue_read` | Internal audience-specific business review queue projection | `lotus-idea` | `foundation_only` |
+| `review_queue_exception_read` | Internal aggregate review queue exception diagnostic | `lotus-idea` | `not_certified` |
 | `review_queue_readiness_read` | Internal advisor review queue readiness diagnostic | `lotus-idea` | `not_certified` |
 | `review_action` | Internal human review decision recording | `lotus-idea` | `foundation_only` |
 | `feedback_record` | Internal advisor feedback recording | `lotus-idea` | `foundation_only` |

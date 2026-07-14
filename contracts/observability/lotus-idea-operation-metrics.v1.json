@@ -105,9 +105,15 @@
         },
         {
           "operation": "review_queue_read",
-          "scope": "Internal advisor review queue projection",
+          "scope": "Internal audience-specific business review queue projection",
           "source_authority": "lotus-idea",
           "supportability_status": "foundation_only"
+        },
+        {
+          "operation": "review_queue_exception_read",
+          "scope": "Internal aggregate review queue exception diagnostic",
+          "source_authority": "lotus-idea",
+          "supportability_status": "not_certified"
         },
         {
           "operation": "review_queue_readiness_read",
