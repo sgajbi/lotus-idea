@@ -132,7 +132,9 @@ def _validate_source_of_truth(
 
 
 def _validate_durable_submission_state_machine(repository_root: Path) -> list[str]:
-    orchestration = _read(repository_root, "src/app/application/downstream_realization.py")
+    orchestration = _read(
+        repository_root, "src/app/application/downstream_realization/submission_use_cases.py"
+    )
     postgres = _read(
         repository_root,
         "src/app/infrastructure/postgres_downstream_submission.py",

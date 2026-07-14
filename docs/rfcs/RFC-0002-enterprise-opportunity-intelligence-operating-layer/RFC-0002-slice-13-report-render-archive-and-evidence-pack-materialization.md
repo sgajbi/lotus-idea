@@ -77,7 +77,7 @@ Implemented in the first Slice 13 foundation:
    posture, reason codes, and bounded source summaries, while omitting source
    routes, raw source payloads, raw downstream responses, and client-ready
    publication authority.
-10. `src/app/application/downstream_realization.py` now adds source-safe
+10. `src/app/application/downstream_realization/submission_use_cases.py` now adds source-safe
     application orchestration for submitting existing report evidence-pack
     requests through the Report downstream realization port. It finds the
     request through bounded repository lookup, creates an atomic durable claim

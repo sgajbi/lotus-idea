@@ -102,7 +102,7 @@ Implemented in this slice:
     `idea.downstream-realization.readiness.read` capability, emits
     `downstream_realization_readiness_read`, and keeps the supportability
     posture `not_certified` until live downstream contract proof exists.
-19. `src/app/application/downstream_realization.py` now adds source-safe
+19. `src/app/application/downstream_realization/submission_use_cases.py` now adds source-safe
     application orchestration for submitting existing Advise proposal and
     Manage action conversion intents through the downstream realization ports.
     The orchestration selects the correct downstream client, atomically claims

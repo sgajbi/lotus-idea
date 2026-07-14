@@ -813,7 +813,7 @@ records or publishing events.
 surface for a single bounded delivery pass and returns aggregate counts only.
 This is not certified external publication, a Gateway event, platform mesh
 event publication, downstream delivery, or a supported feature.
-`src/app/application/downstream_realization.py` adds source-safe submission
+`src/app/application/downstream_realization/submission_use_cases.py` adds source-safe submission
 orchestration for existing Advise/Manage conversion intents and Report
 evidence-pack requests while leaving authoritative downstream outcome truth in
 the owning services. `src/app/ports/downstream_realization.py` and
