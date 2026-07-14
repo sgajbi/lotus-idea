@@ -539,7 +539,6 @@ def test_postgres_runtime_serializes_concurrent_review_and_feedback_resource_ide
             review_id="postgres-concurrent-review-identity-001",
             action=ReviewAction.APPROVE_FOR_CONVERSION,
             actor=actor,
-            access_scope=scope,
             reason_codes=(ReasonCode.REVIEW_REQUIRED,),
             decided_at_utc=datetime(2026, 6, 21, 10, 5, tzinfo=UTC),
         ),
@@ -577,7 +576,6 @@ def test_postgres_runtime_serializes_concurrent_review_and_feedback_resource_ide
         FeedbackCommand(
             feedback_id="postgres-concurrent-feedback-identity-001",
             actor=actor,
-            access_scope=scope,
             outcome=FeedbackOutcome.USEFUL,
             reason_codes=(ReasonCode.REVIEW_REQUIRED,),
             recorded_at_utc=datetime(2026, 6, 21, 10, 6, tzinfo=UTC),

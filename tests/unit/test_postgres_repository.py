@@ -1087,7 +1087,6 @@ def review_command(review_id: str = "review-approve-001") -> ReviewDecisionComma
         review_id=review_id,
         action=ReviewAction.APPROVE_FOR_CONVERSION,
         actor=actor(),
-        access_scope=access_scope(),
         reason_codes=(ReasonCode.REVIEW_APPROVED_FOR_CONVERSION,),
         decided_at_utc=EVALUATED_AT + timedelta(minutes=2),
     )
@@ -1097,7 +1096,6 @@ def feedback_command() -> FeedbackCommand:
     return FeedbackCommand(
         feedback_id="feedback-useful-001",
         actor=actor(),
-        access_scope=access_scope(),
         outcome=FeedbackOutcome.USEFUL,
         reason_codes=(ReasonCode.FEEDBACK_RECORDED,),
         recorded_at_utc=EVALUATED_AT + timedelta(minutes=3),

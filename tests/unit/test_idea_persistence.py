@@ -115,6 +115,7 @@ def high_cash_candidate() -> tuple[IdeaCandidate, tuple[SourceRef, ...]]:
             cash_movement_ref=refs[2],
             cashflow_projection_ref=refs[3],
             evaluated_at_utc=EVALUATED_AT,
+            access_scope=review_access_scope(),
         ),
         HighCashSignalPolicy(
             policy_version="idle-liquidity-v1",
@@ -179,7 +180,6 @@ def review_decision_command(
         review_id=review_id,
         action=ReviewAction.APPROVE_FOR_CONVERSION,
         actor=advisor_actor_context(),
-        access_scope=review_access_scope(),
         reason_codes=(ReasonCode.REVIEW_APPROVED_FOR_CONVERSION,),
         decided_at_utc=decided_at_utc,
     )
@@ -193,7 +193,6 @@ def feedback_command(
     return FeedbackCommand(
         feedback_id=feedback_id,
         actor=advisor_actor_context(),
-        access_scope=review_access_scope(),
         outcome=FeedbackOutcome.USEFUL,
         reason_codes=(ReasonCode.FEEDBACK_RECORDED,),
         recorded_at_utc=recorded_at_utc,

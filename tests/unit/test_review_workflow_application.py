@@ -82,12 +82,12 @@ def review_candidate(candidate_id: str = "idea-review-001") -> IdeaCandidate:
         review_posture=ReviewPosture.ADVISOR_REVIEW_REQUIRED,
         evidence_packet=evidence_packet,
         source_signal_ids=("signal-review-workflow-001",),
-        access_scope=access_scope(),
         score=IdeaScore(
             policy_version="idea-deterministic-ranking-v1",
             score=Decimal("82"),
             reason_codes=(ReasonCode.HIGH_CASH_RATIO, ReasonCode.REVIEW_REQUIRED),
         ),
+        access_scope=access_scope(),
         created_at_utc=EVALUATED_AT,
         updated_at_utc=EVALUATED_AT,
     )
@@ -143,7 +143,6 @@ def decision_command(
         review_id=review_id or f"review-{action.value}",
         action=action,
         actor=advisor_context(),
-        access_scope=access_scope(),
         reason_codes=(ReasonCode.REVIEW_REQUIRED,),
         decided_at_utc=DECIDED_AT,
         suppression_reason=suppression_reason,
@@ -154,30 +153,27 @@ def feedback_command() -> FeedbackCommand:
     return FeedbackCommand(
         feedback_id="feedback-review-workflow-001",
         actor=advisor_context(),
-        access_scope=access_scope(),
         outcome=FeedbackOutcome.USEFUL,
         reason_codes=(ReasonCode.REVIEW_REQUIRED,),
         recorded_at_utc=DECIDED_AT,
     )
 
 
-def alternate_scope_decision_command() -> ReviewDecisionCommand:
+def mismatched_actor_scope_decision_command() -> ReviewDecisionCommand:
     return ReviewDecisionCommand(
         review_id="review-self-asserted-scope",
         action=ReviewAction.SUPPRESS,
         actor=alternate_scope_advisor_context(),
-        access_scope=alternate_access_scope(),
         reason_codes=(ReasonCode.REVIEW_REQUIRED,),
         decided_at_utc=DECIDED_AT,
         suppression_reason=SuppressionReason.MANUAL_SUPPRESSION,
     )
 
 
-def alternate_scope_feedback_command() -> FeedbackCommand:
+def mismatched_actor_scope_feedback_command() -> FeedbackCommand:
     return FeedbackCommand(
         feedback_id="feedback-self-asserted-scope",
         actor=alternate_scope_advisor_context(),
-        access_scope=alternate_access_scope(),
         outcome=FeedbackOutcome.USEFUL,
         reason_codes=(ReasonCode.REVIEW_REQUIRED,),
         recorded_at_utc=DECIDED_AT,
@@ -243,14 +239,14 @@ def test_apply_review_action_uses_candidate_projection_without_snapshot() -> Non
     assert repository.looked_up_candidate_ids == ["idea-review-001"]
 
 
-def test_apply_review_action_uses_persisted_candidate_scope_not_command_scope() -> None:
+def test_apply_review_action_authorizes_actor_against_persisted_candidate_scope() -> None:
     repository = repository_with_candidate()
 
     with pytest.raises(ReviewEntitlementDenied):
         apply_review_action_to_repository(
             ApplyReviewActionToRepositoryCommand(
                 candidate_id="idea-review-001",
-                review=alternate_scope_decision_command(),
+                review=mismatched_actor_scope_decision_command(),
                 idempotency_key="review-action:self-asserted-scope:001",
             ),
             repository=repository,
@@ -402,14 +398,14 @@ def test_record_feedback_uses_candidate_projection_without_snapshot() -> None:
     assert repository.looked_up_candidate_ids == ["idea-review-001"]
 
 
-def test_record_feedback_uses_persisted_candidate_scope_not_command_scope() -> None:
+def test_record_feedback_authorizes_actor_against_persisted_candidate_scope() -> None:
     repository = repository_with_candidate()
 
     with pytest.raises(ReviewEntitlementDenied):
         record_feedback_to_repository(
             RecordFeedbackToRepositoryCommand(
                 candidate_id="idea-review-001",
-                feedback=alternate_scope_feedback_command(),
+                feedback=mismatched_actor_scope_feedback_command(),
                 idempotency_key="review-feedback:self-asserted-scope:001",
             ),
             repository=repository,
@@ -455,7 +451,6 @@ def test_feedback_resource_identity_replays_or_conflicts_independently_of_transp
     changed_feedback = FeedbackCommand(
         feedback_id=first_command.feedback.feedback_id,
         actor=first_command.feedback.actor,
-        access_scope=first_command.feedback.access_scope,
         outcome=FeedbackOutcome.NOT_USEFUL,
         reason_codes=first_command.feedback.reason_codes,
         recorded_at_utc=first_command.feedback.recorded_at_utc,

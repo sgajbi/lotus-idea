@@ -183,7 +183,6 @@ class ReviewDecisionCommand:
     review_id: str
     action: ReviewAction
     actor: ReviewActorContext
-    access_scope: ReviewAccessScope | None
     reason_codes: tuple[ReasonCode, ...]
     decided_at_utc: datetime
     suppression_reason: SuppressionReason | None = None
@@ -254,7 +253,6 @@ class ReviewActionResult:
 class FeedbackCommand:
     feedback_id: str
     actor: ReviewActorContext
-    access_scope: ReviewAccessScope | None
     outcome: FeedbackOutcome
     reason_codes: tuple[ReasonCode, ...]
     recorded_at_utc: datetime
@@ -488,7 +486,7 @@ def record_feedback(
         candidate_id=candidate.candidate_id,
         action=ReviewAction.NO_ACTION,
         actor=command.actor,
-        access_scope=command.access_scope,
+        access_scope=candidate.access_scope,
         policy=policy,
     )
     feedback = IdeaFeedback(
@@ -605,7 +603,7 @@ def _ensure_allowed(
         candidate_id=candidate.candidate_id,
         action=command.action,
         actor=command.actor,
-        access_scope=command.access_scope,
+        access_scope=candidate.access_scope,
         policy=policy,
     )
     if candidate.lifecycle_status not in _REVIEW_ACTION_LIFECYCLE_STATUSES[command.action]:
