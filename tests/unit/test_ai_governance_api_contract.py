@@ -63,6 +63,15 @@ def test_ai_workflow_output_request_rejects_unsafe_shape() -> None:
             claimText="Source-backed claim",
             sourceProductIds=(" ",),
         )
+    with pytest.raises(ValidationError, match="sourceProductIds must be unique"):
+        AIOutputClaimRequest(
+            claimId="claim-001",
+            claimText="Source-backed claim",
+            sourceProductIds=(
+                "lotus-core:PortfolioStateSnapshot:v1",
+                "lotus-core:PortfolioStateSnapshot:v1",
+            ),
+        )
     with pytest.raises(ValidationError):
         AIProposedActionRequest(
             actionType=AIProposedActionType.ADVISOR_REVIEW,

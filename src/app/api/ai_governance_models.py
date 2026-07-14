@@ -13,6 +13,7 @@ from app.domain.ai_execution_provenance import (
     AIExecutionProvenancePosture,
     AIWorkflowOutputTrustPolicy,
 )
+from app.domain.ai_explanation import AI_CLAIM_GROUNDING_POLICY_VERSION
 from app.domain.ai_metadata_policy import AI_METADATA_ENVELOPE_VERSION
 from app.application.ai_governance import (
     AIExplanationReadinessSnapshot,
@@ -86,6 +87,8 @@ class AIOutputClaimRequest(CamelModel):
             raise ValueError("sourceProductIds is required")
         if any(not product_id.strip() for product_id in value):
             raise ValueError("sourceProductIds cannot contain blank values")
+        if len(set(value)) != len(value):
+            raise ValueError("sourceProductIds must be unique")
         return tuple(value)
 
     def to_domain(self) -> AIOutputClaim:
@@ -131,6 +134,16 @@ class AIWorkflowOutputRequest(CamelModel):
         if not value:
             raise ValueError("AI output lists cannot be empty")
         return tuple(value)
+
+    @field_validator("claims")
+    @classmethod
+    def _claim_ids_must_be_unique(
+        cls,
+        value: tuple[AIOutputClaimRequest, ...],
+    ) -> tuple[AIOutputClaimRequest, ...]:
+        if len({claim.claim_id for claim in value}) != len(value):
+            raise ValueError("claimIds must be unique")
+        return value
 
     @field_validator("verifier_ran_at_utc")
     @classmethod
@@ -331,6 +344,30 @@ class RedactedIdeaEvidenceResponse(CamelModel):
         )
 
 
+class GroundedAIClaimResponse(CamelModel):
+    claim_id: str = Field(..., alias="claimId")
+    claim_text: str = Field(..., alias="claimText")
+    source_refs: tuple[RedactedSourceRefResponse, ...] = Field(..., alias="sourceRefs")
+
+    @classmethod
+    def from_domain(
+        cls,
+        claim: AIOutputClaim,
+        evidence: RedactedIdeaEvidence,
+    ) -> "GroundedAIClaimResponse":
+        source_refs_by_product = {
+            source_ref.product_id: source_ref for source_ref in evidence.source_refs
+        }
+        return cls(
+            claimId=claim.claim_id,
+            claimText=claim.claim_text,
+            sourceRefs=tuple(
+                RedactedSourceRefResponse.from_domain(source_refs_by_product[product_id])
+                for product_id in claim.source_product_ids
+            ),
+        )
+
+
 class AIWorkflowOutputSummaryResponse(CamelModel):
     output_id: str = Field(..., alias="outputId")
     claim_ids: tuple[str, ...] = Field(..., alias="claimIds")
@@ -340,15 +377,38 @@ class AIWorkflowOutputSummaryResponse(CamelModel):
     )
     verifier_ran_at_utc: datetime = Field(..., alias="verifierRanAtUtc")
     action_policy_version: str = Field(..., alias="actionPolicyVersion")
+    claim_grounding_policy_version: str = Field(
+        ...,
+        alias="claimGroundingPolicyVersion",
+    )
+    grounded_claims: tuple[GroundedAIClaimResponse, ...] = Field(
+        ...,
+        alias="groundedClaims",
+    )
 
     @classmethod
-    def from_domain(cls, output: AIWorkflowOutput) -> "AIWorkflowOutputSummaryResponse":
+    def from_domain(
+        cls,
+        output: AIWorkflowOutput,
+        evidence: RedactedIdeaEvidence,
+        *,
+        include_grounding: bool,
+    ) -> "AIWorkflowOutputSummaryResponse":
         return cls(
             outputId=output.output_id,
             claimIds=tuple(claim.claim_id for claim in output.claims),
             proposedActionTypes=tuple(action.action_type for action in output.proposed_actions),
             verifierRanAtUtc=output.verifier_ran_at_utc,
             actionPolicyVersion=AI_ACTION_POLICY_VERSION,
+            claimGroundingPolicyVersion=AI_CLAIM_GROUNDING_POLICY_VERSION,
+            groundedClaims=(
+                tuple(
+                    GroundedAIClaimResponse.from_domain(claim, evidence)
+                    for claim in output.claims
+                )
+                if include_grounding
+                else ()
+            ),
         )
 
 
@@ -422,7 +482,11 @@ class AIExplanationEvaluationResponse(CamelModel):
                 result.request.redacted_evidence
             ),
             verifiedOutput=(
-                AIWorkflowOutputSummaryResponse.from_domain(result.output)
+                AIWorkflowOutputSummaryResponse.from_domain(
+                    result.output,
+                    result.request.redacted_evidence,
+                    include_grounding=(result.verifier_outcome is AIVerifierOutcome.PASSED),
+                )
                 if result.output is not None
                 else None
             ),
@@ -544,6 +608,7 @@ __all__ = [
     "AIWorkflowOutputSummaryResponse",
     "AIWorkflowPackRequest",
     "AIWorkflowPackResponse",
+    "GroundedAIClaimResponse",
     "RedactedIdeaEvidenceResponse",
     "RedactedSourceRefResponse",
 ]
