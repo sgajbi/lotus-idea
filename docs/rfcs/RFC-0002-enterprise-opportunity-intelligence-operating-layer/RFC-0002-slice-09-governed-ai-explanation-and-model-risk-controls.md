@@ -161,6 +161,17 @@ Implemented in this slice:
     policy version. Lineage retains approved field names only. The model-risk
     contract machine-checks classification, forwarding, retention, and
     no-raw-value guarantees. No provider adapter or runtime split is claimed.
+25. Issue `#389` adds `src/app/domain/ai_explanation/grounding.py` as a bounded
+    deterministic explanation policy. Accepted advisor-visible narrative is
+    rendered only from ordered claims that passed source-product verification;
+    the submitted provider narrative remains attested input and is neither
+    returned nor persisted. The response exposes claim-level source product,
+    version, as-of, freshness, and quality references. Blocked output exposes no
+    grounded claims. Output integrity binds the grounding policy and the
+    submitted provider-output digest without retaining raw narrative, while the
+    model-risk contract and readiness endpoint expose the active grounding
+    posture. Duplicate claim or source-product identities fail closed. This is
+    design modularity inside the existing Idea process, not an AI runtime split.
 
 Validation evidence from the implementation slice:
 

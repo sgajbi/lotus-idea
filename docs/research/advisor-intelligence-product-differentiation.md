@@ -30,7 +30,7 @@ Primary sources reviewed on 2026-07-14 show four established patterns:
 
 | Pattern | Public evidence | Consequence for Lotus |
 | --- | --- | --- |
-| Portfolio analytics translated into advisor commentary | [BlackRock Aladdin Wealth Auto Commentary](https://www.blackrock.com/aladdin/discover/press-release/aladdin-wealth-launches-ai-enabled-commentary-tool-at-morgan-stanley) combines analytics, firm views, portfolio holdings, and preferences into concise advisor insights. | Summarization alone is not differentiated. Lotus explanations must expose evidence coverage, provenance, conflicts, and abstention. |
+| Portfolio analytics translated into advisor commentary | [BlackRock AI-enabled investing](https://www.blackrock.com/aladdin/discover/blog/ai-enabled-investor) describes governed Auto Commentary over analytics, firm views, portfolio holdings, and preferences, with advisor review before use. | Summarization and human review are baseline. Lotus explanations must additionally expose evidence coverage, provenance, conflicts, and abstention. |
 | Proactive opportunity and liquidity-event detection | [UBS advisor AI](https://www.ubs.com/us/en/wealth-management/financial-advisor-experience/articles/ai-for-financial-advisors.html) describes analytics and ML surfacing client opportunities and meeting briefings. | Detection must be cross-domain and deterministic-first, with explicit source authority and queue-policy lineage. |
 | Meeting workflow assistance with human control | [Morgan Stanley AI Debrief](https://www.morganstanley.com/press-releases/ai-at-morgan-stanley-debrief-launch) creates meeting notes, action items, and drafts for advisor review. | Human review is baseline. Lotus must additionally bind outputs to governed evidence and prohibit downstream authority. |
 | Personalized nudges at operating scale | [DBS AI-powered nudges](https://www.dbs.com/artificial-intelligence-machine-learning/index.html) describes personalized insights and relationship-manager discussion prompts. | Personalization must be bounded by entitlement, purpose, policy, freshness, and model-risk controls rather than opaque targeting. |
@@ -57,6 +57,25 @@ ordered by bank value and control feasibility, not novelty alone.
 Novelty is not an acceptance criterion. A capability should be rejected when it
 adds cognitive or runtime complexity without measurable advisor value,
 defensible control improvement, or a clear operating owner.
+
+## Selected Delivery Hypothesis
+
+Issue [#389](https://github.com/sgajbi/lotus-idea/issues/389) selects the
+evidence-grounded advisor narrative hypothesis for the current bounded delivery.
+
+| Dimension | Falsifiable decision |
+| --- | --- |
+| Advisor outcome | Every accepted advisor-visible sentence is rendered by Idea from an ordered claim that passed deterministic source-product verification. |
+| Control outcome | The submitted provider narrative is absent from the accepted response, audit attributes, and persisted lineage; source-safe claim references expose product/version, as-of date, freshness, and quality. |
+| Failure posture | Unsupported or otherwise blocked output returns no grounded claims and cannot be presented as evidence-backed narrative. |
+| Ownership | `lotus-ai` owns provider/model execution and attestation; `lotus-idea` owns deterministic claim verification, grounded projection, replay identity, and human-review posture. |
+| Acceptance threshold | Behavioral tests prove 100% of accepted narrative derives from verified claims and zero submitted narrative is returned or persisted. |
+
+This is a controlled explanation foundation, not a claim that Lotus predicts an
+outcome, gives advice, or has completed live-provider, Gateway, Workbench, or
+supported-feature certification. BlackRock's 2026 product framing reinforces
+that advisor commentary and mandatory advisor review are now baseline; Lotus's
+selected differentiator is the deterministic evidence and control boundary.
 
 ## Bank-Buyability Controls
 

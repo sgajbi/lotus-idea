@@ -91,6 +91,13 @@ RFC-0002 Slice 09 adds `src/app/domain/ai_governance.py`,
     PostgreSQL partial unique indexes and reconstruction after restart.
 20. bounded provenance telemetry that excludes signatures, keys, run ids,
     prompts, model content, and client data.
+21. `lotus-idea.ai-claim-grounding-policy.v1`, which replaces accepted
+    provider-authored narrative with a deterministic ordered projection of
+    claims that passed source-product verification.
+22. claim-level source-safe response grounding over product/version, as-of,
+    freshness, and quality, with no grounded claims returned for blocked output.
+23. output-integrity binding for both the grounding policy and submitted
+    provider-output digest without persisting the submitted narrative.
 
 The API preserves source authority: AI output cannot mutate candidate score,
 lifecycle, source facts, review state, conversion state, or downstream workflow
@@ -107,7 +114,10 @@ Successful API responses always return:
 4. `lotusAiRuntimeExecuted=true` only for cryptographically verified,
    request-bound producer execution; fallback and local fixtures remain `false`,
 5. `supportedFeaturePromoted=false`,
-6. `grantsDownstreamAuthority=false`.
+6. `grantsDownstreamAuthority=false`,
+7. `verifiedOutput.claimGroundingPolicyVersion=lotus-idea.ai-claim-grounding-policy.v1`,
+8. `verifiedOutput.groundedClaims` only when every returned claim passed the
+   deterministic verifier; blocked output returns an empty list.
 
 The readiness diagnostic always returns:
 
@@ -122,8 +132,10 @@ The readiness diagnostic always returns:
 7. `actionContentPolicyVersion=lotus-idea.ai-action-content-policy.v1`.
 8. `metadataEnvelopeVersion=lotus-idea.ai-metadata-envelope.v1`.
 9. `lotusAiRunAttestationAvailable=true`; producer and consumer mainline
-   contract proof is complete, while live runtime execution and the other
-   certification blockers remain explicit.
+    contract proof is complete, while live runtime execution and the other
+    certification blockers remain explicit.
+10. `claimGroundingAvailable=true` and
+    `claimGroundingPolicyVersion=lotus-idea.ai-claim-grounding-policy.v1`.
 
 ## Provider-Safe Metadata Envelope
 
@@ -147,6 +159,30 @@ integration may forward only the validated envelope and must not receive the
 original request mapping. This is an internal design boundary in the existing
 service; no workload, isolation, ownership, or operability evidence justifies
 another runtime process.
+
+## Evidence-Grounded Narrative Policy
+
+Provider-authored explanation text is untrusted input even when its structured
+claims cite allowed source products. Idea therefore verifies claims first and
+renders accepted advisor-visible narrative from their ordered `claimText`
+values. A benign sourced claim cannot be used to launder unsupported advice,
+guarantees, execution instructions, or client communication in surrounding
+provider prose.
+
+| Output state | Advisor-visible narrative | Claim grounding |
+| --- | --- | --- |
+| Accepted | Server-rendered from verified ordered claims | Each claim includes source-safe product/version, as-of, freshness, and quality references. |
+| Unsupported claim | Bounded blocked explanation | Empty; unsupported source references are not projected as grounding. |
+| Forbidden action or action content | Bounded blocked explanation | Empty; an allowed claim cannot legitimize prohibited action content. |
+| Deterministic fallback | Server-owned fallback wording | No workflow output or grounded claims. |
+
+Claim IDs and source-product IDs must be unique so projection, replay, and audit
+identity remain unambiguous. `lotus-idea.ai-output-integrity.v1` binds the
+accepted grounded content, grounding policy version, and digest of the original
+provider output. Persistence retains the integrity digest/version and bounded
+lineage, not submitted narrative. The grounding package is an Idea-owned domain
+module inside the existing runtime; provider execution, prompts, RAG, and model
+operations remain with `lotus-ai`.
 
 ## Proposed-Action Content Policy
 
