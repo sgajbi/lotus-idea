@@ -189,12 +189,12 @@ artifacts deliberately keep these blockers:
 
 ## Report Materialization Proof
 
-`scripts/generate_report_materialization_proof.py` can read the sibling
+`scripts/report/generate_materialization_source_contract.py` can read the sibling
 `lotus-report` materialization contract and produce a source-safe artifact such
 as:
 
 ```powershell
-python scripts/generate_report_materialization_proof.py `
+python scripts/report/generate_materialization_source_contract.py `
   --generated-at-utc 2026-06-27T00:00:00Z `
   --report-root ..\lotus-report `
   --output output\downstream\report-materialization-proof.json
@@ -368,9 +368,9 @@ Implementation-backed evidence:
 16. report intake source-contract gate:
     `scripts/report/intake_route_source_contract_gate.py`,
 17. report materialization proof generator:
-   `scripts/generate_report_materialization_proof.py`,
+   `scripts/report/generate_materialization_source_contract.py`,
 18. report materialization proof gate:
-    `scripts/report_materialization_proof_contract_gate.py`,
+    `scripts/report/materialization_source_contract_gate.py`,
 19. readiness API route: `src/app/api/downstream_realization_readiness.py`,
 20. operation events:
    `downstream_realization_readiness_read` and
@@ -391,7 +391,7 @@ Implementation-backed evidence:
 27. report intake source-contract tests:
     `tests/unit/report/test_intake_route_source_contract.py`,
 28. report materialization proof tests:
-    `tests/unit/test_report_materialization_proof.py`,
+    `tests/unit/report/test_materialization_source_contract.py`,
 29. submission reconciliation and real PostgreSQL tests:
    `tests/integration/test_downstream_submission_reconciliation_api.py` and
    `tests/integration/test_postgres_downstream_submission_runtime.py`,

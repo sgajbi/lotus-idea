@@ -153,7 +153,7 @@ GENERATED_READINESS_ARTIFACTS = (
         "scripts/report/generate_intake_route_source_contract.py",
         "a Report intake-route source-contract proof artifact",
     ),
-    ("scripts/generate_report_materialization_proof.py", "a report materialization proof artifact"),
+    ("scripts/report/generate_materialization_source_contract.py", "a report materialization proof artifact"),
     ("scripts/generate_mesh_policy_proof.py", "mesh policy proof artifact"),
     (
         "scripts/generate_platform_mesh_onboarding_proof.py",

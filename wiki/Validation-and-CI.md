@@ -498,7 +498,7 @@ Persistence adapter validation:
     `lotus_report_live_intake_route_proof_missing` remains and reject inflated
     runtime, authorization, tenant-isolation, materialization, render, archive,
     publication, certification, and promotion claims.
-16. `tests/unit/test_report_materialization_proof.py` and
+16. `tests/unit/report/test_materialization_source_contract.py` and
     `make report-materialization-proof-contract-gate` prove the source-safe
     `lotus-report` materialization proof contract that downstream and aggregate
     readiness consume to clear only

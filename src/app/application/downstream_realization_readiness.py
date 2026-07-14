@@ -19,7 +19,7 @@ from app.application.downstream_route_contract_proof import (
 from app.application.report.intake_route_source_contract import (
     report_intake_route_source_contract_proof_is_valid,
 )
-from app.application.report_materialization_proof import (
+from app.application.report.materialization_source_contract import (
     REPORT_MATERIALIZATION_BLOCKERS_CLEARED,
     REPORT_MATERIALIZATION_ROUTE,
     report_materialization_proof_is_valid,

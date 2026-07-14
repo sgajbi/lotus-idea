@@ -61,7 +61,7 @@ from app.application.platform_mesh_onboarding_proof import (
     platform_mesh_onboarding_proof_is_valid,
 )
 from app.application.proof_provenance import aggregate_proof_artifact_is_current
-from app.application.report_materialization_proof import (
+from app.application.report.materialization_source_contract import (
     REPORT_MATERIALIZATION_BLOCKERS_CLEARED,
     report_materialization_proof_is_valid,
 )

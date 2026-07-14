@@ -6,17 +6,18 @@ from pathlib import Path
 import sys
 from tempfile import TemporaryDirectory
 
+ROOT = Path(__file__).resolve().parents[2]
+SRC = ROOT / "src"
+for path in (ROOT, SRC):
+    if str(path) not in sys.path:
+        sys.path.insert(0, str(path))
+
 try:
     from scripts.proof_source_safety import forbidden_content_validator, validate_forbidden_content
 except ModuleNotFoundError:
     from proof_source_safety import forbidden_content_validator, validate_forbidden_content  # type: ignore[import-not-found,no-redef]
 
-ROOT = Path(__file__).resolve().parents[1]
-SRC = ROOT / "src"
-if str(SRC) not in sys.path:
-    sys.path.insert(0, str(SRC))
-
-from app.application.report_materialization_proof import (  # noqa: E402
+from app.application.report.materialization_source_contract import (  # noqa: E402
     REMAINING_REPORT_MATERIALIZATION_BLOCKERS,
     REPORT_MATERIALIZATION_BLOCKERS_CLEARED,
     REPORT_MATERIALIZATION_PROOF_SCHEMA_VERSION,

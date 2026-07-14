@@ -633,7 +633,7 @@ output, archive record, client publication, suitability decision, mandate
 action, execution instruction, or supported feature.
 
 Report materialization proof is captured by
-`scripts/generate_report_materialization_proof.py`. The repo-native
+`scripts/report/generate_materialization_source_contract.py`. The repo-native
 `make implementation-proof-readiness-check` target now generates the default
 artifact from `LOTUS_REPORT_ROOT` under
 `LOTUS_IDEA_REPORT_MATERIALIZATION_PROOF_OUTPUT` and passes it into aggregate
@@ -1018,11 +1018,11 @@ Implementation-backed evidence:
 1. report intake route source-contract tests:
     `tests/unit/report/test_intake_route_source_contract.py`,
 1. report materialization proof generator:
-    `scripts/generate_report_materialization_proof.py`,
+    `scripts/report/generate_materialization_source_contract.py`,
 1. report materialization proof contract gate:
     `make report-materialization-proof-contract-gate`,
 1. report materialization proof tests:
-    `tests/unit/test_report_materialization_proof.py`,
+    `tests/unit/report/test_materialization_source_contract.py`,
 1. outbox broker source-contract proof tests:
     `tests/unit/outbox/broker/test_source_contract_proof.py`,
     `tests/unit/outbox/broker/test_readiness_consumption.py`,
