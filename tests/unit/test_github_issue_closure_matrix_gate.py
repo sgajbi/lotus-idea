@@ -242,3 +242,20 @@ def test_github_issue_closure_matrix_gate_freezes_evidence_inventory_guard_closu
     errors = module.validate_issue_closure_matrix(matrix)
 
     assert "#431: merged-main issue cannot regress to `locally_fixed`" in errors
+
+
+def test_github_issue_closure_matrix_gate_freezes_workbench_source_contract_closure(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    matrix = tmp_path / "matrix.md"
+    content = module.MATRIX_PATH.read_text(encoding="utf-8")
+    content = content.replace(
+        "Stop static Workbench read-path declarations from clearing runtime consumption proof | `merged_main` |",
+        "Stop static Workbench read-path declarations from clearing runtime consumption proof | `locally_fixed` |",
+    )
+    matrix.write_text(content, encoding="utf-8")
+
+    errors = module.validate_issue_closure_matrix(matrix)
+
+    assert "#434: merged-main issue cannot regress to `locally_fixed`" in errors
