@@ -4,7 +4,10 @@ from datetime import UTC, datetime
 import sys
 from pathlib import Path
 
-from app.application.ai_model_risk_operations_proof import (
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT))
+
+from app.application.ai_model_risk_operations.source_contract_proof import (  # noqa: E402
     AI_MODEL_RISK_OPERATIONS_BLOCKERS_CLEARED,
     AI_MODEL_RISK_OPERATIONS_PROOF_SCHEMA_VERSION,
     EXPECTED_ALERT_IDS,
@@ -15,13 +18,19 @@ from app.application.ai_model_risk_operations_proof import (
     ai_model_risk_operations_proof_is_valid,
     build_ai_model_risk_operations_proof_payload,
 )
+from app.domain.proof_evidence import EvidenceClass  # noqa: E402
 
 try:
-    from scripts.proof_source_safety import forbidden_content_validator, validate_forbidden_content
+    from scripts.proof_source_safety import (  # noqa: E402
+        forbidden_content_validator,
+        validate_forbidden_content,
+    )
 except ModuleNotFoundError:
-    from proof_source_safety import forbidden_content_validator, validate_forbidden_content  # type: ignore[import-not-found,no-redef]
+    from proof_source_safety import (  # type: ignore[import-not-found,no-redef] # noqa: E402
+        forbidden_content_validator,
+        validate_forbidden_content,
+    )
 
-ROOT = Path(__file__).resolve().parents[1]
 FORBIDDEN_KEYS = {
     "accountId",
     "candidateId",
@@ -75,7 +84,11 @@ def validate_ai_model_risk_operations_proof_contract() -> list[str]:
     if tuple(proof.get("aggregateBlockersCleared") or ()) != (
         AI_MODEL_RISK_OPERATIONS_BLOCKERS_CLEARED
     ):
-        errors.append("AI model-risk operations proof must clear only dashboard and alert blockers")
+        errors.append("AI model-risk operations source contract must clear no blockers")
+    if proof.get("evidenceClass") != EvidenceClass.SOURCE_CONTRACT.value:
+        errors.append("AI model-risk operations proof must remain source-contract evidence")
+    if proof.get("requiredBlockerEvidenceClasses") != {}:
+        errors.append("AI model-risk operations source contract must map no cleared blockers")
     if tuple(proof.get("remainingCertificationBlockers") or ()) != (
         REMAINING_AI_MODEL_RISK_OPERATIONS_BLOCKERS
     ):

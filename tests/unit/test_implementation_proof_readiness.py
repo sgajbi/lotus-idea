@@ -9,7 +9,7 @@ from typing import Any
 import pytest
 
 from app.application.ai_lineage_store_proof import build_ai_lineage_store_proof_payload
-from app.application.ai_model_risk_operations_proof import (
+from app.application.ai_model_risk_operations.source_contract_proof import (
     build_ai_model_risk_operations_proof_payload,
 )
 from app.application.ai_workflow_pack_registration_proof import (
@@ -588,6 +588,8 @@ def test_implementation_proof_readiness_uses_ai_lineage_store_proof_without_runt
 
     assert "certified_ai_lineage_store_missing" not in snapshot.overall_blockers
     assert "lotus_ai_runtime_execution_missing" in snapshot.overall_blockers
+    assert "model_risk_dashboard_runtime_proof_missing" in snapshot.overall_blockers
+    assert "model_risk_alert_rules_runtime_proof_missing" in snapshot.overall_blockers
     assert "workflow_pack_runtime_contract_not_certified" in snapshot.overall_blockers
     assert "model_risk_operations_dashboard_not_certified" not in snapshot.overall_blockers
     assert "model_risk_operations_alerts_not_certified" not in snapshot.overall_blockers
@@ -695,7 +697,7 @@ def test_implementation_proof_readiness_uses_ai_workflow_pack_runtime_execution_
 def test_implementation_proof_readiness_uses_ai_model_risk_operations_proof_without_product_claim() -> (
     None
 ):
-    proof_ref = "output/ai/ai-model-risk-operations-proof.json"
+    proof_ref = "output/ai/ai-model-risk-operations-source-contract-proof.json"
     proof = _bound_aggregate_proof(
         build_ai_model_risk_operations_proof_payload(
             generated_at_utc=datetime(2026, 6, 26, 0, 0, tzinfo=UTC),
@@ -728,7 +730,40 @@ def test_implementation_proof_readiness_uses_ai_model_risk_operations_proof_with
     )
     assert "model_risk_operations_dashboard_not_certified" not in ai_explanation.blockers
     assert "model_risk_operations_alerts_not_certified" not in ai_explanation.blockers
-    assert "output/ai/ai-model-risk-operations-proof.json" in ai_explanation.evidence_refs
+    assert (
+        "output/ai/ai-model-risk-operations-source-contract-proof.json"
+        in ai_explanation.evidence_refs
+    )
+    assert "model_risk_dashboard_runtime_proof_missing" in ai_explanation.blockers
+    assert "model_risk_alert_rules_runtime_proof_missing" in ai_explanation.blockers
+
+
+def test_ai_model_risk_source_contract_rejects_runtime_claim_inflation() -> None:
+    proof_ref = "output/ai/ai-model-risk-operations-source-contract-proof.json"
+    proof = build_ai_model_risk_operations_proof_payload(
+        generated_at_utc=datetime(2026, 6, 26, 0, 0, tzinfo=UTC),
+        repository_root=ROOT,
+    )
+    proof["evidenceClass"] = "runtime_execution"
+    proof["runtimeExecutionObserved"] = True
+    bound_proof = _bound_aggregate_proof(proof, proof_ref)
+
+    snapshot = build_implementation_proof_readiness_snapshot(
+        evaluated_at_utc=datetime(2026, 6, 26, 0, 0, tzinfo=UTC),
+        repository=InMemoryIdeaRepository(),
+        durable_storage_backed=False,
+        ai_model_risk_operations_proof=bound_proof,
+        ai_model_risk_operations_proof_ref=proof_ref,
+    )
+
+    ai_explanation = next(
+        capability
+        for capability in snapshot.capabilities
+        if capability.capability_id == "ai-explanation"
+    )
+    assert proof_ref not in ai_explanation.evidence_refs
+    assert "model_risk_dashboard_runtime_proof_missing" in ai_explanation.blockers
+    assert "model_risk_alert_rules_runtime_proof_missing" in ai_explanation.blockers
 
 
 def test_implementation_proof_readiness_uses_workbench_read_path_proof_without_promotion() -> None:

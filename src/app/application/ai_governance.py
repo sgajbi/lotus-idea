@@ -92,8 +92,8 @@ class AIExplanationReadinessSnapshot:
     model_risk_operations_contract_available: bool
     model_risk_dashboard_contract_available: bool
     model_risk_alert_contract_available: bool
-    model_risk_dashboard_certified: bool
-    model_risk_alert_certified: bool
+    model_risk_dashboard_source_contract_valid: bool
+    model_risk_alert_rules_source_contract_valid: bool
     lotus_ai_runtime_executed: bool
     certification_blockers: tuple[str, ...]
     supported_feature_promoted: bool
@@ -190,13 +190,15 @@ def build_ai_explanation_readiness_snapshot(
         model_risk_operations_contract_available=True,
         model_risk_dashboard_contract_available=True,
         model_risk_alert_contract_available=True,
-        model_risk_dashboard_certified=True,
-        model_risk_alert_certified=True,
+        model_risk_dashboard_source_contract_valid=True,
+        model_risk_alert_rules_source_contract_valid=True,
         lotus_ai_runtime_executed=False,
         certification_blockers=(
             "lotus_ai_runtime_execution_missing",
             "certified_ai_lineage_store_missing",
             "workflow_pack_runtime_contract_not_certified",
+            "model_risk_dashboard_runtime_proof_missing",
+            "model_risk_alert_rules_runtime_proof_missing",
             "certified_runtime_trust_telemetry_missing",
             "workbench_product_proof_missing",
         ),

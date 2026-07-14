@@ -6,16 +6,17 @@ import json
 import sys
 from pathlib import Path
 
-from app.application.ai_model_risk_operations_proof import (
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT))
+
+from app.application.ai_model_risk_operations.source_contract_proof import (  # noqa: E402
     build_ai_model_risk_operations_proof_payload,
 )
 
 try:
-    from scripts.proof_generator_io import write_json_payload
+    from scripts.proof_generator_io import write_json_payload  # noqa: E402
 except ImportError:  # pragma: no cover - supports direct script execution
-    from proof_generator_io import write_json_payload  # type: ignore[import-not-found,no-redef]
-
-ROOT = Path(__file__).resolve().parents[1]
+    from proof_generator_io import write_json_payload  # type: ignore[import-not-found,no-redef] # noqa: E402
 
 
 def main(argv: list[str] | None = None) -> int:

@@ -482,8 +482,8 @@ AI_EXPLANATION_READINESS_ROUTE: RouteMetadata = {
                         "modelRiskOperationsContractAvailable": True,
                         "modelRiskDashboardContractAvailable": True,
                         "modelRiskAlertContractAvailable": True,
-                        "modelRiskDashboardCertified": True,
-                        "modelRiskAlertCertified": True,
+                        "modelRiskDashboardSourceContractValid": True,
+                        "modelRiskAlertRulesSourceContractValid": True,
                         "lotusAiRuntimeExecuted": False,
                         "certificationBlockers": [
                             "lotus_ai_runtime_execution_missing",

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from app.application.bond_maturity_live_proof import BOND_MATURITY_LIVE_PROOF_ENV
 from app.application.ai_lineage_store_proof import AI_LINEAGE_STORE_PROOF_ENV
-from app.application.ai_model_risk_operations_proof import (
+from app.application.ai_model_risk_operations.source_contract_proof import (
     AI_MODEL_RISK_OPERATIONS_PROOF_ENV,
 )
 from app.application.ai_workflow_pack_registration_proof import (

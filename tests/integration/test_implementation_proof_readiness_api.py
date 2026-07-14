@@ -14,7 +14,7 @@ from app.application.ai_lineage_store_proof import (
     AI_LINEAGE_STORE_PROOF_ENV,
     build_ai_lineage_store_proof_payload,
 )
-from app.application.ai_model_risk_operations_proof import (
+from app.application.ai_model_risk_operations.source_contract_proof import (
     AI_MODEL_RISK_OPERATIONS_PROOF_ENV,
     build_ai_model_risk_operations_proof_payload,
 )
@@ -493,7 +493,7 @@ def _configure_readiness_proof_artifacts(
     durable_proof_path = tmp_path / "durable-repository-proof.json"
     runtime_proof_path = tmp_path / "runtime-trust-telemetry-proof.json"
     ai_lineage_proof_path = tmp_path / "ai-lineage-store-proof.json"
-    ai_model_risk_proof_path = tmp_path / "ai-model-risk-operations-proof.json"
+    ai_model_risk_proof_path = tmp_path / "ai-model-risk-operations-source-contract-proof.json"
     operator_workflows_proof_path = tmp_path / "operator-workflows-operations-proof.json"
     workbench_proof_path = tmp_path / "workbench-read-path-proof.json"
     report_route_proof_path = tmp_path / "report-intake-route-proof.json"
