@@ -15,6 +15,13 @@ from app.application.source_ingestion import (
     IngestHighCashSourceSignalCommand,
     ingest_high_cash_signal_from_core,
 )
+from app.application.high_volatility_runtime_evidence import (
+    build_high_volatility_runtime_execution,
+    high_volatility_runtime_execution_is_valid,
+)
+from app.application.high_volatility_signal import (
+    evaluate_and_persist_high_volatility_signal_from_risk,
+)
 from app.runtime.repository_state import reset_idea_repository_for_tests
 from app.domain import (
     EvidenceFreshness,
@@ -49,13 +56,22 @@ from app.ports.core_sources import (
     CoreHighCashEvidenceRequest,
     CoreOpportunitySourcePort,
 )
-from app.runtime.repository_state import get_idea_repository
+from app.runtime.repository_state import (
+    get_idea_repository,
+    idea_repository_durable_storage_backed,
+)
 from tests.integration.postgres_runtime_support import (
     MIGRATIONS_DIR,
     execute_migrations,
     high_cash_payload,
     persistence_headers,
     run_concurrent_repository_mutations,
+)
+from tests.support.high_volatility_runtime_evidence import (
+    GENERATED_AT as HIGH_VOLATILITY_GENERATED_AT,
+    FixedRiskVolatilitySource,
+    risk_evidence as high_volatility_risk_evidence,
+    runtime_command as high_volatility_runtime_command,
 )
 
 
@@ -73,6 +89,46 @@ POSTGRES_SCHEMA_TABLES = (
     "idea_report_evidence_pack_request",
     "idea_ai_explanation_lineage",
 )
+
+
+def test_high_volatility_runtime_evidence_replays_after_postgres_repository_reload(
+    postgres_database_url: str,
+) -> None:
+    command = high_volatility_runtime_command()
+    source = FixedRiskVolatilitySource(high_volatility_risk_evidence())
+    repository = get_idea_repository()
+    accepted = evaluate_and_persist_high_volatility_signal_from_risk(
+        command,
+        risk_source=source,
+        repository=repository,
+    )
+    accepted_payload = build_high_volatility_runtime_execution(
+        generated_at_utc=HIGH_VOLATILITY_GENERATED_AT,
+        command=command,
+        result=accepted,
+        durable_storage_backed=idea_repository_durable_storage_backed(repository),
+    )
+
+    reset_idea_repository_for_tests(reload_from_environment=True)
+    reloaded_repository = get_idea_repository()
+    replayed = evaluate_and_persist_high_volatility_signal_from_risk(
+        command,
+        risk_source=source,
+        repository=reloaded_repository,
+    )
+    replayed_payload = build_high_volatility_runtime_execution(
+        generated_at_utc=HIGH_VOLATILITY_GENERATED_AT,
+        command=command,
+        result=replayed,
+        durable_storage_backed=idea_repository_durable_storage_backed(reloaded_repository),
+    )
+
+    assert accepted_payload["execution"]["persistenceReceipt"]["decision"] == "accepted"
+    assert replayed_payload["execution"]["persistenceReceipt"]["decision"] == "replayed"
+    assert high_volatility_runtime_execution_is_valid(accepted_payload) is True
+    assert high_volatility_runtime_execution_is_valid(replayed_payload) is True
+    assert _table_count(postgres_database_url, "idea_candidate_record") == 1
+    assert _table_count(postgres_database_url, "idea_idempotency_record") == 1
 
 
 def test_postgres_runtime_provider_persists_api_state_across_reloaded_connections(
