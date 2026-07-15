@@ -473,6 +473,10 @@ capability inside the existing deployable and Idea-owned database boundary.
 The follow-on same-pattern scan found the equivalent Performance
 underperformance defect; issue `#469` tracks it separately so #466 remains a
 bounded occurrence.
+PR `#470` merged the drawdown occurrence by rebase to exact-main SHA
+`6d58f620`. Main Releasability `29394530188` and CodeQL `29394525914` passed,
+including PostgreSQL and release-image validation, and wiki publication
+`2c3e3c5` has zero drift.
 PR `#467` merged the high-volatility occurrence by rebase to exact-main SHA
 `81f490ba`. Main Releasability `29391350559` and CodeQL `29391347328` passed,
 including PostgreSQL and Docker, and wiki publication `78cfcfc` has zero drift.
