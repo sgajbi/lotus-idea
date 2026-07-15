@@ -8,7 +8,10 @@ from app.application.core_benchmark_assignment_runtime_evidence import (
     evaluate_core_benchmark_assignment_readiness,
 )
 from app.domain import EvidenceFreshness, SourceRef, SourceSystem
-from app.ports.core_sources import CoreBenchmarkAssignmentEvidence, CoreBenchmarkAssignmentEvidenceRequest
+from app.ports.core_sources import (
+    CoreBenchmarkAssignmentEvidence,
+    CoreBenchmarkAssignmentEvidenceRequest,
+)
 
 
 class AuthoritativeCoreBenchmarkAssignmentSource:

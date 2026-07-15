@@ -16,7 +16,9 @@ from tests.support.core_benchmark_assignment_runtime_evidence import (
 
 
 class UnavailableCoreSource:
-    def fetch_benchmark_assignment_evidence(self, request: CoreBenchmarkAssignmentEvidenceRequest) -> object:
+    def fetch_benchmark_assignment_evidence(
+        self, request: CoreBenchmarkAssignmentEvidenceRequest
+    ) -> object:
         raise CoreSourceUnavailable(code="core_benchmark_assignment_source_unavailable")
 
 
@@ -43,16 +45,26 @@ def test_generator_routes_through_application_use_case_and_writes_truthful_artif
 
     exit_code = generate_runtime_execution.main(
         [
-            "--core-query-control-plane-base-url", "http://localhost:8101",
-            "--tenant-id", "tenant-a",
-            "--portfolio-id", "PB_SG_GLOBAL_BAL_001",
-            "--as-of-date", "2026-06-21",
-            "--reporting-currency", "USD",
-            "--generated-at-utc", "2026-06-21T10:10:00Z",
-            "--evaluated-at-utc", "2026-06-21T10:10:00Z",
-            "--correlation-id", "corr-secret",
-            "--trace-id", "trace-secret",
-            "--output", str(output),
+            "--core-query-control-plane-base-url",
+            "http://localhost:8101",
+            "--tenant-id",
+            "tenant-a",
+            "--portfolio-id",
+            "PB_SG_GLOBAL_BAL_001",
+            "--as-of-date",
+            "2026-06-21",
+            "--reporting-currency",
+            "USD",
+            "--generated-at-utc",
+            "2026-06-21T10:10:00Z",
+            "--evaluated-at-utc",
+            "2026-06-21T10:10:00Z",
+            "--correlation-id",
+            "corr-secret",
+            "--trace-id",
+            "trace-secret",
+            "--output",
+            str(output),
         ]
     )
 

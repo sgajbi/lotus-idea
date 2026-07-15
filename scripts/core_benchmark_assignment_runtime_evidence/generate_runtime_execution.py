@@ -70,12 +70,17 @@ def main(argv: list[str] | None = None) -> int:
     except (CoreSourceEntitlementDenied, CoreSourceUnavailable, DownstreamServiceError) as exc:
         return _write_blocked(args=args, command=command, error_code=_source_error_code(exc))
     except (DownstreamClientConfigurationError, OSError, ValueError, json.JSONDecodeError) as exc:
-        print(f"Core benchmark-assignment runtime evidence configuration error: {exc}", file=sys.stderr)
+        print(
+            f"Core benchmark-assignment runtime evidence configuration error: {exc}",
+            file=sys.stderr,
+        )
         return 2
 
 
 def _write_blocked(
-    *, args: argparse.Namespace, command: EvaluateCoreBenchmarkAssignmentReadiness | None,
+    *,
+    args: argparse.Namespace,
+    command: EvaluateCoreBenchmarkAssignmentReadiness | None,
     error_code: str,
 ) -> int:
     try:
@@ -109,7 +114,10 @@ def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Generate receipt-bound Core benchmark-assignment runtime evidence."
     )
-    parser.add_argument("--core-query-control-plane-base-url", default=os.getenv(CORE_QUERY_CONTROL_PLANE_BASE_URL_ENV))
+    parser.add_argument(
+        "--core-query-control-plane-base-url",
+        default=os.getenv(CORE_QUERY_CONTROL_PLANE_BASE_URL_ENV),
+    )
     parser.add_argument("--core-base-url", default=os.getenv(CORE_BASE_URL_ENV))
     parser.add_argument("--timeout-seconds", default=os.getenv(TIMEOUT_SECONDS_ENV, "2.0"))
     parser.add_argument("--tenant-id", required=True)

@@ -225,7 +225,10 @@ def test_repository_hygiene_gate_enforces_core_benchmark_runtime_evidence_packag
 
     assert violations == sorted(
         [
-            *(f"{path}: legacy flat-module path must not be reintroduced" for path in retired_paths),
+            *(
+                f"{path}: legacy flat-module path must not be reintroduced"
+                for path in retired_paths
+            ),
             *(f"{path}: required bounded-module path is missing" for path in required_paths),
         ]
     )
