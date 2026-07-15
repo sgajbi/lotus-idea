@@ -43,7 +43,6 @@ def _payload(product_name: str, *, extra: dict[str, Any] | None = None) -> dict[
 
 def _maturity_summary_payload(*, extra: dict[str, Any] | None = None) -> dict[str, Any]:
     maturity_hash = "sha256:" + "a" * 64
-    holdings_hash = "sha256:" + "b" * 64
     payload = _payload(
         "PortfolioMaturitySummary",
         extra={
@@ -76,10 +75,8 @@ def _maturity_summary_payload(*, extra: dict[str, Any] | None = None) -> dict[st
             "policy_version": "holdings-policy-v1",
             "correlation_id": "corr-core",
             "source_lineage": {
-                "source_owner": "lotus-core",
-                "source_product": "PortfolioMaturitySummary",
                 "upstream_product": "HoldingsAsOf",
-                "upstream_content_hash": holdings_hash,
+                "upstream_content_hash": "sha256:" + "b" * 64,
             },
         },
     )
