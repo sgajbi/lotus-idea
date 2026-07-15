@@ -501,15 +501,14 @@ Additional implemented high-volatility foundation:
    below-materiality, stale, non-ready, missing-source, duplicate,
    entitlement-denied, source-unavailable, malformed-measure, trace-header, and
    request-validation cases.
-6. `src/app/application/high_volatility_live_proof.py`,
-   `scripts/generate_high_volatility_live_proof.py`,
-   `scripts/high_volatility_live_proof_contract_gate.py`, and
-   `make high-volatility-live-proof-contract-gate` define a source-safe live
-   Risk high-volatility proof artifact. A valid artifact proves a live
-   `lotus-risk:RiskMetricsReport:v1` source call, current source evidence,
-   ready Risk supportability, and deterministic high-volatility candidate
-   generation, then clears only the namespaced opportunity-archetype live Risk
-   volatility blocker when consumed by aggregate readiness.
+6. `src/app/application/high_volatility_runtime_evidence/`,
+   `scripts/high_volatility_runtime_evidence/`, and
+   `make high-volatility-live-proof-contract-gate` define a closed v2
+   high-volatility `runtime_execution` contract. A valid artifact binds one
+   current `lotus-risk:RiskMetricsReport:v1` source receipt to the authoritative
+   evaluation-and-persistence result and one accepted or replayed durable Idea
+   persistence receipt, then clears only the namespaced opportunity-archetype
+   live Risk volatility blocker when consumed by aggregate readiness.
 7. This high-volatility foundation does not include drawdown-specific source
    proof, data-mesh certification, Workbench proof, or supported-feature
    promotion.

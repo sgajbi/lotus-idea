@@ -44,6 +44,13 @@ does not fetch Risk sources, calculate volatility, approve Risk methodology,
 recommend trades, create rebalance actions, prove Workbench behavior, authorize
 client publication, certify data mesh, or promote a supported feature.
 
+Separate high-volatility v2 runtime evidence invokes the authoritative source
+adapter and evaluation-and-persistence use case. It binds current Risk evidence
+to accepted or replayed durable Idea persistence and may clear only the
+volatility live-source blocker. This is implementation proof, not a claim of
+Workbench realization, deployment, production certification, client
+publication, official risk methodology, or supported-feature promotion.
+
 Missing-benchmark review is now an internal bounded foundation under the
 opportunity archetype/scenario contract. It has deterministic policy and Core
 benchmark-assignment source-port proof plus bounded Performance benchmark-readiness
