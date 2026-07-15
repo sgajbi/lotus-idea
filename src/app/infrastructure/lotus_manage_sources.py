@@ -265,6 +265,12 @@ def _action_register_runtime(
             code="manage_action_register_generated_at_missing",
         )
         fingerprint = _content_hash(payload)
+        run_count = _int_field(payload, "run_count", code="manage_run_count_malformed")
+        operation_count = _int_field(
+            payload,
+            "operation_count",
+            code="manage_operation_count_malformed",
+        )
     except ManageSourceUnavailable:
         return None
     if (
@@ -289,6 +295,8 @@ def _action_register_runtime(
         as_of_date=as_of_date,
         generated_at_utc=generated_at,
         source_batch_fingerprint=fingerprint,
+        run_count=run_count,
+        operation_count=operation_count,
         correlation_id=correlation_id,
     )
 

@@ -44,6 +44,8 @@ class ManageActionRegisterRuntimeEvidence:
     as_of_date: date
     generated_at_utc: datetime
     source_batch_fingerprint: str
+    run_count: int
+    operation_count: int
     correlation_id: str | None
 
 
