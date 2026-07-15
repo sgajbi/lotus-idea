@@ -391,20 +391,28 @@ amounts, movement details, or client facts. It deliberately retains Workbench,
 data-mesh, client-publication, supported-feature, suitability, planning,
 funding-advice, and treasury-instruction blockers.
 
-Lotus Core bond-maturity live proof is captured by
-`scripts/generate_bond_maturity_live_proof.py`. A valid artifact referenced
-through `LOTUS_IDEA_BOND_MATURITY_LIVE_PROOF` clears only
-`opportunity_archetype_maturity_live_core_source_proof_missing` for the
-`opportunity-archetype-scenarios` capability. The live adapter consumes
-Core-owned `PortfolioMaturitySummary:v1`, requires upstream `HoldingsAsOf:v1`
-lineage, and fails closed instead of deriving maturity dates or counts from raw
-positions. The artifact proves live Core maturity-summary evidence, current
-source refs, next maturity-date evidence, and maturing-position count presence
-without storing portfolio identity, request or response payloads, correlation
-IDs, trace IDs, candidate IDs, source routes, positions, holdings, security
-identifiers, maturity dates, or quantities. It deliberately retains data-mesh,
-Workbench, client-publication, product-recommendation, reinvestment-advice,
-suitability, risk, and supported-feature blockers.
+Lotus Core bond-maturity runtime evidence is captured by
+`scripts/bond_maturity_runtime_evidence/generate_runtime_execution.py`. A valid
+artifact referenced through `LOTUS_IDEA_BOND_MATURITY_LIVE_PROOF` can satisfy
+only `opportunity_archetype_maturity_live_core_source_proof_missing` for the
+`opportunity-archetype-scenarios` capability. The named read-only application
+use case consumes Core-owned `PortfolioMaturitySummary:v1` through the source
+port and binds the exact request scope, maturity-summary receipt, and upstream
+`HoldingsAsOf:v1` content identity. Qualification requires current complete
+evidence, exact horizon and non-projected mode, contractual maturity-date basis,
+supported response posture, no missing dates or unsupported product features,
+complete reconciliation, snapshot/policy/correlation identity, consistent
+hashes, and valid evidence time. A supported zero-count window is a completed
+execution with `opportunityDetected=false`; a positive count requires an
+in-window next maturity date. The source-safe artifact hashes tenant, portfolio,
+and correlation identity and excludes request/response bodies, raw holdings,
+security identifiers, quantities, and instrument-level schedules. It retains
+the bounded next date and aggregate counts needed to verify the decision.
+Lotus Core issue `#792` tracks missing producer reconciliation, tenant, and
+correlation metadata; real qualification fails closed until Core supplies it.
+Data-mesh, Workbench, client-publication, product recommendation, reinvestment
+advice, suitability, risk, deployment, production, and supported-feature
+blockers remain.
 
 Lotus Manage mandate live proof is captured by
 `scripts/generate_manage_mandate_live_proof.py`. A valid artifact referenced
@@ -995,12 +1003,12 @@ Implementation-backed evidence:
     `make core-portfolio-state-live-proof-contract-gate`,
 1. Core portfolio-state runtime-evidence tests:
     `tests/unit/core_portfolio_state_runtime_evidence/`,
-1. Bond maturity live-proof generator:
-    `scripts/generate_bond_maturity_live_proof.py`,
-1. Bond maturity live-proof contract gate:
+1. Bond maturity runtime-evidence generator:
+    `scripts/bond_maturity_runtime_evidence/generate_runtime_execution.py`,
+1. Bond maturity runtime-evidence contract gate:
     `make bond-maturity-live-proof-contract-gate`,
-1. Bond maturity live-proof tests:
-    `tests/unit/test_bond_maturity_live_proof.py`,
+1. Bond maturity runtime-evidence tests:
+    `tests/unit/bond_maturity_runtime_evidence/`,
 1. Low-income Core cashflow live-proof generator:
     `scripts/generate_low_income_core_cashflow_live_proof.py`,
 1. Low-income Core cashflow live-proof contract gate:

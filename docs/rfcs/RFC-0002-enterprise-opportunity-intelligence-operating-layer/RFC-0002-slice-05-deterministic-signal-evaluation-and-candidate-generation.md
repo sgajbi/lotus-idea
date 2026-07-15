@@ -165,12 +165,19 @@ Additional implemented bond-maturity / reinvestment foundation:
    `HoldingsAsOf:v1` lineage, accepts explicit maturity summary fields only,
    and no longer derives maturity dates or maturing-position counts from raw
    positions.
-4. `src/app/application/bond_maturity_live_proof.py`,
-   `scripts/generate_bond_maturity_live_proof.py`, and
-   `make bond-maturity-live-proof-contract-gate` define a source-safe live
-   proof artifact that can clear only the live Core maturity source blocker.
-   It does not certify data mesh, Workbench behavior, client publication,
-   product recommendations, reinvestment advice, or supported-feature status.
+4. `src/app/application/bond_maturity_runtime_evidence/`,
+   `scripts/bond_maturity_runtime_evidence/`, and
+   `make bond-maturity-live-proof-contract-gate` define closed v2
+   `runtime_execution` evidence. A named read-only use case binds exact request
+   scope, `PortfolioMaturitySummary:v1`, and upstream `HoldingsAsOf:v1`
+   receipts; a supported empty window completes without creating an
+   opportunity. Partial, stale, unsupported-feature, scope-inconsistent, or
+   tampered evidence cannot clear the live Core maturity source blocker. Core
+   issue `#792` tracks missing producer reconciliation, tenant, and correlation
+   metadata, so live qualification remains fail closed. The artifact does not
+   certify data mesh, Workbench behavior, client publication, product
+   recommendations, reinvestment advice, deployment, production, or
+   supported-feature status.
 5. `src/app/api/bond_maturity_signals.py` exposes
    `POST /api/v1/idea-signals/bond-maturity/evaluate` as a bounded
    caller-supplied API foundation over Core maturity-summary evidence. It
