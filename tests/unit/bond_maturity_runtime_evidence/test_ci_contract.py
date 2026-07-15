@@ -4,8 +4,7 @@ import importlib.util
 from pathlib import Path
 from types import ModuleType
 
-
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 
 
 def _load_ci_contract_gate() -> ModuleType:
@@ -18,19 +17,13 @@ def _load_ci_contract_gate() -> ModuleType:
     return module
 
 
-def test_ci_contract_gate_blocks_missing_bond_maturity_live_proof_wiring() -> None:
+def test_ci_contract_gate_blocks_missing_bond_maturity_runtime_evidence_wiring() -> None:
     module = _load_ci_contract_gate()
     makefile = (
         (ROOT / "Makefile")
         .read_text(encoding="utf-8")
-        .replace(
-            "LOTUS_IDEA_BOND_MATURITY_LIVE_PROOF",
-            "REMOVED_BOND_MATURITY_PROOF",
-        )
-        .replace(
-            "--bond-maturity-live-proof",
-            "--removed-bond-maturity-live-proof",
-        )
+        .replace("LOTUS_IDEA_BOND_MATURITY_LIVE_PROOF", "REMOVED_BOND_MATURITY_PROOF")
+        .replace("--bond-maturity-live-proof", "--removed-bond-maturity-live-proof")
     )
 
     errors = module.validate_makefile(makefile)
@@ -45,13 +38,16 @@ def test_ci_contract_gate_blocks_missing_bond_maturity_live_proof_wiring() -> No
     ) in errors
 
 
-def test_ci_contract_gate_blocks_missing_bond_maturity_live_proof_gate() -> None:
+def test_ci_contract_gate_blocks_missing_bond_maturity_runtime_contract_gate() -> None:
     module = _load_ci_contract_gate()
     makefile = (
         (ROOT / "Makefile")
         .read_text(encoding="utf-8")
         .replace("$(MAKE) bond-maturity-live-proof-contract-gate\n", "")
-        .replace("scripts/bond_maturity_live_proof_contract_gate.py", "scripts/removed.py")
+        .replace(
+            "scripts/bond_maturity_runtime_evidence/runtime_execution_contract_gate.py",
+            "scripts/removed.py",
+        )
     )
 
     errors = module.validate_makefile(makefile)
@@ -61,5 +57,5 @@ def test_ci_contract_gate_blocks_missing_bond_maturity_live_proof_gate() -> None
     ) in errors
     assert (
         "Makefile bond-maturity-live-proof-contract-gate target must run "
-        "`scripts/bond_maturity_live_proof_contract_gate.py`"
+        "`scripts/bond_maturity_runtime_evidence/runtime_execution_contract_gate.py`"
     ) in errors

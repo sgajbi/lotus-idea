@@ -15,7 +15,7 @@ from app.application.ai_workflow_pack_registration.source_contract_proof import 
 from app.application.ai_runtime_proof import (
     AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF_ENV,
 )
-from app.application.bond_maturity_live_proof import BOND_MATURITY_LIVE_PROOF_ENV
+from app.application.bond_maturity_runtime_evidence import BOND_MATURITY_RUNTIME_EXECUTION_ENV
 from app.application.durable_repository_proof import DURABLE_REPOSITORY_PROOF_ENV
 from app.application.workbench.contract_proof import (
     GATEWAY_WORKBENCH_CONTRACT_PROOF_ENV,
@@ -194,7 +194,7 @@ _JSON_PROOF_ARTIFACTS: tuple[tuple[str, str, str, str], ...] = (
         "Gateway/Workbench discovery contract proof",
     ),
     (
-        BOND_MATURITY_LIVE_PROOF_ENV,
+        BOND_MATURITY_RUNTIME_EXECUTION_ENV,
         "bond_maturity_live_proof",
         "bond_maturity_live_proof_ref",
         "bond maturity live proof",

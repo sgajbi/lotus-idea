@@ -12,7 +12,7 @@ from app.application.ai_workflow_pack_registration.source_contract_proof import 
 from app.application.ai_runtime_proof import (
     AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF_ENV,
 )
-from app.application.bond_maturity_live_proof import BOND_MATURITY_LIVE_PROOF_ENV
+from app.application.bond_maturity_runtime_evidence import BOND_MATURITY_RUNTIME_EXECUTION_ENV
 from app.application.durable_repository_proof import DURABLE_REPOSITORY_PROOF_ENV
 from app.application.workbench.contract_proof import (
     GATEWAY_WORKBENCH_CONTRACT_PROOF_ENV,
@@ -240,7 +240,7 @@ def _configure_relative_artifact_env(monkeypatch: pytest.MonkeyPatch) -> None:
         PLATFORM_CATALOG_SOURCE_CONTRACT_ENV: (
             "output/data-mesh/platform-catalog-source-contract.json"
         ),
-        BOND_MATURITY_LIVE_PROOF_ENV: (
+        BOND_MATURITY_RUNTIME_EXECUTION_ENV: (
             "output/opportunity-archetypes/bond-maturity-live-proof.json"
         ),
         LOW_INCOME_CORE_CASHFLOW_LIVE_PROOF_ENV: (

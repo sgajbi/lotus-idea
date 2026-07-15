@@ -2,6 +2,9 @@ from __future__ import annotations
 
 REQUIRED_CORE_RUNTIME_EVIDENCE_PATHS = {
     "scripts/repository_hygiene/core_runtime_evidence_paths.py",
+    "scripts/bond_maturity_runtime_evidence/__init__.py",
+    "scripts/bond_maturity_runtime_evidence/generate_runtime_execution.py",
+    "scripts/bond_maturity_runtime_evidence/runtime_execution_contract_gate.py",
     "scripts/core_benchmark_assignment_runtime_evidence/generate_runtime_execution.py",
     "scripts/core_portfolio_state_runtime_evidence/__init__.py",
     "scripts/core_portfolio_state_runtime_evidence/generate_runtime_execution.py",
@@ -11,6 +14,15 @@ REQUIRED_CORE_RUNTIME_EVIDENCE_PATHS = {
     "src/app/application/core_portfolio_state_runtime_evidence/__init__.py",
     "src/app/application/core_portfolio_state_runtime_evidence/contract.py",
     "src/app/application/core_portfolio_state_runtime_evidence/runtime_execution.py",
+    "src/app/application/bond_maturity_runtime_evidence/__init__.py",
+    "src/app/application/bond_maturity_runtime_evidence/contract.py",
+    "src/app/application/bond_maturity_runtime_evidence/runtime_execution.py",
+    "tests/support/bond_maturity_runtime_evidence.py",
+    "tests/unit/bond_maturity_runtime_evidence/__init__.py",
+    "tests/unit/bond_maturity_runtime_evidence/test_aggregate_readiness.py",
+    "tests/unit/bond_maturity_runtime_evidence/test_ci_contract.py",
+    "tests/unit/bond_maturity_runtime_evidence/test_generator.py",
+    "tests/unit/bond_maturity_runtime_evidence/test_runtime_execution.py",
     "tests/support/core_portfolio_state_runtime_evidence.py",
     "tests/unit/core_portfolio_state_runtime_evidence/__init__.py",
     "tests/unit/core_portfolio_state_runtime_evidence/test_generator.py",
@@ -18,12 +30,18 @@ REQUIRED_CORE_RUNTIME_EVIDENCE_PATHS = {
 }
 
 PROHIBITED_CORE_RUNTIME_EVIDENCE_LEGACY_PATHS = {
+    "scripts/bond_maturity_live_proof_contract_gate.py",
     "scripts/core_benchmark_assignment_live_proof_contract_gate.py",
     "scripts/core_portfolio_state_live_proof_contract_gate.py",
     "scripts/generate_core_benchmark_assignment_live_proof.py",
+    "scripts/generate_bond_maturity_live_proof.py",
     "scripts/generate_core_portfolio_state_live_proof.py",
     "src/app/application/core_benchmark_assignment_live_proof.py",
+    "src/app/application/bond_maturity_live_proof.py",
     "src/app/application/core_portfolio_state_live_proof.py",
     "tests/unit/test_core_benchmark_assignment_live_proof.py",
+    "tests/unit/test_bond_maturity_live_proof.py",
+    "tests/unit/test_bond_maturity_live_proof_ci_contract_gate.py",
+    "tests/unit/test_bond_maturity_live_proof_readiness.py",
     "tests/unit/test_core_portfolio_state_live_proof.py",
 }
