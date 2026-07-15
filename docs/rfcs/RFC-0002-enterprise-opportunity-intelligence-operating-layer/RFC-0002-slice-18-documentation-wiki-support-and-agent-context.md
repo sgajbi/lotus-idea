@@ -141,7 +141,7 @@ documentation across opportunity signal APIs.
     `docs/operations/implementation-proof-readiness.md`, quality gate docs,
     RFC evidence, and wiki source now describe the live source-proof artifact
     contract, aggregate source-safe `blockReasonCounts`, and
-    `make source-ingestion-live-proof-contract-gate`, while preserving the
+    `make source-ingestion-runtime-execution-contract-gate`, while preserving the
     boundary that only a family-valid and aggregate-current artifact clears the
     live-Core blocker and does not promote source ingestion as a supported
     feature.
@@ -320,6 +320,12 @@ documentation across opportunity signal APIs.
     source. It clears no blocker and preserves materialization execution,
     rendered-output, archive-record, retention/legal-hold, publication,
     certification, and supported-feature boundaries.
+36. Issue `#456` synchronizes source-ingestion v2 `runtime_execution` truth
+    across the run-once and implementation-proof runbooks, Slice 09/17,
+    quality gates, repository context, evidence/review ledgers, and authored
+    wiki. The artifact is implementation-backed by exact Core source refs and
+    durable persistence receipts; it preserves scheduler, mesh,
+    Gateway/Workbench, production, and supported-feature boundaries.
 
 This documentation slice does not promote any supported feature. It records
 bounded Workbench read-path source contract, Gateway/Workbench contract proof, and

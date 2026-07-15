@@ -918,7 +918,7 @@ make downstream-realization-contract-gate
 make downstream-route-source-contract-proof-gate
 make outbox-broker-source-contract-proof-gate
 make runtime-trust-telemetry-test-execution-contract-gate
-make source-ingestion-live-proof-contract-gate
+make source-ingestion-runtime-execution-contract-gate
 make canonical-opportunity-source-proofs
 make source-ingestion-scheduled-worker-check
 make quality-scorecard-gate
@@ -1282,14 +1282,26 @@ Recent issue-derived patterns to preserve:
     receipt JSON loading are shared through `app.application.ci_execution_evidence`
     and `scripts.proof_generator_io`; capability packages retain only their
     own trusted workflow, assertion, blocker, and no-claim policy.
-36. Integration API clients must be created through
+36. Source-ingestion v2 evidence is `runtime_execution` only when the
+    capability-owned `source_ingestion_runtime_evidence` policy validates
+    actual application-use-case results. Require exact current Core product
+    refs, accepted/replayed-only decisions, one persisted-record receipt per
+    work item, source-evidence hash reconciliation, source-safe scope binding,
+    durable storage, and current aggregate provenance. Self-asserted success
+    booleans, summary counts, in-memory runs, mixed decisions, missing records,
+    unknown fields, and claim inflation clear no blocker. Keep the generator
+    and gate under `scripts/source_ingestion/`; repository hygiene prohibits
+    the retired flat v1 paths. This is design modularity within the existing
+    API/worker deployable and shared Idea PostgreSQL boundary, not a new
+    service or database.
+37. Integration API clients must be created through
     `tests.support.http.managed_test_client`. The autouse integration fixture
     owns application lifespan and deterministic client shutdown per test;
     direct FastAPI or Starlette `TestClient` construction is blocked by
     `make test-client-lifecycle-gate` through `make lint`. This prevents
     cumulative event-loop socket exhaustion on Windows and ensures shutdown
     hooks are exercised without scattering cleanup logic across test modules.
-37. Platform-mesh event contracts, declared consumers, source-manifest entries,
+38. Platform-mesh event contracts, declared consumers, source-manifest entries,
     and generated catalog entries are `source_contract` evidence. They may add
     provenance to outbox readiness but must not clear
     `platform_mesh_event_publication_proof_missing` or claim runtime execution,
@@ -1297,7 +1309,7 @@ Recent issue-derived patterns to preserve:
     certification, downstream delivery, or supported-feature promotion. Keep
     this proof family under capability-owned `outbox/platform_mesh/` packages;
     repository hygiene prohibits the retired flat publication-proof paths.
-38. Lotus AI workflow-pack phase specs, registry seed declarations, bindings,
+39. Lotus AI workflow-pack phase specs, registry seed declarations, bindings,
     queue policy, supportability source, and tests are `source_contract`
     evidence. Keep this family under capability-owned
     `ai_workflow_pack_registration/` application, script, and test packages.
@@ -1305,7 +1317,7 @@ Recent issue-derived patterns to preserve:
     `workflow_pack_runtime_contract_not_certified`; it cannot claim runtime
     registry observation, deployment, production certification, provider
     execution, Workbench proof, client publication, or feature promotion.
-39. A sibling Report contract and static route declaration are
+40. A sibling Report contract and static route declaration are
     `source_contract` evidence, not live intake proof. Keep the application
     policy, thin generator, gate, and focused tests under capability-owned
     `report/` packages. A valid artifact adds provenance only, clears no
@@ -1314,7 +1326,7 @@ Recent issue-derived patterns to preserve:
     isolation, and request-execution evidence from the owning Report runtime.
     Never infer materialization, render, archive, publication, certification,
     or supported-feature posture from route declarations.
-40. A sibling Report materialization contract is also `source_contract`
+41. A sibling Report materialization contract is also `source_contract`
     evidence, even when that sibling contract declares an implemented route or
     records report-owned execution claims. Keep this family under the
     capability-owned `report/` application, script, and test packages. The v2
@@ -1326,7 +1338,7 @@ Recent issue-derived patterns to preserve:
     evidence from the owning Report/Render/Archive runtime can change those
     blockers; source declarations must never be projected into a current target
     route, readiness status, or supportability status.
-41. Platform source-manifest and generated-catalog inclusion are
+42. Platform source-manifest and generated-catalog inclusion are
     `source_contract` claims. Keep this family under capability-owned
     `data_mesh/` application, script, and test packages. Bind each authoritative
     sibling platform input by repository, ref, and SHA-256, reject unknown

@@ -164,8 +164,8 @@ AI workflow-pack runtime execution proof contract validation,
 source-ingestion worker manifest and source-safe output-contract validation,
 scheduled source-ingestion worker deploy-contract validation and source-safe
 artifact-ref recording in aggregate implementation-proof readiness,
-source-ingestion live-proof artifact contract validation with aggregate-current
-provenance consumption, implementation-proof readiness release-lane artifact
+receipt-bound source-ingestion v2 `runtime_execution` validation with
+aggregate-current provenance consumption, implementation-proof readiness release-lane artifact
 generation, runtime trust telemetry preview validation and runtime trust
 telemetry snapshot release-lane artifact generation,
 security audit, Docker build validation, runtime-only Docker dependency posture,
@@ -415,13 +415,15 @@ Persistence adapter validation:
    `make source-ingestion-scheduled-worker-check` prove the scheduled worker
    deploy-contract shape, opt-in Docker Compose worker service, source-safe
    scheduler check-only output, and scheduled-worker proof artifact validation.
-8. `tests/unit/test_source_ingestion_live_proof.py`,
-   `tests/unit/test_source_ingestion_live_proof_contract_gate.py`, and
-   `make source-ingestion-live-proof-contract-gate` prove the live Core
-   source-ingestion proof artifact contract, source-sensitive-field blocking,
-   aggregate blocked-reason diagnostics, and readiness blocker behavior without
-   calling Core in CI. A valid artifact can clear only the source-ingestion
-   live-Core blocker and the high-cash archetype live-Core blocker.
+8. `tests/unit/source_ingestion_runtime_evidence/test_runtime_execution.py`,
+   `tests/unit/source_ingestion_runtime_evidence/test_contract_gate.py`, and
+   `make source-ingestion-runtime-execution-contract-gate` prove the closed v2
+   `runtime_execution` contract. Positive fixtures traverse the application
+   use case and repository; mutation tests reject unknown claims, non-current
+   or wrong-authority Core refs, evidence-hash/scope/count drift, missing
+   persistence receipts, mixed outcomes, in-memory posture, and claim
+   inflation. Valid current evidence changes only the family live-Core posture
+   and high-cash archetype live-Core blocker.
 9. `tests/unit/test_generate_implementation_proof_readiness.py` and
    `make implementation-proof-readiness-check` prove the aggregate RFC-0002
    implementation-proof readiness artifact, including source-ingestion proof
@@ -687,7 +689,7 @@ SBOM/release evidence with resolved base/scanner image digests, endpoint certifi
 data-mesh contract validation, downstream realization contract validation,
 migration contract validation, migration execution dry-run
 validation, source-ingestion worker manifest and output-contract validation,
-source-ingestion live-proof contract validation, PostgreSQL runtime
+source-ingestion runtime-execution receipt contract validation, PostgreSQL runtime
 proof, durable repository proof contract validation, workflow-dispatch access, non-suppressed auto-merge token
 usage, merged-PR main-releasability dispatch, bounded job timeouts, no `continue-on-error: true`
 in critical lanes, maintainability enforcement, quality-scorecard truth,

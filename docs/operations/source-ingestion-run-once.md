@@ -40,22 +40,28 @@ The endpoint proves the service can:
 `make trusted-tenant-context-gate` prevents the API, application, port,
 adapter, persistence, worker, and telemetry contracts from drifting apart.
 
-`scripts/generate_source_ingestion_live_proof.py` wraps the same worker path
-and writes a source-safe proof artifact for release reviewers. When that
-artifact is family-valid, referenced through
-`LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF`, and aggregate-current, aggregate
-readiness can clear only `live_core_source_proof_missing`; scheduled worker,
-data-mesh, Gateway/Workbench, and supported-feature blockers remain. Aggregate
-implementation-proof readiness also records the validated live-proof artifact
-ref in source-safe capability evidence so reviewers can audit the blocker
-clearance without seeing Core payloads or portfolio identity. Missing, stale,
-future-dated, wrong-ref, or wrong-source-revision provenance leaves the blocker
-in place.
-The live-proof artifact also includes aggregate `blockReasonCounts` for
-blocked attempts. These counts help operators distinguish Core unavailable,
-entitlement denied, omitted cash-weight evidence, and Core-reported blocked
-cash-weight supportability without exposing source payloads or reconstructing
-cash weight in `lotus-idea`.
+## Runtime Evidence Contract
+
+`scripts/source_ingestion/generate_runtime_execution.py` executes the same
+application use case and emits v2 `runtime_execution` evidence. Qualification
+is derived from the returned domain and persistence results; it is never
+accepted from caller-supplied success booleans or summary counts.
+
+| Required receipt binding | Validation rule |
+| --- | --- |
+| Worker scope | The tenant and portfolio are hashed into a source-safe scope fingerprint. Raw identifiers are excluded. |
+| Core authority | Exactly the four governed high-cash Core products must be current, same-date `lotus-core` references. |
+| Domain outcome | Every work item must finish as `accepted` or `replayed`; mixed blocked, conflict, duplicate, suppressed, or ineligible runs do not qualify. |
+| Persistence | Every qualifying item must carry the actual persisted record timestamp, source-evidence hash, and a digest over the receipt. |
+| Durability | `durableStorageBacked` must be true. An in-memory execution remains useful test evidence but cannot qualify. |
+| Aggregate provenance | The consumed artifact ref, digest, source revision, clean-tree posture, and freshness must match at evaluation time. |
+
+A valid current artifact removes the source-ingestion readiness live-Core
+blocker and only the declared opportunity-archetype blocker
+`opportunity_archetype_live_core_source_proof_missing`. Scheduled-worker,
+data-mesh, Gateway/Workbench, production-certification, and supported-feature
+blockers remain. Blocked runs retain source-safe aggregate reason counts but
+carry no persistence receipts and clear no blocker.
 
 `scripts/run_scheduled_source_ingestion_worker.py` wraps the run-once worker in
 an explicit scheduler entrypoint. `--max-runs` is useful for bounded operator
@@ -153,17 +159,17 @@ canonical Workbench/demo portfolio, but its 2026-06-20 Core cash weight is below
 the high-cash threshold and should not be used to force an accepted
 source-ingestion proof.
 
-Live-proof capture:
+Runtime-evidence capture:
 
 ```powershell
-python scripts/generate_source_ingestion_live_proof.py `
+python scripts/source_ingestion/generate_runtime_execution.py `
   --manifest docs/examples/source-ingestion/high-cash-worker-manifest.example.json `
   --core-query-base-url http://localhost:8201 `
   --core-query-control-plane-base-url http://localhost:8202 `
   --generated-at-utc 2026-06-21T10:10:00Z `
-  --output output/source-ingestion/live-proof.json
+  --output output/source-ingestion/source-ingestion-runtime-execution.json
 
-$env:LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF = "output/source-ingestion/live-proof.json"
+$env:LOTUS_IDEA_SOURCE_INGESTION_RUNTIME_EXECUTION = "output/source-ingestion/source-ingestion-runtime-execution.json"
 ```
 
 Aggregate readiness can consume that live proof through the canonical Make
@@ -172,14 +178,14 @@ target without a one-off generator command:
 ```powershell
 $env:LOTUS_CORE_QUERY_BASE_URL = "http://localhost:8201"
 $env:LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL = "http://localhost:8202"
-$env:LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF = "output/source-ingestion/live-proof.json"
+$env:LOTUS_IDEA_SOURCE_INGESTION_RUNTIME_EXECUTION = "output/source-ingestion/source-ingestion-runtime-execution.json"
 $env:IMPLEMENTATION_PROOF_OUTPUT = "output/implementation-proof/implementation-proof-readiness.json"
 make implementation-proof-readiness-check
 ```
 
 ### Repeatable Durable Proof Runs
 
-Live proof uses the same idempotency semantics as the run-once worker. When a
+Runtime-evidence capture uses the same idempotency semantics as the run-once worker. When a
 durable PostgreSQL repository already contains an accepted proof for a prior
 source fingerprint, rerunning the checked-in manifest with the generated
 default key can correctly return `conflict` after the upstream source identity
@@ -188,25 +194,25 @@ changes. Do not reset the database to hide that evidence.
 For a new release-proof capture against an existing durable repository, create
 an ignored proof-run manifest under `output/source-ingestion/` with a
 source-safe explicit `idempotencyKey`, then pass that manifest to
-`scripts/generate_source_ingestion_live_proof.py`. Keep the generated manifest
+`scripts/source_ingestion/generate_runtime_execution.py`. Keep the generated manifest
 out of Git; the committed example manifest remains the canonical source-safe
 default.
 
 ```powershell
 $proofId = (Get-Date).ToUniversalTime().ToString("yyyyMMddTHHmmssZ")
-$manifestPath = "output/source-ingestion/live-proof-manifest-$proofId.json"
+$manifestPath = "output/source-ingestion/runtime-execution-manifest-$proofId.json"
 
 # Copy docs/examples/source-ingestion/high-cash-worker-manifest.example.json
 # into $manifestPath and set:
 # workItems[0].idempotencyKey =
 #   "signal-ingestion:high-cash:lotus-core:proof-$proofId"
 
-python scripts/generate_source_ingestion_live_proof.py `
+python scripts/source_ingestion/generate_runtime_execution.py `
   --manifest $manifestPath `
   --core-query-base-url http://localhost:8201 `
   --core-query-control-plane-base-url http://localhost:8202 `
   --generated-at-utc 2026-06-23T11:10:00Z `
-  --output output/source-ingestion/live-proof.json
+  --output output/source-ingestion/source-ingestion-runtime-execution.json
 ```
 
 Scheduled-worker deploy proof:
@@ -282,7 +288,8 @@ Implementation-backed evidence:
 2. manifest planner: `src/app/application/source_ingestion_worker.py`,
 3. scheduled-worker planner:
    `src/app/application/source_ingestion_scheduled_worker.py`,
-4. live-proof builder: `src/app/application/source_ingestion_live_proof.py`,
+4. runtime-evidence policy:
+   `src/app/application/source_ingestion_runtime_evidence/runtime_execution.py`,
 5. runtime builder: `src/app/runtime/source_ingestion_state.py`,
 6. API route: `src/app/api/source_ingestion_readiness.py`,
 7. scheduled worker entrypoint:
@@ -295,7 +302,8 @@ Implementation-backed evidence:
    `tests/integration/test_source_ingestion_readiness_api.py`,
 11. scheduled-worker contract gate:
    `make source-ingestion-scheduled-worker-check`,
-12. live-proof contract gate: `make source-ingestion-live-proof-contract-gate`,
+12. runtime-execution contract gate:
+    `make source-ingestion-runtime-execution-contract-gate`,
 13. block-reason diagnostics tests:
    `tests/unit/test_source_ingestion_worker.py`,
 14. proof-readiness diagnostic:
@@ -307,7 +315,7 @@ Run:
 python -m pytest tests/unit/test_source_ingestion.py tests/unit/test_source_ingestion_worker.py tests/integration/test_source_ingestion_readiness_api.py -q
 make source-ingestion-worker-check
 make source-ingestion-scheduled-worker-check
-make source-ingestion-live-proof-contract-gate
+make source-ingestion-runtime-execution-contract-gate
 make endpoint-certification-gate
 make openapi-gate
 ```

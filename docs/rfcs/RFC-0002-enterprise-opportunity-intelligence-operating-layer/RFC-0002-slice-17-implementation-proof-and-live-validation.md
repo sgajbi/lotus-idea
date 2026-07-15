@@ -1,6 +1,6 @@
 # RFC-0002 Slice 17: Implementation Proof And Live Validation
 
-Status: Partially implemented - aggregate proof-readiness diagnostic, bounded live source-ingestion proof artifact contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry test-execution artifact, Workbench read-path source-contract proof artifact, Gateway/Workbench contract proof artifact, Gateway/Workbench discovery contract proof artifact, digest-bound Advise and Manage route source contracts, Manage mandate live proof artifact, Core portfolio-state live proof artifact, Report intake route and materialization source-contract artifacts, bounded outbox broker source-contract proof artifact, bounded downstream consumer source-contract proof artifact, bounded outbox platform-mesh event source-contract proof, digest-bound mesh policy source-contract artifact, platform catalog source contract artifact, AI lineage store proof artifact, AI workflow-pack registration proof artifact, AI workflow-pack runtime execution proof artifact, high-volatility and drawdown live Risk proof artifact contracts, low-income Core cashflow live proof artifact contract, bond-maturity policy foundation, and opportunity archetype scenario readiness with source/policy foundations available. Slice evidence now includes live canonical Risk concentration, Performance underperformance, and Performance benchmark-readiness source proofs for `PB_SG_GLOBAL_BAL_001`; observed Advise/Manage route serving and acceptance, policy certification, Report intake and materialization execution, rendered output, archive creation, external broker publication, platform-mesh event publication, downstream consumer execution, full live opportunity-journey proof, data-mesh certification, Workbench product proof, client-publication approval, and supported-feature promotion remain pending.
+Status: Partially implemented - aggregate proof-readiness diagnostic, bounded source-ingestion runtime-execution receipt contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry test-execution artifact, Workbench read-path source-contract proof artifact, Gateway/Workbench contract proof artifact, Gateway/Workbench discovery contract proof artifact, digest-bound Advise and Manage route source contracts, Manage mandate live proof artifact, Core portfolio-state live proof artifact, Report intake route and materialization source-contract artifacts, bounded outbox broker source-contract proof artifact, bounded downstream consumer source-contract proof artifact, bounded outbox platform-mesh event source-contract proof, digest-bound mesh policy source-contract artifact, platform catalog source contract artifact, AI lineage store proof artifact, AI workflow-pack registration proof artifact, AI workflow-pack runtime execution proof artifact, high-volatility and drawdown live Risk proof artifact contracts, low-income Core cashflow live proof artifact contract, bond-maturity policy foundation, and opportunity archetype scenario readiness with source/policy foundations available. Slice evidence now includes live canonical Risk concentration, Performance underperformance, and Performance benchmark-readiness source proofs for `PB_SG_GLOBAL_BAL_001`; observed Advise/Manage route serving and acceptance, policy certification, Report intake and materialization execution, rendered output, archive creation, external broker publication, platform-mesh event publication, downstream consumer execution, full live opportunity-journey proof, data-mesh certification, Workbench product proof, client-publication approval, and supported-feature promotion remain pending.
 
 ## Outcome
 
@@ -94,9 +94,9 @@ Prove the complete supported opportunity journey end to end.
     until bounded live Core source proof, certified long-running scheduling proof,
     data-mesh runtime telemetry, Gateway/Workbench proof, and supported-feature
     promotion evidence exist.
-11. `src/app/application/source_ingestion_live_proof.py`,
-    `scripts/generate_source_ingestion_live_proof.py`, and
-    `make source-ingestion-live-proof-contract-gate` now define and enforce the
+11. `src/app/application/source_ingestion_runtime_evidence/runtime_execution.py`,
+    `scripts/source_ingestion/generate_runtime_execution.py`, and
+    `make source-ingestion-runtime-execution-contract-gate` now define and enforce the
     source-safe live Core proof artifact shape. The source-ingestion readiness
     diagnostic may report a family-valid configured artifact, but aggregate
     implementation-proof readiness clears only `live_core_source_proof_missing`
@@ -191,7 +191,7 @@ Prove the complete supported opportunity journey end to end.
     supported-feature blockers remain.
 19. `src/app/runtime/proof_artifacts.py` now gives the certified operator API
     the same source-safe artifact-ref path as the aggregate generator for
-    source-ingestion live proof, source-ingestion scheduled-worker proof,
+    source-ingestion runtime-execution receipt, source-ingestion scheduled-worker proof,
     durable repository, runtime trust telemetry, Workbench read-path, outbox
     broker, platform catalog source contract, and AI lineage store proofs. `tests/unit/test_proof_artifacts.py`,
     `tests/unit/test_implementation_proof_readiness.py`, and
@@ -405,7 +405,7 @@ Prove the complete supported opportunity journey end to end.
     mandate risk-health, data-mesh, Workbench, client-publication,
     supported-feature, rebalance, action, and order-execution blockers.
 33. A family-valid and aggregate-current source-ingestion live Core proof
-    referenced through `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF` now clears only
+    referenced through `LOTUS_IDEA_SOURCE_INGESTION_RUNTIME_EXECUTION` now clears only
     `opportunity_archetype_live_core_source_proof_missing` for the high-cash
     scenario while preserving Workbench, data-mesh, client-publication, and
     supported-feature blockers.
@@ -557,6 +557,13 @@ not narrow runtime readiness and preserves candidate-snapshot,
 durable-repository, product-coverage, certified-runtime-telemetry,
 data-mesh-runtime, platform mesh, active-product, Gateway/Workbench discovery,
 and supported-feature gaps.
+The source-ingestion v2 `runtime_execution` artifact narrows the high-cash
+live-Core gap only when the actual application result contains durable
+accepted/replayed records bound to the four governed current Core source
+products. Self-asserted status/count fields, in-memory runs, mixed outcomes,
+missing receipts, hash/scope drift, and stale aggregate provenance do not
+qualify. The artifact does not narrow scheduled-worker, data-mesh,
+Gateway/Workbench, production-certification, or supported-feature gaps.
 The Workbench read-path v2 source-contract artifact records bounded queue/detail
 declarations without narrowing the runtime-readiness gap. It does not prove
 Gateway serving, Workbench consumption, entitlement enforcement, browser

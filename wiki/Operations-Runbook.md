@@ -123,11 +123,11 @@ changed-source conflict recovery. This is not a deployed scheduler daemon, live
 Core source-worker certification, production storage certification,
 data-product certification, Gateway route, Workbench proof, or supported
 business feature.
-Blocked run-mode summaries and live-proof artifacts also include aggregate
-`blockReasonCounts`. These bounded counts help diagnose Core unavailable,
-entitlement denied, omitted cash-weight evidence, and Core-reported blocked
-cash-weight supportability without recomputing source-owned values or exposing
-Core payloads.
+Blocked run-mode evidence retains aggregate reason counts without receipts or
+blocker clearance. Qualifying v2 `runtime_execution` evidence instead binds
+exact current Core refs to accepted/replayed durable persistence receipts while
+excluding raw tenant, portfolio, route, payload, idempotency, and candidate
+values.
 `scripts/run_scheduled_source_ingestion_worker.py` adds a bounded scheduled
 worker entrypoint over the same run-once worker path, and `docker-compose.yml`
 declares the opt-in `lotus-idea-source-ingestion-worker` service. The app-owned
@@ -189,12 +189,12 @@ repository configuration, and remaining certification blockers without calling
 Core or exposing source payloads. It remains `not_certified` until live Core
 source proof, runtime data-mesh telemetry, Gateway/Workbench proof, downstream
 proof, and supported-feature evidence exist.
-`scripts/generate_source_ingestion_live_proof.py` captures a source-safe live
+`scripts/source_ingestion/generate_runtime_execution.py` captures a source-safe live
 Core proof artifact for release reviewers. Prefer explicit
 `--core-query-base-url` and `--core-query-control-plane-base-url` values for
 canonical split Core runtimes; `--core-base-url` remains a compatibility
 fallback for older single-base stacks. Point
-`LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF` at a family-valid and
+`LOTUS_IDEA_SOURCE_INGESTION_RUNTIME_EXECUTION` at a family-valid and
 aggregate-current artifact to clear only the live-Core blocker in aggregate
 readiness.
 Blocked proof artifacts can still be useful operator evidence because
@@ -239,7 +239,7 @@ It also records the generated AI lineage store proof when
 `certified_ai_lineage_store_missing` while preserving `lotus-ai` runtime,
 Workbench, blocked client publication, and supported-feature blockers.
 The repo-native `make implementation-proof-readiness-check` target can consume
-live proof through `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF`,
+live proof through `LOTUS_IDEA_SOURCE_INGESTION_RUNTIME_EXECUTION`,
 `LOTUS_CORE_QUERY_BASE_URL`, `LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL`,
 optional missing-suitability live Advise proof through
 `LOTUS_IDEA_MISSING_SUITABILITY_LIVE_PROOF`,
@@ -476,7 +476,7 @@ resource/idempotency data, or records source-authoritative conversion truth.
 
 | Operating area | Current proof | Must not be inferred |
 | --- | --- | --- |
-| Source ingestion | Manifest plus source-safe check-only output gate, scheduled-worker deploy-contract gate, live-proof artifact contract, internal run-once foundation, and aggregate-only operator route | Live source certification, mesh certification, Gateway/Workbench support, downstream proof, or supported ingestion product |
+| Source ingestion | Manifest/check-only gate, scheduled-worker deploy contract, receipt-bound v2 Core runtime evidence, internal run-once foundation, and aggregate-only operator route | Scheduler observation, mesh certification, Gateway/Workbench support, production certification, downstream proof, or supported ingestion product |
 | Persistence | Exact-main, digest-bound PostgreSQL CI receipt over migration, persistence/replay, concurrency/audit/outbox, and repository-side pagination tests; source-safe aggregate proof clears only the two matching persistence blockers | Runtime database configuration, deployment migration or production storage certification, production recovery readiness, Workbench proof, or supported-feature promotion |
 | Outbox delivery foundation | Source-safe records, durable retry scheduling with first/last failure timing, retryable failure status, published status, dead-letter status, HTTP publisher adapter foundation, repo-owned outbox event and downstream consumer contracts, aggregate readiness diagnostic, bounded run-once operator action, bounded outbox broker source-contract artifact, bounded downstream consumer source-contract proof artifact, and bounded platform-mesh event source-contract proof | Observed external broker configuration/publication, downstream consumer execution, certified platform-mesh event publication, downstream delivery, Gateway/Workbench behavior, client-ready publication, or supported-feature promotion |
 | Data mesh | Proposed contracts, source-safe readiness diagnostics, and bounded platform source-manifest/catalog onboarding proof | Promoted data product, mesh certification, Gateway/Workbench discovery, or supported-feature promotion |
@@ -513,7 +513,7 @@ the operator entrypoints by purpose so this page stays readable.
 | Broad local CI | `make ci` | PR-grade local validation when runtime prerequisites are available. |
 | Release evidence | `make ci-release` | Broad release posture, including Docker and PostgreSQL prerequisites. |
 | Durable storage proof | `make postgres-integration-gate`, `make durable-repository-proof-contract-gate` | Validate PostgreSQL-backed repository and proof-artifact posture. |
-| Source proof | `make source-ingestion-worker-check`, `make source-ingestion-scheduled-worker-check`, `make source-ingestion-live-proof-contract-gate` | Validate ingestion worker contracts and live-proof artifact shape. |
+| Source-ingestion evidence | `make source-ingestion-worker-check`, `make source-ingestion-scheduled-worker-check`, `make source-ingestion-runtime-execution-contract-gate` | Validate worker contracts and receipt-bound Core runtime execution evidence without promoting scheduler, mesh, UI, production, or support posture. |
 | Upstream source-product proof | `make risk-concentration-live-proof-contract-gate`, `make high-volatility-live-proof-contract-gate`, `make risk-drawdown-live-proof-contract-gate`, `make core-benchmark-assignment-live-proof-contract-gate`, `make core-portfolio-state-live-proof-contract-gate`, `make manage-mandate-live-proof-contract-gate`, `make mandate-restriction-live-proof-contract-gate`, `make missing-suitability-live-proof-contract-gate`, `make missing-risk-profile-live-proof-contract-gate`, `make performance-underperformance-live-proof-contract-gate` | Validate bounded sibling source-proof artifacts without promoting support by command existence alone. |
 | Runtime trust and implementation proof | `make runtime-trust-telemetry-test-execution-contract-gate`, `make implementation-proof-readiness-check`, `make runtime-trust-telemetry-preview-check`, `make runtime-trust-telemetry-snapshot-check` | Validate in-memory test evidence and inspect durable runtime posture without clearing certification blockers. |
 | Downstream proof | `make downstream-route-source-contract-proof-gate`, `make report-intake-route-source-contract-proof-gate`, `make report-materialization-source-contract-proof-gate` | Validate bounded Advise, Manage, and Report contract artifacts. |
@@ -848,7 +848,7 @@ Workbench read-path source contract, report-intake route, report materialization
 source contract, platform catalog source contract, AI lineage store, AI
 workflow-pack registration proof, and AI workflow-pack runtime execution proof
 artifact paths configured through
-`LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF`,
+`LOTUS_IDEA_SOURCE_INGESTION_RUNTIME_EXECUTION`,
 `LOTUS_IDEA_SOURCE_INGESTION_SCHEDULED_WORKER_PROOF`,
 `LOTUS_IDEA_DURABLE_REPOSITORY_PROOF`,
 `LOTUS_IDEA_RUNTIME_TRUST_TELEMETRY_TEST_EXECUTION`,
@@ -891,7 +891,7 @@ only `runtime_candidate_snapshot_missing`; it preserves
 `data_mesh_runtime_telemetry_not_certified` while declared producer product
 coverage is incomplete.
 
-Optional JSON proof artifacts, including source-ingestion live proof, now also
+Optional JSON proof artifacts, including source-ingestion runtime-execution receipts, now also
 require aggregate provenance before they can clear blockers. The CLI and
 runtime artifact loader attach
 `aggregateProofProvenance` with the source-safe proof ref, artifact SHA-256,

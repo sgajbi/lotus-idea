@@ -342,9 +342,13 @@ recovery. The application layer also has a manifest-backed run-once
 source-ingestion worker CLI with manifest and source-safe check-only output
 validation through `make source-ingestion-worker-check`, a bounded scheduled
 worker entrypoint and opt-in Docker Compose worker profile validated by
-`make source-ingestion-scheduled-worker-check`, plus a source-safe live Core
-proof artifact contract validated by
-`make source-ingestion-live-proof-contract-gate`. Production storage readiness
+`make source-ingestion-scheduled-worker-check`, plus a source-safe v2
+`runtime_execution` contract validated by
+`make source-ingestion-runtime-execution-contract-gate`. It consumes the
+actual use-case and persistence results, requires exact current Core products
+and durable accepted/replayed receipts, and rejects self-asserted status/count
+claims. This is an internal capability package, not another deployable.
+Production storage readiness
 still requires protected migration execution and rollout-health evidence, mesh
 certification, platform mesh
 event publication proof, downstream delivery evidence, and live
