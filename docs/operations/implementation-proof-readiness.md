@@ -199,7 +199,7 @@ taxonomy and the #393 same-pattern campaign.
 | `LOTUS_IDEA_PERFORMANCE_UNDERPERFORMANCE_LIVE_PROOF` | Passes validated v2 Performance underperformance `runtime_execution` evidence into opportunity-archetype readiness. It must bind exact current `ReturnsSeriesBundle:v1` evidence and benchmark context to the authoritative Idea use-case result and accepted or replayed durable persistence. A valid artifact clears only `opportunity_archetype_live_performance_source_proof_missing`; benchmark assignment, data mesh, Workbench, client publication, deployment, production, and supported-feature promotion remain blocked. The environment name is retained for operator compatibility and does not accept the retired v1 contract. |
 | `LOTUS_IDEA_MISSING_BENCHMARK_PERFORMANCE_READINESS_PROOF` | Passes a validated source-safe Lotus Performance benchmark-readiness proof artifact into missing-benchmark opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_performance_benchmark_readiness_source_ref_missing`; it does not assign benchmarks, calculate performance or benchmark returns, certify benchmark methodology, certify data mesh, prove Workbench behavior, approve client publication, or promote support. |
 | `LOTUS_IDEA_CORE_BENCHMARK_ASSIGNMENT_LIVE_PROOF` | Passes validated v2 Core benchmark-assignment `runtime_execution` evidence into opportunity-archetype readiness. The compatibility environment name does not accept v1. A valid artifact binds pseudonymous scope and an exact current `BenchmarkAssignment:v1` source receipt, clears only `opportunity_archetype_benchmark_assignment_source_ref_missing`, and preserves Performance, methodology, mesh, Workbench, publication, deployment, production, and promotion blockers. |
-| `LOTUS_IDEA_CORE_PORTFOLIO_STATE_LIVE_PROOF` | Passes a validated source-safe Lotus Core portfolio-state live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_core_portfolio_state_source_ref_missing`; it does not certify Manage action-register proof, mandate performance health, mandate risk health, rebalance authority, action authority, order execution, data mesh, Workbench, client publication, or supported-feature promotion. |
+| `LOTUS_IDEA_CORE_PORTFOLIO_STATE_LIVE_PROOF` | Passes validated v2 Core portfolio-state `runtime_execution` evidence into opportunity-archetype readiness. The compatibility environment name does not accept v1. A valid artifact binds pseudonymous request scope to the complete current `PortfolioStateSnapshot:v1` source receipt and clears only `opportunity_archetype_core_portfolio_state_source_ref_missing`. It preserves Manage, Performance, Risk, mesh, Workbench, publication, deployment, production, and promotion blockers. |
 | `LOTUS_IDEA_BOND_MATURITY_LIVE_PROOF` | Passes a validated source-safe Lotus Core maturity-summary live-proof artifact into opportunity-archetype readiness. The live adapter consumes Core-owned `PortfolioMaturitySummary:v1` and fails closed when explicit maturity facts or upstream holdings lineage are missing. A valid artifact clears only `opportunity_archetype_maturity_live_core_source_proof_missing`; it does not recommend reinvestment products, forecast cashflows, certify suitability or risk, certify data mesh, prove Workbench behavior, approve client publication, or promote support. |
 | `LOTUS_IDEA_MISSING_BENCHMARK_LIVE_PROOF` | Passes a validated source-safe Lotus Core missing-benchmark live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_missing_benchmark_live_core_source_proof_missing`; it does not assign benchmarks, certify Performance benchmark-readiness evidence, certify benchmark methodology, calculate benchmark composition or returns, certify data mesh, prove Workbench behavior, approve client publication, or promote support. |
 | `LOTUS_IDEA_LOW_INCOME_CORE_CASHFLOW_LIVE_PROOF` | Passes a validated source-safe Lotus Core cashflow live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_live_core_cashflow_source_proof_missing`; it does not certify client income needs, funding advice, treasury instruction, suitability, planning objectives, data mesh, Workbench, client publication, or supported-feature promotion. |
@@ -356,15 +356,20 @@ receipt. It retains live Performance, data-mesh, Workbench, client-publication,
 deployment, production, and supported-feature blockers. Core owns assignment;
 Idea does not assign benchmarks, calculate returns, or certify methodology.
 
-Lotus Core portfolio-state live proof is captured by
-`scripts/generate_core_portfolio_state_live_proof.py`. A valid artifact
+Lotus Core portfolio-state runtime evidence is captured by
+`scripts/core_portfolio_state_runtime_evidence/generate_runtime_execution.py`.
+A valid artifact
 referenced through `LOTUS_IDEA_CORE_PORTFOLIO_STATE_LIVE_PROOF` clears only
 `opportunity_archetype_core_portfolio_state_source_ref_missing` for the
-`opportunity-archetype-scenarios` capability. The artifact proves a live
-`lotus-core:PortfolioStateSnapshot:v1` source call and current source evidence
-without storing portfolio identity, request or response payloads, correlation
-IDs, trace IDs, candidate IDs, source routes, holdings, positions, allocation
-weights, or portfolio totals. It deliberately retains portfolio-scoped Manage,
+`opportunity-archetype-scenarios` capability. The closed v2 artifact binds a
+named read-only use case, pseudonymous request scope, and the complete current
+`lotus-core:PortfolioStateSnapshot:v1` receipt. That receipt includes response
+scope, product identity, request fingerprint, snapshot identity, source hashes,
+restatement, reconciliation, evidence time, policy, correlation, and section
+posture without storing raw identifiers, payloads, holdings, positions,
+allocation weights, or portfolio totals. Missing or inconsistent producer
+trust metadata fails closed; lotus-core issue `#790` tracks the current producer
+gap. The artifact deliberately retains portfolio-scoped Manage,
 mandate performance-health, mandate risk-health, data-mesh, Workbench,
 client-publication, supported-feature, rebalance, action, order-creation,
 execution, and settlement blockers unless a separate valid Manage mandate
@@ -984,12 +989,12 @@ Implementation-backed evidence:
     `scripts/core_benchmark_assignment_runtime_evidence/generate_runtime_execution.py`,
 1. Core benchmark assignment live-proof contract gate:
     `make core-benchmark-assignment-live-proof-contract-gate`,
-1. Core portfolio-state live-proof generator:
-    `scripts/generate_core_portfolio_state_live_proof.py`,
-1. Core portfolio-state live-proof contract gate:
+1. Core portfolio-state runtime-evidence generator:
+    `scripts/core_portfolio_state_runtime_evidence/generate_runtime_execution.py`,
+1. Core portfolio-state runtime-evidence contract gate:
     `make core-portfolio-state-live-proof-contract-gate`,
-1. Core portfolio-state live-proof tests:
-    `tests/unit/test_core_portfolio_state_live_proof.py`,
+1. Core portfolio-state runtime-evidence tests:
+    `tests/unit/core_portfolio_state_runtime_evidence/`,
 1. Bond maturity live-proof generator:
     `scripts/generate_bond_maturity_live_proof.py`,
 1. Bond maturity live-proof contract gate:
