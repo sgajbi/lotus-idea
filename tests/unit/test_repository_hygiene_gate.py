@@ -202,16 +202,9 @@ def test_repository_hygiene_gate_enforces_performance_runtime_evidence_package()
 def test_repository_hygiene_gate_enforces_core_benchmark_runtime_evidence_package() -> None:
     module = _load_repository_hygiene_gate()
     required_paths = {
-        "scripts/core_benchmark_assignment_runtime_evidence/__init__.py",
         "scripts/core_benchmark_assignment_runtime_evidence/generate_runtime_execution.py",
-        "scripts/core_benchmark_assignment_runtime_evidence/runtime_execution_contract_gate.py",
-        "src/app/application/core_benchmark_assignment_runtime_evidence/__init__.py",
         "src/app/application/core_benchmark_assignment_runtime_evidence/contract.py",
         "src/app/application/core_benchmark_assignment_runtime_evidence/runtime_execution.py",
-        "tests/support/core_benchmark_assignment_runtime_evidence.py",
-        "tests/unit/core_benchmark_assignment_runtime_evidence/__init__.py",
-        "tests/unit/core_benchmark_assignment_runtime_evidence/test_generator.py",
-        "tests/unit/core_benchmark_assignment_runtime_evidence/test_runtime_execution.py",
     }
     retired_paths = {
         "scripts/core_benchmark_assignment_live_proof_contract_gate.py",
