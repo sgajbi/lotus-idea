@@ -454,17 +454,21 @@ Additional implemented allocation-drift / mandate-review foundation:
    and `make opportunity-archetype-contract-gate` now pin this API module,
    route, and integration test as allocation-drift evidence so the archetype
    proof contract cannot drift back to policy-only evidence.
-8. `src/app/application/manage_mandate_live_proof.py`,
-   `scripts/generate_manage_mandate_live_proof.py`, and
+8. `src/app/application/manage_mandate_runtime_evidence/`,
+   `scripts/manage_mandate_runtime_evidence/`, and
    `make manage-mandate-live-proof-contract-gate` define the source-safe
-   live-proof artifact contract for portfolio-scoped
-   `lotus-manage:PortfolioActionRegister:v1` posture. A valid artifact clears
+   closed v2 runtime-evidence contract for portfolio-scoped
+   `lotus-manage:PortfolioActionRegister:v1` posture. A named source-evaluation
+   use case binds exact source receipts, source-owned time and scope, policy, and
+   deterministic candidate or no-opportunity outcome. A valid artifact clears
    only `opportunity_archetype_portfolio_scoped_manage_source_proof_missing`,
    `opportunity_archetype_mandate_performance_health_source_ref_missing`, and
    `opportunity_archetype_mandate_risk_health_source_ref_missing` in aggregate
    readiness. It does not certify Core portfolio state, data mesh, Workbench
    behavior, client publication, supported-feature promotion, rebalance
-   authority, action authority, order creation, execution, or settlement.
+   authority, action authority, order creation, execution, or settlement. Manage
+   issue `#620` tracks producer metadata required for live qualification; Idea
+   does not synthesize it.
 9. `POST /api/v1/idea-signals/allocation-drift/evaluate-from-source` exposes
    the existing Manage mandate-health source-port through the bounded advisor
    API pattern. It enforces advisor role, `idea.signal.evaluate`, and
@@ -895,7 +899,7 @@ Deferred mainline and later-slice evidence:
    proof; the clean-tree canonical run now validates current returns-series
    evidence,
 4. portfolio-scoped Manage, mandate performance-health, and mandate risk-health
-   live proof beyond the source-safe Manage mandate proof contract and Core
+   live proof beyond the closed v2 Manage mandate runtime-evidence contract and Core
    portfolio-state source-ref proof,
 5. source-worker certification beyond bounded live Core source-ingestion proof,
 6. live-service execution, restart, and recovery evidence for the scheduled
