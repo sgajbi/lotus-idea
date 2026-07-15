@@ -568,7 +568,7 @@ risk-drawdown-live-proof-contract-gate:
 	$(VENV_PYTHON) scripts/risk_drawdown_runtime_evidence/runtime_execution_contract_gate.py
 
 manage-mandate-live-proof-contract-gate:
-	$(VENV_PYTHON) scripts/manage_mandate_live_proof_contract_gate.py
+	$(VENV_PYTHON) scripts/manage_mandate_runtime_evidence/runtime_execution_contract_gate.py
 
 mandate-restriction-live-proof-contract-gate:
 	$(VENV_PYTHON) scripts/mandate_restriction_live_proof_contract_gate.py

@@ -895,7 +895,7 @@ def test_ci_contract_gate_blocks_missing_manage_mandate_live_proof_gate() -> Non
         .read_text(encoding="utf-8")
         .replace("$(MAKE) manage-mandate-live-proof-contract-gate\n", "")
         .replace(
-            "scripts/manage_mandate_live_proof_contract_gate.py",
+            "scripts/manage_mandate_runtime_evidence/runtime_execution_contract_gate.py",
             "scripts/removed.py",
         )
     )
@@ -907,7 +907,7 @@ def test_ci_contract_gate_blocks_missing_manage_mandate_live_proof_gate() -> Non
     ) in errors
     assert (
         "Makefile manage-mandate-live-proof-contract-gate target must run "
-        "`scripts/manage_mandate_live_proof_contract_gate.py`"
+        "`scripts/manage_mandate_runtime_evidence/runtime_execution_contract_gate.py`"
     ) in errors
 
 

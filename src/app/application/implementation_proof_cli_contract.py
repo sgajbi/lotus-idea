@@ -32,7 +32,7 @@ from app.application.high_volatility_runtime_evidence import HIGH_VOLATILITY_RUN
 from app.application.low_income_cashflow_runtime_evidence import (
     LOW_INCOME_CASHFLOW_RUNTIME_EXECUTION_ENV,
 )
-from app.application.manage_mandate_live_proof import MANAGE_MANDATE_LIVE_PROOF_ENV
+from app.application.manage_mandate_runtime_evidence import MANAGE_MANDATE_RUNTIME_EXECUTION_ENV
 from app.application.mandate_restriction_live_proof import MANDATE_RESTRICTION_LIVE_PROOF_ENV
 from app.application.mandate_restriction_source_product_proof import (
     MANDATE_RESTRICTION_SOURCE_PRODUCT_PROOF_ENV,
@@ -224,7 +224,7 @@ PROOF_ARTIFACT_ARGS: tuple[tuple[str, str, str], ...] = (
     ),
     (
         "--manage-mandate-live-proof",
-        MANAGE_MANDATE_LIVE_PROOF_ENV,
+        MANAGE_MANDATE_RUNTIME_EXECUTION_ENV,
         "Optional lotus-manage portfolio-scoped mandate live source proof artifact path.",
     ),
     (
