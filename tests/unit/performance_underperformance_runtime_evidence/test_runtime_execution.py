@@ -44,9 +44,7 @@ def test_runtime_execution_binds_performance_source_and_persistence_receipts() -
         "opportunity_archetype_live_performance_source_proof_missing"
     ]
     execution = payload["execution"]
-    assert execution["sourceReceipt"]["productId"] == (
-        "lotus-performance:ReturnsSeriesBundle:v1"
-    )
+    assert execution["sourceReceipt"]["productId"] == ("lotus-performance:ReturnsSeriesBundle:v1")
     assert execution["persistenceReceipt"]["decision"] == "accepted"
     assert performance_underperformance_runtime_execution_is_valid(payload) is True
 

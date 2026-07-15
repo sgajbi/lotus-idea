@@ -70,7 +70,10 @@ def performance_underperformance_runtime_execution_is_valid(
         _TOP_LEVEL_KEYS | {AGGREGATE_PROOF_PROVENANCE_KEY},
     ):
         return False
-    if payload.get("schemaVersion") != PERFORMANCE_UNDERPERFORMANCE_RUNTIME_EXECUTION_SCHEMA_VERSION:
+    if (
+        payload.get("schemaVersion")
+        != PERFORMANCE_UNDERPERFORMANCE_RUNTIME_EXECUTION_SCHEMA_VERSION
+    ):
         return False
     if payload.get("repository") != "lotus-idea":
         return False
@@ -107,7 +110,10 @@ def performance_underperformance_runtime_execution_is_valid(
         PERFORMANCE_UNDERPERFORMANCE_REMAINING_BLOCKERS
     ):
         return False
-    if tuple(payload.get("evidenceRefs") or ()) != PERFORMANCE_UNDERPERFORMANCE_RUNTIME_EVIDENCE_REFS:
+    if (
+        tuple(payload.get("evidenceRefs") or ())
+        != PERFORMANCE_UNDERPERFORMANCE_RUNTIME_EVIDENCE_REFS
+    ):
         return False
     if tuple(payload.get("aggregateBlockersSatisfied") or ()) != (
         PERFORMANCE_UNDERPERFORMANCE_RUNTIME_BLOCKERS_SATISFIED

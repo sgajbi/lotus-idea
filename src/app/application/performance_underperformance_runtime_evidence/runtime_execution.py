@@ -84,13 +84,9 @@ def _payload(
             "qualificationBlockers": list(blockers),
         },
         "aggregateBlockersSatisfied": (
-            list(PERFORMANCE_UNDERPERFORMANCE_RUNTIME_BLOCKERS_SATISFIED)
-            if not blockers
-            else []
+            list(PERFORMANCE_UNDERPERFORMANCE_RUNTIME_BLOCKERS_SATISFIED) if not blockers else []
         ),
-        "remainingCertificationBlockers": list(
-            PERFORMANCE_UNDERPERFORMANCE_REMAINING_BLOCKERS
-        ),
+        "remainingCertificationBlockers": list(PERFORMANCE_UNDERPERFORMANCE_REMAINING_BLOCKERS),
         "evidenceRefs": list(PERFORMANCE_UNDERPERFORMANCE_RUNTIME_EVIDENCE_REFS),
         "nonProofClaims": {
             "officialPerformanceCalculationOwned": "lotus-performance",
@@ -134,9 +130,7 @@ _RUNTIME_EXECUTION_BUILDER: SourceRuntimeExecutionBuilder[
     source_execution_blocker="performance_source_execution_blocked",
     default_source_error="performance_source_unavailable",
 )
-build_performance_underperformance_runtime_execution = (
-    _RUNTIME_EXECUTION_BUILDER.build_completed
-)
+build_performance_underperformance_runtime_execution = _RUNTIME_EXECUTION_BUILDER.build_completed
 build_blocked_performance_underperformance_runtime_execution = (
     _RUNTIME_EXECUTION_BUILDER.build_blocked
 )

@@ -68,7 +68,9 @@ def validate_performance_underperformance_runtime_execution_contract() -> list[s
     )
     errors: list[str] = []
     if not performance_underperformance_runtime_execution_is_valid(payload):
-        errors.append("valid performance underperformance runtime execution fixture should validate")
+        errors.append(
+            "valid performance underperformance runtime execution fixture should validate"
+        )
     inflated = dict(payload)
     inflated["productionCertified"] = True
     if performance_underperformance_runtime_execution_is_valid(inflated):
