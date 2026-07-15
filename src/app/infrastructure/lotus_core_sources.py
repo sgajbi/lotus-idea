@@ -333,9 +333,7 @@ class LotusCoreHighCashSourceAdapter:
             include_projected=_optional_bool_field(
                 maturity_summary_payload, "include_projected", "includeProjected"
             ),
-            maturity_basis=_text_field(
-                maturity_summary_payload, "maturity_basis", "maturityBasis"
-            ),
+            maturity_basis=_text_field(maturity_summary_payload, "maturity_basis", "maturityBasis"),
             maturity_bearing_holding_count=_int_field(
                 maturity_summary_payload,
                 "maturity_bearing_holding_count",
@@ -372,9 +370,7 @@ class LotusCoreHighCashSourceAdapter:
             response_source_digest=_text_field(
                 maturity_summary_payload, "source_digest", "sourceDigest"
             ),
-            upstream_product_name=_lineage_text_field(
-                maturity_summary_payload, "upstream_product"
-            ),
+            upstream_product_name=_lineage_text_field(maturity_summary_payload, "upstream_product"),
             upstream_content_hash=_lineage_text_field(
                 maturity_summary_payload, "upstream_content_hash"
             ),
@@ -389,13 +385,9 @@ class LotusCoreHighCashSourceAdapter:
                 "latest_evidence_timestamp",
                 "latestEvidenceTimestamp",
             ),
-            source_evidence_current=_bool_field(
-                maturity_summary_payload, "source_evidence_current"
-            )
+            source_evidence_current=_bool_field(maturity_summary_payload, "source_evidence_current")
             or _bool_field(maturity_summary_payload, "sourceEvidenceCurrent"),
-            policy_version=_text_field(
-                maturity_summary_payload, "policy_version", "policyVersion"
-            ),
+            policy_version=_text_field(maturity_summary_payload, "policy_version", "policyVersion"),
             source_correlation_id=_text_field(
                 maturity_summary_payload, "correlation_id", "correlationId"
             ),

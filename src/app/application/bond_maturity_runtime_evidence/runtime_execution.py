@@ -21,9 +21,7 @@ from app.ports.core_sources import (
 )
 
 BOND_MATURITY_RUNTIME_EXECUTION_ENV = "LOTUS_IDEA_BOND_MATURITY_LIVE_PROOF"
-BOND_MATURITY_RUNTIME_EXECUTION_SCHEMA_VERSION = (
-    "lotus-idea.bond-maturity.runtime-execution.v2"
-)
+BOND_MATURITY_RUNTIME_EXECUTION_SCHEMA_VERSION = "lotus-idea.bond-maturity.runtime-execution.v2"
 BOND_MATURITY_RUNTIME_BLOCKERS_SATISFIED = (
     "opportunity_archetype_maturity_live_core_source_proof_missing",
 )
