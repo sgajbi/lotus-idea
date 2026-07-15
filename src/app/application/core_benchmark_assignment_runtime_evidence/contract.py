@@ -10,8 +10,8 @@ from app.application.core_benchmark_assignment_runtime_evidence.runtime_executio
     CORE_BENCHMARK_ASSIGNMENT_RUNTIME_BLOCKERS_SATISFIED,
     CORE_BENCHMARK_ASSIGNMENT_RUNTIME_EVIDENCE_REFS,
     CORE_BENCHMARK_ASSIGNMENT_RUNTIME_EXECUTION_SCHEMA_VERSION,
-    _sha256_json,
 )
+from app.application.core_runtime_evidence import sha256_json
 from app.application.proof_provenance import AGGREGATE_PROOF_PROVENANCE_KEY
 from app.domain import EvidenceFreshness, SourceSystem
 from app.domain.proof_evidence import (
@@ -130,8 +130,8 @@ def core_benchmark_assignment_runtime_execution_is_valid(payload: Mapping[str, A
     except ValueError:
         return False
     if (
-        request.get("requestDigest") != _sha256_json(request_material)
-        or source.get("receiptDigest") != _sha256_json(source_material)
+        request.get("requestDigest") != sha256_json(request_material)
+        or source.get("receiptDigest") != sha256_json(source_material)
         or request.get("evaluatedAtUtc") != execution.get("evaluatedAtUtc")
         or request.get("asOfDate") != source.get("asOfDate")
         or source.get("productId") != "lotus-core:BenchmarkAssignment:v1"
