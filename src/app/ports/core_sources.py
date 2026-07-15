@@ -8,6 +8,18 @@ from typing import Protocol
 from app.domain import SourceRef
 
 
+PORTFOLIO_STATE_PRODUCT_ID = "lotus-core:PortfolioStateSnapshot:v1"
+HOLDINGS_PRODUCT_ID = "lotus-core:HoldingsAsOf:v1"
+CASH_MOVEMENT_PRODUCT_ID = "lotus-core:PortfolioCashMovementSummary:v1"
+CASHFLOW_PROJECTION_PRODUCT_ID = "lotus-core:PortfolioCashflowProjection:v1"
+CORE_HIGH_CASH_SOURCE_PRODUCT_IDS = (
+    PORTFOLIO_STATE_PRODUCT_ID,
+    HOLDINGS_PRODUCT_ID,
+    CASH_MOVEMENT_PRODUCT_ID,
+    CASHFLOW_PROJECTION_PRODUCT_ID,
+)
+
+
 class CoreSourceUnavailable(Exception):
     def __init__(self, *, code: str = "core_source_unavailable") -> None:
         self.code = code

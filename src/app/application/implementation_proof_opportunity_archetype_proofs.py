@@ -70,7 +70,9 @@ from app.application.risk_drawdown_live_proof import (
     RISK_DRAWDOWN_LIVE_BLOCKERS_CLEARED,
     risk_drawdown_live_proof_is_valid,
 )
-from app.application.source_ingestion_live_proof import HIGH_CASH_LIVE_CORE_BLOCKERS_CLEARED
+from app.application.source_ingestion_runtime_evidence.runtime_execution import (
+    SOURCE_INGESTION_RUNTIME_BLOCKERS_SATISFIED,
+)
 
 OpportunityProofValidator = Callable[[Mapping[str, object]], bool]
 OpportunityProofApplicator = Callable[
@@ -88,8 +90,8 @@ OpportunityProofStep = tuple[
 def _apply_opportunity_archetype_proofs(
     *,
     capabilities: tuple[ImplementationProofCapabilityReadiness, ...],
-    source_ingestion_live_proof_current: bool,
-    source_ingestion_live_proof_ref: str | None,
+    source_ingestion_runtime_execution_current: bool,
+    source_ingestion_runtime_execution_ref: str | None,
     evaluated_at_utc: datetime,
     risk_concentration_live_proof: Mapping[str, object] | None,
     risk_concentration_live_proof_ref: str | None,
@@ -124,10 +126,10 @@ def _apply_opportunity_archetype_proofs(
     missing_benchmark_performance_readiness_proof: Mapping[str, object] | None,
     missing_benchmark_performance_readiness_proof_ref: str | None,
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
-    capabilities = _apply_source_ingestion_live_proof(
+    capabilities = _apply_source_ingestion_runtime_execution(
         capabilities,
-        source_ingestion_live_proof_current=source_ingestion_live_proof_current,
-        source_ingestion_live_proof_ref=source_ingestion_live_proof_ref,
+        source_ingestion_runtime_execution_current=source_ingestion_runtime_execution_current,
+        source_ingestion_runtime_execution_ref=source_ingestion_runtime_execution_ref,
     )
     for proof, proof_is_valid, apply_proof, proof_ref in _opportunity_proof_steps(locals()):
         capabilities = _apply_valid_opportunity_proof(
@@ -279,20 +281,20 @@ def _apply_valid_opportunity_proof(
     return tuple(apply_proof(capability, proof_ref) for capability in capabilities)
 
 
-def _apply_source_ingestion_live_proof(
+def _apply_source_ingestion_runtime_execution(
     capabilities: tuple[ImplementationProofCapabilityReadiness, ...],
     *,
-    source_ingestion_live_proof_current: bool,
-    source_ingestion_live_proof_ref: str | None,
+    source_ingestion_runtime_execution_current: bool,
+    source_ingestion_runtime_execution_ref: str | None,
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
-    if not source_ingestion_live_proof_current:
+    if not source_ingestion_runtime_execution_current:
         return capabilities
     return tuple(
         apply_blocker_proof(
             capability,
             capability_ids=("opportunity-archetype-scenarios",),
-            blockers_cleared=HIGH_CASH_LIVE_CORE_BLOCKERS_CLEARED,
-            proof_ref=source_ingestion_live_proof_ref,
+            blockers_cleared=SOURCE_INGESTION_RUNTIME_BLOCKERS_SATISFIED,
+            proof_ref=source_ingestion_runtime_execution_ref,
         )
         for capability in capabilities
     )
@@ -301,15 +303,15 @@ def _apply_source_ingestion_live_proof(
 def apply_opportunity_archetype_proofs_from_scope(
     *,
     capabilities: tuple[ImplementationProofCapabilityReadiness, ...],
-    source_ingestion_live_proof_current: bool,
-    source_ingestion_live_proof_ref: str | None,
+    source_ingestion_runtime_execution_current: bool,
+    source_ingestion_runtime_execution_ref: str | None,
     evaluated_at_utc: datetime,
     scope: Mapping[str, object],
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
     return _apply_opportunity_archetype_proofs(
         capabilities=capabilities,
-        source_ingestion_live_proof_current=source_ingestion_live_proof_current,
-        source_ingestion_live_proof_ref=source_ingestion_live_proof_ref,
+        source_ingestion_runtime_execution_current=source_ingestion_runtime_execution_current,
+        source_ingestion_runtime_execution_ref=source_ingestion_runtime_execution_ref,
         evaluated_at_utc=evaluated_at_utc,
         risk_concentration_live_proof=_payload(scope, "risk_concentration_live_proof"),
         risk_concentration_live_proof_ref=_ref(scope, "risk_concentration_live_proof_ref"),

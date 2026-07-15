@@ -65,8 +65,8 @@ from app.application.report.materialization_source_contract import (
 from app.application.runtime_trust_telemetry.test_execution_contract import (
     runtime_trust_telemetry_test_execution_is_valid,
 )
-from app.application.source_ingestion_live_proof import (
-    source_ingestion_live_proof_can_clear_aggregate_blockers,
+from app.application.source_ingestion_runtime_evidence import (
+    source_ingestion_runtime_execution_can_clear_aggregate_blockers,
 )
 from app.application.source_ingestion_readiness import SourceIngestionReadinessSnapshot
 from app.application.workbench.read_path_source_contract import (
@@ -128,8 +128,8 @@ def _apply_available_proofs(
     gateway_workbench_contract_proof_ref: str | None,
     gateway_workbench_discovery_contract_proof: Mapping[str, object] | None,
     gateway_workbench_discovery_contract_proof_ref: str | None,
-    source_ingestion_live_proof: Mapping[str, object] | None,
-    source_ingestion_live_proof_ref: str | None,
+    source_ingestion_runtime_execution: Mapping[str, object] | None,
+    source_ingestion_runtime_execution_ref: str | None,
     source_ingestion: SourceIngestionReadinessSnapshot,
     risk_concentration_live_proof: Mapping[str, object] | None,
     risk_concentration_live_proof_ref: str | None,
@@ -210,13 +210,15 @@ def _apply_opportunity_archetype_proofs(
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
     return apply_opportunity_archetype_proofs_from_scope(
         capabilities=capabilities,
-        source_ingestion_live_proof_current=source_ingestion_live_proof_can_clear_aggregate_blockers(
-            cast(Mapping[str, object] | None, scope["source_ingestion_live_proof"]),
+        source_ingestion_runtime_execution_current=source_ingestion_runtime_execution_can_clear_aggregate_blockers(
+            cast(Mapping[str, object] | None, scope["source_ingestion_runtime_execution"]),
             evaluated_at_utc=cast(datetime, scope["evaluated_at_utc"]),
-            proof_ref=cast(str | None, scope["source_ingestion_live_proof_ref"]),
+            proof_ref=cast(str | None, scope["source_ingestion_runtime_execution_ref"]),
             repository_root=cast(Path, scope["repository_root"]),
         ),
-        source_ingestion_live_proof_ref=cast(str | None, scope["source_ingestion_live_proof_ref"]),
+        source_ingestion_runtime_execution_ref=cast(
+            str | None, scope["source_ingestion_runtime_execution_ref"]
+        ),
         evaluated_at_utc=cast(datetime, scope["evaluated_at_utc"]),
         scope=scope,
     )

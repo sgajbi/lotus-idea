@@ -773,8 +773,8 @@ def test_ci_contract_gate_blocks_missing_live_source_proof_readiness_wiring() ->
         (ROOT / "Makefile")
         .read_text(encoding="utf-8")
         .replace(
-            "$(if $(LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF),"
-            "--source-ingestion-live-proof $(LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF),) ",
+            "$(if $(LOTUS_IDEA_SOURCE_INGESTION_RUNTIME_EXECUTION),"
+            "--source-ingestion-runtime-execution $(LOTUS_IDEA_SOURCE_INGESTION_RUNTIME_EXECUTION),) ",
             "",
         )
     )

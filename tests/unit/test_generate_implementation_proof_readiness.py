@@ -55,12 +55,9 @@ from app.application.risk_concentration_live_proof import (
     build_risk_concentration_live_proof_payload,
 )
 from app.application.risk_drawdown_live_proof import build_risk_drawdown_live_proof_payload
-from app.application.source_ingestion_live_proof import (
-    build_source_ingestion_live_proof_payload,
-)
 from app.application.source_ingestion_readiness import (
     CORE_BASE_URL_ENV,
-    LIVE_PROOF_ENV,
+    SOURCE_INGESTION_RUNTIME_EXECUTION_ENV,
     MANIFEST_ENV,
     SCHEDULED_WORKER_PROOF_ENV,
 )
@@ -74,6 +71,7 @@ from tests.support.ai_workflow_pack_fixture import (
 )
 from tests.support.ai_runtime_proof import ai_runtime_execution_receipt
 from tests.support.ai_lineage_store_proof import valid_ai_lineage_ci_execution_receipt
+from tests.support.source_ingestion_runtime_evidence import runtime_execution
 from tests.unit.source_ingestion_proof_helpers import (
     valid_scheduled_worker_proof as _valid_scheduled_worker_proof,
 )
@@ -233,7 +231,7 @@ def test_generate_implementation_proof_readiness_uses_explicit_live_source_proof
 ) -> None:
     monkeypatch.setenv(MANIFEST_ENV, "pre-existing-manifest.json")
     monkeypatch.setenv(CORE_BASE_URL_ENV, "http://pre-existing-core")
-    monkeypatch.setenv(LIVE_PROOF_ENV, "pre-existing-live-proof.json")
+    monkeypatch.setenv(SOURCE_INGESTION_RUNTIME_EXECUTION_ENV, "pre-existing-live-proof.json")
     manifest = tmp_path / "manifest.json"
     manifest.write_text(
         json.dumps(
@@ -245,21 +243,10 @@ def test_generate_implementation_proof_readiness_uses_explicit_live_source_proof
         ),
         encoding="utf-8",
     )
-    live_proof = tmp_path / "source-ingestion-live-proof.json"
+    live_proof = tmp_path / "source-ingestion-runtime-execution.json"
     live_proof.write_text(
         json.dumps(
-            build_source_ingestion_live_proof_payload(
-                generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
-                live_core_source_attempted=True,
-                worker_summary={
-                    "schemaVersion": MANIFEST_SCHEMA_VERSION,
-                    "mode": "run_once",
-                    "sourceAuthority": "lotus-core",
-                    "durableStorageBacked": True,
-                    "totalCount": 1,
-                    "decisionCounts": {"accepted": 1, "replayed": 0},
-                },
-            )
+            runtime_execution()
         ),
         encoding="utf-8",
     )
@@ -273,7 +260,7 @@ def test_generate_implementation_proof_readiness_uses_explicit_live_source_proof
             str(manifest),
             "--core-base-url",
             "http://localhost:8310",
-            "--source-ingestion-live-proof",
+            "--source-ingestion-runtime-execution",
             str(live_proof),
             "--output",
             str(output_path),
@@ -289,7 +276,7 @@ def test_generate_implementation_proof_readiness_uses_explicit_live_source_proof
     )
     assert "live_core_source_proof_missing" not in source_ingestion["blockers"]
     assert "scheduled_worker_deploy_proof_missing" in source_ingestion["blockers"]
-    assert "source ingestion live proof artifact" in source_ingestion["evidenceRefs"]
+    assert "source ingestion runtime execution artifact" in source_ingestion["evidenceRefs"]
     archetypes = next(
         capability
         for capability in payload["capabilities"]
@@ -298,12 +285,12 @@ def test_generate_implementation_proof_readiness_uses_explicit_live_source_proof
     assert "opportunity_archetype_live_core_source_proof_missing" not in archetypes["blockers"]
     assert "opportunity_archetype_data_mesh_not_certified" in archetypes["blockers"]
     assert "opportunity_archetype_supported_feature_promotion_missing" in archetypes["blockers"]
-    assert "source ingestion live proof artifact" in archetypes["evidenceRefs"]
+    assert "source ingestion runtime execution artifact" in archetypes["evidenceRefs"]
     assert payload["readinessStatus"] == "blocked"
     assert payload["supportedFeaturePromoted"] is False
     assert os.environ[MANIFEST_ENV] == "pre-existing-manifest.json"
     assert os.environ[CORE_BASE_URL_ENV] == "http://pre-existing-core"
-    assert os.environ[LIVE_PROOF_ENV] == "pre-existing-live-proof.json"
+    assert os.environ[SOURCE_INGESTION_RUNTIME_EXECUTION_ENV] == "pre-existing-live-proof.json"
 
 
 def test_generate_implementation_proof_readiness_uses_explicit_durable_repository_proof(

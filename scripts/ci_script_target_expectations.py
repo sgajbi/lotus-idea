@@ -7,8 +7,8 @@ SCRIPT_TARGET_EXPECTATIONS = {
     "source-ingestion-scheduled-worker-check": (
         "scripts/source_ingestion_scheduled_worker_contract_gate.py"
     ),
-    "source-ingestion-live-proof-contract-gate": (
-        "scripts/source_ingestion_live_proof_contract_gate.py"
+    "source-ingestion-runtime-execution-contract-gate": (
+        "scripts/source_ingestion/runtime_execution_contract_gate.py"
     ),
     "risk-concentration-live-proof-contract-gate": (
         "scripts/risk_concentration_live_proof_contract_gate.py"

@@ -9,6 +9,10 @@ from urllib.parse import quote
 from app.domain import EvidenceFreshness, SourceRef, SourceSystem
 from app.infrastructure.downstream_client import DownstreamJsonClient, DownstreamServiceError
 from app.ports.core_sources import (
+    CASHFLOW_PROJECTION_PRODUCT_ID,
+    CASH_MOVEMENT_PRODUCT_ID,
+    HOLDINGS_PRODUCT_ID,
+    PORTFOLIO_STATE_PRODUCT_ID,
     CoreBenchmarkAssignmentEvidence,
     CoreBenchmarkAssignmentEvidenceRequest,
     CoreBondMaturityEvidence,
@@ -25,10 +29,6 @@ from app.ports.core_sources import (
 
 
 PRODUCT_VERSION = "v1"
-PORTFOLIO_STATE_PRODUCT_ID = "lotus-core:PortfolioStateSnapshot:v1"
-HOLDINGS_PRODUCT_ID = "lotus-core:HoldingsAsOf:v1"
-CASH_MOVEMENT_PRODUCT_ID = "lotus-core:PortfolioCashMovementSummary:v1"
-CASHFLOW_PROJECTION_PRODUCT_ID = "lotus-core:PortfolioCashflowProjection:v1"
 BENCHMARK_ASSIGNMENT_PRODUCT_ID = "lotus-core:BenchmarkAssignment:v1"
 MATURITY_SUMMARY_PRODUCT_ID = "lotus-core:PortfolioMaturitySummary:v1"
 

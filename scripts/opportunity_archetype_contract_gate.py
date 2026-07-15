@@ -48,13 +48,13 @@ REQUIRED_HIGH_CASH_PRODUCTS = {
 REQUIRED_HIGH_CASH_EVIDENCE = {
     "src/app/domain/signal_evaluation.py",
     "src/app/application/source_ingestion.py",
-    "src/app/application/source_ingestion_live_proof.py",
+    "src/app/application/source_ingestion_runtime_evidence/runtime_execution.py",
     "docs/examples/source-ingestion/high-cash-worker-manifest.example.json",
     "make source-ingestion-worker-check",
-    "make source-ingestion-live-proof-contract-gate",
+    "make source-ingestion-runtime-execution-contract-gate",
     "GET /api/v1/source-ingestion/readiness",
     "POST /api/v1/source-ingestion/run-once",
-    "tests/unit/test_source_ingestion_live_proof.py",
+    "tests/unit/source_ingestion_runtime_evidence/test_runtime_execution.py",
 }
 REQUIRED_CONCENTRATION_EVIDENCE = {
     "src/app/application/concentration_risk_signal.py",

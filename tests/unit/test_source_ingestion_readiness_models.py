@@ -18,7 +18,7 @@ from app.application.source_ingestion_readiness import (
     CORE_BASE_URL_ENV,
     CORE_QUERY_BASE_URL_ENV,
     CORE_QUERY_CONTROL_PLANE_BASE_URL_ENV,
-    LIVE_PROOF_ENV,
+    SOURCE_INGESTION_RUNTIME_EXECUTION_ENV,
     MANIFEST_ENV,
     SCHEDULED_WORKER_PROOF_ENV,
     SourceIngestionReadinessSnapshot,
@@ -130,7 +130,7 @@ def _clear_source_ingestion_environment(monkeypatch: pytest.MonkeyPatch) -> None
         CORE_BASE_URL_ENV,
         CORE_QUERY_BASE_URL_ENV,
         CORE_QUERY_CONTROL_PLANE_BASE_URL_ENV,
-        LIVE_PROOF_ENV,
+        SOURCE_INGESTION_RUNTIME_EXECUTION_ENV,
         SCHEDULED_WORKER_PROOF_ENV,
     ):
         monkeypatch.delenv(env_name, raising=False)

@@ -24,7 +24,7 @@ from app.application.source_ingestion_readiness import (
     CORE_BASE_URL_ENV,
     CORE_QUERY_BASE_URL_ENV,
     CORE_QUERY_CONTROL_PLANE_BASE_URL_ENV,
-    LIVE_PROOF_ENV,
+    SOURCE_INGESTION_RUNTIME_EXECUTION_ENV,
     MANIFEST_ENV,
     SCHEDULED_WORKER_PROOF_ENV,
 )
@@ -55,18 +55,18 @@ def main(argv: list[str] | None = None) -> int:
         evaluated_at_utc = _parse_evaluated_at_utc(args.evaluated_at_utc)
         with _temporary_environment(_readiness_environment_overrides(args)):
             repository = get_idea_repository()
-            source_ingestion_live_proof = _proof_artifact_input(
-                args.source_ingestion_live_proof,
-                artifact_name="source ingestion live proof",
-                ref_name="source ingestion live proof artifact",
+            source_ingestion_runtime_execution = _proof_artifact_input(
+                args.source_ingestion_runtime_execution,
+                artifact_name="source ingestion runtime execution",
+                ref_name="source ingestion runtime execution artifact",
             )
             proof_artifacts = _proof_artifact_inputs(args)
             snapshot = build_implementation_proof_readiness_snapshot(
                 evaluated_at_utc=evaluated_at_utc,
                 repository=repository,
                 durable_storage_backed=idea_repository_durable_storage_backed(repository),
-                source_ingestion_live_proof=source_ingestion_live_proof.payload,
-                source_ingestion_live_proof_ref=source_ingestion_live_proof.proof_ref,
+                source_ingestion_runtime_execution=source_ingestion_runtime_execution.payload,
+                source_ingestion_runtime_execution_ref=source_ingestion_runtime_execution.proof_ref,
                 source_ingestion_scheduled_worker_proof_ref=_source_safe_artifact_ref(
                     _resolve_optional_path(args.source_ingestion_scheduled_worker_proof),
                     artifact_name="source ingestion scheduled-worker proof artifact",
@@ -389,8 +389,11 @@ def _add_runtime_context_args(parser: argparse.ArgumentParser) -> None:
         ),
     )
     parser.add_argument(
-        "--source-ingestion-live-proof",
-        help=f"Optional live Core proof artifact path to expose as {LIVE_PROOF_ENV}.",
+        "--source-ingestion-runtime-execution",
+        help=(
+            "Optional receipt-bound Core source-ingestion runtime execution artifact path "
+            f"to expose as {SOURCE_INGESTION_RUNTIME_EXECUTION_ENV}."
+        ),
     )
     parser.add_argument(
         "--source-ingestion-scheduled-worker-proof",
@@ -430,7 +433,7 @@ def _readiness_environment_overrides(args: argparse.Namespace) -> dict[str, str 
         CORE_BASE_URL_ENV: args.core_base_url,
         CORE_QUERY_BASE_URL_ENV: args.core_query_base_url,
         CORE_QUERY_CONTROL_PLANE_BASE_URL_ENV: args.core_query_control_plane_base_url,
-        LIVE_PROOF_ENV: args.source_ingestion_live_proof,
+        SOURCE_INGESTION_RUNTIME_EXECUTION_ENV: args.source_ingestion_runtime_execution,
         SCHEDULED_WORKER_PROOF_ENV: args.source_ingestion_scheduled_worker_proof,
     }
 

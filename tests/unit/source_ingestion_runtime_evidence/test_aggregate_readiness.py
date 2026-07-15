@@ -17,28 +17,26 @@ from app.application.implementation_proof_models import (
     ImplementationProofReadinessSnapshot,
 )
 from app.application.proof_provenance import bind_aggregate_proof_provenance
-from app.application.source_ingestion_live_proof import (
-    build_source_ingestion_live_proof_payload,
-)
 from app.application.source_ingestion_readiness import (
     CORE_BASE_URL_ENV,
-    LIVE_PROOF_ENV,
+    SOURCE_INGESTION_RUNTIME_EXECUTION_ENV,
     MANIFEST_ENV,
     SCHEDULED_WORKER_PROOF_ENV,
 )
 from app.domain import InMemoryIdeaRepository
 from app.runtime.repository_state import DATABASE_URL_ENV
+from tests.support.source_ingestion_runtime_evidence import runtime_execution
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 EVALUATED_AT = datetime(2026, 6, 21, 10, 10, tzinfo=UTC)
 SOURCE_INGESTION_PROOF_REF = "output/source-ingestion/live-proof.json"
 
 
-def test_current_bound_source_ingestion_live_proof_clears_only_aggregate_live_blockers(
+def test_current_bound_source_ingestion_runtime_execution_clears_only_aggregate_live_blockers(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    proof = _bound_source_ingestion_proof(_valid_source_ingestion_live_proof())
+    proof = _bound_source_ingestion_proof(_valid_source_ingestion_runtime_execution())
     snapshot = _build_snapshot_with_live_proof(monkeypatch, tmp_path, proof)
 
     source_ingestion = _capability(snapshot, "source-ingestion")
@@ -55,17 +53,17 @@ def test_current_bound_source_ingestion_live_proof_clears_only_aggregate_live_bl
 @pytest.mark.parametrize(
     "proof_factory",
     [
-        pytest.param(lambda: _valid_source_ingestion_live_proof(), id="missing-provenance"),
+        pytest.param(lambda: _valid_source_ingestion_runtime_execution(), id="missing-provenance"),
         pytest.param(
             lambda: _bound_source_ingestion_proof(
-                _valid_source_ingestion_live_proof(),
+                _valid_source_ingestion_runtime_execution(),
                 proof_ref="output/source-ingestion/copied-live-proof.json",
             ),
             id="wrong-ref",
         ),
         pytest.param(
             lambda: _bound_source_ingestion_proof(
-                _valid_source_ingestion_live_proof(
+                _valid_source_ingestion_runtime_execution(
                     generated_at_utc=datetime(2026, 6, 20, 9, 0, tzinfo=UTC)
                 )
             ),
@@ -73,7 +71,7 @@ def test_current_bound_source_ingestion_live_proof_clears_only_aggregate_live_bl
         ),
         pytest.param(
             lambda: _bound_source_ingestion_proof(
-                _valid_source_ingestion_live_proof(
+                _valid_source_ingestion_runtime_execution(
                     generated_at_utc=datetime(2026, 6, 21, 10, 11, tzinfo=UTC)
                 )
             ),
@@ -82,7 +80,7 @@ def test_current_bound_source_ingestion_live_proof_clears_only_aggregate_live_bl
         pytest.param(lambda: _wrong_source_revision_proof(), id="wrong-source-revision"),
     ],
 )
-def test_source_ingestion_live_proof_requires_aggregate_current_provenance(
+def test_source_ingestion_runtime_execution_requires_aggregate_current_provenance(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
     proof_factory: Callable[[], dict[str, Any]],
@@ -105,11 +103,11 @@ def _build_snapshot_with_live_proof(
     proof: dict[str, Any],
 ) -> ImplementationProofReadinessSnapshot:
     manifest_path = tmp_path / "manifest.json"
-    proof_path = tmp_path / "source-ingestion-live-proof.json"
+    proof_path = tmp_path / "source-ingestion-runtime-execution.json"
     manifest_path.write_text("{}", encoding="utf-8")
     proof_path.write_text(json.dumps(proof), encoding="utf-8")
     monkeypatch.setenv(MANIFEST_ENV, str(manifest_path))
-    monkeypatch.setenv(LIVE_PROOF_ENV, str(proof_path))
+    monkeypatch.setenv(SOURCE_INGESTION_RUNTIME_EXECUTION_ENV, str(proof_path))
     monkeypatch.delenv(SCHEDULED_WORKER_PROOF_ENV, raising=False)
     monkeypatch.setenv(CORE_BASE_URL_ENV, "http://localhost:8310")
     monkeypatch.setenv(DATABASE_URL_ENV, "postgresql://localhost/lotus_idea")
@@ -118,28 +116,17 @@ def _build_snapshot_with_live_proof(
         evaluated_at_utc=EVALUATED_AT,
         repository=InMemoryIdeaRepository(),
         durable_storage_backed=False,
-        source_ingestion_live_proof=proof,
-        source_ingestion_live_proof_ref=SOURCE_INGESTION_PROOF_REF,
+        source_ingestion_runtime_execution=proof,
+        source_ingestion_runtime_execution_ref=SOURCE_INGESTION_PROOF_REF,
         repository_root=ROOT,
     )
 
 
-def _valid_source_ingestion_live_proof(
+def _valid_source_ingestion_runtime_execution(
     *,
     generated_at_utc: datetime = EVALUATED_AT,
 ) -> dict[str, Any]:
-    return build_source_ingestion_live_proof_payload(
-        generated_at_utc=generated_at_utc,
-        live_core_source_attempted=True,
-        worker_summary={
-            "schemaVersion": "lotus-idea.source-ingestion.high-cash.run-once.v1",
-            "mode": "run_once",
-            "sourceAuthority": "lotus-core",
-            "durableStorageBacked": True,
-            "totalCount": 1,
-            "decisionCounts": {"accepted": 1, "replayed": 0},
-        },
-    )
+    return runtime_execution(generated_at_utc=generated_at_utc)
 
 
 def _bound_source_ingestion_proof(
@@ -148,7 +135,7 @@ def _bound_source_ingestion_proof(
     proof_ref: str = SOURCE_INGESTION_PROOF_REF,
 ) -> dict[str, Any]:
     with tempfile.TemporaryDirectory() as directory:
-        artifact_path = Path(directory) / "source-ingestion-live-proof.json"
+        artifact_path = Path(directory) / "source-ingestion-runtime-execution.json"
         artifact_path.write_text(json.dumps(payload), encoding="utf-8")
         bound = bind_aggregate_proof_provenance(
             payload,
@@ -161,7 +148,7 @@ def _bound_source_ingestion_proof(
 
 
 def _wrong_source_revision_proof() -> dict[str, Any]:
-    proof = _bound_source_ingestion_proof(_valid_source_ingestion_live_proof())
+    proof = _bound_source_ingestion_proof(_valid_source_ingestion_runtime_execution())
     proof["aggregateProofProvenance"]["sourceRevision"] = "0000000000000000000000000000000000000000"
     return proof
 
