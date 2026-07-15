@@ -151,6 +151,77 @@ class CoreLowIncomeEvidenceRequest:
 
 
 @dataclass(frozen=True)
+class CoreSourceProductRuntimeEvidence:
+    product_name: str | None
+    product_version: str | None
+    tenant_id: str | None
+    portfolio_id: str | None
+    generated_at_utc: datetime | None
+    as_of_date: date | None
+    restatement_version: str | None
+    reconciliation_status: str | None
+    data_quality_status: str | None
+    latest_evidence_at_utc: datetime | None
+    source_batch_fingerprint: str | None
+    snapshot_id: str | None
+    content_hash: str | None
+    source_digest: str | None
+    source_refs: tuple[str, ...]
+    source_lineage: tuple[tuple[str, str], ...]
+    degradation_status: str | None
+    degradation_reason_codes: tuple[str, ...]
+    degradation_detail_count: int
+    source_evidence_current: bool
+    freshness_status: str | None
+    policy_version: str | None
+    correlation_id: str | None
+
+
+@dataclass(frozen=True)
+class CoreCashMovementBucketEvidence:
+    classification: str | None
+    timing: str | None
+    currency: str | None
+    is_position_flow: bool | None
+    is_portfolio_flow: bool | None
+    cashflow_count: int | None
+    total_amount: Decimal | None
+    movement_direction: str | None
+
+
+@dataclass(frozen=True)
+class CoreCashMovementSummaryEvidence:
+    runtime: CoreSourceProductRuntimeEvidence
+    start_date: date | None
+    end_date: date | None
+    buckets: tuple[CoreCashMovementBucketEvidence, ...]
+    cashflow_count: int | None
+
+
+@dataclass(frozen=True)
+class CoreCashflowProjectionPointEvidence:
+    projection_date: date | None
+    booked_net_cashflow: Decimal | None
+    projected_settlement_cashflow: Decimal | None
+    net_cashflow: Decimal | None
+    projected_cumulative_cashflow: Decimal | None
+
+
+@dataclass(frozen=True)
+class CoreCashflowProjectionEvidence:
+    runtime: CoreSourceProductRuntimeEvidence
+    range_start_date: date | None
+    range_end_date: date | None
+    include_projected: bool | None
+    portfolio_currency: str | None
+    points: tuple[CoreCashflowProjectionPointEvidence, ...]
+    total_net_cashflow: Decimal | None
+    booked_total_net_cashflow: Decimal | None
+    projected_settlement_total_cashflow: Decimal | None
+    projection_days: int | None
+
+
+@dataclass(frozen=True)
 class CoreLowIncomeEvidence:
     source_reported_min_projected_cumulative_cashflow: Decimal | None
     cash_movement_count: int | None
@@ -158,6 +229,8 @@ class CoreLowIncomeEvidence:
     cashflow_projection_ref: SourceRef | None
     cashflow_diagnostic: str | None = None
     entitlement_allowed: bool = True
+    cash_movement_product: CoreCashMovementSummaryEvidence | None = None
+    cashflow_projection_product: CoreCashflowProjectionEvidence | None = None
 
 
 @dataclass(frozen=True)

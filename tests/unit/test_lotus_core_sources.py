@@ -424,6 +424,100 @@ def test_lotus_core_adapter_fetches_low_income_cashflow_source_products() -> Non
     ]
 
 
+def test_lotus_core_adapter_preserves_low_income_source_product_receipts() -> None:
+    movement_hash = "sha256:" + "c" * 64
+    projection_hash = "sha256:" + "d" * 64
+
+    def runtime_metadata(content_hash: str) -> dict[str, Any]:
+        return {
+            "tenant_id": "tenant-a",
+            "portfolio_id": "PB_SG_GLOBAL_BAL_001",
+            "restatement_version": "restatement-v1",
+            "reconciliation_status": "COMPLETE",
+            "latest_evidence_timestamp": "2026-06-21T09:59:00Z",
+            "source_batch_fingerprint": content_hash,
+            "snapshot_id": "cashflow-snapshot-1",
+            "content_hash": content_hash,
+            "source_digest": content_hash,
+            "source_refs": ["lotus-core://source/cashflow/1"],
+            "source_lineage": {"source_owner": "lotus-core"},
+            "degradation": {"status": "NONE", "reason_codes": [], "details": []},
+            "source_evidence_current": True,
+            "freshness_status": "CURRENT",
+            "policy_version": "cashflow-policy-v1",
+            "correlation_id": "corr-core",
+        }
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if "cash-movement-summary" in str(request.url):
+            return httpx.Response(
+                200,
+                json=_payload(
+                    "PortfolioCashMovementSummary",
+                    extra={
+                        **runtime_metadata(movement_hash),
+                        "start_date": "2026-06-21",
+                        "end_date": "2026-06-21",
+                        "buckets": [
+                            {
+                                "classification": "CASHFLOW_OUT",
+                                "timing": "SETTLED",
+                                "currency": "USD",
+                                "is_position_flow": False,
+                                "is_portfolio_flow": True,
+                                "cashflow_count": 1,
+                                "total_amount": "-12500",
+                                "movement_direction": "OUTFLOW",
+                            }
+                        ],
+                        "cashflow_count": 1,
+                    },
+                ),
+            )
+        return httpx.Response(
+            200,
+            json=_payload(
+                "PortfolioCashflowProjection",
+                extra={
+                    **runtime_metadata(projection_hash),
+                    "range_start_date": "2026-06-21",
+                    "range_end_date": "2026-08-05",
+                    "include_projected": True,
+                    "portfolio_currency": "USD",
+                    "points": [
+                        {
+                            "projection_date": "2026-06-21",
+                            "booked_net_cashflow": "0",
+                            "projected_settlement_cashflow": "-12500",
+                            "net_cashflow": "-12500",
+                            "projected_cumulative_cashflow": "-12500",
+                        }
+                    ],
+                    "total_net_cashflow": "-12500",
+                    "booked_total_net_cashflow": "0",
+                    "projected_settlement_total_cashflow": "-12500",
+                    "projection_days": 45,
+                },
+            ),
+        )
+
+    evidence = _adapter(httpx.MockTransport(handler)).fetch_low_income_evidence(
+        _low_income_request()
+    )
+
+    movement = evidence.cash_movement_product
+    projection = evidence.cashflow_projection_product
+    assert movement is not None
+    assert movement.runtime.content_hash == movement_hash
+    assert movement.runtime.source_lineage == (("source_owner", "lotus-core"),)
+    assert movement.buckets[0].total_amount == Decimal("-12500")
+    assert projection is not None
+    assert projection.runtime.content_hash == projection_hash
+    assert projection.range_end_date == date(2026, 8, 5)
+    assert projection.points[0].booked_net_cashflow == Decimal("0")
+    assert projection.points[0].projected_cumulative_cashflow == Decimal("-12500")
+
+
 def test_lotus_core_adapter_fetches_bond_maturity_source_product() -> None:
     seen: list[str] = []
 
@@ -581,6 +675,37 @@ def test_lotus_core_adapter_uses_cashflow_projection_total_when_points_are_absen
     )
 
     assert evidence.source_reported_min_projected_cumulative_cashflow == Decimal("-11000")
+
+
+@pytest.mark.parametrize(
+    ("projection_payload", "expected"),
+    [
+        ({"points": [{"projected_cumulative_cashflow": 0}]}, Decimal("0")),
+        ({"total_net_cashflow": 0}, Decimal("0")),
+    ],
+)
+def test_lotus_core_adapter_preserves_zero_low_income_projection_evidence(
+    projection_payload: dict[str, Any],
+    expected: Decimal,
+) -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        if "cash-movement-summary" in str(request.url):
+            return httpx.Response(
+                200,
+                json=_payload("PortfolioCashMovementSummary", extra={"cashflow_count": 0}),
+            )
+        return httpx.Response(
+            200,
+            json=_payload("PortfolioCashflowProjection", extra=projection_payload),
+        )
+
+    evidence = _adapter(httpx.MockTransport(handler)).fetch_low_income_evidence(
+        _low_income_request()
+    )
+
+    assert evidence.source_reported_min_projected_cumulative_cashflow == expected
+    assert evidence.cash_movement_count == 0
+    assert evidence.cashflow_diagnostic == "core_cashflow_liquidity_evidence_ready"
 
 
 def test_lotus_core_adapter_reports_low_income_missing_projection_diagnostic() -> None:
