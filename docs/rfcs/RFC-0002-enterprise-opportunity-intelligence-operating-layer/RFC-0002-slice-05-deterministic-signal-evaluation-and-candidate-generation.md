@@ -578,15 +578,14 @@ Additional implemented drawdown-review foundation:
    mandate/restriction, low-income, and missing-benchmark foundations must keep
    their API module, route, and integration-test evidence refs aligned with the
    governed archetype contract.
-9. `src/app/application/risk_drawdown_live_proof.py`,
-   `scripts/generate_risk_drawdown_live_proof.py`,
-   `scripts/risk_drawdown_live_proof_contract_gate.py`, and
-   `make risk-drawdown-live-proof-contract-gate` define a source-safe live Risk
-   drawdown proof artifact. A valid artifact proves a live
-   `lotus-risk:DrawdownAnalyticsReport:v1` source call, current source
-   evidence, ready Risk supportability, and deterministic drawdown-review
-   candidate generation, then clears only the namespaced opportunity-archetype
-   drawdown source blocker when consumed by aggregate readiness.
+9. `src/app/application/risk_drawdown_runtime_evidence/`,
+   `scripts/risk_drawdown_runtime_evidence/`, and the compatibility target
+   `make risk-drawdown-live-proof-contract-gate` define a closed v2 Risk
+   drawdown `runtime_execution` artifact. A valid artifact binds current
+   `lotus-risk:DrawdownAnalyticsReport:v1` evidence and the authoritative
+   evaluation result to accepted or replayed durable Idea persistence, then
+   clears only the namespaced opportunity-archetype drawdown source blocker
+   when consumed by aggregate readiness.
 10. This foundation does not include data-mesh certification, Workbench proof,
    client-publication approval, or supported-feature promotion.
 

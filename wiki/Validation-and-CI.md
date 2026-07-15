@@ -566,10 +566,14 @@ Persistence adapter validation:
     `make opportunity-archetype-contract-gate` also require the
     high-volatility API module, route, and integration test as archetype
     evidence.
-    `tests/unit/test_risk_drawdown_live_proof.py` and
+    `tests/unit/risk_drawdown_runtime_evidence/`,
+    `tests/integration/risk_runtime_evidence/test_postgres_replay.py`, and
     `make risk-drawdown-live-proof-contract-gate` prove the optional Lotus Risk
-    drawdown live-proof artifact remains source-safe and can clear only the
-    namespaced drawdown source blocker when valid evidence is supplied.
+    drawdown artifact is a closed v2 `runtime_execution` receipt. It binds
+    current `DrawdownAnalyticsReport:v1` evidence to the authoritative Idea
+    evaluation-and-persistence result, rejects tampering and in-memory claims,
+    and can clear only the namespaced drawdown source blocker. The required
+    PostgreSQL lane proves accepted persistence, repository reload, and replay.
     `tests/unit/test_opportunity_archetype_contract_gate.py` and
     `make opportunity-archetype-contract-gate` also require the drawdown API
     module, route, and integration test as archetype evidence.
