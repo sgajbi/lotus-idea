@@ -1,8 +1,13 @@
 from __future__ import annotations
 
+from typing import Any
+
+import pytest
+
 from app.application.implementation_proof_readiness import (
     build_implementation_proof_readiness_snapshot,
 )
+from app.application.proof_provenance import AGGREGATE_PROOF_PROVENANCE_KEY
 from app.domain import InMemoryIdeaRepository
 from tests.support.proof_provenance import bound_aggregate_proof
 from tests.support.risk_concentration_runtime_evidence import (
@@ -44,8 +49,61 @@ def test_implementation_proof_readiness_uses_risk_concentration_live_proof_witho
     assert snapshot.supported_features_promoted is False
 
 
+@pytest.mark.parametrize(
+    "mutation",
+    (
+        "missing_provenance",
+        "non_durable_execution",
+        "unknown_contract_field",
+        "tampered_persistence_receipt",
+    ),
+)
+def test_implementation_proof_readiness_rejects_untrustworthy_risk_concentration_evidence(
+    mutation: str,
+) -> None:
+    proof = _valid_risk_concentration_live_proof()
+    _mutate_proof(proof, mutation)
+
+    snapshot = build_implementation_proof_readiness_snapshot(
+        evaluated_at_utc=GENERATED_AT,
+        repository=InMemoryIdeaRepository(),
+        durable_storage_backed=False,
+        risk_concentration_live_proof=proof,
+        risk_concentration_live_proof_ref=PROOF_REF,
+    )
+
+    assert "opportunity_archetype_live_risk_source_proof_missing" in snapshot.overall_blockers
+    archetypes = next(
+        capability
+        for capability in snapshot.capabilities
+        if capability.capability_id == "opportunity-archetype-scenarios"
+    )
+    assert "opportunity_archetype_live_risk_source_proof_missing" in archetypes.blockers
+    assert PROOF_REF not in archetypes.evidence_refs
+    assert snapshot.supported_features_promoted is False
+
+
 def _valid_risk_concentration_live_proof() -> dict[str, object]:
     return bound_aggregate_proof(
         runtime_execution(),
         PROOF_REF,
     )
+
+
+def _mutate_proof(proof: dict[str, Any], mutation: str) -> None:
+    if mutation == "missing_provenance":
+        proof.pop(AGGREGATE_PROOF_PROVENANCE_KEY)
+        return
+    if mutation == "unknown_contract_field":
+        proof["untrustedClaim"] = True
+        return
+
+    execution = proof["execution"]
+    assert isinstance(execution, dict)
+    if mutation == "non_durable_execution":
+        execution["durableStorageBacked"] = False
+        return
+
+    persistence_receipt = execution["persistenceReceipt"]
+    assert isinstance(persistence_receipt, dict)
+    persistence_receipt["decision"] = "accepted-without-write"
