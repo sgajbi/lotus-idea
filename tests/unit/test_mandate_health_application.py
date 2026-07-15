@@ -139,6 +139,7 @@ def test_mandate_health_application_blocks_entitlement_denial_without_candidate(
 
 def _command() -> EvaluateMandateHealthFromManageCommand:
     return EvaluateMandateHealthFromManageCommand(
+        tenant_id="tenant-a",
         portfolio_id="PB_SG_GLOBAL_BAL_001",
         as_of_date=AS_OF_DATE,
         evaluated_at_utc=EVALUATED_AT,

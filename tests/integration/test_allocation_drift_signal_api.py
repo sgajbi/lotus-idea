@@ -294,6 +294,7 @@ def test_allocation_drift_signal_from_source_api_returns_pm_review_candidate(
         "lotus-risk:MandateRiskHealthContext:v1",
     }
     assert manage_source.seen_request == ManageMandateHealthEvidenceRequest(
+        tenant_id="tenant-a",
         portfolio_id=PORTFOLIO_ID,
         as_of_date=AS_OF_DATE,
         evaluated_at_utc=EVALUATED_AT,
@@ -407,6 +408,7 @@ def source_evaluation_headers(*, portfolio_ids: str = PORTFOLIO_ID) -> dict[str,
         "X-Correlation-Id": "corr-manage-allocation-source-api",
         "X-Trace-Id": "trace-manage-allocation-source-api",
         "X-Caller-Portfolio-Ids": portfolio_ids,
+        "X-Caller-Tenant-Ids": "tenant-a",
     }
 
 

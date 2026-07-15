@@ -6,6 +6,7 @@ from typing import Any, cast
 import httpx
 import pytest
 
+from app.application.core_runtime_evidence import identity_hash
 from app.domain import EvidenceFreshness
 from app.infrastructure.downstream_client import DownstreamClientConfig, DownstreamJsonClient
 from app.infrastructure.lotus_manage_sources import LotusManageMandateHealthSourceAdapter
@@ -22,6 +23,13 @@ EVALUATED_AT = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
 
 def _payload(*, extra: dict[str, Any] | None = None) -> dict[str, Any]:
     payload: dict[str, Any] = {
+        "product_id": "lotus-manage:PortfolioActionRegister:v1",
+        "product_version": "v1",
+        "tenant_id_hash": identity_hash("tenant-a"),
+        "portfolio_id": "PB_SG_GLOBAL_BAL_001",
+        "as_of_date": AS_OF_DATE.isoformat(),
+        "generated_at_utc": "2026-06-21T09:59:00Z",
+        "correlation_id": "corr-manage",
         "store_backend": "INMEMORY",
         "retention_days": 7,
         "run_count": 1,
@@ -32,7 +40,7 @@ def _payload(*, extra: dict[str, Any] | None = None) -> dict[str, Any]:
         "workflow_action_counts": {"APPROVE": 2},
         "workflow_reason_code_counts": {"REVIEW_APPROVED": 2},
         "lineage_edge_count": 4,
-        "source_batch_fingerprint": "portfolio-action-register",
+        "source_batch_fingerprint": "sha256:" + "a" * 64,
         "newest_run_created_at": "2026-06-21T10:00:00+00:00",
         "newest_operation_created_at": "2026-06-21T10:00:00+00:00",
         "supportability": {
@@ -46,6 +54,11 @@ def _payload(*, extra: dict[str, Any] | None = None) -> dict[str, Any]:
     }
     if extra:
         payload.update(extra)
+    for source_ref in payload.get("sourceRefs", []):
+        if isinstance(source_ref, dict) and (
+            source_ref.get("productId") or source_ref.get("sourceProductId")
+        ):
+            source_ref.setdefault("asOfDate", AS_OF_DATE.isoformat())
     return payload
 
 
@@ -60,6 +73,7 @@ def _adapter(handler: httpx.MockTransport) -> LotusManageMandateHealthSourceAdap
 
 def _request() -> ManageMandateHealthEvidenceRequest:
     return ManageMandateHealthEvidenceRequest(
+        tenant_id="tenant-a",
         portfolio_id="PB_SG_GLOBAL_BAL_001",
         as_of_date=AS_OF_DATE,
         evaluated_at_utc=EVALUATED_AT,
@@ -100,13 +114,15 @@ def test_lotus_manage_adapter_fetches_declared_action_register_source_product() 
     assert evidence.supportability_state == "ready"
     assert evidence.supportability_reason == "supportability_summary_ready"
     assert evidence.freshness_bucket == "current"
-    assert evidence.portfolio_scope_confirmed is False
+    assert evidence.portfolio_scope_confirmed is True
     assert evidence.action_register_ref is not None
     assert evidence.action_register_ref.product_id == "lotus-manage:PortfolioActionRegister:v1"
     assert evidence.action_register_ref.route == "/api/v1/rebalance/supportability/summary"
     assert evidence.action_register_ref.freshness is EvidenceFreshness.CURRENT
-    assert evidence.action_register_ref.content_hash == "sha256:portfolio-action-register"
-    assert evidence.manage_diagnostic == "manage_action_register_ready_store_wide_scope"
+    assert evidence.action_register_ref.content_hash == "sha256:" + "a" * 64
+    assert evidence.manage_diagnostic == "manage_action_register_ready_portfolio_scope"
+    assert evidence.action_register_runtime is not None
+    assert evidence.action_register_runtime.tenant_id_hash == identity_hash("tenant-a")
     assert seen == [
         (
             "GET",
@@ -123,6 +139,7 @@ def test_lotus_manage_adapter_url_encodes_scoped_portfolio_id() -> None:
         return httpx.Response(200, json=_payload(extra={"portfolio_id": "PB/SG BAL"}))
 
     request = ManageMandateHealthEvidenceRequest(
+        tenant_id="tenant-a",
         portfolio_id="PB/SG BAL",
         as_of_date=AS_OF_DATE,
         evaluated_at_utc=EVALUATED_AT,
@@ -299,11 +316,15 @@ def test_lotus_manage_adapter_accepts_nested_mandate_health_refs() -> None:
     assert isinstance(supportability, dict)
     supportability["mandatePerformanceHealthRef"] = {
         "content_hash": "sha256:performance-nested",
+        "as_of_date": AS_OF_DATE.isoformat(),
+        "generated_at_utc": "2026-06-21T09:59:00Z",
         "health_state": "ready",
         "freshness_bucket": "current",
     }
     supportability["mandateRiskHealthRef"] = {
         "content_hash": "sha256:risk-nested",
+        "as_of_date": AS_OF_DATE.isoformat(),
+        "generated_at_utc": "2026-06-21T09:59:00Z",
         "health_state": "unavailable",
     }
 
@@ -349,7 +370,7 @@ def test_lotus_manage_adapter_accepts_missing_supportability_as_unknown_unavaila
     assert evidence.action_register_ref is not None
     assert evidence.action_register_ref.data_quality_status == "unknown"
     assert evidence.action_register_ref.freshness is EvidenceFreshness.UNAVAILABLE
-    assert evidence.manage_diagnostic == "manage_action_register_unknown_store_wide_scope"
+    assert evidence.manage_diagnostic == "manage_action_register_unknown_portfolio_scope"
 
 
 def test_lotus_manage_adapter_maps_malformed_supportability_to_source_unavailable() -> None:
@@ -375,16 +396,16 @@ def test_lotus_manage_adapter_maps_missing_counts_to_source_unavailable() -> Non
     assert exc_info.value.code == "manage_workflow_decision_count_malformed"
 
 
-def test_lotus_manage_adapter_maps_missing_source_lineage_to_source_unavailable() -> None:
+def test_lotus_manage_adapter_keeps_missing_source_lineage_unqualified() -> None:
     payload = _payload()
     payload.pop("source_batch_fingerprint")
 
-    with pytest.raises(ManageSourceUnavailable) as exc_info:
-        _adapter(
-            httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
-        ).fetch_mandate_health_evidence(_request())
+    evidence = _adapter(
+        httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+    ).fetch_mandate_health_evidence(_request())
 
-    assert exc_info.value.code == "manage_content_hash_missing"
+    assert evidence.action_register_runtime is None
+    assert evidence.action_register_ref is None
 
 
 def test_lotus_manage_adapter_maps_bool_count_to_source_unavailable() -> None:
@@ -437,11 +458,11 @@ def test_lotus_manage_adapter_accepts_same_day_freshness_bucket_as_current() -> 
     assert evidence.action_register_ref.freshness is EvidenceFreshness.CURRENT
 
 
-def test_lotus_manage_adapter_uses_source_metadata_when_present() -> None:
+def test_lotus_manage_adapter_uses_authoritative_source_metadata() -> None:
     payload = _payload(
         extra={
-            "generated_at": "2026-06-21T10:00:00Z",
-            "source_batch_fingerprint": "manage-batch",
+            "generated_at_utc": "2026-06-21T09:58:00Z",
+            "source_batch_fingerprint": "sha256:" + "b" * 64,
         }
     )
 
@@ -450,23 +471,26 @@ def test_lotus_manage_adapter_uses_source_metadata_when_present() -> None:
     ).fetch_mandate_health_evidence(_request())
 
     assert evidence.action_register_ref is not None
-    assert evidence.action_register_ref.generated_at_utc == EVALUATED_AT
-    assert evidence.action_register_ref.content_hash == "sha256:manage-batch"
+    assert evidence.action_register_ref.generated_at_utc == datetime(
+        2026, 6, 21, 9, 58, tzinfo=UTC
+    )
+    assert evidence.action_register_ref.content_hash == "sha256:" + "b" * 64
 
 
-def test_lotus_manage_adapter_normalizes_naive_source_timestamp() -> None:
-    payload = _payload(extra={"generated_at": "2026-06-21T10:00:00"})
+def test_lotus_manage_adapter_rejects_naive_source_timestamp() -> None:
+    payload = _payload(extra={"generated_at_utc": "2026-06-21T10:00:00"})
 
     evidence = _adapter(
         httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
     ).fetch_mandate_health_evidence(_request())
 
-    assert evidence.action_register_ref is not None
-    assert evidence.action_register_ref.generated_at_utc == EVALUATED_AT
+    assert evidence.action_register_ref is None
+    assert evidence.action_register_runtime is None
 
 
-def test_lotus_manage_adapter_uses_request_time_when_source_timestamps_are_absent() -> None:
+def test_lotus_manage_adapter_does_not_substitute_consumer_time() -> None:
     payload = _payload()
+    payload.pop("generated_at_utc")
     payload.pop("newest_run_created_at")
     payload.pop("newest_operation_created_at")
 
@@ -474,15 +498,15 @@ def test_lotus_manage_adapter_uses_request_time_when_source_timestamps_are_absen
         httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
     ).fetch_mandate_health_evidence(_request())
 
-    assert evidence.action_register_ref is not None
-    assert evidence.action_register_ref.generated_at_utc == EVALUATED_AT
+    assert evidence.action_register_ref is None
+    assert evidence.action_register_runtime is None
 
 
 def test_lotus_manage_adapter_preserves_prefixed_source_fingerprint() -> None:
     payload = _payload(
         extra={
             "source_batch_fingerprint": None,
-            "lineageFingerprint": "sha256:manage-lineage",
+            "lineageFingerprint": "sha256:" + "c" * 64,
         }
     )
 
@@ -491,7 +515,7 @@ def test_lotus_manage_adapter_preserves_prefixed_source_fingerprint() -> None:
     ).fetch_mandate_health_evidence(_request())
 
     assert evidence.action_register_ref is not None
-    assert evidence.action_register_ref.content_hash == "sha256:manage-lineage"
+    assert evidence.action_register_ref.content_hash == "sha256:" + "c" * 64
 
 
 def test_lotus_manage_adapter_requires_declared_freshness_for_ready_supportability() -> None:
@@ -535,6 +559,7 @@ def test_lotus_manage_adapter_does_not_treat_ref_health_state_as_freshness() -> 
 def test_manage_mandate_health_evidence_request_requires_portfolio_id() -> None:
     with pytest.raises(ValueError, match="portfolio_id is required"):
         ManageMandateHealthEvidenceRequest(
+            tenant_id="tenant-a",
             portfolio_id=" ",
             as_of_date=AS_OF_DATE,
             evaluated_at_utc=EVALUATED_AT,
@@ -544,7 +569,41 @@ def test_manage_mandate_health_evidence_request_requires_portfolio_id() -> None:
 def test_manage_mandate_health_evidence_request_requires_aware_evaluation_time() -> None:
     with pytest.raises(ValueError, match="evaluated_at_utc must be timezone-aware"):
         ManageMandateHealthEvidenceRequest(
+            tenant_id="tenant-a",
             portfolio_id="PB_SG_GLOBAL_BAL_001",
             as_of_date=AS_OF_DATE,
             evaluated_at_utc=datetime(2026, 6, 21, 10, 0),
         )
+
+
+def test_manage_mandate_health_evidence_request_requires_tenant_id() -> None:
+    with pytest.raises(ValueError, match="tenant_id is required"):
+        ManageMandateHealthEvidenceRequest(
+            tenant_id=" ",
+            portfolio_id="PB_SG_GLOBAL_BAL_001",
+            as_of_date=AS_OF_DATE,
+            evaluated_at_utc=EVALUATED_AT,
+        )
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    (
+        ("tenant_id_hash", "sha256:" + "f" * 64),
+        ("as_of_date", "2026-06-20"),
+        ("correlation_id", "corr-other"),
+        ("source_batch_fingerprint", "not-a-sha256"),
+    ),
+)
+def test_lotus_manage_adapter_rejects_mismatched_receipt_identity(
+    field: str,
+    value: str,
+) -> None:
+    evidence = _adapter(
+        httpx.MockTransport(
+            lambda request: httpx.Response(200, json=_payload(extra={field: value}))
+        )
+    ).fetch_mandate_health_evidence(_request())
+
+    assert evidence.action_register_runtime is None
+    assert evidence.action_register_ref is None

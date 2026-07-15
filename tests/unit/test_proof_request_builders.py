@@ -30,6 +30,7 @@ def test_build_advise_policy_evaluation_evidence_request_preserves_source_contex
 
 def test_build_manage_mandate_health_evidence_request_preserves_source_context() -> None:
     request = build_manage_mandate_health_evidence_request(
+        tenant_id="tenant-a",
         portfolio_id="PB_SG_GLOBAL_BAL_001",
         as_of_date=AS_OF_DATE,
         evaluated_at_utc=EVALUATED_AT,
@@ -37,6 +38,7 @@ def test_build_manage_mandate_health_evidence_request_preserves_source_context()
         trace_id="trace-123",
     )
 
+    assert request.tenant_id == "tenant-a"
     assert request.portfolio_id == "PB_SG_GLOBAL_BAL_001"
     assert request.as_of_date == AS_OF_DATE
     assert request.evaluated_at_utc == EVALUATED_AT

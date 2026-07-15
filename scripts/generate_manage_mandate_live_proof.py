@@ -54,6 +54,7 @@ def main(argv: list[str] | None = None) -> int:
         )
         evidence = manage_source.fetch_mandate_health_evidence(
             build_manage_mandate_health_evidence_request(
+                tenant_id=args.tenant_id,
                 portfolio_id=args.portfolio_id,
                 as_of_date=as_of_date,
                 evaluated_at_utc=evaluated_at_utc,
@@ -63,6 +64,7 @@ def main(argv: list[str] | None = None) -> int:
         )
         evaluation = evaluate_mandate_health_signal_from_manage(
             EvaluateMandateHealthFromManageCommand(
+                tenant_id=args.tenant_id,
                 portfolio_id=args.portfolio_id,
                 as_of_date=as_of_date,
                 evaluated_at_utc=evaluated_at_utc,
@@ -138,6 +140,7 @@ def _parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--manage-base-url", default=os.getenv(MANAGE_BASE_URL_ENV))
     parser.add_argument("--timeout-seconds", default=os.getenv(TIMEOUT_SECONDS_ENV, "2.0"))
+    parser.add_argument("--tenant-id", required=True)
     parser.add_argument("--portfolio-id", required=True)
     parser.add_argument("--as-of-date", required=True)
     parser.add_argument(

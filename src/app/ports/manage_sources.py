@@ -19,6 +19,7 @@ class ManageSourceEntitlementDenied(Exception):
 
 @dataclass(frozen=True)
 class ManageMandateHealthEvidenceRequest:
+    tenant_id: str
     portfolio_id: str
     as_of_date: date
     evaluated_at_utc: datetime
@@ -26,10 +27,24 @@ class ManageMandateHealthEvidenceRequest:
     trace_id: str | None = None
 
     def __post_init__(self) -> None:
+        if not self.tenant_id.strip():
+            raise ValueError("tenant_id is required")
         if not self.portfolio_id.strip():
             raise ValueError("portfolio_id is required")
         if self.evaluated_at_utc.tzinfo is None or self.evaluated_at_utc.utcoffset() is None:
             raise ValueError("evaluated_at_utc must be timezone-aware")
+
+
+@dataclass(frozen=True)
+class ManageActionRegisterRuntimeEvidence:
+    product_id: str
+    product_version: str
+    tenant_id_hash: str
+    portfolio_id: str
+    as_of_date: date
+    generated_at_utc: datetime
+    source_batch_fingerprint: str
+    correlation_id: str | None
 
 
 @dataclass(frozen=True)
@@ -41,6 +56,7 @@ class ManageMandateHealthEvidence:
     freshness_bucket: str | None
     portfolio_scope_confirmed: bool
     action_register_ref: SourceRef | None
+    action_register_runtime: ManageActionRegisterRuntimeEvidence | None = None
     mandate_performance_health_ref: SourceRef | None = None
     mandate_risk_health_ref: SourceRef | None = None
     manage_diagnostic: str | None = None
@@ -52,7 +68,3 @@ class ManageMandateHealthSourcePort(Protocol):
         self, request: ManageMandateHealthEvidenceRequest
     ) -> ManageMandateHealthEvidence:
         """Fetch source-owned Lotus Manage action-register posture for idea evaluation."""
-
-
-class ManageOpportunitySourcePort(ManageMandateHealthSourcePort, Protocol):
-    """Backward-compatible alias for the mandate-health source contract."""
