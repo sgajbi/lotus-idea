@@ -4,6 +4,8 @@ from copy import deepcopy
 from dataclasses import replace
 from datetime import datetime, timedelta
 from decimal import Decimal
+import json
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -19,6 +21,7 @@ from app.application.underperformance_signal import (
 )
 from app.domain import CandidatePersistenceDecision, EvidenceFreshness, InMemoryIdeaRepository
 from app.ports.performance_sources import PerformanceUnderperformanceEvidence
+from scripts.performance_underperformance_runtime_evidence import generate_runtime_execution
 from tests.support.performance_underperformance_runtime_evidence import (
     GENERATED_AT,
     FixedPerformanceUnderperformanceSource,
@@ -26,6 +29,10 @@ from tests.support.performance_underperformance_runtime_evidence import (
     runtime_command,
     runtime_execution,
 )
+
+
+class DurableIdeaRepository(InMemoryIdeaRepository):
+    durable_storage_backed = True
 
 
 def test_runtime_execution_binds_performance_source_and_persistence_receipts() -> None:
@@ -215,3 +222,79 @@ def test_runtime_execution_requires_timezone_aware_generation_time() -> None:
             error_code="performance_source_unavailable",
             durable_storage_backed=True,
         )
+
+
+def test_runtime_execution_cli_writes_source_safe_artifact(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    output = tmp_path / "runtime-execution.json"
+    monkeypatch.setattr(generate_runtime_execution, "get_idea_repository", DurableIdeaRepository)
+    monkeypatch.setattr(
+        generate_runtime_execution,
+        "LotusPerformanceUnderperformanceSourceAdapter",
+        lambda _client: FixedPerformanceUnderperformanceSource(performance_evidence()),
+    )
+
+    result = generate_runtime_execution.main(
+        [
+            "--performance-base-url",
+            "http://performance.test",
+            "--portfolio-id",
+            "PB_SG_GLOBAL_BAL_001",
+            "--as-of-date",
+            "2026-06-21",
+            "--generated-at-utc",
+            "2026-06-21T10:10:00Z",
+            "--evaluated-at-utc",
+            "2026-06-21T10:00:00Z",
+            "--correlation-id",
+            "sensitive-correlation",
+            "--trace-id",
+            "sensitive-trace",
+            "--output",
+            str(output),
+        ]
+    )
+
+    payload = json.loads(output.read_text(encoding="utf-8"))
+    serialized = json.dumps(payload)
+    assert result == 0
+    assert performance_underperformance_runtime_execution_is_valid(payload) is True
+    assert "PB_SG_GLOBAL_BAL_001" not in serialized
+    assert "sensitive-correlation" not in serialized
+    assert "sensitive-trace" not in serialized
+
+
+def test_runtime_execution_cli_fails_closed_without_durable_repository(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    output = tmp_path / "runtime-execution.json"
+    monkeypatch.setattr(generate_runtime_execution, "get_idea_repository", InMemoryIdeaRepository)
+    monkeypatch.setattr(
+        generate_runtime_execution,
+        "LotusPerformanceUnderperformanceSourceAdapter",
+        lambda _client: FixedPerformanceUnderperformanceSource(performance_evidence()),
+    )
+
+    result = generate_runtime_execution.main(
+        [
+            "--performance-base-url",
+            "http://performance.test",
+            "--portfolio-id",
+            "PB_SG_GLOBAL_BAL_001",
+            "--as-of-date",
+            "2026-06-21",
+            "--generated-at-utc",
+            "2026-06-21T10:10:00Z",
+            "--evaluated-at-utc",
+            "2026-06-21T10:00:00Z",
+            "--output",
+            str(output),
+        ]
+    )
+
+    payload = json.loads(output.read_text(encoding="utf-8"))
+    assert result == 3
+    assert "durable_repository_not_configured" in payload["execution"]["qualificationBlockers"]
