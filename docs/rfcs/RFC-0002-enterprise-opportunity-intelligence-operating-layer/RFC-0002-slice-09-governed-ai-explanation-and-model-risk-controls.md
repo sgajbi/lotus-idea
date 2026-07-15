@@ -460,6 +460,9 @@ supported-feature blockers remain. This is internal design modularity in the
 existing deployable, not a new service or database boundary.
 The follow-on same-pattern scan found the equivalent flat drawdown proof;
 issue `#466` tracks that separately so the #465 closure remains bounded.
+PR `#467` merged the high-volatility occurrence by rebase to exact-main SHA
+`81f490ba`. Main Releasability `29391350559` and CodeQL `29391347328` passed,
+including PostgreSQL and Docker, and wiki publication `78cfcfc` has zero drift.
 
 PR `#439` merged this occurrence by rebase to exact-main SHA `1a64ef69`.
 Main Releasability `29356075075` and CodeQL `29356064752` passed on that exact
