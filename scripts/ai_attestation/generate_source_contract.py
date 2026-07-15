@@ -1,0 +1,61 @@
+from __future__ import annotations
+
+import argparse
+from datetime import datetime
+from pathlib import Path
+import sys
+
+ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT))
+
+from app.application.ai_attestation.source_contract import (  # noqa: E402
+    build_ai_attestation_source_contract,
+)
+from scripts.proof_generator_io import write_json_payload  # noqa: E402
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = _parser()
+    args = parser.parse_args(argv)
+    try:
+        payload = build_ai_attestation_source_contract(
+            generated_at_utc=_aware_datetime(args.generated_at_utc),
+            repository_root=ROOT,
+            lotus_ai_root=Path(args.lotus_ai_root) if args.lotus_ai_root else None,
+        )
+    except (OSError, ValueError) as exc:
+        print(f"AI attestation source-contract error: {exc}", file=sys.stderr)
+        return 2
+    write_json_payload(payload, output=args.output)
+    if args.allow_missing_producer and payload["validationScope"] == "idea_consumer_only":
+        return 0
+    return 0 if payload["sourceContractValid"] else 1
+
+
+def _parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="Generate signed AI attestation producer/consumer source-contract evidence."
+    )
+    parser.add_argument("--generated-at-utc", required=True)
+    parser.add_argument("--lotus-ai-root")
+    parser.add_argument("--output")
+    parser.add_argument(
+        "--allow-missing-producer",
+        action="store_true",
+        help=(
+            "Write explicit Idea-consumer-only evidence and exit 0 when the sibling Lotus AI "
+            "source is unavailable."
+        ),
+    )
+    return parser
+
+
+def _aware_datetime(value: str) -> datetime:
+    parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    if parsed.tzinfo is None or parsed.utcoffset() is None:
+        raise ValueError("--generated-at-utc must be timezone-aware")
+    return parsed
+
+
+if __name__ == "__main__":
+    sys.exit(main())
