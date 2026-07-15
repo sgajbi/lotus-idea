@@ -559,7 +559,7 @@ canonical-signal-api-proof:
 	$(VENV_PYTHON) scripts/run_canonical_signal_api_proof.py --idea-base-url "$(CANONICAL_SIGNAL_API_IDEA_BASE_URL)" --portfolio-id "$(CANONICAL_OPPORTUNITY_PORTFOLIO_ID)" --as-of-date "$(CANONICAL_OPPORTUNITY_AS_OF_DATE)" --period-name "$(CANONICAL_SIGNAL_API_PERIOD_NAME)" --reporting-currency "$(CANONICAL_SIGNAL_API_REPORTING_CURRENCY)" --generated-at-utc "$(CANONICAL_OPPORTUNITY_GENERATED_AT_UTC)" --evaluated-at-utc "$(CANONICAL_OPPORTUNITY_EVALUATED_AT_UTC)" --correlation-id "$(CANONICAL_OPPORTUNITY_CORRELATION_ID)" --trace-id "$(CANONICAL_OPPORTUNITY_TRACE_ID)" --output "$(CANONICAL_SIGNAL_API_OUTPUT)"
 
 risk-concentration-live-proof-contract-gate:
-	$(VENV_PYTHON) scripts/risk_concentration_live_proof_contract_gate.py
+	$(VENV_PYTHON) scripts/risk_concentration_runtime_evidence/runtime_execution_contract_gate.py
 
 high-volatility-live-proof-contract-gate:
 	$(VENV_PYTHON) scripts/high_volatility_live_proof_contract_gate.py

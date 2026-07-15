@@ -11,7 +11,7 @@ SCRIPT_TARGET_EXPECTATIONS = {
         "scripts/source_ingestion/runtime_execution_contract_gate.py"
     ),
     "risk-concentration-live-proof-contract-gate": (
-        "scripts/risk_concentration_live_proof_contract_gate.py"
+        "scripts/risk_concentration_runtime_evidence/runtime_execution_contract_gate.py"
     ),
     "performance-underperformance-live-proof-contract-gate": (
         "scripts/performance_underperformance_live_proof_contract_gate.py"

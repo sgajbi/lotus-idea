@@ -51,9 +51,6 @@ from app.application.performance_underperformance_live_proof import (
 from app.application.data_mesh.platform_catalog_source_contract import (
     build_platform_catalog_source_contract_payload,
 )
-from app.application.risk_concentration_live_proof import (
-    build_risk_concentration_live_proof_payload,
-)
 from app.application.risk_drawdown_live_proof import build_risk_drawdown_live_proof_payload
 from app.application.source_ingestion_readiness import (
     CORE_BASE_URL_ENV,
@@ -68,6 +65,10 @@ from app.application.workbench.read_path_source_contract import (
 from app.domain import InMemoryIdeaRepository
 from tests.support.ai_workflow_pack_fixture import (
     write_lotus_ai_workflow_pack_fixture,
+)
+from tests.support.risk_concentration_runtime_evidence import (
+    GENERATED_AT as RISK_CONCENTRATION_GENERATED_AT,
+    runtime_execution as risk_concentration_runtime_execution,
 )
 from tests.support.ai_runtime_proof import ai_runtime_execution_receipt
 from tests.support.ai_lineage_store_proof import valid_ai_lineage_ci_execution_receipt
@@ -860,22 +861,7 @@ def test_generate_implementation_proof_readiness_uses_explicit_risk_concentratio
 ) -> None:
     risk_proof = tmp_path / "risk-concentration-live-proof.json"
     risk_proof.write_text(
-        json.dumps(
-            build_risk_concentration_live_proof_payload(
-                generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
-                live_risk_source_attempted=True,
-                evaluation_summary={
-                    "runStatus": "completed",
-                    "sourceAuthority": "lotus-risk",
-                    "sourceProductId": "lotus-risk:ConcentrationRiskReport:v1",
-                    "evaluationOutcome": "candidate_created",
-                    "sourceEvidenceCurrent": True,
-                    "sourceDiagnosticCodes": ["risk_issuer_coverage_complete"],
-                    "reasonCodes": ["concentration_attention"],
-                    "unsupportedReasons": [],
-                },
-            )
-        ),
+        json.dumps(risk_concentration_runtime_execution()),
         encoding="utf-8",
     )
     output_path = tmp_path / "proof" / "readiness.json"
@@ -883,7 +869,7 @@ def test_generate_implementation_proof_readiness_uses_explicit_risk_concentratio
     result = proof_report.main(
         [
             "--evaluated-at-utc",
-            "2026-06-27T00:00:00Z",
+            RISK_CONCENTRATION_GENERATED_AT.isoformat(),
             "--risk-concentration-live-proof",
             str(risk_proof),
             "--output",

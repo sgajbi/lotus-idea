@@ -15,7 +15,9 @@ from app.application.missing_benchmark_performance_readiness_proof import (
 from app.application.performance_underperformance_live_proof import (
     performance_underperformance_live_proof_is_valid,
 )
-from app.application.risk_concentration_live_proof import risk_concentration_live_proof_is_valid
+from app.application.risk_concentration_runtime_evidence import (
+    risk_concentration_runtime_execution_is_valid,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -33,9 +35,9 @@ class ProofCase:
 PROOF_CASES = (
     ProofCase(
         name="risk_concentration",
-        script_name="generate_risk_concentration_live_proof.py",
+        script_name="risk_concentration_runtime_evidence/generate_runtime_execution.py",
         output_name="risk-concentration-live-proof.json",
-        validator=risk_concentration_live_proof_is_valid,
+        validator=risk_concentration_runtime_execution_is_valid,
     ),
     ProofCase(
         name="performance_underperformance",
@@ -169,6 +171,14 @@ def _artifact_observation(artifact: Mapping[str, Any]) -> dict[str, Any]:
         value = artifact.get(key)
         if isinstance(value, list | tuple):
             observation[key] = [str(item) for item in value]
+    execution = artifact.get("execution")
+    if isinstance(execution, Mapping):
+        observation["executionStatus"] = execution.get("status")
+        blockers = execution.get("qualificationBlockers")
+        if isinstance(blockers, list | tuple):
+            observation["qualificationBlockers"] = [str(item) for item in blockers]
+    if "evidenceClass" in artifact:
+        observation["evidenceClass"] = artifact["evidenceClass"]
     return observation
 
 

@@ -62,9 +62,9 @@ from app.application.performance_underperformance_live_proof import (
     PERFORMANCE_UNDERPERFORMANCE_LIVE_BLOCKERS_CLEARED,
     performance_underperformance_live_proof_is_valid,
 )
-from app.application.risk_concentration_live_proof import (
-    RISK_CONCENTRATION_LIVE_BLOCKERS_CLEARED,
-    risk_concentration_live_proof_is_valid,
+from app.application.risk_concentration_runtime_evidence import (
+    RISK_CONCENTRATION_RUNTIME_BLOCKERS_SATISFIED,
+    risk_concentration_runtime_execution_is_valid,
 )
 from app.application.risk_drawdown_live_proof import (
     RISK_DRAWDOWN_LIVE_BLOCKERS_CLEARED,
@@ -148,7 +148,7 @@ def _opportunity_proof_steps(scope: Mapping[str, object]) -> tuple[OpportunityPr
         _proof_step(
             scope,
             "risk_concentration_live",
-            risk_concentration_live_proof_is_valid,
+            risk_concentration_runtime_execution_is_valid,
             _apply_risk_concentration_live_proof,
         ),
         _proof_step(
@@ -391,7 +391,7 @@ def _apply_risk_concentration_live_proof(
     return apply_blocker_proof(
         capability,
         capability_ids=("opportunity-archetype-scenarios",),
-        blockers_cleared=RISK_CONCENTRATION_LIVE_BLOCKERS_CLEARED,
+        blockers_cleared=RISK_CONCENTRATION_RUNTIME_BLOCKERS_SATISFIED,
         proof_ref=risk_concentration_live_proof_ref,
     )
 
