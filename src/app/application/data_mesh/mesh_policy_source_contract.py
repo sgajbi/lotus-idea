@@ -87,6 +87,7 @@ _CONTRACT_CHECK_FIELDS = frozenset(
     }
 )
 
+
 def build_mesh_policy_source_contract_payload(
     *,
     generated_at_utc: datetime,
@@ -199,9 +200,7 @@ def mesh_policy_source_contract_is_valid(payload: Mapping[str, Any]) -> bool:
 
 
 def _source_authority(repository_root: Path) -> tuple[dict[str, str | None], ...]:
-    return build_source_authority_records(
-        _source_authority_sources(repository_root)
-    )
+    return build_source_authority_records(_source_authority_sources(repository_root))
 
 
 def _source_authority_is_valid(value: object) -> bool:

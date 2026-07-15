@@ -278,9 +278,7 @@ def platform_catalog_source_contract_is_valid(payload: Mapping[str, Any]) -> boo
 
 
 def _source_authority(platform_root: Path) -> tuple[dict[str, str | None], ...]:
-    return build_source_authority_records(
-        _source_authority_sources(platform_root)
-    )
+    return build_source_authority_records(_source_authority_sources(platform_root))
 
 
 def _source_authority_is_valid(value: object) -> bool:
