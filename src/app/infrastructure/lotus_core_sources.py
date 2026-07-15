@@ -17,12 +17,17 @@ from app.ports.core_sources import (
     CoreBenchmarkAssignmentEvidenceRequest,
     CoreBondMaturityEvidence,
     CoreBondMaturityEvidenceRequest,
+    CoreCashflowProjectionEvidence,
+    CoreCashflowProjectionPointEvidence,
+    CoreCashMovementBucketEvidence,
+    CoreCashMovementSummaryEvidence,
     CoreHighCashEvidence,
     CoreHighCashEvidenceRequest,
     CoreLowIncomeEvidence,
     CoreLowIncomeEvidenceRequest,
     CorePortfolioStateEvidence,
     CorePortfolioStateEvidenceRequest,
+    CoreSourceProductRuntimeEvidence,
     CoreSourceEntitlementDenied,
     CoreSourceUnavailable,
 )
@@ -256,6 +261,8 @@ class LotusCoreHighCashSourceAdapter:
         min_projected_cumulative_cashflow = _min_projected_cumulative_cashflow(
             cashflow_projection_payload
         )
+        cash_movement_product = _cash_movement_summary_evidence(cash_movement_payload)
+        cashflow_projection_product = _cashflow_projection_evidence(cashflow_projection_payload)
         return CoreLowIncomeEvidence(
             source_reported_min_projected_cumulative_cashflow=min_projected_cumulative_cashflow,
             cash_movement_count=cash_movement_count,
@@ -273,6 +280,8 @@ class LotusCoreHighCashSourceAdapter:
                 cash_movement_count=cash_movement_count,
                 min_projected_cumulative_cashflow=min_projected_cumulative_cashflow,
             ),
+            cash_movement_product=cash_movement_product,
+            cashflow_projection_product=cashflow_projection_product,
         )
 
     def fetch_bond_maturity_evidence(
@@ -660,6 +669,149 @@ def _int_field(payload: dict[str, Any], *keys: str) -> int | None:
     return None
 
 
+def _cash_movement_summary_evidence(
+    payload: dict[str, Any],
+) -> CoreCashMovementSummaryEvidence:
+    buckets = payload.get("buckets")
+    parsed_buckets = (
+        tuple(_cash_movement_bucket(item) for item in buckets if isinstance(item, dict))
+        if isinstance(buckets, list)
+        else ()
+    )
+    return CoreCashMovementSummaryEvidence(
+        runtime=_source_product_runtime_evidence(payload),
+        start_date=_optional_date_field(payload, "start_date", "startDate"),
+        end_date=_optional_date_field(payload, "end_date", "endDate"),
+        buckets=parsed_buckets,
+        cashflow_count=_int_field(payload, "cashflow_count", "cashflowCount"),
+    )
+
+
+def _cash_movement_bucket(payload: dict[str, Any]) -> CoreCashMovementBucketEvidence:
+    return CoreCashMovementBucketEvidence(
+        classification=_text_field(payload, "classification"),
+        timing=_text_field(payload, "timing"),
+        currency=_text_field(payload, "currency"),
+        is_position_flow=_optional_bool_field(payload, "is_position_flow", "isPositionFlow"),
+        is_portfolio_flow=_optional_bool_field(payload, "is_portfolio_flow", "isPortfolioFlow"),
+        cashflow_count=_int_field(payload, "cashflow_count", "cashflowCount"),
+        total_amount=_optional_decimal_field(payload, "total_amount", "totalAmount"),
+        movement_direction=_text_field(payload, "movement_direction", "movementDirection"),
+    )
+
+
+def _cashflow_projection_evidence(payload: dict[str, Any]) -> CoreCashflowProjectionEvidence:
+    points = payload.get("points")
+    parsed_points = (
+        tuple(_cashflow_projection_point(item) for item in points if isinstance(item, dict))
+        if isinstance(points, list)
+        else ()
+    )
+    return CoreCashflowProjectionEvidence(
+        runtime=_source_product_runtime_evidence(payload),
+        range_start_date=_optional_date_field(payload, "range_start_date", "rangeStartDate"),
+        range_end_date=_optional_date_field(payload, "range_end_date", "rangeEndDate"),
+        include_projected=_optional_bool_field(payload, "include_projected", "includeProjected"),
+        portfolio_currency=_text_field(payload, "portfolio_currency", "portfolioCurrency"),
+        points=parsed_points,
+        total_net_cashflow=_optional_decimal_field(
+            payload, "total_net_cashflow", "totalNetCashflow"
+        ),
+        booked_total_net_cashflow=_optional_decimal_field(
+            payload, "booked_total_net_cashflow", "bookedTotalNetCashflow"
+        ),
+        projected_settlement_total_cashflow=_optional_decimal_field(
+            payload,
+            "projected_settlement_total_cashflow",
+            "projectedSettlementTotalCashflow",
+        ),
+        projection_days=_int_field(payload, "projection_days", "projectionDays"),
+    )
+
+
+def _cashflow_projection_point(payload: dict[str, Any]) -> CoreCashflowProjectionPointEvidence:
+    return CoreCashflowProjectionPointEvidence(
+        projection_date=_optional_date_field(payload, "projection_date", "projectionDate"),
+        booked_net_cashflow=_optional_decimal_field(
+            payload, "booked_net_cashflow", "bookedNetCashflow"
+        ),
+        projected_settlement_cashflow=_optional_decimal_field(
+            payload, "projected_settlement_cashflow", "projectedSettlementCashflow"
+        ),
+        net_cashflow=_optional_decimal_field(payload, "net_cashflow", "netCashflow"),
+        projected_cumulative_cashflow=_optional_decimal_field(
+            payload, "projected_cumulative_cashflow", "projectedCumulativeCashflow"
+        ),
+    )
+
+
+def _source_product_runtime_evidence(
+    payload: dict[str, Any],
+) -> CoreSourceProductRuntimeEvidence:
+    degradation = payload.get("degradation")
+    degradation_mapping = degradation if isinstance(degradation, dict) else {}
+    details = degradation_mapping.get("details")
+    return CoreSourceProductRuntimeEvidence(
+        product_name=_text_field(payload, "product_name", "productName"),
+        product_version=_text_field(payload, "product_version", "productVersion"),
+        tenant_id=_text_field(payload, "tenant_id", "tenantId"),
+        portfolio_id=_text_field(payload, "portfolio_id", "portfolioId"),
+        generated_at_utc=_optional_datetime_field(payload, "generated_at", "generatedAt"),
+        as_of_date=_optional_date_field(payload, "as_of_date", "asOfDate"),
+        restatement_version=_text_field(payload, "restatement_version", "restatementVersion"),
+        reconciliation_status=_text_field(payload, "reconciliation_status", "reconciliationStatus"),
+        data_quality_status=_text_field(payload, "data_quality_status", "dataQualityStatus"),
+        latest_evidence_at_utc=_optional_datetime_field(
+            payload, "latest_evidence_timestamp", "latestEvidenceTimestamp"
+        ),
+        source_batch_fingerprint=_text_field(
+            payload, "source_batch_fingerprint", "sourceBatchFingerprint"
+        ),
+        snapshot_id=_text_field(payload, "snapshot_id", "snapshotId"),
+        content_hash=_text_field(payload, "content_hash", "contentHash"),
+        source_digest=_text_field(payload, "source_digest", "sourceDigest"),
+        source_refs=_text_sequence_field(payload, "source_refs", "sourceRefs"),
+        source_lineage=_text_mapping_items(payload, "source_lineage", "sourceLineage"),
+        degradation_status=_text_field(degradation_mapping, "status"),
+        degradation_reason_codes=_text_sequence_field(degradation_mapping, "reason_codes"),
+        degradation_detail_count=len(details) if isinstance(details, list) else 0,
+        source_evidence_current=_bool_alias_field(
+            payload, "source_evidence_current", "sourceEvidenceCurrent"
+        ),
+        freshness_status=_text_field(payload, "freshness_status", "freshnessStatus"),
+        policy_version=_text_field(payload, "policy_version", "policyVersion"),
+        correlation_id=_text_field(payload, "correlation_id", "correlationId"),
+    )
+
+
+def _optional_decimal_field(
+    payload: dict[str, Any], *keys: str, error_code: str | None = None
+) -> Decimal | None:
+    for key in keys:
+        if key in payload and payload[key] is not None:
+            return _decimal_value(payload[key], code=error_code or f"core_{key}_malformed")
+    return None
+
+
+def _bool_alias_field(payload: dict[str, Any], *keys: str) -> bool:
+    value = _optional_bool_field(payload, *keys)
+    return value is True
+
+
+def _text_mapping_items(payload: dict[str, Any], *keys: str) -> tuple[tuple[str, str], ...]:
+    for key in keys:
+        value = payload.get(key)
+        if isinstance(value, dict):
+            return tuple(
+                sorted(
+                    (str(item_key), item_value.strip())
+                    for item_key, item_value in value.items()
+                    if isinstance(item_value, str) and item_value.strip()
+                )
+            )
+    return ()
+
+
 def _min_projected_cumulative_cashflow(payload: dict[str, Any]) -> Decimal | None:
     values: list[Decimal] = []
     points = payload.get("points")
@@ -667,18 +819,23 @@ def _min_projected_cumulative_cashflow(payload: dict[str, Any]) -> Decimal | Non
         for point in points:
             if not isinstance(point, dict):
                 continue
-            value = point.get("projected_cumulative_cashflow") or point.get(
-                "projectedCumulativeCashflow"
+            value = _optional_decimal_field(
+                point,
+                "projected_cumulative_cashflow",
+                "projectedCumulativeCashflow",
+                error_code="core_cashflow_projection_malformed",
             )
             if value is None:
                 continue
-            values.append(_decimal_value(value, code="core_cashflow_projection_malformed"))
+            values.append(value)
     if values:
         return min(values)
-    total = payload.get("total_net_cashflow") or payload.get("totalNetCashflow")
-    if total is None:
-        return None
-    return _decimal_value(total, code="core_cashflow_projection_malformed")
+    return _optional_decimal_field(
+        payload,
+        "total_net_cashflow",
+        "totalNetCashflow",
+        error_code="core_cashflow_projection_malformed",
+    )
 
 
 def _decimal_value(value: object, *, code: str) -> Decimal:
