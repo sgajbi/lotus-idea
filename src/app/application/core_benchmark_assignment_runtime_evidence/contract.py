@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import date
+import re
 from typing import Any
 
 from app.application.core_benchmark_assignment_runtime_evidence.runtime_execution import (
@@ -20,6 +21,7 @@ _EXECUTION_KEYS = frozenset({"status", "evaluatedAtUtc", "requestReceipt", "sour
 _REQUEST_KEYS = frozenset({"tenantIdHash", "portfolioIdHash", "asOfDate", "reportingCurrency", "evaluatedAtUtc", "requestDigest"})
 _SOURCE_KEYS = frozenset({"productId", "sourceSystem", "productVersion", "route", "asOfDate", "generatedAtUtc", "contentHash", "dataQualityStatus", "freshness", "receiptDigest"})
 _CLAIM_KEYS = frozenset({"benchmarkAssignmentOwned", "benchmarkAssignmentChanged", "performanceMethodologyCertified", "dataMeshRuntimeCertified", "gatewayWorkbenchRuntimeObserved", "clientPublicationApproved", "deploymentCertified", "productionCertified", "supportedFeaturePromoted", "ideaPersistenceRequired"})
+_SHA256_PATTERN = re.compile(r"^sha256:[0-9a-f]{64}$")
 
 
 def core_benchmark_assignment_runtime_execution_is_valid(payload: Mapping[str, Any]) -> bool:
@@ -64,6 +66,23 @@ def core_benchmark_assignment_runtime_execution_is_valid(payload: Mapping[str, A
             or execution.get("status") != "completed"
             or execution.get("assignmentStatus") != "active"
             or tuple(execution.get("qualificationBlockers") or ())):
+        return False
+    if not all(
+        isinstance(request.get(key), str) and _SHA256_PATTERN.fullmatch(str(request[key]))
+        for key in ("tenantIdHash", "portfolioIdHash", "requestDigest")
+    ):
+        return False
+    currency = request.get("reportingCurrency")
+    if currency is not None and (
+        not isinstance(currency, str) or len(currency) != 3 or not currency.isalpha() or not currency.isupper()
+    ):
+        return False
+    if not all(
+        isinstance(source.get(key), str) and str(source[key]).strip()
+        for key in ("productVersion", "route", "contentHash", "dataQualityStatus", "receiptDigest")
+    ):
+        return False
+    if not isinstance(execution.get("diagnosticCode"), str) or not str(execution["diagnosticCode"]).strip():
         return False
     if tuple(payload.get("aggregateBlockersSatisfied") or ()) != CORE_BENCHMARK_ASSIGNMENT_RUNTIME_BLOCKERS_SATISFIED:
         return False

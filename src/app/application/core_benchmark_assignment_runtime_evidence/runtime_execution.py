@@ -58,6 +58,10 @@ class EvaluateCoreBenchmarkAssignmentReadiness:
             raise ValueError("tenant_id and portfolio_id are required")
         if self.evaluated_at_utc.tzinfo is None or self.evaluated_at_utc.utcoffset() is None:
             raise ValueError("evaluated_at_utc must be timezone-aware")
+        if self.reporting_currency is not None and (
+            len(self.reporting_currency) != 3 or not self.reporting_currency.isalpha()
+        ):
+            raise ValueError("reporting_currency must be a three-letter currency code")
 
 
 @dataclass(frozen=True)
@@ -195,7 +199,9 @@ def _request_receipt(command: EvaluateCoreBenchmarkAssignmentReadiness) -> dict[
         "tenantIdHash": _identity_hash(command.tenant_id),
         "portfolioIdHash": _identity_hash(command.portfolio_id),
         "asOfDate": command.as_of_date.isoformat(),
-        "reportingCurrency": command.reporting_currency,
+        "reportingCurrency": (
+            command.reporting_currency.upper() if command.reporting_currency else None
+        ),
         "evaluatedAtUtc": _format_utc(command.evaluated_at_utc),
     }
     return {**material, "requestDigest": _sha256_json(material)}
