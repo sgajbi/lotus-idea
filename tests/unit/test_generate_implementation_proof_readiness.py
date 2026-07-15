@@ -50,7 +50,6 @@ from app.application.performance_underperformance_live_proof import (
 from app.application.data_mesh.platform_catalog_source_contract import (
     build_platform_catalog_source_contract_payload,
 )
-from app.application.risk_drawdown_live_proof import build_risk_drawdown_live_proof_payload
 from app.application.source_ingestion_readiness import (
     CORE_BASE_URL_ENV,
     SOURCE_INGESTION_RUNTIME_EXECUTION_ENV,
@@ -71,6 +70,9 @@ from tests.support.risk_concentration_runtime_evidence import (
 )
 from tests.support.high_volatility_runtime_evidence import (
     runtime_execution as high_volatility_runtime_execution,
+)
+from tests.support.risk_drawdown_runtime_evidence import (
+    runtime_execution as drawdown_runtime_execution,
 )
 from tests.support.ai_runtime_proof import ai_runtime_execution_receipt
 from tests.support.ai_lineage_store_proof import valid_ai_lineage_ci_execution_receipt
@@ -945,20 +947,8 @@ def test_generate_implementation_proof_readiness_uses_explicit_risk_drawdown_liv
     risk_drawdown_proof = tmp_path / "risk-drawdown-live-proof.json"
     risk_drawdown_proof.write_text(
         json.dumps(
-            build_risk_drawdown_live_proof_payload(
-                generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
-                live_risk_source_attempted=True,
-                evaluation_summary={
-                    "runStatus": "completed",
-                    "sourceAuthority": "lotus-risk",
-                    "sourceProductId": "lotus-risk:DrawdownAnalyticsReport:v1",
-                    "evaluationOutcome": "candidate_created",
-                    "sourceEvidenceCurrent": True,
-                    "riskSupportabilityReady": True,
-                    "sourceDiagnosticCodes": ["risk_drawdown_source_ready"],
-                    "reasonCodes": ["drawdown_attention"],
-                    "unsupportedReasons": [],
-                },
+            drawdown_runtime_execution(
+                generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC)
             )
         ),
         encoding="utf-8",

@@ -61,12 +61,12 @@ def test_ci_contract_gate_blocks_missing_high_volatility_runtime_evidence_gate()
     ) in errors
 
 
-def test_ci_contract_gate_blocks_missing_risk_drawdown_live_proof_gate() -> None:
+def test_ci_contract_gate_blocks_missing_risk_drawdown_runtime_evidence_gate() -> None:
     module = _load_ci_contract_gate()
     errors = module.validate_makefile(
         _makefile_without(
             "$(MAKE) risk-drawdown-live-proof-contract-gate\n",
-            "scripts/risk_drawdown_live_proof_contract_gate.py",
+            "scripts/risk_drawdown_runtime_evidence/runtime_execution_contract_gate.py",
         )
     )
 
@@ -75,7 +75,7 @@ def test_ci_contract_gate_blocks_missing_risk_drawdown_live_proof_gate() -> None
     ) in errors
     assert (
         "Makefile risk-drawdown-live-proof-contract-gate target must run "
-        "`scripts/risk_drawdown_live_proof_contract_gate.py`"
+        "`scripts/risk_drawdown_runtime_evidence/runtime_execution_contract_gate.py`"
     ) in errors
 
 

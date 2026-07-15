@@ -565,7 +565,7 @@ high-volatility-live-proof-contract-gate:
 	$(VENV_PYTHON) scripts/high_volatility_runtime_evidence/runtime_execution_contract_gate.py
 
 risk-drawdown-live-proof-contract-gate:
-	$(VENV_PYTHON) scripts/risk_drawdown_live_proof_contract_gate.py
+	$(VENV_PYTHON) scripts/risk_drawdown_runtime_evidence/runtime_execution_contract_gate.py
 
 manage-mandate-live-proof-contract-gate:
 	$(VENV_PYTHON) scripts/manage_mandate_live_proof_contract_gate.py

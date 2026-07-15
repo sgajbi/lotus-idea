@@ -66,9 +66,9 @@ from app.application.risk_concentration_runtime_evidence import (
     RISK_CONCENTRATION_RUNTIME_BLOCKERS_SATISFIED,
     risk_concentration_runtime_execution_is_valid,
 )
-from app.application.risk_drawdown_live_proof import (
-    RISK_DRAWDOWN_LIVE_BLOCKERS_CLEARED,
-    risk_drawdown_live_proof_is_valid,
+from app.application.risk_drawdown_runtime_evidence import (
+    RISK_DRAWDOWN_RUNTIME_BLOCKERS_SATISFIED,
+    risk_drawdown_runtime_execution_is_valid,
 )
 from app.application.source_ingestion_runtime_evidence.runtime_execution import (
     SOURCE_INGESTION_RUNTIME_BLOCKERS_SATISFIED,
@@ -160,7 +160,7 @@ def _opportunity_proof_steps(scope: Mapping[str, object]) -> tuple[OpportunityPr
         _proof_step(
             scope,
             "risk_drawdown_live",
-            risk_drawdown_live_proof_is_valid,
+            risk_drawdown_runtime_execution_is_valid,
             _apply_risk_drawdown_live_proof,
         ),
         _proof_step(
@@ -415,7 +415,7 @@ def _apply_risk_drawdown_live_proof(
     return apply_blocker_proof(
         capability,
         capability_ids=("opportunity-archetype-scenarios",),
-        blockers_cleared=RISK_DRAWDOWN_LIVE_BLOCKERS_CLEARED,
+        blockers_cleared=RISK_DRAWDOWN_RUNTIME_BLOCKERS_SATISFIED,
         proof_ref=risk_drawdown_live_proof_ref,
     )
 
