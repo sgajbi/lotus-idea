@@ -59,13 +59,13 @@ REQUIRED_HIGH_CASH_EVIDENCE = {
 REQUIRED_CONCENTRATION_EVIDENCE = {
     "src/app/application/concentration_risk_signal.py",
     "src/app/api/concentration_risk_signals.py",
-    "src/app/application/risk_concentration_live_proof.py",
+    "src/app/application/risk_concentration_runtime_evidence/runtime_execution.py",
     "src/app/infrastructure/lotus_risk_sources.py",
     "POST /api/v1/idea-signals/concentration-risk/evaluate",
-    "scripts/generate_risk_concentration_live_proof.py",
+    "scripts/risk_concentration_runtime_evidence/generate_runtime_execution.py",
     "make risk-concentration-live-proof-contract-gate",
     "tests/integration/test_concentration_risk_signal_api.py",
-    "tests/unit/test_risk_concentration_live_proof.py",
+    "tests/unit/risk_concentration_runtime_evidence/test_runtime_execution.py",
 }
 REQUIRED_UNDERPERFORMANCE_EVIDENCE = {
     "src/app/application/underperformance_signal.py",

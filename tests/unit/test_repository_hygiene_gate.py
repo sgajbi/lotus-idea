@@ -165,6 +165,40 @@ def test_repository_hygiene_gate_enforces_source_ingestion_runtime_evidence_pack
     )
 
 
+def test_repository_hygiene_gate_enforces_risk_concentration_runtime_evidence_package() -> None:
+    module = _load_repository_hygiene_gate()
+    required_paths = {
+        "scripts/risk_concentration_runtime_evidence/__init__.py",
+        "scripts/risk_concentration_runtime_evidence/generate_runtime_execution.py",
+        "scripts/risk_concentration_runtime_evidence/runtime_execution_contract_gate.py",
+        "src/app/application/risk_concentration_runtime_evidence/__init__.py",
+        "src/app/application/risk_concentration_runtime_evidence/runtime_execution.py",
+        "tests/support/risk_concentration_runtime_evidence.py",
+        "tests/unit/risk_concentration_runtime_evidence/__init__.py",
+        "tests/unit/risk_concentration_runtime_evidence/test_contract_gate.py",
+        "tests/unit/risk_concentration_runtime_evidence/test_runtime_execution.py",
+    }
+    retired_paths = {
+        "scripts/generate_risk_concentration_live_proof.py",
+        "scripts/risk_concentration_live_proof_contract_gate.py",
+        "src/app/application/risk_concentration_live_proof.py",
+        "tests/unit/test_risk_concentration_live_proof.py",
+    }
+    tracked_paths = sorted(module.REQUIRED_BOUNDED_MODULE_PATHS - required_paths | retired_paths)
+
+    violations = module.find_bounded_module_placement_violations(tracked_paths)
+
+    assert violations == sorted(
+        [
+            *(
+                f"{path}: legacy flat-module path must not be reintroduced"
+                for path in retired_paths
+            ),
+            *(f"{path}: required bounded-module path is missing" for path in required_paths),
+        ]
+    )
+
+
 def test_repository_hygiene_gate_enforces_outbox_bounded_module_placement() -> None:
     module = _load_repository_hygiene_gate()
     required_paths = {

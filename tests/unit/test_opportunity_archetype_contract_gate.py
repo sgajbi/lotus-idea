@@ -98,7 +98,10 @@ def test_opportunity_archetype_contract_records_concentration_foundation_without
     assert "src/app/domain/signal_evaluation.py" in concentration.evidence_refs
     assert "src/app/application/concentration_risk_signal.py" in concentration.evidence_refs
     assert "src/app/api/concentration_risk_signals.py" in concentration.evidence_refs
-    assert "src/app/application/risk_concentration_live_proof.py" in concentration.evidence_refs
+    assert (
+        "src/app/application/risk_concentration_runtime_evidence/runtime_execution.py"
+        in concentration.evidence_refs
+    )
     assert "POST /api/v1/idea-signals/concentration-risk/evaluate" in (concentration.evidence_refs)
     assert "tests/integration/test_concentration_risk_signal_api.py" in (
         concentration.evidence_refs
