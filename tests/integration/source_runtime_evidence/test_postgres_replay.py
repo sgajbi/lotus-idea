@@ -15,6 +15,13 @@ from app.application.high_volatility_runtime_evidence import (
 from app.application.high_volatility_signal import (
     evaluate_and_persist_high_volatility_signal_from_risk,
 )
+from app.application.performance_underperformance_runtime_evidence import (
+    build_performance_underperformance_runtime_execution,
+    performance_underperformance_runtime_execution_is_valid,
+)
+from app.application.underperformance_signal import (
+    evaluate_and_persist_underperformance_signal_from_performance,
+)
 from app.application.risk_drawdown_runtime_evidence import (
     build_risk_drawdown_runtime_execution,
     risk_drawdown_runtime_execution_is_valid,
@@ -31,6 +38,12 @@ from tests.support.high_volatility_runtime_evidence import (
     FixedRiskVolatilitySource,
     risk_evidence as high_volatility_risk_evidence,
     runtime_command as high_volatility_runtime_command,
+)
+from tests.support.performance_underperformance_runtime_evidence import (
+    GENERATED_AT as PERFORMANCE_UNDERPERFORMANCE_GENERATED_AT,
+    FixedPerformanceUnderperformanceSource,
+    performance_evidence,
+    runtime_command as performance_underperformance_runtime_command,
 )
 from tests.support.risk_drawdown_runtime_evidence import (
     GENERATED_AT as RISK_DRAWDOWN_GENERATED_AT,
@@ -53,9 +66,13 @@ _RUNTIME_TABLES = frozenset({"idea_candidate_record", "idea_idempotency_record"}
             lambda repository: _drawdown_execution(repository),
             id="risk-drawdown",
         ),
+        pytest.param(
+            lambda repository: _performance_underperformance_execution(repository),
+            id="performance-underperformance",
+        ),
     ),
 )
-def test_risk_runtime_evidence_replays_after_postgres_repository_reload(
+def test_source_runtime_evidence_replays_after_postgres_repository_reload(
     postgres_database_url: str,
     execute: Callable[[CandidatePersistenceRepository], tuple[Mapping[str, Any], bool]],
 ) -> None:
@@ -120,3 +137,21 @@ def _drawdown_execution(
         durable_storage_backed=idea_repository_durable_storage_backed(repository),
     )
     return payload, risk_drawdown_runtime_execution_is_valid(payload)
+
+
+def _performance_underperformance_execution(
+    repository: CandidatePersistenceRepository,
+) -> tuple[Mapping[str, Any], bool]:
+    command = performance_underperformance_runtime_command()
+    result = evaluate_and_persist_underperformance_signal_from_performance(
+        command,
+        performance_source=FixedPerformanceUnderperformanceSource(performance_evidence()),
+        repository=repository,
+    )
+    payload = build_performance_underperformance_runtime_execution(
+        generated_at_utc=PERFORMANCE_UNDERPERFORMANCE_GENERATED_AT,
+        command=command,
+        result=result,
+        durable_storage_backed=idea_repository_durable_storage_backed(repository),
+    )
+    return payload, performance_underperformance_runtime_execution_is_valid(payload)
