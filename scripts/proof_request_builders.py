@@ -25,6 +25,7 @@ def build_advise_policy_evaluation_evidence_request(
 
 def build_manage_mandate_health_evidence_request(
     *,
+    tenant_id: str,
     portfolio_id: str,
     as_of_date: date,
     evaluated_at_utc: datetime,
@@ -32,6 +33,7 @@ def build_manage_mandate_health_evidence_request(
     trace_id: str | None,
 ) -> ManageMandateHealthEvidenceRequest:
     return ManageMandateHealthEvidenceRequest(
+        tenant_id=tenant_id,
         portfolio_id=portfolio_id,
         as_of_date=as_of_date,
         evaluated_at_utc=evaluated_at_utc,

@@ -16,7 +16,7 @@ from app.domain import (
     UnsupportedEvidenceReason,
     evaluate_mandate_health_signal,
 )
-from app.application.access_scope import portfolio_only_scope
+from app.application.access_scope import tenant_portfolio_scope
 from app.domain.access_scope import ReviewAccessScope
 from app.ports.manage_sources import (
     ManageMandateHealthSourcePort,
@@ -45,6 +45,7 @@ class EvaluateMandateHealthSignalCommand:
 
 @dataclass(frozen=True)
 class EvaluateMandateHealthFromManageCommand:
+    tenant_id: str
     portfolio_id: str
     as_of_date: date
     evaluated_at_utc: datetime
@@ -92,6 +93,7 @@ def evaluate_mandate_health_signal_from_manage(
     try:
         evidence = manage_source.fetch_mandate_health_evidence(
             ManageMandateHealthEvidenceRequest(
+                tenant_id=command.tenant_id,
                 portfolio_id=command.portfolio_id,
                 as_of_date=command.as_of_date,
                 evaluated_at_utc=command.evaluated_at_utc,
@@ -112,7 +114,10 @@ def evaluate_mandate_health_signal_from_manage(
                 mandate_risk_health_ref=None,
                 evaluated_at_utc=command.evaluated_at_utc,
                 entitlement_allowed=False,
-                access_scope=portfolio_only_scope(command.portfolio_id),
+                access_scope=tenant_portfolio_scope(
+                    tenant_id=command.tenant_id,
+                    portfolio_id=command.portfolio_id,
+                ),
                 duplicate_of_candidate_id=command.duplicate_of_candidate_id,
             ),
             policy=policy,
@@ -146,7 +151,10 @@ def _evaluate_mandate_health_evidence(
             mandate_risk_health_ref=evidence.mandate_risk_health_ref,
             evaluated_at_utc=command.evaluated_at_utc,
             entitlement_allowed=evidence.entitlement_allowed,
-            access_scope=portfolio_only_scope(command.portfolio_id),
+            access_scope=tenant_portfolio_scope(
+                tenant_id=command.tenant_id,
+                portfolio_id=command.portfolio_id,
+            ),
             duplicate_of_candidate_id=command.duplicate_of_candidate_id,
         ),
         policy=policy,

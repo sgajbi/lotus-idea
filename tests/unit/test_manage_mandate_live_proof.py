@@ -18,7 +18,6 @@ from app.domain import EvidenceFreshness, SourceRef, SourceSystem
 from app.ports.manage_sources import (
     ManageMandateHealthEvidence,
     ManageMandateHealthEvidenceRequest,
-    ManageOpportunitySourcePort,
     ManageSourceUnavailable,
 )
 
@@ -29,7 +28,7 @@ GENERATED_AT = datetime(2026, 6, 27, 10, 10, tzinfo=UTC)
 
 
 @dataclass
-class RecordingManageSource(ManageOpportunitySourcePort):
+class RecordingManageSource:
     error: Exception | None = None
 
     def fetch_mandate_health_evidence(
@@ -217,6 +216,8 @@ def test_manage_mandate_live_proof_cli_writes_source_safe_artifact(
         [
             "--manage-base-url",
             "http://localhost:8350",
+            "--tenant-id",
+            "tenant-a",
             "--portfolio-id",
             "PB_SG_GLOBAL_BAL_001",
             "--as-of-date",
@@ -273,6 +274,8 @@ def test_manage_mandate_live_proof_cli_writes_blocked_artifact(
         [
             "--manage-base-url",
             "http://localhost:8350",
+            "--tenant-id",
+            "tenant-a",
             "--portfolio-id",
             "PB_SG_GLOBAL_BAL_001",
             "--as-of-date",

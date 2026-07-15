@@ -1,13 +1,16 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import date, datetime
+import re
 from typing import Any
 from urllib.parse import quote
 
+from app.application.core_runtime_evidence import identity_hash
 from app.domain import EvidenceFreshness, SourceRef, SourceSystem
 from app.infrastructure.downstream_client import DownstreamJsonClient, DownstreamServiceError
 from app.ports.manage_sources import (
+    ManageActionRegisterRuntimeEvidence,
     ManageMandateHealthEvidence,
     ManageMandateHealthEvidenceRequest,
     ManageSourceEntitlementDenied,
@@ -20,6 +23,7 @@ ACTION_REGISTER_PRODUCT_ID = "lotus-manage:PortfolioActionRegister:v1"
 MANDATE_PERFORMANCE_HEALTH_PRODUCT_ID = "lotus-performance:MandatePerformanceHealthContext:v1"
 MANDATE_RISK_HEALTH_PRODUCT_ID = "lotus-risk:MandateRiskHealthContext:v1"
 ACTION_REGISTER_SUPPORTABILITY_ROUTE = "/api/v1/rebalance/supportability/summary"
+_SHA256_PATTERN = re.compile(r"^sha256:[0-9a-f]{64}$")
 
 
 @dataclass(frozen=True)
@@ -54,6 +58,7 @@ class LotusManageMandateHealthSourceAdapter:
             raise ManageSourceUnavailable(code=exc.code) from exc
 
         posture = _action_register_posture(payload, request=request)
+        runtime = _action_register_runtime(payload, request=request)
         return ManageMandateHealthEvidence(
             workflow_decision_count=posture.workflow_decision_count,
             lineage_edge_count=posture.lineage_edge_count,
@@ -61,7 +66,12 @@ class LotusManageMandateHealthSourceAdapter:
             supportability_reason=posture.supportability_reason,
             freshness_bucket=posture.freshness_bucket,
             portfolio_scope_confirmed=posture.portfolio_scope_confirmed,
-            action_register_ref=_source_ref(payload, posture=posture, request=request),
+            action_register_ref=(
+                _action_register_source_ref(runtime, posture=posture)
+                if runtime is not None
+                else None
+            ),
+            action_register_runtime=runtime,
             mandate_performance_health_ref=_source_product_ref(
                 payload,
                 supportability_product_key="mandate_performance_health_ref",
@@ -108,27 +118,22 @@ def _action_register_posture(
     )
 
 
-def _source_ref(
-    payload: dict[str, Any],
+def _action_register_source_ref(
+    runtime: ManageActionRegisterRuntimeEvidence,
     *,
     posture: _ActionRegisterPosture,
-    request: ManageMandateHealthEvidenceRequest,
 ) -> SourceRef:
     return SourceRef(
-        product_id=ACTION_REGISTER_PRODUCT_ID,
+        product_id=runtime.product_id,
         source_system=SourceSystem.LOTUS_MANAGE,
-        product_version=str(
-            payload.get("product_version") or payload.get("productVersion") or PRODUCT_VERSION
-        ),
+        product_version=runtime.product_version,
         route=ACTION_REGISTER_SUPPORTABILITY_ROUTE,
-        as_of_date=request.as_of_date,
-        generated_at_utc=_generated_at(payload, fallback=request.evaluated_at_utc),
-        content_hash=_content_hash(payload),
+        as_of_date=runtime.as_of_date,
+        generated_at_utc=runtime.generated_at_utc,
+        content_hash=runtime.source_batch_fingerprint,
         data_quality_status=posture.supportability_state or "unknown",
         freshness=_freshness(posture),
     )
-
-
 def _source_product_ref(
     payload: dict[str, Any],
     *,
@@ -159,8 +164,11 @@ def _source_product_ref(
         or _text_field(ref_payload, "source_route")
         or _text_field(ref_payload, "sourceRoute")
         or default_route,
-        as_of_date=request.as_of_date,
-        generated_at_utc=_generated_at(ref_payload, fallback=request.evaluated_at_utc),
+        as_of_date=_required_date(ref_payload, "manage_source_ref_as_of_date_missing"),
+        generated_at_utc=_required_generated_at(
+            ref_payload,
+            code="manage_source_ref_generated_at_missing",
+        ),
         content_hash=_content_hash(ref_payload),
         data_quality_status=_text_field(ref_payload, "data_quality_status")
         or _text_field(ref_payload, "dataQualityStatus")
@@ -241,6 +249,68 @@ def _text_field(payload: dict[str, Any], key: str) -> str | None:
     return None
 
 
+def _action_register_runtime(
+    payload: dict[str, Any],
+    *,
+    request: ManageMandateHealthEvidenceRequest,
+) -> ManageActionRegisterRuntimeEvidence | None:
+    try:
+        product_id = _required_text_alias(payload, "product_id", "productId")
+        product_version = _required_text_alias(payload, "product_version", "productVersion")
+        tenant_id_hash = _required_text_alias(payload, "tenant_id_hash", "tenantIdHash")
+        portfolio_id = _required_text_alias(payload, "portfolio_id", "portfolioId")
+        as_of_date = _required_date(payload, "manage_action_register_as_of_date_missing")
+        generated_at = _required_generated_at(
+            payload,
+            code="manage_action_register_generated_at_missing",
+        )
+        fingerprint = _content_hash(payload)
+    except ManageSourceUnavailable:
+        return None
+    if (
+        product_id != ACTION_REGISTER_PRODUCT_ID
+        or product_version != PRODUCT_VERSION
+        or portfolio_id != request.portfolio_id
+        or as_of_date != request.as_of_date
+        or tenant_id_hash != identity_hash(request.tenant_id)
+        or not _SHA256_PATTERN.fullmatch(fingerprint)
+    ):
+        return None
+    correlation_id = _text_field(payload, "correlation_id") or _text_field(
+        payload, "correlationId"
+    )
+    if request.correlation_id is not None and correlation_id != request.correlation_id:
+        return None
+    return ManageActionRegisterRuntimeEvidence(
+        product_id=product_id,
+        product_version=product_version,
+        tenant_id_hash=tenant_id_hash,
+        portfolio_id=portfolio_id,
+        as_of_date=as_of_date,
+        generated_at_utc=generated_at,
+        source_batch_fingerprint=fingerprint,
+        correlation_id=correlation_id,
+    )
+
+
+def _required_text_alias(payload: dict[str, Any], *keys: str) -> str:
+    for key in keys:
+        value = _text_field(payload, key)
+        if value is not None:
+            return value
+    raise ManageSourceUnavailable(code=f"manage_{keys[0]}_missing")
+
+
+def _required_date(payload: dict[str, Any], code: str) -> date:
+    value = _text_field(payload, "as_of_date") or _text_field(payload, "asOfDate")
+    if value is None:
+        raise ManageSourceUnavailable(code=code)
+    try:
+        return date.fromisoformat(value)
+    except ValueError as exc:
+        raise ManageSourceUnavailable(code=code) from exc
+
+
 def _portfolio_scope_confirmed(
     payload: dict[str, Any],
     *,
@@ -260,7 +330,7 @@ def _portfolio_scope_confirmed(
     )
 
 
-def _generated_at(payload: dict[str, Any], *, fallback: datetime) -> datetime:
+def _required_generated_at(payload: dict[str, Any], *, code: str) -> datetime:
     for key in (
         "generated_at",
         "generatedAt",
@@ -271,11 +341,14 @@ def _generated_at(payload: dict[str, Any], *, fallback: datetime) -> datetime:
     ):
         value = payload.get(key)
         if isinstance(value, str) and value.strip():
-            parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+            try:
+                parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+            except ValueError as exc:
+                raise ManageSourceUnavailable(code=code) from exc
             if parsed.tzinfo is None or parsed.utcoffset() is None:
-                return parsed.replace(tzinfo=UTC)
+                raise ManageSourceUnavailable(code=code)
             return parsed
-    return fallback
+    raise ManageSourceUnavailable(code=code)
 
 
 def _content_hash(payload: dict[str, Any]) -> str:
