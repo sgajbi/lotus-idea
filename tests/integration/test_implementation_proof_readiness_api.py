@@ -315,8 +315,8 @@ def test_implementation_proof_readiness_api_consumes_configured_proof_artifacts(
         capability["capabilityId"]: capability for capability in payload["capabilities"]
     }
     assert (
-            "source ingestion runtime execution artifact"
-            in capabilities["source-ingestion"]["evidenceRefs"]
+        "source ingestion runtime execution artifact"
+        in capabilities["source-ingestion"]["evidenceRefs"]
     )
     assert (
         "source ingestion scheduled-worker proof artifact"

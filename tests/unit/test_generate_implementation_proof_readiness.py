@@ -225,13 +225,16 @@ def test_generate_implementation_proof_readiness_uses_explicit_scheduled_worker_
     assert os.environ[SCHEDULED_WORKER_PROOF_ENV] == "pre-existing-proof.json"
 
 
-def test_generate_implementation_proof_readiness_uses_explicit_live_source_proof(
+def test_generate_implementation_proof_readiness_uses_runtime_execution_receipts(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
     monkeypatch.setenv(MANIFEST_ENV, "pre-existing-manifest.json")
     monkeypatch.setenv(CORE_BASE_URL_ENV, "http://pre-existing-core")
-    monkeypatch.setenv(SOURCE_INGESTION_RUNTIME_EXECUTION_ENV, "pre-existing-live-proof.json")
+    monkeypatch.setenv(
+        SOURCE_INGESTION_RUNTIME_EXECUTION_ENV,
+        "pre-existing-runtime-execution.json",
+    )
     manifest = tmp_path / "manifest.json"
     manifest.write_text(
         json.dumps(
@@ -243,11 +246,9 @@ def test_generate_implementation_proof_readiness_uses_explicit_live_source_proof
         ),
         encoding="utf-8",
     )
-    live_proof = tmp_path / "source-ingestion-runtime-execution.json"
-    live_proof.write_text(
-        json.dumps(
-            runtime_execution()
-        ),
+    runtime_execution_path = tmp_path / "source-ingestion-runtime-execution.json"
+    runtime_execution_path.write_text(
+        json.dumps(runtime_execution()),
         encoding="utf-8",
     )
     output_path = tmp_path / "proof" / "readiness.json"
@@ -261,7 +262,7 @@ def test_generate_implementation_proof_readiness_uses_explicit_live_source_proof
             "--core-base-url",
             "http://localhost:8310",
             "--source-ingestion-runtime-execution",
-            str(live_proof),
+            str(runtime_execution_path),
             "--output",
             str(output_path),
         ]
@@ -290,7 +291,9 @@ def test_generate_implementation_proof_readiness_uses_explicit_live_source_proof
     assert payload["supportedFeaturePromoted"] is False
     assert os.environ[MANIFEST_ENV] == "pre-existing-manifest.json"
     assert os.environ[CORE_BASE_URL_ENV] == "http://pre-existing-core"
-    assert os.environ[SOURCE_INGESTION_RUNTIME_EXECUTION_ENV] == "pre-existing-live-proof.json"
+    assert (
+        os.environ[SOURCE_INGESTION_RUNTIME_EXECUTION_ENV] == "pre-existing-runtime-execution.json"
+    )
 
 
 def test_generate_implementation_proof_readiness_uses_explicit_durable_repository_proof(
