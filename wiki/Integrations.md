@@ -182,8 +182,8 @@ invested market value, or portfolio totals. If Core omits the value or reports
 blocked denominator supportability, high-cash evaluation remains blocked.
 Core's source-contract dependency was closed in `sgajbi/lotus-core#430`; live
 Core proof can now be captured through
-`scripts/generate_source_ingestion_live_proof.py` and referenced through
-`LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF`. That proof clears only the live-Core
+`scripts/source_ingestion/generate_runtime_execution.py` and referenced through
+`LOTUS_IDEA_SOURCE_INGESTION_RUNTIME_EXECUTION`. That proof clears only the live-Core
 blocker when it is family-valid and aggregate-current. Scheduled worker deploy
 proof can now be captured separately through
 `scripts/generate_scheduled_source_ingestion_worker_proof.py` and referenced

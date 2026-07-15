@@ -42,7 +42,7 @@ Blocking scaffold commands:
 33. `make downstream-route-source-contract-proof-gate`
 34. `make source-ingestion-worker-check`
 35. `make source-ingestion-scheduled-worker-check`
-36. `make source-ingestion-live-proof-contract-gate`
+36. `make source-ingestion-runtime-execution-contract-gate`
 37. `make risk-concentration-live-proof-contract-gate`
 38. `make high-volatility-live-proof-contract-gate`
 39. `make risk-drawdown-live-proof-contract-gate`
@@ -111,7 +111,7 @@ downstream realization contract validation, migration contract validation,
 migration execution dry-run validation,
 source-ingestion worker manifest and source-safe output-contract validation,
 scheduled source-ingestion worker deploy-contract validation,
-source-ingestion live-proof contract validation with aggregate blocked-reason
+source-ingestion runtime-execution receipt contract validation with aggregate blocked-reason
 diagnostics,
 durable repository proof contract validation,
 runtime trust telemetry test-execution contract validation,
@@ -410,10 +410,14 @@ provenance while retaining `workflow_pack_runtime_contract_not_certified`.
 Model-risk dashboard and alert artifact certification remains owned by
 `make ai-model-risk-operations-proof-contract-gate`.
 
-`make source-ingestion-live-proof-contract-gate` also protects the live-proof
-artifact's aggregate `blockReasonCounts`. This keeps Core-runtime proof
-failures diagnosable while blocking raw portfolio identifiers, source payloads,
-idempotency keys, candidate identifiers, and premature support claims.
+`make source-ingestion-runtime-execution-contract-gate` validates the closed
+v2 `runtime_execution` artifact against real application-use-case and
+persistence results. It reconciles decision/receipt counts, exact Core source
+products, source-evidence hashes, durable storage, and source-safe receipt
+digests; rejects the former self-asserted booleans and unknown fields; and
+preserves scheduled-worker, mesh, Gateway/Workbench, production, and promotion
+boundaries. Raw portfolio, tenant, route, payload, idempotency, and candidate
+values remain prohibited.
 
 `make outbox-broker-source-contract-proof-gate` validates the bounded outbox
 broker source-contract artifact used by aggregate implementation-proof

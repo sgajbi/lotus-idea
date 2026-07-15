@@ -397,6 +397,19 @@ telemetry implementation, automation, and tests are capability-owned under
 `runtime_trust_telemetry/`; this is design modularity inside the existing
 deployable, not a new service.
 
+Issue `#456` applies that rule to Core source ingestion. The former v1 artifact
+accepted self-asserted attempt, completion, durability, and decision-count
+claims after discarding the authoritative per-item result. The v2
+`runtime_execution` contract now consumes the actual high-cash use-case result
+and requires exact current Core source refs plus one durable accepted/replayed
+persistence receipt per work item. Count, source hash, scope, timestamp,
+provenance, and source-safety checks fail closed; unknown fields and
+production/promotion claim inflation are rejected. Only the family live-Core
+posture and `opportunity_archetype_live_core_source_proof_missing` can change.
+Scheduler, mesh, Gateway/Workbench, production, and feature-promotion blockers
+remain. The capability was grouped internally without introducing another
+service or database boundary.
+
 PR `#439` merged this occurrence by rebase to exact-main SHA `1a64ef69`.
 Main Releasability `29356075075` and CodeQL `29356064752` passed on that exact
 commit, and wiki publication `4a43d9d` has zero source drift. Issue `#437` is

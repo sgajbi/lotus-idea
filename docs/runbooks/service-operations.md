@@ -12,7 +12,7 @@
 | `make postgres-integration-gate` | Real PostgreSQL persistence/replay proof. |
 | `make source-ingestion-worker-check` | Manifest and source-safe check-only output contract proof. |
 | `make source-ingestion-scheduled-worker-check` | Scheduled worker deploy-contract proof. |
-| `make source-ingestion-live-proof-contract-gate` | Source-safe live-proof artifact contract proof. |
+| `make source-ingestion-runtime-execution-contract-gate` | Receipt-bound v2 Core runtime-execution evidence contract. |
 | `make risk-concentration-live-proof-contract-gate` | Source-safe Lotus Risk concentration live-proof artifact contract for opportunity-archetype readiness without data-mesh, Workbench, client-publication, or supported-feature promotion. |
 | `make high-volatility-live-proof-contract-gate` | Source-safe Lotus Risk high-volatility live-proof artifact contract for opportunity-archetype readiness without data-mesh, Workbench, client-publication, or supported-feature promotion. |
 | `make risk-drawdown-live-proof-contract-gate` | Source-safe Lotus Risk drawdown live-proof artifact contract for opportunity-archetype readiness without data-mesh, Workbench, client-publication, or supported-feature promotion. |
@@ -283,9 +283,9 @@ flowchart TD
    manifest, and Core configuration, blocks before mutation when runtime
    inputs are missing or invalid, and returns aggregate decision counts only.
 8. For live Core source-ingestion proof capture, run
-   `scripts/generate_source_ingestion_live_proof.py --manifest <path> --core-query-base-url <query-url> --core-query-control-plane-base-url <control-plane-url> --generated-at-utc <timestamp> --output output/source-ingestion/live-proof.json`.
+   `scripts/source_ingestion/generate_runtime_execution.py --manifest <path> --core-query-base-url <query-url> --core-query-control-plane-base-url <control-plane-url> --generated-at-utc <timestamp> --output output/source-ingestion/source-ingestion-runtime-execution.json`.
    Use `--core-base-url` only for legacy single-base Core stacks.
-   Then set `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF` to that output path.
+   Then set `LOTUS_IDEA_SOURCE_INGESTION_RUNTIME_EXECUTION` to that output path.
    A family-valid and aggregate-current artifact clears only the live-Core
    blocker; it is not scheduled worker, data-mesh, Gateway/Workbench,
    downstream, or supported-feature proof.

@@ -113,22 +113,25 @@ same non-clearing rule. Those refs do not clear runtime execution,
 render/archive, suitability policy, rebalance/action, client-publication,
 certification, or supported-feature blockers.
 
-Source-ingestion live proof is captured by
-`scripts/generate_source_ingestion_live_proof.py`. The source-ingestion
-readiness endpoint may report the family-level live Core proof as valid from
-the configured artifact, but aggregate implementation-proof readiness clears
-`live_core_source_proof_missing` only when that family-valid artifact is also
+Source-ingestion runtime evidence is captured by
+`scripts/source_ingestion/generate_runtime_execution.py`. The closed-field v2
+artifact is `runtime_execution` evidence because its source-safe receipts bind
+the actual Core references, domain decisions, and persisted records returned by
+the application use case. Hand-authored success flags, summary counts,
+in-memory storage, mixed outcomes, missing records, altered source hashes, and
+unknown claim fields fail closed. The source-ingestion readiness endpoint may
+report the family-level live Core posture as valid from the configured
+artifact, but aggregate implementation-proof readiness clears
+`live_core_source_proof_missing` only when that valid artifact is also
 aggregate-current: it must carry `aggregateProofProvenance`, match the
 source-safe consumed proof ref, be no more than 24 hours old, not be
 future-dated, be bound to the current Lotus Idea source revision, and declare
 `sourceTreeDirty=false`. A current artifact referenced through
-`LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF` clears only
+`LOTUS_IDEA_SOURCE_INGESTION_RUNTIME_EXECUTION` clears only
 `live_core_source_proof_missing`; it does not clear scheduled worker,
-data-mesh, Gateway/Workbench, downstream, or supported-feature blockers.
-The artifact carries source-safe aggregate `blockReasonCounts` so blocked
-attempts can distinguish Core unavailable, entitlement denied, missing
-cash-weight evidence, and Core-reported blocked cash-weight supportability
-without exposing source payloads or reconstructing source-owned calculations.
+data-mesh, Gateway/Workbench, production-certification, downstream, or
+supported-feature blockers. Blocked artifacts retain source-safe aggregate
+reason counts but carry no persistence receipt and clear no blocker.
 When aggregate implementation-proof readiness consumes a family-valid and
 aggregate-current live proof path, the `source-ingestion` capability also
 records a source-safe artifact reference in `evidenceRefs`, so release
@@ -189,7 +192,7 @@ taxonomy and the #393 same-pattern campaign.
 | `IMPLEMENTATION_PROOF_OUTPUT` | Writes the aggregate readiness JSON to a chosen ignored output path. |
 | `LOTUS_CORE_QUERY_BASE_URL` | Passes the live Core query-service URL into readiness generation. |
 | `LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL` | Passes the live Core query-control-plane URL into readiness generation. |
-| `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF` | Passes the live source-ingestion proof artifact into aggregate readiness. The family proof must be valid and aggregate-current before it can clear source-ingestion or high-cash opportunity-archetype live Core blockers. |
+| `LOTUS_IDEA_SOURCE_INGESTION_RUNTIME_EXECUTION` | Passes receipt-bound v2 `runtime_execution` evidence into aggregate readiness. The artifact must be valid and aggregate-current before it can affect the source-ingestion or high-cash opportunity-archetype live Core posture. |
 | `LOTUS_IDEA_RISK_CONCENTRATION_LIVE_PROOF` | Passes a validated source-safe Lotus Risk concentration live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_live_risk_source_proof_missing`; it does not certify data mesh, Workbench, client publication, or supported-feature promotion. |
 | `LOTUS_IDEA_HIGH_VOLATILITY_LIVE_PROOF` | Passes a validated source-safe Lotus Risk high-volatility live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_live_risk_volatility_source_proof_missing`; it does not certify drawdown, data mesh, Workbench, client publication, or supported-feature promotion. |
 | `LOTUS_IDEA_RISK_DRAWDOWN_LIVE_PROOF` | Passes a validated source-safe Lotus Risk drawdown live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_drawdown_source_proof_missing`; it does not certify volatility, data mesh, Workbench, client publication, or supported-feature promotion. |
@@ -900,16 +903,16 @@ Implementation-backed evidence:
    `POST /api/v1/source-ingestion/run-once`,
 1. source-ingestion run-once runbook:
     `docs/operations/source-ingestion-run-once.md`,
-1. source-ingestion live-proof generator:
-    `scripts/generate_source_ingestion_live_proof.py`,
+1. source-ingestion runtime-execution receipt generator:
+    `scripts/source_ingestion/generate_runtime_execution.py`,
 1. source-ingestion block-reason diagnostics tests:
     `tests/unit/test_source_ingestion_worker.py`,
 1. scheduled source-ingestion worker proof generator:
     `scripts/generate_scheduled_source_ingestion_worker_proof.py`,
 1. scheduled source-ingestion worker contract gate:
     `make source-ingestion-scheduled-worker-check`,
-1. source-ingestion live-proof contract gate:
-    `make source-ingestion-live-proof-contract-gate`,
+1. source-ingestion runtime-execution receipt contract gate:
+    `make source-ingestion-runtime-execution-contract-gate`,
 1. Risk concentration live-proof generator:
     `scripts/generate_risk_concentration_live_proof.py`,
 1. Risk concentration live-proof contract gate:
@@ -1101,7 +1104,7 @@ make implementation-proof-readiness-check
 
 $env:LOTUS_CORE_QUERY_BASE_URL = "http://localhost:8201"
 $env:LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL = "http://localhost:8202"
-$env:LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF = "output/source-ingestion/live-proof.json"
+$env:LOTUS_IDEA_SOURCE_INGESTION_RUNTIME_EXECUTION = "output/source-ingestion/source-ingestion-runtime-execution.json"
 $env:LOTUS_IDEA_HIGH_VOLATILITY_LIVE_PROOF = "output/opportunity/high-volatility-live-proof.json"
 $env:LOTUS_IDEA_CORE_PORTFOLIO_STATE_LIVE_PROOF = "output/opportunity/core-portfolio-state-live-proof.json"
 $env:LOTUS_IDEA_LOW_INCOME_CORE_CASHFLOW_LIVE_PROOF = "output/opportunity/low-income-core-cashflow-live-proof.json"
@@ -1133,7 +1136,7 @@ make workbench-read-path-source-contract-proof-gate
 make gateway-workbench-contract-proof-contract-gate
 make gateway-workbench-discovery-contract-proof-contract-gate
 make source-ingestion-scheduled-worker-check
-make source-ingestion-live-proof-contract-gate
+make source-ingestion-runtime-execution-contract-gate
 make risk-concentration-live-proof-contract-gate
 make high-volatility-live-proof-contract-gate
 make risk-drawdown-live-proof-contract-gate
