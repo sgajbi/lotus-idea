@@ -54,7 +54,9 @@ def test_rejects_source_authority_identity_or_digest_substitution(
     path = tmp_path / "source.py"
     path.write_text("SOURCE = True\n", encoding="utf-8")
     sources = (SourceAuthoritySource("lotus-idea", "src/source.py", path),)
-    records = [dict(record) for record in build_source_authority_records(sources)]
+    records: list[dict[str, object]] = [
+        dict(record) for record in build_source_authority_records(sources)
+    ]
     records[0][mutation] = value
 
     assert source_authority_records_are_valid(records, expected_sources=sources) is False
@@ -64,7 +66,9 @@ def test_rejects_unknown_source_authority_fields(tmp_path: Path) -> None:
     path = tmp_path / "source.py"
     path.write_text("SOURCE = True\n", encoding="utf-8")
     sources = (SourceAuthoritySource("lotus-idea", "src/source.py", path),)
-    records = [dict(record) for record in build_source_authority_records(sources)]
+    records: list[dict[str, object]] = [
+        dict(record) for record in build_source_authority_records(sources)
+    ]
     records[0]["runtimeCertified"] = True
 
     assert source_authority_records_are_valid(records, expected_sources=sources) is False
