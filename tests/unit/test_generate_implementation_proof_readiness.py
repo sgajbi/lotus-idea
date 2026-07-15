@@ -58,7 +58,9 @@ from app.application.workbench.read_path_source_contract import (
     build_workbench_read_path_source_contract_proof_payload,
 )
 from app.domain import InMemoryIdeaRepository
-from tests.support.performance_underperformance_runtime_evidence import runtime_execution as performance_underperformance_runtime_execution
+from tests.support.performance_underperformance_runtime_evidence import (
+    runtime_execution as performance_underperformance_runtime_execution,
+)
 from tests.support.ai_workflow_pack_fixture import (
     write_lotus_ai_workflow_pack_fixture,
 )

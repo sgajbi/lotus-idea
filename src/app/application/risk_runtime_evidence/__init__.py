@@ -14,6 +14,7 @@ from app.application.risk_runtime_evidence.request_identity import (
     build_risk_runtime_request_fingerprint,
     source_ref_matches_risk_request,
 )
+
 __all__ = [
     "SourceRuntimeExecutionBuilder",
     "build_risk_candidate_idempotency_payload",
