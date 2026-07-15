@@ -137,7 +137,7 @@ def test_opportunity_archetype_contract_records_underperformance_foundation_with
         underperformance.evidence_refs
     )
     assert (
-        "src/app/application/performance_underperformance_live_proof.py"
+        "src/app/application/performance_underperformance_runtime_evidence/runtime_execution.py"
         in underperformance.evidence_refs
     )
     assert "make performance-underperformance-live-proof-contract-gate" in (

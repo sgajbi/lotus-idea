@@ -66,8 +66,8 @@ from app.application.outbox.platform_mesh.source_contract_proof import (
 from app.application.data_mesh.platform_catalog_source_contract import (
     PLATFORM_CATALOG_SOURCE_CONTRACT_ENV,
 )
-from app.application.performance_underperformance_live_proof import (
-    PERFORMANCE_UNDERPERFORMANCE_LIVE_PROOF_ENV,
+from app.application.performance_underperformance_runtime_evidence import (
+    PERFORMANCE_UNDERPERFORMANCE_RUNTIME_EXECUTION_ENV,
 )
 from app.application.report.intake_route_source_contract import (
     REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF_ENV,
@@ -199,7 +199,7 @@ PROOF_ARTIFACT_ARGS: tuple[tuple[str, str, str], ...] = (
     ),
     (
         "--performance-underperformance-live-proof",
-        PERFORMANCE_UNDERPERFORMANCE_LIVE_PROOF_ENV,
+        PERFORMANCE_UNDERPERFORMANCE_RUNTIME_EXECUTION_ENV,
         "Optional lotus-performance underperformance live source proof artifact path.",
     ),
     (

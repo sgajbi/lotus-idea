@@ -842,7 +842,8 @@ def test_ci_contract_gate_blocks_missing_performance_underperformance_live_proof
         .read_text(encoding="utf-8")
         .replace("$(MAKE) performance-underperformance-live-proof-contract-gate\n", "")
         .replace(
-            "scripts/performance_underperformance_live_proof_contract_gate.py",
+            "scripts/performance_underperformance_runtime_evidence/"
+            "runtime_execution_contract_gate.py",
             "scripts/removed.py",
         )
     )
@@ -855,7 +856,8 @@ def test_ci_contract_gate_blocks_missing_performance_underperformance_live_proof
     ) in errors
     assert (
         "Makefile performance-underperformance-live-proof-contract-gate target must run "
-        "`scripts/performance_underperformance_live_proof_contract_gate.py`"
+        "`scripts/performance_underperformance_runtime_evidence/"
+        "runtime_execution_contract_gate.py`"
     ) in errors
 
 

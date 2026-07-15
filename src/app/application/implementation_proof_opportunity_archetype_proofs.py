@@ -58,9 +58,9 @@ from app.application.missing_benchmark_performance_readiness_proof import (
     MISSING_BENCHMARK_PERFORMANCE_READINESS_BLOCKERS_CLEARED,
     missing_benchmark_performance_readiness_proof_is_valid,
 )
-from app.application.performance_underperformance_live_proof import (
-    PERFORMANCE_UNDERPERFORMANCE_LIVE_BLOCKERS_CLEARED,
-    performance_underperformance_live_proof_is_valid,
+from app.application.performance_underperformance_runtime_evidence import (
+    PERFORMANCE_UNDERPERFORMANCE_RUNTIME_BLOCKERS_SATISFIED,
+    performance_underperformance_runtime_execution_is_valid,
 )
 from app.application.risk_concentration_runtime_evidence import (
     RISK_CONCENTRATION_RUNTIME_BLOCKERS_SATISFIED,
@@ -166,7 +166,7 @@ def _opportunity_proof_steps(scope: Mapping[str, object]) -> tuple[OpportunityPr
         _proof_step(
             scope,
             "performance_underperformance_live",
-            performance_underperformance_live_proof_is_valid,
+            performance_underperformance_runtime_execution_is_valid,
             _apply_performance_underperformance_live_proof,
         ),
         _proof_step(
@@ -427,7 +427,7 @@ def _apply_performance_underperformance_live_proof(
     return apply_blocker_proof(
         capability,
         capability_ids=("opportunity-archetype-scenarios",),
-        blockers_cleared=PERFORMANCE_UNDERPERFORMANCE_LIVE_BLOCKERS_CLEARED,
+        blockers_cleared=PERFORMANCE_UNDERPERFORMANCE_RUNTIME_BLOCKERS_SATISFIED,
         proof_ref=performance_underperformance_live_proof_ref,
     )
 
