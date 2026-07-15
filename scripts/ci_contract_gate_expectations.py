@@ -52,7 +52,7 @@ REQUIRED_LINT_TARGETS = (
     "ai-lineage-store-proof-contract-gate",
     "ai-workflow-pack-registration-proof-contract-gate",
     "ai-workflow-pack-runtime-execution-proof-contract-gate",
-    "lotus-ai-attestation-contract-proof-gate",
+    "ai-attestation-source-contract-gate",
     "ai-provider-retention-contract-gate",
     "archive-lifecycle-posture-contract-gate",
     "report-intake-route-source-contract-proof-gate",

@@ -1,7 +1,7 @@
 .PHONY: install dependency-refresh lint ci-contract-gate repository-hygiene-gate test-client-lifecycle-gate maintainability-gate duplicate-implementation-inventory duplicate-implementation-gate private-import-boundary-gate foundation-structure-gate documentation-contract-gate quality-scorecard-gate github-issue-closure-matrix-gate monetary-float-guard no-sensitive-content-guard runtime-dependency-closure-gate source-observability-contract-gate api-route-metadata-gate api-problem-details-boundary-gate api-idempotency-boundary-gate api-camel-model-boundary-gate api-signal-model-boundary-gate api-temporal-validation-boundary-gate openapi-problem-details-example-gate caller-context-contract-gate signal-api-contract-gate trusted-tenant-context-gate source-temporal-contract-gate review-queue-snapshot-contract-gate operation-metric-contract-gate service-slo-capacity-contract-gate ai-model-risk-ops-contract-gate ai-model-risk-operations-proof-contract-gate ci-signal-evidence-contract-gate implementation-truth-gate data-mesh-contract-gate mesh-policy-source-contract-proof-gate opportunity-archetype-contract-gate downstream-realization-contract-gate downstream-route-source-contract-proof-gate outbox-event-contract-gate outbox-consumer-contract-gate outbox-recovery-contract-gate migration-contract-gate migration-execution-gate deployment-migration-contract-gate durable-repository-proof-contract-gate runtime-trust-telemetry-test-execution-contract-gate ai-lineage-store-proof-contract-gate ai-workflow-pack-registration-proof-contract-gate ai-workflow-pack-runtime-execution-proof-contract-gate report-intake-route-source-contract-proof-gate report-materialization-source-contract-proof-gate workbench-read-path-source-contract-proof-gate gateway-workbench-contract-proof-contract-gate gateway-workbench-discovery-contract-proof-contract-gate outbox-broker-source-contract-proof-gate outbox-consumer-contract-proof-contract-gate outbox-platform-mesh-event-source-contract-proof-gate platform-catalog-source-contract-proof-gate source-ingestion-worker-check source-ingestion-scheduled-worker-check source-ingestion-runtime-execution-contract-gate canonical-opportunity-source-proofs canonical-signal-api-proof risk-concentration-live-proof-contract-gate high-volatility-live-proof-contract-gate risk-drawdown-live-proof-contract-gate core-benchmark-assignment-live-proof-contract-gate core-portfolio-state-live-proof-contract-gate bond-maturity-live-proof-contract-gate missing-benchmark-live-proof-contract-gate missing-benchmark-performance-readiness-proof-contract-gate low-income-core-cashflow-live-proof-contract-gate manage-mandate-live-proof-contract-gate mandate-restriction-live-proof-contract-gate mandate-restriction-source-product-proof-contract-gate missing-suitability-live-proof-contract-gate missing-risk-profile-source-product-proof-contract-gate missing-risk-profile-live-proof-contract-gate performance-underperformance-live-proof-contract-gate implementation-proof-readiness-check runtime-trust-telemetry-preview-check runtime-trust-telemetry-snapshot-check migrate migrate-rollback deployment-migrate supported-features-gate endpoint-certification-gate postgres-integration-gate typecheck architecture-boundary-gate architecture-boundary-report quality-baseline openapi-gate test test-unit test-integration test-e2e test-unit-coverage test-integration-coverage test-e2e-coverage test-coverage security-audit check ci ci-release docker-build container-runtime-smoke release-sbom container-image-scan release-image-identity-contract-gate clean
 
 .PHONY: candidate-state-contract-gate review-identity-contract-gate conversion-outcome-contract-gate outbox-supportability-contract-gate outbox-supportability-rule-test service-slo-rule-test service-capacity-baseline-contract-gate service-load-soak-proof-gate service-resource-baseline-contract-gate service-resource-proof-gate service-capacity-workload downstream-capacity-seed service-resource-baseline postgres-capacity-threshold-proof supported-feature-promotion-contract-gate disaster-recovery-contract-gate disaster-recovery-proof-gate postgres-disaster-recovery-seed postgres-disaster-recovery-drill postgres-disaster-recovery-resume data-lifecycle-contract-gate scheduled-data-lifecycle-seed scheduled-data-lifecycle-review scheduled-data-lifecycle-review-proof-gate
-.PHONY: license-compliance-gate license-release-evidence-gate lotus-ai-attestation-contract-proof lotus-ai-attestation-contract-proof-gate ai-provider-retention-contract-gate archive-lifecycle-posture-contract-gate ai-lineage-store-ci-proof durable-repository-ci-proof
+.PHONY: license-compliance-gate license-release-evidence-gate ai-attestation-source-contract ai-attestation-source-contract-gate ai-provider-retention-contract-gate archive-lifecycle-posture-contract-gate ai-lineage-store-ci-proof durable-repository-ci-proof
 
 VENV_DIR ?= .venv
 UNIT_TESTS ?= tests/unit
@@ -65,7 +65,7 @@ LOTUS_IDEA_AI_WORKFLOW_PACK_REGISTRATION_PROOF ?=
 LOTUS_IDEA_AI_WORKFLOW_PACK_REGISTRATION_PROOF_OUTPUT ?= output/ai/ai-workflow-pack-registration-source-contract-proof.json
 LOTUS_IDEA_AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF ?=
 LOTUS_IDEA_AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF_OUTPUT ?= output/ai/ai-workflow-pack-runtime-execution-proof.json
-LOTUS_IDEA_LOTUS_AI_ATTESTATION_CONTRACT_PROOF_OUTPUT ?= output/ai/lotus-ai-attestation-contract-proof.json
+LOTUS_IDEA_AI_ATTESTATION_SOURCE_CONTRACT_OUTPUT ?= output/ai/signed-ai-attestation-source-contract.json
 LOTUS_IDEA_REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF ?=
 LOTUS_REPORT_ROOT ?= ../lotus-report
 LOTUS_IDEA_REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF_OUTPUT ?= output/report/intake-route-source-contract-proof.json
@@ -235,7 +235,7 @@ lint:
 	$(MAKE) ai-lineage-store-proof-contract-gate
 	$(MAKE) ai-workflow-pack-registration-proof-contract-gate
 	$(MAKE) ai-workflow-pack-runtime-execution-proof-contract-gate
-	$(MAKE) lotus-ai-attestation-contract-proof-gate
+	$(MAKE) ai-attestation-source-contract-gate
 	$(MAKE) ai-provider-retention-contract-gate
 	$(MAKE) archive-lifecycle-posture-contract-gate
 	$(MAKE) report-intake-route-source-contract-proof-gate
@@ -504,8 +504,8 @@ ai-workflow-pack-registration-proof-contract-gate:
 ai-workflow-pack-runtime-execution-proof-contract-gate:
 	$(VENV_PYTHON) scripts/ai_workflow_pack_runtime_execution_proof_contract_gate.py
 
-lotus-ai-attestation-contract-proof-gate:
-	$(VENV_PYTHON) scripts/lotus_ai_attestation_contract_proof_gate.py
+ai-attestation-source-contract-gate:
+	$(VENV_PYTHON) scripts/ai_attestation/source_contract_gate.py
 
 ai-provider-retention-contract-gate:
 	$(VENV_PYTHON) scripts/ai_provider_retention_contract_gate.py
@@ -513,8 +513,8 @@ ai-provider-retention-contract-gate:
 archive-lifecycle-posture-contract-gate:
 	$(VENV_PYTHON) scripts/archive_lifecycle_posture_contract_gate.py
 
-lotus-ai-attestation-contract-proof:
-	$(VENV_PYTHON) scripts/generate_lotus_ai_attestation_contract_proof.py --generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --lotus-ai-root $(LOTUS_AI_ROOT) --output $(LOTUS_IDEA_LOTUS_AI_ATTESTATION_CONTRACT_PROOF_OUTPUT)
+ai-attestation-source-contract:
+	$(VENV_PYTHON) scripts/ai_attestation/generate_source_contract.py --generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --lotus-ai-root $(LOTUS_AI_ROOT) --output $(LOTUS_IDEA_AI_ATTESTATION_SOURCE_CONTRACT_OUTPUT)
 
 report-intake-route-source-contract-proof-gate:
 	$(VENV_PYTHON) scripts/report/intake_route_source_contract_gate.py

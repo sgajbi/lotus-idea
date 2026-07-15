@@ -497,6 +497,40 @@ def test_repository_hygiene_gate_enforces_review_queue_domain_package() -> None:
     ]
 
 
+def test_repository_hygiene_gate_enforces_ai_attestation_source_contract_package() -> None:
+    module = _load_repository_hygiene_gate()
+    required_paths = {
+        "scripts/ai_attestation/generate_source_contract.py",
+        "scripts/ai_attestation/source_contract_gate.py",
+        "src/app/application/ai_attestation/source_contract.py",
+        "tests/support/ai_attestation/source_fixture.py",
+        "tests/unit/ai_attestation/test_source_contract.py",
+        "tests/unit/ai_attestation/test_source_contract_automation.py",
+    }
+    retired_paths = {
+        "scripts/generate_lotus_ai_attestation_contract_proof.py",
+        "scripts/lotus_ai_attestation_contract_proof_gate.py",
+        "src/app/application/lotus_ai_attestation_contract_proof.py",
+        "tests/support/lotus_ai_attestation_source_fixture.py",
+        "tests/unit/test_generate_lotus_ai_attestation_contract_proof.py",
+        "tests/unit/test_lotus_ai_attestation_contract_proof.py",
+        "tests/unit/test_lotus_ai_attestation_contract_proof_gate.py",
+    }
+    tracked_paths = sorted(module.REQUIRED_BOUNDED_MODULE_PATHS - required_paths | retired_paths)
+
+    violations = module.find_bounded_module_placement_violations(tracked_paths)
+
+    assert violations == sorted(
+        [
+            *(
+                f"{path}: legacy flat-module path must not be reintroduced"
+                for path in retired_paths
+            ),
+            *(f"{path}: required bounded-module path is missing" for path in required_paths),
+        ]
+    )
+
+
 def test_repository_hygiene_gate_rejects_rfc_coupled_executable_names() -> None:
     module = _load_repository_hygiene_gate()
 

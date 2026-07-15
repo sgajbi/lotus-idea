@@ -6,6 +6,7 @@ from app.application.source_authority import (
     SourceAuthoritySource,
     build_source_authority_records,
     source_authority_records_are_valid,
+    source_authority_records_digest,
 )
 
 
@@ -24,6 +25,7 @@ def test_builds_and_validates_ordered_digest_bound_source_authority(tmp_path: Pa
     assert tuple(record["repository"] for record in records) == ("lotus-idea", "lotus-ai")
     assert all(len(record["sha256"] or "") == 64 for record in records)
     assert source_authority_records_are_valid(records, expected_sources=sources) is True
+    assert len(source_authority_records_digest(records) or "") == 64
 
 
 def test_missing_source_cannot_form_valid_source_authority(tmp_path: Path) -> None:
@@ -66,3 +68,4 @@ def test_rejects_unknown_source_authority_fields(tmp_path: Path) -> None:
     records[0]["runtimeCertified"] = True
 
     assert source_authority_records_are_valid(records, expected_sources=sources) is False
+    assert source_authority_records_digest(records) is None

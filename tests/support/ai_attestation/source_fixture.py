@@ -20,7 +20,7 @@ PRODUCER_SOURCE_FILES = {
 }
 
 
-def materialize_lotus_ai_attestation_source(root: Path) -> Path:
+def write_lotus_ai_attestation_source(root: Path) -> Path:
     for relative_path, content in PRODUCER_SOURCE_FILES.items():
         path = root / relative_path
         path.parent.mkdir(parents=True, exist_ok=True)

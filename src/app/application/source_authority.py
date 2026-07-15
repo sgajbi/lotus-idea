@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 import hashlib
+import json
 from pathlib import Path
 
 
@@ -47,6 +48,33 @@ def source_authority_records_are_valid(
         if any(character not in "0123456789abcdef" for character in digest):
             return False
     return True
+
+
+def source_authority_records_digest(value: object) -> str | None:
+    if not isinstance(value, (list, tuple)):
+        return None
+    records: list[dict[str, str]] = []
+    for item in value:
+        if not isinstance(item, Mapping) or set(item) != _SOURCE_AUTHORITY_FIELDS:
+            return None
+        repository = item.get("repository")
+        ref = item.get("ref")
+        digest = item.get("sha256")
+        if (
+            not isinstance(repository, str)
+            or not isinstance(ref, str)
+            or not isinstance(digest, str)
+        ):
+            return None
+        records.append(
+            {
+                "repository": repository,
+                "ref": ref,
+                "sha256": digest,
+            }
+        )
+    canonical = json.dumps(records, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(canonical).hexdigest()
 
 
 def _sha256(path: Path) -> str | None:
