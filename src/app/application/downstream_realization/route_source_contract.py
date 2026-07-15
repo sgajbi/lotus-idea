@@ -3,13 +3,17 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime
-import hashlib
 import json
 import os
 from pathlib import Path
 from typing import Any
 
 from app.application.proof_provenance import AGGREGATE_PROOF_PROVENANCE_KEY
+from app.application.source_authority import (
+    SourceAuthoritySource,
+    build_source_authority_records,
+    source_authority_records_are_valid,
+)
 from app.application.source_safe_cross_repo_proof import is_timezone_aware_datetime_text
 from app.domain.proof_evidence import EvidenceClass
 
@@ -31,7 +35,6 @@ REMAINING_MANAGE_ROUTE_BLOCKERS = (
     "rebalance_execution_authority_remains_lotus_manage",
 )
 
-_SOURCE_AUTHORITY_FIELDS = frozenset({"repository", "ref", "sha256"})
 _CONTRACT_CHECK_FIELDS = frozenset(
     {
         "timezoneAwareGeneratedAtUtc",
@@ -288,37 +291,31 @@ def _route_source_contract_is_valid(
 def _source_authority(
     downstream_root: Path, profile: RouteSourceContractProfile
 ) -> tuple[dict[str, str | None], ...]:
-    prefix = f"../{profile.owner_repository}/"
-    return tuple(
-        {
-            "repository": profile.owner_repository,
-            "ref": f"{prefix}{ref}",
-            "sha256": _sha256(downstream_root / ref),
-        }
-        for ref in profile.source_refs
+    return build_source_authority_records(
+        _source_authority_sources(downstream_root, profile)
     )
 
 
 def _source_authority_is_valid(value: object, profile: RouteSourceContractProfile) -> bool:
-    if not isinstance(value, (list, tuple)) or len(value) != len(profile.source_refs):
-        return False
+    return source_authority_records_are_valid(
+        value,
+        expected_sources=_source_authority_sources(Path(), profile),
+    )
+
+
+def _source_authority_sources(
+    downstream_root: Path,
+    profile: RouteSourceContractProfile,
+) -> tuple[SourceAuthoritySource, ...]:
     prefix = f"../{profile.owner_repository}/"
-    for item, ref in zip(value, profile.source_refs, strict=True):
-        if not isinstance(item, Mapping) or set(item) != _SOURCE_AUTHORITY_FIELDS:
-            return False
-        if (
-            item.get("repository") != profile.owner_repository
-            or item.get("ref") != f"{prefix}{ref}"
-        ):
-            return False
-        digest = item.get("sha256")
-        if (
-            not isinstance(digest, str)
-            or len(digest) != 64
-            or any(c not in "0123456789abcdef" for c in digest)
-        ):
-            return False
-    return True
+    return tuple(
+        SourceAuthoritySource(
+            profile.owner_repository,
+            f"{prefix}{ref}",
+            downstream_root / ref,
+        )
+        for ref in profile.source_refs
+    )
 
 
 def _contract_declares_route(
@@ -389,7 +386,3 @@ def _optional_json(path: Path) -> dict[str, Any] | None:
         return None
     payload = json.loads(path.read_text(encoding="utf-8"))
     return payload if isinstance(payload, dict) else None
-
-
-def _sha256(path: Path) -> str | None:
-    return hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else None
