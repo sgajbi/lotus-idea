@@ -190,8 +190,8 @@ def _opportunity_archetype_proof_artifact_inputs(
         ),
         "core_portfolio_state_live": _proof_artifact_input(
             args.core_portfolio_state_live_proof,
-            artifact_name="Core portfolio-state live proof",
-            ref_name="Core portfolio-state live proof artifact",
+            artifact_name="Core portfolio-state runtime evidence",
+            ref_name="Core portfolio-state runtime evidence artifact",
         ),
         "bond_maturity_live": _proof_artifact_input(
             args.bond_maturity_live_proof,

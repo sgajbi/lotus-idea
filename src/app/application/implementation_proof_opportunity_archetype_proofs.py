@@ -18,9 +18,9 @@ from app.application.core_benchmark_assignment_runtime_evidence import (
     CORE_BENCHMARK_ASSIGNMENT_RUNTIME_BLOCKERS_SATISFIED,
     core_benchmark_assignment_runtime_execution_is_valid,
 )
-from app.application.core_portfolio_state_live_proof import (
-    CORE_PORTFOLIO_STATE_LIVE_BLOCKERS_CLEARED,
-    core_portfolio_state_live_proof_is_valid,
+from app.application.core_portfolio_state_runtime_evidence import (
+    CORE_PORTFOLIO_STATE_RUNTIME_BLOCKERS_SATISFIED,
+    core_portfolio_state_runtime_execution_is_valid,
 )
 from app.application.low_income_core_cashflow_live_proof import (
     LOW_INCOME_CORE_CASHFLOW_LIVE_BLOCKERS_CLEARED,
@@ -178,7 +178,7 @@ def _opportunity_proof_steps(scope: Mapping[str, object]) -> tuple[OpportunityPr
         _proof_step(
             scope,
             "core_portfolio_state_live",
-            core_portfolio_state_live_proof_is_valid,
+            core_portfolio_state_runtime_execution_is_valid,
             _apply_core_portfolio_state_live_proof,
         ),
         _proof_step(
@@ -451,7 +451,7 @@ def _apply_core_portfolio_state_live_proof(
     return apply_blocker_proof(
         capability,
         capability_ids=("opportunity-archetype-scenarios",),
-        blockers_cleared=CORE_PORTFOLIO_STATE_LIVE_BLOCKERS_CLEARED,
+        blockers_cleared=CORE_PORTFOLIO_STATE_RUNTIME_BLOCKERS_SATISFIED,
         proof_ref=core_portfolio_state_live_proof_ref,
     )
 
