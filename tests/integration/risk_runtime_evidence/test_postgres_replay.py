@@ -68,16 +68,22 @@ def test_risk_runtime_evidence_replays_after_postgres_repository_reload(
     assert replayed_payload["execution"]["persistenceReceipt"]["decision"] == "replayed"
     assert accepted_valid is True
     assert replayed_valid is True
-    assert table_count(
-        postgres_database_url,
-        "idea_candidate_record",
-        allowed_tables=_RUNTIME_TABLES,
-    ) == 1
-    assert table_count(
-        postgres_database_url,
-        "idea_idempotency_record",
-        allowed_tables=_RUNTIME_TABLES,
-    ) == 1
+    assert (
+        table_count(
+            postgres_database_url,
+            "idea_candidate_record",
+            allowed_tables=_RUNTIME_TABLES,
+        )
+        == 1
+    )
+    assert (
+        table_count(
+            postgres_database_url,
+            "idea_idempotency_record",
+            allowed_tables=_RUNTIME_TABLES,
+        )
+        == 1
+    )
 
 
 def _high_volatility_execution(

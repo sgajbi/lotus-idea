@@ -18,12 +18,8 @@ from app.domain import OpportunityFamily, SourceSystem
 from app.domain.proof_evidence import EvidenceClass
 
 RISK_DRAWDOWN_RUNTIME_EXECUTION_ENV = "LOTUS_IDEA_RISK_DRAWDOWN_LIVE_PROOF"
-RISK_DRAWDOWN_RUNTIME_EXECUTION_SCHEMA_VERSION = (
-    "lotus-idea.risk-drawdown.runtime-execution.v2"
-)
-RISK_DRAWDOWN_RUNTIME_BLOCKERS_SATISFIED = (
-    "opportunity_archetype_drawdown_source_proof_missing",
-)
+RISK_DRAWDOWN_RUNTIME_EXECUTION_SCHEMA_VERSION = "lotus-idea.risk-drawdown.runtime-execution.v2"
+RISK_DRAWDOWN_RUNTIME_BLOCKERS_SATISFIED = ("opportunity_archetype_drawdown_source_proof_missing",)
 RISK_DRAWDOWN_REMAINING_BLOCKERS = (
     "opportunity_archetype_live_risk_volatility_source_proof_missing",
     "opportunity_archetype_data_mesh_not_certified",
