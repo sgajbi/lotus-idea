@@ -251,7 +251,7 @@ optional missing risk-profile live Advise proof through
 `LOTUS_IDEA_MISSING_RISK_PROFILE_LIVE_PROOF`,
 optional Manage mandate live proof through
 `LOTUS_IDEA_MANAGE_MANDATE_LIVE_PROOF`,
-optional Core benchmark assignment live proof through
+optional receipt-bound Core benchmark-assignment runtime evidence through
 `LOTUS_IDEA_CORE_BENCHMARK_ASSIGNMENT_LIVE_PROOF`,
 optional Core portfolio-state live proof through
 `LOTUS_IDEA_CORE_PORTFOLIO_STATE_LIVE_PROOF`,
@@ -514,7 +514,7 @@ the operator entrypoints by purpose so this page stays readable.
 | Release evidence | `make ci-release` | Broad release posture, including Docker and PostgreSQL prerequisites. |
 | Durable storage proof | `make postgres-integration-gate`, `make durable-repository-proof-contract-gate` | Validate PostgreSQL-backed repository and proof-artifact posture. |
 | Source-ingestion evidence | `make source-ingestion-worker-check`, `make source-ingestion-scheduled-worker-check`, `make source-ingestion-runtime-execution-contract-gate` | Validate worker contracts and receipt-bound Core runtime execution evidence without promoting scheduler, mesh, UI, production, or support posture. |
-| Upstream runtime and source-product proof | `make risk-concentration-live-proof-contract-gate`, `make high-volatility-live-proof-contract-gate`, `make risk-drawdown-live-proof-contract-gate`, `make core-benchmark-assignment-live-proof-contract-gate`, `make core-portfolio-state-live-proof-contract-gate`, `make manage-mandate-live-proof-contract-gate`, `make mandate-restriction-live-proof-contract-gate`, `make missing-suitability-live-proof-contract-gate`, `make missing-risk-profile-live-proof-contract-gate`, `make performance-underperformance-live-proof-contract-gate` | Validate bounded sibling evidence. Risk concentration, high volatility, and drawdown require receipt-bound v2 runtime execution over current Lotus Risk evidence and durable Idea persistence; the other listed gates retain their declared evidence classes. Command existence never promotes support. |
+| Upstream runtime and source-product proof | `make risk-concentration-live-proof-contract-gate`, `make high-volatility-live-proof-contract-gate`, `make risk-drawdown-live-proof-contract-gate`, `make core-benchmark-assignment-live-proof-contract-gate`, `make core-portfolio-state-live-proof-contract-gate`, `make manage-mandate-live-proof-contract-gate`, `make mandate-restriction-live-proof-contract-gate`, `make missing-suitability-live-proof-contract-gate`, `make missing-risk-profile-live-proof-contract-gate`, `make performance-underperformance-live-proof-contract-gate` | Validate bounded sibling evidence. Risk and Performance signal runtime evidence binds current authority receipts to durable Idea persistence. Read-only Core benchmark-assignment runtime evidence binds exact request/source receipts without inventing persistence. Other gates retain their declared classes. Command existence never promotes support. |
 | Runtime trust and implementation proof | `make runtime-trust-telemetry-test-execution-contract-gate`, `make implementation-proof-readiness-check`, `make runtime-trust-telemetry-preview-check`, `make runtime-trust-telemetry-snapshot-check` | Validate in-memory test evidence and inspect durable runtime posture without clearing certification blockers. |
 | Downstream proof | `make downstream-route-source-contract-proof-gate`, `make report-intake-route-source-contract-proof-gate`, `make report-materialization-source-contract-proof-gate` | Validate bounded Advise, Manage, and Report contract artifacts. |
 | Local hygiene | `make clean` | Remove ignored generated residue before branch hygiene checks. |
@@ -828,8 +828,8 @@ artifact, runtime trust telemetry test-execution artifact, Workbench read-path s
 Advise route source-contract artifact, missing-suitability live Advise proof
 artifact, typed mandate/restriction source-product proof artifact, typed
 missing risk-profile source-product proof artifact, missing risk-profile live
-Advise proof artifact, Manage mandate live proof artifact, Core benchmark assignment live
-proof artifact, Core portfolio-state live proof artifact, Manage route source-contract artifact,
+Advise proof artifact, Manage mandate live proof artifact, Core benchmark-assignment runtime
+evidence artifact, Core portfolio-state live proof artifact, Manage route source-contract artifact,
 Report intake route source-contract artifact, Report materialization source-contract artifact,
 mesh policy source-contract artifact, platform catalog
 onboarding proof artifact, AI lineage store proof artifact, AI workflow-pack registration proof artifact,

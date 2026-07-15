@@ -2041,7 +2041,9 @@ evidence must justify it.
 
 Runtime source proof may clear a source blocker only when a closed evidence
 contract binds the exact authoritative source receipt to the actual application
-use-case result and accepted or replayed durable Idea persistence. Shared
+use-case result. When that use case creates or mutates an Idea aggregate, the
+contract must also bind accepted or replayed durable Idea persistence. Never
+fabricate a persistence receipt for an authoritative read-only operation. Shared
 `application/source_runtime_evidence/` code owns only source-neutral receipt,
 digest, and closed-contract mechanics. Capability packages own their source
 authority, product identity, domain outcome, blockers, and non-proof claims.
@@ -2057,6 +2059,19 @@ unknown claims, or receipt tampering. Lotus Idea creates review candidates; it
 does not own official returns, benchmark assignment, attribution, or
 performance methodology. This design modularity remains inside the existing
 Idea deployable and database until runtime evidence justifies a split.
+
+For Core benchmark-assignment readiness, use
+`application/core_benchmark_assignment_runtime_evidence/` and its matching
+automation package. Route automation through the named application use case and
+Core source port. Bind pseudonymous tenant/portfolio scope, exact as-of date,
+reporting currency, evaluation time, and the complete current
+`lotus-core:BenchmarkAssignment:v1` receipt through canonical digests. Reject
+unknown fields, source substitution, scope/digest mismatch, stale or future
+evidence, inactive or ineffective assignments, and missing identity/version.
+The operation is read-only: it does not persist an Idea, assign a benchmark, or
+claim Performance methodology, deployment, production, publication, or support.
+Keep this as design modularity within the existing deployable; no independently
+scalable runtime boundary is justified.
 
 ## Cross-Links
 

@@ -82,6 +82,7 @@ ACTIONABLE_ISSUES = frozenset(
         466,
         469,
         473,
+        476,
     }
 )
 
