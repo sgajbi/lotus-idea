@@ -25,9 +25,7 @@ GENERATED_AT = datetime(2026, 6, 21, 10, 10, tzinfo=UTC)
 class FixedRiskDrawdownSource:
     evidence: RiskDrawdownEvidence
 
-    def fetch_drawdown_evidence(
-        self, request: RiskDrawdownEvidenceRequest
-    ) -> RiskDrawdownEvidence:
+    def fetch_drawdown_evidence(self, request: RiskDrawdownEvidenceRequest) -> RiskDrawdownEvidence:
         return self.evidence
 
 

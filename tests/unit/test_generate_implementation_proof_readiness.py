@@ -947,9 +947,7 @@ def test_generate_implementation_proof_readiness_uses_explicit_risk_drawdown_liv
     risk_drawdown_proof = tmp_path / "risk-drawdown-live-proof.json"
     risk_drawdown_proof.write_text(
         json.dumps(
-            drawdown_runtime_execution(
-                generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC)
-            )
+            drawdown_runtime_execution(generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC))
         ),
         encoding="utf-8",
     )

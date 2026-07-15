@@ -18,9 +18,7 @@ from app.ports.risk_sources import RiskDrawdownEvidence, RiskDrawdownEvidenceReq
 
 
 class _Source:
-    def fetch_drawdown_evidence(
-        self, request: RiskDrawdownEvidenceRequest
-    ) -> RiskDrawdownEvidence:
+    def fetch_drawdown_evidence(self, request: RiskDrawdownEvidenceRequest) -> RiskDrawdownEvidence:
         return RiskDrawdownEvidence(
             source_reported_max_drawdown=Decimal("-0.1245"),
             risk_supportability_state="ready",

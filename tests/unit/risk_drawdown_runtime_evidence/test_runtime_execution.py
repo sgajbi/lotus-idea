@@ -45,9 +45,7 @@ def test_runtime_execution_binds_drawdown_source_and_durable_persistence_receipt
     ]
     execution = payload["execution"]
     assert execution["periodName"] == "YTD"
-    assert execution["sourceReceipt"]["productId"] == (
-        "lotus-risk:DrawdownAnalyticsReport:v1"
-    )
+    assert execution["sourceReceipt"]["productId"] == ("lotus-risk:DrawdownAnalyticsReport:v1")
     assert execution["persistenceReceipt"]["decision"] == "accepted"
     assert risk_drawdown_runtime_execution_is_valid(payload) is True
 
