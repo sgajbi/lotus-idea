@@ -551,7 +551,7 @@ Persistence adapter validation:
     prove wrong `sourceSystem` or `productId` source refs are rejected before
     candidate creation or high-cash persistence, with product-safe
     `400 invalid_request` responses and source-safe invalid-request telemetry.
-    `tests/unit/test_risk_concentration_live_proof.py` and
+    `tests/unit/risk_concentration_runtime_evidence/` and
     `make risk-concentration-live-proof-contract-gate` prove the optional Lotus
     Risk concentration live-proof artifact remains source-safe and can clear
     only the namespaced live Risk source blocker when valid evidence is supplied.

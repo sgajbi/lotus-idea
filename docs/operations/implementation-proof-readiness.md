@@ -273,16 +273,22 @@ implementation-proof readiness records the validated artifact reference in the
 evidence auditable without leaking source payloads. This remains deploy
 topology proof only; it is not live long-running scheduler certification.
 
-Lotus Risk concentration live proof is captured by
-`scripts/generate_risk_concentration_live_proof.py`. A valid artifact referenced
+Lotus Risk concentration runtime execution evidence is captured by
+`scripts/risk_concentration_runtime_evidence/generate_runtime_execution.py`. A valid artifact referenced
 through `LOTUS_IDEA_RISK_CONCENTRATION_LIVE_PROOF` clears only
 `opportunity_archetype_live_risk_source_proof_missing` for the
-`opportunity-archetype-scenarios` capability. The artifact proves a live
-`lotus-risk:ConcentrationRiskReport:v1` source call, current source evidence,
-and deterministic concentration candidate generation without storing portfolio
-identity, request or response payloads, correlation IDs, trace IDs, candidate
-IDs, or source routes. It deliberately retains data-mesh, Workbench,
-client-publication, and supported-feature blockers.
+`opportunity-archetype-scenarios` capability. The closed v2
+`runtime_execution` contract binds one current
+`lotus-risk:ConcentrationRiskReport:v1` source receipt to the authoritative
+deterministic use-case result and one durable accepted or replayed Idea
+persistence receipt. Request, source, evidence, scope, and persistence digests
+must reconcile. Unknown claims, stale or mixed source identity, in-memory
+storage, missing persistence, and receipt tampering fail closed. The artifact
+stores no portfolio identity, request or response payload, correlation ID,
+trace ID, candidate ID, source route, or concentration figure. It retains
+data-mesh, Workbench, client-publication, deployment, production, and
+supported-feature blockers; official concentration methodology remains owned
+by `lotus-risk`.
 
 Lotus Risk high-volatility live proof is captured by
 `scripts/generate_high_volatility_live_proof.py`. A valid artifact referenced
@@ -913,9 +919,9 @@ Implementation-backed evidence:
     `make source-ingestion-scheduled-worker-check`,
 1. source-ingestion runtime-execution receipt contract gate:
     `make source-ingestion-runtime-execution-contract-gate`,
-1. Risk concentration live-proof generator:
-    `scripts/generate_risk_concentration_live_proof.py`,
-1. Risk concentration live-proof contract gate:
+1. Risk concentration runtime-execution generator:
+    `scripts/risk_concentration_runtime_evidence/generate_runtime_execution.py`,
+1. Risk concentration runtime-execution contract gate:
     `make risk-concentration-live-proof-contract-gate`,
 1. High-volatility live-proof generator:
     `scripts/generate_high_volatility_live_proof.py`,

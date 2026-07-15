@@ -300,13 +300,16 @@ Prove the complete supported opportunity journey end to end.
     certification, Workbench proof, client-publication, and supported-feature
     gaps while preserving the no-demo, no-client-publication,
     no-data-mesh-certification, and no-supported-feature-promotion boundaries.
-28. `src/app/application/risk_concentration_live_proof.py`,
-    `scripts/generate_risk_concentration_live_proof.py`, and
-    `make risk-concentration-live-proof-contract-gate` now define and enforce a
-    source-safe Lotus Risk concentration live-proof artifact. Aggregate
-    readiness can consume a valid artifact to clear only
-    `opportunity_archetype_live_risk_source_proof_missing`, while preserving
-    data-mesh, Workbench, client-publication, and supported-feature blockers.
+28. `src/app/application/risk_concentration_runtime_evidence/`,
+    `scripts/risk_concentration_runtime_evidence/`, and
+    `make risk-concentration-live-proof-contract-gate` now define and enforce
+    closed v2 `runtime_execution` evidence. The artifact reconciles one current
+    Lotus Risk source receipt with the authoritative deterministic use-case
+    result and one durable accepted/replayed Idea persistence receipt.
+    Aggregate readiness can clear only
+    `opportunity_archetype_live_risk_source_proof_missing`; data-mesh,
+    Workbench, client-publication, deployment, production, and
+    supported-feature blockers remain.
 29. `src/app/application/high_volatility_live_proof.py`,
     `scripts/generate_high_volatility_live_proof.py`, and
     `make high-volatility-live-proof-contract-gate` now define and enforce a

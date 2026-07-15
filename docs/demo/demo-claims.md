@@ -17,6 +17,12 @@ Allowed status vocabulary:
 4. `Not applicable`
 5. `Unknown - requires owner review`
 
+Risk concentration evidence is valid only when the closed v2
+`runtime_execution` contract binds the authoritative Lotus Risk source receipt
+to an accepted or replayed durable Idea persistence receipt. It can affect only
+the live-Risk source blocker and does not promote demo, client-publication,
+production, or supported-feature posture.
+
 ## Functional Capability Matrix
 
 | Capability | Status | Evidence | Gap | Next step |
