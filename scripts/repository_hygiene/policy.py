@@ -31,6 +31,7 @@ REQUIRED_BOUNDED_MODULE_PATHS = {
     "scripts/risk_concentration_runtime_evidence/generate_runtime_execution.py",
     "scripts/risk_concentration_runtime_evidence/runtime_execution_contract_gate.py",
     "src/app/application/risk_concentration_runtime_evidence/__init__.py",
+    "src/app/application/risk_concentration_runtime_evidence/contract.py",
     "src/app/application/risk_concentration_runtime_evidence/runtime_execution.py",
     "tests/support/risk_concentration_runtime_evidence.py",
     "tests/unit/risk_concentration_runtime_evidence/__init__.py",
