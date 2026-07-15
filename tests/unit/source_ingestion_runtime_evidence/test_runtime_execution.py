@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
+from dataclasses import replace
 from datetime import datetime
 import importlib.util
 import json
@@ -16,7 +17,8 @@ from app.application.source_ingestion_runtime_evidence import (
     build_source_ingestion_runtime_execution,
     source_ingestion_runtime_execution_is_valid,
 )
-from app.domain import EvidenceFreshness, InMemoryIdeaRepository
+from app.application.source_ingestion import HighCashSourceIngestionBatchResult
+from app.domain import CandidatePersistenceDecision, EvidenceFreshness, InMemoryIdeaRepository
 from tests.support.source_ingestion_runtime_evidence import (
     EVALUATED_AT,
     GENERATED_AT,
@@ -108,11 +110,47 @@ def test_runtime_execution_rejects_unknown_contract_fields(
 @pytest.mark.parametrize(
     ("path", "value"),
     [
+        (("aggregateProofProvenance",), "not-a-mapping"),
+        (("schemaVersion",), "lotus-idea.source-ingestion.runtime-execution.v1"),
+        (("repository",), "lotus-core"),
         (("evidenceClass",), "source_contract"),
+        (("proofFamily",), "portfolio_accounting"),
+        (("proofType",), "self_asserted"),
         (("sourceAuthority",), "lotus-idea"),
+        (("generatedAtUtc",), "2026-06-21T10:10:00"),
+        (("worker",), []),
+        (("execution",), []),
+        (("nonProofClaims",), []),
+        (("remainingCertificationBlockers",), []),
+        (("evidenceRefs",), []),
+        (("worker", "schemaVersion"), "unexpected"),
+        (("aggregateBlockersSatisfied",), []),
+        (("execution", "status"), "blocked"),
         (("execution", "durableStorageBacked"), False),
+        (("execution", "qualificationBlockers"), ["runtime_receipt_missing"]),
+        (("execution", "decisionCounts"), []),
+        (("execution", "decisionCounts", "accepted"), -1),
+        (("execution", "totalCount"), True),
+        (("execution", "decisionCounts", "accepted"), 0),
+        (("execution", "decisionCounts", "blocked"), 1),
+        (("execution", "receipts"), ()),
+        (("execution", "blockReasonCounts"), {"source_unavailable": 1}),
         (("execution", "totalCount"), 2),
         (("execution", "receiptCount"), 0),
+        (("execution", "receipts", 0, "itemIndex"), True),
+        (("execution", "receipts", 0, "decision"), "blocked"),
+        (("execution", "receipts", 0, "asOfDate"), "not-a-date"),
+        (("execution", "receipts", 0, "scopeFingerprint"), "not-a-digest"),
+        (("execution", "receipts", 0, "sourceRefs"), []),
+        (("execution", "receipts", 0, "persistedAtUtc"), "2026-06-22T10:10:00Z"),
+        (("execution", "receipts", 0, "sourceRefs", 0), {}),
+        (("execution", "receipts", 0, "sourceRefs", 0, "asOfDate"), "2026-06-20"),
+        (("execution", "receipts", 0, "sourceRefs", 0, "productId"), ""),
+        (
+            ("execution", "receipts", 0, "sourceRefs", 0, "generatedAtUtc"),
+            "2026-06-22T10:00:00Z",
+        ),
+        (("execution", "receipts", 0, "sourceRefs", 0, "productId"), "unexpected"),
         (("execution", "receipts", 0, "sourceEvidenceHash"), "sha256:" + "0" * 64),
         (("execution", "receipts", 0, "scopeFingerprint"), "sha256:" + "0" * 64),
         (("execution", "receipts", 0, "sourceRefs", 0, "freshness"), "stale"),
@@ -152,6 +190,102 @@ def test_non_current_source_result_never_qualifies() -> None:
     assert source_ingestion_runtime_execution_is_valid(payload) is False
 
 
+def test_empty_application_result_cannot_produce_runtime_receipts() -> None:
+    plan = runtime_plan()
+
+    payload = build_source_ingestion_runtime_execution(
+        generated_at_utc=GENERATED_AT,
+        plan=plan,
+        result=HighCashSourceIngestionBatchResult(item_results=()),
+        durable_storage_backed=True,
+    )
+
+    assert payload["execution"]["receiptCount"] == 0
+    assert payload["execution"]["qualificationBlockers"] == ["no_ingestion_results"]
+    assert source_ingestion_runtime_execution_is_valid(payload) is False
+
+
+@pytest.mark.parametrize(
+    "persistence_mutator",
+    [
+        pytest.param(lambda _: None, id="missing-persistence"),
+        pytest.param(
+            lambda persistence: replace(
+                persistence,
+                decision=CandidatePersistenceDecision.REPLAYED,
+            ),
+            id="decision-mismatch",
+        ),
+        pytest.param(
+            lambda persistence: replace(
+                persistence,
+                record=replace(persistence.record, evidence_hash="sha256:forged"),
+            ),
+            id="evidence-hash-mismatch",
+        ),
+        pytest.param(
+            lambda persistence: replace(
+                persistence,
+                record=replace(
+                    persistence.record,
+                    candidate=replace(persistence.record.candidate, access_scope=None),
+                ),
+            ),
+            id="missing-scope",
+        ),
+        pytest.param(
+            lambda persistence: replace(
+                persistence,
+                record=replace(
+                    persistence.record,
+                    candidate=replace(
+                        persistence.record.candidate,
+                        access_scope=replace(
+                            persistence.record.candidate.access_scope,
+                            tenant_id="another-tenant",
+                        ),
+                    ),
+                ),
+            ),
+            id="scope-mismatch",
+        ),
+    ],
+)
+def test_runtime_receipts_require_matching_persistence_results(
+    persistence_mutator: Callable[[Any], Any],
+) -> None:
+    plan = runtime_plan()
+    result = runtime_result(plan)
+    item_result = result.item_results[0]
+    persistence = item_result.signal_result.persistence
+    assert persistence is not None
+    assert persistence.record is not None
+    assert persistence.record.candidate.access_scope is not None
+    mismatched_result = replace(
+        result,
+        item_results=(
+            replace(
+                item_result,
+                signal_result=replace(
+                    item_result.signal_result,
+                    persistence=persistence_mutator(persistence),
+                ),
+            ),
+        ),
+    )
+
+    payload = build_source_ingestion_runtime_execution(
+        generated_at_utc=GENERATED_AT,
+        plan=plan,
+        result=mismatched_result,
+        durable_storage_backed=True,
+    )
+
+    assert payload["execution"]["receiptCount"] == 0
+    assert "runtime_receipt_missing" in payload["execution"]["qualificationBlockers"]
+    assert source_ingestion_runtime_execution_is_valid(payload) is False
+
+
 def test_in_memory_execution_is_evidence_but_not_certification_proof() -> None:
     plan = runtime_plan()
     payload = build_source_ingestion_runtime_execution(
@@ -184,6 +318,18 @@ def test_blocked_execution_preserves_non_proof_boundaries() -> None:
         "supportedFeaturePromoted": False,
     }
     assert source_ingestion_runtime_execution_is_valid(payload) is False
+
+
+def test_blocked_in_memory_execution_preserves_storage_blocker() -> None:
+    payload = build_blocked_source_ingestion_runtime_execution(
+        generated_at_utc=GENERATED_AT,
+        plan=runtime_plan(),
+        error_code="",
+        durable_storage_backed=False,
+    )
+
+    assert payload["execution"]["blockReasonCounts"] == {"core_source_unavailable": 1}
+    assert "durable_repository_not_configured" in payload["execution"]["qualificationBlockers"]
 
 
 def test_generation_time_must_be_timezone_aware() -> None:
