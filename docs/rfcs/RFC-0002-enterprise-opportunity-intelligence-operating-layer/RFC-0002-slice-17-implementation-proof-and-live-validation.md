@@ -1,6 +1,6 @@
 # RFC-0002 Slice 17: Implementation Proof And Live Validation
 
-Status: Partially implemented - aggregate proof-readiness diagnostic, bounded source-ingestion runtime-execution receipt contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry test-execution artifact, Workbench read-path source-contract proof artifact, Gateway/Workbench contract proof artifact, Gateway/Workbench discovery contract proof artifact, digest-bound Advise and Manage route source contracts, Manage mandate live proof artifact, receipt-bound Core portfolio-state and bond-maturity runtime evidence, Report intake route and materialization source-contract artifacts, bounded outbox broker source-contract proof artifact, bounded downstream consumer source-contract proof artifact, bounded outbox platform-mesh event source-contract proof, digest-bound mesh policy source-contract artifact, platform catalog source contract artifact, AI lineage store proof artifact, AI workflow-pack registration proof artifact, AI workflow-pack runtime execution proof artifact, high-volatility and drawdown live Risk proof artifact contracts, low-income Core cashflow live proof artifact contract, and opportunity archetype scenario readiness with source/policy foundations available. Slice evidence now includes live canonical Risk concentration, Performance underperformance, and Performance benchmark-readiness source proofs for `PB_SG_GLOBAL_BAL_001`; Core portfolio-state and bond-maturity live qualification remain fail-closed pending lotus-core #790 and #792 respectively. Observed Advise/Manage route serving and acceptance, policy certification, Report intake and materialization execution, rendered output, archive creation, external broker publication, platform-mesh event publication, downstream consumer execution, full live opportunity-journey proof, data-mesh certification, Workbench product proof, client-publication approval, and supported-feature promotion remain pending.
+Status: Partially implemented - aggregate proof-readiness diagnostic, bounded source-ingestion runtime-execution receipt contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry test-execution artifact, Workbench read-path source-contract proof artifact, Gateway/Workbench contract proof artifact, Gateway/Workbench discovery contract proof artifact, digest-bound Advise and Manage route source contracts, Manage mandate live proof artifact, receipt-bound Core portfolio-state, bond-maturity, and low-income cashflow runtime evidence, Report intake route and materialization source-contract artifacts, bounded outbox broker source-contract proof artifact, bounded downstream consumer source-contract proof artifact, bounded outbox platform-mesh event source-contract proof, digest-bound mesh policy source-contract artifact, platform catalog source contract artifact, AI lineage store proof artifact, AI workflow-pack registration proof artifact, AI workflow-pack runtime execution proof artifact, high-volatility and drawdown live Risk proof artifact contracts, and opportunity archetype scenario readiness with source/policy foundations available. Slice evidence now includes live canonical Risk concentration, Performance underperformance, and Performance benchmark-readiness source proofs for `PB_SG_GLOBAL_BAL_001`; Core portfolio-state, bond-maturity, and low-income cashflow live qualification remain fail-closed pending lotus-core #790, #792, and #796 respectively. Observed Advise/Manage route serving and acceptance, policy certification, Report intake and materialization execution, rendered output, archive creation, external broker publication, platform-mesh event publication, downstream consumer execution, full live opportunity-journey proof, data-mesh certification, Workbench product proof, client-publication approval, and supported-feature promotion remain pending.
 
 ## Outcome
 
@@ -386,14 +386,19 @@ Prove the complete supported opportunity journey end to end.
     assignment, Manage/performance/risk health source refs, data-mesh
     certification, Workbench product proof, client publication, and
     supported-feature promotion.
-36. `src/app/application/low_income_core_cashflow_live_proof.py`,
-    `scripts/generate_low_income_core_cashflow_live_proof.py`, and
+36. `src/app/application/low_income_cashflow_runtime_evidence/`,
+    `scripts/low_income_cashflow_runtime_evidence/`, and
     `make low-income-core-cashflow-live-proof-contract-gate` now define and
-    enforce a source-safe Lotus Core cashflow live-proof artifact. Aggregate
+    enforce closed v2 Lotus Core cashflow runtime evidence. A named application
+    use case binds pseudonymous request scope, exact movement-summary and
+    projection receipts, projection arithmetic, movement counts, policy, and
+    deterministic candidate or no-opportunity outcome. Aggregate
     readiness can consume a valid artifact to clear only
     `opportunity_archetype_live_core_cashflow_source_proof_missing`, while
     preserving Workbench, data-mesh, client-publication, supported-feature,
-    suitability, planning, funding-advice, and treasury-instruction blockers.
+    suitability, planning, funding-advice, treasury-instruction, deployment,
+    and production blockers. Core issue `#796` tracks producer trust metadata
+    required before live qualification can pass.
 33. `src/app/application/manage_mandate_live_proof.py`,
     `scripts/generate_manage_mandate_live_proof.py`, and
     `make manage-mandate-live-proof-contract-gate` now define and enforce a

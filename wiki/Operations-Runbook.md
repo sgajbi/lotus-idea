@@ -261,7 +261,7 @@ optional missing-benchmark live Core proof through
 `LOTUS_IDEA_MISSING_BENCHMARK_LIVE_PROOF`,
 optional missing-benchmark Performance readiness proof through
 `LOTUS_IDEA_MISSING_BENCHMARK_PERFORMANCE_READINESS_PROOF`,
-optional low-income Core cashflow live proof through
+optional receipt-bound low-income Core cashflow runtime evidence through
 `LOTUS_IDEA_LOW_INCOME_CORE_CASHFLOW_LIVE_PROOF`,
 default Advise route source contract through `LOTUS_ADVISE_ROOT` and
 `LOTUS_IDEA_ADVISE_ROUTE_SOURCE_CONTRACT_PROOF_OUTPUT`, default Manage route source

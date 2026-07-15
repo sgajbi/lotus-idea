@@ -610,11 +610,16 @@ Persistence adapter validation:
     only the namespaced bond-maturity live Core source blocker; lotus-core issue
     `#792` tracks missing producer reconciliation, tenant, and correlation
     metadata.
-    `tests/unit/test_low_income_core_cashflow_live_proof.py` and
+    `tests/unit/low_income_cashflow_runtime_evidence/` and
     `make low-income-core-cashflow-live-proof-contract-gate` prove the optional
-    Lotus Core cashflow live-proof artifact remains source-safe and can clear
-    only the namespaced low-income Core cashflow source blocker when valid
-    evidence is supplied.
+    Lotus Core cashflow artifact is closed v2 `runtime_execution` evidence. It
+    binds pseudonymous request scope, exact movement-summary and projection
+    receipts, projection arithmetic, movement counts, and deterministic
+    candidate or no-opportunity outcome. Unknown, stale, degraded,
+    scope-inconsistent, arithmetically invalid, or tampered evidence fails
+    closed; zero cashflow remains valid no-opportunity evidence. It can satisfy
+    only the namespaced low-income Core cashflow source blocker. Core issue
+    `#796` tracks producer trust metadata required for live qualification.
     `tests/unit/test_missing_suitability_live_proof.py`,
     `tests/unit/test_missing_risk_profile_live_proof.py`,
     `make missing-suitability-live-proof-contract-gate`, and

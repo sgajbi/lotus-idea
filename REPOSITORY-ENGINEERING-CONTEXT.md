@@ -194,7 +194,12 @@ All signal families share the versioned
 Low-income source-backed evaluation
 consumes only Core-owned cash movement and cashflow projection evidence and
 must not infer income needs, funding advice, treasury instructions, planning
-suitability, or client-ready communication. Bond-maturity source-backed
+suitability, or client-ready communication. Its closed v2 runtime evidence must
+invoke the named application use case and bind exact request, movement-summary,
+projection, and deterministic evaluation receipts. Zero cashflow is a valid
+no-opportunity boundary; partial, stale, degraded, scope-inconsistent,
+arithmetically inconsistent, or tampered evidence clears no blocker. Core issue
+`#796` tracks producer trust metadata that Idea must not invent. Bond-maturity source-backed
 evaluation consumes only Core-owned maturity summary and holdings lineage
 evidence and must not own maturity schedules, recommend replacement products,
 calculate reinvestment advice, approve planning suitability, or create orders.

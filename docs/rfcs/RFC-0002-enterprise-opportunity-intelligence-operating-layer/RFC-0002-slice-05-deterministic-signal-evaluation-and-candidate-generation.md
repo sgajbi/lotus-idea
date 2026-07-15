@@ -838,10 +838,10 @@ Additional implemented low-income / liquidity-shortfall foundation:
    source-contract mismatch rejection, source-redacted response projection, and
    bounded signal-evaluation operation events for the caller-supplied API
    foundation.
-8. `src/app/application/low_income_core_cashflow_live_proof.py`,
-    `scripts/generate_low_income_core_cashflow_live_proof.py`, and
+8. `src/app/application/low_income_cashflow_runtime_evidence/`,
+    `scripts/low_income_cashflow_runtime_evidence/`, and
     `make low-income-core-cashflow-live-proof-contract-gate` define a
-   source-safe live Core cashflow proof artifact. A valid artifact proves live
+   receipt-bound v2 Core cashflow runtime-evidence artifact. A valid artifact proves live
    `lotus-core:PortfolioCashflowProjection:v1` and
    `lotus-core:PortfolioCashMovementSummary:v1` source calls, current source
    evidence, and deterministic low-income / liquidity-shortfall candidate
