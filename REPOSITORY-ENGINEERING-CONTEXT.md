@@ -2073,6 +2073,19 @@ claim Performance methodology, deployment, production, publication, or support.
 Keep this as design modularity within the existing deployable; no independently
 scalable runtime boundary is justified.
 
+For Core portfolio-state readiness, use
+`application/core_portfolio_state_runtime_evidence/` and its matching
+automation package. Route generation through the named read-only application
+use case and Core source port. Bind pseudonymous request scope to the complete
+current `lotus-core:PortfolioStateSnapshot:v1` receipt, including response
+scope, request fingerprint, snapshot identity, source hashes, restatement,
+reconciliation, evidence time, policy, correlation, and applied/dropped
+sections. Reject unknown fields, scope/time/hash drift, incomplete
+reconciliation, dropped sections, and tampering. Never fabricate Idea
+persistence or missing Core trust metadata. Core issue `#790` owns the producer
+gap; Idea must fail closed until it is resolved. This remains design modularity
+inside the existing deployable with no new database or runtime service.
+
 ## Cross-Links
 
 Central context:

@@ -436,7 +436,7 @@ Persistence adapter validation:
    supporting-evidence consumption without live-blocker clearance,
    optional Manage mandate live proof consumption,
    optional receipt-bound Core benchmark-assignment runtime evidence consumption,
-   optional Core portfolio-state live proof consumption,
+   optional receipt-bound Core portfolio-state runtime evidence consumption,
    optional missing-benchmark live Core proof consumption,
    optional missing-benchmark Performance readiness proof consumption,
    default Report intake route source-contract generation and consumption, default
@@ -590,11 +590,14 @@ Persistence adapter validation:
     exact current Core source receipt and can clear only the namespaced
     benchmark-assignment source-ref blocker. The read-only use case has no
     fabricated Idea persistence receipt.
-    `tests/unit/test_core_portfolio_state_live_proof.py` and
+    `tests/unit/core_portfolio_state_runtime_evidence/` and
     `make core-portfolio-state-live-proof-contract-gate` prove the optional
-    Lotus Core portfolio-state live-proof artifact remains source-safe and can
-    clear only the namespaced Core portfolio-state source-ref blocker when
-    valid evidence is supplied.
+    Lotus Core portfolio-state artifact is closed v2 `runtime_execution`
+    evidence. It binds a named read-only use case, pseudonymous request scope,
+    and complete current `PortfolioStateSnapshot:v1` receipt, and can clear only
+    the namespaced Core portfolio-state source-ref blocker. Missing snapshot
+    identity, reconciliation, policy, section, scope, time, or hash trust fails
+    closed; lotus-core issue `#790` tracks the current producer gap.
     `tests/unit/test_bond_maturity_live_proof.py` and
     `make bond-maturity-live-proof-contract-gate` prove the optional Lotus Core
     maturity-summary live-proof artifact remains source-safe and can clear only

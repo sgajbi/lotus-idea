@@ -1,6 +1,6 @@
 # RFC-0002 Slice 17: Implementation Proof And Live Validation
 
-Status: Partially implemented - aggregate proof-readiness diagnostic, bounded source-ingestion runtime-execution receipt contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry test-execution artifact, Workbench read-path source-contract proof artifact, Gateway/Workbench contract proof artifact, Gateway/Workbench discovery contract proof artifact, digest-bound Advise and Manage route source contracts, Manage mandate live proof artifact, Core portfolio-state live proof artifact, Report intake route and materialization source-contract artifacts, bounded outbox broker source-contract proof artifact, bounded downstream consumer source-contract proof artifact, bounded outbox platform-mesh event source-contract proof, digest-bound mesh policy source-contract artifact, platform catalog source contract artifact, AI lineage store proof artifact, AI workflow-pack registration proof artifact, AI workflow-pack runtime execution proof artifact, high-volatility and drawdown live Risk proof artifact contracts, low-income Core cashflow live proof artifact contract, bond-maturity policy foundation, and opportunity archetype scenario readiness with source/policy foundations available. Slice evidence now includes live canonical Risk concentration, Performance underperformance, and Performance benchmark-readiness source proofs for `PB_SG_GLOBAL_BAL_001`; observed Advise/Manage route serving and acceptance, policy certification, Report intake and materialization execution, rendered output, archive creation, external broker publication, platform-mesh event publication, downstream consumer execution, full live opportunity-journey proof, data-mesh certification, Workbench product proof, client-publication approval, and supported-feature promotion remain pending.
+Status: Partially implemented - aggregate proof-readiness diagnostic, bounded source-ingestion runtime-execution receipt contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry test-execution artifact, Workbench read-path source-contract proof artifact, Gateway/Workbench contract proof artifact, Gateway/Workbench discovery contract proof artifact, digest-bound Advise and Manage route source contracts, Manage mandate live proof artifact, receipt-bound Core portfolio-state runtime evidence, Report intake route and materialization source-contract artifacts, bounded outbox broker source-contract proof artifact, bounded downstream consumer source-contract proof artifact, bounded outbox platform-mesh event source-contract proof, digest-bound mesh policy source-contract artifact, platform catalog source contract artifact, AI lineage store proof artifact, AI workflow-pack registration proof artifact, AI workflow-pack runtime execution proof artifact, high-volatility and drawdown live Risk proof artifact contracts, low-income Core cashflow live proof artifact contract, bond-maturity policy foundation, and opportunity archetype scenario readiness with source/policy foundations available. Slice evidence now includes live canonical Risk concentration, Performance underperformance, and Performance benchmark-readiness source proofs for `PB_SG_GLOBAL_BAL_001`; Core portfolio-state live qualification remains fail-closed pending lotus-core #790. Observed Advise/Manage route serving and acceptance, policy certification, Report intake and materialization execution, rendered output, archive creation, external broker publication, platform-mesh event publication, downstream consumer execution, full live opportunity-journey proof, data-mesh certification, Workbench product proof, client-publication approval, and supported-feature promotion remain pending.
 
 ## Outcome
 
@@ -404,11 +404,15 @@ Prove the complete supported opportunity journey end to end.
     `opportunity_archetype_mandate_risk_health_source_ref_missing`, while
     preserving Core portfolio-state, data-mesh, Workbench, client-publication,
     supported-feature, rebalance, action, and order-execution blockers.
-34. `src/app/application/core_portfolio_state_live_proof.py`,
-    `scripts/generate_core_portfolio_state_live_proof.py`, and
+34. `src/app/application/core_portfolio_state_runtime_evidence/`,
+    `scripts/core_portfolio_state_runtime_evidence/`, and
     `make core-portfolio-state-live-proof-contract-gate` now define and enforce
-    a source-safe Lotus Core portfolio-state live-proof artifact. Aggregate
-    readiness can consume a valid artifact to clear only
+    closed v2 Lotus Core portfolio-state runtime evidence. A named read-only
+    use case binds pseudonymous request scope to the complete current
+    `PortfolioStateSnapshot:v1` receipt, including snapshot identity, source
+    hashes, restatement, reconciliation, evidence time, policy, correlation,
+    and applied/dropped sections. Aggregate readiness can consume a valid
+    artifact to clear only
     `opportunity_archetype_core_portfolio_state_source_ref_missing`, while
     preserving portfolio-scoped Manage proof, mandate performance-health,
     mandate risk-health, data-mesh, Workbench, client-publication,
@@ -469,9 +473,11 @@ without relying on chat memory.
    risk-health contexts. Core portfolio-state, data-mesh, Workbench,
    client-publication, supported-feature, rebalance, action, and order-execution
    proof remain pending.
-10. Core portfolio-state live proof is now explicit in aggregate readiness
-   evidence, but it proves only current `PortfolioStateSnapshot:v1` source-ref
-   posture. Portfolio-scoped Manage proof, mandate performance-health, mandate
+10. Core portfolio-state runtime evidence is explicit in aggregate readiness,
+   but it qualifies only when the closed request and source receipts reconcile.
+   Core issue `#790` tracks missing producer snapshot identity and reconciliation
+   metadata, so live qualification currently fails closed. Portfolio-scoped
+   Manage proof, mandate performance-health, mandate
    risk-health, data-mesh, Workbench, client-publication, supported-feature,
    rebalance, action, and order-execution proof remain pending.
 11. AI lineage store proof is now explicit in aggregate readiness evidence, but
