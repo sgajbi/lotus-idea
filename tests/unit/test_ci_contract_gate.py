@@ -800,11 +800,11 @@ def test_ci_contract_gate_blocks_missing_risk_concentration_live_proof_wiring() 
 
     assert (
         "Makefile implementation-proof-readiness-check target must support "
-        "optional Risk concentration live proof artifact wiring"
+        "optional Risk concentration runtime execution artifact wiring"
     ) in errors
     assert (
         "Makefile implementation-proof-readiness-check target must pass optional Risk "
-        "concentration live proof artifact into readiness generation"
+        "concentration runtime execution artifact into readiness generation"
     ) in errors
 
 

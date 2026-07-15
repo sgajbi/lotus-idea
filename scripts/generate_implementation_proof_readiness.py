@@ -165,8 +165,8 @@ def _opportunity_archetype_proof_artifact_inputs(
     return {
         "risk_concentration_live": _proof_artifact_input(
             args.risk_concentration_live_proof,
-            artifact_name="Risk concentration live proof",
-            ref_name="Risk concentration live proof artifact",
+            artifact_name="Risk concentration runtime execution",
+            ref_name="Risk concentration runtime execution artifact",
         ),
         "high_volatility_live": _proof_artifact_input(
             args.high_volatility_live_proof,
