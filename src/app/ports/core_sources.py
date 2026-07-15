@@ -111,6 +111,24 @@ class CorePortfolioStateEvidenceRequest:
 class CorePortfolioStateEvidence:
     portfolio_state_ref: SourceRef | None
     source_evidence_available: bool
+    response_product_name: str | None = None
+    response_product_version: str | None = None
+    response_tenant_id: str | None = None
+    response_portfolio_id: str | None = None
+    snapshot_mode: str | None = None
+    request_fingerprint: str | None = None
+    snapshot_id: str | None = None
+    source_batch_fingerprint: str | None = None
+    response_content_hash: str | None = None
+    response_source_digest: str | None = None
+    restatement_version: str | None = None
+    reconciliation_status: str | None = None
+    latest_evidence_at_utc: datetime | None = None
+    source_evidence_current: bool = False
+    policy_version: str | None = None
+    source_correlation_id: str | None = None
+    applied_sections: tuple[str, ...] = ()
+    dropped_sections: tuple[str, ...] = ()
     portfolio_state_diagnostic: str | None = None
     entitlement_allowed: bool = True
 

@@ -300,7 +300,27 @@ def test_lotus_core_adapter_fetches_portfolio_state_source_product() -> None:
             200,
             json=_payload(
                 "PortfolioStateSnapshot",
-                extra={"request_fingerprint": "core-snapshot-fingerprint"},
+                extra={
+                    "tenant_id": "tenant-a",
+                    "portfolio_id": "PB_SG_GLOBAL_BAL_001",
+                    "snapshot_mode": "BASELINE",
+                    "request_fingerprint": "core-snapshot-fingerprint",
+                    "snapshot_id": "pss_test_snapshot",
+                    "source_batch_fingerprint": "sha256:" + "a" * 64,
+                    "content_hash": "sha256:" + "a" * 64,
+                    "source_digest": "sha256:" + "a" * 64,
+                    "restatement_version": "restatement-v1",
+                    "reconciliation_status": "COMPLETE",
+                    "latest_evidence_timestamp": "2026-06-21T09:59:00Z",
+                    "source_evidence_current": True,
+                    "policy_version": "tenant-policy-v1",
+                    "correlation_id": "corr-core",
+                    "governance": {
+                        "tenant_id": "tenant-a",
+                        "applied_sections": ["portfolio_state", "portfolio_totals"],
+                        "dropped_sections": [],
+                    },
+                },
             ),
         )
 
@@ -312,6 +332,23 @@ def test_lotus_core_adapter_fetches_portfolio_state_source_product() -> None:
     assert evidence.portfolio_state_ref.product_id == "lotus-core:PortfolioStateSnapshot:v1"
     assert evidence.portfolio_state_ref.freshness is EvidenceFreshness.CURRENT
     assert evidence.source_evidence_available is True
+    assert evidence.response_product_name == "PortfolioStateSnapshot"
+    assert evidence.response_product_version == "v1"
+    assert evidence.response_tenant_id == "tenant-a"
+    assert evidence.response_portfolio_id == "PB_SG_GLOBAL_BAL_001"
+    assert evidence.snapshot_mode == "BASELINE"
+    assert evidence.snapshot_id == "pss_test_snapshot"
+    assert evidence.source_batch_fingerprint == "sha256:" + "a" * 64
+    assert evidence.response_content_hash == "sha256:" + "a" * 64
+    assert evidence.response_source_digest == "sha256:" + "a" * 64
+    assert evidence.restatement_version == "restatement-v1"
+    assert evidence.reconciliation_status == "COMPLETE"
+    assert evidence.latest_evidence_at_utc == datetime(2026, 6, 21, 9, 59, tzinfo=UTC)
+    assert evidence.source_evidence_current is True
+    assert evidence.policy_version == "tenant-policy-v1"
+    assert evidence.source_correlation_id == "corr-core"
+    assert evidence.applied_sections == ("portfolio_state", "portfolio_totals")
+    assert evidence.dropped_sections == ()
     assert evidence.portfolio_state_diagnostic == "core_portfolio_state_ready"
     assert seen == [
         (

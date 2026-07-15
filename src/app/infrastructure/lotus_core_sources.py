@@ -201,6 +201,34 @@ class LotusCoreHighCashSourceAdapter:
                 route="/integration/portfolios/{portfolio_id}/core-snapshot",
             ),
             source_evidence_available=True,
+            response_product_name=_text_field(portfolio_state_payload, "product_name"),
+            response_product_version=_text_field(portfolio_state_payload, "product_version"),
+            response_tenant_id=_portfolio_state_tenant_id(portfolio_state_payload),
+            response_portfolio_id=_text_field(portfolio_state_payload, "portfolio_id"),
+            snapshot_mode=_text_field(portfolio_state_payload, "snapshot_mode"),
+            request_fingerprint=_text_field(portfolio_state_payload, "request_fingerprint"),
+            snapshot_id=_text_field(portfolio_state_payload, "snapshot_id"),
+            source_batch_fingerprint=_text_field(
+                portfolio_state_payload, "source_batch_fingerprint"
+            ),
+            response_content_hash=_text_field(portfolio_state_payload, "content_hash"),
+            response_source_digest=_text_field(portfolio_state_payload, "source_digest"),
+            restatement_version=_text_field(portfolio_state_payload, "restatement_version"),
+            reconciliation_status=_text_field(portfolio_state_payload, "reconciliation_status"),
+            latest_evidence_at_utc=_optional_datetime_field(
+                portfolio_state_payload, "latest_evidence_timestamp"
+            ),
+            source_evidence_current=_bool_field(
+                portfolio_state_payload, "source_evidence_current"
+            ),
+            policy_version=_text_field(portfolio_state_payload, "policy_version"),
+            source_correlation_id=_text_field(portfolio_state_payload, "correlation_id"),
+            applied_sections=_portfolio_state_governance_sections(
+                portfolio_state_payload, "applied_sections"
+            ),
+            dropped_sections=_portfolio_state_governance_sections(
+                portfolio_state_payload, "dropped_sections"
+            ),
             portfolio_state_diagnostic="core_portfolio_state_ready",
         )
 
@@ -398,6 +426,21 @@ def _datetime_field(payload: dict[str, Any], *keys: str) -> datetime:
     raise CoreSourceUnavailable(code="core_generated_at_missing")
 
 
+def _optional_datetime_field(payload: dict[str, Any], *keys: str) -> datetime | None:
+    for key in keys:
+        value = payload.get(key)
+        if not isinstance(value, str) or not value.strip():
+            continue
+        try:
+            parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        except ValueError as exc:
+            raise CoreSourceUnavailable(code=f"core_{key}_malformed") from exc
+        if parsed.tzinfo is None or parsed.utcoffset() is None:
+            raise CoreSourceUnavailable(code=f"core_{key}_naive")
+        return parsed
+    return None
+
+
 def _date_field(payload: dict[str, Any], *keys: str) -> date:
     for key in keys:
         value = payload.get(key)
@@ -468,6 +511,31 @@ def _text_field(payload: dict[str, Any], *keys: str) -> str | None:
         if isinstance(value, str) and value.strip():
             return value.strip()
     return None
+
+
+def _bool_field(payload: dict[str, Any], key: str) -> bool:
+    value = payload.get(key)
+    return value if isinstance(value, bool) else False
+
+
+def _portfolio_state_tenant_id(payload: dict[str, Any]) -> str | None:
+    tenant_id = _text_field(payload, "tenant_id")
+    governance = payload.get("governance")
+    if tenant_id is not None or not isinstance(governance, dict):
+        return tenant_id
+    return _text_field(governance, "tenant_id")
+
+
+def _portfolio_state_governance_sections(
+    payload: dict[str, Any], key: str
+) -> tuple[str, ...]:
+    governance = payload.get("governance")
+    if not isinstance(governance, dict):
+        return ()
+    value = governance.get(key)
+    if not isinstance(value, list) or not all(isinstance(item, str) for item in value):
+        return ()
+    return tuple(item.strip() for item in value if item.strip())
 
 
 def _int_field(payload: dict[str, Any], *keys: str) -> int | None:
