@@ -8,14 +8,16 @@ from app.application.high_volatility_signal import (
     EvaluateAndPersistHighVolatilityFromRiskCommand,
     HighVolatilitySignalPersistenceResult,
 )
-from app.application.risk_runtime_evidence import build_runtime_receipts, sha256_json
+from app.application.risk_runtime_evidence import (
+    RiskRuntimeExecutionBuilder,
+    build_runtime_receipts,
+    sha256_json,
+)
 from app.domain import EvidenceFreshness, OpportunityFamily, SourceRef, SourceSystem
 from app.domain.proof_evidence import EvidenceClass
 
 HIGH_VOLATILITY_RUNTIME_EXECUTION_ENV = "LOTUS_IDEA_HIGH_VOLATILITY_LIVE_PROOF"
-HIGH_VOLATILITY_RUNTIME_EXECUTION_SCHEMA_VERSION = (
-    "lotus-idea.high-volatility.runtime-execution.v2"
-)
+HIGH_VOLATILITY_RUNTIME_EXECUTION_SCHEMA_VERSION = "lotus-idea.high-volatility.runtime-execution.v2"
 HIGH_VOLATILITY_RUNTIME_BLOCKERS_SATISFIED = (
     "opportunity_archetype_live_risk_volatility_source_proof_missing",
 )
@@ -42,57 +44,7 @@ HIGH_VOLATILITY_RUNTIME_EVIDENCE_REFS = (
 _PRODUCT_ID = "lotus-risk:RiskMetricsReport:v1"
 
 
-def build_high_volatility_runtime_execution(
-    *,
-    generated_at_utc: datetime,
-    command: EvaluateAndPersistHighVolatilityFromRiskCommand,
-    result: HighVolatilitySignalPersistenceResult,
-    durable_storage_backed: bool,
-) -> dict[str, Any]:
-    _require_aware(generated_at_utc, "generated_at_utc")
-    source_receipt, persistence_receipt = _receipts(command=command, result=result)
-    blockers = _qualification_blockers(
-        result=result,
-        durable_storage_backed=durable_storage_backed,
-        source_receipt=source_receipt,
-        persistence_receipt=persistence_receipt,
-    )
-    return _payload(
-        generated_at_utc=generated_at_utc,
-        command=command,
-        status="completed",
-        durable_storage_backed=durable_storage_backed,
-        source_receipt=source_receipt,
-        persistence_receipt=persistence_receipt,
-        qualification_blockers=blockers,
-    )
-
-
-def build_blocked_high_volatility_runtime_execution(
-    *,
-    generated_at_utc: datetime,
-    command: EvaluateAndPersistHighVolatilityFromRiskCommand,
-    error_code: str,
-    durable_storage_backed: bool,
-) -> dict[str, Any]:
-    _require_aware(generated_at_utc, "generated_at_utc")
-    blockers = [f"source_error_{error_code.strip() or 'risk_source_unavailable'}"]
-    if not durable_storage_backed:
-        blockers.append("durable_repository_not_configured")
-    blockers.extend(("authoritative_source_receipt_missing", "persistence_receipt_missing"))
-    return _payload(
-        generated_at_utc=generated_at_utc,
-        command=command,
-        status="blocked",
-        durable_storage_backed=durable_storage_backed,
-        source_receipt=None,
-        persistence_receipt=None,
-        qualification_blockers=tuple(blockers),
-    )
-
-
 def _payload(
-    *,
     generated_at_utc: datetime,
     command: EvaluateAndPersistHighVolatilityFromRiskCommand,
     status: str,
@@ -141,7 +93,6 @@ def _payload(
 
 
 def _receipts(
-    *,
     command: EvaluateAndPersistHighVolatilityFromRiskCommand,
     result: HighVolatilitySignalPersistenceResult,
 ) -> tuple[dict[str, Any] | None, dict[str, Any] | None]:
@@ -156,28 +107,6 @@ def _receipts(
             command=command,
         ),
     )
-
-
-def _qualification_blockers(
-    *,
-    result: HighVolatilitySignalPersistenceResult,
-    durable_storage_backed: bool,
-    source_receipt: Mapping[str, Any] | None,
-    persistence_receipt: Mapping[str, Any] | None,
-) -> tuple[str, ...]:
-    blockers: list[str] = []
-    if not durable_storage_backed:
-        blockers.append("durable_repository_not_configured")
-    if source_receipt is None:
-        blockers.append("authoritative_source_receipt_missing")
-    if persistence_receipt is None:
-        blockers.append("persistence_receipt_missing")
-    if result.source_diagnostic_codes and any(
-        code in {"risk_source_unavailable", "risk_source_entitlement_denied"}
-        for code in result.source_diagnostic_codes
-    ):
-        blockers.append("risk_source_execution_blocked")
-    return tuple(blockers)
 
 
 def _source_ref_matches_command(
@@ -209,10 +138,14 @@ def _request_fingerprint(command: EvaluateAndPersistHighVolatilityFromRiskComman
     )
 
 
-def _require_aware(value: datetime, field_name: str) -> None:
-    if value.tzinfo is None or value.utcoffset() is None:
-        raise ValueError(f"{field_name} must be timezone-aware")
-
-
 def _format_utc(value: datetime) -> str:
     return value.astimezone(UTC).isoformat().replace("+00:00", "Z")
+
+
+_RUNTIME_EXECUTION_BUILDER = RiskRuntimeExecutionBuilder(
+    build_receipts=_receipts,
+    build_payload=_payload,
+    read_diagnostics=lambda result: result.source_diagnostic_codes,
+)
+build_high_volatility_runtime_execution = _RUNTIME_EXECUTION_BUILDER.build_completed
+build_blocked_high_volatility_runtime_execution = _RUNTIME_EXECUTION_BUILDER.build_blocked
