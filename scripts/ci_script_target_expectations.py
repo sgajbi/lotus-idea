@@ -20,7 +20,7 @@ SCRIPT_TARGET_EXPECTATIONS = {
         "scripts/core_benchmark_assignment_runtime_evidence/runtime_execution_contract_gate.py"
     ),
     "core-portfolio-state-live-proof-contract-gate": (
-        "scripts/core_portfolio_state_live_proof_contract_gate.py"
+        "scripts/core_portfolio_state_runtime_evidence/runtime_execution_contract_gate.py"
     ),
     "bond-maturity-live-proof-contract-gate": "scripts/bond_maturity_live_proof_contract_gate.py",
     "missing-benchmark-live-proof-contract-gate": (

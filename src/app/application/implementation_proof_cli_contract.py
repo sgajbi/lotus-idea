@@ -14,8 +14,8 @@ from app.application.ai_runtime_proof import (
 from app.application.core_benchmark_assignment_runtime_evidence import (
     CORE_BENCHMARK_ASSIGNMENT_RUNTIME_EXECUTION_ENV,
 )
-from app.application.core_portfolio_state_live_proof import (
-    CORE_PORTFOLIO_STATE_LIVE_PROOF_ENV,
+from app.application.core_portfolio_state_runtime_evidence import (
+    CORE_PORTFOLIO_STATE_RUNTIME_EXECUTION_ENV,
 )
 from app.application.downstream_realization.route_source_contract import (
     ADVISE_ROUTE_SOURCE_CONTRACT_ENV,
@@ -209,8 +209,8 @@ PROOF_ARTIFACT_ARGS: tuple[tuple[str, str, str], ...] = (
     ),
     (
         "--core-portfolio-state-live-proof",
-        CORE_PORTFOLIO_STATE_LIVE_PROOF_ENV,
-        "Optional lotus-core portfolio-state live source proof artifact path.",
+        CORE_PORTFOLIO_STATE_RUNTIME_EXECUTION_ENV,
+        "Optional receipt-bound Lotus Core portfolio-state runtime evidence path.",
     ),
     (
         "--bond-maturity-live-proof",
