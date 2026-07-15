@@ -2,12 +2,16 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import datetime
-import hashlib
 import json
 from pathlib import Path
 from typing import Any
 
 from app.application.proof_provenance import AGGREGATE_PROOF_PROVENANCE_KEY
+from app.application.source_authority import (
+    SourceAuthoritySource,
+    build_source_authority_records,
+    source_authority_records_are_valid,
+)
 from app.application.source_safe_cross_repo_proof import (
     is_timezone_aware_datetime_text,
     required_file_evidence_present,
@@ -95,8 +99,6 @@ _CONTRACT_CHECK_FIELDS = frozenset(
         "platformMaturityKeepsIdeaDeferred",
     }
 )
-
-_SOURCE_AUTHORITY_FIELDS = frozenset({"repository", "ref", "sha256"})
 
 REQUIRED_PRODUCER_PRODUCTS = (
     "lotus-idea:AdvisorOpportunityQueue:v1",
@@ -276,37 +278,28 @@ def platform_catalog_source_contract_is_valid(payload: Mapping[str, Any]) -> boo
 
 
 def _source_authority(platform_root: Path) -> tuple[dict[str, str | None], ...]:
-    prefix = "../lotus-platform/"
-    return tuple(
-        {
-            "repository": "lotus-platform",
-            "ref": ref,
-            "sha256": _sha256(platform_root / ref.removeprefix(prefix)),
-        }
-        for ref in PLATFORM_SOURCE_AUTHORITY_REFS
+    return build_source_authority_records(
+        _source_authority_sources(platform_root)
     )
 
 
 def _source_authority_is_valid(value: object) -> bool:
-    if not isinstance(value, (list, tuple)) or len(value) != len(PLATFORM_SOURCE_AUTHORITY_REFS):
-        return False
-    for item, expected_ref in zip(value, PLATFORM_SOURCE_AUTHORITY_REFS, strict=True):
-        if not isinstance(item, Mapping) or set(item) != _SOURCE_AUTHORITY_FIELDS:
-            return False
-        if item.get("repository") != "lotus-platform" or item.get("ref") != expected_ref:
-            return False
-        digest = item.get("sha256")
-        if not isinstance(digest, str) or len(digest) != 64:
-            return False
-        if any(character not in "0123456789abcdef" for character in digest):
-            return False
-    return True
+    return source_authority_records_are_valid(
+        value,
+        expected_sources=_source_authority_sources(Path()),
+    )
 
 
-def _sha256(path: Path) -> str | None:
-    if not path.is_file():
-        return None
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+def _source_authority_sources(platform_root: Path) -> tuple[SourceAuthoritySource, ...]:
+    prefix = "../lotus-platform/"
+    return tuple(
+        SourceAuthoritySource(
+            "lotus-platform",
+            ref,
+            platform_root / ref.removeprefix(prefix),
+        )
+        for ref in PLATFORM_SOURCE_AUTHORITY_REFS
+    )
 
 
 def _optional_json(path: Path) -> dict[str, Any] | None:
