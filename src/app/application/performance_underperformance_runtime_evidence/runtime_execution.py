@@ -46,6 +46,7 @@ PERFORMANCE_UNDERPERFORMANCE_RUNTIME_EVIDENCE_REFS = (
     "src/app/ports/performance_sources.py",
     "src/app/infrastructure/lotus_performance_sources.py",
     "scripts/performance_underperformance_runtime_evidence/generate_runtime_execution.py",
+    "tests/integration/source_runtime_evidence/test_postgres_replay.py",
     "make performance-underperformance-live-proof-contract-gate",
 )
 
