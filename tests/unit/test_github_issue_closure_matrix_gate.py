@@ -361,3 +361,20 @@ def test_github_issue_closure_matrix_gate_freezes_runtime_telemetry_test_evidenc
     errors = module.validate_issue_closure_matrix(matrix)
 
     assert "#452: merged-main issue cannot regress to `locally_fixed`" in errors
+
+
+def test_github_issue_closure_matrix_gate_freezes_source_ingestion_runtime_evidence_closure(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    matrix = tmp_path / "matrix.md"
+    content = module.MATRIX_PATH.read_text(encoding="utf-8")
+    content = content.replace(
+        "Bind source-ingestion live proof to runtime and persistence receipts | `merged_main` |",
+        "Bind source-ingestion live proof to runtime and persistence receipts | `locally_fixed` |",
+    )
+    matrix.write_text(content, encoding="utf-8")
+
+    errors = module.validate_issue_closure_matrix(matrix)
+
+    assert "#456: merged-main issue cannot regress to `locally_fixed`" in errors
