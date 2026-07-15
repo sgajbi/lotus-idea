@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import replace
 from datetime import UTC, date, datetime, timedelta
 import json
-from typing import Any
+from typing import Any, Callable
 
 import pytest
 
@@ -244,28 +244,31 @@ def _evidence() -> CorePortfolioStateEvidence:
 
 def _evidence_for_failure(failure_mode: str) -> CorePortfolioStateEvidence:
     evidence = _evidence()
-    changes: dict[str, object] = {
-        "missing_ref": {"portfolio_state_ref": None},
-        "entitlement": {"entitlement_allowed": False},
-        "unavailable": {"source_evidence_available": False},
-        "product": {"response_product_name": "HoldingsAsOf"},
-        "tenant": {"response_tenant_id": "tenant-b"},
-        "portfolio": {"response_portfolio_id": "portfolio-b"},
-        "simulation": {"snapshot_mode": "SIMULATION"},
-        "sections": {"applied_sections": ("portfolio_state",)},
-        "dropped": {"dropped_sections": ("portfolio_totals",)},
-        "request_fingerprint": {"request_fingerprint": None},
-        "snapshot_id": {"snapshot_id": None},
-        "restatement": {"restatement_version": None},
-        "policy": {"policy_version": None},
-        "hash": {"response_source_digest": "sha256:" + "b" * 64},
-        "reconciliation": {"reconciliation_status": "UNKNOWN"},
-        "source_current": {"source_evidence_current": False},
-        "latest_evidence": {"latest_evidence_at_utc": NOW + timedelta(seconds=1)},
-        "correlation": {"source_correlation_id": "corr-b"},
-    }.get(failure_mode, {})
-    if changes:
-        return replace(evidence, **changes)
+    mutations: dict[str, Callable[[CorePortfolioStateEvidence], CorePortfolioStateEvidence]] = {
+        "missing_ref": lambda value: replace(value, portfolio_state_ref=None),
+        "entitlement": lambda value: replace(value, entitlement_allowed=False),
+        "unavailable": lambda value: replace(value, source_evidence_available=False),
+        "product": lambda value: replace(value, response_product_name="HoldingsAsOf"),
+        "tenant": lambda value: replace(value, response_tenant_id="tenant-b"),
+        "portfolio": lambda value: replace(value, response_portfolio_id="portfolio-b"),
+        "simulation": lambda value: replace(value, snapshot_mode="SIMULATION"),
+        "sections": lambda value: replace(value, applied_sections=("portfolio_state",)),
+        "dropped": lambda value: replace(value, dropped_sections=("portfolio_totals",)),
+        "request_fingerprint": lambda value: replace(value, request_fingerprint=None),
+        "snapshot_id": lambda value: replace(value, snapshot_id=None),
+        "restatement": lambda value: replace(value, restatement_version=None),
+        "policy": lambda value: replace(value, policy_version=None),
+        "hash": lambda value: replace(value, response_source_digest="sha256:" + "b" * 64),
+        "reconciliation": lambda value: replace(value, reconciliation_status="UNKNOWN"),
+        "source_current": lambda value: replace(value, source_evidence_current=False),
+        "latest_evidence": lambda value: replace(
+            value, latest_evidence_at_utc=NOW + timedelta(seconds=1)
+        ),
+        "correlation": lambda value: replace(value, source_correlation_id="corr-b"),
+    }
+    mutation = mutations.get(failure_mode)
+    if mutation is not None:
+        return mutation(evidence)
     if failure_mode == "stale":
         return replace(
             evidence,
