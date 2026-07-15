@@ -169,10 +169,15 @@ def test_underperformance_persistence_requires_operational_identity(
         idempotency_key="performance-underperformance-runtime-proof",
         actor_subject="lotus-idea-runtime-proof",
     )
+    invalid_command = (
+        replace(command, idempotency_key=value)
+        if field == "idempotency_key"
+        else replace(command, actor_subject=value)
+    )
 
     with pytest.raises(ValueError, match=field):
         evaluate_and_persist_underperformance_signal_from_performance(
-            replace(command, **{field: value}),
+            invalid_command,
             performance_source=StubPerformanceSource(),
             repository=InMemoryIdeaRepository(),
         )
