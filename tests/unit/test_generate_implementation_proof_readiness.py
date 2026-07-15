@@ -887,7 +887,7 @@ def test_generate_implementation_proof_readiness_uses_explicit_risk_concentratio
     assert "opportunity_archetype_live_risk_source_proof_missing" not in (archetypes["blockers"])
     assert "opportunity_archetype_data_mesh_not_certified" in archetypes["blockers"]
     assert "opportunity_archetype_supported_feature_promotion_missing" in (archetypes["blockers"])
-    assert "Risk concentration live proof artifact" in archetypes["evidenceRefs"]
+    assert "Risk concentration runtime execution artifact" in archetypes["evidenceRefs"]
     assert payload["readinessStatus"] == "blocked"
     assert payload["supportedFeaturePromoted"] is False
 

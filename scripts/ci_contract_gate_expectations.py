@@ -350,11 +350,11 @@ REQUIRED_READINESS_WIRING = (
     ),
     (
         "LOTUS_IDEA_RISK_CONCENTRATION_LIVE_PROOF",
-        "support optional Risk concentration live proof artifact wiring",
+        "support optional Risk concentration runtime execution artifact wiring",
     ),
     (
         "--risk-concentration-live-proof",
-        "pass optional Risk concentration live proof artifact into readiness generation",
+        "pass optional Risk concentration runtime execution artifact into readiness generation",
     ),
     (
         "LOTUS_IDEA_PERFORMANCE_UNDERPERFORMANCE_LIVE_PROOF",
