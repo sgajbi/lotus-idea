@@ -10,11 +10,14 @@ from app.application.risk_concentration_runtime_evidence.runtime_execution impor
     RISK_CONCENTRATION_RUNTIME_BLOCKERS_SATISFIED,
     RISK_CONCENTRATION_RUNTIME_EVIDENCE_REFS,
     RISK_CONCENTRATION_RUNTIME_EXECUTION_SCHEMA_VERSION,
-    is_sha256,
-    sha256_json,
-    source_evidence_hash,
 )
-from app.domain import EvidenceFreshness, OpportunityFamily, SourceSystem
+from app.application.risk_runtime_evidence import (
+    is_sha256,
+    persistence_receipt_is_valid,
+    source_evidence_hash,
+    source_receipt_is_valid,
+)
+from app.domain import OpportunityFamily, SourceSystem
 from app.domain.proof_evidence import (
     EvidenceClass,
     evidence_class_can_clear,
@@ -47,30 +50,6 @@ _EXECUTION_KEYS = frozenset(
         "sourceReceipt",
         "persistenceReceipt",
         "qualificationBlockers",
-    }
-)
-_SOURCE_RECEIPT_KEYS = frozenset(
-    {
-        "productId",
-        "sourceSystem",
-        "productVersion",
-        "asOfDate",
-        "generatedAtUtc",
-        "contentHash",
-        "dataQualityStatus",
-        "freshness",
-        "sourceReceiptSha256",
-    }
-)
-_PERSISTENCE_RECEIPT_KEYS = frozenset(
-    {
-        "decision",
-        "candidateFamily",
-        "candidateLifecycleStatus",
-        "sourceEvidenceHash",
-        "scopeFingerprint",
-        "persistedAtUtc",
-        "persistenceReceiptSha256",
     }
 )
 _NON_PROOF_CLAIM_KEYS = frozenset(
@@ -156,59 +135,18 @@ def _execution_is_valid(execution: Mapping[str, Any], *, generated_at_utc: datet
         return False
     source = execution.get("sourceReceipt")
     persistence = execution.get("persistenceReceipt")
-    if not _source_receipt_is_valid(
+    if not source_receipt_is_valid(
         source,
+        product_id=_PRODUCT_ID,
         as_of_date=as_of_date,
         evaluated_at_utc=evaluated_at_utc,
     ):
         return False
-    if not _persistence_receipt_is_valid(persistence, generated_at_utc=generated_at_utc):
+    if not persistence_receipt_is_valid(
+        persistence,
+        family=OpportunityFamily.CONCENTRATION,
+        generated_at_utc=generated_at_utc,
+    ):
         return False
     assert isinstance(source, Mapping) and isinstance(persistence, Mapping)
     return persistence.get("sourceEvidenceHash") == source_evidence_hash(source)
-
-
-def _source_receipt_is_valid(
-    value: object,
-    *,
-    as_of_date: date,
-    evaluated_at_utc: datetime,
-) -> bool:
-    if not isinstance(value, Mapping) or set(value) != _SOURCE_RECEIPT_KEYS:
-        return False
-    if (
-        value.get("productId") != _PRODUCT_ID
-        or value.get("sourceSystem") != SourceSystem.LOTUS_RISK.value
-    ):
-        return False
-    if (
-        value.get("asOfDate") != as_of_date.isoformat()
-        or value.get("freshness") != EvidenceFreshness.CURRENT.value
-    ):
-        return False
-    if not all(
-        isinstance(value.get(key), str) and str(value[key]).strip()
-        for key in ("productVersion", "contentHash", "dataQualityStatus")
-    ):
-        return False
-    source_generated_at = parse_timezone_aware_datetime(value.get("generatedAtUtc"))
-    if source_generated_at is None or source_generated_at > evaluated_at_utc:
-        return False
-    unsigned = {key: item for key, item in value.items() if key != "sourceReceiptSha256"}
-    return value.get("sourceReceiptSha256") == sha256_json(unsigned)
-
-
-def _persistence_receipt_is_valid(value: object, *, generated_at_utc: datetime) -> bool:
-    if not isinstance(value, Mapping) or set(value) != _PERSISTENCE_RECEIPT_KEYS:
-        return False
-    if value.get("decision") not in {"accepted", "replayed"}:
-        return False
-    if value.get("candidateFamily") != OpportunityFamily.CONCENTRATION.value:
-        return False
-    if not all(is_sha256(value.get(key)) for key in ("sourceEvidenceHash", "scopeFingerprint")):
-        return False
-    persisted_at_utc = parse_timezone_aware_datetime(value.get("persistedAtUtc"))
-    if persisted_at_utc is None or persisted_at_utc > generated_at_utc:
-        return False
-    unsigned = {key: item for key, item in value.items() if key != "persistenceReceiptSha256"}
-    return value.get("persistenceReceiptSha256") == sha256_json(unsigned)

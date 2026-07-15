@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import UTC, datetime
-import hashlib
-import json
 from typing import Any
 
 from app.application.concentration_risk_signal import (
@@ -11,14 +9,16 @@ from app.application.concentration_risk_signal import (
     EvaluateAndPersistConcentrationRiskFromRiskCommand,
 )
 from app.domain import (
-    CandidatePersistenceDecision,
     EvidenceFreshness,
     OpportunityFamily,
     SourceRef,
     SourceSystem,
 )
-from app.domain.evidence_hashing import evidence_hash_for_source_refs
 from app.domain.proof_evidence import EvidenceClass
+from app.application.risk_runtime_evidence import (
+    build_runtime_receipts,
+    sha256_json,
+)
 
 RISK_CONCENTRATION_RUNTIME_EXECUTION_ENV = "LOTUS_IDEA_RISK_CONCENTRATION_LIVE_PROOF"
 RISK_CONCENTRATION_RUNTIME_EXECUTION_SCHEMA_VERSION = (
@@ -149,48 +149,18 @@ def _receipts(
     command: EvaluateAndPersistConcentrationRiskFromRiskCommand,
     result: ConcentrationRiskSignalPersistenceResult,
 ) -> tuple[dict[str, Any] | None, dict[str, Any] | None]:
-    persistence = result.persistence
     candidate = result.evaluation.candidate
-    if persistence is None or persistence.record is None or candidate is None:
-        return None, None
-    if persistence.decision not in {
-        CandidatePersistenceDecision.ACCEPTED,
-        CandidatePersistenceDecision.REPLAYED,
-    }:
-        return None, None
-    record = persistence.record
-    if record.candidate != candidate or candidate.family is not OpportunityFamily.CONCENTRATION:
-        return None, None
-    source_refs = candidate.evidence_packet.source_refs
-    if len(source_refs) != 1:
-        return None, None
-    source_ref = source_refs[0]
-    if not _source_ref_matches_command(source_ref, command=command):
-        return None, None
-    if record.evidence_hash != evidence_hash_for_source_refs(source_refs):
-        return None, None
-    source_receipt = _source_receipt(source_ref)
-    scope = candidate.access_scope
-    if scope is None or scope.portfolio_id != command.evaluation.portfolio_id:
-        return None, None
-    persistence_receipt: dict[str, Any] = {
-        "decision": persistence.decision.value,
-        "candidateFamily": candidate.family.value,
-        "candidateLifecycleStatus": candidate.lifecycle_status.value,
-        "sourceEvidenceHash": record.evidence_hash,
-        "scopeFingerprint": sha256_json(
-            {
-                "tenantId": scope.tenant_id,
-                "bookId": scope.book_id,
-                "portfolioId": scope.portfolio_id,
-                "clientId": scope.client_id,
-                "requestFingerprint": _request_fingerprint(command),
-            }
+    return build_runtime_receipts(
+        candidate=candidate,
+        persistence=result.persistence,
+        expected_family=OpportunityFamily.CONCENTRATION,
+        expected_portfolio_id=command.evaluation.portfolio_id,
+        request_fingerprint=_request_fingerprint(command),
+        source_ref_is_authoritative=lambda source_ref: _source_ref_matches_command(
+            source_ref,
+            command=command,
         ),
-        "persistedAtUtc": _format_utc(record.persisted_at_utc),
-    }
-    persistence_receipt["persistenceReceiptSha256"] = sha256_json(persistence_receipt)
-    return source_receipt, persistence_receipt
+    )
 
 
 def _qualification_blockers(
@@ -229,36 +199,6 @@ def _source_ref_matches_command(
     )
 
 
-def _source_receipt(source_ref: SourceRef) -> dict[str, Any]:
-    receipt: dict[str, Any] = {
-        "productId": source_ref.product_id,
-        "sourceSystem": source_ref.source_system.value,
-        "productVersion": source_ref.product_version,
-        "asOfDate": source_ref.as_of_date.isoformat(),
-        "generatedAtUtc": _format_utc(source_ref.generated_at_utc),
-        "contentHash": source_ref.content_hash,
-        "dataQualityStatus": source_ref.data_quality_status,
-        "freshness": source_ref.freshness.value,
-    }
-    receipt["sourceReceiptSha256"] = sha256_json(receipt)
-    return receipt
-
-
-def source_evidence_hash(source_receipt: Mapping[str, Any]) -> str:
-    return sha256_json(
-        [
-            {
-                "content_hash": source_receipt["contentHash"],
-                "data_quality_status": source_receipt["dataQualityStatus"],
-                "freshness": source_receipt["freshness"],
-                "product_id": source_receipt["productId"],
-                "product_version": source_receipt["productVersion"],
-                "source_system": source_receipt["sourceSystem"],
-            }
-        ]
-    )
-
-
 def _request_fingerprint(command: EvaluateAndPersistConcentrationRiskFromRiskCommand) -> str:
     request = command.evaluation
     return sha256_json(
@@ -269,20 +209,6 @@ def _request_fingerprint(command: EvaluateAndPersistConcentrationRiskFromRiskCom
             "idempotencyKey": command.idempotency_key,
             "actorSubject": command.actor_subject,
         }
-    )
-
-
-def sha256_json(value: object) -> str:
-    canonical = json.dumps(value, sort_keys=True, separators=(",", ":"), default=str)
-    return f"sha256:{hashlib.sha256(canonical.encode('utf-8')).hexdigest()}"
-
-
-def is_sha256(value: object) -> bool:
-    return bool(
-        isinstance(value, str)
-        and value.startswith("sha256:")
-        and len(value) == 71
-        and all(character in "0123456789abcdef" for character in value[7:])
     )
 
 
