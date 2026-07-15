@@ -198,7 +198,7 @@ taxonomy and the #393 same-pattern campaign.
 | `LOTUS_IDEA_RISK_DRAWDOWN_LIVE_PROOF` | Passes validated v2 drawdown `runtime_execution` evidence into opportunity-archetype readiness. It must bind current Lotus Risk evidence to the authoritative Idea use-case result and accepted or replayed durable persistence. A valid artifact clears only `opportunity_archetype_drawdown_source_proof_missing`; it does not certify volatility, data mesh, Workbench, client publication, deployment, production, or supported-feature promotion. The environment name is retained for operator compatibility; it does not imply acceptance of the retired v1 contract. |
 | `LOTUS_IDEA_PERFORMANCE_UNDERPERFORMANCE_LIVE_PROOF` | Passes validated v2 Performance underperformance `runtime_execution` evidence into opportunity-archetype readiness. It must bind exact current `ReturnsSeriesBundle:v1` evidence and benchmark context to the authoritative Idea use-case result and accepted or replayed durable persistence. A valid artifact clears only `opportunity_archetype_live_performance_source_proof_missing`; benchmark assignment, data mesh, Workbench, client publication, deployment, production, and supported-feature promotion remain blocked. The environment name is retained for operator compatibility and does not accept the retired v1 contract. |
 | `LOTUS_IDEA_MISSING_BENCHMARK_PERFORMANCE_READINESS_PROOF` | Passes a validated source-safe Lotus Performance benchmark-readiness proof artifact into missing-benchmark opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_performance_benchmark_readiness_source_ref_missing`; it does not assign benchmarks, calculate performance or benchmark returns, certify benchmark methodology, certify data mesh, prove Workbench behavior, approve client publication, or promote support. |
-| `LOTUS_IDEA_CORE_BENCHMARK_ASSIGNMENT_LIVE_PROOF` | Passes a validated source-safe Lotus Core benchmark assignment live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_benchmark_assignment_source_ref_missing`; it does not certify Performance source evidence, benchmark methodology, benchmark composition, benchmark return calculation, data mesh, Workbench, client publication, or supported-feature promotion. |
+| `LOTUS_IDEA_CORE_BENCHMARK_ASSIGNMENT_LIVE_PROOF` | Passes validated v2 Core benchmark-assignment `runtime_execution` evidence into opportunity-archetype readiness. The compatibility environment name does not accept v1. A valid artifact binds pseudonymous scope and an exact current `BenchmarkAssignment:v1` source receipt, clears only `opportunity_archetype_benchmark_assignment_source_ref_missing`, and preserves Performance, methodology, mesh, Workbench, publication, deployment, production, and promotion blockers. |
 | `LOTUS_IDEA_CORE_PORTFOLIO_STATE_LIVE_PROOF` | Passes a validated source-safe Lotus Core portfolio-state live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_core_portfolio_state_source_ref_missing`; it does not certify Manage action-register proof, mandate performance health, mandate risk health, rebalance authority, action authority, order execution, data mesh, Workbench, client publication, or supported-feature promotion. |
 | `LOTUS_IDEA_BOND_MATURITY_LIVE_PROOF` | Passes a validated source-safe Lotus Core maturity-summary live-proof artifact into opportunity-archetype readiness. The live adapter consumes Core-owned `PortfolioMaturitySummary:v1` and fails closed when explicit maturity facts or upstream holdings lineage are missing. A valid artifact clears only `opportunity_archetype_maturity_live_core_source_proof_missing`; it does not recommend reinvestment products, forecast cashflows, certify suitability or risk, certify data mesh, prove Workbench behavior, approve client publication, or promote support. |
 | `LOTUS_IDEA_MISSING_BENCHMARK_LIVE_PROOF` | Passes a validated source-safe Lotus Core missing-benchmark live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_missing_benchmark_live_core_source_proof_missing`; it does not assign benchmarks, certify Performance benchmark-readiness evidence, certify benchmark methodology, calculate benchmark composition or returns, certify data mesh, prove Workbench behavior, approve client publication, or promote support. |
@@ -339,18 +339,22 @@ route, return, or benchmark value. Benchmark-assignment, data-mesh, Workbench,
 client-publication, deployment, production, and supported-feature blockers
 remain.
 
-Lotus Core benchmark assignment live proof is captured by
-`scripts/generate_core_benchmark_assignment_live_proof.py`. A valid artifact
+Lotus Core benchmark-assignment runtime evidence is captured by
+`scripts/core_benchmark_assignment_runtime_evidence/generate_runtime_execution.py`.
+A valid artifact
 referenced through `LOTUS_IDEA_CORE_BENCHMARK_ASSIGNMENT_LIVE_PROOF` clears only
 `opportunity_archetype_benchmark_assignment_source_ref_missing` for the
 `opportunity-archetype-scenarios` capability. The artifact proves a live
-`lotus-core:BenchmarkAssignment:v1` source call, current source evidence,
-effective assignment posture, benchmark identity resolution, and assignment
-version presence without storing portfolio identity, benchmark identity, request
-or response payloads, correlation IDs, trace IDs, candidate IDs, or source
-routes. It deliberately retains live Performance, data-mesh, Workbench,
-client-publication, and supported-feature blockers, and it does not assign
-benchmarks, calculate benchmark returns, or certify benchmark methodology.
+`lotus-core:BenchmarkAssignment:v1` source call through a named application use
+case. Canonical digests bind pseudonymous tenant/portfolio scope, exact as-of
+date, reporting currency, evaluation time, and the complete current source
+receipt. The closed validator rejects unknown claims, source substitution,
+scope or digest mismatch, stale/future evidence, inactive or ineffective
+assignments, and missing benchmark identity/version. This read-only operation
+does not create an Idea aggregate, so it deliberately has no persistence
+receipt. It retains live Performance, data-mesh, Workbench, client-publication,
+deployment, production, and supported-feature blockers. Core owns assignment;
+Idea does not assign benchmarks, calculate returns, or certify methodology.
 
 Lotus Core portfolio-state live proof is captured by
 `scripts/generate_core_portfolio_state_live_proof.py`. A valid artifact
@@ -976,8 +980,8 @@ Implementation-backed evidence:
     `scripts/generate_missing_benchmark_performance_readiness_proof.py`,
 1. Missing-benchmark Performance readiness proof contract gate:
     `make missing-benchmark-performance-readiness-proof-contract-gate`,
-1. Core benchmark assignment live-proof generator:
-    `scripts/generate_core_benchmark_assignment_live_proof.py`,
+1. Core benchmark-assignment runtime-evidence generator:
+    `scripts/core_benchmark_assignment_runtime_evidence/generate_runtime_execution.py`,
 1. Core benchmark assignment live-proof contract gate:
     `make core-benchmark-assignment-live-proof-contract-gate`,
 1. Core portfolio-state live-proof generator:

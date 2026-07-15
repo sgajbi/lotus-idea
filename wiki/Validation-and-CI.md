@@ -435,7 +435,7 @@ Persistence adapter validation:
    default digest-bound Advise and Manage route source-contract generation and
    supporting-evidence consumption without live-blocker clearance,
    optional Manage mandate live proof consumption,
-   optional Core benchmark assignment live proof consumption,
+   optional receipt-bound Core benchmark-assignment runtime evidence consumption,
    optional Core portfolio-state live proof consumption,
    optional missing-benchmark live Core proof consumption,
    optional missing-benchmark Performance readiness proof consumption,
@@ -583,11 +583,13 @@ Persistence adapter validation:
     `runtime_execution` evidence. It must bind current Performance evidence to
     accepted or replayed durable Idea persistence and can clear only the
     namespaced live Performance source blocker.
-    `tests/unit/test_core_benchmark_assignment_live_proof.py` and
+    `tests/unit/core_benchmark_assignment_runtime_evidence/` and
     `make core-benchmark-assignment-live-proof-contract-gate` prove the
-    optional Lotus Core benchmark assignment live-proof artifact remains
-    source-safe and can clear only the namespaced benchmark-assignment
-    source-ref blocker when valid evidence is supplied.
+    optional Lotus Core benchmark-assignment artifact is closed v2
+    `runtime_execution` evidence. It binds pseudonymous request scope to one
+    exact current Core source receipt and can clear only the namespaced
+    benchmark-assignment source-ref blocker. The read-only use case has no
+    fabricated Idea persistence receipt.
     `tests/unit/test_core_portfolio_state_live_proof.py` and
     `make core-portfolio-state-live-proof-contract-gate` prove the optional
     Lotus Core portfolio-state live-proof artifact remains source-safe and can
