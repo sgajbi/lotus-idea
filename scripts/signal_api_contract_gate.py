@@ -63,7 +63,7 @@ CALLER_HEADER_ALIASES = (
 )
 
 CORE_LIVE_PROOF_SCRIPTS = (
-    Path("scripts/generate_bond_maturity_live_proof.py"),
+    Path("scripts/bond_maturity_runtime_evidence/generate_runtime_execution.py"),
     Path("scripts/core_benchmark_assignment_runtime_evidence/generate_runtime_execution.py"),
     Path("scripts/core_portfolio_state_runtime_evidence/generate_runtime_execution.py"),
     Path("scripts/generate_low_income_core_cashflow_live_proof.py"),

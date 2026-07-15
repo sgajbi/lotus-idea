@@ -3,9 +3,9 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from datetime import datetime
 
-from app.application.bond_maturity_live_proof import (
-    BOND_MATURITY_LIVE_BLOCKERS_CLEARED,
-    bond_maturity_live_proof_is_valid,
+from app.application.bond_maturity_runtime_evidence import (
+    BOND_MATURITY_RUNTIME_BLOCKERS_SATISFIED,
+    bond_maturity_runtime_execution_is_valid,
 )
 from app.application.implementation_proof_capability_updates import apply_blocker_proof
 from app.application.implementation_proof_models import ImplementationProofCapabilityReadiness
@@ -184,7 +184,7 @@ def _opportunity_proof_steps(scope: Mapping[str, object]) -> tuple[OpportunityPr
         _proof_step(
             scope,
             "bond_maturity_live",
-            bond_maturity_live_proof_is_valid,
+            bond_maturity_runtime_execution_is_valid,
             _apply_bond_maturity_live_proof,
         ),
         _proof_step(
@@ -463,7 +463,7 @@ def _apply_bond_maturity_live_proof(
     return apply_blocker_proof(
         capability,
         capability_ids=("opportunity-archetype-scenarios",),
-        blockers_cleared=BOND_MATURITY_LIVE_BLOCKERS_CLEARED,
+        blockers_cleared=BOND_MATURITY_RUNTIME_BLOCKERS_SATISFIED,
         proof_ref=bond_maturity_live_proof_ref,
     )
 

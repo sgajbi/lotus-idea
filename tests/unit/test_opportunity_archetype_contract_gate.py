@@ -372,16 +372,29 @@ def test_opportunity_archetype_contract_records_bond_maturity_foundation_without
     assert "src/app/domain/bond_maturity_signal.py" in bond_maturity.evidence_refs
     assert "src/app/application/bond_maturity_signal.py" in bond_maturity.evidence_refs
     assert "src/app/api/bond_maturity_signals.py" in bond_maturity.evidence_refs
-    assert "src/app/application/bond_maturity_live_proof.py" in bond_maturity.evidence_refs
+    assert (
+        "src/app/application/bond_maturity_runtime_evidence/runtime_execution.py"
+        in bond_maturity.evidence_refs
+    )
+    assert (
+        "src/app/application/bond_maturity_runtime_evidence/contract.py"
+        in bond_maturity.evidence_refs
+    )
     assert "src/app/infrastructure/lotus_core_sources.py" in bond_maturity.evidence_refs
     assert "src/app/ports/core_sources.py" in bond_maturity.evidence_refs
-    assert "scripts/generate_bond_maturity_live_proof.py" in bond_maturity.evidence_refs
+    assert (
+        "scripts/bond_maturity_runtime_evidence/generate_runtime_execution.py"
+        in bond_maturity.evidence_refs
+    )
     assert "make bond-maturity-live-proof-contract-gate" in bond_maturity.evidence_refs
     assert "POST /api/v1/idea-signals/bond-maturity/evaluate" in bond_maturity.evidence_refs
     assert "tests/integration/test_bond_maturity_signal_api.py" in bond_maturity.evidence_refs
     assert "tests/unit/test_bond_maturity_signal_evaluation.py" in (bond_maturity.evidence_refs)
     assert "tests/unit/test_bond_maturity_application.py" in bond_maturity.evidence_refs
-    assert "tests/unit/test_bond_maturity_live_proof.py" in bond_maturity.evidence_refs
+    assert (
+        "tests/unit/bond_maturity_runtime_evidence/test_runtime_execution.py"
+        in bond_maturity.evidence_refs
+    )
     assert "maturity_source_contract_missing" not in bond_maturity.blockers
     assert "maturity_live_core_source_proof_missing" in bond_maturity.blockers
     assert "maturity_signal_policy_missing" not in bond_maturity.blockers

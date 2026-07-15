@@ -604,7 +604,7 @@ low-income-core-cashflow-live-proof-contract-gate:
 	$(VENV_PYTHON) scripts/low_income_core_cashflow_live_proof_contract_gate.py
 
 bond-maturity-live-proof-contract-gate:
-	$(VENV_PYTHON) scripts/bond_maturity_live_proof_contract_gate.py
+	$(VENV_PYTHON) scripts/bond_maturity_runtime_evidence/runtime_execution_contract_gate.py
 
 implementation-proof-readiness-check:
 	$(VENV_PYTHON) scripts/generate_scheduled_source_ingestion_worker_proof.py --manifest docs/examples/source-ingestion/high-cash-worker-manifest.example.json --generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --run-forever --output output/source-ingestion/scheduled-worker-proof.json

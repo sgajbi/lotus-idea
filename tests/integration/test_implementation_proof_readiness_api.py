@@ -18,9 +18,8 @@ from app.application.ai_model_risk_operations.source_contract_proof import (
     AI_MODEL_RISK_OPERATIONS_PROOF_ENV,
     build_ai_model_risk_operations_proof_payload,
 )
-from app.application.bond_maturity_live_proof import (
-    BOND_MATURITY_LIVE_PROOF_ENV,
-    build_bond_maturity_live_proof_payload,
+from app.application.bond_maturity_runtime_evidence import (
+    BOND_MATURITY_RUNTIME_EXECUTION_ENV,
 )
 from app.application.durable_repository_proof import (
     DURABLE_REPOSITORY_PROOF_ENV,
@@ -37,6 +36,9 @@ from app.application.runtime_trust_telemetry.test_execution_contract import (
 from tests.support.durable_repository_proof import (
     SOURCE_COMMIT_SHA,
     valid_durable_repository_ci_execution_receipt,
+)
+from tests.support.bond_maturity_runtime_evidence import (
+    valid_bond_maturity_runtime_evidence,
 )
 from app.application.report.intake_route_source_contract import (
     REMAINING_REPORT_INTAKE_ROUTE_CERTIFICATION_BLOCKERS,
@@ -107,7 +109,7 @@ def test_implementation_proof_readiness_api_returns_blocked_operator_posture(
     monkeypatch.delenv(OPERATOR_WORKFLOWS_OPERATIONS_PROOF_ENV, raising=False)
     monkeypatch.delenv(WORKBENCH_READ_PATH_SOURCE_CONTRACT_PROOF_ENV, raising=False)
     monkeypatch.delenv(REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF_ENV, raising=False)
-    monkeypatch.delenv(BOND_MATURITY_LIVE_PROOF_ENV, raising=False)
+    monkeypatch.delenv(BOND_MATURITY_RUNTIME_EXECUTION_ENV, raising=False)
     reset_idea_repository_for_tests()
     client = managed_test_client(app)
 
@@ -574,7 +576,10 @@ def _configure_readiness_proof_artifacts(
         str(workbench_proof_path),
     )
     monkeypatch.setenv(REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF_ENV, str(report_route_proof_path))
-    monkeypatch.setenv(BOND_MATURITY_LIVE_PROOF_ENV, str(bond_maturity_live_proof_path))
+    monkeypatch.setenv(
+        BOND_MATURITY_RUNTIME_EXECUTION_ENV,
+        str(bond_maturity_live_proof_path),
+    )
 
 
 def _write_proof(path: Path, payload: dict[str, object]) -> None:
@@ -642,18 +647,6 @@ def _valid_report_intake_route_source_contract_proof() -> dict[str, object]:
 
 
 def _valid_bond_maturity_live_proof(*, generated_at_utc: datetime) -> dict[str, object]:
-    return build_bond_maturity_live_proof_payload(
-        generated_at_utc=generated_at_utc,
-        live_core_source_attempted=True,
-        evidence_summary={
-            "runStatus": "completed",
-            "sourceAuthority": "lotus-core",
-            "holdingsRefPresent": True,
-            "maturityFactRefPresent": True,
-            "nextMaturityDatePresent": True,
-            "maturingPositionCountPresent": True,
-            "sourceEvidenceCurrent": True,
-            "maturityDiagnostic": "core_maturity_evidence_ready",
-            "sourceDiagnosticCodes": ["core_maturity_evidence_ready"],
-        },
+    return valid_bond_maturity_runtime_evidence(
+        evaluated_at_utc=generated_at_utc,
     )
