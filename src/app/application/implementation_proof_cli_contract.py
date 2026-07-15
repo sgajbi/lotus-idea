@@ -29,8 +29,8 @@ from app.application.workbench.contract_proof import (
     GATEWAY_WORKBENCH_CONTRACT_PROOF_ENV,
 )
 from app.application.high_volatility_runtime_evidence import HIGH_VOLATILITY_RUNTIME_EXECUTION_ENV
-from app.application.low_income_core_cashflow_live_proof import (
-    LOW_INCOME_CORE_CASHFLOW_LIVE_PROOF_ENV,
+from app.application.low_income_cashflow_runtime_evidence import (
+    LOW_INCOME_CASHFLOW_RUNTIME_EXECUTION_ENV,
 )
 from app.application.manage_mandate_live_proof import MANAGE_MANDATE_LIVE_PROOF_ENV
 from app.application.mandate_restriction_live_proof import MANDATE_RESTRICTION_LIVE_PROOF_ENV
@@ -219,7 +219,7 @@ PROOF_ARTIFACT_ARGS: tuple[tuple[str, str, str], ...] = (
     ),
     (
         "--low-income-core-cashflow-live-proof",
-        LOW_INCOME_CORE_CASHFLOW_LIVE_PROOF_ENV,
+        LOW_INCOME_CASHFLOW_RUNTIME_EXECUTION_ENV,
         "Optional lotus-core cashflow live source proof artifact path for low-income review.",
     ),
     (

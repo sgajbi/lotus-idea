@@ -22,9 +22,9 @@ from app.application.core_portfolio_state_runtime_evidence import (
     CORE_PORTFOLIO_STATE_RUNTIME_BLOCKERS_SATISFIED,
     core_portfolio_state_runtime_execution_is_valid,
 )
-from app.application.low_income_core_cashflow_live_proof import (
-    LOW_INCOME_CORE_CASHFLOW_LIVE_BLOCKERS_CLEARED,
-    low_income_core_cashflow_live_proof_is_valid,
+from app.application.low_income_cashflow_runtime_evidence import (
+    LOW_INCOME_CASHFLOW_RUNTIME_BLOCKERS_SATISFIED,
+    low_income_cashflow_runtime_execution_is_valid,
 )
 from app.application.manage_mandate_live_proof import (
     MANAGE_MANDATE_LIVE_BLOCKERS_CLEARED,
@@ -190,7 +190,7 @@ def _opportunity_proof_steps(scope: Mapping[str, object]) -> tuple[OpportunityPr
         _proof_step(
             scope,
             "low_income_core_cashflow_live",
-            low_income_core_cashflow_live_proof_is_valid,
+            low_income_cashflow_runtime_execution_is_valid,
             _apply_low_income_core_cashflow_live_proof,
         ),
         _proof_step(
@@ -475,7 +475,7 @@ def _apply_low_income_core_cashflow_live_proof(
     return apply_blocker_proof(
         capability,
         capability_ids=("opportunity-archetype-scenarios",),
-        blockers_cleared=LOW_INCOME_CORE_CASHFLOW_LIVE_BLOCKERS_CLEARED,
+        blockers_cleared=LOW_INCOME_CASHFLOW_RUNTIME_BLOCKERS_SATISFIED,
         proof_ref=low_income_core_cashflow_live_proof_ref,
     )
 
