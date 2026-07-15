@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import replace
 from datetime import UTC, date, datetime, timedelta
 from copy import deepcopy
+from typing import Any
 
 import pytest
 
@@ -109,7 +110,7 @@ def test_unqualified_authoritative_evidence_cannot_clear_aggregate_blocker(
     assert not core_benchmark_assignment_runtime_execution_is_valid(payload)
 
 
-def _valid_payload() -> dict[str, object]:
+def _valid_payload() -> dict[str, Any]:
     result = evaluate_core_benchmark_assignment_readiness(_command(), core_source=RecordingSource())
     return deepcopy(
         build_core_benchmark_assignment_runtime_execution(generated_at_utc=NOW, result=result)
