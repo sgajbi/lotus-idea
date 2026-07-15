@@ -97,6 +97,7 @@ def source_receipt_is_valid(
     value: object,
     *,
     product_id: str,
+    source_system: SourceSystem,
     as_of_date: date,
     evaluated_at_utc: datetime,
 ) -> bool:
@@ -104,7 +105,7 @@ def source_receipt_is_valid(
         return False
     if (
         value.get("productId") != product_id
-        or value.get("sourceSystem") != SourceSystem.LOTUS_RISK.value
+        or value.get("sourceSystem") != source_system.value
         or value.get("asOfDate") != as_of_date.isoformat()
         or value.get("freshness") != EvidenceFreshness.CURRENT.value
     ):

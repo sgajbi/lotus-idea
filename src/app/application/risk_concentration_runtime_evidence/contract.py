@@ -138,6 +138,7 @@ def _execution_is_valid(execution: Mapping[str, Any], *, generated_at_utc: datet
     if not source_receipt_is_valid(
         source,
         product_id=_PRODUCT_ID,
+        source_system=SourceSystem.LOTUS_RISK,
         as_of_date=as_of_date,
         evaluated_at_utc=evaluated_at_utc,
     ):

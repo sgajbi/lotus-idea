@@ -9,7 +9,7 @@ from app.application.drawdown_review_signal import (
     EvaluateAndPersistDrawdownReviewFromRiskCommand,
 )
 from app.application.risk_runtime_evidence import (
-    RiskRuntimeExecutionBuilder,
+    SourceRuntimeExecutionBuilder,
     build_risk_runtime_command_fingerprint,
     build_runtime_receipts,
     source_ref_matches_risk_request,
@@ -97,10 +97,10 @@ def _format_utc(value: datetime) -> str:
     return value.astimezone(UTC).isoformat().replace("+00:00", "Z")
 
 
-_RUNTIME_EXECUTION_BUILDER: RiskRuntimeExecutionBuilder[
+_RUNTIME_EXECUTION_BUILDER: SourceRuntimeExecutionBuilder[
     EvaluateAndPersistDrawdownReviewFromRiskCommand,
     DrawdownReviewSignalPersistenceResult,
-] = RiskRuntimeExecutionBuilder(
+] = SourceRuntimeExecutionBuilder(
     build_receipts=lambda command, result: build_runtime_receipts(
         candidate=result.evaluation.candidate,
         persistence=result.persistence,
@@ -116,6 +116,11 @@ _RUNTIME_EXECUTION_BUILDER: RiskRuntimeExecutionBuilder[
     ),
     build_payload=_payload,
     read_diagnostics=lambda result: result.source_diagnostic_codes,
+    blocking_diagnostic_codes=frozenset(
+        {"risk_source_unavailable", "risk_source_entitlement_denied"}
+    ),
+    source_execution_blocker="risk_source_execution_blocked",
+    default_source_error="risk_source_unavailable",
 )
 build_risk_drawdown_runtime_execution = _RUNTIME_EXECUTION_BUILDER.build_completed
 build_blocked_risk_drawdown_runtime_execution = _RUNTIME_EXECUTION_BUILDER.build_blocked
