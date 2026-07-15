@@ -8,6 +8,8 @@ from pathlib import Path
 import subprocess
 from typing import Any
 
+from app.domain.proof_evidence import parse_timezone_aware_datetime
+
 AGGREGATE_PROOF_PROVENANCE_KEY = "aggregateProofProvenance"
 MAX_AGGREGATE_PROOF_AGE = timedelta(hours=24)
 SOURCE_REVISION_ENV = "LOTUS_IDEA_SOURCE_REVISION"
@@ -22,7 +24,7 @@ def bind_aggregate_proof_provenance(
     repository_root: Path,
 ) -> dict[str, Any]:
     bound_payload = dict(payload)
-    generated_at_utc = _parse_timezone_aware_datetime(payload.get("generatedAtUtc"))
+    generated_at_utc = parse_timezone_aware_datetime(payload.get("generatedAtUtc"))
     bound_payload[AGGREGATE_PROOF_PROVENANCE_KEY] = {
         "repository": "lotus-idea",
         "proofRef": proof_ref,
@@ -45,7 +47,7 @@ def aggregate_proof_artifact_is_current(
         return False
     if not proof_ref:
         return False
-    generated_at_utc = _parse_timezone_aware_datetime(payload.get("generatedAtUtc"))
+    generated_at_utc = parse_timezone_aware_datetime(payload.get("generatedAtUtc"))
     if generated_at_utc is None:
         return False
     evaluated_at_utc = evaluated_at_utc.astimezone(UTC)
@@ -115,18 +117,6 @@ def _sha256_file(path: Path) -> str:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
-
-
-def _parse_timezone_aware_datetime(value: object) -> datetime | None:
-    if not isinstance(value, str) or not value.strip():
-        return None
-    try:
-        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
-    except ValueError:
-        return None
-    if parsed.tzinfo is None or parsed.utcoffset() is None:
-        return None
-    return parsed.astimezone(UTC)
 
 
 def _format_utc(value: datetime) -> str:
