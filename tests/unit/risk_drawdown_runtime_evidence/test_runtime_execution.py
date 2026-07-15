@@ -84,6 +84,34 @@ def test_runtime_execution_rejects_unknown_or_inflated_claims(
 
 
 @pytest.mark.parametrize(
+    ("path", "value"),
+    (
+        (("schemaVersion",), "lotus-idea.risk-drawdown.runtime-execution.v1"),
+        (("repository",), "lotus-risk"),
+        (("evidenceClass",), "source_contract"),
+        (("proofFamily",), "risk_volatility"),
+        (("proofType",), "lotus_risk_drawdown_calculation"),
+        (("sourceAuthority",), "lotus-idea"),
+        (("nonProofClaims",), {}),
+        (("nonProofClaims", "officialRiskCalculationOwned"), "lotus-idea"),
+        (("remainingCertificationBlockers",), []),
+        (("evidenceRefs",), []),
+    ),
+)
+def test_runtime_execution_rejects_authority_or_readiness_contract_substitution(
+    path: tuple[str, ...],
+    value: object,
+) -> None:
+    payload = deepcopy(runtime_execution())
+    target: Any = payload
+    for key in path[:-1]:
+        target = target[key]
+    target[path[-1]] = value
+
+    assert risk_drawdown_runtime_execution_is_valid(payload) is False
+
+
+@pytest.mark.parametrize(
     ("receipt_name", "field", "value"),
     (
         ("sourceReceipt", "contentHash", "sha256:forged"),
