@@ -165,11 +165,24 @@ def test_opportunity_archetype_contract_records_manage_foundation_without_promot
     assert "lotus-manage:PortfolioActionRegister:v1" in allocation_drift.source_products
     assert "src/app/application/mandate_health_signal.py" in allocation_drift.evidence_refs
     assert "src/app/api/allocation_drift_signals.py" in allocation_drift.evidence_refs
-    assert "src/app/application/manage_mandate_live_proof.py" in allocation_drift.evidence_refs
+    assert (
+        "src/app/application/manage_mandate_runtime_evidence/runtime_execution.py"
+        in allocation_drift.evidence_refs
+    )
+    assert (
+        "src/app/application/manage_mandate_runtime_evidence/contract.py"
+        in allocation_drift.evidence_refs
+    )
     assert "src/app/infrastructure/lotus_manage_sources.py" in allocation_drift.evidence_refs
-    assert "scripts/generate_manage_mandate_live_proof.py" in allocation_drift.evidence_refs
+    assert (
+        "scripts/manage_mandate_runtime_evidence/generate_runtime_execution.py"
+        in allocation_drift.evidence_refs
+    )
     assert "make manage-mandate-live-proof-contract-gate" in allocation_drift.evidence_refs
-    assert "tests/unit/test_manage_mandate_live_proof.py" in allocation_drift.evidence_refs
+    assert (
+        "tests/unit/manage_mandate_runtime_evidence/test_runtime_execution.py"
+        in allocation_drift.evidence_refs
+    )
     assert "tests/integration/test_allocation_drift_signal_api.py" in (
         allocation_drift.evidence_refs
     )

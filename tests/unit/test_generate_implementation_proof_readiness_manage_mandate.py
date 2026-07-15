@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 
 import scripts.generate_implementation_proof_readiness as proof_report
-from app.application.manage_mandate_live_proof import build_manage_mandate_live_proof_payload
+from tests.support.manage_mandate_runtime_evidence import valid_manage_mandate_runtime_evidence
 
 
 def test_generate_implementation_proof_readiness_uses_explicit_manage_mandate_live_proof(
@@ -14,25 +14,8 @@ def test_generate_implementation_proof_readiness_uses_explicit_manage_mandate_li
     manage_proof = tmp_path / "manage-mandate-live-proof.json"
     manage_proof.write_text(
         json.dumps(
-            build_manage_mandate_live_proof_payload(
-                generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
-                live_manage_source_attempted=True,
-                evaluation_summary={
-                    "runStatus": "completed",
-                    "sourceAuthority": "lotus-manage",
-                    "sourceProductId": "lotus-manage:PortfolioActionRegister:v1",
-                    "evaluationOutcome": "candidate_created",
-                    "sourceEvidenceCurrent": True,
-                    "portfolioScopeConfirmed": True,
-                    "manageActionRegisterReady": True,
-                    "mandatePerformanceHealthSourceRefCurrent": True,
-                    "mandateRiskHealthSourceRefCurrent": True,
-                    "workflowDecisionCount": 2,
-                    "lineageEdgeCount": 1,
-                    "sourceDiagnosticCodes": ["manage_action_register_ready_portfolio_scope"],
-                    "reasonCodes": ["review_required"],
-                    "unsupportedReasons": [],
-                },
+            valid_manage_mandate_runtime_evidence(
+                evaluated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
             )
         ),
         encoding="utf-8",

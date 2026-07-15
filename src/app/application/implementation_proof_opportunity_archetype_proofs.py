@@ -26,9 +26,11 @@ from app.application.low_income_cashflow_runtime_evidence import (
     LOW_INCOME_CASHFLOW_RUNTIME_BLOCKERS_SATISFIED,
     low_income_cashflow_runtime_execution_is_valid,
 )
-from app.application.manage_mandate_live_proof import (
-    MANAGE_MANDATE_LIVE_BLOCKERS_CLEARED,
-    manage_mandate_live_proof_is_valid,
+from app.application.manage_mandate_runtime_evidence import (
+    manage_mandate_runtime_execution_is_valid,
+)
+from app.application.manage_mandate_runtime_evidence.runtime_execution import (
+    MANAGE_MANDATE_RUNTIME_BLOCKERS_SATISFIED,
 )
 from app.application.mandate_restriction_live_proof import (
     MANDATE_RESTRICTION_LIVE_BLOCKERS_CLEARED,
@@ -196,8 +198,8 @@ def _opportunity_proof_steps(scope: Mapping[str, object]) -> tuple[OpportunityPr
         _proof_step(
             scope,
             "manage_mandate_live",
-            manage_mandate_live_proof_is_valid,
-            _apply_manage_mandate_live_proof,
+            manage_mandate_runtime_execution_is_valid,
+            _apply_manage_mandate_runtime_execution,
         ),
         _proof_step(
             scope,
@@ -480,14 +482,14 @@ def _apply_low_income_core_cashflow_live_proof(
     )
 
 
-def _apply_manage_mandate_live_proof(
+def _apply_manage_mandate_runtime_execution(
     capability: ImplementationProofCapabilityReadiness,
     manage_mandate_live_proof_ref: str | None,
 ) -> ImplementationProofCapabilityReadiness:
     return apply_blocker_proof(
         capability,
         capability_ids=("opportunity-archetype-scenarios",),
-        blockers_cleared=MANAGE_MANDATE_LIVE_BLOCKERS_CLEARED,
+        blockers_cleared=MANAGE_MANDATE_RUNTIME_BLOCKERS_SATISFIED,
         proof_ref=manage_mandate_live_proof_ref,
     )
 

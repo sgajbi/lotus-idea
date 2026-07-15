@@ -5,8 +5,8 @@ from datetime import UTC, datetime
 from app.application.implementation_proof_readiness import (
     build_implementation_proof_readiness_snapshot,
 )
-from app.application.manage_mandate_live_proof import build_manage_mandate_live_proof_payload
 from app.domain import InMemoryIdeaRepository
+from tests.support.manage_mandate_runtime_evidence import valid_manage_mandate_runtime_evidence
 from tests.support.proof_provenance import bound_aggregate_proof
 
 PROOF_REF = "output/opportunity/manage-mandate-live-proof.json"
@@ -86,25 +86,8 @@ def test_implementation_proof_readiness_uses_manage_mandate_live_proof_without_p
 
 def _valid_manage_mandate_live_proof() -> dict[str, object]:
     return bound_aggregate_proof(
-        build_manage_mandate_live_proof_payload(
-            generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
-            live_manage_source_attempted=True,
-            evaluation_summary={
-                "runStatus": "completed",
-                "sourceAuthority": "lotus-manage",
-                "sourceProductId": "lotus-manage:PortfolioActionRegister:v1",
-                "evaluationOutcome": "candidate_created",
-                "sourceEvidenceCurrent": True,
-                "portfolioScopeConfirmed": True,
-                "manageActionRegisterReady": True,
-                "mandatePerformanceHealthSourceRefCurrent": True,
-                "mandateRiskHealthSourceRefCurrent": True,
-                "workflowDecisionCount": 2,
-                "lineageEdgeCount": 1,
-                "sourceDiagnosticCodes": ["manage_action_register_ready_portfolio_scope"],
-                "reasonCodes": ["review_required"],
-                "unsupportedReasons": [],
-            },
+        valid_manage_mandate_runtime_evidence(
+            evaluated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
         ),
         PROOF_REF,
     )
