@@ -27,6 +27,18 @@ PROHIBITED_SUFFIXES = {
 }
 
 REQUIRED_BOUNDED_MODULE_PATHS = {
+    "scripts/high_volatility_runtime_evidence/__init__.py",
+    "scripts/high_volatility_runtime_evidence/generate_runtime_execution.py",
+    "scripts/high_volatility_runtime_evidence/runtime_execution_contract_gate.py",
+    "src/app/application/high_volatility_runtime_evidence/__init__.py",
+    "src/app/application/high_volatility_runtime_evidence/contract.py",
+    "src/app/application/high_volatility_runtime_evidence/runtime_execution.py",
+    "src/app/application/risk_runtime_evidence/__init__.py",
+    "src/app/application/risk_runtime_evidence/receipts.py",
+    "tests/support/high_volatility_runtime_evidence.py",
+    "tests/unit/high_volatility_runtime_evidence/__init__.py",
+    "tests/unit/high_volatility_runtime_evidence/test_contract_gate.py",
+    "tests/unit/high_volatility_runtime_evidence/test_runtime_execution.py",
     "scripts/risk_concentration_runtime_evidence/__init__.py",
     "scripts/risk_concentration_runtime_evidence/generate_runtime_execution.py",
     "scripts/risk_concentration_runtime_evidence/runtime_execution_contract_gate.py",
@@ -260,6 +272,10 @@ REQUIRED_BOUNDED_MODULE_PATHS = {
 }
 
 PROHIBITED_LEGACY_MODULE_PATHS = {
+    "scripts/generate_high_volatility_live_proof.py",
+    "scripts/high_volatility_live_proof_contract_gate.py",
+    "src/app/application/high_volatility_live_proof.py",
+    "tests/unit/test_high_volatility_live_proof.py",
     "scripts/generate_risk_concentration_live_proof.py",
     "scripts/risk_concentration_live_proof_contract_gate.py",
     "src/app/application/risk_concentration_live_proof.py",

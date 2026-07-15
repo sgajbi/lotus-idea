@@ -10,9 +10,9 @@ from app.application.bond_maturity_live_proof import (
 from app.application.implementation_proof_capability_updates import apply_blocker_proof
 from app.application.implementation_proof_models import ImplementationProofCapabilityReadiness
 from app.application.proof_provenance import aggregate_proof_artifact_is_current
-from app.application.high_volatility_live_proof import (
-    HIGH_VOLATILITY_LIVE_BLOCKERS_CLEARED,
-    high_volatility_live_proof_is_valid,
+from app.application.high_volatility_runtime_evidence import (
+    HIGH_VOLATILITY_RUNTIME_BLOCKERS_SATISFIED,
+    high_volatility_runtime_execution_is_valid,
 )
 from app.application.core_benchmark_assignment_live_proof import (
     CORE_BENCHMARK_ASSIGNMENT_LIVE_BLOCKERS_CLEARED,
@@ -154,7 +154,7 @@ def _opportunity_proof_steps(scope: Mapping[str, object]) -> tuple[OpportunityPr
         _proof_step(
             scope,
             "high_volatility_live",
-            high_volatility_live_proof_is_valid,
+            high_volatility_runtime_execution_is_valid,
             _apply_high_volatility_live_proof,
         ),
         _proof_step(
@@ -403,7 +403,7 @@ def _apply_high_volatility_live_proof(
     return apply_blocker_proof(
         capability,
         capability_ids=("opportunity-archetype-scenarios",),
-        blockers_cleared=HIGH_VOLATILITY_LIVE_BLOCKERS_CLEARED,
+        blockers_cleared=HIGH_VOLATILITY_RUNTIME_BLOCKERS_SATISFIED,
         proof_ref=high_volatility_live_proof_ref,
     )
 

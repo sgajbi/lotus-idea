@@ -28,7 +28,7 @@ from app.application.workbench.discovery_contract_proof import (
 from app.application.workbench.contract_proof import (
     GATEWAY_WORKBENCH_CONTRACT_PROOF_ENV,
 )
-from app.application.high_volatility_live_proof import HIGH_VOLATILITY_LIVE_PROOF_ENV
+from app.application.high_volatility_runtime_evidence import HIGH_VOLATILITY_RUNTIME_EXECUTION_ENV
 from app.application.low_income_core_cashflow_live_proof import (
     LOW_INCOME_CORE_CASHFLOW_LIVE_PROOF_ENV,
 )
@@ -189,7 +189,7 @@ PROOF_ARTIFACT_ARGS: tuple[tuple[str, str, str], ...] = (
     ),
     (
         "--high-volatility-live-proof",
-        HIGH_VOLATILITY_LIVE_PROOF_ENV,
+        HIGH_VOLATILITY_RUNTIME_EXECUTION_ENV,
         "Optional lotus-risk high-volatility live source proof artifact path.",
     ),
     (
