@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import replace
 from datetime import UTC, date, datetime, timedelta
 from copy import deepcopy
+import hashlib
+import json
 from typing import Any
 
 import pytest
@@ -84,6 +86,99 @@ def test_validator_rejects_unknown_or_inflated_claims() -> None:
     inflated["nonProofClaims"]["performanceMethodologyCertified"] = True
     assert not core_benchmark_assignment_runtime_execution_is_valid(unknown)
     assert not core_benchmark_assignment_runtime_execution_is_valid(inflated)
+
+
+@pytest.mark.parametrize(
+    "failure_mode",
+    ["blank_tenant", "naive_evaluation_time", "invalid_currency"],
+)
+def test_command_rejects_invalid_scope_time_and_currency(failure_mode: str) -> None:
+    with pytest.raises(ValueError):
+        if failure_mode == "blank_tenant":
+            replace(_command(), tenant_id="")
+        elif failure_mode == "naive_evaluation_time":
+            replace(_command(), evaluated_at_utc=datetime(2026, 6, 21, 10, 10))
+        else:
+            replace(_command(), reporting_currency="US")
+
+
+def test_builder_requires_timezone_aware_generation_time() -> None:
+    result = evaluate_core_benchmark_assignment_readiness(_command(), core_source=RecordingSource())
+    with pytest.raises(ValueError, match="generated_at_utc must be timezone-aware"):
+        build_core_benchmark_assignment_runtime_execution(
+            generated_at_utc=datetime(2026, 6, 21, 10, 10), result=result
+        )
+
+
+@pytest.mark.parametrize(
+    "failure_mode",
+    ["missing_ref", "scope_mismatch", "entitlement_denied"],
+)
+def test_source_authority_scope_and_entitlement_fail_closed(failure_mode: str) -> None:
+    evidence = _evidence()
+    if failure_mode == "missing_ref":
+        evidence = replace(evidence, benchmark_assignment_ref=None)
+    elif failure_mode == "scope_mismatch":
+        evidence = replace(
+            evidence,
+            benchmark_assignment_ref=replace(_source_ref(), as_of_date=date(2026, 6, 20)),
+        )
+    else:
+        evidence = replace(evidence, entitlement_allowed=False)
+    result = evaluate_core_benchmark_assignment_readiness(
+        _command(), core_source=RecordingSource(evidence)
+    )
+    payload = build_core_benchmark_assignment_runtime_execution(generated_at_utc=NOW, result=result)
+    assert payload["execution"]["qualificationBlockers"]
+    assert not core_benchmark_assignment_runtime_execution_is_valid(payload)
+
+
+@pytest.mark.parametrize(
+    "failure_mode",
+    [
+        "malformed_generated_time",
+        "wrong_source_authority",
+        "malformed_claims",
+        "missing_source_receipt",
+        "invalid_as_of_date",
+        "malformed_identity_hash",
+        "lowercase_currency",
+        "empty_source_route",
+        "empty_diagnostic",
+        "wrong_aggregate_blockers",
+        "wrong_remaining_blockers",
+    ],
+)
+def test_closed_contract_rejects_malformed_receipts_and_control_fields(failure_mode: str) -> None:
+    payload = _valid_payload()
+    execution = payload["execution"]
+    if failure_mode == "malformed_generated_time":
+        payload["generatedAtUtc"] = "not-an-instant"
+    elif failure_mode == "wrong_source_authority":
+        payload["sourceAuthority"] = "lotus-performance"
+    elif failure_mode == "malformed_claims":
+        payload["nonProofClaims"] = {}
+    elif failure_mode == "missing_source_receipt":
+        execution["sourceReceipt"] = None
+    elif failure_mode == "invalid_as_of_date":
+        execution["requestReceipt"]["asOfDate"] = "not-a-date"
+        _refresh_digest(execution["requestReceipt"], "requestDigest")
+    elif failure_mode == "malformed_identity_hash":
+        execution["requestReceipt"]["tenantIdHash"] = "not-a-sha256"
+        _refresh_digest(execution["requestReceipt"], "requestDigest")
+    elif failure_mode == "lowercase_currency":
+        execution["requestReceipt"]["reportingCurrency"] = "usd"
+        _refresh_digest(execution["requestReceipt"], "requestDigest")
+    elif failure_mode == "empty_source_route":
+        execution["sourceReceipt"]["route"] = ""
+        _refresh_digest(execution["sourceReceipt"], "receiptDigest")
+    elif failure_mode == "empty_diagnostic":
+        execution["diagnosticCode"] = ""
+    elif failure_mode == "wrong_aggregate_blockers":
+        payload["aggregateBlockersSatisfied"] = []
+    else:
+        payload["remainingCertificationBlockers"] = []
+    assert not core_benchmark_assignment_runtime_execution_is_valid(payload)
 
 
 @pytest.mark.parametrize(
@@ -177,3 +272,9 @@ def _source_ref() -> SourceRef:
         data_quality_status="complete",
         freshness=EvidenceFreshness.CURRENT,
     )
+
+
+def _refresh_digest(receipt: dict[str, Any], digest_key: str) -> None:
+    material = {key: value for key, value in receipt.items() if key != digest_key}
+    encoded = json.dumps(material, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    receipt[digest_key] = f"sha256:{hashlib.sha256(encoded).hexdigest()}"
