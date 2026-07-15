@@ -281,8 +281,7 @@ def test_implementation_proof_readiness_capabilities_are_source_safe() -> None:
     assert "make source-ingestion-scheduled-worker-check" in source_ingestion.evidence_refs
     assert "make source-ingestion-runtime-execution-contract-gate" in source_ingestion.evidence_refs
     assert (
-        "scripts/source_ingestion/generate_runtime_execution.py"
-        in source_ingestion.evidence_refs
+        "scripts/source_ingestion/generate_runtime_execution.py" in source_ingestion.evidence_refs
     )
     assert "scripts/generate_scheduled_source_ingestion_worker_proof.py" in (
         source_ingestion.evidence_refs

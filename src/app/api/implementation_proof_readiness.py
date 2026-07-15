@@ -223,9 +223,7 @@ def _build_readiness_snapshot_from_configured_artifacts(
         evaluated_at_utc=evaluated_at_utc,
         repository=repository,
         durable_storage_backed=durable_storage_backed,
-        source_ingestion_runtime_execution=(
-            proof_artifacts.source_ingestion_runtime_execution
-        ),
+        source_ingestion_runtime_execution=(proof_artifacts.source_ingestion_runtime_execution),
         source_ingestion_runtime_execution_ref=(
             proof_artifacts.source_ingestion_runtime_execution_ref
         ),

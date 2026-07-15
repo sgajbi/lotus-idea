@@ -47,7 +47,7 @@ def test_configured_implementation_proof_artifacts_loads_relative_source_safe_re
     tmp_path: Path,
 ) -> None:
     durable_path = tmp_path / "output" / "persistence" / "durable-repository-proof.json"
-    source_ingestion_live_path = (
+    source_ingestion_runtime_execution_path = (
         tmp_path / "output" / "source-ingestion" / "source-ingestion-runtime-execution.json"
     )
     runtime_path = (
@@ -82,7 +82,7 @@ def test_configured_implementation_proof_artifacts_loads_relative_source_safe_re
     )
     _write_artifacts(
         durable_path,
-        source_ingestion_live_path,
+        source_ingestion_runtime_execution_path,
         runtime_path,
         ai_lineage_path,
         ai_workflow_pack_path,
