@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime, timedelta
+from typing import Any
 
 from app.application.bond_maturity_runtime_evidence import (
     EvaluateBondMaturityReadiness,
@@ -104,7 +105,7 @@ def valid_bond_maturity_runtime_evidence(
     evaluated_at_utc: datetime,
     as_of_date: date | None = None,
     opportunity_detected: bool = True,
-) -> dict[str, object]:
+) -> dict[str, Any]:
     command = EvaluateBondMaturityReadiness(
         tenant_id="test-tenant",
         portfolio_id="test-portfolio",
