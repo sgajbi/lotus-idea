@@ -64,9 +64,7 @@ def validate_bond_maturity_runtime_execution_contract() -> list[str]:
     payload = build_bond_maturity_runtime_execution(generated_at_utc=NOW, result=result)
     if not bond_maturity_runtime_execution_is_valid(payload):
         errors.append("authoritative Core bond-maturity runtime fixture must validate")
-    if payload.get("aggregateBlockersSatisfied") != list(
-        BOND_MATURITY_RUNTIME_BLOCKERS_SATISFIED
-    ):
+    if payload.get("aggregateBlockersSatisfied") != list(BOND_MATURITY_RUNTIME_BLOCKERS_SATISFIED):
         errors.append("runtime evidence must satisfy only the bond-maturity Core source blocker")
     if payload.get("remainingCertificationBlockers") != list(BOND_MATURITY_REMAINING_BLOCKERS):
         errors.append("runtime evidence must preserve unrelated certification blockers")

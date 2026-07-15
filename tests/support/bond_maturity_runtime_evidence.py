@@ -94,9 +94,7 @@ def authoritative_bond_maturity_evidence(
         policy_version="holdings-policy-v1",
         source_correlation_id=request.correlation_id,
         maturity_diagnostic=(
-            "core_maturity_evidence_ready"
-            if opportunity_detected
-            else "core_maturity_window_empty"
+            "core_maturity_evidence_ready" if opportunity_detected else "core_maturity_window_empty"
         ),
     )
 
@@ -118,9 +116,7 @@ def valid_bond_maturity_runtime_evidence(
     )
     result = evaluate_bond_maturity_readiness(
         command,
-        core_source=AuthoritativeCoreBondMaturitySource(
-            opportunity_detected=opportunity_detected
-        ),
+        core_source=AuthoritativeCoreBondMaturitySource(opportunity_detected=opportunity_detected),
     )
     return build_bond_maturity_runtime_execution(
         generated_at_utc=evaluated_at_utc,

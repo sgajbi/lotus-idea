@@ -75,9 +75,7 @@ def test_use_case_preserves_scope_and_builds_source_safe_closed_receipts() -> No
     assert receipt["maturityBasis"] == "CONTRACTUAL_INSTRUMENT_MATURITY_DATE"
     assert receipt["supportabilityStatus"] == "SUPPORTED"
     assert payload["execution"]["opportunityDetected"] is True
-    assert payload["aggregateBlockersSatisfied"] == list(
-        BOND_MATURITY_RUNTIME_BLOCKERS_SATISFIED
-    )
+    assert payload["aggregateBlockersSatisfied"] == list(BOND_MATURITY_RUNTIME_BLOCKERS_SATISFIED)
     assert payload["remainingCertificationBlockers"] == list(BOND_MATURITY_REMAINING_BLOCKERS)
     assert payload["nonProofClaims"]["maturityFactsOwned"] == "lotus-core"
     assert all(
@@ -117,24 +115,72 @@ def test_supported_empty_window_is_valid_without_false_opportunity() -> None:
             ),
             "core_maturity_evidence_not_current",
         ),
-        (lambda value: replace(value, holdings_ref=None), "core_maturity_upstream_holdings_ref_missing"),
-        (lambda value: replace(value, entitlement_allowed=False), "core_maturity_entitlement_denied"),
-        (lambda value: replace(value, response_product_name="Other"), "core_maturity_product_identity_mismatch"),
-        (lambda value: replace(value, response_tenant_id="tenant-b"), "core_maturity_response_scope_mismatch"),
-        (lambda value: replace(value, response_portfolio_id="portfolio-b"), "core_maturity_response_scope_mismatch"),
+        (
+            lambda value: replace(value, holdings_ref=None),
+            "core_maturity_upstream_holdings_ref_missing",
+        ),
+        (
+            lambda value: replace(value, entitlement_allowed=False),
+            "core_maturity_entitlement_denied",
+        ),
+        (
+            lambda value: replace(value, response_product_name="Other"),
+            "core_maturity_product_identity_mismatch",
+        ),
+        (
+            lambda value: replace(value, response_tenant_id="tenant-b"),
+            "core_maturity_response_scope_mismatch",
+        ),
+        (
+            lambda value: replace(value, response_portfolio_id="portfolio-b"),
+            "core_maturity_response_scope_mismatch",
+        ),
         (lambda value: replace(value, horizon_days=31), "core_maturity_window_scope_mismatch"),
-        (lambda value: replace(value, include_projected=True), "core_maturity_window_scope_mismatch"),
-        (lambda value: replace(value, maturity_basis="CALL_DATE"), "core_maturity_basis_unsupported"),
-        (lambda value: replace(value, source_reported_maturing_position_count=-1), "core_maturity_counts_invalid"),
-        (lambda value: replace(value, source_reported_next_maturity_date=None), "core_maturity_fact_inconsistent"),
-        (lambda value: replace(value, supportability_status="PARTIAL"), "core_maturity_supportability_not_supported"),
-        (lambda value: replace(value, supportability_reasons=("HOLDINGS_PARTIAL",)), "core_maturity_supportability_reasons_present"),
-        (lambda value: replace(value, missing_maturity_date_count=1), "core_maturity_dates_incomplete"),
-        (lambda value: replace(value, unsupported_maturity_feature_count=1), "core_maturity_product_features_unsupported"),
-        (lambda value: replace(value, request_fingerprint="summary"), "core_maturity_request_fingerprint_invalid"),
+        (
+            lambda value: replace(value, include_projected=True),
+            "core_maturity_window_scope_mismatch",
+        ),
+        (
+            lambda value: replace(value, maturity_basis="CALL_DATE"),
+            "core_maturity_basis_unsupported",
+        ),
+        (
+            lambda value: replace(value, source_reported_maturing_position_count=-1),
+            "core_maturity_counts_invalid",
+        ),
+        (
+            lambda value: replace(value, source_reported_next_maturity_date=None),
+            "core_maturity_fact_inconsistent",
+        ),
+        (
+            lambda value: replace(value, supportability_status="PARTIAL"),
+            "core_maturity_supportability_not_supported",
+        ),
+        (
+            lambda value: replace(value, supportability_reasons=("HOLDINGS_PARTIAL",)),
+            "core_maturity_supportability_reasons_present",
+        ),
+        (
+            lambda value: replace(value, missing_maturity_date_count=1),
+            "core_maturity_dates_incomplete",
+        ),
+        (
+            lambda value: replace(value, unsupported_maturity_feature_count=1),
+            "core_maturity_product_features_unsupported",
+        ),
+        (
+            lambda value: replace(value, request_fingerprint="summary"),
+            "core_maturity_request_fingerprint_invalid",
+        ),
         (lambda value: replace(value, snapshot_id=None), "core_maturity_snapshot_identity_missing"),
-        (lambda value: replace(value, response_content_hash="sha256:" + "c" * 64), "core_maturity_source_digest_mismatch"),
-        (lambda value: replace(value, reconciliation_status="UNKNOWN"), "core_maturity_reconciliation_incomplete"),
+        (
+            lambda value: replace(value, response_content_hash="sha256:" + "c" * 64),
+            "core_maturity_source_digest_mismatch",
+        ),
+        (
+            lambda value: replace(value, reconciliation_status="UNKNOWN"),
+            "core_maturity_reconciliation_incomplete",
+        ),
         (
             lambda value: replace(
                 value,
@@ -142,9 +188,18 @@ def test_supported_empty_window_is_valid_without_false_opportunity() -> None:
             ),
             "core_maturity_data_quality_incomplete",
         ),
-        (lambda value: replace(value, source_evidence_current=False), "core_maturity_source_current_posture_missing"),
-        (lambda value: replace(value, latest_evidence_at_utc=NOW + timedelta(seconds=1)), "core_maturity_latest_evidence_time_invalid"),
-        (lambda value: replace(value, source_correlation_id="corr-b"), "core_maturity_correlation_binding_missing"),
+        (
+            lambda value: replace(value, source_evidence_current=False),
+            "core_maturity_source_current_posture_missing",
+        ),
+        (
+            lambda value: replace(value, latest_evidence_at_utc=NOW + timedelta(seconds=1)),
+            "core_maturity_latest_evidence_time_invalid",
+        ),
+        (
+            lambda value: replace(value, source_correlation_id="corr-b"),
+            "core_maturity_correlation_binding_missing",
+        ),
     ],
 )
 def test_domain_failures_cannot_clear_aggregate_blocker(
