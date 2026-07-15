@@ -4,7 +4,7 @@ from datetime import UTC, date, datetime
 from typing import Any, Protocol
 
 from app.application.candidate_persistence_identity import build_candidate_idempotency_payload
-from app.application.risk_runtime_evidence.receipts import sha256_json
+from app.application.source_runtime_evidence.receipts import sha256_json
 from app.domain import OpportunityFamily, SignalEvaluationResult, SourceRef, SourceSystem
 
 

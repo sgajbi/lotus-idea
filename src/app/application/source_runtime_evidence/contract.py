@@ -4,13 +4,13 @@ from collections.abc import Mapping
 from datetime import date, datetime
 from typing import Any
 
-from app.application.risk_runtime_evidence.receipts import (
+from app.application.source_runtime_evidence.receipts import (
     is_sha256,
     persistence_receipt_is_valid,
     source_evidence_hash,
     source_receipt_is_valid,
 )
-from app.domain import OpportunityFamily
+from app.domain import OpportunityFamily, SourceSystem
 from app.domain.proof_evidence import parse_timezone_aware_datetime
 
 
@@ -19,6 +19,7 @@ def runtime_execution_receipts_are_valid(
     *,
     generated_at_utc: datetime,
     product_id: str,
+    source_system: SourceSystem,
     family: OpportunityFamily,
     period_name_required: bool,
 ) -> bool:
@@ -43,6 +44,7 @@ def runtime_execution_receipts_are_valid(
     if not source_receipt_is_valid(
         source,
         product_id=product_id,
+        source_system=source_system,
         as_of_date=as_of_date,
         evaluated_at_utc=evaluated_at_utc,
     ):

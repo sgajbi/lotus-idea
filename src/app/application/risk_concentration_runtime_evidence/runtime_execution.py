@@ -16,7 +16,7 @@ from app.domain import (
 )
 from app.domain.proof_evidence import EvidenceClass
 from app.application.risk_runtime_evidence import (
-    RiskRuntimeExecutionBuilder,
+    SourceRuntimeExecutionBuilder,
     build_runtime_receipts,
     sha256_json,
 )
@@ -144,10 +144,15 @@ def _format_utc(value: datetime) -> str:
     return value.astimezone(UTC).isoformat().replace("+00:00", "Z")
 
 
-_RUNTIME_EXECUTION_BUILDER = RiskRuntimeExecutionBuilder(
+_RUNTIME_EXECUTION_BUILDER = SourceRuntimeExecutionBuilder(
     build_receipts=_receipts,
     build_payload=_payload,
     read_diagnostics=lambda result: result.source_diagnostic_codes,
+    blocking_diagnostic_codes=frozenset(
+        {"risk_source_unavailable", "risk_source_entitlement_denied"}
+    ),
+    source_execution_blocker="risk_source_execution_blocked",
+    default_source_error="risk_source_unavailable",
 )
 build_risk_concentration_runtime_execution = _RUNTIME_EXECUTION_BUILDER.build_completed
 build_blocked_risk_concentration_runtime_execution = _RUNTIME_EXECUTION_BUILDER.build_blocked

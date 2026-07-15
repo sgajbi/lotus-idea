@@ -26,10 +26,13 @@ DiagnosticReader = Callable[[ResultT], Collection[str]]
 
 
 @dataclass(frozen=True)
-class RiskRuntimeExecutionBuilder(Generic[CommandT, ResultT]):
+class SourceRuntimeExecutionBuilder(Generic[CommandT, ResultT]):
     build_receipts: ReceiptBuilder[CommandT, ResultT]
     build_payload: PayloadBuilder[CommandT]
     read_diagnostics: DiagnosticReader[ResultT]
+    blocking_diagnostic_codes: frozenset[str]
+    source_execution_blocker: str
+    default_source_error: str
 
     def build_completed(
         self,
@@ -46,6 +49,8 @@ class RiskRuntimeExecutionBuilder(Generic[CommandT, ResultT]):
             source_receipt=source_receipt,
             persistence_receipt=persistence_receipt,
             diagnostic_codes=self.read_diagnostics(result),
+            blocking_diagnostic_codes=self.blocking_diagnostic_codes,
+            source_execution_blocker=self.source_execution_blocker,
         )
         return self.build_payload(
             generated_at_utc,
@@ -69,6 +74,7 @@ class RiskRuntimeExecutionBuilder(Generic[CommandT, ResultT]):
         blockers = blocked_runtime_qualification_blockers(
             error_code=error_code,
             durable_storage_backed=durable_storage_backed,
+            default_source_error=self.default_source_error,
         )
         return self.build_payload(
             generated_at_utc,
@@ -87,6 +93,8 @@ def runtime_qualification_blockers(
     source_receipt: Mapping[str, Any] | None,
     persistence_receipt: Mapping[str, Any] | None,
     diagnostic_codes: Collection[str],
+    blocking_diagnostic_codes: Collection[str],
+    source_execution_blocker: str,
 ) -> tuple[str, ...]:
     blockers: list[str] = []
     if not durable_storage_backed:
@@ -95,11 +103,8 @@ def runtime_qualification_blockers(
         blockers.append("authoritative_source_receipt_missing")
     if persistence_receipt is None:
         blockers.append("persistence_receipt_missing")
-    if any(
-        code in {"risk_source_unavailable", "risk_source_entitlement_denied"}
-        for code in diagnostic_codes
-    ):
-        blockers.append("risk_source_execution_blocked")
+    if any(code in blocking_diagnostic_codes for code in diagnostic_codes):
+        blockers.append(source_execution_blocker)
     return tuple(blockers)
 
 
@@ -107,8 +112,9 @@ def blocked_runtime_qualification_blockers(
     *,
     error_code: str,
     durable_storage_backed: bool,
+    default_source_error: str,
 ) -> tuple[str, ...]:
-    blockers = [f"source_error_{error_code.strip() or 'risk_source_unavailable'}"]
+    blockers = [f"source_error_{error_code.strip() or default_source_error}"]
     if not durable_storage_backed:
         blockers.append("durable_repository_not_configured")
     blockers.extend(("authoritative_source_receipt_missing", "persistence_receipt_missing"))

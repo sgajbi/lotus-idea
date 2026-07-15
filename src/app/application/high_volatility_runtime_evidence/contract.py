@@ -113,6 +113,7 @@ def high_volatility_runtime_execution_is_valid(payload: Mapping[str, Any]) -> bo
         execution,
         generated_at_utc=generated_at_utc,
         product_id=_PRODUCT_ID,
+        source_system=SourceSystem.LOTUS_RISK,
         family=OpportunityFamily.HIGH_VOLATILITY,
         period_name_required=True,
     ):
