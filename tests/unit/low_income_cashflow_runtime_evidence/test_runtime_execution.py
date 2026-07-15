@@ -17,7 +17,7 @@ from app.application.low_income_cashflow_runtime_evidence import (
     low_income_cashflow_runtime_execution_is_valid,
 )
 from app.application.core_runtime_evidence import sha256_json
-from app.domain import LowIncomeSignalPolicy, SignalEvaluationOutcome
+from app.domain import EvidenceFreshness, LowIncomeSignalPolicy, SignalEvaluationOutcome
 from app.ports.core_sources import CoreLowIncomeEvidence, CoreLowIncomeEvidenceRequest
 from tests.support.low_income_cashflow_runtime_evidence import (
     AuthoritativeCoreLowIncomeSource,
@@ -186,6 +186,166 @@ def test_runtime_execution_fails_closed_on_source_trust_drift(
     assert low_income_cashflow_runtime_execution_is_valid(payload) is False
 
 
+@pytest.mark.parametrize(
+    ("mutation", "expected_blocker"),
+    [
+        (
+            lambda evidence: replace(evidence, cash_movement_product=None),
+            "core_cash_movement_receipt_missing",
+        ),
+        (
+            lambda evidence: replace(evidence, cashflow_projection_product=None),
+            "core_cashflow_projection_receipt_missing",
+        ),
+        (
+            lambda evidence: replace(evidence, entitlement_allowed=False),
+            "core_cashflow_entitlement_denied",
+        ),
+        (
+            lambda evidence: replace(evidence, cashflow_diagnostic="SOURCE_DEGRADED"),
+            "core_cashflow_diagnostic_not_ready",
+        ),
+        (
+            lambda evidence: replace(
+                evidence,
+                cashflow_projection_ref=replace(
+                    evidence.cashflow_projection_ref,
+                    as_of_date=date(2026, 6, 20),
+                ),
+            ),
+            "core_cashflow_projection_scope_mismatch",
+        ),
+        (
+            lambda evidence: replace(
+                evidence,
+                cashflow_projection_ref=replace(
+                    evidence.cashflow_projection_ref,
+                    freshness=EvidenceFreshness.STALE,
+                ),
+            ),
+            "core_cashflow_projection_evidence_not_current",
+        ),
+        (
+            lambda evidence: replace(
+                evidence,
+                cash_movement_product=replace(
+                    evidence.cash_movement_product,
+                    end_date=date(2026, 6, 22),
+                ),
+            ),
+            "core_cash_movement_window_mismatch",
+        ),
+        (
+            lambda evidence: replace(
+                evidence,
+                cash_movement_product=replace(
+                    evidence.cash_movement_product,
+                    buckets=evidence.cash_movement_product.buckets * 2,
+                    cashflow_count=2,
+                ),
+                cash_movement_count=2,
+            ),
+            "core_cash_movement_buckets_invalid",
+        ),
+        (
+            lambda evidence: replace(
+                evidence,
+                cash_movement_product=replace(
+                    evidence.cash_movement_product,
+                    buckets=(
+                        replace(
+                            evidence.cash_movement_product.buckets[0],
+                            movement_direction="INFLOW",
+                        ),
+                    ),
+                ),
+            ),
+            "core_cash_movement_direction_mismatch",
+        ),
+        (
+            lambda evidence: _replace_projection_runtime(evidence, portfolio_id="other"),
+            "core_cashflow_projection_response_scope_mismatch",
+        ),
+        (
+            lambda evidence: _replace_projection_runtime(
+                evidence,
+                source_digest="sha256:" + "e" * 64,
+            ),
+            "core_cashflow_projection_source_digest_mismatch",
+        ),
+        (
+            lambda evidence: _replace_projection_runtime(evidence, snapshot_id=None),
+            "core_cashflow_projection_governance_identity_missing",
+        ),
+        (
+            lambda evidence: replace(
+                evidence,
+                cashflow_projection_product=replace(
+                    evidence.cashflow_projection_product,
+                    points=evidence.cashflow_projection_product.points[:-1],
+                ),
+            ),
+            "core_cashflow_projection_series_invalid",
+        ),
+        (
+            lambda evidence: _replace_projection_point(
+                evidence,
+                1,
+                projection_date=date(2026, 6, 25),
+            ),
+            "core_cashflow_projection_series_invalid",
+        ),
+        (
+            lambda evidence: _replace_projection_point(
+                evidence,
+                0,
+                net_cashflow=Decimal("1"),
+            ),
+            "core_cashflow_projection_series_invalid",
+        ),
+        (
+            lambda evidence: _replace_projection_point(
+                evidence,
+                0,
+                projected_cumulative_cashflow=Decimal("-1"),
+            ),
+            "core_cashflow_projection_series_invalid",
+        ),
+    ],
+)
+def test_runtime_execution_rejects_incomplete_or_inconsistent_core_receipts(
+    mutation: Callable[[CoreLowIncomeEvidence], CoreLowIncomeEvidence],
+    expected_blocker: str,
+) -> None:
+    command = _command()
+    evidence = authoritative_low_income_evidence(
+        request=_request(command),
+        minimum_cashflow=Decimal("-12500"),
+    )
+
+    result = evaluate_low_income_cashflow_readiness(
+        command,
+        core_source=_FixedSource(mutation(evidence)),
+    )
+    payload = build_low_income_cashflow_runtime_execution(generated_at_utc=NOW, result=result)
+
+    assert expected_blocker in payload["execution"]["qualificationBlockers"]
+    assert low_income_cashflow_runtime_execution_is_valid(payload) is False
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"tenant_id": " "},
+        {"horizon_days": 0},
+        {"correlation_id": " "},
+    ],
+)
+def test_readiness_command_rejects_invalid_execution_scope(changes: dict[str, Any]) -> None:
+    with pytest.raises(ValueError):
+        replace(_command(), **changes)
+
+
 def test_runtime_execution_rejects_unknown_and_tampered_claims() -> None:
     payload = _valid_payload()
     unknown = deepcopy(payload)
@@ -195,6 +355,49 @@ def test_runtime_execution_rejects_unknown_and_tampered_claims() -> None:
 
     assert low_income_cashflow_runtime_execution_is_valid(unknown) is False
     assert low_income_cashflow_runtime_execution_is_valid(tampered) is False
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        lambda payload: payload.update({"unexpected": True}),
+        lambda payload: payload.update({"proofType": "caller_summary"}),
+        lambda payload: payload["nonProofClaims"].update({"cashflowFactsOwned": "lotus-idea"}),
+        lambda payload: payload["nonProofClaims"].update({"portfolioAccountingOwned": True}),
+        lambda payload: _mutate_and_redigest(
+            payload["execution"]["cashMovementReceipt"],
+            reconciliationStatus="UNKNOWN",
+        ),
+        lambda payload: _mutate_and_redigest(
+            payload["execution"]["evaluationReceipt"],
+            outcome="not_eligible",
+        ),
+        lambda payload: _mutate_and_redigest(
+            payload["execution"]["requestReceipt"],
+            asOfDate="not-a-date",
+        ),
+        lambda payload: _mutate_and_redigest(
+            payload["execution"]["requestReceipt"],
+            horizonDays=0,
+        ),
+        lambda payload: _mutate_and_redigest(
+            payload["execution"]["cashMovementReceipt"],
+            responseTenantIdHash="sha256:" + "f" * 64,
+        ),
+        lambda payload: _mutate_and_redigest(
+            payload["execution"]["evaluationReceipt"],
+            candidateScore="not-a-decimal",
+        ),
+    ],
+)
+def test_contract_rejects_closed_schema_and_semantic_tampering(
+    mutation: Callable[[dict[str, Any]], object],
+) -> None:
+    payload = _valid_payload()
+
+    mutation(payload)
+
+    assert low_income_cashflow_runtime_execution_is_valid(payload) is False
 
 
 def test_contract_rejects_semantic_forgery_with_recomputed_digest() -> None:
@@ -228,6 +431,19 @@ def test_runtime_execution_rejects_policy_result_drift() -> None:
         "low_income_no_opportunity_outcome_mismatch"
         in payload["execution"]["qualificationBlockers"]
     )
+    assert low_income_cashflow_runtime_execution_is_valid(payload) is False
+
+
+def test_runtime_execution_requires_candidate_identity_for_eligible_cashflow() -> None:
+    result = evaluate_low_income_cashflow_readiness(
+        _command(),
+        core_source=AuthoritativeCoreLowIncomeSource(),
+    )
+    result = replace(result, evaluation=replace(result.evaluation, candidate=None))
+
+    payload = build_low_income_cashflow_runtime_execution(generated_at_utc=NOW, result=result)
+
+    assert "low_income_candidate_identity_missing" in payload["execution"]["qualificationBlockers"]
     assert low_income_cashflow_runtime_execution_is_valid(payload) is False
 
 
@@ -282,3 +498,43 @@ class _FixedSource:
         self, request: CoreLowIncomeEvidenceRequest
     ) -> CoreLowIncomeEvidence:
         return self.evidence
+
+
+def _replace_projection_runtime(
+    evidence: CoreLowIncomeEvidence,
+    **changes: Any,
+) -> CoreLowIncomeEvidence:
+    projection = evidence.cashflow_projection_product
+    assert projection is not None
+    return replace(
+        evidence,
+        cashflow_projection_product=replace(
+            projection,
+            runtime=replace(projection.runtime, **changes),
+        ),
+    )
+
+
+def _replace_projection_point(
+    evidence: CoreLowIncomeEvidence,
+    index: int,
+    **changes: Any,
+) -> CoreLowIncomeEvidence:
+    projection = evidence.cashflow_projection_product
+    assert projection is not None
+    points = list(projection.points)
+    points[index] = replace(points[index], **changes)
+    return replace(
+        evidence,
+        cashflow_projection_product=replace(projection, points=tuple(points)),
+    )
+
+
+def _mutate_and_redigest(receipt: dict[str, Any], **changes: Any) -> None:
+    receipt.update(changes)
+    digest_field = next(
+        key for key in ("requestDigest", "receiptDigest", "evaluationDigest") if key in receipt
+    )
+    receipt[digest_field] = sha256_json(
+        {key: value for key, value in receipt.items() if key != digest_field}
+    )
