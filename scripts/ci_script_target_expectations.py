@@ -32,7 +32,9 @@ SCRIPT_TARGET_EXPECTATIONS = {
     "low-income-core-cashflow-live-proof-contract-gate": (
         "scripts/low_income_core_cashflow_live_proof_contract_gate.py"
     ),
-    "risk-drawdown-live-proof-contract-gate": "scripts/risk_drawdown_live_proof_contract_gate.py",
+    "risk-drawdown-live-proof-contract-gate": (
+        "scripts/risk_drawdown_runtime_evidence/runtime_execution_contract_gate.py"
+    ),
     "manage-mandate-live-proof-contract-gate": "scripts/manage_mandate_live_proof_contract_gate.py",
     "mandate-restriction-live-proof-contract-gate": (
         "scripts/mandate_restriction_live_proof_contract_gate.py"

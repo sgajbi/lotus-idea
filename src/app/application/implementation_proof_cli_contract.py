@@ -78,7 +78,7 @@ from app.application.report.materialization_source_contract import (
 from app.application.risk_concentration_runtime_evidence import (
     RISK_CONCENTRATION_RUNTIME_EXECUTION_ENV,
 )
-from app.application.risk_drawdown_live_proof import RISK_DRAWDOWN_LIVE_PROOF_ENV
+from app.application.risk_drawdown_runtime_evidence import RISK_DRAWDOWN_RUNTIME_EXECUTION_ENV
 from app.application.runtime_trust_telemetry.test_execution_contract import (
     RUNTIME_TRUST_TELEMETRY_TEST_EXECUTION_ENV,
 )
@@ -194,8 +194,8 @@ PROOF_ARTIFACT_ARGS: tuple[tuple[str, str, str], ...] = (
     ),
     (
         "--risk-drawdown-live-proof",
-        RISK_DRAWDOWN_LIVE_PROOF_ENV,
-        "Optional lotus-risk drawdown live source proof artifact path.",
+        RISK_DRAWDOWN_RUNTIME_EXECUTION_ENV,
+        "Optional receipt-bound lotus-risk drawdown runtime execution artifact path.",
     ),
     (
         "--performance-underperformance-live-proof",

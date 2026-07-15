@@ -1,20 +1,23 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from typing import Any
+
+import pytest
 
 from app.application.implementation_proof_readiness import (
     build_implementation_proof_readiness_snapshot,
 )
-from app.application.risk_drawdown_live_proof import build_risk_drawdown_live_proof_payload
+from app.application.proof_provenance import AGGREGATE_PROOF_PROVENANCE_KEY
 from app.domain import InMemoryIdeaRepository
 from tests.support.proof_provenance import bound_aggregate_proof
+from tests.support.risk_drawdown_runtime_evidence import GENERATED_AT, runtime_execution
 
 PROOF_REF = "output/opportunity/risk-drawdown-live-proof.json"
 
 
 def test_implementation_proof_readiness_retains_drawdown_blocker_without_live_proof() -> None:
     snapshot = build_implementation_proof_readiness_snapshot(
-        evaluated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
+        evaluated_at_utc=GENERATED_AT,
         repository=InMemoryIdeaRepository(),
         durable_storage_backed=False,
     )
@@ -30,7 +33,7 @@ def test_implementation_proof_readiness_retains_drawdown_blocker_without_live_pr
 
 def test_implementation_proof_readiness_uses_drawdown_live_proof_without_promotion() -> None:
     snapshot = build_implementation_proof_readiness_snapshot(
-        evaluated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
+        evaluated_at_utc=GENERATED_AT,
         repository=InMemoryIdeaRepository(),
         durable_storage_backed=False,
         risk_drawdown_live_proof=_valid_risk_drawdown_live_proof(),
@@ -65,22 +68,69 @@ def test_implementation_proof_readiness_uses_drawdown_live_proof_without_promoti
     assert snapshot.supported_features_promoted is False
 
 
+@pytest.mark.parametrize(
+    "mutation",
+    (
+        "missing_provenance",
+        "non_durable_execution",
+        "wrong_evidence_class",
+        "unknown_contract_field",
+        "tampered_source_receipt",
+        "tampered_persistence_receipt",
+    ),
+)
+def test_implementation_proof_readiness_rejects_untrustworthy_drawdown_evidence(
+    mutation: str,
+) -> None:
+    proof = _valid_risk_drawdown_live_proof()
+    _mutate_proof(proof, mutation)
+
+    snapshot = build_implementation_proof_readiness_snapshot(
+        evaluated_at_utc=GENERATED_AT,
+        repository=InMemoryIdeaRepository(),
+        durable_storage_backed=False,
+        risk_drawdown_live_proof=proof,
+        risk_drawdown_live_proof_ref=PROOF_REF,
+    )
+
+    assert "opportunity_archetype_drawdown_source_proof_missing" in snapshot.overall_blockers
+    archetypes = next(
+        capability
+        for capability in snapshot.capabilities
+        if capability.capability_id == "opportunity-archetype-scenarios"
+    )
+    assert PROOF_REF not in archetypes.evidence_refs
+    assert snapshot.supported_features_promoted is False
+
+
 def _valid_risk_drawdown_live_proof() -> dict[str, object]:
     return bound_aggregate_proof(
-        build_risk_drawdown_live_proof_payload(
-            generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
-            live_risk_source_attempted=True,
-            evaluation_summary={
-                "runStatus": "completed",
-                "sourceAuthority": "lotus-risk",
-                "sourceProductId": "lotus-risk:DrawdownAnalyticsReport:v1",
-                "evaluationOutcome": "candidate_created",
-                "sourceEvidenceCurrent": True,
-                "riskSupportabilityReady": True,
-                "sourceDiagnosticCodes": ["risk_drawdown_source_ready"],
-                "reasonCodes": ["drawdown_attention"],
-                "unsupportedReasons": [],
-            },
-        ),
+        runtime_execution(),
         PROOF_REF,
     )
+
+
+def _mutate_proof(proof: dict[str, Any], mutation: str) -> None:
+    if mutation == "missing_provenance":
+        proof.pop(AGGREGATE_PROOF_PROVENANCE_KEY)
+        return
+    if mutation == "wrong_evidence_class":
+        proof["evidenceClass"] = "source_contract"
+        return
+    if mutation == "unknown_contract_field":
+        proof["untrustedClaim"] = True
+        return
+
+    execution = proof["execution"]
+    assert isinstance(execution, dict)
+    if mutation == "non_durable_execution":
+        execution["durableStorageBacked"] = False
+        return
+    if mutation == "tampered_source_receipt":
+        source_receipt = execution["sourceReceipt"]
+        assert isinstance(source_receipt, dict)
+        source_receipt["contentHash"] = "sha256:forged"
+        return
+    persistence_receipt = execution["persistenceReceipt"]
+    assert isinstance(persistence_receipt, dict)
+    persistence_receipt["decision"] = "accepted-without-write"
