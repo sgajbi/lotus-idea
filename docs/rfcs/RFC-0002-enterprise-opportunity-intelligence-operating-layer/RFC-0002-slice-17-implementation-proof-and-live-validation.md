@@ -1,6 +1,6 @@
 # RFC-0002 Slice 17: Implementation Proof And Live Validation
 
-Status: Partially implemented - aggregate proof-readiness diagnostic, bounded source-ingestion runtime-execution receipt contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry test-execution artifact, Workbench read-path source-contract proof artifact, Gateway/Workbench contract proof artifact, Gateway/Workbench discovery contract proof artifact, digest-bound Advise and Manage route source contracts, Manage mandate live proof artifact, receipt-bound Core portfolio-state, bond-maturity, and low-income cashflow runtime evidence, Report intake route and materialization source-contract artifacts, bounded outbox broker source-contract proof artifact, bounded downstream consumer source-contract proof artifact, bounded outbox platform-mesh event source-contract proof, digest-bound mesh policy source-contract artifact, platform catalog source contract artifact, AI lineage store proof artifact, AI workflow-pack registration proof artifact, AI workflow-pack runtime execution proof artifact, high-volatility and drawdown live Risk proof artifact contracts, and opportunity archetype scenario readiness with source/policy foundations available. Slice evidence now includes live canonical Risk concentration, Performance underperformance, and Performance benchmark-readiness source proofs for `PB_SG_GLOBAL_BAL_001`; Core portfolio-state, bond-maturity, and low-income cashflow live qualification remain fail-closed pending lotus-core #790, #792, and #796 respectively. Observed Advise/Manage route serving and acceptance, policy certification, Report intake and materialization execution, rendered output, archive creation, external broker publication, platform-mesh event publication, downstream consumer execution, full live opportunity-journey proof, data-mesh certification, Workbench product proof, client-publication approval, and supported-feature promotion remain pending.
+Status: Partially implemented - aggregate proof-readiness diagnostic, bounded source-ingestion runtime-execution receipt contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry test-execution artifact, Workbench read-path source-contract proof artifact, Gateway/Workbench contract proof artifact, Gateway/Workbench discovery contract proof artifact, digest-bound Advise and Manage route source contracts, closed v2 Manage mandate runtime evidence, receipt-bound Core portfolio-state, bond-maturity, and low-income cashflow runtime evidence, Report intake route and materialization source-contract artifacts, bounded outbox broker source-contract proof artifact, bounded downstream consumer source-contract proof artifact, bounded outbox platform-mesh event source-contract proof, digest-bound mesh policy source-contract artifact, platform catalog source contract artifact, AI lineage store proof artifact, AI workflow-pack registration proof artifact, AI workflow-pack runtime execution proof artifact, high-volatility and drawdown live Risk proof artifact contracts, and opportunity archetype scenario readiness with source/policy foundations available. Slice evidence now includes live canonical Risk concentration, Performance underperformance, and Performance benchmark-readiness source proofs for `PB_SG_GLOBAL_BAL_001`; Core portfolio-state, bond-maturity, and low-income cashflow live qualification remain fail-closed pending lotus-core #790, #792, and #796, and Manage mandate-health qualification remains fail-closed pending lotus-manage #620. Observed Advise/Manage route serving and acceptance, policy certification, Report intake and materialization execution, rendered output, archive creation, external broker publication, platform-mesh event publication, downstream consumer execution, full live opportunity-journey proof, data-mesh certification, Workbench product proof, client-publication approval, and supported-feature promotion remain pending.
 
 ## Outcome
 
@@ -399,16 +399,21 @@ Prove the complete supported opportunity journey end to end.
     suitability, planning, funding-advice, treasury-instruction, deployment,
     and production blockers. Core issue `#796` tracks producer trust metadata
     required before live qualification can pass.
-33. `src/app/application/manage_mandate_live_proof.py`,
-    `scripts/generate_manage_mandate_live_proof.py`, and
+33. `src/app/application/manage_mandate_runtime_evidence/`,
+    `scripts/manage_mandate_runtime_evidence/`, and
     `make manage-mandate-live-proof-contract-gate` now define and enforce a
-    source-safe Lotus Manage mandate live-proof artifact. Aggregate readiness
+    closed v2 Lotus Manage mandate runtime-evidence artifact. A named
+    source-evaluation use case binds pseudonymous scope, exact action-register
+    and mandate-health receipts, producer-authored time, policy, and
+    deterministic candidate or no-opportunity outcome. Aggregate readiness
     can consume a valid artifact to clear only
     `opportunity_archetype_portfolio_scoped_manage_source_proof_missing`,
     `opportunity_archetype_mandate_performance_health_source_ref_missing`, and
     `opportunity_archetype_mandate_risk_health_source_ref_missing`, while
     preserving Core portfolio-state, data-mesh, Workbench, client-publication,
-    supported-feature, rebalance, action, and order-execution blockers.
+    supported-feature, rebalance, action, and order-execution blockers. Manage
+    issue `#620` keeps live qualification fail closed until the producer supplies
+    authoritative tenant, temporal, and source-ref identity.
 34. `src/app/application/core_portfolio_state_runtime_evidence/`,
     `scripts/core_portfolio_state_runtime_evidence/`, and
     `make core-portfolio-state-live-proof-contract-gate` now define and enforce
@@ -485,7 +490,7 @@ without relying on chat memory.
    blocker. Route serving/acceptance, suitability, policy approval, mandate/rebalance authority,
    execution, order creation, client communication, and supported-feature
    promotion remain pending.
-9. Manage mandate live proof is now explicit in aggregate readiness evidence,
+9. Closed v2 Manage mandate runtime evidence is now explicit in aggregate readiness,
    and proves only portfolio-scoped Manage action-register source posture plus
    current source refs for source-owned mandate performance-health and mandate
    risk-health contexts. Core portfolio-state, data-mesh, Workbench,

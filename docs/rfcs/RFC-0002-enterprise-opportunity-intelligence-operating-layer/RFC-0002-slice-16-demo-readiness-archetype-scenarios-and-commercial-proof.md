@@ -158,7 +158,7 @@ commercial proof from getting ahead of implementation-backed runtime evidence.
    Lotus Manage `PortfolioActionRegister:v1` source-port/adapter foundation,
    bounded caller-supplied
    `POST /api/v1/idea-signals/allocation-drift/evaluate` API foundation,
-   source-safe Manage mandate live-proof contract, and source-safe Core
+   closed v2 Manage mandate runtime-evidence contract, and source-safe Core
    portfolio-state live-proof contract. The governed archetype contract and
    `make opportunity-archetype-contract-gate` require the allocation-drift API
    module, route, and integration test as evidence refs, preventing demo

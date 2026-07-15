@@ -89,6 +89,12 @@ Current implementation includes these bounded foundations:
     adapters and proof generators, binds aggregate evidence to source revision,
     correlation, and trace IDs, and fails closed on stale or incomplete source
     evidence without persisting raw child process output.
+12. capability-owned closed v2 runtime-evidence packages that call named
+    application use cases and bind exact source receipts to deterministic
+    outcomes. Shared `runtime_evidence/` code is limited to source-neutral scope,
+    identity, hash, and receipt primitives; source authority and schemas remain
+    capability-owned. These are internal design modules, not separately
+    deployable services.
 
 The first canonical demo/front-office portfolio remains
 `PB_SG_GLOBAL_BAL_001` when a governed Lotus front-office flow requires a
@@ -154,6 +160,11 @@ Source refs must preserve producer product identity, source system, version,
 as-of date, generated-at timestamp, freshness, and content lineage where the
 source provides it. Do not synthesize source-owned hashes from response payloads
 unless the source contract explicitly permits it.
+Manage mandate-health runtime qualification also requires trusted tenant scope,
+producer-authored as-of and generated-at timestamps, and authoritative
+action-register, Performance-health, and Risk-health source identities. Missing
+metadata fails closed. Lotus Manage issue `#620` tracks the producer correction;
+Idea must not substitute request or consumer timestamps.
 Caller-supplied signal APIs must also validate source refs against the route's
 governed source contract before candidate creation: wrong `sourceSystem` or
 wrong `productId` is `400 invalid_request`, and rejection telemetry must use

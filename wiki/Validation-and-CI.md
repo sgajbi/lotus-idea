@@ -434,7 +434,7 @@ Persistence adapter validation:
    proof consumption, bounded outbox broker source-contract proof consumption,
    default digest-bound Advise and Manage route source-contract generation and
    supporting-evidence consumption without live-blocker clearance,
-   optional Manage mandate live proof consumption,
+   optional closed v2 Manage mandate runtime-evidence consumption,
    optional receipt-bound Core benchmark-assignment runtime evidence consumption,
    optional receipt-bound Core portfolio-state runtime evidence consumption,
    optional missing-benchmark live Core proof consumption,

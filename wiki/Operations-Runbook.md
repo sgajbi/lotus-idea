@@ -249,7 +249,7 @@ optional typed missing risk-profile source-product proof through
 `LOTUS_IDEA_MISSING_RISK_PROFILE_SOURCE_PRODUCT_PROOF`,
 optional missing risk-profile live Advise proof through
 `LOTUS_IDEA_MISSING_RISK_PROFILE_LIVE_PROOF`,
-optional Manage mandate live proof through
+optional closed v2 Manage mandate runtime evidence through
 `LOTUS_IDEA_MANAGE_MANDATE_LIVE_PROOF`,
 optional receipt-bound Core benchmark-assignment runtime evidence through
 `LOTUS_IDEA_CORE_BENCHMARK_ASSIGNMENT_LIVE_PROOF`,
@@ -828,17 +828,19 @@ artifact, runtime trust telemetry test-execution artifact, Workbench read-path s
 Advise route source-contract artifact, missing-suitability live Advise proof
 artifact, typed mandate/restriction source-product proof artifact, typed
 missing risk-profile source-product proof artifact, missing risk-profile live
-Advise proof artifact, Manage mandate live proof artifact, Core benchmark-assignment runtime
+Advise proof artifact, Manage mandate runtime-evidence artifact, Core benchmark-assignment runtime
 evidence artifact, Core portfolio-state runtime evidence artifact, Manage route source-contract artifact,
 Report intake route source-contract artifact, Report materialization source-contract artifact,
 mesh policy source-contract artifact, platform catalog
 onboarding proof artifact, AI lineage store proof artifact, AI workflow-pack registration proof artifact,
 AI workflow-pack runtime execution proof artifact,
 and the same source-safe readiness snapshot without running the HTTP service.
-Manage mandate proof consumption requires source-authored Manage lineage or
-fingerprint metadata for action-register source refs; missing Manage lineage
-remains source-unavailable and does not become a synthesized `SourceRef`
-content hash.
+Manage mandate proof consumption requires trusted tenant scope, source-authored
+as-of and generated-at time, and authoritative Manage lineage or fingerprint
+metadata for action-register and mandate-health source refs. Missing producer
+identity remains source-unavailable and does not become a synthesized
+`SourceRef` or consumer timestamp. Lotus Manage issue `#620` tracks the producer
+correction.
 The snapshot records validated proof artifact refs in capability
 evidence. Capability readiness and supportability are derived after proof
 artifact consumption, so a proof family can report `ready` and `supported` only
