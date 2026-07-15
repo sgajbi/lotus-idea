@@ -3,13 +3,24 @@ from __future__ import annotations
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
+import pytest
+
 from app.application.high_volatility_signal import (
+    EvaluateAndPersistHighVolatilityFromRiskCommand,
     EvaluateHighVolatilityFromRiskCommand,
     EvaluateHighVolatilitySignalCommand,
+    evaluate_and_persist_high_volatility_signal_from_risk,
     evaluate_high_volatility_signal_command,
     evaluate_high_volatility_signal_from_risk,
 )
-from app.domain import EvidenceFreshness, SignalEvaluationOutcome, SourceRef, SourceSystem
+from app.domain import (
+    CandidatePersistenceDecision,
+    EvidenceFreshness,
+    InMemoryIdeaRepository,
+    SignalEvaluationOutcome,
+    SourceRef,
+    SourceSystem,
+)
 from app.ports.risk_sources import (
     RiskConcentrationEvidence,
     RiskConcentrationEvidenceRequest,
@@ -131,3 +142,80 @@ def test_evaluate_high_volatility_signal_from_risk_blocks_source_unavailable() -
 
     assert result.outcome is SignalEvaluationOutcome.BLOCKED
     assert result.candidate is None
+
+
+def test_evaluate_and_persist_high_volatility_accepts_then_replays_same_command() -> None:
+    repository = InMemoryIdeaRepository()
+    source = StubRiskSource(
+        RiskVolatilityEvidence(
+            source_reported_volatility=Decimal("14.25"),
+            risk_supportability_state="ready",
+            risk_ref=source_ref(),
+            risk_diagnostic="risk_volatility_source_ready",
+        )
+    )
+    persisted_command = EvaluateAndPersistHighVolatilityFromRiskCommand(
+        evaluation=command(),
+        idempotency_key="high-volatility-runtime",
+        actor_subject="runtime-evidence",
+    )
+
+    accepted = evaluate_and_persist_high_volatility_signal_from_risk(
+        persisted_command,
+        risk_source=source,
+        repository=repository,
+    )
+    replayed = evaluate_and_persist_high_volatility_signal_from_risk(
+        persisted_command,
+        risk_source=source,
+        repository=repository,
+    )
+
+    assert accepted.persistence is not None
+    assert accepted.persistence.decision is CandidatePersistenceDecision.ACCEPTED
+    assert replayed.persistence is not None
+    assert replayed.persistence.decision is CandidatePersistenceDecision.REPLAYED
+    assert accepted.source_diagnostic_codes == ("risk_volatility_source_ready",)
+
+
+@pytest.mark.parametrize(
+    ("exception", "diagnostic"),
+    (
+        (RiskSourceEntitlementDenied(), "risk_source_entitlement_denied"),
+        (RiskSourceUnavailable(code="risk_unavailable"), "risk_unavailable"),
+    ),
+)
+def test_evaluate_and_persist_high_volatility_fails_before_persistence_on_source_failure(
+    exception: Exception,
+    diagnostic: str,
+) -> None:
+    result = evaluate_and_persist_high_volatility_signal_from_risk(
+        EvaluateAndPersistHighVolatilityFromRiskCommand(
+            evaluation=command(),
+            idempotency_key="high-volatility-runtime",
+            actor_subject="runtime-evidence",
+        ),
+        risk_source=StubRiskSource(exc=exception),
+        repository=InMemoryIdeaRepository(),
+    )
+
+    assert result.evaluation.outcome is SignalEvaluationOutcome.BLOCKED
+    assert result.persistence is None
+    assert result.source_diagnostic_codes == (diagnostic,)
+
+
+@pytest.mark.parametrize(("idempotency_key", "actor_subject"), (("", "actor"), ("key", "")))
+def test_evaluate_and_persist_high_volatility_requires_command_identity(
+    idempotency_key: str,
+    actor_subject: str,
+) -> None:
+    with pytest.raises(ValueError, match="required"):
+        evaluate_and_persist_high_volatility_signal_from_risk(
+            EvaluateAndPersistHighVolatilityFromRiskCommand(
+                evaluation=command(),
+                idempotency_key=idempotency_key,
+                actor_subject=actor_subject,
+            ),
+            risk_source=StubRiskSource(),
+            repository=InMemoryIdeaRepository(),
+        )
