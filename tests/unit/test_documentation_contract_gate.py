@@ -78,7 +78,7 @@ def test_documentation_contract_gate_requires_explicit_governance_exclusion(
 
     assert errors == [
         "docs/architecture/implementation-proof-evidence-classification.md: "
-        "missing completed campaign occurrences: #431"
+        "missing completed campaign occurrences: #431, #473"
     ]
 
 
