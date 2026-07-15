@@ -5,6 +5,8 @@ REQUIRED_CORE_RUNTIME_EVIDENCE_PATHS = {
     "scripts/bond_maturity_runtime_evidence/__init__.py",
     "scripts/bond_maturity_runtime_evidence/generate_runtime_execution.py",
     "scripts/bond_maturity_runtime_evidence/runtime_execution_contract_gate.py",
+    "scripts/opportunity_archetype_contracts/__init__.py",
+    "scripts/opportunity_archetype_contracts/bond_maturity.py",
     "scripts/core_benchmark_assignment_runtime_evidence/generate_runtime_execution.py",
     "scripts/core_portfolio_state_runtime_evidence/__init__.py",
     "scripts/core_portfolio_state_runtime_evidence/generate_runtime_execution.py",
