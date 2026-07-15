@@ -2086,6 +2086,25 @@ persistence or missing Core trust metadata. Core issue `#790` owns the producer
 gap; Idea must fail closed until it is resolved. This remains design modularity
 inside the existing deployable with no new database or runtime service.
 
+For Core bond-maturity readiness, use
+`application/bond_maturity_runtime_evidence/` and its matching automation and
+test packages. Route generation through the named read-only application use
+case and `CoreBondMaturitySourcePort`. Bind pseudonymous request scope to the
+exact current `lotus-core:PortfolioMaturitySummary:v1` receipt and upstream
+`HoldingsAsOf:v1` content identity. Require exact horizon, non-projected mode,
+contractual instrument maturity-date basis, supported/complete/current posture,
+zero missing maturity dates, zero unsupported lifecycle features, complete
+reconciliation, snapshot/policy/correlation identity, consistent hashes, and
+valid evidence time. Treat a supported empty window as completed with no
+opportunity; require an in-window next date for a positive count. Reject caller
+summary booleans, source substitution, unknown fields, partial/stale evidence,
+scope or date/count inconsistency, and re-digested tampering. Never infer call,
+put, amortization, structured-note, lockup, or expiry schedules, and never claim
+product recommendation or reinvestment advice. Core issue `#792` owns missing
+producer reconciliation, tenant, and correlation metadata; Idea must fail
+closed until it is resolved. This is design modularity inside the existing
+deployable, with no new database or runtime service.
+
 ## Cross-Links
 
 Central context:

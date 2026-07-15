@@ -598,13 +598,18 @@ Persistence adapter validation:
     the namespaced Core portfolio-state source-ref blocker. Missing snapshot
     identity, reconciliation, policy, section, scope, time, or hash trust fails
     closed; lotus-core issue `#790` tracks the current producer gap.
-    `tests/unit/test_bond_maturity_live_proof.py` and
+    `tests/unit/bond_maturity_runtime_evidence/` and
     `make bond-maturity-live-proof-contract-gate` prove the optional Lotus Core
-    maturity-summary live-proof artifact remains source-safe and can clear only
-    the namespaced bond-maturity live Core source blocker when valid
-    `PortfolioMaturitySummary:v1` evidence is supplied. The live adapter fails
-    closed when explicit maturity facts or upstream holdings lineage are missing
-    rather than deriving maturity dates or counts from raw positions.
+    maturity-summary artifact is closed v2 `runtime_execution` evidence. It
+    binds pseudonymous request scope to one exact current
+    `PortfolioMaturitySummary:v1` receipt and upstream `HoldingsAsOf:v1`
+    content identity. Partial/stale evidence, scope or digest mismatch,
+    projected holdings, unsupported lifecycle features, unknown reconciliation,
+    inconsistent dates/counts, and tampering fail closed. A supported empty
+    window completes without creating an opportunity. The artifact can satisfy
+    only the namespaced bond-maturity live Core source blocker; lotus-core issue
+    `#792` tracks missing producer reconciliation, tenant, and correlation
+    metadata.
     `tests/unit/test_low_income_core_cashflow_live_proof.py` and
     `make low-income-core-cashflow-live-proof-contract-gate` prove the optional
     Lotus Core cashflow live-proof artifact remains source-safe and can clear
