@@ -17,7 +17,7 @@ SCRIPT_TARGET_EXPECTATIONS = {
         "scripts/performance_underperformance_runtime_evidence/runtime_execution_contract_gate.py"
     ),
     "core-benchmark-assignment-live-proof-contract-gate": (
-        "scripts/core_benchmark_assignment_live_proof_contract_gate.py"
+        "scripts/core_benchmark_assignment_runtime_evidence/runtime_execution_contract_gate.py"
     ),
     "core-portfolio-state-live-proof-contract-gate": (
         "scripts/core_portfolio_state_live_proof_contract_gate.py"

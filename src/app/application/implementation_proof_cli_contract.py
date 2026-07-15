@@ -11,8 +11,8 @@ from app.application.ai_workflow_pack_registration.source_contract_proof import 
 from app.application.ai_runtime_proof import (
     AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF_ENV,
 )
-from app.application.core_benchmark_assignment_live_proof import (
-    CORE_BENCHMARK_ASSIGNMENT_LIVE_PROOF_ENV,
+from app.application.core_benchmark_assignment_runtime_evidence import (
+    CORE_BENCHMARK_ASSIGNMENT_RUNTIME_EXECUTION_ENV,
 )
 from app.application.core_portfolio_state_live_proof import (
     CORE_PORTFOLIO_STATE_LIVE_PROOF_ENV,
@@ -204,8 +204,8 @@ PROOF_ARTIFACT_ARGS: tuple[tuple[str, str, str], ...] = (
     ),
     (
         "--core-benchmark-assignment-live-proof",
-        CORE_BENCHMARK_ASSIGNMENT_LIVE_PROOF_ENV,
-        "Optional lotus-core benchmark assignment live source proof artifact path.",
+        CORE_BENCHMARK_ASSIGNMENT_RUNTIME_EXECUTION_ENV,
+        "Optional receipt-bound Lotus Core benchmark-assignment runtime evidence path.",
     ),
     (
         "--core-portfolio-state-live-proof",

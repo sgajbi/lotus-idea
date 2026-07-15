@@ -2,14 +2,14 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from app.application.core_benchmark_assignment_live_proof import (
-    build_core_benchmark_assignment_live_proof_payload,
-)
 from app.application.implementation_proof_readiness import (
     build_implementation_proof_readiness_snapshot,
 )
 from app.domain import InMemoryIdeaRepository
 from tests.support.proof_provenance import bound_aggregate_proof
+from tests.support.core_benchmark_assignment_runtime_evidence import (
+    valid_core_benchmark_assignment_runtime_evidence,
+)
 
 PROOF_REF = "output/opportunity/core-benchmark-assignment-live-proof.json"
 
@@ -59,21 +59,8 @@ def test_implementation_proof_readiness_uses_core_benchmark_assignment_live_proo
 
 def _valid_core_benchmark_assignment_live_proof() -> dict[str, object]:
     return bound_aggregate_proof(
-        build_core_benchmark_assignment_live_proof_payload(
-            generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
-            live_core_source_attempted=True,
-            evidence_summary={
-                "runStatus": "completed",
-                "sourceAuthority": "lotus-core",
-                "sourceProductId": "lotus-core:BenchmarkAssignment:v1",
-                "benchmarkAssignmentRefPresent": True,
-                "benchmarkIdentityResolved": True,
-                "assignmentEffectiveForAsOfDate": True,
-                "assignmentStatus": "active",
-                "assignmentVersionPresent": True,
-                "sourceEvidenceCurrent": True,
-                "sourceDiagnosticCodes": ["core_benchmark_assignment_ready"],
-            },
+        valid_core_benchmark_assignment_runtime_evidence(
+            evaluated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC)
         ),
         PROOF_REF,
     )
