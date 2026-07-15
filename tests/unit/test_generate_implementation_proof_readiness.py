@@ -24,7 +24,6 @@ from app.application.workbench.contract_proof import (
 from app.application.workbench.discovery_contract_proof import (
     build_gateway_workbench_discovery_contract_proof_payload,
 )
-from app.application.high_volatility_live_proof import build_high_volatility_live_proof_payload
 from app.application.implementation_proof_readiness import (
     build_implementation_proof_readiness_snapshot,
 )
@@ -69,6 +68,9 @@ from tests.support.ai_workflow_pack_fixture import (
 from tests.support.risk_concentration_runtime_evidence import (
     GENERATED_AT as RISK_CONCENTRATION_GENERATED_AT,
     runtime_execution as risk_concentration_runtime_execution,
+)
+from tests.support.high_volatility_runtime_evidence import (
+    runtime_execution as high_volatility_runtime_execution,
 )
 from tests.support.ai_runtime_proof import ai_runtime_execution_receipt
 from tests.support.ai_lineage_store_proof import valid_ai_lineage_ci_execution_receipt
@@ -898,20 +900,8 @@ def test_generate_implementation_proof_readiness_uses_explicit_high_volatility_l
     high_volatility_proof = tmp_path / "high-volatility-live-proof.json"
     high_volatility_proof.write_text(
         json.dumps(
-            build_high_volatility_live_proof_payload(
-                generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
-                live_risk_source_attempted=True,
-                evaluation_summary={
-                    "runStatus": "completed",
-                    "sourceAuthority": "lotus-risk",
-                    "sourceProductId": "lotus-risk:RiskMetricsReport:v1",
-                    "evaluationOutcome": "candidate_created",
-                    "sourceEvidenceCurrent": True,
-                    "riskSupportabilityReady": True,
-                    "sourceDiagnosticCodes": ["risk_volatility_source_ready"],
-                    "reasonCodes": ["drawdown_attention"],
-                    "unsupportedReasons": [],
-                },
+            high_volatility_runtime_execution(
+                generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC)
             )
         ),
         encoding="utf-8",

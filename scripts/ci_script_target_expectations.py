@@ -126,7 +126,7 @@ SCRIPT_TARGET_EXPECTATIONS = {
     ),
     "ci-signal-evidence-contract-gate": "scripts/ci_signal_evidence_contract_gate.py",
     "high-volatility-live-proof-contract-gate": (
-        "scripts/high_volatility_live_proof_contract_gate.py"
+        "scripts/high_volatility_runtime_evidence/runtime_execution_contract_gate.py"
     ),
     "private-import-boundary-gate": "scripts/private_import_boundary_gate.py",
     "runtime-dependency-closure-gate": "scripts/runtime_dependency_closure_gate.py",
