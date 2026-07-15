@@ -66,7 +66,7 @@ REQUIRED_LINT_TARGETS = (
     "platform-catalog-source-contract-proof-gate",
     "source-ingestion-worker-check",
     "source-ingestion-scheduled-worker-check",
-    "source-ingestion-live-proof-contract-gate",
+    "source-ingestion-runtime-execution-contract-gate",
     "risk-concentration-live-proof-contract-gate",
     "high-volatility-live-proof-contract-gate",
     "risk-drawdown-live-proof-contract-gate",
@@ -345,7 +345,7 @@ REQUIRED_READINESS_WIRING = (
         "keep cross-repo proof generation CI-stable when sibling evidence is absent",
     ),
     (
-        "--source-ingestion-live-proof",
+        "--source-ingestion-runtime-execution",
         "support optional live source-ingestion proof artifact wiring",
     ),
     (

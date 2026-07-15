@@ -49,8 +49,8 @@ from app.application.source_ingestion_readiness import (
     SourceIngestionReadinessSnapshot,
     build_source_ingestion_readiness_snapshot,
 )
-from app.application.source_ingestion_live_proof import (
-    source_ingestion_live_proof_can_clear_aggregate_blockers,
+from app.application.source_ingestion_runtime_evidence import (
+    source_ingestion_runtime_execution_can_clear_aggregate_blockers,
 )
 from app.application.supported_feature_promotion import (
     SupportedFeaturePromotionEvaluation,
@@ -66,8 +66,8 @@ def build_implementation_proof_readiness_snapshot(
     evaluated_at_utc: datetime,
     repository: OutboxDeliveryRepository,
     durable_storage_backed: bool,
-    source_ingestion_live_proof: Mapping[str, object] | None = None,
-    source_ingestion_live_proof_ref: str | None = None,
+    source_ingestion_runtime_execution: Mapping[str, object] | None = None,
+    source_ingestion_runtime_execution_ref: str | None = None,
     source_ingestion_scheduled_worker_proof_ref: str | None = None,
     durable_repository_proof: Mapping[str, object] | None = None,
     durable_repository_proof_ref: str | None = None,
@@ -226,15 +226,17 @@ def _build_capabilities_with_available_proofs(
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
     capabilities = _build_base_capabilities(
         source_ingestion=cast(SourceIngestionReadinessSnapshot, scope["source_ingestion"]),
-        source_ingestion_live_proof_current=(
-            source_ingestion_live_proof_can_clear_aggregate_blockers(
-                cast(Mapping[str, object] | None, scope["source_ingestion_live_proof"]),
+        source_ingestion_runtime_execution_current=(
+            source_ingestion_runtime_execution_can_clear_aggregate_blockers(
+                cast(Mapping[str, object] | None, scope["source_ingestion_runtime_execution"]),
                 evaluated_at_utc=cast(datetime, scope["evaluated_at_utc"]),
-                proof_ref=cast(str | None, scope["source_ingestion_live_proof_ref"]),
+                proof_ref=cast(str | None, scope["source_ingestion_runtime_execution_ref"]),
                 repository_root=cast(Path, scope["repository_root"]),
             )
         ),
-        source_ingestion_live_proof_ref=cast(str | None, scope["source_ingestion_live_proof_ref"]),
+        source_ingestion_runtime_execution_ref=cast(
+            str | None, scope["source_ingestion_runtime_execution_ref"]
+        ),
         source_ingestion_scheduled_worker_proof_ref=cast(
             str | None,
             scope["source_ingestion_scheduled_worker_proof_ref"],
@@ -265,8 +267,8 @@ def _build_capabilities_with_available_proofs(
 def _build_base_capabilities(
     *,
     source_ingestion: SourceIngestionReadinessSnapshot,
-    source_ingestion_live_proof_current: bool,
-    source_ingestion_live_proof_ref: str | None,
+    source_ingestion_runtime_execution_current: bool,
+    source_ingestion_runtime_execution_ref: str | None,
     source_ingestion_scheduled_worker_proof_ref: str | None,
     review_queue: ReviewQueueReadinessSnapshot,
     ai_explanation: AIExplanationReadinessSnapshot,
@@ -280,8 +282,8 @@ def _build_base_capabilities(
     return (
         _source_ingestion_capability(
             source_ingestion,
-            live_proof_current=source_ingestion_live_proof_current,
-            live_proof_ref=source_ingestion_live_proof_ref,
+            live_proof_current=source_ingestion_runtime_execution_current,
+            live_proof_ref=source_ingestion_runtime_execution_ref,
             scheduled_worker_proof_ref=source_ingestion_scheduled_worker_proof_ref,
         ),
         _review_queue_capability(review_queue),
@@ -308,12 +310,12 @@ def _source_ingestion_capability(
         "src/app/application/source_ingestion.py",
         "scripts/run_source_ingestion_worker.py",
         "scripts/run_scheduled_source_ingestion_worker.py",
-        "scripts/generate_source_ingestion_live_proof.py",
+        "scripts/source_ingestion/generate_runtime_execution.py",
         "scripts/generate_scheduled_source_ingestion_worker_proof.py",
         "docs/examples/source-ingestion/high-cash-worker-manifest.example.json",
         "make source-ingestion-worker-check",
         "make source-ingestion-scheduled-worker-check",
-        "make source-ingestion-live-proof-contract-gate",
+        "make source-ingestion-runtime-execution-contract-gate",
         "GET /api/v1/source-ingestion/readiness",
         "POST /api/v1/source-ingestion/run-once",
     ]

@@ -23,7 +23,7 @@ from app.application.source_ingestion_readiness import (
     CORE_BASE_URL_ENV,
     CORE_QUERY_BASE_URL_ENV,
     CORE_QUERY_CONTROL_PLANE_BASE_URL_ENV,
-    LIVE_PROOF_ENV,
+    SOURCE_INGESTION_RUNTIME_EXECUTION_ENV,
     MANIFEST_ENV,
     SCHEDULED_WORKER_PROOF_ENV,
 )
@@ -205,7 +205,7 @@ def test_source_ingestion_readiness_api_returns_blocked_operator_posture(
     monkeypatch.delenv(CORE_BASE_URL_ENV, raising=False)
     monkeypatch.delenv(CORE_QUERY_BASE_URL_ENV, raising=False)
     monkeypatch.delenv(CORE_QUERY_CONTROL_PLANE_BASE_URL_ENV, raising=False)
-    monkeypatch.delenv(LIVE_PROOF_ENV, raising=False)
+    monkeypatch.delenv(SOURCE_INGESTION_RUNTIME_EXECUTION_ENV, raising=False)
     monkeypatch.delenv(SCHEDULED_WORKER_PROOF_ENV, raising=False)
     monkeypatch.delenv(DATABASE_URL_ENV, raising=False)
     client = managed_test_client(app)
@@ -280,7 +280,7 @@ def test_source_ingestion_readiness_api_emits_not_certified_operation_event(
 ) -> None:
     monkeypatch.delenv(MANIFEST_ENV, raising=False)
     monkeypatch.delenv(CORE_BASE_URL_ENV, raising=False)
-    monkeypatch.delenv(LIVE_PROOF_ENV, raising=False)
+    monkeypatch.delenv(SOURCE_INGESTION_RUNTIME_EXECUTION_ENV, raising=False)
     monkeypatch.delenv(SCHEDULED_WORKER_PROOF_ENV, raising=False)
     monkeypatch.delenv(DATABASE_URL_ENV, raising=False)
     events: list[tuple[str, str, str, bool, bool, str | None]] = []
@@ -325,7 +325,7 @@ def test_source_ingestion_readiness_api_emits_configured_run_once_event(
     manifest = tmp_path / "manifest.json"
     manifest.write_text("{}", encoding="utf-8")
     monkeypatch.setenv(MANIFEST_ENV, str(manifest))
-    monkeypatch.delenv(LIVE_PROOF_ENV, raising=False)
+    monkeypatch.delenv(SOURCE_INGESTION_RUNTIME_EXECUTION_ENV, raising=False)
     monkeypatch.delenv(SCHEDULED_WORKER_PROOF_ENV, raising=False)
     monkeypatch.setenv(CORE_BASE_URL_ENV, "http://localhost:8310")
     monkeypatch.setenv(DATABASE_URL_ENV, "postgresql://localhost/lotus_idea")

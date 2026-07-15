@@ -9,8 +9,9 @@ from pathlib import Path
 from typing import Any
 
 from app.application.source_ingestion import run_high_cash_source_ingestion_batch
-from app.application.source_ingestion_live_proof import (
-    build_source_ingestion_live_proof_payload,
+from app.application.source_ingestion_runtime_evidence import (
+    build_blocked_source_ingestion_runtime_execution,
+    build_source_ingestion_runtime_execution,
 )
 from app.application.source_ingestion_readiness import (
     CORE_BASE_URL_ENV,
@@ -21,8 +22,6 @@ from app.application.source_ingestion_readiness import (
 )
 from app.application.source_ingestion_worker import (
     source_ingestion_worker_plan_from_manifest,
-    summarize_source_ingestion_worker_failure,
-    summarize_source_ingestion_worker_run,
 )
 from app.infrastructure.downstream_client import (
     DownstreamClientConfig,
@@ -37,10 +36,10 @@ from app.runtime.repository_state import (
     idea_repository_durable_storage_backed,
 )
 
-try:
-    from scripts.proof_generator_io import timeout_seconds_from_args, write_json_payload
-except ModuleNotFoundError:
-    from proof_generator_io import timeout_seconds_from_args, write_json_payload  # type: ignore[import-not-found,no-redef]
+SCRIPT_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(SCRIPT_ROOT))
+
+from proof_generator_io import timeout_seconds_from_args, write_json_payload  # noqa: E402
 
 CORE_BASE_URL_HELP = (
     f"Optional compatibility Core base URL used for both Core query and query-control-plane "
@@ -73,26 +72,23 @@ def main(argv: list[str] | None = None) -> int:
                 )
             ),
         )
-        worker_summary = summarize_source_ingestion_worker_run(
-            plan=plan,
-            result=run_high_cash_source_ingestion_batch(
-                plan.command,
-                core_source=core_source,
-                repository=repository,
-            ),
-            durable_storage_backed=durable_storage_backed,
+        result = run_high_cash_source_ingestion_batch(
+            plan.command,
+            core_source=core_source,
+            repository=repository,
         )
-        proof_payload = build_source_ingestion_live_proof_payload(
+        proof_payload = build_source_ingestion_runtime_execution(
             generated_at_utc=generated_at_utc,
-            worker_summary=worker_summary,
-            live_core_source_attempted=True,
+            plan=plan,
+            result=result,
+            durable_storage_backed=durable_storage_backed,
         )
         write_json_payload(proof_payload, output=args.output)
         return 0
     except (CoreSourceEntitlementDenied, CoreSourceUnavailable, DownstreamServiceError) as exc:
         return _write_blocked_source_proof(args=args, error_code=_source_error_code(exc))
     except (DownstreamClientConfigurationError, OSError, ValueError, json.JSONDecodeError) as exc:
-        print(f"source ingestion live proof configuration error: {exc}", file=sys.stderr)
+        print(f"source ingestion runtime evidence configuration error: {exc}", file=sys.stderr)
         return 2
 
 
@@ -101,27 +97,23 @@ def _write_blocked_source_proof(*, args: argparse.Namespace, error_code: str) ->
         generated_at_utc = _parse_instant(args.generated_at_utc, "generated-at-utc")
         plan = source_ingestion_worker_plan_from_manifest(_read_manifest(_manifest_path(args)))
         repository = get_idea_repository()
-        worker_summary = summarize_source_ingestion_worker_failure(
+        proof_payload = build_blocked_source_ingestion_runtime_execution(
+            generated_at_utc=generated_at_utc,
             plan=plan,
             error_code=error_code,
             durable_storage_backed=idea_repository_durable_storage_backed(repository),
         )
-        proof_payload = build_source_ingestion_live_proof_payload(
-            generated_at_utc=generated_at_utc,
-            worker_summary=worker_summary,
-            live_core_source_attempted=True,
-        )
         write_json_payload(proof_payload, output=args.output)
     except (OSError, ValueError, json.JSONDecodeError) as exc:
-        print(f"source ingestion live proof error: {exc}", file=sys.stderr)
+        print(f"source ingestion runtime evidence error: {exc}", file=sys.stderr)
         return 2
-    print(f"source ingestion live proof blocked: {error_code}", file=sys.stderr)
+    print(f"source ingestion runtime evidence blocked: {error_code}", file=sys.stderr)
     return 3
 
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Generate source-safe live Core source-ingestion proof for lotus-idea."
+        description="Generate source-safe Core source-ingestion runtime execution evidence."
     )
     parser.add_argument("--manifest", default=os.getenv(MANIFEST_ENV))
     parser.add_argument(

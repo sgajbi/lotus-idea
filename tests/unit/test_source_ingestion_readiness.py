@@ -1,19 +1,15 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
 import json
 from pathlib import Path
 
 import pytest
 
-from app.application.source_ingestion_live_proof import (
-    build_source_ingestion_live_proof_payload,
-)
 from app.application.source_ingestion_readiness import (
     CORE_BASE_URL_ENV,
     CORE_QUERY_BASE_URL_ENV,
     CORE_QUERY_CONTROL_PLANE_BASE_URL_ENV,
-    LIVE_PROOF_ENV,
+    SOURCE_INGESTION_RUNTIME_EXECUTION_ENV,
     MANIFEST_ENV,
     SCHEDULED_WORKER_PROOF_ENV,
     build_source_ingestion_readiness_snapshot,
@@ -22,6 +18,7 @@ from app.runtime.repository_state import DATABASE_URL_ENV
 from tests.unit.source_ingestion_proof_helpers import (
     valid_scheduled_worker_proof as _valid_scheduled_worker_proof,
 )
+from tests.support.source_ingestion_runtime_evidence import runtime_execution
 
 
 def test_source_ingestion_readiness_reports_blocked_default_posture(
@@ -31,7 +28,7 @@ def test_source_ingestion_readiness_reports_blocked_default_posture(
     monkeypatch.delenv(CORE_BASE_URL_ENV, raising=False)
     monkeypatch.delenv(CORE_QUERY_BASE_URL_ENV, raising=False)
     monkeypatch.delenv(CORE_QUERY_CONTROL_PLANE_BASE_URL_ENV, raising=False)
-    monkeypatch.delenv(LIVE_PROOF_ENV, raising=False)
+    monkeypatch.delenv(SOURCE_INGESTION_RUNTIME_EXECUTION_ENV, raising=False)
     monkeypatch.delenv(SCHEDULED_WORKER_PROOF_ENV, raising=False)
     monkeypatch.delenv(DATABASE_URL_ENV, raising=False)
 
@@ -77,7 +74,7 @@ def test_source_ingestion_readiness_reports_configured_run_once_posture(
     manifest = tmp_path / "manifest.json"
     manifest.write_text("{}", encoding="utf-8")
     monkeypatch.setenv(MANIFEST_ENV, str(manifest))
-    monkeypatch.delenv(LIVE_PROOF_ENV, raising=False)
+    monkeypatch.delenv(SOURCE_INGESTION_RUNTIME_EXECUTION_ENV, raising=False)
     monkeypatch.delenv(SCHEDULED_WORKER_PROOF_ENV, raising=False)
     monkeypatch.setenv(CORE_BASE_URL_ENV, "http://localhost:8310")
     monkeypatch.setenv(DATABASE_URL_ENV, "postgresql://localhost/lotus_idea")
@@ -107,24 +104,11 @@ def test_source_ingestion_readiness_clears_only_live_core_blocker_with_valid_pro
     manifest.write_text("{}", encoding="utf-8")
     proof = tmp_path / "live-proof.json"
     proof.write_text(
-        json.dumps(
-            build_source_ingestion_live_proof_payload(
-                generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
-                live_core_source_attempted=True,
-                worker_summary={
-                    "schemaVersion": "lotus-idea.source-ingestion.high-cash.run-once.v1",
-                    "mode": "run_once",
-                    "sourceAuthority": "lotus-core",
-                    "durableStorageBacked": True,
-                    "totalCount": 1,
-                    "decisionCounts": {"accepted": 1, "replayed": 0},
-                },
-            )
-        ),
+        json.dumps(runtime_execution()),
         encoding="utf-8",
     )
     monkeypatch.setenv(MANIFEST_ENV, str(manifest))
-    monkeypatch.setenv(LIVE_PROOF_ENV, str(proof))
+    monkeypatch.setenv(SOURCE_INGESTION_RUNTIME_EXECUTION_ENV, str(proof))
     monkeypatch.delenv(SCHEDULED_WORKER_PROOF_ENV, raising=False)
     monkeypatch.setenv(CORE_BASE_URL_ENV, "http://localhost:8310")
     monkeypatch.setenv(DATABASE_URL_ENV, "postgresql://localhost/lotus_idea")
@@ -155,7 +139,7 @@ def test_source_ingestion_readiness_keeps_live_core_blocker_for_invalid_proof(
     proof = tmp_path / "live-proof.json"
     proof.write_text('{"schemaVersion": "wrong"}', encoding="utf-8")
     monkeypatch.setenv(MANIFEST_ENV, str(manifest))
-    monkeypatch.setenv(LIVE_PROOF_ENV, str(proof))
+    monkeypatch.setenv(SOURCE_INGESTION_RUNTIME_EXECUTION_ENV, str(proof))
     monkeypatch.delenv(SCHEDULED_WORKER_PROOF_ENV, raising=False)
     monkeypatch.setenv(CORE_BASE_URL_ENV, "http://localhost:8310")
     monkeypatch.setenv(DATABASE_URL_ENV, "postgresql://localhost/lotus_idea")
@@ -176,7 +160,7 @@ def test_source_ingestion_readiness_keeps_live_core_blocker_for_malformed_proof(
     proof = tmp_path / "live-proof.json"
     proof.write_text("{not-json", encoding="utf-8")
     monkeypatch.setenv(MANIFEST_ENV, str(manifest))
-    monkeypatch.setenv(LIVE_PROOF_ENV, str(proof))
+    monkeypatch.setenv(SOURCE_INGESTION_RUNTIME_EXECUTION_ENV, str(proof))
     monkeypatch.delenv(SCHEDULED_WORKER_PROOF_ENV, raising=False)
     monkeypatch.setenv(CORE_BASE_URL_ENV, "http://localhost:8310")
     monkeypatch.setenv(DATABASE_URL_ENV, "postgresql://localhost/lotus_idea")
@@ -200,7 +184,7 @@ def test_source_ingestion_readiness_clears_only_scheduled_worker_blocker_with_va
         encoding="utf-8",
     )
     monkeypatch.setenv(MANIFEST_ENV, str(manifest))
-    monkeypatch.delenv(LIVE_PROOF_ENV, raising=False)
+    monkeypatch.delenv(SOURCE_INGESTION_RUNTIME_EXECUTION_ENV, raising=False)
     monkeypatch.setenv(SCHEDULED_WORKER_PROOF_ENV, str(scheduled_proof))
     monkeypatch.setenv(CORE_BASE_URL_ENV, "http://localhost:8310")
     monkeypatch.setenv(DATABASE_URL_ENV, "postgresql://localhost/lotus_idea")
@@ -227,7 +211,7 @@ def test_source_ingestion_readiness_keeps_scheduled_worker_blocker_for_invalid_p
     scheduled_proof = tmp_path / "scheduled-worker-proof.json"
     scheduled_proof.write_text('{"schemaVersion": "wrong"}', encoding="utf-8")
     monkeypatch.setenv(MANIFEST_ENV, str(manifest))
-    monkeypatch.delenv(LIVE_PROOF_ENV, raising=False)
+    monkeypatch.delenv(SOURCE_INGESTION_RUNTIME_EXECUTION_ENV, raising=False)
     monkeypatch.setenv(SCHEDULED_WORKER_PROOF_ENV, str(scheduled_proof))
     monkeypatch.setenv(CORE_BASE_URL_ENV, "http://localhost:8310")
     monkeypatch.setenv(DATABASE_URL_ENV, "postgresql://localhost/lotus_idea")
@@ -248,7 +232,7 @@ def test_source_ingestion_readiness_keeps_scheduled_worker_blocker_for_malformed
     scheduled_proof = tmp_path / "scheduled-worker-proof.json"
     scheduled_proof.write_text("{not-json", encoding="utf-8")
     monkeypatch.setenv(MANIFEST_ENV, str(manifest))
-    monkeypatch.delenv(LIVE_PROOF_ENV, raising=False)
+    monkeypatch.delenv(SOURCE_INGESTION_RUNTIME_EXECUTION_ENV, raising=False)
     monkeypatch.setenv(SCHEDULED_WORKER_PROOF_ENV, str(scheduled_proof))
     monkeypatch.setenv(CORE_BASE_URL_ENV, "http://localhost:8310")
     monkeypatch.setenv(DATABASE_URL_ENV, "postgresql://localhost/lotus_idea")
@@ -274,7 +258,7 @@ def test_source_ingestion_readiness_resolves_relative_manifest_from_repo_root(
     manifest.parent.mkdir()
     manifest.write_text("{}", encoding="utf-8")
     monkeypatch.setenv(MANIFEST_ENV, "ops/manifest.json")
-    monkeypatch.delenv(LIVE_PROOF_ENV, raising=False)
+    monkeypatch.delenv(SOURCE_INGESTION_RUNTIME_EXECUTION_ENV, raising=False)
     monkeypatch.delenv(SCHEDULED_WORKER_PROOF_ENV, raising=False)
     monkeypatch.setenv(CORE_BASE_URL_ENV, "http://localhost:8310")
     monkeypatch.setenv(DATABASE_URL_ENV, "postgresql://localhost/lotus_idea")
@@ -336,7 +320,7 @@ def test_source_ingestion_readiness_blocks_unreadable_configured_manifest(
 ) -> None:
     missing_manifest = tmp_path / "missing.json"
     monkeypatch.setenv(MANIFEST_ENV, str(missing_manifest))
-    monkeypatch.delenv(LIVE_PROOF_ENV, raising=False)
+    monkeypatch.delenv(SOURCE_INGESTION_RUNTIME_EXECUTION_ENV, raising=False)
     monkeypatch.delenv(SCHEDULED_WORKER_PROOF_ENV, raising=False)
     monkeypatch.setenv(CORE_BASE_URL_ENV, "http://localhost:8310")
     monkeypatch.setenv(DATABASE_URL_ENV, "postgresql://localhost/lotus_idea")

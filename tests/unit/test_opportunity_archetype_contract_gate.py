@@ -462,14 +462,14 @@ def test_opportunity_archetype_contract_gate_rejects_missing_high_cash_evidence(
     module = _load_contract_gate_script()
     payload = _contract_payload()
     payload["archetypes"][0]["evidence_refs"].remove(
-        "src/app/application/source_ingestion_live_proof.py"
+        "src/app/application/source_ingestion_runtime_evidence/runtime_execution.py"
     )
 
     errors = module.validate_opportunity_archetype_contract_payload(module._parse_payload(payload))
 
     assert (
         "high-cash-idle-liquidity evidence_refs missing: "
-        "src/app/application/source_ingestion_live_proof.py"
+        "src/app/application/source_ingestion_runtime_evidence/runtime_execution.py"
     ) in errors
 
 

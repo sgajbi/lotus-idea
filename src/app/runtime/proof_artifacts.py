@@ -45,7 +45,10 @@ from app.application.report.intake_route_source_contract import (
 from app.application.runtime_trust_telemetry.test_execution_contract import (
     RUNTIME_TRUST_TELEMETRY_TEST_EXECUTION_ENV,
 )
-from app.application.source_ingestion_readiness import LIVE_PROOF_ENV, SCHEDULED_WORKER_PROOF_ENV
+from app.application.source_ingestion_readiness import SCHEDULED_WORKER_PROOF_ENV
+from app.application.source_ingestion_runtime_evidence import (
+    SOURCE_INGESTION_RUNTIME_EXECUTION_ENV,
+)
 from app.application.workbench.read_path_source_contract import (
     WORKBENCH_READ_PATH_SOURCE_CONTRACT_PROOF_ENV,
 )
@@ -54,8 +57,8 @@ from app.runtime.proof_artifact_files import read_optional_json_object
 
 @dataclass(frozen=True)
 class ConfiguredImplementationProofArtifacts:
-    source_ingestion_live_proof: dict[str, Any] | None
-    source_ingestion_live_proof_ref: str | None
+    source_ingestion_runtime_execution: dict[str, Any] | None
+    source_ingestion_runtime_execution_ref: str | None
     source_ingestion_scheduled_worker_proof_ref: str | None
     durable_repository_proof: dict[str, Any] | None
     durable_repository_proof_ref: str | None
@@ -101,10 +104,10 @@ _REF_ONLY_PROOF_ARTIFACTS: tuple[tuple[str, str, str], ...] = (
 
 _JSON_PROOF_ARTIFACTS: tuple[tuple[str, str, str, str], ...] = (
     (
-        LIVE_PROOF_ENV,
-        "source_ingestion_live_proof",
-        "source_ingestion_live_proof_ref",
-        "source ingestion live proof",
+        SOURCE_INGESTION_RUNTIME_EXECUTION_ENV,
+        "source_ingestion_runtime_execution",
+        "source_ingestion_runtime_execution_ref",
+        "source ingestion runtime execution",
     ),
     (
         DURABLE_REPOSITORY_PROOF_ENV,

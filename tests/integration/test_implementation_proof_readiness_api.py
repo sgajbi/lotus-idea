@@ -46,12 +46,9 @@ from app.application.report.intake_route_source_contract import (
     REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF_SCHEMA_VERSION,
     REQUIRED_REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_EVIDENCE_REFS,
 )
-from app.application.source_ingestion_live_proof import (
-    build_source_ingestion_live_proof_payload,
-)
 from app.application.source_ingestion_readiness import (
     CORE_BASE_URL_ENV,
-    LIVE_PROOF_ENV,
+    SOURCE_INGESTION_RUNTIME_EXECUTION_ENV,
     MANIFEST_ENV,
     SCHEDULED_WORKER_PROOF_ENV,
 )
@@ -64,6 +61,7 @@ from app.application.source_ingestion_worker import (
     MANIFEST_SCHEMA_VERSION,
     source_ingestion_worker_plan_from_manifest,
 )
+from tests.support.source_ingestion_runtime_evidence import runtime_execution
 from app.application.workbench.read_path_source_contract import (
     WORKBENCH_READ_PATH_SOURCE_CONTRACT_PROOF_ENV,
     build_workbench_read_path_source_contract_proof_payload,
@@ -317,7 +315,8 @@ def test_implementation_proof_readiness_api_consumes_configured_proof_artifacts(
         capability["capabilityId"]: capability for capability in payload["capabilities"]
     }
     assert (
-        "source ingestion live proof artifact" in capabilities["source-ingestion"]["evidenceRefs"]
+            "source ingestion runtime execution artifact"
+            in capabilities["source-ingestion"]["evidenceRefs"]
     )
     assert (
         "source ingestion scheduled-worker proof artifact"
@@ -488,7 +487,7 @@ def _configure_readiness_proof_artifacts(
         bind_clean_aggregate_proof_provenance,
     )
     manifest_path = tmp_path / "source-ingestion-manifest.json"
-    live_proof_path = tmp_path / "source-ingestion-live-proof.json"
+    live_proof_path = tmp_path / "source-ingestion-runtime-execution.json"
     scheduled_proof_path = tmp_path / "source-ingestion-scheduled-worker-proof.json"
     durable_proof_path = tmp_path / "durable-repository-proof.json"
     runtime_proof_path = tmp_path / "runtime-trust-telemetry-test-execution.json"
@@ -504,18 +503,7 @@ def _configure_readiness_proof_artifacts(
     manifest_path.write_text("{}", encoding="utf-8")
     _write_proof(
         live_proof_path,
-        build_source_ingestion_live_proof_payload(
-            generated_at_utc=evaluated_at_utc,
-            live_core_source_attempted=True,
-            worker_summary={
-                "schemaVersion": MANIFEST_SCHEMA_VERSION,
-                "mode": "run_once",
-                "sourceAuthority": "lotus-core",
-                "durableStorageBacked": True,
-                "totalCount": 1,
-                "decisionCounts": {"accepted": 1, "replayed": 0},
-            },
-        ),
+        runtime_execution(generated_at_utc=evaluated_at_utc),
     )
     _write_proof(
         scheduled_proof_path,
@@ -573,7 +561,7 @@ def _configure_readiness_proof_artifacts(
     )
 
     monkeypatch.setenv(MANIFEST_ENV, str(manifest_path))
-    monkeypatch.setenv(LIVE_PROOF_ENV, str(live_proof_path))
+    monkeypatch.setenv(SOURCE_INGESTION_RUNTIME_EXECUTION_ENV, str(live_proof_path))
     monkeypatch.setenv(SCHEDULED_WORKER_PROOF_ENV, str(scheduled_proof_path))
     monkeypatch.setenv(CORE_BASE_URL_ENV, "http://localhost:8310")
     monkeypatch.setenv(DURABLE_REPOSITORY_PROOF_ENV, str(durable_proof_path))

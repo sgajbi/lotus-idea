@@ -35,7 +35,7 @@ from app.application.data_mesh.platform_catalog_source_contract import (
 from app.application.runtime_trust_telemetry.test_execution_contract import (
     RUNTIME_TRUST_TELEMETRY_TEST_EXECUTION_ENV,
 )
-from app.application.source_ingestion_readiness import LIVE_PROOF_ENV
+from app.application.source_ingestion_readiness import SOURCE_INGESTION_RUNTIME_EXECUTION_ENV
 from app.application.workbench.read_path_source_contract import (
     WORKBENCH_READ_PATH_SOURCE_CONTRACT_PROOF_ENV,
 )
@@ -48,7 +48,7 @@ def test_configured_implementation_proof_artifacts_loads_relative_source_safe_re
 ) -> None:
     durable_path = tmp_path / "output" / "persistence" / "durable-repository-proof.json"
     source_ingestion_live_path = (
-        tmp_path / "output" / "source-ingestion" / "source-ingestion-live-proof.json"
+        tmp_path / "output" / "source-ingestion" / "source-ingestion-runtime-execution.json"
     )
     runtime_path = (
         tmp_path
@@ -101,11 +101,11 @@ def test_configured_implementation_proof_artifacts_loads_relative_source_safe_re
     artifacts = configured_implementation_proof_artifacts(repository_root=tmp_path)
 
     _assert_bound_artifact(
-        artifacts.source_ingestion_live_proof,
-        "source-ingestion-live-proof.json",
+        artifacts.source_ingestion_runtime_execution,
+        "source-ingestion-runtime-execution.json",
     )
-    assert artifacts.source_ingestion_live_proof_ref == (
-        "output/source-ingestion/source-ingestion-live-proof.json"
+    assert artifacts.source_ingestion_runtime_execution_ref == (
+        "output/source-ingestion/source-ingestion-runtime-execution.json"
     )
     _assert_bound_artifact(artifacts.durable_repository_proof, "durable-repository-proof.json")
     assert artifacts.durable_repository_proof_ref == (
@@ -211,7 +211,7 @@ def _write_artifacts(*paths: Path) -> None:
 def _configure_relative_artifact_env(monkeypatch: pytest.MonkeyPatch) -> None:
     env_paths = {
         DURABLE_REPOSITORY_PROOF_ENV: "output/persistence/durable-repository-proof.json",
-        LIVE_PROOF_ENV: "output/source-ingestion/source-ingestion-live-proof.json",
+        SOURCE_INGESTION_RUNTIME_EXECUTION_ENV: "output/source-ingestion/source-ingestion-runtime-execution.json",
         RUNTIME_TRUST_TELEMETRY_TEST_EXECUTION_ENV: (
             "output/trust-telemetry/test-execution/runtime-trust-telemetry-test-execution.json"
         ),

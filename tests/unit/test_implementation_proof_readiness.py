@@ -65,12 +65,9 @@ from app.domain.proof_evidence import EvidenceClass
 from app.application.runtime_trust_telemetry.test_execution_contract import (
     build_runtime_trust_telemetry_test_execution_payload,
 )
-from app.application.source_ingestion_live_proof import (
-    build_source_ingestion_live_proof_payload,
-)
 from app.application.source_ingestion_readiness import (
     CORE_BASE_URL_ENV,
-    LIVE_PROOF_ENV,
+    SOURCE_INGESTION_RUNTIME_EXECUTION_ENV,
     MANIFEST_ENV,
     SCHEDULED_WORKER_PROOF_ENV,
 )
@@ -84,6 +81,7 @@ from tests.support.ai_workflow_pack_fixture import (
 )
 from tests.support.ai_runtime_proof import ai_runtime_execution_receipt
 from tests.support.ai_lineage_store_proof import valid_ai_lineage_ci_execution_receipt
+from tests.support.source_ingestion_runtime_evidence import runtime_execution
 from tests.unit.source_ingestion_proof_helpers import (
     valid_scheduled_worker_proof as _valid_scheduled_worker_proof,
 )
@@ -281,8 +279,11 @@ def test_implementation_proof_readiness_capabilities_are_source_safe() -> None:
     assert "POST /api/v1/source-ingestion/run-once" in source_ingestion.evidence_refs
     assert "make source-ingestion-worker-check" in source_ingestion.evidence_refs
     assert "make source-ingestion-scheduled-worker-check" in source_ingestion.evidence_refs
-    assert "make source-ingestion-live-proof-contract-gate" in source_ingestion.evidence_refs
-    assert "scripts/generate_source_ingestion_live_proof.py" in source_ingestion.evidence_refs
+    assert "make source-ingestion-runtime-execution-contract-gate" in source_ingestion.evidence_refs
+    assert (
+        "scripts/source_ingestion/generate_runtime_execution.py"
+        in source_ingestion.evidence_refs
+    )
     assert "scripts/generate_scheduled_source_ingestion_worker_proof.py" in (
         source_ingestion.evidence_refs
     )
@@ -400,32 +401,21 @@ def test_implementation_proof_readiness_lists_valid_source_ingestion_proof_refs_
     tmp_path: Path,
 ) -> None:
     manifest = tmp_path / "manifest.json"
-    live_proof = tmp_path / "source-ingestion-live-proof.json"
+    live_proof = tmp_path / "source-ingestion-runtime-execution.json"
     scheduled_proof = tmp_path / "source-ingestion-scheduled-worker-proof.json"
     manifest.write_text("{}", encoding="utf-8")
-    source_ingestion_live_proof_ref = "output/source-ingestion/live-proof.json"
-    source_ingestion_live_proof = _bound_aggregate_proof(
-        build_source_ingestion_live_proof_payload(
-            generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
-            live_core_source_attempted=True,
-            worker_summary={
-                "schemaVersion": "lotus-idea.source-ingestion.high-cash.run-once.v1",
-                "mode": "run_once",
-                "sourceAuthority": "lotus-core",
-                "durableStorageBacked": True,
-                "totalCount": 1,
-                "decisionCounts": {"accepted": 1, "replayed": 0},
-            },
-        ),
-        source_ingestion_live_proof_ref,
+    source_ingestion_runtime_execution_ref = "output/source-ingestion/live-proof.json"
+    source_ingestion_runtime_execution = _bound_aggregate_proof(
+        runtime_execution(),
+        source_ingestion_runtime_execution_ref,
     )
     live_proof.write_text(
-        json.dumps(source_ingestion_live_proof),
+        json.dumps(source_ingestion_runtime_execution),
         encoding="utf-8",
     )
     scheduled_proof.write_text(json.dumps(_valid_scheduled_worker_proof()), encoding="utf-8")
     monkeypatch.setenv(MANIFEST_ENV, str(manifest))
-    monkeypatch.setenv(LIVE_PROOF_ENV, str(live_proof))
+    monkeypatch.setenv(SOURCE_INGESTION_RUNTIME_EXECUTION_ENV, str(live_proof))
     monkeypatch.setenv(SCHEDULED_WORKER_PROOF_ENV, str(scheduled_proof))
     monkeypatch.setenv(CORE_BASE_URL_ENV, "http://localhost:8310")
     monkeypatch.setenv(DATABASE_URL_ENV, "postgresql://localhost/lotus_idea")
@@ -434,8 +424,8 @@ def test_implementation_proof_readiness_lists_valid_source_ingestion_proof_refs_
         evaluated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
         repository=InMemoryIdeaRepository(),
         durable_storage_backed=False,
-        source_ingestion_live_proof=source_ingestion_live_proof,
-        source_ingestion_live_proof_ref=source_ingestion_live_proof_ref,
+        source_ingestion_runtime_execution=source_ingestion_runtime_execution,
+        source_ingestion_runtime_execution_ref=source_ingestion_runtime_execution_ref,
         source_ingestion_scheduled_worker_proof_ref=(
             "output/source-ingestion/scheduled-worker-proof.json"
         ),

@@ -5,7 +5,10 @@ import json
 import os
 from pathlib import Path
 
-from app.application.source_ingestion_live_proof import live_core_source_proof_is_valid
+from app.application.source_ingestion_runtime_evidence import (
+    SOURCE_INGESTION_RUNTIME_EXECUTION_ENV as SOURCE_INGESTION_RUNTIME_EXECUTION_ENV,
+    source_ingestion_runtime_execution_is_valid,
+)
 from app.application.source_ingestion_scheduled_worker import (
     scheduled_worker_deploy_proof_is_valid,
 )
@@ -18,7 +21,6 @@ CORE_BASE_URL_ENV = "LOTUS_CORE_BASE_URL"
 CORE_QUERY_BASE_URL_ENV = "LOTUS_CORE_QUERY_BASE_URL"
 CORE_QUERY_CONTROL_PLANE_BASE_URL_ENV = "LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL"
 MANIFEST_ENV = "LOTUS_IDEA_SOURCE_INGESTION_MANIFEST"
-LIVE_PROOF_ENV = "LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF"
 SCHEDULED_WORKER_PROOF_ENV = "LOTUS_IDEA_SOURCE_INGESTION_SCHEDULED_WORKER_PROOF"
 TIMEOUT_SECONDS_ENV = "LOTUS_IDEA_SOURCE_INGESTION_TIMEOUT_SECONDS"
 EXAMPLE_MANIFEST_PATH = Path(
@@ -68,8 +70,8 @@ def build_source_ingestion_readiness_snapshot(
         configured_manifest,
         repository_root=repository_root,
     )
-    configured_live_proof_path = resolve_source_ingestion_manifest_path(
-        os.getenv(LIVE_PROOF_ENV, "").strip(),
+    configured_runtime_execution_path = resolve_source_ingestion_manifest_path(
+        os.getenv(SOURCE_INGESTION_RUNTIME_EXECUTION_ENV, "").strip(),
         repository_root=repository_root,
     )
     configured_scheduled_worker_proof_path = resolve_source_ingestion_manifest_path(
@@ -77,7 +79,7 @@ def build_source_ingestion_readiness_snapshot(
         repository_root=repository_root,
     )
     core_source_urls = core_source_runtime_urls_from_environment()
-    live_core_source_proof_valid = _live_core_source_proof_valid(configured_live_proof_path)
+    live_core_source_proof_valid = _runtime_execution_valid(configured_runtime_execution_path)
     scheduled_worker_deploy_proof_valid = _scheduled_worker_deploy_proof_valid(
         configured_scheduled_worker_proof_path
     )
@@ -101,7 +103,7 @@ def build_source_ingestion_readiness_snapshot(
             configured_manifest_path and configured_manifest_path.is_file()
         ),
         configured_live_proof_available=bool(
-            configured_live_proof_path and configured_live_proof_path.is_file()
+            configured_runtime_execution_path and configured_runtime_execution_path.is_file()
         ),
         live_core_source_proof_valid=live_core_source_proof_valid,
         configured_scheduled_worker_proof_available=bool(
@@ -192,14 +194,14 @@ def _certification_blockers(
     return tuple(blockers)
 
 
-def _live_core_source_proof_valid(configured_live_proof_path: Path | None) -> bool:
-    if configured_live_proof_path is None or not configured_live_proof_path.is_file():
+def _runtime_execution_valid(configured_runtime_execution_path: Path | None) -> bool:
+    if configured_runtime_execution_path is None or not configured_runtime_execution_path.is_file():
         return False
     try:
-        payload = json.loads(configured_live_proof_path.read_text(encoding="utf-8"))
+        payload = json.loads(configured_runtime_execution_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
         return False
-    return isinstance(payload, dict) and live_core_source_proof_is_valid(payload)
+    return isinstance(payload, dict) and source_ingestion_runtime_execution_is_valid(payload)
 
 
 def _scheduled_worker_deploy_proof_valid(
