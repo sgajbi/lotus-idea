@@ -34,6 +34,18 @@ REMAINING_MANAGE_ROUTE_BLOCKERS = (
     "manage_live_contract_proof_missing",
     "rebalance_execution_authority_remains_lotus_manage",
 )
+REQUIRED_ADVISE_PRODUCER_CERTIFICATION_BLOCKERS = (
+    "suitability_policy_authority_remains_lotus_advise",
+    "advisory_proposal_creation_not_certified",
+    "proposal_lifecycle_persistence_not_certified",
+    "client_publication_authority_blocked",
+)
+REQUIRED_MANAGE_PRODUCER_CERTIFICATION_BLOCKERS = (
+    "rebalance_execution_authority_remains_lotus_manage",
+    "action_register_persistence_not_certified",
+    "oms_execution_not_certified",
+    "client_publication_authority_blocked",
+)
 
 _CONTRACT_CHECK_FIELDS = frozenset(
     {
@@ -90,6 +102,7 @@ class RouteSourceContractProfile:
     contract_path: str
     target_route: str
     remaining_blockers: tuple[str, ...]
+    required_producer_certification_blockers: tuple[str, ...]
     source_refs: tuple[str, ...]
     evidence_refs: tuple[str, ...]
 
@@ -107,6 +120,9 @@ ADVISE_ROUTE_PROFILE = RouteSourceContractProfile(
     contract_path="contracts/idea-proposal-intake/lotus-advise-idea-proposal-intake.v1.json",
     target_route=ADVISE_PROPOSAL_ROUTE,
     remaining_blockers=REMAINING_ADVISE_ROUTE_BLOCKERS,
+    required_producer_certification_blockers=(
+        REQUIRED_ADVISE_PRODUCER_CERTIFICATION_BLOCKERS
+    ),
     source_refs=(
         "contracts/idea-proposal-intake/lotus-advise-idea-proposal-intake.v1.json",
         "src/api/proposals/router.py",
@@ -137,6 +153,9 @@ MANAGE_ROUTE_PROFILE = RouteSourceContractProfile(
     contract_path="contracts/idea-action-intake/lotus-manage-idea-action-intake.v1.json",
     target_route=MANAGE_ACTION_ROUTE,
     remaining_blockers=REMAINING_MANAGE_ROUTE_BLOCKERS,
+    required_producer_certification_blockers=(
+        REQUIRED_MANAGE_PRODUCER_CERTIFICATION_BLOCKERS
+    ),
     source_refs=(
         "contracts/idea-action-intake/lotus-manage-idea-action-intake.v1.json",
         "src/api/routers/rebalance_runs.py",
@@ -361,7 +380,10 @@ def _contract_preserves_boundaries(payload: dict[str, Any] | None) -> bool:
 def _contract_retains_blockers(
     payload: dict[str, Any] | None, profile: RouteSourceContractProfile
 ) -> bool:
-    return set(profile.remaining_blockers) <= set((payload or {}).get("certification_blockers", ()))
+    producer_blockers = (payload or {}).get("certification_blockers")
+    return isinstance(producer_blockers, list) and set(
+        profile.required_producer_certification_blockers
+    ) <= set(producer_blockers)
 
 
 def _load_from_env(env_name: str) -> tuple[dict[str, Any] | None, str | None]:

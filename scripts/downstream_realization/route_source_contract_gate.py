@@ -20,6 +20,8 @@ from app.application.downstream_realization.route_source_contract import (  # no
     MANAGE_ROUTE_PROFILE,
     REMAINING_ADVISE_ROUTE_BLOCKERS,
     REMAINING_MANAGE_ROUTE_BLOCKERS,
+    REQUIRED_ADVISE_PRODUCER_CERTIFICATION_BLOCKERS,
+    REQUIRED_MANAGE_PRODUCER_CERTIFICATION_BLOCKERS,
     ROUTE_SOURCE_CONTRACT_BLOCKERS_SATISFIED,
     ROUTE_SOURCE_CONTRACT_SCHEMA_VERSION,
     advise_route_source_contract_is_valid,
@@ -177,7 +179,9 @@ def _advise_contract_payload() -> dict[str, object]:
             "Does not create orders, execution instructions, fills, or settlement records.",
             "Does not promote a supported feature in lotus-advise or lotus-idea.",
         ],
-        "certification_blockers": list(REMAINING_ADVISE_ROUTE_BLOCKERS),
+        "certification_blockers": list(
+            REQUIRED_ADVISE_PRODUCER_CERTIFICATION_BLOCKERS
+        ),
     }
 
 
@@ -201,7 +205,9 @@ def _manage_contract_payload() -> dict[str, object]:
             "Does not create orders, execution instructions, fills, or settlement records.",
             "Does not promote a supported feature in lotus-manage or lotus-idea.",
         ],
-        "certification_blockers": list(REMAINING_MANAGE_ROUTE_BLOCKERS),
+        "certification_blockers": list(
+            REQUIRED_MANAGE_PRODUCER_CERTIFICATION_BLOCKERS
+        ),
     }
 
 
