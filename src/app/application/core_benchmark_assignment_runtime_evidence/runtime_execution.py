@@ -14,9 +14,7 @@ from app.ports.core_sources import (
     CoreBenchmarkAssignmentSourcePort,
 )
 
-CORE_BENCHMARK_ASSIGNMENT_RUNTIME_EXECUTION_ENV = (
-    "LOTUS_IDEA_CORE_BENCHMARK_ASSIGNMENT_LIVE_PROOF"
-)
+CORE_BENCHMARK_ASSIGNMENT_RUNTIME_EXECUTION_ENV = "LOTUS_IDEA_CORE_BENCHMARK_ASSIGNMENT_LIVE_PROOF"
 CORE_BENCHMARK_ASSIGNMENT_RUNTIME_EXECUTION_SCHEMA_VERSION = (
     "lotus-idea.core-benchmark-assignment.runtime-execution.v2"
 )
@@ -110,7 +108,10 @@ def build_core_benchmark_assignment_runtime_execution(
 
 
 def build_blocked_core_benchmark_assignment_runtime_execution(
-    *, generated_at_utc: datetime, command: EvaluateCoreBenchmarkAssignmentReadiness, error_code: str
+    *,
+    generated_at_utc: datetime,
+    command: EvaluateCoreBenchmarkAssignmentReadiness,
+    error_code: str,
 ) -> dict[str, Any]:
     _require_aware(generated_at_utc, "generated_at_utc")
     return _payload(
@@ -125,10 +126,17 @@ def build_blocked_core_benchmark_assignment_runtime_execution(
     )
 
 
-def _payload(*, generated_at_utc: datetime, command: EvaluateCoreBenchmarkAssignmentReadiness,
-             status: str, request_receipt: dict[str, Any], source_receipt: dict[str, Any] | None,
-             assignment_status: str, diagnostic_code: str,
-             qualification_blockers: tuple[str, ...]) -> dict[str, Any]:
+def _payload(
+    *,
+    generated_at_utc: datetime,
+    command: EvaluateCoreBenchmarkAssignmentReadiness,
+    status: str,
+    request_receipt: dict[str, Any],
+    source_receipt: dict[str, Any] | None,
+    assignment_status: str,
+    diagnostic_code: str,
+    qualification_blockers: tuple[str, ...],
+) -> dict[str, Any]:
     blockers = tuple(dict.fromkeys(qualification_blockers))
     return {
         "schemaVersion": CORE_BENCHMARK_ASSIGNMENT_RUNTIME_EXECUTION_SCHEMA_VERSION,
@@ -173,7 +181,11 @@ def _qualification_blockers(
 ) -> tuple[str, ...]:
     ref = evidence.benchmark_assignment_ref
     blockers: list[str] = []
-    if ref is None or ref.source_system is not SourceSystem.LOTUS_CORE or ref.product_id != _PRODUCT_ID:
+    if (
+        ref is None
+        or ref.source_system is not SourceSystem.LOTUS_CORE
+        or ref.product_id != _PRODUCT_ID
+    ):
         blockers.append("core_benchmark_assignment_source_ref_missing")
     elif ref.as_of_date != command.as_of_date:
         blockers.append("core_benchmark_assignment_scope_mismatch")
