@@ -319,14 +319,15 @@ Prove the complete supported opportunity journey end to end.
     `opportunity_archetype_live_risk_volatility_source_proof_missing`, while
     preserving drawdown, data-mesh, Workbench, client-publication, deployment,
     production, and supported-feature blockers.
-30. `src/app/application/risk_drawdown_live_proof.py`,
-    `scripts/generate_risk_drawdown_live_proof.py`, and
-    `make risk-drawdown-live-proof-contract-gate` now define and enforce a
-    source-safe Lotus Risk drawdown live-proof artifact. Aggregate readiness
-    can consume a valid artifact to clear only
+30. `src/app/application/risk_drawdown_runtime_evidence/`,
+    `scripts/risk_drawdown_runtime_evidence/`, and the compatibility target
+    `make risk-drawdown-live-proof-contract-gate` define and enforce a closed
+    v2 Lotus Risk drawdown `runtime_execution` contract. It binds current Risk
+    source evidence and the authoritative use-case result to accepted or
+    replayed durable Idea persistence. Aggregate readiness can clear only
     `opportunity_archetype_drawdown_source_proof_missing`, while preserving
-    volatility, data-mesh, Workbench, client-publication, and supported-feature
-    blockers.
+    volatility, data-mesh, Workbench, client-publication, deployment,
+    production, and supported-feature blockers.
 31. `src/app/application/performance_underperformance_live_proof.py`,
     `scripts/generate_performance_underperformance_live_proof.py`, and
     `make performance-underperformance-live-proof-contract-gate` now define and

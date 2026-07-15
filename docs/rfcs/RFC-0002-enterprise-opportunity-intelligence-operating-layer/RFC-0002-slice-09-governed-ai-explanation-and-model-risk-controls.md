@@ -458,8 +458,21 @@ receipt tampering fail closed. A valid current artifact can clear only
 mesh, Gateway/Workbench, publication, deployment, production, and
 supported-feature blockers remain. This is internal design modularity in the
 existing deployable, not a new service or database boundary.
-The follow-on same-pattern scan found the equivalent flat drawdown proof;
-issue `#466` tracks that separately so the #465 closure remains bounded.
+Issue `#466` applies the same authority rule to the Risk drawdown proof. The
+capability-owned `application/risk_drawdown_runtime_evidence/`,
+`scripts/risk_drawdown_runtime_evidence/`, and focused test packages replace
+the retired flat v1 implementation with a closed v2 `runtime_execution`
+contract. The generator invokes the authoritative drawdown
+evaluation-and-persistence use case and binds exact current
+`DrawdownAnalyticsReport:v1` evidence to accepted or replayed durable Idea
+persistence. Unknown claims, stale or mismatched evidence, non-candidate
+outcomes, conflicts, in-memory execution, missing persistence, and receipt
+tampering fail closed. Shared Risk evidence modules own only request identity,
+receipt assembly, and contract mechanics; drawdown remains a separate domain
+capability inside the existing deployable and Idea-owned database boundary.
+The follow-on same-pattern scan found the equivalent Performance
+underperformance defect; issue `#469` tracks it separately so #466 remains a
+bounded occurrence.
 PR `#467` merged the high-volatility occurrence by rebase to exact-main SHA
 `81f490ba`. Main Releasability `29391350559` and CodeQL `29391347328` passed,
 including PostgreSQL and Docker, and wiki publication `78cfcfc` has zero drift.

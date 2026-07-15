@@ -227,6 +227,14 @@ Drawdown-review source-backed evaluation consumes only Lotus Risk-owned
 `DrawdownAnalyticsReport:v1` evidence and must not calculate drawdown, approve
 risk methodology, recommend trades, create rebalance actions, or promote
 risk/product support.
+Drawdown runtime evidence must invoke the authoritative Idea evaluation and
+persistence use case and bind the exact current Risk source receipt to an
+accepted or replayed durable Idea persistence receipt. Unknown claims,
+self-asserted success, stale or mismatched evidence, non-candidate outcomes,
+conflicts, in-memory execution, missing persistence, and receipt drift clear no
+blocker. Concentration, volatility, and drawdown share internal execution and
+receipt mechanics while retaining capability-owned contracts inside the
+existing service and Idea-owned database boundary.
 Underperformance source-backed evaluation consumes only Lotus Performance-owned
 `ReturnsSeriesBundle:v1` active-return and benchmark-context evidence and must
 not calculate returns, assign benchmarks, approve benchmark methodology,

@@ -195,7 +195,7 @@ taxonomy and the #393 same-pattern campaign.
 | `LOTUS_IDEA_SOURCE_INGESTION_RUNTIME_EXECUTION` | Passes receipt-bound v2 `runtime_execution` evidence into aggregate readiness. The artifact must be valid and aggregate-current before it can affect the source-ingestion or high-cash opportunity-archetype live Core posture. |
 | `LOTUS_IDEA_RISK_CONCENTRATION_LIVE_PROOF` | Passes a validated source-safe Lotus Risk concentration live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_live_risk_source_proof_missing`; it does not certify data mesh, Workbench, client publication, or supported-feature promotion. |
 | `LOTUS_IDEA_HIGH_VOLATILITY_LIVE_PROOF` | Passes validated v2 high-volatility `runtime_execution` evidence into opportunity-archetype readiness. It must bind current Lotus Risk evidence to the authoritative Idea use-case result and accepted or replayed durable persistence. A valid artifact clears only `opportunity_archetype_live_risk_volatility_source_proof_missing`; it does not certify drawdown, data mesh, Workbench, client publication, deployment, production, or supported-feature promotion. |
-| `LOTUS_IDEA_RISK_DRAWDOWN_LIVE_PROOF` | Passes a validated source-safe Lotus Risk drawdown live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_drawdown_source_proof_missing`; it does not certify volatility, data mesh, Workbench, client publication, or supported-feature promotion. |
+| `LOTUS_IDEA_RISK_DRAWDOWN_LIVE_PROOF` | Passes validated v2 drawdown `runtime_execution` evidence into opportunity-archetype readiness. It must bind current Lotus Risk evidence to the authoritative Idea use-case result and accepted or replayed durable persistence. A valid artifact clears only `opportunity_archetype_drawdown_source_proof_missing`; it does not certify volatility, data mesh, Workbench, client publication, deployment, production, or supported-feature promotion. The environment name is retained for operator compatibility; it does not imply acceptance of the retired v1 contract. |
 | `LOTUS_IDEA_PERFORMANCE_UNDERPERFORMANCE_LIVE_PROOF` | Passes a validated source-safe Lotus Performance underperformance live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_live_performance_source_proof_missing`; it does not certify benchmark assignment, data mesh, Workbench, client publication, or supported-feature promotion. |
 | `LOTUS_IDEA_MISSING_BENCHMARK_PERFORMANCE_READINESS_PROOF` | Passes a validated source-safe Lotus Performance benchmark-readiness proof artifact into missing-benchmark opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_performance_benchmark_readiness_source_ref_missing`; it does not assign benchmarks, calculate performance or benchmark returns, certify benchmark methodology, certify data mesh, prove Workbench behavior, approve client publication, or promote support. |
 | `LOTUS_IDEA_CORE_BENCHMARK_ASSIGNMENT_LIVE_PROOF` | Passes a validated source-safe Lotus Core benchmark assignment live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_benchmark_assignment_source_ref_missing`; it does not certify Performance source evidence, benchmark methodology, benchmark composition, benchmark return calculation, data mesh, Workbench, client publication, or supported-feature promotion. |
@@ -306,17 +306,23 @@ route, volatility value, or drawdown figure. It retains drawdown, data-mesh,
 Workbench, client-publication, deployment, production, and supported-feature
 blockers; official risk methodology remains owned by `lotus-risk`.
 
-Lotus Risk drawdown live proof is captured by
-`scripts/generate_risk_drawdown_live_proof.py`. A valid artifact referenced
+Lotus Risk drawdown runtime execution evidence is captured by
+`scripts/risk_drawdown_runtime_evidence/generate_runtime_execution.py`. A valid
+artifact referenced
 through `LOTUS_IDEA_RISK_DRAWDOWN_LIVE_PROOF` clears only
 `opportunity_archetype_drawdown_source_proof_missing` for the
-`opportunity-archetype-scenarios` capability. The artifact proves a live
-`lotus-risk:DrawdownAnalyticsReport:v1` source call, current source evidence,
-ready Risk supportability, and deterministic drawdown-review candidate
-generation without storing portfolio identity, request or response payloads,
-correlation IDs, trace IDs, candidate IDs, source routes, max-drawdown values,
-or drawdown episodes. It deliberately retains volatility, data-mesh,
-Workbench, client-publication, and supported-feature blockers.
+`opportunity-archetype-scenarios` capability. The closed v2 contract binds one
+current `lotus-risk:DrawdownAnalyticsReport:v1` source receipt to the
+authoritative deterministic use-case result and one accepted or replayed
+durable Idea persistence receipt. Request, source, evidence, scope, timestamp,
+provenance, and persistence digests must reconcile. Unknown claims, stale or
+mixed source identity, non-candidate outcomes, conflicts, in-memory storage,
+missing persistence, and receipt tampering fail closed. The artifact stores no
+portfolio identity, request or response payload, correlation ID, trace ID,
+candidate ID, source route, max-drawdown value, or drawdown episode. It retains
+volatility, data-mesh, Workbench, client-publication, deployment, production,
+and supported-feature blockers; official drawdown methodology remains owned by
+`lotus-risk`.
 
 Lotus Performance underperformance live proof is captured by
 `scripts/generate_performance_underperformance_live_proof.py`. A valid artifact
@@ -931,9 +937,9 @@ Implementation-backed evidence:
     `scripts/high_volatility_runtime_evidence/generate_runtime_execution.py`,
 1. High-volatility runtime-execution contract gate:
     `make high-volatility-live-proof-contract-gate`,
-1. Risk drawdown live-proof generator:
-    `scripts/generate_risk_drawdown_live_proof.py`,
-1. Risk drawdown live-proof contract gate:
+1. Risk drawdown runtime-execution generator:
+    `scripts/risk_drawdown_runtime_evidence/generate_runtime_execution.py`,
+1. Risk drawdown runtime-execution contract gate (compatibility target name):
     `make risk-drawdown-live-proof-contract-gate`,
 1. Missing-suitability live-proof generator:
     `scripts/generate_missing_suitability_live_proof.py`,
