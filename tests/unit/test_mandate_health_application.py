@@ -4,6 +4,7 @@ from datetime import UTC, date, datetime
 
 from app.application.mandate_health_signal import (
     EvaluateMandateHealthFromManageCommand,
+    evaluate_mandate_health_readiness_from_manage,
     evaluate_mandate_health_signal_from_manage,
 )
 from app.domain import (
@@ -135,6 +136,40 @@ def test_mandate_health_application_blocks_entitlement_denial_without_candidate(
     assert result.outcome is SignalEvaluationOutcome.BLOCKED
     assert result.candidate is None
     assert result.reason_codes == (ReasonCode.REVIEW_REQUIRED,)
+
+
+def test_mandate_health_readiness_preserves_exact_source_evidence() -> None:
+    evidence = ManageMandateHealthEvidence(
+        workflow_decision_count=2,
+        lineage_edge_count=4,
+        supportability_state="ready",
+        supportability_reason="supportability_summary_ready",
+        freshness_bucket="current",
+        portfolio_scope_confirmed=True,
+        action_register_ref=_source_ref(),
+    )
+
+    execution = evaluate_mandate_health_readiness_from_manage(
+        _command(),
+        manage_source=StubManageSource(evidence),
+    )
+
+    assert execution.evidence is evidence
+    assert execution.source_error_code is None
+    assert execution.evaluation.outcome is SignalEvaluationOutcome.CANDIDATE_CREATED
+
+
+def test_mandate_health_readiness_preserves_source_error_identity() -> None:
+    execution = evaluate_mandate_health_readiness_from_manage(
+        _command(),
+        manage_source=StubManageSource(
+            exception=ManageSourceUnavailable(code="manage_temporal_identity_missing")
+        ),
+    )
+
+    assert execution.evidence is None
+    assert execution.source_error_code == "manage_temporal_identity_missing"
+    assert execution.evaluation.outcome is SignalEvaluationOutcome.BLOCKED
 
 
 def _command() -> EvaluateMandateHealthFromManageCommand:
