@@ -288,14 +288,13 @@ Additional implemented underperformance foundation:
    benchmark methodology, recommend trades, create rebalance actions, publish
    client communication, certify data products, prove Workbench behavior, or
    promote support.
-7. `src/app/application/performance_underperformance_live_proof.py`,
-   `scripts/generate_performance_underperformance_live_proof.py`,
-   `scripts/performance_underperformance_live_proof_contract_gate.py`, and
+7. `src/app/application/performance_underperformance_runtime_evidence/`,
+   `scripts/performance_underperformance_runtime_evidence/`, and
    `make performance-underperformance-live-proof-contract-gate` define a
-   source-safe live Performance underperformance proof artifact. A valid
-   artifact proves a live `lotus-performance:ReturnsSeriesBundle:v1` source
-   call, current source evidence, benchmark context availability, and
-   deterministic underperformance candidate generation, then clears only the
+   closed v2 Performance underperformance `runtime_execution` artifact. A
+   valid artifact binds current `lotus-performance:ReturnsSeriesBundle:v1`
+   evidence and benchmark context to deterministic candidate evaluation plus
+   accepted or replayed durable Idea persistence. It clears only the
    namespaced opportunity-archetype live Performance source blocker when
    consumed by aggregate readiness.
 8. `src/app/application/core_benchmark_assignment_live_proof.py`,

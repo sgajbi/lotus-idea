@@ -196,7 +196,7 @@ taxonomy and the #393 same-pattern campaign.
 | `LOTUS_IDEA_RISK_CONCENTRATION_LIVE_PROOF` | Passes a validated source-safe Lotus Risk concentration live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_live_risk_source_proof_missing`; it does not certify data mesh, Workbench, client publication, or supported-feature promotion. |
 | `LOTUS_IDEA_HIGH_VOLATILITY_LIVE_PROOF` | Passes validated v2 high-volatility `runtime_execution` evidence into opportunity-archetype readiness. It must bind current Lotus Risk evidence to the authoritative Idea use-case result and accepted or replayed durable persistence. A valid artifact clears only `opportunity_archetype_live_risk_volatility_source_proof_missing`; it does not certify drawdown, data mesh, Workbench, client publication, deployment, production, or supported-feature promotion. |
 | `LOTUS_IDEA_RISK_DRAWDOWN_LIVE_PROOF` | Passes validated v2 drawdown `runtime_execution` evidence into opportunity-archetype readiness. It must bind current Lotus Risk evidence to the authoritative Idea use-case result and accepted or replayed durable persistence. A valid artifact clears only `opportunity_archetype_drawdown_source_proof_missing`; it does not certify volatility, data mesh, Workbench, client publication, deployment, production, or supported-feature promotion. The environment name is retained for operator compatibility; it does not imply acceptance of the retired v1 contract. |
-| `LOTUS_IDEA_PERFORMANCE_UNDERPERFORMANCE_LIVE_PROOF` | Passes a validated source-safe Lotus Performance underperformance live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_live_performance_source_proof_missing`; it does not certify benchmark assignment, data mesh, Workbench, client publication, or supported-feature promotion. |
+| `LOTUS_IDEA_PERFORMANCE_UNDERPERFORMANCE_LIVE_PROOF` | Passes validated v2 Performance underperformance `runtime_execution` evidence into opportunity-archetype readiness. It must bind exact current `ReturnsSeriesBundle:v1` evidence and benchmark context to the authoritative Idea use-case result and accepted or replayed durable persistence. A valid artifact clears only `opportunity_archetype_live_performance_source_proof_missing`; benchmark assignment, data mesh, Workbench, client publication, deployment, production, and supported-feature promotion remain blocked. The environment name is retained for operator compatibility and does not accept the retired v1 contract. |
 | `LOTUS_IDEA_MISSING_BENCHMARK_PERFORMANCE_READINESS_PROOF` | Passes a validated source-safe Lotus Performance benchmark-readiness proof artifact into missing-benchmark opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_performance_benchmark_readiness_source_ref_missing`; it does not assign benchmarks, calculate performance or benchmark returns, certify benchmark methodology, certify data mesh, prove Workbench behavior, approve client publication, or promote support. |
 | `LOTUS_IDEA_CORE_BENCHMARK_ASSIGNMENT_LIVE_PROOF` | Passes a validated source-safe Lotus Core benchmark assignment live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_benchmark_assignment_source_ref_missing`; it does not certify Performance source evidence, benchmark methodology, benchmark composition, benchmark return calculation, data mesh, Workbench, client publication, or supported-feature promotion. |
 | `LOTUS_IDEA_CORE_PORTFOLIO_STATE_LIVE_PROOF` | Passes a validated source-safe Lotus Core portfolio-state live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_core_portfolio_state_source_ref_missing`; it does not certify Manage action-register proof, mandate performance health, mandate risk health, rebalance authority, action authority, order execution, data mesh, Workbench, client publication, or supported-feature promotion. |
@@ -324,17 +324,20 @@ volatility, data-mesh, Workbench, client-publication, deployment, production,
 and supported-feature blockers; official drawdown methodology remains owned by
 `lotus-risk`.
 
-Lotus Performance underperformance live proof is captured by
-`scripts/generate_performance_underperformance_live_proof.py`. A valid artifact
+Lotus Performance underperformance runtime execution is captured by
+`scripts/performance_underperformance_runtime_evidence/generate_runtime_execution.py`.
+A valid artifact
 referenced through `LOTUS_IDEA_PERFORMANCE_UNDERPERFORMANCE_LIVE_PROOF` clears
 only `opportunity_archetype_live_performance_source_proof_missing` for the
-`opportunity-archetype-scenarios` capability. The artifact proves a live
-`lotus-performance:ReturnsSeriesBundle:v1` source call, current source
-evidence, benchmark context availability, and deterministic underperformance
-candidate generation without storing portfolio identity, request or response
-payloads, correlation IDs, trace IDs, candidate IDs, source routes, returns, or
-benchmark values. It deliberately retains benchmark-assignment, data-mesh,
-Workbench, client-publication, and supported-feature blockers.
+`opportunity-archetype-scenarios` capability. The closed v2 artifact binds a
+live `lotus-performance:ReturnsSeriesBundle:v1` source receipt and benchmark
+context to deterministic candidate evaluation and one accepted or replayed
+durable Idea persistence receipt. Request, source, evidence, scope, timestamp,
+and persistence digests must reconcile. It stores no portfolio identity,
+request or response payload, correlation or trace ID, candidate ID, source
+route, return, or benchmark value. Benchmark-assignment, data-mesh, Workbench,
+client-publication, deployment, production, and supported-feature blockers
+remain.
 
 Lotus Core benchmark assignment live proof is captured by
 `scripts/generate_core_benchmark_assignment_live_proof.py`. A valid artifact
@@ -965,9 +968,9 @@ Implementation-backed evidence:
     `scripts/generate_mandate_restriction_live_proof.py`,
 1. Mandate/restriction live-proof contract gate:
     `make mandate-restriction-live-proof-contract-gate`,
-1. Performance underperformance live-proof generator:
-    `scripts/generate_performance_underperformance_live_proof.py`,
-1. Performance underperformance live-proof contract gate:
+1. Performance underperformance runtime-execution generator:
+    `scripts/performance_underperformance_runtime_evidence/generate_runtime_execution.py`,
+1. Performance underperformance runtime-execution contract gate (compatibility target):
     `make performance-underperformance-live-proof-contract-gate`,
 1. Missing-benchmark Performance readiness proof generator:
     `scripts/generate_missing_benchmark_performance_readiness_proof.py`,

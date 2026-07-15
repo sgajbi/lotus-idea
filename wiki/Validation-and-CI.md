@@ -567,7 +567,7 @@ Persistence adapter validation:
     high-volatility API module, route, and integration test as archetype
     evidence.
     `tests/unit/risk_drawdown_runtime_evidence/`,
-    `tests/integration/risk_runtime_evidence/test_postgres_replay.py`, and
+    `tests/integration/source_runtime_evidence/test_postgres_replay.py`, and
     `make risk-drawdown-live-proof-contract-gate` prove the optional Lotus Risk
     drawdown artifact is a closed v2 `runtime_execution` receipt. It binds
     current `DrawdownAnalyticsReport:v1` evidence to the authoritative Idea
@@ -577,11 +577,12 @@ Persistence adapter validation:
     `tests/unit/test_opportunity_archetype_contract_gate.py` and
     `make opportunity-archetype-contract-gate` also require the drawdown API
     module, route, and integration test as archetype evidence.
-    `tests/unit/test_performance_underperformance_live_proof.py` and
+    `tests/unit/performance_underperformance_runtime_evidence/` and
     `make performance-underperformance-live-proof-contract-gate` prove the
-    optional Lotus Performance underperformance live-proof artifact remains
-    source-safe and can clear only the namespaced live Performance source
-    blocker when valid evidence is supplied.
+    optional Lotus Performance underperformance artifact is closed v2
+    `runtime_execution` evidence. It must bind current Performance evidence to
+    accepted or replayed durable Idea persistence and can clear only the
+    namespaced live Performance source blocker.
     `tests/unit/test_core_benchmark_assignment_live_proof.py` and
     `make core-benchmark-assignment-live-proof-contract-gate` prove the
     optional Lotus Core benchmark assignment live-proof artifact remains

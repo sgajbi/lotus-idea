@@ -2037,6 +2037,27 @@ production-like resource, and platform-owned cost evidence exists. No runtime
 service split follows from adding observability; workload or failure-isolation
 evidence must justify it.
 
+## Source Runtime Evidence Boundary
+
+Runtime source proof may clear a source blocker only when a closed evidence
+contract binds the exact authoritative source receipt to the actual application
+use-case result and accepted or replayed durable Idea persistence. Shared
+`application/source_runtime_evidence/` code owns only source-neutral receipt,
+digest, and closed-contract mechanics. Capability packages own their source
+authority, product identity, domain outcome, blockers, and non-proof claims.
+
+For Performance underperformance, use
+`application/performance_underperformance_runtime_evidence/` and its matching
+automation package. Require current
+`lotus-performance:ReturnsSeriesBundle:v1` evidence, benchmark context, one
+deterministic review candidate, and PostgreSQL reload/replay proof. Fail closed
+for source substitution, stale or temporally mismatched evidence, missing
+benchmark context, non-candidate outcomes, conflicts, in-memory storage,
+unknown claims, or receipt tampering. Lotus Idea creates review candidates; it
+does not own official returns, benchmark assignment, attribution, or
+performance methodology. This design modularity remains inside the existing
+Idea deployable and database until runtime evidence justifies a split.
+
 ## Cross-Links
 
 Central context:

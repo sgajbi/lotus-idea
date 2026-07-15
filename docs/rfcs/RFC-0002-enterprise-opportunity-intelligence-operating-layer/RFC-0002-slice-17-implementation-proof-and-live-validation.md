@@ -328,14 +328,15 @@ Prove the complete supported opportunity journey end to end.
     `opportunity_archetype_drawdown_source_proof_missing`, while preserving
     volatility, data-mesh, Workbench, client-publication, deployment,
     production, and supported-feature blockers.
-31. `src/app/application/performance_underperformance_live_proof.py`,
-    `scripts/generate_performance_underperformance_live_proof.py`, and
+31. `src/app/application/performance_underperformance_runtime_evidence/`,
+    `scripts/performance_underperformance_runtime_evidence/`, and
     `make performance-underperformance-live-proof-contract-gate` now define and
-    enforce a source-safe Lotus Performance underperformance live-proof
-    artifact. Aggregate readiness can consume a valid artifact to clear only
+    enforce a closed v2 Lotus Performance underperformance
+    `runtime_execution` artifact bound to accepted or replayed durable Idea
+    persistence. Aggregate readiness can consume a valid artifact to clear only
     `opportunity_archetype_live_performance_source_proof_missing`, while
     preserving benchmark-assignment, data-mesh, Workbench, client-publication,
-    and supported-feature blockers.
+    deployment, production, and supported-feature blockers.
 32. `src/app/application/core_benchmark_assignment_live_proof.py`,
     `scripts/generate_core_benchmark_assignment_live_proof.py`, and
     `make core-benchmark-assignment-live-proof-contract-gate` now define and

@@ -473,6 +473,21 @@ capability inside the existing deployable and Idea-owned database boundary.
 The follow-on same-pattern scan found the equivalent Performance
 underperformance defect; issue `#469` tracks it separately so #466 remains a
 bounded occurrence.
+Issue `#469` now replaces that flat v1 proof with capability-owned
+`performance_underperformance_runtime_evidence/` application, automation, and
+test packages. The generator invokes a named Performance
+evaluation-and-persistence use case, binds exact current
+`lotus-performance:ReturnsSeriesBundle:v1` evidence to accepted or replayed
+durable Idea persistence, and fails closed for missing benchmark context,
+non-candidate results, conflicts, source substitution, stale evidence,
+in-memory storage, unknown claims, and receipt tampering. Stable source-neutral
+receipt mechanics moved to `application/source_runtime_evidence/`; Risk and
+Performance contracts retain independent authority, schemas, and blockers.
+The required PostgreSQL gate covers accepted write, repository reload, and
+replay. This is internal design modularity in the existing deployable and
+Idea-owned database. Official returns, benchmark, attribution, and methodology
+authority remain in Lotus Performance; no API, migration, supported-feature,
+or runtime-topology change is implied.
 PR `#470` merged the drawdown occurrence by rebase to exact-main SHA
 `6d58f620`. Main Releasability `29394530188` and CodeQL `29394525914` passed,
 including PostgreSQL and release-image validation, and wiki publication
