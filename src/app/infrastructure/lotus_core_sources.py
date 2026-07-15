@@ -218,9 +218,7 @@ class LotusCoreHighCashSourceAdapter:
             latest_evidence_at_utc=_optional_datetime_field(
                 portfolio_state_payload, "latest_evidence_timestamp"
             ),
-            source_evidence_current=_bool_field(
-                portfolio_state_payload, "source_evidence_current"
-            ),
+            source_evidence_current=_bool_field(portfolio_state_payload, "source_evidence_current"),
             policy_version=_text_field(portfolio_state_payload, "policy_version"),
             source_correlation_id=_text_field(portfolio_state_payload, "correlation_id"),
             applied_sections=_portfolio_state_governance_sections(
@@ -526,9 +524,7 @@ def _portfolio_state_tenant_id(payload: dict[str, Any]) -> str | None:
     return _text_field(governance, "tenant_id")
 
 
-def _portfolio_state_governance_sections(
-    payload: dict[str, Any], key: str
-) -> tuple[str, ...]:
+def _portfolio_state_governance_sections(payload: dict[str, Any], key: str) -> tuple[str, ...]:
     governance = payload.get("governance")
     if not isinstance(governance, dict):
         return ()
