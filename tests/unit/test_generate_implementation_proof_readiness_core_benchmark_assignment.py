@@ -5,8 +5,8 @@ import json
 from pathlib import Path
 
 import scripts.generate_implementation_proof_readiness as proof_report
-from app.application.core_benchmark_assignment_live_proof import (
-    build_core_benchmark_assignment_live_proof_payload,
+from tests.support.core_benchmark_assignment_runtime_evidence import (
+    valid_core_benchmark_assignment_runtime_evidence,
 )
 
 
@@ -16,21 +16,8 @@ def test_generate_implementation_proof_readiness_uses_explicit_core_benchmark_as
     core_proof = tmp_path / "core-benchmark-assignment-live-proof.json"
     core_proof.write_text(
         json.dumps(
-            build_core_benchmark_assignment_live_proof_payload(
-                generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
-                live_core_source_attempted=True,
-                evidence_summary={
-                    "runStatus": "completed",
-                    "sourceAuthority": "lotus-core",
-                    "sourceProductId": "lotus-core:BenchmarkAssignment:v1",
-                    "benchmarkAssignmentRefPresent": True,
-                    "benchmarkIdentityResolved": True,
-                    "assignmentEffectiveForAsOfDate": True,
-                    "assignmentStatus": "active",
-                    "assignmentVersionPresent": True,
-                    "sourceEvidenceCurrent": True,
-                    "sourceDiagnosticCodes": ["core_benchmark_assignment_ready"],
-                },
+            valid_core_benchmark_assignment_runtime_evidence(
+                evaluated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC)
             )
         ),
         encoding="utf-8",
