@@ -90,6 +90,7 @@ def test_use_case_preserves_exact_scope_and_builds_closed_receipts() -> None:
     ("failure_mode", "expected_blocker"),
     [
         ("missing_ref", "core_portfolio_state_source_ref_missing"),
+        ("as_of_scope", "core_portfolio_state_scope_mismatch"),
         ("stale", "core_portfolio_state_evidence_not_current"),
         ("future_source", "core_portfolio_state_source_time_invalid"),
         ("entitlement", "core_portfolio_state_entitlement_denied"),
@@ -133,11 +134,18 @@ def test_domain_failures_cannot_clear_aggregate_blocker(
     "tamper",
     [
         "top_level",
+        "proof_type",
+        "claim_shape",
         "execution",
         "request",
         "source",
         "request_digest",
+        "request_hash_shape",
+        "request_as_of_shape",
         "source_digest",
+        "source_hash_shape",
+        "source_identity_blank",
+        "diagnostic_blank",
         "tenant_binding",
         "portfolio_binding",
         "correlation_binding",
@@ -274,6 +282,11 @@ def _evidence_for_failure(failure_mode: str) -> CorePortfolioStateEvidence:
             evidence,
             portfolio_state_ref=replace(_source_ref(), freshness=EvidenceFreshness.STALE),
         )
+    if failure_mode == "as_of_scope":
+        return replace(
+            evidence,
+            portfolio_state_ref=replace(_source_ref(), as_of_date=date(2026, 6, 20)),
+        )
     if failure_mode == "future_source":
         return replace(
             evidence,
@@ -304,6 +317,10 @@ def _tamper(payload: dict[str, Any], tamper: str) -> None:
     source = execution["sourceReceipt"]
     if tamper == "top_level":
         payload["invented"] = True
+    elif tamper == "proof_type":
+        payload["proofType"] = "self_asserted_summary"
+    elif tamper == "claim_shape":
+        del payload["nonProofClaims"]["orderExecutionReady"]
     elif tamper == "execution":
         execution["invented"] = True
     elif tamper == "request":
@@ -312,8 +329,22 @@ def _tamper(payload: dict[str, Any], tamper: str) -> None:
         source["invented"] = True
     elif tamper == "request_digest":
         request["requestDigest"] = "sha256:" + "0" * 64
+    elif tamper == "request_hash_shape":
+        request["tenantIdHash"] = "not-a-sha256"
+        _refresh_request_digest(request)
+    elif tamper == "request_as_of_shape":
+        request["asOfDate"] = "not-a-date"
+        _refresh_request_digest(request)
     elif tamper == "source_digest":
         source["receiptDigest"] = "sha256:" + "0" * 64
+    elif tamper == "source_hash_shape":
+        source["contentHash"] = "not-a-sha256"
+        _refresh_source_digest(source)
+    elif tamper == "source_identity_blank":
+        source["snapshotId"] = " "
+        _refresh_source_digest(source)
+    elif tamper == "diagnostic_blank":
+        execution["diagnosticCode"] = " "
     elif tamper == "tenant_binding":
         source["responseTenantIdHash"] = "sha256:" + "1" * 64
         _refresh_source_digest(source)
