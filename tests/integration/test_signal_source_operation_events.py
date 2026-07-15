@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 import pytest
@@ -236,7 +237,9 @@ def capture_foundation_events(
         source_authority: str = "lotus-idea",
         durable_storage_backed: bool = False,
         error_code: str | None = None,
+        attributes: Mapping[str, object] | None = None,
     ) -> None:
+        del attributes
         events.append(
             (operation.value, outcome.value, source_authority, durable_storage_backed, error_code)
         )
@@ -251,6 +254,7 @@ def source_signal_headers() -> dict[str, str]:
         "X-Caller-Roles": "advisor",
         "X-Caller-Capabilities": "idea.signal.evaluate",
         "X-Caller-Portfolio-Ids": "PB_SG_GLOBAL_BAL_001",
+        "X-Caller-Tenant-Ids": "tenant-a",
     }
 
 

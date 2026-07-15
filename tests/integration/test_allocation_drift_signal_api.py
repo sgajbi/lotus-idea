@@ -357,6 +357,41 @@ def test_allocation_drift_signal_from_source_checks_scope_before_runtime(
     assert "PB_SG_OTHER_002" not in response.text
 
 
+@pytest.mark.parametrize("tenant_ids", [None, "tenant-a,tenant-b"])
+def test_allocation_drift_signal_from_source_requires_one_trusted_tenant_before_runtime(
+    monkeypatch: MonkeyPatch,
+    tenant_ids: str | None,
+) -> None:
+    client = managed_test_client(app)
+
+    def fail_if_called() -> ManageMandateHealthSourceRuntimeBlocker:
+        raise AssertionError("runtime must not be built without one trusted tenant")
+
+    monkeypatch.setattr(
+        allocation_drift_api,
+        "_build_manage_mandate_health_source_runtime_from_environment",
+        fail_if_called,
+    )
+    headers = source_evaluation_headers(tenant_ids=tenant_ids)
+
+    response = client.post(
+        "/api/v1/idea-signals/allocation-drift/evaluate-from-source",
+        json=allocation_drift_source_payload(),
+        headers=headers,
+    )
+
+    assert response.status_code == 403
+    assert response.json() == {
+        "type": "about:blank",
+        "status": 403,
+        "code": "permission_denied",
+        "title": "Permission denied",
+        "detail": "A single trusted tenant context is required for this source evaluation.",
+    }
+    assert "tenant-a" not in response.text
+    assert "tenant-b" not in response.text
+
+
 def test_allocation_drift_signal_from_source_closes_runtime_on_source_blocker(
     monkeypatch: MonkeyPatch,
 ) -> None:
@@ -400,16 +435,20 @@ def evaluate_headers() -> dict[str, str]:
     }
 
 
-def source_evaluation_headers(*, portfolio_ids: str = PORTFOLIO_ID) -> dict[str, str]:
-    return {
+def source_evaluation_headers(
+    *, portfolio_ids: str = PORTFOLIO_ID, tenant_ids: str | None = "tenant-a"
+) -> dict[str, str]:
+    headers = {
         "X-Caller-Subject": "advisor-001",
         "X-Caller-Roles": "advisor",
         "X-Caller-Capabilities": "idea.signal.evaluate",
         "X-Correlation-Id": "corr-manage-allocation-source-api",
         "X-Trace-Id": "trace-manage-allocation-source-api",
         "X-Caller-Portfolio-Ids": portfolio_ids,
-        "X-Caller-Tenant-Ids": "tenant-a",
     }
+    if tenant_ids is not None:
+        headers["X-Caller-Tenant-Ids"] = tenant_ids
+    return headers
 
 
 def allocation_drift_payload() -> dict[str, Any]:
