@@ -819,8 +819,13 @@ deterministic input/output bindings, maps verified output through the
 application use case, and atomically persists a bounded receipt. Run id and
 replay nonce remain unique across restart. Producer and consumer mainline/CI
 evidence exists, so readiness reports the verifier as available without a
-missing-mainline-proof claim. Local source proof still clears no live-runtime,
-Workbench, or promotion blocker.
+missing-mainline-proof claim. The capability-owned signed-attestation v2
+`source_contract` binds separate producer and consumer repository/ref/SHA-256
+collections plus canonical collection digests. Isolated CI validates only an
+explicit `idea_consumer_only` non-proof posture. Unknown fields and execution,
+model-risk approval, deployment, production, Workbench, publication, or
+promotion claims fail closed. Source-contract evidence still clears no
+live-runtime, Workbench, or promotion blocker.
 
 Idea also independently verifies and atomically persists the bounded
 `lotus-ai:ProviderRetentionConfirmation:v1` receipt with attested explanation
@@ -1269,6 +1274,11 @@ Recent issue-derived patterns to preserve:
     uploaded artifact digest. Keep this taxonomy in a domain package and each
     proof builder in its own application capability package; do not create a
     separate runtime service without workload or failure-isolation evidence.
+    Cross-repository source contracts must also close top-level and nested
+    fields, bind each producer/consumer authority by repository/ref/SHA-256,
+    bind the ordered authority collection to a canonical digest, and name any
+    consumer-only validation scope as an invalid full proof. Do not infer
+    mainline certification eligibility from file presence or token scans.
 35. Durable repository proof is owned by the bounded
     `app.application.durable_repository_proof` package, with contract, JUnit
     receipt mapping, and builder modules. Its entrypoints live under

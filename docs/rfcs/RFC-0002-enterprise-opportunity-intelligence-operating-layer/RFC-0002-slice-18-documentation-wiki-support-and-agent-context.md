@@ -326,6 +326,13 @@ documentation across opportunity signal APIs.
     wiki. The artifact is implementation-backed by exact Core source refs and
     durable persistence receipts; it preserves scheduler, mesh,
     Gateway/Workbench, production, and supported-feature boundaries.
+37. Issue `#459` synchronizes signed AI attestation declarations as closed v2
+    `source_contract` evidence across the AI governance runbook, Slice 09/15/17,
+    quality gates, repository context, evidence/review ledgers, and authored
+    wiki. Separate digest-bound producer and consumer authority collections make
+    full and consumer-only validation scopes explicit. Both clear no blocker;
+    live provider/model execution, model-risk approval, deployment, production,
+    Workbench, publication, and promotion remain unproven.
 
 This documentation slice does not promote any supported feature. It records
 bounded Workbench read-path source contract, Gateway/Workbench contract proof, and

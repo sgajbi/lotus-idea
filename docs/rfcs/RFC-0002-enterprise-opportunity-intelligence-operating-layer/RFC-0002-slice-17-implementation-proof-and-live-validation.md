@@ -619,6 +619,15 @@ digest-bound receipt with guardrails and caller policy enforced." It does not cl
 live provider execution, provider rollout, certified model-risk operations,
 Workbench proof, or supported-feature proof.
 
+The signed AI attestation v2 source contract narrows the declaration gap from
+unbound file/token scans to exact producer and consumer source-authority records
+with canonical collection digests. A full sibling checkout can validate both
+sides; isolated CI validates an explicit Idea-consumer-only posture that remains
+an invalid full proof. No aggregate readiness consumer is added because source
+declarations clear no current blocker. Live provider/model execution,
+model-risk approval, deployment, production certification, Workbench proof,
+publication, and supported-feature promotion remain separate evidence gaps.
+
 ## Acceptance Gate
 
 Issue #331 closes the readiness/gate reconciliation gap. Aggregate readiness

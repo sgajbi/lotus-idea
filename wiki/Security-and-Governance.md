@@ -54,13 +54,15 @@ excluded from the receipt and audit projection.
 
 Run id and replay nonce are durable unique identities. Operation events expose
 only bounded verification/rejection posture; they exclude signatures, keys,
-run ids, prompts, provider payloads, and client data. Local proof is enforced
-by `make lotus-ai-attestation-contract-proof-gate`. Isolated repository CI
-validates lotus-idea-owned verification and replay controls without asserting
-producer certification; a supplied lotus-ai checkout activates the full
-cross-repository proof. Support remains blocked until cross-repository mainline
-CI, runtime telemetry, Workbench proof, and supported-feature promotion are
-complete.
+run ids, prompts, provider payloads, and client data. The closed source contract
+is enforced by `make ai-attestation-source-contract-gate`. It binds separate
+Lotus AI producer and Idea consumer source collections to exact SHA-256 records
+and canonical collection digests. Isolated CI validates an explicit
+Idea-consumer-only non-proof posture; a supplied Lotus AI checkout activates
+full cross-repository source validation. Neither scope proves provider/model
+execution, model-risk approval, deployment, production certification,
+Workbench behavior, publication, or support. Unknown fields and authority claim
+inflation fail closed.
 
 ## License And IP Governance
 

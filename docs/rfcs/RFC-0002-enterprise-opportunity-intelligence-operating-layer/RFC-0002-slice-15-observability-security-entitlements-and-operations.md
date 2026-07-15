@@ -273,9 +273,13 @@ contract narrows the prior dashboard gap to a not-certified contract posture;
 neither is `lotus-ai` runtime, dashboard, alert, Workbench, or supported
 feature certification evidence.
 The verifier may report `lotusAiRunAttestationAvailable=true`; this is local
-capability availability, not certification. The source-safe
-`lotus-ai-attestation-contract-proof` validates producer and consumer code but
-clears no blocker until mainline CI evidence is available.
+capability availability, not certification. The closed v2 signed-attestation
+`source_contract` binds separate producer and consumer source collections and
+canonical digests. Full cross-repository validation and explicit
+Idea-consumer-only posture both clear no blocker; use
+`make ai-attestation-source-contract-gate`. Source declarations cannot prove
+runtime execution, model-risk approval, deployment, production certification,
+Workbench behavior, publication, or supported-feature promotion.
 The implementation-proof readiness diagnostic is explicitly `not_certified`
 until every reported proof family has implementation-backed live evidence and
 supported-feature promotion evidence where applicable.
