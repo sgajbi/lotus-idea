@@ -98,6 +98,24 @@ def test_github_issue_closure_matrix_gate_freezes_underperformance_main_truth(
     assert "#469: merged-main issue cannot regress to `locally_fixed`" in errors
 
 
+def test_github_issue_closure_matrix_gate_freezes_core_benchmark_main_truth(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    matrix = tmp_path / "matrix.md"
+    content = module.MATRIX_PATH.read_text(encoding="utf-8").replace(
+        "issues/476) Bind Core benchmark-assignment proof to authoritative runtime evidence "
+        "| `merged_main` |",
+        "issues/476) Bind Core benchmark-assignment proof to authoritative runtime evidence "
+        "| `locally_fixed` |",
+    )
+    matrix.write_text(content, encoding="utf-8")
+
+    errors = module.validate_issue_closure_matrix(matrix)
+
+    assert "#476: merged-main issue cannot regress to `locally_fixed`" in errors
+
+
 def test_github_issue_closure_matrix_gate_blocks_missing_issue(tmp_path: Path) -> None:
     module = _load_gate()
     matrix = tmp_path / "matrix.md"
