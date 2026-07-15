@@ -183,6 +183,35 @@ class CoreBondMaturityEvidence:
     source_reported_maturing_position_count: int | None
     holdings_ref: SourceRef | None
     maturity_fact_ref: SourceRef | None
+    response_product_name: str | None = None
+    response_product_version: str | None = None
+    response_tenant_id: str | None = None
+    response_portfolio_id: str | None = None
+    source_product_name: str | None = None
+    source_product_version: str | None = None
+    window_start_date: date | None = None
+    window_end_date: date | None = None
+    horizon_days: int | None = None
+    include_projected: bool | None = None
+    maturity_basis: str | None = None
+    maturity_bearing_holding_count: int | None = None
+    missing_maturity_date_count: int | None = None
+    unsupported_maturity_feature_count: int | None = None
+    supportability_status: str | None = None
+    supportability_reasons: tuple[str, ...] = ()
+    request_fingerprint: str | None = None
+    snapshot_id: str | None = None
+    source_batch_fingerprint: str | None = None
+    response_content_hash: str | None = None
+    response_source_digest: str | None = None
+    upstream_product_name: str | None = None
+    upstream_content_hash: str | None = None
+    restatement_version: str | None = None
+    reconciliation_status: str | None = None
+    latest_evidence_at_utc: datetime | None = None
+    source_evidence_current: bool = False
+    policy_version: str | None = None
+    source_correlation_id: str | None = None
     maturity_diagnostic: str | None = None
     entitlement_allowed: bool = True
 

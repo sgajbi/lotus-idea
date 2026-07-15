@@ -307,6 +307,98 @@ class LotusCoreHighCashSourceAdapter:
             source_reported_maturing_position_count=maturing_position_count,
             holdings_ref=holdings_ref,
             maturity_fact_ref=maturity_fact_ref,
+            response_product_name=_text_field(
+                maturity_summary_payload, "product_name", "productName"
+            ),
+            response_product_version=_text_field(
+                maturity_summary_payload, "product_version", "productVersion"
+            ),
+            response_tenant_id=_text_field(maturity_summary_payload, "tenant_id", "tenantId"),
+            response_portfolio_id=_text_field(
+                maturity_summary_payload, "portfolio_id", "portfolioId"
+            ),
+            source_product_name=_text_field(
+                maturity_summary_payload, "source_product_name", "sourceProductName"
+            ),
+            source_product_version=_text_field(
+                maturity_summary_payload, "source_product_version", "sourceProductVersion"
+            ),
+            window_start_date=_optional_date_field(
+                maturity_summary_payload, "window_start_date", "windowStartDate"
+            ),
+            window_end_date=_optional_date_field(
+                maturity_summary_payload, "window_end_date", "windowEndDate"
+            ),
+            horizon_days=_int_field(maturity_summary_payload, "horizon_days", "horizonDays"),
+            include_projected=_optional_bool_field(
+                maturity_summary_payload, "include_projected", "includeProjected"
+            ),
+            maturity_basis=_text_field(
+                maturity_summary_payload, "maturity_basis", "maturityBasis"
+            ),
+            maturity_bearing_holding_count=_int_field(
+                maturity_summary_payload,
+                "maturity_bearing_holding_count",
+                "maturityBearingHoldingCount",
+            ),
+            missing_maturity_date_count=_int_field(
+                maturity_summary_payload,
+                "missing_maturity_date_count",
+                "missingMaturityDateCount",
+            ),
+            unsupported_maturity_feature_count=_int_field(
+                maturity_summary_payload,
+                "unsupported_maturity_feature_count",
+                "unsupportedMaturityFeatureCount",
+            ),
+            supportability_status=_text_field(
+                maturity_summary_payload, "supportability_status", "supportabilityStatus"
+            ),
+            supportability_reasons=_text_sequence_field(
+                maturity_summary_payload, "supportability_reasons", "supportabilityReasons"
+            ),
+            request_fingerprint=_text_field(
+                maturity_summary_payload, "request_fingerprint", "requestFingerprint"
+            ),
+            snapshot_id=_text_field(maturity_summary_payload, "snapshot_id", "snapshotId"),
+            source_batch_fingerprint=_text_field(
+                maturity_summary_payload,
+                "source_batch_fingerprint",
+                "sourceBatchFingerprint",
+            ),
+            response_content_hash=_text_field(
+                maturity_summary_payload, "content_hash", "contentHash"
+            ),
+            response_source_digest=_text_field(
+                maturity_summary_payload, "source_digest", "sourceDigest"
+            ),
+            upstream_product_name=_lineage_text_field(
+                maturity_summary_payload, "upstream_product"
+            ),
+            upstream_content_hash=_lineage_text_field(
+                maturity_summary_payload, "upstream_content_hash"
+            ),
+            restatement_version=_text_field(
+                maturity_summary_payload, "restatement_version", "restatementVersion"
+            ),
+            reconciliation_status=_text_field(
+                maturity_summary_payload, "reconciliation_status", "reconciliationStatus"
+            ),
+            latest_evidence_at_utc=_optional_datetime_field(
+                maturity_summary_payload,
+                "latest_evidence_timestamp",
+                "latestEvidenceTimestamp",
+            ),
+            source_evidence_current=_bool_field(
+                maturity_summary_payload, "source_evidence_current"
+            )
+            or _bool_field(maturity_summary_payload, "sourceEvidenceCurrent"),
+            policy_version=_text_field(
+                maturity_summary_payload, "policy_version", "policyVersion"
+            ),
+            source_correlation_id=_text_field(
+                maturity_summary_payload, "correlation_id", "correlationId"
+            ),
             maturity_diagnostic=_bond_maturity_diagnostic(
                 next_maturity_date_present=next_maturity_date is not None,
                 maturing_position_count=maturing_position_count,
@@ -443,7 +535,10 @@ def _date_field(payload: dict[str, Any], *keys: str) -> date:
     for key in keys:
         value = payload.get(key)
         if isinstance(value, str):
-            return date.fromisoformat(value)
+            try:
+                return date.fromisoformat(value)
+            except ValueError as exc:
+                raise CoreSourceUnavailable(code=f"core_{key}_malformed") from exc
     raise CoreSourceUnavailable(code="core_as_of_date_missing")
 
 
@@ -451,8 +546,35 @@ def _optional_date_field(payload: dict[str, Any], *keys: str) -> date | None:
     for key in keys:
         value = payload.get(key)
         if isinstance(value, str) and value.strip():
-            return date.fromisoformat(value)
+            try:
+                return date.fromisoformat(value)
+            except ValueError as exc:
+                raise CoreSourceUnavailable(code=f"core_{key}_malformed") from exc
     return None
+
+
+def _optional_bool_field(payload: dict[str, Any], *keys: str) -> bool | None:
+    for key in keys:
+        value = payload.get(key)
+        if isinstance(value, bool):
+            return value
+    return None
+
+
+def _text_sequence_field(payload: dict[str, Any], *keys: str) -> tuple[str, ...]:
+    for key in keys:
+        value = payload.get(key)
+        if isinstance(value, list) and all(isinstance(item, str) for item in value):
+            return tuple(item.strip() for item in value if item.strip())
+    return ()
+
+
+def _lineage_text_field(payload: dict[str, Any], key: str) -> str | None:
+    lineage = payload.get("source_lineage") or payload.get("sourceLineage")
+    if not isinstance(lineage, dict):
+        return None
+    value = lineage.get(key)
+    return value.strip() if isinstance(value, str) and value.strip() else None
 
 
 def _bond_maturity_diagnostic(
@@ -466,10 +588,10 @@ def _bond_maturity_diagnostic(
         "PARTIAL",
     }:
         return f"core_maturity_{supportability_status.lower()}"
-    if not next_maturity_date_present:
-        return "core_maturity_date_missing"
     if maturing_position_count < 1:
         return "core_maturity_window_empty"
+    if not next_maturity_date_present:
+        return "core_maturity_date_missing"
     return "core_maturity_evidence_ready"
 
 
@@ -482,7 +604,7 @@ def _explicit_next_maturity_date(payload: dict[str, Any]) -> date | None:
             "next_maturity_date",
             "nextMaturityDate",
         )
-    except ValueError as exc:
+    except (CoreSourceUnavailable, ValueError) as exc:
         raise CoreSourceUnavailable(code="core_maturity_date_malformed") from exc
 
 

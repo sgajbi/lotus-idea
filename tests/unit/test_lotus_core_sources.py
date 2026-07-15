@@ -42,9 +42,13 @@ def _payload(product_name: str, *, extra: dict[str, Any] | None = None) -> dict[
 
 
 def _maturity_summary_payload(*, extra: dict[str, Any] | None = None) -> dict[str, Any]:
+    maturity_hash = "sha256:" + "a" * 64
+    holdings_hash = "sha256:" + "b" * 64
     payload = _payload(
         "PortfolioMaturitySummary",
         extra={
+            "tenant_id": "tenant-a",
+            "portfolio_id": "PB_SG_GLOBAL_BAL_001",
             "source_product_name": "HoldingsAsOf",
             "source_product_version": "v1",
             "window_start_date": "2026-06-21",
@@ -60,14 +64,22 @@ def _maturity_summary_payload(*, extra: dict[str, Any] | None = None) -> dict[st
             "unsupported_maturity_feature_count": 0,
             "supportability_status": "SUPPORTED",
             "supportability_reasons": [],
-            "request_fingerprint": "maturity_summary:abc123",
-            "content_hash": "sha256:portfolio-maturity-summary",
-            "source_batch_fingerprint": "sha256:portfolio-maturity-summary",
+            "request_fingerprint": "maturity_summary:0123456789abcdef",
+            "snapshot_id": "holdings-snapshot-1",
+            "content_hash": maturity_hash,
+            "source_digest": maturity_hash,
+            "source_batch_fingerprint": maturity_hash,
+            "restatement_version": "restatement-v1",
+            "reconciliation_status": "COMPLETE",
+            "latest_evidence_timestamp": "2026-06-21T09:59:00Z",
+            "source_evidence_current": True,
+            "policy_version": "holdings-policy-v1",
+            "correlation_id": "corr-core",
             "source_lineage": {
                 "source_owner": "lotus-core",
                 "source_product": "PortfolioMaturitySummary",
                 "upstream_product": "HoldingsAsOf",
-                "upstream_content_hash": "sha256:holdings-as-of",
+                "upstream_content_hash": holdings_hash,
             },
         },
     )
@@ -435,10 +447,23 @@ def test_lotus_core_adapter_fetches_bond_maturity_source_product() -> None:
     assert evidence.source_reported_maturing_position_count == 1
     assert evidence.holdings_ref is not None
     assert evidence.holdings_ref.product_id == "lotus-core:HoldingsAsOf:v1"
-    assert evidence.holdings_ref.content_hash == "sha256:holdings-as-of"
+    assert evidence.holdings_ref.content_hash == "sha256:" + "b" * 64
     assert evidence.maturity_fact_ref is not None
     assert evidence.maturity_fact_ref.product_id == "lotus-core:PortfolioMaturitySummary:v1"
-    assert evidence.maturity_fact_ref.content_hash == "sha256:portfolio-maturity-summary"
+    assert evidence.maturity_fact_ref.content_hash == "sha256:" + "a" * 64
+    assert evidence.response_tenant_id == "tenant-a"
+    assert evidence.response_portfolio_id == "PB_SG_GLOBAL_BAL_001"
+    assert evidence.window_start_date == date(2026, 6, 21)
+    assert evidence.window_end_date == date(2026, 7, 21)
+    assert evidence.horizon_days == 30
+    assert evidence.include_projected is False
+    assert evidence.maturity_basis == "CONTRACTUAL_INSTRUMENT_MATURITY_DATE"
+    assert evidence.supportability_status == "SUPPORTED"
+    assert evidence.supportability_reasons == ()
+    assert evidence.snapshot_id == "holdings-snapshot-1"
+    assert evidence.reconciliation_status == "COMPLETE"
+    assert evidence.source_evidence_current is True
+    assert evidence.source_correlation_id == "corr-core"
     assert evidence.maturity_diagnostic == "core_maturity_evidence_ready"
     assert seen == [
         "https://core.example/portfolios/PB_SG_GLOBAL_BAL_001/maturity-summary"
@@ -472,7 +497,7 @@ def test_lotus_core_adapter_reports_bond_maturity_window_empty() -> None:
             200,
             json=_maturity_summary_payload(
                 extra={
-                    "next_maturity_date": "2026-08-15",
+                    "next_maturity_date": None,
                     "maturing_holding_count": 0,
                 },
             ),
@@ -482,7 +507,7 @@ def test_lotus_core_adapter_reports_bond_maturity_window_empty() -> None:
         _bond_maturity_request()
     )
 
-    assert evidence.source_reported_next_maturity_date == date(2026, 8, 15)
+    assert evidence.source_reported_next_maturity_date is None
     assert evidence.source_reported_maturing_position_count == 0
     assert evidence.maturity_diagnostic == "core_maturity_window_empty"
 
@@ -525,6 +550,21 @@ def test_lotus_core_adapter_maps_malformed_bond_maturity_date_to_source_unavaila
         )
 
     assert exc_info.value.code == "core_maturity_date_malformed"
+
+
+def test_lotus_core_adapter_maps_malformed_maturity_window_date_to_source_unavailable() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200,
+            json=_maturity_summary_payload(extra={"window_start_date": "not-a-date"}),
+        )
+
+    with pytest.raises(CoreSourceUnavailable) as exc_info:
+        _adapter(httpx.MockTransport(handler)).fetch_bond_maturity_evidence(
+            _bond_maturity_request()
+        )
+
+    assert exc_info.value.code == "core_window_start_date_malformed"
 
 
 def test_lotus_core_adapter_uses_cashflow_projection_total_when_points_are_absent() -> None:
