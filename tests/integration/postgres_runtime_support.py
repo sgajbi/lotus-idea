@@ -4,6 +4,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from datetime import UTC, datetime, timedelta
 from threading import Barrier
+from collections.abc import Collection
 from typing import Any, Callable, TypeVar, cast
 
 import psycopg
@@ -30,6 +31,22 @@ def execute_migrations(database_url: str, direction: MigrationDirection) -> None
     plan = build_migration_plan(MIGRATIONS_DIR, direction)
     with psycopg.connect(database_url, row_factory=dict_row) as connection:
         execute_migration_plan(cast(MigrationConnection, connection), plan)
+
+
+def table_count(
+    database_url: str,
+    table_name: str,
+    *,
+    allowed_tables: Collection[str],
+) -> int:
+    if table_name not in allowed_tables:
+        raise ValueError(f"Unsupported test table: {table_name}")
+    with psycopg.connect(database_url) as connection, connection.cursor() as cursor:
+        cursor.execute(f"SELECT COUNT(*) FROM {table_name}")
+        row = cursor.fetchone()
+    if row is None:
+        raise AssertionError(f"No count returned for {table_name}")
+    return int(row[0])
 
 
 def high_cash_payload() -> dict[str, Any]:

@@ -3,7 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Any
 
 from app.domain import (
     CandidatePersistenceResult,
@@ -20,7 +19,7 @@ from app.domain import (
 )
 from app.application.access_scope import portfolio_only_scope
 from app.domain.access_scope import ReviewAccessScope
-from app.ports.evidence_payloads import source_ref_payload
+from app.application.risk_runtime_evidence import build_risk_candidate_idempotency_payload
 from app.ports.idea_repository import CandidatePersistenceRepository
 from app.ports.risk_sources import (
     RiskDrawdownSourcePort,
@@ -137,7 +136,15 @@ def evaluate_and_persist_drawdown_review_signal_from_risk(
     persistence = repository.persist_candidate(
         evaluation.candidate,
         idempotency_key=command.idempotency_key,
-        payload=_idempotency_payload_for_risk_drawdown(command.evaluation, evaluation, policy),
+        payload=build_risk_candidate_idempotency_payload(
+            portfolio_id=command.evaluation.portfolio_id,
+            as_of_date=command.evaluation.as_of_date,
+            period_name=command.evaluation.period_name,
+            evaluated_at_utc=command.evaluation.evaluated_at_utc,
+            family=OpportunityFamily.HIGH_VOLATILITY,
+            policy_version=policy.policy_version,
+            evaluation=evaluation,
+        ),
         actor_subject=command.actor_subject,
         occurred_at_utc=command.evaluation.evaluated_at_utc,
     )
@@ -226,31 +233,6 @@ def _risk_source_diagnostic_codes(evidence: RiskDrawdownEvidence) -> tuple[str, 
     if isinstance(diagnostic, str) and diagnostic.strip():
         return (diagnostic.strip(),)
     return ()
-
-
-def _idempotency_payload_for_risk_drawdown(
-    command: EvaluateDrawdownReviewFromRiskCommand,
-    evaluation: SignalEvaluationResult,
-    policy: DrawdownReviewSignalPolicy,
-) -> dict[str, Any]:
-    source_refs = (
-        evaluation.candidate.evidence_packet.source_refs if evaluation.candidate is not None else ()
-    )
-    return {
-        "as_of_date": command.as_of_date.isoformat(),
-        "candidate_id": (
-            evaluation.candidate.candidate_id if evaluation.candidate is not None else None
-        ),
-        "evaluated_at_utc": command.evaluated_at_utc.isoformat(),
-        "family": OpportunityFamily.HIGH_VOLATILITY.value,
-        "period_name": command.period_name,
-        "portfolio_id": command.portfolio_id,
-        "policy_version": policy.policy_version,
-        "source_signal_ids": (
-            list(evaluation.candidate.source_signal_ids) if evaluation.candidate is not None else []
-        ),
-        "source_refs": [source_ref_payload(source_ref) for source_ref in source_refs],
-    }
 
 
 def _require_text(value: str, field_name: str) -> None:

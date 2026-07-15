@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import date, datetime
 from typing import Any
 
 from app.application.proof_provenance import AGGREGATE_PROOF_PROVENANCE_KEY
@@ -12,10 +11,7 @@ from app.application.risk_drawdown_runtime_evidence.runtime_execution import (
     RISK_DRAWDOWN_RUNTIME_EXECUTION_SCHEMA_VERSION,
 )
 from app.application.risk_runtime_evidence import (
-    is_sha256,
-    persistence_receipt_is_valid,
-    source_evidence_hash,
-    source_receipt_is_valid,
+    runtime_execution_receipts_are_valid,
 )
 from app.domain import OpportunityFamily, SourceSystem
 from app.domain.proof_evidence import (
@@ -113,45 +109,15 @@ def risk_drawdown_runtime_execution_is_valid(payload: Mapping[str, Any]) -> bool
         RISK_DRAWDOWN_RUNTIME_BLOCKERS_SATISFIED
     ):
         return False
-    if not _execution_is_valid(execution, generated_at_utc=generated_at_utc):
+    if not runtime_execution_receipts_are_valid(
+        execution,
+        generated_at_utc=generated_at_utc,
+        product_id=_PRODUCT_ID,
+        family=OpportunityFamily.HIGH_VOLATILITY,
+        period_name_required=True,
+    ):
         return False
     return evidence_class_can_clear(
         actual=EvidenceClass.RUNTIME_EXECUTION,
         required=EvidenceClass.RUNTIME_EXECUTION,
     )
-
-
-def _execution_is_valid(execution: Mapping[str, Any], *, generated_at_utc: datetime) -> bool:
-    if execution.get("status") != "completed" or execution.get("durableStorageBacked") is not True:
-        return False
-    if tuple(execution.get("qualificationBlockers") or ()):
-        return False
-    evaluated_at_utc = parse_timezone_aware_datetime(execution.get("evaluatedAtUtc"))
-    if evaluated_at_utc is None or evaluated_at_utc > generated_at_utc:
-        return False
-    try:
-        as_of_date = date.fromisoformat(str(execution.get("asOfDate")))
-    except ValueError:
-        return False
-    period_name = execution.get("periodName")
-    if not isinstance(period_name, str) or not period_name.strip():
-        return False
-    if not is_sha256(execution.get("requestFingerprint")):
-        return False
-    source = execution.get("sourceReceipt")
-    persistence = execution.get("persistenceReceipt")
-    if not source_receipt_is_valid(
-        source,
-        product_id=_PRODUCT_ID,
-        as_of_date=as_of_date,
-        evaluated_at_utc=evaluated_at_utc,
-    ):
-        return False
-    if not persistence_receipt_is_valid(
-        persistence,
-        family=OpportunityFamily.HIGH_VOLATILITY,
-        generated_at_utc=generated_at_utc,
-    ):
-        return False
-    assert isinstance(source, Mapping) and isinstance(persistence, Mapping)
-    return persistence.get("sourceEvidenceHash") == source_evidence_hash(source)
