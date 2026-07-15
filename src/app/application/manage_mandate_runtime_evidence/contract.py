@@ -6,7 +6,7 @@ from decimal import Decimal, InvalidOperation
 import re
 from typing import Any
 
-from app.application.core_runtime_evidence import sha256_json
+from app.application.runtime_evidence import sha256_json
 from app.application.manage_mandate_runtime_evidence.runtime_execution import (
     MANAGE_MANDATE_REMAINING_BLOCKERS,
     MANAGE_MANDATE_RUNTIME_BLOCKERS_SATISFIED,

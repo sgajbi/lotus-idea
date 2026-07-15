@@ -11,7 +11,7 @@ from app.application.core_benchmark_assignment_runtime_evidence.runtime_executio
     CORE_BENCHMARK_ASSIGNMENT_RUNTIME_EVIDENCE_REFS,
     CORE_BENCHMARK_ASSIGNMENT_RUNTIME_EXECUTION_SCHEMA_VERSION,
 )
-from app.application.core_runtime_evidence import sha256_json
+from app.application.runtime_evidence import sha256_json
 from app.application.proof_provenance import AGGREGATE_PROOF_PROVENANCE_KEY
 from app.domain import EvidenceFreshness, SourceSystem
 from app.domain.proof_evidence import (

@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import datetime
 import re
 from typing import Any
 
-from app.application.core_runtime_evidence import (
+from app.application.runtime_evidence import (
+    RuntimeEvidenceScope,
     format_utc,
     identity_hash,
     require_aware,
@@ -42,7 +43,7 @@ CORE_PORTFOLIO_STATE_REMAINING_BLOCKERS = (
 CORE_PORTFOLIO_STATE_RUNTIME_EVIDENCE_REFS = (
     "src/app/application/core_portfolio_state_runtime_evidence/runtime_execution.py",
     "src/app/application/core_portfolio_state_runtime_evidence/contract.py",
-    "src/app/application/core_runtime_evidence/receipts.py",
+    "src/app/application/runtime_evidence/receipts.py",
     "src/app/ports/core_sources.py",
     "src/app/infrastructure/lotus_core_sources.py",
     "scripts/core_portfolio_state_runtime_evidence/generate_runtime_execution.py",
@@ -60,20 +61,8 @@ _SHA256_PATTERN = re.compile(r"^sha256:[0-9a-f]{64}$")
 
 
 @dataclass(frozen=True)
-class EvaluateCorePortfolioStateReadiness:
-    tenant_id: str
-    portfolio_id: str
-    as_of_date: date
-    evaluated_at_utc: datetime
-    correlation_id: str | None = None
-    trace_id: str | None = None
-
-    def __post_init__(self) -> None:
-        if not self.tenant_id.strip() or not self.portfolio_id.strip():
-            raise ValueError("tenant_id and portfolio_id are required")
-        require_aware(self.evaluated_at_utc, "evaluated_at_utc")
-        if self.correlation_id is not None and not self.correlation_id.strip():
-            raise ValueError("correlation_id must not be blank")
+class EvaluateCorePortfolioStateReadiness(RuntimeEvidenceScope):
+    pass
 
 
 @dataclass(frozen=True)

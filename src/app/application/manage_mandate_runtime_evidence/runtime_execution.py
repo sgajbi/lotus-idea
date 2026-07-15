@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import datetime
 import re
 from typing import Any
 
-from app.application.core_runtime_evidence import (
+from app.application.runtime_evidence import (
+    RuntimeEvidenceScope,
     format_utc,
     identity_hash,
     require_aware,
@@ -53,6 +54,8 @@ MANAGE_MANDATE_REMAINING_BLOCKERS = (
 MANAGE_MANDATE_RUNTIME_EVIDENCE_REFS = (
     "src/app/application/manage_mandate_runtime_evidence/runtime_execution.py",
     "src/app/application/manage_mandate_runtime_evidence/contract.py",
+    "src/app/application/runtime_evidence/receipts.py",
+    "src/app/application/runtime_evidence/scope.py",
     "src/app/application/mandate_health_signal.py",
     "src/app/ports/manage_sources.py",
     "src/app/infrastructure/lotus_manage_sources.py",
@@ -68,20 +71,8 @@ _SHA256_PATTERN = re.compile(r"^sha256:[0-9a-f]{64}$")
 
 
 @dataclass(frozen=True)
-class EvaluateManageMandateReadiness:
-    tenant_id: str
-    portfolio_id: str
-    as_of_date: date
-    evaluated_at_utc: datetime
-    correlation_id: str | None = None
-    trace_id: str | None = None
-
-    def __post_init__(self) -> None:
-        if not self.tenant_id.strip() or not self.portfolio_id.strip():
-            raise ValueError("tenant_id and portfolio_id are required")
-        require_aware(self.evaluated_at_utc, "evaluated_at_utc")
-        if self.correlation_id is not None and not self.correlation_id.strip():
-            raise ValueError("correlation_id must not be blank")
+class EvaluateManageMandateReadiness(RuntimeEvidenceScope):
+    pass
 
 
 @dataclass(frozen=True)

@@ -16,7 +16,7 @@ from app.application.bond_maturity_runtime_evidence import (
     build_bond_maturity_runtime_execution,
     evaluate_bond_maturity_readiness,
 )
-from app.application.core_runtime_evidence import sha256_json
+from app.application.runtime_evidence import sha256_json
 from app.domain import EvidenceFreshness
 from app.ports.core_sources import CoreBondMaturityEvidence, CoreBondMaturityEvidenceRequest
 from tests.support.bond_maturity_runtime_evidence import (

@@ -6,7 +6,7 @@ from typing import Any, cast
 import httpx
 import pytest
 
-from app.application.core_runtime_evidence import identity_hash
+from app.application.runtime_evidence import identity_hash
 from app.domain import EvidenceFreshness
 from app.infrastructure.downstream_client import DownstreamClientConfig, DownstreamJsonClient
 from app.infrastructure.lotus_manage_sources import LotusManageMandateHealthSourceAdapter
