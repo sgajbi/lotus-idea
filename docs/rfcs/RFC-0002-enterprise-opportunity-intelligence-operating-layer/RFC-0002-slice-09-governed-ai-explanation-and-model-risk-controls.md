@@ -410,6 +410,20 @@ Scheduler, mesh, Gateway/Workbench, production, and feature-promotion blockers
 remain. The capability was grouped internally without introducing another
 service or database boundary.
 
+Issue `#459` applies the same authority rule to signed Lotus AI attestation
+declarations. The former v1 artifact inferred mainline-certification eligibility
+from file and token scans and accepted unknown certification-shaped claims. The
+capability-owned `application/ai_attestation/`, `scripts/ai_attestation/`, and
+`tests/unit/ai_attestation/` packages now emit and validate a closed-field v2
+`source_contract`. Separate producer and consumer source collections bind exact
+repository/ref/SHA-256 records and canonical collection digests. Full
+cross-repository and Idea-consumer-only validation scopes are explicit; the
+latter is an invalid full proof when the producer checkout is absent. Both
+clear no blocker and reject runtime, provider, model-risk approval, deployment,
+production, Workbench, publication, and promotion claims. Shared source-authority
+record handling replaces three equivalent implementations without adding a
+runtime service or database boundary.
+
 PR `#439` merged this occurrence by rebase to exact-main SHA `1a64ef69`.
 Main Releasability `29356075075` and CodeQL `29356064752` passed on that exact
 commit, and wiki publication `4a43d9d` has zero source drift. Issue `#437` is

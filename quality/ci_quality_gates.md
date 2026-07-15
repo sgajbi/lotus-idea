@@ -410,6 +410,16 @@ provenance while retaining `workflow_pack_runtime_contract_not_certified`.
 Model-risk dashboard and alert artifact certification remains owned by
 `make ai-model-risk-operations-proof-contract-gate`.
 
+`make ai-attestation-source-contract-gate` validates the closed signed Lotus AI
+attestation v2 `source_contract`. It requires exact producer/consumer
+repository/ref/SHA-256 records, canonical collection digests, closed top-level
+and check-field sets, source-safe content, and zero blocker clearance. With no
+sibling producer checkout it accepts only an explicit Idea-consumer-only
+non-proof posture. It rejects runtime execution, live-provider, model-risk
+approval, deployment, production, Workbench, publication, and promotion claim
+inflation. The retired flat v1 module, scripts, tests, target names, and output
+variable are prohibited by repository hygiene and CI target contracts.
+
 `make source-ingestion-runtime-execution-contract-gate` validates the closed
 v2 `runtime_execution` artifact against real application-use-case and
 persistence results. It reconciles decision/receipt counts, exact Core source

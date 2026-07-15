@@ -333,15 +333,18 @@ proof, production workflow-pack certification, and Workbench product proof.
 The producer delivery was completed under `sgajbi/lotus-ai#113` at producer
 main commit `162df803a7a835813dc17116be674842f12aa544`, with Main Releasability
 run `29153879884`. The Idea consumer is mainline-proven through commit
-`f496c4429178eaa5679767bc8f1c3102e17d5eb2` and run `29179489433`. Local source-safe
-proof is generated with `make lotus-ai-attestation-contract-proof` and enforced
-by `make lotus-ai-attestation-contract-proof-gate`. In isolated repository CI,
-where the sibling producer checkout is unavailable, the gate validates only
-lotus-idea-owned verification and replay controls; it does not attempt to
-re-prove immutable GitHub mainline history. Supplying a producer checkout makes the same
-gate require the complete cross-repository contract proof. It clears no
-aggregate blocker because branch-local source inspection does not prove
-live-provider rollout, Workbench behavior, or supported-feature promotion.
+`f496c4429178eaa5679767bc8f1c3102e17d5eb2` and run `29179489433`. The closed v2
+source contract is generated with `make ai-attestation-source-contract` and
+enforced by `make ai-attestation-source-contract-gate`. It records separate,
+digest-bound Lotus AI producer and Idea consumer source authorities and declares
+evidence class `source_contract`. With both repositories available, validation
+scope is `full_cross_repository`. Isolated repository CI emits an explicit
+`idea_consumer_only` non-proof posture: only Idea-owned verification and replay
+controls validate, producer validity and its collection digest remain absent,
+and the full contract stays invalid. Neither scope re-proves immutable GitHub
+history or clears an aggregate blocker. Unknown fields and execution,
+deployment, model-risk approval, production, Workbench, client-publication, or
+supported-feature claims fail closed.
 Idea does not own signing keys, provider
 execution, model inventory, prompts, RAG, or AI runtime infrastructure.
 
