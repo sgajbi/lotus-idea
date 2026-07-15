@@ -3,9 +3,9 @@ from __future__ import annotations
 from datetime import UTC, date, datetime
 from typing import Any, Protocol
 
+from app.application.candidate_persistence_identity import build_candidate_idempotency_payload
 from app.application.risk_runtime_evidence.receipts import sha256_json
 from app.domain import OpportunityFamily, SignalEvaluationResult, SourceRef, SourceSystem
-from app.ports.evidence_payloads import source_ref_payload
 
 
 class RiskEvaluationRequest(Protocol):
@@ -43,19 +43,15 @@ def build_risk_candidate_idempotency_payload(
     policy_version: str,
     evaluation: SignalEvaluationResult,
 ) -> dict[str, Any]:
-    candidate = evaluation.candidate
-    source_refs = candidate.evidence_packet.source_refs if candidate is not None else ()
-    return {
-        "as_of_date": as_of_date.isoformat(),
-        "candidate_id": candidate.candidate_id if candidate is not None else None,
-        "evaluated_at_utc": evaluated_at_utc.isoformat(),
-        "family": family.value,
-        "period_name": period_name,
-        "portfolio_id": portfolio_id,
-        "policy_version": policy_version,
-        "source_signal_ids": list(candidate.source_signal_ids) if candidate is not None else [],
-        "source_refs": [source_ref_payload(source_ref) for source_ref in source_refs],
-    }
+    return build_candidate_idempotency_payload(
+        portfolio_id=portfolio_id,
+        as_of_date=as_of_date,
+        period_name=period_name,
+        evaluated_at_utc=evaluated_at_utc,
+        family=family,
+        policy_version=policy_version,
+        evaluation=evaluation,
+    )
 
 
 def build_risk_runtime_request_fingerprint(
