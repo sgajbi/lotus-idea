@@ -66,9 +66,7 @@ SCRIPT_TARGET_EXPECTATIONS = {
     "ai-workflow-pack-runtime-execution-proof-contract-gate": (
         "scripts/ai_workflow_pack_runtime_execution_proof_contract_gate.py"
     ),
-    "ai-attestation-source-contract-gate": (
-        "scripts/ai_attestation/source_contract_gate.py"
-    ),
+    "ai-attestation-source-contract-gate": ("scripts/ai_attestation/source_contract_gate.py"),
     "downstream-route-source-contract-proof-gate": "scripts/downstream_realization/route_source_contract_gate.py",
     "report-intake-route-source-contract-proof-gate": "scripts/report/intake_route_source_contract_gate.py",
     "report-materialization-source-contract-proof-gate": (

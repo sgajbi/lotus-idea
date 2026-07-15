@@ -291,9 +291,7 @@ def _route_source_contract_is_valid(
 def _source_authority(
     downstream_root: Path, profile: RouteSourceContractProfile
 ) -> tuple[dict[str, str | None], ...]:
-    return build_source_authority_records(
-        _source_authority_sources(downstream_root, profile)
-    )
+    return build_source_authority_records(_source_authority_sources(downstream_root, profile))
 
 
 def _source_authority_is_valid(value: object, profile: RouteSourceContractProfile) -> bool:
