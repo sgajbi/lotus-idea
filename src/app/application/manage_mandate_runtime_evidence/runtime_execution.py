@@ -34,9 +34,7 @@ from app.ports.manage_sources import (
 )
 
 MANAGE_MANDATE_RUNTIME_EXECUTION_ENV = "LOTUS_IDEA_MANAGE_MANDATE_LIVE_PROOF"
-MANAGE_MANDATE_RUNTIME_EXECUTION_SCHEMA_VERSION = (
-    "lotus-idea.manage-mandate.runtime-execution.v2"
-)
+MANAGE_MANDATE_RUNTIME_EXECUTION_SCHEMA_VERSION = "lotus-idea.manage-mandate.runtime-execution.v2"
 MANAGE_MANDATE_RUNTIME_BLOCKERS_SATISFIED = (
     "opportunity_archetype_portfolio_scoped_manage_source_proof_missing",
     "opportunity_archetype_mandate_performance_health_source_ref_missing",

@@ -471,9 +471,7 @@ def test_lotus_manage_adapter_uses_authoritative_source_metadata() -> None:
     ).fetch_mandate_health_evidence(_request())
 
     assert evidence.action_register_ref is not None
-    assert evidence.action_register_ref.generated_at_utc == datetime(
-        2026, 6, 21, 9, 58, tzinfo=UTC
-    )
+    assert evidence.action_register_ref.generated_at_utc == datetime(2026, 6, 21, 9, 58, tzinfo=UTC)
     assert evidence.action_register_ref.content_hash == "sha256:" + "b" * 64
 
 

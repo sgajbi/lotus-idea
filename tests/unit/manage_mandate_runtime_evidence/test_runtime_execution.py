@@ -81,9 +81,7 @@ def test_runtime_execution_preserves_supported_no_opportunity(
         lambda payload: payload["execution"]["mandateRiskHealthReceipt"].update(
             {"freshness": "stale"}
         ),
-        lambda payload: payload["execution"]["evaluationReceipt"].update(
-            {"candidateIdHash": None}
-        ),
+        lambda payload: payload["execution"]["evaluationReceipt"].update({"candidateIdHash": None}),
     ),
 )
 def test_contract_rejects_unknown_claims_and_receipt_tampering(
