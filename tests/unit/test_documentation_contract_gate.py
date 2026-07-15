@@ -82,6 +82,68 @@ def test_documentation_contract_gate_requires_explicit_governance_exclusion(
     ]
 
 
+def test_documentation_contract_gate_blocks_stale_completed_occurrence_posture(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    architecture = tmp_path / "docs" / "architecture"
+    architecture.mkdir(parents=True)
+    inventory_source = ROOT / EVIDENCE_CLASSIFICATION_INVENTORY_PATH
+    matrix_source = ROOT / ISSUE_CLOSURE_MATRIX_PATH
+    inventory = inventory_source.read_text(encoding="utf-8").replace(
+        "#469 hardened on exact main by PR #472",
+        "#469, next separately bounded occurrence",
+    )
+    (tmp_path / EVIDENCE_CLASSIFICATION_INVENTORY_PATH).write_text(
+        inventory,
+        encoding="utf-8",
+    )
+    (tmp_path / ISSUE_CLOSURE_MATRIX_PATH).write_text(
+        matrix_source.read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+
+    errors = module.evidence_classification_inventory_errors(root=tmp_path)
+
+    assert errors == [
+        "docs/architecture/implementation-proof-evidence-classification.md: "
+        "completed campaign occurrences retain pending posture: #469"
+    ]
+
+
+def test_documentation_contract_gate_blocks_unregistered_completed_occurrence(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    architecture = tmp_path / "docs" / "architecture"
+    architecture.mkdir(parents=True)
+    inventory_source = ROOT / EVIDENCE_CLASSIFICATION_INVENTORY_PATH
+    matrix_source = ROOT / ISSUE_CLOSURE_MATRIX_PATH
+    (tmp_path / EVIDENCE_CLASSIFICATION_INVENTORY_PATH).write_text(
+        inventory_source.read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+    matrix_lines = []
+    for line in matrix_source.read_text(encoding="utf-8").splitlines():
+        if "[#469]" in line:
+            line = line.replace(
+                "The evidence-classification campaign #393 same-pattern",
+                "The same-pattern",
+            ).replace("campaign #393", "campaign 393")
+        matrix_lines.append(line)
+    (tmp_path / ISSUE_CLOSURE_MATRIX_PATH).write_text(
+        "\n".join(matrix_lines),
+        encoding="utf-8",
+    )
+
+    errors = module.evidence_classification_inventory_errors(root=tmp_path)
+
+    assert errors == [
+        "docs/architecture/implementation-proof-evidence-classification.md: "
+        "completed inventory occurrences lack campaign registration: #469"
+    ]
+
+
 def test_documentation_contract_gate_blocks_missing_surface(tmp_path: Path) -> None:
     module = _load_gate()
     surface = module.DocumentationSurface(
