@@ -1,11 +1,16 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import UTC, date, datetime
-import hashlib
-import json
+from datetime import date, datetime
 from typing import Any
 
+from app.application.core_runtime_evidence import (
+    format_utc,
+    identity_hash,
+    require_aware,
+    sha256_json,
+    source_ref_receipt,
+)
 from app.domain import EvidenceFreshness, SourceRef, SourceSystem
 from app.domain.proof_evidence import EvidenceClass
 from app.ports.core_sources import (
@@ -90,7 +95,7 @@ def evaluate_core_benchmark_assignment_readiness(
 def build_core_benchmark_assignment_runtime_execution(
     *, generated_at_utc: datetime, result: CoreBenchmarkAssignmentReadinessResult
 ) -> dict[str, Any]:
-    _require_aware(generated_at_utc, "generated_at_utc")
+    require_aware(generated_at_utc, "generated_at_utc")
     command, evidence = result.command, result.evidence
     request_receipt = _request_receipt(command)
     source_receipt = _source_receipt(evidence.benchmark_assignment_ref)
@@ -113,7 +118,7 @@ def build_blocked_core_benchmark_assignment_runtime_execution(
     command: EvaluateCoreBenchmarkAssignmentReadiness,
     error_code: str,
 ) -> dict[str, Any]:
-    _require_aware(generated_at_utc, "generated_at_utc")
+    require_aware(generated_at_utc, "generated_at_utc")
     return _payload(
         generated_at_utc=generated_at_utc,
         command=command,
@@ -145,10 +150,10 @@ def _payload(
         "proofFamily": "core_benchmark_assignment",
         "proofType": "lotus_core_effective_dated_benchmark_assignment_read",
         "sourceAuthority": SourceSystem.LOTUS_CORE.value,
-        "generatedAtUtc": _format_utc(generated_at_utc),
+        "generatedAtUtc": format_utc(generated_at_utc),
         "execution": {
             "status": status,
-            "evaluatedAtUtc": _format_utc(command.evaluated_at_utc),
+            "evaluatedAtUtc": format_utc(command.evaluated_at_utc),
             "requestReceipt": request_receipt,
             "sourceReceipt": source_receipt,
             "assignmentStatus": assignment_status,
@@ -208,47 +213,16 @@ def _qualification_blockers(
 
 def _request_receipt(command: EvaluateCoreBenchmarkAssignmentReadiness) -> dict[str, Any]:
     material = {
-        "tenantIdHash": _identity_hash(command.tenant_id),
-        "portfolioIdHash": _identity_hash(command.portfolio_id),
+        "tenantIdHash": identity_hash(command.tenant_id),
+        "portfolioIdHash": identity_hash(command.portfolio_id),
         "asOfDate": command.as_of_date.isoformat(),
         "reportingCurrency": (
             command.reporting_currency.upper() if command.reporting_currency else None
         ),
-        "evaluatedAtUtc": _format_utc(command.evaluated_at_utc),
+        "evaluatedAtUtc": format_utc(command.evaluated_at_utc),
     }
-    return {**material, "requestDigest": _sha256_json(material)}
+    return {**material, "requestDigest": sha256_json(material)}
 
 
 def _source_receipt(ref: SourceRef | None) -> dict[str, Any] | None:
-    if ref is None:
-        return None
-    material = {
-        "productId": ref.product_id,
-        "sourceSystem": ref.source_system.value,
-        "productVersion": ref.product_version,
-        "route": ref.route,
-        "asOfDate": ref.as_of_date.isoformat(),
-        "generatedAtUtc": _format_utc(ref.generated_at_utc),
-        "contentHash": ref.content_hash,
-        "dataQualityStatus": ref.data_quality_status,
-        "freshness": ref.freshness.value,
-    }
-    return {**material, "receiptDigest": _sha256_json(material)}
-
-
-def _identity_hash(value: str) -> str:
-    return f"sha256:{hashlib.sha256(value.strip().encode('utf-8')).hexdigest()}"
-
-
-def _sha256_json(value: object) -> str:
-    encoded = json.dumps(value, sort_keys=True, separators=(",", ":")).encode("utf-8")
-    return f"sha256:{hashlib.sha256(encoded).hexdigest()}"
-
-
-def _require_aware(value: datetime, name: str) -> None:
-    if value.tzinfo is None or value.utcoffset() is None:
-        raise ValueError(f"{name} must be timezone-aware")
-
-
-def _format_utc(value: datetime) -> str:
-    return value.astimezone(UTC).isoformat().replace("+00:00", "Z")
+    return source_ref_receipt(ref)
