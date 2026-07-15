@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 from dataclasses import replace
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from typing import Any, Callable
 
@@ -16,7 +16,8 @@ from app.application.low_income_cashflow_runtime_evidence import (
     evaluate_low_income_cashflow_readiness,
     low_income_cashflow_runtime_execution_is_valid,
 )
-from app.domain import SignalEvaluationOutcome
+from app.application.core_runtime_evidence import sha256_json
+from app.domain import LowIncomeSignalPolicy, SignalEvaluationOutcome
 from app.ports.core_sources import CoreLowIncomeEvidence, CoreLowIncomeEvidenceRequest
 from tests.support.low_income_cashflow_runtime_evidence import (
     AuthoritativeCoreLowIncomeSource,
@@ -103,6 +104,64 @@ def test_runtime_execution_binds_domain_threshold_outcome(
             ),
             "core_cashflow_projection_series_invalid",
         ),
+        (
+            lambda evidence: replace(
+                evidence,
+                cashflow_projection_ref=replace(
+                    evidence.cashflow_projection_ref,
+                    product_id="lotus-core:OtherProduct:v1",
+                ),
+            ),
+            "core_cashflow_projection_source_ref_missing",
+        ),
+        (
+            lambda evidence: replace(
+                evidence,
+                cash_movement_product=replace(
+                    evidence.cash_movement_product,
+                    runtime=replace(
+                        evidence.cash_movement_product.runtime,
+                        generated_at_utc=NOW + timedelta(minutes=1),
+                    ),
+                ),
+            ),
+            "core_cash_movement_evidence_time_invalid",
+        ),
+        (
+            lambda evidence: replace(
+                evidence,
+                cashflow_projection_product=replace(
+                    evidence.cashflow_projection_product,
+                    runtime=replace(
+                        evidence.cashflow_projection_product.runtime,
+                        correlation_id="corr-other",
+                    ),
+                ),
+            ),
+            "core_cashflow_projection_correlation_binding_missing",
+        ),
+        (
+            lambda evidence: replace(
+                evidence,
+                cash_movement_product=replace(
+                    evidence.cash_movement_product,
+                    runtime=replace(
+                        evidence.cash_movement_product.runtime,
+                        degradation_status="PARTIAL",
+                        degradation_reason_codes=("SOURCE_PARTIAL",),
+                        degradation_detail_count=1,
+                    ),
+                ),
+            ),
+            "core_cash_movement_supportability_incomplete",
+        ),
+        (
+            lambda evidence: replace(
+                evidence,
+                source_reported_min_projected_cumulative_cashflow=Decimal("-1"),
+            ),
+            "core_cashflow_minimum_mismatch",
+        ),
     ],
 )
 def test_runtime_execution_fails_closed_on_source_trust_drift(
@@ -136,6 +195,40 @@ def test_runtime_execution_rejects_unknown_and_tampered_claims() -> None:
 
     assert low_income_cashflow_runtime_execution_is_valid(unknown) is False
     assert low_income_cashflow_runtime_execution_is_valid(tampered) is False
+
+
+def test_contract_rejects_semantic_forgery_with_recomputed_digest() -> None:
+    payload = _valid_payload()
+    request = payload["execution"]["requestReceipt"]
+    request["horizonDays"] = 29
+    request["requestDigest"] = sha256_json(
+        {key: value for key, value in request.items() if key != "requestDigest"}
+    )
+
+    assert low_income_cashflow_runtime_execution_is_valid(payload) is False
+
+
+def test_runtime_execution_rejects_policy_result_drift() -> None:
+    result = evaluate_low_income_cashflow_readiness(
+        _command(),
+        core_source=AuthoritativeCoreLowIncomeSource(),
+    )
+    mismatched = replace(
+        result,
+        policy=LowIncomeSignalPolicy(
+            policy_version="cashflow-liquidity-review-v2",
+            projected_cumulative_cashflow_threshold=Decimal("-20000"),
+            candidate_score=Decimal("68"),
+        ),
+    )
+
+    payload = build_low_income_cashflow_runtime_execution(generated_at_utc=NOW, result=mismatched)
+
+    assert (
+        "low_income_no_opportunity_outcome_mismatch"
+        in payload["execution"]["qualificationBlockers"]
+    )
+    assert low_income_cashflow_runtime_execution_is_valid(payload) is False
 
 
 def test_blocked_runtime_execution_never_qualifies() -> None:
