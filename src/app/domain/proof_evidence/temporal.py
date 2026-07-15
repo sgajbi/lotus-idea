@@ -1,13 +1,19 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 
 
-def is_timezone_aware_datetime_text(value: object) -> bool:
+def parse_timezone_aware_datetime(value: object) -> datetime | None:
     if not isinstance(value, str) or not value.strip():
-        return False
+        return None
     try:
         parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
     except ValueError:
-        return False
-    return parsed.tzinfo is not None and parsed.utcoffset() is not None
+        return None
+    if parsed.tzinfo is None or parsed.utcoffset() is None:
+        return None
+    return parsed.astimezone(UTC)
+
+
+def is_timezone_aware_datetime_text(value: object) -> bool:
+    return parse_timezone_aware_datetime(value) is not None

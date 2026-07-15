@@ -23,7 +23,11 @@ from app.application.source_ingestion_worker import (
 )
 from app.domain import CandidatePersistenceDecision, EvidenceFreshness, SourceRef, SourceSystem
 from app.domain.evidence_hashing import evidence_hash_for_source_refs
-from app.domain.proof_evidence import EvidenceClass, evidence_class_can_clear
+from app.domain.proof_evidence import (
+    EvidenceClass,
+    evidence_class_can_clear,
+    parse_timezone_aware_datetime,
+)
 from app.ports.core_sources import CORE_HIGH_CASH_SOURCE_PRODUCT_IDS
 
 
@@ -207,7 +211,7 @@ def source_ingestion_runtime_execution_is_valid(payload: Mapping[str, Any]) -> b
         return False
     if payload.get("sourceAuthority") != SourceSystem.LOTUS_CORE.value:
         return False
-    generated_at_utc = _aware_datetime(payload.get("generatedAtUtc"))
+    generated_at_utc = parse_timezone_aware_datetime(payload.get("generatedAtUtc"))
     if generated_at_utc is None:
         return False
     worker = payload.get("worker")
@@ -393,7 +397,7 @@ def _qualification_blockers(
 
 
 def _worker_is_valid(worker: Mapping[str, Any], *, generated_at_utc: datetime) -> bool:
-    evaluated_at_utc = _aware_datetime(worker.get("evaluatedAtUtc"))
+    evaluated_at_utc = parse_timezone_aware_datetime(worker.get("evaluatedAtUtc"))
     return bool(
         worker.get("schemaVersion") == MANIFEST_SCHEMA_VERSION
         and worker.get("mode") == "run_once"
@@ -446,7 +450,7 @@ def _execution_is_valid(
         return False
     if execution.get("blockReasonCounts") != {}:
         return False
-    evaluated_at_utc = _aware_datetime(worker.get("evaluatedAtUtc"))
+    evaluated_at_utc = parse_timezone_aware_datetime(worker.get("evaluatedAtUtc"))
     if evaluated_at_utc is None:
         return False
     indexes: set[int] = set()
@@ -492,7 +496,7 @@ def _receipt_is_valid(
     source_evidence_hash = value.get("sourceEvidenceHash")
     if source_evidence_hash != _source_ref_receipt_hash(refs):
         return False
-    persisted_at_utc = _aware_datetime(value.get("persistedAtUtc"))
+    persisted_at_utc = parse_timezone_aware_datetime(value.get("persistedAtUtc"))
     if persisted_at_utc is None or persisted_at_utc > generated_at_utc:
         return False
     unsigned_receipt = {
@@ -542,7 +546,7 @@ def _source_ref_receipts_are_valid(
             for key in ("productId", "productVersion", "contentHash", "dataQualityStatus")
         ):
             return False
-        source_generated_at = _aware_datetime(ref.get("generatedAtUtc"))
+        source_generated_at = parse_timezone_aware_datetime(ref.get("generatedAtUtc"))
         if source_generated_at is None or source_generated_at > evaluated_at_utc:
             return False
         product_ids.append(str(ref["productId"]))
@@ -606,18 +610,6 @@ def _non_negative_int(value: object) -> int | None:
     if isinstance(value, bool) or not isinstance(value, int) or value < 0:
         return None
     return value
-
-
-def _aware_datetime(value: object) -> datetime | None:
-    if not isinstance(value, str) or not value.strip():
-        return None
-    try:
-        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
-    except ValueError:
-        return None
-    if parsed.tzinfo is None or parsed.utcoffset() is None:
-        return None
-    return parsed.astimezone(UTC)
 
 
 def _require_aware(value: datetime, field_name: str) -> None:

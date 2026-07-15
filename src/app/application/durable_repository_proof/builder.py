@@ -22,7 +22,6 @@ from app.application.durable_repository_proof.contract import (
 )
 from app.application.proof_provenance import AGGREGATE_PROOF_PROVENANCE_KEY
 from app.application.source_safe_cross_repo_proof import (
-    is_timezone_aware_datetime_text,
     required_file_evidence_present,
     required_make_target_evidence_present,
 )
@@ -33,6 +32,7 @@ from app.domain.proof_evidence import (
     ci_execution_receipt_from_mapping,
     ci_execution_receipt_is_well_formed,
     evidence_class_can_clear,
+    parse_timezone_aware_datetime,
 )
 
 
@@ -132,7 +132,7 @@ def durable_repository_proof_is_valid(payload: Mapping[str, Any]) -> bool:
     if not isinstance(receipt_payload, Mapping):
         return False
     receipt = ci_execution_receipt_from_mapping(receipt_payload)
-    generated_at_utc = _aware_datetime(payload.get("generatedAtUtc"))
+    generated_at_utc = parse_timezone_aware_datetime(payload.get("generatedAtUtc"))
     source_commit_sha = payload.get("sourceCommitSha")
     if (
         receipt is None
@@ -185,7 +185,7 @@ def _receipt_satisfies_durable_repository_policy(
     source_commit_sha: str,
     generated_at_utc: datetime,
 ) -> bool:
-    completed_at_utc = _aware_datetime(receipt.completed_at_utc)
+    completed_at_utc = parse_timezone_aware_datetime(receipt.completed_at_utc)
     return (
         ci_execution_receipt_is_well_formed(receipt)
         and generated_at_utc.tzinfo is not None
@@ -201,10 +201,3 @@ def _receipt_satisfies_durable_repository_policy(
         and completed_at_utc is not None
         and completed_at_utc <= generated_at_utc
     )
-
-
-def _aware_datetime(value: object) -> datetime | None:
-    if not is_timezone_aware_datetime_text(value):
-        return None
-    assert isinstance(value, str)
-    return datetime.fromisoformat(value.replace("Z", "+00:00"))
