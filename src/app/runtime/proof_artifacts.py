@@ -23,8 +23,8 @@ from app.application.workbench.contract_proof import (
 from app.application.workbench.discovery_contract_proof import (
     GATEWAY_WORKBENCH_DISCOVERY_CONTRACT_PROOF_ENV,
 )
-from app.application.low_income_core_cashflow_live_proof import (
-    LOW_INCOME_CORE_CASHFLOW_LIVE_PROOF_ENV,
+from app.application.low_income_cashflow_runtime_evidence import (
+    LOW_INCOME_CASHFLOW_RUNTIME_EXECUTION_ENV,
 )
 from app.application.operator_workflows_operations.source_contract_proof import (
     OPERATOR_WORKFLOWS_OPERATIONS_PROOF_ENV,
@@ -200,7 +200,7 @@ _JSON_PROOF_ARTIFACTS: tuple[tuple[str, str, str, str], ...] = (
         "bond maturity live proof",
     ),
     (
-        LOW_INCOME_CORE_CASHFLOW_LIVE_PROOF_ENV,
+        LOW_INCOME_CASHFLOW_RUNTIME_EXECUTION_ENV,
         "low_income_core_cashflow_live_proof",
         "low_income_core_cashflow_live_proof_ref",
         "low-income Core cashflow live proof",

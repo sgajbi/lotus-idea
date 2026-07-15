@@ -32,7 +32,7 @@ SCRIPT_TARGET_EXPECTATIONS = {
         "scripts/missing_benchmark_performance_readiness_proof_contract_gate.py"
     ),
     "low-income-core-cashflow-live-proof-contract-gate": (
-        "scripts/low_income_core_cashflow_live_proof_contract_gate.py"
+        "scripts/low_income_cashflow_runtime_evidence/runtime_execution_contract_gate.py"
     ),
     "risk-drawdown-live-proof-contract-gate": (
         "scripts/risk_drawdown_runtime_evidence/runtime_execution_contract_gate.py"

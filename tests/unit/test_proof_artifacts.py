@@ -20,8 +20,8 @@ from app.application.workbench.contract_proof import (
 from app.application.workbench.discovery_contract_proof import (
     GATEWAY_WORKBENCH_DISCOVERY_CONTRACT_PROOF_ENV,
 )
-from app.application.low_income_core_cashflow_live_proof import (
-    LOW_INCOME_CORE_CASHFLOW_LIVE_PROOF_ENV,
+from app.application.low_income_cashflow_runtime_evidence import (
+    LOW_INCOME_CASHFLOW_RUNTIME_EXECUTION_ENV,
 )
 from app.application.outbox.broker.source_contract_proof import (
     OUTBOX_BROKER_SOURCE_CONTRACT_PROOF_ENV,
@@ -243,7 +243,7 @@ def _configure_relative_artifact_env(monkeypatch: pytest.MonkeyPatch) -> None:
         BOND_MATURITY_RUNTIME_EXECUTION_ENV: (
             "output/opportunity-archetypes/bond-maturity-live-proof.json"
         ),
-        LOW_INCOME_CORE_CASHFLOW_LIVE_PROOF_ENV: (
+        LOW_INCOME_CASHFLOW_RUNTIME_EXECUTION_ENV: (
             "output/opportunity-archetypes/low-income-core-cashflow-live-proof.json"
         ),
     }

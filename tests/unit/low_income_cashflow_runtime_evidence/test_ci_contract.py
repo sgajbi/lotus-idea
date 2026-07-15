@@ -4,21 +4,19 @@ import importlib.util
 from pathlib import Path
 from types import ModuleType
 
-
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 
 
 def _load_ci_contract_gate() -> ModuleType:
     script_path = ROOT / "scripts" / "ci_contract_gate.py"
     spec = importlib.util.spec_from_file_location("ci_contract_gate", script_path)
-    assert spec is not None
-    assert spec.loader is not None
+    assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
 
 
-def test_ci_contract_gate_blocks_missing_low_income_core_cashflow_live_proof_wiring() -> None:
+def test_ci_contract_gate_blocks_missing_low_income_cashflow_runtime_wiring() -> None:
     module = _load_ci_contract_gate()
     makefile = (
         (ROOT / "Makefile")
@@ -45,16 +43,14 @@ def test_ci_contract_gate_blocks_missing_low_income_core_cashflow_live_proof_wir
     ) in errors
 
 
-def test_ci_contract_gate_blocks_missing_low_income_core_cashflow_live_proof_gate() -> None:
+def test_ci_contract_gate_blocks_missing_low_income_cashflow_runtime_gate() -> None:
     module = _load_ci_contract_gate()
+    script = "scripts/low_income_cashflow_runtime_evidence/runtime_execution_contract_gate.py"
     makefile = (
         (ROOT / "Makefile")
         .read_text(encoding="utf-8")
         .replace("$(MAKE) low-income-core-cashflow-live-proof-contract-gate\n", "")
-        .replace(
-            "scripts/low_income_core_cashflow_live_proof_contract_gate.py",
-            "scripts/removed.py",
-        )
+        .replace(script, "scripts/removed.py")
     )
 
     errors = module.validate_makefile(makefile)
@@ -63,6 +59,5 @@ def test_ci_contract_gate_blocks_missing_low_income_core_cashflow_live_proof_gat
         "Makefile lint target must call `$(MAKE) low-income-core-cashflow-live-proof-contract-gate`"
     ) in errors
     assert (
-        "Makefile low-income-core-cashflow-live-proof-contract-gate target must run "
-        "`scripts/low_income_core_cashflow_live_proof_contract_gate.py`"
+        f"Makefile low-income-core-cashflow-live-proof-contract-gate target must run `{script}`"
     ) in errors

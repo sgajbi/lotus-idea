@@ -601,7 +601,7 @@ missing-benchmark-performance-readiness-proof-contract-gate:
 	$(VENV_PYTHON) scripts/missing_benchmark_performance_readiness_proof_contract_gate.py
 
 low-income-core-cashflow-live-proof-contract-gate:
-	$(VENV_PYTHON) scripts/low_income_core_cashflow_live_proof_contract_gate.py
+	$(VENV_PYTHON) scripts/low_income_cashflow_runtime_evidence/runtime_execution_contract_gate.py
 
 bond-maturity-live-proof-contract-gate:
 	$(VENV_PYTHON) scripts/bond_maturity_runtime_evidence/runtime_execution_contract_gate.py
