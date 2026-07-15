@@ -116,6 +116,24 @@ def test_github_issue_closure_matrix_gate_freezes_core_benchmark_main_truth(
     assert "#476: merged-main issue cannot regress to `locally_fixed`" in errors
 
 
+def test_github_issue_closure_matrix_gate_freezes_bond_maturity_main_truth(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    matrix = tmp_path / "matrix.md"
+    content = module.MATRIX_PATH.read_text(encoding="utf-8").replace(
+        "issues/482) Bind bond-maturity proof to authoritative Core runtime evidence "
+        "| `merged_main` |",
+        "issues/482) Bind bond-maturity proof to authoritative Core runtime evidence "
+        "| `locally_fixed` |",
+    )
+    matrix.write_text(content, encoding="utf-8")
+
+    errors = module.validate_issue_closure_matrix(matrix)
+
+    assert "#482: merged-main issue cannot regress to `locally_fixed`" in errors
+
+
 def test_github_issue_closure_matrix_gate_blocks_missing_issue(tmp_path: Path) -> None:
     module = _load_gate()
     matrix = tmp_path / "matrix.md"
