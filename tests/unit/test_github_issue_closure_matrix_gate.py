@@ -378,3 +378,20 @@ def test_github_issue_closure_matrix_gate_freezes_source_ingestion_runtime_evide
     errors = module.validate_issue_closure_matrix(matrix)
 
     assert "#456: merged-main issue cannot regress to `locally_fixed`" in errors
+
+
+def test_github_issue_closure_matrix_gate_freezes_ai_attestation_source_contract_closure(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    matrix = tmp_path / "matrix.md"
+    content = module.MATRIX_PATH.read_text(encoding="utf-8")
+    content = content.replace(
+        "Classify signed AI attestation declarations as closed source-contract evidence | `merged_main` |",
+        "Classify signed AI attestation declarations as closed source-contract evidence | `locally_fixed` |",
+    )
+    matrix.write_text(content, encoding="utf-8")
+
+    errors = module.validate_issue_closure_matrix(matrix)
+
+    assert "#459: merged-main issue cannot regress to `locally_fixed`" in errors
