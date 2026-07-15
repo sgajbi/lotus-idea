@@ -205,6 +205,13 @@ Concentration-risk source-backed evaluation consumes only Lotus Risk-owned
 `ConcentrationRiskReport:v1` evidence and must not calculate concentration,
 approve risk methodology, recommend trades, create rebalance actions, or
 promote risk/product support.
+Concentration runtime evidence must invoke the authoritative Idea evaluation
+and persistence use case and bind the exact current Lotus Risk source receipt
+to an accepted or replayed durable Idea persistence receipt. In-memory runs,
+self-asserted success, missing provenance, unknown claims, and receipt drift
+clear no readiness blocker. Valid evidence affects only the live-Risk source
+posture; it does not certify data mesh, Gateway/Workbench behavior, client
+publication, deployment, production, or supported-feature promotion.
 High-volatility source-backed evaluation consumes only Lotus Risk-owned
 `RiskMetricsReport:v1` volatility evidence and must not calculate volatility,
 VaR, tracking error, approve risk methodology, recommend trades, create

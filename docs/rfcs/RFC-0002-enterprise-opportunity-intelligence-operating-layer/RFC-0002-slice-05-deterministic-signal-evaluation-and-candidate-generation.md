@@ -240,15 +240,15 @@ Additional implemented concentration-risk foundation:
    does not calculate concentration, approve risk methodology, recommend
    trades, create rebalance actions, certify data mesh, prove Workbench
    behavior, authorize client publication, or promote support.
-7. `src/app/application/risk_concentration_live_proof.py`,
-   `scripts/generate_risk_concentration_live_proof.py`,
-   `scripts/risk_concentration_live_proof_contract_gate.py`, and
-   `make risk-concentration-live-proof-contract-gate` define a source-safe live
-   Risk concentration proof artifact. A valid artifact proves a live
-   `lotus-risk:ConcentrationRiskReport:v1` source call, current source
-   evidence, and deterministic concentration candidate generation, then clears
-   only the namespaced opportunity-archetype live Risk source blocker when
-   consumed by aggregate readiness.
+7. `src/app/application/risk_concentration_runtime_evidence/`,
+   `scripts/risk_concentration_runtime_evidence/`, and
+   `make risk-concentration-live-proof-contract-gate` define closed v2
+   `runtime_execution` evidence. A valid artifact binds a current
+   `lotus-risk:ConcentrationRiskReport:v1` receipt to the authoritative
+   deterministic use-case result and durable accepted/replayed Idea
+   persistence receipt, then clears only the namespaced opportunity-archetype
+   live Risk source blocker when consumed by aggregate readiness. It does not
+   transfer official risk authority or certify production support.
 
 Additional implemented underperformance foundation:
 

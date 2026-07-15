@@ -424,6 +424,23 @@ production, Workbench, publication, and promotion claims. Shared source-authorit
 record handling replaces three equivalent implementations without adding a
 runtime service or database boundary.
 
+Issue `#462` applies the same authority rule to the Risk concentration proof.
+The former v1 artifact could clear the live-Risk blocker from self-asserted
+source and persistence fields. The capability-owned
+`application/risk_concentration_runtime_evidence/`,
+`scripts/risk_concentration_runtime_evidence/`, and focused test packages now
+emit and validate a closed-field v2 `runtime_execution` contract. It invokes
+the authoritative concentration evaluation-and-persistence use case and binds
+the exact current `lotus-risk:ConcentrationRiskReport:v1` source receipt to an
+accepted or replayed durable Idea persistence receipt. Request, source,
+evidence, scope, timestamp, provenance, and receipt digests must reconcile.
+Unknown fields, in-memory execution, missing receipts, and receipt tampering
+fail closed. A valid current artifact can clear only
+`opportunity_archetype_live_risk_source_proof_missing`; mesh,
+Gateway/Workbench, publication, deployment, production, and supported-feature
+blockers remain. This is internal design modularity in the existing deployable,
+not a new service or database boundary.
+
 PR `#439` merged this occurrence by rebase to exact-main SHA `1a64ef69`.
 Main Releasability `29356075075` and CodeQL `29356064752` passed on that exact
 commit, and wiki publication `4a43d9d` has zero source drift. Issue `#437` is
