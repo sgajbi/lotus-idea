@@ -28,9 +28,7 @@ try:
 except ModuleNotFoundError:
     from proof_source_safety import validate_forbidden_content  # type: ignore[import-not-found,no-redef]
 
-GENERATOR = (
-    ROOT / "scripts" / "manage_mandate_runtime_evidence" / "generate_runtime_execution.py"
-)
+GENERATOR = ROOT / "scripts" / "manage_mandate_runtime_evidence" / "generate_runtime_execution.py"
 PROHIBITED_PATHS = (
     ROOT / "src" / "app" / "application" / "manage_mandate_live_proof.py",
     ROOT / "scripts" / "generate_manage_mandate_live_proof.py",
@@ -71,9 +69,7 @@ def validate_manage_mandate_runtime_execution_contract() -> list[str]:
         MANAGE_MANDATE_RUNTIME_BLOCKERS_SATISFIED
     ):
         errors.append("runtime evidence must satisfy only the three Manage source blockers")
-    if candidate.get("remainingCertificationBlockers") != list(
-        MANAGE_MANDATE_REMAINING_BLOCKERS
-    ):
+    if candidate.get("remainingCertificationBlockers") != list(MANAGE_MANDATE_REMAINING_BLOCKERS):
         errors.append("runtime evidence must preserve unrelated certification blockers")
     no_opportunity_result = evaluate_manage_mandate_readiness(
         command,

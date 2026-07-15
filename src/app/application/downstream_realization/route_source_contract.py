@@ -120,9 +120,7 @@ ADVISE_ROUTE_PROFILE = RouteSourceContractProfile(
     contract_path="contracts/idea-proposal-intake/lotus-advise-idea-proposal-intake.v1.json",
     target_route=ADVISE_PROPOSAL_ROUTE,
     remaining_blockers=REMAINING_ADVISE_ROUTE_BLOCKERS,
-    required_producer_certification_blockers=(
-        REQUIRED_ADVISE_PRODUCER_CERTIFICATION_BLOCKERS
-    ),
+    required_producer_certification_blockers=(REQUIRED_ADVISE_PRODUCER_CERTIFICATION_BLOCKERS),
     source_refs=(
         "contracts/idea-proposal-intake/lotus-advise-idea-proposal-intake.v1.json",
         "src/api/proposals/router.py",
@@ -153,9 +151,7 @@ MANAGE_ROUTE_PROFILE = RouteSourceContractProfile(
     contract_path="contracts/idea-action-intake/lotus-manage-idea-action-intake.v1.json",
     target_route=MANAGE_ACTION_ROUTE,
     remaining_blockers=REMAINING_MANAGE_ROUTE_BLOCKERS,
-    required_producer_certification_blockers=(
-        REQUIRED_MANAGE_PRODUCER_CERTIFICATION_BLOCKERS
-    ),
+    required_producer_certification_blockers=(REQUIRED_MANAGE_PRODUCER_CERTIFICATION_BLOCKERS),
     source_refs=(
         "contracts/idea-action-intake/lotus-manage-idea-action-intake.v1.json",
         "src/api/routers/rebalance_runs.py",

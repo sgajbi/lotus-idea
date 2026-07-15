@@ -134,6 +134,8 @@ def _action_register_source_ref(
         data_quality_status=posture.supportability_state or "unknown",
         freshness=_freshness(posture),
     )
+
+
 def _source_product_ref(
     payload: dict[str, Any],
     *,
@@ -282,9 +284,7 @@ def _action_register_runtime(
         or not _SHA256_PATTERN.fullmatch(fingerprint)
     ):
         return None
-    correlation_id = _text_field(payload, "correlation_id") or _text_field(
-        payload, "correlationId"
-    )
+    correlation_id = _text_field(payload, "correlation_id") or _text_field(payload, "correlationId")
     if request.correlation_id is not None and correlation_id != request.correlation_id:
         return None
     return ManageActionRegisterRuntimeEvidence(

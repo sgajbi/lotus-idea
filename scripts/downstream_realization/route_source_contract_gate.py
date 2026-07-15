@@ -179,9 +179,7 @@ def _advise_contract_payload() -> dict[str, object]:
             "Does not create orders, execution instructions, fills, or settlement records.",
             "Does not promote a supported feature in lotus-advise or lotus-idea.",
         ],
-        "certification_blockers": list(
-            REQUIRED_ADVISE_PRODUCER_CERTIFICATION_BLOCKERS
-        ),
+        "certification_blockers": list(REQUIRED_ADVISE_PRODUCER_CERTIFICATION_BLOCKERS),
     }
 
 
@@ -205,9 +203,7 @@ def _manage_contract_payload() -> dict[str, object]:
             "Does not create orders, execution instructions, fills, or settlement records.",
             "Does not promote a supported feature in lotus-manage or lotus-idea.",
         ],
-        "certification_blockers": list(
-            REQUIRED_MANAGE_PRODUCER_CERTIFICATION_BLOCKERS
-        ),
+        "certification_blockers": list(REQUIRED_MANAGE_PRODUCER_CERTIFICATION_BLOCKERS),
     }
 
 

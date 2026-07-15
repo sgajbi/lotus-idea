@@ -204,7 +204,11 @@ def _mapping_has_keys(value: object, keys: frozenset[str]) -> bool:
 def _digests_are_valid(*receipts: Mapping[str, Any]) -> bool:
     for receipt in receipts:
         digest_key = next(
-            (key for key in ("requestDigest", "evaluationDigest", "receiptDigest") if key in receipt),
+            (
+                key
+                for key in ("requestDigest", "evaluationDigest", "receiptDigest")
+                if key in receipt
+            ),
             None,
         )
         if digest_key is None:
@@ -282,9 +286,7 @@ def _receipts_reconcile(
     upstream = [dict(performance), dict(risk)]
     if action.get("upstreamSourceRefsDigest") != sha256_json(upstream):
         return False
-    action_source_material = {
-        key: action[key] for key in _SOURCE_KEYS if key != "receiptDigest"
-    }
+    action_source_material = {key: action[key] for key in _SOURCE_KEYS if key != "receiptDigest"}
     action_source = {
         **action_source_material,
         "receiptDigest": sha256_json(action_source_material),

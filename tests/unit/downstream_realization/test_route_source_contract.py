@@ -159,9 +159,7 @@ def test_contract_requires_every_producer_owned_certification_blocker(
     root = _write_fixture(tmp_path, family)
     contract_path = root / profile.contract_path
     contract = json.loads(contract_path.read_text(encoding="utf-8"))
-    contract["certification_blockers"].remove(
-        profile.required_producer_certification_blockers[0]
-    )
+    contract["certification_blockers"].remove(profile.required_producer_certification_blockers[0])
     contract_path.write_text(json.dumps(contract), encoding="utf-8")
 
     payload = _build_payload(root, family)
