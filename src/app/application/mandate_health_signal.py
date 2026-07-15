@@ -54,6 +54,14 @@ class EvaluateMandateHealthFromManageCommand:
     trace_id: str | None = None
 
 
+@dataclass(frozen=True)
+class MandateHealthSourceEvaluation:
+    command: EvaluateMandateHealthFromManageCommand
+    evidence: ManageMandateHealthEvidence | None
+    evaluation: SignalEvaluationResult
+    source_error_code: str | None = None
+
+
 DEFAULT_MANDATE_HEALTH_POLICY = MandateHealthSignalPolicy(
     policy_version=CandidateScorePolicyVersion.ALLOCATION_DRIFT.value,
     minimum_workflow_decision_count=1,
@@ -90,6 +98,19 @@ def evaluate_mandate_health_signal_from_manage(
     manage_source: ManageMandateHealthSourcePort,
     policy: MandateHealthSignalPolicy = DEFAULT_MANDATE_HEALTH_POLICY,
 ) -> SignalEvaluationResult:
+    return evaluate_mandate_health_readiness_from_manage(
+        command,
+        manage_source=manage_source,
+        policy=policy,
+    ).evaluation
+
+
+def evaluate_mandate_health_readiness_from_manage(
+    command: EvaluateMandateHealthFromManageCommand,
+    *,
+    manage_source: ManageMandateHealthSourcePort,
+    policy: MandateHealthSignalPolicy = DEFAULT_MANDATE_HEALTH_POLICY,
+) -> MandateHealthSourceEvaluation:
     try:
         evidence = manage_source.fetch_mandate_health_evidence(
             ManageMandateHealthEvidenceRequest(
@@ -102,7 +123,7 @@ def evaluate_mandate_health_signal_from_manage(
             )
         )
     except ManageSourceEntitlementDenied:
-        return evaluate_mandate_health_signal_command(
+        evaluation = evaluate_mandate_health_signal_command(
             EvaluateMandateHealthSignalCommand(
                 as_of_date=command.as_of_date,
                 workflow_decision_count=None,
@@ -122,15 +143,30 @@ def evaluate_mandate_health_signal_from_manage(
             ),
             policy=policy,
         )
-    except ManageSourceUnavailable:
-        return SignalEvaluationResult(
-            outcome=SignalEvaluationOutcome.BLOCKED,
-            family=OpportunityFamily.ALLOCATION_DRIFT,
-            reason_codes=(ReasonCode.SOURCE_PARTIAL,),
-            unsupported_reasons=(UnsupportedEvidenceReason.SOURCE_UNAVAILABLE,),
+        return MandateHealthSourceEvaluation(
+            command=command,
+            evidence=None,
+            evaluation=evaluation,
+            source_error_code="manage_source_entitlement_denied",
+        )
+    except ManageSourceUnavailable as exc:
+        return MandateHealthSourceEvaluation(
+            command=command,
+            evidence=None,
+            evaluation=SignalEvaluationResult(
+                outcome=SignalEvaluationOutcome.BLOCKED,
+                family=OpportunityFamily.ALLOCATION_DRIFT,
+                reason_codes=(ReasonCode.SOURCE_PARTIAL,),
+                unsupported_reasons=(UnsupportedEvidenceReason.SOURCE_UNAVAILABLE,),
+            ),
+            source_error_code=exc.code,
         )
 
-    return _evaluate_mandate_health_evidence(command, evidence, policy=policy)
+    return MandateHealthSourceEvaluation(
+        command=command,
+        evidence=evidence,
+        evaluation=_evaluate_mandate_health_evidence(command, evidence, policy=policy),
+    )
 
 
 def _evaluate_mandate_health_evidence(
