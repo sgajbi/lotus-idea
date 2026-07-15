@@ -16,8 +16,8 @@ from app.application.downstream_realization.route_source_contract import (
     MANAGE_ACTION_ROUTE,
     MANAGE_ROUTE_PROFILE,
     MANAGE_ROUTE_SOURCE_CONTRACT_ENV,
-    REMAINING_ADVISE_ROUTE_BLOCKERS,
-    REMAINING_MANAGE_ROUTE_BLOCKERS,
+    REQUIRED_ADVISE_PRODUCER_CERTIFICATION_BLOCKERS,
+    REQUIRED_MANAGE_PRODUCER_CERTIFICATION_BLOCKERS,
     ROUTE_SOURCE_CONTRACT_SCHEMA_VERSION,
     advise_route_source_contract_is_valid,
     build_advise_route_source_contract_payload,
@@ -151,21 +151,56 @@ def test_validator_rejects_malformed_source_authority_collection(tmp_path: Path)
     assert manage_route_source_contract_is_valid(payload) is False
 
 
-def test_contract_requires_live_and_authority_blockers(tmp_path: Path) -> None:
-    root = _write_fixture(tmp_path, "advise")
-    contract_path = root / ADVISE_ROUTE_PROFILE.contract_path
+@pytest.mark.parametrize("family", ["advise", "manage"])
+def test_contract_requires_every_producer_owned_certification_blocker(
+    tmp_path: Path, family: str
+) -> None:
+    profile = ADVISE_ROUTE_PROFILE if family == "advise" else MANAGE_ROUTE_PROFILE
+    root = _write_fixture(tmp_path, family)
+    contract_path = root / profile.contract_path
     contract = json.loads(contract_path.read_text(encoding="utf-8"))
-    contract["certification_blockers"].remove("advise_live_contract_proof_missing")
+    contract["certification_blockers"].remove(
+        profile.required_producer_certification_blockers[0]
+    )
     contract_path.write_text(json.dumps(contract), encoding="utf-8")
 
-    payload = build_advise_route_source_contract_payload(
-        generated_at_utc=GENERATED_AT,
-        repository_root=ROOT,
-        advise_root=root,
-    )
+    payload = _build_payload(root, family)
 
     assert payload["sourceContractValid"] is False
-    assert advise_route_source_contract_is_valid(payload) is False
+    validator = (
+        advise_route_source_contract_is_valid
+        if family == "advise"
+        else manage_route_source_contract_is_valid
+    )
+    assert validator(payload) is False
+
+
+@pytest.mark.parametrize("family", ["advise", "manage"])
+def test_contract_allows_additional_producer_certification_blockers(
+    tmp_path: Path, family: str
+) -> None:
+    profile = ADVISE_ROUTE_PROFILE if family == "advise" else MANAGE_ROUTE_PROFILE
+    root = _write_fixture(tmp_path, family)
+    contract_path = root / profile.contract_path
+    contract = json.loads(contract_path.read_text(encoding="utf-8"))
+    contract["certification_blockers"].append("future_producer_owned_blocker")
+    contract_path.write_text(json.dumps(contract), encoding="utf-8")
+
+    assert _build_payload(root, family)["sourceContractValid"] is True
+
+
+@pytest.mark.parametrize("family", ["advise", "manage"])
+def test_contract_rejects_consumer_readiness_blockers_as_producer_certification(
+    tmp_path: Path, family: str
+) -> None:
+    profile = ADVISE_ROUTE_PROFILE if family == "advise" else MANAGE_ROUTE_PROFILE
+    root = _write_fixture(tmp_path, family)
+    contract_path = root / profile.contract_path
+    contract = json.loads(contract_path.read_text(encoding="utf-8"))
+    contract["certification_blockers"] = list(profile.remaining_blockers)
+    contract_path.write_text(json.dumps(contract), encoding="utf-8")
+
+    assert _build_payload(root, family)["sourceContractValid"] is False
 
 
 @pytest.mark.parametrize(
@@ -217,6 +252,10 @@ def test_contract_gate_passes_closed_source_contracts() -> None:
 
 def _valid_payload(tmp_path: Path, family: str) -> dict[str, object]:
     root = _write_fixture(tmp_path, family)
+    return _build_payload(root, family)
+
+
+def _build_payload(root: Path, family: str) -> dict[str, object]:
     if family == "advise":
         return build_advise_route_source_contract_payload(
             generated_at_utc=GENERATED_AT, repository_root=ROOT, advise_root=root
@@ -267,7 +306,9 @@ def _contract_payload(family: str) -> dict[str, object]:
             "Does not promote a supported feature.",
         ],
         "certification_blockers": list(
-            REMAINING_ADVISE_ROUTE_BLOCKERS if advise else REMAINING_MANAGE_ROUTE_BLOCKERS
+            REQUIRED_ADVISE_PRODUCER_CERTIFICATION_BLOCKERS
+            if advise
+            else REQUIRED_MANAGE_PRODUCER_CERTIFICATION_BLOCKERS
         ),
     }
     if advise:
