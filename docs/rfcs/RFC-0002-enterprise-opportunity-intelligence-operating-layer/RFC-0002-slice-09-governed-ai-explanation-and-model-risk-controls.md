@@ -441,6 +441,26 @@ Gateway/Workbench, publication, deployment, production, and supported-feature
 blockers remain. This is internal design modularity in the existing deployable,
 not a new service or database boundary.
 
+Issue `#465` applies the same authority rule to the Risk high-volatility proof.
+The former v1 artifact could clear its live-Risk blocker from self-asserted
+source and persistence fields. The capability-owned
+`application/high_volatility_runtime_evidence/`,
+`scripts/high_volatility_runtime_evidence/`, and focused test packages now emit
+and validate a closed-field v2 `runtime_execution` contract. It invokes the
+authoritative high-volatility evaluation-and-persistence use case and binds the
+exact current `lotus-risk:RiskMetricsReport:v1` source receipt to an accepted or
+replayed durable Idea persistence receipt. Shared `risk_runtime_evidence`
+helpers remove duplicate concentration/volatility receipt plumbing. Wrong
+evidence classes, unknown claims, stale or mismatched source evidence,
+non-candidate outcomes, in-memory execution, missing receipts, and digest or
+receipt tampering fail closed. A valid current artifact can clear only
+`opportunity_archetype_live_risk_volatility_source_proof_missing`; drawdown,
+mesh, Gateway/Workbench, publication, deployment, production, and
+supported-feature blockers remain. This is internal design modularity in the
+existing deployable, not a new service or database boundary.
+The follow-on same-pattern scan found the equivalent flat drawdown proof;
+issue `#466` tracks that separately so the #465 closure remains bounded.
+
 PR `#439` merged this occurrence by rebase to exact-main SHA `1a64ef69`.
 Main Releasability `29356075075` and CodeQL `29356064752` passed on that exact
 commit, and wiki publication `4a43d9d` has zero source drift. Issue `#437` is

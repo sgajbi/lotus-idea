@@ -555,10 +555,13 @@ Persistence adapter validation:
     `make risk-concentration-live-proof-contract-gate` prove the optional Lotus
     Risk concentration live-proof artifact remains source-safe and can clear
     only the namespaced live Risk source blocker when valid evidence is supplied.
-    `tests/unit/test_high_volatility_live_proof.py` and
+    `tests/unit/high_volatility_runtime_evidence/` and
     `make high-volatility-live-proof-contract-gate` prove the optional Lotus
-    Risk volatility live-proof artifact remains source-safe and can clear only
-    the namespaced volatility source blocker when valid evidence is supplied.
+    Risk volatility evidence is a closed v2 `runtime_execution` receipt. It
+    binds current `RiskMetricsReport:v1` evidence to the authoritative Idea
+    evaluation-and-persistence result, rejects tampering and in-memory claims,
+    and can clear only the namespaced volatility source blocker. The required
+    PostgreSQL lane proves accepted persistence, repository reload, and replay.
     `tests/unit/test_opportunity_archetype_contract_gate.py` and
     `make opportunity-archetype-contract-gate` also require the
     high-volatility API module, route, and integration test as archetype

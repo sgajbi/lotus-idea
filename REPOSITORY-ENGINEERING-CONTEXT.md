@@ -216,6 +216,13 @@ High-volatility source-backed evaluation consumes only Lotus Risk-owned
 `RiskMetricsReport:v1` volatility evidence and must not calculate volatility,
 VaR, tracking error, approve risk methodology, recommend trades, create
 rebalance actions, or promote risk/product support.
+High-volatility runtime evidence must invoke the authoritative Idea evaluation
+and persistence use case and bind the exact current Risk source receipt to an
+accepted or replayed durable Idea persistence receipt. In-memory execution,
+self-asserted success, stale or mismatched evidence, non-candidate outcomes,
+unknown claims, and receipt drift clear no blocker. Concentration and volatility
+share internal execution and receipt assembly, but remain separate capability
+contracts inside the existing service and Idea-owned database boundary.
 Drawdown-review source-backed evaluation consumes only Lotus Risk-owned
 `DrawdownAnalyticsReport:v1` evidence and must not calculate drawdown, approve
 risk methodology, recommend trades, create rebalance actions, or promote

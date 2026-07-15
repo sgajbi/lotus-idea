@@ -310,14 +310,15 @@ Prove the complete supported opportunity journey end to end.
     `opportunity_archetype_live_risk_source_proof_missing`; data-mesh,
     Workbench, client-publication, deployment, production, and
     supported-feature blockers remain.
-29. `src/app/application/high_volatility_live_proof.py`,
-    `scripts/generate_high_volatility_live_proof.py`, and
-    `make high-volatility-live-proof-contract-gate` now define and enforce a
-    source-safe Lotus Risk high-volatility live-proof artifact. Aggregate
-    readiness can consume a valid artifact to clear only
+29. `src/app/application/high_volatility_runtime_evidence/`,
+    `scripts/high_volatility_runtime_evidence/`, and
+    `make high-volatility-live-proof-contract-gate` define and enforce a closed
+    v2 Lotus Risk high-volatility `runtime_execution` contract. It binds current
+    Risk source evidence and the authoritative use-case result to accepted or
+    replayed durable Idea persistence. Aggregate readiness can clear only
     `opportunity_archetype_live_risk_volatility_source_proof_missing`, while
-    preserving drawdown, data-mesh, Workbench, client-publication, and
-    supported-feature blockers.
+    preserving drawdown, data-mesh, Workbench, client-publication, deployment,
+    production, and supported-feature blockers.
 30. `src/app/application/risk_drawdown_live_proof.py`,
     `scripts/generate_risk_drawdown_live_proof.py`, and
     `make risk-drawdown-live-proof-contract-gate` now define and enforce a
