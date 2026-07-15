@@ -52,6 +52,20 @@ def test_github_issue_closure_matrix_gate_requires_current_drawdown_issue(
     assert "Missing actionable issue rows: #466" in errors
 
 
+def test_github_issue_closure_matrix_gate_requires_current_underperformance_issue(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    matrix = tmp_path / "matrix.md"
+    content = module.MATRIX_PATH.read_text(encoding="utf-8")
+    content = "\n".join(line for line in content.splitlines() if "[#469]" not in line)
+    matrix.write_text(content, encoding="utf-8")
+
+    errors = module.validate_issue_closure_matrix(matrix)
+
+    assert "Missing actionable issue rows: #469" in errors
+
+
 def test_github_issue_closure_matrix_gate_blocks_missing_issue(tmp_path: Path) -> None:
     module = _load_gate()
     matrix = tmp_path / "matrix.md"
