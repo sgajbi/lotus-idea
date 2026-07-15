@@ -44,9 +44,6 @@ from app.application.outbox.platform_mesh.source_contract_proof import (
     REQUIRED_PLATFORM_PRODUCT_IDS,
     build_outbox_platform_mesh_event_source_contract_proof_payload,
 )
-from app.application.performance_underperformance_live_proof import (
-    build_performance_underperformance_live_proof_payload,
-)
 from app.application.data_mesh.platform_catalog_source_contract import (
     build_platform_catalog_source_contract_payload,
 )
@@ -61,6 +58,7 @@ from app.application.workbench.read_path_source_contract import (
     build_workbench_read_path_source_contract_proof_payload,
 )
 from app.domain import InMemoryIdeaRepository
+from tests.support.performance_underperformance_runtime_evidence import runtime_execution as performance_underperformance_runtime_execution
 from tests.support.ai_workflow_pack_fixture import (
     write_lotus_ai_workflow_pack_fixture,
 )
@@ -990,20 +988,8 @@ def test_generate_implementation_proof_readiness_uses_explicit_performance_under
     performance_proof = tmp_path / "performance-underperformance-live-proof.json"
     performance_proof.write_text(
         json.dumps(
-            build_performance_underperformance_live_proof_payload(
-                generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
-                live_performance_source_attempted=True,
-                evaluation_summary={
-                    "runStatus": "completed",
-                    "sourceAuthority": "lotus-performance",
-                    "sourceProductId": "lotus-performance:ReturnsSeriesBundle:v1",
-                    "evaluationOutcome": "candidate_created",
-                    "sourceEvidenceCurrent": True,
-                    "benchmarkContextAvailable": True,
-                    "sourceDiagnosticCodes": ["performance_benchmark_context_ready"],
-                    "reasonCodes": ["underperformance_attention"],
-                    "unsupportedReasons": [],
-                },
+            performance_underperformance_runtime_execution(
+                generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC)
             )
         ),
         encoding="utf-8",

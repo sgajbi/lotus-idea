@@ -12,8 +12,8 @@ from typing import Any, Callable, Mapping
 from app.application.missing_benchmark_performance_readiness_proof import (
     missing_benchmark_performance_readiness_proof_is_valid,
 )
-from app.application.performance_underperformance_live_proof import (
-    performance_underperformance_live_proof_is_valid,
+from app.application.performance_underperformance_runtime_evidence import (
+    performance_underperformance_runtime_execution_is_valid,
 )
 from app.application.risk_concentration_runtime_evidence import (
     risk_concentration_runtime_execution_is_valid,
@@ -41,9 +41,9 @@ PROOF_CASES = (
     ),
     ProofCase(
         name="performance_underperformance",
-        script_name="generate_performance_underperformance_live_proof.py",
+        script_name="performance_underperformance_runtime_evidence/generate_runtime_execution.py",
         output_name="performance-underperformance-live-proof.json",
-        validator=performance_underperformance_live_proof_is_valid,
+        validator=performance_underperformance_runtime_execution_is_valid,
     ),
     ProofCase(
         name="performance_benchmark_readiness",

@@ -586,7 +586,7 @@ missing-risk-profile-live-proof-contract-gate:
 	$(VENV_PYTHON) scripts/missing_risk_profile_live_proof_contract_gate.py
 
 performance-underperformance-live-proof-contract-gate:
-	$(VENV_PYTHON) scripts/performance_underperformance_live_proof_contract_gate.py
+	$(VENV_PYTHON) scripts/performance_underperformance_runtime_evidence/runtime_execution_contract_gate.py
 
 core-benchmark-assignment-live-proof-contract-gate:
 	$(VENV_PYTHON) scripts/core_benchmark_assignment_live_proof_contract_gate.py
