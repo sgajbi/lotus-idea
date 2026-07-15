@@ -8,9 +8,10 @@ deterministic signal evaluation; it does not promote a product feature.
 
 ## Current Scope
 
-Current evidence covers canonical Risk concentration, Performance
-underperformance, and Performance benchmark-readiness source proofs plus the
-bounded layered Idea API proof. It is implementation evidence only. Data-mesh
+Current automation covers canonical Risk concentration, Performance
+underperformance runtime persistence, and Performance benchmark-readiness
+proofs plus the bounded layered Idea API proof. It is implementation evidence
+only. Data-mesh
 activation, full Gateway/Workbench behavior, downstream realization,
 client-ready publication, official calculation authority, and
 supported-feature promotion remain separately blocked.
@@ -32,7 +33,9 @@ supported-feature promotion remain separately blocked.
 2. Use the governed portfolio `PB_SG_GLOBAL_BAL_001` and its current as-of
    date.
 3. Confirm `risk.dev.lotus` and `performance.dev.lotus` are reachable.
-4. Use unique correlation and trace IDs for every run.
+4. Configure `LOTUS_IDEA_DATABASE_URL` for the Idea-owned PostgreSQL instance;
+   the Performance runtime proof rejects in-memory storage.
+5. Use unique correlation and trace IDs for every run.
 
 ## Run
 
@@ -85,7 +88,8 @@ response observations and never persists raw responses.
 ## Current Proof Families
 
 1. Lotus Risk concentration evidence.
-2. Lotus Performance returns-series underperformance evidence.
+2. Lotus Performance returns-series underperformance runtime execution and
+   durable persistence evidence.
 3. Lotus Performance benchmark-readiness evidence.
 
 A valid child proof clears only its named source blocker. The aggregate does
@@ -95,10 +99,11 @@ supported-feature promotion.
 
 ## Current Runtime Result
 
-On 2026-07-10, the clean-tree canonical run proved current Risk concentration,
-Performance underperformance, and Performance benchmark-readiness evidence.
-The aggregate returned `certificationReady=true` with source revision
-`ffa9c35`, `sourceTreeDirty=false`, and explicit correlation/trace IDs. This is
-branch evidence until the implementation slice is merged and mainline release
-proof is captured. Do not replace it with caller-supplied values or a relaxed
-validator.
+The 2026-07-10 clean-tree aggregate is historical v1 evidence and no longer
+qualifies Performance underperformance after the closed v2 contract replaced
+it. A current canonical run must use
+`scripts/performance_underperformance_runtime_evidence/generate_runtime_execution.py`,
+an Idea-owned durable repository, and accepted or replayed persistence. Until
+that run and mainline validation exist, do not describe the aggregate as
+currently certification-ready. Never substitute caller-supplied values or a
+relaxed validator.
