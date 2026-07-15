@@ -16,7 +16,7 @@ from app.application.low_income_cashflow_runtime_evidence import (
     evaluate_low_income_cashflow_readiness,
     low_income_cashflow_runtime_execution_is_valid,
 )
-from app.application.core_runtime_evidence import sha256_json
+from app.application.runtime_evidence import sha256_json
 from app.domain import EvidenceFreshness, LowIncomeSignalPolicy, SignalEvaluationOutcome
 from app.ports.core_sources import CoreLowIncomeEvidence, CoreLowIncomeEvidenceRequest
 from tests.support.low_income_cashflow_runtime_evidence import (

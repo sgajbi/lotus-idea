@@ -6,7 +6,7 @@ from typing import Any, Callable
 
 import pytest
 
-from app.application.core_runtime_evidence import sha256_json
+from app.application.runtime_evidence import sha256_json
 from app.application.manage_mandate_runtime_evidence import (
     EvaluateManageMandateReadiness,
     build_blocked_manage_mandate_runtime_execution,

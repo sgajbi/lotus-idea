@@ -7,7 +7,7 @@ import re
 from typing import Any, cast
 
 from app.application.access_scope import tenant_portfolio_scope
-from app.application.core_runtime_evidence import (
+from app.application.runtime_evidence import (
     format_utc,
     identity_hash,
     require_aware,
@@ -54,7 +54,7 @@ LOW_INCOME_CASHFLOW_REMAINING_BLOCKERS = (
 LOW_INCOME_CASHFLOW_RUNTIME_EVIDENCE_REFS = (
     "src/app/application/low_income_cashflow_runtime_evidence/runtime_execution.py",
     "src/app/application/low_income_cashflow_runtime_evidence/contract.py",
-    "src/app/application/core_runtime_evidence/receipts.py",
+    "src/app/application/runtime_evidence/receipts.py",
     "src/app/ports/core_sources.py",
     "src/app/infrastructure/lotus_core_sources.py",
     "scripts/low_income_cashflow_runtime_evidence/generate_runtime_execution.py",

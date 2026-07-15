@@ -6,7 +6,7 @@ import re
 from typing import Any
 from urllib.parse import quote
 
-from app.application.core_runtime_evidence import identity_hash
+from app.application.runtime_evidence import identity_hash
 from app.domain import EvidenceFreshness, SourceRef, SourceSystem
 from app.infrastructure.downstream_client import DownstreamJsonClient, DownstreamServiceError
 from app.ports.manage_sources import (

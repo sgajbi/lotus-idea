@@ -16,7 +16,7 @@ from app.application.core_portfolio_state_runtime_evidence import (
     core_portfolio_state_runtime_execution_is_valid,
     evaluate_core_portfolio_state_readiness,
 )
-from app.application.core_runtime_evidence import sha256_json
+from app.application.runtime_evidence import sha256_json
 from app.domain import EvidenceFreshness, SourceRef, SourceSystem
 from app.ports.core_sources import (
     CorePortfolioStateEvidence,

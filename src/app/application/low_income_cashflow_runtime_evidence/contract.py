@@ -6,7 +6,7 @@ from decimal import Decimal, InvalidOperation
 import re
 from typing import Any
 
-from app.application.core_runtime_evidence import sha256_json
+from app.application.runtime_evidence import sha256_json
 from app.application.low_income_cashflow_runtime_evidence.runtime_execution import (
     LOW_INCOME_CASHFLOW_REMAINING_BLOCKERS,
     LOW_INCOME_CASHFLOW_RUNTIME_BLOCKERS_SATISFIED,

@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import date, datetime, timedelta
 from typing import Any
 
-from app.application.core_runtime_evidence import identity_hash
+from app.application.runtime_evidence import identity_hash
 from app.application.manage_mandate_runtime_evidence import (
     EvaluateManageMandateReadiness,
     build_manage_mandate_runtime_execution,

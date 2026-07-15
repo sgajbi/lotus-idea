@@ -5,7 +5,7 @@ from datetime import date, datetime, timedelta
 import re
 from typing import Any
 
-from app.application.core_runtime_evidence import (
+from app.application.runtime_evidence import (
     format_utc,
     identity_hash,
     require_aware,
@@ -36,7 +36,7 @@ BOND_MATURITY_REMAINING_BLOCKERS = (
 BOND_MATURITY_RUNTIME_EVIDENCE_REFS = (
     "src/app/application/bond_maturity_runtime_evidence/runtime_execution.py",
     "src/app/application/bond_maturity_runtime_evidence/contract.py",
-    "src/app/application/core_runtime_evidence/receipts.py",
+    "src/app/application/runtime_evidence/receipts.py",
     "src/app/ports/core_sources.py",
     "src/app/infrastructure/lotus_core_sources.py",
     "scripts/bond_maturity_runtime_evidence/generate_runtime_execution.py",

@@ -11,7 +11,7 @@ from app.application.bond_maturity_runtime_evidence.runtime_execution import (
     BOND_MATURITY_RUNTIME_EVIDENCE_REFS,
     BOND_MATURITY_RUNTIME_EXECUTION_SCHEMA_VERSION,
 )
-from app.application.core_runtime_evidence import sha256_json
+from app.application.runtime_evidence import sha256_json
 from app.application.proof_provenance import AGGREGATE_PROOF_PROVENANCE_KEY
 from app.domain import EvidenceFreshness, SourceSystem
 from app.domain.proof_evidence import (
