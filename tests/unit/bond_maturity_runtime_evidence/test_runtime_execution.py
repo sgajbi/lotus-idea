@@ -103,6 +103,34 @@ def test_supported_empty_window_is_valid_without_false_opportunity() -> None:
 
 
 @pytest.mark.parametrize(
+    ("changes", "expected_message"),
+    [
+        ({"tenant_id": " "}, "tenant_id and portfolio_id are required"),
+        ({"maturity_window_days": 0}, "maturity_window_days must be between 1 and 366"),
+        ({"maturity_window_days": 367}, "maturity_window_days must be between 1 and 366"),
+        ({"correlation_id": " "}, "correlation_id must not be blank"),
+    ],
+)
+def test_command_rejects_ambiguous_or_out_of_policy_scope(
+    changes: dict[str, Any],
+    expected_message: str,
+) -> None:
+    values: dict[str, Any] = {
+        "tenant_id": "tenant-a",
+        "portfolio_id": "portfolio-a",
+        "as_of_date": AS_OF,
+        "evaluated_at_utc": NOW,
+        "maturity_window_days": 30,
+        "correlation_id": "corr-a",
+        "trace_id": "trace-a",
+    }
+    values.update(changes)
+
+    with pytest.raises(ValueError, match=expected_message):
+        EvaluateBondMaturityReadiness(**values)
+
+
+@pytest.mark.parametrize(
     ("mutation", "expected_blocker"),
     [
         (lambda value: replace(value, maturity_fact_ref=None), "core_maturity_source_ref_missing"),
@@ -116,8 +144,48 @@ def test_supported_empty_window_is_valid_without_false_opportunity() -> None:
             "core_maturity_evidence_not_current",
         ),
         (
+            lambda value: replace(
+                value,
+                maturity_fact_ref=replace(
+                    value.maturity_fact_ref,
+                    as_of_date=AS_OF - timedelta(days=1),
+                ),
+            ),
+            "core_maturity_scope_mismatch",
+        ),
+        (
+            lambda value: replace(
+                value,
+                maturity_fact_ref=replace(
+                    value.maturity_fact_ref,
+                    generated_at_utc=NOW + timedelta(seconds=1),
+                ),
+            ),
+            "core_maturity_source_time_invalid",
+        ),
+        (
             lambda value: replace(value, holdings_ref=None),
             "core_maturity_upstream_holdings_ref_missing",
+        ),
+        (
+            lambda value: replace(
+                value,
+                holdings_ref=replace(
+                    value.holdings_ref,
+                    as_of_date=AS_OF - timedelta(days=1),
+                ),
+            ),
+            "core_maturity_upstream_scope_mismatch",
+        ),
+        (
+            lambda value: replace(
+                value,
+                holdings_ref=replace(
+                    value.holdings_ref,
+                    freshness=EvidenceFreshness.STALE,
+                ),
+            ),
+            "core_maturity_upstream_not_current",
         ),
         (
             lambda value: replace(value, entitlement_allowed=False),
@@ -173,6 +241,14 @@ def test_supported_empty_window_is_valid_without_false_opportunity() -> None:
             "core_maturity_request_fingerprint_invalid",
         ),
         (lambda value: replace(value, snapshot_id=None), "core_maturity_snapshot_identity_missing"),
+        (
+            lambda value: replace(value, restatement_version=None),
+            "core_maturity_restatement_version_missing",
+        ),
+        (
+            lambda value: replace(value, policy_version=None),
+            "core_maturity_policy_version_missing",
+        ),
         (
             lambda value: replace(value, response_content_hash="sha256:" + "c" * 64),
             "core_maturity_source_digest_mismatch",
@@ -237,6 +313,12 @@ def test_domain_failures_cannot_clear_aggregate_blocker(
         "upstream_hash",
         "future_generated",
         "future_latest_evidence",
+        "malformed_window_end",
+        "negative_count",
+        "missing_count_exceeds_bearing_count",
+        "positive_count_without_opportunity",
+        "malformed_next_maturity",
+        "missing_snapshot_identity",
         "claim_inflation",
         "remaining_blockers",
         "evidence_refs",
@@ -321,6 +403,23 @@ def _tamper(payload: dict[str, Any], tamper: str) -> None:
         _refresh_source_digest(source)
     elif tamper == "future_latest_evidence":
         source["latestEvidenceAtUtc"] = "2026-06-21T10:11:00Z"
+        _refresh_source_digest(source)
+    elif tamper == "malformed_window_end":
+        source["windowEndDate"] = "not-a-date"
+        _refresh_source_digest(source)
+    elif tamper == "negative_count":
+        source["maturingHoldingCount"] = -1
+        _refresh_source_digest(source)
+    elif tamper == "missing_count_exceeds_bearing_count":
+        source["missingMaturityDateCount"] = 3
+        _refresh_source_digest(source)
+    elif tamper == "positive_count_without_opportunity":
+        execution["opportunityDetected"] = False
+    elif tamper == "malformed_next_maturity":
+        source["nextMaturityDate"] = "not-a-date"
+        _refresh_source_digest(source)
+    elif tamper == "missing_snapshot_identity":
+        source["snapshotId"] = ""
         _refresh_source_digest(source)
     elif tamper == "claim_inflation":
         payload["nonProofClaims"]["reinvestmentAdviceProduced"] = True
