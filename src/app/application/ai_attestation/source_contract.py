@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from app.application.proof_provenance import AGGREGATE_PROOF_PROVENANCE_KEY
 from app.application.source_authority import (
@@ -290,9 +290,7 @@ def idea_consumer_source_contract_is_valid(payload: Mapping[str, Any]) -> bool:
         return False
     if not _missing_producer_authority_is_explicit(payload.get("producerSourceAuthority")):
         return False
-    checks = payload.get("contractChecks")
-    if not isinstance(checks, Mapping):
-        return False
+    checks = cast(Mapping[str, Any], payload["contractChecks"])
     expected_true = _CONTRACT_CHECK_FIELDS - {
         "producerSourceAuthorityDigestBound",
         "producerClaimsDeclared",

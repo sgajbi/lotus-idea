@@ -58,6 +58,54 @@ def test_missing_producer_is_explicit_consumer_only_non_proof(tmp_path: Path) ->
     assert signed_ai_attestation_source_contract_is_valid(payload) is False
 
 
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("schemaVersion", "v1"),
+        ("validationScope", "full_cross_repository"),
+        ("sourceContractValid", True),
+        ("consumerSourceContractValid", False),
+        ("producerSourceContractValid", True),
+        ("consumerSourceAuthority", ()),
+        ("consumerSourceAuthorityDigest", "a" * 64),
+        ("producerSourceAuthorityDigest", "a" * 64),
+        ("contractChecks", None),
+    ],
+)
+def test_consumer_only_contract_rejects_identity_authority_or_scope_upgrade(
+    field: str,
+    value: object,
+    tmp_path: Path,
+) -> None:
+    payload = _consumer_only_payload(tmp_path)
+    payload[field] = value
+
+    assert idea_consumer_source_contract_is_valid(payload) is False
+
+
+@pytest.mark.parametrize("mutation", ["cardinality", "shape", "identity", "digest"])
+def test_consumer_only_contract_rejects_ambiguous_missing_producer_authority(
+    mutation: str,
+    tmp_path: Path,
+) -> None:
+    payload = _consumer_only_payload(tmp_path)
+    authority: list[object] = [
+        dict(item)
+        for item in cast(tuple[Mapping[str, object], ...], payload["producerSourceAuthority"])
+    ]
+    if mutation == "cardinality":
+        authority.pop()
+    elif mutation == "shape":
+        authority[0] = "missing"
+    elif mutation == "identity":
+        cast(dict[str, object], authority[0])["repository"] = "lotus-risk"
+    else:
+        cast(dict[str, object], authority[0])["sha256"] = "a" * 64
+    payload["producerSourceAuthority"] = authority
+
+    assert idea_consumer_source_contract_is_valid(payload) is False
+
+
 def test_changed_producer_source_changes_bound_collection_digest(tmp_path: Path) -> None:
     producer_root = write_lotus_ai_attestation_source(tmp_path / "lotus-ai")
     original = build_ai_attestation_source_contract(
@@ -203,4 +251,12 @@ def _valid_payload(tmp_path: Path) -> dict[str, Any]:
         generated_at_utc=GENERATED_AT,
         repository_root=ROOT,
         lotus_ai_root=write_lotus_ai_attestation_source(tmp_path / "lotus-ai"),
+    )
+
+
+def _consumer_only_payload(tmp_path: Path) -> dict[str, Any]:
+    return build_ai_attestation_source_contract(
+        generated_at_utc=GENERATED_AT,
+        repository_root=ROOT,
+        lotus_ai_root=tmp_path / "missing-lotus-ai",
     )
