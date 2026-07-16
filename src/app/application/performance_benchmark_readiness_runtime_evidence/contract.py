@@ -304,7 +304,11 @@ def _benchmark_context_is_valid(source: Mapping[str, Any]) -> bool:
         assessment.outcome.value != "blocked"
         and source.get("readinessDiagnostic") == assessment.diagnostic
         and (
-            (_is_sha256(benchmark_id_hash) and isinstance(return_source, str) and bool(return_source))
+            (
+                _is_sha256(benchmark_id_hash)
+                and isinstance(return_source, str)
+                and bool(return_source)
+            )
             if available
             else benchmark_id_hash is None and return_source is None
         )
