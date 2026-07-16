@@ -145,6 +145,18 @@ CodeQL run `29523299087` also passed for the exact merge SHA. Repo-authored
 wiki source was published after merge and strict parity returned zero
 differences. Supported-feature posture remains unchanged.
 
+Issue `#538` certifies accepted and replayed success modes for conversion
+intent and conversion outcome mutations. One code-owned conversion-workflow
+example module validates both response families through their API DTOs and
+publishes named OpenAPI modes. The accepted outcome preserves explicit null
+correction fields, while all examples retain false downstream execution,
+suitability, client-communication, and supported-feature authority. A shared
+named-success validator now enforces exact OpenAPI, endpoint-ledger, and
+integration-evidence parity across review and conversion workflows instead of
+duplicating endpoint-specific gate logic. This is internal design modularity
+inside the existing deployable and does not certify downstream realization,
+Gateway, Workbench, data products, or supported features.
+
 PR `#533` merged issue `#532` to `main` at
 `373bda0bc2203cb4e1f2ab0d011d8dd9890369ad`. Main Releasability run
 `29520564704` passed on attempt 2, including lint, typecheck, security,
