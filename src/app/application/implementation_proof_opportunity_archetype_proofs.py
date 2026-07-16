@@ -36,9 +36,11 @@ from app.application.advise_mandate_restriction_runtime_evidence import (
     ADVISE_MANDATE_RESTRICTION_RUNTIME_BLOCKERS_SATISFIED,
     advise_mandate_restriction_runtime_execution_is_valid,
 )
-from app.application.mandate_restriction_source_product_proof import (
+from app.application.advise_source_product_evidence import (
     MANDATE_RESTRICTION_SOURCE_PRODUCT_BLOCKERS_CLEARED,
+    MISSING_RISK_PROFILE_SOURCE_PRODUCT_BLOCKERS_CLEARED,
     mandate_restriction_source_product_proof_is_valid,
+    missing_risk_profile_source_product_proof_is_valid,
 )
 from app.application.advise_missing_suitability_runtime_evidence import (
     ADVISE_MISSING_SUITABILITY_RUNTIME_BLOCKERS_SATISFIED,
@@ -47,10 +49,6 @@ from app.application.advise_missing_suitability_runtime_evidence import (
 from app.application.advise_missing_risk_profile_runtime_evidence import (
     ADVISE_MISSING_RISK_PROFILE_RUNTIME_BLOCKERS_SATISFIED,
     advise_missing_risk_profile_runtime_execution_is_valid,
-)
-from app.application.missing_risk_profile_source_product_proof import (
-    MISSING_RISK_PROFILE_SOURCE_PRODUCT_BLOCKERS_CLEARED,
-    missing_risk_profile_source_product_proof_is_valid,
 )
 from app.application.core_missing_benchmark_runtime_evidence import (
     CORE_MISSING_BENCHMARK_RUNTIME_BLOCKERS_SATISFIED,

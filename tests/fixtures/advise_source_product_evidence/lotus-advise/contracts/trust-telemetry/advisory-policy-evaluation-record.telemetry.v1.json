@@ -1,0 +1,13 @@
+{
+  "contract_id": "lotus-domain-product-trust-telemetry-snapshot",
+  "product_id": "lotus-advise:AdvisoryPolicyEvaluationRecord:v1",
+  "producer_repository": "lotus-advise",
+  "source_repository": "lotus-advise",
+  "product_name": "AdvisoryPolicyEvaluationRecord",
+  "product_version": "v1",
+  "blocking": {
+    "blocked": true,
+    "blocked_reason": "TRUST_TELEMETRY_STALE",
+    "blocked_summary": "Certification remains blocked pending current telemetry."
+  }
+}

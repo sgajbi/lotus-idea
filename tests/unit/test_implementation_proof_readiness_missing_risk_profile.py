@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from pathlib import Path
 
+from app.application.advise_source_product_evidence import (
+    build_missing_risk_profile_source_product_proof_payload,
+)
 from app.application.implementation_proof_readiness import (
     build_implementation_proof_readiness_snapshot,
-)
-from app.application.missing_risk_profile_source_product_proof import (
-    build_missing_risk_profile_source_product_proof_payload,
 )
 from app.domain import InMemoryIdeaRepository
 from tests.support.proof_provenance import bound_aggregate_proof
@@ -16,6 +17,8 @@ from tests.support.advise_missing_risk_profile_runtime_evidence import (
 
 SOURCE_PRODUCT_PROOF_REF = "output/opportunity/missing-risk-profile-source-product-proof.json"
 LIVE_PROOF_REF = "output/opportunity/missing-risk-profile-live-proof.json"
+ROOT = Path(__file__).resolve().parents[2]
+ADVISE_FIXTURE_ROOT = ROOT / "tests/fixtures/advise_source_product_evidence/lotus-advise"
 
 
 def test_implementation_proof_readiness_retains_missing_risk_profile_blocker_without_proof() -> (
@@ -175,6 +178,8 @@ def _valid_missing_risk_profile_source_product_proof() -> dict[str, object]:
     return bound_aggregate_proof(
         build_missing_risk_profile_source_product_proof_payload(
             generated_at_utc=datetime(2026, 6, 28, 0, 0, tzinfo=UTC),
+            repository_root=ROOT,
+            advise_root=ADVISE_FIXTURE_ROOT,
         ),
         SOURCE_PRODUCT_PROOF_REF,
     )
