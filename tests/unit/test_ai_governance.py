@@ -399,8 +399,7 @@ def test_ai_output_blocks_unsupported_claims() -> None:
     assert result.reason_codes == (ReasonCode.AI_UNSUPPORTED_CLAIM_BLOCKED,)
     assert result.audit_event.outcome == "blocked"
     assert result.explanation_text == (
-        "AI explanation was blocked because one or more claims lacked approved "
-        "evidence bindings."
+        "AI explanation was blocked because one or more claims lacked approved evidence bindings."
     )
     assert result.output is not None
     assert result.output.explanation_text == result.explanation_text
