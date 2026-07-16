@@ -386,8 +386,7 @@ def test_ai_explanation_api_blocks_unsupported_claims_and_forbidden_actions() ->
     assert unsupported_claim.json()["reasonCodes"] == ["ai_unsupported_claim_blocked"]
     assert unsupported_claim.json()["verifiedOutput"]["groundedClaims"] == []
     assert unsupported_claim.json()["explanationText"] == (
-        "AI explanation was blocked because one or more claims lacked approved "
-        "evidence bindings."
+        "AI explanation was blocked because one or more claims lacked approved evidence bindings."
     )
     assert unsupported_narrative not in unsupported_claim.text
     assert forbidden_action.status_code == 200
