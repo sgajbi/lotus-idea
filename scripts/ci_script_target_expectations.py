@@ -53,7 +53,7 @@ SCRIPT_TARGET_EXPECTATIONS = {
         "scripts/missing_risk_profile_source_product_proof_contract_gate.py"
     ),
     "missing-risk-profile-live-proof-contract-gate": (
-        "scripts/missing_risk_profile_live_proof_contract_gate.py"
+        "scripts/advise_missing_risk_profile_runtime_evidence/runtime_execution_contract_gate.py"
     ),
     "mesh-policy-source-contract-proof-gate": (
         "scripts/data_mesh/mesh_policy_source_contract_gate.py"

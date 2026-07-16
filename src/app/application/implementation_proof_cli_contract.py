@@ -49,8 +49,8 @@ from app.application.missing_benchmark_performance_readiness_proof import (
 from app.application.advise_missing_suitability_runtime_evidence import (
     ADVISE_MISSING_SUITABILITY_RUNTIME_EXECUTION_ENV,
 )
-from app.application.missing_risk_profile_live_proof import (
-    MISSING_RISK_PROFILE_LIVE_PROOF_ENV,
+from app.application.advise_missing_risk_profile_runtime_evidence import (
+    ADVISE_MISSING_RISK_PROFILE_RUNTIME_EXECUTION_ENV,
 )
 from app.application.missing_risk_profile_source_product_proof import (
     MISSING_RISK_PROFILE_SOURCE_PRODUCT_PROOF_ENV,
@@ -248,7 +248,7 @@ PROOF_ARTIFACT_ARGS: tuple[tuple[str, str, str], ...] = (
     ),
     (
         "--missing-risk-profile-live-proof",
-        MISSING_RISK_PROFILE_LIVE_PROOF_ENV,
+        ADVISE_MISSING_RISK_PROFILE_RUNTIME_EXECUTION_ENV,
         "Optional lotus-advise missing risk-profile live source proof artifact path.",
     ),
     (

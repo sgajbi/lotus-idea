@@ -5,14 +5,14 @@ from datetime import UTC, datetime
 from app.application.implementation_proof_readiness import (
     build_implementation_proof_readiness_snapshot,
 )
-from app.application.missing_risk_profile_live_proof import (
-    build_missing_risk_profile_live_proof_payload,
-)
 from app.application.missing_risk_profile_source_product_proof import (
     build_missing_risk_profile_source_product_proof_payload,
 )
 from app.domain import InMemoryIdeaRepository
 from tests.support.proof_provenance import bound_aggregate_proof
+from tests.support.advise_missing_risk_profile_runtime_evidence import (
+    valid_advise_missing_risk_profile_runtime_evidence,
+)
 
 SOURCE_PRODUCT_PROOF_REF = "output/opportunity/missing-risk-profile-source-product-proof.json"
 LIVE_PROOF_REF = "output/opportunity/missing-risk-profile-live-proof.json"
@@ -164,19 +164,8 @@ def test_implementation_proof_readiness_combines_missing_risk_profile_source_pro
 
 def _valid_missing_risk_profile_live_proof() -> dict[str, object]:
     return bound_aggregate_proof(
-        build_missing_risk_profile_live_proof_payload(
-            generated_at_utc=datetime(2026, 6, 28, 0, 0, tzinfo=UTC),
-            live_advise_source_attempted=True,
-            evaluation_summary={
-                "runStatus": "completed",
-                "sourceAuthority": "lotus-advise",
-                "sourceProductId": "lotus-advise:AdvisoryPolicyEvaluationRecord:v1",
-                "evaluationOutcome": "candidate_created",
-                "sourceEvidenceCurrent": True,
-                "sourceDiagnosticCodes": ["risk_profile_missing"],
-                "reasonCodes": ["missing_risk_profile", "review_required"],
-                "unsupportedReasons": [],
-            },
+        valid_advise_missing_risk_profile_runtime_evidence(
+            evaluated_at_utc=datetime(2026, 6, 28, 0, 0, tzinfo=UTC),
         ),
         LIVE_PROOF_REF,
     )
