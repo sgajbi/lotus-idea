@@ -56,9 +56,9 @@ from app.application.core_missing_benchmark_runtime_evidence import (
     CORE_MISSING_BENCHMARK_RUNTIME_BLOCKERS_SATISFIED,
     core_missing_benchmark_runtime_execution_is_valid,
 )
-from app.application.missing_benchmark_performance_readiness_proof import (
-    MISSING_BENCHMARK_PERFORMANCE_READINESS_BLOCKERS_CLEARED,
-    missing_benchmark_performance_readiness_proof_is_valid,
+from app.application.performance_benchmark_readiness_runtime_evidence import (
+    PERFORMANCE_BENCHMARK_READINESS_RUNTIME_BLOCKERS_SATISFIED,
+    performance_benchmark_readiness_runtime_execution_is_valid,
 )
 from app.application.performance_underperformance_runtime_evidence import (
     PERFORMANCE_UNDERPERFORMANCE_RUNTIME_BLOCKERS_SATISFIED,
@@ -240,7 +240,7 @@ def _opportunity_proof_steps(scope: Mapping[str, object]) -> tuple[OpportunityPr
         _proof_step(
             scope,
             "missing_benchmark_performance_readiness",
-            missing_benchmark_performance_readiness_proof_is_valid,
+            performance_benchmark_readiness_runtime_execution_is_valid,
             _apply_missing_benchmark_performance_readiness_proof,
         ),
     )
@@ -573,6 +573,6 @@ def _apply_missing_benchmark_performance_readiness_proof(
     return apply_blocker_proof(
         capability,
         capability_ids=("opportunity-archetype-scenarios",),
-        blockers_cleared=MISSING_BENCHMARK_PERFORMANCE_READINESS_BLOCKERS_CLEARED,
+        blockers_cleared=PERFORMANCE_BENCHMARK_READINESS_RUNTIME_BLOCKERS_SATISFIED,
         proof_ref=missing_benchmark_performance_readiness_proof_ref,
     )

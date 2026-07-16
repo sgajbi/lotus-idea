@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import UTC, datetime
 
 from app.application.implementation_proof_readiness import (
@@ -10,13 +11,21 @@ from app.application.core_missing_benchmark_runtime_evidence import (
     build_core_missing_benchmark_runtime_execution,
     evaluate_core_missing_benchmark,
 )
-from app.application.missing_benchmark_performance_readiness_proof import (
-    build_missing_benchmark_performance_readiness_proof_payload,
+from app.application.performance_benchmark_readiness import (
+    evaluate_performance_benchmark_readiness,
+)
+from app.application.performance_benchmark_readiness_runtime_evidence import (
+    build_performance_benchmark_readiness_runtime_execution,
 )
 from app.domain import InMemoryIdeaRepository
 from tests.support.proof_provenance import bound_aggregate_proof
 from tests.support.core_missing_benchmark_runtime_evidence import (
     AuthoritativeCoreMissingBenchmarkSource,
+)
+from tests.support.performance_benchmark_readiness_runtime_evidence import (
+    AuthoritativePerformanceBenchmarkReadinessSource,
+    performance_benchmark_readiness_command,
+    performance_benchmark_readiness_evidence,
 )
 
 LIVE_PROOF_REF = "output/opportunity/missing-benchmark-live-proof.json"
@@ -161,20 +170,24 @@ def _valid_missing_benchmark_live_proof() -> dict[str, object]:
 
 
 def _valid_missing_benchmark_performance_readiness_proof() -> dict[str, object]:
+    evaluated_at = datetime(2026, 6, 28, 0, 0, tzinfo=UTC)
+    command = replace(
+        performance_benchmark_readiness_command(),
+        as_of_date=evaluated_at.date(),
+        evaluated_at_utc=evaluated_at,
+    )
     return bound_aggregate_proof(
-        build_missing_benchmark_performance_readiness_proof_payload(
-            generated_at_utc=datetime(2026, 6, 28, 0, 0, tzinfo=UTC),
-            live_performance_source_attempted=True,
-            performance_summary={
-                "runStatus": "completed",
-                "sourceAuthority": "lotus-performance",
-                "sourceProductId": "lotus-performance:ReturnsSeriesBundle:v1",
-                "sourceEvidenceCurrent": True,
-                "performanceBenchmarkReadinessSourceRefPresent": True,
-                "benchmarkContextAvailable": False,
-                "benchmarkReadinessDiagnostic": "performance_benchmark_context_missing",
-                "sourceDiagnosticCodes": ["performance_benchmark_context_missing"],
-            },
+        build_performance_benchmark_readiness_runtime_execution(
+            generated_at_utc=evaluated_at,
+            result=evaluate_performance_benchmark_readiness(
+                command,
+                performance_source=AuthoritativePerformanceBenchmarkReadinessSource(
+                    evidence=performance_benchmark_readiness_evidence(
+                        as_of_date=evaluated_at.date(),
+                        generated_at_utc=evaluated_at,
+                    )
+                ),
+            ),
         ),
         PERFORMANCE_PROOF_REF,
     )

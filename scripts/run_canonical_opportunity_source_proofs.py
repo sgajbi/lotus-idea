@@ -9,8 +9,8 @@ import subprocess
 import sys
 from typing import Any, Callable, Mapping
 
-from app.application.missing_benchmark_performance_readiness_proof import (
-    missing_benchmark_performance_readiness_proof_is_valid,
+from app.application.performance_benchmark_readiness_runtime_evidence import (
+    performance_benchmark_readiness_runtime_execution_is_valid,
 )
 from app.application.performance_underperformance_runtime_evidence import (
     performance_underperformance_runtime_execution_is_valid,
@@ -47,9 +47,12 @@ PROOF_CASES = (
     ),
     ProofCase(
         name="performance_benchmark_readiness",
-        script_name="generate_missing_benchmark_performance_readiness_proof.py",
+        script_name=(
+            "performance_benchmark_readiness_runtime_evidence/"
+            "generate_runtime_execution.py"
+        ),
         output_name="missing-benchmark-performance-readiness-proof.json",
-        validator=missing_benchmark_performance_readiness_proof_is_valid,
+        validator=performance_benchmark_readiness_runtime_execution_is_valid,
     ),
 )
 
@@ -174,6 +177,10 @@ def _artifact_observation(artifact: Mapping[str, Any]) -> dict[str, Any]:
     execution = artifact.get("execution")
     if isinstance(execution, Mapping):
         observation["executionStatus"] = execution.get("status")
+        evaluation = execution.get("evaluationReceipt")
+        if isinstance(evaluation, Mapping):
+            observation["evaluationOutcome"] = evaluation.get("outcome")
+            observation["readinessDiagnostic"] = evaluation.get("readinessDiagnostic")
         blockers = execution.get("qualificationBlockers")
         if isinstance(blockers, list | tuple):
             observation["qualificationBlockers"] = [str(item) for item in blockers]
@@ -212,6 +219,18 @@ def _proof_command(
     ]
     if case.name == "performance_benchmark_readiness":
         command.extend(["--performance-base-url", args.performance_base_url])
+        command.extend(
+            [
+                "--tenant-id",
+                args.tenant_id,
+                "--book-id",
+                args.book_id,
+                "--client-id",
+                args.client_id,
+                "--evaluation-id",
+                args.evaluation_id,
+            ]
+        )
     elif case.name == "performance_underperformance":
         command.extend(["--performance-base-url", args.performance_base_url])
     else:
@@ -269,6 +288,10 @@ def _parser() -> argparse.ArgumentParser:
         description="Run and validate the canonical Lotus Idea opportunity source proofs."
     )
     parser.add_argument("--portfolio-id", required=True)
+    parser.add_argument("--tenant-id", required=True)
+    parser.add_argument("--book-id", required=True)
+    parser.add_argument("--client-id", required=True)
+    parser.add_argument("--evaluation-id", required=True)
     parser.add_argument("--as-of-date", required=True)
     parser.add_argument("--risk-base-url", required=True)
     parser.add_argument("--performance-base-url", required=True)
