@@ -138,7 +138,10 @@ from app.domain.missing_suitability_signal import (
 from app.domain.missing_risk_profile_signal import (
     MissingRiskProfileSignalInput,
     MissingRiskProfileSignalPolicy,
+    RiskProfilePosture,
     evaluate_missing_risk_profile_signal,
+    missing_risk_profile_review_required_from_diagnostic,
+    risk_profile_posture_from_advise_diagnostic,
 )
 from app.domain.missing_benchmark_signal import (
     MissingBenchmarkSignalInput,
@@ -507,6 +510,9 @@ __all__ = [
     "evaluate_mandate_restriction_signal",
     "evaluate_missing_benchmark_signal",
     "evaluate_missing_risk_profile_signal",
+    "missing_risk_profile_review_required_from_diagnostic",
+    "risk_profile_posture_from_advise_diagnostic",
+    "RiskProfilePosture",
     "evaluate_missing_suitability_context_signal",
     "missing_suitability_review_required",
     "missing_suitability_review_required_from_workflow",

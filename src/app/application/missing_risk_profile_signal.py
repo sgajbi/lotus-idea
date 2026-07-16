@@ -3,7 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
-from enum import StrEnum
 
 from app.domain import (
     CandidateScorePolicyVersion,
@@ -11,11 +10,13 @@ from app.domain import (
     MissingRiskProfileSignalPolicy,
     OpportunityFamily,
     ReasonCode,
+    RiskProfilePosture,
     SignalEvaluationOutcome,
     SignalEvaluationResult,
     SourceRef,
     UnsupportedEvidenceReason,
     evaluate_missing_risk_profile_signal,
+    risk_profile_posture_from_advise_diagnostic,
 )
 from app.domain.access_scope import ReviewAccessScope
 from app.ports.advise_sources import (
@@ -25,14 +26,6 @@ from app.ports.advise_sources import (
     AdviseSourceEntitlementDenied,
     AdviseSourceUnavailable,
 )
-
-
-class RiskProfilePosture(StrEnum):
-    MISSING = "MISSING"
-    STALE = "STALE"
-    EXPIRED = "EXPIRED"
-    REVIEW_DUE = "REVIEW_DUE"
-    CURRENT = "CURRENT"
 
 
 @dataclass(frozen=True)
@@ -57,6 +50,13 @@ class EvaluateMissingRiskProfileFromAdviseCommand:
     duplicate_of_candidate_id: str | None = None
     correlation_id: str | None = None
     trace_id: str | None = None
+
+
+@dataclass(frozen=True)
+class MissingRiskProfileSourceEvaluation:
+    evaluation: SignalEvaluationResult
+    evidence: AdvisePolicyEvaluationEvidence | None
+    source_error_code: str | None = None
 
 
 DEFAULT_MISSING_RISK_PROFILE_POLICY = MissingRiskProfileSignalPolicy(
@@ -90,6 +90,19 @@ def evaluate_missing_risk_profile_signal_from_advise(
     advise_source: AdviseOpportunitySourcePort,
     policy: MissingRiskProfileSignalPolicy = DEFAULT_MISSING_RISK_PROFILE_POLICY,
 ) -> SignalEvaluationResult:
+    return evaluate_missing_risk_profile_readiness_from_advise(
+        command,
+        advise_source=advise_source,
+        policy=policy,
+    ).evaluation
+
+
+def evaluate_missing_risk_profile_readiness_from_advise(
+    command: EvaluateMissingRiskProfileFromAdviseCommand,
+    *,
+    advise_source: AdviseOpportunitySourcePort,
+    policy: MissingRiskProfileSignalPolicy = DEFAULT_MISSING_RISK_PROFILE_POLICY,
+) -> MissingRiskProfileSourceEvaluation:
     try:
         evidence = advise_source.fetch_policy_evaluation_evidence(
             AdvisePolicyEvaluationEvidenceRequest(
@@ -101,29 +114,50 @@ def evaluate_missing_risk_profile_signal_from_advise(
             )
         )
     except AdviseSourceEntitlementDenied:
-        return evaluate_missing_risk_profile_signal_command(
-            EvaluateMissingRiskProfileSignalCommand(
-                as_of_date=command.as_of_date,
-                risk_profile_ref=None,
-                risk_profile_status=None,
-                risk_profile_effective_for_as_of_date=None,
-                risk_profile_review_due=None,
-                evaluated_at_utc=command.evaluated_at_utc,
-                entitlement_allowed=False,
-                access_scope=command.access_scope,
-                duplicate_of_candidate_id=command.duplicate_of_candidate_id,
+        return MissingRiskProfileSourceEvaluation(
+            evaluation=evaluate_missing_risk_profile_signal_command(
+                EvaluateMissingRiskProfileSignalCommand(
+                    as_of_date=command.as_of_date,
+                    risk_profile_ref=None,
+                    risk_profile_status=None,
+                    risk_profile_effective_for_as_of_date=None,
+                    risk_profile_review_due=None,
+                    evaluated_at_utc=command.evaluated_at_utc,
+                    entitlement_allowed=False,
+                    access_scope=command.access_scope,
+                    duplicate_of_candidate_id=command.duplicate_of_candidate_id,
+                ),
+                policy=policy,
             ),
-            policy=policy,
+            evidence=None,
+            source_error_code="advise_source_entitlement_denied",
         )
-    except AdviseSourceUnavailable:
-        return SignalEvaluationResult(
-            outcome=SignalEvaluationOutcome.BLOCKED,
-            family=OpportunityFamily.MISSING_RISK_PROFILE,
-            reason_codes=(ReasonCode.SOURCE_PARTIAL,),
-            unsupported_reasons=(UnsupportedEvidenceReason.SOURCE_UNAVAILABLE,),
+    except AdviseSourceUnavailable as exc:
+        return MissingRiskProfileSourceEvaluation(
+            evaluation=SignalEvaluationResult(
+                outcome=SignalEvaluationOutcome.BLOCKED,
+                family=OpportunityFamily.MISSING_RISK_PROFILE,
+                reason_codes=(ReasonCode.SOURCE_PARTIAL,),
+                unsupported_reasons=(UnsupportedEvidenceReason.SOURCE_UNAVAILABLE,),
+            ),
+            evidence=None,
+            source_error_code=exc.code,
         )
 
-    return _evaluate_advise_evidence(command, evidence, policy=policy)
+    try:
+        evaluation = _evaluate_advise_evidence(command, evidence, policy=policy)
+    except ValueError:
+        return MissingRiskProfileSourceEvaluation(
+            evaluation=SignalEvaluationResult(
+                outcome=SignalEvaluationOutcome.BLOCKED,
+                family=OpportunityFamily.MISSING_RISK_PROFILE,
+                reason_codes=(ReasonCode.SOURCE_PARTIAL,),
+                unsupported_reasons=(UnsupportedEvidenceReason.SOURCE_UNCERTIFIED,),
+            ),
+            evidence=evidence,
+            source_error_code="advise_policy_evidence_invalid",
+        )
+    return MissingRiskProfileSourceEvaluation(evaluation=evaluation, evidence=evidence)
 
 
 def _evaluate_advise_evidence(
@@ -132,7 +166,7 @@ def _evaluate_advise_evidence(
     *,
     policy: MissingRiskProfileSignalPolicy,
 ) -> SignalEvaluationResult:
-    posture = _risk_profile_posture_from_advise_diagnostic(evidence.advise_diagnostic)
+    posture = risk_profile_posture_from_advise_diagnostic(evidence.advise_diagnostic)
     if posture is None or posture is RiskProfilePosture.CURRENT:
         return SignalEvaluationResult(
             outcome=SignalEvaluationOutcome.NOT_ELIGIBLE,
@@ -158,31 +192,3 @@ def _evaluate_advise_evidence(
         ),
         policy=policy,
     )
-
-
-def _risk_profile_posture_from_advise_diagnostic(
-    advise_diagnostic: str | None,
-) -> RiskProfilePosture | None:
-    if advise_diagnostic is None:
-        return None
-    normalized_codes = {
-        code.strip().lower()
-        for token in advise_diagnostic.replace(";", ",").replace("|", ",").split(",")
-        for code in token.split()
-        if code.strip()
-    }
-    if normalized_codes & {
-        "risk_profile_missing",
-        "client_risk_profile_missing",
-        "advise_risk_profile_missing",
-    }:
-        return RiskProfilePosture.MISSING
-    if normalized_codes & {"risk_profile_stale", "client_risk_profile_stale"}:
-        return RiskProfilePosture.STALE
-    if normalized_codes & {"risk_profile_expired", "client_risk_profile_expired"}:
-        return RiskProfilePosture.EXPIRED
-    if normalized_codes & {"risk_profile_review_due", "client_risk_profile_review_due"}:
-        return RiskProfilePosture.REVIEW_DUE
-    if normalized_codes & {"risk_profile_current", "client_risk_profile_current"}:
-        return RiskProfilePosture.CURRENT
-    return None

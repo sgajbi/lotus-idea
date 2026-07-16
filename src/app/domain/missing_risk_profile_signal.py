@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
+from enum import StrEnum
 import hashlib
 import json
 
@@ -31,6 +32,51 @@ from app.domain.signal_evaluation import (
 
 _CURRENT_RISK_PROFILE_STATUSES = {"CURRENT", "COMPLETE", "ACTIVE"}
 _MISSING_RISK_PROFILE_STATUSES = {"MISSING", "STALE", "EXPIRED", "BLOCKED", "PENDING_REVIEW"}
+
+
+class RiskProfilePosture(StrEnum):
+    MISSING = "MISSING"
+    STALE = "STALE"
+    EXPIRED = "EXPIRED"
+    REVIEW_DUE = "REVIEW_DUE"
+    CURRENT = "CURRENT"
+
+
+def risk_profile_posture_from_advise_diagnostic(
+    advise_diagnostic: str | None,
+) -> RiskProfilePosture | None:
+    if advise_diagnostic is None:
+        return None
+    normalized_codes = {
+        code.strip().lower()
+        for token in advise_diagnostic.replace(";", ",").replace("|", ",").split(",")
+        for code in token.split()
+        if code.strip()
+    }
+    posture_by_code = {
+        "risk_profile_missing": RiskProfilePosture.MISSING,
+        "client_risk_profile_missing": RiskProfilePosture.MISSING,
+        "advise_risk_profile_missing": RiskProfilePosture.MISSING,
+        "risk_profile_stale": RiskProfilePosture.STALE,
+        "client_risk_profile_stale": RiskProfilePosture.STALE,
+        "risk_profile_expired": RiskProfilePosture.EXPIRED,
+        "client_risk_profile_expired": RiskProfilePosture.EXPIRED,
+        "risk_profile_review_due": RiskProfilePosture.REVIEW_DUE,
+        "client_risk_profile_review_due": RiskProfilePosture.REVIEW_DUE,
+        "risk_profile_current": RiskProfilePosture.CURRENT,
+        "client_risk_profile_current": RiskProfilePosture.CURRENT,
+    }
+    postures = {posture_by_code[code] for code in normalized_codes if code in posture_by_code}
+    return next(iter(postures)) if len(postures) == 1 else None
+
+
+def missing_risk_profile_review_required_from_diagnostic(
+    advise_diagnostic: str | None,
+) -> bool | None:
+    posture = risk_profile_posture_from_advise_diagnostic(advise_diagnostic)
+    if posture is None:
+        return None
+    return posture is not RiskProfilePosture.CURRENT
 
 
 @dataclass(frozen=True)
