@@ -1864,6 +1864,15 @@ declare machine-readable external certification blockers and preserve
 `planned` and `not_applicable` are not valid substitutes for an implemented
 public operation.
 
+For certified readiness and supportability endpoints, schema-valid examples
+are insufficient. Prefer a deterministic no-I/O API response factory over a
+parallel hand-written Swagger object, and compare the complete code-owned
+default response against both the endpoint ledger and generated OpenAPI.
+Issue `#526` applies this contract to AI explanation readiness so claim
+grounding fields and model-risk runtime blockers cannot drift independently.
+Repository-dependent values remain explicit factory inputs rather than
+normalized-away differences.
+
 ## Supported-Feature Promotion Rule
 
 The supported-feature registry is source truth for support posture.

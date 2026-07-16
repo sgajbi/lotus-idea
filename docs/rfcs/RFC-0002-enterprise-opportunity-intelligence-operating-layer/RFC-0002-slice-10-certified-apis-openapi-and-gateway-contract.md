@@ -584,6 +584,18 @@ Focused validation passed for the current foundation:
     runtime smoke. Wiki publication `19358a8` has zero drift. Runtime behavior,
     API schema, persistence, Gateway/Workbench realization, and
     supported-feature posture did not change.
+38. Issue `#526` removes a semantically stale AI explanation readiness
+    Swagger example. The default success example now comes from the same
+    deterministic application snapshot and API serializer as the runtime
+    route. Complete-structure certification checks bind all control fields and
+    blockers across the code-owned response, endpoint ledger, and generated
+    OpenAPI; schema validity alone is no longer sufficient for this endpoint.
+39. This increment is design modularity inside the existing deployable.
+    Authorization, operation events, response schema, persistence, Lotus AI
+    ownership, model-risk approval, Gateway/Workbench realization, and
+    supported-feature posture remain unchanged. The wider example-shape
+    inventory is retained for endpoint-by-endpoint review because alternate
+    success modes and dynamic fields must not be bulk-normalized.
 
 PR merge-gate evidence remains required before merge.
 
