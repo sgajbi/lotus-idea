@@ -33,6 +33,31 @@ class AdvisePolicyEvaluationEvidenceRequest:
 
 
 @dataclass(frozen=True)
+class AdvisePolicyEvaluationRuntimeEvidence:
+    product_id: str
+    product_version: str
+    route: str
+    evaluation_id: str | None
+    tenant_scope_hash: str | None
+    portfolio_id: str | None
+    as_of_date: date | None
+    generated_at_utc: datetime | None
+    content_hash: str | None
+    source_evidence_hash: str | None
+    policy_content_hash: str | None
+    policy_pack_id: str | None
+    policy_version: str | None
+    evaluation_status: str | None
+    open_requirement_count: int
+    blocked_requirement_count: int
+    sign_off_status: str | None
+    sign_off_blocker_count: int
+    client_ready_publication: str | None
+    data_quality_status: str
+    freshness: str
+
+
+@dataclass(frozen=True)
 class AdvisePolicyEvaluationEvidence:
     evaluation_status: str | None
     open_requirement_count: int | None
@@ -41,6 +66,7 @@ class AdvisePolicyEvaluationEvidence:
     sign_off_blocker_count: int | None
     client_ready_publication: str | None
     policy_ref: SourceRef | None
+    workflow_runtime: AdvisePolicyEvaluationRuntimeEvidence | None = None
     advise_diagnostic: str | None = None
     entitlement_allowed: bool = True
 

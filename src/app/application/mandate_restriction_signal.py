@@ -67,6 +67,14 @@ class EvaluateMandateRestrictionFromAdviseCommand:
     trace_id: str | None = None
 
 
+@dataclass(frozen=True)
+class MandateRestrictionSourceEvaluation:
+    command: EvaluateMandateRestrictionFromAdviseCommand
+    evidence: AdvisePolicyEvaluationEvidence | None
+    evaluation: SignalEvaluationResult
+    source_error_code: str | None = None
+
+
 DEFAULT_MANDATE_RESTRICTION_POLICY = MandateRestrictionSignalPolicy(
     policy_version=CandidateScorePolicyVersion.MANDATE_RESTRICTION.value,
     candidate_score=Decimal("66"),
@@ -98,6 +106,19 @@ def evaluate_mandate_restriction_signal_from_advise(
     advise_source: AdviseOpportunitySourcePort,
     policy: MandateRestrictionSignalPolicy = DEFAULT_MANDATE_RESTRICTION_POLICY,
 ) -> SignalEvaluationResult:
+    return evaluate_mandate_restriction_readiness_from_advise(
+        command,
+        advise_source=advise_source,
+        policy=policy,
+    ).evaluation
+
+
+def evaluate_mandate_restriction_readiness_from_advise(
+    command: EvaluateMandateRestrictionFromAdviseCommand,
+    *,
+    advise_source: AdviseOpportunitySourcePort,
+    policy: MandateRestrictionSignalPolicy = DEFAULT_MANDATE_RESTRICTION_POLICY,
+) -> MandateRestrictionSourceEvaluation:
     try:
         evidence = advise_source.fetch_policy_evaluation_evidence(
             AdvisePolicyEvaluationEvidenceRequest(
@@ -109,7 +130,7 @@ def evaluate_mandate_restriction_signal_from_advise(
             )
         )
     except AdviseSourceEntitlementDenied:
-        return evaluate_mandate_restriction_signal_command(
+        evaluation = evaluate_mandate_restriction_signal_command(
             EvaluateMandateRestrictionSignalCommand(
                 as_of_date=command.as_of_date,
                 restriction_ref=None,
@@ -123,15 +144,30 @@ def evaluate_mandate_restriction_signal_from_advise(
             ),
             policy=policy,
         )
-    except AdviseSourceUnavailable:
-        return SignalEvaluationResult(
-            outcome=SignalEvaluationOutcome.BLOCKED,
-            family=OpportunityFamily.MANDATE_RESTRICTION,
-            reason_codes=(ReasonCode.SOURCE_PARTIAL,),
-            unsupported_reasons=(UnsupportedEvidenceReason.SOURCE_UNAVAILABLE,),
+        return MandateRestrictionSourceEvaluation(
+            command=command,
+            evidence=None,
+            evaluation=evaluation,
+            source_error_code="advise_source_entitlement_denied",
+        )
+    except AdviseSourceUnavailable as exc:
+        return MandateRestrictionSourceEvaluation(
+            command=command,
+            evidence=None,
+            evaluation=SignalEvaluationResult(
+                outcome=SignalEvaluationOutcome.BLOCKED,
+                family=OpportunityFamily.MANDATE_RESTRICTION,
+                reason_codes=(ReasonCode.SOURCE_PARTIAL,),
+                unsupported_reasons=(UnsupportedEvidenceReason.SOURCE_UNAVAILABLE,),
+            ),
+            source_error_code=exc.code,
         )
 
-    return _evaluate_advise_evidence(command, evidence, policy=policy)
+    return MandateRestrictionSourceEvaluation(
+        command=command,
+        evidence=evidence,
+        evaluation=_evaluate_advise_evidence(command, evidence, policy=policy),
+    )
 
 
 def mandate_restriction_review_ready_from_advise_diagnostic(
