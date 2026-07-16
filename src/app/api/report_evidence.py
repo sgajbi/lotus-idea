@@ -407,52 +407,6 @@ REPORT_EVIDENCE_PACK_ROUTE: RouteMetadata = {
                 "Report evidence-pack request accepted or replayed through the internal "
                 "repository foundation."
             ),
-            "content": {
-                "application/json": {
-                    "example": {
-                        "reportEvidencePack": {
-                            "reportEvidencePackId": "report-evidence-pack-001",
-                            "conversionIntentId": "conversion-report-001",
-                            "candidateId": "idea_high_cash_8d57adbf52f7f5a7",
-                            "purpose": "client_review_report_section",
-                            "evidencePacketId": "iep_high_cash_8d57adbf52f7f5a7",
-                            "evidenceContentHash": "sha256:evidence-lineage",
-                            "sourceSignalIds": ["signal_high_cash_8d57adbf52f7f5a7"],
-                            "sourceSummaries": [
-                                {
-                                    "productId": "lotus-core:PortfolioStateSnapshot:v1",
-                                    "sourceSystem": "lotus-core",
-                                    "productVersion": "v1",
-                                    "asOfDate": "2026-06-21",
-                                    "generatedAtUtc": "2026-06-21T10:00:00Z",
-                                    "contentHash": "sha256:portfolio-state",
-                                    "dataQualityStatus": "complete",
-                                    "freshness": "current",
-                                }
-                            ],
-                            "reasonCodes": ["review_approved_for_conversion"],
-                            "reportSourceAuthority": "lotus-report",
-                            "renderSourceAuthority": "lotus-render",
-                            "archiveSourceAuthority": "lotus-archive",
-                            "boundary": "request_only",
-                            "retentionPolicyRef": "lotus-report:idea-evidence-retention:v1",
-                            "requestedAtUtc": "2026-06-21T10:25:00Z",
-                            "grantsClientPublicationAuthority": False,
-                            "createsRenderedOutput": False,
-                            "createsArchiveRecord": False,
-                        },
-                        "persistence": {
-                            "decision": "accepted",
-                            "candidateId": "idea_high_cash_8d57adbf52f7f5a7",
-                            "lifecycleStatus": "converted_to_report",
-                            "reviewPosture": "approved_for_conversion",
-                            "auditEventType": "idea.report_evidence_pack.requested",
-                        },
-                        "durableStorageBacked": False,
-                        "supportedFeaturePromoted": False,
-                    }
-                }
-            },
         },
         **invalid_request_metadata(detail="Correct the report evidence pack request and retry."),
         **permission_denied_metadata(

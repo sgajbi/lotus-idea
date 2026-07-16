@@ -42,6 +42,7 @@ from app.api.durable_write_guard import durable_write_readiness_payload
 from app.api.idempotency import mark_required_idempotency_openapi_headers
 from app.api.examples.ai_explanation import apply_ai_explanation_openapi_examples
 from app.api.examples.conversion_workflow import apply_conversion_workflow_openapi_examples
+from app.api.examples.report_evidence import apply_report_evidence_openapi_examples
 from app.api.examples.review_workflow import apply_review_workflow_openapi_examples
 from app.api.problem_details import (
     ProblemDetailsHTTPException,
@@ -282,7 +283,8 @@ def _configure_openapi_contract_overrides(application: FastAPI) -> None:
         schema = apply_caller_context_openapi_contract(schema)
         schema = apply_ai_explanation_openapi_examples(schema)
         schema = apply_review_workflow_openapi_examples(schema)
-        application.openapi_schema = apply_conversion_workflow_openapi_examples(schema)
+        schema = apply_conversion_workflow_openapi_examples(schema)
+        application.openapi_schema = apply_report_evidence_openapi_examples(schema)
         return application.openapi_schema
 
     application.openapi = governed_openapi  # type: ignore[method-assign]
