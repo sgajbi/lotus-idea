@@ -6,9 +6,8 @@ from dataclasses import dataclass
 from pathlib import Path
 
 try:
-    from documentation.evidence_classification_inventory import (
-        evidence_classification_inventory_errors,
-    )
+    from documentation import evidence_classification_inventory as evidence_inventory
+    from documentation import implementation_proof_artifact_registry as artifact_registry
     from documentation.quality_contract import (
         code_fence_count,
         has_heading,
@@ -19,9 +18,8 @@ try:
     from documentation_stale_claims import PROHIBITED_STALE_CLAIMS, PROOF_READINESS_HEADINGS
     from wiki_navigation_contract import same_wiki_page_link_errors
 except ModuleNotFoundError:
-    from scripts.documentation.evidence_classification_inventory import (
-        evidence_classification_inventory_errors,
-    )
+    from scripts.documentation import evidence_classification_inventory as evidence_inventory
+    from scripts.documentation import implementation_proof_artifact_registry as artifact_registry
     from scripts.documentation.quality_contract import (
         code_fence_count,
         has_heading,
@@ -482,7 +480,8 @@ def validate_documentation_contract(
                 f"minimum is {surface.min_mermaid_fences}"
             )
     errors.extend(same_wiki_page_link_errors(root=root))
-    errors.extend(evidence_classification_inventory_errors(root=root))
+    errors.extend(evidence_inventory.evidence_classification_inventory_errors(root=root))
+    errors.extend(artifact_registry.implementation_proof_artifact_registry_errors(root=root))
     return errors
 
 

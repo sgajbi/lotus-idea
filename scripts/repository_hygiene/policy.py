@@ -1,9 +1,7 @@
 from __future__ import annotations
 
-from .runtime_evidence_paths import (
-    PROHIBITED_RUNTIME_EVIDENCE_LEGACY_PATHS,
-    REQUIRED_RUNTIME_EVIDENCE_PATHS,
-)
+from . import advise_source_product_evidence_paths as advise_paths
+from . import runtime_evidence_paths as runtime_paths
 
 PROHIBITED_EXACT_PATHS = {
     ".coverage",
@@ -32,7 +30,8 @@ PROHIBITED_SUFFIXES = {
 }
 
 REQUIRED_BOUNDED_MODULE_PATHS = {
-    *REQUIRED_RUNTIME_EVIDENCE_PATHS,
+    *runtime_paths.REQUIRED_RUNTIME_EVIDENCE_PATHS,
+    *advise_paths.REQUIRED_ADVISE_SOURCE_PRODUCT_EVIDENCE_PATHS,
     "scripts/performance_underperformance_runtime_evidence/__init__.py",
     "scripts/performance_underperformance_runtime_evidence/generate_runtime_execution.py",
     "scripts/performance_underperformance_runtime_evidence/runtime_execution_contract_gate.py",
@@ -306,7 +305,8 @@ REQUIRED_BOUNDED_MODULE_PATHS = {
 }
 
 PROHIBITED_LEGACY_MODULE_PATHS = {
-    *PROHIBITED_RUNTIME_EVIDENCE_LEGACY_PATHS,
+    *runtime_paths.PROHIBITED_RUNTIME_EVIDENCE_LEGACY_PATHS,
+    *advise_paths.PROHIBITED_ADVISE_SOURCE_PRODUCT_EVIDENCE_PATHS,
     "scripts/generate_performance_underperformance_live_proof.py",
     "scripts/performance_underperformance_live_proof_contract_gate.py",
     "src/app/application/performance_underperformance_live_proof.py",
