@@ -47,8 +47,7 @@ SCRIPT_TARGET_EXPECTATIONS = {
         "scripts/mandate_restriction_source_product_proof_contract_gate.py"
     ),
     "missing-suitability-live-proof-contract-gate": (
-        "scripts/advise_missing_suitability_runtime_evidence/"
-        "runtime_execution_contract_gate.py"
+        "scripts/advise_missing_suitability_runtime_evidence/runtime_execution_contract_gate.py"
     ),
     "missing-risk-profile-source-product-proof-contract-gate": (
         "scripts/missing_risk_profile_source_product_proof_contract_gate.py"

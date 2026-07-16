@@ -10,7 +10,7 @@ from app.application.advise_policy_runtime_evidence import (
     reconcile_advise_policy_workflow_receipts,
 )
 from app.application.proof_provenance import AGGREGATE_PROOF_PROVENANCE_KEY
-from app.application.runtime_evidence import sha256_json
+from app.application.runtime_evidence import non_authority_claims_are_valid, sha256_json
 from app.domain import missing_suitability_review_required_from_workflow
 from app.domain.proof_evidence import EvidenceClass, parse_timezone_aware_datetime
 
@@ -167,7 +167,13 @@ def advise_missing_suitability_runtime_execution_is_valid(
         or not _mapping_has_keys(request, _REQUEST_KEYS)
         or not _mapping_has_keys(workflow, _WORKFLOW_KEYS)
         or not _mapping_has_keys(evaluation, _EVALUATION_KEYS)
-        or not _claims_are_valid(claims)
+        or not non_authority_claims_are_valid(
+            claims,
+            owners={
+                "policyWorkflowOwned": "lotus-advise",
+                "opportunityDetectionOwned": "lotus-idea",
+            },
+        )
     ):
         return False
     assert isinstance(request, Mapping)
@@ -187,16 +193,6 @@ def advise_missing_suitability_runtime_execution_is_valid(
 
 def _mapping_has_keys(value: object, keys: frozenset[str]) -> bool:
     return isinstance(value, Mapping) and set(value) == keys
-
-
-def _claims_are_valid(claims: Mapping[str, Any]) -> bool:
-    owners = {
-        "policyWorkflowOwned": "lotus-advise",
-        "opportunityDetectionOwned": "lotus-idea",
-    }
-    return all(claims.get(key) == value for key, value in owners.items()) and all(
-        value is False for key, value in claims.items() if key not in owners
-    )
 
 
 def _digests_are_valid(

@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import Any
 
 from app.application.advise_policy_runtime_evidence import (
+    AdvisePolicyRuntimeEvidenceScope,
     AdvisePolicyWorkflowScope,
     advise_policy_workflow_qualification_blockers,
     build_advise_policy_workflow_receipt,
@@ -16,7 +17,6 @@ from app.application.missing_suitability_signal import (
     evaluate_missing_suitability_context_readiness_from_advise,
 )
 from app.application.runtime_evidence import (
-    RuntimeEvidenceScope,
     format_utc,
     identity_hash,
     require_aware,
@@ -55,19 +55,8 @@ ADVISE_MISSING_SUITABILITY_RUNTIME_EVIDENCE_REFS = (
 
 
 @dataclass(frozen=True)
-class EvaluateAdviseMissingSuitability(RuntimeEvidenceScope):
-    book_id: str = ""
-    client_id: str = ""
-    evaluation_id: str = ""
-
-    def __post_init__(self) -> None:
-        super().__post_init__()
-        if not self.book_id.strip() or not self.client_id.strip() or not self.evaluation_id.strip():
-            raise ValueError("book_id, client_id, and evaluation_id are required")
-        if self.correlation_id is None or self.trace_id is None:
-            raise ValueError("correlation_id and trace_id are required")
-        if not self.trace_id.strip():
-            raise ValueError("trace_id must not be blank")
+class EvaluateAdviseMissingSuitability(AdvisePolicyRuntimeEvidenceScope):
+    pass
 
 
 @dataclass(frozen=True)
