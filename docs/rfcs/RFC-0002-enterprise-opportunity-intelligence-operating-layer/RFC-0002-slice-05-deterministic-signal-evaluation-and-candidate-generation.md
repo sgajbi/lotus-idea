@@ -628,13 +628,15 @@ Additional implemented missing suitability context foundation:
    stale, missing-source, missing-status/count, duplicate, entitlement-denied,
    source-unavailable, malformed-source, trace-header, and request-validation
    cases.
-6. `src/app/application/missing_suitability_live_proof.py`,
-   `scripts/generate_missing_suitability_live_proof.py`, and
-   `make missing-suitability-live-proof-contract-gate` define a source-safe
-   live Advise proof artifact. A valid artifact can clear only
+6. `src/app/application/advise_missing_suitability_runtime_evidence/`,
+   `scripts/advise_missing_suitability_runtime_evidence/`, and
+   `make missing-suitability-live-proof-contract-gate` define a closed v2
+   runtime-execution artifact. It invokes one named application use case and
+   binds pseudonymous request scope, exact producer workflow evidence, and a
+   deterministic candidate or no-opportunity receipt. A valid artifact can clear only
    `opportunity_archetype_advise_policy_live_source_proof_missing`; it does not
    approve suitability, policy, proposal, sign-off, client publication, or
-   external communication.
+   external communication. Retired flat v1 paths are prohibited.
 7. `src/app/api/missing_suitability_signals.py` exposes the bounded
    `POST /api/v1/idea-signals/missing-suitability/evaluate` API over
    caller-supplied Advise policy-evaluation evidence. The endpoint rejects

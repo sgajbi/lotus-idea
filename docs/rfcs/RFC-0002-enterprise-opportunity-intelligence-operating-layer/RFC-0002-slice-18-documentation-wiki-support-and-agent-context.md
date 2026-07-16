@@ -1,6 +1,6 @@
 # RFC-0002 Slice 18: Documentation, Wiki, Support, And Agent Context
 
-Status: Partially implemented - API certification, outbox readiness, implementation-proof, live source-proof contract, scheduled-worker proof contract, durable repository proof contract, runtime telemetry test-execution contract, bounded Workbench read-path source contract, bounded Gateway/Workbench contract proof, bounded Gateway/Workbench discovery contract proof, digest-bound Advise/Manage route source contracts, bounded Report intake route source contract, bounded outbox broker source-contract proof, bounded outbox platform-mesh event source-contract proof, digest-bound mesh policy source contract, AI lineage store proof, closed v2 Manage mandate and Advise mandate/restriction runtime evidence, receipt-bound Core portfolio-state, bond-maturity, and low-income cashflow runtime evidence, typed Advise mandate/restriction source-product proof, typed Advise missing risk-profile source-product proof, missing risk-profile live proof, underperformance, allocation-drift, and drawdown-review API foundation truth, mandate/restriction and missing-benchmark policy foundation truth, client-demo process, and downstream contract documentation synchronized
+Status: Partially implemented - API certification, outbox readiness, implementation-proof, live source-proof contract, scheduled-worker proof contract, durable repository proof contract, runtime telemetry test-execution contract, bounded Workbench read-path source contract, bounded Gateway/Workbench contract proof, bounded Gateway/Workbench discovery contract proof, digest-bound Advise/Manage route source contracts, bounded Report intake route source contract, bounded outbox broker source-contract proof, bounded outbox platform-mesh event source-contract proof, digest-bound mesh policy source contract, AI lineage store proof, closed v2 Manage mandate, Advise mandate/restriction, and Advise missing-suitability runtime evidence, receipt-bound Core portfolio-state, bond-maturity, and low-income cashflow runtime evidence, typed Advise mandate/restriction source-product proof, typed Advise missing risk-profile source-product proof, missing risk-profile live proof, underperformance, allocation-drift, and drawdown-review API foundation truth, mandate/restriction and missing-benchmark policy foundation truth, client-demo process, and downstream contract documentation synchronized
 
 ## Outcome
 
@@ -335,6 +335,12 @@ documentation across opportunity signal APIs.
     full and consumer-only validation scopes explicit. Both clear no blocker;
     live provider/model execution, model-risk approval, deployment, production,
     Workbench, publication, and promotion remain unproven.
+
+The missing-suitability operator and engineering material now describes the
+closed v2 receipt contract, one-fetch generator, truthful no-opportunity
+qualification, preserved authority boundaries, and prohibited flat v1 paths.
+The existing environment variable and Make target remain stable, but do not
+accept legacy artifacts.
 
 This documentation slice does not promote any supported feature. It records
 bounded Workbench read-path source contract, Gateway/Workbench contract proof, and

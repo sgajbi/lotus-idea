@@ -620,13 +620,17 @@ Persistence adapter validation:
     closed; zero cashflow remains valid no-opportunity evidence. It can satisfy
     only the namespaced low-income Core cashflow source blocker. Core issue
     `#796` tracks producer trust metadata required for live qualification.
-    `tests/unit/test_missing_suitability_live_proof.py`,
+    `tests/unit/advise_missing_suitability_runtime_evidence/test_runtime_execution.py`,
+    `tests/unit/advise_missing_suitability_runtime_evidence/test_generator.py`,
     `tests/unit/test_missing_risk_profile_live_proof.py`,
     `make missing-suitability-live-proof-contract-gate`, and
     `make missing-risk-profile-live-proof-contract-gate` prove the optional
-    Lotus Advise policy-evaluation and risk-profile live-proof artifacts remain
-    source-safe and can clear only their namespaced Advise source blockers
-    when valid evidence is supplied.
+    Lotus Advise policy-evaluation and risk-profile evidence remains
+    source-safe and can clear only its namespaced Advise source blocker when
+    valid evidence is supplied. Missing-suitability uses a closed v2
+    runtime-execution contract over exact request, workflow, and evaluation
+    receipts; missing risk profile remains tracked for equivalent hardening in
+    issue `#496`.
     `tests/unit/test_implementation_proof_readiness.py`,
     `tests/unit/test_generate_implementation_proof_readiness.py`, and
     `tests/integration/test_implementation_proof_readiness_api.py` also prove

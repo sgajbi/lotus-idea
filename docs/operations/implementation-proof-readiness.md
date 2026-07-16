@@ -478,8 +478,9 @@ It deliberately retains live Advise source proof, restriction clearance,
 mandate-state authority, suitability, policy, proposal, client-publication,
 data-mesh, Workbench, and supported-feature blockers.
 
-Lotus Advise missing-suitability live proof is captured by
-`scripts/generate_missing_suitability_live_proof.py`. A valid artifact
+Lotus Advise missing-suitability runtime evidence is captured by
+`scripts/advise_missing_suitability_runtime_evidence/generate_runtime_execution.py`.
+A valid closed v2 artifact
 referenced through `LOTUS_IDEA_MISSING_SUITABILITY_LIVE_PROOF` clears only
 `opportunity_archetype_advise_policy_live_source_proof_missing` for the
 `opportunity-archetype-scenarios` capability. The artifact proves a live
@@ -975,9 +976,9 @@ Implementation-backed evidence:
     `scripts/risk_drawdown_runtime_evidence/generate_runtime_execution.py`,
 1. Risk drawdown runtime-execution contract gate (compatibility target name):
     `make risk-drawdown-live-proof-contract-gate`,
-1. Missing-suitability live-proof generator:
-    `scripts/generate_missing_suitability_live_proof.py`,
-1. Missing-suitability live-proof contract gate:
+1. Missing-suitability runtime-evidence generator:
+    `scripts/advise_missing_suitability_runtime_evidence/generate_runtime_execution.py`,
+1. Missing-suitability runtime-evidence contract gate:
     `make missing-suitability-live-proof-contract-gate`,
 1. Missing risk-profile source-product proof generator:
     `scripts/generate_missing_risk_profile_source_product_proof.py`,

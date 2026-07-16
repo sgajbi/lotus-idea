@@ -241,7 +241,7 @@ Workbench, blocked client publication, and supported-feature blockers.
 The repo-native `make implementation-proof-readiness-check` target can consume
 live proof through `LOTUS_IDEA_SOURCE_INGESTION_RUNTIME_EXECUTION`,
 `LOTUS_CORE_QUERY_BASE_URL`, `LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL`,
-optional missing-suitability live Advise proof through
+optional closed v2 missing-suitability Advise runtime evidence through
 `LOTUS_IDEA_MISSING_SUITABILITY_LIVE_PROOF`,
 optional typed mandate/restriction source-product proof through
 `LOTUS_IDEA_MANDATE_RESTRICTION_SOURCE_PRODUCT_PROOF`,
@@ -827,7 +827,7 @@ client-ready publication, or supported-feature promotion.
 `make implementation-proof-readiness-check` generates the scheduled
 source-ingestion worker deploy-proof artifact, durable repository proof
 artifact, runtime trust telemetry test-execution artifact, Workbench read-path source contract,
-Advise route source-contract artifact, missing-suitability live Advise proof
+Advise route source-contract artifact, missing-suitability Advise runtime-evidence
 artifact, typed mandate/restriction source-product proof artifact, typed
 missing risk-profile source-product proof artifact, missing risk-profile live
 Advise proof artifact, Manage mandate runtime-evidence artifact, Core benchmark-assignment runtime
@@ -845,6 +845,14 @@ artifacts. Qualification requires producer-owned tenant scope, portfolio and
 evaluation identity, as-of and generation time, workflow posture, and
 evaluation/source/policy hashes. Missing or mismatched evidence clears no
 aggregate blocker; Advise issue `#459` owns the producer metadata gap.
+Advise missing-suitability runtime evidence is generated separately with
+`scripts/advise_missing_suitability_runtime_evidence/generate_runtime_execution.py`
+and validated by `make missing-suitability-live-proof-contract-gate`. It uses
+the same producer qualification boundary, accepts deterministic candidate and
+truthful no-opportunity outcomes, performs one source fetch, and preserves all
+suitability, publication, mesh, product-surface, deployment, production, and
+supported-feature authority blockers. Its stable environment variable and
+Make target reject retired v1 artifacts.
 Manage mandate proof consumption requires trusted tenant scope, source-authored
 as-of and generated-at time, and authoritative Manage lineage or fingerprint
 metadata for action-register and mandate-health source refs. Missing producer
