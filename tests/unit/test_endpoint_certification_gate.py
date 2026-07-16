@@ -667,9 +667,7 @@ def _implemented_uncertified_endpoint() -> dict[str, object]:
         "owner": "lotus-idea privacy and records operations",
         "purpose": "Apply a governed lifecycle action.",
         "when_to_use": "Use with idea.data-lifecycle.manage capability.",
-        "when_not_to_use": (
-            "Do not use as Gateway, Workbench, or supported-feature promotion."
-        ),
+        "when_not_to_use": ("Do not use as Gateway, Workbench, or supported-feature promotion."),
         "request_examples": ["{}"],
         "response_examples": [
             '{"certificationStatus":"not_certified","supportedFeaturePromoted":false}'

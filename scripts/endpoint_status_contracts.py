@@ -47,8 +47,7 @@ def _validate_certification_blockers(
     blockers = endpoint.get("certification_blockers")
     if not isinstance(blockers, list) or not blockers:
         return [
-            f"{operation}: implemented_not_certified endpoint must declare "
-            "certification_blockers"
+            f"{operation}: implemented_not_certified endpoint must declare certification_blockers"
         ]
     errors: list[str] = []
     for index, blocker in enumerate(blockers):
