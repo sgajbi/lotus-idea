@@ -56,6 +56,19 @@ def _load_endpoint_review_workflow_contracts() -> ModuleType:
     return module
 
 
+def _load_endpoint_conversion_workflow_contracts() -> ModuleType:
+    script_path = ROOT / "scripts" / "endpoint_conversion_workflow_contracts.py"
+    spec = importlib.util.spec_from_file_location(
+        "endpoint_conversion_workflow_contracts",
+        script_path,
+    )
+    assert spec is not None
+    assert spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 def test_endpoint_certification_gate_passes_current_repository_contract() -> None:
     module = _load_endpoint_certification_gate()
 
@@ -760,6 +773,116 @@ def test_endpoint_certification_gate_blocks_review_action_ledger_and_test_drift(
     assert any("response_examples must exactly match" in error for error in errors)
     assert any("cross-key review-action replay integration test" in error for error in errors)
     assert any("review-action success publication contract test" in error for error in errors)
+
+
+def test_endpoint_certification_gate_requires_every_conversion_intent_success_mode() -> None:
+    from app.api.examples.conversion_workflow import (
+        build_conversion_intent_response_examples,
+    )
+    from app.main import app
+
+    module = _load_endpoint_conversion_workflow_contracts()
+    expected = build_conversion_intent_response_examples()
+    endpoint = {
+        "method": "POST",
+        "path": "/api/v1/idea-candidates/{candidateId}/conversion-intents",
+        "response_examples": [json.dumps(value) for value in expected.values()],
+        "test_evidence": [
+            module.CONVERSION_INTENT_REPLAY_TEST,
+            module.CONVERSION_INTENT_SUCCESS_CONTRACT_TEST,
+        ],
+    }
+    openapi_spec = deepcopy(app.openapi())
+    examples = openapi_spec["paths"][endpoint["path"]]["post"]["responses"]["200"]["content"][
+        "application/json"
+    ]["examples"]
+    examples.pop("replayed")
+
+    errors = module.validate_conversion_intent_success_contract(endpoint, openapi_spec)
+
+    assert errors == [
+        (
+            "('POST', '/api/v1/idea-candidates/{candidateId}/conversion-intents'): "
+            "OpenAPI 200 examples must exactly match every named code-owned "
+            "conversion-intent success mode"
+        )
+    ]
+
+
+def test_endpoint_certification_gate_blocks_conversion_intent_ledger_and_test_drift() -> None:
+    from app.api.examples.conversion_workflow import (
+        build_conversion_intent_response_examples,
+    )
+
+    module = _load_endpoint_conversion_workflow_contracts()
+    expected = build_conversion_intent_response_examples()
+    endpoint = {
+        "method": "POST",
+        "path": "/api/v1/idea-candidates/{candidateId}/conversion-intents",
+        "response_examples": [json.dumps(expected["accepted"])],
+        "test_evidence": [],
+    }
+
+    errors = module.validate_conversion_intent_success_contract(endpoint)
+
+    assert any("response_examples must exactly match" in error for error in errors)
+    assert any("idempotent conversion-intent replay integration test" in error for error in errors)
+    assert any("conversion-intent success publication contract test" in error for error in errors)
+
+
+def test_endpoint_certification_gate_requires_every_conversion_outcome_success_mode() -> None:
+    from app.api.examples.conversion_workflow import (
+        build_conversion_outcome_response_examples,
+    )
+    from app.main import app
+
+    module = _load_endpoint_conversion_workflow_contracts()
+    expected = build_conversion_outcome_response_examples()
+    endpoint = {
+        "method": "POST",
+        "path": "/api/v1/conversion-intents/{conversionIntentId}/outcomes",
+        "response_examples": [json.dumps(value) for value in expected.values()],
+        "test_evidence": [
+            module.CONVERSION_OUTCOME_REPLAY_TEST,
+            module.CONVERSION_OUTCOME_SUCCESS_CONTRACT_TEST,
+        ],
+    }
+    openapi_spec = deepcopy(app.openapi())
+    examples = openapi_spec["paths"][endpoint["path"]]["post"]["responses"]["200"]["content"][
+        "application/json"
+    ]["examples"]
+    examples["accepted"]["value"]["conversionOutcome"].pop("correctionReason")
+
+    errors = module.validate_conversion_outcome_success_contract(endpoint, openapi_spec)
+
+    assert errors == [
+        (
+            "('POST', '/api/v1/conversion-intents/{conversionIntentId}/outcomes'): "
+            "OpenAPI 200 examples must exactly match every named code-owned "
+            "conversion-outcome success mode"
+        )
+    ]
+
+
+def test_endpoint_certification_gate_blocks_conversion_outcome_ledger_and_test_drift() -> None:
+    from app.api.examples.conversion_workflow import (
+        build_conversion_outcome_response_examples,
+    )
+
+    module = _load_endpoint_conversion_workflow_contracts()
+    expected = build_conversion_outcome_response_examples()
+    endpoint = {
+        "method": "POST",
+        "path": "/api/v1/conversion-intents/{conversionIntentId}/outcomes",
+        "response_examples": [json.dumps(expected["accepted"])],
+        "test_evidence": [],
+    }
+
+    errors = module.validate_conversion_outcome_success_contract(endpoint)
+
+    assert any("response_examples must exactly match" in error for error in errors)
+    assert any("cross-key conversion-outcome replay integration test" in error for error in errors)
+    assert any("conversion-outcome success publication contract test" in error for error in errors)
 
 
 def _certified_endpoint(*, test_evidence: list[str]) -> dict[str, object]:

@@ -2,6 +2,10 @@ from __future__ import annotations
 
 from typing import Any
 
+from app.api.examples.openapi import (
+    apply_named_response_examples,
+    build_named_openapi_examples,
+)
 from app.api.review_workflow_models import FeedbackResponse, ReviewActionResponse
 
 
@@ -104,14 +108,14 @@ def build_feedback_response_examples() -> dict[str, dict[str, Any]]:
 
 
 def build_review_action_openapi_examples() -> dict[str, dict[str, Any]]:
-    return _build_openapi_examples(
+    return build_named_openapi_examples(
         build_review_action_response_examples(),
         REVIEW_ACTION_SUCCESS_EXAMPLE_SUMMARIES,
     )
 
 
 def build_feedback_openapi_examples() -> dict[str, dict[str, Any]]:
-    return _build_openapi_examples(
+    return build_named_openapi_examples(
         build_feedback_response_examples(),
         FEEDBACK_SUCCESS_EXAMPLE_SUMMARIES,
     )
@@ -120,41 +124,17 @@ def build_feedback_openapi_examples() -> dict[str, dict[str, Any]]:
 def apply_review_workflow_openapi_examples(
     openapi_schema: dict[str, Any],
 ) -> dict[str, Any]:
-    _apply_operation_examples(
+    apply_named_response_examples(
         openapi_schema,
-        REVIEW_ACTION_OPERATION_PATH,
-        build_review_action_openapi_examples(),
+        operation_path=REVIEW_ACTION_OPERATION_PATH,
+        examples=build_review_action_openapi_examples(),
     )
-    _apply_operation_examples(
+    apply_named_response_examples(
         openapi_schema,
-        FEEDBACK_OPERATION_PATH,
-        build_feedback_openapi_examples(),
+        operation_path=FEEDBACK_OPERATION_PATH,
+        examples=build_feedback_openapi_examples(),
     )
     return openapi_schema
-
-
-def _build_openapi_examples(
-    examples: dict[str, dict[str, Any]],
-    summaries: dict[str, str],
-) -> dict[str, dict[str, Any]]:
-    return {
-        name: {
-            "summary": summaries[name],
-            "value": value,
-        }
-        for name, value in examples.items()
-    }
-
-
-def _apply_operation_examples(
-    openapi_schema: dict[str, Any],
-    operation_path: str,
-    examples: dict[str, dict[str, Any]],
-) -> None:
-    operation = openapi_schema["paths"][operation_path]["post"]
-    media = operation["responses"]["200"]["content"]["application/json"]
-    media.pop("example", None)
-    media["examples"] = examples
 
 
 def _validated_review_action_response(payload: dict[str, Any]) -> dict[str, Any]:
