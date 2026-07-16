@@ -265,6 +265,14 @@ Missing-suitability source-backed evaluation consumes only Lotus Advise-owned
 `AdvisoryPolicyEvaluationRecord:v1` workflow posture and must not approve
 suitability, approve policy, approve proposals, approve sign-off, publish
 client communication, or promote Advise/product support.
+Its closed v2 runtime-evidence contract invokes one named application use case
+and binds pseudonymous request scope, producer workflow scope/time, policy and
+source hashes, workflow posture, and deterministic candidate or no-opportunity
+receipts. Missing or mismatched producer authority fails closed. The stable
+environment variable and Make target reject retired v1 artifacts. Shared
+Advise workflow qualification reduces duplicate producer logic while each
+opportunity family retains its own schema and outcome policy. This is internal
+design modularity, not a runtime service boundary.
 Missing-risk-profile source-backed evaluation consumes only Lotus Advise-owned
 `AdvisoryPolicyEvaluationRecord:v1` risk-profile diagnostic posture and must
 not approve risk profiling, determine suitability, approve policy/proposals,
