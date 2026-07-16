@@ -301,10 +301,7 @@ def _freshness_text(*payloads: dict[str, Any]) -> str:
 
 
 def _evidence_freshness(value: str) -> EvidenceFreshness:
-    try:
-        return EvidenceFreshness(value)
-    except ValueError:
-        return EvidenceFreshness.UNAVAILABLE
+    return EvidenceFreshness(value)
 
 
 def _diagnostic(posture: _PolicyEvaluationPosture, payload: dict[str, Any]) -> str:
