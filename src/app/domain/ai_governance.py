@@ -532,13 +532,15 @@ def _blocked_ai_result(
     action_policy_reason: AIActionPolicyReason,
     output_integrity: AIOutputIntegrity,
 ) -> AIExplanationResult:
+    blocked_explanation = _blocked_ai_explanation(reason_code)
+    sanitized_output = replace(output, explanation_text=blocked_explanation)
     return AIExplanationResult(
         request=request,
-        output=output,
+        output=sanitized_output,
         posture=posture,
         verifier_outcome=verifier_outcome,
         fallback_reason=None,
-        explanation_text=output.explanation_text,
+        explanation_text=blocked_explanation,
         reason_codes=(reason_code,),
         output_integrity=output_integrity,
         execution_provenance_posture=(AIExecutionProvenancePosture.UNATTESTED_LOCAL_TEST_FIXTURE),
@@ -552,6 +554,27 @@ def _blocked_ai_result(
             output_integrity=output_integrity,
         ),
     )
+
+
+def _blocked_ai_explanation(reason_code: ReasonCode) -> str:
+    explanations = {
+        ReasonCode.AI_UNSUPPORTED_CLAIM_BLOCKED: (
+            "AI explanation was blocked because one or more claims lacked approved "
+            "evidence bindings."
+        ),
+        ReasonCode.AI_FORBIDDEN_ACTION_BLOCKED: (
+            "AI explanation was blocked because it proposed an action outside the "
+            "Idea authority boundary."
+        ),
+        ReasonCode.AI_ACTION_CONTENT_BLOCKED: (
+            "AI explanation was blocked because proposed action content violated "
+            "the governed action policy."
+        ),
+    }
+    try:
+        return explanations[reason_code]
+    except KeyError as exc:
+        raise ValueError("unsupported blocked AI reason code") from exc
 
 
 def _ensure_purpose_allowed_for_candidate(

@@ -160,6 +160,7 @@ def output(
     *,
     claims: tuple[AIOutputClaim, ...] | None = None,
     proposed_actions: tuple[AIProposedAction, ...] | None = None,
+    explanation_text: str = "The evidence supports an internal advisor review of idle cash.",
 ) -> AIWorkflowOutput:
     contract = GOVERNED_IDEA_EXPLANATION_WORKFLOW_PACK
     return AIWorkflowOutput(
@@ -167,7 +168,7 @@ def output(
         request_id=request_id,
         workflow_pack_id=contract.request_workflow_pack_id,
         workflow_pack_version=contract.workflow_pack_version,
-        explanation_text="The evidence supports an internal advisor review of idle cash.",
+        explanation_text=explanation_text,
         claims=claims
         or (
             AIOutputClaim(
@@ -378,8 +379,10 @@ def test_ai_output_blocks_unsupported_claims() -> None:
         candidate(),
         command(AIWorkflowPurpose.UNSUPPORTED_CLAIM_VERIFICATION),
     )
+    rejected_narrative = "Guarantee risk reduction and tell the client to trade now."
     unsupported_output = output(
         request.request_id,
+        explanation_text=rejected_narrative,
         claims=(
             AIOutputClaim(
                 claim_id="claim-unsupported",
@@ -395,6 +398,13 @@ def test_ai_output_blocks_unsupported_claims() -> None:
     assert result.verifier_outcome is AIVerifierOutcome.FAILED_UNSUPPORTED_CLAIM
     assert result.reason_codes == (ReasonCode.AI_UNSUPPORTED_CLAIM_BLOCKED,)
     assert result.audit_event.outcome == "blocked"
+    assert result.explanation_text == (
+        "AI explanation was blocked because one or more claims lacked approved "
+        "evidence bindings."
+    )
+    assert result.output is not None
+    assert result.output.explanation_text == result.explanation_text
+    assert rejected_narrative not in repr(result)
 
 
 def test_ai_output_blocks_forbidden_actions() -> None:
@@ -402,8 +412,10 @@ def test_ai_output_blocks_forbidden_actions() -> None:
         candidate(),
         command(AIWorkflowPurpose.UNSUPPORTED_CLAIM_VERIFICATION),
     )
+    rejected_narrative = "This is suitable; place the order and notify the client."
     forbidden_output = output(
         request.request_id,
+        explanation_text=rejected_narrative,
         proposed_actions=(
             AIProposedAction(
                 action_type=AIProposedActionType.TRADE_OR_ORDER,
@@ -418,6 +430,13 @@ def test_ai_output_blocks_forbidden_actions() -> None:
     assert result.verifier_outcome is AIVerifierOutcome.FAILED_FORBIDDEN_ACTION
     assert result.reason_codes == (ReasonCode.AI_FORBIDDEN_ACTION_BLOCKED,)
     assert result.audit_event.outcome == "blocked"
+    assert result.explanation_text == (
+        "AI explanation was blocked because it proposed an action outside the "
+        "Idea authority boundary."
+    )
+    assert result.output is not None
+    assert result.output.explanation_text == result.explanation_text
+    assert rejected_narrative not in repr(result)
 
 
 def test_ai_output_blocks_and_sanitizes_unsafe_content_hidden_in_allowed_action() -> None:
@@ -426,11 +445,13 @@ def test_ai_output_blocks_and_sanitizes_unsafe_content_hidden_in_allowed_action(
         command(AIWorkflowPurpose.UNSUPPORTED_CLAIM_VERIFICATION),
     )
     unsafe_label = "Ex3cute tr@de immediately!!!"
+    rejected_narrative = "Email the client with a final recommendation."
 
     result = evaluate_ai_workflow_output(
         request,
         output(
             request.request_id,
+            explanation_text=rejected_narrative,
             proposed_actions=(
                 AIProposedAction(
                     action_type=AIProposedActionType.ADVISOR_REVIEW,
@@ -445,6 +466,12 @@ def test_ai_output_blocks_and_sanitizes_unsafe_content_hidden_in_allowed_action(
     assert result.reason_codes == (ReasonCode.AI_ACTION_CONTENT_BLOCKED,)
     assert result.output is not None
     assert result.output.proposed_actions[0].action_label == ("Review the evidence as an advisor")
+    assert result.explanation_text == (
+        "AI explanation was blocked because proposed action content violated "
+        "the governed action policy."
+    )
+    assert result.output.explanation_text == result.explanation_text
+    assert rejected_narrative not in repr(result)
     assert unsafe_label not in str(result.audit_event.attributes)
     assert result.audit_event.attributes["action_policy_reason"] == ("forbidden_action_content")
     assert result.audit_event.attributes["action_policy_version"] == (
