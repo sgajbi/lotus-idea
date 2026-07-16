@@ -69,9 +69,7 @@ def validate_named_success_contract(
     operation: tuple[str, str],
     expected: dict[str, dict[str, Any]],
     workflow_name: str,
-    replay_test: str,
-    replay_evidence_description: str,
-    success_contract_test: str,
+    required_test_evidence: tuple[tuple[str, str], ...],
 ) -> list[str]:
     endpoint_operation = (str(endpoint["method"]).upper(), str(endpoint["path"]))
     if endpoint_operation != operation:
@@ -85,13 +83,9 @@ def validate_named_success_contract(
         )
 
     test_evidence = tuple(str(value) for value in endpoint.get("test_evidence", ()))
-    if replay_test not in test_evidence:
-        errors.append(f"{operation}: test_evidence must cite the {replay_evidence_description}")
-    if success_contract_test not in test_evidence:
-        errors.append(
-            f"{operation}: test_evidence must cite the complete {workflow_name} success "
-            "publication contract test"
-        )
+    for test_reference, evidence_description in required_test_evidence:
+        if test_reference not in test_evidence:
+            errors.append(f"{operation}: test_evidence must cite the {evidence_description}")
 
     if openapi_spec is not None:
         operation_schema = openapi_operation(openapi_spec, operation)

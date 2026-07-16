@@ -45,9 +45,16 @@ def validate_conversion_intent_success_contract(
         operation=CONVERSION_INTENT_OPERATION,
         expected=build_conversion_intent_response_examples(),
         workflow_name="conversion-intent",
-        replay_test=CONVERSION_INTENT_REPLAY_TEST,
-        replay_evidence_description="idempotent conversion-intent replay integration test",
-        success_contract_test=CONVERSION_INTENT_SUCCESS_CONTRACT_TEST,
+        required_test_evidence=(
+            (
+                CONVERSION_INTENT_REPLAY_TEST,
+                "idempotent conversion-intent replay integration test",
+            ),
+            (
+                CONVERSION_INTENT_SUCCESS_CONTRACT_TEST,
+                "complete conversion-intent success publication contract test",
+            ),
+        ),
     )
 
 
@@ -65,9 +72,16 @@ def validate_conversion_outcome_success_contract(
         operation=CONVERSION_OUTCOME_OPERATION,
         expected=build_conversion_outcome_response_examples(),
         workflow_name="conversion-outcome",
-        replay_test=CONVERSION_OUTCOME_REPLAY_TEST,
-        replay_evidence_description="cross-key conversion-outcome replay integration test",
-        success_contract_test=CONVERSION_OUTCOME_SUCCESS_CONTRACT_TEST,
+        required_test_evidence=(
+            (
+                CONVERSION_OUTCOME_REPLAY_TEST,
+                "cross-key conversion-outcome replay integration test",
+            ),
+            (
+                CONVERSION_OUTCOME_SUCCESS_CONTRACT_TEST,
+                "complete conversion-outcome success publication contract test",
+            ),
+        ),
     )
 
 

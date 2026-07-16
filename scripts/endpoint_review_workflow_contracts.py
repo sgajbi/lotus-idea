@@ -37,9 +37,16 @@ def validate_review_action_success_contract(
         operation=REVIEW_ACTION_OPERATION,
         expected=build_review_action_response_examples(),
         workflow_name="review-action",
-        replay_test=REVIEW_ACTION_IDENTITY_REPLAY_TEST,
-        replay_evidence_description="cross-key review-action replay integration test",
-        success_contract_test=REVIEW_ACTION_SUCCESS_CONTRACT_TEST,
+        required_test_evidence=(
+            (
+                REVIEW_ACTION_IDENTITY_REPLAY_TEST,
+                "cross-key review-action replay integration test",
+            ),
+            (
+                REVIEW_ACTION_SUCCESS_CONTRACT_TEST,
+                "complete review-action success publication contract test",
+            ),
+        ),
     )
 
 
@@ -55,9 +62,16 @@ def validate_feedback_success_contract(
         operation=FEEDBACK_OPERATION,
         expected=build_feedback_response_examples(),
         workflow_name="feedback",
-        replay_test=FEEDBACK_IDENTITY_REPLAY_TEST,
-        replay_evidence_description="cross-key feedback replay integration test",
-        success_contract_test=FEEDBACK_SUCCESS_CONTRACT_TEST,
+        required_test_evidence=(
+            (
+                FEEDBACK_IDENTITY_REPLAY_TEST,
+                "cross-key feedback replay integration test",
+            ),
+            (
+                FEEDBACK_SUCCESS_CONTRACT_TEST,
+                "complete feedback success publication contract test",
+            ),
+        ),
     )
 
 
