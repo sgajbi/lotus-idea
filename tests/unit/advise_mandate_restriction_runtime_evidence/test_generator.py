@@ -8,6 +8,7 @@ from types import ModuleType
 import pytest
 
 from app.ports.advise_sources import (
+    AdvisePolicyEvaluationEvidence,
     AdvisePolicyEvaluationEvidenceRequest,
     AdviseSourceUnavailable,
 )
@@ -128,7 +129,7 @@ class _UnavailableSource:
     def fetch_policy_evaluation_evidence(
         self,
         request: AdvisePolicyEvaluationEvidenceRequest,
-    ) -> object:
+    ) -> AdvisePolicyEvaluationEvidence:
         raise AdviseSourceUnavailable(code="advise_temporal_identity_missing")
 
     def close(self) -> None:
