@@ -12,6 +12,7 @@ from app.application.source_ingestion_runtime_evidence import (
 from app.application.source_ingestion_scheduler import (
     SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE_ENV,
     SCHEDULED_WORKER_SOURCE_CONTRACT_ENV,
+    scheduled_worker_deployment_matches_source_contract,
     scheduled_worker_deployment_evidence_is_valid,
     scheduled_worker_source_contract_is_valid,
 )
@@ -88,12 +89,30 @@ def build_source_ingestion_readiness_snapshot(
     )
     core_source_urls = core_source_runtime_urls_from_environment()
     live_core_source_proof_valid = _runtime_execution_valid(configured_runtime_execution_path)
-    scheduled_worker_source_contract_valid = _scheduled_worker_source_contract_valid(
-        configured_scheduled_worker_source_contract_path,
-        repository_root=repository_root,
+    scheduled_worker_source_contract = _read_json_object(
+        configured_scheduled_worker_source_contract_path
     )
-    scheduled_worker_deployment_evidence_valid = _scheduled_worker_deployment_evidence_valid(
+    scheduled_worker_deployment_evidence = _read_json_object(
         configured_scheduled_worker_deployment_evidence_path
+    )
+    scheduled_worker_source_contract_valid = bool(
+        scheduled_worker_source_contract
+        and scheduled_worker_source_contract_is_valid(
+            scheduled_worker_source_contract,
+            repository_root=repository_root,
+        )
+    )
+    scheduled_worker_deployment_evidence_valid = bool(
+        scheduled_worker_source_contract_valid
+        and scheduled_worker_deployment_evidence
+        and scheduled_worker_source_contract
+        and scheduled_worker_deployment_evidence_is_valid(
+            scheduled_worker_deployment_evidence
+        )
+        and scheduled_worker_deployment_matches_source_contract(
+            scheduled_worker_deployment_evidence,
+            scheduled_worker_source_contract,
+        )
     )
     configuration_blockers = _configuration_blockers(
         example_manifest=example_manifest,
@@ -221,43 +240,14 @@ def _runtime_execution_valid(configured_runtime_execution_path: Path | None) -> 
     return isinstance(payload, dict) and source_ingestion_runtime_execution_is_valid(payload)
 
 
-def _scheduled_worker_source_contract_valid(
-    configured_scheduled_worker_source_contract_path: Path | None,
-    *,
-    repository_root: Path,
-) -> bool:
-    if (
-        configured_scheduled_worker_source_contract_path is None
-        or not configured_scheduled_worker_source_contract_path.is_file()
-    ):
-        return False
+def _read_json_object(path: Path | None) -> dict[str, object] | None:
+    if path is None or not path.is_file():
+        return None
     try:
-        payload = json.loads(
-            configured_scheduled_worker_source_contract_path.read_text(encoding="utf-8")
-        )
+        payload = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
-        return False
-    return isinstance(payload, dict) and scheduled_worker_source_contract_is_valid(
-        payload,
-        repository_root=repository_root,
-    )
-
-
-def _scheduled_worker_deployment_evidence_valid(
-    configured_scheduled_worker_deployment_evidence_path: Path | None,
-) -> bool:
-    if (
-        configured_scheduled_worker_deployment_evidence_path is None
-        or not configured_scheduled_worker_deployment_evidence_path.is_file()
-    ):
-        return False
-    try:
-        payload = json.loads(
-            configured_scheduled_worker_deployment_evidence_path.read_text(encoding="utf-8")
-        )
-    except (OSError, json.JSONDecodeError):
-        return False
-    return isinstance(payload, dict) and scheduled_worker_deployment_evidence_is_valid(payload)
+        return None
+    return payload if isinstance(payload, dict) else None
 
 
 def resolve_source_ingestion_manifest_path(

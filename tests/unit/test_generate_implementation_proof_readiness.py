@@ -257,6 +257,11 @@ def test_deployment_evidence_clears_only_scheduled_worker_deployment_blocker(
         "pre-existing-deployment-evidence.json",
     )
     evidence_path = tmp_path / "scheduled-worker-deployment-evidence.json"
+    source_contract_path = tmp_path / "scheduled-worker-source-contract.json"
+    source_contract_path.write_text(
+        json.dumps(source_contract(repository_root=ROOT)),
+        encoding="utf-8",
+    )
     evidence_path.write_text(
         json.dumps(deployment_evidence(repository_root=ROOT)),
         encoding="utf-8",
@@ -267,6 +272,8 @@ def test_deployment_evidence_clears_only_scheduled_worker_deployment_blocker(
         [
             "--evaluated-at-utc",
             "2026-06-21T10:10:00Z",
+            "--source-ingestion-scheduled-worker-source-contract",
+            str(source_contract_path),
             "--source-ingestion-scheduled-worker-deployment-evidence",
             str(evidence_path),
             "--output",
