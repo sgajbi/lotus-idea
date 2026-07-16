@@ -7,6 +7,7 @@ from app.application.mandate_restriction_signal import (
     EvaluateMandateRestrictionSignalCommand,
     evaluate_mandate_restriction_signal_command,
     evaluate_mandate_restriction_signal_from_advise,
+    evaluate_mandate_restriction_readiness_from_advise,
     mandate_restriction_review_ready_from_advise_diagnostic,
 )
 from app.domain import (
@@ -90,23 +91,23 @@ def test_mandate_restriction_command_preserves_entitlement_blocker() -> None:
 
 
 def test_mandate_restriction_application_consumes_explicit_advise_diagnostic() -> None:
-    advise_source = StubAdviseSource(
-        AdvisePolicyEvaluationEvidence(
-            evaluation_status="PENDING_REVIEW",
-            open_requirement_count=0,
-            blocked_requirement_count=0,
-            sign_off_status="PENDING_REVIEW",
-            sign_off_blocker_count=0,
-            client_ready_publication="BLOCKED",
-            policy_ref=_source_ref(),
-            advise_diagnostic="mandate_restriction_review_required",
-        )
+    evidence = AdvisePolicyEvaluationEvidence(
+        evaluation_status="PENDING_REVIEW",
+        open_requirement_count=0,
+        blocked_requirement_count=0,
+        sign_off_status="PENDING_REVIEW",
+        sign_off_blocker_count=0,
+        client_ready_publication="BLOCKED",
+        policy_ref=_source_ref(),
+        advise_diagnostic="mandate_restriction_review_required",
     )
+    advise_source = StubAdviseSource(evidence)
 
-    result = evaluate_mandate_restriction_signal_from_advise(
+    source_evaluation = evaluate_mandate_restriction_readiness_from_advise(
         _advise_command(),
         advise_source=advise_source,
     )
+    result = source_evaluation.evaluation
 
     assert result.outcome is SignalEvaluationOutcome.CANDIDATE_CREATED
     assert result.candidate is not None
@@ -117,6 +118,8 @@ def test_mandate_restriction_application_consumes_explicit_advise_diagnostic() -
     assert result.candidate.access_scope == _access_scope()
     assert advise_source.requests[0].evaluation_id == "pev_001"
     assert advise_source.requests[0].trace_id == "trace-advise"
+    assert source_evaluation.evidence is evidence
+    assert source_evaluation.source_error_code is None
 
 
 def test_mandate_restriction_application_ignores_generic_advise_policy_gap() -> None:
@@ -144,15 +147,18 @@ def test_mandate_restriction_application_ignores_generic_advise_policy_gap() -> 
 
 
 def test_mandate_restriction_application_blocks_when_advise_source_unavailable() -> None:
-    result = evaluate_mandate_restriction_signal_from_advise(
+    source_evaluation = evaluate_mandate_restriction_readiness_from_advise(
         _advise_command(),
         advise_source=StubAdviseSource(
             exception=AdviseSourceUnavailable(code="advise_policy_workflow_pending")
         ),
     )
+    result = source_evaluation.evaluation
 
     assert result.outcome is SignalEvaluationOutcome.BLOCKED
     assert result.reason_codes == (ReasonCode.SOURCE_PARTIAL,)
+    assert source_evaluation.evidence is None
+    assert source_evaluation.source_error_code == "advise_policy_workflow_pending"
 
 
 def test_mandate_restriction_application_blocks_entitlement_denial() -> None:

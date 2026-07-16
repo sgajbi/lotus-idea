@@ -53,10 +53,18 @@ def _payload(*, extra: dict[str, Any] | None = None) -> dict[str, Any]:
         "latest_sign_off_event": None,
         "client_ready_publication": "BLOCKED",
         "metadata": {
+            "product_id": "lotus-advise:AdvisoryPolicyEvaluationRecord:v1",
             "product_version": "v1",
+            "evaluation_id": "pev_001",
+            "tenant_scope_hash": "sha256:tenant-scope",
+            "portfolio_id": "portfolio-001",
             "generated_at": "2026-06-21T10:00:00Z",
             "as_of_date": "2026-06-21",
             "content_hash": "sha256:advisory-policy-evaluation-record",
+            "source_evidence_hash": "sha256:source-evidence",
+            "policy_content_hash": "sha256:policy-content",
+            "policy_pack_id": "global-mandate-restrictions",
+            "policy_version": "2026.06",
             "data_quality_status": "quality_passed",
             "freshness": "current",
         },
@@ -107,6 +115,11 @@ def test_lotus_advise_adapter_fetches_declared_policy_evaluation_source_product(
     assert evidence.policy_ref.route == "/advisory/policy-evaluations/pev_001/workflow"
     assert evidence.policy_ref.freshness is EvidenceFreshness.CURRENT
     assert evidence.policy_ref.content_hash == "sha256:advisory-policy-evaluation-record"
+    assert evidence.workflow_runtime is not None
+    assert evidence.workflow_runtime.evaluation_id == "pev_001"
+    assert evidence.workflow_runtime.portfolio_id == "portfolio-001"
+    assert evidence.workflow_runtime.tenant_scope_hash == "sha256:tenant-scope"
+    assert evidence.workflow_runtime.open_requirement_count == 2
     assert evidence.advise_diagnostic == "advise_policy_requirements_open"
     assert seen == [
         (
@@ -202,18 +215,19 @@ def test_lotus_advise_adapter_rejects_malformed_sla_posture(
     assert exc_info.value.code == expected_code
 
 
-def test_lotus_advise_adapter_requires_lineage_metadata_for_source_ref() -> None:
+def test_lotus_advise_adapter_preserves_missing_generated_at_as_unqualified_evidence() -> None:
     payload = _payload()
     metadata = payload["metadata"]
     assert isinstance(metadata, dict)
     metadata.pop("generated_at")
 
-    with pytest.raises(AdviseSourceUnavailable) as exc_info:
-        _adapter(
-            httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
-        ).fetch_policy_evaluation_evidence(_request())
+    evidence = _adapter(
+        httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+    ).fetch_policy_evaluation_evidence(_request())
 
-    assert exc_info.value.code == "advise_generated_at_missing"
+    assert evidence.policy_ref is None
+    assert evidence.workflow_runtime is not None
+    assert evidence.workflow_runtime.generated_at_utc is None
 
 
 def test_lotus_advise_adapter_rejects_malformed_metadata_object() -> None:
@@ -241,18 +255,19 @@ def test_lotus_advise_adapter_rejects_naive_generated_at_metadata() -> None:
     assert exc_info.value.code == "advise_generated_at_naive"
 
 
-def test_lotus_advise_adapter_requires_content_hash_metadata() -> None:
+def test_lotus_advise_adapter_preserves_missing_content_hash_as_unqualified_evidence() -> None:
     payload = _payload()
     metadata = payload["metadata"]
     assert isinstance(metadata, dict)
     metadata.pop("content_hash")
 
-    with pytest.raises(AdviseSourceUnavailable) as exc_info:
-        _adapter(
-            httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
-        ).fetch_policy_evaluation_evidence(_request())
+    evidence = _adapter(
+        httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+    ).fetch_policy_evaluation_evidence(_request())
 
-    assert exc_info.value.code == "advise_content_hash_missing"
+    assert evidence.policy_ref is None
+    assert evidence.workflow_runtime is not None
+    assert evidence.workflow_runtime.content_hash is None
 
 
 def test_lotus_advise_adapter_maps_stale_policy_source() -> None:
@@ -293,7 +308,7 @@ def test_lotus_advise_adapter_maps_non_current_policy_source_freshness(
     assert evidence.policy_ref.freshness is expected
 
 
-def test_lotus_advise_adapter_uses_fallback_metadata_and_diagnostics() -> None:
+def test_lotus_advise_adapter_does_not_substitute_request_as_of_for_missing_source_time() -> None:
     payload = _payload(
         extra={
             "approval_dependencies": [],
@@ -318,11 +333,12 @@ def test_lotus_advise_adapter_uses_fallback_metadata_and_diagnostics() -> None:
     assert evidence.evaluation_status is None
     assert evidence.sign_off_status is None
     assert evidence.open_requirement_count == 0
-    assert evidence.policy_ref is not None
-    assert evidence.policy_ref.as_of_date == AS_OF_DATE
-    assert evidence.policy_ref.content_hash == "sha256:fallback-hash"
-    assert evidence.policy_ref.data_quality_status == "unknown"
-    assert evidence.policy_ref.freshness is EvidenceFreshness.UNAVAILABLE
+    assert evidence.policy_ref is None
+    assert evidence.workflow_runtime is not None
+    assert evidence.workflow_runtime.as_of_date is None
+    assert evidence.workflow_runtime.content_hash == "sha256:fallback-hash"
+    assert evidence.workflow_runtime.data_quality_status == "unknown"
+    assert evidence.workflow_runtime.freshness == EvidenceFreshness.UNAVAILABLE.value
     assert evidence.advise_diagnostic == "advise_policy_evaluation_source_partial"
 
 

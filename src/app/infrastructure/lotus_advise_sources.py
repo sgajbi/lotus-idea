@@ -10,6 +10,7 @@ from app.infrastructure.downstream_client import DownstreamJsonClient, Downstrea
 from app.ports.advise_sources import (
     AdvisePolicyEvaluationEvidence,
     AdvisePolicyEvaluationEvidenceRequest,
+    AdvisePolicyEvaluationRuntimeEvidence,
     AdviseSourceEntitlementDenied,
     AdviseSourceUnavailable,
 )
@@ -54,6 +55,7 @@ class LotusAdvisePolicyEvaluationSourceAdapter:
             raise AdviseSourceUnavailable(code=exc.code) from exc
 
         posture = _policy_evaluation_posture(payload)
+        runtime_evidence = _runtime_evidence(payload, posture=posture, route=route)
         return AdvisePolicyEvaluationEvidence(
             evaluation_status=posture.evaluation_status,
             open_requirement_count=posture.open_requirement_count,
@@ -61,7 +63,8 @@ class LotusAdvisePolicyEvaluationSourceAdapter:
             sign_off_status=posture.sign_off_status,
             sign_off_blocker_count=posture.sign_off_blocker_count,
             client_ready_publication=posture.client_ready_publication,
-            policy_ref=_source_ref(payload, request=request, route=route),
+            policy_ref=_source_ref(runtime_evidence),
+            workflow_runtime=runtime_evidence,
             advise_diagnostic=_diagnostic(posture, payload),
         )
 
@@ -94,30 +97,67 @@ def _policy_evaluation_posture(payload: dict[str, Any]) -> _PolicyEvaluationPost
     )
 
 
-def _source_ref(
+def _source_ref(runtime: AdvisePolicyEvaluationRuntimeEvidence) -> SourceRef | None:
+    if (
+        runtime.as_of_date is None
+        or runtime.generated_at_utc is None
+        or runtime.content_hash is None
+    ):
+        return None
+    freshness = _evidence_freshness(runtime.freshness)
+    return SourceRef(
+        product_id=runtime.product_id,
+        source_system=SourceSystem.LOTUS_ADVISE,
+        product_version=runtime.product_version,
+        route=runtime.route,
+        as_of_date=runtime.as_of_date,
+        generated_at_utc=runtime.generated_at_utc,
+        content_hash=runtime.content_hash,
+        data_quality_status=runtime.data_quality_status,
+        freshness=freshness,
+    )
+
+
+def _runtime_evidence(
     payload: dict[str, Any],
     *,
-    request: AdvisePolicyEvaluationEvidenceRequest,
+    posture: _PolicyEvaluationPosture,
     route: str,
-) -> SourceRef:
+) -> AdvisePolicyEvaluationRuntimeEvidence:
     metadata = _optional_object_field(payload, "metadata")
     replay_metadata = _optional_object_field(payload, "replay_metadata")
-    return SourceRef(
-        product_id=POLICY_EVALUATION_PRODUCT_ID,
-        source_system=SourceSystem.LOTUS_ADVISE,
-        product_version=str(
-            metadata.get("product_version")
-            or metadata.get("productVersion")
-            or replay_metadata.get("product_version")
-            or replay_metadata.get("productVersion")
-            or PRODUCT_VERSION
-        ),
+    return AdvisePolicyEvaluationRuntimeEvidence(
+        product_id=_text_from_payloads("product_id", metadata, replay_metadata)
+        or POLICY_EVALUATION_PRODUCT_ID,
+        product_version=_text_from_payloads("product_version", metadata, replay_metadata)
+        or PRODUCT_VERSION,
         route=route,
-        as_of_date=_as_of_date(metadata, replay_metadata, payload, fallback=request.as_of_date),
-        generated_at_utc=_generated_at(metadata, replay_metadata, payload),
-        content_hash=_content_hash(metadata, replay_metadata, payload),
+        evaluation_id=_text_from_payloads("evaluation_id", metadata, payload),
+        tenant_scope_hash=_text_from_payloads(
+            "tenant_scope_hash", metadata, replay_metadata, payload
+        ),
+        portfolio_id=_text_from_payloads("portfolio_id", metadata, payload),
+        as_of_date=_as_of_date(metadata, replay_metadata, payload),
+        generated_at_utc=_optional_generated_at(metadata, replay_metadata, payload),
+        content_hash=_optional_hash(
+            ("content_hash", "evaluation_hash"), metadata, replay_metadata, payload
+        ),
+        source_evidence_hash=_optional_hash(
+            ("source_evidence_hash",), metadata, replay_metadata, payload
+        ),
+        policy_content_hash=_optional_hash(
+            ("policy_content_hash",), metadata, replay_metadata, payload
+        ),
+        policy_pack_id=_text_from_payloads("policy_pack_id", metadata, replay_metadata),
+        policy_version=_text_from_payloads("policy_version", metadata, replay_metadata),
+        evaluation_status=posture.evaluation_status,
+        open_requirement_count=posture.open_requirement_count,
+        blocked_requirement_count=posture.blocked_requirement_count,
+        sign_off_status=posture.sign_off_status,
+        sign_off_blocker_count=posture.sign_off_blocker_count,
+        client_ready_publication=posture.client_ready_publication,
         data_quality_status=_data_quality_status(metadata, replay_metadata),
-        freshness=_freshness(metadata, replay_metadata),
+        freshness=_freshness_text(metadata, replay_metadata),
     )
 
 
@@ -176,7 +216,7 @@ def _text_field(payload: dict[str, Any], key: str) -> str | None:
     return None
 
 
-def _generated_at(*payloads: dict[str, Any]) -> datetime:
+def _optional_generated_at(*payloads: dict[str, Any]) -> datetime | None:
     for payload in payloads:
         for key in (
             "generated_at",
@@ -192,39 +232,42 @@ def _generated_at(*payloads: dict[str, Any]) -> datetime:
                 if parsed.tzinfo is None or parsed.utcoffset() is None:
                     raise AdviseSourceUnavailable(code="advise_generated_at_naive")
                 return parsed
-    raise AdviseSourceUnavailable(code="advise_generated_at_missing")
+    return None
 
 
 def _as_of_date(
     *payloads: dict[str, Any],
-    fallback: date,
-) -> date:
+) -> date | None:
     for payload in payloads:
         for key in ("as_of_date", "asOfDate", "evaluated_as_of_date", "evaluatedAsOfDate"):
             value = payload.get(key)
             if isinstance(value, str) and value.strip():
                 return date.fromisoformat(value)
-    return fallback
+    return None
 
 
-def _content_hash(*payloads: dict[str, Any]) -> str:
+def _optional_hash(keys: tuple[str, ...], *payloads: dict[str, Any]) -> str | None:
     for payload in payloads:
-        for key in (
-            "content_hash",
-            "contentHash",
-            "evaluation_hash",
-            "evaluationHash",
-            "source_evaluation_hash",
-            "sourceEvaluationHash",
-            "request_fingerprint",
-            "requestFingerprint",
-            "lineage_fingerprint",
-            "lineageFingerprint",
-        ):
+        for key in keys:
             value = payload.get(key)
             if isinstance(value, str) and value.strip():
                 return value if value.startswith("sha256:") else f"sha256:{value}"
-    raise AdviseSourceUnavailable(code="advise_content_hash_missing")
+    return None
+
+
+def _text_from_payloads(key: str, *payloads: dict[str, Any]) -> str | None:
+    aliases = (key, _camel_case(key))
+    for payload in payloads:
+        for alias in aliases:
+            value = payload.get(alias)
+            if isinstance(value, str) and value.strip():
+                return value.strip()
+    return None
+
+
+def _camel_case(value: str) -> str:
+    head, *tail = value.split("_")
+    return head + "".join(part.title() for part in tail)
 
 
 def _data_quality_status(*payloads: dict[str, Any]) -> str:
@@ -235,7 +278,7 @@ def _data_quality_status(*payloads: dict[str, Any]) -> str:
     return "unknown"
 
 
-def _freshness(*payloads: dict[str, Any]) -> EvidenceFreshness:
+def _freshness_text(*payloads: dict[str, Any]) -> str:
     for payload in payloads:
         value = (
             payload.get("freshness")
@@ -247,14 +290,21 @@ def _freshness(*payloads: dict[str, Any]) -> EvidenceFreshness:
         if isinstance(value, str) and value.strip():
             normalized = value.strip().lower()
             if "stale" in normalized:
-                return EvidenceFreshness.STALE
+                return EvidenceFreshness.STALE.value
             if "expired" in normalized:
-                return EvidenceFreshness.EXPIRED
+                return EvidenceFreshness.EXPIRED.value
             if "unavailable" in normalized:
-                return EvidenceFreshness.UNAVAILABLE
+                return EvidenceFreshness.UNAVAILABLE.value
             if "current" in normalized:
-                return EvidenceFreshness.CURRENT
-    return EvidenceFreshness.UNAVAILABLE
+                return EvidenceFreshness.CURRENT.value
+    return EvidenceFreshness.UNAVAILABLE.value
+
+
+def _evidence_freshness(value: str) -> EvidenceFreshness:
+    try:
+        return EvidenceFreshness(value)
+    except ValueError:
+        return EvidenceFreshness.UNAVAILABLE
 
 
 def _diagnostic(posture: _PolicyEvaluationPosture, payload: dict[str, Any]) -> str:
