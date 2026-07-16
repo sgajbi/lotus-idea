@@ -945,7 +945,8 @@ def test_ci_contract_gate_blocks_missing_suitability_live_proof_gate() -> None:
         .read_text(encoding="utf-8")
         .replace("$(MAKE) missing-suitability-live-proof-contract-gate\n", "")
         .replace(
-            "scripts/missing_suitability_live_proof_contract_gate.py",
+            "scripts/advise_missing_suitability_runtime_evidence/"
+            "runtime_execution_contract_gate.py",
             "scripts/removed.py",
         )
     )
@@ -957,7 +958,8 @@ def test_ci_contract_gate_blocks_missing_suitability_live_proof_gate() -> None:
     ) in errors
     assert (
         "Makefile missing-suitability-live-proof-contract-gate target must run "
-        "`scripts/missing_suitability_live_proof_contract_gate.py`"
+        "`scripts/advise_missing_suitability_runtime_evidence/"
+        "runtime_execution_contract_gate.py`"
     ) in errors
 
 

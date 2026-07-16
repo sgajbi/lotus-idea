@@ -5,8 +5,8 @@ import json
 from pathlib import Path
 
 import scripts.generate_implementation_proof_readiness as proof_report
-from app.application.missing_suitability_live_proof import (
-    build_missing_suitability_live_proof_payload,
+from tests.support.advise_missing_suitability_runtime_evidence import (
+    valid_advise_missing_suitability_runtime_evidence,
 )
 
 
@@ -16,21 +16,8 @@ def test_generate_implementation_proof_readiness_uses_explicit_missing_suitabili
     advise_proof = tmp_path / "missing-suitability-live-proof.json"
     advise_proof.write_text(
         json.dumps(
-            build_missing_suitability_live_proof_payload(
-                generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
-                live_advise_source_attempted=True,
-                evaluation_summary={
-                    "runStatus": "completed",
-                    "sourceAuthority": "lotus-advise",
-                    "sourceProductId": "lotus-advise:AdvisoryPolicyEvaluationRecord:v1",
-                    "evaluationOutcome": "candidate_created",
-                    "sourceEvidenceCurrent": True,
-                    "clientReadyPublicationBlocked": True,
-                    "advisePolicyWorkflowReady": True,
-                    "sourceDiagnosticCodes": ["advise_policy_requirements_open"],
-                    "reasonCodes": ["suitability_context_missing", "review_required"],
-                    "unsupportedReasons": [],
-                },
+            valid_advise_missing_suitability_runtime_evidence(
+                evaluated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
             )
         ),
         encoding="utf-8",

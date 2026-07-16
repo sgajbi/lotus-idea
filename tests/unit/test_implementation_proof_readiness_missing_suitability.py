@@ -5,10 +5,10 @@ from datetime import UTC, datetime
 from app.application.implementation_proof_readiness import (
     build_implementation_proof_readiness_snapshot,
 )
-from app.application.missing_suitability_live_proof import (
-    build_missing_suitability_live_proof_payload,
-)
 from app.domain import InMemoryIdeaRepository
+from tests.support.advise_missing_suitability_runtime_evidence import (
+    valid_advise_missing_suitability_runtime_evidence,
+)
 from tests.support.proof_provenance import bound_aggregate_proof
 
 PROOF_REF = "output/opportunity/missing-suitability-live-proof.json"
@@ -73,21 +73,8 @@ def test_implementation_proof_readiness_uses_missing_suitability_live_proof_with
 
 def _valid_missing_suitability_live_proof() -> dict[str, object]:
     return bound_aggregate_proof(
-        build_missing_suitability_live_proof_payload(
-            generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
-            live_advise_source_attempted=True,
-            evaluation_summary={
-                "runStatus": "completed",
-                "sourceAuthority": "lotus-advise",
-                "sourceProductId": "lotus-advise:AdvisoryPolicyEvaluationRecord:v1",
-                "evaluationOutcome": "candidate_created",
-                "sourceEvidenceCurrent": True,
-                "clientReadyPublicationBlocked": True,
-                "advisePolicyWorkflowReady": True,
-                "sourceDiagnosticCodes": ["advise_policy_requirements_open"],
-                "reasonCodes": ["suitability_context_missing", "review_required"],
-                "unsupportedReasons": [],
-            },
+        valid_advise_missing_suitability_runtime_evidence(
+            evaluated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
         ),
         PROOF_REF,
     )

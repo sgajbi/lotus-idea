@@ -577,7 +577,7 @@ mandate-restriction-source-product-proof-contract-gate:
 	$(VENV_PYTHON) scripts/mandate_restriction_source_product_proof_contract_gate.py
 
 missing-suitability-live-proof-contract-gate:
-	$(VENV_PYTHON) scripts/missing_suitability_live_proof_contract_gate.py
+	$(VENV_PYTHON) scripts/advise_missing_suitability_runtime_evidence/runtime_execution_contract_gate.py
 
 missing-risk-profile-source-product-proof-contract-gate:
 	$(VENV_PYTHON) scripts/missing_risk_profile_source_product_proof_contract_gate.py
