@@ -17,6 +17,9 @@ from app.application.opportunity_archetype_contracts import (  # noqa: E402
 from opportunity_archetype_contracts.bond_maturity import (  # noqa: E402
     BOND_MATURITY_EVIDENCE as REQUIRED_BOND_MATURITY_EVIDENCE,
 )
+from opportunity_archetype_contracts.missing_benchmark import (  # noqa: E402
+    MISSING_BENCHMARK_EVIDENCE as REQUIRED_MISSING_BENCHMARK_EVIDENCE,
+)
 
 _parse_payload = opportunity_archetype_contract_from_payload
 
@@ -182,37 +185,6 @@ REQUIRED_LOW_INCOME_EVIDENCE = {
     "tests/unit/test_low_income_signal_evaluation.py",
     "tests/unit/test_low_income_application.py",
     "tests/unit/test_lotus_core_sources.py",
-    "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-00-critical-review-source-map-and-product-gap-allocation.md",
-}
-REQUIRED_MISSING_BENCHMARK_EVIDENCE = {
-    "src/app/domain/missing_benchmark_signal.py",
-    "src/app/application/missing_benchmark_signal.py",
-    "src/app/api/missing_benchmark_signals.py",
-    "src/app/application/core_missing_benchmark_runtime_evidence/runtime_execution.py",
-    "src/app/application/core_missing_benchmark_runtime_evidence/contract.py",
-    "src/app/application/performance_benchmark_readiness.py",
-    "src/app/application/performance_benchmark_readiness_runtime_evidence/runtime_execution.py",
-    "src/app/application/performance_benchmark_readiness_runtime_evidence/contract.py",
-    "src/app/domain/performance_benchmark_readiness.py",
-    "src/app/ports/core_sources.py",
-    "src/app/ports/performance_sources.py",
-    "src/app/infrastructure/lotus_core_sources.py",
-    "src/app/infrastructure/lotus_performance_sources.py",
-    "scripts/core_missing_benchmark_runtime_evidence/generate_runtime_execution.py",
-    "scripts/performance_benchmark_readiness_runtime_evidence/generate_runtime_execution.py",
-    "make missing-benchmark-live-proof-contract-gate",
-    "make missing-benchmark-performance-readiness-proof-contract-gate",
-    "POST /api/v1/idea-signals/missing-benchmark/evaluate",
-    "tests/integration/test_missing_benchmark_signal_api.py",
-    "tests/unit/test_missing_benchmark_signal_evaluation.py",
-    "tests/unit/test_missing_benchmark_application.py",
-    "tests/unit/core_missing_benchmark_runtime_evidence/test_runtime_execution.py",
-    "tests/unit/core_missing_benchmark_runtime_evidence/test_generator.py",
-    "tests/unit/performance_benchmark_readiness_runtime_evidence/test_runtime_execution.py",
-    "tests/unit/performance_benchmark_readiness_runtime_evidence/test_generator.py",
-    "tests/unit/test_implementation_proof_readiness_missing_benchmark.py",
-    "tests/unit/test_lotus_core_sources.py",
-    "tests/unit/test_lotus_performance_sources.py",
     "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-00-critical-review-source-map-and-product-gap-allocation.md",
 }
 REQUIRED_MISSING_RISK_PROFILE_EVIDENCE = {
