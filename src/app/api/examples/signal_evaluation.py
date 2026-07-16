@@ -8,6 +8,7 @@ from app.domain import EvidenceFreshness, SignalEvaluationResult, SourceSystem
 
 
 ResponseT = TypeVar("ResponseT", bound=SignalEvaluationResponse)
+EvidenceT = TypeVar("EvidenceT")
 
 
 def serialize_signal_evaluation(
@@ -43,7 +44,34 @@ def build_source_ref_request(
     )
 
 
+def build_core_source_ref_request(
+    product_id: str,
+    *,
+    as_of_date: date,
+    generated_at_utc: datetime,
+    freshness: EvidenceFreshness = EvidenceFreshness.CURRENT,
+) -> SourceRefRequest:
+    return build_source_ref_request(
+        product_id,
+        source_system=SourceSystem.LOTUS_CORE,
+        as_of_date=as_of_date,
+        generated_at_utc=generated_at_utc,
+        freshness=freshness,
+    )
+
+
+def return_or_raise_example_evidence(
+    evidence: EvidenceT,
+    error: Exception | None,
+) -> EvidenceT:
+    if error is not None:
+        raise error
+    return evidence
+
+
 __all__ = [
+    "build_core_source_ref_request",
     "build_source_ref_request",
+    "return_or_raise_example_evidence",
     "serialize_signal_evaluation",
 ]
