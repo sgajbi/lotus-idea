@@ -162,12 +162,15 @@ def _blocked(
 
 
 def _benchmark_assignment_is_ready(source_input: MissingBenchmarkSignalInput) -> bool:
-    return benchmark_assignment_diagnostic(
-        benchmark_identity_resolved=source_input.benchmark_identity_resolved,
-        assignment_effective_for_as_of_date=source_input.assignment_effective_for_as_of_date,
-        assignment_status=source_input.assignment_status,
-        assignment_version_present=source_input.assignment_version_present,
-    ) == "core_benchmark_assignment_ready"
+    return (
+        benchmark_assignment_diagnostic(
+            benchmark_identity_resolved=source_input.benchmark_identity_resolved,
+            assignment_effective_for_as_of_date=source_input.assignment_effective_for_as_of_date,
+            assignment_status=source_input.assignment_status,
+            assignment_version_present=source_input.assignment_version_present,
+        )
+        == "core_benchmark_assignment_ready"
+    )
 
 
 def benchmark_assignment_diagnostic(
