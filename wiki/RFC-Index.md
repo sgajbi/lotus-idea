@@ -198,6 +198,10 @@ Current RFC-0002 implementation-start baseline:
    High-cash caller, source-backed, and persistence APIs now publish their
    complete executable HTTP 200 mode matrices from one application-backed,
    DTO-serialized factory, with exact endpoint-ledger and OpenAPI parity.
+   Low-income caller and Core-backed APIs now publish the same complete
+   candidate-created, blocked, suppressed, and not-eligible matrix from
+   capability-owned application-backed factories, with both required Core
+   source products retained in source-safe candidate examples.
    `make implementation-proof-readiness-check` generates and consumes the
    scheduled source-ingestion worker source contract while intentionally
    preserving the deployment blocker, durable repository

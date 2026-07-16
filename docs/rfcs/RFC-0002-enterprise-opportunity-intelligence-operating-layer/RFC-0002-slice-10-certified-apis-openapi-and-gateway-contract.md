@@ -252,6 +252,28 @@ is verified during closure. A refreshed deterministic inventory leaves 26
 multi-shape operations under issue `#542`, so Slice 10 remains partially
 implemented and supported-feature posture remains unchanged.
 
+Issue `#551` continues issue `#542` through the low-income /
+liquidity-shortfall signal family. Capability-owned factories execute the
+existing caller-supplied and Core-backed application paths and serialize the
+real API response DTO. Both operations now publish named `candidate_created`,
+`blocked`, `suppressed`, and `not_eligible` HTTP 200 modes. Candidate examples
+retain both governed Core source products while omitting source routes and
+content hashes. Focused HTTP tests add the previously missing caller
+suppression and source-backed suppression/not-eligible proof, including source
+runtime cleanup and no candidate persistence. Exact factory, endpoint-ledger,
+generated OpenAPI, and cited-test parity is blocking. A shared example mapper
+removes duplicate DTO serialization and source-reference fixture construction
+from high-cash and low-income modules without moving policy or source logic out
+of their capability owners.
+
+This is internal design modularity inside the existing deployable. Core
+retains cashflow and cash-movement authority. No persistence route, live Core
+certification, Gateway/Workbench realization, data-product promotion, or
+supported-feature promotion is introduced. README and supported-feature truth
+remain unchanged by explicit scope decision. A refreshed deterministic scan
+leaves 24 multi-shape operations under issue `#542`; Slice 10 remains partially
+implemented.
+
 PR `#543` merged issue `#539` to `main` at
 `f6e2365eaec5f4f0184d5985e5b5fcc641b4883b`. Main Releasability run
 `29528824505` passed, including lint, typecheck, security, architecture,
