@@ -88,13 +88,9 @@ def build_performance_benchmark_readiness_runtime_execution(
             "qualificationBlockers": blockers,
         },
         "aggregateBlockersSatisfied": (
-            list(PERFORMANCE_BENCHMARK_READINESS_RUNTIME_BLOCKERS_SATISFIED)
-            if not blockers
-            else []
+            list(PERFORMANCE_BENCHMARK_READINESS_RUNTIME_BLOCKERS_SATISFIED) if not blockers else []
         ),
-        "remainingCertificationBlockers": list(
-            PERFORMANCE_BENCHMARK_READINESS_REMAINING_BLOCKERS
-        ),
+        "remainingCertificationBlockers": list(PERFORMANCE_BENCHMARK_READINESS_REMAINING_BLOCKERS),
         "evidenceRefs": list(PERFORMANCE_BENCHMARK_READINESS_RUNTIME_EVIDENCE_REFS),
         "nonProofClaims": {
             "officialPerformanceOwned": "lotus-performance",

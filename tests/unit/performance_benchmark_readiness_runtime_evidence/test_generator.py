@@ -28,9 +28,7 @@ def test_generator_invokes_one_use_case_fetch_and_closes_source(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     output = tmp_path / "missing-benchmark-performance-readiness-proof.json"
-    source = AuthoritativePerformanceBenchmarkReadinessSource(
-        evidence=_generator_evidence()
-    )
+    source = AuthoritativePerformanceBenchmarkReadinessSource(evidence=_generator_evidence())
     monkeypatch.setattr(
         generate_runtime_execution,
         "LotusPerformanceUnderperformanceSourceAdapter",

@@ -48,8 +48,7 @@ PROOF_CASES = (
     ProofCase(
         name="performance_benchmark_readiness",
         script_name=(
-            "performance_benchmark_readiness_runtime_evidence/"
-            "generate_runtime_execution.py"
+            "performance_benchmark_readiness_runtime_evidence/generate_runtime_execution.py"
         ),
         output_name="missing-benchmark-performance-readiness-proof.json",
         validator=performance_benchmark_readiness_runtime_execution_is_valid,
