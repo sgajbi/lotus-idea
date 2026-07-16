@@ -10,7 +10,9 @@ deterministic signal evaluation; it does not promote a product feature.
 
 Current automation covers canonical Risk concentration, Performance
 underperformance runtime persistence, and Performance benchmark-readiness
-proofs plus the bounded layered Idea API proof. It is implementation evidence
+runtime evidence plus the bounded layered Idea API proof. The
+benchmark-readiness child uses a source-preserving one-fetch use case and
+closed v2 request/source/evaluation receipts. It is implementation evidence
 only. Data-mesh
 activation, full Gateway/Workbench behavior, downstream realization,
 client-ready publication, official calculation authority, and
@@ -41,7 +43,11 @@ supported-feature promotion remain separately blocked.
 
 ```powershell
 make canonical-opportunity-source-proofs `
+  CANONICAL_OPPORTUNITY_TENANT_ID=default `
+  CANONICAL_OPPORTUNITY_BOOK_ID=BOOK_SG_BALANCED_DPM `
   CANONICAL_OPPORTUNITY_PORTFOLIO_ID=PB_SG_GLOBAL_BAL_001 `
+  CANONICAL_OPPORTUNITY_CLIENT_ID=CLIENT_SCOPE_PB_SG_GLOBAL_BAL_001 `
+  CANONICAL_OPPORTUNITY_EVALUATION_ID=EVAL_PB_SG_GLOBAL_BAL_001_20260410 `
   CANONICAL_OPPORTUNITY_AS_OF_DATE=2026-04-10 `
   CANONICAL_OPPORTUNITY_RISK_BASE_URL=http://risk.dev.lotus `
   CANONICAL_OPPORTUNITY_PERFORMANCE_BASE_URL=http://performance.dev.lotus `
@@ -100,10 +106,11 @@ supported-feature promotion.
 ## Current Runtime Result
 
 The 2026-07-10 clean-tree aggregate is historical v1 evidence and no longer
-qualifies Performance underperformance after the closed v2 contract replaced
-it. A current canonical run must use
-`scripts/performance_underperformance_runtime_evidence/generate_runtime_execution.py`,
-an Idea-owned durable repository, and accepted or replayed persistence. Until
-that run and mainline validation exist, do not describe the aggregate as
-currently certification-ready. Never substitute caller-supplied values or a
+qualifies either Performance underperformance or Performance
+benchmark-readiness after their closed v2 contracts replaced the flat
+artifacts. A current canonical run must use the capability-owned generators,
+an Idea-owned durable repository for underperformance persistence, and explicit
+pseudonymous scope for benchmark readiness. Until a fresh run and mainline
+validation exist, do not describe the aggregate as currently
+certification-ready. Never substitute caller-supplied summary booleans or a
 relaxed validator.

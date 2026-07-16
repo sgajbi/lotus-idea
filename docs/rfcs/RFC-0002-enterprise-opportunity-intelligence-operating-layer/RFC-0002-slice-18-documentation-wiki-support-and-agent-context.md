@@ -356,7 +356,14 @@ source assignment-state, and deterministic candidate or ready-assignment
 no-opportunity receipts are pseudonymous and digest-bound. The stable operator
 environment variable and Make target accept v2 only; retired flat paths are
 prohibited. Performance benchmark readiness remains a separate authority and
-issue `#500` remains open.
+is now documented through its own source-preserving use case and closed v2
+runtime-evidence contract under issue `#500`. The stable environment variable,
+readiness CLI argument, output filename, and Make target remain, but retired
+flat v1 artifacts are rejected. The contract binds exact Performance
+product/route/time, provenance hashes, benchmark context, coverage,
+freshness/quality, producer correlation/trace, and deterministic
+review-required or no-opportunity posture. A fresh v2 runtime capture remains
+required; the historical July 5 v1 artifact is not qualifying evidence.
 
 This documentation slice does not promote any supported feature. It records
 bounded Workbench read-path source contract, Gateway/Workbench contract proof, and

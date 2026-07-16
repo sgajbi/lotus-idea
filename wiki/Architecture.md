@@ -83,8 +83,10 @@ domain outcomes remain inside each capability package.
 
 `LOTUS_IDEA_MISSING_BENCHMARK_LIVE_PROOF` and
 `make missing-benchmark-live-proof-contract-gate` retain their operator names
-but accept v2 only. Performance readiness, mesh, Gateway/Workbench, client
-publication, deployment, production, and feature promotion remain blocked.
+but accept v2 only. Performance benchmark readiness now has its own independent
+closed v2 one-fetch contract; fresh qualifying runtime capture, mesh,
+Gateway/Workbench, client publication, deployment, production, and feature
+promotion remain blocked.
 
 ## Data Mesh Baseline
 
@@ -262,9 +264,11 @@ produce new candidate identity; no effective-date window is inferred.
 `scripts/run_canonical_opportunity_source_proofs.py` is an operator automation
 boundary over the existing source-proof generators. It invokes Risk
 concentration, Performance underperformance, and Performance
-benchmark-readiness proof use cases, validates each returned artifact, and
-writes one aggregate result. It records source revision, dirty-tree status,
-correlation, and trace IDs while suppressing child process output.
+benchmark-readiness use cases, validates each returned artifact, and writes one
+aggregate result. The benchmark-readiness case requires pseudonymous
+tenant/book/portfolio/client/evaluation scope and accepts only closed v2
+request/source/evaluation receipts. It records source revision, dirty-tree
+status, correlation, and trace IDs while suppressing child process output.
 
 The runner is not a new runtime service and does not move source authority into
 `lotus-idea`. A blocked or stale upstream result makes the aggregate

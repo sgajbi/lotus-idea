@@ -57,9 +57,11 @@ capabilities exist.
    archetype blockers: Risk concentration proof clears the live Risk blocker,
    high-volatility proof clears the live Risk volatility blocker, drawdown
    proof clears the Risk drawdown blocker, Performance underperformance proof
-   clears the live Performance blocker, missing-benchmark Performance readiness
-   proof clears only the Performance benchmark-readiness blocker, Core benchmark
-   assignment proof clears the benchmark-assignment source-ref blocker,
+   clears the live Performance blocker, closed v2 missing-benchmark Performance
+   readiness runtime evidence clears only the Performance benchmark-readiness
+   blocker after request, source, benchmark-context, coverage, and evaluation
+   receipts reconcile, Core benchmark assignment proof clears the
+   benchmark-assignment source-ref blocker,
    closed v2 missing-benchmark Core runtime evidence clears only the
    missing-benchmark live Core source blocker after request, assignment-state,
    and evaluation receipts reconcile, low-income Core

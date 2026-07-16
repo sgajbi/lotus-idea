@@ -1,6 +1,6 @@
 # RFC-0002 Slice 17: Implementation Proof And Live Validation
 
-Status: Partially implemented - aggregate proof-readiness diagnostic, bounded source-ingestion runtime-execution receipt contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry test-execution artifact, Workbench read-path source-contract proof artifact, Gateway/Workbench contract proof artifact, Gateway/Workbench discovery contract proof artifact, digest-bound Advise and Manage route source contracts, closed v2 Manage mandate runtime evidence, receipt-bound Core portfolio-state, bond-maturity, and low-income cashflow runtime evidence, Report intake route and materialization source-contract artifacts, bounded outbox broker source-contract proof artifact, bounded downstream consumer source-contract proof artifact, bounded outbox platform-mesh event source-contract proof, digest-bound mesh policy source-contract artifact, platform catalog source contract artifact, AI lineage store proof artifact, AI workflow-pack registration proof artifact, AI workflow-pack runtime execution proof artifact, high-volatility and drawdown live Risk proof artifact contracts, and opportunity archetype scenario readiness with source/policy foundations available. Slice evidence now includes live canonical Risk concentration, Performance underperformance, and Performance benchmark-readiness source proofs for `PB_SG_GLOBAL_BAL_001`; Core portfolio-state, bond-maturity, and low-income cashflow live qualification remain fail-closed pending lotus-core #790, #792, and #796, and Manage mandate-health qualification remains fail-closed pending lotus-manage #620. Observed Advise/Manage route serving and acceptance, policy certification, Report intake and materialization execution, rendered output, archive creation, external broker publication, platform-mesh event publication, downstream consumer execution, full live opportunity-journey proof, data-mesh certification, Workbench product proof, client-publication approval, and supported-feature promotion remain pending.
+Status: Partially implemented - aggregate proof-readiness diagnostic, bounded source-ingestion runtime-execution receipt contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry test-execution artifact, Workbench read-path source-contract proof artifact, Gateway/Workbench contract proof artifact, Gateway/Workbench discovery contract proof artifact, digest-bound Advise and Manage route source contracts, closed v2 Manage mandate runtime evidence, receipt-bound Core portfolio-state, bond-maturity, low-income cashflow, missing-benchmark Core, and Performance benchmark-readiness runtime evidence, Report intake route and materialization source-contract artifacts, bounded outbox broker source-contract proof artifact, bounded downstream consumer source-contract proof artifact, bounded outbox platform-mesh event source-contract proof, digest-bound mesh policy source-contract artifact, platform catalog source contract artifact, AI lineage store proof artifact, AI workflow-pack registration proof artifact, AI workflow-pack runtime execution proof artifact, high-volatility and drawdown live Risk proof artifact contracts, and opportunity archetype scenario readiness with source/policy foundations available. Historical canonical Risk concentration and Performance artifacts exist for `PB_SG_GLOBAL_BAL_001`, but retired flat-v1 Performance evidence no longer qualifies under current v2 contracts and fresh runtime capture is required. Core portfolio-state, bond-maturity, and low-income cashflow live qualification remain fail-closed pending lotus-core #790, #792, and #796, and Manage mandate-health qualification remains fail-closed pending lotus-manage #620. Observed Advise/Manage route serving and acceptance, policy certification, Report intake and materialization execution, rendered output, archive creation, external broker publication, platform-mesh event publication, downstream consumer execution, full live opportunity-journey proof, data-mesh certification, Workbench product proof, client-publication approval, and supported-feature promotion remain pending.
 
 ## Outcome
 
@@ -366,17 +366,25 @@ Prove the complete supported opportunity journey end to end.
     diagnostics, and semantic tampering fail closed. Retired flat v1 paths are
     prohibited. The proof does not assign benchmarks, calculate benchmark
     returns, or certify benchmark methodology.
-34. `src/app/application/missing_benchmark_performance_readiness_proof.py`,
-    `scripts/generate_missing_benchmark_performance_readiness_proof.py`, and
+34. `src/app/application/performance_benchmark_readiness.py`,
+    `src/app/application/performance_benchmark_readiness_runtime_evidence/`,
+    `scripts/performance_benchmark_readiness_runtime_evidence/`, and
     `make missing-benchmark-performance-readiness-proof-contract-gate` now
-    define and enforce a source-safe Lotus Performance benchmark-readiness proof
-    artifact for missing-benchmark review. Aggregate readiness can consume a
-    valid artifact to clear only
+    define and enforce closed v2 Lotus Performance benchmark-readiness
+    `runtime_execution` evidence for missing-benchmark review. A named
+    source-preserving use case performs one fetch and binds pseudonymous request
+    scope to the exact `ReturnsSeriesBundle:v1` product/route/time, calculation
+    and input hashes, benchmark context, coverage counts, freshness, quality,
+    producer correlation/trace, and deterministic review-required or
+    no-opportunity evaluation receipts. Aggregate readiness can consume a valid
+    current artifact to clear only
     `opportunity_archetype_performance_benchmark_readiness_source_ref_missing`,
     while preserving Core missing-benchmark live proof, data-mesh, Workbench,
-    client-publication, and supported-feature blockers. The proof does not
-    assign benchmarks, calculate performance or benchmark returns, or certify
-    benchmark methodology.
+    client-publication, deployment, production, and supported-feature blockers.
+    Unknown fields, raw identifiers, stale/future evidence, scope/time/hash/count
+    drift, contradictory context, diagnostic drift, and semantic tampering fail
+    closed. The proof does not assign benchmarks, calculate performance or
+    benchmark returns, or certify benchmark methodology.
 35. Live canonical proof run on 2026-07-05 against `PB_SG_GLOBAL_BAL_001` and
     as-of date `2026-04-10` generated source-safe artifacts under ignored
     `output/opportunity/` for Risk concentration, Performance
@@ -387,6 +395,9 @@ Prove the complete supported opportunity journey end to end.
     `opportunity_archetype_performance_benchmark_readiness_source_ref_missing`,
     and were consumed by `make implementation-proof-readiness-check` with
     `IMPLEMENTATION_PROOF_EVALUATED_AT_UTC=2026-07-05T06:48:16Z`.
+    The historical Performance benchmark-readiness artifact used the retired
+    flat v1 contract and no longer qualifies after issue `#500`; a fresh v2
+    receipt-bound runtime capture is required.
     Remaining blockers still include Core live source proof, benchmark
     assignment, Manage/performance/risk health source refs, data-mesh
     certification, Workbench product proof, client publication, and

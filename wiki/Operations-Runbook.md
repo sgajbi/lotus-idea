@@ -261,7 +261,7 @@ optional receipt-bound Core bond-maturity runtime evidence through
 `LOTUS_IDEA_BOND_MATURITY_LIVE_PROOF`,
 optional closed v2 Core missing-benchmark runtime evidence through
 `LOTUS_IDEA_MISSING_BENCHMARK_LIVE_PROOF`,
-optional missing-benchmark Performance readiness proof through
+optional closed v2 Performance benchmark-readiness runtime evidence through
 `LOTUS_IDEA_MISSING_BENCHMARK_PERFORMANCE_READINESS_PROOF`,
 optional receipt-bound low-income Core cashflow runtime evidence through
 `LOTUS_IDEA_LOW_INCOME_CORE_CASHFLOW_LIVE_PROOF`,

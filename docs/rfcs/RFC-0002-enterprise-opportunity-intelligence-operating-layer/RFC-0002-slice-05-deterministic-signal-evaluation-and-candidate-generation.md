@@ -392,17 +392,22 @@ Additional implemented missing-benchmark foundation:
    evaluation receipts must reconcile. Both a review candidate for an
    assignment gap and a truthful ready-assignment no-opportunity result can
    qualify. Only the missing-benchmark live Core source blocker is cleared.
-9. `src/app/application/missing_benchmark_performance_readiness_proof.py`,
-   `scripts/generate_missing_benchmark_performance_readiness_proof.py`, and
+9. `src/app/application/performance_benchmark_readiness.py`,
+   `src/app/application/performance_benchmark_readiness_runtime_evidence/`,
+   `scripts/performance_benchmark_readiness_runtime_evidence/`, and
    `make missing-benchmark-performance-readiness-proof-contract-gate` define a
-   source-safe Lotus Performance benchmark-readiness proof artifact that can
-   clear only the missing-benchmark Performance source-ref blocker when
-   `ReturnsSeriesBundle:v1` evidence proves benchmark readiness was evaluated.
+   closed v2 `runtime_execution` contract. One named application use case
+   performs one Performance fetch and preserves the exact
+   `ReturnsSeriesBundle:v1` evidence or a stable source error. Pseudonymous
+   request, exact source, benchmark-context, coverage, and deterministic
+   evaluation receipts must reconcile. Both missing-context review-required
+   and truthful ready-context no-opportunity outcomes can qualify. Only the
+   missing-benchmark Performance readiness blocker can be cleared.
 10. The opportunity archetype contract records `missing-benchmark-review` as a
-   non-promoted bounded foundation. Remaining blockers include Performance
-   benchmark-readiness source ref when no valid proof is supplied, data-mesh
-   certification, Workbench proof, client publication, and supported-feature
-   promotion.
+   non-promoted bounded foundation. A fresh qualifying v2 Performance runtime
+   artifact is still required before aggregate readiness can clear its named
+   blocker. Data-mesh certification, Workbench proof, client publication,
+   deployment, production, and supported-feature promotion remain blocked.
 
 Additional implemented allocation-drift / mandate-review foundation:
 
@@ -921,9 +926,9 @@ Deferred mainline and later-slice evidence:
 1. merged release evidence for the current live Risk concentration proof,
 2. merged release evidence for the current live Performance returns-series
    proof,
-3. merged release evidence for the current live Performance benchmark-readiness
-   proof; the clean-tree canonical run now validates current returns-series
-   evidence,
+3. fresh canonical runtime evidence for the closed v2 Performance
+   benchmark-readiness contract; historical flat-v1 artifacts no longer
+   qualify,
 4. portfolio-scoped Manage, mandate performance-health, and mandate risk-health
    live proof beyond the closed v2 Manage mandate runtime-evidence contract and Core
    portfolio-state source-ref proof,
@@ -960,7 +965,11 @@ certification result.
 
 ```powershell
 make canonical-opportunity-source-proofs `
+  CANONICAL_OPPORTUNITY_TENANT_ID=default `
+  CANONICAL_OPPORTUNITY_BOOK_ID=BOOK_SG_BALANCED_DPM `
   CANONICAL_OPPORTUNITY_PORTFOLIO_ID=PB_SG_GLOBAL_BAL_001 `
+  CANONICAL_OPPORTUNITY_CLIENT_ID=CLIENT_SCOPE_PB_SG_GLOBAL_BAL_001 `
+  CANONICAL_OPPORTUNITY_EVALUATION_ID=EVAL_PB_SG_GLOBAL_BAL_001_20260410 `
   CANONICAL_OPPORTUNITY_AS_OF_DATE=2026-04-10 `
   CANONICAL_OPPORTUNITY_RISK_BASE_URL=http://risk.dev.lotus `
   CANONICAL_OPPORTUNITY_PERFORMANCE_BASE_URL=http://performance.dev.lotus `
@@ -970,14 +979,14 @@ make canonical-opportunity-source-proofs `
   CANONICAL_OPPORTUNITY_TRACE_ID=trace-canonical-proof
 ```
 
-The clean-tree 2026-07-10 canonical run proved current Risk concentration,
-Performance underperformance, and Performance benchmark-readiness evidence;
-the aggregate returned `certificationReady=true`. The aggregate records
-`sourceRevision`, `sourceTreeDirty=false`, correlation, trace, per-proof
-observations, and explicit non-proof boundaries. Raw child process output is
-intentionally excluded. The implementation is merged on `main`; the source-safe
-aggregate remains bounded canonical source evidence rather than a broader
-Gateway/Workbench or supported-feature certification.
+The clean-tree 2026-07-10 aggregate is historical. Its flat-v1 Performance
+artifacts no longer qualify after the closed v2 underperformance and
+benchmark-readiness contracts. A fresh canonical run must bind the current
+source revision, clean-tree posture, exact child receipts, and pseudonymous
+benchmark-readiness scope before `certificationReady=true` is meaningful. Raw
+child process output remains excluded. Even a valid aggregate is bounded source
+evidence rather than broader Gateway/Workbench or supported-feature
+certification.
 
 This is implementation-proof automation, not Gateway/Workbench certification,
 data-product activation, client publication approval, official performance or

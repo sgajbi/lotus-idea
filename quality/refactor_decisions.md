@@ -6,6 +6,48 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-07-16: Performance Benchmark-Readiness Evidence Boundary
+
+Performance benchmark-readiness proof generation now uses one named
+source-preserving application use case and capability-owned closed v2 runtime
+evidence. The source port preserves the exact `ReturnsSeriesBundle:v1`
+response identity needed for audit and replay: product/route/time, response
+portfolio, calculation and input hashes, benchmark context, coverage,
+freshness/quality, and producer correlation/trace.
+
+The runtime contract pseudonymizes consumer scope and cross-binds request,
+source, benchmark-context, and deterministic review-required or
+no-opportunity receipts. It rejects blocked source execution, malformed or
+contradictory context, unknown fields, raw identifiers, stale/future evidence,
+scope/time/hash/count drift, diagnostic drift, and recomputed-digest semantic
+tampering. Flat v1 implementation, generator, gate, and test paths are removed
+and prohibited while the stable environment variable, CLI argument, output
+filename, and Make target remain.
+
+This is design modularity inside the existing `lotus-idea` deployable. A
+separate runtime service would add network, deployment, support, and failure
+surface without workload, scaling, ownership, or isolation evidence. No API,
+OpenAPI, persistence, database, migration, or supported-feature change is
+introduced. Lotus Performance retains official performance and benchmark
+context authority; Lotus Core retains benchmark assignment authority.
+
+Evidence:
+
+1. Code: `src/app/application/performance_benchmark_readiness.py`,
+   `src/app/application/performance_benchmark_readiness_runtime_evidence/`,
+   `src/app/domain/performance_benchmark_readiness.py`, and the Performance
+   port/adapter.
+2. Tests: `tests/unit/test_performance_benchmark_readiness.py`,
+   `tests/unit/performance_benchmark_readiness_runtime_evidence/`, aggregate
+   readiness, archetype, adapter, and canonical-runner suites.
+3. Gates: `make missing-benchmark-performance-readiness-proof-contract-gate`,
+   `make opportunity-archetype-contract-gate`, and `make ci-contract-gate`.
+4. Guidance decision: repository context and operator/wiki truth changed and
+   are updated. Existing platform skills already require source-preserving
+   one-fetch receipts, semantic tamper checks, capability-owned organization,
+   same-pattern scans, and design-versus-runtime modularity, so no skill or
+   central-context change is required.
+
 ## 2026-07-04: Review Workflow API Operation Boundary
 
 The review-action and feedback API routes now share

@@ -25,7 +25,7 @@ promotion.
 | Demo area | Current truth | Client-facing handling |
 | --- | --- | --- |
 | Opportunity intelligence | Internal candidate, review, feedback, conversion, and proof foundations exist. | Explain the governed operating model and current boundaries. |
-| Opportunity archetypes | Governed, non-promoted foundations exist across source-owned portfolio, risk, performance, mandate, suitability, risk-profile, income, maturity, and benchmark evidence. Closed v2 Core missing-benchmark evidence can clear only its named live-source blocker after one fetch and reconciled request, assignment-state, and candidate/no-opportunity receipts. Performance readiness, data mesh, Gateway/Workbench, client publication, deployment, production, and feature promotion remain blocked. | Use as taxonomy, source-authority framing, and internal foundation proof only; do not present it as full Workbench journey proof, client-demo proof, or a supported feature. |
+| Opportunity archetypes | Governed, non-promoted foundations exist across source-owned portfolio, risk, performance, mandate, suitability, risk-profile, income, maturity, and benchmark evidence. Independent closed v2 Core assignment and Performance benchmark-readiness contracts each perform one source fetch and reconcile pseudonymous request, exact source, and deterministic review-required or no-opportunity receipts. Fresh qualifying evidence, data mesh, Gateway/Workbench, client publication, deployment, production, and feature promotion remain blocked. | Use as taxonomy, source-authority framing, and internal foundation proof only; do not present it as full Workbench journey proof, client-demo proof, or a supported feature. |
 | Supported features | No external supported feature is promoted. | Do not claim production availability or client-ready publication. |
 | Workbench | Bounded read-only proof exists, but full product-surface certification is blocked. | Show only after validation and with explicit bounded-preview language. |
 | Downstream realization | Digest-bound Advise, Manage, and Report route source contracts can be consumed as non-clearing provenance; bounded Report/Render/Archive materialization source contracts can be consumed when sibling `lotus-report` evidence is present. | Describe domain boundaries; do not claim route serving or acceptance, suitability, rebalance/execution, client publication, or supported-feature promotion. |
@@ -96,7 +96,11 @@ posture, including the bounded
 Core evidence, and can consume bounded Performance benchmark-readiness proof,
 but it does not assign benchmarks, calculate performance or benchmark returns,
 certify methodology, prove Workbench behavior, authorize client publication, or
-promote a supported feature.
+promote a supported feature. Performance evidence must use the closed v2
+runtime contract that binds exact source provenance, benchmark context,
+coverage, freshness/quality, and deterministic review-required or
+no-opportunity posture. The historical flat v1 artifact is not qualifying
+evidence.
 
 Missing risk-profile review is an internal bounded foundation only. It can
 create advisor-review evidence-gap candidates from explicit Advise-owned
