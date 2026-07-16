@@ -29,6 +29,10 @@ from endpoint_low_income_signal_contracts import (  # noqa: E402
     validate_low_income_evaluation_success_contract,
     validate_source_backed_low_income_evaluation_success_contract,
 )
+from endpoint_bond_maturity_signal_contracts import (  # noqa: E402
+    validate_bond_maturity_evaluation_success_contract,
+    validate_source_backed_bond_maturity_evaluation_success_contract,
+)
 from endpoint_review_workflow_contracts import (  # noqa: E402
     validate_feedback_success_contract,
     validate_review_action_success_contract,
@@ -214,6 +218,10 @@ def _validate_implemented_endpoint_posture(
     errors.extend(validate_low_income_evaluation_success_contract(endpoint, openapi_spec))
     errors.extend(
         validate_source_backed_low_income_evaluation_success_contract(endpoint, openapi_spec)
+    )
+    errors.extend(validate_bond_maturity_evaluation_success_contract(endpoint, openapi_spec))
+    errors.extend(
+        validate_source_backed_bond_maturity_evaluation_success_contract(endpoint, openapi_spec)
     )
     errors.extend(validate_conversion_intent_success_contract(endpoint, openapi_spec))
     errors.extend(validate_conversion_outcome_success_contract(endpoint, openapi_spec))
