@@ -31,6 +31,7 @@ PORTFOLIO_ID = "PB_SG_GLOBAL_BAL_001"
 
 @dataclass
 class RecordingCoreLowIncomeSource(CoreLowIncomeSourcePort):
+    evidence: CoreLowIncomeEvidence | None = None
     seen_request: CoreLowIncomeEvidenceRequest | None = None
     error: Exception | None = None
     close_count: int = 0
@@ -43,7 +44,7 @@ class RecordingCoreLowIncomeSource(CoreLowIncomeSourcePort):
         self.seen_request = request
         if self.error is not None:
             raise self.error
-        return _core_low_income_evidence()
+        return self.evidence or _core_low_income_evidence()
 
     def close(self) -> None:
         self.close_count += 1
@@ -194,6 +195,51 @@ def test_low_income_source_api_returns_blocked_posture_for_core_unavailable(
     assert PORTFOLIO_ID not in response.text
 
 
+@pytest.mark.parametrize(
+    ("projected_cashflow", "duplicate_candidate_id", "expected_outcome"),
+    (
+        (Decimal("-12500"), "idea_low_income_existing", "suppressed"),
+        (Decimal("-500"), None, "not_eligible"),
+    ),
+)
+def test_low_income_source_api_exposes_suppressed_and_not_eligible_success_modes(
+    monkeypatch: Any,
+    projected_cashflow: Decimal,
+    duplicate_candidate_id: str | None,
+    expected_outcome: str,
+) -> None:
+    reset_idea_repository_for_tests(InMemoryIdeaRepository())
+    source = RecordingCoreLowIncomeSource(
+        evidence=_core_low_income_evidence(projected_cashflow=projected_cashflow)
+    )
+    runtime = CoreLowIncomeSourceRuntime(
+        core_source=source,
+        core_base_url_configured=True,
+        core_query_base_url_configured=True,
+        core_query_control_plane_base_url_configured=True,
+    )
+    monkeypatch.setattr(
+        low_income_signals_api,
+        "_build_core_low_income_source_runtime_from_environment",
+        lambda: runtime,
+    )
+    payload = low_income_source_payload()
+    if duplicate_candidate_id is not None:
+        payload["duplicateOfCandidateId"] = duplicate_candidate_id
+
+    response = managed_test_client(app).post(
+        "/api/v1/idea-signals/low-income/evaluate-from-source",
+        json=payload,
+        headers=source_evaluation_headers(),
+    )
+
+    assert response.status_code == 200
+    assert response.json()["outcome"] == expected_outcome
+    assert response.json()["candidate"] is None
+    assert source.close_count == 1
+    assert len(get_idea_repository().snapshot().candidate_records) == 0
+
+
 def test_low_income_source_api_emits_bounded_operation_events(
     monkeypatch: Any,
 ) -> None:
@@ -315,6 +361,28 @@ def test_low_income_signal_api_reports_above_threshold_not_eligible() -> None:
         "outcome": "not_eligible",
         "family": "low_income",
         "reasonCodes": ["below_materiality"],
+        "unsupportedReasons": [],
+        "candidate": None,
+        "sourceAuthority": "lotus-core",
+        "supportedFeaturePromoted": False,
+    }
+
+
+def test_low_income_signal_api_reports_duplicate_suppressed() -> None:
+    payload = low_income_payload()
+    payload["duplicateOfCandidateId"] = "idea_low_income_existing"
+
+    response = managed_test_client(app).post(
+        "/api/v1/idea-signals/low-income/evaluate",
+        json=payload,
+        headers=evaluate_headers(),
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "outcome": "suppressed",
+        "family": "low_income",
+        "reasonCodes": ["duplicate_suppressed"],
         "unsupportedReasons": [],
         "candidate": None,
         "sourceAuthority": "lotus-core",
@@ -497,9 +565,12 @@ def _source_ref(product_id: str) -> SourceRef:
     )
 
 
-def _core_low_income_evidence() -> CoreLowIncomeEvidence:
+def _core_low_income_evidence(
+    *,
+    projected_cashflow: Decimal = Decimal("-12500"),
+) -> CoreLowIncomeEvidence:
     return CoreLowIncomeEvidence(
-        source_reported_min_projected_cumulative_cashflow=Decimal("-12500"),
+        source_reported_min_projected_cumulative_cashflow=projected_cashflow,
         cash_movement_count=4,
         cash_movement_ref=_source_ref("lotus-core:PortfolioCashMovementSummary:v1"),
         cashflow_projection_ref=_source_ref("lotus-core:PortfolioCashflowProjection:v1"),
