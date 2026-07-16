@@ -6,6 +6,27 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-07-16: Typed Advise Source-Product Evidence Boundary
+
+The mandate/restriction and missing-risk-profile typed source-product proofs
+now share a capability-owned application and automation package. Stable
+operator environment variables and Make targets remain, but retired flat v1
+modules, scripts, and tests are prohibited.
+
+The shared module owns only source-authority loading, digest binding, closed
+field validation, and authority-denial mechanics. Independent profiles retain
+diagnostic vocabulary, blocker effects, evidence refs, and non-proof
+boundaries. The aggregate proof artifact registry maps every CLI input to its
+application arguments, evidence class, blocker effect, tracking issue, and
+classification status; documentation validation rejects drift.
+
+This is design modularity inside the existing Lotus Idea deployable. It does
+not add an API, database, migration, worker, service, deployment boundary, or
+supported feature. Advise retains risk-profile, suitability, policy, proposal,
+mandate, and restriction authority. Issue `#508` tracks scheduled-worker
+deployment evidence separately because static topology declarations are not a
+deployment receipt.
+
 ## 2026-07-16: Performance Benchmark-Readiness Evidence Boundary
 
 Performance benchmark-readiness proof generation now uses one named

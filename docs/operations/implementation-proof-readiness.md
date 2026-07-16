@@ -177,6 +177,14 @@ execution, runtime execution, deployment, or production certification. These
 classes are exact, not cumulative. A proof can clear only a blocker that
 requires the same class.
 
+`app.application.implementation_proof_artifact_registry` records every optional
+artifact accepted by the aggregate proof CLI, including its readiness payload
+and reference arguments, evidence class, blocker effect, issue owner, and
+classification status. `make documentation-contract-gate` compares that
+registry with the CLI parser, application snapshot signature, and evidence
+classification inventory. Adding a proof input without all four surfaces now
+fails deterministically.
+
 The AI lineage-store v2 proof requires mainline `ci_execution`. It binds the
 Main Releasability PostgreSQL workflow/job, run and attempt, exact commit and
 main ref, successful conclusion, completion timestamp, GitHub artifact digest,
@@ -465,7 +473,8 @@ client-publication, data-mesh, Workbench, deployment, production, and
 supported-feature blockers.
 
 Lotus Advise mandate/restriction source-product proof is captured by
-`scripts/generate_mandate_restriction_source_product_proof.py`. A valid
+`scripts/advise_source_product_evidence/generate_source_contract.py
+--capability mandate-restriction --advise-root <lotus-advise-root>`. A valid
 artifact referenced through
 `LOTUS_IDEA_MANDATE_RESTRICTION_SOURCE_PRODUCT_PROOF` clears only
 `opportunity_archetype_typed_restriction_source_product_missing` for the
@@ -474,9 +483,12 @@ artifact referenced through
 `lotus-advise:AdvisoryPolicyEvaluationRecord:v1` source-product contract and
 Advise-owned restriction diagnostic vocabulary for mandate, product
 restriction, country restriction, and suitability-policy actionability posture.
+It binds the current Advise product declaration and trust-telemetry source by
+repository, ref, and SHA-256, rejects unknown claims, and preserves the
+producer's blocked telemetry posture.
 It deliberately retains live Advise source proof, restriction clearance,
 mandate-state authority, suitability, policy, proposal, client-publication,
-data-mesh, Workbench, and supported-feature blockers.
+data-mesh, Workbench, deployment, production, and supported-feature blockers.
 
 Lotus Advise missing-suitability runtime evidence is captured by
 `scripts/advise_missing_suitability_runtime_evidence/generate_runtime_execution.py`.
@@ -493,7 +505,8 @@ retains suitability, policy, proposal, client-publication, data-mesh,
 Workbench, and supported-feature blockers.
 
 Lotus Advise missing risk-profile source-product proof is captured by
-`scripts/generate_missing_risk_profile_source_product_proof.py`. A valid
+`scripts/advise_source_product_evidence/generate_source_contract.py
+--capability missing-risk-profile --advise-root <lotus-advise-root>`. A valid
 artifact referenced through
 `LOTUS_IDEA_MISSING_RISK_PROFILE_SOURCE_PRODUCT_PROOF` clears only
 `opportunity_archetype_typed_advise_risk_profile_source_product_missing` for
@@ -503,7 +516,10 @@ the `opportunity-archetype-scenarios` capability. The artifact proves that
 Advise-owned risk-profile diagnostic vocabulary for missing, stale, expired,
 and review-due risk-profile posture. It deliberately retains live Advise source
 proof, risk-profile approval, suitability, policy, proposal,
-client-publication, data-mesh, Workbench, and supported-feature blockers.
+client-publication, data-mesh, Workbench, deployment, production, and
+supported-feature blockers. Both typed profiles use the same closed
+source-authority contract while retaining independent diagnostics and blocker
+effects.
 
 Lotus Advise missing-risk-profile runtime evidence is captured by
 `scripts/advise_missing_risk_profile_runtime_evidence/generate_runtime_execution.py`.
@@ -989,11 +1005,13 @@ Implementation-backed evidence:
 1. Missing-suitability runtime-evidence contract gate:
     `make missing-suitability-live-proof-contract-gate`,
 1. Missing risk-profile source-product proof generator:
-    `scripts/generate_missing_risk_profile_source_product_proof.py`,
+    `scripts/advise_source_product_evidence/generate_source_contract.py
+    --capability missing-risk-profile`,
 1. Missing risk-profile source-product proof contract gate:
     `make missing-risk-profile-source-product-proof-contract-gate`,
 1. Mandate/restriction source-product proof generator:
-    `scripts/generate_mandate_restriction_source_product_proof.py`,
+    `scripts/advise_source_product_evidence/generate_source_contract.py
+    --capability mandate-restriction`,
 1. Mandate/restriction source-product proof contract gate:
     `make mandate-restriction-source-product-proof-contract-gate`,
 1. Missing risk-profile runtime-evidence generator:

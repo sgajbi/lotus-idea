@@ -1,9 +1,8 @@
 # lotus-idea
 
-`lotus-idea` is the Lotus opportunity intelligence and idea lifecycle domain
-service for private-banking workflows. It turns source-owned evidence into
-reviewable opportunity candidates, evidence packs, scores, review queues,
-feedback records, conversion intent, and readiness posture.
+`lotus-idea` is the Lotus opportunity intelligence and idea lifecycle domain service for
+private-banking workflows. It turns source-owned evidence into reviewable candidates, evidence
+packs, scores, review queues, feedback records, conversion intent, and readiness posture.
 
 | Start with | Use it for |
 | --- | --- |
@@ -26,7 +25,7 @@ contracts, OpenAPI evidence, tests, documentation, wiki source, CI evidence on
 
 | Area | Current truth | Promotion blocker |
 | --- | --- | --- |
-| Opportunity policies | Bounded foundations exist for high cash, concentration risk, underperformance, allocation drift, bond maturity, volatility, drawdown, suitability gaps, risk-profile gaps, mandate/restriction review, income gaps, and missing benchmark review. Missing benchmark has independent closed v2 Core assignment and Performance benchmark-readiness contracts. Each invokes one source-preserving use case and binds pseudonymous request scope to exact source and deterministic review-required or no-opportunity receipts. Advise-backed suitability, risk-profile, and mandate/restriction policies use the same receipt-bound standard while retaining separate domain outcomes. | Fresh qualifying runtime capture, typed source products, data-mesh, Workbench, client-publication, deployment, production, and supported-feature certification remain blocked. Core retains benchmark-assignment authority, Performance retains official performance and benchmark-readiness authority, and Idea owns only opportunity review posture. |
+| Opportunity policies | Bounded foundations exist for high cash, concentration risk, underperformance, allocation drift, bond maturity, volatility, drawdown, suitability gaps, risk-profile gaps, mandate/restriction review, income gaps, and missing benchmark review. Missing benchmark has independent closed v2 Core assignment and Performance benchmark-readiness contracts. Advise-backed suitability, risk-profile, and mandate/restriction policies use receipt-bound runtime contracts while retaining separate domain outcomes. Typed mandate/restriction and risk-profile source-contract evidence binds the current Advise product declaration and blocked trust telemetry by repository, ref, and SHA-256. | Fresh qualifying runtime capture, data-mesh, Workbench, client-publication, deployment, production, and supported-feature certification remain blocked. Source-contract evidence cannot approve risk profiles, suitability, policy, proposals, mandate changes, or restriction clearance. Core, Performance, and Advise retain their source authority; Idea owns only opportunity review posture. |
 | Review and queues | Candidate persistence, replay, scoring, audit-oriented transitions, advisor review/feedback, audience-bound advisor/PM/compliance queues, and an aggregate operator exception surface are implemented as internal foundations. Mutation scope comes only from trusted caller entitlements and persisted candidate truth. | Gateway/Workbench product proof, feedback mesh certification, client publication, and supported-feature promotion remain blocked. |
 | Data lifecycle | Versioned classification/residency policy, transactional PostgreSQL controls, pseudonymized tombstones, aggregate expiry review, signed bank decisions, Lotus AI retention receipts, and Archive posture verification are implemented. Applied decisions are restart-safe and single-use. | Live authority/key-discovery proof, jurisdiction approval, managed Archive trust distribution, provider-native confirmation, production policy sources, and production purge proof remain blocked. |
 | Downstream intent | Conversion intent, source-versioned append-only outcome history, policy-valid current posture, report evidence-pack requests, outbox records, and digest-bound Advise/Manage/Report source-contract provenance are bounded foundations. | Source contracts clear no live blocker; route acceptance, execution, rendering, archive authority, and materialization runtime proof remain external. Quarantined outcome history does not count as ready. |
@@ -89,6 +88,8 @@ existing deployable service.
 | `src/app/observability/` | Structured logging, metrics, tracing, correlation, and operation events. |
 | `contracts/` | Data-mesh, SLO, access, evidence-policy, downstream, trust telemetry, and readiness contracts. |
 | `docs/` and `wiki/` | RFCs, operator runbooks, architecture standards, demo posture, and GitHub wiki source. |
+
+Typed Advise source-product evidence lives in matching application and automation capability packages. Its profiles share source-authority mechanics but retain independent diagnostics and blocker effects; this is design modularity inside the existing service, not a new runtime.
 
 ### Request Path
 

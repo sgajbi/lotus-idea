@@ -33,7 +33,9 @@ except ModuleNotFoundError:
     )
     from scripts.wiki_navigation_contract import same_wiki_page_link_errors
 
-
+evidence_classification_inventory_errors = (
+    evidence_inventory.evidence_classification_inventory_errors
+)
 ROOT = Path(__file__).resolve().parents[1]
 
 
