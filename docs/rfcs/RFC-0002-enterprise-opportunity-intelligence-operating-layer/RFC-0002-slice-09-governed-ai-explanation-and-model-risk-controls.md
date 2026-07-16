@@ -197,6 +197,15 @@ Implemented in this slice:
     Make targets remain useful `source_contract` evidence but cannot prove
     execution. This is design modularity inside the existing Idea process, not
     a separately scalable service boundary.
+28. Issue `#516` closes a failure-path recurrence of the narrative-grounding
+    defect. Unsupported-claim, forbidden-action-type, and forbidden-action-
+    content outcomes now replace submitted provider narrative with deterministic
+    server-owned blocked text before domain result and API projection. The
+    submitted output remains tamper-evident through its content digest, while
+    responses, replay responses, audit attributes, and lineage evidence retain
+    no raw rejected narrative. This remains an internal domain-policy change;
+    no provider runtime, persistence schema, service split, or supported-feature
+    promotion is introduced.
 
 Validation evidence from the implementation slice:
 
@@ -310,6 +319,11 @@ Validation evidence from the implementation slice:
     loading/evaluation/delivery remain required. The builder, thin generator,
     gate, and tests are grouped under capability-oriented
     `ai_model_risk_operations/` packages without adding a deployable service.
+24. Issue `#516` adds adversarial domain and API coverage for rejected provider
+    narrative across unsupported claims, forbidden action types, forbidden
+    action content, idempotent replay, changed-content conflict, audit, and
+    lineage source safety. The focused AI governance, grounding, integrity, and
+    lineage suites pass with `61 passed`; targeted Ruff and strict MyPy pass.
 
 Issue `#411` changes the AI readiness response vocabulary from certification
 claims to source-contract validity and therefore changes OpenAPI truth. It
@@ -545,7 +559,8 @@ includes:
 2. Persist lineage refs, workflow-pack version, evaluation posture, verifier
    result, fallback state, and review posture.
 3. Block unsupported claims, autonomous advice, client communication, and raw
-   provider output exposure.
+   provider output exposure across accepted, blocked, fallback, replay, and
+   conflict paths.
 
 ## Acceptance Gate
 

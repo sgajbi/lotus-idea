@@ -143,7 +143,9 @@ Current RFC-0002 implementation-start baseline:
    identity rejection for arbitrary caller-supplied packs, and a certified
    internal AI explanation evaluator API plus a not-certified AI explanation
    readiness diagnostic. Submitted provider narrative is not advisor-visible or
-   persisted, and blocked output exposes no grounded claims.
+   persisted across accepted, blocked, replay, or conflict paths. Blocked output
+   exposes no grounded claims and uses deterministic server-owned explanation
+   text.
    PR `#394` additionally proves actual review-gated deterministic-stub
    execution through `idea_explanation.pack@v1` with a bounded receipt on
    exact-main SHA `b892d5d6`; Main Releasability `29303651841` and CodeQL

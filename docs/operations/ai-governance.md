@@ -98,6 +98,10 @@ RFC-0002 Slice 09 adds `src/app/domain/ai_governance.py`,
     freshness, and quality, with no grounded claims returned for blocked output.
 23. output-integrity binding for both the grounding policy and submitted
     provider-output digest without persisting the submitted narrative.
+24. deterministic server-owned blocked explanations for unsupported claims,
+    forbidden action types, and forbidden action content. Rejected provider
+    narrative is digest-bound for tamper evidence but absent from the domain
+    result, API response, replay response, audit attributes, and lineage record.
 
 The API preserves source authority: AI output cannot mutate candidate score,
 lifecycle, source facts, review state, conversion state, or downstream workflow
@@ -117,7 +121,8 @@ Successful API responses always return:
 6. `grantsDownstreamAuthority=false`,
 7. `verifiedOutput.claimGroundingPolicyVersion=lotus-idea.ai-claim-grounding-policy.v1`,
 8. `verifiedOutput.groundedClaims` only when every returned claim passed the
-   deterministic verifier; blocked output returns an empty list.
+   deterministic verifier; blocked output returns an empty list and a
+   server-owned product-safe explanation.
 
 The readiness diagnostic always returns:
 

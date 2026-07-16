@@ -878,8 +878,11 @@ AI explanation text is also untrusted input. Enforce
 action verification. Accepted advisor-visible narrative must be server-rendered
 from ordered verified claims and must carry source-safe product/version, as-of,
 freshness, and quality references. Blocked output returns no grounded claims.
-Keep submitted narrative out of responses and persistence; bind its digest and
-the grounding policy into output integrity so replay conflicts remain exact.
+Replace blocked provider prose with deterministic server-owned explanation text
+before the domain result reaches API projection. Keep submitted narrative out of
+accepted, blocked, fallback, replay, and conflict responses and persistence;
+bind its digest and the grounding policy into output integrity so replay
+conflicts remain exact. A blocked status alone is not sanitization.
 This policy belongs to the internal `app.domain.ai_explanation` capability and
 does not justify a separate runtime or transfer AI infrastructure ownership from
 `lotus-ai`.

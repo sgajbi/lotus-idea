@@ -597,9 +597,11 @@ AI explanation request and response DTOs live in
 `src/app/api/ai_governance_models.py`, while
 `src/app/domain/ai_explanation/grounding.py` owns deterministic claim narrative
 projection and its versioned policy. Submitted provider narrative is attested
-input only: it is not returned or persisted, while output integrity binds its
-digest and the grounding policy for exact replay. This capability package avoids
-adding another flat domain file.
+input only: accepted results replace it with grounded claim projection, and
+blocked results replace it with deterministic server-owned explanation text
+before API projection. It is not returned or persisted, while output integrity
+binds its digest and the grounding policy for exact replay and conflict
+detection. This capability package avoids adding another flat domain file.
 
 `src/app/api/ai_governance.py` keeps authorization, idempotency,
 durable-write checks, operation-event emission, route metadata, and response
