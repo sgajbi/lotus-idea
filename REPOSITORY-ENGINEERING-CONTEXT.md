@@ -543,7 +543,11 @@ Materially distinct normal API outcomes must be published from DTO-validated,
 code-owned examples and checked against both OpenAPI and the endpoint
 certification ledger. For feedback, accepted and business-resource replay are
 separate HTTP 200 modes; do not collapse replay into prose or a single accepted
-example. Apply this rule endpoint by endpoint from executable application
+example. Review actions follow the same rule. Keep sibling review-workflow
+contracts in `app.api.examples.review_workflow` and
+`scripts/endpoint_review_workflow_contracts.py` so DTO validation, OpenAPI
+publication, ledger parity, replay evidence, and authority boundaries evolve
+together. Apply this rule endpoint by endpoint from executable application
 behavior and integration tests rather than inferring completeness from example
 counts.
 Conversion-intent and conversion-outcome API route orchestration follows the

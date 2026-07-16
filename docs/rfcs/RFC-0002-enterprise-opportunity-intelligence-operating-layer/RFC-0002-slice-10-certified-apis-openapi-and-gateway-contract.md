@@ -120,6 +120,18 @@ mode, its authority boundary, or its integration evidence drifts. This
 contract work does not promote feedback as a data product or supported
 feature.
 
+Issue `#535` applies the same executable-contract standard to review actions
+and consolidates both review-workflow mutations behind one internal contract
+module. Code-owned, DTO-validated examples publish a newly accepted review
+decision and a business-resource replay with `reviewDecision=null` and
+`persistence.decision=replayed`. The accepted example preserves the explicit
+nullable `snoozedUntilUtc` field and the
+`grantsDownstreamAuthority=false` boundary. OpenAPI, the endpoint ledger, and
+the contract tests must match both modes exactly; the certification gate fails
+when any payload, replay evidence, or publication reference drifts. This is
+design modularity inside the existing `lotus-idea` deployable and does not
+create a review microservice or promote a supported review product.
+
 PR `#533` merged issue `#532` to `main` at
 `373bda0bc2203cb4e1f2ab0d011d8dd9890369ad`. Main Releasability run
 `29520564704` passed on attempt 2, including lint, typecheck, security,
