@@ -62,6 +62,29 @@ def test_ci_contract_gate_blocks_direct_ci_signal_evidence_api_fetch(
     ) in errors
 
 
+def test_ci_contract_gate_blocks_diff_coupled_or_non_blocking_actionlint(
+    tmp_path: Path,
+) -> None:
+    module = _load_ci_contract_gate()
+    workflow_dir = _copy_workflows(tmp_path, module)
+    pr_gate = workflow_dir / "pr-merge-gate.yml"
+    pr_gate.write_text(
+        pr_gate.read_text(encoding="utf-8").replace(
+            "          reporter: local\n"
+            "          filter_mode: nofilter\n"
+            "          fail_level: error",
+            "          reporter: github-pr-check",
+        ),
+        encoding="utf-8",
+    )
+
+    errors = module.validate_workflows(workflow_dir)
+
+    assert "pr-merge-gate.yml missing `reporter: local`" in errors
+    assert "pr-merge-gate.yml missing `filter_mode: nofilter`" in errors
+    assert "pr-merge-gate.yml missing `fail_level: error`" in errors
+
+
 def test_ci_contract_gate_blocks_missing_main_release_evidence_reference(
     tmp_path: Path,
 ) -> None:
