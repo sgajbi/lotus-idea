@@ -8,17 +8,15 @@ from urllib.parse import quote
 from app.domain import EvidenceFreshness, SourceRef, SourceSystem
 from app.infrastructure.downstream_client import DownstreamJsonClient, DownstreamServiceError
 from app.ports.advise_sources import (
+    ADVISE_POLICY_EVALUATION_PRODUCT_ID,
+    ADVISE_POLICY_EVALUATION_PRODUCT_VERSION,
+    ADVISE_POLICY_EVALUATION_WORKFLOW_ROUTE_TEMPLATE,
     AdvisePolicyEvaluationEvidence,
     AdvisePolicyEvaluationEvidenceRequest,
     AdvisePolicyEvaluationRuntimeEvidence,
     AdviseSourceEntitlementDenied,
     AdviseSourceUnavailable,
 )
-
-
-PRODUCT_VERSION = "v1"
-POLICY_EVALUATION_PRODUCT_ID = "lotus-advise:AdvisoryPolicyEvaluationRecord:v1"
-POLICY_EVALUATION_WORKFLOW_ROUTE_TEMPLATE = "/advisory/policy-evaluations/{evaluation_id}/workflow"
 
 
 @dataclass(frozen=True)
@@ -70,7 +68,7 @@ class LotusAdvisePolicyEvaluationSourceAdapter:
 
 
 def _workflow_route(evaluation_id: str) -> str:
-    return POLICY_EVALUATION_WORKFLOW_ROUTE_TEMPLATE.format(
+    return ADVISE_POLICY_EVALUATION_WORKFLOW_ROUTE_TEMPLATE.format(
         evaluation_id=quote(evaluation_id, safe="")
     )
 
@@ -128,9 +126,9 @@ def _runtime_evidence(
     replay_metadata = _optional_object_field(payload, "replay_metadata")
     return AdvisePolicyEvaluationRuntimeEvidence(
         product_id=_text_from_payloads("product_id", metadata, replay_metadata)
-        or POLICY_EVALUATION_PRODUCT_ID,
+        or ADVISE_POLICY_EVALUATION_PRODUCT_ID,
         product_version=_text_from_payloads("product_version", metadata, replay_metadata)
-        or PRODUCT_VERSION,
+        or ADVISE_POLICY_EVALUATION_PRODUCT_VERSION,
         route=route,
         evaluation_id=_text_from_payloads("evaluation_id", metadata, payload),
         tenant_scope_hash=_text_from_payloads(

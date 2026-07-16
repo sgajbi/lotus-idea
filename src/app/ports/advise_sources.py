@@ -6,6 +6,12 @@ from typing import Protocol
 
 from app.domain import SourceRef
 
+ADVISE_POLICY_EVALUATION_PRODUCT_ID = "lotus-advise:AdvisoryPolicyEvaluationRecord:v1"
+ADVISE_POLICY_EVALUATION_PRODUCT_VERSION = "v1"
+ADVISE_POLICY_EVALUATION_WORKFLOW_ROUTE_TEMPLATE = (
+    "/advisory/policy-evaluations/{evaluation_id}/workflow"
+)
+
 
 class AdviseSourceUnavailable(Exception):
     def __init__(self, *, code: str = "advise_source_unavailable") -> None:
