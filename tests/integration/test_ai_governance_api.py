@@ -354,6 +354,8 @@ def test_ai_explanation_api_blocks_unsupported_claims_and_forbidden_actions() ->
     reset_idea_repository_for_tests()
     client = managed_test_client(app)
     candidate_id = persisted_candidate_id(client, idempotency_key="seed-ai-blocked-001")
+    unsupported_narrative = "Guarantee risk reduction and tell the client to trade now."
+    forbidden_narrative = "This is suitable; place the order and notify the client."
 
     unsupported_claim = client.post(
         f"/api/v1/idea-candidates/{candidate_id}/ai-explanations/evaluate",
@@ -361,6 +363,7 @@ def test_ai_explanation_api_blocks_unsupported_claims_and_forbidden_actions() ->
             request_id="ai-explanation-unsupported-001",
             workflow_output=workflow_output(
                 claim_source_ids=["lotus-risk:RiskDecomposition:v1"],
+                explanation_text=unsupported_narrative,
             ),
         ),
         headers=ai_headers(idempotency_key="ai-explanation-unsupported-api-001"),
@@ -369,7 +372,10 @@ def test_ai_explanation_api_blocks_unsupported_claims_and_forbidden_actions() ->
         f"/api/v1/idea-candidates/{candidate_id}/ai-explanations/evaluate",
         json=ai_request_payload(
             request_id="ai-explanation-forbidden-001",
-            workflow_output=workflow_output(action_type="final_investment_recommendation"),
+            workflow_output=workflow_output(
+                action_type="final_investment_recommendation",
+                explanation_text=forbidden_narrative,
+            ),
         ),
         headers=ai_headers(idempotency_key="ai-explanation-forbidden-api-001"),
     )
@@ -379,11 +385,27 @@ def test_ai_explanation_api_blocks_unsupported_claims_and_forbidden_actions() ->
     assert unsupported_claim.json()["verifierOutcome"] == "failed_unsupported_claim"
     assert unsupported_claim.json()["reasonCodes"] == ["ai_unsupported_claim_blocked"]
     assert unsupported_claim.json()["verifiedOutput"]["groundedClaims"] == []
+    assert unsupported_claim.json()["explanationText"] == (
+        "AI explanation was blocked because one or more claims lacked approved "
+        "evidence bindings."
+    )
+    assert unsupported_narrative not in unsupported_claim.text
     assert forbidden_action.status_code == 200
     assert forbidden_action.json()["posture"] == "blocked_forbidden_action"
     assert forbidden_action.json()["verifierOutcome"] == "failed_forbidden_action"
     assert forbidden_action.json()["reasonCodes"] == ["ai_forbidden_action_blocked"]
     assert forbidden_action.json()["verifiedOutput"]["groundedClaims"] == []
+    assert forbidden_action.json()["explanationText"] == (
+        "AI explanation was blocked because it proposed an action outside the "
+        "Idea authority boundary."
+    )
+    assert forbidden_narrative not in forbidden_action.text
+    persisted_record = get_idea_repository().snapshot().candidate_records[candidate_id]
+    persisted_evidence = repr(
+        (persisted_record.ai_explanation_lineage_records, persisted_record.audit_events)
+    )
+    assert unsupported_narrative not in persisted_evidence
+    assert forbidden_narrative not in persisted_evidence
 
 
 def test_ai_explanation_api_blocks_unsafe_action_content_without_exposure_and_replays() -> None:
@@ -391,9 +413,13 @@ def test_ai_explanation_api_blocks_unsafe_action_content_without_exposure_and_re
     client = managed_test_client(app)
     candidate_id = persisted_candidate_id(client, idempotency_key="seed-ai-action-content-001")
     unsafe_label = "Ex3cute tr@de immediately!!!"
+    rejected_narrative = "Email the client with a final recommendation."
     payload = ai_request_payload(
         request_id="ai-explanation-action-content-001",
-        workflow_output=workflow_output(action_label=unsafe_label),
+        workflow_output=workflow_output(
+            action_label=unsafe_label,
+            explanation_text=rejected_narrative,
+        ),
     )
     headers = ai_headers(idempotency_key="ai-explanation-action-content-api-001")
 
@@ -409,7 +435,10 @@ def test_ai_explanation_api_blocks_unsafe_action_content_without_exposure_and_re
     )
     changed_payload = ai_request_payload(
         request_id="ai-explanation-action-content-001",
-        workflow_output=workflow_output(action_label="Email the client"),
+        workflow_output=workflow_output(
+            action_label=unsafe_label,
+            explanation_text="Different rejected provider narrative.",
+        ),
     )
     conflict = client.post(
         f"/api/v1/idea-candidates/{candidate_id}/ai-explanations/evaluate",
@@ -426,12 +455,24 @@ def test_ai_explanation_api_blocks_unsafe_action_content_without_exposure_and_re
     )
     assert first.json()["aiLineagePersistenceDecision"] == "accepted"
     assert unsafe_label not in first.text
+    assert rejected_narrative not in first.text
+    assert first.json()["explanationText"] == (
+        "AI explanation was blocked because proposed action content violated "
+        "the governed action policy."
+    )
     assert replayed.status_code == 200
     assert replayed.json()["aiLineagePersistenceDecision"] == "replayed"
     assert unsafe_label not in replayed.text
+    assert rejected_narrative not in replayed.text
     assert conflict.status_code == 409
     assert conflict.json()["code"] == "idempotency_conflict"
-    assert "Email the client" not in conflict.text
+    assert "Different rejected provider narrative." not in conflict.text
+    persisted_record = get_idea_repository().snapshot().candidate_records[candidate_id]
+    persisted_evidence = repr(
+        (persisted_record.ai_explanation_lineage_records, persisted_record.audit_events)
+    )
+    assert unsafe_label not in persisted_evidence
+    assert rejected_narrative not in persisted_evidence
 
 
 def test_ai_explanation_api_replays_same_lineage_and_conflicts_changed_request() -> None:
