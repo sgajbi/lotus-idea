@@ -628,6 +628,15 @@ Focused validation passed for the current foundation:
     removed. This is design modularity and contract hardening inside the
     existing deployable; persistence, runtime ownership, Gateway/Workbench,
     supported-feature posture, and service topology do not change.
+44. Final local validation for issue `#529` passed `make check` and
+    `make ci`: `4,702` unit tests, `454` integration tests with `31`
+    declared environment-only PostgreSQL skips, `4` E2E tests, `99.01%`
+    combined coverage over `27,742` statements, MyPy over `945` source
+    files, zero duplicate clusters across `2,719` functions, and no known
+    dependency vulnerabilities. Strict wiki parity is zero; README, wiki
+    source, supported features, persistence, migrations, seed, Gateway,
+    Workbench, central skills, and runtime topology remain unchanged by
+    explicit scope decision.
 
 PR merge-gate evidence remains required before merge.
 
