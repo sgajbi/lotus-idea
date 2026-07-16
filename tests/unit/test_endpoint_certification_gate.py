@@ -43,6 +43,16 @@ def _load_endpoint_status_contracts() -> ModuleType:
     return module
 
 
+def _load_endpoint_feedback_contracts() -> ModuleType:
+    script_path = ROOT / "scripts" / "endpoint_feedback_contracts.py"
+    spec = importlib.util.spec_from_file_location("endpoint_feedback_contracts", script_path)
+    assert spec is not None
+    assert spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 def test_endpoint_certification_gate_passes_current_repository_contract() -> None:
     module = _load_endpoint_certification_gate()
 
@@ -639,6 +649,56 @@ def test_endpoint_certification_gate_accepts_complete_ai_readiness_publication()
         )
         == []
     )
+
+
+def test_endpoint_certification_gate_requires_every_feedback_success_mode() -> None:
+    from app.api.examples.feedback import build_feedback_response_examples
+    from app.main import app
+
+    module = _load_endpoint_feedback_contracts()
+    expected = build_feedback_response_examples()
+    endpoint = {
+        "method": "POST",
+        "path": "/api/v1/idea-candidates/{candidateId}/feedback",
+        "response_examples": [json.dumps(value) for value in expected.values()],
+        "test_evidence": [
+            module.FEEDBACK_IDENTITY_REPLAY_TEST,
+            module.FEEDBACK_SUCCESS_CONTRACT_TEST,
+        ],
+    }
+    openapi_spec = deepcopy(app.openapi())
+    examples = openapi_spec["paths"][endpoint["path"]]["post"]["responses"]["200"]["content"][
+        "application/json"
+    ]["examples"]
+    examples.pop("replayed")
+
+    errors = module.validate_feedback_success_contract(endpoint, openapi_spec)
+
+    assert errors == [
+        (
+            "('POST', '/api/v1/idea-candidates/{candidateId}/feedback'): OpenAPI 200 "
+            "examples must exactly match every named code-owned feedback success mode"
+        )
+    ]
+
+
+def test_endpoint_certification_gate_blocks_feedback_ledger_and_test_drift() -> None:
+    from app.api.examples.feedback import build_feedback_response_examples
+
+    module = _load_endpoint_feedback_contracts()
+    expected = build_feedback_response_examples()
+    endpoint = {
+        "method": "POST",
+        "path": "/api/v1/idea-candidates/{candidateId}/feedback",
+        "response_examples": [json.dumps(expected["accepted"])],
+        "test_evidence": [],
+    }
+
+    errors = module.validate_feedback_success_contract(endpoint)
+
+    assert any("response_examples must exactly match" in error for error in errors)
+    assert any("cross-key feedback replay integration test" in error for error in errors)
+    assert any("feedback success publication contract test" in error for error in errors)
 
 
 def _certified_endpoint(*, test_evidence: list[str]) -> dict[str, object]:
