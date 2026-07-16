@@ -82,10 +82,13 @@ proof, downstream proof, supported-feature evidence, and mainline CI all agree.
 13. RFC-0002 Slice 10 partially implements the certified internal
     `POST /api/v1/idea-signals/high-cash/evaluate` and
     `POST /api/v1/idea-signals/high-cash/evaluate-and-persist` API foundations
-    over caller-supplied, source-owned Core evidence, plus certified internal
-    lifecycle, AI explanation, advisor queue, review, feedback, conversion,
-    report evidence-pack, AI-explanation-readiness, and data-mesh-readiness
-    endpoint foundations. Advisor queue OpenAPI now publishes required
+    over caller-supplied, source-owned Core evidence, plus the source-backed
+    high-cash route. Named OpenAPI contracts now cover all executable
+    evaluation, retry, duplicate-candidate, and no-write modes. The slice also
+    includes certified internal lifecycle, AI explanation, advisor queue,
+    review, feedback, conversion, report evidence-pack,
+    AI-explanation-readiness, and data-mesh-readiness endpoint foundations.
+    Advisor queue OpenAPI now publishes required
     continuation identity and stable snapshot conflict semantics, with
     bounded read-only Gateway publication for advisor queue and candidate
     detail,

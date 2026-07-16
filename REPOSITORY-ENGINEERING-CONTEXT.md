@@ -1916,6 +1916,18 @@ no-supported-feature-promotion fields. This is internal design modularity; no
 runtime split is justified without workload, failure-isolation, ownership, or
 operability evidence.
 
+Issue `#548` applies the contract to the high-cash signal family. The caller
+and source-backed evaluation routes must each publish candidate-created,
+blocked, suppressed, and not-eligible modes from application-backed,
+DTO-serialized factories. Evaluate-and-persist must additionally distinguish
+accepted, replayed, and duplicate-candidate decisions, while blocked,
+suppressed, and not-eligible outcomes retain `persistence=null`. Keep the
+factory under `app.api.examples.high_cash_signal`, keep the endpoint gate as a
+thin parity adapter, and cite HTTP behavior for every mode. Do not hand-code
+cash weight, candidate identity, evidence hash, retry decisions, or response
+projection in documentation fixtures. Core remains the source authority, and
+this contract proof does not certify live source runtime or promote support.
+
 ## Supported-Feature Promotion Rule
 
 The supported-feature registry is source truth for support posture.
