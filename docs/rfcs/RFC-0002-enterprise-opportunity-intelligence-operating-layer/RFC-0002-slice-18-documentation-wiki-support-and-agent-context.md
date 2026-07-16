@@ -356,9 +356,10 @@ mandate/restriction and missing-risk-profile profiles. Both are closed v2
 telemetry files, preserve blocked producer posture, and reject authority
 inflation. The aggregate artifact registry makes CLI, application, evidence
 class, tracking issue, and documentation inventory drift a blocking
-documentation-contract failure. Issue `#508` remains explicit for scheduled
-worker deployment evidence rather than being hidden by this documentation
-slice.
+documentation-contract failure. Issue `#508` now records the locally
+implemented scheduled-worker source-contract and deployment-evidence boundary;
+an actual environment deployment receipt remains absent rather than being
+hidden by this documentation slice.
 
 The missing-benchmark Core material now records the independently owned closed
 v2 runtime contract implemented by issue `#499`. One named application use case
