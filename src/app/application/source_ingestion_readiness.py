@@ -9,8 +9,11 @@ from app.application.source_ingestion_runtime_evidence import (
     SOURCE_INGESTION_RUNTIME_EXECUTION_ENV as SOURCE_INGESTION_RUNTIME_EXECUTION_ENV,
     source_ingestion_runtime_execution_is_valid,
 )
-from app.application.source_ingestion_scheduled_worker import (
-    scheduled_worker_deploy_proof_is_valid,
+from app.application.source_ingestion_scheduler import (
+    SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE_ENV,
+    SCHEDULED_WORKER_SOURCE_CONTRACT_ENV,
+    scheduled_worker_deployment_evidence_is_valid,
+    scheduled_worker_source_contract_is_valid,
 )
 from app.application.source_ingestion_worker import MANIFEST_SCHEMA_VERSION
 from app.runtime.repository_state import DATABASE_URL_ENV
@@ -21,7 +24,6 @@ CORE_BASE_URL_ENV = "LOTUS_CORE_BASE_URL"
 CORE_QUERY_BASE_URL_ENV = "LOTUS_CORE_QUERY_BASE_URL"
 CORE_QUERY_CONTROL_PLANE_BASE_URL_ENV = "LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL"
 MANIFEST_ENV = "LOTUS_IDEA_SOURCE_INGESTION_MANIFEST"
-SCHEDULED_WORKER_PROOF_ENV = "LOTUS_IDEA_SOURCE_INGESTION_SCHEDULED_WORKER_PROOF"
 TIMEOUT_SECONDS_ENV = "LOTUS_IDEA_SOURCE_INGESTION_TIMEOUT_SECONDS"
 EXAMPLE_MANIFEST_PATH = Path(
     "docs/examples/source-ingestion/high-cash-worker-manifest.example.json"
@@ -39,8 +41,10 @@ class SourceIngestionReadinessSnapshot:
     configured_manifest_available: bool
     configured_live_proof_available: bool
     live_core_source_proof_valid: bool
-    configured_scheduled_worker_proof_available: bool
-    scheduled_worker_deploy_proof_valid: bool
+    configured_scheduled_worker_source_contract_available: bool
+    scheduled_worker_source_contract_valid: bool
+    configured_scheduled_worker_deployment_evidence_available: bool
+    scheduled_worker_deployment_evidence_valid: bool
     core_base_url_configured: bool
     core_query_base_url_configured: bool
     core_query_control_plane_base_url_configured: bool
@@ -74,14 +78,22 @@ def build_source_ingestion_readiness_snapshot(
         os.getenv(SOURCE_INGESTION_RUNTIME_EXECUTION_ENV, "").strip(),
         repository_root=repository_root,
     )
-    configured_scheduled_worker_proof_path = resolve_source_ingestion_manifest_path(
-        os.getenv(SCHEDULED_WORKER_PROOF_ENV, "").strip(),
+    configured_scheduled_worker_source_contract_path = resolve_source_ingestion_manifest_path(
+        os.getenv(SCHEDULED_WORKER_SOURCE_CONTRACT_ENV, "").strip(),
+        repository_root=repository_root,
+    )
+    configured_scheduled_worker_deployment_evidence_path = resolve_source_ingestion_manifest_path(
+        os.getenv(SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE_ENV, "").strip(),
         repository_root=repository_root,
     )
     core_source_urls = core_source_runtime_urls_from_environment()
     live_core_source_proof_valid = _runtime_execution_valid(configured_runtime_execution_path)
-    scheduled_worker_deploy_proof_valid = _scheduled_worker_deploy_proof_valid(
-        configured_scheduled_worker_proof_path
+    scheduled_worker_source_contract_valid = _scheduled_worker_source_contract_valid(
+        configured_scheduled_worker_source_contract_path,
+        repository_root=repository_root,
+    )
+    scheduled_worker_deployment_evidence_valid = _scheduled_worker_deployment_evidence_valid(
+        configured_scheduled_worker_deployment_evidence_path
     )
     configuration_blockers = _configuration_blockers(
         example_manifest=example_manifest,
@@ -90,7 +102,7 @@ def build_source_ingestion_readiness_snapshot(
     )
     certification_blockers = _certification_blockers(
         live_core_source_proof_valid=live_core_source_proof_valid,
-        scheduled_worker_deploy_proof_valid=scheduled_worker_deploy_proof_valid,
+        scheduled_worker_deployment_evidence_valid=scheduled_worker_deployment_evidence_valid,
     )
     return SourceIngestionReadinessSnapshot(
         repository="lotus-idea",
@@ -106,11 +118,16 @@ def build_source_ingestion_readiness_snapshot(
             configured_runtime_execution_path and configured_runtime_execution_path.is_file()
         ),
         live_core_source_proof_valid=live_core_source_proof_valid,
-        configured_scheduled_worker_proof_available=bool(
-            configured_scheduled_worker_proof_path
-            and configured_scheduled_worker_proof_path.is_file()
+        configured_scheduled_worker_source_contract_available=bool(
+            configured_scheduled_worker_source_contract_path
+            and configured_scheduled_worker_source_contract_path.is_file()
         ),
-        scheduled_worker_deploy_proof_valid=scheduled_worker_deploy_proof_valid,
+        scheduled_worker_source_contract_valid=scheduled_worker_source_contract_valid,
+        configured_scheduled_worker_deployment_evidence_available=bool(
+            configured_scheduled_worker_deployment_evidence_path
+            and configured_scheduled_worker_deployment_evidence_path.is_file()
+        ),
+        scheduled_worker_deployment_evidence_valid=scheduled_worker_deployment_evidence_valid,
         core_base_url_configured=core_source_urls.fully_configured,
         core_query_base_url_configured=core_source_urls.query_base_url_configured,
         core_query_control_plane_base_url_configured=(
@@ -178,12 +195,12 @@ def _configuration_blockers(
 def _certification_blockers(
     *,
     live_core_source_proof_valid: bool,
-    scheduled_worker_deploy_proof_valid: bool,
+    scheduled_worker_deployment_evidence_valid: bool,
 ) -> tuple[str, ...]:
     blockers: list[str] = []
     if not live_core_source_proof_valid:
         blockers.append("live_core_source_proof_missing")
-    if not scheduled_worker_deploy_proof_valid:
+    if not scheduled_worker_deployment_evidence_valid:
         blockers.append("scheduled_worker_deploy_proof_missing")
     blockers.extend(
         (
@@ -204,19 +221,43 @@ def _runtime_execution_valid(configured_runtime_execution_path: Path | None) -> 
     return isinstance(payload, dict) and source_ingestion_runtime_execution_is_valid(payload)
 
 
-def _scheduled_worker_deploy_proof_valid(
-    configured_scheduled_worker_proof_path: Path | None,
+def _scheduled_worker_source_contract_valid(
+    configured_scheduled_worker_source_contract_path: Path | None,
+    *,
+    repository_root: Path,
 ) -> bool:
     if (
-        configured_scheduled_worker_proof_path is None
-        or not configured_scheduled_worker_proof_path.is_file()
+        configured_scheduled_worker_source_contract_path is None
+        or not configured_scheduled_worker_source_contract_path.is_file()
     ):
         return False
     try:
-        payload = json.loads(configured_scheduled_worker_proof_path.read_text(encoding="utf-8"))
+        payload = json.loads(
+            configured_scheduled_worker_source_contract_path.read_text(encoding="utf-8")
+        )
     except (OSError, json.JSONDecodeError):
         return False
-    return isinstance(payload, dict) and scheduled_worker_deploy_proof_is_valid(payload)
+    return isinstance(payload, dict) and scheduled_worker_source_contract_is_valid(
+        payload,
+        repository_root=repository_root,
+    )
+
+
+def _scheduled_worker_deployment_evidence_valid(
+    configured_scheduled_worker_deployment_evidence_path: Path | None,
+) -> bool:
+    if (
+        configured_scheduled_worker_deployment_evidence_path is None
+        or not configured_scheduled_worker_deployment_evidence_path.is_file()
+    ):
+        return False
+    try:
+        payload = json.loads(
+            configured_scheduled_worker_deployment_evidence_path.read_text(encoding="utf-8")
+        )
+    except (OSError, json.JSONDecodeError):
+        return False
+    return isinstance(payload, dict) and scheduled_worker_deployment_evidence_is_valid(payload)
 
 
 def resolve_source_ingestion_manifest_path(

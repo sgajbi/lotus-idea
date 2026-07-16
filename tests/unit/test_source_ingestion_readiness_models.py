@@ -20,8 +20,11 @@ from app.application.source_ingestion_readiness import (
     CORE_QUERY_CONTROL_PLANE_BASE_URL_ENV,
     SOURCE_INGESTION_RUNTIME_EXECUTION_ENV,
     MANIFEST_ENV,
-    SCHEDULED_WORKER_PROOF_ENV,
     SourceIngestionReadinessSnapshot,
+)
+from app.application.source_ingestion_scheduler import (
+    SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE_ENV,
+    SCHEDULED_WORKER_SOURCE_CONTRACT_ENV,
 )
 from app.application.source_ingestion_worker import MANIFEST_SCHEMA_VERSION
 
@@ -37,8 +40,10 @@ def test_source_ingestion_readiness_response_preserves_certification_boundaries(
         configured_manifest_available=True,
         configured_live_proof_available=False,
         live_core_source_proof_valid=False,
-        configured_scheduled_worker_proof_available=True,
-        scheduled_worker_deploy_proof_valid=True,
+        configured_scheduled_worker_source_contract_available=True,
+        scheduled_worker_source_contract_valid=True,
+        configured_scheduled_worker_deployment_evidence_available=True,
+        scheduled_worker_deployment_evidence_valid=True,
         core_base_url_configured=True,
         core_query_base_url_configured=True,
         core_query_control_plane_base_url_configured=True,
@@ -131,6 +136,7 @@ def _clear_source_ingestion_environment(monkeypatch: pytest.MonkeyPatch) -> None
         CORE_QUERY_BASE_URL_ENV,
         CORE_QUERY_CONTROL_PLANE_BASE_URL_ENV,
         SOURCE_INGESTION_RUNTIME_EXECUTION_ENV,
-        SCHEDULED_WORKER_PROOF_ENV,
+        SCHEDULED_WORKER_SOURCE_CONTRACT_ENV,
+        SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE_ENV,
     ):
         monkeypatch.delenv(env_name, raising=False)

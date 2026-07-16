@@ -39,10 +39,18 @@ class SourceIngestionReadinessResponse(CamelModel):
     configured_manifest_available: bool = Field(..., alias="configuredManifestAvailable")
     configured_live_proof_available: bool = Field(..., alias="configuredLiveProofAvailable")
     live_core_source_proof_valid: bool = Field(..., alias="liveCoreSourceProofValid")
-    configured_scheduled_worker_proof_available: bool = Field(
-        ..., alias="configuredScheduledWorkerProofAvailable"
+    configured_scheduled_worker_source_contract_available: bool = Field(
+        ..., alias="configuredScheduledWorkerSourceContractAvailable"
     )
-    scheduled_worker_deploy_proof_valid: bool = Field(..., alias="scheduledWorkerDeployProofValid")
+    scheduled_worker_source_contract_valid: bool = Field(
+        ..., alias="scheduledWorkerSourceContractValid"
+    )
+    configured_scheduled_worker_deployment_evidence_available: bool = Field(
+        ..., alias="configuredScheduledWorkerDeploymentEvidenceAvailable"
+    )
+    scheduled_worker_deployment_evidence_valid: bool = Field(
+        ..., alias="scheduledWorkerDeploymentEvidenceValid"
+    )
     core_base_url_configured: bool = Field(..., alias="coreBaseUrlConfigured")
     core_query_base_url_configured: bool = Field(..., alias="coreQueryBaseUrlConfigured")
     core_query_control_plane_base_url_configured: bool = Field(
@@ -72,10 +80,16 @@ class SourceIngestionReadinessResponse(CamelModel):
             configuredManifestAvailable=snapshot.configured_manifest_available,
             configuredLiveProofAvailable=snapshot.configured_live_proof_available,
             liveCoreSourceProofValid=snapshot.live_core_source_proof_valid,
-            configuredScheduledWorkerProofAvailable=(
-                snapshot.configured_scheduled_worker_proof_available
+            configuredScheduledWorkerSourceContractAvailable=(
+                snapshot.configured_scheduled_worker_source_contract_available
             ),
-            scheduledWorkerDeployProofValid=snapshot.scheduled_worker_deploy_proof_valid,
+            scheduledWorkerSourceContractValid=snapshot.scheduled_worker_source_contract_valid,
+            configuredScheduledWorkerDeploymentEvidenceAvailable=(
+                snapshot.configured_scheduled_worker_deployment_evidence_available
+            ),
+            scheduledWorkerDeploymentEvidenceValid=(
+                snapshot.scheduled_worker_deployment_evidence_valid
+            ),
             coreBaseUrlConfigured=snapshot.core_base_url_configured,
             coreQueryBaseUrlConfigured=snapshot.core_query_base_url_configured,
             coreQueryControlPlaneBaseUrlConfigured=(

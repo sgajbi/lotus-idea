@@ -11,14 +11,21 @@ from app.application.source_ingestion_readiness import (
     CORE_QUERY_CONTROL_PLANE_BASE_URL_ENV,
     SOURCE_INGESTION_RUNTIME_EXECUTION_ENV,
     MANIFEST_ENV,
-    SCHEDULED_WORKER_PROOF_ENV,
     build_source_ingestion_readiness_snapshot,
 )
+from app.application.source_ingestion_scheduler import (
+    SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE_ENV,
+    SCHEDULED_WORKER_SOURCE_CONTRACT_ENV,
+)
 from app.runtime.repository_state import DATABASE_URL_ENV
-from tests.unit.source_ingestion_proof_helpers import (
-    valid_scheduled_worker_proof as _valid_scheduled_worker_proof,
+from tests.support.source_ingestion_scheduler_evidence import (
+    deployment_evidence,
+    source_contract,
 )
 from tests.support.source_ingestion_runtime_evidence import runtime_execution
+
+
+ROOT = Path(__file__).resolve().parents[2]
 
 
 def test_source_ingestion_readiness_reports_blocked_default_posture(
@@ -29,7 +36,8 @@ def test_source_ingestion_readiness_reports_blocked_default_posture(
     monkeypatch.delenv(CORE_QUERY_BASE_URL_ENV, raising=False)
     monkeypatch.delenv(CORE_QUERY_CONTROL_PLANE_BASE_URL_ENV, raising=False)
     monkeypatch.delenv(SOURCE_INGESTION_RUNTIME_EXECUTION_ENV, raising=False)
-    monkeypatch.delenv(SCHEDULED_WORKER_PROOF_ENV, raising=False)
+    monkeypatch.delenv(SCHEDULED_WORKER_SOURCE_CONTRACT_ENV, raising=False)
+    monkeypatch.delenv(SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE_ENV, raising=False)
     monkeypatch.delenv(DATABASE_URL_ENV, raising=False)
 
     snapshot = build_source_ingestion_readiness_snapshot()
@@ -41,8 +49,10 @@ def test_source_ingestion_readiness_reports_blocked_default_posture(
     assert snapshot.configured_manifest_available is False
     assert snapshot.configured_live_proof_available is False
     assert snapshot.live_core_source_proof_valid is False
-    assert snapshot.configured_scheduled_worker_proof_available is False
-    assert snapshot.scheduled_worker_deploy_proof_valid is False
+    assert snapshot.configured_scheduled_worker_source_contract_available is False
+    assert snapshot.scheduled_worker_source_contract_valid is False
+    assert snapshot.configured_scheduled_worker_deployment_evidence_available is False
+    assert snapshot.scheduled_worker_deployment_evidence_valid is False
     assert snapshot.core_base_url_configured is False
     assert snapshot.core_query_base_url_configured is False
     assert snapshot.core_query_control_plane_base_url_configured is False
@@ -75,7 +85,8 @@ def test_source_ingestion_readiness_reports_configured_run_once_posture(
     manifest.write_text("{}", encoding="utf-8")
     monkeypatch.setenv(MANIFEST_ENV, str(manifest))
     monkeypatch.delenv(SOURCE_INGESTION_RUNTIME_EXECUTION_ENV, raising=False)
-    monkeypatch.delenv(SCHEDULED_WORKER_PROOF_ENV, raising=False)
+    monkeypatch.delenv(SCHEDULED_WORKER_SOURCE_CONTRACT_ENV, raising=False)
+    monkeypatch.delenv(SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE_ENV, raising=False)
     monkeypatch.setenv(CORE_BASE_URL_ENV, "http://localhost:8310")
     monkeypatch.setenv(DATABASE_URL_ENV, "postgresql://localhost/lotus_idea")
 
@@ -84,8 +95,10 @@ def test_source_ingestion_readiness_reports_configured_run_once_posture(
     assert snapshot.configured_manifest_available is True
     assert snapshot.configured_live_proof_available is False
     assert snapshot.live_core_source_proof_valid is False
-    assert snapshot.configured_scheduled_worker_proof_available is False
-    assert snapshot.scheduled_worker_deploy_proof_valid is False
+    assert snapshot.configured_scheduled_worker_source_contract_available is False
+    assert snapshot.scheduled_worker_source_contract_valid is False
+    assert snapshot.configured_scheduled_worker_deployment_evidence_available is False
+    assert snapshot.scheduled_worker_deployment_evidence_valid is False
     assert snapshot.core_base_url_configured is True
     assert snapshot.core_query_base_url_configured is True
     assert snapshot.core_query_control_plane_base_url_configured is True
@@ -109,7 +122,8 @@ def test_source_ingestion_readiness_clears_only_live_core_blocker_with_valid_pro
     )
     monkeypatch.setenv(MANIFEST_ENV, str(manifest))
     monkeypatch.setenv(SOURCE_INGESTION_RUNTIME_EXECUTION_ENV, str(proof))
-    monkeypatch.delenv(SCHEDULED_WORKER_PROOF_ENV, raising=False)
+    monkeypatch.delenv(SCHEDULED_WORKER_SOURCE_CONTRACT_ENV, raising=False)
+    monkeypatch.delenv(SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE_ENV, raising=False)
     monkeypatch.setenv(CORE_BASE_URL_ENV, "http://localhost:8310")
     monkeypatch.setenv(DATABASE_URL_ENV, "postgresql://localhost/lotus_idea")
 
@@ -119,8 +133,10 @@ def test_source_ingestion_readiness_clears_only_live_core_blocker_with_valid_pro
     assert snapshot.core_query_base_url_configured is True
     assert snapshot.core_query_control_plane_base_url_configured is True
     assert snapshot.live_core_source_proof_valid is True
-    assert snapshot.configured_scheduled_worker_proof_available is False
-    assert snapshot.scheduled_worker_deploy_proof_valid is False
+    assert snapshot.configured_scheduled_worker_source_contract_available is False
+    assert snapshot.scheduled_worker_source_contract_valid is False
+    assert snapshot.configured_scheduled_worker_deployment_evidence_available is False
+    assert snapshot.scheduled_worker_deployment_evidence_valid is False
     assert "live_core_source_proof_missing" not in snapshot.certification_blockers
     assert snapshot.certification_blockers == (
         "scheduled_worker_deploy_proof_missing",
@@ -140,7 +156,8 @@ def test_source_ingestion_readiness_keeps_live_core_blocker_for_invalid_proof(
     proof.write_text('{"schemaVersion": "wrong"}', encoding="utf-8")
     monkeypatch.setenv(MANIFEST_ENV, str(manifest))
     monkeypatch.setenv(SOURCE_INGESTION_RUNTIME_EXECUTION_ENV, str(proof))
-    monkeypatch.delenv(SCHEDULED_WORKER_PROOF_ENV, raising=False)
+    monkeypatch.delenv(SCHEDULED_WORKER_SOURCE_CONTRACT_ENV, raising=False)
+    monkeypatch.delenv(SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE_ENV, raising=False)
     monkeypatch.setenv(CORE_BASE_URL_ENV, "http://localhost:8310")
     monkeypatch.setenv(DATABASE_URL_ENV, "postgresql://localhost/lotus_idea")
 
@@ -161,7 +178,8 @@ def test_source_ingestion_readiness_keeps_live_core_blocker_for_malformed_proof(
     proof.write_text("{not-json", encoding="utf-8")
     monkeypatch.setenv(MANIFEST_ENV, str(manifest))
     monkeypatch.setenv(SOURCE_INGESTION_RUNTIME_EXECUTION_ENV, str(proof))
-    monkeypatch.delenv(SCHEDULED_WORKER_PROOF_ENV, raising=False)
+    monkeypatch.delenv(SCHEDULED_WORKER_SOURCE_CONTRACT_ENV, raising=False)
+    monkeypatch.delenv(SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE_ENV, raising=False)
     monkeypatch.setenv(CORE_BASE_URL_ENV, "http://localhost:8310")
     monkeypatch.setenv(DATABASE_URL_ENV, "postgresql://localhost/lotus_idea")
 
@@ -172,27 +190,55 @@ def test_source_ingestion_readiness_keeps_live_core_blocker_for_malformed_proof(
     assert "live_core_source_proof_missing" in snapshot.certification_blockers
 
 
-def test_source_ingestion_readiness_clears_only_scheduled_worker_blocker_with_valid_proof(
+def test_source_contract_does_not_clear_scheduled_worker_deployment_blocker(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
     manifest = tmp_path / "manifest.json"
     manifest.write_text("{}", encoding="utf-8")
-    scheduled_proof = tmp_path / "scheduled-worker-proof.json"
-    scheduled_proof.write_text(
-        json.dumps(_valid_scheduled_worker_proof()),
+    contract_path = tmp_path / "scheduled-worker-source-contract.json"
+    contract_path.write_text(
+        json.dumps(source_contract(repository_root=ROOT)),
         encoding="utf-8",
     )
     monkeypatch.setenv(MANIFEST_ENV, str(manifest))
     monkeypatch.delenv(SOURCE_INGESTION_RUNTIME_EXECUTION_ENV, raising=False)
-    monkeypatch.setenv(SCHEDULED_WORKER_PROOF_ENV, str(scheduled_proof))
+    monkeypatch.setenv(SCHEDULED_WORKER_SOURCE_CONTRACT_ENV, str(contract_path))
+    monkeypatch.delenv(SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE_ENV, raising=False)
     monkeypatch.setenv(CORE_BASE_URL_ENV, "http://localhost:8310")
     monkeypatch.setenv(DATABASE_URL_ENV, "postgresql://localhost/lotus_idea")
 
     snapshot = build_source_ingestion_readiness_snapshot()
 
-    assert snapshot.configured_scheduled_worker_proof_available is True
-    assert snapshot.scheduled_worker_deploy_proof_valid is True
+    assert snapshot.configured_scheduled_worker_source_contract_available is True
+    assert snapshot.scheduled_worker_source_contract_valid is True
+    assert snapshot.configured_scheduled_worker_deployment_evidence_available is False
+    assert snapshot.scheduled_worker_deployment_evidence_valid is False
+    assert "scheduled_worker_deploy_proof_missing" in snapshot.certification_blockers
+
+
+def test_deployment_evidence_clears_only_scheduled_worker_deployment_blocker(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text("{}", encoding="utf-8")
+    evidence_path = tmp_path / "scheduled-worker-deployment-evidence.json"
+    evidence_path.write_text(
+        json.dumps(deployment_evidence(repository_root=ROOT)),
+        encoding="utf-8",
+    )
+    monkeypatch.setenv(MANIFEST_ENV, str(manifest))
+    monkeypatch.delenv(SOURCE_INGESTION_RUNTIME_EXECUTION_ENV, raising=False)
+    monkeypatch.delenv(SCHEDULED_WORKER_SOURCE_CONTRACT_ENV, raising=False)
+    monkeypatch.setenv(SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE_ENV, str(evidence_path))
+    monkeypatch.setenv(CORE_BASE_URL_ENV, "http://localhost:8310")
+    monkeypatch.setenv(DATABASE_URL_ENV, "postgresql://localhost/lotus_idea")
+
+    snapshot = build_source_ingestion_readiness_snapshot()
+
+    assert snapshot.configured_scheduled_worker_deployment_evidence_available is True
+    assert snapshot.scheduled_worker_deployment_evidence_valid is True
     assert "scheduled_worker_deploy_proof_missing" not in snapshot.certification_blockers
     assert snapshot.certification_blockers == (
         "live_core_source_proof_missing",
@@ -202,45 +248,47 @@ def test_source_ingestion_readiness_clears_only_scheduled_worker_blocker_with_va
     assert snapshot.certification_status == "not_certified"
 
 
-def test_source_ingestion_readiness_keeps_scheduled_worker_blocker_for_invalid_proof(
+def test_source_ingestion_readiness_keeps_deployment_blocker_for_invalid_evidence(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
     manifest = tmp_path / "manifest.json"
     manifest.write_text("{}", encoding="utf-8")
-    scheduled_proof = tmp_path / "scheduled-worker-proof.json"
-    scheduled_proof.write_text('{"schemaVersion": "wrong"}', encoding="utf-8")
+    evidence_path = tmp_path / "scheduled-worker-deployment-evidence.json"
+    evidence_path.write_text('{"schemaVersion": "wrong"}', encoding="utf-8")
     monkeypatch.setenv(MANIFEST_ENV, str(manifest))
     monkeypatch.delenv(SOURCE_INGESTION_RUNTIME_EXECUTION_ENV, raising=False)
-    monkeypatch.setenv(SCHEDULED_WORKER_PROOF_ENV, str(scheduled_proof))
+    monkeypatch.delenv(SCHEDULED_WORKER_SOURCE_CONTRACT_ENV, raising=False)
+    monkeypatch.setenv(SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE_ENV, str(evidence_path))
     monkeypatch.setenv(CORE_BASE_URL_ENV, "http://localhost:8310")
     monkeypatch.setenv(DATABASE_URL_ENV, "postgresql://localhost/lotus_idea")
 
     snapshot = build_source_ingestion_readiness_snapshot()
 
-    assert snapshot.configured_scheduled_worker_proof_available is True
-    assert snapshot.scheduled_worker_deploy_proof_valid is False
+    assert snapshot.configured_scheduled_worker_deployment_evidence_available is True
+    assert snapshot.scheduled_worker_deployment_evidence_valid is False
     assert "scheduled_worker_deploy_proof_missing" in snapshot.certification_blockers
 
 
-def test_source_ingestion_readiness_keeps_scheduled_worker_blocker_for_malformed_proof(
+def test_source_ingestion_readiness_keeps_deployment_blocker_for_malformed_evidence(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
     manifest = tmp_path / "manifest.json"
     manifest.write_text("{}", encoding="utf-8")
-    scheduled_proof = tmp_path / "scheduled-worker-proof.json"
-    scheduled_proof.write_text("{not-json", encoding="utf-8")
+    evidence_path = tmp_path / "scheduled-worker-deployment-evidence.json"
+    evidence_path.write_text("{not-json", encoding="utf-8")
     monkeypatch.setenv(MANIFEST_ENV, str(manifest))
     monkeypatch.delenv(SOURCE_INGESTION_RUNTIME_EXECUTION_ENV, raising=False)
-    monkeypatch.setenv(SCHEDULED_WORKER_PROOF_ENV, str(scheduled_proof))
+    monkeypatch.delenv(SCHEDULED_WORKER_SOURCE_CONTRACT_ENV, raising=False)
+    monkeypatch.setenv(SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE_ENV, str(evidence_path))
     monkeypatch.setenv(CORE_BASE_URL_ENV, "http://localhost:8310")
     monkeypatch.setenv(DATABASE_URL_ENV, "postgresql://localhost/lotus_idea")
 
     snapshot = build_source_ingestion_readiness_snapshot()
 
-    assert snapshot.configured_scheduled_worker_proof_available is True
-    assert snapshot.scheduled_worker_deploy_proof_valid is False
+    assert snapshot.configured_scheduled_worker_deployment_evidence_available is True
+    assert snapshot.scheduled_worker_deployment_evidence_valid is False
     assert "scheduled_worker_deploy_proof_missing" in snapshot.certification_blockers
 
 
@@ -259,7 +307,8 @@ def test_source_ingestion_readiness_resolves_relative_manifest_from_repo_root(
     manifest.write_text("{}", encoding="utf-8")
     monkeypatch.setenv(MANIFEST_ENV, "ops/manifest.json")
     monkeypatch.delenv(SOURCE_INGESTION_RUNTIME_EXECUTION_ENV, raising=False)
-    monkeypatch.delenv(SCHEDULED_WORKER_PROOF_ENV, raising=False)
+    monkeypatch.delenv(SCHEDULED_WORKER_SOURCE_CONTRACT_ENV, raising=False)
+    monkeypatch.delenv(SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE_ENV, raising=False)
     monkeypatch.setenv(CORE_BASE_URL_ENV, "http://localhost:8310")
     monkeypatch.setenv(DATABASE_URL_ENV, "postgresql://localhost/lotus_idea")
 
@@ -321,7 +370,8 @@ def test_source_ingestion_readiness_blocks_unreadable_configured_manifest(
     missing_manifest = tmp_path / "missing.json"
     monkeypatch.setenv(MANIFEST_ENV, str(missing_manifest))
     monkeypatch.delenv(SOURCE_INGESTION_RUNTIME_EXECUTION_ENV, raising=False)
-    monkeypatch.delenv(SCHEDULED_WORKER_PROOF_ENV, raising=False)
+    monkeypatch.delenv(SCHEDULED_WORKER_SOURCE_CONTRACT_ENV, raising=False)
+    monkeypatch.delenv(SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE_ENV, raising=False)
     monkeypatch.setenv(CORE_BASE_URL_ENV, "http://localhost:8310")
     monkeypatch.setenv(DATABASE_URL_ENV, "postgresql://localhost/lotus_idea")
 

@@ -68,7 +68,8 @@ def build_implementation_proof_readiness_snapshot(
     durable_storage_backed: bool,
     source_ingestion_runtime_execution: Mapping[str, object] | None = None,
     source_ingestion_runtime_execution_ref: str | None = None,
-    source_ingestion_scheduled_worker_proof_ref: str | None = None,
+    source_ingestion_scheduled_worker_source_contract_ref: str | None = None,
+    source_ingestion_scheduled_worker_deployment_evidence_ref: str | None = None,
     durable_repository_proof: Mapping[str, object] | None = None,
     durable_repository_proof_ref: str | None = None,
     runtime_trust_telemetry_test_execution: Mapping[str, object] | None = None,
@@ -237,9 +238,13 @@ def _build_capabilities_with_available_proofs(
         source_ingestion_runtime_execution_ref=cast(
             str | None, scope["source_ingestion_runtime_execution_ref"]
         ),
-        source_ingestion_scheduled_worker_proof_ref=cast(
+        source_ingestion_scheduled_worker_source_contract_ref=cast(
             str | None,
-            scope["source_ingestion_scheduled_worker_proof_ref"],
+            scope["source_ingestion_scheduled_worker_source_contract_ref"],
+        ),
+        source_ingestion_scheduled_worker_deployment_evidence_ref=cast(
+            str | None,
+            scope["source_ingestion_scheduled_worker_deployment_evidence_ref"],
         ),
         review_queue=cast(ReviewQueueReadinessSnapshot, scope["review_queue"]),
         ai_explanation=cast(AIExplanationReadinessSnapshot, scope["ai_explanation"]),
@@ -269,7 +274,8 @@ def _build_base_capabilities(
     source_ingestion: SourceIngestionReadinessSnapshot,
     source_ingestion_runtime_execution_current: bool,
     source_ingestion_runtime_execution_ref: str | None,
-    source_ingestion_scheduled_worker_proof_ref: str | None,
+    source_ingestion_scheduled_worker_source_contract_ref: str | None,
+    source_ingestion_scheduled_worker_deployment_evidence_ref: str | None,
     review_queue: ReviewQueueReadinessSnapshot,
     ai_explanation: AIExplanationReadinessSnapshot,
     data_mesh: DataMeshReadinessSnapshot,
@@ -284,7 +290,12 @@ def _build_base_capabilities(
             source_ingestion,
             live_proof_current=source_ingestion_runtime_execution_current,
             live_proof_ref=source_ingestion_runtime_execution_ref,
-            scheduled_worker_proof_ref=source_ingestion_scheduled_worker_proof_ref,
+            scheduled_worker_source_contract_ref=(
+                source_ingestion_scheduled_worker_source_contract_ref
+            ),
+            scheduled_worker_deployment_evidence_ref=(
+                source_ingestion_scheduled_worker_deployment_evidence_ref
+            ),
         ),
         _review_queue_capability(review_queue),
         _ai_explanation_capability(ai_explanation),
@@ -304,14 +315,16 @@ def _source_ingestion_capability(
     *,
     live_proof_current: bool,
     live_proof_ref: str | None,
-    scheduled_worker_proof_ref: str | None,
+    scheduled_worker_source_contract_ref: str | None,
+    scheduled_worker_deployment_evidence_ref: str | None,
 ) -> ImplementationProofCapabilityReadiness:
     evidence_refs = [
         "src/app/application/source_ingestion.py",
         "scripts/run_source_ingestion_worker.py",
         "scripts/run_scheduled_source_ingestion_worker.py",
         "scripts/source_ingestion/generate_runtime_execution.py",
-        "scripts/generate_scheduled_source_ingestion_worker_proof.py",
+        "scripts/source_ingestion_scheduler/generate_source_contract.py",
+        "scripts/source_ingestion_scheduler/generate_deployment_evidence.py",
         "docs/examples/source-ingestion/high-cash-worker-manifest.example.json",
         "make source-ingestion-worker-check",
         "make source-ingestion-scheduled-worker-check",
@@ -321,8 +334,13 @@ def _source_ingestion_capability(
     ]
     if live_proof_current and live_proof_ref:
         evidence_refs.append(live_proof_ref)
-    if snapshot.scheduled_worker_deploy_proof_valid and scheduled_worker_proof_ref:
-        evidence_refs.append(scheduled_worker_proof_ref)
+    if snapshot.scheduled_worker_source_contract_valid and scheduled_worker_source_contract_ref:
+        evidence_refs.append(scheduled_worker_source_contract_ref)
+    if (
+        snapshot.scheduled_worker_deployment_evidence_valid
+        and scheduled_worker_deployment_evidence_ref
+    ):
+        evidence_refs.append(scheduled_worker_deployment_evidence_ref)
     return build_capability_readiness(
         "source-ingestion",
         "Source-owned high-cash signal ingestion",
