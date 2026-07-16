@@ -5,6 +5,8 @@ import json
 from pathlib import Path
 from types import ModuleType
 
+import pytest
+
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -97,6 +99,90 @@ def test_ci_signal_evidence_rejects_source_sensitive_markers() -> None:
     )
 
     assert any("forbidden source markers" in error for error in errors)
+
+
+def test_jobs_payload_from_needs_preserves_results_and_discards_outputs() -> None:
+    module = _load_ci_signal_evidence()
+
+    payload = module.jobs_payload_from_needs(
+        {
+            "workflow-lint": {
+                "result": "success",
+                "outputs": {"token-shaped-output": "must-not-survive"},
+            },
+            "unit-tests": {"result": "failure", "outputs": {}},
+            "optional-proof": {"result": "skipped", "outputs": {}},
+        }
+    )
+
+    assert [job["name"] for job in payload["jobs"]] == [
+        "optional-proof",
+        "unit-tests",
+        "workflow-lint",
+    ]
+    assert [job["conclusion"] for job in payload["jobs"]] == [
+        "skipped",
+        "failure",
+        "success",
+    ]
+    assert all(job["steps"] == [] for job in payload["jobs"])
+    assert "outputs" not in json.dumps(payload)
+
+
+def test_jobs_payload_from_needs_rejects_unknown_result() -> None:
+    module = _load_ci_signal_evidence()
+
+    with pytest.raises(ValueError, match="unsupported result"):
+        module.jobs_payload_from_needs({"unit-tests": {"result": "unknown"}})
+
+
+def test_ci_signal_evidence_cli_consumes_needs_context_without_outputs(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    module = _load_ci_signal_evidence()
+    output = tmp_path / "ci-signal-evidence.json"
+    monkeypatch.setenv(
+        "CI_NEEDS_JSON",
+        json.dumps(
+            {
+                "workflow-lint": {
+                    "result": "failure",
+                    "outputs": {"password": "must-not-survive"},
+                }
+            }
+        ),
+    )
+
+    result = module.main(
+        [
+            "--needs-env",
+            "CI_NEEDS_JSON",
+            "--output",
+            str(output),
+            "--repository",
+            "sgajbi/lotus-idea",
+            "--commit-sha",
+            "e" * 40,
+            "--ref",
+            "refs/heads/feature",
+            "--workflow",
+            "Remote Feature Lane",
+            "--run-id",
+            "655",
+            "--run-attempt",
+            "1",
+            "--generated-at-utc",
+            "2026-07-16T23:00:00Z",
+        ]
+    )
+
+    assert result == 0
+    artifact_text = output.read_text(encoding="utf-8")
+    artifact = json.loads(artifact_text)
+    assert artifact["source"] == "github-actions-needs-context"
+    assert artifact["summary"]["failedJobCount"] == 1
+    assert artifact["summary"]["failureCategories"] == ["workflow_lint"]
+    assert "password" not in artifact_text
 
 
 def test_ci_signal_evidence_cli_writes_artifact(tmp_path: Path) -> None:

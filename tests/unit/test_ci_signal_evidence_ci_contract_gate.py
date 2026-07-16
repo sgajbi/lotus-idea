@@ -24,9 +24,9 @@ def test_ci_contract_gate_blocks_missing_feature_signal_evidence(tmp_path: Path)
     feature_lane = workflow_dir / "feature-lane.yml"
     feature_lane.write_text(
         feature_lane.read_text(encoding="utf-8").replace(
-            "python scripts/ci_signal_evidence.py --jobs-json ci-jobs.json "
+            "python scripts/ci_signal_evidence.py --needs-env CI_NEEDS_JSON "
             "--output ci-signal-evidence.json",
-            "python -m json.tool ci-jobs.json",
+            "python -m json.tool ci-needs.json",
         ),
         encoding="utf-8",
     )
@@ -36,7 +36,7 @@ def test_ci_contract_gate_blocks_missing_feature_signal_evidence(tmp_path: Path)
     assert "feature-lane.yml missing `scripts/ci_signal_evidence.py`" in errors
 
 
-def test_ci_contract_gate_blocks_direct_ci_signal_evidence_api_fetch(
+def test_ci_contract_gate_blocks_replacing_native_needs_with_api_fetch(
     tmp_path: Path,
 ) -> None:
     module = _load_ci_contract_gate()
@@ -44,17 +44,20 @@ def test_ci_contract_gate_blocks_direct_ci_signal_evidence_api_fetch(
     feature_lane = workflow_dir / "feature-lane.yml"
     feature_lane.write_text(
         feature_lane.read_text(encoding="utf-8").replace(
-            "python scripts/ci/fetch_github_actions_jobs.py --output ci-jobs.json",
-            "gh api repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/jobs",
+            "        env:\n"
+            "          CI_NEEDS_JSON: ${{ toJson(needs) }}\n"
+            "        run: python scripts/ci_signal_evidence.py --needs-env "
+            "CI_NEEDS_JSON --output ci-signal-evidence.json",
+            "        run: gh api repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/jobs",
         ),
         encoding="utf-8",
     )
 
     errors = module.validate_workflows(workflow_dir)
 
+    assert "feature-lane.yml missing `CI_NEEDS_JSON: ${{ toJson(needs) }}`" in errors
     assert (
-        "feature-lane.yml missing "
-        "`python scripts/ci/fetch_github_actions_jobs.py --output ci-jobs.json`"
+        "feature-lane.yml missing `scripts/ci_signal_evidence.py --needs-env CI_NEEDS_JSON`"
     ) in errors
     assert (
         "feature-lane.yml must not contain "
