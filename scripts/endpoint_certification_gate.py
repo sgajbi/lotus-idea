@@ -13,9 +13,9 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from endpoint_source_contracts import validate_signal_source_contract_error_examples  # noqa: E402
 from endpoint_ai_contracts import validate_ai_attested_success_mode  # noqa: E402
+from endpoint_status_contracts import validate_endpoint_status_contract  # noqa: E402
 
 LEDGER_PATH = Path("docs/operations/endpoint-certification-ledger.json")
-APP_MAIN_PATH = Path("src/app/main.py")
 REQUIRED_FIELDS = (
     "method",
     "path",
@@ -49,6 +49,7 @@ ALLOWED_CERTIFICATION_STATUSES = frozenset(
     "baseline_certified certified implemented_not_certified planned not_applicable".split()
 )
 OPERATION_EVENT_TEST_TERMS = ("operation_event", "operation_events")
+IMPLEMENTED_OPERATION_STATUSES = frozenset({"certified", "implemented_not_certified"})
 NEGATIVE_OR_DEGRADED_TEST_TERMS = (
     "blocked",
     "conflict",
@@ -87,49 +88,6 @@ def _openapi_schema_from_app() -> dict[str, Any]:
     from app.main import app
 
     return app.openapi()
-
-
-def _openapi_operations_from_app() -> set[tuple[str, str]]:
-    openapi = _openapi_schema_from_app()
-    operations: set[tuple[str, str]] = set()
-    for path, path_item in openapi.get("paths", {}).items():
-        if not isinstance(path_item, dict):
-            continue
-        for method in path_item:
-            if method.lower() in {"get", "post", "put", "patch", "delete"}:
-                operations.add((method.upper(), path))
-    return operations
-
-
-def _openapi_operations_from_source() -> set[tuple[str, str]]:
-    operations: set[tuple[str, str]] = set()
-    tree = ast.parse(APP_MAIN_PATH.read_text(encoding="utf-8"), filename=str(APP_MAIN_PATH))
-    for node in ast.walk(tree):
-        if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-            continue
-        for decorator in node.decorator_list:
-            if not isinstance(decorator, ast.Call):
-                continue
-            if not isinstance(decorator.func, ast.Attribute):
-                continue
-            method = decorator.func.attr.lower()
-            if method not in {"get", "post", "put", "patch", "delete"}:
-                continue
-            if not decorator.args or not isinstance(decorator.args[0], ast.Constant):
-                continue
-            path = decorator.args[0].value
-            if isinstance(path, str):
-                operations.add((method.upper(), path))
-    return operations
-
-
-def _openapi_operations() -> set[tuple[str, str]]:
-    try:
-        return _openapi_operations_from_app()
-    except ModuleNotFoundError as exc:
-        if APP_MAIN_PATH.exists():
-            return _openapi_operations_from_source()
-        raise exc
 
 
 def _parse_json_examples(
@@ -174,21 +132,21 @@ def _validate_test_reference(operation: tuple[str, str], reference: str) -> list
     return [f"{operation}: test_evidence test does not exist: {reference}"]
 
 
-def _validate_certified_endpoint_posture(
+def _validate_implemented_endpoint_posture(
     endpoint: dict[str, Any],
     openapi_spec: dict[str, Any] | None = None,
 ) -> list[str]:
     operation = (str(endpoint["method"]).upper(), str(endpoint["path"]))
-    if endpoint["certification_status"] != "certified":
+    if endpoint["certification_status"] not in IMPLEMENTED_OPERATION_STATUSES:
         return []
 
     errors: list[str] = []
-    if operation in BASELINE_OPERATIONS:
+    if endpoint["certification_status"] == "certified" and operation in BASELINE_OPERATIONS:
         errors.append(f"{operation}: baseline operation must not use certified status")
 
     capabilities = _capabilities_from_endpoint(endpoint)
     if not capabilities:
-        errors.append(f"{operation}: certified endpoint must name at least one idea.* capability")
+        errors.append(f"{operation}: implemented endpoint must name at least one idea.* capability")
 
     unsupported_boundary = str(endpoint.get("when_not_to_use", ""))
     for boundary_term in BOUNDARY_TERMS:
@@ -199,24 +157,26 @@ def _validate_certified_endpoint_posture(
 
     if "scripts/openapi_quality_gate.py" not in str(endpoint.get("openapi_evidence", "")):
         errors.append(
-            f"{operation}: openapi_evidence must reference scripts/openapi_quality_gate.py"
+            f"{operation}: implemented endpoint openapi_evidence must reference "
+            "scripts/openapi_quality_gate.py"
         )
 
     if not any("403" in str(example) for example in endpoint.get("error_examples", [])):
-        errors.append(f"{operation}: certified endpoint must document product-safe 403 behavior")
+        errors.append(f"{operation}: implemented endpoint must document product-safe 403 behavior")
 
     test_evidence = endpoint.get("test_evidence", [])
     if not any(
         term in str(reference) for reference in test_evidence for term in OPERATION_EVENT_TEST_TERMS
     ):
         errors.append(
-            f"{operation}: certified endpoint must reference bounded operation-event test evidence"
+            f"{operation}: implemented endpoint must reference bounded operation-event test evidence"
         )
 
-    errors.extend(_validate_certified_endpoint_test_pyramid(operation, test_evidence))
+    errors.extend(_validate_implemented_endpoint_test_pyramid(operation, test_evidence))
     errors.extend(_validate_gateway_publication_posture(endpoint))
     errors.extend(validate_ai_attested_success_mode(endpoint, openapi_spec))
     errors.extend(validate_signal_source_contract_error_examples(endpoint))
+    errors.extend(validate_endpoint_status_contract(endpoint, openapi_spec))
     if openapi_spec is not None:
         errors.extend(_validate_openapi_caller_context_publication(endpoint, openapi_spec))
 
@@ -329,11 +289,11 @@ def _validate_caller_header_descriptions(
     return errors
 
 
-def _validate_certified_endpoint_test_pyramid(
+def _validate_implemented_endpoint_test_pyramid(
     operation: tuple[str, str], test_evidence: object
 ) -> list[str]:
     if not isinstance(test_evidence, list):
-        return [f"{operation}: certified endpoint test_evidence must be a list"]
+        return [f"{operation}: implemented endpoint test_evidence must be a list"]
 
     references = [str(reference) for reference in test_evidence]
     errors: list[str] = []
@@ -343,7 +303,7 @@ def _validate_certified_endpoint_test_pyramid(
         for reference in references
     ):
         errors.append(
-            f"{operation}: certified endpoint must reference at least one integration API "
+            f"{operation}: implemented endpoint must reference at least one integration API "
             "behavior test"
         )
 
@@ -356,7 +316,8 @@ def _validate_certified_endpoint_test_pyramid(
         term in test_name for test_name in test_names for term in NEGATIVE_OR_DEGRADED_TEST_TERMS
     ):
         errors.append(
-            f"{operation}: certified endpoint must reference negative or degraded-path test evidence"
+            f"{operation}: implemented endpoint must reference negative or degraded-path "
+            "test evidence"
         )
     return errors
 
@@ -477,7 +438,7 @@ def main() -> int:
         ):
             errors.append(f"{operation}: baseline endpoint must use baseline_certified status")
 
-        errors.extend(_validate_certified_endpoint_posture(endpoint, openapi_spec))
+        errors.extend(_validate_implemented_endpoint_posture(endpoint, openapi_spec))
 
     missing_from_ledger = sorted(openapi_operations - ledger_operations)
     stale_in_ledger = sorted(ledger_operations - openapi_operations)
