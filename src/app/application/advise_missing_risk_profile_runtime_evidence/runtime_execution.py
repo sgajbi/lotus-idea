@@ -8,6 +8,7 @@ from app.application.advise_policy_runtime_evidence import (
     AdvisePolicyRuntimeEvidenceScope,
     AdvisePolicyWorkflowScope,
     advise_policy_workflow_qualification_blockers,
+    build_advise_policy_request_receipt,
     build_advise_policy_workflow_receipt,
 )
 from app.application.missing_risk_profile_signal import (
@@ -116,7 +117,10 @@ def build_advise_missing_risk_profile_runtime_execution(
         "execution": {
             "status": "completed" if evidence is not None else "blocked",
             "evaluatedAtUtc": format_utc(result.command.evaluated_at_utc),
-            "requestReceipt": _request_receipt(result),
+            "requestReceipt": build_advise_policy_request_receipt(
+                result.command,
+                policy_version=result.policy.policy_version,
+            ),
             "workflowReceipt": workflow_receipt,
             "evaluationReceipt": _evaluation_receipt(result, workflow_receipt=workflow_receipt),
             "qualificationBlockers": blockers,
@@ -144,24 +148,6 @@ def build_advise_missing_risk_profile_runtime_execution(
             "ideaPersistenceRequired": False,
         },
     }
-
-
-def _request_receipt(result: AdviseMissingRiskProfileResult) -> dict[str, Any]:
-    command = result.command
-    material = {
-        "tenantIdHash": identity_hash(command.tenant_id),
-        "bookIdHash": identity_hash(command.book_id),
-        "portfolioIdHash": identity_hash(command.portfolio_id),
-        "clientIdHash": identity_hash(command.client_id),
-        "evaluationIdHash": identity_hash(command.evaluation_id),
-        "asOfDate": command.as_of_date.isoformat(),
-        "evaluatedAtUtc": format_utc(command.evaluated_at_utc),
-        "consumerSystem": "lotus-idea",
-        "correlationIdHash": identity_hash(command.correlation_id or ""),
-        "traceIdHash": identity_hash(command.trace_id or ""),
-        "policyVersion": result.policy.policy_version,
-    }
-    return {**material, "requestDigest": sha256_json(material)}
 
 
 def _evaluation_receipt(
