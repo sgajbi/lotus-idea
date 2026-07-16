@@ -6,7 +6,7 @@
 | **Applies to** | RFC-0002 Slice 09 and later Gateway, Workbench, proof, and promotion slices |
 | **Last reviewed** | 2026-07-14 |
 | **Product owner** | `lotus-idea` for opportunity intelligence; `lotus-ai` for AI runtime infrastructure and governed workflow packs |
-| **Review trigger** | Before Slice 09 implementation resumes, before a material AI capability decision, and before supported-feature promotion |
+| **Review trigger** | Before external Slice 09 certification work, before a material AI capability decision, and before supported-feature promotion |
 
 ## Decision
 

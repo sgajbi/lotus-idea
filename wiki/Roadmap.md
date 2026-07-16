@@ -73,10 +73,12 @@ proof, downstream proof, supported-feature evidence, and mainline CI all agree.
     internal, unpromoted foundation until later product-proof gates pass.
     Exact-main SHA `d5be2390` passed Main Releasability run `29297787754` and
     CodeQL run `29297783153`,
-12. RFC-0002 Slice 09 partially implements internal AI governance with redacted
-    evidence envelopes, verifier/fallback controls, safe audit events,
-    certified internal AI explanation evaluator API, a not-certified AI
-    explanation readiness diagnostic, and no AI downstream authority,
+12. RFC-0002 Slice 09 completes the Lotus Idea repository implementation for
+    internal AI governance with redacted evidence envelopes,
+    verifier/fallback controls, safe audit events, certified internal AI
+    explanation APIs, durable source-safe lineage, a not-certified readiness
+    diagnostic, and no AI downstream authority. Live provider, production
+    model-risk, Gateway/Workbench, and promotion evidence remain blocked,
 13. RFC-0002 Slice 10 partially implements the certified internal
     `POST /api/v1/idea-signals/high-cash/evaluate` and
     `POST /api/v1/idea-signals/high-cash/evaluate-and-persist` API foundations
