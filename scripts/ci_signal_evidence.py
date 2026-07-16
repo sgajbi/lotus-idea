@@ -17,6 +17,30 @@ FORBIDDEN_SOURCE_MARKERS = (
     "portfolio_id",
     "account_number",
 )
+NEEDS_JOB_RESULTS = {"success", "failure", "cancelled", "skipped"}
+
+
+def jobs_payload_from_needs(needs_payload: dict[str, Any]) -> dict[str, Any]:
+    jobs: list[dict[str, Any]] = []
+    for job_id, metadata in sorted(needs_payload.items()):
+        if not isinstance(metadata, dict):
+            raise ValueError(f"needs entry {job_id!r} must be an object")
+        result = metadata.get("result")
+        if result not in NEEDS_JOB_RESULTS:
+            raise ValueError(f"needs entry {job_id!r} has unsupported result {result!r}")
+        jobs.append(
+            {
+                "name": job_id,
+                "status": "completed",
+                "conclusion": result,
+                "started_at": None,
+                "completed_at": None,
+                "runner_name": None,
+                "labels": [],
+                "steps": [],
+            }
+        )
+    return {"jobs": jobs}
 
 
 def build_ci_signal_evidence(
@@ -173,7 +197,7 @@ def _build_step(step: dict[str, Any]) -> dict[str, Any]:
 def _failure_category(name: str, conclusion: str) -> str | None:
     if conclusion in {"success", "skipped", "unknown", ""}:
         return None
-    lowered = name.lower()
+    lowered = name.lower().replace("-", " ").replace("_", " ")
     if conclusion == "cancelled":
         return "cancelled"
     if conclusion == "timed_out":
@@ -252,7 +276,12 @@ def _default_generated_at() -> str:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Generate source-safe CI timing/signal evidence.")
-    parser.add_argument("--jobs-json", required=True, help="GitHub Actions run jobs API payload.")
+    source = parser.add_mutually_exclusive_group(required=True)
+    source.add_argument("--jobs-json", help="GitHub Actions run jobs API payload.")
+    source.add_argument(
+        "--needs-env",
+        help="Environment variable containing the GitHub Actions needs context.",
+    )
     parser.add_argument("--output", required=True, help="Path to write ci-signal-evidence.json.")
     parser.add_argument("--repository", default=os.getenv("GITHUB_REPOSITORY", "unknown"))
     parser.add_argument("--commit-sha", default=os.getenv("GITHUB_SHA", "unknown"))
@@ -266,7 +295,18 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    jobs_payload = json.loads(Path(args.jobs_json).read_text(encoding="utf-8"))
+    if args.needs_env:
+        raw_needs = os.getenv(args.needs_env)
+        if raw_needs is None:
+            raise ValueError(f"environment variable {args.needs_env!r} is not set")
+        parsed_needs = json.loads(raw_needs)
+        if not isinstance(parsed_needs, dict):
+            raise ValueError("GitHub Actions needs context must be a JSON object")
+        jobs_payload = jobs_payload_from_needs(parsed_needs)
+        evidence_source = "github-actions-needs-context"
+    else:
+        jobs_payload = json.loads(Path(args.jobs_json).read_text(encoding="utf-8"))
+        evidence_source = "github-actions-jobs-api"
     artifact = build_ci_signal_evidence(
         jobs_payload=jobs_payload,
         repository=args.repository,
@@ -276,6 +316,7 @@ def main(argv: list[str] | None = None) -> int:
         run_id=args.run_id,
         run_attempt=args.run_attempt,
         generated_at_utc=args.generated_at_utc,
+        source=evidence_source,
     )
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
