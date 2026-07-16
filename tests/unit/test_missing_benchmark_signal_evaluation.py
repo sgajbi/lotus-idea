@@ -17,12 +17,42 @@ from app.domain import (
     SourceRef,
     SourceSystem,
     UnsupportedEvidenceReason,
+    benchmark_assignment_diagnostic,
     evaluate_missing_benchmark_signal,
 )
 
 
 AS_OF_DATE = date(2026, 6, 21)
 EVALUATED_AT = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
+
+
+@pytest.mark.parametrize(
+    ("identity", "effective", "status", "version", "expected"),
+    (
+        (False, False, None, False, "core_benchmark_assignment_benchmark_identity_missing"),
+        (True, False, None, False, "core_benchmark_assignment_not_effective_for_as_of_date"),
+        (True, True, None, False, "core_benchmark_assignment_status_missing"),
+        (True, True, "inactive", False, "core_benchmark_assignment_inactive"),
+        (True, True, " ACTIVE ", False, "core_benchmark_assignment_version_missing"),
+        (True, True, "ACTIVE", True, "core_benchmark_assignment_ready"),
+    ),
+)
+def test_benchmark_assignment_diagnostic_has_deterministic_precedence(
+    identity: bool,
+    effective: bool,
+    status: str | None,
+    version: bool,
+    expected: str,
+) -> None:
+    assert (
+        benchmark_assignment_diagnostic(
+            benchmark_identity_resolved=identity,
+            assignment_effective_for_as_of_date=effective,
+            assignment_status=status,
+            assignment_version_present=version,
+        )
+        == expected
+    )
 
 
 def policy() -> MissingBenchmarkSignalPolicy:

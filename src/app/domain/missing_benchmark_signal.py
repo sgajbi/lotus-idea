@@ -162,12 +162,33 @@ def _blocked(
 
 
 def _benchmark_assignment_is_ready(source_input: MissingBenchmarkSignalInput) -> bool:
-    return (
-        source_input.benchmark_identity_resolved
-        and source_input.assignment_effective_for_as_of_date
-        and source_input.assignment_version_present
-        and (source_input.assignment_status or "").lower() == "active"
-    )
+    return benchmark_assignment_diagnostic(
+        benchmark_identity_resolved=source_input.benchmark_identity_resolved,
+        assignment_effective_for_as_of_date=source_input.assignment_effective_for_as_of_date,
+        assignment_status=source_input.assignment_status,
+        assignment_version_present=source_input.assignment_version_present,
+    ) == "core_benchmark_assignment_ready"
+
+
+def benchmark_assignment_diagnostic(
+    *,
+    benchmark_identity_resolved: bool,
+    assignment_effective_for_as_of_date: bool,
+    assignment_status: str | None,
+    assignment_version_present: bool,
+) -> str:
+    if not benchmark_identity_resolved:
+        return "core_benchmark_assignment_benchmark_identity_missing"
+    if not assignment_effective_for_as_of_date:
+        return "core_benchmark_assignment_not_effective_for_as_of_date"
+    normalized_status = (assignment_status or "").strip().lower()
+    if not normalized_status:
+        return "core_benchmark_assignment_status_missing"
+    if normalized_status != "active":
+        return f"core_benchmark_assignment_{normalized_status}"
+    if not assignment_version_present:
+        return "core_benchmark_assignment_version_missing"
+    return "core_benchmark_assignment_ready"
 
 
 def _stable_missing_benchmark_identity(
