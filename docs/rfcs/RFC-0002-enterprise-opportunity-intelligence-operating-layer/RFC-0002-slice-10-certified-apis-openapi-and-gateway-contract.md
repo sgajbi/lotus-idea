@@ -120,6 +120,21 @@ mode, its authority boundary, or its integration evidence drifts. This
 contract work does not promote feedback as a data product or supported
 feature.
 
+PR `#533` merged issue `#532` to `main` at
+`373bda0bc2203cb4e1f2ab0d011d8dd9890369ad`. Main Releasability run
+`29520564704` passed on attempt 2, including lint, typecheck, security,
+architecture, OpenAPI, 4,705 unit tests, integration, end-to-end, PostgreSQL
+runtime proof, 99% combined coverage, container runtime smoke, vulnerability
+scan, SBOM generation, commit-tagged image publication, digest inspection,
+keyless signing, provenance attestation, SBOM attestation, and release identity
+validation. Attempt 1 failed only while GHCR returned `unknown blob` during
+layer publication; rerunning the failed release job for the same exact source
+SHA succeeded without a code change. The released image is
+`ghcr.io/sgajbi/lotus-idea@sha256:b3df918b60770b6e3b54251ffacd11705a9a71fe47b6fdc8ce01b71531dc734c`.
+CodeQL run `29520557719` also passed for the exact merge SHA. Repo-authored
+wiki source was published after merge and strict parity returned zero
+differences. Supported-feature posture remains unchanged.
+
 The conversion-intent and conversion-outcome endpoints expose the Slice 12
 internal conversion workflow foundation over persisted, review-approved
 candidates. They require `Idempotency-Key` and conversion-specific
