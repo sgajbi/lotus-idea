@@ -133,9 +133,7 @@ def valid_advise_missing_suitability_runtime_evidence(
             correlation_id="corr-advise",
             trace_id="trace-advise",
         ),
-        advise_source=AuthoritativeAdviseMissingSuitabilitySource(
-            context_missing=context_missing
-        ),
+        advise_source=AuthoritativeAdviseMissingSuitabilitySource(context_missing=context_missing),
     )
     return build_advise_missing_suitability_runtime_execution(
         generated_at_utc=evaluated_at_utc,

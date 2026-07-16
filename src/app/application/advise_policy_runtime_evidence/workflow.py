@@ -136,7 +136,11 @@ def advise_policy_workflow_qualification_blockers(
         blockers.append("advise_source_quality_not_ready")
     if any(
         not _is_sha256(value)
-        for value in (runtime.content_hash, runtime.source_evidence_hash, runtime.policy_content_hash)
+        for value in (
+            runtime.content_hash,
+            runtime.source_evidence_hash,
+            runtime.policy_content_hash,
+        )
     ):
         blockers.append("advise_workflow_hash_invalid")
     counts: tuple[object, ...] = (

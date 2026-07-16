@@ -53,9 +53,7 @@ def test_runtime_execution_qualifies_candidate_from_one_authoritative_fetch() ->
 
 
 def test_runtime_execution_accepts_truthful_no_opportunity_receipt() -> None:
-    payload = _payload(
-        source=AuthoritativeAdviseMissingSuitabilitySource(context_missing=False)
-    )
+    payload = _payload(source=AuthoritativeAdviseMissingSuitabilitySource(context_missing=False))
 
     evaluation = payload["execution"]["evaluationReceipt"]
     assert evaluation["outcome"] == "not_eligible"
@@ -66,7 +64,10 @@ def test_runtime_execution_accepts_truthful_no_opportunity_receipt() -> None:
 @pytest.mark.parametrize(
     ("mutation", "expected_blocker"),
     (
-        (lambda runtime: replace(runtime, evaluation_id="other"), "advise_evaluation_scope_mismatch"),
+        (
+            lambda runtime: replace(runtime, evaluation_id="other"),
+            "advise_evaluation_scope_mismatch",
+        ),
         (
             lambda runtime: replace(runtime, tenant_scope_hash="sha256:" + "f" * 64),
             "advise_tenant_scope_mismatch",
