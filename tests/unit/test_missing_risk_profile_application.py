@@ -7,17 +7,18 @@ import pytest
 from app.application.missing_risk_profile_signal import (
     EvaluateMissingRiskProfileFromAdviseCommand,
     EvaluateMissingRiskProfileSignalCommand,
-    RiskProfilePosture,
+    evaluate_missing_risk_profile_readiness_from_advise,
     evaluate_missing_risk_profile_signal_command,
     evaluate_missing_risk_profile_signal_from_advise,
-    _risk_profile_posture_from_advise_diagnostic,
 )
 from app.domain import (
     EvidenceFreshness,
     ReasonCode,
+    RiskProfilePosture,
     SignalEvaluationOutcome,
     SourceRef,
     SourceSystem,
+    risk_profile_posture_from_advise_diagnostic,
 )
 from app.domain.access_scope import ReviewAccessScope
 from app.ports.advise_sources import (
@@ -165,7 +166,60 @@ def test_missing_risk_profile_application_maps_advise_risk_profile_diagnostics(
     diagnostic: str,
     expected: RiskProfilePosture | None,
 ) -> None:
-    assert _risk_profile_posture_from_advise_diagnostic(diagnostic) is expected
+    assert risk_profile_posture_from_advise_diagnostic(diagnostic) is expected
+
+
+def test_missing_risk_profile_domain_rejects_conflicting_diagnostic_postures() -> None:
+    assert (
+        risk_profile_posture_from_advise_diagnostic("risk_profile_missing,risk_profile_current")
+        is None
+    )
+
+
+def test_missing_risk_profile_readiness_preserves_exact_source_evidence() -> None:
+    evidence = AdvisePolicyEvaluationEvidence(
+        evaluation_status="PENDING_REVIEW",
+        open_requirement_count=1,
+        blocked_requirement_count=0,
+        sign_off_status="PENDING_REVIEW",
+        sign_off_blocker_count=0,
+        client_ready_publication="BLOCKED",
+        policy_ref=_source_ref(),
+        advise_diagnostic="risk_profile_missing",
+    )
+
+    result = evaluate_missing_risk_profile_readiness_from_advise(
+        _command(),
+        advise_source=StubAdviseSource(evidence),
+    )
+
+    assert result.evaluation.outcome is SignalEvaluationOutcome.CANDIDATE_CREATED
+    assert result.evidence is evidence
+    assert result.source_error_code is None
+
+
+@pytest.mark.parametrize(
+    ("exception", "expected_code"),
+    (
+        (AdviseSourceEntitlementDenied(), "advise_source_entitlement_denied"),
+        (
+            AdviseSourceUnavailable(code="advise_policy_workflow_pending"),
+            "advise_policy_workflow_pending",
+        ),
+    ),
+)
+def test_missing_risk_profile_readiness_preserves_stable_source_error(
+    exception: Exception,
+    expected_code: str,
+) -> None:
+    result = evaluate_missing_risk_profile_readiness_from_advise(
+        _command(),
+        advise_source=StubAdviseSource(exception=exception),
+    )
+
+    assert result.evaluation.outcome is SignalEvaluationOutcome.BLOCKED
+    assert result.evidence is None
+    assert result.source_error_code == expected_code
 
 
 def test_missing_risk_profile_application_blocks_when_advise_source_unavailable() -> None:
