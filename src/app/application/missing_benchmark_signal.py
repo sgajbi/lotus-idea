@@ -53,6 +53,13 @@ class EvaluateMissingBenchmarkFromCoreCommand:
     trace_id: str | None = None
 
 
+@dataclass(frozen=True)
+class MissingBenchmarkSourceEvaluation:
+    evaluation: SignalEvaluationResult
+    evidence: CoreBenchmarkAssignmentEvidence | None
+    source_error_code: str | None = None
+
+
 DEFAULT_MISSING_BENCHMARK_POLICY = MissingBenchmarkSignalPolicy(
     policy_version=CandidateScorePolicyVersion.MISSING_BENCHMARK.value,
     candidate_score=Decimal("68"),
@@ -87,6 +94,19 @@ def evaluate_missing_benchmark_signal_from_core(
     core_source: CoreBenchmarkAssignmentSourcePort,
     policy: MissingBenchmarkSignalPolicy = DEFAULT_MISSING_BENCHMARK_POLICY,
 ) -> SignalEvaluationResult:
+    return evaluate_missing_benchmark_readiness_from_core(
+        command,
+        core_source=core_source,
+        policy=policy,
+    ).evaluation
+
+
+def evaluate_missing_benchmark_readiness_from_core(
+    command: EvaluateMissingBenchmarkFromCoreCommand,
+    *,
+    core_source: CoreBenchmarkAssignmentSourcePort,
+    policy: MissingBenchmarkSignalPolicy = DEFAULT_MISSING_BENCHMARK_POLICY,
+) -> MissingBenchmarkSourceEvaluation:
     try:
         evidence = core_source.fetch_benchmark_assignment_evidence(
             CoreBenchmarkAssignmentEvidenceRequest(
@@ -100,33 +120,44 @@ def evaluate_missing_benchmark_signal_from_core(
             )
         )
     except CoreSourceEntitlementDenied:
-        return evaluate_missing_benchmark_signal_command(
-            EvaluateMissingBenchmarkSignalCommand(
-                as_of_date=command.as_of_date,
-                benchmark_assignment_ref=None,
-                benchmark_identity_resolved=False,
-                assignment_effective_for_as_of_date=False,
-                assignment_status=None,
-                assignment_version_present=False,
-                evaluated_at_utc=command.evaluated_at_utc,
-                entitlement_allowed=False,
-                access_scope=tenant_portfolio_scope(
-                    tenant_id=command.tenant_id,
-                    portfolio_id=command.portfolio_id,
+        return MissingBenchmarkSourceEvaluation(
+            evaluation=evaluate_missing_benchmark_signal_command(
+                EvaluateMissingBenchmarkSignalCommand(
+                    as_of_date=command.as_of_date,
+                    benchmark_assignment_ref=None,
+                    benchmark_identity_resolved=False,
+                    assignment_effective_for_as_of_date=False,
+                    assignment_status=None,
+                    assignment_version_present=False,
+                    evaluated_at_utc=command.evaluated_at_utc,
+                    entitlement_allowed=False,
+                    access_scope=tenant_portfolio_scope(
+                        tenant_id=command.tenant_id,
+                        portfolio_id=command.portfolio_id,
+                    ),
+                    duplicate_of_candidate_id=command.duplicate_of_candidate_id,
                 ),
-                duplicate_of_candidate_id=command.duplicate_of_candidate_id,
+                policy=policy,
             ),
-            policy=policy,
+            evidence=None,
+            source_error_code="core_source_entitlement_denied",
         )
-    except CoreSourceUnavailable:
-        return SignalEvaluationResult(
-            outcome=SignalEvaluationOutcome.BLOCKED,
-            family=OpportunityFamily.MISSING_BENCHMARK,
-            reason_codes=(ReasonCode.SOURCE_PARTIAL,),
-            unsupported_reasons=(UnsupportedEvidenceReason.SOURCE_UNAVAILABLE,),
+    except CoreSourceUnavailable as exc:
+        return MissingBenchmarkSourceEvaluation(
+            evaluation=SignalEvaluationResult(
+                outcome=SignalEvaluationOutcome.BLOCKED,
+                family=OpportunityFamily.MISSING_BENCHMARK,
+                reason_codes=(ReasonCode.SOURCE_PARTIAL,),
+                unsupported_reasons=(UnsupportedEvidenceReason.SOURCE_UNAVAILABLE,),
+            ),
+            evidence=None,
+            source_error_code=exc.code,
         )
 
-    return _evaluate_missing_benchmark_core_evidence(command, evidence, policy=policy)
+    return MissingBenchmarkSourceEvaluation(
+        evaluation=_evaluate_missing_benchmark_core_evidence(command, evidence, policy=policy),
+        evidence=evidence,
+    )
 
 
 def _evaluate_missing_benchmark_core_evidence(
