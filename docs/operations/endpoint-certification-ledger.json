@@ -818,6 +818,7 @@
         "tests/unit/test_candidate_lifecycle_application.py::test_candidate_lifecycle_transition_command_rejects_downstream_authority_targets",
         "tests/unit/test_idea_persistence.py::test_lifecycle_transition_blocks_downstream_authority_targets_before_outbox",
         "tests/unit/test_service_contract.py::test_lifecycle_transition_openapi_excludes_downstream_authority_input_statuses",
+        "tests/unit/api_examples/test_candidate_state_examples.py::test_candidate_lifecycle_success_examples_match_ledger_and_openapi",
         "tests/integration/test_api_operation_events.py::test_lifecycle_queue_review_and_feedback_emit_operation_events"
       ],
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
@@ -948,7 +949,9 @@
       ],
       "response_examples": [
         "{\"candidateId\":\"idea_high_cash_8d57adbf52f7f5a7\",\"replayStatus\":\"matched\",\"evidencePacketId\":\"iep_high_cash_8d57adbf52f7f5a7\",\"recordedEvidenceHash\":\"sha256:evidence-lineage\",\"currentEvidenceHash\":\"sha256:evidence-lineage\",\"sourceRefCount\":1,\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false,\"grantsDownstreamAuthority\":false}",
-        "{\"candidateId\":\"idea_high_cash_8d57adbf52f7f5a7\",\"replayStatus\":\"hash_mismatch\",\"evidencePacketId\":\"iep_high_cash_8d57adbf52f7f5a7\",\"recordedEvidenceHash\":\"sha256:evidence-lineage\",\"currentEvidenceHash\":\"sha256:changed-evidence-lineage\",\"sourceRefCount\":1,\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false,\"grantsDownstreamAuthority\":false}"
+        "{\"candidateId\":\"idea_high_cash_8d57adbf52f7f5a7\",\"replayStatus\":\"hash_mismatch\",\"evidencePacketId\":\"iep_high_cash_8d57adbf52f7f5a7\",\"recordedEvidenceHash\":\"sha256:evidence-lineage\",\"currentEvidenceHash\":\"sha256:changed-evidence-lineage\",\"sourceRefCount\":1,\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false,\"grantsDownstreamAuthority\":false}",
+        "{\"candidateId\":\"idea_high_cash_8d57adbf52f7f5a7\",\"replayStatus\":\"stale_source\",\"evidencePacketId\":\"iep_high_cash_8d57adbf52f7f5a7\",\"recordedEvidenceHash\":\"sha256:evidence-lineage\",\"currentEvidenceHash\":null,\"sourceRefCount\":1,\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false,\"grantsDownstreamAuthority\":false}",
+        "{\"candidateId\":\"idea_high_cash_8d57adbf52f7f5a7\",\"replayStatus\":\"expired\",\"evidencePacketId\":\"iep_high_cash_8d57adbf52f7f5a7\",\"recordedEvidenceHash\":\"sha256:evidence-lineage\",\"currentEvidenceHash\":null,\"sourceRefCount\":1,\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false,\"grantsDownstreamAuthority\":false}"
       ],
       "error_examples": [
         "403 returns product-safe Problem Details when the caller lacks the operator role or idea.candidate.evidence.replay capability.",
@@ -958,8 +961,10 @@
       "test_evidence": [
         "tests/integration/test_candidate_evidence_replay_api.py::test_candidate_evidence_replay_api_returns_matched_posture_without_source_payloads",
         "tests/integration/test_candidate_evidence_replay_api.py::test_candidate_evidence_replay_api_reports_hash_mismatch_and_stale_source",
+        "tests/integration/test_candidate_evidence_replay_api.py::test_candidate_evidence_replay_api_reports_expired_posture",
         "tests/integration/test_candidate_evidence_replay_api.py::test_candidate_evidence_replay_api_requires_operator_permission_and_existing_candidate",
         "tests/integration/test_candidate_evidence_replay_api.py::test_candidate_evidence_replay_api_rejects_missing_current_source_refs",
+        "tests/unit/api_examples/test_candidate_state_examples.py::test_candidate_evidence_replay_success_examples_match_ledger_and_openapi",
         "tests/integration/test_api_operation_events.py::test_candidate_evidence_replay_api_emits_bounded_operation_event"
       ],
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
