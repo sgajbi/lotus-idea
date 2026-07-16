@@ -11,6 +11,7 @@ Expose certified `lotus-idea` APIs and Gateway routes for supported behavior.
 The first certified API foundations are:
 
 - `POST /api/v1/idea-signals/high-cash/evaluate`
+- `POST /api/v1/idea-signals/high-cash/evaluate-from-source`
 - `POST /api/v1/idea-signals/high-cash/evaluate-and-persist`
 - `POST /api/v1/idea-signals/low-income/evaluate`
 - `POST /api/v1/idea-signals/bond-maturity/evaluate`
@@ -215,6 +216,22 @@ Repo-authored wiki source was published at wiki commit `25b0620`, and strict
 parity returned zero differences. The implementation branch is absent locally
 and remotely. Supported-feature posture remains unchanged, and issue `#542`
 remains open for the other capability-owned multi-shape response families.
+
+Issue `#548` continues issue `#542` through the high-cash signal family. One
+capability-owned deterministic factory now executes the existing application
+and domain services and serializes their real API DTOs for caller-supplied,
+Core-backed, and evaluate-and-persist contracts. Both evaluation operations
+publish `candidate_created`, `blocked`, `suppressed`, and `not_eligible` as
+named HTTP 200 modes. Evaluate-and-persist additionally publishes `accepted`,
+idempotent `replayed`, and `duplicate_candidate` persistence decisions, while
+blocked, suppressed, and not-eligible evaluations explicitly retain
+`persistence=null`. Focused HTTP tests prove every mode, including source
+runtime cleanup and retry-safe duplicate handling, and the endpoint
+certification gate enforces exact factory, ledger, generated OpenAPI, and cited
+test parity. This is internal design modularity only. Core retains cash-weight
+and source authority; live Core certification, Gateway/Workbench realization,
+data-product promotion, and supported-feature promotion remain outside this
+tranche.
 
 PR `#543` merged issue `#539` to `main` at
 `f6e2365eaec5f4f0184d5985e5b5fcc641b4883b`. Main Releasability run

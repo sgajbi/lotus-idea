@@ -195,6 +195,9 @@ Current RFC-0002 implementation-start baseline:
    posture across source ingestion, advisor queue, AI explanation, data mesh,
    runtime trust telemetry preview/snapshot/proof evidence, outbox delivery, Workbench, downstream
    realization, and supported-feature promotion.
+   High-cash caller, source-backed, and persistence APIs now publish their
+   complete executable HTTP 200 mode matrices from one application-backed,
+   DTO-serialized factory, with exact endpoint-ledger and OpenAPI parity.
    `make implementation-proof-readiness-check` generates and consumes the
    scheduled source-ingestion worker source contract while intentionally
    preserving the deployment blocker, durable repository
