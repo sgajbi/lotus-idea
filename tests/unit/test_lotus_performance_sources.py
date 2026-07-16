@@ -252,6 +252,63 @@ def test_lotus_performance_adapter_rejects_malformed_benchmark_context(
         ).fetch_benchmark_readiness_evidence(_benchmark_readiness_request())
 
 
+@pytest.mark.parametrize(
+    ("mutation", "expected_code"),
+    (
+        (
+            lambda coverage, metadata: metadata.update({"correlation_id": " "}),
+            "performance_correlation_id_malformed",
+        ),
+        (
+            lambda coverage, metadata: coverage.update({"requested_points": True}),
+            "performance_requested_points_malformed",
+        ),
+        (
+            lambda coverage, metadata: coverage.update({"coverage_ratio": "invalid"}),
+            "performance_coverage_ratio_malformed",
+        ),
+        (
+            lambda coverage, metadata: coverage.update({"coverage_ratio": "NaN"}),
+            "performance_coverage_ratio_malformed",
+        ),
+    ),
+)
+def test_lotus_performance_adapter_rejects_malformed_benchmark_readiness_metadata(
+    mutation: Any,
+    expected_code: str,
+) -> None:
+    payload = _payload()
+    diagnostics = payload["diagnostics"]
+    metadata = payload["metadata"]
+    assert isinstance(diagnostics, dict)
+    assert isinstance(metadata, dict)
+    coverage = diagnostics["coverage"]
+    assert isinstance(coverage, dict)
+    mutation(coverage, metadata)
+
+    with pytest.raises(PerformanceSourceUnavailable) as exc_info:
+        _adapter(
+            httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+        ).fetch_benchmark_readiness_evidence(_benchmark_readiness_request())
+
+    assert exc_info.value.code == expected_code
+
+
+def test_lotus_performance_adapter_preserves_absent_producer_trace_metadata() -> None:
+    payload = _payload()
+    metadata = payload["metadata"]
+    assert isinstance(metadata, dict)
+    metadata.pop("correlation_id")
+    metadata.pop("trace_id")
+
+    evidence = _adapter(
+        httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+    ).fetch_benchmark_readiness_evidence(_benchmark_readiness_request())
+
+    assert evidence.producer_correlation_id is None
+    assert evidence.producer_trace_id is None
+
+
 def test_lotus_performance_adapter_fetches_mandate_health_source_product_ref() -> None:
     seen: list[tuple[str, str, dict[str, Any]]] = []
 
