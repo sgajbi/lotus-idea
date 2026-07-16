@@ -19,6 +19,7 @@ from app.application.advise_mandate_restriction_runtime_evidence import (
 from app.application.runtime_evidence import sha256_json
 from app.domain import EvidenceFreshness
 from app.ports.advise_sources import (
+    AdvisePolicyEvaluationEvidence,
     AdvisePolicyEvaluationEvidenceRequest,
     AdviseSourceUnavailable,
 )
@@ -248,5 +249,5 @@ class _UnavailableSource:
     def fetch_policy_evaluation_evidence(
         self,
         request: AdvisePolicyEvaluationEvidenceRequest,
-    ) -> object:
+    ) -> AdvisePolicyEvaluationEvidence:
         raise AdviseSourceUnavailable(code="advise_temporal_identity_missing")
