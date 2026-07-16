@@ -569,7 +569,12 @@ def _configure_readiness_proof_artifacts(
             repository_root=ROOT,
         ),
     )
-    _write_proof(report_route_proof_path, _valid_report_intake_route_source_contract_proof())
+    _write_proof(
+        report_route_proof_path,
+        _valid_report_intake_route_source_contract_proof(
+            generated_at_utc=evaluated_at_utc,
+        ),
+    )
     _write_proof(
         bond_maturity_live_proof_path,
         _valid_bond_maturity_live_proof(generated_at_utc=evaluated_at_utc),
@@ -606,11 +611,14 @@ def _write_proof(path: Path, payload: dict[str, object]) -> None:
     )
 
 
-def _valid_report_intake_route_source_contract_proof() -> dict[str, object]:
+def _valid_report_intake_route_source_contract_proof(
+    *,
+    generated_at_utc: datetime,
+) -> dict[str, object]:
     return {
         "schemaVersion": REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF_SCHEMA_VERSION,
         "repository": "lotus-idea",
-        "generatedAtUtc": "2026-06-24T00:00:00+00:00",
+        "generatedAtUtc": generated_at_utc.isoformat(),
         "proofType": "lotus_report_idea_evidence_intake_route_source_contract",
         "proofScope": "report_intake_route_declaration_and_contract_compatibility",
         "evidenceClass": "source_contract",
