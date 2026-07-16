@@ -56,6 +56,8 @@ class AuthoritativeAdviseMandateRestrictionSource:
             evaluation_id=request.evaluation_id,
             tenant_scope_hash=identity_hash(self.tenant_id),
             portfolio_id=self.portfolio_id,
+            correlation_id=request.correlation_id,
+            trace_id=request.trace_id,
             as_of_date=request.as_of_date,
             generated_at_utc=generated_at,
             content_hash=EVALUATION_HASH,

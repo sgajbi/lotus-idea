@@ -57,6 +57,7 @@ _REQUEST_KEYS = frozenset(
         "evaluatedAtUtc",
         "consumerSystem",
         "correlationIdHash",
+        "traceIdHash",
         "policyVersion",
         "requestDigest",
     }
@@ -70,6 +71,8 @@ _WORKFLOW_KEYS = frozenset(
         "evaluationIdHash",
         "tenantScopeHash",
         "portfolioIdHash",
+        "sourceCorrelationIdHash",
+        "sourceTraceIdHash",
         "asOfDate",
         "generatedAtUtc",
         "contentHash",
@@ -212,10 +215,14 @@ def _digests_are_valid(*receipts: Mapping[str, Any]) -> bool:
             receipts[0].get("portfolioIdHash"),
             receipts[0].get("clientIdHash"),
             receipts[0].get("evaluationIdHash"),
+            receipts[0].get("correlationIdHash"),
+            receipts[0].get("traceIdHash"),
             receipts[0].get("requestDigest"),
             receipts[1].get("tenantScopeHash"),
             receipts[1].get("portfolioIdHash"),
             receipts[1].get("evaluationIdHash"),
+            receipts[1].get("sourceCorrelationIdHash"),
+            receipts[1].get("sourceTraceIdHash"),
             receipts[1].get("contentHash"),
             receipts[1].get("sourceEvidenceHash"),
             receipts[1].get("policyContentHash"),
@@ -244,6 +251,8 @@ def _receipts_reconcile(
         or request.get("evaluationIdHash") != workflow.get("evaluationIdHash")
         or request.get("tenantIdHash") != workflow.get("tenantScopeHash")
         or request.get("portfolioIdHash") != workflow.get("portfolioIdHash")
+        or request.get("correlationIdHash") != workflow.get("sourceCorrelationIdHash")
+        or request.get("traceIdHash") != workflow.get("sourceTraceIdHash")
         or request.get("asOfDate") != workflow.get("asOfDate")
         or request.get("policyVersion") != evaluation.get("policyVersion")
         or source_generated is None

@@ -71,6 +71,10 @@ class EvaluateAdviseMandateRestriction(RuntimeEvidenceScope):
         super().__post_init__()
         if not self.book_id.strip() or not self.client_id.strip() or not self.evaluation_id.strip():
             raise ValueError("book_id, client_id, and evaluation_id are required")
+        if self.correlation_id is None or self.trace_id is None:
+            raise ValueError("correlation_id and trace_id are required")
+        if not self.trace_id.strip():
+            raise ValueError("trace_id must not be blank")
 
 
 @dataclass(frozen=True)
@@ -180,6 +184,7 @@ def _request_receipt(result: AdviseMandateRestrictionResult) -> dict[str, Any]:
         "correlationIdHash": (
             identity_hash(command.correlation_id) if command.correlation_id else None
         ),
+        "traceIdHash": identity_hash(command.trace_id) if command.trace_id else None,
         "policyVersion": result.policy.policy_version,
     }
     return {**material, "requestDigest": sha256_json(material)}
@@ -200,6 +205,10 @@ def _workflow_receipt(
         "evaluationIdHash": identity_hash(runtime.evaluation_id) if runtime.evaluation_id else None,
         "tenantScopeHash": runtime.tenant_scope_hash,
         "portfolioIdHash": identity_hash(runtime.portfolio_id) if runtime.portfolio_id else None,
+        "sourceCorrelationIdHash": (
+            identity_hash(runtime.correlation_id) if runtime.correlation_id else None
+        ),
+        "sourceTraceIdHash": identity_hash(runtime.trace_id) if runtime.trace_id else None,
         "asOfDate": runtime.as_of_date.isoformat() if runtime.as_of_date else None,
         "generatedAtUtc": format_utc(runtime.generated_at_utc) if runtime.generated_at_utc else None,
         "contentHash": runtime.content_hash,
@@ -262,6 +271,8 @@ def _qualification_blockers(
         "advise_evaluation_identity_missing": runtime.evaluation_id,
         "advise_tenant_scope_missing": runtime.tenant_scope_hash,
         "advise_portfolio_scope_missing": runtime.portfolio_id,
+        "advise_source_correlation_missing": runtime.correlation_id,
+        "advise_source_trace_missing": runtime.trace_id,
         "advise_as_of_date_missing": runtime.as_of_date,
         "advise_generated_at_missing": runtime.generated_at_utc,
         "advise_evaluation_hash_missing": runtime.content_hash,
@@ -280,6 +291,10 @@ def _qualification_blockers(
         blockers.append("advise_tenant_scope_mismatch")
     if runtime.portfolio_id and runtime.portfolio_id != command.portfolio_id:
         blockers.append("advise_portfolio_scope_mismatch")
+    if runtime.correlation_id and runtime.correlation_id != command.correlation_id:
+        blockers.append("advise_source_correlation_mismatch")
+    if runtime.trace_id and runtime.trace_id != command.trace_id:
+        blockers.append("advise_source_trace_mismatch")
     if runtime.as_of_date and runtime.as_of_date != command.as_of_date:
         blockers.append("advise_as_of_date_mismatch")
     if runtime.generated_at_utc and runtime.generated_at_utc > command.evaluated_at_utc:
