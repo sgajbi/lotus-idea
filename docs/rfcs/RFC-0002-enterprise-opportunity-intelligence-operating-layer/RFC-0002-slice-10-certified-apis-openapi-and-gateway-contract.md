@@ -611,6 +611,23 @@ Focused validation passed for the current foundation:
     and digest-pinned runtime smoke. Strict wiki parity is zero and no
     closure-only wiki publication is needed. Issue `#526` is closed and its
     implementation branch is absent locally and remotely.
+42. Issue `#529` extends complete response certification from the single-mode
+    readiness diagnostic to every executable AI explanation evaluation success
+    family. One DTO-validated factory now publishes complete local-fixture,
+    verified-attested, deterministic-fallback, unsupported-claim,
+    forbidden-action, and unsafe-action-content responses to both generated
+    OpenAPI and the endpoint ledger. Certification requires exact serialized
+    equality, including explicit nulls, grounding, retention, provenance, and
+    no-authority fields.
+43. FastAPI's generated schema omitted explicit nulls from route examples, so
+    the application now applies a bounded post-generation injection from the
+    same code-owned factory. Focused mutation tests reject missing named modes,
+    missing control fields, grounding-policy drift, provider-authored blocked
+    narrative, and fallback authority drift. Two legacy public verifier states
+    with no executable constructor, route outcome, or behavioral test were
+    removed. This is design modularity and contract hardening inside the
+    existing deployable; persistence, runtime ownership, Gateway/Workbench,
+    supported-feature posture, and service topology do not change.
 
 PR merge-gate evidence remains required before merge.
 

@@ -1873,6 +1873,16 @@ grounding fields and model-risk runtime blockers cannot drift independently.
 Repository-dependent values remain explicit factory inputs rather than
 normalized-away differences.
 
+For any certified endpoint with materially different executable success
+families, publish one complete named example per family from a DTO-validated
+code-owned factory and require exact factory, endpoint-ledger, and generated
+OpenAPI equality. Preserve explicit nulls and control fields; when framework
+generation drops them, apply a bounded post-generation injection from that
+same factory. Public enum values require an executable constructor, route
+outcome, and behavioral test. Issue `#529` applies this contract to all six AI
+explanation evaluation success families and removes two legacy verifier states
+that had no executable behavior.
+
 ## Supported-Feature Promotion Rule
 
 The supported-feature registry is source truth for support posture.
