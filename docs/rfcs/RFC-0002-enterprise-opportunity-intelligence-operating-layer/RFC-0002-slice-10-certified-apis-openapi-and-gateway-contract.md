@@ -132,6 +132,19 @@ when any payload, replay evidence, or publication reference drifts. This is
 design modularity inside the existing `lotus-idea` deployable and does not
 create a review microservice or promote a supported review product.
 
+PR `#536` merged issue `#535` to `main` at
+`20d64edaaf15d9b85f69927f0a3887b2d57bd865`. Main Releasability run
+`29523305583` passed, including lint, typecheck, security, architecture,
+OpenAPI, 4,708 unit tests, integration, end-to-end, PostgreSQL runtime proof,
+99% combined coverage, container runtime smoke, vulnerability scan, SBOM
+generation, commit-tagged image publication, digest inspection, keyless
+signing, provenance attestation, SBOM attestation, release identity validation,
+and CI signal evidence. The released image is
+`ghcr.io/sgajbi/lotus-idea@sha256:f57e98efd9291e731e435db3d325dc453d6c129df8a865df8236d5d995807e16`.
+CodeQL run `29523299087` also passed for the exact merge SHA. Repo-authored
+wiki source was published after merge and strict parity returned zero
+differences. Supported-feature posture remains unchanged.
+
 PR `#533` merged issue `#532` to `main` at
 `373bda0bc2203cb4e1f2ab0d011d8dd9890369ad`. Main Releasability run
 `29520564704` passed on attempt 2, including lint, typecheck, security,
