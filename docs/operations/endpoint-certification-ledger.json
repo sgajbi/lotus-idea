@@ -1091,7 +1091,8 @@
         "{\"feedbackId\":\"feedback-useful-001\",\"outcome\":\"useful\",\"reasonCodes\":[\"review_required\"],\"recordedAtUtc\":\"2026-06-21T10:06:00Z\"}"
       ],
       "response_examples": [
-        "{\"feedbackEvent\":{\"feedbackId\":\"feedback-useful-001\",\"candidateId\":\"idea_high_cash_8d57adbf52f7f5a7\",\"evidencePacketId\":\"iep_high_cash_8d57adbf52f7f5a7\",\"outcome\":\"useful\",\"actorRole\":\"advisor\",\"reasonCodes\":[\"feedback_recorded\",\"review_required\"],\"recordedAtUtc\":\"2026-06-21T10:06:00Z\"},\"persistence\":{\"decision\":\"accepted\",\"candidateId\":\"idea_high_cash_8d57adbf52f7f5a7\",\"lifecycleStatus\":\"generated\",\"reviewPosture\":\"advisor_review_required\",\"auditEventType\":\"idea.feedback.recorded\"},\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}"
+        "{\"feedbackEvent\":{\"feedbackId\":\"feedback-useful-001\",\"candidateId\":\"idea_high_cash_8d57adbf52f7f5a7\",\"evidencePacketId\":\"iep_high_cash_8d57adbf52f7f5a7\",\"outcome\":\"useful\",\"actorRole\":\"advisor\",\"reasonCodes\":[\"feedback_recorded\",\"review_required\"],\"recordedAtUtc\":\"2026-06-21T10:06:00Z\"},\"persistence\":{\"decision\":\"accepted\",\"candidateId\":\"idea_high_cash_8d57adbf52f7f5a7\",\"lifecycleStatus\":\"generated\",\"reviewPosture\":\"advisor_review_required\",\"auditEventType\":\"idea.feedback.recorded\"},\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}",
+        "{\"feedbackEvent\":null,\"persistence\":{\"decision\":\"replayed\",\"candidateId\":\"idea_high_cash_8d57adbf52f7f5a7\",\"lifecycleStatus\":\"generated\",\"reviewPosture\":\"advisor_review_required\",\"auditEventType\":\"idea.feedback.recorded\"},\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}"
       ],
       "error_examples": [
         "403 returns product-safe Problem Details when the caller lacks idea.feedback.record capability, a supported review role, or trusted caller entitlement headers covering the persisted candidate scope.",
@@ -1102,6 +1103,7 @@
       "test_evidence": [
         "tests/integration/test_review_workflow_api.py::test_feedback_api_persists_source_provenanced_feedback",
         "tests/integration/test_review_identity_api.py::test_feedback_api_governs_resource_identity_across_transport_keys",
+        "tests/unit/api_examples/test_feedback.py::test_feedback_success_examples_match_ledger_and_openapi",
         "tests/integration/test_review_workflow_api.py::test_review_action_api_returns_not_found_for_missing_candidate",
         "tests/integration/test_review_workflow_api.py::test_review_action_api_requires_mutating_capability_and_scope",
         "tests/integration/test_review_workflow_entitlements_api.py::test_feedback_api_enforces_trusted_caller_entitlement_scope",
