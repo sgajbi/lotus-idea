@@ -17,7 +17,7 @@ from app.application.advise_mandate_restriction_runtime_evidence import (
     evaluate_advise_mandate_restriction,
 )
 from app.application.runtime_evidence import sha256_json
-from app.domain import EvidenceFreshness
+from app.domain import EvidenceFreshness, SignalEvaluationOutcome
 from app.ports.advise_sources import (
     AdvisePolicyEvaluationEvidence,
     AdvisePolicyEvaluationEvidenceRequest,
@@ -92,6 +92,7 @@ def test_runtime_execution_accepts_a_truthful_no_opportunity_evaluation() -> Non
             lambda runtime: replace(runtime, correlation_id="other"),
             "advise_source_correlation_mismatch",
         ),
+        (lambda runtime: replace(runtime, trace_id="other"), "advise_source_trace_mismatch"),
         (lambda runtime: replace(runtime, trace_id=None), "advise_source_trace_missing"),
         (
             lambda runtime: replace(runtime, as_of_date=date(2026, 7, 14)),
@@ -123,6 +124,10 @@ def test_runtime_execution_accepts_a_truthful_no_opportunity_evaluation() -> Non
             "advise_evaluation_status_missing",
         ),
         (lambda runtime: replace(runtime, product_id="other:v1"), "advise_source_product_mismatch"),
+        (
+            lambda runtime: replace(runtime, product_version="v2"),
+            "advise_source_product_version_mismatch",
+        ),
         (lambda runtime: replace(runtime, route="/other"), "advise_source_route_mismatch"),
     ),
 )
@@ -175,6 +180,49 @@ def test_runtime_execution_rejects_source_ref_and_workflow_disagreement() -> Non
     assert payload["aggregateBlockersSatisfied"] == []
 
 
+def test_runtime_execution_requires_workflow_and_source_reference_receipts() -> None:
+    result = _result()
+    evidence = result.source_evaluation.evidence
+    assert evidence is not None
+
+    for incomplete_evidence, expected_blocker in (
+        (replace(evidence, workflow_runtime=None), "advise_workflow_runtime_receipt_missing"),
+        (replace(evidence, policy_ref=None), "advise_policy_source_ref_missing"),
+    ):
+        payload = build_advise_mandate_restriction_runtime_execution(
+            generated_at_utc=NOW,
+            result=replace(
+                result,
+                source_evaluation=replace(result.source_evaluation, evidence=incomplete_evidence),
+            ),
+        )
+
+        assert expected_blocker in payload["execution"]["qualificationBlockers"]
+        assert not advise_mandate_restriction_runtime_execution_is_valid(payload)
+
+
+def test_runtime_execution_rejects_a_blocked_idea_evaluation() -> None:
+    result = _result()
+    blocked_evaluation = replace(
+        result.source_evaluation.evaluation,
+        outcome=SignalEvaluationOutcome.BLOCKED,
+    )
+
+    payload = build_advise_mandate_restriction_runtime_execution(
+        generated_at_utc=NOW,
+        result=replace(
+            result,
+            source_evaluation=replace(
+                result.source_evaluation,
+                evaluation=blocked_evaluation,
+            ),
+        ),
+    )
+
+    assert "mandate_restriction_evaluation_blocked" in payload["execution"]["qualificationBlockers"]
+    assert not advise_mandate_restriction_runtime_execution_is_valid(payload)
+
+
 def test_runtime_execution_preserves_source_failure_without_qualifying() -> None:
     result = evaluate_advise_mandate_restriction(
         _command(),
@@ -213,7 +261,6 @@ def test_runtime_execution_preserves_entitlement_denial_without_qualifying() -> 
     ("path", "value"),
     (
         (("execution", "requestReceipt", "tenantIdHash"), "sha256:" + "0" * 64),
-        (("execution", "workflowReceipt", "openRequirementCount"), 0),
         (("execution", "evaluationReceipt", "outcome"), "not_eligible"),
         (("nonProofClaims", "restrictionCleared"), True),
         (("aggregateBlockersSatisfied",), []),
@@ -247,6 +294,45 @@ def test_closed_contract_rejects_unknown_fields() -> None:
     assert not advise_mandate_restriction_runtime_execution_is_valid(payload)
 
 
+def test_closed_contract_rejects_digest_tampering() -> None:
+    payload = build_advise_mandate_restriction_runtime_execution(
+        generated_at_utc=NOW,
+        result=_result(),
+    )
+    payload["execution"]["workflowReceipt"]["contentHash"] = "sha256:" + "0" * 64
+
+    assert not advise_mandate_restriction_runtime_execution_is_valid(payload)
+
+
+@pytest.mark.parametrize(
+    ("path", "value"),
+    (
+        (("sourceAuthority",), "caller"),
+        (("generatedAtUtc",), "not-a-timestamp"),
+        (("execution", "requestReceipt", "asOfDate"), "not-a-date"),
+        (("execution", "evaluationReceipt", "candidateScore"), "not-a-decimal"),
+        (("execution", "workflowReceipt", "openRequirementCount"), -1),
+        (("execution", "evaluationReceipt", "family"), "suitability"),
+        (("execution", "evaluationReceipt", "restrictionReviewRequired"), False),
+    ),
+)
+def test_closed_contract_rejects_malformed_authority_receipts(
+    path: tuple[str, ...],
+    value: object,
+) -> None:
+    payload = build_advise_mandate_restriction_runtime_execution(
+        generated_at_utc=NOW,
+        result=_result(),
+    )
+    target: Any = payload
+    for key in path[:-1]:
+        target = target[key]
+    target[path[-1]] = value
+    _refresh_receipt_digests(payload)
+
+    assert not advise_mandate_restriction_runtime_execution_is_valid(payload)
+
+
 @pytest.mark.parametrize(
     "changes",
     (
@@ -256,6 +342,9 @@ def test_closed_contract_rejects_unknown_fields() -> None:
         {"client_id": " "},
         {"evaluation_id": " "},
         {"correlation_id": " "},
+        {"correlation_id": None},
+        {"trace_id": None},
+        {"trace_id": " "},
     ),
 )
 def test_command_rejects_incomplete_or_blank_scope(changes: dict[str, Any]) -> None:
@@ -289,12 +378,18 @@ def _refresh_receipt_digests(payload: dict[str, Any]) -> None:
     for receipt_name, digest_key in (
         ("requestReceipt", "requestDigest"),
         ("workflowReceipt", "receiptDigest"),
-        ("evaluationReceipt", "evaluationDigest"),
     ):
         receipt = execution[receipt_name]
         receipt[digest_key] = sha256_json(
             {key: value for key, value in receipt.items() if key != digest_key}
         )
+    evaluation = execution["evaluationReceipt"]
+    workflow = execution["workflowReceipt"]
+    if workflow is not None:
+        evaluation["sourceRefsDigest"] = sha256_json([workflow])
+    evaluation["evaluationDigest"] = sha256_json(
+        {key: value for key, value in evaluation.items() if key != "evaluationDigest"}
+    )
 
 
 class _UnavailableSource:

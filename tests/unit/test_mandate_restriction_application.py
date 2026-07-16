@@ -173,6 +173,7 @@ def test_mandate_restriction_application_blocks_entitlement_denial() -> None:
 
 
 def test_mandate_restriction_application_maps_source_product_diagnostics() -> None:
+    assert mandate_restriction_review_ready_from_advise_diagnostic(None) is False
     assert (
         mandate_restriction_review_ready_from_advise_diagnostic(
             "product_restriction_review_required"
