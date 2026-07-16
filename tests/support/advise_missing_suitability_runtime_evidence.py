@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from dataclasses import replace
 from datetime import date, datetime, timedelta
 from typing import Any, Callable
 
@@ -107,12 +106,6 @@ class AuthoritativeAdviseMissingSuitabilitySource:
                 else "advise_policy_context_available"
             ),
         )
-
-
-def without_runtime_field(
-    field_name: str,
-) -> Callable[[AdvisePolicyEvaluationRuntimeEvidence], AdvisePolicyEvaluationRuntimeEvidence]:
-    return lambda runtime: replace(runtime, **{field_name: None})
 
 
 def valid_advise_missing_suitability_runtime_evidence(
