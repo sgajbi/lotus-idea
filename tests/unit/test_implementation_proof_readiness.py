@@ -899,7 +899,7 @@ def test_route_source_contracts_add_evidence_without_clearing_live_or_authority_
     advise_proof_ref = "output/downstream/advise-route-source-contract-proof.json"
     manage_proof_ref = "output/downstream/manage-route-source-contract-proof.json"
     snapshot = build_implementation_proof_readiness_snapshot(
-        evaluated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
+        evaluated_at_utc=datetime(2026, 7, 15, 0, 0, tzinfo=UTC),
         repository=InMemoryIdeaRepository(),
         durable_storage_backed=False,
         advise_proposal_route_proof=_bound_aggregate_proof(
@@ -928,6 +928,28 @@ def test_route_source_contracts_add_evidence_without_clearing_live_or_authority_
     assert "client_publication_authority_blocked" in downstream.blockers
     assert advise_proof_ref in downstream.evidence_refs
     assert manage_proof_ref in downstream.evidence_refs
+
+
+def test_route_source_contracts_require_current_aggregate_provenance() -> None:
+    proof_ref = "output/downstream/advise-route-source-contract-proof.json"
+    snapshot = build_implementation_proof_readiness_snapshot(
+        evaluated_at_utc=datetime(2026, 7, 17, 0, 0, tzinfo=UTC),
+        repository=InMemoryIdeaRepository(),
+        durable_storage_backed=False,
+        advise_proposal_route_proof=_bound_aggregate_proof(
+            valid_advise_route_source_contract(),
+            proof_ref,
+        ),
+        advise_proposal_route_proof_ref=proof_ref,
+    )
+
+    downstream = next(
+        capability
+        for capability in snapshot.capabilities
+        if capability.capability_id == "downstream-realization"
+    )
+    assert proof_ref not in downstream.evidence_refs
+    assert "advise_live_contract_proof_missing" in downstream.blockers
 
 
 def test_source_contract_adds_evidence_without_clearing_runtime_or_publication_blockers() -> None:
