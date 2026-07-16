@@ -184,6 +184,19 @@ is internal API design modularity and does not certify Report intake, Render,
 Archive, client publication, Gateway, Workbench, data products, or supported
 features.
 
+PR `#543` merged issue `#539` to `main` at
+`f6e2365eaec5f4f0184d5985e5b5fcc641b4883b`. Main Releasability run
+`29528824505` passed, including lint, typecheck, security, architecture,
+OpenAPI, 4,717 unit tests, integration, end-to-end, PostgreSQL runtime proof,
+99% combined coverage, container runtime smoke, vulnerability scan, SBOM
+generation, commit-tagged image publication, digest inspection, keyless
+signing, provenance attestation, SBOM attestation, release identity validation,
+and CI signal evidence. The released image is
+`ghcr.io/sgajbi/lotus-idea@sha256:4e66269aa389f73ef7faf704f8006b521f33f757813f4696ea87c1fbacf4842c`.
+CodeQL run `29528818845` also passed for the exact merge SHA. Repo-authored
+wiki source was published in wiki commit `33a7b8a`, and strict parity returned
+zero differences. Supported-feature posture remains unchanged.
+
 PR `#533` merged issue `#532` to `main` at
 `373bda0bc2203cb4e1f2ab0d011d8dd9890369ad`. Main Releasability run
 `29520564704` passed on attempt 2, including lint, typecheck, security,
