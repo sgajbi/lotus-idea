@@ -552,6 +552,13 @@ Focused validation passed for the current foundation:
     `4` E2E tests, `99.01%` combined coverage over `27712` statements, strict
     MyPy over `941` source files, zero duplicate clusters across `2715`
     functions, and no known dependency vulnerabilities.
+35. PR `#521` merged by rebase at exact-main SHA
+    `da061fc65648e8224e9e1847ef9cf1e7772b365e`; Main Releasability
+    `29506764366` and CodeQL `29506757015` passed. Release digest
+    `sha256:37d4cf724e53791e30af1ad2ff58b9074706261586df03d9e3fd7bf0e068e5dc`
+    has matching image/version metadata and release evidence. Wiki publication
+    `5c9b740` has zero drift, issue `#520` is closed, and the implementation
+    branch is absent locally and remotely.
 
 PR merge-gate evidence remains required before merge.
 
