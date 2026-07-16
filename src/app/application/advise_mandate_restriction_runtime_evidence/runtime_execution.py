@@ -8,6 +8,7 @@ from app.application.advise_policy_runtime_evidence import (
     AdvisePolicyRuntimeEvidenceScope,
     AdvisePolicyWorkflowScope,
     advise_policy_workflow_qualification_blockers,
+    build_advise_policy_request_receipt,
     build_advise_policy_workflow_receipt,
 )
 from app.application.mandate_restriction_signal import (
@@ -103,7 +104,10 @@ def build_advise_mandate_restriction_runtime_execution(
     evidence = result.source_evaluation.evidence
     runtime = evidence.workflow_runtime if evidence is not None else None
     blockers = _qualification_blockers(result, runtime)
-    request_receipt = _request_receipt(result)
+    request_receipt = build_advise_policy_request_receipt(
+        result.command,
+        policy_version=result.policy.policy_version,
+    )
     workflow_receipt = build_advise_policy_workflow_receipt(
         runtime,
         evidence=evidence,
@@ -150,26 +154,6 @@ def build_advise_mandate_restriction_runtime_execution(
             "ideaPersistenceRequired": False,
         },
     }
-
-
-def _request_receipt(result: AdviseMandateRestrictionResult) -> dict[str, Any]:
-    command = result.command
-    material = {
-        "tenantIdHash": identity_hash(command.tenant_id),
-        "bookIdHash": identity_hash(command.book_id),
-        "portfolioIdHash": identity_hash(command.portfolio_id),
-        "clientIdHash": identity_hash(command.client_id),
-        "evaluationIdHash": identity_hash(command.evaluation_id),
-        "asOfDate": command.as_of_date.isoformat(),
-        "evaluatedAtUtc": format_utc(command.evaluated_at_utc),
-        "consumerSystem": "lotus-idea",
-        "correlationIdHash": (
-            identity_hash(command.correlation_id) if command.correlation_id else None
-        ),
-        "traceIdHash": identity_hash(command.trace_id) if command.trace_id else None,
-        "policyVersion": result.policy.policy_version,
-    }
-    return {**material, "requestDigest": sha256_json(material)}
 
 
 def _evaluation_receipt(
