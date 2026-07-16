@@ -84,7 +84,8 @@ def test_ci_contract_gate_blocks_missing_mandate_restriction_live_proof_gate() -
     errors = module.validate_makefile(
         _makefile_without(
             "$(MAKE) mandate-restriction-live-proof-contract-gate\n",
-            "scripts/mandate_restriction_live_proof_contract_gate.py",
+            "scripts/advise_mandate_restriction_runtime_evidence/"
+            "runtime_execution_contract_gate.py",
         )
     )
 
@@ -93,7 +94,8 @@ def test_ci_contract_gate_blocks_missing_mandate_restriction_live_proof_gate() -
     ) in errors
     assert (
         "Makefile mandate-restriction-live-proof-contract-gate target must run "
-        "`scripts/mandate_restriction_live_proof_contract_gate.py`"
+        "`scripts/advise_mandate_restriction_runtime_evidence/"
+        "runtime_execution_contract_gate.py`"
     ) in errors
 
 

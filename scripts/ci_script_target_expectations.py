@@ -41,7 +41,8 @@ SCRIPT_TARGET_EXPECTATIONS = {
         "scripts/manage_mandate_runtime_evidence/runtime_execution_contract_gate.py"
     ),
     "mandate-restriction-live-proof-contract-gate": (
-        "scripts/mandate_restriction_live_proof_contract_gate.py"
+        "scripts/advise_mandate_restriction_runtime_evidence/"
+        "runtime_execution_contract_gate.py"
     ),
     "mandate-restriction-source-product-proof-contract-gate": (
         "scripts/mandate_restriction_source_product_proof_contract_gate.py"

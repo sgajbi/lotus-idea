@@ -5,14 +5,14 @@ from datetime import UTC, datetime
 from app.application.implementation_proof_readiness import (
     build_implementation_proof_readiness_snapshot,
 )
-from app.application.mandate_restriction_live_proof import (
-    build_mandate_restriction_live_proof_payload,
-)
 from app.application.mandate_restriction_source_product_proof import (
     build_mandate_restriction_source_product_proof_payload,
 )
 from app.domain import InMemoryIdeaRepository
 from tests.support.proof_provenance import bound_aggregate_proof
+from tests.support.advise_mandate_restriction_runtime_evidence import (
+    valid_advise_mandate_restriction_runtime_evidence,
+)
 
 LIVE_PROOF_REF = "output/opportunity/mandate-restriction-live-proof.json"
 SOURCE_PRODUCT_PROOF_REF = "output/opportunity/mandate-restriction-source-product-proof.json"
@@ -157,20 +157,8 @@ def test_implementation_proof_readiness_combines_mandate_restriction_source_proo
 
 def _valid_mandate_restriction_live_proof() -> dict[str, object]:
     return bound_aggregate_proof(
-        build_mandate_restriction_live_proof_payload(
-            generated_at_utc=datetime(2026, 6, 28, 0, 0, tzinfo=UTC),
-            live_advise_source_attempted=True,
-            evaluation_summary={
-                "runStatus": "completed",
-                "sourceAuthority": "lotus-advise",
-                "sourceProductId": "lotus-advise:AdvisoryPolicyEvaluationRecord:v1",
-                "evaluationOutcome": "candidate_created",
-                "sourceEvidenceCurrent": True,
-                "restrictionReviewReady": True,
-                "sourceDiagnosticCodes": ["mandate_restriction_review_required"],
-                "reasonCodes": ["mandate_restriction_review", "review_required"],
-                "unsupportedReasons": [],
-            },
+        valid_advise_mandate_restriction_runtime_evidence(
+            evaluated_at_utc=datetime(2026, 6, 28, 0, 0, tzinfo=UTC),
         ),
         LIVE_PROOF_REF,
     )

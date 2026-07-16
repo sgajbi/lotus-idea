@@ -32,9 +32,9 @@ from app.application.manage_mandate_runtime_evidence import (
 from app.application.manage_mandate_runtime_evidence.runtime_execution import (
     MANAGE_MANDATE_RUNTIME_BLOCKERS_SATISFIED,
 )
-from app.application.mandate_restriction_live_proof import (
-    MANDATE_RESTRICTION_LIVE_BLOCKERS_CLEARED,
-    mandate_restriction_live_proof_is_valid,
+from app.application.advise_mandate_restriction_runtime_evidence import (
+    ADVISE_MANDATE_RESTRICTION_RUNTIME_BLOCKERS_SATISFIED,
+    advise_mandate_restriction_runtime_execution_is_valid,
 )
 from app.application.mandate_restriction_source_product_proof import (
     MANDATE_RESTRICTION_SOURCE_PRODUCT_BLOCKERS_CLEARED,
@@ -204,8 +204,8 @@ def _opportunity_proof_steps(scope: Mapping[str, object]) -> tuple[OpportunityPr
         _proof_step(
             scope,
             "mandate_restriction_live",
-            mandate_restriction_live_proof_is_valid,
-            _apply_mandate_restriction_live_proof,
+            advise_mandate_restriction_runtime_execution_is_valid,
+            _apply_advise_mandate_restriction_runtime_execution,
         ),
         _proof_step(
             scope,
@@ -494,14 +494,14 @@ def _apply_manage_mandate_runtime_execution(
     )
 
 
-def _apply_mandate_restriction_live_proof(
+def _apply_advise_mandate_restriction_runtime_execution(
     capability: ImplementationProofCapabilityReadiness,
     mandate_restriction_live_proof_ref: str | None,
 ) -> ImplementationProofCapabilityReadiness:
     return apply_blocker_proof(
         capability,
         capability_ids=("opportunity-archetype-scenarios",),
-        blockers_cleared=MANDATE_RESTRICTION_LIVE_BLOCKERS_CLEARED,
+        blockers_cleared=ADVISE_MANDATE_RESTRICTION_RUNTIME_BLOCKERS_SATISFIED,
         proof_ref=mandate_restriction_live_proof_ref,
     )
 
