@@ -2124,6 +2124,29 @@ Gateway/Workbench, publication, deployment, production, and promotion remain
 blocked. No API, persistence, database, migration, or runtime-service split is
 introduced.
 
+For Performance benchmark-readiness evidence, use
+`application/performance_benchmark_readiness.py`,
+`application/performance_benchmark_readiness_runtime_evidence/`, and their
+matching capability-owned automation and tests. The named application use case
+must perform exactly one `ReturnsSeriesBundle:v1` fetch and preserve the exact
+Performance evidence or a stable source error. Closed v2 request, source, and
+evaluation receipts bind pseudonymous tenant/book/portfolio/client/evaluation
+and correlation/trace scope to the exact source product/version/route,
+as-of/generated time, calculation and input hashes, response portfolio,
+benchmark context, coverage counts and ratio, freshness, data quality, and
+deterministic review-required or no-opportunity posture. Reject unknown fields,
+raw identifiers, stale/future evidence, scope/time/hash/count drift, malformed
+or contradictory benchmark context, diagnostic drift, digest tampering, and
+recomputed-digest semantic tampering. The stable
+`LOTUS_IDEA_MISSING_BENCHMARK_PERFORMANCE_READINESS_PROOF` environment name,
+output filename, readiness CLI argument, and
+`make missing-benchmark-performance-readiness-proof-contract-gate` accept v2
+only; retired flat v1 paths are prohibited. This clears only the named
+Performance readiness blocker. It does not assign benchmarks, calculate
+official returns, certify methodology, persist an Idea, certify data mesh,
+prove Gateway/Workbench behavior, approve publication, certify deployment or
+production, or promote support.
+
 For Core portfolio-state readiness, use
 `application/core_portfolio_state_runtime_evidence/` and its matching
 automation package. Route generation through the named read-only application

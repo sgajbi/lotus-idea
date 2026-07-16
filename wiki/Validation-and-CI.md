@@ -438,7 +438,8 @@ Persistence adapter validation:
    optional receipt-bound Core benchmark-assignment runtime evidence consumption,
    optional receipt-bound Core portfolio-state runtime evidence consumption,
    optional closed v2 Core missing-benchmark runtime-evidence consumption,
-   optional missing-benchmark Performance readiness proof consumption,
+   optional closed v2 Performance benchmark-readiness runtime-evidence
+   consumption,
    default Report intake route source-contract generation and consumption, default
    Report materialization source-contract generation and consumption, default
    platform catalog source contract generation and
@@ -639,14 +640,14 @@ Persistence adapter validation:
     that aggregate readiness exposes those scenario blockers as namespaced
     `opportunity_archetype_*` operator evidence without clearing product
     support.
-    Live canonical evidence generated on 2026-07-05 for
-    `PB_SG_GLOBAL_BAL_001` proved current source evidence for Risk
-    concentration, Performance underperformance, and missing-benchmark
-    Performance readiness. The aggregate readiness check consumed those
-    artifacts only when `IMPLEMENTATION_PROOF_EVALUATED_AT_UTC` matched the
-    proof window, clearing only the three source blockers while preserving
-    Core, Manage, Workbench, data-mesh, client-publication, and
-    supported-feature blockers.
+    Historical canonical evidence generated on 2026-07-05 for
+    `PB_SG_GLOBAL_BAL_001` exercised Risk concentration and the former flat
+    Performance proof families. The retired Performance artifacts no longer
+    qualify after the closed v2 underperformance and benchmark-readiness
+    contracts. A fresh run must bind exact runtime receipts and matching
+    aggregate provenance before either Performance blocker can clear. Core,
+    Manage, Workbench, data-mesh, client-publication, and supported-feature
+    blockers remain independent.
 16. `tests/unit/test_downstream_realization_contract_gate.py` and
    `make downstream-realization-contract-gate` prove the governed downstream
    realization contract plan remains planned, source-authority preserving,

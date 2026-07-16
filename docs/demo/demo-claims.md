@@ -53,10 +53,13 @@ publication, official risk methodology, or supported-feature promotion.
 
 Missing-benchmark review is now an internal bounded foundation under the
 opportunity archetype/scenario contract. It has deterministic policy and Core
-benchmark-assignment source-port proof plus bounded Performance benchmark-readiness
-proof consumption; it does not assign benchmarks, calculate performance or
-benchmark returns, certify methodology, prove Workbench behavior, authorize
-client publication, or promote a supported feature.
+benchmark-assignment source-port proof plus closed v2 Performance
+benchmark-readiness runtime-evidence consumption. The independent Performance
+contract binds exact source provenance, benchmark context, coverage, and
+deterministic review-required or no-opportunity posture. It does not assign
+benchmarks, calculate performance or benchmark returns, certify methodology,
+prove Workbench behavior, authorize client publication, or promote a supported
+feature.
 
 Missing risk-profile review is now an internal bounded foundation under the
 opportunity archetype/scenario contract. It creates advisor-review candidates

@@ -13,15 +13,21 @@ not promote a product feature.
    `lotus-workbench` `npm run live:stack:up`.
 2. Confirm the canonical seed uses portfolio `PB_SG_GLOBAL_BAL_001` and the
    governed as-of date.
-3. Confirm `risk.dev.lotus` and `performance.dev.lotus` resolve and are
+3. Provide explicit tenant, book, client-scope, and evaluation identities. The
+   benchmark-readiness artifact hashes them and never emits raw values.
+4. Confirm `risk.dev.lotus` and `performance.dev.lotus` resolve and are
    reachable from the host.
-4. Use a unique correlation ID and trace ID for each proof run.
+5. Use a unique correlation ID and trace ID for each proof run.
 
 ## Command
 
 ```powershell
 make canonical-opportunity-source-proofs `
+  CANONICAL_OPPORTUNITY_TENANT_ID=default `
+  CANONICAL_OPPORTUNITY_BOOK_ID=BOOK_SG_BALANCED_DPM `
   CANONICAL_OPPORTUNITY_PORTFOLIO_ID=PB_SG_GLOBAL_BAL_001 `
+  CANONICAL_OPPORTUNITY_CLIENT_ID=CLIENT_SCOPE_PB_SG_GLOBAL_BAL_001 `
+  CANONICAL_OPPORTUNITY_EVALUATION_ID=EVAL_PB_SG_GLOBAL_BAL_001_20260410 `
   CANONICAL_OPPORTUNITY_AS_OF_DATE=2026-04-10 `
   CANONICAL_OPPORTUNITY_RISK_BASE_URL=http://risk.dev.lotus `
   CANONICAL_OPPORTUNITY_PERFORMANCE_BASE_URL=http://performance.dev.lotus `
@@ -35,7 +41,11 @@ The direct Python equivalent is:
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\run_canonical_opportunity_source_proofs.py `
+  --tenant-id default `
+  --book-id BOOK_SG_BALANCED_DPM `
   --portfolio-id PB_SG_GLOBAL_BAL_001 `
+  --client-id CLIENT_SCOPE_PB_SG_GLOBAL_BAL_001 `
+  --evaluation-id EVAL_PB_SG_GLOBAL_BAL_001_20260410 `
   --as-of-date 2026-04-10 `
   --risk-base-url http://risk.dev.lotus `
   --performance-base-url http://performance.dev.lotus `
@@ -114,13 +124,14 @@ outcome with source-temporal reason codes.
 
 ## Current Boundary
 
-The runner currently certifies these source-owned proof families:
+The runner currently validates these bounded source-owned proof families:
 
 1. Lotus Risk concentration evidence and deterministic concentration review.
 2. Lotus Performance returns-series evidence and deterministic
    underperformance review.
-3. Lotus Performance benchmark-readiness evidence for missing-benchmark
-   review.
+3. Lotus Performance benchmark-readiness runtime evidence for
+   missing-benchmark review, including closed pseudonymous request, exact
+   source, benchmark-context, coverage, and deterministic evaluation receipts.
 
 A valid child proof clears only its named source blocker. The aggregate does
 not certify data-mesh activation, Gateway/Workbench product behavior, client
@@ -131,9 +142,9 @@ supported-feature promotion.
 
 If Performance reports `performance_returns_series_pending`, wait for the
 canonical Performance/Core data path to reach the governed as-of date and rerun
-the command. The clean-tree 2026-07-10 run reached current evidence and passed
-all three proof families. Do not substitute caller-supplied values or relax the
-validator.
+the command. The clean-tree 2026-07-10 aggregate is historical flat-v1
+Performance evidence and is not qualifying under the current contracts. Do not
+substitute caller-supplied summary values or relax the validator.
 
 If the canonical stack fails before Idea proof execution, preserve the failing
 service name and readiness response as cross-repository evidence. Idea proof
