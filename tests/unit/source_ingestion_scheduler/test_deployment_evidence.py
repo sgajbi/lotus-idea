@@ -42,10 +42,15 @@ def test_deployment_evidence_binds_image_environment_controller_and_rollout() ->
 @pytest.mark.parametrize(
     ("path", "value"),
     (
+        (("schemaVersion",), "wrong"),
         (("evidenceClass",), "source_contract"),
         (("requiredEvidenceClass",), "runtime_execution"),
+        (("repository",), "lotus-platform"),
+        (("generatedAtUtc",), "2026-07-16T10:10:00"),
+        (("sourceCommitSha",), "not-a-sha"),
         (("image", "reference"), "ghcr.io/sgajbi/lotus-idea:latest"),
         (("image", "digest"), f"sha256:{'c' * 64}"),
+        (("image", "digest"), "not-a-digest"),
         (("image", "gitCommitSha"), "c" * 40),
         (("target", "environment"), ""),
         (("target", "environmentClass"), "unknown"),
@@ -59,6 +64,8 @@ def test_deployment_evidence_binds_image_environment_controller_and_rollout() ->
         (("schedulerConfiguration", "identityDigest"), "not-a-digest"),
         (("schedulerConfiguration", "sourceContractDigest"), "not-a-digest"),
         (("deploymentEvidenceValid",), False),
+        (("proofClosed",), False),
+        (("blockerEffect", "clears"), []),
         (("nonProofClaims", "scheduledExecutionObserved"), True),
         (("nonProofClaims", "liveCoreSourceCertified"), True),
         (("nonProofClaims", "productionCertified"), True),
@@ -83,6 +90,43 @@ def test_deployment_evidence_rejects_unknown_execution_boolean() -> None:
     assert not scheduled_worker_deployment_evidence_is_valid(payload)
 
 
+@pytest.mark.parametrize(
+    ("path", "value"),
+    (
+        (("image",), []),
+        (("target",), []),
+        (("controller",), []),
+        (("controller", "workflow"), ""),
+        (("controller", "actor"), ""),
+        (("controller", "runId"), "run-1"),
+        (("controller", "runAttempt"), True),
+        (("workload",), []),
+        (("workload", "identity"), ""),
+        (("workload", "rolloutCompletedAtUtc"), "2026-07-16T10:00:00"),
+        (("schedulerConfiguration",), []),
+    ),
+)
+def test_deployment_evidence_rejects_malformed_nested_receipts(
+    path: tuple[str, ...],
+    value: object,
+) -> None:
+    payload = deepcopy(deployment_evidence(repository_root=ROOT))
+    _set(payload, path, value)
+    _refresh_receipt_digest(payload)
+
+    assert not scheduled_worker_deployment_evidence_is_valid(payload)
+
+
+def test_deployment_evidence_rejects_unknown_nested_keys() -> None:
+    payload = deployment_evidence(repository_root=ROOT)
+    image = payload["image"]
+    assert isinstance(image, dict)
+    image["tag"] = "latest"
+    _refresh_receipt_digest(payload)
+
+    assert not scheduled_worker_deployment_evidence_is_valid(payload)
+
+
 def test_deployment_evidence_rejects_aggregate_source_revision_drift() -> None:
     payload = deployment_evidence(repository_root=ROOT)
     payload["aggregateProofProvenance"] = {
@@ -98,6 +142,16 @@ def test_deployment_evidence_rejects_source_contract_digest_drift() -> None:
     contract["sourceContractDigest"] = f"sha256:{'c' * 64}"
 
     assert not scheduled_worker_deployment_matches_source_contract(payload, contract)
+
+
+def test_deployment_match_rejects_invalid_deployment() -> None:
+    payload = deployment_evidence(repository_root=ROOT)
+    payload["deploymentEvidenceValid"] = False
+
+    assert not scheduled_worker_deployment_matches_source_contract(
+        payload,
+        source_contract(repository_root=ROOT),
+    )
 
 
 def _set(payload: dict[str, object], path: tuple[str, ...], value: object) -> None:

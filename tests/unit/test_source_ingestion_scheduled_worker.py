@@ -14,6 +14,7 @@ from app.application.source_ingestion_scheduler import (
     SCHEDULED_WORKER_ENTRYPOINT,
     SCHEDULED_WORKER_SCHEMA_VERSION,
     build_scheduled_worker_check_summary,
+    scheduled_worker_check_summary_is_valid,
     source_ingestion_schedule_config_from_values,
 )
 from app.application.source_ingestion_worker import (
@@ -55,6 +56,55 @@ def test_builds_source_safe_scheduled_worker_check_summary() -> None:
     assert "idempotencyKey" not in serialized
 
 
+@pytest.mark.parametrize(
+    ("path", "value"),
+    (
+        (("schemaVersion",), "wrong"),
+        (("mode",), "run"),
+        (("sourceAuthority",), "lotus-idea"),
+        (("opportunityFamily",), "underperformance"),
+        (("runOnceManifestSchemaVersion",), "wrong"),
+        (("schedulerEntrypoint",), "scripts/wrong.py"),
+        (("runOnceWorkerEntrypoint",), "scripts/wrong.py"),
+        (("dockerComposeService",), "wrong"),
+        (("supportedFeaturePromoted",), True),
+        (("schedulePolicy",), []),
+        (("schedulePolicy", "intervalSeconds"), 0),
+        (("schedulePolicy", "maxRuns"), True),
+        (("schedulePolicy", "runOnStart"), False),
+        (("schedulePolicy", "runForever"), "false"),
+        (("runOnceManifest",), []),
+        (("runOnceManifest", "schemaVersion"), "wrong"),
+    ),
+)
+def test_scheduled_worker_check_summary_rejects_contract_drift(
+    path: tuple[str, ...],
+    value: object,
+) -> None:
+    summary = _check_summary()
+    _set(summary, path, value)
+
+    assert not scheduled_worker_check_summary_is_valid(summary)
+
+
+def test_scheduled_worker_check_summary_rejects_non_mapping_and_unknown_keys() -> None:
+    assert not scheduled_worker_check_summary_is_valid([])
+
+    summary = _check_summary()
+    summary["deploymentObserved"] = True
+
+    assert not scheduled_worker_check_summary_is_valid(summary)
+
+
+def test_scheduled_worker_check_summary_rejects_schedule_policy_unknown_keys() -> None:
+    summary = _check_summary()
+    schedule_policy = summary["schedulePolicy"]
+    assert isinstance(schedule_policy, dict)
+    schedule_policy["cron"] = "* * * * *"
+
+    assert not scheduled_worker_check_summary_is_valid(summary)
+
+
 def test_schedule_config_defaults_none_values() -> None:
     schedule = source_ingestion_schedule_config_from_values(
         interval_seconds=None,
@@ -74,6 +124,26 @@ def test_schedule_config_accepts_explicit_daemon_mode() -> None:
     )
 
     assert schedule.run_forever is True
+
+
+@pytest.mark.parametrize("value", ("false", "False", "0", "", None))
+def test_schedule_config_accepts_explicit_non_daemon_values(value: object) -> None:
+    schedule = source_ingestion_schedule_config_from_values(
+        interval_seconds="300",
+        max_runs="1",
+        run_forever=value,
+    )
+
+    assert schedule.run_forever is False
+
+
+def test_schedule_config_rejects_invalid_boolean() -> None:
+    with pytest.raises(ValueError, match="runForever must be a boolean"):
+        source_ingestion_schedule_config_from_values(
+            interval_seconds="300",
+            max_runs="1",
+            run_forever="yes",
+        )
 
 
 @pytest.mark.parametrize(
@@ -273,6 +343,25 @@ def _manifest() -> dict[str, Any]:
             }
         ],
     }
+
+
+def _check_summary() -> dict[str, Any]:
+    return build_scheduled_worker_check_summary(
+        plan=source_ingestion_worker_plan_from_manifest(_manifest()),
+        schedule=source_ingestion_schedule_config_from_values(
+            interval_seconds="300",
+            max_runs="1",
+        ),
+    )
+
+
+def _set(payload: dict[str, Any], path: tuple[str, ...], value: object) -> None:
+    target = payload
+    for part in path[:-1]:
+        nested = target[part]
+        assert isinstance(nested, dict)
+        target = nested
+    target[path[-1]] = value
 
 
 def _load_scheduler_script() -> ModuleType:
