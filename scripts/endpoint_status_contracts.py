@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-import json
 import re
 from typing import Any
+
+from endpoint_contract_support import json_object_examples, openapi_operation
 
 
 IMPLEMENTED_NOT_CERTIFIED = "implemented_not_certified"
@@ -20,7 +21,7 @@ def validate_endpoint_status_contract(
     errors = _validate_certification_blockers(operation, endpoint)
     if not any(
         _is_truthful_uncertified_posture(example)
-        for example in _json_object_examples(endpoint.get("response_examples"))
+        for example in json_object_examples(endpoint.get("response_examples"))
     ):
         errors.append(
             f"{operation}: implemented_not_certified response_examples must preserve "
@@ -28,7 +29,7 @@ def validate_endpoint_status_contract(
         )
 
     if openapi_spec is not None:
-        operation_schema = _openapi_operation(openapi_spec, operation)
+        operation_schema = openapi_operation(openapi_spec, operation)
         if operation_schema is None or not any(
             _is_truthful_uncertified_posture(example)
             for example in _openapi_success_examples(operation_schema)
@@ -60,18 +61,6 @@ def _validate_certification_blockers(
     return errors
 
 
-def _openapi_operation(
-    openapi_spec: dict[str, Any],
-    operation: tuple[str, str],
-) -> dict[str, Any] | None:
-    method, path = operation
-    path_item = openapi_spec.get("paths", {}).get(path)
-    if not isinstance(path_item, dict):
-        return None
-    operation_schema = path_item.get(method.lower())
-    return operation_schema if isinstance(operation_schema, dict) else None
-
-
 def _openapi_success_examples(operation_schema: dict[str, Any]) -> tuple[dict[str, Any], ...]:
     media = (
         operation_schema.get("responses", {})
@@ -90,22 +79,6 @@ def _openapi_success_examples(operation_schema: dict[str, Any]) -> tuple[dict[st
             metadata.get("value") for metadata in examples.values() if isinstance(metadata, dict)
         )
     return tuple(example for example in candidates if isinstance(example, dict))
-
-
-def _json_object_examples(examples: Any) -> tuple[dict[str, Any], ...]:
-    if not isinstance(examples, list):
-        return ()
-    parsed: list[dict[str, Any]] = []
-    for example in examples:
-        if not isinstance(example, str) or not example.lstrip().startswith("{"):
-            continue
-        try:
-            payload = json.loads(example)
-        except json.JSONDecodeError:
-            continue
-        if isinstance(payload, dict):
-            parsed.append(payload)
-    return tuple(parsed)
 
 
 def _is_truthful_uncertified_posture(payload: dict[str, Any]) -> bool:
