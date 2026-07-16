@@ -159,6 +159,9 @@ def test_command_requires_pseudonymous_receipt_scope() -> None:
     with pytest.raises(ValueError, match="evaluated_at_utc must be timezone-aware"):
         replace(command(), evaluated_at_utc=datetime(2026, 7, 16, 14, 0))
 
+    with pytest.raises(ValueError, match="reporting_currency must be a three-letter currency code"):
+        replace(command(), reporting_currency="US")
+
 
 def command() -> EvaluatePerformanceBenchmarkReadiness:
     return EvaluatePerformanceBenchmarkReadiness(
