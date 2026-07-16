@@ -200,6 +200,22 @@ deployable; signal evaluation, downstream realization, readiness metadata,
 Gateway, Workbench, data products, and supported-feature promotion remain
 outside this tranche.
 
+PR `#546` merged issue `#545` by rebase to exact-main SHA
+`c14d3e41716725df5143854abcb39842e115fa3e`. Main Releasability run
+`29532246827` and CodeQL run `29532238824` passed for that SHA. Validation
+included 4,722 unit tests, 454 integration tests with 31 declared
+environment-only PostgreSQL skips, 4 end-to-end tests, 99.02% combined
+coverage over 27,851 statements, MyPy over 954 source files, zero duplicate
+clusters across 2,740 functions, PostgreSQL runtime proof, vulnerability
+scanning, SBOM generation and attestation, keyless image signing, provenance
+attestation, release identity validation, and CI signal evidence. The released
+image is
+`ghcr.io/sgajbi/lotus-idea@sha256:648879ec8cf725790e6c5628dcb41a397d7fdd207d1c19240dcaab265e9533e2`.
+Repo-authored wiki source was published at wiki commit `25b0620`, and strict
+parity returned zero differences. The implementation branch is absent locally
+and remotely. Supported-feature posture remains unchanged, and issue `#542`
+remains open for the other capability-owned multi-shape response families.
+
 PR `#543` merged issue `#539` to `main` at
 `f6e2365eaec5f4f0184d5985e5b5fcc641b4883b`. Main Releasability run
 `29528824505` passed, including lint, typecheck, security, architecture,
