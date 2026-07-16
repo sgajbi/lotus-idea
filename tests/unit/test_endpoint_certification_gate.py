@@ -18,6 +18,16 @@ def _load_endpoint_certification_gate() -> ModuleType:
     return module
 
 
+def _load_endpoint_ai_contracts() -> ModuleType:
+    script_path = ROOT / "scripts" / "endpoint_ai_contracts.py"
+    spec = importlib.util.spec_from_file_location("endpoint_ai_contracts", script_path)
+    assert spec is not None
+    assert spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 def test_endpoint_certification_gate_passes_current_repository_contract() -> None:
     module = _load_endpoint_certification_gate()
 
@@ -424,6 +434,104 @@ def test_endpoint_certification_gate_represents_implemented_uncertified_truth() 
     assert "implemented_not_certified" in module.ALLOWED_CERTIFICATION_STATUSES
 
 
+def test_endpoint_certification_gate_blocks_stale_attested_ai_success_truth() -> None:
+    module = _load_endpoint_ai_contracts()
+    endpoint = _attested_ai_endpoint()
+    endpoint["when_to_use"] = (
+        "Use with idea.ai-explanation.evaluate capability. Production-like profiles "
+        "currently reject workflow output."
+    )
+    endpoint["response_examples"] = [
+        '{"executionProvenancePosture":"unattested_local_test_fixture",'
+        '"lotusAiRuntimeExecuted":false,"grantsDownstreamAuthority":false,'
+        '"supportedFeaturePromoted":false}'
+    ]
+    endpoint["test_evidence"] = []
+
+    errors = module.validate_ai_attested_success_mode(endpoint)
+
+    assert any("must not reject verified attested workflow output" in error for error in errors)
+    assert any("must include verified attested AI success posture" in error for error in errors)
+    assert any(
+        "must cite the attested AI API success integration test" in error for error in errors
+    )
+
+
+def test_endpoint_certification_gate_requires_named_openapi_attested_success_mode() -> None:
+    module = _load_endpoint_ai_contracts()
+    endpoint = _attested_ai_endpoint()
+    openapi_spec = {
+        "paths": {
+            endpoint["path"]: {
+                "post": {
+                    "responses": {
+                        "200": {
+                            "content": {
+                                "application/json": {
+                                    "examples": {
+                                        "unattestedLocalTestFixture": {
+                                            "value": {
+                                                "executionProvenancePosture": (
+                                                    "unattested_local_test_fixture"
+                                                ),
+                                                "lotusAiRuntimeExecuted": False,
+                                                "grantsDownstreamAuthority": False,
+                                                "supportedFeaturePromoted": False,
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    errors = module.validate_ai_attested_success_mode(endpoint, openapi_spec)
+
+    assert errors == [
+        (
+            "('POST', '/api/v1/idea-candidates/{candidateId}/ai-explanations/evaluate'): "
+            "OpenAPI 200 examples must include verified attested AI success"
+        )
+    ]
+
+
+def test_endpoint_certification_gate_accepts_complete_attested_ai_success_truth() -> None:
+    module = _load_endpoint_ai_contracts()
+    endpoint = _attested_ai_endpoint()
+    attested = {
+        "executionProvenancePosture": "lotus_ai_attestation_verified",
+        "lotusAiRuntimeExecuted": True,
+        "grantsDownstreamAuthority": False,
+        "supportedFeaturePromoted": False,
+    }
+    openapi_spec = {
+        "paths": {
+            endpoint["path"]: {
+                "post": {
+                    "responses": {
+                        "200": {
+                            "content": {
+                                "application/json": {
+                                    "examples": {
+                                        "unattestedLocalTestFixture": {"value": {}},
+                                        "verifiedAttestedOutput": {"value": attested},
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    assert module.validate_ai_attested_success_mode(endpoint, openapi_spec) == []
+
+
 def _certified_endpoint(*, test_evidence: list[str]) -> dict[str, object]:
     return {
         "method": "POST",
@@ -438,4 +546,24 @@ def _certified_endpoint(*, test_evidence: list[str]) -> dict[str, object]:
         "error_examples": ["403 returns product-safe Problem Details."],
         "test_evidence": test_evidence,
         "openapi_evidence": "scripts/openapi_quality_gate.py validates this endpoint.",
+    }
+
+
+def _attested_ai_endpoint() -> dict[str, object]:
+    return {
+        "method": "POST",
+        "path": "/api/v1/idea-candidates/{candidateId}/ai-explanations/evaluate",
+        "purpose": "Verify workflow output with a verified Lotus AI run attestation.",
+        "when_to_use": (
+            "Use with idea.ai-explanation.evaluate and verified Lotus AI run attestation."
+        ),
+        "response_examples": [
+            '{"executionProvenancePosture":"lotus_ai_attestation_verified",'
+            '"lotusAiRuntimeExecuted":true,"grantsDownstreamAuthority":false,'
+            '"supportedFeaturePromoted":false}'
+        ],
+        "test_evidence": [
+            "tests/integration/test_attested_ai_governance_api.py::"
+            "test_api_accepts_signed_bound_lotus_ai_output"
+        ],
     }

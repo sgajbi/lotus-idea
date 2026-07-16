@@ -229,8 +229,9 @@ and pre-v1 records remain explicitly unverifiable.
 `lotus-idea.ai-execution-provenance-policy.v1` prevents self-asserted AI output
 from crossing the production trust boundary. Local/test fixtures are visibly
 unattested and cannot clear runtime proof. Demo, staging, and production reject
-workflow output before candidate lookup or lineage persistence; deterministic
-fallback remains available. Signed run/model attestation is producer-owned and
+unattested workflow output before candidate lookup or lineage persistence and
+accept only a complete producer output bundle with verified run/model
+attestation; deterministic fallback remains available. Attestation issuance is producer-owned and
 was completed under `lotus-ai#113`; Idea-side verification and replay fencing
 are also mainline-proven. Readiness remains blocked on live runtime execution,
 runtime trust, Workbench proof, and supported-feature promotion rather than a
