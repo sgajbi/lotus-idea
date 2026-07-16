@@ -69,7 +69,9 @@ from app.application.source_ingestion_readiness import (
     CORE_BASE_URL_ENV,
     SOURCE_INGESTION_RUNTIME_EXECUTION_ENV,
     MANIFEST_ENV,
-    SCHEDULED_WORKER_PROOF_ENV,
+)
+from app.application.source_ingestion_scheduler import (
+    SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE_ENV,
 )
 from app.application.workbench.read_path_source_contract import (
     build_workbench_read_path_source_contract_proof_payload,
@@ -82,8 +84,8 @@ from tests.support.ai_workflow_pack_fixture import (
 from tests.support.ai_runtime_proof import ai_runtime_execution_receipt
 from tests.support.ai_lineage_store_proof import valid_ai_lineage_ci_execution_receipt
 from tests.support.source_ingestion_runtime_evidence import runtime_execution
-from tests.unit.source_ingestion_proof_helpers import (
-    valid_scheduled_worker_proof as _valid_scheduled_worker_proof,
+from tests.support.source_ingestion_scheduler_evidence import (
+    deployment_evidence,
 )
 from tests.unit.downstream_realization.fixtures import (
     valid_advise_route_source_contract,
@@ -283,7 +285,10 @@ def test_implementation_proof_readiness_capabilities_are_source_safe() -> None:
     assert (
         "scripts/source_ingestion/generate_runtime_execution.py" in source_ingestion.evidence_refs
     )
-    assert "scripts/generate_scheduled_source_ingestion_worker_proof.py" in (
+    assert "scripts/source_ingestion_scheduler/generate_source_contract.py" in (
+        source_ingestion.evidence_refs
+    )
+    assert "scripts/source_ingestion_scheduler/generate_deployment_evidence.py" in (
         source_ingestion.evidence_refs
     )
     assert "live_core_source_proof_missing" in source_ingestion.blockers
@@ -401,7 +406,9 @@ def test_implementation_proof_readiness_lists_valid_source_ingestion_proof_refs_
 ) -> None:
     manifest = tmp_path / "manifest.json"
     live_proof = tmp_path / "source-ingestion-runtime-execution.json"
-    scheduled_proof = tmp_path / "source-ingestion-scheduled-worker-proof.json"
+    deployment_evidence_path = (
+        tmp_path / "source-ingestion-scheduled-worker-deployment-evidence.json"
+    )
     manifest.write_text("{}", encoding="utf-8")
     source_ingestion_runtime_execution_ref = "output/source-ingestion/live-proof.json"
     source_ingestion_runtime_execution = _bound_aggregate_proof(
@@ -412,10 +419,16 @@ def test_implementation_proof_readiness_lists_valid_source_ingestion_proof_refs_
         json.dumps(source_ingestion_runtime_execution),
         encoding="utf-8",
     )
-    scheduled_proof.write_text(json.dumps(_valid_scheduled_worker_proof()), encoding="utf-8")
+    deployment_evidence_path.write_text(
+        json.dumps(deployment_evidence(repository_root=ROOT)),
+        encoding="utf-8",
+    )
     monkeypatch.setenv(MANIFEST_ENV, str(manifest))
     monkeypatch.setenv(SOURCE_INGESTION_RUNTIME_EXECUTION_ENV, str(live_proof))
-    monkeypatch.setenv(SCHEDULED_WORKER_PROOF_ENV, str(scheduled_proof))
+    monkeypatch.setenv(
+        SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE_ENV,
+        str(deployment_evidence_path),
+    )
     monkeypatch.setenv(CORE_BASE_URL_ENV, "http://localhost:8310")
     monkeypatch.setenv(DATABASE_URL_ENV, "postgresql://localhost/lotus_idea")
 
@@ -425,8 +438,8 @@ def test_implementation_proof_readiness_lists_valid_source_ingestion_proof_refs_
         durable_storage_backed=False,
         source_ingestion_runtime_execution=source_ingestion_runtime_execution,
         source_ingestion_runtime_execution_ref=source_ingestion_runtime_execution_ref,
-        source_ingestion_scheduled_worker_proof_ref=(
-            "output/source-ingestion/scheduled-worker-proof.json"
+        source_ingestion_scheduled_worker_deployment_evidence_ref=(
+            "output/source-ingestion/scheduled-worker-deployment-evidence.json"
         ),
     )
 
@@ -440,7 +453,9 @@ def test_implementation_proof_readiness_lists_valid_source_ingestion_proof_refs_
     assert "data_mesh_runtime_telemetry_not_certified" in source_ingestion.blockers
     assert "gateway_workbench_proof_missing" in source_ingestion.blockers
     assert "output/source-ingestion/live-proof.json" in source_ingestion.evidence_refs
-    assert "output/source-ingestion/scheduled-worker-proof.json" in (source_ingestion.evidence_refs)
+    assert "output/source-ingestion/scheduled-worker-deployment-evidence.json" in (
+        source_ingestion.evidence_refs
+    )
     assert snapshot.readiness_status == "blocked"
     assert snapshot.supportability_status == "not_certified"
     assert snapshot.supported_features_promoted is False

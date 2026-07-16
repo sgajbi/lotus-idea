@@ -32,7 +32,13 @@ def implementation_proof_artifact_registry_errors(*, root: Path) -> list[str]:
         for action in _parser()._actions
         for option in action.option_strings
         if option.startswith("--")
-        and ("proof" in option or "runtime-execution" in option or "test-execution" in option)
+        and (
+            "proof" in option
+            or "runtime-execution" in option
+            or "test-execution" in option
+            or "source-contract" in option
+            or "deployment-evidence" in option
+        )
     }
     registry_flags = set(flags)
     if parser_flags != registry_flags:
@@ -66,6 +72,8 @@ def implementation_proof_artifact_registry_errors(*, root: Path) -> list[str]:
             errors.append(f"{INVENTORY_PATH.as_posix()}: expected one `{spec.inventory_label}` row")
             continue
         row = matching_rows[0]
+        columns = [column.strip() for column in row.strip().strip("|").split("|")]
+        classification = columns[1] if len(columns) > 1 else ""
         if f"#{spec.tracking_issue}" not in row:
             errors.append(
                 f"{INVENTORY_PATH.as_posix()}: `{spec.inventory_label}` must track "
@@ -82,7 +90,7 @@ def implementation_proof_artifact_registry_errors(*, root: Path) -> list[str]:
         if (
             spec.status is ProofArtifactClassificationStatus.CLASSIFIED
             and evidence_class is not None
-            and evidence_class.value not in row
+            and f"`{evidence_class.value}`" not in classification
         ):
             errors.append(
                 f"{INVENTORY_PATH.as_posix()}: `{spec.inventory_label}` must name "

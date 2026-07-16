@@ -86,11 +86,25 @@ from app.application.risk_drawdown_runtime_evidence import RISK_DRAWDOWN_RUNTIME
 from app.application.runtime_trust_telemetry.test_execution_contract import (
     RUNTIME_TRUST_TELEMETRY_TEST_EXECUTION_ENV,
 )
+from app.application.source_ingestion_scheduler import (
+    SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE_ENV,
+    SCHEDULED_WORKER_SOURCE_CONTRACT_ENV,
+)
 from app.application.workbench.read_path_source_contract import (
     WORKBENCH_READ_PATH_SOURCE_CONTRACT_PROOF_ENV,
 )
 
 PROOF_ARTIFACT_ARGS: tuple[tuple[str, str, str], ...] = (
+    (
+        "--source-ingestion-scheduled-worker-source-contract",
+        SCHEDULED_WORKER_SOURCE_CONTRACT_ENV,
+        "Optional scheduled source-ingestion worker source-contract artifact path.",
+    ),
+    (
+        "--source-ingestion-scheduled-worker-deployment-evidence",
+        SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE_ENV,
+        "Optional scheduled source-ingestion worker deployment-evidence artifact path.",
+    ),
     (
         "--durable-repository-proof",
         DURABLE_REPOSITORY_PROOF_ENV,

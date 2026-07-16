@@ -138,7 +138,7 @@ def test_ci_contract_gate_blocks_stale_implementation_proof_readiness_target() -
         (ROOT / "Makefile")
         .read_text(encoding="utf-8")
         .replace(
-            "--source-ingestion-scheduled-worker-proof output/source-ingestion/scheduled-worker-proof.json",
+            "--source-ingestion-scheduled-worker-source-contract output/source-ingestion/scheduled-worker-source-contract.json",
             "",
         )
     )

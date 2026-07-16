@@ -114,8 +114,8 @@ REQUIRED_TEST_SELECTORS = {
 
 GENERATED_READINESS_ARTIFACTS = (
     (
-        "scripts/generate_scheduled_source_ingestion_worker_proof.py",
-        "a scheduled source-ingestion worker proof artifact",
+        "scripts.source_ingestion_scheduler.generate_source_contract",
+        "a scheduled source-ingestion worker source-contract artifact",
     ),
     (
         "scripts/persistence/generate_durable_repository_proof.py",
@@ -190,8 +190,8 @@ GENERATED_READINESS_ARTIFACTS = (
 
 PASSED_READINESS_ARTIFACTS = (
     (
-        "--source-ingestion-scheduled-worker-proof",
-        "scheduled source-ingestion worker proof artifact",
+        "--source-ingestion-scheduled-worker-source-contract",
+        "scheduled source-ingestion worker source-contract artifact",
     ),
     ("--durable-repository-proof", "durable repository proof artifact"),
     ("--runtime-trust-telemetry-test-execution", "runtime trust telemetry test execution artifact"),

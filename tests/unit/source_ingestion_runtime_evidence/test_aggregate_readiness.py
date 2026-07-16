@@ -21,7 +21,10 @@ from app.application.source_ingestion_readiness import (
     CORE_BASE_URL_ENV,
     SOURCE_INGESTION_RUNTIME_EXECUTION_ENV,
     MANIFEST_ENV,
-    SCHEDULED_WORKER_PROOF_ENV,
+)
+from app.application.source_ingestion_scheduler import (
+    SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE_ENV,
+    SCHEDULED_WORKER_SOURCE_CONTRACT_ENV,
 )
 from app.domain import InMemoryIdeaRepository
 from app.runtime.repository_state import DATABASE_URL_ENV
@@ -108,7 +111,8 @@ def _build_snapshot_with_live_proof(
     proof_path.write_text(json.dumps(proof), encoding="utf-8")
     monkeypatch.setenv(MANIFEST_ENV, str(manifest_path))
     monkeypatch.setenv(SOURCE_INGESTION_RUNTIME_EXECUTION_ENV, str(proof_path))
-    monkeypatch.delenv(SCHEDULED_WORKER_PROOF_ENV, raising=False)
+    monkeypatch.delenv(SCHEDULED_WORKER_SOURCE_CONTRACT_ENV, raising=False)
+    monkeypatch.delenv(SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE_ENV, raising=False)
     monkeypatch.setenv(CORE_BASE_URL_ENV, "http://localhost:8310")
     monkeypatch.setenv(DATABASE_URL_ENV, "postgresql://localhost/lotus_idea")
 

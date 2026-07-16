@@ -51,7 +51,10 @@ from app.application.source_ingestion_readiness import (
     CORE_BASE_URL_ENV,
     SOURCE_INGESTION_RUNTIME_EXECUTION_ENV,
     MANIFEST_ENV,
-    SCHEDULED_WORKER_PROOF_ENV,
+)
+from app.application.source_ingestion_scheduler import (
+    SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE_ENV,
+    SCHEDULED_WORKER_SOURCE_CONTRACT_ENV,
 )
 from app.application.source_ingestion_worker import MANIFEST_SCHEMA_VERSION
 from app.application.workbench.read_path_source_contract import (
@@ -77,10 +80,14 @@ from tests.support.risk_drawdown_runtime_evidence import (
 from tests.support.ai_runtime_proof import ai_runtime_execution_receipt
 from tests.support.ai_lineage_store_proof import valid_ai_lineage_ci_execution_receipt
 from tests.support.source_ingestion_runtime_evidence import runtime_execution
-from tests.unit.source_ingestion_proof_helpers import (
-    valid_scheduled_worker_proof as _valid_scheduled_worker_proof,
+from tests.support.source_ingestion_scheduler_evidence import (
+    deployment_evidence,
+    source_contract,
 )
 from tests.unit.workbench.test_discovery_contract_proof import _write_platform_fixture
+
+
+ROOT = Path(__file__).resolve().parents[2]
 
 
 def test_implementation_proof_readiness_payload_is_source_safe() -> None:
@@ -177,13 +184,16 @@ def test_generate_implementation_proof_readiness_writes_output_file(
     assert payload["readinessStatus"] == "blocked"
 
 
-def test_generate_implementation_proof_readiness_uses_explicit_scheduled_worker_proof(
+def test_static_scheduled_worker_source_contract_preserves_deployment_blocker(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
     monkeypatch.setenv(MANIFEST_ENV, "pre-existing-manifest.json")
     monkeypatch.setenv(CORE_BASE_URL_ENV, "http://pre-existing-core")
-    monkeypatch.setenv(SCHEDULED_WORKER_PROOF_ENV, "pre-existing-proof.json")
+    monkeypatch.setenv(
+        SCHEDULED_WORKER_SOURCE_CONTRACT_ENV,
+        "pre-existing-source-contract.json",
+    )
     manifest = tmp_path / "manifest.json"
     manifest.write_text(
         json.dumps(
@@ -195,8 +205,11 @@ def test_generate_implementation_proof_readiness_uses_explicit_scheduled_worker_
         ),
         encoding="utf-8",
     )
-    scheduled_proof = tmp_path / "scheduled-worker-proof.json"
-    scheduled_proof.write_text(json.dumps(_valid_scheduled_worker_proof()), encoding="utf-8")
+    source_contract_path = tmp_path / "scheduled-worker-source-contract.json"
+    source_contract_path.write_text(
+        json.dumps(source_contract(repository_root=ROOT)),
+        encoding="utf-8",
+    )
     output_path = tmp_path / "proof" / "readiness.json"
 
     result = proof_report.main(
@@ -205,8 +218,57 @@ def test_generate_implementation_proof_readiness_uses_explicit_scheduled_worker_
             "2026-06-21T10:10:00Z",
             "--source-ingestion-manifest",
             str(manifest),
-            "--source-ingestion-scheduled-worker-proof",
-            str(scheduled_proof),
+            "--source-ingestion-scheduled-worker-source-contract",
+            str(source_contract_path),
+            "--output",
+            str(output_path),
+        ]
+    )
+
+    assert result == 0
+    payload = json.loads(output_path.read_text(encoding="utf-8"))
+    source_ingestion = next(
+        capability
+        for capability in payload["capabilities"]
+        if capability["capabilityId"] == "source-ingestion"
+    )
+    assert "scheduled_worker_deploy_proof_missing" in source_ingestion["blockers"]
+    assert "live_core_source_proof_missing" in source_ingestion["blockers"]
+    assert "source ingestion scheduled-worker source-contract artifact" in (
+        source_ingestion["evidenceRefs"]
+    )
+    assert "durable_repository_not_configured" in source_ingestion["blockers"]
+    assert payload["readinessStatus"] == "blocked"
+    assert payload["supportedFeaturePromoted"] is False
+    assert os.environ[MANIFEST_ENV] == "pre-existing-manifest.json"
+    assert os.environ[CORE_BASE_URL_ENV] == "http://pre-existing-core"
+    assert (
+        os.environ[SCHEDULED_WORKER_SOURCE_CONTRACT_ENV]
+        == "pre-existing-source-contract.json"
+    )
+
+
+def test_deployment_evidence_clears_only_scheduled_worker_deployment_blocker(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    monkeypatch.setenv(
+        SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE_ENV,
+        "pre-existing-deployment-evidence.json",
+    )
+    evidence_path = tmp_path / "scheduled-worker-deployment-evidence.json"
+    evidence_path.write_text(
+        json.dumps(deployment_evidence(repository_root=ROOT)),
+        encoding="utf-8",
+    )
+    output_path = tmp_path / "proof" / "readiness.json"
+
+    result = proof_report.main(
+        [
+            "--evaluated-at-utc",
+            "2026-06-21T10:10:00Z",
+            "--source-ingestion-scheduled-worker-deployment-evidence",
+            str(evidence_path),
             "--output",
             str(output_path),
         ]
@@ -221,13 +283,13 @@ def test_generate_implementation_proof_readiness_uses_explicit_scheduled_worker_
     )
     assert "scheduled_worker_deploy_proof_missing" not in source_ingestion["blockers"]
     assert "live_core_source_proof_missing" in source_ingestion["blockers"]
-    assert "source ingestion scheduled-worker proof artifact" in source_ingestion["evidenceRefs"]
-    assert "durable_repository_not_configured" in source_ingestion["blockers"]
-    assert payload["readinessStatus"] == "blocked"
-    assert payload["supportedFeaturePromoted"] is False
-    assert os.environ[MANIFEST_ENV] == "pre-existing-manifest.json"
-    assert os.environ[CORE_BASE_URL_ENV] == "http://pre-existing-core"
-    assert os.environ[SCHEDULED_WORKER_PROOF_ENV] == "pre-existing-proof.json"
+    assert "source ingestion scheduled-worker deployment-evidence artifact" in (
+        source_ingestion["evidenceRefs"]
+    )
+    assert (
+        os.environ[SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE_ENV]
+        == "pre-existing-deployment-evidence.json"
+    )
 
 
 def test_generate_implementation_proof_readiness_uses_runtime_execution_receipts(

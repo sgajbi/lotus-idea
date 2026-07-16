@@ -45,7 +45,10 @@ from app.application.report.intake_route_source_contract import (
 from app.application.runtime_trust_telemetry.test_execution_contract import (
     RUNTIME_TRUST_TELEMETRY_TEST_EXECUTION_ENV,
 )
-from app.application.source_ingestion_readiness import SCHEDULED_WORKER_PROOF_ENV
+from app.application.source_ingestion_scheduler import (
+    SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE_ENV,
+    SCHEDULED_WORKER_SOURCE_CONTRACT_ENV,
+)
 from app.application.source_ingestion_runtime_evidence import (
     SOURCE_INGESTION_RUNTIME_EXECUTION_ENV,
 )
@@ -59,7 +62,8 @@ from app.runtime.proof_artifact_files import read_optional_json_object
 class ConfiguredImplementationProofArtifacts:
     source_ingestion_runtime_execution: dict[str, Any] | None
     source_ingestion_runtime_execution_ref: str | None
-    source_ingestion_scheduled_worker_proof_ref: str | None
+    source_ingestion_scheduled_worker_source_contract_ref: str | None
+    source_ingestion_scheduled_worker_deployment_evidence_ref: str | None
     durable_repository_proof: dict[str, Any] | None
     durable_repository_proof_ref: str | None
     runtime_trust_telemetry_test_execution: dict[str, Any] | None
@@ -96,9 +100,14 @@ class ConfiguredImplementationProofArtifacts:
 
 _REF_ONLY_PROOF_ARTIFACTS: tuple[tuple[str, str, str], ...] = (
     (
-        SCHEDULED_WORKER_PROOF_ENV,
-        "source_ingestion_scheduled_worker_proof_ref",
-        "source ingestion scheduled-worker proof",
+        SCHEDULED_WORKER_SOURCE_CONTRACT_ENV,
+        "source_ingestion_scheduled_worker_source_contract_ref",
+        "source ingestion scheduled-worker source contract",
+    ),
+    (
+        SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE_ENV,
+        "source_ingestion_scheduled_worker_deployment_evidence_ref",
+        "source ingestion scheduled-worker deployment evidence",
     ),
 )
 

@@ -52,18 +52,13 @@ from app.application.source_ingestion_readiness import (
     CORE_BASE_URL_ENV,
     SOURCE_INGESTION_RUNTIME_EXECUTION_ENV,
     MANIFEST_ENV,
-    SCHEDULED_WORKER_PROOF_ENV,
 )
-from app.application.source_ingestion_scheduled_worker import (
-    build_scheduled_worker_check_summary,
-    build_scheduled_worker_deploy_proof_payload,
-    source_ingestion_schedule_config_from_values,
+from app.application.source_ingestion_scheduler import (
+    SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE_ENV,
 )
-from app.application.source_ingestion_worker import (
-    MANIFEST_SCHEMA_VERSION,
-    source_ingestion_worker_plan_from_manifest,
-)
+from app.application.proof_provenance import current_source_revision
 from tests.support.source_ingestion_runtime_evidence import runtime_execution
+from tests.support.source_ingestion_scheduler_evidence import deployment_evidence
 from app.application.workbench.read_path_source_contract import (
     WORKBENCH_READ_PATH_SOURCE_CONTRACT_PROOF_ENV,
     build_workbench_read_path_source_contract_proof_payload,
@@ -321,7 +316,7 @@ def test_implementation_proof_readiness_api_consumes_configured_proof_artifacts(
         in capabilities["source-ingestion"]["evidenceRefs"]
     )
     assert (
-        "source ingestion scheduled-worker proof artifact"
+        "source ingestion scheduled-worker deployment evidence artifact"
         in capabilities["source-ingestion"]["evidenceRefs"]
     )
     assert "durable repository proof artifact" in capabilities["source-ingestion"]["evidenceRefs"]
@@ -490,7 +485,9 @@ def _configure_readiness_proof_artifacts(
     )
     manifest_path = tmp_path / "source-ingestion-manifest.json"
     live_proof_path = tmp_path / "source-ingestion-runtime-execution.json"
-    scheduled_proof_path = tmp_path / "source-ingestion-scheduled-worker-proof.json"
+    deployment_evidence_path = (
+        tmp_path / "source-ingestion-scheduled-worker-deployment-evidence.json"
+    )
     durable_proof_path = tmp_path / "durable-repository-proof.json"
     runtime_proof_path = tmp_path / "runtime-trust-telemetry-test-execution.json"
     ai_lineage_proof_path = tmp_path / "ai-lineage-store-proof.json"
@@ -508,8 +505,11 @@ def _configure_readiness_proof_artifacts(
         runtime_execution(generated_at_utc=evaluated_at_utc),
     )
     _write_proof(
-        scheduled_proof_path,
-        _valid_scheduled_worker_proof(generated_at_utc=evaluated_at_utc),
+        deployment_evidence_path,
+        deployment_evidence(
+            repository_root=ROOT,
+            source_commit_sha=current_source_revision(ROOT),
+        ),
     )
     _write_proof(
         durable_proof_path,
@@ -564,7 +564,10 @@ def _configure_readiness_proof_artifacts(
 
     monkeypatch.setenv(MANIFEST_ENV, str(manifest_path))
     monkeypatch.setenv(SOURCE_INGESTION_RUNTIME_EXECUTION_ENV, str(live_proof_path))
-    monkeypatch.setenv(SCHEDULED_WORKER_PROOF_ENV, str(scheduled_proof_path))
+    monkeypatch.setenv(
+        SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE_ENV,
+        str(deployment_evidence_path),
+    )
     monkeypatch.setenv(CORE_BASE_URL_ENV, "http://localhost:8310")
     monkeypatch.setenv(DURABLE_REPOSITORY_PROOF_ENV, str(durable_proof_path))
     monkeypatch.setenv(RUNTIME_TRUST_TELEMETRY_TEST_EXECUTION_ENV, str(runtime_proof_path))
@@ -586,31 +589,6 @@ def _write_proof(path: Path, payload: dict[str, object]) -> None:
     path.write_text(
         json.dumps(payload),
         encoding="utf-8",
-    )
-
-
-def _valid_scheduled_worker_proof(*, generated_at_utc: datetime) -> dict[str, object]:
-    plan = source_ingestion_worker_plan_from_manifest(
-        {
-            "schemaVersion": MANIFEST_SCHEMA_VERSION,
-            "tenantId": "default",
-            "evaluatedAtUtc": "2026-06-21T10:00:00Z",
-            "workItems": [{"portfolioId": "PB_SG_GLOBAL_BAL_001", "asOfDate": "2026-06-21"}],
-        }
-    )
-    summary = build_scheduled_worker_check_summary(
-        plan=plan,
-        schedule=source_ingestion_schedule_config_from_values(
-            interval_seconds=300,
-            max_runs=1,
-        ),
-    )
-    return build_scheduled_worker_deploy_proof_payload(
-        generated_at_utc=generated_at_utc,
-        check_summary=summary,
-        scheduler_entrypoint_present=True,
-        run_once_worker_entrypoint_present=True,
-        docker_compose_service_present=True,
     )
 
 

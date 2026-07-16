@@ -5,7 +5,7 @@ SCRIPT_TARGET_EXPECTATIONS = {
     "foundation-structure-gate": "scripts/foundation_structure_gate.py",
     "source-ingestion-worker-check": "scripts/source_ingestion_worker_contract_gate.py",
     "source-ingestion-scheduled-worker-check": (
-        "scripts/source_ingestion_scheduled_worker_contract_gate.py"
+        "scripts.source_ingestion_scheduler.contract_gate"
     ),
     "source-ingestion-runtime-execution-contract-gate": (
         "scripts/source_ingestion/runtime_execution_contract_gate.py"

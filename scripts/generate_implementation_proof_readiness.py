@@ -26,7 +26,10 @@ from app.application.source_ingestion_readiness import (
     CORE_QUERY_CONTROL_PLANE_BASE_URL_ENV,
     SOURCE_INGESTION_RUNTIME_EXECUTION_ENV,
     MANIFEST_ENV,
-    SCHEDULED_WORKER_PROOF_ENV,
+)
+from app.application.source_ingestion_scheduler import (
+    SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE_ENV,
+    SCHEDULED_WORKER_SOURCE_CONTRACT_ENV,
 )
 from app.runtime.repository_state import (
     get_idea_repository,
@@ -67,9 +70,25 @@ def main(argv: list[str] | None = None) -> int:
                 durable_storage_backed=idea_repository_durable_storage_backed(repository),
                 source_ingestion_runtime_execution=source_ingestion_runtime_execution.payload,
                 source_ingestion_runtime_execution_ref=source_ingestion_runtime_execution.proof_ref,
-                source_ingestion_scheduled_worker_proof_ref=_source_safe_artifact_ref(
-                    _resolve_optional_path(args.source_ingestion_scheduled_worker_proof),
-                    artifact_name="source ingestion scheduled-worker proof artifact",
+                source_ingestion_scheduled_worker_source_contract_ref=(
+                    _source_safe_artifact_ref(
+                        _resolve_optional_path(
+                            args.source_ingestion_scheduled_worker_source_contract
+                        ),
+                        artifact_name=(
+                            "source ingestion scheduled-worker source-contract artifact"
+                        ),
+                    )
+                ),
+                source_ingestion_scheduled_worker_deployment_evidence_ref=(
+                    _source_safe_artifact_ref(
+                        _resolve_optional_path(
+                            args.source_ingestion_scheduled_worker_deployment_evidence
+                        ),
+                        artifact_name=(
+                            "source ingestion scheduled-worker deployment-evidence artifact"
+                        ),
+                    )
                 ),
                 **_proof_payload_kwargs(proof_artifacts),
             )
@@ -395,13 +414,6 @@ def _add_runtime_context_args(parser: argparse.ArgumentParser) -> None:
             f"to expose as {SOURCE_INGESTION_RUNTIME_EXECUTION_ENV}."
         ),
     )
-    parser.add_argument(
-        "--source-ingestion-scheduled-worker-proof",
-        help=(
-            "Optional scheduled source-ingestion worker proof artifact path to expose as "
-            f"{SCHEDULED_WORKER_PROOF_ENV}."
-        ),
-    )
 
 
 def _add_proof_artifact_args(parser: argparse.ArgumentParser) -> None:
@@ -434,7 +446,12 @@ def _readiness_environment_overrides(args: argparse.Namespace) -> dict[str, str 
         CORE_QUERY_BASE_URL_ENV: args.core_query_base_url,
         CORE_QUERY_CONTROL_PLANE_BASE_URL_ENV: args.core_query_control_plane_base_url,
         SOURCE_INGESTION_RUNTIME_EXECUTION_ENV: args.source_ingestion_runtime_execution,
-        SCHEDULED_WORKER_PROOF_ENV: args.source_ingestion_scheduled_worker_proof,
+        SCHEDULED_WORKER_SOURCE_CONTRACT_ENV: (
+            args.source_ingestion_scheduled_worker_source_contract
+        ),
+        SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE_ENV: (
+            args.source_ingestion_scheduled_worker_deployment_evidence
+        ),
     }
 
 

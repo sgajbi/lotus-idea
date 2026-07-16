@@ -20,9 +20,11 @@ from app.application.source_ingestion_readiness import (  # noqa: E402
     MANIFEST_ENV,
     TIMEOUT_SECONDS_ENV,
 )
-from app.application.source_ingestion_scheduled_worker import (  # noqa: E402
+from app.application.source_ingestion_scheduler import (  # noqa: E402
     DEFAULT_SCHEDULE_INTERVAL_SECONDS,
     DEFAULT_SCHEDULE_MAX_RUNS,
+    SCHEDULE_INTERVAL_SECONDS_ENV,
+    SCHEDULE_MAX_RUNS_ENV,
     SourceIngestionScheduleConfig,
     build_scheduled_worker_check_summary,
     source_ingestion_schedule_config_from_values,
@@ -30,9 +32,6 @@ from app.application.source_ingestion_scheduled_worker import (  # noqa: E402
 from app.application.source_ingestion_worker import source_ingestion_worker_plan_from_manifest  # noqa: E402
 from run_source_ingestion_worker import main as run_once_worker_main  # noqa: E402
 
-
-SCHEDULE_INTERVAL_SECONDS_ENV = "LOTUS_IDEA_SOURCE_INGESTION_SCHEDULE_INTERVAL_SECONDS"
-SCHEDULE_MAX_RUNS_ENV = "LOTUS_IDEA_SOURCE_INGESTION_SCHEDULE_MAX_RUNS"
 
 _stop_requested = False
 

@@ -227,8 +227,11 @@ def _build_readiness_snapshot_from_configured_artifacts(
         source_ingestion_runtime_execution_ref=(
             proof_artifacts.source_ingestion_runtime_execution_ref
         ),
-        source_ingestion_scheduled_worker_proof_ref=(
-            proof_artifacts.source_ingestion_scheduled_worker_proof_ref
+        source_ingestion_scheduled_worker_source_contract_ref=(
+            proof_artifacts.source_ingestion_scheduled_worker_source_contract_ref
+        ),
+        source_ingestion_scheduled_worker_deployment_evidence_ref=(
+            proof_artifacts.source_ingestion_scheduled_worker_deployment_evidence_ref
         ),
         durable_repository_proof=proof_artifacts.durable_repository_proof,
         durable_repository_proof_ref=proof_artifacts.durable_repository_proof_ref,
