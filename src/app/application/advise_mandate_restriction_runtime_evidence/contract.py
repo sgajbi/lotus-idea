@@ -6,6 +6,9 @@ from decimal import Decimal, InvalidOperation
 import re
 from typing import Any
 
+from app.application.advise_policy_runtime_evidence import (
+    reconcile_advise_policy_workflow_receipts,
+)
 from app.application.mandate_restriction_signal import (
     mandate_restriction_review_ready_from_advise_diagnostic,
 )
@@ -128,9 +131,6 @@ _CLAIM_KEYS = frozenset(
     }
 )
 _SHA256 = re.compile(r"^sha256:[0-9a-f]{64}$")
-_WORKFLOW_ROUTE_TEMPLATE = "/advisory/policy-evaluations/{evaluation_id}/workflow"
-
-
 def advise_mandate_restriction_runtime_execution_is_valid(
     payload: Mapping[str, Any],
 ) -> bool:
@@ -243,37 +243,17 @@ def _receipts_reconcile(
         Decimal(str(evaluation.get("candidateScore")))
     except (InvalidOperation, ValueError):
         return False
-    source_generated = parse_timezone_aware_datetime(workflow.get("generatedAtUtc"))
     if (
-        request.get("consumerSystem") != "lotus-idea"
-        or request.get("evaluatedAtUtc") != evaluated.isoformat().replace("+00:00", "Z")
-        or request.get("evaluationIdHash") != workflow.get("evaluationIdHash")
-        or request.get("tenantIdHash") != workflow.get("tenantScopeHash")
-        or request.get("portfolioIdHash") != workflow.get("portfolioIdHash")
-        or request.get("correlationIdHash") != workflow.get("sourceCorrelationIdHash")
-        or request.get("traceIdHash") != workflow.get("sourceTraceIdHash")
-        or request.get("asOfDate") != workflow.get("asOfDate")
+        not reconcile_advise_policy_workflow_receipts(
+            request,
+            workflow,
+            evaluated_at_utc=evaluated,
+        )
         or request.get("policyVersion") != evaluation.get("policyVersion")
-        or source_generated is None
-        or source_generated > evaluated
-        or workflow.get("productId") != "lotus-advise:AdvisoryPolicyEvaluationRecord:v1"
-        or workflow.get("sourceSystem") != "lotus-advise"
-        or workflow.get("productVersion") != "v1"
-        or workflow.get("routeTemplate") != _WORKFLOW_ROUTE_TEMPLATE
-        or workflow.get("freshness") != "current"
-        or str(workflow.get("dataQualityStatus", "")).lower()
-        not in {"ready", "complete", "quality_passed"}
         or evaluation.get("family") != "mandate_restriction"
         or evaluation.get("unsupportedReasons") != []
         or evaluation.get("sourceRefsDigest") != sha256_json([dict(workflow)])
     ):
-        return False
-    counts = (
-        workflow.get("openRequirementCount"),
-        workflow.get("blockedRequirementCount"),
-        workflow.get("signOffBlockerCount"),
-    )
-    if any(not isinstance(value, int) or isinstance(value, bool) or value < 0 for value in counts):
         return False
     review_required = mandate_restriction_review_ready_from_advise_diagnostic(
         _optional_text(workflow.get("adviseDiagnostic"))
