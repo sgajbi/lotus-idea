@@ -2,7 +2,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from endpoint_contract_support import json_object_examples, openapi_operation
+from endpoint_contract_support import (
+    json_object_examples,
+    openapi_operation,
+    openapi_success_object_examples,
+)
 
 
 AI_EXPLANATION_OPERATION = (
@@ -12,6 +16,11 @@ AI_EXPLANATION_OPERATION = (
 AI_ATTESTED_SUCCESS_TEST = (
     "tests/integration/test_attested_ai_governance_api.py::"
     "test_api_accepts_signed_bound_lotus_ai_output"
+)
+AI_READINESS_OPERATION = ("GET", "/api/v1/ai-explanations/readiness")
+AI_READINESS_CONTRACT_TEST = (
+    "tests/unit/test_ai_explanation_readiness.py::"
+    "test_ai_explanation_readiness_published_examples_match_runtime_contract"
 )
 
 
@@ -77,6 +86,42 @@ def validate_ai_attested_success_mode(
                 f"{operation}: OpenAPI 200 examples must preserve local/test fixture posture"
             )
 
+    return errors
+
+
+def validate_ai_readiness_success_contract(
+    endpoint: dict[str, Any],
+    openapi_spec: dict[str, Any] | None = None,
+) -> list[str]:
+    operation = (str(endpoint["method"]).upper(), str(endpoint["path"]))
+    if operation != AI_READINESS_OPERATION:
+        return []
+
+    from app.api.ai_governance_models import build_ai_explanation_readiness_response
+
+    expected = build_ai_explanation_readiness_response().model_dump(mode="json", by_alias=True)
+    errors: list[str] = []
+    if expected not in json_object_examples(endpoint.get("response_examples")):
+        errors.append(
+            f"{operation}: response_examples must exactly match the code-owned default "
+            "AI readiness response"
+        )
+
+    test_evidence = tuple(str(value) for value in endpoint.get("test_evidence", ()))
+    if AI_READINESS_CONTRACT_TEST not in test_evidence:
+        errors.append(
+            f"{operation}: test_evidence must cite the complete AI readiness publication "
+            "contract test"
+        )
+
+    if openapi_spec is not None and expected not in openapi_success_object_examples(
+        openapi_spec,
+        operation,
+    ):
+        errors.append(
+            f"{operation}: OpenAPI success example must exactly match the code-owned default "
+            "AI readiness response"
+        )
     return errors
 
 

@@ -1027,7 +1027,7 @@
         "403 returns product-safe Problem Details when the caller lacks the operator role or idea.ai-explanation.readiness.read capability."
       ],
       "test_evidence": [
-        "tests/unit/test_ai_explanation_readiness.py::test_ai_explanation_readiness_reports_blocked_not_certified_posture",
+        "tests/unit/test_ai_explanation_readiness.py::test_ai_explanation_readiness_published_examples_match_runtime_contract",
         "tests/integration/test_ai_governance_api.py::test_ai_explanation_readiness_api_returns_source_safe_blocked_posture",
         "tests/integration/test_ai_governance_api.py::test_ai_explanation_readiness_api_requires_operator_role_and_capability",
         "tests/integration/test_api_operation_events.py::test_ai_explanation_readiness_api_emits_not_certified_operation_event"

@@ -1,8 +1,9 @@
 import json
 from pathlib import Path
 
-from app.api.ai_governance_models import AIExplanationReadinessResponse
+from app.api.ai_governance_models import build_ai_explanation_readiness_response
 from app.application.ai_governance import build_ai_explanation_readiness_snapshot
+from app.main import app
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -64,7 +65,7 @@ def test_ai_explanation_readiness_reports_durable_lineage_store_without_certific
     assert snapshot.supported_feature_promoted is False
 
 
-def test_ai_explanation_readiness_ledger_example_matches_runtime_contract() -> None:
+def test_ai_explanation_readiness_published_examples_match_runtime_contract() -> None:
     ledger = json.loads(
         (ROOT / "docs/operations/endpoint-certification-ledger.json").read_text(encoding="utf-8")
     )
@@ -74,10 +75,13 @@ def test_ai_explanation_readiness_ledger_example_matches_runtime_contract() -> N
         if entry["method"] == "GET" and entry["path"] == "/api/v1/ai-explanations/readiness"
     )
     documented = json.loads(endpoint["response_examples"][0])
-    runtime = json.loads(
-        AIExplanationReadinessResponse.from_domain(
-            build_ai_explanation_readiness_snapshot()
-        ).model_dump_json(by_alias=True)
+    runtime = build_ai_explanation_readiness_response().model_dump(
+        mode="json",
+        by_alias=True,
     )
+    openapi_example = app.openapi()["paths"]["/api/v1/ai-explanations/readiness"]["get"][
+        "responses"
+    ]["200"]["content"]["application/json"]["example"]
 
     assert documented == runtime
+    assert openapi_example == runtime

@@ -17,6 +17,7 @@ from app.api.ai_governance_models import (
     AIWorkflowPackResponse,
     RedactedIdeaEvidenceResponse,
     RedactedSourceRefResponse,
+    build_ai_explanation_readiness_response,
 )
 from app.api.caller_headers import TRUSTED_CALLER_CONTEXT_HEADER, caller_context_from_headers
 from app.api.durable_write_guard import (
@@ -45,7 +46,6 @@ from app.application.ai_governance import (
     AIExplanationEvaluationDecision,
     AIExplanationWorkflowResult,
     EvaluateAIExplanationToRepositoryCommand,
-    build_ai_explanation_readiness_snapshot,
     evaluate_ai_explanation_to_repository,
 )
 from app.application.lotus_ai_run_attestation_verification import (
@@ -137,14 +137,14 @@ async def get_ai_explanation_readiness(
         )
 
     repository = get_idea_repository()
-    snapshot = build_ai_explanation_readiness_snapshot(
+    response = build_ai_explanation_readiness_response(
         durable_ai_lineage_store_backed=idea_repository_durable_storage_backed(repository)
     )
     _emit_ai_explanation_readiness_operation_event(
         OperationOutcome.BLOCKED,
-        durable_storage_backed=snapshot.durable_ai_lineage_store_backed,
+        durable_storage_backed=response.durable_ai_lineage_store_backed,
     )
-    return AIExplanationReadinessResponse.from_domain(snapshot)
+    return response
 
 
 async def evaluate_ai_explanation(
@@ -485,42 +485,10 @@ AI_EXPLANATION_READINESS_ROUTE: RouteMetadata = {
             "description": "AI explanation readiness posture returned.",
             "content": {
                 "application/json": {
-                    "example": {
-                        "repository": "lotus-idea",
-                        "sourceAuthority": "lotus-idea",
-                        "workflowAuthority": "lotus-ai",
-                        "readinessStatus": "blocked",
-                        "supportabilityStatus": "not_certified",
-                        "certificationReady": False,
-                        "deterministicFallbackAvailable": True,
-                        "verifierAvailable": True,
-                        "redactedEvidenceEnvelopeAvailable": True,
-                        "unsupportedClaimBlockingAvailable": True,
-                        "forbiddenActionBlockingAvailable": True,
-                        "actionContentPolicyVersion": ("lotus-idea.ai-action-content-policy.v1"),
-                        "lotusAiRunAttestationAvailable": True,
-                        "productionLikeAttestationRequired": True,
-                        "localTestUnattestedFixtureAllowed": True,
-                        "executionProvenancePolicyVersion": (
-                            "lotus-idea.ai-execution-provenance-policy.v1"
-                        ),
-                        "metadataEnvelopeVersion": "lotus-idea.ai-metadata-envelope.v1",
-                        "durableAiLineageStoreBacked": False,
-                        "modelRiskOperationsContractAvailable": True,
-                        "modelRiskDashboardContractAvailable": True,
-                        "modelRiskAlertContractAvailable": True,
-                        "modelRiskDashboardSourceContractValid": True,
-                        "modelRiskAlertRulesSourceContractValid": True,
-                        "lotusAiRuntimeExecuted": False,
-                        "certificationBlockers": [
-                            "lotus_ai_runtime_execution_missing",
-                            "certified_ai_lineage_store_missing",
-                            "workflow_pack_runtime_contract_not_certified",
-                            "certified_runtime_trust_telemetry_missing",
-                            "workbench_product_proof_missing",
-                        ],
-                        "supportedFeaturePromoted": False,
-                    }
+                    "example": build_ai_explanation_readiness_response().model_dump(
+                        mode="json",
+                        by_alias=True,
+                    )
                 }
             },
         },
