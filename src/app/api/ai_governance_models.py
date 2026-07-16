@@ -18,6 +18,7 @@ from app.domain.ai_metadata_policy import AI_METADATA_ENVELOPE_VERSION
 from app.application.ai_governance import (
     AIExplanationReadinessSnapshot,
     EvaluateAIExplanationToRepositoryCommand,
+    build_ai_explanation_readiness_snapshot,
 )
 from app.domain import (
     AIExplanationCommand,
@@ -612,6 +613,17 @@ class AIExplanationReadinessResponse(CamelModel):
         )
 
 
+def build_ai_explanation_readiness_response(
+    *,
+    durable_ai_lineage_store_backed: bool = False,
+) -> AIExplanationReadinessResponse:
+    return AIExplanationReadinessResponse.from_domain(
+        build_ai_explanation_readiness_snapshot(
+            durable_ai_lineage_store_backed=durable_ai_lineage_store_backed,
+        )
+    )
+
+
 __all__ = [
     "AIExplanationEvaluationRequest",
     "AIExplanationEvaluationResponse",
@@ -625,4 +637,5 @@ __all__ = [
     "GroundedAIClaimResponse",
     "RedactedIdeaEvidenceResponse",
     "RedactedSourceRefResponse",
+    "build_ai_explanation_readiness_response",
 ]

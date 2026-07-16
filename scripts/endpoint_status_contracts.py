@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from endpoint_contract_support import json_object_examples, openapi_operation
+from endpoint_contract_support import json_object_examples, openapi_success_object_examples
 
 
 IMPLEMENTED_NOT_CERTIFIED = "implemented_not_certified"
@@ -29,10 +29,9 @@ def validate_endpoint_status_contract(
         )
 
     if openapi_spec is not None:
-        operation_schema = openapi_operation(openapi_spec, operation)
-        if operation_schema is None or not any(
+        if not any(
             _is_truthful_uncertified_posture(example)
-            for example in _openapi_success_examples(operation_schema)
+            for example in openapi_success_object_examples(openapi_spec, operation)
         ):
             errors.append(
                 f"{operation}: OpenAPI success examples must preserve not-certified "
@@ -59,26 +58,6 @@ def _validate_certification_blockers(
     if len(blockers) != len(set(blockers)):
         errors.append(f"{operation}: certification_blockers must not contain duplicates")
     return errors
-
-
-def _openapi_success_examples(operation_schema: dict[str, Any]) -> tuple[dict[str, Any], ...]:
-    media = (
-        operation_schema.get("responses", {})
-        .get("200", {})
-        .get("content", {})
-        .get("application/json", {})
-    )
-    if not isinstance(media, dict):
-        return ()
-    candidates: list[Any] = []
-    if isinstance(media.get("example"), dict):
-        candidates.append(media["example"])
-    examples = media.get("examples")
-    if isinstance(examples, dict):
-        candidates.extend(
-            metadata.get("value") for metadata in examples.values() if isinstance(metadata, dict)
-        )
-    return tuple(example for example in candidates if isinstance(example, dict))
 
 
 def _is_truthful_uncertified_posture(payload: dict[str, Any]) -> bool:

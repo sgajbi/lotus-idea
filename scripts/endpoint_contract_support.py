@@ -16,6 +16,36 @@ def openapi_operation(
     return operation_schema if isinstance(operation_schema, dict) else None
 
 
+def openapi_success_object_examples(
+    openapi_spec: dict[str, Any],
+    operation: tuple[str, str],
+) -> tuple[dict[str, Any], ...]:
+    operation_schema = openapi_operation(openapi_spec, operation)
+    if operation_schema is None:
+        return ()
+    responses = operation_schema.get("responses")
+    if not isinstance(responses, dict):
+        return ()
+
+    candidates: list[Any] = []
+    for status_code, response in responses.items():
+        if not str(status_code).startswith("2") or not isinstance(response, dict):
+            continue
+        media = response.get("content", {}).get("application/json", {})
+        if not isinstance(media, dict):
+            continue
+        if isinstance(media.get("example"), dict):
+            candidates.append(media["example"])
+        examples = media.get("examples")
+        if isinstance(examples, dict):
+            candidates.extend(
+                metadata.get("value")
+                for metadata in examples.values()
+                if isinstance(metadata, dict)
+            )
+    return tuple(example for example in candidates if isinstance(example, dict))
+
+
 def json_object_examples(examples: Any) -> tuple[dict[str, Any], ...]:
     if not isinstance(examples, list):
         return ()

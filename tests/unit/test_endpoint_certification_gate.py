@@ -4,6 +4,7 @@ import importlib.util
 from pathlib import Path
 import sys
 from types import ModuleType
+from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -620,6 +621,40 @@ def test_endpoint_certification_gate_accepts_complete_attested_ai_success_truth(
     assert module.validate_ai_attested_success_mode(endpoint, openapi_spec) == []
 
 
+def test_endpoint_certification_gate_blocks_ai_readiness_publication_drift() -> None:
+    import json
+
+    module = _load_endpoint_ai_contracts()
+    endpoint = _ai_readiness_endpoint()
+    ledger_example = json.loads(str(endpoint["response_examples"][0]))
+    ledger_example.pop("claimGroundingAvailable")
+    endpoint["response_examples"] = [json.dumps(ledger_example)]
+    endpoint["test_evidence"] = []
+    openapi_spec = _ai_readiness_openapi()
+    openapi_example = openapi_spec["paths"][endpoint["path"]]["get"]["responses"]["200"]["content"][
+        "application/json"
+    ]["example"]
+    openapi_example["certificationBlockers"].remove("model_risk_dashboard_runtime_proof_missing")
+
+    errors = module.validate_ai_readiness_success_contract(endpoint, openapi_spec)
+
+    assert any("response_examples must exactly match" in error for error in errors)
+    assert any("test_evidence must cite" in error for error in errors)
+    assert any("OpenAPI success example must exactly match" in error for error in errors)
+
+
+def test_endpoint_certification_gate_accepts_complete_ai_readiness_publication() -> None:
+    module = _load_endpoint_ai_contracts()
+
+    assert (
+        module.validate_ai_readiness_success_contract(
+            _ai_readiness_endpoint(),
+            _ai_readiness_openapi(),
+        )
+        == []
+    )
+
+
 def _certified_endpoint(*, test_evidence: list[str]) -> dict[str, object]:
     return {
         "method": "POST",
@@ -682,4 +717,42 @@ def _implemented_uncertified_endpoint() -> dict[str, object]:
             "test_data_lifecycle_api_emits_bounded_permission_event",
         ],
         "openapi_evidence": "scripts/openapi_quality_gate.py validates this endpoint.",
+    }
+
+
+def _ai_readiness_endpoint() -> dict[str, Any]:
+    from app.api.ai_governance_models import build_ai_explanation_readiness_response
+
+    response = build_ai_explanation_readiness_response().model_dump_json(by_alias=True)
+    return {
+        "method": "GET",
+        "path": "/api/v1/ai-explanations/readiness",
+        "response_examples": [response],
+        "test_evidence": [
+            "tests/unit/test_ai_explanation_readiness.py::"
+            "test_ai_explanation_readiness_published_examples_match_runtime_contract"
+        ],
+    }
+
+
+def _ai_readiness_openapi() -> dict[str, Any]:
+    from app.api.ai_governance_models import build_ai_explanation_readiness_response
+
+    response = build_ai_explanation_readiness_response().model_dump(mode="json", by_alias=True)
+    return {
+        "paths": {
+            "/api/v1/ai-explanations/readiness": {
+                "get": {
+                    "responses": {
+                        "200": {
+                            "content": {
+                                "application/json": {
+                                    "example": response,
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
