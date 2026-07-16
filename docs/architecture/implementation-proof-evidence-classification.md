@@ -93,7 +93,29 @@ the next starts.
 | Advise missing-risk-profile source-product contract | Closed v2 `source_contract` evidence binds the same current Advise product and trust-telemetry authority while retaining a separately named risk-profile diagnostic contract. It can satisfy only the typed risk-profile source-product blocker and grants no risk-profile, suitability, policy, proposal, publication, deployment, production, or promotion authority. | #507 hardened on exact main by PR #509 at `9c2854b6`; the same exact-main release and wiki evidence applies. |
 | Scheduled source-ingestion worker source contract | `source_contract` | #508 closed v2 evidence binds exact scheduler/run-once/proof-I/O entrypoints, Compose, canonical manifest, check summary, and scheduler configuration by digest. Static declarations clear no blocker and preserve deployment, live Core, mesh, Gateway/Workbench, production, and promotion posture. Hardened on exact main by PR #511 at `39207ccb`; Main Releasability `29493497420`, CodeQL `29493492510`, release digest `sha256:a33d5676d2461009c5a7e8bfd52d537de8758394e7b62bc9ac21d8a02836db87`, and wiki publication `4b224a3` passed. |
 | Scheduled source-ingestion worker deployment evidence | `deployment` | #508 closed v1 evidence requires immutable image digest, exact Git SHA, target environment/class, controller repository/workflow/run/attempt/actor, workload identity and completed rollout, observed image/Git identity, scheduler-configuration digest, exact source-contract digest, and a canonical deployment-receipt digest. It can clear only `scheduled_worker_deploy_proof_missing`; scheduled execution, live Core, production, mesh, Gateway/Workbench, and promotion remain non-proof claims or preserved blockers. Hardened on the same exact-main evidence. Repository-local generation does not fabricate an environment receipt; blocker clearance still requires a matching observed deployment artifact. |
-| Other aggregate proof builders | Classification audit remains open; no unreviewed family is promoted by this capability. | #393 |
+| Other aggregate proof builders | The exhaustive CLI/readiness registry and blocker-mutation scan found no unregistered aggregate proof family. Registry effect is now executable across standard aggregate, opportunity-archetype, downstream component, source-ingestion, and scheduler paths; unknown, duplicate, pending, stale, or wrong-effect wiring fails closed. Mainline closure remains pending. | #393, #513 |
+
+## Executable Effect Boundary
+
+Evidence classification is not documentation-only metadata. Each consumer must
+state whether it intends to clear blockers or add supporting evidence, and that
+intent must match the unique classified registry entry before artifact
+validation or capability mutation.
+
+The application now enforces this rule across:
+
+1. standard aggregate proof consumption,
+2. opportunity-archetype proof steps,
+3. source-ingestion runtime evidence shared by source and archetype readiness,
+4. scheduler source-contract and deployment-evidence references,
+5. downstream component source-contract readiness.
+
+The aggregate downstream path consumes Advise, Manage, Report intake, and
+Report materialization evidence once through the provenance-aware aggregate
+boundary. This removes a duplicate nested path that previously allowed a stale
+or future-dated source-contract reference to appear as aggregate evidence.
+Supporting evidence still clears no blocker, and no supported feature is
+promoted.
 
 ## Operating Commands
 

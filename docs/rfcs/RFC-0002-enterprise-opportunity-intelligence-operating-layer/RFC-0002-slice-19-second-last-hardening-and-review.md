@@ -943,6 +943,15 @@ aggregate proof inventory:
    `deployment` evidence. No actual environment deployment receipt is
    fabricated by repository-local validation.
 
+Issue `#513` closes the remaining design gap between the typed registry and
+proof consumption. Registry lookup is unique and fail-closed, duplicate
+payload/reference keys are blocking documentation errors, every blocker
+mutation path is effect-aware, and source-ingestion proof currency is evaluated
+once and shared across capability projections. The same-pattern scan found no
+additional aggregate blocker-mutation family outside the standard and
+opportunity consumers. This remains design modularity inside the existing
+deployable; no process split is justified.
+
 GitHub issue `#318` hardens review and feedback mutation entitlements. Review
 actions and feedback now bind `ReviewActorContext` to trusted
 `X-Caller-Tenant-Ids`, `X-Caller-Book-Ids`, `X-Caller-Portfolio-Ids`, and

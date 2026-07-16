@@ -696,6 +696,15 @@ declarations clear no current blocker. Live provider/model execution,
 model-risk approval, deployment, production certification, Workbench proof,
 publication, and supported-feature promotion remain separate evidence gaps.
 
+Issue `#513` makes the aggregate proof registry executable. Standard aggregate,
+opportunity-archetype, source-ingestion, downstream, and scheduler consumers
+must match a unique classified registry effect before evidence can be applied.
+Unknown, duplicate, pending, stale, future-dated, or wrong-effect wiring fails
+closed. The downstream aggregate path now validates all four route and Report
+source contracts once through the provenance-aware aggregate boundary instead
+of inheriting evidence from a nested component snapshot. No blocker set,
+authority boundary, runtime topology, or supported-feature posture is widened.
+
 ## Acceptance Gate
 
 Issue #331 closes the readiness/gate reconciliation gap. Aggregate readiness

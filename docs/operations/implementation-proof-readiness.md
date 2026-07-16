@@ -185,6 +185,17 @@ registry with the CLI parser, application snapshot signature, and evidence
 classification inventory. Adding a proof input without all four surfaces now
 fails deterministically.
 
+Registry effect is executable application policy, not descriptive metadata.
+Before validation or mutation, every aggregate consumer must reconcile its
+payload or reference argument to exactly one classified registry entry and
+assert either `blocker_clearing` or `supporting_evidence`. Unknown, duplicate,
+pending, and wrong-effect entries fail closed. This applies to standard
+aggregate artifacts, opportunity-archetype artifacts, source-ingestion runtime
+evidence, scheduled-worker source/deployment evidence, and downstream
+source-contract readiness. Aggregate downstream source contracts are also
+subject to the normal 24-hour provenance window; stale or future-dated
+contracts do not add aggregate evidence references.
+
 The AI lineage-store v2 proof requires mainline `ci_execution`. It binds the
 Main Releasability PostgreSQL workflow/job, run and attempt, exact commit and
 main ref, successful conclusion, completion timestamp, GitHub artifact digest,
