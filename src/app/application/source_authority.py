@@ -77,6 +77,14 @@ def source_authority_records_digest(value: object) -> str | None:
     return hashlib.sha256(canonical).hexdigest()
 
 
+def load_json_object(path: Path) -> Mapping[str, object] | None:
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    return payload if isinstance(payload, Mapping) else None
+
+
 def _sha256(path: Path) -> str | None:
     if not path.is_file():
         return None

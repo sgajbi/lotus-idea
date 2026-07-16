@@ -36,8 +36,9 @@ from app.application.manage_mandate_runtime_evidence import MANAGE_MANDATE_RUNTI
 from app.application.advise_mandate_restriction_runtime_evidence import (
     ADVISE_MANDATE_RESTRICTION_RUNTIME_EXECUTION_ENV,
 )
-from app.application.mandate_restriction_source_product_proof import (
+from app.application.advise_source_product_evidence import (
     MANDATE_RESTRICTION_SOURCE_PRODUCT_PROOF_ENV,
+    MISSING_RISK_PROFILE_SOURCE_PRODUCT_PROOF_ENV,
 )
 from app.application.data_mesh.mesh_policy_source_contract import (
     MESH_POLICY_SOURCE_CONTRACT_ENV,
@@ -53,9 +54,6 @@ from app.application.advise_missing_suitability_runtime_evidence import (
 )
 from app.application.advise_missing_risk_profile_runtime_evidence import (
     ADVISE_MISSING_RISK_PROFILE_RUNTIME_EXECUTION_ENV,
-)
-from app.application.missing_risk_profile_source_product_proof import (
-    MISSING_RISK_PROFILE_SOURCE_PRODUCT_PROOF_ENV,
 )
 from app.application.operator_workflows_operations.source_contract_proof import (
     OPERATOR_WORKFLOWS_OPERATIONS_PROOF_ENV,

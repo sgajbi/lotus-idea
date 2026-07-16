@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from pathlib import Path
 
+from app.application.advise_source_product_evidence import (
+    build_mandate_restriction_source_product_proof_payload,
+)
 from app.application.implementation_proof_readiness import (
     build_implementation_proof_readiness_snapshot,
-)
-from app.application.mandate_restriction_source_product_proof import (
-    build_mandate_restriction_source_product_proof_payload,
 )
 from app.domain import InMemoryIdeaRepository
 from tests.support.proof_provenance import bound_aggregate_proof
@@ -16,6 +17,8 @@ from tests.support.advise_mandate_restriction_runtime_evidence import (
 
 LIVE_PROOF_REF = "output/opportunity/mandate-restriction-live-proof.json"
 SOURCE_PRODUCT_PROOF_REF = "output/opportunity/mandate-restriction-source-product-proof.json"
+ROOT = Path(__file__).resolve().parents[2]
+ADVISE_FIXTURE_ROOT = ROOT / "tests/fixtures/advise_source_product_evidence/lotus-advise"
 
 
 def test_implementation_proof_readiness_retains_mandate_restriction_blocker_without_proof() -> None:
@@ -168,6 +171,8 @@ def _valid_mandate_restriction_source_product_proof() -> dict[str, object]:
     return bound_aggregate_proof(
         build_mandate_restriction_source_product_proof_payload(
             generated_at_utc=datetime(2026, 6, 28, 0, 0, tzinfo=UTC),
+            repository_root=ROOT,
+            advise_root=ADVISE_FIXTURE_ROOT,
         ),
         SOURCE_PRODUCT_PROOF_REF,
     )

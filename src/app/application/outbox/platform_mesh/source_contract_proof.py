@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from datetime import datetime
-import json
 from pathlib import Path
 from typing import Any
 
+from app.application.source_authority import load_json_object
 from app.application.source_safe_cross_repo_proof import (
     is_timezone_aware_datetime_text,
     required_file_evidence_present,
@@ -14,6 +14,7 @@ from app.application.source_safe_cross_repo_proof import (
 from app.domain.proof_evidence import EvidenceClass, evidence_class_can_clear
 
 _is_timezone_aware_datetime_text = is_timezone_aware_datetime_text
+_load_json_object = load_json_object
 _required_file_evidence_present = required_file_evidence_present
 _required_make_target_evidence_present = required_make_target_evidence_present
 
@@ -248,14 +249,6 @@ def outbox_platform_mesh_event_source_contract_proof_is_valid(
             "evidenceClassMatchesBlockers",
         )
     )
-
-
-def _load_json_object(path: Path) -> Mapping[str, Any] | None:
-    try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return None
-    return payload if isinstance(payload, Mapping) else None
 
 
 def _event_contract_is_source_safe(payload: Mapping[str, Any] | None) -> bool:

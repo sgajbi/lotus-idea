@@ -183,7 +183,7 @@ GENERATED_READINESS_ARTIFACTS = (
         "a Gateway/Workbench discovery contract proof artifact",
     ),
     (
-        "scripts/generate_mandate_restriction_source_product_proof.py",
+        "scripts/advise_source_product_evidence/generate_source_contract.py",
         "a mandate/restriction source-product proof artifact",
     ),
 )

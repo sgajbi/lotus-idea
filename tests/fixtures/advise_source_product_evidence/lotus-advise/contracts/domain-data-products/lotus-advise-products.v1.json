@@ -1,0 +1,21 @@
+{
+  "products": [
+    {
+      "product_name": "AdvisoryPolicyEvaluationRecord",
+      "product_version": "v1",
+      "owner_repository": "lotus-advise",
+      "authoritative_domain": "advisory_workflow",
+      "lifecycle_status": "active",
+      "required_trust_metadata": [
+        "product_name",
+        "product_version",
+        "generated_at",
+        "content_hash",
+        "correlation_id"
+      ],
+      "approved_consumers": [
+        "lotus-idea"
+      ]
+    }
+  ]
+}
