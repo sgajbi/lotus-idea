@@ -1,12 +1,19 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
 import json
 from pathlib import Path
 
 import scripts.generate_implementation_proof_readiness as proof_report
-from app.application.missing_benchmark_performance_readiness_proof import (
-    build_missing_benchmark_performance_readiness_proof_payload,
+from app.application.performance_benchmark_readiness import (
+    evaluate_performance_benchmark_readiness,
+)
+from app.application.performance_benchmark_readiness_runtime_evidence import (
+    build_performance_benchmark_readiness_runtime_execution,
+)
+from tests.support.performance_benchmark_readiness_runtime_evidence import (
+    NOW,
+    AuthoritativePerformanceBenchmarkReadinessSource,
+    performance_benchmark_readiness_command,
 )
 
 
@@ -16,19 +23,12 @@ def test_generate_readiness_uses_missing_benchmark_performance_readiness_proof(
     performance_proof = tmp_path / "missing-benchmark-performance-readiness-proof.json"
     performance_proof.write_text(
         json.dumps(
-            build_missing_benchmark_performance_readiness_proof_payload(
-                generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
-                live_performance_source_attempted=True,
-                performance_summary={
-                    "runStatus": "completed",
-                    "sourceAuthority": "lotus-performance",
-                    "sourceProductId": "lotus-performance:ReturnsSeriesBundle:v1",
-                    "sourceEvidenceCurrent": True,
-                    "performanceBenchmarkReadinessSourceRefPresent": True,
-                    "benchmarkContextAvailable": False,
-                    "benchmarkReadinessDiagnostic": "performance_benchmark_context_missing",
-                    "sourceDiagnosticCodes": ["performance_benchmark_context_missing"],
-                },
+            build_performance_benchmark_readiness_runtime_execution(
+                generated_at_utc=NOW,
+                result=evaluate_performance_benchmark_readiness(
+                    performance_benchmark_readiness_command(),
+                    performance_source=AuthoritativePerformanceBenchmarkReadinessSource(),
+                ),
             )
         ),
         encoding="utf-8",
@@ -38,7 +38,7 @@ def test_generate_readiness_uses_missing_benchmark_performance_readiness_proof(
     result = proof_report.main(
         [
             "--evaluated-at-utc",
-            "2026-06-27T00:00:00Z",
+            "2026-07-16T14:00:00Z",
             "--missing-benchmark-performance-readiness-proof",
             str(performance_proof),
             "--output",

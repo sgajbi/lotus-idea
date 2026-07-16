@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 
 from app.application.performance_benchmark_readiness import (
@@ -70,6 +70,8 @@ def performance_benchmark_readiness_evidence(
     response_portfolio_id: str = "portfolio-a",
     producer_correlation_id: str = "corr-performance",
     producer_trace_id: str = "trace-performance",
+    as_of_date: date = NOW.date(),
+    generated_at_utc: datetime = NOW,
 ) -> PerformanceBenchmarkReadinessEvidence:
     return PerformanceBenchmarkReadinessEvidence(
         benchmark_context_available=benchmark_context_available,
@@ -80,8 +82,8 @@ def performance_benchmark_readiness_evidence(
             source_system=SourceSystem.LOTUS_PERFORMANCE,
             product_version="v1",
             route="/integration/returns/series",
-            as_of_date=NOW.date(),
-            generated_at_utc=NOW,
+            as_of_date=as_of_date,
+            generated_at_utc=generated_at_utc,
             content_hash="sha256:" + "1" * 64,
             data_quality_status=data_quality_status,
             freshness=freshness,

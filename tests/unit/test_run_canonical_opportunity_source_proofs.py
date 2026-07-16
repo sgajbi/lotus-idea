@@ -18,6 +18,10 @@ from scripts.run_canonical_opportunity_source_proofs import (
 def test_proof_command_keeps_source_adapter_arguments_explicit() -> None:
     args = argparse.Namespace(
         portfolio_id="PB_SG_GLOBAL_BAL_001",
+        tenant_id="tenant-canonical",
+        book_id="book-canonical",
+        client_id="client-canonical",
+        evaluation_id="evaluation-canonical",
         as_of_date="2026-04-10",
         risk_base_url="http://risk.dev.lotus",
         performance_base_url="http://performance.dev.lotus",
@@ -65,6 +69,10 @@ def test_run_proofs_fails_closed_when_a_child_is_blocked_or_artifact_is_invalid(
     )
     args = argparse.Namespace(
         portfolio_id="PB_SG_GLOBAL_BAL_001",
+        tenant_id="tenant-canonical",
+        book_id="book-canonical",
+        client_id="client-canonical",
+        evaluation_id="evaluation-canonical",
         as_of_date="2026-04-10",
         risk_base_url="http://risk.dev.lotus",
         performance_base_url="http://performance.dev.lotus",
@@ -107,3 +115,36 @@ def test_run_proofs_fails_closed_when_a_child_is_blocked_or_artifact_is_invalid(
     assert payload["portfolioScope"] == "governed_canonical"
     assert "portfolioId" not in payload
     assert payload["supportedFeaturePromoted"] is False
+
+
+def test_performance_benchmark_readiness_command_binds_governed_scope() -> None:
+    args = argparse.Namespace(
+        portfolio_id="PB_SG_GLOBAL_BAL_001",
+        tenant_id="tenant-canonical",
+        book_id="book-canonical",
+        client_id="client-canonical",
+        evaluation_id="evaluation-canonical",
+        as_of_date="2026-04-10",
+        risk_base_url="http://risk.dev.lotus",
+        performance_base_url="http://performance.dev.lotus",
+        period_name="1Y",
+        reporting_currency="USD",
+        timeout_seconds="5.0",
+        correlation_id="corr-canonical-proof",
+        trace_id="trace-canonical-proof",
+    )
+
+    command = _proof_command(
+        case=PROOF_CASES[2],
+        args=args,
+        generated_at=datetime(2026, 7, 10, tzinfo=UTC),
+        evaluated_at=datetime(2026, 7, 10, tzinfo=UTC),
+        output_path=Path("output/opportunity/performance-readiness.json"),
+        correlation_id=args.correlation_id,
+        trace_id=args.trace_id,
+    )
+
+    assert command[command.index("--tenant-id") + 1] == "tenant-canonical"
+    assert command[command.index("--book-id") + 1] == "book-canonical"
+    assert command[command.index("--client-id") + 1] == "client-canonical"
+    assert command[command.index("--evaluation-id") + 1] == "evaluation-canonical"

@@ -45,8 +45,8 @@ from app.application.data_mesh.mesh_policy_source_contract import (
 from app.application.core_missing_benchmark_runtime_evidence import (
     CORE_MISSING_BENCHMARK_RUNTIME_EXECUTION_ENV as MISSING_BENCHMARK_LIVE_PROOF_ENV,
 )
-from app.application.missing_benchmark_performance_readiness_proof import (
-    MISSING_BENCHMARK_PERFORMANCE_READINESS_PROOF_ENV,
+from app.application.performance_benchmark_readiness_runtime_evidence import (
+    PERFORMANCE_BENCHMARK_READINESS_RUNTIME_EXECUTION_ENV,
 )
 from app.application.advise_missing_suitability_runtime_evidence import (
     ADVISE_MISSING_SUITABILITY_RUNTIME_EXECUTION_ENV,
@@ -265,7 +265,7 @@ PROOF_ARTIFACT_ARGS: tuple[tuple[str, str, str], ...] = (
     ),
     (
         "--missing-benchmark-performance-readiness-proof",
-        MISSING_BENCHMARK_PERFORMANCE_READINESS_PROOF_ENV,
+        PERFORMANCE_BENCHMARK_READINESS_RUNTIME_EXECUTION_ENV,
         "Optional lotus-performance benchmark-readiness proof artifact path for missing-benchmark review.",
     ),
 )
