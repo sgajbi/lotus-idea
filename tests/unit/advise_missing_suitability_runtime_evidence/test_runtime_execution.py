@@ -4,7 +4,7 @@ from copy import deepcopy
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 import json
-from typing import Callable
+from typing import Any, Callable
 
 import pytest
 
@@ -167,7 +167,7 @@ def test_contract_rejects_receipt_tampering_even_when_digest_is_recomputed(
 def _payload(
     *,
     source: AuthoritativeAdviseMissingSuitabilitySource | None = None,
-) -> dict[str, object]:
+) -> dict[str, Any]:
     result = evaluate_advise_missing_suitability(
         EvaluateAdviseMissingSuitability(
             tenant_id="tenant-a",
