@@ -17,6 +17,10 @@ AI_ATTESTED_SUCCESS_TEST = (
     "tests/integration/test_attested_ai_governance_api.py::"
     "test_api_accepts_signed_bound_lotus_ai_output"
 )
+AI_EVALUATION_SUCCESS_CONTRACT_TEST = (
+    "tests/unit/api_examples/test_ai_explanation.py::"
+    "test_ai_explanation_success_examples_match_ledger_and_openapi"
+)
 AI_READINESS_OPERATION = ("GET", "/api/v1/ai-explanations/readiness")
 AI_READINESS_CONTRACT_TEST = (
     "tests/unit/test_ai_explanation_readiness.py::"
@@ -24,7 +28,7 @@ AI_READINESS_CONTRACT_TEST = (
 )
 
 
-def validate_ai_attested_success_mode(
+def validate_ai_evaluation_success_contract(
     endpoint: dict[str, Any],
     openapi_spec: dict[str, Any] | None = None,
 ) -> list[str]:
@@ -48,16 +52,24 @@ def validate_ai_attested_success_mode(
             f"{operation}: certification truth must document verified Lotus AI run attestation"
         )
 
-    response_examples = json_object_examples(endpoint.get("response_examples"))
-    if not any(_is_verified_ai_attestation_success(example) for example in response_examples):
+    from app.api.examples.ai_explanation import build_ai_explanation_evaluation_examples
+
+    expected = build_ai_explanation_evaluation_examples()
+    if json_object_examples(endpoint.get("response_examples")) != tuple(expected.values()):
         errors.append(
-            f"{operation}: response_examples must include verified attested AI success posture"
+            f"{operation}: response_examples must exactly match every code-owned AI evaluation "
+            "success mode"
         )
 
     test_evidence = tuple(str(value) for value in endpoint.get("test_evidence", ()))
     if AI_ATTESTED_SUCCESS_TEST not in test_evidence:
         errors.append(
             f"{operation}: test_evidence must cite the attested AI API success integration test"
+        )
+    if AI_EVALUATION_SUCCESS_CONTRACT_TEST not in test_evidence:
+        errors.append(
+            f"{operation}: test_evidence must cite the complete AI evaluation publication "
+            "contract test"
         )
 
     if openapi_spec is not None:
@@ -71,19 +83,15 @@ def validate_ai_attested_success_mode(
             else {}
         )
         examples = media.get("examples", {}) if isinstance(media, dict) else {}
-        values = [
-            metadata.get("value") for metadata in examples.values() if isinstance(metadata, dict)
-        ]
-        if not any(
-            isinstance(value, dict) and _is_verified_ai_attestation_success(value)
-            for value in values
-        ):
+        published = {
+            str(name): metadata.get("value")
+            for name, metadata in examples.items()
+            if isinstance(metadata, dict)
+        }
+        if published != expected:
             errors.append(
-                f"{operation}: OpenAPI 200 examples must include verified attested AI success"
-            )
-        if "unattestedLocalTestFixture" not in examples:
-            errors.append(
-                f"{operation}: OpenAPI 200 examples must preserve local/test fixture posture"
+                f"{operation}: OpenAPI 200 examples must exactly match every named code-owned "
+                "AI evaluation success mode"
             )
 
     return errors
@@ -123,12 +131,3 @@ def validate_ai_readiness_success_contract(
             "AI readiness response"
         )
     return errors
-
-
-def _is_verified_ai_attestation_success(payload: dict[str, Any]) -> bool:
-    return (
-        payload.get("executionProvenancePosture") == "lotus_ai_attestation_verified"
-        and payload.get("lotusAiRuntimeExecuted") is True
-        and payload.get("grantsDownstreamAuthority") is False
-        and payload.get("supportedFeaturePromoted") is False
-    )

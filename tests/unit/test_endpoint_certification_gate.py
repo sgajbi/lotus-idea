@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+from copy import deepcopy
 import importlib.util
+import json
 from pathlib import Path
 import sys
 from types import ModuleType
@@ -525,100 +527,81 @@ def test_endpoint_status_contract_accepts_explicit_uncertified_posture() -> None
 
 def test_endpoint_certification_gate_blocks_stale_attested_ai_success_truth() -> None:
     module = _load_endpoint_ai_contracts()
-    endpoint = _attested_ai_endpoint()
+    endpoint = _ai_evaluation_endpoint()
     endpoint["when_to_use"] = (
         "Use with idea.ai-explanation.evaluate capability. Production-like profiles "
         "currently reject workflow output."
     )
-    endpoint["response_examples"] = [
-        '{"executionProvenancePosture":"unattested_local_test_fixture",'
-        '"lotusAiRuntimeExecuted":false,"grantsDownstreamAuthority":false,'
-        '"supportedFeaturePromoted":false}'
-    ]
     endpoint["test_evidence"] = []
 
-    errors = module.validate_ai_attested_success_mode(endpoint)
+    errors = module.validate_ai_evaluation_success_contract(endpoint)
 
     assert any("must not reject verified attested workflow output" in error for error in errors)
-    assert any("must include verified attested AI success posture" in error for error in errors)
     assert any(
         "must cite the attested AI API success integration test" in error for error in errors
     )
+    assert any("complete AI evaluation publication contract test" in error for error in errors)
 
 
-def test_endpoint_certification_gate_requires_named_openapi_attested_success_mode() -> None:
+def test_endpoint_certification_gate_requires_every_named_ai_success_mode() -> None:
     module = _load_endpoint_ai_contracts()
-    endpoint = _attested_ai_endpoint()
-    openapi_spec = {
-        "paths": {
-            endpoint["path"]: {
-                "post": {
-                    "responses": {
-                        "200": {
-                            "content": {
-                                "application/json": {
-                                    "examples": {
-                                        "unattestedLocalTestFixture": {
-                                            "value": {
-                                                "executionProvenancePosture": (
-                                                    "unattested_local_test_fixture"
-                                                ),
-                                                "lotusAiRuntimeExecuted": False,
-                                                "grantsDownstreamAuthority": False,
-                                                "supportedFeaturePromoted": False,
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
+    endpoint = _ai_evaluation_endpoint()
+    openapi_spec = _ai_evaluation_openapi()
+    examples = openapi_spec["paths"][endpoint["path"]]["post"]["responses"]["200"]["content"][
+        "application/json"
+    ]["examples"]
+    examples.pop("deterministicFallback")
 
-    errors = module.validate_ai_attested_success_mode(endpoint, openapi_spec)
+    errors = module.validate_ai_evaluation_success_contract(endpoint, openapi_spec)
 
     assert errors == [
         (
             "('POST', '/api/v1/idea-candidates/{candidateId}/ai-explanations/evaluate'): "
-            "OpenAPI 200 examples must include verified attested AI success"
+            "OpenAPI 200 examples must exactly match every named code-owned AI evaluation "
+            "success mode"
         )
     ]
 
 
-def test_endpoint_certification_gate_accepts_complete_attested_ai_success_truth() -> None:
+def test_endpoint_certification_gate_blocks_ai_success_safety_field_drift() -> None:
     module = _load_endpoint_ai_contracts()
-    endpoint = _attested_ai_endpoint()
-    attested = {
-        "executionProvenancePosture": "lotus_ai_attestation_verified",
-        "lotusAiRuntimeExecuted": True,
-        "grantsDownstreamAuthority": False,
-        "supportedFeaturePromoted": False,
-    }
-    openapi_spec = {
-        "paths": {
-            endpoint["path"]: {
-                "post": {
-                    "responses": {
-                        "200": {
-                            "content": {
-                                "application/json": {
-                                    "examples": {
-                                        "unattestedLocalTestFixture": {"value": {}},
-                                        "verifiedAttestedOutput": {"value": attested},
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
+    endpoint = _ai_evaluation_endpoint()
+    examples = [json.loads(value) for value in endpoint["response_examples"]]
+    mutations = []
 
-    assert module.validate_ai_attested_success_mode(endpoint, openapi_spec) == []
+    missing_control = deepcopy(examples)
+    missing_control[0].pop("metadataEnvelopeVersion")
+    mutations.append(missing_control)
+
+    missing_grounding = deepcopy(examples)
+    missing_grounding[0]["verifiedOutput"].pop("claimGroundingPolicyVersion")
+    mutations.append(missing_grounding)
+
+    blocked_narrative_drift = deepcopy(examples)
+    blocked_narrative_drift[3]["explanationText"] = "Provider-authored rejected narrative"
+    mutations.append(blocked_narrative_drift)
+
+    fallback_authority_drift = deepcopy(examples)
+    fallback_authority_drift[2]["grantsDownstreamAuthority"] = True
+    mutations.append(fallback_authority_drift)
+
+    for mutation in mutations:
+        changed = deepcopy(endpoint)
+        changed["response_examples"] = [json.dumps(value) for value in mutation]
+        errors = module.validate_ai_evaluation_success_contract(changed)
+        assert any("response_examples must exactly match" in error for error in errors)
+
+
+def test_endpoint_certification_gate_accepts_complete_ai_success_truth() -> None:
+    module = _load_endpoint_ai_contracts()
+
+    assert (
+        module.validate_ai_evaluation_success_contract(
+            _ai_evaluation_endpoint(),
+            _ai_evaluation_openapi(),
+        )
+        == []
+    )
 
 
 def test_endpoint_certification_gate_blocks_ai_readiness_publication_drift() -> None:
@@ -672,7 +655,9 @@ def _certified_endpoint(*, test_evidence: list[str]) -> dict[str, object]:
     }
 
 
-def _attested_ai_endpoint() -> dict[str, object]:
+def _ai_evaluation_endpoint() -> dict[str, object]:
+    from app.api.examples.ai_explanation import build_ai_explanation_evaluation_examples
+
     return {
         "method": "POST",
         "path": "/api/v1/idea-candidates/{candidateId}/ai-explanations/evaluate",
@@ -681,14 +666,41 @@ def _attested_ai_endpoint() -> dict[str, object]:
             "Use with idea.ai-explanation.evaluate and verified Lotus AI run attestation."
         ),
         "response_examples": [
-            '{"executionProvenancePosture":"lotus_ai_attestation_verified",'
-            '"lotusAiRuntimeExecuted":true,"grantsDownstreamAuthority":false,'
-            '"supportedFeaturePromoted":false}'
+            json.dumps(value) for value in build_ai_explanation_evaluation_examples().values()
         ],
         "test_evidence": [
             "tests/integration/test_attested_ai_governance_api.py::"
-            "test_api_accepts_signed_bound_lotus_ai_output"
+            "test_api_accepts_signed_bound_lotus_ai_output",
+            "tests/unit/api_examples/test_ai_explanation.py::"
+            "test_ai_explanation_success_examples_match_ledger_and_openapi",
         ],
+    }
+
+
+def _ai_evaluation_openapi() -> dict[str, Any]:
+    from app.api.examples.ai_explanation import build_ai_explanation_evaluation_examples
+
+    return {
+        "paths": {
+            "/api/v1/idea-candidates/{candidateId}/ai-explanations/evaluate": {
+                "post": {
+                    "responses": {
+                        "200": {
+                            "content": {
+                                "application/json": {
+                                    "examples": {
+                                        name: {"value": value}
+                                        for name, value in (
+                                            build_ai_explanation_evaluation_examples().items()
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
 

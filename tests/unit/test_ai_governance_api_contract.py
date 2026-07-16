@@ -195,6 +195,10 @@ def test_ai_explanation_openapi_publishes_attestation_boundary() -> None:
     assert set(success_examples) == {
         "unattestedLocalTestFixture",
         "verifiedAttestedOutput",
+        "deterministicFallback",
+        "blockedUnsupportedClaim",
+        "blockedForbiddenAction",
+        "blockedUnsafeActionContent",
     }
     assert (
         success_examples["unattestedLocalTestFixture"]["value"]["executionProvenancePosture"]
@@ -205,6 +209,15 @@ def test_ai_explanation_openapi_publishes_attestation_boundary() -> None:
     assert attested["lotusAiRuntimeExecuted"] is True
     assert attested["grantsDownstreamAuthority"] is False
     assert attested["supportedFeaturePromoted"] is False
+    fallback = success_examples["deterministicFallback"]["value"]
+    assert fallback["posture"] == "fallback_used"
+    assert fallback["executionProvenancePosture"] == "not_applicable_fallback"
+    assert fallback["verifiedOutput"] is None
+    assert fallback["grantsDownstreamAuthority"] is False
+    blocked = success_examples["blockedUnsupportedClaim"]["value"]
+    assert blocked["posture"] == "blocked_unsupported_claim"
+    assert blocked["verifiedOutput"]["groundedClaims"] == []
+    assert blocked["grantsDownstreamAuthority"] is False
 
 
 def test_ai_explanation_application_command_rejects_blank_candidate() -> None:

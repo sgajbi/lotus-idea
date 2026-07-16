@@ -64,10 +64,8 @@ class AIWorkflowPurpose(StrEnum):
 class AIExplanationPosture(StrEnum):
     READY_FOR_ADVISOR_REVIEW = "ready_for_advisor_review"
     FALLBACK_USED = "fallback_used"
-    BLOCKED_UNSUPPORTED_EVIDENCE = "blocked_unsupported_evidence"
     BLOCKED_UNSUPPORTED_CLAIM = "blocked_unsupported_claim"
     BLOCKED_FORBIDDEN_ACTION = "blocked_forbidden_action"
-    BLOCKED_REDACTION = "blocked_redaction"
 
 
 class AIVerifierOutcome(StrEnum):
