@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from typing import Any
 
 from app.application.performance_benchmark_readiness import (
     EvaluatePerformanceBenchmarkReadiness,
@@ -105,7 +106,7 @@ def performance_benchmark_readiness_evidence(
 def performance_benchmark_readiness_runtime_execution(
     *,
     source: AuthoritativePerformanceBenchmarkReadinessSource | None = None,
-) -> dict[str, object]:
+) -> dict[str, Any]:
     result = evaluate_performance_benchmark_readiness(
         performance_benchmark_readiness_command(),
         performance_source=source or AuthoritativePerformanceBenchmarkReadinessSource(),
