@@ -151,10 +151,20 @@ def evaluate_missing_suitability_context_readiness_from_advise(
             source_error_code=exc.code,
         )
 
-    return MissingSuitabilitySourceEvaluation(
-        evaluation=_evaluate_advise_evidence(command, evidence, policy=policy),
-        evidence=evidence,
-    )
+    try:
+        evaluation = _evaluate_advise_evidence(command, evidence, policy=policy)
+    except ValueError:
+        return MissingSuitabilitySourceEvaluation(
+            evaluation=SignalEvaluationResult(
+                outcome=SignalEvaluationOutcome.BLOCKED,
+                family=OpportunityFamily.MISSING_SUITABILITY_CONTEXT,
+                reason_codes=(ReasonCode.SOURCE_PARTIAL,),
+                unsupported_reasons=(UnsupportedEvidenceReason.SOURCE_UNCERTIFIED,),
+            ),
+            evidence=evidence,
+            source_error_code="advise_policy_evidence_invalid",
+        )
+    return MissingSuitabilitySourceEvaluation(evaluation=evaluation, evidence=evidence)
 
 
 def _evaluate_advise_evidence(

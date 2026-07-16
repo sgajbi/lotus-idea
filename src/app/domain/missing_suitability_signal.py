@@ -84,7 +84,7 @@ def evaluate_missing_suitability_context_signal(
             family=OpportunityFamily.MISSING_SUITABILITY_CONTEXT,
             reason_codes=(ReasonCode.DUPLICATE_SUPPRESSED,),
         )
-    if not _review_required(source_input, policy):
+    if not missing_suitability_review_required(source_input, policy):
         return SignalEvaluationResult(
             outcome=SignalEvaluationOutcome.NOT_ELIGIBLE,
             family=OpportunityFamily.MISSING_SUITABILITY_CONTEXT,
@@ -166,7 +166,7 @@ def validate_missing_suitability_counts(
             raise ValueError(f"{field_name} must be non-negative")
 
 
-def _review_required(
+def missing_suitability_review_required(
     source_input: MissingSuitabilityContextSignalInput,
     policy: MissingSuitabilityContextSignalPolicy,
 ) -> bool:
@@ -175,12 +175,31 @@ def _review_required(
     assert source_input.open_requirement_count is not None
     assert source_input.blocked_requirement_count is not None
     assert source_input.sign_off_blocker_count is not None
+    return missing_suitability_review_required_from_workflow(
+        evaluation_status=source_input.evaluation_status,
+        open_requirement_count=source_input.open_requirement_count,
+        blocked_requirement_count=source_input.blocked_requirement_count,
+        sign_off_status=source_input.sign_off_status,
+        sign_off_blocker_count=source_input.sign_off_blocker_count,
+        minimum_open_requirement_count=policy.minimum_open_requirement_count,
+    )
+
+
+def missing_suitability_review_required_from_workflow(
+    *,
+    evaluation_status: str,
+    open_requirement_count: int,
+    blocked_requirement_count: int,
+    sign_off_status: str,
+    sign_off_blocker_count: int,
+    minimum_open_requirement_count: int,
+) -> bool:
     return (
-        source_input.evaluation_status.upper() in {"PENDING_REVIEW", "BLOCKED"}
-        or source_input.sign_off_status.upper() in {"PENDING_REVIEW", "BLOCKED"}
-        or source_input.open_requirement_count >= policy.minimum_open_requirement_count
-        or source_input.blocked_requirement_count > 0
-        or source_input.sign_off_blocker_count > 0
+        evaluation_status.upper() in {"PENDING_REVIEW", "BLOCKED"}
+        or sign_off_status.upper() in {"PENDING_REVIEW", "BLOCKED"}
+        or open_requirement_count >= minimum_open_requirement_count
+        or blocked_requirement_count > 0
+        or sign_off_blocker_count > 0
     )
 
 
