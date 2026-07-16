@@ -79,19 +79,49 @@ def test_runtime_execution_accepts_a_truthful_no_opportunity_evaluation() -> Non
 @pytest.mark.parametrize(
     ("mutation", "expected_blocker"),
     (
-        (lambda runtime: replace(runtime, evaluation_id="other"), "advise_evaluation_scope_mismatch"),
-        (lambda runtime: replace(runtime, tenant_scope_hash="sha256:" + "f" * 64), "advise_tenant_scope_mismatch"),
+        (
+            lambda runtime: replace(runtime, evaluation_id="other"),
+            "advise_evaluation_scope_mismatch",
+        ),
+        (
+            lambda runtime: replace(runtime, tenant_scope_hash="sha256:" + "f" * 64),
+            "advise_tenant_scope_mismatch",
+        ),
         (lambda runtime: replace(runtime, portfolio_id="other"), "advise_portfolio_scope_mismatch"),
-        (lambda runtime: replace(runtime, correlation_id="other"), "advise_source_correlation_mismatch"),
+        (
+            lambda runtime: replace(runtime, correlation_id="other"),
+            "advise_source_correlation_mismatch",
+        ),
         (lambda runtime: replace(runtime, trace_id=None), "advise_source_trace_missing"),
-        (lambda runtime: replace(runtime, as_of_date=date(2026, 7, 14)), "advise_as_of_date_mismatch"),
-        (lambda runtime: replace(runtime, generated_at_utc=NOW + timedelta(seconds=1)), "advise_evidence_from_future"),
-        (lambda runtime: replace(runtime, content_hash="not-a-hash"), "advise_workflow_hash_invalid"),
+        (
+            lambda runtime: replace(runtime, as_of_date=date(2026, 7, 14)),
+            "advise_as_of_date_mismatch",
+        ),
+        (
+            lambda runtime: replace(runtime, generated_at_utc=NOW + timedelta(seconds=1)),
+            "advise_evidence_from_future",
+        ),
+        (
+            lambda runtime: replace(runtime, content_hash="not-a-hash"),
+            "advise_workflow_hash_invalid",
+        ),
         (lambda runtime: replace(runtime, freshness="stale"), "advise_source_evidence_not_current"),
-        (lambda runtime: replace(runtime, data_quality_status="unknown"), "advise_source_quality_not_ready"),
-        (lambda runtime: replace(runtime, open_requirement_count=-1), "advise_workflow_counts_invalid"),
-        (lambda runtime: replace(runtime, policy_pack_id=None), "advise_policy_pack_identity_missing"),
-        (lambda runtime: replace(runtime, evaluation_status=None), "advise_evaluation_status_missing"),
+        (
+            lambda runtime: replace(runtime, data_quality_status="unknown"),
+            "advise_source_quality_not_ready",
+        ),
+        (
+            lambda runtime: replace(runtime, open_requirement_count=-1),
+            "advise_workflow_counts_invalid",
+        ),
+        (
+            lambda runtime: replace(runtime, policy_pack_id=None),
+            "advise_policy_pack_identity_missing",
+        ),
+        (
+            lambda runtime: replace(runtime, evaluation_status=None),
+            "advise_evaluation_status_missing",
+        ),
         (lambda runtime: replace(runtime, product_id="other:v1"), "advise_source_product_mismatch"),
         (lambda runtime: replace(runtime, route="/other"), "advise_source_route_mismatch"),
     ),
@@ -174,9 +204,7 @@ def test_runtime_execution_preserves_entitlement_denial_without_qualifying() -> 
     )
 
     assert payload["execution"]["status"] == "blocked"
-    assert "advise_source_entitlement_denied" in payload["execution"][
-        "qualificationBlockers"
-    ]
+    assert "advise_source_entitlement_denied" in payload["execution"]["qualificationBlockers"]
     assert payload["aggregateBlockersSatisfied"] == []
     assert not advise_mandate_restriction_runtime_execution_is_valid(payload)
 

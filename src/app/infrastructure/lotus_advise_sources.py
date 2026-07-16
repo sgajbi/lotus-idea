@@ -135,9 +135,7 @@ def _runtime_evidence(
             "tenant_scope_hash", metadata, replay_metadata, payload
         ),
         portfolio_id=_text_from_payloads("portfolio_id", metadata, payload),
-        correlation_id=_text_from_payloads(
-            "correlation_id", metadata, replay_metadata, payload
-        ),
+        correlation_id=_text_from_payloads("correlation_id", metadata, replay_metadata, payload),
         trace_id=_text_from_payloads("trace_id", metadata, replay_metadata, payload),
         as_of_date=_as_of_date(metadata, replay_metadata, payload),
         generated_at_utc=_optional_generated_at(metadata, replay_metadata, payload),

@@ -73,9 +73,7 @@ def test_generator_writes_blocked_artifact_for_source_failure(
     payload = json.loads(output.read_text(encoding="utf-8"))
     assert payload["execution"]["status"] == "blocked"
     assert payload["aggregateBlockersSatisfied"] == []
-    assert "advise_temporal_identity_missing" in payload["execution"][
-        "qualificationBlockers"
-    ]
+    assert "advise_temporal_identity_missing" in payload["execution"]["qualificationBlockers"]
     assert "portfolio-a" not in json.dumps(payload)
 
 

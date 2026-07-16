@@ -137,8 +137,7 @@ def advise_mandate_restriction_runtime_execution_is_valid(
     if set(payload) not in (_TOP_KEYS, _TOP_KEYS | {AGGREGATE_PROOF_PROVENANCE_KEY}):
         return False
     if (
-        payload.get("schemaVersion")
-        != ADVISE_MANDATE_RESTRICTION_RUNTIME_EXECUTION_SCHEMA_VERSION
+        payload.get("schemaVersion") != ADVISE_MANDATE_RESTRICTION_RUNTIME_EXECUTION_SCHEMA_VERSION
         or payload.get("repository") != "lotus-idea"
         or payload.get("evidenceClass") != EvidenceClass.RUNTIME_EXECUTION.value
         or payload.get("proofFamily") != "mandate_restriction_review"
@@ -257,8 +256,7 @@ def _receipts_reconcile(
         or request.get("policyVersion") != evaluation.get("policyVersion")
         or source_generated is None
         or source_generated > evaluated
-        or workflow.get("productId")
-        != "lotus-advise:AdvisoryPolicyEvaluationRecord:v1"
+        or workflow.get("productId") != "lotus-advise:AdvisoryPolicyEvaluationRecord:v1"
         or workflow.get("sourceSystem") != "lotus-advise"
         or workflow.get("productVersion") != "v1"
         or workflow.get("routeTemplate") != _WORKFLOW_ROUTE_TEMPLATE
@@ -275,10 +273,7 @@ def _receipts_reconcile(
         workflow.get("blockedRequirementCount"),
         workflow.get("signOffBlockerCount"),
     )
-    if any(
-        not isinstance(value, int) or isinstance(value, bool) or value < 0
-        for value in counts
-    ):
+    if any(not isinstance(value, int) or isinstance(value, bool) or value < 0 for value in counts):
         return False
     review_required = mandate_restriction_review_ready_from_advise_diagnostic(
         _optional_text(workflow.get("adviseDiagnostic"))

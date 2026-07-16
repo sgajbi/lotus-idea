@@ -30,9 +30,7 @@ from app.ports.advise_sources import (
     AdvisePolicyEvaluationRuntimeEvidence,
 )
 
-ADVISE_MANDATE_RESTRICTION_RUNTIME_EXECUTION_ENV = (
-    "LOTUS_IDEA_MANDATE_RESTRICTION_LIVE_PROOF"
-)
+ADVISE_MANDATE_RESTRICTION_RUNTIME_EXECUTION_ENV = "LOTUS_IDEA_MANDATE_RESTRICTION_LIVE_PROOF"
 ADVISE_MANDATE_RESTRICTION_RUNTIME_EXECUTION_SCHEMA_VERSION = (
     "lotus-idea.advise-mandate-restriction.runtime-execution.v2"
 )
@@ -142,13 +140,9 @@ def build_advise_mandate_restriction_runtime_execution(
             "qualificationBlockers": list(blockers),
         },
         "aggregateBlockersSatisfied": (
-            list(ADVISE_MANDATE_RESTRICTION_RUNTIME_BLOCKERS_SATISFIED)
-            if not blockers
-            else []
+            list(ADVISE_MANDATE_RESTRICTION_RUNTIME_BLOCKERS_SATISFIED) if not blockers else []
         ),
-        "remainingCertificationBlockers": list(
-            ADVISE_MANDATE_RESTRICTION_REMAINING_BLOCKERS
-        ),
+        "remainingCertificationBlockers": list(ADVISE_MANDATE_RESTRICTION_REMAINING_BLOCKERS),
         "evidenceRefs": list(ADVISE_MANDATE_RESTRICTION_RUNTIME_EVIDENCE_REFS),
         "nonProofClaims": {
             "policyWorkflowOwned": "lotus-advise",
@@ -210,7 +204,9 @@ def _workflow_receipt(
         ),
         "sourceTraceIdHash": identity_hash(runtime.trace_id) if runtime.trace_id else None,
         "asOfDate": runtime.as_of_date.isoformat() if runtime.as_of_date else None,
-        "generatedAtUtc": format_utc(runtime.generated_at_utc) if runtime.generated_at_utc else None,
+        "generatedAtUtc": format_utc(runtime.generated_at_utc)
+        if runtime.generated_at_utc
+        else None,
         "contentHash": runtime.content_hash,
         "sourceEvidenceHash": runtime.source_evidence_hash,
         "policyContentHash": runtime.policy_content_hash,
@@ -262,7 +258,9 @@ def _qualification_blockers(
     blockers: list[str] = []
     evidence = result.source_evaluation.evidence
     if evidence is None:
-        blockers.append(result.source_evaluation.source_error_code or "advise_source_evidence_missing")
+        blockers.append(
+            result.source_evaluation.source_error_code or "advise_source_evidence_missing"
+        )
         return tuple(blockers)
     if runtime is None:
         return ("advise_workflow_runtime_receipt_missing",)
@@ -338,10 +336,7 @@ def _qualification_blockers(
         runtime.blocked_requirement_count,
         runtime.sign_off_blocker_count,
     )
-    if any(
-        not isinstance(value, int) or isinstance(value, bool) or value < 0
-        for value in counts
-    ):
+    if any(not isinstance(value, int) or isinstance(value, bool) or value < 0 for value in counts):
         blockers.append("advise_workflow_counts_invalid")
     elif (
         evidence.open_requirement_count != runtime.open_requirement_count
