@@ -66,10 +66,10 @@ evidence-grounded advisor narrative hypothesis for the current bounded delivery.
 | Dimension | Falsifiable decision |
 | --- | --- |
 | Advisor outcome | Every accepted advisor-visible sentence is rendered by Idea from an ordered claim that passed deterministic source-product verification. |
-| Control outcome | The submitted provider narrative is absent from the accepted response, audit attributes, and persisted lineage; source-safe claim references expose product/version, as-of date, freshness, and quality. |
-| Failure posture | Unsupported or otherwise blocked output returns no grounded claims and cannot be presented as evidence-backed narrative. |
+| Control outcome | The submitted provider narrative is absent from accepted and blocked responses, replay responses, audit attributes, and persisted lineage; source-safe claim references expose product/version, as-of date, freshness, and quality. |
+| Failure posture | Unsupported or otherwise blocked output returns no grounded claims, replaces rejected prose with deterministic server-owned explanation text, and cannot be presented as evidence-backed narrative. |
 | Ownership | `lotus-ai` owns provider/model execution and attestation; `lotus-idea` owns deterministic claim verification, grounded projection, replay identity, and human-review posture. |
-| Acceptance threshold | Behavioral tests prove 100% of accepted narrative derives from verified claims and zero submitted narrative is returned or persisted. |
+| Acceptance threshold | Behavioral tests prove 100% of accepted narrative derives from verified claims and zero submitted narrative is returned or persisted across accepted, blocked, replay, and conflict paths. |
 
 This is a controlled explanation foundation, not a claim that Lotus predicts an
 outcome, gives advice, or has completed live-provider, Gateway, Workbench, or
