@@ -143,6 +143,27 @@ def test_source_contract_rejects_source_authority_digest_tampering(capability: s
 
 
 @pytest.mark.parametrize(
+    ("field_name", "bad_value"),
+    (
+        ("generatedAtUtc", "2026-07-16T10:10:00"),
+        ("sourceAuthority", "lotus-advise"),
+        ("diagnosticContract", ["risk_profile_missing"]),
+    ),
+)
+def test_source_contract_rejects_malformed_integrity_envelopes(
+    field_name: str,
+    bad_value: object,
+) -> None:
+    payload = _payload(MISSING_RISK_PROFILE.capability)
+    payload[field_name] = bad_value
+
+    assert not advise_source_product_source_contract_is_valid(
+        payload,
+        profile=MISSING_RISK_PROFILE,
+    )
+
+
+@pytest.mark.parametrize(
     ("capability", "contract_mutation"),
     (
         (
@@ -152,6 +173,10 @@ def test_source_contract_rejects_source_authority_digest_tampering(capability: s
         (
             MISSING_RISK_PROFILE.capability,
             ("approved_consumers", ["lotus-gateway"]),
+        ),
+        (
+            MISSING_RISK_PROFILE.capability,
+            ("product_name", "UnrelatedAdviseProduct"),
         ),
     ),
 )

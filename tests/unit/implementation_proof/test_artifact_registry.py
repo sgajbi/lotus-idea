@@ -2,6 +2,14 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
+from app.application.implementation_proof_artifact_registry import (
+    ImplementationProofArtifactSpec,
+    ProofArtifactClassificationStatus,
+    ProofArtifactEffect,
+)
+from app.domain.proof_evidence import EvidenceClass
 from scripts.documentation.implementation_proof_artifact_registry import (
     INVENTORY_PATH,
     implementation_proof_artifact_registry_errors,
@@ -56,3 +64,36 @@ def test_registry_gate_requires_pending_tracking_posture(tmp_path: Path) -> None
         "docs/architecture/implementation-proof-evidence-classification.md: "
         "`Scheduled source-ingestion worker deployment evidence` must remain pending"
     ) in errors
+
+
+@pytest.mark.parametrize(
+    ("status", "evidence_class", "message"),
+    (
+        (
+            ProofArtifactClassificationStatus.CLASSIFIED,
+            None,
+            "classified proof artifacts require an evidence class",
+        ),
+        (
+            ProofArtifactClassificationStatus.PENDING_CORRECTION,
+            EvidenceClass.DEPLOYMENT,
+            "pending proof artifacts must not declare a completed evidence class",
+        ),
+    ),
+)
+def test_artifact_spec_rejects_incoherent_classification_state(
+    status: ProofArtifactClassificationStatus,
+    evidence_class: EvidenceClass | None,
+    message: str,
+) -> None:
+    with pytest.raises(ValueError, match=message):
+        ImplementationProofArtifactSpec(
+            cli_flag="--invalid-proof",
+            payload_argument="invalid_proof",
+            ref_argument="invalid_proof_ref",
+            evidence_class=evidence_class,
+            effect=ProofArtifactEffect.BLOCKER_CLEARING,
+            inventory_label="Invalid proof",
+            tracking_issue=507,
+            status=status,
+        )
