@@ -17,7 +17,10 @@ from app.application.downstream_realization_readiness import (
     DownstreamRealizationReadinessSnapshot,
     build_downstream_realization_readiness_snapshot,
 )
-from app.application.implementation_proof_consumption import apply_available_proofs_from_scope
+from app.application.implementation_proof_consumption import (
+    apply_available_proofs_from_scope,
+    source_ingestion_runtime_execution_is_registered_and_current,
+)
 from app.application.implementation_proof_models import (
     ImplementationProofCapabilityReadiness,
     ImplementationProofReadinessSnapshot,
@@ -48,9 +51,6 @@ from app.application.runtime_trust_telemetry import (
 from app.application.source_ingestion_readiness import (
     SourceIngestionReadinessSnapshot,
     build_source_ingestion_readiness_snapshot,
-)
-from app.application.source_ingestion_runtime_evidence import (
-    source_ingestion_runtime_execution_can_clear_aggregate_blockers,
 )
 from app.application.supported_feature_promotion import (
     SupportedFeaturePromotionEvaluation,
@@ -160,16 +160,6 @@ def build_implementation_proof_readiness_snapshot(
     downstream_realization = build_downstream_realization_readiness_snapshot(
         repository=repository,
         durable_storage_backed=durable_storage_backed,
-        advise_proposal_route_proof=advise_proposal_route_proof,
-        advise_proposal_route_proof_ref=advise_proposal_route_proof_ref,
-        manage_action_route_proof=manage_action_route_proof,
-        manage_action_route_proof_ref=manage_action_route_proof_ref,
-        report_intake_route_source_contract_proof=report_intake_route_source_contract_proof,
-        report_intake_route_source_contract_proof_ref=report_intake_route_source_contract_proof_ref,
-        report_materialization_source_contract_proof=report_materialization_source_contract_proof,
-        report_materialization_source_contract_proof_ref=(
-            report_materialization_source_contract_proof_ref
-        ),
     )
     outbox_delivery = build_outbox_delivery_readiness_snapshot(
         repository=repository,
@@ -225,16 +215,17 @@ def _readiness_snapshot(
 def _build_capabilities_with_available_proofs(
     scope: Mapping[str, object],
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
+    source_ingestion_runtime_execution_current = (
+        source_ingestion_runtime_execution_is_registered_and_current(
+            cast(Mapping[str, object] | None, scope["source_ingestion_runtime_execution"]),
+            evaluated_at_utc=cast(datetime, scope["evaluated_at_utc"]),
+            proof_ref=cast(str | None, scope["source_ingestion_runtime_execution_ref"]),
+            repository_root=cast(Path, scope["repository_root"]),
+        )
+    )
     capabilities = _build_base_capabilities(
         source_ingestion=cast(SourceIngestionReadinessSnapshot, scope["source_ingestion"]),
-        source_ingestion_runtime_execution_current=(
-            source_ingestion_runtime_execution_can_clear_aggregate_blockers(
-                cast(Mapping[str, object] | None, scope["source_ingestion_runtime_execution"]),
-                evaluated_at_utc=cast(datetime, scope["evaluated_at_utc"]),
-                proof_ref=cast(str | None, scope["source_ingestion_runtime_execution_ref"]),
-                repository_root=cast(Path, scope["repository_root"]),
-            )
-        ),
+        source_ingestion_runtime_execution_current=source_ingestion_runtime_execution_current,
         source_ingestion_runtime_execution_ref=cast(
             str | None, scope["source_ingestion_runtime_execution_ref"]
         ),
@@ -266,7 +257,11 @@ def _build_capabilities_with_available_proofs(
             scope["supported_feature_evaluation"],
         ),
     )
-    return apply_available_proofs_from_scope(capabilities=capabilities, scope=scope)
+    proof_scope = dict(scope)
+    proof_scope["source_ingestion_runtime_execution_current"] = (
+        source_ingestion_runtime_execution_current
+    )
+    return apply_available_proofs_from_scope(capabilities=capabilities, scope=proof_scope)
 
 
 def _build_base_capabilities(

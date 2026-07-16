@@ -33,6 +33,10 @@ from app.application.implementation_proof_capability_updates import (
     apply_supporting_evidence,
     build_capability_readiness,
 )
+from app.application.implementation_proof_artifact_registry import (
+    ProofArtifactEffect,
+    proof_artifact_effect_matches_payload,
+)
 from app.application.implementation_proof_models import (
     ImplementationProofCapabilityReadiness,
 )
@@ -61,6 +65,9 @@ from app.application.data_mesh.platform_catalog_source_contract import (
 from app.application.proof_provenance import aggregate_proof_artifact_is_current
 from app.application.report.materialization_source_contract import (
     report_materialization_source_contract_is_valid,
+)
+from app.application.report.intake_route_source_contract import (
+    report_intake_route_source_contract_proof_is_valid,
 )
 from app.application.runtime_trust_telemetry.test_execution_contract import (
     runtime_trust_telemetry_test_execution_is_valid,
@@ -91,7 +98,6 @@ def _apply_available_proofs(
     *,
     capabilities: tuple[ImplementationProofCapabilityReadiness, ...],
     evaluated_at_utc: datetime,
-    repository_root: Path,
     durable_repository_proof: Mapping[str, object] | None,
     durable_repository_proof_ref: str | None,
     runtime_trust_telemetry_test_execution: Mapping[str, object] | None,
@@ -110,6 +116,8 @@ def _apply_available_proofs(
     advise_proposal_route_proof_ref: str | None,
     manage_action_route_proof: Mapping[str, object] | None,
     manage_action_route_proof_ref: str | None,
+    report_intake_route_source_contract_proof: Mapping[str, object] | None,
+    report_intake_route_source_contract_proof_ref: str | None,
     report_materialization_source_contract_proof: Mapping[str, object] | None,
     report_materialization_source_contract_proof_ref: str | None,
     mesh_policy_source_contract_proof: Mapping[str, object] | None,
@@ -128,7 +136,7 @@ def _apply_available_proofs(
     gateway_workbench_contract_proof_ref: str | None,
     gateway_workbench_discovery_contract_proof: Mapping[str, object] | None,
     gateway_workbench_discovery_contract_proof_ref: str | None,
-    source_ingestion_runtime_execution: Mapping[str, object] | None,
+    source_ingestion_runtime_execution_current: bool,
     source_ingestion_runtime_execution_ref: str | None,
     source_ingestion: SourceIngestionReadinessSnapshot,
     risk_concentration_live_proof: Mapping[str, object] | None,
@@ -191,6 +199,10 @@ def _apply_available_proofs(
         advise_proposal_route_proof_ref=advise_proposal_route_proof_ref,
         manage_action_route_proof=manage_action_route_proof,
         manage_action_route_proof_ref=manage_action_route_proof_ref,
+        report_intake_route_source_contract_proof=report_intake_route_source_contract_proof,
+        report_intake_route_source_contract_proof_ref=(
+            report_intake_route_source_contract_proof_ref
+        ),
         report_materialization_source_contract_proof=report_materialization_source_contract_proof,
         report_materialization_source_contract_proof_ref=(
             report_materialization_source_contract_proof_ref
@@ -210,11 +222,9 @@ def _apply_opportunity_archetype_proofs(
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
     return apply_opportunity_archetype_proofs_from_scope(
         capabilities=capabilities,
-        source_ingestion_runtime_execution_current=source_ingestion_runtime_execution_can_clear_aggregate_blockers(
-            cast(Mapping[str, object] | None, scope["source_ingestion_runtime_execution"]),
-            evaluated_at_utc=cast(datetime, scope["evaluated_at_utc"]),
-            proof_ref=cast(str | None, scope["source_ingestion_runtime_execution_ref"]),
-            repository_root=cast(Path, scope["repository_root"]),
+        source_ingestion_runtime_execution_current=cast(
+            bool,
+            scope["source_ingestion_runtime_execution_current"],
         ),
         source_ingestion_runtime_execution_ref=cast(
             str | None, scope["source_ingestion_runtime_execution_ref"]
@@ -246,7 +256,9 @@ def _apply_storage_and_runtime_proofs(
     runtime_trust_telemetry_test_execution: Mapping[str, object] | None,
     runtime_trust_telemetry_test_execution_ref: str | None,
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
-    if _proof_is_valid_and_current(
+    if _registered_proof_is_valid_and_current(
+        "durable_repository_proof",
+        ProofArtifactEffect.BLOCKER_CLEARING,
         durable_repository_proof,
         durable_repository_proof_ref,
         evaluated_at_utc=evaluated_at_utc,
@@ -256,7 +268,9 @@ def _apply_storage_and_runtime_proofs(
             _apply_durable_repository_proof(capability, durable_repository_proof_ref)
             for capability in capabilities
         )
-    if _proof_is_valid_and_current(
+    if _registered_proof_is_valid_and_current(
+        "runtime_trust_telemetry_test_execution",
+        ProofArtifactEffect.SUPPORTING_EVIDENCE,
         runtime_trust_telemetry_test_execution,
         runtime_trust_telemetry_test_execution_ref,
         evaluated_at_utc=evaluated_at_utc,
@@ -285,7 +299,9 @@ def _apply_ai_proofs(
     ai_workflow_pack_runtime_execution_proof: Mapping[str, object] | None,
     ai_workflow_pack_runtime_execution_proof_ref: str | None,
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
-    if _proof_can_clear_blockers(
+    if _registered_proof_is_valid_and_current(
+        "ai_lineage_store_proof",
+        ProofArtifactEffect.BLOCKER_CLEARING,
         ai_lineage_store_proof,
         ai_lineage_store_proof_ref,
         evaluated_at_utc=evaluated_at_utc,
@@ -295,7 +311,9 @@ def _apply_ai_proofs(
             _apply_ai_lineage_store_proof(capability, ai_lineage_store_proof_ref)
             for capability in capabilities
         )
-    if _proof_can_clear_blockers(
+    if _registered_proof_is_valid_and_current(
+        "ai_model_risk_operations_proof",
+        ProofArtifactEffect.SUPPORTING_EVIDENCE,
         ai_model_risk_operations_proof,
         ai_model_risk_operations_proof_ref,
         evaluated_at_utc=evaluated_at_utc,
@@ -305,7 +323,9 @@ def _apply_ai_proofs(
             _apply_ai_model_risk_operations_proof(capability, ai_model_risk_operations_proof_ref)
             for capability in capabilities
         )
-    if _proof_can_clear_blockers(
+    if _registered_proof_is_valid_and_current(
+        "ai_workflow_pack_registration_proof",
+        ProofArtifactEffect.SUPPORTING_EVIDENCE,
         ai_workflow_pack_registration_proof,
         ai_workflow_pack_registration_proof_ref,
         evaluated_at_utc=evaluated_at_utc,
@@ -318,7 +338,9 @@ def _apply_ai_proofs(
             )
             for capability in capabilities
         )
-    if _proof_can_clear_blockers(
+    if _registered_proof_is_valid_and_current(
+        "ai_workflow_pack_runtime_execution_proof",
+        ProofArtifactEffect.BLOCKER_CLEARING,
         ai_workflow_pack_runtime_execution_proof,
         ai_workflow_pack_runtime_execution_proof_ref,
         evaluated_at_utc=evaluated_at_utc,
@@ -342,10 +364,14 @@ def _apply_downstream_proofs(
     advise_proposal_route_proof_ref: str | None,
     manage_action_route_proof: Mapping[str, object] | None,
     manage_action_route_proof_ref: str | None,
+    report_intake_route_source_contract_proof: Mapping[str, object] | None,
+    report_intake_route_source_contract_proof_ref: str | None,
     report_materialization_source_contract_proof: Mapping[str, object] | None,
     report_materialization_source_contract_proof_ref: str | None,
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
-    if _proof_can_clear_blockers(
+    if _registered_proof_is_valid_and_current(
+        "advise_proposal_route_proof",
+        ProofArtifactEffect.SUPPORTING_EVIDENCE,
         advise_proposal_route_proof,
         advise_proposal_route_proof_ref,
         evaluated_at_utc=evaluated_at_utc,
@@ -359,7 +385,9 @@ def _apply_downstream_proofs(
             )
             for capability in capabilities
         )
-    if _proof_is_valid_and_current(
+    if _registered_proof_is_valid_and_current(
+        "manage_action_route_proof",
+        ProofArtifactEffect.SUPPORTING_EVIDENCE,
         manage_action_route_proof,
         manage_action_route_proof_ref,
         evaluated_at_utc=evaluated_at_utc,
@@ -373,7 +401,25 @@ def _apply_downstream_proofs(
             )
             for capability in capabilities
         )
-    if _proof_is_valid_and_current(
+    if _registered_proof_is_valid_and_current(
+        "report_intake_route_source_contract_proof",
+        ProofArtifactEffect.SUPPORTING_EVIDENCE,
+        report_intake_route_source_contract_proof,
+        report_intake_route_source_contract_proof_ref,
+        evaluated_at_utc=evaluated_at_utc,
+        proof_is_valid=report_intake_route_source_contract_proof_is_valid,
+    ):
+        capabilities = tuple(
+            apply_supporting_evidence(
+                capability,
+                capability_ids=("downstream-realization",),
+                evidence_ref=report_intake_route_source_contract_proof_ref,
+            )
+            for capability in capabilities
+        )
+    if _registered_proof_is_valid_and_current(
+        "report_materialization_source_contract_proof",
+        ProofArtifactEffect.SUPPORTING_EVIDENCE,
         report_materialization_source_contract_proof,
         report_materialization_source_contract_proof_ref,
         evaluated_at_utc=evaluated_at_utc,
@@ -412,7 +458,9 @@ def _apply_platform_and_surface_proofs(
     operator_workflows_operations_proof: Mapping[str, object] | None,
     operator_workflows_operations_proof_ref: str | None,
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
-    if _proof_is_valid_and_current(
+    if _registered_proof_is_valid_and_current(
+        "mesh_policy_source_contract_proof",
+        ProofArtifactEffect.SUPPORTING_EVIDENCE,
         mesh_policy_source_contract_proof,
         mesh_policy_source_contract_proof_ref,
         evaluated_at_utc=evaluated_at_utc,
@@ -425,7 +473,9 @@ def _apply_platform_and_surface_proofs(
             )
             for capability in capabilities
         )
-    if _proof_is_valid_and_current(
+    if _registered_proof_is_valid_and_current(
+        "outbox_broker_source_contract_proof",
+        ProofArtifactEffect.SUPPORTING_EVIDENCE,
         outbox_broker_source_contract_proof,
         outbox_broker_source_contract_proof_ref,
         evaluated_at_utc=evaluated_at_utc,
@@ -438,7 +488,9 @@ def _apply_platform_and_surface_proofs(
             )
             for capability in capabilities
         )
-    if _proof_is_valid_and_current(
+    if _registered_proof_is_valid_and_current(
+        "outbox_consumer_contract_proof",
+        ProofArtifactEffect.SUPPORTING_EVIDENCE,
         outbox_consumer_contract_proof,
         outbox_consumer_contract_proof_ref,
         evaluated_at_utc=evaluated_at_utc,
@@ -451,7 +503,9 @@ def _apply_platform_and_surface_proofs(
             )
             for capability in capabilities
         )
-    if _proof_is_valid_and_current(
+    if _registered_proof_is_valid_and_current(
+        "outbox_platform_mesh_event_source_contract_proof",
+        ProofArtifactEffect.SUPPORTING_EVIDENCE,
         outbox_platform_mesh_event_source_contract_proof,
         outbox_platform_mesh_event_source_contract_proof_ref,
         evaluated_at_utc=evaluated_at_utc,
@@ -470,7 +524,9 @@ def _apply_platform_and_surface_proofs(
         proof=platform_catalog_source_contract_proof,
         proof_ref=platform_catalog_source_contract_proof_ref,
     )
-    if _proof_is_valid_and_current(
+    if _registered_proof_is_valid_and_current(
+        "workbench_read_path_source_contract_proof",
+        ProofArtifactEffect.SUPPORTING_EVIDENCE,
         workbench_read_path_source_contract_proof,
         workbench_read_path_source_contract_proof_ref,
         evaluated_at_utc=evaluated_at_utc,
@@ -483,7 +539,9 @@ def _apply_platform_and_surface_proofs(
             )
             for capability in capabilities
         )
-    if _proof_is_valid_and_current(
+    if _registered_proof_is_valid_and_current(
+        "gateway_workbench_contract_proof",
+        ProofArtifactEffect.SUPPORTING_EVIDENCE,
         gateway_workbench_contract_proof,
         gateway_workbench_contract_proof_ref,
         evaluated_at_utc=evaluated_at_utc,
@@ -496,7 +554,9 @@ def _apply_platform_and_surface_proofs(
             )
             for capability in capabilities
         )
-    if _proof_is_valid_and_current(
+    if _registered_proof_is_valid_and_current(
+        "gateway_workbench_discovery_contract_proof",
+        ProofArtifactEffect.SUPPORTING_EVIDENCE,
         gateway_workbench_discovery_contract_proof,
         gateway_workbench_discovery_contract_proof_ref,
         evaluated_at_utc=evaluated_at_utc,
@@ -525,7 +585,9 @@ def _apply_platform_catalog_source_contract_if_valid(
     proof: Mapping[str, object] | None,
     proof_ref: str | None,
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
-    if not _proof_can_clear_blockers(
+    if not _registered_proof_is_valid_and_current(
+        "platform_catalog_source_contract_proof",
+        ProofArtifactEffect.BLOCKER_CLEARING,
         proof,
         proof_ref,
         evaluated_at_utc=evaluated_at_utc,
@@ -545,7 +607,9 @@ def _apply_operator_workflows_operations_proof_if_valid(
     operator_workflows_operations_proof: Mapping[str, object] | None,
     operator_workflows_operations_proof_ref: str | None,
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
-    if not _proof_is_valid_and_current(
+    if not _registered_proof_is_valid_and_current(
+        "operator_workflows_operations_proof",
+        ProofArtifactEffect.SUPPORTING_EVIDENCE,
         operator_workflows_operations_proof,
         operator_workflows_operations_proof_ref,
         evaluated_at_utc=evaluated_at_utc,
@@ -580,18 +644,43 @@ def _apply_operator_workflows_operations_source_contract(
     )
 
 
-def _proof_can_clear_blockers(
+def registered_proof_is_valid_and_current(
+    payload_argument: str,
+    expected_effect: ProofArtifactEffect,
     proof: Mapping[str, object] | None,
     proof_ref: str | None,
     *,
     evaluated_at_utc: datetime,
     proof_is_valid: Any,
 ) -> bool:
+    if not proof_artifact_effect_matches_payload(payload_argument, expected_effect):
+        return False
     return _proof_is_valid_and_current(
         proof,
         proof_ref,
         evaluated_at_utc=evaluated_at_utc,
         proof_is_valid=proof_is_valid,
+    )
+
+
+_registered_proof_is_valid_and_current = registered_proof_is_valid_and_current
+
+
+def source_ingestion_runtime_execution_is_registered_and_current(
+    proof: Mapping[str, object] | None,
+    *,
+    evaluated_at_utc: datetime,
+    proof_ref: str | None,
+    repository_root: Path,
+) -> bool:
+    return proof_artifact_effect_matches_payload(
+        "source_ingestion_runtime_execution",
+        ProofArtifactEffect.BLOCKER_CLEARING,
+    ) and source_ingestion_runtime_execution_can_clear_aggregate_blockers(
+        proof,
+        evaluated_at_utc=evaluated_at_utc,
+        proof_ref=proof_ref,
+        repository_root=repository_root,
     )
 
 
