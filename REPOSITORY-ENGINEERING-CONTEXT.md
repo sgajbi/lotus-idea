@@ -125,8 +125,12 @@ Current implementation includes these bounded foundations:
     proof CLI input to its readiness arguments, evidence class, blocker effect,
     tracking issue, and classification status. The documentation contract gate
     fails when CLI, application signature, registry, or evidence inventory
-    drift. Scheduled-worker source and deployment inputs are independently
-    classified and cannot substitute for one another.
+    drift, including duplicate payload or reference arguments. Aggregate,
+    opportunity-archetype, downstream component, source-ingestion, and
+    scheduler consumers assert the registered effect before accepting evidence
+    or mutating blockers. Unknown, duplicate, pending, or wrong-effect wiring
+    fails closed. Scheduled-worker source and deployment inputs are
+    independently classified and cannot substitute for one another.
 
 The first canonical demo/front-office portfolio remains
 `PB_SG_GLOBAL_BAL_001` when a governed Lotus front-office flow requires a

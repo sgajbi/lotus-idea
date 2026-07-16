@@ -190,6 +190,21 @@ absent until a deployment controller emits a matching observed receipt. Issue
 `#508` implements the fail-closed source-contract and deployment-evidence
 contracts; static Compose declarations are not treated as a deployment receipt.
 
+### Executable Proof Effects
+
+The registry's blocker effect is enforced at runtime. Standard aggregate,
+opportunity-archetype, source-ingestion, downstream, and scheduler consumers
+must resolve one classified registry entry and match their intended
+`blocker_clearing` or `supporting_evidence` behavior before accepting an
+artifact. Unknown, duplicate, pending, or wrong-effect wiring fails closed.
+
+Aggregate downstream contracts now pass through one provenance-aware
+consumption boundary. A source contract outside the 24-hour aggregate freshness
+window cannot appear in aggregate evidence merely because a nested readiness
+model recognizes its static contract shape. This is an internal modularity and
+correctness control; it does not prove route serving, deployment, production
+certification, or supported-feature readiness.
+
 `make ci-contract-gate` target explicitly fails if current blocking lint gates are removed from
 `make lint`, if artifact-producing implementation-proof readiness or runtime
 trust telemetry snapshot generation is added back to `make lint`, or if

@@ -361,6 +361,14 @@ implemented scheduled-worker source-contract and deployment-evidence boundary;
 an actual environment deployment receipt remains absent rather than being
 hidden by this documentation slice.
 
+Issue `#513` records the registry-effect enforcement boundary in operator,
+architecture, RFC, repository-context, review-ledger, and wiki truth. The
+documentation gate rejects duplicate payload and reference arguments, while
+application tests mutate effects and prove that supporting evidence cannot be
+consumed as blocker-clearing evidence. README, API/OpenAPI, migration,
+database, seed, and supported-feature truth are unchanged because this slice
+changes internal proof governance rather than product support.
+
 The missing-benchmark Core material now records the independently owned closed
 v2 runtime contract implemented by issue `#499`. One named application use case
 performs one Core fetch and preserves exact evidence or a stable error. Request,
