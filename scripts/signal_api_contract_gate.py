@@ -67,7 +67,7 @@ CORE_LIVE_PROOF_SCRIPTS = (
     Path("scripts/core_benchmark_assignment_runtime_evidence/generate_runtime_execution.py"),
     Path("scripts/core_portfolio_state_runtime_evidence/generate_runtime_execution.py"),
     Path("scripts/low_income_cashflow_runtime_evidence/generate_runtime_execution.py"),
-    Path("scripts/generate_missing_benchmark_live_proof.py"),
+    Path("scripts/core_missing_benchmark_runtime_evidence/generate_runtime_execution.py"),
 )
 
 

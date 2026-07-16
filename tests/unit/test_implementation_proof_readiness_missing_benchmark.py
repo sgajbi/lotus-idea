@@ -5,14 +5,19 @@ from datetime import UTC, datetime
 from app.application.implementation_proof_readiness import (
     build_implementation_proof_readiness_snapshot,
 )
-from app.application.missing_benchmark_live_proof import (
-    build_missing_benchmark_live_proof_payload,
+from app.application.core_missing_benchmark_runtime_evidence import (
+    EvaluateCoreMissingBenchmark,
+    build_core_missing_benchmark_runtime_execution,
+    evaluate_core_missing_benchmark,
 )
 from app.application.missing_benchmark_performance_readiness_proof import (
     build_missing_benchmark_performance_readiness_proof_payload,
 )
 from app.domain import InMemoryIdeaRepository
 from tests.support.proof_provenance import bound_aggregate_proof
+from tests.support.core_missing_benchmark_runtime_evidence import (
+    AuthoritativeCoreMissingBenchmarkSource,
+)
 
 LIVE_PROOF_REF = "output/opportunity/missing-benchmark-live-proof.json"
 PERFORMANCE_PROOF_REF = "output/opportunity/missing-benchmark-performance-readiness-proof.json"
@@ -130,25 +135,26 @@ def test_implementation_proof_readiness_uses_missing_benchmark_performance_readi
 
 
 def _valid_missing_benchmark_live_proof() -> dict[str, object]:
+    evaluated_at = datetime(2026, 6, 28, 0, 0, tzinfo=UTC)
+    result = evaluate_core_missing_benchmark(
+        EvaluateCoreMissingBenchmark(
+            tenant_id="tenant-a",
+            book_id="book-a",
+            portfolio_id="portfolio-a",
+            client_id="client-a",
+            evaluation_id="evaluation-a",
+            as_of_date=evaluated_at.date(),
+            evaluated_at_utc=evaluated_at,
+            reporting_currency="USD",
+            correlation_id="corr-core",
+            trace_id="trace-core",
+        ),
+        core_source=AuthoritativeCoreMissingBenchmarkSource(),
+    )
     return bound_aggregate_proof(
-        build_missing_benchmark_live_proof_payload(
-            generated_at_utc=datetime(2026, 6, 28, 0, 0, tzinfo=UTC),
-            live_core_source_attempted=True,
-            evaluation_summary={
-                "runStatus": "completed",
-                "sourceAuthority": "lotus-core",
-                "sourceProductId": "lotus-core:BenchmarkAssignment:v1",
-                "evaluationOutcome": "candidate_created",
-                "benchmarkAssignmentRefPresent": True,
-                "benchmarkIdentityResolved": False,
-                "assignmentEffectiveForAsOfDate": False,
-                "assignmentStatus": "active",
-                "assignmentVersionPresent": True,
-                "sourceEvidenceCurrent": True,
-                "sourceDiagnosticCodes": ["core_benchmark_assignment_benchmark_identity_missing"],
-                "reasonCodes": ["missing_benchmark", "review_required"],
-                "unsupportedReasons": [],
-            },
+        build_core_missing_benchmark_runtime_execution(
+            generated_at_utc=evaluated_at,
+            result=result,
         ),
         LIVE_PROOF_REF,
     )

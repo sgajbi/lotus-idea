@@ -445,12 +445,14 @@ def test_opportunity_archetype_contract_records_missing_benchmark_foundation_wit
     assert "src/app/domain/missing_benchmark_signal.py" in missing_benchmark.evidence_refs
     assert "src/app/application/missing_benchmark_signal.py" in missing_benchmark.evidence_refs
     assert "src/app/api/missing_benchmark_signals.py" in missing_benchmark.evidence_refs
-    assert "src/app/application/missing_benchmark_live_proof.py" in (
+    assert "src/app/application/core_missing_benchmark_runtime_evidence/runtime_execution.py" in (
         missing_benchmark.evidence_refs
     )
     assert "src/app/ports/core_sources.py" in missing_benchmark.evidence_refs
     assert "src/app/infrastructure/lotus_core_sources.py" in missing_benchmark.evidence_refs
-    assert "scripts/generate_missing_benchmark_live_proof.py" in (missing_benchmark.evidence_refs)
+    assert "scripts/core_missing_benchmark_runtime_evidence/generate_runtime_execution.py" in (
+        missing_benchmark.evidence_refs
+    )
     assert "make missing-benchmark-live-proof-contract-gate" in missing_benchmark.evidence_refs
     assert "POST /api/v1/idea-signals/missing-benchmark/evaluate" in (
         missing_benchmark.evidence_refs
@@ -462,7 +464,10 @@ def test_opportunity_archetype_contract_records_missing_benchmark_foundation_wit
         missing_benchmark.evidence_refs
     )
     assert "tests/unit/test_missing_benchmark_application.py" in missing_benchmark.evidence_refs
-    assert "tests/unit/test_missing_benchmark_live_proof.py" in missing_benchmark.evidence_refs
+    assert (
+        "tests/unit/core_missing_benchmark_runtime_evidence/test_runtime_execution.py"
+        in missing_benchmark.evidence_refs
+    )
     assert "tests/unit/test_implementation_proof_readiness_missing_benchmark.py" in (
         missing_benchmark.evidence_refs
     )

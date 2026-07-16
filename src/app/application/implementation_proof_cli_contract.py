@@ -42,7 +42,9 @@ from app.application.mandate_restriction_source_product_proof import (
 from app.application.data_mesh.mesh_policy_source_contract import (
     MESH_POLICY_SOURCE_CONTRACT_ENV,
 )
-from app.application.missing_benchmark_live_proof import MISSING_BENCHMARK_LIVE_PROOF_ENV
+from app.application.core_missing_benchmark_runtime_evidence import (
+    CORE_MISSING_BENCHMARK_RUNTIME_EXECUTION_ENV as MISSING_BENCHMARK_LIVE_PROOF_ENV,
+)
 from app.application.missing_benchmark_performance_readiness_proof import (
     MISSING_BENCHMARK_PERFORMANCE_READINESS_PROOF_ENV,
 )
