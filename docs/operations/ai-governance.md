@@ -125,6 +125,15 @@ Successful API responses always return:
    deterministic verifier; blocked output returns an empty list and a
    server-owned product-safe explanation.
 
+The endpoint's generated OpenAPI and certification ledger publish six complete
+named response families from one DTO-validated code factory: local fixture,
+verified attested output, deterministic fallback, unsupported claim, forbidden
+action, and unsafe action content. Certification compares the complete
+serialized structures, including explicit nulls and authority controls, rather
+than accepting schema-valid excerpts. The public verifier-result vocabulary is
+limited to outcomes that have executable constructors, route behavior, and
+behavioral tests.
+
 The readiness diagnostic always returns:
 
 1. `readinessStatus=blocked`,
