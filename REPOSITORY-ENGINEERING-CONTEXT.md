@@ -64,8 +64,8 @@ Current implementation includes these bounded foundations:
    high volatility, drawdown review, missing suitability, missing risk profile,
    mandate/restriction, low income / liquidity shortfall, and missing
    benchmark review,
-3. source-adapter and live-proof foundations for selected Core, Risk,
-   Performance, Advise, and Manage evidence families,
+3. source-adapter and receipt-bound runtime-evidence foundations for selected
+   Core, Risk, Performance, Advise, and Manage evidence families,
 4. durable repository support with PostgreSQL migrations and source-safe
    migration rollback/reapply proof,
 5. evidence replay, idempotency, safe audit, operation events, and bounded
@@ -276,6 +276,12 @@ posture and must not clear restrictions, change mandate state, determine
 suitability, approve policy/proposals, recommend trades, create rebalance
 actions, create orders, publish client communication, certify a typed
 restriction data product, or promote Advise/product support.
+Its v2 runtime-evidence contract calls the named application use case once and
+binds pseudonymous request scope, producer workflow scope/time, policy and
+source hashes, workflow posture, deterministic candidate or no-opportunity
+outcome, and canonical digests. Missing producer as-of or trusted tenant scope
+fails closed; request values and consumer clocks are never substituted. This is
+an internal design module in the existing service, not a deployable boundary.
 
 ## Current Implementation Map
 

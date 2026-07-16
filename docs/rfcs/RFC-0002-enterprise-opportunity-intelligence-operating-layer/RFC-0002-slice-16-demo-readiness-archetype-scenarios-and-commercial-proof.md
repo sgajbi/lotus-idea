@@ -1,6 +1,6 @@
 # RFC-0002 Slice 16: Demo Readiness, Archetype Scenarios, And Commercial Proof
 
-Status: Partially implemented - proof-readiness diagnostic consumes the governed archetype/scenario contract as blocked scenario readiness; concentration risk review, underperformance review, allocation-drift mandate review, bond maturity / reinvestment, high-volatility / drawdown review, missing suitability context, missing risk-profile review, mandate/restriction review, low-income / liquidity shortfall, and missing-benchmark review are non-promoted bounded foundations with source-specific proof contracts where implemented; typed Advise mandate/restriction source-product proof and Advise mandate/restriction live proof clear only their named blockers; demo claims remain blocked
+Status: Partially implemented - proof-readiness diagnostic consumes the governed archetype/scenario contract as blocked scenario readiness; concentration risk review, underperformance review, allocation-drift mandate review, bond maturity / reinvestment, high-volatility / drawdown review, missing suitability context, missing risk-profile review, mandate/restriction review, low-income / liquidity shortfall, and missing-benchmark review are non-promoted bounded foundations with source-specific proof contracts where implemented; typed Advise mandate/restriction source-product proof and closed v2 receipt-bound Advise mandate/restriction runtime evidence clear only their named blockers; demo claims remain blocked
 
 ## Outcome
 
@@ -68,7 +68,7 @@ capabilities exist.
    portfolio-state proof clears only the Core portfolio-state source-ref
    blocker, Advise missing-suitability proof clears the live Advise policy
    blocker, typed mandate/restriction source-product proof clears only the
-   typed restriction source-product blocker, mandate/restriction live proof
+   typed restriction source-product blocker, receipt-bound mandate/restriction runtime evidence
    clears only the Advise restriction live-source blocker, typed missing
    risk-profile source-product proof clears only the typed Advise risk-profile
    source-product blocker, and missing risk-profile live proof clears only the

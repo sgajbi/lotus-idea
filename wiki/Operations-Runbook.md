@@ -245,6 +245,8 @@ optional missing-suitability live Advise proof through
 `LOTUS_IDEA_MISSING_SUITABILITY_LIVE_PROOF`,
 optional typed mandate/restriction source-product proof through
 `LOTUS_IDEA_MANDATE_RESTRICTION_SOURCE_PRODUCT_PROOF`,
+optional closed v2 Advise mandate/restriction runtime evidence through
+`LOTUS_IDEA_MANDATE_RESTRICTION_LIVE_PROOF`,
 optional typed missing risk-profile source-product proof through
 `LOTUS_IDEA_MISSING_RISK_PROFILE_SOURCE_PRODUCT_PROOF`,
 optional missing risk-profile live Advise proof through
@@ -514,7 +516,7 @@ the operator entrypoints by purpose so this page stays readable.
 | Release evidence | `make ci-release` | Broad release posture, including Docker and PostgreSQL prerequisites. |
 | Durable storage proof | `make postgres-integration-gate`, `make durable-repository-proof-contract-gate` | Validate PostgreSQL-backed repository and proof-artifact posture. |
 | Source-ingestion evidence | `make source-ingestion-worker-check`, `make source-ingestion-scheduled-worker-check`, `make source-ingestion-runtime-execution-contract-gate` | Validate worker contracts and receipt-bound Core runtime execution evidence without promoting scheduler, mesh, UI, production, or support posture. |
-| Upstream runtime and source-product proof | `make risk-concentration-live-proof-contract-gate`, `make high-volatility-live-proof-contract-gate`, `make risk-drawdown-live-proof-contract-gate`, `make core-benchmark-assignment-live-proof-contract-gate`, `make core-portfolio-state-live-proof-contract-gate`, `make manage-mandate-live-proof-contract-gate`, `make mandate-restriction-live-proof-contract-gate`, `make missing-suitability-live-proof-contract-gate`, `make missing-risk-profile-live-proof-contract-gate`, `make performance-underperformance-live-proof-contract-gate` | Validate bounded sibling evidence. Risk and Performance signal runtime evidence binds current authority receipts to durable Idea persistence. Read-only Core benchmark-assignment and portfolio-state runtime evidence bind exact request/source receipts without inventing persistence. Portfolio-state qualification also requires snapshot identity, source hashes, reconciliation, policy, and complete section posture. Other gates retain their declared classes. Command existence never promotes support. |
+| Upstream runtime and source-product proof | `make risk-concentration-live-proof-contract-gate`, `make high-volatility-live-proof-contract-gate`, `make risk-drawdown-live-proof-contract-gate`, `make core-benchmark-assignment-live-proof-contract-gate`, `make core-portfolio-state-live-proof-contract-gate`, `make manage-mandate-live-proof-contract-gate`, `make mandate-restriction-live-proof-contract-gate`, `make missing-suitability-live-proof-contract-gate`, `make missing-risk-profile-live-proof-contract-gate`, `make performance-underperformance-live-proof-contract-gate` | Validate bounded sibling evidence. Risk and Performance signal runtime evidence binds current authority receipts to durable Idea persistence. Core and Advise read-only evidence binds pseudonymous request scope to exact producer receipts without inventing source identity or persistence. The Advise mandate/restriction gate accepts truthful candidate and no-opportunity results but fails closed without producer-owned scope/time. Command existence never promotes support. |
 | Runtime trust and implementation proof | `make runtime-trust-telemetry-test-execution-contract-gate`, `make implementation-proof-readiness-check`, `make runtime-trust-telemetry-preview-check`, `make runtime-trust-telemetry-snapshot-check` | Validate in-memory test evidence and inspect durable runtime posture without clearing certification blockers. |
 | Downstream proof | `make downstream-route-source-contract-proof-gate`, `make report-intake-route-source-contract-proof-gate`, `make report-materialization-source-contract-proof-gate` | Validate bounded Advise, Manage, and Report contract artifacts. |
 | Local hygiene | `make clean` | Remove ignored generated residue before branch hygiene checks. |
@@ -835,6 +837,14 @@ mesh policy source-contract artifact, platform catalog
 onboarding proof artifact, AI lineage store proof artifact, AI workflow-pack registration proof artifact,
 AI workflow-pack runtime execution proof artifact,
 and the same source-safe readiness snapshot without running the HTTP service.
+Advise mandate/restriction runtime evidence is generated separately with
+`scripts/advise_mandate_restriction_runtime_evidence/generate_runtime_execution.py`
+and validated by `make mandate-restriction-live-proof-contract-gate`. The
+compatibility environment and Make target names do not accept retired v1
+artifacts. Qualification requires producer-owned tenant scope, portfolio and
+evaluation identity, as-of and generation time, workflow posture, and
+evaluation/source/policy hashes. Missing or mismatched evidence clears no
+aggregate blocker; Advise issue `#459` owns the producer metadata gap.
 Manage mandate proof consumption requires trusted tenant scope, source-authored
 as-of and generated-at time, and authoritative Manage lineage or fingerprint
 metadata for action-register and mandate-health source refs. Missing producer

@@ -774,13 +774,17 @@ Additional implemented mandate/restriction review foundation:
    A valid artifact can clear only
    `opportunity_archetype_typed_restriction_source_product_missing` in
    aggregate readiness.
-8. `src/app/application/mandate_restriction_live_proof.py`,
-   `scripts/generate_mandate_restriction_live_proof.py`, and
-   `make mandate-restriction-live-proof-contract-gate` define a separate
-   source-safe live Advise mandate/restriction diagnostic proof. A valid
-   artifact can clear only
+8. `src/app/application/advise_mandate_restriction_runtime_evidence/`,
+   `scripts/advise_mandate_restriction_runtime_evidence/`, and
+   `make mandate-restriction-live-proof-contract-gate` define the closed v2,
+   receipt-bound Advise mandate/restriction runtime-evidence capability. It
+   invokes the named application use case once, binds pseudonymous request and
+   producer workflow scope/time to exact policy/source hashes and deterministic
+   candidate or no-opportunity output, and rejects unknown or unreconciled
+   claims. A valid artifact can clear only
    `opportunity_archetype_live_restriction_source_proof_missing` in aggregate
-   readiness.
+   readiness. Missing authoritative producer as-of or tenant scope remains
+   blocked under Advise issue `#459`; Idea does not substitute request values.
 9. `POST /api/v1/idea-signals/mandate-restriction/evaluate-from-source`
    exposes the existing Advise policy-evaluation source-port through the
    bounded advisor API pattern. It enforces advisor role,
@@ -799,6 +803,19 @@ Additional implemented mandate/restriction review foundation:
 11. This foundation does not include restriction clearance, mandate-state
    authority, data-mesh certification, Workbench proof, client-publication
    approval, or supported-feature promotion.
+
+### Domain Correctness Rationale
+
+The opportunity is a review trigger, not an advisory or execution decision.
+This separation is consistent with the FCA suitability framework: mandate
+changes are suitability-controlled recommendations, restricted investments
+require suitability consideration, and insufficient client information must
+block recommendations or trade decisions. See
+[FCA COBS 9A.2](https://handbook.fca.org.uk/handbook/cobs9a/cobs9as2) and
+[FCA COBS 9.2](https://handbook.fca.org.uk/handbook/COBS/9/2.html). Lotus Idea
+therefore records source-owned review posture and emits a compliance-review
+candidate or no-opportunity result; it never clears a restriction, determines
+suitability, changes a mandate, or authorizes a recommendation or trade.
 
 Additional implemented low-income / liquidity-shortfall foundation:
 

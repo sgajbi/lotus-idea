@@ -110,14 +110,19 @@ supported-feature blockers remain.
 
 Mandate/restriction review is an internal bounded foundation only. It can
 create compliance-review candidates from explicit source-owned restriction
-posture supplied through the bounded API, but it does not fetch live upstream
-evidence, approve suitability, change mandate state, clear restrictions, create
-orders, authorize client publication, or promote a supported feature.
+posture supplied through the bounded API or the named source-backed application
+use case, but it does not approve suitability, change mandate state, clear
+restrictions, create orders, authorize client publication, or promote a
+supported feature.
 A valid typed Advise source-product proof clears only the typed restriction
-source-product blocker, and a valid live Advise proof clears only the live
-restriction source blocker; neither proof is Workbench, data-mesh,
-client-publication, supported-feature, restriction-clearance, mandate-change,
-rebalance, or order authority.
+source-product blocker. Closed v2 runtime evidence clears only the live
+restriction source blocker when hashed request scope reconciles with
+producer-owned scope/time, workflow posture, source/policy hashes, and a
+deterministic candidate or no-opportunity result. Advise issue `#459` tracks
+missing producer metadata, so live qualification remains fail closed. Neither
+artifact is Workbench, data-mesh, client-publication, deployment, production,
+supported-feature, restriction-clearance, mandate-change, rebalance, or order
+authority.
 
 ## Client Demo Flow
 
