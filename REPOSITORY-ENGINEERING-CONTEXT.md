@@ -1905,6 +1905,17 @@ outcome, and behavioral test. Issue `#529` applies this contract to all six AI
 explanation evaluation success families and removes two legacy verifier states
 that had no executable behavior.
 
+Issue `#545` applies the same contract to candidate-state APIs. Keep lifecycle
+`accepted` and idempotent `replayed` modes in one capability-owned factory, and
+keep evidence replay `matched`, `hash_mismatch`, `stale_source`, and `expired`
+modes in the same candidate-state package. The endpoint ledger, generated
+OpenAPI, DTO serialization, and cited integration behavior must remain exactly
+equal. Degraded supportability postures that intentionally return HTTP 200 are
+not optional examples. Preserve no-source-payload, no-downstream-authority, and
+no-supported-feature-promotion fields. This is internal design modularity; no
+runtime split is justified without workload, failure-isolation, ownership, or
+operability evidence.
+
 ## Supported-Feature Promotion Rule
 
 The supported-feature registry is source truth for support posture.

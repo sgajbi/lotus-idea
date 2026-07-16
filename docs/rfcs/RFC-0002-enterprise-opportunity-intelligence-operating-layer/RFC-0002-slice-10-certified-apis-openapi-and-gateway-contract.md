@@ -184,6 +184,22 @@ is internal API design modularity and does not certify Report intake, Render,
 Archive, client publication, Gateway, Workbench, data products, or supported
 features.
 
+Issue `#545` continues issue `#542` through a bounded candidate-state tranche.
+One capability-owned, DTO-validated example module publishes lifecycle
+`accepted` and idempotent `replayed` modes plus evidence replay `matched`,
+`hash_mismatch`, `stale_source`, and `expired` modes. The audit found that the
+last two replay postures were executable HTTP 200 behavior but absent from the
+endpoint ledger, so the implementation corrects ledger truth rather than
+copying the incomplete inventory. The shared named-success validator now
+accepts generic required behavioral evidence instead of assuming every
+multi-mode contract is only an idempotency replay. Exact factory, OpenAPI,
+ledger, and behavioral-test parity is blocking. All examples preserve source
+redaction, false downstream authority, and
+`supportedFeaturePromoted=false`. This is design modularity inside the existing
+deployable; signal evaluation, downstream realization, readiness metadata,
+Gateway, Workbench, data products, and supported-feature promotion remain
+outside this tranche.
+
 PR `#543` merged issue `#539` to `main` at
 `f6e2365eaec5f4f0184d5985e5b5fcc641b4883b`. Main Releasability run
 `29528824505` passed, including lint, typecheck, security, architecture,
