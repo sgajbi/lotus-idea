@@ -191,6 +191,20 @@ def test_ai_explanation_openapi_publishes_attestation_boundary() -> None:
         "producerExecutionOutput",
         "runAttestation",
     } <= request_schema["properties"].keys()
+    success_examples = operation["responses"]["200"]["content"]["application/json"]["examples"]
+    assert set(success_examples) == {
+        "unattestedLocalTestFixture",
+        "verifiedAttestedOutput",
+    }
+    assert (
+        success_examples["unattestedLocalTestFixture"]["value"]["executionProvenancePosture"]
+        == "unattested_local_test_fixture"
+    )
+    attested = success_examples["verifiedAttestedOutput"]["value"]
+    assert attested["executionProvenancePosture"] == "lotus_ai_attestation_verified"
+    assert attested["lotusAiRuntimeExecuted"] is True
+    assert attested["grantsDownstreamAuthority"] is False
+    assert attested["supportedFeaturePromoted"] is False
 
 
 def test_ai_explanation_application_command_rejects_blank_candidate() -> None:

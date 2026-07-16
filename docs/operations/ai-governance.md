@@ -78,9 +78,10 @@ RFC-0002 Slice 09 adds `src/app/domain/ai_governance.py`,
     claim, action, workflow/evaluator, and policy content without persisting
     unrestricted provider-authored text.
 16. `lotus-idea.ai-execution-provenance-policy.v1`, which allows explicitly
-    unattested workflow fixtures only in local/test and rejects workflow output
-    in demo, staging, and production until a verified Lotus AI attestation is
-    available.
+    unattested workflow fixtures only in local/test, rejects unattested output
+    in demo, staging, and production, and accepts production-like output only
+    when the complete producer execution bundle carries a verified Lotus AI
+    run attestation.
 17. evaluation and readiness responses that expose
     `metadataEnvelopeVersion=lotus-idea.ai-metadata-envelope.v1` so consumers
     can verify the active boundary contract.

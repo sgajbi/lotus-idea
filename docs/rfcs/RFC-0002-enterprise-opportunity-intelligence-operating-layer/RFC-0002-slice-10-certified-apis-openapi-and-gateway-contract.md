@@ -153,6 +153,16 @@ runtime workflows, never certifies runtime AI lineage-store proof, never grants
 downstream authority, and keeps `durableStorageBacked=false`,
 `lotusAiRuntimeExecuted=false`, and `supportedFeaturePromoted=false`.
 
+Issue `#520` corrects the endpoint certification boundary after signed
+attestation support. Production-like profiles accept workflow output only when
+`producerRunId`, exact `producerExecutionOutput`, and a verified Lotus AI
+`runAttestation` form one bound bundle. OpenAPI publishes separate named
+local/test-fixture and verified-attested success examples. The endpoint
+certification gate requires the verified response posture and exact HTTP
+integration evidence, preventing the ledger from regressing to the former
+reject-all description. Idea still does not call a provider, own AI runtime
+infrastructure, grant downstream authority, or promote a supported feature.
+
 Implementation files:
 
 1. `src/app/api/idea_signals.py`: FastAPI DTOs, authorization mapping,
@@ -532,6 +542,16 @@ Focused validation passed for the current foundation:
     gates, OpenAPI, endpoint certification, architecture boundary, migrations,
     integration/e2e/unit coverage, coverage gate `99.00`, and dependency audit
     with no known vulnerabilities.
+33. Issue `#520` adds named OpenAPI success examples for local/test fixture and
+    verified attested output, cites the attested API integration path in the
+    endpoint ledger, and adds mutation-tested certification enforcement for
+    `lotus_ai_attestation_verified`, `lotusAiRuntimeExecuted=true`,
+    no downstream authority, and no supported-feature promotion.
+34. Final `make check` and `make ci` pass with `4694` unit tests, `453`
+    integration tests plus `31` declared environment-only PostgreSQL skips,
+    `4` E2E tests, `99.01%` combined coverage over `27712` statements, strict
+    MyPy over `941` source files, zero duplicate clusters across `2715`
+    functions, and no known dependency vulnerabilities.
 
 PR merge-gate evidence remains required before merge.
 

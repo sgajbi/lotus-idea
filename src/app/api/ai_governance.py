@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 from fastapi import FastAPI, Header, Path, status
 from fastapi.responses import JSONResponse
 
@@ -78,6 +80,31 @@ from app.security.caller_context import CallerContext, PermissionDeniedError
 
 _AI_EXPLANATION_CAPABILITY = "idea.ai-explanation.evaluate"
 _AI_EXPLANATION_READINESS_CAPABILITY = "idea.ai-explanation.readiness.read"
+
+
+def _with_ai_explanation_success_modes(
+    response_metadata: dict[str, Any],
+) -> dict[str, Any]:
+    media = response_metadata["content"]["application/json"]
+    local_fixture = media.pop("example")
+    verified_attested_output = {
+        **local_fixture,
+        "executionProvenancePosture": "lotus_ai_attestation_verified",
+        "providerRetentionConfirmationRecorded": True,
+        "durableStorageBacked": True,
+        "lotusAiRuntimeExecuted": True,
+    }
+    media["examples"] = {
+        "unattestedLocalTestFixture": {
+            "summary": "Explicit non-production local/test workflow fixture",
+            "value": local_fixture,
+        },
+        "verifiedAttestedOutput": {
+            "summary": "Production-like output with verified Lotus AI run attestation",
+            "value": verified_attested_output,
+        },
+    }
+    return response_metadata
 
 
 async def get_ai_explanation_readiness(
@@ -695,6 +722,8 @@ AI_EXPLANATION_ROUTE: RouteMetadata = {
         **durable_repository_write_unavailable_metadata(),
     },
 }
+
+_with_ai_explanation_success_modes(AI_EXPLANATION_ROUTE["responses"][status.HTTP_200_OK])
 
 
 def register_ai_governance_routes(app: FastAPI) -> None:

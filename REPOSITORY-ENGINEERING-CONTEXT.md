@@ -898,8 +898,9 @@ proof. Retention follows the Idea regulated-advisory lifecycle policy.
 AI workflow output trust is governed by
 `lotus-idea.ai-execution-provenance-policy.v1`. Local/test may accept only an
 explicit `unattested_local_test_fixture`; demo, staging, and production reject
-workflow output before candidate lookup or persistence until a verified
-producer receipt exists. Deterministic fallback remains allowed. Signed
+unattested workflow output before candidate lookup or persistence and accept
+only a complete producer output bundle with a verified run receipt.
+Deterministic fallback remains allowed. Signed
 run/model attestation issuance and key distribution belong to `lotus-ai`; the
 producer contract was completed under `sgajbi/lotus-ai#113`. Live
 provider/model approval and runtime truth remain external and do not become
