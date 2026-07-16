@@ -31,6 +31,7 @@ PORTFOLIO_ID = "PB_SG_GLOBAL_BAL_001"
 @dataclass
 class RecordingCoreBondMaturitySource(CoreBondMaturitySourcePort):
     seen_request: CoreBondMaturityEvidenceRequest | None = None
+    evidence: CoreBondMaturityEvidence | None = None
     error: Exception | None = None
     close_count: int = 0
     close_error: Exception | None = None
@@ -42,7 +43,7 @@ class RecordingCoreBondMaturitySource(CoreBondMaturitySourcePort):
         self.seen_request = request
         if self.error is not None:
             raise self.error
-        return _core_bond_maturity_evidence()
+        return self.evidence or _core_bond_maturity_evidence()
 
     def close(self) -> None:
         self.close_count += 1
@@ -193,6 +194,57 @@ def test_bond_maturity_source_api_returns_blocked_posture_for_core_unavailable(
     assert payload["unsupportedReasons"] == ["source_unavailable"]
     assert source.close_count == 1
     assert PORTFOLIO_ID not in response.text
+
+
+@pytest.mark.parametrize(
+    ("next_maturity_date", "duplicate_of_candidate_id", "expected_outcome"),
+    (
+        (date(2026, 7, 10), "idea_bond_maturity_existing", "suppressed"),
+        (date(2026, 8, 15), None, "not_eligible"),
+    ),
+)
+def test_bond_maturity_source_api_exposes_non_candidate_success_modes(
+    monkeypatch: Any,
+    next_maturity_date: date,
+    duplicate_of_candidate_id: str | None,
+    expected_outcome: str,
+) -> None:
+    source = RecordingCoreBondMaturitySource(
+        evidence=_core_bond_maturity_evidence(next_maturity_date=next_maturity_date)
+    )
+    runtime = CoreBondMaturitySourceRuntime(
+        core_source=source,
+        core_base_url_configured=True,
+        core_query_base_url_configured=True,
+        core_query_control_plane_base_url_configured=True,
+    )
+    monkeypatch.setattr(
+        bond_maturity_signals_api,
+        "_build_core_bond_maturity_source_runtime_from_environment",
+        lambda: runtime,
+    )
+    request_payload = bond_maturity_source_payload()
+    request_payload["duplicateOfCandidateId"] = duplicate_of_candidate_id
+
+    response = managed_test_client(app).post(
+        "/api/v1/idea-signals/bond-maturity/evaluate-from-source",
+        json=request_payload,
+        headers=source_evaluation_headers(),
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "outcome": expected_outcome,
+        "family": "bond_maturity",
+        "reasonCodes": [
+            "duplicate_suppressed" if expected_outcome == "suppressed" else "below_materiality"
+        ],
+        "unsupportedReasons": [],
+        "candidate": None,
+        "sourceAuthority": "lotus-core",
+        "supportedFeaturePromoted": False,
+    }
+    assert source.close_count == 1
 
 
 def test_bond_maturity_source_api_emits_bounded_operation_events(
@@ -354,6 +406,28 @@ def test_bond_maturity_signal_api_reports_stale_source_blocker() -> None:
     }
 
 
+def test_bond_maturity_signal_api_reports_duplicate_suppressed() -> None:
+    payload = bond_maturity_payload()
+    payload["duplicateOfCandidateId"] = "idea_bond_maturity_existing"
+
+    response = managed_test_client(app).post(
+        "/api/v1/idea-signals/bond-maturity/evaluate",
+        json=payload,
+        headers=evaluate_headers(),
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "outcome": "suppressed",
+        "family": "bond_maturity",
+        "reasonCodes": ["duplicate_suppressed"],
+        "unsupportedReasons": [],
+        "candidate": None,
+        "sourceAuthority": "lotus-core",
+        "supportedFeaturePromoted": False,
+    }
+
+
 @pytest.mark.parametrize("field_name", ("holdingsRef", "maturityFactRef"))
 def test_bond_maturity_signal_api_rejects_wrong_source_contract(
     monkeypatch: Any,
@@ -506,9 +580,12 @@ def _source_ref(product_id: str) -> SourceRef:
     )
 
 
-def _core_bond_maturity_evidence() -> CoreBondMaturityEvidence:
+def _core_bond_maturity_evidence(
+    *,
+    next_maturity_date: date = date(2026, 7, 10),
+) -> CoreBondMaturityEvidence:
     return CoreBondMaturityEvidence(
-        source_reported_next_maturity_date=date(2026, 7, 10),
+        source_reported_next_maturity_date=next_maturity_date,
         source_reported_maturing_position_count=2,
         holdings_ref=_source_ref("lotus-core:HoldingsAsOf:v1"),
         maturity_fact_ref=_source_ref("lotus-core:PortfolioMaturitySummary:v1"),
