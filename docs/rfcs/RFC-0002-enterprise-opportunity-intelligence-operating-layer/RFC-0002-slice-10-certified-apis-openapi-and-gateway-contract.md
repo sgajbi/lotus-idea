@@ -596,6 +596,12 @@ Focused validation passed for the current foundation:
     supported-feature posture remain unchanged. The wider example-shape
     inventory is retained for endpoint-by-endpoint review because alternate
     success modes and dynamic fields must not be bulk-normalized.
+40. Final local validation for issue `#526` passed `make check` and
+    `make ci`: `4,699` unit tests, `454` integration tests with `31`
+    declared environment-only PostgreSQL skips, `4` E2E tests, `99.01%`
+    combined coverage over `27,714` statements, MyPy over `942` source
+    files, zero duplicate clusters across `2,716` functions, and no known
+    dependency vulnerabilities.
 
 PR merge-gate evidence remains required before merge.
 
