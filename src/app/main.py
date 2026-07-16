@@ -40,6 +40,7 @@ from app.api.underperformance_signals import register_underperformance_signal_ro
 from app.api.caller_context_openapi import apply_caller_context_openapi_contract
 from app.api.durable_write_guard import durable_write_readiness_payload
 from app.api.idempotency import mark_required_idempotency_openapi_headers
+from app.api.examples.ai_explanation import apply_ai_explanation_openapi_examples
 from app.api.problem_details import (
     ProblemDetailsHTTPException,
     problem_details_response as problem_response,
@@ -276,7 +277,8 @@ def _configure_openapi_contract_overrides(application: FastAPI) -> None:
             routes=application.routes,
         )
         schema = mark_required_idempotency_openapi_headers(schema)
-        application.openapi_schema = apply_caller_context_openapi_contract(schema)
+        schema = apply_caller_context_openapi_contract(schema)
+        application.openapi_schema = apply_ai_explanation_openapi_examples(schema)
         return application.openapi_schema
 
     application.openapi = governed_openapi  # type: ignore[method-assign]

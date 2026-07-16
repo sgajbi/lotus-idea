@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-from typing import Any
-
 from fastapi import FastAPI, Header, Path, status
 from fastapi.responses import JSONResponse
 
+from app.api.examples.ai_explanation import build_ai_explanation_openapi_examples
 from app.api.ai_governance_models import (
     AIExplanationEvaluationRequest,
     AIExplanationEvaluationResponse,
@@ -80,31 +79,6 @@ from app.security.caller_context import CallerContext, PermissionDeniedError
 
 _AI_EXPLANATION_CAPABILITY = "idea.ai-explanation.evaluate"
 _AI_EXPLANATION_READINESS_CAPABILITY = "idea.ai-explanation.readiness.read"
-
-
-def _with_ai_explanation_success_modes(
-    response_metadata: dict[str, Any],
-) -> dict[str, Any]:
-    media = response_metadata["content"]["application/json"]
-    local_fixture = media.pop("example")
-    verified_attested_output = {
-        **local_fixture,
-        "executionProvenancePosture": "lotus_ai_attestation_verified",
-        "providerRetentionConfirmationRecorded": True,
-        "durableStorageBacked": True,
-        "lotusAiRuntimeExecuted": True,
-    }
-    media["examples"] = {
-        "unattestedLocalTestFixture": {
-            "summary": "Explicit non-production local/test workflow fixture",
-            "value": local_fixture,
-        },
-        "verifiedAttestedOutput": {
-            "summary": "Production-like output with verified Lotus AI run attestation",
-            "value": verified_attested_output,
-        },
-    }
-    return response_metadata
 
 
 async def get_ai_explanation_readiness(
@@ -529,93 +503,7 @@ AI_EXPLANATION_ROUTE: RouteMetadata = {
             "description": "AI explanation evaluation returned through the internal foundation.",
             "content": {
                 "application/json": {
-                    "example": {
-                        "requestId": "ai-explanation-001",
-                        "candidateId": "idea_high_cash_8d57adbf52f7f5a7",
-                        "workflowPack": {
-                            "workflowPackId": "lotus-ai:idea-explanation:v1",
-                            "workflowPackVersion": "v1",
-                            "purpose": "advisor_rationale_draft",
-                            "evaluationRef": "lotus-ai:governed-verifier:v1",
-                            "sourceAuthority": "lotus-ai",
-                        },
-                        "posture": "ready_for_advisor_review",
-                        "verifierOutcome": "passed",
-                        "explanationText": (
-                            "Cash weight is above idle-liquidity policy threshold."
-                        ),
-                        "reasonCodes": ["ai_verifier_passed"],
-                        "fallbackUsed": False,
-                        "fallbackReason": None,
-                        "grantsDownstreamAuthority": False,
-                        "auditEventType": "idea.ai_explanation.evaluated",
-                        "outputIntegrityVersion": "lotus-idea.ai-output-integrity.v1",
-                        "outputContentDigest": f"sha256:{'a' * 64}",
-                        "executionProvenancePosture": "unattested_local_test_fixture",
-                        "executionProvenancePolicyVersion": (
-                            "lotus-idea.ai-execution-provenance-policy.v1"
-                        ),
-                        "metadataEnvelopeVersion": "lotus-idea.ai-metadata-envelope.v1",
-                        "redactedEvidence": {
-                            "candidateId": "idea_high_cash_8d57adbf52f7f5a7",
-                            "family": "high_cash",
-                            "lifecycleStatus": "ready_for_review",
-                            "reviewPosture": "advisor_review_required",
-                            "evidencePacketId": "iep_high_cash_8d57adbf52f7f5a7",
-                            "evidenceContentHash": "sha256:evidence-lineage",
-                            "supportability": "ready",
-                            "sourceRefs": [
-                                {
-                                    "productId": "lotus-core:PortfolioStateSnapshot:v1",
-                                    "sourceSystem": "lotus-core",
-                                    "productVersion": "v1",
-                                    "asOfDate": "2026-06-21",
-                                    "freshness": "current",
-                                    "dataQualityStatus": "complete",
-                                }
-                            ],
-                            "reasonCodes": ["high_cash_ratio", "review_required"],
-                            "unsupportedReasons": [],
-                            "scorePolicyVersion": "idle-liquidity-v1",
-                            "score": "82",
-                            "sourceSignalCount": 1,
-                        },
-                        "verifiedOutput": {
-                            "outputId": "ai-output-001",
-                            "claimIds": ["claim-001"],
-                            "proposedActionTypes": ["advisor_review"],
-                            "verifierRanAtUtc": "2026-06-21T10:12:00Z",
-                            "actionPolicyVersion": "lotus-idea.ai-action-content-policy.v1",
-                            "claimGroundingPolicyVersion": (
-                                "lotus-idea.ai-claim-grounding-policy.v1"
-                            ),
-                            "groundedClaims": [
-                                {
-                                    "claimId": "claim-001",
-                                    "claimText": (
-                                        "Cash weight is above idle-liquidity policy threshold."
-                                    ),
-                                    "sourceRefs": [
-                                        {
-                                            "productId": ("lotus-core:PortfolioStateSnapshot:v1"),
-                                            "sourceSystem": "lotus-core",
-                                            "productVersion": "v1",
-                                            "asOfDate": "2026-06-21",
-                                            "freshness": "current",
-                                            "dataQualityStatus": "complete",
-                                        }
-                                    ],
-                                }
-                            ],
-                        },
-                        "approvedMetadataKeys": ["channel"],
-                        "aiLineageRecorded": True,
-                        "aiLineagePersistenceDecision": "accepted",
-                        "providerRetentionConfirmationRecorded": False,
-                        "durableStorageBacked": False,
-                        "lotusAiRuntimeExecuted": False,
-                        "supportedFeaturePromoted": False,
-                    }
+                    "examples": build_ai_explanation_openapi_examples(),
                 }
             },
         },
@@ -690,8 +578,6 @@ AI_EXPLANATION_ROUTE: RouteMetadata = {
         **durable_repository_write_unavailable_metadata(),
     },
 }
-
-_with_ai_explanation_success_modes(AI_EXPLANATION_ROUTE["responses"][status.HTTP_200_OK])
 
 
 def register_ai_governance_routes(app: FastAPI) -> None:
