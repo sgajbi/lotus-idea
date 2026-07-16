@@ -1950,6 +1950,18 @@ proof for every mode, including source runtime cleanup. This is internal design
 modularity, not evidence for a signal microservice or supported-feature
 promotion.
 
+Issue `#555` applies the same contract to the bond-maturity / reinvestment
+review family. Keep caller and Core-backed `candidate_created`, `blocked`,
+`suppressed`, and `not_eligible` modes in
+`app.api.examples.bond_maturity_signal`; build them through the application
+use cases and serialize the real response DTO. Preserve both Core holdings and
+maturity-summary lineage in candidate examples while redacting source routes
+and hashes. Core remains authoritative for holdings and maturity facts; Idea
+must not infer schedules, recommend replacement products, decide suitability,
+or claim execution authority. Require exact factory/OpenAPI/ledger/test parity
+and HTTP proof for every mode. This is internal design modularity and does not
+justify a signal microservice or supported-feature promotion.
+
 ## Supported-Feature Promotion Rule
 
 The supported-feature registry is source truth for support posture.
