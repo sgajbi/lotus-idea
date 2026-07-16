@@ -276,8 +276,9 @@ flowchart TD
    `idea.source-ingestion.readiness.read` capability. This reports manifest,
    Core query URL, Core query-control-plane URL, durable repository
    configuration, live-proof artifact
-   validity, scheduled-worker proof validity, and remaining certification
-   blockers without calling Core or exposing source payloads.
+   validity, scheduled-worker source-contract validity, separately observed
+   deployment-evidence validity, and remaining certification blockers without
+   calling Core or exposing source payloads.
 7. For bounded source-ingestion operator execution, call
    `POST /api/v1/source-ingestion/run-once` with the `operator` role and
    `idea.source-ingestion.run` capability. This requires durable repository,

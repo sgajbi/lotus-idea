@@ -399,9 +399,10 @@ and uncertified.
 `GET /api/v1/source-ingestion/readiness` now exposes the internal operator
 readiness posture for that run-once worker configuration and certification
 blockers without calling Core, certifying live source ingestion, or promoting a
-supported feature. A valid scheduled-worker proof artifact can clear only the
-scheduled-worker blocker; it does not clear live Core, data-mesh,
-Gateway/Workbench, downstream, or supported-feature blockers.
+supported feature. A valid scheduled-worker source contract clears no blocker.
+Only matching deployment evidence can clear the scheduled-worker deployment
+blocker; it does not clear live Core, data-mesh, Gateway/Workbench, downstream,
+or supported-feature blockers.
 `POST /api/v1/source-ingestion/run-once` exposes the same bounded
 source-ingestion batch foundation through the service boundary for operators.
 It requires durable repository posture plus configured manifest and Core

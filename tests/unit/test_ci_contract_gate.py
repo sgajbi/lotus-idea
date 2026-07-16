@@ -132,7 +132,7 @@ def test_ci_contract_gate_blocks_unscoped_coverage_test_target() -> None:
     ) in errors
 
 
-def test_ci_contract_gate_blocks_stale_implementation_proof_readiness_target() -> None:
+def test_ci_contract_gate_blocks_missing_scheduler_source_contract_wiring() -> None:
     module = _load_ci_contract_gate()
     makefile = (
         (ROOT / "Makefile")
@@ -147,7 +147,7 @@ def test_ci_contract_gate_blocks_stale_implementation_proof_readiness_target() -
 
     assert (
         "Makefile implementation-proof-readiness-check target must pass the scheduled "
-        "source-ingestion worker proof artifact into readiness generation"
+        "source-ingestion worker source-contract artifact into readiness generation"
     ) in errors
 
 

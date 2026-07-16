@@ -30,7 +30,7 @@ identifiers as source authority.
 
 | Panel | Operator Question | Expected Use |
 | --- | --- | --- |
-| Source Ingestion Readiness And Run Once | Are source-ingestion readiness checks or run-once attempts blocked? | Start with configuration, manifest, Core query/control-plane URL, and scheduled-worker proof posture. |
+| Source Ingestion Readiness And Run Once | Are source-ingestion readiness checks or run-once attempts blocked? | Start with configuration, manifest, Core query/control-plane URL, scheduled-worker source-contract posture, and separately observed deployment evidence. |
 | Outbox Delivery Runtime State | Is durable work pending, due, deferred, leased, failed, published, or dead-lettered? | Triage actual aggregate queue state independently of API traffic. |
 | Downstream Realization Readiness And Submission | Are downstream readiness or local submission paths blocked? | Separate local submission posture from downstream-owned execution or approval outcomes. |
 | Runtime Trust And Implementation Proof Readiness | Are runtime trust telemetry or aggregate proof readiness checks blocked? | Identify remaining proof blockers before any support or product-surface promotion. |
@@ -50,7 +50,8 @@ Response:
    context.
 2. Confirm whether the blocker is missing manifest configuration, unavailable
    Core query or control-plane URLs, missing durable repository configuration,
-   missing live Core source proof, or missing scheduled-worker proof.
+   missing live Core source evidence, invalid scheduled-worker source-contract
+   evidence, or missing matching deployment evidence.
 3. Do not infer live source certification from run-once execution alone.
 
 ## outbox-delivery-readiness-blocked
