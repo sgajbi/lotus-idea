@@ -1473,6 +1473,14 @@ Recent issue-derived patterns to preserve:
     certification, Gateway/Workbench discovery, deployment, production
     certification, or supported-feature promotion. This remains design
     modularity inside the existing Lotus Idea deployable.
+43. Deterministic workflow lint must not depend on GitHub pull-request diff
+    availability. Configure the pinned actionlint action with a blocking local
+    reporter. GitHub Actions jobs-metadata collection must use
+    `scripts/ci/fetch_github_actions_jobs.py`, which applies bounded exponential
+    backoff, validates the response shape, and atomically publishes output.
+    Transient GitHub API failures may be retried; exhausted retries remain a
+    hard CI failure and must never be converted into ignored or synthetic
+    evidence.
 
 Recent GitHub issue categories should keep being worked category-wise so
 repeated defect patterns are fixed once and pinned with tests or gates:
