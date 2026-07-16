@@ -36,7 +36,7 @@ def test_ci_contract_gate_blocks_missing_feature_signal_evidence(tmp_path: Path)
     assert "feature-lane.yml missing `scripts/ci_signal_evidence.py`" in errors
 
 
-def test_ci_contract_gate_blocks_unquoted_ci_signal_evidence_api_path(
+def test_ci_contract_gate_blocks_direct_ci_signal_evidence_api_fetch(
     tmp_path: Path,
 ) -> None:
     module = _load_ci_contract_gate()
@@ -44,7 +44,7 @@ def test_ci_contract_gate_blocks_unquoted_ci_signal_evidence_api_path(
     feature_lane = workflow_dir / "feature-lane.yml"
     feature_lane.write_text(
         feature_lane.read_text(encoding="utf-8").replace(
-            'gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/jobs"',
+            "python scripts/ci/fetch_github_actions_jobs.py --output ci-jobs.json",
             "gh api repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/jobs",
         ),
         encoding="utf-8",
@@ -54,7 +54,7 @@ def test_ci_contract_gate_blocks_unquoted_ci_signal_evidence_api_path(
 
     assert (
         "feature-lane.yml missing "
-        '`gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/jobs"`'
+        "`python scripts/ci/fetch_github_actions_jobs.py --output ci-jobs.json`"
     ) in errors
     assert (
         "feature-lane.yml must not contain "
