@@ -13,6 +13,7 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from endpoint_source_contracts import validate_signal_source_contract_error_examples  # noqa: E402
 from endpoint_ai_contracts import validate_ai_attested_success_mode  # noqa: E402
+from endpoint_contract_support import openapi_operation  # noqa: E402
 from endpoint_status_contracts import validate_endpoint_status_contract  # noqa: E402
 
 LEDGER_PATH = Path("docs/operations/endpoint-certification-ledger.json")
@@ -203,7 +204,7 @@ def _validate_openapi_caller_context_publication(
     if not capabilities:
         return []
 
-    operation_schema = _openapi_operation(openapi_spec, operation)
+    operation_schema = openapi_operation(openapi_spec, operation)
     if operation_schema is None:
         return [f"{operation}: missing OpenAPI operation for caller-context publication"]
 
@@ -238,20 +239,6 @@ def _validate_openapi_caller_context_publication(
 
     errors.extend(_validate_caller_header_descriptions(operation, operation_schema))
     return errors
-
-
-def _openapi_operation(
-    openapi_spec: dict[str, Any], operation: tuple[str, str]
-) -> dict[str, Any] | None:
-    method, path = operation
-    paths = openapi_spec.get("paths")
-    if not isinstance(paths, dict):
-        return None
-    path_item = paths.get(path)
-    if not isinstance(path_item, dict):
-        return None
-    operation_schema = path_item.get(method.lower())
-    return operation_schema if isinstance(operation_schema, dict) else None
 
 
 def _security_names(security: object) -> set[str]:

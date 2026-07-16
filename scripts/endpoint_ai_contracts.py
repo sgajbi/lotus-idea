@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-import json
 from typing import Any
+
+from endpoint_contract_support import json_object_examples, openapi_operation
 
 
 AI_EXPLANATION_OPERATION = (
@@ -38,7 +39,7 @@ def validate_ai_attested_success_mode(
             f"{operation}: certification truth must document verified Lotus AI run attestation"
         )
 
-    response_examples = _json_object_examples(endpoint.get("response_examples"))
+    response_examples = json_object_examples(endpoint.get("response_examples"))
     if not any(_is_verified_ai_attestation_success(example) for example in response_examples):
         errors.append(
             f"{operation}: response_examples must include verified attested AI success posture"
@@ -51,7 +52,7 @@ def validate_ai_attested_success_mode(
         )
 
     if openapi_spec is not None:
-        operation_schema = _openapi_operation(openapi_spec, operation)
+        operation_schema = openapi_operation(openapi_spec, operation)
         media = (
             operation_schema.get("responses", {})
             .get("200", {})
@@ -77,34 +78,6 @@ def validate_ai_attested_success_mode(
             )
 
     return errors
-
-
-def _openapi_operation(
-    openapi_spec: dict[str, Any],
-    operation: tuple[str, str],
-) -> dict[str, Any] | None:
-    method, path = operation
-    path_item = openapi_spec.get("paths", {}).get(path)
-    if not isinstance(path_item, dict):
-        return None
-    operation_schema = path_item.get(method.lower())
-    return operation_schema if isinstance(operation_schema, dict) else None
-
-
-def _json_object_examples(examples: Any) -> tuple[dict[str, Any], ...]:
-    if not isinstance(examples, list):
-        return ()
-    parsed: list[dict[str, Any]] = []
-    for example in examples:
-        if not isinstance(example, str) or not example.lstrip().startswith("{"):
-            continue
-        try:
-            payload = json.loads(example)
-        except json.JSONDecodeError:
-            continue
-        if isinstance(payload, dict):
-            parsed.append(payload)
-    return tuple(parsed)
 
 
 def _is_verified_ai_attestation_success(payload: dict[str, Any]) -> bool:
