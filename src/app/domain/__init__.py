@@ -149,6 +149,12 @@ from app.domain.missing_benchmark_signal import (
     benchmark_assignment_diagnostic,
     evaluate_missing_benchmark_signal,
 )
+from app.domain.performance_benchmark_readiness import (
+    PERFORMANCE_BENCHMARK_READINESS_POLICY_VERSION,
+    PerformanceBenchmarkReadinessAssessment,
+    PerformanceBenchmarkReadinessOutcome,
+    assess_performance_benchmark_readiness,
+)
 from app.domain.mandate_restriction_signal import (
     MandateRestrictionSignalInput,
     MandateRestrictionSignalPolicy,
@@ -438,6 +444,9 @@ __all__ = [
     "MissingRiskProfileSignalPolicy",
     "MissingBenchmarkSignalInput",
     "MissingBenchmarkSignalPolicy",
+    "PERFORMANCE_BENCHMARK_READINESS_POLICY_VERSION",
+    "PerformanceBenchmarkReadinessAssessment",
+    "PerformanceBenchmarkReadinessOutcome",
     "UnderperformanceSignalInput",
     "UnderperformanceSignalPolicy",
     "CandidatePersistenceDecision",
@@ -510,6 +519,7 @@ __all__ = [
     "evaluate_mandate_health_signal",
     "evaluate_mandate_restriction_signal",
     "benchmark_assignment_diagnostic",
+    "assess_performance_benchmark_readiness",
     "evaluate_missing_benchmark_signal",
     "evaluate_missing_risk_profile_signal",
     "missing_risk_profile_review_required_from_diagnostic",

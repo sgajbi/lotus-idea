@@ -207,7 +207,49 @@ def test_lotus_performance_adapter_fetches_benchmark_readiness_without_active_re
     assert evidence.performance_ref.product_id == "lotus-performance:ReturnsSeriesBundle:v1"
     assert evidence.performance_ref.route == "/integration/returns/series"
     assert evidence.performance_ref.freshness is EvidenceFreshness.CURRENT
-    assert evidence.performance_diagnostic == "performance_benchmark_context_missing"
+    assert evidence.benchmark_id is None
+    assert evidence.benchmark_return_source is None
+    assert evidence.calculation_id == "2f4f3e0e-6e0e-4e0e-8e0e-2f4f3e0e6e0e"
+    assert evidence.response_portfolio_id == "PB_SG_GLOBAL_BAL_001"
+    assert evidence.input_fingerprint == "sha256:returns-series-input"
+    assert evidence.calculation_hash == "sha256:returns-series-calculation"
+    assert evidence.requested_point_count == 120
+    assert evidence.returned_point_count == 120
+    assert evidence.missing_point_count == 0
+    assert evidence.coverage_ratio == Decimal("1.0")
+    assert evidence.producer_correlation_id == "corr-performance"
+    assert evidence.producer_trace_id == "trace-performance"
+    assert evidence.readiness_diagnostic == "performance_benchmark_context_missing"
+
+
+def test_lotus_performance_adapter_preserves_ready_benchmark_context() -> None:
+    evidence = _adapter(
+        httpx.MockTransport(lambda request: httpx.Response(200, json=_payload()))
+    ).fetch_benchmark_readiness_evidence(_benchmark_readiness_request())
+
+    assert evidence.benchmark_context_available is True
+    assert evidence.benchmark_id == "BMK_PRIVATE_BANKING_BALANCED"
+    assert evidence.benchmark_return_source == "calculated"
+    assert evidence.readiness_diagnostic == "performance_benchmark_context_ready"
+
+
+@pytest.mark.parametrize(
+    "benchmark_context",
+    (
+        {"benchmark_id": "BMK_PRIVATE_BANKING_BALANCED"},
+        {"return_source": "calculated"},
+        "not-an-object",
+    ),
+)
+def test_lotus_performance_adapter_rejects_malformed_benchmark_context(
+    benchmark_context: object,
+) -> None:
+    payload = _payload(extra={"benchmark_context": benchmark_context})
+
+    with pytest.raises(PerformanceSourceUnavailable):
+        _adapter(
+            httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+        ).fetch_benchmark_readiness_evidence(_benchmark_readiness_request())
 
 
 def test_lotus_performance_adapter_fetches_mandate_health_source_product_ref() -> None:
