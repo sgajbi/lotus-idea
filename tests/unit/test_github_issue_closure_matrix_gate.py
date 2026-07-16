@@ -166,6 +166,24 @@ def test_github_issue_closure_matrix_gate_freezes_low_income_cashflow_main_truth
     assert "#485: merged-main issue cannot regress to `locally_fixed`" in errors
 
 
+def test_github_issue_closure_matrix_gate_freezes_scheduler_evidence_main_truth(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    matrix = tmp_path / "matrix.md"
+    content = module.MATRIX_PATH.read_text(encoding="utf-8").replace(
+        "issues/508) Stop static scheduled-worker declarations from clearing deployment proof "
+        "| `merged_main` |",
+        "issues/508) Stop static scheduled-worker declarations from clearing deployment proof "
+        "| `locally_fixed` |",
+    )
+    matrix.write_text(content, encoding="utf-8")
+
+    errors = module.validate_issue_closure_matrix(matrix)
+
+    assert "#508: merged-main issue cannot regress to `locally_fixed`" in errors
+
+
 def test_github_issue_closure_matrix_gate_blocks_missing_issue(tmp_path: Path) -> None:
     module = _load_gate()
     matrix = tmp_path / "matrix.md"
