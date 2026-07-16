@@ -300,6 +300,14 @@ Implementation files:
     source-redacted response projection, and no-authority promotion.
 41. `tests/integration/test_api_operation_events.py`: bounded operation-event
     evidence for certified signal endpoint posture.
+42. `scripts/endpoint_status_contracts.py` and
+    `tests/integration/test_api_operation_events.py::test_data_lifecycle_api_emits_bounded_permission_event`:
+    implementation-quality enforcement for public
+    `implemented_not_certified` operations. The gate requires the same
+    capability, caller-context, product-safe error, operation-event,
+    integration-test, and OpenAPI evidence as certified operations, plus
+    machine-readable external blockers and explicit not-certified,
+    no-promotion success posture.
 
 ## Current Contract
 

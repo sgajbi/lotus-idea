@@ -1853,6 +1853,17 @@ Every RFC slice that exposes behavior must update, as applicable:
 7. repository context when local implementation patterns changed,
 8. tests that prove both success and fail-closed behavior.
 
+Endpoint implementation quality and endpoint certification status are
+independent controls. Public business/operator operations marked
+`implemented_not_certified` must still carry the same capability,
+caller-context, product-safe error, operation-event, integration-test, and
+OpenAPI evidence required of certified operations. They must additionally
+declare machine-readable external certification blockers and preserve
+`certificationStatus=not_certified` plus
+`supportedFeaturePromoted=false` in ledger and generated success examples.
+`planned` and `not_applicable` are not valid substitutes for an implemented
+public operation.
+
 ## Supported-Feature Promotion Rule
 
 The supported-feature registry is source truth for support posture.
