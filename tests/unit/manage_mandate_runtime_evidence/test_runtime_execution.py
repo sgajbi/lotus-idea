@@ -82,6 +82,7 @@ def test_runtime_execution_preserves_supported_no_opportunity(
             {"freshness": "stale"}
         ),
         lambda payload: payload["execution"]["evaluationReceipt"].update({"candidateIdHash": None}),
+        lambda payload: payload.update({"proofFamily": "substituted_family"}),
     ),
 )
 def test_contract_rejects_unknown_claims_and_receipt_tampering(
@@ -98,11 +99,18 @@ def test_contract_rejects_unknown_claims_and_receipt_tampering(
     ("receipt_name", "changes"),
     (
         ("requestReceipt", {"asOfDate": "2026-06-27"}),
+        ("requestReceipt", {"asOfDate": "not-a-date"}),
+        ("actionRegisterReceipt", {"route": "/wrong"}),
+        ("actionRegisterReceipt", {"upstreamSourceRefsDigest": "sha256:" + "f" * 64}),
+        ("actionRegisterReceipt", {"runCount": -1}),
+        ("actionRegisterReceipt", {"supportabilityState": "degraded"}),
         ("actionRegisterReceipt", {"responseTenantIdHash": "sha256:" + "f" * 64}),
         ("actionRegisterReceipt", {"workflowDecisionCount": 0}),
         ("mandatePerformanceHealthReceipt", {"route": "/wrong"}),
         ("mandateRiskHealthReceipt", {"generatedAtUtc": "2026-06-29T10:10:00Z"}),
         ("evaluationReceipt", {"outcome": "not_eligible"}),
+        ("evaluationReceipt", {"sourceRefsDigest": "sha256:" + "f" * 64}),
+        ("evaluationReceipt", {"unsupportedReasons": ["source_unavailable"]}),
         ("evaluationReceipt", {"minimumWorkflowDecisionCount": "1"}),
         ("evaluationReceipt", {"minimumLineageEdgeCount": True}),
         ("evaluationReceipt", {"candidateScore": "not-a-decimal"}),
@@ -137,12 +145,125 @@ def test_contract_rejects_semantic_forgery_with_recomputed_digest(
             "manage_portfolio_scope_not_confirmed",
         ),
         (
+            lambda evidence: replace(evidence, entitlement_allowed=False),
+            "manage_source_entitlement_denied",
+        ),
+        (
             lambda evidence: replace(evidence, supportability_state="degraded"),
             "manage_action_register_not_ready",
         ),
         (
+            lambda evidence: replace(evidence, supportability_reason="degraded"),
+            "manage_supportability_reason_not_ready",
+        ),
+        (
+            lambda evidence: replace(evidence, freshness_bucket="stale"),
+            "manage_supportability_not_current",
+        ),
+        (
+            lambda evidence: replace(
+                evidence,
+                action_register_runtime=replace(
+                    evidence.action_register_runtime,
+                    product_id="lotus-manage:Substituted:v1",
+                ),
+            ),
+            "manage_action_register_product_mismatch",
+        ),
+        (
+            lambda evidence: replace(
+                evidence,
+                action_register_runtime=replace(
+                    evidence.action_register_runtime,
+                    tenant_id_hash="sha256:" + "f" * 64,
+                ),
+            ),
+            "manage_action_register_tenant_scope_mismatch",
+        ),
+        (
+            lambda evidence: replace(
+                evidence,
+                action_register_runtime=replace(
+                    evidence.action_register_runtime,
+                    portfolio_id="portfolio-b",
+                ),
+            ),
+            "manage_action_register_scope_mismatch",
+        ),
+        (
+            lambda evidence: replace(
+                evidence,
+                action_register_runtime=replace(
+                    evidence.action_register_runtime,
+                    correlation_id="corr-other",
+                ),
+            ),
+            "manage_action_register_correlation_mismatch",
+        ),
+        (
+            lambda evidence: replace(
+                evidence,
+                action_register_runtime=replace(evidence.action_register_runtime, run_count=-1),
+            ),
+            "manage_action_register_counts_invalid",
+        ),
+        (
+            lambda evidence: replace(
+                evidence,
+                action_register_runtime=replace(
+                    evidence.action_register_runtime,
+                    source_batch_fingerprint="not-a-digest",
+                ),
+            ),
+            "manage_action_register_fingerprint_invalid",
+        ),
+        (
             lambda evidence: replace(evidence, mandate_performance_health_ref=None),
             "mandate_performance_health_source_ref_missing",
+        ),
+        (
+            lambda evidence: replace(
+                evidence,
+                mandate_performance_health_ref=replace(
+                    evidence.mandate_performance_health_ref,
+                    product_version="v2",
+                ),
+            ),
+            "mandate_performance_health_version_mismatch",
+        ),
+        (
+            lambda evidence: replace(
+                evidence,
+                mandate_performance_health_ref=replace(
+                    evidence.mandate_performance_health_ref,
+                    as_of_date=date(2026, 6, 27),
+                ),
+            ),
+            "mandate_performance_health_scope_mismatch",
+        ),
+        (
+            lambda evidence: replace(
+                evidence,
+                mandate_performance_health_ref=replace(
+                    evidence.mandate_performance_health_ref,
+                    generated_at_utc=NOW + timedelta(minutes=1),
+                ),
+            ),
+            "mandate_performance_health_future_evidence",
+        ),
+        (
+            lambda evidence: replace(
+                evidence,
+                mandate_performance_health_ref=replace(
+                    evidence.mandate_performance_health_ref,
+                    content_hash="not-a-digest",
+                ),
+            ),
+            "mandate_performance_health_content_hash_invalid",
+        ),
+        (
+            lambda evidence: replace(evidence, workflow_decision_count=-1),
+            "manage_evidence_counts_invalid",
         ),
         (
             lambda evidence: replace(
