@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import date, datetime
 import re
 from typing import Any
 
@@ -167,6 +167,10 @@ def _common_receipts_are_valid(
     evaluation: Mapping[str, Any],
     evaluated_at_utc: datetime,
 ) -> bool:
+    try:
+        date.fromisoformat(str(request.get("asOfDate")))
+    except (TypeError, ValueError):
+        return False
     for receipt, digest_key in (
         (request, "requestDigest"),
         (workflow, "receiptDigest"),
