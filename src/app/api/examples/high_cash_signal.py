@@ -9,6 +9,10 @@ from app.api.examples.openapi import (
     apply_named_response_examples,
     build_named_openapi_examples,
 )
+from app.api.examples.signal_evaluation import (
+    build_source_ref_request,
+    serialize_signal_evaluation,
+)
 from app.api.idea_signal_models import (
     CandidatePersistenceSummaryResponse,
     EvaluateAndPersistHighCashSignalResponse,
@@ -255,10 +259,11 @@ def _persistence_response(result: HighCashSignalPersistenceResult) -> dict[str, 
 
 
 def _serialized_evaluation(result: SignalEvaluationResult) -> dict[str, Any]:
-    return EvaluateHighCashSignalResponse.from_domain(
+    return serialize_signal_evaluation(
         result,
-        source_authority=_SOURCE_AUTHORITY,
-    ).model_dump(mode="json", by_alias=True)
+        response_model=EvaluateHighCashSignalResponse,
+        source_authority=SourceSystem.LOTUS_CORE,
+    )
 
 
 def _evaluation_request(
@@ -324,15 +329,11 @@ def _source_ref_request(
     *,
     freshness: EvidenceFreshness,
 ) -> SourceRefRequest:
-    return SourceRefRequest(
-        productId=product_id,
-        sourceSystem=SourceSystem.LOTUS_CORE,
-        productVersion="v1",
-        route=f"/source/{product_id}",
-        asOfDate=_AS_OF_DATE,
-        generatedAtUtc=_EVALUATED_AT,
-        contentHash=f"sha256:{product_id}",
-        dataQualityStatus="complete",
+    return build_source_ref_request(
+        product_id,
+        source_system=SourceSystem.LOTUS_CORE,
+        as_of_date=_AS_OF_DATE,
+        generated_at_utc=_EVALUATED_AT,
         freshness=freshness,
     )
 
