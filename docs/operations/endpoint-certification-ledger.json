@@ -147,10 +147,11 @@
       "request_examples": [
         "{\"asOfDate\":\"2026-06-21\",\"evaluatedAtUtc\":\"2026-06-21T10:00:00Z\",\"sourceReportedMinProjectedCumulativeCashflow\":\"-12500\",\"cashMovementCount\":4,\"cashMovementRef\":{\"productId\":\"lotus-core:PortfolioCashMovementSummary:v1\",\"sourceSystem\":\"lotus-core\",\"productVersion\":\"v1\",\"route\":\"/portfolios/PB_SG_GLOBAL_BAL_001/cash-movement-summary\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"contentHash\":\"sha256:low-income-cash-movement\",\"dataQualityStatus\":\"complete\",\"freshness\":\"current\"},\"cashflowProjectionRef\":{\"productId\":\"lotus-core:PortfolioCashflowProjection:v1\",\"sourceSystem\":\"lotus-core\",\"productVersion\":\"v1\",\"route\":\"/portfolios/PB_SG_GLOBAL_BAL_001/cashflow-projection\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"contentHash\":\"sha256:low-income-cashflow-projection\",\"dataQualityStatus\":\"complete\",\"freshness\":\"current\"},\"entitlementAllowed\":true}"
       ],
-      "response_examples": [
-        "{\"outcome\":\"candidate_created\",\"family\":\"low_income\",\"reasonCodes\":[\"income_attention\",\"review_required\"],\"unsupportedReasons\":[],\"candidate\":{\"candidateId\":\"idea_low_income_8d57adbf52f7f5a7\",\"family\":\"low_income\",\"lifecycleStatus\":\"generated\",\"reviewPosture\":\"advisor_review_required\",\"evidencePacketId\":\"iep_low_income_8d57adbf52f7f5a7\",\"supportability\":\"ready\",\"score\":\"68\",\"scorePolicyVersion\":\"cashflow-liquidity-review-v1\",\"sourceSignalIds\":[\"signal_low_income_8d57adbf52f7f5a7\"],\"sourceRefs\":[{\"productId\":\"lotus-core:PortfolioCashMovementSummary:v1\",\"sourceSystem\":\"lotus-core\",\"productVersion\":\"v1\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"dataQualityStatus\":\"complete\",\"freshness\":\"current\"},{\"productId\":\"lotus-core:PortfolioCashflowProjection:v1\",\"sourceSystem\":\"lotus-core\",\"productVersion\":\"v1\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"dataQualityStatus\":\"complete\",\"freshness\":\"current\"}]},\"sourceAuthority\":\"lotus-core\",\"supportedFeaturePromoted\":false}",
-        "{\"outcome\":\"not_eligible\",\"family\":\"low_income\",\"reasonCodes\":[\"below_materiality\"],\"unsupportedReasons\":[],\"candidate\":null,\"sourceAuthority\":\"lotus-core\",\"supportedFeaturePromoted\":false}",
-        "{\"outcome\":\"blocked\",\"family\":\"low_income\",\"reasonCodes\":[\"source_stale\"],\"unsupportedReasons\":[\"stale_source\"],\"candidate\":null,\"sourceAuthority\":\"lotus-core\",\"supportedFeaturePromoted\":false}"
+  "response_examples": [
+    "{\"outcome\":\"candidate_created\",\"family\":\"low_income\",\"reasonCodes\":[\"income_attention\",\"review_required\"],\"unsupportedReasons\":[],\"candidate\":{\"candidateId\":\"idea_low_income_cf1cc0474bac8b24\",\"family\":\"low_income\",\"lifecycleStatus\":\"generated\",\"reviewPosture\":\"advisor_review_required\",\"evidencePacketId\":\"iep_low_income_cf1cc0474bac8b24\",\"supportability\":\"ready\",\"score\":\"68\",\"scorePolicyVersion\":\"cashflow-liquidity-review-v1\",\"sourceSignalIds\":[\"signal_low_income_cf1cc0474bac8b24\"],\"sourceRefs\":[{\"productId\":\"lotus-core:PortfolioCashMovementSummary:v1\",\"sourceSystem\":\"lotus-core\",\"productVersion\":\"v1\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"dataQualityStatus\":\"complete\",\"freshness\":\"current\"},{\"productId\":\"lotus-core:PortfolioCashflowProjection:v1\",\"sourceSystem\":\"lotus-core\",\"productVersion\":\"v1\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"dataQualityStatus\":\"complete\",\"freshness\":\"current\"}]},\"sourceAuthority\":\"lotus-core\",\"supportedFeaturePromoted\":false}",
+    "{\"outcome\":\"blocked\",\"family\":\"low_income\",\"reasonCodes\":[\"source_stale\"],\"unsupportedReasons\":[\"stale_source\"],\"candidate\":null,\"sourceAuthority\":\"lotus-core\",\"supportedFeaturePromoted\":false}",
+    "{\"outcome\":\"suppressed\",\"family\":\"low_income\",\"reasonCodes\":[\"duplicate_suppressed\"],\"unsupportedReasons\":[],\"candidate\":null,\"sourceAuthority\":\"lotus-core\",\"supportedFeaturePromoted\":false}",
+    "{\"outcome\":\"not_eligible\",\"family\":\"low_income\",\"reasonCodes\":[\"below_materiality\"],\"unsupportedReasons\":[],\"candidate\":null,\"sourceAuthority\":\"lotus-core\",\"supportedFeaturePromoted\":false}"
       ],
       "error_examples": [
         "403 returns product-safe Problem Details when the caller lacks advisor role or idea.signal.evaluate capability.",
@@ -159,13 +160,15 @@
       ],
       "test_evidence": [
         "tests/integration/test_low_income_signal_api.py::test_low_income_signal_api_returns_review_candidate",
-        "tests/integration/test_low_income_signal_api.py::test_low_income_signal_api_reports_above_threshold_not_eligible",
-        "tests/integration/test_low_income_signal_api.py::test_low_income_signal_api_reports_stale_source_blocker",
+    "tests/integration/test_low_income_signal_api.py::test_low_income_signal_api_reports_above_threshold_not_eligible",
+    "tests/integration/test_low_income_signal_api.py::test_low_income_signal_api_reports_stale_source_blocker",
+    "tests/integration/test_low_income_signal_api.py::test_low_income_signal_api_reports_duplicate_suppressed",
         "tests/integration/test_low_income_signal_api.py::test_low_income_signal_api_rejects_wrong_source_contract",
         "tests/integration/test_low_income_signal_api.py::test_low_income_signal_api_requires_signal_permission",
-        "tests/integration/test_api_operation_events.py::test_low_income_signal_api_emits_bounded_operation_event"
-      ],
-      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
+    "tests/integration/test_api_operation_events.py::test_low_income_signal_api_emits_bounded_operation_event",
+    "tests/unit/api_examples/test_low_income_signal_examples.py::test_low_income_examples_match_ledger_and_generated_openapi"
+  ],
+  "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples; scripts/endpoint_low_income_signal_contracts.py enforces exact named success-mode parity."
     },
     {
       "method": "POST",
@@ -178,9 +181,11 @@
       "request_examples": [
         "{\"portfolioId\":\"PB_SG_GLOBAL_BAL_001\",\"asOfDate\":\"2026-06-21\",\"evaluatedAtUtc\":\"2026-06-21T10:00:00Z\",\"horizonDays\":30}"
       ],
-      "response_examples": [
-        "{\"outcome\":\"candidate_created\",\"family\":\"low_income\",\"reasonCodes\":[\"income_attention\",\"review_required\"],\"unsupportedReasons\":[],\"candidate\":{\"candidateId\":\"idea_low_income_8d57adbf52f7f5a7\",\"family\":\"low_income\",\"lifecycleStatus\":\"generated\",\"reviewPosture\":\"advisor_review_required\",\"evidencePacketId\":\"iep_low_income_8d57adbf52f7f5a7\",\"supportability\":\"ready\",\"score\":\"68\",\"scorePolicyVersion\":\"cashflow-liquidity-review-v1\",\"sourceSignalIds\":[\"signal_low_income_8d57adbf52f7f5a7\"],\"sourceRefs\":[{\"productId\":\"lotus-core:PortfolioCashMovementSummary:v1\",\"sourceSystem\":\"lotus-core\",\"productVersion\":\"v1\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"dataQualityStatus\":\"complete\",\"freshness\":\"current\"},{\"productId\":\"lotus-core:PortfolioCashflowProjection:v1\",\"sourceSystem\":\"lotus-core\",\"productVersion\":\"v1\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"dataQualityStatus\":\"complete\",\"freshness\":\"current\"}]},\"sourceAuthority\":\"lotus-core\",\"supportedFeaturePromoted\":false}",
-        "{\"outcome\":\"blocked\",\"family\":\"low_income\",\"reasonCodes\":[\"source_partial\"],\"unsupportedReasons\":[\"source_unavailable\"],\"candidate\":null,\"sourceAuthority\":\"lotus-core\",\"supportedFeaturePromoted\":false}"
+  "response_examples": [
+    "{\"outcome\":\"candidate_created\",\"family\":\"low_income\",\"reasonCodes\":[\"income_attention\",\"review_required\"],\"unsupportedReasons\":[],\"candidate\":{\"candidateId\":\"idea_low_income_3efbd2f9572a5d01\",\"family\":\"low_income\",\"lifecycleStatus\":\"generated\",\"reviewPosture\":\"advisor_review_required\",\"evidencePacketId\":\"iep_low_income_3efbd2f9572a5d01\",\"supportability\":\"ready\",\"score\":\"68\",\"scorePolicyVersion\":\"cashflow-liquidity-review-v1\",\"sourceSignalIds\":[\"signal_low_income_3efbd2f9572a5d01\"],\"sourceRefs\":[{\"productId\":\"lotus-core:PortfolioCashMovementSummary:v1\",\"sourceSystem\":\"lotus-core\",\"productVersion\":\"v1\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"dataQualityStatus\":\"complete\",\"freshness\":\"current\"},{\"productId\":\"lotus-core:PortfolioCashflowProjection:v1\",\"sourceSystem\":\"lotus-core\",\"productVersion\":\"v1\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"dataQualityStatus\":\"complete\",\"freshness\":\"current\"}]},\"sourceAuthority\":\"lotus-core\",\"supportedFeaturePromoted\":false}",
+    "{\"outcome\":\"blocked\",\"family\":\"low_income\",\"reasonCodes\":[\"source_partial\"],\"unsupportedReasons\":[\"source_unavailable\"],\"candidate\":null,\"sourceAuthority\":\"lotus-core\",\"supportedFeaturePromoted\":false}",
+    "{\"outcome\":\"suppressed\",\"family\":\"low_income\",\"reasonCodes\":[\"duplicate_suppressed\"],\"unsupportedReasons\":[],\"candidate\":null,\"sourceAuthority\":\"lotus-core\",\"supportedFeaturePromoted\":false}",
+    "{\"outcome\":\"not_eligible\",\"family\":\"low_income\",\"reasonCodes\":[\"below_materiality\"],\"unsupportedReasons\":[],\"candidate\":null,\"sourceAuthority\":\"lotus-core\",\"supportedFeaturePromoted\":false}"
       ],
       "error_examples": [
         "403 returns product-safe Problem Details when the caller lacks advisor role, idea.signal.evaluate capability, or portfolio entitlement.",
@@ -191,12 +196,14 @@
         "tests/integration/test_low_income_signal_api.py::test_low_income_source_api_fetches_core_evidence_without_persistence",
         "tests/integration/test_low_income_signal_api.py::test_low_income_source_api_requires_portfolio_entitlement",
         "tests/integration/test_low_income_signal_api.py::test_low_income_source_api_blocks_when_core_runtime_is_not_configured",
-        "tests/integration/test_low_income_signal_api.py::test_low_income_source_api_returns_blocked_posture_for_core_unavailable",
+    "tests/integration/test_low_income_signal_api.py::test_low_income_source_api_returns_blocked_posture_for_core_unavailable",
+    "tests/integration/test_low_income_signal_api.py::test_low_income_source_api_exposes_suppressed_and_not_eligible_success_modes",
         "tests/integration/test_low_income_signal_api.py::test_low_income_source_api_emits_bounded_operation_events",
         "tests/integration/test_low_income_signal_api.py::test_low_income_source_api_suppresses_runtime_close_failure",
-        "tests/unit/test_source_ingestion_state.py::test_core_low_income_source_runtime_builds_without_manifest"
-      ],
-      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
+    "tests/unit/test_source_ingestion_state.py::test_core_low_income_source_runtime_builds_without_manifest",
+    "tests/unit/api_examples/test_low_income_signal_examples.py::test_low_income_examples_match_ledger_and_generated_openapi"
+  ],
+  "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples; scripts/endpoint_low_income_signal_contracts.py enforces exact named success-mode parity."
     },
     {
       "method": "POST",
