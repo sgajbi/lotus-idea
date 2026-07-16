@@ -53,6 +53,13 @@ class EvaluateMissingSuitabilityContextFromAdviseCommand:
     trace_id: str | None = None
 
 
+@dataclass(frozen=True)
+class MissingSuitabilitySourceEvaluation:
+    evaluation: SignalEvaluationResult
+    evidence: AdvisePolicyEvaluationEvidence | None
+    source_error_code: str | None = None
+
+
 DEFAULT_MISSING_SUITABILITY_CONTEXT_POLICY = MissingSuitabilityContextSignalPolicy(
     policy_version=CandidateScorePolicyVersion.MISSING_SUITABILITY.value,
     minimum_open_requirement_count=1,
@@ -88,6 +95,19 @@ def evaluate_missing_suitability_context_signal_from_advise(
     advise_source: AdvisePolicyEvaluationSourcePort,
     policy: MissingSuitabilityContextSignalPolicy = DEFAULT_MISSING_SUITABILITY_CONTEXT_POLICY,
 ) -> SignalEvaluationResult:
+    return evaluate_missing_suitability_context_readiness_from_advise(
+        command,
+        advise_source=advise_source,
+        policy=policy,
+    ).evaluation
+
+
+def evaluate_missing_suitability_context_readiness_from_advise(
+    command: EvaluateMissingSuitabilityContextFromAdviseCommand,
+    *,
+    advise_source: AdvisePolicyEvaluationSourcePort,
+    policy: MissingSuitabilityContextSignalPolicy = DEFAULT_MISSING_SUITABILITY_CONTEXT_POLICY,
+) -> MissingSuitabilitySourceEvaluation:
     try:
         evidence = advise_source.fetch_policy_evaluation_evidence(
             AdvisePolicyEvaluationEvidenceRequest(
@@ -99,31 +119,42 @@ def evaluate_missing_suitability_context_signal_from_advise(
             )
         )
     except AdviseSourceEntitlementDenied:
-        return evaluate_missing_suitability_context_signal_command(
-            EvaluateMissingSuitabilityContextSignalCommand(
-                as_of_date=command.as_of_date,
-                evaluation_status=None,
-                open_requirement_count=None,
-                blocked_requirement_count=None,
-                sign_off_status=None,
-                sign_off_blocker_count=None,
-                client_ready_publication=None,
-                policy_ref=None,
-                evaluated_at_utc=command.evaluated_at_utc,
-                entitlement_allowed=False,
-                duplicate_of_candidate_id=command.duplicate_of_candidate_id,
+        return MissingSuitabilitySourceEvaluation(
+            evaluation=evaluate_missing_suitability_context_signal_command(
+                EvaluateMissingSuitabilityContextSignalCommand(
+                    as_of_date=command.as_of_date,
+                    evaluation_status=None,
+                    open_requirement_count=None,
+                    blocked_requirement_count=None,
+                    sign_off_status=None,
+                    sign_off_blocker_count=None,
+                    client_ready_publication=None,
+                    policy_ref=None,
+                    evaluated_at_utc=command.evaluated_at_utc,
+                    entitlement_allowed=False,
+                    duplicate_of_candidate_id=command.duplicate_of_candidate_id,
+                ),
+                policy=policy,
             ),
-            policy=policy,
+            evidence=None,
+            source_error_code="advise_source_entitlement_denied",
         )
-    except AdviseSourceUnavailable:
-        return SignalEvaluationResult(
-            outcome=SignalEvaluationOutcome.BLOCKED,
-            family=OpportunityFamily.MISSING_SUITABILITY_CONTEXT,
-            reason_codes=(ReasonCode.SOURCE_PARTIAL,),
-            unsupported_reasons=(UnsupportedEvidenceReason.SOURCE_UNAVAILABLE,),
+    except AdviseSourceUnavailable as exc:
+        return MissingSuitabilitySourceEvaluation(
+            evaluation=SignalEvaluationResult(
+                outcome=SignalEvaluationOutcome.BLOCKED,
+                family=OpportunityFamily.MISSING_SUITABILITY_CONTEXT,
+                reason_codes=(ReasonCode.SOURCE_PARTIAL,),
+                unsupported_reasons=(UnsupportedEvidenceReason.SOURCE_UNAVAILABLE,),
+            ),
+            evidence=None,
+            source_error_code=exc.code,
         )
 
-    return _evaluate_advise_evidence(command, evidence, policy=policy)
+    return MissingSuitabilitySourceEvaluation(
+        evaluation=_evaluate_advise_evidence(command, evidence, policy=policy),
+        evidence=evidence,
+    )
 
 
 def _evaluate_advise_evidence(

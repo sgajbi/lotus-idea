@@ -5,6 +5,7 @@ from datetime import UTC, date, datetime
 from app.application.missing_suitability_signal import (
     EvaluateMissingSuitabilityContextFromAdviseCommand,
     evaluate_missing_suitability_context_signal_from_advise,
+    evaluate_missing_suitability_context_readiness_from_advise,
 )
 from app.domain import (
     EvidenceFreshness,
@@ -121,6 +122,32 @@ def test_missing_suitability_application_blocks_entitlement_denial_without_candi
     assert result.reason_codes == (ReasonCode.REVIEW_REQUIRED,)
 
 
+def test_missing_suitability_application_preserves_authoritative_source_evidence() -> None:
+    evidence = _evidence()
+
+    result = evaluate_missing_suitability_context_readiness_from_advise(
+        _command(),
+        advise_source=StubAdviseSource(evidence=evidence),
+    )
+
+    assert result.evidence is evidence
+    assert result.source_error_code is None
+    assert result.evaluation.outcome is SignalEvaluationOutcome.CANDIDATE_CREATED
+
+
+def test_missing_suitability_application_preserves_source_failure_code() -> None:
+    result = evaluate_missing_suitability_context_readiness_from_advise(
+        _command(),
+        advise_source=StubAdviseSource(
+            exception=AdviseSourceUnavailable(code="advise_policy_workflow_timeout")
+        ),
+    )
+
+    assert result.evidence is None
+    assert result.source_error_code == "advise_policy_workflow_timeout"
+    assert result.evaluation.outcome is SignalEvaluationOutcome.BLOCKED
+
+
 def _command() -> EvaluateMissingSuitabilityContextFromAdviseCommand:
     return EvaluateMissingSuitabilityContextFromAdviseCommand(
         evaluation_id="pev_001",
@@ -128,6 +155,19 @@ def _command() -> EvaluateMissingSuitabilityContextFromAdviseCommand:
         evaluated_at_utc=EVALUATED_AT,
         correlation_id="corr-advise",
         trace_id="trace-advise",
+    )
+
+
+def _evidence() -> AdvisePolicyEvaluationEvidence:
+    return AdvisePolicyEvaluationEvidence(
+        evaluation_status="PENDING_REVIEW",
+        open_requirement_count=2,
+        blocked_requirement_count=0,
+        sign_off_status="PENDING_REVIEW",
+        sign_off_blocker_count=1,
+        client_ready_publication="BLOCKED",
+        policy_ref=_source_ref(),
+        advise_diagnostic="advise_policy_requirements_open",
     )
 
 
