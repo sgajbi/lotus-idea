@@ -145,7 +145,7 @@ def _validate_runtime_packaging(errors: list[str]) -> None:
 def _validate_retired_paths(errors: list[str]) -> None:
     for retired_path in RETIRED_PATHS:
         if (ROOT / retired_path).exists():
-            errors.append(f"retired scheduled-worker proof path must not exist: {retired_path}")
+            errors.append(f"retired scheduled-worker v1 path must not exist: {retired_path}")
     for root in ("src", "scripts"):
         for file_path in (ROOT / root).rglob("*"):
             if not file_path.is_file() or file_path.suffix not in {".py", ".json", ".md"}:

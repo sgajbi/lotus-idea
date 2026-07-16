@@ -191,9 +191,11 @@ Prove the complete supported opportunity journey end to end.
     supported-feature blockers remain.
 19. `src/app/runtime/proof_artifacts.py` now gives the certified operator API
     the same source-safe artifact-ref path as the aggregate generator for
-    source-ingestion runtime-execution receipt, source-ingestion scheduled-worker proof,
-    durable repository, runtime trust telemetry, Workbench read-path, outbox
-    broker, platform catalog source contract, and AI lineage store proofs. `tests/unit/test_proof_artifacts.py`,
+    source-ingestion runtime-execution receipt, source-ingestion
+    scheduled-worker source-contract and deployment evidence, durable
+    repository, runtime trust telemetry, Workbench read-path, outbox broker,
+    platform catalog source contract, and AI lineage store proofs.
+    `tests/unit/test_proof_artifacts.py`,
     `tests/unit/test_implementation_proof_readiness.py`, and
     `tests/integration/test_implementation_proof_readiness_api.py` prove that
     configured valid artifacts clear only their intended aggregate blockers,

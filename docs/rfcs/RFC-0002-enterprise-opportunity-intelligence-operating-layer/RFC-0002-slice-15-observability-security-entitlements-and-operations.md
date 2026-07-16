@@ -1,6 +1,6 @@
 # RFC-0002 Slice 15: Observability, Security, Entitlements, And Operations
 
-Status: Partially Implemented - bounded operation events plus evidence replay, source-ingestion, scheduled-worker proof, outbox delivery readiness/run-once with durable retry scheduling and PostgreSQL repository-side readiness projection, outbox broker source-contract proof, downstream realization, AI explanation, implementation-proof, and advisor queue readiness diagnostics with bounded PostgreSQL aggregate projection
+Status: Partially Implemented - bounded operation events plus evidence replay, source-ingestion, scheduled-worker source-contract and deployment-evidence posture, outbox delivery readiness/run-once with durable retry scheduling and PostgreSQL repository-side readiness projection, outbox broker source-contract proof, downstream realization, AI explanation, implementation-proof, and advisor queue readiness diagnostics with bounded PostgreSQL aggregate projection
 
 ## Outcome
 

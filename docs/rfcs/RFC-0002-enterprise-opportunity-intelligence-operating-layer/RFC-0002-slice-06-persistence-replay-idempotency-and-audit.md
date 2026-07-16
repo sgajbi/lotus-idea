@@ -252,7 +252,8 @@ Implemented first-wave internal scope:
     separately observed matching deployment receipt for blocker clearance.
 13. `make source-ingestion-scheduled-worker-check` and
     `scripts/ci_contract_gate.py` block future removal or downgrade of the
-    scheduled worker proof gate from local quality enforcement.
+    scheduled-worker source-contract and deployment-evidence gate from local
+    quality enforcement.
 14. `POST /api/v1/idea-signals/high-cash/evaluate-and-persist` now exposes the
    caller-supplied high-cash evaluate-and-persist path as a certified internal
    API foundation with `Idempotency-Key`, `idea.candidate.persist`, product-safe
@@ -576,9 +577,9 @@ Current slice validation:
    passed after adding scheduled worker configuration and source-contract evidence,
    missing Core runtime guard, and source-safe gate coverage.
 8. `.venv\Scripts\python.exe -m scripts.source_ingestion_scheduler.contract_gate`
-   passed, proving the scheduled worker proof shape, entrypoints, and Compose
-   service remain wired into local enforcement without exposing source-owned
-   identifiers.
+   passed, proving the scheduled-worker source-contract and deployment-evidence
+   shapes, entrypoints, and Compose service remain wired into local enforcement
+   without exposing source-owned identifiers.
 9. `.venv\Scripts\python.exe -m pytest tests\integration\test_postgres_runtime_integration.py -q`
    skips locally when `LOTUS_IDEA_POSTGRES_INTEGRATION_URL` is not configured;
    a required local disposable-PostgreSQL run passed with `11 passed` across
