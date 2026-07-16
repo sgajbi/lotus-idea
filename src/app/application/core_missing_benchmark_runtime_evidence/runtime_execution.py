@@ -15,11 +15,11 @@ from app.application.runtime_evidence import (
     identity_hash,
     require_aware,
     sha256_json,
+    source_ref_material,
 )
 from app.domain import (
     MissingBenchmarkSignalPolicy,
     SignalEvaluationOutcome,
-    SourceRef,
     SourceSystem,
     benchmark_assignment_diagnostic,
 )
@@ -200,7 +200,7 @@ def _source_receipt(evidence: CoreBenchmarkAssignmentEvidence | None) -> dict[st
     if evidence is None or ref is None:
         return None
     material = {
-        **_source_ref_material(ref),
+        **source_ref_material(ref),
         "benchmarkIdentityResolved": evidence.benchmark_identity_resolved,
         "assignmentEffectiveForAsOfDate": evidence.assignment_effective_for_as_of_date,
         "assignmentStatus": _normalized_status(evidence.assignment_status),
@@ -209,20 +209,6 @@ def _source_receipt(evidence: CoreBenchmarkAssignmentEvidence | None) -> dict[st
         "entitlementAllowed": evidence.entitlement_allowed,
     }
     return {**material, "receiptDigest": sha256_json(material)}
-
-
-def _source_ref_material(ref: SourceRef) -> dict[str, Any]:
-    return {
-        "productId": ref.product_id,
-        "sourceSystem": ref.source_system.value,
-        "productVersion": ref.product_version,
-        "route": ref.route,
-        "asOfDate": ref.as_of_date.isoformat(),
-        "generatedAtUtc": format_utc(ref.generated_at_utc),
-        "contentHash": ref.content_hash,
-        "dataQualityStatus": ref.data_quality_status,
-        "freshness": ref.freshness.value,
-    }
 
 
 def _evaluation_receipt(

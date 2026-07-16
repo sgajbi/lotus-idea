@@ -8,10 +8,8 @@ from typing import Any
 from app.domain import SourceRef
 
 
-def source_ref_receipt(ref: SourceRef | None) -> dict[str, Any] | None:
-    if ref is None:
-        return None
-    material = {
+def source_ref_material(ref: SourceRef) -> dict[str, Any]:
+    return {
         "productId": ref.product_id,
         "sourceSystem": ref.source_system.value,
         "productVersion": ref.product_version,
@@ -22,6 +20,12 @@ def source_ref_receipt(ref: SourceRef | None) -> dict[str, Any] | None:
         "dataQualityStatus": ref.data_quality_status,
         "freshness": ref.freshness.value,
     }
+
+
+def source_ref_receipt(ref: SourceRef | None) -> dict[str, Any] | None:
+    if ref is None:
+        return None
+    material = source_ref_material(ref)
     return {**material, "receiptDigest": sha256_json(material)}
 
 
