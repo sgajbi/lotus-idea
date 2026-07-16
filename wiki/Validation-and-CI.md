@@ -186,8 +186,9 @@ trust-telemetry files by digest, preserve blocked telemetry, and reject unknown
 or authority-bearing claims. The documentation contract also reconciles every
 aggregate proof CLI input with its application argument, evidence class,
 tracking issue, and inventory row. Scheduled-worker deployment evidence remains
-pending under issue `#508`; static Compose declarations are not treated as a
-deployment receipt.
+absent until a deployment controller emits a matching observed receipt. Issue
+`#508` implements the fail-closed source-contract and deployment-evidence
+contracts; static Compose declarations are not treated as a deployment receipt.
 
 `make ci-contract-gate` target explicitly fails if current blocking lint gates are removed from
 `make lint`, if artifact-producing implementation-proof readiness or runtime

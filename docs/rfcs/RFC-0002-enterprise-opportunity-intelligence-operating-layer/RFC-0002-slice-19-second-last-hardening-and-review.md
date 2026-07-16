@@ -938,8 +938,10 @@ aggregate proof inventory:
    documentation inventory.
 4. Repository hygiene requires capability-owned paths and prohibits the
    retired flat source-product modules, scripts, and tests.
-5. The same-pattern scan opened issue `#508` for scheduled-worker deployment
-   evidence that still lacks a deployment receipt and evidence class.
+5. The same-pattern scan opened issue `#508`; the current slice now separates
+   non-clearing scheduler `source_contract` evidence from matching
+   `deployment` evidence. No actual environment deployment receipt is
+   fabricated by repository-local validation.
 
 GitHub issue `#318` hardens review and feedback mutation entitlements. Review
 actions and feedback now bind `ReviewActorContext` to trusted
