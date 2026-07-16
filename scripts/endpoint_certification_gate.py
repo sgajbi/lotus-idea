@@ -20,6 +20,9 @@ from endpoint_review_workflow_contracts import (  # noqa: E402
     validate_feedback_success_contract,
     validate_review_action_success_contract,
 )
+from endpoint_report_evidence_contracts import (  # noqa: E402
+    validate_report_evidence_pack_success_contract,
+)
 from endpoint_conversion_workflow_contracts import (  # noqa: E402
     validate_conversion_intent_success_contract,
     validate_conversion_outcome_success_contract,
@@ -192,6 +195,7 @@ def _validate_implemented_endpoint_posture(
     errors.extend(validate_conversion_outcome_success_contract(endpoint, openapi_spec))
     errors.extend(validate_review_action_success_contract(endpoint, openapi_spec))
     errors.extend(validate_feedback_success_contract(endpoint, openapi_spec))
+    errors.extend(validate_report_evidence_pack_success_contract(endpoint, openapi_spec))
     errors.extend(validate_signal_source_contract_error_examples(endpoint))
     errors.extend(validate_endpoint_status_contract(endpoint, openapi_spec))
     if openapi_spec is not None:
