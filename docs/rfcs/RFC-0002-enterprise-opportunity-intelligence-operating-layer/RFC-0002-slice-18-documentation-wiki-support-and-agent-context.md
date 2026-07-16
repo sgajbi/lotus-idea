@@ -347,9 +347,16 @@ standard through its capability-owned contract while retaining independent
 risk-profile posture semantics. Shared Advise request and workflow validation
 removes duplicate producer qualification; a one-fetch generator preserves the
 exact source result, candidate and truthful no-opportunity executions qualify,
-and retired flat v1 paths are prohibited. Issues `#499` and `#500` track the
-separate Core benchmark-assignment and Performance benchmark-readiness
-occurrences found by the same-pattern scan.
+and retired flat v1 paths are prohibited.
+
+The missing-benchmark Core material now records the independently owned closed
+v2 runtime contract implemented by issue `#499`. One named application use case
+performs one Core fetch and preserves exact evidence or a stable error. Request,
+source assignment-state, and deterministic candidate or ready-assignment
+no-opportunity receipts are pseudonymous and digest-bound. The stable operator
+environment variable and Make target accept v2 only; retired flat paths are
+prohibited. Performance benchmark readiness remains a separate authority and
+issue `#500` remains open.
 
 This documentation slice does not promote any supported feature. It records
 bounded Workbench read-path source contract, Gateway/Workbench contract proof, and

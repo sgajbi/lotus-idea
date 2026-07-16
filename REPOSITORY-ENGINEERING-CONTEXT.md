@@ -2106,6 +2106,24 @@ claim Performance methodology, deployment, production, publication, or support.
 Keep this as design modularity within the existing deployable; no independently
 scalable runtime boundary is justified.
 
+For Core-backed missing-benchmark review, use
+`application/core_missing_benchmark_runtime_evidence/` and its matching
+automation and test packages. The named application use case must perform one
+Core fetch and preserve the exact evidence or stable source error. Closed v2
+receipts bind pseudonymous tenant/book/portfolio/client/evaluation and
+correlation/trace scope, source authority, source time and freshness,
+assignment identity/effectiveness/status/version posture, deterministic
+candidate or ready-assignment no-opportunity output, and cross-receipt digests.
+Reject unknown fields, stale/future evidence, scope or assignment drift,
+diagnostic conflict, claim inflation, and recomputed-digest semantic tampering.
+The stable `LOTUS_IDEA_MISSING_BENCHMARK_LIVE_PROOF` environment name and
+`make missing-benchmark-live-proof-contract-gate` accept v2 only; repository
+hygiene prohibits the retired flat v1 paths. This clears only the named Core
+missing-benchmark source blocker. Performance readiness, mesh,
+Gateway/Workbench, publication, deployment, production, and promotion remain
+blocked. No API, persistence, database, migration, or runtime-service split is
+introduced.
+
 For Core portfolio-state readiness, use
 `application/core_portfolio_state_runtime_evidence/` and its matching
 automation package. Route generation through the named read-only application

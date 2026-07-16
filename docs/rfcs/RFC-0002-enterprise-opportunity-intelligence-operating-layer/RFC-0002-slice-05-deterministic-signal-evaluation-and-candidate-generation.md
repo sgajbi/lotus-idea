@@ -383,12 +383,15 @@ Additional implemented missing-benchmark foundation:
    portfolio entitlement denial before runtime construction, missing Core
    runtime configuration, Core source unavailability, cleanup-failure
    suppression, permission denial, and operation-event proof.
-8. `src/app/application/missing_benchmark_live_proof.py`,
-   `scripts/generate_missing_benchmark_live_proof.py`, and
-   `make missing-benchmark-live-proof-contract-gate` define a source-safe live
-   Core proof artifact that can clear only the missing-benchmark live Core
-   source blocker when it proves a current Core source attempt produced an
-   advisor-review missing-benchmark candidate.
+8. `src/app/application/core_missing_benchmark_runtime_evidence/`,
+   `scripts/core_missing_benchmark_runtime_evidence/`, and
+   `make missing-benchmark-live-proof-contract-gate` define a closed v2
+   `runtime_execution` artifact. One named application use case performs one
+   Core fetch and preserves exact assignment evidence or a stable source error.
+   Pseudonymous request, current source, assignment-state, and deterministic
+   evaluation receipts must reconcile. Both a review candidate for an
+   assignment gap and a truthful ready-assignment no-opportunity result can
+   qualify. Only the missing-benchmark live Core source blocker is cleared.
 9. `src/app/application/missing_benchmark_performance_readiness_proof.py`,
    `scripts/generate_missing_benchmark_performance_readiness_proof.py`, and
    `make missing-benchmark-performance-readiness-proof-contract-gate` define a

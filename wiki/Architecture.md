@@ -67,6 +67,25 @@ flowchart LR
 | Product composition | `lotus-gateway` |
 | User experience | `lotus-workbench` |
 
+## Receipt-Bound Runtime Evidence
+
+Runtime evidence is capability-owned and clears only its named source blocker.
+Shared code may format hashes or validate envelopes, but source authority and
+domain outcomes remain inside each capability package.
+
+| Missing-benchmark control | Current implementation |
+| --- | --- |
+| Application flow | One `EvaluateCoreMissingBenchmark` use case performs one Core fetch through the benchmark-assignment port and preserves exact evidence or a stable source error. |
+| Contract | Closed v2 request, source, assignment-state, and evaluation receipts use canonical digests and reject unknown fields or inflated claims. |
+| Outcomes | Incomplete assignment posture creates an advisor-review candidate; a complete active assignment is a truthful no-opportunity execution. |
+| Authority boundary | Core owns benchmark assignment. Performance owns benchmark readiness and methodology. Idea owns only opportunity detection and review posture. |
+| Runtime topology | The package improves internal design modularity inside the existing deployable; no separate service or database is introduced. |
+
+`LOTUS_IDEA_MISSING_BENCHMARK_LIVE_PROOF` and
+`make missing-benchmark-live-proof-contract-gate` retain their operator names
+but accept v2 only. Performance readiness, mesh, Gateway/Workbench, client
+publication, deployment, production, and feature promotion remain blocked.
+
 ## Data Mesh Baseline
 
 Repo-owned proposed mesh declarations live under `contracts/`:

@@ -351,16 +351,21 @@ Prove the complete supported opportunity journey end to end.
     calculate returns, or certify methodology.
 33. `src/app/domain/missing_benchmark_signal.py`,
     `src/app/application/missing_benchmark_signal.py`,
-    `src/app/application/missing_benchmark_live_proof.py`, and
-    `scripts/generate_missing_benchmark_live_proof.py` now define a bounded
-    missing-benchmark review policy, Core benchmark-assignment source-port
-    wrapper, and source-safe live Core proof artifact. Aggregate readiness can
-    consume a valid artifact to clear only
+    `src/app/application/core_missing_benchmark_runtime_evidence/`, and
+    `scripts/core_missing_benchmark_runtime_evidence/` now define a bounded
+    missing-benchmark review policy, source-preserving Core use case, and closed
+    v2 runtime artifact. One Core fetch is bound to pseudonymous request scope,
+    exact current assignment evidence, canonical assignment-state and
+    evaluation digests, and either a deterministic review candidate or truthful
+    ready-assignment no-opportunity result. Aggregate readiness can consume a
+    valid artifact to clear only
     `opportunity_archetype_missing_benchmark_live_core_source_proof_missing`,
     while preserving Performance benchmark-readiness, data-mesh, Workbench,
-    client-publication, and supported-feature blockers. The proof does not
-    assign benchmarks, calculate benchmark returns, or certify benchmark
-    methodology.
+    client-publication, deployment, production, and supported-feature blockers.
+    Unknown fields, stale/future evidence, scope/assignment drift, conflicting
+    diagnostics, and semantic tampering fail closed. Retired flat v1 paths are
+    prohibited. The proof does not assign benchmarks, calculate benchmark
+    returns, or certify benchmark methodology.
 34. `src/app/application/missing_benchmark_performance_readiness_proof.py`,
     `scripts/generate_missing_benchmark_performance_readiness_proof.py`, and
     `make missing-benchmark-performance-readiness-proof-contract-gate` now
