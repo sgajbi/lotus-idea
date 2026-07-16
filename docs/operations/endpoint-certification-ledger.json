@@ -1815,7 +1815,7 @@
         "tests/integration/test_data_lifecycle_api.py::test_data_lifecycle_api_does_not_disclose_cross_tenant_candidate_existence",
         "tests/integration/test_data_lifecycle_api.py::test_data_lifecycle_api_verifies_archive_posture_before_linked_erasure",
         "tests/integration/test_data_lifecycle_api.py::test_data_lifecycle_openapi_certifies_success_and_failure_contracts",
-        "tests/integration/test_api_operation_events.py::test_data_lifecycle_api_emits_bounded_permission_event",
+        "tests/integration/data_lifecycle/test_operation_events.py::test_data_lifecycle_api_emits_bounded_permission_event",
         "tests/integration/test_postgres_data_lifecycle_runtime.py::test_postgres_archive_posture_receipt_is_restart_safe_and_single_use",
         "tests/unit/data_lifecycle/test_archive_posture_verification.py::test_verifies_archive_posture_without_granting_disposal_authority",
         "tests/unit/data_lifecycle/test_postgres_policy.py::test_postgres_lifecycle_erasure_redacts_and_audits_in_one_commit"

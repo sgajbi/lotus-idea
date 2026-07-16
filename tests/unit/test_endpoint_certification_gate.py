@@ -676,7 +676,7 @@ def _implemented_uncertified_endpoint() -> dict[str, object]:
         "test_evidence": [
             "tests/integration/test_data_lifecycle_api.py::"
             "test_data_lifecycle_api_requires_role_capability_and_exact_tenant",
-            "tests/integration/test_api_operation_events.py::"
+            "tests/integration/data_lifecycle/test_operation_events.py::"
             "test_data_lifecycle_api_emits_bounded_permission_event",
         ],
         "openapi_evidence": "scripts/openapi_quality_gate.py validates this endpoint.",

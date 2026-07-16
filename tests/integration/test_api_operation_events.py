@@ -13,7 +13,6 @@ import app.api.candidate_evidence_replay as candidate_evidence_replay_api
 import app.api.candidate_lifecycle as candidate_lifecycle_api
 import app.api.concentration_risk_signals as concentration_risk_signals_api
 import app.api.conversion_governance as conversion_governance_api
-import app.api.data_lifecycle as data_lifecycle_api
 import app.api.drawdown_review_signals as drawdown_review_signals_api
 import app.api.high_volatility_signals as high_volatility_signals_api
 import app.api.idea_signals as idea_signals_api
@@ -619,7 +618,6 @@ def capture_operation_events(
             monkeypatch.setattr(module, "emit_operation_event", capture_operation_event)
         for foundation_alias in (
             "_emit_review_operation_event",
-            "_emit_event",
             "emit_conversion_operation_event",
             "emit_review_workflow_operation_event",
         ):
@@ -1089,33 +1087,6 @@ def test_ai_explanation_readiness_api_emits_not_certified_operation_event(
             False,
             None,
         )
-    ]
-
-
-def test_data_lifecycle_api_emits_bounded_permission_event(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    events = capture_operation_events(monkeypatch, data_lifecycle_api)
-
-    response = managed_test_client(app).post(
-        "/api/v1/data-lifecycle/candidates/candidate-001/actions",
-        json={
-            "tenantId": "tenant-001",
-            "action": "erase",
-            "authorityRef": "bank-privacy-governance:decision-001",
-            "reason": "approved_lifecycle_request",
-            "changeReference": "privacy-case-001",
-            "requestedAtUtc": "2026-07-10T09:00:00Z",
-            "dryRun": True,
-            "approverSubject": "privacy-approver-001",
-        },
-        headers={"Idempotency-Key": "operation-data-lifecycle-denied-001"},
-    )
-
-    assert response.status_code == 403
-    assert response.json()["code"] == "permission_denied"
-    assert events == [
-        ("data_lifecycle_action", "permission_denied", "lotus-idea", False, None),
     ]
 
 
