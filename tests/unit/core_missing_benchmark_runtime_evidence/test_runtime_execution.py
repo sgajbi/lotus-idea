@@ -149,6 +149,16 @@ def test_runtime_execution_qualifies_each_reviewable_assignment_gap(
                 evidence,
                 benchmark_assignment_ref=replace(
                     evidence.benchmark_assignment_ref,
+                    route="/integration/portfolios/{portfolio_id}/benchmark",
+                ),
+            ),
+            "core_benchmark_assignment_route_mismatch",
+        ),
+        (
+            lambda evidence: replace(
+                evidence,
+                benchmark_assignment_ref=replace(
+                    evidence.benchmark_assignment_ref,
                     as_of_date=evidence.benchmark_assignment_ref.as_of_date - timedelta(days=1),
                 ),
             ),
@@ -173,6 +183,20 @@ def test_runtime_execution_qualifies_each_reviewable_assignment_gap(
                 ),
             ),
             "core_benchmark_assignment_evidence_not_current",
+        ),
+        (
+            lambda evidence: replace(
+                evidence,
+                benchmark_assignment_ref=replace(
+                    evidence.benchmark_assignment_ref,
+                    data_quality_status="incomplete",
+                ),
+            ),
+            "core_benchmark_assignment_data_quality_incomplete",
+        ),
+        (
+            lambda evidence: replace(evidence, entitlement_allowed=False),
+            "core_benchmark_assignment_entitlement_denied",
         ),
         (
             lambda evidence: replace(
@@ -261,6 +285,17 @@ def test_contract_rejects_semantic_tampering_even_with_recomputed_digest(
         evaluation["evaluationDigest"] = sha256_json(
             {key: item for key, item in evaluation.items() if key != "evaluationDigest"}
         )
+
+    assert not core_missing_benchmark_runtime_execution_is_valid(payload)
+
+
+def test_contract_rejects_malformed_request_as_of_date() -> None:
+    payload = deepcopy(_payload())
+    request = payload["execution"]["requestReceipt"]
+    request["asOfDate"] = "not-a-date"
+    request["requestDigest"] = sha256_json(
+        {key: item for key, item in request.items() if key != "requestDigest"}
+    )
 
     assert not core_missing_benchmark_runtime_execution_is_valid(payload)
 
