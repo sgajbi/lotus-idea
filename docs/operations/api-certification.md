@@ -104,7 +104,17 @@ blocks weak certification by requiring:
     `X-Lotus-Trusted-Caller-Context`,
 13. machine-readable `certification_blockers`, ledger response examples, and generated OpenAPI
     success examples that preserve `not_certified` plus `supportedFeaturePromoted=false` for every
-    `implemented_not_certified` operation.
+    `implemented_not_certified` operation,
+14. the AI explanation readiness ledger and generated OpenAPI success examples to exactly match
+    the complete code-owned default response produced by the application snapshot and API
+    serializer, including every control field and certification blocker.
+
+Certified readiness examples must not be maintained as parallel hand-written
+objects when the endpoint has a deterministic no-I/O response factory. The
+factory remains the source for the runtime response and OpenAPI example; the
+ledger is compared against the complete serialized structure. Dynamic
+repository posture may vary at runtime only through explicitly modelled inputs
+such as durable-storage availability.
 
 `implemented_not_certified` means the public operation exists and must meet the
 same implementation-quality, security, observability, OpenAPI, and test
