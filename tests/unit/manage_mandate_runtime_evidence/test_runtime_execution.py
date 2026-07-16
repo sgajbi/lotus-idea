@@ -323,6 +323,56 @@ def test_runtime_execution_preserves_source_error_without_qualifying() -> None:
     assert manage_mandate_runtime_execution_is_valid(payload) is False
 
 
+def test_runtime_execution_rejects_evaluation_outcomes_that_contradict_source_counts() -> None:
+    candidate_result = evaluate_manage_mandate_readiness(
+        _command(),
+        manage_source=AuthoritativeManageMandateSource(),
+    )
+    no_opportunity_result = evaluate_manage_mandate_readiness(
+        _command(),
+        manage_source=AuthoritativeManageMandateSource(workflow_count=0, lineage_count=0),
+    )
+    candidate_as_no_opportunity = replace(
+        candidate_result,
+        source_evaluation=replace(
+            candidate_result.source_evaluation,
+            evaluation=replace(
+                candidate_result.source_evaluation.evaluation,
+                outcome=SignalEvaluationOutcome.NOT_ELIGIBLE,
+                signal=None,
+                candidate=None,
+            ),
+        ),
+    )
+    no_opportunity_as_candidate = replace(
+        no_opportunity_result,
+        source_evaluation=replace(
+            no_opportunity_result.source_evaluation,
+            evaluation=candidate_result.source_evaluation.evaluation,
+        ),
+    )
+
+    candidate_payload = build_manage_mandate_runtime_execution(
+        generated_at_utc=NOW,
+        result=candidate_as_no_opportunity,
+    )
+    no_opportunity_payload = build_manage_mandate_runtime_execution(
+        generated_at_utc=NOW,
+        result=no_opportunity_as_candidate,
+    )
+
+    assert (
+        "manage_candidate_outcome_mismatch"
+        in candidate_payload["execution"]["qualificationBlockers"]
+    )
+    assert (
+        "manage_no_opportunity_outcome_mismatch"
+        in no_opportunity_payload["execution"]["qualificationBlockers"]
+    )
+    assert candidate_payload["aggregateBlockersSatisfied"] == []
+    assert no_opportunity_payload["aggregateBlockersSatisfied"] == []
+
+
 def test_explicit_blocked_runtime_execution_never_qualifies() -> None:
     payload = build_blocked_manage_mandate_runtime_execution(
         generated_at_utc=NOW,
