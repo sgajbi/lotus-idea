@@ -71,8 +71,8 @@ capabilities exist.
    typed restriction source-product blocker, receipt-bound mandate/restriction runtime evidence
    clears only the Advise restriction live-source blocker, typed missing
    risk-profile source-product proof clears only the typed Advise risk-profile
-   source-product blocker, and missing risk-profile live proof clears only the
-   live Advise risk-profile source blocker.
+   source-product blocker, and closed v2 missing-risk-profile runtime evidence
+   clears only the live Advise risk-profile source blocker.
    Mandate performance/risk health, data-mesh certification, Workbench proof,
    client-publication, and supported-feature blockers remain intact after
    source-specific proof.
@@ -144,13 +144,13 @@ commercial proof from getting ahead of implementation-backed runtime evidence.
    before demo use.
 8. Missing risk-profile review now has a bounded deterministic policy and
    Lotus Advise `AdvisoryPolicyEvaluationRecord:v1` explicit risk-profile
-   diagnostic source-port/adapter/live-proof foundation plus a separate
+   diagnostic source-port/adapter/runtime-evidence foundation plus a separate
    source-safe typed Advise risk-profile source-product proof. It can create
    only an advisor-review evidence-gap candidate from Advise-owned missing,
    stale, expired, or review-due risk-profile diagnostic posture. A valid
    source-product proof clears only
    `opportunity_archetype_typed_advise_risk_profile_source_product_missing`;
-   a valid source-safe live Advise proof clears only
+   valid closed v2 Advise runtime evidence clears only
    `opportunity_archetype_advise_risk_profile_live_source_proof_missing`;
    data-mesh certification, Workbench proof, client-publication approval, and
    supported-feature evidence remain required before demo use.

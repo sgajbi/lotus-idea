@@ -450,7 +450,7 @@ REQUIRED_READINESS_WIRING = (
     ),
     (
         "LOTUS_IDEA_MISSING_RISK_PROFILE_LIVE_PROOF",
-        "support optional Advise missing risk-profile live proof artifact wiring",
+        "support optional Advise missing-risk-profile runtime evidence wiring",
     ),
     (
         "LOTUS_IDEA_MISSING_RISK_PROFILE_SOURCE_PRODUCT_PROOF",
@@ -462,7 +462,7 @@ REQUIRED_READINESS_WIRING = (
     ),
     (
         "--missing-risk-profile-live-proof",
-        "pass optional Advise missing risk-profile live proof artifact into readiness generation",
+        "pass optional Advise missing-risk-profile runtime evidence into readiness generation",
     ),
     (
         "--missing-risk-profile-source-product-proof",

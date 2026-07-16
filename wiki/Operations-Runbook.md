@@ -249,7 +249,7 @@ optional closed v2 Advise mandate/restriction runtime evidence through
 `LOTUS_IDEA_MANDATE_RESTRICTION_LIVE_PROOF`,
 optional typed missing risk-profile source-product proof through
 `LOTUS_IDEA_MISSING_RISK_PROFILE_SOURCE_PRODUCT_PROOF`,
-optional missing risk-profile live Advise proof through
+optional closed v2 missing-risk-profile Advise runtime evidence through
 `LOTUS_IDEA_MISSING_RISK_PROFILE_LIVE_PROOF`,
 optional closed v2 Manage mandate runtime evidence through
 `LOTUS_IDEA_MANAGE_MANDATE_LIVE_PROOF`,
@@ -516,7 +516,7 @@ the operator entrypoints by purpose so this page stays readable.
 | Release evidence | `make ci-release` | Broad release posture, including Docker and PostgreSQL prerequisites. |
 | Durable storage proof | `make postgres-integration-gate`, `make durable-repository-proof-contract-gate` | Validate PostgreSQL-backed repository and proof-artifact posture. |
 | Source-ingestion evidence | `make source-ingestion-worker-check`, `make source-ingestion-scheduled-worker-check`, `make source-ingestion-runtime-execution-contract-gate` | Validate worker contracts and receipt-bound Core runtime execution evidence without promoting scheduler, mesh, UI, production, or support posture. |
-| Upstream runtime and source-product proof | `make risk-concentration-live-proof-contract-gate`, `make high-volatility-live-proof-contract-gate`, `make risk-drawdown-live-proof-contract-gate`, `make core-benchmark-assignment-live-proof-contract-gate`, `make core-portfolio-state-live-proof-contract-gate`, `make manage-mandate-live-proof-contract-gate`, `make mandate-restriction-live-proof-contract-gate`, `make missing-suitability-live-proof-contract-gate`, `make missing-risk-profile-live-proof-contract-gate`, `make performance-underperformance-live-proof-contract-gate` | Validate bounded sibling evidence. Risk and Performance signal runtime evidence binds current authority receipts to durable Idea persistence. Core and Advise read-only evidence binds pseudonymous request scope to exact producer receipts without inventing source identity or persistence. The Advise mandate/restriction gate accepts truthful candidate and no-opportunity results but fails closed without producer-owned scope/time. Command existence never promotes support. |
+| Upstream runtime and source-product proof | `make risk-concentration-live-proof-contract-gate`, `make high-volatility-live-proof-contract-gate`, `make risk-drawdown-live-proof-contract-gate`, `make core-benchmark-assignment-live-proof-contract-gate`, `make core-portfolio-state-live-proof-contract-gate`, `make manage-mandate-live-proof-contract-gate`, `make mandate-restriction-live-proof-contract-gate`, `make missing-suitability-live-proof-contract-gate`, `make missing-risk-profile-live-proof-contract-gate`, `make performance-underperformance-live-proof-contract-gate` | Validate bounded sibling evidence. Risk and Performance signal runtime evidence binds current authority receipts to durable Idea persistence. Core and Advise read-only evidence binds pseudonymous request scope to exact producer receipts without inventing source identity or persistence. Advise mandate/restriction, missing-suitability, and missing-risk-profile gates accept truthful candidate and no-opportunity results but fail closed without producer-owned scope/time/hashes/posture. Command existence never promotes support. |
 | Runtime trust and implementation proof | `make runtime-trust-telemetry-test-execution-contract-gate`, `make implementation-proof-readiness-check`, `make runtime-trust-telemetry-preview-check`, `make runtime-trust-telemetry-snapshot-check` | Validate in-memory test evidence and inspect durable runtime posture without clearing certification blockers. |
 | Downstream proof | `make downstream-route-source-contract-proof-gate`, `make report-intake-route-source-contract-proof-gate`, `make report-materialization-source-contract-proof-gate` | Validate bounded Advise, Manage, and Report contract artifacts. |
 | Local hygiene | `make clean` | Remove ignored generated residue before branch hygiene checks. |
@@ -829,8 +829,8 @@ source-ingestion worker deploy-proof artifact, durable repository proof
 artifact, runtime trust telemetry test-execution artifact, Workbench read-path source contract,
 Advise route source-contract artifact, missing-suitability Advise runtime-evidence
 artifact, typed mandate/restriction source-product proof artifact, typed
-missing risk-profile source-product proof artifact, missing risk-profile live
-Advise proof artifact, Manage mandate runtime-evidence artifact, Core benchmark-assignment runtime
+missing risk-profile source-product proof artifact, missing-risk-profile Advise
+runtime-evidence artifact, Manage mandate runtime-evidence artifact, Core benchmark-assignment runtime
 evidence artifact, Core portfolio-state runtime evidence artifact, Manage route source-contract artifact,
 Report intake route source-contract artifact, Report materialization source-contract artifact,
 mesh policy source-contract artifact, platform catalog

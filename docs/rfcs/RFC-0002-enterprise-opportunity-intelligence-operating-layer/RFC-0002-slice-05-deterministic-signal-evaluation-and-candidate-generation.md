@@ -698,12 +698,16 @@ Additional implemented missing risk profile foundation:
    valid artifact can clear only
    `opportunity_archetype_typed_advise_risk_profile_source_product_missing`
    in aggregate readiness.
-7. `src/app/application/missing_risk_profile_live_proof.py`,
-   `scripts/generate_missing_risk_profile_live_proof.py`, and
-   `make missing-risk-profile-live-proof-contract-gate` define a source-safe
-   Advise risk-profile diagnostic proof artifact. A valid artifact can clear
-   only `opportunity_archetype_advise_risk_profile_live_source_proof_missing`
-   in aggregate readiness.
+7. `src/app/application/advise_missing_risk_profile_runtime_evidence/`,
+   `scripts/advise_missing_risk_profile_runtime_evidence/`, and
+   `make missing-risk-profile-live-proof-contract-gate` define a closed v2
+   Advise risk-profile `runtime_execution` contract. One named application use
+   case preserves the exact producer evidence or stable source error, and the
+   generator performs one fetch. Canonical request, workflow, and evaluation
+   receipts bind pseudonymous scope, producer scope/time/hashes/posture, and a
+   deterministic candidate or truthful no-opportunity result. A valid artifact
+   can clear only
+   `opportunity_archetype_advise_risk_profile_live_source_proof_missing`.
 8. `src/app/api/missing_risk_profile_signals.py` exposes the bounded
    `POST /api/v1/idea-signals/missing-risk-profile/evaluate` API over
    caller-supplied Advise evidence refs. The endpoint returns source-safe
@@ -723,7 +727,7 @@ Additional implemented missing risk profile foundation:
     workflow identifiers, and raw source payloads from responses.
 11. This remains an internal design-module foundation inside the existing
     `lotus-idea` service. It does not add a separately scalable process,
-    certify live Advise source support, approve risk profiling, determine
+    certify general Advise source support, approve risk profiling, determine
     suitability, approve policy, approve proposals, publish client
     communication, prove Gateway/Workbench behavior, promote a typed
     risk-profile data product, or promote a supported feature.
