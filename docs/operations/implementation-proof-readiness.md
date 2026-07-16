@@ -204,7 +204,7 @@ taxonomy and the #393 same-pattern campaign.
 | `LOTUS_IDEA_MISSING_BENCHMARK_LIVE_PROOF` | Passes a validated source-safe Lotus Core missing-benchmark live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_missing_benchmark_live_core_source_proof_missing`; it does not assign benchmarks, certify Performance benchmark-readiness evidence, certify benchmark methodology, calculate benchmark composition or returns, certify data mesh, prove Workbench behavior, approve client publication, or promote support. |
 | `LOTUS_IDEA_LOW_INCOME_CORE_CASHFLOW_LIVE_PROOF` | Passes validated receipt-bound Core cashflow v2 runtime evidence into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_live_core_cashflow_source_proof_missing`; it does not certify client income needs, funding advice, treasury instruction, suitability, planning objectives, data mesh, Workbench, client publication, deployment, production, or supported-feature promotion. |
 | `LOTUS_IDEA_MANAGE_MANDATE_LIVE_PROOF` | Passes validated closed v2 Lotus Manage mandate runtime evidence into opportunity-archetype readiness. Exact source scope, time, identity, policy, and deterministic outcome must reconcile. A valid artifact clears only `opportunity_archetype_portfolio_scoped_manage_source_proof_missing`, `opportunity_archetype_mandate_performance_health_source_ref_missing`, and `opportunity_archetype_mandate_risk_health_source_ref_missing`; it does not certify Core portfolio state, data mesh, Workbench, client publication, supported-feature promotion, rebalance authority, action authority, order creation, execution, or settlement. |
-| `LOTUS_IDEA_MANDATE_RESTRICTION_LIVE_PROOF` | Passes a validated source-safe Lotus Advise mandate/restriction live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_live_restriction_source_proof_missing`; it does not certify a typed restriction source product, clear restrictions, change mandate state, approve suitability or policy, certify data mesh, prove Workbench behavior, approve client publication, create rebalance/order authority, or promote support. |
+| `LOTUS_IDEA_MANDATE_RESTRICTION_LIVE_PROOF` | Passes validated closed v2 Advise mandate/restriction `runtime_execution` evidence into opportunity-archetype readiness. The compatibility environment name does not accept v1. Exact pseudonymous request scope, producer scope/time, workflow posture, source/policy hashes, deterministic candidate or no-opportunity outcome, and receipt digests must reconcile. A valid artifact clears only `opportunity_archetype_live_restriction_source_proof_missing`; typed source-product, restriction clearance, mandate state, suitability, policy/proposal approval, data mesh, Workbench, client publication, rebalance/order authority, deployment, production, and support promotion remain blocked. |
 | `LOTUS_IDEA_MANDATE_RESTRICTION_SOURCE_PRODUCT_PROOF` | Passes a validated source-safe typed Lotus Advise mandate/restriction source-product proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_typed_restriction_source_product_missing`; it does not certify live Advise reachability, clear restrictions, change mandate state, approve suitability, approve policy, approve proposals, certify data mesh, prove Workbench behavior, approve client publication, create rebalance/order authority, or promote support. |
 | `LOTUS_IDEA_MISSING_SUITABILITY_LIVE_PROOF` | Passes a validated source-safe Lotus Advise policy-evaluation live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_advise_policy_live_source_proof_missing`; it does not certify suitability, policy approval, proposal approval, data mesh, Workbench, client publication, or supported-feature promotion. |
 | `LOTUS_IDEA_MISSING_RISK_PROFILE_SOURCE_PRODUCT_PROOF` | Passes a validated source-safe typed Lotus Advise risk-profile source-product proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_typed_advise_risk_profile_source_product_missing`; it does not certify live Advise reachability, approve risk profiling, approve suitability or policy, certify data mesh, prove Workbench behavior, approve client publication, or promote support. |
@@ -445,22 +445,24 @@ deliberately retains Core portfolio-state, data-mesh, Workbench,
 client-publication, supported-feature, rebalance, action, order-creation,
 execution, and settlement blockers.
 
-Lotus Advise mandate/restriction live proof is captured by
-`scripts/generate_mandate_restriction_live_proof.py`. A valid artifact
+Lotus Advise mandate/restriction runtime evidence is captured by
+`scripts/advise_mandate_restriction_runtime_evidence/generate_runtime_execution.py`.
+A valid artifact
 referenced through `LOTUS_IDEA_MANDATE_RESTRICTION_LIVE_PROOF` clears only
 `opportunity_archetype_live_restriction_source_proof_missing` for the
-`opportunity-archetype-scenarios` capability. The artifact proves a live
-`lotus-advise:AdvisoryPolicyEvaluationRecord:v1` workflow source call, current
-source evidence, explicit source-owned restriction diagnostic posture, and
-deterministic compliance-review candidate generation without storing evaluation
-identity, request or response payloads, correlation IDs, trace IDs, candidate
-IDs, source routes, requirement details, restriction details, or sign-off
-details. It deliberately retains typed restriction source-product, mandate
-state-change, restriction-clearance, suitability, policy, proposal, rebalance,
-order, client-publication, data-mesh, Workbench, and supported-feature
-blockers. Generic Advise policy diagnostics do not validate this proof; the
-source diagnostic must explicitly identify a mandate/restriction review
-condition.
+`opportunity-archetype-scenarios` capability. The artifact binds hashed
+tenant, book, portfolio, client, evaluation, and correlation identity to the
+producer workflow's portfolio, as-of, generation time, evaluation/source/policy
+hashes, policy identity, requirement and sign-off posture, freshness, quality,
+and exact diagnostic. Its closed validator reconciles every receipt and accepts
+both a deterministic review candidate and a truthful no-opportunity outcome.
+Unknown claims, raw scoped identifiers, source substitution, missing producer
+scope/time, future/stale evidence, malformed counts/hashes, or outcome drift
+fail closed. Advise issue `#459` tracks the producer metadata needed for a live
+artifact to qualify. The artifact retains typed source-product, mandate-state,
+restriction-clearance, suitability, policy/proposal, rebalance/order,
+client-publication, data-mesh, Workbench, deployment, production, and
+supported-feature blockers.
 
 Lotus Advise mandate/restriction source-product proof is captured by
 `scripts/generate_mandate_restriction_source_product_proof.py`. A valid
@@ -993,9 +995,9 @@ Implementation-backed evidence:
     `scripts/manage_mandate_runtime_evidence/generate_runtime_execution.py`,
 1. Manage mandate runtime-evidence contract gate:
     `make manage-mandate-live-proof-contract-gate`,
-1. Mandate/restriction live-proof generator:
-    `scripts/generate_mandate_restriction_live_proof.py`,
-1. Mandate/restriction live-proof contract gate:
+1. Advise mandate/restriction runtime-evidence generator:
+    `scripts/advise_mandate_restriction_runtime_evidence/generate_runtime_execution.py`,
+1. Advise mandate/restriction runtime-evidence contract gate (compatibility target):
     `make mandate-restriction-live-proof-contract-gate`,
 1. Performance underperformance runtime-execution generator:
     `scripts/performance_underperformance_runtime_evidence/generate_runtime_execution.py`,

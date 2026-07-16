@@ -552,7 +552,7 @@ without relying on chat memory.
     missing risk-profile source-product, and missing risk-profile live Advise
     proof artifacts. Typed mandate/restriction source-product proof clears
     only `opportunity_archetype_typed_restriction_source_product_missing`;
-    mandate/restriction live proof clears only the Advise restriction
+    receipt-bound mandate/restriction runtime evidence clears only the Advise restriction
     live-source blocker; missing suitability proof clears only the Advise
     policy live-source blocker; typed missing risk-profile source-product
     proof clears only
