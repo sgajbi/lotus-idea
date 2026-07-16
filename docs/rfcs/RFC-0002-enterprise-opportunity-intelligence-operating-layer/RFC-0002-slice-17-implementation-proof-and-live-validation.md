@@ -549,8 +549,8 @@ without relying on chat memory.
     concentration live Risk, high-volatility live Risk, drawdown live Risk,
     low-income live Core cashflow, typed mandate/restriction source-product,
     mandate/restriction live Advise, missing-suitability Advise runtime, typed
-    missing risk-profile source-product, and missing risk-profile live Advise
-    proof artifacts. Typed mandate/restriction source-product proof clears
+    missing risk-profile source-product, and missing-risk-profile Advise
+    runtime-execution artifacts. Typed mandate/restriction source-product proof clears
     only `opportunity_archetype_typed_restriction_source_product_missing`;
     receipt-bound mandate/restriction runtime evidence clears only the Advise restriction
     live-source blocker; closed v2 missing-suitability runtime evidence binds
@@ -558,8 +558,9 @@ without relying on chat memory.
     receipts and clears only the Advise policy live-source blocker; typed missing risk-profile source-product
     proof clears only
     `opportunity_archetype_typed_advise_risk_profile_source_product_missing`;
-    missing risk-profile live proof clears only the Advise risk-profile
-    live-source blocker; low-income Core cashflow proof clears only
+    closed v2 missing-risk-profile runtime evidence binds exact request,
+    workflow, and deterministic candidate or no-opportunity receipts and clears
+    only the Advise risk-profile live-source blocker; low-income Core cashflow proof clears only
     `opportunity_archetype_live_core_cashflow_source_proof_missing`;
     full Workbench product proof, data-mesh certification, client-publication,
     and supported-feature promotion remain pending.

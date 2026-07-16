@@ -287,13 +287,15 @@ clearance, mandate state, rebalance actions, orders, client
 publication, data-mesh certification, Gateway/Workbench behavior, or
 supported-feature promotion.
 
-Missing-suitability runtime evidence follows the same layered path through a
-named application use case and the Advise source port. Its capability-owned v2
-contract binds pseudonymous request scope to producer-authored workflow
-identity, time, hashes, posture, and deterministic candidate or no-opportunity
-receipts. Shared Advise qualification code removes duplicate producer checks;
-the missing-suitability and mandate/restriction schemas remain independent.
-This is design modularity inside one service, not a microservice boundary.
+Missing-suitability and missing-risk-profile runtime evidence follow the same
+layered path through named application use cases and the Advise source port.
+Their capability-owned v2 contracts bind pseudonymous request scope to
+producer-authored workflow identity, time, hashes, posture, and deterministic
+candidate or no-opportunity receipts. Shared Advise request-envelope and
+workflow qualification code removes duplicate producer checks;
+missing-suitability, missing-risk-profile, and mandate/restriction retain
+independent domain outcomes and schemas. This is design modularity inside one
+service, not a microservice boundary.
 
 API modules share the active repository provider through
 `src/app/runtime/repository_state.py`. Signal, review, feedback, queue, and

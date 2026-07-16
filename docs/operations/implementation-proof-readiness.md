@@ -505,19 +505,23 @@ and review-due risk-profile posture. It deliberately retains live Advise source
 proof, risk-profile approval, suitability, policy, proposal,
 client-publication, data-mesh, Workbench, and supported-feature blockers.
 
-Lotus Advise missing risk-profile live proof is captured by
-`scripts/generate_missing_risk_profile_live_proof.py`. A valid artifact
-referenced through `LOTUS_IDEA_MISSING_RISK_PROFILE_LIVE_PROOF` clears only
+Lotus Advise missing-risk-profile runtime evidence is captured by
+`scripts/advise_missing_risk_profile_runtime_evidence/generate_runtime_execution.py`.
+A valid closed v2 artifact referenced through
+`LOTUS_IDEA_MISSING_RISK_PROFILE_LIVE_PROOF` clears only
 `opportunity_archetype_advise_risk_profile_live_source_proof_missing` for the
-`opportunity-archetype-scenarios` capability. The artifact proves a live
+`opportunity-archetype-scenarios` capability. The artifact proves one live
+source fetch and one named application-use-case execution. Canonical request,
+producer workflow, and deterministic evaluation receipts must reconcile for a
+candidate or truthful no-opportunity result. It binds the
 `lotus-advise:AdvisoryPolicyEvaluationRecord:v1` workflow source call, current
 source evidence, explicit risk-profile diagnostic posture, and deterministic
-advisor-review candidate generation without storing evaluation identity,
+advisor-review outcome without storing evaluation identity,
 request or response payloads, correlation IDs, trace IDs, candidate IDs,
 source routes, requirement details, or sign-off details. It deliberately
 retains typed risk-profile source-product, risk-profile authority,
-suitability, policy, proposal, client-publication, data-mesh, Workbench, and
-supported-feature blockers.
+suitability, policy, proposal, sign-off, client-publication, data-mesh,
+Workbench, deployment, production, and supported-feature blockers.
 
 Durable repository proof is captured by
 `scripts/persistence/generate_durable_repository_proof.py`. A valid artifact referenced
@@ -988,9 +992,9 @@ Implementation-backed evidence:
     `scripts/generate_mandate_restriction_source_product_proof.py`,
 1. Mandate/restriction source-product proof contract gate:
     `make mandate-restriction-source-product-proof-contract-gate`,
-1. Missing risk-profile live-proof generator:
-    `scripts/generate_missing_risk_profile_live_proof.py`,
-1. Missing risk-profile live-proof contract gate:
+1. Missing risk-profile runtime-evidence generator:
+    `scripts/advise_missing_risk_profile_runtime_evidence/generate_runtime_execution.py`,
+1. Missing risk-profile runtime-evidence contract gate:
     `make missing-risk-profile-live-proof-contract-gate`,
 1. Manage mandate runtime-evidence generator:
     `scripts/manage_mandate_runtime_evidence/generate_runtime_execution.py`,

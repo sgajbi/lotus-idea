@@ -88,7 +88,7 @@ Release and review evidence commands:
    platform catalog source contract artifact, plus AI lineage store and AI
    workflow-pack registration proof artifacts and optional Core
    portfolio-state, Manage mandate, Advise mandate/restriction,
-   receipt-bound missing-suitability runtime evidence and missing risk-profile live proof, then consumes all
+   receipt-bound missing-suitability and missing-risk-profile runtime evidence, then consumes all
    in aggregate RFC proof-readiness evidence.
 2. `make runtime-trust-telemetry-snapshot-check` writes the source-safe runtime
    trust telemetry snapshot under ignored `output/` for release/review evidence.

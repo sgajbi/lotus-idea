@@ -1,6 +1,6 @@
 # RFC-0002 Slice 18: Documentation, Wiki, Support, And Agent Context
 
-Status: Partially implemented - API certification, outbox readiness, implementation-proof, live source-proof contract, scheduled-worker proof contract, durable repository proof contract, runtime telemetry test-execution contract, bounded Workbench read-path source contract, bounded Gateway/Workbench contract proof, bounded Gateway/Workbench discovery contract proof, digest-bound Advise/Manage route source contracts, bounded Report intake route source contract, bounded outbox broker source-contract proof, bounded outbox platform-mesh event source-contract proof, digest-bound mesh policy source contract, AI lineage store proof, closed v2 Manage mandate, Advise mandate/restriction, and Advise missing-suitability runtime evidence, receipt-bound Core portfolio-state, bond-maturity, and low-income cashflow runtime evidence, typed Advise mandate/restriction source-product proof, typed Advise missing risk-profile source-product proof, missing risk-profile live proof, underperformance, allocation-drift, and drawdown-review API foundation truth, mandate/restriction and missing-benchmark policy foundation truth, client-demo process, and downstream contract documentation synchronized
+Status: Partially implemented - API certification, outbox readiness, implementation-proof, live source-proof contract, scheduled-worker proof contract, durable repository proof contract, runtime telemetry test-execution contract, bounded Workbench read-path source contract, bounded Gateway/Workbench contract proof, bounded Gateway/Workbench discovery contract proof, digest-bound Advise/Manage route source contracts, bounded Report intake route source contract, bounded outbox broker source-contract proof, bounded outbox platform-mesh event source-contract proof, digest-bound mesh policy source contract, AI lineage store proof, closed v2 Manage mandate, Advise mandate/restriction, Advise missing-suitability, and Advise missing-risk-profile runtime evidence, receipt-bound Core portfolio-state, bond-maturity, and low-income cashflow runtime evidence, typed Advise mandate/restriction source-product proof, typed Advise missing risk-profile source-product proof, underperformance, allocation-drift, and drawdown-review API foundation truth, mandate/restriction and missing-benchmark policy foundation truth, client-demo process, and downstream contract documentation synchronized
 
 ## Outcome
 
@@ -341,6 +341,15 @@ closed v2 receipt contract, one-fetch generator, truthful no-opportunity
 qualification, preserved authority boundaries, and prohibited flat v1 paths.
 The existing environment variable and Make target remain stable, but do not
 accept legacy artifacts.
+
+The missing-risk-profile material now records the same receipt-bound execution
+standard through its capability-owned contract while retaining independent
+risk-profile posture semantics. Shared Advise request and workflow validation
+removes duplicate producer qualification; a one-fetch generator preserves the
+exact source result, candidate and truthful no-opportunity executions qualify,
+and retired flat v1 paths are prohibited. Issues `#499` and `#500` track the
+separate Core benchmark-assignment and Performance benchmark-readiness
+occurrences found by the same-pattern scan.
 
 This documentation slice does not promote any supported feature. It records
 bounded Workbench read-path source contract, Gateway/Workbench contract proof, and

@@ -93,8 +93,11 @@ Current implementation includes these bounded foundations:
     application use cases and bind exact source receipts to deterministic
     outcomes. Shared `runtime_evidence/` code is limited to source-neutral scope,
     identity, hash, and receipt primitives; source authority and schemas remain
-    capability-owned. These are internal design modules, not separately
-    deployable services.
+    capability-owned. Advise policy families additionally share producer
+    workflow qualification and request-envelope mechanics while
+    missing-suitability, missing-risk-profile, and mandate/restriction retain
+    independent outcome contracts. These are internal design modules, not
+    separately deployable services.
 
 The first canonical demo/front-office portfolio remains
 `PB_SG_GLOBAL_BAL_001` when a governed Lotus front-office flow requires a

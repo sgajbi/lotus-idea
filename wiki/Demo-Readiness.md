@@ -104,9 +104,12 @@ risk-profile diagnostic posture, including the bounded
 `POST /api/v1/idea-signals/missing-risk-profile/evaluate` API over
 caller-supplied Advise evidence, but it does not approve risk profiling,
 suitability, policy, proposal, client publication, or external communication.
-Its source-safe live proof can clear only the Advise risk-profile live-source
-blocker; typed source-product, data-mesh, Workbench, client-publication, and
-supported-feature blockers remain.
+Its closed v2 runtime evidence binds one source-preserving application result
+and one Advise fetch to exact request, workflow, and deterministic candidate or
+truthful no-opportunity receipts. It can clear only the Advise risk-profile
+live-source blocker; typed source-product, data-mesh, Workbench,
+client-publication, deployment, production, and supported-feature blockers
+remain.
 
 Mandate/restriction review is an internal bounded foundation only. It can
 create compliance-review candidates from explicit source-owned restriction
