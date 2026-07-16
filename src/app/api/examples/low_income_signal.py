@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from functools import partial
 from typing import Any
 
 from app.api.examples.openapi import (
@@ -10,14 +11,14 @@ from app.api.examples.openapi import (
     build_named_openapi_examples,
 )
 from app.api.examples.signal_evaluation import (
-    build_source_ref_request,
+    build_core_source_ref_request,
+    return_or_raise_example_evidence,
     serialize_signal_evaluation,
 )
 from app.api.low_income_signals import (
     EvaluateLowIncomeSignalRequest,
     EvaluateLowIncomeSignalResponse,
 )
-from app.api.signal_models import SourceRefRequest
 from app.application.low_income_signal import (
     EvaluateLowIncomeFromCoreCommand,
     evaluate_low_income_signal_command,
@@ -182,18 +183,11 @@ def _core_evidence(projected_cumulative_cashflow: Decimal) -> CoreLowIncomeEvide
     )
 
 
-def _source_ref(
-    product_id: str,
-    *,
-    freshness: EvidenceFreshness = EvidenceFreshness.CURRENT,
-) -> SourceRefRequest:
-    return build_source_ref_request(
-        product_id,
-        source_system=_SOURCE_AUTHORITY,
-        as_of_date=_AS_OF_DATE,
-        generated_at_utc=_EVALUATED_AT,
-        freshness=freshness,
-    )
+_source_ref = partial(
+    build_core_source_ref_request,
+    as_of_date=_AS_OF_DATE,
+    generated_at_utc=_EVALUATED_AT,
+)
 
 
 def _serialized(result: SignalEvaluationResult) -> dict[str, Any]:
@@ -210,13 +204,10 @@ class _ExampleCoreLowIncomeSource(CoreLowIncomeSourcePort):
     error: CoreSourceUnavailable | None = None
 
     def fetch_low_income_evidence(
-        self,
-        request: CoreLowIncomeEvidenceRequest,
+        self, request: CoreLowIncomeEvidenceRequest
     ) -> CoreLowIncomeEvidence:
         del request
-        if self.error is not None:
-            raise self.error
-        return self.evidence
+        return return_or_raise_example_evidence(self.evidence, self.error)
 
 
 __all__ = [
