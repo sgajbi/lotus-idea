@@ -7,6 +7,7 @@ from typing import Any
 
 from tests.support.http import managed_test_client
 import psycopg
+import pytest
 
 import app.api.idea_signals as idea_signals_api
 from app.api.caller_headers import TRUSTED_CALLER_CONTEXT_HEADER, TRUSTED_CALLER_CONTEXT_TOKEN_ENV
@@ -80,8 +81,9 @@ def high_cash_payload(
     freshness: str = "current",
     entitlement_allowed: bool = True,
     cash_weight: str | None = "0.18",
+    duplicate_of_candidate_id: str | None = None,
 ) -> dict[str, Any]:
-    return {
+    payload = {
         "asOfDate": "2026-06-21",
         "evaluatedAtUtc": "2026-06-21T10:00:00Z",
         "sourceReportedCashWeight": cash_weight,
@@ -95,6 +97,9 @@ def high_cash_payload(
         },
         "entitlementAllowed": entitlement_allowed,
     }
+    if duplicate_of_candidate_id is not None:
+        payload["duplicateOfCandidateId"] = duplicate_of_candidate_id
+    return payload
 
 
 def authorized_headers() -> dict[str, str]:
@@ -125,12 +130,16 @@ def source_evaluation_headers(
 def high_cash_source_payload(
     *,
     portfolio_id: str = PORTFOLIO_ID,
+    duplicate_of_candidate_id: str | None = None,
 ) -> dict[str, str]:
-    return {
+    payload = {
         "portfolioId": portfolio_id,
         "asOfDate": "2026-06-21",
         "evaluatedAtUtc": "2026-06-21T10:00:00Z",
     }
+    if duplicate_of_candidate_id is not None:
+        payload["duplicateOfCandidateId"] = duplicate_of_candidate_id
+    return payload
 
 
 def persistence_headers(idempotency_key: str) -> dict[str, str]:
@@ -161,17 +170,21 @@ def _capture_signal_operation_events(
     return events
 
 
-def test_high_cash_source_api_fetches_core_evidence_without_persistence(
-    monkeypatch: Any,
-) -> None:
-    reset_idea_repository_for_tests()
-    source = RecordingCoreSource()
-    runtime = CoreHighCashSourceRuntime(
+def _configured_core_runtime(source: RecordingCoreSource) -> CoreHighCashSourceRuntime:
+    return CoreHighCashSourceRuntime(
         core_source=source,
         core_base_url_configured=True,
         core_query_base_url_configured=True,
         core_query_control_plane_base_url_configured=True,
     )
+
+
+def test_high_cash_source_api_fetches_core_evidence_without_persistence(
+    monkeypatch: Any,
+) -> None:
+    reset_idea_repository_for_tests()
+    source = RecordingCoreSource()
+    runtime = _configured_core_runtime(source)
     monkeypatch.setattr(
         idea_signals_api,
         "_build_core_high_cash_source_runtime_from_environment",
@@ -214,6 +227,43 @@ def test_high_cash_source_api_fetches_core_evidence_without_persistence(
     assert "contentHash" not in response.text
 
 
+def test_high_cash_source_api_exposes_suppressed_and_not_eligible_success_modes(
+    monkeypatch: Any,
+) -> None:
+    source = RecordingCoreSource(evidence=_core_evidence(cash_weight=Decimal("0.05")))
+    runtime = _configured_core_runtime(source)
+    monkeypatch.setattr(
+        idea_signals_api,
+        "_build_core_high_cash_source_runtime_from_environment",
+        lambda: runtime,
+    )
+    client = managed_test_client(app)
+
+    not_eligible = client.post(
+        "/api/v1/idea-signals/high-cash/evaluate-from-source",
+        json=high_cash_source_payload(),
+        headers=source_evaluation_headers(),
+    )
+    source.evidence = _core_evidence()
+    suppressed = client.post(
+        "/api/v1/idea-signals/high-cash/evaluate-from-source",
+        json=high_cash_source_payload(
+            duplicate_of_candidate_id="idea_high_cash_existing",
+        ),
+        headers=source_evaluation_headers(),
+    )
+
+    assert not_eligible.status_code == 200
+    assert not_eligible.json()["outcome"] == "not_eligible"
+    assert not_eligible.json()["reasonCodes"] == ["below_materiality"]
+    assert not_eligible.json()["candidate"] is None
+    assert suppressed.status_code == 200
+    assert suppressed.json()["outcome"] == "suppressed"
+    assert suppressed.json()["reasonCodes"] == ["duplicate_suppressed"]
+    assert suppressed.json()["candidate"] is None
+    assert source.close_count == 2
+
+
 def test_high_cash_source_api_blocks_temporally_mismatched_adapter_evidence(
     monkeypatch: Any,
 ) -> None:
@@ -226,12 +276,7 @@ def test_high_cash_source_api_blocks_temporally_mismatched_adapter_evidence(
             holdings_ref=replace(evidence.holdings_ref, as_of_date=date(2026, 6, 20)),
         )
     )
-    runtime = CoreHighCashSourceRuntime(
-        core_source=source,
-        core_base_url_configured=True,
-        core_query_base_url_configured=True,
-        core_query_control_plane_base_url_configured=True,
-    )
+    runtime = _configured_core_runtime(source)
     monkeypatch.setattr(
         idea_signals_api,
         "_build_core_high_cash_source_runtime_from_environment",
@@ -426,12 +471,7 @@ def test_high_cash_source_api_returns_blocked_posture_for_core_unavailable(
     monkeypatch: Any,
 ) -> None:
     source = RecordingCoreSource(error=CoreSourceUnavailable(code="core_query_unavailable"))
-    runtime = CoreHighCashSourceRuntime(
-        core_source=source,
-        core_base_url_configured=True,
-        core_query_base_url_configured=True,
-        core_query_control_plane_base_url_configured=True,
-    )
+    runtime = _configured_core_runtime(source)
     monkeypatch.setattr(
         idea_signals_api,
         "_build_core_high_cash_source_runtime_from_environment",
@@ -458,12 +498,7 @@ def test_high_cash_source_api_emits_bounded_tenant_scope_operation_event(
     monkeypatch: Any,
 ) -> None:
     source = RecordingCoreSource()
-    runtime = CoreHighCashSourceRuntime(
-        core_source=source,
-        core_base_url_configured=True,
-        core_query_base_url_configured=True,
-        core_query_control_plane_base_url_configured=True,
-    )
+    runtime = _configured_core_runtime(source)
     events: list[tuple[str, str, str, bool, str | None, dict[str, str]]] = []
 
     def capture_event(*args: Any, **kwargs: Any) -> None:
@@ -509,12 +544,7 @@ def test_high_cash_source_api_suppresses_runtime_close_failure(
     monkeypatch: Any,
 ) -> None:
     source = RecordingCoreSource(close_error=RuntimeError(f"close failed for {PORTFOLIO_ID}"))
-    runtime = CoreHighCashSourceRuntime(
-        core_source=source,
-        core_base_url_configured=True,
-        core_query_base_url_configured=True,
-        core_query_control_plane_base_url_configured=True,
-    )
+    runtime = _configured_core_runtime(source)
     events: list[tuple[str, str, str | None]] = []
 
     def capture_event(*args: Any, **kwargs: Any) -> None:
@@ -570,6 +600,41 @@ def test_high_cash_api_creates_candidate_from_source_owned_evidence() -> None:
     }
     assert "route" not in payload["candidate"]["sourceRefs"][0]
     assert "contentHash" not in payload["candidate"]["sourceRefs"][0]
+
+
+@pytest.mark.parametrize(
+    ("request_payload", "expected_outcome", "expected_reason_code"),
+    (
+        (
+            high_cash_payload(cash_weight="0.05"),
+            "not_eligible",
+            "below_materiality",
+        ),
+        (
+            high_cash_payload(
+                duplicate_of_candidate_id="idea_high_cash_existing",
+            ),
+            "suppressed",
+            "duplicate_suppressed",
+        ),
+    ),
+)
+def test_high_cash_api_exposes_non_candidate_success_modes(
+    request_payload: dict[str, Any],
+    expected_outcome: str,
+    expected_reason_code: str,
+) -> None:
+    response = managed_test_client(app).post(
+        "/api/v1/idea-signals/high-cash/evaluate",
+        json=request_payload,
+        headers=authorized_headers(),
+    )
+
+    assert response.status_code == 200
+    assert response.json()["outcome"] == expected_outcome
+    assert response.json()["reasonCodes"] == [expected_reason_code]
+    assert response.json()["candidate"] is None
+    assert response.json()["supportedFeaturePromoted"] is False
 
 
 def test_high_cash_api_returns_blocked_posture_for_source_entitlement_denial() -> None:
@@ -703,7 +768,11 @@ def test_high_cash_api_requires_signal_evaluation_capability() -> None:
     }
 
 
-def _source_ref(product_id: str) -> SourceRef:
+def _source_ref(
+    product_id: str,
+    *,
+    freshness: EvidenceFreshness = EvidenceFreshness.CURRENT,
+) -> SourceRef:
     return SourceRef(
         product_id=product_id,
         source_system=SourceSystem.LOTUS_CORE,
@@ -713,17 +782,33 @@ def _source_ref(product_id: str) -> SourceRef:
         generated_at_utc=EVALUATED_AT,
         content_hash=f"sha256:{product_id}",
         data_quality_status="complete",
-        freshness=EvidenceFreshness.CURRENT,
+        freshness=freshness,
     )
 
 
-def _core_evidence() -> CoreHighCashEvidence:
+def _core_evidence(
+    *,
+    cash_weight: Decimal = Decimal("0.18"),
+    freshness: EvidenceFreshness = EvidenceFreshness.CURRENT,
+) -> CoreHighCashEvidence:
     return CoreHighCashEvidence(
-        source_reported_cash_weight=Decimal("0.18"),
-        portfolio_state_ref=_source_ref("lotus-core:PortfolioStateSnapshot:v1"),
-        holdings_ref=_source_ref("lotus-core:HoldingsAsOf:v1"),
-        cash_movement_ref=_source_ref("lotus-core:PortfolioCashMovementSummary:v1"),
-        cashflow_projection_ref=_source_ref("lotus-core:PortfolioCashflowProjection:v1"),
+        source_reported_cash_weight=cash_weight,
+        portfolio_state_ref=_source_ref(
+            "lotus-core:PortfolioStateSnapshot:v1",
+            freshness=freshness,
+        ),
+        holdings_ref=_source_ref(
+            "lotus-core:HoldingsAsOf:v1",
+            freshness=freshness,
+        ),
+        cash_movement_ref=_source_ref(
+            "lotus-core:PortfolioCashMovementSummary:v1",
+            freshness=freshness,
+        ),
+        cashflow_projection_ref=_source_ref(
+            "lotus-core:PortfolioCashflowProjection:v1",
+            freshness=freshness,
+        ),
     )
 
 
@@ -935,6 +1020,31 @@ def test_high_cash_persist_api_replays_same_idempotency_payload() -> None:
     )
 
 
+def test_high_cash_persist_api_returns_existing_candidate_for_new_retry_key() -> None:
+    reset_idea_repository_for_tests()
+    client = managed_test_client(app)
+    first = client.post(
+        "/api/v1/idea-signals/high-cash/evaluate-and-persist",
+        json=high_cash_payload(),
+        headers=persistence_headers("persist-high-cash-api-first-key"),
+    )
+
+    duplicate = client.post(
+        "/api/v1/idea-signals/high-cash/evaluate-and-persist",
+        json=high_cash_payload(),
+        headers=persistence_headers("persist-high-cash-api-second-key"),
+    )
+
+    assert first.status_code == 200
+    assert first.json()["persistence"]["decision"] == "accepted"
+    assert duplicate.status_code == 200
+    assert duplicate.json()["persistence"]["decision"] == "duplicate_candidate"
+    assert (
+        duplicate.json()["persistence"]["candidateId"] == first.json()["persistence"]["candidateId"]
+    )
+    assert len(get_idea_repository().snapshot().candidate_records) == 1
+
+
 def test_high_cash_persist_api_returns_conflict_for_changed_idempotency_payload() -> None:
     reset_idea_repository_for_tests()
     client = managed_test_client(app)
@@ -976,6 +1086,38 @@ def test_high_cash_persist_api_does_not_persist_blocked_evaluation() -> None:
     assert payload["evaluation"]["outcome"] == "blocked"
     assert payload["persistence"] is None
     assert payload["durableStorageBacked"] is False
+
+
+@pytest.mark.parametrize(
+    ("request_payload", "expected_outcome"),
+    (
+        (high_cash_payload(cash_weight="0.05"), "not_eligible"),
+        (
+            high_cash_payload(
+                duplicate_of_candidate_id="idea_high_cash_existing",
+            ),
+            "suppressed",
+        ),
+    ),
+)
+def test_high_cash_persist_api_skips_non_candidate_success_modes(
+    request_payload: dict[str, Any],
+    expected_outcome: str,
+) -> None:
+    reset_idea_repository_for_tests()
+
+    response = managed_test_client(app).post(
+        "/api/v1/idea-signals/high-cash/evaluate-and-persist",
+        json=request_payload,
+        headers=persistence_headers(f"persist-high-cash-api-{expected_outcome}"),
+    )
+
+    assert response.status_code == 200
+    assert response.json()["evaluation"]["outcome"] == expected_outcome
+    assert response.json()["evaluation"]["candidate"] is None
+    assert response.json()["persistence"] is None
+    assert response.json()["supportedFeaturePromoted"] is False
+    assert len(get_idea_repository().snapshot().candidate_records) == 0
 
 
 def test_high_cash_persist_api_requires_candidate_persistence_capability() -> None:
