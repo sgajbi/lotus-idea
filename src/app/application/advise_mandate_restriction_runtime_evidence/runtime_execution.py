@@ -2,10 +2,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-import re
 from typing import Any
-from urllib.parse import quote
 
+from app.application.advise_policy_runtime_evidence import (
+    AdvisePolicyWorkflowScope,
+    advise_policy_workflow_qualification_blockers,
+    build_advise_policy_workflow_receipt,
+)
 from app.application.mandate_restriction_signal import (
     DEFAULT_MANDATE_RESTRICTION_POLICY,
     EvaluateMandateRestrictionFromAdviseCommand,
@@ -23,10 +26,7 @@ from app.domain import MandateRestrictionSignalPolicy, SignalEvaluationOutcome, 
 from app.domain.access_scope import ReviewAccessScope
 from app.domain.proof_evidence import EvidenceClass
 from app.ports.advise_sources import (
-    ADVISE_POLICY_EVALUATION_PRODUCT_ID,
-    ADVISE_POLICY_EVALUATION_WORKFLOW_ROUTE_TEMPLATE,
     AdviseOpportunitySourcePort,
-    AdvisePolicyEvaluationEvidence,
     AdvisePolicyEvaluationRuntimeEvidence,
 )
 
@@ -56,9 +56,6 @@ ADVISE_MANDATE_RESTRICTION_RUNTIME_EVIDENCE_REFS = (
     "contracts/opportunity-archetypes/lotus-idea-opportunity-archetypes.v1.json",
     "make mandate-restriction-live-proof-contract-gate",
 )
-_SHA256 = re.compile(r"^sha256:[0-9a-f]{64}$")
-
-
 @dataclass(frozen=True)
 class EvaluateAdviseMandateRestriction(RuntimeEvidenceScope):
     book_id: str = ""
@@ -116,7 +113,7 @@ def build_advise_mandate_restriction_runtime_execution(
     runtime = evidence.workflow_runtime if evidence is not None else None
     blockers = _qualification_blockers(result, runtime)
     request_receipt = _request_receipt(result)
-    workflow_receipt = _workflow_receipt(
+    workflow_receipt = build_advise_policy_workflow_receipt(
         runtime,
         evidence=evidence,
     )
@@ -184,47 +181,6 @@ def _request_receipt(result: AdviseMandateRestrictionResult) -> dict[str, Any]:
     return {**material, "requestDigest": sha256_json(material)}
 
 
-def _workflow_receipt(
-    runtime: AdvisePolicyEvaluationRuntimeEvidence | None,
-    *,
-    evidence: AdvisePolicyEvaluationEvidence | None,
-) -> dict[str, Any] | None:
-    if runtime is None:
-        return None
-    material = {
-        "productId": runtime.product_id,
-        "sourceSystem": SourceSystem.LOTUS_ADVISE.value,
-        "productVersion": runtime.product_version,
-        "routeTemplate": ADVISE_POLICY_EVALUATION_WORKFLOW_ROUTE_TEMPLATE,
-        "evaluationIdHash": identity_hash(runtime.evaluation_id) if runtime.evaluation_id else None,
-        "tenantScopeHash": runtime.tenant_scope_hash,
-        "portfolioIdHash": identity_hash(runtime.portfolio_id) if runtime.portfolio_id else None,
-        "sourceCorrelationIdHash": (
-            identity_hash(runtime.correlation_id) if runtime.correlation_id else None
-        ),
-        "sourceTraceIdHash": identity_hash(runtime.trace_id) if runtime.trace_id else None,
-        "asOfDate": runtime.as_of_date.isoformat() if runtime.as_of_date else None,
-        "generatedAtUtc": format_utc(runtime.generated_at_utc)
-        if runtime.generated_at_utc
-        else None,
-        "contentHash": runtime.content_hash,
-        "sourceEvidenceHash": runtime.source_evidence_hash,
-        "policyContentHash": runtime.policy_content_hash,
-        "policyPackId": runtime.policy_pack_id,
-        "policyVersion": runtime.policy_version,
-        "evaluationStatus": runtime.evaluation_status,
-        "openRequirementCount": runtime.open_requirement_count,
-        "blockedRequirementCount": runtime.blocked_requirement_count,
-        "signOffStatus": runtime.sign_off_status,
-        "signOffBlockerCount": runtime.sign_off_blocker_count,
-        "clientReadyPublication": runtime.client_ready_publication,
-        "dataQualityStatus": runtime.data_quality_status,
-        "freshness": runtime.freshness,
-        "adviseDiagnostic": evidence.advise_diagnostic if evidence is not None else None,
-    }
-    return {**material, "receiptDigest": sha256_json(material)}
-
-
 def _evaluation_receipt(
     result: AdviseMandateRestrictionResult,
     *,
@@ -255,105 +211,26 @@ def _qualification_blockers(
     result: AdviseMandateRestrictionResult,
     runtime: AdvisePolicyEvaluationRuntimeEvidence | None,
 ) -> tuple[str, ...]:
-    blockers: list[str] = []
     evidence = result.source_evaluation.evidence
-    if evidence is None:
-        blockers.append(
-            result.source_evaluation.source_error_code or "advise_source_evidence_missing"
-        )
-        return tuple(blockers)
-    if runtime is None:
-        return ("advise_workflow_runtime_receipt_missing",)
     command = result.command
-    required = {
-        "advise_evaluation_identity_missing": runtime.evaluation_id,
-        "advise_tenant_scope_missing": runtime.tenant_scope_hash,
-        "advise_portfolio_scope_missing": runtime.portfolio_id,
-        "advise_source_correlation_missing": runtime.correlation_id,
-        "advise_source_trace_missing": runtime.trace_id,
-        "advise_as_of_date_missing": runtime.as_of_date,
-        "advise_generated_at_missing": runtime.generated_at_utc,
-        "advise_evaluation_hash_missing": runtime.content_hash,
-        "advise_source_evidence_hash_missing": runtime.source_evidence_hash,
-        "advise_policy_content_hash_missing": runtime.policy_content_hash,
-        "advise_policy_pack_identity_missing": runtime.policy_pack_id,
-        "advise_policy_version_missing": runtime.policy_version,
-        "advise_evaluation_status_missing": runtime.evaluation_status,
-        "advise_sign_off_status_missing": runtime.sign_off_status,
-        "advise_client_publication_posture_missing": runtime.client_ready_publication,
-    }
-    blockers.extend(code for code, value in required.items() if value is None)
-    if runtime.evaluation_id and runtime.evaluation_id != command.evaluation_id:
-        blockers.append("advise_evaluation_scope_mismatch")
-    if runtime.tenant_scope_hash and runtime.tenant_scope_hash != identity_hash(command.tenant_id):
-        blockers.append("advise_tenant_scope_mismatch")
-    if runtime.portfolio_id and runtime.portfolio_id != command.portfolio_id:
-        blockers.append("advise_portfolio_scope_mismatch")
-    if runtime.correlation_id and runtime.correlation_id != command.correlation_id:
-        blockers.append("advise_source_correlation_mismatch")
-    if runtime.trace_id and runtime.trace_id != command.trace_id:
-        blockers.append("advise_source_trace_mismatch")
-    if runtime.as_of_date and runtime.as_of_date != command.as_of_date:
-        blockers.append("advise_as_of_date_mismatch")
-    if runtime.generated_at_utc and runtime.generated_at_utc > command.evaluated_at_utc:
-        blockers.append("advise_evidence_from_future")
-    if runtime.product_id != ADVISE_POLICY_EVALUATION_PRODUCT_ID:
-        blockers.append("advise_source_product_mismatch")
-    if runtime.product_version != "v1":
-        blockers.append("advise_source_product_version_mismatch")
-    expected_route = ADVISE_POLICY_EVALUATION_WORKFLOW_ROUTE_TEMPLATE.format(
-        evaluation_id=quote(command.evaluation_id, safe="")
-    )
-    if runtime.route != expected_route:
-        blockers.append("advise_source_route_mismatch")
-    if evidence.policy_ref is None:
-        blockers.append("advise_policy_source_ref_missing")
-    elif (
-        evidence.policy_ref.product_id != runtime.product_id
-        or evidence.policy_ref.route != runtime.route
-        or evidence.policy_ref.as_of_date != runtime.as_of_date
-        or evidence.policy_ref.generated_at_utc != runtime.generated_at_utc
-        or evidence.policy_ref.content_hash != runtime.content_hash
-        or evidence.policy_ref.freshness.value != runtime.freshness
-        or evidence.policy_ref.data_quality_status != runtime.data_quality_status
-    ):
-        blockers.append("advise_policy_source_ref_mismatch")
-    if runtime.freshness != "current":
-        blockers.append("advise_source_evidence_not_current")
-    if runtime.data_quality_status.lower() not in {"ready", "complete", "quality_passed"}:
-        blockers.append("advise_source_quality_not_ready")
-    if any(
-        not _is_sha256(value)
-        for value in (
-            runtime.content_hash,
-            runtime.source_evidence_hash,
-            runtime.policy_content_hash,
+    blockers = list(
+        advise_policy_workflow_qualification_blockers(
+            scope=AdvisePolicyWorkflowScope(
+                tenant_id=command.tenant_id,
+                portfolio_id=command.portfolio_id,
+                evaluation_id=command.evaluation_id,
+                as_of_date=command.as_of_date,
+                evaluated_at_utc=command.evaluated_at_utc,
+                correlation_id=command.correlation_id or "",
+                trace_id=command.trace_id or "",
+            ),
+            evidence=evidence,
+            source_error_code=result.source_evaluation.source_error_code,
         )
-    ):
-        blockers.append("advise_workflow_hash_invalid")
-    counts: tuple[object, ...] = (
-        runtime.open_requirement_count,
-        runtime.blocked_requirement_count,
-        runtime.sign_off_blocker_count,
     )
-    if any(not isinstance(value, int) or isinstance(value, bool) or value < 0 for value in counts):
-        blockers.append("advise_workflow_counts_invalid")
-    elif (
-        evidence.open_requirement_count != runtime.open_requirement_count
-        or evidence.blocked_requirement_count != runtime.blocked_requirement_count
-        or evidence.sign_off_blocker_count != runtime.sign_off_blocker_count
-        or evidence.evaluation_status != runtime.evaluation_status
-        or evidence.sign_off_status != runtime.sign_off_status
-        or evidence.client_ready_publication != runtime.client_ready_publication
-    ):
-        blockers.append("advise_workflow_posture_mismatch")
     if result.source_evaluation.evaluation.outcome not in {
         SignalEvaluationOutcome.CANDIDATE_CREATED,
         SignalEvaluationOutcome.NOT_ELIGIBLE,
     }:
         blockers.append("mandate_restriction_evaluation_blocked")
     return tuple(dict.fromkeys(blockers))
-
-
-def _is_sha256(value: object) -> bool:
-    return isinstance(value, str) and _SHA256.fullmatch(value) is not None
