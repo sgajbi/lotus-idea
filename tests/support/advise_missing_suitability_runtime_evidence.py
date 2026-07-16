@@ -1,9 +1,14 @@
 from __future__ import annotations
 
 from dataclasses import replace
-from datetime import timedelta
-from typing import Callable
+from datetime import date, datetime, timedelta
+from typing import Any, Callable
 
+from app.application.advise_missing_suitability_runtime_evidence import (
+    EvaluateAdviseMissingSuitability,
+    build_advise_missing_suitability_runtime_execution,
+    evaluate_advise_missing_suitability,
+)
 from app.application.runtime_evidence import identity_hash
 from app.domain import EvidenceFreshness, SourceRef, SourceSystem
 from app.ports.advise_sources import (
@@ -108,3 +113,31 @@ def without_runtime_field(
     field_name: str,
 ) -> Callable[[AdvisePolicyEvaluationRuntimeEvidence], AdvisePolicyEvaluationRuntimeEvidence]:
     return lambda runtime: replace(runtime, **{field_name: None})
+
+
+def valid_advise_missing_suitability_runtime_evidence(
+    *,
+    evaluated_at_utc: datetime,
+    as_of_date: date | None = None,
+    context_missing: bool = True,
+) -> dict[str, Any]:
+    result = evaluate_advise_missing_suitability(
+        EvaluateAdviseMissingSuitability(
+            tenant_id="tenant-a",
+            book_id="book-a",
+            portfolio_id="portfolio-a",
+            client_id="client-a",
+            evaluation_id="evaluation-a",
+            as_of_date=as_of_date or evaluated_at_utc.date(),
+            evaluated_at_utc=evaluated_at_utc,
+            correlation_id="corr-advise",
+            trace_id="trace-advise",
+        ),
+        advise_source=AuthoritativeAdviseMissingSuitabilitySource(
+            context_missing=context_missing
+        ),
+    )
+    return build_advise_missing_suitability_runtime_execution(
+        generated_at_utc=evaluated_at_utc,
+        result=result,
+    )

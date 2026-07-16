@@ -40,9 +40,9 @@ from app.application.mandate_restriction_source_product_proof import (
     MANDATE_RESTRICTION_SOURCE_PRODUCT_BLOCKERS_CLEARED,
     mandate_restriction_source_product_proof_is_valid,
 )
-from app.application.missing_suitability_live_proof import (
-    MISSING_SUITABILITY_LIVE_BLOCKERS_CLEARED,
-    missing_suitability_live_proof_is_valid,
+from app.application.advise_missing_suitability_runtime_evidence import (
+    ADVISE_MISSING_SUITABILITY_RUNTIME_BLOCKERS_SATISFIED,
+    advise_missing_suitability_runtime_execution_is_valid,
 )
 from app.application.missing_risk_profile_live_proof import (
     MISSING_RISK_PROFILE_LIVE_BLOCKERS_CLEARED,
@@ -216,7 +216,7 @@ def _opportunity_proof_steps(scope: Mapping[str, object]) -> tuple[OpportunityPr
         _proof_step(
             scope,
             "missing_suitability_live",
-            missing_suitability_live_proof_is_valid,
+            advise_missing_suitability_runtime_execution_is_valid,
             _apply_missing_suitability_live_proof,
         ),
         _proof_step(
@@ -525,7 +525,7 @@ def _apply_missing_suitability_live_proof(
     return apply_blocker_proof(
         capability,
         capability_ids=("opportunity-archetype-scenarios",),
-        blockers_cleared=MISSING_SUITABILITY_LIVE_BLOCKERS_CLEARED,
+        blockers_cleared=ADVISE_MISSING_SUITABILITY_RUNTIME_BLOCKERS_SATISFIED,
         proof_ref=missing_suitability_live_proof_ref,
     )
 
