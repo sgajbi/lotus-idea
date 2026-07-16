@@ -1141,6 +1141,7 @@
       "test_evidence": [
         "tests/integration/test_review_workflow_api.py::test_conversion_intent_api_records_review_approved_candidate_without_downstream_authority",
         "tests/integration/test_review_workflow_api.py::test_conversion_intent_api_replays_and_conflicts_idempotently",
+        "tests/unit/api_examples/test_conversion_workflow.py::test_conversion_intent_success_examples_match_ledger_and_openapi",
         "tests/integration/test_review_workflow_api.py::test_conversion_intent_api_requires_approved_state_permission_and_valid_request",
         "tests/integration/test_api_operation_events.py::test_conversion_and_report_workflow_emit_operation_events",
         "tests/unit/test_postgres_idempotency_precheck.py::test_postgres_review_and_conversion_idempotency_prechecks_are_bounded",
@@ -1214,6 +1215,7 @@
         "tests/integration/test_review_workflow_api.py::test_conversion_outcome_api_records_source_authorized_result",
         "tests/integration/test_review_workflow_api.py::test_conversion_outcome_api_rejects_wrong_source_not_found_permission_and_replays",
         "tests/integration/test_conversion_outcome_lifecycle_api.py::test_conversion_outcome_api_replays_identity_and_rejects_changed_source_fact",
+        "tests/unit/api_examples/test_conversion_workflow.py::test_conversion_outcome_success_examples_match_ledger_and_openapi",
         "tests/integration/test_conversion_outcome_lifecycle_api.py::test_conversion_outcome_api_enforces_progression_and_append_only_correction",
         "tests/integration/test_postgres_runtime_integration.py::test_postgres_runtime_serializes_conversion_outcome_identity_and_source_version",
         "tests/integration/test_api_operation_events.py::test_conversion_and_report_workflow_emit_operation_events"

@@ -24,6 +24,10 @@ from app.api.conversion_governance_operations import (
 )
 from app.api.durable_write_guard import durable_repository_write_unavailable_metadata
 from app.api.event_lineage import EventCausationHeader, event_lineage_from_request
+from app.api.examples.conversion_workflow import (
+    build_conversion_intent_response_examples,
+    build_conversion_outcome_response_examples,
+)
 from app.api.problem_details import (
     conflict_metadata,
     invalid_request_metadata,
@@ -287,31 +291,7 @@ CONVERSION_INTENT_ROUTE: RouteMetadata = {
             "description": "Conversion intent accepted or replayed through the internal repository foundation.",
             "content": {
                 "application/json": {
-                    "example": {
-                        "conversionIntent": {
-                            "conversionIntentId": "conversion-report-001",
-                            "candidateId": "idea_high_cash_8d57adbf52f7f5a7",
-                            "target": "report_evidence",
-                            "sourceStatus": "approved",
-                            "targetSourceAuthority": "lotus-report",
-                            "evidencePacketId": "iep_high_cash_8d57adbf52f7f5a7",
-                            "evidenceContentHash": "sha256:evidence-lineage",
-                            "sourceSignalIds": ["signal_high_cash_8d57adbf52f7f5a7"],
-                            "boundary": "intent_only",
-                            "reasonCodes": ["review_approved_for_conversion"],
-                            "requestedAtUtc": "2026-06-21T10:15:00Z",
-                            "grantsDownstreamAuthority": False,
-                        },
-                        "persistence": {
-                            "decision": "accepted",
-                            "candidateId": "idea_high_cash_8d57adbf52f7f5a7",
-                            "lifecycleStatus": "converted_to_report",
-                            "reviewPosture": "approved_for_conversion",
-                            "auditEventType": "idea.conversion.intent_requested",
-                        },
-                        "durableStorageBacked": False,
-                        "supportedFeaturePromoted": False,
-                    }
+                    "example": build_conversion_intent_response_examples()["accepted"]
                 }
             },
         },
@@ -360,33 +340,7 @@ CONVERSION_OUTCOME_ROUTE: RouteMetadata = {
             "description": "Conversion outcome accepted or replayed through the internal repository foundation.",
             "content": {
                 "application/json": {
-                    "example": {
-                        "conversionOutcome": {
-                            "conversionOutcomeId": "conversion-report-outcome-001",
-                            "conversionIntentId": "conversion-report-001",
-                            "target": "report_evidence",
-                            "status": "accepted",
-                            "sourceSystem": "lotus-report",
-                            "sourceEventVersion": 1,
-                            "downstreamReference": "report-evidence-pack-001",
-                            "supersedesConversionOutcomeId": None,
-                            "correctionReason": None,
-                            "boundary": "downstream_realization_required",
-                            "recordedAtUtc": "2026-06-21T10:20:00Z",
-                            "grantsExecutionAuthority": False,
-                            "grantsClientCommunicationAuthority": False,
-                            "grantsSuitabilityAuthority": False,
-                        },
-                        "persistence": {
-                            "decision": "accepted",
-                            "candidateId": "idea_high_cash_8d57adbf52f7f5a7",
-                            "lifecycleStatus": "converted_to_report",
-                            "reviewPosture": "approved_for_conversion",
-                            "auditEventType": "idea.conversion.outcome_recorded",
-                        },
-                        "durableStorageBacked": False,
-                        "supportedFeaturePromoted": False,
-                    }
+                    "example": build_conversion_outcome_response_examples()["accepted"]
                 }
             },
         },

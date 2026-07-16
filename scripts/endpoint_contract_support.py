@@ -60,3 +60,67 @@ def json_object_examples(examples: Any) -> tuple[dict[str, Any], ...]:
         if isinstance(payload, dict):
             parsed.append(payload)
     return tuple(parsed)
+
+
+def validate_named_success_contract(
+    *,
+    endpoint: dict[str, Any],
+    openapi_spec: dict[str, Any] | None,
+    operation: tuple[str, str],
+    expected: dict[str, dict[str, Any]],
+    workflow_name: str,
+    replay_test: str,
+    replay_evidence_description: str,
+    success_contract_test: str,
+) -> list[str]:
+    endpoint_operation = (str(endpoint["method"]).upper(), str(endpoint["path"]))
+    if endpoint_operation != operation:
+        return []
+
+    errors: list[str] = []
+    if json_object_examples(endpoint.get("response_examples")) != tuple(expected.values()):
+        errors.append(
+            f"{operation}: response_examples must exactly match every code-owned {workflow_name} "
+            "success mode"
+        )
+
+    test_evidence = tuple(str(value) for value in endpoint.get("test_evidence", ()))
+    if replay_test not in test_evidence:
+        errors.append(f"{operation}: test_evidence must cite the {replay_evidence_description}")
+    if success_contract_test not in test_evidence:
+        errors.append(
+            f"{operation}: test_evidence must cite the complete {workflow_name} success "
+            "publication contract test"
+        )
+
+    if openapi_spec is not None:
+        operation_schema = openapi_operation(openapi_spec, operation)
+        media = (
+            operation_schema.get("responses", {})
+            .get("200", {})
+            .get("content", {})
+            .get("application/json", {})
+            if operation_schema is not None
+            else {}
+        )
+        examples = media.get("examples", {}) if isinstance(media, dict) else {}
+        published = {
+            str(name): metadata.get("value")
+            for name, metadata in examples.items()
+            if isinstance(metadata, dict)
+        }
+        if published != expected:
+            errors.append(
+                f"{operation}: OpenAPI 200 examples must exactly match every named "
+                f"code-owned {workflow_name} success mode"
+            )
+
+    return errors
+
+
+__all__ = [
+    "json_object_examples",
+    "openapi_operation",
+    "openapi_success_object_examples",
+    "validate_named_success_contract",
+]
