@@ -567,6 +567,23 @@ Focused validation passed for the current foundation:
     has matching image/version metadata and release evidence. Wiki publication
     `5c9b740` has zero drift, issue `#520` is closed, and the implementation
     branch is absent locally and remotely.
+36. Issue `#523` closes an implementation-quality bypass for
+    `implemented_not_certified` public operations. The shared certification
+    gate now enforces capability ownership, Gateway/Workbench boundaries,
+    product-safe `403`, bounded operation events, integration and negative
+    tests, and OpenAPI caller context for both implemented statuses.
+    Capability-owned status contracts additionally require machine-readable
+    external certification blockers and truthful not-certified/no-promotion
+    success examples in the ledger and generated OpenAPI.
+37. PR `#524` merged by rebase at exact-main SHA
+    `92517e55833d2691497aa3307f6651870a3443d6`; Main Releasability
+    `29510553267` and CodeQL `29510545264` passed. Release digest
+    `sha256:f65ee9f606ba11a0dc20ec6d7e550b9f9c9865b6ba452c3e962aaacc4524c02d`
+    has matching OCI and `/version` identity, scan, SBOM, signature,
+    provenance and SBOM attestations, release manifest, and digest-pinned
+    runtime smoke. Wiki publication `19358a8` has zero drift. Runtime behavior,
+    API schema, persistence, Gateway/Workbench realization, and
+    supported-feature posture did not change.
 
 PR merge-gate evidence remains required before merge.
 
