@@ -157,6 +157,19 @@ duplicating endpoint-specific gate logic. This is internal design modularity
 inside the existing deployable and does not certify downstream realization,
 Gateway, Workbench, data products, or supported features.
 
+PR `#540` merged issue `#538` to `main` at
+`f923b83075c306a658ce01232af5b8edbc099cbf`. Main Releasability run
+`29525897999` passed, including lint, typecheck, security, architecture,
+OpenAPI, 4,714 unit tests, integration, end-to-end, PostgreSQL runtime proof,
+99% combined coverage, container runtime smoke, vulnerability scan, SBOM
+generation, commit-tagged image publication, digest inspection, keyless
+signing, provenance attestation, SBOM attestation, release identity validation,
+and CI signal evidence. The released image is
+`ghcr.io/sgajbi/lotus-idea@sha256:20529440f6366a0522efac45bf2bff64a47e81a7568034a1f13972fe6e6862f6`.
+CodeQL run `29525892683` also passed for the exact merge SHA. Repo-authored
+wiki source was published after merge and strict parity returned zero
+differences. Supported-feature posture remains unchanged.
+
 PR `#533` merged issue `#532` to `main` at
 `373bda0bc2203cb4e1f2ab0d011d8dd9890369ad`. Main Releasability run
 `29520564704` passed on attempt 2, including lint, typecheck, security,
