@@ -1928,6 +1928,21 @@ cash weight, candidate identity, evidence hash, retry decisions, or response
 projection in documentation fixtures. Core remains the source authority, and
 this contract proof does not certify live source runtime or promote support.
 
+Issue `#551` applies the same contract to the low-income /
+liquidity-shortfall signal family. Keep caller and Core-backed
+`candidate_created`, `blocked`, `suppressed`, and `not_eligible` modes in
+`app.api.examples.low_income_signal`; build them through the existing
+application use cases and serialize the real response DTO. Candidate examples
+must retain both governed Core cash-movement and cashflow-projection source
+products while redacting route and content-hash fields. Use
+`app.api.examples.signal_evaluation` only for source-reference fixture and DTO
+serialization mechanics shared across signal families; domain thresholds,
+source evidence, outcome selection, and authority boundaries stay with each
+capability owner. Require exact factory/OpenAPI/ledger/test parity and HTTP
+proof for every mode, including source runtime cleanup. This is internal design
+modularity, not evidence for a signal microservice or supported-feature
+promotion.
+
 ## Supported-Feature Promotion Rule
 
 The supported-feature registry is source truth for support posture.

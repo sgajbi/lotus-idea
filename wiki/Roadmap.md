@@ -84,7 +84,10 @@ proof, downstream proof, supported-feature evidence, and mainline CI all agree.
     `POST /api/v1/idea-signals/high-cash/evaluate-and-persist` API foundations
     over caller-supplied, source-owned Core evidence, plus the source-backed
     high-cash route. Named OpenAPI contracts now cover all executable
-    evaluation, retry, duplicate-candidate, and no-write modes. The slice also
+    evaluation, retry, duplicate-candidate, and no-write modes. Low-income
+    caller and Core-backed routes likewise publish complete candidate-created,
+    blocked, suppressed, and not-eligible mode matrices with exact executable
+    contract parity. The slice also
     includes certified internal lifecycle, AI explanation, advisor queue,
     review, feedback, conversion, report evidence-pack,
     AI-explanation-readiness, and data-mesh-readiness endpoint foundations.
