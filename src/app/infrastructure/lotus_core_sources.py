@@ -6,7 +6,12 @@ from decimal import Decimal, InvalidOperation
 from typing import Any
 from urllib.parse import quote
 
-from app.domain import EvidenceFreshness, SourceRef, SourceSystem
+from app.domain import (
+    EvidenceFreshness,
+    SourceRef,
+    SourceSystem,
+    benchmark_assignment_diagnostic,
+)
 from app.infrastructure.downstream_client import DownstreamJsonClient, DownstreamServiceError
 from app.ports.core_sources import (
     CASHFLOW_PROJECTION_PRODUCT_ID,
@@ -168,7 +173,7 @@ class LotusCoreHighCashSourceAdapter:
             assignment_effective_for_as_of_date=assignment_effective_for_as_of_date,
             assignment_status=assignment_status,
             assignment_version_present=assignment_version_present,
-            assignment_diagnostic=_benchmark_assignment_diagnostic(
+            assignment_diagnostic=benchmark_assignment_diagnostic(
                 benchmark_identity_resolved=benchmark_identity_resolved,
                 assignment_effective_for_as_of_date=assignment_effective_for_as_of_date,
                 assignment_status=assignment_status,
@@ -865,26 +870,6 @@ def _assignment_effective_for_as_of_date(payload: dict[str, Any], as_of_date: da
     if effective_from > as_of_date:
         return False
     return effective_to is None or effective_to >= as_of_date
-
-
-def _benchmark_assignment_diagnostic(
-    *,
-    benchmark_identity_resolved: bool,
-    assignment_effective_for_as_of_date: bool,
-    assignment_status: str | None,
-    assignment_version_present: bool,
-) -> str:
-    if not benchmark_identity_resolved:
-        return "core_benchmark_assignment_benchmark_identity_missing"
-    if not assignment_effective_for_as_of_date:
-        return "core_benchmark_assignment_not_effective_for_as_of_date"
-    if assignment_status is None:
-        return "core_benchmark_assignment_status_missing"
-    if assignment_status.lower() != "active":
-        return f"core_benchmark_assignment_{assignment_status.lower()}"
-    if not assignment_version_present:
-        return "core_benchmark_assignment_version_missing"
-    return "core_benchmark_assignment_ready"
 
 
 def _content_hash(payload: dict[str, Any]) -> str:

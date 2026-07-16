@@ -146,6 +146,7 @@ from app.domain.missing_risk_profile_signal import (
 from app.domain.missing_benchmark_signal import (
     MissingBenchmarkSignalInput,
     MissingBenchmarkSignalPolicy,
+    benchmark_assignment_diagnostic,
     evaluate_missing_benchmark_signal,
 )
 from app.domain.mandate_restriction_signal import (
@@ -508,6 +509,7 @@ __all__ = [
     "evaluate_low_income_signal",
     "evaluate_mandate_health_signal",
     "evaluate_mandate_restriction_signal",
+    "benchmark_assignment_diagnostic",
     "evaluate_missing_benchmark_signal",
     "evaluate_missing_risk_profile_signal",
     "missing_risk_profile_review_required_from_diagnostic",
