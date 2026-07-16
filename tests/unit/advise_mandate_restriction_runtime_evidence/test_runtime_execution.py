@@ -21,6 +21,7 @@ from app.domain import EvidenceFreshness
 from app.ports.advise_sources import (
     AdvisePolicyEvaluationEvidence,
     AdvisePolicyEvaluationEvidenceRequest,
+    AdviseSourceEntitlementDenied,
     AdviseSourceUnavailable,
 )
 from tests.support.advise_mandate_restriction_runtime_evidence import (
@@ -81,6 +82,8 @@ def test_runtime_execution_accepts_a_truthful_no_opportunity_evaluation() -> Non
         (lambda runtime: replace(runtime, evaluation_id="other"), "advise_evaluation_scope_mismatch"),
         (lambda runtime: replace(runtime, tenant_scope_hash="sha256:" + "f" * 64), "advise_tenant_scope_mismatch"),
         (lambda runtime: replace(runtime, portfolio_id="other"), "advise_portfolio_scope_mismatch"),
+        (lambda runtime: replace(runtime, correlation_id="other"), "advise_source_correlation_mismatch"),
+        (lambda runtime: replace(runtime, trace_id=None), "advise_source_trace_missing"),
         (lambda runtime: replace(runtime, as_of_date=date(2026, 7, 14)), "advise_as_of_date_mismatch"),
         (lambda runtime: replace(runtime, generated_at_utc=NOW + timedelta(seconds=1)), "advise_evidence_from_future"),
         (lambda runtime: replace(runtime, content_hash="not-a-hash"), "advise_workflow_hash_invalid"),
@@ -89,6 +92,8 @@ def test_runtime_execution_accepts_a_truthful_no_opportunity_evaluation() -> Non
         (lambda runtime: replace(runtime, open_requirement_count=-1), "advise_workflow_counts_invalid"),
         (lambda runtime: replace(runtime, policy_pack_id=None), "advise_policy_pack_identity_missing"),
         (lambda runtime: replace(runtime, evaluation_status=None), "advise_evaluation_status_missing"),
+        (lambda runtime: replace(runtime, product_id="other:v1"), "advise_source_product_mismatch"),
+        (lambda runtime: replace(runtime, route="/other"), "advise_source_route_mismatch"),
     ),
 )
 def test_runtime_execution_fails_closed_on_inconsistent_workflow_evidence(
@@ -153,6 +158,25 @@ def test_runtime_execution_preserves_source_failure_without_qualifying() -> None
 
     assert payload["execution"]["status"] == "blocked"
     assert "advise_temporal_identity_missing" in payload["execution"]["qualificationBlockers"]
+    assert payload["aggregateBlockersSatisfied"] == []
+    assert not advise_mandate_restriction_runtime_execution_is_valid(payload)
+
+
+def test_runtime_execution_preserves_entitlement_denial_without_qualifying() -> None:
+    result = evaluate_advise_mandate_restriction(
+        _command(),
+        advise_source=_EntitlementDeniedSource(),
+    )
+
+    payload = build_advise_mandate_restriction_runtime_execution(
+        generated_at_utc=NOW,
+        result=result,
+    )
+
+    assert payload["execution"]["status"] == "blocked"
+    assert "advise_source_entitlement_denied" in payload["execution"][
+        "qualificationBlockers"
+    ]
     assert payload["aggregateBlockersSatisfied"] == []
     assert not advise_mandate_restriction_runtime_execution_is_valid(payload)
 
@@ -251,3 +275,11 @@ class _UnavailableSource:
         request: AdvisePolicyEvaluationEvidenceRequest,
     ) -> AdvisePolicyEvaluationEvidence:
         raise AdviseSourceUnavailable(code="advise_temporal_identity_missing")
+
+
+class _EntitlementDeniedSource:
+    def fetch_policy_evaluation_evidence(
+        self,
+        request: AdvisePolicyEvaluationEvidenceRequest,
+    ) -> AdvisePolicyEvaluationEvidence:
+        raise AdviseSourceEntitlementDenied

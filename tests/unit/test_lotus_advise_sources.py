@@ -58,6 +58,8 @@ def _payload(*, extra: dict[str, Any] | None = None) -> dict[str, Any]:
             "evaluation_id": "pev_001",
             "tenant_scope_hash": "sha256:tenant-scope",
             "portfolio_id": "portfolio-001",
+            "correlation_id": "corr-advise",
+            "trace_id": "trace-advise",
             "generated_at": "2026-06-21T10:00:00Z",
             "as_of_date": "2026-06-21",
             "content_hash": "sha256:advisory-policy-evaluation-record",
@@ -119,6 +121,8 @@ def test_lotus_advise_adapter_fetches_declared_policy_evaluation_source_product(
     assert evidence.workflow_runtime.evaluation_id == "pev_001"
     assert evidence.workflow_runtime.portfolio_id == "portfolio-001"
     assert evidence.workflow_runtime.tenant_scope_hash == "sha256:tenant-scope"
+    assert evidence.workflow_runtime.correlation_id == "corr-advise"
+    assert evidence.workflow_runtime.trace_id == "trace-advise"
     assert evidence.workflow_runtime.open_requirement_count == 2
     assert evidence.advise_diagnostic == "advise_policy_requirements_open"
     assert seen == [

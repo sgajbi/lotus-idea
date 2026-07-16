@@ -46,6 +46,8 @@ class AdvisePolicyEvaluationRuntimeEvidence:
     evaluation_id: str | None
     tenant_scope_hash: str | None
     portfolio_id: str | None
+    correlation_id: str | None
+    trace_id: str | None
     as_of_date: date | None
     generated_at_utc: datetime | None
     content_hash: str | None

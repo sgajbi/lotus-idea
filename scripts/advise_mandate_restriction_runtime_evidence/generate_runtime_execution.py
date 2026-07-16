@@ -96,8 +96,8 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--as-of-date", required=True)
     parser.add_argument("--generated-at-utc", required=True)
     parser.add_argument("--evaluated-at-utc", required=True)
-    parser.add_argument("--correlation-id")
-    parser.add_argument("--trace-id")
+    parser.add_argument("--correlation-id", required=True)
+    parser.add_argument("--trace-id", required=True)
     parser.add_argument("--output")
     return parser
 
