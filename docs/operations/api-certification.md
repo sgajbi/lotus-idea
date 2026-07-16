@@ -111,6 +111,9 @@ blocks weak certification by requiring:
 15. every materially different executable success family to have one complete named example whose
     serialized value exactly matches the code-owned response factory in both the endpoint ledger
     and generated OpenAPI.
+16. accepted and idempotent replay modes for review, feedback, conversion, and report evidence-pack
+    mutations to remain distinct named HTTP 200 examples, with required integration evidence and
+    false downstream/client-publication/supported-feature authority preserved exactly.
 
 Certified readiness examples must not be maintained as parallel hand-written
 objects when the endpoint has a deterministic no-I/O response factory. The

@@ -170,6 +170,20 @@ CodeQL run `29525892683` also passed for the exact merge SHA. Repo-authored
 wiki source was published after merge and strict parity returned zero
 differences. Supported-feature posture remains unchanged.
 
+Issue `#539` applies the same executable-contract standard to report
+evidence-pack request recording. A capability-owned, DTO-validated example
+module publishes accepted and idempotent replay modes; replay exposes
+`reportEvidencePack=null` with `persistence.decision=replayed`. The accepted
+mode preserves `grantsClientPublicationAuthority=false`,
+`createsRenderedOutput=false`, and `createsArchiveRecord=false`, while both
+modes retain `supportedFeaturePromoted=false`. OpenAPI, the endpoint ledger,
+and cited integration behavior must match exactly. The same-pattern inventory
+opened issue `#542` for the remaining multi-shape HTTP 2xx operations, which
+require capability-by-capability review rather than bulk normalization. This
+is internal API design modularity and does not certify Report intake, Render,
+Archive, client publication, Gateway, Workbench, data products, or supported
+features.
+
 PR `#533` merged issue `#532` to `main` at
 `373bda0bc2203cb4e1f2ab0d011d8dd9890369ad`. Main Releasability run
 `29520564704` passed on attempt 2, including lint, typecheck, security,
