@@ -274,6 +274,24 @@ remain unchanged by explicit scope decision. A refreshed deterministic scan
 leaves 24 multi-shape operations under issue `#542`; Slice 10 remains partially
 implemented.
 
+PR `#552` merged issue `#551` by rebase to exact-main SHA
+`342f1320750cd16ec8790f6f422afe1d8437407f`. Main Releasability run
+`29539206978` passed on attempt 2 after attempt 1 encountered a transient GitHub
+Actions API HTTP 503 while fetching job metadata; no code changed between
+attempts. CodeQL run `29539202545` passed for the same SHA. Validation included
+4,733 unit tests, 463 integration tests with 31 declared environment-only
+PostgreSQL skips, 4 end-to-end tests, 99.02% combined coverage over 27,984
+statements, MyPy over 961 source files, and zero duplicate clusters across 2,770
+functions. The signed, attested image is
+`ghcr.io/sgajbi/lotus-idea@sha256:c340fc2f9789708a25a9427475108de8413091b7cf3de1d4bf39fdd60bd101a8`;
+its OCI labels, release manifest, digest-pinned deployment reference, and
+runtime `/version` response reconcile commit, branch, repository, version,
+build timestamp, run id, image build id, and image digest. Vulnerability scan,
+CycloneDX SBOM and attestation, keyless signature, and provenance attestation
+also passed. Repo-authored wiki source was published at wiki commit `aa6487a`,
+and strict parity returned zero differences. The deterministic inventory remains
+24 operations; supported-feature posture remains unchanged.
+
 PR `#543` merged issue `#539` to `main` at
 `f6e2365eaec5f4f0184d5985e5b5fcc641b4883b`. Main Releasability run
 `29528824505` passed, including lint, typecheck, security, architecture,
