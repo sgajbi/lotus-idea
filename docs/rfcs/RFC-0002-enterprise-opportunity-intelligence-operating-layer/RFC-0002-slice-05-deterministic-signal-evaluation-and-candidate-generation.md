@@ -100,16 +100,18 @@ Additional implemented source-adapter foundation:
    schema version, source authority, item indexes, and sensitive-field
    exclusions so future worker changes cannot downgrade CI to manifest parsing
    only.
-9. `src/app/application/source_ingestion_scheduled_worker.py`,
+9. `src/app/application/source_ingestion_scheduler/`,
    `scripts/run_scheduled_source_ingestion_worker.py`,
-   `scripts/generate_scheduled_source_ingestion_worker_proof.py`,
-   `scripts/source_ingestion_scheduled_worker_contract_gate.py`, and the
+   `scripts/source_ingestion_scheduler/generate_source_contract.py`,
+   `scripts/source_ingestion_scheduler/contract_gate.py`, and the
    `lotus-idea-source-ingestion-worker` Compose profile now add the first
-   deploy-contract foundation for scheduled high-cash source ingestion. The
+   scheduler source-contract foundation for high-cash source ingestion. The
    scheduled worker runs the existing run-once worker on a bounded interval,
    supports a source-safe `--check-only` mode, fails closed when Core runtime
-   configuration is missing in run mode, and emits a proof artifact that can
-   clear only the scheduled-worker deploy-proof blocker.
+   configuration is missing in run mode, and emits digest-bound
+   `source_contract` evidence that clears no blocker. Issue `#508` corrected
+   the former deployment overclaim; blocker clearance now requires a separate
+   matching observed deployment receipt.
 10. `make source-ingestion-scheduled-worker-check` now locks the scheduled
     worker schema, entrypoints, Compose service, proof artifact, and
     sensitive-field exclusions so future changes cannot replace deployment
@@ -1052,12 +1054,12 @@ Current source-ingestion orchestration validation:
 4. `make source-ingestion-worker-check` passed, proving the example manifest
    and source-safe check-only output contract validate without Core or
    repository writes.
-5. `.venv\Scripts\python.exe -m pytest tests\unit\test_source_ingestion_scheduled_worker.py tests\unit\test_source_ingestion_scheduled_worker_contract_gate.py -q`
+5. `.venv\Scripts\python.exe -m pytest tests\unit\test_source_ingestion_scheduled_worker.py tests\unit\source_ingestion_scheduler\test_contract_gate.py -q`
    passed after adding scheduled worker check-only, proof artifact, missing
    Core runtime guard, and sensitive-output contract coverage.
-6. `.venv\Scripts\python.exe scripts\source_ingestion_scheduled_worker_contract_gate.py`
-   passed, proving the scheduled worker deploy-contract artifact remains
-   source-safe and wired to the Compose worker profile.
+6. `.venv\Scripts\python.exe -m scripts.source_ingestion_scheduler.contract_gate`
+   passed, proving scheduler source/deployment contracts remain source-safe and
+   wired to the Compose worker profile without conflating evidence classes.
 7. Scheduled deployment now uses explicit `--run-forever` daemon mode with
    SIGTERM/SIGINT shutdown, `restart: on-failure`, and nonzero propagation for
    blocked iterations. Focused scheduled-worker tests cover daemon stop and

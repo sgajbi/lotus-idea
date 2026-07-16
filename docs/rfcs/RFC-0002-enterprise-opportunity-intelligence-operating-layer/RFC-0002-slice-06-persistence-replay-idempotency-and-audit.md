@@ -240,15 +240,16 @@ Implemented first-wave internal scope:
     keys, and candidate identifiers from check-only output.
 11. `scripts/ci_contract_gate.py` blocks future removal or downgrade of the
     source-ingestion worker contract gate from local quality enforcement.
-12. `src/app/application/source_ingestion_scheduled_worker.py`,
+12. `src/app/application/source_ingestion_scheduler/`,
     `scripts/run_scheduled_source_ingestion_worker.py`,
-    `scripts/generate_scheduled_source_ingestion_worker_proof.py`, and the
+    `scripts/source_ingestion_scheduler/generate_source_contract.py`, and the
     `lotus-idea-source-ingestion-worker` Compose service now provide a bounded
-    scheduled worker deploy-contract foundation over the existing run-once
+    scheduled worker source-contract foundation over the existing run-once
     worker. `--check-only` validates schedule and manifest posture without
     Core calls or repository writes, run mode fails closed without explicit
-    Core runtime configuration, and generated proof can clear only the
-    scheduled-worker deploy-proof blocker.
+    Core runtime configuration. The generated static proof is now closed
+    `source_contract` evidence and clears no blocker; issue `#508` requires a
+    separately observed matching deployment receipt for blocker clearance.
 13. `make source-ingestion-scheduled-worker-check` and
     `scripts/ci_contract_gate.py` block future removal or downgrade of the
     scheduled worker proof gate from local quality enforcement.
@@ -527,7 +528,7 @@ connect to PostgreSQL; runtime endpoints still report durable storage only from
 the active repository provider. The
 source-ingestion application layer now has a bounded run-once batch primitive,
 a versioned manifest-backed run-once CLI and check-only gate, and a bounded
-scheduled-worker deploy-contract proof over that run-once primitive. The outbox
+scheduled-worker source/deployment evidence contracts over that run-once primitive. The outbox
 foundation now includes internal retry and dead-letter status semantics through
 the repository port, a source-safe HTTP publisher adapter foundation, a
 certified aggregate readiness diagnostic, and a certified internal
@@ -571,10 +572,10 @@ Current slice validation:
 6. `.venv\Scripts\python.exe scripts\ci_contract_gate.py` passed after adding
    the source-ingestion worker check target to the required local lint
    contract.
-7. `.venv\Scripts\python.exe -m pytest tests\unit\test_source_ingestion_scheduled_worker.py tests\unit\test_source_ingestion_scheduled_worker_contract_gate.py -q`
-   passed after adding scheduled worker deploy-contract, proof artifact,
+7. `.venv\Scripts\python.exe -m pytest tests\unit\test_source_ingestion_scheduled_worker.py tests\unit\source_ingestion_scheduler\test_contract_gate.py -q`
+   passed after adding scheduled worker configuration and source-contract evidence,
    missing Core runtime guard, and source-safe gate coverage.
-8. `.venv\Scripts\python.exe scripts\source_ingestion_scheduled_worker_contract_gate.py`
+8. `.venv\Scripts\python.exe -m scripts.source_ingestion_scheduler.contract_gate`
    passed, proving the scheduled worker proof shape, entrypoints, and Compose
    service remain wired into local enforcement without exposing source-owned
    identifiers.

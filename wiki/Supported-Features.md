@@ -49,8 +49,10 @@ source-ingestion replay/conflict recovery. A manifest-backed run-once
 source-ingestion worker CLI and `make source-ingestion-worker-check` also
 exist; the gate validates both manifest shape and source-safe check-only output
 shape. A bounded scheduled-worker entrypoint, opt-in Docker Compose worker
-profile, and `make source-ingestion-scheduled-worker-check` also exist for
-deploy-contract proof. `POST /api/v1/source-ingestion/run-once` adds a certified internal
+profile, and `make source-ingestion-scheduled-worker-check` also exist. Static
+scheduler declarations are non-clearing `source_contract` evidence; deployment
+blocker clearance requires a separate matching observed deployment receipt.
+`POST /api/v1/source-ingestion/run-once` adds a certified internal
 operator action over the same batch foundation, but it requires durable
 repository posture plus configured manifest and Core settings, returns
 aggregate decision counts only, isolates route-owned runtime cleanup failures
@@ -143,8 +145,8 @@ material, or a supported feature. These are not externally
 supported features until live source-worker certification, certified
 long-running scheduled source-worker runtime proof, full Workbench live proof,
 downstream acceptance, data-product certification, and supported-feature
-evidence are present. The current scheduled worker deploy-contract proof is a
-foundation control only.
+evidence are present. The scheduler source contract and deployment-evidence
+contract are foundation controls only and do not promote a supported feature.
 
 Planned capabilities:
 

@@ -70,17 +70,27 @@ controlled shutdown, and propagates blocked or failed iterations as nonzero
 exit status. The worker is declared in `docker-compose.yml` as the opt-in
 `lotus-idea-source-ingestion-worker` service under the `worker` profile with
 `restart: on-failure`.
-`scripts/generate_scheduled_source_ingestion_worker_proof.py` writes a
-source-safe deploy-proof artifact. When that artifact is valid and referenced
-through `LOTUS_IDEA_SOURCE_INGESTION_SCHEDULED_WORKER_PROOF`, readiness can
-clear only `scheduled_worker_deploy_proof_missing`; live Core, data-mesh,
-Gateway/Workbench, downstream, and supported-feature blockers remain.
-`make implementation-proof-readiness-check` also generates this deploy-proof
-artifact under ignored `output/source-ingestion/` and passes it into the
-aggregate RFC proof-readiness generator so CI evidence does not keep a stale
-scheduled-worker deploy-proof blocker after the contract has been validated.
-The same aggregate snapshot records the validated deploy-proof artifact ref in
-source-safe capability evidence.
+`scripts/source_ingestion_scheduler/generate_source_contract.py` writes closed
+`source_contract` evidence over the scheduler entrypoint, run-once entrypoint,
+Compose service, canonical manifest, file digests, and scheduler configuration.
+That artifact is supporting evidence only and always preserves
+`scheduled_worker_deploy_proof_missing`.
+
+Deployment blocker clearance requires a separate artifact generated from
+observed release-controller facts by
+`scripts/source_ingestion_scheduler/generate_deployment_evidence.py`. The
+`deployment` contract binds the exact image digest, Git SHA, target environment,
+controller workflow/run/attempt/actor, deployed workload identity, completed
+rollout, scheduler configuration digest, and source-contract digest. Readiness
+clears only `scheduled_worker_deploy_proof_missing` when both configured
+artifacts validate and reconcile. It does not claim that a scheduled iteration
+ran.
+
+`make implementation-proof-readiness-check` generates and records only the
+source-contract artifact. It intentionally leaves the deployment blocker
+present unless
+`LOTUS_IDEA_SOURCE_INGESTION_SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE` points to a
+real matching deployment receipt.
 
 ## What It Does Not Prove
 
@@ -215,7 +225,7 @@ python scripts/source_ingestion/generate_runtime_execution.py `
   --output output/source-ingestion/source-ingestion-runtime-execution.json
 ```
 
-Scheduled-worker deploy proof:
+Scheduled-worker source contract:
 
 ```powershell
 python scripts/run_scheduled_source_ingestion_worker.py `
@@ -224,12 +234,34 @@ python scripts/run_scheduled_source_ingestion_worker.py `
   --core-query-control-plane-base-url http://localhost:8202 `
   --run-forever
 
-python scripts/generate_scheduled_source_ingestion_worker_proof.py `
+python -m scripts.source_ingestion_scheduler.generate_source_contract `
   --manifest docs/examples/source-ingestion/high-cash-worker-manifest.example.json `
   --generated-at-utc 2026-06-21T10:10:00Z `
-  --output output/source-ingestion/scheduled-worker-proof.json
+  --output output/source-ingestion/scheduled-worker-source-contract.json
 
-$env:LOTUS_IDEA_SOURCE_INGESTION_SCHEDULED_WORKER_PROOF = "output/source-ingestion/scheduled-worker-proof.json"
+$env:LOTUS_IDEA_SOURCE_INGESTION_SCHEDULED_WORKER_SOURCE_CONTRACT = "output/source-ingestion/scheduled-worker-source-contract.json"
+```
+
+Deployment evidence must use observed values from the deployment controller:
+
+```powershell
+python -m scripts.source_ingestion_scheduler.generate_deployment_evidence `
+  --generated-at-utc 2026-07-16T10:20:00Z `
+  --source-commit-sha <40-character-git-sha> `
+  --image-digest sha256:<64-hex-digest> `
+  --target-environment integration-sg `
+  --environment-class test `
+  --controller-workflow deploy-integration `
+  --controller-run-id <run-id> `
+  --controller-run-attempt 1 `
+  --deployment-actor github-actions `
+  --workload-identity lotus-idea-source-ingestion-worker `
+  --rollout-completed-at-utc 2026-07-16T10:19:00Z `
+  --scheduler-configuration-digest <source-contract-scheduler-digest> `
+  --source-contract-digest <source-contract-digest> `
+  --output output/source-ingestion/scheduled-worker-deployment-evidence.json
+
+$env:LOTUS_IDEA_SOURCE_INGESTION_SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE = "output/source-ingestion/scheduled-worker-deployment-evidence.json"
 ```
 
 Run-once batch ceiling:
@@ -286,16 +318,16 @@ Implementation-backed evidence:
 
 1. domain batch runner: `src/app/application/source_ingestion.py`,
 2. manifest planner: `src/app/application/source_ingestion_worker.py`,
-3. scheduled-worker planner:
-   `src/app/application/source_ingestion_scheduled_worker.py`,
+3. scheduled-worker capability:
+   `src/app/application/source_ingestion_scheduler/`,
 4. runtime-evidence policy:
    `src/app/application/source_ingestion_runtime_evidence/runtime_execution.py`,
 5. runtime builder: `src/app/runtime/source_ingestion_state.py`,
 6. API route: `src/app/api/source_ingestion_readiness.py`,
 7. scheduled worker entrypoint:
    `scripts/run_scheduled_source_ingestion_worker.py`,
-8. scheduled worker proof generator:
-   `scripts/generate_scheduled_source_ingestion_worker_proof.py`,
+8. scheduled worker evidence automation:
+   `scripts/source_ingestion_scheduler/`,
 9. endpoint ledger:
    `docs/operations/endpoint-certification-ledger.json`,
 10. integration tests:

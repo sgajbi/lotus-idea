@@ -134,8 +134,8 @@ documentation across opportunity signal APIs.
     guides, quality scorecard, RFC evidence, and wiki source now describe the
     certified internal `POST /api/v1/source-ingestion/run-once` operator action
     while preserving the boundary that bounded live Core source-ingestion proof
-    is proof evidence only, not live Core source certification, scheduled worker
-    deploy-contract proof through that endpoint, certified long-running
+    is proof evidence only, not live Core source certification, scheduler
+    deployment or execution through that endpoint, certified long-running
     scheduled runtime, Gateway/Workbench proof, or supported-feature promotion.
 14. README, repository context, `docs/operations/source-ingestion-run-once.md`,
     `docs/operations/implementation-proof-readiness.md`, quality gate docs,
@@ -149,10 +149,10 @@ documentation across opportunity signal APIs.
     `docs/operations/api-certification.md`, `docs/operations/observability.md`,
     `docs/operations/implementation-proof-readiness.md`, demo claims, quality
     docs, RFC evidence, and wiki source now describe the scheduled worker
-    entrypoint, Compose worker profile, deploy-proof artifact contract, and
-    `make source-ingestion-scheduled-worker-check`, while preserving the
-    boundary that a valid artifact clears only the scheduled-worker deploy-proof
-    blocker and does not promote source ingestion as a supported feature.
+    entrypoint, Compose worker profile, separate source/deployment evidence
+    contracts, and `make source-ingestion-scheduled-worker-check`, while
+    preserving the boundary that static source evidence clears no blocker and
+    matching deployment evidence clears only the scheduler deployment blocker.
 16. README, repository context, `docs/operations/persistence.md`,
     `docs/operations/implementation-proof-readiness.md`, quality gate docs,
     RFC evidence, and wiki source now describe the durable repository proof

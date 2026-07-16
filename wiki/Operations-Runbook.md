@@ -139,12 +139,14 @@ orchestrates the same contract rather than supplying Idea persistence.
 database. Compose proves durable local restart behavior only; it does not
 certify production recovery, live ingestion, Workbench support, data mesh,
 client publication, or supported-feature status.
-`make source-ingestion-scheduled-worker-check` validates the
-deploy contract and source-safe proof shape without calling Core. A valid proof
-artifact referenced through
-`LOTUS_IDEA_SOURCE_INGESTION_SCHEDULED_WORKER_PROOF` clears only the
-scheduled-worker blocker; it is not live Core, data-mesh, Gateway/Workbench,
-downstream, or supported-feature proof.
+`make source-ingestion-scheduled-worker-check` validates both scheduler evidence
+classes without calling Core. The digest-bound scheduler source contract clears
+no blocker. A separate deployment receipt may clear only
+`scheduled_worker_deploy_proof_missing` after immutable image, Git,
+environment, controller-run, workload-rollout, and configuration identities
+reconcile with that source contract. Neither artifact proves scheduled
+execution, live Core, data mesh, Gateway/Workbench, downstream realization,
+production certification, or supported-feature promotion.
 The scheduled worker's image closure is separately verified: the Dockerfile
 packages the canonical manifest, entrypoint scripts, and imported proof I/O
 helper, while `.dockerignore` re-includes only the governed manifest path.
@@ -206,16 +208,20 @@ accepted before an upstream Core source fingerprint changed, a later run can
 correctly return `conflict`. Capture the next release-proof run with an ignored
 manifest under `output/source-ingestion/` and a source-safe explicit
 `idempotencyKey`; do not reset durable state to force an accepted outcome.
-`scripts/generate_scheduled_source_ingestion_worker_proof.py` captures a
-source-safe scheduled worker deploy-contract artifact. Point
-`LOTUS_IDEA_SOURCE_INGESTION_SCHEDULED_WORKER_PROOF` at a valid artifact to
-clear only the scheduled-worker deploy-proof blocker. Certified long-running
-scheduled runtime, mesh certification, Gateway/Workbench proof, and
-supported-feature promotion remain blocked.
-Aggregate implementation-proof readiness records the validated live and
-scheduled source-ingestion proof artifact refs in the `source-ingestion`
-capability evidence, so reviewers can trace blocker clearance without exposing
-Core payloads, portfolio identity, or worker source records.
+Generate digest-bound scheduler source evidence with
+`python -m scripts.source_ingestion_scheduler.generate_source_contract` and
+configure
+`LOTUS_IDEA_SOURCE_INGESTION_SCHEDULED_WORKER_SOURCE_CONTRACT`. This
+`source_contract` artifact is always non-clearing.
+
+Generate deployment evidence only from observed release-controller facts with
+`python -m scripts.source_ingestion_scheduler.generate_deployment_evidence` and
+configure
+`LOTUS_IDEA_SOURCE_INGESTION_SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE`. Readiness
+clears only the scheduler deployment blocker when both artifacts validate and
+cross-bind. Aggregate implementation-proof readiness records each validated
+reference separately without exposing Core payloads, portfolio identity, or
+worker source records.
 It also records the AI model-risk operations contract and
 `make ai-model-risk-ops-contract-gate` in the `ai-explanation` capability
 evidence, so reviewers can see dashboard-control and alert-candidate posture
@@ -478,7 +484,7 @@ resource/idempotency data, or records source-authoritative conversion truth.
 
 | Operating area | Current proof | Must not be inferred |
 | --- | --- | --- |
-| Source ingestion | Manifest/check-only gate, scheduled-worker deploy contract, receipt-bound v2 Core runtime evidence, internal run-once foundation, and aggregate-only operator route | Scheduler observation, mesh certification, Gateway/Workbench support, production certification, downstream proof, or supported ingestion product |
+| Source ingestion | Manifest/check-only gate, separately classified scheduler source/deployment contracts, receipt-bound v2 Core runtime evidence, internal run-once foundation, and aggregate-only operator route | Scheduled execution, mesh certification, Gateway/Workbench support, production certification, downstream proof, or supported ingestion product |
 | Persistence | Exact-main, digest-bound PostgreSQL CI receipt over migration, persistence/replay, concurrency/audit/outbox, and repository-side pagination tests; source-safe aggregate proof clears only the two matching persistence blockers | Runtime database configuration, deployment migration or production storage certification, production recovery readiness, Workbench proof, or supported-feature promotion |
 | Outbox delivery foundation | Source-safe records, durable retry scheduling with first/last failure timing, retryable failure status, published status, dead-letter status, HTTP publisher adapter foundation, repo-owned outbox event and downstream consumer contracts, aggregate readiness diagnostic, bounded run-once operator action, bounded outbox broker source-contract artifact, bounded downstream consumer source-contract proof artifact, and bounded platform-mesh event source-contract proof | Observed external broker configuration/publication, downstream consumer execution, certified platform-mesh event publication, downstream delivery, Gateway/Workbench behavior, client-ready publication, or supported-feature promotion |
 | Data mesh | Proposed contracts, source-safe readiness diagnostics, and bounded platform source-manifest/catalog onboarding proof | Promoted data product, mesh certification, Gateway/Workbench discovery, or supported-feature promotion |
@@ -825,7 +831,8 @@ broker payloads. It is not live implementation proof, certified broker runtime,
 downstream delivery, data-product certification, Workbench proof,
 client-ready publication, or supported-feature promotion.
 `make implementation-proof-readiness-check` generates the scheduled
-source-ingestion worker deploy-proof artifact, durable repository proof
+source-ingestion worker source contract and intentionally preserves its
+deployment blocker, durable repository proof
 artifact, runtime trust telemetry test-execution artifact, Workbench read-path source contract,
 Advise route source-contract artifact, missing-suitability Advise runtime-evidence
 artifact, typed mandate/restriction source-product proof artifact, typed
@@ -875,7 +882,8 @@ source contract, platform catalog source contract, AI lineage store, AI
 workflow-pack registration proof, and AI workflow-pack runtime execution proof
 artifact paths configured through
 `LOTUS_IDEA_SOURCE_INGESTION_RUNTIME_EXECUTION`,
-`LOTUS_IDEA_SOURCE_INGESTION_SCHEDULED_WORKER_PROOF`,
+`LOTUS_IDEA_SOURCE_INGESTION_SCHEDULED_WORKER_SOURCE_CONTRACT`,
+`LOTUS_IDEA_SOURCE_INGESTION_SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE`,
 `LOTUS_IDEA_DURABLE_REPOSITORY_PROOF`,
 `LOTUS_IDEA_RUNTIME_TRUST_TELEMETRY_TEST_EXECUTION`,
 `LOTUS_IDEA_WORKBENCH_READ_PATH_SOURCE_CONTRACT_PROOF`,

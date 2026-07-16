@@ -162,8 +162,8 @@ AI lineage store proof contract validation,
 AI workflow-pack registration proof contract validation,
 AI workflow-pack runtime execution proof contract validation,
 source-ingestion worker manifest and source-safe output-contract validation,
-scheduled source-ingestion worker deploy-contract validation and source-safe
-artifact-ref recording in aggregate implementation-proof readiness,
+scheduled source-ingestion worker source/deployment contract validation and
+source-safe artifact-ref recording in aggregate implementation-proof readiness,
 receipt-bound source-ingestion v2 `runtime_execution` validation with
 aggregate-current provenance consumption, implementation-proof readiness release-lane artifact
 generation, runtime trust telemetry preview validation and runtime trust
@@ -421,10 +421,11 @@ Persistence adapter validation:
    manifest contract plus source-safe check-only output contract and aggregate
    blocked-reason diagnostics without calling Core or writing repository state.
 7. `tests/unit/test_source_ingestion_scheduled_worker.py`,
-   `tests/unit/test_source_ingestion_scheduled_worker_contract_gate.py`, and
-   `make source-ingestion-scheduled-worker-check` prove the scheduled worker
-   deploy-contract shape, opt-in Docker Compose worker service, source-safe
-   scheduler check-only output, and scheduled-worker proof artifact validation.
+   `tests/unit/source_ingestion_scheduler/`, and
+   `make source-ingestion-scheduled-worker-check` prove scheduler configuration,
+   opt-in Docker Compose wiring, source-contract digest binding, deployment
+   identity reconciliation, source-safe output, and non-clearing static
+   evidence.
 8. `tests/unit/source_ingestion_runtime_evidence/test_runtime_execution.py`,
    `tests/unit/source_ingestion_runtime_evidence/test_contract_gate.py`, and
    `make source-ingestion-runtime-execution-contract-gate` prove the closed v2
@@ -718,8 +719,8 @@ Persistence adapter validation:
 22. Runtime API database wiring is opt-in and still requires deploy migration
    evidence, certified long-running scheduled source-worker proof, live Core
    source-worker proof, and mesh/support promotion evidence before any
-   supported durable product claim. The scheduled worker deploy-contract proof
-   is validated separately by `make source-ingestion-scheduled-worker-check`.
+   supported durable product claim. Scheduler source/deployment evidence is
+   validated separately by `make source-ingestion-scheduled-worker-check`.
 
 The CI contract gate is blocking from day one. It prevents accidental removal of bank-buyable
 controls from the Makefile or GitHub lanes, including least-privilege workflow permissions,
@@ -1056,20 +1057,21 @@ provider while remaining blocked and not certified.
 The internal source-ingestion-readiness endpoint is covered by OpenAPI,
 endpoint certification, unit tests, and integration tests. Its passing checks
 certify the diagnostic route only. A valid proof artifact can clear only the
-live-Core-source blocker; the route still does not certify the scheduled worker
-deploy-contract artifact, long-running scheduled runtime, data-product
+live-Core-source blocker; the route still does not certify scheduled execution,
+long-running scheduled runtime, data-product
 promotion, Gateway/Workbench support, or supported-feature promotion.
-The scheduled worker deploy-contract artifact is covered separately by
-`make source-ingestion-scheduled-worker-check`; a valid artifact clears only
-the scheduled-worker deploy-proof blocker.
-Aggregate implementation-proof readiness records validated live and scheduled
-source-ingestion proof artifact refs in source-safe capability evidence when
-those blockers clear, so CI evidence remains auditable without exposing source
-payloads.
+Scheduler source and deployment contracts are covered separately by
+`make source-ingestion-scheduled-worker-check`. Source declarations are
+non-clearing `source_contract` evidence. Only deployment evidence that binds
+the exact source contract, immutable image, Git revision, environment,
+controller run, and completed workload rollout may clear the scheduler
+deployment blocker. Aggregate readiness records both validated references and
+keeps scheduled execution, production certification, and product support
+blocked.
 The internal source-ingestion-run-once endpoint is covered by OpenAPI,
 endpoint certification, unit tests, and integration tests. Its passing checks
 certify the bounded operator action only; they do not certify live Core
-ingestion, the scheduled worker deploy-contract artifact, long-running
+ingestion, scheduler deployment or execution, long-running
 scheduled runtime, data-product promotion, Gateway/Workbench support, or
 supported-feature promotion.
 
