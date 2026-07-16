@@ -502,9 +502,7 @@ def _apply_platform_and_surface_proofs(
         ),
         gateway_workbench_contract_proof=gateway_workbench_contract_proof,
         gateway_workbench_contract_proof_ref=gateway_workbench_contract_proof_ref,
-        gateway_workbench_discovery_contract_proof=(
-            gateway_workbench_discovery_contract_proof
-        ),
+        gateway_workbench_discovery_contract_proof=(gateway_workbench_discovery_contract_proof),
         gateway_workbench_discovery_contract_proof_ref=(
             gateway_workbench_discovery_contract_proof_ref
         ),
