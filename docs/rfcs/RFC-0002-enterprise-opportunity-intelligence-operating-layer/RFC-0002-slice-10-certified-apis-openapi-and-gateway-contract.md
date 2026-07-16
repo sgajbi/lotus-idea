@@ -111,6 +111,15 @@ suitability/compliance/mandate/execution/client-communication authority, and
 keep `supportedFeaturePromoted=false`. `durableStorageBacked` follows the
 active repository provider.
 
+Issue `#532` certifies both executable feedback success modes. Code-owned,
+DTO-validated examples now publish a newly accepted feedback event and a
+cross-key business-resource replay with `feedbackEvent=null` and
+`persistence.decision=replayed`. OpenAPI and the endpoint ledger must exactly
+match those examples, and the endpoint certification gate fails if either
+mode, its authority boundary, or its integration evidence drifts. This
+contract work does not promote feedback as a data product or supported
+feature.
+
 The conversion-intent and conversion-outcome endpoints expose the Slice 12
 internal conversion workflow foundation over persisted, review-approved
 candidates. They require `Idempotency-Key` and conversion-specific

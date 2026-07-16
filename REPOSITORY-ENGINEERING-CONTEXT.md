@@ -539,6 +539,13 @@ in `app.api.review_workflow_operations` as design modularity inside the
 existing `lotus-idea` process. Do not split this into a separate runtime
 service, worker, or queue boundary without measured workload, failure-isolation,
 ownership, security, or operability evidence.
+Materially distinct normal API outcomes must be published from DTO-validated,
+code-owned examples and checked against both OpenAPI and the endpoint
+certification ledger. For feedback, accepted and business-resource replay are
+separate HTTP 200 modes; do not collapse replay into prose or a single accepted
+example. Apply this rule endpoint by endpoint from executable application
+behavior and integration tests rather than inferring completeness from example
+counts.
 Conversion-intent and conversion-outcome API route orchestration follows the
 same pattern in `app.api.conversion_governance_operations`. This helper is an
 internal API boundary only; conversion posture remains local, review-gated, and
