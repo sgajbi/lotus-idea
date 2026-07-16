@@ -11,7 +11,7 @@
 | `make ci-release` | Full local release-lane proof when Docker and disposable PostgreSQL are available. |
 | `make postgres-integration-gate` | Real PostgreSQL persistence/replay proof. |
 | `make source-ingestion-worker-check` | Manifest and source-safe check-only output contract proof. |
-| `make source-ingestion-scheduled-worker-check` | Scheduled worker deploy-contract proof. |
+| `make source-ingestion-scheduled-worker-check` | Scheduler source-contract and deployment-evidence contract integrity. |
 | `make source-ingestion-runtime-execution-contract-gate` | Receipt-bound v2 Core runtime-execution evidence contract. |
 | `make risk-concentration-live-proof-contract-gate` | Source-safe Lotus Risk concentration live-proof artifact contract for opportunity-archetype readiness without data-mesh, Workbench, client-publication, or supported-feature promotion. |
 | `make high-volatility-live-proof-contract-gate` | Receipt-bound v2 Lotus Risk high-volatility runtime-execution contract over current source evidence and durable Idea persistence, without drawdown, data-mesh, Workbench, client-publication, deployment, production, or supported-feature promotion. |
@@ -290,12 +290,19 @@ flowchart TD
    A family-valid and aggregate-current artifact clears only the live-Core
    blocker; it is not scheduled worker, data-mesh, Gateway/Workbench,
    downstream, or supported-feature proof.
-9. For scheduled-worker deploy proof capture, run
-   `scripts/generate_scheduled_source_ingestion_worker_proof.py --manifest <path> --generated-at-utc <timestamp> --output output/source-ingestion/scheduled-worker-proof.json`.
-   Then set `LOTUS_IDEA_SOURCE_INGESTION_SCHEDULED_WORKER_PROOF` to that
-   output path. A valid artifact clears only the scheduled-worker blocker; it
-   is not live Core, data-mesh, Gateway/Workbench, downstream, or
-   supported-feature proof.
+9. Generate scheduled-worker source evidence with
+   `python -m scripts.source_ingestion_scheduler.generate_source_contract`.
+   Set `LOTUS_IDEA_SOURCE_INGESTION_SCHEDULED_WORKER_SOURCE_CONTRACT` to that
+   output. It is `source_contract` evidence and clears no blocker.
+10. Generate deployment evidence only from observed release-controller facts
+    with
+    `python -m scripts.source_ingestion_scheduler.generate_deployment_evidence`.
+    Set `LOTUS_IDEA_SOURCE_INGESTION_SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE` to
+    the output. It clears only `scheduled_worker_deploy_proof_missing` when its
+    image, Git, environment, controller, workload rollout, and configuration
+    identities reconcile with the configured source contract. It is not
+    scheduled-execution, live Core, data-mesh, Gateway/Workbench, downstream,
+    production-certification, or supported-feature proof.
 10. For aggregate RFC-0002 proof posture checks, call
    `GET /api/v1/implementation-proof/readiness?evaluatedAtUtc=<timestamp>`
    with the `operator` role and
@@ -347,10 +354,11 @@ the only runtime path marked as read-only retryable without one.
 14. For CI or async evidence without running the service, run
     `make implementation-proof-readiness-check` or
     `scripts/generate_implementation_proof_readiness.py --evaluated-at-utc <timestamp>`.
-    The Make target generates and consumes the scheduled-worker deploy-proof
-    artifact before producing the aggregate snapshot. The generated JSON is an
-    operator proof-readiness artifact, not live scheduler certification or a
-    supported product claim.
+    The Make target generates and consumes the scheduled-worker source contract
+    before producing the aggregate snapshot. It intentionally preserves the
+    deployment blocker unless a matching observed deployment receipt is
+    configured. The generated JSON is an operator proof-readiness artifact, not
+    scheduled-execution certification or a supported product claim.
 15. For source-safe runtime trust telemetry preview evidence without running
     the service, run `make runtime-trust-telemetry-preview-check` or
     `scripts/runtime_trust_telemetry/generate_preview.py --generated-at-utc <timestamp>`.

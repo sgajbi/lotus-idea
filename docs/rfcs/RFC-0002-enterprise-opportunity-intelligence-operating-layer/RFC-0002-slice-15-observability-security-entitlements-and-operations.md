@@ -253,9 +253,9 @@ client-ready publication, or supported-feature promotion.
 The source-ingestion readiness diagnostic and run-once operator action are
 explicitly `not_certified` until live Core source proof, certified long-running
 scheduled runtime proof, runtime data-mesh telemetry, Gateway/Workbench proof,
-and supported-feature promotion evidence exist. A valid scheduled-worker
-deploy-contract artifact may clear only the
-`scheduled_worker_deploy_proof_missing` blocker.
+and supported-feature promotion evidence exist. Static scheduler declarations
+clear no blocker; matching `deployment` evidence may clear only
+`scheduled_worker_deploy_proof_missing` and does not prove scheduled execution.
 The advisor queue readiness diagnostic is explicitly `not_certified` until
 durable queue posture, Workbench proof, data-product certification, and runtime
 trust telemetry exist. Platform caller-context scope forwarding and direct

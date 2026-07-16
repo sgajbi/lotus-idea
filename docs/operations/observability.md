@@ -249,8 +249,10 @@ fails closed before mutation when durable storage, manifest, or Core
 configuration is absent. Both remain
 `not_certified` until live Core source proof, runtime data-mesh telemetry,
 Gateway/Workbench proof, downstream proof, and supported-feature evidence
-exist. A valid scheduled-worker deploy-proof artifact can clear only the
-scheduled-worker blocker; it is not live source or product support proof.
+exist. Scheduler source declarations remain non-clearing `source_contract`
+evidence. Only a matching deployment receipt can clear the scheduled-worker
+blocker, and neither artifact proves scheduled execution, live source, or
+product support.
 
 The outbox delivery run-once operator action requires a validated
 `Idempotency-Key` before broker checks or event mutation. Operation events may

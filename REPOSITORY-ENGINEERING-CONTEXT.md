@@ -56,6 +56,18 @@ access, or evidence-policy certification blockers without a separately
 authority-bound certification artifact. This is design modularity inside the
 existing Idea service; it does not justify a runtime split.
 
+Scheduled source-ingestion worker evidence is split by authority class under
+`app.application.source_ingestion_scheduler`. Digest-bound entrypoint, Compose,
+manifest, and scheduler-configuration declarations are closed
+`source_contract` evidence and clear no blocker. Only a matching `deployment`
+receipt may clear `scheduled_worker_deploy_proof_missing`; it must bind the
+immutable image digest, exact Git SHA, named environment, controller
+workflow/run/attempt/actor, workload rollout completion, and exact source
+contract/configuration digests. Unknown fields, class substitution, identity
+drift, incomplete rollout, and scheduled-execution or production claim
+inflation fail closed. This is internal design modularity in the existing Idea
+deployable, not justification for another runtime service.
+
 The supported-feature registry remains `foundation_only` with an empty
 `features` list. Keep it that way until code, tests, contracts, OpenAPI,
 docs/wiki, runtime proof, CI proof, and mainline validation exist for an
@@ -113,8 +125,8 @@ Current implementation includes these bounded foundations:
     proof CLI input to its readiness arguments, evidence class, blocker effect,
     tracking issue, and classification status. The documentation contract gate
     fails when CLI, application signature, registry, or evidence inventory
-    drift. Scheduled-worker deployment evidence remains explicitly pending
-    under issue `#508` instead of receiving an inferred evidence class.
+    drift. Scheduled-worker source and deployment inputs are independently
+    classified and cannot substitute for one another.
 
 The first canonical demo/front-office portfolio remains
 `PB_SG_GLOBAL_BAL_001` when a governed Lotus front-office flow requires a

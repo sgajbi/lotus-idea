@@ -86,8 +86,8 @@ The response remains blocked until all of the following are implemented and
 validated through the owning repositories and platform gates:
 
 1. source-ingestion certification beyond the bounded live Core proof artifact,
-2. certified long-running scheduled worker runtime proof beyond the current
-   deploy-contract artifact,
+2. observed scheduled-worker deployment evidence and later scheduled-execution
+   certification beyond the current source contract,
 3. platform mesh certification, active producer products, and Gateway/Workbench discovery,
 4. certified downstream delivery evidence beyond the bounded consumer-runtime proof artifact,
 5. certified external broker publication and production event-publication evidence beyond the bounded platform-mesh event source-contract artifact,
@@ -267,19 +267,28 @@ It remains source-safe proof over the internal high-cash ingestion run and does
 not certify Workbench behavior, data mesh, client publication, or
 supported-feature promotion.
 
-Scheduled source-ingestion worker deploy proof is captured by
-`scripts/generate_scheduled_source_ingestion_worker_proof.py`. A valid artifact
-referenced through `LOTUS_IDEA_SOURCE_INGESTION_SCHEDULED_WORKER_PROOF` clears
-only `scheduled_worker_deploy_proof_missing`; it does not clear live Core,
-data-mesh, Gateway/Workbench, downstream, or supported-feature blockers.
-`make implementation-proof-readiness-check` now generates that deploy-proof
-artifact under ignored `output/source-ingestion/` and passes it explicitly into
-the aggregate readiness generator, so the repo-native proof snapshot does not
-report a stale scheduled-worker deploy-proof blocker. Aggregate
-implementation-proof readiness records the validated artifact reference in the
-`source-ingestion` capability `evidenceRefs`, making the blocker-clearance
-evidence auditable without leaking source payloads. This remains deploy
-topology proof only; it is not live long-running scheduler certification.
+Scheduled source-ingestion worker evidence is intentionally split by class:
+
+1. `scripts/source_ingestion_scheduler/generate_source_contract.py` produces
+   closed `source_contract` evidence over digest-bound scheduler source,
+   Compose, manifest, and configuration identity. It contributes an evidence
+   reference but clears no blocker.
+2. `scripts/source_ingestion_scheduler/generate_deployment_evidence.py`
+   produces `deployment` evidence only from observed immutable image, Git,
+   environment, controller-run, workload-rollout, and scheduler-configuration
+   facts.
+3. Readiness clears only `scheduled_worker_deploy_proof_missing` when the
+   deployment receipt validates and binds the exact configured source contract.
+   Unknown fields, evidence-class substitution, digest drift, incomplete
+   rollout, and execution or production claim inflation fail closed.
+
+`make implementation-proof-readiness-check` generates only the source contract,
+so its default snapshot truthfully retains the deployment blocker. A deployment
+receipt may be supplied through
+`LOTUS_IDEA_SOURCE_INGESTION_SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE`; neither
+artifact proves that a scheduled iteration executed, live Core certification,
+data-mesh certification, Gateway/Workbench behavior, downstream realization,
+production certification, or supported-feature promotion.
 
 Lotus Risk concentration runtime execution evidence is captured by
 `scripts/risk_concentration_runtime_evidence/generate_runtime_execution.py`. A valid artifact referenced
@@ -937,8 +946,9 @@ Implementation-backed evidence:
 1. API route: `src/app/api/implementation_proof_readiness.py`,
 1. runtime artifact loader: `src/app/runtime/proof_artifacts.py`,
 1. artifact generator: `scripts/generate_implementation_proof_readiness.py`,
-1. repo-native check that generates and consumes the scheduled-worker
-   deploy-proof, durable repository proof, runtime telemetry test-execution evidence, Workbench
+1. repo-native check that generates and consumes the scheduled-worker source
+   contract while preserving the deployment blocker, durable repository proof,
+   runtime telemetry test-execution evidence, Workbench
    read-path proof, Advise and Manage route source contracts,
    Report intake route source contract, Report materialization source contract, outbox broker
    proof, outbox consumer contract proof, and outbox platform mesh event
@@ -982,8 +992,8 @@ Implementation-backed evidence:
     `scripts/source_ingestion/generate_runtime_execution.py`,
 1. source-ingestion block-reason diagnostics tests:
     `tests/unit/test_source_ingestion_worker.py`,
-1. scheduled source-ingestion worker proof generator:
-    `scripts/generate_scheduled_source_ingestion_worker_proof.py`,
+1. scheduled source-ingestion worker evidence generators:
+    `scripts/source_ingestion_scheduler/`,
 1. scheduled source-ingestion worker contract gate:
     `make source-ingestion-scheduled-worker-check`,
 1. source-ingestion runtime-execution receipt contract gate:

@@ -246,22 +246,25 @@ This slice also hardens downstream realization contract governance:
 
 This slice also hardens scheduled source-ingestion worker proof governance:
 
-1. `scripts/source_ingestion_scheduled_worker_contract_gate.py` validates the
-   scheduled worker check summary, proof artifact schema, entrypoint presence,
-   Compose worker service, and source-sensitive field exclusions.
+1. `scripts/source_ingestion_scheduler/contract_gate.py` validates scheduler
+   configuration, source-contract and deployment-evidence schemas, entrypoint
+   and Compose presence, digest reconciliation, retired-path absence, and
+   source-sensitive field exclusions.
 2. `make source-ingestion-scheduled-worker-check` runs the validator directly,
    `make lint` runs it as a blocking local/GitHub lane gate, and
    `scripts/ci_contract_gate.py` prevents future agents from removing the
    target or lint call.
 3. `tests/unit/test_source_ingestion_scheduled_worker.py` and
-   `tests/unit/test_source_ingestion_scheduled_worker_contract_gate.py` cover
-   current pass behavior, invalid proof behavior, source-safe output, and
-   missing Core runtime configuration in run mode.
+   `tests/unit/source_ingestion_scheduler/` cover scheduler behavior,
+   non-clearing static evidence, deployment identity reconciliation, unknown
+   fields, class substitution, digest drift, rollout ordering, source-safe
+   output, and missing Core runtime configuration in run mode.
 4. README, repository context, source-ingestion runbook, API certification
    docs, observability docs, quality guides, RFC evidence, and wiki source now
-   describe the scheduled worker deploy-contract proof without promoting live
-   Core ingestion, certified long-running scheduling, Gateway/Workbench,
-   data-product certification, or supported-feature support.
+   distinguish scheduler `source_contract` and `deployment` evidence without
+   promoting scheduled execution, live Core ingestion, certified long-running
+   scheduling, Gateway/Workbench, data-product certification, or
+   supported-feature support.
 
 This slice also hardens workflow/operator API error-model polish:
 

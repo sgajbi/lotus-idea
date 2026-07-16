@@ -184,13 +184,16 @@ Core's source-contract dependency was closed in `sgajbi/lotus-core#430`; live
 Core proof can now be captured through
 `scripts/source_ingestion/generate_runtime_execution.py` and referenced through
 `LOTUS_IDEA_SOURCE_INGESTION_RUNTIME_EXECUTION`. That proof clears only the live-Core
-blocker when it is family-valid and aggregate-current. Scheduled worker deploy
-proof can now be captured separately through
-`scripts/generate_scheduled_source_ingestion_worker_proof.py` and referenced
-through `LOTUS_IDEA_SOURCE_INGESTION_SCHEDULED_WORKER_PROOF`; that proof clears
-only the scheduled-worker blocker. Mesh certification, Gateway/Workbench proof,
-downstream realization proof, and supported-feature promotion remain required
-before source-ingestion support or product claims can be promoted.
+blocker when it is family-valid and aggregate-current. Scheduled-worker source
+declarations are captured separately through
+`scripts/source_ingestion_scheduler/generate_source_contract.py`; this
+`source_contract` evidence clears no blocker. Only matching observed
+`deployment` evidence from
+`scripts/source_ingestion_scheduler/generate_deployment_evidence.py` may clear
+the scheduled-worker deployment blocker. Neither proves a scheduled execution.
+Mesh certification, Gateway/Workbench proof, downstream realization proof, and
+supported-feature promotion remain required before source-ingestion support or
+product claims can be promoted.
 
 The Manage source adapter consumes source-authored
 `lotus-manage:PortfolioActionRegister:v1` lineage or fingerprint metadata for

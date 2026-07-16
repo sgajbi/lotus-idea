@@ -1,6 +1,6 @@
 # RFC-0002 Slice 17: Implementation Proof And Live Validation
 
-Status: Partially implemented - aggregate proof-readiness diagnostic, bounded source-ingestion runtime-execution receipt contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry test-execution artifact, Workbench read-path source-contract proof artifact, Gateway/Workbench contract proof artifact, Gateway/Workbench discovery contract proof artifact, digest-bound Advise and Manage route source contracts, closed v2 Manage mandate runtime evidence, receipt-bound Core portfolio-state, bond-maturity, low-income cashflow, missing-benchmark Core, and Performance benchmark-readiness runtime evidence, Report intake route and materialization source-contract artifacts, bounded outbox broker source-contract proof artifact, bounded downstream consumer source-contract proof artifact, bounded outbox platform-mesh event source-contract proof, digest-bound mesh policy source-contract artifact, platform catalog source contract artifact, AI lineage store proof artifact, AI workflow-pack registration proof artifact, AI workflow-pack runtime execution proof artifact, high-volatility and drawdown live Risk proof artifact contracts, and opportunity archetype scenario readiness with source/policy foundations available. Historical canonical Risk concentration and Performance artifacts exist for `PB_SG_GLOBAL_BAL_001`, but retired flat-v1 Performance evidence no longer qualifies under current v2 contracts and fresh runtime capture is required. Core portfolio-state, bond-maturity, and low-income cashflow live qualification remain fail-closed pending lotus-core #790, #792, and #796, and Manage mandate-health qualification remains fail-closed pending lotus-manage #620. Observed Advise/Manage route serving and acceptance, policy certification, Report intake and materialization execution, rendered output, archive creation, external broker publication, platform-mesh event publication, downstream consumer execution, full live opportunity-journey proof, data-mesh certification, Workbench product proof, client-publication approval, and supported-feature promotion remain pending.
+Status: Partially implemented - aggregate proof-readiness diagnostic, bounded source-ingestion runtime-execution receipt contract, independently classified scheduled-worker source-contract and deployment-evidence contracts, durable repository proof artifact, runtime telemetry test-execution artifact, Workbench read-path source-contract proof artifact, Gateway/Workbench contract proof artifact, Gateway/Workbench discovery contract proof artifact, digest-bound Advise and Manage route source contracts, closed v2 Manage mandate runtime evidence, receipt-bound Core portfolio-state, bond-maturity, low-income cashflow, missing-benchmark Core, and Performance benchmark-readiness runtime evidence, Report intake route and materialization source-contract artifacts, bounded outbox broker source-contract proof artifact, bounded downstream consumer source-contract proof artifact, bounded outbox platform-mesh event source-contract proof, digest-bound mesh policy source-contract artifact, platform catalog source contract artifact, AI lineage store proof artifact, AI workflow-pack registration proof artifact, AI workflow-pack runtime execution proof artifact, high-volatility and drawdown live Risk proof artifact contracts, and opportunity archetype scenario readiness with source/policy foundations available. Historical canonical Risk concentration and Performance artifacts exist for `PB_SG_GLOBAL_BAL_001`, but retired flat-v1 Performance evidence no longer qualifies under current v2 contracts and fresh runtime capture is required. Core portfolio-state, bond-maturity, and low-income cashflow live qualification remain fail-closed pending lotus-core #790, #792, and #796, and Manage mandate-health qualification remains fail-closed pending lotus-manage #620. Observed scheduled-worker deployment and execution, Advise/Manage route serving and acceptance, policy certification, Report intake and materialization execution, rendered output, archive creation, external broker publication, platform-mesh event publication, downstream consumer execution, full live opportunity-journey proof, data-mesh certification, Workbench product proof, client-publication approval, and supported-feature promotion remain pending.
 
 ## Outcome
 
@@ -15,12 +15,12 @@ Prove the complete supported opportunity journey end to end.
    certified internal operator endpoint with
    `idea.implementation-proof.readiness.read` capability enforcement.
 3. `scripts/generate_implementation_proof_readiness.py` accepts explicit
-   source-ingestion manifest, live-proof, scheduled-worker proof, and durable
-   repository proof paths. `make implementation-proof-readiness-check` now
-   generates the scheduled source-ingestion worker deploy-proof artifact and
-   durable repository proof artifact before producing the same source-safe
-   readiness snapshot as repo-native automation evidence without requiring the
-   HTTP service to run.
+   source-ingestion manifest, live runtime evidence, scheduled-worker source
+   contract, optional deployment evidence, and durable repository proof paths.
+   `make implementation-proof-readiness-check` generates the scheduler source
+   contract and durable repository proof before producing the same source-safe
+   readiness snapshot without requiring the HTTP service. It intentionally
+   preserves the deployment blocker when no observed deployment receipt exists.
 4. `docs/operations/endpoint-certification-ledger.json` certifies the endpoint
    as an internal operator diagnostic and preserves the no-full-live-journey,
    no-Gateway-product-support, no-Workbench-product-support,
@@ -108,26 +108,26 @@ Prove the complete supported opportunity journey end to end.
     denial, missing cash-weight evidence, and Core-reported cash-weight
     supportability blockers. This improves live-proof diagnosis without
     exposing source payloads or reconstructing cash weight in `lotus-idea`.
-12. `src/app/application/source_ingestion_scheduled_worker.py`,
-    `scripts/run_scheduled_source_ingestion_worker.py`,
-    `scripts/generate_scheduled_source_ingestion_worker_proof.py`, and
-    `make source-ingestion-scheduled-worker-check` now define and enforce the
-    source-safe scheduled worker deploy-contract proof shape. When a valid
-    artifact is referenced through
-    `LOTUS_IDEA_SOURCE_INGESTION_SCHEDULED_WORKER_PROOF`, the
-     source-ingestion readiness diagnostic can clear only
-     `scheduled_worker_deploy_proof_missing`; live Core, data-mesh,
-     Gateway/Workbench, and supported-feature blockers remain.
-13. `make implementation-proof-readiness-check` now generates that scheduled
-    worker deploy-proof artifact under ignored `output/source-ingestion/` and
-    passes it explicitly into aggregate proof-readiness generation, so repo-native
-    evidence no longer reports a stale scheduled-worker deploy-proof blocker
-    after the deploy contract is validated. Aggregate implementation-readiness
-    evidence records validated live and scheduled source-ingestion proof
-    artifact refs in the `source-ingestion` capability when those blockers are
-    cleared. The same valid live Core source-ingestion artifact can now clear
-    only `opportunity_archetype_live_core_source_proof_missing` for the
-    high-cash scenario inside aggregate opportunity-archetype readiness.
+12. `src/app/application/source_ingestion_scheduler/`,
+    `scripts/source_ingestion_scheduler/`, and
+    `make source-ingestion-scheduled-worker-check` separate scheduler evidence
+    by authority class. Digest-bound source, Compose, manifest, and
+    configuration declarations are closed v2 `source_contract` evidence that
+    clears no blocker. Closed `deployment` evidence must bind immutable image
+    digest, exact Git SHA, named environment, controller workflow/run identity,
+    workload rollout completion, and exact source-contract/configuration
+    digests before clearing only `scheduled_worker_deploy_proof_missing`.
+13. `make implementation-proof-readiness-check` generates only the scheduler
+    source contract under ignored `output/source-ingestion/`; therefore the
+    default aggregate snapshot retains the deployment blocker. Operators may
+    provide a matching receipt through
+    `LOTUS_IDEA_SOURCE_INGESTION_SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE`.
+    Aggregate readiness records each validated artifact separately. Neither
+    artifact proves scheduled execution, live Core, mesh, Gateway/Workbench,
+    production certification, or supported-feature promotion. The valid live
+    Core source-ingestion artifact separately clears only
+    `opportunity_archetype_live_core_source_proof_missing` for the high-cash
+    scenario.
 14. `src/app/application/durable_repository_proof/`,
     `scripts/persistence/generate_durable_repository_proof.py`, and
     `make durable-repository-proof-contract-gate` now define and enforce a
@@ -600,10 +600,12 @@ supported-feature proof.
 The aggregate block-reason diagnostics further narrow the operator-debugging
 gap for blocked live attempts; they are not source certification and do not
 change the supported-feature posture.
-The scheduled-worker deploy-contract artifact narrows the scheduling proof gap
-from "no deployable worker contract" to "bounded scheduler entrypoint, Compose
-worker service, source-safe proof, and aggregate readiness consumption are
-CI-enforced"; it does not close long-running scheduler operations, live Core
+The scheduler source contract narrows the design gap from "no governed worker
+contract" to "bounded scheduler entrypoint, Compose worker service,
+digest-bound source evidence, and aggregate readiness consumption are
+CI-enforced." A separate deployment contract defines the minimum observed
+rollout evidence without claiming one exists. Neither closes scheduled
+execution, long-running scheduler operations, live Core
 source certification, platform mesh certification, Gateway/Workbench,
 downstream, or supported-feature proof.
 The outbox-delivery readiness diagnostic, run-once operator action, and bounded
