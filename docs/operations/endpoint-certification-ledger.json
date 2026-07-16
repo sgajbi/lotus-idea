@@ -1782,6 +1782,10 @@
       "method": "POST",
       "path": "/api/v1/data-lifecycle/candidates/{candidateId}/actions",
       "certification_status": "implemented_not_certified",
+      "certification_blockers": [
+        "live_bank_lifecycle_authority_proof_missing",
+        "production_archive_trust_and_store_proof_missing"
+      ],
       "owner": "lotus-idea privacy and records operations",
       "purpose": "Preview or apply a tenant-scoped legal hold, hold release, erasure, or purge while preserving regulated tombstones, delivery fences, and immutable operation audit.",
       "when_to_use": "Use only through an authorized privacy or records workflow carrying idea.data-lifecycle.manage, exact tenant entitlement, a governed authority decision, Idempotency-Key, and required dual approval.",
@@ -1811,6 +1815,7 @@
         "tests/integration/test_data_lifecycle_api.py::test_data_lifecycle_api_does_not_disclose_cross_tenant_candidate_existence",
         "tests/integration/test_data_lifecycle_api.py::test_data_lifecycle_api_verifies_archive_posture_before_linked_erasure",
         "tests/integration/test_data_lifecycle_api.py::test_data_lifecycle_openapi_certifies_success_and_failure_contracts",
+        "tests/integration/test_api_operation_events.py::test_data_lifecycle_api_emits_bounded_permission_event",
         "tests/integration/test_postgres_data_lifecycle_runtime.py::test_postgres_archive_posture_receipt_is_restart_safe_and_single_use",
         "tests/unit/data_lifecycle/test_archive_posture_verification.py::test_verifies_archive_posture_without_granting_disposal_authority",
         "tests/unit/data_lifecycle/test_postgres_policy.py::test_postgres_lifecycle_erasure_redacts_and_audits_in_one_commit"
