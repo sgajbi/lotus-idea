@@ -320,6 +320,13 @@ missing-suitability, missing-risk-profile, and mandate/restriction retain
 independent domain outcomes and schemas. This is design modularity inside one
 service, not a microservice boundary.
 
+Typed Advise source-product evidence follows the same modularity rule.
+`app.application.advise_source_product_evidence` owns shared source-authority
+loading, SHA-256 binding, and closed validation, while separate profiles own
+mandate/restriction and missing-risk-profile diagnostic vocabulary and blocker
+effects. The package consumes only Advise declarations and blocked telemetry;
+it does not call Advise, approve advisory decisions, or justify a process split.
+
 API modules share the active repository provider through
 `src/app/runtime/repository_state.py`. Signal, review, feedback, queue, and
 lifecycle routes must use that provider so API modules do not create duplicate

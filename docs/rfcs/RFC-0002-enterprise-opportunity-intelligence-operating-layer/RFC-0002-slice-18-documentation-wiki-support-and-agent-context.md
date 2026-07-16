@@ -349,6 +349,17 @@ removes duplicate producer qualification; a one-fetch generator preserves the
 exact source result, candidate and truthful no-opportunity executions qualify,
 and retired flat v1 paths are prohibited.
 
+Typed Advise source-product material now uses one capability-owned
+`advise_source_product_evidence/` package with independent
+mandate/restriction and missing-risk-profile profiles. Both are closed v2
+`source_contract` evidence over current producer declaration and trust
+telemetry files, preserve blocked producer posture, and reject authority
+inflation. The aggregate artifact registry makes CLI, application, evidence
+class, tracking issue, and documentation inventory drift a blocking
+documentation-contract failure. Issue `#508` remains explicit for scheduled
+worker deployment evidence rather than being hidden by this documentation
+slice.
+
 The missing-benchmark Core material now records the independently owned closed
 v2 runtime contract implemented by issue `#499`. One named application use case
 performs one Core fetch and preserves exact evidence or a stable error. Request,

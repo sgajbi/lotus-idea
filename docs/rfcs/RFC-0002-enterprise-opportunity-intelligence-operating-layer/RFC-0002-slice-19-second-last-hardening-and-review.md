@@ -921,6 +921,23 @@ route source authority instead of the caller-supplied mismatched authority.
 Missing refs still flow to the existing deterministic blocked evaluation
 semantics.
 
+GitHub issue `#507` hardens typed Advise source-product evidence and the
+aggregate proof inventory:
+
+1. Mandate/restriction and missing-risk-profile source contracts now bind the
+   current Advise product declaration and trust telemetry by
+   repository/ref/SHA-256.
+2. Closed field sets, canonical source-authority digests, independent
+   capability profiles, and authority-claim denial prevent a static contract
+   from becoming live, advisory, deployment, production, or support proof.
+3. A typed registry covers every aggregate proof CLI input and reconciles it
+   with readiness arguments, evidence classification, issue ownership, and
+   documentation inventory.
+4. Repository hygiene requires capability-owned paths and prohibits the
+   retired flat source-product modules, scripts, and tests.
+5. The same-pattern scan opened issue `#508` for scheduled-worker deployment
+   evidence that still lacks a deployment receipt and evidence class.
+
 GitHub issue `#318` hardens review and feedback mutation entitlements. Review
 actions and feedback now bind `ReviewActorContext` to trusted
 `X-Caller-Tenant-Ids`, `X-Caller-Book-Ids`, `X-Caller-Portfolio-Ids`, and

@@ -179,6 +179,16 @@ scheduled-worker image contract additionally checks that every Compose-declared 
 present in the build context and copied into the image, including the canonical manifest and
 entrypoint helper modules. A local worker check is not enough: validate the built image with
 `docker run --rm lotus-idea-lotus-idea-source-ingestion-worker python scripts/run_scheduled_source_ingestion_worker.py --check-only --manifest /app/docs/examples/source-ingestion/canonical-high-cash-worker.manifest.json`.
+
+The typed Advise source-product gates use one capability-owned generator and
+validator with separate profiles. They bind the current Advise product and
+trust-telemetry files by digest, preserve blocked telemetry, and reject unknown
+or authority-bearing claims. The documentation contract also reconciles every
+aggregate proof CLI input with its application argument, evidence class,
+tracking issue, and inventory row. Scheduled-worker deployment evidence remains
+pending under issue `#508`; static Compose declarations are not treated as a
+deployment receipt.
+
 `make ci-contract-gate` target explicitly fails if current blocking lint gates are removed from
 `make lint`, if artifact-producing implementation-proof readiness or runtime
 trust telemetry snapshot generation is added back to `make lint`, or if

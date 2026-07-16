@@ -566,13 +566,15 @@ without relying on chat memory.
     low-income live Core cashflow, typed mandate/restriction source-product,
     mandate/restriction live Advise, missing-suitability Advise runtime, typed
     missing risk-profile source-product, and missing-risk-profile Advise
-    runtime-execution artifacts. Typed mandate/restriction source-product proof clears
-    only `opportunity_archetype_typed_restriction_source_product_missing`;
+    runtime-execution artifacts. Closed v2 typed mandate/restriction
+    `source_contract` evidence binds the current Advise declaration and blocked
+    trust telemetry by repository/ref/SHA-256 and clears only
+    `opportunity_archetype_typed_restriction_source_product_missing`;
     receipt-bound mandate/restriction runtime evidence clears only the Advise restriction
     live-source blocker; closed v2 missing-suitability runtime evidence binds
     exact request, workflow, and deterministic candidate or no-opportunity
-    receipts and clears only the Advise policy live-source blocker; typed missing risk-profile source-product
-    proof clears only
+    receipts and clears only the Advise policy live-source blocker; the
+    independently profiled typed missing-risk-profile `source_contract` clears only
     `opportunity_archetype_typed_advise_risk_profile_source_product_missing`;
     closed v2 missing-risk-profile runtime evidence binds exact request,
     workflow, and deterministic candidate or no-opportunity receipts and clears

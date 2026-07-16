@@ -699,11 +699,13 @@ Additional implemented missing risk profile foundation:
    current/not-eligible, stale, expired, review-due, missing-source,
    missing-posture, duplicate, entitlement-denied, source-unavailable, generic
    suitability diagnostic suppression, and request-routing cases.
-6. `src/app/application/missing_risk_profile_source_product_proof.py`,
-   `scripts/generate_missing_risk_profile_source_product_proof.py`, and
+6. `src/app/application/advise_source_product_evidence/`,
+   `scripts/advise_source_product_evidence/`, and
    `make missing-risk-profile-source-product-proof-contract-gate` define a
-   source-safe typed Advise risk-profile source-product proof artifact. A
-   valid artifact can clear only
+   closed v2 typed Advise risk-profile `source_contract` artifact. It binds
+   current producer declaration and trust-telemetry files by repository, ref,
+   and SHA-256, preserves blocked producer telemetry, rejects unknown claims,
+   and can clear only
    `opportunity_archetype_typed_advise_risk_profile_source_product_missing`
    in aggregate readiness.
 7. `src/app/application/advise_missing_risk_profile_runtime_evidence/`,
@@ -781,11 +783,13 @@ Additional implemented mandate/restriction review foundation:
    rejection, source-safe mismatch errors, explicit Advise diagnostic
    consumption, generic diagnostic suppression, runtime-not-configured,
    access-scope denial, source-unavailable, and runtime cleanup cases.
-7. `src/app/application/mandate_restriction_source_product_proof.py`,
-   `scripts/generate_mandate_restriction_source_product_proof.py`, and
+7. `src/app/application/advise_source_product_evidence/`,
+   `scripts/advise_source_product_evidence/`, and
    `make mandate-restriction-source-product-proof-contract-gate` define a
-   source-safe typed Advise mandate/restriction source-product proof artifact.
-   A valid artifact can clear only
+   closed v2 typed Advise mandate/restriction `source_contract` artifact. It
+   shares source-authority mechanics with the risk-profile profile while
+   retaining independent diagnostics and blocker effects. A valid artifact can
+   clear only
    `opportunity_archetype_typed_restriction_source_product_missing` in
    aggregate readiness.
 8. `src/app/application/advise_mandate_restriction_runtime_evidence/`,

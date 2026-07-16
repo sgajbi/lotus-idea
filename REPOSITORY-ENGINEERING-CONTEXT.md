@@ -37,6 +37,17 @@ Gateway serving, Workbench consumption, entitlement, and browser evidence may
 clear that runtime blocker. This is design modularity inside the existing
 service, not evidence for a runtime split.
 
+Typed Advise source-product evidence is closed v2 `source_contract` evidence.
+Keep shared source-authority loading, digest binding, and validation under
+`app.application.advise_source_product_evidence`, with separate
+mandate/restriction and missing-risk-profile profiles. A current artifact must
+bind the Advise product declaration and trust-telemetry file by repository,
+ref, and SHA-256 and must preserve blocked producer telemetry. It may clear
+only its named typed-contract blocker. It cannot prove a live Advise call,
+risk-profile or suitability approval, policy or proposal approval, mandate
+change, restriction clearance, mesh certification, Workbench behavior,
+publication, deployment, production certification, or support.
+
 Repo-owned mesh readiness, SLO, access, and evidence-policy declarations are
 v2 digest-bound `source_contract` evidence only. Keep their builder, generator,
 gate, and focused tests under capability-owned `data_mesh/` packages. A valid
@@ -98,6 +109,12 @@ Current implementation includes these bounded foundations:
     missing-suitability, missing-risk-profile, and mandate/restriction retain
     independent outcome contracts. These are internal design modules, not
     separately deployable services.
+13. a typed implementation-proof artifact registry that maps every aggregate
+    proof CLI input to its readiness arguments, evidence class, blocker effect,
+    tracking issue, and classification status. The documentation contract gate
+    fails when CLI, application signature, registry, or evidence inventory
+    drift. Scheduled-worker deployment evidence remains explicitly pending
+    under issue `#508` instead of receiving an inferred evidence class.
 
 The first canonical demo/front-office portfolio remains
 `PB_SG_GLOBAL_BAL_001` when a governed Lotus front-office flow requires a
