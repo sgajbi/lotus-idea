@@ -328,7 +328,17 @@ Validation evidence from the implementation slice:
     integration tests plus `31` declared environment-only PostgreSQL skips, `4`
     E2E tests, `99.01%` combined coverage over `27704` statements, strict MyPy
     over `941` source files, zero duplicate clusters across `2710` functions,
-    and no known dependency vulnerabilities.
+    and no known dependency vulnerabilities. PR `#517` merged by rebase at
+    exact-main SHA `6720c4ebebe77e023566a3d6eb84fc7c9c3cec44`; Main
+    Releasability `29501521249` and CodeQL `29501509557` passed. Release digest
+    `sha256:4fa38866b01e25f2a2dbc6ea5d96a8ca084d33cc9342673f9e6e57b43d774430`
+    has matching OCI and `/version` identity, scan, SBOM, keyless signature,
+    provenance and SBOM attestations, release manifest, and digest-pinned
+    runtime-smoke evidence. Wiki publication `ffed0c8` has zero drift, issue
+    `#516` is closed, and the implementation branch is absent locally and
+    remotely. This occurrence does not promote Slice 09: live provider
+    execution, model-risk approval, Gateway/Workbench certification, and
+    supported-feature promotion remain separately gated.
 
 Issue `#411` changes the AI readiness response vocabulary from certification
 claims to source-contract validity and therefore changes OpenAPI truth. It
