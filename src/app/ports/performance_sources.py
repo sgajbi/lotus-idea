@@ -67,8 +67,20 @@ class PerformanceBenchmarkReadinessEvidenceRequest:
 @dataclass(frozen=True)
 class PerformanceBenchmarkReadinessEvidence:
     benchmark_context_available: bool
+    benchmark_id: str | None
+    benchmark_return_source: str | None
     performance_ref: SourceRef | None
-    performance_diagnostic: str | None = None
+    calculation_id: str
+    response_portfolio_id: str
+    input_fingerprint: str
+    calculation_hash: str
+    requested_point_count: int
+    returned_point_count: int
+    missing_point_count: int
+    coverage_ratio: Decimal
+    producer_correlation_id: str | None
+    producer_trace_id: str | None
+    readiness_diagnostic: str
     entitlement_allowed: bool = True
 
 

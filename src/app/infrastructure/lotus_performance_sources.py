@@ -7,7 +7,12 @@ from decimal import Decimal, InvalidOperation
 import time
 from typing import Any
 
-from app.domain import EvidenceFreshness, SourceRef, SourceSystem
+from app.domain import (
+    EvidenceFreshness,
+    SourceRef,
+    SourceSystem,
+    assess_performance_benchmark_readiness,
+)
 from app.infrastructure.downstream_client import DownstreamJsonClient, DownstreamServiceError
 from app.infrastructure.source_product_payloads import first_reason_code
 from app.ports.performance_sources import (
@@ -41,6 +46,8 @@ class _UnderperformanceMeasures:
 @dataclass(frozen=True)
 class _BenchmarkReadinessMeasures:
     benchmark_context_available: bool
+    benchmark_id: str | None
+    benchmark_return_source: str | None
     diagnostic: str
 
 
@@ -84,10 +91,25 @@ class LotusPerformanceUnderperformanceSourceAdapter:
     ) -> PerformanceBenchmarkReadinessEvidence:
         payload = self._fetch_returns_series_payload(request)
         measures = _benchmark_readiness_measures(payload)
+        coverage = _coverage_measures(payload)
+        metadata = _object_field(payload, "metadata")
+        provenance = _object_field(payload, "provenance")
         return PerformanceBenchmarkReadinessEvidence(
             benchmark_context_available=measures.benchmark_context_available,
+            benchmark_id=measures.benchmark_id,
+            benchmark_return_source=measures.benchmark_return_source,
             performance_ref=_source_ref(payload),
-            performance_diagnostic=measures.diagnostic,
+            calculation_id=_text_field(payload, "calculation_id"),
+            response_portfolio_id=_text_field(payload, "portfolio_id"),
+            input_fingerprint=_sha256_field(provenance, "input_fingerprint"),
+            calculation_hash=_sha256_field(provenance, "calculation_hash"),
+            requested_point_count=coverage.requested_point_count,
+            returned_point_count=coverage.returned_point_count,
+            missing_point_count=coverage.missing_point_count,
+            coverage_ratio=coverage.coverage_ratio,
+            producer_correlation_id=_optional_text_field(metadata, "correlation_id"),
+            producer_trace_id=_optional_text_field(metadata, "trace_id"),
+            readiness_diagnostic=measures.diagnostic,
         )
 
     def _fetch_returns_series_payload(
@@ -245,15 +267,48 @@ def _benchmark_readiness_measures(payload: dict[str, Any]) -> _BenchmarkReadines
     if _is_async_accepted(payload):
         raise PerformanceSourceUnavailable(code="performance_returns_series_pending")
 
-    benchmark_context_available = isinstance(payload.get("benchmark_context"), dict)
-    diagnostic = (
-        "performance_benchmark_context_ready"
-        if benchmark_context_available
-        else "performance_benchmark_context_missing"
+    benchmark_context = payload.get("benchmark_context")
+    if benchmark_context is not None and not isinstance(benchmark_context, dict):
+        raise PerformanceSourceUnavailable(code="performance_benchmark_context_malformed")
+    if isinstance(benchmark_context, dict):
+        benchmark_context_available = True
+        benchmark_id = _text_field(benchmark_context, "benchmark_id")
+        benchmark_return_source = _text_field(benchmark_context, "return_source")
+    else:
+        benchmark_context_available = False
+        benchmark_id = None
+        benchmark_return_source = None
+    assessment = assess_performance_benchmark_readiness(
+        benchmark_context_available=benchmark_context_available,
+        benchmark_id=benchmark_id,
+        benchmark_return_source=benchmark_return_source,
     )
+    if assessment.outcome.value == "blocked":
+        raise PerformanceSourceUnavailable(code=assessment.diagnostic)
     return _BenchmarkReadinessMeasures(
         benchmark_context_available=benchmark_context_available,
-        diagnostic=diagnostic,
+        benchmark_id=benchmark_id,
+        benchmark_return_source=benchmark_return_source,
+        diagnostic=assessment.diagnostic,
+    )
+
+
+@dataclass(frozen=True)
+class _CoverageMeasures:
+    requested_point_count: int
+    returned_point_count: int
+    missing_point_count: int
+    coverage_ratio: Decimal
+
+
+def _coverage_measures(payload: dict[str, Any]) -> _CoverageMeasures:
+    diagnostics = _object_field(payload, "diagnostics")
+    coverage = _object_field(diagnostics, "coverage")
+    return _CoverageMeasures(
+        requested_point_count=_non_negative_int_field(coverage, "requested_points"),
+        returned_point_count=_non_negative_int_field(coverage, "returned_points"),
+        missing_point_count=_non_negative_int_field(coverage, "missing_points"),
+        coverage_ratio=_decimal_field(coverage, "coverage_ratio"),
     )
 
 
@@ -328,6 +383,38 @@ def _text_field(payload: dict[str, Any], key: str) -> str:
 def _optional_bool_field(payload: dict[str, Any], key: str) -> bool | None:
     value = payload.get(key)
     return value if isinstance(value, bool) else None
+
+
+def _optional_text_field(payload: dict[str, Any], key: str) -> str | None:
+    value = payload.get(key)
+    if value is None:
+        return None
+    if isinstance(value, str) and value.strip():
+        return value.strip()
+    raise PerformanceSourceUnavailable(code=f"performance_{key}_malformed")
+
+
+def _non_negative_int_field(payload: dict[str, Any], key: str) -> int:
+    value = payload.get(key)
+    if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+        raise PerformanceSourceUnavailable(code=f"performance_{key}_malformed")
+    return value
+
+
+def _decimal_field(payload: dict[str, Any], key: str) -> Decimal:
+    value = payload.get(key)
+    try:
+        parsed = Decimal(str(value))
+    except InvalidOperation as exc:
+        raise PerformanceSourceUnavailable(code=f"performance_{key}_malformed") from exc
+    if not parsed.is_finite():
+        raise PerformanceSourceUnavailable(code=f"performance_{key}_malformed")
+    return parsed
+
+
+def _sha256_field(payload: dict[str, Any], key: str) -> str:
+    value = _text_field(payload, key)
+    return value if value.startswith("sha256:") else f"sha256:{value}"
 
 
 def _decimal_text(value: Decimal | None) -> str | None:
