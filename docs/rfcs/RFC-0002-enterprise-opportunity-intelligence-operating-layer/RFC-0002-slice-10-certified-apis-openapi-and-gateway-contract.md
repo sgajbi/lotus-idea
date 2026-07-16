@@ -292,6 +292,29 @@ also passed. Repo-authored wiki source was published at wiki commit `aa6487a`,
 and strict parity returned zero differences. The deterministic inventory remains
 24 operations; supported-feature posture remains unchanged.
 
+Issue `#555` continues issue `#542` through the bond-maturity / reinvestment
+review signal family. Capability-owned factories execute the existing
+caller-supplied and Core-backed application paths and serialize the real API
+response DTO. Both operations publish named `candidate_created`, `blocked`,
+`suppressed`, and `not_eligible` HTTP 200 modes. Candidate examples retain the
+governed Core `HoldingsAsOf:v1` and `PortfolioMaturitySummary:v1` lineage while
+omitting source routes and content hashes. Focused HTTP tests prove the
+previously uncited caller suppression and source-backed suppression and
+not-eligible behavior, including runtime cleanup and no candidate persistence.
+Exact factory, endpoint-ledger, generated OpenAPI, and cited-test parity is a
+blocking endpoint-certification contract.
+
+This is design modularity inside the existing deployable, not a runtime split.
+Core retains holdings, maturity-schedule, and maturity-summary authority;
+Lotus Idea owns only deterministic opportunity detection and advisor-review
+posture. No replacement-product recommendation, reinvestment advice,
+suitability decision, persistence route, live Core certification,
+Gateway/Workbench realization, data-product promotion, or supported-feature
+promotion is introduced. README and supported-feature registry truth remain
+unchanged by explicit scope decision. A refreshed deterministic scan leaves
+22 multi-shape operations under issue `#542`; Slice 10 remains partially
+implemented.
+
 PR `#543` merged issue `#539` to `main` at
 `f6e2365eaec5f4f0184d5985e5b5fcc641b4883b`. Main Releasability run
 `29528824505` passed, including lint, typecheck, security, architecture,

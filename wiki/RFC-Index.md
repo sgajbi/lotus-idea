@@ -202,6 +202,9 @@ Current RFC-0002 implementation-start baseline:
    candidate-created, blocked, suppressed, and not-eligible matrix from
    capability-owned application-backed factories, with both required Core
    source products retained in source-safe candidate examples.
+   Bond-maturity caller and Core-backed APIs now publish that complete matrix
+   from their existing application paths, preserving Core holdings and
+   maturity-summary lineage without moving maturity-data authority into Idea.
    `make implementation-proof-readiness-check` generates and consumes the
    scheduled source-ingestion worker source contract while intentionally
    preserving the deployment blocker, durable repository

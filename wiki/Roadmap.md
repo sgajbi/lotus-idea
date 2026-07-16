@@ -87,7 +87,8 @@ proof, downstream proof, supported-feature evidence, and mainline CI all agree.
     evaluation, retry, duplicate-candidate, and no-write modes. Low-income
     caller and Core-backed routes likewise publish complete candidate-created,
     blocked, suppressed, and not-eligible mode matrices with exact executable
-    contract parity. The slice also
+    contract parity. Bond-maturity caller and Core-backed routes now meet the
+    same contract while retaining Core maturity-data authority. The slice also
     includes certified internal lifecycle, AI explanation, advisor queue,
     review, feedback, conversion, report evidence-pack,
     AI-explanation-readiness, and data-mesh-readiness endpoint foundations.
