@@ -35,6 +35,57 @@ class ImplementationProofArtifactSpec:
             raise ValueError("pending proof artifacts must not declare a completed evidence class")
 
 
+def proof_artifact_spec_for_payload_argument(
+    payload_argument: str,
+) -> ImplementationProofArtifactSpec | None:
+    matches = tuple(
+        spec
+        for spec in IMPLEMENTATION_PROOF_ARTIFACT_SPECS
+        if spec.payload_argument == payload_argument
+    )
+    return matches[0] if len(matches) == 1 else None
+
+
+def proof_artifact_spec_for_ref_argument(
+    ref_argument: str,
+) -> ImplementationProofArtifactSpec | None:
+    matches = tuple(
+        spec for spec in IMPLEMENTATION_PROOF_ARTIFACT_SPECS if spec.ref_argument == ref_argument
+    )
+    return matches[0] if len(matches) == 1 else None
+
+
+def proof_artifact_effect_matches_payload(
+    payload_argument: str,
+    expected_effect: ProofArtifactEffect,
+) -> bool:
+    return _proof_artifact_effect_matches(
+        proof_artifact_spec_for_payload_argument(payload_argument),
+        expected_effect,
+    )
+
+
+def proof_artifact_effect_matches_ref(
+    ref_argument: str,
+    expected_effect: ProofArtifactEffect,
+) -> bool:
+    return _proof_artifact_effect_matches(
+        proof_artifact_spec_for_ref_argument(ref_argument),
+        expected_effect,
+    )
+
+
+def _proof_artifact_effect_matches(
+    spec: ImplementationProofArtifactSpec | None,
+    expected_effect: ProofArtifactEffect,
+) -> bool:
+    return bool(
+        spec
+        and spec.status is ProofArtifactClassificationStatus.CLASSIFIED
+        and spec.effect is expected_effect
+    )
+
+
 def _classified(
     cli_flag: str,
     payload_argument: str,

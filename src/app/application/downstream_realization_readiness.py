@@ -14,6 +14,10 @@ from app.application.downstream_realization.route_source_contract import (
     advise_route_source_contract_is_valid,
     manage_route_source_contract_is_valid,
 )
+from app.application.implementation_proof_artifact_registry import (
+    ProofArtifactEffect,
+    proof_artifact_effect_matches_payload,
+)
 from app.application.report.intake_route_source_contract import (
     report_intake_route_source_contract_proof_is_valid,
 )
@@ -235,8 +239,13 @@ def _apply_available_downstream_proofs(
     tuple[DownstreamRealizationCapabilityReadiness, ...],
     tuple[DownstreamRealizationContractReadiness, ...],
 ]:
-    if advise_proposal_route_proof and advise_route_source_contract_is_valid(
-        advise_proposal_route_proof
+    if (
+        proof_artifact_effect_matches_payload(
+            "advise_proposal_route_proof",
+            ProofArtifactEffect.SUPPORTING_EVIDENCE,
+        )
+        and advise_proposal_route_proof
+        and advise_route_source_contract_is_valid(advise_proposal_route_proof)
     ):
         capabilities, downstream_contracts = _apply_route_source_contract(
             capabilities=capabilities,
@@ -246,8 +255,13 @@ def _apply_available_downstream_proofs(
             proof_ref=advise_proposal_route_proof_ref,
             target_route=ADVISE_PROPOSAL_ROUTE,
         )
-    if manage_action_route_proof and manage_route_source_contract_is_valid(
-        manage_action_route_proof
+    if (
+        proof_artifact_effect_matches_payload(
+            "manage_action_route_proof",
+            ProofArtifactEffect.SUPPORTING_EVIDENCE,
+        )
+        and manage_action_route_proof
+        and manage_route_source_contract_is_valid(manage_action_route_proof)
     ):
         capabilities, downstream_contracts = _apply_route_source_contract(
             capabilities=capabilities,
@@ -258,7 +272,11 @@ def _apply_available_downstream_proofs(
             target_route=MANAGE_ACTION_ROUTE,
         )
     if (
-        report_intake_route_source_contract_proof
+        proof_artifact_effect_matches_payload(
+            "report_intake_route_source_contract_proof",
+            ProofArtifactEffect.SUPPORTING_EVIDENCE,
+        )
+        and report_intake_route_source_contract_proof
         and report_intake_route_source_contract_proof_is_valid(
             report_intake_route_source_contract_proof
         )
@@ -278,7 +296,11 @@ def _apply_available_downstream_proofs(
             for contract in downstream_contracts
         )
     if (
-        report_materialization_source_contract_proof
+        proof_artifact_effect_matches_payload(
+            "report_materialization_source_contract_proof",
+            ProofArtifactEffect.SUPPORTING_EVIDENCE,
+        )
+        and report_materialization_source_contract_proof
         and report_materialization_source_contract_is_valid(
             report_materialization_source_contract_proof
         )

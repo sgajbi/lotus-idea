@@ -5,6 +5,10 @@ import json
 import os
 from pathlib import Path
 
+from app.application.implementation_proof_artifact_registry import (
+    ProofArtifactEffect,
+    proof_artifact_effect_matches_ref,
+)
 from app.application.source_ingestion_runtime_evidence import (
     SOURCE_INGESTION_RUNTIME_EXECUTION_ENV as SOURCE_INGESTION_RUNTIME_EXECUTION_ENV,
     source_ingestion_runtime_execution_is_valid,
@@ -96,14 +100,22 @@ def build_source_ingestion_readiness_snapshot(
         configured_scheduled_worker_deployment_evidence_path
     )
     scheduled_worker_source_contract_valid = bool(
-        scheduled_worker_source_contract
+        proof_artifact_effect_matches_ref(
+            "source_ingestion_scheduled_worker_source_contract_ref",
+            ProofArtifactEffect.SUPPORTING_EVIDENCE,
+        )
+        and scheduled_worker_source_contract
         and scheduled_worker_source_contract_is_valid(
             scheduled_worker_source_contract,
             repository_root=repository_root,
         )
     )
     scheduled_worker_deployment_evidence_valid = bool(
-        scheduled_worker_source_contract_valid
+        proof_artifact_effect_matches_ref(
+            "source_ingestion_scheduled_worker_deployment_evidence_ref",
+            ProofArtifactEffect.BLOCKER_CLEARING,
+        )
+        and scheduled_worker_source_contract_valid
         and scheduled_worker_deployment_evidence
         and scheduled_worker_source_contract
         and scheduled_worker_deployment_evidence_is_valid(scheduled_worker_deployment_evidence)

@@ -8,6 +8,10 @@ from app.application.bond_maturity_runtime_evidence import (
     bond_maturity_runtime_execution_is_valid,
 )
 from app.application.implementation_proof_capability_updates import apply_blocker_proof
+from app.application.implementation_proof_artifact_registry import (
+    ProofArtifactEffect,
+    proof_artifact_effect_matches_payload,
+)
 from app.application.implementation_proof_models import ImplementationProofCapabilityReadiness
 from app.application.proof_provenance import aggregate_proof_artifact_is_current
 from app.application.high_volatility_runtime_evidence import (
@@ -80,6 +84,7 @@ OpportunityProofApplicator = Callable[
     ImplementationProofCapabilityReadiness,
 ]
 OpportunityProofStep = tuple[
+    str,
     Mapping[str, object] | None,
     OpportunityProofValidator,
     OpportunityProofApplicator,
@@ -131,9 +136,16 @@ def _apply_opportunity_archetype_proofs(
         source_ingestion_runtime_execution_current=source_ingestion_runtime_execution_current,
         source_ingestion_runtime_execution_ref=source_ingestion_runtime_execution_ref,
     )
-    for proof, proof_is_valid, apply_proof, proof_ref in _opportunity_proof_steps(locals()):
+    for (
+        payload_argument,
+        proof,
+        proof_is_valid,
+        apply_proof,
+        proof_ref,
+    ) in _opportunity_proof_steps(locals()):
         capabilities = _apply_valid_opportunity_proof(
             capabilities,
+            payload_argument=payload_argument,
             proof=proof,
             proof_is_valid=proof_is_valid,
             apply_proof=apply_proof,
@@ -250,17 +262,20 @@ def _proof_step(
     proof_is_valid: OpportunityProofValidator,
     apply_proof: OpportunityProofApplicator,
 ) -> OpportunityProofStep:
+    payload_argument = f"{name}_proof"
     return (
-        _payload(scope, f"{name}_proof"),
+        payload_argument,
+        _payload(scope, payload_argument),
         proof_is_valid,
         apply_proof,
-        _ref(scope, f"{name}_proof_ref"),
+        _ref(scope, f"{payload_argument}_ref"),
     )
 
 
 def _apply_valid_opportunity_proof(
     capabilities: tuple[ImplementationProofCapabilityReadiness, ...],
     *,
+    payload_argument: str,
     proof: Mapping[str, object] | None,
     proof_is_valid: Callable[[Mapping[str, object]], bool],
     apply_proof: Callable[
@@ -270,6 +285,11 @@ def _apply_valid_opportunity_proof(
     proof_ref: str | None,
     evaluated_at_utc: datetime,
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
+    if not proof_artifact_effect_matches_payload(
+        payload_argument,
+        ProofArtifactEffect.BLOCKER_CLEARING,
+    ):
+        return capabilities
     if not proof or not proof_is_valid(proof):
         return capabilities
     if not aggregate_proof_artifact_is_current(

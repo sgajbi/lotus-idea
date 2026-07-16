@@ -23,9 +23,21 @@ INVENTORY_PATH = Path("docs/architecture/implementation-proof-evidence-classific
 def implementation_proof_artifact_registry_errors(*, root: Path) -> list[str]:
     errors: list[str] = []
     flags = [spec.cli_flag for spec in IMPLEMENTATION_PROOF_ARTIFACT_SPECS]
-    duplicates = sorted({flag for flag in flags if flags.count(flag) > 1})
-    if duplicates:
-        errors.append(f"implementation proof artifact registry has duplicate flags: {duplicates}")
+    _append_duplicate_errors(errors, values=flags, field_name="flags")
+    _append_duplicate_errors(
+        errors,
+        values=[
+            spec.payload_argument
+            for spec in IMPLEMENTATION_PROOF_ARTIFACT_SPECS
+            if spec.payload_argument is not None
+        ],
+        field_name="payload arguments",
+    )
+    _append_duplicate_errors(
+        errors,
+        values=[spec.ref_argument for spec in IMPLEMENTATION_PROOF_ARTIFACT_SPECS],
+        field_name="reference arguments",
+    )
 
     parser_flags = {
         option
@@ -97,3 +109,16 @@ def implementation_proof_artifact_registry_errors(*, root: Path) -> list[str]:
                 f"`{evidence_class.value}`"
             )
     return errors
+
+
+def _append_duplicate_errors(
+    errors: list[str],
+    *,
+    values: list[str],
+    field_name: str,
+) -> None:
+    duplicates = sorted({value for value in values if values.count(value) > 1})
+    if duplicates:
+        errors.append(
+            f"implementation proof artifact registry has duplicate {field_name}: {duplicates}"
+        )
