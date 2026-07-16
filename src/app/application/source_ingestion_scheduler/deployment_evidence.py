@@ -11,6 +11,7 @@ from app.domain.proof_evidence import (
     EvidenceClass,
     evidence_class_can_clear,
     is_timezone_aware_datetime_text,
+    parse_timezone_aware_datetime,
 )
 
 
@@ -167,6 +168,18 @@ def scheduled_worker_deployment_evidence_is_valid(payload: Mapping[str, Any]) ->
         image_digest=image_digest,
     ):
         return False
+    generated_at_utc = parse_timezone_aware_datetime(payload.get("generatedAtUtc"))
+    workload = payload["workload"]
+    assert isinstance(workload, Mapping)
+    rollout_completed_at_utc = parse_timezone_aware_datetime(
+        workload.get("rolloutCompletedAtUtc")
+    )
+    if (
+        generated_at_utc is None
+        or rollout_completed_at_utc is None
+        or rollout_completed_at_utc > generated_at_utc
+    ):
+        return False
     if not _scheduler_configuration_is_valid(payload.get("schedulerConfiguration")):
         return False
     if payload.get("blockerEffect") != {
@@ -192,6 +205,23 @@ def scheduled_worker_deployment_evidence_is_valid(payload: Mapping[str, Any]) ->
         )
     }
     return payload.get("deploymentReceiptDigest") == sha256_json(deployment_material)
+
+
+def scheduled_worker_deployment_matches_source_contract(
+    deployment_evidence: Mapping[str, Any],
+    source_contract: Mapping[str, Any],
+) -> bool:
+    if not scheduled_worker_deployment_evidence_is_valid(deployment_evidence):
+        return False
+    scheduler_configuration = deployment_evidence.get("schedulerConfiguration")
+    if not isinstance(scheduler_configuration, Mapping):
+        return False
+    return (
+        scheduler_configuration.get("identityDigest")
+        == source_contract.get("schedulerConfigurationDigest")
+        and scheduler_configuration.get("sourceContractDigest")
+        == source_contract.get("sourceContractDigest")
+    )
 
 
 def _image_is_valid(value: object, *, source_commit_sha: str) -> bool:

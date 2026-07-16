@@ -72,6 +72,7 @@ from app.application.source_ingestion_readiness import (
 )
 from app.application.source_ingestion_scheduler import (
     SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE_ENV,
+    SCHEDULED_WORKER_SOURCE_CONTRACT_ENV,
 )
 from app.application.workbench.read_path_source_contract import (
     build_workbench_read_path_source_contract_proof_payload,
@@ -86,6 +87,7 @@ from tests.support.ai_lineage_store_proof import valid_ai_lineage_ci_execution_r
 from tests.support.source_ingestion_runtime_evidence import runtime_execution
 from tests.support.source_ingestion_scheduler_evidence import (
     deployment_evidence,
+    source_contract,
 )
 from tests.unit.downstream_realization.fixtures import (
     valid_advise_route_source_contract,
@@ -409,6 +411,7 @@ def test_implementation_proof_readiness_lists_valid_source_ingestion_proof_refs_
     deployment_evidence_path = (
         tmp_path / "source-ingestion-scheduled-worker-deployment-evidence.json"
     )
+    source_contract_path = tmp_path / "source-ingestion-scheduled-worker-source-contract.json"
     manifest.write_text("{}", encoding="utf-8")
     source_ingestion_runtime_execution_ref = "output/source-ingestion/live-proof.json"
     source_ingestion_runtime_execution = _bound_aggregate_proof(
@@ -423,12 +426,17 @@ def test_implementation_proof_readiness_lists_valid_source_ingestion_proof_refs_
         json.dumps(deployment_evidence(repository_root=ROOT)),
         encoding="utf-8",
     )
+    source_contract_path.write_text(
+        json.dumps(source_contract(repository_root=ROOT)),
+        encoding="utf-8",
+    )
     monkeypatch.setenv(MANIFEST_ENV, str(manifest))
     monkeypatch.setenv(SOURCE_INGESTION_RUNTIME_EXECUTION_ENV, str(live_proof))
     monkeypatch.setenv(
         SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE_ENV,
         str(deployment_evidence_path),
     )
+    monkeypatch.setenv(SCHEDULED_WORKER_SOURCE_CONTRACT_ENV, str(source_contract_path))
     monkeypatch.setenv(CORE_BASE_URL_ENV, "http://localhost:8310")
     monkeypatch.setenv(DATABASE_URL_ENV, "postgresql://localhost/lotus_idea")
 
@@ -440,6 +448,9 @@ def test_implementation_proof_readiness_lists_valid_source_ingestion_proof_refs_
         source_ingestion_runtime_execution_ref=source_ingestion_runtime_execution_ref,
         source_ingestion_scheduled_worker_deployment_evidence_ref=(
             "output/source-ingestion/scheduled-worker-deployment-evidence.json"
+        ),
+        source_ingestion_scheduled_worker_source_contract_ref=(
+            "output/source-ingestion/scheduled-worker-source-contract.json"
         ),
     )
 
@@ -454,6 +465,9 @@ def test_implementation_proof_readiness_lists_valid_source_ingestion_proof_refs_
     assert "gateway_workbench_proof_missing" in source_ingestion.blockers
     assert "output/source-ingestion/live-proof.json" in source_ingestion.evidence_refs
     assert "output/source-ingestion/scheduled-worker-deployment-evidence.json" in (
+        source_ingestion.evidence_refs
+    )
+    assert "output/source-ingestion/scheduled-worker-source-contract.json" in (
         source_ingestion.evidence_refs
     )
     assert snapshot.readiness_status == "blocked"

@@ -7,9 +7,13 @@ import pytest
 
 from app.application.runtime_evidence import sha256_json
 from app.application.source_ingestion_scheduler import (
+    scheduled_worker_deployment_matches_source_contract,
     scheduled_worker_deployment_evidence_is_valid,
 )
-from tests.support.source_ingestion_scheduler_evidence import deployment_evidence
+from tests.support.source_ingestion_scheduler_evidence import (
+    deployment_evidence,
+    source_contract,
+)
 
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -31,6 +35,10 @@ def test_deployment_evidence_binds_image_environment_controller_and_rollout() ->
     assert payload["workload"]["observedGitCommitSha"] == payload["sourceCommitSha"]
     assert payload["nonProofClaims"]["scheduledExecutionObserved"] is False
     assert payload["nonProofClaims"]["productionCertified"] is False
+    assert scheduled_worker_deployment_matches_source_contract(
+        payload,
+        source_contract(repository_root=ROOT),
+    )
 
 
 @pytest.mark.parametrize(
@@ -47,6 +55,7 @@ def test_deployment_evidence_binds_image_environment_controller_and_rollout() ->
         (("controller", "runId"), "run-1"),
         (("controller", "runAttempt"), 0),
         (("workload", "rolloutStatus"), "started"),
+        (("workload", "rolloutCompletedAtUtc"), "2026-07-16T10:11:00Z"),
         (("workload", "observedImageDigest"), f"sha256:{'c' * 64}"),
         (("workload", "observedGitCommitSha"), "c" * 40),
         (("schedulerConfiguration", "identityDigest"), "not-a-digest"),
@@ -83,6 +92,14 @@ def test_deployment_evidence_rejects_aggregate_source_revision_drift() -> None:
     }
 
     assert not scheduled_worker_deployment_evidence_is_valid(payload)
+
+
+def test_deployment_evidence_rejects_source_contract_digest_drift() -> None:
+    payload = deployment_evidence(repository_root=ROOT)
+    contract = source_contract(repository_root=ROOT)
+    contract["sourceContractDigest"] = f"sha256:{'c' * 64}"
+
+    assert not scheduled_worker_deployment_matches_source_contract(payload, contract)
 
 
 def _set(payload: dict[str, object], path: tuple[str, ...], value: object) -> None:

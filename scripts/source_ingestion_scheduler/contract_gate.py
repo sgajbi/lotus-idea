@@ -16,6 +16,7 @@ from app.application.source_ingestion_scheduler import (
     build_scheduled_worker_deployment_evidence_payload,
     build_scheduled_worker_source_contract_payload,
     scheduled_worker_deployment_evidence_is_valid,
+    scheduled_worker_deployment_matches_source_contract,
     scheduled_worker_source_contract_is_valid,
     source_ingestion_schedule_config_from_values,
 )
@@ -110,6 +111,11 @@ def validate_source_ingestion_scheduler_contracts() -> list[str]:
         errors.append("scheduled-worker deployment-evidence schema drift")
     if not scheduled_worker_deployment_evidence_is_valid(deployment_evidence):
         errors.append("scheduled-worker deployment evidence must validate")
+    if not scheduled_worker_deployment_matches_source_contract(
+        deployment_evidence,
+        source_contract,
+    ):
+        errors.append("deployment evidence must bind the exact scheduler source contract")
     if deployment_evidence["blockerEffect"]["clears"] != [
         "scheduled_worker_deploy_proof_missing"
     ]:

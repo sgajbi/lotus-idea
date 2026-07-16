@@ -17,6 +17,7 @@ from app.application.source_ingestion_scheduler.deployment_evidence import (
     SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE_ENV,
     SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE_SCHEMA_VERSION,
     build_scheduled_worker_deployment_evidence_payload,
+    scheduled_worker_deployment_matches_source_contract,
     scheduled_worker_deployment_evidence_is_valid,
 )
 from app.application.source_ingestion_scheduler.source_contract import (
@@ -50,6 +51,7 @@ __all__ = [
     "build_scheduled_worker_source_contract_payload",
     "scheduled_worker_check_summary_is_valid",
     "scheduled_worker_deployment_evidence_is_valid",
+    "scheduled_worker_deployment_matches_source_contract",
     "scheduled_worker_source_contract_is_valid",
     "source_ingestion_schedule_config_from_values",
 ]

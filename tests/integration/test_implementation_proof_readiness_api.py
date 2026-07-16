@@ -55,10 +55,14 @@ from app.application.source_ingestion_readiness import (
 )
 from app.application.source_ingestion_scheduler import (
     SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE_ENV,
+    SCHEDULED_WORKER_SOURCE_CONTRACT_ENV,
 )
 from app.application.proof_provenance import current_source_revision
 from tests.support.source_ingestion_runtime_evidence import runtime_execution
-from tests.support.source_ingestion_scheduler_evidence import deployment_evidence
+from tests.support.source_ingestion_scheduler_evidence import (
+    deployment_evidence,
+    source_contract,
+)
 from app.application.workbench.read_path_source_contract import (
     WORKBENCH_READ_PATH_SOURCE_CONTRACT_PROOF_ENV,
     build_workbench_read_path_source_contract_proof_payload,
@@ -319,6 +323,10 @@ def test_implementation_proof_readiness_api_consumes_configured_proof_artifacts(
         "source ingestion scheduled-worker deployment evidence artifact"
         in capabilities["source-ingestion"]["evidenceRefs"]
     )
+    assert (
+        "source ingestion scheduled-worker source contract artifact"
+        in capabilities["source-ingestion"]["evidenceRefs"]
+    )
     assert "durable repository proof artifact" in capabilities["source-ingestion"]["evidenceRefs"]
     assert (
         "runtime trust telemetry test execution artifact"
@@ -488,6 +496,7 @@ def _configure_readiness_proof_artifacts(
     deployment_evidence_path = (
         tmp_path / "source-ingestion-scheduled-worker-deployment-evidence.json"
     )
+    source_contract_path = tmp_path / "source-ingestion-scheduled-worker-source-contract.json"
     durable_proof_path = tmp_path / "durable-repository-proof.json"
     runtime_proof_path = tmp_path / "runtime-trust-telemetry-test-execution.json"
     ai_lineage_proof_path = tmp_path / "ai-lineage-store-proof.json"
@@ -510,6 +519,10 @@ def _configure_readiness_proof_artifacts(
             repository_root=ROOT,
             source_commit_sha=current_source_revision(ROOT),
         ),
+    )
+    _write_proof(
+        source_contract_path,
+        source_contract(repository_root=ROOT),
     )
     _write_proof(
         durable_proof_path,
@@ -568,6 +581,7 @@ def _configure_readiness_proof_artifacts(
         SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE_ENV,
         str(deployment_evidence_path),
     )
+    monkeypatch.setenv(SCHEDULED_WORKER_SOURCE_CONTRACT_ENV, str(source_contract_path))
     monkeypatch.setenv(CORE_BASE_URL_ENV, "http://localhost:8310")
     monkeypatch.setenv(DURABLE_REPOSITORY_PROOF_ENV, str(durable_proof_path))
     monkeypatch.setenv(RUNTIME_TRUST_TELEMETRY_TEST_EXECUTION_ENV, str(runtime_proof_path))
