@@ -33,9 +33,16 @@ def validate_report_evidence_pack_success_contract(
         operation=REPORT_EVIDENCE_PACK_OPERATION,
         expected=build_report_evidence_pack_response_examples(),
         workflow_name="report-evidence-pack",
-        replay_test=REPORT_EVIDENCE_PACK_REPLAY_TEST,
-        replay_evidence_description="idempotent report-evidence-pack replay integration test",
-        success_contract_test=REPORT_EVIDENCE_PACK_SUCCESS_CONTRACT_TEST,
+        required_test_evidence=(
+            (
+                REPORT_EVIDENCE_PACK_REPLAY_TEST,
+                "idempotent report-evidence-pack replay integration test",
+            ),
+            (
+                REPORT_EVIDENCE_PACK_SUCCESS_CONTRACT_TEST,
+                "complete report-evidence-pack success publication contract test",
+            ),
+        ),
     )
 
 
