@@ -5,6 +5,7 @@ from datetime import UTC, date, datetime
 from app.application.missing_benchmark_signal import (
     EvaluateMissingBenchmarkFromCoreCommand,
     EvaluateMissingBenchmarkSignalCommand,
+    evaluate_missing_benchmark_readiness_from_core,
     evaluate_missing_benchmark_signal_command,
     evaluate_missing_benchmark_signal_from_core,
 )
@@ -92,6 +93,28 @@ def test_evaluate_missing_benchmark_signal_from_core_uses_assignment_evidence() 
     assert core_source.requests[0].correlation_id == "corr-core"
 
 
+def test_readiness_use_case_preserves_authoritative_evidence_from_one_fetch() -> None:
+    evidence = CoreBenchmarkAssignmentEvidence(
+        benchmark_assignment_ref=_source_ref(),
+        benchmark_identity_resolved=False,
+        assignment_effective_for_as_of_date=False,
+        assignment_status="active",
+        assignment_version_present=True,
+        assignment_diagnostic="core_benchmark_assignment_benchmark_identity_missing",
+    )
+    core_source = StubCoreBenchmarkAssignmentSource(evidence)
+
+    result = evaluate_missing_benchmark_readiness_from_core(
+        _command(),
+        core_source=core_source,
+    )
+
+    assert result.evidence is evidence
+    assert result.source_error_code is None
+    assert result.evaluation.outcome is SignalEvaluationOutcome.CANDIDATE_CREATED
+    assert len(core_source.requests) == 1
+
+
 def test_evaluate_missing_benchmark_signal_from_core_ignores_ready_assignment() -> None:
     core_source = StubCoreBenchmarkAssignmentSource(
         CoreBenchmarkAssignmentEvidence(
@@ -121,6 +144,13 @@ def test_evaluate_missing_benchmark_signal_from_core_blocks_entitlement_denial()
     assert result.candidate is None
     assert result.reason_codes == (ReasonCode.REVIEW_REQUIRED,)
 
+    preserved = evaluate_missing_benchmark_readiness_from_core(
+        _command(),
+        core_source=StubCoreBenchmarkAssignmentSource(exception=CoreSourceEntitlementDenied()),
+    )
+    assert preserved.evidence is None
+    assert preserved.source_error_code == "core_source_entitlement_denied"
+
 
 def test_evaluate_missing_benchmark_signal_from_core_blocks_source_unavailable() -> None:
     result = evaluate_missing_benchmark_signal_from_core(
@@ -133,6 +163,15 @@ def test_evaluate_missing_benchmark_signal_from_core_blocks_source_unavailable()
     assert result.outcome is SignalEvaluationOutcome.BLOCKED
     assert result.candidate is None
     assert result.reason_codes == (ReasonCode.SOURCE_PARTIAL,)
+
+    preserved = evaluate_missing_benchmark_readiness_from_core(
+        _command(),
+        core_source=StubCoreBenchmarkAssignmentSource(
+            exception=CoreSourceUnavailable(code="core_benchmark_assignment_pending")
+        ),
+    )
+    assert preserved.evidence is None
+    assert preserved.source_error_code == "core_benchmark_assignment_pending"
 
 
 def _command() -> EvaluateMissingBenchmarkFromCoreCommand:
