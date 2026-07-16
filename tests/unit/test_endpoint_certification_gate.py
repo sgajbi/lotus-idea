@@ -566,7 +566,10 @@ def test_endpoint_certification_gate_requires_every_named_ai_success_mode() -> N
 def test_endpoint_certification_gate_blocks_ai_success_safety_field_drift() -> None:
     module = _load_endpoint_ai_contracts()
     endpoint = _ai_evaluation_endpoint()
-    examples = [json.loads(value) for value in endpoint["response_examples"]]
+    response_examples = endpoint["response_examples"]
+    assert isinstance(response_examples, list)
+    assert all(isinstance(value, str) for value in response_examples)
+    examples = [json.loads(value) for value in response_examples]
     mutations = []
 
     missing_control = deepcopy(examples)
