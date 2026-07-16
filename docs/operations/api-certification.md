@@ -86,20 +86,32 @@ blocks weak certification by requiring:
 3. valid JSON request and response examples when an example is JSON-shaped,
 4. real `tests/path.py::test_name` references,
 5. `baseline_certified` status only for health/metadata baseline endpoints,
-6. certified business/operator endpoints to name an `idea.*` capability,
-7. certified endpoints to preserve Gateway, Workbench, and supported-feature-promotion boundaries,
+6. implemented business/operator endpoints, whether `certified` or
+   `implemented_not_certified`, to name an `idea.*` capability,
+7. implemented endpoints to preserve Gateway, Workbench, and
+   supported-feature-promotion boundaries,
 8. product-safe 403 behavior and `scripts/openapi_quality_gate.py` evidence,
-9. bounded operation-event test evidence for every certified business/operator endpoint,
+9. bounded operation-event test evidence for every implemented business/operator endpoint,
 10. exact bounded read-only `lotus-gateway` route citation before a ledger entry can claim Gateway
     publication, while still preserving Workbench, data-product, client-ready publication, and
     supported-feature boundaries,
 11. at least one non-operation-event integration API behavior test and at least one negative or
-    degraded-path test reference for every certified business/operator endpoint, so endpoint
+    degraded-path test reference for every implemented business/operator endpoint, so endpoint
     certification cannot be based only on schema examples, unit tests, or telemetry assertions,
-12. generated OpenAPI caller-context security publication for every certified endpoint that names
+12. generated OpenAPI caller-context security publication for every implemented endpoint that names
     an `idea.*` capability, including matching required capability values, trusted caller-context
     provenance wording, and descriptions for `X-Caller-Capabilities` and
-    `X-Lotus-Trusted-Caller-Context`.
+    `X-Lotus-Trusted-Caller-Context`,
+13. machine-readable `certification_blockers`, ledger response examples, and generated OpenAPI
+    success examples that preserve `not_certified` plus `supportedFeaturePromoted=false` for every
+    `implemented_not_certified` operation.
+
+`implemented_not_certified` means the public operation exists and must meet the
+same implementation-quality, security, observability, OpenAPI, and test
+standards as a certified operation, while named external production evidence
+still blocks certification. `planned` and `not_applicable` remain inventory
+vocabulary only; they do not satisfy implemented-operation requirements and
+must not be used to describe an available public route.
 
 ## Certified Foundation Endpoints
 

@@ -97,7 +97,9 @@ Required posture:
    contract only, mapped to proof identity `idea_explanation.pack@v1` and
    rejected with product-safe `invalid_ai_workflow_pack` when caller-supplied
    identity is unregistered,
-7. endpoint certification and OpenAPI quality gates,
+7. endpoint implementation-quality and OpenAPI gates for both certified and
+   implemented-but-not-certified public operations, with explicit external
+   blockers and no-promotion posture,
 8. proposed data-product declarations, repo-native data-mesh contract gate,
    blocked static trust telemetry, source-safe runtime trust telemetry preview
    and snapshot evidence, and planned SLO/access/evidence policies before mesh
