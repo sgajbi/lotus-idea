@@ -324,6 +324,11 @@ Validation evidence from the implementation slice:
     action content, idempotent replay, changed-content conflict, audit, and
     lineage source safety. The focused AI governance, grounding, integrity, and
     lineage suites pass with `61 passed`; targeted Ruff and strict MyPy pass.
+    Final-head `make check` and `make ci` pass with `4691` unit tests, `453`
+    integration tests plus `31` declared environment-only PostgreSQL skips, `4`
+    E2E tests, `99.01%` combined coverage over `27704` statements, strict MyPy
+    over `941` source files, zero duplicate clusters across `2710` functions,
+    and no known dependency vulnerabilities.
 
 Issue `#411` changes the AI readiness response vocabulary from certification
 claims to source-contract validity and therefore changes OpenAPI truth. It
