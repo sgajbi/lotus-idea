@@ -637,6 +637,15 @@ Focused validation passed for the current foundation:
     source, supported features, persistence, migrations, seed, Gateway,
     Workbench, central skills, and runtime topology remain unchanged by
     explicit scope decision.
+45. PR `#530` merged by rebase at exact-main SHA
+    `dab34f477572bd9ff0bba7e4fad4d9f22bfdd4cb`; Main Releasability
+    `29518262581` and CodeQL `29518252754` passed. Release digest
+    `sha256:e9219dbf98a13fa2cb9b76adf9eb1e893a94744c6ede1457d5b4c1c808e2d456`
+    has matching OCI and `/version` identity, vulnerability scan, SBOM,
+    keyless signature, provenance and SBOM attestations, release manifest,
+    and digest-pinned runtime smoke. Strict wiki publication parity is zero,
+    no publication change is required, issue `#529` is closed, and the
+    implementation branch is absent locally and remotely.
 
 PR merge-gate evidence remains required before merge.
 
