@@ -473,6 +473,61 @@ def _apply_platform_and_surface_proofs(
             )
             for capability in capabilities
         )
+    capabilities = _apply_outbox_proofs(
+        capabilities=capabilities,
+        evaluated_at_utc=evaluated_at_utc,
+        outbox_broker_source_contract_proof=outbox_broker_source_contract_proof,
+        outbox_broker_source_contract_proof_ref=outbox_broker_source_contract_proof_ref,
+        outbox_consumer_contract_proof=outbox_consumer_contract_proof,
+        outbox_consumer_contract_proof_ref=outbox_consumer_contract_proof_ref,
+        outbox_platform_mesh_event_source_contract_proof=(
+            outbox_platform_mesh_event_source_contract_proof
+        ),
+        outbox_platform_mesh_event_source_contract_proof_ref=(
+            outbox_platform_mesh_event_source_contract_proof_ref
+        ),
+    )
+    capabilities = _apply_platform_catalog_source_contract_if_valid(
+        capabilities=capabilities,
+        evaluated_at_utc=evaluated_at_utc,
+        proof=platform_catalog_source_contract_proof,
+        proof_ref=platform_catalog_source_contract_proof_ref,
+    )
+    capabilities = _apply_workbench_proofs(
+        capabilities=capabilities,
+        evaluated_at_utc=evaluated_at_utc,
+        workbench_read_path_source_contract_proof=workbench_read_path_source_contract_proof,
+        workbench_read_path_source_contract_proof_ref=(
+            workbench_read_path_source_contract_proof_ref
+        ),
+        gateway_workbench_contract_proof=gateway_workbench_contract_proof,
+        gateway_workbench_contract_proof_ref=gateway_workbench_contract_proof_ref,
+        gateway_workbench_discovery_contract_proof=(
+            gateway_workbench_discovery_contract_proof
+        ),
+        gateway_workbench_discovery_contract_proof_ref=(
+            gateway_workbench_discovery_contract_proof_ref
+        ),
+    )
+    return _apply_operator_workflows_operations_proof_if_valid(
+        capabilities=capabilities,
+        evaluated_at_utc=evaluated_at_utc,
+        operator_workflows_operations_proof=operator_workflows_operations_proof,
+        operator_workflows_operations_proof_ref=operator_workflows_operations_proof_ref,
+    )
+
+
+def _apply_outbox_proofs(
+    *,
+    capabilities: tuple[ImplementationProofCapabilityReadiness, ...],
+    evaluated_at_utc: datetime,
+    outbox_broker_source_contract_proof: Mapping[str, object] | None,
+    outbox_broker_source_contract_proof_ref: str | None,
+    outbox_consumer_contract_proof: Mapping[str, object] | None,
+    outbox_consumer_contract_proof_ref: str | None,
+    outbox_platform_mesh_event_source_contract_proof: Mapping[str, object] | None,
+    outbox_platform_mesh_event_source_contract_proof_ref: str | None,
+) -> tuple[ImplementationProofCapabilityReadiness, ...]:
     if _registered_proof_is_valid_and_current(
         "outbox_broker_source_contract_proof",
         ProofArtifactEffect.SUPPORTING_EVIDENCE,
@@ -518,12 +573,20 @@ def _apply_platform_and_surface_proofs(
             )
             for capability in capabilities
         )
-    capabilities = _apply_platform_catalog_source_contract_if_valid(
-        capabilities=capabilities,
-        evaluated_at_utc=evaluated_at_utc,
-        proof=platform_catalog_source_contract_proof,
-        proof_ref=platform_catalog_source_contract_proof_ref,
-    )
+    return capabilities
+
+
+def _apply_workbench_proofs(
+    *,
+    capabilities: tuple[ImplementationProofCapabilityReadiness, ...],
+    evaluated_at_utc: datetime,
+    workbench_read_path_source_contract_proof: Mapping[str, object] | None,
+    workbench_read_path_source_contract_proof_ref: str | None,
+    gateway_workbench_contract_proof: Mapping[str, object] | None,
+    gateway_workbench_contract_proof_ref: str | None,
+    gateway_workbench_discovery_contract_proof: Mapping[str, object] | None,
+    gateway_workbench_discovery_contract_proof_ref: str | None,
+) -> tuple[ImplementationProofCapabilityReadiness, ...]:
     if _registered_proof_is_valid_and_current(
         "workbench_read_path_source_contract_proof",
         ProofArtifactEffect.SUPPORTING_EVIDENCE,
@@ -569,12 +632,6 @@ def _apply_platform_and_surface_proofs(
             )
             for capability in capabilities
         )
-    capabilities = _apply_operator_workflows_operations_proof_if_valid(
-        capabilities=capabilities,
-        evaluated_at_utc=evaluated_at_utc,
-        operator_workflows_operations_proof=operator_workflows_operations_proof,
-        operator_workflows_operations_proof_ref=operator_workflows_operations_proof_ref,
-    )
     return capabilities
 
 
