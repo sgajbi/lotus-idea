@@ -43,9 +43,12 @@ def _load_endpoint_status_contracts() -> ModuleType:
     return module
 
 
-def _load_endpoint_feedback_contracts() -> ModuleType:
-    script_path = ROOT / "scripts" / "endpoint_feedback_contracts.py"
-    spec = importlib.util.spec_from_file_location("endpoint_feedback_contracts", script_path)
+def _load_endpoint_review_workflow_contracts() -> ModuleType:
+    script_path = ROOT / "scripts" / "endpoint_review_workflow_contracts.py"
+    spec = importlib.util.spec_from_file_location(
+        "endpoint_review_workflow_contracts",
+        script_path,
+    )
     assert spec is not None
     assert spec.loader is not None
     module = importlib.util.module_from_spec(spec)
@@ -171,7 +174,10 @@ def test_endpoint_certification_gate_blocks_missing_negative_or_degraded_evidenc
 
 
 def test_endpoint_certification_gate_accepts_operation_event_evidence() -> None:
+    from app.api.examples.review_workflow import build_review_action_response_examples
+
     module = _load_endpoint_certification_gate()
+    review_contracts = _load_endpoint_review_workflow_contracts()
     endpoint = {
         "method": "POST",
         "path": "/api/v1/idea-candidates/{candidateId}/review-actions",
@@ -182,9 +188,14 @@ def test_endpoint_certification_gate_accepts_operation_event_evidence() -> None:
             "supported-feature promotion."
         ),
         "error_examples": ["403 returns product-safe Problem Details."],
+        "response_examples": [
+            json.dumps(value) for value in build_review_action_response_examples().values()
+        ],
         "test_evidence": [
             "tests/integration/test_review_workflow_api.py::test_review_action_api_requires_permission_and_valid_request",
             "tests/integration/test_api_operation_events.py::test_lifecycle_queue_review_and_feedback_emit_operation_events",
+            review_contracts.REVIEW_ACTION_IDENTITY_REPLAY_TEST,
+            review_contracts.REVIEW_ACTION_SUCCESS_CONTRACT_TEST,
         ],
         "openapi_evidence": "scripts/openapi_quality_gate.py validates the operation.",
     }
@@ -652,10 +663,10 @@ def test_endpoint_certification_gate_accepts_complete_ai_readiness_publication()
 
 
 def test_endpoint_certification_gate_requires_every_feedback_success_mode() -> None:
-    from app.api.examples.feedback import build_feedback_response_examples
+    from app.api.examples.review_workflow import build_feedback_response_examples
     from app.main import app
 
-    module = _load_endpoint_feedback_contracts()
+    module = _load_endpoint_review_workflow_contracts()
     expected = build_feedback_response_examples()
     endpoint = {
         "method": "POST",
@@ -683,9 +694,9 @@ def test_endpoint_certification_gate_requires_every_feedback_success_mode() -> N
 
 
 def test_endpoint_certification_gate_blocks_feedback_ledger_and_test_drift() -> None:
-    from app.api.examples.feedback import build_feedback_response_examples
+    from app.api.examples.review_workflow import build_feedback_response_examples
 
-    module = _load_endpoint_feedback_contracts()
+    module = _load_endpoint_review_workflow_contracts()
     expected = build_feedback_response_examples()
     endpoint = {
         "method": "POST",
@@ -699,6 +710,56 @@ def test_endpoint_certification_gate_blocks_feedback_ledger_and_test_drift() -> 
     assert any("response_examples must exactly match" in error for error in errors)
     assert any("cross-key feedback replay integration test" in error for error in errors)
     assert any("feedback success publication contract test" in error for error in errors)
+
+
+def test_endpoint_certification_gate_requires_every_review_action_success_mode() -> None:
+    from app.api.examples.review_workflow import build_review_action_response_examples
+    from app.main import app
+
+    module = _load_endpoint_review_workflow_contracts()
+    expected = build_review_action_response_examples()
+    endpoint = {
+        "method": "POST",
+        "path": "/api/v1/idea-candidates/{candidateId}/review-actions",
+        "response_examples": [json.dumps(value) for value in expected.values()],
+        "test_evidence": [
+            module.REVIEW_ACTION_IDENTITY_REPLAY_TEST,
+            module.REVIEW_ACTION_SUCCESS_CONTRACT_TEST,
+        ],
+    }
+    openapi_spec = deepcopy(app.openapi())
+    examples = openapi_spec["paths"][endpoint["path"]]["post"]["responses"]["200"]["content"][
+        "application/json"
+    ]["examples"]
+    examples["accepted"]["value"]["reviewDecision"].pop("snoozedUntilUtc")
+
+    errors = module.validate_review_action_success_contract(endpoint, openapi_spec)
+
+    assert errors == [
+        (
+            "('POST', '/api/v1/idea-candidates/{candidateId}/review-actions'): OpenAPI "
+            "200 examples must exactly match every named code-owned review-action success mode"
+        )
+    ]
+
+
+def test_endpoint_certification_gate_blocks_review_action_ledger_and_test_drift() -> None:
+    from app.api.examples.review_workflow import build_review_action_response_examples
+
+    module = _load_endpoint_review_workflow_contracts()
+    expected = build_review_action_response_examples()
+    endpoint = {
+        "method": "POST",
+        "path": "/api/v1/idea-candidates/{candidateId}/review-actions",
+        "response_examples": [json.dumps(expected["accepted"])],
+        "test_evidence": [],
+    }
+
+    errors = module.validate_review_action_success_contract(endpoint)
+
+    assert any("response_examples must exactly match" in error for error in errors)
+    assert any("cross-key review-action replay integration test" in error for error in errors)
+    assert any("review-action success publication contract test" in error for error in errors)
 
 
 def _certified_endpoint(*, test_evidence: list[str]) -> dict[str, object]:

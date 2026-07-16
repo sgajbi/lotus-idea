@@ -6,6 +6,10 @@ from fastapi.responses import JSONResponse
 from app.api.caller_headers import TRUSTED_CALLER_CONTEXT_HEADER
 from app.api.durable_write_guard import durable_repository_write_unavailable_metadata
 from app.api.event_lineage import EventCausationHeader, event_lineage_from_request
+from app.api.examples.review_workflow import (
+    build_feedback_response_examples,
+    build_review_action_response_examples,
+)
 from app.api.problem_details import (
     conflict_metadata,
     invalid_request_metadata,
@@ -340,32 +344,7 @@ REVIEW_ACTION_ROUTE: RouteMetadata = {
         200: {
             "description": "Review action accepted or replayed through the internal repository foundation.",
             "content": {
-                "application/json": {
-                    "example": {
-                        "reviewDecision": {
-                            "reviewId": "review-suppress-001",
-                            "candidateId": "idea_high_cash_8d57adbf52f7f5a7",
-                            "evidencePacketId": "iep_high_cash_8d57adbf52f7f5a7",
-                            "action": "suppress",
-                            "resultingPosture": "suppressed",
-                            "actorRole": "advisor",
-                            "reasonCodes": ["review_suppressed", "review_required"],
-                            "decidedAtUtc": "2026-06-21T10:05:00Z",
-                            "suppressionReason": "manual_suppression",
-                            "snoozedUntilUtc": None,
-                            "grantsDownstreamAuthority": False,
-                        },
-                        "persistence": {
-                            "decision": "accepted",
-                            "candidateId": "idea_high_cash_8d57adbf52f7f5a7",
-                            "lifecycleStatus": "generated",
-                            "reviewPosture": "suppressed",
-                            "auditEventType": "idea.review.decision_recorded",
-                        },
-                        "durableStorageBacked": False,
-                        "supportedFeaturePromoted": False,
-                    }
-                }
+                "application/json": {"example": build_review_action_response_examples()["accepted"]}
             },
         },
         **invalid_request_metadata(detail="Correct the review request and retry."),
@@ -414,28 +393,7 @@ FEEDBACK_ROUTE: RouteMetadata = {
         200: {
             "description": "Feedback accepted or replayed through the internal repository foundation.",
             "content": {
-                "application/json": {
-                    "example": {
-                        "feedbackEvent": {
-                            "feedbackId": "feedback-useful-001",
-                            "candidateId": "idea_high_cash_8d57adbf52f7f5a7",
-                            "evidencePacketId": "iep_high_cash_8d57adbf52f7f5a7",
-                            "outcome": "useful",
-                            "actorRole": "advisor",
-                            "reasonCodes": ["feedback_recorded", "review_required"],
-                            "recordedAtUtc": "2026-06-21T10:06:00Z",
-                        },
-                        "persistence": {
-                            "decision": "accepted",
-                            "candidateId": "idea_high_cash_8d57adbf52f7f5a7",
-                            "lifecycleStatus": "generated",
-                            "reviewPosture": "advisor_review_required",
-                            "auditEventType": "idea.feedback.recorded",
-                        },
-                        "durableStorageBacked": False,
-                        "supportedFeaturePromoted": False,
-                    }
-                }
+                "application/json": {"example": build_feedback_response_examples()["accepted"]}
             },
         },
         **invalid_request_metadata(detail="Correct the feedback request and retry."),
