@@ -182,8 +182,7 @@ def core_missing_benchmark_runtime_execution_is_valid(payload: Mapping[str, Any]
         == CORE_MISSING_BENCHMARK_RUNTIME_BLOCKERS_SATISFIED
         and tuple(payload.get("remainingCertificationBlockers") or ())
         == CORE_MISSING_BENCHMARK_REMAINING_BLOCKERS
-        and tuple(payload.get("evidenceRefs") or ())
-        == CORE_MISSING_BENCHMARK_RUNTIME_EVIDENCE_REFS
+        and tuple(payload.get("evidenceRefs") or ()) == CORE_MISSING_BENCHMARK_RUNTIME_EVIDENCE_REFS
     )
 
 
@@ -235,9 +234,7 @@ def _source_is_valid(
     )
     expected_diagnostic = benchmark_assignment_diagnostic(
         benchmark_identity_resolved=source.get("benchmarkIdentityResolved") is True,
-        assignment_effective_for_as_of_date=(
-            source.get("assignmentEffectiveForAsOfDate") is True
-        ),
+        assignment_effective_for_as_of_date=(source.get("assignmentEffectiveForAsOfDate") is True),
         assignment_status=(
             str(source["assignmentStatus"])
             if isinstance(source.get("assignmentStatus"), str)
@@ -251,8 +248,7 @@ def _source_is_valid(
         and status_is_valid
         and source.get("productId") == "lotus-core:BenchmarkAssignment:v1"
         and source.get("sourceSystem") == "lotus-core"
-        and source.get("route")
-        == "/integration/portfolios/{portfolio_id}/benchmark-assignment"
+        and source.get("route") == "/integration/portfolios/{portfolio_id}/benchmark-assignment"
         and source.get("asOfDate") == request.get("asOfDate")
         and source_generated is not None
         and source_generated <= evaluated_at_utc
@@ -304,8 +300,7 @@ def _evaluation_is_valid(
     return (
         evaluation.get("outcome") == "candidate_created"
         and evaluation.get("missingBenchmarkReviewRequired") is True
-        and tuple(evaluation.get("reasonCodes") or ())
-        == ("missing_benchmark", "review_required")
+        and tuple(evaluation.get("reasonCodes") or ()) == ("missing_benchmark", "review_required")
         and all(
             _is_sha256(evaluation.get(key))
             for key in ("candidateIdHash", "signalIdHash", "evidencePacketIdHash")

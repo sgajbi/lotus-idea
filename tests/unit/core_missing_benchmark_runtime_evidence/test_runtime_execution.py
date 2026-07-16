@@ -81,9 +81,7 @@ def test_runtime_execution_accepts_truthful_ready_assignment_no_opportunity() ->
             lambda evidence: replace(
                 evidence,
                 benchmark_identity_resolved=True,
-                assignment_diagnostic=(
-                    "core_benchmark_assignment_not_effective_for_as_of_date"
-                ),
+                assignment_diagnostic=("core_benchmark_assignment_not_effective_for_as_of_date"),
             ),
             "core_benchmark_assignment_not_effective_for_as_of_date",
         ),
@@ -123,9 +121,7 @@ def test_runtime_execution_qualifies_each_reviewable_assignment_gap(
     mutation: Callable[[CoreBenchmarkAssignmentEvidence], CoreBenchmarkAssignmentEvidence],
     diagnostic: str,
 ) -> None:
-    payload = _payload(
-        source=AuthoritativeCoreMissingBenchmarkSource(evidence_mutation=mutation)
-    )
+    payload = _payload(source=AuthoritativeCoreMissingBenchmarkSource(evidence_mutation=mutation))
 
     assert payload["execution"]["sourceReceipt"]["assignmentDiagnostic"] == diagnostic
     assert core_missing_benchmark_runtime_execution_is_valid(payload)
@@ -191,9 +187,7 @@ def test_runtime_execution_fails_closed_on_untrusted_source_evidence(
     mutation: Callable[[CoreBenchmarkAssignmentEvidence], CoreBenchmarkAssignmentEvidence],
     expected_blocker: str,
 ) -> None:
-    payload = _payload(
-        source=AuthoritativeCoreMissingBenchmarkSource(evidence_mutation=mutation)
-    )
+    payload = _payload(source=AuthoritativeCoreMissingBenchmarkSource(evidence_mutation=mutation))
 
     assert expected_blocker in payload["execution"]["qualificationBlockers"]
     assert payload["aggregateBlockersSatisfied"] == []

@@ -30,7 +30,9 @@ try:
 except ModuleNotFoundError:
     from proof_source_safety import validate_forbidden_content  # type: ignore[import-not-found,no-redef]
 
-GENERATOR = ROOT / "scripts" / "core_missing_benchmark_runtime_evidence" / "generate_runtime_execution.py"
+GENERATOR = (
+    ROOT / "scripts" / "core_missing_benchmark_runtime_evidence" / "generate_runtime_execution.py"
+)
 PROHIBITED_PATHS = (
     ROOT / "src" / "app" / "application" / "missing_benchmark_live_proof.py",
     ROOT / "scripts" / "generate_missing_benchmark_live_proof.py",
