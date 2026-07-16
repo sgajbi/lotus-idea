@@ -26,7 +26,7 @@ SCRIPT_TARGET_EXPECTATIONS = {
         "scripts/bond_maturity_runtime_evidence/runtime_execution_contract_gate.py"
     ),
     "missing-benchmark-live-proof-contract-gate": (
-        "scripts/missing_benchmark_live_proof_contract_gate.py"
+        "scripts/core_missing_benchmark_runtime_evidence/runtime_execution_contract_gate.py"
     ),
     "missing-benchmark-performance-readiness-proof-contract-gate": (
         "scripts/missing_benchmark_performance_readiness_proof_contract_gate.py"

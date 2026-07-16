@@ -27,6 +27,9 @@ class AuthoritativeCoreMissingBenchmarkSource:
         self.error = error
         self.requests: list[CoreBenchmarkAssignmentEvidenceRequest] = []
 
+    def close(self) -> None:
+        pass
+
     def fetch_benchmark_assignment_evidence(
         self,
         request: CoreBenchmarkAssignmentEvidenceRequest,

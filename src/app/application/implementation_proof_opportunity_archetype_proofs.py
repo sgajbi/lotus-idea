@@ -52,9 +52,9 @@ from app.application.missing_risk_profile_source_product_proof import (
     MISSING_RISK_PROFILE_SOURCE_PRODUCT_BLOCKERS_CLEARED,
     missing_risk_profile_source_product_proof_is_valid,
 )
-from app.application.missing_benchmark_live_proof import (
-    MISSING_BENCHMARK_LIVE_BLOCKERS_CLEARED,
-    missing_benchmark_live_proof_is_valid,
+from app.application.core_missing_benchmark_runtime_evidence import (
+    CORE_MISSING_BENCHMARK_RUNTIME_BLOCKERS_SATISFIED,
+    core_missing_benchmark_runtime_execution_is_valid,
 )
 from app.application.missing_benchmark_performance_readiness_proof import (
     MISSING_BENCHMARK_PERFORMANCE_READINESS_BLOCKERS_CLEARED,
@@ -234,7 +234,7 @@ def _opportunity_proof_steps(scope: Mapping[str, object]) -> tuple[OpportunityPr
         _proof_step(
             scope,
             "missing_benchmark_live",
-            missing_benchmark_live_proof_is_valid,
+            core_missing_benchmark_runtime_execution_is_valid,
             _apply_missing_benchmark_live_proof,
         ),
         _proof_step(
@@ -561,7 +561,7 @@ def _apply_missing_benchmark_live_proof(
     return apply_blocker_proof(
         capability,
         capability_ids=("opportunity-archetype-scenarios",),
-        blockers_cleared=MISSING_BENCHMARK_LIVE_BLOCKERS_CLEARED,
+        blockers_cleared=CORE_MISSING_BENCHMARK_RUNTIME_BLOCKERS_SATISFIED,
         proof_ref=missing_benchmark_live_proof_ref,
     )
 
