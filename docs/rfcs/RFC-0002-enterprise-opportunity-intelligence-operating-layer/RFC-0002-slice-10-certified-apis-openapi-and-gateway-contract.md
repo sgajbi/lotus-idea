@@ -233,6 +233,25 @@ and source authority; live Core certification, Gateway/Workbench realization,
 data-product promotion, and supported-feature promotion remain outside this
 tranche.
 
+PR `#549` merged issue `#548` by rebase to exact-main SHA
+`d993eeefe97f5e6adfda68669cc82bc62c1cae9f`. Main Releasability run
+`29536267571` and CodeQL run `29536268290` passed for that SHA. Validation
+included 4,728 unit tests, 460 integration tests with 31 declared
+environment-only PostgreSQL skips, 4 end-to-end tests, 99.02% combined
+coverage over 27,916 statements, MyPy over 957 source files, zero duplicate
+clusters across 2,755 functions, PostgreSQL runtime proof, container
+vulnerability scanning, CycloneDX SBOM generation and attestation, keyless
+image signing, provenance attestation, release identity validation, and CI
+signal evidence. The released image is
+`ghcr.io/sgajbi/lotus-idea@sha256:9b4e389e368370b44b904ce0ab6ac7687f3f943303c766924c7bb246e9a38219`;
+the runtime `/version` response exposes the same commit, branch, repository,
+build timestamp, run id, image build id, and digest-bound identity. Repo-authored
+wiki source was published at wiki commit `4e28a13`, and strict parity returned
+zero differences. The implementation branch is absent locally; remote cleanup
+is verified during closure. A refreshed deterministic inventory leaves 26
+multi-shape operations under issue `#542`, so Slice 10 remains partially
+implemented and supported-feature posture remains unchanged.
+
 PR `#543` merged issue `#539` to `main` at
 `f6e2365eaec5f4f0184d5985e5b5fcc641b4883b`. Main Releasability run
 `29528824505` passed, including lint, typecheck, security, architecture,
