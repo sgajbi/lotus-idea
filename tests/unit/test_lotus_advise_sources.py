@@ -95,6 +95,27 @@ def _request(evaluation_id: str = "pev_001") -> AdvisePolicyEvaluationEvidenceRe
     )
 
 
+@pytest.mark.parametrize(
+    "changes",
+    (
+        {"evaluation_id": " "},
+        {"evaluated_at_utc": EVALUATED_AT.replace(tzinfo=None)},
+    ),
+)
+def test_advise_evidence_request_rejects_invalid_identity_or_time(
+    changes: dict[str, Any],
+) -> None:
+    values: dict[str, Any] = {
+        "evaluation_id": "pev_001",
+        "as_of_date": AS_OF_DATE,
+        "evaluated_at_utc": EVALUATED_AT,
+    }
+    values.update(changes)
+
+    with pytest.raises(ValueError):
+        AdvisePolicyEvaluationEvidenceRequest(**values)
+
+
 def test_lotus_advise_adapter_fetches_declared_policy_evaluation_source_product() -> None:
     seen: list[tuple[str, str]] = []
 
@@ -159,6 +180,16 @@ def test_lotus_advise_adapter_prefers_source_declared_diagnostic() -> None:
     assert evidence.advise_diagnostic == "mandate_restriction_review_required"
 
 
+def test_lotus_advise_adapter_accepts_direct_source_diagnostic() -> None:
+    payload = _payload(extra={"source_diagnostic": " mandate_restriction_review_required "})
+
+    evidence = _adapter(
+        httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+    ).fetch_policy_evaluation_evidence(_request())
+
+    assert evidence.advise_diagnostic == "mandate_restriction_review_required"
+
+
 def test_lotus_advise_adapter_maps_forbidden_source_response_to_entitlement_denied() -> None:
     adapter = _adapter(httpx.MockTransport(lambda request: httpx.Response(403, json={})))
 
@@ -184,6 +215,16 @@ def test_lotus_advise_adapter_maps_malformed_requirements_to_source_unavailable(
         ).fetch_policy_evaluation_evidence(_request())
 
     assert exc_info.value.code == "advise_approval_dependencies_malformed"
+
+
+def test_lotus_advise_adapter_ignores_requirement_without_a_status() -> None:
+    payload = _payload(extra={"approval_dependencies": [{"requirement_id": "approval:missing"}]})
+
+    evidence = _adapter(
+        httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+    ).fetch_policy_evaluation_evidence(_request())
+
+    assert evidence.blocked_requirement_count == 1
 
 
 def test_lotus_advise_adapter_maps_malformed_sign_off_blockers_to_source_unavailable() -> None:
@@ -310,6 +351,20 @@ def test_lotus_advise_adapter_maps_non_current_policy_source_freshness(
 
     assert evidence.policy_ref is not None
     assert evidence.policy_ref.freshness is expected
+
+
+def test_lotus_advise_adapter_maps_unknown_freshness_to_unavailable() -> None:
+    payload = _payload()
+    metadata = payload["metadata"]
+    assert isinstance(metadata, dict)
+    metadata["freshness"] = "producer-specific-state"
+
+    evidence = _adapter(
+        httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+    ).fetch_policy_evaluation_evidence(_request())
+
+    assert evidence.policy_ref is not None
+    assert evidence.policy_ref.freshness is EvidenceFreshness.UNAVAILABLE
 
 
 def test_lotus_advise_adapter_does_not_substitute_request_as_of_for_missing_source_time() -> None:
