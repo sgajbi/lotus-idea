@@ -82,6 +82,19 @@ def _load_endpoint_report_evidence_contracts() -> ModuleType:
     return module
 
 
+def _load_endpoint_candidate_state_contracts() -> ModuleType:
+    script_path = ROOT / "scripts" / "endpoint_candidate_state_contracts.py"
+    spec = importlib.util.spec_from_file_location(
+        "endpoint_candidate_state_contracts",
+        script_path,
+    )
+    assert spec is not None
+    assert spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 def test_endpoint_certification_gate_passes_current_repository_contract() -> None:
     module = _load_endpoint_certification_gate()
 
@@ -1087,3 +1100,100 @@ def _ai_readiness_openapi() -> dict[str, Any]:
             }
         }
     }
+
+
+def test_endpoint_certification_gate_requires_every_candidate_lifecycle_success_mode() -> None:
+    from app.api.examples.candidate_state import (
+        build_candidate_lifecycle_response_examples,
+    )
+    from app.main import app
+
+    module = _load_endpoint_candidate_state_contracts()
+    expected = build_candidate_lifecycle_response_examples()
+    endpoint = {
+        "method": "POST",
+        "path": module.CANDIDATE_LIFECYCLE_OPERATION[1],
+        "response_examples": [json.dumps(value) for value in expected.values()],
+        "test_evidence": [
+            module.CANDIDATE_LIFECYCLE_BEHAVIOR_TEST,
+            module.CANDIDATE_LIFECYCLE_SUCCESS_CONTRACT_TEST,
+        ],
+    }
+    openapi_spec = deepcopy(app.openapi())
+    examples = openapi_spec["paths"][endpoint["path"]]["post"]["responses"]["200"]["content"][
+        "application/json"
+    ]["examples"]
+    examples.pop("replayed")
+
+    errors = module.validate_candidate_lifecycle_success_contract(endpoint, openapi_spec)
+
+    assert errors == [
+        (
+            "('POST', '/api/v1/idea-candidates/{candidateId}/lifecycle-transitions'): "
+            "OpenAPI 200 examples must exactly match every named code-owned "
+            "candidate-lifecycle success mode"
+        )
+    ]
+
+
+def test_endpoint_certification_gate_blocks_candidate_evidence_replay_openapi_drift() -> None:
+    from app.api.examples.candidate_state import (
+        build_candidate_evidence_replay_response_examples,
+    )
+    from app.main import app
+
+    module = _load_endpoint_candidate_state_contracts()
+    expected = build_candidate_evidence_replay_response_examples()
+    endpoint = {
+        "method": "POST",
+        "path": module.CANDIDATE_EVIDENCE_REPLAY_OPERATION[1],
+        "response_examples": [json.dumps(value) for value in expected.values()],
+        "test_evidence": [
+            module.CANDIDATE_EVIDENCE_REPLAY_MATCHED_TEST,
+            module.CANDIDATE_EVIDENCE_REPLAY_COMPARISON_TEST,
+            module.CANDIDATE_EVIDENCE_REPLAY_EXPIRED_TEST,
+            module.CANDIDATE_EVIDENCE_REPLAY_SUCCESS_CONTRACT_TEST,
+        ],
+    }
+    openapi_spec = deepcopy(app.openapi())
+    examples = openapi_spec["paths"][endpoint["path"]]["post"]["responses"]["200"]["content"][
+        "application/json"
+    ]["examples"]
+    examples["staleSource"]["value"]["currentEvidenceHash"] = "sha256:unexpected"
+
+    errors = module.validate_candidate_evidence_replay_success_contract(endpoint, openapi_spec)
+
+    assert errors == [
+        (
+            "('POST', '/api/v1/idea-candidates/{candidateId}/evidence-replay'): "
+            "OpenAPI 200 examples must exactly match every named code-owned "
+            "candidate-evidence-replay success mode"
+        )
+    ]
+
+
+def test_endpoint_certification_gate_blocks_candidate_evidence_replay_ledger_and_test_drift() -> (
+    None
+):
+    from app.api.examples.candidate_state import (
+        build_candidate_evidence_replay_response_examples,
+    )
+
+    module = _load_endpoint_candidate_state_contracts()
+    expected = build_candidate_evidence_replay_response_examples()
+    endpoint = {
+        "method": "POST",
+        "path": module.CANDIDATE_EVIDENCE_REPLAY_OPERATION[1],
+        "response_examples": [
+            json.dumps(expected["matched"]),
+            json.dumps(expected["hashMismatch"]),
+        ],
+        "test_evidence": [module.CANDIDATE_EVIDENCE_REPLAY_MATCHED_TEST],
+    }
+
+    errors = module.validate_candidate_evidence_replay_success_contract(endpoint)
+
+    assert any("response_examples must exactly match" in error for error in errors)
+    assert any("hash-mismatch and stale-source" in error for error in errors)
+    assert any("expired candidate-evidence-replay integration test" in error for error in errors)
+    assert any("success publication contract test" in error for error in errors)
