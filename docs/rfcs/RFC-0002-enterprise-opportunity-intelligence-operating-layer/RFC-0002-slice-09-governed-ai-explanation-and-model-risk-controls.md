@@ -1,6 +1,20 @@
 # RFC-0002 Slice 09: Governed AI Explanation And Model-Risk Controls
 
-Status: Partially implemented - internal AI governance, certified API foundation, and source-safe API-idempotent lineage persistence with PostgreSQL runtime proof
+Status: Repository implementation complete - external production certification and supported-feature promotion remain blocked
+
+Implementation closure:
+
+1. Lotus Idea owns and implements the redacted request boundary, deterministic
+   fallback, evidence-grounded explanation policy, forbidden-output controls,
+   entitlement checks, attestation verification, replay fencing, bounded
+   lineage, audit, API projection, readiness diagnostics, and PostgreSQL proof.
+2. The acceptance gate in this slice is code-backed and validated on `main`.
+3. Live provider execution, production model-risk approval, runtime dashboard
+   and alert execution, Gateway/Workbench realization, and supported-feature
+   promotion are external certification gates. They remain fail-closed under
+   issues `#340`, `#380`, and `sgajbi/lotus-ai#115`.
+4. This closure does not promote an AI product, transfer AI infrastructure
+   ownership into Lotus Idea, or claim RFC-0002 completion.
 
 ## Outcome
 
@@ -256,9 +270,9 @@ Validation evidence from the implementation slice:
     digest image, runtime metadata, vulnerability scan, SBOM, signature,
     provenance, release manifest, and digest-bound deployment evidence. Wiki
     publication `f86a57c` synchronized the three changed pages with zero drift.
-    Issue `#389` is implementation-complete; Slice 09 remains partial only for
-    the separate live-provider/production, Gateway/Workbench, and promotion
-    blockers below.
+    Issue `#389` is implementation-complete. The repository implementation is
+    complete, while the separate live-provider/production,
+    Gateway/Workbench, and promotion gates below remain externally blocked.
 17. Issue `#392` closed through PR `#394` with `65` focused runtime-proof and
     HTTP-adapter tests covering the changed boundary at `100%`; full local
     coverage passed at `99.03%`. A running canonical Lotus AI service returned
@@ -336,8 +350,9 @@ Validation evidence from the implementation slice:
     provenance and SBOM attestations, release manifest, and digest-pinned
     runtime-smoke evidence. Wiki publication `ffed0c8` has zero drift, issue
     `#516` is closed, and the implementation branch is absent locally and
-    remotely. This occurrence does not promote Slice 09: live provider
-    execution, model-risk approval, Gateway/Workbench certification, and
+    remotely. This occurrence completes the remaining repository-owned
+    failure-path defect without promoting the product: live provider execution,
+    model-risk approval, Gateway/Workbench certification, and
     supported-feature promotion remain separately gated.
 
 Issue `#411` changes the AI readiness response vocabulary from certification
@@ -552,10 +567,10 @@ before resuming material Slice 09 capability implementation.
 These references shape controls only. Lotus product truth remains the code,
 tests, RFC evidence, supported-features ledger, CI, and published wiki source.
 
-## Remaining Work
+## External Certification And Promotion
 
-This slice is not yet a supported AI explanation product. Remaining work
-includes:
+The Lotus Idea implementation is complete, but this is not yet a supported AI
+explanation product. External certification work includes:
 
 1. prompt registry, RAG, evaluation, and provider telemetry owned by
    `lotus-ai`,
@@ -586,6 +601,7 @@ includes:
    conversion state.
 
 Generic deterministic-stub `lotus-ai` workflow execution and mainline durable
-lineage-store CI certification are implemented. Live-provider and production
-model-risk approval, Gateway/Workbench realization, and supported-feature
-promotion remain planned and blocked.
+lineage-store CI certification are implemented. The four repository acceptance
+criteria above pass. Live-provider and production model-risk approval,
+Gateway/Workbench realization, and supported-feature promotion remain blocked
+and cannot be cleared by additional Idea-local scaffolding.

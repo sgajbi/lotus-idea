@@ -134,7 +134,8 @@ Current RFC-0002 implementation-start baseline:
    mesh certification, and supported-feature promotion remain later-slice
    gates. Exact-main SHA `d5be2390` passed Main Releasability run
    `29297787754` and CodeQL run `29297783153`.
-10. Slice 09 partially implements internal AI governance with redacted evidence
+10. Slice 09 completes the Lotus Idea repository implementation for governed AI
+   explanation with redacted evidence
    envelopes, forbidden metadata rejection, deterministic fallback,
    unsupported-claim and forbidden-action verifier outcomes, evidence-grounded
    server-rendered claim narrative with source-safe freshness/quality bindings,
@@ -152,9 +153,10 @@ Current RFC-0002 implementation-start baseline:
    `29303648849` passed. Live-provider execution, production model-risk
    approval, Gateway, Workbench, and supported-feature promotion remain absent.
    PR `#390` merged this bounded capability to exact-main SHA `67a6e005`;
-   Main Releasability `29300549721` and CodeQL `29300546423` passed. Slice 09
-   remains partial for its separate live-provider/production and
-   product-realization gates.
+   Main Releasability `29300549721` and CodeQL `29300546423` passed. Later
+   hardening closed the blocked-provider-narrative recurrence through PR `#517`.
+   Live-provider/production approval and product-realization gates remain
+   externally blocked; no supported feature is promoted.
    PRs `#397`/`#398` additionally require and validate a digest-bound exact-main
    CI execution receipt before durable AI lineage-store certification can
    clear. Exact-main SHA `5cf7592b` passed Main Releasability `29307190040` and

@@ -1973,7 +1973,7 @@ runbooks, quality scorecards, and contracts for detailed history.
 
 ## AI Product Research Rule
 
-Before material Slice 09 or later AI-assisted product design, read
+Before external Slice 09 certification or later AI-assisted product design, read
 `docs/research/advisor-intelligence-product-differentiation.md`. Refresh its
 dated primary-source research, state a falsifiable differentiation hypothesis,
 and define deterministic anchors, source authority, evaluation, failure,
