@@ -1064,6 +1064,7 @@
         "tests/integration/test_review_workflow_api.py::test_review_action_api_returns_conflict_for_changed_idempotency_payload",
         "tests/integration/test_review_identity_api.py::test_review_action_api_governs_resource_identity_across_transport_keys",
         "tests/integration/test_review_workflow_api.py::test_review_action_api_returns_state_conflict_for_generated_candidate_approval",
+        "tests/unit/api_examples/test_review_workflow.py::test_review_action_success_examples_match_ledger_and_openapi",
         "tests/unit/test_candidate_state_policy.py::test_candidate_construction_and_rehydration_reject_contradictory_state",
         "tests/unit/test_review_governance.py::test_every_review_action_fails_closed_for_non_reviewable_states",
         "tests/unit/test_postgres_review_queue.py::test_postgres_review_queue_quarantines_contradictory_raw_candidate_state",
@@ -1103,7 +1104,7 @@
       "test_evidence": [
         "tests/integration/test_review_workflow_api.py::test_feedback_api_persists_source_provenanced_feedback",
         "tests/integration/test_review_identity_api.py::test_feedback_api_governs_resource_identity_across_transport_keys",
-        "tests/unit/api_examples/test_feedback.py::test_feedback_success_examples_match_ledger_and_openapi",
+        "tests/unit/api_examples/test_review_workflow.py::test_feedback_success_examples_match_ledger_and_openapi",
         "tests/integration/test_review_workflow_api.py::test_review_action_api_returns_not_found_for_missing_candidate",
         "tests/integration/test_review_workflow_api.py::test_review_action_api_requires_mutating_capability_and_scope",
         "tests/integration/test_review_workflow_entitlements_api.py::test_feedback_api_enforces_trusted_caller_entitlement_scope",

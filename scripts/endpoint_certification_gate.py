@@ -16,7 +16,10 @@ from endpoint_ai_contracts import (  # noqa: E402
     validate_ai_evaluation_success_contract,
     validate_ai_readiness_success_contract,
 )
-from endpoint_feedback_contracts import validate_feedback_success_contract  # noqa: E402
+from endpoint_review_workflow_contracts import (  # noqa: E402
+    validate_feedback_success_contract,
+    validate_review_action_success_contract,
+)
 from endpoint_contract_support import openapi_operation  # noqa: E402
 from endpoint_status_contracts import validate_endpoint_status_contract  # noqa: E402
 
@@ -181,6 +184,7 @@ def _validate_implemented_endpoint_posture(
     errors.extend(_validate_gateway_publication_posture(endpoint))
     errors.extend(validate_ai_evaluation_success_contract(endpoint, openapi_spec))
     errors.extend(validate_ai_readiness_success_contract(endpoint, openapi_spec))
+    errors.extend(validate_review_action_success_contract(endpoint, openapi_spec))
     errors.extend(validate_feedback_success_contract(endpoint, openapi_spec))
     errors.extend(validate_signal_source_contract_error_examples(endpoint))
     errors.extend(validate_endpoint_status_contract(endpoint, openapi_spec))
