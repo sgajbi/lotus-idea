@@ -24,9 +24,7 @@ def test_source_contract_is_closed_digest_bound_supporting_evidence() -> None:
     )
     assert payload["evidenceClass"] == "source_contract"
     assert payload["blockerEffect"]["clears"] == []
-    assert "scheduled_worker_deploy_proof_missing" in (
-        payload["blockerEffect"]["preserves"]
-    )
+    assert "scheduled_worker_deploy_proof_missing" in (payload["blockerEffect"]["preserves"])
     assert payload["nonProofClaims"] == {
         "deploymentObserved": False,
         "scheduledExecutionObserved": False,
@@ -95,9 +93,5 @@ def _set(payload: dict[str, object], path: tuple[str, ...], value: object) -> No
 
 
 def _refresh_digest(payload: dict[str, object]) -> None:
-    material = {
-        key: value
-        for key, value in payload.items()
-        if key != "sourceContractDigest"
-    }
+    material = {key: value for key, value in payload.items() if key != "sourceContractDigest"}
     payload["sourceContractDigest"] = sha256_json(material)

@@ -16,6 +16,7 @@ from app.application.source_ingestion_scheduler import (
 )
 from app.application.source_ingestion_worker import source_ingestion_worker_plan_from_manifest
 from scripts.proof_generator_io import parse_generated_at_utc, write_json_payload
+
 ROOT = Path(__file__).resolve().parents[2]
 
 

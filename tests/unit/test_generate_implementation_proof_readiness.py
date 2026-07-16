@@ -234,18 +234,16 @@ def test_static_scheduled_worker_source_contract_preserves_deployment_blocker(
     )
     assert "scheduled_worker_deploy_proof_missing" in source_ingestion["blockers"]
     assert "live_core_source_proof_missing" in source_ingestion["blockers"]
-    assert "source ingestion scheduled-worker source-contract artifact" in (
-        source_ingestion["evidenceRefs"]
+    assert (
+        "source ingestion scheduled-worker source-contract artifact"
+        in (source_ingestion["evidenceRefs"])
     )
     assert "durable_repository_not_configured" in source_ingestion["blockers"]
     assert payload["readinessStatus"] == "blocked"
     assert payload["supportedFeaturePromoted"] is False
     assert os.environ[MANIFEST_ENV] == "pre-existing-manifest.json"
     assert os.environ[CORE_BASE_URL_ENV] == "http://pre-existing-core"
-    assert (
-        os.environ[SCHEDULED_WORKER_SOURCE_CONTRACT_ENV]
-        == "pre-existing-source-contract.json"
-    )
+    assert os.environ[SCHEDULED_WORKER_SOURCE_CONTRACT_ENV] == "pre-existing-source-contract.json"
 
 
 def test_deployment_evidence_clears_only_scheduled_worker_deployment_blocker(
@@ -290,8 +288,9 @@ def test_deployment_evidence_clears_only_scheduled_worker_deployment_blocker(
     )
     assert "scheduled_worker_deploy_proof_missing" not in source_ingestion["blockers"]
     assert "live_core_source_proof_missing" in source_ingestion["blockers"]
-    assert "source ingestion scheduled-worker deployment-evidence artifact" in (
-        source_ingestion["evidenceRefs"]
+    assert (
+        "source ingestion scheduled-worker deployment-evidence artifact"
+        in (source_ingestion["evidenceRefs"])
     )
     assert (
         os.environ[SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE_ENV]

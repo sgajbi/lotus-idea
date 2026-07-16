@@ -89,9 +89,7 @@ def validate_source_ingestion_scheduler_contracts() -> list[str]:
             deployment_actor="github-actions",
             workload_identity=DOCKER_COMPOSE_WORKER_SERVICE,
             rollout_completed_at_utc=datetime(2026, 7, 16, 10, 19, tzinfo=UTC),
-            scheduler_configuration_digest=source_contract[
-                "schedulerConfigurationDigest"
-            ],
+            scheduler_configuration_digest=source_contract["schedulerConfigurationDigest"],
             source_contract_digest=source_contract["sourceContractDigest"],
         )
     except (OSError, ValueError, json.JSONDecodeError) as exc:
@@ -116,9 +114,7 @@ def validate_source_ingestion_scheduler_contracts() -> list[str]:
         source_contract,
     ):
         errors.append("deployment evidence must bind the exact scheduler source contract")
-    if deployment_evidence["blockerEffect"]["clears"] != [
-        "scheduled_worker_deploy_proof_missing"
-    ]:
+    if deployment_evidence["blockerEffect"]["clears"] != ["scheduled_worker_deploy_proof_missing"]:
         errors.append("deployment evidence must clear only the deployment blocker")
     if source_contract["blockerEffect"]["clears"]:
         errors.append("source-contract evidence must clear no blocker")
@@ -149,9 +145,7 @@ def _validate_runtime_packaging(errors: list[str]) -> None:
 def _validate_retired_paths(errors: list[str]) -> None:
     for retired_path in RETIRED_PATHS:
         if (ROOT / retired_path).exists():
-            errors.append(
-                f"retired scheduled-worker proof path must not exist: {retired_path}"
-            )
+            errors.append(f"retired scheduled-worker proof path must not exist: {retired_path}")
     for root in ("src", "scripts"):
         for file_path in (ROOT / root).rglob("*"):
             if not file_path.is_file() or file_path.suffix not in {".py", ".json", ".md"}:

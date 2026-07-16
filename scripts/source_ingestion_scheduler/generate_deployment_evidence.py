@@ -24,9 +24,7 @@ def main(argv: list[str] | None = None) -> int:
             controller_run_attempt=args.controller_run_attempt,
             deployment_actor=args.deployment_actor,
             workload_identity=args.workload_identity,
-            rollout_completed_at_utc=parse_generated_at_utc(
-                args.rollout_completed_at_utc
-            ),
+            rollout_completed_at_utc=parse_generated_at_utc(args.rollout_completed_at_utc),
             scheduler_configuration_digest=args.scheduler_configuration_digest,
             source_contract_digest=args.source_contract_digest,
         )

@@ -67,8 +67,6 @@ def deployment_evidence(
         deployment_actor="github-actions",
         workload_identity="lotus-idea-source-ingestion-worker",
         rollout_completed_at_utc=ROLLOUT_COMPLETED_AT,
-        scheduler_configuration_digest=str(
-            contract["schedulerConfigurationDigest"]
-        ),
+        scheduler_configuration_digest=str(contract["schedulerConfigurationDigest"]),
         source_contract_digest=str(contract["sourceContractDigest"]),
     )

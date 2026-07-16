@@ -106,9 +106,7 @@ def build_source_ingestion_readiness_snapshot(
         scheduled_worker_source_contract_valid
         and scheduled_worker_deployment_evidence
         and scheduled_worker_source_contract
-        and scheduled_worker_deployment_evidence_is_valid(
-            scheduled_worker_deployment_evidence
-        )
+        and scheduled_worker_deployment_evidence_is_valid(scheduled_worker_deployment_evidence)
         and scheduled_worker_deployment_matches_source_contract(
             scheduled_worker_deployment_evidence,
             scheduled_worker_source_contract,
