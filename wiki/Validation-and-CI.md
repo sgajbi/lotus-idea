@@ -437,7 +437,7 @@ Persistence adapter validation:
    optional closed v2 Manage mandate runtime-evidence consumption,
    optional receipt-bound Core benchmark-assignment runtime evidence consumption,
    optional receipt-bound Core portfolio-state runtime evidence consumption,
-   optional missing-benchmark live Core proof consumption,
+   optional closed v2 Core missing-benchmark runtime-evidence consumption,
    optional missing-benchmark Performance readiness proof consumption,
    default Report intake route source-contract generation and consumption, default
    Report materialization source-contract generation and consumption, default

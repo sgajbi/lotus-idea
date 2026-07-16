@@ -60,8 +60,9 @@ capabilities exist.
    clears the live Performance blocker, missing-benchmark Performance readiness
    proof clears only the Performance benchmark-readiness blocker, Core benchmark
    assignment proof clears the benchmark-assignment source-ref blocker,
-   missing-benchmark Core proof clears only the missing-benchmark live Core
-   source blocker, low-income Core
+   closed v2 missing-benchmark Core runtime evidence clears only the
+   missing-benchmark live Core source blocker after request, assignment-state,
+   and evaluation receipts reconcile, low-income Core
    cashflow proof clears the live Core cashflow source blocker, Manage mandate
    proof clears the portfolio-scoped Manage action-register blocker plus
    mandate performance-health and mandate risk-health source-ref blockers, Core
