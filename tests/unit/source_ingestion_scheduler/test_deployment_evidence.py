@@ -25,9 +25,7 @@ def test_deployment_evidence_binds_image_environment_controller_and_rollout() ->
     assert scheduled_worker_deployment_evidence_is_valid(payload)
     assert payload["evidenceClass"] == "deployment"
     assert payload["requiredEvidenceClass"] == "deployment"
-    assert payload["blockerEffect"]["clears"] == [
-        "scheduled_worker_deploy_proof_missing"
-    ]
+    assert payload["blockerEffect"]["clears"] == ["scheduled_worker_deploy_proof_missing"]
     assert payload["image"]["reference"] == (
         f"ghcr.io/sgajbi/lotus-idea@{payload['image']['digest']}"
     )

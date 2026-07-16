@@ -171,9 +171,7 @@ def scheduled_worker_deployment_evidence_is_valid(payload: Mapping[str, Any]) ->
     generated_at_utc = parse_timezone_aware_datetime(payload.get("generatedAtUtc"))
     workload = payload["workload"]
     assert isinstance(workload, Mapping)
-    rollout_completed_at_utc = parse_timezone_aware_datetime(
-        workload.get("rolloutCompletedAtUtc")
-    )
+    rollout_completed_at_utc = parse_timezone_aware_datetime(workload.get("rolloutCompletedAtUtc"))
     if (
         generated_at_utc is None
         or rollout_completed_at_utc is None
@@ -216,11 +214,10 @@ def scheduled_worker_deployment_matches_source_contract(
     scheduler_configuration = deployment_evidence.get("schedulerConfiguration")
     if not isinstance(scheduler_configuration, Mapping):
         return False
-    return (
-        scheduler_configuration.get("identityDigest")
-        == source_contract.get("schedulerConfigurationDigest")
-        and scheduler_configuration.get("sourceContractDigest")
-        == source_contract.get("sourceContractDigest")
+    return scheduler_configuration.get("identityDigest") == source_contract.get(
+        "schedulerConfigurationDigest"
+    ) and scheduler_configuration.get("sourceContractDigest") == source_contract.get(
+        "sourceContractDigest"
     )
 
 
