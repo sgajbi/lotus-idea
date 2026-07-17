@@ -432,10 +432,10 @@
         "{\"asOfDate\":\"2026-06-21\",\"evaluatedAtUtc\":\"2026-06-21T10:00:00Z\",\"sourceReportedMaxDrawdown\":\"-0.1245\",\"riskSupportabilityState\":\"ready\",\"drawdownRef\":{\"productId\":\"lotus-risk:DrawdownAnalyticsReport:v1\",\"sourceSystem\":\"lotus-risk\",\"productVersion\":\"v1\",\"route\":\"/analytics/risk/drawdown\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"contentHash\":\"sha256:drawdown-analytics-report\",\"dataQualityStatus\":\"ready\",\"freshness\":\"current\"},\"entitlementAllowed\":true}"
       ],
       "response_examples": [
-        "{\"outcome\":\"candidate_created\",\"family\":\"high_volatility\",\"reasonCodes\":[\"drawdown_attention\",\"review_required\"],\"unsupportedReasons\":[],\"candidate\":{\"candidateId\":\"idea_drawdown_review_8d57adbf52f7f5a7\",\"family\":\"high_volatility\",\"lifecycleStatus\":\"generated\",\"reviewPosture\":\"advisor_review_required\",\"evidencePacketId\":\"iep_drawdown_review_8d57adbf52f7f5a7\",\"supportability\":\"ready\",\"score\":\"72\",\"scorePolicyVersion\":\"drawdown-review-attention-v1\",\"sourceSignalIds\":[\"signal_drawdown_review_8d57adbf52f7f5a7\"],\"sourceRefs\":[{\"productId\":\"lotus-risk:DrawdownAnalyticsReport:v1\",\"sourceSystem\":\"lotus-risk\",\"productVersion\":\"v1\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"dataQualityStatus\":\"ready\",\"freshness\":\"current\"}]},\"sourceAuthority\":\"lotus-risk\",\"supportedFeaturePromoted\":false}",
-        "{\"outcome\":\"not_eligible\",\"family\":\"high_volatility\",\"reasonCodes\":[\"below_materiality\"],\"unsupportedReasons\":[],\"candidate\":null,\"sourceAuthority\":\"lotus-risk\",\"supportedFeaturePromoted\":false}",
-        "{\"outcome\":\"blocked\",\"family\":\"high_volatility\",\"reasonCodes\":[\"source_partial\"],\"unsupportedReasons\":[\"source_uncertified\"],\"candidate\":null,\"sourceAuthority\":\"lotus-risk\",\"supportedFeaturePromoted\":false}",
-        "{\"outcome\":\"blocked\",\"family\":\"high_volatility\",\"reasonCodes\":[\"source_stale\"],\"unsupportedReasons\":[\"stale_source\"],\"candidate\":null,\"sourceAuthority\":\"lotus-risk\",\"supportedFeaturePromoted\":false}"
+        "{\"outcome\":\"candidate_created\",\"family\":\"high_volatility\",\"reasonCodes\":[\"drawdown_attention\",\"review_required\"],\"unsupportedReasons\":[],\"candidate\":{\"candidateId\":\"idea_drawdown_review_118a1ef3fc44b068\",\"family\":\"high_volatility\",\"lifecycleStatus\":\"generated\",\"reviewPosture\":\"advisor_review_required\",\"evidencePacketId\":\"iep_drawdown_review_118a1ef3fc44b068\",\"supportability\":\"ready\",\"score\":\"72\",\"scorePolicyVersion\":\"drawdown-review-attention-v1\",\"sourceSignalIds\":[\"signal_drawdown_review_118a1ef3fc44b068\"],\"sourceRefs\":[{\"productId\":\"lotus-risk:DrawdownAnalyticsReport:v1\",\"sourceSystem\":\"lotus-risk\",\"productVersion\":\"v1\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"dataQualityStatus\":\"ready\",\"freshness\":\"current\"}]},\"sourceAuthority\":\"lotus-risk\",\"supportedFeaturePromoted\":false}",
+        "{\"outcome\":\"blocked\",\"family\":\"high_volatility\",\"reasonCodes\":[\"source_stale\"],\"unsupportedReasons\":[\"stale_source\"],\"candidate\":null,\"sourceAuthority\":\"lotus-risk\",\"supportedFeaturePromoted\":false}",
+        "{\"outcome\":\"suppressed\",\"family\":\"high_volatility\",\"reasonCodes\":[\"duplicate_suppressed\"],\"unsupportedReasons\":[],\"candidate\":null,\"sourceAuthority\":\"lotus-risk\",\"supportedFeaturePromoted\":false}",
+        "{\"outcome\":\"not_eligible\",\"family\":\"high_volatility\",\"reasonCodes\":[\"below_materiality\"],\"unsupportedReasons\":[],\"candidate\":null,\"sourceAuthority\":\"lotus-risk\",\"supportedFeaturePromoted\":false}"
       ],
       "error_examples": [
         "403 returns product-safe Problem Details when the caller lacks advisor role or idea.signal.evaluate capability.",
@@ -445,13 +445,15 @@
       "test_evidence": [
         "tests/integration/test_drawdown_review_signal_api.py::test_drawdown_review_signal_api_returns_review_candidate",
         "tests/integration/test_drawdown_review_signal_api.py::test_drawdown_review_signal_api_reports_below_threshold_not_eligible",
+        "tests/integration/test_drawdown_review_signal_api.py::test_drawdown_review_signal_api_reports_duplicate_suppressed",
         "tests/integration/test_drawdown_review_signal_api.py::test_drawdown_review_signal_api_reports_non_ready_source_blocker",
         "tests/integration/test_drawdown_review_signal_api.py::test_drawdown_review_signal_api_reports_stale_source_blocker",
         "tests/integration/test_drawdown_review_signal_api.py::test_drawdown_review_signal_api_rejects_wrong_source_contract",
         "tests/integration/test_drawdown_review_signal_api.py::test_drawdown_review_signal_api_requires_signal_permission",
-        "tests/integration/test_api_operation_events.py::test_drawdown_review_signal_api_emits_bounded_operation_event"
+        "tests/integration/test_api_operation_events.py::test_drawdown_review_signal_api_emits_bounded_operation_event",
+        "tests/unit/api_examples/test_drawdown_review_signal_examples.py::test_drawdown_review_examples_match_ledger_and_generated_openapi"
       ],
-      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
+      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples; scripts/endpoint_drawdown_review_signal_contracts.py enforces exact named success-mode parity."
     },
     {
       "method": "POST",
@@ -465,8 +467,10 @@
         "{\"portfolioId\":\"PB_SG_GLOBAL_BAL_001\",\"asOfDate\":\"2026-06-21\",\"periodName\":\"YTD\",\"evaluatedAtUtc\":\"2026-06-21T10:00:00Z\"}"
       ],
       "response_examples": [
-        "{\"outcome\":\"candidate_created\",\"family\":\"high_volatility\",\"reasonCodes\":[\"drawdown_attention\",\"review_required\"],\"unsupportedReasons\":[],\"candidate\":{\"candidateId\":\"idea_drawdown_review_8d57adbf52f7f5a7\",\"family\":\"high_volatility\",\"lifecycleStatus\":\"generated\",\"reviewPosture\":\"advisor_review_required\",\"evidencePacketId\":\"iep_drawdown_review_8d57adbf52f7f5a7\",\"supportability\":\"ready\",\"score\":\"72\",\"scorePolicyVersion\":\"drawdown-review-attention-v1\",\"sourceSignalIds\":[\"signal_drawdown_review_8d57adbf52f7f5a7\"],\"sourceRefs\":[{\"productId\":\"lotus-risk:DrawdownAnalyticsReport:v1\",\"sourceSystem\":\"lotus-risk\",\"productVersion\":\"v1\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"dataQualityStatus\":\"ready\",\"freshness\":\"current\"}]},\"sourceAuthority\":\"lotus-risk\",\"supportedFeaturePromoted\":false}",
-        "{\"outcome\":\"blocked\",\"family\":\"high_volatility\",\"reasonCodes\":[\"source_partial\"],\"unsupportedReasons\":[\"source_unavailable\"],\"candidate\":null,\"sourceAuthority\":\"lotus-risk\",\"supportedFeaturePromoted\":false}"
+        "{\"outcome\":\"candidate_created\",\"family\":\"high_volatility\",\"reasonCodes\":[\"drawdown_attention\",\"review_required\"],\"unsupportedReasons\":[],\"candidate\":{\"candidateId\":\"idea_drawdown_review_a18f6b65d03844e5\",\"family\":\"high_volatility\",\"lifecycleStatus\":\"generated\",\"reviewPosture\":\"advisor_review_required\",\"evidencePacketId\":\"iep_drawdown_review_a18f6b65d03844e5\",\"supportability\":\"ready\",\"score\":\"72\",\"scorePolicyVersion\":\"drawdown-review-attention-v1\",\"sourceSignalIds\":[\"signal_drawdown_review_a18f6b65d03844e5\"],\"sourceRefs\":[{\"productId\":\"lotus-risk:DrawdownAnalyticsReport:v1\",\"sourceSystem\":\"lotus-risk\",\"productVersion\":\"v1\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"dataQualityStatus\":\"ready\",\"freshness\":\"current\"}]},\"sourceAuthority\":\"lotus-risk\",\"supportedFeaturePromoted\":false}",
+        "{\"outcome\":\"blocked\",\"family\":\"high_volatility\",\"reasonCodes\":[\"source_partial\"],\"unsupportedReasons\":[\"source_unavailable\"],\"candidate\":null,\"sourceAuthority\":\"lotus-risk\",\"supportedFeaturePromoted\":false}",
+        "{\"outcome\":\"suppressed\",\"family\":\"high_volatility\",\"reasonCodes\":[\"duplicate_suppressed\"],\"unsupportedReasons\":[],\"candidate\":null,\"sourceAuthority\":\"lotus-risk\",\"supportedFeaturePromoted\":false}",
+        "{\"outcome\":\"not_eligible\",\"family\":\"high_volatility\",\"reasonCodes\":[\"below_materiality\"],\"unsupportedReasons\":[],\"candidate\":null,\"sourceAuthority\":\"lotus-risk\",\"supportedFeaturePromoted\":false}"
       ],
       "error_examples": [
         "403 returns product-safe Problem Details when the caller lacks advisor role, idea.signal.evaluate capability, or portfolio entitlement.",
@@ -478,10 +482,12 @@
         "tests/integration/test_drawdown_review_signal_api.py::test_drawdown_review_signal_from_source_blocks_when_runtime_not_configured",
         "tests/integration/test_drawdown_review_signal_api.py::test_drawdown_review_signal_from_source_checks_scope_before_runtime",
         "tests/integration/test_drawdown_review_signal_api.py::test_drawdown_review_signal_from_source_closes_runtime_on_source_blocker",
+        "tests/integration/test_drawdown_review_signal_api.py::test_drawdown_review_signal_from_source_exposes_non_candidate_success_modes",
         "tests/integration/test_signal_source_operation_events.py::test_drawdown_review_source_api_emits_blocked_operation_event",
-        "tests/unit/test_source_ingestion_state.py::test_risk_drawdown_source_runtime_builds_without_manifest"
+        "tests/unit/test_source_ingestion_state.py::test_risk_drawdown_source_runtime_builds_without_manifest",
+        "tests/unit/api_examples/test_drawdown_review_signal_examples.py::test_drawdown_review_examples_match_ledger_and_generated_openapi"
       ],
-      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
+      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples; scripts/endpoint_drawdown_review_signal_contracts.py enforces exact named success-mode parity."
     },
     {
       "method": "POST",
