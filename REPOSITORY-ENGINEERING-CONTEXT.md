@@ -612,6 +612,16 @@ it must not approve or create a client risk profile, determine risk capacity,
 approve suitability or policy, publish to a client, or infer product authority
 from these examples. Eight multi-shape operations remain under issue `#542`
 after this family.
+Missing-benchmark caller and Core-backed evaluation now follow the same
+contract under issue `#571`. Both routes publish candidate-created, blocked,
+suppressed, and not-eligible modes from their real application paths. The
+source-backed route uses only `CoreBenchmarkAssignmentSourcePort` and retains
+`BenchmarkAssignment:v1` identity. Idea detects review posture only; it must
+not assign a benchmark, approve benchmark methodology, calculate performance,
+recommend a trade, rebalance, execute, or infer Core product authority from
+these examples. Six multi-shape operations remain under issue `#542` after
+this family. The existing platform named-success skill and validator guardrail
+already cover this recurrence, so no new skill/context change is required.
 Unit-test modules must also use globally unique basenames across nested
 directories because pytest imports this repository's tests by module basename.
 Name example-publication tests for the durable concern, such as
