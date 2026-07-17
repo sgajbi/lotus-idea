@@ -23,6 +23,10 @@ from endpoint_conversion_workflow_contracts import (
     validate_conversion_intent_success_contract,
     validate_conversion_outcome_success_contract,
 )
+from endpoint_concentration_risk_signal_contracts import (
+    validate_concentration_risk_evaluation_success_contract,
+    validate_source_backed_concentration_risk_evaluation_success_contract,
+)
 from endpoint_high_cash_signal_contracts import (
     validate_high_cash_evaluation_success_contract,
     validate_high_cash_persistence_success_contract,
@@ -64,6 +68,8 @@ NAMED_SUCCESS_VALIDATORS: tuple[NamedSuccessValidator, ...] = (
     validate_source_backed_bond_maturity_evaluation_success_contract,
     validate_underperformance_evaluation_success_contract,
     validate_source_backed_underperformance_evaluation_success_contract,
+    validate_concentration_risk_evaluation_success_contract,
+    validate_source_backed_concentration_risk_evaluation_success_contract,
     validate_conversion_intent_success_contract,
     validate_conversion_outcome_success_contract,
     validate_review_action_success_contract,
