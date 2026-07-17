@@ -711,9 +711,10 @@
         "{\"asOfDate\":\"2026-06-21\",\"evaluatedAtUtc\":\"2026-06-21T10:00:00Z\",\"benchmarkAssignmentRef\":{\"productId\":\"lotus-core:BenchmarkAssignment:v1\",\"sourceSystem\":\"lotus-core\",\"productVersion\":\"v1\",\"route\":\"/integration/portfolios/PB_SG_GLOBAL_BAL_001/benchmark-assignment\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"contentHash\":\"sha256:benchmark-assignment-gap\",\"dataQualityStatus\":\"complete\",\"freshness\":\"current\"},\"benchmarkIdentityResolved\":false,\"assignmentEffectiveForAsOfDate\":false,\"assignmentStatus\":\"ACTIVE\",\"assignmentVersionPresent\":true,\"entitlementAllowed\":true}"
       ],
       "response_examples": [
-        "{\"outcome\":\"candidate_created\",\"family\":\"missing_benchmark\",\"reasonCodes\":[\"missing_benchmark\",\"review_required\"],\"unsupportedReasons\":[],\"candidate\":{\"candidateId\":\"idea_missing_benchmark_8d57adbf52f7f5a7\",\"family\":\"missing_benchmark\",\"lifecycleStatus\":\"generated\",\"reviewPosture\":\"advisor_review_required\",\"evidencePacketId\":\"iep_missing_benchmark_8d57adbf52f7f5a7\",\"supportability\":\"ready\",\"score\":\"68\",\"scorePolicyVersion\":\"missing-benchmark-review-v1\",\"sourceSignalIds\":[\"signal_missing_benchmark_8d57adbf52f7f5a7\"],\"sourceRefs\":[{\"productId\":\"lotus-core:BenchmarkAssignment:v1\",\"sourceSystem\":\"lotus-core\",\"productVersion\":\"v1\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"dataQualityStatus\":\"complete\",\"freshness\":\"current\"}]},\"sourceAuthority\":\"lotus-core\",\"supportedFeaturePromoted\":false}",
-        "{\"outcome\":\"not_eligible\",\"family\":\"missing_benchmark\",\"reasonCodes\":[\"below_materiality\"],\"unsupportedReasons\":[],\"candidate\":null,\"sourceAuthority\":\"lotus-core\",\"supportedFeaturePromoted\":false}",
-        "{\"outcome\":\"blocked\",\"family\":\"missing_benchmark\",\"reasonCodes\":[\"source_stale\"],\"unsupportedReasons\":[\"stale_source\"],\"candidate\":null,\"sourceAuthority\":\"lotus-core\",\"supportedFeaturePromoted\":false}"
+        "{\"outcome\":\"candidate_created\",\"family\":\"missing_benchmark\",\"reasonCodes\":[\"missing_benchmark\",\"review_required\"],\"unsupportedReasons\":[],\"candidate\":{\"candidateId\":\"idea_missing_benchmark_ec8bf0d4a463a6cf\",\"family\":\"missing_benchmark\",\"lifecycleStatus\":\"generated\",\"reviewPosture\":\"advisor_review_required\",\"evidencePacketId\":\"iep_missing_benchmark_ec8bf0d4a463a6cf\",\"supportability\":\"ready\",\"score\":\"68\",\"scorePolicyVersion\":\"missing-benchmark-review-v1\",\"sourceSignalIds\":[\"signal_missing_benchmark_ec8bf0d4a463a6cf\"],\"sourceRefs\":[{\"productId\":\"lotus-core:BenchmarkAssignment:v1\",\"sourceSystem\":\"lotus-core\",\"productVersion\":\"v1\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"dataQualityStatus\":\"complete\",\"freshness\":\"current\"}]},\"sourceAuthority\":\"lotus-core\",\"supportedFeaturePromoted\":false}",
+        "{\"outcome\":\"blocked\",\"family\":\"missing_benchmark\",\"reasonCodes\":[\"source_stale\"],\"unsupportedReasons\":[\"stale_source\"],\"candidate\":null,\"sourceAuthority\":\"lotus-core\",\"supportedFeaturePromoted\":false}",
+        "{\"outcome\":\"suppressed\",\"family\":\"missing_benchmark\",\"reasonCodes\":[\"duplicate_suppressed\"],\"unsupportedReasons\":[],\"candidate\":null,\"sourceAuthority\":\"lotus-core\",\"supportedFeaturePromoted\":false}",
+        "{\"outcome\":\"not_eligible\",\"family\":\"missing_benchmark\",\"reasonCodes\":[\"below_materiality\"],\"unsupportedReasons\":[],\"candidate\":null,\"sourceAuthority\":\"lotus-core\",\"supportedFeaturePromoted\":false}"
       ],
       "error_examples": [
         "403 returns product-safe Problem Details when the caller lacks advisor role or idea.signal.evaluate capability.",
@@ -724,9 +725,11 @@
         "tests/integration/test_missing_benchmark_signal_api.py::test_missing_benchmark_signal_api_returns_review_candidate",
         "tests/integration/test_missing_benchmark_signal_api.py::test_missing_benchmark_signal_api_reports_ready_assignment_not_eligible",
         "tests/integration/test_missing_benchmark_signal_api.py::test_missing_benchmark_signal_api_reports_stale_source_blocker",
+        "tests/integration/test_missing_benchmark_signal_api.py::test_missing_benchmark_signal_api_exposes_non_candidate_success_modes",
         "tests/integration/test_missing_benchmark_signal_api.py::test_missing_benchmark_signal_api_rejects_wrong_source_contract",
         "tests/integration/test_missing_benchmark_signal_api.py::test_missing_benchmark_signal_api_requires_signal_permission",
-        "tests/integration/test_api_operation_events.py::test_missing_benchmark_signal_api_emits_bounded_operation_event"
+        "tests/integration/test_api_operation_events.py::test_missing_benchmark_signal_api_emits_bounded_operation_event",
+        "tests/unit/api_examples/test_missing_benchmark_signal_examples.py::test_missing_benchmark_examples_match_ledger_and_generated_openapi"
       ],
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
     },
@@ -742,8 +745,10 @@
         "{\"portfolioId\":\"PB_SG_GLOBAL_BAL_001\",\"asOfDate\":\"2026-06-21\",\"evaluatedAtUtc\":\"2026-06-21T10:00:00Z\",\"reportingCurrency\":\"USD\"}"
       ],
       "response_examples": [
-        "{\"outcome\":\"candidate_created\",\"family\":\"missing_benchmark\",\"reasonCodes\":[\"missing_benchmark\",\"review_required\"],\"unsupportedReasons\":[],\"candidate\":{\"candidateId\":\"idea_missing_benchmark_8d57adbf52f7f5a7\",\"family\":\"missing_benchmark\",\"lifecycleStatus\":\"generated\",\"reviewPosture\":\"advisor_review_required\",\"evidencePacketId\":\"iep_missing_benchmark_8d57adbf52f7f5a7\",\"supportability\":\"ready\",\"score\":\"68\",\"scorePolicyVersion\":\"missing-benchmark-review-v1\",\"sourceSignalIds\":[\"signal_missing_benchmark_8d57adbf52f7f5a7\"],\"sourceRefs\":[{\"productId\":\"lotus-core:BenchmarkAssignment:v1\",\"sourceSystem\":\"lotus-core\",\"productVersion\":\"v1\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"dataQualityStatus\":\"complete\",\"freshness\":\"current\"}]},\"sourceAuthority\":\"lotus-core\",\"supportedFeaturePromoted\":false}",
-        "{\"outcome\":\"blocked\",\"family\":\"missing_benchmark\",\"reasonCodes\":[\"source_partial\"],\"unsupportedReasons\":[\"source_unavailable\"],\"candidate\":null,\"sourceAuthority\":\"lotus-core\",\"supportedFeaturePromoted\":false}"
+        "{\"outcome\":\"candidate_created\",\"family\":\"missing_benchmark\",\"reasonCodes\":[\"missing_benchmark\",\"review_required\"],\"unsupportedReasons\":[],\"candidate\":{\"candidateId\":\"idea_missing_benchmark_de7f553c63917b78\",\"family\":\"missing_benchmark\",\"lifecycleStatus\":\"generated\",\"reviewPosture\":\"advisor_review_required\",\"evidencePacketId\":\"iep_missing_benchmark_de7f553c63917b78\",\"supportability\":\"ready\",\"score\":\"68\",\"scorePolicyVersion\":\"missing-benchmark-review-v1\",\"sourceSignalIds\":[\"signal_missing_benchmark_de7f553c63917b78\"],\"sourceRefs\":[{\"productId\":\"lotus-core:BenchmarkAssignment:v1\",\"sourceSystem\":\"lotus-core\",\"productVersion\":\"v1\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"dataQualityStatus\":\"complete\",\"freshness\":\"current\"}]},\"sourceAuthority\":\"lotus-core\",\"supportedFeaturePromoted\":false}",
+        "{\"outcome\":\"blocked\",\"family\":\"missing_benchmark\",\"reasonCodes\":[\"source_partial\"],\"unsupportedReasons\":[\"source_unavailable\"],\"candidate\":null,\"sourceAuthority\":\"lotus-core\",\"supportedFeaturePromoted\":false}",
+        "{\"outcome\":\"suppressed\",\"family\":\"missing_benchmark\",\"reasonCodes\":[\"duplicate_suppressed\"],\"unsupportedReasons\":[],\"candidate\":null,\"sourceAuthority\":\"lotus-core\",\"supportedFeaturePromoted\":false}",
+        "{\"outcome\":\"not_eligible\",\"family\":\"missing_benchmark\",\"reasonCodes\":[\"below_materiality\"],\"unsupportedReasons\":[],\"candidate\":null,\"sourceAuthority\":\"lotus-core\",\"supportedFeaturePromoted\":false}"
       ],
       "error_examples": [
         "403 returns product-safe Problem Details when the caller lacks advisor role, idea.signal.evaluate capability, or portfolio entitlement.",
@@ -757,7 +762,9 @@
         "tests/integration/test_missing_benchmark_signal_api.py::test_missing_benchmark_source_api_returns_blocked_posture_for_core_unavailable",
         "tests/integration/test_missing_benchmark_signal_api.py::test_missing_benchmark_source_api_emits_bounded_operation_events",
         "tests/integration/test_missing_benchmark_signal_api.py::test_missing_benchmark_source_api_suppresses_runtime_close_failure",
-        "tests/unit/test_source_ingestion_state.py::test_core_benchmark_assignment_source_runtime_builds_without_manifest"
+        "tests/integration/test_missing_benchmark_signal_api.py::test_missing_benchmark_source_api_exposes_non_candidate_success_modes",
+        "tests/unit/test_source_ingestion_state.py::test_core_benchmark_assignment_source_runtime_builds_without_manifest",
+        "tests/unit/api_examples/test_missing_benchmark_signal_examples.py::test_missing_benchmark_examples_match_ledger_and_generated_openapi"
       ],
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
     },

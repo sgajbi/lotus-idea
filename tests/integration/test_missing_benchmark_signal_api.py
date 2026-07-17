@@ -31,6 +31,7 @@ PORTFOLIO_ID = "PB_SG_GLOBAL_BAL_001"
 @dataclass
 class RecordingCoreBenchmarkAssignmentSource(CoreBenchmarkAssignmentSourcePort):
     seen_request: CoreBenchmarkAssignmentEvidenceRequest | None = None
+    evidence: CoreBenchmarkAssignmentEvidence | None = None
     error: Exception | None = None
     close_count: int = 0
     close_error: Exception | None = None
@@ -42,7 +43,7 @@ class RecordingCoreBenchmarkAssignmentSource(CoreBenchmarkAssignmentSourcePort):
         self.seen_request = request
         if self.error is not None:
             raise self.error
-        return _core_benchmark_assignment_evidence()
+        return self.evidence or _core_benchmark_assignment_evidence()
 
     def close(self) -> None:
         self.close_count += 1
@@ -364,6 +365,120 @@ def test_missing_benchmark_signal_api_reports_stale_source_blocker() -> None:
     }
 
 
+@pytest.mark.parametrize(
+    ("duplicate_candidate_id", "ready_assignment", "expected_outcome", "expected_reason"),
+    (
+        (
+            "idea_missing_benchmark_existing",
+            False,
+            "suppressed",
+            "duplicate_suppressed",
+        ),
+        (None, True, "not_eligible", "below_materiality"),
+    ),
+)
+def test_missing_benchmark_signal_api_exposes_non_candidate_success_modes(
+    duplicate_candidate_id: str | None,
+    ready_assignment: bool,
+    expected_outcome: str,
+    expected_reason: str,
+) -> None:
+    reset_idea_repository_for_tests(InMemoryIdeaRepository())
+    client = managed_test_client(app)
+    payload = missing_benchmark_payload()
+    if duplicate_candidate_id is not None:
+        payload["duplicateOfCandidateId"] = duplicate_candidate_id
+    if ready_assignment:
+        payload.update(
+            {
+                "benchmarkIdentityResolved": True,
+                "assignmentEffectiveForAsOfDate": True,
+                "assignmentStatus": "ACTIVE",
+                "assignmentVersionPresent": True,
+            }
+        )
+
+    response = client.post(
+        "/api/v1/idea-signals/missing-benchmark/evaluate",
+        json=payload,
+        headers=evaluate_headers(),
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "outcome": expected_outcome,
+        "family": "missing_benchmark",
+        "reasonCodes": [expected_reason],
+        "unsupportedReasons": [],
+        "candidate": None,
+        "sourceAuthority": "lotus-core",
+        "supportedFeaturePromoted": False,
+    }
+    assert len(get_idea_repository().snapshot().candidate_records) == 0
+
+
+@pytest.mark.parametrize(
+    ("duplicate_candidate_id", "ready_assignment", "expected_outcome", "expected_reason"),
+    (
+        (
+            "idea_missing_benchmark_existing",
+            False,
+            "suppressed",
+            "duplicate_suppressed",
+        ),
+        (None, True, "not_eligible", "below_materiality"),
+    ),
+)
+def test_missing_benchmark_source_api_exposes_non_candidate_success_modes(
+    monkeypatch: pytest.MonkeyPatch,
+    duplicate_candidate_id: str | None,
+    ready_assignment: bool,
+    expected_outcome: str,
+    expected_reason: str,
+) -> None:
+    reset_idea_repository_for_tests(InMemoryIdeaRepository())
+    source = RecordingCoreBenchmarkAssignmentSource(
+        evidence=_core_benchmark_assignment_evidence(
+            benchmark_identity_resolved=ready_assignment,
+            assignment_effective_for_as_of_date=ready_assignment,
+        )
+    )
+    runtime = CoreBenchmarkAssignmentSourceRuntime(
+        core_source=source,
+        core_base_url_configured=True,
+        core_query_base_url_configured=True,
+        core_query_control_plane_base_url_configured=True,
+    )
+    monkeypatch.setattr(
+        missing_benchmark_signals_api,
+        "_build_core_benchmark_assignment_source_runtime_from_environment",
+        lambda: runtime,
+    )
+    payload: dict[str, str] = missing_benchmark_source_payload()
+    if duplicate_candidate_id is not None:
+        payload["duplicateOfCandidateId"] = duplicate_candidate_id
+    client = managed_test_client(app)
+
+    response = client.post(
+        "/api/v1/idea-signals/missing-benchmark/evaluate-from-source",
+        json=payload,
+        headers=source_evaluation_headers(),
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "outcome": expected_outcome,
+        "family": "missing_benchmark",
+        "reasonCodes": [expected_reason],
+        "unsupportedReasons": [],
+        "candidate": None,
+        "sourceAuthority": "lotus-core",
+        "supportedFeaturePromoted": False,
+    }
+    assert len(get_idea_repository().snapshot().candidate_records) == 0
+    assert source.close_count == 1
+
+
 def test_missing_benchmark_signal_api_rejects_wrong_source_contract(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -505,11 +620,15 @@ def _source_ref(product_id: str) -> SourceRef:
     )
 
 
-def _core_benchmark_assignment_evidence() -> CoreBenchmarkAssignmentEvidence:
+def _core_benchmark_assignment_evidence(
+    *,
+    benchmark_identity_resolved: bool = False,
+    assignment_effective_for_as_of_date: bool = False,
+) -> CoreBenchmarkAssignmentEvidence:
     return CoreBenchmarkAssignmentEvidence(
         benchmark_assignment_ref=_source_ref("lotus-core:BenchmarkAssignment:v1"),
-        benchmark_identity_resolved=False,
-        assignment_effective_for_as_of_date=False,
+        benchmark_identity_resolved=benchmark_identity_resolved,
+        assignment_effective_for_as_of_date=assignment_effective_for_as_of_date,
         assignment_status="ACTIVE",
         assignment_version_present=True,
         assignment_diagnostic="core_benchmark_assignment_benchmark_identity_missing",
