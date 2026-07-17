@@ -45,7 +45,10 @@ proof, downstream proof, supported-feature evidence, and mainline CI all agree.
    source-ingestion worker CLI and check-only gate. It now also includes
    durable claim-before-call downstream submission, uncertain-outcome
    quarantine/reconciliation, operator audit controls, and real PostgreSQL
-   concurrency/restart proof. Protected exact-image migration automation now
+   concurrency/restart proof. Downstream submission OpenAPI now distinguishes
+   terminal `200` accepted/rejected and replay modes from the separately named
+   `202 reconciliation_required` posture without transferring downstream
+   authority. Protected exact-image migration automation now
    adds durable release-bound history, locking, pending-only apply, drift
    rejection, explicit legacy adoption, bounded rollback, source-safe evidence,
    and anti-bypass governance. Managed infrastructure, external authority,

@@ -768,6 +768,15 @@ bounded local posture, and propagate correlation, trace, and idempotency
 context. They do not record authoritative downstream outcomes or prove route
 existence in the owning downstream service.
 
+Both routes publish application-derived accepted, rejected, accepted-replayed,
+and rejected-replayed HTTP `200` modes, plus a separately named HTTP `202`
+`reconciliation_required` mode. Same-key retries preserve the local outcome and
+do not make another downstream call. Advise/Manage retain conversion workflow
+and outcome authority; Report retains materialization authority. Idea retains
+only local intent, claim/finalize, reconciliation, and audit posture. The
+status-aware named-success validator is the reusable repository guardrail; no
+README or supported-feature promotion follows from this contract closure.
+
 Readiness endpoints are diagnostic foundations. They report aggregate blockers
 and source-of-truth refs. They are not support, certification, or live journey
 proof by themselves.
