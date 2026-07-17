@@ -61,6 +61,9 @@ from app.api.examples.low_income_signal import apply_low_income_signal_openapi_e
 from app.api.examples.mandate_restriction_signal import (
     apply_mandate_restriction_signal_openapi_examples,
 )
+from app.api.examples.missing_benchmark_signal import (
+    apply_missing_benchmark_signal_openapi_examples,
+)
 from app.api.examples.missing_risk_profile_signal import (
     apply_missing_risk_profile_signal_openapi_examples,
 )
@@ -316,6 +319,7 @@ def _configure_openapi_contract_overrides(application: FastAPI) -> None:
         schema = apply_high_cash_signal_openapi_examples(schema)
         schema = apply_low_income_signal_openapi_examples(schema)
         schema = apply_mandate_restriction_signal_openapi_examples(schema)
+        schema = apply_missing_benchmark_signal_openapi_examples(schema)
         schema = apply_missing_risk_profile_signal_openapi_examples(schema)
         schema = apply_underperformance_signal_openapi_examples(schema)
         schema = apply_review_workflow_openapi_examples(schema)
