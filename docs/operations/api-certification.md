@@ -286,6 +286,12 @@ promotion. Those remain blocked until later RFC slices add runtime adapters,
 downstream contracts, trust telemetry, UI proof, and supported-feature
 registration.
 
+`GET /health/ready` is additionally status-mode certified: the `200` `ready`
+example and the `503` `draining`, `restoring`, durable-repository, and
+release-identity examples are assembled by production code and must match the
+ledger and generated OpenAPI. The 503 modes are deliberate traffic-safety
+controls, not business-success outcomes or product-support claims.
+
 Caller-context authorization headers are local/test simulation inputs unless
 they arrive through trusted ingress. In `demo`, `staging`, and `production`,
 requests carrying privileged `X-Caller-*` role, capability, or entitlement

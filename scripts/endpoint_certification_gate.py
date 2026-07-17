@@ -175,7 +175,6 @@ def _validate_implemented_endpoint_posture(
 
     errors.extend(_validate_implemented_endpoint_test_pyramid(operation, test_evidence))
     errors.extend(_validate_gateway_publication_posture(endpoint))
-    errors.extend(validate_named_success_contracts(endpoint, openapi_spec))
     errors.extend(validate_signal_source_contract_error_examples(endpoint))
     errors.extend(validate_endpoint_status_contract(endpoint, openapi_spec))
     if openapi_spec is not None:
@@ -426,6 +425,7 @@ def main() -> int:
             errors.append(f"{operation}: baseline endpoint must use baseline_certified status")
 
         errors.extend(_validate_implemented_endpoint_posture(endpoint, openapi_spec))
+        errors.extend(validate_named_success_contracts(endpoint, openapi_spec))
 
     missing_from_ledger = sorted(openapi_operations - ledger_operations)
     stale_in_ledger = sorted(ledger_operations - openapi_operations)

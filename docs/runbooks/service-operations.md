@@ -159,6 +159,13 @@ data-mesh readiness, client publication, or supported-feature status.
 - Metadata: /metadata
 - Version and image provenance metadata: /version
 
+Readiness returns `200` only for `status=ready`. `503` is expected while the
+service is draining or restoring, lacks a durable write repository, or lacks a
+valid release-image digest binding. The source-safe payload identifies only the
+normalized posture and blocker codes; it never exposes DSNs, credentials,
+hostnames, or raw environment values. These are traffic-routing controls, not
+Idea business capability or supported-feature evidence.
+
 Database restore and cutover use the dedicated
 [PostgreSQL disaster recovery runbook](postgres-disaster-recovery.md). Set
 `LOTUS_IDEA_RECOVERY_POSTURE` to `draining`, `restoring`, `degraded`, or

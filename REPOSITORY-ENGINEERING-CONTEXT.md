@@ -648,9 +648,14 @@ The downstream-submission family under issue `#575` reduced that inventory to
 two operations by certifying both conversion-intent and report-evidence-pack
 submissions as status-aware application-backed contracts. The advisor queue
 under issue `#577` then reduced it to one by publishing exact
-`itemsAvailable` and `noItemsAvailable` queue examples. The sole remaining
-operation is `GET /health/ready`; these inventory corrections do not promote a
-supported feature or transfer product authority.
+`itemsAvailable` and `noItemsAvailable` queue examples. Issue `#581` closes
+the final `GET /health/ready` entry with runtime-derived named `200` and `503`
+response modes. Its generic status-mode validator is deliberately separate
+from the named-success vocabulary because readiness failures are operational
+traffic controls, not business outcomes. The central endpoint gate invokes
+targeted validators for baseline platform operations as well as business
+endpoints. None of these inventory corrections promote a supported feature or
+transfer product authority.
 Conversion-intent and conversion-outcome API route orchestration follows the
 same pattern in `app.api.conversion_governance_operations`. This helper is an
 internal API boundary only; conversion posture remains local, review-gated, and
@@ -794,8 +799,11 @@ only local intent, claim/finalize, reconciliation, and audit posture. The
 status-aware named-success validator is the reusable repository guardrail; no
 README or supported-feature promotion follows from this contract closure.
 
-Readiness endpoints are diagnostic foundations. They report aggregate blockers
-and source-of-truth refs. They are not support, certification, or live journey
+Readiness endpoints are diagnostic foundations. `GET /health/ready` publishes
+one `200 ready` mode and source-safe `503` draining, restoring,
+durable-repository, and release-identity blocked modes from the same typed
+assembly path used by the route. They report aggregate blockers and
+source-of-truth refs; they are not support, certification, or live journey
 proof by themselves.
 
 ## Data Mesh Posture

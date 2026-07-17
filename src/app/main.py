@@ -38,7 +38,11 @@ from app.api.runtime_trust_telemetry import register_runtime_trust_telemetry_rou
 from app.api.source_ingestion_readiness import register_source_ingestion_readiness_routes
 from app.api.underperformance_signals import register_underperformance_signal_routes
 from app.api.caller_context_openapi import apply_caller_context_openapi_contract
-from app.api.durable_write_guard import durable_write_readiness_payload
+from app.api.health_readiness import (
+    HealthReadinessResponse,
+    build_health_readiness_response,
+    health_readiness_status_code,
+)
 from app.api.idempotency import mark_required_idempotency_openapi_headers
 from app.api.examples.ai_explanation import apply_ai_explanation_openapi_examples
 from app.api.examples.advisor_review_queue import (
@@ -60,6 +64,7 @@ from app.api.examples.downstream_submission import apply_downstream_submission_o
 from app.api.examples.high_volatility_signal import (
     apply_high_volatility_signal_openapi_examples,
 )
+from app.api.examples.health_readiness import apply_health_readiness_openapi_examples
 from app.api.examples.high_cash_signal import apply_high_cash_signal_openapi_examples
 from app.api.examples.low_income_signal import apply_low_income_signal_openapi_examples
 from app.api.examples.mandate_restriction_signal import (
@@ -217,44 +222,22 @@ def _register_platform_routes(application: FastAPI) -> None:
         tags=["Health"],
         summary="Get readiness",
         description=(
-            "Returns readiness status, draining state, and durable write repository posture."
+            "Returns source-safe service readiness, recovery posture, durable-write posture, "
+            "and release-identity configuration blockers. A 503 response is an intentional "
+            "operational state, not a business capability failure."
         ),
+        response_model=HealthReadinessResponse,
         responses={
             200: {
                 "description": "Service is ready to receive traffic.",
-                "content": {
-                    "application/json": {
-                        "example": {
-                            "status": "ready",
-                            "recoveryPosture": "normal",
-                            "runtimeProfile": "local",
-                            "durableRepositoryConfigured": False,
-                            "durableStorageBacked": False,
-                            "processLocalRepositoryAllowed": True,
-                            "durableWriteRepositoryRequired": False,
-                            "configurationBlockers": [],
-                        }
-                    }
-                },
+                "content": {"application/json": {}},
             },
             503: {
                 "description": (
-                    "Service is intentionally draining or missing required durable write "
-                    "configuration."
+                    "Service is intentionally draining, restoring, or missing required "
+                    "durable-write or release-identity configuration."
                 ),
-                "content": {
-                    "application/json": {
-                        "example": {
-                            "status": "degraded",
-                            "runtimeProfile": "production",
-                            "durableRepositoryConfigured": False,
-                            "durableStorageBacked": False,
-                            "processLocalRepositoryAllowed": False,
-                            "durableWriteRepositoryRequired": True,
-                            "configurationBlockers": ["durable_repository_not_configured"],
-                        }
-                    }
-                },
+                "content": {"application/json": {}},
             },
         },
     )(health_ready)
@@ -326,6 +309,7 @@ def _configure_openapi_contract_overrides(application: FastAPI) -> None:
         schema = apply_downstream_submission_openapi_examples(schema)
         schema = apply_high_volatility_signal_openapi_examples(schema)
         schema = apply_high_cash_signal_openapi_examples(schema)
+        schema = apply_health_readiness_openapi_examples(schema)
         schema = apply_low_income_signal_openapi_examples(schema)
         schema = apply_mandate_restriction_signal_openapi_examples(schema)
         schema = apply_missing_benchmark_signal_openapi_examples(schema)
@@ -441,34 +425,23 @@ async def health_live() -> dict[str, str]:
     return {"status": "live"}
 
 
-async def health_ready(request: Request, response: Response) -> dict[str, object]:
+async def health_ready(request: Request, response: Response) -> HealthReadinessResponse:
     recovery_decision = load_recovery_runtime_state().decision
     if bool(getattr(request.app.state, "is_draining", False)):
         recovery_decision = evaluate_recovery_readiness(ServiceRecoveryPosture.DRAINING)
     posture = idea_repository_runtime_posture()
-    payload = durable_write_readiness_payload(posture)
-    payload["recoveryPosture"] = recovery_decision.posture.value
     identity_blockers = release_identity_configuration_blockers(os.environ)
-    if identity_blockers:
-        configured_blockers = payload.get("configurationBlockers")
-        blockers = list(configured_blockers) if isinstance(configured_blockers, list) else []
-        blockers.extend(blocker for blocker in identity_blockers if blocker not in blockers)
-        payload["configurationBlockers"] = blockers
-        payload["status"] = "degraded"
-    if not recovery_decision.write_ready:
-        payload["status"] = recovery_decision.readiness_status
-        configured_blockers = payload.get("configurationBlockers")
-        blockers = (
-            list(configured_blockers)
-            if isinstance(configured_blockers, list)
-            and all(isinstance(blocker, str) for blocker in configured_blockers)
-            else []
-        )
-        if recovery_decision.blocker not in blockers:
-            blockers.append(recovery_decision.blocker)
-        payload["configurationBlockers"] = blockers
-    if not posture.write_ready or not recovery_decision.write_ready or identity_blockers:
-        response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+    payload = build_health_readiness_response(
+        runtime_profile=posture.runtime_profile.value,
+        durable_repository_configured=posture.durable_repository_configured,
+        durable_storage_backed=posture.durable_storage_backed,
+        process_local_repository_allowed=posture.process_local_repository_allowed,
+        durable_write_repository_required=posture.durable_write_repository_required,
+        configuration_blockers=posture.configuration_blockers,
+        recovery_decision=recovery_decision,
+        identity_blockers=identity_blockers,
+    )
+    response.status_code = health_readiness_status_code(payload)
     return payload
 
 

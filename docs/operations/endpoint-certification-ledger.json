@@ -1964,24 +1964,30 @@
       "path": "/health/ready",
       "certification_status": "baseline_certified",
       "owner": "lotus-idea owners",
-      "purpose": "Report whether the service is ready to receive traffic.",
-      "when_to_use": "Use for readiness probes and deployment routing decisions.",
-      "when_not_to_use": "Do not use as a business capability or upstream data-quality signal.",
+      "purpose": "Report source-safe service readiness, recovery posture, durable-write repository posture, and release-identity configuration blockers for traffic-routing decisions.",
+      "when_to_use": "Use for readiness probes and deployment traffic-routing decisions; a 503 response is an intentional operational posture that keeps unsafe write traffic out of service.",
+      "when_not_to_use": "Do not use as an Idea business capability, upstream data-quality signal, Gateway contract, Workbench product proof, client-publication proof, or supported-feature promotion.",
       "request_examples": [
         "No request body."
       ],
       "response_examples": [
-        "{\"status\":\"ready\"}",
-        "{\"status\":\"draining\"}"
+        "{\"status\":\"ready\",\"recoveryPosture\":\"normal\",\"runtimeProfile\":\"local\",\"durableRepositoryConfigured\":false,\"durableStorageBacked\":false,\"processLocalRepositoryAllowed\":true,\"durableWriteRepositoryRequired\":false,\"configurationBlockers\":[]}",
+        "{\"status\":\"draining\",\"recoveryPosture\":\"draining\",\"runtimeProfile\":\"local\",\"durableRepositoryConfigured\":false,\"durableStorageBacked\":false,\"processLocalRepositoryAllowed\":true,\"durableWriteRepositoryRequired\":false,\"configurationBlockers\":[\"service_recovery_draining\"]}",
+        "{\"status\":\"restoring\",\"recoveryPosture\":\"restoring\",\"runtimeProfile\":\"local\",\"durableRepositoryConfigured\":false,\"durableStorageBacked\":false,\"processLocalRepositoryAllowed\":true,\"durableWriteRepositoryRequired\":false,\"configurationBlockers\":[\"service_recovery_restoring\"]}",
+        "{\"status\":\"degraded\",\"recoveryPosture\":\"normal\",\"runtimeProfile\":\"production\",\"durableRepositoryConfigured\":false,\"durableStorageBacked\":false,\"processLocalRepositoryAllowed\":false,\"durableWriteRepositoryRequired\":true,\"configurationBlockers\":[\"durable_repository_not_configured\"]}",
+        "{\"status\":\"degraded\",\"recoveryPosture\":\"normal\",\"runtimeProfile\":\"production\",\"durableRepositoryConfigured\":false,\"durableStorageBacked\":false,\"processLocalRepositoryAllowed\":false,\"durableWriteRepositoryRequired\":true,\"configurationBlockers\":[\"release_image_digest_binding_missing\"]}"
       ],
       "error_examples": [
-        "503 readiness response returns {\"status\":\"draining\"} during intentional drain."
+        "503 response modes are code-owned and include draining, restoring, missing durable repository configuration, and missing release image digest binding; payloads never expose connection strings, credentials, or raw environment values."
       ],
       "test_evidence": [
         "tests/integration/test_health.py::test_health_endpoints",
-        "tests/integration/test_health.py::test_readiness_reports_draining_state"
+        "tests/integration/test_health.py::test_readiness_reports_draining_state",
+        "tests/integration/test_health.py::test_readiness_degrades_when_production_profile_lacks_durable_repository",
+        "tests/integration/test_health.py::test_readiness_fails_closed_for_recovery_posture",
+        "tests/unit/api_examples/test_health_readiness_examples.py::test_health_readiness_examples_match_ledger_and_generated_openapi"
       ],
-      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
+      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples; scripts/endpoint_health_readiness_contracts.py requires exact code-owned 200 and 503 values, ledger parity, and behavior evidence."
     },
     {
       "method": "GET",
