@@ -642,8 +642,10 @@
         "{\"asOfDate\":\"2026-06-21\",\"evaluatedAtUtc\":\"2026-06-21T10:00:00Z\",\"riskProfileRef\":{\"productId\":\"lotus-advise:AdvisoryPolicyEvaluationRecord:v1\",\"sourceSystem\":\"lotus-advise\",\"productVersion\":\"v1\",\"route\":\"/advisory/policy-evaluations/pev_001/risk-profile-posture\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"contentHash\":\"sha256:missing-risk-profile-review\",\"dataQualityStatus\":\"quality_passed\",\"freshness\":\"current\"},\"riskProfileStatus\":\"STALE\",\"riskProfileEffectiveForAsOfDate\":false,\"riskProfileReviewDue\":true,\"entitlementAllowed\":true}"
       ],
       "response_examples": [
-        "{\"outcome\":\"candidate_created\",\"family\":\"missing_risk_profile\",\"reasonCodes\":[\"missing_risk_profile\",\"review_required\"],\"unsupportedReasons\":[],\"candidate\":{\"candidateId\":\"idea_missing_risk_profile_8d57adbf52f7f5a7\",\"family\":\"missing_risk_profile\",\"lifecycleStatus\":\"generated\",\"reviewPosture\":\"advisor_review_required\",\"evidencePacketId\":\"iep_missing_risk_profile_8d57adbf52f7f5a7\",\"supportability\":\"ready\",\"score\":\"64\",\"scorePolicyVersion\":\"missing-risk-profile-review-v1\",\"sourceSignalIds\":[\"signal_missing_risk_profile_8d57adbf52f7f5a7\"],\"sourceRefs\":[{\"productId\":\"lotus-advise:AdvisoryPolicyEvaluationRecord:v1\",\"sourceSystem\":\"lotus-advise\",\"productVersion\":\"v1\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"dataQualityStatus\":\"quality_passed\",\"freshness\":\"current\"}]},\"sourceAuthority\":\"lotus-advise\",\"supportedFeaturePromoted\":false}",
-        "{\"outcome\":\"blocked\",\"family\":\"missing_risk_profile\",\"reasonCodes\":[\"source_stale\"],\"unsupportedReasons\":[\"stale_source\"],\"candidate\":null,\"sourceAuthority\":\"lotus-advise\",\"supportedFeaturePromoted\":false}"
+        "{\"outcome\":\"candidate_created\",\"family\":\"missing_risk_profile\",\"reasonCodes\":[\"missing_risk_profile\",\"review_required\"],\"unsupportedReasons\":[],\"candidate\":{\"candidateId\":\"idea_missing_risk_profile_6863f97d22866d0a\",\"family\":\"missing_risk_profile\",\"lifecycleStatus\":\"generated\",\"reviewPosture\":\"advisor_review_required\",\"evidencePacketId\":\"iep_missing_risk_profile_6863f97d22866d0a\",\"supportability\":\"ready\",\"score\":\"64\",\"scorePolicyVersion\":\"missing-risk-profile-review-v1\",\"sourceSignalIds\":[\"signal_missing_risk_profile_6863f97d22866d0a\"],\"sourceRefs\":[{\"productId\":\"lotus-advise:AdvisoryPolicyEvaluationRecord:v1\",\"sourceSystem\":\"lotus-advise\",\"productVersion\":\"v1\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"dataQualityStatus\":\"quality_passed\",\"freshness\":\"current\"}]},\"sourceAuthority\":\"lotus-advise\",\"supportedFeaturePromoted\":false}",
+        "{\"outcome\":\"blocked\",\"family\":\"missing_risk_profile\",\"reasonCodes\":[\"source_stale\"],\"unsupportedReasons\":[\"stale_source\"],\"candidate\":null,\"sourceAuthority\":\"lotus-advise\",\"supportedFeaturePromoted\":false}",
+        "{\"outcome\":\"suppressed\",\"family\":\"missing_risk_profile\",\"reasonCodes\":[\"duplicate_suppressed\"],\"unsupportedReasons\":[],\"candidate\":null,\"sourceAuthority\":\"lotus-advise\",\"supportedFeaturePromoted\":false}",
+        "{\"outcome\":\"not_eligible\",\"family\":\"missing_risk_profile\",\"reasonCodes\":[\"below_materiality\"],\"unsupportedReasons\":[],\"candidate\":null,\"sourceAuthority\":\"lotus-advise\",\"supportedFeaturePromoted\":false}"
       ],
       "error_examples": [
         "403 returns product-safe Problem Details when the caller lacks advisor role or idea.signal.evaluate capability.",
@@ -653,10 +655,12 @@
       "test_evidence": [
         "tests/integration/test_missing_risk_profile_signal_api.py::test_missing_risk_profile_signal_api_returns_review_candidate",
         "tests/integration/test_missing_risk_profile_signal_api.py::test_missing_risk_profile_signal_api_reports_stale_source_blocker",
+        "tests/integration/test_missing_risk_profile_signal_api.py::test_missing_risk_profile_signal_api_exposes_non_candidate_success_modes",
         "tests/integration/test_missing_risk_profile_signal_api.py::test_missing_risk_profile_signal_api_rejects_wrong_source_contract",
         "tests/integration/test_missing_risk_profile_signal_api.py::test_missing_risk_profile_signal_api_rejects_wrong_advise_product_id",
         "tests/integration/test_missing_risk_profile_signal_api.py::test_missing_risk_profile_signal_api_requires_signal_permission",
-        "tests/integration/test_api_operation_events.py::test_missing_risk_profile_signal_api_emits_bounded_operation_event"
+        "tests/integration/test_api_operation_events.py::test_missing_risk_profile_signal_api_emits_bounded_operation_event",
+        "tests/unit/api_examples/test_missing_risk_profile_signal_examples.py::test_missing_risk_profile_examples_match_ledger_and_generated_openapi"
       ],
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
     },
@@ -672,8 +676,10 @@
         "{\"evaluationId\":\"pev_001\",\"asOfDate\":\"2026-06-21\",\"evaluatedAtUtc\":\"2026-06-21T10:00:00Z\",\"accessScope\":{\"tenantId\":\"tenant-sg\",\"bookId\":\"global-balanced\",\"portfolioId\":\"PB_SG_GLOBAL_BAL_001\",\"clientId\":\"client-001\"}}"
       ],
       "response_examples": [
-        "{\"outcome\":\"candidate_created\",\"family\":\"missing_risk_profile\",\"reasonCodes\":[\"missing_risk_profile\",\"review_required\"],\"unsupportedReasons\":[],\"candidate\":{\"candidateId\":\"idea_missing_risk_profile_8d57adbf52f7f5a7\",\"family\":\"missing_risk_profile\",\"lifecycleStatus\":\"generated\",\"reviewPosture\":\"advisor_review_required\",\"evidencePacketId\":\"iep_missing_risk_profile_8d57adbf52f7f5a7\",\"supportability\":\"ready\",\"score\":\"64\",\"scorePolicyVersion\":\"missing-risk-profile-review-v1\",\"sourceSignalIds\":[\"signal_missing_risk_profile_8d57adbf52f7f5a7\"],\"sourceRefs\":[{\"productId\":\"lotus-advise:AdvisoryPolicyEvaluationRecord:v1\",\"sourceSystem\":\"lotus-advise\",\"productVersion\":\"v1\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"dataQualityStatus\":\"quality_passed\",\"freshness\":\"current\"}]},\"sourceAuthority\":\"lotus-advise\",\"supportedFeaturePromoted\":false}",
-        "{\"outcome\":\"blocked\",\"family\":\"missing_risk_profile\",\"reasonCodes\":[\"source_partial\"],\"unsupportedReasons\":[\"source_unavailable\"],\"candidate\":null,\"sourceAuthority\":\"lotus-advise\",\"supportedFeaturePromoted\":false}"
+        "{\"outcome\":\"candidate_created\",\"family\":\"missing_risk_profile\",\"reasonCodes\":[\"missing_risk_profile\",\"review_required\"],\"unsupportedReasons\":[],\"candidate\":{\"candidateId\":\"idea_missing_risk_profile_bf0f1221281cb4b8\",\"family\":\"missing_risk_profile\",\"lifecycleStatus\":\"generated\",\"reviewPosture\":\"advisor_review_required\",\"evidencePacketId\":\"iep_missing_risk_profile_bf0f1221281cb4b8\",\"supportability\":\"ready\",\"score\":\"64\",\"scorePolicyVersion\":\"missing-risk-profile-review-v1\",\"sourceSignalIds\":[\"signal_missing_risk_profile_bf0f1221281cb4b8\"],\"sourceRefs\":[{\"productId\":\"lotus-advise:AdvisoryPolicyEvaluationRecord:v1\",\"sourceSystem\":\"lotus-advise\",\"productVersion\":\"v1\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"dataQualityStatus\":\"quality_passed\",\"freshness\":\"current\"}]},\"sourceAuthority\":\"lotus-advise\",\"supportedFeaturePromoted\":false}",
+        "{\"outcome\":\"blocked\",\"family\":\"missing_risk_profile\",\"reasonCodes\":[\"source_partial\"],\"unsupportedReasons\":[\"source_unavailable\"],\"candidate\":null,\"sourceAuthority\":\"lotus-advise\",\"supportedFeaturePromoted\":false}",
+        "{\"outcome\":\"suppressed\",\"family\":\"missing_risk_profile\",\"reasonCodes\":[\"duplicate_suppressed\"],\"unsupportedReasons\":[],\"candidate\":null,\"sourceAuthority\":\"lotus-advise\",\"supportedFeaturePromoted\":false}",
+        "{\"outcome\":\"not_eligible\",\"family\":\"missing_risk_profile\",\"reasonCodes\":[\"below_materiality\"],\"unsupportedReasons\":[],\"candidate\":null,\"sourceAuthority\":\"lotus-advise\",\"supportedFeaturePromoted\":false}"
       ],
       "error_examples": [
         "403 returns product-safe Problem Details when the caller lacks advisor role, idea.signal.evaluate capability, or supplied request access-scope entitlement.",
@@ -685,9 +691,11 @@
         "tests/integration/test_missing_risk_profile_signal_api.py::test_missing_risk_profile_signal_from_source_blocks_when_runtime_not_configured",
         "tests/integration/test_missing_risk_profile_signal_api.py::test_missing_risk_profile_signal_from_source_checks_scope_before_runtime",
         "tests/integration/test_missing_risk_profile_signal_api.py::test_missing_risk_profile_signal_from_source_closes_runtime_on_source_blocker",
+        "tests/integration/test_missing_risk_profile_signal_api.py::test_missing_risk_profile_signal_from_source_exposes_non_candidate_success_modes",
         "tests/integration/test_signal_source_operation_events.py::test_missing_risk_profile_source_api_emits_blocked_operation_event",
         "tests/unit/test_missing_risk_profile_application.py::test_missing_risk_profile_application_preserves_access_scope_from_advise_command",
-        "tests/unit/test_source_ingestion_state.py::test_advise_policy_evaluation_source_runtime_builds_without_manifest"
+        "tests/unit/test_source_ingestion_state.py::test_advise_policy_evaluation_source_runtime_builds_without_manifest",
+        "tests/unit/api_examples/test_missing_risk_profile_signal_examples.py::test_missing_risk_profile_examples_match_ledger_and_generated_openapi"
       ],
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
     },

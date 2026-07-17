@@ -48,6 +48,10 @@ from endpoint_mandate_restriction_signal_contracts import (
     validate_mandate_restriction_evaluation_success_contract,
     validate_source_backed_mandate_restriction_evaluation_success_contract,
 )
+from endpoint_missing_risk_profile_signal_contracts import (
+    validate_missing_risk_profile_evaluation_success_contract,
+    validate_source_backed_missing_risk_profile_evaluation_success_contract,
+)
 from endpoint_report_evidence_contracts import validate_report_evidence_pack_success_contract
 from endpoint_review_workflow_contracts import (
     validate_feedback_success_contract,
@@ -88,6 +92,8 @@ NAMED_SUCCESS_VALIDATORS: tuple[NamedSuccessValidator, ...] = (
     validate_source_backed_high_volatility_evaluation_success_contract,
     validate_mandate_restriction_evaluation_success_contract,
     validate_source_backed_mandate_restriction_evaluation_success_contract,
+    validate_missing_risk_profile_evaluation_success_contract,
+    validate_source_backed_missing_risk_profile_evaluation_success_contract,
     validate_conversion_intent_success_contract,
     validate_conversion_outcome_success_contract,
     validate_review_action_success_contract,
