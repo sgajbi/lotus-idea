@@ -21,9 +21,10 @@ def apply_named_response_examples(
     *,
     operation_path: str,
     examples: dict[str, dict[str, Any]],
+    response_status_code: str = "200",
 ) -> None:
     operation = openapi_schema["paths"][operation_path]["post"]
-    media = operation["responses"]["200"]["content"]["application/json"]
+    media = operation["responses"][response_status_code]["content"]["application/json"]
     media.pop("example", None)
     media["examples"] = examples
 

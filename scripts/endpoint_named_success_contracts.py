@@ -31,6 +31,10 @@ from endpoint_drawdown_review_signal_contracts import (
     validate_drawdown_review_evaluation_success_contract,
     validate_source_backed_drawdown_review_evaluation_success_contract,
 )
+from endpoint_downstream_submission_contracts import (
+    validate_conversion_downstream_submission_success_contract,
+    validate_report_downstream_submission_success_contract,
+)
 from endpoint_high_cash_signal_contracts import (
     validate_high_cash_evaluation_success_contract,
     validate_high_cash_persistence_success_contract,
@@ -81,6 +85,7 @@ NAMED_SUCCESS_VALIDATORS: tuple[NamedSuccessValidator, ...] = (
     validate_ai_readiness_success_contract,
     validate_candidate_lifecycle_success_contract,
     validate_candidate_evidence_replay_success_contract,
+    validate_conversion_downstream_submission_success_contract,
     validate_allocation_drift_evaluation_success_contract,
     validate_source_backed_allocation_drift_evaluation_success_contract,
     validate_high_cash_evaluation_success_contract,
@@ -111,6 +116,7 @@ NAMED_SUCCESS_VALIDATORS: tuple[NamedSuccessValidator, ...] = (
     validate_review_action_success_contract,
     validate_feedback_success_contract,
     validate_report_evidence_pack_success_contract,
+    validate_report_downstream_submission_success_contract,
 )
 
 

@@ -53,6 +53,7 @@ from app.api.examples.conversion_workflow import apply_conversion_workflow_opena
 from app.api.examples.drawdown_review_signal import (
     apply_drawdown_review_signal_openapi_examples,
 )
+from app.api.examples.downstream_submission import apply_downstream_submission_openapi_examples
 from app.api.examples.high_volatility_signal import (
     apply_high_volatility_signal_openapi_examples,
 )
@@ -318,6 +319,7 @@ def _configure_openapi_contract_overrides(application: FastAPI) -> None:
         schema = apply_bond_maturity_signal_openapi_examples(schema)
         schema = apply_concentration_risk_signal_openapi_examples(schema)
         schema = apply_drawdown_review_signal_openapi_examples(schema)
+        schema = apply_downstream_submission_openapi_examples(schema)
         schema = apply_high_volatility_signal_openapi_examples(schema)
         schema = apply_high_cash_signal_openapi_examples(schema)
         schema = apply_low_income_signal_openapi_examples(schema)

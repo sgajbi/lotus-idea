@@ -778,6 +778,59 @@ def test_report_downstream_submission_api_returns_bounded_rejection(
     assert report_client.submitted[0].report_evidence_pack_id == "report-pack-rejected-api-001"
 
 
+def test_report_downstream_submission_api_returns_durable_uncertain_posture(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    reset_idea_repository_for_tests()
+    client = managed_test_client(app)
+    report_client = CapturingReportClient(
+        DownstreamRealizationOutcome.unknown("downstream_unavailable")
+    )
+    monkeypatch.setattr(
+        downstream_realization_api,
+        "get_report_evidence_pack_realization_client",
+        lambda: report_client,
+    )
+    candidate_id = seed_approved_candidate(
+        client,
+        suffix="-report-uncertain-downstream",
+        idempotency_prefix="report-uncertain-downstream",
+    )
+    record_conversion_intent(
+        client,
+        candidate_id,
+        conversion_intent_id="conversion-report-uncertain-api-001",
+        target="report_evidence",
+        idempotency_key="conversion-report-uncertain-api-001",
+    )
+    record_report_evidence_pack(
+        client,
+        conversion_intent_id="conversion-report-uncertain-api-001",
+        report_evidence_pack_id="report-pack-uncertain-api-001",
+        idempotency_key="report-pack-uncertain-api-001",
+    )
+    headers = downstream_submission_headers("downstream-submit-report-uncertain-api-001")
+
+    first = client.post(
+        "/api/v1/report-evidence-packs/report-pack-uncertain-api-001/downstream-submissions",
+        headers=headers,
+    )
+    retry = client.post(
+        "/api/v1/report-evidence-packs/report-pack-uncertain-api-001/downstream-submissions",
+        headers=headers,
+    )
+
+    assert first.status_code == 202
+    assert retry.status_code == 202
+    first_submission = first.json()["downstreamSubmission"]
+    retry_submission = retry.json()["downstreamSubmission"]
+    assert first_submission["submissionStatus"] == "reconciliation_required"
+    assert first_submission["downstreamFailureReason"] == "downstream_unavailable"
+    assert retry_submission["supportReference"] == first_submission["supportReference"]
+    assert retry_submission["idempotencyReplayed"] is True
+    assert len(report_client.submitted) == 1
+
+
 def test_report_downstream_submission_api_fails_closed_without_adapter_configuration(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
