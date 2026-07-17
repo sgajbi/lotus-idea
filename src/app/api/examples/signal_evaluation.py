@@ -1,10 +1,17 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import date, datetime
 from typing import Any, TypeVar
 
 from app.api.signal_models import SignalEvaluationResponse, SourceRefRequest
 from app.domain import EvidenceFreshness, SignalEvaluationResult, SourceSystem
+from app.ports.advise_sources import (
+    AdviseOpportunitySourcePort,
+    AdvisePolicyEvaluationEvidence,
+    AdvisePolicyEvaluationEvidenceRequest,
+    AdviseSourceUnavailable,
+)
 
 
 ResponseT = TypeVar("ResponseT", bound=SignalEvaluationResponse)
@@ -70,9 +77,25 @@ def return_or_raise_example_evidence(
     return evidence
 
 
+@dataclass(frozen=True)
+class ExampleAdvisePolicyEvaluationSource(AdviseOpportunitySourcePort):
+    """Deterministic Advise-port fake for source-backed OpenAPI examples."""
+
+    evidence: AdvisePolicyEvaluationEvidence
+    error: AdviseSourceUnavailable | None = None
+
+    def fetch_policy_evaluation_evidence(
+        self,
+        request: AdvisePolicyEvaluationEvidenceRequest,
+    ) -> AdvisePolicyEvaluationEvidence:
+        del request
+        return return_or_raise_example_evidence(self.evidence, self.error)
+
+
 __all__ = [
     "build_core_source_ref_request",
     "build_source_ref_request",
+    "ExampleAdvisePolicyEvaluationSource",
     "return_or_raise_example_evidence",
     "serialize_signal_evaluation",
 ]
