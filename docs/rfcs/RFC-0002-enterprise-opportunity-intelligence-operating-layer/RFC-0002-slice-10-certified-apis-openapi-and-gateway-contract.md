@@ -541,7 +541,8 @@ automatic uncertain-call retry, suitability, execution, client publication,
 Gateway/Workbench realization, data-product promotion, or supported-feature
 promotion is introduced. README and supported-feature truth remain unchanged;
 the status-aware repository validator is the durable improvement. A refreshed
-deterministic scan leaves four multi-shape operations under #542.
+deterministic scan left two multi-shape operations under #542: the advisor
+queue and health-readiness contracts.
 
 Issue `#577` continues issue `#542` through the advisor-review-queue success
 contract. Its capability-owned factory persists a deterministic internal
@@ -558,6 +559,11 @@ authority. README and supported-feature registry truth remain unchanged by
 explicit scope decision. The generalized named-response helper now supports
 the HTTP method of the governed operation, avoiding a POST-only hidden
 assumption without introducing a runtime split.
+
+A refreshed deterministic scan after issue `#577` leaves one multi-shape
+operation under `#542`: `GET /health/ready`. That remaining technical
+readiness contract is not a supported-feature, product-authority, or client
+publication promotion.
 
 PR `#543` merged issue `#539` to `main` at
 `f6e2365eaec5f4f0184d5985e5b5fcc641b4883b`. Main Releasability run

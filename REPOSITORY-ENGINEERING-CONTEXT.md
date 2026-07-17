@@ -644,6 +644,13 @@ directories because pytest imports this repository's tests by module basename.
 Name example-publication tests for the durable concern, such as
 `test_report_evidence_examples.py`, rather than colliding with an existing
 domain test such as `test_report_evidence.py`.
+The downstream-submission family under issue `#575` reduced that inventory to
+two operations by certifying both conversion-intent and report-evidence-pack
+submissions as status-aware application-backed contracts. The advisor queue
+under issue `#577` then reduced it to one by publishing exact
+`itemsAvailable` and `noItemsAvailable` queue examples. The sole remaining
+operation is `GET /health/ready`; these inventory corrections do not promote a
+supported feature or transfer product authority.
 Conversion-intent and conversion-outcome API route orchestration follows the
 same pattern in `app.api.conversion_governance_operations`. This helper is an
 internal API boundary only; conversion posture remains local, review-gated, and
