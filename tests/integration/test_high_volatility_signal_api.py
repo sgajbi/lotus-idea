@@ -6,7 +6,7 @@ from decimal import Decimal
 from typing import Any
 
 from tests.support.http import managed_test_client
-from pytest import MonkeyPatch
+from pytest import MonkeyPatch, mark
 
 import app.api.high_volatility_signals as high_volatility_api
 from app.domain import EvidenceFreshness, InMemoryIdeaRepository, SourceRef, SourceSystem
@@ -31,6 +31,7 @@ PORTFOLIO_ID = "PB_SG_GLOBAL_BAL_001"
 @dataclass
 class RecordingRiskVolatilitySource:
     seen_request: RiskVolatilityEvidenceRequest | None = None
+    evidence: RiskVolatilityEvidence | None = None
     error: Exception | None = None
     close_count: int = 0
 
@@ -41,7 +42,7 @@ class RecordingRiskVolatilitySource:
         self.seen_request = request
         if self.error is not None:
             raise self.error
-        return _risk_volatility_evidence()
+        return self.evidence or _risk_volatility_evidence()
 
     def close(self) -> None:
         self.close_count += 1
@@ -74,6 +75,7 @@ def test_high_volatility_signal_api_returns_review_candidate() -> None:
 
 
 def test_high_volatility_signal_api_reports_below_threshold_not_eligible() -> None:
+    reset_idea_repository_for_tests(InMemoryIdeaRepository())
     client = managed_test_client(app)
     payload = high_volatility_payload()
     payload["sourceReportedVolatility"] = "8.50"
@@ -94,6 +96,32 @@ def test_high_volatility_signal_api_reports_below_threshold_not_eligible() -> No
         "sourceAuthority": "lotus-risk",
         "supportedFeaturePromoted": False,
     }
+    assert len(get_idea_repository().snapshot().candidate_records) == 0
+
+
+def test_high_volatility_signal_api_reports_duplicate_suppressed() -> None:
+    reset_idea_repository_for_tests(InMemoryIdeaRepository())
+    client = managed_test_client(app)
+    payload = high_volatility_payload()
+    payload["duplicateOfCandidateId"] = "idea_high_volatility_existing"
+
+    response = client.post(
+        "/api/v1/idea-signals/high-volatility/evaluate",
+        json=payload,
+        headers=evaluate_headers(),
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "outcome": "suppressed",
+        "family": "high_volatility",
+        "reasonCodes": ["duplicate_suppressed"],
+        "unsupportedReasons": [],
+        "candidate": None,
+        "sourceAuthority": "lotus-risk",
+        "supportedFeaturePromoted": False,
+    }
+    assert len(get_idea_repository().snapshot().candidate_records) == 0
 
 
 def test_high_volatility_signal_api_reports_non_ready_source_blocker() -> None:
@@ -343,6 +371,71 @@ def test_high_volatility_signal_from_source_closes_runtime_on_source_blocker(
     assert risk_source.close_count == 1
 
 
+@mark.parametrize(
+    (
+        "source_reported_volatility",
+        "duplicate_of_candidate_id",
+        "expected_outcome",
+        "expected_reason",
+    ),
+    (
+        (
+            Decimal("14.25"),
+            "idea_high_volatility_existing",
+            "suppressed",
+            "duplicate_suppressed",
+        ),
+        (
+            Decimal("8.50"),
+            None,
+            "not_eligible",
+            "below_materiality",
+        ),
+    ),
+)
+def test_high_volatility_signal_from_source_exposes_non_candidate_success_modes(
+    monkeypatch: MonkeyPatch,
+    source_reported_volatility: Decimal,
+    duplicate_of_candidate_id: str | None,
+    expected_outcome: str,
+    expected_reason: str,
+) -> None:
+    reset_idea_repository_for_tests(InMemoryIdeaRepository())
+    client = managed_test_client(app)
+    risk_source = RecordingRiskVolatilitySource(
+        evidence=_risk_volatility_evidence(source_reported_volatility=source_reported_volatility)
+    )
+    monkeypatch.setattr(
+        high_volatility_api,
+        "_build_risk_volatility_source_runtime_from_environment",
+        lambda: RiskVolatilitySourceRuntime(
+            risk_source=risk_source,
+            risk_base_url_configured=True,
+        ),
+    )
+    request_payload = high_volatility_source_payload()
+    request_payload["duplicateOfCandidateId"] = duplicate_of_candidate_id
+
+    response = client.post(
+        "/api/v1/idea-signals/high-volatility/evaluate-from-source",
+        json=request_payload,
+        headers=source_evaluation_headers(),
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "outcome": expected_outcome,
+        "family": "high_volatility",
+        "reasonCodes": [expected_reason],
+        "unsupportedReasons": [],
+        "candidate": None,
+        "sourceAuthority": "lotus-risk",
+        "supportedFeaturePromoted": False,
+    }
+    assert risk_source.close_count == 1
+    assert len(get_idea_repository().snapshot().candidate_records) == 0
+
+
 def evaluate_headers() -> dict[str, str]:
     return {
         "X-Caller-Subject": "advisor-001",
@@ -383,7 +476,7 @@ def high_volatility_payload() -> dict[str, Any]:
     }
 
 
-def high_volatility_source_payload(*, portfolio_id: str = PORTFOLIO_ID) -> dict[str, str]:
+def high_volatility_source_payload(*, portfolio_id: str = PORTFOLIO_ID) -> dict[str, Any]:
     return {
         "portfolioId": portfolio_id,
         "asOfDate": "2026-06-21",
@@ -392,9 +485,11 @@ def high_volatility_source_payload(*, portfolio_id: str = PORTFOLIO_ID) -> dict[
     }
 
 
-def _risk_volatility_evidence() -> RiskVolatilityEvidence:
+def _risk_volatility_evidence(
+    *, source_reported_volatility: Decimal = Decimal("14.25")
+) -> RiskVolatilityEvidence:
     return RiskVolatilityEvidence(
-        source_reported_volatility=Decimal("14.25"),
+        source_reported_volatility=source_reported_volatility,
         risk_supportability_state="ready",
         risk_ref=SourceRef(
             product_id="lotus-risk:RiskMetricsReport:v1",
