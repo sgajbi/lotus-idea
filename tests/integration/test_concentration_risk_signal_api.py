@@ -6,7 +6,7 @@ from decimal import Decimal
 from typing import Any
 
 from tests.support.http import managed_test_client
-from pytest import MonkeyPatch
+from pytest import MonkeyPatch, mark
 
 import app.api.concentration_risk_signals as concentration_risk_api
 from app.api.caller_headers import INVALID_CALLER_SCOPE_DETAIL
@@ -32,6 +32,7 @@ PORTFOLIO_ID = "PB_SG_GLOBAL_BAL_001"
 @dataclass
 class RecordingRiskSource:
     seen_request: RiskConcentrationEvidenceRequest | None = None
+    evidence: RiskConcentrationEvidence | None = None
     error: Exception | None = None
     close_count: int = 0
 
@@ -42,7 +43,7 @@ class RecordingRiskSource:
         self.seen_request = request
         if self.error is not None:
             raise self.error
-        return _risk_evidence()
+        return self.evidence or _risk_evidence()
 
     def close(self) -> None:
         self.close_count += 1
@@ -91,6 +92,29 @@ def test_concentration_risk_signal_api_reports_below_threshold_not_eligible() ->
         "outcome": "not_eligible",
         "family": "concentration",
         "reasonCodes": ["below_materiality"],
+        "unsupportedReasons": [],
+        "candidate": None,
+        "sourceAuthority": "lotus-risk",
+        "supportedFeaturePromoted": False,
+    }
+
+
+def test_concentration_risk_signal_api_reports_duplicate_suppressed() -> None:
+    client = managed_test_client(app)
+    payload = concentration_payload()
+    payload["duplicateOfCandidateId"] = "idea_concentration_existing"
+
+    response = client.post(
+        "/api/v1/idea-signals/concentration-risk/evaluate",
+        json=payload,
+        headers=evaluate_headers(),
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "outcome": "suppressed",
+        "family": "concentration",
+        "reasonCodes": ["duplicate_suppressed"],
         "unsupportedReasons": [],
         "candidate": None,
         "sourceAuthority": "lotus-risk",
@@ -401,6 +425,75 @@ def test_concentration_risk_signal_from_source_closes_runtime_on_source_blocker(
     assert risk_source.close_count == 1
 
 
+@mark.parametrize(
+    (
+        "top_position_weight",
+        "top_issuer_weight",
+        "duplicate_of_candidate_id",
+        "expected_outcome",
+        "expected_reason",
+    ),
+    (
+        (
+            Decimal("0.22"),
+            Decimal("0.27"),
+            "idea_concentration_existing",
+            "suppressed",
+            "duplicate_suppressed",
+        ),
+        (
+            Decimal("0.05"),
+            Decimal("0.08"),
+            None,
+            "not_eligible",
+            "below_materiality",
+        ),
+    ),
+)
+def test_concentration_risk_signal_from_source_exposes_non_candidate_success_modes(
+    monkeypatch: MonkeyPatch,
+    top_position_weight: Decimal,
+    top_issuer_weight: Decimal,
+    duplicate_of_candidate_id: str | None,
+    expected_outcome: str,
+    expected_reason: str,
+) -> None:
+    reset_idea_repository_for_tests(InMemoryIdeaRepository())
+    client = managed_test_client(app)
+    risk_source = RecordingRiskSource(
+        evidence=_risk_evidence_with_weights(top_position_weight, top_issuer_weight)
+    )
+    monkeypatch.setattr(
+        concentration_risk_api,
+        "_build_risk_concentration_source_runtime_from_environment",
+        lambda: RiskConcentrationSourceRuntime(
+            risk_source=risk_source,
+            risk_base_url_configured=True,
+        ),
+    )
+    request_payload = concentration_source_payload()
+    request_payload["duplicateOfCandidateId"] = duplicate_of_candidate_id
+
+    response = client.post(
+        "/api/v1/idea-signals/concentration-risk/evaluate-from-source",
+        json=request_payload,
+        headers=source_evaluation_headers(),
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "outcome": expected_outcome,
+        "family": "concentration",
+        "reasonCodes": [expected_reason],
+        "unsupportedReasons": [],
+        "candidate": None,
+        "sourceAuthority": "lotus-risk",
+        "supportedFeaturePromoted": False,
+    }
+    assert risk_source.close_count == 1
+    assert len(get_idea_repository().snapshot().candidate_records) == 0
+
+
 def evaluate_headers() -> dict[str, str]:
     return {
         "X-Caller-Subject": "advisor-001",
@@ -452,7 +545,7 @@ def concentration_payload() -> dict[str, Any]:
     }
 
 
-def concentration_source_payload(*, portfolio_id: str = PORTFOLIO_ID) -> dict[str, str]:
+def concentration_source_payload(*, portfolio_id: str = PORTFOLIO_ID) -> dict[str, Any]:
     return {
         "portfolioId": portfolio_id,
         "asOfDate": "2026-06-21",
@@ -477,4 +570,19 @@ def _risk_evidence() -> RiskConcentrationEvidence:
             freshness=EvidenceFreshness.CURRENT,
         ),
         concentration_diagnostic="risk_issuer_coverage_complete",
+    )
+
+
+def _risk_evidence_with_weights(
+    top_position_weight: Decimal,
+    top_issuer_weight: Decimal,
+) -> RiskConcentrationEvidence:
+    evidence = _risk_evidence()
+    return RiskConcentrationEvidence(
+        top_position_weight_current=top_position_weight,
+        top_issuer_weight_current=top_issuer_weight,
+        issuer_coverage_status=evidence.issuer_coverage_status,
+        concentration_ref=evidence.concentration_ref,
+        concentration_diagnostic=evidence.concentration_diagnostic,
+        entitlement_allowed=evidence.entitlement_allowed,
     )

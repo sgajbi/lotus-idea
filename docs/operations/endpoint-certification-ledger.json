@@ -361,10 +361,10 @@
         "{\"asOfDate\":\"2026-06-21\",\"evaluatedAtUtc\":\"2026-06-21T10:00:00Z\",\"topPositionWeightCurrent\":\"0.18\",\"topIssuerWeightCurrent\":\"0.24\",\"issuerCoverageStatus\":\"complete\",\"concentrationRef\":{\"productId\":\"lotus-risk:ConcentrationRiskReport:v1\",\"sourceSystem\":\"lotus-risk\",\"productVersion\":\"v1\",\"route\":\"/analytics/risk/concentration\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"contentHash\":\"sha256:concentration-risk-report\",\"dataQualityStatus\":\"quality_passed\",\"freshness\":\"current\"},\"entitlementAllowed\":true}"
       ],
       "response_examples": [
-        "{\"outcome\":\"candidate_created\",\"family\":\"concentration\",\"reasonCodes\":[\"concentration_attention\",\"review_required\"],\"unsupportedReasons\":[],\"candidate\":{\"candidateId\":\"idea_concentration_8d57adbf52f7f5a7\",\"family\":\"concentration\",\"lifecycleStatus\":\"generated\",\"reviewPosture\":\"advisor_review_required\",\"evidencePacketId\":\"iep_concentration_8d57adbf52f7f5a7\",\"supportability\":\"ready\",\"score\":\"78\",\"scorePolicyVersion\":\"concentration-attention-v1\",\"sourceSignalIds\":[\"signal_concentration_8d57adbf52f7f5a7\"],\"sourceRefs\":[{\"productId\":\"lotus-risk:ConcentrationRiskReport:v1\",\"sourceSystem\":\"lotus-risk\",\"productVersion\":\"v1\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"dataQualityStatus\":\"quality_passed\",\"freshness\":\"current\"}]},\"sourceAuthority\":\"lotus-risk\",\"supportedFeaturePromoted\":false}",
-        "{\"outcome\":\"not_eligible\",\"family\":\"concentration\",\"reasonCodes\":[\"below_materiality\"],\"unsupportedReasons\":[],\"candidate\":null,\"sourceAuthority\":\"lotus-risk\",\"supportedFeaturePromoted\":false}",
-        "{\"outcome\":\"blocked\",\"family\":\"concentration\",\"reasonCodes\":[\"source_partial\"],\"unsupportedReasons\":[\"source_uncertified\"],\"candidate\":null,\"sourceAuthority\":\"lotus-risk\",\"supportedFeaturePromoted\":false}",
-        "{\"outcome\":\"blocked\",\"family\":\"concentration\",\"reasonCodes\":[\"source_stale\"],\"unsupportedReasons\":[\"stale_source\"],\"candidate\":null,\"sourceAuthority\":\"lotus-risk\",\"supportedFeaturePromoted\":false}"
+        "{\"outcome\":\"candidate_created\",\"family\":\"concentration\",\"reasonCodes\":[\"concentration_attention\",\"review_required\"],\"unsupportedReasons\":[],\"candidate\":{\"candidateId\":\"idea_concentration_c3f174782e0472ae\",\"family\":\"concentration\",\"lifecycleStatus\":\"generated\",\"reviewPosture\":\"advisor_review_required\",\"evidencePacketId\":\"iep_concentration_c3f174782e0472ae\",\"supportability\":\"ready\",\"score\":\"78\",\"scorePolicyVersion\":\"concentration-attention-v1\",\"sourceSignalIds\":[\"signal_concentration_c3f174782e0472ae\"],\"sourceRefs\":[{\"productId\":\"lotus-risk:ConcentrationRiskReport:v1\",\"sourceSystem\":\"lotus-risk\",\"productVersion\":\"v1\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"dataQualityStatus\":\"quality_passed\",\"freshness\":\"current\"}]},\"sourceAuthority\":\"lotus-risk\",\"supportedFeaturePromoted\":false}",
+        "{\"outcome\":\"blocked\",\"family\":\"concentration\",\"reasonCodes\":[\"source_stale\"],\"unsupportedReasons\":[\"stale_source\"],\"candidate\":null,\"sourceAuthority\":\"lotus-risk\",\"supportedFeaturePromoted\":false}",
+        "{\"outcome\":\"suppressed\",\"family\":\"concentration\",\"reasonCodes\":[\"duplicate_suppressed\"],\"unsupportedReasons\":[],\"candidate\":null,\"sourceAuthority\":\"lotus-risk\",\"supportedFeaturePromoted\":false}",
+        "{\"outcome\":\"not_eligible\",\"family\":\"concentration\",\"reasonCodes\":[\"below_materiality\"],\"unsupportedReasons\":[],\"candidate\":null,\"sourceAuthority\":\"lotus-risk\",\"supportedFeaturePromoted\":false}"
       ],
       "error_examples": [
         "403 returns product-safe Problem Details when the caller lacks advisor role or idea.signal.evaluate capability.",
@@ -373,15 +373,17 @@
       ],
       "test_evidence": [
         "tests/integration/test_concentration_risk_signal_api.py::test_concentration_risk_signal_api_returns_review_candidate",
+        "tests/integration/test_concentration_risk_signal_api.py::test_concentration_risk_signal_api_reports_duplicate_suppressed",
         "tests/integration/test_concentration_risk_signal_api.py::test_concentration_risk_signal_api_reports_below_threshold_not_eligible",
         "tests/integration/test_concentration_risk_signal_api.py::test_concentration_risk_signal_api_reports_partial_issuer_coverage_blocker",
         "tests/integration/test_concentration_risk_signal_api.py::test_concentration_risk_signal_api_reports_stale_source_blocker",
         "tests/integration/test_concentration_risk_signal_api.py::test_concentration_risk_signal_api_rejects_wrong_source_contract",
         "tests/integration/test_concentration_risk_signal_api.py::test_concentration_risk_signal_api_rejects_wrong_risk_product_id",
         "tests/integration/test_concentration_risk_signal_api.py::test_concentration_risk_signal_api_requires_signal_permission",
-        "tests/integration/test_api_operation_events.py::test_concentration_risk_signal_api_emits_bounded_operation_event"
+        "tests/integration/test_api_operation_events.py::test_concentration_risk_signal_api_emits_bounded_operation_event",
+        "tests/unit/api_examples/test_concentration_risk_signal_examples.py::test_concentration_risk_examples_match_ledger_and_generated_openapi"
       ],
-      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
+      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples; scripts/endpoint_concentration_risk_signal_contracts.py enforces exact named success-mode parity."
     },
     {
       "method": "POST",
@@ -395,8 +397,10 @@
         "{\"portfolioId\":\"PB_SG_GLOBAL_BAL_001\",\"asOfDate\":\"2026-06-21\",\"evaluatedAtUtc\":\"2026-06-21T10:00:00Z\"}"
       ],
       "response_examples": [
-        "{\"outcome\":\"candidate_created\",\"family\":\"concentration\",\"reasonCodes\":[\"concentration_attention\",\"review_required\"],\"unsupportedReasons\":[],\"candidate\":{\"candidateId\":\"idea_concentration_8d57adbf52f7f5a7\",\"family\":\"concentration\",\"lifecycleStatus\":\"generated\",\"reviewPosture\":\"advisor_review_required\",\"evidencePacketId\":\"iep_concentration_8d57adbf52f7f5a7\",\"supportability\":\"ready\",\"score\":\"78\",\"scorePolicyVersion\":\"concentration-attention-v1\",\"sourceSignalIds\":[\"signal_concentration_8d57adbf52f7f5a7\"],\"sourceRefs\":[{\"productId\":\"lotus-risk:ConcentrationRiskReport:v1\",\"sourceSystem\":\"lotus-risk\",\"productVersion\":\"v1\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"dataQualityStatus\":\"ready\",\"freshness\":\"current\"}]},\"sourceAuthority\":\"lotus-risk\",\"supportedFeaturePromoted\":false}",
-        "{\"outcome\":\"blocked\",\"family\":\"concentration\",\"reasonCodes\":[\"source_partial\"],\"unsupportedReasons\":[\"source_unavailable\"],\"candidate\":null,\"sourceAuthority\":\"lotus-risk\",\"supportedFeaturePromoted\":false}"
+        "{\"outcome\":\"candidate_created\",\"family\":\"concentration\",\"reasonCodes\":[\"concentration_attention\",\"review_required\"],\"unsupportedReasons\":[],\"candidate\":{\"candidateId\":\"idea_concentration_ad0bdbaaecf91443\",\"family\":\"concentration\",\"lifecycleStatus\":\"generated\",\"reviewPosture\":\"advisor_review_required\",\"evidencePacketId\":\"iep_concentration_ad0bdbaaecf91443\",\"supportability\":\"ready\",\"score\":\"78\",\"scorePolicyVersion\":\"concentration-attention-v1\",\"sourceSignalIds\":[\"signal_concentration_ad0bdbaaecf91443\"],\"sourceRefs\":[{\"productId\":\"lotus-risk:ConcentrationRiskReport:v1\",\"sourceSystem\":\"lotus-risk\",\"productVersion\":\"v1\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"dataQualityStatus\":\"quality_passed\",\"freshness\":\"current\"}]},\"sourceAuthority\":\"lotus-risk\",\"supportedFeaturePromoted\":false}",
+        "{\"outcome\":\"blocked\",\"family\":\"concentration\",\"reasonCodes\":[\"source_partial\"],\"unsupportedReasons\":[\"source_unavailable\"],\"candidate\":null,\"sourceAuthority\":\"lotus-risk\",\"supportedFeaturePromoted\":false}",
+        "{\"outcome\":\"suppressed\",\"family\":\"concentration\",\"reasonCodes\":[\"duplicate_suppressed\"],\"unsupportedReasons\":[],\"candidate\":null,\"sourceAuthority\":\"lotus-risk\",\"supportedFeaturePromoted\":false}",
+        "{\"outcome\":\"not_eligible\",\"family\":\"concentration\",\"reasonCodes\":[\"below_materiality\"],\"unsupportedReasons\":[],\"candidate\":null,\"sourceAuthority\":\"lotus-risk\",\"supportedFeaturePromoted\":false}"
       ],
       "error_examples": [
         "403 returns product-safe Problem Details when the caller lacks advisor role, idea.signal.evaluate capability, or portfolio entitlement scope.",
@@ -408,11 +412,13 @@
         "tests/integration/test_concentration_risk_signal_api.py::test_concentration_risk_signal_from_source_checks_scope_before_runtime",
         "tests/integration/test_concentration_risk_signal_api.py::test_concentration_risk_signal_from_source_blocks_when_runtime_not_configured",
         "tests/integration/test_concentration_risk_signal_api.py::test_concentration_risk_signal_from_source_closes_runtime_on_source_blocker",
+        "tests/integration/test_concentration_risk_signal_api.py::test_concentration_risk_signal_from_source_exposes_non_candidate_success_modes",
         "tests/integration/test_api_operation_events.py::test_concentration_risk_source_api_emits_blocked_operation_event",
         "tests/unit/test_source_ingestion_state.py::test_risk_concentration_source_runtime_builds_without_manifest",
-        "tests/unit/test_lotus_risk_sources.py::test_lotus_risk_adapter_close_releases_owned_client"
+        "tests/unit/test_lotus_risk_sources.py::test_lotus_risk_adapter_close_releases_owned_client",
+        "tests/unit/api_examples/test_concentration_risk_signal_examples.py::test_concentration_risk_examples_match_ledger_and_generated_openapi"
       ],
-      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
+      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples; scripts/endpoint_concentration_risk_signal_contracts.py enforces exact named success-mode parity."
     },
     {
       "method": "POST",
