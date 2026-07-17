@@ -90,6 +90,27 @@ def validate_named_success_status_contract(
     workflow_name: str,
     required_test_evidence: tuple[tuple[str, str], ...],
 ) -> list[str]:
+    return validate_named_response_status_contract(
+        endpoint=endpoint,
+        openapi_spec=openapi_spec,
+        operation=operation,
+        expected_by_status=expected_by_status,
+        workflow_name=workflow_name,
+        required_test_evidence=required_test_evidence,
+        mode_kind="success",
+    )
+
+
+def validate_named_response_status_contract(
+    *,
+    endpoint: dict[str, Any],
+    openapi_spec: dict[str, Any] | None,
+    operation: tuple[str, str],
+    expected_by_status: tuple[tuple[str, dict[str, dict[str, Any]]], ...],
+    workflow_name: str,
+    required_test_evidence: tuple[tuple[str, str], ...],
+    mode_kind: str = "response",
+) -> list[str]:
     endpoint_operation = (str(endpoint["method"]).upper(), str(endpoint["path"]))
     if endpoint_operation != operation:
         return []
@@ -101,7 +122,7 @@ def validate_named_success_status_contract(
     if json_object_examples(endpoint.get("response_examples")) != expected_ledger_examples:
         errors.append(
             f"{operation}: response_examples must exactly match every code-owned {workflow_name} "
-            "success mode"
+            f"{mode_kind} mode"
         )
 
     test_evidence = tuple(str(value) for value in endpoint.get("test_evidence", ()))
@@ -129,7 +150,7 @@ def validate_named_success_status_contract(
             if published != expected:
                 errors.append(
                     f"{operation}: OpenAPI {status_code} examples must exactly match every named "
-                    f"code-owned {workflow_name} success mode"
+                    f"code-owned {workflow_name} {mode_kind} mode"
                 )
 
     return errors
@@ -140,5 +161,6 @@ __all__ = [
     "openapi_operation",
     "openapi_success_object_examples",
     "validate_named_success_contract",
+    "validate_named_response_status_contract",
     "validate_named_success_status_contract",
 ]

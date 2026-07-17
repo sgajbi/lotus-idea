@@ -47,6 +47,7 @@ from endpoint_high_volatility_signal_contracts import (
     validate_high_volatility_evaluation_success_contract,
     validate_source_backed_high_volatility_evaluation_success_contract,
 )
+from endpoint_health_readiness_contracts import validate_health_readiness_response_contract
 from endpoint_low_income_signal_contracts import (
     validate_low_income_evaluation_success_contract,
     validate_source_backed_low_income_evaluation_success_contract,
@@ -85,6 +86,7 @@ NamedSuccessValidator = Callable[
 
 NAMED_SUCCESS_VALIDATORS: tuple[NamedSuccessValidator, ...] = (
     validate_advisor_review_queue_success_contract,
+    validate_health_readiness_response_contract,
     validate_ai_evaluation_success_contract,
     validate_ai_readiness_success_contract,
     validate_candidate_lifecycle_success_contract,

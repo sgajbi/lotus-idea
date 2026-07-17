@@ -36,7 +36,18 @@ def test_health_endpoints() -> None:
     client = managed_test_client(app)
     assert client.get("/health").status_code == 200
     assert client.get("/health/live").status_code == 200
-    assert client.get("/health/ready").status_code == 200
+    readiness = client.get("/health/ready")
+    assert readiness.status_code == 200
+    assert readiness.json() == {
+        "status": "ready",
+        "recoveryPosture": "normal",
+        "runtimeProfile": "local",
+        "durableRepositoryConfigured": False,
+        "durableStorageBacked": False,
+        "processLocalRepositoryAllowed": True,
+        "durableWriteRepositoryRequired": False,
+        "configurationBlockers": [],
+    }
 
 
 def test_correlation_and_trace_header_propagation() -> None:

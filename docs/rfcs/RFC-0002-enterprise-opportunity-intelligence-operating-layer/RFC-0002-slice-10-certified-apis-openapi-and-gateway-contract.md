@@ -560,10 +560,18 @@ explicit scope decision. The generalized named-response helper now supports
 the HTTP method of the governed operation, avoiding a POST-only hidden
 assumption without introducing a runtime split.
 
-A refreshed deterministic scan after issue `#577` leaves one multi-shape
-operation under `#542`: `GET /health/ready`. That remaining technical
-readiness contract is not a supported-feature, product-authority, or client
-publication promotion.
+Issue `#581` closes the final Slice 10 inventory entry, `GET /health/ready`,
+as a status-aware operational response contract. The route has one `200`
+`ready` mode and intentionally uses `503` for draining, restoring,
+durable-repository, and release-identity blockers; these failure modes are not
+mislabelled as business success. A typed production response assembler supplies
+both route output and deterministic OpenAPI examples, while a capability-owned
+validator requires exact code-owned `200`/`503`, ledger, and HTTP-behavior
+parity. The central gate now invokes targeted validators for baseline platform
+operations as well as business endpoints. This removes the final inventory gap
+without changing README or supported-feature truth, adding a runtime service,
+or promoting product, authority, Gateway, Workbench, client-publication, or
+production readiness.
 
 PR `#543` merged issue `#539` to `main` at
 `f6e2365eaec5f4f0184d5985e5b5fcc641b4883b`. Main Releasability run
