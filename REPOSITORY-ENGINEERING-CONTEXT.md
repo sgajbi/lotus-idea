@@ -587,6 +587,13 @@ while preserving `RiskMetricsReport:v1` as Risk-owned evidence. Idea must not
 infer volatility, VaR, tracking-error calculations, methodology approval,
 trade recommendations, rebalance, or execution authority from these examples.
 Fourteen multi-shape operations remain under issue `#542` after this family.
+Drawdown-review caller and Risk-backed evaluation now follow the same contract
+under issue `#565`. Both routes publish candidate-created, blocked, suppressed,
+and not-eligible modes from their real application paths while preserving
+`DrawdownAnalyticsReport:v1` as Risk-owned evidence. Idea must not infer
+drawdown calculation, period selection, methodology approval, trade
+recommendations, rebalance, or execution authority from these examples. Twelve
+multi-shape operations remain under issue `#542` after this family.
 Unit-test modules must also use globally unique basenames across nested
 directories because pytest imports this repository's tests by module basename.
 Name example-publication tests for the durable concern, such as
