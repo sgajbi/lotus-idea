@@ -594,6 +594,15 @@ and not-eligible modes from their real application paths while preserving
 drawdown calculation, period selection, methodology approval, trade
 recommendations, rebalance, or execution authority from these examples. Twelve
 multi-shape operations remain under issue `#542` after this family.
+Mandate-restriction caller and Advise-backed evaluation now follow the same
+contract under issue `#567`. Both routes publish candidate-created, blocked,
+suppressed, and not-eligible modes from their real application paths. The
+caller route preserves the actual governed Core, Manage, or Advise source
+authority; the source-backed route retains Advise
+`AdvisoryPolicyEvaluationRecord:v1` identity. Idea must not infer restriction
+clearance, mandate change, suitability or policy approval, client publication,
+rebalance, order, or execution authority from these examples. Ten multi-shape
+operations remain under issue `#542` after this family.
 Unit-test modules must also use globally unique basenames across nested
 directories because pytest imports this repository's tests by module basename.
 Name example-publication tests for the durable concern, such as

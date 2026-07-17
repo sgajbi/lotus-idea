@@ -228,6 +228,13 @@ Current RFC-0002 implementation-start baseline:
    `DrawdownAnalyticsReport:v1` identity without moving drawdown calculation,
    period selection, methodology, recommendation, rebalance, or execution
    authority into Idea.
+   Mandate-restriction caller and Advise-backed APIs now publish that complete
+   matrix from their existing application paths. Caller evaluation preserves
+   the actual governed Core, Manage, or Advise authority; source-backed
+   candidate examples retain Advise `AdvisoryPolicyEvaluationRecord:v1`
+   identity without moving restriction clearance, mandate change,
+   suitability/policy approval, publication, rebalance, order, or execution
+   authority into Idea.
    `make implementation-proof-readiness-check` generates and consumes the
    scheduled source-ingestion worker source contract while intentionally
    preserving the deployment blocker, durable repository

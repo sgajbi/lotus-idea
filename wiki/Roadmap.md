@@ -98,7 +98,10 @@ proof, downstream proof, supported-feature evidence, and mainline CI all agree.
     Risk-backed routes now meet the same contract while retaining Risk
     volatility, VaR, tracking-error, and methodology authority. Drawdown-review
     caller and Risk-backed routes now meet the same contract while retaining
-    Risk drawdown calculation, period-selection, and methodology authority. The slice also
+    Risk drawdown calculation, period-selection, and methodology authority.
+    Mandate-restriction caller and Advise-backed routes now meet the same
+    contract while retaining Core/Manage/Advise source ownership and Advise
+    policy-evaluation authority. The slice also
     includes certified internal lifecycle, AI explanation, advisor queue,
     review, feedback, conversion, report evidence-pack,
     AI-explanation-readiness, and data-mesh-readiness endpoint foundations.
