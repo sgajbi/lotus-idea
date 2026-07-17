@@ -48,7 +48,10 @@ proof, downstream proof, supported-feature evidence, and mainline CI all agree.
    concurrency/restart proof. Downstream submission OpenAPI now distinguishes
    terminal `200` accepted/rejected and replay modes from the separately named
    `202 reconciliation_required` posture without transferring downstream
-   authority. Protected exact-image migration automation now
+   authority. Application-backed advisor-queue `itemsAvailable` and
+   `noItemsAvailable` OpenAPI modes now publish through the existing bounded
+   queue projection; this is not a review-product or supported-feature promotion.
+   Protected exact-image migration automation now
    adds durable release-bound history, locking, pending-only apply, drift
    rejection, explicit legacy adoption, bounded rollback, source-safe evidence,
    and anti-bypass governance. Managed infrastructure, external authority,

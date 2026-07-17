@@ -428,51 +428,7 @@ ADVISOR_REVIEW_QUEUE_ROUTE: RouteMetadata = {
     "responses": {
         200: {
             "description": "Advisor review queue projection returned.",
-            "content": {
-                "application/json": {
-                    "example": {
-                        "audience": "advisor",
-                        "policyVersion": "idea-deterministic-ranking-v1",
-                        "evaluatedAtUtc": "2026-06-21T10:10:00Z",
-                        "items": [
-                            {
-                                "rank": 1,
-                                "candidate": {
-                                    "candidateId": "idea_high_cash_8d57adbf52f7f5a7",
-                                    "family": "high_cash",
-                                    "lifecycleStatus": "generated",
-                                    "reviewPosture": "advisor_review_required",
-                                    "evidencePacketId": "iep_high_cash_8d57adbf52f7f5a7",
-                                    "score": "82",
-                                    "scorePolicyVersion": "idle-liquidity-v1",
-                                    "sourceSignalIds": ["signal_high_cash_8d57adbf52f7f5a7"],
-                                },
-                                "score": "82",
-                                "priorityBucket": "high",
-                                "policyVersion": "idea-deterministic-ranking-v1",
-                                "reasonCodes": ["high_cash_ratio", "review_required"],
-                            }
-                        ],
-                        "exclusions": [],
-                        "page": {
-                            "limit": 25,
-                            "offset": 0,
-                            "returnedItemCount": 1,
-                            "totalReviewableItemCount": 1,
-                            "returnedExclusionCount": 0,
-                            "totalExcludedCandidateCount": 0,
-                            "nextOffset": None,
-                            "hasNextPage": False,
-                            "snapshotToken": (
-                                "rqs1_0123456789abcdef0123456789abcdef"
-                                "0123456789abcdef0123456789abcdef"
-                            ),
-                        },
-                        "durableStorageBacked": False,
-                        "supportedFeaturePromoted": False,
-                    }
-                }
-            },
+            "content": {"application/json": {}},
         },
         **invalid_request_metadata(
             detail="Correct the advisor review queue request and retry.",

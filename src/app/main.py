@@ -41,6 +41,9 @@ from app.api.caller_context_openapi import apply_caller_context_openapi_contract
 from app.api.durable_write_guard import durable_write_readiness_payload
 from app.api.idempotency import mark_required_idempotency_openapi_headers
 from app.api.examples.ai_explanation import apply_ai_explanation_openapi_examples
+from app.api.examples.advisor_review_queue import (
+    apply_advisor_review_queue_openapi_examples,
+)
 from app.api.examples.allocation_drift_signal import (
     apply_allocation_drift_signal_openapi_examples,
 )
@@ -314,6 +317,7 @@ def _configure_openapi_contract_overrides(application: FastAPI) -> None:
         schema = mark_required_idempotency_openapi_headers(schema)
         schema = apply_caller_context_openapi_contract(schema)
         schema = apply_ai_explanation_openapi_examples(schema)
+        schema = apply_advisor_review_queue_openapi_examples(schema)
         schema = apply_allocation_drift_signal_openapi_examples(schema)
         schema = apply_candidate_state_openapi_examples(schema)
         schema = apply_bond_maturity_signal_openapi_examples(schema)

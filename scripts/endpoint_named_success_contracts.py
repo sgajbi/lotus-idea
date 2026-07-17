@@ -3,6 +3,9 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any
 
+from endpoint_advisor_review_queue_contracts import (
+    validate_advisor_review_queue_success_contract,
+)
 from endpoint_ai_contracts import (
     validate_ai_evaluation_success_contract,
     validate_ai_readiness_success_contract,
@@ -81,6 +84,7 @@ NamedSuccessValidator = Callable[
 ]
 
 NAMED_SUCCESS_VALIDATORS: tuple[NamedSuccessValidator, ...] = (
+    validate_advisor_review_queue_success_contract,
     validate_ai_evaluation_success_contract,
     validate_ai_readiness_success_contract,
     validate_candidate_lifecycle_success_contract,
