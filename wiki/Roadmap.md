@@ -101,7 +101,10 @@ proof, downstream proof, supported-feature evidence, and mainline CI all agree.
     Risk drawdown calculation, period-selection, and methodology authority.
     Mandate-restriction caller and Advise-backed routes now meet the same
     contract while retaining Core/Manage/Advise source ownership and Advise
-    policy-evaluation authority. The slice also
+    policy-evaluation authority. Missing-risk-profile caller and Advise-backed
+    routes now meet the same contract while retaining Advise client
+    risk-profile workflow, diagnostic, risk-capacity, suitability, and policy
+    authority. The slice also
     includes certified internal lifecycle, AI explanation, advisor queue,
     review, feedback, conversion, report evidence-pack,
     AI-explanation-readiness, and data-mesh-readiness endpoint foundations.
