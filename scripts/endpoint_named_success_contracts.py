@@ -44,6 +44,10 @@ from endpoint_low_income_signal_contracts import (
     validate_low_income_evaluation_success_contract,
     validate_source_backed_low_income_evaluation_success_contract,
 )
+from endpoint_mandate_restriction_signal_contracts import (
+    validate_mandate_restriction_evaluation_success_contract,
+    validate_source_backed_mandate_restriction_evaluation_success_contract,
+)
 from endpoint_report_evidence_contracts import validate_report_evidence_pack_success_contract
 from endpoint_review_workflow_contracts import (
     validate_feedback_success_contract,
@@ -82,6 +86,8 @@ NAMED_SUCCESS_VALIDATORS: tuple[NamedSuccessValidator, ...] = (
     validate_source_backed_drawdown_review_evaluation_success_contract,
     validate_high_volatility_evaluation_success_contract,
     validate_source_backed_high_volatility_evaluation_success_contract,
+    validate_mandate_restriction_evaluation_success_contract,
+    validate_source_backed_mandate_restriction_evaluation_success_contract,
     validate_conversion_intent_success_contract,
     validate_conversion_outcome_success_contract,
     validate_review_action_success_contract,
