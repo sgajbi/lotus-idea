@@ -1258,9 +1258,11 @@
         "POST /api/v1/conversion-intents/conversion-advise-api-001/downstream-submissions with X-Caller-Capabilities: idea.downstream-realization.submit and Idempotency-Key: downstream-submit-advise-api-001"
       ],
       "response_examples": [
-        "{\"downstreamSubmission\":{\"submissionStatus\":\"accepted_by_downstream\",\"sourceAuthority\":\"lotus-advise\",\"target\":\"advise_proposal\",\"downstreamFailureReason\":null,\"supportReference\":\"downstream-submission-0123456789abcdef01234567\",\"recordsDownstreamOutcome\":false,\"grantsDownstreamAuthority\":false,\"supportedFeaturePromoted\":false,\"idempotencyReplayed\":false},\"durableStorageBacked\":true,\"supportedFeaturePromoted\":false}",
-        "{\"downstreamSubmission\":{\"submissionStatus\":\"rejected_by_downstream\",\"sourceAuthority\":\"lotus-manage\",\"target\":\"manage_review\",\"downstreamFailureReason\":\"downstream_rejected\",\"supportReference\":\"downstream-submission-0123456789abcdef01234567\",\"recordsDownstreamOutcome\":false,\"grantsDownstreamAuthority\":false,\"supportedFeaturePromoted\":false,\"idempotencyReplayed\":false},\"durableStorageBacked\":true,\"supportedFeaturePromoted\":false}",
-        "{\"downstreamSubmission\":{\"submissionStatus\":\"reconciliation_required\",\"sourceAuthority\":\"lotus-advise\",\"target\":\"advise_proposal\",\"downstreamFailureReason\":\"downstream_timeout\",\"supportReference\":\"downstream-submission-0123456789abcdef01234567\",\"recordsDownstreamOutcome\":false,\"grantsDownstreamAuthority\":false,\"supportedFeaturePromoted\":false,\"idempotencyReplayed\":false},\"durableStorageBacked\":true,\"supportedFeaturePromoted\":false}"
+        "{\"downstreamSubmission\":{\"submissionStatus\":\"accepted_by_downstream\",\"sourceAuthority\":\"lotus-advise\",\"target\":\"advise_proposal\",\"downstreamFailureReason\":null,\"supportReference\":\"downstream-submission-878d34a974f6c96f0e060309\",\"idempotencyReplayed\":false,\"recordsDownstreamOutcome\":false,\"grantsDownstreamAuthority\":false,\"supportedFeaturePromoted\":false},\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}",
+        "{\"downstreamSubmission\":{\"submissionStatus\":\"rejected_by_downstream\",\"sourceAuthority\":\"lotus-manage\",\"target\":\"manage_review\",\"downstreamFailureReason\":\"downstream_rejected\",\"supportReference\":\"downstream-submission-a81c695989f570fb370c8fc7\",\"idempotencyReplayed\":false,\"recordsDownstreamOutcome\":false,\"grantsDownstreamAuthority\":false,\"supportedFeaturePromoted\":false},\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}",
+        "{\"downstreamSubmission\":{\"submissionStatus\":\"accepted_by_downstream\",\"sourceAuthority\":\"lotus-advise\",\"target\":\"advise_proposal\",\"downstreamFailureReason\":null,\"supportReference\":\"downstream-submission-dd9156fe2e3c0c4ba1ff9340\",\"idempotencyReplayed\":true,\"recordsDownstreamOutcome\":false,\"grantsDownstreamAuthority\":false,\"supportedFeaturePromoted\":false},\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}",
+        "{\"downstreamSubmission\":{\"submissionStatus\":\"rejected_by_downstream\",\"sourceAuthority\":\"lotus-manage\",\"target\":\"manage_review\",\"downstreamFailureReason\":\"downstream_rejected\",\"supportReference\":\"downstream-submission-c5a7047ba1985340c11390f2\",\"idempotencyReplayed\":true,\"recordsDownstreamOutcome\":false,\"grantsDownstreamAuthority\":false,\"supportedFeaturePromoted\":false},\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}",
+        "{\"downstreamSubmission\":{\"submissionStatus\":\"reconciliation_required\",\"sourceAuthority\":\"lotus-advise\",\"target\":\"advise_proposal\",\"downstreamFailureReason\":\"downstream_timeout\",\"supportReference\":\"downstream-submission-239649617006e5c6edcbe49f\",\"idempotencyReplayed\":false,\"recordsDownstreamOutcome\":false,\"grantsDownstreamAuthority\":false,\"supportedFeaturePromoted\":false},\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}"
       ],
       "error_examples": [
         "403 returns product-safe Problem Details when the caller lacks idea.downstream-realization.submit capability.",
@@ -1271,6 +1273,7 @@
       ],
       "test_evidence": [
         "tests/integration/test_downstream_realization_api.py::test_conversion_downstream_submission_api_accepts_advise_intent_with_support_reference",
+        "tests/integration/test_downstream_realization_api.py::test_conversion_downstream_submission_api_returns_bounded_rejection",
         "tests/integration/test_downstream_realization_api.py::test_conversion_downstream_submission_api_returns_durable_uncertain_posture",
         "tests/unit/test_downstream_realization_application.py::test_downstream_acceptance_with_failed_local_finalize_requires_reconciliation",
         "tests/integration/test_postgres_downstream_submission_runtime.py::test_postgres_downstream_submission_claim_recovery_and_restart_proof",
@@ -1279,12 +1282,13 @@
         "tests/integration/test_downstream_realization_api.py::test_downstream_submission_api_fails_closed_without_adapter_configuration",
         "tests/integration/test_downstream_realization_api.py::test_downstream_submission_api_requires_submission_capability",
         "tests/integration/test_downstream_realization_api.py::test_conversion_downstream_submission_api_rejects_report_target_on_conversion_route",
+        "tests/unit/api_examples/test_downstream_submission_examples.py::test_downstream_submission_examples_match_ledger_and_generated_openapi",
         "tests/integration/test_downstream_realization_api.py::test_downstream_submission_api_emits_not_certified_operation_event",
         "tests/unit/test_downstream_realization_lookup.py::test_downstream_conversion_submission_uses_lookup_without_snapshot",
         "tests/unit/test_postgres_downstream_lookup.py::test_postgres_conversion_intent_lookup_uses_direct_table_query",
         "tests/unit/test_api_problem_details.py::test_downstream_submission_openapi_problem_codes_match_runtime_contract"
       ],
-      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
+      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples; scripts/endpoint_downstream_submission_contracts.py enforces exact named 200 and 202 success-mode parity."
     },
     {
       "method": "POST",
@@ -1361,9 +1365,11 @@
         "POST /api/v1/report-evidence-packs/report-pack-api-001/downstream-submissions with X-Caller-Capabilities: idea.downstream-realization.submit and Idempotency-Key: downstream-submit-report-api-001"
       ],
       "response_examples": [
-        "{\"downstreamSubmission\":{\"submissionStatus\":\"accepted_by_downstream\",\"sourceAuthority\":\"lotus-report\",\"target\":\"report_evidence\",\"downstreamFailureReason\":null,\"supportReference\":\"downstream-submission-0123456789abcdef01234567\",\"recordsDownstreamOutcome\":false,\"grantsDownstreamAuthority\":false,\"supportedFeaturePromoted\":false,\"idempotencyReplayed\":false},\"durableStorageBacked\":true,\"supportedFeaturePromoted\":false}",
-        "{\"downstreamSubmission\":{\"submissionStatus\":\"rejected_by_downstream\",\"sourceAuthority\":\"lotus-report\",\"target\":\"report_evidence\",\"downstreamFailureReason\":\"downstream_rejected\",\"supportReference\":\"downstream-submission-0123456789abcdef01234567\",\"recordsDownstreamOutcome\":false,\"grantsDownstreamAuthority\":false,\"supportedFeaturePromoted\":false,\"idempotencyReplayed\":false},\"durableStorageBacked\":true,\"supportedFeaturePromoted\":false}",
-        "{\"downstreamSubmission\":{\"submissionStatus\":\"reconciliation_required\",\"sourceAuthority\":\"lotus-report\",\"target\":\"report_evidence\",\"downstreamFailureReason\":\"downstream_unavailable\",\"supportReference\":\"downstream-submission-0123456789abcdef01234567\",\"recordsDownstreamOutcome\":false,\"grantsDownstreamAuthority\":false,\"supportedFeaturePromoted\":false,\"idempotencyReplayed\":false},\"durableStorageBacked\":true,\"supportedFeaturePromoted\":false}"
+        "{\"downstreamSubmission\":{\"submissionStatus\":\"accepted_by_downstream\",\"sourceAuthority\":\"lotus-report\",\"target\":\"report_evidence\",\"downstreamFailureReason\":null,\"supportReference\":\"downstream-submission-8df88201e37286c99c79764d\",\"idempotencyReplayed\":false,\"recordsDownstreamOutcome\":false,\"grantsDownstreamAuthority\":false,\"supportedFeaturePromoted\":false},\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}",
+        "{\"downstreamSubmission\":{\"submissionStatus\":\"rejected_by_downstream\",\"sourceAuthority\":\"lotus-report\",\"target\":\"report_evidence\",\"downstreamFailureReason\":\"downstream_rejected\",\"supportReference\":\"downstream-submission-eeae2e71e61b026ffab03190\",\"idempotencyReplayed\":false,\"recordsDownstreamOutcome\":false,\"grantsDownstreamAuthority\":false,\"supportedFeaturePromoted\":false},\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}",
+        "{\"downstreamSubmission\":{\"submissionStatus\":\"accepted_by_downstream\",\"sourceAuthority\":\"lotus-report\",\"target\":\"report_evidence\",\"downstreamFailureReason\":null,\"supportReference\":\"downstream-submission-7872c830850d8528da4b3e03\",\"idempotencyReplayed\":true,\"recordsDownstreamOutcome\":false,\"grantsDownstreamAuthority\":false,\"supportedFeaturePromoted\":false},\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}",
+        "{\"downstreamSubmission\":{\"submissionStatus\":\"rejected_by_downstream\",\"sourceAuthority\":\"lotus-report\",\"target\":\"report_evidence\",\"downstreamFailureReason\":\"downstream_rejected\",\"supportReference\":\"downstream-submission-5c8e5e0c066d570420c2052e\",\"idempotencyReplayed\":true,\"recordsDownstreamOutcome\":false,\"grantsDownstreamAuthority\":false,\"supportedFeaturePromoted\":false},\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}",
+        "{\"downstreamSubmission\":{\"submissionStatus\":\"reconciliation_required\",\"sourceAuthority\":\"lotus-report\",\"target\":\"report_evidence\",\"downstreamFailureReason\":\"downstream_unavailable\",\"supportReference\":\"downstream-submission-16388b8c861875b03ded87f9\",\"idempotencyReplayed\":false,\"recordsDownstreamOutcome\":false,\"grantsDownstreamAuthority\":false,\"supportedFeaturePromoted\":false},\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}"
       ],
       "error_examples": [
         "403 returns product-safe Problem Details when the caller lacks idea.downstream-realization.submit capability.",
@@ -1374,18 +1380,21 @@
       ],
       "test_evidence": [
         "tests/integration/test_downstream_realization_api.py::test_report_downstream_submission_api_accepts_pack_with_support_reference",
+        "tests/integration/test_downstream_realization_api.py::test_report_downstream_submission_api_returns_bounded_rejection",
         "tests/unit/test_downstream_realization_application.py::test_unknown_downstream_outcome_is_durable_and_never_retried_automatically",
         "tests/integration/test_postgres_downstream_submission_runtime.py::test_postgres_downstream_submission_claim_recovery_and_restart_proof",
         "tests/integration/test_downstream_realization_api.py::test_report_downstream_submission_api_replays_same_idempotency_key",
         "tests/integration/test_downstream_realization_api.py::test_report_downstream_submission_api_rejects_idempotency_conflict",
+        "tests/integration/test_downstream_realization_api.py::test_report_downstream_submission_api_returns_durable_uncertain_posture",
         "tests/integration/test_downstream_realization_api.py::test_downstream_submission_api_fails_closed_without_adapter_configuration",
         "tests/integration/test_downstream_realization_api.py::test_downstream_submission_api_requires_submission_capability",
         "tests/integration/test_downstream_realization_api.py::test_downstream_submission_api_emits_not_certified_operation_event",
         "tests/unit/test_downstream_realization_lookup.py::test_downstream_report_pack_submission_uses_lookup_without_snapshot",
         "tests/unit/test_postgres_downstream_lookup.py::test_postgres_report_pack_lookup_uses_direct_table_query",
-        "tests/unit/test_api_problem_details.py::test_downstream_submission_openapi_problem_codes_match_runtime_contract"
+        "tests/unit/test_api_problem_details.py::test_downstream_submission_openapi_problem_codes_match_runtime_contract",
+        "tests/unit/api_examples/test_downstream_submission_examples.py::test_downstream_submission_examples_match_ledger_and_generated_openapi"
       ],
-      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
+      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples; scripts/endpoint_downstream_submission_contracts.py enforces exact named 200 and 202 success-mode parity."
     },
     {
       "method": "GET",
