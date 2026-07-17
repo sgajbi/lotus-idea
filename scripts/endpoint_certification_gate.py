@@ -12,38 +12,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 sys.path.insert(0, str(ROOT / "src"))
 
 from endpoint_source_contracts import validate_signal_source_contract_error_examples  # noqa: E402
-from endpoint_ai_contracts import (  # noqa: E402
-    validate_ai_evaluation_success_contract,
-    validate_ai_readiness_success_contract,
-)
-from endpoint_candidate_state_contracts import (  # noqa: E402
-    validate_candidate_evidence_replay_success_contract,
-    validate_candidate_lifecycle_success_contract,
-)
-from endpoint_high_cash_signal_contracts import (  # noqa: E402
-    validate_high_cash_evaluation_success_contract,
-    validate_high_cash_persistence_success_contract,
-    validate_source_backed_high_cash_evaluation_success_contract,
-)
-from endpoint_low_income_signal_contracts import (  # noqa: E402
-    validate_low_income_evaluation_success_contract,
-    validate_source_backed_low_income_evaluation_success_contract,
-)
-from endpoint_bond_maturity_signal_contracts import (  # noqa: E402
-    validate_bond_maturity_evaluation_success_contract,
-    validate_source_backed_bond_maturity_evaluation_success_contract,
-)
-from endpoint_review_workflow_contracts import (  # noqa: E402
-    validate_feedback_success_contract,
-    validate_review_action_success_contract,
-)
-from endpoint_report_evidence_contracts import (  # noqa: E402
-    validate_report_evidence_pack_success_contract,
-)
-from endpoint_conversion_workflow_contracts import (  # noqa: E402
-    validate_conversion_intent_success_contract,
-    validate_conversion_outcome_success_contract,
-)
+from endpoint_named_success_contracts import validate_named_success_contracts  # noqa: E402
 from endpoint_contract_support import openapi_operation  # noqa: E402
 from endpoint_status_contracts import validate_endpoint_status_contract  # noqa: E402
 
@@ -206,28 +175,7 @@ def _validate_implemented_endpoint_posture(
 
     errors.extend(_validate_implemented_endpoint_test_pyramid(operation, test_evidence))
     errors.extend(_validate_gateway_publication_posture(endpoint))
-    errors.extend(validate_ai_evaluation_success_contract(endpoint, openapi_spec))
-    errors.extend(validate_ai_readiness_success_contract(endpoint, openapi_spec))
-    errors.extend(validate_candidate_lifecycle_success_contract(endpoint, openapi_spec))
-    errors.extend(validate_candidate_evidence_replay_success_contract(endpoint, openapi_spec))
-    errors.extend(validate_high_cash_evaluation_success_contract(endpoint, openapi_spec))
-    errors.extend(
-        validate_source_backed_high_cash_evaluation_success_contract(endpoint, openapi_spec)
-    )
-    errors.extend(validate_high_cash_persistence_success_contract(endpoint, openapi_spec))
-    errors.extend(validate_low_income_evaluation_success_contract(endpoint, openapi_spec))
-    errors.extend(
-        validate_source_backed_low_income_evaluation_success_contract(endpoint, openapi_spec)
-    )
-    errors.extend(validate_bond_maturity_evaluation_success_contract(endpoint, openapi_spec))
-    errors.extend(
-        validate_source_backed_bond_maturity_evaluation_success_contract(endpoint, openapi_spec)
-    )
-    errors.extend(validate_conversion_intent_success_contract(endpoint, openapi_spec))
-    errors.extend(validate_conversion_outcome_success_contract(endpoint, openapi_spec))
-    errors.extend(validate_review_action_success_contract(endpoint, openapi_spec))
-    errors.extend(validate_feedback_success_contract(endpoint, openapi_spec))
-    errors.extend(validate_report_evidence_pack_success_contract(endpoint, openapi_spec))
+    errors.extend(validate_named_success_contracts(endpoint, openapi_spec))
     errors.extend(validate_signal_source_contract_error_examples(endpoint))
     errors.extend(validate_endpoint_status_contract(endpoint, openapi_spec))
     if openapi_spec is not None:
