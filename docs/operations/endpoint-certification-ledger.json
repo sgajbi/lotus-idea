@@ -570,8 +570,10 @@
         "{\"asOfDate\":\"2026-06-21\",\"evaluatedAtUtc\":\"2026-06-21T10:00:00Z\",\"restrictionRef\":{\"productId\":\"lotus-advise:AdvisoryPolicyEvaluationRecord:v1\",\"sourceSystem\":\"lotus-advise\",\"productVersion\":\"v1\",\"route\":\"/advisory/policy-evaluations/pev_001/restriction-posture\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"contentHash\":\"sha256:mandate-restriction-review\",\"dataQualityStatus\":\"quality_passed\",\"freshness\":\"current\"},\"restrictionStatus\":\"REVIEW_REQUIRED\",\"changedSinceLastReview\":true,\"actionabilityBlocked\":true,\"entitlementAllowed\":true}"
       ],
       "response_examples": [
-        "{\"outcome\":\"candidate_created\",\"family\":\"mandate_restriction\",\"reasonCodes\":[\"mandate_restriction_review\",\"review_required\"],\"unsupportedReasons\":[],\"candidate\":{\"candidateId\":\"idea_mandate_restriction_8d57adbf52f7f5a7\",\"family\":\"mandate_restriction\",\"lifecycleStatus\":\"generated\",\"reviewPosture\":\"compliance_review_required\",\"evidencePacketId\":\"iep_mandate_restriction_8d57adbf52f7f5a7\",\"supportability\":\"ready\",\"score\":\"66\",\"scorePolicyVersion\":\"mandate-restriction-review-v1\",\"sourceSignalIds\":[\"signal_mandate_restriction_8d57adbf52f7f5a7\"],\"sourceRefs\":[{\"productId\":\"lotus-advise:AdvisoryPolicyEvaluationRecord:v1\",\"sourceSystem\":\"lotus-advise\",\"productVersion\":\"v1\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"dataQualityStatus\":\"quality_passed\",\"freshness\":\"current\"}]},\"sourceAuthority\":\"lotus-advise\",\"supportedFeaturePromoted\":false}",
-        "{\"outcome\":\"blocked\",\"family\":\"mandate_restriction\",\"reasonCodes\":[\"source_stale\"],\"unsupportedReasons\":[\"stale_source\"],\"candidate\":null,\"sourceAuthority\":\"lotus-advise\",\"supportedFeaturePromoted\":false}"
+      "{\"outcome\":\"candidate_created\",\"family\":\"mandate_restriction\",\"reasonCodes\":[\"mandate_restriction_review\",\"review_required\"],\"unsupportedReasons\":[],\"candidate\":{\"candidateId\":\"idea_mandate_restriction_94fb15883b210ae2\",\"family\":\"mandate_restriction\",\"lifecycleStatus\":\"generated\",\"reviewPosture\":\"compliance_review_required\",\"evidencePacketId\":\"iep_mandate_restriction_94fb15883b210ae2\",\"supportability\":\"ready\",\"score\":\"66\",\"scorePolicyVersion\":\"mandate-restriction-review-v1\",\"sourceSignalIds\":[\"signal_mandate_restriction_94fb15883b210ae2\"],\"sourceRefs\":[{\"productId\":\"lotus-advise:AdvisoryPolicyEvaluationRecord:v1\",\"sourceSystem\":\"lotus-advise\",\"productVersion\":\"v1\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"dataQualityStatus\":\"quality_passed\",\"freshness\":\"current\"}]},\"sourceAuthority\":\"lotus-advise\",\"supportedFeaturePromoted\":false}",
+      "{\"outcome\":\"blocked\",\"family\":\"mandate_restriction\",\"reasonCodes\":[\"source_stale\"],\"unsupportedReasons\":[\"stale_source\"],\"candidate\":null,\"sourceAuthority\":\"lotus-advise\",\"supportedFeaturePromoted\":false}",
+      "{\"outcome\":\"suppressed\",\"family\":\"mandate_restriction\",\"reasonCodes\":[\"duplicate_suppressed\"],\"unsupportedReasons\":[],\"candidate\":null,\"sourceAuthority\":\"lotus-advise\",\"supportedFeaturePromoted\":false}",
+      "{\"outcome\":\"not_eligible\",\"family\":\"mandate_restriction\",\"reasonCodes\":[\"below_materiality\"],\"unsupportedReasons\":[],\"candidate\":null,\"sourceAuthority\":\"lotus-advise\",\"supportedFeaturePromoted\":false}"
       ],
       "error_examples": [
         "403 returns product-safe Problem Details when the caller lacks advisor role or idea.signal.evaluate capability.",
@@ -584,9 +586,11 @@
         "tests/integration/test_mandate_restriction_signal_api.py::test_mandate_restriction_signal_api_accepts_governed_source_contracts",
         "tests/integration/test_mandate_restriction_signal_api.py::test_mandate_restriction_signal_api_rejects_unknown_source_contract",
         "tests/integration/test_mandate_restriction_signal_api.py::test_mandate_restriction_signal_api_rejects_wrong_advise_product_id",
-        "tests/integration/test_mandate_restriction_signal_api.py::test_mandate_restriction_signal_api_requires_signal_permission",
-        "tests/unit/test_signal_api_support.py::test_signal_source_ref_one_of_contract_rejects_unknown_pair_without_leaking_ref",
-        "tests/integration/test_api_operation_events.py::test_mandate_restriction_signal_api_emits_bounded_operation_event"
+      "tests/integration/test_mandate_restriction_signal_api.py::test_mandate_restriction_signal_api_requires_signal_permission",
+      "tests/integration/test_mandate_restriction_signal_api.py::test_mandate_restriction_signal_api_exposes_non_candidate_success_modes",
+      "tests/unit/test_signal_api_support.py::test_signal_source_ref_one_of_contract_rejects_unknown_pair_without_leaking_ref",
+      "tests/integration/test_api_operation_events.py::test_mandate_restriction_signal_api_emits_bounded_operation_event",
+      "tests/unit/api_examples/test_mandate_restriction_signal_examples.py::test_mandate_restriction_examples_match_ledger_and_generated_openapi"
       ],
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
     },
@@ -602,8 +606,10 @@
         "{\"evaluationId\":\"pev_001\",\"asOfDate\":\"2026-06-21\",\"evaluatedAtUtc\":\"2026-06-21T10:00:00Z\",\"accessScope\":{\"tenantId\":\"tenant-sg\",\"bookId\":\"global-balanced\",\"portfolioId\":\"PB_SG_GLOBAL_BAL_001\",\"clientId\":\"client-001\"}}"
       ],
       "response_examples": [
-        "{\"outcome\":\"candidate_created\",\"family\":\"mandate_restriction\",\"reasonCodes\":[\"mandate_restriction_review\",\"review_required\"],\"unsupportedReasons\":[],\"candidate\":{\"candidateId\":\"idea_mandate_restriction_8d57adbf52f7f5a7\",\"family\":\"mandate_restriction\",\"lifecycleStatus\":\"generated\",\"reviewPosture\":\"compliance_review_required\",\"evidencePacketId\":\"iep_mandate_restriction_8d57adbf52f7f5a7\",\"supportability\":\"ready\",\"score\":\"66\",\"scorePolicyVersion\":\"mandate-restriction-review-v1\",\"sourceSignalIds\":[\"signal_mandate_restriction_8d57adbf52f7f5a7\"],\"sourceRefs\":[{\"productId\":\"lotus-advise:AdvisoryPolicyEvaluationRecord:v1\",\"sourceSystem\":\"lotus-advise\",\"productVersion\":\"v1\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"dataQualityStatus\":\"quality_passed\",\"freshness\":\"current\"}]},\"sourceAuthority\":\"lotus-advise\",\"supportedFeaturePromoted\":false}",
-        "{\"outcome\":\"blocked\",\"family\":\"mandate_restriction\",\"reasonCodes\":[\"source_partial\"],\"unsupportedReasons\":[\"source_unavailable\"],\"candidate\":null,\"sourceAuthority\":\"lotus-advise\",\"supportedFeaturePromoted\":false}"
+      "{\"outcome\":\"candidate_created\",\"family\":\"mandate_restriction\",\"reasonCodes\":[\"mandate_restriction_review\",\"review_required\"],\"unsupportedReasons\":[],\"candidate\":{\"candidateId\":\"idea_mandate_restriction_94fb15883b210ae2\",\"family\":\"mandate_restriction\",\"lifecycleStatus\":\"generated\",\"reviewPosture\":\"compliance_review_required\",\"evidencePacketId\":\"iep_mandate_restriction_94fb15883b210ae2\",\"supportability\":\"ready\",\"score\":\"66\",\"scorePolicyVersion\":\"mandate-restriction-review-v1\",\"sourceSignalIds\":[\"signal_mandate_restriction_94fb15883b210ae2\"],\"sourceRefs\":[{\"productId\":\"lotus-advise:AdvisoryPolicyEvaluationRecord:v1\",\"sourceSystem\":\"lotus-advise\",\"productVersion\":\"v1\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"dataQualityStatus\":\"quality_passed\",\"freshness\":\"current\"}]},\"sourceAuthority\":\"lotus-advise\",\"supportedFeaturePromoted\":false}",
+      "{\"outcome\":\"blocked\",\"family\":\"mandate_restriction\",\"reasonCodes\":[\"source_partial\"],\"unsupportedReasons\":[\"source_unavailable\"],\"candidate\":null,\"sourceAuthority\":\"lotus-advise\",\"supportedFeaturePromoted\":false}",
+      "{\"outcome\":\"suppressed\",\"family\":\"mandate_restriction\",\"reasonCodes\":[\"duplicate_suppressed\"],\"unsupportedReasons\":[],\"candidate\":null,\"sourceAuthority\":\"lotus-advise\",\"supportedFeaturePromoted\":false}",
+      "{\"outcome\":\"not_eligible\",\"family\":\"mandate_restriction\",\"reasonCodes\":[\"below_materiality\"],\"unsupportedReasons\":[],\"candidate\":null,\"sourceAuthority\":\"lotus-advise\",\"supportedFeaturePromoted\":false}"
       ],
       "error_examples": [
         "403 returns product-safe Problem Details when the caller lacks advisor role, idea.signal.evaluate capability, or supplied request access-scope entitlement.",
@@ -614,11 +620,13 @@
         "tests/integration/test_mandate_restriction_signal_api.py::test_mandate_restriction_signal_from_source_api_returns_review_candidate",
         "tests/integration/test_mandate_restriction_signal_api.py::test_mandate_restriction_signal_from_source_blocks_when_runtime_not_configured",
         "tests/integration/test_mandate_restriction_signal_api.py::test_mandate_restriction_signal_from_source_checks_scope_before_runtime",
-        "tests/integration/test_mandate_restriction_signal_api.py::test_mandate_restriction_signal_from_source_closes_runtime_on_source_blocker",
-        "tests/integration/test_signal_source_operation_events.py::test_mandate_restriction_source_api_emits_blocked_operation_event",
+      "tests/integration/test_mandate_restriction_signal_api.py::test_mandate_restriction_signal_from_source_closes_runtime_on_source_blocker",
+      "tests/integration/test_mandate_restriction_signal_api.py::test_mandate_restriction_signal_from_source_exposes_non_candidate_success_modes",
+      "tests/integration/test_signal_source_operation_events.py::test_mandate_restriction_source_api_emits_blocked_operation_event",
         "tests/unit/test_mandate_restriction_application.py::test_mandate_restriction_application_consumes_explicit_advise_diagnostic",
         "tests/unit/test_mandate_restriction_application.py::test_mandate_restriction_application_ignores_generic_advise_policy_gap",
-        "tests/unit/test_source_ingestion_state.py::test_advise_policy_evaluation_source_runtime_builds_without_manifest"
+      "tests/unit/test_source_ingestion_state.py::test_advise_policy_evaluation_source_runtime_builds_without_manifest",
+      "tests/unit/api_examples/test_mandate_restriction_signal_examples.py::test_mandate_restriction_examples_match_ledger_and_generated_openapi"
       ],
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
     },
