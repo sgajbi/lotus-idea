@@ -622,6 +622,13 @@ recommend a trade, rebalance, execute, or infer Core product authority from
 these examples. Six multi-shape operations remain under issue `#542` after
 this family. The existing platform named-success skill and validator guardrail
 already cover this recurrence, so no new skill/context change is required.
+Missing-suitability caller and Advise-backed evaluation now follow the same
+contract under issue `#573`. Both routes publish candidate-created, blocked,
+suppressed, and not-eligible modes from their real application paths. Advise
+retains `AdvisoryPolicyEvaluationRecord:v1`, suitability, policy, proposal,
+sign-off, and client-publication authority; Idea only detects deterministic
+evidence-gap posture and routes compliance review. Four multi-shape operations
+remain under issue `#542`; the existing platform guardrail covers this recurrence.
 Unit-test modules must also use globally unique basenames across nested
 directories because pytest imports this repository's tests by module basename.
 Name example-publication tests for the durable concern, such as

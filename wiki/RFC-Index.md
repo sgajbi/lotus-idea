@@ -246,6 +246,11 @@ Current RFC-0002 implementation-start baseline:
    `BenchmarkAssignment:v1` identity without moving benchmark assignment,
    methodology, performance calculation, recommendation, rebalance, or
    execution authority into Idea.
+   Missing-suitability caller and Advise-backed APIs now publish the same
+   complete matrix from their existing application paths. Candidate examples
+   retain Advise `AdvisoryPolicyEvaluationRecord:v1` identity without moving
+   suitability, policy, proposal, sign-off, client-publication, rebalance,
+   order, or execution authority into Idea.
    `make implementation-proof-readiness-check` generates and consumes the
    scheduled source-ingestion worker source contract while intentionally
    preserving the deployment blocker, durable repository
