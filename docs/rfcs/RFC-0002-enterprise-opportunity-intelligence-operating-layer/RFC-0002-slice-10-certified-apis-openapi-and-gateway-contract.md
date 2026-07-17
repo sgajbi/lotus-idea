@@ -408,6 +408,28 @@ unchanged by explicit scope decision. A refreshed deterministic scan leaves
 14 multi-shape operations under issue `#542`; Slice 10 remains partially
 implemented.
 
+Issue `#565` continues issue `#542` through the drawdown-review signal family.
+Capability-owned deterministic factories execute the existing caller-supplied
+and Risk-backed application paths and serialize the real API response DTO.
+Both operations publish named `candidate_created`, `blocked`, `suppressed`,
+and `not_eligible` HTTP 200 modes. Candidate examples retain Lotus Risk
+`DrawdownAnalyticsReport:v1` identity while omitting source routes and content
+hashes. Focused HTTP tests prove caller suppression, source-backed suppression
+and not-eligible behavior, source runtime cleanup, and the absence of candidate
+persistence for non-candidate outcomes. Negative contract tests prove that
+missing OpenAPI modes or absent behavioral evidence fail certification.
+
+This is design modularity inside the existing deployable, not a runtime split.
+Lotus Risk retains drawdown calculation, period selection, methodology, and
+risk-product authority; Lotus Idea owns only deterministic opportunity
+detection and advisor-review posture. No persistence route, live source
+certification, trade recommendation, rebalance/execution authority,
+Gateway/Workbench realization, data-product promotion, or supported-feature
+promotion is introduced. README and supported-feature registry truth remain
+unchanged by explicit scope decision. A refreshed deterministic scan leaves
+12 multi-shape operations under issue `#542`; Slice 10 remains partially
+implemented.
+
 PR `#543` merged issue `#539` to `main` at
 `f6e2365eaec5f4f0184d5985e5b5fcc641b4883b`. Main Releasability run
 `29528824505` passed, including lint, typecheck, security, architecture,
