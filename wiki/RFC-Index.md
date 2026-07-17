@@ -205,6 +205,11 @@ Current RFC-0002 implementation-start baseline:
    Bond-maturity caller and Core-backed APIs now publish that complete matrix
    from their existing application paths, preserving Core holdings and
    maturity-summary lineage without moving maturity-data authority into Idea.
+   Allocation-drift caller and Manage-backed APIs now publish that complete
+   matrix from their existing application paths. Source-backed candidate
+   examples retain supporting Manage, Performance, and Risk product lineage
+   without moving drift, mandate, performance, risk, rebalance, or order
+   authority into Idea.
    `make implementation-proof-readiness-check` generates and consumes the
    scheduled source-ingestion worker source contract while intentionally
    preserving the deployment blocker, durable repository
