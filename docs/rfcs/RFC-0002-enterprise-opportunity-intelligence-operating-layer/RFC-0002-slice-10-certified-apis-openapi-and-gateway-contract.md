@@ -386,6 +386,28 @@ introduced. README and supported-feature registry truth remain unchanged by
 explicit scope decision. A refreshed deterministic scan leaves 16 multi-shape
 operations under issue `#542`; Slice 10 remains partially implemented.
 
+Issue `#563` continues issue `#542` through the high-volatility signal family.
+Capability-owned deterministic factories execute the existing caller-supplied
+and Risk-backed application paths and serialize the real API response DTO.
+Both operations publish named `candidate_created`, `blocked`, `suppressed`,
+and `not_eligible` HTTP 200 modes. Candidate examples retain Lotus Risk
+`RiskMetricsReport:v1` identity while omitting source routes and content
+hashes. Focused HTTP tests prove caller suppression, source-backed suppression
+and not-eligible behavior, source runtime cleanup, and the absence of candidate
+persistence for non-candidate outcomes. Negative contract tests prove that
+missing OpenAPI modes or absent behavioral evidence fail certification.
+
+This is design modularity inside the existing deployable, not a runtime split.
+Lotus Risk retains volatility, VaR, tracking-error calculations, methodology,
+and risk-product authority; Lotus Idea owns only deterministic opportunity
+detection and advisor-review posture. No persistence route, live source
+certification, trade recommendation, rebalance/execution authority,
+Gateway/Workbench realization, data-product promotion, or supported-feature
+promotion is introduced. README and supported-feature registry truth remain
+unchanged by explicit scope decision. A refreshed deterministic scan leaves
+14 multi-shape operations under issue `#542`; Slice 10 remains partially
+implemented.
+
 PR `#543` merged issue `#539` to `main` at
 `f6e2365eaec5f4f0184d5985e5b5fcc641b4883b`. Main Releasability run
 `29528824505` passed, including lint, typecheck, security, architecture,
@@ -488,13 +510,14 @@ Implementation files:
    `PortfolioMaturitySummary:v1` maturity evidence with product-safe
    authorization, source-redacted response projection, OpenAPI examples, and
    operation events.
-6. `src/app/api/concentration_risk_signals.py`: bounded concentration-risk
-   signal API over caller-supplied Lotus Risk concentration evidence with
+6. `src/app/api/concentration_risk_signals.py` and
+   `src/app/api/high_volatility_signals.py`: bounded Risk-backed signal APIs
+   over caller-supplied Lotus Risk concentration and volatility evidence with
    shared product-safe authorization, source-redacted response projection,
    application-backed named OpenAPI examples, operation events, and no local
-   risk-methodology authority. The capability-owned example and endpoint
-   contract modules enforce caller/source success-mode parity without adding a
-   runtime boundary.
+   risk-methodology authority. Capability-owned example and endpoint contract
+   modules enforce caller/source success-mode parity without adding a runtime
+   boundary.
 7. `src/app/api/drawdown_review_signals.py`: bounded drawdown-review signal
    API over caller-supplied Lotus Risk drawdown analytics evidence with shared
    product-safe authorization, source-redacted response projection, OpenAPI
@@ -591,11 +614,12 @@ Implementation files:
     creation, outside-window not-eligible posture, stale-source blocking,
     permission denial, source-redacted response projection, and no-authority
     promotion.
-38. `tests/integration/test_concentration_risk_signal_api.py`: certified API
-    behavior evidence for concentration-risk review candidate creation,
-    duplicate suppression, below-threshold not-eligible posture, partial
-    issuer-coverage and stale-source blocking, source-backed non-candidate
-    outcomes, runtime cleanup, permission denial, and no-authority promotion.
+38. `tests/integration/test_concentration_risk_signal_api.py` and
+    `tests/integration/test_high_volatility_signal_api.py`: certified API
+    behavior evidence for Risk-backed review candidate creation, duplicate
+    suppression, below-threshold not-eligible posture, incomplete/stale/source
+    blocking, source-backed non-candidate outcomes, runtime cleanup, permission
+    denial, and no-authority promotion.
 39. `tests/integration/test_drawdown_review_signal_api.py`: certified API
     behavior evidence for drawdown-review candidate creation, below-threshold
     not-eligible posture, non-ready source blocking, stale-source blocking,

@@ -218,6 +218,11 @@ Current RFC-0002 implementation-start baseline:
    matrix from their existing application paths. Candidate examples retain
    Risk `ConcentrationRiskReport:v1` identity without moving concentration,
    methodology, recommendation, rebalance, or execution authority into Idea.
+   High-volatility caller and Risk-backed APIs now publish that complete matrix
+   from their existing application paths. Candidate examples retain Risk
+   `RiskMetricsReport:v1` identity without moving volatility, VaR,
+   tracking-error, methodology, recommendation, rebalance, or execution
+   authority into Idea.
    `make implementation-proof-readiness-check` generates and consumes the
    scheduled source-ingestion worker source contract while intentionally
    preserving the deployment blocker, durable repository
