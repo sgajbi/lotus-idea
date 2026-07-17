@@ -83,10 +83,10 @@
         "{\"asOfDate\":\"2026-06-21\",\"evaluatedAtUtc\":\"2026-06-21T10:00:00Z\",\"workflowDecisionCount\":2,\"lineageEdgeCount\":4,\"manageSupportabilityState\":\"ready\",\"portfolioScopeConfirmed\":true,\"actionRegisterRef\":{\"productId\":\"lotus-manage:PortfolioActionRegister:v1\",\"sourceSystem\":\"lotus-manage\",\"productVersion\":\"v1\",\"route\":\"/api/v1/rebalance/supportability/summary\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"contentHash\":\"sha256:portfolio-action-register\",\"dataQualityStatus\":\"ready\",\"freshness\":\"current\"},\"entitlementAllowed\":true}"
       ],
       "response_examples": [
-        "{\"outcome\":\"candidate_created\",\"family\":\"allocation_drift\",\"reasonCodes\":[\"allocation_drift_attention\",\"review_required\"],\"unsupportedReasons\":[],\"candidate\":{\"candidateId\":\"idea_allocation_drift_8d57adbf52f7f5a7\",\"family\":\"allocation_drift\",\"lifecycleStatus\":\"generated\",\"reviewPosture\":\"pm_review_required\",\"evidencePacketId\":\"iep_allocation_drift_8d57adbf52f7f5a7\",\"supportability\":\"ready\",\"score\":\"70\",\"scorePolicyVersion\":\"allocation-drift-mandate-review-v1\",\"sourceSignalIds\":[\"signal_allocation_drift_8d57adbf52f7f5a7\"],\"sourceRefs\":[{\"productId\":\"lotus-manage:PortfolioActionRegister:v1\",\"sourceSystem\":\"lotus-manage\",\"productVersion\":\"v1\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"dataQualityStatus\":\"ready\",\"freshness\":\"current\"}]},\"sourceAuthority\":\"lotus-manage\",\"supportedFeaturePromoted\":false}",
-        "{\"outcome\":\"not_eligible\",\"family\":\"allocation_drift\",\"reasonCodes\":[\"below_materiality\"],\"unsupportedReasons\":[],\"candidate\":null,\"sourceAuthority\":\"lotus-manage\",\"supportedFeaturePromoted\":false}",
-        "{\"outcome\":\"blocked\",\"family\":\"allocation_drift\",\"reasonCodes\":[\"source_partial\"],\"unsupportedReasons\":[\"missing_source\"],\"candidate\":null,\"sourceAuthority\":\"lotus-manage\",\"supportedFeaturePromoted\":false}",
-        "{\"outcome\":\"blocked\",\"family\":\"allocation_drift\",\"reasonCodes\":[\"source_stale\"],\"unsupportedReasons\":[\"stale_source\"],\"candidate\":null,\"sourceAuthority\":\"lotus-manage\",\"supportedFeaturePromoted\":false}"
+        "{\"outcome\":\"candidate_created\",\"family\":\"allocation_drift\",\"reasonCodes\":[\"allocation_drift_attention\",\"review_required\"],\"unsupportedReasons\":[],\"candidate\":{\"candidateId\":\"idea_allocation_drift_1a278850ce741c38\",\"family\":\"allocation_drift\",\"lifecycleStatus\":\"generated\",\"reviewPosture\":\"pm_review_required\",\"evidencePacketId\":\"iep_allocation_drift_1a278850ce741c38\",\"supportability\":\"ready\",\"score\":\"70\",\"scorePolicyVersion\":\"allocation-drift-mandate-review-v1\",\"sourceSignalIds\":[\"signal_allocation_drift_1a278850ce741c38\"],\"sourceRefs\":[{\"productId\":\"lotus-manage:PortfolioActionRegister:v1\",\"sourceSystem\":\"lotus-manage\",\"productVersion\":\"v1\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"dataQualityStatus\":\"ready\",\"freshness\":\"current\"}]},\"sourceAuthority\":\"lotus-manage\",\"supportedFeaturePromoted\":false}",
+        "{\"outcome\":\"blocked\",\"family\":\"allocation_drift\",\"reasonCodes\":[\"source_stale\"],\"unsupportedReasons\":[\"stale_source\"],\"candidate\":null,\"sourceAuthority\":\"lotus-manage\",\"supportedFeaturePromoted\":false}",
+        "{\"outcome\":\"suppressed\",\"family\":\"allocation_drift\",\"reasonCodes\":[\"duplicate_suppressed\"],\"unsupportedReasons\":[],\"candidate\":null,\"sourceAuthority\":\"lotus-manage\",\"supportedFeaturePromoted\":false}",
+        "{\"outcome\":\"not_eligible\",\"family\":\"allocation_drift\",\"reasonCodes\":[\"below_materiality\"],\"unsupportedReasons\":[],\"candidate\":null,\"sourceAuthority\":\"lotus-manage\",\"supportedFeaturePromoted\":false}"
       ],
       "error_examples": [
         "403 returns product-safe Problem Details when the caller lacks advisor role or idea.signal.evaluate capability.",
@@ -96,13 +96,15 @@
       "test_evidence": [
         "tests/integration/test_allocation_drift_signal_api.py::test_allocation_drift_signal_api_returns_pm_review_candidate",
         "tests/integration/test_allocation_drift_signal_api.py::test_allocation_drift_signal_api_reports_below_threshold_not_eligible",
+        "tests/integration/test_allocation_drift_signal_api.py::test_allocation_drift_signal_api_reports_duplicate_suppressed",
         "tests/integration/test_allocation_drift_signal_api.py::test_allocation_drift_signal_api_blocks_store_wide_manage_posture",
         "tests/integration/test_allocation_drift_signal_api.py::test_allocation_drift_signal_api_reports_non_ready_source_blocker",
         "tests/integration/test_allocation_drift_signal_api.py::test_allocation_drift_signal_api_reports_stale_source_blocker",
         "tests/integration/test_allocation_drift_signal_api.py::test_allocation_drift_signal_api_rejects_wrong_source_contract",
         "tests/integration/test_allocation_drift_signal_api.py::test_allocation_drift_signal_api_requires_signal_permission",
         "tests/unit/test_signal_api_support.py::test_signal_source_ref_contract_uses_offending_contract_source_authority",
-        "tests/integration/test_api_operation_events.py::test_allocation_drift_signal_api_emits_bounded_operation_event"
+        "tests/integration/test_api_operation_events.py::test_allocation_drift_signal_api_emits_bounded_operation_event",
+        "tests/unit/api_examples/test_allocation_drift_signal_examples.py::test_allocation_drift_examples_match_ledger_and_generated_openapi"
       ],
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
     },
@@ -118,8 +120,10 @@
         "{\"portfolioId\":\"PB_SG_GLOBAL_BAL_001\",\"asOfDate\":\"2026-06-21\",\"evaluatedAtUtc\":\"2026-06-21T10:00:00Z\"}"
       ],
       "response_examples": [
-        "{\"outcome\":\"candidate_created\",\"family\":\"allocation_drift\",\"reasonCodes\":[\"allocation_drift_attention\",\"review_required\"],\"unsupportedReasons\":[],\"candidate\":{\"candidateId\":\"idea_allocation_drift_8d57adbf52f7f5a7\",\"family\":\"allocation_drift\",\"lifecycleStatus\":\"generated\",\"reviewPosture\":\"pm_review_required\",\"evidencePacketId\":\"iep_allocation_drift_8d57adbf52f7f5a7\",\"supportability\":\"ready\",\"score\":\"70\",\"scorePolicyVersion\":\"allocation-drift-mandate-review-v1\",\"sourceSignalIds\":[\"signal_allocation_drift_8d57adbf52f7f5a7\"],\"sourceRefs\":[{\"productId\":\"lotus-manage:PortfolioActionRegister:v1\",\"sourceSystem\":\"lotus-manage\",\"productVersion\":\"v1\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"dataQualityStatus\":\"ready\",\"freshness\":\"current\"}]},\"sourceAuthority\":\"lotus-manage\",\"supportedFeaturePromoted\":false}",
-        "{\"outcome\":\"blocked\",\"family\":\"allocation_drift\",\"reasonCodes\":[\"source_partial\"],\"unsupportedReasons\":[\"source_unavailable\"],\"candidate\":null,\"sourceAuthority\":\"lotus-manage\",\"supportedFeaturePromoted\":false}"
+        "{\"outcome\":\"candidate_created\",\"family\":\"allocation_drift\",\"reasonCodes\":[\"allocation_drift_attention\",\"review_required\"],\"unsupportedReasons\":[],\"candidate\":{\"candidateId\":\"idea_allocation_drift_219ca6ec2bb63182\",\"family\":\"allocation_drift\",\"lifecycleStatus\":\"generated\",\"reviewPosture\":\"pm_review_required\",\"evidencePacketId\":\"iep_allocation_drift_219ca6ec2bb63182\",\"supportability\":\"ready\",\"score\":\"70\",\"scorePolicyVersion\":\"allocation-drift-mandate-review-v1\",\"sourceSignalIds\":[\"signal_allocation_drift_219ca6ec2bb63182\"],\"sourceRefs\":[{\"productId\":\"lotus-manage:PortfolioActionRegister:v1\",\"sourceSystem\":\"lotus-manage\",\"productVersion\":\"v1\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"dataQualityStatus\":\"ready\",\"freshness\":\"current\"},{\"productId\":\"lotus-performance:MandatePerformanceHealthContext:v1\",\"sourceSystem\":\"lotus-performance\",\"productVersion\":\"v1\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"dataQualityStatus\":\"ready\",\"freshness\":\"current\"},{\"productId\":\"lotus-risk:MandateRiskHealthContext:v1\",\"sourceSystem\":\"lotus-risk\",\"productVersion\":\"v1\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"dataQualityStatus\":\"ready\",\"freshness\":\"current\"}]},\"sourceAuthority\":\"lotus-manage\",\"supportedFeaturePromoted\":false}",
+        "{\"outcome\":\"blocked\",\"family\":\"allocation_drift\",\"reasonCodes\":[\"source_partial\"],\"unsupportedReasons\":[\"source_unavailable\"],\"candidate\":null,\"sourceAuthority\":\"lotus-manage\",\"supportedFeaturePromoted\":false}",
+        "{\"outcome\":\"suppressed\",\"family\":\"allocation_drift\",\"reasonCodes\":[\"duplicate_suppressed\"],\"unsupportedReasons\":[],\"candidate\":null,\"sourceAuthority\":\"lotus-manage\",\"supportedFeaturePromoted\":false}",
+        "{\"outcome\":\"not_eligible\",\"family\":\"allocation_drift\",\"reasonCodes\":[\"below_materiality\"],\"unsupportedReasons\":[],\"candidate\":null,\"sourceAuthority\":\"lotus-manage\",\"supportedFeaturePromoted\":false}"
       ],
       "error_examples": [
         "403 returns product-safe Problem Details when the caller lacks advisor role, idea.signal.evaluate capability, or portfolio entitlement.",
@@ -131,8 +135,10 @@
         "tests/integration/test_allocation_drift_signal_api.py::test_allocation_drift_signal_from_source_blocks_when_runtime_not_configured",
         "tests/integration/test_allocation_drift_signal_api.py::test_allocation_drift_signal_from_source_checks_scope_before_runtime",
         "tests/integration/test_allocation_drift_signal_api.py::test_allocation_drift_signal_from_source_closes_runtime_on_source_blocker",
+        "tests/integration/test_allocation_drift_signal_api.py::test_allocation_drift_signal_from_source_exposes_non_candidate_success_modes",
         "tests/integration/test_signal_source_operation_events.py::test_allocation_drift_source_api_emits_blocked_operation_event",
-        "tests/unit/test_source_ingestion_state.py::test_manage_mandate_health_source_runtime_builds_without_manifest"
+        "tests/unit/test_source_ingestion_state.py::test_manage_mandate_health_source_runtime_builds_without_manifest",
+        "tests/unit/api_examples/test_allocation_drift_signal_examples.py::test_allocation_drift_examples_match_ledger_and_generated_openapi"
       ],
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
     },

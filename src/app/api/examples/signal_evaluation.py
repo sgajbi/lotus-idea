@@ -30,6 +30,7 @@ def build_source_ref_request(
     as_of_date: date,
     generated_at_utc: datetime,
     freshness: EvidenceFreshness = EvidenceFreshness.CURRENT,
+    data_quality_status: str = "complete",
 ) -> SourceRefRequest:
     return SourceRefRequest(
         productId=product_id,
@@ -39,7 +40,7 @@ def build_source_ref_request(
         asOfDate=as_of_date,
         generatedAtUtc=generated_at_utc,
         contentHash=f"sha256:{product_id}",
-        dataQualityStatus="complete",
+        dataQualityStatus=data_quality_status,
         freshness=freshness,
     )
 

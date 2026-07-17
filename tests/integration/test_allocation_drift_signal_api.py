@@ -30,6 +30,7 @@ PORTFOLIO_ID = "PB_SG_GLOBAL_BAL_001"
 
 @dataclass
 class RecordingManageMandateHealthSource:
+    evidence: ManageMandateHealthEvidence | None = None
     seen_request: ManageMandateHealthEvidenceRequest | None = None
     error: Exception | None = None
     close_count: int = 0
@@ -41,7 +42,7 @@ class RecordingManageMandateHealthSource:
         self.seen_request = request
         if self.error is not None:
             raise self.error
-        return _manage_mandate_health_evidence()
+        return self.evidence or _manage_mandate_health_evidence()
 
     def close(self) -> None:
         self.close_count += 1
@@ -89,6 +90,28 @@ def test_allocation_drift_signal_api_reports_below_threshold_not_eligible() -> N
         "outcome": "not_eligible",
         "family": "allocation_drift",
         "reasonCodes": ["below_materiality"],
+        "unsupportedReasons": [],
+        "candidate": None,
+        "sourceAuthority": "lotus-manage",
+        "supportedFeaturePromoted": False,
+    }
+
+
+def test_allocation_drift_signal_api_reports_duplicate_suppressed() -> None:
+    payload = allocation_drift_payload()
+    payload["duplicateOfCandidateId"] = "idea_allocation_drift_existing"
+
+    response = managed_test_client(app).post(
+        "/api/v1/idea-signals/allocation-drift/evaluate",
+        json=payload,
+        headers=evaluate_headers(),
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "outcome": "suppressed",
+        "family": "allocation_drift",
+        "reasonCodes": ["duplicate_suppressed"],
         "unsupportedReasons": [],
         "candidate": None,
         "sourceAuthority": "lotus-manage",
@@ -427,6 +450,56 @@ def test_allocation_drift_signal_from_source_closes_runtime_on_source_blocker(
     assert manage_source.close_count == 1
 
 
+@pytest.mark.parametrize(
+    ("workflow_decision_count", "duplicate_of_candidate_id", "expected_outcome"),
+    (
+        (2, "idea_allocation_drift_existing", "suppressed"),
+        (0, None, "not_eligible"),
+    ),
+)
+def test_allocation_drift_signal_from_source_exposes_non_candidate_success_modes(
+    monkeypatch: MonkeyPatch,
+    workflow_decision_count: int,
+    duplicate_of_candidate_id: str | None,
+    expected_outcome: str,
+) -> None:
+    reset_idea_repository_for_tests(InMemoryIdeaRepository())
+    manage_source = RecordingManageMandateHealthSource(
+        evidence=_manage_mandate_health_evidence(workflow_decision_count=workflow_decision_count)
+    )
+    monkeypatch.setattr(
+        allocation_drift_api,
+        "_build_manage_mandate_health_source_runtime_from_environment",
+        lambda: ManageMandateHealthSourceRuntime(
+            manage_source=manage_source,
+            manage_base_url_configured=True,
+        ),
+    )
+    request_payload = allocation_drift_source_payload()
+    request_payload["duplicateOfCandidateId"] = duplicate_of_candidate_id
+
+    response = managed_test_client(app).post(
+        "/api/v1/idea-signals/allocation-drift/evaluate-from-source",
+        json=request_payload,
+        headers=source_evaluation_headers(),
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "outcome": expected_outcome,
+        "family": "allocation_drift",
+        "reasonCodes": [
+            "duplicate_suppressed" if expected_outcome == "suppressed" else "below_materiality"
+        ],
+        "unsupportedReasons": [],
+        "candidate": None,
+        "sourceAuthority": "lotus-manage",
+        "supportedFeaturePromoted": False,
+    }
+    assert manage_source.close_count == 1
+    assert len(get_idea_repository().snapshot().candidate_records) == 0
+
+
 def evaluate_headers() -> dict[str, str]:
     return {
         "X-Caller-Subject": "advisor-001",
@@ -500,9 +573,11 @@ def allocation_drift_source_payload(*, portfolio_id: str = PORTFOLIO_ID) -> dict
     }
 
 
-def _manage_mandate_health_evidence() -> ManageMandateHealthEvidence:
+def _manage_mandate_health_evidence(
+    *, workflow_decision_count: int = 2
+) -> ManageMandateHealthEvidence:
     return ManageMandateHealthEvidence(
-        workflow_decision_count=2,
+        workflow_decision_count=workflow_decision_count,
         lineage_edge_count=4,
         supportability_state="ready",
         supportability_reason="supportability_summary_ready",
