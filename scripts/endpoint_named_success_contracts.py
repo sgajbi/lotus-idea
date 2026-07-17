@@ -27,6 +27,10 @@ from endpoint_concentration_risk_signal_contracts import (
     validate_concentration_risk_evaluation_success_contract,
     validate_source_backed_concentration_risk_evaluation_success_contract,
 )
+from endpoint_drawdown_review_signal_contracts import (
+    validate_drawdown_review_evaluation_success_contract,
+    validate_source_backed_drawdown_review_evaluation_success_contract,
+)
 from endpoint_high_cash_signal_contracts import (
     validate_high_cash_evaluation_success_contract,
     validate_high_cash_persistence_success_contract,
@@ -74,6 +78,8 @@ NAMED_SUCCESS_VALIDATORS: tuple[NamedSuccessValidator, ...] = (
     validate_source_backed_underperformance_evaluation_success_contract,
     validate_concentration_risk_evaluation_success_contract,
     validate_source_backed_concentration_risk_evaluation_success_contract,
+    validate_drawdown_review_evaluation_success_contract,
+    validate_source_backed_drawdown_review_evaluation_success_contract,
     validate_high_volatility_evaluation_success_contract,
     validate_source_backed_high_volatility_evaluation_success_contract,
     validate_conversion_intent_success_contract,
