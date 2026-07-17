@@ -603,6 +603,15 @@ authority; the source-backed route retains Advise
 clearance, mandate change, suitability or policy approval, client publication,
 rebalance, order, or execution authority from these examples. Ten multi-shape
 operations remain under issue `#542` after this family.
+Missing-risk-profile caller and Advise-backed evaluation now follow the same
+contract under issue `#569`. Both routes publish candidate-created, blocked,
+suppressed, and not-eligible modes from their real application paths. The
+source-backed route uses only the Advise source port and retains
+`AdvisoryPolicyEvaluationRecord:v1` identity. Idea detects review posture only;
+it must not approve or create a client risk profile, determine risk capacity,
+approve suitability or policy, publish to a client, or infer product authority
+from these examples. Eight multi-shape operations remain under issue `#542`
+after this family.
 Unit-test modules must also use globally unique basenames across nested
 directories because pytest imports this repository's tests by module basename.
 Name example-publication tests for the durable concern, such as
