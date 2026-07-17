@@ -51,6 +51,9 @@ from app.api.examples.high_cash_signal import apply_high_cash_signal_openapi_exa
 from app.api.examples.low_income_signal import apply_low_income_signal_openapi_examples
 from app.api.examples.report_evidence import apply_report_evidence_openapi_examples
 from app.api.examples.review_workflow import apply_review_workflow_openapi_examples
+from app.api.examples.underperformance_signal import (
+    apply_underperformance_signal_openapi_examples,
+)
 from app.api.problem_details import (
     ProblemDetailsHTTPException,
     problem_details_response as problem_response,
@@ -294,6 +297,7 @@ def _configure_openapi_contract_overrides(application: FastAPI) -> None:
         schema = apply_bond_maturity_signal_openapi_examples(schema)
         schema = apply_high_cash_signal_openapi_examples(schema)
         schema = apply_low_income_signal_openapi_examples(schema)
+        schema = apply_underperformance_signal_openapi_examples(schema)
         schema = apply_review_workflow_openapi_examples(schema)
         schema = apply_conversion_workflow_openapi_examples(schema)
         application.openapi_schema = apply_report_evidence_openapi_examples(schema)

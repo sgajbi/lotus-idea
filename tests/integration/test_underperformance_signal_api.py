@@ -6,7 +6,7 @@ from decimal import Decimal
 from typing import Any
 
 from tests.support.http import managed_test_client
-from pytest import MonkeyPatch
+from pytest import MonkeyPatch, mark
 
 import app.api.underperformance_signals as underperformance_api
 from app.domain import EvidenceFreshness, InMemoryIdeaRepository, SourceRef, SourceSystem
@@ -32,6 +32,7 @@ PORTFOLIO_ID = "PB_SG_GLOBAL_BAL_001"
 class RecordingPerformanceUnderperformanceSource:
     seen_request: PerformanceUnderperformanceEvidenceRequest | None = None
     error: Exception | None = None
+    evidence: PerformanceUnderperformanceEvidence | None = None
     close_count: int = 0
 
     def fetch_underperformance_evidence(
@@ -41,7 +42,7 @@ class RecordingPerformanceUnderperformanceSource:
         self.seen_request = request
         if self.error is not None:
             raise self.error
-        return _performance_underperformance_evidence()
+        return self.evidence or _performance_underperformance_evidence()
 
     def close(self) -> None:
         self.close_count += 1
@@ -89,6 +90,29 @@ def test_underperformance_signal_api_reports_above_threshold_not_eligible() -> N
         "outcome": "not_eligible",
         "family": "underperformance",
         "reasonCodes": ["below_materiality"],
+        "unsupportedReasons": [],
+        "candidate": None,
+        "sourceAuthority": "lotus-performance",
+        "supportedFeaturePromoted": False,
+    }
+
+
+def test_underperformance_signal_api_reports_duplicate_suppressed() -> None:
+    client = managed_test_client(app)
+    payload = underperformance_payload()
+    payload["duplicateOfCandidateId"] = "idea_underperformance_existing"
+
+    response = client.post(
+        "/api/v1/idea-signals/underperformance/evaluate",
+        json=payload,
+        headers=evaluate_headers(),
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "outcome": "suppressed",
+        "family": "underperformance",
+        "reasonCodes": ["duplicate_suppressed"],
         "unsupportedReasons": [],
         "candidate": None,
         "sourceAuthority": "lotus-performance",
@@ -364,6 +388,61 @@ def test_underperformance_signal_from_source_closes_runtime_on_source_blocker(
     assert performance_source.close_count == 1
 
 
+@mark.parametrize(
+    ("active_return", "duplicate_of_candidate_id", "expected_outcome", "expected_reason"),
+    (
+        (
+            Decimal("-0.0125"),
+            "idea_underperformance_existing",
+            "suppressed",
+            "duplicate_suppressed",
+        ),
+        (Decimal("-0.001"), None, "not_eligible", "below_materiality"),
+    ),
+)
+def test_underperformance_signal_from_source_exposes_non_candidate_success_modes(
+    monkeypatch: MonkeyPatch,
+    active_return: Decimal,
+    duplicate_of_candidate_id: str | None,
+    expected_outcome: str,
+    expected_reason: str,
+) -> None:
+    reset_idea_repository_for_tests(InMemoryIdeaRepository())
+    client = managed_test_client(app)
+    performance_source = RecordingPerformanceUnderperformanceSource(
+        evidence=_performance_underperformance_evidence(active_return=active_return)
+    )
+    monkeypatch.setattr(
+        underperformance_api,
+        "_build_performance_underperformance_source_runtime_from_environment",
+        lambda: PerformanceUnderperformanceSourceRuntime(
+            performance_source=performance_source,
+            performance_base_url_configured=True,
+        ),
+    )
+    request_payload = underperformance_source_payload()
+    request_payload["duplicateOfCandidateId"] = duplicate_of_candidate_id
+
+    response = client.post(
+        "/api/v1/idea-signals/underperformance/evaluate-from-source",
+        json=request_payload,
+        headers=source_evaluation_headers(),
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "outcome": expected_outcome,
+        "family": "underperformance",
+        "reasonCodes": [expected_reason],
+        "unsupportedReasons": [],
+        "candidate": None,
+        "sourceAuthority": "lotus-performance",
+        "supportedFeaturePromoted": False,
+    }
+    assert performance_source.close_count == 1
+    assert len(get_idea_repository().snapshot().candidate_records) == 0
+
+
 def evaluate_headers() -> dict[str, str]:
     return {
         "X-Caller-Subject": "advisor-001",
@@ -404,7 +483,7 @@ def underperformance_payload() -> dict[str, Any]:
     }
 
 
-def underperformance_source_payload(*, portfolio_id: str = PORTFOLIO_ID) -> dict[str, str]:
+def underperformance_source_payload(*, portfolio_id: str = PORTFOLIO_ID) -> dict[str, Any]:
     return {
         "portfolioId": portfolio_id,
         "asOfDate": "2026-06-21",
@@ -414,9 +493,11 @@ def underperformance_source_payload(*, portfolio_id: str = PORTFOLIO_ID) -> dict
     }
 
 
-def _performance_underperformance_evidence() -> PerformanceUnderperformanceEvidence:
+def _performance_underperformance_evidence(
+    *, active_return: Decimal = Decimal("-0.0125")
+) -> PerformanceUnderperformanceEvidence:
     return PerformanceUnderperformanceEvidence(
-        source_reported_active_return=Decimal("-0.0125"),
+        source_reported_active_return=active_return,
         benchmark_context_available=True,
         performance_ref=SourceRef(
             product_id="lotus-performance:ReturnsSeriesBundle:v1",
