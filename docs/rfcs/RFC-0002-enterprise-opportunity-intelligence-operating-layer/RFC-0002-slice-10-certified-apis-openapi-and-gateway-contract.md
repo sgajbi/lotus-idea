@@ -508,6 +508,21 @@ platform named-success guardrail was reused without a new skill/context change;
 a refreshed deterministic scan leaves six multi-shape operations under issue
 `#542`; Slice 10 remains partially implemented.
 
+Issue `#573` continues issue `#542` through the missing-suitability signal family.
+Capability-owned factories execute the existing caller-supplied and Advise-backed
+application paths, serialize the real response DTO, and publish named
+`candidate_created`, `blocked`, `suppressed`, and `not_eligible` HTTP 200 modes.
+Focused HTTP tests prove non-candidate no-persistence and source-runtime cleanup;
+negative contract tests reject missing modes and behavior evidence.
+
+Advise retains suitability, policy, proposal, sign-off, and client-publication
+posture authority. Idea owns only deterministic evidence-gap detection,
+suppression, eligibility, and compliance-review routing. No suitability or policy
+approval, persistence route, runtime split, client publication, Gateway/Workbench
+realization, data-product promotion, or supported-feature promotion is introduced.
+README and supported-feature truth remain unchanged. The existing platform
+named-success guardrail is reused; four multi-shape operations remain under #542.
+
 PR `#543` merged issue `#539` to `main` at
 `f6e2365eaec5f4f0184d5985e5b5fcc641b4883b`. Main Releasability run
 `29528824505` passed, including lint, typecheck, security, architecture,
