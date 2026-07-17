@@ -1,6 +1,6 @@
 # RFC-0002 Slice 11: Workbench Product Realization
 
-Status: Partially implemented - bounded Workbench read-only advisor queue/detail rendering exists; full live proof and support remain pending
+Status: Partially implemented - bounded Gateway/Workbench queue, detail, review-action, feedback, and conversion-intent controls exist; full live proof and support remain pending
 
 Current implementation note: RFC-0002 Slice 10 now provides
 `GET /api/v1/idea-candidates/{candidateId}` as a certified internal,
@@ -15,10 +15,23 @@ routing, and the canonical live-validation script now requires a populated
 candidate row, loaded detail fields, and observed post-navigation route
 evidence before accepting the opportunities screenshot.
 
-This is still a read-only product-surface foundation. It does not implement
-review actions, feedback, conversion affordances, entitlement-denied panel
-proof, full canonical live stack proof, data-product certification, demo-ready
-screenshots, or supported-feature promotion.
+Gateway PR #498 merged at `eeba84510d4449c9d181671b9b68d8af24f474cb` and
+publishes typed BFF routes for Idea-owned review actions, feedback, and bounded
+conversion intents. Workbench PR #435 merged at
+`97c57b21a9626f3f1ebcdade49252d6b599ae1dd` and adds the corresponding
+candidate-panel controls. The browser sends no authority headers: the Workbench
+BFF strips any client-supplied Idea authority and derives the configured
+server-side advisory authority before forwarding the request. The controls
+record only Idea-owned workflow state; they do not create proposals, clear
+restrictions, approve suitability, or execute portfolio actions.
+
+This remains a bounded product-surface foundation. It does not provide an
+end-user identity-provider integration, entitlement-denied panel proof, full
+canonical live-stack proof, data-product certification, demo-ready screenshots,
+or supported-feature promotion. Workbench #436 owns authenticated end-user
+principal resolution; the Slice 11 canonical proof remains deferred until an
+all-main cross-service runtime can be validated without treating branch-local
+evidence as product certification.
 
 The repo-owned Gateway/Workbench contract artifact is classified as
 `source_contract`. It can record the declared queue/detail routes and bounded
@@ -40,9 +53,10 @@ Gateway/BFF only.
 
 ## Required Work
 
-1. Extend the bounded read-only opportunity queue and candidate-detail panel
-   into review action, feedback, and conversion affordances for supported
-   roles.
+1. Bounded queue/detail review action, feedback, and conversion-intent
+   affordances are implemented through Gateway/BFF only; complete the
+   authenticated-principal and runtime proof needed before treating role
+   authorization as product-certified.
 2. Show source refs, reason codes, score posture, freshness, unsupported
    evidence, AI review posture, and downstream conversion status.
 3. Add browser, accessibility, responsive, empty, loading, degraded, and
