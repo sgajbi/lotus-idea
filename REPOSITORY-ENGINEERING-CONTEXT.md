@@ -566,7 +566,14 @@ candidate-created, blocked, suppressed, and not-eligible modes from their real
 application paths. Source-backed candidates retain supporting Manage,
 Performance, and Risk product lineage without granting Idea drift-calculation,
 mandate, performance, risk, rebalance, or order authority. Twenty multi-shape
-operations remain under issue `#542` after this family.
+operations remained under issue `#542` after that family. Underperformance
+caller and Performance-backed evaluation now follow the same contract under
+issue `#559`. Both routes publish candidate-created, blocked, suppressed, and
+not-eligible modes from their real application paths while preserving
+`ReturnsSeriesBundle:v1` as Performance-owned evidence. Idea must not infer
+returns, benchmark assignment, benchmark methodology, or investment-action
+authority from these examples. Eighteen multi-shape operations remain under
+issue `#542` after this family.
 Unit-test modules must also use globally unique basenames across nested
 directories because pytest imports this repository's tests by module basename.
 Name example-publication tests for the durable concern, such as

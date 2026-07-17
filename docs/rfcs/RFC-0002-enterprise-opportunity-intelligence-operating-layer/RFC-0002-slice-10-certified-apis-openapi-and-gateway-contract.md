@@ -342,6 +342,28 @@ unchanged by explicit scope decision. A refreshed deterministic scan leaves 20
 multi-shape operations under issue `#542`; Slice 10 remains partially
 implemented.
 
+Issue `#559` continues issue `#542` through the underperformance-review signal
+family. Capability-owned deterministic factories execute the existing
+caller-supplied and Performance-backed application paths and serialize the
+real API response DTO. Both operations publish named `candidate_created`,
+`blocked`, `suppressed`, and `not_eligible` HTTP 200 modes. Candidate examples
+retain Lotus Performance `ReturnsSeriesBundle:v1` identity while omitting
+source routes and content hashes. Focused HTTP tests prove caller suppression,
+source-backed suppression and not-eligible behavior, runtime cleanup, and the
+absence of candidate persistence for non-candidate outcomes. Negative contract
+tests prove that missing OpenAPI modes, ledger drift, or absent behavioral
+evidence fail certification.
+
+This is design modularity inside the existing deployable, not a runtime split.
+Lotus Performance retains returns, active-return, benchmark-context, and
+methodology authority; Lotus Idea owns only deterministic opportunity
+detection and advisor-review posture. No persistence route, live source
+certification, Gateway/Workbench realization, data-product promotion, or
+supported-feature promotion is introduced. README and supported-feature
+registry truth remain unchanged by explicit scope decision. A refreshed
+deterministic scan leaves 18 multi-shape operations under issue `#542`; Slice
+10 remains partially implemented.
+
 PR `#543` merged issue `#539` to `main` at
 `f6e2365eaec5f4f0184d5985e5b5fcc641b4883b`. Main Releasability run
 `29528824505` passed, including lint, typecheck, security, architecture,

@@ -210,6 +210,10 @@ Current RFC-0002 implementation-start baseline:
    examples retain supporting Manage, Performance, and Risk product lineage
    without moving drift, mandate, performance, risk, rebalance, or order
    authority into Idea.
+   Underperformance caller and Performance-backed APIs now publish that
+   complete matrix from their existing application paths. Candidate examples
+   retain Performance `ReturnsSeriesBundle:v1` identity without moving returns,
+   benchmark, methodology, recommendation, or execution authority into Idea.
    `make implementation-proof-readiness-check` generates and consumes the
    scheduled source-ingestion worker source contract while intentionally
    preserving the deployment blocker, durable repository
