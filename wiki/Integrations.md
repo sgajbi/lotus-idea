@@ -8,6 +8,16 @@ exist. They do not certify source-owned calculations, downstream execution,
 Report/Render/Archive materialization, full Gateway/Workbench product support,
 data-product certification, or supported-feature promotion.
 
+## Current Integration Posture
+
+| Reader need | Start here |
+| --- | --- |
+| Source authority | [Upstream](#upstream) |
+| Gateway and Workbench boundary | [Gateway Publication Foundation](#gateway-publication-foundation) |
+| Conversion and downstream limits | [Downstream](#downstream), [Conversion Boundaries](#conversion-boundaries) |
+| Data product dependencies | [Data Product Dependencies](#data-product-dependencies) |
+| Lifecycle and retention receipts | [Lotus AI Provider-Retention Receipt](#lotus-ai-provider-retention-receipt), [Lotus Archive Lifecycle Posture](#lotus-archive-lifecycle-posture), [Bank Lifecycle Authority](#bank-lifecycle-authority) |
+
 ### Lotus AI Provider-Retention Receipt
 
 An attested AI explanation may include the signed
@@ -55,16 +65,6 @@ contract drift fails before lifecycle mutation code is promoted. This does not m
 Platform a legal/privacy decision issuer. A bank-controlled producer, managed keys, approvals, and
 production-authorized purge evidence remain required for certification.
 
-## Integration Reader Map
-
-| Need | Section |
-| --- | --- |
-| Source authority | [Upstream](#upstream) |
-| Consumer and downstream boundaries | [Downstream](#downstream) |
-| Gateway publication posture | [Gateway Publication Foundation](#gateway-publication-foundation) |
-| Data product dependencies | [Data Product Dependencies](#data-product-dependencies) |
-| Adapter and conversion detail | [Current Source Adapter Posture](#current-source-adapter-posture), [Conversion Boundaries](#conversion-boundaries) |
-
 ## Upstream
 
 1. `lotus-core`
@@ -90,19 +90,25 @@ and certified.
 
 ## Gateway Publication Foundation
 
-`lotus-gateway` now publishes bounded read-only routes for the current advisor
-queue and candidate detail foundations:
+`lotus-gateway` publishes bounded read and Idea-workflow routes for the advisor
+queue, candidate detail, review actions, feedback, and conversion intents:
 
 1. `GET /api/v1/ideas/review-queues/advisor`,
-2. `GET /api/v1/ideas/candidates/{candidate_id}`.
+2. `GET /api/v1/ideas/candidates/{candidate_id}`,
+3. `POST /api/v1/ideas/candidates/{candidate_id}/review-actions`,
+4. `POST /api/v1/ideas/candidates/{candidate_id}/feedback`,
+5. `POST /api/v1/ideas/candidates/{candidate_id}/conversion-intents`.
 
 Gateway forwards caller context, caller entitlement-scope, and correlation
 headers to `lotus-idea`, preserves `lotus-idea` ranking, source references,
-durable-storage posture, and unsupported-feature posture, and blocks any upstream
-`supportedFeaturePromoted=true` response. Gateway does not generate, rank,
-enrich, certify, or promote ideas locally. This is not Workbench product proof,
-data-product certification, full source-ingestion certification, client-ready
-publication, or a supported feature.
+durable-storage posture, lifecycle, idempotency, and unsupported-feature posture,
+and blocks any upstream `supportedFeaturePromoted=true` response. Workbench uses
+these routes through its BFF; browser-supplied Idea authority headers are
+stripped and server-side advisory authority is derived before forwarding.
+Gateway does not generate, rank, enrich, approve suitability, create proposals,
+execute actions, certify, or promote ideas locally. This is not full Workbench
+product proof, end-user identity-provider proof, data-product certification,
+client-ready publication, or a supported feature.
 
 ## Data Product Dependencies
 

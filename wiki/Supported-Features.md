@@ -78,11 +78,13 @@ source-safe diagnostics without masking completed, replayed, conflict, or
 bounded blocked responses. That is recoverability foundation only; no certified live
 broker runtime, Gateway event, platform-mesh event runtime publication, downstream
 delivery, or supported event publication exists. `lotus-gateway` now publishes bounded
-read-only advisor queue and candidate detail routes with caller
-entitlement-scope forwarding, and `lotus-workbench` now renders the bounded
-read-only advisor queue/detail path through Gateway. These foundations are not
-deployed scheduler daemon proof, live Core worker certification, full Workbench
-live proof, or supported-feature promotion. The bounded live source-ingestion
+advisor queue/detail reads plus Idea-owned review-action, feedback, and
+conversion-intent routes with caller entitlement-scope, idempotency, correlation,
+and trace forwarding. `lotus-workbench` renders the corresponding controls
+through its BFF, which removes browser-supplied Idea authority and derives
+server-side advisory authority. These foundations are not end-user
+identity-provider proof, deployed scheduler daemon proof, live Core worker
+certification, full Workbench live proof, or supported-feature promotion. The bounded live source-ingestion
 proof artifact is implementation evidence for source-ingestion readiness only;
 it is not live source-worker certification or a supported feature. The AI
 explanation readiness diagnostic is an operator supportability check only; it

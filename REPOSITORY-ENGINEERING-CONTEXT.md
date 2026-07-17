@@ -28,14 +28,17 @@ Security governance, and repo-native CI guardrails.
 
 No externally supported product feature is promoted yet.
 
-Workbench read-path declarations are v2 `source_contract` evidence only. Keep
-the builder, generator, gate, and focused tests under capability-owned
+Workbench read-path and action-path declarations are v2 `source_contract`
+evidence only. The bounded Gateway BFF action family forwards Idea-owned review
+actions, feedback, and conversion intents; it must not transfer source,
+suitability, restriction, proposal, execution, or supported-feature authority.
+Keep builders, generators, gates, and focused tests under capability-owned
 `workbench/` packages. Static files, Make targets, route strings, and historical
 PR/SHA references must never clear
 `workbench_gateway_bff_consumption_proof_missing`; only machine-verifiable
-Gateway serving, Workbench consumption, entitlement, and browser evidence may
-clear that runtime blocker. This is design modularity inside the existing
-service, not evidence for a runtime split.
+Gateway serving, Workbench consumption, authenticated entitlement, and browser
+evidence may clear that runtime blocker. This is design modularity inside the
+existing service, not evidence for a runtime split.
 
 Typed Advise source-product evidence is closed v2 `source_contract` evidence.
 Keep shared source-authority loading, digest binding, and validation under
