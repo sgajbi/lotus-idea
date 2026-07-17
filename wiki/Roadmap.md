@@ -92,7 +92,9 @@ proof, downstream proof, supported-feature evidence, and mainline CI all agree.
     caller and Manage-backed routes also meet the same contract while retaining
     Manage, Performance, and Risk source authority. Underperformance caller and
     Performance-backed routes now meet the same contract while retaining
-    Performance returns and benchmark authority. The slice also
+    Performance returns and benchmark authority. Concentration-risk caller and
+    Risk-backed routes now meet the same contract while retaining Risk
+    concentration and methodology authority. The slice also
     includes certified internal lifecycle, AI explanation, advisor queue,
     review, feedback, conversion, report evidence-pack,
     AI-explanation-readiness, and data-mesh-readiness endpoint foundations.
