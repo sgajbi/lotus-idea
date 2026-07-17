@@ -565,7 +565,7 @@ def source_ref_payload(
     }
 
 
-def allocation_drift_source_payload(*, portfolio_id: str = PORTFOLIO_ID) -> dict[str, str]:
+def allocation_drift_source_payload(*, portfolio_id: str = PORTFOLIO_ID) -> dict[str, Any]:
     return {
         "portfolioId": portfolio_id,
         "asOfDate": "2026-06-21",
