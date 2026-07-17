@@ -27,8 +27,13 @@ EVALUATION_ID = "pev_001"
 
 
 class RecordingAdvisePolicyEvaluationSource:
-    def __init__(self, error: Exception | None = None) -> None:
+    def __init__(
+        self,
+        error: Exception | None = None,
+        evidence: AdvisePolicyEvaluationEvidence | None = None,
+    ) -> None:
         self.error = error
+        self.evidence = evidence
         self.close_count = 0
         self.seen_request: AdvisePolicyEvaluationEvidenceRequest | None = None
 
@@ -39,7 +44,7 @@ class RecordingAdvisePolicyEvaluationSource:
         self.seen_request = request
         if self.error is not None:
             raise self.error
-        return _advise_policy_evidence()
+        return self.evidence or _advise_policy_evidence()
 
     def close(self) -> None:
         self.close_count += 1
@@ -91,6 +96,57 @@ def test_missing_suitability_signal_api_reports_uncertified_publication_blocker(
         "sourceAuthority": "lotus-advise",
         "supportedFeaturePromoted": False,
     }
+
+
+@pytest.mark.parametrize(
+    ("duplicate_candidate_id", "ready_workflow", "expected_outcome", "expected_reason"),
+    (
+        (
+            "idea_missing_suitability_context_existing",
+            False,
+            "suppressed",
+            "duplicate_suppressed",
+        ),
+        (None, True, "not_eligible", "below_materiality"),
+    ),
+)
+def test_missing_suitability_signal_api_exposes_non_candidate_success_modes(
+    duplicate_candidate_id: str | None,
+    ready_workflow: bool,
+    expected_outcome: str,
+    expected_reason: str,
+) -> None:
+    reset_idea_repository_for_tests(InMemoryIdeaRepository())
+    payload = missing_suitability_payload()
+    if duplicate_candidate_id is not None:
+        payload["duplicateOfCandidateId"] = duplicate_candidate_id
+    if ready_workflow:
+        payload.update(
+            {
+                "evaluationStatus": "COMPLETED",
+                "openRequirementCount": 0,
+                "signOffStatus": "APPROVED",
+                "signOffBlockerCount": 0,
+            }
+        )
+
+    response = managed_test_client(app).post(
+        "/api/v1/idea-signals/missing-suitability/evaluate",
+        json=payload,
+        headers=evaluate_headers(),
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "outcome": expected_outcome,
+        "family": "missing_suitability_context",
+        "reasonCodes": [expected_reason],
+        "unsupportedReasons": [],
+        "candidate": None,
+        "sourceAuthority": "lotus-advise",
+        "supportedFeaturePromoted": False,
+    }
+    assert len(get_idea_repository().snapshot().candidate_records) == 0
 
 
 def test_missing_suitability_signal_api_rejects_wrong_source_contract(
@@ -295,6 +351,66 @@ def test_missing_suitability_signal_from_source_closes_runtime_on_source_blocker
     assert advise_source.close_count == 1
 
 
+@pytest.mark.parametrize(
+    ("duplicate_candidate_id", "ready_workflow", "expected_outcome", "expected_reason"),
+    (
+        (
+            "idea_missing_suitability_context_existing",
+            False,
+            "suppressed",
+            "duplicate_suppressed",
+        ),
+        (None, True, "not_eligible", "below_materiality"),
+    ),
+)
+def test_missing_suitability_signal_from_source_exposes_non_candidate_success_modes(
+    monkeypatch: pytest.MonkeyPatch,
+    duplicate_candidate_id: str | None,
+    ready_workflow: bool,
+    expected_outcome: str,
+    expected_reason: str,
+) -> None:
+    reset_idea_repository_for_tests(InMemoryIdeaRepository())
+    advise_source = RecordingAdvisePolicyEvaluationSource(
+        evidence=_advise_policy_evidence(
+            evaluation_status="COMPLETED" if ready_workflow else "PENDING_REVIEW",
+            open_requirement_count=0 if ready_workflow else 2,
+            sign_off_status="APPROVED" if ready_workflow else "PENDING_REVIEW",
+            sign_off_blocker_count=0 if ready_workflow else 1,
+        )
+    )
+    monkeypatch.setattr(
+        missing_suitability_api,
+        "_build_advise_policy_evaluation_source_runtime_from_environment",
+        lambda: AdvisePolicyEvaluationSourceRuntime(
+            advise_source=advise_source,
+            advise_base_url_configured=True,
+        ),
+    )
+    payload = missing_suitability_source_payload()
+    if duplicate_candidate_id is not None:
+        payload["duplicateOfCandidateId"] = duplicate_candidate_id
+
+    response = managed_test_client(app).post(
+        "/api/v1/idea-signals/missing-suitability/evaluate-from-source",
+        json=payload,
+        headers=source_evaluation_headers(),
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "outcome": expected_outcome,
+        "family": "missing_suitability_context",
+        "reasonCodes": [expected_reason],
+        "unsupportedReasons": [],
+        "candidate": None,
+        "sourceAuthority": "lotus-advise",
+        "supportedFeaturePromoted": False,
+    }
+    assert len(get_idea_repository().snapshot().candidate_records) == 0
+    assert advise_source.close_count == 1
+
+
 def evaluate_headers() -> dict[str, str]:
     return {
         "X-Caller-Subject": "advisor-001",
@@ -356,13 +472,19 @@ def missing_suitability_payload() -> dict[str, Any]:
     }
 
 
-def _advise_policy_evidence() -> AdvisePolicyEvaluationEvidence:
+def _advise_policy_evidence(
+    *,
+    evaluation_status: str = "PENDING_REVIEW",
+    open_requirement_count: int = 2,
+    sign_off_status: str = "PENDING_REVIEW",
+    sign_off_blocker_count: int = 1,
+) -> AdvisePolicyEvaluationEvidence:
     return AdvisePolicyEvaluationEvidence(
-        evaluation_status="PENDING_REVIEW",
-        open_requirement_count=2,
+        evaluation_status=evaluation_status,
+        open_requirement_count=open_requirement_count,
         blocked_requirement_count=0,
-        sign_off_status="PENDING_REVIEW",
-        sign_off_blocker_count=1,
+        sign_off_status=sign_off_status,
+        sign_off_blocker_count=sign_off_blocker_count,
         client_ready_publication="BLOCKED",
         policy_ref=SourceRef(
             product_id="lotus-advise:AdvisoryPolicyEvaluationRecord:v1",

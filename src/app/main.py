@@ -67,6 +67,9 @@ from app.api.examples.missing_benchmark_signal import (
 from app.api.examples.missing_risk_profile_signal import (
     apply_missing_risk_profile_signal_openapi_examples,
 )
+from app.api.examples.missing_suitability_signal import (
+    apply_missing_suitability_signal_openapi_examples,
+)
 from app.api.examples.report_evidence import apply_report_evidence_openapi_examples
 from app.api.examples.review_workflow import apply_review_workflow_openapi_examples
 from app.api.examples.underperformance_signal import (
@@ -321,6 +324,7 @@ def _configure_openapi_contract_overrides(application: FastAPI) -> None:
         schema = apply_mandate_restriction_signal_openapi_examples(schema)
         schema = apply_missing_benchmark_signal_openapi_examples(schema)
         schema = apply_missing_risk_profile_signal_openapi_examples(schema)
+        schema = apply_missing_suitability_signal_openapi_examples(schema)
         schema = apply_underperformance_signal_openapi_examples(schema)
         schema = apply_review_workflow_openapi_examples(schema)
         schema = apply_conversion_workflow_openapi_examples(schema)
