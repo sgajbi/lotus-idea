@@ -556,6 +556,17 @@ evolve together without copied enforcement. Apply this rule endpoint by
 endpoint from executable application behavior and integration tests rather
 than inferring completeness from example counts. Issue `#542` tracks the
 remaining capability-by-capability multi-shape HTTP 2xx inventory.
+Register each capability validator in
+`scripts/endpoint_named_success_contracts.py`; do not add another direct import
+and invocation pair to the central endpoint certification gate. The registry
+keeps capability ownership explicit while the central gate remains a stable,
+maintainable orchestrator. Allocation-drift caller and Manage-backed
+evaluation follows this contract under issue `#557`: both routes publish
+candidate-created, blocked, suppressed, and not-eligible modes from their real
+application paths. Source-backed candidates retain supporting Manage,
+Performance, and Risk product lineage without granting Idea drift-calculation,
+mandate, performance, risk, rebalance, or order authority. Twenty multi-shape
+operations remain under issue `#542` after this family.
 Unit-test modules must also use globally unique basenames across nested
 directories because pytest imports this repository's tests by module basename.
 Name example-publication tests for the durable concern, such as

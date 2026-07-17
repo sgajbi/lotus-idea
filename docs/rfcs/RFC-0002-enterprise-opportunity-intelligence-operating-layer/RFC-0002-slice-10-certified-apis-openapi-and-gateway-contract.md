@@ -315,6 +315,33 @@ unchanged by explicit scope decision. A refreshed deterministic scan leaves
 22 multi-shape operations under issue `#542`; Slice 10 remains partially
 implemented.
 
+Issue `#557` continues issue `#542` through the allocation-drift / mandate-review
+signal family. Capability-owned factories execute the existing caller-supplied
+and Manage-backed application paths and serialize the real API response DTO.
+Both operations publish named `candidate_created`, `blocked`, `suppressed`, and
+`not_eligible` HTTP 200 modes. Source-backed candidate examples retain governed
+Manage `PortfolioActionRegister:v1`, Performance
+`MandatePerformanceHealthContext:v1`, and Risk `MandateRiskHealthContext:v1`
+lineage while omitting source routes and content hashes. Focused HTTP tests prove
+caller suppression and source-backed
+suppression and not-eligible behavior, including runtime cleanup and no
+candidate persistence. Exact factory, endpoint-ledger, generated OpenAPI, and
+cited-test parity is a blocking endpoint-certification contract.
+
+Named-success contract validators now register in
+`scripts/endpoint_named_success_contracts.py`. The central endpoint gate remains
+a stable orchestrator below its maintainability limit as additional capability
+contracts are added. This is design modularity inside the existing deployable,
+not a runtime split. Manage retains action-register, mandate implementation,
+rebalance, and order authority; Performance and Risk retain their calculation
+authority. Lotus Idea owns only deterministic opportunity detection and
+advisor-review posture. No persistence route, live source certification,
+Gateway/Workbench realization, data-product promotion, or supported-feature
+promotion is introduced. README and supported-feature registry truth remain
+unchanged by explicit scope decision. A refreshed deterministic scan leaves 20
+multi-shape operations under issue `#542`; Slice 10 remains partially
+implemented.
+
 PR `#543` merged issue `#539` to `main` at
 `f6e2365eaec5f4f0184d5985e5b5fcc641b4883b`. Main Releasability run
 `29528824505` passed, including lint, typecheck, security, architecture,

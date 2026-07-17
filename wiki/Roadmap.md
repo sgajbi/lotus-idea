@@ -88,7 +88,9 @@ proof, downstream proof, supported-feature evidence, and mainline CI all agree.
     caller and Core-backed routes likewise publish complete candidate-created,
     blocked, suppressed, and not-eligible mode matrices with exact executable
     contract parity. Bond-maturity caller and Core-backed routes now meet the
-    same contract while retaining Core maturity-data authority. The slice also
+    same contract while retaining Core maturity-data authority. Allocation-drift
+    caller and Manage-backed routes also meet the same contract while retaining
+    Manage, Performance, and Risk source authority. The slice also
     includes certified internal lifecycle, AI explanation, advisor queue,
     review, feedback, conversion, report evidence-pack,
     AI-explanation-readiness, and data-mesh-readiness endpoint foundations.
