@@ -321,25 +321,18 @@ def test_endpoint_certification_gate_accepts_openapi_caller_context_publication(
 
 def test_endpoint_certification_gate_accepts_bounded_gateway_publication_boundary() -> None:
     module = _load_endpoint_certification_gate()
-    endpoint = {
-        "method": "GET",
-        "path": "/api/v1/review-queues/advisor",
-        "certification_status": "certified",
-        "when_to_use": "Use with idea.review.queue.read capability.",
-        "when_not_to_use": (
-            "Read-only Gateway publication exists through lotus-gateway "
-            "GET /api/v1/ideas/review-queues/advisor. Do not use as a durable "
-            "queue store, Workbench product proof, data-product certification proof, "
-            "PM/compliance/operator queue surface, client-ready publication, or "
-            "supported-feature promotion."
-        ),
-        "error_examples": ["403 returns product-safe Problem Details."],
-        "test_evidence": [
-            "tests/integration/test_review_queue_api.py::test_review_queue_api_requires_permission",
-            "tests/integration/test_api_operation_events.py::test_lifecycle_queue_review_and_feedback_emit_operation_events",
-        ],
-        "openapi_evidence": "scripts/openapi_quality_gate.py validates the operation.",
-    }
+    ledger = json.loads(
+        (ROOT / "docs" / "operations" / "endpoint-certification-ledger.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    endpoint = deepcopy(
+        next(
+            endpoint
+            for endpoint in ledger["endpoints"]
+            if endpoint["method"] == "GET" and endpoint["path"] == "/api/v1/review-queues/advisor"
+        )
+    )
 
     errors = module._validate_implemented_endpoint_posture(endpoint)
 
