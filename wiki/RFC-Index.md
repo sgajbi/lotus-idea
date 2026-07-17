@@ -282,7 +282,10 @@ Current RFC-0002 implementation-start baseline:
     certified internal downstream submission APIs for Advise/Manage conversion
     intents and Report evidence-pack requests, `make
     conversion-outcome-contract-gate`, and `make
-    downstream-realization-contract-gate`. It does not prove downstream
+    downstream-realization-contract-gate`. Both downstream submission routes
+    now publish accepted, rejected, accepted-replayed, and rejected-replayed
+    `200` modes plus a separately named `202 reconciliation_required` mode.
+    It does not prove downstream
     route existence, create downstream records, execute downstream materialization,
     or promote a supported feature.
 13. Slice 18 is partially implemented for API certification and

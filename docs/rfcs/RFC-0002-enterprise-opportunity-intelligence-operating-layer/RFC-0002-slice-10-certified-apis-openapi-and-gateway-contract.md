@@ -523,6 +523,26 @@ realization, data-product promotion, or supported-feature promotion is introduce
 README and supported-feature truth remain unchanged. The existing platform
 named-success guardrail is reused; four multi-shape operations remain under #542.
 
+Issue `#575` continues issue `#542` through the two downstream-submission
+operations. Capability-owned factories execute the real conversion-intent and
+report-evidence application use cases through deterministic no-I/O adapters,
+then serialize `DownstreamSubmissionApiResponse`. Both routes publish accepted,
+rejected, accepted-replayed, and rejected-replayed HTTP `200` modes, with
+`reconciliation_required` separately published as HTTP `202`. The endpoint
+ledger, generated OpenAPI, and required HTTP behavior evidence are enforced by
+the shared status-aware named-success validator; negative tests reject a
+missing `202` mode or behavior reference.
+
+Idea retains only claim-before-call, local finalization, replay, uncertain
+outcome preservation, reconciliation, and audit posture. Advise/Manage retain
+conversion workflow and authoritative outcome authority; Report retains
+materialization authority. No downstream route proof, downstream record,
+automatic uncertain-call retry, suitability, execution, client publication,
+Gateway/Workbench realization, data-product promotion, or supported-feature
+promotion is introduced. README and supported-feature truth remain unchanged;
+the status-aware repository validator is the durable improvement. A refreshed
+deterministic scan leaves four multi-shape operations under #542.
+
 PR `#543` merged issue `#539` to `main` at
 `f6e2365eaec5f4f0184d5985e5b5fcc641b4883b`. Main Releasability run
 `29528824505` passed, including lint, typecheck, security, architecture,
