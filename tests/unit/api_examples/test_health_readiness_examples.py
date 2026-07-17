@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 import sys
 from types import ModuleType
+from typing import Any
 
 from app.api.examples.health_readiness import (
     HEALTH_READINESS_OPERATION_PATH,
@@ -101,7 +102,7 @@ def _load_contract_module() -> ModuleType:
     return module
 
 
-def _ledger_endpoint() -> dict[str, object]:
+def _ledger_endpoint() -> dict[str, Any]:
     ledger = json.loads(LEDGER_PATH.read_text(encoding="utf-8"))
     return deepcopy(
         next(
