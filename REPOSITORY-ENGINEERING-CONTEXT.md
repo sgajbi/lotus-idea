@@ -513,6 +513,16 @@ Keep this as domain policy plus an internal adapter boundary. A separately
 deployed queue service requires measured scaling, failure-isolation, ownership,
 or operability evidence.
 
+Advisor-queue HTTP success evidence is code-owned rather than illustrative:
+the capability factory persists a deterministic internal candidate through the
+existing use case, builds the real queue projection, and serializes the
+production response DTO for the named `itemsAvailable` and `noItemsAvailable`
+200 modes. The endpoint ledger and generated OpenAPI must match that factory
+exactly through the centralized named-success registry. This strengthens an
+internal read-only contract only; it does not promote a supported feature or
+transfer suitability, compliance, mandate, execution, or client-publication
+authority to Idea.
+
 Candidate scoring and queue ranking are distinct versioned policies:
 
 1. `app.domain.scoring` owns weighted score calculation and the closed current

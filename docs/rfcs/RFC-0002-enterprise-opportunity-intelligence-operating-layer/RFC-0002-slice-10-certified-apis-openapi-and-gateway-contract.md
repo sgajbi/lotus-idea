@@ -543,6 +543,22 @@ promotion is introduced. README and supported-feature truth remain unchanged;
 the status-aware repository validator is the durable improvement. A refreshed
 deterministic scan leaves four multi-shape operations under #542.
 
+Issue `#577` continues issue `#542` through the advisor-review-queue success
+contract. Its capability-owned factory persists a deterministic internal
+high-cash candidate through the existing use case, invokes the real queue
+projection, and serializes `BusinessReviewQueueResponse`. Generated OpenAPI
+and the endpoint ledger publish exact named HTTP `200` `itemsAvailable` and
+`noItemsAvailable` modes; focused negative tests reject either a missing mode
+or an absent empty-queue behavior reference.
+
+This hardens the bounded, entitlement-scoped Idea queue read only. It neither
+changes the snapshot/as-of policy nor grants suitability, compliance, mandate,
+execution, client-publication, Workbench, data-product, or supported-feature
+authority. README and supported-feature registry truth remain unchanged by
+explicit scope decision. The generalized named-response helper now supports
+the HTTP method of the governed operation, avoiding a POST-only hidden
+assumption without introducing a runtime split.
+
 PR `#543` merged issue `#539` to `main` at
 `f6e2365eaec5f4f0184d5985e5b5fcc641b4883b`. Main Releasability run
 `29528824505` passed, including lint, typecheck, security, architecture,

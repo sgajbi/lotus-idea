@@ -1466,8 +1466,8 @@
         "GET /api/v1/review-queues/advisor?evaluatedAtUtc=2026-06-21T10:10:00Z with X-Caller-Capabilities: idea.review.queue.read and X-Caller-Portfolio-Ids: PB_SG_GLOBAL_BAL_001"
       ],
       "response_examples": [
-        "{\"audience\":\"advisor\",\"policyVersion\":\"idea-deterministic-ranking-v1\",\"evaluatedAtUtc\":\"2026-06-21T10:10:00Z\",\"items\":[{\"rank\":1,\"candidate\":{\"candidateId\":\"idea_high_cash_8d57adbf52f7f5a7\",\"family\":\"high_cash\",\"lifecycleStatus\":\"generated\",\"reviewPosture\":\"advisor_review_required\",\"evidencePacketId\":\"iep_high_cash_8d57adbf52f7f5a7\",\"score\":\"82\",\"scorePolicyVersion\":\"idle-liquidity-v1\",\"sourceSignalIds\":[\"signal_high_cash_8d57adbf52f7f5a7\"]},\"score\":\"82\",\"priorityBucket\":\"high\",\"policyVersion\":\"idea-deterministic-ranking-v1\",\"reasonCodes\":[\"high_cash_ratio\",\"review_required\"]}],\"exclusions\":[],\"page\":{\"limit\":25,\"offset\":0,\"returnedItemCount\":1,\"totalReviewableItemCount\":1,\"returnedExclusionCount\":0,\"totalExcludedCandidateCount\":0,\"nextOffset\":null,\"hasNextPage\":false,\"snapshotToken\":\"rqs1_0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\"},\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}",
-        "{\"audience\":\"advisor\",\"policyVersion\":\"idea-deterministic-ranking-v1\",\"evaluatedAtUtc\":\"2026-06-21T10:10:00Z\",\"items\":[],\"exclusions\":[],\"page\":{\"limit\":25,\"offset\":0,\"returnedItemCount\":0,\"totalReviewableItemCount\":0,\"returnedExclusionCount\":0,\"totalExcludedCandidateCount\":0,\"nextOffset\":null,\"hasNextPage\":false,\"snapshotToken\":\"rqs1_0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\"},\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}"
+        "{\"audience\":\"advisor\",\"policyVersion\":\"idea-deterministic-ranking-v1\",\"evaluatedAtUtc\":\"2026-06-21T10:00:00Z\",\"items\":[{\"rank\":1,\"candidate\":{\"candidateId\":\"idea_high_cash_5b945fe333f7e8aa\",\"family\":\"high_cash\",\"lifecycleStatus\":\"generated\",\"reviewPosture\":\"advisor_review_required\",\"evidencePacketId\":\"iep_high_cash_5b945fe333f7e8aa\",\"score\":\"82\",\"scorePolicyVersion\":\"idle-liquidity-v1\",\"sourceSignalIds\":[\"signal_high_cash_5b945fe333f7e8aa\"]},\"score\":\"82\",\"priorityBucket\":\"high\",\"policyVersion\":\"idea-deterministic-ranking-v1\",\"reasonCodes\":[\"high_cash_ratio\",\"review_required\"]}],\"exclusions\":[],\"page\":{\"limit\":25,\"offset\":0,\"returnedItemCount\":1,\"totalReviewableItemCount\":1,\"returnedExclusionCount\":0,\"totalExcludedCandidateCount\":0,\"nextOffset\":null,\"hasNextPage\":false,\"snapshotToken\":\"rqs1_ded102662e7a737ee948bc0afbc20527b093f7521a0d705adf873304f5e635ec\"},\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}",
+        "{\"audience\":\"advisor\",\"policyVersion\":\"idea-deterministic-ranking-v1\",\"evaluatedAtUtc\":\"2026-06-21T10:00:00Z\",\"items\":[],\"exclusions\":[],\"page\":{\"limit\":25,\"offset\":0,\"returnedItemCount\":0,\"totalReviewableItemCount\":0,\"returnedExclusionCount\":0,\"totalExcludedCandidateCount\":0,\"nextOffset\":null,\"hasNextPage\":false,\"snapshotToken\":\"rqs1_14d9c73289f2dd3626e2910d9c8d41e49372d7f1fb6c7de5edc121b7f7c804d4\"},\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}"
       ],
       "error_examples": [
         "403 returns product-safe Problem Details when the caller lacks idea.review.queue.read capability or advisor role.",
@@ -1496,12 +1496,13 @@
         "tests/integration/test_review_queue_api.py::test_advisor_review_queue_api_rejects_naive_evaluation_time_safely",
         "tests/integration/test_review_queue_api.py::test_advisor_review_queue_api_rejects_blank_scope_filter_safely",
         "tests/integration/test_review_queue_api.py::test_advisor_review_queue_api_rejects_blank_caller_scope_header_safely",
+        "tests/unit/api_examples/test_advisor_review_queue_examples.py::test_advisor_review_queue_examples_match_ledger_and_generated_openapi",
         "tests/integration/test_api_operation_events.py::test_lifecycle_queue_review_and_feedback_emit_operation_events",
         "tests/unit/test_review_queue_application.py::test_build_review_queue_from_repository_uses_repository_side_page_projection",
         "tests/unit/test_postgres_review_queue.py::test_postgres_repository_review_queue_page_uses_bounded_candidate_projection",
         "tests/integration/test_postgres_review_queue_runtime.py::test_postgres_review_queue_preserves_snapshot_across_future_insert_and_rejects_stale_token"
       ],
-      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
+      "openapi_evidence": "scripts/endpoint_advisor_review_queue_contracts.py validates exact application-backed named 200 examples; scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
     },
     {
       "method": "GET",
