@@ -223,10 +223,10 @@
         "{\"asOfDate\":\"2026-06-21\",\"evaluatedAtUtc\":\"2026-06-21T10:00:00Z\",\"sourceReportedActiveReturn\":\"-0.0125\",\"benchmarkContextAvailable\":true,\"performanceRef\":{\"productId\":\"lotus-performance:ReturnsSeriesBundle:v1\",\"sourceSystem\":\"lotus-performance\",\"productVersion\":\"v1\",\"route\":\"/integration/returns/series\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"contentHash\":\"sha256:returns-series-bundle\",\"dataQualityStatus\":\"ready\",\"freshness\":\"current\"},\"entitlementAllowed\":true}"
       ],
       "response_examples": [
-        "{\"outcome\":\"candidate_created\",\"family\":\"underperformance\",\"reasonCodes\":[\"underperformance_attention\",\"review_required\"],\"unsupportedReasons\":[],\"candidate\":{\"candidateId\":\"idea_underperformance_8d57adbf52f7f5a7\",\"family\":\"underperformance\",\"lifecycleStatus\":\"generated\",\"reviewPosture\":\"advisor_review_required\",\"evidencePacketId\":\"iep_underperformance_8d57adbf52f7f5a7\",\"supportability\":\"ready\",\"score\":\"74\",\"scorePolicyVersion\":\"underperformance-review-v1\",\"sourceSignalIds\":[\"signal_underperformance_8d57adbf52f7f5a7\"],\"sourceRefs\":[{\"productId\":\"lotus-performance:ReturnsSeriesBundle:v1\",\"sourceSystem\":\"lotus-performance\",\"productVersion\":\"v1\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"dataQualityStatus\":\"ready\",\"freshness\":\"current\"}]},\"sourceAuthority\":\"lotus-performance\",\"supportedFeaturePromoted\":false}",
-        "{\"outcome\":\"not_eligible\",\"family\":\"underperformance\",\"reasonCodes\":[\"below_materiality\"],\"unsupportedReasons\":[],\"candidate\":null,\"sourceAuthority\":\"lotus-performance\",\"supportedFeaturePromoted\":false}",
-        "{\"outcome\":\"blocked\",\"family\":\"underperformance\",\"reasonCodes\":[\"missing_benchmark\"],\"unsupportedReasons\":[\"missing_source\"],\"candidate\":null,\"sourceAuthority\":\"lotus-performance\",\"supportedFeaturePromoted\":false}",
-        "{\"outcome\":\"blocked\",\"family\":\"underperformance\",\"reasonCodes\":[\"source_stale\"],\"unsupportedReasons\":[\"stale_source\"],\"candidate\":null,\"sourceAuthority\":\"lotus-performance\",\"supportedFeaturePromoted\":false}"
+        "{\"outcome\":\"candidate_created\",\"family\":\"underperformance\",\"reasonCodes\":[\"underperformance_attention\",\"review_required\"],\"unsupportedReasons\":[],\"candidate\":{\"candidateId\":\"idea_underperformance_5efb918055e02492\",\"family\":\"underperformance\",\"lifecycleStatus\":\"generated\",\"reviewPosture\":\"advisor_review_required\",\"evidencePacketId\":\"iep_underperformance_5efb918055e02492\",\"supportability\":\"ready\",\"score\":\"74\",\"scorePolicyVersion\":\"underperformance-review-v1\",\"sourceSignalIds\":[\"signal_underperformance_5efb918055e02492\"],\"sourceRefs\":[{\"productId\":\"lotus-performance:ReturnsSeriesBundle:v1\",\"sourceSystem\":\"lotus-performance\",\"productVersion\":\"v1\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"dataQualityStatus\":\"ready\",\"freshness\":\"current\"}]},\"sourceAuthority\":\"lotus-performance\",\"supportedFeaturePromoted\":false}",
+        "{\"outcome\":\"blocked\",\"family\":\"underperformance\",\"reasonCodes\":[\"source_stale\"],\"unsupportedReasons\":[\"stale_source\"],\"candidate\":null,\"sourceAuthority\":\"lotus-performance\",\"supportedFeaturePromoted\":false}",
+        "{\"outcome\":\"suppressed\",\"family\":\"underperformance\",\"reasonCodes\":[\"duplicate_suppressed\"],\"unsupportedReasons\":[],\"candidate\":null,\"sourceAuthority\":\"lotus-performance\",\"supportedFeaturePromoted\":false}",
+        "{\"outcome\":\"not_eligible\",\"family\":\"underperformance\",\"reasonCodes\":[\"below_materiality\"],\"unsupportedReasons\":[],\"candidate\":null,\"sourceAuthority\":\"lotus-performance\",\"supportedFeaturePromoted\":false}"
       ],
       "error_examples": [
         "403 returns product-safe Problem Details when the caller lacks advisor role or idea.signal.evaluate capability.",
@@ -238,12 +238,14 @@
         "tests/integration/test_underperformance_signal_api.py::test_underperformance_signal_api_reports_above_threshold_not_eligible",
         "tests/integration/test_underperformance_signal_api.py::test_underperformance_signal_api_reports_missing_benchmark_context_blocker",
         "tests/integration/test_underperformance_signal_api.py::test_underperformance_signal_api_reports_stale_source_blocker",
+        "tests/integration/test_underperformance_signal_api.py::test_underperformance_signal_api_reports_duplicate_suppressed",
         "tests/integration/test_underperformance_signal_api.py::test_underperformance_signal_api_rejects_wrong_source_contract",
         "tests/integration/test_underperformance_signal_api.py::test_underperformance_signal_api_rejects_wrong_performance_product_id",
         "tests/integration/test_underperformance_signal_api.py::test_underperformance_signal_api_requires_signal_permission",
-        "tests/integration/test_api_operation_events.py::test_underperformance_signal_api_emits_bounded_operation_event"
+        "tests/integration/test_api_operation_events.py::test_underperformance_signal_api_emits_bounded_operation_event",
+        "tests/unit/api_examples/test_underperformance_signal_examples.py::test_underperformance_examples_match_ledger_and_generated_openapi"
       ],
-      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
+      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples; scripts/endpoint_underperformance_signal_contracts.py enforces exact named success-mode parity."
     },
     {
       "method": "POST",
@@ -257,8 +259,10 @@
         "{\"portfolioId\":\"PB_SG_GLOBAL_BAL_001\",\"asOfDate\":\"2026-06-21\",\"periodName\":\"YTD\",\"evaluatedAtUtc\":\"2026-06-21T10:00:00Z\",\"reportingCurrency\":\"USD\"}"
       ],
       "response_examples": [
-        "{\"outcome\":\"candidate_created\",\"family\":\"underperformance\",\"reasonCodes\":[\"underperformance_attention\",\"review_required\"],\"unsupportedReasons\":[],\"candidate\":{\"candidateId\":\"idea_underperformance_8d57adbf52f7f5a7\",\"family\":\"underperformance\",\"lifecycleStatus\":\"generated\",\"reviewPosture\":\"advisor_review_required\",\"evidencePacketId\":\"iep_underperformance_8d57adbf52f7f5a7\",\"supportability\":\"ready\",\"score\":\"74\",\"scorePolicyVersion\":\"underperformance-review-v1\",\"sourceSignalIds\":[\"signal_underperformance_8d57adbf52f7f5a7\"],\"sourceRefs\":[{\"productId\":\"lotus-performance:ReturnsSeriesBundle:v1\",\"sourceSystem\":\"lotus-performance\",\"productVersion\":\"v1\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"dataQualityStatus\":\"ready\",\"freshness\":\"current\"}]},\"sourceAuthority\":\"lotus-performance\",\"supportedFeaturePromoted\":false}",
-        "{\"outcome\":\"blocked\",\"family\":\"underperformance\",\"reasonCodes\":[\"source_partial\"],\"unsupportedReasons\":[\"source_unavailable\"],\"candidate\":null,\"sourceAuthority\":\"lotus-performance\",\"supportedFeaturePromoted\":false}"
+        "{\"outcome\":\"candidate_created\",\"family\":\"underperformance\",\"reasonCodes\":[\"underperformance_attention\",\"review_required\"],\"unsupportedReasons\":[],\"candidate\":{\"candidateId\":\"idea_underperformance_8df150c778db8c7d\",\"family\":\"underperformance\",\"lifecycleStatus\":\"generated\",\"reviewPosture\":\"advisor_review_required\",\"evidencePacketId\":\"iep_underperformance_8df150c778db8c7d\",\"supportability\":\"ready\",\"score\":\"74\",\"scorePolicyVersion\":\"underperformance-review-v1\",\"sourceSignalIds\":[\"signal_underperformance_8df150c778db8c7d\"],\"sourceRefs\":[{\"productId\":\"lotus-performance:ReturnsSeriesBundle:v1\",\"sourceSystem\":\"lotus-performance\",\"productVersion\":\"v1\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"dataQualityStatus\":\"ready\",\"freshness\":\"current\"}]},\"sourceAuthority\":\"lotus-performance\",\"supportedFeaturePromoted\":false}",
+        "{\"outcome\":\"blocked\",\"family\":\"underperformance\",\"reasonCodes\":[\"source_partial\"],\"unsupportedReasons\":[\"source_unavailable\"],\"candidate\":null,\"sourceAuthority\":\"lotus-performance\",\"supportedFeaturePromoted\":false}",
+        "{\"outcome\":\"suppressed\",\"family\":\"underperformance\",\"reasonCodes\":[\"duplicate_suppressed\"],\"unsupportedReasons\":[],\"candidate\":null,\"sourceAuthority\":\"lotus-performance\",\"supportedFeaturePromoted\":false}",
+        "{\"outcome\":\"not_eligible\",\"family\":\"underperformance\",\"reasonCodes\":[\"below_materiality\"],\"unsupportedReasons\":[],\"candidate\":null,\"sourceAuthority\":\"lotus-performance\",\"supportedFeaturePromoted\":false}"
       ],
       "error_examples": [
         "403 returns product-safe Problem Details when the caller lacks advisor role, idea.signal.evaluate capability, or portfolio entitlement.",
@@ -270,10 +274,12 @@
         "tests/integration/test_underperformance_signal_api.py::test_underperformance_signal_from_source_blocks_when_runtime_not_configured",
         "tests/integration/test_underperformance_signal_api.py::test_underperformance_signal_from_source_checks_scope_before_runtime",
         "tests/integration/test_underperformance_signal_api.py::test_underperformance_signal_from_source_closes_runtime_on_source_blocker",
+        "tests/integration/test_underperformance_signal_api.py::test_underperformance_signal_from_source_exposes_non_candidate_success_modes",
         "tests/integration/test_signal_source_operation_events.py::test_underperformance_source_api_emits_blocked_operation_event",
-        "tests/unit/test_source_ingestion_state.py::test_performance_underperformance_source_runtime_builds_without_manifest"
+        "tests/unit/test_source_ingestion_state.py::test_performance_underperformance_source_runtime_builds_without_manifest",
+        "tests/unit/api_examples/test_underperformance_signal_examples.py::test_underperformance_examples_match_ledger_and_generated_openapi"
       ],
-      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
+      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples; scripts/endpoint_underperformance_signal_contracts.py enforces exact named success-mode parity."
     },
     {
       "method": "POST",

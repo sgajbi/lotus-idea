@@ -37,6 +37,10 @@ from endpoint_review_workflow_contracts import (
     validate_feedback_success_contract,
     validate_review_action_success_contract,
 )
+from endpoint_underperformance_signal_contracts import (
+    validate_source_backed_underperformance_evaluation_success_contract,
+    validate_underperformance_evaluation_success_contract,
+)
 
 
 NamedSuccessValidator = Callable[
@@ -58,6 +62,8 @@ NAMED_SUCCESS_VALIDATORS: tuple[NamedSuccessValidator, ...] = (
     validate_source_backed_low_income_evaluation_success_contract,
     validate_bond_maturity_evaluation_success_contract,
     validate_source_backed_bond_maturity_evaluation_success_contract,
+    validate_underperformance_evaluation_success_contract,
+    validate_source_backed_underperformance_evaluation_success_contract,
     validate_conversion_intent_success_contract,
     validate_conversion_outcome_success_contract,
     validate_review_action_success_contract,
