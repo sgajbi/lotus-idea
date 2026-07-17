@@ -50,6 +50,9 @@ from app.api.examples.concentration_risk_signal import (
     apply_concentration_risk_signal_openapi_examples,
 )
 from app.api.examples.conversion_workflow import apply_conversion_workflow_openapi_examples
+from app.api.examples.high_volatility_signal import (
+    apply_high_volatility_signal_openapi_examples,
+)
 from app.api.examples.high_cash_signal import apply_high_cash_signal_openapi_examples
 from app.api.examples.low_income_signal import apply_low_income_signal_openapi_examples
 from app.api.examples.report_evidence import apply_report_evidence_openapi_examples
@@ -299,6 +302,7 @@ def _configure_openapi_contract_overrides(application: FastAPI) -> None:
         schema = apply_candidate_state_openapi_examples(schema)
         schema = apply_bond_maturity_signal_openapi_examples(schema)
         schema = apply_concentration_risk_signal_openapi_examples(schema)
+        schema = apply_high_volatility_signal_openapi_examples(schema)
         schema = apply_high_cash_signal_openapi_examples(schema)
         schema = apply_low_income_signal_openapi_examples(schema)
         schema = apply_underperformance_signal_openapi_examples(schema)
