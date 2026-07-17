@@ -288,6 +288,10 @@ Current RFC-0002 implementation-start baseline:
     It does not prove downstream
     route existence, create downstream records, execute downstream materialization,
     or promote a supported feature.
+    The downstream family reduced the Slice 10 named-success inventory to two
+    operations; advisor-queue application-backed examples then reduced it to
+    the sole remaining `GET /health/ready` contract. This is inventory truth
+    only, not feature or authority promotion.
 13. Slice 18 is partially implemented for API certification and
     implementation-proof documentation truth. `docs/operations/api-certification.md`
     and `docs/operations/implementation-proof-readiness.md` now mirror the

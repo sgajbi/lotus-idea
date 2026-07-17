@@ -51,6 +51,8 @@ proof, downstream proof, supported-feature evidence, and mainline CI all agree.
    authority. Application-backed advisor-queue `itemsAvailable` and
    `noItemsAvailable` OpenAPI modes now publish through the existing bounded
    queue projection; this is not a review-product or supported-feature promotion.
+   This leaves `GET /health/ready` as the sole remaining Slice 10 named-success
+   contract; the inventory is not a feature or authority promotion.
    Protected exact-image migration automation now
    adds durable release-bound history, locking, pending-only apply, drift
    rejection, explicit legacy adoption, bounded rollback, source-safe evidence,
