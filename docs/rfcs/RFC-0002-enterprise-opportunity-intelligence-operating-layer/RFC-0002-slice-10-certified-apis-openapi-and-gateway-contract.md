@@ -483,6 +483,31 @@ and supported-feature registry truth remain unchanged by explicit scope
 decision. A refreshed deterministic scan leaves eight multi-shape operations
 under issue `#542`; Slice 10 remains partially implemented.
 
+Issue `#571` continues issue `#542` through the missing-benchmark signal
+family. Capability-owned deterministic factories execute the existing
+caller-supplied and Core-backed application paths and serialize the real API
+response DTO. Both operations publish named `candidate_created`, `blocked`,
+`suppressed`, and `not_eligible` HTTP 200 modes. Caller-supplied evaluation
+accepts only Core `BenchmarkAssignment:v1` evidence; source-backed examples
+replace only `CoreBenchmarkAssignmentSourcePort` and retain redacted source
+identity. Focused HTTP tests prove caller and source-backed
+suppression/not-eligible behavior, source-runtime cleanup, and the absence of
+candidate persistence for non-candidate outcomes. Negative contract tests prove
+that missing OpenAPI modes or absent behavioral evidence fail certification.
+
+This is design modularity inside the existing deployable, not a runtime split.
+Core retains benchmark-assignment, portfolio, and benchmark-methodology
+authority. Lotus Idea owns only deterministic detection, suppression,
+eligibility, source-safe references, and advisor-review posture. No benchmark
+assignment, methodology approval, performance calculation, persistence route,
+client publication, rebalance/order/execution authority, live source
+certification, Gateway/Workbench realization, data-product promotion, or
+supported-feature promotion is introduced. README and supported-feature
+registry truth remain unchanged by explicit scope decision. The existing
+platform named-success guardrail was reused without a new skill/context change;
+a refreshed deterministic scan leaves six multi-shape operations under issue
+`#542`; Slice 10 remains partially implemented.
+
 PR `#543` merged issue `#539` to `main` at
 `f6e2365eaec5f4f0184d5985e5b5fcc641b4883b`. Main Releasability run
 `29528824505` passed, including lint, typecheck, security, architecture,

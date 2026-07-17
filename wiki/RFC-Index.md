@@ -241,6 +241,11 @@ Current RFC-0002 implementation-start baseline:
    client risk-profile approval or creation, risk-capacity determination,
    suitability/policy approval, publication, rebalance, order, or execution
    authority into Idea.
+   Missing-benchmark caller and Core-backed APIs now publish the same complete
+   matrix from their existing application paths. Candidate examples retain Core
+   `BenchmarkAssignment:v1` identity without moving benchmark assignment,
+   methodology, performance calculation, recommendation, rebalance, or
+   execution authority into Idea.
    `make implementation-proof-readiness-check` generates and consumes the
    scheduled source-ingestion worker source contract while intentionally
    preserving the deployment blocker, durable repository
