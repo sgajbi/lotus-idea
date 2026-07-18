@@ -1543,10 +1543,13 @@ Recent issue-derived patterns to preserve:
     same rule: keep public fixture helpers stable, move large source-contract
     and runtime-execution fake file catalogs behind capability-owned constants,
     and test the non-claim boundaries for external-publication authority,
-    downstream authority, live provider, and supported-feature promotion.
-    Follow-up issue `#625` carries the same bounded-helper pattern into the
-    production concentration-risk signal evaluator; keep it domain-owned rather
-    than introducing a generic signal framework.
+    downstream authority, live provider, and supported-feature promotion. Issue
+    `#625` carries the same bounded-helper pattern into the production
+    concentration-risk signal evaluator: keep the public evaluator stable,
+    split concentration source validation, issuer coverage, duplicate and
+    materiality decisions, and candidate assembly into domain-owned helpers,
+    and do not introduce a generic signal framework or unsupported
+    concentration calculation / trade / rebalance authority.
 31. Route-owned runtimes must consume their own cleanup hooks. Source-ingestion
     run-once builds Core HTTP clients through `SourceIngestionRuntime`; the API
     path must close the runtime after accepted or source-unavailable execution

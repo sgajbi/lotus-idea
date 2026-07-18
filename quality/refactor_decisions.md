@@ -6,6 +6,48 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-07-18: Concentration-Risk Signal Evaluator Boundary
+
+Issue `#625` applies the Slice 19 report-only quality-baseline lens to the
+production concentration-risk domain evaluator.
+
+The public `evaluate_concentration_risk_signal(source_input, policy)` contract
+remains the only evaluation entry point. The implementation now delegates to
+private concentration-risk helpers for:
+
+1. timezone-aware evaluation validation,
+2. entitlement and missing Lotus Risk source blockers,
+3. source temporal, freshness, and issuer-coverage validation,
+4. duplicate suppression and top position / top issuer materiality decisions,
+5. deterministic concentration signal, lineage, evidence-packet, candidate,
+   and score construction.
+
+This deliberately does not introduce a generic signal framework. The helper
+boundary stays capability-owned because concentration risk has its own source
+authority, issuer exposure language, materiality semantics, advisor-review
+posture, and no-trade/no-rebalance boundary.
+
+Validation and scope decisions:
+
+1. `evaluate_concentration_risk_signal` moved from the report-only `123` line
+   hotspot to an `18` line public orchestrator.
+2. Existing focused regression coverage in
+   `tests/unit/test_concentration_risk_signal_evaluation.py` already proves
+   candidate-created, entitlement-denied, missing source, stale source,
+   uncertified issuer coverage, below-materiality, duplicate suppression,
+   invalid weights, and policy validation paths.
+3. Local validation passed:
+   `python -m pytest tests/unit/test_concentration_risk_signal_evaluation.py -q`
+   (`17` passed),
+   `python -m pytest tests/unit/test_github_issue_closure_matrix_gate.py -q`
+   (`42` passed), Ruff check/format-check over touched Python files,
+   `make quality-baseline`, `make maintainability-gate`,
+   `make duplicate-implementation-gate`, `make lint`, and `make check`
+   (`4,864` unit tests).
+4. README, wiki, supported-features, OpenAPI, migrations, authn/authz, Core,
+   Gateway, Workbench, data-mesh certification, external-publication authority,
+   and supported-feature truth are unchanged by explicit scope decision.
+
 ## 2026-07-18: AI Workflow-Pack Fixture Boundary
 
 Issue `#623` applies the Slice 19 report-only quality-baseline lens to

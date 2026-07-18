@@ -1456,6 +1456,59 @@ removed remotely by GitHub and deleted locally after patch-equivalence
 verification. Follow-up issue `#625` captures the next production domain
 maintainability candidate instead of broadening this test-support slice.
 
+## Issue 625 Concentration-Risk Signal Evaluation Maintainability
+
+Issue `#625` applies the same Slice 19 quality-baseline learning to the
+production concentration-risk domain evaluator. After issue `#623`,
+`make quality-baseline` listed
+`src/app/domain/signal_evaluation.py::evaluate_concentration_risk_signal` at
+`123` lines. The function mixed evaluation-time validation, entitlement and
+source blockers, temporal/freshness/issuer-coverage decisions, duplicate
+suppression, top-position and top-issuer materiality checks, deterministic
+identity, signal, lineage, evidence packet, candidate, and score assembly.
+
+`src/app/domain/signal_evaluation.py` now preserves the public
+`evaluate_concentration_risk_signal(source_input, policy)` signature,
+concentration-risk family, Lotus Risk source-authority semantics, blocker
+outcomes, advisor-review posture, source refs, stable identity semantics,
+evidence packet, candidate score, and access scope while extracting:
+
+1. timezone-aware evaluation precondition validation,
+2. entitlement and mandatory Lotus Risk source blocker selection,
+3. temporal, freshness, and issuer-coverage source blockers,
+4. duplicate, source-weight, and materiality decisions,
+5. signal, lineage, evidence-packet, candidate, and success result assembly.
+
+Focused validation passed:
+
+1. `python -m pytest tests/unit/test_concentration_risk_signal_evaluation.py -q`
+   (`17` passed),
+2. `python -m pytest tests/unit/test_github_issue_closure_matrix_gate.py -q`
+   (`42` passed),
+3. Ruff check and format-check over touched Python files,
+4. `make quality-baseline`,
+5. `make maintainability-gate`,
+6. `make duplicate-implementation-gate`,
+7. `make lint`,
+8. `make check` (`4,864` unit tests).
+
+The same-pattern scan covered #561 concentration success-mode certification,
+#609 mandate-health domain-helper evidence, open and closed GitHub duplicate
+searches for `evaluate_concentration_risk_signal`, `concentration risk signal
+maintainability`, and `quality baseline concentration risk evaluator`, the
+concentration-risk unit tests, the codebase review ledger, the issue closure
+matrix, repository context, and issue-discovery ledger `#225`.
+`evaluate_concentration_risk_signal` moved from `123` lines to an `18` line
+public orchestrator; the candidate-created helper is `52` lines.
+
+This is internal domain modularity only. It does not change source-authority
+contracts, Lotus Risk ownership, API/OpenAPI behavior, persistence,
+migrations, runtime topology, authentication/authorization, Core, Gateway,
+Workbench, data-product support, external-publication authority, or
+supported-feature promotion. README, wiki, supported features, OpenAPI,
+migrations, and central skills are unchanged by explicit scope decision; no
+wiki publication is required because no wiki source changed.
+
 ## Issue 620 PostgreSQL Fake Row Construction Maintainability
 
 Issue `#620` follows through on the issue `#618` fake-infrastructure pattern.
