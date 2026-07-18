@@ -1,12 +1,19 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import Any, Sequence
+
+RowBuilder = Callable[[Sequence[Any]], dict[str, Any]]
 
 
 def row_for_insert(table_name: str, params: Sequence[Any]) -> dict[str, Any]:
     values = [_unwrap_jsonb(value) for value in params]
-    columns_by_table = {
-        "idea_candidate_record": (
+    return _ROW_BUILDERS[table_name](values)
+
+
+def _candidate_record_row(values: Sequence[Any]) -> dict[str, Any]:
+    return _row_from_columns(
+        (
             "candidate_id",
             "family",
             "lifecycle_status",
@@ -17,14 +24,26 @@ def row_for_insert(table_name: str, params: Sequence[Any]) -> dict[str, Any]:
             "persisted_at_utc",
             "updated_at_utc",
         ),
-        "idea_idempotency_record": (
+        values,
+    )
+
+
+def _idempotency_record_row(values: Sequence[Any]) -> dict[str, Any]:
+    return _row_from_columns(
+        (
             "idempotency_key",
             "operation_name",
             "payload_hash",
             "candidate_id",
             "created_at_utc",
         ),
-        "idea_lifecycle_history": (
+        values,
+    )
+
+
+def _lifecycle_history_row(values: Sequence[Any]) -> dict[str, Any]:
+    return _row_from_columns(
+        (
             "lifecycle_history_id",
             "candidate_id",
             "source_status",
@@ -32,7 +51,13 @@ def row_for_insert(table_name: str, params: Sequence[Any]) -> dict[str, Any]:
             "actor_subject",
             "changed_at_utc",
         ),
-        "idea_audit_event": (
+        values,
+    )
+
+
+def _audit_event_row(values: Sequence[Any]) -> dict[str, Any]:
+    return _row_from_columns(
+        (
             "audit_event_id",
             "candidate_id",
             "event_type",
@@ -41,7 +66,13 @@ def row_for_insert(table_name: str, params: Sequence[Any]) -> dict[str, Any]:
             "attributes_json",
             "occurred_at_utc",
         ),
-        "idea_outbox_event": (
+        values,
+    )
+
+
+def _outbox_event_row(values: Sequence[Any]) -> dict[str, Any]:
+    return _row_from_columns(
+        (
             "outbox_event_id",
             "event_type",
             "aggregate_type",
@@ -65,7 +96,13 @@ def row_for_insert(table_name: str, params: Sequence[Any]) -> dict[str, Any]:
             "lease_attempt_id",
             "lease_expires_at_utc",
         ),
-        "idea_review_decision": (
+        values,
+    )
+
+
+def _review_decision_row(values: Sequence[Any]) -> dict[str, Any]:
+    return _row_from_columns(
+        (
             "review_decision_id",
             "candidate_id",
             "action",
@@ -73,14 +110,26 @@ def row_for_insert(table_name: str, params: Sequence[Any]) -> dict[str, Any]:
             "decision_json",
             "decided_at_utc",
         ),
-        "idea_feedback_event": (
+        values,
+    )
+
+
+def _feedback_event_row(values: Sequence[Any]) -> dict[str, Any]:
+    return _row_from_columns(
+        (
             "feedback_event_id",
             "candidate_id",
             "actor_subject",
             "feedback_json",
             "recorded_at_utc",
         ),
-        "idea_conversion_intent": (
+        values,
+    )
+
+
+def _conversion_intent_row(values: Sequence[Any]) -> dict[str, Any]:
+    return _row_from_columns(
+        (
             "conversion_intent_id",
             "candidate_id",
             "target",
@@ -88,7 +137,13 @@ def row_for_insert(table_name: str, params: Sequence[Any]) -> dict[str, Any]:
             "intent_json",
             "requested_at_utc",
         ),
-        "idea_conversion_outcome": (
+        values,
+    )
+
+
+def _conversion_outcome_row(values: Sequence[Any]) -> dict[str, Any]:
+    return _row_from_columns(
+        (
             "conversion_outcome_id",
             "conversion_intent_id",
             "source_system",
@@ -100,7 +155,13 @@ def row_for_insert(table_name: str, params: Sequence[Any]) -> dict[str, Any]:
             "outcome_json",
             "recorded_at_utc",
         ),
-        "idea_report_evidence_pack_request": (
+        values,
+    )
+
+
+def _report_evidence_pack_request_row(values: Sequence[Any]) -> dict[str, Any]:
+    return _row_from_columns(
+        (
             "report_evidence_pack_id",
             "candidate_id",
             "conversion_intent_id",
@@ -109,7 +170,13 @@ def row_for_insert(table_name: str, params: Sequence[Any]) -> dict[str, Any]:
             "evidence_pack_json",
             "requested_at_utc",
         ),
-        "idea_downstream_submission": (
+        values,
+    )
+
+
+def _downstream_submission_row(values: Sequence[Any]) -> dict[str, Any]:
+    return _row_from_columns(
+        (
             "idempotency_key",
             "request_fingerprint",
             "resource_type",
@@ -129,7 +196,13 @@ def row_for_insert(table_name: str, params: Sequence[Any]) -> dict[str, Any]:
             "lease_expires_at_utc",
             "audit_json",
         ),
-        "idea_ai_explanation_lineage": (
+        values,
+    )
+
+
+def _ai_explanation_lineage_row(values: Sequence[Any]) -> dict[str, Any]:
+    return _row_from_columns(
+        (
             "ai_explanation_request_id",
             "candidate_id",
             "evidence_packet_id",
@@ -155,8 +228,31 @@ def row_for_insert(table_name: str, params: Sequence[Any]) -> dict[str, Any]:
             "requested_at_utc",
             "evaluated_at_utc",
         ),
-    }
-    return dict(zip(columns_by_table[table_name], values, strict=True))
+        values,
+    )
+
+
+def _row_from_columns(
+    columns: Sequence[str],
+    values: Sequence[Any],
+) -> dict[str, Any]:
+    return dict(zip(columns, values, strict=True))
+
+
+_ROW_BUILDERS: dict[str, RowBuilder] = {
+    "idea_candidate_record": _candidate_record_row,
+    "idea_idempotency_record": _idempotency_record_row,
+    "idea_lifecycle_history": _lifecycle_history_row,
+    "idea_audit_event": _audit_event_row,
+    "idea_outbox_event": _outbox_event_row,
+    "idea_review_decision": _review_decision_row,
+    "idea_feedback_event": _feedback_event_row,
+    "idea_conversion_intent": _conversion_intent_row,
+    "idea_conversion_outcome": _conversion_outcome_row,
+    "idea_report_evidence_pack_request": _report_evidence_pack_request_row,
+    "idea_downstream_submission": _downstream_submission_row,
+    "idea_ai_explanation_lineage": _ai_explanation_lineage_row,
+}
 
 
 def update_candidate_record_row(
