@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import cast
 
 from fastapi import FastAPI, Header, Request, status
@@ -47,6 +48,7 @@ from app.api.signal_api_support import (
 )
 from app.application.high_cash_signal import (
     EvaluateAndPersistHighCashSignalCommand,
+    HighCashSignalPersistenceResult,
     evaluate_high_cash_signal_from_core,
     evaluate_high_cash_signal_command,
 )
@@ -60,9 +62,11 @@ from app.application.mandate_restriction_signal import (
 )
 from app.domain import (
     CandidatePersistenceDecision,
+    EventLineageContext,
     SignalEvaluationResult,
     SourceSystem,
 )
+from app.ports.idea_repository import CandidatePersistenceRepository
 from app.api.problem_details import (
     conflict_metadata,
     invalid_request_metadata,
@@ -91,6 +95,14 @@ def _is_advise_policy_runtime_blocked(runtime: object) -> bool:
 _PERSIST_HIGH_CASH_POLICY = CapabilityPolicy.for_roles(
     required_capability="idea.candidate.persist",
 )
+
+
+@dataclass(frozen=True)
+class _HighCashPersistenceApiContext:
+    source_authority: str
+    repository: CandidatePersistenceRepository
+    durable_storage_backed: bool
+    event_lineage: EventLineageContext
 
 
 _MANDATE_RESTRICTION_PRODUCT_IDS_BY_SOURCE: dict[SourceSystem, tuple[str, ...]] = {
@@ -206,6 +218,42 @@ async def evaluate_and_persist_high_cash_signal(
     idempotency_key: str = Header(..., alias="Idempotency-Key"),
     x_causation_id: EventCausationHeader = None,
 ) -> EvaluateAndPersistHighCashSignalResponse | JSONResponse:
+    permission_problem = _high_cash_persistence_permission_problem(caller)
+    if permission_problem is not None:
+        return permission_problem
+
+    idempotency_problem = _high_cash_persistence_idempotency_problem(idempotency_key)
+    if idempotency_problem is not None:
+        return idempotency_problem
+
+    context = _high_cash_persistence_context_or_problem(
+        request,
+        http_request=http_request,
+        x_causation_id=x_causation_id,
+    )
+    if isinstance(context, JSONResponse):
+        return context
+
+    result = _evaluate_high_cash_persistence_request(
+        request,
+        caller=caller,
+        idempotency_key=idempotency_key,
+        context=context,
+    )
+    conflict_problem = _high_cash_persistence_conflict_problem(
+        result,
+        context=context,
+    )
+    if conflict_problem is not None:
+        return conflict_problem
+
+    _emit_high_cash_persistence_outcome(result, context=context)
+    return _high_cash_persistence_response(result, context=context)
+
+
+def _high_cash_persistence_permission_problem(
+    caller: CallerContextHeaders,
+) -> JSONResponse | None:
     try:
         require_capability(caller, _PERSIST_HIGH_CASH_POLICY)
     except PermissionDeniedError:
@@ -221,6 +269,12 @@ async def evaluate_and_persist_high_cash_signal(
             title="Permission denied",
             detail="The caller is not permitted to persist idea candidates.",
         )
+    return None
+
+
+def _high_cash_persistence_idempotency_problem(
+    idempotency_key: str,
+) -> JSONResponse | None:
     if not idempotency_key.strip():
         emit_foundation_operation_event(
             IdeaOperation.CANDIDATE_PERSISTENCE,
@@ -234,7 +288,15 @@ async def evaluate_and_persist_high_cash_signal(
             title="Invalid request",
             detail="Idempotency-Key is required.",
         )
+    return None
 
+
+def _high_cash_persistence_context_or_problem(
+    request: EvaluateHighCashSignalRequest,
+    *,
+    http_request: Request,
+    x_causation_id: EventCausationHeader,
+) -> _HighCashPersistenceApiContext | JSONResponse:
     source_authority = _high_cash_source_authority(request)
     source_contracts = _high_cash_source_ref_contracts(request)
     contract_problem = signal_source_ref_contract_problem_or_none(
@@ -268,15 +330,37 @@ async def evaluate_and_persist_high_cash_signal(
             title="Invalid request",
             detail="Correct the event lineage headers and retry.",
         )
-    result = evaluate_and_persist_high_cash_signal_command(
+    return _HighCashPersistenceApiContext(
+        source_authority=source_authority,
+        repository=repository,
+        durable_storage_backed=durable_storage_backed,
+        event_lineage=event_lineage,
+    )
+
+
+def _evaluate_high_cash_persistence_request(
+    request: EvaluateHighCashSignalRequest,
+    *,
+    caller: CallerContextHeaders,
+    idempotency_key: str,
+    context: _HighCashPersistenceApiContext,
+) -> HighCashSignalPersistenceResult:
+    return evaluate_and_persist_high_cash_signal_command(
         EvaluateAndPersistHighCashSignalCommand(
             evaluation=request.to_command(),
             idempotency_key=idempotency_key,
             actor_subject=caller.subject,
-            event_lineage=event_lineage,
+            event_lineage=context.event_lineage,
         ),
-        repository=repository,
+        repository=context.repository,
     )
+
+
+def _high_cash_persistence_conflict_problem(
+    result: HighCashSignalPersistenceResult,
+    *,
+    context: _HighCashPersistenceApiContext,
+) -> JSONResponse | None:
     if (
         result.persistence is not None
         and result.persistence.decision is CandidatePersistenceDecision.CONFLICT
@@ -284,8 +368,8 @@ async def evaluate_and_persist_high_cash_signal(
         emit_foundation_operation_event(
             IdeaOperation.CANDIDATE_PERSISTENCE,
             OperationOutcome.CONFLICT,
-            source_authority="lotus-core",
-            durable_storage_backed=durable_storage_backed,
+            source_authority=context.source_authority,
+            durable_storage_backed=context.durable_storage_backed,
             error_code="idempotency_conflict",
         )
         return problem_response(
@@ -294,7 +378,14 @@ async def evaluate_and_persist_high_cash_signal(
             title="Idempotency conflict",
             detail="The idempotency key was already used with a different request payload.",
         )
+    return None
 
+
+def _emit_high_cash_persistence_outcome(
+    result: HighCashSignalPersistenceResult,
+    *,
+    context: _HighCashPersistenceApiContext,
+) -> None:
     emit_foundation_operation_event(
         IdeaOperation.CANDIDATE_PERSISTENCE,
         _operation_outcome_from_candidate_persistence(
@@ -303,13 +394,20 @@ async def evaluate_and_persist_high_cash_signal(
             ),
             evaluation=result.evaluation,
         ),
-        source_authority=source_authority,
-        durable_storage_backed=durable_storage_backed,
+        source_authority=context.source_authority,
+        durable_storage_backed=context.durable_storage_backed,
     )
+
+
+def _high_cash_persistence_response(
+    result: HighCashSignalPersistenceResult,
+    *,
+    context: _HighCashPersistenceApiContext,
+) -> EvaluateAndPersistHighCashSignalResponse:
     return EvaluateAndPersistHighCashSignalResponse(
         evaluation=EvaluateHighCashSignalResponse.from_domain(
             result.evaluation,
-            source_authority=source_authority,
+            source_authority=context.source_authority,
         ),
         persistence=(
             CandidatePersistenceSummaryResponse.from_record(
@@ -319,7 +417,7 @@ async def evaluate_and_persist_high_cash_signal(
             if result.persistence is not None
             else None
         ),
-        durableStorageBacked=durable_storage_backed,
+        durableStorageBacked=context.durable_storage_backed,
         supportedFeaturePromoted=False,
     )
 
