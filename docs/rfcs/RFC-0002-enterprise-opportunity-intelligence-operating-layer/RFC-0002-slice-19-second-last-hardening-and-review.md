@@ -1322,3 +1322,15 @@ Workbench behavior, data-product support, client-ready publication, or
 supported-feature promotion. README, wiki, supported features, OpenAPI,
 migrations, and central skills are unchanged by explicit scope decision until a
 later slice changes reader-facing product or operator truth.
+
+PR `#610` merged by rebase to exact-main SHA
+`0156f7030a7be223a0b7b67f579326efb0e00a52`. Feature Lane, PR Merge Gate,
+exact-main CodeQL `29640841746`, and exact-main Main Releasability
+`29640844111` passed. Release evidence published
+`ghcr.io/sgajbi/lotus-idea@sha256:f74756d41fab84d1dc9e5878d23ae0b2e73db9a4d352561d16a898f04c199659`
+with provenance attestation
+`https://github.com/sgajbi/lotus-idea/attestations/35955171` and SBOM
+attestation `https://github.com/sgajbi/lotus-idea/attestations/35955178`.
+Issue `#609` is closed and the local and remote implementation branches are
+absent after remote prune. Strict wiki parity and the repo-local wiki quality
+audit passed; no wiki publication change was needed.
