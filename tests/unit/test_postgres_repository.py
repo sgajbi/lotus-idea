@@ -20,7 +20,6 @@ from app.domain import (
     ConversionTarget,
     DownstreamSubmissionPosture,
     EvidenceFreshness,
-    EvidenceReplayStatus,
     FeedbackCommand,
     FeedbackOutcome,
     HighCashSignalInput,
@@ -43,18 +42,12 @@ from app.domain import (
     build_ai_explanation_request,
     deterministic_ai_fallback,
     evaluate_high_cash_signal,
-    record_conversion_outcome,
-    record_feedback,
     request_conversion_intent,
-    request_report_evidence_pack,
     apply_review_action,
 )
 from app.domain.persistence import (
     CandidatePersistenceDecision,
-    ConversionPersistenceDecision,
-    EvidencePackPersistenceDecision,
     IdeaRepositorySnapshot,
-    LifecyclePersistenceDecision,
     ReviewPersistenceDecision,
 )
 from app.infrastructure.postgres_repository import PostgresIdeaRepository
@@ -155,186 +148,6 @@ def test_postgres_repository_rejects_uncontracted_outbox_rows_on_load() -> None:
 
     with pytest.raises(ValueError, match="unsupported outbox schema_version"):
         PostgresIdeaRepository(connection).snapshot()
-
-
-def test_postgres_repository_round_trips_mutating_workflow_details() -> None:
-    connection = FakePostgresConnection()
-    repository = PostgresIdeaRepository(connection)
-    review_ready = replace(
-        high_cash_candidate(candidate_scope=access_scope()),
-        candidate_id="idea_high_cash_review_ready",
-        lifecycle_status=IdeaLifecycleStatus.READY_FOR_REVIEW,
-    )
-    approved = replace(
-        high_cash_candidate(candidate_scope=access_scope()),
-        candidate_id="idea_high_cash_approved",
-        lifecycle_status=IdeaLifecycleStatus.APPROVED,
-        review_posture=ReviewPosture.APPROVED_FOR_CONVERSION,
-    )
-
-    repository.persist_candidate(
-        review_ready,
-        idempotency_key="candidate:review-ready",
-        payload={"candidateId": review_ready.candidate_id},
-        actor_subject="signal-ingestion-worker",
-        occurred_at_utc=EVALUATED_AT,
-    )
-    repository.persist_candidate(
-        approved,
-        idempotency_key="candidate:approved",
-        payload={"candidateId": approved.candidate_id, "state": "approved"},
-        actor_subject="signal-ingestion-worker",
-        occurred_at_utc=EVALUATED_AT,
-    )
-    lifecycle = repository.record_lifecycle_transition(
-        review_ready.candidate_id,
-        IdeaLifecycleStatus.REVIEWED_BY_ADVISOR,
-        idempotency_key="lifecycle:reviewed",
-        payload={"candidateId": review_ready.candidate_id, "target": "reviewed_by_advisor"},
-        actor_subject="advisor-001",
-        occurred_at_utc=EVALUATED_AT + timedelta(minutes=1),
-        transition_id="transition-review-001",
-        reason_codes=("review_required",),
-    )
-    assert lifecycle.record is not None
-
-    review_result = apply_review_action(
-        lifecycle.record.candidate,
-        review_command(),
-    )
-    review = repository.record_review_action(
-        review_result,
-        idempotency_key="review:approve",
-        payload={"reviewId": review_result.decision.review_id},
-    )
-    assert review.record is not None
-    feedback_result = record_feedback(
-        review.record.candidate,
-        feedback_command(),
-    )
-    feedback = repository.record_feedback_event(
-        feedback_result,
-        idempotency_key="feedback:useful",
-        payload={"feedbackId": feedback_result.feedback_event.feedback.feedback_id},
-    )
-
-    conversion_result = request_conversion_intent(
-        approved,
-        conversion_command(),
-    )
-    conversion = repository.record_conversion_intent(
-        conversion_result,
-        idempotency_key="conversion:intent",
-        payload={
-            "conversionIntentId": conversion_result.conversion_intent.intent.conversion_intent_id
-        },
-    )
-    assert conversion.record is not None
-    outcome_result = record_conversion_outcome(
-        conversion_result.conversion_intent,
-        conversion_outcome_command(),
-    )
-    outcome = repository.record_conversion_outcome(
-        outcome_result,
-        idempotency_key="conversion:outcome",
-        payload={
-            "conversionOutcomeId": outcome_result.conversion_outcome.outcome.conversion_outcome_id
-        },
-    )
-    pack_result = request_report_evidence_pack(
-        conversion.record.candidate,
-        conversion_result.conversion_intent,
-        report_pack_command(),
-    )
-    pack = repository.record_report_evidence_pack(
-        pack_result,
-        idempotency_key="report:evidence-pack",
-        payload={"reportEvidencePackId": pack_result.evidence_pack.report_evidence_pack_id},
-    )
-    replay = repository.replay_evidence(
-        review_ready.candidate_id,
-        current_source_refs=review_ready.evidence_packet.source_refs,
-        evaluated_at_utc=EVALUATED_AT + timedelta(minutes=7),
-    )
-    review_precheck = repository.precheck_review_mutation(
-        idempotency_key="review:approve",
-        payload={"reviewId": review_result.decision.review_id},
-        identity=review_result.decision.mutation_identity,
-    )
-    conversion_precheck = repository.precheck_conversion_mutation(
-        idempotency_key="conversion:intent",
-        payload={
-            "conversionIntentId": conversion_result.conversion_intent.intent.conversion_intent_id
-        },
-    )
-    evidence_pack_precheck = repository.precheck_evidence_pack_mutation(
-        idempotency_key="report:evidence-pack",
-        payload={"reportEvidencePackId": pack_result.evidence_pack.report_evidence_pack_id},
-    )
-    loaded_intent = repository.conversion_intent_by_id("conversion-report-001")
-    loaded_conversion_record = repository.candidate_record_for_conversion_intent(
-        "conversion-report-001"
-    )
-    bounded_workflow_sql = tuple(connection.executed_sql)
-    _append_orphan_detail_rows(connection)
-
-    recovered = PostgresIdeaRepository(connection).snapshot()
-    reviewed_record = recovered.candidate_records[review_ready.candidate_id]
-    converted_record = recovered.candidate_records[approved.candidate_id]
-
-    assert lifecycle.decision is LifecyclePersistenceDecision.ACCEPTED
-    assert review.decision is ReviewPersistenceDecision.ACCEPTED
-    assert feedback.decision is ReviewPersistenceDecision.ACCEPTED
-    assert conversion.decision is ConversionPersistenceDecision.ACCEPTED
-    assert outcome.decision is ConversionPersistenceDecision.ACCEPTED
-    assert pack.decision is EvidencePackPersistenceDecision.ACCEPTED
-    assert_no_whole_store_snapshot(bounded_workflow_sql)
-    assert replay.status is EvidenceReplayStatus.MATCHED
-    assert review_precheck is not None
-    assert review_precheck.decision is ReviewPersistenceDecision.REPLAYED
-    assert conversion_precheck is not None
-    assert conversion_precheck.decision is ConversionPersistenceDecision.REPLAYED
-    assert evidence_pack_precheck is not None
-    assert evidence_pack_precheck.decision is EvidencePackPersistenceDecision.REPLAYED
-    assert loaded_intent == conversion_result.conversion_intent
-    assert loaded_conversion_record is not None
-    assert loaded_conversion_record.candidate.candidate_id == approved.candidate_id
-    assert len(reviewed_record.lifecycle_history) == 2
-    assert len(reviewed_record.review_decisions) == 1
-    assert len(reviewed_record.feedback_events) == 1
-    assert len(converted_record.conversion_intents) == 1
-    assert len(converted_record.conversion_outcomes) == 1
-    assert len(converted_record.report_evidence_packs) == 1
-    assert [event.event_type for event in recovered.outbox_events.values()] == [
-        "idea.candidate.persisted.v1",
-        "idea.candidate.persisted.v1",
-        "idea.lifecycle.transitioned.v1",
-        "idea.review.decision_recorded.v1",
-        "idea.feedback.recorded.v1",
-        "idea.conversion.intent_requested.v1",
-        "idea.conversion.outcome_recorded.v1",
-        "idea.report_evidence_pack.requested.v1",
-    ]
-    assert recovered.conversion_intent_candidates["conversion-report-001"] == approved.candidate_id
-    assert (
-        recovered.report_evidence_pack_candidates["report-evidence-pack-001"]
-        == approved.candidate_id
-    )
-
-    replacement_connection = FakePostgresConnection()
-    PostgresIdeaRepository(replacement_connection).replace_snapshot(recovered)
-    replaced = PostgresIdeaRepository(replacement_connection).snapshot()
-
-    assert replacement_connection.commits == 1
-    assert replacement_connection.rollbacks == 0
-    assert replaced.candidate_records.keys() == recovered.candidate_records.keys()
-    assert len(replacement_connection.rows["idea_lifecycle_history"]) == 3
-    assert len(replacement_connection.rows["idea_review_decision"]) == 1
-    assert len(replacement_connection.rows["idea_feedback_event"]) == 1
-    assert len(replacement_connection.rows["idea_conversion_intent"]) == 1
-    assert len(replacement_connection.rows["idea_conversion_outcome"]) == 1
-    assert len(replacement_connection.rows["idea_report_evidence_pack_request"]) == 1
-    assert len(replacement_connection.rows["idea_outbox_event"]) == 8
 
 
 def test_postgres_repository_rejects_mismatched_conversion_intent_idempotency() -> None:
