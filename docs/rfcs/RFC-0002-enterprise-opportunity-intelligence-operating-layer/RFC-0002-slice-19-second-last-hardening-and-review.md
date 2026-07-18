@@ -1082,3 +1082,9 @@ promotion. The current platform and backend skills already require governed
 in-process API client lifecycle handling, so no central skill change is
 justified; the durable prevention is the repository-native blocking gate and
 repo-local documentation/context update.
+
+PR `#599` merged by rebase to exact-main SHA
+`68e9faf91a438c2b7315dd32c5b60431fa15d2e5`. Feature Lane, PR Merge Gate,
+CodeQL, exact-main Main Releasability `29635864355`, exact-main CodeQL
+`29635862048`, wiki publication `66194f1`, and strict wiki parity passed.
+Issue `#598` is closed; local and remote implementation branches are absent.
