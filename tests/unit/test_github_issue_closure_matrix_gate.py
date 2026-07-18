@@ -294,6 +294,24 @@ def test_github_issue_closure_matrix_gate_freezes_ai_workflow_pack_fixture_main_
     assert "#623: merged-main issue cannot regress to `locally_fixed`" in errors
 
 
+def test_github_issue_closure_matrix_gate_freezes_concentration_risk_domain_issue(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    matrix = tmp_path / "matrix.md"
+    content = module.MATRIX_PATH.read_text(encoding="utf-8").replace(
+        "issues/625) Refactor concentration-risk signal evaluator into "
+        "domain-owned helpers | `merged_main` |",
+        "issues/625) Refactor concentration-risk signal evaluator into "
+        "domain-owned helpers | `locally_fixed` |",
+    )
+    matrix.write_text(content, encoding="utf-8")
+
+    errors = module.validate_issue_closure_matrix(matrix)
+
+    assert "#625: merged-main issue cannot regress to `locally_fixed`" in errors
+
+
 def test_github_issue_closure_matrix_gate_blocks_missing_issue(tmp_path: Path) -> None:
     module = _load_gate()
     matrix = tmp_path / "matrix.md"

@@ -1509,6 +1509,14 @@ supported-feature promotion. README, wiki, supported features, OpenAPI,
 migrations, and central skills are unchanged by explicit scope decision; no
 wiki publication is required because no wiki source changed.
 
+PR `#627` merged this hardening by rebase to exact-main SHA
+`148f3038bb60482b1a84a88d0b638c32623ffa17`. PR checks passed Feature Lane,
+PR Merge Gate, and CodeQL. Exact-main Main Releasability run `29650135797`
+and CodeQL run `29650132606` passed on that SHA. Strict wiki parity passed
+with `DiffCount 0`; no wiki publication change was needed. Issue `#625` is
+closed and the local and remote implementation branches are absent after
+patch-equivalence verification.
+
 ## Issue 620 PostgreSQL Fake Row Construction Maintainability
 
 Issue `#620` follows through on the issue `#618` fake-infrastructure pattern.
