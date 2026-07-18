@@ -269,11 +269,7 @@ def _capability(
     snapshot: ImplementationProofReadinessSnapshot,
     capability_id: str,
 ) -> ImplementationProofCapabilityReadiness:
-    return next(
-        capability
-        for capability in snapshot.capabilities
-        if capability.capability_id == capability_id
-    )
+    return next(c for c in snapshot.capabilities if c.capability_id == capability_id)
 
 
 def _assert_runtime_telemetry_capability_is_source_safe(
