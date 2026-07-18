@@ -270,6 +270,16 @@ missing adapter configuration is persisted as a replayable
 `downstream_realization_not_configured` posture. They do not record
 authoritative downstream outcomes or prove downstream route existence.
 
+Advise and Manage adapter wire shape is pinned in
+`contracts/downstream-realization/lotus-idea-downstream-intake-wire-contract.v1.json`.
+The Manage adapter may use a server-side development fixture only in `local`
+and `test` profiles to meet the current owner route's service-context header
+requirement. It never accepts identity from browser headers and fails closed in
+demo, staging, and production. It is not an IdP/session/token-claim
+implementation, does not grant rebalance authority, and does not prove owner
+route acceptance; the future trusted identity work remains tracked in issue
+`#380`.
+
 The opt-in PostgreSQL runtime proof now covers the first internal report
 conversion intent/outcome path. It proves `lotus-idea` workflow-state
 persistence only; it does not prove downstream service intake.

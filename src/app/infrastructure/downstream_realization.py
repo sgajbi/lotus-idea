@@ -22,6 +22,37 @@ class DownstreamRealizationConfigurationError(ValueError):
 
 
 @dataclass(frozen=True)
+class ManageRealizationServiceContext:
+    actor_id: str
+    role: str
+    tenant_id: str
+    service_identity: str
+    capabilities: str
+
+    def __post_init__(self) -> None:
+        for field_name, value in (
+            ("actor_id", self.actor_id),
+            ("role", self.role),
+            ("tenant_id", self.tenant_id),
+            ("service_identity", self.service_identity),
+            ("capabilities", self.capabilities),
+        ):
+            if not value.strip():
+                raise DownstreamRealizationConfigurationError(
+                    f"manage realization {field_name} is required."
+                )
+
+    def request_headers(self) -> dict[str, str]:
+        return {
+            "X-Actor-Id": self.actor_id,
+            "X-Role": self.role,
+            "X-Tenant-Id": self.tenant_id,
+            "X-Service-Identity": self.service_identity,
+            "X-Capabilities": self.capabilities,
+        }
+
+
+@dataclass(frozen=True)
 class DownstreamRealizationAdapterConfig:
     base_url: str
     submit_path: str
@@ -33,6 +64,7 @@ class DownstreamRealizationAdapterConfig:
     retry_max_attempts: int = 1
     retry_initial_backoff_seconds: float = 0.05
     retry_max_backoff_seconds: float = 0.5
+    manage_service_context: ManageRealizationServiceContext | None = None
 
     def __post_init__(self) -> None:
         if not self.submit_path.startswith("/"):
@@ -96,6 +128,11 @@ class HttpManageActionRealizationClient:
         client: DownstreamJsonClient | None = None,
     ) -> None:
         _require_source_authority(config, SourceSystem.LOTUS_MANAGE)
+        if config.manage_service_context is None:
+            raise DownstreamRealizationConfigurationError(
+                "manage realization service context is required."
+            )
+        self._manage_service_context = config.manage_service_context
         self._config = config
         self._client = _client_from_config(config, client)
 
@@ -115,6 +152,7 @@ class HttpManageActionRealizationClient:
             correlation_id=correlation_id,
             trace_id=trace_id,
             idempotency_key=idempotency_key,
+            additional_headers=self._manage_service_context.request_headers(),
         )
 
     def close(self) -> None:
@@ -179,6 +217,7 @@ def _post_downstream_envelope(
     correlation_id: str | None,
     trace_id: str | None,
     idempotency_key: str | None,
+    additional_headers: dict[str, str] | None = None,
 ) -> DownstreamRealizationOutcome:
     try:
         client.post_json(
@@ -187,6 +226,7 @@ def _post_downstream_envelope(
             correlation_id=correlation_id,
             trace_id=trace_id,
             idempotency_key=idempotency_key,
+            additional_headers=additional_headers,
         )
     except DownstreamServiceError as exc:
         failure_reason = _failure_reason(exc)
@@ -197,21 +237,26 @@ def _post_downstream_envelope(
 
 
 def _conversion_intent_envelope(intent: GovernedConversionIntent) -> dict[str, Any]:
+    if intent.intent.target is ConversionTarget.ADVISE_PROPOSAL:
+        intent_type = "REVIEW_FOR_ADVISORY_PROPOSAL"
+    elif intent.intent.target is ConversionTarget.MANAGE_REVIEW:
+        intent_type = "REVIEW_FOR_REBALANCE"
+    else:
+        raise ValueError("unsupported conversion target for downstream intake envelope")
     return {
-        "conversionIntentId": intent.intent.conversion_intent_id,
-        "candidateId": intent.intent.candidate_id,
-        "target": intent.intent.target.value,
-        "sourceStatus": intent.intent.source_status.value,
-        "targetSourceAuthority": intent.target_source_authority.value,
-        "evidencePacketId": intent.evidence_packet_id,
-        "evidenceContentFingerprint": intent.evidence_content_hash,
-        "sourceSignalIds": list(intent.source_signal_ids),
-        "boundary": intent.boundary.value,
-        "reasonCodes": [reason.value for reason in intent.reason_codes],
-        "requestedAtUtc": intent.intent.requested_at_utc.isoformat(),
-        "grantsDownstreamAuthority": intent.grants_downstream_authority,
-        "producer": "lotus-idea",
-        "supportabilityStatus": "not_certified",
+        "source_system": "lotus-idea",
+        "source_product": "lotus-idea:IdeaCandidate:v1",
+        "idea_candidate_id": intent.intent.candidate_id,
+        "conversion_intent_id": intent.intent.conversion_intent_id,
+        "intent_type": intent_type,
+        "source_refs": [
+            {
+                "source_system": "lotus-idea",
+                "source_type": "IdeaCandidate",
+                "source_id": intent.intent.candidate_id,
+                "content_hash": intent.evidence_content_hash,
+            }
+        ],
     }
 
 
