@@ -74,6 +74,18 @@ authentication or authorization infrastructure, Core, Gateway, Workbench,
 data-product support, external-publication authority, runtime topology,
 wiki source, README, supported features, or supported-feature promotion.
 
+PR `#649` merged by rebase to exact-main SHA
+`af95892e53243396441c81796cf2e61af2d2e7ad`. Exact-main Main Releasability
+`29663395035` and CodeQL `29663391657` passed on that SHA, including
+PostgreSQL runtime proof, combined coverage, Docker build, image scan,
+digest-bound runtime smoke, signing, provenance, SBOM attestation, release
+metadata, image identity binding, license binding, and CI signal evidence.
+Strict wiki parity passed with `DiffCount 0`; no wiki publication was needed
+because no wiki source changed. The implementation branch was deleted locally
+after patch-equivalence verification and remotely by GitHub. Follow-through
+issue `#650` tracks the next report-only E2E authority-boundary workflow
+hotspot discovered from the same quality-baseline lens.
+
 Issue `#645` applies the Slice 19 quality-baseline learning to the
 PostgreSQL repository mutating workflow regression. After issue `#642`, the
 current report-only quality baseline listed
