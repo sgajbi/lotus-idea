@@ -184,7 +184,9 @@ def test_evaluate_and_persist_drawdown_review_accepts_then_replays_same_command(
     assert replayed.persistence.decision is CandidatePersistenceDecision.REPLAYED
     assert accepted.source_diagnostic_codes == ("risk_drawdown_source_ready",)
     assert accepted.persistence.record is not None
-    assert accepted.persistence.record.candidate.family is DRAWDOWN_REVIEW_FAMILY_COMPATIBILITY.family
+    assert (
+        accepted.persistence.record.candidate.family is DRAWDOWN_REVIEW_FAMILY_COMPATIBILITY.family
+    )
 
 
 @pytest.mark.parametrize(

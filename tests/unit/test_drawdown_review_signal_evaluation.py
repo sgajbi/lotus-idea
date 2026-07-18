@@ -79,7 +79,10 @@ def test_drawdown_review_positive_case_creates_source_safe_candidate() -> None:
     assert first.family is DRAWDOWN_REVIEW_FAMILY_COMPATIBILITY.family
     assert first.signal.family is DRAWDOWN_REVIEW_FAMILY_COMPATIBILITY.family
     assert first.signal.reason_codes == (DRAWDOWN_REVIEW_FAMILY_COMPATIBILITY.reason_code,)
-    assert first.signal.source_refs[0].product_id == DRAWDOWN_REVIEW_FAMILY_COMPATIBILITY.source_product_id
+    assert (
+        first.signal.source_refs[0].product_id
+        == DRAWDOWN_REVIEW_FAMILY_COMPATIBILITY.source_product_id
+    )
     assert first.signal.source_refs[0].route == DRAWDOWN_REVIEW_FAMILY_COMPATIBILITY.source_route
     assert first.candidate.candidate_id == second.candidate.candidate_id
     assert first.candidate.candidate_id.startswith("idea_drawdown_review_")
