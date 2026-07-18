@@ -6,6 +6,40 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-07-18: AI Workflow-Pack Fixture Boundary
+
+Issue `#623` applies the Slice 19 report-only quality-baseline lens to
+`tests/support/ai_workflow_pack_fixture.py`.
+
+The public `write_lotus_ai_workflow_pack_fixture()` and
+`write_lotus_ai_workflow_pack_runtime_execution_fixture()` helpers remain the
+stable entry points for Idea's Lotus AI source-contract and runtime-execution
+proof tests. They no longer inline-build every fake Lotus AI file. Base
+source-contract fixture files and runtime-execution fixture files now live in
+capability-owned module-level catalogs, with one shared writer loop preserving
+the generated tree.
+
+This is test-support maintainability only. It does not change runtime
+behavior, API/OpenAPI contracts, persistence, migrations,
+authentication/authorization, Core, Gateway, Workbench, Lotus AI
+runtime/provider certification, external-publication authority, data-mesh
+certification, or supported-feature promotion.
+
+Evidence:
+
+1. `write_lotus_ai_workflow_pack_fixture` and
+   `write_lotus_ai_workflow_pack_runtime_execution_fixture` dropped out of the
+   report-only largest-function list after `make quality-baseline`.
+2. `tests/unit/test_ai_workflow_pack_fixture.py` covers critical
+   source-contract files, runtime-execution files, and no-claim boundaries for
+   external-publication authority, downstream authority, live provider, and
+   supported-feature promotion.
+3. Focused validation passed:
+   `python -m pytest tests/unit/test_ai_workflow_pack_fixture.py tests/unit/ai_workflow_pack_registration/test_source_contract_proof.py -q`
+   (`48` tests), Ruff check and format-check over touched files,
+   `make quality-baseline`, `make maintainability-gate`, and
+   `make duplicate-implementation-gate`.
+
 ## 2026-07-18: PostgreSQL Fake Row Builder Boundary
 
 Issue `#620` applies the follow-through Slice 19 test-support hardening from
@@ -197,7 +231,7 @@ semantics while delegating to explicit API-boundary helpers:
 This is design modularity inside the existing Lotus Idea API process. It does
 not certify external broker runtime, downstream consumer execution,
 platform-mesh event publication, Gateway/Workbench support, data-product
-support, client-ready publication, or supported-feature promotion.
+support, external-publication authority, or supported-feature promotion.
 
 Evidence:
 
@@ -873,7 +907,7 @@ Private-banking, source-safety, and modernization boundaries preserved:
    raw evidence, portfolio accounting, suitability/compliance approval,
    execution authority, or report rendering/archive authority.
 4. The routes still do not prove Workbench product support, data-product
-   certification, client-ready publication, PM/compliance queue support, or
+   certification, external-publication authority, PM/compliance queue support, or
    supported-feature promotion.
 5. The slice does not add compatibility shims, legacy route aliases, or new
    runtime process boundaries; it reduces design-time complexity inside the

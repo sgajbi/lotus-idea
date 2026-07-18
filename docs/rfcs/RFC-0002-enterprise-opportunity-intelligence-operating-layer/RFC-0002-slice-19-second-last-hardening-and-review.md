@@ -72,7 +72,7 @@ This slice also hardens endpoint certification quality:
 3. The gate now blocks stale Gateway-publication truth: only endpoints with
    implemented bounded read-only `lotus-gateway` publication may cite Gateway
    publication, and those ledger entries must name the exact Gateway route while
-   preserving Workbench, data-product, client-ready publication, and
+   preserving Workbench, data-product, external-publication authority, and
    supported-feature boundaries.
 4. `tests/unit/test_endpoint_certification_gate.py` covers current pass behavior
    and failure cases for missing capabilities, weak unsupported-boundary text,
@@ -358,7 +358,7 @@ the packaged service:
    PR/Main workflow calls.
 5. This is packaged runtime entrypoint and health-surface proof only. It does
    not certify production deployment, live upstream source connectivity,
-   Workbench support, data-product certification, client-ready publication, or
+   Workbench support, data-product certification, external-publication authority, or
    supported-feature promotion.
 
 This slice also hardens release SBOM scope after GitHub issue `#272` showed
@@ -382,7 +382,7 @@ evidence:
    `sbom.cdx.json` as local release evidence, not repository source truth.
 5. This is runtime Python dependency SBOM evidence only. It does not certify a
    full container-image SBOM, registry attestation, production signing,
-   Workbench support, data-product certification, client-ready publication, or
+   Workbench support, data-product certification, external-publication authority, or
    supported-feature promotion. Container OS and packaged-image vulnerability
    posture remains the Trivy image scan's scope.
 
@@ -643,7 +643,7 @@ whole-store snapshot:
    the existing service, not a separate runtime queue-readiness process.
 7. This is production-scale internal read-path hardening only. It does not
    certify Workbench support, data-product promotion, PM/compliance queue
-   support, client-ready publication, or supported-feature promotion.
+   support, external-publication authority, or supported-feature promotion.
 
 GitHub issue `#332` further hardens that bounded read path with a real temporal
 snapshot contract:
@@ -687,7 +687,7 @@ counting outbox state through whole-store repository snapshots:
    evidence-pack, or AI lineage tables.
 4. This is production-scale internal operator-readiness hardening only. It does
    not certify external broker publication, downstream delivery, platform mesh
-   event publication, Gateway/Workbench support, client-ready publication, or
+   event publication, Gateway/Workbench support, external-publication authority, or
    supported-feature promotion.
 
 This slice also applies the same bounded durable-read pattern to the
@@ -778,7 +778,7 @@ repository snapshots before adapter calls:
    and unrelated state tables.
 5. This is production-scale internal read-path hardening only. It does not
    certify downstream execution, route existence, suitability/rebalance/report
-   authority, client-ready publication, or supported-feature promotion.
+   authority, external-publication authority, or supported-feature promotion.
 
 This slice also hardens AI explanation workflow-pack identity after issue
 review showed the runtime API accepted arbitrary caller-supplied pack id,
@@ -823,7 +823,7 @@ workflow totals:
    candidate, audit, outbox, downstream submission, and AI-lineage tables.
 4. This is production-scale internal operator-readiness hardening only. It does
    not certify downstream execution, route existence, suitability/rebalance/
-   report authority, client-ready publication, Gateway/Workbench support, or
+   report authority, external-publication authority, Gateway/Workbench support, or
    supported-feature promotion.
 
 This slice also applies the bounded durable-read pattern to runtime trust
@@ -846,7 +846,7 @@ should not hydrate whole repository snapshots for aggregate counts:
    AI-lineage tables.
 4. This is production-scale internal trust-telemetry hardening only. It does
    not certify data products, platform mesh, Gateway/Workbench discovery,
-   client-ready publication, or supported-feature promotion.
+   external-publication authority, or supported-feature promotion.
 
 This slice also hardens the shared downstream HTTP policy after issue review
 showed outbound calls had timeouts and safe failure mapping but no governed
@@ -872,7 +872,7 @@ retry/backoff contract:
    runtime config, and outbox idempotency propagation.
 5. This is internal resilience hardening only. It does not certify live Core
    ingestion, external broker publication, downstream route existence,
-   downstream execution, report materialization, client-ready publication,
+   downstream execution, report materialization, external-publication authority,
    Gateway/Workbench support, or supported-feature promotion.
 
 GitHub issue `#312` extends that source-ingestion resilience hardening to
@@ -985,7 +985,7 @@ API-level run identity before external side effects:
    permission ordering, and operation-event attributes.
 5. This is internal operator-action hardening only. It does not certify
    external broker publication, downstream delivery, platform mesh event
-   publication, Gateway/Workbench support, client-ready publication, or
+   publication, Gateway/Workbench support, external-publication authority, or
    supported-feature promotion.
 
 This slice also hardens durable outbox retry scheduling after GitHub issue
@@ -1012,7 +1012,7 @@ pass:
    readiness counts, and Postgres adapter parity.
 5. This is internal outbox operability hardening only. It does not certify
    external broker publication, downstream delivery, platform mesh event
-   publication, Gateway/Workbench support, client-ready publication, or
+   publication, Gateway/Workbench support, external-publication authority, or
    supported-feature promotion.
 
 ## Issue 331 Supported-Feature Promotion Reconciliation
@@ -1260,7 +1260,7 @@ into a behavior-neutral feedback refactor.
 
 This is internal API-boundary modularity only; it does not implement an identity
 provider, authenticated sessions, token-claims, new authorization policy,
-Gateway/Workbench behavior, data-product support, client-ready publication,
+Gateway/Workbench behavior, data-product support, external-publication authority,
 runtime topology, or supported-feature promotion. README, wiki,
 supported-features, OpenAPI, migrations, and central skills are unchanged by
 explicit scope decision until a later slice changes reader-facing product or
@@ -1323,7 +1323,7 @@ candidate-created helper is `52` lines.
 This is internal domain modularity only. It does not change source-authority
 contracts, Manage/Risk/Performance ownership, API/OpenAPI behavior, migrations,
 runtime topology, authentication/authorization implementation, Gateway or
-Workbench behavior, data-product support, client-ready publication, or
+Workbench behavior, data-product support, external-publication authority, or
 supported-feature promotion. README, wiki, supported features, OpenAPI,
 migrations, and central skills are unchanged by explicit scope decision until a
 later slice changes reader-facing product or operator truth.
@@ -1385,9 +1385,68 @@ end-to-end repository round-trip test, not a reusable SQL-family dispatcher.
 This is test-support maintainability only. It does not change production
 PostgreSQL adapters, schema, migrations, API/OpenAPI behavior, runtime
 topology, authentication/authorization, Core, Gateway, Workbench,
-data-product support, client-ready publication, or supported-feature
+data-product support, external-publication authority, or supported-feature
 promotion. README, wiki, supported features, OpenAPI, migrations, and central
 skills are unchanged by explicit scope decision.
+
+## Issue 623 AI Workflow-Pack Fixture Maintainability
+
+Issue `#623` follows the same Slice 19 report-only quality-baseline pattern
+into AI workflow-pack test support. After issue `#620` moved the PostgreSQL
+fake row builder out of the largest-function list, `make quality-baseline` on
+exact main `2b740aed4c2c5f5b723861cd8468ddcbe138d997` listed:
+
+1. `tests/support/ai_workflow_pack_fixture.py::write_lotus_ai_workflow_pack_runtime_execution_fixture`
+   at `150` lines,
+2. `tests/support/ai_workflow_pack_fixture.py::write_lotus_ai_workflow_pack_fixture`
+   at `129` lines.
+
+The helpers were reusable test-support infrastructure rather than scenario
+tests. They inline-built Lotus AI source-contract specs, registry seed,
+bindings, queue policy, supportability surface, runtime provider stub,
+guardrails, caller policy, migration seed, and test files. That made the AI
+source-authority and non-proof boundaries harder to review.
+
+The public helpers now remain stable entry points while delegating file
+generation to:
+
+1. a base source-contract file catalog,
+2. a runtime-execution file catalog,
+3. one shared writer loop.
+
+Focused validation passed:
+
+1. `python -m pytest tests/unit/test_ai_workflow_pack_fixture.py tests/unit/ai_workflow_pack_registration/test_source_contract_proof.py -q`
+   (`48` tests),
+2. Ruff check over `tests/support/ai_workflow_pack_fixture.py` and
+   `tests/unit/test_ai_workflow_pack_fixture.py`,
+3. Ruff format-check over the same files,
+4. `make quality-baseline`,
+5. `make maintainability-gate`,
+6. `make duplicate-implementation-gate`.
+
+The same-pattern scan used open and closed GitHub duplicate searches for
+`ai_workflow_pack_fixture`,
+`write_lotus_ai_workflow_pack_runtime_execution_fixture`, and
+`AI workflow pack maintainability`. Existing issue `#340` tracks external
+attested Lotus AI run/model provenance, and closed issue `#392` tracks runtime
+blocker proof semantics; neither owns this fixture-maintainability root cause.
+Issue `#623` was filed before source mutation and ledger issue `#225` was
+updated.
+
+The targeted fixture writers dropped out of the largest-function list after
+refactoring. The remaining larger functions are scenario tests, source-safe
+proof/readiness tests, a data-lifecycle test scaffold, a Core-source adapter,
+and unrelated API/domain hotspots; they are not the same AI workflow-pack
+fixture-catalog pattern.
+
+This is test-support maintainability only. It does not change production
+runtime behavior, API/OpenAPI contracts, persistence, migrations,
+authentication/authorization, Core, Gateway, Workbench, Lotus AI
+runtime/provider certification, external-publication authority, data-mesh
+certification, or supported-feature promotion. README, wiki, supported
+features, OpenAPI, migrations, and central skills are unchanged by explicit
+scope decision; no wiki publication is required because no wiki source changed.
 
 ## Issue 620 PostgreSQL Fake Row Construction Maintainability
 
@@ -1438,6 +1497,6 @@ dispatcher pattern.
 This is test-support maintainability only. It does not change production
 PostgreSQL adapters, schema, migrations, API/OpenAPI behavior, runtime
 topology, authentication/authorization, Core, Gateway, Workbench,
-data-product support, client-ready publication, or supported-feature
+data-product support, external-publication authority, or supported-feature
 promotion. README, wiki, supported features, OpenAPI, migrations, and central
 skills are unchanged by explicit scope decision.
