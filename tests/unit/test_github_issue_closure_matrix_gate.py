@@ -230,6 +230,24 @@ def test_github_issue_closure_matrix_gate_freezes_postgres_fake_dispatcher_main_
     assert "#618: merged-main issue cannot regress to `locally_fixed`" in errors
 
 
+def test_github_issue_closure_matrix_gate_freezes_postgres_row_builder_main_truth(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    matrix = tmp_path / "matrix.md"
+    content = module.MATRIX_PATH.read_text(encoding="utf-8").replace(
+        "issues/620) Refactor PostgreSQL fake row construction into table-owned "
+        "builders | `merged_main` |",
+        "issues/620) Refactor PostgreSQL fake row construction into table-owned "
+        "builders | `locally_fixed` |",
+    )
+    matrix.write_text(content, encoding="utf-8")
+
+    errors = module.validate_issue_closure_matrix(matrix)
+
+    assert "#620: merged-main issue cannot regress to `locally_fixed`" in errors
+
+
 def test_github_issue_closure_matrix_gate_blocks_missing_issue(tmp_path: Path) -> None:
     module = _load_gate()
     matrix = tmp_path / "matrix.md"
