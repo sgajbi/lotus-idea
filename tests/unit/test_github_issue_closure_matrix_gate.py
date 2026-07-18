@@ -545,6 +545,24 @@ def test_github_issue_closure_matrix_gate_freezes_runtime_trust_telemetry_loader
     assert "#642: merged-main issue cannot regress to `locally_fixed`" in errors
 
 
+def test_github_issue_closure_matrix_gate_freezes_postgres_workflow_test_issue(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    matrix = tmp_path / "matrix.md"
+    content = module.MATRIX_PATH.read_text(encoding="utf-8").replace(
+        "issues/645) Refactor PostgreSQL mutating workflow round-trip test into "
+        "focused helpers | `merged_main` |",
+        "issues/645) Refactor PostgreSQL mutating workflow round-trip test into "
+        "focused helpers | `locally_fixed` |",
+    )
+    matrix.write_text(content, encoding="utf-8")
+
+    errors = module.validate_issue_closure_matrix(matrix)
+
+    assert "#645: merged-main issue cannot regress to `locally_fixed`" in errors
+
+
 def test_github_issue_closure_matrix_gate_freezes_postgres_snapshot_writes_main_truth(
     tmp_path: Path,
 ) -> None:
