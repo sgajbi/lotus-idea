@@ -980,3 +980,11 @@ ADRs live in `docs/architecture/adr/`:
 Codebase review and modularity evidence lives in
 `docs/architecture/CODEBASE-REVIEW-PLAYBOOK.md` and
 `docs/architecture/CODEBASE-REVIEW-LEDGER.md`.
+
+`quality/architecture_boundary_report.json` is tracked deterministic
+import-boundary evidence. Regenerate it with `make architecture-boundary-report`;
+`make architecture-boundary-gate` fails when the report schema, source import
+digest, source file count, rule digest, status, violations, or rule body drift
+from current `src/app` truth. This proves only design-boundary posture inside
+the existing service; it does not certify runtime behavior, Gateway/Workbench
+support, data-mesh certification, or supported-feature promotion.

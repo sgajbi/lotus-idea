@@ -148,6 +148,13 @@ Current implementation includes these bounded foundations:
     or mutating blockers. Unknown, duplicate, pending, or wrong-effect wiring
     fails closed. Scheduled-worker source and deployment inputs are
     independently classified and cannot substitute for one another.
+14. a tracked architecture-boundary report contract at
+    `quality/architecture_boundary_report.json`. The report binds the current
+    `src/app` import inventory and rule digest through
+    `architecture-boundary-report.v2`; `make architecture-boundary-gate` fails
+    when that evidence is missing, malformed, stale, or tampered. This is
+    deterministic design-boundary evidence only, not runtime certification or
+    product support.
 
 The first canonical demo/front-office portfolio remains
 `PB_SG_GLOBAL_BAL_001` when a governed Lotus front-office flow requires a
@@ -2197,9 +2204,7 @@ Current gaps remain explicit:
 13. no full container-filesystem SBOM; release evidence includes
     runtime-dependency SBOM, Trivy image scan, registry digest capture, keyless
     image signature, and provenance/SBOM attestations,
-14. no deterministic freshness check for committed architecture boundary
-    report evidence.
-15. no bank-approved jurisdiction policy, live bank lifecycle-authority
+14. no bank-approved jurisdiction policy, live bank lifecycle-authority
     producer/key-discovery proof, Report/Archive/AI retention conformance, or
     production authorized purge certification. Production-like consumers now
     verify and durably fence signed decisions; a bounded scheduled expiry

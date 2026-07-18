@@ -4,6 +4,11 @@ import ast
 import json
 from pathlib import Path
 
+try:
+    from architecture_boundary_gate import validate_architecture_report_freshness
+except ImportError:  # pragma: no cover - supports package-style imports in tests/tools
+    from scripts.architecture_boundary_gate import validate_architecture_report_freshness
+
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE_ROOTS = (ROOT / "src", ROOT / "tests", ROOT / "scripts")
 REPORT_PATH = ROOT / "quality" / "baseline_report.json"
@@ -41,12 +46,16 @@ def build_report() -> dict[str, object]:
     functions = [row for path in files for row in _function_rows(path)]
     architecture_report_exists = ARCHITECTURE_REPORT_PATH.exists()
     architecture_report_status = "missing"
+    architecture_report_freshness_errors: list[str] = []
     if architecture_report_exists:
         try:
             architecture_payload = json.loads(ARCHITECTURE_REPORT_PATH.read_text(encoding="utf-8"))
             architecture_report_status = str(architecture_payload.get("status", "unknown"))
         except json.JSONDecodeError:
             architecture_report_status = "malformed"
+        architecture_report_freshness_errors = validate_architecture_report_freshness(
+            ARCHITECTURE_REPORT_PATH
+        )
     largest_files = sorted(
         (
             {
@@ -74,6 +83,12 @@ def build_report() -> dict[str, object]:
         "architecture_boundary_report": "quality/architecture_boundary_report.json",
         "architecture_boundary_report_exists": architecture_report_exists,
         "architecture_boundary_report_status": architecture_report_status,
+        "architecture_boundary_report_freshness_status": (
+            "current"
+            if architecture_report_exists and not architecture_report_freshness_errors
+            else "stale"
+        ),
+        "architecture_boundary_report_freshness_errors": architecture_report_freshness_errors,
         "notes": [
             "Report-only scaffold baseline. Do not promote noisy metrics before baseline and exception policy are clear.",
             "OpenAPI, endpoint certification, supported-features, and no-sensitive-content gates remain separate deterministic scaffold checks.",
@@ -98,6 +113,8 @@ def main() -> None:
         f"Python functions: `{report['python_functions']}`",
         "",
         f"Architecture boundary report: `{report['architecture_boundary_report_status']}`",
+        "Architecture boundary report freshness: "
+        f"`{report['architecture_boundary_report_freshness_status']}`",
         "",
         "## Largest Files",
         "",
