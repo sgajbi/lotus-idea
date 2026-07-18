@@ -6,6 +6,47 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-07-19: PostgreSQL Outbox Recovery Workflow Proof Boundary
+
+Issue `#655` applies the Slice 19 report-only quality-baseline lens to the
+PostgreSQL outbox recovery workflow proof. After issue `#654`,
+`make quality-baseline` listed
+`tests/unit/outbox/test_postgres_delivery_adapter.py::test_postgres_outbox_recovery_is_durable_idempotent_and_lease_fenced`
+at `125` lines.
+
+The test mixed:
+
+1. candidate/outbox dead-letter setup,
+2. newer pending event fan-out,
+3. support-reference and recovery claim construction,
+4. accepted, replayed, and competing lease-conflict recovery decisions,
+5. recovery audit and source-safe row assertions,
+6. support-reference lookup SQL-shape assertions,
+7. invalid delivery input validation assertions.
+
+`tests/unit/outbox/test_postgres_delivery_adapter.py` now keeps one externally
+visible durable/idempotent/lease-fenced recovery proof, but the public test is
+a short orchestrator over named helpers for each proof boundary. Event states,
+support references, idempotency keys, lease attempts, failure reasons,
+SQL-shape assertions, validation errors, and recovery decisions are preserved.
+
+Focused validation passed:
+
+1. `python -m ruff check tests/unit/outbox/test_postgres_delivery_adapter.py`,
+2. `python -m ruff format --check tests/unit/outbox/test_postgres_delivery_adapter.py`,
+3. `python -m mypy tests/unit/outbox/test_postgres_delivery_adapter.py`,
+4. `python -m pytest tests/unit/outbox/test_postgres_delivery_adapter.py -q`
+   (`9` passed).
+
+This is test-support maintainability only. It does not change production
+outbox delivery/recovery behavior, PostgreSQL repository implementation,
+API/OpenAPI, persistence, migrations, authentication or authorization
+infrastructure, Core, Gateway, Workbench, runtime topology, wiki source,
+README, supported-features, data-mesh certification, external-publication
+authority, or supported-feature promotion. Broader local gates, PR checks,
+exact-main Main Releasability/CodeQL, wiki parity, issue closure, and branch
+cleanup remain pending for the tranche.
+
 ## 2026-07-19: Data Lifecycle Fake PostgreSQL Cursor Dispatcher Boundary
 
 Issue `#654` applies the Slice 19 report-only quality-baseline lens to the
