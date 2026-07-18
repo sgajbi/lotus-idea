@@ -570,9 +570,14 @@ file/function-size maintainability gate:
    centralize operations-contract payload, operation, and label validation in
    `scripts.operations_contract_validators`; each
    proof gate, generator, contract gate, and API route retains family-specific
-   policy/argument behavior, direct script execution remains supported, and the
-   current measured baseline ignores pass/ellipsis-only protocol stubs, scans
-   1,607 executable function bodies, and reports 0 exact duplicate clusters.
+   policy/argument behavior, direct script execution remains supported, and
+   issue `#614` keeps report-only quality baseline generation aligned with the
+   blocking scanners: pass/ellipsis-only protocol stubs are excluded before
+   reporting executable function rows, baseline paths are POSIX-normalized for
+   deterministic Windows/Linux evidence, the current local generated quality
+   baseline reports 9,252 executable source/test/script function rows, and the
+   current duplicate implementation gate reports 0 exact duplicate clusters
+   across 2,953 source/script functions.
 5. `scripts/ci_contract_gate.py` protects the report-only/blocking target split,
    strict flag, and `make lint` lane placement.
 6. This is exact first-party implementation-body enforcement only. It does not

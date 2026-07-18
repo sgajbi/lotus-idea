@@ -360,10 +360,14 @@ projection into `app.api.persistence_summary`, and API review access-scope DTOs 
 loading into `app.runtime.proof_artifact_files`, and source-product proof payload text-sequence
 normalization into `app.application.source_product_proof_values`, and outbox contract
 forbidden-text traversal into `scripts.contract_text_guards`, and operations-contract payload,
-operation, and label validation into `scripts.operations_contract_validators`; the current
-measured baseline ignores pass/ellipsis-only protocol stubs, scans 1,607 executable function
-bodies, and reports 0 exact duplicate clusters. The CI contract gate protects the report-only and
-blocking target split, strict `--fail-on-duplicates` enforcement, and `make lint` lane placement.
+operation, and label validation into `scripts.operations_contract_validators`; the report-only
+quality baseline now uses the same pass/ellipsis-only protocol-stub classifier as the blocking
+maintainability and duplicate scanners, and emits POSIX-normalized report paths so Windows and
+Linux runs produce deterministic quality evidence. The current local generated quality baseline
+reports 9,252 executable source/test/script function rows, and the current duplicate
+implementation gate reports 0 exact duplicate clusters across 2,953 source/script functions. The
+CI contract gate protects the report-only and blocking target split, strict
+`--fail-on-duplicates` enforcement, and `make lint` lane placement.
 The exact duplicate-code threshold is promoted for first-party implementation bodies; broader
 near-duplicate or generated-pattern similarity checks remain unpromoted until they have their own
 measured baseline and exception policy.
