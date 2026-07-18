@@ -316,6 +316,11 @@ methodology, approve suitability, policy, proposal, sign-off, restriction
 clearance, mandate state, rebalance actions, orders, client
 publication, data-mesh certification, Gateway/Workbench behavior, or
 supported-feature promotion.
+Drawdown-review keeps the existing `high_volatility` candidate family for
+API/persistence compatibility, but the domain compatibility contract records it
+as a separate Lotus Risk `DrawdownAnalyticsReport:v1` evidence lane under the
+combined high-volatility / drawdown-review archetype. High-volatility and
+drawdown proofs must not clear each other's readiness blockers.
 
 Missing-suitability and missing-risk-profile runtime evidence follow the same
 layered path through named application use cases and the Advise source port.

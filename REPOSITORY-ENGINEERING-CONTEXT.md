@@ -311,6 +311,13 @@ conflicts, in-memory execution, missing persistence, and receipt drift clear no
 blocker. Concentration, volatility, and drawdown share internal execution and
 receipt mechanics while retaining capability-owned contracts inside the
 existing service and Idea-owned database boundary.
+Drawdown-review remains family-compatible with the existing
+`high_volatility` candidate family for persisted/API compatibility, while
+`src/app/domain/opportunity_family_compatibility.py` explicitly records it as
+the distinct Lotus Risk drawdown-review evidence lane under the combined
+high-volatility / drawdown-review archetype. Do not introduce a first-class
+drawdown candidate family without a migration/API-compatibility plan and
+consumer coordination.
 Underperformance source-backed evaluation consumes only Lotus Performance-owned
 `ReturnsSeriesBundle:v1` active-return and benchmark-context evidence and must
 not calculate returns, assign benchmarks, approve benchmark methodology,

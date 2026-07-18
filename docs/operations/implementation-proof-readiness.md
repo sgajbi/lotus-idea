@@ -906,6 +906,12 @@ supplied.
 High-volatility / drawdown review remains blocked on data-mesh, Workbench,
 publication, and supported-feature evidence unless those separate proofs are supplied. Client-demo,
 data-mesh, Workbench, publication, and supported-feature blockers remain.
+Drawdown-review candidate results intentionally retain the API/persistence
+family value `high_volatility` for compatibility, but implementation-proof
+readiness treats the high-volatility and drawdown-review Risk evidence lanes as
+separate blockers, source products, and proof variables. Do not infer that a
+valid drawdown proof certifies volatility, or that a valid volatility proof
+certifies drawdown.
 
 Live canonical proof evidence from 2026-07-05 shows the aggregate consumer can
 clear Risk concentration, Performance underperformance, and missing-benchmark

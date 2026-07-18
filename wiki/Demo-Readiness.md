@@ -80,6 +80,12 @@ trades, create rebalance actions, prove Workbench behavior, authorize client
 publication, certify data mesh, or promote support. The opportunity archetype
 contract gate pins the drawdown API module, endpoint, and integration test as
 evidence, so demo-readiness proof cannot rely on policy-only drawdown evidence.
+For compatibility, drawdown-review candidate responses and persisted records
+remain under the existing `high_volatility` family. The drawdown-review lane is
+still separately governed by Risk `DrawdownAnalyticsReport:v1` source evidence,
+`drawdown_attention` reason codes, and drawdown-specific readiness blockers;
+high-volatility proof does not certify drawdown proof, and drawdown proof does
+not certify volatility proof.
 
 For every implemented caller-supplied signal foundation, the opportunity
 archetype contract gate now pins the API module, endpoint, and integration
