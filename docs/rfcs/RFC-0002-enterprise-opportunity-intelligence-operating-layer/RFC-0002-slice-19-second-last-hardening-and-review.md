@@ -1388,3 +1388,56 @@ topology, authentication/authorization, Core, Gateway, Workbench,
 data-product support, client-ready publication, or supported-feature
 promotion. README, wiki, supported features, OpenAPI, migrations, and central
 skills are unchanged by explicit scope decision.
+
+## Issue 620 PostgreSQL Fake Row Construction Maintainability
+
+Issue `#620` follows through on the issue `#618` fake-infrastructure pattern.
+After the SQL dispatcher moved out of the top largest-function list,
+`make quality-baseline` listed
+`tests/unit/postgres_repository_mutation_fake_helpers.py::row_for_insert` as a
+`154` line reusable fake row-construction helper. The two larger functions are
+scenario tests; this helper owned many independent table shapes and therefore
+qualified as the next internally actionable Slice 19 test-support hardening
+target.
+
+`row_for_insert` now preserves its public fake-insert entry point while
+delegating row construction to table-owned builders for:
+
+1. candidate records,
+2. idempotency records,
+3. lifecycle history,
+4. audit events,
+5. outbox events,
+6. review decisions and feedback,
+7. conversion intent and outcome records,
+8. report evidence-pack requests,
+9. downstream submissions,
+10. AI explanation lineage records.
+
+Focused validation passed:
+
+1. `tests/unit/test_postgres_repository_mutation_fake_helpers.py`,
+2. `tests/unit/test_postgres_repository.py`,
+3. `tests/unit/test_postgres_downstream_submission.py`,
+4. `tests/unit/outbox/test_postgres_delivery_adapter.py`,
+5. `tests/integration/test_postgres_runtime_integration.py`,
+6. `make quality-baseline`,
+7. `make maintainability-gate`,
+8. `make duplicate-implementation-gate`.
+
+The same-pattern scan used open and closed GitHub duplicate searches for
+`row_for_insert postgres repository fake`,
+`postgres_repository_mutation_fake_helpers`,
+`fake row construction table builders`, and `quality baseline row_for_insert`.
+No owning issue existed beyond related closed issue `#618`, so issue `#620`
+was filed before source mutation. The helper dropped out of the largest
+function list after refactoring; the remaining larger functions are scenario
+tests or unrelated support fixtures, not the same reusable row-construction
+dispatcher pattern.
+
+This is test-support maintainability only. It does not change production
+PostgreSQL adapters, schema, migrations, API/OpenAPI behavior, runtime
+topology, authentication/authorization, Core, Gateway, Workbench,
+data-product support, client-ready publication, or supported-feature
+promotion. README, wiki, supported features, OpenAPI, migrations, and central
+skills are unchanged by explicit scope decision.

@@ -1526,7 +1526,7 @@ Recent issue-derived patterns to preserve:
     inspect siblings in the same impact/lens family. Fix a high-confidence
     sibling in the same bounded batch or create a GitHub issue with exact
     function, line count, route/proof ownership, acceptance criteria, and
-    no-promotion boundaries. Issues `#601`, `#603`, `#606`, `#609`, and `#618` are the current
+    no-promotion boundaries. Issues `#601`, `#603`, `#606`, `#609`, `#618`, and `#620` are the current
     pattern: `build_service_capacity_baseline` moved from 130 to 64 lines,
     `post_outbox_delivery_run_once` moved from 129 to 71 lines, and
     `record_review_action` moved from 127 to 54 lines, and
@@ -1535,7 +1535,10 @@ Recent issue-derived patterns to preserve:
     and runtime topology. The same rule applies to test-support infrastructure:
     `FakePostgresCursor.execute` moved out of the largest-function list by
     delegating SQL families to named fake handlers while preserving row,
-    transaction, `rowcount`, idempotency, and assertion semantics.
+    transaction, `rowcount`, idempotency, and assertion semantics. The
+    follow-through fake row helper split `row_for_insert` into table-owned row
+    builders while preserving JSONB unwrapping, strict column/value validation,
+    and unknown-table failure behavior.
 31. Route-owned runtimes must consume their own cleanup hooks. Source-ingestion
     run-once builds Core HTTP clients through `SourceIngestionRuntime`; the API
     path must close the runtime after accepted or source-unavailable execution
