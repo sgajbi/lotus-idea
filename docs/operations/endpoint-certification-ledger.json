@@ -425,7 +425,7 @@
       "path": "/api/v1/idea-signals/drawdown-review/evaluate",
       "certification_status": "certified",
       "owner": "lotus-idea owners",
-      "purpose": "Evaluate caller-supplied, source-owned Lotus Risk drawdown analytics evidence for high-volatility / drawdown review posture.",
+      "purpose": "Evaluate caller-supplied, source-owned Lotus Risk drawdown analytics evidence for high-volatility / drawdown review posture while preserving high_volatility family compatibility and drawdown-specific evidence identity.",
       "when_to_use": "Use as the RFC-0002 bounded API foundation when an internal caller has advisor role and idea.signal.evaluate capability and already has source-authorized Lotus Risk drawdown evidence, source-reported maximum drawdown, Risk supportability posture, and entitlement posture.",
       "when_not_to_use": "Do not use as a live upstream source-ingestion API, drawdown calculation, risk methodology approval, trade recommendation, rebalance action, data-product certification proof, Gateway contract, Workbench product proof, client-ready publication, or supported-feature promotion.",
       "request_examples": [
@@ -460,7 +460,7 @@
       "path": "/api/v1/idea-signals/drawdown-review/evaluate-from-source",
       "certification_status": "certified",
       "owner": "lotus-idea owners",
-      "purpose": "Fetch source-owned Lotus Risk drawdown analytics evidence through the configured Risk source adapter and evaluate deterministic drawdown-review posture.",
+      "purpose": "Fetch source-owned Lotus Risk drawdown analytics evidence through the configured Risk source adapter and evaluate deterministic drawdown-review posture while preserving high_volatility family compatibility and drawdown-specific evidence identity.",
       "when_to_use": "Use as the bounded RFC-0002 Slice 5 source-fetching API foundation when the caller is entitled to the requested portfolio scope and Lotus Risk runtime URL is configured.",
       "when_not_to_use": "Do not use as live source certification, source-worker certification, durable candidate persistence, drawdown calculation, risk methodology approval, trade recommendation, rebalance action, data-product certification proof, Gateway contract, Workbench product proof, client-ready publication, or supported-feature promotion.",
       "request_examples": [

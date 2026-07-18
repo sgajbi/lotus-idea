@@ -15,6 +15,7 @@ from app.api.examples.drawdown_review_signal import (
     build_drawdown_review_evaluation_response_examples,
     build_source_backed_drawdown_review_evaluation_response_examples,
 )
+from app.domain import DRAWDOWN_REVIEW_FAMILY_COMPATIBILITY
 from app.main import app
 
 
@@ -49,9 +50,15 @@ def test_drawdown_review_examples_cover_every_domain_outcome_and_authority_bound
     for examples in (caller_examples, source_examples):
         candidate = examples["candidateCreated"]["candidate"]
         assert candidate is not None
+        assert examples["candidateCreated"]["family"] == (
+            DRAWDOWN_REVIEW_FAMILY_COMPATIBILITY.family.value
+        )
+        assert candidate["family"] == DRAWDOWN_REVIEW_FAMILY_COMPATIBILITY.family.value
+        assert candidate["candidateId"].startswith("idea_drawdown_review_")
+        assert candidate["scorePolicyVersion"] == "drawdown-review-attention-v1"
         assert candidate["reviewPosture"] == "advisor_review_required"
         assert {ref["productId"] for ref in candidate["sourceRefs"]} == {
-            "lotus-risk:DrawdownAnalyticsReport:v1"
+            DRAWDOWN_REVIEW_FAMILY_COMPATIBILITY.source_product_id
         }
         assert all(
             "route" not in ref and "contentHash" not in ref for ref in candidate["sourceRefs"]

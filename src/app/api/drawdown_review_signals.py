@@ -265,10 +265,14 @@ DRAWDOWN_REVIEW_EVALUATE_ROUTE: RouteMetadata = {
     "description": (
         "Evaluates caller-supplied, source-owned Lotus Risk drawdown analytics "
         "evidence for high-volatility / drawdown review posture. The endpoint is "
-        "a bounded API foundation; it does not fetch upstream sources, calculate "
-        "drawdown, approve risk methodology, recommend trades, create rebalance "
-        "actions, publish client communication, certify a data product, prove "
-        "Gateway/Workbench behavior, or promote a supported business feature."
+        "a bounded API foundation. For API and persistence compatibility, "
+        "drawdown-review responses keep the existing high_volatility family "
+        "while preserving drawdown-specific reason codes, source evidence, and "
+        "candidate identity. The endpoint does not fetch upstream sources, "
+        "calculate drawdown, approve risk methodology, recommend trades, create "
+        "rebalance actions, publish client communication, certify a data product, "
+        "prove Gateway/Workbench behavior, or promote a supported business "
+        "feature."
     ),
     "status_code": status.HTTP_200_OK,
     "response_model": EvaluateDrawdownReviewSignalResponse,
@@ -323,11 +327,13 @@ DRAWDOWN_REVIEW_EVALUATE_FROM_SOURCE_ROUTE: RouteMetadata = {
     "description": (
         "Fetches source-owned Lotus Risk DrawdownAnalyticsReport evidence through "
         "the configured Risk source adapter, then evaluates deterministic "
-        "drawdown-review posture. The endpoint does not persist candidates, "
-        "calculate drawdown, approve risk methodology, recommend trades, create "
-        "rebalance actions, certify live source support, create Gateway/Workbench "
-        "support, publish client communication, certify a data product, or promote "
-        "a supported business feature."
+        "drawdown-review posture. For API compatibility, responses keep the "
+        "existing high_volatility family while preserving drawdown-specific "
+        "reason codes, source evidence, and candidate identity. The endpoint does "
+        "not persist candidates, calculate drawdown, approve risk methodology, "
+        "recommend trades, create rebalance actions, certify live source support, "
+        "create Gateway/Workbench support, publish client communication, certify "
+        "a data product, or promote a supported business feature."
     ),
     "status_code": status.HTTP_200_OK,
     "response_model": EvaluateDrawdownReviewSignalResponse,
