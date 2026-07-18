@@ -1517,6 +1517,64 @@ with `DiffCount 0`; no wiki publication change was needed. Issue `#625` is
 closed and the local and remote implementation branches are absent after
 patch-equivalence verification.
 
+## Issue 630 High-Cash Persist API Maintainability
+
+Issue `#630` applies the same Slice 19 quality-baseline learning to the
+high-cash candidate persistence API boundary. After issue `#625`,
+`make quality-baseline` listed
+`src/app/api/idea_signals.py::evaluate_and_persist_high_cash_signal` at `123`
+lines. The route mixed candidate-persistence capability authorization,
+idempotency-key validation, Core source-ref contract validation, repository
+lookup, durable-write readiness, event-lineage parsing, application command
+execution, idempotency conflict mapping, operation-event emission, and final
+response projection.
+
+`src/app/api/idea_signals.py` now preserves the public
+`evaluate_and_persist_high_cash_signal(...)` FastAPI route signature,
+response model, status codes, source-authority validation, idempotency/replay
+semantics, durable fail-closed behavior, operation-event family, and
+`supportedFeaturePromoted=false` posture while extracting:
+
+1. candidate-persistence capability problem mapping,
+2. idempotency-key problem mapping,
+3. Core source-ref and durable repository context construction,
+4. request event-lineage parsing,
+5. application command execution through the existing high-cash use case,
+6. idempotency conflict problem mapping,
+7. candidate-persistence operation-event outcome emission,
+8. final API response projection.
+
+Focused validation passed:
+
+1. `python -m ruff check src/app/api/idea_signals.py`,
+2. `python -m ruff format --check src/app/api/idea_signals.py`,
+3. `python -m mypy src/app/api/idea_signals.py`,
+4. `python -m pytest tests/integration/test_high_cash_signal_api.py -q`
+   (`36` passed),
+5. `python -m pytest tests/integration/test_api_operation_events.py -q`
+   (`21` passed),
+6. `python -m pytest tests/integration/outbox/test_event_lineage_api.py -q`
+   (`5` passed),
+7. `make quality-baseline`,
+8. `make maintainability-gate`,
+9. `make duplicate-implementation-gate` with zero duplicate clusters across
+   `2,965` source/script functions.
+
+The same-pattern scan covered #601/#603/#606/#609/#618/#620/#623/#625
+maintainability evidence, the current report-only quality baseline, focused
+high-cash API regression tests, operation-event tests, event-lineage tests,
+the codebase review ledger, the issue closure matrix, refactor decisions, and
+issue-discovery ledger `#225`. `evaluate_and_persist_high_cash_signal` moved
+from `123` lines to a `38` line public orchestrator.
+
+This is internal API-boundary modularity only. It does not implement
+authentication or authorization infrastructure, Core changes, Gateway,
+Workbench, data-product support, external-publication authority, runtime
+topology changes, migrations, OpenAPI behavior changes, or supported-feature
+promotion. README, wiki, supported features, OpenAPI, migrations, and central
+skills are unchanged by explicit scope decision; no wiki publication is
+required unless later PR/mainline evidence changes repo-authored wiki truth.
+
 ## Issue 620 PostgreSQL Fake Row Construction Maintainability
 
 Issue `#620` follows through on the issue `#618` fake-infrastructure pattern.
