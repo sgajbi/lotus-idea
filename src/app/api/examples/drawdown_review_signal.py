@@ -24,7 +24,12 @@ from app.application.drawdown_review_signal import (
     evaluate_drawdown_review_signal_command,
     evaluate_drawdown_review_signal_from_risk,
 )
-from app.domain import EvidenceFreshness, SignalEvaluationResult, SourceSystem
+from app.domain import (
+    DRAWDOWN_REVIEW_FAMILY_COMPATIBILITY,
+    EvidenceFreshness,
+    SignalEvaluationResult,
+    SourceSystem,
+)
 from app.ports.risk_sources import (
     RiskDrawdownEvidence,
     RiskDrawdownEvidenceRequest,
@@ -153,7 +158,7 @@ def _drawdown_evidence(
 
 def _drawdown_ref(*, freshness: EvidenceFreshness = EvidenceFreshness.CURRENT) -> SourceRefRequest:
     return build_source_ref_request(
-        "lotus-risk:DrawdownAnalyticsReport:v1",
+        DRAWDOWN_REVIEW_FAMILY_COMPATIBILITY.source_product_id,
         source_system=SourceSystem.LOTUS_RISK,
         as_of_date=_AS_OF_DATE,
         generated_at_utc=_EVALUATED_AT,
