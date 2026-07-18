@@ -50,180 +50,9 @@ class FakePostgresCursor:
         normalized = " ".join(query.lower().split())
         self.connection.executed_sql.append(normalized)
         self.rowcount = 0
-        if execute_bounded_mutation_query(self, normalized, params):
-            return
-        if _execute_data_lifecycle_query(self, normalized, params):
-            return
-        if execute_downstream_submission_query(self, normalized, params):
-            return
-        if _execute_outbox_recovery_query(self, normalized, params):
-            return
-        if normalized.startswith("/* lotus-idea review-queue-count */"):
-            assert params is not None
-            self._rows = review_queue_count_rows(self.connection, normalized, params)
-            return
-        if normalized.startswith("/* lotus-idea review-queue-page */"):
-            assert params is not None
-            self._rows = review_queue_page_rows(self.connection, normalized, params)
-            return
-        if normalized.startswith("/* lotus-idea review-queue-readiness-summary */"):
-            assert params is not None
-            self._rows = review_queue_readiness_summary_rows(self.connection, normalized, params)
-            return
-        if normalized.startswith("/* lotus-idea outbox-delivery-ready-events */"):
-            assert params is not None
-            self._rows = outbox_delivery_ready_rows(self.connection, params)
-            return
-        if normalized.startswith("/* lotus-idea outbox-readiness-summary */"):
-            assert params is not None
-            self._rows = outbox_readiness_summary_row(self.connection, params)
-            return
-        if normalized.startswith("/* lotus-idea downstream-realization-readiness-summary */"):
-            quarantined_intents = {
-                row["conversion_intent_id"]
-                for row in self.connection.rows["idea_conversion_outcome_quarantine"]
-            }
-            self._rows = [
-                {
-                    "conversion_intent_count": len(self.connection.rows["idea_conversion_intent"]),
-                    "conversion_outcome_count": len(
-                        {
-                            row["conversion_intent_id"]
-                            for row in self.connection.rows["idea_conversion_outcome"]
-                            if row["conversion_intent_id"] not in quarantined_intents
-                        }
-                    ),
-                    "report_evidence_pack_request_count": len(
-                        self.connection.rows["idea_report_evidence_pack_request"]
-                    ),
-                }
-            ]
-            return
-        if normalized.startswith("/* lotus-idea runtime-trust-telemetry-summary */"):
-            self._rows = runtime_trust_telemetry_summary_rows(self.connection.rows)
-            return
-        if normalized.startswith(
-            "/* lotus-idea runtime-trust-telemetry-source-authority-counts */"
-        ):
-            self._rows = runtime_trust_telemetry_count_rows(
-                self.connection.rows,
-                "source_system",
-            )
-            return
-        if normalized.startswith("/* lotus-idea runtime-trust-telemetry-freshness-counts */"):
-            self._rows = runtime_trust_telemetry_count_rows(self.connection.rows, "freshness")
-            return
-        if normalized.startswith("/* lotus-idea runtime-trust-telemetry-supportability-counts */"):
-            self._rows = candidate_json_count_rows(
-                self.connection.rows,
-                ("evidence_packet", "supportability"),
-            )
-            return
-        if normalized.startswith("/* lotus-idea runtime-trust-telemetry-lifecycle-counts */"):
-            self._rows = table_count_rows(
-                self.connection.rows,
-                "idea_candidate_record",
-                "lifecycle_status",
-                active_candidates_only=True,
-            )
-            return
-        if normalized.startswith("/* lotus-idea runtime-trust-telemetry-data-lifecycle-counts */"):
-            self._rows = table_count_rows(
-                self.connection.rows, "idea_data_lifecycle_control", "state"
-            )
-            return
-        if normalized.startswith("/* lotus-idea candidate-detail"):
-            assert params is not None
-            self._rows = candidate_detail_rows(self.connection, normalized, params)
-            return
-        if normalized.startswith("/* lotus-idea downstream-lookup"):
-            assert params is not None
-            self._rows = downstream_lookup_rows(self.connection, normalized, params)
-            return
-        if normalized.startswith("/* lotus-idea idempotency-lookup */"):
-            assert params is not None
-            self._rows = idempotency_lookup_rows(self.connection, normalized, params)
-            return
-        if _execute_conversion_outcome_query(self, normalized, params):
-            return
-        if normalized.startswith("/* lotus-idea review-identity-decision */"):
-            assert params is not None
-            self._rows = [
-                {"decision_json": row["decision_json"]}
-                for row in self.connection.rows["idea_review_decision"]
-                if row["review_decision_id"] == params[0]
-            ]
-            return
-        if normalized.startswith("/* lotus-idea review-identity-feedback */"):
-            assert params is not None
-            self._rows = [
-                {"feedback_json": row["feedback_json"]}
-                for row in self.connection.rows["idea_feedback_event"]
-                if row["feedback_event_id"] == params[0]
-            ]
-            return
-        if normalized.startswith("with selected"):
-            assert params is not None
-            self.connection.begin_write()
-            self._rows = claim_outbox_event_rows(self.connection, params)
-            return
-        if normalized.startswith("update idea_candidate_record"):
-            assert params is not None
-            self.connection.begin_write()
-            self._rows = update_candidate_record_row(self.connection.rows, params)
-            return
-        if normalized.startswith("update idea_outbox_event"):
-            assert params is not None
-            self.connection.begin_write()
-            if "set status = %s, published_at_utc = %s" in normalized:
-                self._rows = publish_outbox_event_row(self.connection, params)
-            elif "set status = %s, published_at_utc = null" in normalized:
-                self._rows = recover_dead_letter_row(self.connection, params)
-            else:
-                self._rows = fail_outbox_event_row(self.connection, params)
-            return
-        if normalized.startswith("select"):
-            if (
-                "from idea_outbox_event" in normalized
-                and "where outbox_event_id = %s" in normalized
-            ):
-                assert params is not None
-                self._rows = [
-                    row
-                    for row in self.connection.rows["idea_outbox_event"]
-                    if row["outbox_event_id"] == params[0]
-                ]
+        for handler in _FAKE_SQL_HANDLERS:
+            if handler(self, normalized, params):
                 return
-            self._rows = list(self.connection.rows[_table_from_select(normalized)])
-            return
-        if normalized.startswith("delete from"):
-            self.connection.begin_write()
-            self.connection.deletes += 1
-            self.connection.rows[normalized.split()[2]].clear()
-            return
-        if normalized.startswith("insert into"):
-            table_name = normalized.split()[2]
-            self.connection.begin_write()
-            if table_name == self.connection.fail_on_insert:
-                raise RuntimeError(f"insert failed for {table_name}")
-            assert params is not None
-            if table_name == "idea_idempotency_record" and "on conflict" in normalized:
-                idempotency_key = params[0]
-                if any(
-                    row["idempotency_key"] == idempotency_key
-                    for row in self.connection.rows[table_name]
-                ):
-                    self._rows = []
-                    return
-                row = row_for_insert(table_name, params)
-                self.connection.rows[table_name].append(row)
-                self._rows = [{"idempotency_key": idempotency_key}]
-                return
-            if _execute_identity_insert(self, table_name, normalized, params):
-                return
-            self.connection.rows[table_name].append(row_for_insert(table_name, params))
-            self.rowcount = 1
-            return
         raise AssertionError(f"unexpected SQL: {query}")
 
     def fetchall(self) -> Sequence[dict[str, Any]]:
@@ -237,6 +66,145 @@ class FakePostgresCursor:
 
     def __exit__(self, exc_type: object, exc: object, traceback: object) -> None:
         return None
+
+
+def _execute_review_queue_query(
+    cursor: FakePostgresCursor,
+    normalized: str,
+    params: Sequence[Any] | None,
+) -> bool:
+    if normalized.startswith("/* lotus-idea review-queue-count */"):
+        assert params is not None
+        cursor._rows = review_queue_count_rows(cursor.connection, normalized, params)
+        return True
+    if normalized.startswith("/* lotus-idea review-queue-page */"):
+        assert params is not None
+        cursor._rows = review_queue_page_rows(cursor.connection, normalized, params)
+        return True
+    if normalized.startswith("/* lotus-idea review-queue-readiness-summary */"):
+        assert params is not None
+        cursor._rows = review_queue_readiness_summary_rows(cursor.connection, normalized, params)
+        return True
+    return False
+
+
+def _execute_readiness_summary_query(
+    cursor: FakePostgresCursor,
+    normalized: str,
+    params: Sequence[Any] | None,
+) -> bool:
+    if normalized.startswith("/* lotus-idea outbox-delivery-ready-events */"):
+        assert params is not None
+        cursor._rows = outbox_delivery_ready_rows(cursor.connection, params)
+        return True
+    if normalized.startswith("/* lotus-idea outbox-readiness-summary */"):
+        assert params is not None
+        cursor._rows = outbox_readiness_summary_row(cursor.connection, params)
+        return True
+    if normalized.startswith("/* lotus-idea downstream-realization-readiness-summary */"):
+        cursor._rows = [_downstream_realization_readiness_summary(cursor.connection)]
+        return True
+    return False
+
+
+def _downstream_realization_readiness_summary(
+    connection: FakePostgresConnection,
+) -> dict[str, int]:
+    quarantined_intents = {
+        row["conversion_intent_id"] for row in connection.rows["idea_conversion_outcome_quarantine"]
+    }
+    non_quarantined_outcome_intents = {
+        row["conversion_intent_id"]
+        for row in connection.rows["idea_conversion_outcome"]
+        if row["conversion_intent_id"] not in quarantined_intents
+    }
+    return {
+        "conversion_intent_count": len(connection.rows["idea_conversion_intent"]),
+        "conversion_outcome_count": len(non_quarantined_outcome_intents),
+        "report_evidence_pack_request_count": len(
+            connection.rows["idea_report_evidence_pack_request"]
+        ),
+    }
+
+
+def _execute_runtime_trust_telemetry_query(
+    cursor: FakePostgresCursor,
+    normalized: str,
+    params: Sequence[Any] | None,
+) -> bool:
+    del params
+    if normalized.startswith("/* lotus-idea runtime-trust-telemetry-summary */"):
+        cursor._rows = runtime_trust_telemetry_summary_rows(cursor.connection.rows)
+        return True
+    if normalized.startswith("/* lotus-idea runtime-trust-telemetry-source-authority-counts */"):
+        cursor._rows = runtime_trust_telemetry_count_rows(cursor.connection.rows, "source_system")
+        return True
+    if normalized.startswith("/* lotus-idea runtime-trust-telemetry-freshness-counts */"):
+        cursor._rows = runtime_trust_telemetry_count_rows(cursor.connection.rows, "freshness")
+        return True
+    if normalized.startswith("/* lotus-idea runtime-trust-telemetry-supportability-counts */"):
+        cursor._rows = candidate_json_count_rows(
+            cursor.connection.rows, ("evidence_packet", "supportability")
+        )
+        return True
+    if normalized.startswith("/* lotus-idea runtime-trust-telemetry-lifecycle-counts */"):
+        cursor._rows = table_count_rows(
+            cursor.connection.rows,
+            "idea_candidate_record",
+            "lifecycle_status",
+            active_candidates_only=True,
+        )
+        return True
+    if normalized.startswith("/* lotus-idea runtime-trust-telemetry-data-lifecycle-counts */"):
+        cursor._rows = table_count_rows(
+            cursor.connection.rows, "idea_data_lifecycle_control", "state"
+        )
+        return True
+    return False
+
+
+def _execute_lookup_query(
+    cursor: FakePostgresCursor,
+    normalized: str,
+    params: Sequence[Any] | None,
+) -> bool:
+    if normalized.startswith("/* lotus-idea candidate-detail"):
+        assert params is not None
+        cursor._rows = candidate_detail_rows(cursor.connection, normalized, params)
+        return True
+    if normalized.startswith("/* lotus-idea downstream-lookup"):
+        assert params is not None
+        cursor._rows = downstream_lookup_rows(cursor.connection, normalized, params)
+        return True
+    if normalized.startswith("/* lotus-idea idempotency-lookup */"):
+        assert params is not None
+        cursor._rows = idempotency_lookup_rows(cursor.connection, normalized, params)
+        return True
+    return False
+
+
+def _execute_review_identity_query(
+    cursor: FakePostgresCursor,
+    normalized: str,
+    params: Sequence[Any] | None,
+) -> bool:
+    if normalized.startswith("/* lotus-idea review-identity-decision */"):
+        assert params is not None
+        cursor._rows = [
+            {"decision_json": row["decision_json"]}
+            for row in cursor.connection.rows["idea_review_decision"]
+            if row["review_decision_id"] == params[0]
+        ]
+        return True
+    if normalized.startswith("/* lotus-idea review-identity-feedback */"):
+        assert params is not None
+        cursor._rows = [
+            {"feedback_json": row["feedback_json"]}
+            for row in cursor.connection.rows["idea_feedback_event"]
+            if row["feedback_event_id"] == params[0]
+        ]
+        return True
+    return False
 
 
 def _execute_data_lifecycle_query(
@@ -312,6 +280,121 @@ def _execute_data_lifecycle_query(
         }
     )
     cursor.rowcount = 1
+    return True
+
+
+def _execute_outbox_event_query(
+    cursor: FakePostgresCursor,
+    normalized: str,
+    params: Sequence[Any] | None,
+) -> bool:
+    if normalized.startswith("with selected"):
+        assert params is not None
+        cursor.connection.begin_write()
+        cursor._rows = claim_outbox_event_rows(cursor.connection, params)
+        return True
+    if normalized.startswith("update idea_outbox_event"):
+        assert params is not None
+        cursor.connection.begin_write()
+        cursor._rows = _updated_outbox_event_rows(cursor.connection, normalized, params)
+        return True
+    return False
+
+
+def _updated_outbox_event_rows(
+    connection: FakePostgresConnection,
+    normalized: str,
+    params: Sequence[Any],
+) -> list[dict[str, Any]]:
+    if "set status = %s, published_at_utc = %s" in normalized:
+        return publish_outbox_event_row(connection, params)
+    if "set status = %s, published_at_utc = null" in normalized:
+        return recover_dead_letter_row(connection, params)
+    return fail_outbox_event_row(connection, params)
+
+
+def _execute_candidate_update_query(
+    cursor: FakePostgresCursor,
+    normalized: str,
+    params: Sequence[Any] | None,
+) -> bool:
+    if not normalized.startswith("update idea_candidate_record"):
+        return False
+    assert params is not None
+    cursor.connection.begin_write()
+    cursor._rows = update_candidate_record_row(cursor.connection.rows, params)
+    return True
+
+
+def _execute_generic_select_query(
+    cursor: FakePostgresCursor,
+    normalized: str,
+    params: Sequence[Any] | None,
+) -> bool:
+    if not normalized.startswith("select"):
+        return False
+    if "from idea_outbox_event" in normalized and "where outbox_event_id = %s" in normalized:
+        assert params is not None
+        cursor._rows = [
+            row
+            for row in cursor.connection.rows["idea_outbox_event"]
+            if row["outbox_event_id"] == params[0]
+        ]
+        return True
+    cursor._rows = list(cursor.connection.rows[_table_from_select(normalized)])
+    return True
+
+
+def _execute_delete_query(
+    cursor: FakePostgresCursor,
+    normalized: str,
+    params: Sequence[Any] | None,
+) -> bool:
+    del params
+    if not normalized.startswith("delete from"):
+        return False
+    cursor.connection.begin_write()
+    cursor.connection.deletes += 1
+    cursor.connection.rows[normalized.split()[2]].clear()
+    return True
+
+
+def _execute_insert_query(
+    cursor: FakePostgresCursor,
+    normalized: str,
+    params: Sequence[Any] | None,
+) -> bool:
+    if not normalized.startswith("insert into"):
+        return False
+    table_name = normalized.split()[2]
+    cursor.connection.begin_write()
+    if table_name == cursor.connection.fail_on_insert:
+        raise RuntimeError(f"insert failed for {table_name}")
+    assert params is not None
+    if _execute_idempotency_insert(cursor, table_name, normalized, params):
+        return True
+    if _execute_identity_insert(cursor, table_name, normalized, params):
+        return True
+    cursor.connection.rows[table_name].append(row_for_insert(table_name, params))
+    cursor.rowcount = 1
+    return True
+
+
+def _execute_idempotency_insert(
+    cursor: FakePostgresCursor,
+    table_name: str,
+    normalized: str,
+    params: Sequence[Any],
+) -> bool:
+    if table_name != "idea_idempotency_record" or "on conflict" not in normalized:
+        return False
+    idempotency_key = params[0]
+    if any(row["idempotency_key"] == idempotency_key for row in cursor.connection.rows[table_name]):
+        cursor._rows = []
+        return True
+    row = row_for_insert(table_name, params)
+    cursor.connection.rows[table_name].append(row)
+    cursor._rows = [{"idempotency_key": idempotency_key}]
     return True
 
 
@@ -542,3 +625,22 @@ def _table_from_select(query: str) -> str:
         if f" from {table_name}" in query:
             return table_name
     raise AssertionError(f"unknown select table: {query}")
+
+
+_FAKE_SQL_HANDLERS = (
+    execute_bounded_mutation_query,
+    _execute_data_lifecycle_query,
+    execute_downstream_submission_query,
+    _execute_outbox_recovery_query,
+    _execute_review_queue_query,
+    _execute_readiness_summary_query,
+    _execute_runtime_trust_telemetry_query,
+    _execute_lookup_query,
+    _execute_conversion_outcome_query,
+    _execute_review_identity_query,
+    _execute_outbox_event_query,
+    _execute_candidate_update_query,
+    _execute_generic_select_query,
+    _execute_delete_query,
+    _execute_insert_query,
+)
