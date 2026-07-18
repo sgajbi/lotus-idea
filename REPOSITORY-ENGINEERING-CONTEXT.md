@@ -1556,7 +1556,14 @@ Recent issue-derived patterns to preserve:
     and DTO assembly into adapter-owned helpers, preserve fail-closed source
     authority and currentness semantics, and do not implement Core changes,
     live Core certification, runtime topology, Gateway/Workbench, or supported
-    feature claims.
+    feature claims. Issue `#636` applies the same proof-boundary rule to the
+    Core portfolio-state runtime execution contract: keep
+    `core_portfolio_state_runtime_execution_is_valid` as the stable public
+    fail-closed validator, split proof envelope, request receipt, source
+    receipt, source posture, hash identity, non-proof claims, and closure
+    checks into proof-owned helpers, and do not treat the refactor as Core
+    issue `sgajbi/lotus-core#790`, data-mesh, Gateway/Workbench, production,
+    or supported-feature evidence.
 31. Route-owned runtimes must consume their own cleanup hooks. Source-ingestion
     run-once builds Core HTTP clients through `SourceIngestionRuntime`; the API
     path must close the runtime after accepted or source-unavailable execution

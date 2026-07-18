@@ -1636,6 +1636,65 @@ migrations, and central skills are unchanged by explicit scope decision; no
 wiki publication is required unless later PR/mainline evidence changes
 repo-authored wiki truth.
 
+## Issue 636 Core Portfolio-State Runtime Validator Maintainability
+
+Issue `#636` applies the same Slice 19 quality-baseline learning to the Core
+portfolio-state runtime proof-contract validator. After issue `#633`, the
+current report-only quality baseline listed
+`src/app/application/core_portfolio_state_runtime_evidence/contract.py::core_portfolio_state_runtime_execution_is_valid`
+at `121` lines. The function mixed proof-envelope validation, non-proof claim
+boundary checks, request/source receipt shape validation, Core
+`PortfolioStateSnapshot:v1` scope and product posture checks, temporal
+currentness, hash/digest identity, diagnostic and blocker/evidence-ref closure,
+and final runtime-evidence clearing.
+
+`src/app/application/core_portfolio_state_runtime_evidence/contract.py` now
+preserves the public `core_portfolio_state_runtime_execution_is_valid(payload)`
+validator while extracting:
+
+1. `_runtime_execution_validation_parts(...)` for top-level proof envelope and
+   receipt shape parsing;
+2. `_non_proof_claims_are_valid(...)` for no-claim boundary validation;
+3. `_request_receipt_is_valid(...)` for request digest, scope, and hash checks;
+4. `_source_receipt_is_valid(...)` and its source scope, product/posture,
+   temporal, hash, and required-string helpers;
+5. `_execution_closure_is_valid(...)` for status, diagnostic, blocker, and
+   evidence-ref closure.
+
+Focused validation passed:
+
+1. `python -m pytest tests/unit/core_portfolio_state_runtime_evidence/test_runtime_execution.py tests/unit/core_portfolio_state_runtime_evidence/test_generator.py -q`
+   (`56` passed),
+2. `python -m ruff check src/app/application/core_portfolio_state_runtime_evidence/contract.py tests/unit/core_portfolio_state_runtime_evidence/test_runtime_execution.py`,
+3. `python -m ruff format --check src/app/application/core_portfolio_state_runtime_evidence/contract.py tests/unit/core_portfolio_state_runtime_evidence/test_runtime_execution.py`,
+4. `python -m mypy src/app/application/core_portfolio_state_runtime_evidence/contract.py`,
+5. `make quality-baseline`,
+6. `make maintainability-gate`,
+7. `make duplicate-implementation-gate` with zero duplicate clusters across
+   `2,977` source/script functions,
+8. `make github-issue-closure-matrix-gate`,
+9. `make documentation-contract-gate`.
+
+The same-pattern scan covered #601/#603/#606/#609/#618/#620/#623/#625/#630/#633
+maintainability evidence, current `quality/baseline_report.md`, GitHub
+searches for `core_portfolio_state_runtime_execution_is_valid`,
+`PortfolioStateSnapshot maintainability`, and `core portfolio state runtime
+evidence`, focused runtime-evidence tests, generator tests, the codebase review
+ledger, the issue closure matrix, refactor decisions, and issue-discovery
+ledger `#225`. Closed runtime-evidence/source-contract issues #479/#482 and
+open external blockers #380/#345 do not own this maintainability root cause.
+The public validator moved from `121` lines to a `12` line orchestrator; every
+extracted helper is `39` lines or smaller.
+
+This is internal proof-contract modularity only. It does not implement Core
+changes, Core issue `sgajbi/lotus-core#790`, live Core certification,
+authentication or authorization infrastructure, Gateway, Workbench,
+data-product support, external-publication authority, runtime topology
+changes, migrations, OpenAPI behavior changes, or supported-feature promotion.
+README, wiki, supported features, OpenAPI, migrations, and central skills are
+unchanged by explicit scope decision; no wiki publication is required unless
+later PR/mainline evidence changes repo-authored wiki truth.
+
 ## Issue 620 PostgreSQL Fake Row Construction Maintainability
 
 Issue `#620` follows through on the issue `#618` fake-infrastructure pattern.
