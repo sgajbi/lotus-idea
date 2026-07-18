@@ -73,8 +73,12 @@ On-demand local report commands:
 2. `make quality-baseline`
 
 Generated report artifacts from these commands are local review evidence and are
-ignored by git. They are not durable current-state proof in the quality
-scorecard; rerun the commands when a reviewer asks for a fresh artifact.
+handled by claim class. `quality/architecture_boundary_report.json` is tracked
+deterministic architecture evidence and `make architecture-boundary-gate` fails
+when it is stale against current source imports or boundary rules. The broader
+`quality/baseline_report.json` and `quality/baseline_report.md` size/function
+baselines remain ignored report-only artifacts; rerun `make quality-baseline`
+when a reviewer asks for a fresh local baseline.
 
 Release and review evidence commands:
 

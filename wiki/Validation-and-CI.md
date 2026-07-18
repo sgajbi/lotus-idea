@@ -123,9 +123,12 @@ the authoritative complete command inventory. This page groups the commands by
 decision path so it stays readable.
 
 `make architecture-boundary-gate` is the durable blocking architecture proof.
-`make architecture-boundary-report` generates ignored local review evidence on
-demand; do not cite a committed architecture report as current proof unless a
-future deterministic report-drift gate is added.
+It also validates the tracked `quality/architecture_boundary_report.json`
+freshness contract, including schema, source import digest, source file count,
+rule digest, status, violations, and rule body. `make architecture-boundary-report`
+regenerates that deterministic report. This is design-boundary evidence only;
+it does not certify runtime behavior, Gateway/Workbench support, data-mesh
+certification, or supported-feature promotion.
 
 `make ci` is the broad local aggregate for lint, typecheck, contract gates,
 OpenAPI, migrations, integration/e2e/coverage, and dependency audit. It must

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import sys
 from pathlib import Path
 from types import ModuleType
@@ -726,11 +727,11 @@ def test_ci_contract_gate_rejects_workflows_without_parseable_jobs() -> None:
     assert timeout_errors == ["synthetic.yml must define at least one parseable job"]
 
 
-def test_generated_quality_reports_do_not_dirty_worktree() -> None:
+def test_quality_report_ignore_policy_tracks_only_deterministic_architecture_report() -> None:
     gitignore = _read(".gitignore")
     dockerignore = _read(".dockerignore")
 
-    assert "quality/architecture_boundary_report.json" in gitignore
+    assert "quality/architecture_boundary_report.json" not in gitignore
     assert "quality/baseline_report.json" in gitignore
     assert "quality/baseline_report.md" in gitignore
     assert "quality/architecture_boundary_report.json" in dockerignore
@@ -830,11 +831,17 @@ def test_blocking_architecture_boundary_gate_does_not_write_report(
 
     monkeypatch.setattr(module, "REPORT_PATH", report_path)
     monkeypatch.setattr(module, "validate_architecture_boundaries", lambda: [])
+    report_path.write_text(
+        json.dumps(module.build_architecture_report("report-only"), indent=2, sort_keys=True)
+        + "\n",
+        encoding="utf-8",
+    )
+    original_report = report_path.read_text(encoding="utf-8")
     monkeypatch.setattr(sys, "argv", ["architecture_boundary_gate.py", "--mode", "blocking"])
 
     assert module.main() == 0
 
-    assert not report_path.exists()
+    assert report_path.read_text(encoding="utf-8") == original_report
     assert "Architecture boundary gate passed" in capsys.readouterr().out
 
 

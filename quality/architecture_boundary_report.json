@@ -1,0 +1,53 @@
+{
+  "input_fingerprint": {
+    "rule_digest": "7ac722a440e92064c348b878ae630578e6badfdc91971683691c31c134a14a82",
+    "source_file_count": 470,
+    "source_import_digest": "62944a640f0cb5e9b29cebd144dcc6b89997b22be795afec394b1756dfb85165",
+    "source_root": "src/app"
+  },
+  "mode": "report-only",
+  "repository": "lotus-idea",
+  "rules": {
+    "api": {
+      "description": "API routes should call application services and the API runtime dependency facade rather than concrete infrastructure or runtime composition modules.",
+      "forbidden_prefixes": [
+        "app.infrastructure",
+        "app.runtime"
+      ]
+    },
+    "application": {
+      "description": "Application services may orchestrate domain and ports but must not depend on HTTP/framework or concrete infrastructure.",
+      "forbidden_prefixes": [
+        "fastapi",
+        "starlette",
+        "app.infrastructure",
+        "app.api"
+      ]
+    },
+    "domain": {
+      "description": "Domain must stay framework-free and independent from API, contract, and infrastructure modules.",
+      "forbidden_prefixes": [
+        "fastapi",
+        "starlette",
+        "pydantic",
+        "requests",
+        "httpx",
+        "sqlalchemy",
+        "app.api",
+        "app.infrastructure",
+        "app.contracts"
+      ]
+    },
+    "runtime": {
+      "description": "Runtime composition may wire concrete adapters but must not depend on HTTP routes, DTOs, or framework modules.",
+      "forbidden_prefixes": [
+        "fastapi",
+        "starlette",
+        "app.api"
+      ]
+    }
+  },
+  "schema_version": "architecture-boundary-report.v2",
+  "status": "passed",
+  "violations": []
+}

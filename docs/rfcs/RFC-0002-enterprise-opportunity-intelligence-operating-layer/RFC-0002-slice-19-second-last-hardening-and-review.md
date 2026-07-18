@@ -1040,3 +1040,24 @@ does not change API behavior, implement authentication or authorization,
 certify live source ingestion, promote Gateway/Workbench support, certify data
 products, prove downstream execution, certify AI provider runtime, publish
 client-ready material, or promote a supported feature.
+
+## Issue 596 Architecture Boundary Report Freshness
+
+Issue `#596` hardens deterministic architecture-governance evidence. The
+tracked `quality/architecture_boundary_report.json` artifact now uses
+`architecture-boundary-report.v2` and binds the current `src/app` import
+inventory plus the architecture rule digest through stable SHA-256
+fingerprints.
+
+`make architecture-boundary-report` regenerates the report, and
+`make architecture-boundary-gate` now fails closed when the tracked report is
+missing, malformed, generated with an unsupported schema, generated in the
+wrong mode, stale against source/rule inputs, or tampered in status,
+violations, repository, or rules. `make quality-baseline` records report
+freshness status while keeping the broader size/function baseline report-only.
+
+Focused unit tests cover current pass, regenerated-report pass, missing schema,
+stale fingerprint, and tampered status. This clears only the Slice 19
+architecture-report freshness gap. It does not certify runtime behavior,
+Gateway/Workbench product support, data-mesh certification, production
+deployment, client publication, or supported-feature promotion.
