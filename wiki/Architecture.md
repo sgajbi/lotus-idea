@@ -802,6 +802,13 @@ it loads only command or identity-linked aggregates before the existing domain
 decision and atomic delta. Outbox run requests are idempotency-row-only,
 evidence replay is candidate-only, and report precheck is exact-key plus linked
 candidate. Full snapshots remain explicit administrative/test/DR behavior.
+Snapshot replacement writes are now isolated in
+`app.infrastructure.postgres_snapshot_writes`, which owns candidate snapshot
+inserts, snapshot idempotency inserts, downstream submission inserts, and
+lifecycle/audit/review/feedback/conversion/report detail inserts. New ordinary
+request-path persistence work should continue to use bounded mutation or
+projection modules instead of adding broad snapshot SQL back to the root
+PostgreSQL repository class.
 A disposable PostgreSQL 18 lane passes all 17 required tests. No database,
 schema, process, API, migration, source-authority, or supported-feature boundary
 was added.

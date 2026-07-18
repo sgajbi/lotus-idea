@@ -16,6 +16,7 @@ REQUIRED_DURABLE_REPOSITORY_EVIDENCE_REFS = (
     "migrations/001_idea_repository_foundation.sql",
     "migrations/001_idea_repository_foundation.rollback.sql",
     "src/app/infrastructure/postgres_repository.py",
+    "src/app/infrastructure/postgres_snapshot_writes.py",
     "src/app/infrastructure/postgres_review_queue.py",
     "src/app/infrastructure/postgres_codecs.py",
     "src/app/runtime/repository_state.py",

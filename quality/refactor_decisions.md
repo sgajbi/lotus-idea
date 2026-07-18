@@ -6,6 +6,36 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-07-18: PostgreSQL Snapshot Write Boundary
+
+Issue `#612` extracts PostgreSQL snapshot replacement and detail-write helpers
+from `src/app/infrastructure/postgres_repository.py` into
+`src/app/infrastructure/postgres_snapshot_writes.py`.
+
+The public `PostgresIdeaRepository` API and durable behavior remain unchanged.
+The new `PostgresSnapshotWriteRepositoryMixin` owns candidate snapshot inserts,
+snapshot idempotency inserts, downstream submission inserts, lifecycle/audit
+detail inserts, review/feedback identity-conflict inserts, conversion intent
+and outcome detail inserts, report evidence-pack inserts, and AI explanation
+lineage detail insertion used during snapshot replacement.
+
+This is design modularity inside the existing Lotus Idea PostgreSQL adapter. It
+does not change schema, migrations, source-authority contracts, API/OpenAPI
+shape, runtime topology, authentication/authorization, Core, Gateway,
+Workbench, or supported-feature promotion.
+
+Evidence:
+
+1. `src/app/infrastructure/postgres_repository.py` moved from `1,186` lines to
+   `866` lines.
+2. `src/app/infrastructure/postgres_snapshot_writes.py` is a focused `358` line
+   PostgreSQL write helper module.
+3. Targeted validation passed: Ruff and MyPy over the changed infrastructure
+   modules; `make test-unit UNIT_TESTS=tests/unit/test_postgres_repository.py`
+   (`19` passed); `make maintainability-gate`; and
+   `make duplicate-implementation-gate` with zero duplicate clusters across
+   `2,952` functions.
+
 ## 2026-07-18: Mandate-Health Signal Evaluation Boundary
 
 `src/app/domain/signal_evaluation.py::evaluate_mandate_health_signal` became
