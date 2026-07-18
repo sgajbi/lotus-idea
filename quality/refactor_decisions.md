@@ -6,6 +6,48 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-07-19: Critical Idea Workflow E2E Authority Boundary Test Boundary
+
+Issue `#650` applies the Slice 19 report-only quality-baseline lens to the
+critical Idea workflow E2E authority-boundary proof. After issue `#648`,
+`make quality-baseline` listed
+`tests/e2e/test_critical_idea_workflow.py::test_critical_idea_workflow_preserves_authority_boundaries`
+at `153` lines.
+
+The test mixed:
+
+1. high-cash candidate creation and persistence,
+2. advisor queue visibility and ranked review posture,
+3. lifecycle transitions to review-ready,
+4. review approval without downstream authority,
+5. conversion intent with Report-owned `intent_only` posture,
+6. report evidence-pack request semantics without render/archive/publication
+   authority,
+7. client-ready publication rejection without portfolio identity leakage,
+8. candidate detail replay with durable-storage and supported-feature
+   non-promotion proof.
+
+`tests/e2e/test_critical_idea_workflow.py` now keeps one externally visible
+E2E workflow proof, but the public test is a short orchestrator over named
+helpers for each domain step and authority-boundary assertion. All routes,
+payloads, headers, status codes, and assertions are preserved.
+
+Focused validation passed:
+
+1. `python -m ruff check tests/e2e/test_critical_idea_workflow.py`,
+2. `python -m ruff format --check tests/e2e/test_critical_idea_workflow.py`,
+3. `python -m mypy tests/e2e/test_critical_idea_workflow.py`,
+4. `python -m pytest tests/e2e/test_critical_idea_workflow.py -q` (`1`
+   passed).
+
+This is test-support maintainability only. It does not change production API
+behavior, OpenAPI, persistence, migrations, authentication or authorization
+infrastructure, Core, Gateway, Workbench, runtime topology, wiki source,
+README, supported-features, data-mesh certification, external-publication
+authority, or supported-feature promotion. Broader local gates, PR checks,
+exact-main Main Releasability/CodeQL, wiki parity, issue closure, and branch
+cleanup remain pending for the tranche.
+
 ## 2026-07-19: PostgreSQL Runtime Workflow Integration Test Boundary
 
 Issue `#648` applies the Slice 19 report-only quality-baseline lens to the

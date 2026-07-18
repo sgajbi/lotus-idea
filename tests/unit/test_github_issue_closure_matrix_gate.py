@@ -248,6 +248,23 @@ def test_github_issue_closure_matrix_gate_requires_postgres_runtime_workflow_iss
     assert "Missing actionable issue rows: #648" in errors
 
 
+def test_github_issue_closure_matrix_gate_requires_critical_workflow_e2e_issue(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    matrix = tmp_path / "matrix.md"
+    content = "\n".join(
+        line
+        for line in module.MATRIX_PATH.read_text(encoding="utf-8").splitlines()
+        if "[#650]" not in line
+    )
+    matrix.write_text(content, encoding="utf-8")
+
+    errors = module.validate_issue_closure_matrix(matrix)
+
+    assert "Missing actionable issue rows: #650" in errors
+
+
 def test_github_issue_closure_matrix_gate_requires_postgres_snapshot_writes_issue(
     tmp_path: Path,
 ) -> None:

@@ -24,6 +24,48 @@ Perform the full engineering review before final closure.
 
 ## Current Implementation Evidence
 
+Issue `#650` applies the Slice 19 quality-baseline learning to the critical
+Idea workflow E2E authority-boundary proof. After issue `#648`, the current
+report-only quality baseline listed
+`tests/e2e/test_critical_idea_workflow.py::test_critical_idea_workflow_preserves_authority_boundaries`
+at `153` lines. The scenario proved important end-to-end private-banking
+workflow posture but mixed high-cash candidate persistence, advisor queue
+visibility, lifecycle transitions, review approval, conversion intent, report
+evidence-pack request semantics, client-ready publication rejection, and
+candidate detail replay in one function.
+
+`tests/e2e/test_critical_idea_workflow.py` now keeps the same externally
+visible E2E scenario, but the public test is a short orchestrator over named
+helpers for candidate persistence, advisor queue visibility, lifecycle
+transition, review approval, conversion intent, report evidence-pack request,
+client-ready rejection, and candidate detail replay. All routes, payloads,
+headers, status codes, and authority-boundary assertions are preserved.
+
+Focused validation passed:
+
+1. `python -m ruff check tests/e2e/test_critical_idea_workflow.py`,
+2. `python -m ruff format --check tests/e2e/test_critical_idea_workflow.py`,
+3. `python -m mypy tests/e2e/test_critical_idea_workflow.py`,
+4. `python -m pytest tests/e2e/test_critical_idea_workflow.py -q` with `1`
+   test.
+
+The same-pattern scan followed the Slice 19 maintainability sequence through
+#648, current `quality/baseline_report.md`, duplicate searches for
+`test_critical_idea_workflow_preserves_authority_boundaries`,
+`critical idea workflow authority boundaries`, and
+`test_critical_idea_workflow.py maintainability`, the codebase review ledger,
+the issue closure matrix, refactor decisions, and issue-discovery ledger
+`#225`. Issue `#623` is related fixture-writer cleanup but does not own this
+E2E workflow decomposition.
+
+This is internal test-support modularity only. It does not change production
+API behavior, OpenAPI, persistence, migrations, authentication or authorization
+infrastructure, Core, Gateway, Workbench, data-product support,
+external-publication authority, runtime topology, wiki source, README,
+supported features, or supported-feature promotion. Broader local gates, PR
+checks, exact-main Main Releasability/CodeQL, wiki parity, issue closure, and
+branch cleanup remain pending for the tranche.
+
 Issue `#648` applies the Slice 19 quality-baseline learning to the PostgreSQL
 runtime workflow integration proof. After issue `#645`, the current
 report-only quality baseline listed
