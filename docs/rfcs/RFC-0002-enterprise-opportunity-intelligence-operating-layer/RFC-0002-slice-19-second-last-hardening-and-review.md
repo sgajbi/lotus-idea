@@ -24,6 +24,56 @@ Perform the full engineering review before final closure.
 
 ## Current Implementation Evidence
 
+Issue `#648` applies the Slice 19 quality-baseline learning to the PostgreSQL
+runtime workflow integration proof. After issue `#645`, the current
+report-only quality baseline listed
+`tests/integration/test_postgres_runtime_integration.py::test_postgres_runtime_provider_persists_review_conversion_and_report_workflow`
+at `174` lines. The scenario proved important PostgreSQL runtime behavior but
+mixed high-cash persistence setup, advisor queue reload, lifecycle transition,
+review action replay, feedback, conversion intent replay, conversion outcome,
+report evidence-pack replay, table-count proof, and SQL outbox lineage
+assertions in one function.
+
+`tests/integration/test_postgres_runtime_integration.py` now keeps the same
+externally visible integration scenario, but the public test is a short
+orchestrator over named helpers for candidate persistence, advisor queue reload,
+review/replay, feedback, conversion/replay, outcome, report/replay,
+table-count, and outbox-lineage proof. The refactored workflow test no longer
+appears in the report-only top-function list; the new largest function is the
+E2E authority-boundary test at `153` lines.
+
+Focused validation passed:
+
+1. `python -m ruff check tests/integration/test_postgres_runtime_integration.py`,
+2. `python -m ruff format --check tests/integration/test_postgres_runtime_integration.py`,
+3. `python -m mypy tests/integration/test_postgres_runtime_integration.py`.
+
+The focused PostgreSQL test command
+`python -m pytest tests/integration/test_postgres_runtime_integration.py::test_postgres_runtime_provider_persists_review_conversion_and_report_workflow -q`
+was source-collected and skipped because the local PostgreSQL integration
+fixture was not active. Broader local quality gates passed:
+
+1. `make quality-baseline`,
+2. `make maintainability-gate`,
+3. `make duplicate-implementation-gate` with zero duplicate clusters across
+   `3,004` source/script functions.
+
+The same-pattern scan covered
+#601/#603/#606/#609/#618/#620/#623/#625/#630/#633/#636/#638/#640/#642/#645
+maintainability evidence, current `quality/baseline_report.md`, GitHub
+searches for
+`test_postgres_runtime_provider_persists_review_conversion_and_report_workflow`,
+`review conversion report workflow quality baseline`,
+`test_postgres_runtime_integration.py maintainability`, and
+`PostgreSQL runtime integration workflow`, the codebase review ledger, the
+issue closure matrix, refactor decisions, and issue-discovery ledger `#225`.
+
+This is internal test-support modularity only. It does not change production
+PostgreSQL adapters, schema, migrations, API/OpenAPI behavior,
+authentication or authorization infrastructure, Core, Gateway, Workbench,
+data-product support, external-publication authority, runtime topology,
+wiki source, README, supported features, or supported-feature promotion.
+
 Issue `#645` applies the Slice 19 quality-baseline learning to the
 PostgreSQL repository mutating workflow regression. After issue `#642`, the
 current report-only quality baseline listed
