@@ -6,6 +6,58 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-07-19: High-Cash Persist API Boundary
+
+Issue `#630` applies the Slice 19 report-only quality-baseline lens to the
+high-cash candidate persistence route.
+
+The public `evaluate_and_persist_high_cash_signal(...)` FastAPI route remains
+the stable API entry point for caller-supplied high-cash evaluation and
+candidate persistence. The implementation now delegates API-boundary decisions
+to named private helpers for:
+
+1. candidate-persistence capability validation,
+2. idempotency-key validation,
+3. Core source-ref contract validation,
+4. durable repository readiness and durable-storage posture,
+5. request event-lineage parsing,
+6. application command execution through the existing use case,
+7. idempotency conflict mapping,
+8. operation-event outcome emission,
+9. final response projection.
+
+This deliberately does not introduce authentication or authorization
+infrastructure, a generic signal framework, Core changes, Gateway/Workbench
+behavior, or a runtime service split. The route remains an API/controller
+orchestrator over the existing application use case and repository port.
+
+Validation and scope decisions:
+
+1. `evaluate_and_persist_high_cash_signal` moved from the report-only `123`
+   line hotspot to a `38` line public orchestrator.
+2. Existing high-value regression coverage already proves permission denial,
+   blank idempotency key rejection, source-contract rejection, durable
+   repository fail-closed behavior, replay, duplicate-candidate retry,
+   idempotency conflict, blocked/non-candidate no-persistence behavior, event
+   lineage, and operation-event outcomes.
+3. Local validation passed:
+   `python -m ruff check src/app/api/idea_signals.py`,
+   `python -m ruff format --check src/app/api/idea_signals.py`,
+   `python -m mypy src/app/api/idea_signals.py`,
+   `python -m pytest tests/integration/test_high_cash_signal_api.py -q`
+   (`36` passed),
+   `python -m pytest tests/integration/test_api_operation_events.py -q`
+   (`21` passed),
+   `python -m pytest tests/integration/outbox/test_event_lineage_api.py -q`
+   (`5` passed),
+   `make quality-baseline`, `make maintainability-gate`, and
+   `make duplicate-implementation-gate` with zero duplicate clusters across
+   `2,965` source/script functions.
+4. README, wiki, supported-features, OpenAPI, migrations, authn/authz
+   infrastructure, Core, Gateway, Workbench, data-mesh certification,
+   external-publication authority, and supported-feature truth are unchanged by
+   explicit scope decision.
+
 ## 2026-07-18: Concentration-Risk Signal Evaluator Boundary
 
 Issue `#625` applies the Slice 19 report-only quality-baseline lens to the
