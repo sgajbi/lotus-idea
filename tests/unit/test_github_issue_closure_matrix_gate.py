@@ -136,6 +136,34 @@ def test_github_issue_closure_matrix_gate_requires_concentration_risk_domain_iss
     assert "Missing actionable issue rows: #625" in errors
 
 
+def test_github_issue_closure_matrix_gate_requires_postgres_snapshot_writes_issue(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    matrix = tmp_path / "matrix.md"
+    content = module.MATRIX_PATH.read_text(encoding="utf-8")
+    content = "\n".join(line for line in content.splitlines() if "[#612]" not in line)
+    matrix.write_text(content, encoding="utf-8")
+
+    errors = module.validate_issue_closure_matrix(matrix)
+
+    assert "Missing actionable issue rows: #612" in errors
+
+
+def test_github_issue_closure_matrix_gate_requires_quality_baseline_stub_issue(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    matrix = tmp_path / "matrix.md"
+    content = module.MATRIX_PATH.read_text(encoding="utf-8")
+    content = "\n".join(line for line in content.splitlines() if "[#614]" not in line)
+    matrix.write_text(content, encoding="utf-8")
+
+    errors = module.validate_issue_closure_matrix(matrix)
+
+    assert "Missing actionable issue rows: #614" in errors
+
+
 def test_github_issue_closure_matrix_gate_requires_inventory_closure_issue(
     tmp_path: Path,
 ) -> None:
@@ -310,6 +338,42 @@ def test_github_issue_closure_matrix_gate_freezes_concentration_risk_domain_issu
     errors = module.validate_issue_closure_matrix(matrix)
 
     assert "#625: merged-main issue cannot regress to `locally_fixed`" in errors
+
+
+def test_github_issue_closure_matrix_gate_freezes_postgres_snapshot_writes_main_truth(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    matrix = tmp_path / "matrix.md"
+    content = module.MATRIX_PATH.read_text(encoding="utf-8").replace(
+        "issues/612) Extract PostgreSQL snapshot detail write helpers from main "
+        "repository | `merged_main` |",
+        "issues/612) Extract PostgreSQL snapshot detail write helpers from main "
+        "repository | `locally_fixed` |",
+    )
+    matrix.write_text(content, encoding="utf-8")
+
+    errors = module.validate_issue_closure_matrix(matrix)
+
+    assert "#612: merged-main issue cannot regress to `locally_fixed`" in errors
+
+
+def test_github_issue_closure_matrix_gate_freezes_quality_baseline_stub_main_truth(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    matrix = tmp_path / "matrix.md"
+    content = module.MATRIX_PATH.read_text(encoding="utf-8").replace(
+        "issues/614) Exclude non-implementation stubs from quality baseline "
+        "generation | `merged_main` |",
+        "issues/614) Exclude non-implementation stubs from quality baseline "
+        "generation | `locally_fixed` |",
+    )
+    matrix.write_text(content, encoding="utf-8")
+
+    errors = module.validate_issue_closure_matrix(matrix)
+
+    assert "#614: merged-main issue cannot regress to `locally_fixed`" in errors
 
 
 def test_github_issue_closure_matrix_gate_blocks_missing_issue(tmp_path: Path) -> None:
