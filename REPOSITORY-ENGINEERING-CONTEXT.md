@@ -1506,10 +1506,11 @@ Recent issue-derived patterns to preserve:
     inspect siblings in the same impact/lens family. Fix a high-confidence
     sibling in the same bounded batch or create a GitHub issue with exact
     function, line count, route/proof ownership, acceptance criteria, and
-    no-promotion boundaries. Issues `#601`, `#603`, and `#606` are the current
+    no-promotion boundaries. Issues `#601`, `#603`, `#606`, and `#609` are the current
     pattern: `build_service_capacity_baseline` moved from 130 to 64 lines,
     `post_outbox_delivery_run_once` moved from 129 to 71 lines, and
-    `record_review_action` moved from 127 to 54 lines while preserving
+    `record_review_action` moved from 127 to 54 lines, and
+    `evaluate_mandate_health_signal` moved from 127 to 15 lines while preserving
     source-safe blockers, entitlement semantics, no-supported-feature posture,
     and runtime topology.
 30. Route-owned runtimes must consume their own cleanup hooks. Source-ingestion

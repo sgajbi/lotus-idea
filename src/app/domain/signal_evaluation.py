@@ -430,11 +430,32 @@ def evaluate_mandate_health_signal(
     source_input: MandateHealthSignalInput,
     policy: MandateHealthSignalPolicy,
 ) -> SignalEvaluationResult:
+    _validate_mandate_health_evaluation_time(source_input)
+    if pre_source_block := _mandate_health_pre_source_block(source_input):
+        return pre_source_block
+
+    source_refs = _mandate_health_source_refs(source_input)
+    if source_block := _mandate_health_source_block(source_input, source_refs):
+        return source_block
+    if materiality_result := _mandate_health_materiality_result(source_input, policy):
+        return materiality_result
+
+    return _mandate_health_candidate_created_result(source_input, policy, source_refs)
+
+
+def _validate_mandate_health_evaluation_time(
+    source_input: MandateHealthSignalInput,
+) -> None:
     if (
         source_input.evaluated_at_utc.tzinfo is None
         or source_input.evaluated_at_utc.utcoffset() is None
     ):
         raise ValueError("evaluated_at_utc must be timezone-aware")
+
+
+def _mandate_health_pre_source_block(
+    source_input: MandateHealthSignalInput,
+) -> SignalEvaluationResult | None:
     if not source_input.entitlement_allowed:
         return blocked_signal_result(
             family=OpportunityFamily.ALLOCATION_DRIFT,
@@ -447,7 +468,13 @@ def evaluate_mandate_health_signal(
             reason_codes=(ReasonCode.SOURCE_PARTIAL,),
             unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,),
         )
-    source_refs = _mandate_health_source_refs(source_input)
+    return None
+
+
+def _mandate_health_source_block(
+    source_input: MandateHealthSignalInput,
+    source_refs: tuple[SourceRef, ...],
+) -> SignalEvaluationResult | None:
     temporal_block = temporal_blocked_signal_result(
         family=OpportunityFamily.ALLOCATION_DRIFT,
         as_of_date=source_input.as_of_date,
@@ -480,6 +507,13 @@ def evaluate_mandate_health_signal(
             reason_codes=(ReasonCode.SOURCE_PARTIAL,),
             unsupported_reasons=(UnsupportedEvidenceReason.SOURCE_UNCERTIFIED,),
         )
+    return None
+
+
+def _mandate_health_materiality_result(
+    source_input: MandateHealthSignalInput,
+    policy: MandateHealthSignalPolicy,
+) -> SignalEvaluationResult | None:
     if source_input.duplicate_of_candidate_id is not None:
         return SignalEvaluationResult(
             outcome=SignalEvaluationOutcome.SUPPRESSED,
@@ -505,7 +539,14 @@ def evaluate_mandate_health_signal(
             family=OpportunityFamily.ALLOCATION_DRIFT,
             reason_codes=(ReasonCode.BELOW_MATERIALITY,),
         )
+    return None
 
+
+def _mandate_health_candidate_created_result(
+    source_input: MandateHealthSignalInput,
+    policy: MandateHealthSignalPolicy,
+    source_refs: tuple[SourceRef, ...],
+) -> SignalEvaluationResult:
     identity = _stable_mandate_health_identity(source_input, policy, source_refs)
     signal = OpportunitySignal(
         signal_id=f"signal_allocation_drift_{identity}",
