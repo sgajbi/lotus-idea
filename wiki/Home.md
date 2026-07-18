@@ -12,7 +12,7 @@ supported yet.
 
 | Audience | Start with | Use it for |
 | --- | --- | --- |
-| Business and product | [Overview](Overview) and [Supported Features](Supported-Features) | Current capability truth, ownership boundaries, and promotion requirements. |
+| Business and product | [Overview](Overview), [Architecture](Architecture), and [Supported Features](Supported-Features) | Product blueprint, current capability truth, ownership boundaries, and promotion requirements. |
 | Sales and demo | [Demo Readiness](Demo-Readiness) and [Roadmap](Roadmap) | Implementation-backed talk tracks, do-not-claim rules, and planned capability framing. |
 | Operations and support | [Operations Runbook](Operations-Runbook), [Service SLO and Capacity](Service-SLO-And-Capacity), [Data Lifecycle Operations](Data-Lifecycle-Operations), [PostgreSQL Disaster Recovery](PostgreSQL-Disaster-Recovery), [Canonical Opportunity Source Proofs](Canonical-Opportunity-Source-Proofs), [Troubleshooting](Troubleshooting), [Validation and CI](Validation-and-CI), and [Security and Governance](Security-and-Governance) | Reliability budgets, supportability posture, governed privacy lifecycle, recovery, source-proof execution, diagnostics, gates, and incident first checks. |
 | Engineering and agents | [Architecture](Architecture), [API Surface](API-Surface), [Integrations](Integrations), [Development Workflow](Development-Workflow), and [RFC Index](RFC-Index) | Source authority, API foundations, repo-native commands, and RFC slice truth. |
@@ -23,7 +23,7 @@ supported yet.
 | --- | --- |
 | Understand what `lotus-idea` does | [Overview](Overview) |
 | See current support truth | [Supported Features](Supported-Features) |
-| Understand architecture and boundaries | [Architecture](Architecture) |
+| Understand architecture, blueprint, and boundaries | [Architecture](Architecture) |
 | Start locally | [Getting Started](Getting-Started) |
 | Work on the repo | [Development Workflow](Development-Workflow) |
 | Understand APIs and integrations | [API Surface](API-Surface), [Integrations](Integrations) |

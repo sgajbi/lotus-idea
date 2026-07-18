@@ -19,6 +19,13 @@ data-product certification, or supported-feature promotion from these foundation
 
 ## Architecture Principles
 
+The repo-authored product blueprint is `docs/LOTUS_IDEA_BLUEPRINT.md`. It is
+the durable anchor for product definition, source-authority boundaries, owned
+and non-owned capabilities, AI/human governance, and current non-claim rules.
+The blueprint is context truth only: it does not promote support, certify
+Gateway/Workbench, clear data-product blockers, prove downstream execution,
+implement production IdP/auth, or certify AI provider runtime.
+
 | Principle | Current application |
 | --- | --- |
 | Source authority stays upstream | `lotus-idea` carries source refs, freshness, and evidence; it does not recompute official portfolio, performance, risk, suitability, or report outcomes. |

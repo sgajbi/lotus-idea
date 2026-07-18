@@ -40,7 +40,8 @@ data-product certification, docs/wiki truth, and supported-feature evidence.
 
 Review inputs:
 
-1. `C:\Users\Sandeep\Downloads\LOTUS_IDEA_BLUEPRINT.md`.
+1. `docs/LOTUS_IDEA_BLUEPRINT.md`, repo-authored from the original
+   implementation-start blueprint.
 2. `lotus-platform/platform-standards/LOTUS_BANK_BUYABLE_ENGINEERING_CONTRACT.md`.
 3. `lotus-platform/context/playbooks/ENTERPRISE-BACKEND-REFACTORING-INSTRUCTIONS.md`.
 4. `lotus-platform/generated/domain-product-catalog.json`.

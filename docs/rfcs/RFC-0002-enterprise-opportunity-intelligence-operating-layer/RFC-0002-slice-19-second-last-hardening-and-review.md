@@ -1023,3 +1023,20 @@ and binds API/generated output to the domain snapshot. Tests cover empty,
 planned/not-applicable, malformed, missing path, stale review, missing/invalid
 registry, and valid current evidence. This is design modularity inside the
 existing runtime, not a publication service or supported-feature promotion.
+
+## Issue 594 Blueprint Context Durability
+
+Issue `#594` hardens RFC and agent context durability after Slice 00 still
+depended on a local Downloads-path blueprint. The repo now owns
+`docs/LOTUS_IDEA_BLUEPRINT.md` as the durable product and architecture anchor
+for Lotus Idea's opportunity-intelligence definition, source-authority map,
+owned/non-owned capability boundary, AI/human-governance posture, and current
+non-claim rules.
+
+README, repository context, architecture docs, wiki source, and Slice 00 now
+link that repo-authored anchor so future RFC work does not rely on chat memory
+or a local user file path. This is documentation/context hardening only. It
+does not change API behavior, implement authentication or authorization,
+certify live source ingestion, promote Gateway/Workbench support, certify data
+products, prove downstream execution, certify AI provider runtime, publish
+client-ready material, or promote a supported feature.

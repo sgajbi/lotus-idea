@@ -6,7 +6,7 @@ packs, scores, review queues, feedback records, conversion intent, and readiness
 
 | Start with | Use it for |
 | --- | --- |
-| [REPOSITORY-ENGINEERING-CONTEXT.md](REPOSITORY-ENGINEERING-CONTEXT.md) | Current implementation truth, repo-local rules, and issue-derived patterns. |
+| [REPOSITORY-ENGINEERING-CONTEXT.md](REPOSITORY-ENGINEERING-CONTEXT.md) and [docs/LOTUS_IDEA_BLUEPRINT.md](docs/LOTUS_IDEA_BLUEPRINT.md) | Current implementation truth, product blueprint, repo-local rules, and issue-derived patterns. |
 | [docs/rfcs/README.md](docs/rfcs/README.md) | RFC slice index and completion posture. |
 | [wiki/Home.md](wiki/Home.md) | Authored GitHub wiki source. |
 | [LOTUS_BANK_BUYABLE_ENGINEERING_CONTRACT.md](../lotus-platform/platform-standards/LOTUS_BANK_BUYABLE_ENGINEERING_CONTRACT.md) | Governing banking-grade engineering contract. |
@@ -295,7 +295,7 @@ Start here:
 
 - [REPOSITORY-ENGINEERING-CONTEXT.md](REPOSITORY-ENGINEERING-CONTEXT.md):
   repository role, current truth, engineering patterns, commands, issue-learning
-  loop, and promotion rules.
+  loop, promotion rules, and the durable product blueprint.
 - [docs/rfcs/README.md](docs/rfcs/README.md): RFC index and slice status.
 - [docs/operations/api-certification.md](docs/operations/api-certification.md):
   endpoint certification baseline and ledger rules.
