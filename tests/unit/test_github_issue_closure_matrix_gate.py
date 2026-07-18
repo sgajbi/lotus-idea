@@ -514,6 +514,23 @@ def test_github_issue_closure_matrix_gate_freezes_bond_maturity_runtime_validato
     assert "#640: merged-main issue cannot regress to `locally_fixed`" in errors
 
 
+def test_github_issue_closure_matrix_gate_freezes_runtime_trust_telemetry_loader_issue(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    matrix = tmp_path / "matrix.md"
+    content = module.MATRIX_PATH.read_text(encoding="utf-8").replace(
+        "issues/642) Refactor PostgreSQL runtime trust telemetry summary loader | `merged_main` |",
+        "issues/642) Refactor PostgreSQL runtime trust telemetry summary loader | "
+        "`locally_fixed` |",
+    )
+    matrix.write_text(content, encoding="utf-8")
+
+    errors = module.validate_issue_closure_matrix(matrix)
+
+    assert "#642: merged-main issue cannot regress to `locally_fixed`" in errors
+
+
 def test_github_issue_closure_matrix_gate_freezes_postgres_snapshot_writes_main_truth(
     tmp_path: Path,
 ) -> None:
