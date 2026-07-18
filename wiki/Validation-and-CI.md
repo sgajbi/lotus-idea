@@ -774,13 +774,14 @@ make test-e2e E2E_TESTS=tests/e2e/test_critical_idea_workflow.py
 Use these overrides for fast local diagnosis. PR evidence should still state whether the full
 repo-native target or a focused target was run.
 
-Integration API tests must construct clients through
-`tests.support.http.managed_test_client`. The integration fixture enters the
-application lifespan and closes all clients after each test, including failure
-paths. `make test-client-lifecycle-gate` is blocking through `make lint` and
-rejects direct FastAPI or Starlette `TestClient` imports and construction. This
-keeps shutdown behavior explicit and prevents cumulative event-loop socket
-exhaustion during repeated Windows suites.
+Integration and E2E API tests must construct clients through
+`tests.support.http.managed_test_client`. The integration and E2E fixtures enter
+the application lifespan and close all clients after each test, including
+failure paths. `make test-client-lifecycle-gate` is blocking through
+`make lint` and rejects direct FastAPI or Starlette `TestClient` imports and
+construction in both suites. This keeps shutdown behavior explicit and prevents
+cumulative event-loop socket exhaustion during repeated Windows suites and the
+critical idea workflow E2E lane.
 
 GitHub test and coverage lanes must stay repo-native:
 

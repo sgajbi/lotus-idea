@@ -1061,3 +1061,24 @@ stale fingerprint, and tampered status. This clears only the Slice 19
 architecture-report freshness gap. It does not certify runtime behavior,
 Gateway/Workbench product support, data-mesh certification, production
 deployment, client publication, or supported-feature promotion.
+
+## Issue 598 E2E Managed TestClient Lifecycle
+
+Issue `#598` hardens the existing managed FastAPI/Starlette `TestClient`
+lifecycle guard after the integration suite was protected but the E2E smoke and
+critical idea workflow tests could still construct unmanaged clients directly.
+
+`scripts/testing/test_client_lifecycle_gate.py` now scans both `tests/integration`
+and `tests/e2e`, and focused unit tests prove the current pass path plus the
+unmanaged E2E import/construction failure path. The E2E suite now has an
+autouse managed-client lifecycle fixture and its API callers use
+`tests.support.http.managed_test_client`, preserving application lifespan and
+deterministic shutdown cleanup for repeated local and CI runs.
+
+This is test-governance hardening only. It does not change product runtime
+behavior, API contracts, OpenAPI output, migrations, authentication,
+authorization, Gateway, Workbench, source authority, or supported-feature
+promotion. The current platform and backend skills already require governed
+in-process API client lifecycle handling, so no central skill change is
+justified; the durable prevention is the repository-native blocking gate and
+repo-local documentation/context update.

@@ -1575,9 +1575,9 @@ Recent issue-derived patterns to preserve:
     the retired flat v1 paths. This is design modularity within the existing
     API/worker deployable and shared Idea PostgreSQL boundary, not a new
     service or database.
-37. Integration API clients must be created through
-    `tests.support.http.managed_test_client`. The autouse integration fixture
-    owns application lifespan and deterministic client shutdown per test;
+37. Integration and E2E API clients must be created through
+    `tests.support.http.managed_test_client`. The autouse integration and E2E
+    fixtures own application lifespan and deterministic client shutdown per test;
     direct FastAPI or Starlette `TestClient` construction is blocked by
     `make test-client-lifecycle-gate` through `make lint`. This prevents
     cumulative event-loop socket exhaustion on Windows and ensures shutdown

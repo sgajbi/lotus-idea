@@ -1,16 +1,16 @@
-from fastapi.testclient import TestClient
 from app.main import app
+from tests.support.http import managed_test_client
 
 
 def test_e2e_smoke() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     response = client.get("/health")
     assert response.status_code == 200
     assert response.json()["status"] == "ok"
 
 
 def test_metadata_endpoint() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     response = client.get("/metadata")
     assert response.status_code == 200
     payload = response.json()
@@ -33,7 +33,7 @@ def test_metadata_endpoint() -> None:
 
 
 def test_version_endpoint_matches_metadata_endpoint() -> None:
-    client = TestClient(app)
+    client = managed_test_client(app)
     metadata_response = client.get("/metadata")
     version_response = client.get("/version")
 
