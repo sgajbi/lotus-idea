@@ -6,6 +6,52 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-07-19: Implementation Proof Readiness Capability Assertion Boundary
+
+Issue `#653` applies the Slice 19 report-only quality-baseline lens to the
+implementation-proof readiness source-safe capability test. After issue `#652`,
+`make quality-baseline` listed
+`tests/unit/test_implementation_proof_readiness.py::test_implementation_proof_readiness_capabilities_are_source_safe`
+at `138` lines.
+
+The test mixed:
+
+1. expected capability inventory assertions,
+2. repeated capability lookup,
+3. runtime trust telemetry evidence and blocker assertions,
+4. outbox delivery evidence and blocker assertions,
+5. source-ingestion evidence and blocker assertions,
+6. opportunity archetype evidence, blocker, readiness, supportability, and
+   supported-feature non-promotion assertions,
+7. downstream realization evidence and blocker assertions,
+8. AI explanation evidence and model-risk blocker assertions,
+9. serialized no-leak posture assertions.
+
+`tests/unit/test_implementation_proof_readiness.py` now keeps one externally
+visible source-safe readiness capability proof, but the public test is a short
+snapshot-building orchestrator over named helpers for capability inventory,
+capability lookup, each capability-family assertion, and serialized no-leak
+posture. Capability IDs, evidence refs, blocker checks, readiness/supportability
+assertions, supported-feature non-promotion assertions, and no-leak assertions
+are preserved.
+
+Focused validation passed:
+
+1. `python -m ruff check tests/unit/test_implementation_proof_readiness.py`,
+2. `python -m ruff format --check tests/unit/test_implementation_proof_readiness.py`,
+3. `python -m mypy tests/unit/test_implementation_proof_readiness.py`,
+4. `python -m pytest tests/unit/test_implementation_proof_readiness.py -q`
+   (`28` passed).
+
+This is test-support maintainability only. It does not change production
+readiness behavior, proof-artifact semantics, API/OpenAPI, persistence,
+migrations, authentication or authorization infrastructure, Core, Gateway,
+Workbench, runtime topology, wiki source, README, supported-features,
+data-mesh certification, external-publication authority, or supported-feature
+promotion. Broader local gates, PR checks, exact-main Main
+Releasability/CodeQL, wiki parity, issue closure, and branch cleanup remain
+pending for the tranche.
+
 ## 2026-07-19: Configured Proof Artifacts Source-Safe Ref Test Boundary
 
 Issue `#652` applies the Slice 19 report-only quality-baseline lens to the
