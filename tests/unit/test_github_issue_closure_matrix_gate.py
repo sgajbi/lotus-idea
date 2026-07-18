@@ -299,6 +299,23 @@ def test_github_issue_closure_matrix_gate_requires_proof_readiness_capability_is
     assert "Missing actionable issue rows: #653" in errors
 
 
+def test_github_issue_closure_matrix_gate_requires_data_lifecycle_fake_cursor_issue(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    matrix = tmp_path / "matrix.md"
+    content = "\n".join(
+        line
+        for line in module.MATRIX_PATH.read_text(encoding="utf-8").splitlines()
+        if "[#654]" not in line
+    )
+    matrix.write_text(content, encoding="utf-8")
+
+    errors = module.validate_issue_closure_matrix(matrix)
+
+    assert "Missing actionable issue rows: #654" in errors
+
+
 def test_github_issue_closure_matrix_gate_requires_postgres_snapshot_writes_issue(
     tmp_path: Path,
 ) -> None:

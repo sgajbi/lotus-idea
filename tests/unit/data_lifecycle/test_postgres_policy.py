@@ -39,6 +39,52 @@ from app.infrastructure.data_lifecycle.postgres_redaction import (
 from tests.unit.postgres_repository_fake import FakePostgresConnection
 
 NOW = datetime(2026, 7, 11, 9, 0, tzinfo=UTC)
+_CONTROL_UPDATE_COLUMNS = (
+    "state",
+    "version",
+    "updated_at_utc",
+    "held_from_state",
+    "hold_authority_ref",
+    "hold_change_reference",
+    "held_at_utc",
+    "erased_at_utc",
+    "purged_at_utc",
+    "tombstone_sha256",
+)
+_OPERATION_INSERT_COLUMNS = (
+    "operation_id",
+    "idempotency_key",
+    "request_fingerprint",
+    "candidate_id",
+    "correlation_id",
+    "trace_id",
+    "tenant_id",
+    "action",
+    "decision",
+    "dry_run",
+    "actor_subject",
+    "approver_subject",
+    "authority_ref",
+    "reason",
+    "change_reference",
+    "blockers_json",
+    "affected_row_counts_json",
+    "audit_sha256",
+    "requested_at_utc",
+    "evaluated_at_utc",
+    "control_version",
+    "authority_decision_id",
+    "authority_replay_nonce",
+    "authority_key_id",
+    "authority_rotation_epoch",
+    "authority_verified_at_utc",
+    "archive_decision_id",
+    "archive_document_id",
+    "archive_evidence_pack_id",
+    "archive_payload_digest",
+    "archive_key_id",
+    "archive_verified_at_utc",
+)
 
 
 @pytest.mark.parametrize(
@@ -80,132 +126,124 @@ class LifecycleCursor:
         return None
 
     def execute(self, query: str, params: Sequence[Any] | None = None) -> None:
+        normalized = self._prepare_statement(query)
+        if "pg_advisory_xact_lock" in normalized:
+            return
+        if "from idea_data_lifecycle_operation" in normalized:
+            self._load_existing_lifecycle_operation(normalized, params)
+            return
+        if "select candidate_json" in normalized:
+            self._load_candidate_json(params)
+            return
+        if "from idea_data_lifecycle_control" in normalized:
+            self._load_lifecycle_control()
+            return
+        if "from idea_outbox_event" in normalized:
+            self._load_active_count(self.connection.active_outbox_count)
+            return
+        if "from idea_downstream_submission" in normalized:
+            self._load_active_count(self.connection.active_downstream_count)
+            return
+        if "from idea_report_evidence_pack_request" in normalized:
+            self._load_linked_report_evidence_pack_ids()
+            return
+        if normalized.startswith("update idea_data_lifecycle_control"):
+            self._update_lifecycle_control(params)
+            return
+        if normalized.startswith("insert into idea_data_lifecycle_operation"):
+            self._insert_lifecycle_operation(params)
+            return
+        raise AssertionError(f"unexpected SQL: {normalized}")
+
+    def _prepare_statement(self, query: str) -> str:
         normalized = " ".join(query.lower().split())
         self.executed.append(normalized)
         self.rows = []
         self.rowcount = 0
-        if "pg_advisory_xact_lock" in normalized:
-            return
-        if "from idea_data_lifecycle_operation" in normalized:
-            assert params is not None
-            if "archive_decision_id" in normalized:
-                operation = next(
-                    (
-                        row
-                        for row in self.connection.operations.values()
-                        if row.get("decision") == "applied"
-                        and (
-                            row.get("archive_decision_id") == params[0]
-                            or row.get("archive_payload_digest") == params[1]
-                        )
-                    ),
-                    None,
+        return normalized
+
+    def _load_existing_lifecycle_operation(
+        self,
+        normalized: str,
+        params: Sequence[Any] | None,
+    ) -> None:
+        assert params is not None
+        if "archive_decision_id" in normalized:
+            operation = self._operation_by_archive_receipt(params)
+        elif "where authority_decision_id" in normalized:
+            operation = self._operation_by_authority_receipt(params)
+        else:
+            operation = self.connection.operations.get(str(params[0]))
+        self.rows = [operation] if operation is not None else []
+
+    def _operation_by_archive_receipt(
+        self,
+        params: Sequence[Any],
+    ) -> dict[str, Any] | None:
+        return next(
+            (
+                row
+                for row in self.connection.operations.values()
+                if row.get("decision") == "applied"
+                and (
+                    row.get("archive_decision_id") == params[0]
+                    or row.get("archive_payload_digest") == params[1]
                 )
-            elif "where authority_decision_id" in normalized:
-                operation = next(
-                    (
-                        row
-                        for row in self.connection.operations.values()
-                        if row.get("authority_decision_id") == params[0]
-                        or row.get("authority_replay_nonce") == params[1]
-                    ),
-                    None,
-                )
-            else:
-                operation = self.connection.operations.get(str(params[0]))
-            self.rows = [operation] if operation is not None else []
-            return
-        if "select candidate_json" in normalized:
-            assert params is not None
-            if self.connection.candidate_exists:
-                self.rows = [
-                    {
-                        "candidate_json": {
-                            "access_scope": {"tenant_id": self.connection.candidate_tenant_id}
-                        }
-                    }
-                ]
-            return
-        if "from idea_data_lifecycle_control" in normalized:
-            self.rows = [dict(self.connection.control)] if self.connection.control else []
-            return
-        if "from idea_outbox_event" in normalized:
-            self.rows = [{"active_count": self.connection.active_outbox_count}]
-            return
-        if "from idea_downstream_submission" in normalized:
-            self.rows = [{"active_count": self.connection.active_downstream_count}]
-            return
-        if "from idea_report_evidence_pack_request" in normalized:
+            ),
+            None,
+        )
+
+    def _operation_by_authority_receipt(
+        self,
+        params: Sequence[Any],
+    ) -> dict[str, Any] | None:
+        return next(
+            (
+                row
+                for row in self.connection.operations.values()
+                if row.get("authority_decision_id") == params[0]
+                or row.get("authority_replay_nonce") == params[1]
+            ),
+            None,
+        )
+
+    def _load_candidate_json(self, params: Sequence[Any] | None) -> None:
+        assert params is not None
+        if self.connection.candidate_exists:
             self.rows = [
-                {"report_evidence_pack_id": evidence_pack_id}
-                for evidence_pack_id in sorted(self.connection.linked_report_evidence_pack_ids)
+                {
+                    "candidate_json": {
+                        "access_scope": {"tenant_id": self.connection.candidate_tenant_id}
+                    }
+                }
             ]
-            return
-        if normalized.startswith("update idea_data_lifecycle_control"):
-            assert params is not None
-            self.rowcount = self.connection.control_update_rowcount
-            if self.rowcount == 1:
-                keys = (
-                    "state",
-                    "version",
-                    "updated_at_utc",
-                    "held_from_state",
-                    "hold_authority_ref",
-                    "hold_change_reference",
-                    "held_at_utc",
-                    "erased_at_utc",
-                    "purged_at_utc",
-                    "tombstone_sha256",
-                )
-                self.connection.control.update(dict(zip(keys, params[:10], strict=True)))
-            return
-        if normalized.startswith("insert into idea_data_lifecycle_operation"):
-            assert params is not None
-            values = [_unwrap(value) for value in params]
-            row = dict(
-                zip(
-                    (
-                        "operation_id",
-                        "idempotency_key",
-                        "request_fingerprint",
-                        "candidate_id",
-                        "correlation_id",
-                        "trace_id",
-                        "tenant_id",
-                        "action",
-                        "decision",
-                        "dry_run",
-                        "actor_subject",
-                        "approver_subject",
-                        "authority_ref",
-                        "reason",
-                        "change_reference",
-                        "blockers_json",
-                        "affected_row_counts_json",
-                        "audit_sha256",
-                        "requested_at_utc",
-                        "evaluated_at_utc",
-                        "control_version",
-                        "authority_decision_id",
-                        "authority_replay_nonce",
-                        "authority_key_id",
-                        "authority_rotation_epoch",
-                        "authority_verified_at_utc",
-                        "archive_decision_id",
-                        "archive_document_id",
-                        "archive_evidence_pack_id",
-                        "archive_payload_digest",
-                        "archive_key_id",
-                        "archive_verified_at_utc",
-                    ),
-                    values,
-                    strict=True,
-                )
+
+    def _load_lifecycle_control(self) -> None:
+        self.rows = [dict(self.connection.control)] if self.connection.control else []
+
+    def _load_active_count(self, active_count: int) -> None:
+        self.rows = [{"active_count": active_count}]
+
+    def _load_linked_report_evidence_pack_ids(self) -> None:
+        self.rows = [
+            {"report_evidence_pack_id": evidence_pack_id}
+            for evidence_pack_id in sorted(self.connection.linked_report_evidence_pack_ids)
+        ]
+
+    def _update_lifecycle_control(self, params: Sequence[Any] | None) -> None:
+        assert params is not None
+        self.rowcount = self.connection.control_update_rowcount
+        if self.rowcount == 1:
+            self.connection.control.update(
+                dict(zip(_CONTROL_UPDATE_COLUMNS, params[:10], strict=True))
             )
-            self.connection.operations[str(row["idempotency_key"])] = row
-            self.rowcount = 1
-            return
-        raise AssertionError(f"unexpected SQL: {normalized}")
+
+    def _insert_lifecycle_operation(self, params: Sequence[Any] | None) -> None:
+        assert params is not None
+        values = [_unwrap(value) for value in params]
+        row = dict(zip(_OPERATION_INSERT_COLUMNS, values, strict=True))
+        self.connection.operations[str(row["idempotency_key"])] = row
+        self.rowcount = 1
 
     def fetchone(self) -> Mapping[str, Any] | None:
         return self.rows[0] if self.rows else None
