@@ -767,7 +767,12 @@ Downstream realization:
 8. local/test-only Report fixture: `LOTUS_IDEA_REPORT_REALIZATION_ACTOR_ID`,
    `LOTUS_IDEA_REPORT_REALIZATION_CALLER_APPLICATION`,
    `LOTUS_IDEA_REPORT_REALIZATION_TENANT_ID`, and
-   `LOTUS_IDEA_REPORT_REALIZATION_REGION`,
+   `LOTUS_IDEA_REPORT_REALIZATION_REGION`. The owner-authorized synthetic
+   fixture is fixed to `tenant-sg` / `APAC`; other local/test values fail
+   closed. At the Report adapter boundary only, the Idea-owned
+   `lotus-report:idea-evidence-retention:v1` reference maps to the
+   Report-owned `generated-report-standard` selector. Do not persist that
+   selector in Idea or treat it as trusted production identity,
 9. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_TIMEOUT_SECONDS`,
 10. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_MAX_CONNECTIONS`,
 11. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_MAX_KEEPALIVE_CONNECTIONS`,
@@ -781,8 +786,9 @@ only. They never trust browser-supplied identity headers and fail closed in
 demo, staging, and production until trusted service identity and
 IdP/session/token-claim mapping are delivered through the tracked identity
 work in issue `#380`. The Report adapter maps the Idea evidence envelope into
-the Report-owned strict snake-case intake contract and does not grant Report,
-Render, Archive, or publication authority.
+the Report-owned strict snake-case intake contract, performs only the governed
+retention-policy selector translation documented above, and does not grant
+Report, Render, Archive, or publication authority.
 
 Outbox broker:
 

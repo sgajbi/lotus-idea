@@ -470,7 +470,12 @@ Report intake uses the same server-only local/test fixture posture. It requires
 `LOTUS_IDEA_REPORT_REALIZATION_REGION`; the adapter forwards them only as
 `X-Actor-Id`, `X-Caller-Application`, `X-Tenant-Id`, and `X-Region` to the
 Report-owned `POST /reports/idea-evidence-packs` route. The adapter maps the
-Idea envelope to the owner's strict snake-case contract. It is restricted to
+Idea envelope to the owner's strict snake-case contract. It translates the
+Idea-owned `lotus-report:idea-evidence-retention:v1` reference only at that
+boundary to the Report-owned `generated-report-standard` selector and keeps
+the persisted Idea lifecycle reference unchanged. The synthetic Report fixture
+is limited to `tenant-sg` / `APAC`; other local/test tenant or region values
+fail closed. It is restricted to
 `local` and `test`, fails closed in demo/staging/production, does not trust
 browser identity, and does not prove Report acceptance, materialization,
 rendering, archive creation, client publication, or IdP/session/token-claim

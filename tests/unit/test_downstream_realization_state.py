@@ -110,6 +110,26 @@ def test_invalid_report_adapter_configuration_fails_closed(
         get_report_evidence_pack_realization_client()
 
 
+@pytest.mark.parametrize(
+    ("environment_name", "environment_value", "message"),
+    [
+        (REPORT_TENANT_ID_ENV, "local-development", "tenant_id must be 'tenant-sg'"),
+        (REPORT_REGION_ENV, "local", "region must be 'APAC'"),
+    ],
+)
+def test_report_service_context_fixture_rejects_unrecognized_owner_scope(
+    monkeypatch: pytest.MonkeyPatch,
+    environment_name: str,
+    environment_value: str,
+    message: str,
+) -> None:
+    configure_report_env(monkeypatch)
+    monkeypatch.setenv(environment_name, environment_value)
+
+    with pytest.raises(DownstreamRealizationClientsUnavailableError, match=message):
+        get_report_evidence_pack_realization_client()
+
+
 def test_missing_downstream_configuration_fails_closed(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -298,6 +318,6 @@ def configure_report_env(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv(REPORT_SUBMIT_PATH_ENV, "/reports/idea-evidence-packs")
     monkeypatch.setenv(REPORT_ACTOR_ID_ENV, "lotus-idea-local-development")
     monkeypatch.setenv(REPORT_CALLER_APPLICATION_ENV, "lotus-idea")
-    monkeypatch.setenv(REPORT_TENANT_ID_ENV, "local-development")
-    monkeypatch.setenv(REPORT_REGION_ENV, "local")
+    monkeypatch.setenv(REPORT_TENANT_ID_ENV, "tenant-sg")
+    monkeypatch.setenv(REPORT_REGION_ENV, "APAC")
     monkeypatch.setenv(TIMEOUT_SECONDS_ENV, "1.25")

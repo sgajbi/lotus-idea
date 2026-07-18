@@ -75,9 +75,14 @@ Implemented in the first Slice 13 foundation:
    adapter foundation for Report evidence-pack request handoff envelopes. The
    adapter maps the Idea-owned vocabulary into the Report-owned strict
    snake-case intake contract at `POST /reports/idea-evidence-packs`, including
-   purpose and `REPORT_INTAKE_ONLY` boundary translation. It preserves
-   Report/Render/Archive source authority, retention posture, reason codes, and
-   bounded source summaries while omitting source routes, raw source payloads,
+   purpose and `REPORT_INTAKE_ONLY` boundary translation. The adapter maps the
+   Idea-owned external retention reference
+   `lotus-report:idea-evidence-retention:v1` only at the Report boundary to the
+   owner selector `generated-report-standard`; the persisted Idea lifecycle
+   reference remains unchanged. Local/test context is limited to the
+   Report-authorized synthetic fixture `tenant-sg` / `APAC`, while all other
+   profiles fail closed. It preserves Report/Render/Archive source authority,
+   retention posture, reason codes, and bounded source summaries while omitting source routes, raw source payloads,
    raw downstream responses, and client-ready publication authority. Report
    caller context is server-configured only for `local` and `test`; demo,
    staging, and production fail closed until trusted identity and IdP claim
