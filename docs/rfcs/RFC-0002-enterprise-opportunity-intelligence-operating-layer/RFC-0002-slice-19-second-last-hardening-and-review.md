@@ -1260,3 +1260,12 @@ runtime topology, or supported-feature promotion. README, wiki,
 supported-features, OpenAPI, migrations, and central skills are unchanged by
 explicit scope decision until a later slice changes reader-facing product or
 operator truth.
+
+PR `#607` merged by rebase to exact-main SHA
+`6281106f5fe314bce7b7b3c9db20a64252a8fb0e`. Feature Lane, PR Merge Gate,
+exact-main Main Releasability `29639367176`, and exact-main CodeQL
+`29639364976` passed. Release evidence published
+`ghcr.io/sgajbi/lotus-idea@sha256:6ba9d633707a1045901f899055fcc86cf3766806fea0905dcd5c406e76969154`.
+Issue `#606` is closed and the local and remote implementation branches are
+absent after remote prune. Strict wiki parity and the repo-local wiki quality
+audit passed; no wiki publication change was needed.
