@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
-from typing import Any, Mapping, TypedDict
+from typing import Any, Mapping, Sequence, TypedDict
 
 import pytest
 
@@ -70,7 +70,13 @@ def _postgres_dead_letter(connection: FakePostgresConnection) -> Any:
     return repository.snapshot().outbox_events[event.event_id]
 
 
-def _recovery_claim(event_id: str, idempotency_key: str) -> RecoveryClaim:
+def _recovery_claim(
+    event_id: str,
+    idempotency_key: str,
+    *,
+    change_reference: str = "CHG-POSTGRES-RECOVERY",
+    lease_attempt_id: str = "recovery-attempt",
+) -> RecoveryClaim:
     support_reference = outbox_dead_letter_support_reference(event_id)
     return {
         "support_reference": support_reference,
@@ -78,15 +84,15 @@ def _recovery_claim(event_id: str, idempotency_key: str) -> RecoveryClaim:
         "request_payload": outbox_recovery_request_payload(
             support_reference=support_reference,
             reason="broker_route_corrected",
-            change_reference="CHG-POSTGRES-RECOVERY",
+            change_reference=change_reference,
             actor_subject="platform-operator",
         ),
         "actor_subject": "platform-operator",
         "reason": "broker_route_corrected",
-        "change_reference": "CHG-POSTGRES-RECOVERY",
+        "change_reference": change_reference,
         "requested_at_utc": EVALUATED_AT + timedelta(minutes=2),
         "lease_owner": "outbox-recovery",
-        "lease_attempt_id": "recovery-attempt",
+        "lease_attempt_id": lease_attempt_id,
         "lease_expires_at_utc": EVALUATED_AT + timedelta(minutes=7),
     }
 
@@ -179,6 +185,35 @@ def test_postgres_outbox_adapter_validates_delivery_lease_inputs() -> None:
 def test_postgres_outbox_recovery_is_durable_idempotent_and_lease_fenced() -> None:
     connection = FakePostgresConnection()
     repository = PostgresIdeaRepository(connection)
+    event = _create_dead_letter_for_recovery(repository)
+    _add_newer_pending_outbox_events(connection, event.event_id)
+    claim = _recovery_claim(
+        event.event_id,
+        "outbox-redrive:postgres:001",
+        change_reference="CHG-2026-0710",
+        lease_attempt_id="recovery-attempt-1",
+    )
+
+    summaries = repository.dead_letter_summaries(limit=10)
+    accepted = repository.claim_dead_letter_for_recovery(**claim)
+    restarted_repository = PostgresIdeaRepository(connection)
+    replay = restarted_repository.claim_dead_letter_for_recovery(**claim)
+    competing_claim = _competing_recovery_claim(claim)
+    competing = restarted_repository.claim_dead_letter_for_recovery(**competing_claim)
+
+    _assert_recovery_summary_and_decisions(
+        summaries,
+        claim,
+        accepted,
+        replay,
+        competing,
+    )
+    _assert_recovery_audit_is_source_safe(restarted_repository, connection)
+    _assert_support_reference_lookup_sql(connection)
+    _assert_delivery_input_validation(repository)
+
+
+def _create_dead_letter_for_recovery(repository: PostgresIdeaRepository) -> Any:
     candidate = high_cash_candidate(candidate_scope=access_scope())
     repository.persist_candidate(
         candidate,
@@ -204,10 +239,15 @@ def test_postgres_outbox_recovery_is_durable_idempotent_and_lease_fenced() -> No
         failed_at_utc=EVALUATED_AT + timedelta(minutes=1),
         max_retry_count=1,
     )
+    return event
+
+
+def _add_newer_pending_outbox_events(
+    connection: FakePostgresConnection,
+    event_id: str,
+) -> None:
     target_row = next(
-        row
-        for row in connection.rows["idea_outbox_event"]
-        if row["outbox_event_id"] == event.event_id
+        row for row in connection.rows["idea_outbox_event"] if row["outbox_event_id"] == event_id
     )
     connection.rows["idea_outbox_event"].extend(
         {
@@ -218,49 +258,44 @@ def test_postgres_outbox_recovery_is_durable_idempotent_and_lease_fenced() -> No
         }
         for index in range(1001)
     )
-    support_reference = outbox_dead_letter_support_reference(event.event_id)
-    request_payload = outbox_recovery_request_payload(
-        support_reference=support_reference,
-        reason="broker_route_corrected",
-        change_reference="CHG-2026-0710",
-        actor_subject="platform-operator",
-    )
-    claim: RecoveryClaim = {
-        "support_reference": support_reference,
-        "idempotency_key": "outbox-redrive:postgres:001",
-        "request_payload": request_payload,
-        "actor_subject": "platform-operator",
-        "reason": "broker_route_corrected",
-        "change_reference": "CHG-2026-0710",
-        "requested_at_utc": EVALUATED_AT + timedelta(minutes=2),
-        "lease_owner": "outbox-recovery",
-        "lease_attempt_id": "recovery-attempt-1",
-        "lease_expires_at_utc": EVALUATED_AT + timedelta(minutes=7),
-    }
 
-    summaries = repository.dead_letter_summaries(limit=10)
-    accepted = repository.claim_dead_letter_for_recovery(**claim)
-    restarted_repository = PostgresIdeaRepository(connection)
-    replay = restarted_repository.claim_dead_letter_for_recovery(**claim)
-    competing_claim: RecoveryClaim = {
+
+def _competing_recovery_claim(claim: RecoveryClaim) -> RecoveryClaim:
+    return {
         **claim,
         "idempotency_key": "outbox-redrive:postgres:002",
         "lease_attempt_id": "recovery-attempt-2",
     }
-    competing = restarted_repository.claim_dead_letter_for_recovery(**competing_claim)
 
-    assert [summary.support_reference for summary in summaries] == [support_reference]
+
+def _assert_recovery_summary_and_decisions(
+    summaries: Sequence[Any],
+    claim: RecoveryClaim,
+    accepted: Any,
+    replay: Any,
+    competing: Any,
+) -> None:
+    assert [summary.support_reference for summary in summaries] == [claim["support_reference"]]
     assert accepted.decision is OutboxRecoveryDecision.ACCEPTED
     assert accepted.event is not None
     assert accepted.event.status is OutboxEventStatus.LEASED
     assert accepted.event.failure_reason == "publisher_rejected"
     assert replay.decision is OutboxRecoveryDecision.REPLAYED
     assert competing.decision is OutboxRecoveryDecision.LEASE_CONFLICT
-    records = restarted_repository.outbox_recovery_audit_records()
+
+
+def _assert_recovery_audit_is_source_safe(
+    repository: PostgresIdeaRepository,
+    connection: FakePostgresConnection,
+) -> None:
+    records = repository.outbox_recovery_audit_records()
     assert len(records) == 1
     assert records[0].original_failure_reason == "publisher_rejected"
     assert records[0].original_retry_count == 1
     assert "outbox-redrive:postgres:001" not in str(connection.rows)
+
+
+def _assert_support_reference_lookup_sql(connection: FakePostgresConnection) -> None:
     lookup_sql = next(
         query
         for query in connection.executed_sql
@@ -270,6 +305,9 @@ def test_postgres_outbox_recovery_is_durable_idempotent_and_lease_fenced() -> No
     assert "sha256(outbox_event_id::bytea)" in lookup_sql
     assert "order by" not in lookup_sql
     assert "limit" not in lookup_sql
+
+
+def _assert_delivery_input_validation(repository: PostgresIdeaRepository) -> None:
     with pytest.raises(ValueError, match="event_id is required"):
         repository.mark_outbox_event_published(
             " ",

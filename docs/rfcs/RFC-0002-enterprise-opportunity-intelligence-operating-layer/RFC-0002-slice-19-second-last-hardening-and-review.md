@@ -24,6 +24,51 @@ Perform the full engineering review before final closure.
 
 ## Current Implementation Evidence
 
+Issue `#655` applies the Slice 19 quality-baseline learning to the PostgreSQL
+outbox recovery workflow proof. After issue `#654`, the current report-only
+quality baseline listed
+`tests/unit/outbox/test_postgres_delivery_adapter.py::test_postgres_outbox_recovery_is_durable_idempotent_and_lease_fenced`
+at `125` lines. The scenario proved important recovery supportability but
+mixed candidate/outbox dead-letter setup, newer pending event fan-out,
+recovery claim construction, accepted/replayed/competing decisions, audit
+source-safety assertions, support-reference lookup SQL-shape checks, and
+invalid delivery input validation in one function.
+
+`tests/unit/outbox/test_postgres_delivery_adapter.py` now keeps the same
+externally visible durable/idempotent/lease-fenced recovery proof, but the
+public test is a short orchestrator over named helpers for dead-letter setup,
+newer pending event fan-out, competing claim construction, recovery decision
+assertions, audit/source-safety assertions, support-reference SQL-shape
+assertions, and invalid delivery input checks. Event states, support
+references, idempotency keys, lease attempts, failure reasons, SQL-shape
+assertions, validation errors, and recovery decisions are preserved.
+
+Focused validation passed:
+
+1. `python -m ruff check tests/unit/outbox/test_postgres_delivery_adapter.py`,
+2. `python -m ruff format --check tests/unit/outbox/test_postgres_delivery_adapter.py`,
+3. `python -m mypy tests/unit/outbox/test_postgres_delivery_adapter.py`,
+4. `python -m pytest tests/unit/outbox/test_postgres_delivery_adapter.py -q`
+   with `9` tests.
+
+The same-pattern scan followed the Slice 19 maintainability sequence through
+#654, current `quality/baseline_report.md`, duplicate searches for
+`test_postgres_outbox_recovery_is_durable_idempotent_and_lease_fenced`,
+`postgres outbox recovery durable idempotent lease fenced maintainability`,
+and `test_postgres_delivery_adapter.py maintainability`, the codebase review
+ledger, the issue closure matrix, refactor decisions, and issue-discovery
+ledger `#225`. Closed issue `#620` owns PostgreSQL fake row builders, not this
+outbox recovery workflow proof decomposition.
+
+This is internal test-support modularity only. It does not change production
+outbox delivery/recovery behavior, PostgreSQL repository implementation,
+API/OpenAPI, persistence, migrations, authentication or authorization
+infrastructure, Core, Gateway, Workbench, data-product support,
+external-publication authority, runtime topology, wiki source, README,
+supported features, or supported-feature promotion. Broader local gates, PR
+checks, exact-main Main Releasability/CodeQL, wiki parity, issue closure, and
+branch cleanup remain pending for the tranche.
+
 Issue `#654` applies the Slice 19 quality-baseline learning to the
 data-lifecycle PostgreSQL policy fake cursor. After issue `#653`, the current
 report-only quality baseline listed
