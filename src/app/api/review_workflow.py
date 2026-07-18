@@ -28,6 +28,7 @@ from app.api.review_workflow_models import (
 )
 from app.api.review_workflow_operations import (
     ReviewWorkflowCallerHeaders,
+    ReviewWorkflowMutationContext,
     emit_review_workflow_operation_event as _emit_review_operation_event,
     error_code_from_review_decision,
     operation_outcome_from_review_decision as _operation_outcome_from_review_decision,
@@ -37,6 +38,7 @@ from app.api.review_workflow_operations import (
 )
 from app.api.route_metadata import RouteMetadata
 from app.application.review_workflow import (
+    ReviewWorkflowResult,
     apply_review_action_to_repository,
     record_feedback_to_repository,
 )
@@ -109,103 +111,178 @@ async def record_review_action(
     x_causation_id: EventCausationHeader = None,
 ) -> ReviewActionResponse | JSONResponse:
     try:
-        context = prepare_review_workflow_mutation(
-            headers=ReviewWorkflowCallerHeaders(
-                subject=x_caller_subject,
-                roles=x_caller_roles,
-                capabilities=x_caller_capabilities,
-                tenant_ids=x_caller_tenant_ids,
-                book_ids=x_caller_book_ids,
-                portfolio_ids=x_caller_portfolio_ids,
-                client_ids=x_caller_client_ids,
-                trusted_caller_context=x_lotus_trusted_caller_context,
-            ),
-            capability=_REVIEW_ACTION_CAPABILITY,
+        context = _review_action_mutation_context(
+            x_caller_subject=x_caller_subject,
+            x_caller_roles=x_caller_roles,
+            x_caller_capabilities=x_caller_capabilities,
+            x_caller_tenant_ids=x_caller_tenant_ids,
+            x_caller_book_ids=x_caller_book_ids,
+            x_caller_portfolio_ids=x_caller_portfolio_ids,
+            x_caller_client_ids=x_caller_client_ids,
+            x_lotus_trusted_caller_context=x_lotus_trusted_caller_context,
             idempotency_key=idempotency_key,
-            operation=IdeaOperation.REVIEW_ACTION,
         )
         if isinstance(context, JSONResponse):
             return context
-        result = apply_review_action_to_repository(
-            request.to_command(
-                candidate_id=candidate_id,
-                caller=context.caller,
-                role=context.role,
-                idempotency_key=idempotency_key,
-                event_lineage=event_lineage_from_request(http_request, causation_id=x_causation_id),
-            ),
-            repository=context.repository,
+        result = _apply_review_action_request(
+            request,
+            context=context,
+            candidate_id=candidate_id,
+            idempotency_key=idempotency_key,
+            http_request=http_request,
+            causation_id=x_causation_id,
         )
     except PermissionDeniedError:
-        _emit_review_operation_event(
-            IdeaOperation.REVIEW_ACTION,
-            OperationOutcome.PERMISSION_DENIED,
-            "permission_denied",
+        return _review_action_permission_problem(
+            "The caller is not permitted to record idea reviews."
         )
-        return _permission_denied("The caller is not permitted to record idea reviews.")
     except ReviewEntitlementDenied:
-        _emit_review_operation_event(
-            IdeaOperation.REVIEW_ACTION,
-            OperationOutcome.PERMISSION_DENIED,
-            "permission_denied",
+        return _review_action_permission_problem(
+            "The caller is not permitted to review this idea candidate."
         )
-        return _permission_denied("The caller is not permitted to review this idea candidate.")
     except (InvalidCandidateState, InvalidReviewAction) as exc:
-        error_code = exc.code
-        _emit_review_operation_event(
-            IdeaOperation.REVIEW_ACTION,
-            OperationOutcome.INVALID_STATE,
-            error_code,
-            attributes={
-                "candidate_id": exc.candidate_id
-                if isinstance(exc, InvalidCandidateState)
-                else candidate_id,
-                "lifecycle_status": exc.lifecycle_status.value,
-                "policy_version": exc.policy_version,
-                "requested_action": request.action.value,
-                "review_posture": exc.review_posture.value,
-            },
-        )
-        return problem_response(
-            status_code=status.HTTP_409_CONFLICT,
-            code=error_code,
-            title=(
-                "Candidate state conflict"
-                if isinstance(exc, InvalidCandidateState)
-                else "Review action conflict"
-            ),
-            detail=(
-                "The persisted candidate lifecycle and review posture are incompatible."
-                if isinstance(exc, InvalidCandidateState)
-                else "The review action is not valid for the current idea candidate state."
-            ),
-        )
+        return _review_action_state_problem(exc, candidate_id=candidate_id, request=request)
     except ValueError:
-        _emit_review_operation_event(
-            IdeaOperation.REVIEW_ACTION,
-            OperationOutcome.INVALID_REQUEST,
-            "invalid_request",
-        )
-        return problem_response(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            code="invalid_request",
-            title="Invalid request",
-            detail="Correct the review request and retry.",
-        )
+        return _review_action_invalid_request_problem()
 
+    return _review_action_response(result, durable_storage_backed=context.durable_storage_backed)
+
+
+def _review_action_mutation_context(
+    *,
+    x_caller_subject: str | None,
+    x_caller_roles: str | None,
+    x_caller_capabilities: str | None,
+    x_caller_tenant_ids: str | None,
+    x_caller_book_ids: str | None,
+    x_caller_portfolio_ids: str | None,
+    x_caller_client_ids: str | None,
+    x_lotus_trusted_caller_context: str | None,
+    idempotency_key: str,
+) -> ReviewWorkflowMutationContext | JSONResponse:
+    return prepare_review_workflow_mutation(
+        headers=ReviewWorkflowCallerHeaders(
+            subject=x_caller_subject,
+            roles=x_caller_roles,
+            capabilities=x_caller_capabilities,
+            tenant_ids=x_caller_tenant_ids,
+            book_ids=x_caller_book_ids,
+            portfolio_ids=x_caller_portfolio_ids,
+            client_ids=x_caller_client_ids,
+            trusted_caller_context=x_lotus_trusted_caller_context,
+        ),
+        capability=_REVIEW_ACTION_CAPABILITY,
+        idempotency_key=idempotency_key,
+        operation=IdeaOperation.REVIEW_ACTION,
+    )
+
+
+def _apply_review_action_request(
+    request: ReviewActionRequest,
+    *,
+    context: ReviewWorkflowMutationContext,
+    candidate_id: str,
+    idempotency_key: str,
+    http_request: Request,
+    causation_id: EventCausationHeader,
+) -> ReviewWorkflowResult:
+    return apply_review_action_to_repository(
+        request.to_command(
+            candidate_id=candidate_id,
+            caller=context.caller,
+            role=context.role,
+            idempotency_key=idempotency_key,
+            event_lineage=event_lineage_from_request(http_request, causation_id=causation_id),
+        ),
+        repository=context.repository,
+    )
+
+
+def _review_action_permission_problem(detail: str) -> JSONResponse:
+    _emit_review_operation_event(
+        IdeaOperation.REVIEW_ACTION,
+        OperationOutcome.PERMISSION_DENIED,
+        "permission_denied",
+    )
+    return _permission_denied(detail)
+
+
+def _review_action_state_problem(
+    exc: InvalidCandidateState | InvalidReviewAction,
+    *,
+    candidate_id: str,
+    request: ReviewActionRequest,
+) -> JSONResponse:
+    _emit_review_operation_event(
+        IdeaOperation.REVIEW_ACTION,
+        OperationOutcome.INVALID_STATE,
+        exc.code,
+        attributes=_review_action_state_attributes(exc, candidate_id, request),
+    )
+    return problem_response(
+        status_code=status.HTTP_409_CONFLICT,
+        code=exc.code,
+        title=(
+            "Candidate state conflict"
+            if isinstance(exc, InvalidCandidateState)
+            else "Review action conflict"
+        ),
+        detail=(
+            "The persisted candidate lifecycle and review posture are incompatible."
+            if isinstance(exc, InvalidCandidateState)
+            else "The review action is not valid for the current idea candidate state."
+        ),
+    )
+
+
+def _review_action_state_attributes(
+    exc: InvalidCandidateState | InvalidReviewAction,
+    candidate_id: str,
+    request: ReviewActionRequest,
+) -> dict[str, str]:
+    return {
+        "candidate_id": exc.candidate_id
+        if isinstance(exc, InvalidCandidateState)
+        else candidate_id,
+        "lifecycle_status": exc.lifecycle_status.value,
+        "policy_version": exc.policy_version,
+        "requested_action": request.action.value,
+        "review_posture": exc.review_posture.value,
+    }
+
+
+def _review_action_invalid_request_problem() -> JSONResponse:
+    _emit_review_operation_event(
+        IdeaOperation.REVIEW_ACTION,
+        OperationOutcome.INVALID_REQUEST,
+        "invalid_request",
+    )
+    return problem_response(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        code="invalid_request",
+        title="Invalid request",
+        detail="Correct the review request and retry.",
+    )
+
+
+def _review_action_response(
+    result: ReviewWorkflowResult,
+    *,
+    durable_storage_backed: bool,
+) -> ReviewActionResponse | JSONResponse:
     problem = _problem_for_review_persistence(result.persistence)
     if problem is not None:
         _emit_review_operation_event(
             IdeaOperation.REVIEW_ACTION,
             _operation_outcome_from_review_decision(result.persistence.decision),
             _error_code_from_review_decision(result.persistence.decision),
-            context.durable_storage_backed,
+            durable_storage_backed,
         )
         return problem
     _emit_review_operation_event(
         IdeaOperation.REVIEW_ACTION,
         _operation_outcome_from_review_decision(result.persistence.decision),
-        durable_storage_backed=context.durable_storage_backed,
+        durable_storage_backed=durable_storage_backed,
     )
     return ReviewActionResponse(
         reviewDecision=(
@@ -214,7 +291,7 @@ async def record_review_action(
             else None
         ),
         persistence=ReviewPersistenceSummaryResponse.from_result(result.persistence),
-        durableStorageBacked=context.durable_storage_backed,
+        durableStorageBacked=durable_storage_backed,
         supportedFeaturePromoted=False,
     )
 

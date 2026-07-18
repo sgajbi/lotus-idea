@@ -1199,3 +1199,64 @@ exact-main CodeQL `29638083923`, and exact-main Main Releasability
 Issue `#603` is closed and the local and remote implementation branches are
 absent after remote prune. Strict wiki parity passed with DiffCount `0`; no
 wiki publication change was needed.
+
+## Issue 606 Review-Action API Maintainability
+
+Issue `#606` applies the #601/#603 same-pattern learning to the human-governance
+review-action API boundary. The report-only quality baseline on exact main
+`f357d263fb95c3b2ab08462844b54a0ec711b71b` listed
+`src/app/api/review_workflow.py::record_review_action` at `127` lines. The
+route mixed trusted caller construction, entitlement failure mapping,
+idempotency lineage, application command construction, invalid-state telemetry,
+invalid-request mapping, persistence problem mapping, operation events, final
+response assembly, and no-supported-feature posture in one review surface.
+
+`src/app/api/review_workflow.py` now preserves the public route signature,
+OpenAPI metadata, response schema, idempotency lineage, entitlement semantics,
+persistence decision mapping, operation-event posture, and
+`supportedFeaturePromoted=false` semantics while extracting:
+
+1. trusted caller and repository mutation-context construction,
+2. review-action command construction and application execution,
+3. permission and entitlement problem mapping,
+4. state-conflict telemetry attributes and problem responses,
+5. invalid-request problem responses,
+6. persistence problem and success response assembly.
+
+Focused validation passed:
+
+1. Ruff over `src/app/api/review_workflow.py`,
+2. MyPy over `src/app/api/review_workflow.py`,
+3. `make test-unit UNIT_TESTS=tests/unit/test_review_workflow_api_operations.py`
+   (`6` passed),
+4. `make test-unit UNIT_TESTS=tests/unit/test_review_workflow_application.py`
+   (`16` passed),
+5. `make test-unit UNIT_TESTS=tests/unit/api_examples/test_review_workflow.py`
+   (`2` passed),
+6. `make test-integration INTEGRATION_TESTS=tests/integration/test_review_workflow_api.py`
+   (`24` passed),
+7. `make test-integration INTEGRATION_TESTS=tests/integration/test_review_workflow_entitlements_api.py`
+   (`13` passed),
+8. `make test-integration INTEGRATION_TESTS=tests/integration/test_api_operation_events.py`
+   (`21` passed),
+9. `make quality-baseline`,
+10. `make maintainability-gate`,
+11. `make duplicate-implementation-gate` with zero duplicate clusters across
+    `2,947` functions.
+
+The same-pattern scan covered #601/#603 evidence, open and closed GitHub issue
+searches, source maintainability hotspots, duplicate implementation inventory,
+review workflow unit/integration tests, operation-event tests, the codebase
+review ledger, the issue closure matrix, and repository context.
+`record_review_action` is reduced to `54` lines and is no longer in the
+report-only top-function list. Sibling `record_feedback` remains below the
+current source-hotspot threshold at `99` lines, so this slice does not expand
+into a behavior-neutral feedback refactor.
+
+This is internal API-boundary modularity only; it does not implement an identity
+provider, authenticated sessions, token-claims, new authorization policy,
+Gateway/Workbench behavior, data-product support, client-ready publication,
+runtime topology, or supported-feature promotion. README, wiki,
+supported-features, OpenAPI, migrations, and central skills are unchanged by
+explicit scope decision until a later slice changes reader-facing product or
+operator truth.
