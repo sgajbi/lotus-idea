@@ -574,8 +574,11 @@ and their corresponding `scripts/endpoint_*_contracts.py` modules. Reuse
 OpenAPI publication, ledger parity, replay evidence, and authority boundaries
 evolve together without copied enforcement. Apply this rule endpoint by
 endpoint from executable application behavior and integration tests rather
-than inferring completeness from example counts. Issue `#542` tracks the
-remaining capability-by-capability multi-shape HTTP 2xx inventory.
+than inferring completeness from example counts. Issue `#542` tracked the
+capability-by-capability multi-shape HTTP 2xx inventory, and issue `#581`
+closed the final status-aware `GET /health/ready` entry. Remaining blockers
+are product/runtime/promotion evidence blockers, not missing named-response
+contract inventory.
 Register each capability validator in
 `scripts/endpoint_named_success_contracts.py`; do not add another direct import
 and invocation pair to the central endpoint certification gate. The registry
