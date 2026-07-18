@@ -1549,7 +1549,14 @@ Recent issue-derived patterns to preserve:
     split concentration source validation, issuer coverage, duplicate and
     materiality decisions, and candidate assembly into domain-owned helpers,
     and do not introduce a generic signal framework or unsupported
-    concentration calculation / trade / rebalance authority.
+    concentration calculation / trade / rebalance authority. Issue `#633`
+    applies the pattern to the bond-maturity Core adapter: keep the public
+    `fetch_bond_maturity_evidence` port behavior stable, split Core
+    `PortfolioMaturitySummary:v1` / `HoldingsAsOf:v1` source-fact validation
+    and DTO assembly into adapter-owned helpers, preserve fail-closed source
+    authority and currentness semantics, and do not implement Core changes,
+    live Core certification, runtime topology, Gateway/Workbench, or supported
+    feature claims.
 31. Route-owned runtimes must consume their own cleanup hooks. Source-ingestion
     run-once builds Core HTTP clients through `SourceIngestionRuntime`; the API
     path must close the runtime after accepted or source-unavailable execution

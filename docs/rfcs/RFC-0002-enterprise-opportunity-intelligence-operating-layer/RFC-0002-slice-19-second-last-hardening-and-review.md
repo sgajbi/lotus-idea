@@ -1582,6 +1582,60 @@ publication parity passed with `DiffCount 0`, so no wiki publication was
 required. Issue `#630` is closed on exact main, and the implementation branch
 is absent locally and remotely after patch-equivalence cleanup.
 
+## Issue 633 Bond-Maturity Core Adapter Maintainability
+
+Issue `#633` applies the same Slice 19 quality-baseline learning to the
+bond-maturity Core source adapter. After issue `#630`, the current
+report-only quality baseline on exact main
+`5dd200fe9f385bb27c566fa3ae76bf720249f241` listed
+`src/app/infrastructure/lotus_core_sources.py::fetch_bond_maturity_evidence`
+at `126` lines. The method mixed Core maturity-summary HTTP execution,
+entitlement/dependency mapping, Core `PortfolioMaturitySummary:v1` source-ref
+construction, upstream `HoldingsAsOf:v1` lineage validation, maturity-window
+and supportability field extraction, source-currentness and policy metadata,
+hash/correlation metadata, and product-safe diagnostic projection.
+
+`src/app/infrastructure/lotus_core_sources.py` now preserves the public
+`fetch_bond_maturity_evidence(request)` adapter behavior while extracting:
+
+1. `_bond_maturity_source_facts(...)` for next maturity date, maturing position
+   count, fail-closed holdings lineage, and maturity fact source-ref
+   construction;
+2. `_bond_maturity_evidence(...)` for the final `CoreBondMaturityEvidence`
+   response DTO projection.
+
+Focused validation passed:
+
+1. `python -m pytest tests/unit/test_lotus_core_sources.py tests/unit/bond_maturity_runtime_evidence/test_core_adapter.py -q`
+   (`62` passed),
+2. `python -m ruff check src/app/infrastructure/lotus_core_sources.py tests/unit/test_lotus_core_sources.py tests/unit/bond_maturity_runtime_evidence/test_core_adapter.py`,
+3. `python -m ruff format --check src/app/infrastructure/lotus_core_sources.py tests/unit/test_lotus_core_sources.py tests/unit/bond_maturity_runtime_evidence/test_core_adapter.py`,
+4. `python -m mypy src/app/infrastructure/lotus_core_sources.py`,
+5. `make quality-baseline`,
+6. `make maintainability-gate`,
+7. `make duplicate-implementation-gate` with zero duplicate clusters across
+   `2,967` functions,
+8. `make github-issue-closure-matrix-gate`,
+9. `make documentation-contract-gate`.
+
+The same-pattern scan covered #601/#603/#606/#609/#618/#620/#623/#625/#630
+maintainability evidence, current `quality/baseline_report.md`, open and
+closed GitHub duplicate searches for `fetch_bond_maturity_evidence`, `bond
+maturity maintainability`, and `lotus_core_sources maintainability`, focused
+Core adapter tests, runtime-evidence adapter tests, the codebase review ledger,
+the issue closure matrix, refactor decisions, and issue-discovery ledger
+`#225`. `fetch_bond_maturity_evidence` moved from `126` lines to a `19` line
+public orchestrator; the extracted helpers are `14` and `73` lines.
+
+This is internal adapter modularity only. It does not implement Core changes,
+live Core certification, authentication or authorization infrastructure,
+Gateway, Workbench, data-product support, external-publication authority,
+runtime topology changes, migrations, OpenAPI behavior changes, or
+supported-feature promotion. README, wiki, supported features, OpenAPI,
+migrations, and central skills are unchanged by explicit scope decision; no
+wiki publication is required unless later PR/mainline evidence changes
+repo-authored wiki truth.
+
 ## Issue 620 PostgreSQL Fake Row Construction Maintainability
 
 Issue `#620` follows through on the issue `#618` fake-infrastructure pattern.

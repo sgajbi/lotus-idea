@@ -6,6 +6,49 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-07-19: Bond-Maturity Core Adapter Source Boundary
+
+Issue `#633` applies the Slice 19 report-only quality-baseline lens to the
+Core bond-maturity source adapter. On exact main
+`5dd200fe9f385bb27c566fa3ae76bf720249f241`, `make quality-baseline` listed
+`src/app/infrastructure/lotus_core_sources.py::fetch_bond_maturity_evidence`
+at `126` lines, near the blocking `130` line source-function threshold.
+
+The method mixed:
+
+1. Core maturity-summary HTTP path construction and query execution,
+2. entitlement-denied and dependency-unavailable mapping,
+3. `PortfolioMaturitySummary:v1` source-ref construction,
+4. `HoldingsAsOf:v1` upstream lineage validation,
+5. response DTO assembly for maturity window, supportability, hash, freshness,
+   policy, and correlation metadata,
+6. product-safe bond-maturity diagnostic projection.
+
+This slice preserves the public `fetch_bond_maturity_evidence(request)`
+adapter behavior while extracting `_bond_maturity_source_facts(...)` and
+`_bond_maturity_evidence(...)`. The public method moved from `126` lines to a
+`19` line orchestrator; the extracted helpers are `14` and `73` lines.
+
+Validation:
+
+1. `python -m pytest tests/unit/test_lotus_core_sources.py tests/unit/bond_maturity_runtime_evidence/test_core_adapter.py -q`
+   passed with `62` tests.
+2. Ruff check and format-check passed over the touched source and tests.
+3. `python -m mypy src/app/infrastructure/lotus_core_sources.py` passed.
+4. `make quality-baseline`, `make maintainability-gate`, and
+   `make duplicate-implementation-gate` passed with zero duplicate clusters
+   across `2,967` functions.
+5. `make github-issue-closure-matrix-gate` and
+   `make documentation-contract-gate` passed.
+
+No-claim decision: this is internal adapter modularity only. It does not
+change Core implementation, Core source authority, source contracts,
+API/OpenAPI behavior, migrations, runtime topology, authentication or
+authorization infrastructure, Gateway, Workbench, data-mesh certification,
+external-publication authority, or supported-feature promotion. README, wiki,
+supported-features, OpenAPI, migrations, and central skills are unchanged by
+explicit scope decision.
+
 ## 2026-07-19: High-Cash Persist API Boundary
 
 Issue `#630` applies the Slice 19 report-only quality-baseline lens to the
