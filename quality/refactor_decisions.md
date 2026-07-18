@@ -6,6 +6,34 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-07-18: Mandate-Health Signal Evaluation Boundary
+
+`src/app/domain/signal_evaluation.py::evaluate_mandate_health_signal` became
+the next production-code source hotspot after #606 closed. Issue `#609`
+applies the same Slice 19 maintainability pattern to the allocation-drift
+domain signal without changing source authority, Manage/Risk/Performance
+ownership, API/OpenAPI shape, migrations, runtime topology, Gateway/Workbench,
+authentication/authorization, or supported-feature promotion.
+
+The public evaluator keeps its signature and behavior while delegating to
+explicit domain helpers:
+
+1. `_validate_mandate_health_evaluation_time` for timezone-aware evaluation
+   preconditions,
+2. `_mandate_health_pre_source_block` for entitlement and mandatory
+   action-register source blockers,
+3. `_mandate_health_source_block` for temporal, freshness, portfolio-scope, and
+   Manage supportability blockers,
+4. `_mandate_health_materiality_result` for duplicate, count, and threshold
+   decisions,
+5. `_mandate_health_candidate_created_result` for stable identity, signal,
+   lineage, evidence packet, candidate, and final result assembly.
+
+`evaluate_mandate_health_signal` moved from `127` lines to `15` lines; the
+candidate-created helper is `52` lines. Focused mandate-health unit,
+application, and allocation-drift API integration tests preserve blocker,
+not-eligible, suppressed, and candidate-created behavior.
+
 ## 2026-07-18: Review-Action API Boundary
 
 `src/app/api/review_workflow.py::record_review_action` was the next source

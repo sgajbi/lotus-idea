@@ -1269,3 +1269,56 @@ exact-main Main Releasability `29639367176`, and exact-main CodeQL
 Issue `#606` is closed and the local and remote implementation branches are
 absent after remote prune. Strict wiki parity and the repo-local wiki quality
 audit passed; no wiki publication change was needed.
+
+## Issue 609 Mandate-Health Signal Evaluation Maintainability
+
+Issue `#609` applies the same Slice 19 same-pattern maintainability lens to the
+allocation-drift mandate-health domain evaluator. After issue `#606` closed,
+`make quality-baseline` listed
+`src/app/domain/signal_evaluation.py::evaluate_mandate_health_signal` as the
+next production-code hotspot at `127` lines. The function mixed evaluation-time
+validation, entitlement and source blockers, temporal/freshness/supportability
+decisions, duplicate suppression, materiality checks, identity generation,
+signal, lineage, evidence-packet, candidate, and final result assembly.
+
+`src/app/domain/signal_evaluation.py` now preserves the public evaluator
+signature, allocation-drift family, blocker outcomes, PM review posture,
+source refs, stable identity semantics, evidence packet, candidate score, and
+access scope while extracting:
+
+1. timezone-aware evaluation precondition validation,
+2. entitlement and mandatory action-register source blocker selection,
+3. temporal, freshness, portfolio-scope, and Manage-supportability blockers,
+4. duplicate, count, and materiality decisions,
+5. signal, lineage, evidence-packet, candidate, and success result assembly.
+
+Focused validation passed:
+
+1. Ruff over `src/app/domain/signal_evaluation.py`,
+2. MyPy over `src/app/domain/signal_evaluation.py`,
+3. `make test-unit UNIT_TESTS=tests/unit/test_mandate_health_signal_evaluation.py`
+   (`19` passed),
+4. `make test-unit UNIT_TESTS=tests/unit/test_mandate_health_application.py`
+   (`6` passed),
+5. `make test-integration INTEGRATION_TESTS=tests/integration/test_allocation_drift_signal_api.py`
+   (`18` passed),
+6. `make quality-baseline`,
+7. `make maintainability-gate`,
+8. `make duplicate-implementation-gate` with zero duplicate clusters across
+   `2,952` functions.
+
+The same-pattern scan covered #601/#603/#606 evidence, open and closed GitHub
+duplicate searches, source maintainability hotspots, duplicate implementation
+inventory, mandate-health unit and application tests, allocation-drift API
+integration tests, the codebase review ledger, the issue closure matrix,
+repository context, and issue-discovery ledger `#225`.
+`evaluate_mandate_health_signal` moved from `127` lines to `15` lines; the
+candidate-created helper is `52` lines.
+
+This is internal domain modularity only. It does not change source-authority
+contracts, Manage/Risk/Performance ownership, API/OpenAPI behavior, migrations,
+runtime topology, authentication/authorization implementation, Gateway or
+Workbench behavior, data-product support, client-ready publication, or
+supported-feature promotion. README, wiki, supported features, OpenAPI,
+migrations, and central skills are unchanged by explicit scope decision until a
+later slice changes reader-facing product or operator truth.
