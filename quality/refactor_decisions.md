@@ -6,6 +6,56 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-07-19: AI Explanation Evaluation API Boundary
+
+Issue `#638` applies the Slice 19 report-only quality-baseline lens to the
+AI explanation evaluation route. After issue `#636`, `make quality-baseline`
+listed `src/app/api/ai_governance.py::evaluate_ai_explanation` at `120`
+lines.
+
+The route mixed:
+
+1. trusted caller-context parsing and capability authorization,
+2. idempotency validation,
+3. request DTO to application-command mapping,
+4. durable repository configuration checks,
+5. application use-case execution,
+6. exception-to-ProblemDetails mapping and operation-event emission,
+7. lineage persistence and response DTO projection.
+
+This slice preserves the public `evaluate_ai_explanation(...)` FastAPI route,
+response model, status/error codes, idempotency semantics, entitlement checks,
+durable-write fail-closed behavior, Lotus AI provenance and metadata
+validation, and operation-event semantics while extracting API-boundary helpers
+for caller binding, command construction, durable-write problem mapping,
+exception/problem mapping, and success/result response assembly. The public
+route moved from `120` lines to `54` lines; the exception dispatcher is `14`
+lines and each extracted problem helper is `13` lines or smaller.
+
+Validation:
+
+1. `python -m py_compile src/app/api/ai_governance.py` passed.
+2. `python -m pytest tests/unit/test_ai_governance.py tests/unit/test_ai_governance_api_contract.py tests/unit/test_ai_lineage_idempotency.py tests/unit/test_attested_ai_explanation_application.py tests/integration/test_ai_governance_api.py -q`
+   passed with `60` tests.
+3. `python -m ruff check`, `python -m ruff format --check`, and
+   `python -m mypy src/app/api/ai_governance.py` passed for the touched Python
+   scope.
+4. The focused AI governance plus closure-matrix suite passed with `114`
+   tests.
+5. `make quality-baseline`, `make maintainability-gate`,
+   `make duplicate-implementation-gate`, `make github-issue-closure-matrix-gate`,
+   and `make documentation-contract-gate` passed.
+6. `make lint` and `make check` passed; the full unit suite reported `4,878`
+   passed tests.
+
+No-claim decision: this is internal API-boundary modularity only. It does not
+implement authentication or authorization infrastructure, Lotus AI
+runtime/provider certification, API/OpenAPI behavior changes, migrations,
+runtime topology, Core, Gateway, Workbench, data-mesh certification,
+external-publication authority, or supported-feature promotion. README, wiki,
+supported-features, OpenAPI, migrations, and central skills are unchanged by
+explicit scope decision unless final validation changes repo-authored truth.
+
 ## 2026-07-19: Core Portfolio-State Runtime Proof Validator Boundary
 
 Issue `#636` applies the Slice 19 report-only quality-baseline lens to the
