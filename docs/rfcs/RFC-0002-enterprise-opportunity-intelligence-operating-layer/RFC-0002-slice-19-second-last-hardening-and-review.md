@@ -71,6 +71,13 @@ authentication or authorization infrastructure, Core, Gateway, Workbench,
 data-product support, external-publication authority, runtime topology,
 wiki source, README, supported features, or supported-feature promotion.
 
+PR `#646` merged by rebase to exact-main SHA
+`e68da3895496ea24189a6f3aeafad6820905925a`. PR checks passed Feature Lane,
+PR Merge Gate, Queue Auto Merge, and CodeQL. Exact-main Main Releasability
+`29661723179` and CodeQL `29661717167` passed on that SHA. Strict wiki parity
+passed with `DiffCount 0`, no unmerged remote branches remain against
+`origin/main`, and the implementation branch is absent locally and remotely.
+
 Issue `#346` adds deterministic release-compliance review evidence. The
 repository now reconciles exact runtime and CI locks to a versioned SPDX policy,
 generates notices reproducibly, fails closed on unapproved or incomplete
