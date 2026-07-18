@@ -6,6 +6,47 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-07-18: Service-Capacity Baseline Builder Boundary
+
+`src/app/application/service_capacity_baseline.py::build_service_capacity_baseline`
+was at the blocking source-function maintainability threshold in the
+report-only quality baseline. The builder is a high-consequence
+production-readiness proof path, so future Slice 19 capacity hardening should
+not add validation, qualification, or artifact fields into one near-limit
+function.
+
+The builder now keeps its public signature and artifact schema but delegates to
+explicit internal boundaries:
+
+1. `_validate_capacity_baseline_request` for request-level invariants,
+2. `_scenario_summaries` for governed scenario aggregation,
+3. `_capacity_evidence_qualifications` for protected PostgreSQL,
+   dependency-recovery, load/soak, resource, and cost qualification,
+4. `CapacityEvidenceQualificationSet` for derived certification-blocker state,
+5. `_capacity_baseline_artifact` for source-safe artifact assembly.
+
+This is design modularity inside the existing Lotus Idea deployable. It does
+not execute a live load/soak run, certify capacity, certify cost attribution,
+change API behavior, change migrations, prove Gateway/Workbench behavior,
+promote a data product, or promote a supported feature.
+
+Evidence:
+
+1. Code: `src/app/application/service_capacity_baseline.py`.
+2. Tests and gates:
+   `make test-unit UNIT_TESTS=tests/unit/test_service_capacity_baseline.py`
+   (`34` passed), `make service-capacity-baseline-contract-gate`,
+   `make maintainability-gate`, `make duplicate-implementation-gate`, and
+   `make quality-baseline`.
+3. Maintainability impact: `build_service_capacity_baseline` moved from
+   `130` lines to `64` lines and no longer appears in the report-only
+   top-function list; no duplicate implementation clusters were introduced.
+4. Documentation/context decision: RFC Slice 19, the codebase review ledger,
+   issue closure matrix, and this decision log were updated. README, wiki,
+   supported-features, OpenAPI, migrations, runtime topology, and central
+   skills are unchanged because public behavior and operating commands did not
+   change.
+
 ## 2026-07-16: Typed Advise Source-Product Evidence Boundary
 
 The mandate/restriction and missing-risk-profile typed source-product proofs

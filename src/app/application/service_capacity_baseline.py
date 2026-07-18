@@ -92,6 +92,30 @@ class CapacityMeasurement:
             raise ValueError("recovered is only valid for dependency_failure measurements")
 
 
+@dataclass(frozen=True)
+class CapacityEvidenceQualificationSet:
+    postgres_threshold_proof_validated: bool
+    postgres_qualification: dict[str, Any] | None
+    dependency_recovery_qualification: dict[str, Any] | None
+    load_soak_qualification: dict[str, Any] | None
+    resource_baseline_validated: bool
+    resource_qualification: dict[str, Any] | None
+    cost_attribution_qualification: dict[str, Any] | None
+
+    @property
+    def postgres_saturation_measured(self) -> bool:
+        return self.postgres_qualification is not None
+
+    def certification_blockers(self) -> list[str]:
+        return _certification_blockers(
+            load_soak_attested=self.load_soak_qualification is not None,
+            postgres_saturation_measured=self.postgres_saturation_measured,
+            dependency_recovery_attested=self.dependency_recovery_qualification is not None,
+            production_like_resource_attested=self.resource_qualification is not None,
+            cost_attribution_verified=self.cost_attribution_qualification is not None,
+        )
+
+
 def build_service_capacity_baseline(
     *,
     measurements: Iterable[CapacityMeasurement],
@@ -113,6 +137,61 @@ def build_service_capacity_baseline(
     cost_attribution_artifact: dict[str, Any] | None = None,
     cost_attribution_attestation: VerifiedPlatformCostAttestation | None = None,
 ) -> dict[str, Any]:
+    _validate_capacity_baseline_request(
+        environment_profile=environment_profile,
+        generated_at_utc=generated_at_utc,
+        observed_window_seconds=observed_window_seconds,
+        postgres_max_connection_utilization_fraction=(postgres_max_connection_utilization_fraction),
+        commit_sha=commit_sha,
+        branch=branch,
+        run_id=run_id,
+    )
+    scenarios = _scenario_summaries(measurements)
+    qualifications = _capacity_evidence_qualifications(
+        postgres_threshold_proof=postgres_threshold_proof,
+        postgres_threshold_attestation=postgres_threshold_attestation,
+        dependency_recovery_proof=dependency_recovery_proof,
+        dependency_recovery_attestation=dependency_recovery_attestation,
+        load_soak_proof=load_soak_proof,
+        load_soak_attestation=load_soak_attestation,
+        resource_baseline=resource_baseline,
+        resource_attestation=resource_attestation,
+        cost_attribution_artifact=cost_attribution_artifact,
+        cost_attribution_attestation=cost_attribution_attestation,
+        generated_at_utc=generated_at_utc,
+        commit_sha=commit_sha,
+        branch=branch,
+        run_id=run_id,
+    )
+    artifact = _capacity_baseline_artifact(
+        environment_profile=environment_profile,
+        generated_at_utc=generated_at_utc,
+        commit_sha=commit_sha,
+        branch=branch,
+        run_id=run_id,
+        observed_window_seconds=observed_window_seconds,
+        scenarios=scenarios,
+        qualifications=qualifications,
+        postgres_threshold_proof=postgres_threshold_proof,
+        postgres_max_connection_utilization_fraction=(postgres_max_connection_utilization_fraction),
+        resource_baseline=resource_baseline,
+    )
+    errors = validate_service_capacity_baseline(artifact)
+    if errors:
+        raise ValueError("; ".join(errors))
+    return artifact
+
+
+def _validate_capacity_baseline_request(
+    *,
+    environment_profile: str,
+    generated_at_utc: datetime,
+    observed_window_seconds: float,
+    postgres_max_connection_utilization_fraction: float | None,
+    commit_sha: str,
+    branch: str,
+    run_id: str,
+) -> None:
     if environment_profile not in ENVIRONMENT_PROFILES:
         raise ValueError("environment_profile must be test, production-like, or production")
     if generated_at_utc.tzinfo is None or generated_at_utc.utcoffset() is None:
@@ -130,10 +209,31 @@ def build_service_capacity_baseline(
         if not value.strip():
             raise ValueError(f"{name} must not be blank")
 
+
+def _scenario_summaries(measurements: Iterable[CapacityMeasurement]) -> list[dict[str, Any]]:
     grouped: dict[str, list[CapacityMeasurement]] = {scenario: [] for scenario in SCENARIOS}
     for measurement in measurements:
         grouped[measurement.scenario].append(measurement)
-    scenarios = [_scenario_summary(scenario, grouped[scenario]) for scenario in SCENARIOS]
+    return [_scenario_summary(scenario, grouped[scenario]) for scenario in SCENARIOS]
+
+
+def _capacity_evidence_qualifications(
+    *,
+    postgres_threshold_proof: dict[str, Any] | None,
+    postgres_threshold_attestation: VerifiedArtifactAttestation | None,
+    dependency_recovery_proof: dict[str, Any] | None,
+    dependency_recovery_attestation: VerifiedArtifactAttestation | None,
+    load_soak_proof: dict[str, Any] | None,
+    load_soak_attestation: VerifiedArtifactAttestation | None,
+    resource_baseline: dict[str, Any] | None,
+    resource_attestation: VerifiedArtifactAttestation | None,
+    cost_attribution_artifact: dict[str, Any] | None,
+    cost_attribution_attestation: VerifiedPlatformCostAttestation | None,
+    generated_at_utc: datetime,
+    commit_sha: str,
+    branch: str,
+    run_id: str,
+) -> CapacityEvidenceQualificationSet:
     postgres_threshold_proof_validated = _postgres_threshold_proof_is_valid(
         postgres_threshold_proof,
         commit_sha=commit_sha,
@@ -145,7 +245,6 @@ def build_service_capacity_baseline(
         generated_at_utc=generated_at_utc,
         run_id=run_id,
     )
-    postgres_saturation_measured = postgres_qualification is not None
     dependency_recovery_qualification = _dependency_recovery_qualification(
         proof=dependency_recovery_proof,
         attestation=dependency_recovery_attestation,
@@ -179,13 +278,32 @@ def build_service_capacity_baseline(
         generated_at_utc=generated_at_utc,
         run_id=run_id,
     )
-    blockers = _certification_blockers(
-        load_soak_attested=load_soak_qualification is not None,
-        postgres_saturation_measured=postgres_saturation_measured,
-        dependency_recovery_attested=dependency_recovery_qualification is not None,
-        production_like_resource_attested=resource_qualification is not None,
-        cost_attribution_verified=cost_attribution_qualification is not None,
+    return CapacityEvidenceQualificationSet(
+        postgres_threshold_proof_validated=postgres_threshold_proof_validated,
+        postgres_qualification=postgres_qualification,
+        dependency_recovery_qualification=dependency_recovery_qualification,
+        load_soak_qualification=load_soak_qualification,
+        resource_baseline_validated=resource_baseline_validated,
+        resource_qualification=resource_qualification,
+        cost_attribution_qualification=cost_attribution_qualification,
     )
+
+
+def _capacity_baseline_artifact(
+    *,
+    environment_profile: str,
+    generated_at_utc: datetime,
+    commit_sha: str,
+    branch: str,
+    run_id: str,
+    observed_window_seconds: float,
+    scenarios: list[dict[str, Any]],
+    qualifications: CapacityEvidenceQualificationSet,
+    postgres_threshold_proof: dict[str, Any] | None,
+    postgres_max_connection_utilization_fraction: float | None,
+    resource_baseline: dict[str, Any] | None,
+) -> dict[str, Any]:
+    blockers = qualifications.certification_blockers()
     artifact = {
         "schemaVersion": SCHEMA_VERSION,
         "repository": "lotus-idea",
@@ -200,27 +318,24 @@ def build_service_capacity_baseline(
         "scenarios": scenarios,
         "resourceEvidence": _resource_evidence(
             scenarios=scenarios,
-            load_soak_qualification=load_soak_qualification,
-            dependency_recovery_qualification=dependency_recovery_qualification,
-            postgres_saturation_measured=postgres_saturation_measured,
-            postgres_threshold_proof_validated=postgres_threshold_proof_validated,
+            load_soak_qualification=qualifications.load_soak_qualification,
+            dependency_recovery_qualification=(qualifications.dependency_recovery_qualification),
+            postgres_saturation_measured=qualifications.postgres_saturation_measured,
+            postgres_threshold_proof_validated=(qualifications.postgres_threshold_proof_validated),
             postgres_threshold_proof=postgres_threshold_proof,
-            postgres_qualification=postgres_qualification,
+            postgres_qualification=qualifications.postgres_qualification,
             postgres_max_connection_utilization_fraction=(
                 postgres_max_connection_utilization_fraction
             ),
-            resource_baseline_validated=resource_baseline_validated,
+            resource_baseline_validated=qualifications.resource_baseline_validated,
             resource_baseline=resource_baseline,
-            resource_qualification=resource_qualification,
-            cost_attribution_qualification=cost_attribution_qualification,
+            resource_qualification=qualifications.resource_qualification,
+            cost_attribution_qualification=qualifications.cost_attribution_qualification,
         ),
         "certificationReady": not blockers,
         "certificationBlockers": blockers,
         "supportedFeaturePromoted": False,
     }
-    errors = validate_service_capacity_baseline(artifact)
-    if errors:
-        raise ValueError("; ".join(errors))
     return artifact
 
 
