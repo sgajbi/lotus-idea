@@ -134,105 +134,39 @@ async def evaluate_ai_explanation(
         alias=TRUSTED_CALLER_CONTEXT_HEADER,
     ),
 ) -> AIExplanationEvaluationResponse | JSONResponse:
-    caller = caller_context_from_headers(
-        subject=x_caller_subject,
-        roles=x_caller_roles,
-        capabilities=x_caller_capabilities,
-        tenant_ids=x_caller_tenant_ids,
-        trusted_caller_context=x_lotus_trusted_caller_context,
-    )
     try:
-        _require_ai_explanation_caller(caller)
-        validate_idempotency_key(idempotency_key)
-        command = request.to_command(
+        command = _ai_explanation_command_from_request(
+            request,
             candidate_id=candidate_id,
-            caller=caller,
             idempotency_key=idempotency_key,
-            allow_unattested_workflow_fixture=(
-                load_runtime_settings().runtime_profile.allows_unattested_ai_workflow_fixture
+            caller=_ai_explanation_caller_from_headers(
+                subject=x_caller_subject,
+                roles=x_caller_roles,
+                capabilities=x_caller_capabilities,
+                tenant_ids=x_caller_tenant_ids,
+                trusted_caller_context=x_lotus_trusted_caller_context,
             ),
         )
         repository = get_idea_repository()
         durable_storage_backed = idea_repository_durable_storage_backed(repository)
-        configuration_problem = durable_write_problem(repository)
+        configuration_problem = _ai_explanation_durable_write_problem(
+            repository,
+            durable_storage_backed=durable_storage_backed,
+        )
         if configuration_problem is not None:
-            _emit_ai_explanation_operation_event(
-                OperationOutcome.BLOCKED,
-                DURABLE_REPOSITORY_NOT_CONFIGURED,
-                durable_storage_backed=durable_storage_backed,
-            )
             return configuration_problem
         result = _evaluate_ai_explanation_command(command, repository=repository)
-    except (PermissionDeniedError, AIExplanationEntitlementDenied):
-        _emit_ai_explanation_operation_event(
-            OperationOutcome.PERMISSION_DENIED,
-            "permission_denied",
-        )
-        return problem_response(
-            status_code=status.HTTP_403_FORBIDDEN,
-            code="permission_denied",
-            title="Permission denied",
-            detail="The caller is not permitted to evaluate idea AI explanations.",
-        )
-    except InvalidAIWorkflowOutput:
-        _emit_ai_explanation_operation_event(
-            OperationOutcome.INVALID_REQUEST,
-            "invalid_ai_output",
-        )
-        return problem_response(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            code="invalid_ai_output",
-            title="Invalid AI output",
-            detail="The AI workflow output does not match the governed explanation request.",
-        )
-    except UntrustedAIWorkflowOutput as exc:
-        _emit_ai_explanation_operation_event(
-            OperationOutcome.BLOCKED,
-            "ai_execution_provenance_required",
-            provenance_posture="rejected",
-            provenance_rejection_reason=exc.reason.value,
-        )
-        return problem_response(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            code="ai_execution_provenance_required",
-            title="AI execution provenance required",
-            detail="Production-like profiles require verified Lotus AI execution provenance.",
-        )
-    except InvalidAIMetadataEnvelope:
-        _emit_ai_explanation_operation_event(
-            OperationOutcome.INVALID_REQUEST,
-            "invalid_ai_metadata",
-        )
-        return problem_response(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            code="invalid_ai_metadata",
-            title="Invalid AI metadata",
-            detail="Use only the versioned provider-safe AI metadata envelope.",
-        )
-    except InvalidAIWorkflowPack:
-        _emit_ai_explanation_operation_event(
-            OperationOutcome.INVALID_REQUEST,
-            "invalid_ai_workflow_pack",
-        )
-        return problem_response(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            code="invalid_ai_workflow_pack",
-            title="Invalid AI workflow pack",
-            detail="Use the registered Lotus AI idea explanation workflow pack contract.",
-        )
-    except InvalidAIExplanationRequest as exc:
-        return _invalid_ai_explanation_request_response(exc)
-    except ValueError:
-        _emit_ai_explanation_operation_event(
-            OperationOutcome.INVALID_REQUEST,
-            "invalid_request",
-        )
-        return problem_response(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            code="invalid_request",
-            title="Invalid request",
-            detail="Correct the AI explanation evaluation request and retry.",
-        )
+    except (
+        PermissionDeniedError,
+        AIExplanationEntitlementDenied,
+        InvalidAIWorkflowOutput,
+        UntrustedAIWorkflowOutput,
+        InvalidAIMetadataEnvelope,
+        InvalidAIWorkflowPack,
+        InvalidAIExplanationRequest,
+        ValueError,
+    ) as exc:
+        return _ai_explanation_exception_response(exc)
 
     problem = _ai_explanation_result_problem(result)
     if problem is not None:
@@ -240,6 +174,155 @@ async def evaluate_ai_explanation(
     return _successful_ai_explanation_response(
         result,
         durable_storage_backed=bool(getattr(repository, "durable_storage_backed", False)),
+    )
+
+
+def _ai_explanation_caller_from_headers(
+    *,
+    subject: str | None,
+    roles: str | None,
+    capabilities: str | None,
+    tenant_ids: str | None,
+    trusted_caller_context: str | None,
+) -> CallerContext:
+    caller = caller_context_from_headers(
+        subject=subject,
+        roles=roles,
+        capabilities=capabilities,
+        tenant_ids=tenant_ids,
+        trusted_caller_context=trusted_caller_context,
+    )
+    _require_ai_explanation_caller(caller)
+    return caller
+
+
+def _ai_explanation_command_from_request(
+    request: AIExplanationEvaluationRequest,
+    *,
+    candidate_id: str,
+    idempotency_key: str,
+    caller: CallerContext,
+) -> EvaluateAIExplanationToRepositoryCommand:
+    validate_idempotency_key(idempotency_key)
+    return request.to_command(
+        candidate_id=candidate_id,
+        caller=caller,
+        idempotency_key=idempotency_key,
+        allow_unattested_workflow_fixture=(
+            load_runtime_settings().runtime_profile.allows_unattested_ai_workflow_fixture
+        ),
+    )
+
+
+def _ai_explanation_durable_write_problem(
+    repository: AIExplanationRepository,
+    *,
+    durable_storage_backed: bool,
+) -> JSONResponse | None:
+    configuration_problem = durable_write_problem(repository)
+    if configuration_problem is None:
+        return None
+    _emit_ai_explanation_operation_event(
+        OperationOutcome.BLOCKED,
+        DURABLE_REPOSITORY_NOT_CONFIGURED,
+        durable_storage_backed=durable_storage_backed,
+    )
+    return configuration_problem
+
+
+def _ai_explanation_exception_response(exc: Exception) -> JSONResponse:
+    if isinstance(exc, (PermissionDeniedError, AIExplanationEntitlementDenied)):
+        return _ai_explanation_permission_problem()
+    if isinstance(exc, InvalidAIWorkflowOutput):
+        return _invalid_ai_workflow_output_problem()
+    if isinstance(exc, UntrustedAIWorkflowOutput):
+        return _untrusted_ai_workflow_output_problem(exc)
+    if isinstance(exc, InvalidAIMetadataEnvelope):
+        return _invalid_ai_metadata_problem()
+    if isinstance(exc, InvalidAIWorkflowPack):
+        return _invalid_ai_workflow_pack_problem()
+    if isinstance(exc, InvalidAIExplanationRequest):
+        return _invalid_ai_explanation_request_response(exc)
+    return _generic_invalid_ai_explanation_request_problem()
+
+
+def _ai_explanation_permission_problem() -> JSONResponse:
+    _emit_ai_explanation_operation_event(
+        OperationOutcome.PERMISSION_DENIED,
+        "permission_denied",
+    )
+    return problem_response(
+        status_code=status.HTTP_403_FORBIDDEN,
+        code="permission_denied",
+        title="Permission denied",
+        detail="The caller is not permitted to evaluate idea AI explanations.",
+    )
+
+
+def _invalid_ai_workflow_output_problem() -> JSONResponse:
+    _emit_ai_explanation_operation_event(
+        OperationOutcome.INVALID_REQUEST,
+        "invalid_ai_output",
+    )
+    return problem_response(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        code="invalid_ai_output",
+        title="Invalid AI output",
+        detail="The AI workflow output does not match the governed explanation request.",
+    )
+
+
+def _untrusted_ai_workflow_output_problem(exc: UntrustedAIWorkflowOutput) -> JSONResponse:
+    _emit_ai_explanation_operation_event(
+        OperationOutcome.BLOCKED,
+        "ai_execution_provenance_required",
+        provenance_posture="rejected",
+        provenance_rejection_reason=exc.reason.value,
+    )
+    return problem_response(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        code="ai_execution_provenance_required",
+        title="AI execution provenance required",
+        detail="Production-like profiles require verified Lotus AI execution provenance.",
+    )
+
+
+def _invalid_ai_metadata_problem() -> JSONResponse:
+    _emit_ai_explanation_operation_event(
+        OperationOutcome.INVALID_REQUEST,
+        "invalid_ai_metadata",
+    )
+    return problem_response(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        code="invalid_ai_metadata",
+        title="Invalid AI metadata",
+        detail="Use only the versioned provider-safe AI metadata envelope.",
+    )
+
+
+def _invalid_ai_workflow_pack_problem() -> JSONResponse:
+    _emit_ai_explanation_operation_event(
+        OperationOutcome.INVALID_REQUEST,
+        "invalid_ai_workflow_pack",
+    )
+    return problem_response(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        code="invalid_ai_workflow_pack",
+        title="Invalid AI workflow pack",
+        detail="Use the registered Lotus AI idea explanation workflow pack contract.",
+    )
+
+
+def _generic_invalid_ai_explanation_request_problem() -> JSONResponse:
+    _emit_ai_explanation_operation_event(
+        OperationOutcome.INVALID_REQUEST,
+        "invalid_request",
+    )
+    return problem_response(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        code="invalid_request",
+        title="Invalid request",
+        detail="Correct the AI explanation evaluation request and retry.",
     )
 
 
