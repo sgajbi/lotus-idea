@@ -155,6 +155,7 @@ def test_domain_failures_cannot_clear_aggregate_blocker(
         "snapshot_mode",
         "content_hash",
         "future_generated",
+        "payload_generated_before_evaluated",
         "future_latest_evidence",
         "claim_inflation",
         "remaining_blockers",
@@ -372,6 +373,8 @@ def _tamper(payload: dict[str, Any], tamper: str) -> None:
     elif tamper == "future_generated":
         source["generatedAtUtc"] = "2026-06-21T10:11:00Z"
         _refresh_source_digest(source)
+    elif tamper == "payload_generated_before_evaluated":
+        payload["generatedAtUtc"] = "2026-06-21T10:09:59Z"
     elif tamper == "future_latest_evidence":
         source["latestEvidenceAtUtc"] = "2026-06-21T10:11:00Z"
         _refresh_source_digest(source)
