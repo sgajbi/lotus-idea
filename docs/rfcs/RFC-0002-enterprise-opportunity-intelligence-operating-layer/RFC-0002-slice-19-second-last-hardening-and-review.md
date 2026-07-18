@@ -24,6 +24,50 @@ Perform the full engineering review before final closure.
 
 ## Current Implementation Evidence
 
+Issue `#653` applies the Slice 19 quality-baseline learning to the
+implementation-proof readiness source-safe capability test. After issue `#652`,
+the current report-only quality baseline listed
+`tests/unit/test_implementation_proof_readiness.py::test_implementation_proof_readiness_capabilities_are_source_safe`
+at `138` lines. The scenario proved important readiness publication posture but
+mixed capability inventory, repeated capability lookup, runtime trust
+telemetry, outbox delivery, source ingestion, opportunity archetype,
+downstream realization, AI explanation, and serialized no-leak assertions in
+one function.
+
+`tests/unit/test_implementation_proof_readiness.py` now keeps the same
+externally visible source-safe readiness capability proof, but the public test
+is a short snapshot-building orchestrator over named helpers for capability
+inventory, capability lookup, each capability-family assertion, and serialized
+no-leak posture. Capability IDs, evidence refs, blocker checks,
+readiness/supportability assertions, supported-feature non-promotion
+assertions, and no-leak assertions are preserved.
+
+Focused validation passed:
+
+1. `python -m ruff check tests/unit/test_implementation_proof_readiness.py`,
+2. `python -m ruff format --check tests/unit/test_implementation_proof_readiness.py`,
+3. `python -m mypy tests/unit/test_implementation_proof_readiness.py`,
+4. `python -m pytest tests/unit/test_implementation_proof_readiness.py -q`
+   with `28` tests.
+
+The same-pattern scan followed the Slice 19 maintainability sequence through
+#652, current `quality/baseline_report.md`, duplicate searches for
+`test_implementation_proof_readiness_capabilities_are_source_safe`,
+`implementation proof readiness capabilities source safe maintainability`, and
+`test_implementation_proof_readiness.py maintainability`, the codebase review
+ledger, the issue closure matrix, refactor decisions, and issue-discovery
+ledger `#225`. Closed issue `#623` owns AI workflow-pack fixture writers, not
+this readiness capability assertion decomposition.
+
+This is internal test-support modularity only. It does not change production
+readiness behavior, proof-artifact semantics, API/OpenAPI, persistence,
+migrations, authentication or authorization infrastructure, Core, Gateway,
+Workbench, data-product support, external-publication authority, runtime
+topology, wiki source, README, supported features, or supported-feature
+promotion. Broader local gates, PR checks, exact-main Main
+Releasability/CodeQL, wiki parity, issue closure, and branch cleanup remain
+pending for the tranche.
+
 Issue `#652` applies the Slice 19 quality-baseline learning to the configured
 implementation-proof artifact source-safe refs test. After issue `#650`, the
 current report-only quality baseline listed

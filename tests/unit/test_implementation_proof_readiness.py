@@ -28,6 +28,10 @@ from app.application.implementation_proof_consumption import (
 from app.application.implementation_proof_readiness import (
     build_implementation_proof_readiness_snapshot,
 )
+from app.application.implementation_proof_models import (
+    ImplementationProofCapabilityReadiness,
+    ImplementationProofReadinessSnapshot,
+)
 from app.application.supported_feature_promotion import (
     SUPPORTED_FEATURE_REGISTRY_INVALID,
     evaluate_supported_feature_promotion,
@@ -229,8 +233,24 @@ def test_implementation_proof_readiness_capabilities_are_source_safe() -> None:
         durable_storage_backed=False,
     )
 
-    capability_ids = {capability.capability_id for capability in snapshot.capabilities}
-    assert capability_ids == {
+    _assert_expected_capability_inventory(snapshot)
+    _assert_runtime_telemetry_capability_is_source_safe(
+        _capability(snapshot, "runtime-trust-telemetry-preview")
+    )
+    _assert_outbox_delivery_capability_is_source_safe(_capability(snapshot, "outbox-delivery"))
+    _assert_source_ingestion_capability_is_source_safe(_capability(snapshot, "source-ingestion"))
+    _assert_opportunity_archetype_capability_is_source_safe(
+        _capability(snapshot, "opportunity-archetype-scenarios")
+    )
+    _assert_downstream_capability_is_source_safe(_capability(snapshot, "downstream-realization"))
+    _assert_ai_explanation_capability_is_source_safe(_capability(snapshot, "ai-explanation"))
+    _assert_snapshot_repr_is_source_safe(snapshot)
+
+
+def _assert_expected_capability_inventory(
+    snapshot: ImplementationProofReadinessSnapshot,
+) -> None:
+    assert {capability.capability_id for capability in snapshot.capabilities} == {
         "source-ingestion",
         "advisor-review-queue",
         "ai-explanation",
@@ -243,11 +263,22 @@ def test_implementation_proof_readiness_capabilities_are_source_safe() -> None:
         "downstream-realization",
         "supported-feature-promotion",
     }
-    runtime_telemetry = next(
+
+
+def _capability(
+    snapshot: ImplementationProofReadinessSnapshot,
+    capability_id: str,
+) -> ImplementationProofCapabilityReadiness:
+    return next(
         capability
         for capability in snapshot.capabilities
-        if capability.capability_id == "runtime-trust-telemetry-preview"
+        if capability.capability_id == capability_id
     )
+
+
+def _assert_runtime_telemetry_capability_is_source_safe(
+    runtime_telemetry: ImplementationProofCapabilityReadiness,
+) -> None:
     assert "make runtime-trust-telemetry-preview-check" in runtime_telemetry.evidence_refs
     assert "make runtime-trust-telemetry-snapshot-check" in runtime_telemetry.evidence_refs
     assert (
@@ -260,11 +291,11 @@ def test_implementation_proof_readiness_capabilities_are_source_safe() -> None:
     )
     assert "scripts/runtime_trust_telemetry/generate_snapshot.py" in runtime_telemetry.evidence_refs
     assert "platform_mesh_certification_missing" in runtime_telemetry.blockers
-    outbox_delivery = next(
-        capability
-        for capability in snapshot.capabilities
-        if capability.capability_id == "outbox-delivery"
-    )
+
+
+def _assert_outbox_delivery_capability_is_source_safe(
+    outbox_delivery: ImplementationProofCapabilityReadiness,
+) -> None:
     assert "GET /api/v1/outbox-delivery/readiness" in outbox_delivery.evidence_refs
     assert "POST /api/v1/outbox-delivery/run-once" in outbox_delivery.evidence_refs
     assert "src/app/infrastructure/outbox/publisher.py" in outbox_delivery.evidence_refs
@@ -274,11 +305,11 @@ def test_implementation_proof_readiness_capabilities_are_source_safe() -> None:
     )
     assert "outbox_broker_not_configured" in outbox_delivery.blockers
     assert "external_broker_runtime_proof_missing" in outbox_delivery.blockers
-    source_ingestion = next(
-        capability
-        for capability in snapshot.capabilities
-        if capability.capability_id == "source-ingestion"
-    )
+
+
+def _assert_source_ingestion_capability_is_source_safe(
+    source_ingestion: ImplementationProofCapabilityReadiness,
+) -> None:
     assert "GET /api/v1/source-ingestion/readiness" in source_ingestion.evidence_refs
     assert "POST /api/v1/source-ingestion/run-once" in source_ingestion.evidence_refs
     assert "make source-ingestion-worker-check" in source_ingestion.evidence_refs
@@ -294,11 +325,11 @@ def test_implementation_proof_readiness_capabilities_are_source_safe() -> None:
         source_ingestion.evidence_refs
     )
     assert "live_core_source_proof_missing" in source_ingestion.blockers
-    archetypes = next(
-        capability
-        for capability in snapshot.capabilities
-        if capability.capability_id == "opportunity-archetype-scenarios"
-    )
+
+
+def _assert_opportunity_archetype_capability_is_source_safe(
+    archetypes: ImplementationProofCapabilityReadiness,
+) -> None:
     assert (
         "contracts/opportunity-archetypes/lotus-idea-opportunity-archetypes.v1.json"
         in archetypes.evidence_refs
@@ -315,11 +346,11 @@ def test_implementation_proof_readiness_capabilities_are_source_safe() -> None:
     assert archetypes.readiness_status == "blocked"
     assert archetypes.supportability_status == "not_certified"
     assert archetypes.supported_feature_promoted is False
-    downstream = next(
-        capability
-        for capability in snapshot.capabilities
-        if capability.capability_id == "downstream-realization"
-    )
+
+
+def _assert_downstream_capability_is_source_safe(
+    downstream: ImplementationProofCapabilityReadiness,
+) -> None:
     assert "GET /api/v1/downstream-realization/readiness" in downstream.evidence_refs
     assert (
         "POST /api/v1/conversion-intents/{conversionIntentId}/downstream-submissions"
@@ -336,11 +367,11 @@ def test_implementation_proof_readiness_capabilities_are_source_safe() -> None:
     assert "lotus_report_live_intake_route_proof_missing" in downstream.blockers
     assert "report_evidence_pack_live_materialization_proof_missing" in downstream.blockers
     assert "dedicated_report_idea_evidence_intake_contract_missing" not in downstream.blockers
-    ai_explanation = next(
-        capability
-        for capability in snapshot.capabilities
-        if capability.capability_id == "ai-explanation"
-    )
+
+
+def _assert_ai_explanation_capability_is_source_safe(
+    ai_explanation: ImplementationProofCapabilityReadiness,
+) -> None:
     assert (
         "contracts/observability/lotus-idea-ai-model-risk-operations.v1.json"
         in ai_explanation.evidence_refs
@@ -355,6 +386,11 @@ def test_implementation_proof_readiness_capabilities_are_source_safe() -> None:
     )
     assert "model_risk_operations_dashboard_not_certified" not in ai_explanation.blockers
     assert "model_risk_operations_alerts_not_certified" not in ai_explanation.blockers
+
+
+def _assert_snapshot_repr_is_source_safe(
+    snapshot: ImplementationProofReadinessSnapshot,
+) -> None:
     serialized = repr(snapshot)
     assert "portfolio_id" not in serialized
     assert "client_id" not in serialized
