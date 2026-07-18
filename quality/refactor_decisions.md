@@ -6,6 +6,52 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-07-19: Core Portfolio-State Runtime Proof Validator Boundary
+
+Issue `#636` applies the Slice 19 report-only quality-baseline lens to the
+Core portfolio-state runtime proof contract. After issue `#633`,
+`make quality-baseline` listed
+`src/app/application/core_portfolio_state_runtime_evidence/contract.py::core_portfolio_state_runtime_execution_is_valid`
+at `121` lines.
+
+The validator mixed:
+
+1. top-level proof envelope and source-authority checks,
+2. non-proof claim boundary validation,
+3. request and source receipt shape validation,
+4. Core `PortfolioStateSnapshot:v1` source scope and product posture checks,
+5. temporal currentness and latest-evidence checks,
+6. source hash, digest, and receipt identity checks,
+7. diagnostic, blocker, evidence-ref, and runtime-evidence clearing.
+
+This slice preserves the public `core_portfolio_state_runtime_execution_is_valid(payload)`
+contract while extracting proof-owned helpers for runtime-execution parts,
+non-proof claims, request receipts, source receipts, source scope, source
+product posture, temporal posture, hash identity, required source strings, and
+execution closure. The public validator moved from `121` lines to a `12` line
+orchestrator; every extracted helper is `39` lines or smaller.
+
+Validation:
+
+1. `python -m pytest tests/unit/core_portfolio_state_runtime_evidence/test_runtime_execution.py tests/unit/core_portfolio_state_runtime_evidence/test_generator.py -q`
+   passed with `56` tests.
+2. Ruff check and format-check passed over the touched source and tests.
+3. `python -m mypy src/app/application/core_portfolio_state_runtime_evidence/contract.py`
+   passed.
+4. `make quality-baseline`, `make maintainability-gate`, and
+   `make duplicate-implementation-gate` passed with zero duplicate clusters
+   across `2,977` source/script functions.
+5. `make github-issue-closure-matrix-gate` and
+   `make documentation-contract-gate` passed.
+
+No-claim decision: this is internal proof-contract modularity only. It does
+not change Core implementation, Core producer gap `sgajbi/lotus-core#790`,
+Core source authority, API/OpenAPI behavior, migrations, runtime topology,
+authentication or authorization infrastructure, Gateway, Workbench, data-mesh
+certification, external-publication authority, or supported-feature promotion.
+README, wiki, supported-features, OpenAPI, migrations, and central skills are
+unchanged by explicit scope decision.
+
 ## 2026-07-19: Bond-Maturity Core Adapter Source Boundary
 
 Issue `#633` applies the Slice 19 report-only quality-baseline lens to the
