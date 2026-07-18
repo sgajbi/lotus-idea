@@ -336,17 +336,35 @@ def test_postgres_runtime_provider_persists_review_conversion_and_report_workflo
     postgres_database_url: str,
 ) -> None:
     client = managed_test_client(app)
+    candidate_id = _persist_workflow_candidate(client)
+    _assert_advisor_queue_reload_contains_candidate(client, candidate_id)
+
+    _transition_candidate_to_review_ready(client, candidate_id)
+    _assert_review_action_persists_and_replays(client, candidate_id)
+    _assert_feedback_persists(client, candidate_id)
+    _assert_conversion_intent_persists_and_replays(client, candidate_id)
+    _assert_conversion_outcome_persists(client)
+    _assert_report_evidence_pack_persists_and_replays(client, candidate_id)
+
+    _assert_workflow_table_counts(postgres_database_url)
+    _assert_workflow_outbox_lineage(postgres_database_url)
+
+
+def _persist_workflow_candidate(client: ManagedTestClient) -> str:
     persist_headers = persistence_headers("postgres-runtime-proof-workflow-persist-001")
     high_cash_request = high_cash_payload()
-
     persisted = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
         json=high_cash_request,
         headers=persist_headers,
     )
     assert persisted.status_code == 200
-    candidate_id = str(persisted.json()["persistence"]["candidateId"])
+    return str(persisted.json()["persistence"]["candidateId"])
 
+
+def _assert_advisor_queue_reload_contains_candidate(
+    client: ManagedTestClient, candidate_id: str
+) -> None:
     reset_idea_repository_for_tests(reload_from_environment=True)
     queue = client.get(
         "/api/v1/review-queues/advisor",
@@ -358,7 +376,10 @@ def test_postgres_runtime_provider_persists_review_conversion_and_report_workflo
     assert queue_payload["durableStorageBacked"] is True
     assert queue_payload["items"][0]["candidate"]["candidateId"] == candidate_id
 
-    _transition_candidate_to_review_ready(client, candidate_id)
+
+def _assert_review_action_persists_and_replays(
+    client: ManagedTestClient, candidate_id: str
+) -> None:
     review_headers = _review_headers("postgres-runtime-proof-review-approve-001")
     review_payload = _approve_review_payload()
     review = client.post(
@@ -383,6 +404,8 @@ def test_postgres_runtime_provider_persists_review_conversion_and_report_workflo
     assert replayed_review.json()["durableStorageBacked"] is True
     assert replayed_review.json()["persistence"]["decision"] == "replayed"
 
+
+def _assert_feedback_persists(client: ManagedTestClient, candidate_id: str) -> None:
     feedback = client.post(
         f"/api/v1/idea-candidates/{candidate_id}/feedback",
         json=_feedback_payload(),
@@ -392,6 +415,10 @@ def test_postgres_runtime_provider_persists_review_conversion_and_report_workflo
     assert feedback.json()["durableStorageBacked"] is True
     assert feedback.json()["persistence"]["decision"] == "accepted"
 
+
+def _assert_conversion_intent_persists_and_replays(
+    client: ManagedTestClient, candidate_id: str
+) -> None:
     reset_idea_repository_for_tests(reload_from_environment=True)
     conversion_headers = _conversion_intent_headers("postgres-runtime-proof-conversion-intent-001")
     conversion_payload = _conversion_intent_payload()
@@ -416,6 +443,8 @@ def test_postgres_runtime_provider_persists_review_conversion_and_report_workflo
     assert replayed_conversion.json()["durableStorageBacked"] is True
     assert replayed_conversion.json()["persistence"]["decision"] == "replayed"
 
+
+def _assert_conversion_outcome_persists(client: ManagedTestClient) -> None:
     outcome = client.post(
         "/api/v1/conversion-intents/conversion-report-001/outcomes",
         json=_conversion_outcome_payload(),
@@ -425,6 +454,10 @@ def test_postgres_runtime_provider_persists_review_conversion_and_report_workflo
     assert outcome.json()["durableStorageBacked"] is True
     assert outcome.json()["persistence"]["decision"] == "accepted"
 
+
+def _assert_report_evidence_pack_persists_and_replays(
+    client: ManagedTestClient, candidate_id: str
+) -> None:
     reset_idea_repository_for_tests(reload_from_environment=True)
     report_headers = _report_evidence_pack_headers(
         "postgres-runtime-proof-report-evidence-pack-001"
@@ -453,12 +486,17 @@ def test_postgres_runtime_provider_persists_review_conversion_and_report_workflo
     assert replayed_report_pack.json()["durableStorageBacked"] is True
     assert replayed_report_pack.json()["persistence"]["decision"] == "replayed"
 
+
+def _assert_workflow_table_counts(postgres_database_url: str) -> None:
     assert _table_count(postgres_database_url, "idea_candidate_record") == 1
     assert _table_count(postgres_database_url, "idea_review_decision") == 1
     assert _table_count(postgres_database_url, "idea_feedback_event") == 1
     assert _table_count(postgres_database_url, "idea_conversion_intent") == 1
     assert _table_count(postgres_database_url, "idea_conversion_outcome") == 1
     assert _table_count(postgres_database_url, "idea_report_evidence_pack_request") == 1
+
+
+def _workflow_outbox_lineage_rows(postgres_database_url: str) -> list[dict[str, Any]]:
     with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
         with connection.cursor() as cursor:
             cursor.execute(
@@ -468,9 +506,11 @@ def test_postgres_runtime_provider_persists_review_conversion_and_report_workflo
                 ORDER BY occurred_at_utc, outbox_event_id
                 """
             )
-            lineage_rows = cursor.fetchall()
+            return cursor.fetchall()
 
-    expected_lineage = {
+
+def _expected_workflow_lineage() -> dict[str, tuple[str, str]]:
+    return {
         "idea.candidate.persisted.v1": (
             "corr-postgres-runtime-proof",
             "trace-postgres-runtime-proof",
@@ -500,9 +540,14 @@ def test_postgres_runtime_provider_persists_review_conversion_and_report_workflo
             "trace-postgres-runtime-proof-report-pack",
         ),
     }
+
+
+def _assert_workflow_outbox_lineage(postgres_database_url: str) -> None:
+    lineage_rows = _workflow_outbox_lineage_rows(postgres_database_url)
+    expected_lineage = _expected_workflow_lineage()
     assert set(expected_lineage).issubset({row["event_type"] for row in lineage_rows})
     for row in lineage_rows:
-        expected = expected_lineage.get(row["event_type"])
+        expected = expected_lineage.get(str(row["event_type"]))
         if expected is not None:
             assert (row["correlation_id"], row["trace_id"]) == expected
             assert row["lineage_origin"] == "request"
