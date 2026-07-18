@@ -1687,6 +1687,13 @@ SQL dispatch; it does not own this production PostgreSQL telemetry projection
 loader. The public loader moved from `120` lines to a `7` line orchestrator;
 every executable helper is `39` lines or smaller.
 
+PR `#643` merged by rebase to exact-main SHA
+`9d4de81768f6467fa8aa42e176b82d5adc7fa6c8`. PR checks passed Feature Lane,
+PR Merge Gate, Queue Auto Merge, and CodeQL. Exact-main Main Releasability
+`29659803202` and CodeQL `29659800081` passed on that SHA. Strict wiki parity
+passed with `DiffCount 0`, no unmerged remote branches remain against
+`origin/main`, and the implementation branch is absent locally and remotely.
+
 This is internal infrastructure modularity only. It does not change runtime
 trust telemetry semantics, API/OpenAPI behavior, migrations, authentication or
 authorization infrastructure, Core, Gateway, Workbench, data-mesh
