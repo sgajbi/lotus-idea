@@ -32,6 +32,13 @@ Workbench read-path and action-path declarations are v2 `source_contract`
 evidence only. The bounded Gateway BFF action family forwards Idea-owned review
 actions, feedback, and conversion intents; it must not transfer source,
 suitability, restriction, proposal, execution, or supported-feature authority.
+Workbench PR `#438` adds an explicit `development_configured` BFF authority
+fixture for local, development, and test only. It strips browser-supplied
+`X-Caller-*` authority, rejects unallowlisted Idea paths, and fails closed
+before Gateway when the environment or authority mode is not explicitly
+development. It is not an identity-provider, authenticated-session, or
+token-claims implementation; production principal resolution remains tracked
+by Workbench `#436`, platform `#563`, and Idea promotion tracker `#380`.
 Keep builders, generators, gates, and focused tests under capability-owned
 `workbench/` packages. Static files, Make targets, route strings, and historical
 PR/SHA references must never clear
