@@ -20,6 +20,7 @@ from app.domain.ideas import (
     SourceRef,
     UnsupportedEvidenceReason,
 )
+from app.domain.opportunity_family_compatibility import DRAWDOWN_REVIEW_FAMILY_COMPATIBILITY
 from app.domain.signal_evaluation_models import (
     ConcentrationRiskSignalInput,
     ConcentrationRiskSignalPolicy,
@@ -733,6 +734,7 @@ def evaluate_drawdown_review_signal(
     source_input: DrawdownReviewSignalInput,
     policy: DrawdownReviewSignalPolicy,
 ) -> SignalEvaluationResult:
+    family = DRAWDOWN_REVIEW_FAMILY_COMPATIBILITY.family
     if (
         source_input.evaluated_at_utc.tzinfo is None
         or source_input.evaluated_at_utc.utcoffset() is None
@@ -741,18 +743,18 @@ def evaluate_drawdown_review_signal(
 
     if not source_input.entitlement_allowed:
         return blocked_signal_result(
-            family=OpportunityFamily.HIGH_VOLATILITY,
+            family=family,
             reason_codes=(ReasonCode.REVIEW_REQUIRED,),
             unsupported_reasons=(UnsupportedEvidenceReason.ENTITLEMENT_DENIED,),
         )
     if source_input.risk_ref is None:
         return blocked_signal_result(
-            family=OpportunityFamily.HIGH_VOLATILITY,
+            family=family,
             reason_codes=(ReasonCode.SOURCE_PARTIAL,),
             unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,),
         )
     temporal_block = temporal_blocked_signal_result(
-        family=OpportunityFamily.HIGH_VOLATILITY,
+        family=family,
         as_of_date=source_input.as_of_date,
         evaluated_at_utc=source_input.evaluated_at_utc,
         source_refs=(source_input.risk_ref,),
@@ -761,31 +763,31 @@ def evaluate_drawdown_review_signal(
         return temporal_block
     if source_input.risk_ref.freshness is not EvidenceFreshness.CURRENT:
         return blocked_signal_result(
-            family=OpportunityFamily.HIGH_VOLATILITY,
+            family=family,
             reason_codes=(ReasonCode.SOURCE_STALE,),
             unsupported_reasons=(UnsupportedEvidenceReason.STALE_SOURCE,),
         )
     if source_input.risk_supportability_state is None:
         return blocked_signal_result(
-            family=OpportunityFamily.HIGH_VOLATILITY,
+            family=family,
             reason_codes=(ReasonCode.SOURCE_PARTIAL,),
             unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,),
         )
     if source_input.risk_supportability_state.lower() != "ready":
         return blocked_signal_result(
-            family=OpportunityFamily.HIGH_VOLATILITY,
+            family=family,
             reason_codes=(ReasonCode.SOURCE_PARTIAL,),
             unsupported_reasons=(UnsupportedEvidenceReason.SOURCE_UNCERTIFIED,),
         )
     if source_input.duplicate_of_candidate_id is not None:
         return SignalEvaluationResult(
             outcome=SignalEvaluationOutcome.SUPPRESSED,
-            family=OpportunityFamily.HIGH_VOLATILITY,
+            family=family,
             reason_codes=(ReasonCode.DUPLICATE_SUPPRESSED,),
         )
     if source_input.source_reported_max_drawdown is None:
         return blocked_signal_result(
-            family=OpportunityFamily.HIGH_VOLATILITY,
+            family=family,
             reason_codes=(ReasonCode.SOURCE_PARTIAL,),
             unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,),
         )
@@ -794,7 +796,7 @@ def evaluate_drawdown_review_signal(
     if source_input.source_reported_max_drawdown > policy.max_drawdown_threshold:
         return SignalEvaluationResult(
             outcome=SignalEvaluationOutcome.NOT_ELIGIBLE,
-            family=OpportunityFamily.HIGH_VOLATILITY,
+            family=family,
             reason_codes=(ReasonCode.BELOW_MATERIALITY,),
         )
 
@@ -802,7 +804,7 @@ def evaluate_drawdown_review_signal(
     identity = _stable_drawdown_review_identity(source_input, policy, source_refs)
     signal = OpportunitySignal(
         signal_id=f"signal_drawdown_review_{identity}",
-        family=OpportunityFamily.HIGH_VOLATILITY,
+        family=family,
         source_refs=source_refs,
         reason_codes=(ReasonCode.DRAWDOWN_ATTENTION,),
         detected_at_utc=source_input.evaluated_at_utc,
@@ -825,7 +827,7 @@ def evaluate_drawdown_review_signal(
     )
     candidate = IdeaCandidate(
         candidate_id=f"idea_drawdown_review_{identity}",
-        family=OpportunityFamily.HIGH_VOLATILITY,
+        family=family,
         lifecycle_status=IdeaLifecycleStatus.GENERATED,
         review_posture=ReviewPosture.ADVISOR_REVIEW_REQUIRED,
         evidence_packet=evidence_packet,
@@ -841,7 +843,7 @@ def evaluate_drawdown_review_signal(
     )
     return SignalEvaluationResult(
         outcome=SignalEvaluationOutcome.CANDIDATE_CREATED,
-        family=OpportunityFamily.HIGH_VOLATILITY,
+        family=family,
         reason_codes=evidence_packet.reason_codes,
         signal=signal,
         candidate=candidate,
@@ -1028,7 +1030,7 @@ def _stable_drawdown_review_identity(
 ) -> str:
     identity_payload = {
         "as_of_date": source_input.as_of_date.isoformat(),
-        "family": OpportunityFamily.HIGH_VOLATILITY.value,
+        "family": DRAWDOWN_REVIEW_FAMILY_COMPATIBILITY.family.value,
         "policy_version": policy.policy_version,
         "risk_supportability_state": source_input.risk_supportability_state,
         "source_reported_max_drawdown": str(source_input.source_reported_max_drawdown),

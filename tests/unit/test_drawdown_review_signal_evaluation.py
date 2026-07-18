@@ -6,6 +6,7 @@ from decimal import Decimal
 import pytest
 
 from app.domain import (
+    DRAWDOWN_REVIEW_FAMILY_COMPATIBILITY,
     DrawdownReviewSignalInput,
     DrawdownReviewSignalPolicy,
     EvidenceFreshness,
@@ -75,9 +76,15 @@ def test_drawdown_review_positive_case_creates_source_safe_candidate() -> None:
     assert first.signal is not None
     assert first.candidate is not None
     assert second.candidate is not None
-    assert first.signal.family is OpportunityFamily.HIGH_VOLATILITY
+    assert first.family is DRAWDOWN_REVIEW_FAMILY_COMPATIBILITY.family
+    assert first.signal.family is DRAWDOWN_REVIEW_FAMILY_COMPATIBILITY.family
+    assert first.signal.reason_codes == (DRAWDOWN_REVIEW_FAMILY_COMPATIBILITY.reason_code,)
+    assert first.signal.source_refs[0].product_id == DRAWDOWN_REVIEW_FAMILY_COMPATIBILITY.source_product_id
+    assert first.signal.source_refs[0].route == DRAWDOWN_REVIEW_FAMILY_COMPATIBILITY.source_route
     assert first.candidate.candidate_id == second.candidate.candidate_id
     assert first.candidate.candidate_id.startswith("idea_drawdown_review_")
+    assert first.candidate.family is OpportunityFamily.HIGH_VOLATILITY
+    assert first.candidate.family is DRAWDOWN_REVIEW_FAMILY_COMPATIBILITY.family
     assert first.candidate.lifecycle_status is IdeaLifecycleStatus.GENERATED
     assert first.candidate.review_posture is ReviewPosture.ADVISOR_REVIEW_REQUIRED
     assert first.reason_codes == (
@@ -93,6 +100,7 @@ def test_drawdown_review_below_materiality_does_not_create_candidate() -> None:
     )
 
     assert result.outcome is SignalEvaluationOutcome.NOT_ELIGIBLE
+    assert result.family is DRAWDOWN_REVIEW_FAMILY_COMPATIBILITY.family
     assert result.candidate is None
     assert result.reason_codes == (ReasonCode.BELOW_MATERIALITY,)
 
@@ -105,8 +113,10 @@ def test_drawdown_review_missing_or_stale_source_blocks_positive_claim() -> None
     )
 
     assert missing.outcome is SignalEvaluationOutcome.BLOCKED
+    assert missing.family is DRAWDOWN_REVIEW_FAMILY_COMPATIBILITY.family
     assert missing.unsupported_reasons == (UnsupportedEvidenceReason.MISSING_SOURCE,)
     assert stale.outcome is SignalEvaluationOutcome.BLOCKED
+    assert stale.family is DRAWDOWN_REVIEW_FAMILY_COMPATIBILITY.family
     assert stale.reason_codes == (ReasonCode.SOURCE_STALE,)
     assert stale.unsupported_reasons == (UnsupportedEvidenceReason.STALE_SOURCE,)
 
@@ -118,6 +128,7 @@ def test_drawdown_review_non_ready_source_blocks_positive_claim() -> None:
     )
 
     assert result.outcome is SignalEvaluationOutcome.BLOCKED
+    assert result.family is DRAWDOWN_REVIEW_FAMILY_COMPATIBILITY.family
     assert result.unsupported_reasons == (UnsupportedEvidenceReason.SOURCE_UNCERTIFIED,)
 
 
@@ -128,6 +139,7 @@ def test_drawdown_review_duplicate_source_is_suppressed() -> None:
     )
 
     assert result.outcome is SignalEvaluationOutcome.SUPPRESSED
+    assert result.family is DRAWDOWN_REVIEW_FAMILY_COMPATIBILITY.family
     assert result.candidate is None
     assert result.reason_codes == (ReasonCode.DUPLICATE_SUPPRESSED,)
 
@@ -143,8 +155,10 @@ def test_drawdown_review_missing_metric_or_entitlement_blocks_positive_claim() -
     )
 
     assert missing_metric.outcome is SignalEvaluationOutcome.BLOCKED
+    assert missing_metric.family is DRAWDOWN_REVIEW_FAMILY_COMPATIBILITY.family
     assert missing_metric.unsupported_reasons == (UnsupportedEvidenceReason.MISSING_SOURCE,)
     assert denied.outcome is SignalEvaluationOutcome.BLOCKED
+    assert denied.family is DRAWDOWN_REVIEW_FAMILY_COMPATIBILITY.family
     assert denied.unsupported_reasons == (UnsupportedEvidenceReason.ENTITLEMENT_DENIED,)
 
 
