@@ -1636,6 +1636,77 @@ migrations, and central skills are unchanged by explicit scope decision; no
 wiki publication is required unless later PR/mainline evidence changes
 repo-authored wiki truth.
 
+## Issue 638 AI Explanation Evaluation API Boundary Maintainability
+
+Issue `#638` applies the same Slice 19 quality-baseline learning to the AI
+explanation evaluation API route. After issue `#636`, the current report-only
+quality baseline listed
+`src/app/api/ai_governance.py::evaluate_ai_explanation` at `120` lines. The
+route mixed trusted caller-context parsing, capability authorization,
+idempotency validation, request DTO to application-command mapping, durable
+repository configuration, application execution, exception-to-ProblemDetails
+mapping, operation-event emission, lineage persistence projection, and response
+DTO assembly.
+
+`src/app/api/ai_governance.py` now preserves the public
+`evaluate_ai_explanation(...)` FastAPI route signature, response model,
+status/error codes, idempotency semantics, caller entitlement checks,
+durable-write fail-closed posture, Lotus AI provenance and metadata validation,
+operation-event emission, and production response DTO projection while
+extracting:
+
+1. `_ai_explanation_caller_from_headers(...)` for trusted caller-context
+   parsing and capability authorization,
+2. `_ai_explanation_command_from_request(...)` for idempotency validation and
+   request-to-command mapping,
+3. `_ai_explanation_durable_write_problem(...)` for durable repository
+   configuration and blocked telemetry,
+4. `_ai_explanation_exception_response(...)` and dedicated product-safe problem
+   helpers for stable exception mapping,
+5. `_successful_ai_explanation_response(...)` and
+   `_ai_explanation_result_problem(...)` as the bounded response projection
+   layer.
+
+Focused validation passed:
+
+1. `python -m py_compile src/app/api/ai_governance.py`,
+2. `python -m pytest tests/unit/test_ai_governance.py tests/unit/test_ai_governance_api_contract.py tests/unit/test_ai_lineage_idempotency.py tests/unit/test_attested_ai_explanation_application.py tests/integration/test_ai_governance_api.py -q`
+   with `60` tests,
+3. `python -m ruff check src/app/api/ai_governance.py tests/integration/test_ai_governance_api.py tests/unit/test_github_issue_closure_matrix_gate.py scripts/github_issue_closure_matrix_gate.py`,
+4. `python -m ruff format --check src/app/api/ai_governance.py tests/integration/test_ai_governance_api.py tests/unit/test_github_issue_closure_matrix_gate.py scripts/github_issue_closure_matrix_gate.py`,
+5. `python -m mypy src/app/api/ai_governance.py`,
+6. `python -m pytest tests/unit/test_ai_governance.py tests/unit/test_ai_governance_api_contract.py tests/unit/test_ai_lineage_idempotency.py tests/unit/test_attested_ai_explanation_application.py tests/integration/test_ai_governance_api.py tests/unit/test_github_issue_closure_matrix_gate.py -q`
+   with `114` tests,
+7. `make quality-baseline`,
+8. `make maintainability-gate`,
+9. `make duplicate-implementation-gate` with zero duplicate clusters across
+   `2,987` source/script functions,
+10. `make github-issue-closure-matrix-gate`,
+11. `make documentation-contract-gate`,
+12. `make lint`,
+13. `make check` with `4,878` passed unit tests.
+
+The same-pattern scan covered
+#601/#603/#606/#609/#618/#620/#623/#625/#630/#633/#636 maintainability
+evidence, current `quality/baseline_report.md`, GitHub searches for
+`evaluate_ai_explanation`, `AI governance API maintainability`, and
+`ai_governance.py route refactor`, focused AI governance unit/API-contract,
+lineage, application, and integration tests, the codebase review ledger, the
+issue closure matrix, refactor decisions, and issue-discovery ledger `#225`.
+Closed issues #268/#389/#516/#623 cover adjacent AI governance, lineage, and
+fixture concerns but do not own this route-orchestration hotspot. The public
+route moved from `120` lines to `54` lines; the exception dispatcher is `14`
+lines and each extracted problem helper is `13` lines or smaller.
+
+This is internal API-boundary modularity only. It does not implement
+authentication or authorization infrastructure, Lotus AI runtime/provider
+certification, API/OpenAPI behavior changes, migrations, runtime topology
+changes, Core, Gateway, Workbench, data-product support, external-publication
+authority, or supported-feature promotion. README, wiki, supported features,
+OpenAPI, migrations, and central skills are unchanged by explicit scope
+decision; no wiki publication is required unless later PR/mainline evidence
+changes repo-authored wiki truth.
+
 ## Issue 636 Core Portfolio-State Runtime Validator Maintainability
 
 Issue `#636` applies the same Slice 19 quality-baseline learning to the Core
@@ -1694,6 +1765,12 @@ changes, migrations, OpenAPI behavior changes, or supported-feature promotion.
 README, wiki, supported features, OpenAPI, migrations, and central skills are
 unchanged by explicit scope decision; no wiki publication is required unless
 later PR/mainline evidence changes repo-authored wiki truth.
+
+PR `#637` merged by rebase to exact-main SHA
+`4762f3ef21debcc9e153ae215bce12a398be5ffe`. Main Releasability
+`29655963600` and CodeQL `29655918314` passed on that exact SHA, strict wiki
+parity reported `DiffCount 0`, issue `#636` is closed on exact main, and the
+implementation branch is absent after cleanup.
 
 ## Issue 620 PostgreSQL Fake Row Construction Maintainability
 

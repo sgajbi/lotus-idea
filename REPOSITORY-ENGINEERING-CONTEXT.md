@@ -484,6 +484,15 @@ that capture operation events must patch the helper emitter aliases as well as
 legacy route-local emitter names. Do not silently rely on route modules owning
 the emitter after review/conversion/outbox helper extraction.
 
+AI explanation evaluation remains inside `app.api.ai_governance` for now, but
+the route must stay as a thin API-boundary orchestrator. Keep trusted caller
+context binding, idempotency-to-command mapping, durable-write problem mapping,
+exception-to-ProblemDetails mapping, and success/result response projection in
+named helper functions rather than re-growing `evaluate_ai_explanation(...)`.
+This is internal design modularity only; it does not implement production
+authentication/authorization, Lotus AI runtime/provider certification, API
+contract changes, or a separate runtime service.
+
 When one HTTP status can return multiple stable `ProblemDetails` codes, use
 `app.api.problem_details.merged_problem_response_metadata` instead of spreading
 multiple response-metadata dictionaries with the same status key. Downstream
