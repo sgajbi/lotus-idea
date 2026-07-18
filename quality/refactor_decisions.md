@@ -6,6 +6,42 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-07-18: PostgreSQL Fake SQL Dispatcher Boundary
+
+Issue `#618` reduces the remaining report-only test-support hotspot in
+`tests/unit/postgres_repository_fake.py::FakePostgresCursor.execute`.
+
+The fake cursor remains a single in-process test double for the PostgreSQL
+repository, but its public `execute()` method now delegates to named
+SQL-family handlers for review queues, readiness summaries, runtime trust
+telemetry, lookups, review identity, outbox events, candidate updates, generic
+selects, deletes, inserts, and idempotency inserts. Existing capability-owned
+helpers continue to own bounded mutation, downstream submission, outbox
+recovery, runtime trust telemetry row building, review queue rows, and lookup
+rows.
+
+This is test-support maintainability only. It does not change the production
+PostgreSQL adapter, database schema, migrations, API/OpenAPI behavior,
+authentication/authorization, Core, Gateway, Workbench, runtime certification,
+or supported-feature promotion.
+
+Evidence:
+
+1. `FakePostgresCursor.execute` dropped out of the report-only largest-function
+   list after `make quality-baseline`.
+2. `tests/unit/test_postgres_repository_fake_dispatch.py` covers generic
+   insert/select/delete write tracking and downstream readiness quarantine
+   behavior.
+3. Affected suites passed:
+   `tests/unit/test_postgres_repository_fake_dispatch.py`,
+   `tests/unit/test_postgres_repository.py`,
+   `tests/unit/test_postgres_downstream_readiness.py`,
+   `tests/unit/runtime_trust_telemetry/test_postgres_projection.py`, and
+   `tests/unit/test_postgres_review_queue.py` (`35` tests).
+4. `make quality-baseline`, `make maintainability-gate`,
+   `make duplicate-implementation-gate`, `make lint`, and `make typecheck`
+   passed locally.
+
 ## 2026-07-18: PostgreSQL Snapshot Write Boundary
 
 Issue `#612` extracts PostgreSQL snapshot replacement and detail-write helpers

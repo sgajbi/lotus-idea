@@ -1339,3 +1339,52 @@ attestation `https://github.com/sgajbi/lotus-idea/attestations/35955178`.
 Issue `#609` is closed and the local and remote implementation branches are
 absent after remote prune. Strict wiki parity and the repo-local wiki quality
 audit passed; no wiki publication change was needed.
+
+## Issue 618 PostgreSQL Fake Dispatcher Maintainability
+
+Issue `#618` applies the same Slice 19 quality-baseline learning to the
+PostgreSQL repository fake used by persistence, readiness, review queue,
+runtime trust telemetry, downstream, and outbox tests. After issue `#614`
+aligned report-only baseline generation with the blocking scanners,
+`make quality-baseline` listed
+`tests/unit/postgres_repository_fake.py::FakePostgresCursor.execute` as the
+largest remaining executable function at `179` lines.
+
+`FakePostgresCursor.execute` now preserves its public test-double behavior
+while delegating SQL families to named handlers for:
+
+1. review queue count/page/readiness queries,
+2. outbox and downstream readiness summaries,
+3. runtime trust telemetry aggregate queries,
+4. candidate detail, downstream lookup, and idempotency lookup queries,
+5. review identity queries,
+6. outbox event claim/update behavior,
+7. candidate update behavior,
+8. generic select, delete, insert, and idempotency insert behavior.
+
+Focused validation passed:
+
+1. `tests/unit/test_postgres_repository_fake_dispatch.py`,
+2. `tests/unit/test_postgres_repository.py`,
+3. `tests/unit/test_postgres_downstream_readiness.py`,
+4. `tests/unit/runtime_trust_telemetry/test_postgres_projection.py`,
+5. `tests/unit/test_postgres_review_queue.py`,
+6. `make quality-baseline`,
+7. `make maintainability-gate`,
+8. `make duplicate-implementation-gate`,
+9. `make lint`,
+10. `make typecheck`.
+
+The same-pattern scan covered existing capability-owned fake helpers,
+open/closed GitHub duplicate searches, the quality baseline, maintainability
+and duplicate gates, the codebase review ledger, the issue closure matrix,
+repository context, and issue-discovery ledger `#225`. The dispatcher dropped
+out of the top largest-function list; the next largest function is an
+end-to-end repository round-trip test, not a reusable SQL-family dispatcher.
+
+This is test-support maintainability only. It does not change production
+PostgreSQL adapters, schema, migrations, API/OpenAPI behavior, runtime
+topology, authentication/authorization, Core, Gateway, Workbench,
+data-product support, client-ready publication, or supported-feature
+promotion. README, wiki, supported features, OpenAPI, migrations, and central
+skills are unchanged by explicit scope decision.
