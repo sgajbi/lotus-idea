@@ -2,10 +2,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi.testclient import TestClient
-
 from app.main import app
 from app.runtime.repository_state import reset_idea_repository_for_tests
+from tests.support.http import managed_test_client
 
 
 PORTFOLIO_ID = "PB_SG_GLOBAL_BAL_001"
@@ -144,7 +143,7 @@ def _report_evidence_pack_payload(
 
 def test_critical_idea_workflow_preserves_authority_boundaries() -> None:
     reset_idea_repository_for_tests()
-    client = TestClient(app)
+    client = managed_test_client(app)
 
     candidate_response = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",

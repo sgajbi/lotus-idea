@@ -9,58 +9,59 @@ Blocking scaffold commands:
 
 1. `make architecture-boundary-gate`
 2. `make ci-contract-gate`
-3. `make maintainability-gate`
-4. `make private-import-boundary-gate`
-5. `make documentation-contract-gate`
-6. `make quality-scorecard-gate`
-7. `make monetary-float-guard`
-8. `make no-sensitive-content-guard`
-9. `make source-observability-contract-gate`
-10. `make api-route-metadata-gate`
-11. `make api-problem-details-boundary-gate`
-12. `make openapi-problem-details-example-gate`
-13. `make operation-metric-contract-gate`
-14. `make ai-model-risk-ops-contract-gate`
-15. `make ai-model-risk-operations-proof-contract-gate`
-16. `make implementation-truth-gate`
-17. `make data-mesh-contract-gate`
-18. `make mesh-policy-source-contract-proof-gate`
-19. `make opportunity-archetype-contract-gate`
-20. `make downstream-realization-contract-gate`
-21. `make migration-contract-gate`
-22. `make migration-execution-gate`
-23. `make durable-repository-proof-contract-gate`
-24. `make runtime-trust-telemetry-test-execution-contract-gate`
-25. `make ai-lineage-store-proof-contract-gate`
-26. `make ai-workflow-pack-registration-proof-contract-gate`
-27. `make ai-workflow-pack-runtime-execution-proof-contract-gate`
-28. `make workbench-read-path-source-contract-proof-gate`
-29. `make gateway-workbench-contract-proof-contract-gate`
-30. `make gateway-workbench-discovery-contract-proof-contract-gate`
-31. `make outbox-broker-source-contract-proof-gate`
-32. `make platform-catalog-source-contract-proof-gate`
-33. `make downstream-route-source-contract-proof-gate`
-34. `make source-ingestion-worker-check`
-35. `make source-ingestion-scheduled-worker-check`
-36. `make source-ingestion-runtime-execution-contract-gate`
-37. `make risk-concentration-live-proof-contract-gate`
-38. `make high-volatility-live-proof-contract-gate`
-39. `make risk-drawdown-live-proof-contract-gate`
-40. `make manage-mandate-live-proof-contract-gate`
-41. `make mandate-restriction-live-proof-contract-gate`
-42. `make missing-suitability-live-proof-contract-gate`
-43. `make missing-risk-profile-live-proof-contract-gate`
-44. `make performance-underperformance-live-proof-contract-gate`
-45. `make core-benchmark-assignment-live-proof-contract-gate`
-46. `make core-portfolio-state-live-proof-contract-gate`
-47. `make supported-features-gate`
-48. `make endpoint-certification-gate`
-49. `make postgres-integration-gate`
-50. `make openapi-gate`
-51. `make coverage-gate`
-52. `make security-audit`
-53. `make docker-build`
-54. `make container-runtime-smoke`
+3. `make test-client-lifecycle-gate`
+4. `make maintainability-gate`
+5. `make private-import-boundary-gate`
+6. `make documentation-contract-gate`
+7. `make quality-scorecard-gate`
+8. `make monetary-float-guard`
+9. `make no-sensitive-content-guard`
+10. `make source-observability-contract-gate`
+11. `make api-route-metadata-gate`
+12. `make api-problem-details-boundary-gate`
+13. `make openapi-problem-details-example-gate`
+14. `make operation-metric-contract-gate`
+15. `make ai-model-risk-ops-contract-gate`
+16. `make ai-model-risk-operations-proof-contract-gate`
+17. `make implementation-truth-gate`
+18. `make data-mesh-contract-gate`
+19. `make mesh-policy-source-contract-proof-gate`
+20. `make opportunity-archetype-contract-gate`
+21. `make downstream-realization-contract-gate`
+22. `make migration-contract-gate`
+23. `make migration-execution-gate`
+24. `make durable-repository-proof-contract-gate`
+25. `make runtime-trust-telemetry-test-execution-contract-gate`
+26. `make ai-lineage-store-proof-contract-gate`
+27. `make ai-workflow-pack-registration-proof-contract-gate`
+28. `make ai-workflow-pack-runtime-execution-proof-contract-gate`
+29. `make workbench-read-path-source-contract-proof-gate`
+30. `make gateway-workbench-contract-proof-contract-gate`
+31. `make gateway-workbench-discovery-contract-proof-contract-gate`
+32. `make outbox-broker-source-contract-proof-gate`
+33. `make platform-catalog-source-contract-proof-gate`
+34. `make downstream-route-source-contract-proof-gate`
+35. `make source-ingestion-worker-check`
+36. `make source-ingestion-scheduled-worker-check`
+37. `make source-ingestion-runtime-execution-contract-gate`
+38. `make risk-concentration-live-proof-contract-gate`
+39. `make high-volatility-live-proof-contract-gate`
+40. `make risk-drawdown-live-proof-contract-gate`
+41. `make manage-mandate-live-proof-contract-gate`
+42. `make mandate-restriction-live-proof-contract-gate`
+43. `make missing-suitability-live-proof-contract-gate`
+44. `make missing-risk-profile-live-proof-contract-gate`
+45. `make performance-underperformance-live-proof-contract-gate`
+46. `make core-benchmark-assignment-live-proof-contract-gate`
+47. `make core-portfolio-state-live-proof-contract-gate`
+48. `make supported-features-gate`
+49. `make endpoint-certification-gate`
+50. `make postgres-integration-gate`
+51. `make openapi-gate`
+52. `make coverage-gate`
+53. `make security-audit`
+54. `make docker-build`
+55. `make container-runtime-smoke`
 
 Support commands:
 
@@ -269,6 +270,13 @@ make test-e2e E2E_TESTS=tests/e2e/test_service_contract.py
 
 The defaults remain the full unit, integration, and e2e suites. The CI contract gate blocks
 removal of `UNIT_TESTS`, `INTEGRATION_TESTS`, and `E2E_TESTS` wiring.
+
+Integration and E2E API tests must construct in-process FastAPI clients through
+`tests.support.http.managed_test_client` under the autouse managed-client
+scope. `make test-client-lifecycle-gate` is blocking through `make lint` and
+rejects direct FastAPI or Starlette `TestClient` imports and construction in
+both suites, preserving lifespan and deterministic shutdown cleanup across
+ordinary integration tests and the critical idea workflow E2E lane.
 
 Coverage collection also stays on the Makefile surface:
 

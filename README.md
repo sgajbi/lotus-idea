@@ -18,10 +18,9 @@ persistence, readiness, source-ingestion, outbox, AI-governance, downstream
 intent, Gateway/Workbench read-path, and data-mesh proof foundations exist, but
 no externally supported product feature is promoted.
 
-The supported-feature registry remains foundation-only. Feature promotion
-requires implementation-backed source certification, Gateway/Workbench proof,
-contracts, OpenAPI evidence, tests, documentation, wiki source, CI evidence on
-`main`, and clean branch hygiene.
+The supported-feature registry remains foundation-only. Feature promotion requires
+implementation-backed source certification, Gateway/Workbench proof, contracts, OpenAPI evidence,
+tests, documentation, wiki source, CI evidence on `main`, and clean branch hygiene.
 
 | Area | Current truth | Promotion blocker |
 | --- | --- | --- |
@@ -188,6 +187,7 @@ Common gates:
 | `make test-unit` | Unit tests; override `UNIT_TESTS` for focused work. |
 | `make test-integration` | Integration tests; override `INTEGRATION_TESTS` for focused work. |
 | `make test-e2e` | Deterministic end-to-end tests; override `E2E_TESTS` for focused work. |
+| `make test-client-lifecycle-gate` | Blocks unmanaged FastAPI/Starlette `TestClient` construction in integration and E2E tests. |
 | `make documentation-contract-gate` | README, repo context, docs, wiki, demo, and evidence-surface contract truth. |
 | `make implementation-truth-gate` | Blocks overclaims about support, certification, live source proof, Workbench, and client readiness. |
 | `make foundation-structure-gate` | Enforces foundation-only posture, documentation truth, and architecture-boundary agreement. |
