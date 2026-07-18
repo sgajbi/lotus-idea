@@ -24,6 +24,52 @@ Perform the full engineering review before final closure.
 
 ## Current Implementation Evidence
 
+Issue `#654` applies the Slice 19 quality-baseline learning to the
+data-lifecycle PostgreSQL policy fake cursor. After issue `#653`, the current
+report-only quality baseline listed
+`tests/unit/data_lifecycle/test_postgres_policy.py::execute` at `127` lines.
+Inspection showed this is `LifecycleCursor.execute(...)`, the fake PostgreSQL
+cursor dispatcher. The dispatcher proved important data-lifecycle test
+behavior but mixed SQL normalization, lifecycle operation lookup,
+candidate/control reads, active-delivery reads, report evidence-pack reads,
+control updates, and lifecycle-operation insert recording in one method.
+
+`tests/unit/data_lifecycle/test_postgres_policy.py` now keeps the same fake
+cursor behavior, but `LifecycleCursor.execute(...)` is a dispatcher over named
+SQL-family helpers for statement preparation, lifecycle operation lookup,
+archive/authority replay lookup, candidate/control reads, delivery active-count
+reads, linked report evidence-pack reads, lifecycle-control update mutation,
+and lifecycle-operation insert recording. Stable column tuples replace embedded
+update/insert key lists. SQL matching behavior, rows, rowcount, operation-map
+updates, control updates, commit/rollback tests, and assertion semantics are
+preserved.
+
+Focused validation passed:
+
+1. `python -m ruff check tests/unit/data_lifecycle/test_postgres_policy.py`,
+2. `python -m ruff format --check tests/unit/data_lifecycle/test_postgres_policy.py`,
+3. `python -m mypy tests/unit/data_lifecycle/test_postgres_policy.py`,
+4. `python -m pytest tests/unit/data_lifecycle/test_postgres_policy.py -q`
+   with `16` tests.
+
+The same-pattern scan followed the Slice 19 maintainability sequence through
+#653, current `quality/baseline_report.md`, duplicate searches for
+`test_postgres_policy execute data lifecycle maintainability`,
+`data lifecycle postgres policy test execute`, and
+`test_postgres_policy.py maintainability`, the codebase review ledger, the
+issue closure matrix, refactor decisions, and issue-discovery ledger `#225`.
+Broad search returned `#225` and `#345`; `#345` owns SLO/capacity telemetry,
+not this fake cursor decomposition.
+
+This is internal test-support modularity only. It does not change production
+data-lifecycle policy behavior, PostgreSQL repository implementation,
+API/OpenAPI, persistence, migrations, authentication or authorization
+infrastructure, Core, Gateway, Workbench, data-product support,
+external-publication authority, runtime topology, wiki source, README,
+supported features, or supported-feature promotion. Broader local gates, PR
+checks, exact-main Main Releasability/CodeQL, wiki parity, issue closure, and
+branch cleanup remain pending for the tranche.
+
 Issue `#653` applies the Slice 19 quality-baseline learning to the
 implementation-proof readiness source-safe capability test. After issue `#652`,
 the current report-only quality baseline listed

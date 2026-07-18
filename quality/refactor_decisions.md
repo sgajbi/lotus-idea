@@ -6,6 +6,50 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-07-19: Data Lifecycle Fake PostgreSQL Cursor Dispatcher Boundary
+
+Issue `#654` applies the Slice 19 report-only quality-baseline lens to the
+data-lifecycle PostgreSQL policy fake cursor. After issue `#653`,
+`make quality-baseline` listed
+`tests/unit/data_lifecycle/test_postgres_policy.py::execute` at `127` lines.
+Inspection showed this is `LifecycleCursor.execute(...)`, the fake PostgreSQL
+cursor dispatcher.
+
+The dispatcher mixed:
+
+1. SQL normalization and execution recording,
+2. advisory lock no-op handling,
+3. lifecycle operation lookup by idempotency key, authority receipt, and
+   archive receipt,
+4. candidate and lifecycle-control row loading,
+5. active outbox and downstream submission count loading,
+6. linked report evidence-pack row loading,
+7. lifecycle-control update mutation,
+8. lifecycle-operation insert recording.
+
+`tests/unit/data_lifecycle/test_postgres_policy.py` now keeps the same fake
+cursor behavior, but `LifecycleCursor.execute(...)` is a dispatcher over named
+SQL-family helpers. Stable column tuples replace embedded update/insert key
+lists. SQL matching behavior, rows, rowcount, operation-map updates, control
+updates, commit/rollback tests, and assertion semantics are preserved.
+
+Focused validation passed:
+
+1. `python -m ruff check tests/unit/data_lifecycle/test_postgres_policy.py`,
+2. `python -m ruff format --check tests/unit/data_lifecycle/test_postgres_policy.py`,
+3. `python -m mypy tests/unit/data_lifecycle/test_postgres_policy.py`,
+4. `python -m pytest tests/unit/data_lifecycle/test_postgres_policy.py -q`
+   (`16` passed).
+
+This is test-support maintainability only. It does not change production
+data-lifecycle policy behavior, PostgreSQL repository implementation,
+API/OpenAPI, persistence, migrations, authentication or authorization
+infrastructure, Core, Gateway, Workbench, runtime topology, wiki source,
+README, supported-features, data-mesh certification, external-publication
+authority, or supported-feature promotion. Broader local gates, PR checks,
+exact-main Main Releasability/CodeQL, wiki parity, issue closure, and branch
+cleanup remain pending for the tranche.
+
 ## 2026-07-19: Implementation Proof Readiness Capability Assertion Boundary
 
 Issue `#653` applies the Slice 19 report-only quality-baseline lens to the
