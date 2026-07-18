@@ -1526,7 +1526,8 @@ Recent issue-derived patterns to preserve:
     inspect siblings in the same impact/lens family. Fix a high-confidence
     sibling in the same bounded batch or create a GitHub issue with exact
     function, line count, route/proof ownership, acceptance criteria, and
-    no-promotion boundaries. Issues `#601`, `#603`, `#606`, `#609`, `#618`, and `#620` are the current
+    no-promotion boundaries. Issues `#601`, `#603`, `#606`, `#609`, `#618`,
+    `#620`, and `#623` are the current
     pattern: `build_service_capacity_baseline` moved from 130 to 64 lines,
     `post_outbox_delivery_run_once` moved from 129 to 71 lines, and
     `record_review_action` moved from 127 to 54 lines, and
@@ -1538,7 +1539,11 @@ Recent issue-derived patterns to preserve:
     transaction, `rowcount`, idempotency, and assertion semantics. The
     follow-through fake row helper split `row_for_insert` into table-owned row
     builders while preserving JSONB unwrapping, strict column/value validation,
-    and unknown-table failure behavior.
+    and unknown-table failure behavior. AI workflow-pack fixtures apply the
+    same rule: keep public fixture helpers stable, move large source-contract
+    and runtime-execution fake file catalogs behind capability-owned constants,
+    and test the non-claim boundaries for external-publication authority,
+    downstream authority, live provider, and supported-feature promotion.
 31. Route-owned runtimes must consume their own cleanup hooks. Source-ingestion
     run-once builds Core HTTP clients through `SourceIngestionRuntime`; the API
     path must close the runtime after accepted or source-unavailable execution
@@ -2236,7 +2241,7 @@ Current gaps remain explicit:
 5. no downstream execution/materialization proof,
 6. no certified external broker publication,
 7. no platform mesh certification,
-8. no client-ready publication,
+8. no external-publication authority,
 9. bounded service/workflow SLIs, burn alerts, and dashboard exist, but no
    production load/soak, PostgreSQL saturation, resource, cost, or back-pressure
    certification,
