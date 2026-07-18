@@ -6,6 +6,67 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-07-19: PostgreSQL Runtime Workflow Integration Test Boundary
+
+Issue `#648` applies the Slice 19 report-only quality-baseline lens to the
+PostgreSQL runtime workflow integration proof. After issue `#645`,
+`make quality-baseline` listed
+`tests/integration/test_postgres_runtime_integration.py::test_postgres_runtime_provider_persists_review_conversion_and_report_workflow`
+at `174` lines.
+
+The test mixed:
+
+1. high-cash persisted API setup,
+2. advisor queue durable reload proof,
+3. lifecycle transition to review-ready,
+4. review action persistence and replay,
+5. feedback persistence,
+6. conversion intent persistence and replay,
+7. conversion outcome persistence,
+8. report evidence-pack persistence and replay,
+9. table-count verification,
+10. SQL outbox query and lineage assertions.
+
+`tests/integration/test_postgres_runtime_integration.py` now keeps one
+externally visible PostgreSQL-backed integration scenario, but the public test
+is a short orchestrator over named helpers for candidate persistence, advisor
+queue reload, review/replay, feedback, conversion/replay, outcome,
+report/replay, table counts, and outbox-lineage proof. The refactored workflow
+test no longer appears in the report-only top-function list; the new largest
+function is the E2E authority-boundary test at `153` lines.
+
+Focused validation passed:
+
+1. `python -m ruff check tests/integration/test_postgres_runtime_integration.py`,
+2. `python -m ruff format --check tests/integration/test_postgres_runtime_integration.py`,
+3. `python -m mypy tests/integration/test_postgres_runtime_integration.py`.
+
+The focused PostgreSQL test command
+`python -m pytest tests/integration/test_postgres_runtime_integration.py::test_postgres_runtime_provider_persists_review_conversion_and_report_workflow -q`
+was source-collected and skipped because the local PostgreSQL integration
+fixture was not active. Broader local quality gates passed:
+
+1. `make quality-baseline`,
+2. `make maintainability-gate`,
+3. `make duplicate-implementation-gate` with zero duplicate clusters across
+   `3,004` source/script functions.
+
+The same-pattern scan covered
+#601/#603/#606/#609/#618/#620/#623/#625/#630/#633/#636/#638/#640/#642/#645
+maintainability evidence, current `quality/baseline_report.md`, GitHub
+duplicate searches for
+`test_postgres_runtime_provider_persists_review_conversion_and_report_workflow`,
+`review conversion report workflow quality baseline`,
+`test_postgres_runtime_integration.py maintainability`, and
+`PostgreSQL runtime integration workflow`, the codebase review ledger, the
+issue closure matrix, RFC Slice 19, and issue-discovery ledger `#225`.
+
+This is test-support maintainability only. It does not change production
+PostgreSQL adapters, schema, migrations, API/OpenAPI behavior, authentication
+or authorization infrastructure, Core, Gateway, Workbench, data-product
+support, external-publication authority, runtime topology, wiki source,
+README, supported features, or supported-feature promotion.
+
 ## 2026-07-19: PostgreSQL Mutating Workflow Test Boundary
 
 Issue `#645` applies the Slice 19 report-only quality-baseline lens to the
