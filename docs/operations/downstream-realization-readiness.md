@@ -360,10 +360,18 @@ suitability or rebalance authority, or certify downstream acceptance. The
 future trusted identity path remains tracked in GitHub issue `#380`; this
 branch keeps the fixture explicitly non-authoritative.
 
-Report intake has the same identity-provider deferral. The Idea adapter maps
-its governed report-evidence request to the Report-owned strict snake-case
-contract at `POST /reports/idea-evidence-packs`, including the Report intake
-purpose, the owner retention-policy selector, and `REPORT_INTAKE_ONLY` boundary vocabulary.
+Report materialization has the same identity-provider deferral. The Idea adapter
+maps a persisted, trusted-scope report-evidence request to the Report-owned
+strict snake-case contract at
+`POST /reports/idea-evidence-packs/materializations`. It projects only the
+persisted candidate `portfolio_id`, requires the candidate tenant to match the
+configured local/test Report fixture, derives one valid `as_of_date` from
+consistent source summaries, and uses server-fixed `json` output. Missing or
+mismatched scope and invalid or inconsistent dates fail before HTTP I/O;
+browser-supplied scope and identity authority are never used. The nested pack
+keeps the Report intake purpose, owner retention-policy selector, and
+`REPORT_INTAKE_ONLY` vocabulary while the outer request uses
+`REPORT_JOB_MATERIALIZATION`.
 The Idea-owned persisted reference
 `lotus-report:idea-evidence-retention:v1` maps only at this adapter boundary to
 the Report-owned `generated-report-standard` selector; it does not alter Idea
@@ -381,15 +389,18 @@ available.
 | `LOTUS_IDEA_REPORT_REALIZATION_CALLER_APPLICATION` | `lotus-idea` |
 | `LOTUS_IDEA_REPORT_REALIZATION_TENANT_ID` | `tenant-sg` |
 | `LOTUS_IDEA_REPORT_REALIZATION_REGION` | `APAC` |
+| `LOTUS_IDEA_REPORT_REALIZATION_OUTPUT_FORMATS` | `json` |
 
 The adapter sends these values only as `X-Actor-Id`,
 `X-Caller-Application`, `X-Tenant-Id`, and `X-Region`, in addition to
 correlation, trace, and idempotency headers. They do not authenticate an end
 user, grant Report/Render/Archive authority, prove downstream acceptance, or
-promote a supported feature. The `tenant-sg` / `APAC` values are the
+promote a supported feature. The `tenant-sg` / `APAC` / `json` values are the
 Report-owned local/test fixture scope and are enforced in Lotus Idea; arbitrary
 local values fail closed. The deferred production identity work remains tracked
-by GitHub issue `#380`.
+by GitHub issue `#380`. A successful request may return a local Report JSON
+job, but it is not supportable Report completion, Render output, Archive
+record, retention/legal-hold, publication, or support evidence.
 
 ## Evidence
 

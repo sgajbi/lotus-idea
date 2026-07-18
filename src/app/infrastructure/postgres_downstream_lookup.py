@@ -107,6 +107,29 @@ def load_report_evidence_pack_by_id(
     return report_evidence_pack_from_json(read_json_object(rows[0], "evidence_pack_json"))
 
 
+def load_candidate_record_for_report_evidence_pack(
+    connection: PostgresConnection,
+    report_evidence_pack_id: str,
+) -> CandidatePersistenceRecord | None:
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            /* lotus-idea downstream-lookup-report-evidence-pack-candidate */
+            SELECT report.candidate_id
+            FROM idea_report_evidence_pack_request report
+            JOIN idea_data_lifecycle_control lifecycle
+              ON lifecycle.candidate_id = report.candidate_id
+            WHERE report.report_evidence_pack_id = %s
+              AND COALESCE(lifecycle.held_from_state, lifecycle.state) = 'active'
+            """,
+            (report_evidence_pack_id,),
+        )
+        rows = cursor.fetchall()
+    if not rows:
+        return None
+    return load_candidate_record_by_id(connection, read_row_value(rows[0], "candidate_id"))
+
+
 def load_downstream_submission_by_idempotency_key(
     connection: PostgresConnection,
     idempotency_key: str,

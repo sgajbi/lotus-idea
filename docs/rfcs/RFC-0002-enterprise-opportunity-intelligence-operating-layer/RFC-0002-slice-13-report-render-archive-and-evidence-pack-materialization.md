@@ -72,21 +72,30 @@ Implemented in the first Slice 13 foundation:
    promotion from sibling declarations.
 9. `src/app/ports/downstream_realization.py` and
    `src/app/infrastructure/downstream_realization.py` add a source-safe HTTP
-   adapter foundation for Report evidence-pack request handoff envelopes. The
-   adapter maps the Idea-owned vocabulary into the Report-owned strict
-   snake-case intake contract at `POST /reports/idea-evidence-packs`, including
-   purpose and `REPORT_INTAKE_ONLY` boundary translation. The adapter maps the
+   adapter foundation for the Report materialization request at
+   `POST /reports/idea-evidence-packs/materializations`. The adapter resolves
+   the candidate record associated with the persisted evidence pack through a
+   bounded repository port, projects only its trusted `portfolio_id`, and
+   derives one valid `as_of_date` only when every included source summary
+   agrees. Missing scope, tenant mismatch, malformed dates, and inconsistent
+   dates fail before HTTP I/O. The browser never supplies portfolio, tenant,
+   actor, or output-format authority. The adapter maps the Idea-owned
+   vocabulary into the Report-owned strict snake-case nested intake contract
+   and the `REPORT_JOB_MATERIALIZATION` boundary. The adapter maps the
    Idea-owned external retention reference
    `lotus-report:idea-evidence-retention:v1` only at the Report boundary to the
    owner selector `generated-report-standard`; the persisted Idea lifecycle
    reference remains unchanged. Local/test context is limited to the
-   Report-authorized synthetic fixture `tenant-sg` / `APAC`, while all other
-   profiles fail closed. It preserves Report/Render/Archive source authority,
+   Report-authorized synthetic fixture `tenant-sg` / `APAC` with server-fixed
+   `json` output; demo, staging, and production profiles fail closed. It
+   preserves Report/Render/Archive source authority,
    retention posture, reason codes, and bounded source summaries while omitting source routes, raw source payloads,
    raw downstream responses, and client-ready publication authority. Report
    caller context is server-configured only for `local` and `test`; demo,
    staging, and production fail closed until trusted identity and IdP claim
-   mapping are available (tracked in `#380`).
+   mapping are available (tracked in `#380`). The consumer-side scope
+   projection is tracked and delivered under `#591`; it is not live Report job,
+   render, archive, publication, or support evidence.
 10. `src/app/application/downstream_realization/submission_use_cases.py` now adds source-safe
     application orchestration for submitting existing report evidence-pack
     requests through the Report downstream realization port. It finds the
@@ -156,6 +165,9 @@ Partially satisfied:
 4. `lotus-report` can provide source-safe materialization/render/archive proof
    for reviewed idea evidence when the sibling materialization contract is
    present.
+5. The Idea consumer can submit a strictly bounded local/test materialization
+   request only after resolving persisted candidate scope and matching source
+   dates. The `json` fixture avoids a false render/archive claim.
 
 Not yet satisfied:
 
@@ -167,6 +179,10 @@ Not yet satisfied:
    trust telemetry, client-publication proof, or supported-feature promotion
    exists. PostgreSQL-backed internal request recording proof exists
    only inside the opt-in runtime proof.
+5. A source-safe local/test `json` request can observe a Report-owned job, but
+   it does not certify a supportable Report completion, rendered document,
+   Archive record, retention/legal-hold posture, client publication, or
+   production identity.
 
 The downstream-realization readiness diagnostic and report submission API are
 certified as internal foundations. With a valid report-intake source contract,

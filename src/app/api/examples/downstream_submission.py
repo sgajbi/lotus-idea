@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, cast
 
 from app.api.downstream_realization import (
     DownstreamSubmissionApiResponse,
@@ -15,6 +16,7 @@ from app.application.downstream_realization import (
     submit_report_evidence_pack_to_downstream,
 )
 from app.domain import (
+    CandidatePersistenceRecord,
     ConversionTarget,
     DownstreamSubmissionClaimDecision,
     DownstreamSubmissionClaimResult,
@@ -26,6 +28,7 @@ from app.domain import (
     IdeaConversionIntent,
     IdeaLifecycleStatus,
     ReasonCode,
+    ReviewAccessScope,
     SourceSystem,
     evaluate_downstream_submission_claim,
     finalize_downstream_submission,
@@ -307,6 +310,16 @@ def _report_evidence_pack() -> GovernedReportEvidencePack:
     )
 
 
+@dataclass(frozen=True)
+class _ExampleCandidate:
+    access_scope: ReviewAccessScope
+
+
+@dataclass(frozen=True)
+class _ExampleReportEvidencePackCandidateRecord:
+    candidate: _ExampleCandidate
+
+
 class _ExampleDownstreamSubmissionRepository:
     def __init__(
         self,
@@ -316,6 +329,23 @@ class _ExampleDownstreamSubmissionRepository:
     ) -> None:
         self._conversion_intent = conversion_intent
         self._report_evidence_pack = report_evidence_pack
+        self._report_evidence_pack_candidate: CandidatePersistenceRecord | None = (
+            cast(
+                CandidatePersistenceRecord,
+                _ExampleReportEvidencePackCandidateRecord(
+                    candidate=_ExampleCandidate(
+                        access_scope=ReviewAccessScope(
+                            tenant_id="tenant-sg",
+                            book_id="book-private-bank-sg",
+                            portfolio_id="PB_SG_GLOBAL_BAL_001",
+                            client_id="client-example",
+                        )
+                    )
+                ),
+            )
+            if report_evidence_pack is not None
+            else None
+        )
         self._records: dict[str, DownstreamSubmissionRecord] = {}
 
     def conversion_intent_by_id(self, conversion_intent_id: str) -> GovernedConversionIntent | None:
@@ -324,6 +354,16 @@ class _ExampleDownstreamSubmissionRepository:
             and self._conversion_intent.intent.conversion_intent_id == conversion_intent_id
         ):
             return self._conversion_intent
+        return None
+
+    def candidate_record_for_report_evidence_pack(
+        self, report_evidence_pack_id: str
+    ) -> CandidatePersistenceRecord | None:
+        if (
+            self._report_evidence_pack
+            and self._report_evidence_pack.report_evidence_pack_id == report_evidence_pack_id
+        ):
+            return self._report_evidence_pack_candidate
         return None
 
     def report_evidence_pack_by_id(

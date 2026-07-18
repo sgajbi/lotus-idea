@@ -163,12 +163,21 @@ def submit_report_evidence_pack_to_downstream(
     evidence_pack = repository.report_evidence_pack_by_id(command.report_evidence_pack_id)
     if evidence_pack is None:
         return _unresolved_result(DownstreamRealizationStatus.NOT_FOUND)
+    candidate_record = repository.candidate_record_for_report_evidence_pack(
+        command.report_evidence_pack_id
+    )
+    if candidate_record is None:
+        return _unresolved_result(DownstreamRealizationStatus.NOT_FOUND)
     request = _request_for_report_pack(command, evidence_pack)
+    access_scope = candidate_record.candidate.access_scope
+    if access_scope is None:
+        return _uncertain_result(request, "trusted_candidate_scope_missing")
     call = (
         None
         if report_client is None
         else lambda: report_client.submit_report_evidence_pack_request(
             evidence_pack,
+            access_scope=access_scope,
             correlation_id=command.correlation_id,
             trace_id=command.trace_id,
             idempotency_key=command.idempotency_key,

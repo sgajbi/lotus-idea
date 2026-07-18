@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import date
 from typing import Any
 
 from app.domain import (
     ConversionTarget,
     GovernedConversionIntent,
     GovernedReportEvidencePack,
+    ReviewAccessScope,
     SourceSystem,
 )
 from app.domain.data_lifecycle import REPORT_EVIDENCE_RETENTION_POLICY_REF
@@ -68,6 +70,7 @@ class ReportRealizationServiceContext:
     caller_application: str
     tenant_id: str
     region: str
+    requested_output_formats: tuple[str, ...]
 
     def __post_init__(self) -> None:
         for field_name, value in (
@@ -80,6 +83,14 @@ class ReportRealizationServiceContext:
                 raise DownstreamRealizationConfigurationError(
                     f"report realization {field_name} is required."
                 )
+        if not self.requested_output_formats:
+            raise DownstreamRealizationConfigurationError(
+                "report realization requested_output_formats is required."
+            )
+        if any(not output_format.strip() for output_format in self.requested_output_formats):
+            raise DownstreamRealizationConfigurationError(
+                "report realization requested_output_formats cannot contain blanks."
+            )
 
     def request_headers(self) -> dict[str, str]:
         return {
@@ -217,6 +228,7 @@ class HttpReportEvidencePackMaterializationClient:
         self,
         evidence_pack: GovernedReportEvidencePack,
         *,
+        access_scope: ReviewAccessScope,
         correlation_id: str | None = None,
         trace_id: str | None = None,
         idempotency_key: str | None = None,
@@ -224,7 +236,11 @@ class HttpReportEvidencePackMaterializationClient:
         return _post_downstream_envelope(
             self._client,
             self._config.submit_path,
-            json_payload=_report_evidence_pack_envelope(evidence_pack),
+            json_payload=_report_evidence_pack_materialization_envelope(
+                evidence_pack,
+                access_scope=access_scope,
+                service_context=self._report_service_context,
+            ),
             correlation_id=correlation_id,
             trace_id=trace_id,
             idempotency_key=idempotency_key,
@@ -339,6 +355,43 @@ def _report_evidence_pack_envelope(evidence_pack: GovernedReportEvidencePack) ->
         "producer": "lotus-idea",
         "supportability_status": "not_certified",
     }
+
+
+def _report_evidence_pack_materialization_envelope(
+    evidence_pack: GovernedReportEvidencePack,
+    *,
+    access_scope: ReviewAccessScope,
+    service_context: ReportRealizationServiceContext,
+) -> dict[str, Any]:
+    if access_scope.tenant_id != service_context.tenant_id:
+        raise DownstreamRealizationConfigurationError(
+            "Report materialization candidate tenant does not match the configured service context."
+        )
+    return {
+        "idea_evidence_pack": _report_evidence_pack_envelope(evidence_pack),
+        "portfolio_id": access_scope.portfolio_id,
+        "as_of_date": _report_materialization_as_of_date(evidence_pack),
+        "requested_output_formats": list(service_context.requested_output_formats),
+        "boundary": "REPORT_JOB_MATERIALIZATION",
+        "grants_client_publication_authority": False,
+        "producer": "lotus-idea",
+        "supportability_status": "not_certified",
+    }
+
+
+def _report_materialization_as_of_date(evidence_pack: GovernedReportEvidencePack) -> str:
+    as_of_dates = {summary.as_of_date.strip() for summary in evidence_pack.source_summaries}
+    if len(as_of_dates) != 1:
+        raise DownstreamRealizationConfigurationError(
+            "Report materialization requires one consistent source as_of_date."
+        )
+    as_of_date = as_of_dates.pop()
+    try:
+        return date.fromisoformat(as_of_date).isoformat()
+    except ValueError as exc:
+        raise DownstreamRealizationConfigurationError(
+            "Report materialization source as_of_date must be ISO-8601."
+        ) from exc
 
 
 def _report_intake_purpose(evidence_pack: GovernedReportEvidencePack) -> str:

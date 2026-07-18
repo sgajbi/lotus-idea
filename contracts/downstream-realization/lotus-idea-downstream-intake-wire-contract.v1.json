@@ -1,6 +1,6 @@
 {
   "contract_id": "lotus-idea-downstream-intake-wire-contract",
-  "contract_version": "1.2.0",
+  "contract_version": "1.3.0",
   "repository": "lotus-idea",
   "lifecycle_status": "development_only",
   "supportability_status": "not_certified",
@@ -45,8 +45,18 @@
     {
       "conversion_target": "report_evidence",
       "owner_repository": "lotus-report",
-      "owner_route": "POST /reports/idea-evidence-packs",
+      "owner_route": "POST /reports/idea-evidence-packs/materializations",
       "request_fields": [
+        "idea_evidence_pack",
+        "portfolio_id",
+        "as_of_date",
+        "requested_output_formats",
+        "boundary",
+        "grants_client_publication_authority",
+        "producer",
+        "supportability_status"
+      ],
+      "idea_evidence_pack_fields": [
         "report_evidence_pack_id",
         "conversion_intent_id",
         "candidate_id",
@@ -78,9 +88,10 @@
       },
       "local_test_service_context": {
         "tenant_id": "tenant-sg",
-        "region": "APAC"
+        "region": "APAC",
+        "output_formats": ["json"]
       },
-      "boundary": "REPORT_INTAKE_ONLY",
+      "boundary": "REPORT_JOB_MATERIALIZATION",
       "required_server_headers": [
         "X-Actor-Id",
         "X-Caller-Application",

@@ -55,7 +55,7 @@ _REQUIRED_INTAKE_REQUEST_FIELDS = {
     "intent_type",
     "source_refs",
 }
-_REQUIRED_REPORT_INTAKE_REQUEST_FIELDS = {
+_REQUIRED_REPORT_INTAKE_PAYLOAD_FIELDS = {
     "report_evidence_pack_id",
     "conversion_intent_id",
     "candidate_id",
@@ -74,6 +74,16 @@ _REQUIRED_REPORT_INTAKE_REQUEST_FIELDS = {
     "grants_client_publication_authority",
     "creates_rendered_output",
     "creates_archive_record",
+    "producer",
+    "supportability_status",
+}
+_REQUIRED_REPORT_MATERIALIZATION_REQUEST_FIELDS = {
+    "idea_evidence_pack",
+    "portfolio_id",
+    "as_of_date",
+    "requested_output_formats",
+    "boundary",
+    "grants_client_publication_authority",
     "producer",
     "supportability_status",
 }
@@ -98,8 +108,9 @@ _EXPECTED_INTAKE_CONSUMERS = {
     },
     "report_evidence": {
         "owner_repository": "lotus-report",
-        "owner_route": "POST /reports/idea-evidence-packs",
-        "request_fields": _REQUIRED_REPORT_INTAKE_REQUEST_FIELDS,
+        "owner_route": "POST /reports/idea-evidence-packs/materializations",
+        "request_fields": _REQUIRED_REPORT_MATERIALIZATION_REQUEST_FIELDS,
+        "idea_evidence_pack_fields": _REQUIRED_REPORT_INTAKE_PAYLOAD_FIELDS,
         "purpose_mapping": {
             "client_review_report_section": "CLIENT_REPORT_EVIDENCE",
             "advisor_review_evidence": "ADVISOR_REVIEW_APPENDIX",
@@ -111,8 +122,9 @@ _EXPECTED_INTAKE_CONSUMERS = {
         "local_test_service_context": {
             "tenant_id": "tenant-sg",
             "region": "APAC",
+            "output_formats": ["json"],
         },
-        "boundary": "REPORT_INTAKE_ONLY",
+        "boundary": "REPORT_JOB_MATERIALIZATION",
         "required_server_headers": {
             "X-Actor-Id",
             "X-Caller-Application",
@@ -223,8 +235,8 @@ def _validate_downstream_intake_wire_contract(repository_root: Path) -> list[str
     errors: list[str] = []
     if payload.get("contract_id") != "lotus-idea-downstream-intake-wire-contract":
         errors.append("downstream intake wire contract has an unexpected contract_id")
-    if payload.get("contract_version") != "1.2.0":
-        errors.append("downstream intake wire contract must be version 1.2.0")
+    if payload.get("contract_version") != "1.3.0":
+        errors.append("downstream intake wire contract must be version 1.3.0")
     if payload.get("repository") != "lotus-idea":
         errors.append("downstream intake wire contract repository must be lotus-idea")
     if payload.get("lifecycle_status") != "development_only":
@@ -277,8 +289,15 @@ def _validate_downstream_intake_wire_contract(repository_root: Path) -> list[str
                 "owner_retention_policy_mapping",
                 "local_test_service_context",
                 "boundary",
+                "idea_evidence_pack_fields",
             ):
-                if consumer.get(field) != expected[field]:
+                actual = consumer.get(field)
+                expected_value = expected[field]
+                if field == "idea_evidence_pack_fields":
+                    matches = isinstance(actual, list) and set(actual) == expected_value
+                else:
+                    matches = actual == expected_value
+                if not matches:
                     errors.append(f"{target} intake wire contract {field} drifted")
         headers = consumer.get("required_server_headers")
         if not isinstance(headers, list) or set(headers) != expected["required_server_headers"]:

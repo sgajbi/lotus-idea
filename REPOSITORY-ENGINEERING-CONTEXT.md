@@ -1602,7 +1602,17 @@ Recent issue-derived patterns to preserve:
     evidence from the owning Report/Render/Archive runtime can change those
     blockers; source declarations must never be projected into a current target
     route, readiness status, or supportability status.
-42. Platform source-manifest and generated-catalog inclusion are
+42. The Idea Report consumer may submit the Report materialization route only
+    after resolving the evidence pack's persisted candidate record. Project
+    only the trusted `portfolio_id`; do not add raw scope to audits, public
+    DTOs, or persisted evidence packs. Require all source summaries to carry
+    the same valid business date and require the candidate tenant to match the
+    server-configured local/test Report fixture before HTTP I/O. The fixture
+    uses only `tenant-sg` / `APAC` / `json`, never browser-supplied identity or
+    scope, and fails closed outside `local` and `test` until `#380` production
+    identity prerequisites are available. This consumer mapping is not Report
+    job, Render, Archive, publication, or supported-feature evidence.
+43. Platform source-manifest and generated-catalog inclusion are
     `source_contract` claims. Keep this family under capability-owned
     `data_mesh/` application, script, and test packages. Bind each authoritative
     sibling platform input by repository, ref, and SHA-256, reject unknown

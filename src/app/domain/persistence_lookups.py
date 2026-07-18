@@ -51,6 +51,13 @@ class InMemoryIdeaLookupMixin:
             report_evidence_pack_id,
         )
 
+    def candidate_record_for_report_evidence_pack(self, report_evidence_pack_id: str) -> Any | None:
+        _require_text(report_evidence_pack_id, "report_evidence_pack_id")
+        candidate_id = self._report_evidence_pack_candidates.get(report_evidence_pack_id)
+        if candidate_id is None:
+            return None
+        return self._candidate_records.get(candidate_id)
+
 
 def report_evidence_pack_by_id(
     candidate_records: Mapping[str, Any],
