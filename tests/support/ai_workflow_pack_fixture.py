@@ -2,11 +2,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-
-def write_lotus_ai_workflow_pack_fixture(tmp_path: Path) -> Path:
-    lotus_ai_root = tmp_path / "lotus-ai"
-    _write(
-        lotus_ai_root / "src/app/services/workflow_pack_phase1_specs.py",
+_BASE_WORKFLOW_PACK_FILES: tuple[tuple[str, str], ...] = (
+    (
+        "src/app/services/workflow_pack_phase1_specs.py",
         """
 IDEA_EXPLANATION_V1_SPEC = dict(
     pack_id="idea_explanation.pack",
@@ -19,9 +17,9 @@ IDEA_EXPLANATION_V1_SPEC = dict(
     supported_inputs=("redacted_evidence_packet", "explanation_request", "supportability"),
 )
 """,
-    )
-    _write(
-        lotus_ai_root / "src/app/services/workflow_pack_registry_seed.py",
+    ),
+    (
+        "src/app/services/workflow_pack_registry_seed.py",
         """
 from app.services.workflow_pack_phase1_specs import IDEA_EXPLANATION_V1_SPEC
 
@@ -55,9 +53,9 @@ IDEA_EXPLANATION_REGISTRATION = {
     "non_proof_boundaries": NON_PROOF_BOUNDARIES,
 }
 """,
-    )
-    _write(
-        lotus_ai_root / "src/app/services/workflow_pack_bindings.py",
+    ),
+    (
+        "src/app/services/workflow_pack_bindings.py",
         """
 from app.services.workflow_pack_phase1_specs import IDEA_EXPLANATION_V1_SPEC
 
@@ -70,57 +68,57 @@ def _build_execution_binding_from_spec(spec):
 
 IDEA_EXPLANATION_BINDING = _build_execution_binding_from_spec(IDEA_EXPLANATION_V1_SPEC)
 """,
-    )
-    _write(
-        lotus_ai_root / "src/app/services/workflow_pack_queue_policy_catalog.py",
+    ),
+    (
+        "src/app/services/workflow_pack_queue_policy_catalog.py",
         """
 def _review_support_idea_explanation_policy():
     return "queue-policy.idea-explanation.v1"
 """,
-    )
-    _write(
-        lotus_ai_root / "src/app/services/ai_surface_supportability.py",
+    ),
+    (
+        "src/app/services/ai_surface_supportability.py",
         """
 SUPPORTED_AI_SURFACES = {
     "idea_explanation.pack@v1": {"authority": "lotus-idea"},
 }
 """,
-    )
-    _write(
-        lotus_ai_root / "tests/unit/test_workflow_pack_registry.py",
+    ),
+    (
+        "tests/unit/test_workflow_pack_registry.py",
         """
 def test_registry_contains_idea_pack_contract():
     registration = {"pack_id": "idea_explanation.pack", "owner": "lotus-idea"}
     assert registration["pack_id"] == "idea_explanation.pack"
     assert registration["owner"] == "lotus-idea"
 """,
-    )
-    _write(
-        lotus_ai_root / "tests/unit/test_workflow_pack_bindings.py",
+    ),
+    (
+        "tests/unit/test_workflow_pack_bindings.py",
         """
 def test_binding_contains_idea_pack_contract():
     binding = {"pack_id": "idea_explanation.pack"}
     assert binding["pack_id"] == "idea_explanation.pack"
 """,
-    )
-    _write(
-        lotus_ai_root / "tests/unit/test_workflow_pack_queue_policy_catalog.py",
+    ),
+    (
+        "tests/unit/test_workflow_pack_queue_policy_catalog.py",
         """
 def test_queue_policy_contains_idea_pack_policy():
     policy_id = "queue-policy.idea-explanation.v1"
     assert policy_id == "queue-policy.idea-explanation.v1"
 """,
-    )
-    _write(
-        lotus_ai_root / "tests/unit/test_workflow_pack_runtime_status.py",
+    ),
+    (
+        "tests/unit/test_workflow_pack_runtime_status.py",
         """
 def test_runtime_status_names_idea_pack_without_execution_claim():
     workflow_pack_id = "idea_explanation.pack@v1"
     assert workflow_pack_id == "idea_explanation.pack@v1"
 """,
-    )
-    _write(
-        lotus_ai_root / "tests/integration/test_workflow_pack_registry_api_contract.py",
+    ),
+    (
+        "tests/integration/test_workflow_pack_registry_api_contract.py",
         """
 def test_registry_api_returns_default_registration_ref_for_idea_pack():
     response = {
@@ -130,14 +128,12 @@ def test_registry_api_returns_default_registration_ref_for_idea_pack():
     assert response["pack_id"] == "idea_explanation.pack"
     assert response["default_registration_ref"]
 """,
-    )
-    return lotus_ai_root
+    ),
+)
 
-
-def write_lotus_ai_workflow_pack_runtime_execution_fixture(tmp_path: Path) -> Path:
-    lotus_ai_root = write_lotus_ai_workflow_pack_fixture(tmp_path)
-    _write(
-        lotus_ai_root / "src/app/providers/idea_explanation_stub.py",
+_RUNTIME_EXECUTION_WORKFLOW_PACK_FILES: tuple[tuple[str, str], ...] = (
+    (
+        "src/app/providers/idea_explanation_stub.py",
         """
 def build_idea_explanation_stub_result(*, context_payload):
     return "draft", {
@@ -148,9 +144,9 @@ def build_idea_explanation_stub_result(*, context_payload):
         "downstream_authority": "BLOCKED",
     }
 """,
-    )
-    _write(
-        lotus_ai_root / "src/app/services/idea_explanation_guardrails.py",
+    ),
+    (
+        "src/app/services/idea_explanation_guardrails.py",
         """
 _FORBIDDEN_REQUESTED_OUTPUTS = {"client_ready_publication"}
 _FORBIDDEN_TECHNICAL_KEYS = {"raw_prompt", "raw_provider_output"}
@@ -167,9 +163,9 @@ def validate_idea_explanation_payload(payload):
     assert supportability["human_review_required"] is True
     assert supportability["forbidden_actions"]
 """,
-    )
-    _write(
-        lotus_ai_root / "src/app/services/workflow_pack_execution.py",
+    ),
+    (
+        "src/app/services/workflow_pack_execution.py",
         """
 from app.services.idea_explanation_guardrails import validate_idea_explanation_payload
 
@@ -178,9 +174,9 @@ def execute(request):
     if request.pack_id == "idea_explanation.pack" and request.version == "v1":
         validate_idea_explanation_payload(request.task_request.context.payload)
 """,
-    )
-    _write(
-        lotus_ai_root / "src/app/providers/stub_text_provider.py",
+    ),
+    (
+        "src/app/providers/stub_text_provider.py",
         """
 from app.providers.idea_explanation_stub import build_idea_explanation_stub_result
 
@@ -192,9 +188,9 @@ def generate(request):
     if request.task_id == "explain.v1" and idea_explanation_result:
         return idea_explanation_result
 """,
-    )
-    _write(
-        lotus_ai_root / "src/app/repositories/memory_caller_policy_repository.py",
+    ),
+    (
+        "src/app/repositories/memory_caller_policy_repository.py",
         """
 LOTUS_IDEA_POLICY = dict(
     caller_app="lotus-idea",
@@ -204,9 +200,9 @@ LOTUS_IDEA_POLICY = dict(
     restricted_tenant_ids=["tenant-sg-001"],
 )
 """,
-    )
-    _write(
-        lotus_ai_root / "alembic/versions/0034_seed_lotus_idea_caller_policy.py",
+    ),
+    (
+        "alembic/versions/0034_seed_lotus_idea_caller_policy.py",
         """
 def upgrade():
     values = (
@@ -219,9 +215,9 @@ def upgrade():
     )
     assert values
 """,
-    )
-    _write(
-        lotus_ai_root / "tests/support/workflow_pack_fixtures.py",
+    ),
+    (
+        "tests/support/workflow_pack_fixtures.py",
         """
 def idea_explanation_payload():
     return {"redacted_evidence_packet": {}, "explanation_request": {}, "supportability": {}}
@@ -230,9 +226,9 @@ def idea_explanation_payload():
 def idea_explanation_workflow_pack_execution_request_json():
     return {"pack_id": "idea_explanation.pack"}
 """,
-    )
-    _write(
-        lotus_ai_root / "tests/unit/test_idea_explanation_guardrails.py",
+    ),
+    (
+        "tests/unit/test_idea_explanation_guardrails.py",
         """
 from tests.support.workflow_pack_fixtures import idea_explanation_payload
 
@@ -240,9 +236,9 @@ from tests.support.workflow_pack_fixtures import idea_explanation_payload
 def test_accepts_source_safe_idea_explanation_payload():
     validate_idea_explanation_payload(idea_explanation_payload())
 """,
-    )
-    _write(
-        lotus_ai_root / "tests/unit/test_workflow_pack_execution.py",
+    ),
+    (
+        "tests/unit/test_workflow_pack_execution.py",
         """
 def test_execute_workflow_pack_records_review_gated_idea_explanation_output():
     assert workflow_authority_owner == "lotus-idea"
@@ -256,24 +252,24 @@ def test_execute_workflow_pack_records_review_gated_idea_explanation_output():
 def test_validate_workflow_pack_execution_binding_runs_idea_explanation_guardrails():
     return True
 """,
-    )
-    _write(
-        lotus_ai_root / "tests/unit/test_workflow_pack_bindings.py",
+    ),
+    (
+        "tests/unit/test_workflow_pack_bindings.py",
         """
 def test_get_workflow_pack_execution_binding_returns_idea_explanation_binding():
     binding.validate_task_request_payload(payload=idea_explanation_payload())
 """,
-    )
-    _write(
-        lotus_ai_root / "tests/unit/test_access_control_authorization.py",
+    ),
+    (
+        "tests/unit/test_access_control_authorization.py",
         """
 def test_authorize_lotus_idea_explain_request():
     request = dict(caller_app="lotus-idea", task_id="explain.v1")
     assert request
 """,
-    )
-    _write(
-        lotus_ai_root / "tests/unit/test_sqlalchemy_caller_policy_repository.py",
+    ),
+    (
+        "tests/unit/test_sqlalchemy_caller_policy_repository.py",
         """
 def test_seeded_lotus_idea_policy_blocks_live_provider():
     class Policy:
@@ -282,8 +278,25 @@ def test_seeded_lotus_idea_policy_blocks_live_provider():
     lotus_idea_policy = Policy()
     assert lotus_idea_policy.allow_live_provider is False
 """,
-    )
+    ),
+)
+
+
+def write_lotus_ai_workflow_pack_fixture(tmp_path: Path) -> Path:
+    lotus_ai_root = tmp_path / "lotus-ai"
+    _write_fixture_files(lotus_ai_root, _BASE_WORKFLOW_PACK_FILES)
     return lotus_ai_root
+
+
+def write_lotus_ai_workflow_pack_runtime_execution_fixture(tmp_path: Path) -> Path:
+    lotus_ai_root = write_lotus_ai_workflow_pack_fixture(tmp_path)
+    _write_fixture_files(lotus_ai_root, _RUNTIME_EXECUTION_WORKFLOW_PACK_FILES)
+    return lotus_ai_root
+
+
+def _write_fixture_files(lotus_ai_root: Path, files: tuple[tuple[str, str], ...]) -> None:
+    for relative_path, content in files:
+        _write(lotus_ai_root / relative_path, content)
 
 
 def _write(path: Path, content: str) -> None:
