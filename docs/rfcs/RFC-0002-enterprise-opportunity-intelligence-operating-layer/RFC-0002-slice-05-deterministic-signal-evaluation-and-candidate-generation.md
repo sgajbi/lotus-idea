@@ -554,28 +554,35 @@ Additional implemented drawdown-review foundation:
    `DrawdownReviewSignalPolicy`, `DrawdownReviewSignalInput`, and
    `evaluate_drawdown_review_signal` for source-owned drawdown attention
    candidates under the high-volatility / drawdown review archetype.
-2. The evaluator consumes only Lotus Risk-owned maximum drawdown,
+2. `src/app/domain/opportunity_family_compatibility.py` codifies the
+   compatibility boundary: drawdown-review continues to serialize as the
+   existing `high_volatility` candidate family, but has a distinct Lotus
+   Risk `DrawdownAnalyticsReport:v1` evidence lane, route, and
+   `drawdown_attention` reason code. A first-class drawdown candidate family
+   requires an explicit migration/API-compatibility plan.
+3. The evaluator consumes only Lotus Risk-owned maximum drawdown,
    supportability state, freshness, entitlement posture, and source refs. It
    does not calculate drawdown, volatility, tracking error, VaR, risk profile,
    suitability, or mandate risk locally.
-3. `src/app/ports/risk_sources.py`,
+4. `src/app/ports/risk_sources.py`,
    `src/app/application/drawdown_review_signal.py`, and
    `src/app/infrastructure/lotus_risk_sources.py` add the source port,
    application wrapper, and fail-closed HTTP adapter over
    `POST /analytics/risk/drawdown` for `DrawdownAnalyticsReport:v1` drawdown
    evidence.
-4. The adapter preserves correlation and trace headers, requests source-owned
+5. The adapter preserves correlation and trace headers, requests source-owned
    stateful drawdown analytics, requires source lineage metadata, maps 401/403
    to entitlement denial, and fails closed when generated-at, as-of-date,
    request fingerprint, period results, summary blocks, or parseable maximum
    drawdown are missing or malformed.
-5. `tests/unit/test_drawdown_review_signal_evaluation.py`,
+6. `tests/unit/test_opportunity_family_compatibility.py`,
+   `tests/unit/test_drawdown_review_signal_evaluation.py`,
    `tests/unit/test_drawdown_review_application.py`, and
    `tests/unit/test_lotus_risk_drawdown_sources.py` cover positive,
    below-materiality, stale, non-ready, missing-source, duplicate,
-   entitlement-denied, source-unavailable, malformed-measure, trace-header, and
-   request-validation cases.
-6. `src/app/api/drawdown_review_signals.py` exposes
+   entitlement-denied, source-unavailable, family compatibility,
+   malformed-measure, trace-header, and request-validation cases.
+7. `src/app/api/drawdown_review_signals.py` exposes
    `POST /api/v1/idea-signals/drawdown-review/evaluate` as a bounded
    caller-supplied API foundation over Lotus Risk
    `DrawdownAnalyticsReport:v1` maximum-drawdown evidence. It requires
@@ -586,19 +593,19 @@ Additional implemented drawdown-review foundation:
    methodology, recommend trades, create rebalance actions, publish client
    communication, certify data products, prove Workbench behavior, or promote
    support.
-7. The opportunity archetype contract gate now requires the drawdown-review
+8. The opportunity archetype contract gate now requires the drawdown-review
    API module, route, source-contract mismatch regression, and integration
    test as implementation evidence for the high-volatility / drawdown review
    archetype, so proof-readiness evidence cannot regress to policy-only
    drawdown proof.
-8. `make opportunity-archetype-contract-gate` now enforces API evidence parity
+9. `make opportunity-archetype-contract-gate` now enforces API evidence parity
    for every implemented caller-supplied signal API recorded in the archetype
    contract. Concentration, underperformance, allocation drift, bond maturity,
    high volatility, drawdown, missing suitability, missing risk profile,
    mandate/restriction, low-income, and missing-benchmark foundations must keep
    their API module, route, and integration-test evidence refs aligned with the
    governed archetype contract.
-9. `src/app/application/risk_drawdown_runtime_evidence/`,
+10. `src/app/application/risk_drawdown_runtime_evidence/`,
    `scripts/risk_drawdown_runtime_evidence/`, and the compatibility target
    `make risk-drawdown-live-proof-contract-gate` define a closed v2 Risk
    drawdown `runtime_execution` artifact. A valid artifact binds current
@@ -606,7 +613,7 @@ Additional implemented drawdown-review foundation:
    evaluation result to accepted or replayed durable Idea persistence, then
    clears only the namespaced opportunity-archetype drawdown source blocker
    when consumed by aggregate readiness.
-10. This foundation does not include data-mesh certification, Workbench proof,
+11. This foundation does not include data-mesh certification, Workbench proof,
    client-publication approval, or supported-feature promotion.
 
 Additional implemented missing suitability context foundation:
