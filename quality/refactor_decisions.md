@@ -6,6 +6,40 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-07-18: PostgreSQL Fake Row Builder Boundary
+
+Issue `#620` applies the follow-through Slice 19 test-support hardening from
+issue `#618` to `tests/unit/postgres_repository_mutation_fake_helpers.py`.
+
+The public `row_for_insert()` helper remains the single insertion entry point
+used by the PostgreSQL fake, but it no longer owns every table's fake row
+shape inline. It unwraps JSONB values once and delegates to table-owned row
+builders for candidate records, idempotency, lifecycle history, audit events,
+outbox events, review decisions, feedback, conversion intent/outcome, report
+evidence-pack requests, downstream submissions, and AI explanation lineage.
+
+This is test-support maintainability only. It does not change the production
+PostgreSQL adapter, database schema, migrations, API/OpenAPI behavior,
+authentication/authorization, Core, Gateway, Workbench, runtime certification,
+or supported-feature promotion.
+
+Evidence:
+
+1. `row_for_insert` dropped out of the report-only largest-function list after
+   `make quality-baseline`.
+2. `tests/unit/test_postgres_repository_mutation_fake_helpers.py` covers
+   representative candidate-row JSONB unwrapping, downstream-submission row
+   shape, unknown-table failure, and column/value mismatch failure.
+3. Affected suites passed:
+   `tests/unit/test_postgres_repository_mutation_fake_helpers.py`,
+   `tests/unit/test_postgres_repository.py`,
+   `tests/unit/test_postgres_downstream_submission.py`,
+   `tests/unit/outbox/test_postgres_delivery_adapter.py`, and
+   `tests/integration/test_postgres_runtime_integration.py` (`45` passed,
+   `9` skipped).
+4. `make quality-baseline`, `make maintainability-gate`, and
+   `make duplicate-implementation-gate` passed locally.
+
 ## 2026-07-18: PostgreSQL Fake SQL Dispatcher Boundary
 
 Issue `#618` reduces the remaining report-only test-support hotspot in

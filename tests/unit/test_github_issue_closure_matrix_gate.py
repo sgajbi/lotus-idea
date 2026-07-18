@@ -94,6 +94,20 @@ def test_github_issue_closure_matrix_gate_requires_postgres_fake_dispatcher_issu
     assert "Missing actionable issue rows: #618" in errors
 
 
+def test_github_issue_closure_matrix_gate_requires_postgres_row_builder_issue(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    matrix = tmp_path / "matrix.md"
+    content = module.MATRIX_PATH.read_text(encoding="utf-8")
+    content = "\n".join(line for line in content.splitlines() if "[#620]" not in line)
+    matrix.write_text(content, encoding="utf-8")
+
+    errors = module.validate_issue_closure_matrix(matrix)
+
+    assert "Missing actionable issue rows: #620" in errors
+
+
 def test_github_issue_closure_matrix_gate_requires_inventory_closure_issue(
     tmp_path: Path,
 ) -> None:
@@ -196,6 +210,24 @@ def test_github_issue_closure_matrix_gate_freezes_scheduler_evidence_main_truth(
     errors = module.validate_issue_closure_matrix(matrix)
 
     assert "#508: merged-main issue cannot regress to `locally_fixed`" in errors
+
+
+def test_github_issue_closure_matrix_gate_freezes_postgres_fake_dispatcher_main_truth(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    matrix = tmp_path / "matrix.md"
+    content = module.MATRIX_PATH.read_text(encoding="utf-8").replace(
+        "issues/618) Refactor PostgreSQL fake SQL dispatcher into capability-owned "
+        "handlers | `merged_main` |",
+        "issues/618) Refactor PostgreSQL fake SQL dispatcher into capability-owned "
+        "handlers | `locally_fixed` |",
+    )
+    matrix.write_text(content, encoding="utf-8")
+
+    errors = module.validate_issue_closure_matrix(matrix)
+
+    assert "#618: merged-main issue cannot regress to `locally_fixed`" in errors
 
 
 def test_github_issue_closure_matrix_gate_blocks_missing_issue(tmp_path: Path) -> None:
