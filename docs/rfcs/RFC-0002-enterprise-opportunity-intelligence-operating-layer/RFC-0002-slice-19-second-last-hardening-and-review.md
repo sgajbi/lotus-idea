@@ -1190,3 +1190,12 @@ publication, Gateway/Workbench support, data-product support, client-ready
 publication, or supported-feature promotion. README, wiki, supported-features,
 OpenAPI, migrations, runtime topology, and central skills are unchanged by
 explicit scope decision.
+
+PR `#604` merged by rebase to exact-main SHA
+`b83321e5bd7ee774a76e92a656400dd647634ab7`. Feature Lane, PR Merge Gate,
+exact-main CodeQL `29638083923`, and exact-main Main Releasability
+`29638086274` passed. Release evidence published
+`ghcr.io/sgajbi/lotus-idea@sha256:4c9c66dd950c324ba7f2ff9e3a1c5c401438cca5236445a7b7c7e8b2a2e3325a`.
+Issue `#603` is closed and the local and remote implementation branches are
+absent after remote prune. Strict wiki parity passed with DiffCount `0`; no
+wiki publication change was needed.
