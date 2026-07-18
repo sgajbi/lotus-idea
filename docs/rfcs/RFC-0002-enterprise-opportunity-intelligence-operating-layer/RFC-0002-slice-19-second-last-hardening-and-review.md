@@ -1131,3 +1131,62 @@ certify capacity, certify platform cost attribution, certify downstream
 execution, change API behavior, change migrations, prove Gateway/Workbench,
 promote data products, or promote supported features. README, wiki, central
 skills, and supported-features truth are unchanged by explicit scope decision.
+
+PR `#602` merged by rebase to exact-main SHA
+`2a2dc5d89d0e2c2284bf41e5b9f9ada373bec4a2`. Feature Lane, PR Merge Gate,
+exact-main Main Releasability `29637109887`, and exact-main CodeQL
+`29637107707` passed. Release evidence published
+`ghcr.io/sgajbi/lotus-idea@sha256:d0893699122b9b51ba3ae6c03cc8927c5cdebd94087ca3fbf277a4fbe9a3f3c9`.
+Issue `#601` is closed and the local and remote implementation branches are
+absent after remote prune.
+
+## Issue 603 Outbox Delivery Run-Once API Maintainability
+
+Issue `#603` applies the #601/#602 learning to the adjacent operability and
+architecture-boundary hotspot. The report-only quality baseline on exact main
+`2a2dc5d89d0e2c2284bf41e5b9f9ada373bec4a2` listed
+`src/app/api/outbox/delivery.py::post_outbox_delivery_run_once` at `129`
+lines, one line below the blocking source-function threshold. The route is an
+operator-facing run-once API and mixed caller construction, permission mapping,
+idempotency validation, durable-write configuration, capacity posture,
+delivery-time validation, publisher configuration, observed execution,
+operation events, conflict/replay handling, and final response assembly in one
+review surface.
+
+`src/app/api/outbox/delivery.py` now preserves the public route signature,
+OpenAPI contract, response schema, idempotency replay/conflict behavior,
+publisher cleanup, SLO observation, operation-event posture, and
+`supportedFeaturePromoted=false` semantics while extracting:
+
+1. trusted caller construction,
+2. product-safe permission failure mapping,
+3. idempotency/run context construction,
+4. durable-write, capacity, and UTC delivery-time preconditions,
+5. fail-closed publisher configuration posture,
+6. run-status response and operation-event mapping.
+
+Focused validation passed:
+
+1. Ruff format/check for `src/app/api/outbox/delivery.py`,
+2. MyPy over `src/app/api/outbox/delivery.py`,
+3. `make test-unit UNIT_TESTS=tests/unit/outbox/test_outbox_delivery.py`
+   (`16` passed),
+4. `make test-integration INTEGRATION_TESTS=tests/integration/outbox/test_delivery_readiness_api.py`
+   (`16` passed),
+5. `make maintainability-gate`,
+6. `make duplicate-implementation-gate`,
+7. `make quality-baseline`.
+
+The same-pattern scan covered #601/#602 review evidence, open GitHub issues,
+source maintainability hotspots, duplicate implementation inventory, outbox
+delivery unit/integration tests, the codebase review ledger, the issue closure
+matrix, and repository context. `post_outbox_delivery_run_once` is reduced to
+`71` lines and is no longer in the report-only top-function list. The next
+source hotspot, `src/app/api/review_workflow.py::record_review_action` at
+`127` lines, is classified for later issue-backed review rather than widening
+this PR. This is internal API-boundary modularity only; it does not certify
+external broker runtime, downstream consumer execution, platform-mesh event
+publication, Gateway/Workbench support, data-product support, client-ready
+publication, or supported-feature promotion. README, wiki, supported-features,
+OpenAPI, migrations, runtime topology, and central skills are unchanged by
+explicit scope decision.
