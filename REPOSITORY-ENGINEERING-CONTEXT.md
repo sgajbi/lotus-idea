@@ -1544,6 +1544,9 @@ Recent issue-derived patterns to preserve:
     and runtime-execution fake file catalogs behind capability-owned constants,
     and test the non-claim boundaries for external-publication authority,
     downstream authority, live provider, and supported-feature promotion.
+    Follow-up issue `#625` carries the same bounded-helper pattern into the
+    production concentration-risk signal evaluator; keep it domain-owned rather
+    than introducing a generic signal framework.
 31. Route-owned runtimes must consume their own cleanup hooks. Source-ingestion
     run-once builds Core HTTP clients through `SourceIngestionRuntime`; the API
     path must close the runtime after accepted or source-unavailable execution

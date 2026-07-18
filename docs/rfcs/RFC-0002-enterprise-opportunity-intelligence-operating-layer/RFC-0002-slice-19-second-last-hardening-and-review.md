@@ -1448,6 +1448,14 @@ certification, or supported-feature promotion. README, wiki, supported
 features, OpenAPI, migrations, and central skills are unchanged by explicit
 scope decision; no wiki publication is required because no wiki source changed.
 
+PR `#624` merged this hardening by rebase to exact-main SHA
+`79a319c37624d62dacd35b516924521c8ddabb06`. PR checks passed Feature Lane, PR
+Merge Gate, and CodeQL. Exact-main Main Releasability run `29648568930` and
+CodeQL run `29648566676` passed on that SHA. The implementation branch was
+removed remotely by GitHub and deleted locally after patch-equivalence
+verification. Follow-up issue `#625` captures the next production domain
+maintainability candidate instead of broadening this test-support slice.
+
 ## Issue 620 PostgreSQL Fake Row Construction Maintainability
 
 Issue `#620` follows through on the issue `#618` fake-infrastructure pattern.
