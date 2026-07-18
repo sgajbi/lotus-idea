@@ -178,6 +178,20 @@ def test_github_issue_closure_matrix_gate_requires_core_portfolio_state_validato
     assert "Missing actionable issue rows: #636" in errors
 
 
+def test_github_issue_closure_matrix_gate_requires_ai_explanation_route_issue(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    matrix = tmp_path / "matrix.md"
+    content = module.MATRIX_PATH.read_text(encoding="utf-8")
+    content = "\n".join(line for line in content.splitlines() if "[#638]" not in line)
+    matrix.write_text(content, encoding="utf-8")
+
+    errors = module.validate_issue_closure_matrix(matrix)
+
+    assert "Missing actionable issue rows: #638" in errors
+
+
 def test_github_issue_closure_matrix_gate_requires_postgres_snapshot_writes_issue(
     tmp_path: Path,
 ) -> None:
@@ -416,6 +430,24 @@ def test_github_issue_closure_matrix_gate_freezes_bond_maturity_core_adapter_iss
     errors = module.validate_issue_closure_matrix(matrix)
 
     assert "#633: merged-main issue cannot regress to `locally_fixed`" in errors
+
+
+def test_github_issue_closure_matrix_gate_freezes_core_portfolio_state_validator_issue(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    matrix = tmp_path / "matrix.md"
+    content = module.MATRIX_PATH.read_text(encoding="utf-8").replace(
+        "issues/636) Refactor Core portfolio-state runtime validator into "
+        "proof-owned helpers | `merged_main` |",
+        "issues/636) Refactor Core portfolio-state runtime validator into "
+        "proof-owned helpers | `locally_fixed` |",
+    )
+    matrix.write_text(content, encoding="utf-8")
+
+    errors = module.validate_issue_closure_matrix(matrix)
+
+    assert "#636: merged-main issue cannot regress to `locally_fixed`" in errors
 
 
 def test_github_issue_closure_matrix_gate_freezes_postgres_snapshot_writes_main_truth(
