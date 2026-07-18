@@ -141,10 +141,7 @@ def _report_evidence_pack_payload(
     }
 
 
-def test_critical_idea_workflow_preserves_authority_boundaries() -> None:
-    reset_idea_repository_for_tests()
-    client = managed_test_client(app)
-
+def _persist_high_cash_candidate(client: Any) -> str:
     candidate_response = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
         json=_high_cash_payload(),
@@ -158,12 +155,16 @@ def test_critical_idea_workflow_preserves_authority_boundaries() -> None:
     assert candidate_response.status_code == 200
     candidate_payload = candidate_response.json()
     candidate_id = candidate_payload["persistence"]["candidateId"]
+    assert isinstance(candidate_id, str)
     assert candidate_payload["evaluation"]["outcome"] == "candidate_created"
     assert candidate_payload["evaluation"]["candidate"]["candidateId"] == candidate_id
     assert candidate_payload["evaluation"]["candidate"]["lifecycleStatus"] == "generated"
     assert candidate_payload["persistence"]["decision"] == "accepted"
     assert candidate_payload["supportedFeaturePromoted"] is False
+    return candidate_id
 
+
+def _assert_advisor_queue_contains_candidate(client: Any, candidate_id: str) -> None:
     queue_response = client.get(
         "/api/v1/review-queues/advisor?evaluatedAtUtc=2026-06-21T10:10:00Z&limit=10",
         headers=_queue_headers(),
@@ -178,6 +179,8 @@ def test_critical_idea_workflow_preserves_authority_boundaries() -> None:
     assert queue_payload["items"][0]["candidate"]["reviewPosture"] == "advisor_review_required"
     assert queue_payload["supportedFeaturePromoted"] is False
 
+
+def _transition_candidate_to_review_ready(client: Any, candidate_id: str) -> None:
     for minute, target_status in enumerate(
         ("enriched", "scored", "governance_checked", "ready_for_review"),
         start=1,
@@ -194,6 +197,11 @@ def test_critical_idea_workflow_preserves_authority_boundaries() -> None:
         assert lifecycle_response.status_code == 200
         assert lifecycle_response.json()["persistence"]["lifecycleStatus"] == target_status
 
+
+def _assert_review_approval_preserves_idea_boundary(
+    client: Any,
+    candidate_id: str,
+) -> None:
     review_response = client.post(
         f"/api/v1/idea-candidates/{candidate_id}/review-actions",
         json=_approve_review_payload(),
@@ -208,6 +216,11 @@ def test_critical_idea_workflow_preserves_authority_boundaries() -> None:
     assert review_payload["reviewDecision"]["grantsDownstreamAuthority"] is False
     assert review_payload["persistence"]["reviewPosture"] == "approved_for_conversion"
 
+
+def _assert_conversion_intent_is_report_intent_only(
+    client: Any,
+    candidate_id: str,
+) -> None:
     conversion_response = client.post(
         f"/api/v1/idea-candidates/{candidate_id}/conversion-intents",
         json=_conversion_intent_payload(),
@@ -226,6 +239,8 @@ def test_critical_idea_workflow_preserves_authority_boundaries() -> None:
     assert conversion_payload["conversionIntent"]["grantsDownstreamAuthority"] is False
     assert conversion_payload["persistence"]["lifecycleStatus"] == "converted_to_report"
 
+
+def _assert_report_evidence_pack_request_has_no_report_authority(client: Any) -> None:
     report_pack_response = client.post(
         "/api/v1/conversion-intents/critical-e2e-conversion-report-001/report-evidence-packs",
         json=_report_evidence_pack_payload(),
@@ -249,6 +264,10 @@ def test_critical_idea_workflow_preserves_authority_boundaries() -> None:
     assert evidence_pack["createsArchiveRecord"] is False
     assert "route" not in evidence_pack["sourceSummaries"][0]
 
+
+def _assert_client_ready_publication_request_is_rejected_without_leak(
+    client: Any,
+) -> None:
     client_ready_response = client.post(
         "/api/v1/conversion-intents/critical-e2e-conversion-report-001/report-evidence-packs",
         json=_report_evidence_pack_payload(
@@ -266,6 +285,11 @@ def test_critical_idea_workflow_preserves_authority_boundaries() -> None:
     assert client_ready_response.json()["code"] == "report_evidence_pack_conflict"
     assert PORTFOLIO_ID not in client_ready_response.text
 
+
+def _assert_candidate_detail_replays_non_authority_workflow(
+    client: Any,
+    candidate_id: str,
+) -> None:
     detail_response = client.get(
         f"/api/v1/idea-candidates/{candidate_id}",
         headers=_headers(
@@ -294,3 +318,17 @@ def test_critical_idea_workflow_preserves_authority_boundaries() -> None:
     assert detail_payload["reportEvidencePacks"][0]["createsArchiveRecord"] is False
     assert detail_payload["durableStorageBacked"] is False
     assert detail_payload["supportedFeaturePromoted"] is False
+
+
+def test_critical_idea_workflow_preserves_authority_boundaries() -> None:
+    reset_idea_repository_for_tests()
+    client = managed_test_client(app)
+
+    candidate_id = _persist_high_cash_candidate(client)
+    _assert_advisor_queue_contains_candidate(client, candidate_id)
+    _transition_candidate_to_review_ready(client, candidate_id)
+    _assert_review_approval_preserves_idea_boundary(client, candidate_id)
+    _assert_conversion_intent_is_report_intent_only(client, candidate_id)
+    _assert_report_evidence_pack_request_has_no_report_authority(client)
+    _assert_client_ready_publication_request_is_rejected_without_leak(client)
+    _assert_candidate_detail_replays_non_authority_workflow(client, candidate_id)
