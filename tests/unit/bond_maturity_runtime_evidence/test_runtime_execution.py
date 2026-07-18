@@ -297,6 +297,7 @@ def test_domain_failures_cannot_clear_aggregate_blocker(
     "tamper",
     [
         "top_level",
+        "evidence_class_underclaim",
         "proof_type",
         "claim_shape",
         "execution",
@@ -363,6 +364,8 @@ def _tamper(payload: dict[str, Any], tamper: str) -> None:
     source = execution["sourceReceipt"]
     if tamper == "top_level":
         payload["invented"] = True
+    elif tamper == "evidence_class_underclaim":
+        payload["evidenceClass"] = "source_design_contract"
     elif tamper == "proof_type":
         payload["proofType"] = "caller_summary"
     elif tamper == "claim_shape":

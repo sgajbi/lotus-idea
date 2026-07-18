@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import date, timedelta
+from dataclasses import dataclass
+from datetime import date, datetime, timedelta
 import re
 from typing import Any
 
@@ -132,9 +133,35 @@ _SHA256_PATTERN = re.compile(r"^sha256:[0-9a-f]{64}$")
 _REQUEST_FINGERPRINT_PATTERN = re.compile(r"^maturity_summary:[0-9a-f]{16}$")
 
 
+@dataclass(frozen=True)
+class _RuntimeExecutionValidationParts:
+    generated_at_utc: datetime
+    evaluated_at_utc: datetime
+    execution: Mapping[str, Any]
+    request: Mapping[str, Any]
+    source: Mapping[str, Any]
+
+
 def bond_maturity_runtime_execution_is_valid(payload: Mapping[str, Any]) -> bool:
+    parts = _runtime_execution_validation_parts(payload)
+    return (
+        parts is not None
+        and _request_receipt_is_valid(parts)
+        and _source_receipt_is_valid(parts)
+        and _fact_posture_is_valid(parts)
+        and _execution_closure_is_valid(payload, parts)
+        and evidence_class_can_clear(
+            actual=EvidenceClass.RUNTIME_EXECUTION,
+            required=EvidenceClass.RUNTIME_EXECUTION,
+        )
+    )
+
+
+def _runtime_execution_validation_parts(
+    payload: Mapping[str, Any],
+) -> _RuntimeExecutionValidationParts | None:
     if set(payload) not in (_TOP_KEYS, _TOP_KEYS | {AGGREGATE_PROOF_PROVENANCE_KEY}):
-        return False
+        return None
     if (
         payload.get("schemaVersion") != BOND_MATURITY_RUNTIME_EXECUTION_SCHEMA_VERSION
         or payload.get("repository") != "lotus-idea"
@@ -143,18 +170,14 @@ def bond_maturity_runtime_execution_is_valid(payload: Mapping[str, Any]) -> bool
         or payload.get("proofType") != "lotus_core_portfolio_maturity_summary_read"
         or payload.get("sourceAuthority") != SourceSystem.LOTUS_CORE.value
     ):
-        return False
+        return None
     generated = parse_timezone_aware_datetime(payload.get("generatedAtUtc"))
     execution = payload.get("execution")
     claims = payload.get("nonProofClaims")
     if generated is None or not isinstance(execution, Mapping) or set(execution) != _EXECUTION_KEYS:
-        return False
-    if not isinstance(claims, Mapping) or set(claims) != _CLAIM_KEYS:
-        return False
-    if claims.get("maturityFactsOwned") != "lotus-core" or any(
-        value is not False for key, value in claims.items() if key != "maturityFactsOwned"
-    ):
-        return False
+        return None
+    if not _non_proof_claims_are_valid(claims):
+        return None
     request = execution.get("requestReceipt")
     source = execution.get("sourceReceipt")
     evaluated = parse_timezone_aware_datetime(execution.get("evaluatedAtUtc"))
@@ -165,53 +188,34 @@ def bond_maturity_runtime_execution_is_valid(payload: Mapping[str, Any]) -> bool
         or set(source) != _SOURCE_KEYS
         or evaluated is None
     ):
-        return False
-    request_material = {key: request[key] for key in _REQUEST_KEYS if key != "requestDigest"}
-    source_material = {key: source[key] for key in _SOURCE_KEYS if key != "receiptDigest"}
-    if (
-        request.get("requestDigest") != sha256_json(request_material)
-        or source.get("receiptDigest") != sha256_json(source_material)
-        or execution.get("status") != "completed"
-        or tuple(execution.get("qualificationBlockers") or ())
-        or request.get("evaluatedAtUtc") != execution.get("evaluatedAtUtc")
-        or request.get("consumerSystem") != "lotus-idea"
-        or request.get("includeProjected") is not False
-        or source.get("includeProjected") is not False
-        or request.get("asOfDate") != source.get("asOfDate")
-        or request.get("asOfDate") != source.get("windowStartDate")
-        or request.get("maturityWindowDays") != source.get("horizonDays")
-        or request.get("tenantIdHash") != source.get("responseTenantIdHash")
-        or request.get("portfolioIdHash") != source.get("responsePortfolioIdHash")
-        or request.get("correlationIdHash") != source.get("sourceCorrelationIdHash")
-        or source.get("productId") != "lotus-core:PortfolioMaturitySummary:v1"
-        or source.get("sourceSystem") != SourceSystem.LOTUS_CORE.value
-        or source.get("productVersion") != "v1"
-        or source.get("route") != "/portfolios/{portfolio_id}/maturity-summary"
-        or source.get("responseProductName") != "PortfolioMaturitySummary"
-        or source.get("responseProductVersion") != "v1"
-        or source.get("sourceProductName") != "HoldingsAsOf"
-        or source.get("sourceProductVersion") != "v1"
-        or source.get("upstreamProductId") != "lotus-core:HoldingsAsOf:v1"
-        or source.get("upstreamProductName") != "HoldingsAsOf"
-        or source.get("maturityBasis") != "CONTRACTUAL_INSTRUMENT_MATURITY_DATE"
-        or source.get("freshness") != EvidenceFreshness.CURRENT.value
-        or str(source.get("dataQualityStatus", "")).upper() != "COMPLETE"
-        or str(source.get("supportabilityStatus", "")).upper() != "SUPPORTED"
-        or tuple(source.get("supportabilityReasons") or ())
-        or source.get("missingMaturityDateCount") != 0
-        or source.get("unsupportedMaturityFeatureCount") != 0
-        or str(source.get("reconciliationStatus", "")).upper() != "COMPLETE"
-        or source.get("sourceEvidenceCurrent") is not True
-    ):
-        return False
-    if not _scope_and_time_are_valid(
+        return None
+    return _RuntimeExecutionValidationParts(
+        generated_at_utc=generated,
+        evaluated_at_utc=evaluated,
+        execution=execution,
         request=request,
         source=source,
-        evaluated=evaluated,
-        generated=generated,
+    )
+
+
+def _non_proof_claims_are_valid(claims: object) -> bool:
+    return (
+        isinstance(claims, Mapping)
+        and set(claims) == _CLAIM_KEYS
+        and claims.get("maturityFactsOwned") == "lotus-core"
+        and all(value is False for key, value in claims.items() if key != "maturityFactsOwned")
+    )
+
+
+def _request_receipt_is_valid(parts: _RuntimeExecutionValidationParts) -> bool:
+    request = parts.request
+    request_material = {key: request[key] for key in _REQUEST_KEYS if key != "requestDigest"}
+    if (
+        request.get("requestDigest") != sha256_json(request_material)
+        or request.get("evaluatedAtUtc") != parts.execution.get("evaluatedAtUtc")
+        or request.get("consumerSystem") != "lotus-idea"
+        or request.get("includeProjected") is not False
     ):
-        return False
-    if not _fact_posture_is_valid(execution=execution, source=source):
         return False
     request_hashes = (
         request.get("tenantIdHash"),
@@ -219,48 +223,65 @@ def bond_maturity_runtime_execution_is_valid(payload: Mapping[str, Any]) -> bool
         request.get("correlationIdHash"),
         request.get("requestDigest"),
     )
-    source_hashes = (
-        source.get("contentHash"),
-        source.get("sourceBatchFingerprint"),
-        source.get("responseContentHash"),
-        source.get("responseSourceDigest"),
-    )
-    if (
-        not all(_is_sha256(value) for value in request_hashes + source_hashes)
-        or not _is_sha256(source.get("upstreamContentHash"))
-        or not _is_sha256(source.get("holdingsContentHash"))
-        or source.get("holdingsContentHash") != source.get("upstreamContentHash")
-        or len(set(source_hashes)) != 1
-        or not isinstance(source.get("requestFingerprint"), str)
-        or _REQUEST_FINGERPRINT_PATTERN.fullmatch(str(source["requestFingerprint"])) is None
-    ):
-        return False
-    if not all(
-        isinstance(source.get(field), str) and str(source[field]).strip()
-        for field in ("snapshotId", "restatementVersion", "policyVersion", "receiptDigest")
-    ):
-        return False
-    if (
-        tuple(payload.get("aggregateBlockersSatisfied") or ())
-        != BOND_MATURITY_RUNTIME_BLOCKERS_SATISFIED
-        or tuple(payload.get("remainingCertificationBlockers") or ())
-        != BOND_MATURITY_REMAINING_BLOCKERS
-        or tuple(payload.get("evidenceRefs") or ()) != BOND_MATURITY_RUNTIME_EVIDENCE_REFS
-    ):
-        return False
-    return evidence_class_can_clear(
-        actual=EvidenceClass.RUNTIME_EXECUTION,
-        required=EvidenceClass.RUNTIME_EXECUTION,
+    return all(_is_sha256(value) for value in request_hashes)
+
+
+def _source_receipt_is_valid(parts: _RuntimeExecutionValidationParts) -> bool:
+    source = parts.source
+    source_material = {key: source[key] for key in _SOURCE_KEYS if key != "receiptDigest"}
+    return (
+        source.get("receiptDigest") == sha256_json(source_material)
+        and _source_scope_matches_request(parts)
+        and _source_product_and_posture_are_valid(source)
+        and _source_window_and_temporal_posture_are_valid(parts)
+        and _source_hash_identity_is_valid(source)
+        and _source_required_strings_are_present(source)
     )
 
 
-def _scope_and_time_are_valid(
-    *,
-    request: Mapping[str, Any],
-    source: Mapping[str, Any],
-    evaluated: Any,
-    generated: Any,
+def _source_scope_matches_request(parts: _RuntimeExecutionValidationParts) -> bool:
+    request = parts.request
+    source = parts.source
+    return (
+        request.get("asOfDate") == source.get("asOfDate")
+        and request.get("asOfDate") == source.get("windowStartDate")
+        and request.get("maturityWindowDays") == source.get("horizonDays")
+        and request.get("tenantIdHash") == source.get("responseTenantIdHash")
+        and request.get("portfolioIdHash") == source.get("responsePortfolioIdHash")
+        and request.get("correlationIdHash") == source.get("sourceCorrelationIdHash")
+    )
+
+
+def _source_product_and_posture_are_valid(source: Mapping[str, Any]) -> bool:
+    return (
+        source.get("includeProjected") is False
+        and source.get("productId") == "lotus-core:PortfolioMaturitySummary:v1"
+        and source.get("sourceSystem") == SourceSystem.LOTUS_CORE.value
+        and source.get("productVersion") == "v1"
+        and source.get("route") == "/portfolios/{portfolio_id}/maturity-summary"
+        and source.get("responseProductName") == "PortfolioMaturitySummary"
+        and source.get("responseProductVersion") == "v1"
+        and source.get("sourceProductName") == "HoldingsAsOf"
+        and source.get("sourceProductVersion") == "v1"
+        and source.get("upstreamProductId") == "lotus-core:HoldingsAsOf:v1"
+        and source.get("upstreamProductName") == "HoldingsAsOf"
+        and source.get("maturityBasis") == "CONTRACTUAL_INSTRUMENT_MATURITY_DATE"
+        and source.get("freshness") == EvidenceFreshness.CURRENT.value
+        and str(source.get("dataQualityStatus", "")).upper() == "COMPLETE"
+        and str(source.get("supportabilityStatus", "")).upper() == "SUPPORTED"
+        and not tuple(source.get("supportabilityReasons") or ())
+        and source.get("missingMaturityDateCount") == 0
+        and source.get("unsupportedMaturityFeatureCount") == 0
+        and str(source.get("reconciliationStatus", "")).upper() == "COMPLETE"
+        and source.get("sourceEvidenceCurrent") is True
+    )
+
+
+def _source_window_and_temporal_posture_are_valid(
+    parts: _RuntimeExecutionValidationParts,
 ) -> bool:
+    request = parts.request
+    source = parts.source
     try:
         as_of = date.fromisoformat(str(request.get("asOfDate")))
         window_end = date.fromisoformat(str(source.get("windowEndDate")))
@@ -275,17 +296,63 @@ def _scope_and_time_are_valid(
         and window_end == as_of + timedelta(days=horizon)
         and source_generated is not None
         and latest_evidence is not None
-        and source_generated <= evaluated
+        and source_generated <= parts.evaluated_at_utc
         and latest_evidence <= source_generated
-        and generated >= evaluated
+        and parts.generated_at_utc >= parts.evaluated_at_utc
     )
 
 
-def _fact_posture_is_valid(
-    *,
-    execution: Mapping[str, Any],
-    source: Mapping[str, Any],
+def _source_hash_identity_is_valid(source: Mapping[str, Any]) -> bool:
+    source_hashes = (
+        source.get("contentHash"),
+        source.get("sourceBatchFingerprint"),
+        source.get("responseContentHash"),
+        source.get("responseSourceDigest"),
+    )
+    if not all(_is_sha256(value) for value in source_hashes):
+        return False
+    if not _is_sha256(source.get("upstreamContentHash")) or not _is_sha256(
+        source.get("holdingsContentHash")
+    ):
+        return False
+    return (
+        source.get("holdingsContentHash") == source.get("upstreamContentHash")
+        and len(set(source_hashes)) == 1
+        and isinstance(source.get("requestFingerprint"), str)
+        and _REQUEST_FINGERPRINT_PATTERN.fullmatch(str(source["requestFingerprint"])) is not None
+    )
+
+
+def _source_required_strings_are_present(source: Mapping[str, Any]) -> bool:
+    return all(
+        isinstance(source.get(field), str) and str(source[field]).strip()
+        for field in ("snapshotId", "restatementVersion", "policyVersion", "receiptDigest")
+    )
+
+
+def _execution_closure_is_valid(
+    payload: Mapping[str, Any],
+    parts: _RuntimeExecutionValidationParts,
 ) -> bool:
+    execution = parts.execution
+    if (
+        execution.get("status") != "completed"
+        or tuple(execution.get("qualificationBlockers") or ())
+        or tuple(payload.get("aggregateBlockersSatisfied") or ())
+        != BOND_MATURITY_RUNTIME_BLOCKERS_SATISFIED
+        or tuple(payload.get("remainingCertificationBlockers") or ())
+        != BOND_MATURITY_REMAINING_BLOCKERS
+        or tuple(payload.get("evidenceRefs") or ()) != BOND_MATURITY_RUNTIME_EVIDENCE_REFS
+    ):
+        return False
+    return True
+
+
+def _fact_posture_is_valid(
+    parts: _RuntimeExecutionValidationParts,
+) -> bool:
+    execution = parts.execution
+    source = parts.source
     counts = (
         source.get("maturingHoldingCount"),
         source.get("maturityBearingHoldingCount"),
