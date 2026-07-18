@@ -589,3 +589,22 @@ def test_github_issue_closure_matrix_gate_freezes_drawdown_runtime_evidence_clos
     errors = module.validate_issue_closure_matrix(matrix)
 
     assert "#466: merged-main issue cannot regress to `locally_fixed`" in errors
+
+
+def test_github_issue_closure_matrix_gate_freezes_service_capacity_builder_closure(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    matrix = tmp_path / "matrix.md"
+    content = module.MATRIX_PATH.read_text(encoding="utf-8")
+    content = content.replace(
+        "Refactor service capacity baseline builder below Slice 19 maintainability threshold |"
+        " `merged_main` |",
+        "Refactor service capacity baseline builder below Slice 19 maintainability threshold |"
+        " `locally_fixed` |",
+    )
+    matrix.write_text(content, encoding="utf-8")
+
+    errors = module.validate_issue_closure_matrix(matrix)
+
+    assert "#601: merged-main issue cannot regress to `locally_fixed`" in errors

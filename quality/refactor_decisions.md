@@ -6,6 +6,57 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-07-18: Outbox Delivery Run-Once API Boundary
+
+`src/app/api/outbox/delivery.py::post_outbox_delivery_run_once` appeared in
+the report-only quality baseline at `129` lines, one line below the blocking
+source-function maintainability threshold. Issue `#603` applies the same
+operability and architecture-boundary lens learned from issue `#601`: an
+operator-facing run-once route should not mix caller parsing, authorization,
+idempotency, durable-write gating, capacity posture, publisher configuration,
+execution observation, response mapping, and no-promotion posture in one
+near-limit function.
+
+The route keeps its public signature, OpenAPI contract, response schema,
+operation events, idempotency replay/conflict behavior, publisher cleanup,
+durable-write fail-closed posture, and `supportedFeaturePromoted=false`
+semantics while delegating to explicit API-boundary helpers:
+
+1. `_outbox_delivery_run_caller` for trusted caller construction,
+2. `_outbox_delivery_run_permission_problem` for product-safe authorization
+   failure mapping,
+3. `_outbox_delivery_run_context` for idempotency validation, operator run
+   reference, repository, and durable-storage posture,
+4. `_outbox_delivery_run_precondition_problem` for durable-write, capacity, and
+   UTC delivery-time blockers,
+5. `_outbox_delivery_run_publisher_or_block` for fail-closed broker
+   configuration posture,
+6. `_outbox_delivery_run_response` for conflict/replay/accepted response and
+   operation-event mapping.
+
+This is design modularity inside the existing Lotus Idea API process. It does
+not certify external broker runtime, downstream consumer execution,
+platform-mesh event publication, Gateway/Workbench support, data-product
+support, client-ready publication, or supported-feature promotion.
+
+Evidence:
+
+1. Code: `src/app/api/outbox/delivery.py`.
+2. Tests and gates: Ruff and MyPy over `src/app/api/outbox/delivery.py`,
+   `make test-unit UNIT_TESTS=tests/unit/outbox/test_outbox_delivery.py`
+   (`16` passed),
+   `make test-integration INTEGRATION_TESTS=tests/integration/outbox/test_delivery_readiness_api.py`
+   (`16` passed), `make maintainability-gate`,
+   `make duplicate-implementation-gate`, and `make quality-baseline`.
+3. Maintainability impact: `post_outbox_delivery_run_once` moved from `129` to
+   `71` lines and left the report-only top-function list; no duplicate
+   implementation clusters were introduced.
+4. Documentation/context decision: RFC Slice 19, the codebase review ledger,
+   issue closure matrix, repository context, and this decision log were
+   updated. README, wiki, supported-features, OpenAPI, migrations, runtime
+   topology, and central skills are unchanged because public behavior and
+   operating commands did not change.
+
 ## 2026-07-18: Service-Capacity Baseline Builder Boundary
 
 `src/app/application/service_capacity_baseline.py::build_service_capacity_baseline`

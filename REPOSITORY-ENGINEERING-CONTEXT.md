@@ -1498,7 +1498,19 @@ Recent issue-derived patterns to preserve:
     resolution in `scripts/proof_generator_io.py`, removing known
     duplicate function-body clusters while preserving family-specific proof
     policy and generator argument behavior.
-28. Route-owned runtimes must consume their own cleanup hooks. Source-ingestion
+29. Report-only maintainability baselines are issue-discovery inputs, not
+    permission to stop at the first local fix. When a Slice 19 hardening issue
+    comes from a near-threshold proof, readiness, run-once, operator, or API
+    orchestration function, run `make quality-baseline` with the blocking
+    `make maintainability-gate` and `make duplicate-implementation-gate`, then
+    inspect siblings in the same impact/lens family. Fix a high-confidence
+    sibling in the same bounded batch or create a GitHub issue with exact
+    function, line count, route/proof ownership, acceptance criteria, and
+    no-promotion boundaries. Issues `#601` and `#603` are the current pattern:
+    `build_service_capacity_baseline` moved from 130 to 64 lines and
+    `post_outbox_delivery_run_once` moved from 129 to 71 lines while preserving
+    source-safe blockers, no-supported-feature posture, and runtime topology.
+30. Route-owned runtimes must consume their own cleanup hooks. Source-ingestion
     run-once builds Core HTTP clients through `SourceIngestionRuntime`; the API
     path must close the runtime after accepted or source-unavailable execution
     and must not rely on worker-only cleanup semantics. The same pattern applies
@@ -1508,16 +1520,16 @@ Recent issue-derived patterns to preserve:
     not product outcomes: route-owned `close()` failures must be bounded to
     source-safe suppressed operation events and must not replace already
     computed completed, replayed, conflict, or blocked run-once responses.
-29. Run-once source-ingestion manifests are intentionally small bounded
+31. Run-once source-ingestion manifests are intentionally small bounded
     operator actions. `maxItems` and raw `workItems` must stay at or below the
     code-owned 100-item ceiling; larger ingestion requires a separately
     designed chunked or scheduled workflow with capacity evidence.
-30. Operation metric source-authority vocabulary must be code-owned. Runtime
+32. Operation metric source-authority vocabulary must be code-owned. Runtime
     `OperationEvent`, operation metric contracts, operator workflow contracts,
     dashboards, and alert proof gates must consume the same governed
     `OPERATION_EVENT_SOURCE_AUTHORITIES` set instead of duplicating partial
     allowlists.
-31. Keep context holistic. Detailed GitHub issue closure evidence belongs in
+33. Keep context holistic. Detailed GitHub issue closure evidence belongs in
     `docs/architecture/GITHUB-ISSUE-CLOSURE-MATRIX.md` and is enforced by
     `make github-issue-closure-matrix-gate`; this context file should retain
     durable patterns, boundaries, commands, and routing rules instead of

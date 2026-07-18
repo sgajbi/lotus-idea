@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import time
 
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Mapping
 
@@ -75,6 +76,15 @@ _RUN_OUTBOX_DELIVERY_POLICY = CapabilityPolicy.for_roles(
 )
 
 
+@dataclass(frozen=True)
+class OutboxDeliveryRunContext:
+    caller: CallerContext
+    idempotency_key: str
+    operator_run_reference: str
+    repository: OutboxDeliveryRepository
+    durable_storage_backed: bool
+
+
 async def get_outbox_delivery_readiness(
     x_caller_subject: str | None = Header(default=None, alias="X-Caller-Subject"),
     x_caller_roles: str | None = Header(default=None, alias="X-Caller-Roles"),
@@ -139,12 +149,73 @@ async def post_outbox_delivery_run_once(
     ),
     idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
 ) -> OutboxDeliveryRunOnceResponse | JSONResponse:
-    caller = caller_context_from_headers(
+    caller = _outbox_delivery_run_caller(
         subject=x_caller_subject,
         roles=x_caller_roles,
         capabilities=x_caller_capabilities,
         trusted_caller_context=x_lotus_trusted_caller_context,
     )
+    permission_problem = _outbox_delivery_run_permission_problem(caller)
+    if permission_problem is not None:
+        return permission_problem
+
+    context_or_problem = _outbox_delivery_run_context(caller, idempotency_key)
+    if isinstance(context_or_problem, JSONResponse):
+        return context_or_problem
+    run_context = context_or_problem
+
+    precondition_problem = _outbox_delivery_run_precondition_problem(
+        run_context,
+        max_retry_count=max_retry_count,
+        delivered_at_utc=delivered_at_utc,
+    )
+    if precondition_problem is not None:
+        return precondition_problem
+
+    run_request_payload = outbox_delivery_run_request_payload(
+        limit=limit,
+        max_retry_count=max_retry_count,
+        delivered_at_utc=delivered_at_utc,
+        caller_subject=run_context.caller.subject,
+    )
+
+    publisher_or_response = _outbox_delivery_run_publisher_or_block(
+        run_context,
+        max_retry_count=max_retry_count,
+    )
+    if isinstance(publisher_or_response, OutboxDeliveryRunOnceResponse):
+        return publisher_or_response
+
+    summary = _run_observed_outbox_delivery(
+        repository=run_context.repository,
+        publisher=publisher_or_response,
+        limit=limit,
+        max_retry_count=max_retry_count,
+        idempotency_key=run_context.idempotency_key,
+        request_payload=run_request_payload,
+        delivered_at_utc=delivered_at_utc,
+        durable_storage_backed=run_context.durable_storage_backed,
+        operator_run_reference=run_context.operator_run_reference,
+    )
+    return _outbox_delivery_run_response(summary, run_context)
+
+
+def _outbox_delivery_run_caller(
+    *,
+    subject: str | None,
+    roles: str | None,
+    capabilities: str | None,
+    trusted_caller_context: str | None,
+) -> CallerContext:
+    return caller_context_from_headers(
+        subject=subject,
+        roles=roles,
+        capabilities=capabilities,
+        trusted_caller_context=trusted_caller_context,
+    )
+
+
+def _outbox_delivery_run_permission_problem(caller: CallerContext) -> JSONResponse | None:
     try:
         require_role_and_capability(caller, _RUN_OUTBOX_DELIVERY_POLICY)
     except PermissionDeniedError:
@@ -153,7 +224,13 @@ async def post_outbox_delivery_run_once(
             "permission_denied",
         )
         return problem_response(**_outbox_delivery_run_permission_denied_response_args())
+    return None
 
+
+def _outbox_delivery_run_context(
+    caller: CallerContext,
+    idempotency_key: str | None,
+) -> OutboxDeliveryRunContext | JSONResponse:
     validated_idempotency_key = idempotency_key or ""
     try:
         validate_idempotency_key(validated_idempotency_key)
@@ -166,69 +243,82 @@ async def post_outbox_delivery_run_once(
             **_outbox_delivery_run_invalid_request_response_args(IDEMPOTENCY_KEY_REQUIRED_MESSAGE)
         )
 
-    operator_run_reference = operator_run_reference_for_idempotency_key(validated_idempotency_key)
     repository = get_idea_repository()
-    durable_storage_backed = idea_repository_durable_storage_backed(repository)
-    configuration_problem = durable_write_problem(repository)
+    return OutboxDeliveryRunContext(
+        caller=caller,
+        idempotency_key=validated_idempotency_key,
+        operator_run_reference=operator_run_reference_for_idempotency_key(
+            validated_idempotency_key
+        ),
+        repository=repository,
+        durable_storage_backed=idea_repository_durable_storage_backed(repository),
+    )
+
+
+def _outbox_delivery_run_precondition_problem(
+    run_context: OutboxDeliveryRunContext,
+    *,
+    max_retry_count: int,
+    delivered_at_utc: datetime | None,
+) -> OutboxDeliveryRunOnceResponse | JSONResponse | None:
+    configuration_problem = durable_write_problem(run_context.repository)
     if configuration_problem is not None:
         _emit_outbox_delivery_run_event(
             OperationOutcome.BLOCKED,
             DURABLE_REPOSITORY_NOT_CONFIGURED,
-            durable_storage_backed=durable_storage_backed,
-            operator_run_reference=operator_run_reference,
+            durable_storage_backed=run_context.durable_storage_backed,
+            operator_run_reference=run_context.operator_run_reference,
         )
         return configuration_problem
 
     capacity_block = _outbox_capacity_block(
-        repository, durable_storage_backed, max_retry_count, operator_run_reference
+        run_context.repository,
+        run_context.durable_storage_backed,
+        max_retry_count,
+        run_context.operator_run_reference,
     )
     if capacity_block is not None:
         return capacity_block
 
-    delivery_time_problem = _delivery_time_problem(
-        delivered_at_utc, durable_storage_backed, operator_run_reference
-    )
-    if delivery_time_problem is not None:
-        return delivery_time_problem
-
-    run_request_payload = outbox_delivery_run_request_payload(
-        limit=limit,
-        max_retry_count=max_retry_count,
-        delivered_at_utc=delivered_at_utc,
-        caller_subject=caller.subject,
+    return _delivery_time_problem(
+        delivered_at_utc,
+        run_context.durable_storage_backed,
+        run_context.operator_run_reference,
     )
 
+
+def _outbox_delivery_run_publisher_or_block(
+    run_context: OutboxDeliveryRunContext,
+    *,
+    max_retry_count: int,
+) -> OutboxEventPublisher | OutboxDeliveryRunOnceResponse:
     publisher_result = _build_outbox_publisher_from_environment()
-    if isinstance(publisher_result, str):
-        _emit_outbox_delivery_run_event(
-            OperationOutcome.BLOCKED,
-            publisher_result,
-            durable_storage_backed=durable_storage_backed,
-            operator_run_reference=operator_run_reference,
-        )
-        return OutboxDeliveryRunOnceResponse.blocked(
-            durable_storage_backed=durable_storage_backed,
-            blocker=publisher_result,
-            max_retry_count=max_retry_count,
-            operator_run_reference=operator_run_reference,
-        )
+    if not isinstance(publisher_result, str):
+        return publisher_result
 
-    summary = _run_observed_outbox_delivery(
-        repository=repository,
-        publisher=publisher_result,
-        limit=limit,
-        max_retry_count=max_retry_count,
-        idempotency_key=validated_idempotency_key,
-        request_payload=run_request_payload,
-        delivered_at_utc=delivered_at_utc,
-        durable_storage_backed=durable_storage_backed,
-        operator_run_reference=operator_run_reference,
+    _emit_outbox_delivery_run_event(
+        OperationOutcome.BLOCKED,
+        publisher_result,
+        durable_storage_backed=run_context.durable_storage_backed,
+        operator_run_reference=run_context.operator_run_reference,
     )
+    return OutboxDeliveryRunOnceResponse.blocked(
+        durable_storage_backed=run_context.durable_storage_backed,
+        blocker=publisher_result,
+        max_retry_count=max_retry_count,
+        operator_run_reference=run_context.operator_run_reference,
+    )
+
+
+def _outbox_delivery_run_response(
+    summary: OutboxDeliveryRunSummary,
+    run_context: OutboxDeliveryRunContext,
+) -> OutboxDeliveryRunOnceResponse | JSONResponse:
     if summary.run_status is OutboxDeliveryRunStatus.CONFLICT:
         _emit_outbox_delivery_run_event(
             OperationOutcome.CONFLICT,
             "idempotency_conflict",
-            durable_storage_backed=durable_storage_backed,
+            durable_storage_backed=run_context.durable_storage_backed,
             operator_run_reference=summary.operator_run_reference,
         )
         return problem_response(**_outbox_delivery_run_idempotency_conflict_response_args())
@@ -238,13 +328,13 @@ async def post_outbox_delivery_run_once(
             if summary.run_status is OutboxDeliveryRunStatus.REPLAYED
             else OperationOutcome.ACCEPTED
         ),
-        durable_storage_backed=durable_storage_backed,
+        durable_storage_backed=run_context.durable_storage_backed,
         attempted_count=summary.attempted_count,
         operator_run_reference=summary.operator_run_reference,
     )
     return OutboxDeliveryRunOnceResponse.from_domain(
         summary,
-        durable_storage_backed=durable_storage_backed,
+        durable_storage_backed=run_context.durable_storage_backed,
     )
 
 
