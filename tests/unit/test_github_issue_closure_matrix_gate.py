@@ -354,6 +354,24 @@ def test_github_issue_closure_matrix_gate_freezes_concentration_risk_domain_issu
     assert "#625: merged-main issue cannot regress to `locally_fixed`" in errors
 
 
+def test_github_issue_closure_matrix_gate_freezes_high_cash_persistence_api_issue(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    matrix = tmp_path / "matrix.md"
+    content = module.MATRIX_PATH.read_text(encoding="utf-8").replace(
+        "issues/630) Refactor high-cash persist API handler into "
+        "API-boundary helpers | `merged_main` |",
+        "issues/630) Refactor high-cash persist API handler into "
+        "API-boundary helpers | `locally_fixed` |",
+    )
+    matrix.write_text(content, encoding="utf-8")
+
+    errors = module.validate_issue_closure_matrix(matrix)
+
+    assert "#630: merged-main issue cannot regress to `locally_fixed`" in errors
+
+
 def test_github_issue_closure_matrix_gate_freezes_postgres_snapshot_writes_main_truth(
     tmp_path: Path,
 ) -> None:

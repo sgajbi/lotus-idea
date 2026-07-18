@@ -57,6 +57,11 @@ Validation and scope decisions:
    infrastructure, Core, Gateway, Workbench, data-mesh certification,
    external-publication authority, and supported-feature truth are unchanged by
    explicit scope decision.
+5. PR `#631` merged by rebase to exact-main SHA
+   `640dba29a3f592df60381c1875e55bc12b2120bd`. Main Releasability
+   `29652436655` and CodeQL `29652431830` passed on that exact SHA. Strict wiki
+   publication parity passed with `DiffCount 0`; issue `#630` is closed and the
+   implementation branch is absent locally and remotely.
 
 ## 2026-07-18: Concentration-Risk Signal Evaluator Boundary
 
