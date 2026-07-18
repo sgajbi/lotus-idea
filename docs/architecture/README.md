@@ -14,6 +14,12 @@ The initial architecture posture is:
 
 Architecture decisions live under `docs/architecture/adr/`.
 
+The durable product blueprint lives in `docs/LOTUS_IDEA_BLUEPRINT.md`. Use it
+as the repo-authored anchor for product definition, source-authority boundaries,
+AI/human-governance posture, and non-claim rules before changing architecture
+or RFC implementation scope. It is context truth, not support-promotion
+evidence.
+
 Codebase cleanup and modularity evidence lives in:
 
 1. `docs/architecture/CODEBASE-REVIEW-PLAYBOOK.md`

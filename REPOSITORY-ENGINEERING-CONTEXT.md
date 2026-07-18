@@ -19,6 +19,13 @@ and the RFC-0002 slice files.
 
 `lotus-idea` is in RFC-0002 foundation implementation.
 
+The repo-authored product blueprint is `docs/LOTUS_IDEA_BLUEPRINT.md`. Treat it
+as the durable anchor for the service product definition, source-authority map,
+owned/non-owned capabilities, AI/human-governance posture, and non-claim
+boundary. It replaces dependence on a local Downloads-path blueprint during
+agent execution, but it is not implementation evidence or supported-feature
+promotion by itself.
+
 The repository now contains certified internal API foundations, deterministic
 signal policies, caller-supplied evaluation APIs, persistence and migration
 support, PostgreSQL repository projections, source-ingestion foundations,
@@ -2237,6 +2244,7 @@ runbooks, quality scorecards, and contracts for detailed history.
 ## AI Product Research Rule
 
 Before external Slice 09 certification or later AI-assisted product design, read
+`docs/LOTUS_IDEA_BLUEPRINT.md` and
 `docs/research/advisor-intelligence-product-differentiation.md`. Refresh its
 dated primary-source research, state a falsifiable differentiation hypothesis,
 and define deterministic anchors, source authority, evaluation, failure,
@@ -2493,15 +2501,16 @@ Central context:
 Repository-local anchors:
 
 1. `README.md`
-2. `docs/rfcs/README.md`
-3. `docs/operations/api-certification.md`
-4. `docs/operations/implementation-proof-readiness.md`
-5. `docs/operations/downstream-realization-readiness.md`
-6. `docs/runbooks/service-operations.md`
-7. `docs/architecture/CODEBASE-REVIEW-PLAYBOOK.md`
-8. `docs/architecture/CODEBASE-REVIEW-LEDGER.md`
-9. `quality/quality_scorecard.md`
-10. `supported-features/supported-features.json`
-11. `wiki/Home.md`
-12. `docs/operations/service-slo-capacity.md`
-13. `docs/research/advisor-intelligence-product-differentiation.md`
+2. `docs/LOTUS_IDEA_BLUEPRINT.md`
+3. `docs/rfcs/README.md`
+4. `docs/operations/api-certification.md`
+5. `docs/operations/implementation-proof-readiness.md`
+6. `docs/operations/downstream-realization-readiness.md`
+7. `docs/runbooks/service-operations.md`
+8. `docs/architecture/CODEBASE-REVIEW-PLAYBOOK.md`
+9. `docs/architecture/CODEBASE-REVIEW-LEDGER.md`
+10. `quality/quality_scorecard.md`
+11. `supported-features/supported-features.json`
+12. `wiki/Home.md`
+13. `docs/operations/service-slo-capacity.md`
+14. `docs/research/advisor-intelligence-product-differentiation.md`
