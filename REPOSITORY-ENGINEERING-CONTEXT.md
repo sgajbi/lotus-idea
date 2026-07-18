@@ -1889,13 +1889,18 @@ repeated defect patterns are fixed once and pinned with tests or gates:
     `app.application.source_product_proof_values`, and centralize outbox
     contract forbidden-text traversal in `scripts.contract_text_guards`, and
     centralize operations-contract payload, operation, and label validation in
-    `scripts.operations_contract_validators`; the current measured baseline
-    ignores pass/ellipsis-only protocol stubs, scans 1,607 executable function
-    bodies, and reports 0 exact duplicate clusters. GitHub issue `#309`
-    promotes the same deterministic scanner to a blocking
-    `make duplicate-implementation-gate` with `--fail-on-duplicates`, wired into
-    `make lint` while preserving `make duplicate-implementation-inventory` as
-    the no-artifact report-only evidence command.
+    `scripts.operations_contract_validators`; GitHub issue `#614` keeps the
+    report-only quality baseline aligned with the blocking scanners by using
+    the same pass/ellipsis-only protocol-stub classifier before reporting
+    executable function rows and by emitting POSIX-normalized report paths for
+    deterministic Windows/Linux evidence. The current local generated quality
+    baseline reports 9,252 executable source/test/script function rows, and the
+    current duplicate implementation gate reports 0 exact duplicate clusters
+    across 2,953 source/script functions. GitHub issue `#309` promotes the same
+    deterministic scanner to a blocking `make duplicate-implementation-gate`
+    with `--fail-on-duplicates`, wired into `make lint` while preserving
+    `make duplicate-implementation-inventory` as the no-artifact report-only
+    evidence command.
     `make ci-contract-gate` protects the report-only/blocking target split,
     strict flag, and `make lint` lane placement.
 22. Operation metric source-authority vocabulary drift: GitHub issue `#311` is

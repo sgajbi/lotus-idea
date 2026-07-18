@@ -253,10 +253,14 @@ projection into `app.api.persistence_summary`, and API review access-scope DTOs 
 loading into `app.runtime.proof_artifact_files`, and source-product proof payload text-sequence
 normalization into `app.application.source_product_proof_values`, and outbox contract
 forbidden-text traversal into `scripts.contract_text_guards`, and operations-contract payload,
-operation, and label validation into `scripts.operations_contract_validators`; the current
-measured baseline ignores pass/ellipsis-only protocol stubs, scans 1,607 executable function
-bodies, and reports 0 exact duplicate clusters. The CI contract gate protects the report-only and
-blocking target split, the strict `--fail-on-duplicates` flag, and the `make lint` lane placement.
+operation, and label validation into `scripts.operations_contract_validators`; GitHub issue `#614`
+keeps the report-only quality baseline aligned with the blocking scanners by using the same
+pass/ellipsis-only protocol-stub classifier before reporting executable function rows, and by
+emitting POSIX-normalized report paths for deterministic Windows/Linux evidence. The current local
+generated quality baseline reports 9,252 executable source/test/script function rows, and the
+current duplicate implementation gate reports 0 exact duplicate clusters across 2,953 source/script
+functions. The CI contract gate protects the report-only and blocking target split, the strict
+`--fail-on-duplicates` flag, and the `make lint` lane placement.
 Intentional exceptions must be implemented as measured scanner policy with tests, not by removing
 the blocking gate.
 
