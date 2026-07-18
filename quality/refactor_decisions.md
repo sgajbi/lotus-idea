@@ -39,6 +39,9 @@ Evidence:
    (`48` tests), Ruff check and format-check over touched files,
    `make quality-baseline`, `make maintainability-gate`, and
    `make duplicate-implementation-gate`.
+4. PR `#624` merged by rebase to exact-main SHA
+   `79a319c37624d62dacd35b516924521c8ddabb06`; exact-main Main Releasability
+   `29648568930` and CodeQL `29648566676` passed.
 
 ## 2026-07-18: PostgreSQL Fake Row Builder Boundary
 

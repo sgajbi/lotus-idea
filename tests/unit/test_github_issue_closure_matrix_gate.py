@@ -262,6 +262,24 @@ def test_github_issue_closure_matrix_gate_freezes_postgres_row_builder_main_trut
     assert "#620: merged-main issue cannot regress to `locally_fixed`" in errors
 
 
+def test_github_issue_closure_matrix_gate_freezes_ai_workflow_pack_fixture_main_truth(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    matrix = tmp_path / "matrix.md"
+    content = module.MATRIX_PATH.read_text(encoding="utf-8").replace(
+        "issues/623) Refactor AI workflow-pack fixture writers into capability-owned "
+        "helpers | `merged_main` |",
+        "issues/623) Refactor AI workflow-pack fixture writers into capability-owned "
+        "helpers | `locally_fixed` |",
+    )
+    matrix.write_text(content, encoding="utf-8")
+
+    errors = module.validate_issue_closure_matrix(matrix)
+
+    assert "#623: merged-main issue cannot regress to `locally_fixed`" in errors
+
+
 def test_github_issue_closure_matrix_gate_blocks_missing_issue(tmp_path: Path) -> None:
     module = _load_gate()
     matrix = tmp_path / "matrix.md"
