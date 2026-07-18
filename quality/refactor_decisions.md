@@ -6,6 +6,38 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-07-18: Review-Action API Boundary
+
+`src/app/api/review_workflow.py::record_review_action` was the next source
+hotspot left by the #603 same-pattern scan at `127` lines on exact main
+`f357d263fb95c3b2ab08462844b54a0ec711b71b`. Issue `#606` applies the same
+API-boundary lens to the human-governance review route without widening scope
+into authentication, authorization, Workbench, Gateway, or supported-feature
+promotion.
+
+The route keeps its public signature, OpenAPI metadata, response schema,
+idempotency lineage, entitlement semantics, operation events, persistence
+problem mapping, and `supportedFeaturePromoted=false` posture while delegating
+to explicit API-boundary helpers:
+
+1. `_review_action_mutation_context` for trusted caller and repository
+   mutation context construction,
+2. `_apply_review_action_request` for domain command construction and
+   application execution,
+3. `_review_action_permission_problem` for permission and entitlement failure
+   mapping,
+4. `_review_action_state_problem` and `_review_action_state_attributes` for
+   state-conflict telemetry and problem details,
+5. `_review_action_invalid_request_problem` for request validation failure
+   mapping,
+6. `_review_action_response` for persistence problem and success response
+   assembly.
+
+This is design modularity inside the existing Lotus Idea API process. It does
+not implement identity provider integration, authenticated sessions,
+token-claims, Gateway/Workbench behavior, schema changes, data migration,
+runtime topology changes, or supported-feature promotion.
+
 ## 2026-07-18: Outbox Delivery Run-Once API Boundary
 
 `src/app/api/outbox/delivery.py::post_outbox_delivery_run_once` appeared in
