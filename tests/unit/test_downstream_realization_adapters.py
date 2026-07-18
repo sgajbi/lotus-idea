@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import UTC, date, datetime
 from typing import Any
 
@@ -27,6 +28,7 @@ from app.infrastructure.downstream_realization import (
     HttpManageActionRealizationClient,
     HttpReportEvidencePackMaterializationClient,
     ManageRealizationServiceContext,
+    ReportRealizationServiceContext,
 )
 from app.ports.downstream_realization import DownstreamRealizationOutcomePosture
 
@@ -91,46 +93,85 @@ def test_advise_adapter_posts_source_safe_conversion_intent_envelope() -> None:
     assert "source_route" not in rendered
 
 
-def test_report_adapter_omits_source_routes_and_raw_hash_keys() -> None:
+def test_report_adapter_matches_owner_contract_and_omits_sensitive_fields() -> None:
     captured: dict[str, Any] = {}
 
     def handler(request: httpx.Request) -> httpx.Response:
+        captured["headers"] = dict(request.headers)
         captured["payload"] = request.read()
         return httpx.Response(202, json={"accepted": True})
 
     adapter = HttpReportEvidencePackMaterializationClient(
         DownstreamRealizationAdapterConfig(
             base_url="https://report.example",
-            submit_path="/reports/idea-evidence-intake",
+            submit_path="/reports/idea-evidence-packs",
             source_authority=SourceSystem.LOTUS_REPORT,
+            report_service_context=report_service_context(),
         ),
         client=downstream_json_client("https://report.example", httpx.MockTransport(handler)),
     )
 
-    outcome = adapter.submit_report_evidence_pack_request(report_evidence_pack())
+    outcome = adapter.submit_report_evidence_pack_request(
+        report_evidence_pack(),
+        correlation_id="corr-report",
+        trace_id="trace-report",
+        idempotency_key="report-submission-idempotency-001",
+    )
 
     assert outcome.accepted is True
     payload = httpx.Response(200, content=captured["payload"]).json()
-    assert payload["reportEvidencePackId"] == "report-evidence-pack-001"
-    assert payload["reportSourceAuthority"] == "lotus-report"
-    assert payload["renderSourceAuthority"] == "lotus-render"
-    assert payload["archiveSourceAuthority"] == "lotus-archive"
-    assert payload["createsRenderedOutput"] is False
-    assert payload["createsArchiveRecord"] is False
-    assert payload["sourceSummaries"] == [
+    assert payload == {
+        "report_evidence_pack_id": "report-evidence-pack-001",
+        "conversion_intent_id": "conversion-report-001",
+        "candidate_id": "idea_high_cash_redacted",
+        "purpose": "CLIENT_REPORT_EVIDENCE",
+        "evidence_packet_id": "iep-redacted",
+        "evidence_content_fingerprint": "sha256:evidence-redacted",
+        "source_signal_ids": ["signal-redacted"],
+        "source_summaries": [
+            {
+                "product_id": "lotus-core:PortfolioStateSnapshot:v1",
+                "source_system": "lotus-core",
+                "product_version": "v1",
+                "as_of_date": "2026-06-21",
+                "generated_at_utc": SOURCE_TIME.isoformat(),
+                "data_quality_status": "complete",
+                "freshness": "current",
+            }
+        ],
+        "reason_codes": ["review_approved_for_conversion"],
+        "report_source_authority": "lotus-report",
+        "render_source_authority": "lotus-render",
+        "archive_source_authority": "lotus-archive",
+        "boundary": "REPORT_INTAKE_ONLY",
+        "retention_policy_ref": "lotus-report:idea-evidence-retention:v1",
+        "requested_at_utc": REQUEST_TIME.isoformat(),
+        "grants_client_publication_authority": False,
+        "creates_rendered_output": False,
+        "creates_archive_record": False,
+        "producer": "lotus-idea",
+        "supportability_status": "not_certified",
+    }
+    assert captured["headers"]["x-actor-id"] == "lotus-idea-local-development"
+    assert captured["headers"]["x-caller-application"] == "lotus-idea"
+    assert captured["headers"]["x-tenant-id"] == "local-development"
+    assert captured["headers"]["x-region"] == "local"
+    assert captured["headers"]["x-correlation-id"] == "corr-report"
+    assert captured["headers"]["x-trace-id"] == "trace-report"
+    assert captured["headers"]["idempotency-key"] == "report-submission-idempotency-001"
+    assert payload["source_summaries"] == [
         {
-            "productId": "lotus-core:PortfolioStateSnapshot:v1",
-            "sourceSystem": "lotus-core",
-            "productVersion": "v1",
-            "asOfDate": "2026-06-21",
-            "generatedAtUtc": SOURCE_TIME.isoformat(),
-            "dataQualityStatus": "complete",
+            "product_id": "lotus-core:PortfolioStateSnapshot:v1",
+            "source_system": "lotus-core",
+            "product_version": "v1",
+            "as_of_date": "2026-06-21",
+            "generated_at_utc": SOURCE_TIME.isoformat(),
+            "data_quality_status": "complete",
             "freshness": "current",
         }
     ]
     rendered = str(payload)
     assert "route" not in rendered.lower()
-    assert "contentHash" not in rendered
     assert "content_hash" not in rendered
     assert "portfolio_id" not in rendered
     assert "client_id" not in rendered
@@ -367,6 +408,46 @@ def test_manage_adapter_requires_server_context() -> None:
         )
 
 
+def test_report_adapter_requires_server_context() -> None:
+    with pytest.raises(DownstreamRealizationConfigurationError, match="service context"):
+        HttpReportEvidencePackMaterializationClient(
+            DownstreamRealizationAdapterConfig(
+                base_url="https://report.example",
+                submit_path="/reports/idea-evidence-packs",
+                source_authority=SourceSystem.LOTUS_REPORT,
+            )
+        )
+
+
+def test_report_service_context_rejects_blank_required_values() -> None:
+    with pytest.raises(DownstreamRealizationConfigurationError, match="actor_id is required"):
+        ReportRealizationServiceContext(
+            actor_id=" ",
+            caller_application="lotus-idea",
+            tenant_id="local-development",
+            region="local",
+        )
+
+
+@pytest.mark.parametrize(
+    ("purpose", "expected_intake_purpose"),
+    [
+        (ReportEvidencePackPurpose.CLIENT_REVIEW_REPORT_SECTION, "CLIENT_REPORT_EVIDENCE"),
+        (ReportEvidencePackPurpose.ADVISOR_REVIEW_EVIDENCE, "ADVISOR_REVIEW_APPENDIX"),
+        (ReportEvidencePackPurpose.AUDIT_EVIDENCE, "ADVISOR_REVIEW_APPENDIX"),
+    ],
+)
+def test_report_adapter_maps_governed_purpose_to_owner_vocabulary(
+    purpose: ReportEvidencePackPurpose,
+    expected_intake_purpose: str,
+) -> None:
+    from app.infrastructure.downstream_realization import _report_evidence_pack_envelope
+
+    payload = _report_evidence_pack_envelope(replace(report_evidence_pack(), purpose=purpose))
+
+    assert payload["purpose"] == expected_intake_purpose
+
+
 def downstream_json_client(
     base_url: str,
     transport: httpx.MockTransport,
@@ -392,6 +473,15 @@ def manage_service_context() -> ManageRealizationServiceContext:
         tenant_id="local-development",
         service_identity="lotus-idea-local-development",
         capabilities="manage.write",
+    )
+
+
+def report_service_context() -> ReportRealizationServiceContext:
+    return ReportRealizationServiceContext(
+        actor_id="lotus-idea-local-development",
+        caller_application="lotus-idea",
+        tenant_id="local-development",
+        region="local",
     )
 
 

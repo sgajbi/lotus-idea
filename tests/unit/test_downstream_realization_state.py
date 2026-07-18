@@ -16,7 +16,11 @@ from app.runtime.downstream_realization_state import (
     MANAGE_TENANT_ID_ENV,
     POOL_TIMEOUT_SECONDS_ENV,
     REPORT_BASE_URL_ENV,
+    REPORT_ACTOR_ID_ENV,
+    REPORT_CALLER_APPLICATION_ENV,
+    REPORT_REGION_ENV,
     REPORT_SUBMIT_PATH_ENV,
+    REPORT_TENANT_ID_ENV,
     RETRY_INITIAL_BACKOFF_SECONDS_ENV,
     RETRY_MAX_ATTEMPTS_ENV,
     RETRY_MAX_BACKOFF_SECONDS_ENV,
@@ -50,13 +54,60 @@ def test_conversion_realization_clients_are_built_from_environment(
 def test_report_realization_client_is_built_from_environment(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setenv(REPORT_BASE_URL_ENV, "https://report.example")
-    monkeypatch.setenv(REPORT_SUBMIT_PATH_ENV, "/reports/idea-evidence-intake")
-    monkeypatch.setenv(TIMEOUT_SECONDS_ENV, "1.25")
+    configure_report_env(monkeypatch)
 
     report_client = get_report_evidence_pack_realization_client()
 
     assert get_report_evidence_pack_realization_client() is report_client
+
+
+@pytest.mark.parametrize(
+    "environment_name",
+    [
+        REPORT_ACTOR_ID_ENV,
+        REPORT_CALLER_APPLICATION_ENV,
+        REPORT_TENANT_ID_ENV,
+        REPORT_REGION_ENV,
+    ],
+)
+def test_missing_report_service_context_fails_closed(
+    monkeypatch: pytest.MonkeyPatch,
+    environment_name: str,
+) -> None:
+    configure_report_env(monkeypatch)
+    monkeypatch.delenv(environment_name, raising=False)
+
+    with pytest.raises(
+        DownstreamRealizationClientsUnavailableError,
+        match=f"{environment_name} is not configured",
+    ):
+        get_report_evidence_pack_realization_client()
+
+
+def test_report_service_context_fixture_is_rejected_outside_local_and_test(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    configure_report_env(monkeypatch)
+    monkeypatch.setenv(RUNTIME_PROFILE_ENV, "production")
+
+    with pytest.raises(
+        DownstreamRealizationClientsUnavailableError,
+        match="restricted to local and test",
+    ):
+        get_report_evidence_pack_realization_client()
+
+
+def test_invalid_report_adapter_configuration_fails_closed(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    configure_report_env(monkeypatch)
+    monkeypatch.setenv(REPORT_BASE_URL_ENV, "not-a-url")
+
+    with pytest.raises(
+        DownstreamRealizationClientsUnavailableError,
+        match="absolute HTTP",
+    ):
+        get_report_evidence_pack_realization_client()
 
 
 def test_missing_downstream_configuration_fails_closed(
@@ -238,4 +289,15 @@ def configure_conversion_env(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv(MANAGE_TENANT_ID_ENV, "local-development")
     monkeypatch.setenv(MANAGE_SERVICE_IDENTITY_ENV, "lotus-idea-local-development")
     monkeypatch.setenv(MANAGE_CAPABILITIES_ENV, "manage.write")
+    monkeypatch.setenv(TIMEOUT_SECONDS_ENV, "1.25")
+
+
+def configure_report_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv(RUNTIME_PROFILE_ENV, "local")
+    monkeypatch.setenv(REPORT_BASE_URL_ENV, "https://report.example")
+    monkeypatch.setenv(REPORT_SUBMIT_PATH_ENV, "/reports/idea-evidence-packs")
+    monkeypatch.setenv(REPORT_ACTOR_ID_ENV, "lotus-idea-local-development")
+    monkeypatch.setenv(REPORT_CALLER_APPLICATION_ENV, "lotus-idea")
+    monkeypatch.setenv(REPORT_TENANT_ID_ENV, "local-development")
+    monkeypatch.setenv(REPORT_REGION_ENV, "local")
     monkeypatch.setenv(TIMEOUT_SECONDS_ENV, "1.25")

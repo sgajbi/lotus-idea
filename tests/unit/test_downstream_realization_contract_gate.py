@@ -128,6 +128,22 @@ def test_downstream_realization_contract_gate_blocks_downstream_intake_wire_cont
     assert "manage_review intake wire contract required_server_headers drifted" in errors
 
 
+def test_downstream_realization_contract_gate_blocks_report_intake_wire_contract_drift(
+    tmp_path: Path,
+) -> None:
+    module = _load_downstream_realization_contract_gate()
+    source = ROOT / module.DOWNSTREAM_INTAKE_WIRE_CONTRACT_PATH
+    target = tmp_path / module.DOWNSTREAM_INTAKE_WIRE_CONTRACT_PATH
+    target.parent.mkdir(parents=True)
+    payload = json.loads(source.read_text(encoding="utf-8"))
+    payload["consumer_contracts"][2]["boundary"] = "request_only"
+    target.write_text(json.dumps(payload), encoding="utf-8")
+
+    errors = module._validate_downstream_intake_wire_contract(tmp_path)
+
+    assert "report_evidence intake wire contract boundary drifted" in errors
+
+
 def test_downstream_realization_contract_gate_blocks_call_before_claim_regression(
     tmp_path: Path,
 ) -> None:

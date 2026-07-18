@@ -1,6 +1,6 @@
 {
   "contract_id": "lotus-idea-downstream-intake-wire-contract",
-  "contract_version": "1.0.0",
+  "contract_version": "1.1.0",
   "repository": "lotus-idea",
   "lifecycle_status": "development_only",
   "supportability_status": "not_certified",
@@ -40,6 +40,45 @@
         "X-Tenant-Id",
         "X-Service-Identity",
         "X-Capabilities"
+      ]
+    },
+    {
+      "conversion_target": "report_evidence",
+      "owner_repository": "lotus-report",
+      "owner_route": "POST /reports/idea-evidence-packs",
+      "request_fields": [
+        "report_evidence_pack_id",
+        "conversion_intent_id",
+        "candidate_id",
+        "purpose",
+        "evidence_packet_id",
+        "evidence_content_fingerprint",
+        "source_signal_ids",
+        "source_summaries",
+        "reason_codes",
+        "report_source_authority",
+        "render_source_authority",
+        "archive_source_authority",
+        "boundary",
+        "retention_policy_ref",
+        "requested_at_utc",
+        "grants_client_publication_authority",
+        "creates_rendered_output",
+        "creates_archive_record",
+        "producer",
+        "supportability_status"
+      ],
+      "purpose_mapping": {
+        "client_review_report_section": "CLIENT_REPORT_EVIDENCE",
+        "advisor_review_evidence": "ADVISOR_REVIEW_APPENDIX",
+        "audit_evidence": "ADVISOR_REVIEW_APPENDIX"
+      },
+      "boundary": "REPORT_INTAKE_ONLY",
+      "required_server_headers": [
+        "X-Actor-Id",
+        "X-Caller-Application",
+        "X-Tenant-Id",
+        "X-Region"
       ]
     }
   ],

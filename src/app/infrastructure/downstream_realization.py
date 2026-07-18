@@ -53,6 +53,34 @@ class ManageRealizationServiceContext:
 
 
 @dataclass(frozen=True)
+class ReportRealizationServiceContext:
+    actor_id: str
+    caller_application: str
+    tenant_id: str
+    region: str
+
+    def __post_init__(self) -> None:
+        for field_name, value in (
+            ("actor_id", self.actor_id),
+            ("caller_application", self.caller_application),
+            ("tenant_id", self.tenant_id),
+            ("region", self.region),
+        ):
+            if not value.strip():
+                raise DownstreamRealizationConfigurationError(
+                    f"report realization {field_name} is required."
+                )
+
+    def request_headers(self) -> dict[str, str]:
+        return {
+            "X-Actor-Id": self.actor_id,
+            "X-Caller-Application": self.caller_application,
+            "X-Tenant-Id": self.tenant_id,
+            "X-Region": self.region,
+        }
+
+
+@dataclass(frozen=True)
 class DownstreamRealizationAdapterConfig:
     base_url: str
     submit_path: str
@@ -65,6 +93,7 @@ class DownstreamRealizationAdapterConfig:
     retry_initial_backoff_seconds: float = 0.05
     retry_max_backoff_seconds: float = 0.5
     manage_service_context: ManageRealizationServiceContext | None = None
+    report_service_context: ReportRealizationServiceContext | None = None
 
     def __post_init__(self) -> None:
         if not self.submit_path.startswith("/"):
@@ -166,6 +195,11 @@ class HttpReportEvidencePackMaterializationClient:
         client: DownstreamJsonClient | None = None,
     ) -> None:
         _require_source_authority(config, SourceSystem.LOTUS_REPORT)
+        if config.report_service_context is None:
+            raise DownstreamRealizationConfigurationError(
+                "report realization service context is required."
+            )
+        self._report_service_context = config.report_service_context
         self._config = config
         self._client = _client_from_config(config, client)
 
@@ -184,6 +218,7 @@ class HttpReportEvidencePackMaterializationClient:
             correlation_id=correlation_id,
             trace_id=trace_id,
             idempotency_key=idempotency_key,
+            additional_headers=self._report_service_context.request_headers(),
         )
 
     def close(self) -> None:
@@ -262,38 +297,47 @@ def _conversion_intent_envelope(intent: GovernedConversionIntent) -> dict[str, A
 
 def _report_evidence_pack_envelope(evidence_pack: GovernedReportEvidencePack) -> dict[str, Any]:
     return {
-        "reportEvidencePackId": evidence_pack.report_evidence_pack_id,
-        "conversionIntentId": evidence_pack.conversion_intent_id,
-        "candidateId": evidence_pack.candidate_id,
-        "purpose": evidence_pack.purpose.value,
-        "evidencePacketId": evidence_pack.evidence_packet_id,
-        "evidenceContentFingerprint": evidence_pack.evidence_content_hash,
-        "sourceSignalIds": list(evidence_pack.source_signal_ids),
-        "sourceSummaries": [
+        "report_evidence_pack_id": evidence_pack.report_evidence_pack_id,
+        "conversion_intent_id": evidence_pack.conversion_intent_id,
+        "candidate_id": evidence_pack.candidate_id,
+        "purpose": _report_intake_purpose(evidence_pack),
+        "evidence_packet_id": evidence_pack.evidence_packet_id,
+        "evidence_content_fingerprint": evidence_pack.evidence_content_hash,
+        "source_signal_ids": list(evidence_pack.source_signal_ids),
+        "source_summaries": [
             {
-                "productId": summary.product_id,
-                "sourceSystem": summary.source_system.value,
-                "productVersion": summary.product_version,
-                "asOfDate": summary.as_of_date,
-                "generatedAtUtc": summary.generated_at_utc.isoformat(),
-                "dataQualityStatus": summary.data_quality_status,
+                "product_id": summary.product_id,
+                "source_system": summary.source_system.value,
+                "product_version": summary.product_version,
+                "as_of_date": summary.as_of_date,
+                "generated_at_utc": summary.generated_at_utc.isoformat(),
+                "data_quality_status": summary.data_quality_status,
                 "freshness": summary.freshness,
             }
             for summary in evidence_pack.source_summaries
         ],
-        "reasonCodes": [reason.value for reason in evidence_pack.reason_codes],
-        "reportSourceAuthority": evidence_pack.report_source_authority.value,
-        "renderSourceAuthority": evidence_pack.render_source_authority.value,
-        "archiveSourceAuthority": evidence_pack.archive_source_authority.value,
-        "boundary": evidence_pack.boundary.value,
-        "retentionPolicyRef": evidence_pack.retention_policy_ref,
-        "requestedAtUtc": evidence_pack.requested_at_utc.isoformat(),
-        "grantsClientPublicationAuthority": evidence_pack.grants_client_publication_authority,
-        "createsRenderedOutput": evidence_pack.creates_rendered_output,
-        "createsArchiveRecord": evidence_pack.creates_archive_record,
+        "reason_codes": [reason.value for reason in evidence_pack.reason_codes],
+        "report_source_authority": evidence_pack.report_source_authority.value,
+        "render_source_authority": evidence_pack.render_source_authority.value,
+        "archive_source_authority": evidence_pack.archive_source_authority.value,
+        "boundary": "REPORT_INTAKE_ONLY",
+        "retention_policy_ref": evidence_pack.retention_policy_ref,
+        "requested_at_utc": evidence_pack.requested_at_utc.isoformat(),
+        "grants_client_publication_authority": evidence_pack.grants_client_publication_authority,
+        "creates_rendered_output": evidence_pack.creates_rendered_output,
+        "creates_archive_record": evidence_pack.creates_archive_record,
         "producer": "lotus-idea",
-        "supportabilityStatus": "not_certified",
+        "supportability_status": "not_certified",
     }
+
+
+def _report_intake_purpose(evidence_pack: GovernedReportEvidencePack) -> str:
+    purpose_by_idea_purpose = {
+        "client_review_report_section": "CLIENT_REPORT_EVIDENCE",
+        "advisor_review_evidence": "ADVISOR_REVIEW_APPENDIX",
+        "audit_evidence": "ADVISOR_REVIEW_APPENDIX",
+    }
+    return purpose_by_idea_purpose[evidence_pack.purpose.value]
 
 
 def _failure_reason(exc: DownstreamServiceError) -> str:
