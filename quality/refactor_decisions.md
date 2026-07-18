@@ -6,6 +6,35 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-07-19: PostgreSQL Runtime Trust Telemetry Loader Boundary
+
+Issue `#642` applies the Slice 19 report-only quality-baseline lens to the
+PostgreSQL runtime trust telemetry projection loader. After issue `#640`,
+`make quality-baseline` listed
+`src/app/infrastructure/postgres_runtime_trust_telemetry.py::load_runtime_trust_telemetry_summary`
+at `120` lines.
+
+The loader mixed:
+
+1. PostgreSQL cursor orchestration and summary query execution,
+2. repeated count-map SQL for source authority, freshness, supportability,
+   lifecycle, and data-lifecycle states,
+3. row decoding/defaulting for source dates, generated-at timestamps, booleans,
+   and integers,
+4. `RuntimeTrustTelemetryRepositorySummary` DTO assembly.
+
+The public loader now stays as a `7` line orchestrator and delegates to
+infrastructure-owned row loading, count-map, DTO-projection, and defaulting
+helpers. The SQL comments remain stable so fake PostgreSQL projection tests and
+operator evidence can continue to bind query ownership.
+
+This is design modularity inside the existing `lotus-idea` service. It does
+not create a telemetry service, change runtime trust telemetry semantics,
+certify a data product, change API/OpenAPI behavior, alter migrations, promote
+supported features, or prove Gateway/Workbench/client-publication readiness.
+README, wiki source, supported features, central context, and central skills
+are unchanged by explicit scope decision.
+
 ## 2026-07-19: Bond-Maturity Runtime Proof Validator Boundary
 
 Issue `#640` applies the Slice 19 report-only quality-baseline lens to the

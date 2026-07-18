@@ -1636,6 +1636,64 @@ migrations, and central skills are unchanged by explicit scope decision; no
 wiki publication is required unless later PR/mainline evidence changes
 repo-authored wiki truth.
 
+## Issue 642 PostgreSQL Runtime Trust Telemetry Loader Maintainability
+
+Issue `#642` applies the same Slice 19 quality-baseline learning to the
+PostgreSQL runtime trust telemetry projection loader. After issue `#640`, the
+current report-only quality baseline listed
+`src/app/infrastructure/postgres_runtime_trust_telemetry.py::load_runtime_trust_telemetry_summary`
+at `120` lines. The function mixed PostgreSQL cursor orchestration, summary
+query execution, repeated count-map SQL, row decoding/defaulting, timestamp and
+date projection, and `RuntimeTrustTelemetryRepositorySummary` DTO assembly.
+
+`src/app/infrastructure/postgres_runtime_trust_telemetry.py` now preserves the
+public `load_runtime_trust_telemetry_summary(connection)` loader while
+extracting:
+
+1. `_load_runtime_trust_telemetry_rows(...)` for cursor-owned summary and
+   count-map loading,
+2. `_summary_from_rows(...)` for the final repository summary DTO projection,
+3. `_load_summary_row(...)`, `_load_count_maps(...)`, and `_count_queries()`
+   for explicit query ownership,
+4. source-authority, freshness, supportability, lifecycle, and data-lifecycle
+   count-query helpers with stable SQL comments,
+5. optional-row, timestamp, date, and integer defaulting helpers.
+
+Focused validation passed:
+
+1. `python -m pytest tests/unit/runtime_trust_telemetry/test_postgres_loader.py tests/unit/runtime_trust_telemetry/test_postgres_projection.py tests/unit/runtime_trust_telemetry/test_telemetry.py -q`
+   (`11` passed),
+2. `python -m ruff check src/app/infrastructure/postgres_runtime_trust_telemetry.py tests/unit/runtime_trust_telemetry/test_postgres_loader.py tests/unit/runtime_trust_telemetry/test_postgres_projection.py tests/unit/runtime_trust_telemetry/test_telemetry.py`,
+3. `python -m ruff format --check src/app/infrastructure/postgres_runtime_trust_telemetry.py tests/unit/runtime_trust_telemetry/test_postgres_loader.py tests/unit/runtime_trust_telemetry/test_postgres_projection.py tests/unit/runtime_trust_telemetry/test_telemetry.py`,
+4. `python -m mypy src/app/infrastructure/postgres_runtime_trust_telemetry.py`,
+5. `make quality-baseline`,
+6. `make maintainability-gate`,
+7. `make duplicate-implementation-gate` with zero duplicate clusters across
+   `3,004` source/script functions,
+8. `make lint`,
+9. `make check` with `4,885` passed unit tests,
+10. strict wiki parity with `DiffCount 0`.
+
+Stranded-truth reconciliation found no unmerged remote branches against
+`origin/main` before PR preparation.
+
+The same-pattern scan covered
+#601/#603/#606/#609/#618/#620/#623/#625/#630/#633/#636/#638/#640
+maintainability evidence, current `quality/baseline_report.md`, GitHub
+duplicate searches recorded in issue `#642`, focused loader/projection/runtime
+trust telemetry tests, the codebase review ledger, the issue closure matrix,
+refactor decisions, and issue-discovery ledger `#225`. Closed #618 owns fake
+SQL dispatch; it does not own this production PostgreSQL telemetry projection
+loader. The public loader moved from `120` lines to a `7` line orchestrator;
+every executable helper is `39` lines or smaller.
+
+This is internal infrastructure modularity only. It does not change runtime
+trust telemetry semantics, API/OpenAPI behavior, migrations, authentication or
+authorization infrastructure, Core, Gateway, Workbench, data-mesh
+certification, external-publication authority, runtime topology, wiki source,
+README, supported features, or supported-feature promotion. No wiki publication
+is required unless later PR/mainline evidence changes repo-authored wiki truth.
+
 ## Issue 640 Bond-Maturity Runtime Validator Maintainability
 
 Issue `#640` applies the same Slice 19 quality-baseline learning to the Core
