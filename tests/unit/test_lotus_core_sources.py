@@ -452,6 +452,31 @@ def test_lotus_core_adapter_reports_bond_maturity_window_empty() -> None:
     assert evidence.maturity_diagnostic == "core_maturity_window_empty"
 
 
+def test_lotus_core_adapter_preserves_bond_maturity_camel_case_currentness() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200,
+            json=_maturity_summary_payload(
+                extra={
+                    "source_evidence_current": None,
+                    "sourceEvidenceCurrent": True,
+                }
+            ),
+        )
+
+    evidence = _adapter(httpx.MockTransport(handler)).fetch_bond_maturity_evidence(
+        _bond_maturity_request()
+    )
+
+    assert evidence.source_evidence_current is True
+    holdings_ref = evidence.holdings_ref
+    assert holdings_ref is not None
+    assert holdings_ref.product_id == "lotus-core:HoldingsAsOf:v1"
+    maturity_fact_ref = evidence.maturity_fact_ref
+    assert maturity_fact_ref is not None
+    assert maturity_fact_ref.product_id == "lotus-core:PortfolioMaturitySummary:v1"
+
+
 def test_lotus_core_adapter_maps_missing_maturing_count_to_source_unavailable() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(
