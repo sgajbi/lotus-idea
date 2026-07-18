@@ -402,6 +402,14 @@ runtime modularity:
     row-only; evidence replay is candidate-only. Full snapshots are reserved
     for explicit administrative/test/DR behavior. Focused unit and PostgreSQL
     tests mirror the package.
+11. `app.infrastructure.postgres_snapshot_writes` owns PostgreSQL snapshot
+    replacement and detail-write helpers for full snapshot/admin/test/DR flows.
+    Keep candidate snapshot inserts, snapshot idempotency inserts, downstream
+    submission inserts, lifecycle/audit/review/feedback/conversion/report
+    detail inserts, and AI explanation lineage detail insertion out of the
+    top-level `postgres_repository.py` class. Ordinary request paths should
+    still use bounded mutation/projection modules rather than broad snapshot
+    hydration.
 
 Design modularity does not imply runtime modularity. Do not introduce a new
 process, service, queue, worker class, or separately scalable boundary unless
@@ -1392,27 +1400,32 @@ Recent issue-derived patterns to preserve:
 11. PostgreSQL mutation paths need optimistic same-candidate guards and
     database idempotency-collision retry; full-snapshot mutation helpers must
     not silently overwrite stale state or leak raw primary-key collisions,
-12. persisted AI explanation lineage writes need both API-level idempotency and
+12. PostgreSQL snapshot replacement write helpers belong in
+    `app.infrastructure.postgres_snapshot_writes`; do not add new
+    snapshot/detail insert SQL back to `postgres_repository.py`. Preserve the
+    distinction between full snapshot/admin/test/DR behavior and ordinary
+    bounded request-path mutations/projections,
+13. persisted AI explanation lineage writes need both API-level idempotency and
     domain request-id replay protection; same-key replay/conflict and
     distinct-key request-id conflict must remain separately tested,
-13. AI explanation evaluation must use the single governed workflow-pack
+14. AI explanation evaluation must use the single governed workflow-pack
     contract in `app.domain.ai_governance`: public request identity
     `lotus-ai:idea-explanation:v1` + version `v1` + evaluator
     `lotus-ai:governed-verifier:v1` maps deliberately to the proof identity
     `idea_explanation.pack@v1`; arbitrary caller-supplied pack identities must
     fail closed with product-safe `invalid_ai_workflow_pack` before candidate
     lookup or lineage persistence,
-14. privileged operator run-once mutations need explicit operator run identity
+15. privileged operator run-once mutations need explicit operator run identity
    and idempotency before event claims or external side effects,
-15. release evidence artifacts must name their scope, target artifact or
+16. release evidence artifacts must name their scope, target artifact or
     dependency source, generator, path, and non-proof boundary before being cited
     as release proof,
-16. runtime dependency SBOM evidence must come from the resolved runtime
+17. runtime dependency SBOM evidence must come from the resolved runtime
     dependency closure in `requirements/runtime-resolved.lock.txt`, not from
     direct-only runtime requirements or an ambiguous CI environment; the
     supported-name `requirements/requirements.txt` exists only as a gated
     mirror for GitHub Dependency Graph support,
-17. Python dependency updates must move root pins and runtime lock evidence
+18. Python dependency updates must move root pins and runtime lock evidence
     through the governed `make dependency-refresh` path. Dependabot must not
     open a separate `/requirements` lock-only stream; lock refreshes should
     regenerate both `requirements/runtime-resolved.lock.txt` and
@@ -1421,33 +1434,33 @@ Recent issue-derived patterns to preserve:
     `open-pull-requests-limit: 0` while RFC implementation is active; security
     alerts and security-update posture remain governed through the GitHub
     Security tab and `make github-security-posture-check`,
-18. GitHub Actions shell commands that interpolate runtime environment values
+19. GitHub Actions shell commands that interpolate runtime environment values
     such as `${GITHUB_REPOSITORY}` or `${GITHUB_RUN_ID}` must quote the whole
     composed argument so workflow lint remains clean and CI signal evidence
     jobs do not accumulate avoidable ShellCheck annotations.
-19. Docker build and scan evidence must be paired with bounded packaged-runtime
+20. Docker build and scan evidence must be paired with bounded packaged-runtime
     startup and health-surface smoke proof before claiming release image
     confidence,
-20. generated proof and quality evidence must be reproducible from current
+21. generated proof and quality evidence must be reproducible from current
     gate rules or be documented as on-demand evidence rather than current proof,
-21. ignored report-only artifacts must not be cited as durable current-state
+22. ignored report-only artifacts must not be cited as durable current-state
     proof unless a deterministic committed-artifact drift gate exists,
-22. documentation should record the durable rule, not only the one-off fix,
-23. supportability, readiness, health-state, and data-quality vocabulary must
+23. documentation should record the durable rule, not only the one-off fix,
+24. supportability, readiness, health-state, and data-quality vocabulary must
     not be treated as freshness-current evidence unless a source-owned freshness
     field explicitly uses governed freshness vocabulary.
-24. dashboard and alert source-contract validation should be pattern-backed with a
+25. dashboard and alert source-contract validation should be pattern-backed with a
     machine-readable contract, concrete Grafana/Prometheus/runbook artifacts,
     proof gates, drift tests, and explicit non-proof boundaries. Runtime
     certification additionally requires environment-bound provisioning, query,
     rule-evaluation, delivery, and deployment evidence; do not rely on a metric
     catalog or static files alone for operator visibility claims.
-25. mutating workflow idempotency must be true in both runtime behavior and
+26. mutating workflow idempotency must be true in both runtime behavior and
     OpenAPI contract truth. Routes that require `Idempotency-Key` should use the
     shared `app.api.idempotency` route list and validation helpers, and
     `make api-idempotency-boundary-gate` must fail optional or defaulted
     `Idempotency-Key` OpenAPI headers for certified idempotent mutations.
-26. Docker runtime images should install the resolved runtime dependency lock
+27. Docker runtime images should install the resolved runtime dependency lock
     before copying application source, then install the local service package
     with `--no-deps` after `COPY src`; `.dockerignore` must keep generated
     coverage, SBOM, quality-report, and proof-output artifacts out of Docker
@@ -1457,7 +1470,7 @@ Recent issue-derived patterns to preserve:
     `make ci-contract-gate` must catch source-before-dependency-install
     ordering, dependency reinstall drift, Docker-context generated-artifact
     parity drift, and declared-but-unpackaged worker assets.
-27. release images must be commit-tagged, CI-published only, signed, attested,
+28. release images must be commit-tagged, CI-published only, signed, attested,
     and promoted by digest. Because an image cannot embed its own final
     registry digest without changing that digest, `lotus.image-identity.v1`
     separates OCI build identity from registry/deployment identity. The
@@ -1481,7 +1494,7 @@ Recent issue-derived patterns to preserve:
     Compose must also configure the distinct Advise, Manage, and Report
     realization base/path pairs. Generic source-read URLs are not realization
     configuration; the CI Compose runtime contract blocks that substitution.
-28. duplicate-implementation controls now split report-only evidence from
+29. duplicate-implementation controls now split report-only evidence from
     blocking enforcement. `make duplicate-implementation-inventory` scans exact
     first-party function-body duplicates across `src/app` and `scripts`, writes
     no artifacts, and reports the inventory for review. `make
@@ -1498,7 +1511,7 @@ Recent issue-derived patterns to preserve:
     resolution in `scripts/proof_generator_io.py`, removing known
     duplicate function-body clusters while preserving family-specific proof
     policy and generator argument behavior.
-29. Report-only maintainability baselines are issue-discovery inputs, not
+30. Report-only maintainability baselines are issue-discovery inputs, not
     permission to stop at the first local fix. When a Slice 19 hardening issue
     comes from a near-threshold proof, readiness, run-once, operator, or API
     orchestration function, run `make quality-baseline` with the blocking
@@ -1513,7 +1526,7 @@ Recent issue-derived patterns to preserve:
     `evaluate_mandate_health_signal` moved from 127 to 15 lines while preserving
     source-safe blockers, entitlement semantics, no-supported-feature posture,
     and runtime topology.
-30. Route-owned runtimes must consume their own cleanup hooks. Source-ingestion
+31. Route-owned runtimes must consume their own cleanup hooks. Source-ingestion
     run-once builds Core HTTP clients through `SourceIngestionRuntime`; the API
     path must close the runtime after accepted or source-unavailable execution
     and must not rely on worker-only cleanup semantics. The same pattern applies
@@ -1523,21 +1536,21 @@ Recent issue-derived patterns to preserve:
     not product outcomes: route-owned `close()` failures must be bounded to
     source-safe suppressed operation events and must not replace already
     computed completed, replayed, conflict, or blocked run-once responses.
-31. Run-once source-ingestion manifests are intentionally small bounded
+32. Run-once source-ingestion manifests are intentionally small bounded
     operator actions. `maxItems` and raw `workItems` must stay at or below the
     code-owned 100-item ceiling; larger ingestion requires a separately
     designed chunked or scheduled workflow with capacity evidence.
-32. Operation metric source-authority vocabulary must be code-owned. Runtime
+33. Operation metric source-authority vocabulary must be code-owned. Runtime
     `OperationEvent`, operation metric contracts, operator workflow contracts,
     dashboards, and alert proof gates must consume the same governed
     `OPERATION_EVENT_SOURCE_AUTHORITIES` set instead of duplicating partial
     allowlists.
-33. Keep context holistic. Detailed GitHub issue closure evidence belongs in
+34. Keep context holistic. Detailed GitHub issue closure evidence belongs in
     `docs/architecture/GITHUB-ISSUE-CLOSURE-MATRIX.md` and is enforced by
     `make github-issue-closure-matrix-gate`; this context file should retain
     durable patterns, boundaries, commands, and routing rules instead of
     becoming a repeated per-issue evidence dump.
-32. Data-lifecycle controls must cover every access path and terminal phase,
+35. Data-lifecycle controls must cover every access path and terminal phase,
     not only the primary mutation. Direct detail and downstream lookups must
     exclude erased/purged aggregates; new delivery claims must share the
     lifecycle lock; erasure must pseudonymize both prior audit actors and the
@@ -1547,11 +1560,11 @@ Recent issue-derived patterns to preserve:
     sanitized correlation and trace on the immutable operation rather than
     treating request logs as durable audit. Pin these
     invariants with real PostgreSQL restart and concurrency tests.
-33. Retention references are authority-bearing contract values. Never accept a
+36. Retention references are authority-bearing contract values. Never accept a
     caller-chosen non-blank value as policy. Map only versioned, governed
     external references to local policy, fail closed for unknown values, and
     keep legal/privacy approval outside Lotus Idea.
-34. Blocker-clearing proof must declare exactly one evidence class:
+37. Blocker-clearing proof must declare exactly one evidence class:
     `source_contract`, `test_execution`, `ci_execution`, `runtime_execution`,
     `deployment`, or `production_certification`. File presence, Make target
     text, and workflow narrative are source-contract evidence, not execution.
@@ -1565,7 +1578,7 @@ Recent issue-derived patterns to preserve:
     bind the ordered authority collection to a canonical digest, and name any
     consumer-only validation scope as an invalid full proof. Do not infer
     mainline certification eligibility from file presence or token scans.
-35. Durable repository proof is owned by the bounded
+38. Durable repository proof is owned by the bounded
     `app.application.durable_repository_proof` package, with contract, JUnit
     receipt mapping, and builder modules. Its entrypoints live under
     `scripts/persistence/`, and repository hygiene blocks the retired flat
@@ -1578,7 +1591,7 @@ Recent issue-derived patterns to preserve:
     receipt JSON loading are shared through `app.application.ci_execution_evidence`
     and `scripts.proof_generator_io`; capability packages retain only their
     own trusted workflow, assertion, blocker, and no-claim policy.
-36. Source-ingestion v2 evidence is `runtime_execution` only when the
+39. Source-ingestion v2 evidence is `runtime_execution` only when the
     capability-owned `source_ingestion_runtime_evidence` policy validates
     actual application-use-case results. Require exact current Core product
     refs, accepted/replayed-only decisions, one persisted-record receipt per
@@ -1590,14 +1603,14 @@ Recent issue-derived patterns to preserve:
     the retired flat v1 paths. This is design modularity within the existing
     API/worker deployable and shared Idea PostgreSQL boundary, not a new
     service or database.
-37. Integration and E2E API clients must be created through
+40. Integration and E2E API clients must be created through
     `tests.support.http.managed_test_client`. The autouse integration and E2E
     fixtures own application lifespan and deterministic client shutdown per test;
     direct FastAPI or Starlette `TestClient` construction is blocked by
     `make test-client-lifecycle-gate` through `make lint`. This prevents
     cumulative event-loop socket exhaustion on Windows and ensures shutdown
     hooks are exercised without scattering cleanup logic across test modules.
-38. Platform-mesh event contracts, declared consumers, source-manifest entries,
+41. Platform-mesh event contracts, declared consumers, source-manifest entries,
     and generated catalog entries are `source_contract` evidence. They may add
     provenance to outbox readiness but must not clear
     `platform_mesh_event_publication_proof_missing` or claim runtime execution,
@@ -1605,7 +1618,7 @@ Recent issue-derived patterns to preserve:
     certification, downstream delivery, or supported-feature promotion. Keep
     this proof family under capability-owned `outbox/platform_mesh/` packages;
     repository hygiene prohibits the retired flat publication-proof paths.
-39. Lotus AI workflow-pack phase specs, registry seed declarations, bindings,
+42. Lotus AI workflow-pack phase specs, registry seed declarations, bindings,
     queue policy, supportability source, and tests are `source_contract`
     evidence. Keep this family under capability-owned
     `ai_workflow_pack_registration/` application, script, and test packages.
@@ -1613,7 +1626,7 @@ Recent issue-derived patterns to preserve:
     `workflow_pack_runtime_contract_not_certified`; it cannot claim runtime
     registry observation, deployment, production certification, provider
     execution, Workbench proof, client publication, or feature promotion.
-40. A sibling Report contract and static route declaration are
+43. A sibling Report contract and static route declaration are
     `source_contract` evidence, not live intake proof. Keep the application
     policy, thin generator, gate, and focused tests under capability-owned
     `report/` packages. A valid artifact adds provenance only, clears no
@@ -1622,7 +1635,7 @@ Recent issue-derived patterns to preserve:
     isolation, and request-execution evidence from the owning Report runtime.
     Never infer materialization, render, archive, publication, certification,
     or supported-feature posture from route declarations.
-41. A sibling Report materialization contract is also `source_contract`
+44. A sibling Report materialization contract is also `source_contract`
     evidence, even when that sibling contract declares an implemented route or
     records report-owned execution claims. Keep this family under the
     capability-owned `report/` application, script, and test packages. The v2
@@ -1634,7 +1647,7 @@ Recent issue-derived patterns to preserve:
     evidence from the owning Report/Render/Archive runtime can change those
     blockers; source declarations must never be projected into a current target
     route, readiness status, or supportability status.
-42. The Idea Report consumer may submit the Report materialization route only
+45. The Idea Report consumer may submit the Report materialization route only
     after resolving the evidence pack's persisted candidate record. Project
     only the trusted `portfolio_id`; do not add raw scope to audits, public
     DTOs, or persisted evidence packs. Require all source summaries to carry
@@ -1644,7 +1657,7 @@ Recent issue-derived patterns to preserve:
     scope, and fails closed outside `local` and `test` until `#380` production
     identity prerequisites are available. This consumer mapping is not Report
     job, Render, Archive, publication, or supported-feature evidence.
-43. Platform source-manifest and generated-catalog inclusion are
+46. Platform source-manifest and generated-catalog inclusion are
     `source_contract` claims. Keep this family under capability-owned
     `data_mesh/` application, script, and test packages. Bind each authoritative
     sibling platform input by repository, ref, and SHA-256, reject unknown
@@ -1655,7 +1668,7 @@ Recent issue-derived patterns to preserve:
     certification, Gateway/Workbench discovery, deployment, production
     certification, or supported-feature promotion. This remains design
     modularity inside the existing Lotus Idea deployable.
-43. Deterministic workflow lint must not depend on GitHub pull-request diff
+47. Deterministic workflow lint must not depend on GitHub pull-request diff
     availability. Configure the pinned actionlint action with a blocking local
     reporter. CI signal evidence must consume only authoritative upstream job
     conclusions from the native GitHub Actions `needs` context, discard all job

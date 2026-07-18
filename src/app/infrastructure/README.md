@@ -14,4 +14,5 @@ Current adapters include:
    handoff adapter foundations. They are not live downstream realization proof
    until owning repositories certify routes, acceptance behavior, and product
    evidence.
-4. `postgres_repository.py` for the opt-in durable repository path.
+4. `postgres_repository.py` for the opt-in durable repository path, with
+   snapshot replacement/detail-write SQL owned by `postgres_snapshot_writes.py`.

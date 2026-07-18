@@ -13,6 +13,7 @@ REQUIRED_AI_LINEAGE_STORE_EVIDENCE_REFS = (
     "src/app/application/ai_governance.py",
     "src/app/domain/ai_lineage_persistence.py",
     "src/app/infrastructure/postgres_repository.py",
+    "src/app/infrastructure/postgres_snapshot_writes.py",
     "tests/integration/test_postgres_runtime_integration.py",
     "make postgres-integration-gate",
     "Main Releasability / PostgreSQL Runtime Proof",

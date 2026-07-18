@@ -23,9 +23,9 @@ def test_review_identity_contract_gate_rejects_non_atomic_postgres_identity_clai
         target = tmp_path / relative_path
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
-    repository_path = tmp_path / "src/app/infrastructure/postgres_repository.py"
-    repository_path.write_text(
-        repository_path.read_text(encoding="utf-8").replace(
+    snapshot_writes_path = tmp_path / "src/app/infrastructure/postgres_snapshot_writes.py"
+    snapshot_writes_path.write_text(
+        snapshot_writes_path.read_text(encoding="utf-8").replace(
             "ON CONFLICT (review_decision_id) DO NOTHING",
             "removed review identity conflict handling",
         ),

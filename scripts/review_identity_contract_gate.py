@@ -21,7 +21,7 @@ REQUIRED_FRAGMENTS = {
         "def _review_identity_result",
         "def _review_identity_record",
     ),
-    "src/app/infrastructure/postgres_repository.py": (
+    "src/app/infrastructure/postgres_snapshot_writes.py": (
         "ON CONFLICT (review_decision_id) DO NOTHING",
         "ON CONFLICT (feedback_event_id) DO NOTHING",
         "raise ConcurrentReviewIdentityMutationError",
