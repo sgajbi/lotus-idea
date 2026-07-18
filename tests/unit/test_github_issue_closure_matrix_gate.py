@@ -108,6 +108,20 @@ def test_github_issue_closure_matrix_gate_requires_postgres_row_builder_issue(
     assert "Missing actionable issue rows: #620" in errors
 
 
+def test_github_issue_closure_matrix_gate_requires_ai_workflow_pack_fixture_issue(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    matrix = tmp_path / "matrix.md"
+    content = module.MATRIX_PATH.read_text(encoding="utf-8")
+    content = "\n".join(line for line in content.splitlines() if "[#623]" not in line)
+    matrix.write_text(content, encoding="utf-8")
+
+    errors = module.validate_issue_closure_matrix(matrix)
+
+    assert "Missing actionable issue rows: #623" in errors
+
+
 def test_github_issue_closure_matrix_gate_requires_inventory_closure_issue(
     tmp_path: Path,
 ) -> None:
