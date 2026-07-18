@@ -49,6 +49,14 @@ class _CashWeightEvidence:
     diagnostic: str
 
 
+@dataclass(frozen=True)
+class _BondMaturitySourceFacts:
+    next_maturity_date: date | None
+    maturing_position_count: int
+    holdings_ref: SourceRef
+    maturity_fact_ref: SourceRef
+
+
 class LotusCoreHighCashSourceAdapter:
     def __init__(
         self,
@@ -306,115 +314,99 @@ class LotusCoreHighCashSourceAdapter:
                 raise CoreSourceEntitlementDenied from exc
             raise CoreSourceUnavailable(code=exc.code) from exc
 
-        next_maturity_date = _explicit_next_maturity_date(maturity_summary_payload)
-        maturing_position_count = _explicit_maturing_position_count(maturity_summary_payload)
-        maturity_fact_ref = _source_ref(
-            maturity_summary_payload,
+        source_facts = _bond_maturity_source_facts(maturity_summary_payload)
+        return _bond_maturity_evidence(maturity_summary_payload, source_facts)
+
+
+def _bond_maturity_source_facts(payload: dict[str, Any]) -> _BondMaturitySourceFacts:
+    holdings_ref = _holdings_lineage_ref_or_none(payload)
+    if holdings_ref is None:
+        raise CoreSourceUnavailable(code="core_maturity_upstream_holdings_ref_missing")
+    return _BondMaturitySourceFacts(
+        next_maturity_date=_explicit_next_maturity_date(payload),
+        maturing_position_count=_explicit_maturing_position_count(payload),
+        holdings_ref=holdings_ref,
+        maturity_fact_ref=_source_ref(
+            payload,
             product_id=MATURITY_SUMMARY_PRODUCT_ID,
             route="/portfolios/{portfolio_id}/maturity-summary",
-        )
-        holdings_ref = _holdings_lineage_ref_or_none(maturity_summary_payload)
-        if holdings_ref is None:
-            raise CoreSourceUnavailable(code="core_maturity_upstream_holdings_ref_missing")
-        return CoreBondMaturityEvidence(
-            source_reported_next_maturity_date=next_maturity_date,
-            source_reported_maturing_position_count=maturing_position_count,
-            holdings_ref=holdings_ref,
-            maturity_fact_ref=maturity_fact_ref,
-            response_product_name=_text_field(
-                maturity_summary_payload, "product_name", "productName"
-            ),
-            response_product_version=_text_field(
-                maturity_summary_payload, "product_version", "productVersion"
-            ),
-            response_tenant_id=_text_field(maturity_summary_payload, "tenant_id", "tenantId"),
-            response_portfolio_id=_text_field(
-                maturity_summary_payload, "portfolio_id", "portfolioId"
-            ),
-            source_product_name=_text_field(
-                maturity_summary_payload, "source_product_name", "sourceProductName"
-            ),
-            source_product_version=_text_field(
-                maturity_summary_payload, "source_product_version", "sourceProductVersion"
-            ),
-            window_start_date=_optional_date_field(
-                maturity_summary_payload, "window_start_date", "windowStartDate"
-            ),
-            window_end_date=_optional_date_field(
-                maturity_summary_payload, "window_end_date", "windowEndDate"
-            ),
-            horizon_days=_int_field(maturity_summary_payload, "horizon_days", "horizonDays"),
-            include_projected=_optional_bool_field(
-                maturity_summary_payload, "include_projected", "includeProjected"
-            ),
-            maturity_basis=_text_field(maturity_summary_payload, "maturity_basis", "maturityBasis"),
-            maturity_bearing_holding_count=_int_field(
-                maturity_summary_payload,
-                "maturity_bearing_holding_count",
-                "maturityBearingHoldingCount",
-            ),
-            missing_maturity_date_count=_int_field(
-                maturity_summary_payload,
-                "missing_maturity_date_count",
-                "missingMaturityDateCount",
-            ),
-            unsupported_maturity_feature_count=_int_field(
-                maturity_summary_payload,
-                "unsupported_maturity_feature_count",
-                "unsupportedMaturityFeatureCount",
-            ),
+        ),
+    )
+
+
+def _bond_maturity_evidence(
+    payload: dict[str, Any],
+    source_facts: _BondMaturitySourceFacts,
+) -> CoreBondMaturityEvidence:
+    return CoreBondMaturityEvidence(
+        source_reported_next_maturity_date=source_facts.next_maturity_date,
+        source_reported_maturing_position_count=source_facts.maturing_position_count,
+        holdings_ref=source_facts.holdings_ref,
+        maturity_fact_ref=source_facts.maturity_fact_ref,
+        response_product_name=_text_field(payload, "product_name", "productName"),
+        response_product_version=_text_field(payload, "product_version", "productVersion"),
+        response_tenant_id=_text_field(payload, "tenant_id", "tenantId"),
+        response_portfolio_id=_text_field(payload, "portfolio_id", "portfolioId"),
+        source_product_name=_text_field(payload, "source_product_name", "sourceProductName"),
+        source_product_version=_text_field(
+            payload, "source_product_version", "sourceProductVersion"
+        ),
+        window_start_date=_optional_date_field(payload, "window_start_date", "windowStartDate"),
+        window_end_date=_optional_date_field(payload, "window_end_date", "windowEndDate"),
+        horizon_days=_int_field(payload, "horizon_days", "horizonDays"),
+        include_projected=_optional_bool_field(payload, "include_projected", "includeProjected"),
+        maturity_basis=_text_field(payload, "maturity_basis", "maturityBasis"),
+        maturity_bearing_holding_count=_int_field(
+            payload,
+            "maturity_bearing_holding_count",
+            "maturityBearingHoldingCount",
+        ),
+        missing_maturity_date_count=_int_field(
+            payload,
+            "missing_maturity_date_count",
+            "missingMaturityDateCount",
+        ),
+        unsupported_maturity_feature_count=_int_field(
+            payload,
+            "unsupported_maturity_feature_count",
+            "unsupportedMaturityFeatureCount",
+        ),
+        supportability_status=_text_field(payload, "supportability_status", "supportabilityStatus"),
+        supportability_reasons=_text_sequence_field(
+            payload, "supportability_reasons", "supportabilityReasons"
+        ),
+        request_fingerprint=_text_field(payload, "request_fingerprint", "requestFingerprint"),
+        snapshot_id=_text_field(payload, "snapshot_id", "snapshotId"),
+        source_batch_fingerprint=_text_field(
+            payload,
+            "source_batch_fingerprint",
+            "sourceBatchFingerprint",
+        ),
+        response_content_hash=_text_field(payload, "content_hash", "contentHash"),
+        response_source_digest=_text_field(payload, "source_digest", "sourceDigest"),
+        upstream_product_name=_lineage_text_field(payload, "upstream_product"),
+        upstream_content_hash=_lineage_text_field(payload, "upstream_content_hash"),
+        restatement_version=_text_field(payload, "restatement_version", "restatementVersion"),
+        reconciliation_status=_text_field(payload, "reconciliation_status", "reconciliationStatus"),
+        latest_evidence_at_utc=_optional_datetime_field(
+            payload,
+            "latest_evidence_timestamp",
+            "latestEvidenceTimestamp",
+        ),
+        source_evidence_current=_bool_field(payload, "source_evidence_current")
+        or _bool_field(payload, "sourceEvidenceCurrent"),
+        policy_version=_text_field(payload, "policy_version", "policyVersion"),
+        source_correlation_id=_text_field(payload, "correlation_id", "correlationId"),
+        maturity_diagnostic=_bond_maturity_diagnostic(
+            next_maturity_date_present=source_facts.next_maturity_date is not None,
+            maturing_position_count=source_facts.maturing_position_count,
             supportability_status=_text_field(
-                maturity_summary_payload, "supportability_status", "supportabilityStatus"
+                payload,
+                "supportability_status",
+                "supportabilityStatus",
             ),
-            supportability_reasons=_text_sequence_field(
-                maturity_summary_payload, "supportability_reasons", "supportabilityReasons"
-            ),
-            request_fingerprint=_text_field(
-                maturity_summary_payload, "request_fingerprint", "requestFingerprint"
-            ),
-            snapshot_id=_text_field(maturity_summary_payload, "snapshot_id", "snapshotId"),
-            source_batch_fingerprint=_text_field(
-                maturity_summary_payload,
-                "source_batch_fingerprint",
-                "sourceBatchFingerprint",
-            ),
-            response_content_hash=_text_field(
-                maturity_summary_payload, "content_hash", "contentHash"
-            ),
-            response_source_digest=_text_field(
-                maturity_summary_payload, "source_digest", "sourceDigest"
-            ),
-            upstream_product_name=_lineage_text_field(maturity_summary_payload, "upstream_product"),
-            upstream_content_hash=_lineage_text_field(
-                maturity_summary_payload, "upstream_content_hash"
-            ),
-            restatement_version=_text_field(
-                maturity_summary_payload, "restatement_version", "restatementVersion"
-            ),
-            reconciliation_status=_text_field(
-                maturity_summary_payload, "reconciliation_status", "reconciliationStatus"
-            ),
-            latest_evidence_at_utc=_optional_datetime_field(
-                maturity_summary_payload,
-                "latest_evidence_timestamp",
-                "latestEvidenceTimestamp",
-            ),
-            source_evidence_current=_bool_field(maturity_summary_payload, "source_evidence_current")
-            or _bool_field(maturity_summary_payload, "sourceEvidenceCurrent"),
-            policy_version=_text_field(maturity_summary_payload, "policy_version", "policyVersion"),
-            source_correlation_id=_text_field(
-                maturity_summary_payload, "correlation_id", "correlationId"
-            ),
-            maturity_diagnostic=_bond_maturity_diagnostic(
-                next_maturity_date_present=next_maturity_date is not None,
-                maturing_position_count=maturing_position_count,
-                supportability_status=_text_field(
-                    maturity_summary_payload,
-                    "supportability_status",
-                    "supportabilityStatus",
-                ),
-            ),
-        )
+        ),
+    )
 
 
 def _holdings_lineage_ref_or_none(payload: dict[str, Any]) -> SourceRef | None:
