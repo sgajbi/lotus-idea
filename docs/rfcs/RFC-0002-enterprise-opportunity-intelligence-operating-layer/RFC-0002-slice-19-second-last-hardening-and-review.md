@@ -24,6 +24,53 @@ Perform the full engineering review before final closure.
 
 ## Current Implementation Evidence
 
+Issue `#645` applies the Slice 19 quality-baseline learning to the
+PostgreSQL repository mutating workflow regression. After issue `#642`, the
+current report-only quality baseline listed
+`tests/unit/test_postgres_repository.py::test_postgres_repository_round_trips_mutating_workflow_details`
+at `178` lines. The test proved important PostgreSQL workflow behavior but
+mixed candidate setup, lifecycle transition persistence, review action,
+feedback, conversion intent/outcome, report evidence-pack persistence,
+evidence replay, idempotency prechecks, lookup proof, outbox ordering,
+recovered snapshot assertions, and replacement snapshot round-trip in one
+function.
+
+`tests/unit/test_postgres_repository_mutating_workflow.py` now owns this
+regression. The public test is a short orchestrator over named test-support
+helpers for seed candidate setup, workflow mutation execution, persistence
+decision proof, replay/precheck evidence, conversion lookup proof, recovered
+snapshot assertions, outbox ordering, and replacement snapshot round-trip.
+`tests/unit/test_postgres_repository.py` moved from `1,179` to `992` lines;
+the new focused workflow module is `334` lines.
+
+Focused validation passed:
+
+1. `python -m ruff format --check tests/unit/test_postgres_repository.py tests/unit/test_postgres_repository_mutating_workflow.py`,
+2. `python -m ruff check tests/unit/test_postgres_repository.py tests/unit/test_postgres_repository_mutating_workflow.py`,
+3. `python -m mypy tests/unit/test_postgres_repository.py tests/unit/test_postgres_repository_mutating_workflow.py`,
+4. `python -m pytest tests/unit/test_postgres_repository.py tests/unit/test_postgres_repository_mutating_workflow.py -q`
+   with `19` tests,
+5. `make quality-baseline`,
+6. `make maintainability-gate`,
+7. `make duplicate-implementation-gate` with zero duplicate clusters across
+   `3,004` source/script functions.
+
+The same-pattern scan covered
+#601/#603/#606/#609/#618/#620/#623/#625/#630/#633/#636/#638/#640/#642
+maintainability evidence, current `quality/baseline_report.md`, GitHub
+searches for `test_postgres_repository_round_trips_mutating_workflow_details`,
+`postgres repository workflow details maintainability`, and
+`mutating workflow details quality baseline`, the codebase review ledger, the
+issue closure matrix, refactor decisions, and issue-discovery ledger `#225`.
+Closed issue `#222` owns the production row-scoped PostgreSQL write change, not
+this test-support decomposition.
+
+This is internal test-support modularity only. It does not change production
+PostgreSQL adapters, schema, migrations, API/OpenAPI behavior,
+authentication or authorization infrastructure, Core, Gateway, Workbench,
+data-product support, external-publication authority, runtime topology,
+wiki source, README, supported features, or supported-feature promotion.
+
 Issue `#346` adds deterministic release-compliance review evidence. The
 repository now reconciles exact runtime and CI locks to a versioned SPDX policy,
 generates notices reproducibly, fails closed on unapproved or incomplete

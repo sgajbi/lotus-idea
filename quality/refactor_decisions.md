@@ -6,6 +6,62 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-07-19: PostgreSQL Mutating Workflow Test Boundary
+
+Issue `#645` applies the Slice 19 report-only quality-baseline lens to the
+PostgreSQL repository mutating workflow regression. After issue `#642`,
+`make quality-baseline` listed
+`tests/unit/test_postgres_repository.py::test_postgres_repository_round_trips_mutating_workflow_details`
+at `178` lines.
+
+The test mixed:
+
+1. review-ready and approved candidate setup,
+2. lifecycle transition persistence,
+3. review action and feedback persistence,
+4. conversion intent and outcome persistence,
+5. report evidence-pack persistence,
+6. evidence replay and idempotency prechecks,
+7. conversion/report lookup assertions,
+8. recovered snapshot and outbox ordering assertions,
+9. replacement snapshot round-trip assertions.
+
+The regression now lives in
+`tests/unit/test_postgres_repository_mutating_workflow.py`. Its public test is
+a short orchestrator over named test-support helpers for seed candidates,
+workflow mutation execution, persistence decisions, replay/precheck evidence,
+lookup evidence, recovered snapshot assertions, and replacement snapshot
+round-trip proof. `tests/unit/test_postgres_repository.py` moved from `1,179`
+to `992` lines, and the focused workflow module is `334` lines.
+
+Focused validation passed:
+
+1. `python -m ruff format --check tests/unit/test_postgres_repository.py tests/unit/test_postgres_repository_mutating_workflow.py`,
+2. `python -m ruff check tests/unit/test_postgres_repository.py tests/unit/test_postgres_repository_mutating_workflow.py`,
+3. `python -m mypy tests/unit/test_postgres_repository.py tests/unit/test_postgres_repository_mutating_workflow.py`,
+4. `python -m pytest tests/unit/test_postgres_repository.py tests/unit/test_postgres_repository_mutating_workflow.py -q`
+   with `19` tests,
+5. `make quality-baseline`,
+6. `make maintainability-gate`,
+7. `make duplicate-implementation-gate` with zero duplicate clusters across
+   `3,004` source/script functions.
+
+The same-pattern scan covered
+#601/#603/#606/#609/#618/#620/#623/#625/#630/#633/#636/#638/#640/#642
+maintainability evidence, current `quality/baseline_report.md`, GitHub
+searches for `test_postgres_repository_round_trips_mutating_workflow_details`,
+`postgres repository workflow details maintainability`, and
+`mutating workflow details quality baseline`, the codebase review ledger, the
+issue closure matrix, RFC Slice 19, and issue-discovery ledger `#225`. Closed
+issue `#222` owned production row-scoped PostgreSQL writes, not this
+test-support decomposition.
+
+This is test-support maintainability only. It does not change production
+PostgreSQL adapters, schema, migrations, API/OpenAPI behavior, authentication
+or authorization infrastructure, Core, Gateway, Workbench, data-product
+support, external-publication authority, runtime topology, wiki source, README,
+supported features, or supported-feature promotion.
+
 ## 2026-07-19: PostgreSQL Runtime Trust Telemetry Loader Boundary
 
 Issue `#642` applies the Slice 19 report-only quality-baseline lens to the
