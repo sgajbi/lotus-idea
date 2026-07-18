@@ -450,7 +450,7 @@ replay without another adapter call, changed-fingerprint reuse returns
 target, resource id, bounded failure reason, correlation id, trace id, and
 timestamp without source payloads or raw downstream responses.
 
-For local Compose only, Manage intake requires four server-process settings:
+For local Compose only, Manage intake requires server-process settings:
 `LOTUS_IDEA_MANAGE_REALIZATION_ACTOR_ID`,
 `LOTUS_IDEA_MANAGE_REALIZATION_ROLE`,
 `LOTUS_IDEA_MANAGE_REALIZATION_TENANT_ID`, and
@@ -462,6 +462,19 @@ and `test`; demo, staging, and production fail closed. Do not pass user
 identity from a browser or use this as evidence of IdP/session/token-claim
 integration, suitability, rebalance, or downstream acceptance. Track the
 future trusted identity integration through issue `#380`.
+
+Report intake uses the same server-only local/test fixture posture. It requires
+`LOTUS_IDEA_REPORT_REALIZATION_ACTOR_ID`,
+`LOTUS_IDEA_REPORT_REALIZATION_CALLER_APPLICATION`,
+`LOTUS_IDEA_REPORT_REALIZATION_TENANT_ID`, and
+`LOTUS_IDEA_REPORT_REALIZATION_REGION`; the adapter forwards them only as
+`X-Actor-Id`, `X-Caller-Application`, `X-Tenant-Id`, and `X-Region` to the
+Report-owned `POST /reports/idea-evidence-packs` route. The adapter maps the
+Idea envelope to the owner's strict snake-case contract. It is restricted to
+`local` and `test`, fails closed in demo/staging/production, does not trust
+browser identity, and does not prove Report acceptance, materialization,
+rendering, archive creation, client publication, or IdP/session/token-claim
+integration. Issue `#380` tracks the production identity path.
 
 OpenAPI for these submission routes uses named `ProblemDetails` examples where
 one status can return multiple stable codes. Operators should expect `503`

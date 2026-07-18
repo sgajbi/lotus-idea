@@ -73,10 +73,15 @@ Implemented in the first Slice 13 foundation:
 9. `src/app/ports/downstream_realization.py` and
    `src/app/infrastructure/downstream_realization.py` add a source-safe HTTP
    adapter foundation for Report evidence-pack request handoff envelopes. The
-   envelope preserves Report/Render/Archive source authority, retention
-   posture, reason codes, and bounded source summaries, while omitting source
-   routes, raw source payloads, raw downstream responses, and client-ready
-   publication authority.
+   adapter maps the Idea-owned vocabulary into the Report-owned strict
+   snake-case intake contract at `POST /reports/idea-evidence-packs`, including
+   purpose and `REPORT_INTAKE_ONLY` boundary translation. It preserves
+   Report/Render/Archive source authority, retention posture, reason codes, and
+   bounded source summaries while omitting source routes, raw source payloads,
+   raw downstream responses, and client-ready publication authority. Report
+   caller context is server-configured only for `local` and `test`; demo,
+   staging, and production fail closed until trusted identity and IdP claim
+   mapping are available (tracked in `#380`).
 10. `src/app/application/downstream_realization/submission_use_cases.py` now adds source-safe
     application orchestration for submitting existing report evidence-pack
     requests through the Report downstream realization port. It finds the

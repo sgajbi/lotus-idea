@@ -764,18 +764,25 @@ Downstream realization:
    `LOTUS_IDEA_MANAGE_REALIZATION_CAPABILITIES`,
 6. `LOTUS_IDEA_REPORT_REALIZATION_BASE_URL`,
 7. `LOTUS_IDEA_REPORT_REALIZATION_SUBMIT_PATH`,
-8. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_TIMEOUT_SECONDS`,
-9. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_MAX_CONNECTIONS`,
-10. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_MAX_KEEPALIVE_CONNECTIONS`,
-11. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_POOL_TIMEOUT_SECONDS`,
-12. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_RETRY_MAX_ATTEMPTS`,
-13. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_RETRY_INITIAL_BACKOFF_SECONDS`,
-14. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_RETRY_MAX_BACKOFF_SECONDS`.
+8. local/test-only Report fixture: `LOTUS_IDEA_REPORT_REALIZATION_ACTOR_ID`,
+   `LOTUS_IDEA_REPORT_REALIZATION_CALLER_APPLICATION`,
+   `LOTUS_IDEA_REPORT_REALIZATION_TENANT_ID`, and
+   `LOTUS_IDEA_REPORT_REALIZATION_REGION`,
+9. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_TIMEOUT_SECONDS`,
+10. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_MAX_CONNECTIONS`,
+11. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_MAX_KEEPALIVE_CONNECTIONS`,
+12. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_POOL_TIMEOUT_SECONDS`,
+13. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_RETRY_MAX_ATTEMPTS`,
+14. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_RETRY_INITIAL_BACKOFF_SECONDS`,
+15. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_RETRY_MAX_BACKOFF_SECONDS`.
 
-The Manage fixture is a server-side local/test development aid only. It never
-trusts browser-supplied identity headers and fails closed in demo, staging, and
-production until trusted service identity and IdP/session/token-claim mapping
-are delivered through the tracked identity work.
+The Manage and Report fixtures are server-side local/test development aids
+only. They never trust browser-supplied identity headers and fail closed in
+demo, staging, and production until trusted service identity and
+IdP/session/token-claim mapping are delivered through the tracked identity
+work in issue `#380`. The Report adapter maps the Idea evidence envelope into
+the Report-owned strict snake-case intake contract and does not grant Report,
+Render, Archive, or publication authority.
 
 Outbox broker:
 

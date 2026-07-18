@@ -9,10 +9,15 @@ import pytest
 from app.domain import ConversionTarget, SourceSystem
 from app.infrastructure.downstream_realization import (
     ManageRealizationServiceContext,
+    ReportRealizationServiceContext,
     _conversion_intent_envelope,
+    _report_evidence_pack_envelope,
 )
 
-from tests.unit.test_downstream_realization_adapters import conversion_intent
+from tests.unit.test_downstream_realization_adapters import (
+    conversion_intent,
+    report_evidence_pack,
+)
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -56,6 +61,31 @@ def test_manage_service_context_matches_versioned_wire_contract() -> None:
         tenant_id="local-development",
         service_identity="lotus-idea-local-development",
         capabilities="manage.write",
+    )
+
+    assert set(context.request_headers()) == set(contract["required_server_headers"])
+
+
+def test_report_adapter_envelope_matches_versioned_wire_contract() -> None:
+    contract = _consumer_contract("report_evidence")
+    envelope = _report_evidence_pack_envelope(report_evidence_pack())
+
+    assert set(envelope) == set(contract["request_fields"])
+    assert envelope["purpose"] == contract["purpose_mapping"]["client_review_report_section"]
+    assert envelope["boundary"] == contract["boundary"]
+    assert envelope["grants_client_publication_authority"] is False
+    assert envelope["creates_rendered_output"] is False
+    assert envelope["creates_archive_record"] is False
+    assert "content_hash" not in str(envelope)
+
+
+def test_report_service_context_matches_versioned_wire_contract() -> None:
+    contract = _consumer_contract("report_evidence")
+    context = ReportRealizationServiceContext(
+        actor_id="lotus-idea-local-development",
+        caller_application="lotus-idea",
+        tenant_id="local-development",
+        region="local",
     )
 
     assert set(context.request_headers()) == set(contract["required_server_headers"])

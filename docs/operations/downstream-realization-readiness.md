@@ -335,7 +335,7 @@ so a healthy source adapter cannot mask an unavailable downstream handoff.
 `LOTUS_IDEA_DOWNSTREAM_REALIZATION_TIMEOUT_SECONDS` controls the HTTP adapter
 timeout and defaults conservatively when absent.
 
-### Local Manage Intake Fixture
+### Local Manage And Report Intake Fixtures
 
 Until the platform has trusted service identity and an identity-provider claim
 mapping, local Compose supplies a development-only Manage intake fixture from
@@ -360,6 +360,30 @@ suitability or rebalance authority, or certify downstream acceptance. The
 future trusted identity path remains tracked in GitHub issue `#380`; this
 branch keeps the fixture explicitly non-authoritative.
 
+Report intake has the same identity-provider deferral. The Idea adapter maps
+its governed report-evidence request to the Report-owned strict snake-case
+contract at `POST /reports/idea-evidence-packs`, including the Report intake
+purpose and `REPORT_INTAKE_ONLY` boundary vocabulary. Local Compose supplies
+the caller context from server process configuration, never from browser or
+caller request headers. The fixture is restricted in code to `local` and
+`test`; `demo`, `staging`, and `production` fail closed before any Report call
+until a trusted service identity and IdP/session/token-claim mapping are
+available.
+
+| Server-side environment variable | Local Compose value |
+| --- | --- |
+| `LOTUS_IDEA_REPORT_REALIZATION_ACTOR_ID` | `lotus-idea-local-development` |
+| `LOTUS_IDEA_REPORT_REALIZATION_CALLER_APPLICATION` | `lotus-idea` |
+| `LOTUS_IDEA_REPORT_REALIZATION_TENANT_ID` | `local-development` |
+| `LOTUS_IDEA_REPORT_REALIZATION_REGION` | `local` |
+
+The adapter sends these values only as `X-Actor-Id`,
+`X-Caller-Application`, `X-Tenant-Id`, and `X-Region`, in addition to
+correlation, trace, and idempotency headers. They do not authenticate an end
+user, grant Report/Render/Archive authority, prove downstream acceptance, or
+promote a supported feature. The deferred production identity work remains
+tracked by GitHub issue `#380`.
+
 ## Evidence
 
 Implementation-backed evidence:
@@ -382,7 +406,7 @@ Implementation-backed evidence:
    `src/app/api/downstream_submission_reconciliation.py`,
 8. governed contract plan:
    `contracts/downstream-realization/lotus-idea-downstream-contracts.v1.json`,
-9. versioned Advise/Manage consumer wire contract:
+9. versioned Advise/Manage/Report consumer wire contract:
    `contracts/downstream-realization/lotus-idea-downstream-intake-wire-contract.v1.json`,
 10. report-owned planned intake contract:
    `lotus-report/contracts/idea-evidence-intake/lotus-report-idea-evidence-pack-intake.v1.json`,

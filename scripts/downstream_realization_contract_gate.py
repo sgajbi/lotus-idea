@@ -55,6 +55,28 @@ _REQUIRED_INTAKE_REQUEST_FIELDS = {
     "intent_type",
     "source_refs",
 }
+_REQUIRED_REPORT_INTAKE_REQUEST_FIELDS = {
+    "report_evidence_pack_id",
+    "conversion_intent_id",
+    "candidate_id",
+    "purpose",
+    "evidence_packet_id",
+    "evidence_content_fingerprint",
+    "source_signal_ids",
+    "source_summaries",
+    "reason_codes",
+    "report_source_authority",
+    "render_source_authority",
+    "archive_source_authority",
+    "boundary",
+    "retention_policy_ref",
+    "requested_at_utc",
+    "grants_client_publication_authority",
+    "creates_rendered_output",
+    "creates_archive_record",
+    "producer",
+    "supportability_status",
+}
 _EXPECTED_INTAKE_CONSUMERS = {
     "advise_proposal": {
         "owner_repository": "lotus-advise",
@@ -72,6 +94,23 @@ _EXPECTED_INTAKE_CONSUMERS = {
             "X-Tenant-Id",
             "X-Service-Identity",
             "X-Capabilities",
+        },
+    },
+    "report_evidence": {
+        "owner_repository": "lotus-report",
+        "owner_route": "POST /reports/idea-evidence-packs",
+        "request_fields": _REQUIRED_REPORT_INTAKE_REQUEST_FIELDS,
+        "purpose_mapping": {
+            "client_review_report_section": "CLIENT_REPORT_EVIDENCE",
+            "advisor_review_evidence": "ADVISOR_REVIEW_APPENDIX",
+            "audit_evidence": "ADVISOR_REVIEW_APPENDIX",
+        },
+        "boundary": "REPORT_INTAKE_ONLY",
+        "required_server_headers": {
+            "X-Actor-Id",
+            "X-Caller-Application",
+            "X-Tenant-Id",
+            "X-Region",
         },
     },
 }
@@ -177,8 +216,8 @@ def _validate_downstream_intake_wire_contract(repository_root: Path) -> list[str
     errors: list[str] = []
     if payload.get("contract_id") != "lotus-idea-downstream-intake-wire-contract":
         errors.append("downstream intake wire contract has an unexpected contract_id")
-    if payload.get("contract_version") != "1.0.0":
-        errors.append("downstream intake wire contract must be version 1.0.0")
+    if payload.get("contract_version") != "1.1.0":
+        errors.append("downstream intake wire contract must be version 1.1.0")
     if payload.get("repository") != "lotus-idea":
         errors.append("downstream intake wire contract repository must be lotus-idea")
     if payload.get("lifecycle_status") != "development_only":
@@ -209,21 +248,26 @@ def _validate_downstream_intake_wire_contract(repository_root: Path) -> list[str
     by_target = {str(item.get("conversion_target", "")): item for item in consumers}
     if set(by_target) != set(_EXPECTED_INTAKE_CONSUMERS):
         errors.append(
-            "downstream intake wire contract must declare exactly Advise and Manage consumers"
+            "downstream intake wire contract must declare exactly Advise, Manage, and Report consumers"
         )
     for target, expected in _EXPECTED_INTAKE_CONSUMERS.items():
         consumer = by_target.get(target)
         if consumer is None:
             continue
-        for field in ("owner_repository", "owner_route", "intent_type"):
+        for field in ("owner_repository", "owner_route"):
             if consumer.get(field) != expected[field]:
                 errors.append(f"{target} intake wire contract {field} drifted")
+        if target != "report_evidence" and consumer.get("intent_type") != expected["intent_type"]:
+            errors.append(f"{target} intake wire contract intent_type drifted")
         request_fields = consumer.get("request_fields")
-        if (
-            not isinstance(request_fields, list)
-            or set(request_fields) != _REQUIRED_INTAKE_REQUEST_FIELDS
+        if not isinstance(request_fields, list) or set(request_fields) != expected.get(
+            "request_fields", _REQUIRED_INTAKE_REQUEST_FIELDS
         ):
             errors.append(f"{target} intake wire contract request_fields drifted")
+        if target == "report_evidence":
+            for field in ("purpose_mapping", "boundary"):
+                if consumer.get(field) != expected[field]:
+                    errors.append(f"{target} intake wire contract {field} drifted")
         headers = consumer.get("required_server_headers")
         if not isinstance(headers, list) or set(headers) != expected["required_server_headers"]:
             errors.append(f"{target} intake wire contract required_server_headers drifted")
