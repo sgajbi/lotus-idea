@@ -1636,6 +1636,68 @@ migrations, and central skills are unchanged by explicit scope decision; no
 wiki publication is required unless later PR/mainline evidence changes
 repo-authored wiki truth.
 
+## Issue 640 Bond-Maturity Runtime Validator Maintainability
+
+Issue `#640` applies the same Slice 19 quality-baseline learning to the Core
+bond-maturity runtime proof-contract validator. After issue `#638`, the current
+report-only quality baseline listed
+`src/app/application/bond_maturity_runtime_evidence/contract.py::bond_maturity_runtime_execution_is_valid`
+at `120` lines. The function mixed proof-envelope validation, non-proof claim
+boundary checks, request/source receipt shape validation, Core
+`PortfolioMaturitySummary:v1` and upstream `HoldingsAsOf:v1` product posture
+checks, horizon/window/temporal checks, hash and upstream holdings identity,
+maturity fact posture, blocker/evidence-ref closure, and final runtime-evidence
+clearing.
+
+`src/app/application/bond_maturity_runtime_evidence/contract.py` now preserves
+the public `bond_maturity_runtime_execution_is_valid(payload)` validator while
+extracting:
+
+1. `_runtime_execution_validation_parts(...)` for top-level proof envelope and
+   receipt shape parsing,
+2. `_non_proof_claims_are_valid(...)` for no-claim boundary validation,
+3. `_request_receipt_is_valid(...)` for request digest and hash checks,
+4. `_source_receipt_is_valid(...)` and source scope, product/posture,
+   temporal/window, hash, and required-string helpers,
+5. `_execution_closure_is_valid(...)` for status, blocker, and evidence-ref
+   closure,
+6. `_fact_posture_is_valid(...)` for supported empty-window versus positive
+   opportunity maturity fact posture.
+
+Focused validation passed:
+
+1. `python -m pytest tests/unit/bond_maturity_runtime_evidence/test_runtime_execution.py tests/unit/bond_maturity_runtime_evidence/test_generator.py -q`
+   (`69` passed),
+2. `python -m ruff check src/app/application/bond_maturity_runtime_evidence/contract.py tests/unit/bond_maturity_runtime_evidence/test_runtime_execution.py tests/unit/bond_maturity_runtime_evidence/test_generator.py`,
+3. `python -m ruff format --check src/app/application/bond_maturity_runtime_evidence/contract.py tests/unit/bond_maturity_runtime_evidence/test_runtime_execution.py tests/unit/bond_maturity_runtime_evidence/test_generator.py`,
+4. `python -m mypy src/app/application/bond_maturity_runtime_evidence/contract.py`,
+5. `make quality-baseline`,
+6. `make maintainability-gate`,
+7. `make duplicate-implementation-gate` with zero duplicate clusters across
+   `2,995` source/script functions.
+
+The same-pattern scan covered
+#601/#603/#606/#609/#618/#620/#623/#625/#630/#633/#636/#638 maintainability
+evidence, current `quality/baseline_report.md`, GitHub searches for
+`bond_maturity_runtime_execution_is_valid`,
+`bond maturity runtime evidence contract maintainability`,
+`quality baseline bond maturity runtime validator`, and
+`PortfolioMaturitySummary runtime evidence maintainability`, focused
+runtime-evidence tests, generator tests, the codebase review ledger, the issue
+closure matrix, refactor decisions, and issue-discovery ledger `#225`. Closed
+#633 owns the adjacent Core adapter, not this proof-contract validator. The
+public validator moved from `120` lines to `13` lines and every extracted
+helper is `39` lines or smaller.
+
+This is internal proof-contract modularity only. It does not implement Core
+changes, Core issue `sgajbi/lotus-core#792`, live Core certification,
+authentication or authorization infrastructure, Gateway, Workbench,
+data-product support, external-publication authority, runtime topology
+changes, migrations, OpenAPI behavior changes, or supported-feature promotion.
+README, wiki, supported features, OpenAPI, migrations, central context, and
+central skills are unchanged by explicit scope decision; no wiki publication is
+required unless later PR/mainline evidence changes repo-authored wiki truth.
+
 ## Issue 638 AI Explanation Evaluation API Boundary Maintainability
 
 Issue `#638` applies the same Slice 19 quality-baseline learning to the AI
@@ -1706,6 +1768,13 @@ authority, or supported-feature promotion. README, wiki, supported features,
 OpenAPI, migrations, and central skills are unchanged by explicit scope
 decision; no wiki publication is required unless later PR/mainline evidence
 changes repo-authored wiki truth.
+
+PR `#639` merged this hardening by rebase to exact-main SHA
+`342135870d728a63a95c158abe8ba3905f9dbb5f`. Main Releasability
+`29657176296` and CodeQL `29657173682` passed on that exact SHA. Strict wiki
+publication parity passed with `DiffCount 0`, so no wiki publication was
+required. Issue `#638` is closed on exact main, and the implementation branch
+is absent locally and remotely after patch-equivalence cleanup.
 
 ## Issue 636 Core Portfolio-State Runtime Validator Maintainability
 
