@@ -144,7 +144,7 @@ def test_report_adapter_matches_owner_contract_and_omits_sensitive_fields() -> N
         "render_source_authority": "lotus-render",
         "archive_source_authority": "lotus-archive",
         "boundary": "REPORT_INTAKE_ONLY",
-        "retention_policy_ref": "lotus-report:idea-evidence-retention:v1",
+        "retention_policy_ref": "generated-report-standard",
         "requested_at_utc": REQUEST_TIME.isoformat(),
         "grants_client_publication_authority": False,
         "creates_rendered_output": False,
@@ -154,8 +154,8 @@ def test_report_adapter_matches_owner_contract_and_omits_sensitive_fields() -> N
     }
     assert captured["headers"]["x-actor-id"] == "lotus-idea-local-development"
     assert captured["headers"]["x-caller-application"] == "lotus-idea"
-    assert captured["headers"]["x-tenant-id"] == "local-development"
-    assert captured["headers"]["x-region"] == "local"
+    assert captured["headers"]["x-tenant-id"] == "tenant-sg"
+    assert captured["headers"]["x-region"] == "APAC"
     assert captured["headers"]["x-correlation-id"] == "corr-report"
     assert captured["headers"]["x-trace-id"] == "trace-report"
     assert captured["headers"]["idempotency-key"] == "report-submission-idempotency-001"
@@ -448,6 +448,34 @@ def test_report_adapter_maps_governed_purpose_to_owner_vocabulary(
     assert payload["purpose"] == expected_intake_purpose
 
 
+def test_report_adapter_fails_closed_when_owner_retention_policy_mapping_is_missing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from app.infrastructure import downstream_realization
+
+    monkeypatch.delitem(
+        downstream_realization._REPORT_OWNER_RETENTION_POLICY_BY_IDEA_REFERENCE,
+        "lotus-report:idea-evidence-retention:v1",
+    )
+    adapter = HttpReportEvidencePackMaterializationClient(
+        DownstreamRealizationAdapterConfig(
+            base_url="https://report.example",
+            submit_path="/reports/idea-evidence-packs",
+            source_authority=SourceSystem.LOTUS_REPORT,
+            report_service_context=report_service_context(),
+        ),
+        client=downstream_json_client(
+            "https://report.example",
+            httpx.MockTransport(
+                lambda _request: pytest.fail("Report must not be called without a policy mapping")
+            ),
+        ),
+    )
+
+    with pytest.raises(DownstreamRealizationConfigurationError, match="not mapped"):
+        adapter.submit_report_evidence_pack_request(report_evidence_pack())
+
+
 def downstream_json_client(
     base_url: str,
     transport: httpx.MockTransport,
@@ -480,8 +508,8 @@ def report_service_context() -> ReportRealizationServiceContext:
     return ReportRealizationServiceContext(
         actor_id="lotus-idea-local-development",
         caller_application="lotus-idea",
-        tenant_id="local-development",
-        region="local",
+        tenant_id="tenant-sg",
+        region="APAC",
     )
 
 

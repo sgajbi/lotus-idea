@@ -51,6 +51,8 @@ REPORT_TENANT_ID_ENV = "LOTUS_IDEA_REPORT_REALIZATION_TENANT_ID"
 REPORT_REGION_ENV = "LOTUS_IDEA_REPORT_REALIZATION_REGION"
 _MANAGE_SERVICE_CONTEXT_FIXTURE_PROFILES = {RuntimeProfile.LOCAL, RuntimeProfile.TEST}
 _REPORT_SERVICE_CONTEXT_FIXTURE_PROFILES = {RuntimeProfile.LOCAL, RuntimeProfile.TEST}
+_REPORT_LOCAL_TEST_FIXTURE_TENANT_ID = "tenant-sg"
+_REPORT_LOCAL_TEST_FIXTURE_REGION = "APAC"
 
 
 class DownstreamRealizationClientsUnavailableError(RuntimeError):
@@ -213,6 +215,7 @@ def _report_adapter_config(
             tenant_id=_required_env(REPORT_TENANT_ID_ENV),
             region=_required_env(REPORT_REGION_ENV),
         )
+        _require_report_service_context_fixture_values(service_context)
         return DownstreamRealizationAdapterConfig(
             base_url=_required_env(base_url_env),
             submit_path=_required_env(submit_path_env),
@@ -254,6 +257,21 @@ def _require_report_service_context_fixture_profile() -> None:
         raise DownstreamRealizationClientsUnavailableError(
             "Report realization service-context fixture is restricted to local and test "
             "runtime profiles until trusted service identity is available."
+        )
+
+
+def _require_report_service_context_fixture_values(
+    service_context: ReportRealizationServiceContext,
+) -> None:
+    if service_context.tenant_id != _REPORT_LOCAL_TEST_FIXTURE_TENANT_ID:
+        raise DownstreamRealizationClientsUnavailableError(
+            "Report realization local/test fixture tenant_id must be "
+            f"'{_REPORT_LOCAL_TEST_FIXTURE_TENANT_ID}'."
+        )
+    if service_context.region != _REPORT_LOCAL_TEST_FIXTURE_REGION:
+        raise DownstreamRealizationClientsUnavailableError(
+            "Report realization local/test fixture region must be "
+            f"'{_REPORT_LOCAL_TEST_FIXTURE_REGION}'."
         )
 
 

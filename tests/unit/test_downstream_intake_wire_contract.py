@@ -72,6 +72,10 @@ def test_report_adapter_envelope_matches_versioned_wire_contract() -> None:
 
     assert set(envelope) == set(contract["request_fields"])
     assert envelope["purpose"] == contract["purpose_mapping"]["client_review_report_section"]
+    assert (
+        envelope["retention_policy_ref"]
+        == contract["owner_retention_policy_mapping"]["lotus-report:idea-evidence-retention:v1"]
+    )
     assert envelope["boundary"] == contract["boundary"]
     assert envelope["grants_client_publication_authority"] is False
     assert envelope["creates_rendered_output"] is False
@@ -84,8 +88,8 @@ def test_report_service_context_matches_versioned_wire_contract() -> None:
     context = ReportRealizationServiceContext(
         actor_id="lotus-idea-local-development",
         caller_application="lotus-idea",
-        tenant_id="local-development",
-        region="local",
+        tenant_id=contract["local_test_service_context"]["tenant_id"],
+        region=contract["local_test_service_context"]["region"],
     )
 
     assert set(context.request_headers()) == set(contract["required_server_headers"])

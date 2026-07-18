@@ -1,6 +1,6 @@
 {
   "contract_id": "lotus-idea-downstream-intake-wire-contract",
-  "contract_version": "1.1.0",
+  "contract_version": "1.2.0",
   "repository": "lotus-idea",
   "lifecycle_status": "development_only",
   "supportability_status": "not_certified",
@@ -72,6 +72,13 @@
         "client_review_report_section": "CLIENT_REPORT_EVIDENCE",
         "advisor_review_evidence": "ADVISOR_REVIEW_APPENDIX",
         "audit_evidence": "ADVISOR_REVIEW_APPENDIX"
+      },
+      "owner_retention_policy_mapping": {
+        "lotus-report:idea-evidence-retention:v1": "generated-report-standard"
+      },
+      "local_test_service_context": {
+        "tenant_id": "tenant-sg",
+        "region": "APAC"
       },
       "boundary": "REPORT_INTAKE_ONLY",
       "required_server_headers": [

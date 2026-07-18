@@ -9,6 +9,7 @@ from app.domain import (
     GovernedReportEvidencePack,
     SourceSystem,
 )
+from app.domain.data_lifecycle import REPORT_EVIDENCE_RETENTION_POLICY_REF
 from app.infrastructure.downstream_client import (
     DownstreamClientConfig,
     DownstreamJsonClient,
@@ -19,6 +20,15 @@ from app.ports.downstream_realization import DownstreamRealizationOutcome
 
 class DownstreamRealizationConfigurationError(ValueError):
     pass
+
+
+# Lotus Idea persists the external policy reference as governed lifecycle
+# metadata. Report owns a separate, route-specific selector. Keep the
+# translation at this anti-corruption boundary so neither persistence nor the
+# Idea domain starts depending on Report's local policy vocabulary.
+_REPORT_OWNER_RETENTION_POLICY_BY_IDEA_REFERENCE = {
+    REPORT_EVIDENCE_RETENTION_POLICY_REF: "generated-report-standard",
+}
 
 
 @dataclass(frozen=True)
@@ -321,7 +331,7 @@ def _report_evidence_pack_envelope(evidence_pack: GovernedReportEvidencePack) ->
         "render_source_authority": evidence_pack.render_source_authority.value,
         "archive_source_authority": evidence_pack.archive_source_authority.value,
         "boundary": "REPORT_INTAKE_ONLY",
-        "retention_policy_ref": evidence_pack.retention_policy_ref,
+        "retention_policy_ref": _report_owner_retention_policy_ref(evidence_pack),
         "requested_at_utc": evidence_pack.requested_at_utc.isoformat(),
         "grants_client_publication_authority": evidence_pack.grants_client_publication_authority,
         "creates_rendered_output": evidence_pack.creates_rendered_output,
@@ -338,6 +348,15 @@ def _report_intake_purpose(evidence_pack: GovernedReportEvidencePack) -> str:
         "audit_evidence": "ADVISOR_REVIEW_APPENDIX",
     }
     return purpose_by_idea_purpose[evidence_pack.purpose.value]
+
+
+def _report_owner_retention_policy_ref(evidence_pack: GovernedReportEvidencePack) -> str:
+    try:
+        return _REPORT_OWNER_RETENTION_POLICY_BY_IDEA_REFERENCE[evidence_pack.retention_policy_ref]
+    except KeyError as exc:
+        raise DownstreamRealizationConfigurationError(
+            "Report retention policy reference is not mapped to an owner policy selector."
+        ) from exc
 
 
 def _failure_reason(exc: DownstreamServiceError) -> str:

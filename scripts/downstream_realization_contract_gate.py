@@ -105,6 +105,13 @@ _EXPECTED_INTAKE_CONSUMERS = {
             "advisor_review_evidence": "ADVISOR_REVIEW_APPENDIX",
             "audit_evidence": "ADVISOR_REVIEW_APPENDIX",
         },
+        "owner_retention_policy_mapping": {
+            "lotus-report:idea-evidence-retention:v1": "generated-report-standard",
+        },
+        "local_test_service_context": {
+            "tenant_id": "tenant-sg",
+            "region": "APAC",
+        },
         "boundary": "REPORT_INTAKE_ONLY",
         "required_server_headers": {
             "X-Actor-Id",
@@ -216,8 +223,8 @@ def _validate_downstream_intake_wire_contract(repository_root: Path) -> list[str
     errors: list[str] = []
     if payload.get("contract_id") != "lotus-idea-downstream-intake-wire-contract":
         errors.append("downstream intake wire contract has an unexpected contract_id")
-    if payload.get("contract_version") != "1.1.0":
-        errors.append("downstream intake wire contract must be version 1.1.0")
+    if payload.get("contract_version") != "1.2.0":
+        errors.append("downstream intake wire contract must be version 1.2.0")
     if payload.get("repository") != "lotus-idea":
         errors.append("downstream intake wire contract repository must be lotus-idea")
     if payload.get("lifecycle_status") != "development_only":
@@ -265,7 +272,12 @@ def _validate_downstream_intake_wire_contract(repository_root: Path) -> list[str
         ):
             errors.append(f"{target} intake wire contract request_fields drifted")
         if target == "report_evidence":
-            for field in ("purpose_mapping", "boundary"):
+            for field in (
+                "purpose_mapping",
+                "owner_retention_policy_mapping",
+                "local_test_service_context",
+                "boundary",
+            ):
                 if consumer.get(field) != expected[field]:
                     errors.append(f"{target} intake wire contract {field} drifted")
         headers = consumer.get("required_server_headers")

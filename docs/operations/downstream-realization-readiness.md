@@ -363,7 +363,12 @@ branch keeps the fixture explicitly non-authoritative.
 Report intake has the same identity-provider deferral. The Idea adapter maps
 its governed report-evidence request to the Report-owned strict snake-case
 contract at `POST /reports/idea-evidence-packs`, including the Report intake
-purpose and `REPORT_INTAKE_ONLY` boundary vocabulary. Local Compose supplies
+purpose, the owner retention-policy selector, and `REPORT_INTAKE_ONLY` boundary vocabulary.
+The Idea-owned persisted reference
+`lotus-report:idea-evidence-retention:v1` maps only at this adapter boundary to
+the Report-owned `generated-report-standard` selector; it does not alter Idea
+lifecycle retention metadata or create Report, Render, Archive, or publication
+authority. Local Compose supplies
 the caller context from server process configuration, never from browser or
 caller request headers. The fixture is restricted in code to `local` and
 `test`; `demo`, `staging`, and `production` fail closed before any Report call
@@ -374,15 +379,17 @@ available.
 | --- | --- |
 | `LOTUS_IDEA_REPORT_REALIZATION_ACTOR_ID` | `lotus-idea-local-development` |
 | `LOTUS_IDEA_REPORT_REALIZATION_CALLER_APPLICATION` | `lotus-idea` |
-| `LOTUS_IDEA_REPORT_REALIZATION_TENANT_ID` | `local-development` |
-| `LOTUS_IDEA_REPORT_REALIZATION_REGION` | `local` |
+| `LOTUS_IDEA_REPORT_REALIZATION_TENANT_ID` | `tenant-sg` |
+| `LOTUS_IDEA_REPORT_REALIZATION_REGION` | `APAC` |
 
 The adapter sends these values only as `X-Actor-Id`,
 `X-Caller-Application`, `X-Tenant-Id`, and `X-Region`, in addition to
 correlation, trace, and idempotency headers. They do not authenticate an end
 user, grant Report/Render/Archive authority, prove downstream acceptance, or
-promote a supported feature. The deferred production identity work remains
-tracked by GitHub issue `#380`.
+promote a supported feature. The `tenant-sg` / `APAC` values are the
+Report-owned local/test fixture scope and are enforced in Lotus Idea; arbitrary
+local values fail closed. The deferred production identity work remains tracked
+by GitHub issue `#380`.
 
 ## Evidence
 
