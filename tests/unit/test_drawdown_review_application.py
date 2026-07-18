@@ -15,8 +15,10 @@ from app.application.drawdown_review_signal import (
 )
 from app.domain import (
     CandidatePersistenceDecision,
+    DRAWDOWN_REVIEW_FAMILY_COMPATIBILITY,
     EvidenceFreshness,
     InMemoryIdeaRepository,
+    OpportunityFamily,
     SignalEvaluationOutcome,
     SourceRef,
     SourceSystem,
@@ -102,7 +104,9 @@ def test_evaluate_drawdown_review_signal_command_maps_source_input() -> None:
     )
 
     assert result.outcome is SignalEvaluationOutcome.CANDIDATE_CREATED
+    assert result.family is DRAWDOWN_REVIEW_FAMILY_COMPATIBILITY.family
     assert result.candidate is not None
+    assert result.candidate.family is OpportunityFamily.HIGH_VOLATILITY
     assert result.candidate.candidate_id.startswith("idea_drawdown_review_")
 
 
@@ -132,6 +136,7 @@ def test_evaluate_drawdown_review_signal_from_risk_blocks_entitlement_denial() -
     )
 
     assert result.outcome is SignalEvaluationOutcome.BLOCKED
+    assert result.family is DRAWDOWN_REVIEW_FAMILY_COMPATIBILITY.family
     assert result.candidate is None
 
 
@@ -142,6 +147,7 @@ def test_evaluate_drawdown_review_signal_from_risk_blocks_source_unavailable() -
     )
 
     assert result.outcome is SignalEvaluationOutcome.BLOCKED
+    assert result.family is DRAWDOWN_REVIEW_FAMILY_COMPATIBILITY.family
     assert result.candidate is None
 
 
@@ -177,6 +183,8 @@ def test_evaluate_and_persist_drawdown_review_accepts_then_replays_same_command(
     assert replayed.persistence is not None
     assert replayed.persistence.decision is CandidatePersistenceDecision.REPLAYED
     assert accepted.source_diagnostic_codes == ("risk_drawdown_source_ready",)
+    assert accepted.persistence.record is not None
+    assert accepted.persistence.record.candidate.family is DRAWDOWN_REVIEW_FAMILY_COMPATIBILITY.family
 
 
 @pytest.mark.parametrize(

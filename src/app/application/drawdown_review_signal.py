@@ -7,9 +7,9 @@ from decimal import Decimal
 from app.domain import (
     CandidatePersistenceResult,
     CandidateScorePolicyVersion,
+    DRAWDOWN_REVIEW_FAMILY_COMPATIBILITY,
     DrawdownReviewSignalInput,
     DrawdownReviewSignalPolicy,
-    OpportunityFamily,
     ReasonCode,
     SignalEvaluationOutcome,
     SignalEvaluationResult,
@@ -141,7 +141,7 @@ def evaluate_and_persist_drawdown_review_signal_from_risk(
             as_of_date=command.evaluation.as_of_date,
             period_name=command.evaluation.period_name,
             evaluated_at_utc=command.evaluation.evaluated_at_utc,
-            family=OpportunityFamily.HIGH_VOLATILITY,
+            family=DRAWDOWN_REVIEW_FAMILY_COMPATIBILITY.family,
             policy_version=policy.policy_version,
             evaluation=evaluation,
         ),
@@ -194,7 +194,7 @@ def _evaluate_drawdown_review_source(
         return _DrawdownReviewSourceEvaluation(
             evaluation=SignalEvaluationResult(
                 outcome=SignalEvaluationOutcome.BLOCKED,
-                family=OpportunityFamily.HIGH_VOLATILITY,
+                family=DRAWDOWN_REVIEW_FAMILY_COMPATIBILITY.family,
                 reason_codes=(ReasonCode.SOURCE_PARTIAL,),
                 unsupported_reasons=(UnsupportedEvidenceReason.SOURCE_UNAVAILABLE,),
             ),

@@ -80,6 +80,13 @@ from app.domain.outbox.events import (
     mark_outbox_event_published,
     validate_outbox_failure_reason,
 )
+from app.domain.opportunity_family_compatibility import (
+    DRAWDOWN_REVIEW_FAMILY_COMPATIBILITY,
+    HIGH_VOLATILITY_FAMILY_COMPATIBILITY,
+    OpportunityArchetype,
+    OpportunityEvidenceLane,
+    OpportunityFamilyCompatibility,
+)
 from app.domain.downstream_submission import (
     DownstreamSubmissionAuditAction,
     DownstreamSubmissionAuditEntry,
@@ -371,6 +378,11 @@ __all__ = [
     "OUTBOX_EVENT_AGGREGATE_TYPE",
     "OUTBOX_EVENT_SCHEMA_VERSION",
     "SUPPORTED_OUTBOX_EVENT_TYPES",
+    "DRAWDOWN_REVIEW_FAMILY_COMPATIBILITY",
+    "HIGH_VOLATILITY_FAMILY_COMPATIBILITY",
+    "OpportunityArchetype",
+    "OpportunityEvidenceLane",
+    "OpportunityFamilyCompatibility",
     "DownstreamSubmissionPosture",
     "DownstreamSubmissionRecord",
     "DownstreamSubmissionResourceType",
