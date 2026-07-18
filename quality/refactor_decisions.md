@@ -6,6 +6,55 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-07-19: Bond-Maturity Runtime Proof Validator Boundary
+
+Issue `#640` applies the Slice 19 report-only quality-baseline lens to the
+Core bond-maturity runtime proof contract. After issue `#638`,
+`make quality-baseline` listed
+`src/app/application/bond_maturity_runtime_evidence/contract.py::bond_maturity_runtime_execution_is_valid`
+at `120` lines.
+
+The validator mixed:
+
+1. top-level proof envelope and source-authority checks,
+2. non-proof claim boundary validation,
+3. request and source receipt shape validation,
+4. Core `PortfolioMaturitySummary:v1` and upstream `HoldingsAsOf:v1`
+   product posture checks,
+5. horizon, window, temporal, reconciliation, and supportability checks,
+6. source hash, digest, request fingerprint, and upstream holdings identity
+   checks,
+7. maturity fact posture for empty-window versus opportunity-detected outputs,
+8. blocker, evidence-ref, and runtime-evidence clearing.
+
+This slice preserves the public
+`bond_maturity_runtime_execution_is_valid(payload)` contract while extracting
+proof-owned helpers for runtime-execution parts, non-proof claims, request
+receipts, source receipts, source scope, source product posture, temporal/window
+posture, source hash identity, required source strings, execution closure, and
+maturity fact posture. The public validator moved from `120` lines to `13`
+lines; every extracted helper is `39` lines or smaller.
+
+Validation:
+
+1. `python -m pytest tests/unit/bond_maturity_runtime_evidence/test_runtime_execution.py tests/unit/bond_maturity_runtime_evidence/test_generator.py -q`
+   passed with `69` tests.
+2. `python -m ruff check`, `python -m ruff format --check`, and
+   `python -m mypy src/app/application/bond_maturity_runtime_evidence/contract.py`
+   passed for the touched Python scope.
+3. `make quality-baseline`, `make maintainability-gate`, and
+   `make duplicate-implementation-gate` passed; duplicate inventory reported
+   `0` duplicate clusters across `2,995` source/script functions.
+
+No-claim decision: this is internal proof-contract modularity only. It does
+not implement Core changes, Core issue `sgajbi/lotus-core#792`, live Core
+certification, authentication or authorization infrastructure, Gateway,
+Workbench, data-mesh certification, external-publication authority, runtime
+topology changes, migrations, OpenAPI behavior changes, or supported-feature
+promotion. README, wiki, supported-features, OpenAPI, migrations, central
+context, and central skills are unchanged by explicit scope decision unless
+final validation changes repo-authored truth.
+
 ## 2026-07-19: AI Explanation Evaluation API Boundary
 
 Issue `#638` applies the Slice 19 report-only quality-baseline lens to the

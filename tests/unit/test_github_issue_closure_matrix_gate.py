@@ -192,6 +192,20 @@ def test_github_issue_closure_matrix_gate_requires_ai_explanation_route_issue(
     assert "Missing actionable issue rows: #638" in errors
 
 
+def test_github_issue_closure_matrix_gate_requires_bond_maturity_runtime_validator_issue(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    matrix = tmp_path / "matrix.md"
+    content = module.MATRIX_PATH.read_text(encoding="utf-8")
+    content = "\n".join(line for line in content.splitlines() if "[#640]" not in line)
+    matrix.write_text(content, encoding="utf-8")
+
+    errors = module.validate_issue_closure_matrix(matrix)
+
+    assert "Missing actionable issue rows: #640" in errors
+
+
 def test_github_issue_closure_matrix_gate_requires_postgres_snapshot_writes_issue(
     tmp_path: Path,
 ) -> None:
@@ -448,6 +462,24 @@ def test_github_issue_closure_matrix_gate_freezes_core_portfolio_state_validator
     errors = module.validate_issue_closure_matrix(matrix)
 
     assert "#636: merged-main issue cannot regress to `locally_fixed`" in errors
+
+
+def test_github_issue_closure_matrix_gate_freezes_ai_explanation_route_issue(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    matrix = tmp_path / "matrix.md"
+    content = module.MATRIX_PATH.read_text(encoding="utf-8").replace(
+        "issues/638) Refactor AI explanation evaluation route into "
+        "API-boundary helpers | `merged_main` |",
+        "issues/638) Refactor AI explanation evaluation route into "
+        "API-boundary helpers | `locally_fixed` |",
+    )
+    matrix.write_text(content, encoding="utf-8")
+
+    errors = module.validate_issue_closure_matrix(matrix)
+
+    assert "#638: merged-main issue cannot regress to `locally_fixed`" in errors
 
 
 def test_github_issue_closure_matrix_gate_freezes_postgres_snapshot_writes_main_truth(
