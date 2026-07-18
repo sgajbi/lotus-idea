@@ -6,6 +6,48 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-07-19: Configured Proof Artifacts Source-Safe Ref Test Boundary
+
+Issue `#652` applies the Slice 19 report-only quality-baseline lens to the
+configured implementation-proof artifact source-safe refs test. After issue
+`#650`, `make quality-baseline` listed
+`tests/unit/test_proof_artifacts.py::test_configured_implementation_proof_artifacts_loads_relative_source_safe_refs`
+at `146` lines.
+
+The test mixed:
+
+1. proof-artifact path construction,
+2. fixture artifact writing,
+3. relative environment variable binding,
+4. configured proof-artifact loading,
+5. durable repository proof assertions,
+6. source-ingestion, runtime trust telemetry, AI, Workbench/Gateway, outbox,
+   platform catalog, bond-maturity, and low-income proof-family assertions,
+7. aggregate-proof provenance assertions.
+
+`tests/unit/test_proof_artifacts.py` now keeps one externally visible
+configured-artifacts proof, but the public test is a short setup/load/assert
+orchestrator over named helpers for configured artifact paths, artifact fixture
+writing, relative environment binding, and typed proof-family assertions.
+Artifact names, environment variables, relative refs, provenance assertions,
+and non-object rejection behavior are preserved.
+
+Focused validation passed:
+
+1. `python -m ruff check tests/unit/test_proof_artifacts.py`,
+2. `python -m ruff format --check tests/unit/test_proof_artifacts.py`,
+3. `python -m mypy tests/unit/test_proof_artifacts.py`,
+4. `python -m pytest tests/unit/test_proof_artifacts.py -q` (`2` passed).
+
+This is test-support maintainability only. It does not change proof-artifact
+runtime behavior, production API behavior, API/OpenAPI, persistence,
+migrations, authentication or authorization infrastructure, Core, Gateway,
+Workbench, runtime topology, wiki source, README, supported-features,
+data-mesh certification, external-publication authority, or supported-feature
+promotion. Broader local gates, PR checks, exact-main Main
+Releasability/CodeQL, wiki parity, issue closure, and branch cleanup remain
+pending for the tranche.
+
 ## 2026-07-19: Critical Idea Workflow E2E Authority Boundary Test Boundary
 
 Issue `#650` applies the Slice 19 report-only quality-baseline lens to the

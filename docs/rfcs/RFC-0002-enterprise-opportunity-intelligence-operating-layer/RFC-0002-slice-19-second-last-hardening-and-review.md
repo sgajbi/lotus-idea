@@ -24,6 +24,47 @@ Perform the full engineering review before final closure.
 
 ## Current Implementation Evidence
 
+Issue `#652` applies the Slice 19 quality-baseline learning to the configured
+implementation-proof artifact source-safe refs test. After issue `#650`, the
+current report-only quality baseline listed
+`tests/unit/test_proof_artifacts.py::test_configured_implementation_proof_artifacts_loads_relative_source_safe_refs`
+at `146` lines. The scenario proved important proof-artifact source-safety but
+mixed path construction, artifact writing, relative environment binding,
+configured artifact loading, per-proof-family assertions, and aggregate
+provenance checks in one function.
+
+`tests/unit/test_proof_artifacts.py` now keeps the same externally visible
+configured-artifacts proof, but the public test is a short setup/load/assert
+orchestrator over named helpers for configured artifact paths, artifact fixture
+writing, relative environment binding, and typed proof-family assertions.
+Artifact names, environment variables, relative refs, provenance assertions,
+and non-object rejection behavior are preserved.
+
+Focused validation passed:
+
+1. `python -m ruff check tests/unit/test_proof_artifacts.py`,
+2. `python -m ruff format --check tests/unit/test_proof_artifacts.py`,
+3. `python -m mypy tests/unit/test_proof_artifacts.py`,
+4. `python -m pytest tests/unit/test_proof_artifacts.py -q` with `2` tests.
+
+The same-pattern scan followed the Slice 19 maintainability sequence through
+#650, current `quality/baseline_report.md`, duplicate searches for
+`test_configured_implementation_proof_artifacts_loads_relative_source_safe_refs`,
+`proof artifacts relative source safe refs maintainability`, and
+`test_proof_artifacts.py maintainability`, the codebase review ledger, the
+issue closure matrix, refactor decisions, and issue-discovery ledger `#225`.
+The broad searches returned only the issue-discovery ledger, so #652 owns this
+focused test-support decomposition.
+
+This is internal test-support modularity only. It does not change
+proof-artifact runtime behavior, production API behavior, API/OpenAPI,
+persistence, migrations, authentication or authorization infrastructure, Core,
+Gateway, Workbench, data-product support, external-publication authority,
+runtime topology, wiki source, README, supported features, or
+supported-feature promotion. Broader local gates, PR checks, exact-main Main
+Releasability/CodeQL, wiki parity, issue closure, and branch cleanup remain
+pending for the tranche.
+
 Issue `#650` applies the Slice 19 quality-baseline learning to the critical
 Idea workflow E2E authority-boundary proof. After issue `#648`, the current
 report-only quality baseline listed
