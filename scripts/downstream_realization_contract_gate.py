@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 from pathlib import Path
 import sys
 from typing import Any
@@ -41,6 +42,37 @@ REQUIRED_EVIDENCE_REFS = {
         "lotus-report/contracts/idea-evidence-intake/lotus-report-idea-evidence-pack-intake.v1.json",
         "lotus-render",
         "lotus-archive",
+    },
+}
+DOWNSTREAM_INTAKE_WIRE_CONTRACT_PATH = Path(
+    "contracts/downstream-realization/lotus-idea-downstream-intake-wire-contract.v1.json"
+)
+_REQUIRED_INTAKE_REQUEST_FIELDS = {
+    "source_system",
+    "source_product",
+    "idea_candidate_id",
+    "conversion_intent_id",
+    "intent_type",
+    "source_refs",
+}
+_EXPECTED_INTAKE_CONSUMERS = {
+    "advise_proposal": {
+        "owner_repository": "lotus-advise",
+        "owner_route": "POST /advisory/proposals/idea-intake",
+        "intent_type": "REVIEW_FOR_ADVISORY_PROPOSAL",
+        "required_server_headers": set(),
+    },
+    "manage_review": {
+        "owner_repository": "lotus-manage",
+        "owner_route": "POST /api/v1/rebalance/idea-action-intake",
+        "intent_type": "REVIEW_FOR_REBALANCE",
+        "required_server_headers": {
+            "X-Actor-Id",
+            "X-Role",
+            "X-Tenant-Id",
+            "X-Service-Identity",
+            "X-Capabilities",
+        },
     },
 }
 
@@ -87,6 +119,7 @@ def validate_downstream_realization_contract_plan_payload(
         errors.append("downstream contract plan must not promote supported features")
 
     errors.extend(_validate_source_of_truth(plan, repository_root=repository_root))
+    errors.extend(_validate_downstream_intake_wire_contract(repository_root))
     errors.extend(_validate_contracts(plan))
     errors.extend(_validate_durable_submission_state_machine(repository_root))
     return errors
@@ -105,6 +138,7 @@ def _validate_source_of_truth(
         "downstream_realization_api",
         "downstream_adapter_port",
         "downstream_adapter_foundation",
+        "downstream_intake_wire_contract",
         "downstream_submission_state",
         "downstream_submission_postgres",
         "downstream_submission_migration",
@@ -128,6 +162,71 @@ def _validate_source_of_truth(
             continue
         if not (repository_root / path).exists():
             errors.append(f"downstream contract plan source_of_truth.{key} path missing")
+    return errors
+
+
+def _validate_downstream_intake_wire_contract(repository_root: Path) -> list[str]:
+    path = repository_root / DOWNSTREAM_INTAKE_WIRE_CONTRACT_PATH
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        return [f"downstream intake wire contract is unreadable: {exc}"]
+    if not isinstance(payload, dict):
+        return ["downstream intake wire contract must be a JSON object"]
+
+    errors: list[str] = []
+    if payload.get("contract_id") != "lotus-idea-downstream-intake-wire-contract":
+        errors.append("downstream intake wire contract has an unexpected contract_id")
+    if payload.get("contract_version") != "1.0.0":
+        errors.append("downstream intake wire contract must be version 1.0.0")
+    if payload.get("repository") != "lotus-idea":
+        errors.append("downstream intake wire contract repository must be lotus-idea")
+    if payload.get("lifecycle_status") != "development_only":
+        errors.append("downstream intake wire contract must remain development_only")
+    if payload.get("supportability_status") != "not_certified":
+        errors.append("downstream intake wire contract must remain not_certified")
+    if payload.get("non_authoritative") is not True:
+        errors.append("downstream intake wire contract must remain non_authoritative")
+
+    security_boundary = payload.get("security_boundary")
+    if not isinstance(security_boundary, dict):
+        errors.append("downstream intake wire contract security_boundary must be an object")
+    else:
+        for field in (
+            "development_fixture_only",
+            "browser_supplied_identity_headers_forbidden",
+            "idp_session_and_token_claim_mapping_deferred",
+            "does_not_grant_downstream_business_authority",
+        ):
+            if security_boundary.get(field) is not True:
+                errors.append(
+                    f"downstream intake wire contract security_boundary.{field} must be true"
+                )
+
+    consumers = payload.get("consumer_contracts")
+    if not isinstance(consumers, list) or not all(isinstance(item, dict) for item in consumers):
+        return errors + ["downstream intake wire contract consumer_contracts must be objects"]
+    by_target = {str(item.get("conversion_target", "")): item for item in consumers}
+    if set(by_target) != set(_EXPECTED_INTAKE_CONSUMERS):
+        errors.append(
+            "downstream intake wire contract must declare exactly Advise and Manage consumers"
+        )
+    for target, expected in _EXPECTED_INTAKE_CONSUMERS.items():
+        consumer = by_target.get(target)
+        if consumer is None:
+            continue
+        for field in ("owner_repository", "owner_route", "intent_type"):
+            if consumer.get(field) != expected[field]:
+                errors.append(f"{target} intake wire contract {field} drifted")
+        request_fields = consumer.get("request_fields")
+        if (
+            not isinstance(request_fields, list)
+            or set(request_fields) != _REQUIRED_INTAKE_REQUEST_FIELDS
+        ):
+            errors.append(f"{target} intake wire contract request_fields drifted")
+        headers = consumer.get("required_server_headers")
+        if not isinstance(headers, list) or set(headers) != expected["required_server_headers"]:
+            errors.append(f"{target} intake wire contract required_server_headers drifted")
     return errors
 
 

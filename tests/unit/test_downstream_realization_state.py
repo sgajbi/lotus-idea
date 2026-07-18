@@ -8,7 +8,12 @@ from app.runtime.downstream_realization_state import (
     MAX_CONNECTIONS_ENV,
     MAX_KEEPALIVE_CONNECTIONS_ENV,
     MANAGE_BASE_URL_ENV,
+    MANAGE_ACTOR_ID_ENV,
+    MANAGE_CAPABILITIES_ENV,
+    MANAGE_ROLE_ENV,
+    MANAGE_SERVICE_IDENTITY_ENV,
     MANAGE_SUBMIT_PATH_ENV,
+    MANAGE_TENANT_ID_ENV,
     POOL_TIMEOUT_SECONDS_ENV,
     REPORT_BASE_URL_ENV,
     REPORT_SUBMIT_PATH_ENV,
@@ -23,6 +28,7 @@ from app.runtime.downstream_realization_state import (
     get_report_evidence_pack_realization_client,
     reset_downstream_realization_clients_for_tests,
 )
+from app.runtime.settings import RUNTIME_PROFILE_ENV
 
 
 @pytest.fixture(autouse=True)
@@ -62,6 +68,43 @@ def test_missing_downstream_configuration_fails_closed(
     with pytest.raises(
         DownstreamRealizationClientsUnavailableError,
         match=f"{ADVISE_BASE_URL_ENV} is not configured",
+    ):
+        get_conversion_realization_clients()
+
+
+@pytest.mark.parametrize(
+    "environment_name",
+    [
+        MANAGE_ACTOR_ID_ENV,
+        MANAGE_ROLE_ENV,
+        MANAGE_TENANT_ID_ENV,
+        MANAGE_SERVICE_IDENTITY_ENV,
+        MANAGE_CAPABILITIES_ENV,
+    ],
+)
+def test_missing_manage_service_context_fails_closed(
+    monkeypatch: pytest.MonkeyPatch,
+    environment_name: str,
+) -> None:
+    configure_conversion_env(monkeypatch)
+    monkeypatch.delenv(environment_name, raising=False)
+
+    with pytest.raises(
+        DownstreamRealizationClientsUnavailableError,
+        match=f"{environment_name} is not configured",
+    ):
+        get_conversion_realization_clients()
+
+
+def test_manage_service_context_fixture_is_rejected_outside_local_and_test(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    configure_conversion_env(monkeypatch)
+    monkeypatch.setenv(RUNTIME_PROFILE_ENV, "production")
+
+    with pytest.raises(
+        DownstreamRealizationClientsUnavailableError,
+        match="restricted to local and test",
     ):
         get_conversion_realization_clients()
 
@@ -185,8 +228,14 @@ def test_close_downstream_realization_clients_is_idempotent() -> None:
 
 
 def configure_conversion_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv(RUNTIME_PROFILE_ENV, "local")
     monkeypatch.setenv(ADVISE_BASE_URL_ENV, "https://advise.example")
     monkeypatch.setenv(ADVISE_SUBMIT_PATH_ENV, "/advisory/idea-intake")
     monkeypatch.setenv(MANAGE_BASE_URL_ENV, "https://manage.example")
     monkeypatch.setenv(MANAGE_SUBMIT_PATH_ENV, "/manage/idea-intake")
+    monkeypatch.setenv(MANAGE_ACTOR_ID_ENV, "lotus-idea-local-development")
+    monkeypatch.setenv(MANAGE_ROLE_ENV, "service")
+    monkeypatch.setenv(MANAGE_TENANT_ID_ENV, "local-development")
+    monkeypatch.setenv(MANAGE_SERVICE_IDENTITY_ENV, "lotus-idea-local-development")
+    monkeypatch.setenv(MANAGE_CAPABILITIES_ENV, "manage.write")
     monkeypatch.setenv(TIMEOUT_SECONDS_ENV, "1.25")

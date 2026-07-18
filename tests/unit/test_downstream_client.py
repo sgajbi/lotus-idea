@@ -188,6 +188,40 @@ def test_trace_headers_are_forwarded() -> None:
     assert payload == {"status": "ok"}
 
 
+def test_post_forwards_configured_server_side_headers_without_overriding_trace_headers() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert request.headers["X-Actor-Id"] == "lotus-idea-local-development"
+        assert request.headers["X-Service-Identity"] == "lotus-idea-local-development"
+        assert request.headers["X-Correlation-Id"] == "corr-123"
+        assert request.headers["Idempotency-Key"] == "idem-123"
+        return httpx.Response(202, json={"status": "accepted"})
+
+    payload = _client_for(httpx.MockTransport(handler)).post_json(
+        "/submit",
+        json_payload={"intent": "review"},
+        correlation_id="corr-123",
+        idempotency_key="idem-123",
+        additional_headers={
+            "X-Actor-Id": "lotus-idea-local-development",
+            "X-Service-Identity": "lotus-idea-local-development",
+        },
+    )
+
+    assert payload == {"status": "accepted"}
+
+
+@pytest.mark.parametrize("header_name", ["X-Correlation-Id", "Idempotency-Key"])
+def test_additional_headers_cannot_override_governed_trace_headers(header_name: str) -> None:
+    with pytest.raises(DownstreamClientConfigurationError, match="must not override"):
+        _client_for(httpx.MockTransport(lambda _request: httpx.Response(202, json={}))).post_json(
+            "/submit",
+            json_payload={"intent": "review"},
+            correlation_id="corr-123",
+            idempotency_key="idem-123",
+            additional_headers={header_name: "untrusted-override"},
+        )
+
+
 def test_governed_dependency_records_one_logical_request_after_success(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

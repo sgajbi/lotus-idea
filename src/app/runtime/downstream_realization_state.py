@@ -15,12 +15,14 @@ from app.infrastructure.downstream_realization import (
     HttpAdviseProposalRealizationClient,
     HttpManageActionRealizationClient,
     HttpReportEvidencePackMaterializationClient,
+    ManageRealizationServiceContext,
 )
 from app.ports.downstream_realization import (
     AdviseProposalRealizationClient,
     ManageActionRealizationClient,
     ReportEvidencePackMaterializationClient,
 )
+from app.runtime.settings import RuntimeConfigurationError, RuntimeProfile, load_runtime_settings
 
 ADVISE_BASE_URL_ENV = "LOTUS_IDEA_ADVISE_REALIZATION_BASE_URL"
 ADVISE_SUBMIT_PATH_ENV = "LOTUS_IDEA_ADVISE_REALIZATION_SUBMIT_PATH"
@@ -37,6 +39,12 @@ RETRY_INITIAL_BACKOFF_SECONDS_ENV = (
     "LOTUS_IDEA_DOWNSTREAM_REALIZATION_RETRY_INITIAL_BACKOFF_SECONDS"
 )
 RETRY_MAX_BACKOFF_SECONDS_ENV = "LOTUS_IDEA_DOWNSTREAM_REALIZATION_RETRY_MAX_BACKOFF_SECONDS"
+MANAGE_ACTOR_ID_ENV = "LOTUS_IDEA_MANAGE_REALIZATION_ACTOR_ID"
+MANAGE_ROLE_ENV = "LOTUS_IDEA_MANAGE_REALIZATION_ROLE"
+MANAGE_TENANT_ID_ENV = "LOTUS_IDEA_MANAGE_REALIZATION_TENANT_ID"
+MANAGE_SERVICE_IDENTITY_ENV = "LOTUS_IDEA_MANAGE_REALIZATION_SERVICE_IDENTITY"
+MANAGE_CAPABILITIES_ENV = "LOTUS_IDEA_MANAGE_REALIZATION_CAPABILITIES"
+_MANAGE_SERVICE_CONTEXT_FIXTURE_PROFILES = {RuntimeProfile.LOCAL, RuntimeProfile.TEST}
 
 
 class DownstreamRealizationClientsUnavailableError(RuntimeError):
@@ -65,7 +73,7 @@ def get_conversion_realization_clients() -> ConversionRealizationClients:
                 )
             ),
             manage_client=HttpManageActionRealizationClient(
-                _adapter_config(
+                _manage_adapter_config(
                     base_url_env=MANAGE_BASE_URL_ENV,
                     submit_path_env=MANAGE_SUBMIT_PATH_ENV,
                     source_authority=SourceSystem.LOTUS_MANAGE,
@@ -142,6 +150,56 @@ def _adapter_config(
         )
     except DownstreamRealizationConfigurationError as exc:
         raise DownstreamRealizationClientsUnavailableError(str(exc)) from exc
+
+
+def _manage_adapter_config(
+    *,
+    base_url_env: str,
+    submit_path_env: str,
+    source_authority: SourceSystem,
+) -> DownstreamRealizationAdapterConfig:
+    try:
+        _require_manage_service_context_fixture_profile()
+        service_context = ManageRealizationServiceContext(
+            actor_id=_required_env(MANAGE_ACTOR_ID_ENV),
+            role=_required_env(MANAGE_ROLE_ENV),
+            tenant_id=_required_env(MANAGE_TENANT_ID_ENV),
+            service_identity=_required_env(MANAGE_SERVICE_IDENTITY_ENV),
+            capabilities=_required_env(MANAGE_CAPABILITIES_ENV),
+        )
+        return DownstreamRealizationAdapterConfig(
+            base_url=_required_env(base_url_env),
+            submit_path=_required_env(submit_path_env),
+            source_authority=source_authority,
+            timeout_seconds=_timeout_seconds(),
+            max_connections=_positive_int_env(
+                MAX_CONNECTIONS_ENV, default=DEFAULT_DEPENDENCY_MAX_CONNECTIONS
+            ),
+            max_keepalive_connections=_positive_int_env(
+                MAX_KEEPALIVE_CONNECTIONS_ENV,
+                default=DEFAULT_DEPENDENCY_MAX_KEEPALIVE_CONNECTIONS,
+            ),
+            pool_timeout_seconds=_positive_float_env(POOL_TIMEOUT_SECONDS_ENV, default=2.0),
+            retry_max_attempts=_positive_int_env(RETRY_MAX_ATTEMPTS_ENV, default=1),
+            retry_initial_backoff_seconds=_non_negative_float_env(
+                RETRY_INITIAL_BACKOFF_SECONDS_ENV, default=0.05
+            ),
+            retry_max_backoff_seconds=_non_negative_float_env(
+                RETRY_MAX_BACKOFF_SECONDS_ENV, default=0.5
+            ),
+            manage_service_context=service_context,
+        )
+    except (DownstreamRealizationConfigurationError, RuntimeConfigurationError) as exc:
+        raise DownstreamRealizationClientsUnavailableError(str(exc)) from exc
+
+
+def _require_manage_service_context_fixture_profile() -> None:
+    profile = load_runtime_settings().runtime_profile
+    if profile not in _MANAGE_SERVICE_CONTEXT_FIXTURE_PROFILES:
+        raise DownstreamRealizationClientsUnavailableError(
+            "Manage realization service-context fixture is restricted to local and test "
+            "runtime profiles until trusted service identity is available."
+        )
 
 
 def _required_env(name: str) -> str:

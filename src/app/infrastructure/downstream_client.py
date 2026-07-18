@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 import random
 import time
-from typing import Any
+from typing import Any, Mapping
 from urllib.parse import urlparse
 
 import httpx
@@ -205,6 +205,7 @@ class DownstreamJsonClient:
         correlation_id: str | None = None,
         trace_id: str | None = None,
         idempotency_key: str | None = None,
+        additional_headers: Mapping[str, str] | None = None,
     ) -> dict[str, Any]:
         return self._request_json(
             "POST",
@@ -213,6 +214,7 @@ class DownstreamJsonClient:
             correlation_id=correlation_id,
             trace_id=trace_id,
             idempotency_key=idempotency_key,
+            additional_headers=additional_headers,
         )
 
     def _request_json(
@@ -224,6 +226,7 @@ class DownstreamJsonClient:
         correlation_id: str | None = None,
         trace_id: str | None = None,
         idempotency_key: str | None = None,
+        additional_headers: Mapping[str, str] | None = None,
     ) -> dict[str, Any]:
         started_at = time.perf_counter()
         try:
@@ -234,6 +237,7 @@ class DownstreamJsonClient:
                 correlation_id=correlation_id,
                 trace_id=trace_id,
                 idempotency_key=idempotency_key,
+                additional_headers=additional_headers,
             )
         except DownstreamServiceError as error:
             self._observe_dependency_request(
@@ -258,6 +262,7 @@ class DownstreamJsonClient:
         correlation_id: str | None = None,
         trace_id: str | None = None,
         idempotency_key: str | None = None,
+        additional_headers: Mapping[str, str] | None = None,
     ) -> dict[str, Any]:
         retry_attempt_limit = self._retry_attempt_limit(
             method=method,
@@ -268,6 +273,7 @@ class DownstreamJsonClient:
             trace_id=trace_id,
             idempotency_key=idempotency_key,
         )
+        _add_request_headers(headers, additional_headers)
         attempt_count = 0
         while True:
             attempt_count += 1
@@ -392,6 +398,26 @@ def _dependency_outcome(error: DownstreamServiceError) -> str:
         "upstream_rejected_request": "rejected",
         "upstream_malformed_response": "malformed",
     }.get(error.code, "unavailable")
+
+
+def _add_request_headers(
+    headers: dict[str, str], additional_headers: Mapping[str, str] | None
+) -> None:
+    if additional_headers is None:
+        return
+    protected_headers = {key.lower() for key in headers}
+    for name, value in additional_headers.items():
+        normalized_name = name.strip()
+        normalized_value = value.strip()
+        if not normalized_name or not normalized_value:
+            raise DownstreamClientConfigurationError(
+                "additional request headers must have non-blank names and values."
+            )
+        if normalized_name.lower() in protected_headers:
+            raise DownstreamClientConfigurationError(
+                f"additional request header must not override {normalized_name}."
+            )
+        headers[normalized_name] = normalized_value
 
 
 def _retry_after_seconds(response: httpx.Response | None) -> float | None:

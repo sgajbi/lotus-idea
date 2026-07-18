@@ -17,6 +17,7 @@
     "downstream_realization_api": "src/app/api/downstream_realization.py",
     "downstream_adapter_port": "src/app/ports/downstream_realization.py",
     "downstream_adapter_foundation": "src/app/infrastructure/downstream_realization.py",
+    "downstream_intake_wire_contract": "contracts/downstream-realization/lotus-idea-downstream-intake-wire-contract.v1.json",
     "downstream_submission_state": "src/app/domain/downstream_submission.py",
     "downstream_submission_postgres": "src/app/infrastructure/postgres_downstream_submission.py",
     "downstream_submission_migration": "migrations/008_downstream_submission_state_machine.sql",

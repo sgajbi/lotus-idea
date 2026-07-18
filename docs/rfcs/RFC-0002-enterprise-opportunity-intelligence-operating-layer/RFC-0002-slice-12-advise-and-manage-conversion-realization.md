@@ -175,6 +175,14 @@ Implemented in this slice:
     path bypasses `snapshot()` while preserving idempotency posture and direct
     PostgreSQL query shape for conversion intents and report evidence-pack
     requests.
+28. `contracts/downstream-realization/lotus-idea-downstream-intake-wire-contract.v1.json`
+    pins the exact Advise and Manage consumer payloads. Advise receives its
+    owner-defined snake-case intake fields; Manage receives the same bounded
+    payload plus a server-side local/test fixture for its required service
+    context headers. `src/app/runtime/downstream_realization_state.py` rejects
+    that fixture outside local/test profiles, and the adapter never forwards
+    browser identity data. This is not IdP, session, or token-claim mapping and
+    does not provide downstream business authority or live acceptance proof.
 
 ## Issue 326 Outcome Lifecycle Hardening
 

@@ -450,6 +450,19 @@ replay without another adapter call, changed-fingerprint reuse returns
 target, resource id, bounded failure reason, correlation id, trace id, and
 timestamp without source payloads or raw downstream responses.
 
+For local Compose only, Manage intake requires four server-process settings:
+`LOTUS_IDEA_MANAGE_REALIZATION_ACTOR_ID`,
+`LOTUS_IDEA_MANAGE_REALIZATION_ROLE`,
+`LOTUS_IDEA_MANAGE_REALIZATION_TENANT_ID`, and
+`LOTUS_IDEA_MANAGE_REALIZATION_SERVICE_IDENTITY`, and
+`LOTUS_IDEA_MANAGE_REALIZATION_CAPABILITIES`. Their local defaults are a
+development fixture and are sent only to Manage as its required service-context
+and capability headers. The application permits the fixture only in `local`
+and `test`; demo, staging, and production fail closed. Do not pass user
+identity from a browser or use this as evidence of IdP/session/token-claim
+integration, suitability, rebalance, or downstream acceptance. Track the
+future trusted identity integration through issue `#380`.
+
 OpenAPI for these submission routes uses named `ProblemDetails` examples where
 one status can return multiple stable codes. Operators should expect `503`
 examples for downstream adapter configuration and durable repository

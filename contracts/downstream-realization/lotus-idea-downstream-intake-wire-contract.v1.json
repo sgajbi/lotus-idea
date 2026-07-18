@@ -1,0 +1,52 @@
+{
+  "contract_id": "lotus-idea-downstream-intake-wire-contract",
+  "contract_version": "1.0.0",
+  "repository": "lotus-idea",
+  "lifecycle_status": "development_only",
+  "supportability_status": "not_certified",
+  "non_authoritative": true,
+  "consumer_contracts": [
+    {
+      "conversion_target": "advise_proposal",
+      "owner_repository": "lotus-advise",
+      "owner_route": "POST /advisory/proposals/idea-intake",
+      "intent_type": "REVIEW_FOR_ADVISORY_PROPOSAL",
+      "request_fields": [
+        "source_system",
+        "source_product",
+        "idea_candidate_id",
+        "conversion_intent_id",
+        "intent_type",
+        "source_refs"
+      ],
+      "required_server_headers": []
+    },
+    {
+      "conversion_target": "manage_review",
+      "owner_repository": "lotus-manage",
+      "owner_route": "POST /api/v1/rebalance/idea-action-intake",
+      "intent_type": "REVIEW_FOR_REBALANCE",
+      "request_fields": [
+        "source_system",
+        "source_product",
+        "idea_candidate_id",
+        "conversion_intent_id",
+        "intent_type",
+        "source_refs"
+      ],
+      "required_server_headers": [
+        "X-Actor-Id",
+        "X-Role",
+        "X-Tenant-Id",
+        "X-Service-Identity",
+        "X-Capabilities"
+      ]
+    }
+  ],
+  "security_boundary": {
+    "development_fixture_only": true,
+    "browser_supplied_identity_headers_forbidden": true,
+    "idp_session_and_token_claim_mapping_deferred": true,
+    "does_not_grant_downstream_business_authority": true
+  }
+}

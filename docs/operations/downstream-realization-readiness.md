@@ -335,6 +335,31 @@ so a healthy source adapter cannot mask an unavailable downstream handoff.
 `LOTUS_IDEA_DOWNSTREAM_REALIZATION_TIMEOUT_SECONDS` controls the HTTP adapter
 timeout and defaults conservatively when absent.
 
+### Local Manage Intake Fixture
+
+Until the platform has trusted service identity and an identity-provider claim
+mapping, local Compose supplies a development-only Manage intake fixture from
+server process configuration. It is never read from browser or caller request
+headers. The fixture is restricted in code to the `local` and `test` runtime
+profiles; `demo`, `staging`, and `production` fail closed before any Manage
+call, even when the variables are present.
+
+| Server-side environment variable | Local Compose value |
+| --- | --- |
+| `LOTUS_IDEA_MANAGE_REALIZATION_ACTOR_ID` | `lotus-idea-local-development` |
+| `LOTUS_IDEA_MANAGE_REALIZATION_ROLE` | `service` |
+| `LOTUS_IDEA_MANAGE_REALIZATION_TENANT_ID` | `local-development` |
+| `LOTUS_IDEA_MANAGE_REALIZATION_SERVICE_IDENTITY` | `lotus-idea-local-development` |
+| `LOTUS_IDEA_MANAGE_REALIZATION_CAPABILITIES` | `manage.write` |
+
+The adapter sends these values only as `X-Actor-Id`, `X-Role`, `X-Tenant-Id`,
+`X-Service-Identity`, and `X-Capabilities` to the current Manage route, in
+addition to governed correlation, trace, and idempotency headers. This fixture
+does not authenticate an end user, map a session or token claim, grant
+suitability or rebalance authority, or certify downstream acceptance. The
+future trusted identity path remains tracked in GitHub issue `#380`; this
+branch keeps the fixture explicitly non-authoritative.
+
 ## Evidence
 
 Implementation-backed evidence:
@@ -357,59 +382,61 @@ Implementation-backed evidence:
    `src/app/api/downstream_submission_reconciliation.py`,
 8. governed contract plan:
    `contracts/downstream-realization/lotus-idea-downstream-contracts.v1.json`,
-9. report-owned planned intake contract:
+9. versioned Advise/Manage consumer wire contract:
+   `contracts/downstream-realization/lotus-idea-downstream-intake-wire-contract.v1.json`,
+10. report-owned planned intake contract:
    `lotus-report/contracts/idea-evidence-intake/lotus-report-idea-evidence-pack-intake.v1.json`,
-10. contract gate: `scripts/downstream_realization_contract_gate.py`,
-11. downstream route source-contract implementation:
+11. contract gate: `scripts/downstream_realization_contract_gate.py`,
+12. downstream route source-contract implementation:
    `src/app/application/downstream_realization/route_source_contract.py`,
-12. Advise route proof generator:
+13. Advise route proof generator:
     `scripts/downstream_realization/generate_advise_route_source_contract.py`,
-13. Manage route proof generator:
+14. Manage route proof generator:
     `scripts/downstream_realization/generate_manage_route_source_contract.py`,
-14. downstream route source-contract gate:
+15. downstream route source-contract gate:
     `scripts/downstream_realization/route_source_contract_gate.py`,
-15. focused downstream route source-contract tests:
+16. focused downstream route source-contract tests:
     `tests/unit/downstream_realization/test_route_source_contract.py`,
-16. report intake source-contract generator:
+17. report intake source-contract generator:
    `scripts/report/generate_intake_route_source_contract.py`,
-17. report intake source-contract gate:
+18. report intake source-contract gate:
     `scripts/report/intake_route_source_contract_gate.py`,
-17. report materialization source-contract generator:
+19. report materialization source-contract generator:
    `scripts/report/generate_materialization_source_contract.py`,
-18. report materialization source-contract gate:
+20. report materialization source-contract gate:
     `scripts/report/materialization_source_contract_gate.py`,
-19. readiness API route: `src/app/api/downstream_realization_readiness.py`,
-20. operation events:
+21. readiness API route: `src/app/api/downstream_realization_readiness.py`,
+22. operation events:
    `downstream_realization_readiness_read` and
    `downstream_realization_submission`, plus
    `downstream_reconciliation_read` and `downstream_reconciliation_resolve`,
-21. endpoint ledger:
+23. endpoint ledger:
    `docs/operations/endpoint-certification-ledger.json`,
-22. unit tests:
+24. unit tests:
    `tests/unit/test_downstream_realization_readiness.py`,
-23. application orchestration tests:
+25. application orchestration tests:
    `tests/unit/test_downstream_realization_application.py`,
-24. adapter tests:
+26. adapter tests:
    `tests/unit/test_downstream_realization_adapters.py`,
-25. gate tests:
+27. gate tests:
    `tests/unit/test_downstream_realization_contract_gate.py`,
-26. route proof tests:
+28. route proof tests:
     `tests/unit/downstream_realization/test_route_source_contract.py`,
-27. report intake source-contract tests:
+29. report intake source-contract tests:
     `tests/unit/report/test_intake_route_source_contract.py`,
-28. report materialization source-contract tests:
+30. report materialization source-contract tests:
     `tests/unit/report/test_materialization_source_contract.py`,
-29. submission reconciliation and real PostgreSQL tests:
+31. submission reconciliation and real PostgreSQL tests:
    `tests/integration/test_downstream_submission_reconciliation_api.py` and
    `tests/integration/test_postgres_downstream_submission_runtime.py`,
-30. integration tests:
+32. integration tests:
    `tests/integration/test_downstream_realization_readiness_api.py` and
    `tests/integration/test_downstream_realization_api.py`.
 
 Run:
 
 ```powershell
-python -m pytest tests/unit/test_downstream_realization_application.py tests/unit/test_downstream_realization_adapters.py tests/unit/test_downstream_realization_readiness.py tests/integration/test_downstream_realization_api.py tests/integration/test_downstream_realization_readiness_api.py -q
+python -m pytest tests/unit/test_downstream_realization_application.py tests/unit/test_downstream_realization_adapters.py tests/unit/test_downstream_intake_wire_contract.py tests/unit/test_downstream_realization_readiness.py tests/integration/test_downstream_realization_api.py tests/integration/test_downstream_realization_readiness_api.py -q
 make downstream-realization-contract-gate
 make downstream-route-source-contract-proof-gate
 make report-intake-route-source-contract-proof-gate
