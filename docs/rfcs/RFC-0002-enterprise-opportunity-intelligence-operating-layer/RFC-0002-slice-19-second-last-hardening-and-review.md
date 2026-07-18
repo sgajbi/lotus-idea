@@ -1088,3 +1088,46 @@ PR `#599` merged by rebase to exact-main SHA
 CodeQL, exact-main Main Releasability `29635864355`, exact-main CodeQL
 `29635862048`, wiki publication `66194f1`, and strict wiki parity passed.
 Issue `#598` is closed; local and remote implementation branches are absent.
+
+## Issue 601 Service-Capacity Builder Maintainability
+
+Issue `#601` hardens the Slice 19 maintainability posture for the
+service-capacity proof path. The report-only quality baseline on exact main
+`4c3e6c91fe9f04257a09212b866f97aa4a645792` listed
+`src/app/application/service_capacity_baseline.py::build_service_capacity_baseline`
+at `130` lines, exactly at the blocking source-function threshold. That
+function built a source-safe capacity artifact but mixed request validation,
+scenario summarization, protected evidence qualification, certification-blocker
+derivation, artifact assembly, and schema validation in one review surface.
+
+`src/app/application/service_capacity_baseline.py` now preserves the public
+builder signature, artifact schema, evidence-class semantics, certification
+blockers, and `supportedFeaturePromoted=false` posture while extracting:
+
+1. capacity-baseline request validation,
+2. governed scenario summarization,
+3. protected PostgreSQL/dependency/load/resource/cost qualification,
+4. blocker calculation through `CapacityEvidenceQualificationSet`,
+5. source-safe artifact assembly.
+
+Focused validation passed:
+
+1. Ruff format/check for `src/app/application/service_capacity_baseline.py`
+   and `tests/unit/test_service_capacity_baseline.py`,
+2. `make test-unit UNIT_TESTS=tests/unit/test_service_capacity_baseline.py`
+   (`34` passed),
+3. `make service-capacity-baseline-contract-gate`,
+4. `make maintainability-gate`,
+5. `make duplicate-implementation-gate`,
+6. `make quality-baseline`.
+
+The same-pattern scan covered source maintainability hotspots, duplicate
+implementation inventory, service-capacity tests, the service-capacity
+contract gate, the codebase review ledger, and the GitHub issue closure
+matrix. `build_service_capacity_baseline` is reduced to `64` lines and is no
+longer in the report-only top-function list. This is internal
+production-readiness proof modularity only; it does not execute live load/soak,
+certify capacity, certify platform cost attribution, certify downstream
+execution, change API behavior, change migrations, prove Gateway/Workbench,
+promote data products, or promote supported features. README, wiki, central
+skills, and supported-features truth are unchanged by explicit scope decision.
