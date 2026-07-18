@@ -19,19 +19,25 @@ Gateway PR #498 merged at `eeba84510d4449c9d181671b9b68d8af24f474cb` and
 publishes typed BFF routes for Idea-owned review actions, feedback, and bounded
 conversion intents. Workbench PR #435 merged at
 `97c57b21a9626f3f1ebcdade49252d6b599ae1dd` and adds the corresponding
-candidate-panel controls. The browser sends no authority headers: the Workbench
-BFF strips any client-supplied Idea authority and derives the configured
-server-side advisory authority before forwarding the request. The controls
-record only Idea-owned workflow state; they do not create proposals, clear
-restrictions, approve suitability, or execute portfolio actions.
+candidate-panel controls. Workbench PR #438 merged at
+`6212861c2bb6fe7344ad17dd391cda5a8f81a73f` and makes its BFF authority mode
+explicit: `development_configured` is permitted only for local, development,
+and test. The BFF strips any client-supplied Idea authority, rejects
+unallowlisted Idea paths, and fails closed before Gateway for unconfigured or
+non-development authority. The development fixture is not an authenticated
+principal, session, or token-claims implementation. The controls record only
+Idea-owned workflow state; they do not create proposals, clear restrictions,
+approve suitability, or execute portfolio actions.
 
 This remains a bounded product-surface foundation. It does not provide an
 end-user identity-provider integration, entitlement-denied panel proof, full
 canonical live-stack proof, data-product certification, demo-ready screenshots,
-or supported-feature promotion. Workbench #436 owns authenticated end-user
-principal resolution; the Slice 11 canonical proof remains deferred until an
-all-main cross-service runtime can be validated without treating branch-local
-evidence as product certification.
+or supported-feature promotion. Workbench #436 and platform #563 own the
+authenticated end-user principal/session contract; Idea #380 records the
+resulting certification and promotion dependency. The Slice 11 canonical proof
+remains deferred until an all-main cross-service runtime can be validated
+without treating a development fixture or branch-local evidence as product
+certification.
 
 The repo-owned Gateway/Workbench contract artifact is classified as
 `source_contract`. It can record the declared queue/detail routes and bounded

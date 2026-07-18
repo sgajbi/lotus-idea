@@ -81,8 +81,9 @@ delivery, or supported event publication exists. `lotus-gateway` now publishes b
 advisor queue/detail reads plus Idea-owned review-action, feedback, and
 conversion-intent routes with caller entitlement-scope, idempotency, correlation,
 and trace forwarding. `lotus-workbench` renders the corresponding controls
-through its BFF, which removes browser-supplied Idea authority and derives
-server-side advisory authority. These foundations are not end-user
+through its BFF, which removes browser-supplied Idea authority. Its configured
+authority fixture is development-only and non-development requests fail closed
+before Gateway. These foundations are not authenticated-principal or
 identity-provider proof, deployed scheduler daemon proof, live Core worker
 certification, full Workbench live proof, or supported-feature promotion. The bounded live source-ingestion
 proof artifact is implementation evidence for source-ingestion readiness only;
