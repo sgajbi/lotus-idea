@@ -78,6 +78,7 @@ from app.infrastructure.outbox.postgres_recovery import PostgresOutboxRecoveryRe
 from app.infrastructure.postgres_protocols import PostgresConnection as PostgresConnection
 from app.infrastructure.postgres_protocols import PostgresCursor
 from app.infrastructure.postgres_downstream_lookup import (
+    load_candidate_record_for_report_evidence_pack,
     load_candidate_record_for_conversion_intent,
     load_conversion_intent_by_id,
     load_report_evidence_pack_by_id,
@@ -391,6 +392,15 @@ class PostgresIdeaRepository(
         report_evidence_pack_id: str,
     ) -> GovernedReportEvidencePack | None:
         return load_report_evidence_pack_by_id(self._connection, report_evidence_pack_id)
+
+    def candidate_record_for_report_evidence_pack(
+        self,
+        report_evidence_pack_id: str,
+    ) -> CandidatePersistenceRecord | None:
+        return load_candidate_record_for_report_evidence_pack(
+            self._connection,
+            report_evidence_pack_id,
+        )
 
     def record_report_evidence_pack(
         self,

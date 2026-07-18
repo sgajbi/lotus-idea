@@ -11,11 +11,12 @@ from app.infrastructure.downstream_realization import (
     ManageRealizationServiceContext,
     ReportRealizationServiceContext,
     _conversion_intent_envelope,
-    _report_evidence_pack_envelope,
+    _report_evidence_pack_materialization_envelope,
 )
 
 from tests.unit.test_downstream_realization_adapters import (
     conversion_intent,
+    report_access_scope,
     report_evidence_pack,
 )
 
@@ -68,18 +69,33 @@ def test_manage_service_context_matches_versioned_wire_contract() -> None:
 
 def test_report_adapter_envelope_matches_versioned_wire_contract() -> None:
     contract = _consumer_contract("report_evidence")
-    envelope = _report_evidence_pack_envelope(report_evidence_pack())
+    envelope = _report_evidence_pack_materialization_envelope(
+        report_evidence_pack(),
+        access_scope=report_access_scope(),
+        service_context=ReportRealizationServiceContext(
+            actor_id="lotus-idea-local-development",
+            caller_application="lotus-idea",
+            tenant_id=contract["local_test_service_context"]["tenant_id"],
+            region=contract["local_test_service_context"]["region"],
+            requested_output_formats=tuple(
+                contract["local_test_service_context"]["output_formats"]
+            ),
+        ),
+    )
 
     assert set(envelope) == set(contract["request_fields"])
-    assert envelope["purpose"] == contract["purpose_mapping"]["client_review_report_section"]
+    assert set(envelope["idea_evidence_pack"]) == set(contract["idea_evidence_pack_fields"])
     assert (
-        envelope["retention_policy_ref"]
+        envelope["idea_evidence_pack"]["purpose"]
+        == contract["purpose_mapping"]["client_review_report_section"]
+    )
+    assert (
+        envelope["idea_evidence_pack"]["retention_policy_ref"]
         == contract["owner_retention_policy_mapping"]["lotus-report:idea-evidence-retention:v1"]
     )
     assert envelope["boundary"] == contract["boundary"]
     assert envelope["grants_client_publication_authority"] is False
-    assert envelope["creates_rendered_output"] is False
-    assert envelope["creates_archive_record"] is False
+    assert envelope["requested_output_formats"] == ["json"]
     assert "content_hash" not in str(envelope)
 
 
@@ -90,6 +106,7 @@ def test_report_service_context_matches_versioned_wire_contract() -> None:
         caller_application="lotus-idea",
         tenant_id=contract["local_test_service_context"]["tenant_id"],
         region=contract["local_test_service_context"]["region"],
+        requested_output_formats=tuple(contract["local_test_service_context"]["output_formats"]),
     )
 
     assert set(context.request_headers()) == set(contract["required_server_headers"])

@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Protocol
 
-from app.domain import GovernedConversionIntent, GovernedReportEvidencePack
+from app.domain import GovernedConversionIntent, GovernedReportEvidencePack, ReviewAccessScope
 
 
 class DownstreamRealizationOutcomePosture(StrEnum):
@@ -79,6 +79,7 @@ class ReportEvidencePackMaterializationClient(Protocol):
         self,
         evidence_pack: GovernedReportEvidencePack,
         *,
+        access_scope: ReviewAccessScope,
         correlation_id: str | None = None,
         trace_id: str | None = None,
         idempotency_key: str | None = None,

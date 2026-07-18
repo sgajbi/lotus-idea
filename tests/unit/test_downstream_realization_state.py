@@ -18,6 +18,7 @@ from app.runtime.downstream_realization_state import (
     REPORT_BASE_URL_ENV,
     REPORT_ACTOR_ID_ENV,
     REPORT_CALLER_APPLICATION_ENV,
+    REPORT_OUTPUT_FORMATS_ENV,
     REPORT_REGION_ENV,
     REPORT_SUBMIT_PATH_ENV,
     REPORT_TENANT_ID_ENV,
@@ -68,6 +69,7 @@ def test_report_realization_client_is_built_from_environment(
         REPORT_CALLER_APPLICATION_ENV,
         REPORT_TENANT_ID_ENV,
         REPORT_REGION_ENV,
+        REPORT_OUTPUT_FORMATS_ENV,
     ],
 )
 def test_missing_report_service_context_fails_closed(
@@ -115,6 +117,7 @@ def test_invalid_report_adapter_configuration_fails_closed(
     [
         (REPORT_TENANT_ID_ENV, "local-development", "tenant_id must be 'tenant-sg'"),
         (REPORT_REGION_ENV, "local", "region must be 'APAC'"),
+        (REPORT_OUTPUT_FORMATS_ENV, "pdf", "requested_output_formats must be 'json'"),
     ],
 )
 def test_report_service_context_fixture_rejects_unrecognized_owner_scope(
@@ -198,6 +201,17 @@ def test_invalid_connection_limits_fail_closed(monkeypatch: pytest.MonkeyPatch) 
     with pytest.raises(
         DownstreamRealizationClientsUnavailableError,
         match=f"{MAX_CONNECTIONS_ENV} must be positive",
+    ):
+        get_conversion_realization_clients()
+
+
+def test_non_integer_connection_limits_fail_closed(monkeypatch: pytest.MonkeyPatch) -> None:
+    configure_conversion_env(monkeypatch)
+    monkeypatch.setenv(MAX_CONNECTIONS_ENV, "not-an-integer")
+
+    with pytest.raises(
+        DownstreamRealizationClientsUnavailableError,
+        match=f"{MAX_CONNECTIONS_ENV} must be an integer",
     ):
         get_conversion_realization_clients()
 
@@ -315,9 +329,10 @@ def configure_conversion_env(monkeypatch: pytest.MonkeyPatch) -> None:
 def configure_report_env(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv(RUNTIME_PROFILE_ENV, "local")
     monkeypatch.setenv(REPORT_BASE_URL_ENV, "https://report.example")
-    monkeypatch.setenv(REPORT_SUBMIT_PATH_ENV, "/reports/idea-evidence-packs")
+    monkeypatch.setenv(REPORT_SUBMIT_PATH_ENV, "/reports/idea-evidence-packs/materializations")
     monkeypatch.setenv(REPORT_ACTOR_ID_ENV, "lotus-idea-local-development")
     monkeypatch.setenv(REPORT_CALLER_APPLICATION_ENV, "lotus-idea")
     monkeypatch.setenv(REPORT_TENANT_ID_ENV, "tenant-sg")
     monkeypatch.setenv(REPORT_REGION_ENV, "APAC")
+    monkeypatch.setenv(REPORT_OUTPUT_FORMATS_ENV, "json")
     monkeypatch.setenv(TIMEOUT_SECONDS_ENV, "1.25")

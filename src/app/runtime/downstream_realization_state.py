@@ -49,10 +49,12 @@ REPORT_ACTOR_ID_ENV = "LOTUS_IDEA_REPORT_REALIZATION_ACTOR_ID"
 REPORT_CALLER_APPLICATION_ENV = "LOTUS_IDEA_REPORT_REALIZATION_CALLER_APPLICATION"
 REPORT_TENANT_ID_ENV = "LOTUS_IDEA_REPORT_REALIZATION_TENANT_ID"
 REPORT_REGION_ENV = "LOTUS_IDEA_REPORT_REALIZATION_REGION"
+REPORT_OUTPUT_FORMATS_ENV = "LOTUS_IDEA_REPORT_REALIZATION_OUTPUT_FORMATS"
 _MANAGE_SERVICE_CONTEXT_FIXTURE_PROFILES = {RuntimeProfile.LOCAL, RuntimeProfile.TEST}
 _REPORT_SERVICE_CONTEXT_FIXTURE_PROFILES = {RuntimeProfile.LOCAL, RuntimeProfile.TEST}
 _REPORT_LOCAL_TEST_FIXTURE_TENANT_ID = "tenant-sg"
 _REPORT_LOCAL_TEST_FIXTURE_REGION = "APAC"
+_REPORT_LOCAL_TEST_FIXTURE_OUTPUT_FORMATS = ("json",)
 
 
 class DownstreamRealizationClientsUnavailableError(RuntimeError):
@@ -214,6 +216,7 @@ def _report_adapter_config(
             caller_application=_required_env(REPORT_CALLER_APPLICATION_ENV),
             tenant_id=_required_env(REPORT_TENANT_ID_ENV),
             region=_required_env(REPORT_REGION_ENV),
+            requested_output_formats=_csv_env(REPORT_OUTPUT_FORMATS_ENV),
         )
         _require_report_service_context_fixture_values(service_context)
         return DownstreamRealizationAdapterConfig(
@@ -273,6 +276,10 @@ def _require_report_service_context_fixture_values(
             "Report realization local/test fixture region must be "
             f"'{_REPORT_LOCAL_TEST_FIXTURE_REGION}'."
         )
+    if service_context.requested_output_formats != _REPORT_LOCAL_TEST_FIXTURE_OUTPUT_FORMATS:
+        raise DownstreamRealizationClientsUnavailableError(
+            "Report realization local/test fixture requested_output_formats must be 'json'."
+        )
 
 
 def _required_env(name: str) -> str:
@@ -280,6 +287,14 @@ def _required_env(name: str) -> str:
     if not value:
         raise DownstreamRealizationClientsUnavailableError(f"{name} is not configured")
     return value
+
+
+def _csv_env(name: str) -> tuple[str, ...]:
+    value = _required_env(name)
+    values = tuple(item.strip().lower() for item in value.split(","))
+    if not values or any(not item for item in values):
+        raise DownstreamRealizationClientsUnavailableError(f"{name} must be a non-empty CSV value")
+    return values
 
 
 def _timeout_seconds() -> float:

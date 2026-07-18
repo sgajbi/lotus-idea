@@ -31,6 +31,7 @@ from app.domain import (
     ReasonCode,
     ReportEvidencePackCommand,
     ReportEvidencePackPurpose,
+    ReviewAccessScope,
     ReviewPosture,
     SourceRef,
     SourceSystem,
@@ -120,11 +121,13 @@ class CapturingReportClient:
     correlation_id: str | None = None
     trace_id: str | None = None
     idempotency_key: str | None = None
+    access_scope: ReviewAccessScope | None = None
 
     def submit_report_evidence_pack_request(
         self,
         evidence_pack: GovernedReportEvidencePack,
         *,
+        access_scope: ReviewAccessScope,
         correlation_id: str | None = None,
         trace_id: str | None = None,
         idempotency_key: str | None = None,
@@ -133,6 +136,7 @@ class CapturingReportClient:
         self.correlation_id = correlation_id
         self.trace_id = trace_id
         self.idempotency_key = idempotency_key
+        self.access_scope = access_scope
         return self.outcome
 
 
@@ -536,6 +540,12 @@ def test_submit_report_evidence_pack_uses_report_materialization_client() -> Non
     assert report_client.correlation_id == "corr-report-realization"
     assert report_client.trace_id == "trace-report-realization"
     assert report_client.idempotency_key == "submission-report-pack-001"
+    assert report_client.access_scope == ReviewAccessScope(
+        tenant_id="tenant-sg",
+        book_id="book-private-bank-sg",
+        portfolio_id="PB_SG_GLOBAL_BAL_001",
+        client_id="client-redacted",
+    )
 
 
 def test_submit_report_evidence_pack_replays_local_submission_without_client_call() -> None:
@@ -721,6 +731,12 @@ def candidate() -> IdeaCandidate:
         ),
         created_at_utc=EVALUATED_AT,
         updated_at_utc=EVALUATED_AT,
+        access_scope=ReviewAccessScope(
+            tenant_id="tenant-sg",
+            book_id="book-private-bank-sg",
+            portfolio_id="PB_SG_GLOBAL_BAL_001",
+            client_id="client-redacted",
+        ),
     )
 
 

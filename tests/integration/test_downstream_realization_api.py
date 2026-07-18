@@ -100,6 +100,7 @@ class CapturingReportClient:
         self,
         evidence_pack: Any,
         *,
+        access_scope: Any,
         correlation_id: str | None = None,
         trace_id: str | None = None,
         idempotency_key: str | None = None,

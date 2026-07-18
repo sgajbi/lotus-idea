@@ -88,6 +88,22 @@ production-authorized purge evidence remain required for certification.
 Integration claims are planned until the relevant RFC-0002 slice is implemented
 and certified.
 
+## Local/Test Report Materialization Consumer
+
+The Slice 13 consumer can submit an existing Idea evidence pack to Report's
+`POST /reports/idea-evidence-packs/materializations` route only in `local` or
+`test`. It resolves the associated persisted candidate record, projects only
+its trusted portfolio identifier, requires the tenant to match the fixed
+`tenant-sg` / `APAC` Report fixture, and accepts only one valid source business
+date across the pack. The fixture uses server-configured `json` output and
+fails before HTTP I/O when scope or dates are unsafe.
+
+It does not consume browser identity or scope headers and is not a substitute
+for an IdP, authenticated session, or token claims. It is disabled outside
+local/test while Idea `#380`, platform `#563`, and Workbench `#436` remain
+open. A successful handoff is still not proof of Report job completion, Render
+output, Archive retention, client publication, or a supported feature.
+
 ## Gateway Publication Foundation
 
 `lotus-gateway` publishes bounded read and Idea-workflow routes for the advisor

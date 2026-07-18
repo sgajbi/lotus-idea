@@ -6,6 +6,25 @@ reviewed idea that already has a `report_evidence` conversion intent.
 This is an RFC-0002 Slice 13 foundation. It is not downstream report, render, or
 archive realization.
 
+## Local/Test Materialization Handoff
+
+An existing report evidence-pack request can be submitted through the internal
+downstream-submission route. In `local` and `test` only, the server maps it to
+Report's `POST /reports/idea-evidence-packs/materializations` contract using a
+server-configured `json` output fixture.
+
+The mapping resolves `portfolio_id` only from the persisted candidate access
+scope, requires that tenant to equal the configured Report fixture tenant, and
+derives `as_of_date` only when all source summaries agree. Missing scope,
+tenant mismatch, malformed dates, and date disagreement fail before Report is
+called. Browser-supplied portfolio, tenant, actor, role, booking-center, and
+output-format values are never accepted.
+
+This development fixture is not an identity provider, session, or token-claims
+implementation. It is disabled in demo, staging, and production until the
+trusted principal and entitlement prerequisites tracked in Idea `#380`,
+platform `#563`, and Workbench `#436` are delivered.
+
 ## Implemented Scope
 
 Certified internal API foundation:
@@ -35,6 +54,10 @@ The endpoint does not:
    authority,
 6. certify a data product,
 7. promote a supported feature.
+
+The local/test materialization request may return a Report-owned JSON job, but
+it does not certify a supportable Report completion, Render output, Archive
+record, retention or legal-hold controls, or client communication authority.
 
 ## Source Authority
 

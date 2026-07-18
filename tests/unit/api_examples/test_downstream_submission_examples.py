@@ -11,6 +11,7 @@ from typing import Any
 from app.api.examples.downstream_submission import (
     CONVERSION_DOWNSTREAM_SUBMISSION_OPERATION_PATH,
     REPORT_DOWNSTREAM_SUBMISSION_OPERATION_PATH,
+    _ExampleDownstreamSubmissionRepository,
     build_conversion_downstream_submission_200_response_examples,
     build_conversion_downstream_submission_202_response_examples,
     build_report_downstream_submission_200_response_examples,
@@ -69,6 +70,12 @@ def test_downstream_submission_examples_preserve_authority_and_replay_safety() -
             assert submission["supportedFeaturePromoted"] is False
             assert payload["durableStorageBacked"] is False
             assert payload["supportedFeaturePromoted"] is False
+
+
+def test_downstream_submission_example_repository_does_not_return_scope_for_another_pack() -> None:
+    repository = _ExampleDownstreamSubmissionRepository()
+
+    assert repository.candidate_record_for_report_evidence_pack("another-report-pack") is None
 
 
 def test_downstream_submission_examples_match_ledger_and_generated_openapi() -> None:

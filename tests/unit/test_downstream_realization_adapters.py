@@ -18,6 +18,7 @@ from app.domain import (
     ReasonCode,
     ReportEvidencePackPurpose,
     ReportEvidenceSourceSummary,
+    ReviewAccessScope,
     SourceSystem,
 )
 from app.infrastructure.downstream_client import DownstreamClientConfig, DownstreamJsonClient
@@ -104,7 +105,7 @@ def test_report_adapter_matches_owner_contract_and_omits_sensitive_fields() -> N
     adapter = HttpReportEvidencePackMaterializationClient(
         DownstreamRealizationAdapterConfig(
             base_url="https://report.example",
-            submit_path="/reports/idea-evidence-packs",
+            submit_path="/reports/idea-evidence-packs/materializations",
             source_authority=SourceSystem.LOTUS_REPORT,
             report_service_context=report_service_context(),
         ),
@@ -113,6 +114,7 @@ def test_report_adapter_matches_owner_contract_and_omits_sensitive_fields() -> N
 
     outcome = adapter.submit_report_evidence_pack_request(
         report_evidence_pack(),
+        access_scope=report_access_scope(),
         correlation_id="corr-report",
         trace_id="trace-report",
         idempotency_key="report-submission-idempotency-001",
@@ -121,34 +123,43 @@ def test_report_adapter_matches_owner_contract_and_omits_sensitive_fields() -> N
     assert outcome.accepted is True
     payload = httpx.Response(200, content=captured["payload"]).json()
     assert payload == {
-        "report_evidence_pack_id": "report-evidence-pack-001",
-        "conversion_intent_id": "conversion-report-001",
-        "candidate_id": "idea_high_cash_redacted",
-        "purpose": "CLIENT_REPORT_EVIDENCE",
-        "evidence_packet_id": "iep-redacted",
-        "evidence_content_fingerprint": "sha256:evidence-redacted",
-        "source_signal_ids": ["signal-redacted"],
-        "source_summaries": [
-            {
-                "product_id": "lotus-core:PortfolioStateSnapshot:v1",
-                "source_system": "lotus-core",
-                "product_version": "v1",
-                "as_of_date": "2026-06-21",
-                "generated_at_utc": SOURCE_TIME.isoformat(),
-                "data_quality_status": "complete",
-                "freshness": "current",
-            }
-        ],
-        "reason_codes": ["review_approved_for_conversion"],
-        "report_source_authority": "lotus-report",
-        "render_source_authority": "lotus-render",
-        "archive_source_authority": "lotus-archive",
-        "boundary": "REPORT_INTAKE_ONLY",
-        "retention_policy_ref": "generated-report-standard",
-        "requested_at_utc": REQUEST_TIME.isoformat(),
+        "idea_evidence_pack": {
+            "report_evidence_pack_id": "report-evidence-pack-001",
+            "conversion_intent_id": "conversion-report-001",
+            "candidate_id": "idea_high_cash_redacted",
+            "purpose": "CLIENT_REPORT_EVIDENCE",
+            "evidence_packet_id": "iep-redacted",
+            "evidence_content_fingerprint": "sha256:evidence-redacted",
+            "source_signal_ids": ["signal-redacted"],
+            "source_summaries": [
+                {
+                    "product_id": "lotus-core:PortfolioStateSnapshot:v1",
+                    "source_system": "lotus-core",
+                    "product_version": "v1",
+                    "as_of_date": "2026-06-21",
+                    "generated_at_utc": SOURCE_TIME.isoformat(),
+                    "data_quality_status": "complete",
+                    "freshness": "current",
+                }
+            ],
+            "reason_codes": ["review_approved_for_conversion"],
+            "report_source_authority": "lotus-report",
+            "render_source_authority": "lotus-render",
+            "archive_source_authority": "lotus-archive",
+            "boundary": "REPORT_INTAKE_ONLY",
+            "retention_policy_ref": "generated-report-standard",
+            "requested_at_utc": REQUEST_TIME.isoformat(),
+            "grants_client_publication_authority": False,
+            "creates_rendered_output": False,
+            "creates_archive_record": False,
+            "producer": "lotus-idea",
+            "supportability_status": "not_certified",
+        },
+        "portfolio_id": "PB_SG_GLOBAL_BAL_001",
+        "as_of_date": "2026-06-21",
+        "requested_output_formats": ["json"],
+        "boundary": "REPORT_JOB_MATERIALIZATION",
         "grants_client_publication_authority": False,
-        "creates_rendered_output": False,
-        "creates_archive_record": False,
         "producer": "lotus-idea",
         "supportability_status": "not_certified",
     }
@@ -158,8 +169,10 @@ def test_report_adapter_matches_owner_contract_and_omits_sensitive_fields() -> N
     assert captured["headers"]["x-region"] == "APAC"
     assert captured["headers"]["x-correlation-id"] == "corr-report"
     assert captured["headers"]["x-trace-id"] == "trace-report"
+    assert "client_id" not in str(payload)
+    assert "tenant_id" not in str(payload)
     assert captured["headers"]["idempotency-key"] == "report-submission-idempotency-001"
-    assert payload["source_summaries"] == [
+    assert payload["idea_evidence_pack"]["source_summaries"] == [
         {
             "product_id": "lotus-core:PortfolioStateSnapshot:v1",
             "source_system": "lotus-core",
@@ -173,8 +186,8 @@ def test_report_adapter_matches_owner_contract_and_omits_sensitive_fields() -> N
     rendered = str(payload)
     assert "route" not in rendered.lower()
     assert "content_hash" not in rendered
-    assert "portfolio_id" not in rendered
     assert "client_id" not in rendered
+    assert "book_id" not in rendered
 
 
 @pytest.mark.parametrize(
@@ -413,9 +426,93 @@ def test_report_adapter_requires_server_context() -> None:
         HttpReportEvidencePackMaterializationClient(
             DownstreamRealizationAdapterConfig(
                 base_url="https://report.example",
-                submit_path="/reports/idea-evidence-packs",
+                submit_path="/reports/idea-evidence-packs/materializations",
                 source_authority=SourceSystem.LOTUS_REPORT,
             )
+        )
+
+
+def test_report_adapter_rejects_candidate_tenant_mismatch_before_http_call() -> None:
+    adapter = HttpReportEvidencePackMaterializationClient(
+        DownstreamRealizationAdapterConfig(
+            base_url="https://report.example",
+            submit_path="/reports/idea-evidence-packs/materializations",
+            source_authority=SourceSystem.LOTUS_REPORT,
+            report_service_context=report_service_context(),
+        ),
+        client=downstream_json_client(
+            "https://report.example",
+            httpx.MockTransport(
+                lambda _request: pytest.fail("Report must not receive mismatched tenant scope")
+            ),
+        ),
+    )
+
+    with pytest.raises(DownstreamRealizationConfigurationError, match="tenant does not match"):
+        adapter.submit_report_evidence_pack_request(
+            report_evidence_pack(),
+            access_scope=replace(report_access_scope(), tenant_id="tenant-other"),
+        )
+
+
+def test_report_adapter_rejects_inconsistent_source_dates_before_http_call() -> None:
+    adapter = HttpReportEvidencePackMaterializationClient(
+        DownstreamRealizationAdapterConfig(
+            base_url="https://report.example",
+            submit_path="/reports/idea-evidence-packs/materializations",
+            source_authority=SourceSystem.LOTUS_REPORT,
+            report_service_context=report_service_context(),
+        ),
+        client=downstream_json_client(
+            "https://report.example",
+            httpx.MockTransport(
+                lambda _request: pytest.fail("Report must not receive inconsistent source dates")
+            ),
+        ),
+    )
+    evidence_pack = replace(
+        report_evidence_pack(),
+        source_summaries=(
+            *report_evidence_pack().source_summaries,
+            replace(report_evidence_pack().source_summaries[0], as_of_date="2026-06-22"),
+        ),
+    )
+
+    with pytest.raises(
+        DownstreamRealizationConfigurationError, match="consistent source as_of_date"
+    ):
+        adapter.submit_report_evidence_pack_request(
+            evidence_pack,
+            access_scope=report_access_scope(),
+        )
+
+
+def test_report_adapter_rejects_malformed_source_date_before_http_call() -> None:
+    adapter = HttpReportEvidencePackMaterializationClient(
+        DownstreamRealizationAdapterConfig(
+            base_url="https://report.example",
+            submit_path="/reports/idea-evidence-packs/materializations",
+            source_authority=SourceSystem.LOTUS_REPORT,
+            report_service_context=report_service_context(),
+        ),
+        client=downstream_json_client(
+            "https://report.example",
+            httpx.MockTransport(
+                lambda _request: pytest.fail("Report must not receive a malformed source date")
+            ),
+        ),
+    )
+    evidence_pack = replace(
+        report_evidence_pack(),
+        source_summaries=(
+            replace(report_evidence_pack().source_summaries[0], as_of_date="not-an-iso-date"),
+        ),
+    )
+
+    with pytest.raises(DownstreamRealizationConfigurationError, match="must be ISO-8601"):
+        adapter.submit_report_evidence_pack_request(
+            evidence_pack,
+            access_scope=report_access_scope(),
         )
 
 
@@ -426,6 +523,7 @@ def test_report_service_context_rejects_blank_required_values() -> None:
             caller_application="lotus-idea",
             tenant_id="local-development",
             region="local",
+            requested_output_formats=("json",),
         )
 
 
@@ -460,7 +558,7 @@ def test_report_adapter_fails_closed_when_owner_retention_policy_mapping_is_miss
     adapter = HttpReportEvidencePackMaterializationClient(
         DownstreamRealizationAdapterConfig(
             base_url="https://report.example",
-            submit_path="/reports/idea-evidence-packs",
+            submit_path="/reports/idea-evidence-packs/materializations",
             source_authority=SourceSystem.LOTUS_REPORT,
             report_service_context=report_service_context(),
         ),
@@ -473,7 +571,10 @@ def test_report_adapter_fails_closed_when_owner_retention_policy_mapping_is_miss
     )
 
     with pytest.raises(DownstreamRealizationConfigurationError, match="not mapped"):
-        adapter.submit_report_evidence_pack_request(report_evidence_pack())
+        adapter.submit_report_evidence_pack_request(
+            report_evidence_pack(),
+            access_scope=report_access_scope(),
+        )
 
 
 def downstream_json_client(
@@ -510,6 +611,16 @@ def report_service_context() -> ReportRealizationServiceContext:
         caller_application="lotus-idea",
         tenant_id="tenant-sg",
         region="APAC",
+        requested_output_formats=("json",),
+    )
+
+
+def report_access_scope() -> ReviewAccessScope:
+    return ReviewAccessScope(
+        tenant_id="tenant-sg",
+        book_id="book-private-bank-sg",
+        portfolio_id="PB_SG_GLOBAL_BAL_001",
+        client_id="client-redacted",
     )
 
 

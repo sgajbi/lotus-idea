@@ -353,6 +353,11 @@ class DownstreamSubmissionRepository(Protocol):
         report_evidence_pack_id: str,
     ) -> GovernedReportEvidencePack | None: ...
 
+    def candidate_record_for_report_evidence_pack(
+        self,
+        report_evidence_pack_id: str,
+    ) -> CandidatePersistenceRecord | None: ...
+
     def downstream_submission_by_idempotency_key(
         self,
         idempotency_key: str,

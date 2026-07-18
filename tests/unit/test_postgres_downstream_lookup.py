@@ -105,6 +105,47 @@ def test_postgres_report_pack_lookup_uses_direct_table_query() -> None:
     assert "idea_downstream_submission" not in executed_sql
 
 
+def test_postgres_report_pack_candidate_lookup_uses_bounded_record_query() -> None:
+    connection = FakePostgresConnection()
+    repository = PostgresIdeaRepository(connection)
+    candidate = approved_candidate()
+    repository.persist_candidate(
+        candidate,
+        idempotency_key="signal-ingestion:report-pack-candidate-lookup",
+        payload={"candidateId": candidate.candidate_id},
+        actor_subject="signal-ingestion-worker",
+        occurred_at_utc=EVALUATED_AT,
+    )
+    conversion_result = request_conversion_intent(candidate, conversion_command())
+    conversion_persistence = repository.record_conversion_intent(
+        conversion_result,
+        idempotency_key=conversion_result.conversion_intent.idempotency_key,
+        payload={"conversionIntentId": "conversion-report-001"},
+    )
+    assert conversion_persistence.record is not None
+    pack_result = request_report_evidence_pack(
+        conversion_persistence.record.candidate,
+        conversion_result.conversion_intent,
+        report_pack_command(),
+    )
+    repository.record_report_evidence_pack(
+        pack_result,
+        idempotency_key=pack_result.evidence_pack.idempotency_key,
+        payload={"reportEvidencePackId": "report-evidence-pack-001"},
+    )
+    connection.executed_sql.clear()
+
+    loaded = repository.candidate_record_for_report_evidence_pack("report-evidence-pack-001")
+
+    assert loaded is not None
+    assert loaded.candidate.access_scope == candidate.access_scope
+    executed_sql = " ".join(connection.executed_sql)
+    assert "/* lotus-idea downstream-lookup-report-evidence-pack-candidate */" in executed_sql
+    assert "report.report_evidence_pack_id = %s" in executed_sql
+    assert "join idea_data_lifecycle_control" in executed_sql
+    assert "idea_report_evidence_pack_request" in executed_sql
+
+
 def test_postgres_downstream_submission_idempotency_lookup_uses_direct_table_query() -> None:
     connection = FakePostgresConnection()
     repository = PostgresIdeaRepository(connection)
@@ -148,6 +189,7 @@ def test_postgres_downstream_lookups_return_none_for_missing_records() -> None:
     assert repository.conversion_intent_by_id("missing-conversion") is None
     assert repository.candidate_record_for_conversion_intent("missing-conversion") is None
     assert repository.report_evidence_pack_by_id("missing-report-pack") is None
+    assert repository.candidate_record_for_report_evidence_pack("missing-report-pack") is None
     assert repository.downstream_submission_by_idempotency_key("missing-submission") is None
 
 
