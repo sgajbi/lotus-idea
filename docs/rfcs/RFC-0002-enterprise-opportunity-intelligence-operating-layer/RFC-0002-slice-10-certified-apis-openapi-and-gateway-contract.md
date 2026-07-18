@@ -1,6 +1,6 @@
 # RFC-0002 Slice 10: Certified APIs, OpenAPI, And Gateway Contract
 
-Status: Partially implemented - certified internal API foundations plus bounded read-only Gateway publication for advisor queue and candidate detail
+Status: Implemented for the internal API/OpenAPI contract inventory - certified internal API foundations plus bounded read-only Gateway publication for advisor queue and candidate detail are complete; full product proof and supported-feature promotion remain blocked under later slices and issue `#380`
 
 ## Outcome
 
