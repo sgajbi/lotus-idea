@@ -194,9 +194,32 @@ def evaluate_concentration_risk_signal(
     source_input: ConcentrationRiskSignalInput,
     policy: ConcentrationRiskSignalPolicy,
 ) -> SignalEvaluationResult:
+    _validate_concentration_risk_evaluation_time(source_input)
+    if pre_source_block := _concentration_risk_pre_source_block(source_input):
+        return pre_source_block
+
+    source_refs = _concentration_risk_source_refs(source_input)
+    if source_block := _concentration_risk_source_block(source_input, source_refs):
+        return source_block
+    if materiality_result := _concentration_risk_materiality_result(
+        source_input,
+        policy,
+    ):
+        return materiality_result
+
+    return _concentration_risk_candidate_created_result(source_input, policy, source_refs)
+
+
+def _validate_concentration_risk_evaluation_time(
+    source_input: ConcentrationRiskSignalInput,
+) -> None:
     if source_input.evaluated_at_utc.tzinfo is None:
         raise ValueError("evaluated_at_utc must be timezone-aware")
 
+
+def _concentration_risk_pre_source_block(
+    source_input: ConcentrationRiskSignalInput,
+) -> SignalEvaluationResult | None:
     if not source_input.entitlement_allowed:
         return blocked_signal_result(
             family=OpportunityFamily.CONCENTRATION,
@@ -209,15 +232,22 @@ def evaluate_concentration_risk_signal(
             reason_codes=(ReasonCode.SOURCE_PARTIAL,),
             unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,),
         )
+    return None
+
+
+def _concentration_risk_source_block(
+    source_input: ConcentrationRiskSignalInput,
+    source_refs: tuple[SourceRef, ...],
+) -> SignalEvaluationResult | None:
     temporal_block = temporal_blocked_signal_result(
         family=OpportunityFamily.CONCENTRATION,
         as_of_date=source_input.as_of_date,
         evaluated_at_utc=source_input.evaluated_at_utc,
-        source_refs=(source_input.concentration_ref,),
+        source_refs=source_refs,
     )
     if temporal_block is not None:
         return temporal_block
-    if source_input.concentration_ref.freshness is not EvidenceFreshness.CURRENT:
+    if any(source_ref.freshness is not EvidenceFreshness.CURRENT for source_ref in source_refs):
         return blocked_signal_result(
             family=OpportunityFamily.CONCENTRATION,
             reason_codes=(ReasonCode.SOURCE_STALE,),
@@ -235,6 +265,13 @@ def evaluate_concentration_risk_signal(
             reason_codes=(ReasonCode.SOURCE_PARTIAL,),
             unsupported_reasons=(UnsupportedEvidenceReason.SOURCE_UNCERTIFIED,),
         )
+    return None
+
+
+def _concentration_risk_materiality_result(
+    source_input: ConcentrationRiskSignalInput,
+    policy: ConcentrationRiskSignalPolicy,
+) -> SignalEvaluationResult | None:
     if source_input.duplicate_of_candidate_id is not None:
         return SignalEvaluationResult(
             outcome=SignalEvaluationOutcome.SUPPRESSED,
@@ -256,16 +293,39 @@ def evaluate_concentration_risk_signal(
             reason_codes=(ReasonCode.SOURCE_PARTIAL,),
             unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,),
         )
-    if (
-        top_position_weight is None or top_position_weight < policy.top_position_weight_threshold
-    ) and (top_issuer_weight is None or top_issuer_weight < policy.top_issuer_weight_threshold):
+    if _concentration_risk_below_materiality(
+        top_position_weight=top_position_weight,
+        top_issuer_weight=top_issuer_weight,
+        policy=policy,
+    ):
         return SignalEvaluationResult(
             outcome=SignalEvaluationOutcome.NOT_ELIGIBLE,
             family=OpportunityFamily.CONCENTRATION,
             reason_codes=(ReasonCode.BELOW_MATERIALITY,),
         )
+    return None
 
-    source_refs = (source_input.concentration_ref,)
+
+def _concentration_risk_below_materiality(
+    *,
+    top_position_weight: Decimal | None,
+    top_issuer_weight: Decimal | None,
+    policy: ConcentrationRiskSignalPolicy,
+) -> bool:
+    position_below = (
+        top_position_weight is None or top_position_weight < policy.top_position_weight_threshold
+    )
+    issuer_below = (
+        top_issuer_weight is None or top_issuer_weight < policy.top_issuer_weight_threshold
+    )
+    return position_below and issuer_below
+
+
+def _concentration_risk_candidate_created_result(
+    source_input: ConcentrationRiskSignalInput,
+    policy: ConcentrationRiskSignalPolicy,
+    source_refs: tuple[SourceRef, ...],
+) -> SignalEvaluationResult:
     identity = _stable_concentration_identity(source_input, policy, source_refs)
     signal = OpportunitySignal(
         signal_id=f"signal_concentration_{identity}",
@@ -313,6 +373,12 @@ def evaluate_concentration_risk_signal(
         signal=signal,
         candidate=candidate,
     )
+
+
+def _concentration_risk_source_refs(
+    source_input: ConcentrationRiskSignalInput,
+) -> tuple[SourceRef, ...]:
+    return () if source_input.concentration_ref is None else (source_input.concentration_ref,)
 
 
 def evaluate_underperformance_signal(
