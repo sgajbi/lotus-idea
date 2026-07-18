@@ -39,67 +39,85 @@ from app.application.source_ingestion_readiness import SOURCE_INGESTION_RUNTIME_
 from app.application.workbench.read_path_source_contract import (
     WORKBENCH_READ_PATH_SOURCE_CONTRACT_PROOF_ENV,
 )
-from app.runtime.proof_artifacts import configured_implementation_proof_artifacts
+from app.runtime.proof_artifacts import (
+    ConfiguredImplementationProofArtifacts,
+    configured_implementation_proof_artifacts,
+)
 
 
 def test_configured_implementation_proof_artifacts_loads_relative_source_safe_refs(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    durable_path = tmp_path / "output" / "persistence" / "durable-repository-proof.json"
-    source_ingestion_runtime_execution_path = (
-        tmp_path / "output" / "source-ingestion" / "source-ingestion-runtime-execution.json"
-    )
-    runtime_path = (
-        tmp_path
-        / "output"
-        / "trust-telemetry"
-        / "test-execution"
-        / "runtime-trust-telemetry-test-execution.json"
-    )
-    ai_lineage_path = tmp_path / "output" / "ai" / "ai-lineage-store-proof.json"
-    ai_workflow_pack_path = (
-        tmp_path / "output" / "ai" / "ai-workflow-pack-registration-source-contract-proof.json"
-    )
-    ai_runtime_path = tmp_path / "output" / "ai" / "ai-workflow-pack-runtime-execution-proof.json"
-    workbench_path = tmp_path / "output" / "workbench" / "read-path-source-contract-proof.json"
-    gateway_workbench_path = (
-        tmp_path / "output" / "workbench" / "gateway-workbench-contract-proof.json"
-    )
-    gateway_workbench_discovery_path = (
-        tmp_path / "output" / "workbench" / "gateway-workbench-discovery-contract-proof.json"
-    )
-    outbox_path = tmp_path / "output" / "outbox" / "broker" / "source-contract-proof.json"
-    outbox_mesh_event_path = (
-        tmp_path / "output" / "outbox" / "platform-mesh" / "event-source-contract-proof.json"
-    )
-    platform_mesh_path = tmp_path / "output" / "data-mesh" / "platform-catalog-source-contract.json"
-    low_income_path = (
-        tmp_path / "output" / "opportunity-archetypes" / "low-income-core-cashflow-live-proof.json"
-    )
-    bond_maturity_path = (
-        tmp_path / "output" / "opportunity-archetypes" / "bond-maturity-live-proof.json"
-    )
-    _write_artifacts(
-        durable_path,
-        source_ingestion_runtime_execution_path,
-        runtime_path,
-        ai_lineage_path,
-        ai_workflow_pack_path,
-        ai_runtime_path,
-        workbench_path,
-        gateway_workbench_path,
-        gateway_workbench_discovery_path,
-        outbox_path,
-        outbox_mesh_event_path,
-        platform_mesh_path,
-        bond_maturity_path,
-        low_income_path,
-    )
+    _write_artifacts(*_configured_artifact_paths(tmp_path).values())
     _configure_relative_artifact_env(monkeypatch)
 
     artifacts = configured_implementation_proof_artifacts(repository_root=tmp_path)
 
+    _assert_configured_artifacts_are_bound(artifacts)
+
+
+def test_configured_implementation_proof_artifacts_rejects_non_object_payload(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    proof_path = tmp_path / "proof.json"
+    proof_path.write_text("[]", encoding="utf-8")
+    monkeypatch.setenv(DURABLE_REPOSITORY_PROOF_ENV, str(proof_path))
+
+    with pytest.raises(ValueError, match="durable repository proof must be a JSON object"):
+        configured_implementation_proof_artifacts(repository_root=tmp_path)
+
+
+def _configured_artifact_paths(tmp_path: Path) -> dict[str, Path]:
+    return {
+        "durable": tmp_path / "output" / "persistence" / "durable-repository-proof.json",
+        "source_ingestion_runtime_execution": (
+            tmp_path / "output" / "source-ingestion" / "source-ingestion-runtime-execution.json"
+        ),
+        "runtime": (
+            tmp_path
+            / "output"
+            / "trust-telemetry"
+            / "test-execution"
+            / "runtime-trust-telemetry-test-execution.json"
+        ),
+        "ai_lineage": tmp_path / "output" / "ai" / "ai-lineage-store-proof.json",
+        "ai_workflow_pack": (
+            tmp_path / "output" / "ai" / "ai-workflow-pack-registration-source-contract-proof.json"
+        ),
+        "ai_runtime": (
+            tmp_path / "output" / "ai" / "ai-workflow-pack-runtime-execution-proof.json"
+        ),
+        "workbench": (tmp_path / "output" / "workbench" / "read-path-source-contract-proof.json"),
+        "gateway_workbench": (
+            tmp_path / "output" / "workbench" / "gateway-workbench-contract-proof.json"
+        ),
+        "gateway_workbench_discovery": (
+            tmp_path / "output" / "workbench" / "gateway-workbench-discovery-contract-proof.json"
+        ),
+        "outbox": tmp_path / "output" / "outbox" / "broker" / "source-contract-proof.json",
+        "outbox_mesh_event": (
+            tmp_path / "output" / "outbox" / "platform-mesh" / "event-source-contract-proof.json"
+        ),
+        "platform_mesh": (
+            tmp_path / "output" / "data-mesh" / "platform-catalog-source-contract.json"
+        ),
+        "low_income": (
+            tmp_path
+            / "output"
+            / "opportunity-archetypes"
+            / "low-income-core-cashflow-live-proof.json"
+        ),
+        "bond_maturity": (
+            tmp_path / "output" / "opportunity-archetypes" / "bond-maturity-live-proof.json"
+        ),
+    }
+
+
+def _assert_configured_artifacts_are_bound(
+    artifacts: ConfiguredImplementationProofArtifacts,
+) -> None:
     _assert_bound_artifact(
         artifacts.source_ingestion_runtime_execution,
         "source-ingestion-runtime-execution.json",
@@ -188,18 +206,6 @@ def test_configured_implementation_proof_artifacts_loads_relative_source_safe_re
     assert artifacts.low_income_core_cashflow_live_proof_ref == (
         "output/opportunity-archetypes/low-income-core-cashflow-live-proof.json"
     )
-
-
-def test_configured_implementation_proof_artifacts_rejects_non_object_payload(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-) -> None:
-    proof_path = tmp_path / "proof.json"
-    proof_path.write_text("[]", encoding="utf-8")
-    monkeypatch.setenv(DURABLE_REPOSITORY_PROOF_ENV, str(proof_path))
-
-    with pytest.raises(ValueError, match="durable repository proof must be a JSON object"):
-        configured_implementation_proof_artifacts(repository_root=tmp_path)
 
 
 def _write_artifacts(*paths: Path) -> None:
