@@ -6,6 +6,61 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-07-19: AI Explanation Repository Evaluation Boundary
+
+Issue `#668` applies the Slice 19 report-only quality-baseline lens to the
+AI explanation repository evaluation application boundary. After issue `#666`,
+`make quality-baseline` listed
+`src/app/application/ai_governance.py::evaluate_ai_explanation_to_repository`
+at `117` lines, making it the largest production-code hotspot.
+
+The function mixed:
+
+1. candidate lookup and entitlement validation,
+2. deterministic request construction,
+3. Lotus AI run-attestation infrastructure checks,
+4. run-attestation and provider-retention verification,
+5. attested output mapping,
+6. deterministic fallback and local/test output evaluation,
+7. lineage persistence,
+8. idempotency-conflict response mapping.
+
+`src/app/application/ai_governance.py` keeps the public
+`evaluate_ai_explanation_to_repository(...)` entry point stable while extracting
+candidate resolution, entitlement validation, attested evaluation,
+fallback/local-output evaluation, provider-retention verification, and lineage
+persistence mapping into named helpers. The public function is now `28` lines;
+the attested subflow is bounded at `54` lines. Idempotency, persistence
+receipts, provider-retention receipts, fallback behavior, entitlement failure,
+not-found posture, and untrusted-output failure semantics are preserved.
+
+Focused validation passed:
+
+1. `.venv/Scripts/ruff.exe format src/app/application/ai_governance.py tests/unit/test_ai_governance.py tests/unit/test_attested_ai_explanation_application.py`,
+2. `.venv/Scripts/ruff.exe check src/app/application/ai_governance.py tests/unit/test_ai_governance.py tests/unit/test_attested_ai_explanation_application.py`,
+3. `.venv/Scripts/python.exe -m mypy src/app/application/ai_governance.py tests/unit/test_ai_governance.py`,
+4. `.venv/Scripts/python.exe -m pytest tests/unit/test_ai_governance.py tests/unit/test_attested_ai_explanation_application.py`
+   (`23` passed),
+5. `make maintainability-gate`,
+6. `make quality-baseline`.
+
+The same-pattern scan used duplicate searches for
+`evaluate_ai_explanation_to_repository` and `ai_governance maintainability`.
+Existing issue `#340` owns external Lotus AI attestation/runtime certification,
+and closed issue `#268` owns AI explanation lineage idempotency; neither owns
+this application-layer maintainability root cause. This slice records a
+no-wiki-change decision because operator-facing AI governance behavior and
+commands are unchanged.
+
+This is application-layer maintainability only. It does not change API/OpenAPI
+contracts, persistence schema, migrations, authentication or authorization
+infrastructure, live `lotus-ai` runtime execution, provider certification,
+Gateway, Workbench, data-mesh certification, runtime topology,
+external-publication authority, supported features, or supported-feature
+promotion. Broader branch gates, PR checks, exact-main Main
+Releasability/CodeQL, wiki parity/no-change evidence, issue closure, and branch
+cleanup remain pending for the tranche.
+
 ## 2026-07-19: Drawdown-Review Signal Evaluation Boundary
 
 Issue `#661` applies the Slice 19 report-only quality-baseline lens to the
