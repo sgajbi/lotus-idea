@@ -900,9 +900,9 @@ not platform mesh certification.
 
 Runtime trust telemetry preview/snapshot endpoints and generated artifacts are
 source-safe readiness evidence. They include bounded local downstream
-submission posture counts, but those counts are Idea-owned posture only. They
-are not certified data products, downstream acceptance/materialization proof,
-or supported-feature promotion.
+submission posture counts and issue-backed blocker refs, but those counts are
+Idea-owned posture only. They are not certified data products, downstream
+acceptance/materialization proof, or supported-feature promotion.
 
 PostgreSQL trust projections count only lifecycle-active or held-from-active
 records as candidate and workflow data products. Erased and purged tombstones

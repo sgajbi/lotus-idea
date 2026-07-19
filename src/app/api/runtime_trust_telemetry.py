@@ -260,6 +260,28 @@ RUNTIME_TRUST_TELEMETRY_PREVIEW_ROUTE: RouteMetadata = {
                             "gateway_workbench_discovery_proof_missing",
                             "supported_feature_promotion_missing",
                         ],
+                        "blockerIssueRefs": {
+                            "platform_source_manifest_inclusion_missing": [
+                                "sgajbi/lotus-idea#692",
+                                "sgajbi/lotus-platform#598",
+                            ],
+                            "platform_mesh_certification_missing": [
+                                "sgajbi/lotus-idea#692",
+                                "sgajbi/lotus-platform#598",
+                            ],
+                            "gateway_workbench_discovery_proof_missing": [
+                                "sgajbi/lotus-idea#692",
+                                "sgajbi/lotus-gateway#505",
+                                "sgajbi/lotus-workbench#484",
+                                "sgajbi/lotus-platform#563",
+                            ],
+                            "supported_feature_promotion_missing": [
+                                "sgajbi/lotus-idea#692",
+                                "sgajbi/lotus-idea#380",
+                                "sgajbi/lotus-idea#697",
+                                "sgajbi/lotus-idea#683",
+                            ],
+                        },
                         "productCoverage": [
                             {
                                 "productId": "lotus-idea:IdeaCandidate:v1",
@@ -285,6 +307,28 @@ RUNTIME_TRUST_TELEMETRY_PREVIEW_ROUTE: RouteMetadata = {
                                     "gateway_workbench_discovery_proof_missing",
                                     "supported_feature_promotion_missing",
                                 ],
+                                "blockerIssueRefs": {
+                                    "platform_source_manifest_inclusion_missing": [
+                                        "sgajbi/lotus-idea#692",
+                                        "sgajbi/lotus-platform#598",
+                                    ],
+                                    "platform_mesh_certification_missing": [
+                                        "sgajbi/lotus-idea#692",
+                                        "sgajbi/lotus-platform#598",
+                                    ],
+                                    "gateway_workbench_discovery_proof_missing": [
+                                        "sgajbi/lotus-idea#692",
+                                        "sgajbi/lotus-gateway#505",
+                                        "sgajbi/lotus-workbench#484",
+                                        "sgajbi/lotus-platform#563",
+                                    ],
+                                    "supported_feature_promotion_missing": [
+                                        "sgajbi/lotus-idea#692",
+                                        "sgajbi/lotus-idea#380",
+                                        "sgajbi/lotus-idea#697",
+                                        "sgajbi/lotus-idea#683",
+                                    ],
+                                },
                             }
                         ],
                         "supportedFeaturePromoted": False,
@@ -369,8 +413,34 @@ RUNTIME_TRUST_TELEMETRY_SNAPSHOT_ROUTE: RouteMetadata = {
                                 "Runtime trust telemetry snapshot generated for "
                                 "IdeaCandidate:v1, but platform source manifest inclusion, "
                                 "platform mesh certification, Gateway/Workbench discovery "
-                                "proof, and supported-feature promotion remain pending."
+                                "proof, and supported-feature promotion remain pending; "
+                                "blockers: platform_source_manifest_inclusion_missing, "
+                                "platform_mesh_certification_missing, "
+                                "gateway_workbench_discovery_proof_missing, "
+                                "supported_feature_promotion_missing."
                             ),
+                            "blocker_issue_refs": {
+                                "platform_source_manifest_inclusion_missing": [
+                                    "sgajbi/lotus-idea#692",
+                                    "sgajbi/lotus-platform#598",
+                                ],
+                                "platform_mesh_certification_missing": [
+                                    "sgajbi/lotus-idea#692",
+                                    "sgajbi/lotus-platform#598",
+                                ],
+                                "gateway_workbench_discovery_proof_missing": [
+                                    "sgajbi/lotus-idea#692",
+                                    "sgajbi/lotus-gateway#505",
+                                    "sgajbi/lotus-workbench#484",
+                                    "sgajbi/lotus-platform#563",
+                                ],
+                                "supported_feature_promotion_missing": [
+                                    "sgajbi/lotus-idea#692",
+                                    "sgajbi/lotus-idea#380",
+                                    "sgajbi/lotus-idea#697",
+                                    "sgajbi/lotus-idea#683",
+                                ],
+                            },
                         },
                         "product_coverage": [
                             {
@@ -397,6 +467,28 @@ RUNTIME_TRUST_TELEMETRY_SNAPSHOT_ROUTE: RouteMetadata = {
                                     "gateway_workbench_discovery_proof_missing",
                                     "supported_feature_promotion_missing",
                                 ],
+                                "blocker_issue_refs": {
+                                    "platform_source_manifest_inclusion_missing": [
+                                        "sgajbi/lotus-idea#692",
+                                        "sgajbi/lotus-platform#598",
+                                    ],
+                                    "platform_mesh_certification_missing": [
+                                        "sgajbi/lotus-idea#692",
+                                        "sgajbi/lotus-platform#598",
+                                    ],
+                                    "gateway_workbench_discovery_proof_missing": [
+                                        "sgajbi/lotus-idea#692",
+                                        "sgajbi/lotus-gateway#505",
+                                        "sgajbi/lotus-workbench#484",
+                                        "sgajbi/lotus-platform#563",
+                                    ],
+                                    "supported_feature_promotion_missing": [
+                                        "sgajbi/lotus-idea#692",
+                                        "sgajbi/lotus-idea#380",
+                                        "sgajbi/lotus-idea#697",
+                                        "sgajbi/lotus-idea#683",
+                                    ],
+                                },
                             }
                         ],
                         "observed_trust_metadata": {

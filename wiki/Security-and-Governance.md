@@ -191,13 +191,15 @@ It now includes product coverage for every producer product declared in
 `contracts/domain-data-products/lotus-idea-products.v1.json`, including
 explicit `blocked_not_runtime_backed` posture where a declared product is not
 independently materialized at runtime. This is coverage transparency, not data
-mesh certification.
+mesh certification. Each aggregate and per-product blocker carries durable
+GitHub issue refs so certification gaps remain traceable outside transient
+runtime output.
 
 `make runtime-trust-telemetry-snapshot-check` emits the source-safe runtime
 snapshot for `IdeaCandidate:v1` under ignored `output/trust-telemetry/runtime/`.
 The snapshot includes the same product coverage posture and is contract-shaped
-evidence for operators and CI, not product certification or supported-feature
-promotion.
+evidence for operators and CI, including issue-backed blocker refs. It is not
+product certification or supported-feature promotion.
 `GET /api/v1/data-mesh/trust-telemetry/runtime-snapshot` exposes the same
 contract-shaped posture as a certified internal operator diagnostic. It
 requires the `operator` role and `idea.mesh.trust-telemetry.snapshot.read`,

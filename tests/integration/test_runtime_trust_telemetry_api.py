@@ -107,6 +107,17 @@ def test_runtime_trust_telemetry_preview_api_returns_source_safe_aggregate_state
     assert payload["certificationReady"] is False
     assert payload["supportedFeaturePromoted"] is False
     assert "platform_mesh_certification_missing" in payload["certificationBlockers"]
+    assert payload["blockerIssueRefs"]["platform_mesh_certification_missing"] == [
+        "sgajbi/lotus-idea#692",
+        "sgajbi/lotus-platform#598",
+    ]
+    assert _preview_product_posture(
+        payload,
+        "lotus-idea:OpportunitySignalCandidate:v1",
+    )["blockerIssueRefs"]["runtime_product_materialization_missing"] == [
+        "sgajbi/lotus-idea#692",
+        "sgajbi/lotus-idea#380",
+    ]
     assert "candidateId" not in response.text
     assert "portfolio_id" not in response.text
     assert "contentHash" not in response.text
@@ -234,6 +245,17 @@ def test_runtime_trust_telemetry_snapshot_api_returns_source_safe_contract_state
     }
     assert payload["blocking"]["blocked"] is True
     assert "platform_mesh_certification_missing" in payload["blocking"]["blocked_reason"]
+    assert payload["blocking"]["blocker_issue_refs"]["platform_mesh_certification_missing"] == [
+        "sgajbi/lotus-idea#692",
+        "sgajbi/lotus-platform#598",
+    ]
+    assert _snapshot_product_posture(
+        payload,
+        "lotus-idea:OpportunitySignalCandidate:v1",
+    )["blocker_issue_refs"]["runtime_product_materialization_missing"] == [
+        "sgajbi/lotus-idea#692",
+        "sgajbi/lotus-idea#380",
+    ]
     assert payload["evidence"]["source_artifact_uri"].endswith(
         "output/trust-telemetry/runtime/idea-candidate.telemetry.v1.json"
     )

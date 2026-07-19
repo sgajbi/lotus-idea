@@ -22,6 +22,7 @@ ensure_worktree_imports(__file__)
 from app.application.runtime_trust_telemetry import (  # noqa: E402
     RUNTIME_TELEMETRY_OUTPUT_PATH,
     build_runtime_trust_telemetry_snapshot,
+    required_runtime_trust_telemetry_blocker_issue_refs,
 )
 from app.runtime.repository_state import (  # noqa: E402
     get_idea_repository,
@@ -72,6 +73,7 @@ REQUIRED_PRODUCT_COVERAGE_FIELDS = {
     "source_batch_evidence_available",
     "consumer_exposure_status",
     "certification_blockers",
+    "blocker_issue_refs",
 }
 ALLOWED_COMPLETENESS_STATUSES = {
     "complete",
@@ -197,6 +199,15 @@ def _validate_nested_contracts(payload: dict[str, Any], errors: list[str]) -> No
         errors.append("runtime snapshot blocking must be an object")
     elif blocking.get("blocked") is not True:
         errors.append("runtime snapshot must remain blocked before platform certification")
+    elif "blocker_issue_refs" not in blocking:
+        errors.append("runtime snapshot blocking.blocker_issue_refs must be present")
+    else:
+        _validate_blocker_issue_refs(
+            blockers=_blocking_certification_blockers(blocking),
+            issue_refs=blocking.get("blocker_issue_refs"),
+            context="runtime snapshot blocking.blocker_issue_refs",
+            errors=errors,
+        )
 
     evidence = payload.get("evidence")
     if not isinstance(evidence, dict):
@@ -276,8 +287,75 @@ def _validate_product_coverage(payload: dict[str, Any], errors: list[str]) -> No
             errors.append(
                 f"runtime snapshot product_coverage[{index}] certification_blockers must be a list"
             )
+            blockers: list[str] = []
+        else:
+            blockers = item["certification_blockers"]
+        _validate_blocker_issue_refs(
+            blockers=blockers,
+            issue_refs=item.get("blocker_issue_refs"),
+            context=f"runtime snapshot product_coverage[{index}].blocker_issue_refs",
+            errors=errors,
+        )
     if "lotus-idea:IdeaTrustTelemetry:v1" not in product_ids:
         errors.append("runtime snapshot product_coverage must include IdeaTrustTelemetry:v1")
+
+
+def _blocking_certification_blockers(blocking: dict[str, Any]) -> list[str]:
+    blocked_reason = blocking.get("blocked_reason")
+    if not isinstance(blocked_reason, str) or "blockers: " not in blocked_reason:
+        return []
+    serialized = blocked_reason.split("blockers: ", maxsplit=1)[1].rstrip(".")
+    return [blocker.strip() for blocker in serialized.split(",") if blocker.strip()]
+
+
+def _validate_blocker_issue_refs(
+    *,
+    blockers: list[str],
+    issue_refs: Any,
+    context: str,
+    errors: list[str],
+) -> None:
+    if not isinstance(issue_refs, dict):
+        errors.append(f"{context} must be an object")
+        return
+    blocker_set = set(blockers)
+    missing_mappings = sorted(blocker_set - set(issue_refs))
+    if missing_mappings:
+        errors.append(f"{context} missing blockers: {', '.join(missing_mappings)}")
+    stale_mappings = sorted(set(issue_refs) - blocker_set)
+    if stale_mappings:
+        errors.append(f"{context} contains non-blockers: {', '.join(stale_mappings)}")
+
+    required_refs = required_runtime_trust_telemetry_blocker_issue_refs()
+    for blocker in sorted(blocker_set):
+        if blocker not in required_refs:
+            errors.append(f"{context}.{blocker} is not in the canonical blocker issue-ref map")
+        refs = issue_refs.get(blocker)
+        if not isinstance(refs, list | tuple) or not refs:
+            errors.append(f"{context}.{blocker} must be a non-empty issue-ref list")
+            continue
+        expected_refs = set(required_refs.get(blocker, ()))
+        missing_required_refs = sorted(expected_refs - set(refs))
+        if missing_required_refs:
+            errors.append(
+                f"{context}.{blocker} missing required issue refs: "
+                + ", ".join(missing_required_refs)
+            )
+        invalid_refs = sorted(ref for ref in refs if not _is_issue_ref(ref))
+        if invalid_refs:
+            errors.append(
+                f"{context}.{blocker} must use sgajbi/<repo>#<number> refs: "
+                + ", ".join(invalid_refs)
+            )
+
+
+def _is_issue_ref(ref: Any) -> bool:
+    if not isinstance(ref, str) or not ref.startswith("sgajbi/"):
+        return False
+    if "#" not in ref:
+        return False
+    _, number = ref.rsplit("#", maxsplit=1)
+    return number.isdecimal()
 
 
 def _validate_source_safety(payload: dict[str, Any], errors: list[str]) -> None:
