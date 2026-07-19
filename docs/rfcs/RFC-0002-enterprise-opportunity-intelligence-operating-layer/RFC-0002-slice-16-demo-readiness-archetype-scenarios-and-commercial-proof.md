@@ -104,7 +104,8 @@ commercial proof from getting ahead of implementation-backed runtime evidence.
    data-mesh certification, Workbench proof, and supported-feature evidence
    before demo use. Risk consumer approval for
    `lotus-risk:ConcentrationRiskReport:v1` is source-approved and is no longer
-   a concentration-review blocker.
+   a concentration-review blocker. Producer issue lotus-risk `#211` tracks the
+   remaining fresh Risk concentration/high-volatility/drawdown runtime evidence.
    The source-safe Risk concentration live-proof artifact contract now exists
    and can clear only the live Risk source blocker when valid evidence is
    supplied to aggregate readiness; it is not demo, Workbench, mesh, client
@@ -115,7 +116,8 @@ commercial proof from getting ahead of implementation-backed runtime evidence.
    use. The current foundation consumes source-reported active return and
    benchmark context from `lotus-performance:ReturnsSeriesBundle:v1`, blocks
    missing benchmark context, and does not calculate performance methodology
-   inside `lotus-idea`.
+   inside `lotus-idea`. Producer issue lotus-performance `#464` tracks fresh
+   underperformance and missing-benchmark closed v2 runtime evidence.
 6. High-volatility / drawdown review now has bounded deterministic policies, Lotus Risk
    `RiskMetricsReport:v1` and `DrawdownAnalyticsReport:v1`
    source-port/adapter foundations, the bounded

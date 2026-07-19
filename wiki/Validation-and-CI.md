@@ -17,6 +17,7 @@ clean branch hygiene.
 | Small code or docs edit | `make lint`, focused tests | Fast local proof before commit. |
 | API contract change | `make openapi-gate`, `make endpoint-certification-gate`, focused API tests | Runtime/OpenAPI/certification agreement. |
 | Supported-feature claim | `make supported-features-gate`, `make implementation-truth-gate` | No unproved support or certification language. |
+| Dependency or container vulnerability posture change | `make dependency-vulnerability-posture-gate`, `make security-audit`, release lane for image scan/SBOM/signing/provenance | Exact stable dependency pins, lock mirror truth, governed Python vulnerability audit, Trivy/release hook wiring, and issue-backed exceptions. |
 | Persistence or migration change | `make migration-contract-gate`, `make migration-execution-gate`, focused repository tests | Apply/rollback and query-shape proof. |
 | PostgreSQL recovery change | `make disaster-recovery-contract-gate`, real restore/resume proof, `make disaster-recovery-proof-gate` | RPO/RTO, restored invariants, replay/fencing, and no-mutation evidence. |
 | Canonical source-proof run | `make canonical-opportunity-source-proofs` with governed runtime arguments | Source-specific live evidence, traceability, and fail-closed blocker posture. |
@@ -113,6 +114,7 @@ target and must not carry durable truth that is absent from `main`.
 | --- | --- | --- |
 | Aggregate lanes | `make check`, `make ci`, `make ci-release` | Routine local proof, broad CI-equivalent proof, and release evidence. |
 | Contract and documentation | `make ci-contract-gate`, `make foundation-structure-gate`, `make documentation-contract-gate`, `make implementation-truth-gate`, `make supported-features-gate` | Prevent workflow, docs, support, and certification drift. |
+| Dependency and vulnerability posture | `make dependency-vulnerability-posture-gate`, `make security-audit`, `make container-image-scan`, `make release-sbom` | Govern mature supported dependencies, Python vulnerability scan evidence, container scan wiring, SBOM/signing/provenance hooks, and issue-backed vulnerability exceptions. |
 | API and OpenAPI | `make openapi-gate`, `make endpoint-certification-gate`, `make api-route-metadata-gate`, `make caller-context-contract-gate` | Keep runtime API and published contract truth aligned. |
 | Persistence and runtime | `make migration-contract-gate`, `make migration-execution-gate`, `make deployment-migration-contract-gate`, `make postgres-integration-gate`, `make disaster-recovery-contract-gate`, `make disaster-recovery-proof-gate`, `make container-runtime-smoke` | Prove durable storage, local migration plans, protected exact-image migration controls, restore/resume, and runtime behavior. |
 | Mesh and proof artifacts | `make data-mesh-contract-gate`, `make mesh-policy-source-contract-proof-gate`, `make implementation-proof-readiness-check`, `make canonical-opportunity-source-proofs`, `make runtime-trust-telemetry-snapshot-check` | Validate data-mesh, source-contract, and proof-readiness posture without conflating policy declarations with certification. |

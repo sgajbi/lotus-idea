@@ -191,6 +191,7 @@ Common gates:
 | `make documentation-contract-gate` | README, repo context, docs, wiki, demo, and evidence-surface contract truth. |
 | `make implementation-truth-gate` | Blocks overclaims about support, certification, live source proof, Workbench, and client readiness. |
 | `make foundation-structure-gate` | Enforces foundation-only posture, documentation truth, and architecture-boundary agreement. |
+| `make dependency-vulnerability-posture-gate` | Enforces the RFC-0002 Slice 15 dependency/container vulnerability posture contract, including exact stable pins, scanner wiring, release hooks, and issue-backed exceptions. |
 | `make quality-scorecard-gate` | Keeps quality posture aligned with implementation truth. |
 | `make supported-features-gate` | Ensures supported-feature registry entries are implementation-backed only. |
 | `make endpoint-certification-gate` | Validates endpoint certification evidence and OpenAPI caller-context truth. |
@@ -205,8 +206,7 @@ and non-self-referential build identity labels. Main Releasability binds the
 final digest through signed evidence and verifies digest-pinned `/version`;
 see the [service operations runbook](docs/runbooks/service-operations.md#image-identity-and-promotion).
 
-For README, wiki, RFC, context, contract, CI, or supported-feature edits, run
-stranded-truth reconciliation first:
+For README, wiki, RFC, context, contract, CI, or supported-feature edits, run stranded-truth reconciliation first:
 
 ```powershell
 git fetch origin --prune

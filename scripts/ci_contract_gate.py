@@ -59,6 +59,7 @@ PINNED_ACTIONS: dict[str, tuple[str, str]] = {
 REQUIRED_TARGETS = (
     *REQUIRED_LINT_TARGETS,
     "dependency-refresh",
+    "dependency-vulnerability-posture-gate",
     "postgres-integration-gate",
     "duplicate-implementation-inventory",
     "typecheck",
