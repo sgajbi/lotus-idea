@@ -75,12 +75,34 @@ def test_registered_aggregate_proof_rejects_wrong_effect() -> None:
     )
 
 
-def test_opportunity_proof_rejects_registry_effect_drift(
+@pytest.mark.parametrize(
+    "payload_argument",
+    (
+        "risk_concentration_live_proof",
+        "high_volatility_live_proof",
+        "risk_drawdown_live_proof",
+        "performance_underperformance_live_proof",
+        "core_benchmark_assignment_live_proof",
+        "core_portfolio_state_live_proof",
+        "bond_maturity_live_proof",
+        "low_income_core_cashflow_live_proof",
+        "manage_mandate_live_proof",
+        "mandate_restriction_live_proof",
+        "mandate_restriction_source_product_proof",
+        "missing_suitability_live_proof",
+        "missing_risk_profile_source_product_proof",
+        "missing_risk_profile_live_proof",
+        "missing_benchmark_live_proof",
+        "missing_benchmark_performance_readiness_proof",
+    ),
+)
+def test_opportunity_proofs_reject_registry_effect_drift(
     monkeypatch: pytest.MonkeyPatch,
+    payload_argument: str,
 ) -> None:
     _replace_payload_effect(
         monkeypatch,
-        "risk_concentration_live_proof",
+        payload_argument,
         ProofArtifactEffect.SUPPORTING_EVIDENCE,
     )
     capability = build_capability_readiness(
@@ -91,7 +113,7 @@ def test_opportunity_proof_rejects_registry_effect_drift(
         evidence_refs=(),
         blockers=("live_proof_missing",),
     )
-    proof_ref = "output/opportunity/risk-concentration-live-proof.json"
+    proof_ref = f"output/opportunity/{payload_argument}.json"
     proof = bound_aggregate_proof(
         {"generatedAtUtc": "2026-06-21T10:10:00Z"},
         proof_ref,
@@ -99,7 +121,7 @@ def test_opportunity_proof_rejects_registry_effect_drift(
 
     capabilities = _apply_valid_opportunity_proof(
         (capability,),
-        payload_argument="risk_concentration_live_proof",
+        payload_argument=payload_argument,
         proof=proof,
         proof_is_valid=lambda candidate: bool(candidate),
         apply_proof=lambda candidate, ref: apply_blocker_proof(
