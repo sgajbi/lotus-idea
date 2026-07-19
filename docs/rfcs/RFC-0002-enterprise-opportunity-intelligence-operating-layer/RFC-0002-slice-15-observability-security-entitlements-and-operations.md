@@ -34,12 +34,19 @@ runtime boundary, and does not change supported-feature posture.
 Issue `#695` adds a fail-closed source contract for the Slice 15 dependency and
 container vulnerability posture. The contract requires mature, widely deployed,
 well-documented, scanner-supported technology; exact stable runtime and CI
-Python pins; runtime-lock mirror parity for dependency graph truth; `pip-audit`
+Python pins; an approved direct-dependency registry for every runtime and CI
+root package; runtime-lock mirror parity for dependency graph truth; `pip-audit`
 coverage in feature, PR, and main lanes; Trivy image-scan coverage in PR and
 main lanes; release SBOM, image identity, license, signature, provenance, SBOM
 attestation, digest-reference, and CI-only publish hooks; and issue-backed
 vulnerability exceptions with CVE, owner, compensating control, rollback, and
 bounded expiry.
+
+The 2026-07-19 hardening pass removed the unused `httpx2` development
+dependency and replaced the only test type import with the existing governed
+`httpx` runtime dependency. The gate now rejects unapproved or stale direct
+dependency approvals, which prevents novelty-driven package additions from
+entering the repo by lockfile drift alone.
 
 The implementation adds `make dependency-vulnerability-posture-gate` and wires
 it into `make lint` plus the CI contract gate so a future dependency, workflow,

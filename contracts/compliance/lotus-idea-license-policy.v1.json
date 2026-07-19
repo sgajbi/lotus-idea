@@ -8,7 +8,7 @@
   },
   "ci_lock": {
     "path": "requirements/ci-tooling.lock.txt",
-    "sha256": "d68c6da664ecb9af4cb2117496bfbda8bf395edffec5044863870288404a8702"
+    "sha256": "4a79fa278aa4bfc451f24ce1ba1307957983eba098133dcac3544565b0c68737"
   },
   "policy": {
     "approved": ["Apache-2.0", "BSD-3-Clause", "ISC", "MIT", "PSF-2.0"],
@@ -50,7 +50,6 @@
     {"name":"uvicorn","version":"0.49.0","scopes":["runtime"],"spdx":"BSD-3-Clause","source_url":"https://github.com/encode/uvicorn","attribution_status":"included","obligations":[]},
     {"name":"coverage","version":"7.14.3","scopes":["ci"],"spdx":"Apache-2.0","source_url":"https://github.com/coveragepy/coveragepy","attribution_status":"included","obligations":[]},
     {"name":"cyclonedx-bom","version":"7.3.0","scopes":["ci"],"spdx":"Apache-2.0","source_url":"https://github.com/CycloneDX/cyclonedx-python","attribution_status":"included","obligations":[]},
-    {"name":"httpx2","version":"2.5.0","scopes":["ci"],"spdx":"BSD-3-Clause","source_url":"https://github.com/pydantic/httpx2","attribution_status":"included","obligations":[]},
     {"name":"mypy","version":"2.1.0","scopes":["ci"],"spdx":"MIT","source_url":"https://github.com/python/mypy","attribution_status":"included","obligations":[]},
     {"name":"pip-audit","version":"2.10.1","scopes":["ci"],"spdx":"Apache-2.0","source_url":"https://github.com/pypa/pip-audit","attribution_status":"included","obligations":[]},
     {"name":"pytest","version":"9.1.1","scopes":["ci"],"spdx":"MIT","source_url":"https://github.com/pytest-dev/pytest","attribution_status":"included","obligations":[]},
