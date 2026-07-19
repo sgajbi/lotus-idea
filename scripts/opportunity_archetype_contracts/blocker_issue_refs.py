@@ -1,6 +1,10 @@
 from __future__ import annotations
 
-from app.application.opportunity_archetype_contracts import OpportunityArchetypeContract
+from scripts.proof_worktree_import_guard import ensure_worktree_imports
+
+ensure_worktree_imports(__file__)
+
+from app.application.opportunity_archetype_contracts import OpportunityArchetypeContract  # noqa: E402
 
 
 SLICE_16_ISSUE_REF = "sgajbi/lotus-idea#696"
