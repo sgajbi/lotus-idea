@@ -119,7 +119,7 @@ rollout certification, model-risk operations certification, Workbench proof,
 client-ready publication, or supported-feature promotion. The
 downstream realization readiness diagnostic is an operator supportability
 check only; it reports workflow counts, local unresolved downstream submission
-reconciliation workload, planned Advise/Manage/Report contract posture,
+submission denominator, reconciliation workload, planned Advise/Manage/Report contract posture,
 optional digest-bound route source-contract evidence, optional bounded
 Report/Render/Archive source-contract evidence, and remaining authority/product
 blockers without calling downstream services from `lotus-idea`, granting

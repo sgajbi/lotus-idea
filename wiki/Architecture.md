@@ -736,7 +736,7 @@ promotion.
 `GET /api/v1/downstream-realization/readiness` is the certified internal
 operator diagnostic for downstream realization supportability. It reports
 current conversion intent/outcome counts, report evidence-pack request counts,
-local unresolved downstream submission reconciliation workload,
+local downstream submission denominator, unresolved reconciliation workload,
 source-of-truth paths, planned Advise/Manage/Report downstream contract
 readiness, and blocker groups for `lotus-advise`, `lotus-manage`,
 `lotus-report`, `lotus-render`, and `lotus-archive`. Planned contract records
@@ -745,7 +745,7 @@ name the owning repository and adapter posture from
 `make downstream-realization-contract-gate` keeps them planned and
 not-certified. Digest-bound Advise, Manage, and Report source contracts can add
 sibling declaration provenance, but cannot move target-route, blocker, or
-supportability posture. The reconciliation workload is local Idea posture only.
+supportability posture. The submission/reconciliation workload is local Idea posture only.
 They are not route-serving, authorization,
 tenant-isolation, request-acceptance, suitability, mandate/rebalance, execution,
 materialization, or supported-feature proof.

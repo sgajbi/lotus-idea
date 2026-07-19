@@ -124,6 +124,7 @@ def _downstream_realization_readiness_summary(
         "report_evidence_pack_request_count": len(
             connection.rows["idea_report_evidence_pack_request"]
         ),
+        "downstream_submission_count": len(connection.rows["idea_downstream_submission"]),
         "downstream_reconciliation_required_count": sum(
             1
             for row in connection.rows["idea_downstream_submission"]
