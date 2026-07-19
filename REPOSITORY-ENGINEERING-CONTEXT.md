@@ -1036,6 +1036,16 @@ manifest is source-contract governance only. It does not clear runtime,
 deployment, production, data-mesh, Gateway/Workbench, client-publication, or
 supported-feature blockers.
 
+RFC-0002 blueprint scope coverage is governed by
+`contracts/implementation-proof/rfc0002-blueprint-scope-coverage.v1.json` and
+tracked by issue `#701`. `make blueprint-scope-coverage-gate` is part of
+`make lint` and `make ci-contract-gate`; it parses
+`docs/LOTUS_IDEA_BLUEPRINT.md` and requires every owned capability, non-owned
+authority boundary, and target opportunity family to map to RFC-0002 slices,
+GitHub issues, evidence references, and the foundation-only supported-feature
+posture. If the blueprint changes, this contract must change in the same slice
+or the gate fails closed.
+
 ## Observability And Operability
 
 Operation events are the primary supportability surface. They must stay

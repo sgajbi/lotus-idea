@@ -16,6 +16,7 @@ REQUIRED_LINT_TARGETS = (
     "runtime-dependency-closure-gate",
     "dependency-vulnerability-posture-gate",
     "implementation-proof-closure-manifest-gate",
+    "blueprint-scope-coverage-gate",
     "license-compliance-gate",
     "source-observability-contract-gate",
     "api-route-metadata-gate",
