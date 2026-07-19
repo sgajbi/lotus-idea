@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import json
 import logging
-from typing import Any
+from typing import Any, cast
 
 from _pytest.logging import LogCaptureFixture
 from httpx import Response
@@ -221,9 +221,12 @@ def _request(
     request_headers = dict(headers)
     if case.idempotency_key is not None:
         request_headers["Idempotency-Key"] = case.idempotency_key
-    return client.request(
-        case.method,
-        case.path,
-        json=case.payload,
-        headers=request_headers,
+    return cast(
+        Response,
+        client.request(
+            case.method,
+            case.path,
+            json=case.payload,
+            headers=request_headers,
+        ),
     )
