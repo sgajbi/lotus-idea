@@ -6,6 +6,46 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-07-19: CI Release Evidence Target Validator Boundary
+
+Issue `#658` applies the Slice 19 report-only quality-baseline lens to the
+CI release evidence target validator. After issue `#656`,
+`make quality-baseline` listed
+`scripts/ci_release_evidence_contract.py::validate_release_evidence_targets` at
+`119` lines.
+
+The public validator mixed:
+
+1. release image defaults and CI-only image publication policy,
+2. docker-build provenance arguments,
+3. container runtime smoke wiring,
+4. release image identity wiring,
+5. reproducible SBOM target checks,
+6. container-image scan policy and pinned Trivy wiring.
+
+`scripts/ci_release_evidence_contract.py` now keeps
+`validate_release_evidence_targets(makefile)` as the public entry point, but it
+delegates to named helpers for release image defaults, docker-build target
+provenance, existing smoke/identity checks, release SBOM, and container-image
+scan policy. Error strings and ordering are preserved.
+
+Focused validation passed:
+
+1. `python -m ruff check scripts/ci_release_evidence_contract.py`,
+2. `python -m ruff format --check scripts/ci_release_evidence_contract.py`,
+3. `python -m mypy scripts/ci_release_evidence_contract.py`,
+4. `python -m pytest tests/unit/test_ci_release_evidence_contract.py tests/unit/test_ci_enforcement_contract.py -q`
+   (`82` passed).
+
+This is CI/release-evidence maintainability only. It does not change Makefile
+behavior, CI workflow behavior, Dockerfile behavior, release evidence semantics,
+image publication policy, runtime topology, wiki source, README,
+supported-features, API/OpenAPI, persistence, migrations, authentication or
+authorization infrastructure, Core, Gateway, Workbench, data-mesh
+certification, external-publication authority, or supported-feature promotion.
+Broader local gates, PR checks, exact-main Main Releasability/CodeQL, wiki
+parity, issue closure, and branch cleanup remain pending for the tranche.
+
 ## 2026-07-19: Implementation Proof Readiness API Artifact Setup Boundary
 
 Issue `#656` applies the Slice 19 report-only quality-baseline lens to the
