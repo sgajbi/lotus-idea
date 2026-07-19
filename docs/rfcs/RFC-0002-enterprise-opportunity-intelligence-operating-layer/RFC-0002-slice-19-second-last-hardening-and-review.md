@@ -24,6 +24,53 @@ Perform the full engineering review before final closure.
 
 ## Current Implementation Evidence
 
+Issue `#670` applies the Slice 19 quality-baseline learning to the outbox
+dead-letter recovery policy boundary. After issue `#668`, the current
+report-only quality baseline listed
+`src/app/domain/outbox/recovery.py::claim_dead_letter_for_recovery` at `117`
+lines, tied for the largest remaining production function. The function owns an
+operator-sensitive Slice 15 policy path and previously mixed idempotency
+replay/conflict classification, support-reference event lookup, event-state
+classification, recovery eligibility, attempt-limit enforcement, audit
+construction, lease fencing, and accepted mutation in one branch sequence.
+
+`src/app/domain/outbox/recovery.py` now keeps
+`claim_dead_letter_for_recovery(...)` as the stable public domain entry point,
+but delegates idempotency lookup, opaque support-reference event lookup,
+recoverability classification, attempt counting, rejected-result construction,
+and accepted-claim mutation to named helpers. Recovery decisions, blockers,
+audit fields, support-reference behavior, lease fencing, replay/conflict
+behavior, accepted mutation, and max-attempt behavior are preserved. The current
+quality baseline no longer lists `claim_dead_letter_for_recovery` in the
+largest-function table.
+
+Focused validation passed:
+
+1. `.venv/Scripts/ruff.exe format src/app/domain/outbox/recovery.py tests/unit/outbox/test_outbox_recovery.py`,
+2. `.venv/Scripts/ruff.exe check src/app/domain/outbox/recovery.py tests/unit/outbox/test_outbox_recovery.py`,
+3. `.venv/Scripts/python.exe -m mypy src/app/domain/outbox/recovery.py tests/unit/outbox/test_outbox_recovery.py`,
+4. `.venv/Scripts/python.exe -m pytest tests/unit/outbox/test_outbox_recovery.py`
+   with `13` tests,
+5. `make maintainability-gate`,
+6. `make quality-baseline`.
+
+The same-pattern scan followed the Slice 19 maintainability sequence through
+current `quality/baseline_report.md`, duplicate searches for
+`claim_dead_letter_for_recovery`, `outbox recovery maintainability`, and
+`dead-letter recovery domain policy maintainability`, the codebase review
+ledger, issue closure matrix, and refactor decisions. Closed issue `#337` owns
+the implemented outbox recovery feature, and closed issue `#655` owns the
+PostgreSQL recovery proof-test refactor; neither owns this domain recovery
+policy maintainability root cause.
+
+This is internal domain modularity only. It does not change API/OpenAPI
+behavior, persistence schema, migrations, authentication or authorization
+infrastructure, external broker behavior, Gateway, Workbench, data-product
+support, external-publication authority, runtime topology, wiki source, README,
+supported features, or supported-feature promotion. Broader local gates, PR
+checks, exact-main Main Releasability/CodeQL, wiki no-change evidence, issue
+closure, and branch cleanup remain pending for the tranche.
+
 Issue `#668` applies the Slice 19 quality-baseline learning to the AI
 explanation repository evaluation boundary. After issue `#666`, the current
 report-only quality baseline listed
@@ -67,9 +114,11 @@ contracts, persistence schema, migrations, authentication or authorization
 infrastructure, live `lotus-ai` runtime execution, provider certification,
 Gateway, Workbench, data-product support, external-publication authority,
 runtime topology, wiki source, README, supported features, or supported-feature
-promotion. Broader local gates, PR checks, exact-main Main Releasability/CodeQL,
-wiki parity/no-change evidence, issue closure, and branch cleanup remain pending
-for the tranche.
+promotion. PR `#669` merged by rebase to exact-main SHA
+`11424e8c9a7d395701ced98c1d05b598ae3b631d`; Main Releasability
+`29672745987` and CodeQL `29672742015` passed on that SHA. No wiki source
+changed, issue `#668` is closed with `status/merged-main`, and the merged
+feature branch was pruned.
 
 Issue `#661` applies the Slice 19 quality-baseline learning to the
 drawdown-review signal evaluator. After issue `#659`, the current report-only

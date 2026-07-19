@@ -6,6 +6,57 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-07-19: Outbox Dead-Letter Recovery Policy Boundary
+
+Issue `#670` applies the Slice 19 report-only quality-baseline lens to the
+outbox dead-letter recovery domain policy. After issue `#668`,
+`make quality-baseline` listed
+`src/app/domain/outbox/recovery.py::claim_dead_letter_for_recovery` at `117`
+lines, tied for the largest remaining production function.
+
+The function mixed:
+
+1. idempotent replay and conflict classification,
+2. support-reference lookup,
+3. event state classification,
+4. event-family and schema eligibility,
+5. recovery-attempt limit checking,
+6. recovery audit construction,
+7. lease fencing and accepted mutation.
+
+`src/app/domain/outbox/recovery.py` keeps the public
+`claim_dead_letter_for_recovery(...)` policy entry point stable while extracting
+idempotency lookup, opaque support-reference event lookup, recoverability
+classification, attempt counting, rejected-result construction, and
+accepted-claim mutation into named helpers. Recovery decisions, blockers, audit
+fields, support-reference behavior, lease fencing, replay/conflict behavior,
+and max-attempt behavior are preserved. The current quality baseline no longer
+lists `claim_dead_letter_for_recovery` in the largest-function table.
+
+Focused validation passed:
+
+1. `.venv/Scripts/ruff.exe format src/app/domain/outbox/recovery.py tests/unit/outbox/test_outbox_recovery.py`,
+2. `.venv/Scripts/ruff.exe check src/app/domain/outbox/recovery.py tests/unit/outbox/test_outbox_recovery.py`,
+3. `.venv/Scripts/python.exe -m mypy src/app/domain/outbox/recovery.py tests/unit/outbox/test_outbox_recovery.py`,
+4. `.venv/Scripts/python.exe -m pytest tests/unit/outbox/test_outbox_recovery.py`
+   (`13` passed),
+5. `make maintainability-gate`,
+6. `make quality-baseline`.
+
+The same-pattern scan used duplicate searches for
+`claim_dead_letter_for_recovery`, `outbox recovery maintainability`, and
+`dead-letter recovery domain policy maintainability`. Closed issue `#337` owns
+the implemented recovery capability, and closed issue `#655` owns the
+PostgreSQL recovery proof-test refactor; neither owns this domain policy
+maintainability boundary.
+
+This is domain-policy maintainability only. It does not change API/OpenAPI
+behavior, persistence schema, migrations, authentication or authorization
+infrastructure, external broker behavior, Gateway, Workbench, data-mesh
+certification, runtime topology, wiki source, README, supported features, or
+supported-feature promotion. No wiki publication is required unless later
+PR/mainline evidence changes repo-authored wiki truth.
+
 ## 2026-07-19: AI Explanation Repository Evaluation Boundary
 
 Issue `#668` applies the Slice 19 report-only quality-baseline lens to the
@@ -59,7 +110,11 @@ Gateway, Workbench, data-mesh certification, runtime topology,
 external-publication authority, supported features, or supported-feature
 promotion. Broader branch gates, PR checks, exact-main Main
 Releasability/CodeQL, wiki parity/no-change evidence, issue closure, and branch
-cleanup remain pending for the tranche.
+cleanup completed through PR `#669`, which merged by rebase to exact-main SHA
+`11424e8c9a7d395701ced98c1d05b598ae3b631d`. Main Releasability
+`29672745987` and CodeQL `29672742015` passed on that SHA. No wiki source
+changed, the issue is closed with `status/merged-main`, the remote feature
+branch was pruned, and local state returned to clean `main`.
 
 ## 2026-07-19: Drawdown-Review Signal Evaluation Boundary
 
