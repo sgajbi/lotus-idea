@@ -226,7 +226,78 @@ def claim_dead_letter_for_recovery(
     _require_text(support_reference, "support_reference")
     request_fingerprint = payload_fingerprint(dict(request_payload))
     idempotency_fingerprint = hashlib.sha256(idempotency_key.encode("utf-8")).hexdigest()
-    existing = next(
+    replayed = _idempotent_recovery_claim(
+        events=events,
+        recovery_records=recovery_records,
+        idempotency_fingerprint=idempotency_fingerprint,
+        request_fingerprint=request_fingerprint,
+    )
+    if replayed is not None:
+        return replayed
+
+    event = _find_dead_letter_support_event(events, support_reference=support_reference)
+    if event is None:
+        return _rejected_recovery_claim(
+            decision=OutboxRecoveryDecision.NOT_FOUND,
+            event=None,
+            blocker="dead_letter_not_found",
+        )
+    blocked = _blocked_recovery_claim(
+        event,
+        recovery_records=recovery_records,
+        max_recovery_attempts=max_recovery_attempts,
+    )
+    if blocked is not None:
+        return blocked
+    return _accept_recovery_claim(
+        events=events,
+        recovery_records=recovery_records,
+        event=event,
+        idempotency_key=idempotency_key,
+        request_payload=request_payload,
+        actor_subject=actor_subject,
+        reason=reason,
+        change_reference=change_reference,
+        requested_at_utc=requested_at_utc,
+        lease_owner=lease_owner,
+        lease_attempt_id=lease_attempt_id,
+        lease_expires_at_utc=lease_expires_at_utc,
+    )
+
+
+def _idempotent_recovery_claim(
+    *,
+    events: Mapping[str, OutboxEventRecord],
+    recovery_records: Mapping[str, OutboxRecoveryAuditRecord],
+    idempotency_fingerprint: str,
+    request_fingerprint: str,
+) -> OutboxRecoveryClaimResult | None:
+    existing = _find_recovery_record_by_idempotency(
+        recovery_records,
+        idempotency_fingerprint=idempotency_fingerprint,
+    )
+    if existing is None:
+        return None
+    decision = (
+        OutboxRecoveryDecision.REPLAYED
+        if existing.request_fingerprint == request_fingerprint
+        else OutboxRecoveryDecision.CONFLICT
+    )
+    blocker = "idempotency_conflict" if decision is OutboxRecoveryDecision.CONFLICT else None
+    return OutboxRecoveryClaimResult(
+        decision=decision,
+        event=events.get(existing.event_id),
+        audit_record=existing,
+        blocker=blocker,
+    )
+
+
+def _find_recovery_record_by_idempotency(
+    recovery_records: Mapping[str, OutboxRecoveryAuditRecord],
+    *,
+    idempotency_fingerprint: str,
+) -> OutboxRecoveryAuditRecord | None:
+    return next(
         (
             record
             for record in recovery_records.values()
@@ -234,46 +305,39 @@ def claim_dead_letter_for_recovery(
         ),
         None,
     )
-    if existing is not None:
-        decision = (
-            OutboxRecoveryDecision.REPLAYED
-            if existing.request_fingerprint == request_fingerprint
-            else OutboxRecoveryDecision.CONFLICT
-        )
-        return OutboxRecoveryClaimResult(
-            decision=decision,
-            event=events.get(existing.event_id),
-            audit_record=existing,
-            blocker="idempotency_conflict" if decision is OutboxRecoveryDecision.CONFLICT else None,
-        )
 
-    event = next(
+
+def _find_dead_letter_support_event(
+    events: Mapping[str, OutboxEventRecord],
+    *,
+    support_reference: str,
+) -> OutboxEventRecord | None:
+    return next(
         (
-            candidate
-            for candidate in events.values()
-            if outbox_dead_letter_support_reference(candidate.event_id) == support_reference
+            event
+            for event in events.values()
+            if outbox_dead_letter_support_reference(event.event_id) == support_reference
         ),
         None,
     )
-    if event is None:
-        return OutboxRecoveryClaimResult(
-            decision=OutboxRecoveryDecision.NOT_FOUND,
-            event=None,
-            audit_record=None,
-            blocker="dead_letter_not_found",
-        )
+
+
+def _blocked_recovery_claim(
+    event: OutboxEventRecord,
+    *,
+    recovery_records: Mapping[str, OutboxRecoveryAuditRecord],
+    max_recovery_attempts: int,
+) -> OutboxRecoveryClaimResult | None:
     if event.status is OutboxEventStatus.LEASED:
-        return OutboxRecoveryClaimResult(
+        return _rejected_recovery_claim(
             decision=OutboxRecoveryDecision.LEASE_CONFLICT,
             event=event,
-            audit_record=None,
             blocker="recovery_lease_conflict",
         )
     if event.status is not OutboxEventStatus.DEAD_LETTER:
-        return OutboxRecoveryClaimResult(
+        return _rejected_recovery_claim(
             decision=OutboxRecoveryDecision.NOT_DEAD_LETTERED,
             event=event,
-            audit_record=None,
             blocker="event_not_dead_lettered",
         )
     eligibility_blocker = outbox_recovery_eligibility_blocker(
@@ -281,22 +345,59 @@ def claim_dead_letter_for_recovery(
         schema_version=event.schema_version,
     )
     if eligibility_blocker is not None:
-        return OutboxRecoveryClaimResult(
+        return _rejected_recovery_claim(
             decision=OutboxRecoveryDecision.INELIGIBLE,
             event=event,
-            audit_record=None,
             blocker=eligibility_blocker,
         )
-    recovery_count = sum(
-        1 for record in recovery_records.values() if record.event_id == event.event_id
-    )
-    if recovery_count >= max_recovery_attempts:
-        return OutboxRecoveryClaimResult(
+    if _recovery_attempt_count(recovery_records, event_id=event.event_id) >= (
+        max_recovery_attempts
+    ):
+        return _rejected_recovery_claim(
             decision=OutboxRecoveryDecision.RECOVERY_LIMIT_REACHED,
             event=event,
-            audit_record=None,
             blocker="recovery_attempt_limit_reached",
         )
+    return None
+
+
+def _recovery_attempt_count(
+    recovery_records: Mapping[str, OutboxRecoveryAuditRecord],
+    *,
+    event_id: str,
+) -> int:
+    return sum(1 for record in recovery_records.values() if record.event_id == event_id)
+
+
+def _rejected_recovery_claim(
+    *,
+    decision: OutboxRecoveryDecision,
+    event: OutboxEventRecord | None,
+    blocker: str,
+) -> OutboxRecoveryClaimResult:
+    return OutboxRecoveryClaimResult(
+        decision=decision,
+        event=event,
+        audit_record=None,
+        blocker=blocker,
+    )
+
+
+def _accept_recovery_claim(
+    *,
+    events: dict[str, OutboxEventRecord],
+    recovery_records: dict[str, OutboxRecoveryAuditRecord],
+    event: OutboxEventRecord,
+    idempotency_key: str,
+    request_payload: Mapping[str, Any],
+    actor_subject: str,
+    reason: str,
+    change_reference: str,
+    requested_at_utc: datetime,
+    lease_owner: str,
+    lease_attempt_id: str,
+    lease_expires_at_utc: datetime,
+) -> OutboxRecoveryClaimResult:
     audit_record = build_outbox_recovery_audit_record(
         event,
         idempotency_key=idempotency_key,
