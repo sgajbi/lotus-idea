@@ -8,6 +8,7 @@ from app.application.downstream_realization_contracts import (
     DownstreamRealizationContractPlanRecord,
     load_downstream_realization_contract_plan,
 )
+from app.application.downstream_realization_issue_refs import capability_blocker_issue_refs
 from app.application.downstream_realization.route_source_contract import (
     ADVISE_PROPOSAL_ROUTE,
     MANAGE_ACTION_ROUTE,
@@ -43,14 +44,14 @@ class DownstreamRealizationCapabilityReadiness:
     supportability_status: str
     evidence_refs: tuple[str, ...]
     blockers: tuple[str, ...]
+    blocker_issue_refs: Mapping[str, tuple[str, ...]]
 
     @property
     def certification_ready(self) -> bool:
         return not self.blockers
 
     def __post_init__(self) -> None:
-        object.__setattr__(self, "evidence_refs", tuple(self.evidence_refs))
-        object.__setattr__(self, "blockers", tuple(self.blockers))
+        _freeze_blocker_readiness(self)
 
 
 @dataclass(frozen=True)
@@ -63,14 +64,14 @@ class DownstreamRealizationContractReadiness:
     adapter_status: str
     evidence_refs: tuple[str, ...]
     blockers: tuple[str, ...]
+    blocker_issue_refs: Mapping[str, tuple[str, ...]]
 
     @property
     def certification_ready(self) -> bool:
         return not self.blockers
 
     def __post_init__(self) -> None:
-        object.__setattr__(self, "evidence_refs", tuple(self.evidence_refs))
-        object.__setattr__(self, "blockers", tuple(self.blockers))
+        _freeze_blocker_readiness(self)
 
 
 @dataclass(frozen=True)
@@ -88,6 +89,7 @@ class DownstreamRealizationReadinessSnapshot:
     downstream_adapter_foundation_present: bool
     source_of_truth: Mapping[str, str]
     blockers: tuple[str, ...]
+    blocker_issue_refs: Mapping[str, tuple[str, ...]]
     capabilities: tuple[DownstreamRealizationCapabilityReadiness, ...]
     downstream_contracts: tuple[DownstreamRealizationContractReadiness, ...]
     supported_feature_promoted: bool
@@ -99,6 +101,11 @@ class DownstreamRealizationReadinessSnapshot:
             MappingProxyType(dict(self.source_of_truth)),
         )
         object.__setattr__(self, "blockers", tuple(self.blockers))
+        object.__setattr__(
+            self,
+            "blocker_issue_refs",
+            _immutable_issue_refs(self.blocker_issue_refs),
+        )
         object.__setattr__(self, "capabilities", tuple(self.capabilities))
         object.__setattr__(
             self,
@@ -151,6 +158,7 @@ def build_downstream_realization_readiness_snapshot(
         blocker for contract in downstream_contracts for blocker in contract.blockers
     )
     blockers = tuple(dict.fromkeys((*capability_blockers, *contract_blockers)))
+    blocker_issue_refs = _merge_blocker_issue_refs(capabilities, downstream_contracts)
     certification_ready = not blockers
     return DownstreamRealizationReadinessSnapshot(
         repository="lotus-idea",
@@ -192,6 +200,7 @@ def build_downstream_realization_readiness_snapshot(
             ),
         },
         blockers=blockers,
+        blocker_issue_refs=blocker_issue_refs,
         capabilities=capabilities,
         downstream_contracts=downstream_contracts,
         supported_feature_promoted=False,
@@ -382,6 +391,7 @@ def _capability(
     *,
     evidence_refs: tuple[str, ...],
     blockers: tuple[str, ...],
+    blocker_issue_refs: Mapping[str, tuple[str, ...]],
 ) -> DownstreamRealizationCapabilityReadiness:
     return DownstreamRealizationCapabilityReadiness(
         capability_id=capability_id,
@@ -391,6 +401,7 @@ def _capability(
         supportability_status="not_certified",
         evidence_refs=evidence_refs,
         blockers=blockers,
+        blocker_issue_refs=blocker_issue_refs,
     )
 
 
@@ -409,6 +420,7 @@ def _advise_conversion_capability() -> DownstreamRealizationCapabilityReadiness:
             "suitability_policy_authority_remains_lotus_advise",
             "advise_live_contract_proof_missing",
         ),
+        blocker_issue_refs=capability_blocker_issue_refs("advise-proposal-realization"),
     )
 
 
@@ -427,6 +439,7 @@ def _manage_conversion_capability() -> DownstreamRealizationCapabilityReadiness:
             "rebalance_execution_authority_remains_lotus_manage",
             "manage_live_contract_proof_missing",
         ),
+        blocker_issue_refs=capability_blocker_issue_refs("manage-action-realization"),
     )
 
 
@@ -448,6 +461,7 @@ def _report_render_archive_capability() -> DownstreamRealizationCapabilityReadin
             "archive_record_creation_missing",
             "client_publication_authority_blocked",
         ),
+        blocker_issue_refs=capability_blocker_issue_refs("report-render-archive-realization"),
     )
 
 
@@ -463,6 +477,7 @@ def _downstream_contract_from_plan(
         adapter_status=record.adapter_status,
         evidence_refs=record.evidence_refs,
         blockers=record.blockers,
+        blocker_issue_refs=record.blocker_issue_refs,
     )
 
 
@@ -483,6 +498,7 @@ def _apply_route_source_contract_to_capability(
         capability.source_authority,
         evidence_refs=evidence_refs,
         blockers=capability.blockers,
+        blocker_issue_refs=capability.blocker_issue_refs,
     )
 
 
@@ -507,6 +523,7 @@ def _apply_route_source_contract_to_contract(
         adapter_status=contract.adapter_status,
         evidence_refs=evidence_refs,
         blockers=contract.blockers,
+        blocker_issue_refs=contract.blocker_issue_refs,
     )
 
 
@@ -527,6 +544,7 @@ def _apply_report_intake_route_source_contract_proof_to_capability(
         capability.source_authority,
         evidence_refs=evidence_refs,
         blockers=capability.blockers,
+        blocker_issue_refs=capability.blocker_issue_refs,
     )
 
 
@@ -550,6 +568,7 @@ def _apply_report_intake_route_source_contract_proof_to_contract(
         adapter_status=contract.adapter_status,
         evidence_refs=evidence_refs,
         blockers=contract.blockers,
+        blocker_issue_refs=contract.blocker_issue_refs,
     )
 
 
@@ -570,6 +589,7 @@ def _apply_report_materialization_source_contract_to_capability(
         capability.source_authority,
         evidence_refs=evidence_refs,
         blockers=capability.blockers,
+        blocker_issue_refs=capability.blocker_issue_refs,
     )
 
 
@@ -593,4 +613,39 @@ def _apply_report_materialization_source_contract_to_contract(
         adapter_status=contract.adapter_status,
         evidence_refs=evidence_refs,
         blockers=contract.blockers,
+        blocker_issue_refs=contract.blocker_issue_refs,
+    )
+
+
+def _merge_blocker_issue_refs(
+    capabilities: tuple[DownstreamRealizationCapabilityReadiness, ...],
+    downstream_contracts: tuple[DownstreamRealizationContractReadiness, ...],
+) -> Mapping[str, tuple[str, ...]]:
+    merged: dict[str, tuple[str, ...]] = {}
+    for readiness in (*capabilities, *downstream_contracts):
+        for blocker, issue_refs in readiness.blocker_issue_refs.items():
+            merged[blocker] = tuple(dict.fromkeys((*merged.get(blocker, ()), *issue_refs)))
+    return merged
+
+
+def _immutable_issue_refs(
+    issue_refs: Mapping[str, tuple[str, ...]],
+) -> Mapping[str, tuple[str, ...]]:
+    return MappingProxyType(
+        {
+            str(blocker): tuple(str(issue_ref) for issue_ref in refs)
+            for blocker, refs in issue_refs.items()
+        }
+    )
+
+
+def _freeze_blocker_readiness(
+    readiness: DownstreamRealizationCapabilityReadiness | DownstreamRealizationContractReadiness,
+) -> None:
+    object.__setattr__(readiness, "evidence_refs", tuple(readiness.evidence_refs))
+    object.__setattr__(readiness, "blockers", tuple(readiness.blockers))
+    object.__setattr__(
+        readiness,
+        "blocker_issue_refs",
+        _immutable_issue_refs(readiness.blocker_issue_refs),
     )

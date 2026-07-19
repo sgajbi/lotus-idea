@@ -76,6 +76,7 @@ def test_downstream_realization_contract_gate_blocks_contract_drift() -> None:
             "adapter_status": "implemented",
             "evidence_refs": ["POST http://lotus-advise/api/v1/proposals"],
             "blockers": [],
+            "blocker_issue_refs": {},
         }
     ]
     plan = module._parse_payload(payload)
@@ -89,8 +90,27 @@ def test_downstream_realization_contract_gate_blocks_contract_drift() -> None:
     assert any("route_fit_status must remain not_certified" in error for error in errors)
     assert any("adapter_status must be adapter_foundation_present" in error for error in errors)
     assert any("blockers are required" in error for error in errors)
+    assert any("blockers missing required issue-backed blocker keys" in error for error in errors)
     assert any("evidence_refs missing required references" in error for error in errors)
     assert any("must not include downstream current routes" in error for error in errors)
+
+
+def test_downstream_realization_contract_gate_blocks_unowned_blocker_issue_refs() -> None:
+    module = _load_downstream_realization_contract_gate()
+    payload = _plan_payload(module.load_downstream_realization_contract_plan())
+    advise_contract = dict(payload["contracts"][0])
+    issue_refs = dict(advise_contract["blocker_issue_refs"])
+    issue_refs.pop("advise_live_contract_proof_missing")
+    advise_contract["blocker_issue_refs"] = issue_refs
+    payload["contracts"][0] = advise_contract
+    plan = module._parse_payload(payload)
+
+    errors = module.validate_downstream_realization_contract_plan_payload(plan)
+
+    assert (
+        "lotus-idea-to-lotus-advise-proposal-intake:v1: "
+        "blocker_issue_refs missing blockers: advise_live_contract_proof_missing"
+    ) in errors
 
 
 def test_downstream_realization_contract_gate_blocks_missing_source_truth() -> None:
@@ -233,12 +253,14 @@ def test_downstream_realization_contract_loader_coerces_non_list_contract_fields
     contract = dict(payload["contracts"][0])
     contract["evidence_refs"] = "not-list"
     contract["blockers"] = "not-list"
+    contract["blocker_issue_refs"] = "not-object"
     payload["contracts"] = [contract]
 
     plan = module._parse_payload(payload)
 
     assert plan.contracts[0].evidence_refs == ()
     assert plan.contracts[0].blockers == ()
+    assert plan.contracts[0].blocker_issue_refs == {}
 
 
 def _plan_payload(plan: Any) -> dict[str, Any]:
@@ -264,6 +286,10 @@ def _plan_payload(plan: Any) -> dict[str, Any]:
                         "adapter_status": contract.adapter_status,
                         "evidence_refs": list(contract.evidence_refs),
                         "blockers": list(contract.blockers),
+                        "blocker_issue_refs": {
+                            blocker: list(issue_refs)
+                            for blocker, issue_refs in contract.blocker_issue_refs.items()
+                        },
                     }
                     for contract in plan.contracts
                 ],

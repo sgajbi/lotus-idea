@@ -270,6 +270,7 @@ The success response is intentionally aggregate and source-safe:
 | `downstreamAdapterFoundationPresent` | Whether the repo contains source-safe downstream orchestration, adapter ports, and HTTP adapter foundations |
 | `capabilities` | Capability-level downstream readiness posture and blockers |
 | `downstreamContracts` | Planned downstream handoff contracts, owner repositories, target route posture, adapter status, evidence refs, and blockers |
+| `blockerIssueRefs` | Snapshot-level map from every downstream blocker code to durable `sgajbi/<repo>#<issue>` execution references; capability and contract rows carry the same field at their own scope |
 | `sourceOfTruth` | Implementation and RFC paths that define current behavior |
 | `supportedFeaturePromoted` | Always `false` until supported-feature evidence exists |
 

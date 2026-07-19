@@ -46,8 +46,11 @@ Implemented in the first Slice 13 foundation:
    `lotus-report`, `lotus-render`, or `lotus-archive`. It also exposes the
    planned `lotus-idea-to-lotus-report-evidence-pack-intake:v1` contract readiness
    record with `lotus-report` ownership, planned route posture, adapter status,
-   the report-owned planned intake contract evidence ref, and the remaining
-   live intake route/materialization blockers.
+   the report-owned planned intake contract evidence ref, the remaining
+   live intake route/materialization blockers, and `blockerIssueRefs` that
+   link Report, Render, Archive, and publication blockers to durable
+   GitHub execution issues such as `sgajbi/lotus-idea#690` and the owning
+   downstream repo.
 8. `contracts/downstream-realization/lotus-idea-downstream-contracts.v1.json`
    is the governed source for that planned report handoff row, and
    `make downstream-realization-contract-gate` keeps it planned,
