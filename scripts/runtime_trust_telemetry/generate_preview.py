@@ -71,6 +71,10 @@ def runtime_trust_telemetry_preview_payload(
         "conversionIntentCount": snapshot.conversion_intent_count,
         "conversionOutcomeCount": snapshot.conversion_outcome_count,
         "reportEvidencePackCount": snapshot.report_evidence_pack_count,
+        "downstreamSubmissionCount": snapshot.downstream_submission_count,
+        "downstreamReconciliationRequiredCount": (
+            snapshot.downstream_reconciliation_required_count
+        ),
         "lineageMaterialized": snapshot.lineage_materialized,
         "runtimeTelemetryBacked": snapshot.runtime_telemetry_backed,
         "platformCertified": snapshot.platform_certified,

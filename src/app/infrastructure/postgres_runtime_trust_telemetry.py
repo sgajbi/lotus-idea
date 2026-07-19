@@ -67,6 +67,11 @@ def _summary_from_rows(
         conversion_intent_count=_int(summary, "conversion_intent_count"),
         conversion_outcome_count=_int(summary, "conversion_outcome_count"),
         report_evidence_pack_count=_int(summary, "report_evidence_pack_count"),
+        downstream_submission_count=_int(summary, "downstream_submission_count"),
+        downstream_reconciliation_required_count=_int(
+            summary,
+            "downstream_reconciliation_required_count",
+        ),
         lineage_materialized=bool(read_row_value(summary, "lineage_materialized"))
         if summary
         else False,
@@ -191,7 +196,16 @@ _SUMMARY_WORKFLOW_COUNTS_QUERY = """
                 SELECT COUNT(*) FROM idea_report_evidence_pack_request record
                 JOIN idea_data_lifecycle_control lifecycle USING (candidate_id)
                 WHERE COALESCE(lifecycle.held_from_state, lifecycle.state) = 'active'
-            )::integer AS report_evidence_pack_count
+            )::integer AS report_evidence_pack_count,
+            (
+                SELECT COUNT(*)
+                FROM idea_downstream_submission
+            )::integer AS downstream_submission_count,
+            (
+                SELECT COUNT(*)
+                FROM idea_downstream_submission
+                WHERE status IN ('in_flight', 'reconciliation_required')
+            )::integer AS downstream_reconciliation_required_count
 """
 
 _SUMMARY_DATA_LIFECYCLE_QUERY = """

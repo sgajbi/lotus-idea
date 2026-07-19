@@ -34,6 +34,11 @@ class RuntimeTrustTelemetryPreviewResponse(CamelModel):
     conversion_intent_count: int = Field(..., alias="conversionIntentCount")
     conversion_outcome_count: int = Field(..., alias="conversionOutcomeCount")
     report_evidence_pack_count: int = Field(..., alias="reportEvidencePackCount")
+    downstream_submission_count: int = Field(..., alias="downstreamSubmissionCount")
+    downstream_reconciliation_required_count: int = Field(
+        ...,
+        alias="downstreamReconciliationRequiredCount",
+    )
     lineage_materialized: bool = Field(..., alias="lineageMaterialized")
     runtime_telemetry_backed: bool = Field(..., alias="runtimeTelemetryBacked")
     platform_certified: bool = Field(..., alias="platformCertified")
@@ -70,6 +75,10 @@ class RuntimeTrustTelemetryPreviewResponse(CamelModel):
             conversionIntentCount=snapshot.conversion_intent_count,
             conversionOutcomeCount=snapshot.conversion_outcome_count,
             reportEvidencePackCount=snapshot.report_evidence_pack_count,
+            downstreamSubmissionCount=snapshot.downstream_submission_count,
+            downstreamReconciliationRequiredCount=(
+                snapshot.downstream_reconciliation_required_count
+            ),
             lineageMaterialized=snapshot.lineage_materialized,
             runtimeTelemetryBacked=snapshot.runtime_telemetry_backed,
             platformCertified=snapshot.platform_certified,
@@ -156,6 +165,14 @@ class RuntimeTrustTelemetryDataLifecycleResponse(BaseModel):
     supported_feature_promoted: bool
 
 
+class RuntimeTrustTelemetryDownstreamSubmissionPostureResponse(BaseModel):
+    submission_count: int
+    reconciliation_required_count: int
+    posture_scope: str
+    certification_status: str
+    supported_feature_promoted: bool
+
+
 class RuntimeTrustTelemetryBlockingResponse(BaseModel):
     blocked: bool
     blocked_reason: str
@@ -204,6 +221,7 @@ class RuntimeTrustTelemetrySnapshotResponse(BaseModel):
     data_quality_status: str
     lineage: RuntimeTrustTelemetryLineageResponse
     data_lifecycle: RuntimeTrustTelemetryDataLifecycleResponse
+    downstream_submission_posture: RuntimeTrustTelemetryDownstreamSubmissionPostureResponse
     blocking: RuntimeTrustTelemetryBlockingResponse
     product_coverage: list[RuntimeTrustTelemetryProductCoverageSnapshotResponse]
     observed_trust_metadata: Mapping[str, str]
@@ -217,6 +235,7 @@ class RuntimeTrustTelemetrySnapshotResponse(BaseModel):
 __all__ = [
     "RuntimeTrustTelemetryBlockingResponse",
     "RuntimeTrustTelemetryDataLifecycleResponse",
+    "RuntimeTrustTelemetryDownstreamSubmissionPostureResponse",
     "RuntimeTrustTelemetryEvidenceResponse",
     "RuntimeTrustTelemetryFreshnessResponse",
     "RuntimeTrustTelemetryLineageResponse",

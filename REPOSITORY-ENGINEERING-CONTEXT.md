@@ -535,7 +535,8 @@ For durable reads, prefer bounded projections over whole repository snapshots:
 4. downstream realization readiness-count projection, including bounded
    downstream submission reconciliation workload,
 5. outbox delivery readiness projection,
-6. runtime trust telemetry aggregate projection,
+6. runtime trust telemetry aggregate projection, including local downstream
+   submission posture counts,
 7. advisor queue readiness aggregate projection.
 
 When adding another read path or aggregate diagnostic, first ask whether the
@@ -898,8 +899,10 @@ that `lotus-idea` owns upstream calculations.
 not platform mesh certification.
 
 Runtime trust telemetry preview/snapshot endpoints and generated artifacts are
-source-safe readiness evidence. They are not certified data products and do not
-promote supported features.
+source-safe readiness evidence. They include bounded local downstream
+submission posture counts, but those counts are Idea-owned posture only. They
+are not certified data products, downstream acceptance/materialization proof,
+or supported-feature promotion.
 
 PostgreSQL trust projections count only lifecycle-active or held-from-active
 records as candidate and workflow data products. Erased and purged tombstones
@@ -907,6 +910,9 @@ remain visible only through bounded `dataLifecycleStateCounts`,
 `retentionExpiredCount`, and `lifecycleControlMissingCount` posture. Missing
 controls block certification; process-local repositories report uncontrolled
 lifecycle posture rather than implying durable governance.
+Downstream submission posture in trust telemetry is counted only as aggregate
+local state from `idea_downstream_submission` statuses and must not hydrate
+submission payloads or support references.
 
 ## Security And Privacy Posture
 

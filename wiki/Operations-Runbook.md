@@ -166,7 +166,8 @@ blockers; it does not certify or promote a data product.
 The internal `GET /api/v1/data-mesh/trust-telemetry/runtime-preview`
 diagnostic is available for operators with
 `idea.mesh.trust-telemetry.preview.read` to inspect aggregate runtime telemetry
-preview counts from the active repository provider. It remains
+preview counts and local downstream submission posture from the active
+repository provider. It remains
 `not_certified` until mesh certification, Gateway/Workbench discovery, and
 supported-feature evidence exist. Platform source-manifest and generated
 catalog onboarding can be proven separately by
@@ -176,14 +177,16 @@ mesh.
 `make runtime-trust-telemetry-snapshot-check` generates the corresponding
 source-safe runtime snapshot under
 `output/trust-telemetry/runtime/idea-candidate.telemetry.v1.json`. The snapshot
-is contract-shaped runtime evidence only; it does not promote producer products
-or replace platform mesh certification.
+is contract-shaped runtime evidence only, including a closed local downstream
+submission posture block; it does not promote producer products, prove
+downstream acceptance or materialization, or replace platform mesh
+certification.
 The internal `GET /api/v1/data-mesh/trust-telemetry/runtime-snapshot`
 diagnostic returns the same contract-shaped snapshot for operators with
 `idea.mesh.trust-telemetry.snapshot.read`. It remains source-safe and
 `not_certified`; it is not platform source-manifest inclusion, mesh
-certification, Gateway/Workbench discovery, client-ready publication, or
-supported-feature promotion.
+certification, downstream route serving, Gateway/Workbench discovery,
+client-ready publication, or supported-feature promotion.
 The internal `GET /api/v1/source-ingestion/readiness` diagnostic is available
 for operators with `idea.source-ingestion.readiness.read` to inspect high-cash
 run-once worker manifest, Core query URL, Core query-control-plane URL, durable

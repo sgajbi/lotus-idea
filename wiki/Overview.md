@@ -82,7 +82,8 @@ local unresolved downstream submission reconciliation workload, source-safe
 orchestration/adapter-foundation presence, submission route posture, and
 planned contract posture only. The
 runtime trust telemetry preview reports aggregate active-repository counts
-only, and the runtime snapshot endpoint/generated artifact remain blocked.
+plus local downstream submission posture only, and the runtime snapshot
+endpoint/generated artifact remain blocked.
 None of these
 diagnostics is Workbench proof,
 data-product certification, AI runtime proof, certified live broker runtime,

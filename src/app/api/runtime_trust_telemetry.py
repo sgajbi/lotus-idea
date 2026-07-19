@@ -215,7 +215,8 @@ RUNTIME_TRUST_TELEMETRY_PREVIEW_ROUTE: RouteMetadata = {
         "Returns a source-safe runtime trust telemetry preview for the proposed "
         "IdeaCandidate data product. The endpoint reports aggregate repository "
         "counts, source-authority coverage, freshness, supportability, lifecycle, "
-        "workflow, and certification blockers for internal operators. It is not "
+        "workflow, local downstream submission posture, and certification blockers "
+        "for internal operators. It is not "
         "platform mesh certification, does not expose candidate identifiers or "
         "source routes, and does not promote a supported feature."
     ),
@@ -246,6 +247,8 @@ RUNTIME_TRUST_TELEMETRY_PREVIEW_ROUTE: RouteMetadata = {
                         "conversionIntentCount": 0,
                         "conversionOutcomeCount": 0,
                         "reportEvidencePackCount": 0,
+                        "downstreamSubmissionCount": 0,
+                        "downstreamReconciliationRequiredCount": 0,
                         "lineageMaterialized": True,
                         "runtimeTelemetryBacked": True,
                         "platformCertified": False,
@@ -307,9 +310,9 @@ RUNTIME_TRUST_TELEMETRY_SNAPSHOT_ROUTE: RouteMetadata = {
     "description": (
         "Returns the source-safe, contract-shaped runtime trust telemetry snapshot for the "
         "proposed IdeaCandidate data product. The endpoint is an internal operator proof "
-        "surface over aggregate active-repository state. It is not platform mesh "
-        "certification, does not expose candidate identifiers or source routes, and does "
-        "not promote a supported feature."
+        "surface over aggregate active-repository state and local downstream submission "
+        "posture. It is not platform mesh certification, does not expose candidate "
+        "identifiers or source routes, and does not promote a supported feature."
     ),
     "status_code": status.HTTP_200_OK,
     "response_model": RuntimeTrustTelemetrySnapshotResponse,
@@ -350,6 +353,13 @@ RUNTIME_TRUST_TELEMETRY_SNAPSHOT_ROUTE: RouteMetadata = {
                             "state_counts": {"active": 2},
                             "retention_expired_count": 0,
                             "lifecycle_control_missing_count": 0,
+                            "certification_status": "not_certified",
+                            "supported_feature_promoted": False,
+                        },
+                        "downstream_submission_posture": {
+                            "submission_count": 0,
+                            "reconciliation_required_count": 0,
+                            "posture_scope": "local_idea_submission_state",
                             "certification_status": "not_certified",
                             "supported_feature_promoted": False,
                         },

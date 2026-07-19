@@ -49,6 +49,12 @@ def runtime_trust_telemetry_summary_rows(
             "report_evidence_pack_count": _candidate_row_count(
                 rows["idea_report_evidence_pack_request"], active_candidate_ids
             ),
+            "downstream_submission_count": len(rows["idea_downstream_submission"]),
+            "downstream_reconciliation_required_count": sum(
+                1
+                for row in rows["idea_downstream_submission"]
+                if row["status"] in {"in_flight", "reconciliation_required"}
+            ),
             "retention_expired_count": sum(
                 1
                 for control in rows["idea_data_lifecycle_control"]

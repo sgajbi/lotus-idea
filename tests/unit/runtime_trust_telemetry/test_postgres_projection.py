@@ -36,6 +36,12 @@ def test_postgres_repository_uses_bounded_runtime_trust_telemetry_projection() -
         {"candidate_id": candidate_id},
         {"candidate_id": candidate_id},
     ]
+    connection.rows["idea_downstream_submission"] = [
+        {"status": "in_flight"},
+        {"status": "reconciliation_required"},
+        {"status": "accepted_by_downstream"},
+        {"status": "rejected_by_downstream"},
+    ]
     connection.executed_sql.clear()
 
     summary = repository.runtime_trust_telemetry_summary()
@@ -56,6 +62,8 @@ def test_postgres_repository_uses_bounded_runtime_trust_telemetry_projection() -
     assert summary.conversion_intent_count == 2
     assert summary.conversion_outcome_count == 1
     assert summary.report_evidence_pack_count == 3
+    assert summary.downstream_submission_count == 4
+    assert summary.downstream_reconciliation_required_count == 2
     assert summary.lineage_materialized is True
     assert summary.source_batch_evidence_available is True
     assert summary.data_quality_status == "quality_warning"
@@ -68,11 +76,12 @@ def test_postgres_repository_uses_bounded_runtime_trust_telemetry_projection() -
     assert "from idea_conversion_intent" in executed_sql
     assert "from idea_conversion_outcome" in executed_sql
     assert "from idea_report_evidence_pack_request" in executed_sql
+    assert "from idea_downstream_submission" in executed_sql
+    assert "status in ('in_flight', 'reconciliation_required')" in executed_sql
     assert "runtime-trust-telemetry-data-lifecycle-counts" in executed_sql
     for unrelated_table in (
         "idea_audit_event",
         "idea_outbox_event",
-        "idea_downstream_submission",
         "idea_ai_explanation_lineage",
         "idea_lifecycle_history",
         "idea_idempotency_record",
@@ -89,4 +98,6 @@ def test_postgres_repository_uses_bounded_runtime_trust_telemetry_projection() -
     assert erased_summary.conversion_intent_count == 0
     assert erased_summary.conversion_outcome_count == 0
     assert erased_summary.report_evidence_pack_count == 0
+    assert erased_summary.downstream_submission_count == 4
+    assert erased_summary.downstream_reconciliation_required_count == 2
     assert erased_summary.data_lifecycle_state_counts == {"erased": 1}

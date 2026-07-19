@@ -98,6 +98,8 @@ def test_runtime_trust_telemetry_preview_api_returns_source_safe_aggregate_state
     assert payload["dataLifecycleStateCounts"] == {"process_local_uncontrolled": 1}
     assert payload["retentionExpiredCount"] == 0
     assert payload["lifecycleControlMissingCount"] == 1
+    assert payload["downstreamSubmissionCount"] == 0
+    assert payload["downstreamReconciliationRequiredCount"] == 0
     assert payload["runtimeTelemetryBacked"] is False
     assert "durable_repository_not_configured" in payload["certificationBlockers"]
     assert payload["platformCertified"] is False
@@ -223,6 +225,13 @@ def test_runtime_trust_telemetry_snapshot_api_returns_source_safe_contract_state
     assert payload["data_quality_status"] == "quality_passed"
     assert payload["lineage"]["lineage_materialized"] is True
     assert payload["lineage"]["evidence_access_class"] == "operator_only"
+    assert payload["downstream_submission_posture"] == {
+        "submission_count": 0,
+        "reconciliation_required_count": 0,
+        "posture_scope": "local_idea_submission_state",
+        "certification_status": "not_certified",
+        "supported_feature_promoted": False,
+    }
     assert payload["blocking"]["blocked"] is True
     assert "platform_mesh_certification_missing" in payload["blocking"]["blocked_reason"]
     assert payload["evidence"]["source_artifact_uri"].endswith(
