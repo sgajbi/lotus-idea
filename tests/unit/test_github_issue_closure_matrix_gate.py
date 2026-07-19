@@ -362,6 +362,12 @@ def test_github_issue_closure_matrix_gate_requires_runtime_trust_downstream_post
     _assert_matrix_requires_issue(tmp_path, 663)
 
 
+def test_github_issue_closure_matrix_gate_requires_proof_worktree_import_issue(
+    tmp_path: Path,
+) -> None:
+    _assert_matrix_requires_issue(tmp_path, 664)
+
+
 def test_github_issue_closure_matrix_gate_requires_postgres_snapshot_writes_issue(
     tmp_path: Path,
 ) -> None:

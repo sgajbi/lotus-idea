@@ -1,3 +1,4 @@
+# ruff: noqa: E402
 from __future__ import annotations
 
 from dataclasses import replace
@@ -7,6 +8,11 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
+
+
+from scripts.proof_worktree_import_guard import ensure_worktree_imports
+
+ensure_worktree_imports(__file__)
 
 from app.application.core_portfolio_state_runtime_evidence import (  # noqa: E402
     CORE_PORTFOLIO_STATE_REMAINING_BLOCKERS,

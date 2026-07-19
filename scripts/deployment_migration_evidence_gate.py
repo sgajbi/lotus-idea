@@ -1,3 +1,4 @@
+# ruff: noqa: E402
 from __future__ import annotations
 
 import argparse
@@ -6,6 +7,12 @@ import json
 from pathlib import Path
 import sys
 from typing import Any, Mapping, Sequence
+
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from scripts.proof_worktree_import_guard import ensure_worktree_imports
+
+ensure_worktree_imports(__file__)
 
 from app.application.deployment_migration_contract import (
     load_deployment_migration_contract,

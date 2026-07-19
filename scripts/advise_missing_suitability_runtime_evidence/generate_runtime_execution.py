@@ -1,3 +1,4 @@
+# ruff: noqa: E402
 from __future__ import annotations
 
 import argparse
@@ -6,6 +7,14 @@ from datetime import UTC, date, datetime
 import json
 import os
 import sys
+
+from pathlib import Path
+
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from scripts.proof_worktree_import_guard import ensure_worktree_imports
+
+ensure_worktree_imports(__file__)
 
 from app.application.advise_missing_suitability_runtime_evidence import (
     EvaluateAdviseMissingSuitability,

@@ -1,9 +1,16 @@
+# ruff: noqa: E402
 from __future__ import annotations
 
 import argparse
 import json
 from pathlib import Path
 import sys
+
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from scripts.proof_worktree_import_guard import ensure_worktree_imports
+
+ensure_worktree_imports(__file__)
 
 from app.application.capacity_evidence_qualification import validate_load_soak_proof
 

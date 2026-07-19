@@ -1,3 +1,4 @@
+# ruff: noqa: E402
 from __future__ import annotations
 
 import argparse
@@ -9,6 +10,12 @@ try:
     from scripts.persistence import _bootstrap  # noqa: F401
 except ModuleNotFoundError:
     import _bootstrap  # type: ignore[import-not-found,no-redef]  # noqa: F401
+
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from scripts.proof_worktree_import_guard import ensure_worktree_imports
+
+ensure_worktree_imports(__file__)
 
 from app.application.durable_repository_proof import build_durable_repository_proof_payload
 from scripts.proof_generator_io import load_ci_execution_receipt, write_json_payload

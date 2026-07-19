@@ -1,3 +1,4 @@
+# ruff: noqa: E402
 from __future__ import annotations
 
 import argparse
@@ -11,6 +12,11 @@ import sys
 from pathlib import Path
 from typing import Any
 
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from scripts.proof_worktree_import_guard import ensure_worktree_imports
+
+ensure_worktree_imports(__file__)
 from app.application.implementation_proof_cli_contract import PROOF_ARTIFACT_ARGS
 from app.application.implementation_proof_models import (
     ImplementationProofCapabilityReadiness,
