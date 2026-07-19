@@ -167,7 +167,9 @@ The internal `GET /api/v1/data-mesh/trust-telemetry/runtime-preview`
 diagnostic is available for operators with
 `idea.mesh.trust-telemetry.preview.read` to inspect aggregate runtime telemetry
 preview counts and local downstream submission posture from the active
-repository provider. It remains
+repository provider. Every certification blocker is paired with durable
+`sgajbi/<repo>#<issue>` refs so operators can move directly from runtime
+posture to the owning GitHub execution item. It remains
 `not_certified` until mesh certification, Gateway/Workbench discovery, and
 supported-feature evidence exist. Platform source-manifest and generated
 catalog onboarding can be proven separately by
@@ -178,9 +180,9 @@ mesh.
 source-safe runtime snapshot under
 `output/trust-telemetry/runtime/idea-candidate.telemetry.v1.json`. The snapshot
 is contract-shaped runtime evidence only, including a closed local downstream
-submission posture block; it does not promote producer products, prove
-downstream acceptance or materialization, or replace platform mesh
-certification.
+submission posture block and issue-backed blocker refs; it does not promote
+producer products, prove downstream acceptance or materialization, or replace
+platform mesh certification.
 The internal `GET /api/v1/data-mesh/trust-telemetry/runtime-snapshot`
 diagnostic returns the same contract-shaped snapshot for operators with
 `idea.mesh.trust-telemetry.snapshot.read`. It remains source-safe and

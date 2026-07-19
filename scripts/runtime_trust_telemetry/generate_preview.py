@@ -88,6 +88,7 @@ def runtime_trust_telemetry_preview_payload(
         "certificationStatus": snapshot.certification_status,
         "certificationReady": snapshot.certification_ready,
         "certificationBlockers": list(snapshot.certification_blockers),
+        "blockerIssueRefs": dict(snapshot.blocker_issue_refs),
         "productCoverage": [
             {
                 "productId": posture.product_id,
@@ -108,6 +109,7 @@ def runtime_trust_telemetry_preview_payload(
                 "sourceBatchEvidenceAvailable": posture.source_batch_evidence_available,
                 "consumerExposureStatus": posture.consumer_exposure_status,
                 "certificationBlockers": list(posture.certification_blockers),
+                "blockerIssueRefs": dict(posture.blocker_issue_refs),
             }
             for posture in snapshot.product_postures
         ],

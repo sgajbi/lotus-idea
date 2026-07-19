@@ -19,6 +19,7 @@ from app.ports.idea_repository import (
     RuntimeTrustTelemetryProjectionRepository,
     RuntimeTrustTelemetryRepositorySummary,
 )
+from .issue_refs import runtime_trust_telemetry_blocker_issue_refs
 
 
 PRODUCT_ID = "lotus-idea:IdeaCandidate:v1"
@@ -73,6 +74,7 @@ class RuntimeTrustTelemetryProductPosture:
     source_batch_evidence_available: bool
     consumer_exposure_status: str
     certification_blockers: tuple[str, ...]
+    blocker_issue_refs: Mapping[str, tuple[str, ...]]
 
 
 @dataclass(frozen=True)
@@ -103,6 +105,7 @@ class RuntimeTrustTelemetryPreview:
     certification_status: str
     certification_ready: bool
     certification_blockers: tuple[str, ...]
+    blocker_issue_refs: Mapping[str, tuple[str, ...]]
     product_postures: tuple[RuntimeTrustTelemetryProductPosture, ...]
     supported_feature_promoted: bool
 
@@ -164,6 +167,7 @@ def build_runtime_trust_telemetry_preview(
         certification_status="not_certified",
         certification_ready=False,
         certification_blockers=blockers,
+        blocker_issue_refs=runtime_trust_telemetry_blocker_issue_refs(blockers),
         product_postures=product_postures,
         supported_feature_promoted=False,
     )
@@ -232,6 +236,7 @@ def build_runtime_trust_telemetry_snapshot(
                 "blocking": {
                     "blocked": True,
                     "blocked_reason": _blocked_reason(preview),
+                    "blocker_issue_refs": dict(preview.blocker_issue_refs),
                 },
                 "product_coverage": [
                     _product_posture_payload(posture) for posture in preview.product_postures
@@ -325,6 +330,12 @@ def _product_posture(
         observed_record_count=observed_record_count,
         stale_or_unavailable_source_ref_count=summary.stale_or_unavailable_source_ref_count,
     )
+    certification_blockers = _product_certification_blockers(
+        runtime_backed=runtime_backed,
+        durable_storage_backed=durable_storage_backed,
+        observed_record_count=observed_record_count,
+        stale_or_unavailable_source_ref_count=summary.stale_or_unavailable_source_ref_count,
+    )
     return RuntimeTrustTelemetryProductPosture(
         product_id=product_id,
         product_name=declaration["product_name"],
@@ -360,12 +371,8 @@ def _product_posture(
         if runtime_backed
         else False,
         consumer_exposure_status="not_exposed_platform_not_certified",
-        certification_blockers=_product_certification_blockers(
-            runtime_backed=runtime_backed,
-            durable_storage_backed=durable_storage_backed,
-            observed_record_count=observed_record_count,
-            stale_or_unavailable_source_ref_count=summary.stale_or_unavailable_source_ref_count,
-        ),
+        certification_blockers=certification_blockers,
+        blocker_issue_refs=runtime_trust_telemetry_blocker_issue_refs(certification_blockers),
     )
 
 
@@ -479,6 +486,7 @@ def _product_posture_payload(posture: RuntimeTrustTelemetryProductPosture) -> di
         "source_batch_evidence_available": posture.source_batch_evidence_available,
         "consumer_exposure_status": posture.consumer_exposure_status,
         "certification_blockers": list(posture.certification_blockers),
+        "blocker_issue_refs": dict(posture.blocker_issue_refs),
     }
 
 

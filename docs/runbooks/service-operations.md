@@ -360,7 +360,8 @@ the only runtime path marked as read-only retryable without one.
    with the `operator` role and
    `idea.mesh.trust-telemetry.preview.read` capability. This reports aggregate
    active-repository counts plus product coverage for every declared producer
-   product. It is not data-product certification.
+   product, including blocker-to-GitHub-issue references for every open
+   certification blocker. It is not data-product certification.
 14. For CI or async evidence without running the service, run
     `make implementation-proof-readiness-check` or
     `scripts/generate_implementation_proof_readiness.py --evaluated-at-utc <timestamp>`.
@@ -376,8 +377,9 @@ the only runtime path marked as read-only retryable without one.
     running the service, run `make runtime-trust-telemetry-snapshot-check` or
     `scripts/runtime_trust_telemetry/generate_snapshot.py --generated-at-utc <timestamp>`.
     The generated file is ignored under `output/trust-telemetry/runtime/` and
-    includes product coverage posture. It remains blocked until product coverage
-    is complete and platform mesh certification is complete.
+    includes product coverage posture and issue-backed blocker refs. It remains
+    blocked until product coverage is complete and platform mesh certification
+    is complete.
     When PostgreSQL is the active repository provider, the HTTP preview and
     snapshot diagnostics use a bounded runtime trust telemetry projection over
     candidate and workflow tables rather than hydrating unrelated repository

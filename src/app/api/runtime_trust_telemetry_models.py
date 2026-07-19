@@ -45,6 +45,7 @@ class RuntimeTrustTelemetryPreviewResponse(CamelModel):
     certification_status: str = Field(..., alias="certificationStatus")
     certification_ready: bool = Field(..., alias="certificationReady")
     certification_blockers: tuple[str, ...] = Field(..., alias="certificationBlockers")
+    blocker_issue_refs: Mapping[str, tuple[str, ...]] = Field(..., alias="blockerIssueRefs")
     supported_feature_promoted: bool = Field(..., alias="supportedFeaturePromoted")
     product_coverage: tuple["RuntimeTrustTelemetryProductPostureResponse", ...] = Field(
         ...,
@@ -85,6 +86,7 @@ class RuntimeTrustTelemetryPreviewResponse(CamelModel):
             certificationStatus=snapshot.certification_status,
             certificationReady=snapshot.certification_ready,
             certificationBlockers=snapshot.certification_blockers,
+            blockerIssueRefs=dict(snapshot.blocker_issue_refs),
             productCoverage=tuple(
                 RuntimeTrustTelemetryProductPostureResponse.from_domain(posture)
                 for posture in snapshot.product_postures
@@ -115,6 +117,7 @@ class RuntimeTrustTelemetryProductPostureResponse(CamelModel):
     source_batch_evidence_available: bool = Field(..., alias="sourceBatchEvidenceAvailable")
     consumer_exposure_status: str = Field(..., alias="consumerExposureStatus")
     certification_blockers: tuple[str, ...] = Field(..., alias="certificationBlockers")
+    blocker_issue_refs: Mapping[str, tuple[str, ...]] = Field(..., alias="blockerIssueRefs")
 
     @classmethod
     def from_domain(
@@ -140,6 +143,7 @@ class RuntimeTrustTelemetryProductPostureResponse(CamelModel):
             sourceBatchEvidenceAvailable=posture.source_batch_evidence_available,
             consumerExposureStatus=posture.consumer_exposure_status,
             certificationBlockers=posture.certification_blockers,
+            blockerIssueRefs=dict(posture.blocker_issue_refs),
         )
 
 
@@ -176,6 +180,7 @@ class RuntimeTrustTelemetryDownstreamSubmissionPostureResponse(BaseModel):
 class RuntimeTrustTelemetryBlockingResponse(BaseModel):
     blocked: bool
     blocked_reason: str
+    blocker_issue_refs: Mapping[str, list[str]]
 
 
 class RuntimeTrustTelemetryEvidenceResponse(BaseModel):
@@ -203,6 +208,7 @@ class RuntimeTrustTelemetryProductCoverageSnapshotResponse(BaseModel):
     source_batch_evidence_available: bool
     consumer_exposure_status: str
     certification_blockers: list[str]
+    blocker_issue_refs: Mapping[str, list[str]]
 
 
 class RuntimeTrustTelemetrySnapshotResponse(BaseModel):

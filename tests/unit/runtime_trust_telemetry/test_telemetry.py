@@ -83,6 +83,21 @@ def test_runtime_trust_telemetry_preview_reports_empty_blocked_posture() -> None
         "runtime_candidate_snapshot_missing",
         "durable_repository_not_configured",
     )
+    assert snapshot.blocker_issue_refs["runtime_candidate_snapshot_missing"] == (
+        "sgajbi/lotus-idea#692",
+        "sgajbi/lotus-idea#680",
+    )
+    assert snapshot.blocker_issue_refs["platform_mesh_certification_missing"] == (
+        "sgajbi/lotus-idea#692",
+        "sgajbi/lotus-platform#598",
+    )
+    assert _product_posture(
+        snapshot,
+        "lotus-idea:OpportunitySignalCandidate:v1",
+    ).blocker_issue_refs["runtime_product_materialization_missing"] == (
+        "sgajbi/lotus-idea#692",
+        "sgajbi/lotus-idea#380",
+    )
 
 
 def test_runtime_trust_telemetry_preview_counts_source_safe_repository_state() -> None:
@@ -155,6 +170,10 @@ def test_runtime_trust_telemetry_preview_counts_source_safe_repository_state() -
     assert "durable_repository_not_configured" not in snapshot.certification_blockers
     assert "data_lifecycle_controls_missing" in snapshot.certification_blockers
     assert "platform_mesh_certification_missing" in snapshot.certification_blockers
+    assert snapshot.blocker_issue_refs["data_lifecycle_controls_missing"] == (
+        "sgajbi/lotus-idea#692",
+        "sgajbi/lotus-idea#344",
+    )
 
 
 def test_runtime_trust_telemetry_uses_repository_projection_without_snapshot() -> None:
@@ -232,6 +251,11 @@ def test_runtime_trust_telemetry_preview_payload_is_source_safe() -> None:
     assert payload["generatedAtUtc"] == "2026-06-21T10:10:00Z"
     assert payload["certificationStatus"] == "not_certified"
     assert payload["supportedFeaturePromoted"] is False
+    assert payload["blockerIssueRefs"]["platform_mesh_certification_missing"] == (
+        "sgajbi/lotus-idea#692",
+        "sgajbi/lotus-platform#598",
+    )
+    assert payload["productCoverage"][0]["blockerIssueRefs"]
     assert payload["downstreamSubmissionCount"] == 0
     assert payload["downstreamReconciliationRequiredCount"] == 0
     assert "candidateId" not in rendered
@@ -267,6 +291,10 @@ def test_runtime_trust_telemetry_snapshot_reports_empty_blocked_contract_posture
     )
     assert snapshot["blocking"]["blocked"] is True
     assert "runtime_candidate_snapshot_missing" in snapshot["blocking"]["blocked_reason"]
+    assert snapshot["blocking"]["blocker_issue_refs"]["runtime_candidate_snapshot_missing"] == (
+        "sgajbi/lotus-idea#692",
+        "sgajbi/lotus-idea#680",
+    )
     assert snapshot["observed_trust_metadata"] == {}
 
 
@@ -299,6 +327,14 @@ def test_runtime_trust_telemetry_snapshot_materializes_source_safe_runtime_evide
     assert observed_metadata["as_of_date"] == "2026-06-21"
     assert observed_metadata["source_batch_fingerprint"] == "source-safe-runtime-aggregate"
     assert "platform_mesh_certification_missing" in snapshot["blocking"]["blocked_reason"]
+    assert snapshot["blocking"]["blocker_issue_refs"]["platform_mesh_certification_missing"] == (
+        "sgajbi/lotus-idea#692",
+        "sgajbi/lotus-platform#598",
+    )
+    assert snapshot["blocking"]["blocker_issue_refs"]["data_lifecycle_controls_missing"] == (
+        "sgajbi/lotus-idea#692",
+        "sgajbi/lotus-idea#344",
+    )
     assert "candidate_id" not in rendered
     assert "portfolio_id" not in rendered
     assert "client_id" not in rendered
