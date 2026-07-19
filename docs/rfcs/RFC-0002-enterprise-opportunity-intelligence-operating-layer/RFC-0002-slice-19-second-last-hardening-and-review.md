@@ -1999,6 +1999,62 @@ data-product support, external-publication authority, or supported-feature
 promotion. README, wiki, supported features, OpenAPI, migrations, and central
 skills are unchanged by explicit scope decision.
 
+## Issue 682 Closure-Manifest Coverage And Cross-Repo Backlog Traceability
+
+The 2026-07-19 Slice 19 pass fixed a PR coverage regression without weakening
+the quality gate. PR Merge Gate coverage on head `e5175bf3` reported
+`98.96 < 99.00`; the largest current-tranche miss cluster in directly relevant
+RFC proof code was
+`src/app/application/implementation_proof_closure_manifest.py`, where malformed
+contract, owner issue, dependency issue, and proof-artifact registry branches
+were not covered.
+
+The focused hardening adds unit coverage for:
+
+1. closure-manifest header drift,
+2. malformed `blockerGroups` shape,
+3. missing/invalid required blocker group fields,
+4. malformed `dependencyIssues`,
+5. invalid owner/dependency issue repositories, issue numbers, and URLs,
+6. unclassified proof-artifact registry entries that would otherwise allow
+   blocker closure without evidence class, classification, or issue ownership.
+
+The same-pattern scan covered the current proof/blueprint gate family,
+including `implementation_proof_closure_manifest`, `blueprint_scope_coverage`,
+their CLI gates, documentation-contract references, repository context, quality
+scorecard, and RFC/source-controlled traceability text. The scan found no
+additional local product-code fix required, but it did find a repeatable
+platform automation gap: cross-repo RFC owner issues are still audited manually
+from source contracts and GitHub labels. That gap is now tracked in
+`sgajbi/lotus-platform#602` for a reusable auditor and skill hook.
+
+Focused validation passed:
+
+1. `python -m pytest tests/unit/implementation_proof/test_closure_manifest.py --cov=app.application.implementation_proof_closure_manifest --cov-report=term-missing`
+   => 11 passed, module coverage 100%,
+2. `python -m ruff check tests/unit/implementation_proof/test_closure_manifest.py`,
+3. `python -m ruff format --check tests/unit/implementation_proof/test_closure_manifest.py`,
+4. `make implementation-proof-closure-manifest-gate`,
+5. `make test-unit` => 4,945 passed,
+6. `make maintainability-gate`,
+7. `make quality-scorecard-gate`,
+8. `make implementation-truth-gate`,
+9. `make documentation-contract-gate`,
+10. `make blueprint-scope-coverage-gate`.
+
+The cross-repo issue audit was recorded in Slice 18 source truth,
+`docs/operations/implementation-proof-readiness.md`, repository context, and
+GitHub comments on #673/#681/#701/PR #703. Existing owner-repo issue coverage
+was verified across Advise, AI, Archive, Core, Gateway, Manage, Performance,
+Platform, Render, Report, Risk, and Workbench. No additional product dependency
+issue was required by the audited contract state.
+
+This is proof-governance and documentation/context hardening only. It does not
+implement authentication/authorization infrastructure, Core source changes,
+Gateway, Workbench, downstream execution, report/render/archive materialization,
+data-product certification, client publication, production deployment, runtime
+topology changes, or supported-feature promotion.
+
 ## Issue 623 AI Workflow-Pack Fixture Maintainability
 
 Issue `#623` follows the same Slice 19 report-only quality-baseline pattern
