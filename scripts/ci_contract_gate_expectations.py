@@ -15,6 +15,7 @@ REQUIRED_LINT_TARGETS = (
     "no-sensitive-content-guard",
     "runtime-dependency-closure-gate",
     "dependency-vulnerability-posture-gate",
+    "implementation-proof-closure-manifest-gate",
     "license-compliance-gate",
     "source-observability-contract-gate",
     "api-route-metadata-gate",

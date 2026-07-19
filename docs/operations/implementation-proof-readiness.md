@@ -59,6 +59,22 @@ consistently by the application snapshot, API response, and generated proof
 artifact. `make supported-feature-promotion-contract-gate` prevents those
 consumers from restoring independent counting or hard-coded output.
 
+## Blocker Closure Manifest
+
+`contracts/implementation-proof/rfc0002-blocker-closure-manifest.v1.json`
+is the durable RFC-0002 blocker-to-issue map. It records each current
+implementation-proof blocker, the owning Lotus GitHub issue, any sibling-repo
+dependency issues, the required evidence class, the slice association, and the
+supported-feature effect. `make implementation-proof-closure-manifest-gate`
+builds the strict default readiness snapshot with no optional proof artifacts
+and fails closed when a blocker is missing, duplicated, stale, assigned to an
+unknown evidence class, or linked to an inconsistent issue URL.
+
+The manifest is source-contract governance only. It does not close runtime,
+deployment, production, Workbench, data-mesh, publication, or supported-feature
+blockers by itself. It exists so unresolved RFC-0002 work is durable in GitHub
+and executable source, not hidden in chat memory.
+
 ## What It Does Not Prove
 
 The diagnostic is deliberately not full live journey proof. It does not:

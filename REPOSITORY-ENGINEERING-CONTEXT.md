@@ -1025,6 +1025,17 @@ It adds no supported feature and does not certify production vulnerability
 posture until exact-main Main Releasability produces the scan, SBOM, signature,
 provenance, digest, release-manifest, and wiki/source closure evidence.
 
+RFC-0002 Slice 17 blocker closure truth is governed by
+`contracts/implementation-proof/rfc0002-blocker-closure-manifest.v1.json` and
+tracked by issue `#700`. `make implementation-proof-closure-manifest-gate` is
+part of `make lint` and `make ci-contract-gate`; it builds the strict default
+implementation-proof readiness snapshot and fails closed when any blocker lacks
+a Lotus GitHub owner issue, required evidence class, slice association, sibling
+dependency issue where applicable, or source-safe supported-feature effect. The
+manifest is source-contract governance only. It does not clear runtime,
+deployment, production, data-mesh, Gateway/Workbench, client-publication, or
+supported-feature blockers.
+
 ## Observability And Operability
 
 Operation events are the primary supportability surface. They must stay

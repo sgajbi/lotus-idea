@@ -1,0 +1,493 @@
+{
+  "schemaVersion": "lotus-idea.rfc0002.blocker-closure-manifest.v1",
+  "repository": "lotus-idea",
+  "rfc": "RFC-0002",
+  "trackingIssue": "https://github.com/sgajbi/lotus-idea/issues/700",
+  "auditBasis": {
+    "readinessCommand": "make implementation-proof-readiness-check",
+    "strictGateSnapshot": "in-process default implementation-proof readiness with no optional proof artifacts",
+    "sourceOfTruth": [
+      "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-17-implementation-proof-and-live-validation.md",
+      "docs/operations/implementation-proof-readiness.md",
+      "supported-features/supported-features.json"
+    ]
+  },
+  "blockerGroups": [
+    {
+      "groupId": "source-ingestion-runtime-configuration",
+      "sliceIds": ["RFC-0002/slice-17"],
+      "requiredEvidenceClass": "deployment",
+      "closureStatus": "open",
+      "supportedFeatureEffect": "no_promotion_until_configured_runtime_and_deployment_evidence_exist",
+      "ownerIssue": {
+        "repository": "sgajbi/lotus-idea",
+        "number": 698,
+        "url": "https://github.com/sgajbi/lotus-idea/issues/698"
+      },
+      "dependencyIssues": [
+        {
+          "repository": "sgajbi/lotus-core",
+          "number": 796,
+          "url": "https://github.com/sgajbi/lotus-core/issues/796"
+        }
+      ],
+      "blockers": [
+        "source_ingestion_manifest_not_configured",
+        "lotus_core_query_base_url_not_configured",
+        "lotus_core_query_control_plane_base_url_not_configured",
+        "lotus_core_base_url_not_configured",
+        "scheduled_worker_deploy_proof_missing"
+      ]
+    },
+    {
+      "groupId": "durable-repository-and-runtime-snapshot-proof",
+      "sliceIds": ["RFC-0002/slice-17"],
+      "requiredEvidenceClass": "ci_execution",
+      "closureStatus": "open",
+      "supportedFeatureEffect": "no_promotion_until_durable_repository_and_snapshot_proofs_are_current",
+      "ownerIssue": {
+        "repository": "sgajbi/lotus-idea",
+        "number": 680,
+        "url": "https://github.com/sgajbi/lotus-idea/issues/680"
+      },
+      "dependencyIssues": [],
+      "blockers": [
+        "durable_repository_not_configured",
+        "repository_side_queue_pagination_not_certified",
+        "runtime_candidate_snapshot_missing"
+      ]
+    },
+    {
+      "groupId": "core-runtime-source-proof",
+      "sliceIds": ["RFC-0002/slice-16", "RFC-0002/slice-17"],
+      "requiredEvidenceClass": "runtime_execution",
+      "closureStatus": "external_dependency_open",
+      "supportedFeatureEffect": "no_promotion_until_core_receipts_are_fresh_current_and_consumed",
+      "ownerIssue": {
+        "repository": "sgajbi/lotus-idea",
+        "number": 698,
+        "url": "https://github.com/sgajbi/lotus-idea/issues/698"
+      },
+      "dependencyIssues": [
+        {
+          "repository": "sgajbi/lotus-core",
+          "number": 790,
+          "url": "https://github.com/sgajbi/lotus-core/issues/790"
+        },
+        {
+          "repository": "sgajbi/lotus-core",
+          "number": 792,
+          "url": "https://github.com/sgajbi/lotus-core/issues/792"
+        },
+        {
+          "repository": "sgajbi/lotus-core",
+          "number": 796,
+          "url": "https://github.com/sgajbi/lotus-core/issues/796"
+        }
+      ],
+      "blockers": [
+        "live_core_source_proof_missing",
+        "opportunity_archetype_live_core_source_proof_missing",
+        "opportunity_archetype_benchmark_assignment_source_ref_missing",
+        "opportunity_archetype_core_portfolio_state_source_ref_missing",
+        "opportunity_archetype_maturity_live_core_source_proof_missing",
+        "opportunity_archetype_live_core_cashflow_source_proof_missing",
+        "opportunity_archetype_missing_benchmark_live_core_source_proof_missing"
+      ]
+    },
+    {
+      "groupId": "risk-runtime-source-proof",
+      "sliceIds": ["RFC-0002/slice-16", "RFC-0002/slice-17"],
+      "requiredEvidenceClass": "runtime_execution",
+      "closureStatus": "external_dependency_open",
+      "supportedFeatureEffect": "no_promotion_until_risk_receipts_are_fresh_current_and_consumed",
+      "ownerIssue": {
+        "repository": "sgajbi/lotus-idea",
+        "number": 698,
+        "url": "https://github.com/sgajbi/lotus-idea/issues/698"
+      },
+      "dependencyIssues": [
+        {
+          "repository": "sgajbi/lotus-risk",
+          "number": 211,
+          "url": "https://github.com/sgajbi/lotus-risk/issues/211"
+        }
+      ],
+      "blockers": [
+        "opportunity_archetype_live_risk_source_proof_missing",
+        "opportunity_archetype_live_risk_volatility_source_proof_missing",
+        "opportunity_archetype_drawdown_source_proof_missing",
+        "opportunity_archetype_mandate_risk_health_source_ref_missing"
+      ]
+    },
+    {
+      "groupId": "performance-runtime-source-proof",
+      "sliceIds": ["RFC-0002/slice-16", "RFC-0002/slice-17"],
+      "requiredEvidenceClass": "runtime_execution",
+      "closureStatus": "external_dependency_open",
+      "supportedFeatureEffect": "no_promotion_until_performance_receipts_are_fresh_current_and_consumed",
+      "ownerIssue": {
+        "repository": "sgajbi/lotus-idea",
+        "number": 698,
+        "url": "https://github.com/sgajbi/lotus-idea/issues/698"
+      },
+      "dependencyIssues": [
+        {
+          "repository": "sgajbi/lotus-performance",
+          "number": 464,
+          "url": "https://github.com/sgajbi/lotus-performance/issues/464"
+        }
+      ],
+      "blockers": [
+        "opportunity_archetype_live_performance_source_proof_missing",
+        "opportunity_archetype_mandate_performance_health_source_ref_missing",
+        "opportunity_archetype_performance_benchmark_readiness_source_ref_missing"
+      ]
+    },
+    {
+      "groupId": "advise-runtime-and-source-product-proof",
+      "sliceIds": ["RFC-0002/slice-12", "RFC-0002/slice-16", "RFC-0002/slice-17"],
+      "requiredEvidenceClass": "runtime_execution",
+      "closureStatus": "external_dependency_open",
+      "supportedFeatureEffect": "no_promotion_until_advise_policy_risk_profile_and_restriction_receipts_are_current",
+      "ownerIssue": {
+        "repository": "sgajbi/lotus-idea",
+        "number": 688,
+        "url": "https://github.com/sgajbi/lotus-idea/issues/688"
+      },
+      "dependencyIssues": [
+        {
+          "repository": "sgajbi/lotus-advise",
+          "number": 461,
+          "url": "https://github.com/sgajbi/lotus-advise/issues/461"
+        },
+        {
+          "repository": "sgajbi/lotus-advise",
+          "number": 459,
+          "url": "https://github.com/sgajbi/lotus-advise/issues/459"
+        }
+      ],
+      "blockers": [
+        "suitability_policy_authority_remains_lotus_advise",
+        "advise_live_contract_proof_missing",
+        "opportunity_archetype_advise_policy_live_source_proof_missing",
+        "opportunity_archetype_live_restriction_source_proof_missing",
+        "opportunity_archetype_advise_risk_profile_live_source_proof_missing"
+      ]
+    },
+    {
+      "groupId": "advise-source-product-contract-proof",
+      "sliceIds": ["RFC-0002/slice-16", "RFC-0002/slice-17"],
+      "requiredEvidenceClass": "source_contract",
+      "closureStatus": "open",
+      "supportedFeatureEffect": "adds_provenance_only_until_runtime_and_policy_certification_pass",
+      "ownerIssue": {
+        "repository": "sgajbi/lotus-idea",
+        "number": 698,
+        "url": "https://github.com/sgajbi/lotus-idea/issues/698"
+      },
+      "dependencyIssues": [
+        {
+          "repository": "sgajbi/lotus-advise",
+          "number": 459,
+          "url": "https://github.com/sgajbi/lotus-advise/issues/459"
+        }
+      ],
+      "blockers": [
+        "opportunity_archetype_typed_restriction_source_product_missing",
+        "opportunity_archetype_typed_advise_risk_profile_source_product_missing"
+      ]
+    },
+    {
+      "groupId": "manage-runtime-source-proof",
+      "sliceIds": ["RFC-0002/slice-12", "RFC-0002/slice-16", "RFC-0002/slice-17"],
+      "requiredEvidenceClass": "runtime_execution",
+      "closureStatus": "external_dependency_open",
+      "supportedFeatureEffect": "no_promotion_until_manage_action_and_mandate_receipts_are_current",
+      "ownerIssue": {
+        "repository": "sgajbi/lotus-idea",
+        "number": 689,
+        "url": "https://github.com/sgajbi/lotus-idea/issues/689"
+      },
+      "dependencyIssues": [
+        {
+          "repository": "sgajbi/lotus-manage",
+          "number": 621,
+          "url": "https://github.com/sgajbi/lotus-manage/issues/621"
+        },
+        {
+          "repository": "sgajbi/lotus-manage",
+          "number": 620,
+          "url": "https://github.com/sgajbi/lotus-manage/issues/620"
+        }
+      ],
+      "blockers": [
+        "rebalance_execution_authority_remains_lotus_manage",
+        "manage_live_contract_proof_missing",
+        "opportunity_archetype_portfolio_scoped_manage_source_proof_missing"
+      ]
+    },
+    {
+      "groupId": "data-mesh-certification-and-platform-catalog",
+      "sliceIds": ["RFC-0002/slice-14", "RFC-0002/slice-17"],
+      "requiredEvidenceClass": "production_certification",
+      "closureStatus": "external_dependency_open",
+      "supportedFeatureEffect": "no_promotion_until_platform_certifies_data_product_and_trust_telemetry",
+      "ownerIssue": {
+        "repository": "sgajbi/lotus-idea",
+        "number": 692,
+        "url": "https://github.com/sgajbi/lotus-idea/issues/692"
+      },
+      "dependencyIssues": [
+        {
+          "repository": "sgajbi/lotus-platform",
+          "number": 598,
+          "url": "https://github.com/sgajbi/lotus-platform/issues/598"
+        }
+      ],
+      "blockers": [
+        "data_mesh_runtime_telemetry_not_certified",
+        "data_product_certification_missing",
+        "certified_runtime_trust_telemetry_missing",
+        "data_mesh_not_certified",
+        "producer_products_not_active",
+        "runtime_trust_telemetry_product_coverage_incomplete",
+        "mesh_slo_policy_certification_missing",
+        "mesh_access_policy_certification_missing",
+        "mesh_evidence_policy_certification_missing",
+        "platform_mesh_certification_missing",
+        "data_mesh_certification_missing",
+        "opportunity_archetype_data_mesh_not_certified"
+      ]
+    },
+    {
+      "groupId": "platform-source-contract-inclusion",
+      "sliceIds": ["RFC-0002/slice-14", "RFC-0002/slice-17"],
+      "requiredEvidenceClass": "source_contract",
+      "closureStatus": "external_dependency_open",
+      "supportedFeatureEffect": "source_contract_can_clear_only_catalog_and_manifest_inclusion_blockers",
+      "ownerIssue": {
+        "repository": "sgajbi/lotus-idea",
+        "number": 692,
+        "url": "https://github.com/sgajbi/lotus-idea/issues/692"
+      },
+      "dependencyIssues": [
+        {
+          "repository": "sgajbi/lotus-platform",
+          "number": 598,
+          "url": "https://github.com/sgajbi/lotus-platform/issues/598"
+        }
+      ],
+      "blockers": [
+        "platform_source_manifest_inclusion_missing",
+        "platform_catalog_inclusion_missing"
+      ]
+    },
+    {
+      "groupId": "workbench-and-gateway-product-proof",
+      "sliceIds": ["RFC-0002/slice-11", "RFC-0002/slice-16", "RFC-0002/slice-17"],
+      "requiredEvidenceClass": "runtime_execution",
+      "closureStatus": "external_dependency_open",
+      "supportedFeatureEffect": "no_promotion_until_gateway_bff_workbench_browser_and_demo_runtime_proofs_pass",
+      "ownerIssue": {
+        "repository": "sgajbi/lotus-idea",
+        "number": 685,
+        "url": "https://github.com/sgajbi/lotus-idea/issues/685"
+      },
+      "dependencyIssues": [
+        {
+          "repository": "sgajbi/lotus-gateway",
+          "number": 505,
+          "url": "https://github.com/sgajbi/lotus-gateway/issues/505"
+        },
+        {
+          "repository": "sgajbi/lotus-workbench",
+          "number": 484,
+          "url": "https://github.com/sgajbi/lotus-workbench/issues/484"
+        },
+        {
+          "repository": "sgajbi/lotus-platform",
+          "number": 563,
+          "url": "https://github.com/sgajbi/lotus-platform/issues/563"
+        }
+      ],
+      "blockers": [
+        "gateway_workbench_proof_missing",
+        "workbench_product_proof_missing",
+        "gateway_workbench_discovery_proof_missing",
+        "workbench_panel_missing",
+        "workbench_gateway_bff_consumption_proof_missing",
+        "browser_accessibility_proof_missing",
+        "canonical_demo_runtime_proof_missing",
+        "opportunity_archetype_workbench_product_proof_missing"
+      ]
+    },
+    {
+      "groupId": "ai-runtime-model-risk-and-lineage-proof",
+      "sliceIds": ["RFC-0002/slice-09", "RFC-0002/slice-17"],
+      "requiredEvidenceClass": "runtime_execution",
+      "closureStatus": "external_dependency_open",
+      "supportedFeatureEffect": "no_promotion_until_ai_runtime_model_risk_and_provider_evidence_pass",
+      "ownerIssue": {
+        "repository": "sgajbi/lotus-idea",
+        "number": 680,
+        "url": "https://github.com/sgajbi/lotus-idea/issues/680"
+      },
+      "dependencyIssues": [
+        {
+          "repository": "sgajbi/lotus-ai",
+          "number": 122,
+          "url": "https://github.com/sgajbi/lotus-ai/issues/122"
+        },
+        {
+          "repository": "sgajbi/lotus-ai",
+          "number": 115,
+          "url": "https://github.com/sgajbi/lotus-ai/issues/115"
+        },
+        {
+          "repository": "sgajbi/lotus-idea",
+          "number": 340,
+          "url": "https://github.com/sgajbi/lotus-idea/issues/340"
+        }
+      ],
+      "blockers": [
+        "lotus_ai_runtime_execution_missing",
+        "workflow_pack_runtime_contract_not_certified",
+        "model_risk_dashboard_runtime_proof_missing",
+        "model_risk_alert_rules_runtime_proof_missing"
+      ]
+    },
+    {
+      "groupId": "ai-lineage-store-ci-proof",
+      "sliceIds": ["RFC-0002/slice-09", "RFC-0002/slice-17"],
+      "requiredEvidenceClass": "ci_execution",
+      "closureStatus": "open",
+      "supportedFeatureEffect": "lineage_store_ci_proof_clears_only_lineage_storage_blocker",
+      "ownerIssue": {
+        "repository": "sgajbi/lotus-idea",
+        "number": 680,
+        "url": "https://github.com/sgajbi/lotus-idea/issues/680"
+      },
+      "dependencyIssues": [],
+      "blockers": [
+        "certified_ai_lineage_store_missing"
+      ]
+    },
+    {
+      "groupId": "outbox-broker-and-platform-mesh-publication",
+      "sliceIds": ["RFC-0002/slice-15", "RFC-0002/slice-17"],
+      "requiredEvidenceClass": "runtime_execution",
+      "closureStatus": "external_dependency_open",
+      "supportedFeatureEffect": "no_promotion_until_broker_consumer_and_platform_mesh_publication_execute",
+      "ownerIssue": {
+        "repository": "sgajbi/lotus-idea",
+        "number": 694,
+        "url": "https://github.com/sgajbi/lotus-idea/issues/694"
+      },
+      "dependencyIssues": [
+        {
+          "repository": "sgajbi/lotus-platform",
+          "number": 598,
+          "url": "https://github.com/sgajbi/lotus-platform/issues/598"
+        }
+      ],
+      "blockers": [
+        "outbox_broker_not_configured",
+        "external_broker_runtime_proof_missing",
+        "downstream_consumer_runtime_proof_missing",
+        "platform_mesh_event_publication_proof_missing"
+      ]
+    },
+    {
+      "groupId": "operator-workflow-operations-certification",
+      "sliceIds": ["RFC-0002/slice-15", "RFC-0002/slice-17"],
+      "requiredEvidenceClass": "runtime_execution",
+      "closureStatus": "open",
+      "supportedFeatureEffect": "no_promotion_until_dashboard_alert_and_operator_workflow_runtime_evidence_pass",
+      "ownerIssue": {
+        "repository": "sgajbi/lotus-idea",
+        "number": 693,
+        "url": "https://github.com/sgajbi/lotus-idea/issues/693"
+      },
+      "dependencyIssues": [
+        {
+          "repository": "sgajbi/lotus-platform",
+          "number": 599,
+          "url": "https://github.com/sgajbi/lotus-platform/issues/599"
+        }
+      ],
+      "blockers": [
+        "operator_workflow_dashboard_runtime_proof_missing",
+        "operator_workflow_alert_rules_runtime_proof_missing",
+        "live_source_ingestion_certification_missing",
+        "downstream_execution_outcome_authority_missing"
+      ]
+    },
+    {
+      "groupId": "report-render-archive-materialization-proof",
+      "sliceIds": ["RFC-0002/slice-13", "RFC-0002/slice-17"],
+      "requiredEvidenceClass": "runtime_execution",
+      "closureStatus": "external_dependency_open",
+      "supportedFeatureEffect": "no_promotion_until_report_render_archive_and_publication_authority_execute",
+      "ownerIssue": {
+        "repository": "sgajbi/lotus-idea",
+        "number": 690,
+        "url": "https://github.com/sgajbi/lotus-idea/issues/690"
+      },
+      "dependencyIssues": [
+        {
+          "repository": "sgajbi/lotus-report",
+          "number": 152,
+          "url": "https://github.com/sgajbi/lotus-report/issues/152"
+        },
+        {
+          "repository": "sgajbi/lotus-render",
+          "number": 65,
+          "url": "https://github.com/sgajbi/lotus-render/issues/65"
+        },
+        {
+          "repository": "sgajbi/lotus-archive",
+          "number": 72,
+          "url": "https://github.com/sgajbi/lotus-archive/issues/72"
+        }
+      ],
+      "blockers": [
+        "report_evidence_pack_live_materialization_proof_missing",
+        "rendered_output_creation_missing",
+        "archive_record_creation_missing",
+        "lotus_report_live_intake_route_proof_missing"
+      ]
+    },
+    {
+      "groupId": "supported-feature-and-client-publication-promotion",
+      "sliceIds": ["RFC-0002/slice-16", "RFC-0002/slice-17", "RFC-0002/slice-20"],
+      "requiredEvidenceClass": "production_certification",
+      "closureStatus": "open",
+      "supportedFeatureEffect": "promotion_requires_all_blockers_closed_mainline_ci_green_wiki_published_and_branch_clean",
+      "ownerIssue": {
+        "repository": "sgajbi/lotus-idea",
+        "number": 697,
+        "url": "https://github.com/sgajbi/lotus-idea/issues/697"
+      },
+      "dependencyIssues": [
+        {
+          "repository": "sgajbi/lotus-idea",
+          "number": 380,
+          "url": "https://github.com/sgajbi/lotus-idea/issues/380"
+        },
+        {
+          "repository": "sgajbi/lotus-idea",
+          "number": 683,
+          "url": "https://github.com/sgajbi/lotus-idea/issues/683"
+        }
+      ],
+      "blockers": [
+        "supported_feature_promotion_missing",
+        "opportunity_archetype_supported_feature_promotion_missing",
+        "opportunity_archetype_client_publication_not_ready",
+        "client_publication_authority_blocked",
+        "no_supported_features_promoted"
+      ]
+    }
+  ]
+}
