@@ -1044,7 +1044,13 @@ tracked by issue `#701`. `make blueprint-scope-coverage-gate` is part of
 authority boundary, and target opportunity family to map to RFC-0002 slices,
 GitHub issues, evidence references, and the foundation-only supported-feature
 posture. If the blueprint changes, this contract must change in the same slice
-or the gate fails closed.
+or the gate fails closed. The 2026-07-19 cross-repo issue audit found owner-repo
+RFC-0002 coverage across Advise, AI, Archive, Core, Gateway, Manage,
+Performance, Platform, Render, Report, Risk, and Workbench; no additional
+product dependency issue was required by the audited contract state.
+`sgajbi/lotus-platform#602` tracks the reusable auditor/skill hook so future
+RFC work can validate issue existence, RFC/slice labels, state, priority, and
+blocked posture without relying on chat memory.
 
 ## Observability And Operability
 
