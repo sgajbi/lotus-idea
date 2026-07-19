@@ -39,7 +39,11 @@ def load_downstream_realization_readiness_summary(
                  ))::integer
                     AS conversion_outcome_count,
                 (SELECT COUNT(*) FROM idea_report_evidence_pack_request)::integer
-                    AS report_evidence_pack_request_count
+                    AS report_evidence_pack_request_count,
+                (SELECT COUNT(*)
+                 FROM idea_downstream_submission
+                 WHERE status IN ('in_flight', 'reconciliation_required'))::integer
+                    AS downstream_reconciliation_required_count
             """
         )
         rows = cursor.fetchall()
@@ -48,6 +52,7 @@ def load_downstream_realization_readiness_summary(
             conversion_intent_count=0,
             conversion_outcome_count=0,
             report_evidence_pack_request_count=0,
+            downstream_reconciliation_required_count=0,
         )
     row = rows[0]
     return DownstreamRealizationReadinessRepositorySummary(
@@ -55,5 +60,8 @@ def load_downstream_realization_readiness_summary(
         conversion_outcome_count=read_row_value(row, "conversion_outcome_count"),
         report_evidence_pack_request_count=read_row_value(
             row, "report_evidence_pack_request_count"
+        ),
+        downstream_reconciliation_required_count=read_row_value(
+            row, "downstream_reconciliation_required_count"
         ),
     )

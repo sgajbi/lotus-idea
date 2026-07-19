@@ -94,11 +94,14 @@ Implemented in this slice:
 18. `src/app/application/downstream_realization_readiness.py` and
     `GET /api/v1/downstream-realization/readiness` add a certified internal
     operator diagnostic over current conversion intent/outcome counts and
-    Advise/Manage realization blockers. The diagnostic also exposes
-    adapter-foundation presence and planned downstream contract-readiness
-    records for the Advise proposal and Manage action handoff seams, with owner
-    repositories, planned target-route posture, adapter status, evidence refs,
-    and blockers. It requires both the `operator` role and
+    Advise/Manage realization blockers. Issue `#662` extends that diagnostic
+    with `downstreamReconciliationRequiredCount`, a bounded local count of
+    in-flight or reconciliation-required downstream submissions that need
+    operator verification. The diagnostic also exposes adapter-foundation
+    presence and planned downstream contract-readiness records for the Advise
+    proposal and Manage action handoff seams, with owner repositories, planned
+    target-route posture, adapter status, evidence refs, and blockers. It
+    requires both the `operator` role and
     `idea.downstream-realization.readiness.read` capability, emits
     `downstream_realization_readiness_read`, and keeps the supportability
     posture `not_certified` until live downstream contract proof exists.
@@ -220,11 +223,12 @@ This slice is not yet a supported conversion product. Remaining work includes:
 6. data-product trust telemetry and mesh certification,
 7. supported-feature promotion after runtime and downstream proof.
 
-The downstream-realization readiness diagnostic and submission API are blocker
-and submission-posture foundations only. They do not create proposals,
-suitability records, manage action-register records, rebalance records, orders,
-client communications, reports, rendered output, or archive records. Planned
-contract-readiness records and configured adapter calls are not runtime proof.
+The downstream-realization readiness diagnostic and submission API are blocker,
+submission-posture, and operator-reconciliation workload foundations only. They
+do not create proposals, suitability records, manage action-register records,
+rebalance records, orders, client communications, reports, rendered output, or
+archive records. Planned contract-readiness records and configured adapter
+calls are not runtime proof.
 Valid Advise and Manage source contracts prove only that governed declarations
 exist at bound digests; they are not route-serving, acceptance, authorization,
 tenant-isolation, suitability, rebalance, execution, client-publication, or

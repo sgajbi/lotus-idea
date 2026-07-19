@@ -23,35 +23,38 @@ It returns:
 1. current `lotus-idea` conversion intent count,
 2. current conversion outcome count,
 3. current report evidence-pack request count,
-4. source-of-truth implementation paths,
-5. capability-level blockers for Advise, Manage, and Report/Render/Archive
+4. current unresolved downstream submission reconciliation workload count,
+5. source-of-truth implementation paths,
+6. capability-level blockers for Advise, Manage, and Report/Render/Archive
    realization,
-6. source-safe application orchestration and HTTP adapter-foundation presence
+7. source-safe application orchestration and HTTP adapter-foundation presence
    for the Advise proposal, Manage action, and Report evidence-pack handoff
    seams,
-7. certified internal submission routes for existing Advise/Manage conversion
+8. certified internal submission routes for existing Advise/Manage conversion
    intents and Report evidence-pack requests,
-8. planned downstream contract readiness for the Advise proposal, Manage
+9. planned downstream contract readiness for the Advise proposal, Manage
    action, and Report evidence-pack handoff seams,
-9. default source-safe proof that `lotus-advise` exposes
+10. default source-safe proof that `lotus-advise` exposes
    `POST /advisory/proposals/idea-intake` for proposal intake when sibling
    evidence is present,
-10. default source-safe proof that `lotus-manage` exposes
+11. default source-safe proof that `lotus-manage` exposes
     `POST /api/v1/rebalance/idea-action-intake` for action intake when sibling
     evidence is present,
-11. default source-safe proof that `lotus-report` exposes
+12. default source-safe proof that `lotus-report` exposes
     `POST /reports/idea-evidence-packs` for idea evidence-pack intake,
-12. default source-contract evidence that `lotus-report` declares
+13. default source-contract evidence that `lotus-report` declares
     `POST /reports/idea-evidence-packs/materializations` as a report-owned route
     without asserting runtime execution, rendered output, or archive creation,
-13. `not_certified` supportability until downstream live contracts and product
+14. `not_certified` supportability until downstream live contracts and product
    proof exist.
 
-When PostgreSQL is the active durable provider, the three workflow counts use a
-repository-side readiness projection over `idea_conversion_intent`,
-`idea_conversion_outcome`, and `idea_report_evidence_pack_request`. The
-ordinary readiness read does not hydrate candidate snapshots, audit history,
-outbox events, downstream-submission records, or AI explanation lineage.
+When PostgreSQL is the active durable provider, the workflow and reconciliation
+counts use a repository-side readiness projection over
+`idea_conversion_intent`, `idea_conversion_outcome`,
+`idea_report_evidence_pack_request`, and bounded status counts from
+`idea_downstream_submission`. The ordinary readiness read does not hydrate
+candidate snapshots, audit history, outbox events, downstream-submission
+payloads, or AI explanation lineage.
 
 The submission routes are:
 
@@ -261,6 +264,7 @@ The success response is intentionally aggregate and source-safe:
 | `conversionIntentCount` | Count of `lotus-idea` conversion intents in the active repository provider |
 | `conversionOutcomeCount` | Count of recorded downstream outcome records in `lotus-idea` |
 | `reportEvidencePackRequestCount` | Count of Report/Render/Archive request records in `lotus-idea` |
+| `downstreamReconciliationRequiredCount` | Count of local downstream submissions in `in_flight` or `reconciliation_required` posture that need operator verification or reconciliation |
 | `downstreamAdapterFoundationPresent` | Whether the repo contains source-safe downstream orchestration, adapter ports, and HTTP adapter foundations |
 | `capabilities` | Capability-level downstream readiness posture and blockers |
 | `downstreamContracts` | Planned downstream handoff contracts, owner repositories, target route posture, adapter status, evidence refs, and blockers |

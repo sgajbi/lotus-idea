@@ -425,10 +425,12 @@ with stable source-safe codes instead of being counted from status alone.
 The internal `GET /api/v1/downstream-realization/readiness` diagnostic is
 available for operators with `idea.downstream-realization.readiness.read` to
 inspect Advise, Manage, Report, Render, and Archive realization blockers over
-current `lotus-idea` workflow counts and planned Advise/Manage/Report handoff
-contract posture. It can cite default digest-bound Advise, Manage, and Report
-route source contracts when sibling evidence is present. Those contracts clear
-no live blocker, so readiness remains `not_certified` and `blocked` until downstream
+current `lotus-idea` workflow counts, unresolved downstream submission
+reconciliation workload, and planned Advise/Manage/Report handoff contract
+posture. It can cite default digest-bound Advise, Manage, and Report route
+source contracts when sibling evidence is present. Those contracts clear no
+live blocker, and the reconciliation workload is local Idea posture only, so
+readiness remains `not_certified` and `blocked` until downstream
 materialization contracts, Gateway/Workbench product proof, runtime
 trust telemetry, and supported-feature evidence exist. Planned contract
 records are not downstream route-existence proof by themselves; the endpoint
@@ -972,6 +974,7 @@ clear blockers.
 
 `GET /api/v1/downstream-realization/readiness` is the certified internal
 downstream realization readiness diagnostic. It returns workflow counts,
+local unresolved downstream submission reconciliation workload,
 capability-level blockers, planned downstream contract-readiness records,
 source-of-truth paths, downstream source-authority refs, and
 orchestration/adapter posture without exposing candidate identifiers, source

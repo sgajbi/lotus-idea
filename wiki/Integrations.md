@@ -316,11 +316,13 @@ Operators can inspect the current downstream blocker posture through:
 1. `GET /api/v1/downstream-realization/readiness`.
 
 That route reports conversion intent/outcome counts, report evidence-pack
-request counts, source-of-truth paths, planned downstream contract readiness
-for Advise, Manage, and Report handoffs, and blocker groups for Advise,
-Manage, Report, Render, and Archive realization. It is diagnostic only; the
-planned contract records are not downstream route-existence proof and the
-endpoint does not call downstream services or promote any integration claim.
+request counts, local unresolved downstream submission reconciliation workload,
+source-of-truth paths, planned downstream contract readiness for Advise,
+Manage, and Report handoffs, and blocker groups for Advise, Manage, Report,
+Render, and Archive realization. It is diagnostic only; the local
+reconciliation workload is Idea posture, the planned contract records are not
+downstream route-existence proof, and the endpoint does not call downstream
+services or promote any integration claim.
 The submission routes may call configured adapters, but adapter calls are still
 not acceptance, materialization, or route-existence certification from the
 owning downstream repositories.

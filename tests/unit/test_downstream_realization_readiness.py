@@ -29,11 +29,16 @@ from app.domain import (
     ConversionOutcomeIdentity,
     ConversionOutcomeStatus,
     ConversionTarget,
+    DownstreamSubmissionPosture,
     IdeaRepositorySnapshot,
     InMemoryIdeaRepository,
     SourceSystem,
 )
 from app.ports.idea_repository import DownstreamRealizationReadinessRepositorySummary
+from tests.unit.downstream_submission_helpers import (
+    build_downstream_submission_claim,
+    build_downstream_submission_record,
+)
 from tests.unit.downstream_realization.fixtures import (
     valid_advise_route_source_contract,
     valid_manage_route_source_contract,
@@ -96,6 +101,7 @@ def test_downstream_realization_readiness_reports_blocked_foundation_posture() -
     assert snapshot.conversion_intent_count == 0
     assert snapshot.conversion_outcome_count == 0
     assert snapshot.report_evidence_pack_request_count == 0
+    assert snapshot.downstream_reconciliation_required_count == 0
     assert snapshot.downstream_adapter_foundation_present is True
     assert snapshot.supported_feature_promoted is False
     assert "advise_proposal_creation_adapter_missing" not in snapshot.blockers
@@ -113,6 +119,7 @@ def test_downstream_realization_readiness_reports_blocked_foundation_posture() -
         "downstream_realization_api",
         "downstream_adapter_port",
         "downstream_adapter_foundation",
+        "downstream_submission_reconciliation",
         "downstream_contract_plan",
         "downstream_contract_gate",
         "rfc_slice_12",
@@ -122,6 +129,7 @@ def test_downstream_realization_readiness_reports_blocked_foundation_posture() -
 
 
 def test_downstream_realization_readiness_counts_internal_workflow_records() -> None:
+    submitted_at_utc = datetime(2026, 6, 21, 10, 15, tzinfo=UTC)
     repository = InMemoryIdeaRepository(
         IdeaRepositorySnapshot(
             candidate_records={
@@ -149,6 +157,29 @@ def test_downstream_realization_readiness_counts_internal_workflow_records() -> 
             },
             idempotency_records={},
             idempotency_candidates={},
+            downstream_submission_records={
+                "in-flight": build_downstream_submission_claim(
+                    idempotency_key="downstream-readiness-in-flight",
+                    request_fingerprint="sha256:in-flight",
+                    resource_id="conversion-intent-001",
+                    submitted_at_utc=submitted_at_utc,
+                ),
+                "reconciliation-required": build_downstream_submission_record(
+                    idempotency_key="downstream-readiness-required",
+                    request_fingerprint="sha256:required",
+                    resource_id="conversion-intent-002",
+                    submitted_at_utc=submitted_at_utc,
+                    status=DownstreamSubmissionPosture.RECONCILIATION_REQUIRED,
+                    failure_reason="downstream_timeout",
+                ),
+                "accepted": build_downstream_submission_record(
+                    idempotency_key="downstream-readiness-accepted",
+                    request_fingerprint="sha256:accepted",
+                    resource_id="conversion-intent-003",
+                    submitted_at_utc=submitted_at_utc,
+                    status=DownstreamSubmissionPosture.ACCEPTED_BY_DOWNSTREAM,
+                ),
+            },
         )
     )
 
@@ -161,6 +192,7 @@ def test_downstream_realization_readiness_counts_internal_workflow_records() -> 
     assert snapshot.conversion_intent_count == 2
     assert snapshot.conversion_outcome_count == 1
     assert snapshot.report_evidence_pack_request_count == 1
+    assert snapshot.downstream_reconciliation_required_count == 2
     assert snapshot.certification_ready is False
 
 
@@ -203,6 +235,7 @@ def test_downstream_realization_readiness_uses_repository_projection_without_sna
             conversion_intent_count=2,
             conversion_outcome_count=1,
             report_evidence_pack_request_count=3,
+            downstream_reconciliation_required_count=4,
         )
     )
 
@@ -215,6 +248,7 @@ def test_downstream_realization_readiness_uses_repository_projection_without_sna
     assert snapshot.conversion_intent_count == 2
     assert snapshot.conversion_outcome_count == 1
     assert snapshot.report_evidence_pack_request_count == 3
+    assert snapshot.downstream_reconciliation_required_count == 4
     assert snapshot.certification_ready is False
 
 

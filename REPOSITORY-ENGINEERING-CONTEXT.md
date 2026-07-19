@@ -110,9 +110,10 @@ Current implementation includes these bounded foundations:
    migration rollback/reapply proof,
 5. evidence replay, idempotency, safe audit, operation events, and bounded
    problem-details behavior,
-6. advisor queue, candidate detail, downstream realization readiness, outbox
-   readiness, and runtime trust telemetry projections that avoid whole-store
-   snapshot hydration on PostgreSQL,
+6. advisor queue, candidate detail, downstream realization readiness, including
+   bounded downstream reconciliation workload, outbox readiness, and runtime
+   trust telemetry projections that avoid whole-store snapshot hydration on
+   PostgreSQL,
 7. downstream conversion/report submission foundations that record local
    submission posture and never grant downstream source authority,
 8. source-safe outbox event publication foundations with retry/dead-letter
@@ -531,7 +532,8 @@ For durable reads, prefer bounded projections over whole repository snapshots:
 1. advisor queue page projection,
 2. candidate-detail projection,
 3. downstream conversion/report lookup projection,
-4. downstream realization readiness-count projection,
+4. downstream realization readiness-count projection, including bounded
+   downstream submission reconciliation workload,
 5. outbox delivery readiness projection,
 6. runtime trust telemetry aggregate projection,
 7. advisor queue readiness aggregate projection.

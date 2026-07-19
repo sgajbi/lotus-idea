@@ -26,6 +26,7 @@ from app.application.report.materialization_source_contract import (
 )
 from app.domain.conversion_governance import GovernedConversionOutcome
 from app.domain.conversion_outcome_policy import current_conversion_outcome_identity
+from app.domain.downstream_submission import DownstreamSubmissionPosture
 from app.ports.idea_repository import (
     CandidateSnapshotRepository,
     DownstreamRealizationReadinessProjectionRepository,
@@ -82,6 +83,7 @@ class DownstreamRealizationReadinessSnapshot:
     conversion_intent_count: int
     conversion_outcome_count: int
     report_evidence_pack_request_count: int
+    downstream_reconciliation_required_count: int
     downstream_adapter_foundation_present: bool
     source_of_truth: Mapping[str, str]
     blockers: tuple[str, ...]
@@ -158,6 +160,9 @@ def build_downstream_realization_readiness_snapshot(
         conversion_intent_count=readiness_summary.conversion_intent_count,
         conversion_outcome_count=readiness_summary.conversion_outcome_count,
         report_evidence_pack_request_count=(readiness_summary.report_evidence_pack_request_count),
+        downstream_reconciliation_required_count=(
+            readiness_summary.downstream_reconciliation_required_count
+        ),
         downstream_adapter_foundation_present=True,
         source_of_truth={
             "conversion_workflow": "src/app/application/conversion_workflow.py",
@@ -168,6 +173,9 @@ def build_downstream_realization_readiness_snapshot(
             "downstream_realization_api": "src/app/api/downstream_realization.py",
             "downstream_adapter_port": "src/app/ports/downstream_realization.py",
             "downstream_adapter_foundation": "src/app/infrastructure/downstream_realization.py",
+            "downstream_submission_reconciliation": (
+                "src/app/application/downstream_submission_reconciliation.py"
+            ),
             "downstream_contract_plan": (
                 "contracts/downstream-realization/lotus-idea-downstream-contracts.v1.json"
             ),
@@ -202,6 +210,15 @@ def _downstream_realization_readiness_summary(
         ),
         report_evidence_pack_request_count=sum(
             len(record.report_evidence_packs) for record in records
+        ),
+        downstream_reconciliation_required_count=sum(
+            1
+            for record in snapshot.downstream_submission_records.values()
+            if record.status
+            in {
+                DownstreamSubmissionPosture.IN_FLIGHT,
+                DownstreamSubmissionPosture.RECONCILIATION_REQUIRED,
+            }
         ),
     )
 
