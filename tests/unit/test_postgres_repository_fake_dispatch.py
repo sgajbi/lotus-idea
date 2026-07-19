@@ -77,5 +77,7 @@ def test_fake_cursor_downstream_readiness_summary_excludes_quarantined_outcomes(
     assert cursor.fetchone() == {
         "conversion_intent_count": 2,
         "conversion_outcome_count": 1,
+        "downstream_reconciliation_required_count": 0,
+        "downstream_submission_count": 0,
         "report_evidence_pack_request_count": 1,
     }
