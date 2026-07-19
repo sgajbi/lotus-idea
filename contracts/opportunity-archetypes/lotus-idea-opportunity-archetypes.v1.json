@@ -23,6 +23,117 @@
     "demo_claims": "docs/demo/demo-claims.md",
     "wiki_demo_readiness": "wiki/Demo-Readiness.md"
   },
+  "blocker_issue_refs": {
+    "advise_policy_live_source_proof_missing": [
+      "sgajbi/lotus-idea#696",
+      "sgajbi/lotus-idea#698"
+    ],
+    "advise_risk_profile_live_source_proof_missing": [
+      "sgajbi/lotus-idea#696",
+      "sgajbi/lotus-idea#698"
+    ],
+    "benchmark_assignment_source_ref_missing": [
+      "sgajbi/lotus-idea#696",
+      "sgajbi/lotus-idea#698"
+    ],
+    "client_publication_not_ready": [
+      "sgajbi/lotus-idea#696",
+      "sgajbi/lotus-idea#697",
+      "sgajbi/lotus-idea#380"
+    ],
+    "core_portfolio_state_source_ref_missing": [
+      "sgajbi/lotus-idea#696",
+      "sgajbi/lotus-idea#698",
+      "sgajbi/lotus-core#790"
+    ],
+    "data_mesh_not_certified": [
+      "sgajbi/lotus-idea#696",
+      "sgajbi/lotus-idea#692",
+      "sgajbi/lotus-platform#598"
+    ],
+    "drawdown_source_proof_missing": [
+      "sgajbi/lotus-idea#696",
+      "sgajbi/lotus-idea#698",
+      "sgajbi/lotus-risk#211"
+    ],
+    "live_core_cashflow_source_proof_missing": [
+      "sgajbi/lotus-idea#696",
+      "sgajbi/lotus-idea#698",
+      "sgajbi/lotus-core#796"
+    ],
+    "live_core_source_proof_missing": [
+      "sgajbi/lotus-idea#696",
+      "sgajbi/lotus-idea#698"
+    ],
+    "live_performance_source_proof_missing": [
+      "sgajbi/lotus-idea#696",
+      "sgajbi/lotus-idea#698",
+      "sgajbi/lotus-performance#464"
+    ],
+    "live_restriction_source_proof_missing": [
+      "sgajbi/lotus-idea#696",
+      "sgajbi/lotus-idea#698"
+    ],
+    "live_risk_source_proof_missing": [
+      "sgajbi/lotus-idea#696",
+      "sgajbi/lotus-idea#698",
+      "sgajbi/lotus-risk#211"
+    ],
+    "live_risk_volatility_source_proof_missing": [
+      "sgajbi/lotus-idea#696",
+      "sgajbi/lotus-idea#698",
+      "sgajbi/lotus-risk#211"
+    ],
+    "mandate_performance_health_source_ref_missing": [
+      "sgajbi/lotus-idea#696",
+      "sgajbi/lotus-idea#698",
+      "sgajbi/lotus-performance#464"
+    ],
+    "mandate_risk_health_source_ref_missing": [
+      "sgajbi/lotus-idea#696",
+      "sgajbi/lotus-idea#698",
+      "sgajbi/lotus-risk#211"
+    ],
+    "maturity_live_core_source_proof_missing": [
+      "sgajbi/lotus-idea#696",
+      "sgajbi/lotus-idea#698",
+      "sgajbi/lotus-core#792"
+    ],
+    "missing_benchmark_live_core_source_proof_missing": [
+      "sgajbi/lotus-idea#696",
+      "sgajbi/lotus-idea#698"
+    ],
+    "performance_benchmark_readiness_source_ref_missing": [
+      "sgajbi/lotus-idea#696",
+      "sgajbi/lotus-idea#698",
+      "sgajbi/lotus-performance#464"
+    ],
+    "portfolio_scoped_manage_source_proof_missing": [
+      "sgajbi/lotus-idea#696",
+      "sgajbi/lotus-idea#698",
+      "sgajbi/lotus-manage#620"
+    ],
+    "supported_feature_promotion_missing": [
+      "sgajbi/lotus-idea#696",
+      "sgajbi/lotus-idea#697",
+      "sgajbi/lotus-idea#380"
+    ],
+    "typed_advise_risk_profile_source_product_missing": [
+      "sgajbi/lotus-idea#696",
+      "sgajbi/lotus-idea#698"
+    ],
+    "typed_restriction_source_product_missing": [
+      "sgajbi/lotus-idea#696",
+      "sgajbi/lotus-idea#698"
+    ],
+    "workbench_product_proof_missing": [
+      "sgajbi/lotus-idea#696",
+      "sgajbi/lotus-idea#674",
+      "sgajbi/lotus-idea#685",
+      "sgajbi/lotus-idea#686",
+      "sgajbi/lotus-workbench#484"
+    ]
+  },
   "archetypes": [
     {
       "archetype_id": "high-cash-idle-liquidity",

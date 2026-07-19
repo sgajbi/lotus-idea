@@ -244,6 +244,10 @@ The `opportunity-archetype-scenarios` readiness family is sourced from the
 governed archetype contract. It prefixes scenario blockers with
 `opportunity_archetype_` to keep taxonomy/replay gaps distinct from source
 ingestion, Workbench, data-mesh, downstream, and supported-feature proof gaps.
+The archetype contract also carries a top-level `blocker_issue_refs` map, and
+`make opportunity-archetype-contract-gate` fails if any archetype or scenario
+blocker lacks a durable GitHub issue ref anchored to Slice 16 issue
+`sgajbi/lotus-idea#696`. This is execution traceability, not demo readiness.
 
 The AI lineage store proof gate validates source-safe persistence evidence for
 AI explanation lineage before aggregate proof readiness consumes it. It does

@@ -1,6 +1,6 @@
 # RFC-0002 Slice 16: Demo Readiness, Archetype Scenarios, And Commercial Proof
 
-Status: Partially implemented - proof-readiness diagnostic consumes the governed archetype/scenario contract as blocked scenario readiness; concentration risk review, underperformance review, allocation-drift mandate review, bond maturity / reinvestment, high-volatility / drawdown review, missing suitability context, missing risk-profile review, mandate/restriction review, low-income / liquidity shortfall, and missing-benchmark review are non-promoted bounded foundations with source-specific proof contracts where implemented; typed Advise mandate/restriction source-product proof and closed v2 receipt-bound Advise mandate/restriction runtime evidence clear only their named blockers; demo claims remain blocked
+Status: Partially implemented - proof-readiness diagnostic consumes the governed archetype/scenario contract as blocked scenario readiness; concentration risk review, underperformance review, allocation-drift mandate review, bond maturity / reinvestment, high-volatility / drawdown review, missing suitability context, missing risk-profile review, mandate/restriction review, low-income / liquidity shortfall, and missing-benchmark review are non-promoted bounded foundations with source-specific proof contracts where implemented; archetype blockers are issue-backed through a contract-gated `blocker_issue_refs` map; typed Advise mandate/restriction source-product proof and closed v2 receipt-bound Advise mandate/restriction runtime evidence clear only their named blockers; demo claims remain blocked
 
 ## Outcome
 
@@ -45,8 +45,11 @@ capabilities exist.
    returns calculation, benchmark assignment, methodology certification,
    Workbench proof, client-demo proof, data-mesh certification, trade advice,
    rebalance action, or supported-feature promotion.
-   `make opportunity-archetype-contract-gate` protects the contract from
-   unsupported demo, client-publication, data-mesh certification, or
+   The contract now includes a top-level `blocker_issue_refs` map that links
+   every archetype and canonical-scenario blocker to its durable GitHub
+   execution issue. `make opportunity-archetype-contract-gate` protects the
+   contract from unsupported demo, client-publication, data-mesh certification,
+   stale blocker issue refs, unanchored Slice 16 blocker refs, or
    supported-feature promotion claims.
 6. The aggregate implementation-proof readiness diagnostic now exposes an
    `opportunity-archetype-scenarios` proof family sourced from that contract.

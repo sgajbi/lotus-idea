@@ -961,8 +961,12 @@ The `opportunity-archetype-scenarios` capability reads
 and prefixes its scenario blockers with `opportunity_archetype_` so they do not
 collide with source-ingestion, Workbench, data-mesh, or supported-feature
 blockers from other proof families. It is a taxonomy and scenario-readiness
-view only. A family-valid and aggregate-current source-ingestion live Core
-proof can clear only the high-cash live Core scenario blocker, a valid Risk
+view only. The same contract owns a `blocker_issue_refs` map that links every
+unprefixed archetype blocker to durable GitHub execution issues; the contract
+gate rejects missing, stale, invalid, or non-Slice-16-anchored refs before the
+blockers can be consumed as operator truth. A family-valid and
+aggregate-current source-ingestion live Core proof can clear only the high-cash
+live Core scenario blocker, a valid Risk
 concentration proof can clear only the concentration live Risk scenario blocker,
 and a valid high-volatility proof can clear only the live Risk volatility
 scenario blocker,

@@ -45,6 +45,18 @@ def test_opportunity_archetype_contract_preserves_not_certified_boundaries() -> 
     assert contract.supported_feature_promoted is False
     assert contract.data_mesh_certified is False
     assert all(archetype.blockers for archetype in contract.archetypes)
+    assert contract.blocker_issue_refs["supported_feature_promotion_missing"] == (
+        "sgajbi/lotus-idea#696",
+        "sgajbi/lotus-idea#697",
+        "sgajbi/lotus-idea#380",
+    )
+    assert contract.blocker_issue_refs["workbench_product_proof_missing"] == (
+        "sgajbi/lotus-idea#696",
+        "sgajbi/lotus-idea#674",
+        "sgajbi/lotus-idea#685",
+        "sgajbi/lotus-idea#686",
+        "sgajbi/lotus-workbench#484",
+    )
     assert all(
         scenario.supported_feature_promoted is False
         for archetype in contract.archetypes
@@ -630,6 +642,62 @@ def test_opportunity_archetype_contract_gate_rejects_promoted_scenario() -> None
     assert "high-cash-idle-liquidity: scenario must not promote supported features" in errors
 
 
+def test_opportunity_archetype_contract_gate_rejects_missing_blocker_issue_ref() -> None:
+    module = _load_contract_gate_script()
+    payload = _contract_payload()
+    del payload["blocker_issue_refs"]["live_core_source_proof_missing"]
+
+    errors = module.validate_opportunity_archetype_contract_payload(module._parse_payload(payload))
+
+    assert (
+        "opportunity archetype blocker_issue_refs missing blockers: live_core_source_proof_missing"
+    ) in errors
+
+
+def test_opportunity_archetype_contract_gate_rejects_stale_blocker_issue_ref() -> None:
+    module = _load_contract_gate_script()
+    payload = _contract_payload()
+    payload["blocker_issue_refs"]["obsolete_blocker"] = ["sgajbi/lotus-idea#696"]
+
+    errors = module.validate_opportunity_archetype_contract_payload(module._parse_payload(payload))
+
+    assert (
+        "opportunity archetype blocker_issue_refs contains non-blockers: obsolete_blocker"
+    ) in errors
+
+
+def test_opportunity_archetype_contract_gate_rejects_unanchored_blocker_issue_ref() -> None:
+    module = _load_contract_gate_script()
+    payload = _contract_payload()
+    payload["blocker_issue_refs"]["data_mesh_not_certified"] = [
+        "sgajbi/lotus-idea#692",
+        "sgajbi/lotus-platform#598",
+    ]
+
+    errors = module.validate_opportunity_archetype_contract_payload(module._parse_payload(payload))
+
+    assert (
+        "opportunity archetype blocker_issue_refs.data_mesh_not_certified "
+        "missing Slice 16 issue sgajbi/lotus-idea#696"
+    ) in errors
+
+
+def test_opportunity_archetype_contract_gate_rejects_invalid_blocker_issue_ref() -> None:
+    module = _load_contract_gate_script()
+    payload = _contract_payload()
+    payload["blocker_issue_refs"]["data_mesh_not_certified"] = [
+        "sgajbi/lotus-idea#696",
+        "lotus-platform-598",
+    ]
+
+    errors = module.validate_opportunity_archetype_contract_payload(module._parse_payload(payload))
+
+    assert (
+        "opportunity archetype blocker_issue_refs.data_mesh_not_certified "
+        "has invalid refs: lotus-platform-598"
+    ) in errors
+
+
 def test_opportunity_archetype_contract_loader_rejects_non_object_json(tmp_path: Path) -> None:
     contract_path = tmp_path / "contract.json"
     contract_path.write_text("[]", encoding="utf-8")
@@ -647,6 +715,10 @@ def test_opportunity_archetype_contract_loader_rejects_non_object_json(tmp_path:
         (
             lambda payload: payload.__setitem__("source_of_truth", []),
             "opportunity archetype source_of_truth must be an object",
+        ),
+        (
+            lambda payload: payload.__setitem__("blocker_issue_refs", []),
+            "opportunity archetype blocker_issue_refs must be an object",
         ),
         (
             lambda payload: payload.__setitem__("archetypes", {}),
