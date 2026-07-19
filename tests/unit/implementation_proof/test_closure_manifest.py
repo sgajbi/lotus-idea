@@ -4,12 +4,17 @@ import copy
 import json
 from datetime import UTC, datetime
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
 
+import app.application.implementation_proof_closure_manifest as closure_manifest_module
 from app.application.implementation_proof_closure_manifest import (
     BLOCKER_CLOSURE_CONTRACT_PATH,
     blocker_closure_manifest_errors,
     blocker_closure_manifest_payload,
+)
+from app.application.implementation_proof_artifact_registry import (
+    ProofArtifactClassificationStatus,
 )
 from app.application.implementation_proof_models import ImplementationProofReadinessSnapshot
 from app.application.implementation_proof_readiness import (
@@ -95,6 +100,120 @@ def test_closure_manifest_rejects_issue_url_drift() -> None:
         "source-ingestion-runtime-configuration: issue URL must be "
         "`https://github.com/sgajbi/lotus-idea/issues/698`"
     ) in errors
+
+
+def test_closure_manifest_rejects_header_drift_and_malformed_blocker_groups() -> None:
+    snapshot = _strict_default_snapshot()
+    contract = _load_contract()
+    contract["schemaVersion"] = "stale"
+    contract["repository"] = "lotus-core"
+    contract["rfc"] = "RFC-9999"
+    contract["trackingIssue"] = "https://github.com/sgajbi/lotus-idea/issues/999"
+    contract["blockerGroups"] = {"groupId": "not-a-list"}
+
+    errors = blocker_closure_manifest_errors(snapshot=snapshot, contract=contract)
+
+    assert (
+        f"{BLOCKER_CLOSURE_CONTRACT_PATH}: `schemaVersion` must be "
+        "`lotus-idea.rfc0002.blocker-closure-manifest.v1`"
+    ) in errors
+    assert f"{BLOCKER_CLOSURE_CONTRACT_PATH}: `repository` must be `lotus-idea`" in errors
+    assert f"{BLOCKER_CLOSURE_CONTRACT_PATH}: `rfc` must be `RFC-0002`" in errors
+    assert (
+        f"{BLOCKER_CLOSURE_CONTRACT_PATH}: `trackingIssue` must be "
+        "`https://github.com/sgajbi/lotus-idea/issues/700`"
+    ) in errors
+    assert f"{BLOCKER_CLOSURE_CONTRACT_PATH}: `blockerGroups` must be a list" in errors
+
+
+def test_closure_manifest_rejects_malformed_blocker_group_fields() -> None:
+    snapshot = _strict_default_snapshot()
+    contract = _load_contract()
+    group = contract["blockerGroups"][0]
+    group["groupId"] = ""
+    group["blockers"] = ["", 42]
+    group["sliceIds"] = "RFC-0002/slice-17"
+    group["closureStatus"] = None
+    group["supportedFeatureEffect"] = ""
+    group["ownerIssue"] = "https://github.com/sgajbi/lotus-idea/issues/700"
+
+    errors = blocker_closure_manifest_errors(snapshot=snapshot, contract=contract)
+
+    assert f"{BLOCKER_CLOSURE_CONTRACT_PATH}: `groupId` must be a string" in errors
+    assert "<invalid>: `blockers` must contain at least one string" in errors
+    assert "<invalid>: `sliceIds` must contain at least one string" in errors
+    assert "<invalid>: `closureStatus` must be a string" in errors
+    assert "<invalid>: `supportedFeatureEffect` must be a string" in errors
+    assert "<invalid>: `ownerIssue` must be an issue reference object" in errors
+
+
+def test_closure_manifest_rejects_malformed_dependency_issue_list() -> None:
+    snapshot = _strict_default_snapshot()
+    contract = _load_contract()
+    contract["blockerGroups"][0]["dependencyIssues"] = {
+        "repository": "sgajbi/lotus-core",
+        "number": 790,
+    }
+
+    errors = blocker_closure_manifest_errors(snapshot=snapshot, contract=contract)
+
+    assert "source-ingestion-runtime-configuration: `dependencyIssues` must be a list" in errors
+
+
+def test_closure_manifest_rejects_malformed_issue_reference_fields() -> None:
+    snapshot = _strict_default_snapshot()
+    contract = _load_contract()
+    contract["blockerGroups"][0]["dependencyIssues"] = [
+        {
+            "repository": "external/vendor",
+            "number": 0,
+            "url": "https://github.com/external/vendor/issues/0",
+        },
+        {
+            "repository": "sgajbi/lotus-core",
+            "number": 790,
+            "url": "https://github.com/sgajbi/lotus-core/issues/791",
+        },
+    ]
+
+    errors = blocker_closure_manifest_errors(snapshot=snapshot, contract=contract)
+
+    assert (
+        "source-ingestion-runtime-configuration: issue repository must be an "
+        "sgajbi Lotus repository"
+    ) in errors
+    assert (
+        "source-ingestion-runtime-configuration: issue number must be a positive integer" in errors
+    )
+    assert (
+        "source-ingestion-runtime-configuration: issue URL must be "
+        "`https://github.com/sgajbi/lotus-core/issues/790`"
+    ) in errors
+
+
+def test_closure_manifest_rejects_unclassified_proof_artifact_registry(
+    monkeypatch: Any,
+) -> None:
+    snapshot = _strict_default_snapshot()
+    contract = _load_contract()
+    monkeypatch.setattr(
+        closure_manifest_module,
+        "IMPLEMENTATION_PROOF_ARTIFACT_SPECS",
+        (
+            SimpleNamespace(
+                cli_flag="--ungoverned-proof",
+                evidence_class=None,
+                status=ProofArtifactClassificationStatus.PENDING_CORRECTION,
+                tracking_issue=0,
+            ),
+        ),
+    )
+
+    errors = blocker_closure_manifest_errors(snapshot=snapshot, contract=contract)
+
+    assert "--ungoverned-proof: proof artifact must be classified before closure" in errors
+    assert "--ungoverned-proof: proof artifact must declare an evidence class" in errors
+    assert "--ungoverned-proof: proof artifact must name a tracking issue" in errors
 
 
 def _strict_default_snapshot() -> ImplementationProofReadinessSnapshot:
