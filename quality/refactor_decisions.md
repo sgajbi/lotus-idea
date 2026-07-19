@@ -43,6 +43,14 @@ Focused validation passed:
 5. `make maintainability-gate`,
 6. `make quality-baseline`.
 
+Broader release evidence passed through PR `#671`, which merged by rebase to
+exact-main SHA `0c8b12666731ce60484ee8729e21535821752c89`. Local `make lint`
+and `make check` passed, with `make check` reporting `4918` tests. Feature
+Lane, PR Merge Gate, exact-main Main Releasability `29673780613`, and
+exact-main CodeQL `29673778769` passed. Issue `#670` is closed with
+`status/merged-main`; no wiki source changed, the remote feature branch was
+pruned, and the local worktree returned to clean `main`.
+
 The same-pattern scan used duplicate searches for
 `claim_dead_letter_for_recovery`, `outbox recovery maintainability`, and
 `dead-letter recovery domain policy maintainability`. Closed issue `#337` owns

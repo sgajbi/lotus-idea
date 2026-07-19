@@ -54,6 +54,13 @@ Focused validation passed:
 5. `make maintainability-gate`,
 6. `make quality-baseline`.
 
+Broader validation and merge evidence passed through PR `#671`, which merged
+by rebase to exact-main SHA
+`0c8b12666731ce60484ee8729e21535821752c89`. Local `make lint` and `make check`
+passed, with `make check` reporting `4918` tests. Feature Lane, PR Merge Gate,
+exact-main Main Releasability `29673780613`, and exact-main CodeQL
+`29673778769` passed.
+
 The same-pattern scan followed the Slice 19 maintainability sequence through
 current `quality/baseline_report.md`, duplicate searches for
 `claim_dead_letter_for_recovery`, `outbox recovery maintainability`, and
@@ -67,9 +74,10 @@ This is internal domain modularity only. It does not change API/OpenAPI
 behavior, persistence schema, migrations, authentication or authorization
 infrastructure, external broker behavior, Gateway, Workbench, data-product
 support, external-publication authority, runtime topology, wiki source, README,
-supported features, or supported-feature promotion. Broader local gates, PR
-checks, exact-main Main Releasability/CodeQL, wiki no-change evidence, issue
-closure, and branch cleanup remain pending for the tranche.
+supported features, or supported-feature promotion. Issue `#670` is closed with
+`status/merged-main`; no wiki source changed, no wiki publication was required,
+the remote branch was pruned, no unmerged remote branches remain, and local
+state returned to clean `main`.
 
 Issue `#668` applies the Slice 19 quality-baseline learning to the AI
 explanation repository evaluation boundary. After issue `#666`, the current
