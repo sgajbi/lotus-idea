@@ -2548,8 +2548,11 @@ scope, request fingerprint, snapshot identity, source hashes, restatement,
 reconciliation, evidence time, policy, correlation, and applied/dropped
 sections. Reject unknown fields, scope/time/hash drift, incomplete
 reconciliation, dropped sections, and tampering. Never fabricate Idea
-persistence or missing Core trust metadata. Core issue `#790` owns the producer
-gap; Idea must fail closed until it is resolved. This remains design modularity
+persistence or missing Core trust metadata. Treat request `evaluatedAtUtc` as
+the request boundary and top-level proof `generatedAtUtc` as the post-fetch
+observation boundary: a synchronous Core receipt may be generated between them,
+but evidence later than artifact finalization fails closed. Core issue `#790`
+owns producer acceptance and downstream proof. This remains design modularity
 inside the existing deployable with no new database or runtime service.
 
 For Core bond-maturity readiness, use
@@ -2566,9 +2569,10 @@ opportunity; require an in-window next date for a positive count. Reject caller
 summary booleans, source substitution, unknown fields, partial/stale evidence,
 scope or date/count inconsistency, and re-digested tampering. Never infer call,
 put, amortization, structured-note, lockup, or expiry schedules, and never claim
-product recommendation or reinvestment advice. Core issue `#792` owns missing
-producer reconciliation, tenant, and correlation metadata; Idea must fail
-closed until it is resolved. This is design modularity inside the existing
+product recommendation or reinvestment advice. Bound synchronous source receipt
+time by post-fetch artifact `generatedAtUtc`, not pre-I/O request evaluation;
+evidence later than artifact finalization remains invalid. Core issue `#792`
+owns producer acceptance and downstream proof. This is design modularity inside the existing
 deployable, with no new database or runtime service.
 
 ## Cross-Links

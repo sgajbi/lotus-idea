@@ -83,6 +83,11 @@ port, and infrastructure adapter path for high-cash, concentration,
 underperformance, and missing-benchmark evaluation. It records only bounded
 response observations and never persists raw responses.
 
+For synchronous Core receipt endpoints, request `evaluatedAtUtc` remains the
+request boundary and top-level proof `generatedAtUtc` is the post-fetch
+observation boundary. A receipt generated during the request may qualify only
+when it is no later than artifact finalization; later evidence remains blocked.
+
 ## Exit Codes
 
 | Code | Meaning |

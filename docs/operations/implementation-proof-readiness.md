@@ -396,8 +396,11 @@ scope, product identity, request fingerprint, snapshot identity, source hashes,
 restatement, reconciliation, evidence time, policy, correlation, and section
 posture without storing raw identifiers, payloads, holdings, positions,
 allocation weights, or portfolio totals. Missing or inconsistent producer
-trust metadata fails closed; lotus-core issue `#790` tracks the current producer
-gap. The artifact deliberately retains portfolio-scoped Manage,
+trust metadata fails closed. Request `evaluatedAtUtc` remains the request
+boundary; top-level `generatedAtUtc` records post-fetch observation, so a Core
+receipt generated during the synchronous request can qualify but a receipt
+later than artifact finalization cannot. Lotus-core issue `#790` owns producer
+acceptance and downstream proof. The artifact deliberately retains portfolio-scoped Manage,
 mandate performance-health, mandate risk-health, data-mesh, Workbench,
 client-publication, supported-feature, rebalance, action, order-creation,
 execution, and settlement blockers unless a separate valid Manage mandate
@@ -440,8 +443,10 @@ in-window next maturity date. The source-safe artifact hashes tenant, portfolio,
 and correlation identity and excludes request/response bodies, raw holdings,
 security identifiers, quantities, and instrument-level schedules. It retains
 the bounded next date and aggregate counts needed to verify the decision.
-Lotus Core issue `#792` tracks missing producer reconciliation, tenant, and
-correlation metadata; real qualification fails closed until Core supplies it.
+Request `evaluatedAtUtc` remains the request boundary and top-level
+`generatedAtUtc` is the post-fetch observation boundary; a receipt later than
+artifact finalization fails closed. Lotus Core issue `#792` owns producer
+acceptance and downstream proof.
 Data-mesh, Workbench, client-publication, product recommendation, reinvestment
 advice, suitability, risk, deployment, production, and supported-feature
 blockers remain.
