@@ -373,6 +373,18 @@ consumed as blocker-clearing evidence. README, API/OpenAPI, migration,
 database, seed, and supported-feature truth are unchanged because this slice
 changes internal proof governance rather than product support.
 
+Issue `#701` adds a blueprint scope coverage contract and blocking
+`make blueprint-scope-coverage-gate`. The contract parses
+`docs/LOTUS_IDEA_BLUEPRINT.md` and maps every Idea-owned capability, non-owned
+authority boundary, and target opportunity family to RFC-0002 slice IDs,
+GitHub issues, evidence references, and the `foundation_only_not_promoted`
+supported-feature posture. This makes remaining RFC-0002 execution durable in
+GitHub and repo-owned source while preserving the boundary that local/dev auth,
+source-authoritative portfolio/performance/risk/suitability/report/archive/AI
+infrastructure, downstream acceptance, Workbench proof, platform mesh
+certification, client-ready publication, and supported-feature promotion remain
+blocked until their owning evidence exists.
+
 The missing-benchmark Core material now records the independently owned closed
 v2 runtime contract implemented by issue `#499`. One named application use case
 performs one Core fetch and preserves exact evidence or a stable error. Request,

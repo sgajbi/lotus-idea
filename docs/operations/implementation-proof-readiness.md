@@ -75,6 +75,27 @@ deployment, production, Workbench, data-mesh, publication, or supported-feature
 blockers by itself. It exists so unresolved RFC-0002 work is durable in GitHub
 and executable source, not hidden in chat memory.
 
+## Blueprint Scope Coverage
+
+`contracts/implementation-proof/rfc0002-blueprint-scope-coverage.v1.json`
+is the durable RFC-0002 blueprint-to-issue map. It records every owned
+capability, non-owned authority boundary, and target opportunity family from
+`docs/LOTUS_IDEA_BLUEPRINT.md` with RFC slice IDs, owning GitHub issues,
+sibling-repository dependency issues where applicable, evidence references, and
+the current `foundation_only_not_promoted` supported-feature posture.
+
+`make blueprint-scope-coverage-gate` parses the repo-authored blueprint and
+fails closed when a capability, boundary, or opportunity family is missing from
+the contract, appears in the contract after being removed from the blueprint,
+uses a malformed GitHub issue reference, omits evidence, or promotes a
+supported-feature claim before certification evidence exists. The gate also
+records that the external download copy of the blueprint was reviewed, but the
+repo-authored file remains the source of durable truth.
+
+The coverage contract is planning and traceability governance only. It does not
+close runtime, deployment, Workbench, downstream, platform mesh, client-ready
+publication, or supported-feature blockers.
+
 ## What It Does Not Prove
 
 The diagnostic is deliberately not full live journey proof. It does not:

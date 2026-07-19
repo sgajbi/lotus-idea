@@ -1,0 +1,256 @@
+{
+  "schemaVersion": "lotus-idea.rfc0002.blueprint-scope-coverage.v1",
+  "repository": "lotus-idea",
+  "rfc": "RFC-0002",
+  "trackingIssue": "https://github.com/sgajbi/lotus-idea/issues/701",
+  "blueprintSource": "docs/LOTUS_IDEA_BLUEPRINT.md",
+  "downloadBlueprintReviewed": "C:/Users/Sandeep/Downloads/LOTUS_IDEA_BLUEPRINT.md",
+  "researchCharter": "docs/research/advisor-intelligence-product-differentiation.md",
+  "supportedFeaturePosture": "foundation_only_not_promoted",
+  "ownedCapabilities": [
+    {
+      "capability": "opportunity detection policy",
+      "status": "implemented_foundation",
+      "sliceIds": ["RFC-0002/slice-05", "RFC-0002/slice-16", "RFC-0002/slice-17"],
+      "issues": [
+        {"repository": "sgajbi/lotus-idea", "number": 679, "url": "https://github.com/sgajbi/lotus-idea/issues/679"},
+        {"repository": "sgajbi/lotus-idea", "number": 698, "url": "https://github.com/sgajbi/lotus-idea/issues/698"}
+      ],
+      "evidenceRefs": ["src/app/domain/signal_evaluation.py", "contracts/opportunity-archetypes/lotus-idea-opportunity-archetypes.v1.json"],
+      "supportedFeaturePosture": "foundation_only_not_promoted"
+    },
+    {
+      "capability": "idea candidate identity",
+      "status": "implemented_foundation",
+      "sliceIds": ["RFC-0002/slice-03", "RFC-0002/slice-06"],
+      "issues": [
+        {"repository": "sgajbi/lotus-idea", "number": 673, "url": "https://github.com/sgajbi/lotus-idea/issues/673"}
+      ],
+      "evidenceRefs": ["src/app/domain/idea_candidate.py", "src/app/domain/persistence.py"],
+      "supportedFeaturePosture": "foundation_only_not_promoted"
+    },
+    {
+      "capability": "idea lifecycle status and review posture",
+      "status": "implemented_foundation",
+      "sliceIds": ["RFC-0002/slice-03", "RFC-0002/slice-08"],
+      "issues": [
+        {"repository": "sgajbi/lotus-idea", "number": 673, "url": "https://github.com/sgajbi/lotus-idea/issues/673"}
+      ],
+      "evidenceRefs": ["src/app/domain/lifecycle.py", "contracts/candidate-state/idea-candidate-state.v1.json"],
+      "supportedFeaturePosture": "foundation_only_not_promoted"
+    },
+    {
+      "capability": "evidence packet composition and source-reference preservation",
+      "status": "implemented_foundation",
+      "sliceIds": ["RFC-0002/slice-04", "RFC-0002/slice-10", "RFC-0002/slice-17"],
+      "issues": [
+        {"repository": "sgajbi/lotus-idea", "number": 680, "url": "https://github.com/sgajbi/lotus-idea/issues/680"}
+      ],
+      "evidenceRefs": ["src/app/domain/evidence.py", "docs/operations/implementation-proof-readiness.md"],
+      "supportedFeaturePosture": "foundation_only_not_promoted"
+    },
+    {
+      "capability": "deterministic scoring, ranking, suppression, and queue policy",
+      "status": "implemented_foundation",
+      "sliceIds": ["RFC-0002/slice-07", "RFC-0002/slice-19"],
+      "issues": [
+        {"repository": "sgajbi/lotus-idea", "number": 682, "url": "https://github.com/sgajbi/lotus-idea/issues/682"}
+      ],
+      "evidenceRefs": ["src/app/application/review_queue.py", "quality/quality_scorecard.md"],
+      "supportedFeaturePosture": "foundation_only_not_promoted"
+    },
+    {
+      "capability": "advisor review workflow and feedback capture",
+      "status": "implemented_foundation",
+      "sliceIds": ["RFC-0002/slice-08", "RFC-0002/slice-11"],
+      "issues": [
+        {"repository": "sgajbi/lotus-idea", "number": 686, "url": "https://github.com/sgajbi/lotus-idea/issues/686"}
+      ],
+      "evidenceRefs": ["src/app/api/review_workflow.py", "src/app/application/review_workflow.py"],
+      "supportedFeaturePosture": "foundation_only_not_promoted"
+    },
+    {
+      "capability": "conversion intent and local submission posture",
+      "status": "implemented_foundation",
+      "sliceIds": ["RFC-0002/slice-12", "RFC-0002/slice-13"],
+      "issues": [
+        {"repository": "sgajbi/lotus-idea", "number": 675, "url": "https://github.com/sgajbi/lotus-idea/issues/675"},
+        {"repository": "sgajbi/lotus-idea", "number": 676, "url": "https://github.com/sgajbi/lotus-idea/issues/676"}
+      ],
+      "evidenceRefs": ["src/app/application/downstream_realization.py", "docs/operations/downstream-realization-readiness.md"],
+      "supportedFeaturePosture": "foundation_only_not_promoted"
+    },
+    {
+      "capability": "implementation-proof, runtime-readiness, and trust-telemetry posture for Idea-owned records",
+      "status": "implemented_foundation",
+      "sliceIds": ["RFC-0002/slice-14", "RFC-0002/slice-17"],
+      "issues": [
+        {"repository": "sgajbi/lotus-idea", "number": 680, "url": "https://github.com/sgajbi/lotus-idea/issues/680"},
+        {"repository": "sgajbi/lotus-idea", "number": 700, "url": "https://github.com/sgajbi/lotus-idea/issues/700"}
+      ],
+      "evidenceRefs": ["src/app/application/implementation_proof_readiness.py", "contracts/implementation-proof/rfc0002-blocker-closure-manifest.v1.json"],
+      "supportedFeaturePosture": "foundation_only_not_promoted"
+    },
+    {
+      "capability": "Idea data-product declarations until platform certification and support promotion are proven",
+      "status": "blocked_pending_external_proof",
+      "sliceIds": ["RFC-0002/slice-14", "RFC-0002/slice-20"],
+      "issues": [
+        {"repository": "sgajbi/lotus-idea", "number": 677, "url": "https://github.com/sgajbi/lotus-idea/issues/677"},
+        {"repository": "sgajbi/lotus-platform", "number": 598, "url": "https://github.com/sgajbi/lotus-platform/issues/598"}
+      ],
+      "evidenceRefs": ["contracts/domain-data-products/lotus-idea-products.v1.json", "supported-features/supported-features.json"],
+      "supportedFeaturePosture": "foundation_only_not_promoted"
+    }
+  ],
+  "nonOwnedAuthorityBoundaries": [
+    {
+      "boundary": "portfolio accounting, official holdings, official cash, benchmark identity, client master, product master, or instrument master data",
+      "status": "narrowed_non_owned_authority",
+      "sliceIds": ["RFC-0002/slice-04", "RFC-0002/slice-17"],
+      "issues": [
+        {"repository": "sgajbi/lotus-idea", "number": 698, "url": "https://github.com/sgajbi/lotus-idea/issues/698"},
+        {"repository": "sgajbi/lotus-core", "number": 796, "url": "https://github.com/sgajbi/lotus-core/issues/796"}
+      ],
+      "evidenceRefs": ["docs/LOTUS_IDEA_BLUEPRINT.md", "contracts/implementation-proof/rfc0002-blocker-closure-manifest.v1.json"],
+      "supportedFeaturePosture": "foundation_only_not_promoted"
+    },
+    {
+      "boundary": "official performance, attribution, benchmark methodology, risk, concentration, volatility, drawdown, stress, or scenario calculations",
+      "status": "narrowed_non_owned_authority",
+      "sliceIds": ["RFC-0002/slice-04", "RFC-0002/slice-16", "RFC-0002/slice-17"],
+      "issues": [
+        {"repository": "sgajbi/lotus-risk", "number": 211, "url": "https://github.com/sgajbi/lotus-risk/issues/211"},
+        {"repository": "sgajbi/lotus-performance", "number": 464, "url": "https://github.com/sgajbi/lotus-performance/issues/464"}
+      ],
+      "evidenceRefs": ["src/app/ports/risk_sources.py", "src/app/ports/performance_sources.py"],
+      "supportedFeaturePosture": "foundation_only_not_promoted"
+    },
+    {
+      "boundary": "suitability approval, compliance approval, mandate approval, proposal approval, rebalance authority, order execution, settlement, report rendering, archive authority, retention/legal-hold authority, or client-ready publication",
+      "status": "narrowed_non_owned_authority",
+      "sliceIds": ["RFC-0002/slice-12", "RFC-0002/slice-13", "RFC-0002/slice-17"],
+      "issues": [
+        {"repository": "sgajbi/lotus-advise", "number": 461, "url": "https://github.com/sgajbi/lotus-advise/issues/461"},
+        {"repository": "sgajbi/lotus-manage", "number": 621, "url": "https://github.com/sgajbi/lotus-manage/issues/621"},
+        {"repository": "sgajbi/lotus-report", "number": 152, "url": "https://github.com/sgajbi/lotus-report/issues/152"},
+        {"repository": "sgajbi/lotus-render", "number": 65, "url": "https://github.com/sgajbi/lotus-render/issues/65"},
+        {"repository": "sgajbi/lotus-archive", "number": 72, "url": "https://github.com/sgajbi/lotus-archive/issues/72"}
+      ],
+      "evidenceRefs": ["contracts/downstream-realization/lotus-idea-downstream-contracts.v1.json", "docs/operations/downstream-realization-readiness.md"],
+      "supportedFeaturePosture": "foundation_only_not_promoted"
+    },
+    {
+      "boundary": "AI provider infrastructure, model hosting, prompt-platform ownership, RAG platform ownership, embedding/vector runtime, model operations, or autonomous AI decisions",
+      "status": "narrowed_non_owned_authority",
+      "sliceIds": ["RFC-0002/slice-09", "RFC-0002/slice-17"],
+      "issues": [
+        {"repository": "sgajbi/lotus-ai", "number": 122, "url": "https://github.com/sgajbi/lotus-ai/issues/122"},
+        {"repository": "sgajbi/lotus-idea", "number": 340, "url": "https://github.com/sgajbi/lotus-idea/issues/340"}
+      ],
+      "evidenceRefs": ["docs/research/advisor-intelligence-product-differentiation.md", "contracts/observability/lotus-idea-ai-model-risk-operations.v1.json"],
+      "supportedFeaturePosture": "foundation_only_not_promoted"
+    },
+    {
+      "boundary": "production identity-provider, token-claims, or authorization infrastructure",
+      "status": "narrowed_non_owned_authority",
+      "sliceIds": ["RFC-0002/slice-11", "RFC-0002/slice-15"],
+      "issues": [
+        {"repository": "sgajbi/lotus-idea", "number": 687, "url": "https://github.com/sgajbi/lotus-idea/issues/687"},
+        {"repository": "sgajbi/lotus-platform", "number": 563, "url": "https://github.com/sgajbi/lotus-platform/issues/563"}
+      ],
+      "evidenceRefs": ["docs/LOTUS_IDEA_BLUEPRINT.md", "README.md"],
+      "supportedFeaturePosture": "foundation_only_not_promoted"
+    }
+  ],
+  "targetOpportunityFamilies": [
+    {
+      "family": "high cash / idle liquidity",
+      "status": "blocked_pending_external_proof",
+      "sliceIds": ["RFC-0002/slice-05", "RFC-0002/slice-17"],
+      "issues": [{"repository": "sgajbi/lotus-idea", "number": 698, "url": "https://github.com/sgajbi/lotus-idea/issues/698"}],
+      "evidenceRefs": ["src/app/application/source_ingestion.py"],
+      "supportedFeaturePosture": "foundation_only_not_promoted"
+    },
+    {
+      "family": "concentration risk",
+      "status": "blocked_pending_external_proof",
+      "sliceIds": ["RFC-0002/slice-05", "RFC-0002/slice-16", "RFC-0002/slice-17"],
+      "issues": [{"repository": "sgajbi/lotus-risk", "number": 211, "url": "https://github.com/sgajbi/lotus-risk/issues/211"}],
+      "evidenceRefs": ["src/app/application/concentration_risk_signal.py"],
+      "supportedFeaturePosture": "foundation_only_not_promoted"
+    },
+    {
+      "family": "benchmark underperformance",
+      "status": "blocked_pending_external_proof",
+      "sliceIds": ["RFC-0002/slice-05", "RFC-0002/slice-16", "RFC-0002/slice-17"],
+      "issues": [{"repository": "sgajbi/lotus-performance", "number": 464, "url": "https://github.com/sgajbi/lotus-performance/issues/464"}],
+      "evidenceRefs": ["src/app/application/underperformance_signal.py"],
+      "supportedFeaturePosture": "foundation_only_not_promoted"
+    },
+    {
+      "family": "allocation drift / mandate review",
+      "status": "blocked_pending_external_proof",
+      "sliceIds": ["RFC-0002/slice-05", "RFC-0002/slice-16", "RFC-0002/slice-17"],
+      "issues": [{"repository": "sgajbi/lotus-manage", "number": 620, "url": "https://github.com/sgajbi/lotus-manage/issues/620"}],
+      "evidenceRefs": ["src/app/application/mandate_health_signal.py"],
+      "supportedFeaturePosture": "foundation_only_not_promoted"
+    },
+    {
+      "family": "bond maturity / reinvestment review",
+      "status": "blocked_pending_external_proof",
+      "sliceIds": ["RFC-0002/slice-05", "RFC-0002/slice-16", "RFC-0002/slice-17"],
+      "issues": [{"repository": "sgajbi/lotus-core", "number": 792, "url": "https://github.com/sgajbi/lotus-core/issues/792"}],
+      "evidenceRefs": ["src/app/application/bond_maturity_signal.py"],
+      "supportedFeaturePosture": "foundation_only_not_promoted"
+    },
+    {
+      "family": "low income / liquidity shortfall",
+      "status": "blocked_pending_external_proof",
+      "sliceIds": ["RFC-0002/slice-05", "RFC-0002/slice-16", "RFC-0002/slice-17"],
+      "issues": [{"repository": "sgajbi/lotus-core", "number": 796, "url": "https://github.com/sgajbi/lotus-core/issues/796"}],
+      "evidenceRefs": ["src/app/application/low_income_signal.py"],
+      "supportedFeaturePosture": "foundation_only_not_promoted"
+    },
+    {
+      "family": "high volatility / drawdown review",
+      "status": "blocked_pending_external_proof",
+      "sliceIds": ["RFC-0002/slice-05", "RFC-0002/slice-16", "RFC-0002/slice-17"],
+      "issues": [{"repository": "sgajbi/lotus-risk", "number": 211, "url": "https://github.com/sgajbi/lotus-risk/issues/211"}],
+      "evidenceRefs": ["src/app/application/high_volatility_signal.py", "src/app/application/drawdown_review_signal.py"],
+      "supportedFeaturePosture": "foundation_only_not_promoted"
+    },
+    {
+      "family": "missing benchmark",
+      "status": "blocked_pending_external_proof",
+      "sliceIds": ["RFC-0002/slice-05", "RFC-0002/slice-16", "RFC-0002/slice-17"],
+      "issues": [{"repository": "sgajbi/lotus-core", "number": 790, "url": "https://github.com/sgajbi/lotus-core/issues/790"}],
+      "evidenceRefs": ["src/app/application/missing_benchmark_signal.py"],
+      "supportedFeaturePosture": "foundation_only_not_promoted"
+    },
+    {
+      "family": "missing risk profile",
+      "status": "blocked_pending_external_proof",
+      "sliceIds": ["RFC-0002/slice-05", "RFC-0002/slice-16", "RFC-0002/slice-17"],
+      "issues": [{"repository": "sgajbi/lotus-advise", "number": 459, "url": "https://github.com/sgajbi/lotus-advise/issues/459"}],
+      "evidenceRefs": ["src/app/application/missing_risk_profile_signal.py"],
+      "supportedFeaturePosture": "foundation_only_not_promoted"
+    },
+    {
+      "family": "missing suitability context",
+      "status": "blocked_pending_external_proof",
+      "sliceIds": ["RFC-0002/slice-05", "RFC-0002/slice-16", "RFC-0002/slice-17"],
+      "issues": [{"repository": "sgajbi/lotus-advise", "number": 461, "url": "https://github.com/sgajbi/lotus-advise/issues/461"}],
+      "evidenceRefs": ["src/app/application/missing_suitability_signal.py"],
+      "supportedFeaturePosture": "foundation_only_not_promoted"
+    },
+    {
+      "family": "mandate or restriction review",
+      "status": "blocked_pending_external_proof",
+      "sliceIds": ["RFC-0002/slice-05", "RFC-0002/slice-16", "RFC-0002/slice-17"],
+      "issues": [{"repository": "sgajbi/lotus-advise", "number": 459, "url": "https://github.com/sgajbi/lotus-advise/issues/459"}],
+      "evidenceRefs": ["src/app/application/mandate_restriction_signal.py"],
+      "supportedFeaturePosture": "foundation_only_not_promoted"
+    }
+  ]
+}
