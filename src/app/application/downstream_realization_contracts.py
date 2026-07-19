@@ -23,10 +23,21 @@ class DownstreamRealizationContractPlanRecord:
     adapter_status: str
     evidence_refs: tuple[str, ...]
     blockers: tuple[str, ...]
+    blocker_issue_refs: Mapping[str, tuple[str, ...]]
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "evidence_refs", tuple(self.evidence_refs))
         object.__setattr__(self, "blockers", tuple(self.blockers))
+        object.__setattr__(
+            self,
+            "blocker_issue_refs",
+            MappingProxyType(
+                {
+                    str(blocker): tuple(issue_refs)
+                    for blocker, issue_refs in self.blocker_issue_refs.items()
+                }
+            ),
+        )
 
 
 @dataclass(frozen=True)
@@ -99,6 +110,7 @@ def _contract_record_from_payload(
         adapter_status=str(payload.get("adapter_status", "")),
         evidence_refs=_strings(payload.get("evidence_refs", ())),
         blockers=_strings(payload.get("blockers", ())),
+        blocker_issue_refs=_string_tuple_mapping(payload.get("blocker_issue_refs", {})),
     )
 
 
@@ -106,3 +118,15 @@ def _strings(value: object) -> tuple[str, ...]:
     if not isinstance(value, list):
         return ()
     return tuple(str(item) for item in value)
+
+
+def _string_tuple_mapping(value: object) -> Mapping[str, tuple[str, ...]]:
+    if not isinstance(value, dict):
+        return {}
+    parsed: dict[str, tuple[str, ...]] = {}
+    for key, refs in value.items():
+        if not isinstance(refs, list):
+            parsed[str(key)] = ()
+            continue
+        parsed[str(key)] = tuple(str(ref) for ref in refs)
+    return parsed

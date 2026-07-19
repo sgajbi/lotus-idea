@@ -101,7 +101,9 @@ Implemented in this slice:
     submissions that need operator verification. The diagnostic also exposes adapter-foundation
     presence and planned downstream contract-readiness records for the Advise
     proposal and Manage action handoff seams, with owner repositories, planned
-    target-route posture, adapter status, evidence refs, and blockers. It
+    target-route posture, adapter status, evidence refs, blockers, and
+    `blockerIssueRefs` that link each blocker to durable GitHub execution
+    issues such as `sgajbi/lotus-idea#688` and the owning downstream repo. It
     requires both the `operator` role and
     `idea.downstream-realization.readiness.read` capability, emits
     `downstream_realization_readiness_read`, and keeps the supportability

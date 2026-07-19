@@ -113,6 +113,18 @@ def test_downstream_realization_readiness_reports_blocked_foundation_posture() -
     assert "lotus_report_live_intake_route_proof_missing" in snapshot.blockers
     assert "report_evidence_pack_live_materialization_proof_missing" in snapshot.blockers
     assert "dedicated_report_idea_evidence_intake_contract_missing" not in snapshot.blockers
+    assert snapshot.blocker_issue_refs["advise_live_contract_proof_missing"] == (
+        "sgajbi/lotus-idea#688",
+        "sgajbi/lotus-advise#461",
+    )
+    assert snapshot.blocker_issue_refs["manage_live_contract_proof_missing"] == (
+        "sgajbi/lotus-idea#689",
+        "sgajbi/lotus-manage#621",
+    )
+    assert snapshot.blocker_issue_refs["rendered_output_creation_missing"] == (
+        "sgajbi/lotus-idea#690",
+        "sgajbi/lotus-render#65",
+    )
     assert set(snapshot.source_of_truth) == {
         "conversion_workflow",
         "report_evidence_workflow",
@@ -290,6 +302,12 @@ def test_downstream_realization_readiness_capabilities_preserve_source_authority
         "POST /api/v1/report-evidence-packs/{reportEvidencePackId}/downstream-submissions"
         in capabilities["report-render-archive-realization"].evidence_refs
     )
+    assert capabilities["advise-proposal-realization"].blocker_issue_refs[
+        "advise_live_contract_proof_missing"
+    ] == ("sgajbi/lotus-idea#688", "sgajbi/lotus-advise#461")
+    assert capabilities["manage-action-realization"].blocker_issue_refs[
+        "manage_live_contract_proof_missing"
+    ] == ("sgajbi/lotus-idea#689", "sgajbi/lotus-manage#621")
 
 
 def test_downstream_realization_readiness_contracts_preserve_downstream_authority() -> None:
@@ -322,6 +340,14 @@ def test_downstream_realization_readiness_contracts_preserve_downstream_authorit
     assert (
         "lotus-report/contracts/idea-evidence-intake/"
         "lotus-report-idea-evidence-pack-intake.v1.json" in report_contract.evidence_refs
+    )
+    assert report_contract.blocker_issue_refs["lotus_report_live_intake_route_proof_missing"] == (
+        "sgajbi/lotus-idea#690",
+        "sgajbi/lotus-report#152",
+    )
+    assert report_contract.blocker_issue_refs["archive_record_creation_missing"] == (
+        "sgajbi/lotus-idea#690",
+        "sgajbi/lotus-archive#72",
     )
     assert all(
         contract.route_fit_status == "not_certified"
@@ -412,6 +438,7 @@ def test_materialization_source_contract_preserves_runtime_posture_and_adds_evid
     assert report_contract.target_route == baseline_contract.target_route
     assert report_contract.route_fit_status == baseline_contract.route_fit_status
     assert report_contract.blockers == baseline_contract.blockers
+    assert report_contract.blocker_issue_refs == baseline_contract.blocker_issue_refs
     assert source_contract_ref in report_contract.evidence_refs
 
 
@@ -449,6 +476,14 @@ def test_route_source_contracts_preserve_live_and_authority_blockers() -> None:
     manage_contract = contracts["lotus-idea-to-lotus-manage-action-intake:v1"]
     assert advise_contract.target_route == ADVISE_PROPOSAL_ROUTE
     assert manage_contract.target_route == MANAGE_ACTION_ROUTE
+    assert advise_contract.blocker_issue_refs["advise_live_contract_proof_missing"] == (
+        "sgajbi/lotus-idea#688",
+        "sgajbi/lotus-advise#461",
+    )
+    assert manage_contract.blocker_issue_refs["manage_live_contract_proof_missing"] == (
+        "sgajbi/lotus-idea#689",
+        "sgajbi/lotus-manage#621",
+    )
     assert "output/downstream/advise-route-source-contract-proof.json" in (
         advise_contract.evidence_refs
     )

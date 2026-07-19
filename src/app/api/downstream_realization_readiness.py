@@ -53,6 +53,7 @@ class DownstreamRealizationCapabilityReadinessResponse(CamelModel):
     certification_ready: bool = Field(..., alias="certificationReady")
     evidence_refs: tuple[str, ...] = Field(..., alias="evidenceRefs")
     blockers: tuple[str, ...]
+    blocker_issue_refs: Mapping[str, tuple[str, ...]] = Field(..., alias="blockerIssueRefs")
 
     @classmethod
     def from_domain(
@@ -68,6 +69,7 @@ class DownstreamRealizationCapabilityReadinessResponse(CamelModel):
             certificationReady=capability.certification_ready,
             evidenceRefs=capability.evidence_refs,
             blockers=capability.blockers,
+            blockerIssueRefs=dict(capability.blocker_issue_refs),
         )
 
 
@@ -81,6 +83,7 @@ class DownstreamRealizationContractReadinessResponse(CamelModel):
     certification_ready: bool = Field(..., alias="certificationReady")
     evidence_refs: tuple[str, ...] = Field(..., alias="evidenceRefs")
     blockers: tuple[str, ...]
+    blocker_issue_refs: Mapping[str, tuple[str, ...]] = Field(..., alias="blockerIssueRefs")
 
     @classmethod
     def from_domain(
@@ -97,6 +100,7 @@ class DownstreamRealizationContractReadinessResponse(CamelModel):
             certificationReady=contract.certification_ready,
             evidenceRefs=contract.evidence_refs,
             blockers=contract.blockers,
+            blockerIssueRefs=dict(contract.blocker_issue_refs),
         )
 
 
@@ -123,6 +127,7 @@ class DownstreamRealizationReadinessResponse(CamelModel):
     )
     source_of_truth: Mapping[str, str] = Field(..., alias="sourceOfTruth")
     blockers: tuple[str, ...]
+    blocker_issue_refs: Mapping[str, tuple[str, ...]] = Field(..., alias="blockerIssueRefs")
     capabilities: tuple[DownstreamRealizationCapabilityReadinessResponse, ...]
     downstream_contracts: tuple[DownstreamRealizationContractReadinessResponse, ...] = Field(
         ..., alias="downstreamContracts"
@@ -150,6 +155,7 @@ class DownstreamRealizationReadinessResponse(CamelModel):
             downstreamAdapterFoundationPresent=snapshot.downstream_adapter_foundation_present,
             sourceOfTruth=dict(snapshot.source_of_truth),
             blockers=snapshot.blockers,
+            blockerIssueRefs=dict(snapshot.blocker_issue_refs),
             capabilities=tuple(
                 DownstreamRealizationCapabilityReadinessResponse.from_domain(capability)
                 for capability in snapshot.capabilities
@@ -244,7 +250,7 @@ DOWNSTREAM_REALIZATION_READINESS_ROUTE: RouteMetadata = {
         "posture, unresolved downstream submission reconciliation workload, "
         "planned Advise/Manage/Report downstream "
         "contract posture, source-safe adapter-foundation presence, and explicit "
-        "downstream blockers. A configured Report intake source contract adds declared "
+        "issue-backed downstream blockers. A configured Report intake source contract adds declared "
         "route provenance but does not clear the lotus-report live intake blocker. "
         "It does not call downstream systems, "
         "create proposals, create manage actions, render documents, archive records, "
@@ -305,6 +311,20 @@ DOWNSTREAM_REALIZATION_READINESS_ROUTE: RouteMetadata = {
                             "manage_live_contract_proof_missing",
                             "report_evidence_pack_live_materialization_proof_missing",
                         ],
+                        "blockerIssueRefs": {
+                            "advise_live_contract_proof_missing": [
+                                "sgajbi/lotus-idea#688",
+                                "sgajbi/lotus-advise#461",
+                            ],
+                            "manage_live_contract_proof_missing": [
+                                "sgajbi/lotus-idea#689",
+                                "sgajbi/lotus-manage#621",
+                            ],
+                            "report_evidence_pack_live_materialization_proof_missing": [
+                                "sgajbi/lotus-idea#690",
+                                "sgajbi/lotus-report#152",
+                            ],
+                        },
                         "capabilities": [
                             {
                                 "capabilityId": "advise-proposal-realization",
@@ -317,6 +337,12 @@ DOWNSTREAM_REALIZATION_READINESS_ROUTE: RouteMetadata = {
                                     "POST /api/v1/idea-candidates/{candidateId}/conversion-intents"
                                 ],
                                 "blockers": ["advise_live_contract_proof_missing"],
+                                "blockerIssueRefs": {
+                                    "advise_live_contract_proof_missing": [
+                                        "sgajbi/lotus-idea#688",
+                                        "sgajbi/lotus-advise#461",
+                                    ]
+                                },
                             }
                         ],
                         "downstreamContracts": [
@@ -343,6 +369,24 @@ DOWNSTREAM_REALIZATION_READINESS_ROUTE: RouteMetadata = {
                                     "archive_record_creation_missing",
                                     "client_publication_authority_blocked",
                                 ],
+                                "blockerIssueRefs": {
+                                    "report_evidence_pack_live_materialization_proof_missing": [
+                                        "sgajbi/lotus-idea#690",
+                                        "sgajbi/lotus-report#152",
+                                    ],
+                                    "rendered_output_creation_missing": [
+                                        "sgajbi/lotus-idea#690",
+                                        "sgajbi/lotus-render#65",
+                                    ],
+                                    "archive_record_creation_missing": [
+                                        "sgajbi/lotus-idea#690",
+                                        "sgajbi/lotus-archive#72",
+                                    ],
+                                    "client_publication_authority_blocked": [
+                                        "sgajbi/lotus-idea#690",
+                                        "sgajbi/lotus-report#152",
+                                    ],
+                                },
                             }
                         ],
                         "supportedFeaturePromoted": False,

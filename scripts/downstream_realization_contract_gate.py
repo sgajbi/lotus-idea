@@ -25,6 +25,9 @@ from app.application.downstream_realization_contracts import (  # noqa: E402
     downstream_realization_contract_plan_from_payload,
     load_downstream_realization_contract_plan,
 )
+from app.application.downstream_realization_issue_refs import (  # noqa: E402
+    validate_downstream_blocker_issue_refs,
+)
 
 
 REQUIRED_CONTRACTS = {
@@ -421,6 +424,13 @@ def _validate_contracts(plan: DownstreamRealizationContractPlan) -> list[str]:
             errors.append(f"{contract_id}: adapter_status must be adapter_foundation_present")
         if not contract.blockers:
             errors.append(f"{contract_id}: blockers are required before certification")
+        errors.extend(
+            validate_downstream_blocker_issue_refs(
+                contract_id=contract_id,
+                blockers=contract.blockers,
+                blocker_issue_refs=contract.blocker_issue_refs,
+            )
+        )
 
         missing_refs = sorted(REQUIRED_EVIDENCE_REFS[contract_id] - set(contract.evidence_refs))
         if missing_refs:

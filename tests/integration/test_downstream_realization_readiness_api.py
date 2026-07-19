@@ -68,6 +68,18 @@ def test_downstream_realization_readiness_api_returns_blocked_operator_posture(
     assert "lotus_report_live_intake_route_proof_missing" in payload["blockers"]
     assert "report_evidence_pack_live_materialization_proof_missing" in payload["blockers"]
     assert "dedicated_report_idea_evidence_intake_contract_missing" not in payload["blockers"]
+    assert payload["blockerIssueRefs"]["advise_live_contract_proof_missing"] == [
+        "sgajbi/lotus-idea#688",
+        "sgajbi/lotus-advise#461",
+    ]
+    assert payload["blockerIssueRefs"]["manage_live_contract_proof_missing"] == [
+        "sgajbi/lotus-idea#689",
+        "sgajbi/lotus-manage#621",
+    ]
+    assert payload["blockerIssueRefs"]["archive_record_creation_missing"] == [
+        "sgajbi/lotus-idea#690",
+        "sgajbi/lotus-archive#72",
+    ]
     assert {capability["capabilityId"] for capability in payload["capabilities"]} == {
         "advise-proposal-realization",
         "manage-action-realization",
@@ -78,6 +90,15 @@ def test_downstream_realization_readiness_api_returns_blocked_operator_posture(
         "lotus-manage",
         "lotus-report",
     }
+    advise_capability = next(
+        capability
+        for capability in payload["capabilities"]
+        if capability["capabilityId"] == "advise-proposal-realization"
+    )
+    assert advise_capability["blockerIssueRefs"]["advise_live_contract_proof_missing"] == [
+        "sgajbi/lotus-idea#688",
+        "sgajbi/lotus-advise#461",
+    ]
     assert {contract["contractId"] for contract in payload["downstreamContracts"]} == {
         "lotus-idea-to-lotus-advise-proposal-intake:v1",
         "lotus-idea-to-lotus-manage-action-intake:v1",
@@ -95,6 +116,10 @@ def test_downstream_realization_readiness_api_returns_blocked_operator_posture(
     assert report_contract["adapterStatus"] == "adapter_foundation_present"
     assert report_contract["certificationReady"] is False
     assert "lotus_report_live_intake_route_proof_missing" in report_contract["blockers"]
+    assert report_contract["blockerIssueRefs"]["lotus_report_live_intake_route_proof_missing"] == [
+        "sgajbi/lotus-idea#690",
+        "sgajbi/lotus-report#152",
+    ]
     assert (
         "dedicated_report_idea_evidence_intake_contract_missing"
         not in (report_contract["blockers"])
@@ -135,6 +160,10 @@ def test_downstream_readiness_api_adds_report_source_contract_without_runtime_cl
     assert "rendered_output_creation_missing" in payload["blockers"]
     assert "archive_record_creation_missing" in payload["blockers"]
     assert "client_publication_authority_blocked" in payload["blockers"]
+    assert payload["blockerIssueRefs"]["client_publication_authority_blocked"] == [
+        "sgajbi/lotus-idea#690",
+        "sgajbi/lotus-report#152",
+    ]
     report_contract = next(
         contract
         for contract in payload["downstreamContracts"]
