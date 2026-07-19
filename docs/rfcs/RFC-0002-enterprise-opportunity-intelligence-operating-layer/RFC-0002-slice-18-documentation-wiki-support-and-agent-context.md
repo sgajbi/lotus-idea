@@ -385,6 +385,15 @@ infrastructure, downstream acceptance, Workbench proof, platform mesh
 certification, client-ready publication, and supported-feature promotion remain
 blocked until their owning evidence exists.
 
+The 2026-07-19 cross-repository issue audit verified that the current
+blueprint/proof contract references have owner-repo tracking across Advise, AI,
+Archive, Core, Gateway, Manage, Performance, Platform, Render, Report, Risk, and
+Workbench. No additional product dependency issue was required by the audited
+contract state. `sgajbi/lotus-platform#602` now tracks the reusable platform
+auditor and skill hook for future RFC issue-coverage checks, including issue
+existence, RFC/slice labels, open/closed and blocked state, priority, owner
+repository, and duplicate/superseded posture.
+
 The missing-benchmark Core material now records the independently owned closed
 v2 runtime contract implemented by issue `#499`. One named application use case
 performs one Core fetch and preserves exact evidence or a stable error. Request,

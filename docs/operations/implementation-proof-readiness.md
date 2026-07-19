@@ -96,6 +96,16 @@ The coverage contract is planning and traceability governance only. It does not
 close runtime, deployment, Workbench, downstream, platform mesh, client-ready
 publication, or supported-feature blockers.
 
+The 2026-07-19 GitHub audit verified that the current RFC-0002 blueprint and
+proof contracts have owner-repo issue coverage in `lotus-advise`, `lotus-ai`,
+`lotus-archive`, `lotus-core`, `lotus-gateway`, `lotus-manage`,
+`lotus-performance`, `lotus-platform`, `lotus-render`, `lotus-report`,
+`lotus-risk`, and `lotus-workbench`. No additional product dependency issue was
+required by the audited contract state. `sgajbi/lotus-platform#602` tracks the
+reusable cross-repo RFC issue-coverage auditor so future broad RFC closure work
+can validate issue existence, RFC/slice labels, state, priority, and blocked
+posture without relying on manual chat memory.
+
 ## What It Does Not Prove
 
 The diagnostic is deliberately not full live journey proof. It does not:
