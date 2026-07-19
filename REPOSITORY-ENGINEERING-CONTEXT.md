@@ -147,8 +147,12 @@ Current implementation includes these bounded foundations:
     opportunity-archetype, downstream component, source-ingestion, and
     scheduler consumers assert the registered effect before accepting evidence
     or mutating blockers. Unknown, duplicate, pending, or wrong-effect wiring
-    fails closed. Scheduled-worker source and deployment inputs are
-    independently classified and cannot substitute for one another.
+    fails closed. Opportunity-archetype scenario blockers must remain
+    issue-backed through the contract-level `blocker_issue_refs` map; the
+    `make opportunity-archetype-contract-gate` target rejects missing, stale,
+    invalid, or non-Slice-16-anchored blocker issue refs. Scheduled-worker
+    source and deployment inputs are independently classified and cannot
+    substitute for one another.
 14. a tracked architecture-boundary report contract at
     `quality/architecture_boundary_report.json`. The report binds the current
     `src/app` import inventory and rule digest through

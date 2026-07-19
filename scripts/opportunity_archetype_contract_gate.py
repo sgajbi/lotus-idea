@@ -24,6 +24,9 @@ from app.application.opportunity_archetype_contracts import (  # noqa: E402
 from opportunity_archetype_contracts.bond_maturity import (  # noqa: E402
     BOND_MATURITY_EVIDENCE as REQUIRED_BOND_MATURITY_EVIDENCE,
 )
+from opportunity_archetype_contracts.blocker_issue_refs import (  # noqa: E402
+    validate_blocker_issue_refs,
+)
 from opportunity_archetype_contracts.missing_benchmark import (  # noqa: E402
     MISSING_BENCHMARK_EVIDENCE as REQUIRED_MISSING_BENCHMARK_EVIDENCE,
 )
@@ -301,6 +304,7 @@ def validate_opportunity_archetype_contract_payload(
     if contract.data_mesh_certified:
         errors.append("opportunity archetype contract must not claim data-mesh certification")
     errors.extend(_validate_source_of_truth(contract, repository_root=repository_root))
+    errors.extend(validate_blocker_issue_refs(contract))
     errors.extend(_validate_archetypes(contract, repository_root=repository_root))
     return errors
 

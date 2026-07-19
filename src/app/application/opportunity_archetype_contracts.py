@@ -63,10 +63,21 @@ class OpportunityArchetypeContract:
     supported_feature_promoted: bool
     data_mesh_certified: bool
     source_of_truth: Mapping[str, str]
+    blocker_issue_refs: Mapping[str, tuple[str, ...]]
     archetypes: tuple[OpportunityArchetypeRecord, ...]
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "source_of_truth", MappingProxyType(dict(self.source_of_truth)))
+        object.__setattr__(
+            self,
+            "blocker_issue_refs",
+            MappingProxyType(
+                {
+                    blocker: tuple(issue_refs)
+                    for blocker, issue_refs in self.blocker_issue_refs.items()
+                }
+            ),
+        )
         object.__setattr__(self, "archetypes", tuple(self.archetypes))
 
 
@@ -85,9 +96,12 @@ def opportunity_archetype_contract_from_payload(
     payload: Mapping[str, Any],
 ) -> OpportunityArchetypeContract:
     source_of_truth = payload.get("source_of_truth", {})
+    blocker_issue_refs = payload.get("blocker_issue_refs", {})
     archetypes = payload.get("archetypes", ())
     if not isinstance(source_of_truth, dict):
         raise ValueError("opportunity archetype source_of_truth must be an object")
+    if not isinstance(blocker_issue_refs, dict):
+        raise ValueError("opportunity archetype blocker_issue_refs must be an object")
     if not isinstance(archetypes, list):
         raise ValueError("opportunity archetypes must be a list")
     if not all(isinstance(archetype, dict) for archetype in archetypes):
@@ -105,6 +119,7 @@ def opportunity_archetype_contract_from_payload(
         supported_feature_promoted=bool(payload.get("supported_feature_promoted", True)),
         data_mesh_certified=bool(payload.get("data_mesh_certified", True)),
         source_of_truth={str(key): str(value) for key, value in source_of_truth.items()},
+        blocker_issue_refs=_string_tuple_mapping(blocker_issue_refs),
         archetypes=tuple(
             _archetype_from_payload(cast(Mapping[str, Any], archetype)) for archetype in archetypes
         ),
@@ -149,3 +164,7 @@ def _strings(value: object) -> tuple[str, ...]:
     if not isinstance(value, list):
         return ()
     return tuple(str(item) for item in value)
+
+
+def _string_tuple_mapping(value: Mapping[str, Any]) -> Mapping[str, tuple[str, ...]]:
+    return {str(key): _strings(item) for key, item in value.items()}
