@@ -14,6 +14,7 @@ REQUIRED_LINT_TARGETS = (
     "monetary-float-guard",
     "no-sensitive-content-guard",
     "runtime-dependency-closure-gate",
+    "dependency-vulnerability-posture-gate",
     "license-compliance-gate",
     "source-observability-contract-gate",
     "api-route-metadata-gate",

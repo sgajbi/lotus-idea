@@ -29,6 +29,29 @@ This is release and governance hardening inside the existing service. It adds
 no customer capability, data-product certification, legal authority, or
 runtime boundary, and does not change supported-feature posture.
 
+## Issue 695 Dependency And Container Vulnerability Posture
+
+Issue `#695` adds a fail-closed source contract for the Slice 15 dependency and
+container vulnerability posture. The contract requires mature, widely deployed,
+well-documented, scanner-supported technology; exact stable runtime and CI
+Python pins; runtime-lock mirror parity for dependency graph truth; `pip-audit`
+coverage in feature, PR, and main lanes; Trivy image-scan coverage in PR and
+main lanes; release SBOM, image identity, license, signature, provenance, SBOM
+attestation, digest-reference, and CI-only publish hooks; and issue-backed
+vulnerability exceptions with CVE, owner, compensating control, rollback, and
+bounded expiry.
+
+The implementation adds `make dependency-vulnerability-posture-gate` and wires
+it into `make lint` plus the CI contract gate so a future dependency, workflow,
+container, SBOM, or exception drift fails before product claims move forward.
+Local `make security-audit` on 2026-07-19 reported no known vulnerabilities for
+the governed runtime and CI Python lockfiles. This remains source-design and
+local execution evidence only: production readiness still requires exact-main
+Main Releasability scan, SBOM, signing, provenance, digest publication,
+release-manifest binding, source/wiki closure, and branch hygiene. The contract
+does not promote a supported feature and does not certify a full
+container-filesystem SBOM or production vulnerability posture.
+
 ## Current Implementation Evidence
 
 RFC-0002 Slice 15 now has a first implementation-backed operation observability
@@ -497,7 +520,10 @@ feature.
    supportability endpoints.
 2. Enforce fail-closed entitlements for direct service and Gateway paths.
 3. Run dependency, vulnerability, secret, sensitive-content, metric-label, and
-   container reviews.
+   container reviews. The dependency/container vulnerability posture source
+   contract and local Python lockfile audit are implementation-backed under
+   issue `#695`; exact-main release scan/SBOM/signing/provenance evidence still
+   controls production posture.
 4. Write runbooks for source failures, stale evidence, duplicate bursts, AI
    unavailable, conversion failure, entitlement denial, and replay mismatch.
 
@@ -539,7 +565,9 @@ is still required before the issue can close.
    publication proof only.
 4. Complete dependency, vulnerability, secret, sensitive-content, metric-label,
    and container reviews for the full supported service surface before any
-   supported-feature promotion.
+   supported-feature promotion. Issue `#695` now blocks source drift in
+   dependency/container vulnerability posture, but production certification
+   remains pending exact-main release evidence.
 5. Expand runbooks for source failures, stale evidence, duplicate bursts,
    AI-unavailable fallback, conversion failure, entitlement denial, and replay
    mismatch after those flows have implementation-backed runtime behavior.

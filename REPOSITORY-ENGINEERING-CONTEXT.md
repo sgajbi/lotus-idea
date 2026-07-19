@@ -1012,6 +1012,19 @@ asset rights remain distinct review boundaries. Use
 `docs/operations/license-ip-compliance.md`; this control adds no supported
 feature and no runtime deployable.
 
+RFC-0002 Slice 15 dependency and container vulnerability posture is governed by
+`contracts/security/lotus-idea-dependency-vulnerability-posture.v1.json` and
+tracked by issue `#695`. `make dependency-vulnerability-posture-gate` is part of
+`make lint` and `make ci-contract-gate`; it fails closed when runtime or CI
+Python dependencies are not exact stable pins, runtime lock evidence drifts from
+the dependency-graph mirror, `pip-audit` is removed from governed lanes, Trivy
+image-scan wiring weakens, release SBOM/signing/provenance hooks disappear, or a
+vulnerability exception lacks a Lotus Idea issue, CVE, owner, control, rollback,
+and bounded expiry. This is source-design and local execution hardening only.
+It adds no supported feature and does not certify production vulnerability
+posture until exact-main Main Releasability produces the scan, SBOM, signature,
+provenance, digest, release-manifest, and wiki/source closure evidence.
+
 ## Observability And Operability
 
 Operation events are the primary supportability surface. They must stay
@@ -2300,7 +2313,9 @@ Current gaps remain explicit:
     collision, and erasure-versus-delivery serialization proof,
 13. no full container-filesystem SBOM; release evidence includes
     runtime-dependency SBOM, Trivy image scan, registry digest capture, keyless
-    image signature, and provenance/SBOM attestations,
+    image signature, and provenance/SBOM attestations, and issue `#695` now
+    blocks dependency/container vulnerability posture drift through a source
+    contract gate without certifying production posture,
 14. no bank-approved jurisdiction policy, live bank lifecycle-authority
     producer/key-discovery proof, Report/Archive/AI retention conformance, or
     production authorized purge certification. Production-like consumers now
