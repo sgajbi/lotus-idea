@@ -24,6 +24,46 @@ Perform the full engineering review before final closure.
 
 ## Current Implementation Evidence
 
+Issue `#656` applies the Slice 19 quality-baseline learning to the
+implementation-proof readiness API configured-artifact setup. After issue
+`#655`, the current report-only quality baseline listed
+`tests/integration/test_implementation_proof_readiness_api.py::_configure_readiness_proof_artifacts`
+at `121` lines. The helper proved important readiness API behavior but mixed
+aggregate proof provenance binding, artifact path construction, per-capability
+payload writing, and environment binding in one function.
+
+`tests/integration/test_implementation_proof_readiness_api.py` now keeps the
+same externally visible configured-artifact readiness API proof, but
+`_configure_readiness_proof_artifacts(...)` is a short orchestrator over named
+helpers for provenance binding, typed artifact paths, proof payload writing, and
+environment-variable binding. Artifact filenames, payload builders, env vars,
+readiness blocker expectations, source-safe evidence refs, and supported-feature
+non-promotion assertions are preserved.
+
+Focused validation passed:
+
+1. `python -m ruff check tests/integration/test_implementation_proof_readiness_api.py`,
+2. `python -m ruff format --check tests/integration/test_implementation_proof_readiness_api.py`,
+3. `python -m mypy tests/integration/test_implementation_proof_readiness_api.py`,
+4. `python -m pytest tests/integration/test_implementation_proof_readiness_api.py -q`
+   with `8` tests.
+
+The same-pattern scan followed the Slice 19 maintainability sequence through
+#655, current `quality/baseline_report.md`, duplicate searches for
+`_configure_readiness_proof_artifacts` and
+`test_implementation_proof_readiness_api.py maintainability`, the codebase
+review ledger, the issue closure matrix, refactor decisions, and
+issue-discovery ledger `#225`. The broad searches returned only the
+issue-discovery ledger, so #656 owns this helper decomposition.
+
+This is internal test-support modularity only. It does not change production
+readiness behavior, proof-artifact contract behavior, API/OpenAPI, persistence,
+migrations, authentication or authorization infrastructure, Core, Gateway,
+Workbench, data-product support, external-publication authority, runtime
+topology, wiki source, README, supported features, or supported-feature
+promotion. Broader local gates, PR checks, exact-main Main Releasability/CodeQL,
+wiki parity, issue closure, and branch cleanup remain pending for the tranche.
+
 Issue `#655` applies the Slice 19 quality-baseline learning to the PostgreSQL
 outbox recovery workflow proof. After issue `#654`, the current report-only
 quality baseline listed

@@ -333,6 +333,23 @@ def test_github_issue_closure_matrix_gate_requires_outbox_recovery_workflow_issu
     assert "Missing actionable issue rows: #655" in errors
 
 
+def test_github_issue_closure_matrix_gate_requires_readiness_api_artifact_setup_issue(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    matrix = tmp_path / "matrix.md"
+    content = "\n".join(
+        line
+        for line in module.MATRIX_PATH.read_text(encoding="utf-8").splitlines()
+        if "[#656]" not in line
+    )
+    matrix.write_text(content, encoding="utf-8")
+
+    errors = module.validate_issue_closure_matrix(matrix)
+
+    assert "Missing actionable issue rows: #656" in errors
+
+
 def test_github_issue_closure_matrix_gate_requires_postgres_snapshot_writes_issue(
     tmp_path: Path,
 ) -> None:
