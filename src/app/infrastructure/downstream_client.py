@@ -189,12 +189,14 @@ class DownstreamJsonClient:
         *,
         correlation_id: str | None = None,
         trace_id: str | None = None,
+        additional_headers: Mapping[str, str] | None = None,
     ) -> dict[str, Any]:
         return self._request_json(
             "GET",
             path,
             correlation_id=correlation_id,
             trace_id=trace_id,
+            additional_headers=additional_headers,
         )
 
     def post_json(

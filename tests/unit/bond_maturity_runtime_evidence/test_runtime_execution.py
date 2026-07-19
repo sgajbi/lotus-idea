@@ -90,6 +90,28 @@ def test_use_case_preserves_scope_and_builds_source_safe_closed_receipts() -> No
     assert bond_maturity_runtime_execution_is_valid(payload)
 
 
+def test_source_generated_during_fetch_qualifies_at_artifact_observation_time() -> None:
+    source = RecordingSource()
+    maturity_ref = source.evidence.maturity_fact_ref
+    assert maturity_ref is not None
+    source.evidence = replace(
+        source.evidence,
+        maturity_fact_ref=replace(
+            maturity_ref,
+            generated_at_utc=NOW + timedelta(seconds=1),
+        ),
+    )
+    result = evaluate_bond_maturity_readiness(_command(), core_source=source)
+
+    payload = build_bond_maturity_runtime_execution(
+        generated_at_utc=NOW + timedelta(seconds=2),
+        result=result,
+    )
+
+    assert payload["execution"]["qualificationBlockers"] == []
+    assert bond_maturity_runtime_execution_is_valid(payload)
+
+
 def test_supported_empty_window_is_valid_without_false_opportunity() -> None:
     payload = valid_bond_maturity_runtime_evidence(
         evaluated_at_utc=NOW,

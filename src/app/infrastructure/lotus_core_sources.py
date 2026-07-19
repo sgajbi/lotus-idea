@@ -308,6 +308,7 @@ class LotusCoreHighCashSourceAdapter:
                 f"&horizon_days={request.maturity_window_days}&include_projected=false",
                 correlation_id=request.correlation_id,
                 trace_id=request.trace_id,
+                additional_headers={"X-Tenant-Id": request.tenant_id},
             )
         except DownstreamServiceError as exc:
             if exc.status_code in {401, 403}:

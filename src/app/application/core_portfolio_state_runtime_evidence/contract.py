@@ -263,7 +263,7 @@ def _source_temporal_posture_is_valid(parts: _RuntimeExecutionValidationParts) -
     return (
         source_generated is not None
         and latest_evidence is not None
-        and source_generated <= parts.evaluated_at_utc
+        and source_generated <= parts.generated_at_utc
         and latest_evidence <= source_generated
         and parts.generated_at_utc >= parts.evaluated_at_utc
     )

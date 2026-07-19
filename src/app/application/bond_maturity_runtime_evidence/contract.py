@@ -296,7 +296,7 @@ def _source_window_and_temporal_posture_are_valid(
         and window_end == as_of + timedelta(days=horizon)
         and source_generated is not None
         and latest_evidence is not None
-        and source_generated <= parts.evaluated_at_utc
+        and source_generated <= parts.generated_at_utc
         and latest_evidence <= source_generated
         and parts.generated_at_utc >= parts.evaluated_at_utc
     )
