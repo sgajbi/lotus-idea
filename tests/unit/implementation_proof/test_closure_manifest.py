@@ -160,6 +160,20 @@ def test_closure_manifest_rejects_malformed_dependency_issue_list() -> None:
     assert "source-ingestion-runtime-configuration: `dependencyIssues` must be a list" in errors
 
 
+def test_closure_manifest_rejects_dependency_issue_without_meaningful_role() -> None:
+    snapshot = _strict_default_snapshot()
+    contract = _load_contract()
+    contract["blockerGroups"][0]["dependencyIssues"][0]["dependencyRole"] = "Core"
+
+    errors = blocker_closure_manifest_errors(snapshot=snapshot, contract=contract)
+
+    assert (
+        "source-ingestion-runtime-configuration: dependency issue "
+        "`https://github.com/sgajbi/lotus-core/issues/796` must declare a "
+        "meaningful dependencyRole"
+    ) in errors
+
+
 def test_closure_manifest_rejects_malformed_issue_reference_fields() -> None:
     snapshot = _strict_default_snapshot()
     contract = _load_contract()
@@ -188,6 +202,46 @@ def test_closure_manifest_rejects_malformed_issue_reference_fields() -> None:
     assert (
         "source-ingestion-runtime-configuration: issue URL must be "
         "`https://github.com/sgajbi/lotus-core/issues/790`"
+    ) in errors
+
+
+def test_closure_manifest_rejects_unstable_group_and_blocker_vocabulary() -> None:
+    snapshot = _strict_default_snapshot()
+    contract = _load_contract()
+    group = contract["blockerGroups"][0]
+    group["groupId"] = "Source_Ingestion"
+    group["blockers"][0] = "SourceIngestionManifestNotConfigured"
+
+    errors = blocker_closure_manifest_errors(snapshot=snapshot, contract=contract)
+
+    assert "Source_Ingestion: `groupId` must use lower-kebab-case" in errors
+    assert (
+        "RFC-0002 blocker `SourceIngestionManifestNotConfigured` must use lower_snake_case"
+        in errors
+    )
+
+
+def test_closure_manifest_rejects_slice_status_and_effect_vocabulary_drift() -> None:
+    snapshot = _strict_default_snapshot()
+    contract = _load_contract()
+    group = contract["blockerGroups"][0]
+    group["sliceIds"] = ["RFC-0003/slice-1"]
+    group["closureStatus"] = "done"
+    group["supportedFeatureEffect"] = "clears_everything"
+
+    errors = blocker_closure_manifest_errors(snapshot=snapshot, contract=contract)
+
+    assert (
+        "source-ingestion-runtime-configuration: slice id `RFC-0003/slice-1` must use "
+        "RFC-0002/slice-NN"
+    ) in errors
+    assert any(
+        error.startswith("source-ingestion-runtime-configuration: `closureStatus` must be one of")
+        for error in errors
+    )
+    assert (
+        "source-ingestion-runtime-configuration: `supportedFeatureEffect` must describe "
+        "a governed effect"
     ) in errors
 
 

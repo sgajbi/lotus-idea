@@ -65,10 +65,14 @@ consumers from restoring independent counting or hard-coded output.
 is the durable RFC-0002 blocker-to-issue map. It records each current
 implementation-proof blocker, the owning Lotus GitHub issue, any sibling-repo
 dependency issues, the required evidence class, the slice association, and the
-supported-feature effect. `make implementation-proof-closure-manifest-gate`
+supported-feature effect. Each sibling dependency issue must also declare a
+source-safe `dependencyRole` explaining why that owner issue blocks the
+manifest group. `make implementation-proof-closure-manifest-gate`
 builds the strict default readiness snapshot with no optional proof artifacts
 and fails closed when a blocker is missing, duplicated, stale, assigned to an
-unknown evidence class, or linked to an inconsistent issue URL.
+unknown evidence class, linked to an inconsistent issue URL, missing a
+dependency role, or using drifted group, slice, blocker, closure-status, or
+supported-feature-effect vocabulary.
 
 The manifest is source-contract governance only. It does not close runtime,
 deployment, production, Workbench, data-mesh, publication, or supported-feature

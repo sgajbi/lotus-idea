@@ -28,7 +28,8 @@
         {
           "repository": "sgajbi/lotus-core",
           "number": 796,
-          "url": "https://github.com/sgajbi/lotus-core/issues/796"
+          "url": "https://github.com/sgajbi/lotus-core/issues/796",
+          "dependencyRole": "Core producer trust metadata for cashflow, holdings, and source-ingestion receipts"
         }
       ],
       "blockers": [
@@ -72,17 +73,20 @@
         {
           "repository": "sgajbi/lotus-core",
           "number": 790,
-          "url": "https://github.com/sgajbi/lotus-core/issues/790"
+          "url": "https://github.com/sgajbi/lotus-core/issues/790",
+          "dependencyRole": "Core benchmark-assignment and portfolio-state receipt authority"
         },
         {
           "repository": "sgajbi/lotus-core",
           "number": 792,
-          "url": "https://github.com/sgajbi/lotus-core/issues/792"
+          "url": "https://github.com/sgajbi/lotus-core/issues/792",
+          "dependencyRole": "Core maturity-summary and holdings-lineage producer proof"
         },
         {
           "repository": "sgajbi/lotus-core",
           "number": 796,
-          "url": "https://github.com/sgajbi/lotus-core/issues/796"
+          "url": "https://github.com/sgajbi/lotus-core/issues/796",
+          "dependencyRole": "Core cashflow and source-ingestion producer trust metadata"
         }
       ],
       "blockers": [
@@ -110,7 +114,8 @@
         {
           "repository": "sgajbi/lotus-risk",
           "number": 211,
-          "url": "https://github.com/sgajbi/lotus-risk/issues/211"
+          "url": "https://github.com/sgajbi/lotus-risk/issues/211",
+          "dependencyRole": "Risk concentration, volatility, drawdown, and mandate risk-health receipt authority"
         }
       ],
       "blockers": [
@@ -135,7 +140,8 @@
         {
           "repository": "sgajbi/lotus-performance",
           "number": 464,
-          "url": "https://github.com/sgajbi/lotus-performance/issues/464"
+          "url": "https://github.com/sgajbi/lotus-performance/issues/464",
+          "dependencyRole": "Performance returns-series, benchmark-readiness, and mandate performance-health receipt authority"
         }
       ],
       "blockers": [
@@ -159,12 +165,14 @@
         {
           "repository": "sgajbi/lotus-advise",
           "number": 461,
-          "url": "https://github.com/sgajbi/lotus-advise/issues/461"
+          "url": "https://github.com/sgajbi/lotus-advise/issues/461",
+          "dependencyRole": "Advise suitability-policy live source proof and approval boundary"
         },
         {
           "repository": "sgajbi/lotus-advise",
           "number": 459,
-          "url": "https://github.com/sgajbi/lotus-advise/issues/459"
+          "url": "https://github.com/sgajbi/lotus-advise/issues/459",
+          "dependencyRole": "Advise risk-profile and restriction source-product plus runtime proof"
         }
       ],
       "blockers": [
@@ -190,7 +198,8 @@
         {
           "repository": "sgajbi/lotus-advise",
           "number": 459,
-          "url": "https://github.com/sgajbi/lotus-advise/issues/459"
+          "url": "https://github.com/sgajbi/lotus-advise/issues/459",
+          "dependencyRole": "Advise typed restriction and risk-profile product declaration authority"
         }
       ],
       "blockers": [
@@ -213,12 +222,14 @@
         {
           "repository": "sgajbi/lotus-manage",
           "number": 621,
-          "url": "https://github.com/sgajbi/lotus-manage/issues/621"
+          "url": "https://github.com/sgajbi/lotus-manage/issues/621",
+          "dependencyRole": "Manage conversion-intake and action-register runtime persistence proof"
         },
         {
           "repository": "sgajbi/lotus-manage",
           "number": 620,
-          "url": "https://github.com/sgajbi/lotus-manage/issues/620"
+          "url": "https://github.com/sgajbi/lotus-manage/issues/620",
+          "dependencyRole": "Manage mandate-health source metadata and action-register receipt authority"
         }
       ],
       "blockers": [
@@ -242,7 +253,8 @@
         {
           "repository": "sgajbi/lotus-platform",
           "number": 598,
-          "url": "https://github.com/sgajbi/lotus-platform/issues/598"
+          "url": "https://github.com/sgajbi/lotus-platform/issues/598",
+          "dependencyRole": "Platform data-product catalog, mesh certification, and runtime trust telemetry authority"
         }
       ],
       "blockers": [
@@ -275,7 +287,8 @@
         {
           "repository": "sgajbi/lotus-platform",
           "number": 598,
-          "url": "https://github.com/sgajbi/lotus-platform/issues/598"
+          "url": "https://github.com/sgajbi/lotus-platform/issues/598",
+          "dependencyRole": "Platform source-manifest and catalog inclusion authority"
         }
       ],
       "blockers": [
@@ -298,17 +311,20 @@
         {
           "repository": "sgajbi/lotus-gateway",
           "number": 505,
-          "url": "https://github.com/sgajbi/lotus-gateway/issues/505"
+          "url": "https://github.com/sgajbi/lotus-gateway/issues/505",
+          "dependencyRole": "Gateway BFF publication and composition proof for Idea product surfaces"
         },
         {
           "repository": "sgajbi/lotus-workbench",
           "number": 484,
-          "url": "https://github.com/sgajbi/lotus-workbench/issues/484"
+          "url": "https://github.com/sgajbi/lotus-workbench/issues/484",
+          "dependencyRole": "Workbench advisor queue, candidate detail, and action-path browser proof"
         },
         {
           "repository": "sgajbi/lotus-platform",
           "number": 563,
-          "url": "https://github.com/sgajbi/lotus-platform/issues/563"
+          "url": "https://github.com/sgajbi/lotus-platform/issues/563",
+          "dependencyRole": "Platform production identity-provider and token-claims integration boundary"
         }
       ],
       "blockers": [
@@ -337,17 +353,20 @@
         {
           "repository": "sgajbi/lotus-ai",
           "number": 122,
-          "url": "https://github.com/sgajbi/lotus-ai/issues/122"
+          "url": "https://github.com/sgajbi/lotus-ai/issues/122",
+          "dependencyRole": "Lotus AI runtime execution and model provenance proof"
         },
         {
           "repository": "sgajbi/lotus-ai",
           "number": 115,
-          "url": "https://github.com/sgajbi/lotus-ai/issues/115"
+          "url": "https://github.com/sgajbi/lotus-ai/issues/115",
+          "dependencyRole": "Lotus AI workflow-pack and provider-runtime certification proof"
         },
         {
           "repository": "sgajbi/lotus-idea",
           "number": 340,
-          "url": "https://github.com/sgajbi/lotus-idea/issues/340"
+          "url": "https://github.com/sgajbi/lotus-idea/issues/340",
+          "dependencyRole": "Idea consumer-side attested AI run acceptance and replay protection"
         }
       ],
       "blockers": [
@@ -388,7 +407,8 @@
         {
           "repository": "sgajbi/lotus-platform",
           "number": 598,
-          "url": "https://github.com/sgajbi/lotus-platform/issues/598"
+          "url": "https://github.com/sgajbi/lotus-platform/issues/598",
+          "dependencyRole": "Platform mesh event publication and consumer certification authority"
         }
       ],
       "blockers": [
@@ -413,7 +433,8 @@
         {
           "repository": "sgajbi/lotus-platform",
           "number": 599,
-          "url": "https://github.com/sgajbi/lotus-platform/issues/599"
+          "url": "https://github.com/sgajbi/lotus-platform/issues/599",
+          "dependencyRole": "Platform protected capacity, load, resource, dashboard, and alert attestation"
         }
       ],
       "blockers": [
@@ -438,17 +459,20 @@
         {
           "repository": "sgajbi/lotus-report",
           "number": 152,
-          "url": "https://github.com/sgajbi/lotus-report/issues/152"
+          "url": "https://github.com/sgajbi/lotus-report/issues/152",
+          "dependencyRole": "Report evidence-pack intake and materialization runtime proof"
         },
         {
           "repository": "sgajbi/lotus-render",
           "number": 65,
-          "url": "https://github.com/sgajbi/lotus-render/issues/65"
+          "url": "https://github.com/sgajbi/lotus-render/issues/65",
+          "dependencyRole": "Render output creation and rendering authority proof"
         },
         {
           "repository": "sgajbi/lotus-archive",
           "number": 72,
-          "url": "https://github.com/sgajbi/lotus-archive/issues/72"
+          "url": "https://github.com/sgajbi/lotus-archive/issues/72",
+          "dependencyRole": "Archive record creation and retention-safe publication authority proof"
         }
       ],
       "blockers": [
@@ -473,12 +497,14 @@
         {
           "repository": "sgajbi/lotus-idea",
           "number": 380,
-          "url": "https://github.com/sgajbi/lotus-idea/issues/380"
+          "url": "https://github.com/sgajbi/lotus-idea/issues/380",
+          "dependencyRole": "Idea supported-feature and data-product promotion control"
         },
         {
           "repository": "sgajbi/lotus-idea",
           "number": 683,
-          "url": "https://github.com/sgajbi/lotus-idea/issues/683"
+          "url": "https://github.com/sgajbi/lotus-idea/issues/683",
+          "dependencyRole": "Final mainline validation, wiki publication, and branch hygiene closure"
         }
       ],
       "blockers": [

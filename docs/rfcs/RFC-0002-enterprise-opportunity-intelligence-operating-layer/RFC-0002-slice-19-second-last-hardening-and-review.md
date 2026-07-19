@@ -24,6 +24,31 @@ Perform the full engineering review before final closure.
 
 ## Current Implementation Evidence
 
+Issue `#682` applies the Slice 19 same-pattern hardening rule to the RFC-0002
+blocker closure manifest. The manifest already mapped every current
+implementation-proof blocker to an owner issue, evidence class, slice, and
+supported-feature effect, but sibling dependency issue references could remain
+opaque issue links without explaining why the dependency blocked closure.
+
+`contracts/implementation-proof/rfc0002-blocker-closure-manifest.v1.json` now
+requires each dependency issue to carry a source-safe `dependencyRole`, and
+`src/app/application/implementation_proof_closure_manifest.py` rejects missing
+or weak dependency roles, unstable group IDs, non-RFC-0002 slice IDs,
+non-snake-case blocker names, unsupported closure statuses, and ungoverned
+supported-feature-effect wording. This keeps the manifest as an executable
+closure ledger rather than a decorative link list.
+
+Focused validation passed:
+
+1. `python -m pytest tests/unit/implementation_proof/test_closure_manifest.py -q`
+   with `14` tests,
+2. `make implementation-proof-closure-manifest-gate`.
+
+This is source-contract and traceability hardening only. It does not implement
+authentication/authorization, mutate Core, call source-owner services, clear
+runtime/deployment/production blockers, prove Gateway or Workbench behavior,
+publish wiki source, or promote supported features.
+
 Issue `#670` applies the Slice 19 quality-baseline learning to the outbox
 dead-letter recovery policy boundary. After issue `#668`, the current
 report-only quality baseline listed

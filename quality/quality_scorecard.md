@@ -22,6 +22,14 @@ blueprint drift by mapping every repo-authored owned capability, non-owned
 authority boundary, and target opportunity family to RFC slice IDs, GitHub
 issues, evidence references, and `foundation_only_not_promoted` posture.
 
+Current CI note: `make implementation-proof-closure-manifest-gate` now blocks
+opaque RFC-0002 blocker dependencies by requiring every sibling dependency
+issue to declare a meaningful `dependencyRole`, and by rejecting drifted
+group, slice, blocker, closure-status, and supported-feature-effect
+vocabulary. This is traceability hardening only; it does not clear runtime,
+deployment, production, Gateway/Workbench, downstream, data-mesh,
+client-publication, or supported-feature blockers.
+
 Current slice note: `POST /api/v1/idea-signals/allocation-drift/evaluate` adds
 a certified internal API foundation for caller-supplied Lotus Manage
 `PortfolioActionRegister:v1` action-register and mandate-health source-ref
