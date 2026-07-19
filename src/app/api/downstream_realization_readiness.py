@@ -112,6 +112,7 @@ class DownstreamRealizationReadinessResponse(CamelModel):
         ...,
         alias="reportEvidencePackRequestCount",
     )
+    downstream_submission_count: int = Field(..., alias="downstreamSubmissionCount")
     downstream_reconciliation_required_count: int = Field(
         ...,
         alias="downstreamReconciliationRequiredCount",
@@ -142,6 +143,7 @@ class DownstreamRealizationReadinessResponse(CamelModel):
             conversionIntentCount=snapshot.conversion_intent_count,
             conversionOutcomeCount=snapshot.conversion_outcome_count,
             reportEvidencePackRequestCount=snapshot.report_evidence_pack_request_count,
+            downstreamSubmissionCount=snapshot.downstream_submission_count,
             downstreamReconciliationRequiredCount=(
                 snapshot.downstream_reconciliation_required_count
             ),
@@ -238,8 +240,9 @@ DOWNSTREAM_REALIZATION_READINESS_ROUTE: RouteMetadata = {
         "Returns source-safe operator readiness for downstream realization across "
         "lotus-advise, lotus-manage, lotus-report, lotus-render, and lotus-archive. "
         "The endpoint reports lotus-idea-owned conversion intent, conversion outcome, "
-        "report evidence-pack request counts, unresolved downstream submission "
-        "reconciliation workload, planned Advise/Manage/Report downstream "
+        "report evidence-pack request counts, aggregate downstream submission "
+        "posture, unresolved downstream submission reconciliation workload, "
+        "planned Advise/Manage/Report downstream "
         "contract posture, source-safe adapter-foundation presence, and explicit "
         "downstream blockers. A configured Report intake source contract adds declared "
         "route provenance but does not clear the lotus-report live intake blocker. "
@@ -264,6 +267,7 @@ DOWNSTREAM_REALIZATION_READINESS_ROUTE: RouteMetadata = {
                         "conversionIntentCount": 0,
                         "conversionOutcomeCount": 0,
                         "reportEvidencePackRequestCount": 0,
+                        "downstreamSubmissionCount": 0,
                         "downstreamReconciliationRequiredCount": 0,
                         "downstreamAdapterFoundationPresent": True,
                         "sourceOfTruth": {

@@ -111,7 +111,7 @@ Current implementation includes these bounded foundations:
 5. evidence replay, idempotency, safe audit, operation events, and bounded
    problem-details behavior,
 6. advisor queue, candidate detail, downstream realization readiness, including
-   bounded downstream reconciliation workload, outbox readiness, and runtime
+   bounded downstream submission/reconciliation workload, outbox readiness, and runtime
    trust telemetry projections that avoid whole-store snapshot hydration on
    PostgreSQL,
 7. downstream conversion/report submission foundations that record local
@@ -533,7 +533,7 @@ For durable reads, prefer bounded projections over whole repository snapshots:
 2. candidate-detail projection,
 3. downstream conversion/report lookup projection,
 4. downstream realization readiness-count projection, including bounded
-   downstream submission reconciliation workload,
+   downstream submission denominator and reconciliation workload,
 5. outbox delivery readiness projection,
 6. runtime trust telemetry aggregate projection, including local downstream
    submission posture counts,

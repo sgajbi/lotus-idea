@@ -34,6 +34,7 @@ def test_postgres_repository_uses_downstream_only_readiness_projection() -> None
     assert summary.conversion_intent_count == 2
     assert summary.conversion_outcome_count == 1
     assert summary.report_evidence_pack_request_count == 3
+    assert summary.downstream_submission_count == 4
     assert summary.downstream_reconciliation_required_count == 2
     assert "/* lotus-idea downstream-realization-readiness-summary */" in executed_sql
     assert "from idea_conversion_intent" in executed_sql
@@ -58,6 +59,7 @@ def test_downstream_readiness_summary_returns_zeroes_without_count_row() -> None
     assert summary.conversion_intent_count == 0
     assert summary.conversion_outcome_count == 0
     assert summary.report_evidence_pack_request_count == 0
+    assert summary.downstream_submission_count == 0
     assert summary.downstream_reconciliation_required_count == 0
 
 

@@ -56,6 +56,7 @@ def test_downstream_realization_readiness_api_returns_blocked_operator_posture(
     assert payload["conversionIntentCount"] == 0
     assert payload["conversionOutcomeCount"] == 0
     assert payload["reportEvidencePackRequestCount"] == 0
+    assert payload["downstreamSubmissionCount"] == 0
     assert payload["downstreamReconciliationRequiredCount"] == 0
     assert payload["downstreamAdapterFoundationPresent"] is True
     assert payload["supportedFeaturePromoted"] is False

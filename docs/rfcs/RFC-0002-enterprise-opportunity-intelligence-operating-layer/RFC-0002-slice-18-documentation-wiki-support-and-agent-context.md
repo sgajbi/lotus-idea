@@ -1,6 +1,6 @@
 # RFC-0002 Slice 18: Documentation, Wiki, Support, And Agent Context
 
-Status: Partially implemented - API certification, outbox readiness, implementation-proof, live source-proof contract, scheduled-worker source-contract and deployment-evidence contracts, durable repository proof contract, runtime telemetry test-execution contract, bounded Workbench read-path source contract, bounded Gateway/Workbench contract proof, bounded Gateway/Workbench discovery contract proof, digest-bound Advise/Manage route source contracts, bounded Report intake route source contract, bounded outbox broker source-contract proof, bounded outbox platform-mesh event source-contract proof, digest-bound mesh policy source contract, AI lineage store proof, closed v2 Manage mandate, Advise mandate/restriction, Advise missing-suitability, and Advise missing-risk-profile runtime evidence, receipt-bound Core portfolio-state, bond-maturity, and low-income cashflow runtime evidence, typed Advise mandate/restriction source-product proof, typed Advise missing risk-profile source-product proof, underperformance, allocation-drift, and drawdown-review API foundation truth, mandate/restriction and missing-benchmark policy foundation truth, client-demo process, downstream reconciliation workload readiness truth, and downstream contract documentation synchronized
+Status: Partially implemented - API certification, outbox readiness, implementation-proof, live source-proof contract, scheduled-worker source-contract and deployment-evidence contracts, durable repository proof contract, runtime telemetry test-execution contract, bounded Workbench read-path source contract, bounded Gateway/Workbench contract proof, bounded Gateway/Workbench discovery contract proof, digest-bound Advise/Manage route source contracts, bounded Report intake route source contract, bounded outbox broker source-contract proof, bounded outbox platform-mesh event source-contract proof, digest-bound mesh policy source contract, AI lineage store proof, closed v2 Manage mandate, Advise mandate/restriction, Advise missing-suitability, and Advise missing-risk-profile runtime evidence, receipt-bound Core portfolio-state, bond-maturity, and low-income cashflow runtime evidence, typed Advise mandate/restriction source-product proof, typed Advise missing risk-profile source-product proof, underperformance, allocation-drift, and drawdown-review API foundation truth, mandate/restriction and missing-benchmark policy foundation truth, client-demo process, downstream submission/reconciliation workload readiness truth, and downstream contract documentation synchronized
 
 ## Outcome
 
@@ -92,8 +92,8 @@ documentation across opportunity signal APIs.
    downstream realization readiness diagnostic with a polished operator-facing
    structure: current truth, proof boundary, blockers, response shape, evidence,
    and executable example. Issue `#662` adds the
-   `downstreamReconciliationRequiredCount` response field and documents it as a
-   local unresolved handoff workload count only; it does not prove downstream
+   `downstreamSubmissionCount` and `downstreamReconciliationRequiredCount`
+   response fields and documents them as local handoff posture counts only; they do not prove downstream
    acceptance, materialization, rendering, archive creation, client publication,
    Gateway/Workbench behavior, or supported-feature promotion.
 10. `docs/operations/implementation-proof-readiness.md` now uses the same

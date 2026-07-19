@@ -87,6 +87,7 @@ class DownstreamRealizationReadinessRepositorySummary:
     conversion_intent_count: int
     conversion_outcome_count: int
     report_evidence_pack_request_count: int
+    downstream_submission_count: int
     downstream_reconciliation_required_count: int
 
 

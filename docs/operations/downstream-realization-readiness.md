@@ -23,9 +23,10 @@ It returns:
 1. current `lotus-idea` conversion intent count,
 2. current conversion outcome count,
 3. current report evidence-pack request count,
-4. current unresolved downstream submission reconciliation workload count,
-5. source-of-truth implementation paths,
-6. capability-level blockers for Advise, Manage, and Report/Render/Archive
+4. current local downstream submission count,
+5. current unresolved downstream submission reconciliation workload count,
+6. source-of-truth implementation paths,
+7. capability-level blockers for Advise, Manage, and Report/Render/Archive
    realization,
 7. source-safe application orchestration and HTTP adapter-foundation presence
    for the Advise proposal, Manage action, and Report evidence-pack handoff
@@ -48,10 +49,10 @@ It returns:
 14. `not_certified` supportability until downstream live contracts and product
    proof exist.
 
-When PostgreSQL is the active durable provider, the workflow and reconciliation
-counts use a repository-side readiness projection over
+When PostgreSQL is the active durable provider, the workflow, submission, and
+reconciliation counts use a repository-side readiness projection over
 `idea_conversion_intent`, `idea_conversion_outcome`,
-`idea_report_evidence_pack_request`, and bounded status counts from
+`idea_report_evidence_pack_request`, and bounded counts from
 `idea_downstream_submission`. The ordinary readiness read does not hydrate
 candidate snapshots, audit history, outbox events, downstream-submission
 payloads, or AI explanation lineage.
@@ -264,6 +265,7 @@ The success response is intentionally aggregate and source-safe:
 | `conversionIntentCount` | Count of `lotus-idea` conversion intents in the active repository provider |
 | `conversionOutcomeCount` | Count of recorded downstream outcome records in `lotus-idea` |
 | `reportEvidencePackRequestCount` | Count of Report/Render/Archive request records in `lotus-idea` |
+| `downstreamSubmissionCount` | Count of local downstream submission records across terminal and non-terminal posture; this is a source-safe denominator, not downstream acceptance proof |
 | `downstreamReconciliationRequiredCount` | Count of local downstream submissions in `in_flight` or `reconciliation_required` posture that need operator verification or reconciliation |
 | `downstreamAdapterFoundationPresent` | Whether the repo contains source-safe downstream orchestration, adapter ports, and HTTP adapter foundations |
 | `capabilities` | Capability-level downstream readiness posture and blockers |

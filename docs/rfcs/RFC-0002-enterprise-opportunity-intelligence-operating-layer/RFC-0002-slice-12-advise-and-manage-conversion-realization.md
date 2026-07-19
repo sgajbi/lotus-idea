@@ -95,9 +95,10 @@ Implemented in this slice:
     `GET /api/v1/downstream-realization/readiness` add a certified internal
     operator diagnostic over current conversion intent/outcome counts and
     Advise/Manage realization blockers. Issue `#662` extends that diagnostic
-    with `downstreamReconciliationRequiredCount`, a bounded local count of
-    in-flight or reconciliation-required downstream submissions that need
-    operator verification. The diagnostic also exposes adapter-foundation
+    with `downstreamSubmissionCount` and
+    `downstreamReconciliationRequiredCount`, bounded local counts for total
+    downstream submissions and in-flight or reconciliation-required downstream
+    submissions that need operator verification. The diagnostic also exposes adapter-foundation
     presence and planned downstream contract-readiness records for the Advise
     proposal and Manage action handoff seams, with owner repositories, planned
     target-route posture, adapter status, evidence refs, and blockers. It

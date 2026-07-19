@@ -101,6 +101,7 @@ def test_downstream_realization_readiness_reports_blocked_foundation_posture() -
     assert snapshot.conversion_intent_count == 0
     assert snapshot.conversion_outcome_count == 0
     assert snapshot.report_evidence_pack_request_count == 0
+    assert snapshot.downstream_submission_count == 0
     assert snapshot.downstream_reconciliation_required_count == 0
     assert snapshot.downstream_adapter_foundation_present is True
     assert snapshot.supported_feature_promoted is False
@@ -192,6 +193,7 @@ def test_downstream_realization_readiness_counts_internal_workflow_records() -> 
     assert snapshot.conversion_intent_count == 2
     assert snapshot.conversion_outcome_count == 1
     assert snapshot.report_evidence_pack_request_count == 1
+    assert snapshot.downstream_submission_count == 3
     assert snapshot.downstream_reconciliation_required_count == 2
     assert snapshot.certification_ready is False
 
@@ -235,6 +237,7 @@ def test_downstream_realization_readiness_uses_repository_projection_without_sna
             conversion_intent_count=2,
             conversion_outcome_count=1,
             report_evidence_pack_request_count=3,
+            downstream_submission_count=7,
             downstream_reconciliation_required_count=4,
         )
     )
@@ -248,6 +251,7 @@ def test_downstream_realization_readiness_uses_repository_projection_without_sna
     assert snapshot.conversion_intent_count == 2
     assert snapshot.conversion_outcome_count == 1
     assert snapshot.report_evidence_pack_request_count == 3
+    assert snapshot.downstream_submission_count == 7
     assert snapshot.downstream_reconciliation_required_count == 4
     assert snapshot.certification_ready is False
 

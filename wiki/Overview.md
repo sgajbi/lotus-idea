@@ -78,7 +78,7 @@ operator supportability diagnostics, and the first Gateway publication is
 read-only integration foundation. The implementation-proof readiness diagnostic
 reports blockers, including outbox-delivery blockers. The downstream
 realization readiness diagnostic reports blockers, workflow counts,
-local unresolved downstream submission reconciliation workload, source-safe
+local downstream submission denominator, unresolved reconciliation workload, source-safe
 orchestration/adapter-foundation presence, submission route posture, and
 planned contract posture only. The
 runtime trust telemetry preview reports aggregate active-repository counts
