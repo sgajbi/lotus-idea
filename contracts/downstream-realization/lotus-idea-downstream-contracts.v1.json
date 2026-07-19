@@ -50,10 +50,12 @@
       "blocker_issue_refs": {
         "suitability_policy_authority_remains_lotus_advise": [
           "sgajbi/lotus-idea#688",
+          "sgajbi/lotus-idea#379",
           "sgajbi/lotus-advise#461"
         ],
         "advise_live_contract_proof_missing": [
           "sgajbi/lotus-idea#688",
+          "sgajbi/lotus-idea#379",
           "sgajbi/lotus-advise#461"
         ]
       }
@@ -78,10 +80,12 @@
       "blocker_issue_refs": {
         "rebalance_execution_authority_remains_lotus_manage": [
           "sgajbi/lotus-idea#689",
+          "sgajbi/lotus-idea#379",
           "sgajbi/lotus-manage#621"
         ],
         "manage_live_contract_proof_missing": [
           "sgajbi/lotus-idea#689",
+          "sgajbi/lotus-idea#379",
           "sgajbi/lotus-manage#621"
         ]
       }
@@ -111,22 +115,29 @@
       "blocker_issue_refs": {
         "lotus_report_live_intake_route_proof_missing": [
           "sgajbi/lotus-idea#690",
+          "sgajbi/lotus-idea#379",
           "sgajbi/lotus-report#152"
         ],
         "report_evidence_pack_live_materialization_proof_missing": [
           "sgajbi/lotus-idea#690",
+          "sgajbi/lotus-idea#691",
+          "sgajbi/lotus-idea#379",
           "sgajbi/lotus-report#152"
         ],
         "rendered_output_creation_missing": [
           "sgajbi/lotus-idea#690",
+          "sgajbi/lotus-idea#691",
           "sgajbi/lotus-render#65"
         ],
         "archive_record_creation_missing": [
           "sgajbi/lotus-idea#690",
+          "sgajbi/lotus-idea#691",
           "sgajbi/lotus-archive#72"
         ],
         "client_publication_authority_blocked": [
           "sgajbi/lotus-idea#690",
+          "sgajbi/lotus-idea#691",
+          "sgajbi/lotus-idea#380",
           "sgajbi/lotus-report#152"
         ]
       }
