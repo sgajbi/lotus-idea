@@ -112,6 +112,10 @@ class DownstreamRealizationReadinessResponse(CamelModel):
         ...,
         alias="reportEvidencePackRequestCount",
     )
+    downstream_reconciliation_required_count: int = Field(
+        ...,
+        alias="downstreamReconciliationRequiredCount",
+    )
     downstream_adapter_foundation_present: bool = Field(
         ...,
         alias="downstreamAdapterFoundationPresent",
@@ -138,6 +142,9 @@ class DownstreamRealizationReadinessResponse(CamelModel):
             conversionIntentCount=snapshot.conversion_intent_count,
             conversionOutcomeCount=snapshot.conversion_outcome_count,
             reportEvidencePackRequestCount=snapshot.report_evidence_pack_request_count,
+            downstreamReconciliationRequiredCount=(
+                snapshot.downstream_reconciliation_required_count
+            ),
             downstreamAdapterFoundationPresent=snapshot.downstream_adapter_foundation_present,
             sourceOfTruth=dict(snapshot.source_of_truth),
             blockers=snapshot.blockers,
@@ -231,7 +238,8 @@ DOWNSTREAM_REALIZATION_READINESS_ROUTE: RouteMetadata = {
         "Returns source-safe operator readiness for downstream realization across "
         "lotus-advise, lotus-manage, lotus-report, lotus-render, and lotus-archive. "
         "The endpoint reports lotus-idea-owned conversion intent, conversion outcome, "
-        "report evidence-pack request counts, planned Advise/Manage/Report downstream "
+        "report evidence-pack request counts, unresolved downstream submission "
+        "reconciliation workload, planned Advise/Manage/Report downstream "
         "contract posture, source-safe adapter-foundation presence, and explicit "
         "downstream blockers. A configured Report intake source contract adds declared "
         "route provenance but does not clear the lotus-report live intake blocker. "
@@ -256,13 +264,21 @@ DOWNSTREAM_REALIZATION_READINESS_ROUTE: RouteMetadata = {
                         "conversionIntentCount": 0,
                         "conversionOutcomeCount": 0,
                         "reportEvidencePackRequestCount": 0,
+                        "downstreamReconciliationRequiredCount": 0,
                         "downstreamAdapterFoundationPresent": True,
                         "sourceOfTruth": {
                             "conversion_workflow": "src/app/application/conversion_workflow.py",
                             "report_evidence_workflow": "src/app/application/report_evidence.py",
+                            "downstream_realization_orchestration": (
+                                "src/app/application/downstream_realization.py"
+                            ),
+                            "downstream_realization_api": ("src/app/api/downstream_realization.py"),
                             "downstream_adapter_port": "src/app/ports/downstream_realization.py",
                             "downstream_adapter_foundation": (
                                 "src/app/infrastructure/downstream_realization.py"
+                            ),
+                            "downstream_submission_reconciliation": (
+                                "src/app/application/downstream_submission_reconciliation.py"
                             ),
                             "downstream_contract_plan": (
                                 "contracts/downstream-realization/"
@@ -270,6 +286,14 @@ DOWNSTREAM_REALIZATION_READINESS_ROUTE: RouteMetadata = {
                             ),
                             "downstream_contract_gate": (
                                 "scripts/downstream_realization_contract_gate.py"
+                            ),
+                            "rfc_slice_12": (
+                                "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/"
+                                "RFC-0002-slice-12-advise-and-manage-conversion-realization.md"
+                            ),
+                            "rfc_slice_13": (
+                                "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/"
+                                "RFC-0002-slice-13-report-render-archive-and-evidence-pack-materialization.md"
                             ),
                         },
                         "blockers": [

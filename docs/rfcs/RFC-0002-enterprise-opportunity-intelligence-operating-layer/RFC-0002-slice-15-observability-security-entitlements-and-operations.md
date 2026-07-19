@@ -172,12 +172,16 @@ Implementation evidence:
     downstream realization readiness for Advise, Manage, Report, Render, and
     Archive blockers. The route requires both the `operator` role and
     `idea.downstream-realization.readiness.read`, returns source-safe workflow
-    counts only, and emits bounded `downstream_realization_readiness_read`
-    operation events. Durable PostgreSQL providers compute those workflow
+    and unresolved reconciliation workload counts only, and emits bounded
+    `downstream_realization_readiness_read` operation events. Issue `#662`
+    adds `downstreamReconciliationRequiredCount` so operators can see local
+    in-flight or reconciliation-required downstream submissions without opening
+    the full reconciliation queue. Durable PostgreSQL providers compute those
     counts through a repository-side projection over only
-    `idea_conversion_intent`, `idea_conversion_outcome`, and
-    `idea_report_evidence_pack_request`, without materializing candidate,
-    audit, outbox, downstream-submission, or AI-lineage state.
+    `idea_conversion_intent`, `idea_conversion_outcome`,
+    `idea_report_evidence_pack_request`, and bounded status counts from
+    `idea_downstream_submission`, without materializing candidate, audit,
+    outbox, downstream-submission payload, or AI-lineage state.
 26. `tests/unit/test_downstream_realization_readiness.py` and
     `tests/unit/test_postgres_downstream_readiness.py`, plus
     `tests/integration/test_downstream_realization_readiness_api.py`, prove the

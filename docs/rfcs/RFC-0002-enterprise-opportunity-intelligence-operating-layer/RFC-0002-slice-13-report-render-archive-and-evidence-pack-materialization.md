@@ -40,10 +40,11 @@ Implemented in the first Slice 13 foundation:
    - `tests/integration/test_postgres_runtime_integration.py`,
    - `tests/unit/test_service_contract.py`.
 7. `GET /api/v1/downstream-realization/readiness` now reports the current
-   report evidence-pack request count and the explicit Report/Render/Archive
-   blockers for operators without calling `lotus-report`, `lotus-render`, or
-   `lotus-archive`. It also exposes the planned
-   `lotus-idea-to-lotus-report-evidence-pack-intake:v1` contract readiness
+   report evidence-pack request count, the local unresolved downstream
+   submission reconciliation workload from issue `#662`, and the explicit
+   Report/Render/Archive blockers for operators without calling
+   `lotus-report`, `lotus-render`, or `lotus-archive`. It also exposes the
+   planned `lotus-idea-to-lotus-report-evidence-pack-intake:v1` contract readiness
    record with `lotus-report` ownership, planned route posture, adapter status,
    the report-owned planned intake contract evidence ref, and the remaining
    live intake route/materialization blockers.

@@ -325,7 +325,8 @@ flowchart TD
 11. For downstream realization blocker checks, call
    `GET /api/v1/downstream-realization/readiness` with the `operator` role and
    `idea.downstream-realization.readiness.read` capability. This reports
-   source-safe workflow counts, planned Advise/Manage/Report handoff contract
+   source-safe workflow counts, local unresolved downstream submission
+   reconciliation workload, planned Advise/Manage/Report handoff contract
    posture, and blockers for Advise, Manage, Report, Render, and Archive
    without calling downstream services, proving downstream route existence, or
    creating downstream records.

@@ -21,6 +21,12 @@ def test_postgres_repository_uses_downstream_only_readiness_projection() -> None
         {"conversion_intent_id": "intent-invalid"}
     ]
     connection.rows["idea_report_evidence_pack_request"] = [{}, {}, {}]
+    connection.rows["idea_downstream_submission"] = [
+        {"status": "in_flight"},
+        {"status": "reconciliation_required"},
+        {"status": "accepted_by_downstream"},
+        {"status": "quarantined"},
+    ]
 
     summary = PostgresIdeaRepository(connection).downstream_realization_readiness_summary()
 
@@ -28,17 +34,19 @@ def test_postgres_repository_uses_downstream_only_readiness_projection() -> None
     assert summary.conversion_intent_count == 2
     assert summary.conversion_outcome_count == 1
     assert summary.report_evidence_pack_request_count == 3
+    assert summary.downstream_reconciliation_required_count == 2
     assert "/* lotus-idea downstream-realization-readiness-summary */" in executed_sql
     assert "from idea_conversion_intent" in executed_sql
     assert "from idea_conversion_outcome" in executed_sql
     assert "from idea_conversion_outcome_quarantine" in executed_sql
     assert "from idea_report_evidence_pack_request" in executed_sql
+    assert "from idea_downstream_submission" in executed_sql
+    assert "status in ('in_flight', 'reconciliation_required')" in executed_sql
     for unrelated_table in (
         "idea_candidate_record",
         "idea_audit_event",
         "idea_outbox_event",
         "idea_review_decision",
-        "idea_downstream_submission",
         "idea_ai_explanation_lineage",
     ):
         assert unrelated_table not in executed_sql
@@ -50,6 +58,7 @@ def test_downstream_readiness_summary_returns_zeroes_without_count_row() -> None
     assert summary.conversion_intent_count == 0
     assert summary.conversion_outcome_count == 0
     assert summary.report_evidence_pack_request_count == 0
+    assert summary.downstream_reconciliation_required_count == 0
 
 
 class EmptyReadinessConnection:
