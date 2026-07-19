@@ -189,7 +189,7 @@ Common gates:
 | `make test-e2e` | Deterministic end-to-end tests; override `E2E_TESTS` for focused work. |
 | `make test-client-lifecycle-gate` | Blocks unmanaged FastAPI/Starlette `TestClient` construction in integration and E2E tests. |
 | `make documentation-contract-gate` | README, repo context, docs, wiki, demo, and evidence-surface contract truth. |
-| `make implementation-truth-gate` | Blocks overclaims about support, certification, live source proof, Workbench, and client readiness. |
+| `make implementation-truth-gate`, `make implementation-proof-closure-manifest-gate` | Blocks overclaims and requires every RFC-0002 proof blocker to have issue ownership plus evidence-class closure truth. |
 | `make foundation-structure-gate` | Enforces foundation-only posture, documentation truth, and architecture-boundary agreement. |
 | `make dependency-vulnerability-posture-gate` | Enforces the RFC-0002 Slice 15 dependency/container vulnerability posture contract, including exact stable pins, scanner wiring, release hooks, and issue-backed exceptions. |
 | `make quality-scorecard-gate` | Keeps quality posture aligned with implementation truth. |
