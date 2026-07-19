@@ -89,11 +89,7 @@ REQUIRED_SURFACES = (
             "Context Maintenance Rule",
         ),
     ),
-    DocumentationSurface(
-        "docs/rfcs/README.md",
-        25,
-        ("RFC-0002 Slice Evidence Files", "RFC Rules"),
-    ),
+    DocumentationSurface("docs/rfcs/README.md", 25, ("RFC-0002 Slice Evidence Files", "RFC Rules")),
     DocumentationSurface(
         "docs/standards/enterprise-readiness.md",
         12,
@@ -200,16 +196,8 @@ REQUIRED_SURFACES = (
         5,
         ("repository", "branch", "commit SHA", "validation command"),
     ),
-    DocumentationSurface(
-        "wiki/Home.md",
-        15,
-        ("Start Here", "Boundary", "Validation and CI"),
-    ),
-    DocumentationSurface(
-        "wiki/Overview.md",
-        10,
-        ("Current posture", "opportunity intelligence"),
-    ),
+    DocumentationSurface("wiki/Home.md", 15, ("Start Here", "Boundary", "Validation and CI")),
+    DocumentationSurface("wiki/Overview.md", 10, ("Current posture", "opportunity intelligence")),
     DocumentationSurface(
         "wiki/Architecture.md",
         30,
@@ -235,21 +223,9 @@ REQUIRED_SURFACES = (
         10,
         ("stranded-truth reconciliation", "make documentation-contract-gate"),
     ),
-    DocumentationSurface(
-        "wiki/Supported-Features.md",
-        20,
-        ("Current posture", "Promotion rule"),
-    ),
-    DocumentationSurface(
-        "wiki/Security-and-Governance.md",
-        15,
-        ("Security", "Governance"),
-    ),
-    DocumentationSurface(
-        "wiki/RFC-Index.md",
-        15,
-        ("RFC-0002", "Slice"),
-    ),
+    DocumentationSurface("wiki/Supported-Features.md", 20, ("Current posture", "Promotion rule")),
+    DocumentationSurface("wiki/Security-and-Governance.md", 15, ("Security", "Governance")),
+    DocumentationSurface("wiki/RFC-Index.md", 15, ("RFC-0002", "Slice")),
     DocumentationSurface(
         "wiki/Demo-Readiness.md",
         40,
