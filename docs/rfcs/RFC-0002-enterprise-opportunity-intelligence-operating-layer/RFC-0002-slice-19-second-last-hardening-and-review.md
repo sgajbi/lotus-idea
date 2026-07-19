@@ -24,6 +24,53 @@ Perform the full engineering review before final closure.
 
 ## Current Implementation Evidence
 
+Issue `#668` applies the Slice 19 quality-baseline learning to the AI
+explanation repository evaluation boundary. After issue `#666`, the current
+report-only quality baseline listed
+`src/app/application/ai_governance.py::evaluate_ai_explanation_to_repository`
+at `117` lines, making it the largest production-code hotspot. The function
+coordinated candidate lookup, tenant entitlement, request construction,
+attestation infrastructure checks, Lotus AI run-attestation verification,
+provider-retention verification, attested output mapping, deterministic
+fallback/local-output handling, lineage persistence, and idempotency-conflict
+mapping in one application-layer body.
+
+`src/app/application/ai_governance.py` now keeps
+`evaluate_ai_explanation_to_repository(...)` as the stable public entry point,
+but delegates candidate resolution, entitlement validation, attested evaluation,
+fallback/local-output evaluation, provider-retention verification, and lineage
+persistence mapping to named helpers. The public function is now `28` lines and
+the attested subflow is bounded at `54` lines. Idempotency, persistence
+receipts, provider-retention receipts, fallback behavior, entitlement failure,
+not-found posture, and untrusted-output failure semantics are preserved.
+
+Focused validation passed:
+
+1. `.venv/Scripts/ruff.exe format src/app/application/ai_governance.py tests/unit/test_ai_governance.py tests/unit/test_attested_ai_explanation_application.py`,
+2. `.venv/Scripts/ruff.exe check src/app/application/ai_governance.py tests/unit/test_ai_governance.py tests/unit/test_attested_ai_explanation_application.py`,
+3. `.venv/Scripts/python.exe -m mypy src/app/application/ai_governance.py tests/unit/test_ai_governance.py`,
+4. `.venv/Scripts/python.exe -m pytest tests/unit/test_ai_governance.py tests/unit/test_attested_ai_explanation_application.py`
+   with `23` tests,
+5. `make maintainability-gate`,
+6. `make quality-baseline`.
+
+The same-pattern scan followed the Slice 19 maintainability sequence through
+#661, current `quality/baseline_report.md`, duplicate searches for
+`evaluate_ai_explanation_to_repository` and `ai_governance maintainability`, the
+issue closure matrix, refactor decisions, and issue-discovery ledger `#225`.
+Open issue `#340` owns live Lotus AI attestation/runtime certification, and
+closed issue `#268` owns AI explanation lineage idempotency; neither owns this
+application-layer maintainability root cause.
+
+This is internal application modularity only. It does not change API/OpenAPI
+contracts, persistence schema, migrations, authentication or authorization
+infrastructure, live `lotus-ai` runtime execution, provider certification,
+Gateway, Workbench, data-product support, external-publication authority,
+runtime topology, wiki source, README, supported features, or supported-feature
+promotion. Broader local gates, PR checks, exact-main Main Releasability/CodeQL,
+wiki parity/no-change evidence, issue closure, and branch cleanup remain pending
+for the tranche.
+
 Issue `#661` applies the Slice 19 quality-baseline learning to the
 drawdown-review signal evaluator. After issue `#659`, the current report-only
 quality baseline listed
