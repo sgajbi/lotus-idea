@@ -245,6 +245,24 @@ def test_closure_manifest_rejects_slice_status_and_effect_vocabulary_drift() -> 
     ) in errors
 
 
+def test_closure_manifest_rejects_noncanonical_slice_numbering_and_effect_case() -> None:
+    snapshot = _strict_default_snapshot()
+    contract = _load_contract()
+    group = contract["blockerGroups"][0]
+    group["sliceIds"] = ["RFC-0002/slice-1"]
+    group["supportedFeatureEffect"] = "PromotionRequiresMain"
+
+    errors = blocker_closure_manifest_errors(snapshot=snapshot, contract=contract)
+
+    assert (
+        "source-ingestion-runtime-configuration: slice id `RFC-0002/slice-1` must use "
+        "two-digit slice numbering"
+    ) in errors
+    assert (
+        "source-ingestion-runtime-configuration: `supportedFeatureEffect` must use lower_snake_case"
+    ) in errors
+
+
 def test_closure_manifest_rejects_unclassified_proof_artifact_registry(
     monkeypatch: Any,
 ) -> None:
