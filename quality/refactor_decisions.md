@@ -6,6 +6,46 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-07-19: Implementation Proof Consumption Scope Dispatcher Boundary
+
+Issue `#659` applies the Slice 19 report-only quality-baseline lens to the
+implementation-proof consumption dispatcher. After issue `#658`,
+`make quality-baseline` listed
+`src/app/application/implementation_proof_consumption.py::_apply_available_proofs`
+at `119` lines.
+
+The function mixed:
+
+1. a mirrored keyword-only signature for the whole proof-scope mapping,
+2. storage/runtime proof dispatch,
+3. AI proof dispatch,
+4. downstream proof dispatch,
+5. platform/surface/operator proof dispatch,
+6. opportunity-archetype proof dispatch.
+
+`src/app/application/implementation_proof_consumption.py` now keeps
+`apply_available_proofs_from_scope(capabilities, scope)` as the public entry
+point, but `_apply_available_proofs(...)` consumes the existing proof scope
+directly and delegates through typed extraction helpers plus family-specific
+scope adapters. Proof validation, registered effect matching, evidence refs,
+blocker clearing, and supported-feature non-promotion semantics are preserved.
+
+Focused validation passed:
+
+1. `python -m ruff check src/app/application/implementation_proof_consumption.py`,
+2. `python -m ruff format --check src/app/application/implementation_proof_consumption.py`,
+3. `python -m mypy src/app/application/implementation_proof_consumption.py`,
+4. `python -m pytest tests/unit/test_implementation_proof_readiness.py tests/unit/implementation_proof/test_effect_enforcement.py tests/integration/test_implementation_proof_readiness_api.py -q`
+   (`42` passed).
+
+This is application-layer maintainability only. It does not change readiness
+behavior, proof-artifact contract behavior, API/OpenAPI, persistence,
+migrations, authentication or authorization infrastructure, Core, Gateway,
+Workbench, runtime topology, wiki source, README, supported-features, data-mesh
+certification, external-publication authority, or supported-feature promotion.
+Broader local gates, PR checks, exact-main Main Releasability/CodeQL, wiki
+parity, issue closure, and branch cleanup remain pending for the tranche.
+
 ## 2026-07-19: CI Release Evidence Target Validator Boundary
 
 Issue `#658` applies the Slice 19 report-only quality-baseline lens to the

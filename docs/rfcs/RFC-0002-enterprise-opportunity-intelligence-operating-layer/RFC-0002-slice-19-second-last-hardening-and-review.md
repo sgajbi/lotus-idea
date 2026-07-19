@@ -24,6 +24,46 @@ Perform the full engineering review before final closure.
 
 ## Current Implementation Evidence
 
+Issue `#659` applies the Slice 19 quality-baseline learning to the
+implementation-proof consumption dispatcher. After issue `#658`, the current
+report-only quality baseline listed
+`src/app/application/implementation_proof_consumption.py::_apply_available_proofs`
+at `119` lines. The function was mostly a mirrored keyword-only signature for
+the proof-scope mapping before delegating to storage/runtime, AI, downstream,
+platform/surface/operator, and opportunity-archetype proof-family helpers.
+
+`src/app/application/implementation_proof_consumption.py` now keeps
+`apply_available_proofs_from_scope(capabilities, scope)` as the stable public
+entry point, but `_apply_available_proofs(...)` consumes the existing proof
+scope directly and delegates through typed extraction helpers plus
+family-specific scope adapters. Proof validation, registered artifact-effect
+matching, evidence refs, blocker clearing, and supported-feature non-promotion
+semantics are preserved.
+
+Focused validation passed:
+
+1. `python -m ruff check src/app/application/implementation_proof_consumption.py`,
+2. `python -m ruff format --check src/app/application/implementation_proof_consumption.py`,
+3. `python -m mypy src/app/application/implementation_proof_consumption.py`,
+4. `python -m pytest tests/unit/test_implementation_proof_readiness.py tests/unit/implementation_proof/test_effect_enforcement.py tests/integration/test_implementation_proof_readiness_api.py -q`
+   with `42` tests.
+
+The same-pattern scan followed the Slice 19 maintainability sequence through
+#658, current `quality/baseline_report.md`, duplicate searches for
+`_apply_available_proofs`, `implementation proof consumption maintainability`,
+and `implementation_proof_consumption.py maintainability`, the codebase review
+ledger, the issue closure matrix, refactor decisions, and issue-discovery
+ledger `#225`. Closed #292 added a proof input and does not own this dispatcher
+signature decomposition.
+
+This is application-layer modularity only. It does not change readiness
+behavior, proof-artifact contract behavior, API/OpenAPI, persistence,
+migrations, authentication or authorization infrastructure, Core, Gateway,
+Workbench, data-product support, external-publication authority, runtime
+topology, wiki source, README, supported features, or supported-feature
+promotion. Broader local gates, PR checks, exact-main Main Releasability/CodeQL,
+wiki parity, issue closure, and branch cleanup remain pending for the tranche.
+
 Issue `#658` applies the Slice 19 quality-baseline learning to the CI release
 evidence target validator. After issue `#656`, the current report-only quality
 baseline listed

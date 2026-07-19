@@ -75,7 +75,6 @@ from app.application.runtime_trust_telemetry.test_execution_contract import (
 from app.application.source_ingestion_runtime_evidence import (
     source_ingestion_runtime_execution_can_clear_aggregate_blockers,
 )
-from app.application.source_ingestion_readiness import SourceIngestionReadinessSnapshot
 from app.application.workbench.read_path_source_contract import (
     workbench_read_path_source_contract_proof_is_valid,
 )
@@ -86,133 +85,137 @@ def apply_available_proofs_from_scope(
     capabilities: tuple[ImplementationProofCapabilityReadiness, ...],
     scope: Mapping[str, object],
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
-    proof_args: dict[str, Any] = {
-        name: scope[name]
-        for name in _apply_available_proofs.__annotations__
-        if name not in {"capabilities", "return"}
-    }
-    return _apply_available_proofs(capabilities=capabilities, **proof_args)
+    return _apply_available_proofs(capabilities=capabilities, scope=scope)
 
 
 def _apply_available_proofs(
     *,
     capabilities: tuple[ImplementationProofCapabilityReadiness, ...],
-    evaluated_at_utc: datetime,
-    durable_repository_proof: Mapping[str, object] | None,
-    durable_repository_proof_ref: str | None,
-    runtime_trust_telemetry_test_execution: Mapping[str, object] | None,
-    runtime_trust_telemetry_test_execution_ref: str | None,
-    ai_lineage_store_proof: Mapping[str, object] | None,
-    ai_lineage_store_proof_ref: str | None,
-    ai_model_risk_operations_proof: Mapping[str, object] | None,
-    ai_model_risk_operations_proof_ref: str | None,
-    operator_workflows_operations_proof: Mapping[str, object] | None,
-    operator_workflows_operations_proof_ref: str | None,
-    ai_workflow_pack_registration_proof: Mapping[str, object] | None,
-    ai_workflow_pack_registration_proof_ref: str | None,
-    ai_workflow_pack_runtime_execution_proof: Mapping[str, object] | None,
-    ai_workflow_pack_runtime_execution_proof_ref: str | None,
-    advise_proposal_route_proof: Mapping[str, object] | None,
-    advise_proposal_route_proof_ref: str | None,
-    manage_action_route_proof: Mapping[str, object] | None,
-    manage_action_route_proof_ref: str | None,
-    report_intake_route_source_contract_proof: Mapping[str, object] | None,
-    report_intake_route_source_contract_proof_ref: str | None,
-    report_materialization_source_contract_proof: Mapping[str, object] | None,
-    report_materialization_source_contract_proof_ref: str | None,
-    mesh_policy_source_contract_proof: Mapping[str, object] | None,
-    mesh_policy_source_contract_proof_ref: str | None,
-    outbox_broker_source_contract_proof: Mapping[str, object] | None,
-    outbox_broker_source_contract_proof_ref: str | None,
-    outbox_consumer_contract_proof: Mapping[str, object] | None,
-    outbox_consumer_contract_proof_ref: str | None,
-    outbox_platform_mesh_event_source_contract_proof: Mapping[str, object] | None,
-    outbox_platform_mesh_event_source_contract_proof_ref: str | None,
-    platform_catalog_source_contract_proof: Mapping[str, object] | None,
-    platform_catalog_source_contract_proof_ref: str | None,
-    workbench_read_path_source_contract_proof: Mapping[str, object] | None,
-    workbench_read_path_source_contract_proof_ref: str | None,
-    gateway_workbench_contract_proof: Mapping[str, object] | None,
-    gateway_workbench_contract_proof_ref: str | None,
-    gateway_workbench_discovery_contract_proof: Mapping[str, object] | None,
-    gateway_workbench_discovery_contract_proof_ref: str | None,
-    source_ingestion_runtime_execution_current: bool,
-    source_ingestion_runtime_execution_ref: str | None,
-    source_ingestion: SourceIngestionReadinessSnapshot,
-    risk_concentration_live_proof: Mapping[str, object] | None,
-    risk_concentration_live_proof_ref: str | None,
-    high_volatility_live_proof: Mapping[str, object] | None,
-    high_volatility_live_proof_ref: str | None,
-    risk_drawdown_live_proof: Mapping[str, object] | None,
-    risk_drawdown_live_proof_ref: str | None,
-    performance_underperformance_live_proof: Mapping[str, object] | None,
-    performance_underperformance_live_proof_ref: str | None,
-    core_benchmark_assignment_live_proof: Mapping[str, object] | None,
-    core_benchmark_assignment_live_proof_ref: str | None,
-    core_portfolio_state_live_proof: Mapping[str, object] | None,
-    core_portfolio_state_live_proof_ref: str | None,
-    bond_maturity_live_proof: Mapping[str, object] | None,
-    bond_maturity_live_proof_ref: str | None,
-    low_income_core_cashflow_live_proof: Mapping[str, object] | None,
-    low_income_core_cashflow_live_proof_ref: str | None,
-    manage_mandate_live_proof: Mapping[str, object] | None,
-    manage_mandate_live_proof_ref: str | None,
-    mandate_restriction_live_proof: Mapping[str, object] | None,
-    mandate_restriction_live_proof_ref: str | None,
-    mandate_restriction_source_product_proof: Mapping[str, object] | None,
-    mandate_restriction_source_product_proof_ref: str | None,
-    missing_suitability_live_proof: Mapping[str, object] | None,
-    missing_suitability_live_proof_ref: str | None,
-    missing_risk_profile_source_product_proof: Mapping[str, object] | None,
-    missing_risk_profile_source_product_proof_ref: str | None,
-    missing_risk_profile_live_proof: Mapping[str, object] | None,
-    missing_risk_profile_live_proof_ref: str | None,
-    missing_benchmark_live_proof: Mapping[str, object] | None,
-    missing_benchmark_live_proof_ref: str | None,
-    missing_benchmark_performance_readiness_proof: Mapping[str, object] | None,
-    missing_benchmark_performance_readiness_proof_ref: str | None,
+    scope: Mapping[str, object],
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
-    capabilities = _apply_storage_and_runtime_proofs(
-        capabilities=capabilities,
-        evaluated_at_utc=evaluated_at_utc,
-        durable_repository_proof=durable_repository_proof,
-        durable_repository_proof_ref=durable_repository_proof_ref,
-        runtime_trust_telemetry_test_execution=runtime_trust_telemetry_test_execution,
-        runtime_trust_telemetry_test_execution_ref=runtime_trust_telemetry_test_execution_ref,
+    capabilities = _apply_storage_and_runtime_proofs_from_scope(
+        capabilities=capabilities, scope=scope
     )
-    capabilities = _apply_ai_proofs(
-        capabilities=capabilities,
-        evaluated_at_utc=evaluated_at_utc,
-        ai_lineage_store_proof=ai_lineage_store_proof,
-        ai_lineage_store_proof_ref=ai_lineage_store_proof_ref,
-        ai_model_risk_operations_proof=ai_model_risk_operations_proof,
-        ai_model_risk_operations_proof_ref=ai_model_risk_operations_proof_ref,
-        ai_workflow_pack_registration_proof=ai_workflow_pack_registration_proof,
-        ai_workflow_pack_registration_proof_ref=ai_workflow_pack_registration_proof_ref,
-        ai_workflow_pack_runtime_execution_proof=ai_workflow_pack_runtime_execution_proof,
-        ai_workflow_pack_runtime_execution_proof_ref=ai_workflow_pack_runtime_execution_proof_ref,
-    )
-    capabilities = _apply_downstream_proofs(
-        capabilities=capabilities,
-        evaluated_at_utc=evaluated_at_utc,
-        advise_proposal_route_proof=advise_proposal_route_proof,
-        advise_proposal_route_proof_ref=advise_proposal_route_proof_ref,
-        manage_action_route_proof=manage_action_route_proof,
-        manage_action_route_proof_ref=manage_action_route_proof_ref,
-        report_intake_route_source_contract_proof=report_intake_route_source_contract_proof,
-        report_intake_route_source_contract_proof_ref=(
-            report_intake_route_source_contract_proof_ref
-        ),
-        report_materialization_source_contract_proof=report_materialization_source_contract_proof,
-        report_materialization_source_contract_proof_ref=(
-            report_materialization_source_contract_proof_ref
-        ),
-    )
+    capabilities = _apply_ai_proofs_from_scope(capabilities=capabilities, scope=scope)
+    capabilities = _apply_downstream_proofs_from_scope(capabilities=capabilities, scope=scope)
     capabilities = _apply_platform_surface_and_operator_proofs(
         capabilities=capabilities,
-        scope=locals(),
+        scope=scope,
     )
-    return _apply_opportunity_archetype_proofs(capabilities=capabilities, scope=locals())
+    return _apply_opportunity_archetype_proofs(capabilities=capabilities, scope=scope)
+
+
+def _evaluated_at_utc_from_scope(scope: Mapping[str, object]) -> datetime:
+    return cast(datetime, scope["evaluated_at_utc"])
+
+
+def _proof_payload_from_scope(
+    scope: Mapping[str, object],
+    name: str,
+) -> Mapping[str, object] | None:
+    return cast(Mapping[str, object] | None, scope[name])
+
+
+def _proof_ref_from_scope(scope: Mapping[str, object], name: str) -> str | None:
+    return cast(str | None, scope[name])
+
+
+def _apply_storage_and_runtime_proofs_from_scope(
+    *,
+    capabilities: tuple[ImplementationProofCapabilityReadiness, ...],
+    scope: Mapping[str, object],
+) -> tuple[ImplementationProofCapabilityReadiness, ...]:
+    return _apply_storage_and_runtime_proofs(
+        capabilities=capabilities,
+        evaluated_at_utc=_evaluated_at_utc_from_scope(scope),
+        durable_repository_proof=_proof_payload_from_scope(scope, "durable_repository_proof"),
+        durable_repository_proof_ref=_proof_ref_from_scope(scope, "durable_repository_proof_ref"),
+        runtime_trust_telemetry_test_execution=_proof_payload_from_scope(
+            scope,
+            "runtime_trust_telemetry_test_execution",
+        ),
+        runtime_trust_telemetry_test_execution_ref=_proof_ref_from_scope(
+            scope,
+            "runtime_trust_telemetry_test_execution_ref",
+        ),
+    )
+
+
+def _apply_ai_proofs_from_scope(
+    *,
+    capabilities: tuple[ImplementationProofCapabilityReadiness, ...],
+    scope: Mapping[str, object],
+) -> tuple[ImplementationProofCapabilityReadiness, ...]:
+    return _apply_ai_proofs(
+        capabilities=capabilities,
+        evaluated_at_utc=_evaluated_at_utc_from_scope(scope),
+        ai_lineage_store_proof=_proof_payload_from_scope(scope, "ai_lineage_store_proof"),
+        ai_lineage_store_proof_ref=_proof_ref_from_scope(scope, "ai_lineage_store_proof_ref"),
+        ai_model_risk_operations_proof=_proof_payload_from_scope(
+            scope,
+            "ai_model_risk_operations_proof",
+        ),
+        ai_model_risk_operations_proof_ref=_proof_ref_from_scope(
+            scope,
+            "ai_model_risk_operations_proof_ref",
+        ),
+        ai_workflow_pack_registration_proof=_proof_payload_from_scope(
+            scope,
+            "ai_workflow_pack_registration_proof",
+        ),
+        ai_workflow_pack_registration_proof_ref=_proof_ref_from_scope(
+            scope,
+            "ai_workflow_pack_registration_proof_ref",
+        ),
+        ai_workflow_pack_runtime_execution_proof=_proof_payload_from_scope(
+            scope,
+            "ai_workflow_pack_runtime_execution_proof",
+        ),
+        ai_workflow_pack_runtime_execution_proof_ref=_proof_ref_from_scope(
+            scope,
+            "ai_workflow_pack_runtime_execution_proof_ref",
+        ),
+    )
+
+
+def _apply_downstream_proofs_from_scope(
+    *,
+    capabilities: tuple[ImplementationProofCapabilityReadiness, ...],
+    scope: Mapping[str, object],
+) -> tuple[ImplementationProofCapabilityReadiness, ...]:
+    return _apply_downstream_proofs(
+        capabilities=capabilities,
+        evaluated_at_utc=_evaluated_at_utc_from_scope(scope),
+        advise_proposal_route_proof=_proof_payload_from_scope(
+            scope,
+            "advise_proposal_route_proof",
+        ),
+        advise_proposal_route_proof_ref=_proof_ref_from_scope(
+            scope,
+            "advise_proposal_route_proof_ref",
+        ),
+        manage_action_route_proof=_proof_payload_from_scope(scope, "manage_action_route_proof"),
+        manage_action_route_proof_ref=_proof_ref_from_scope(
+            scope,
+            "manage_action_route_proof_ref",
+        ),
+        report_intake_route_source_contract_proof=_proof_payload_from_scope(
+            scope,
+            "report_intake_route_source_contract_proof",
+        ),
+        report_intake_route_source_contract_proof_ref=_proof_ref_from_scope(
+            scope,
+            "report_intake_route_source_contract_proof_ref",
+        ),
+        report_materialization_source_contract_proof=_proof_payload_from_scope(
+            scope,
+            "report_materialization_source_contract_proof",
+        ),
+        report_materialization_source_contract_proof_ref=_proof_ref_from_scope(
+            scope,
+            "report_materialization_source_contract_proof_ref",
+        ),
+    )
 
 
 def _apply_opportunity_archetype_proofs(

@@ -299,72 +299,49 @@ def test_github_issue_closure_matrix_gate_requires_proof_readiness_capability_is
     assert "Missing actionable issue rows: #653" in errors
 
 
-def test_github_issue_closure_matrix_gate_requires_data_lifecycle_fake_cursor_issue(
-    tmp_path: Path,
-) -> None:
+def _assert_matrix_requires_issue(tmp_path: Path, issue_number: int) -> None:
     module = _load_gate()
     matrix = tmp_path / "matrix.md"
     content = "\n".join(
         line
         for line in module.MATRIX_PATH.read_text(encoding="utf-8").splitlines()
-        if "[#654]" not in line
+        if f"[#{issue_number}]" not in line
     )
     matrix.write_text(content, encoding="utf-8")
 
     errors = module.validate_issue_closure_matrix(matrix)
 
-    assert "Missing actionable issue rows: #654" in errors
+    assert f"Missing actionable issue rows: #{issue_number}" in errors
+
+
+def test_github_issue_closure_matrix_gate_requires_data_lifecycle_fake_cursor_issue(
+    tmp_path: Path,
+) -> None:
+    _assert_matrix_requires_issue(tmp_path, 654)
 
 
 def test_github_issue_closure_matrix_gate_requires_outbox_recovery_workflow_issue(
     tmp_path: Path,
 ) -> None:
-    module = _load_gate()
-    matrix = tmp_path / "matrix.md"
-    content = "\n".join(
-        line
-        for line in module.MATRIX_PATH.read_text(encoding="utf-8").splitlines()
-        if "[#655]" not in line
-    )
-    matrix.write_text(content, encoding="utf-8")
-
-    errors = module.validate_issue_closure_matrix(matrix)
-
-    assert "Missing actionable issue rows: #655" in errors
+    _assert_matrix_requires_issue(tmp_path, 655)
 
 
 def test_github_issue_closure_matrix_gate_requires_readiness_api_artifact_setup_issue(
     tmp_path: Path,
 ) -> None:
-    module = _load_gate()
-    matrix = tmp_path / "matrix.md"
-    content = "\n".join(
-        line
-        for line in module.MATRIX_PATH.read_text(encoding="utf-8").splitlines()
-        if "[#656]" not in line
-    )
-    matrix.write_text(content, encoding="utf-8")
-
-    errors = module.validate_issue_closure_matrix(matrix)
-
-    assert "Missing actionable issue rows: #656" in errors
+    _assert_matrix_requires_issue(tmp_path, 656)
 
 
 def test_github_issue_closure_matrix_gate_requires_ci_release_evidence_validator_issue(
     tmp_path: Path,
 ) -> None:
-    module = _load_gate()
-    matrix = tmp_path / "matrix.md"
-    content = "\n".join(
-        line
-        for line in module.MATRIX_PATH.read_text(encoding="utf-8").splitlines()
-        if "[#658]" not in line
-    )
-    matrix.write_text(content, encoding="utf-8")
+    _assert_matrix_requires_issue(tmp_path, 658)
 
-    errors = module.validate_issue_closure_matrix(matrix)
 
-    assert "Missing actionable issue rows: #658" in errors
+def test_github_issue_closure_matrix_gate_requires_implementation_proof_scope_dispatcher_issue(
+    tmp_path: Path,
+) -> None:
+    _assert_matrix_requires_issue(tmp_path, 659)
 
 
 def test_github_issue_closure_matrix_gate_requires_postgres_snapshot_writes_issue(
