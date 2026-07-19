@@ -116,11 +116,14 @@ The `unknown` value used by portfolio-only scope checks is an unconstrained
 scope dimension for non-Core caller-supplied paths, not a tenant value that may
 be used for a Core-backed candidate or sent to Core.
 
-The domain layer also rejects source evidence whose business date differs from
-the requested `asOfDate`, or whose `generatedAtUtc` is later than
-`evaluatedAtUtc`. The proof runner therefore cannot turn temporally
-misaligned source data into a candidate; such cases remain a bounded blocked
-outcome with source-temporal reason codes.
+The domain layer rejects source evidence whose business date differs from the
+requested `asOfDate`. For pre-existing source facts, `generatedAtUtc` must not
+be later than request `evaluatedAtUtc`. Synchronous Core receipt endpoints may
+generate their response receipt during that request; their closed runtime proof
+therefore bounds source `generatedAtUtc` by the artifact's post-fetch
+`generatedAtUtc`, while still requiring request evaluation to precede artifact
+finalization. Evidence later than that observation boundary remains blocked.
+The proof runner cannot turn temporally misaligned source data into a candidate.
 
 ## Current Boundary
 
