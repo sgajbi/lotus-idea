@@ -1036,7 +1036,11 @@ tracked by issue `#700`. `make implementation-proof-closure-manifest-gate` is
 part of `make lint` and `make ci-contract-gate`; it builds the strict default
 implementation-proof readiness snapshot and fails closed when any blocker lacks
 a Lotus GitHub owner issue, required evidence class, slice association, sibling
-dependency issue where applicable, or source-safe supported-feature effect. The
+dependency issue where applicable, dependency-role explanation, or source-safe
+supported-feature effect. It also rejects unstable group IDs, non-RFC-0002
+slice IDs, non-snake blocker vocabulary, unknown closure statuses, and
+unsupported effect wording so the manifest cannot become a loose issue-link
+dump. The
 manifest is source-contract governance only. It does not clear runtime,
 deployment, production, data-mesh, Gateway/Workbench, client-publication, or
 supported-feature blockers.

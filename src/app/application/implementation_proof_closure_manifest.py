@@ -20,6 +20,21 @@ BLOCKER_CLOSURE_CONTRACT_PATH = Path(
 SCHEMA_VERSION = "lotus-idea.rfc0002.blocker-closure-manifest.v1"
 RFC_ID = "RFC-0002"
 REPOSITORY = "lotus-idea"
+ALLOWED_CLOSURE_STATUSES = frozenset(
+    {
+        "open",
+        "external_dependency_open",
+        "blocked_pending_mainline_closure",
+        "closed_pending_main_validation",
+    }
+)
+SUPPORTED_FEATURE_EFFECT_RE = (
+    "adds_provenance_only_until_",
+    "lineage_store_ci_proof_clears_only_",
+    "no_promotion_until_",
+    "promotion_requires_",
+    "source_contract_can_clear_only_",
+)
 
 
 def blocker_closure_manifest_errors(
@@ -142,11 +157,21 @@ def _blocker_group_index(
 
 def _validate_blocker_group(group: Mapping[str, Any], errors: list[str]) -> None:
     group_id = _required_string(group, "groupId", errors)
+    _validate_stable_identifier(group_id, "groupId", errors)
     _required_string_list(group, "blockers", errors, group_id)
-    _required_string_list(group, "sliceIds", errors, group_id)
+    _validate_blocker_values(_required_string_list(group, "blockers", errors, group_id), errors)
+    _validate_slice_ids(
+        _required_string_list(group, "sliceIds", errors, group_id), group_id, errors
+    )
     _validate_evidence_class(group, group_id, errors)
-    _required_string(group, "closureStatus", errors, group_id)
-    _required_string(group, "supportedFeatureEffect", errors, group_id)
+    _validate_closure_status(
+        _required_string(group, "closureStatus", errors, group_id), group_id, errors
+    )
+    _validate_supported_feature_effect(
+        _required_string(group, "supportedFeatureEffect", errors, group_id),
+        group_id,
+        errors,
+    )
     _validate_issue_ref(group.get("ownerIssue"), errors, group_id, required=True)
     dependency_issues = group.get("dependencyIssues", [])
     if not isinstance(dependency_issues, list):
@@ -189,6 +214,13 @@ def _validate_issue_ref(
     expected_url = f"https://github.com/{repository}/issues/{number}"
     if url != expected_url:
         errors.append(f"{group_id}: issue URL must be `{expected_url}`")
+    if not required:
+        role = issue.get("dependencyRole")
+        if not isinstance(role, str) or len(role.strip()) < 20:
+            errors.append(
+                f"{group_id}: dependency issue `{expected_url}` must declare a "
+                "meaningful dependencyRole"
+            )
 
 
 def _required_string(
@@ -221,6 +253,46 @@ def _string_list(value: object) -> tuple[str, ...]:
     if not isinstance(value, list):
         return ()
     return tuple(item for item in value if isinstance(item, str) and item)
+
+
+def _validate_stable_identifier(value: str, key: str, errors: list[str]) -> None:
+    if value == "<invalid>":
+        return
+    if not value.replace("-", "").isalnum() or value != value.lower():
+        errors.append(f"{value}: `{key}` must use lower-kebab-case")
+
+
+def _validate_blocker_values(blockers: Sequence[str], errors: list[str]) -> None:
+    for blocker in blockers:
+        if not blocker.replace("_", "").isalnum() or blocker != blocker.lower():
+            errors.append(f"RFC-0002 blocker `{blocker}` must use lower_snake_case")
+
+
+def _validate_slice_ids(slice_ids: Sequence[str], group_id: str, errors: list[str]) -> None:
+    for slice_id in slice_ids:
+        if not slice_id.startswith("RFC-0002/slice-"):
+            errors.append(f"{group_id}: slice id `{slice_id}` must use RFC-0002/slice-NN")
+            continue
+        suffix = slice_id.rsplit("-", maxsplit=1)[-1]
+        if len(suffix) != 2 or not suffix.isdigit():
+            errors.append(f"{group_id}: slice id `{slice_id}` must use two-digit slice numbering")
+
+
+def _validate_closure_status(status: str, group_id: str, errors: list[str]) -> None:
+    if status == "<invalid>":
+        return
+    if status not in ALLOWED_CLOSURE_STATUSES:
+        allowed = ", ".join(sorted(ALLOWED_CLOSURE_STATUSES))
+        errors.append(f"{group_id}: `closureStatus` must be one of {allowed}")
+
+
+def _validate_supported_feature_effect(effect: str, group_id: str, errors: list[str]) -> None:
+    if effect == "<invalid>":
+        return
+    if effect != effect.lower() or not effect.replace("_", "").isalnum():
+        errors.append(f"{group_id}: `supportedFeatureEffect` must use lower_snake_case")
+    if not effect.startswith(SUPPORTED_FEATURE_EFFECT_RE):
+        errors.append(f"{group_id}: `supportedFeatureEffect` must describe a governed effect")
 
 
 def _validate_proof_artifact_registry(errors: list[str]) -> None:
