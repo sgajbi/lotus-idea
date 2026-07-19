@@ -24,6 +24,46 @@ Perform the full engineering review before final closure.
 
 ## Current Implementation Evidence
 
+Issue `#658` applies the Slice 19 quality-baseline learning to the CI release
+evidence target validator. After issue `#656`, the current report-only quality
+baseline listed
+`scripts/ci_release_evidence_contract.py::validate_release_evidence_targets` at
+`119` lines. The validator proved important release governance but mixed
+release image defaults, docker-build provenance, runtime smoke wiring, release
+identity wiring, SBOM checks, and container-image scan policy in one function.
+
+`scripts/ci_release_evidence_contract.py` now keeps
+`validate_release_evidence_targets(makefile)` as the stable public entry point,
+but it delegates to named helpers for release image defaults, docker-build
+target provenance, existing container-smoke/release-identity checks, release
+SBOM target checks, and container-image scan policy. Returned error strings and
+ordering are preserved.
+
+Focused validation passed:
+
+1. `python -m ruff check scripts/ci_release_evidence_contract.py`,
+2. `python -m ruff format --check scripts/ci_release_evidence_contract.py`,
+3. `python -m mypy scripts/ci_release_evidence_contract.py`,
+4. `python -m pytest tests/unit/test_ci_release_evidence_contract.py tests/unit/test_ci_enforcement_contract.py -q`
+   with `82` tests.
+
+The same-pattern scan followed the Slice 19 maintainability sequence through
+#656, current `quality/baseline_report.md`, duplicate searches for
+`validate_release_evidence_targets`, `ci release evidence contract maintainability`,
+and `ci_release_evidence_contract.py maintainability`, the codebase review
+ledger, the issue closure matrix, refactor decisions, and issue-discovery
+ledger `#225`. Broad results #345 and #340 are runtime SLO/AI-attestation
+issues, not this release-evidence validator decomposition.
+
+This is CI/release-evidence modularity only. It does not change Makefile
+behavior, CI workflow behavior, Dockerfile behavior, release evidence semantics,
+image publication policy, API/OpenAPI, persistence, migrations, authentication
+or authorization infrastructure, Core, Gateway, Workbench, data-product support,
+external-publication authority, runtime topology, wiki source, README, supported
+features, or supported-feature promotion. Broader local gates, PR checks,
+exact-main Main Releasability/CodeQL, wiki parity, issue closure, and branch
+cleanup remain pending for the tranche.
+
 Issue `#656` applies the Slice 19 quality-baseline learning to the
 implementation-proof readiness API configured-artifact setup. After issue
 `#655`, the current report-only quality baseline listed

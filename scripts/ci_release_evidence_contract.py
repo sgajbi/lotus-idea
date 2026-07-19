@@ -111,6 +111,17 @@ def _validate_release_identity_target(makefile: str) -> list[str]:
 
 def validate_release_evidence_targets(makefile: str) -> list[str]:
     errors: list[str] = []
+    errors.extend(_validate_release_image_defaults(makefile))
+    errors.extend(_validate_docker_build_target(makefile))
+    errors.extend(_validate_container_runtime_smoke_target(makefile))
+    errors.extend(_validate_release_identity_target(makefile))
+    errors.extend(_validate_release_sbom_target(makefile))
+    errors.extend(_validate_container_image_scan_target(makefile))
+    return errors
+
+
+def _validate_release_image_defaults(makefile: str) -> list[str]:
+    errors: list[str] = []
     if "CONTAINER_BASE_IMAGE ?= python:3.12-slim" not in makefile:
         errors.append("Makefile must govern `CONTAINER_BASE_IMAGE` as `python:3.12-slim`")
     governed_image_tag = (
@@ -122,7 +133,11 @@ def validate_release_evidence_targets(makefile: str) -> list[str]:
         errors.append("Makefile must tag the governed service image with the Git commit SHA")
     if "docker push" in makefile:
         errors.append("Makefile must not push images; registry publication is CI-only")
+    return errors
 
+
+def _validate_docker_build_target(makefile: str) -> list[str]:
+    errors: list[str] = []
     docker_build = _target_block(makefile, "docker-build")
     if "--build-arg PYTHON_BASE_IMAGE=$(CONTAINER_BASE_IMAGE)" not in docker_build:
         errors.append("Makefile docker-build target must pass governed Docker base image")
@@ -151,11 +166,11 @@ def validate_release_evidence_targets(makefile: str) -> list[str]:
     }.items():
         if fragment not in docker_build:
             errors.append(error)
+    return errors
 
-    errors.extend(_validate_container_runtime_smoke_target(makefile))
 
-    errors.extend(_validate_release_identity_target(makefile))
-
+def _validate_release_sbom_target(makefile: str) -> list[str]:
+    errors: list[str] = []
     release_sbom = _target_block(makefile, "release-sbom")
     if "-m cyclonedx_py requirements" not in release_sbom:
         errors.append(
@@ -183,7 +198,11 @@ def validate_release_evidence_targets(makefile: str) -> list[str]:
         errors.append(
             "Makefile release-sbom target must finalize CycloneDX JSON for GitHub SBOM attestation"
         )
+    return errors
 
+
+def _validate_container_image_scan_target(makefile: str) -> list[str]:
+    errors: list[str] = []
     container_scan = _target_block(makefile, "container-image-scan")
     if "$(VENV_PYTHON)" in container_scan:
         errors.append(
