@@ -622,8 +622,11 @@ def _merge_blocker_issue_refs(
     downstream_contracts: tuple[DownstreamRealizationContractReadiness, ...],
 ) -> Mapping[str, tuple[str, ...]]:
     merged: dict[str, tuple[str, ...]] = {}
-    for readiness in (*capabilities, *downstream_contracts):
-        for blocker, issue_refs in readiness.blocker_issue_refs.items():
+    for capability in capabilities:
+        for blocker, issue_refs in capability.blocker_issue_refs.items():
+            merged[blocker] = tuple(dict.fromkeys((*merged.get(blocker, ()), *issue_refs)))
+    for downstream_contract in downstream_contracts:
+        for blocker, issue_refs in downstream_contract.blocker_issue_refs.items():
             merged[blocker] = tuple(dict.fromkeys((*merged.get(blocker, ()), *issue_refs)))
     return merged
 
