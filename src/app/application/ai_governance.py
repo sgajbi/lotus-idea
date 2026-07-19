@@ -20,12 +20,15 @@ from app.domain import (
     AIExplanationCommand,
     AIExplanationLineagePersistenceDecision,
     AIExplanationLineagePersistenceResult,
+    AIExplanationRequest,
     AIExplanationResult,
     AIWorkflowOutput,
+    CandidatePersistenceRecord,
     build_ai_explanation_request,
     deterministic_ai_fallback,
     evaluate_ai_workflow_output,
 )
+from app.domain.access_scope import ReviewAccessScope
 from app.ports.idea_repository import AIExplanationRepository
 from app.ports.lotus_ai_attestation import LotusAIAttestationKeySource
 from app.domain.lotus_ai_execution_digest import (
@@ -36,6 +39,7 @@ from app.domain.lotus_ai_execution_digest import (
 from app.domain.lotus_ai_run_attestation import (
     ExpectedLotusAIRunAttestation,
     LotusAIRunAttestationEnvelope,
+    VerifiedLotusAIRunAttestationReceipt,
 )
 from app.application.lotus_ai_idea_explanation_output import (
     map_lotus_ai_idea_workflow_output,
@@ -51,6 +55,7 @@ from app.domain.ai_execution_provenance import AIExecutionProvenancePosture
 from app.domain.ai_provider_retention import (
     AIProviderRetentionEnvelope,
     ExpectedAIProviderRetention,
+    VerifiedAIProviderRetentionReceipt,
 )
 from app.application.ai_provider_retention_verification import (
     verify_ai_provider_retention_confirmation,
@@ -162,6 +167,13 @@ class AIExplanationWorkflowResult:
     lineage_persistence_result: AIExplanationLineagePersistenceResult | None = None
 
 
+@dataclass(frozen=True)
+class _AIExplanationEvaluation:
+    explanation_result: AIExplanationResult
+    attestation_receipt: VerifiedLotusAIRunAttestationReceipt | None = None
+    provider_retention_receipt: VerifiedAIProviderRetentionReceipt | None = None
+
+
 def build_ai_explanation_readiness_snapshot(
     *,
     durable_ai_lineage_store_backed: bool = False,
@@ -214,99 +226,238 @@ def evaluate_ai_explanation_to_repository(
     signature_verifier: LotusAIAttestationSignatureVerifier | None = None,
     verification_clock: Callable[[], datetime] | None = None,
 ) -> AIExplanationWorkflowResult:
-    record = candidate_record_by_id(repository, command.candidate_id)
+    record = _lookup_ai_explanation_candidate(command, repository)
     if record is None:
-        return AIExplanationWorkflowResult(
-            decision=AIExplanationEvaluationDecision.NOT_FOUND,
-            explanation_result=None,
-        )
-    candidate_scope = record.candidate.access_scope
-    if candidate_scope is not None and candidate_scope.tenant_id not in command.caller_tenant_ids:
-        raise AIExplanationEntitlementDenied(
-            "caller tenant entitlement does not include the idea candidate"
-        )
+        return _ai_explanation_not_found()
+    _validate_ai_explanation_entitlement(record, command)
 
     explanation_request = build_ai_explanation_request(record.candidate, command.explanation)
-    attestation_receipt = None
-    provider_retention_receipt = None
+    evaluation = _evaluate_ai_explanation(
+        command,
+        explanation_request=explanation_request,
+        candidate_scope=record.candidate.access_scope,
+        attestation_key_source=attestation_key_source,
+        signature_verifier=signature_verifier,
+        verification_clock=verification_clock,
+    )
+
+    return _persist_ai_explanation_evaluation(
+        command,
+        repository=repository,
+        evaluation=evaluation,
+    )
+
+
+def _lookup_ai_explanation_candidate(
+    command: EvaluateAIExplanationToRepositoryCommand,
+    repository: AIExplanationRepository,
+) -> CandidatePersistenceRecord | None:
+    return candidate_record_by_id(repository, command.candidate_id)
+
+
+def _ai_explanation_not_found() -> AIExplanationWorkflowResult:
+    return AIExplanationWorkflowResult(
+        decision=AIExplanationEvaluationDecision.NOT_FOUND,
+        explanation_result=None,
+    )
+
+
+def _validate_ai_explanation_entitlement(
+    record: CandidatePersistenceRecord,
+    command: EvaluateAIExplanationToRepositoryCommand,
+) -> None:
+    candidate_scope = record.candidate.access_scope
+    if candidate_scope is None or candidate_scope.tenant_id in command.caller_tenant_ids:
+        return
+    raise AIExplanationEntitlementDenied(
+        "caller tenant entitlement does not include the idea candidate"
+    )
+
+
+def _evaluate_ai_explanation(
+    command: EvaluateAIExplanationToRepositoryCommand,
+    *,
+    explanation_request: AIExplanationRequest,
+    candidate_scope: ReviewAccessScope | None,
+    attestation_key_source: LotusAIAttestationKeySource | None,
+    signature_verifier: LotusAIAttestationSignatureVerifier | None,
+    verification_clock: Callable[[], datetime] | None,
+) -> _AIExplanationEvaluation:
     if command.run_attestation is not None:
-        if attestation_key_source is None or signature_verifier is None:
-            raise UntrustedAIWorkflowOutput(
-                "lotus-ai attestation trust infrastructure is unavailable",
-                reason=AIWorkflowProvenanceRejectionReason.TRUST_INFRASTRUCTURE_UNAVAILABLE,
-            )
-        assert command.producer_run_id is not None
-        assert command.producer_execution_output is not None
-        verified_at = (verification_clock or _utcnow)()
-        input_evidence = build_lotus_ai_idea_explanation_input(explanation_request)
-        try:
-            attestation_receipt = verify_lotus_ai_run_attestation(
-                envelope=command.run_attestation,
-                key_discovery=attestation_key_source.get_key_discovery(),
-                expected=ExpectedLotusAIRunAttestation(
-                    run_id=command.producer_run_id,
-                    consumer_request_id=explanation_request.request_id,
-                    input_evidence_sha256=lotus_ai_input_evidence_sha256(input_evidence),
-                    output_content_sha256=lotus_ai_output_content_sha256(
-                        command.producer_execution_output
-                    ),
-                    verified_at_utc=verified_at,
-                ),
-                signature_verifier=signature_verifier,
-            )
-            if command.provider_retention_confirmation is not None:
-                if candidate_scope is None:
-                    raise ValueError("candidate tenant scope is required for provider retention")
-                provider_retention_receipt = verify_ai_provider_retention_confirmation(
-                    envelope=command.provider_retention_confirmation,
-                    key_discovery=attestation_key_source.get_key_discovery(),
-                    expected=ExpectedAIProviderRetention(
-                        workflow_run_id=attestation_receipt.run_id,
-                        tenant_id=candidate_scope.tenant_id,
-                        provider_id=attestation_receipt.provider_id,
-                        provider_mode=attestation_receipt.provider_mode,
-                        model_id=attestation_receipt.model_id,
-                        model_version=attestation_receipt.model_version,
-                        verified_at_utc=verified_at,
-                    ),
-                    signature_verifier=signature_verifier,
-                )
-            workflow_output = map_lotus_ai_idea_workflow_output(
-                command.producer_execution_output,
-                request_id=explanation_request.request_id,
-                workflow_pack_id=explanation_request.workflow_pack.workflow_pack_id,
-                workflow_pack_version=explanation_request.workflow_pack.workflow_pack_version,
-                verifier_ran_at_utc=verified_at,
-            )
-        except (RuntimeError, ValueError) as exc:
-            raise UntrustedAIWorkflowOutput(
-                "lotus-ai attestation verification failed",
-                reason=AIWorkflowProvenanceRejectionReason.ATTESTATION_VERIFICATION_FAILED,
-            ) from exc
-        explanation_result = replace(
+        return _evaluate_attested_ai_explanation(
+            command,
+            explanation_request=explanation_request,
+            candidate_scope=candidate_scope,
+            attestation_key_source=attestation_key_source,
+            signature_verifier=signature_verifier,
+            verification_clock=verification_clock,
+        )
+    if command.workflow_output is None:
+        return _evaluate_deterministic_ai_fallback(command, explanation_request)
+    return _evaluate_unattested_local_ai_output(command, explanation_request)
+
+
+def _evaluate_attested_ai_explanation(
+    command: EvaluateAIExplanationToRepositoryCommand,
+    *,
+    explanation_request: AIExplanationRequest,
+    candidate_scope: ReviewAccessScope | None,
+    attestation_key_source: LotusAIAttestationKeySource | None,
+    signature_verifier: LotusAIAttestationSignatureVerifier | None,
+    verification_clock: Callable[[], datetime] | None,
+) -> _AIExplanationEvaluation:
+    _require_ai_attestation_infrastructure(attestation_key_source, signature_verifier)
+    assert attestation_key_source is not None
+    assert signature_verifier is not None
+    assert command.producer_run_id is not None
+    assert command.producer_execution_output is not None
+    verified_at = (verification_clock or _utcnow)()
+    try:
+        attestation_receipt = _verify_lotus_ai_explanation_attestation(
+            command,
+            explanation_request=explanation_request,
+            attestation_key_source=attestation_key_source,
+            signature_verifier=signature_verifier,
+            verified_at=verified_at,
+        )
+        provider_retention_receipt = _verify_provider_retention_if_present(
+            command,
+            candidate_scope=candidate_scope,
+            attestation_key_source=attestation_key_source,
+            signature_verifier=signature_verifier,
+            attestation_receipt=attestation_receipt,
+            verified_at=verified_at,
+        )
+        workflow_output = map_lotus_ai_idea_workflow_output(
+            command.producer_execution_output,
+            request_id=explanation_request.request_id,
+            workflow_pack_id=explanation_request.workflow_pack.workflow_pack_id,
+            workflow_pack_version=explanation_request.workflow_pack.workflow_pack_version,
+            verifier_ran_at_utc=verified_at,
+        )
+    except (RuntimeError, ValueError) as exc:
+        raise UntrustedAIWorkflowOutput(
+            "lotus-ai attestation verification failed",
+            reason=AIWorkflowProvenanceRejectionReason.ATTESTATION_VERIFICATION_FAILED,
+        ) from exc
+
+    return _AIExplanationEvaluation(
+        explanation_result=replace(
             evaluate_ai_workflow_output(explanation_request, workflow_output),
             execution_provenance_posture=(
                 AIExecutionProvenancePosture.LOTUS_AI_ATTESTATION_VERIFIED
             ),
-        )
-    elif command.workflow_output is None:
-        explanation_result = deterministic_ai_fallback(
+        ),
+        attestation_receipt=attestation_receipt,
+        provider_retention_receipt=provider_retention_receipt,
+    )
+
+
+def _require_ai_attestation_infrastructure(
+    attestation_key_source: LotusAIAttestationKeySource | None,
+    signature_verifier: LotusAIAttestationSignatureVerifier | None,
+) -> None:
+    if attestation_key_source is not None and signature_verifier is not None:
+        return
+    raise UntrustedAIWorkflowOutput(
+        "lotus-ai attestation trust infrastructure is unavailable",
+        reason=AIWorkflowProvenanceRejectionReason.TRUST_INFRASTRUCTURE_UNAVAILABLE,
+    )
+
+
+def _verify_lotus_ai_explanation_attestation(
+    command: EvaluateAIExplanationToRepositoryCommand,
+    *,
+    explanation_request: AIExplanationRequest,
+    attestation_key_source: LotusAIAttestationKeySource,
+    signature_verifier: LotusAIAttestationSignatureVerifier,
+    verified_at: datetime,
+) -> VerifiedLotusAIRunAttestationReceipt:
+    input_evidence = build_lotus_ai_idea_explanation_input(explanation_request)
+    assert command.producer_run_id is not None
+    assert command.producer_execution_output is not None
+    assert command.run_attestation is not None
+    return verify_lotus_ai_run_attestation(
+        envelope=command.run_attestation,
+        key_discovery=attestation_key_source.get_key_discovery(),
+        expected=ExpectedLotusAIRunAttestation(
+            run_id=command.producer_run_id,
+            consumer_request_id=explanation_request.request_id,
+            input_evidence_sha256=lotus_ai_input_evidence_sha256(input_evidence),
+            output_content_sha256=lotus_ai_output_content_sha256(command.producer_execution_output),
+            verified_at_utc=verified_at,
+        ),
+        signature_verifier=signature_verifier,
+    )
+
+
+def _verify_provider_retention_if_present(
+    command: EvaluateAIExplanationToRepositoryCommand,
+    *,
+    candidate_scope: ReviewAccessScope | None,
+    attestation_key_source: LotusAIAttestationKeySource,
+    signature_verifier: LotusAIAttestationSignatureVerifier,
+    attestation_receipt: VerifiedLotusAIRunAttestationReceipt,
+    verified_at: datetime,
+) -> VerifiedAIProviderRetentionReceipt | None:
+    if command.provider_retention_confirmation is None:
+        return None
+    if candidate_scope is None:
+        raise ValueError("candidate tenant scope is required for provider retention")
+    return verify_ai_provider_retention_confirmation(
+        envelope=command.provider_retention_confirmation,
+        key_discovery=attestation_key_source.get_key_discovery(),
+        expected=ExpectedAIProviderRetention(
+            workflow_run_id=attestation_receipt.run_id,
+            tenant_id=candidate_scope.tenant_id,
+            provider_id=attestation_receipt.provider_id,
+            provider_mode=attestation_receipt.provider_mode,
+            model_id=attestation_receipt.model_id,
+            model_version=attestation_receipt.model_version,
+            verified_at_utc=verified_at,
+        ),
+        signature_verifier=signature_verifier,
+    )
+
+
+def _evaluate_deterministic_ai_fallback(
+    command: EvaluateAIExplanationToRepositoryCommand,
+    explanation_request: AIExplanationRequest,
+) -> _AIExplanationEvaluation:
+    return _AIExplanationEvaluation(
+        explanation_result=deterministic_ai_fallback(
             explanation_request,
             fallback_reason=command.fallback_reason,
             occurred_at_utc=command.explanation.requested_at_utc,
         )
-    else:
-        explanation_result = evaluate_ai_workflow_output(
+    )
+
+
+def _evaluate_unattested_local_ai_output(
+    command: EvaluateAIExplanationToRepositoryCommand,
+    explanation_request: AIExplanationRequest,
+) -> _AIExplanationEvaluation:
+    assert command.workflow_output is not None
+    return _AIExplanationEvaluation(
+        explanation_result=evaluate_ai_workflow_output(
             explanation_request,
             command.workflow_output,
         )
+    )
 
+
+def _persist_ai_explanation_evaluation(
+    command: EvaluateAIExplanationToRepositoryCommand,
+    *,
+    repository: AIExplanationRepository,
+    evaluation: _AIExplanationEvaluation,
+) -> AIExplanationWorkflowResult:
     lineage_persistence_result = repository.record_ai_explanation_lineage_request(
-        explanation_result,
+        evaluation.explanation_result,
         idempotency_key=command.idempotency_key,
         payload=dict(command.idempotency_payload),
-        attestation_receipt=attestation_receipt,
-        provider_retention_receipt=provider_retention_receipt,
+        attestation_receipt=evaluation.attestation_receipt,
+        provider_retention_receipt=evaluation.provider_retention_receipt,
     )
     if (
         lineage_persistence_result.decision is AIExplanationLineagePersistenceDecision.CONFLICT
@@ -314,13 +465,13 @@ def evaluate_ai_explanation_to_repository(
     ):
         return AIExplanationWorkflowResult(
             decision=AIExplanationEvaluationDecision.IDEMPOTENCY_CONFLICT,
-            explanation_result=explanation_result,
+            explanation_result=evaluation.explanation_result,
             lineage_persistence_result=lineage_persistence_result,
         )
 
     return AIExplanationWorkflowResult(
         decision=AIExplanationEvaluationDecision.ACCEPTED,
-        explanation_result=explanation_result,
+        explanation_result=evaluation.explanation_result,
         lineage_persistence_result=lineage_persistence_result,
     )
 

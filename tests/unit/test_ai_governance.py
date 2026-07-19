@@ -8,6 +8,7 @@ from typing import Any
 import pytest
 
 from app.application.ai_governance import (
+    AIExplanationEvaluationDecision,
     EvaluateAIExplanationToRepositoryCommand,
     evaluate_ai_explanation_to_repository,
 )
@@ -235,6 +236,67 @@ def test_ai_explanation_uses_candidate_projection_without_snapshot() -> None:
     assert result.explanation_result is not None
     assert result.lineage_persistence_result is not None
     assert repository.looked_up_candidate_ids == ["idea-ai-001"]
+
+
+def test_ai_explanation_returns_not_found_without_lineage_write() -> None:
+    repository = InMemoryIdeaRepository()
+
+    result = evaluate_ai_explanation_to_repository(
+        EvaluateAIExplanationToRepositoryCommand(
+            candidate_id="missing-ai-candidate",
+            explanation=command(AIWorkflowPurpose.UNSUPPORTED_CLAIM_VERIFICATION),
+            fallback_reason=AIFallbackReason.AI_UNAVAILABLE,
+            idempotency_key="ai-explanation:missing-candidate:001",
+            idempotency_payload={"candidateId": "missing-ai-candidate"},
+        ),
+        repository=repository,
+    )
+
+    assert result.decision is AIExplanationEvaluationDecision.NOT_FOUND
+    assert result.explanation_result is None
+    assert result.lineage_persistence_result is None
+    assert repository.snapshot().candidate_records == {}
+
+
+def test_ai_explanation_maps_lineage_conflict_without_overwriting_record() -> None:
+    source_repository = InMemoryIdeaRepository()
+    persisted = source_repository.persist_candidate(
+        candidate(),
+        idempotency_key="signal-ingestion:ai-conflict:001",
+        payload={"candidate_id": "idea-ai-001"},
+        actor_subject="signal-ingestion-worker",
+        occurred_at_utc=EVALUATED_AT,
+    )
+    assert persisted.decision is CandidatePersistenceDecision.ACCEPTED
+    base_command = command(AIWorkflowPurpose.UNSUPPORTED_CLAIM_VERIFICATION)
+
+    first = evaluate_ai_explanation_to_repository(
+        EvaluateAIExplanationToRepositoryCommand(
+            candidate_id="idea-ai-001",
+            explanation=base_command,
+            fallback_reason=AIFallbackReason.AI_UNAVAILABLE,
+            idempotency_key="ai-explanation:conflict:001",
+            idempotency_payload={"requestId": base_command.request_id},
+        ),
+        repository=source_repository,
+    )
+    conflict = evaluate_ai_explanation_to_repository(
+        EvaluateAIExplanationToRepositoryCommand(
+            candidate_id="idea-ai-001",
+            explanation=replace(base_command, request_id="ai-request-conflicting"),
+            fallback_reason=AIFallbackReason.AI_UNAVAILABLE,
+            idempotency_key="ai-explanation:conflict:001",
+            idempotency_payload={"requestId": "ai-request-conflicting"},
+        ),
+        repository=source_repository,
+    )
+
+    assert first.decision is AIExplanationEvaluationDecision.ACCEPTED
+    assert conflict.decision is AIExplanationEvaluationDecision.IDEMPOTENCY_CONFLICT
+    assert conflict.lineage_persistence_result is not None
+    assert conflict.lineage_persistence_result.lineage_record is None
+    record = source_repository.snapshot().candidate_records["idea-ai-001"]
+    assert len(record.ai_explanation_lineage_records) == 1
 
 
 def test_ai_request_rejects_sensitive_metadata() -> None:
