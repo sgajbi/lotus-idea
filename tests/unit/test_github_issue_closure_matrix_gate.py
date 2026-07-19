@@ -344,6 +344,12 @@ def test_github_issue_closure_matrix_gate_requires_implementation_proof_scope_di
     _assert_matrix_requires_issue(tmp_path, 659)
 
 
+def test_github_issue_closure_matrix_gate_requires_drawdown_review_signal_issue(
+    tmp_path: Path,
+) -> None:
+    _assert_matrix_requires_issue(tmp_path, 661)
+
+
 def test_github_issue_closure_matrix_gate_requires_postgres_snapshot_writes_issue(
     tmp_path: Path,
 ) -> None:

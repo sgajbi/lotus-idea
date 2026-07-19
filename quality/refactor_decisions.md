@@ -6,6 +6,56 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-07-19: Drawdown-Review Signal Evaluation Boundary
+
+Issue `#661` applies the Slice 19 report-only quality-baseline lens to the
+drawdown-review signal evaluator. After issue `#659`, `make quality-baseline`
+listed `src/app/domain/signal_evaluation.py::evaluate_drawdown_review_signal`
+at `118` lines.
+
+The function mixed:
+
+1. evaluation-time validation,
+2. entitlement and source-readiness blockers,
+3. temporal, freshness, and supportability checks,
+4. duplicate suppression,
+5. drawdown materiality validation,
+6. stable identity, signal, lineage, evidence packet, candidate, and result
+   assembly.
+
+`src/app/domain/signal_evaluation.py` keeps the public
+`evaluate_drawdown_review_signal` export, while
+`src/app/domain/drawdown_review_evaluation.py` now owns the drawdown-review
+domain evaluator. `src/app/domain/signal_evaluation_common.py` owns the shared
+blocked/temporal result helpers used by signal evaluators. Drawdown-review
+outcome ordering, family compatibility, source refs, unsupported evidence
+reasons, candidate identity, evidence packet reason codes, and source-authority
+semantics are preserved.
+
+Focused validation passed:
+
+1. `python -m ruff check src/app/domain/signal_evaluation.py src/app/domain/drawdown_review_evaluation.py src/app/domain/signal_evaluation_common.py tests/unit/test_drawdown_review_signal_evaluation.py`,
+2. `python -m ruff format --check src/app/domain/signal_evaluation.py src/app/domain/drawdown_review_evaluation.py src/app/domain/signal_evaluation_common.py tests/unit/test_drawdown_review_signal_evaluation.py`,
+3. `python -m mypy src/app/domain/signal_evaluation.py src/app/domain/drawdown_review_evaluation.py src/app/domain/signal_evaluation_common.py`,
+4. `python -m pytest tests/unit/test_drawdown_review_signal_evaluation.py tests/unit/test_drawdown_review_application.py tests/integration/test_drawdown_review_signal_api.py -q`
+   (`30` passed),
+5. `python -m pytest tests/unit/test_source_temporal_contract_gate.py tests/unit/test_opportunity_family_compatibility.py -q`
+   (`4` passed),
+6. `make quality-baseline`,
+7. `make maintainability-gate`,
+8. `make duplicate-implementation-gate` (`0` duplicate clusters across `3,017`
+   source/script functions).
+
+This is internal domain modularity only. It does not change API/OpenAPI
+behavior, source-authority contracts, Lotus Risk methodology, persistence,
+migrations, authentication or authorization infrastructure, Core, Gateway,
+Workbench, runtime topology, wiki source, README, supported-features, data-mesh
+certification, external-publication authority, or supported-feature promotion.
+Adjacent `evaluate_high_volatility_signal` remains a measured risk-domain
+sibling at `117` lines and should be handled by a separate issue-backed slice.
+Broader local gates, PR checks, exact-main Main Releasability/CodeQL, wiki
+parity, issue closure, and branch cleanup remain pending for the tranche.
+
 ## 2026-07-19: Implementation Proof Consumption Scope Dispatcher Boundary
 
 Issue `#659` applies the Slice 19 report-only quality-baseline lens to the

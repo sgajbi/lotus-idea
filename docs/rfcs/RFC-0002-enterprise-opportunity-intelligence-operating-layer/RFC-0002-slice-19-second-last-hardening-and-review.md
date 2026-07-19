@@ -24,6 +24,58 @@ Perform the full engineering review before final closure.
 
 ## Current Implementation Evidence
 
+Issue `#661` applies the Slice 19 quality-baseline learning to the
+drawdown-review signal evaluator. After issue `#659`, the current report-only
+quality baseline listed
+`src/app/domain/signal_evaluation.py::evaluate_drawdown_review_signal` at `118`
+lines. The function consumed Lotus Risk-owned drawdown analytics evidence and
+mixed entitlement/source blockers, temporal/freshness/supportability checks,
+duplicate suppression, max-drawdown validation, materiality, stable identity,
+signal, lineage, evidence packet, candidate, and final result assembly.
+
+`src/app/domain/signal_evaluation.py` now keeps the public
+`evaluate_drawdown_review_signal` export, while
+`src/app/domain/drawdown_review_evaluation.py` owns the drawdown-review domain
+evaluator. `src/app/domain/signal_evaluation_common.py` owns the shared
+blocked/temporal result helpers used by signal evaluators. Drawdown-review
+outcome ordering, family compatibility, source refs, unsupported evidence
+reasons, candidate identity, evidence packet reason codes, and source-authority
+semantics are preserved.
+
+Focused validation passed:
+
+1. `python -m ruff check src/app/domain/signal_evaluation.py src/app/domain/drawdown_review_evaluation.py src/app/domain/signal_evaluation_common.py tests/unit/test_drawdown_review_signal_evaluation.py`,
+2. `python -m ruff format --check src/app/domain/signal_evaluation.py src/app/domain/drawdown_review_evaluation.py src/app/domain/signal_evaluation_common.py tests/unit/test_drawdown_review_signal_evaluation.py`,
+3. `python -m mypy src/app/domain/signal_evaluation.py src/app/domain/drawdown_review_evaluation.py src/app/domain/signal_evaluation_common.py`,
+4. `python -m pytest tests/unit/test_drawdown_review_signal_evaluation.py tests/unit/test_drawdown_review_application.py tests/integration/test_drawdown_review_signal_api.py -q`
+   with `30` tests,
+5. `python -m pytest tests/unit/test_source_temporal_contract_gate.py tests/unit/test_opportunity_family_compatibility.py -q`
+   with `4` tests,
+6. `make quality-baseline`,
+7. `make maintainability-gate`,
+8. `make duplicate-implementation-gate` with zero duplicate clusters across
+   `3,017` source/script functions.
+
+The same-pattern scan followed the Slice 19 maintainability sequence through
+#659, current `quality/baseline_report.md`, duplicate searches for
+`evaluate_drawdown_review_signal`, `drawdown review signal maintainability`,
+and `signal_evaluation.py drawdown maintainability`, the codebase review
+ledger, the issue closure matrix, refactor decisions, and issue-discovery
+ledger `#225`. Closed #616 clarified the high-volatility/drawdown-review family
+compatibility posture and does not own this evaluator decomposition. The
+regenerated quality baseline shows `evaluate_drawdown_review_signal` and
+`src/app/domain/signal_evaluation.py` left the top hotspot lists; adjacent
+`evaluate_high_volatility_signal` remains a measured risk-domain sibling at
+`117` lines and should be handled by a separate issue-backed slice.
+
+This is internal domain modularity only. It does not change API/OpenAPI
+behavior, source-authority contracts, Lotus Risk methodology, persistence,
+migrations, authentication or authorization infrastructure, Core, Gateway,
+Workbench, data-product support, external-publication authority, runtime
+topology, wiki source, README, supported features, or supported-feature
+promotion. Broader local gates, PR checks, exact-main Main Releasability/CodeQL,
+wiki parity, issue closure, and branch cleanup remain pending for the tranche.
+
 Issue `#659` applies the Slice 19 quality-baseline learning to the
 implementation-proof consumption dispatcher. After issue `#658`, the current
 report-only quality baseline listed
