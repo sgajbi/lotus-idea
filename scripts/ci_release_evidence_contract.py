@@ -382,6 +382,12 @@ def validate_dockerfile_runtime(dockerfile: str) -> list[str]:
         "COPY scripts/run_migrations.py ./scripts/run_migrations.py": (
             "Dockerfile must include the standalone migration entrypoint"
         ),
+        "COPY scripts/__init__.py ./scripts/__init__.py": (
+            "Dockerfile must include the runtime scripts package marker"
+        ),
+        (
+            "COPY scripts/proof_worktree_import_guard.py ./scripts/proof_worktree_import_guard.py"
+        ): "Dockerfile must include the runtime proof import guard",
     }
     for fragment, error in required_fragments.items():
         if fragment not in dockerfile:
