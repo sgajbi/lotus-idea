@@ -35,6 +35,8 @@ def test_postgres_runtime_trust_telemetry_loader_defaults_empty_projection() -> 
     assert summary.conversion_intent_count == 0
     assert summary.conversion_outcome_count == 0
     assert summary.report_evidence_pack_count == 0
+    assert summary.downstream_submission_count == 0
+    assert summary.downstream_reconciliation_required_count == 0
     assert summary.lineage_materialized is False
     assert summary.source_batch_evidence_available is False
     assert summary.data_quality_status == "quality_unknown"
@@ -67,6 +69,8 @@ def test_postgres_runtime_trust_telemetry_loader_decodes_summary_and_counts() ->
                     "conversion_intent_count": 3,
                     "conversion_outcome_count": 4,
                     "report_evidence_pack_count": 5,
+                    "downstream_submission_count": 6,
+                    "downstream_reconciliation_required_count": 2,
                     "lineage_materialized": True,
                     "source_batch_evidence_available": True,
                     "data_quality_status": "quality_warning",
@@ -110,6 +114,8 @@ def test_postgres_runtime_trust_telemetry_loader_decodes_summary_and_counts() ->
     assert summary.conversion_intent_count == 3
     assert summary.conversion_outcome_count == 4
     assert summary.report_evidence_pack_count == 5
+    assert summary.downstream_submission_count == 6
+    assert summary.downstream_reconciliation_required_count == 2
     assert summary.lineage_materialized is True
     assert summary.source_batch_evidence_available is True
     assert summary.data_quality_status == "quality_warning"

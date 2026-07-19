@@ -152,23 +152,26 @@ supported-feature promotion.
 The internal
 `GET /api/v1/data-mesh/trust-telemetry/runtime-preview` endpoint reads the
 active repository provider and returns aggregate runtime telemetry preview
-counts for the proposed `IdeaCandidate:v1` product. It omits candidate
-identifiers, source routes, evidence hashes, portfolio identifiers, and client
-identifiers. It is pre-certification runtime evidence only; platform mesh
-certification and product promotion remain planned.
+counts for the proposed `IdeaCandidate:v1` product, including local downstream
+submission posture counts. It omits candidate identifiers, source routes,
+evidence hashes, portfolio identifiers, client identifiers, downstream payloads,
+and support references. It is pre-certification runtime evidence only; platform
+mesh certification and product promotion remain planned.
 
 The internal
 `GET /api/v1/data-mesh/trust-telemetry/runtime-snapshot` endpoint returns the
 corresponding contract-shaped runtime snapshot for operators with
 `idea.mesh.trust-telemetry.snapshot.read`. It uses aggregate active-repository
-state only and does not expose candidate identifiers, source routes, evidence
-hashes, portfolio identifiers, or client identifiers.
+state only, including a closed local downstream submission posture block, and
+does not expose candidate identifiers, source routes, evidence hashes,
+portfolio identifiers, client identifiers, downstream payloads, or support
+references.
 
 When PostgreSQL is active, runtime trust telemetry preview and snapshot reads
 use a repository-side aggregate projection over candidate and workflow tables
-instead of hydrating audit, outbox, downstream-submission, lifecycle-history,
-idempotency, or AI-lineage state. Process-local providers can still use the
-snapshot fallback.
+plus bounded downstream submission status counts instead of hydrating audit,
+outbox, downstream-submission payloads, lifecycle-history, idempotency, or
+AI-lineage state. Process-local providers can still use the snapshot fallback.
 
 Candidate-detail response DTOs live in `app.api.candidate_detail_models` behind
 the existing `app.api.candidate_detail` route surface. This is design

@@ -16,6 +16,7 @@ from app.application.runtime_trust_telemetry import (
 )
 from app.ports.idea_repository import RuntimeTrustTelemetryRepositorySummary
 from app.domain import (
+    DownstreamSubmissionPosture,
     EvidenceFreshness,
     HighCashSignalInput,
     HighCashSignalPolicy,
@@ -25,6 +26,10 @@ from app.domain import (
     SourceRef,
     SourceSystem,
     evaluate_high_cash_signal,
+)
+from tests.unit.downstream_submission_helpers import (
+    build_downstream_submission_claim,
+    build_downstream_submission_record,
 )
 from scripts.runtime_trust_telemetry.generate_preview import (
     runtime_trust_telemetry_preview_payload,
@@ -84,9 +89,37 @@ def test_runtime_trust_telemetry_preview_counts_source_safe_repository_state() -
     repository = InMemoryIdeaRepository()
     first = _persist_high_cash_candidate(repository, suffix="first")
     second = _persist_high_cash_candidate(repository, suffix="second")
+    repository_with_submissions = InMemoryIdeaRepository(
+        replace(
+            repository.snapshot(),
+            downstream_submission_records={
+                "in-flight": build_downstream_submission_claim(
+                    idempotency_key="runtime-telemetry-in-flight",
+                    request_fingerprint="sha256:runtime-telemetry-in-flight",
+                    resource_id="conversion-intent-001",
+                    submitted_at_utc=OBSERVED_AT,
+                ),
+                "reconciliation-required": build_downstream_submission_record(
+                    idempotency_key="runtime-telemetry-reconciliation-required",
+                    request_fingerprint="sha256:runtime-telemetry-required",
+                    resource_id="conversion-intent-002",
+                    submitted_at_utc=OBSERVED_AT,
+                    status=DownstreamSubmissionPosture.RECONCILIATION_REQUIRED,
+                    failure_reason="downstream_timeout",
+                ),
+                "accepted": build_downstream_submission_record(
+                    idempotency_key="runtime-telemetry-accepted",
+                    request_fingerprint="sha256:runtime-telemetry-accepted",
+                    resource_id="conversion-intent-003",
+                    submitted_at_utc=OBSERVED_AT,
+                    status=DownstreamSubmissionPosture.ACCEPTED_BY_DOWNSTREAM,
+                ),
+            },
+        )
+    )
 
     snapshot = build_runtime_trust_telemetry_preview(
-        repository=repository,
+        repository=repository_with_submissions,
         durable_storage_backed=True,
         generated_at_utc=OBSERVED_AT,
     )
@@ -102,6 +135,8 @@ def test_runtime_trust_telemetry_preview_counts_source_safe_repository_state() -
     assert snapshot.lifecycle_counts == {"generated": 2}
     assert snapshot.data_lifecycle_state_counts == {"process_local_uncontrolled": 2}
     assert snapshot.lifecycle_control_missing_count == 2
+    assert snapshot.downstream_submission_count == 3
+    assert snapshot.downstream_reconciliation_required_count == 2
     assert snapshot.lineage_materialized is True
     assert (
         _product_posture(
@@ -152,6 +187,8 @@ def test_runtime_trust_telemetry_uses_repository_projection_without_snapshot() -
     assert preview.conversion_intent_count == 2
     assert preview.conversion_outcome_count == 1
     assert preview.report_evidence_pack_count == 3
+    assert preview.downstream_submission_count == 5
+    assert preview.downstream_reconciliation_required_count == 2
     assert preview.lineage_materialized is True
     assert snapshot["freshness"]["freshness_state"] == "stale"
     assert snapshot["freshness"]["age_seconds"] == 600
@@ -160,6 +197,13 @@ def test_runtime_trust_telemetry_uses_repository_projection_without_snapshot() -
         "state_counts": {"active": 1, "held": 1},
         "retention_expired_count": 1,
         "lifecycle_control_missing_count": 0,
+        "certification_status": "not_certified",
+        "supported_feature_promoted": False,
+    }
+    assert snapshot["downstream_submission_posture"] == {
+        "submission_count": 5,
+        "reconciliation_required_count": 2,
+        "posture_scope": "local_idea_submission_state",
         "certification_status": "not_certified",
         "supported_feature_promoted": False,
     }
@@ -188,6 +232,8 @@ def test_runtime_trust_telemetry_preview_payload_is_source_safe() -> None:
     assert payload["generatedAtUtc"] == "2026-06-21T10:10:00Z"
     assert payload["certificationStatus"] == "not_certified"
     assert payload["supportedFeaturePromoted"] is False
+    assert payload["downstreamSubmissionCount"] == 0
+    assert payload["downstreamReconciliationRequiredCount"] == 0
     assert "candidateId" not in rendered
     assert "portfolio_id" not in rendered
     assert "client_id" not in rendered
@@ -447,6 +493,8 @@ class _ProjectionOnlyRuntimeTrustTelemetryRepository:
             conversion_intent_count=2,
             conversion_outcome_count=1,
             report_evidence_pack_count=3,
+            downstream_submission_count=5,
+            downstream_reconciliation_required_count=2,
             lineage_materialized=True,
             source_batch_evidence_available=True,
             data_quality_status="quality_warning",

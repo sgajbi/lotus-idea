@@ -8,7 +8,12 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Any, Mapping
 
-from app.domain import CandidatePersistenceRecord, EvidenceFreshness
+from app.domain import (
+    CandidatePersistenceRecord,
+    DownstreamSubmissionPosture,
+    EvidenceFreshness,
+    IdeaRepositorySnapshot,
+)
 from app.ports.idea_repository import (
     CandidateSnapshotRepository,
     RuntimeTrustTelemetryProjectionRepository,
@@ -90,6 +95,8 @@ class RuntimeTrustTelemetryPreview:
     conversion_intent_count: int
     conversion_outcome_count: int
     report_evidence_pack_count: int
+    downstream_submission_count: int
+    downstream_reconciliation_required_count: int
     lineage_materialized: bool
     runtime_telemetry_backed: bool
     platform_certified: bool
@@ -149,6 +156,8 @@ def build_runtime_trust_telemetry_preview(
         conversion_intent_count=summary.conversion_intent_count,
         conversion_outcome_count=summary.conversion_outcome_count,
         report_evidence_pack_count=summary.report_evidence_pack_count,
+        downstream_submission_count=summary.downstream_submission_count,
+        downstream_reconciliation_required_count=(summary.downstream_reconciliation_required_count),
         lineage_materialized=summary.lineage_materialized,
         runtime_telemetry_backed=durable_storage_backed,
         platform_certified=False,
@@ -208,6 +217,15 @@ def build_runtime_trust_telemetry_snapshot(
                     "state_counts": dict(preview.data_lifecycle_state_counts),
                     "retention_expired_count": preview.retention_expired_count,
                     "lifecycle_control_missing_count": preview.lifecycle_control_missing_count,
+                    "certification_status": "not_certified",
+                    "supported_feature_promoted": False,
+                },
+                "downstream_submission_posture": {
+                    "submission_count": preview.downstream_submission_count,
+                    "reconciliation_required_count": (
+                        preview.downstream_reconciliation_required_count
+                    ),
+                    "posture_scope": "local_idea_submission_state",
                     "certification_status": "not_certified",
                     "supported_feature_promoted": False,
                 },
@@ -602,14 +620,13 @@ def _runtime_trust_telemetry_summary(
 ) -> RuntimeTrustTelemetryRepositorySummary:
     if isinstance(repository, RuntimeTrustTelemetryProjectionRepository):
         return repository.runtime_trust_telemetry_summary()
-    return _runtime_trust_telemetry_summary_from_records(
-        tuple(repository.snapshot().candidate_records.values())
-    )
+    return _runtime_trust_telemetry_summary_from_snapshot(repository.snapshot())
 
 
-def _runtime_trust_telemetry_summary_from_records(
-    records: tuple[CandidatePersistenceRecord, ...],
+def _runtime_trust_telemetry_summary_from_snapshot(
+    snapshot: IdeaRepositorySnapshot,
 ) -> RuntimeTrustTelemetryRepositorySummary:
+    records = tuple(snapshot.candidate_records.values())
     source_refs = tuple(
         source_ref
         for record in records
@@ -640,6 +657,16 @@ def _runtime_trust_telemetry_summary_from_records(
         conversion_intent_count=sum(len(record.conversion_intents) for record in records),
         conversion_outcome_count=sum(len(record.conversion_outcomes) for record in records),
         report_evidence_pack_count=sum(len(record.report_evidence_packs) for record in records),
+        downstream_submission_count=len(snapshot.downstream_submission_records),
+        downstream_reconciliation_required_count=sum(
+            1
+            for record in snapshot.downstream_submission_records.values()
+            if record.status
+            in {
+                DownstreamSubmissionPosture.IN_FLIGHT,
+                DownstreamSubmissionPosture.RECONCILIATION_REQUIRED,
+            }
+        ),
         lineage_materialized=bool(records)
         and all(_record_lineage_materialized(record) for record in records),
         source_batch_evidence_available=bool(source_refs),

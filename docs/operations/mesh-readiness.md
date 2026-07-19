@@ -96,7 +96,8 @@ The response includes:
 1. `productId: lotus-idea:IdeaCandidate:v1`,
 2. aggregate candidate and source-reference counts,
 3. source-authority, freshness, supportability, and lifecycle count maps,
-4. aggregate review, feedback, conversion, and report evidence-pack counts,
+4. aggregate review, feedback, conversion, report evidence-pack, and local
+   downstream submission posture counts,
 5. `productCoverage` entries for every producer product declared in
    `contracts/domain-data-products/lotus-idea-products.v1.json`,
 6. explicit `coverageStatus`, source-safe counts, lineage/materialization
@@ -120,8 +121,11 @@ complete.
 
 The preview deliberately omits candidate identifiers, portfolio identifiers,
 client identifiers, raw source routes, evidence hashes, request payloads, and
-response payloads. It is endpoint-certified as an internal operator diagnostic,
-not as data-product certification or product discovery.
+response payloads. Downstream submission posture is limited to aggregate local
+Idea counts and does not prove downstream acceptance, materialization, rendered
+output, archive creation, or route serving. It is endpoint-certified as an
+internal operator diagnostic, not as data-product certification or product
+discovery.
 
 `GET /api/v1/data-mesh/trust-telemetry/runtime-snapshot` returns the same
 contract-shaped runtime snapshot as an internal operator diagnostic. It
@@ -132,9 +136,10 @@ requires:
 
 The response preserves the platform trust-telemetry contract field names,
 reports `blocking.blocked: true`, and uses aggregate active-repository state
-only. It deliberately omits candidate identifiers, portfolio identifiers,
-client identifiers, raw source routes, evidence hashes, request payloads, and
-response payloads.
+only. It includes a closed `downstream_submission_posture` block with local
+Idea submission and reconciliation workload counts. It deliberately omits
+candidate identifiers, portfolio identifiers, client identifiers, raw source
+routes, evidence hashes, request payloads, and response payloads.
 
 `make runtime-trust-telemetry-snapshot-check` writes the contract-shaped runtime
 snapshot to:

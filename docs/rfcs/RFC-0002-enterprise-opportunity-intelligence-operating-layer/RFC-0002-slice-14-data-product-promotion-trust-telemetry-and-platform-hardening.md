@@ -36,8 +36,12 @@ This slice now has internal operator diagnostic foundations only:
    runtime trust telemetry preview from the active repository provider.
 9. `GET /api/v1/data-mesh/trust-telemetry/runtime-preview` exposes aggregate
    candidate, source-authority, freshness, supportability, lifecycle, review,
-   feedback, conversion, and report evidence-pack counts to callers with the
-   `operator` role and `idea.mesh.trust-telemetry.preview.read` capability.
+   feedback, conversion, report evidence-pack, and local downstream submission
+   posture counts to callers with the `operator` role and
+   `idea.mesh.trust-telemetry.preview.read` capability. Issue `#663` adds
+   `downstreamSubmissionCount` and `downstreamReconciliationRequiredCount` as
+   local Idea posture only; they are not downstream acceptance or
+   materialization proof.
 10. `scripts/runtime_trust_telemetry/generate_preview.py` and
     `make runtime-trust-telemetry-preview-check` generate the same
     pre-certification preview as source-safe automation evidence.
@@ -53,8 +57,11 @@ This slice now has internal operator diagnostic foundations only:
     runtime trust telemetry snapshot under ignored
     `output/trust-telemetry/runtime/idea-candidate.telemetry.v1.json`.
 14. The endpoint and generated snapshot use platform trust telemetry fields for
-    `lotus-idea:IdeaCandidate:v1`, remain blocked, and omit candidate ids,
-    portfolio ids, client ids, raw source routes, and raw evidence hashes.
+    `lotus-idea:IdeaCandidate:v1`, include a closed
+    `downstream_submission_posture` block with local downstream submission
+    counts, remain blocked, and omit candidate ids, portfolio ids, client ids,
+    raw source routes, raw downstream payloads, support references, and raw
+    evidence hashes.
 15. `src/app/application/runtime_trust_telemetry/test_execution_contract.py`,
     `scripts/runtime_trust_telemetry/generate_test_execution_contract.py`, and
     `make runtime-trust-telemetry-test-execution-contract-gate` define and enforce a
@@ -74,8 +81,9 @@ Durable PostgreSQL providers compute runtime trust telemetry aggregate counts
 through `RuntimeTrustTelemetryProjectionRepository` over
 `idea_candidate_record`, `idea_review_decision`, `idea_feedback_event`,
 `idea_conversion_intent`, `idea_conversion_outcome`, and
-`idea_report_evidence_pack_request` only. Ordinary preview/snapshot reads do
-not hydrate audit, outbox, downstream-submission, lifecycle-history,
+`idea_report_evidence_pack_request`, plus bounded status counts from
+`idea_downstream_submission` only. Ordinary preview/snapshot reads do not
+hydrate audit, outbox, downstream-submission payloads, lifecycle-history,
 idempotency, or AI-lineage state.
 16. `src/app/application/data_mesh/platform_catalog_source_contract.py`,
     `scripts/data_mesh/generate_platform_catalog_source_contract.py`, and
@@ -195,7 +203,8 @@ activate any data product or promote a current feature.
    certification.
 3. Gate 6 is partially satisfied for the diagnostic endpoints and generated
    runtime evidence through OpenAPI, endpoint-certification, runtime-preview
-   endpoint/generator, runtime-snapshot endpoint/generator, and
-   unit/integration evidence, with the mesh readiness endpoint now exposing the
-   platform certification families that remain missing before promotion.
+   endpoint/generator, runtime-snapshot endpoint/generator, local downstream
+   submission posture aggregation, and unit/integration evidence, with the mesh
+   readiness endpoint now exposing the platform certification families that
+   remain missing before promotion.
 4. Gate 7 has no new platform/scaffold blocker from this diagnostic slice.

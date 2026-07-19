@@ -104,6 +104,8 @@ class RuntimeTrustTelemetryRepositorySummary:
     conversion_intent_count: int
     conversion_outcome_count: int
     report_evidence_pack_count: int
+    downstream_submission_count: int
+    downstream_reconciliation_required_count: int
     lineage_materialized: bool
     source_batch_evidence_available: bool
     data_quality_status: str

@@ -39,6 +39,8 @@ REQUIRED_CONTRACT_FIELDS = {
     "reconciliation_status",
     "data_quality_status",
     "lineage",
+    "data_lifecycle",
+    "downstream_submission_posture",
     "blocking",
     "product_coverage",
     "observed_trust_metadata",
@@ -205,6 +207,36 @@ def _validate_nested_contracts(payload: dict[str, Any], errors: list[str]) -> No
             "runtime snapshot observed_trust_metadata contains undeclared fields: "
             + ", ".join(unknown_metadata)
         )
+    _validate_downstream_submission_posture(payload, errors)
+
+
+def _validate_downstream_submission_posture(
+    payload: dict[str, Any],
+    errors: list[str],
+) -> None:
+    posture = payload.get("downstream_submission_posture")
+    if not isinstance(posture, dict):
+        errors.append("runtime snapshot downstream_submission_posture must be an object")
+        return
+    expected_fields = {
+        "submission_count",
+        "reconciliation_required_count",
+        "posture_scope",
+        "certification_status",
+        "supported_feature_promoted",
+    }
+    unknown_or_missing = sorted(set(posture) ^ expected_fields)
+    if unknown_or_missing:
+        errors.append("runtime snapshot downstream_submission_posture fields are invalid")
+    for count_field in ("submission_count", "reconciliation_required_count"):
+        if not isinstance(posture.get(count_field), int) or posture[count_field] < 0:
+            errors.append(f"runtime snapshot downstream_submission_posture {count_field} invalid")
+    if posture.get("posture_scope") != "local_idea_submission_state":
+        errors.append("runtime snapshot downstream submission posture scope is invalid")
+    if posture.get("certification_status") != "not_certified":
+        errors.append("runtime snapshot downstream submission posture must remain not_certified")
+    if posture.get("supported_feature_promoted") is not False:
+        errors.append("runtime snapshot downstream submission posture must not promote support")
 
 
 def _validate_product_coverage(payload: dict[str, Any], errors: list[str]) -> None:
