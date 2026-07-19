@@ -1,3 +1,4 @@
+# ruff: noqa: E402
 from __future__ import annotations
 
 import argparse
@@ -8,6 +9,12 @@ from pathlib import Path
 import sys
 
 import psycopg
+
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from scripts.proof_worktree_import_guard import ensure_worktree_imports
+
+ensure_worktree_imports(__file__)
 
 from app.application.postgres_capacity_threshold_proof import (
     execute_postgres_capacity_threshold_proof,

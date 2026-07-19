@@ -1,3 +1,4 @@
+# ruff: noqa: E402
 from __future__ import annotations
 
 import argparse
@@ -11,6 +12,12 @@ SRC = ROOT / "src"
 for path in (ROOT, SRC):
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
+
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from scripts.proof_worktree_import_guard import ensure_worktree_imports
+
+ensure_worktree_imports(__file__)
 
 from app.application.report.intake_route_source_contract import (  # noqa: E402
     build_report_intake_route_source_contract_proof_payload,

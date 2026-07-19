@@ -1,3 +1,4 @@
+# ruff: noqa: E402
 from __future__ import annotations
 
 import argparse
@@ -15,6 +16,12 @@ if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
+
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from scripts.proof_worktree_import_guard import ensure_worktree_imports
+
+ensure_worktree_imports(__file__)
 
 from app.application.outbox.delivery import (  # noqa: E402
     OUTBOX_DELIVERY_RUN_ONCE_BATCH_CEILING,

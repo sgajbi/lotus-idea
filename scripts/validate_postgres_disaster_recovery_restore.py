@@ -1,3 +1,4 @@
+# ruff: noqa: E402
 from __future__ import annotations
 
 import argparse
@@ -14,6 +15,12 @@ from scripts.run_postgres_disaster_recovery_drill import (  # noqa: E402
     DEFAULT_OUTPUT_PATH,
     validate_restored_database,
 )
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from scripts.proof_worktree_import_guard import ensure_worktree_imports
+
+ensure_worktree_imports(__file__)
+
 from app.domain.disaster_recovery import RestoreValidationStatus  # noqa: E402
 
 

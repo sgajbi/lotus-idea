@@ -1,9 +1,18 @@
+# ruff: noqa: E402
 from __future__ import annotations
 
 from datetime import UTC, datetime
 import json
 from pathlib import Path
 from typing import Any
+
+
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from scripts.proof_worktree_import_guard import ensure_worktree_imports
+
+ensure_worktree_imports(__file__)
 
 from app.application.proof_provenance import bind_aggregate_proof_provenance
 from app.domain.proof_evidence import CIExecutionReceipt, ci_execution_receipt_from_mapping

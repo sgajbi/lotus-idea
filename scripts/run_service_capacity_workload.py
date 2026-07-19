@@ -1,3 +1,4 @@
+# ruff: noqa: E402
 from __future__ import annotations
 
 import argparse
@@ -10,6 +11,11 @@ import sys
 import time
 from typing import Mapping
 
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from scripts.proof_worktree_import_guard import ensure_worktree_imports
+
+ensure_worktree_imports(__file__)
 from app.application.service_capacity_baseline import (
     CapacityMeasurement,
     SCENARIOS,
@@ -89,7 +95,6 @@ def build_workload_plans(
         raise ValueError("mutating scenarios require --allow-mutating-workflows")
     if mutating and environment_profile == "production" and not allow_production_mutations:
         raise ValueError("production mutations require --allow-production-mutations")
-
     headers = _base_headers()
     return [
         _plan(
@@ -392,7 +397,6 @@ def _execute_measurements(
             paced_result.observed_window_seconds,
             paced_result.postgres_max_connection_utilization_fraction,
         )
-
     started_at = time.perf_counter()
     measurements: list[CapacityMeasurement] = []
     for plan in plans:
@@ -418,11 +422,7 @@ def _execute_measurements(
         )
         measurements.extend(postgres_result.measurements)
         postgres_max_utilization = postgres_result.max_connection_utilization_fraction
-    return (
-        measurements,
-        max(time.perf_counter() - started_at, 0.000001),
-        postgres_max_utilization,
-    )
+    return measurements, max(time.perf_counter() - started_at, 0.000001), postgres_max_utilization
 
 
 def validate_paced_load_soak_request(

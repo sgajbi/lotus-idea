@@ -1,8 +1,17 @@
+# ruff: noqa: E402
 from __future__ import annotations
 
 from copy import deepcopy
 from datetime import UTC, date, datetime
 import sys
+
+from pathlib import Path
+
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from scripts.proof_worktree_import_guard import ensure_worktree_imports
+
+ensure_worktree_imports(__file__)
 
 from app.application.core_benchmark_assignment_runtime_evidence import (
     EvaluateCoreBenchmarkAssignmentReadiness,

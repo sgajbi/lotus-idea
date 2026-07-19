@@ -1421,35 +1421,44 @@ Recent issue-derived patterns to preserve:
     can clear implementation-readiness blockers; dirty-tree or missing
     `sourceTreeDirty` provenance is diagnostic-only and must not add evidence
     refs or remove blockers.
-11. PostgreSQL mutation paths need optimistic same-candidate guards and
+11. repo-native proof generators and proof gates that import `app` must call
+    `scripts.proof_worktree_import_guard.ensure_worktree_imports(__file__)`
+    before the first application import. The guard pins application imports to
+    the entrypoint's owning worktree and fails closed with
+    `proof_import_worktree_mismatch` when a reused editable virtual environment
+    or ambient `PYTHONPATH` has already loaded or would discover `app` from a
+    sibling checkout. `tests/unit/test_proof_worktree_import_guard.py`
+    statically enforces the guard and simulates the sibling-worktree failure
+    mode.
+12. PostgreSQL mutation paths need optimistic same-candidate guards and
     database idempotency-collision retry; full-snapshot mutation helpers must
     not silently overwrite stale state or leak raw primary-key collisions,
-12. PostgreSQL snapshot replacement write helpers belong in
+13. PostgreSQL snapshot replacement write helpers belong in
     `app.infrastructure.postgres_snapshot_writes`; do not add new
     snapshot/detail insert SQL back to `postgres_repository.py`. Preserve the
     distinction between full snapshot/admin/test/DR behavior and ordinary
     bounded request-path mutations/projections,
-13. persisted AI explanation lineage writes need both API-level idempotency and
+14. persisted AI explanation lineage writes need both API-level idempotency and
     domain request-id replay protection; same-key replay/conflict and
     distinct-key request-id conflict must remain separately tested,
-14. AI explanation evaluation must use the single governed workflow-pack
+15. AI explanation evaluation must use the single governed workflow-pack
     contract in `app.domain.ai_governance`: public request identity
     `lotus-ai:idea-explanation:v1` + version `v1` + evaluator
     `lotus-ai:governed-verifier:v1` maps deliberately to the proof identity
     `idea_explanation.pack@v1`; arbitrary caller-supplied pack identities must
     fail closed with product-safe `invalid_ai_workflow_pack` before candidate
     lookup or lineage persistence,
-15. privileged operator run-once mutations need explicit operator run identity
+16. privileged operator run-once mutations need explicit operator run identity
    and idempotency before event claims or external side effects,
-16. release evidence artifacts must name their scope, target artifact or
+17. release evidence artifacts must name their scope, target artifact or
     dependency source, generator, path, and non-proof boundary before being cited
     as release proof,
-17. runtime dependency SBOM evidence must come from the resolved runtime
+18. runtime dependency SBOM evidence must come from the resolved runtime
     dependency closure in `requirements/runtime-resolved.lock.txt`, not from
     direct-only runtime requirements or an ambiguous CI environment; the
     supported-name `requirements/requirements.txt` exists only as a gated
     mirror for GitHub Dependency Graph support,
-18. Python dependency updates must move root pins and runtime lock evidence
+19. Python dependency updates must move root pins and runtime lock evidence
     through the governed `make dependency-refresh` path. Dependabot must not
     open a separate `/requirements` lock-only stream; lock refreshes should
     regenerate both `requirements/runtime-resolved.lock.txt` and
@@ -1458,33 +1467,33 @@ Recent issue-derived patterns to preserve:
     `open-pull-requests-limit: 0` while RFC implementation is active; security
     alerts and security-update posture remain governed through the GitHub
     Security tab and `make github-security-posture-check`,
-19. GitHub Actions shell commands that interpolate runtime environment values
+20. GitHub Actions shell commands that interpolate runtime environment values
     such as `${GITHUB_REPOSITORY}` or `${GITHUB_RUN_ID}` must quote the whole
     composed argument so workflow lint remains clean and CI signal evidence
     jobs do not accumulate avoidable ShellCheck annotations.
-20. Docker build and scan evidence must be paired with bounded packaged-runtime
+21. Docker build and scan evidence must be paired with bounded packaged-runtime
     startup and health-surface smoke proof before claiming release image
     confidence,
-21. generated proof and quality evidence must be reproducible from current
+22. generated proof and quality evidence must be reproducible from current
     gate rules or be documented as on-demand evidence rather than current proof,
-22. ignored report-only artifacts must not be cited as durable current-state
+23. ignored report-only artifacts must not be cited as durable current-state
     proof unless a deterministic committed-artifact drift gate exists,
-23. documentation should record the durable rule, not only the one-off fix,
-24. supportability, readiness, health-state, and data-quality vocabulary must
+24. documentation should record the durable rule, not only the one-off fix,
+25. supportability, readiness, health-state, and data-quality vocabulary must
     not be treated as freshness-current evidence unless a source-owned freshness
     field explicitly uses governed freshness vocabulary.
-25. dashboard and alert source-contract validation should be pattern-backed with a
+26. dashboard and alert source-contract validation should be pattern-backed with a
     machine-readable contract, concrete Grafana/Prometheus/runbook artifacts,
     proof gates, drift tests, and explicit non-proof boundaries. Runtime
     certification additionally requires environment-bound provisioning, query,
     rule-evaluation, delivery, and deployment evidence; do not rely on a metric
     catalog or static files alone for operator visibility claims.
-26. mutating workflow idempotency must be true in both runtime behavior and
+27. mutating workflow idempotency must be true in both runtime behavior and
     OpenAPI contract truth. Routes that require `Idempotency-Key` should use the
     shared `app.api.idempotency` route list and validation helpers, and
     `make api-idempotency-boundary-gate` must fail optional or defaulted
     `Idempotency-Key` OpenAPI headers for certified idempotent mutations.
-27. Docker runtime images should install the resolved runtime dependency lock
+28. Docker runtime images should install the resolved runtime dependency lock
     before copying application source, then install the local service package
     with `--no-deps` after `COPY src`; `.dockerignore` must keep generated
     coverage, SBOM, quality-report, and proof-output artifacts out of Docker

@@ -1,3 +1,4 @@
+# ruff: noqa: E402
 from __future__ import annotations
 
 import argparse
@@ -8,6 +9,12 @@ from pathlib import Path
 import subprocess
 import sys
 from typing import Any, Callable, Mapping
+
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from scripts.proof_worktree_import_guard import ensure_worktree_imports
+
+ensure_worktree_imports(__file__)
 
 from app.application.performance_benchmark_readiness_runtime_evidence import (
     performance_benchmark_readiness_runtime_execution_is_valid,

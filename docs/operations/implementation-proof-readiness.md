@@ -170,6 +170,23 @@ readiness blockers. This provenance binding is internal implementation
 evidence; it is not data-mesh certification, client-publication approval, or
 supported-feature promotion.
 
+## Proof Worktree Import Integrity
+
+Repo-native proof generators and proof gates that import `app` must call
+`scripts.proof_worktree_import_guard.ensure_worktree_imports(__file__)` before
+the first application import. The guard pins imports to the entrypoint's owning
+worktree `src/` directory and repository root, then fails closed with
+`proof_import_worktree_mismatch` if an already-loaded or discoverable `app`
+module resolves outside that worktree.
+
+This prevents a clean, revision-bound proof artifact from executing application
+code from a sibling checkout through a reused editable virtual environment or
+ambient `PYTHONPATH`. Operators and agents should use repo-native proof
+commands instead of ad hoc cross-worktree invocations. The invariant is covered
+by `tests/unit/test_proof_worktree_import_guard.py`, including a sibling
+worktree regression and a static scan that requires the guard before every
+application import in proof and contract scripts.
+
 ## Evidence-Class Boundary
 
 Proof authority is classified as source contract, local test execution, CI

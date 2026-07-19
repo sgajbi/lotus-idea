@@ -1,3 +1,4 @@
+# ruff: noqa: E402
 from __future__ import annotations
 
 from datetime import UTC, datetime
@@ -6,6 +7,11 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
+
+
+from scripts.proof_worktree_import_guard import ensure_worktree_imports
+
+ensure_worktree_imports(__file__)
 
 from app.application.workbench.contract_proof import (  # noqa: E402
     GATEWAY_WORKBENCH_CONTRACT_BLOCKERS_CLEARED,

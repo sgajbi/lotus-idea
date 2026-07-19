@@ -1,3 +1,4 @@
+# ruff: noqa: E402
 from __future__ import annotations
 
 import argparse
@@ -10,6 +11,12 @@ try:
     from scripts.outbox._bootstrap import ROOT
 except ModuleNotFoundError:  # pragma: no cover - direct script execution
     from _bootstrap import ROOT  # type: ignore[import-not-found,no-redef]
+
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from scripts.proof_worktree_import_guard import ensure_worktree_imports
+
+ensure_worktree_imports(__file__)
 
 from app.application.outbox.supportability_alerts import (  # noqa: E402
     OUTBOX_DELIVERY_OLDEST_READY_AGE_ALERT_SECONDS,

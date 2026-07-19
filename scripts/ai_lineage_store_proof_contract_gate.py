@@ -1,8 +1,15 @@
+# ruff: noqa: E402
 from __future__ import annotations
 
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
+
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from scripts.proof_worktree_import_guard import ensure_worktree_imports
+
+ensure_worktree_imports(__file__)
 
 from app.application.ai_lineage_store_proof import (
     AI_LINEAGE_STORE_PROOF_SCHEMA_VERSION,

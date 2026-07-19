@@ -1,6 +1,15 @@
+# ruff: noqa: E402
 from __future__ import annotations
 
 from datetime import date, datetime
+
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from scripts.proof_worktree_import_guard import ensure_worktree_imports
+
+ensure_worktree_imports(__file__)
 
 from app.ports.advise_sources import AdvisePolicyEvaluationEvidenceRequest
 

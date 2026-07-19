@@ -1,3 +1,4 @@
+# ruff: noqa: E402
 from __future__ import annotations
 
 import ast
@@ -16,6 +17,12 @@ try:
     from scripts.contract_text_guards import validate_forbidden_contract_text
 except ModuleNotFoundError:
     from contract_text_guards import validate_forbidden_contract_text  # type: ignore[import-not-found,no-redef]
+
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from scripts.proof_worktree_import_guard import ensure_worktree_imports
+
+ensure_worktree_imports(__file__)
 
 from app.domain.outbox.events import (  # noqa: E402
     FORBIDDEN_OUTBOX_PAYLOAD_KEYS,

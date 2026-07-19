@@ -1,3 +1,4 @@
+# ruff: noqa: E402
 from __future__ import annotations
 
 from datetime import UTC, datetime
@@ -16,6 +17,12 @@ try:
     from scripts.proof_source_safety import forbidden_content_validator, validate_forbidden_content
 except ModuleNotFoundError:
     from proof_source_safety import forbidden_content_validator, validate_forbidden_content  # type: ignore[import-not-found,no-redef]
+
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from scripts.proof_worktree_import_guard import ensure_worktree_imports
+
+ensure_worktree_imports(__file__)
 
 from app.application.report.materialization_source_contract import (  # noqa: E402
     REMAINING_REPORT_MATERIALIZATION_BLOCKERS,
