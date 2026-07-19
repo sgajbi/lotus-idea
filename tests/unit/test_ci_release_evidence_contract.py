@@ -415,6 +415,27 @@ def test_ci_contract_gate_blocks_missing_standalone_migration_entrypoint() -> No
     )
 
 
+def test_ci_contract_gate_blocks_missing_runtime_proof_import_guard() -> None:
+    dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
+    degraded = dockerfile.replace(
+        "COPY scripts/proof_worktree_import_guard.py ./scripts/proof_worktree_import_guard.py\n",
+        "",
+    )
+
+    assert "Dockerfile must include the runtime proof import guard" in (
+        validate_dockerfile_runtime(degraded)
+    )
+
+
+def test_ci_contract_gate_blocks_missing_runtime_scripts_package_marker() -> None:
+    dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
+    degraded = dockerfile.replace("COPY scripts/__init__.py ./scripts/__init__.py\n", "")
+
+    assert "Dockerfile must include the runtime scripts package marker" in (
+        validate_dockerfile_runtime(degraded)
+    )
+
+
 def test_ci_contract_gate_blocks_unfinalized_cyclonedx_release_sbom() -> None:
     makefile = (
         (ROOT / "Makefile")

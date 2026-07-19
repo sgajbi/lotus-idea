@@ -368,6 +368,12 @@ def test_github_issue_closure_matrix_gate_requires_proof_worktree_import_issue(
     _assert_matrix_requires_issue(tmp_path, 664)
 
 
+def test_github_issue_closure_matrix_gate_requires_docker_proof_import_guard_issue(
+    tmp_path: Path,
+) -> None:
+    _assert_matrix_requires_issue(tmp_path, 666)
+
+
 def test_github_issue_closure_matrix_gate_requires_postgres_snapshot_writes_issue(
     tmp_path: Path,
 ) -> None:
