@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import UTC, datetime
 import json
 from pathlib import Path
@@ -77,6 +78,22 @@ from tests.unit.test_supported_features_gate import (
 )
 
 ROOT = Path(__file__).resolve().parents[2]
+
+
+@dataclass(frozen=True)
+class ReadinessProofArtifactPaths:
+    manifest: Path
+    source_ingestion_runtime: Path
+    scheduled_worker_deployment: Path
+    scheduled_worker_source_contract: Path
+    durable_repository: Path
+    runtime_trust_telemetry: Path
+    ai_lineage_store: Path
+    ai_model_risk_operations: Path
+    operator_workflows_operations: Path
+    workbench_read_path: Path
+    report_intake_route: Path
+    bond_maturity_live: Path
 
 
 def proof_readiness_headers(
@@ -487,45 +504,71 @@ def _configure_readiness_proof_artifacts(
     tmp_path: Path,
     evaluated_at_utc: datetime,
 ) -> None:
+    _bind_readiness_proof_provenance(monkeypatch)
+    artifact_paths = _readiness_proof_artifact_paths(tmp_path)
+    _write_readiness_proof_artifacts(
+        artifact_paths=artifact_paths,
+        evaluated_at_utc=evaluated_at_utc,
+    )
+    _bind_readiness_proof_artifact_env(
+        monkeypatch=monkeypatch,
+        artifact_paths=artifact_paths,
+    )
+
+
+def _bind_readiness_proof_provenance(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         "app.runtime.proof_artifacts.bind_aggregate_proof_provenance",
         bind_clean_aggregate_proof_provenance,
     )
-    manifest_path = tmp_path / "source-ingestion-manifest.json"
-    live_proof_path = tmp_path / "source-ingestion-runtime-execution.json"
-    deployment_evidence_path = (
-        tmp_path / "source-ingestion-scheduled-worker-deployment-evidence.json"
-    )
-    source_contract_path = tmp_path / "source-ingestion-scheduled-worker-source-contract.json"
-    durable_proof_path = tmp_path / "durable-repository-proof.json"
-    runtime_proof_path = tmp_path / "runtime-trust-telemetry-test-execution.json"
-    ai_lineage_proof_path = tmp_path / "ai-lineage-store-proof.json"
-    ai_model_risk_proof_path = tmp_path / "ai-model-risk-operations-source-contract-proof.json"
-    operator_workflows_proof_path = (
-        tmp_path / "operator-workflows-operations-source-contract-proof.json"
-    )
-    workbench_proof_path = tmp_path / "read-path-source-contract-proof.json"
-    report_route_proof_path = tmp_path / "report-intake-route-source-contract-proof.json"
-    bond_maturity_live_proof_path = tmp_path / "bond-maturity-live-proof.json"
 
-    manifest_path.write_text("{}", encoding="utf-8")
+
+def _readiness_proof_artifact_paths(tmp_path: Path) -> ReadinessProofArtifactPaths:
+    return ReadinessProofArtifactPaths(
+        manifest=tmp_path / "source-ingestion-manifest.json",
+        source_ingestion_runtime=tmp_path / "source-ingestion-runtime-execution.json",
+        scheduled_worker_deployment=(
+            tmp_path / "source-ingestion-scheduled-worker-deployment-evidence.json"
+        ),
+        scheduled_worker_source_contract=(
+            tmp_path / "source-ingestion-scheduled-worker-source-contract.json"
+        ),
+        durable_repository=tmp_path / "durable-repository-proof.json",
+        runtime_trust_telemetry=tmp_path / "runtime-trust-telemetry-test-execution.json",
+        ai_lineage_store=tmp_path / "ai-lineage-store-proof.json",
+        ai_model_risk_operations=(tmp_path / "ai-model-risk-operations-source-contract-proof.json"),
+        operator_workflows_operations=(
+            tmp_path / "operator-workflows-operations-source-contract-proof.json"
+        ),
+        workbench_read_path=tmp_path / "read-path-source-contract-proof.json",
+        report_intake_route=tmp_path / "report-intake-route-source-contract-proof.json",
+        bond_maturity_live=tmp_path / "bond-maturity-live-proof.json",
+    )
+
+
+def _write_readiness_proof_artifacts(
+    *,
+    artifact_paths: ReadinessProofArtifactPaths,
+    evaluated_at_utc: datetime,
+) -> None:
+    artifact_paths.manifest.write_text("{}", encoding="utf-8")
     _write_proof(
-        live_proof_path,
+        artifact_paths.source_ingestion_runtime,
         runtime_execution(generated_at_utc=evaluated_at_utc),
     )
     _write_proof(
-        deployment_evidence_path,
+        artifact_paths.scheduled_worker_deployment,
         deployment_evidence(
             repository_root=ROOT,
             source_commit_sha=current_source_revision(ROOT),
         ),
     )
     _write_proof(
-        source_contract_path,
+        artifact_paths.scheduled_worker_source_contract,
         source_contract(repository_root=ROOT),
     )
     _write_proof(
-        durable_proof_path,
+        artifact_paths.durable_repository,
         build_durable_repository_proof_payload(
             generated_at_utc=evaluated_at_utc,
             repository_root=ROOT,
@@ -534,14 +577,14 @@ def _configure_readiness_proof_artifacts(
         ),
     )
     _write_proof(
-        runtime_proof_path,
+        artifact_paths.runtime_trust_telemetry,
         build_runtime_trust_telemetry_test_execution_payload(
             generated_at_utc=evaluated_at_utc,
             repository_root=ROOT,
         ),
     )
     _write_proof(
-        ai_lineage_proof_path,
+        artifact_paths.ai_lineage_store,
         build_ai_lineage_store_proof_payload(
             generated_at_utc=evaluated_at_utc,
             repository_root=ROOT,
@@ -549,58 +592,82 @@ def _configure_readiness_proof_artifacts(
         ),
     )
     _write_proof(
-        ai_model_risk_proof_path,
+        artifact_paths.ai_model_risk_operations,
         build_ai_model_risk_operations_proof_payload(
             generated_at_utc=evaluated_at_utc,
             repository_root=ROOT,
         ),
     )
     _write_proof(
-        operator_workflows_proof_path,
+        artifact_paths.operator_workflows_operations,
         build_operator_workflows_operations_proof_payload(
             generated_at_utc=evaluated_at_utc,
             repository_root=ROOT,
         ),
     )
     _write_proof(
-        workbench_proof_path,
+        artifact_paths.workbench_read_path,
         build_workbench_read_path_source_contract_proof_payload(
             generated_at_utc=evaluated_at_utc,
             repository_root=ROOT,
         ),
     )
     _write_proof(
-        report_route_proof_path,
+        artifact_paths.report_intake_route,
         _valid_report_intake_route_source_contract_proof(
             generated_at_utc=evaluated_at_utc,
         ),
     )
     _write_proof(
-        bond_maturity_live_proof_path,
+        artifact_paths.bond_maturity_live,
         _valid_bond_maturity_live_proof(generated_at_utc=evaluated_at_utc),
     )
 
-    monkeypatch.setenv(MANIFEST_ENV, str(manifest_path))
-    monkeypatch.setenv(SOURCE_INGESTION_RUNTIME_EXECUTION_ENV, str(live_proof_path))
+
+def _bind_readiness_proof_artifact_env(
+    *,
+    monkeypatch: pytest.MonkeyPatch,
+    artifact_paths: ReadinessProofArtifactPaths,
+) -> None:
+    monkeypatch.setenv(MANIFEST_ENV, str(artifact_paths.manifest))
+    monkeypatch.setenv(
+        SOURCE_INGESTION_RUNTIME_EXECUTION_ENV,
+        str(artifact_paths.source_ingestion_runtime),
+    )
     monkeypatch.setenv(
         SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE_ENV,
-        str(deployment_evidence_path),
+        str(artifact_paths.scheduled_worker_deployment),
     )
-    monkeypatch.setenv(SCHEDULED_WORKER_SOURCE_CONTRACT_ENV, str(source_contract_path))
+    monkeypatch.setenv(
+        SCHEDULED_WORKER_SOURCE_CONTRACT_ENV,
+        str(artifact_paths.scheduled_worker_source_contract),
+    )
     monkeypatch.setenv(CORE_BASE_URL_ENV, "http://localhost:8310")
-    monkeypatch.setenv(DURABLE_REPOSITORY_PROOF_ENV, str(durable_proof_path))
-    monkeypatch.setenv(RUNTIME_TRUST_TELEMETRY_TEST_EXECUTION_ENV, str(runtime_proof_path))
-    monkeypatch.setenv(AI_LINEAGE_STORE_PROOF_ENV, str(ai_lineage_proof_path))
-    monkeypatch.setenv(AI_MODEL_RISK_OPERATIONS_PROOF_ENV, str(ai_model_risk_proof_path))
-    monkeypatch.setenv(OPERATOR_WORKFLOWS_OPERATIONS_PROOF_ENV, str(operator_workflows_proof_path))
+    monkeypatch.setenv(DURABLE_REPOSITORY_PROOF_ENV, str(artifact_paths.durable_repository))
+    monkeypatch.setenv(
+        RUNTIME_TRUST_TELEMETRY_TEST_EXECUTION_ENV,
+        str(artifact_paths.runtime_trust_telemetry),
+    )
+    monkeypatch.setenv(AI_LINEAGE_STORE_PROOF_ENV, str(artifact_paths.ai_lineage_store))
+    monkeypatch.setenv(
+        AI_MODEL_RISK_OPERATIONS_PROOF_ENV,
+        str(artifact_paths.ai_model_risk_operations),
+    )
+    monkeypatch.setenv(
+        OPERATOR_WORKFLOWS_OPERATIONS_PROOF_ENV,
+        str(artifact_paths.operator_workflows_operations),
+    )
     monkeypatch.setenv(
         WORKBENCH_READ_PATH_SOURCE_CONTRACT_PROOF_ENV,
-        str(workbench_proof_path),
+        str(artifact_paths.workbench_read_path),
     )
-    monkeypatch.setenv(REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF_ENV, str(report_route_proof_path))
+    monkeypatch.setenv(
+        REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF_ENV,
+        str(artifact_paths.report_intake_route),
+    )
     monkeypatch.setenv(
         BOND_MATURITY_RUNTIME_EXECUTION_ENV,
-        str(bond_maturity_live_proof_path),
+        str(artifact_paths.bond_maturity_live),
     )
 
 

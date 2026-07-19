@@ -6,6 +6,45 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-07-19: Implementation Proof Readiness API Artifact Setup Boundary
+
+Issue `#656` applies the Slice 19 report-only quality-baseline lens to the
+implementation-proof readiness API configured-artifact setup. After issue
+`#655`, `make quality-baseline` listed
+`tests/integration/test_implementation_proof_readiness_api.py::_configure_readiness_proof_artifacts`
+at `121` lines.
+
+The helper mixed:
+
+1. aggregate proof provenance binding,
+2. configured proof-artifact path construction,
+3. source-ingestion, durable repository, telemetry, AI, Workbench, Report, and
+   bond-maturity proof payload writing,
+4. environment-variable binding for the readiness API integration path.
+
+`tests/integration/test_implementation_proof_readiness_api.py` now keeps the
+same configured-artifact readiness API proof, but `_configure_readiness_proof_artifacts(...)`
+is a short orchestrator over named helpers for provenance, typed paths, payload
+writes, and environment binding. Artifact filenames, payload builders, env vars,
+readiness blockers, source-safe evidence refs, and supported-feature
+non-promotion assertions are preserved.
+
+Focused validation passed:
+
+1. `python -m ruff check tests/integration/test_implementation_proof_readiness_api.py`,
+2. `python -m ruff format --check tests/integration/test_implementation_proof_readiness_api.py`,
+3. `python -m mypy tests/integration/test_implementation_proof_readiness_api.py`,
+4. `python -m pytest tests/integration/test_implementation_proof_readiness_api.py -q`
+   (`8` passed).
+
+This is test-support maintainability only. It does not change production
+readiness behavior, proof-artifact contract behavior, API/OpenAPI, persistence,
+migrations, authentication or authorization infrastructure, Core, Gateway,
+Workbench, runtime topology, wiki source, README, supported-features, data-mesh
+certification, external-publication authority, or supported-feature promotion.
+Broader local gates, PR checks, exact-main Main Releasability/CodeQL, wiki
+parity, issue closure, and branch cleanup remain pending for the tranche.
+
 ## 2026-07-19: PostgreSQL Outbox Recovery Workflow Proof Boundary
 
 Issue `#655` applies the Slice 19 report-only quality-baseline lens to the
