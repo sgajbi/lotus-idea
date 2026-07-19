@@ -70,14 +70,17 @@ def test_downstream_realization_readiness_api_returns_blocked_operator_posture(
     assert "dedicated_report_idea_evidence_intake_contract_missing" not in payload["blockers"]
     assert payload["blockerIssueRefs"]["advise_live_contract_proof_missing"] == [
         "sgajbi/lotus-idea#688",
+        "sgajbi/lotus-idea#379",
         "sgajbi/lotus-advise#461",
     ]
     assert payload["blockerIssueRefs"]["manage_live_contract_proof_missing"] == [
         "sgajbi/lotus-idea#689",
+        "sgajbi/lotus-idea#379",
         "sgajbi/lotus-manage#621",
     ]
     assert payload["blockerIssueRefs"]["archive_record_creation_missing"] == [
         "sgajbi/lotus-idea#690",
+        "sgajbi/lotus-idea#691",
         "sgajbi/lotus-archive#72",
     ]
     assert {capability["capabilityId"] for capability in payload["capabilities"]} == {
@@ -97,6 +100,7 @@ def test_downstream_realization_readiness_api_returns_blocked_operator_posture(
     )
     assert advise_capability["blockerIssueRefs"]["advise_live_contract_proof_missing"] == [
         "sgajbi/lotus-idea#688",
+        "sgajbi/lotus-idea#379",
         "sgajbi/lotus-advise#461",
     ]
     assert {contract["contractId"] for contract in payload["downstreamContracts"]} == {
@@ -118,6 +122,7 @@ def test_downstream_realization_readiness_api_returns_blocked_operator_posture(
     assert "lotus_report_live_intake_route_proof_missing" in report_contract["blockers"]
     assert report_contract["blockerIssueRefs"]["lotus_report_live_intake_route_proof_missing"] == [
         "sgajbi/lotus-idea#690",
+        "sgajbi/lotus-idea#379",
         "sgajbi/lotus-report#152",
     ]
     assert (
@@ -162,6 +167,8 @@ def test_downstream_readiness_api_adds_report_source_contract_without_runtime_cl
     assert "client_publication_authority_blocked" in payload["blockers"]
     assert payload["blockerIssueRefs"]["client_publication_authority_blocked"] == [
         "sgajbi/lotus-idea#690",
+        "sgajbi/lotus-idea#691",
+        "sgajbi/lotus-idea#380",
         "sgajbi/lotus-report#152",
     ]
     report_contract = next(
