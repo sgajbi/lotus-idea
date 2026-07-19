@@ -187,7 +187,51 @@ def test_in_memory_recovery_claim_is_idempotent_and_lease_fenced() -> None:
     assert replay.decision is OutboxRecoveryDecision.REPLAYED
     assert replay.audit_record == accepted.audit_record
     assert competing.decision is OutboxRecoveryDecision.LEASE_CONFLICT
+    assert competing.blocker == "recovery_lease_conflict"
     assert len(repository.outbox_recovery_audit_records()) == 1
+
+
+def test_recovery_replay_uses_idempotency_before_support_lookup() -> None:
+    dead_lettered = _dead_lettered_event()
+    support_reference = outbox_dead_letter_support_reference(dead_lettered.event_id)
+    request_payload = outbox_recovery_request_payload(
+        support_reference=support_reference,
+        reason="broker_route_corrected",
+        change_reference="CHG-2026-0710",
+        actor_subject="platform-operator",
+    )
+    audit_record = build_outbox_recovery_audit_record(
+        dead_lettered,
+        idempotency_key="outbox-redrive:accepted",
+        request_payload=request_payload,
+        actor_subject="platform-operator",
+        reason="broker_route_corrected",
+        change_reference="CHG-2026-0710",
+        requested_at_utc=EVENT_TIME + timedelta(minutes=5),
+        lease_owner="outbox-recovery",
+        lease_attempt_id="recovery-attempt-1",
+        lease_expires_at_utc=EVENT_TIME + timedelta(minutes=10),
+    )
+
+    replay = claim_dead_letter_for_recovery(
+        {},
+        {audit_record.recovery_id: audit_record},
+        support_reference=support_reference,
+        idempotency_key="outbox-redrive:accepted",
+        request_payload=request_payload,
+        actor_subject="platform-operator",
+        reason="broker_route_corrected",
+        change_reference="CHG-2026-0710",
+        requested_at_utc=EVENT_TIME + timedelta(minutes=6),
+        lease_owner="outbox-recovery",
+        lease_attempt_id="recovery-attempt-replay",
+        lease_expires_at_utc=EVENT_TIME + timedelta(minutes=11),
+    )
+
+    assert replay.decision is OutboxRecoveryDecision.REPLAYED
+    assert replay.audit_record == audit_record
+    assert replay.event is None
+    assert replay.blocker is None
 
 
 def test_in_memory_recovery_rejects_idempotency_conflict_and_attempt_limit() -> None:
