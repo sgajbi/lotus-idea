@@ -6,8 +6,8 @@ import logging
 from typing import Any
 
 from _pytest.logging import LogCaptureFixture
+from httpx import Response
 from tests.support.http import ManagedTestClient, managed_test_client
-from httpx2 import Response
 import pytest
 
 from app.api.caller_headers import TRUSTED_CALLER_CONTEXT_HEADER, TRUSTED_CALLER_CONTEXT_TOKEN_ENV

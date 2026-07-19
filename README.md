@@ -191,7 +191,7 @@ Common gates:
 | `make documentation-contract-gate` | README, repo context, docs, wiki, demo, and evidence-surface contract truth. |
 | `make implementation-truth-gate`, `make implementation-proof-closure-manifest-gate`, `make blueprint-scope-coverage-gate` | Blocks overclaims and requires RFC-0002 proof blockers plus blueprint scope to have issue/evidence-class closure truth. |
 | `make foundation-structure-gate` | Enforces foundation-only posture, documentation truth, and architecture-boundary agreement. |
-| `make dependency-vulnerability-posture-gate` | Enforces the RFC-0002 Slice 15 dependency/container vulnerability posture contract, including exact stable pins, scanner wiring, release hooks, and issue-backed exceptions. |
+| `make dependency-vulnerability-posture-gate` | Enforces the RFC-0002 Slice 15 dependency/container vulnerability posture contract, including approved direct dependencies, exact stable pins, scanner wiring, release hooks, and issue-backed exceptions. |
 | `make quality-scorecard-gate` | Keeps quality posture aligned with implementation truth. |
 | `make supported-features-gate` | Ensures supported-feature registry entries are implementation-backed only. |
 | `make endpoint-certification-gate` | Validates endpoint certification evidence and OpenAPI caller-context truth. |
