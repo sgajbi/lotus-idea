@@ -34,6 +34,12 @@ claims.
    truth.
 7. If no post should be drafted, record the reason as an explicit closure
    outcome rather than leaving communication status ambiguous.
+8. Apply the 2026-07-19 #702 research-gate decisions in
+   `docs/research/advisor-intelligence-product-differentiation.md`: only
+   evidence-grounded advisor narrative and deterministic review prioritization
+   are in bounded RFC-0002 foundation scope. Do not describe deferred
+   counterfactual analysis, multilingual explanation, feedback learning, or
+   meeting preparation as delivered, supported, or client-ready.
 
 ## Acceptance Gate
 

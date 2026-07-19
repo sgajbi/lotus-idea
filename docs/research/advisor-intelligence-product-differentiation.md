@@ -4,7 +4,7 @@
 | --- | --- |
 | **Status** | Research and delivery guardrail; not implementation or supported-feature evidence |
 | **Applies to** | RFC-0002 Slice 09 and later Gateway, Workbench, proof, and promotion slices |
-| **Last reviewed** | 2026-07-14 |
+| **Last reviewed** | 2026-07-19 |
 | **Product owner** | `lotus-idea` for opportunity intelligence; `lotus-ai` for AI runtime infrastructure and governed workflow packs |
 | **Review trigger** | Before external Slice 09 certification work, before a material AI capability decision, and before supported-feature promotion |
 
@@ -26,7 +26,7 @@ validation, and supported-feature promotion all exist.
 
 ## Market Baseline
 
-Primary sources reviewed on 2026-07-14 show four established patterns:
+Primary sources reviewed on 2026-07-19 show four established patterns:
 
 | Pattern | Public evidence | Consequence for Lotus |
 | --- | --- | --- |
@@ -35,9 +35,32 @@ Primary sources reviewed on 2026-07-14 show four established patterns:
 | Meeting workflow assistance with human control | [Morgan Stanley AI Debrief](https://www.morganstanley.com/press-releases/ai-at-morgan-stanley-debrief-launch) creates meeting notes, action items, and drafts for advisor review. | Human review is baseline. Lotus must additionally bind outputs to governed evidence and prohibit downstream authority. |
 | Personalized nudges at operating scale | [DBS AI-powered nudges](https://www.dbs.com/artificial-intelligence-machine-learning/index.html) describes personalized insights and relationship-manager discussion prompts. | Personalization must be bounded by entitlement, purpose, policy, freshness, and model-risk controls rather than opaque targeting. |
 
-Control design must continue to use current authoritative guidance, including
-the [NIST Generative AI Profile](https://www.nist.gov/publications/artificial-intelligence-risk-management-framework-generative-artificial-intelligence)
-and applicable financial-sector model-risk and responsible-AI requirements.
+The 2026 refresh also reviewed:
+
+1. [BlackRock Aladdin Wealth Auto Commentary at Morgan Stanley](https://www.blackrock.com/aladdin/discover/press-release/aladdin-wealth-launches-ai-enabled-commentary-tool-at-morgan-stanley),
+   which reinforces that portfolio-commentary generation is becoming an
+   enterprise wealth-platform baseline, not a sufficient differentiator by
+   itself.
+2. [BlackRock Advisor Gateway / Auto Commentary at Wells Fargo](https://www.blackrock.com/aladdin/discover/press-release/wells-fargo-launches-advisor-gateway-for-financial-advisors),
+   which reinforces that advisor meeting preparation and structured portfolio
+   insights are being embedded into advisor desktops.
+3. [DBS 2025 AI Bank announcement](https://www.dbs.com/newsroom/DBS_named_Worlds_Best_AI_Bank_2025),
+   which reinforces that hyper-personalized nudges and relationship-manager
+   insight assistance are already operating-scale bank patterns.
+4. [FINRA Regulatory Notice 24-09](https://www.finra.org/rules-guidance/notices/24-09),
+   which reinforces that generative-AI use does not remove existing securities
+   supervision, communications, records, and compliance obligations.
+5. [NIST AI RMF Generative AI Profile](https://www.nist.gov/publications/artificial-intelligence-risk-management-framework-generative-artificial-intelligence),
+   which remains the cross-sector control anchor for generative-AI risk
+   identification and lifecycle management.
+6. [OCC 2026 model-risk management guidance](https://www.occ.gov/news-issuances/bulletins/2026/bulletin-2026-13.html)
+   and the [FDIC revised model-risk guidance](https://www.fdic.gov/model-risk-management-revised-guidance.pdf),
+   which reinforce risk-based model development, use, validation, monitoring,
+   governance, controls, and third-party considerations for bank model risk.
+7. [MAS FEAT principles](https://www.mas.gov.sg/news/media-releases/2018/mas-introduces-new-feat-principles-to-promote-responsible-use-of-ai-and-data-analytics),
+   which remain relevant for Singapore private-banking fairness, ethics,
+   accountability, and transparency posture.
+
 Market material informs hypotheses; it never certifies Lotus behavior.
 
 ## Differentiation Hypotheses
@@ -57,6 +80,31 @@ ordered by bank value and control feasibility, not novelty alone.
 Novelty is not an acceptance criterion. A capability should be rejected when it
 adds cognitive or runtime complexity without measurable advisor value,
 defensible control improvement, or a clear operating owner.
+
+## 2026-07-19 Hypothesis Decisions
+
+Issue [#702](https://github.com/sgajbi/lotus-idea/issues/702) refreshes the
+research gate for remaining Slice 09/16/21 differentiation hypotheses. These
+decisions govern scope; they do not promote support.
+
+| Capability hypothesis | RFC-0002 decision | Implementation issue posture | Decision rationale |
+| --- | --- | --- | --- |
+| Evidence-grounded advisor narrative | Selected for bounded implementation foundation | Implemented as internal foundation under #389; live `lotus-ai`, Gateway, Workbench, model-risk, and support promotion remain blocked by #340/#122/#380 and aggregate proof issues. | Market commentary tools are baseline; Lotus differentiation is deterministic claim grounding, source authority, abstention, replay, and reviewer control. |
+| Counterfactual opportunity analysis | Deferred to post-RFC-0002 unless selected by a new RFC | Track only if a concrete product issue defines source-owned facts, threshold lineage, and no-risk/no-performance-calculation boundaries. | Valuable, but it can easily drift into official risk/performance calculation or recommendation authority. RFC-0002 should first prove source-bound detection, scoring, review, and downstream posture. |
+| Governed review prioritization | Selected as deterministic internal foundation only | Current scoring and queue policy remain foundation-only; final support requires #682/#680/#699/#380 proof. | Prioritization is core to opportunity operations and can be deterministic, explainable, and audit-friendly without AI or external recommendation authority. |
+| Multilingual controlled explanation | Deferred | Requires a new issue before implementation with terminology glossary, locale fallback, numeric invariance, prohibited-action controls, and human-review evidence. | It is commercially useful, but premature before English canonical explanation, source grounding, and Workbench review proof are certified. |
+| Feedback learning with model-risk fences | Deferred | Requires a new issue/RFC for feedback taxonomy, approved training view, challenger governance, leakage/bias tests, and no-online-learning controls. | Feedback is high value but bank-risky. RFC-0002 can capture feedback; it must not let feedback mutate policy, scoring, prompts, or models autonomously. |
+| Evidence-aware meeting preparation | Deferred to downstream product-surface RFC after Gateway/Workbench proof | Requires Workbench/Gateway evidence, purpose-limited projection, redaction, stale/conflict handling, prompt/output lineage, and human-review proof before any client-facing claim. | Current market sources make meeting preparation a baseline. Lotus should not implement it before backend evidence packs and Workbench consumption are proven. |
+
+Implementation order is therefore:
+
+1. finish deterministic Idea foundations and proof closure,
+2. prove Gateway/Workbench review surfaces and downstream handoff posture,
+3. certify live `lotus-ai` workflow-pack execution and model-risk operations
+   before any AI-supported promotion,
+4. revisit deferred hypotheses only through focused issues with explicit source
+   authority, entitlement, evaluation, failure, human-review, and support
+   gates.
 
 ## Selected Delivery Hypothesis
 

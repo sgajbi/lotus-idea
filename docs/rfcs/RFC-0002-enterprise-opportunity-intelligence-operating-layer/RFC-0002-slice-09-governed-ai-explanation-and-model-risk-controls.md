@@ -564,6 +564,15 @@ capabilities are hypotheses, not implementation or supported-feature evidence.
 Refresh its primary-source research and satisfy its research-to-delivery gate
 before resuming material Slice 09 capability implementation.
 
+Issue `#702` refreshed the charter on 2026-07-19. It keeps
+evidence-grounded advisor narrative and deterministic review prioritization in
+bounded RFC-0002 foundation scope, while deferring counterfactual opportunity
+analysis, multilingual controlled explanation, feedback learning, and
+evidence-aware meeting preparation until focused issues or later RFCs define
+source authority, entitlement, evaluation, failure, human-review, and support
+gates. This decision prevents market-baseline AI features from becoming
+unsupported Lotus claims.
+
 These references shape controls only. Lotus product truth remains the code,
 tests, RFC evidence, supported-features ledger, CI, and published wiki source.
 

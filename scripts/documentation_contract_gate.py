@@ -173,7 +173,13 @@ REQUIRED_SURFACES = (
         70,
         (
             "not implementation or supported-feature evidence",
+            "Last reviewed** | 2026-07-19",
             "Differentiation Hypotheses",
+            "2026-07-19 Hypothesis Decisions",
+            "FINRA Regulatory Notice 24-09",
+            "NIST AI RMF Generative AI Profile",
+            "OCC 2026 model-risk management guidance",
+            "MAS FEAT principles",
             "Bank-Buyability Controls",
             "Research-To-Delivery Gate",
             "`lotus-ai`",
