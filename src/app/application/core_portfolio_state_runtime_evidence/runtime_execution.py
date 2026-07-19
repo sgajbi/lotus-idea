@@ -96,7 +96,11 @@ def build_core_portfolio_state_runtime_execution(
 ) -> dict[str, Any]:
     require_aware(generated_at_utc, "generated_at_utc")
     command, evidence = result.command, result.evidence
-    blockers = _qualification_blockers(command, evidence)
+    blockers = _qualification_blockers(
+        command,
+        evidence,
+        evidence_observed_at_utc=generated_at_utc,
+    )
     return _payload(
         generated_at_utc=generated_at_utc,
         command=command,
@@ -179,6 +183,8 @@ def _payload(
 def _qualification_blockers(
     command: EvaluateCorePortfolioStateReadiness,
     evidence: CorePortfolioStateEvidence,
+    *,
+    evidence_observed_at_utc: datetime,
 ) -> tuple[str, ...]:
     ref = evidence.portfolio_state_ref
     blockers: list[str] = []
@@ -190,7 +196,7 @@ def _qualification_blockers(
         blockers.append("core_portfolio_state_source_ref_missing")
     elif ref.as_of_date != command.as_of_date:
         blockers.append("core_portfolio_state_scope_mismatch")
-    elif ref.generated_at_utc > command.evaluated_at_utc:
+    elif ref.generated_at_utc > evidence_observed_at_utc:
         blockers.append("core_portfolio_state_source_time_invalid")
     elif ref.freshness is not EvidenceFreshness.CURRENT:
         blockers.append("core_portfolio_state_evidence_not_current")
@@ -233,7 +239,7 @@ def _qualification_blockers(
         blockers.append("core_portfolio_state_source_current_posture_missing")
     if (
         evidence.latest_evidence_at_utc is None
-        or evidence.latest_evidence_at_utc > command.evaluated_at_utc
+        or evidence.latest_evidence_at_utc > evidence_observed_at_utc
         or (ref is not None and evidence.latest_evidence_at_utc > ref.generated_at_utc)
     ):
         blockers.append("core_portfolio_state_latest_evidence_time_invalid")

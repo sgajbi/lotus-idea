@@ -117,3 +117,15 @@ def test_adapter_preserves_unsupported_maturity_diagnostic() -> None:
     evidence = _adapter(httpx.MockTransport(handler)).fetch_bond_maturity_evidence(_request())
 
     assert evidence.maturity_diagnostic == "core_maturity_unsupported"
+
+
+def test_adapter_forwards_tenant_and_trace_scope() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert request.headers["X-Tenant-Id"] == "tenant-a"
+        assert request.headers["X-Correlation-Id"] == "corr-core"
+        assert request.headers["X-Trace-Id"] == "trace-core"
+        return httpx.Response(200, json=_maturity_summary_payload(extra={}))
+
+    evidence = _adapter(httpx.MockTransport(handler)).fetch_bond_maturity_evidence(_request())
+
+    assert evidence.response_tenant_id == "tenant-a"

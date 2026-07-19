@@ -44,7 +44,7 @@ def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     command: EvaluateCorePortfolioStateReadiness | None = None
     try:
-        generated_at = _parse_instant(args.generated_at_utc, "generated-at-utc")
+        requested_generated_at = _parse_instant(args.generated_at_utc, "generated-at-utc")
         command = _command(args)
         source = LotusCoreHighCashSourceAdapter(
             DownstreamJsonClient(
@@ -60,7 +60,7 @@ def main(argv: list[str] | None = None) -> int:
         )
         result = evaluate_core_portfolio_state_readiness(command, core_source=source)
         payload = build_core_portfolio_state_runtime_execution(
-            generated_at_utc=generated_at,
+            generated_at_utc=_artifact_generated_at(requested_generated_at),
             result=result,
         )
         write_json_payload(payload, output=args.output)
@@ -84,7 +84,9 @@ def _write_blocked(
     try:
         active_command = command or _command(args)
         payload = build_blocked_core_portfolio_state_runtime_execution(
-            generated_at_utc=_parse_instant(args.generated_at_utc, "generated-at-utc"),
+            generated_at_utc=_artifact_generated_at(
+                _parse_instant(args.generated_at_utc, "generated-at-utc")
+            ),
             command=active_command,
             error_code=error_code,
         )
@@ -140,6 +142,11 @@ def _parse_instant(value: str, field_name: str) -> datetime:
     if parsed.tzinfo is None or parsed.utcoffset() is None:
         raise ValueError(f"{field_name} must be timezone-aware")
     return parsed.astimezone(UTC)
+
+
+def _artifact_generated_at(requested_generated_at: datetime) -> datetime:
+    """Return a truthful post-fetch artifact finalization time."""
+    return max(requested_generated_at, datetime.now(UTC))
 
 
 def _source_error_code(exc: Exception) -> str:

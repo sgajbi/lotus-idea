@@ -86,6 +86,28 @@ def test_use_case_preserves_exact_scope_and_builds_closed_receipts() -> None:
     assert core_portfolio_state_runtime_execution_is_valid(payload)
 
 
+def test_source_generated_during_fetch_qualifies_at_artifact_observation_time() -> None:
+    evidence = replace(
+        _evidence(),
+        portfolio_state_ref=replace(
+            _source_ref(),
+            generated_at_utc=NOW + timedelta(seconds=1),
+        ),
+    )
+    result = evaluate_core_portfolio_state_readiness(
+        _command(),
+        core_source=RecordingSource(evidence),
+    )
+
+    payload = build_core_portfolio_state_runtime_execution(
+        generated_at_utc=NOW + timedelta(seconds=2),
+        result=result,
+    )
+
+    assert payload["execution"]["qualificationBlockers"] == []
+    assert core_portfolio_state_runtime_execution_is_valid(payload)
+
+
 @pytest.mark.parametrize(
     ("failure_mode", "expected_blocker"),
     [

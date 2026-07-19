@@ -188,6 +188,21 @@ def test_trace_headers_are_forwarded() -> None:
     assert payload == {"status": "ok"}
 
 
+def test_get_forwards_additional_scope_headers_without_overriding_trace_headers() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert request.headers["X-Tenant-Id"] == "tenant-a"
+        assert request.headers["X-Correlation-Id"] == "corr-123"
+        return httpx.Response(200, json={"status": "ok"})
+
+    payload = _client_for(httpx.MockTransport(handler)).get_json(
+        "/status",
+        correlation_id="corr-123",
+        additional_headers={"X-Tenant-Id": "tenant-a"},
+    )
+
+    assert payload == {"status": "ok"}
+
+
 def test_post_forwards_configured_server_side_headers_without_overriding_trace_headers() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         assert request.headers["X-Actor-Id"] == "lotus-idea-local-development"

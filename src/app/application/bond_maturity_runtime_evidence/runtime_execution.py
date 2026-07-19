@@ -108,7 +108,11 @@ def build_bond_maturity_runtime_execution(
     result: BondMaturityReadinessResult,
 ) -> dict[str, Any]:
     require_aware(generated_at_utc, "generated_at_utc")
-    blockers = _qualification_blockers(result.command, result.evidence)
+    blockers = _qualification_blockers(
+        result.command,
+        result.evidence,
+        evidence_observed_at_utc=generated_at_utc,
+    )
     return _payload(
         generated_at_utc=generated_at_utc,
         command=result.command,
@@ -196,6 +200,8 @@ def _payload(
 def _qualification_blockers(
     command: EvaluateBondMaturityReadiness,
     evidence: CoreBondMaturityEvidence,
+    *,
+    evidence_observed_at_utc: datetime,
 ) -> tuple[str, ...]:
     maturity_ref = evidence.maturity_fact_ref
     holdings_ref = evidence.holdings_ref
@@ -208,7 +214,7 @@ def _qualification_blockers(
         blockers.append("core_maturity_source_ref_missing")
     elif maturity_ref.as_of_date != command.as_of_date:
         blockers.append("core_maturity_scope_mismatch")
-    elif maturity_ref.generated_at_utc > command.evaluated_at_utc:
+    elif maturity_ref.generated_at_utc > evidence_observed_at_utc:
         blockers.append("core_maturity_source_time_invalid")
     elif maturity_ref.freshness is not EvidenceFreshness.CURRENT:
         blockers.append("core_maturity_evidence_not_current")
@@ -278,7 +284,7 @@ def _qualification_blockers(
         blockers.append("core_maturity_source_current_posture_missing")
     if (
         evidence.latest_evidence_at_utc is None
-        or evidence.latest_evidence_at_utc > command.evaluated_at_utc
+        or evidence.latest_evidence_at_utc > evidence_observed_at_utc
         or (
             maturity_ref is not None
             and evidence.latest_evidence_at_utc > maturity_ref.generated_at_utc

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
+from datetime import timedelta
 import json
 from pathlib import Path
 
@@ -33,6 +34,22 @@ class UnknownReconciliationSource(AuthoritativeCoreBondMaturitySource):
     ) -> CoreBondMaturityEvidence:
         evidence = super().fetch_bond_maturity_evidence(request)
         return replace(evidence, reconciliation_status="UNKNOWN")
+
+
+class ReceiptGeneratedDuringFetchSource(AuthoritativeCoreBondMaturitySource):
+    def fetch_bond_maturity_evidence(
+        self, request: CoreBondMaturityEvidenceRequest
+    ) -> CoreBondMaturityEvidence:
+        evidence = super().fetch_bond_maturity_evidence(request)
+        assert evidence.maturity_fact_ref is not None
+        return replace(
+            evidence,
+            maturity_fact_ref=replace(
+                evidence.maturity_fact_ref,
+                generated_at_utc=request.evaluated_at_utc + timedelta(seconds=1),
+            ),
+            latest_evidence_at_utc=request.evaluated_at_utc,
+        )
 
 
 @pytest.mark.parametrize(
@@ -71,6 +88,21 @@ def test_generator_routes_through_use_case_and_writes_truthful_artifact(
     assert "tenant-a" not in serialized
     assert "corr-secret" not in serialized
     assert "trace-secret" not in serialized
+
+
+def test_generator_observes_receipt_created_during_live_fetch(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    output = tmp_path / "bond-maturity-live-proof.json"
+    monkeypatch.setattr(
+        generate_runtime_execution,
+        "LotusCoreHighCashSourceAdapter",
+        lambda _client: ReceiptGeneratedDuringFetchSource(),
+    )
+
+    assert generate_runtime_execution.main(_args(output)) == 0
+    assert bond_maturity_runtime_execution_is_valid(json.loads(output.read_text(encoding="utf-8")))
 
 
 def test_generator_rejects_invalid_configuration_without_artifact(tmp_path: Path) -> None:
