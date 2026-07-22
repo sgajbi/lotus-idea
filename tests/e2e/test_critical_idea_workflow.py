@@ -224,11 +224,14 @@ def _assert_conversion_intent_is_report_intent_only(
     conversion_response = client.post(
         f"/api/v1/idea-candidates/{candidate_id}/conversion-intents",
         json=_conversion_intent_payload(),
-        headers=_headers(
-            subject="advisor-001",
-            capabilities="idea.conversion.intent.record",
-            idempotency_key="critical-e2e-conversion-intent-001",
-        ),
+        headers={
+            **_headers(
+                subject="advisor-001",
+                capabilities="idea.conversion.intent.record",
+                idempotency_key="critical-e2e-conversion-intent-001",
+            ),
+            **_scope_headers(),
+        },
     )
 
     assert conversion_response.status_code == 200
