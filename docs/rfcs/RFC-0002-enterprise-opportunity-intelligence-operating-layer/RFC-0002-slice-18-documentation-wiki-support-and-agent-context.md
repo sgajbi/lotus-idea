@@ -408,6 +408,16 @@ evidence-consumption PRs from using `Closes`, `Fixes`, or `Resolves` for work
 that still lacks live runtime, downstream, publication, support, or
 supported-feature evidence.
 
+The same Slice 18 learning loop now adds
+`make rfc0002-github-issue-execution-state-audit`, backed by
+`scripts/github_issue_execution_state_audit.py`. The audit compares the ledger
+with current GitHub issue state and lifecycle labels, so reopened issues,
+blocked issues, merged-main-QA-pending issues, and closed-complete issues cannot
+drift silently away from the durable execution ledger. The #681 anchor now
+carries `status/in-progress`; future partial Slice 18 PRs must keep that label
+and use `Keep #681 open` until full RFC documentation, wiki, support, and agent
+context closure is complete.
+
 The missing-benchmark Core material now records the independently owned closed
 v2 runtime contract implemented by issue `#499`. One named application use case
 performs one Core fetch and preserves exact evidence or a stable error. Request,

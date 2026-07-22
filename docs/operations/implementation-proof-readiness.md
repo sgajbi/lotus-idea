@@ -96,6 +96,16 @@ evidence-consumption PRs can link issues without silently closing work that
 still needs live runtime, downstream, publication, support, or supported-feature
 proof.
 
+`make rfc0002-github-issue-execution-state-audit` compares the ledger with
+current GitHub issue state through the GitHub CLI. It is intentionally a
+GitHub-backed audit rather than a CI lint gate: run it before PR evidence, after
+manual label or reopen/close changes, and whenever the RFC issue count is used
+as delivery truth. The audit fails when a ledger-tracked issue is missing from
+GitHub output, GitHub open/closed state contradicts the ledger, `open_blocked`
+issues lack `status/blocked`, `open_in_progress` issues lack
+`status/in-progress`, merged-main-QA-pending issues lack `status/merged-main`,
+or closed-complete issues do not retain `status/merged-main`.
+
 This ledger is issue-lifecycle governance only. It does not promote a feature,
 clear blockers, or replace the blocker closure manifest. It prevents GitHub
 state drift when a PR lands partial RFC progress, such as consuming owner proof
