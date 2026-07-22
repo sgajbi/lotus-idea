@@ -39,6 +39,17 @@ remains deferred until an all-main cross-service runtime can be validated
 without treating a development fixture or branch-local evidence as product
 certification.
 
+Owner-repo Slice 11 evidence is now recorded in
+`contracts/implementation-proof/rfc0002-slice11-owner-mainline-evidence.v1.json`.
+It binds `lotus-gateway` #505 / PR #508 / exact-main
+`98a3240d8e951463be69995f50c52b216d3eda4a` / Main Releasability run
+`29686511139` and `lotus-workbench` #484 / PR #497 / exact-main
+`55cb94ddb33469b58e32308551c84f0c3c4c9e3a` / Main Releasability run
+`29686864889`. `make gateway-workbench-owner-mainline-evidence-gate` validates
+the closed-field evidence index and explicitly preserves the production
+identity, browser/accessibility, canonical runtime, data-product certification,
+and supported-feature promotion blockers.
+
 The repo-owned Gateway/Workbench contract artifact is classified as
 `source_contract`. It can record the declared queue/detail routes and bounded
 read-path contract as evidence, but it clears no runtime blocker and does not

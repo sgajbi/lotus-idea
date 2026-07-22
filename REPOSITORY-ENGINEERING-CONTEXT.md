@@ -1106,6 +1106,15 @@ modularity inside the existing deployable service. Do not introduce a separate
 runtime service without workload, failure-isolation, ownership, security, or
 operability evidence.
 
+Gateway/Workbench owner-repo mainline reconciliation is tracked by
+`contracts/implementation-proof/rfc0002-slice11-owner-mainline-evidence.v1.json`
+and `make gateway-workbench-owner-mainline-evidence-gate`. This records exact
+merged-main Gateway/Workbench dependency evidence only. It must not clear
+`gateway_workbench_proof_missing`,
+`workbench_gateway_bff_consumption_proof_missing`, Workbench product,
+browser/accessibility, canonical runtime, data-product certification, or
+supported-feature blockers.
+
 Gateway/Workbench catalog entries, approved-consumer declarations, and sibling
 platform generated files are also `source_contract` evidence. Keep the
 discovery contract builder, generator, gate, and focused tests in the same

@@ -512,6 +512,13 @@ Persistence adapter validation:
     readiness adds its reference to data-mesh and runtime-trust evidence but
     preserves `gateway_workbench_discovery_proof_missing` until
     machine-verifiable runtime evidence exists.
+
+    `tests/unit/workbench/test_owner_mainline_evidence.py` and
+    `make gateway-workbench-owner-mainline-evidence-gate` validate the
+    RFC-0002 Slice 11 owner-mainline evidence index. The contract binds exact
+    merged-main Gateway and Workbench PR/CI evidence while preserving
+    production identity, browser/accessibility, canonical runtime,
+    data-product certification, and supported-feature promotion blockers.
 14. `tests/unit/outbox/broker/test_source_contract_proof.py`,
     `tests/unit/outbox/broker/test_readiness_consumption.py`,
     `tests/unit/outbox/test_outbox_consumer_contract_proof.py`,
