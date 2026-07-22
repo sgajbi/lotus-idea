@@ -49,6 +49,18 @@ def test_compose_runtime_contract_rejects_missing_realization_wiring() -> None:
     )
 
 
+def test_compose_runtime_contract_rejects_missing_advise_capability_fixture() -> None:
+    compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
+    degraded = compose.replace(
+        "      LOTUS_IDEA_ADVISE_REALIZATION_CAPABILITIES:",
+        "      REMOVED:",
+    )
+
+    assert "docker-compose.yml must configure governed Advise realization capabilities" in (
+        validate_compose_runtime_contract(degraded)
+    )
+
+
 @pytest.mark.parametrize(
     ("current", "replacement", "expected_error"),
     [

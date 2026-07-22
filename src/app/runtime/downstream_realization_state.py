@@ -10,6 +10,7 @@ from app.contracts.operational_limits import (
 )
 from app.domain import SourceSystem
 from app.infrastructure.downstream_realization import (
+    AdviseRealizationServiceContext,
     DownstreamRealizationAdapterConfig,
     DownstreamRealizationConfigurationError,
     HttpAdviseProposalRealizationClient,
@@ -27,6 +28,12 @@ from app.runtime.settings import RuntimeConfigurationError, RuntimeProfile, load
 
 ADVISE_BASE_URL_ENV = "LOTUS_IDEA_ADVISE_REALIZATION_BASE_URL"
 ADVISE_SUBMIT_PATH_ENV = "LOTUS_IDEA_ADVISE_REALIZATION_SUBMIT_PATH"
+ADVISE_ACTOR_ID_ENV = "LOTUS_IDEA_ADVISE_REALIZATION_ACTOR_ID"
+ADVISE_ROLE_ENV = "LOTUS_IDEA_ADVISE_REALIZATION_ROLE"
+ADVISE_TENANT_ID_ENV = "LOTUS_IDEA_ADVISE_REALIZATION_TENANT_ID"
+ADVISE_LEGAL_ENTITY_CODE_ENV = "LOTUS_IDEA_ADVISE_REALIZATION_LEGAL_ENTITY_CODE"
+ADVISE_SERVICE_IDENTITY_ENV = "LOTUS_IDEA_ADVISE_REALIZATION_SERVICE_IDENTITY"
+ADVISE_CAPABILITIES_ENV = "LOTUS_IDEA_ADVISE_REALIZATION_CAPABILITIES"
 MANAGE_BASE_URL_ENV = "LOTUS_IDEA_MANAGE_REALIZATION_BASE_URL"
 MANAGE_SUBMIT_PATH_ENV = "LOTUS_IDEA_MANAGE_REALIZATION_SUBMIT_PATH"
 REPORT_BASE_URL_ENV = "LOTUS_IDEA_REPORT_REALIZATION_BASE_URL"
@@ -50,6 +57,7 @@ REPORT_CALLER_APPLICATION_ENV = "LOTUS_IDEA_REPORT_REALIZATION_CALLER_APPLICATIO
 REPORT_TENANT_ID_ENV = "LOTUS_IDEA_REPORT_REALIZATION_TENANT_ID"
 REPORT_REGION_ENV = "LOTUS_IDEA_REPORT_REALIZATION_REGION"
 REPORT_OUTPUT_FORMATS_ENV = "LOTUS_IDEA_REPORT_REALIZATION_OUTPUT_FORMATS"
+_ADVISE_SERVICE_CONTEXT_FIXTURE_PROFILES = {RuntimeProfile.LOCAL, RuntimeProfile.TEST}
 _MANAGE_SERVICE_CONTEXT_FIXTURE_PROFILES = {RuntimeProfile.LOCAL, RuntimeProfile.TEST}
 _REPORT_SERVICE_CONTEXT_FIXTURE_PROFILES = {RuntimeProfile.LOCAL, RuntimeProfile.TEST}
 _REPORT_LOCAL_TEST_FIXTURE_TENANT_ID = "tenant-sg"
@@ -76,7 +84,7 @@ def get_conversion_realization_clients() -> ConversionRealizationClients:
     if _CONVERSION_CLIENTS is None:
         _CONVERSION_CLIENTS = ConversionRealizationClients(
             advise_client=HttpAdviseProposalRealizationClient(
-                _adapter_config(
+                _advise_adapter_config(
                     base_url_env=ADVISE_BASE_URL_ENV,
                     submit_path_env=ADVISE_SUBMIT_PATH_ENV,
                     source_authority=SourceSystem.LOTUS_ADVISE,
@@ -162,6 +170,50 @@ def _adapter_config(
         raise DownstreamRealizationClientsUnavailableError(str(exc)) from exc
 
 
+def _advise_adapter_config(
+    *,
+    base_url_env: str,
+    submit_path_env: str,
+    source_authority: SourceSystem,
+) -> DownstreamRealizationAdapterConfig:
+    try:
+        base_url = _required_env(base_url_env)
+        submit_path = _required_env(submit_path_env)
+        _require_advise_service_context_fixture_profile()
+        service_context = AdviseRealizationServiceContext(
+            actor_id=_required_env(ADVISE_ACTOR_ID_ENV),
+            role=_required_env(ADVISE_ROLE_ENV),
+            tenant_id=_required_env(ADVISE_TENANT_ID_ENV),
+            legal_entity_code=_required_env(ADVISE_LEGAL_ENTITY_CODE_ENV),
+            service_identity=_required_env(ADVISE_SERVICE_IDENTITY_ENV),
+            capabilities=_required_env(ADVISE_CAPABILITIES_ENV),
+        )
+        return DownstreamRealizationAdapterConfig(
+            base_url=base_url,
+            submit_path=submit_path,
+            source_authority=source_authority,
+            timeout_seconds=_timeout_seconds(),
+            max_connections=_positive_int_env(
+                MAX_CONNECTIONS_ENV, default=DEFAULT_DEPENDENCY_MAX_CONNECTIONS
+            ),
+            max_keepalive_connections=_positive_int_env(
+                MAX_KEEPALIVE_CONNECTIONS_ENV,
+                default=DEFAULT_DEPENDENCY_MAX_KEEPALIVE_CONNECTIONS,
+            ),
+            pool_timeout_seconds=_positive_float_env(POOL_TIMEOUT_SECONDS_ENV, default=2.0),
+            retry_max_attempts=_positive_int_env(RETRY_MAX_ATTEMPTS_ENV, default=1),
+            retry_initial_backoff_seconds=_non_negative_float_env(
+                RETRY_INITIAL_BACKOFF_SECONDS_ENV, default=0.05
+            ),
+            retry_max_backoff_seconds=_non_negative_float_env(
+                RETRY_MAX_BACKOFF_SECONDS_ENV, default=0.5
+            ),
+            advise_service_context=service_context,
+        )
+    except (DownstreamRealizationConfigurationError, RuntimeConfigurationError) as exc:
+        raise DownstreamRealizationClientsUnavailableError(str(exc)) from exc
+
+
 def _manage_adapter_config(
     *,
     base_url_env: str,
@@ -243,6 +295,15 @@ def _report_adapter_config(
         )
     except (DownstreamRealizationConfigurationError, RuntimeConfigurationError) as exc:
         raise DownstreamRealizationClientsUnavailableError(str(exc)) from exc
+
+
+def _require_advise_service_context_fixture_profile() -> None:
+    profile = load_runtime_settings().runtime_profile
+    if profile not in _ADVISE_SERVICE_CONTEXT_FIXTURE_PROFILES:
+        raise DownstreamRealizationClientsUnavailableError(
+            "Advise realization service-context fixture is restricted to local and test "
+            "runtime profiles until trusted service identity is available."
+        )
 
 
 def _require_manage_service_context_fixture_profile() -> None:

@@ -269,6 +269,16 @@ def validate_compose_runtime_contract(compose: str) -> list[str]:
     required_realization = {
         "      LOTUS_IDEA_ADVISE_REALIZATION_BASE_URL:": "Advise realization base URL",
         "      LOTUS_IDEA_ADVISE_REALIZATION_SUBMIT_PATH:": "Advise realization submit path",
+        "      LOTUS_IDEA_ADVISE_REALIZATION_ACTOR_ID:": "Advise realization actor id",
+        "      LOTUS_IDEA_ADVISE_REALIZATION_ROLE:": "Advise realization role",
+        "      LOTUS_IDEA_ADVISE_REALIZATION_TENANT_ID:": "Advise realization tenant id",
+        "      LOTUS_IDEA_ADVISE_REALIZATION_LEGAL_ENTITY_CODE:": (
+            "Advise realization legal entity code"
+        ),
+        "      LOTUS_IDEA_ADVISE_REALIZATION_SERVICE_IDENTITY:": (
+            "Advise realization service identity"
+        ),
+        "      LOTUS_IDEA_ADVISE_REALIZATION_CAPABILITIES:": ("Advise realization capabilities"),
         "      LOTUS_IDEA_MANAGE_REALIZATION_BASE_URL:": "Manage realization base URL",
         "      LOTUS_IDEA_MANAGE_REALIZATION_SUBMIT_PATH:": "Manage realization submit path",
         "      LOTUS_IDEA_REPORT_REALIZATION_BASE_URL:": "Report realization base URL",

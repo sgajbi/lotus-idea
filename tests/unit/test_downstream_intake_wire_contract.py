@@ -8,6 +8,7 @@ import pytest
 
 from app.domain import ConversionTarget, SourceSystem
 from app.infrastructure.downstream_realization import (
+    AdviseRealizationServiceContext,
     ManageRealizationServiceContext,
     ReportRealizationServiceContext,
     _conversion_intent_envelope,
@@ -65,6 +66,24 @@ def test_manage_service_context_matches_versioned_wire_contract() -> None:
     )
 
     assert set(context.request_headers()) == set(contract["required_server_headers"])
+
+
+def test_advise_service_context_matches_versioned_wire_contract() -> None:
+    contract = _consumer_contract(ConversionTarget.ADVISE_PROPOSAL.value)
+    context = AdviseRealizationServiceContext(
+        actor_id="lotus-idea-local-development",
+        role="SERVICE",
+        tenant_id="tenant-sg",
+        legal_entity_code="SGPB",
+        service_identity="lotus-idea-local-development",
+        capabilities=contract["principal_capability"],
+    )
+
+    assert set(context.request_headers()) == set(contract["required_server_headers"])
+    assert contract["receipt_outcomes"] == ["ACCEPTED", "ACCEPTED_REPLAYED", "REJECTED"]
+    assert contract["local_dev_principal_source"] == (
+        "trusted_headers_until_production_idp_available"
+    )
 
 
 def test_report_adapter_envelope_matches_versioned_wire_contract() -> None:

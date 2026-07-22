@@ -23,6 +23,7 @@ from app.domain import (
 )
 from app.infrastructure.downstream_client import DownstreamClientConfig, DownstreamJsonClient
 from app.infrastructure.downstream_realization import (
+    AdviseRealizationServiceContext,
     DownstreamRealizationAdapterConfig,
     DownstreamRealizationConfigurationError,
     HttpAdviseProposalRealizationClient,
@@ -43,6 +44,7 @@ def test_advise_adapter_posts_source_safe_conversion_intent_envelope() -> None:
 
     def handler(request: httpx.Request) -> httpx.Response:
         captured["path"] = request.url.path
+        captured["headers"] = dict(request.headers)
         captured["correlation_id"] = request.headers["X-Correlation-Id"]
         captured["trace_id"] = request.headers["X-Trace-Id"]
         captured["idempotency_key"] = request.headers["Idempotency-Key"]
@@ -54,6 +56,7 @@ def test_advise_adapter_posts_source_safe_conversion_intent_envelope() -> None:
             base_url="https://advise.example",
             submit_path="/advisory/idea-intake",
             source_authority=SourceSystem.LOTUS_ADVISE,
+            advise_service_context=advise_service_context(),
         ),
         client=downstream_json_client("https://advise.example", httpx.MockTransport(handler)),
     )
@@ -70,6 +73,13 @@ def test_advise_adapter_posts_source_safe_conversion_intent_envelope() -> None:
     assert captured["correlation_id"] == "corr-downstream"
     assert captured["trace_id"] == "trace-downstream"
     assert captured["idempotency_key"] == "submission-idempotency-001"
+    assert captured["headers"]["x-actor-id"] == "lotus-idea-local-development"
+    assert captured["headers"]["x-role"] == "SERVICE"
+    assert captured["headers"]["x-tenant-id"] == "tenant-sg"
+    assert captured["headers"]["x-legal-entity-code"] == "SGPB"
+    assert captured["headers"]["x-service-identity"] == "lotus-idea-local-development"
+    assert captured["headers"]["x-capabilities"] == "advisory.idea_proposal_intake.accept"
+    assert captured["headers"]["x-principal-status"] == "ACTIVE"
     payload = httpx.Response(200, content=captured["payload"]).json()
     assert payload == {
         "source_system": "lotus-idea",
@@ -234,6 +244,7 @@ def test_downstream_transport_errors_do_not_leak_raw_exception_text() -> None:
             base_url="https://advise.example",
             submit_path="/advisory/idea-intake",
             source_authority=SourceSystem.LOTUS_ADVISE,
+            advise_service_context=advise_service_context(),
         ),
         client=downstream_json_client("https://advise.example", httpx.MockTransport(handler)),
     )
@@ -260,6 +271,7 @@ def test_downstream_retry_exhaustion_maps_to_bounded_timeout_reason() -> None:
             base_url="https://advise.example",
             submit_path="/advisory/idea-intake",
             source_authority=SourceSystem.LOTUS_ADVISE,
+            advise_service_context=advise_service_context(),
             retry_max_attempts=2,
             retry_initial_backoff_seconds=0,
             retry_max_backoff_seconds=0,
@@ -288,6 +300,7 @@ def test_downstream_adapter_rejects_wrong_conversion_target() -> None:
             base_url="https://advise.example",
             submit_path="/advisory/idea-intake",
             source_authority=SourceSystem.LOTUS_ADVISE,
+            advise_service_context=advise_service_context(),
         ),
         client=downstream_json_client(
             "https://advise.example",
@@ -417,6 +430,17 @@ def test_manage_adapter_requires_server_context() -> None:
                 base_url="https://manage.example",
                 submit_path="/api/v1/rebalance/idea-action-intake",
                 source_authority=SourceSystem.LOTUS_MANAGE,
+            )
+        )
+
+
+def test_advise_adapter_requires_server_context() -> None:
+    with pytest.raises(DownstreamRealizationConfigurationError, match="service context"):
+        HttpAdviseProposalRealizationClient(
+            DownstreamRealizationAdapterConfig(
+                base_url="https://advise.example",
+                submit_path="/advisory/proposals/idea-intake",
+                source_authority=SourceSystem.LOTUS_ADVISE,
             )
         )
 
@@ -602,6 +626,17 @@ def manage_service_context() -> ManageRealizationServiceContext:
         tenant_id="local-development",
         service_identity="lotus-idea-local-development",
         capabilities="manage.write",
+    )
+
+
+def advise_service_context() -> AdviseRealizationServiceContext:
+    return AdviseRealizationServiceContext(
+        actor_id="lotus-idea-local-development",
+        role="SERVICE",
+        tenant_id="tenant-sg",
+        legal_entity_code="SGPB",
+        service_identity="lotus-idea-local-development",
+        capabilities="advisory.idea_proposal_intake.accept",
     )
 
 

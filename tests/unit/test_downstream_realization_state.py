@@ -3,8 +3,14 @@ from __future__ import annotations
 import pytest
 
 from app.runtime.downstream_realization_state import (
+    ADVISE_ACTOR_ID_ENV,
     ADVISE_BASE_URL_ENV,
+    ADVISE_CAPABILITIES_ENV,
+    ADVISE_LEGAL_ENTITY_CODE_ENV,
+    ADVISE_ROLE_ENV,
+    ADVISE_SERVICE_IDENTITY_ENV,
     ADVISE_SUBMIT_PATH_ENV,
+    ADVISE_TENANT_ID_ENV,
     MAX_CONNECTIONS_ENV,
     MAX_KEEPALIVE_CONNECTIONS_ENV,
     MANAGE_BASE_URL_ENV,
@@ -149,6 +155,31 @@ def test_missing_downstream_configuration_fails_closed(
 @pytest.mark.parametrize(
     "environment_name",
     [
+        ADVISE_ACTOR_ID_ENV,
+        ADVISE_ROLE_ENV,
+        ADVISE_TENANT_ID_ENV,
+        ADVISE_LEGAL_ENTITY_CODE_ENV,
+        ADVISE_SERVICE_IDENTITY_ENV,
+        ADVISE_CAPABILITIES_ENV,
+    ],
+)
+def test_missing_advise_service_context_fails_closed(
+    monkeypatch: pytest.MonkeyPatch,
+    environment_name: str,
+) -> None:
+    configure_conversion_env(monkeypatch)
+    monkeypatch.delenv(environment_name, raising=False)
+
+    with pytest.raises(
+        DownstreamRealizationClientsUnavailableError,
+        match=f"{environment_name} is not configured",
+    ):
+        get_conversion_realization_clients()
+
+
+@pytest.mark.parametrize(
+    "environment_name",
+    [
         MANAGE_ACTOR_ID_ENV,
         MANAGE_ROLE_ENV,
         MANAGE_TENANT_ID_ENV,
@@ -171,6 +202,19 @@ def test_missing_manage_service_context_fails_closed(
 
 
 def test_manage_service_context_fixture_is_rejected_outside_local_and_test(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    configure_conversion_env(monkeypatch)
+    monkeypatch.setenv(RUNTIME_PROFILE_ENV, "production")
+
+    with pytest.raises(
+        DownstreamRealizationClientsUnavailableError,
+        match="restricted to local and test",
+    ):
+        get_conversion_realization_clients()
+
+
+def test_advise_service_context_fixture_is_rejected_outside_local_and_test(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     configure_conversion_env(monkeypatch)
@@ -316,6 +360,12 @@ def configure_conversion_env(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv(RUNTIME_PROFILE_ENV, "local")
     monkeypatch.setenv(ADVISE_BASE_URL_ENV, "https://advise.example")
     monkeypatch.setenv(ADVISE_SUBMIT_PATH_ENV, "/advisory/idea-intake")
+    monkeypatch.setenv(ADVISE_ACTOR_ID_ENV, "lotus-idea-local-development")
+    monkeypatch.setenv(ADVISE_ROLE_ENV, "SERVICE")
+    monkeypatch.setenv(ADVISE_TENANT_ID_ENV, "tenant-sg")
+    monkeypatch.setenv(ADVISE_LEGAL_ENTITY_CODE_ENV, "SGPB")
+    monkeypatch.setenv(ADVISE_SERVICE_IDENTITY_ENV, "lotus-idea-local-development")
+    monkeypatch.setenv(ADVISE_CAPABILITIES_ENV, "advisory.idea_proposal_intake.accept")
     monkeypatch.setenv(MANAGE_BASE_URL_ENV, "https://manage.example")
     monkeypatch.setenv(MANAGE_SUBMIT_PATH_ENV, "/manage/idea-intake")
     monkeypatch.setenv(MANAGE_ACTOR_ID_ENV, "lotus-idea-local-development")
