@@ -55,7 +55,9 @@ def test_github_issue_execution_summary_reports_current_rfc0002_counts() -> None
     assert summary["counts"]["open"] == 31
     assert summary["counts"]["closed"] == 9
     assert summary["counts"]["byExecutionStatus"]["open_in_progress"] == 4
+    assert summary["counts"]["byExecutionStatus"]["open_fixed_local"] == 1
     assert summary["issuesByStatus"]["open_in_progress"] == [482, 681, 685, 686]
+    assert summary["issuesByStatus"]["open_fixed_local"] == [689]
     assert 681 in summary["issuesBySlice"]["slice-18"]
     assert summary["sourceOfTruth"]["liveGitHubAudit"] == (
         "make rfc0002-github-issue-execution-state-audit"
@@ -72,6 +74,8 @@ def test_github_issue_execution_summary_markdown_is_comment_ready() -> None:
     assert "- Closed issues: 9" in rendered
     assert "## In-Progress Issues" in rendered
     assert "#482, #681, #685, #686" in rendered
+    assert "## Fixed Locally Issues" in rendered
+    assert "#689" in rendered
     assert "Run the live GitHub state audit" in rendered
 
 

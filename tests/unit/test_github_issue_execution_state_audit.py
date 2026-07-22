@@ -52,6 +52,7 @@ def _github_issue_payload(ledger: dict[str, Any]) -> list[dict[str, Any]]:
     status_label_by_execution_status = {
         "open_blocked": "status/blocked",
         "open_in_progress": "status/in-progress",
+        "open_fixed_local": "status/fixed-local",
         "open_merged_main_qa_pending": "status/merged-main",
         "open_tracker": "status/tracker",
         "closed_complete": "status/merged-main",
@@ -188,6 +189,17 @@ def test_github_issue_execution_state_audit_rejects_missing_status_label(
     assert (
         "#681: executionStatus=open_in_progress requires GitHub label status/in-progress" in errors
     )
+
+
+def test_github_issue_execution_state_audit_accepts_fixed_local_status_label() -> None:
+    module = _load_audit()
+    ledger = _load_ledger()
+    github_payload = _github_issue_payload(ledger)
+    issue_689 = next(issue for issue in github_payload if issue["number"] == 689)
+
+    assert {"name": "status/fixed-local"} in issue_689["labels"]
+    github_issues = module._parse_github_issue_states(github_payload)
+    assert module.audit_github_issue_execution_state(github_issues=github_issues) == []
 
 
 def test_github_issue_execution_state_audit_rejects_tracker_without_tracker_label(
