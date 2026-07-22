@@ -109,6 +109,15 @@ def test_rejects_missing_or_changed_contract_arrays(field_name: str) -> None:
     assert owner_mainline_evidence_contract_is_valid(payload, repository_root=ROOT) is False
 
 
+def test_rejects_non_array_contract_field() -> None:
+    payload = _checked_in_contract()
+    payload["sliceIds"] = "RFC-0002/slice-11"
+
+    errors = validate_owner_mainline_evidence_contract(payload, repository_root=ROOT)
+
+    assert "sliceIds must be a JSON array" in errors
+
+
 def test_rejects_owner_sha_drift() -> None:
     payload = _checked_in_contract()
     owner_evidence = list(_array(payload, "ownerEvidence"))
@@ -134,6 +143,37 @@ def test_rejects_unknown_fields() -> None:
     errors = validate_owner_mainline_evidence_contract(payload, repository_root=ROOT)
 
     assert "unknown top-level owner-mainline evidence fields: ['demoReady']" in errors
+
+
+def test_accepts_contract_only_validation_without_repository_root() -> None:
+    payload = _checked_in_contract()
+
+    assert validate_owner_mainline_evidence_contract(payload) == []
+
+
+def test_rejects_missing_local_evidence_file(tmp_path: Path) -> None:
+    payload = _checked_in_contract()
+    missing_ref = OWNER_MAINLINE_EVIDENCE_CONTRACT_REF
+    _materialize_owner_local_refs(
+        tmp_path,
+        missing_file_refs={missing_ref},
+        include_make_target=True,
+    )
+
+    errors = validate_owner_mainline_evidence_contract(payload, repository_root=tmp_path)
+
+    assert "localEvidenceRefs must point to existing repository evidence" in errors
+    assert "localEvidenceRefs must include an implemented Make target" not in errors
+
+
+def test_rejects_missing_local_make_target(tmp_path: Path) -> None:
+    payload = _checked_in_contract()
+    _materialize_owner_local_refs(tmp_path, missing_file_refs=set(), include_make_target=False)
+
+    errors = validate_owner_mainline_evidence_contract(payload, repository_root=tmp_path)
+
+    assert "localEvidenceRefs must point to existing repository evidence" not in errors
+    assert "localEvidenceRefs must include an implemented Make target" in errors
 
 
 def test_gate_script_accepts_checked_in_contract() -> None:
@@ -179,3 +219,22 @@ def _load_gate_script() -> ModuleType:
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+def _materialize_owner_local_refs(
+    repository_root: Path,
+    *,
+    missing_file_refs: set[str],
+    include_make_target: bool,
+) -> None:
+    for evidence_ref in OWNER_MAINLINE_EVIDENCE_LOCAL_REFS:
+        if evidence_ref.startswith("make "):
+            if include_make_target:
+                target = evidence_ref.removeprefix("make ")
+                (repository_root / "Makefile").write_text(f"{target}:\n", encoding="utf-8")
+            continue
+        if evidence_ref in missing_file_refs:
+            continue
+        evidence_path = repository_root / evidence_ref
+        evidence_path.parent.mkdir(parents=True, exist_ok=True)
+        evidence_path.write_text("owner mainline evidence placeholder\n", encoding="utf-8")
