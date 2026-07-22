@@ -1075,6 +1075,18 @@ product dependency issue was required by the audited contract state.
 RFC work can validate issue existence, RFC/slice labels, state, priority, and
 blocked posture without relying on chat memory.
 
+RFC-0002 Slice 18 issue execution truth is governed by
+`contracts/implementation-proof/rfc0002-github-issue-execution-ledger.v1.json`
+and tracked by issue `#681`. `make rfc0002-github-issue-execution-ledger-gate`
+is part of `make lint`; it records the current RFC execution issues, their
+slice labels, open or closed posture, and whether a PR may use GitHub
+auto-close wording. Open, partial, blocked, or merged-main-QA-pending issues
+must keep `allowPullRequestAutoClose=false` and a `Keep #<issue> open`
+instruction. Do not use `Closes`, `Fixes`, or `Resolves` in PR bodies or commit
+messages for those issues until the full evidence class and QA-backed closure
+criteria are satisfied. The `#690` reopen after PR `#707` is the current
+regression case this gate prevents.
+
 ## Observability And Operability
 
 Operation events are the primary supportability surface. They must stay
@@ -1818,6 +1830,12 @@ Recent issue-derived patterns to preserve:
     outputs, and avoid a same-run jobs API dependency. Failed, cancelled, or
     malformed upstream results remain hard failures and must never be converted
     into ignored or synthetic success evidence.
+48. Partial RFC PRs must not use GitHub auto-close keywords for still-open
+    execution issues. Link the issue neutrally, write `Keep #<issue> open`, name
+    the remaining evidence class, and run
+    `make rfc0002-github-issue-execution-ledger-gate` before PR evidence is
+    posted. Use explicit QA-backed closure after exact-main validation instead
+    of relying on accidental merge-time closure.
 
 Recent GitHub issue categories should keep being worked category-wise so
 repeated defect patterns are fixed once and pinned with tests or gates:
