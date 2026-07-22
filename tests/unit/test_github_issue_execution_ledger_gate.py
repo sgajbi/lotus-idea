@@ -57,7 +57,7 @@ def test_rfc0002_github_issue_execution_ledger_requires_current_issue_690(
     assert "Missing RFC-0002 execution issue entries: #690" in errors
 
 
-def test_rfc0002_github_issue_execution_ledger_keeps_advise_live_proof_in_progress() -> None:
+def test_rfc0002_github_issue_execution_ledger_closes_advise_live_proof_after_main_validation() -> None:
     module = _load_gate()
     payload = _ledger_payload(module)
     issue_688 = next(
@@ -66,10 +66,11 @@ def test_rfc0002_github_issue_execution_ledger_keeps_advise_live_proof_in_progre
         if isinstance(issue, dict) and issue["issueNumber"] == 688
     )
 
-    assert issue_688["githubState"] == "open"
-    assert issue_688["executionStatus"] == "open_in_progress"
-    assert issue_688["allowPullRequestAutoClose"] is False
-    assert "Keep #688 open" in issue_688["closureInstruction"]
+    assert issue_688["githubState"] == "closed"
+    assert issue_688["executionStatus"] == "closed_complete"
+    assert issue_688["allowPullRequestAutoClose"] is True
+    assert "Closed #688" in issue_688["closureInstruction"]
+    assert "PR #714 merged to main" in issue_688["closureInstruction"]
     assert "advise_live_contract_proof_missing" in issue_688["closureInstruction"]
 
 
