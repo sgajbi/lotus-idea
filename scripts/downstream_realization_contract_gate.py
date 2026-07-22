@@ -5,7 +5,6 @@ import argparse
 import json
 from pathlib import Path
 import sys
-from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -102,7 +101,18 @@ _EXPECTED_INTAKE_CONSUMERS = {
         "owner_repository": "lotus-advise",
         "owner_route": "POST /advisory/proposals/idea-intake",
         "intent_type": "REVIEW_FOR_ADVISORY_PROPOSAL",
-        "required_server_headers": set(),
+        "receipt_outcomes": ["ACCEPTED", "ACCEPTED_REPLAYED", "REJECTED"],
+        "principal_capability": "advisory.idea_proposal_intake.accept",
+        "local_dev_principal_source": "trusted_headers_until_production_idp_available",
+        "required_server_headers": {
+            "X-Actor-Id",
+            "X-Role",
+            "X-Tenant-Id",
+            "X-Legal-Entity-Code",
+            "X-Service-Identity",
+            "X-Capabilities",
+            "X-Principal-Status",
+        },
     },
     "manage_review": {
         "owner_repository": "lotus-manage",
@@ -245,8 +255,8 @@ def _validate_downstream_intake_wire_contract(repository_root: Path) -> list[str
     errors: list[str] = []
     if payload.get("contract_id") != "lotus-idea-downstream-intake-wire-contract":
         errors.append("downstream intake wire contract has an unexpected contract_id")
-    if payload.get("contract_version") != "1.3.0":
-        errors.append("downstream intake wire contract must be version 1.3.0")
+    if payload.get("contract_version") != "1.4.0":
+        errors.append("downstream intake wire contract must be version 1.4.0")
     if payload.get("repository") != "lotus-idea":
         errors.append("downstream intake wire contract repository must be lotus-idea")
     if payload.get("lifecycle_status") != "development_only":
@@ -288,6 +298,14 @@ def _validate_downstream_intake_wire_contract(repository_root: Path) -> list[str
                 errors.append(f"{target} intake wire contract {field} drifted")
         if target != "report_evidence" and consumer.get("intent_type") != expected["intent_type"]:
             errors.append(f"{target} intake wire contract intent_type drifted")
+        if target == "advise_proposal":
+            for field in (
+                "receipt_outcomes",
+                "principal_capability",
+                "local_dev_principal_source",
+            ):
+                if consumer.get(field) != expected[field]:
+                    errors.append(f"{target} intake wire contract {field} drifted")
         request_fields = consumer.get("request_fields")
         if not isinstance(request_fields, list) or set(request_fields) != expected.get(
             "request_fields", _REQUIRED_INTAKE_REQUEST_FIELDS
@@ -452,8 +470,7 @@ def _has_sensitive_or_executable_route_claim(evidence_refs: tuple[str, ...]) -> 
     )
 
 
-def _parse_payload(payload: dict[str, Any]) -> DownstreamRealizationContractPlan:
-    return downstream_realization_contract_plan_from_payload(payload)
+_parse_payload = downstream_realization_contract_plan_from_payload
 
 
 def parse_args() -> argparse.Namespace:

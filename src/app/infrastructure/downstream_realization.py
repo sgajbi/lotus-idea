@@ -34,6 +34,41 @@ _REPORT_OWNER_RETENTION_POLICY_BY_IDEA_REFERENCE = {
 
 
 @dataclass(frozen=True)
+class AdviseRealizationServiceContext:
+    actor_id: str
+    role: str
+    tenant_id: str
+    legal_entity_code: str
+    service_identity: str
+    capabilities: str
+
+    def __post_init__(self) -> None:
+        for field_name, value in (
+            ("actor_id", self.actor_id),
+            ("role", self.role),
+            ("tenant_id", self.tenant_id),
+            ("legal_entity_code", self.legal_entity_code),
+            ("service_identity", self.service_identity),
+            ("capabilities", self.capabilities),
+        ):
+            if not value.strip():
+                raise DownstreamRealizationConfigurationError(
+                    f"advise realization {field_name} is required."
+                )
+
+    def request_headers(self) -> dict[str, str]:
+        return {
+            "X-Actor-Id": self.actor_id,
+            "X-Role": self.role,
+            "X-Tenant-Id": self.tenant_id,
+            "X-Legal-Entity-Code": self.legal_entity_code,
+            "X-Service-Identity": self.service_identity,
+            "X-Capabilities": self.capabilities,
+            "X-Principal-Status": "ACTIVE",
+        }
+
+
+@dataclass(frozen=True)
 class ManageRealizationServiceContext:
     actor_id: str
     role: str
@@ -113,6 +148,7 @@ class DownstreamRealizationAdapterConfig:
     retry_max_attempts: int = 1
     retry_initial_backoff_seconds: float = 0.05
     retry_max_backoff_seconds: float = 0.5
+    advise_service_context: AdviseRealizationServiceContext | None = None
     manage_service_context: ManageRealizationServiceContext | None = None
     report_service_context: ReportRealizationServiceContext | None = None
 
@@ -146,6 +182,11 @@ class HttpAdviseProposalRealizationClient:
         client: DownstreamJsonClient | None = None,
     ) -> None:
         _require_source_authority(config, SourceSystem.LOTUS_ADVISE)
+        if config.advise_service_context is None:
+            raise DownstreamRealizationConfigurationError(
+                "advise realization service context is required."
+            )
+        self._advise_service_context = config.advise_service_context
         self._config = config
         self._client = _client_from_config(config, client)
 
@@ -165,6 +206,7 @@ class HttpAdviseProposalRealizationClient:
             correlation_id=correlation_id,
             trace_id=trace_id,
             idempotency_key=idempotency_key,
+            additional_headers=self._advise_service_context.request_headers(),
         )
 
     def close(self) -> None:
