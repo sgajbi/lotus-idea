@@ -246,7 +246,7 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/690",
       "rfcSlices": ["slice-13"],
       "githubState": "open",
-      "executionStatus": "open_in_progress",
+      "executionStatus": "open_blocked",
       "allowPullRequestAutoClose": false,
       "closureInstruction": "Keep #690 open until live Report intake/materialization, Render output, Archive record, publication authority, and supported-feature promotion evidence exist."
     },
