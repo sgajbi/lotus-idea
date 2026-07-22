@@ -123,13 +123,18 @@ ADVISE_ROUTE_PROFILE = RouteSourceContractProfile(
     required_producer_certification_blockers=(REQUIRED_ADVISE_PRODUCER_CERTIFICATION_BLOCKERS),
     source_refs=(
         "contracts/idea-proposal-intake/lotus-advise-idea-proposal-intake.v1.json",
-        "src/api/proposals/router.py",
-        "src/core/proposals/service.py",
+        "src/api/proposals/routes_idea_intake.py",
+        "src/api/proposals/idea_intake_principal.py",
+        "src/core/proposals/idea_intake_authority.py",
+        "src/core/proposals/idea_proposal_intake.py",
     ),
     evidence_refs=(
         "../lotus-advise/contracts/idea-proposal-intake/lotus-advise-idea-proposal-intake.v1.json",
-        "../lotus-advise/src/api/proposals/router.py",
-        "../lotus-advise/src/core/proposals/service.py",
+        "../lotus-advise/src/api/proposals/routes_idea_intake.py",
+        "../lotus-advise/src/api/proposals/idea_intake_principal.py",
+        "../lotus-advise/src/core/proposals/idea_intake_authority.py",
+        "../lotus-advise/src/core/proposals/idea_proposal_intake.py",
+        "../lotus-advise/tests/unit/advisory/api/test_idea_proposal_intake_api.py",
         "src/app/application/downstream_realization/route_source_contract.py",
         "scripts/downstream_realization/route_source_contract_gate.py",
         "contracts/downstream-realization/lotus-idea-downstream-contracts.v1.json",
@@ -348,6 +353,7 @@ def _contract_declares_route(
         and payload.get("downstream_execution_proven") is False
         and payload.get("supported_feature_promoted") is False
         and payload.get("target_route") == profile.target_route
+        and _contract_declares_runtime_receipt_boundary(payload, profile)
     )
 
 
@@ -360,15 +366,32 @@ def _contract_retains_authority(
     )
 
 
+def _contract_declares_runtime_receipt_boundary(
+    payload: dict[str, Any], profile: RouteSourceContractProfile
+) -> bool:
+    if profile is not ADVISE_ROUTE_PROFILE:
+        return True
+    return (
+        payload.get("runtime_intake_receipt_proven") is True
+        and payload.get("receipt_outcomes") == ["ACCEPTED", "ACCEPTED_REPLAYED", "REJECTED"]
+        and payload.get("principal_capability") == "advisory.idea_proposal_intake.accept"
+        and payload.get("local_dev_principal_source")
+        == "trusted_headers_until_production_idp_available"
+    )
+
+
 def _contract_preserves_boundaries(payload: dict[str, Any] | None) -> bool:
     boundaries = " ".join(str(value) for value in (payload or {}).get("non_proof_boundaries", ()))
+    route_or_receipt_boundary = (
+        "Proves only a live route foundation" in boundaries
+        or "Proves a live executable intake receipt" in boundaries
+    )
     return all(
-        fragment in boundaries
-        for fragment in (
-            "Proves only a live route foundation",
-            "Does not grant suitability",
-            "Does not create orders",
-            "Does not promote a supported feature",
+        (
+            route_or_receipt_boundary,
+            "Does not grant suitability" in boundaries,
+            "Does not create orders" in boundaries,
+            "Does not promote a supported feature" in boundaries,
         )
     )
 
