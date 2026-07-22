@@ -21,6 +21,9 @@ from app.application.downstream_realization.route_source_contract import (
     ADVISE_ROUTE_SOURCE_CONTRACT_ENV,
     MANAGE_ROUTE_SOURCE_CONTRACT_ENV,
 )
+from app.application.downstream_realization.advise_intake_runtime_execution import (
+    ADVISE_INTAKE_RUNTIME_EXECUTION_ENV,
+)
 from app.application.durable_repository_proof import DURABLE_REPOSITORY_PROOF_ENV
 from app.application.workbench.discovery_contract_proof import (
     GATEWAY_WORKBENCH_DISCOVERY_CONTRACT_PROOF_ENV,
@@ -144,6 +147,11 @@ PROOF_ARTIFACT_ARGS: tuple[tuple[str, str, str], ...] = (
         "--advise-proposal-route-source-contract-proof",
         ADVISE_ROUTE_SOURCE_CONTRACT_ENV,
         "Optional digest-bound lotus-advise route source-contract artifact path.",
+    ),
+    (
+        "--advise-intake-runtime-execution-proof",
+        ADVISE_INTAKE_RUNTIME_EXECUTION_ENV,
+        "Optional lotus-advise idea-intake runtime execution proof artifact path.",
     ),
     (
         "--manage-action-route-source-contract-proof",

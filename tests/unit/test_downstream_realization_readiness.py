@@ -41,9 +41,11 @@ from tests.unit.downstream_submission_helpers import (
     build_downstream_submission_record,
 )
 from tests.unit.downstream_realization.fixtures import (
+    valid_advise_intake_runtime_execution,
     valid_advise_route_source_contract,
     valid_manage_route_source_contract,
 )
+from tests.support.proof_provenance import bound_aggregate_proof as _bound_aggregate_proof
 
 
 @dataclass(frozen=True)
@@ -512,6 +514,70 @@ def test_route_source_contracts_preserve_live_and_authority_blockers() -> None:
     assert "output/downstream/manage-route-source-contract-proof.json" in (
         manage_contract.evidence_refs
     )
+
+
+def test_advise_intake_runtime_execution_clears_only_advise_live_blocker() -> None:
+    proof_ref = "output/downstream/advise-intake-runtime-execution-proof.json"
+    snapshot = build_downstream_realization_readiness_snapshot(
+        repository=InMemoryIdeaRepository(),
+        durable_storage_backed=False,
+        evaluated_at_utc=datetime(2026, 7, 22, 0, 0, tzinfo=UTC),
+        advise_intake_runtime_execution_proof=_bound_aggregate_proof(
+            valid_advise_intake_runtime_execution(),
+            proof_ref,
+        ),
+        advise_intake_runtime_execution_proof_ref=proof_ref,
+    )
+
+    assert "advise_live_contract_proof_missing" not in snapshot.blockers
+    assert "suitability_policy_authority_remains_lotus_advise" in snapshot.blockers
+    assert "manage_live_contract_proof_missing" in snapshot.blockers
+    assert "report_evidence_pack_live_materialization_proof_missing" in snapshot.blockers
+    assert snapshot.readiness_status == "blocked"
+    assert snapshot.supportability_status == "not_certified"
+    assert snapshot.supported_feature_promoted is False
+    advise_capability = next(
+        capability
+        for capability in snapshot.capabilities
+        if capability.capability_id == "advise-proposal-realization"
+    )
+    assert "advise_live_contract_proof_missing" not in advise_capability.blockers
+    assert "suitability_policy_authority_remains_lotus_advise" in advise_capability.blockers
+    assert proof_ref in advise_capability.evidence_refs
+    advise_contract = next(
+        contract
+        for contract in snapshot.downstream_contracts
+        if contract.contract_id == "lotus-idea-to-lotus-advise-proposal-intake:v1"
+    )
+    assert advise_contract.target_route == ADVISE_PROPOSAL_ROUTE
+    assert advise_contract.route_fit_status == "route_foundation_proven_not_certified"
+    assert "advise_live_contract_proof_missing" not in advise_contract.blockers
+    assert "suitability_policy_authority_remains_lotus_advise" in advise_contract.blockers
+    assert proof_ref in advise_contract.evidence_refs
+
+
+def test_advise_intake_runtime_execution_requires_clean_aggregate_provenance() -> None:
+    proof_ref = "output/downstream/advise-intake-runtime-execution-proof.json"
+    snapshot = build_downstream_realization_readiness_snapshot(
+        repository=InMemoryIdeaRepository(),
+        durable_storage_backed=False,
+        evaluated_at_utc=datetime(2026, 7, 22, 0, 0, tzinfo=UTC),
+        advise_intake_runtime_execution_proof=_bound_aggregate_proof(
+            valid_advise_intake_runtime_execution(),
+            proof_ref,
+            source_tree_dirty=True,
+        ),
+        advise_intake_runtime_execution_proof_ref=proof_ref,
+    )
+
+    assert "advise_live_contract_proof_missing" in snapshot.blockers
+    advise_capability = next(
+        capability
+        for capability in snapshot.capabilities
+        if capability.capability_id == "advise-proposal-realization"
+    )
+    assert "advise_live_contract_proof_missing" in advise_capability.blockers
+    assert proof_ref not in advise_capability.evidence_refs
 
 
 class _ProjectionOnlyDownstreamReadinessRepository:

@@ -7,7 +7,7 @@
 | Required role | `operator` |
 | Required capability | `idea.downstream-realization.readiness.read` |
 | Supportability | `not_certified` |
-| Product claim | Internal submission posture plus default source-safe `lotus-advise`, `lotus-manage`, and `lotus-report` route-foundation evidence when sibling contracts are present; local/test-only server-side Advise, Manage, and Report service-context fixtures for owner intake routes; source contracts clear no live blocker; no report-job execution, rendered output, archive record, suitability, rebalance/execution, client publication, production identity, or supported-feature promotion |
+| Product claim | Internal submission posture plus default source-safe `lotus-advise`, `lotus-manage`, and `lotus-report` route-foundation evidence when sibling contracts are present; opt-in source-safe Advise idea-intake runtime-execution proof for local/dev route serving and bounded receipt behavior; local/test-only server-side Advise, Manage, and Report service-context fixtures for owner intake routes; source contracts clear no live blocker; Advise runtime execution clears only `advise_live_contract_proof_missing`; no report-job execution, rendered output, archive record, suitability, rebalance/execution, client publication, production identity, or supported-feature promotion |
 
 `GET /api/v1/downstream-realization/readiness` reports source-safe readiness
 for realizing approved ideas through `lotus-advise`, `lotus-manage`,
@@ -39,15 +39,19 @@ It returns:
    `POST /advisory/proposals/idea-intake` for proposal intake when sibling
    evidence is present, including the owner-declared bounded receipt outcomes
    `ACCEPTED`, `ACCEPTED_REPLAYED`, and `REJECTED`,
-11. default source-safe proof that `lotus-manage` exposes
+11. opt-in source-safe runtime-execution proof that the Advise idea-intake
+   route served bounded accepted, replayed, rejected, idempotency-conflict,
+   authorization-denied, and tenant-scoped idempotency requests in local/dev
+   scope,
+12. default source-safe proof that `lotus-manage` exposes
     `POST /api/v1/rebalance/idea-action-intake` for action intake when sibling
     evidence is present,
-12. default source-safe proof that `lotus-report` exposes
+13. default source-safe proof that `lotus-report` exposes
     `POST /reports/idea-evidence-packs` for idea evidence-pack intake,
-13. default source-contract evidence that `lotus-report` declares
+14. default source-contract evidence that `lotus-report` declares
     `POST /reports/idea-evidence-packs/materializations` as a report-owned route
     without asserting runtime execution, rendered output, or archive creation,
-14. `not_certified` supportability until downstream live contracts and product
+15. `not_certified` supportability until downstream live contracts and product
    proof exist.
 
 When PostgreSQL is the active durable provider, the workflow, submission, and
@@ -121,6 +125,7 @@ request-acceptance, downstream-record, or supportability blockers:
 | Proof | Blocker it may clear | Boundaries that remain |
 | --- | --- | --- |
 | Advise route source contract | None | The owner contract declares a live executable intake receipt boundary and bounded receipt outcomes, but Idea still needs governed runtime submission evidence before `advise_live_contract_proof_missing` can clear. Suitability and proposal authority remain with `lotus-advise`. |
+| Advise idea-intake runtime execution | `advise_live_contract_proof_missing` only | The proof observes bounded local/dev route serving and source-safe receipt behavior from `lotus-advise`. It does not create an advisory proposal, grant suitability or policy authority, certify production identity, authorize client publication, prove Workbench/Gateway behavior, or promote support. |
 | Manage route source contract | None | The source contract must use Manage-native action-intake vocabulary (`runtime_action_receipt_proven`, `manage.idea_action_intake.accept`, bounded `ACCEPTED` / `ACCEPTED_REPLAYED` / `REJECTED` receipts). Source declarations still do not prove serving, authorization, tenant isolation, request acceptance, or a downstream action record. Rebalance/execution authority remains with `lotus-manage`. |
 | Report intake route source contract | None | `lotus_report_live_intake_route_proof_missing` remains, together with report materialization, render output, archive record creation, client publication, and supported-feature promotion boundaries owned by Report/Render/Archive. |
 | Report materialization source contract | None | The v3 artifact links the closed Report owner proof `sgajbi/lotus-report#152` as provenance while preserving materialization execution, rendered output creation, archive record creation, client publication, and supported-feature blockers; `lotus-report`, `lotus-render`, and `lotus-archive` retain downstream authority. |
@@ -193,6 +198,40 @@ or route-fit posture. Both artifacts deliberately keep these blockers:
 | `suitability_policy_authority_remains_lotus_advise` | `lotus-advise` remains the downstream authority for suitability, policy approval, advisory proposal lifecycle, and client communication. |
 | `rebalance_execution_authority_remains_lotus_manage` | `lotus-manage` remains the source authority for action-register, DPM/rebalance workflow, order/execution, and settlement posture. |
 | `client_publication_authority_blocked` | No client-ready communication authority is granted. |
+
+## Advise Idea-Intake Runtime Execution Proof
+
+`scripts/downstream_realization/generate_advise_intake_runtime_execution.py`
+can execute the Advise owner route through a sibling local ASGI TestClient or
+an explicitly configured HTTP service and produce a source-safe
+`runtime_execution` artifact:
+
+```powershell
+python scripts/downstream_realization/generate_advise_intake_runtime_execution.py `
+  --generated-at-utc 2026-07-22T00:00:00Z `
+  --advise-root ..\lotus-advise `
+  --advise-python ..\lotus-advise\.venv-codex\Scripts\python.exe `
+  --output output\downstream\advise-intake-runtime-execution-proof.json
+
+make advise-intake-runtime-execution-proof-gate
+```
+
+`make implementation-proof-readiness-check` generates and consumes this proof
+by default from `LOTUS_ADVISE_ROOT=../lotus-advise` and
+`LOTUS_ADVISE_PYTHON=../lotus-advise/.venv-codex/Scripts/python.exe`. Set
+`LOTUS_IDEA_ADVISE_INTAKE_RUNTIME_EXECUTION_PROOF` only when an already
+generated artifact should be consumed instead.
+
+The artifact validates closed receipt posture for accepted, replayed, rejected,
+idempotency-conflict, authorization-denied, and tenant-scoped idempotency calls.
+It stores only bounded status fields and canonical receipt digests. It clears
+`advise_live_contract_proof_missing` only when the proof is valid and
+aggregate-current; it deliberately preserves:
+
+| Remaining blocker | Why it remains |
+| --- | --- |
+| `suitability_policy_authority_remains_lotus_advise` | The proof does not create an advisory proposal, suitability record, policy approval, or client communication. |
+| `supported_feature_promotion_missing` | Local/dev route execution is not production certification or supported-feature promotion. |
 
 ## Report Materialization Source Contract
 
@@ -470,41 +509,49 @@ Implementation-backed evidence:
     `scripts/downstream_realization/generate_manage_route_source_contract.py`,
 15. downstream route source-contract gate:
     `scripts/downstream_realization/route_source_contract_gate.py`,
-16. focused downstream route source-contract tests:
+16. Advise idea-intake runtime-execution proof builder:
+    `src/app/application/downstream_realization/advise_intake_runtime_execution.py`,
+17. Advise idea-intake runtime-execution proof generator:
+    `scripts/downstream_realization/generate_advise_intake_runtime_execution.py`,
+18. Advise idea-intake runtime-execution proof gate:
+    `scripts/downstream_realization/advise_intake_runtime_execution_gate.py`,
+19. focused downstream route source-contract tests:
     `tests/unit/downstream_realization/test_route_source_contract.py`,
-17. report intake source-contract generator:
+20. Advise idea-intake runtime-execution tests:
+    `tests/unit/downstream_realization/test_advise_intake_runtime_execution.py`,
+21. report intake source-contract generator:
    `scripts/report/generate_intake_route_source_contract.py`,
-18. report intake source-contract gate:
+22. report intake source-contract gate:
     `scripts/report/intake_route_source_contract_gate.py`,
-19. report materialization source-contract generator:
+23. report materialization source-contract generator:
    `scripts/report/generate_materialization_source_contract.py`,
-20. report materialization source-contract gate:
+24. report materialization source-contract gate:
     `scripts/report/materialization_source_contract_gate.py`,
-21. readiness API route: `src/app/api/downstream_realization_readiness.py`,
-22. operation events:
+25. readiness API route: `src/app/api/downstream_realization_readiness.py`,
+26. operation events:
    `downstream_realization_readiness_read` and
    `downstream_realization_submission`, plus
    `downstream_reconciliation_read` and `downstream_reconciliation_resolve`,
-23. endpoint ledger:
+27. endpoint ledger:
    `docs/operations/endpoint-certification-ledger.json`,
-24. unit tests:
+28. unit tests:
    `tests/unit/test_downstream_realization_readiness.py`,
-25. application orchestration tests:
+29. application orchestration tests:
    `tests/unit/test_downstream_realization_application.py`,
-26. adapter tests:
+30. adapter tests:
    `tests/unit/test_downstream_realization_adapters.py`,
-27. gate tests:
+31. gate tests:
    `tests/unit/test_downstream_realization_contract_gate.py`,
-28. route proof tests:
+32. route proof tests:
     `tests/unit/downstream_realization/test_route_source_contract.py`,
-29. report intake source-contract tests:
+33. report intake source-contract tests:
     `tests/unit/report/test_intake_route_source_contract.py`,
-30. report materialization source-contract tests:
+34. report materialization source-contract tests:
     `tests/unit/report/test_materialization_source_contract.py`,
-31. submission reconciliation and real PostgreSQL tests:
+35. submission reconciliation and real PostgreSQL tests:
    `tests/integration/test_downstream_submission_reconciliation_api.py` and
    `tests/integration/test_postgres_downstream_submission_runtime.py`,
-32. integration tests:
+36. integration tests:
    `tests/integration/test_downstream_realization_readiness_api.py` and
    `tests/integration/test_downstream_realization_api.py`.
 
@@ -514,6 +561,7 @@ Run:
 python -m pytest tests/unit/test_downstream_realization_application.py tests/unit/test_downstream_realization_adapters.py tests/unit/test_downstream_intake_wire_contract.py tests/unit/test_downstream_realization_readiness.py tests/integration/test_downstream_realization_api.py tests/integration/test_downstream_realization_readiness_api.py -q
 make downstream-realization-contract-gate
 make downstream-route-source-contract-proof-gate
+make advise-intake-runtime-execution-proof-gate
 make report-intake-route-source-contract-proof-gate
 make report-materialization-source-contract-proof-gate
 make endpoint-certification-gate

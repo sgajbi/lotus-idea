@@ -18,6 +18,10 @@ from app.application.downstream_realization.route_source_contract import (
     advise_route_source_contract_is_valid,
     manage_route_source_contract_is_valid,
 )
+from app.application.downstream_realization.advise_intake_runtime_execution import (
+    ADVISE_INTAKE_RUNTIME_BLOCKERS_SATISFIED,
+    advise_intake_runtime_execution_is_valid,
+)
 from app.application.durable_repository_proof import (
     DURABLE_REPOSITORY_BLOCKERS_CLEARED,
     durable_repository_proof_is_valid,
@@ -194,6 +198,14 @@ def _apply_downstream_proofs_from_scope(
             scope,
             "advise_proposal_route_proof_ref",
         ),
+        advise_intake_runtime_execution_proof=_proof_payload_from_scope(
+            scope,
+            "advise_intake_runtime_execution_proof",
+        ),
+        advise_intake_runtime_execution_proof_ref=_proof_ref_from_scope(
+            scope,
+            "advise_intake_runtime_execution_proof_ref",
+        ),
         manage_action_route_proof=_proof_payload_from_scope(scope, "manage_action_route_proof"),
         manage_action_route_proof_ref=_proof_ref_from_scope(
             scope,
@@ -365,6 +377,8 @@ def _apply_downstream_proofs(
     evaluated_at_utc: datetime,
     advise_proposal_route_proof: Mapping[str, object] | None,
     advise_proposal_route_proof_ref: str | None,
+    advise_intake_runtime_execution_proof: Mapping[str, object] | None,
+    advise_intake_runtime_execution_proof_ref: str | None,
     manage_action_route_proof: Mapping[str, object] | None,
     manage_action_route_proof_ref: str | None,
     report_intake_route_source_contract_proof: Mapping[str, object] | None,
@@ -401,6 +415,21 @@ def _apply_downstream_proofs(
                 capability,
                 capability_ids=("downstream-realization",),
                 evidence_ref=manage_action_route_proof_ref,
+            )
+            for capability in capabilities
+        )
+    if _registered_proof_is_valid_and_current(
+        "advise_intake_runtime_execution_proof",
+        ProofArtifactEffect.BLOCKER_CLEARING,
+        advise_intake_runtime_execution_proof,
+        advise_intake_runtime_execution_proof_ref,
+        evaluated_at_utc=evaluated_at_utc,
+        proof_is_valid=advise_intake_runtime_execution_is_valid,
+    ):
+        capabilities = tuple(
+            _apply_advise_intake_runtime_execution(
+                capability,
+                advise_intake_runtime_execution_proof_ref,
             )
             for capability in capabilities
         )
@@ -768,6 +797,18 @@ def _apply_report_materialization_source_contract(
         capability,
         capability_ids=("downstream-realization",),
         evidence_ref=report_materialization_source_contract_ref,
+    )
+
+
+def _apply_advise_intake_runtime_execution(
+    capability: ImplementationProofCapabilityReadiness,
+    advise_intake_runtime_execution_proof_ref: str | None,
+) -> ImplementationProofCapabilityReadiness:
+    return apply_blocker_proof(
+        capability,
+        capability_ids=("downstream-realization",),
+        blockers_cleared=ADVISE_INTAKE_RUNTIME_BLOCKERS_SATISFIED,
+        proof_ref=advise_intake_runtime_execution_proof_ref,
     )
 
 

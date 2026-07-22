@@ -1,6 +1,6 @@
 # RFC-0002 Slice 12: Advise And Manage Conversion Realization
 
-Status: Partially implemented - internal conversion governance, source-versioned outcome lifecycle and correction policy, atomic repository-provider parity, durable claim-before-call submission and operator reconciliation, certified API/current-posture foundation, source-safe adapter foundations, governed downstream contract-plan gate, and digest-bound Advise/Manage route source-contract consumption; live execution and supported product proof remain blocked
+Status: Partially implemented - internal conversion governance, source-versioned outcome lifecycle and correction policy, atomic repository-provider parity, durable claim-before-call submission and operator reconciliation, certified API/current-posture foundation, source-safe adapter foundations, governed downstream contract-plan gate, digest-bound Advise/Manage route source-contract consumption, and bounded Advise idea-intake runtime-execution proof consumption; suitability, Manage runtime execution, Report/Render/Archive materialization, production identity, and supported product proof remain blocked
 
 ## Outcome
 
@@ -194,6 +194,26 @@ Implemented in this slice:
     that fixture outside local/test profiles, and the adapter never forwards
     browser identity data. This is not IdP, session, or token-claim mapping and
     does not provide downstream business authority or live acceptance proof.
+29. `src/app/application/downstream_realization/advise_intake_runtime_execution.py`,
+    `scripts/downstream_realization/generate_advise_intake_runtime_execution.py`,
+    `scripts/downstream_realization/advise_intake_runtime_execution_gate.py`,
+    and `make advise-intake-runtime-execution-proof-gate` now define a
+    closed-field, source-safe `runtime_execution` proof for the Advise owner
+    route `POST /advisory/proposals/idea-intake`. The proof observes bounded
+    accepted, replayed, rejected, idempotency-conflict, authorization-denied,
+    and tenant-scoped idempotency receipts through local ASGI or configured
+    HTTP service execution, binds exact current Advise source-authority
+    digests, and stores only bounded receipt posture plus canonical receipt
+    digests. Aggregate and downstream readiness can use a valid current artifact
+    to clear only `advise_live_contract_proof_missing`.
+30. `tests/unit/downstream_realization/test_advise_intake_runtime_execution.py`,
+    `tests/unit/test_downstream_realization_readiness.py`,
+    `tests/unit/test_implementation_proof_readiness.py`,
+    `tests/unit/test_generate_implementation_proof_readiness.py`, and
+    `tests/unit/test_proof_artifacts.py` prove fail-closed receipt validation,
+    digest binding, artifact loading, CLI wiring, API propagation, blocker
+    mutation, and retained non-proof claims for suitability, proposal lifecycle,
+    production identity, client publication, and supported-feature promotion.
 
 ## Issue 326 Outcome Lifecycle Hardening
 
@@ -220,8 +240,8 @@ supported-feature authority moves into `lotus-idea`.
 This slice is not yet a supported conversion product. Remaining work includes:
 
 1. Gateway/Workbench proof,
-2. `lotus-advise` live route acceptance, suitability, policy, proposal
-   lifecycle, and client communication certification beyond source declarations,
+2. `lotus-advise` suitability, policy, proposal lifecycle, and client
+   communication certification beyond bounded route receipt execution,
 3. `lotus-manage` live route acceptance, mandate, DPM/rebalance/action,
    execution, and settlement certification beyond source declarations,
 4. `lotus-report` report-evidence package intake proof for the first
@@ -240,7 +260,10 @@ calls are not runtime proof.
 Valid Advise and Manage source contracts prove only that governed declarations
 exist at bound digests; they are not route-serving, acceptance, authorization,
 tenant-isolation, suitability, rebalance, execution, client-publication, or
-supported-feature proof.
+supported-feature proof. The Advise idea-intake runtime proof adds bounded
+route-serving and receipt-execution evidence only. It is not suitability,
+proposal creation, production identity, client-publication, Workbench/Gateway,
+or supported-feature proof.
 
 ## Required Work
 
@@ -263,8 +286,10 @@ supported-feature proof.
    advice.
 
 The current implementation satisfies the internal domain governance, certified
-internal API foundation, source-safe submission API, and source-safe
-adapter-foundation portions of this gate, plus route-only proof consumption
-when sibling evidence is present. Cross-repository downstream realization
-remains planned until the owning services certify live acceptance,
-suitability/rebalance authority, downstream outcomes, and product support.
+internal API foundation, source-safe submission API, source-safe
+adapter-foundation portions of this gate, route-only proof consumption when
+sibling evidence is present, and bounded Advise route receipt-execution proof
+consumption. Cross-repository downstream realization remains planned until the
+owning services certify suitability/rebalance authority, downstream outcomes,
+Report/Render/Archive materialization, production identity, and product
+support.

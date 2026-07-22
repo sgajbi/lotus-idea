@@ -8,7 +8,7 @@
 | Required capability | `idea.implementation-proof.readiness.read` |
 | Required query | Timezone-aware `evaluatedAtUtc` |
 | Supportability | `not_certified` while blockers remain |
-| Product claim | Bounded live source-ingestion, runtime trust telemetry, digest-bound Advise/Manage/Report route source contracts, Report materialization, outbox broker/consumer/platform-mesh source contracts, Gateway/Workbench source contracts/discovery, mesh policy, platform catalog source contract, receipt-bound mainline AI lineage-store CI execution, AI workflow-pack registration/runtime execution proof artifacts, and opportunity archetype scenario readiness can be consumed. Source contracts add provenance without clearing live blockers; runtime-class Risk/Performance/Core/Manage/Advise proofs clear only their named source-specific blockers. No full live journey, live AI provider execution, downstream route acceptance, suitability/rebalance/risk-profile/restriction-clearance/benchmark-assignment authority, platform mesh certification, external broker or platform-mesh publication, downstream delivery, full Gateway/Workbench product proof, client-ready publication, or supported-feature promotion is proven. |
+| Product claim | Bounded live source-ingestion, runtime trust telemetry, digest-bound Advise/Manage/Report route source contracts, Advise idea-intake runtime execution, Report materialization, outbox broker/consumer/platform-mesh source contracts, Gateway/Workbench source contracts/discovery, mesh policy, platform catalog source contract, receipt-bound mainline AI lineage-store CI execution, AI workflow-pack registration/runtime execution proof artifacts, and opportunity archetype scenario readiness can be consumed. Source contracts add provenance without clearing live blockers; runtime-class Risk/Performance/Core/Manage/Advise proofs clear only their named source-specific blockers. No full live journey, live AI provider execution, suitability/rebalance/risk-profile/restriction-clearance/benchmark-assignment authority, platform mesh certification, external broker or platform-mesh publication, downstream delivery beyond the named bounded proof, full Gateway/Workbench product proof, client-ready publication, or supported-feature promotion is proven. |
 
 `GET /api/v1/implementation-proof/readiness` is the internal operator
 diagnostic for RFC-0002 implementation proof posture.
@@ -335,6 +335,8 @@ taxonomy and the #393 same-pattern campaign.
 | `LOTUS_ADVISE_ROOT` | Selects the sibling `lotus-advise` checkout used to generate the default digest-bound Advise route source contract. Defaults to `../lotus-advise`. |
 | `LOTUS_IDEA_ADVISE_ROUTE_SOURCE_CONTRACT_PROOF_OUTPUT` | Selects the default Advise route source-contract artifact consumed as supporting evidence. Defaults to `output/downstream/advise-route-source-contract-proof.json`. |
 | `LOTUS_IDEA_ADVISE_ROUTE_SOURCE_CONTRACT_PROOF` | Overrides the default Advise route source-contract artifact path. |
+| `LOTUS_ADVISE_PYTHON` | Selects the Python interpreter used to execute the sibling `lotus-advise` local ASGI runtime proof. Defaults to `../lotus-advise/.venv-codex/Scripts/python.exe`. |
+| `LOTUS_IDEA_ADVISE_INTAKE_RUNTIME_EXECUTION_PROOF` | Overrides the default Advise idea-intake runtime-execution proof path. A valid aggregate-current artifact clears only `advise_live_contract_proof_missing` and preserves suitability, proposal lifecycle, client-publication, production, support, and supported-feature blockers. |
 | `LOTUS_MANAGE_ROOT` | Selects the sibling `lotus-manage` checkout used to generate the default digest-bound Manage route source contract. Defaults to `../lotus-manage`. |
 | `LOTUS_IDEA_MANAGE_ROUTE_SOURCE_CONTRACT_PROOF_OUTPUT` | Selects the default Manage route source-contract artifact consumed as supporting evidence. Defaults to `output/downstream/manage-route-source-contract-proof.json`. |
 | `LOTUS_IDEA_MANAGE_ROUTE_SOURCE_CONTRACT_PROOF` | Overrides the default Manage route source-contract artifact path. |
@@ -825,6 +827,20 @@ in present sibling evidence exits non-zero. The validators reject unknown
 fields and forged runtime, authorization, tenant, downstream-acceptance,
 authority, production, publication, or promotion claims.
 
+Advise idea-intake runtime-execution evidence is captured by
+`scripts/downstream_realization/generate_advise_intake_runtime_execution.py`.
+The repo-native `make implementation-proof-readiness-check` target generates
+the default artifact from `LOTUS_ADVISE_ROOT` using `LOTUS_ADVISE_PYTHON` and
+passes it into aggregate readiness unless
+`LOTUS_IDEA_ADVISE_INTAKE_RUNTIME_EXECUTION_PROOF` is set. A valid artifact is
+`runtime_execution` evidence: it observes the Advise owner route serving
+accepted, replayed, rejected, idempotency-conflict, authorization-denied, and
+tenant-scoped idempotency calls while storing only source-safe receipt posture
+and canonical receipt digests. It clears only
+`advise_live_contract_proof_missing`. It does not create proposals, grant
+suitability or policy authority, certify production identity, authorize client
+publication, prove Gateway/Workbench behavior, or promote support.
+
 Report intake route source-contract evidence is captured by
 `scripts/report/generate_intake_route_source_contract.py`. The repo-native
 `make implementation-proof-readiness-check` target now generates the default
@@ -1259,6 +1275,12 @@ Implementation-backed evidence:
     `make downstream-route-source-contract-proof-gate`,
 1. downstream route source-contract tests:
     `tests/unit/downstream_realization/test_route_source_contract.py`,
+1. Advise idea-intake runtime-execution proof generator:
+    `scripts/downstream_realization/generate_advise_intake_runtime_execution.py`,
+1. Advise idea-intake runtime-execution proof gate:
+    `make advise-intake-runtime-execution-proof-gate`,
+1. Advise idea-intake runtime-execution proof tests:
+    `tests/unit/downstream_realization/test_advise_intake_runtime_execution.py`,
 1. report intake route source-contract generator:
     `scripts/report/generate_intake_route_source_contract.py`,
 1. report intake route source-contract gate:
@@ -1343,6 +1365,7 @@ $env:LOTUS_IDEA_CORE_PORTFOLIO_STATE_LIVE_PROOF = "output/opportunity/core-portf
 $env:LOTUS_IDEA_LOW_INCOME_CORE_CASHFLOW_LIVE_PROOF = "output/opportunity/low-income-core-cashflow-live-proof.json"
 $env:LOTUS_IDEA_MANAGE_MANDATE_LIVE_PROOF = "output/opportunity/manage-mandate-live-proof.json"
 $env:LOTUS_ADVISE_ROOT = "..\lotus-advise"
+$env:LOTUS_ADVISE_PYTHON = "..\lotus-advise\.venv-codex\Scripts\python.exe"
 $env:LOTUS_IDEA_ADVISE_ROUTE_SOURCE_CONTRACT_PROOF_OUTPUT = "output/downstream/advise-route-source-contract-proof.json"
 $env:LOTUS_MANAGE_ROOT = "..\lotus-manage"
 $env:LOTUS_IDEA_MANAGE_ROUTE_SOURCE_CONTRACT_PROOF_OUTPUT = "output/downstream/manage-route-source-contract-proof.json"
@@ -1363,6 +1386,7 @@ make outbox-broker-source-contract-proof-gate
 make outbox-consumer-contract-proof-contract-gate
 make outbox-platform-mesh-event-source-contract-proof-gate
 make downstream-route-source-contract-proof-gate
+make advise-intake-runtime-execution-proof-gate
 make report-intake-route-source-contract-proof-gate
 make report-materialization-source-contract-proof-gate
 make workbench-read-path-source-contract-proof-gate

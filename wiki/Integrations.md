@@ -248,7 +248,11 @@ source-safe proof artifacts from `LOTUS_ADVISE_ROOT`, `LOTUS_MANAGE_ROOT`, and
 set. Valid Advise, Manage, and Report route artifacts are `source_contract`
 evidence: they add declaration provenance but clear no live route, request
 acceptance, downstream-record, or supportability blockers until governed
-runtime evidence exists. Suitability,
+runtime evidence exists. The separate Advise idea-intake runtime-execution
+artifact is `runtime_execution` evidence and can clear only
+`advise_live_contract_proof_missing` after it observes source-safe accepted,
+replayed, rejected, idempotency-conflict, authorization-denied, and
+tenant-scoped idempotency receipts from the Advise owner route. Suitability,
 mandate/rebalance authority, execution, report evidence-pack materialization,
 rendered output, archive record creation, client-publication authority, and
 supported-feature promotion remain blocked.
@@ -346,3 +350,10 @@ validated by `make downstream-realization-contract-gate`. That gate keeps the
 records planned, source-authority preserving, blocker-backed, and free of
 current-route or supported-feature claims until Advise, Manage, and Report
 implementation evidence exists.
+
+`make implementation-proof-readiness-check` generates the local/dev Advise
+runtime proof by default when `LOTUS_ADVISE_ROOT` and `LOTUS_ADVISE_PYTHON`
+point to a runnable sibling `lotus-advise` checkout. Override
+`LOTUS_IDEA_ADVISE_INTAKE_RUNTIME_EXECUTION_PROOF` only to consume an existing
+artifact. The proof is source-safe and does not store raw downstream payloads,
+raw IDs, or raw entitlement failures.

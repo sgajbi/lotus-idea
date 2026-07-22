@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from types import MappingProxyType
 from typing import Mapping
 
@@ -15,10 +16,15 @@ from app.application.downstream_realization.route_source_contract import (
     advise_route_source_contract_is_valid,
     manage_route_source_contract_is_valid,
 )
+from app.application.downstream_realization.advise_intake_runtime_execution import (
+    ADVISE_INTAKE_RUNTIME_BLOCKERS_SATISFIED,
+    advise_intake_runtime_execution_is_valid,
+)
 from app.application.implementation_proof_artifact_registry import (
     ProofArtifactEffect,
     proof_artifact_effect_matches_payload,
 )
+from app.application.proof_provenance import aggregate_proof_artifact_is_current
 from app.application.report.intake_route_source_contract import (
     report_intake_route_source_contract_proof_is_valid,
 )
@@ -118,8 +124,11 @@ def build_downstream_realization_readiness_snapshot(
     *,
     repository: CandidateSnapshotRepository,
     durable_storage_backed: bool,
+    evaluated_at_utc: datetime | None = None,
     advise_proposal_route_proof: Mapping[str, object] | None = None,
     advise_proposal_route_proof_ref: str | None = None,
+    advise_intake_runtime_execution_proof: Mapping[str, object] | None = None,
+    advise_intake_runtime_execution_proof_ref: str | None = None,
     manage_action_route_proof: Mapping[str, object] | None = None,
     manage_action_route_proof_ref: str | None = None,
     report_intake_route_source_contract_proof: Mapping[str, object] | None = None,
@@ -140,8 +149,11 @@ def build_downstream_realization_readiness_snapshot(
     capabilities, downstream_contracts = _apply_available_downstream_proofs(
         capabilities=capabilities,
         downstream_contracts=downstream_contracts,
+        evaluated_at_utc=evaluated_at_utc or datetime.now(UTC),
         advise_proposal_route_proof=advise_proposal_route_proof,
         advise_proposal_route_proof_ref=advise_proposal_route_proof_ref,
+        advise_intake_runtime_execution_proof=advise_intake_runtime_execution_proof,
+        advise_intake_runtime_execution_proof_ref=advise_intake_runtime_execution_proof_ref,
         manage_action_route_proof=manage_action_route_proof,
         manage_action_route_proof_ref=manage_action_route_proof_ref,
         report_intake_route_source_contract_proof=report_intake_route_source_contract_proof,
@@ -256,8 +268,11 @@ def _apply_available_downstream_proofs(
     *,
     capabilities: tuple[DownstreamRealizationCapabilityReadiness, ...],
     downstream_contracts: tuple[DownstreamRealizationContractReadiness, ...],
+    evaluated_at_utc: datetime,
     advise_proposal_route_proof: Mapping[str, object] | None,
     advise_proposal_route_proof_ref: str | None,
+    advise_intake_runtime_execution_proof: Mapping[str, object] | None,
+    advise_intake_runtime_execution_proof_ref: str | None,
     manage_action_route_proof: Mapping[str, object] | None,
     manage_action_route_proof_ref: str | None,
     report_intake_route_source_contract_proof: Mapping[str, object] | None,
@@ -299,6 +314,24 @@ def _apply_available_downstream_proofs(
             contract_id="lotus-idea-to-lotus-manage-action-intake:v1",
             proof_ref=manage_action_route_proof_ref,
             target_route=MANAGE_ACTION_ROUTE,
+        )
+    if (
+        proof_artifact_effect_matches_payload(
+            "advise_intake_runtime_execution_proof",
+            ProofArtifactEffect.BLOCKER_CLEARING,
+        )
+        and advise_intake_runtime_execution_proof
+        and advise_intake_runtime_execution_is_valid(advise_intake_runtime_execution_proof)
+        and aggregate_proof_artifact_is_current(
+            advise_intake_runtime_execution_proof,
+            evaluated_at_utc=evaluated_at_utc,
+            proof_ref=advise_intake_runtime_execution_proof_ref,
+        )
+    ):
+        capabilities, downstream_contracts = _apply_advise_intake_runtime_execution(
+            capabilities=capabilities,
+            downstream_contracts=downstream_contracts,
+            proof_ref=advise_intake_runtime_execution_proof_ref,
         )
     if (
         proof_artifact_effect_matches_payload(
@@ -349,6 +382,27 @@ def _apply_available_downstream_proofs(
             for contract in downstream_contracts
         )
     return capabilities, downstream_contracts
+
+
+def _apply_advise_intake_runtime_execution(
+    *,
+    capabilities: tuple[DownstreamRealizationCapabilityReadiness, ...],
+    downstream_contracts: tuple[DownstreamRealizationContractReadiness, ...],
+    proof_ref: str | None,
+) -> tuple[
+    tuple[DownstreamRealizationCapabilityReadiness, ...],
+    tuple[DownstreamRealizationContractReadiness, ...],
+]:
+    return (
+        tuple(
+            _apply_advise_intake_runtime_execution_to_capability(capability, proof_ref)
+            for capability in capabilities
+        ),
+        tuple(
+            _apply_advise_intake_runtime_execution_to_contract(contract, proof_ref)
+            for contract in downstream_contracts
+        ),
+    )
 
 
 def _apply_route_source_contract(
@@ -523,6 +577,55 @@ def _apply_route_source_contract_to_contract(
         adapter_status=contract.adapter_status,
         evidence_refs=evidence_refs,
         blockers=contract.blockers,
+        blocker_issue_refs=contract.blocker_issue_refs,
+    )
+
+
+def _apply_advise_intake_runtime_execution_to_capability(
+    capability: DownstreamRealizationCapabilityReadiness,
+    proof_ref: str | None,
+) -> DownstreamRealizationCapabilityReadiness:
+    if capability.capability_id != "advise-proposal-realization":
+        return capability
+    evidence_refs = capability.evidence_refs
+    if proof_ref:
+        evidence_refs = tuple(dict.fromkeys((*evidence_refs, proof_ref)))
+    return _capability(
+        capability.capability_id,
+        capability.name,
+        capability.source_authority,
+        evidence_refs=evidence_refs,
+        blockers=tuple(
+            blocker
+            for blocker in capability.blockers
+            if blocker not in ADVISE_INTAKE_RUNTIME_BLOCKERS_SATISFIED
+        ),
+        blocker_issue_refs=capability.blocker_issue_refs,
+    )
+
+
+def _apply_advise_intake_runtime_execution_to_contract(
+    contract: DownstreamRealizationContractReadiness,
+    proof_ref: str | None,
+) -> DownstreamRealizationContractReadiness:
+    if contract.contract_id != "lotus-idea-to-lotus-advise-proposal-intake:v1":
+        return contract
+    evidence_refs = contract.evidence_refs
+    if proof_ref:
+        evidence_refs = tuple(dict.fromkeys((*evidence_refs, proof_ref)))
+    return DownstreamRealizationContractReadiness(
+        contract_id=contract.contract_id,
+        owner_repository=contract.owner_repository,
+        source_authority=contract.source_authority,
+        target_route=ADVISE_PROPOSAL_ROUTE,
+        route_fit_status="route_foundation_proven_not_certified",
+        adapter_status=contract.adapter_status,
+        evidence_refs=evidence_refs,
+        blockers=tuple(
+            blocker
+            for blocker in contract.blockers
+            if blocker not in ADVISE_INTAKE_RUNTIME_BLOCKERS_SATISFIED
+        ),
         blocker_issue_refs=contract.blocker_issue_refs,
     )
 
