@@ -1,0 +1,299 @@
+{
+  "schemaVersion": "lotus-idea:rfc0002-github-issue-execution-ledger:v1",
+  "rfcId": "RFC-0002",
+  "asOfDate": "2026-07-22",
+  "repository": "sgajbi/lotus-idea",
+  "executionAnchor": {
+    "issueNumber": 681,
+    "url": "https://github.com/sgajbi/lotus-idea/issues/681",
+    "rfcSlice": "slice-18",
+    "purpose": "Prevent RFC documentation, issue, PR, and agent-context truth from drifting away from implementation-backed evidence."
+  },
+  "policy": {
+    "openIssueAutoCloseDefault": false,
+    "openIssueRequiredInstruction": "Keep #{issueNumber} open",
+    "autoCloseKeywords": ["close", "closes", "closed", "fix", "fixes", "fixed", "resolve", "resolves", "resolved"],
+    "partialProgressRule": "Partial RFC progress must be recorded as evidence on the issue without GitHub auto-close keywords. Issues close only when their complete evidence class and slice DoD are satisfied on main."
+  },
+  "issues": [
+    {
+      "issueNumber": 673,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/673",
+      "rfcSlices": ["slice-03", "slice-06", "slice-08"],
+      "githubState": "open",
+      "executionStatus": "open_tracker",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #673 open until every remaining RFC-0002 implementation, proof, promotion, closure, and mainline validation issue is complete."
+    },
+    {
+      "issueNumber": 674,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/674",
+      "rfcSlices": ["slice-11"],
+      "githubState": "open",
+      "executionStatus": "open_tracker",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #674 open until Workbench product realization proof is complete across Idea, Gateway, and Workbench."
+    },
+    {
+      "issueNumber": 675,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/675",
+      "rfcSlices": ["slice-12", "slice-13"],
+      "githubState": "open",
+      "executionStatus": "open_tracker",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #675 open until Advise and Manage conversion realization is complete with live downstream proof."
+    },
+    {
+      "issueNumber": 676,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/676",
+      "rfcSlices": ["slice-12", "slice-13"],
+      "githubState": "open",
+      "executionStatus": "open_tracker",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #676 open until Report, Render, and Archive evidence-pack materialization proof is complete."
+    },
+    {
+      "issueNumber": 677,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/677",
+      "rfcSlices": ["slice-14", "slice-20"],
+      "githubState": "open",
+      "executionStatus": "open_blocked",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #677 open until data-product promotion and runtime trust telemetry certification have platform mesh evidence."
+    },
+    {
+      "issueNumber": 678,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/678",
+      "rfcSlices": ["slice-15"],
+      "githubState": "open",
+      "executionStatus": "open_tracker",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #678 open until observability, security, entitlements, and operations certification are complete on main."
+    },
+    {
+      "issueNumber": 679,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/679",
+      "rfcSlices": ["slice-05", "slice-16", "slice-17"],
+      "githubState": "open",
+      "executionStatus": "open_tracker",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #679 open until demo readiness, archetype scenarios, and commercial proof are implementation-backed."
+    },
+    {
+      "issueNumber": 680,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/680",
+      "rfcSlices": ["slice-04", "slice-10", "slice-14", "slice-17"],
+      "githubState": "open",
+      "executionStatus": "open_tracker",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #680 open until aggregate implementation proof and live validation journey are complete."
+    },
+    {
+      "issueNumber": 681,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/681",
+      "rfcSlices": ["slice-18"],
+      "githubState": "open",
+      "executionStatus": "open_in_progress",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #681 open until documentation, wiki, support truth, and agent context are synchronized after all remaining implementation truth changes."
+    },
+    {
+      "issueNumber": 682,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/682",
+      "rfcSlices": ["slice-19"],
+      "githubState": "closed",
+      "executionStatus": "closed_complete",
+      "allowPullRequestAutoClose": true,
+      "closureInstruction": "Closed #682 after second-last hardening and same-pattern review evidence reached main."
+    },
+    {
+      "issueNumber": 683,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/683",
+      "rfcSlices": ["slice-20"],
+      "githubState": "open",
+      "executionStatus": "open_pending_final_closure",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #683 open until final closure, exact-main validation, wiki publication, and branch hygiene are complete."
+    },
+    {
+      "issueNumber": 684,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/684",
+      "rfcSlices": ["slice-21"],
+      "githubState": "open",
+      "executionStatus": "open_pending_post_completion",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #684 open until post-completion communication and LinkedIn decision are recorded after RFC-0002 completion."
+    },
+    {
+      "issueNumber": 685,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/685",
+      "rfcSlices": ["slice-11"],
+      "githubState": "open",
+      "executionStatus": "open_in_progress",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #685 open until Gateway/BFF-backed Workbench queue and candidate-detail reads have complete runtime proof."
+    },
+    {
+      "issueNumber": 686,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/686",
+      "rfcSlices": ["slice-08", "slice-11"],
+      "githubState": "open",
+      "executionStatus": "open_in_progress",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #686 open until Workbench review-action, feedback, and conversion-intent controls are fully proven."
+    },
+    {
+      "issueNumber": 687,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/687",
+      "rfcSlices": ["slice-11", "slice-15"],
+      "githubState": "open",
+      "executionStatus": "open_blocked",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #687 open until production identity proof replaces the dev-only Workbench caller-authority fixture."
+    },
+    {
+      "issueNumber": 688,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/688",
+      "rfcSlices": ["slice-12"],
+      "githubState": "open",
+      "executionStatus": "open_merged_main_qa_pending",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #688 open until explicit QA verification reconciles the merged Advise proof against current blocker truth."
+    },
+    {
+      "issueNumber": 689,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/689",
+      "rfcSlices": ["slice-12"],
+      "githubState": "open",
+      "executionStatus": "open_blocked",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #689 open until lotus-manage owner proof reaches main and Idea consumes live Manage route/action-register evidence."
+    },
+    {
+      "issueNumber": 690,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/690",
+      "rfcSlices": ["slice-13"],
+      "githubState": "open",
+      "executionStatus": "open_in_progress",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #690 open until live Report intake/materialization, Render output, Archive record, publication authority, and supported-feature promotion evidence exist."
+    },
+    {
+      "issueNumber": 691,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/691",
+      "rfcSlices": ["slice-13"],
+      "githubState": "open",
+      "executionStatus": "open_blocked",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #691 open until Render/Archive materialization and lifecycle-safe publication boundary proof exists."
+    },
+    {
+      "issueNumber": 692,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/692",
+      "rfcSlices": ["slice-14"],
+      "githubState": "open",
+      "executionStatus": "open_blocked",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #692 open until runtime trust telemetry and mesh catalog promotion gate are certified with owner evidence."
+    },
+    {
+      "issueNumber": 693,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/693",
+      "rfcSlices": ["slice-15"],
+      "githubState": "open",
+      "executionStatus": "open_blocked",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #693 open until protected capacity, load, resource, dependency, and PostgreSQL attestations execute."
+    },
+    {
+      "issueNumber": 694,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/694",
+      "rfcSlices": ["slice-15"],
+      "githubState": "open",
+      "executionStatus": "open_blocked",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #694 open until live broker and outbox publication operations are certified."
+    },
+    {
+      "issueNumber": 695,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/695",
+      "rfcSlices": ["slice-15"],
+      "githubState": "closed",
+      "executionStatus": "closed_complete",
+      "allowPullRequestAutoClose": true,
+      "closureInstruction": "Closed #695 after dependency and container vulnerability posture evidence reached main."
+    },
+    {
+      "issueNumber": 696,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/696",
+      "rfcSlices": ["slice-16"],
+      "githubState": "open",
+      "executionStatus": "open_blocked",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #696 open until canonical opportunity archetype evidence pack for PB_SG_GLOBAL_BAL_001 is implementation-backed."
+    },
+    {
+      "issueNumber": 697,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/697",
+      "rfcSlices": ["slice-16"],
+      "githubState": "open",
+      "executionStatus": "open_blocked",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #697 open until the demo-readiness claim matrix and client-safe commercial proof pack are complete."
+    },
+    {
+      "issueNumber": 698,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/698",
+      "rfcSlices": ["slice-17"],
+      "githubState": "closed",
+      "executionStatus": "closed_complete",
+      "allowPullRequestAutoClose": true,
+      "closureInstruction": "Closed #698 after source runtime evidence refresh was reconciled into main."
+    },
+    {
+      "issueNumber": 699,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/699",
+      "rfcSlices": ["slice-17"],
+      "githubState": "open",
+      "executionStatus": "open_blocked",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #699 open until the full live opportunity journey validates through API, Gateway, Workbench, and downstream handoffs."
+    },
+    {
+      "issueNumber": 700,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/700",
+      "rfcSlices": ["slice-17"],
+      "githubState": "closed",
+      "executionStatus": "closed_complete",
+      "allowPullRequestAutoClose": true,
+      "closureInstruction": "Closed #700 after blocker closure manifest and evidence-class reconciliation reached main."
+    },
+    {
+      "issueNumber": 701,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/701",
+      "rfcSlices": ["slice-00"],
+      "githubState": "closed",
+      "executionStatus": "closed_complete",
+      "allowPullRequestAutoClose": true,
+      "closureInstruction": "Closed #701 after blueprint capability and non-claim boundaries were reconciled into implementation issues."
+    },
+    {
+      "issueNumber": 702,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/702",
+      "rfcSlices": ["slice-00"],
+      "githubState": "closed",
+      "executionStatus": "closed_complete",
+      "allowPullRequestAutoClose": true,
+      "closureInstruction": "Closed #702 after advisor-intelligence research and differentiation hypotheses were refreshed."
+    },
+    {
+      "issueNumber": 704,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/704",
+      "rfcSlices": ["slice-12", "slice-13"],
+      "githubState": "closed",
+      "executionStatus": "closed_complete",
+      "allowPullRequestAutoClose": true,
+      "closureInstruction": "Closed #704 after downstream realization blockers were made issue-backed."
+    }
+  ]
+}

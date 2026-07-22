@@ -25,3 +25,9 @@ Required workflow:
 RFC-0002 implementation slices must record branch, PR, commit, CI, proof directory, wiki decision,
 and branch-cleanup evidence before closure. No supported product claim may depend on a side branch,
 WTBD ledger, or unpublished wiki change.
+
+For partial RFC PRs, link GitHub issues without auto-close keywords. The PR and
+issue comment should say `Keep #<issue> open` and name the remaining evidence
+class until exact-main validation and QA-backed closure are ready. Run
+`make rfc0002-github-issue-execution-ledger-gate` when updating RFC-0002
+issue-tracking truth.

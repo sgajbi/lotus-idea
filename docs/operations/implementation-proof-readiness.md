@@ -79,6 +79,29 @@ deployment, production, Workbench, data-mesh, publication, or supported-feature
 blockers by itself. It exists so unresolved RFC-0002 work is durable in GitHub
 and executable source, not hidden in chat memory.
 
+## GitHub Issue Execution Ledger
+
+`contracts/implementation-proof/rfc0002-github-issue-execution-ledger.v1.json`
+is the durable RFC-0002 issue-execution ledger for the current slice backlog.
+It records the active RFC execution issues, their slice labels, open versus
+closed posture, and whether a PR is allowed to use GitHub auto-close wording
+for the issue.
+
+`make rfc0002-github-issue-execution-ledger-gate` fails closed when an open or
+partially progressed issue allows PR auto-close, lacks the explicit
+`Keep #<issue> open` instruction, omits a current execution issue such as
+`#690`, duplicates an issue, or describes a closed issue without closed
+evidence. The gate is part of `make lint` so partial source-contract or
+evidence-consumption PRs can link issues without silently closing work that
+still needs live runtime, downstream, publication, support, or supported-feature
+proof.
+
+This ledger is issue-lifecycle governance only. It does not promote a feature,
+clear blockers, or replace the blocker closure manifest. It prevents GitHub
+state drift when a PR lands partial RFC progress, such as consuming owner proof
+while keeping Report, Render, Archive, client-publication, and promotion proof
+open.
+
 ## Blueprint Scope Coverage
 
 `contracts/implementation-proof/rfc0002-blueprint-scope-coverage.v1.json`

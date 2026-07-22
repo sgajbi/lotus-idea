@@ -395,6 +395,19 @@ auditor and skill hook for future RFC issue-coverage checks, including issue
 existence, RFC/slice labels, open/closed and blocked state, priority, owner
 repository, and duplicate/superseded posture.
 
+Issue `#681` now adds
+`contracts/implementation-proof/rfc0002-github-issue-execution-ledger.v1.json`
+and `make rfc0002-github-issue-execution-ledger-gate` as the durable
+RFC-0002 issue execution ledger. The ledger covers the current RFC execution
+issues `#673` through `#704` where applicable, including open `#690` after PR
+`#707` landed partial Report proof consumption. It fails closed when an open or
+partial issue allows PR auto-close, lacks a `Keep #<issue> open` instruction,
+duplicates or omits a current execution issue, or describes closed truth with
+open-issue wording. This prevents future source-contract or
+evidence-consumption PRs from using `Closes`, `Fixes`, or `Resolves` for work
+that still lacks live runtime, downstream, publication, support, or
+supported-feature evidence.
+
 The missing-benchmark Core material now records the independently owned closed
 v2 runtime contract implemented by issue `#499`. One named application use case
 performs one Core fetch and preserves exact evidence or a stable error. Request,
