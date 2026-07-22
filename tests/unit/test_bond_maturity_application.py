@@ -89,6 +89,25 @@ def test_evaluate_bond_maturity_signal_from_core_uses_source_evidence() -> None:
     assert core_source.requests[0].correlation_id == "corr-core"
 
 
+def test_evaluate_bond_maturity_signal_from_core_preserves_empty_window() -> None:
+    core_source = StubCoreBondMaturitySource(
+        CoreBondMaturityEvidence(
+            source_reported_next_maturity_date=None,
+            source_reported_maturing_position_count=0,
+            holdings_ref=_source_ref("lotus-core:HoldingsAsOf:v1"),
+            maturity_fact_ref=_source_ref("lotus-core:PortfolioMaturitySummary:v1"),
+            maturity_diagnostic="core_maturity_window_empty",
+        )
+    )
+
+    result = evaluate_bond_maturity_signal_from_core(_command(), core_source=core_source)
+
+    assert result.outcome is SignalEvaluationOutcome.NOT_ELIGIBLE
+    assert result.candidate is None
+    assert result.reason_codes == (ReasonCode.BELOW_MATERIALITY,)
+    assert core_source.requests[0].portfolio_id == "PB_SG_GLOBAL_BAL_001"
+
+
 def test_evaluate_bond_maturity_signal_from_core_blocks_entitlement_denial() -> None:
     result = evaluate_bond_maturity_signal_from_core(
         _command(),

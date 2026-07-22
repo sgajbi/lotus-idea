@@ -105,12 +105,18 @@ def evaluate_bond_maturity_signal(
         )
     if source_input.source_reported_maturing_position_count < 0:
         raise ValueError("source_reported_maturing_position_count must be non-negative")
+    if source_input.source_reported_maturing_position_count == 0:
+        return SignalEvaluationResult(
+            outcome=SignalEvaluationOutcome.NOT_ELIGIBLE,
+            family=OpportunityFamily.BOND_MATURITY,
+            reason_codes=(ReasonCode.BELOW_MATERIALITY,),
+        )
     if source_input.source_reported_next_maturity_date is None:
         return _blocked(
             reason_codes=(ReasonCode.SOURCE_PARTIAL,),
             unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,),
         )
-    if source_input.source_reported_maturing_position_count == 0 or not _within_maturity_window(
+    if not _within_maturity_window(
         as_of_date=source_input.as_of_date,
         maturity_date=source_input.source_reported_next_maturity_date,
         window_days=policy.maturity_window_days,

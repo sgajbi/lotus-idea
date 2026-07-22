@@ -197,20 +197,30 @@ def test_bond_maturity_source_api_returns_blocked_posture_for_core_unavailable(
 
 
 @pytest.mark.parametrize(
-    ("next_maturity_date", "duplicate_of_candidate_id", "expected_outcome"),
     (
-        (date(2026, 7, 10), "idea_bond_maturity_existing", "suppressed"),
-        (date(2026, 8, 15), None, "not_eligible"),
+        "next_maturity_date",
+        "maturing_position_count",
+        "duplicate_of_candidate_id",
+        "expected_outcome",
+    ),
+    (
+        (date(2026, 7, 10), 2, "idea_bond_maturity_existing", "suppressed"),
+        (date(2026, 8, 15), 2, None, "not_eligible"),
+        (None, 0, None, "not_eligible"),
     ),
 )
 def test_bond_maturity_source_api_exposes_non_candidate_success_modes(
     monkeypatch: Any,
-    next_maturity_date: date,
+    next_maturity_date: date | None,
+    maturing_position_count: int,
     duplicate_of_candidate_id: str | None,
     expected_outcome: str,
 ) -> None:
     source = RecordingCoreBondMaturitySource(
-        evidence=_core_bond_maturity_evidence(next_maturity_date=next_maturity_date)
+        evidence=_core_bond_maturity_evidence(
+            next_maturity_date=next_maturity_date,
+            maturing_position_count=maturing_position_count,
+        )
     )
     runtime = CoreBondMaturitySourceRuntime(
         core_source=source,
@@ -245,6 +255,30 @@ def test_bond_maturity_source_api_exposes_non_candidate_success_modes(
         "supportedFeaturePromoted": False,
     }
     assert source.close_count == 1
+
+
+def test_bond_maturity_signal_api_reports_supported_empty_window_not_eligible() -> None:
+    client = managed_test_client(app)
+    payload = bond_maturity_payload()
+    payload["sourceReportedNextMaturityDate"] = None
+    payload["sourceReportedMaturingPositionCount"] = 0
+
+    response = client.post(
+        "/api/v1/idea-signals/bond-maturity/evaluate",
+        json=payload,
+        headers=evaluate_headers(),
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "outcome": "not_eligible",
+        "family": "bond_maturity",
+        "reasonCodes": ["below_materiality"],
+        "unsupportedReasons": [],
+        "candidate": None,
+        "sourceAuthority": "lotus-core",
+        "supportedFeaturePromoted": False,
+    }
 
 
 def test_bond_maturity_source_api_emits_bounded_operation_events(
@@ -582,11 +616,12 @@ def _source_ref(product_id: str) -> SourceRef:
 
 def _core_bond_maturity_evidence(
     *,
-    next_maturity_date: date = date(2026, 7, 10),
+    next_maturity_date: date | None = date(2026, 7, 10),
+    maturing_position_count: int = 2,
 ) -> CoreBondMaturityEvidence:
     return CoreBondMaturityEvidence(
         source_reported_next_maturity_date=next_maturity_date,
-        source_reported_maturing_position_count=2,
+        source_reported_maturing_position_count=maturing_position_count,
         holdings_ref=_source_ref("lotus-core:HoldingsAsOf:v1"),
         maturity_fact_ref=_source_ref("lotus-core:PortfolioMaturitySummary:v1"),
         maturity_diagnostic="core_maturity_summary_maturity_window_detected",
