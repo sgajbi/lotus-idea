@@ -7,6 +7,7 @@ from typing import Any
 import pytest
 
 from app.application.conversion_workflow import (
+    ConversionAccessScopeDenied,
     RequestConversionIntentToRepositoryCommand,
     request_conversion_intent_to_repository,
 )
@@ -29,6 +30,7 @@ from app.domain import (
     SourceRef,
     SourceSystem,
 )
+from app.domain.access_scope import QueueAccessScopeFilter, ReviewAccessScope
 
 AS_OF_DATE = date(2026, 6, 21)
 EVALUATED_AT = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
@@ -43,6 +45,7 @@ def test_request_conversion_intent_uses_candidate_projection_without_snapshot() 
             candidate_id="idea-conversion-workflow-001",
             conversion=conversion_command(),
             idempotency_key="conversion-workflow-request-001",
+            access_scope_filter=authorized_scope_filter(),
         ),
         repository=repository,
     )
@@ -62,6 +65,7 @@ def test_request_conversion_intent_returns_not_found_without_snapshot_for_missin
             candidate_id="missing-candidate",
             conversion=conversion_command(),
             idempotency_key="conversion-workflow-request-001",
+            access_scope_filter=authorized_scope_filter(),
         ),
         repository=repository,
     )
@@ -82,6 +86,50 @@ def test_request_conversion_intent_rejects_mismatched_idempotency_boundary() -> 
             conversion=conversion_command(),
             idempotency_key="conversion-workflow:mismatched-repository-key",
         )
+
+
+def test_request_conversion_intent_rejects_missing_or_mismatched_access_scope() -> None:
+    repository = ProjectionOnlyConversionWorkflowRepository(repository_with_approved_candidate())
+
+    with pytest.raises(ConversionAccessScopeDenied):
+        request_conversion_intent_to_repository(
+            RequestConversionIntentToRepositoryCommand(
+                candidate_id="idea-conversion-workflow-001",
+                conversion=conversion_command(
+                    idempotency_key="conversion-workflow-request-missing-scope-001"
+                ),
+                idempotency_key="conversion-workflow-request-missing-scope-001",
+            ),
+            repository=repository,
+        )
+
+    with pytest.raises(ConversionAccessScopeDenied):
+        request_conversion_intent_to_repository(
+            RequestConversionIntentToRepositoryCommand(
+                candidate_id="idea-conversion-workflow-001",
+                conversion=conversion_command(
+                    conversion_intent_id="conversion-mismatched-scope-001",
+                    idempotency_key="conversion-workflow-request-mismatched-scope-001",
+                ),
+                idempotency_key="conversion-workflow-request-mismatched-scope-001",
+                access_scope_filter=QueueAccessScopeFilter(
+                    tenant_id="tenant-private-bank-sg",
+                    book_id="book-advisor-001",
+                    portfolio_id="PB_SG_DIFFERENT_999",
+                    client_id="client-001",
+                ),
+            ),
+            repository=repository,
+        )
+
+
+def authorized_scope_filter() -> QueueAccessScopeFilter:
+    return QueueAccessScopeFilter(
+        tenant_id="tenant-private-bank-sg",
+        book_id="book-advisor-001",
+        portfolio_id="PB_SG_GLOBAL_BAL_001",
+        client_id="client-001",
+    )
 
 
 def repository_with_approved_candidate() -> InMemoryIdeaRepository:
@@ -135,15 +183,25 @@ def approved_candidate() -> IdeaCandidate:
         ),
         created_at_utc=EVALUATED_AT,
         updated_at_utc=EVALUATED_AT,
+        access_scope=ReviewAccessScope(
+            tenant_id="tenant-private-bank-sg",
+            book_id="book-advisor-001",
+            portfolio_id="PB_SG_GLOBAL_BAL_001",
+            client_id="client-001",
+        ),
     )
 
 
-def conversion_command() -> ConversionIntentCommand:
+def conversion_command(
+    *,
+    conversion_intent_id: str = "conversion-workflow-report-001",
+    idempotency_key: str = "conversion-workflow-request-001",
+) -> ConversionIntentCommand:
     return ConversionIntentCommand(
-        conversion_intent_id="conversion-workflow-report-001",
+        conversion_intent_id=conversion_intent_id,
         target=ConversionTarget.REPORT_EVIDENCE,
         actor_subject="advisor-001",
-        idempotency_key="conversion-workflow-request-001",
+        idempotency_key=idempotency_key,
         reason_codes=(ReasonCode.REVIEW_APPROVED_FOR_CONVERSION,),
         requested_at_utc=REQUESTED_AT,
     )

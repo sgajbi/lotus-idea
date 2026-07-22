@@ -25,6 +25,7 @@ from app.domain import (
     ReasonCode,
     SourceSystem,
 )
+from app.domain.access_scope import QueueAccessScopeFilter
 from app.security.caller_context import CallerContext
 
 
@@ -56,6 +57,7 @@ class ConversionIntentRequest(CamelModel):
         candidate_id: str,
         caller: CallerContext,
         idempotency_key: str,
+        access_scope_filter: QueueAccessScopeFilter | None,
         event_lineage: EventLineageContext,
     ) -> RequestConversionIntentToRepositoryCommand:
         return RequestConversionIntentToRepositoryCommand(
@@ -69,6 +71,7 @@ class ConversionIntentRequest(CamelModel):
                 requested_at_utc=self.requested_at_utc,
             ),
             idempotency_key=idempotency_key,
+            access_scope_filter=access_scope_filter,
             event_lineage=event_lineage,
         )
 

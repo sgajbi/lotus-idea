@@ -441,6 +441,11 @@ For conversion-intent recording, the application command idempotency key and
 the repository replay key must be identical. A mismatch is an invalid internal
 caller construction and must be fixed at the caller boundary rather than
 diagnosed as a replay, conflict, or downstream realization issue.
+Conversion-intent recording is also a candidate-scoped Workbench-originated
+mutation: callers must supply trusted tenant, book, portfolio, and client
+entitlement-scope headers that cover the persisted candidate scope. Missing or
+mismatched scope fails closed as `403 permission_denied` and does not record the
+intent.
 
 Operation metrics are diagnostic support evidence only. `durable_storage_backed=true` confirms only
 that the active repository provider is durable; it does not prove production recovery readiness,

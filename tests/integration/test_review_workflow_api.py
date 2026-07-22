@@ -90,6 +90,10 @@ def conversion_intent_headers(
     return {
         "X-Caller-Subject": "advisor-001",
         "X-Caller-Capabilities": capabilities,
+        "X-Caller-Tenant-Ids": "tenant-private-bank-sg",
+        "X-Caller-Book-Ids": "book-advisor-001",
+        "X-Caller-Portfolio-Ids": "PB_SG_GLOBAL_BAL_001",
+        "X-Caller-Client-Ids": "client-001",
         "X-Correlation-Id": "corr-conversion-intent-api",
         "X-Trace-Id": "trace-conversion-intent-api",
         "Idempotency-Key": idempotency_key,

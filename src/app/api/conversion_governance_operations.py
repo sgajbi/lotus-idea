@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from fastapi import status
 from fastapi.responses import JSONResponse
 
-from app.api.caller_headers import caller_context_from_headers
+from app.api.caller_headers import caller_access_scope_filter, caller_context_from_headers
 from app.api.durable_write_guard import (
     DURABLE_REPOSITORY_NOT_CONFIGURED,
     durable_write_problem,
@@ -21,6 +21,7 @@ from app.api.operation_events import (
     emit_api_foundation_operation_event as emit_conversion_operation_event,
 )
 from app.domain import ConversionPersistenceDecision, ConversionPersistenceResult
+from app.domain.access_scope import QueueAccessScopeFilter
 from app.observability import IdeaOperation, OperationOutcome
 from app.ports.idea_repository import ConversionWorkflowRepository
 from app.security.caller_context import CallerContext, PermissionDeniedError
@@ -34,6 +35,7 @@ __all__ = [
     "permission_denied",
     "prepare_conversion_mutation",
     "problem_for_conversion_persistence",
+    "require_complete_conversion_entitlement_scope",
 ]
 
 
@@ -42,6 +44,10 @@ class ConversionCallerHeaders:
     subject: str | None
     roles: str | None
     capabilities: str | None
+    tenant_ids: str | None
+    book_ids: str | None
+    portfolio_ids: str | None
+    client_ids: str | None
     trusted_caller_context: str | None
 
 
@@ -50,6 +56,7 @@ class ConversionMutationContext:
     caller: CallerContext
     repository: ConversionWorkflowRepository
     durable_storage_backed: bool
+    access_scope_filter: QueueAccessScopeFilter | None = None
 
 
 def prepare_conversion_mutation(
@@ -58,14 +65,21 @@ def prepare_conversion_mutation(
     capability: str,
     idempotency_key: str,
     operation: IdeaOperation,
+    require_complete_entitlement_scope: bool = False,
 ) -> ConversionMutationContext | JSONResponse:
     caller = caller_context_from_headers(
         subject=headers.subject,
         roles=headers.roles,
         capabilities=headers.capabilities,
+        tenant_ids=headers.tenant_ids,
+        book_ids=headers.book_ids,
+        portfolio_ids=headers.portfolio_ids,
+        client_ids=headers.client_ids,
         trusted_caller_context=headers.trusted_caller_context,
     )
     require_conversion_caller(caller, capability=capability)
+    if require_complete_entitlement_scope:
+        require_complete_conversion_entitlement_scope(caller)
     validate_idempotency_key(idempotency_key)
     repository = get_idea_repository()
     durable_storage_backed = idea_repository_durable_storage_backed(repository)
@@ -82,12 +96,19 @@ def prepare_conversion_mutation(
         caller=caller,
         repository=repository,
         durable_storage_backed=durable_storage_backed,
+        access_scope_filter=caller_access_scope_filter(caller),
     )
 
 
 def require_conversion_caller(caller: CallerContext, *, capability: str) -> None:
     if not caller.has_capability(capability):
         raise PermissionDeniedError(capability)
+
+
+def require_complete_conversion_entitlement_scope(caller: CallerContext) -> None:
+    scope = caller.entitlement_scope
+    if not (scope.tenant_ids and scope.book_ids and scope.portfolio_ids and scope.client_ids):
+        raise PermissionDeniedError("idea.conversion.entitlement_scope")
 
 
 def problem_for_conversion_persistence(

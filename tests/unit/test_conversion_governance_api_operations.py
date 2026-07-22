@@ -23,6 +23,10 @@ def caller_headers(
         subject="advisor-001",
         roles=None,
         capabilities=capability,
+        tenant_ids="tenant-private-bank-sg",
+        book_ids="book-advisor-001",
+        portfolio_ids="PB_SG_GLOBAL_BAL_001",
+        client_ids="client-001",
         trusted_caller_context=None,
     )
 
@@ -59,6 +63,26 @@ def test_prepare_conversion_mutation_rejects_missing_capability() -> None:
             capability="idea.conversion.intent.record",
             idempotency_key="conversion-api-ops-denied-001",
             operation=IdeaOperation.CONVERSION_INTENT,
+        )
+
+
+def test_prepare_conversion_mutation_requires_complete_entitlement_scope() -> None:
+    with pytest.raises(PermissionDeniedError, match="Permission denied"):
+        operations.prepare_conversion_mutation(
+            headers=operations.ConversionCallerHeaders(
+                subject="advisor-001",
+                roles=None,
+                capabilities="idea.conversion.intent.record",
+                tenant_ids="tenant-private-bank-sg",
+                book_ids="book-advisor-001",
+                portfolio_ids=None,
+                client_ids="client-001",
+                trusted_caller_context=None,
+            ),
+            capability="idea.conversion.intent.record",
+            idempotency_key="conversion-api-ops-scope-001",
+            operation=IdeaOperation.CONVERSION_INTENT,
+            require_complete_entitlement_scope=True,
         )
 
 
