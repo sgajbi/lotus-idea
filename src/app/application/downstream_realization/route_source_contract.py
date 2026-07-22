@@ -369,12 +369,23 @@ def _contract_retains_authority(
 def _contract_declares_runtime_receipt_boundary(
     payload: dict[str, Any], profile: RouteSourceContractProfile
 ) -> bool:
-    if profile is not ADVISE_ROUTE_PROFILE:
-        return True
+    receipt_outcomes_are_bounded = payload.get("receipt_outcomes") == [
+        "ACCEPTED",
+        "ACCEPTED_REPLAYED",
+        "REJECTED",
+    ]
+    if profile is ADVISE_ROUTE_PROFILE:
+        return (
+            payload.get("runtime_intake_receipt_proven") is True
+            and receipt_outcomes_are_bounded
+            and payload.get("principal_capability") == "advisory.idea_proposal_intake.accept"
+            and payload.get("local_dev_principal_source")
+            == "trusted_headers_until_production_idp_available"
+        )
     return (
-        payload.get("runtime_intake_receipt_proven") is True
-        and payload.get("receipt_outcomes") == ["ACCEPTED", "ACCEPTED_REPLAYED", "REJECTED"]
-        and payload.get("principal_capability") == "advisory.idea_proposal_intake.accept"
+        payload.get("runtime_action_receipt_proven") is True
+        and receipt_outcomes_are_bounded
+        and payload.get("principal_capability") == "manage.idea_action_intake.accept"
         and payload.get("local_dev_principal_source")
         == "trusted_headers_until_production_idp_available"
     )
@@ -382,9 +393,13 @@ def _contract_declares_runtime_receipt_boundary(
 
 def _contract_preserves_boundaries(payload: dict[str, Any] | None) -> bool:
     boundaries = " ".join(str(value) for value in (payload or {}).get("non_proof_boundaries", ()))
-    route_or_receipt_boundary = (
-        "Proves only a live route foundation" in boundaries
-        or "Proves a live executable intake receipt" in boundaries
+    route_or_receipt_boundary = any(
+        fragment in boundaries
+        for fragment in (
+            "Proves only a live route foundation",
+            "Proves a live executable intake receipt",
+            "Proves a live executable action-intake receipt",
+        )
     )
     return all(
         (
