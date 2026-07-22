@@ -85,6 +85,7 @@ from tests.support.source_ingestion_scheduler_evidence import (
     source_contract,
 )
 from tests.unit.workbench.test_discovery_contract_proof import _write_platform_fixture
+from tests.unit.downstream_realization.fixtures import valid_advise_intake_runtime_execution
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -787,6 +788,40 @@ def test_generate_implementation_proof_readiness_uses_explicit_outbox_broker_sou
     assert "external_broker_runtime_proof_missing" in payload["overallBlockers"]
     assert "downstream_consumer_runtime_proof_missing" in payload["overallBlockers"]
     assert "platform_mesh_event_publication_proof_missing" in payload["overallBlockers"]
+    assert payload["readinessStatus"] == "blocked"
+    assert payload["supportedFeaturePromoted"] is False
+
+
+def test_generate_implementation_proof_readiness_uses_advise_intake_runtime_execution(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr("app.application.proof_provenance.source_tree_dirty", lambda _: False)
+    proof = tmp_path / "advise-intake-runtime-execution-proof.json"
+    proof.write_text(json.dumps(valid_advise_intake_runtime_execution()), encoding="utf-8")
+    output_path = tmp_path / "proof" / "readiness.json"
+
+    result = proof_report.main(
+        [
+            "--evaluated-at-utc",
+            "2026-07-22T00:00:00Z",
+            "--advise-intake-runtime-execution-proof",
+            str(proof),
+            "--output",
+            str(output_path),
+        ]
+    )
+
+    assert result == 0
+    payload = json.loads(output_path.read_text(encoding="utf-8"))
+    downstream = next(
+        capability
+        for capability in payload["capabilities"]
+        if capability["capabilityId"] == "downstream-realization"
+    )
+    assert "advise_live_contract_proof_missing" not in downstream["blockers"]
+    assert "suitability_policy_authority_remains_lotus_advise" in downstream["blockers"]
+    assert "Advise idea-intake runtime execution proof artifact" in downstream["evidenceRefs"]
     assert payload["readinessStatus"] == "blocked"
     assert payload["supportedFeaturePromoted"] is False
 

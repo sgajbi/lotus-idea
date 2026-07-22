@@ -20,6 +20,9 @@ from app.application.downstream_realization_readiness import (
     DownstreamRealizationReadinessSnapshot,
     build_downstream_realization_readiness_snapshot,
 )
+from app.application.downstream_realization.advise_intake_runtime_execution import (
+    load_advise_intake_runtime_execution_from_env,
+)
 from app.application.report.intake_route_source_contract import (
     load_report_intake_route_source_contract_proof_from_env,
 )
@@ -199,12 +202,17 @@ async def get_downstream_realization_readiness(
 
     repository = get_idea_repository()
     durable_storage_backed = idea_repository_durable_storage_backed(repository)
+    advise_intake_runtime_execution_proof, advise_intake_runtime_execution_proof_ref = (
+        load_advise_intake_runtime_execution_from_env()
+    )
     report_intake_route_source_contract_proof, report_intake_route_source_contract_proof_ref = (
         load_report_intake_route_source_contract_proof_from_env()
     )
     snapshot = build_downstream_realization_readiness_snapshot(
         repository=repository,
         durable_storage_backed=durable_storage_backed,
+        advise_intake_runtime_execution_proof=advise_intake_runtime_execution_proof,
+        advise_intake_runtime_execution_proof_ref=advise_intake_runtime_execution_proof_ref,
         report_intake_route_source_contract_proof=report_intake_route_source_contract_proof,
         report_intake_route_source_contract_proof_ref=report_intake_route_source_contract_proof_ref,
     )

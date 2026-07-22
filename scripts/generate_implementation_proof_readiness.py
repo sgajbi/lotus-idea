@@ -152,7 +152,7 @@ def _proof_payload_kwargs(input_: Mapping[str, ProofArtifactInput]) -> dict[str,
             else f"{field_name}_proof"
         )
         kwargs[argument_name] = artifact.payload
-        kwargs[f"{argument_name}_ref"] = _proof_ref(artifact)
+        kwargs[f"{argument_name}_ref"] = artifact.proof_ref
     return kwargs
 
 
@@ -178,10 +178,6 @@ def _proof_artifact_input(
         proof_ref=proof_ref,
         ref_name=ref_name,
     )
-
-
-def _proof_ref(input_: ProofArtifactInput) -> str | None:
-    return input_.proof_ref
 
 
 def _opportunity_archetype_proof_artifact_inputs(
@@ -312,6 +308,11 @@ def _proof_artifact_inputs(args: argparse.Namespace) -> dict[str, ProofArtifactI
             args.advise_proposal_route_source_contract_proof,
             artifact_name="Advise proposal route source contract",
             ref_name="Advise proposal route source-contract artifact",
+        ),
+        "advise_intake_runtime_execution": _proof_artifact_input(
+            args.advise_intake_runtime_execution_proof,
+            artifact_name="Advise idea-intake runtime execution proof",
+            ref_name="Advise idea-intake runtime execution proof artifact",
         ),
         "manage_action_route": _proof_artifact_input(
             args.manage_action_route_source_contract_proof,
@@ -462,9 +463,7 @@ def _readiness_environment_overrides(args: argparse.Namespace) -> dict[str, str 
 
 
 def _resolve_optional_path(path_value: str | None) -> Path | None:
-    if not path_value:
-        return None
-    return Path(path_value)
+    return Path(path_value) if path_value else None
 
 
 def _source_safe_artifact_ref(

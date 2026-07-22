@@ -200,6 +200,14 @@ IMPLEMENTATION_PROOF_ARTIFACT_SPECS = (
         449,
     ),
     _classified(
+        "--advise-intake-runtime-execution-proof",
+        "advise_intake_runtime_execution_proof",
+        EvidenceClass.RUNTIME_EXECUTION,
+        CLEARING,
+        "Advise idea-intake runtime execution",
+        688,
+    ),
+    _classified(
         "--manage-action-route-source-contract-proof",
         "manage_action_route_proof",
         EvidenceClass.SOURCE_CONTRACT,

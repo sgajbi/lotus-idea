@@ -86,6 +86,8 @@ def build_implementation_proof_readiness_snapshot(
     ai_workflow_pack_runtime_execution_proof_ref: str | None = None,
     advise_proposal_route_proof: Mapping[str, object] | None = None,
     advise_proposal_route_proof_ref: str | None = None,
+    advise_intake_runtime_execution_proof: Mapping[str, object] | None = None,
+    advise_intake_runtime_execution_proof_ref: str | None = None,
     manage_action_route_proof: Mapping[str, object] | None = None,
     manage_action_route_proof_ref: str | None = None,
     report_intake_route_source_contract_proof: Mapping[str, object] | None = None,
@@ -160,6 +162,9 @@ def build_implementation_proof_readiness_snapshot(
     downstream_realization = build_downstream_realization_readiness_snapshot(
         repository=repository,
         durable_storage_backed=durable_storage_backed,
+        evaluated_at_utc=evaluated_at_utc,
+        advise_intake_runtime_execution_proof=advise_intake_runtime_execution_proof,
+        advise_intake_runtime_execution_proof_ref=advise_intake_runtime_execution_proof_ref,
     )
     outbox_delivery = build_outbox_delivery_readiness_snapshot(
         repository=repository,
