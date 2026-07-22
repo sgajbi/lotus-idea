@@ -656,7 +656,7 @@ def deferred_failed_event(event_type: str) -> OutboxEventRecord:
         failure_reason="publisher_rejected",
         failed_at_utc=EVENT_TIME,
         max_retry_count=3,
-        next_attempt_at_utc=EVENT_TIME + timedelta(seconds=60),
+        next_attempt_at_utc=EVENT_TIME + timedelta(days=3650),
     )
 
 
