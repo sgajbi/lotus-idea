@@ -111,6 +111,36 @@ def test_github_issue_execution_state_audit_rejects_missing_github_issue(
     assert "GitHub state input omitted ledger issues: #690" in errors
 
 
+def test_github_issue_execution_state_audit_rejects_rfc_labeled_issue_missing_from_ledger(
+    tmp_path: Path,
+) -> None:
+    module = _load_audit()
+    ledger = _load_ledger()
+    ledger["issues"] = [
+        entry
+        for entry in ledger["issues"]
+        if isinstance(entry, dict) and entry["issueNumber"] == 681
+    ]
+    github_payload = _github_issue_payload(ledger)
+    github_payload.append(
+        {
+            "number": 999,
+            "state": "OPEN",
+            "title": "RFC-labeled issue outside ledger",
+            "url": "https://github.com/sgajbi/lotus-idea/issues/999",
+            "labels": [{"name": "rfc/RFC-0002"}, {"name": "status/blocked"}],
+        }
+    )
+    github_issues = module._parse_github_issue_states(github_payload)
+
+    errors = module.audit_github_issue_execution_state(
+        ledger_path=_write_ledger(tmp_path, ledger),
+        github_issues=github_issues,
+    )
+
+    assert "rfc/RFC-0002 GitHub issues missing from execution ledger: #999" in errors
+
+
 def test_github_issue_execution_state_audit_rejects_auto_closed_open_issue(
     tmp_path: Path,
 ) -> None:

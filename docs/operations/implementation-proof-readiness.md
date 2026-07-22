@@ -91,10 +91,12 @@ for the issue.
 partially progressed issue allows PR auto-close, lacks the explicit
 `Keep #<issue> open` instruction, omits a current execution issue such as
 `#690`, duplicates an issue, or describes a closed issue without closed
-evidence. The gate is part of `make lint` so partial source-contract or
-evidence-consumption PRs can link issues without silently closing work that
-still needs live runtime, downstream, publication, support, or supported-feature
-proof.
+evidence. The ledger includes the current slice execution issues and legacy
+RFC-labeled blockers, so every GitHub issue carrying `rfc/RFC-0002` must be
+represented in durable execution truth. The gate is part of `make lint` so
+partial source-contract or evidence-consumption PRs can link issues without
+silently closing work that still needs live runtime, downstream, publication,
+support, or supported-feature proof.
 
 `make rfc0002-github-issue-execution-state-audit` compares the ledger with
 current GitHub issue state through the GitHub CLI. It is intentionally a
@@ -104,7 +106,8 @@ as delivery truth. The audit fails when a ledger-tracked issue is missing from
 GitHub output, GitHub open/closed state contradicts the ledger, `open_blocked`
 issues lack `status/blocked`, `open_in_progress` issues lack
 `status/in-progress`, merged-main-QA-pending issues lack `status/merged-main`,
-or closed-complete issues do not retain `status/merged-main`.
+closed-complete issues do not retain `status/merged-main`, or a GitHub issue
+has the `rfc/RFC-0002` label but is missing from the ledger.
 
 This ledger is issue-lifecycle governance only. It does not promote a feature,
 clear blockers, or replace the blocker closure manifest. It prevents GitHub

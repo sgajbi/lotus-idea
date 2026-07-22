@@ -399,11 +399,13 @@ Issue `#681` now adds
 `contracts/implementation-proof/rfc0002-github-issue-execution-ledger.v1.json`
 and `make rfc0002-github-issue-execution-ledger-gate` as the durable
 RFC-0002 issue execution ledger. The ledger covers the current RFC execution
-issues `#673` through `#704` where applicable, including open `#690` after PR
-`#707` landed partial Report proof consumption. It fails closed when an open or
-partial issue allows PR auto-close, lacks a `Keep #<issue> open` instruction,
-duplicates or omits a current execution issue, or describes closed truth with
-open-issue wording. This prevents future source-contract or
+issues and now reconciles every GitHub issue carrying the `rfc/RFC-0002` label,
+including legacy blocker issues `#340`, `#343`, `#344`, `#345`, `#375`,
+`#379`, `#380`, and closed OpenAPI certification issue `#542` alongside the
+slice execution set `#673` through `#704` where applicable. It fails closed when
+an open or partial issue allows PR auto-close, lacks a `Keep #<issue> open`
+instruction, duplicates or omits a current execution issue, or describes closed
+truth with open-issue wording. This prevents future source-contract or
 evidence-consumption PRs from using `Closes`, `Fixes`, or `Resolves` for work
 that still lacks live runtime, downstream, publication, support, or
 supported-feature evidence.
@@ -413,10 +415,12 @@ The same Slice 18 learning loop now adds
 `scripts/github_issue_execution_state_audit.py`. The audit compares the ledger
 with current GitHub issue state and lifecycle labels, so reopened issues,
 blocked issues, merged-main-QA-pending issues, and closed-complete issues cannot
-drift silently away from the durable execution ledger. The #681 anchor now
-carries `status/in-progress`; future partial Slice 18 PRs must keep that label
-and use `Keep #681 open` until full RFC documentation, wiki, support, and agent
-context closure is complete.
+drift silently away from the durable execution ledger. It also fails when a
+GitHub issue is labeled `rfc/RFC-0002` but missing from the ledger, or when a
+ledger issue lacks the RFC label in GitHub. The #681 anchor now carries
+`status/in-progress`; future partial Slice 18 PRs must keep that label and use
+`Keep #681 open` until full RFC documentation, wiki, support, and agent context
+closure is complete.
 
 The missing-benchmark Core material now records the independently owned closed
 v2 runtime contract implemented by issue `#499`. One named application use case

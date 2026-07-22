@@ -31,6 +31,7 @@ EXPECTED_OPEN_LABEL_BY_STATUS = {
     "open_merged_main_qa_pending": "status/merged-main",
 }
 EXPECTED_CLOSED_LABEL = "status/merged-main"
+EXPECTED_RFC_LABEL = "rfc/RFC-0002"
 GITHUB_ISSUE_FIELDS = "number,state,title,labels,url"
 
 
@@ -112,6 +113,8 @@ def audit_github_issue_execution_state(
             "GitHub state input omitted ledger issues: "
             + ", ".join(f"#{issue_number}" for issue_number in missing_from_github_input)
         )
+
+    errors.extend(_audit_rfc_label_coverage(ledger_entries, github_issues))
     return errors
 
 
@@ -144,6 +147,38 @@ def _audit_issue_state(entry: IssueEntry, github_issue: GitHubIssueState) -> lis
         )
     if entry.execution_status == "open_blocked" and github_issue.state != "OPEN":
         errors.append(f"#{entry.issue_number}: blocked execution issue must remain open")
+    return errors
+
+
+def _audit_rfc_label_coverage(
+    ledger_entries: Sequence[IssueEntry],
+    github_issues: Mapping[int, GitHubIssueState],
+) -> list[str]:
+    ledger_issue_numbers = {entry.issue_number for entry in ledger_entries}
+    rfc_labeled_issue_numbers = {
+        issue.issue_number for issue in github_issues.values() if EXPECTED_RFC_LABEL in issue.labels
+    }
+    errors: list[str] = []
+
+    missing_from_ledger = sorted(rfc_labeled_issue_numbers - ledger_issue_numbers)
+    if missing_from_ledger:
+        errors.append(
+            f"{EXPECTED_RFC_LABEL} GitHub issues missing from execution ledger: "
+            + ", ".join(f"#{issue_number}" for issue_number in missing_from_ledger)
+        )
+
+    missing_rfc_label = sorted(
+        entry.issue_number
+        for entry in ledger_entries
+        if (github_issue := github_issues.get(entry.issue_number)) is not None
+        and EXPECTED_RFC_LABEL not in github_issue.labels
+    )
+    if missing_rfc_label:
+        errors.append(
+            "ledger issues missing GitHub label "
+            f"{EXPECTED_RFC_LABEL}: "
+            + ", ".join(f"#{issue_number}" for issue_number in missing_rfc_label)
+        )
     return errors
 
 

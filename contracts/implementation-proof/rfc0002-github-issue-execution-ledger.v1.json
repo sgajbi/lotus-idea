@@ -17,6 +17,78 @@
   },
   "issues": [
     {
+      "issueNumber": 340,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/340",
+      "rfcSlices": ["slice-09", "slice-17"],
+      "githubState": "open",
+      "executionStatus": "open_blocked",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #340 open until attested lotus-ai run evidence and model provenance exist for workflow output acceptance."
+    },
+    {
+      "issueNumber": 343,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/343",
+      "rfcSlices": ["slice-15"],
+      "githubState": "open",
+      "executionStatus": "open_blocked",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #343 open until Lotus Idea PostgreSQL backup and disaster recovery readiness are defined and proven."
+    },
+    {
+      "issueNumber": 344,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/344",
+      "rfcSlices": ["slice-15"],
+      "githubState": "open",
+      "executionStatus": "open_blocked",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #344 open until retention, legal-hold, and erasure lifecycle controls for Idea-owned records are defined and proven."
+    },
+    {
+      "issueNumber": 345,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/345",
+      "rfcSlices": ["slice-15"],
+      "githubState": "open",
+      "executionStatus": "open_blocked",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #345 open until service SLOs, capacity budgets, and error-budget telemetry for Idea workflows are defined and proven."
+    },
+    {
+      "issueNumber": 375,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/375",
+      "rfcSlices": ["slice-15"],
+      "githubState": "open",
+      "executionStatus": "open_blocked",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #375 open until protected migration execution and rollout evidence are provisioned."
+    },
+    {
+      "issueNumber": 379,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/379",
+      "rfcSlices": ["slice-12", "slice-13"],
+      "githubState": "open",
+      "executionStatus": "open_blocked",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #379 open until live downstream persistence outcomes for Idea conversion and evidence handoffs are certified."
+    },
+    {
+      "issueNumber": 380,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/380",
+      "rfcSlices": ["slice-14", "slice-16", "slice-20"],
+      "githubState": "open",
+      "executionStatus": "open_blocked",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #380 open until Idea data-product publication and supported-feature promotion are certified."
+    },
+    {
+      "issueNumber": 542,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/542",
+      "rfcSlices": ["slice-10"],
+      "githubState": "closed",
+      "executionStatus": "closed_complete",
+      "allowPullRequestAutoClose": true,
+      "closureInstruction": "Closed #542 after named OpenAPI modes across remaining multi-shape 2xx endpoints were certified."
+    },
+    {
       "issueNumber": 673,
       "url": "https://github.com/sgajbi/lotus-idea/issues/673",
       "rfcSlices": ["slice-03", "slice-06", "slice-08"],

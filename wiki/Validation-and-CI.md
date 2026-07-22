@@ -873,11 +873,13 @@ publication, support, or supported-feature proof issues.
 
 `make rfc0002-github-issue-execution-state-audit` is the GitHub-backed
 companion audit. It calls the GitHub CLI and compares current GitHub issue
-state and lifecycle labels with the repository ledger. Run it before quoting
-RFC-0002 fixed/open counts, after issue reopen/close/label corrections, and
-before final Slice 18 or Slice 20 closure evidence. It is not part of offline
-CI because it depends on GitHub state, but its parsing and failure modes are
-unit-tested.
+state, lifecycle labels, and `rfc/RFC-0002` label coverage with the repository
+ledger. Run it before quoting RFC-0002 fixed/open counts, after issue
+reopen/close/label corrections, and before final Slice 18 or Slice 20 closure
+evidence. It fails if a GitHub issue is labeled `rfc/RFC-0002` but is missing
+from the ledger, or if a ledger issue loses the RFC label in GitHub. It is not
+part of offline CI because it depends on GitHub state, but its parsing and
+failure modes are unit-tested.
 
 The quality-scorecard gate keeps the bank-buyable control matrix executable. It
 requires the standard control rows, approved readiness statuses, non-empty
