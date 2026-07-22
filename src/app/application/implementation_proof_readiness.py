@@ -146,7 +146,11 @@ def build_implementation_proof_readiness_snapshot(
 ) -> ImplementationProofReadinessSnapshot:
     if evaluated_at_utc.tzinfo is None or evaluated_at_utc.utcoffset() is None:
         raise ValueError("evaluated_at_utc must be timezone-aware")
-    source_ingestion = build_source_ingestion_readiness_snapshot(repository_root=repository_root)
+    source_ingestion = build_source_ingestion_readiness_snapshot(
+        repository_root=repository_root,
+        evaluated_at_utc=evaluated_at_utc,
+        runtime_execution_proof_ref=source_ingestion_runtime_execution_ref,
+    )
     review_queue = build_review_queue_readiness_snapshot(
         BuildReviewQueueFromRepositoryCommand(evaluated_at_utc=evaluated_at_utc),
         repository=repository,
@@ -366,7 +370,11 @@ def _source_ingestion_certification_blockers(
     *,
     live_proof_current: bool,
 ) -> tuple[str, ...]:
-    blockers = list(snapshot.certification_blockers)
+    blockers = [
+        blocker
+        for blocker in snapshot.certification_blockers
+        if not live_proof_current or blocker != "live_core_source_proof_missing"
+    ]
     if not live_proof_current and "live_core_source_proof_missing" not in blockers:
         blockers.insert(0, "live_core_source_proof_missing")
     return tuple(blockers)
