@@ -227,10 +227,10 @@
       "issueNumber": 688,
       "url": "https://github.com/sgajbi/lotus-idea/issues/688",
       "rfcSlices": ["slice-12"],
-      "githubState": "open",
-      "executionStatus": "open_in_progress",
-      "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #688 open until QA verification confirms advise_live_contract_proof_missing is cleared by live Advise route-serving and accepted-receipt evidence."
+      "githubState": "closed",
+      "executionStatus": "closed_complete",
+      "allowPullRequestAutoClose": true,
+      "closureInstruction": "Closed #688 after PR #714 merged to main, exact-main validation confirmed advise_live_contract_proof_missing was cleared by live Advise route-serving and accepted-receipt evidence, wiki parity was published, and branch cleanup completed."
     },
     {
       "issueNumber": 689,
