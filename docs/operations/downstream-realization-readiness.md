@@ -7,7 +7,7 @@
 | Required role | `operator` |
 | Required capability | `idea.downstream-realization.readiness.read` |
 | Supportability | `not_certified` |
-| Product claim | Internal submission posture plus default source-safe `lotus-advise`, `lotus-manage`, and `lotus-report` route-foundation evidence when sibling contracts are present; the `lotus-report` materialization source contract clears no blocker; no report-job execution, rendered output, archive record, suitability, rebalance/execution, client publication, or supported-feature promotion |
+| Product claim | Internal submission posture plus default source-safe `lotus-advise`, `lotus-manage`, and `lotus-report` route-foundation evidence when sibling contracts are present; local/test-only server-side Advise, Manage, and Report service-context fixtures for owner intake routes; source contracts clear no live blocker; no report-job execution, rendered output, archive record, suitability, rebalance/execution, client publication, production identity, or supported-feature promotion |
 
 `GET /api/v1/downstream-realization/readiness` reports source-safe readiness
 for realizing approved ideas through `lotus-advise`, `lotus-manage`,
@@ -37,7 +37,8 @@ It returns:
    action, and Report evidence-pack handoff seams,
 10. default source-safe proof that `lotus-advise` exposes
    `POST /advisory/proposals/idea-intake` for proposal intake when sibling
-   evidence is present,
+   evidence is present, including the owner-declared bounded receipt outcomes
+   `ACCEPTED`, `ACCEPTED_REPLAYED`, and `REJECTED`,
 11. default source-safe proof that `lotus-manage` exposes
     `POST /api/v1/rebalance/idea-action-intake` for action intake when sibling
     evidence is present,
@@ -107,19 +108,20 @@ artifact that CI validates.
 
 | Contract | Owner | Target Route Posture | Current Status |
 | --- | --- | --- | --- |
-| `lotus-idea-to-lotus-advise-proposal-intake:v1` | `lotus-advise` | Contract-plan target remains unchanged when Advise source-contract evidence is present | `not_certified`; static declarations add provenance but do not prove serving or acceptance |
+| `lotus-idea-to-lotus-advise-proposal-intake:v1` | `lotus-advise` | Contract-plan target remains unchanged when Advise source-contract evidence is present | `not_certified`; source-contract declarations add provenance for the owner intake receipt contract and required trusted local/test headers, but Idea still needs live submission proof before clearing runtime blockers |
 | `lotus-idea-to-lotus-manage-action-intake:v1` | `lotus-manage` | Contract-plan target remains unchanged when Manage source-contract evidence is present | `not_certified`; static declarations add provenance but do not prove serving or acceptance |
 | `lotus-idea-to-lotus-report-evidence-pack-intake:v1` | `lotus-report` | `planned:lotus-report-idea-evidence-pack-intake`; a valid source-contract artifact may cite the declared `POST /reports/idea-evidence-packs` route as provenance but cannot make it a current runtime target | `not_certified`; adapter foundation present; source-contract evidence clears no blocker |
 
 These contract records are planning and certification evidence only. They are
 not route-existence proof in the downstream repositories by themselves. Valid
-route proofs generated from merged sibling contracts can clear only these route
-existence blockers:
+route proofs generated from merged sibling contracts are source-contract
+provenance; they do not clear live route, authorization, tenant-isolation,
+request-acceptance, downstream-record, or supportability blockers:
 
 | Proof | Blocker it may clear | Boundaries that remain |
 | --- | --- | --- |
-| Advise route source contract | `advise_live_contract_proof_missing` | Source declarations do not prove serving, authorization, tenant isolation, request acceptance, or a downstream proposal record. Suitability and proposal authority remain with `lotus-advise`. |
-| Manage route source contract | `manage_live_contract_proof_missing` | Source declarations do not prove serving, authorization, tenant isolation, request acceptance, or a downstream action record. Rebalance/execution authority remains with `lotus-manage`. |
+| Advise route source contract | None | The owner contract declares a live executable intake receipt boundary and bounded receipt outcomes, but Idea still needs governed runtime submission evidence before `advise_live_contract_proof_missing` can clear. Suitability and proposal authority remain with `lotus-advise`. |
+| Manage route source contract | None | Source declarations do not prove serving, authorization, tenant isolation, request acceptance, or a downstream action record. Rebalance/execution authority remains with `lotus-manage`. |
 | Report intake route source contract | None | `lotus_report_live_intake_route_proof_missing` remains, together with report materialization, render output, archive record creation, client publication, and supported-feature promotion boundaries owned by Report/Render/Archive. |
 | Report materialization source contract | None | Materialization execution, rendered output creation, archive record creation, client publication, and supported-feature promotion remain blocked; `lotus-report`, `lotus-render`, and `lotus-archive` retain downstream authority. |
 
@@ -186,7 +188,7 @@ or route-fit posture. Both artifacts deliberately keep these blockers:
 
 | Remaining blocker | Why it remains |
 | --- | --- |
-| `advise_live_contract_proof_missing` | No governed runtime receipt proves the Advise route served and accepted a bounded request. |
+| `advise_live_contract_proof_missing` | Advise source-contract evidence is present only when sibling files match; Idea still needs governed runtime submission evidence proving the Advise route served and accepted a bounded request from Idea. |
 | `manage_live_contract_proof_missing` | No governed runtime receipt proves the Manage route served and accepted a bounded request. |
 | `suitability_policy_authority_remains_lotus_advise` | `lotus-advise` remains the downstream authority for suitability, policy approval, advisory proposal lifecycle, and client communication. |
 | `rebalance_execution_authority_remains_lotus_manage` | `lotus-manage` remains the source authority for action-register, DPM/rebalance workflow, order/execution, and settlement posture. |
@@ -342,7 +344,31 @@ so a healthy source adapter cannot mask an unavailable downstream handoff.
 `LOTUS_IDEA_DOWNSTREAM_REALIZATION_TIMEOUT_SECONDS` controls the HTTP adapter
 timeout and defaults conservatively when absent.
 
-### Local Manage And Report Intake Fixtures
+### Local Advise, Manage, And Report Intake Fixtures
+
+Until the platform has trusted service identity and an identity-provider claim
+mapping, local Compose supplies a development-only Advise intake fixture from
+server process configuration. It is never read from browser or caller request
+headers. The fixture is restricted in code to the `local` and `test` runtime
+profiles; `demo`, `staging`, and `production` fail closed before any Advise
+call, even when the variables are present.
+
+| Server-side environment variable | Local Compose value |
+| --- | --- |
+| `LOTUS_IDEA_ADVISE_REALIZATION_ACTOR_ID` | `lotus-idea-local-development` |
+| `LOTUS_IDEA_ADVISE_REALIZATION_ROLE` | `SERVICE` |
+| `LOTUS_IDEA_ADVISE_REALIZATION_TENANT_ID` | `tenant-sg` |
+| `LOTUS_IDEA_ADVISE_REALIZATION_LEGAL_ENTITY_CODE` | `SGPB` |
+| `LOTUS_IDEA_ADVISE_REALIZATION_SERVICE_IDENTITY` | `lotus-idea-local-development` |
+| `LOTUS_IDEA_ADVISE_REALIZATION_CAPABILITIES` | `advisory.idea_proposal_intake.accept` |
+
+The adapter sends these values only as `X-Actor-Id`, `X-Role`,
+`X-Tenant-Id`, `X-Legal-Entity-Code`, `X-Service-Identity`,
+`X-Capabilities`, and `X-Principal-Status: ACTIVE`, in addition to
+correlation, trace, and idempotency headers. This fixture proves neither
+production authentication nor advisory suitability. It only lets local/test
+Idea submit the source-safe conversion-intent envelope to the Advise-owned
+intake receipt route.
 
 Until the platform has trusted service identity and an identity-provider claim
 mapping, local Compose supplies a development-only Manage intake fixture from

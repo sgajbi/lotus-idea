@@ -803,16 +803,27 @@ Downstream realization:
 
 1. `LOTUS_IDEA_ADVISE_REALIZATION_BASE_URL`,
 2. `LOTUS_IDEA_ADVISE_REALIZATION_SUBMIT_PATH`,
-3. `LOTUS_IDEA_MANAGE_REALIZATION_BASE_URL`,
-4. `LOTUS_IDEA_MANAGE_REALIZATION_SUBMIT_PATH`,
-5. local/test-only Manage fixture: `LOTUS_IDEA_MANAGE_REALIZATION_ACTOR_ID`,
+3. local/test-only Advise fixture:
+   `LOTUS_IDEA_ADVISE_REALIZATION_ACTOR_ID`,
+   `LOTUS_IDEA_ADVISE_REALIZATION_ROLE`,
+   `LOTUS_IDEA_ADVISE_REALIZATION_TENANT_ID`,
+   `LOTUS_IDEA_ADVISE_REALIZATION_LEGAL_ENTITY_CODE`,
+   `LOTUS_IDEA_ADVISE_REALIZATION_SERVICE_IDENTITY`, and
+   `LOTUS_IDEA_ADVISE_REALIZATION_CAPABILITIES`. The adapter sends these
+   server-side values only as trusted local/test headers for the Advise-owned
+   `POST /advisory/proposals/idea-intake` receipt route. They are not browser
+   headers, production authn/authz, suitability authority, proposal lifecycle
+   authority, or supported-feature evidence,
+4. `LOTUS_IDEA_MANAGE_REALIZATION_BASE_URL`,
+5. `LOTUS_IDEA_MANAGE_REALIZATION_SUBMIT_PATH`,
+6. local/test-only Manage fixture: `LOTUS_IDEA_MANAGE_REALIZATION_ACTOR_ID`,
    `LOTUS_IDEA_MANAGE_REALIZATION_ROLE`,
    `LOTUS_IDEA_MANAGE_REALIZATION_TENANT_ID`, and
    `LOTUS_IDEA_MANAGE_REALIZATION_SERVICE_IDENTITY`, and
    `LOTUS_IDEA_MANAGE_REALIZATION_CAPABILITIES`,
-6. `LOTUS_IDEA_REPORT_REALIZATION_BASE_URL`,
-7. `LOTUS_IDEA_REPORT_REALIZATION_SUBMIT_PATH`,
-8. local/test-only Report fixture: `LOTUS_IDEA_REPORT_REALIZATION_ACTOR_ID`,
+7. `LOTUS_IDEA_REPORT_REALIZATION_BASE_URL`,
+8. `LOTUS_IDEA_REPORT_REALIZATION_SUBMIT_PATH`,
+9. local/test-only Report fixture: `LOTUS_IDEA_REPORT_REALIZATION_ACTOR_ID`,
    `LOTUS_IDEA_REPORT_REALIZATION_CALLER_APPLICATION`,
    `LOTUS_IDEA_REPORT_REALIZATION_TENANT_ID`, and
    `LOTUS_IDEA_REPORT_REALIZATION_REGION`. The owner-authorized synthetic
@@ -821,19 +832,22 @@ Downstream realization:
    `lotus-report:idea-evidence-retention:v1` reference maps to the
    Report-owned `generated-report-standard` selector. Do not persist that
    selector in Idea or treat it as trusted production identity,
-9. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_TIMEOUT_SECONDS`,
-10. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_MAX_CONNECTIONS`,
-11. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_MAX_KEEPALIVE_CONNECTIONS`,
-12. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_POOL_TIMEOUT_SECONDS`,
-13. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_RETRY_MAX_ATTEMPTS`,
-14. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_RETRY_INITIAL_BACKOFF_SECONDS`,
-15. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_RETRY_MAX_BACKOFF_SECONDS`.
+10. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_TIMEOUT_SECONDS`,
+11. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_MAX_CONNECTIONS`,
+12. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_MAX_KEEPALIVE_CONNECTIONS`,
+13. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_POOL_TIMEOUT_SECONDS`,
+14. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_RETRY_MAX_ATTEMPTS`,
+15. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_RETRY_INITIAL_BACKOFF_SECONDS`,
+16. `LOTUS_IDEA_DOWNSTREAM_REALIZATION_RETRY_MAX_BACKOFF_SECONDS`.
 
-The Manage and Report fixtures are server-side local/test development aids
+The Advise, Manage, and Report fixtures are server-side local/test development aids
 only. They never trust browser-supplied identity headers and fail closed in
 demo, staging, and production until trusted service identity and
 IdP/session/token-claim mapping are delivered through the tracked identity
-work in issue `#380`. The Report adapter maps the Idea evidence envelope into
+work in issue `#380`. The Advise adapter maps only the source-safe conversion
+intent envelope into the Advise-owned intake receipt route and does not grant
+suitability, proposal lifecycle, or client-publication authority. The Report
+adapter maps the Idea evidence envelope into
 the Report-owned strict snake-case intake contract, performs only the governed
 retention-policy selector translation documented above, and does not grant
 Report, Render, Archive, or publication authority.
