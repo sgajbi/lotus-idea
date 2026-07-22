@@ -173,6 +173,27 @@ def test_contract_requires_every_producer_owned_certification_blocker(
     assert validator(payload) is False
 
 
+@pytest.mark.parametrize(
+    "field",
+    ["runtime_intake_receipt_proven", "receipt_outcomes", "principal_capability"],
+)
+def test_advise_contract_requires_current_intake_receipt_boundary(
+    tmp_path: Path, field: str
+) -> None:
+    root = _write_fixture(tmp_path, "advise")
+    contract_path = root / ADVISE_ROUTE_PROFILE.contract_path
+    contract = json.loads(contract_path.read_text(encoding="utf-8"))
+    contract.pop(field)
+    contract_path.write_text(json.dumps(contract), encoding="utf-8")
+
+    payload = build_advise_route_source_contract_payload(
+        generated_at_utc=GENERATED_AT, repository_root=ROOT, advise_root=root
+    )
+
+    assert payload["sourceContractValid"] is False
+    assert advise_route_source_contract_is_valid(payload) is False
+
+
 @pytest.mark.parametrize("family", ["advise", "manage"])
 def test_contract_allows_additional_producer_certification_blockers(
     tmp_path: Path, family: str
@@ -248,6 +269,65 @@ def test_contract_gate_passes_closed_source_contracts() -> None:
     assert module.validate_route_source_contracts() == []
 
 
+@pytest.mark.parametrize(
+    ("script_name", "root_arg"),
+    [
+        ("generate_advise_route_source_contract", "--advise-root"),
+        ("generate_manage_route_source_contract", "--manage-root"),
+    ],
+)
+def test_generators_allow_missing_sibling_evidence_without_hiding_drift(
+    tmp_path: Path, script_name: str, root_arg: str
+) -> None:
+    module = _load_script(script_name)
+    output = tmp_path / "proof.json"
+
+    assert (
+        module.main(
+            [
+                "--generated-at-utc",
+                GENERATED_AT.isoformat(),
+                root_arg,
+                str(tmp_path / "missing-owner"),
+                "--output",
+                str(output),
+                "--allow-missing-evidence",
+            ]
+        )
+        == 0
+    )
+
+    payload = json.loads(output.read_text(encoding="utf-8"))
+    assert payload["sourceContractValid"] is False
+    assert any(item["sha256"] is None for item in payload["sourceAuthority"])
+
+
+def test_manage_generator_fails_present_contract_drift_even_when_missing_is_allowed(
+    tmp_path: Path,
+) -> None:
+    module = _load_script("generate_manage_route_source_contract")
+    manage_root = _write_fixture(tmp_path, "manage")
+    contract_path = manage_root / MANAGE_ROUTE_PROFILE.contract_path
+    contract = json.loads(contract_path.read_text(encoding="utf-8"))
+    contract["non_proof_boundaries"] = ["unsupported boundary"]
+    contract_path.write_text(json.dumps(contract), encoding="utf-8")
+
+    assert (
+        module.main(
+            [
+                "--generated-at-utc",
+                GENERATED_AT.isoformat(),
+                "--manage-root",
+                str(manage_root),
+                "--output",
+                str(tmp_path / "proof.json"),
+                "--allow-missing-evidence",
+            ]
+        )
+        == 1
+    )
+
+
 def _valid_payload(tmp_path: Path, family: str) -> dict[str, object]:
     root = _write_fixture(tmp_path, family)
     return _build_payload(root, family)
@@ -294,6 +374,7 @@ def _contract_payload(family: str) -> dict[str, object]:
         "lifecycle_status": "implemented",
         "supportability_status": "not_certified",
         "route_existence_proven": True,
+        "runtime_intake_receipt_proven": advise,
         "downstream_execution_proven": False,
         "supported_feature_promoted": False,
         "target_route": ADVISE_PROPOSAL_ROUTE if advise else MANAGE_ACTION_ROUTE,
@@ -311,6 +392,21 @@ def _contract_payload(family: str) -> dict[str, object]:
     }
     if advise:
         payload["proposal_authority"] = "lotus-advise"
+        payload["receipt_outcomes"] = ["ACCEPTED", "ACCEPTED_REPLAYED", "REJECTED"]
+        payload["principal_capability"] = "advisory.idea_proposal_intake.accept"
+        payload["local_dev_principal_source"] = "trusted_headers_until_production_idp_available"
+        payload["non_proof_boundaries"] = [
+            "Proves a live executable intake receipt for lotus-idea conversion-intent handoff "
+            "into lotus-advise, including accepted, replayed, rejected, and "
+            "idempotency-conflict behavior.",
+            "Does not grant suitability, recommendation, approval, consent, execution, order, "
+            "OMS, fill, settlement, or client-communication authority.",
+            "Does not create orders, advisory proposal lifecycle records, suitability "
+            "decisions, approvals, execution instructions, fills, settlement records, or "
+            "client messages.",
+            "Does not promote a supported feature, client-ready workflow, data-product "
+            "certification, or downstream execution proof.",
+        ]
     return payload
 
 

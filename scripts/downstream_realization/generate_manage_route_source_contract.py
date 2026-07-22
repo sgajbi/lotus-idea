@@ -45,12 +45,7 @@ def main(argv: list[str] | None = None) -> int:
     write_json_payload(payload, output=args.output)
     if payload["sourceContractValid"]:
         return 0
-    proof_checks = payload.get("proofChecks")
-    if (
-        args.allow_missing_evidence
-        and isinstance(proof_checks, dict)
-        and proof_checks.get("fileEvidencePresent") is False
-    ):
+    if args.allow_missing_evidence and _source_file_evidence_is_missing(payload):
         return 0
     return 1
 
@@ -79,6 +74,13 @@ def _aware_datetime(value: str) -> datetime:
     if parsed.tzinfo is None or parsed.utcoffset() is None:
         raise ValueError("--generated-at-utc must be timezone-aware")
     return parsed
+
+
+def _source_file_evidence_is_missing(payload: dict[str, object]) -> bool:
+    source_authority = payload.get("sourceAuthority")
+    return isinstance(source_authority, (list, tuple)) and any(
+        isinstance(item, dict) and item.get("sha256") is None for item in source_authority
+    )
 
 
 if __name__ == "__main__":

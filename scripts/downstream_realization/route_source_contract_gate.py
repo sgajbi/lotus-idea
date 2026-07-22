@@ -177,14 +177,24 @@ def _advise_contract_payload() -> dict[str, object]:
         "lifecycle_status": "implemented",
         "supportability_status": "not_certified",
         "route_existence_proven": True,
+        "runtime_intake_receipt_proven": True,
         "downstream_execution_proven": False,
         "supported_feature_promoted": False,
         "target_route": ADVISE_PROPOSAL_ROUTE,
+        "receipt_outcomes": ["ACCEPTED", "ACCEPTED_REPLAYED", "REJECTED"],
+        "principal_capability": "advisory.idea_proposal_intake.accept",
+        "local_dev_principal_source": "trusted_headers_until_production_idp_available",
         "non_proof_boundaries": [
-            "Proves only a live route foundation for source-safe lotus-idea proposal intake.",
-            "Does not grant suitability, policy approval, or client-communication authority.",
-            "Does not create orders, execution instructions, fills, or settlement records.",
-            "Does not promote a supported feature in lotus-advise or lotus-idea.",
+            "Proves a live executable intake receipt for lotus-idea conversion-intent handoff "
+            "into lotus-advise, including accepted, replayed, rejected, and "
+            "idempotency-conflict behavior.",
+            "Does not grant suitability, recommendation, approval, consent, execution, order, "
+            "OMS, fill, settlement, or client-communication authority.",
+            "Does not create orders, advisory proposal lifecycle records, suitability "
+            "decisions, approvals, execution instructions, fills, settlement records, or "
+            "client messages.",
+            "Does not promote a supported feature, client-ready workflow, data-product "
+            "certification, or downstream execution proof.",
         ],
         "certification_blockers": list(REQUIRED_ADVISE_PRODUCER_CERTIFICATION_BLOCKERS),
     }
