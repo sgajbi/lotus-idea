@@ -57,6 +57,22 @@ def test_rfc0002_github_issue_execution_ledger_requires_current_issue_690(
     assert "Missing RFC-0002 execution issue entries: #690" in errors
 
 
+def test_rfc0002_github_issue_execution_ledger_keeps_advise_live_proof_blocked() -> None:
+    module = _load_gate()
+    payload = _ledger_payload(module)
+    issue_688 = next(
+        issue
+        for issue in payload["issues"]
+        if isinstance(issue, dict) and issue["issueNumber"] == 688
+    )
+
+    assert issue_688["githubState"] == "open"
+    assert issue_688["executionStatus"] == "open_blocked"
+    assert issue_688["allowPullRequestAutoClose"] is False
+    assert "Keep #688 open" in issue_688["closureInstruction"]
+    assert "advise_live_contract_proof_missing" in issue_688["closureInstruction"]
+
+
 def test_rfc0002_github_issue_execution_ledger_blocks_auto_close_wording_for_open_issue(
     tmp_path: Path,
 ) -> None:
