@@ -228,9 +228,9 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/688",
       "rfcSlices": ["slice-12"],
       "githubState": "open",
-      "executionStatus": "open_merged_main_qa_pending",
+      "executionStatus": "open_blocked",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #688 open until explicit QA verification reconciles the merged Advise proof against current blocker truth."
+      "closureInstruction": "Keep #688 open until QA verification confirms advise_live_contract_proof_missing is cleared by live Advise route-serving and accepted-receipt evidence."
     },
     {
       "issueNumber": 689,
