@@ -105,10 +105,11 @@ manual label or reopen/close changes, and whenever the RFC issue count is used
 as delivery truth. The audit fails when a ledger-tracked issue is missing from
 GitHub output, GitHub open/closed state contradicts the ledger, `open_blocked`
 issues lack `status/blocked`, `open_in_progress` issues lack
-`status/in-progress`, `open_tracker` parent issues lack `status/tracker`,
-merged-main-QA-pending issues lack `status/merged-main`, closed-complete issues
-do not retain `status/merged-main`, or a GitHub issue has the `rfc/RFC-0002`
-label but is missing from the ledger.
+`status/in-progress`, `open_fixed_local` issues lack `status/fixed-local`,
+`open_tracker` parent issues lack `status/tracker`, merged-main-QA-pending
+issues lack `status/merged-main`, closed-complete issues do not retain
+`status/merged-main`, or a GitHub issue has the `rfc/RFC-0002` label but is
+missing from the ledger.
 
 This ledger is issue-lifecycle governance only. It does not promote a feature,
 clear blockers, or replace the blocker closure manifest. It prevents GitHub

@@ -246,7 +246,7 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/689",
       "rfcSlices": ["slice-12"],
       "githubState": "open",
-      "executionStatus": "open_in_progress",
+      "executionStatus": "open_fixed_local",
       "allowPullRequestAutoClose": false,
       "closureInstruction": "Keep #689 open until the Idea-side Manage action-intake runtime proof PR is merged, exact-main validation confirms manage_live_contract_proof_missing is cleared by bounded Manage receipt evidence, and residual action-register persistence, rebalance execution authority, source-temporal metadata, production identity, client-publication, and supported-feature blockers remain issue-linked."
     },
