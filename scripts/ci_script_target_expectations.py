@@ -84,6 +84,9 @@ SCRIPT_TARGET_EXPECTATIONS = {
     "gateway-workbench-discovery-contract-proof-contract-gate": (
         "scripts/workbench/discovery_contract_proof_gate.py"
     ),
+    "gateway-workbench-owner-mainline-evidence-gate": (
+        "scripts/workbench/owner_mainline_evidence_gate.py"
+    ),
     "outbox-broker-source-contract-proof-gate": (
         "scripts/outbox/broker/source_contract_proof_gate.py"
     ),

@@ -2,6 +2,7 @@
 
 .PHONY: candidate-state-contract-gate review-identity-contract-gate conversion-outcome-contract-gate outbox-supportability-contract-gate outbox-supportability-rule-test service-slo-rule-test service-capacity-baseline-contract-gate service-load-soak-proof-gate service-resource-baseline-contract-gate service-resource-proof-gate service-capacity-workload downstream-capacity-seed service-resource-baseline postgres-capacity-threshold-proof supported-feature-promotion-contract-gate disaster-recovery-contract-gate disaster-recovery-proof-gate postgres-disaster-recovery-seed postgres-disaster-recovery-drill postgres-disaster-recovery-resume data-lifecycle-contract-gate scheduled-data-lifecycle-seed scheduled-data-lifecycle-review scheduled-data-lifecycle-review-proof-gate
 .PHONY: license-compliance-gate license-release-evidence-gate ai-attestation-source-contract ai-attestation-source-contract-gate ai-provider-retention-contract-gate archive-lifecycle-posture-contract-gate ai-lineage-store-ci-proof durable-repository-ci-proof
+.PHONY: gateway-workbench-owner-mainline-evidence-gate
 
 VENV_DIR ?= .venv
 UNIT_TESTS ?= tests/unit
@@ -250,6 +251,7 @@ lint:
 	$(MAKE) workbench-read-path-source-contract-proof-gate
 	$(MAKE) gateway-workbench-contract-proof-contract-gate
 	$(MAKE) gateway-workbench-discovery-contract-proof-contract-gate
+	$(MAKE) gateway-workbench-owner-mainline-evidence-gate
 	$(MAKE) outbox-broker-source-contract-proof-gate
 	$(MAKE) outbox-consumer-contract-proof-contract-gate
 	$(MAKE) outbox-platform-mesh-event-source-contract-proof-gate
@@ -546,6 +548,9 @@ gateway-workbench-contract-proof-contract-gate:
 
 gateway-workbench-discovery-contract-proof-contract-gate:
 	$(VENV_PYTHON) scripts/workbench/discovery_contract_proof_gate.py
+
+gateway-workbench-owner-mainline-evidence-gate:
+	$(VENV_PYTHON) scripts/workbench/owner_mainline_evidence_gate.py
 
 outbox-broker-source-contract-proof-gate:
 	$(VENV_PYTHON) scripts/outbox/broker/source_contract_proof_gate.py
