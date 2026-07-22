@@ -137,6 +137,8 @@ def render_markdown(summary: Mapping[str, Any]) -> str:
     lines.extend(["", "## Fixed Locally Issues", ""])
     fixed_local = summary["issuesByStatus"].get("open_fixed_local", [])
     lines.append(_issue_list(fixed_local))
+    lines.extend(["", "## PR-Open Issues", ""])
+    lines.append(_issue_list(summary["issuesByStatus"].get("open_pr_raised", [])))
     lines.extend(["", "## Blocked Issues", ""])
     lines.append(_issue_list(summary["issuesByStatus"].get("open_blocked", [])))
     lines.extend(["", "## Tracker Issues", ""])

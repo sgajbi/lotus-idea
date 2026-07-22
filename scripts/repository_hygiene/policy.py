@@ -3,11 +3,7 @@ from __future__ import annotations
 from . import advise_source_product_evidence_paths as advise_paths
 from . import runtime_evidence_paths as runtime_paths
 
-PROHIBITED_EXACT_PATHS = {
-    ".coverage",
-    ".env",
-    "coverage.xml",
-}
+PROHIBITED_EXACT_PATHS = {".coverage", ".env", "coverage.xml"}
 
 PROHIBITED_PATH_PARTS = {
     ".mypy_cache",
@@ -21,13 +17,7 @@ PROHIBITED_PATH_PARTS = {
     "node_modules",
 }
 
-PROHIBITED_SUFFIXES = {
-    ".db",
-    ".egg-info",
-    ".log",
-    ".pyc",
-    ".pyo",
-}
+PROHIBITED_SUFFIXES = {".db", ".egg-info", ".log", ".pyc", ".pyo"}
 
 REQUIRED_BOUNDED_MODULE_PATHS = {
     *runtime_paths.REQUIRED_RUNTIME_EVIDENCE_PATHS,

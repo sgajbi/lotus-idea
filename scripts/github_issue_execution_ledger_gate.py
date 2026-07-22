@@ -66,6 +66,7 @@ OPEN_STATUSES = frozenset(
         "open_blocked",
         "open_in_progress",
         "open_fixed_local",
+        "open_pr_raised",
         "open_merged_main_qa_pending",
         "open_pending_final_closure",
         "open_pending_post_completion",

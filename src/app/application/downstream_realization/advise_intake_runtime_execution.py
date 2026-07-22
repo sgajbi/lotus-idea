@@ -2,12 +2,17 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import UTC, datetime
-import hashlib
 import json
 import os
 from pathlib import Path
 from typing import Any
 
+from app.application.downstream_realization.intake_runtime_execution_common import (
+    intake_receipt_evidence_is_valid,
+    intake_receipt_matches,
+    non_proof_claims_are_retained,
+    source_safe_intake_receipt_digest,
+)
 from app.application.downstream_realization.route_source_contract import (
     ADVISE_PROPOSAL_ROUTE,
     ADVISE_ROUTE_PROFILE,
@@ -20,7 +25,6 @@ from app.application.source_authority import (
     source_authority_records_are_valid,
 )
 from app.application.source_safe_cross_repo_proof import is_timezone_aware_datetime_text
-from app.application.source_runtime_evidence import is_sha256
 from app.domain.proof_evidence import EvidenceClass
 
 ADVISE_INTAKE_RUNTIME_EXECUTION_ENV = "LOTUS_IDEA_ADVISE_INTAKE_RUNTIME_EXECUTION_PROOF"
@@ -87,6 +91,23 @@ _RECEIPT_FIELDS = frozenset(
         "orderCreated",
         "clientPublicationAuthorized",
     }
+)
+_RECEIPT_DIGEST_FIELDS = (
+    "statusCode",
+    "intakeStatus",
+    "intakeReceiptAccepted",
+    "idempotencyReplay",
+    "reasonCodes",
+    "proposalRecordCreated",
+    "suitabilityAuthorityGranted",
+    "orderCreated",
+    "clientPublicationAuthorized",
+)
+_RETAINED_FALSE_RECEIPT_FIELDS = (
+    "proposalRecordCreated",
+    "suitabilityAuthorityGranted",
+    "orderCreated",
+    "clientPublicationAuthorized",
 )
 _RUNTIME_CHECK_FIELDS = frozenset(
     {
@@ -215,7 +236,10 @@ def advise_intake_runtime_execution_is_valid(payload: Mapping[str, Any]) -> bool
         return False
     if not _source_authority_is_valid(payload.get("sourceAuthority")):
         return False
-    if not _non_proof_claims_are_retained(payload.get("nonProofClaims")):
+    if not non_proof_claims_are_retained(
+        payload.get("nonProofClaims"),
+        expected_fields=_NON_PROOF_CLAIM_FIELDS,
+    ):
         return False
     runtime_checks = payload.get("runtimeChecks")
     if not (
@@ -225,7 +249,16 @@ def advise_intake_runtime_execution_is_valid(payload: Mapping[str, Any]) -> bool
     ):
         return False
     receipt_evidence = payload.get("receiptEvidence")
-    return isinstance(receipt_evidence, Mapping) and _receipt_evidence_is_valid(receipt_evidence)
+    return isinstance(receipt_evidence, Mapping) and intake_receipt_evidence_is_valid(
+        receipt_evidence,
+        expected_fields=_RECEIPT_EVIDENCE_FIELDS,
+        accepted_receipt_is_valid=_accepted_receipt_is_valid,
+        replay_receipt_is_valid=_replay_receipt_is_valid,
+        rejected_receipt_is_valid=_rejected_receipt_is_valid,
+        conflict_receipt_is_valid=_conflict_receipt_is_valid,
+        authorization_denied_receipt_is_valid=_authorization_denied_receipt_is_valid,
+        tenant_isolation_receipt_is_valid=_tenant_isolation_receipt_is_valid,
+    )
 
 
 def load_advise_intake_runtime_execution_from_env() -> tuple[dict[str, Any] | None, str | None]:
@@ -244,19 +277,7 @@ def load_advise_intake_runtime_execution_from_env() -> tuple[dict[str, Any] | No
 
 
 def source_safe_receipt_digest(receipt: Mapping[str, Any]) -> str:
-    canonical = {
-        "statusCode": receipt.get("statusCode"),
-        "intakeStatus": receipt.get("intakeStatus"),
-        "intakeReceiptAccepted": receipt.get("intakeReceiptAccepted"),
-        "idempotencyReplay": receipt.get("idempotencyReplay"),
-        "reasonCodes": receipt.get("reasonCodes"),
-        "proposalRecordCreated": receipt.get("proposalRecordCreated"),
-        "suitabilityAuthorityGranted": receipt.get("suitabilityAuthorityGranted"),
-        "orderCreated": receipt.get("orderCreated"),
-        "clientPublicationAuthorized": receipt.get("clientPublicationAuthorized"),
-    }
-    encoded = json.dumps(canonical, sort_keys=True, separators=(",", ":")).encode()
-    return f"sha256:{hashlib.sha256(encoded).hexdigest()}"
+    return source_safe_intake_receipt_digest(receipt, digest_fields=_RECEIPT_DIGEST_FIELDS)
 
 
 def _runtime_checks(
@@ -292,18 +313,6 @@ def _runtime_checks(
         "clientPublicationAuthorityRetained": True,
         "supportedFeatureNotPromoted": True,
     }
-
-
-def _receipt_evidence_is_valid(receipt_evidence: Mapping[str, Any]) -> bool:
-    return (
-        set(receipt_evidence) == _RECEIPT_EVIDENCE_FIELDS
-        and _accepted_receipt_is_valid(receipt_evidence.get("accepted"))
-        and _replay_receipt_is_valid(receipt_evidence.get("acceptedReplay"))
-        and _rejected_receipt_is_valid(receipt_evidence.get("rejected"))
-        and _conflict_receipt_is_valid(receipt_evidence.get("idempotencyConflict"))
-        and _authorization_denied_receipt_is_valid(receipt_evidence.get("authorizationDenied"))
-        and _tenant_isolation_receipt_is_valid(receipt_evidence.get("tenantScopedIdempotency"))
-    )
 
 
 def _accepted_receipt_is_valid(value: object) -> bool:
@@ -377,28 +386,16 @@ def _receipt_matches(
     replay: bool | None,
     reason_codes: tuple[str, ...],
 ) -> bool:
-    if not isinstance(value, Mapping) or set(value) != _RECEIPT_FIELDS:
-        return False
-    return (
-        value.get("statusCode") == status_code
-        and value.get("intakeStatus") == intake_status
-        and value.get("intakeReceiptAccepted") is accepted
-        and value.get("idempotencyReplay") is replay
-        and tuple(value.get("reasonCodes") or ()) == reason_codes
-        and is_sha256(value.get("receiptDigest"))
-        and value.get("receiptDigest") == source_safe_receipt_digest(value)
-        and value.get("proposalRecordCreated") is False
-        and value.get("suitabilityAuthorityGranted") is False
-        and value.get("orderCreated") is False
-        and value.get("clientPublicationAuthorized") is False
-    )
-
-
-def _non_proof_claims_are_retained(value: object) -> bool:
-    return (
-        isinstance(value, Mapping)
-        and set(value) == _NON_PROOF_CLAIM_FIELDS
-        and all(value.get(key) is False for key in _NON_PROOF_CLAIM_FIELDS)
+    return intake_receipt_matches(
+        value,
+        receipt_fields=_RECEIPT_FIELDS,
+        status_code=status_code,
+        intake_status=intake_status,
+        accepted=accepted,
+        replay=replay,
+        reason_codes=reason_codes,
+        digest=source_safe_receipt_digest,
+        retained_false_fields=_RETAINED_FALSE_RECEIPT_FIELDS,
     )
 
 
