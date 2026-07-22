@@ -18,6 +18,14 @@ EXPECTED_RFC_ID = "RFC-0002"
 EXPECTED_REPOSITORY = "sgajbi/lotus-idea"
 EXPECTED_EXECUTION_ISSUES = frozenset(
     {
+        340,
+        343,
+        344,
+        345,
+        375,
+        379,
+        380,
+        542,
         673,
         674,
         675,
