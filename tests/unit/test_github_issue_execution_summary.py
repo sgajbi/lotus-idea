@@ -52,12 +52,12 @@ def test_github_issue_execution_summary_reports_current_rfc0002_counts() -> None
 
     assert summary["schemaVersion"] == "lotus-idea:rfc0002-github-issue-execution-summary:v1"
     assert summary["counts"]["total"] == 40
-    assert summary["counts"]["open"] == 31
-    assert summary["counts"]["closed"] == 9
+    assert summary["counts"]["open"] == 30
+    assert summary["counts"]["closed"] == 10
     assert summary["counts"]["byExecutionStatus"]["open_in_progress"] == 4
-    assert summary["counts"]["byExecutionStatus"]["open_pr_raised"] == 1
+    assert "open_pr_raised" not in summary["counts"]["byExecutionStatus"]
     assert summary["issuesByStatus"]["open_in_progress"] == [482, 681, 685, 686]
-    assert summary["issuesByStatus"]["open_pr_raised"] == [689]
+    assert "open_pr_raised" not in summary["issuesByStatus"]
     assert 681 in summary["issuesBySlice"]["slice-18"]
     assert summary["sourceOfTruth"]["liveGitHubAudit"] == (
         "make rfc0002-github-issue-execution-state-audit"
@@ -70,13 +70,13 @@ def test_github_issue_execution_summary_markdown_is_comment_ready() -> None:
     rendered = module.render_markdown(module.build_issue_execution_summary())
 
     assert "# RFC-0002 GitHub Issue Execution Summary" in rendered
-    assert "- Open issues: 31" in rendered
-    assert "- Closed issues: 9" in rendered
+    assert "- Open issues: 30" in rendered
+    assert "- Closed issues: 10" in rendered
     assert "## In-Progress Issues" in rendered
     assert "#482, #681, #685, #686" in rendered
     assert "## Fixed Locally Issues" in rendered
     assert "## PR-Open Issues" in rendered
-    assert "#689" in rendered
+    assert "_None._" in rendered
     assert "Run the live GitHub state audit" in rendered
 
 
