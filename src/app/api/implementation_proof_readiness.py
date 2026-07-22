@@ -261,6 +261,12 @@ def _build_readiness_snapshot_from_configured_artifacts(
         advise_intake_runtime_execution_proof_ref=(
             proof_artifacts.advise_intake_runtime_execution_proof_ref
         ),
+        manage_intake_runtime_execution_proof=(
+            proof_artifacts.manage_intake_runtime_execution_proof
+        ),
+        manage_intake_runtime_execution_proof_ref=(
+            proof_artifacts.manage_intake_runtime_execution_proof_ref
+        ),
         outbox_broker_source_contract_proof=proof_artifacts.outbox_broker_source_contract_proof,
         outbox_broker_source_contract_proof_ref=(
             proof_artifacts.outbox_broker_source_contract_proof_ref

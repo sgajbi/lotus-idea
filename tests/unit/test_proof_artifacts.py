@@ -16,6 +16,9 @@ from app.application.bond_maturity_runtime_evidence import BOND_MATURITY_RUNTIME
 from app.application.downstream_realization.advise_intake_runtime_execution import (
     ADVISE_INTAKE_RUNTIME_EXECUTION_ENV,
 )
+from app.application.downstream_realization.manage_intake_runtime_execution import (
+    MANAGE_INTAKE_RUNTIME_EXECUTION_ENV,
+)
 from app.application.durable_repository_proof import DURABLE_REPOSITORY_PROOF_ENV
 from app.application.workbench.contract_proof import (
     GATEWAY_WORKBENCH_CONTRACT_PROOF_ENV,
@@ -95,6 +98,9 @@ def _configured_artifact_paths(tmp_path: Path) -> dict[str, Path]:
         "advise_runtime": (
             tmp_path / "output" / "downstream" / "advise-intake-runtime-execution-proof.json"
         ),
+        "manage_runtime": (
+            tmp_path / "output" / "downstream" / "manage-intake-runtime-execution-proof.json"
+        ),
         "workbench": (tmp_path / "output" / "workbench" / "read-path-source-contract-proof.json"),
         "gateway_workbench": (
             tmp_path / "output" / "workbench" / "gateway-workbench-contract-proof.json"
@@ -164,6 +170,13 @@ def _assert_configured_artifacts_are_bound(
     )
     assert artifacts.advise_intake_runtime_execution_proof_ref == (
         "output/downstream/advise-intake-runtime-execution-proof.json"
+    )
+    _assert_bound_artifact(
+        artifacts.manage_intake_runtime_execution_proof,
+        "manage-intake-runtime-execution-proof.json",
+    )
+    assert artifacts.manage_intake_runtime_execution_proof_ref == (
+        "output/downstream/manage-intake-runtime-execution-proof.json"
     )
     _assert_bound_artifact(
         artifacts.workbench_read_path_source_contract_proof,
@@ -243,6 +256,9 @@ def _configure_relative_artifact_env(monkeypatch: pytest.MonkeyPatch) -> None:
         ),
         ADVISE_INTAKE_RUNTIME_EXECUTION_ENV: (
             "output/downstream/advise-intake-runtime-execution-proof.json"
+        ),
+        MANAGE_INTAKE_RUNTIME_EXECUTION_ENV: (
+            "output/downstream/manage-intake-runtime-execution-proof.json"
         ),
         WORKBENCH_READ_PATH_SOURCE_CONTRACT_PROOF_ENV: (
             "output/workbench/read-path-source-contract-proof.json"

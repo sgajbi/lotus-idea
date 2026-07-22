@@ -163,6 +163,10 @@ GENERATED_READINESS_ARTIFACTS = (
         "a Manage route source-contract artifact",
     ),
     (
+        "scripts/downstream_realization/generate_manage_intake_runtime_execution.py",
+        "a Manage intake runtime-execution proof artifact",
+    ),
+    (
         "scripts/report/generate_intake_route_source_contract.py",
         "a Report intake-route source-contract proof artifact",
     ),
@@ -215,6 +219,10 @@ PASSED_READINESS_ARTIFACTS = (
     (
         "--manage-action-route-source-contract-proof",
         "Manage route source-contract artifact",
+    ),
+    (
+        "--manage-intake-runtime-execution-proof",
+        "Manage intake runtime-execution proof artifact",
     ),
     (
         "--report-intake-route-source-contract-proof",
@@ -285,6 +293,14 @@ REQUIRED_READINESS_WIRING = (
     (
         "LOTUS_IDEA_MANAGE_ROUTE_SOURCE_CONTRACT_PROOF",
         "support an optional Manage route source contract",
+    ),
+    (
+        "LOTUS_IDEA_MANAGE_INTAKE_RUNTIME_EXECUTION_PROOF_OUTPUT",
+        "pass the default Manage intake runtime-execution proof into readiness generation",
+    ),
+    (
+        "LOTUS_IDEA_MANAGE_INTAKE_RUNTIME_EXECUTION_PROOF",
+        "support an optional Manage intake runtime-execution proof",
     ),
     (
         "LOTUS_IDEA_REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF_OUTPUT",

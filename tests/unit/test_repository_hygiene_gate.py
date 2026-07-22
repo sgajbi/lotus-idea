@@ -351,14 +351,21 @@ def test_repository_hygiene_gate_enforces_downstream_route_source_contract_packa
     module = _load_repository_hygiene_gate()
     required_paths = {
         "scripts/downstream_realization/__init__.py",
+        "scripts/downstream_realization/generate_advise_intake_runtime_execution.py",
         "scripts/downstream_realization/generate_advise_route_source_contract.py",
+        "scripts/downstream_realization/generate_manage_intake_runtime_execution.py",
         "scripts/downstream_realization/generate_manage_route_source_contract.py",
+        "scripts/downstream_realization/manage_intake_runtime_execution_gate.py",
         "scripts/downstream_realization/route_source_contract_gate.py",
         "src/app/application/downstream_realization/__init__.py",
+        "src/app/application/downstream_realization/advise_intake_runtime_execution.py",
+        "src/app/application/downstream_realization/manage_intake_runtime_execution.py",
         "src/app/application/downstream_realization/route_source_contract.py",
         "src/app/application/downstream_realization/submission_use_cases.py",
         "tests/unit/downstream_realization/__init__.py",
         "tests/unit/downstream_realization/fixtures.py",
+        "tests/unit/downstream_realization/test_advise_intake_runtime_execution.py",
+        "tests/unit/downstream_realization/test_manage_intake_runtime_execution.py",
         "tests/unit/downstream_realization/test_route_source_contract.py",
     }
     retired_paths = {

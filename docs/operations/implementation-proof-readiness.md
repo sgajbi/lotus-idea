@@ -372,6 +372,9 @@ taxonomy and the #393 same-pattern campaign.
 | `LOTUS_MANAGE_ROOT` | Selects the sibling `lotus-manage` checkout used to generate the default digest-bound Manage route source contract. Defaults to `../lotus-manage`. |
 | `LOTUS_IDEA_MANAGE_ROUTE_SOURCE_CONTRACT_PROOF_OUTPUT` | Selects the default Manage route source-contract artifact consumed as supporting evidence. Defaults to `output/downstream/manage-route-source-contract-proof.json`. |
 | `LOTUS_IDEA_MANAGE_ROUTE_SOURCE_CONTRACT_PROOF` | Overrides the default Manage route source-contract artifact path. |
+| `LOTUS_MANAGE_PYTHON` | Selects the Python interpreter used to execute the sibling `lotus-manage` local ASGI runtime proof. Defaults to `python`; override only when a repo-local Manage venv is required. |
+| `LOTUS_IDEA_MANAGE_INTAKE_RUNTIME_EXECUTION_PROOF_OUTPUT` | Selects the default Manage action-intake runtime-execution artifact consumed by aggregate readiness. Defaults to `output/downstream/manage-intake-runtime-execution-proof.json`. |
+| `LOTUS_IDEA_MANAGE_INTAKE_RUNTIME_EXECUTION_PROOF` | Overrides the default Manage action-intake runtime-execution proof path. A valid aggregate-current artifact clears only `manage_live_contract_proof_missing` and preserves rebalance authority, action-register persistence, OMS/order execution, client-publication, production, support, and supported-feature blockers. |
 | `LOTUS_REPORT_ROOT` | Selects the sibling `lotus-report` checkout used to generate the default source-safe report-intake route proof. Defaults to `../lotus-report`. |
 | `LOTUS_IDEA_REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF_OUTPUT` | Selects the default generated report-intake route proof artifact consumed by aggregate readiness when no override is set. Defaults to `output/report/intake-route-source-contract-proof.json`. |
 | `LOTUS_IDEA_REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF` | Overrides the default generated report-intake route proof artifact passed into aggregate readiness. |
@@ -873,6 +876,21 @@ and canonical receipt digests. It clears only
 suitability or policy authority, certify production identity, authorize client
 publication, prove Gateway/Workbench behavior, or promote support.
 
+Manage action-intake runtime-execution evidence is captured by
+`scripts/downstream_realization/generate_manage_intake_runtime_execution.py`.
+The repo-native `make implementation-proof-readiness-check` target generates
+the default artifact from `LOTUS_MANAGE_ROOT` using `LOTUS_MANAGE_PYTHON` and
+passes it into aggregate readiness unless
+`LOTUS_IDEA_MANAGE_INTAKE_RUNTIME_EXECUTION_PROOF` is set. A valid artifact is
+`runtime_execution` evidence: it observes the Manage owner route serving
+accepted, replayed, rejected, idempotency-conflict, authorization-denied, and
+tenant-scoped idempotency calls while storing only source-safe receipt posture
+and canonical receipt digests. It clears only
+`manage_live_contract_proof_missing`. It does not create action-register
+records, grant rebalance or execution authority, create orders, certify
+production identity, authorize client publication, prove Gateway/Workbench
+behavior, or promote support.
+
 Report intake route source-contract evidence is captured by
 `scripts/report/generate_intake_route_source_contract.py`. The repo-native
 `make implementation-proof-readiness-check` target now generates the default
@@ -1313,6 +1331,12 @@ Implementation-backed evidence:
     `make advise-intake-runtime-execution-proof-gate`,
 1. Advise idea-intake runtime-execution proof tests:
     `tests/unit/downstream_realization/test_advise_intake_runtime_execution.py`,
+1. Manage action-intake runtime-execution proof generator:
+    `scripts/downstream_realization/generate_manage_intake_runtime_execution.py`,
+1. Manage action-intake runtime-execution proof gate:
+    `make manage-intake-runtime-execution-proof-gate`,
+1. Manage action-intake runtime-execution proof tests:
+    `tests/unit/downstream_realization/test_manage_intake_runtime_execution.py`,
 1. report intake route source-contract generator:
     `scripts/report/generate_intake_route_source_contract.py`,
 1. report intake route source-contract gate:
@@ -1401,6 +1425,8 @@ $env:LOTUS_ADVISE_PYTHON = "..\lotus-advise\.venv-codex\Scripts\python.exe"
 $env:LOTUS_IDEA_ADVISE_ROUTE_SOURCE_CONTRACT_PROOF_OUTPUT = "output/downstream/advise-route-source-contract-proof.json"
 $env:LOTUS_MANAGE_ROOT = "..\lotus-manage"
 $env:LOTUS_IDEA_MANAGE_ROUTE_SOURCE_CONTRACT_PROOF_OUTPUT = "output/downstream/manage-route-source-contract-proof.json"
+$env:LOTUS_MANAGE_PYTHON = "python"
+$env:LOTUS_IDEA_MANAGE_INTAKE_RUNTIME_EXECUTION_PROOF_OUTPUT = "output/downstream/manage-intake-runtime-execution-proof.json"
 $env:LOTUS_REPORT_ROOT = "..\lotus-report"
 $env:LOTUS_IDEA_REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF_OUTPUT = "output/report/intake-route-source-contract-proof.json"
 $env:LOTUS_IDEA_REPORT_MATERIALIZATION_SOURCE_CONTRACT_PROOF_OUTPUT = "output/report/materialization-source-contract-proof.json"
@@ -1419,6 +1445,7 @@ make outbox-consumer-contract-proof-contract-gate
 make outbox-platform-mesh-event-source-contract-proof-gate
 make downstream-route-source-contract-proof-gate
 make advise-intake-runtime-execution-proof-gate
+make manage-intake-runtime-execution-proof-gate
 make report-intake-route-source-contract-proof-gate
 make report-materialization-source-contract-proof-gate
 make workbench-read-path-source-contract-proof-gate
