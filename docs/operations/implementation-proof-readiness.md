@@ -713,6 +713,16 @@ Workbench consumption, and entitlement enforcement. The artifact does not
 certify data-mesh products, activate producer products, publish product routes,
 certify canonical Workbench behavior, or promote supported features.
 
+Gateway/Workbench owner-mainline evidence is recorded in
+`contracts/implementation-proof/rfc0002-slice11-owner-mainline-evidence.v1.json`
+and guarded by `make gateway-workbench-owner-mainline-evidence-gate`. The
+contract records only exact merged-main and Main Releasability evidence for the
+owning `lotus-gateway` and `lotus-workbench` RFC-0002 Slice 11 dependencies.
+It is not passed as blocker-clearing runtime evidence: production identity
+provider proof, entitlement-denied browser proof, canonical all-main runtime
+validation, data-product certification, and supported-feature promotion remain
+open dependencies.
+
 Outbox broker source-contract proof is captured by
 `scripts/outbox/broker/generate_source_contract_proof.py`. A valid artifact
 referenced through `LOTUS_IDEA_OUTBOX_BROKER_SOURCE_CONTRACT_PROOF` or passed
@@ -1180,6 +1190,10 @@ Implementation-backed evidence:
     `scripts/workbench/generate_discovery_contract_proof.py`,
 1. Gateway/Workbench discovery contract proof contract gate:
     `make gateway-workbench-discovery-contract-proof-contract-gate`,
+1. Gateway/Workbench owner-mainline evidence contract:
+    `contracts/implementation-proof/rfc0002-slice11-owner-mainline-evidence.v1.json`,
+1. Gateway/Workbench owner-mainline evidence contract gate:
+    `make gateway-workbench-owner-mainline-evidence-gate`,
 1. outbox broker source-contract proof generator:
     `scripts/outbox/broker/generate_source_contract_proof.py`,
 1. outbox consumer contract gate:
