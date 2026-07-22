@@ -22,6 +22,10 @@
           "ref": "scripts/github_issue_execution_state_audit.py"
         },
         {
+          "type": "quality",
+          "ref": "scripts/github_issue_execution_summary.py"
+        },
+        {
           "type": "context",
           "ref": "REPOSITORY-ENGINEERING-CONTEXT.md#github-issue-learning-loop"
         },
@@ -30,7 +34,7 @@
           "ref": "wiki/Validation-and-CI.md"
         }
       ],
-      "futureAgentRule": "Before changing RFC-0002 truth, run the execution ledger gate and live state audit, preserve Keep-open wording for partial issues, ensure parent open_tracker issues carry status/tracker, and record exact PR/main/wiki/branch evidence on the owning issue.",
+      "futureAgentRule": "Before changing RFC-0002 truth, run the execution ledger gate and live state audit, generate the issue execution summary instead of relying on chat or ad hoc assignee filters, preserve Keep-open wording for partial issues, ensure parent open_tracker issues carry status/tracker, and record exact PR/main/wiki/branch evidence on the owning issue.",
       "nonClaimBoundaries": [
         "Issue state labels are not proof; they must point to PR, SHA, run, wiki, and branch evidence.",
         "Slice 18 context updates do not complete RFC-0002 while implementation slices remain open."

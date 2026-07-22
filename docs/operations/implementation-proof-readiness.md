@@ -116,6 +116,15 @@ state drift when a PR lands partial RFC progress, such as consuming owner proof
 while keeping Report, Render, Archive, client-publication, and promotion proof
 open.
 
+`make rfc0002-github-issue-execution-summary` renders a compact Markdown
+summary from the source-controlled execution ledger and issue-learning ledger.
+Use it after the live state audit when reporting fixed/open counts, active
+implementation issues, blocked issues, trackers, or the learning pattern that
+should guide the next implementation slice. The summary is source posture, not
+live GitHub proof; it deliberately points back to
+`make rfc0002-github-issue-execution-state-audit` for current GitHub label and
+open/closed verification.
+
 ## GitHub Issue Learning Patterns
 
 `contracts/implementation-proof/rfc0002-issue-learning-patterns.v1.json` is
