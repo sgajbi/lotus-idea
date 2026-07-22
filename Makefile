@@ -314,7 +314,7 @@ github-issue-closure-matrix-gate:
 	$(VENV_PYTHON) scripts/github_issue_closure_matrix_gate.py
 
 rfc0002-github-issue-execution-ledger-gate:
-	$(VENV_PYTHON) scripts/rfc0002_github_issue_execution_ledger_gate.py
+	$(VENV_PYTHON) scripts/github_issue_execution_ledger_gate.py
 
 monetary-float-guard:
 	$(VENV_PYTHON) scripts/check_monetary_float_usage.py

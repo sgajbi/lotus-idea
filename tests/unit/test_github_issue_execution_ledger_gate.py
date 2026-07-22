@@ -12,9 +12,9 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 def _load_gate() -> ModuleType:
-    script_path = ROOT / "scripts" / "rfc0002_github_issue_execution_ledger_gate.py"
+    script_path = ROOT / "scripts" / "github_issue_execution_ledger_gate.py"
     spec = importlib.util.spec_from_file_location(
-        "rfc0002_github_issue_execution_ledger_gate",
+        "github_issue_execution_ledger_gate",
         script_path,
     )
     assert spec is not None
