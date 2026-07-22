@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+from datetime import UTC, datetime
 import json
 from pathlib import Path
+import tempfile
+from typing import Any
 
 import pytest
 
+from app.application.proof_provenance import bind_aggregate_proof_provenance
 from app.application.source_ingestion_readiness import (
     CORE_BASE_URL_ENV,
     CORE_QUERY_BASE_URL_ENV,
@@ -26,6 +30,7 @@ from tests.support.source_ingestion_runtime_evidence import runtime_execution
 
 
 ROOT = Path(__file__).resolve().parents[2]
+EVALUATED_AT = datetime(2026, 6, 21, 10, 10, tzinfo=UTC)
 
 
 def test_source_ingestion_readiness_reports_blocked_default_posture(
@@ -117,7 +122,7 @@ def test_source_ingestion_readiness_clears_only_live_core_blocker_with_valid_pro
     manifest.write_text("{}", encoding="utf-8")
     proof = tmp_path / "live-proof.json"
     proof.write_text(
-        json.dumps(runtime_execution()),
+        json.dumps(_bound_runtime_execution(runtime_execution(), proof_ref=proof.as_posix())),
         encoding="utf-8",
     )
     monkeypatch.setenv(MANIFEST_ENV, str(manifest))
@@ -127,7 +132,7 @@ def test_source_ingestion_readiness_clears_only_live_core_blocker_with_valid_pro
     monkeypatch.setenv(CORE_BASE_URL_ENV, "http://localhost:8310")
     monkeypatch.setenv(DATABASE_URL_ENV, "postgresql://localhost/lotus_idea")
 
-    snapshot = build_source_ingestion_readiness_snapshot()
+    snapshot = build_source_ingestion_readiness_snapshot(evaluated_at_utc=EVALUATED_AT)
 
     assert snapshot.configured_live_proof_available is True
     assert snapshot.core_query_base_url_configured is True
@@ -144,6 +149,31 @@ def test_source_ingestion_readiness_clears_only_live_core_blocker_with_valid_pro
         "gateway_workbench_proof_missing",
     )
     assert snapshot.certification_status == "not_certified"
+
+
+def test_source_ingestion_readiness_keeps_live_core_blocker_for_unbound_valid_proof(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text("{}", encoding="utf-8")
+    proof = tmp_path / "live-proof.json"
+    proof.write_text(
+        json.dumps(runtime_execution()),
+        encoding="utf-8",
+    )
+    monkeypatch.setenv(MANIFEST_ENV, str(manifest))
+    monkeypatch.setenv(SOURCE_INGESTION_RUNTIME_EXECUTION_ENV, str(proof))
+    monkeypatch.delenv(SCHEDULED_WORKER_SOURCE_CONTRACT_ENV, raising=False)
+    monkeypatch.delenv(SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE_ENV, raising=False)
+    monkeypatch.setenv(CORE_BASE_URL_ENV, "http://localhost:8310")
+    monkeypatch.setenv(DATABASE_URL_ENV, "postgresql://localhost/lotus_idea")
+
+    snapshot = build_source_ingestion_readiness_snapshot(evaluated_at_utc=EVALUATED_AT)
+
+    assert snapshot.configured_live_proof_available is True
+    assert snapshot.live_core_source_proof_valid is False
+    assert "live_core_source_proof_missing" in snapshot.certification_blockers
 
 
 def test_source_ingestion_readiness_keeps_live_core_blocker_for_invalid_proof(
@@ -166,6 +196,24 @@ def test_source_ingestion_readiness_keeps_live_core_blocker_for_invalid_proof(
     assert snapshot.configured_live_proof_available is True
     assert snapshot.live_core_source_proof_valid is False
     assert "live_core_source_proof_missing" in snapshot.certification_blockers
+
+
+def _bound_runtime_execution(
+    payload: dict[str, Any],
+    *,
+    proof_ref: str,
+) -> dict[str, Any]:
+    with tempfile.TemporaryDirectory() as directory:
+        artifact_path = Path(directory) / "source-ingestion-runtime-execution.json"
+        artifact_path.write_text(json.dumps(payload), encoding="utf-8")
+        bound = bind_aggregate_proof_provenance(
+            payload,
+            artifact_path=artifact_path,
+            proof_ref=proof_ref,
+            repository_root=ROOT,
+        )
+        bound["aggregateProofProvenance"]["sourceTreeDirty"] = False
+        return bound
 
 
 def test_source_ingestion_readiness_keeps_live_core_blocker_for_malformed_proof(

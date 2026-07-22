@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import UTC, datetime
 import json
 import os
 from pathlib import Path
@@ -11,7 +12,7 @@ from app.application.implementation_proof_artifact_registry import (
 )
 from app.application.source_ingestion_runtime_evidence import (
     SOURCE_INGESTION_RUNTIME_EXECUTION_ENV as SOURCE_INGESTION_RUNTIME_EXECUTION_ENV,
-    source_ingestion_runtime_execution_is_valid,
+    source_ingestion_runtime_execution_can_clear_aggregate_blockers,
 )
 from app.application.source_ingestion_scheduler import (
     SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE_ENV,
@@ -72,7 +73,10 @@ class SourceIngestionReadinessSnapshot:
 def build_source_ingestion_readiness_snapshot(
     *,
     repository_root: Path = REPOSITORY_ROOT,
+    evaluated_at_utc: datetime | None = None,
+    runtime_execution_proof_ref: str | None = None,
 ) -> SourceIngestionReadinessSnapshot:
+    evaluated_at_utc = evaluated_at_utc or datetime.now(UTC)
     example_manifest = repository_root / EXAMPLE_MANIFEST_PATH
     configured_manifest = os.getenv(MANIFEST_ENV, "").strip()
     configured_manifest_path = resolve_source_ingestion_manifest_path(
@@ -92,7 +96,12 @@ def build_source_ingestion_readiness_snapshot(
         repository_root=repository_root,
     )
     core_source_urls = core_source_runtime_urls_from_environment()
-    live_core_source_proof_valid = _runtime_execution_valid(configured_runtime_execution_path)
+    live_core_source_proof_valid = _runtime_execution_valid(
+        configured_runtime_execution_path,
+        evaluated_at_utc=evaluated_at_utc,
+        proof_ref=runtime_execution_proof_ref,
+        repository_root=repository_root,
+    )
     scheduled_worker_source_contract = _read_json_object(
         configured_scheduled_worker_source_contract_path
     )
@@ -240,14 +249,37 @@ def _certification_blockers(
     return tuple(blockers)
 
 
-def _runtime_execution_valid(configured_runtime_execution_path: Path | None) -> bool:
+def _runtime_execution_valid(
+    configured_runtime_execution_path: Path | None,
+    *,
+    evaluated_at_utc: datetime,
+    proof_ref: str | None,
+    repository_root: Path,
+) -> bool:
     if configured_runtime_execution_path is None or not configured_runtime_execution_path.is_file():
         return False
     try:
         payload = json.loads(configured_runtime_execution_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
         return False
-    return isinstance(payload, dict) and source_ingestion_runtime_execution_is_valid(payload)
+    return isinstance(
+        payload, dict
+    ) and source_ingestion_runtime_execution_can_clear_aggregate_blockers(
+        payload,
+        evaluated_at_utc=evaluated_at_utc,
+        proof_ref=proof_ref
+        or _proof_ref_for_path(configured_runtime_execution_path, repository_root),
+        repository_root=repository_root,
+    )
+
+
+def _proof_ref_for_path(path: Path, repository_root: Path) -> str:
+    resolved_path = path.resolve()
+    resolved_root = repository_root.resolve()
+    try:
+        return resolved_path.relative_to(resolved_root).as_posix()
+    except ValueError:
+        return resolved_path.as_posix()
 
 
 def _read_json_object(path: Path | None) -> dict[str, object] | None:
