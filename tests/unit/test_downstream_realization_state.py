@@ -139,6 +139,17 @@ def test_report_service_context_fixture_rejects_unrecognized_owner_scope(
         get_report_evidence_pack_realization_client()
 
 
+def test_malformed_report_output_formats_fail_closed(monkeypatch: pytest.MonkeyPatch) -> None:
+    configure_report_env(monkeypatch)
+    monkeypatch.setenv(REPORT_OUTPUT_FORMATS_ENV, "json, ")
+
+    with pytest.raises(
+        DownstreamRealizationClientsUnavailableError,
+        match=f"{REPORT_OUTPUT_FORMATS_ENV} must be a non-empty CSV value",
+    ):
+        get_report_evidence_pack_realization_client()
+
+
 def test_missing_downstream_configuration_fails_closed(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -206,10 +217,27 @@ def test_manage_service_context_fixture_is_rejected_outside_local_and_test(
 ) -> None:
     configure_conversion_env(monkeypatch)
     monkeypatch.setenv(RUNTIME_PROFILE_ENV, "production")
+    monkeypatch.setattr(
+        "app.runtime.downstream_realization_state._ADVISE_SERVICE_CONTEXT_FIXTURE_PROFILES",
+        {"production"},
+    )
 
     with pytest.raises(
         DownstreamRealizationClientsUnavailableError,
-        match="restricted to local and test",
+        match="Manage realization service-context fixture is restricted to local and test",
+    ):
+        get_conversion_realization_clients()
+
+
+def test_invalid_manage_adapter_configuration_fails_closed(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    configure_conversion_env(monkeypatch)
+    monkeypatch.setenv(MANAGE_BASE_URL_ENV, "not-a-url")
+
+    with pytest.raises(
+        DownstreamRealizationClientsUnavailableError,
+        match="absolute HTTP",
     ):
         get_conversion_realization_clients()
 
@@ -354,6 +382,17 @@ def test_reset_closes_cached_clients() -> None:
 def test_close_downstream_realization_clients_is_idempotent() -> None:
     close_downstream_realization_clients()
     close_downstream_realization_clients()
+
+
+def test_reset_ignores_clients_without_close_methods() -> None:
+    reset_downstream_realization_clients_for_tests(
+        conversion_clients=ConversionRealizationClients(
+            advise_client=object(),  # type: ignore[arg-type]
+            manage_client=object(),  # type: ignore[arg-type]
+        ),
+        report_client=object(),  # type: ignore[arg-type]
+    )
+    reset_downstream_realization_clients_for_tests(conversion_clients=None, report_client=None)
 
 
 def configure_conversion_env(monkeypatch: pytest.MonkeyPatch) -> None:

@@ -136,40 +136,6 @@ def close_downstream_realization_clients() -> None:
     _REPORT_CLIENT = None
 
 
-def _adapter_config(
-    *,
-    base_url_env: str,
-    submit_path_env: str,
-    source_authority: SourceSystem,
-) -> DownstreamRealizationAdapterConfig:
-    base_url = _required_env(base_url_env)
-    submit_path = _required_env(submit_path_env)
-    try:
-        return DownstreamRealizationAdapterConfig(
-            base_url=base_url,
-            submit_path=submit_path,
-            source_authority=source_authority,
-            timeout_seconds=_timeout_seconds(),
-            max_connections=_positive_int_env(
-                MAX_CONNECTIONS_ENV, default=DEFAULT_DEPENDENCY_MAX_CONNECTIONS
-            ),
-            max_keepalive_connections=_positive_int_env(
-                MAX_KEEPALIVE_CONNECTIONS_ENV,
-                default=DEFAULT_DEPENDENCY_MAX_KEEPALIVE_CONNECTIONS,
-            ),
-            pool_timeout_seconds=_positive_float_env(POOL_TIMEOUT_SECONDS_ENV, default=2.0),
-            retry_max_attempts=_positive_int_env(RETRY_MAX_ATTEMPTS_ENV, default=1),
-            retry_initial_backoff_seconds=_non_negative_float_env(
-                RETRY_INITIAL_BACKOFF_SECONDS_ENV, default=0.05
-            ),
-            retry_max_backoff_seconds=_non_negative_float_env(
-                RETRY_MAX_BACKOFF_SECONDS_ENV, default=0.5
-            ),
-        )
-    except DownstreamRealizationConfigurationError as exc:
-        raise DownstreamRealizationClientsUnavailableError(str(exc)) from exc
-
-
 def _advise_adapter_config(
     *,
     base_url_env: str,
