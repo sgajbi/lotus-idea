@@ -30,4 +30,7 @@ For partial RFC PRs, link GitHub issues without auto-close keywords. The PR and
 issue comment should say `Keep #<issue> open` and name the remaining evidence
 class until exact-main validation and QA-backed closure are ready. Run
 `make rfc0002-github-issue-execution-ledger-gate` when updating RFC-0002
-issue-tracking truth.
+issue-tracking truth. Run
+`make rfc0002-github-issue-execution-state-audit` after issue state or label
+changes, before quoting fixed/open counts, and before Slice 18 or Slice 20
+closure evidence.

@@ -1085,7 +1085,12 @@ must keep `allowPullRequestAutoClose=false` and a `Keep #<issue> open`
 instruction. Do not use `Closes`, `Fixes`, or `Resolves` in PR bodies or commit
 messages for those issues until the full evidence class and QA-backed closure
 criteria are satisfied. The `#690` reopen after PR `#707` is the current
-regression case this gate prevents.
+regression case this gate prevents. When current GitHub state itself is being
+used as delivery truth, run
+`make rfc0002-github-issue-execution-state-audit`; it compares the ledger with
+GitHub open/closed state and lifecycle labels so reopened, blocked,
+in-progress, merged-main-QA-pending, and closed-complete issue posture cannot
+drift silently.
 
 ## Observability And Operability
 
@@ -1836,6 +1841,13 @@ Recent issue-derived patterns to preserve:
     `make rfc0002-github-issue-execution-ledger-gate` before PR evidence is
     posted. Use explicit QA-backed closure after exact-main validation instead
     of relying on accidental merge-time closure.
+49. When issue state, labels, or fixed counts are used as RFC execution truth,
+    run `make rfc0002-github-issue-execution-state-audit` after any manual
+    reopen, close, or label correction. The audit catches ledger/GitHub state
+    drift such as active execution issues missing `status/in-progress`, blocked
+    issues missing `status/blocked`, merged-main-QA-pending issues missing
+    `status/merged-main`, or closed-complete issues losing terminal evidence
+    labels.
 
 Recent GitHub issue categories should keep being worked category-wise so
 repeated defect patterns are fixed once and pinned with tests or gates:
