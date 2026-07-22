@@ -109,7 +109,13 @@ documentation across opportunity signal APIs.
     control refs, future-agent guidance, and no-claim boundaries, so repeated
     GitHub issue patterns are handled before the next slice rather than being
     kept in chat memory.
-11. `docs/demo/README.md`, `docs/demo/client-demo-operating-process.md`,
+11. The caller-context contract gate now scans nested API route modules under
+    `src/app/api/**`, not only top-level API files. This promotes the #686
+    same-pattern lesson into deterministic enforcement: future route packages
+    such as review queues, outbox, and data-lifecycle operations cannot bypass
+    trusted-caller provenance forwarding or strict role-and-capability
+    authorization by moving into a nested module.
+12. `docs/demo/README.md`, `docs/demo/client-demo-operating-process.md`,
     `docs/demo/client-facing-lotus-idea-brief.md`,
     `docs/demo/client-demo-pack.template.md`, `docs/demo/demo-claims.md`, and
     `wiki/Demo-Readiness.md` now give client, sales, marketing, product,
