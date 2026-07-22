@@ -172,12 +172,7 @@ def _proof_artifact_input(
             proof_ref=proof_ref,
             repository_root=Path.cwd(),
         )
-    return ProofArtifactInput(
-        payload=payload,
-        path=path,
-        proof_ref=proof_ref,
-        ref_name=ref_name,
-    )
+    return ProofArtifactInput(payload=payload, path=path, proof_ref=proof_ref, ref_name=ref_name)
 
 
 def _opportunity_archetype_proof_artifact_inputs(

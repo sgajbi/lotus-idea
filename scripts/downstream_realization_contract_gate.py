@@ -96,35 +96,34 @@ _REQUIRED_REPORT_MATERIALIZATION_REQUEST_FIELDS = {
     "producer",
     "supportability_status",
 }
+_INTAKE_RECEIPT_OUTCOMES = ["ACCEPTED", "ACCEPTED_REPLAYED", "REJECTED"]
+_TRUSTED_SERVICE_HEADERS = {
+    "X-Actor-Id",
+    "X-Role",
+    "X-Tenant-Id",
+    "X-Legal-Entity-Code",
+    "X-Service-Identity",
+    "X-Capabilities",
+    "X-Principal-Status",
+}
 _EXPECTED_INTAKE_CONSUMERS = {
     "advise_proposal": {
         "owner_repository": "lotus-advise",
         "owner_route": "POST /advisory/proposals/idea-intake",
         "intent_type": "REVIEW_FOR_ADVISORY_PROPOSAL",
-        "receipt_outcomes": ["ACCEPTED", "ACCEPTED_REPLAYED", "REJECTED"],
+        "receipt_outcomes": _INTAKE_RECEIPT_OUTCOMES,
         "principal_capability": "advisory.idea_proposal_intake.accept",
         "local_dev_principal_source": "trusted_headers_until_production_idp_available",
-        "required_server_headers": {
-            "X-Actor-Id",
-            "X-Role",
-            "X-Tenant-Id",
-            "X-Legal-Entity-Code",
-            "X-Service-Identity",
-            "X-Capabilities",
-            "X-Principal-Status",
-        },
+        "required_server_headers": _TRUSTED_SERVICE_HEADERS,
     },
     "manage_review": {
         "owner_repository": "lotus-manage",
         "owner_route": "POST /api/v1/rebalance/idea-action-intake",
         "intent_type": "REVIEW_FOR_REBALANCE",
-        "required_server_headers": {
-            "X-Actor-Id",
-            "X-Role",
-            "X-Tenant-Id",
-            "X-Service-Identity",
-            "X-Capabilities",
-        },
+        "receipt_outcomes": _INTAKE_RECEIPT_OUTCOMES,
+        "principal_capability": "manage.idea_action_intake.accept",
+        "local_dev_principal_source": "trusted_headers_until_production_idp_available",
+        "required_server_headers": _TRUSTED_SERVICE_HEADERS,
     },
     "report_evidence": {
         "owner_repository": "lotus-report",
@@ -255,8 +254,8 @@ def _validate_downstream_intake_wire_contract(repository_root: Path) -> list[str
     errors: list[str] = []
     if payload.get("contract_id") != "lotus-idea-downstream-intake-wire-contract":
         errors.append("downstream intake wire contract has an unexpected contract_id")
-    if payload.get("contract_version") != "1.4.0":
-        errors.append("downstream intake wire contract must be version 1.4.0")
+    if payload.get("contract_version") != "1.5.0":
+        errors.append("downstream intake wire contract must be version 1.5.0")
     if payload.get("repository") != "lotus-idea":
         errors.append("downstream intake wire contract repository must be lotus-idea")
     if payload.get("lifecycle_status") != "development_only":
@@ -298,7 +297,7 @@ def _validate_downstream_intake_wire_contract(repository_root: Path) -> list[str
                 errors.append(f"{target} intake wire contract {field} drifted")
         if target != "report_evidence" and consumer.get("intent_type") != expected["intent_type"]:
             errors.append(f"{target} intake wire contract intent_type drifted")
-        if target == "advise_proposal":
+        if target != "report_evidence":
             for field in (
                 "receipt_outcomes",
                 "principal_capability",

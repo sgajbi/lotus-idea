@@ -9,7 +9,6 @@ from pathlib import Path
 import subprocess
 import sys
 from typing import Any
-from urllib import error, request
 
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
@@ -20,6 +19,12 @@ ensure_worktree_imports(__file__)
 from app.application.downstream_realization.manage_intake_runtime_execution import (  # noqa: E402
     build_manage_intake_runtime_execution_payload,
     source_safe_manage_receipt_digest,
+)
+from scripts.downstream_realization.intake_runtime_generator_common import (  # noqa: E402
+    body_get,
+    http_post,
+    idea_conversion_payload,
+    reason_codes,
 )
 
 try:
@@ -189,29 +194,40 @@ def _execute_http_service(base_url: str | None) -> dict[str, dict[str, Any]]:
         raise ValueError("--manage-base-url is required for http_service mode")
     endpoint = f"{base_url.rstrip('/')}{ROUTE_PATH}"
     calls = {
-        "accepted": _http_post(endpoint, _payload(), _headers()),
-        "acceptedReplay": _http_post(endpoint, _payload(), _headers()),
-        "rejected": _http_post(
+        "accepted": http_post(
             endpoint,
-            _payload(intent_type="CREATE_MANAGEMENT_ACTION_DRAFT"),
-            _headers(idempotency_key="idea-action-intake-proof-rejected"),
-        ),
-        "idempotencyConflict": _http_post(
-            endpoint,
-            _payload(conversion_intent_id="conversion_intent_changed"),
+            idea_conversion_payload(intent_type="REVIEW_FOR_REBALANCE"),
             _headers(),
         ),
-        "authorizationDenied": _http_post(
+        "acceptedReplay": http_post(
             endpoint,
-            _payload(),
+            idea_conversion_payload(intent_type="REVIEW_FOR_REBALANCE"),
+            _headers(),
+        ),
+        "rejected": http_post(
+            endpoint,
+            idea_conversion_payload(intent_type="CREATE_MANAGEMENT_ACTION_DRAFT"),
+            _headers(idempotency_key="idea-action-intake-proof-rejected"),
+        ),
+        "idempotencyConflict": http_post(
+            endpoint,
+            idea_conversion_payload(
+                intent_type="REVIEW_FOR_REBALANCE",
+                conversion_intent_id="conversion_intent_changed",
+            ),
+            _headers(),
+        ),
+        "authorizationDenied": http_post(
+            endpoint,
+            idea_conversion_payload(intent_type="REVIEW_FOR_REBALANCE"),
             _headers(
                 idempotency_key="idea-action-intake-proof-auth-denied",
                 capabilities="manage.rebalance.read",
             ),
         ),
-        "tenantScopedIdempotency": _http_post(
+        "tenantScopedIdempotency": http_post(
             endpoint,
-            _payload(),
+            idea_conversion_payload(intent_type="REVIEW_FOR_REBALANCE"),
             _headers(
                 idempotency_key="idea-action-intake-proof-001",
                 tenant_id="tenant-private-bank-hk",
@@ -222,88 +238,29 @@ def _execute_http_service(base_url: str | None) -> dict[str, dict[str, Any]]:
     return _source_safe_receipts(calls)
 
 
-def _http_post(
-    endpoint: str, payload: Mapping[str, Any], headers: Mapping[str, str]
-) -> dict[str, Any]:
-    encoded = json.dumps(payload).encode()
-    req = request.Request(
-        endpoint,
-        data=encoded,
-        headers={**dict(headers), "Content-Type": "application/json"},
-        method="POST",
-    )
-    try:
-        with request.urlopen(req, timeout=15) as response:
-            body = json.loads(response.read().decode())
-            return {"statusCode": response.status, "body": body}
-    except error.HTTPError as exc:
-        body = json.loads(exc.read().decode())
-        return {"statusCode": exc.code, "body": body}
-
-
 def _source_safe_receipts(raw: Mapping[str, Any]) -> dict[str, dict[str, Any]]:
     receipts: dict[str, dict[str, Any]] = {}
     for name, response in raw.items():
         body = response.get("body") if isinstance(response, Mapping) else {}
         receipt = {
             "statusCode": response.get("statusCode") if isinstance(response, Mapping) else None,
-            "intakeStatus": _body_get(body, "intake_status"),
-            "intakeReceiptAccepted": _body_get(body, "action_receipt_accepted"),
-            "idempotencyReplay": _body_get(body, "idempotency_replay"),
+            "intakeStatus": body_get(body, "intake_status"),
+            "intakeReceiptAccepted": body_get(body, "action_receipt_accepted"),
+            "idempotencyReplay": body_get(body, "idempotency_replay"),
             "receiptDigest": None,
-            "reasonCodes": _reason_codes(body),
-            "actionRegisterCreated": bool(_body_get(body, "action_register_created") or False),
+            "reasonCodes": reason_codes(body),
+            "actionRegisterCreated": bool(body_get(body, "action_register_created") or False),
             "rebalanceExecutionAuthorityGranted": bool(
-                _body_get(body, "rebalance_execution_authority_granted") or False
+                body_get(body, "rebalance_execution_authority_granted") or False
             ),
-            "orderCreated": bool(_body_get(body, "order_created") or False),
+            "orderCreated": bool(body_get(body, "order_created") or False),
             "clientPublicationAuthorized": bool(
-                _body_get(body, "client_publication_authorized") or False
+                body_get(body, "client_publication_authorized") or False
             ),
         }
         receipt["receiptDigest"] = source_safe_manage_receipt_digest(receipt)
         receipts[str(name)] = receipt
     return receipts
-
-
-def _body_get(body: object, key: str) -> object:
-    if isinstance(body, Mapping):
-        return body.get(key)
-    return None
-
-
-def _reason_codes(body: object) -> list[str]:
-    if not isinstance(body, Mapping):
-        return []
-    reason_codes = body.get("outcome_reason_codes")
-    if isinstance(reason_codes, list):
-        return [str(item) for item in reason_codes]
-    detail = body.get("detail")
-    if isinstance(detail, str):
-        return [detail]
-    return []
-
-
-def _payload(
-    *,
-    intent_type: str = "REVIEW_FOR_REBALANCE",
-    conversion_intent_id: str = "conversion_intent_001",
-) -> dict[str, Any]:
-    return {
-        "source_system": "lotus-idea",
-        "source_product": "lotus-idea:IdeaCandidate:v1",
-        "idea_candidate_id": "idea_candidate_001",
-        "conversion_intent_id": conversion_intent_id,
-        "intent_type": intent_type,
-        "source_refs": [
-            {
-                "source_system": "lotus-idea",
-                "source_type": "IdeaCandidate",
-                "source_id": "idea_candidate_001",
-                "content_hash": "sha256:abc123",
-            }
-        ],
-    }
 
 
 def _headers(

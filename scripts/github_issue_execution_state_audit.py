@@ -29,6 +29,7 @@ EXPECTED_OPEN_LABEL_BY_STATUS = {
     "open_blocked": "status/blocked",
     "open_in_progress": "status/in-progress",
     "open_fixed_local": "status/fixed-local",
+    "open_pr_raised": "status/pr-open",
     "open_merged_main_qa_pending": "status/merged-main",
     "open_tracker": "status/tracker",
 }

@@ -343,24 +343,13 @@ def _apply_available_downstream_proofs(
             downstream_contracts=downstream_contracts,
             proof_ref=advise_intake_runtime_execution_proof_ref,
         )
-    if (
-        proof_artifact_effect_matches_payload(
-            "manage_intake_runtime_execution_proof",
-            ProofArtifactEffect.BLOCKER_CLEARING,
-        )
-        and manage_intake_runtime_execution_proof
-        and manage_intake_runtime_execution_is_valid(manage_intake_runtime_execution_proof)
-        and aggregate_proof_artifact_is_current(
-            manage_intake_runtime_execution_proof,
-            evaluated_at_utc=evaluated_at_utc,
-            proof_ref=manage_intake_runtime_execution_proof_ref,
-        )
-    ):
-        capabilities, downstream_contracts = _apply_manage_intake_runtime_execution(
-            capabilities=capabilities,
-            downstream_contracts=downstream_contracts,
-            proof_ref=manage_intake_runtime_execution_proof_ref,
-        )
+    capabilities, downstream_contracts = _apply_manage_intake_proof_if_valid(
+        capabilities=capabilities,
+        downstream_contracts=downstream_contracts,
+        evaluated_at_utc=evaluated_at_utc,
+        proof=manage_intake_runtime_execution_proof,
+        proof_ref=manage_intake_runtime_execution_proof_ref,
+    )
     if (
         proof_artifact_effect_matches_payload(
             "report_intake_route_source_contract_proof",
@@ -410,6 +399,38 @@ def _apply_available_downstream_proofs(
             for contract in downstream_contracts
         )
     return capabilities, downstream_contracts
+
+
+def _apply_manage_intake_proof_if_valid(
+    *,
+    capabilities: tuple[DownstreamRealizationCapabilityReadiness, ...],
+    downstream_contracts: tuple[DownstreamRealizationContractReadiness, ...],
+    evaluated_at_utc: datetime,
+    proof: Mapping[str, object] | None,
+    proof_ref: str | None,
+) -> tuple[
+    tuple[DownstreamRealizationCapabilityReadiness, ...],
+    tuple[DownstreamRealizationContractReadiness, ...],
+]:
+    if not (
+        proof_artifact_effect_matches_payload(
+            "manage_intake_runtime_execution_proof",
+            ProofArtifactEffect.BLOCKER_CLEARING,
+        )
+        and proof
+        and manage_intake_runtime_execution_is_valid(proof)
+        and aggregate_proof_artifact_is_current(
+            proof,
+            evaluated_at_utc=evaluated_at_utc,
+            proof_ref=proof_ref,
+        )
+    ):
+        return capabilities, downstream_contracts
+    return _apply_manage_intake_runtime_execution(
+        capabilities=capabilities,
+        downstream_contracts=downstream_contracts,
+        proof_ref=proof_ref,
+    )
 
 
 def _apply_advise_intake_runtime_execution(
