@@ -1011,6 +1011,10 @@ def _conversion_intent_headers(idempotency_key: str) -> dict[str, str]:
     return {
         "X-Caller-Subject": "advisor-001",
         "X-Caller-Capabilities": "idea.conversion.intent.record",
+        "X-Caller-Tenant-Ids": "tenant-private-bank-sg",
+        "X-Caller-Book-Ids": "book-advisor-001",
+        "X-Caller-Portfolio-Ids": "PB_SG_GLOBAL_BAL_001",
+        "X-Caller-Client-Ids": "client-001",
         "X-Correlation-Id": "corr-postgres-runtime-proof-conversion-intent",
         "X-Trace-Id": "trace-postgres-runtime-proof-conversion-intent",
         "Idempotency-Key": idempotency_key,
