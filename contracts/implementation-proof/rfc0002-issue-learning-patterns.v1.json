@@ -77,7 +77,7 @@
     {
       "patternId": "downstream_owner_runtime_proof_boundary",
       "title": "Core, Advise, Manage, Report, Render, and Archive handoffs require owner runtime or materialization evidence before blockers clear.",
-      "currentLedgerIssueNumbers": [482, 379, 675, 676, 689, 690, 691],
+      "currentLedgerIssueNumbers": [482, 379, 675, 676, 690, 691],
       "relatedIssueNumbers": [792, 437, 438, 449, 456, 688],
       "rfcSlices": ["slice-09", "slice-12", "slice-13", "slice-17"],
       "durableControls": [

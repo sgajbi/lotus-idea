@@ -245,10 +245,10 @@
       "issueNumber": 689,
       "url": "https://github.com/sgajbi/lotus-idea/issues/689",
       "rfcSlices": ["slice-12"],
-      "githubState": "open",
-      "executionStatus": "open_pr_raised",
-      "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #689 open until the Idea-side Manage action-intake runtime proof PR is merged, exact-main validation confirms manage_live_contract_proof_missing is cleared by bounded Manage receipt evidence, and residual action-register persistence, rebalance execution authority, source-temporal metadata, production identity, client-publication, and supported-feature blockers remain issue-linked."
+      "githubState": "closed",
+      "executionStatus": "closed_complete",
+      "allowPullRequestAutoClose": true,
+      "closureInstruction": "Closed #689 after PR #721 merged to main at c884708285cf19d8862f8c360ea4130ffed375a3, exact-main Main Releasability run 29962877972 and CodeQL run 29962873603 passed, wiki source was published with strict DiffCount 0, branch cleanup completed, and aggregate readiness clears only manage_live_contract_proof_missing while action-register persistence, rebalance execution authority, source-temporal metadata, production identity, client-publication, and supported-feature blockers remain issue-linked."
     },
     {
       "issueNumber": 690,

@@ -192,13 +192,14 @@ def test_github_issue_execution_state_audit_rejects_missing_status_label(
     )
 
 
-def test_github_issue_execution_state_audit_accepts_pr_open_status_label() -> None:
+def test_github_issue_execution_state_audit_accepts_merged_main_status_label() -> None:
     module = _load_audit()
     ledger = _load_ledger()
     github_payload = _github_issue_payload(ledger)
     issue_689 = next(issue for issue in github_payload if issue["number"] == 689)
 
-    assert {"name": "status/pr-open"} in issue_689["labels"]
+    assert issue_689["state"] == "CLOSED"
+    assert {"name": "status/merged-main"} in issue_689["labels"]
     github_issues = module._parse_github_issue_states(github_payload)
     assert module.audit_github_issue_execution_state(github_issues=github_issues) == []
 
