@@ -211,14 +211,23 @@ def _manage_contract_payload() -> dict[str, object]:
         "lifecycle_status": "implemented",
         "supportability_status": "not_certified",
         "route_existence_proven": True,
+        "runtime_action_receipt_proven": True,
         "downstream_execution_proven": False,
         "supported_feature_promoted": False,
         "target_route": MANAGE_ACTION_ROUTE,
+        "receipt_outcomes": ["ACCEPTED", "ACCEPTED_REPLAYED", "REJECTED"],
+        "principal_capability": "manage.idea_action_intake.accept",
+        "local_dev_principal_source": "trusted_headers_until_production_idp_available",
         "non_proof_boundaries": [
-            "Proves only a live route foundation for source-safe lotus-idea action intake.",
-            "Does not grant suitability, mandate approval, or client-communication authority.",
-            "Does not create orders, execution instructions, fills, or settlement records.",
-            "Does not promote a supported feature in lotus-manage or lotus-idea.",
+            "Proves a live executable action-intake receipt for lotus-idea "
+            "conversion-intent handoff into lotus-manage, including accepted, replayed, "
+            "rejected, and idempotency-conflict behavior.",
+            "Does not grant suitability, mandate, rebalance, order, OMS, fill, settlement, "
+            "or client-communication authority.",
+            "Does not create orders, action-register records, execution instructions, fills, "
+            "settlement records, or client messages.",
+            "Does not promote a supported feature, client-ready workflow, data-product "
+            "certification, or downstream execution proof.",
         ],
         "certification_blockers": list(REQUIRED_MANAGE_PRODUCER_CERTIFICATION_BLOCKERS),
     }

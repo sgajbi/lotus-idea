@@ -1314,7 +1314,13 @@ SHA-256. Aggregate and downstream readiness may attach a valid current artifact
 as supporting evidence, but must preserve `advise_live_contract_proof_missing`
 and `manage_live_contract_proof_missing` until an owning runtime supplies a
 governed serving-and-acceptance receipt. Do not infer route execution from
-source files, Make targets, or sibling contract status.
+source files, Make targets, or sibling contract status. Validate each producer
+with its own domain vocabulary: Advise uses
+`runtime_intake_receipt_proven` and
+`advisory.idea_proposal_intake.accept`; Manage uses
+`runtime_action_receipt_proven` and `manage.idea_action_intake.accept`. Do not
+force one sibling's receipt-field names or narrative phrases onto another
+producer contract.
 
 Current repo-native aggregate command posture:
 
@@ -1774,9 +1780,10 @@ Recent issue-derived patterns to preserve:
 44. A sibling Report materialization contract is also `source_contract`
     evidence, even when that sibling contract declares an implemented route or
     records report-owned execution claims. Keep this family under the
-    capability-owned `report/` application, script, and test packages. The v2
-    artifact may add a source-safe evidence reference, but it clears no blocker
-    and must preserve materialization execution, rendered-output creation,
+    capability-owned `report/` application, script, and test packages. The v3
+    artifact may add a source-safe evidence reference and must link the closed
+    Report owner proof `sgajbi/lotus-report#152`, but it clears no blocker and
+    must preserve materialization execution, rendered-output creation,
     archive-record creation, retention/legal-hold, client-publication,
     certification, and promotion posture. Its validator rejects additional
     runtime or authority claim fields. Only machine-verifiable execution

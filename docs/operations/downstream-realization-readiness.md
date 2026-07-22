@@ -121,9 +121,9 @@ request-acceptance, downstream-record, or supportability blockers:
 | Proof | Blocker it may clear | Boundaries that remain |
 | --- | --- | --- |
 | Advise route source contract | None | The owner contract declares a live executable intake receipt boundary and bounded receipt outcomes, but Idea still needs governed runtime submission evidence before `advise_live_contract_proof_missing` can clear. Suitability and proposal authority remain with `lotus-advise`. |
-| Manage route source contract | None | Source declarations do not prove serving, authorization, tenant isolation, request acceptance, or a downstream action record. Rebalance/execution authority remains with `lotus-manage`. |
+| Manage route source contract | None | The source contract must use Manage-native action-intake vocabulary (`runtime_action_receipt_proven`, `manage.idea_action_intake.accept`, bounded `ACCEPTED` / `ACCEPTED_REPLAYED` / `REJECTED` receipts). Source declarations still do not prove serving, authorization, tenant isolation, request acceptance, or a downstream action record. Rebalance/execution authority remains with `lotus-manage`. |
 | Report intake route source contract | None | `lotus_report_live_intake_route_proof_missing` remains, together with report materialization, render output, archive record creation, client publication, and supported-feature promotion boundaries owned by Report/Render/Archive. |
-| Report materialization source contract | None | Materialization execution, rendered output creation, archive record creation, client publication, and supported-feature promotion remain blocked; `lotus-report`, `lotus-render`, and `lotus-archive` retain downstream authority. |
+| Report materialization source contract | None | The v3 artifact links the closed Report owner proof `sgajbi/lotus-report#152` as provenance while preserving materialization execution, rendered output creation, archive record creation, client publication, and supported-feature blockers; `lotus-report`, `lotus-render`, and `lotus-archive` retain downstream authority. |
 
 `make downstream-realization-contract-gate` blocks:
 

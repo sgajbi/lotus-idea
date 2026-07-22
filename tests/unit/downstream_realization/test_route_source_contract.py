@@ -194,6 +194,27 @@ def test_advise_contract_requires_current_intake_receipt_boundary(
     assert advise_route_source_contract_is_valid(payload) is False
 
 
+@pytest.mark.parametrize(
+    "field",
+    ["runtime_action_receipt_proven", "receipt_outcomes", "principal_capability"],
+)
+def test_manage_contract_requires_current_action_intake_receipt_boundary(
+    tmp_path: Path, field: str
+) -> None:
+    root = _write_fixture(tmp_path, "manage")
+    contract_path = root / MANAGE_ROUTE_PROFILE.contract_path
+    contract = json.loads(contract_path.read_text(encoding="utf-8"))
+    contract.pop(field)
+    contract_path.write_text(json.dumps(contract), encoding="utf-8")
+
+    payload = build_manage_route_source_contract_payload(
+        generated_at_utc=GENERATED_AT, repository_root=ROOT, manage_root=root
+    )
+
+    assert payload["sourceContractValid"] is False
+    assert manage_route_source_contract_is_valid(payload) is False
+
+
 @pytest.mark.parametrize("family", ["advise", "manage"])
 def test_contract_allows_additional_producer_certification_blockers(
     tmp_path: Path, family: str
@@ -404,6 +425,22 @@ def _contract_payload(family: str) -> dict[str, object]:
             "Does not create orders, advisory proposal lifecycle records, suitability "
             "decisions, approvals, execution instructions, fills, settlement records, or "
             "client messages.",
+            "Does not promote a supported feature, client-ready workflow, data-product "
+            "certification, or downstream execution proof.",
+        ]
+    else:
+        payload["runtime_action_receipt_proven"] = True
+        payload["receipt_outcomes"] = ["ACCEPTED", "ACCEPTED_REPLAYED", "REJECTED"]
+        payload["principal_capability"] = "manage.idea_action_intake.accept"
+        payload["local_dev_principal_source"] = "trusted_headers_until_production_idp_available"
+        payload["non_proof_boundaries"] = [
+            "Proves a live executable action-intake receipt for lotus-idea "
+            "conversion-intent handoff into lotus-manage, including accepted, replayed, "
+            "rejected, and idempotency-conflict behavior.",
+            "Does not grant suitability, mandate, rebalance, order, OMS, fill, settlement, "
+            "or client-communication authority.",
+            "Does not create orders, action-register records, execution instructions, fills, "
+            "settlement records, or client messages.",
             "Does not promote a supported feature, client-ready workflow, data-product "
             "certification, or downstream execution proof.",
         ]
