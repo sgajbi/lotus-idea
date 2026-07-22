@@ -83,10 +83,10 @@
       "issueNumber": 482,
       "url": "https://github.com/sgajbi/lotus-idea/issues/482",
       "rfcSlices": ["slice-09"],
-      "githubState": "open",
-      "executionStatus": "open_in_progress",
-      "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #482 open until the supported Core bond-maturity empty-window receipt maps to not_eligible/below_materiality on exact main and a fresh Core-backed consumer proof passes."
+      "githubState": "closed",
+      "executionStatus": "closed_complete",
+      "allowPullRequestAutoClose": true,
+      "closureInstruction": "Closed #482 after PR #717 merged to exact Idea main 48cd175ffb18117e379ec698ca226fdaab1d88b5, Main Releasability 29944662113 and CodeQL 29944655544 passed, strict wiki parity confirmed no authored wiki drift, branch cleanup completed, and fresh Core-backed consumer proof on 2026-07-23 showed the supported empty PortfolioMaturitySummary:v1 window maps to no-opportunity while removing only opportunity_archetype_maturity_live_core_source_proof_missing."
     },
     {
       "issueNumber": 542,
