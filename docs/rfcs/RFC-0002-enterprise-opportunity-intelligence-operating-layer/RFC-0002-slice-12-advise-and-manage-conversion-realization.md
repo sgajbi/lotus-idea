@@ -1,6 +1,6 @@
 # RFC-0002 Slice 12: Advise And Manage Conversion Realization
 
-Status: Partially implemented - internal conversion governance, source-versioned outcome lifecycle and correction policy, atomic repository-provider parity, durable claim-before-call submission and operator reconciliation, certified API/current-posture foundation, source-safe adapter foundations, governed downstream contract-plan gate, digest-bound Advise/Manage route source-contract consumption, and bounded Advise idea-intake runtime-execution proof consumption; suitability, Manage runtime execution, Report/Render/Archive materialization, production identity, and supported product proof remain blocked
+Status: Partially implemented - internal conversion governance, source-versioned outcome lifecycle and correction policy, atomic repository-provider parity, durable claim-before-call submission and operator reconciliation, certified API/current-posture foundation, source-safe adapter foundations, governed downstream contract-plan gate, digest-bound Advise/Manage route source-contract consumption, bounded Advise idea-intake runtime-execution proof consumption, and bounded Manage action-intake runtime-execution proof consumption; suitability, Manage action-register persistence/rebalance execution, Report/Render/Archive materialization, production identity, and supported product proof remain blocked
 
 ## Outcome
 
@@ -189,11 +189,13 @@ Implemented in this slice:
 28. `contracts/downstream-realization/lotus-idea-downstream-intake-wire-contract.v1.json`
     pins the exact Advise and Manage consumer payloads. Advise receives its
     owner-defined snake-case intake fields; Manage receives the same bounded
-    payload plus a server-side local/test fixture for its required service
-    context headers. `src/app/runtime/downstream_realization_state.py` rejects
+    payload, bounded `ACCEPTED` / `ACCEPTED_REPLAYED` / `REJECTED` receipt
+    outcomes, `manage.idea_action_intake.accept` capability, and a server-side
+    local/test fixture for its required service context headers.
+    `src/app/runtime/downstream_realization_state.py` rejects
     that fixture outside local/test profiles, and the adapter never forwards
     browser identity data. This is not IdP, session, or token-claim mapping and
-    does not provide downstream business authority or live acceptance proof.
+    does not provide downstream business authority.
 29. `src/app/application/downstream_realization/advise_intake_runtime_execution.py`,
     `scripts/downstream_realization/generate_advise_intake_runtime_execution.py`,
     `scripts/downstream_realization/advise_intake_runtime_execution_gate.py`,
@@ -214,6 +216,29 @@ Implemented in this slice:
     digest binding, artifact loading, CLI wiring, API propagation, blocker
     mutation, and retained non-proof claims for suitability, proposal lifecycle,
     production identity, client publication, and supported-feature promotion.
+31. `src/app/application/downstream_realization/manage_intake_runtime_execution.py`,
+    `scripts/downstream_realization/generate_manage_intake_runtime_execution.py`,
+    `scripts/downstream_realization/manage_intake_runtime_execution_gate.py`, and
+    `make manage-intake-runtime-execution-proof-gate` now define a closed-field,
+    source-safe `runtime_execution` proof for the Manage owner route
+    `POST /api/v1/rebalance/idea-action-intake`. The proof observes bounded
+    accepted, replayed, rejected, idempotency-conflict, authorization-denied,
+    and tenant-scoped idempotency receipts through local ASGI or configured HTTP
+    service execution, binds exact current Manage source-authority digests, and
+    stores only bounded receipt posture plus canonical receipt digests.
+    Aggregate and downstream readiness can use a valid current artifact to
+    clear only `manage_live_contract_proof_missing`.
+32. `tests/unit/downstream_realization/test_manage_intake_runtime_execution.py`,
+    `tests/unit/test_downstream_realization_readiness.py`,
+    `tests/unit/test_implementation_proof_readiness.py`,
+    `tests/unit/test_generate_implementation_proof_readiness.py`,
+    `tests/unit/test_proof_artifacts.py`, `tests/unit/test_ci_contract_gate.py`,
+    and `tests/unit/test_repository_hygiene_gate.py` prove fail-closed receipt
+    validation, digest binding, artifact loading, CLI wiring, API propagation,
+    blocker mutation, bounded module placement, CI readiness wiring, and
+    retained non-proof claims for rebalance execution authority,
+    action-register persistence, order/OMS execution, production identity,
+    client publication, and supported-feature promotion.
 
 ## Issue 326 Outcome Lifecycle Hardening
 

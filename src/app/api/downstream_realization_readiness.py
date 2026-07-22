@@ -23,6 +23,9 @@ from app.application.downstream_realization_readiness import (
 from app.application.downstream_realization.advise_intake_runtime_execution import (
     load_advise_intake_runtime_execution_from_env,
 )
+from app.application.downstream_realization.manage_intake_runtime_execution import (
+    load_manage_intake_runtime_execution_from_env,
+)
 from app.application.report.intake_route_source_contract import (
     load_report_intake_route_source_contract_proof_from_env,
 )
@@ -205,6 +208,9 @@ async def get_downstream_realization_readiness(
     advise_intake_runtime_execution_proof, advise_intake_runtime_execution_proof_ref = (
         load_advise_intake_runtime_execution_from_env()
     )
+    manage_intake_runtime_execution_proof, manage_intake_runtime_execution_proof_ref = (
+        load_manage_intake_runtime_execution_from_env()
+    )
     report_intake_route_source_contract_proof, report_intake_route_source_contract_proof_ref = (
         load_report_intake_route_source_contract_proof_from_env()
     )
@@ -213,6 +219,8 @@ async def get_downstream_realization_readiness(
         durable_storage_backed=durable_storage_backed,
         advise_intake_runtime_execution_proof=advise_intake_runtime_execution_proof,
         advise_intake_runtime_execution_proof_ref=advise_intake_runtime_execution_proof_ref,
+        manage_intake_runtime_execution_proof=manage_intake_runtime_execution_proof,
+        manage_intake_runtime_execution_proof_ref=manage_intake_runtime_execution_proof_ref,
         report_intake_route_source_contract_proof=report_intake_route_source_contract_proof,
         report_intake_route_source_contract_proof_ref=report_intake_route_source_contract_proof_ref,
     )

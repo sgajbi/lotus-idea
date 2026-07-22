@@ -43,6 +43,7 @@ from tests.unit.downstream_submission_helpers import (
 from tests.unit.downstream_realization.fixtures import (
     valid_advise_intake_runtime_execution,
     valid_advise_route_source_contract,
+    valid_manage_intake_runtime_execution,
     valid_manage_route_source_contract,
 )
 from tests.support.proof_provenance import bound_aggregate_proof as _bound_aggregate_proof
@@ -554,6 +555,46 @@ def test_advise_intake_runtime_execution_clears_only_advise_live_blocker() -> No
     assert "advise_live_contract_proof_missing" not in advise_contract.blockers
     assert "suitability_policy_authority_remains_lotus_advise" in advise_contract.blockers
     assert proof_ref in advise_contract.evidence_refs
+
+
+def test_manage_intake_runtime_execution_clears_only_manage_live_blocker() -> None:
+    proof_ref = "output/downstream/manage-intake-runtime-execution-proof.json"
+    snapshot = build_downstream_realization_readiness_snapshot(
+        repository=InMemoryIdeaRepository(),
+        durable_storage_backed=False,
+        evaluated_at_utc=datetime(2026, 7, 22, 0, 0, tzinfo=UTC),
+        manage_intake_runtime_execution_proof=_bound_aggregate_proof(
+            valid_manage_intake_runtime_execution(),
+            proof_ref,
+        ),
+        manage_intake_runtime_execution_proof_ref=proof_ref,
+    )
+
+    assert "manage_live_contract_proof_missing" not in snapshot.blockers
+    assert "rebalance_execution_authority_remains_lotus_manage" in snapshot.blockers
+    assert "advise_live_contract_proof_missing" in snapshot.blockers
+    assert "report_evidence_pack_live_materialization_proof_missing" in snapshot.blockers
+    assert snapshot.readiness_status == "blocked"
+    assert snapshot.supportability_status == "not_certified"
+    assert snapshot.supported_feature_promoted is False
+    manage_capability = next(
+        capability
+        for capability in snapshot.capabilities
+        if capability.capability_id == "manage-action-realization"
+    )
+    assert "manage_live_contract_proof_missing" not in manage_capability.blockers
+    assert "rebalance_execution_authority_remains_lotus_manage" in manage_capability.blockers
+    assert proof_ref in manage_capability.evidence_refs
+    manage_contract = next(
+        contract
+        for contract in snapshot.downstream_contracts
+        if contract.contract_id == "lotus-idea-to-lotus-manage-action-intake:v1"
+    )
+    assert manage_contract.target_route == MANAGE_ACTION_ROUTE
+    assert manage_contract.route_fit_status == "route_foundation_proven_not_certified"
+    assert "manage_live_contract_proof_missing" not in manage_contract.blockers
+    assert "rebalance_execution_authority_remains_lotus_manage" in manage_contract.blockers
+    assert proof_ref in manage_contract.evidence_refs
 
 
 def test_advise_intake_runtime_execution_requires_clean_aggregate_provenance() -> None:

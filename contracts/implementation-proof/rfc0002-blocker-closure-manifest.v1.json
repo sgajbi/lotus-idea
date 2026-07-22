@@ -212,19 +212,13 @@
       "sliceIds": ["RFC-0002/slice-12", "RFC-0002/slice-16", "RFC-0002/slice-17"],
       "requiredEvidenceClass": "runtime_execution",
       "closureStatus": "external_dependency_open",
-      "supportedFeatureEffect": "no_promotion_until_manage_action_and_mandate_receipts_are_current",
+      "supportedFeatureEffect": "no_promotion_until_manage_action_register_persistence_rebalance_authority_and_mandate_receipts_are_current",
       "ownerIssue": {
         "repository": "sgajbi/lotus-idea",
         "number": 689,
         "url": "https://github.com/sgajbi/lotus-idea/issues/689"
       },
       "dependencyIssues": [
-        {
-          "repository": "sgajbi/lotus-manage",
-          "number": 621,
-          "url": "https://github.com/sgajbi/lotus-manage/issues/621",
-          "dependencyRole": "Manage conversion-intake and action-register runtime persistence proof"
-        },
         {
           "repository": "sgajbi/lotus-manage",
           "number": 620,

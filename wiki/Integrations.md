@@ -255,7 +255,14 @@ replayed, rejected, idempotency-conflict, authorization-denied, and
 tenant-scoped idempotency receipts from the Advise owner route. Suitability,
 mandate/rebalance authority, execution, report evidence-pack materialization,
 rendered output, archive record creation, client-publication authority, and
-supported-feature promotion remain blocked.
+supported-feature promotion remain blocked. The separate Manage action-intake
+runtime-execution artifact is also `runtime_execution` evidence and can clear
+only `manage_live_contract_proof_missing` after it observes source-safe
+accepted, replayed, rejected, idempotency-conflict, authorization-denied, and
+tenant-scoped idempotency receipts from the Manage owner route. It does not
+create action-register records, grant rebalance or execution authority, create
+orders, authorize client publication, certify production identity, or promote
+support.
 
 ## Conversion Boundaries
 

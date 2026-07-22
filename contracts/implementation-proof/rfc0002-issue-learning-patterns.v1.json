@@ -95,6 +95,14 @@
         },
         {
           "type": "gate",
+          "ref": "scripts/downstream_realization/generate_manage_intake_runtime_execution.py"
+        },
+        {
+          "type": "gate",
+          "ref": "scripts/downstream_realization/manage_intake_runtime_execution_gate.py"
+        },
+        {
+          "type": "gate",
           "ref": "scripts/report/generate_intake_route_source_contract.py"
         },
         {
@@ -106,7 +114,7 @@
           "ref": "REPOSITORY-ENGINEERING-CONTEXT.md#cross-repository-source-truth-and-localtest-fixtures"
         }
       ],
-      "futureAgentRule": "Classify each downstream artifact by evidence class first: source-contract evidence can support readiness, but only accepted runtime receipts or owner materialization records can clear live execution, render, archive, or publication blockers.",
+      "futureAgentRule": "Classify each downstream artifact by evidence class first: source-contract evidence can support readiness, but only accepted owner runtime receipts or owner materialization records can clear live execution, render, archive, or publication blockers. For Manage, bounded action-intake receipts may clear only the live-route blocker and must preserve action-register, rebalance, order, publication, production, and support blockers.",
       "nonClaimBoundaries": [
         "Idea owns opportunity intent and evidence-pack request posture, not suitability approval, rebalance execution, report rendering, archive retention, or client publication.",
         "Quarantined or fixture-backed outcome history is diagnostic and does not certify downstream persistence."

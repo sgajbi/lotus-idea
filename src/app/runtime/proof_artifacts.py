@@ -19,6 +19,9 @@ from app.application.bond_maturity_runtime_evidence import BOND_MATURITY_RUNTIME
 from app.application.downstream_realization.advise_intake_runtime_execution import (
     ADVISE_INTAKE_RUNTIME_EXECUTION_ENV,
 )
+from app.application.downstream_realization.manage_intake_runtime_execution import (
+    MANAGE_INTAKE_RUNTIME_EXECUTION_ENV,
+)
 from app.application.durable_repository_proof import DURABLE_REPOSITORY_PROOF_ENV
 from app.application.workbench.contract_proof import (
     GATEWAY_WORKBENCH_CONTRACT_PROOF_ENV,
@@ -83,6 +86,8 @@ class ConfiguredImplementationProofArtifacts:
     ai_workflow_pack_runtime_execution_proof_ref: str | None
     advise_intake_runtime_execution_proof: dict[str, Any] | None
     advise_intake_runtime_execution_proof_ref: str | None
+    manage_intake_runtime_execution_proof: dict[str, Any] | None
+    manage_intake_runtime_execution_proof_ref: str | None
     outbox_broker_source_contract_proof: dict[str, Any] | None
     outbox_broker_source_contract_proof_ref: str | None
     outbox_platform_mesh_event_source_contract_proof: dict[str, Any] | None
@@ -170,6 +175,12 @@ _JSON_PROOF_ARTIFACTS: tuple[tuple[str, str, str, str], ...] = (
         "advise_intake_runtime_execution_proof",
         "advise_intake_runtime_execution_proof_ref",
         "Advise idea-intake runtime execution proof",
+    ),
+    (
+        MANAGE_INTAKE_RUNTIME_EXECUTION_ENV,
+        "manage_intake_runtime_execution_proof",
+        "manage_intake_runtime_execution_proof_ref",
+        "Manage idea action-intake runtime execution proof",
     ),
     (
         OUTBOX_BROKER_SOURCE_CONTRACT_PROOF_ENV,

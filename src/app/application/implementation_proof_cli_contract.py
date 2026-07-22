@@ -24,6 +24,9 @@ from app.application.downstream_realization.route_source_contract import (
 from app.application.downstream_realization.advise_intake_runtime_execution import (
     ADVISE_INTAKE_RUNTIME_EXECUTION_ENV,
 )
+from app.application.downstream_realization.manage_intake_runtime_execution import (
+    MANAGE_INTAKE_RUNTIME_EXECUTION_ENV,
+)
 from app.application.durable_repository_proof import DURABLE_REPOSITORY_PROOF_ENV
 from app.application.workbench.discovery_contract_proof import (
     GATEWAY_WORKBENCH_DISCOVERY_CONTRACT_PROOF_ENV,
@@ -157,6 +160,11 @@ PROOF_ARTIFACT_ARGS: tuple[tuple[str, str, str], ...] = (
         "--manage-action-route-source-contract-proof",
         MANAGE_ROUTE_SOURCE_CONTRACT_ENV,
         "Optional digest-bound lotus-manage route source-contract artifact path.",
+    ),
+    (
+        "--manage-intake-runtime-execution-proof",
+        MANAGE_INTAKE_RUNTIME_EXECUTION_ENV,
+        "Optional lotus-manage idea action-intake runtime execution proof artifact path.",
     ),
     (
         "--report-intake-route-source-contract-proof",
