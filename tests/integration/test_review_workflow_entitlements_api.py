@@ -6,6 +6,9 @@ from tests.support.http import managed_test_client
 from app.main import app
 from app.runtime.repository_state import reset_idea_repository_for_tests
 from tests.integration.test_review_workflow_api import (
+    approve_candidate_for_conversion,
+    conversion_intent_headers,
+    conversion_intent_payload,
     feedback_headers,
     feedback_payload,
     persisted_candidate_id,
@@ -106,6 +109,42 @@ def test_feedback_api_enforces_trusted_caller_entitlement_scope() -> None:
     assert self_asserted.status_code == 400
     assert self_asserted.json()["code"] == "invalid_request"
     assert "PB_SG_DIFFERENT_999" not in self_asserted.text
+
+
+def test_conversion_intent_api_enforces_trusted_caller_entitlement_scope() -> None:
+    reset_idea_repository_for_tests()
+    client = managed_test_client(app)
+    candidate_id = persisted_candidate_id(client, idempotency_key="seed-conversion-scope-001")
+    approve_candidate_for_conversion(client, candidate_id)
+    missing_entitlements = conversion_intent_headers("conversion-intent-missing-entitlements-001")
+    for header_name in (
+        "X-Caller-Tenant-Ids",
+        "X-Caller-Book-Ids",
+        "X-Caller-Portfolio-Ids",
+        "X-Caller-Client-Ids",
+    ):
+        missing_entitlements.pop(header_name)
+    mismatched_entitlements = conversion_intent_headers(
+        "conversion-intent-mismatched-entitlements-001"
+    )
+    mismatched_entitlements["X-Caller-Portfolio-Ids"] = "PB_SG_DIFFERENT_999"
+
+    missing = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/conversion-intents",
+        json=conversion_intent_payload(),
+        headers=missing_entitlements,
+    )
+    mismatched = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/conversion-intents",
+        json=conversion_intent_payload(),
+        headers=mismatched_entitlements,
+    )
+
+    assert missing.status_code == 403
+    assert missing.json()["code"] == "permission_denied"
+    assert mismatched.status_code == 403
+    assert mismatched.json()["code"] == "permission_denied"
+    assert "PB_SG_DIFFERENT_999" not in mismatched.text
 
 
 @pytest.mark.parametrize("mutation", ("review", "feedback"))

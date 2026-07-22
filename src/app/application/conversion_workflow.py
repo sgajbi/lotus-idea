@@ -16,6 +16,7 @@ from app.domain import (
     record_conversion_outcome,
     request_conversion_intent,
 )
+from app.domain.access_scope import QueueAccessScopeFilter
 from app.ports.idea_repository import (
     ConversionIntentWorkflowRepository,
     ConversionOutcomeWorkflowRepository,
@@ -27,6 +28,7 @@ class RequestConversionIntentToRepositoryCommand:
     candidate_id: str
     conversion: ConversionIntentCommand
     idempotency_key: str
+    access_scope_filter: QueueAccessScopeFilter | None = None
     event_lineage: EventLineageContext | None = None
 
     def __post_init__(self) -> None:
@@ -60,6 +62,10 @@ class ConversionOutcomeWorkflowResult:
     persistence: ConversionPersistenceResult
 
 
+class ConversionAccessScopeDenied(Exception):
+    """Raised when caller entitlements do not cover the target candidate scope."""
+
+
 def request_conversion_intent_to_repository(
     command: RequestConversionIntentToRepositoryCommand,
     *,
@@ -74,6 +80,10 @@ def request_conversion_intent_to_repository(
                 record=None,
             ),
         )
+    if command.access_scope_filter is None or not command.access_scope_filter.matches(
+        record.candidate.access_scope
+    ):
+        raise ConversionAccessScopeDenied
 
     payload = _conversion_intent_payload(command)
     prechecked = repository.precheck_conversion_mutation(

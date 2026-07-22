@@ -37,6 +37,7 @@ from app.api.problem_details import (
 )
 from app.api.route_metadata import RouteMetadata
 from app.application.conversion_workflow import (
+    ConversionAccessScopeDenied,
     record_conversion_outcome_to_repository,
     request_conversion_intent_to_repository,
 )
@@ -84,6 +85,10 @@ async def record_conversion_intent(
     x_caller_subject: str | None = Header(default=None, alias="X-Caller-Subject"),
     x_caller_roles: str | None = Header(default=None, alias="X-Caller-Roles"),
     x_caller_capabilities: str | None = Header(default=None, alias="X-Caller-Capabilities"),
+    x_caller_tenant_ids: str | None = Header(default=None, alias="X-Caller-Tenant-Ids"),
+    x_caller_book_ids: str | None = Header(default=None, alias="X-Caller-Book-Ids"),
+    x_caller_portfolio_ids: str | None = Header(default=None, alias="X-Caller-Portfolio-Ids"),
+    x_caller_client_ids: str | None = Header(default=None, alias="X-Caller-Client-Ids"),
     x_lotus_trusted_caller_context: str | None = Header(
         default=None,
         alias=TRUSTED_CALLER_CONTEXT_HEADER,
@@ -96,11 +101,16 @@ async def record_conversion_intent(
                 subject=x_caller_subject,
                 roles=x_caller_roles,
                 capabilities=x_caller_capabilities,
+                tenant_ids=x_caller_tenant_ids,
+                book_ids=x_caller_book_ids,
+                portfolio_ids=x_caller_portfolio_ids,
+                client_ids=x_caller_client_ids,
                 trusted_caller_context=x_lotus_trusted_caller_context,
             ),
             capability=_CONVERSION_INTENT_CAPABILITY,
             idempotency_key=idempotency_key,
             operation=IdeaOperation.CONVERSION_INTENT,
+            require_complete_entitlement_scope=True,
         )
         if isinstance(context, JSONResponse):
             return context
@@ -109,6 +119,7 @@ async def record_conversion_intent(
                 candidate_id=candidate_id,
                 caller=context.caller,
                 idempotency_key=idempotency_key,
+                access_scope_filter=context.access_scope_filter,
                 event_lineage=event_lineage_from_request(
                     http_request,
                     causation_id=x_causation_id,
@@ -120,14 +131,21 @@ async def record_conversion_intent(
         emit_conversion_operation_event(
             IdeaOperation.CONVERSION_INTENT,
             OperationOutcome.PERMISSION_DENIED,
-            "permission_denied",
+            error_code="permission_denied",
+        )
+        return permission_denied("The caller is not permitted to record idea conversion intents.")
+    except ConversionAccessScopeDenied:
+        emit_conversion_operation_event(
+            IdeaOperation.CONVERSION_INTENT,
+            OperationOutcome.PERMISSION_DENIED,
+            error_code="permission_denied",
         )
         return permission_denied("The caller is not permitted to record idea conversion intents.")
     except InvalidConversionIntent:
         emit_conversion_operation_event(
             IdeaOperation.CONVERSION_INTENT,
             OperationOutcome.INVALID_STATE,
-            "conversion_intent_conflict",
+            error_code="conversion_intent_conflict",
         )
         return problem_response(
             status_code=status.HTTP_409_CONFLICT,
@@ -139,7 +157,7 @@ async def record_conversion_intent(
         emit_conversion_operation_event(
             IdeaOperation.CONVERSION_INTENT,
             OperationOutcome.INVALID_REQUEST,
-            "invalid_request",
+            error_code="invalid_request",
         )
         return problem_response(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -153,8 +171,8 @@ async def record_conversion_intent(
         emit_conversion_operation_event(
             IdeaOperation.CONVERSION_INTENT,
             operation_outcome_from_conversion_decision(result.persistence.decision),
-            error_code_from_conversion_decision(result.persistence.decision),
-            context.durable_storage_backed,
+            error_code=error_code_from_conversion_decision(result.persistence.decision),
+            durable_storage_backed=context.durable_storage_backed,
         )
         return problem
     emit_conversion_operation_event(
@@ -182,6 +200,10 @@ async def record_conversion_outcome(
     x_caller_subject: str | None = Header(default=None, alias="X-Caller-Subject"),
     x_caller_roles: str | None = Header(default=None, alias="X-Caller-Roles"),
     x_caller_capabilities: str | None = Header(default=None, alias="X-Caller-Capabilities"),
+    x_caller_tenant_ids: str | None = Header(default=None, alias="X-Caller-Tenant-Ids"),
+    x_caller_book_ids: str | None = Header(default=None, alias="X-Caller-Book-Ids"),
+    x_caller_portfolio_ids: str | None = Header(default=None, alias="X-Caller-Portfolio-Ids"),
+    x_caller_client_ids: str | None = Header(default=None, alias="X-Caller-Client-Ids"),
     x_lotus_trusted_caller_context: str | None = Header(
         default=None,
         alias=TRUSTED_CALLER_CONTEXT_HEADER,
@@ -194,6 +216,10 @@ async def record_conversion_outcome(
                 subject=x_caller_subject,
                 roles=x_caller_roles,
                 capabilities=x_caller_capabilities,
+                tenant_ids=x_caller_tenant_ids,
+                book_ids=x_caller_book_ids,
+                portfolio_ids=x_caller_portfolio_ids,
+                client_ids=x_caller_client_ids,
                 trusted_caller_context=x_lotus_trusted_caller_context,
             ),
             capability=_CONVERSION_OUTCOME_CAPABILITY,
@@ -218,14 +244,14 @@ async def record_conversion_outcome(
         emit_conversion_operation_event(
             IdeaOperation.CONVERSION_OUTCOME,
             OperationOutcome.PERMISSION_DENIED,
-            "permission_denied",
+            error_code="permission_denied",
         )
         return permission_denied("The caller is not permitted to record idea conversion outcomes.")
     except InvalidConversionOutcome:
         emit_conversion_operation_event(
             IdeaOperation.CONVERSION_OUTCOME,
             OperationOutcome.INVALID_STATE,
-            "conversion_outcome_conflict",
+            error_code="conversion_outcome_conflict",
         )
         return problem_response(
             status_code=status.HTTP_409_CONFLICT,
@@ -237,7 +263,7 @@ async def record_conversion_outcome(
         emit_conversion_operation_event(
             IdeaOperation.CONVERSION_OUTCOME,
             OperationOutcome.INVALID_REQUEST,
-            "invalid_request",
+            error_code="invalid_request",
         )
         return problem_response(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -251,8 +277,8 @@ async def record_conversion_outcome(
         emit_conversion_operation_event(
             IdeaOperation.CONVERSION_OUTCOME,
             operation_outcome_from_conversion_decision(result.persistence.decision),
-            error_code_from_conversion_decision(result.persistence.decision),
-            context.durable_storage_backed,
+            error_code=error_code_from_conversion_decision(result.persistence.decision),
+            durable_storage_backed=context.durable_storage_backed,
         )
         return problem
     emit_conversion_operation_event(
@@ -279,9 +305,10 @@ CONVERSION_INTENT_ROUTE: RouteMetadata = {
     "description": (
         "Records an internal governed conversion intent for an approved idea candidate "
         "through the RFC-0002 Slice 12 conversion foundation. The route requires a "
-        "conversion-intent capability and Idempotency-Key, transitions only through the "
-        "canonical idea lifecycle graph, and does not grant Advise, Manage, Report, "
-        "suitability, execution, or client-communication authority."
+        "conversion-intent capability, complete tenant/book/portfolio/client caller "
+        "entitlement scope, and Idempotency-Key, transitions only through the canonical "
+        "idea lifecycle graph, and does not grant Advise, Manage, Report, suitability, "
+        "execution, or client-communication authority."
     ),
     "status_code": status.HTTP_200_OK,
     "response_model": ConversionIntentApiResponse,

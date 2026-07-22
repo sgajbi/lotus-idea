@@ -52,7 +52,10 @@ Implemented in this slice:
     decision. Intent persistence remains on the existing repository mutation
     path. The application command requires the conversion-intent command
     idempotency key to match the repository replay key so internal workers
-    cannot persist contradictory conversion evidence.
+    cannot persist contradictory conversion evidence. Conversion-intent
+    recording also requires a complete trusted caller entitlement scope and
+    rejects candidate-scope mismatches before persistence, aligning conversion
+    controls with review-action and feedback mutation proof.
 11. `src/app/api/conversion_governance.py` exposes certified internal API
     foundations:
     - `POST /api/v1/idea-candidates/{candidateId}/conversion-intents`,
@@ -63,11 +66,13 @@ Implemented in this slice:
 13. `tests/unit/test_idea_persistence.py` and
     `tests/integration/test_review_workflow_api.py` cover repository
     idempotency, audit posture, API permission, invalid state, missing
-    resources, wrong source authority, replay, and conflict behavior.
+    resources, wrong source authority, replay, conflict behavior, and
+    conversion-intent entitlement-scope denial.
     `tests/unit/test_conversion_workflow_application.py` adds focused
     projection-only coverage proving conversion-intent requests and missing
     candidate handling do not require `snapshot()` hydration, plus regression
-    coverage for mismatched application/domain idempotency rejection.
+    coverage for mismatched application/domain idempotency rejection and
+    missing or mismatched candidate access-scope denial.
 14. `tests/integration/test_postgres_runtime_integration.py` now proves the
     first PostgreSQL-backed internal report conversion path by creating a
     review-approved candidate, recording the report conversion intent, replaying

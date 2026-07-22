@@ -29,6 +29,14 @@ principal, session, or token-claims implementation. The controls record only
 Idea-owned workflow state; they do not create proposals, clear restrictions,
 approve suitability, or execute portfolio actions.
 
+Idea-owned conversion-intent recording now follows the same Workbench-originated
+mutation boundary as review actions and feedback: the API requires the
+conversion capability, `Idempotency-Key`, and complete trusted
+tenant/book/portfolio/client caller entitlement headers, then rejects
+candidate-scope mismatches with product-safe `403 permission_denied` before
+recording an intent. This is local/dev trusted-caller proof only; it is not an
+end-user IdP, session, or token-claims implementation.
+
 This remains a bounded product-surface foundation. It does not provide an
 end-user identity-provider integration, entitlement-denied panel proof, full
 canonical live-stack proof, data-product certification, demo-ready screenshots,
