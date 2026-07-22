@@ -80,6 +80,15 @@
       "closureInstruction": "Keep #380 open until Idea data-product publication and supported-feature promotion are certified."
     },
     {
+      "issueNumber": 482,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/482",
+      "rfcSlices": ["slice-09"],
+      "githubState": "open",
+      "executionStatus": "open_in_progress",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #482 open until the supported Core bond-maturity empty-window receipt maps to not_eligible/below_materiality on exact main and a fresh Core-backed consumer proof passes."
+    },
+    {
       "issueNumber": 542,
       "url": "https://github.com/sgajbi/lotus-idea/issues/542",
       "rfcSlices": ["slice-10"],

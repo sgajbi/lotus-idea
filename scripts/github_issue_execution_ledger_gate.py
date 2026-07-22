@@ -25,6 +25,7 @@ EXPECTED_EXECUTION_ISSUES = frozenset(
         375,
         379,
         380,
+        482,
         542,
         673,
         674,

@@ -68,11 +68,15 @@
     },
     {
       "patternId": "downstream_owner_runtime_proof_boundary",
-      "title": "Advise, Manage, Report, Render, and Archive handoffs require owner runtime or materialization evidence before blockers clear.",
-      "currentLedgerIssueNumbers": [379, 675, 676, 689, 690, 691],
-      "relatedIssueNumbers": [437, 438, 449, 456, 688],
-      "rfcSlices": ["slice-12", "slice-13", "slice-17"],
+      "title": "Core, Advise, Manage, Report, Render, and Archive handoffs require owner runtime or materialization evidence before blockers clear.",
+      "currentLedgerIssueNumbers": [482, 379, 675, 676, 689, 690, 691],
+      "relatedIssueNumbers": [792, 437, 438, 449, 456, 688],
+      "rfcSlices": ["slice-09", "slice-12", "slice-13", "slice-17"],
       "durableControls": [
+        {
+          "type": "gate",
+          "ref": "scripts/bond_maturity_runtime_evidence/runtime_execution_contract_gate.py"
+        },
         {
           "type": "gate",
           "ref": "scripts/downstream_realization/generate_advise_route_source_contract.py"
