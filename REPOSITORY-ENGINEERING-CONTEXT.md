@@ -1518,6 +1518,13 @@ clean.
 
 When fixing a GitHub issue, inspect adjacent code for the same pattern.
 
+For RFC-0002 execution posture, run
+`make rfc0002-github-issue-execution-state-audit` before quoting live GitHub
+counts, then use `make rfc0002-github-issue-execution-summary` for the compact
+source-controlled handoff view. Do not rely on chat memory, active IDE tabs, or
+assignee-only issue filters to decide how many RFC issues are open, fixed,
+blocked, or in progress.
+
 Recent issue-derived patterns to preserve:
 
 1. bounded PostgreSQL projections should replace whole-store snapshots for

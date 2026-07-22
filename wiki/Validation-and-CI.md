@@ -882,6 +882,12 @@ from the ledger, if a ledger issue loses the RFC label in GitHub, or if an
 because it depends on GitHub state, but its parsing and failure modes are
 unit-tested.
 
+`make rfc0002-github-issue-execution-summary` renders the source-controlled
+RFC-0002 issue execution summary after the ledger and learning-pattern gates
+pass. Use it for implementation handoff and issue-count reporting after the live
+state audit, so active issue counts and learning-pattern lenses come from
+durable source rather than chat memory or assignee-only filters.
+
 The RFC-0002 issue-learning pattern gate keeps repeated defect lessons
 source-controlled. `contracts/implementation-proof/rfc0002-issue-learning-patterns.v1.json`
 maps every non-complete RFC-0002 execution issue to at least one learning
