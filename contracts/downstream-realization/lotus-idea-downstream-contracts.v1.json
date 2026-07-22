@@ -103,7 +103,9 @@
         "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-13-report-render-archive-and-evidence-pack-materialization.md",
         "lotus-report/contracts/idea-evidence-intake/lotus-report-idea-evidence-pack-intake.v1.json",
         "lotus-render",
-        "lotus-archive"
+        "lotus-render#65 exact-main c608fe4c5b22fa22e51e242894a76a8532839e9f main-releasability 29966168422",
+        "lotus-archive",
+        "lotus-archive#72 exact-main 61ff2cb56a0e3652c40df2740f1f5d8150e52071 main-releasability 29966167055"
       ],
       "blockers": [
         "lotus_report_live_intake_route_proof_missing",

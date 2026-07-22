@@ -266,7 +266,7 @@
       "githubState": "open",
       "executionStatus": "open_blocked",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #691 open until Render/Archive materialization and lifecycle-safe publication boundary proof exists."
+      "closureInstruction": "Keep #691 open until Idea consumes Report live materialization plus Render/Archive owner evidence without overclaiming authority. Render owner proof is now available through lotus-render #65 / PR #67 at c608fe4c5b22fa22e51e242894a76a8532839e9f with Main Releasability run 29966168422. Archive owner proof is now available through lotus-archive #72 / PR #73 at 61ff2cb56a0e3652c40df2740f1f5d8150e52071 with Main Releasability run 29966167055. #691 remains open because #690 Report live intake/materialization, #380/#683 publication and supported-feature promotion, and broader Archive production trust/legal evidence in lotus-archive #55 are not complete."
     },
     {
       "issueNumber": 692,

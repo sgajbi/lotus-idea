@@ -460,13 +460,21 @@
           "repository": "sgajbi/lotus-render",
           "number": 65,
           "url": "https://github.com/sgajbi/lotus-render/issues/65",
-          "dependencyRole": "Render output creation and rendering authority proof"
+          "dependencyRole": "Render output creation and rendering authority proof",
+          "dependencyStatus": "merged_main",
+          "mainSha": "c608fe4c5b22fa22e51e242894a76a8532839e9f",
+          "mainReleasabilityRunId": "29966168422",
+          "evidenceBoundary": "Owner-repo render proof is available, but Idea still requires Report live materialization consumption and publication gating before blocker closure."
         },
         {
           "repository": "sgajbi/lotus-archive",
           "number": 72,
           "url": "https://github.com/sgajbi/lotus-archive/issues/72",
-          "dependencyRole": "Archive record creation and retention-safe publication authority proof"
+          "dependencyRole": "Archive record creation and retention-safe publication authority proof",
+          "dependencyStatus": "merged_main",
+          "mainSha": "61ff2cb56a0e3652c40df2740f1f5d8150e52071",
+          "mainReleasabilityRunId": "29966167055",
+          "evidenceBoundary": "Owner-repo archive metadata, access-audit, and lifecycle posture proof is available, but Idea must not claim archive authority, disposal authorization, client publication, or production legal certification."
         }
       ],
       "blockers": [
