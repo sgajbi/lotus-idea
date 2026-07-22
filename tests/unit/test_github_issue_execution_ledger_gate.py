@@ -73,6 +73,24 @@ def test_rfc0002_github_issue_execution_ledger_keeps_advise_live_proof_blocked()
     assert "advise_live_contract_proof_missing" in issue_688["closureInstruction"]
 
 
+def test_rfc0002_github_issue_execution_ledger_keeps_report_live_proof_blocked() -> None:
+    module = _load_gate()
+    payload = _ledger_payload(module)
+    issue_690 = next(
+        issue
+        for issue in payload["issues"]
+        if isinstance(issue, dict) and issue["issueNumber"] == 690
+    )
+
+    assert issue_690["githubState"] == "open"
+    assert issue_690["executionStatus"] == "open_blocked"
+    assert issue_690["allowPullRequestAutoClose"] is False
+    assert "Keep #690 open" in issue_690["closureInstruction"]
+    assert "live Report intake/materialization" in issue_690["closureInstruction"]
+    assert "Render output" in issue_690["closureInstruction"]
+    assert "Archive record" in issue_690["closureInstruction"]
+
+
 def test_rfc0002_github_issue_execution_ledger_blocks_auto_close_wording_for_open_issue(
     tmp_path: Path,
 ) -> None:
