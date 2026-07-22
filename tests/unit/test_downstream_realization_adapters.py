@@ -258,6 +258,29 @@ def test_downstream_transport_errors_do_not_leak_raw_exception_text() -> None:
     assert outcome.failure_reason == "downstream_unavailable"
 
 
+def test_downstream_malformed_response_errors_map_to_bounded_reason() -> None:
+    adapter = HttpAdviseProposalRealizationClient(
+        DownstreamRealizationAdapterConfig(
+            base_url="https://advise.example",
+            submit_path="/advisory/idea-intake",
+            source_authority=SourceSystem.LOTUS_ADVISE,
+            advise_service_context=advise_service_context(),
+        ),
+        client=downstream_json_client(
+            "https://advise.example",
+            httpx.MockTransport(lambda _request: httpx.Response(202, content=b"not-json")),
+        ),
+    )
+
+    outcome = adapter.submit_proposal_intent(
+        conversion_intent(ConversionTarget.ADVISE_PROPOSAL, SourceSystem.LOTUS_ADVISE)
+    )
+
+    assert outcome.accepted is False
+    assert outcome.posture is DownstreamRealizationOutcomePosture.UNKNOWN
+    assert outcome.failure_reason == "downstream_malformed_response"
+
+
 def test_downstream_retry_exhaustion_maps_to_bounded_timeout_reason() -> None:
     attempts = 0
 
@@ -311,6 +334,15 @@ def test_downstream_adapter_rejects_wrong_conversion_target() -> None:
     with pytest.raises(ValueError, match="advise_proposal"):
         adapter.submit_proposal_intent(
             conversion_intent(ConversionTarget.MANAGE_REVIEW, SourceSystem.LOTUS_MANAGE)
+        )
+
+
+def test_conversion_envelope_rejects_non_intake_target() -> None:
+    from app.infrastructure.downstream_realization import _conversion_intent_envelope
+
+    with pytest.raises(ValueError, match="unsupported conversion target"):
+        _conversion_intent_envelope(
+            conversion_intent(ConversionTarget.REPORT_EVIDENCE, SourceSystem.LOTUS_REPORT)
         )
 
 
@@ -548,6 +580,57 @@ def test_report_service_context_rejects_blank_required_values() -> None:
             tenant_id="local-development",
             region="local",
             requested_output_formats=("json",),
+        )
+
+
+def test_advise_service_context_rejects_blank_required_values() -> None:
+    with pytest.raises(DownstreamRealizationConfigurationError, match="actor_id is required"):
+        AdviseRealizationServiceContext(
+            actor_id=" ",
+            role="SERVICE",
+            tenant_id="tenant-sg",
+            legal_entity_code="SGPB",
+            service_identity="lotus-idea-local-development",
+            capabilities="advisory.idea_proposal_intake.accept",
+        )
+
+
+def test_manage_service_context_rejects_blank_required_values() -> None:
+    with pytest.raises(DownstreamRealizationConfigurationError, match="actor_id is required"):
+        ManageRealizationServiceContext(
+            actor_id=" ",
+            role="service",
+            tenant_id="local-development",
+            service_identity="lotus-idea-local-development",
+            capabilities="manage.write",
+        )
+
+
+def test_report_service_context_requires_output_formats() -> None:
+    with pytest.raises(
+        DownstreamRealizationConfigurationError,
+        match="requested_output_formats is required",
+    ):
+        ReportRealizationServiceContext(
+            actor_id="lotus-idea-local-development",
+            caller_application="lotus-idea",
+            tenant_id="tenant-sg",
+            region="APAC",
+            requested_output_formats=(),
+        )
+
+
+def test_report_service_context_rejects_blank_output_formats() -> None:
+    with pytest.raises(
+        DownstreamRealizationConfigurationError,
+        match="requested_output_formats cannot contain blanks",
+    ):
+        ReportRealizationServiceContext(
+            actor_id="lotus-idea-local-development",
+            caller_application="lotus-idea",
+            tenant_id="tenant-sg",
+            region="APAC",
+            requested_output_formats=("json", " "),
         )
 
 
