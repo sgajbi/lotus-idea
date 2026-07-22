@@ -1,0 +1,118 @@
+{
+  "schemaVersion": "lotus-idea.rfc0002.slice11-owner-mainline-evidence.v1",
+  "repository": "lotus-idea",
+  "recordedAtUtc": "2026-07-22T00:00:00+00:00",
+  "rfc": "RFC-0002",
+  "sliceIds": [
+    "RFC-0002/slice-11",
+    "RFC-0002/slice-16",
+    "RFC-0002/slice-17"
+  ],
+  "proofType": "rfc0002_slice11_owner_mainline_evidence",
+  "proofScope": "owner_repo_mainline_evidence_index",
+  "evidenceClass": "source_contract",
+  "ownerMainlineEvidenceValid": true,
+  "trackingIssues": [
+    {
+      "repository": "lotus-idea",
+      "issueNumber": 685,
+      "issueUrl": "https://github.com/sgajbi/lotus-idea/issues/685",
+      "role": "slice_11_owner_reconciliation"
+    },
+    {
+      "repository": "lotus-idea",
+      "issueNumber": 686,
+      "issueUrl": "https://github.com/sgajbi/lotus-idea/issues/686",
+      "role": "slice_11_supportability_reconciliation"
+    }
+  ],
+  "ownerEvidence": [
+    {
+      "ownerRepository": "lotus-gateway",
+      "ownerIssueNumber": 505,
+      "ownerIssueUrl": "https://github.com/sgajbi/lotus-gateway/issues/505",
+      "ownerPullRequestNumber": 508,
+      "ownerPullRequestUrl": "https://github.com/sgajbi/lotus-gateway/pull/508",
+      "mergedMainCommitSha": "98a3240d8e951463be69995f50c52b216d3eda4a",
+      "mainReleasabilityRunId": 29686511139,
+      "mainReleasabilityRunUrl": "https://github.com/sgajbi/lotus-gateway/actions/runs/29686511139",
+      "mainReleasabilityCheckName": "Main Releasability Gate",
+      "mainReleasabilityConclusion": "success",
+      "proofStatus": "merged_main_validated"
+    },
+    {
+      "ownerRepository": "lotus-workbench",
+      "ownerIssueNumber": 484,
+      "ownerIssueUrl": "https://github.com/sgajbi/lotus-workbench/issues/484",
+      "ownerPullRequestNumber": 497,
+      "ownerPullRequestUrl": "https://github.com/sgajbi/lotus-workbench/pull/497",
+      "mergedMainCommitSha": "55cb94ddb33469b58e32308551c84f0c3c4c9e3a",
+      "mainReleasabilityRunId": 29686864889,
+      "mainReleasabilityRunUrl": "https://github.com/sgajbi/lotus-workbench/actions/runs/29686864889",
+      "mainReleasabilityCheckName": "Main Releasability Gate",
+      "mainReleasabilityConclusion": "success",
+      "proofStatus": "merged_main_validated"
+    }
+  ],
+  "dependencyPosture": [
+    {
+      "repository": "lotus-platform",
+      "issueNumber": 563,
+      "issueUrl": "https://github.com/sgajbi/lotus-platform/issues/563",
+      "dependency": "authenticated_bff_principal_session_contract",
+      "status": "open"
+    },
+    {
+      "repository": "lotus-idea",
+      "issueNumber": 687,
+      "issueUrl": "https://github.com/sgajbi/lotus-idea/issues/687",
+      "dependency": "production_identity_provider_proof",
+      "status": "open"
+    },
+    {
+      "repository": "lotus-idea",
+      "issueNumber": 699,
+      "issueUrl": "https://github.com/sgajbi/lotus-idea/issues/699",
+      "dependency": "full_live_opportunity_journey_validation",
+      "status": "open"
+    },
+    {
+      "repository": "lotus-idea",
+      "issueNumber": 380,
+      "issueUrl": "https://github.com/sgajbi/lotus-idea/issues/380",
+      "dependency": "data_product_certification_and_supported_feature_promotion",
+      "status": "open"
+    }
+  ],
+  "localEvidenceRefs": [
+    "contracts/implementation-proof/rfc0002-slice11-owner-mainline-evidence.v1.json",
+    "src/app/application/workbench/owner_mainline_evidence.py",
+    "scripts/workbench/owner_mainline_evidence_gate.py",
+    "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-11-workbench-product-realization.md",
+    "docs/operations/implementation-proof-readiness.md",
+    "wiki/Validation-and-CI.md",
+    "make gateway-workbench-owner-mainline-evidence-gate"
+  ],
+  "remainingCertificationBlockers": [
+    "gateway_workbench_proof_missing",
+    "workbench_product_proof_missing",
+    "gateway_workbench_discovery_proof_missing",
+    "workbench_panel_missing",
+    "workbench_gateway_bff_consumption_proof_missing",
+    "browser_accessibility_proof_missing",
+    "canonical_demo_runtime_proof_missing",
+    "opportunity_archetype_workbench_product_proof_missing",
+    "data_product_certification_missing",
+    "supported_feature_promotion_missing"
+  ],
+  "aggregateBlockersCleared": [],
+  "gatewayOwnerMainlineValidated": true,
+  "workbenchOwnerMainlineValidated": true,
+  "productionIdentityImplemented": false,
+  "canonicalRuntimeCertified": false,
+  "browserAccessibilityCertified": false,
+  "dataProductCertified": false,
+  "supportedFeaturePromoted": false,
+  "runtimeExecutionObserved": false,
+  "proofClosed": false
+}

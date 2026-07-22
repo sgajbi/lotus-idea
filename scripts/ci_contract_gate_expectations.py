@@ -63,6 +63,7 @@ REQUIRED_LINT_TARGETS = (
     "workbench-read-path-source-contract-proof-gate",
     "gateway-workbench-contract-proof-contract-gate",
     "gateway-workbench-discovery-contract-proof-contract-gate",
+    "gateway-workbench-owner-mainline-evidence-gate",
     "outbox-broker-source-contract-proof-gate",
     "outbox-consumer-contract-proof-contract-gate",
     "outbox-platform-mesh-event-source-contract-proof-gate",
