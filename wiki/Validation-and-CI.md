@@ -113,7 +113,7 @@ target and must not carry durable truth that is absent from `main`.
 | Group | Primary commands | Use |
 | --- | --- | --- |
 | Aggregate lanes | `make check`, `make ci`, `make ci-release` | Routine local proof, broad CI-equivalent proof, and release evidence. |
-| Contract and documentation | `make ci-contract-gate`, `make foundation-structure-gate`, `make documentation-contract-gate`, `make implementation-truth-gate`, `make supported-features-gate`, `make blueprint-scope-coverage-gate`, `make rfc0002-github-issue-execution-ledger-gate` | Prevent workflow, docs, support, blueprint, issue-lifecycle, and certification drift. |
+| Contract and documentation | `make ci-contract-gate`, `make foundation-structure-gate`, `make documentation-contract-gate`, `make implementation-truth-gate`, `make supported-features-gate`, `make blueprint-scope-coverage-gate`, `make rfc0002-github-issue-execution-ledger-gate`, `make rfc0002-github-issue-learning-pattern-gate` | Prevent workflow, docs, support, blueprint, issue-lifecycle, issue-learning, and certification drift. |
 | Dependency and vulnerability posture | `make dependency-vulnerability-posture-gate`, `make security-audit`, `make container-image-scan`, `make release-sbom` | Govern mature supported dependencies, Python vulnerability scan evidence, container scan wiring, SBOM/signing/provenance hooks, and issue-backed vulnerability exceptions. |
 | API and OpenAPI | `make openapi-gate`, `make endpoint-certification-gate`, `make api-route-metadata-gate`, `make caller-context-contract-gate` | Keep runtime API and published contract truth aligned. |
 | Persistence and runtime | `make migration-contract-gate`, `make migration-execution-gate`, `make deployment-migration-contract-gate`, `make postgres-integration-gate`, `make disaster-recovery-contract-gate`, `make disaster-recovery-proof-gate`, `make container-runtime-smoke` | Prove durable storage, local migration plans, protected exact-image migration controls, restore/resume, and runtime behavior. |
@@ -880,6 +880,14 @@ evidence. It fails if a GitHub issue is labeled `rfc/RFC-0002` but is missing
 from the ledger, or if a ledger issue loses the RFC label in GitHub. It is not
 part of offline CI because it depends on GitHub state, but its parsing and
 failure modes are unit-tested.
+
+The RFC-0002 issue-learning pattern gate keeps repeated defect lessons
+source-controlled. `contracts/implementation-proof/rfc0002-issue-learning-patterns.v1.json`
+maps every non-complete RFC-0002 execution issue to at least one learning
+cluster, durable control, future-agent rule, and non-claim boundary.
+`make rfc0002-github-issue-learning-pattern-gate` is part of `make lint`; it
+does not call GitHub, but it prevents new RFC execution work from escaping the
+same-pattern review lens.
 
 The quality-scorecard gate keeps the bank-buyable control matrix executable. It
 requires the standard control rows, approved readiness statuses, non-empty

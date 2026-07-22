@@ -115,6 +115,28 @@ state drift when a PR lands partial RFC progress, such as consuming owner proof
 while keeping Report, Render, Archive, client-publication, and promotion proof
 open.
 
+## GitHub Issue Learning Patterns
+
+`contracts/implementation-proof/rfc0002-issue-learning-patterns.v1.json` is
+the durable RFC-0002 issue-learning ledger. It groups every non-complete
+RFC-0002 execution issue into a repeated pattern family such as Workbench /
+Gateway proof boundaries, downstream owner runtime proof, data-product
+promotion, operations certification, AI attestation, demo-commercial claims,
+and GitHub execution hygiene.
+
+`make rfc0002-github-issue-learning-pattern-gate` fails closed when a
+non-complete execution issue is absent from the pattern ledger, a current issue
+reference is not in the execution ledger, a required durable control path is
+missing, or a pattern lacks actionable future-agent guidance and explicit
+non-claim boundaries. The gate is part of `make lint`, so new RFC-0002 issues
+cannot be added to the execution ledger without also deciding which repeated
+defect lens future implementation work must apply.
+
+The pattern ledger is learning and routing governance only. It does not close
+issues, clear implementation blockers, or certify any capability. It exists so
+issue-derived lessons are durable in source control and GitHub-backed PR
+evidence, not only in chat memory or long-form prose.
+
 ## Blueprint Scope Coverage
 
 `contracts/implementation-proof/rfc0002-blueprint-scope-coverage.v1.json`

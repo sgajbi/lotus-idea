@@ -102,6 +102,13 @@ documentation across opportunity signal APIs.
     engineering, operations, release, and demo reviewers without overclaiming
     live proof, certified live broker runtime, downstream delivery, or
     supported-feature promotion.
+10. RFC-0002 issue-derived learning is now source-controlled through
+    `contracts/implementation-proof/rfc0002-issue-learning-patterns.v1.json`
+    and `make rfc0002-github-issue-learning-pattern-gate`. Every non-complete
+    RFC-0002 execution issue must belong to a durable learning cluster with
+    control refs, future-agent guidance, and no-claim boundaries, so repeated
+    GitHub issue patterns are handled before the next slice rather than being
+    kept in chat memory.
 11. `docs/demo/README.md`, `docs/demo/client-demo-operating-process.md`,
     `docs/demo/client-facing-lotus-idea-brief.md`,
     `docs/demo/client-demo-pack.template.md`, `docs/demo/demo-claims.md`, and

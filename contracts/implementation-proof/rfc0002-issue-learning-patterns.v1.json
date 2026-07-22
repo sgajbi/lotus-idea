@@ -1,0 +1,224 @@
+{
+  "schemaVersion": "lotus-idea:rfc0002-issue-learning-patterns:v1",
+  "rfcId": "RFC-0002",
+  "repository": "sgajbi/lotus-idea",
+  "asOfDate": "2026-07-23",
+  "executionLedgerRef": "contracts/implementation-proof/rfc0002-github-issue-execution-ledger.v1.json",
+  "purpose": "Durably cluster RFC-0002 GitHub issue learnings so future implementation slices inspect related defects, preserve no-claim boundaries, and update context or skills when repeated patterns recur.",
+  "patterns": [
+    {
+      "patternId": "github_execution_control_and_context_sync",
+      "title": "GitHub issue state, closure wording, docs, wiki, and agent-context truth must remain executable and mainline-backed.",
+      "currentLedgerIssueNumbers": [673, 681, 683, 684],
+      "relatedIssueNumbers": [681],
+      "rfcSlices": ["slice-18", "slice-20", "slice-21"],
+      "durableControls": [
+        {
+          "type": "gate",
+          "ref": "scripts/github_issue_execution_ledger_gate.py"
+        },
+        {
+          "type": "gate",
+          "ref": "scripts/github_issue_execution_state_audit.py"
+        },
+        {
+          "type": "context",
+          "ref": "REPOSITORY-ENGINEERING-CONTEXT.md#github-issue-learning-loop"
+        },
+        {
+          "type": "wiki",
+          "ref": "wiki/Validation-and-CI.md"
+        }
+      ],
+      "futureAgentRule": "Before changing RFC-0002 truth, run the execution ledger gate and live state audit, preserve Keep-open wording for partial issues, and record exact PR/main/wiki/branch evidence on the owning issue.",
+      "nonClaimBoundaries": [
+        "Issue state labels are not proof; they must point to PR, SHA, run, wiki, and branch evidence.",
+        "Slice 18 context updates do not complete RFC-0002 while implementation slices remain open."
+      ]
+    },
+    {
+      "patternId": "workbench_gateway_surface_proof_boundary",
+      "title": "Workbench and Gateway product-surface proof must be backed by route, panel, action, feedback, conversion-intent, and identity evidence.",
+      "currentLedgerIssueNumbers": [674, 685, 686, 687],
+      "relatedIssueNumbers": [449],
+      "rfcSlices": ["slice-08", "slice-11", "slice-15"],
+      "durableControls": [
+        {
+          "type": "gate",
+          "ref": "scripts/workbench/generate_discovery_contract_proof.py"
+        },
+        {
+          "type": "contract",
+          "ref": "contracts/implementation-proof/rfc0002-slice11-owner-mainline-evidence.v1.json"
+        },
+        {
+          "type": "context",
+          "ref": "REPOSITORY-ENGINEERING-CONTEXT.md#cross-repository-source-truth-and-localtest-fixtures"
+        },
+        {
+          "type": "docs",
+          "ref": "README.md#downstream-consumers"
+        }
+      ],
+      "futureAgentRule": "Treat local/test caller fixtures and static Workbench or Gateway declarations as non-certifying until owner route proof, UI consumption proof, and production identity evidence are available.",
+      "nonClaimBoundaries": [
+        "Local/test caller authority fixtures are not production identity, authentication, or authorization proof.",
+        "Backend source contracts alone do not prove populated Workbench panel readiness."
+      ]
+    },
+    {
+      "patternId": "downstream_owner_runtime_proof_boundary",
+      "title": "Advise, Manage, Report, Render, and Archive handoffs require owner runtime or materialization evidence before blockers clear.",
+      "currentLedgerIssueNumbers": [379, 675, 676, 689, 690, 691],
+      "relatedIssueNumbers": [437, 438, 449, 456, 688],
+      "rfcSlices": ["slice-12", "slice-13", "slice-17"],
+      "durableControls": [
+        {
+          "type": "gate",
+          "ref": "scripts/downstream_realization/generate_advise_route_source_contract.py"
+        },
+        {
+          "type": "gate",
+          "ref": "scripts/downstream_realization/generate_manage_route_source_contract.py"
+        },
+        {
+          "type": "gate",
+          "ref": "scripts/report/generate_intake_route_source_contract.py"
+        },
+        {
+          "type": "gate",
+          "ref": "scripts/report/generate_materialization_source_contract.py"
+        },
+        {
+          "type": "context",
+          "ref": "REPOSITORY-ENGINEERING-CONTEXT.md#cross-repository-source-truth-and-localtest-fixtures"
+        }
+      ],
+      "futureAgentRule": "Classify each downstream artifact by evidence class first: source-contract evidence can support readiness, but only accepted runtime receipts or owner materialization records can clear live execution, render, archive, or publication blockers.",
+      "nonClaimBoundaries": [
+        "Idea owns opportunity intent and evidence-pack request posture, not suitability approval, rebalance execution, report rendering, archive retention, or client publication.",
+        "Quarantined or fixture-backed outcome history is diagnostic and does not certify downstream persistence."
+      ]
+    },
+    {
+      "patternId": "data_mesh_promotion_and_runtime_telemetry",
+      "title": "Data-product promotion and runtime trust telemetry require mesh catalog, policy, discovery, and supported-feature evidence to agree.",
+      "currentLedgerIssueNumbers": [380, 677, 680, 692],
+      "relatedIssueNumbers": [443, 444, 452, 663],
+      "rfcSlices": ["slice-04", "slice-10", "slice-14", "slice-17", "slice-20"],
+      "durableControls": [
+        {
+          "type": "gate",
+          "ref": "scripts/data_mesh/generate_platform_catalog_source_contract.py"
+        },
+        {
+          "type": "gate",
+          "ref": "scripts/runtime_trust_telemetry/generate_snapshot.py"
+        },
+        {
+          "type": "gate",
+          "ref": "scripts/supported_feature_promotion_contract_gate.py"
+        },
+        {
+          "type": "docs",
+          "ref": "docs/operations/supported-feature-promotion.md"
+        }
+      ],
+      "futureAgentRule": "Use the shared supported-feature promotion evaluator and runtime trust telemetry posture instead of independent status counters or static catalog inclusion claims.",
+      "nonClaimBoundaries": [
+        "Mesh policy or catalog source contracts alone do not certify data-product publication.",
+        "Runtime trust telemetry snapshots do not promote customer-facing supported features without current evidence and owner approvals."
+      ]
+    },
+    {
+      "patternId": "operations_security_resilience_certification",
+      "title": "Operations, security, lifecycle, migration, outbox, SLO, capacity, and disaster-recovery claims need protected or production-like attestations.",
+      "currentLedgerIssueNumbers": [343, 344, 345, 375, 678, 693, 694],
+      "relatedIssueNumbers": [337, 343, 344, 345, 372, 375, 695],
+      "rfcSlices": ["slice-15"],
+      "durableControls": [
+        {
+          "type": "gate",
+          "ref": "scripts/dependency_vulnerability_posture_gate.py"
+        },
+        {
+          "type": "gate",
+          "ref": "scripts/service_slo_capacity_contract_gate.py"
+        },
+        {
+          "type": "gate",
+          "ref": "scripts/archive_lifecycle_posture_contract_gate.py"
+        },
+        {
+          "type": "docs",
+          "ref": "docs/runbooks/postgres-disaster-recovery.md"
+        }
+      ],
+      "futureAgentRule": "Separate contract-green local posture from protected execution evidence; do not clear capacity, lifecycle, migration, broker, DR, or vulnerability blockers with static files, local-only probes, or stale report-only evidence.",
+      "nonClaimBoundaries": [
+        "Local/disposable database drills are not provider backup, PITR, failover, or production certification.",
+        "Static SLO, dashboard, lifecycle, or outbox contracts are non-certifying until runtime/protected evidence exists."
+      ]
+    },
+    {
+      "patternId": "ai_attestation_and_model_governance",
+      "title": "AI explanation output acceptance requires attested lotus-ai execution, model provenance, retention, and lineage evidence.",
+      "currentLedgerIssueNumbers": [340],
+      "relatedIssueNumbers": [268, 340, 459, 668],
+      "rfcSlices": ["slice-09", "slice-17"],
+      "durableControls": [
+        {
+          "type": "gate",
+          "ref": "scripts/ai_workflow_pack_registration/generate_source_contract_proof.py"
+        },
+        {
+          "type": "gate",
+          "ref": "scripts/ai_workflow_pack_runtime_execution_proof_contract_gate.py"
+        },
+        {
+          "type": "docs",
+          "ref": "docs/operations/ai-governance.md"
+        },
+        {
+          "type": "context",
+          "ref": "REPOSITORY-ENGINEERING-CONTEXT.md#github-issue-learning-loop"
+        }
+      ],
+      "futureAgentRule": "Keep deterministic fallback/local AI output and static workflow-pack registration separate from live provider attestation; only signed, source-safe, retention-bound runtime execution can clear #340.",
+      "nonClaimBoundaries": [
+        "Idea does not implement lotus-ai provider execution, model approval, or provider retention authority.",
+        "Local fallback output is diagnostic and cannot certify workflow output acceptance."
+      ]
+    },
+    {
+      "patternId": "demo_commercial_and_live_journey_claims",
+      "title": "Demo readiness, commercial proof, canonical archetypes, and full live journey claims must be implementation-backed end to end.",
+      "currentLedgerIssueNumbers": [679, 696, 697, 699],
+      "relatedIssueNumbers": [701, 702],
+      "rfcSlices": ["slice-05", "slice-16", "slice-17"],
+      "durableControls": [
+        {
+          "type": "docs",
+          "ref": "docs/demo/demo-claims.md"
+        },
+        {
+          "type": "contract",
+          "ref": "contracts/implementation-proof/rfc0002-blueprint-scope-coverage.v1.json"
+        },
+        {
+          "type": "docs",
+          "ref": "docs/LOTUS_IDEA_BLUEPRINT.md"
+        },
+        {
+          "type": "wiki",
+          "ref": "wiki/Supported-Features.md"
+        }
+      ],
+      "futureAgentRule": "Treat commercial language as downstream of evidence: canonical opportunity archetypes, demo claim matrices, and live journeys must cite current implementation proof and preserve blockers where source-owner runtime evidence is absent.",
+      "nonClaimBoundaries": [
+        "Research, blueprint language, and demo copy cannot promote unsupported features.",
+        "A single capability proof does not certify the full API, Gateway, Workbench, and downstream handoff journey."
+      ]
+    }
+  ]
+}
