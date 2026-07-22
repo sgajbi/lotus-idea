@@ -1871,7 +1871,8 @@ Recent issue-derived patterns to preserve:
     run `make rfc0002-github-issue-execution-state-audit` after any manual
     reopen, close, or label correction. The audit catches ledger/GitHub state
     drift such as active execution issues missing `status/in-progress`, blocked
-    issues missing `status/blocked`, merged-main-QA-pending issues missing
+    issues missing `status/blocked`, parent tracker issues missing
+    `status/tracker`, merged-main-QA-pending issues missing
     `status/merged-main`, or closed-complete issues losing terminal evidence
     labels.
 

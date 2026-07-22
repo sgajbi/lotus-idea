@@ -877,9 +877,10 @@ state, lifecycle labels, and `rfc/RFC-0002` label coverage with the repository
 ledger. Run it before quoting RFC-0002 fixed/open counts, after issue
 reopen/close/label corrections, and before final Slice 18 or Slice 20 closure
 evidence. It fails if a GitHub issue is labeled `rfc/RFC-0002` but is missing
-from the ledger, or if a ledger issue loses the RFC label in GitHub. It is not
-part of offline CI because it depends on GitHub state, but its parsing and
-failure modes are unit-tested.
+from the ledger, if a ledger issue loses the RFC label in GitHub, or if an
+`open_tracker` parent issue lacks `status/tracker`. It is not part of offline CI
+because it depends on GitHub state, but its parsing and failure modes are
+unit-tested.
 
 The RFC-0002 issue-learning pattern gate keeps repeated defect lessons
 source-controlled. `contracts/implementation-proof/rfc0002-issue-learning-patterns.v1.json`

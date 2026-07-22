@@ -29,6 +29,7 @@ EXPECTED_OPEN_LABEL_BY_STATUS = {
     "open_blocked": "status/blocked",
     "open_in_progress": "status/in-progress",
     "open_merged_main_qa_pending": "status/merged-main",
+    "open_tracker": "status/tracker",
 }
 EXPECTED_CLOSED_LABEL = "status/merged-main"
 EXPECTED_RFC_LABEL = "rfc/RFC-0002"
