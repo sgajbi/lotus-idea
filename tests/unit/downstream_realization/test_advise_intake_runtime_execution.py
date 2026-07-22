@@ -4,6 +4,8 @@ from copy import deepcopy
 from datetime import UTC, datetime
 from pathlib import Path
 
+import pytest
+
 from app.application.downstream_realization.advise_intake_runtime_execution import (
     ADVISE_INTAKE_RUNTIME_EXECUTION_ENV,
     advise_intake_runtime_execution_is_valid,
@@ -119,7 +121,7 @@ def test_advise_intake_runtime_execution_rejects_payload_and_receipt_shape_drift
 
 
 def test_load_advise_intake_runtime_execution_from_env_returns_payload_and_relative_ref(
-    monkeypatch,
+    monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
     proof_path = tmp_path / "advise-proof.json"
@@ -134,7 +136,7 @@ def test_load_advise_intake_runtime_execution_from_env_returns_payload_and_relat
 
 
 def test_load_advise_intake_runtime_execution_from_env_rejects_non_object(
-    monkeypatch,
+    monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
     proof_path = tmp_path / "advise-proof.json"
@@ -150,7 +152,7 @@ def test_load_advise_intake_runtime_execution_from_env_rejects_non_object(
 
 
 def test_load_advise_intake_runtime_execution_from_env_uses_env_ref_for_external_path(
-    monkeypatch,
+    monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
     cwd = tmp_path / "repo"
