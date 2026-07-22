@@ -457,6 +457,23 @@ replay without another adapter call, changed-fingerprint reuse returns
 target, resource id, bounded failure reason, correlation id, trace id, and
 timestamp without source payloads or raw downstream responses.
 
+For local Compose only, Advise intake requires server-process settings:
+`LOTUS_IDEA_ADVISE_REALIZATION_ACTOR_ID`,
+`LOTUS_IDEA_ADVISE_REALIZATION_ROLE`,
+`LOTUS_IDEA_ADVISE_REALIZATION_TENANT_ID`,
+`LOTUS_IDEA_ADVISE_REALIZATION_LEGAL_ENTITY_CODE`,
+`LOTUS_IDEA_ADVISE_REALIZATION_SERVICE_IDENTITY`, and
+`LOTUS_IDEA_ADVISE_REALIZATION_CAPABILITIES`. Their local defaults are a
+development fixture and are sent only to Advise as `X-Actor-Id`, `X-Role`,
+`X-Tenant-Id`, `X-Legal-Entity-Code`, `X-Service-Identity`,
+`X-Capabilities`, and `X-Principal-Status: ACTIVE`, plus governed
+correlation, trace, and idempotency headers. The application permits the
+fixture only in `local` and `test`; demo, staging, and production fail closed.
+Do not pass user identity from a browser or use this as evidence of
+IdP/session/token-claim integration, suitability, proposal lifecycle,
+client-publication authority, or downstream supportability. Track the future
+trusted identity integration through issue `#380`.
+
 For local Compose only, Manage intake requires server-process settings:
 `LOTUS_IDEA_MANAGE_REALIZATION_ACTOR_ID`,
 `LOTUS_IDEA_MANAGE_REALIZATION_ROLE`,

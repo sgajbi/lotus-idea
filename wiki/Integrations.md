@@ -245,11 +245,10 @@ intake route proof for `POST /api/v1/rebalance/idea-action-intake`; and
 `POST /reports/idea-evidence-packs`. `lotus-idea` generates default
 source-safe proof artifacts from `LOTUS_ADVISE_ROOT`, `LOTUS_MANAGE_ROOT`, and
 `LOTUS_REPORT_ROOT` unless the corresponding override artifact variables are
-set. Valid Advise and Manage route artifacts may clear only their bounded
-route-existence blockers. The Report artifact is `source_contract` evidence:
-it adds declaration provenance but keeps
-`lotus_report_live_intake_route_proof_missing` until governed runtime evidence
-exists. Suitability,
+set. Valid Advise, Manage, and Report route artifacts are `source_contract`
+evidence: they add declaration provenance but clear no live route, request
+acceptance, downstream-record, or supportability blockers until governed
+runtime evidence exists. Suitability,
 mandate/rebalance authority, execution, report evidence-pack materialization,
 rendered output, archive record creation, client-publication authority, and
 supported-feature promotion remain blocked.
