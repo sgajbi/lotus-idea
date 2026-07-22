@@ -33,4 +33,6 @@ class until exact-main validation and QA-backed closure are ready. Run
 issue-tracking truth. Run
 `make rfc0002-github-issue-execution-state-audit` after issue state or label
 changes, before quoting fixed/open counts, and before Slice 18 or Slice 20
-closure evidence.
+closure evidence. RFC parent or umbrella issues represented as `open_tracker`
+in the ledger must carry `status/tracker` in GitHub so they remain visible as
+durable execution anchors rather than statusless backlog.

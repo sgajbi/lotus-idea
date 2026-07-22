@@ -421,13 +421,15 @@ The same Slice 18 learning loop now adds
 `make rfc0002-github-issue-execution-state-audit`, backed by
 `scripts/github_issue_execution_state_audit.py`. The audit compares the ledger
 with current GitHub issue state and lifecycle labels, so reopened issues,
-blocked issues, merged-main-QA-pending issues, and closed-complete issues cannot
-drift silently away from the durable execution ledger. It also fails when a
-GitHub issue is labeled `rfc/RFC-0002` but missing from the ledger, or when a
-ledger issue lacks the RFC label in GitHub. The #681 anchor now carries
-`status/in-progress`; future partial Slice 18 PRs must keep that label and use
-`Keep #681 open` until full RFC documentation, wiki, support, and agent context
-closure is complete.
+blocked issues, in-progress issues, open tracker issues,
+merged-main-QA-pending issues, and closed-complete issues cannot drift silently
+away from the durable execution ledger. It also fails when a GitHub issue is
+labeled `rfc/RFC-0002` but missing from the ledger, or when a ledger issue lacks
+the RFC label in GitHub. Parent `open_tracker` issues now require
+`status/tracker`; the #681 anchor carries `status/in-progress`. Future partial
+Slice 18 PRs must keep the correct lifecycle label and use `Keep #681 open`
+until full RFC documentation, wiki, support, and agent context closure is
+complete.
 
 The missing-benchmark Core material now records the independently owned closed
 v2 runtime contract implemented by issue `#499`. One named application use case

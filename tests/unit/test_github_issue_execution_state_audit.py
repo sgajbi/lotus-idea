@@ -53,6 +53,7 @@ def _github_issue_payload(ledger: dict[str, Any]) -> list[dict[str, Any]]:
         "open_blocked": "status/blocked",
         "open_in_progress": "status/in-progress",
         "open_merged_main_qa_pending": "status/merged-main",
+        "open_tracker": "status/tracker",
         "closed_complete": "status/merged-main",
     }
     issues: list[dict[str, Any]] = []
@@ -187,6 +188,30 @@ def test_github_issue_execution_state_audit_rejects_missing_status_label(
     assert (
         "#681: executionStatus=open_in_progress requires GitHub label status/in-progress" in errors
     )
+
+
+def test_github_issue_execution_state_audit_rejects_tracker_without_tracker_label(
+    tmp_path: Path,
+) -> None:
+    module = _load_audit()
+    ledger = _load_ledger()
+    ledger["issues"] = [
+        entry
+        for entry in ledger["issues"]
+        if isinstance(entry, dict) and entry["issueNumber"] == 673
+    ]
+    github_payload = _github_issue_payload(ledger)
+    github_payload[0]["labels"] = [
+        label for label in github_payload[0]["labels"] if label["name"] != "status/tracker"
+    ]
+    github_issues = module._parse_github_issue_states(github_payload)
+
+    errors = module.audit_github_issue_execution_state(
+        ledger_path=_write_ledger(tmp_path, ledger),
+        github_issues=github_issues,
+    )
+
+    assert "#673: executionStatus=open_tracker requires GitHub label status/tracker" in errors
 
 
 def test_github_issue_execution_state_audit_rejects_closed_issue_without_merged_main_label(
