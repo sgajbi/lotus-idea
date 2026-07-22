@@ -818,9 +818,15 @@ Downstream realization:
 5. `LOTUS_IDEA_MANAGE_REALIZATION_SUBMIT_PATH`,
 6. local/test-only Manage fixture: `LOTUS_IDEA_MANAGE_REALIZATION_ACTOR_ID`,
    `LOTUS_IDEA_MANAGE_REALIZATION_ROLE`,
-   `LOTUS_IDEA_MANAGE_REALIZATION_TENANT_ID`, and
+   `LOTUS_IDEA_MANAGE_REALIZATION_TENANT_ID`,
+   `LOTUS_IDEA_MANAGE_REALIZATION_LEGAL_ENTITY_CODE`,
    `LOTUS_IDEA_MANAGE_REALIZATION_SERVICE_IDENTITY`, and
-   `LOTUS_IDEA_MANAGE_REALIZATION_CAPABILITIES`,
+   `LOTUS_IDEA_MANAGE_REALIZATION_CAPABILITIES`. The adapter sends these
+   server-side local/test fixture values only as trusted headers for the
+   Manage-owned action-intake receipt route, including `X-Legal-Entity-Code`
+   and `X-Principal-Status: ACTIVE`; they are not browser headers,
+   production authn/authz, suitability authority, rebalance authority, or
+   supported-feature evidence,
 7. `LOTUS_IDEA_REPORT_REALIZATION_BASE_URL`,
 8. `LOTUS_IDEA_REPORT_REALIZATION_SUBMIT_PATH`,
 9. local/test-only Report fixture: `LOTUS_IDEA_REPORT_REALIZATION_ACTOR_ID`,
