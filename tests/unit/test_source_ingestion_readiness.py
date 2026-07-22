@@ -8,7 +8,7 @@ from typing import Any
 
 import pytest
 
-from app.application.proof_provenance import bind_aggregate_proof_provenance
+from app.application.proof_provenance import SOURCE_REVISION_ENV, bind_aggregate_proof_provenance
 from app.application.source_ingestion_readiness import (
     CORE_BASE_URL_ENV,
     CORE_QUERY_BASE_URL_ENV,
@@ -176,6 +176,84 @@ def test_source_ingestion_readiness_keeps_live_core_blocker_for_unbound_valid_pr
     assert "live_core_source_proof_missing" in snapshot.certification_blockers
 
 
+def test_source_ingestion_readiness_keeps_live_core_blocker_for_wrong_runtime_proof_ref(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text("{}", encoding="utf-8")
+    proof = tmp_path / "live-proof.json"
+    proof.write_text(
+        json.dumps(
+            _bound_runtime_execution(
+                runtime_execution(),
+                proof_ref="output/source-ingestion/different-live-proof.json",
+            )
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setenv(MANIFEST_ENV, str(manifest))
+    monkeypatch.setenv(SOURCE_INGESTION_RUNTIME_EXECUTION_ENV, str(proof))
+    monkeypatch.delenv(SCHEDULED_WORKER_SOURCE_CONTRACT_ENV, raising=False)
+    monkeypatch.delenv(SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE_ENV, raising=False)
+    monkeypatch.setenv(CORE_BASE_URL_ENV, "http://localhost:8310")
+    monkeypatch.setenv(DATABASE_URL_ENV, "postgresql://localhost/lotus_idea")
+
+    snapshot = build_source_ingestion_readiness_snapshot(
+        evaluated_at_utc=EVALUATED_AT,
+        runtime_execution_proof_ref="output/source-ingestion/live-proof.json",
+    )
+
+    assert snapshot.configured_live_proof_available is True
+    assert snapshot.live_core_source_proof_valid is False
+    assert "live_core_source_proof_missing" in snapshot.certification_blockers
+
+
+def test_source_ingestion_readiness_accepts_repo_relative_runtime_proof_ref_fallback(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    monkeypatch.setenv(SOURCE_REVISION_ENV, "test-source-revision")
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text("{}", encoding="utf-8")
+    example_manifest = (
+        tmp_path
+        / "docs"
+        / "examples"
+        / "source-ingestion"
+        / "high-cash-worker-manifest.example.json"
+    )
+    example_manifest.parent.mkdir(parents=True)
+    example_manifest.write_text("{}", encoding="utf-8")
+    proof = tmp_path / "output" / "source-ingestion" / "live-proof.json"
+    proof.parent.mkdir(parents=True)
+    proof.write_text(
+        json.dumps(
+            _bound_runtime_execution(
+                runtime_execution(),
+                proof_ref="output/source-ingestion/live-proof.json",
+                repository_root=tmp_path,
+            )
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setenv(MANIFEST_ENV, str(manifest))
+    monkeypatch.setenv(SOURCE_INGESTION_RUNTIME_EXECUTION_ENV, str(proof))
+    monkeypatch.delenv(SCHEDULED_WORKER_SOURCE_CONTRACT_ENV, raising=False)
+    monkeypatch.delenv(SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE_ENV, raising=False)
+    monkeypatch.setenv(CORE_BASE_URL_ENV, "http://localhost:8310")
+    monkeypatch.setenv(DATABASE_URL_ENV, "postgresql://localhost/lotus_idea")
+
+    snapshot = build_source_ingestion_readiness_snapshot(
+        repository_root=tmp_path,
+        evaluated_at_utc=EVALUATED_AT,
+    )
+
+    assert snapshot.example_manifest_available is True
+    assert snapshot.live_core_source_proof_valid is True
+    assert "live_core_source_proof_missing" not in snapshot.certification_blockers
+
+
 def test_source_ingestion_readiness_keeps_live_core_blocker_for_invalid_proof(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
@@ -202,6 +280,7 @@ def _bound_runtime_execution(
     payload: dict[str, Any],
     *,
     proof_ref: str,
+    repository_root: Path = ROOT,
 ) -> dict[str, Any]:
     with tempfile.TemporaryDirectory() as directory:
         artifact_path = Path(directory) / "source-ingestion-runtime-execution.json"
@@ -210,7 +289,7 @@ def _bound_runtime_execution(
             payload,
             artifact_path=artifact_path,
             proof_ref=proof_ref,
-            repository_root=ROOT,
+            repository_root=repository_root,
         )
         bound["aggregateProofProvenance"]["sourceTreeDirty"] = False
         return bound
