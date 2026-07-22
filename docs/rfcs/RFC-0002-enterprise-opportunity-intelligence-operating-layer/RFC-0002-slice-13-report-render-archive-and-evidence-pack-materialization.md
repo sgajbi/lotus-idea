@@ -69,9 +69,12 @@ Implemented in the first Slice 13 foundation:
    The merged `lotus-report` materialization declaration can also be validated through
    `scripts/report/generate_materialization_source_contract.py` and
    `make report-materialization-source-contract-proof-gate`. Issue `#438`
-   classifies the resulting v2 artifact as `source_contract` evidence. It
-   clears no blocker and cannot infer report-job execution, rendered-output
-   creation, archive-record creation, retention/legal-hold posture,
+   classifies the resulting artifact as `source_contract` evidence. The v3
+   artifact now records `reportOwnerMaterializationContractConsumed=true` and
+   `reportOwnerProofRef=sgajbi/lotus-report#152`, linking the closed
+   Report-owned materialization contract proof without moving Report authority
+   into `lotus-idea`. It clears no blocker and cannot infer report-job
+   execution, rendered-output creation, archive-record creation, retention/legal-hold posture,
    client-publication authority, production certification, or supported-feature
    promotion from sibling declarations.
 9. `src/app/ports/downstream_realization.py` and
@@ -194,12 +197,13 @@ they can cite `POST /reports/idea-evidence-packs` only as a declared sibling
 route; the runtime target remains planned and the live-intake blocker remains.
 With a valid report-materialization source contract, they can cite
 `POST /reports/idea-evidence-packs/materializations` only as a declared
-report-owned route. The runtime target, readiness status, supportability status,
-and all materialization/render/archive blockers remain unchanged. They keep
-Report/Render/Archive ownership outside `lotus-idea` and remain `not_certified`
-until live execution, client publication, Gateway/Workbench product proof,
-data-mesh certification, and supported-feature promotion are implemented and
-validated.
+report-owned route and can expose the closed Report owner proof ref
+`sgajbi/lotus-report#152` as provenance. The runtime target, readiness status,
+supportability status, and live materialization/render/archive blockers remain
+unchanged. They keep Report/Render/Archive ownership outside `lotus-idea` and
+remain `not_certified` until live execution, client publication,
+Gateway/Workbench product proof, data-mesh certification, and supported-feature
+promotion are implemented and validated.
 
 ## Boundary Decision
 

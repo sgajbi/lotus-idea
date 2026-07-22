@@ -21,10 +21,11 @@ REPORT_MATERIALIZATION_SOURCE_CONTRACT_ENV = (
     "LOTUS_IDEA_REPORT_MATERIALIZATION_SOURCE_CONTRACT_PROOF"
 )
 REPORT_MATERIALIZATION_SOURCE_CONTRACT_SCHEMA_VERSION = (
-    "lotus-idea.report-materialization-source-contract.v2"
+    "lotus-idea.report-materialization-source-contract.v3"
 )
 
 REPORT_MATERIALIZATION_BLOCKERS_CLEARED: tuple[str, ...] = ()
+REPORT_MATERIALIZATION_OWNER_PROOF_REF = "sgajbi/lotus-report#152"
 
 REMAINING_REPORT_MATERIALIZATION_BLOCKERS = (
     "report_evidence_pack_live_materialization_proof_missing",
@@ -47,6 +48,7 @@ REQUIRED_REPORT_MATERIALIZATION_EVIDENCE_REFS = (
     "../lotus-report/tests/unit/test_idea_evidence_materialization_contract.py",
     "../lotus-report/tests/unit/test_idea_evidence_intake_service.py",
     "../lotus-report/tests/integration/test_idea_evidence_intake_api.py",
+    REPORT_MATERIALIZATION_OWNER_PROOF_REF,
     "contracts/downstream-realization/lotus-idea-downstream-contracts.v1.json",
     "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/"
     "RFC-0002-slice-13-report-render-archive-and-evidence-pack-materialization.md",
@@ -68,6 +70,8 @@ _SOURCE_CONTRACT_FIELDS = frozenset(
         "targetRoute",
         "contractChecks",
         "remainingCertificationBlockers",
+        "reportOwnerMaterializationContractConsumed",
+        "reportOwnerProofRef",
         "reportMaterializationProven",
         "renderedOutputCreated",
         "archiveRecordCreated",
@@ -83,6 +87,7 @@ _SOURCE_CONTRACT_CHECK_FIELDS = frozenset(
         "fileEvidencePresent",
         "reportContractDeclaresMaterialization",
         "reportContractPreservesNonProofBoundaries",
+        "reportOwnerProofRefLinked",
     }
 )
 
@@ -105,7 +110,7 @@ def build_report_materialization_source_contract_payload(
         repository_root=repository_root,
         sibling_roots={"../lotus-report/": report_root},
         evidence_refs=REQUIRED_REPORT_MATERIALIZATION_EVIDENCE_REFS,
-        non_file_ref_prefixes=("GET ", "POST ", "make "),
+        non_file_ref_prefixes=("GET ", "POST ", "make ", "sgajbi/"),
     )
     report_contract_declares_materialization = _report_contract_declares_materialization(contract)
     report_contract_preserves_non_proof_boundaries = (
@@ -135,8 +140,12 @@ def build_report_materialization_source_contract_payload(
             "reportContractPreservesNonProofBoundaries": (
                 report_contract_preserves_non_proof_boundaries
             ),
+            "reportOwnerProofRefLinked": REPORT_MATERIALIZATION_OWNER_PROOF_REF
+            in REQUIRED_REPORT_MATERIALIZATION_EVIDENCE_REFS,
         },
         "remainingCertificationBlockers": REMAINING_REPORT_MATERIALIZATION_BLOCKERS,
+        "reportOwnerMaterializationContractConsumed": source_contract_valid,
+        "reportOwnerProofRef": REPORT_MATERIALIZATION_OWNER_PROOF_REF,
         "reportMaterializationProven": False,
         "renderedOutputCreated": False,
         "archiveRecordCreated": False,
@@ -166,6 +175,10 @@ def report_materialization_source_contract_is_valid(payload: Mapping[str, Any]) 
     if payload.get("sourceContractValid") is not True:
         return False
     if payload.get("targetRoute") != REPORT_MATERIALIZATION_ROUTE:
+        return False
+    if payload.get("reportOwnerMaterializationContractConsumed") is not True:
+        return False
+    if payload.get("reportOwnerProofRef") != REPORT_MATERIALIZATION_OWNER_PROOF_REF:
         return False
     if payload.get("reportMaterializationProven") is not False:
         return False
@@ -203,6 +216,7 @@ def report_materialization_source_contract_is_valid(payload: Mapping[str, Any]) 
             "fileEvidencePresent",
             "reportContractDeclaresMaterialization",
             "reportContractPreservesNonProofBoundaries",
+            "reportOwnerProofRefLinked",
         )
     )
 

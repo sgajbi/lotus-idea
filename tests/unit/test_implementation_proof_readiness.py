@@ -58,14 +58,6 @@ from app.application.report.intake_route_source_contract import (
     REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF_SCHEMA_VERSION,
     REQUIRED_REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_EVIDENCE_REFS,
 )
-from app.application.report.materialization_source_contract import (
-    REMAINING_REPORT_MATERIALIZATION_BLOCKERS,
-    REPORT_MATERIALIZATION_BLOCKERS_CLEARED,
-    REPORT_MATERIALIZATION_SOURCE_CONTRACT_SCHEMA_VERSION,
-    REPORT_MATERIALIZATION_ROUTE,
-    REQUIRED_REPORT_MATERIALIZATION_EVIDENCE_REFS,
-)
-from app.domain.proof_evidence import EvidenceClass
 from app.application.runtime_trust_telemetry.test_execution_contract import (
     build_runtime_trust_telemetry_test_execution_payload,
 )
@@ -96,6 +88,9 @@ from tests.support.source_ingestion_scheduler_evidence import (
 from tests.unit.downstream_realization.fixtures import (
     valid_advise_route_source_contract,
     valid_manage_route_source_contract,
+)
+from tests.unit.report.materialization_source_contract_fixtures import (
+    valid_report_materialization_source_contract,
 )
 from tests.support.proof_provenance import bound_aggregate_proof as _bound_aggregate_proof
 
@@ -997,7 +992,7 @@ def test_source_contract_adds_evidence_without_clearing_runtime_or_publication_b
         ),
         report_intake_route_source_contract_proof_ref=report_intake_proof_ref,
         report_materialization_source_contract_proof=_bound_aggregate_proof(
-            _valid_report_materialization_source_contract(),
+            valid_report_materialization_source_contract(),
             materialization_contract_ref,
         ),
         report_materialization_source_contract_proof_ref=materialization_contract_ref,
@@ -1167,32 +1162,4 @@ def _valid_report_intake_route_source_contract_proof() -> dict[str, object]:
         "clientPublicationAuthorityGranted": False,
         "supportedFeaturePromoted": False,
         "proofClosed": False,
-    }
-
-
-def _valid_report_materialization_source_contract() -> dict[str, object]:
-    return {
-        "schemaVersion": REPORT_MATERIALIZATION_SOURCE_CONTRACT_SCHEMA_VERSION,
-        "repository": "lotus-idea",
-        "generatedAtUtc": "2026-06-27T00:00:00+00:00",
-        "proofType": "lotus_report_idea_evidence_materialization_source_contract",
-        "proofScope": "report_materialization_declaration_and_contract_compatibility",
-        "evidenceClass": EvidenceClass.SOURCE_CONTRACT.value,
-        "sourceContractValid": True,
-        "aggregateBlockersCleared": REPORT_MATERIALIZATION_BLOCKERS_CLEARED,
-        "evidenceRefs": REQUIRED_REPORT_MATERIALIZATION_EVIDENCE_REFS,
-        "targetRoute": REPORT_MATERIALIZATION_ROUTE,
-        "contractChecks": {
-            "timezoneAwareGeneratedAtUtc": True,
-            "fileEvidencePresent": True,
-            "reportContractDeclaresMaterialization": True,
-            "reportContractPreservesNonProofBoundaries": True,
-        },
-        "remainingCertificationBlockers": REMAINING_REPORT_MATERIALIZATION_BLOCKERS,
-        "reportMaterializationProven": False,
-        "renderedOutputCreated": False,
-        "archiveRecordCreated": False,
-        "clientPublicationAuthorityGranted": False,
-        "supportedFeaturePromoted": False,
-        "certificationClosed": False,
     }

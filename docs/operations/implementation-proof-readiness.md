@@ -813,7 +813,9 @@ artifact from `LOTUS_REPORT_ROOT` under
 `LOTUS_IDEA_REPORT_MATERIALIZATION_SOURCE_CONTRACT_PROOF_OUTPUT` and passes it
 into aggregate readiness when
 `LOTUS_IDEA_REPORT_MATERIALIZATION_SOURCE_CONTRACT_PROOF` is not set. A valid
-artifact clears no blocker. It can add a source-safe evidence reference while
+v3 artifact clears no blocker. It records
+`reportOwnerMaterializationContractConsumed=true` and
+`reportOwnerProofRef=sgajbi/lotus-report#152`, then adds a source-safe evidence reference while
 preserving runtime materialization, rendered-output, archive-record,
 client-publication, certification, and supported-feature blockers. Missing
 sibling evidence writes an invalid source-contract artifact and keeps those

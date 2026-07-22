@@ -319,11 +319,12 @@ documentation across opportunity signal APIs.
     blocker; `lotus_report_live_intake_route_proof_missing` remains until the
     owning Report runtime supplies machine-verifiable serving, authorization,
     tenant-isolation, and request-execution evidence.
-35. Issue `#438` synchronizes the Report materialization artifact as v2
+35. Issue `#438` synchronized the Report materialization artifact as
     `source_contract` evidence across code, CLI and Make vocabulary,
     repository context, evidence inventory, implementation-proof and
     downstream-readiness guides, RFC truth, quality/demo claims, and wiki
-    source. It clears no blocker and preserves materialization execution,
+    source. The v3 artifact now links `sgajbi/lotus-report#152` as the closed
+    Report owner proof. It clears no blocker and preserves materialization execution,
     rendered-output, archive-record, retention/legal-hold, publication,
     certification, and supported-feature boundaries.
 36. Issue `#456` synchronizes source-ingestion v2 `runtime_execution` truth

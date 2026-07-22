@@ -27,6 +27,7 @@ ensure_worktree_imports(__file__)
 from app.application.report.materialization_source_contract import (  # noqa: E402
     REMAINING_REPORT_MATERIALIZATION_BLOCKERS,
     REPORT_MATERIALIZATION_BLOCKERS_CLEARED,
+    REPORT_MATERIALIZATION_OWNER_PROOF_REF,
     REPORT_MATERIALIZATION_SOURCE_CONTRACT_SCHEMA_VERSION,
     REQUIRED_REPORT_MATERIALIZATION_EVIDENCE_REFS,
     build_report_materialization_source_contract_payload,
@@ -87,6 +88,12 @@ def validate_report_materialization_source_contract() -> list[str]:
         errors.append("report materialization artifact must declare source_contract evidence")
     if tuple(artifact.get("evidenceRefs") or ()) != REQUIRED_REPORT_MATERIALIZATION_EVIDENCE_REFS:
         errors.append("report materialization source-contract refs must match the contract")
+    if artifact.get("reportOwnerProofRef") != REPORT_MATERIALIZATION_OWNER_PROOF_REF:
+        errors.append("report materialization source contract must link the Report owner proof")
+    if artifact.get("reportOwnerMaterializationContractConsumed") is not True:
+        errors.append(
+            "report materialization source contract must consume the Report owner contract"
+        )
     if tuple(artifact.get("aggregateBlockersCleared") or ()) != (
         REPORT_MATERIALIZATION_BLOCKERS_CLEARED
     ):

@@ -12,6 +12,7 @@ import pytest
 from app.application.report.materialization_source_contract import (
     REMAINING_REPORT_MATERIALIZATION_BLOCKERS,
     REPORT_MATERIALIZATION_BLOCKERS_CLEARED,
+    REPORT_MATERIALIZATION_OWNER_PROOF_REF,
     REPORT_MATERIALIZATION_SOURCE_CONTRACT_ENV,
     REPORT_MATERIALIZATION_SOURCE_CONTRACT_SCHEMA_VERSION,
     REPORT_MATERIALIZATION_ROUTE,
@@ -37,9 +38,12 @@ def test_builds_source_safe_report_materialization_source_contract(tmp_path: Pat
     assert artifact["targetRoute"] == REPORT_MATERIALIZATION_ROUTE
     assert tuple(artifact["aggregateBlockersCleared"]) == REPORT_MATERIALIZATION_BLOCKERS_CLEARED
     assert tuple(artifact["evidenceRefs"]) == REQUIRED_REPORT_MATERIALIZATION_EVIDENCE_REFS
+    assert REPORT_MATERIALIZATION_OWNER_PROOF_REF in artifact["evidenceRefs"]
     assert tuple(artifact["remainingCertificationBlockers"]) == (
         REMAINING_REPORT_MATERIALIZATION_BLOCKERS
     )
+    assert artifact["reportOwnerMaterializationContractConsumed"] is True
+    assert artifact["reportOwnerProofRef"] == REPORT_MATERIALIZATION_OWNER_PROOF_REF
     assert artifact["reportMaterializationProven"] is False
     assert artifact["renderedOutputCreated"] is False
     assert artifact["archiveRecordCreated"] is False
@@ -109,6 +113,8 @@ def test_rejects_source_contract_when_report_contract_evidence_is_missing(
         ("evidenceClass", EvidenceClass.RUNTIME_EXECUTION.value),
         ("sourceContractValid", False),
         ("targetRoute", "planned:lotus-report-idea-evidence-pack-materialization"),
+        ("reportOwnerMaterializationContractConsumed", False),
+        ("reportOwnerProofRef", "sgajbi/lotus-report#999999"),
         ("reportMaterializationProven", True),
         ("renderedOutputCreated", True),
         ("archiveRecordCreated", True),
@@ -157,6 +163,7 @@ def test_rejects_source_contract_with_invalid_collections(
         "fileEvidencePresent",
         "reportContractDeclaresMaterialization",
         "reportContractPreservesNonProofBoundaries",
+        "reportOwnerProofRefLinked",
     ],
 )
 def test_rejects_source_contract_with_invalid_contract_checks(
