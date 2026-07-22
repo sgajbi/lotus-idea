@@ -13,6 +13,10 @@ from urllib import error, request
 
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from scripts.proof_worktree_import_guard import ensure_worktree_imports
+
+ensure_worktree_imports(__file__)
+
 from app.application.downstream_realization.advise_intake_runtime_execution import (  # noqa: E402
     build_advise_intake_runtime_execution_payload,
     source_safe_receipt_digest,
