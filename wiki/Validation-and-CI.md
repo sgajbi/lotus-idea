@@ -942,11 +942,12 @@ source-contract checks in a predictable path so future slices do not reintroduce
 copy-pasted policy, role-only authorization, or inconsistent problem-detail
 behavior.
 
-The caller-context contract gate also covers adjacent protected API modules:
-when a route policy declares both `allowed_roles` and an `idea.*` capability,
-the route must use `require_role_and_capability`. This preserves the same
-least-privilege posture for advisor queue and candidate detail reads instead
-of letting broad role membership substitute for a published operation
+The caller-context contract gate also covers adjacent protected API modules,
+including nested route packages under `src/app/api/**`. When a route policy
+declares both `allowed_roles` and an `idea.*` capability, the route must use
+`require_role_and_capability`. This preserves the same least-privilege posture
+for advisor queue, candidate detail, outbox, and operator route families
+instead of letting broad role membership substitute for a published operation
 capability. It also requires typed caller-boundary exceptions, exact stable
 codes and bounded error categories, preservation by the global handler,
 RFC 7807 runtime media, and generated 400/403 examples under both supported

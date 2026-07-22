@@ -48,6 +48,10 @@
           "ref": "scripts/workbench/generate_discovery_contract_proof.py"
         },
         {
+          "type": "gate",
+          "ref": "scripts/caller_context_contract_gate.py"
+        },
+        {
           "type": "contract",
           "ref": "contracts/implementation-proof/rfc0002-slice11-owner-mainline-evidence.v1.json"
         },
@@ -60,7 +64,7 @@
           "ref": "README.md#downstream-consumers"
         }
       ],
-      "futureAgentRule": "Treat local/test caller fixtures and static Workbench or Gateway declarations as non-certifying until owner route proof, UI consumption proof, and production identity evidence are available.",
+      "futureAgentRule": "Treat local/test caller fixtures and static Workbench or Gateway declarations as non-certifying until owner route proof, UI consumption proof, and production identity evidence are available; nested API route modules are inside the caller-context contract gate and must not bypass trusted-caller provenance or strict role-and-capability enforcement.",
       "nonClaimBoundaries": [
         "Local/test caller authority fixtures are not production identity, authentication, or authorization proof.",
         "Backend source contracts alone do not prove populated Workbench panel readiness."

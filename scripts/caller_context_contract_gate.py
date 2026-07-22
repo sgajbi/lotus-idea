@@ -199,8 +199,10 @@ def _validate_api_module(path: Path, root: Path) -> list[str]:
 
 def validate_caller_context_contract(root: Path = ROOT) -> list[str]:
     errors = _validate_caller_headers_module(root / CALLER_HEADERS_MODULE, root)
-    for path in sorted((root / API_DIR).glob("*.py")):
+    for path in sorted((root / API_DIR).rglob("*.py")):
         if path.name == CALLER_HEADERS_MODULE.name:
+            continue
+        if "__pycache__" in path.parts:
             continue
         errors.extend(_validate_api_module(path, root))
     shared_contracts = {

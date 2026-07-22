@@ -960,7 +960,11 @@ request also carries `X-Lotus-Trusted-Caller-Context` matching
 `LOTUS_IDEA_TRUSTED_CALLER_CONTEXT_TOKEN`. This is a bounded trusted-ingress
 provenance marker for service-to-service propagation; it is not an
 identity-provider integration, signed assertion, Workbench entitlement proof,
-client-publication proof, or supported-feature promotion.
+client-publication proof, or supported-feature promotion. `make
+caller-context-contract-gate` scans nested API route modules as well as
+top-level API modules, so route families under `src/app/api/review_queue/`,
+`src/app/api/outbox/`, and future nested API packages remain inside the same
+trusted-caller and strict role-and-capability contract.
 
 The data-lifecycle operator route requires `privacy_officer` or
 `records_manager`, `idea.data-lifecycle.manage`, exact trusted tenant scope,
@@ -1538,6 +1542,8 @@ Recent issue-derived patterns to preserve:
 9. caller-supplied capability, role, and entitlement headers are simulation
    inputs in local/test; production-like profiles require the shared trusted
    caller-context provenance guard before those headers can authorize routes,
+   and nested API route modules must remain covered by the caller-context
+   contract gate rather than relying on top-level module scans,
 10. aggregate proof artifacts must be generated from clean source before they
     can clear implementation-readiness blockers; dirty-tree or missing
     `sourceTreeDirty` provenance is diagnostic-only and must not add evidence

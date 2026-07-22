@@ -122,6 +122,37 @@ def test_caller_context_contract_gate_blocks_route_local_header_without_trusted_
     ]
 
 
+def test_caller_context_contract_gate_scans_nested_api_route_modules(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    _write_minimum_caller_headers(tmp_path)
+    _write_module(
+        tmp_path,
+        Path("src/app/api/review_queue/routes.py"),
+        "from fastapi import Header\n"
+        "from app.api.caller_headers import caller_context_from_headers\n\n"
+        "def get_queue(\n"
+        "    x_caller_capabilities: str | None = Header("
+        "default=None, alias='X-Caller-Capabilities'),\n"
+        "):\n"
+        "    return caller_context_from_headers(\n"
+        "        subject=None,\n"
+        "        roles=None,\n"
+        "        capabilities=x_caller_capabilities,\n"
+        "    )\n",
+    )
+
+    errors = module.validate_caller_context_contract(tmp_path)
+
+    assert errors == [
+        "src/app/api/review_queue/routes.py:4: route-local caller context headers must also bind "
+        "`X-Lotus-Trusted-Caller-Context`",
+        "src/app/api/review_queue/routes.py:7: route-local caller_context_from_headers calls must "
+        "forward trusted_caller_context",
+    ]
+
+
 def test_caller_context_contract_gate_accepts_route_local_trusted_forwarding(
     tmp_path: Path,
 ) -> None:
