@@ -1092,6 +1092,16 @@ GitHub open/closed state and lifecycle labels so reopened, blocked,
 in-progress, merged-main-QA-pending, and closed-complete issue posture cannot
 drift silently.
 
+RFC-0002 repeated issue-learning truth is governed by
+`contracts/implementation-proof/rfc0002-issue-learning-patterns.v1.json`.
+`make rfc0002-github-issue-learning-pattern-gate` is part of `make lint`; it
+requires every non-complete RFC-0002 execution issue to belong to a pattern
+family with durable controls, future-agent guidance, and explicit no-claim
+boundaries. When adding or reclassifying an RFC-0002 issue, update the
+execution ledger and this pattern ledger together. The pattern ledger does not
+close issues or clear blockers; it prevents the same defect family from being
+handled only as a one-off chat-memory fix.
+
 ## Observability And Operability
 
 Operation events are the primary supportability surface. They must stay
