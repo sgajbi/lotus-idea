@@ -487,15 +487,17 @@ trusted identity integration through issue `#380`.
 For local Compose only, Manage intake requires server-process settings:
 `LOTUS_IDEA_MANAGE_REALIZATION_ACTOR_ID`,
 `LOTUS_IDEA_MANAGE_REALIZATION_ROLE`,
-`LOTUS_IDEA_MANAGE_REALIZATION_TENANT_ID`, and
+`LOTUS_IDEA_MANAGE_REALIZATION_TENANT_ID`,
+`LOTUS_IDEA_MANAGE_REALIZATION_LEGAL_ENTITY_CODE`,
 `LOTUS_IDEA_MANAGE_REALIZATION_SERVICE_IDENTITY`, and
 `LOTUS_IDEA_MANAGE_REALIZATION_CAPABILITIES`. Their local defaults are a
 development fixture and are sent only to Manage as its required service-context
-and capability headers. The application permits the fixture only in `local`
-and `test`; demo, staging, and production fail closed. Do not pass user
+and capability headers, including `X-Legal-Entity-Code` and
+`X-Principal-Status: ACTIVE`. The application permits the fixture only in
+`local` and `test`; demo, staging, and production fail closed. Do not pass user
 identity from a browser or use this as evidence of IdP/session/token-claim
-integration, suitability, rebalance, or downstream acceptance. Track the
-future trusted identity integration through issue `#380`.
+integration, suitability, rebalance, or downstream acceptance. Track the future
+trusted identity integration through issue `#380`.
 
 Report intake uses the same server-only local/test fixture posture. It requires
 `LOTUS_IDEA_REPORT_REALIZATION_ACTOR_ID`,

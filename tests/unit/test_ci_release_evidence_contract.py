@@ -61,6 +61,18 @@ def test_compose_runtime_contract_rejects_missing_advise_capability_fixture() ->
     )
 
 
+def test_compose_runtime_contract_rejects_missing_manage_legal_entity_fixture() -> None:
+    compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
+    degraded = compose.replace(
+        "      LOTUS_IDEA_MANAGE_REALIZATION_LEGAL_ENTITY_CODE:",
+        "      REMOVED:",
+    )
+
+    assert "docker-compose.yml must configure governed Manage realization legal entity code" in (
+        validate_compose_runtime_contract(degraded)
+    )
+
+
 @pytest.mark.parametrize(
     ("current", "replacement", "expected_error"),
     [

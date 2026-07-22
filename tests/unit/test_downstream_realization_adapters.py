@@ -601,6 +601,7 @@ def test_manage_service_context_rejects_blank_required_values() -> None:
             actor_id=" ",
             role="service",
             tenant_id="local-development",
+            legal_entity_code="SGPB",
             service_identity="lotus-idea-local-development",
             capabilities="manage.write",
         )
@@ -707,6 +708,7 @@ def manage_service_context() -> ManageRealizationServiceContext:
         actor_id="lotus-idea-local-development",
         role="service",
         tenant_id="local-development",
+        legal_entity_code="SGPB",
         service_identity="lotus-idea-local-development",
         capabilities="manage.write",
     )

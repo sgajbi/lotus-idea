@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date
-from typing import Any
+from typing import Any, Protocol
 
 from app.domain import (
     ConversionTarget,
@@ -57,15 +57,7 @@ class AdviseRealizationServiceContext:
                 )
 
     def request_headers(self) -> dict[str, str]:
-        return {
-            "X-Actor-Id": self.actor_id,
-            "X-Role": self.role,
-            "X-Tenant-Id": self.tenant_id,
-            "X-Legal-Entity-Code": self.legal_entity_code,
-            "X-Service-Identity": self.service_identity,
-            "X-Capabilities": self.capabilities,
-            "X-Principal-Status": "ACTIVE",
-        }
+        return _trusted_local_service_headers(self)
 
 
 @dataclass(frozen=True)
@@ -73,6 +65,7 @@ class ManageRealizationServiceContext:
     actor_id: str
     role: str
     tenant_id: str
+    legal_entity_code: str
     service_identity: str
     capabilities: str
 
@@ -81,6 +74,7 @@ class ManageRealizationServiceContext:
             ("actor_id", self.actor_id),
             ("role", self.role),
             ("tenant_id", self.tenant_id),
+            ("legal_entity_code", self.legal_entity_code),
             ("service_identity", self.service_identity),
             ("capabilities", self.capabilities),
         ):
@@ -90,13 +84,7 @@ class ManageRealizationServiceContext:
                 )
 
     def request_headers(self) -> dict[str, str]:
-        return {
-            "X-Actor-Id": self.actor_id,
-            "X-Role": self.role,
-            "X-Tenant-Id": self.tenant_id,
-            "X-Service-Identity": self.service_identity,
-            "X-Capabilities": self.capabilities,
-        }
+        return _trusted_local_service_headers(self)
 
 
 @dataclass(frozen=True)
@@ -134,6 +122,38 @@ class ReportRealizationServiceContext:
             "X-Tenant-Id": self.tenant_id,
             "X-Region": self.region,
         }
+
+
+class _TrustedLocalServiceContext(Protocol):
+    @property
+    def actor_id(self) -> str: ...
+
+    @property
+    def role(self) -> str: ...
+
+    @property
+    def tenant_id(self) -> str: ...
+
+    @property
+    def legal_entity_code(self) -> str: ...
+
+    @property
+    def service_identity(self) -> str: ...
+
+    @property
+    def capabilities(self) -> str: ...
+
+
+def _trusted_local_service_headers(context: _TrustedLocalServiceContext) -> dict[str, str]:
+    return {
+        "X-Actor-Id": context.actor_id,
+        "X-Role": context.role,
+        "X-Tenant-Id": context.tenant_id,
+        "X-Legal-Entity-Code": context.legal_entity_code,
+        "X-Service-Identity": context.service_identity,
+        "X-Capabilities": context.capabilities,
+        "X-Principal-Status": "ACTIVE",
+    }
 
 
 @dataclass(frozen=True)

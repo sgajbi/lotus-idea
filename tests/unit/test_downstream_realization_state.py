@@ -16,6 +16,7 @@ from app.runtime.downstream_realization_state import (
     MANAGE_BASE_URL_ENV,
     MANAGE_ACTOR_ID_ENV,
     MANAGE_CAPABILITIES_ENV,
+    MANAGE_LEGAL_ENTITY_CODE_ENV,
     MANAGE_ROLE_ENV,
     MANAGE_SERVICE_IDENTITY_ENV,
     MANAGE_SUBMIT_PATH_ENV,
@@ -194,6 +195,7 @@ def test_missing_advise_service_context_fails_closed(
         MANAGE_ACTOR_ID_ENV,
         MANAGE_ROLE_ENV,
         MANAGE_TENANT_ID_ENV,
+        MANAGE_LEGAL_ENTITY_CODE_ENV,
         MANAGE_SERVICE_IDENTITY_ENV,
         MANAGE_CAPABILITIES_ENV,
     ],
@@ -410,6 +412,7 @@ def configure_conversion_env(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv(MANAGE_ACTOR_ID_ENV, "lotus-idea-local-development")
     monkeypatch.setenv(MANAGE_ROLE_ENV, "service")
     monkeypatch.setenv(MANAGE_TENANT_ID_ENV, "local-development")
+    monkeypatch.setenv(MANAGE_LEGAL_ENTITY_CODE_ENV, "SGPB")
     monkeypatch.setenv(MANAGE_SERVICE_IDENTITY_ENV, "lotus-idea-local-development")
     monkeypatch.setenv(MANAGE_CAPABILITIES_ENV, "manage.write")
     monkeypatch.setenv(TIMEOUT_SECONDS_ENV, "1.25")

@@ -61,11 +61,16 @@ def test_manage_service_context_matches_versioned_wire_contract() -> None:
         actor_id="lotus-idea-local-development",
         role="service",
         tenant_id="local-development",
+        legal_entity_code="SGPB",
         service_identity="lotus-idea-local-development",
         capabilities="manage.write",
     )
 
     assert set(context.request_headers()) == set(contract["required_server_headers"])
+    assert contract["receipt_outcomes"] == ["ACCEPTED", "ACCEPTED_REPLAYED", "REJECTED"]
+    assert contract["local_dev_principal_source"] == (
+        "trusted_headers_until_production_idp_available"
+    )
 
 
 def test_advise_service_context_matches_versioned_wire_contract() -> None:

@@ -455,16 +455,18 @@ call, even when the variables are present.
 | `LOTUS_IDEA_MANAGE_REALIZATION_ACTOR_ID` | `lotus-idea-local-development` |
 | `LOTUS_IDEA_MANAGE_REALIZATION_ROLE` | `service` |
 | `LOTUS_IDEA_MANAGE_REALIZATION_TENANT_ID` | `local-development` |
+| `LOTUS_IDEA_MANAGE_REALIZATION_LEGAL_ENTITY_CODE` | `SGPB` |
 | `LOTUS_IDEA_MANAGE_REALIZATION_SERVICE_IDENTITY` | `lotus-idea-local-development` |
 | `LOTUS_IDEA_MANAGE_REALIZATION_CAPABILITIES` | `manage.write` |
 
 The adapter sends these values only as `X-Actor-Id`, `X-Role`, `X-Tenant-Id`,
-`X-Service-Identity`, and `X-Capabilities` to the current Manage route, in
-addition to governed correlation, trace, and idempotency headers. This fixture
-does not authenticate an end user, map a session or token claim, grant
-suitability or rebalance authority, or certify downstream acceptance. The
-future trusted identity path remains tracked in GitHub issue `#380`; this
-branch keeps the fixture explicitly non-authoritative.
+`X-Legal-Entity-Code`, `X-Service-Identity`, `X-Capabilities`, and
+`X-Principal-Status: ACTIVE` to the current Manage route, in addition to
+governed correlation, trace, and idempotency headers. This fixture does not
+authenticate an end user, map a session or token claim, grant suitability or
+rebalance authority, or certify downstream acceptance. The future trusted
+identity path remains tracked in GitHub issue `#380`; this branch keeps the
+fixture explicitly non-authoritative.
 
 Report materialization has the same identity-provider deferral. The Idea adapter
 maps a persisted, trusted-scope report-evidence request to the Report-owned
