@@ -22,6 +22,7 @@ from app.application.downstream_realization.manage_intake_runtime_execution impo
 )
 from app.application.report.materialization_runtime_execution import (
     REMAINING_REPORT_MATERIALIZATION_RUNTIME_BLOCKERS,
+    REPORT_RENDER_ARCHIVE_OWNER_MAINLINE_EVIDENCE,
     REPORT_MATERIALIZATION_RUNTIME_BLOCKERS_SATISFIED,
     REPORT_MATERIALIZATION_RUNTIME_EVIDENCE_REFS,
     REPORT_MATERIALIZATION_RUNTIME_EXECUTION_SCHEMA_VERSION,
@@ -184,6 +185,7 @@ def valid_report_materialization_runtime_execution() -> dict[str, object]:
             for ref in REPORT_MATERIALIZATION_RUNTIME_SOURCE_REFS
         ),
         "evidenceRefs": REPORT_MATERIALIZATION_RUNTIME_EVIDENCE_REFS,
+        "ownerMainlineEvidence": REPORT_RENDER_ARCHIVE_OWNER_MAINLINE_EVIDENCE,
         "receiptEvidence": receipt_evidence,
         "runtimeChecks": {
             "timezoneAwareGeneratedAtUtc": True,
@@ -198,6 +200,10 @@ def valid_report_materialization_runtime_execution() -> dict[str, object]:
             "missingIdempotencyKeyObserved": True,
             "clientPublicationDeniedObserved": True,
             "reportMaterializationAuthorityObserved": True,
+            "renderedOutputCreationObserved": True,
+            "archiveRecordCreationObserved": True,
+            "renderOwnerMainlineEvidenceConsumed": True,
+            "archiveOwnerMainlineEvidenceConsumed": True,
             "renderArchiveAuthorityRetained": True,
             "clientPublicationAuthorityRetained": True,
             "supportedFeatureNotPromoted": True,
@@ -206,8 +212,6 @@ def valid_report_materialization_runtime_execution() -> dict[str, object]:
         "aggregateBlockersSatisfied": REPORT_MATERIALIZATION_RUNTIME_BLOCKERS_SATISFIED,
         "remainingCertificationBlockers": REMAINING_REPORT_MATERIALIZATION_RUNTIME_BLOCKERS,
         "producerCertificationBlockersRetained": (
-            "rendered_output_creation_missing",
-            "archive_record_creation_missing",
             "client_publication_authority_blocked",
             "supported_feature_promotion_missing",
             "production_identity_not_certified",

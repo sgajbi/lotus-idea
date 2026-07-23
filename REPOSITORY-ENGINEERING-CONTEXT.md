@@ -1871,13 +1871,17 @@ Recent issue-derived patterns to preserve:
     evidence from the owning Report/Render/Archive runtime can change those
     blockers; source declarations must never be projected into a current target
     route, readiness status, or supportability status.
-    A closed Report materialization runtime-execution proof may clear only
-    `report_evidence_pack_live_materialization_proof_missing` when it is
-    receipt-bound to the sibling Report route, aggregate-current, and generated
-    or supplied through the governed `report/` proof path. It must preserve
-    rendered-output creation, archive-record creation, client-publication,
-    supported-feature promotion, production-identity, retention, and legal-hold
-    blockers until the owning services provide separate runtime evidence.
+    A closed Report materialization runtime-execution proof may clear
+    `report_evidence_pack_live_materialization_proof_missing`,
+    `rendered_output_creation_missing`, and `archive_record_creation_missing`
+    only when it is receipt-bound to the sibling Report route,
+    aggregate-current, generated or supplied through the governed `report/`
+    proof path, and bound to exact Render #65/PR #67 plus Archive #72/PR #73
+    owner-mainline evidence. Owner evidence alone clears no blocker. The proof
+    must preserve client-publication, supported-feature promotion,
+    production-identity, retention, legal-hold, and final-certification blockers
+    until the owning services provide separate runtime, legal, publication, and
+    support evidence.
 45. The Idea Report consumer may submit the Report materialization route only
     after resolving the evidence pack's persisted candidate record. Project
     only the trusted `portfolio_id`; do not add raw scope to audits, public

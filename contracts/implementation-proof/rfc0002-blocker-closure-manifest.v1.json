@@ -442,9 +442,9 @@
       "groupId": "report-render-archive-materialization-proof",
       "sliceIds": ["RFC-0002/slice-13", "RFC-0002/slice-17"],
       "requiredEvidenceClass": "runtime_execution",
-      "closureStatus": "external_dependency_open",
+      "closureStatus": "open",
       "supportedFeatureEffect": "no_promotion_until_report_render_archive_and_publication_authority_execute",
-      "partialProgress": "PR #723 introduces a bounded Report materialization runtime-execution proof path that may clear report_evidence_pack_live_materialization_proof_missing only after merge and exact-main validation. Rendered output, archive record, Report intake, publication authority, production identity, legal/retention, and supported-feature blockers remain open.",
+      "partialProgress": "PR #724 introduced bounded Report materialization runtime-execution proof on main. This Slice 13 continuation binds that proof to exact Render #65/PR #67 and Archive #72/PR #73 owner-mainline evidence so report_evidence_pack_live_materialization_proof_missing, rendered_output_creation_missing, and archive_record_creation_missing may clear only together. Report live intake, publication authority, production identity, legal/retention, and supported-feature blockers remain open.",
       "ownerIssue": {
         "repository": "sgajbi/lotus-idea",
         "number": 690,
@@ -465,7 +465,7 @@
           "dependencyStatus": "merged_main",
           "mainSha": "c608fe4c5b22fa22e51e242894a76a8532839e9f",
           "mainReleasabilityRunId": "29966168422",
-          "evidenceBoundary": "Owner-repo render proof is available, but Idea still requires Report live materialization consumption and publication gating before blocker closure."
+          "evidenceBoundary": "Owner-repo render proof is available and can clear rendered_output_creation_missing only when consumed by an aggregate-current Report materialization runtime proof that preserves publication and production gates."
         },
         {
           "repository": "sgajbi/lotus-archive",
@@ -475,7 +475,7 @@
           "dependencyStatus": "merged_main",
           "mainSha": "61ff2cb56a0e3652c40df2740f1f5d8150e52071",
           "mainReleasabilityRunId": "29966167055",
-          "evidenceBoundary": "Owner-repo archive metadata, access-audit, and lifecycle posture proof is available, but Idea must not claim archive authority, disposal authorization, client publication, or production legal certification."
+          "evidenceBoundary": "Owner-repo archive metadata, access-audit, and lifecycle posture proof is available and can clear archive_record_creation_missing only when consumed by an aggregate-current Report materialization runtime proof. Idea must not claim archive authority, disposal authorization, client publication, or production legal certification."
         }
       ],
       "blockers": [

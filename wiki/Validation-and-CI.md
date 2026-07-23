@@ -557,11 +557,12 @@ Persistence adapter validation:
 17. `tests/unit/report/test_materialization_runtime_execution.py` and
     `make report-materialization-runtime-execution-proof-gate` validate the
     receipt-bound `lotus-report` materialization runtime-execution proof. A
-    valid current artifact clears only
-    `report_evidence_pack_live_materialization_proof_missing` and preserves
-    rendered-output creation, archive-record creation, client-publication,
-    production-identity, legal/retention, support, and supported-feature
-    blockers.
+    valid current artifact must bind source-safe Report materialization
+    receipts to exact Render #65/PR #67 and Archive #72/PR #73 owner-mainline
+    evidence. It clears `report_evidence_pack_live_materialization_proof_missing`,
+    `rendered_output_creation_missing`, and `archive_record_creation_missing`
+    while preserving client-publication, production-identity, legal/retention,
+    support, final certification, and supported-feature blockers.
 18. `tests/unit/test_ai_lineage_store_proof.py` and
     `make ai-lineage-store-proof-contract-gate` prove the source-safe AI
     lineage store proof contract that aggregate readiness consumes to clear

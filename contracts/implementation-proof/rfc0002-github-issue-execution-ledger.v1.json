@@ -264,9 +264,9 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/691",
       "rfcSlices": ["slice-13"],
       "githubState": "open",
-      "executionStatus": "open_ready",
+      "executionStatus": "open_in_progress",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #691 open until Idea consumes Report live materialization plus Render/Archive owner evidence without overclaiming authority. Render owner proof is now available through lotus-render #65 / PR #67 at c608fe4c5b22fa22e51e242894a76a8532839e9f with Main Releasability run 29966168422. Archive owner proof is now available through lotus-archive #72 / PR #73 at 61ff2cb56a0e3652c40df2740f1f5d8150e52071 with Main Releasability run 29966167055. #691 remains open because #690 Report live intake/materialization, #380/#683 publication and supported-feature promotion, and broader Archive production trust/legal evidence in lotus-archive #55 are not complete."
+      "closureInstruction": "Keep #691 open. This branch consumes exact Render owner proof lotus-render #65 / PR #67 at c608fe4c5b22fa22e51e242894a76a8532839e9f with Main Releasability run 29966168422 and Archive owner proof lotus-archive #72 / PR #73 at 61ff2cb56a0e3652c40df2740f1f5d8150e52071 with Main Releasability run 29966167055 inside the aggregate-current Report materialization runtime proof. That may clear rendered_output_creation_missing and archive_record_creation_missing together with report_evidence_pack_live_materialization_proof_missing, but #691 remains open until lifecycle-safe publication, supported-feature promotion, production identity, and broader Archive production trust/legal evidence in lotus-archive #55 are complete."
     },
     {
       "issueNumber": 692,

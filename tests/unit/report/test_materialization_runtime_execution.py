@@ -10,6 +10,7 @@ import pytest
 
 from app.application.report.materialization_runtime_execution import (
     REMAINING_REPORT_MATERIALIZATION_RUNTIME_BLOCKERS,
+    REPORT_RENDER_ARCHIVE_OWNER_MAINLINE_EVIDENCE,
     REPORT_MATERIALIZATION_RUNTIME_BLOCKERS_SATISFIED,
     REPORT_MATERIALIZATION_RUNTIME_EXECUTION_ENV,
     REPORT_MATERIALIZATION_RUNTIME_EXECUTION_SCHEMA_VERSION,
@@ -33,8 +34,14 @@ def test_report_materialization_runtime_execution_accepts_receipt_bound_runtime_
     assert payload["remainingCertificationBlockers"] == (
         REMAINING_REPORT_MATERIALIZATION_RUNTIME_BLOCKERS
     )
+    assert payload["ownerMainlineEvidence"] == REPORT_RENDER_ARCHIVE_OWNER_MAINLINE_EVIDENCE
+    assert "rendered_output_creation_missing" in payload["aggregateBlockersSatisfied"]
+    assert "archive_record_creation_missing" in payload["aggregateBlockersSatisfied"]
+    assert "client_publication_authority_blocked" in payload["remainingCertificationBlockers"]
     assert payload["nonProofClaims"]["supportedFeaturePromoted"] is False  # type: ignore[index]
     assert payload["nonProofClaims"]["clientPublicationAuthorized"] is False  # type: ignore[index]
+    assert payload["nonProofClaims"]["renderedOutputCertified"] is False  # type: ignore[index]
+    assert payload["nonProofClaims"]["archiveRecordCertified"] is False  # type: ignore[index]
 
 
 def test_report_materialization_runtime_execution_builder_binds_runtime_checks() -> None:
@@ -51,6 +58,10 @@ def test_report_materialization_runtime_execution_builder_binds_runtime_checks()
     assert payload["runtimeChecks"]["acceptedArchivedReceiptObserved"] is True
     assert payload["runtimeChecks"]["archiveFailureReceiptObserved"] is True
     assert payload["runtimeChecks"]["clientPublicationDeniedObserved"] is True
+    assert payload["runtimeChecks"]["renderedOutputCreationObserved"] is True
+    assert payload["runtimeChecks"]["archiveRecordCreationObserved"] is True
+    assert payload["runtimeChecks"]["renderOwnerMainlineEvidenceConsumed"] is True
+    assert payload["runtimeChecks"]["archiveOwnerMainlineEvidenceConsumed"] is True
 
 
 def test_report_materialization_runtime_execution_builder_requires_aware_generation_time() -> None:
@@ -80,12 +91,20 @@ def test_report_materialization_runtime_execution_rejects_supported_feature_prom
     assert not report_materialization_runtime_execution_is_valid(payload)
 
 
-def test_report_materialization_runtime_execution_rejects_render_archive_overclaim() -> None:
+def test_report_materialization_runtime_execution_rejects_render_archive_certification_overclaim() -> (
+    None
+):
     payload = deepcopy(valid_report_materialization_runtime_execution())
-    payload["aggregateBlockersSatisfied"] = (
-        *REPORT_MATERIALIZATION_RUNTIME_BLOCKERS_SATISFIED,
-        "rendered_output_creation_missing",
-    )
+    payload["nonProofClaims"]["renderedOutputCertified"] = True  # type: ignore[index]
+
+    assert not report_materialization_runtime_execution_is_valid(payload)
+
+
+def test_report_materialization_runtime_execution_rejects_owner_evidence_drift() -> None:
+    payload = deepcopy(valid_report_materialization_runtime_execution())
+    owner_evidence = cast(list[dict[str, Any]], list(payload["ownerMainlineEvidence"]))
+    owner_evidence[0] = dict(owner_evidence[0], mergedMainCommitSha="0" * 40)
+    payload["ownerMainlineEvidence"] = owner_evidence
 
     assert not report_materialization_runtime_execution_is_valid(payload)
 

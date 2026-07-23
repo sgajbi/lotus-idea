@@ -598,7 +598,7 @@ def test_manage_intake_runtime_execution_clears_only_manage_live_blocker() -> No
     assert proof_ref in manage_contract.evidence_refs
 
 
-def test_report_materialization_runtime_execution_clears_only_materialization_blocker() -> None:
+def test_report_materialization_runtime_execution_consumes_render_archive_owner_evidence() -> None:
     proof_ref = "output/report/materialization-runtime-execution-proof.json"
     snapshot = build_downstream_realization_readiness_snapshot(
         repository=InMemoryIdeaRepository(),
@@ -613,8 +613,8 @@ def test_report_materialization_runtime_execution_clears_only_materialization_bl
 
     assert "report_evidence_pack_live_materialization_proof_missing" not in snapshot.blockers
     assert "lotus_report_live_intake_route_proof_missing" in snapshot.blockers
-    assert "rendered_output_creation_missing" in snapshot.blockers
-    assert "archive_record_creation_missing" in snapshot.blockers
+    assert "rendered_output_creation_missing" not in snapshot.blockers
+    assert "archive_record_creation_missing" not in snapshot.blockers
     assert "client_publication_authority_blocked" in snapshot.blockers
     report_capability = next(
         capability
@@ -624,8 +624,8 @@ def test_report_materialization_runtime_execution_clears_only_materialization_bl
     assert "report_evidence_pack_live_materialization_proof_missing" not in (
         report_capability.blockers
     )
-    assert "rendered_output_creation_missing" in report_capability.blockers
-    assert "archive_record_creation_missing" in report_capability.blockers
+    assert "rendered_output_creation_missing" not in report_capability.blockers
+    assert "archive_record_creation_missing" not in report_capability.blockers
     assert "client_publication_authority_blocked" in report_capability.blockers
     assert proof_ref in report_capability.evidence_refs
     report_contract = next(
@@ -639,8 +639,8 @@ def test_report_materialization_runtime_execution_clears_only_materialization_bl
         report_contract.blockers
     )
     assert "lotus_report_live_intake_route_proof_missing" in report_contract.blockers
-    assert "rendered_output_creation_missing" in report_contract.blockers
-    assert "archive_record_creation_missing" in report_contract.blockers
+    assert "rendered_output_creation_missing" not in report_contract.blockers
+    assert "archive_record_creation_missing" not in report_contract.blockers
     assert "client_publication_authority_blocked" in report_contract.blockers
     assert proof_ref in report_contract.evidence_refs
 
