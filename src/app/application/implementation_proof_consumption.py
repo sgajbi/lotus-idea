@@ -36,6 +36,10 @@ from app.application.workbench.discovery_contract_proof import (
 from app.application.workbench.contract_proof import (
     gateway_workbench_contract_proof_is_valid,
 )
+from app.application.workbench.runtime_execution import (
+    GATEWAY_WORKBENCH_RUNTIME_BLOCKERS_SATISFIED,
+    gateway_workbench_runtime_execution_proof_is_valid,
+)
 from app.application.implementation_proof_capability_updates import (
     apply_blocker_proof,
     apply_supporting_evidence,
@@ -543,6 +547,8 @@ def _apply_platform_and_surface_proofs(
     gateway_workbench_contract_proof_ref: str | None,
     gateway_workbench_discovery_contract_proof: Mapping[str, object] | None,
     gateway_workbench_discovery_contract_proof_ref: str | None,
+    gateway_workbench_runtime_execution_proof: Mapping[str, object] | None,
+    gateway_workbench_runtime_execution_proof_ref: str | None,
     operator_workflows_operations_proof: Mapping[str, object] | None,
     operator_workflows_operations_proof_ref: str | None,
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
@@ -598,6 +604,10 @@ def _apply_platform_and_surface_proofs(
         gateway_workbench_discovery_contract_proof_ref=(
             gateway_workbench_discovery_contract_proof_ref
         ),
+        gateway_workbench_runtime_execution_proof=(gateway_workbench_runtime_execution_proof),
+        gateway_workbench_runtime_execution_proof_ref=(
+            gateway_workbench_runtime_execution_proof_ref
+        ),
     )
     return _apply_operator_workflows_operations_proof_if_valid(
         capabilities=capabilities,
@@ -617,6 +627,8 @@ def _apply_workbench_proofs(
     gateway_workbench_contract_proof_ref: str | None,
     gateway_workbench_discovery_contract_proof: Mapping[str, object] | None,
     gateway_workbench_discovery_contract_proof_ref: str | None,
+    gateway_workbench_runtime_execution_proof: Mapping[str, object] | None,
+    gateway_workbench_runtime_execution_proof_ref: str | None,
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
     if _registered_proof_is_valid_and_current(
         "workbench_read_path_source_contract_proof",
@@ -660,6 +672,21 @@ def _apply_workbench_proofs(
             _apply_gateway_workbench_discovery_contract_proof(
                 capability,
                 gateway_workbench_discovery_contract_proof_ref,
+            )
+            for capability in capabilities
+        )
+    if _registered_proof_is_valid_and_current(
+        "gateway_workbench_runtime_execution_proof",
+        ProofArtifactEffect.BLOCKER_CLEARING,
+        gateway_workbench_runtime_execution_proof,
+        gateway_workbench_runtime_execution_proof_ref,
+        evaluated_at_utc=evaluated_at_utc,
+        proof_is_valid=gateway_workbench_runtime_execution_proof_is_valid,
+    ):
+        capabilities = tuple(
+            _apply_gateway_workbench_runtime_execution_proof(
+                capability,
+                gateway_workbench_runtime_execution_proof_ref,
             )
             for capability in capabilities
         )
@@ -949,6 +976,18 @@ def _apply_gateway_workbench_discovery_contract_proof(
         evidence_refs=evidence_refs,
         blockers=capability.blockers,
         supported_feature_promoted=capability.supported_feature_promoted,
+    )
+
+
+def _apply_gateway_workbench_runtime_execution_proof(
+    capability: ImplementationProofCapabilityReadiness,
+    gateway_workbench_runtime_execution_proof_ref: str | None,
+) -> ImplementationProofCapabilityReadiness:
+    return apply_blocker_proof(
+        capability,
+        capability_ids=("workbench-product-proof",),
+        blockers_cleared=GATEWAY_WORKBENCH_RUNTIME_BLOCKERS_SATISFIED,
+        proof_ref=gateway_workbench_runtime_execution_proof_ref,
     )
 
 

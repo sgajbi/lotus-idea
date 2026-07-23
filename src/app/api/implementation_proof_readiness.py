@@ -307,6 +307,12 @@ def _build_readiness_snapshot_from_configured_artifacts(
         gateway_workbench_discovery_contract_proof_ref=(
             proof_artifacts.gateway_workbench_discovery_contract_proof_ref
         ),
+        gateway_workbench_runtime_execution_proof=(
+            proof_artifacts.gateway_workbench_runtime_execution_proof
+        ),
+        gateway_workbench_runtime_execution_proof_ref=(
+            proof_artifacts.gateway_workbench_runtime_execution_proof_ref
+        ),
         bond_maturity_live_proof=proof_artifacts.bond_maturity_live_proof,
         bond_maturity_live_proof_ref=proof_artifacts.bond_maturity_live_proof_ref,
         low_income_core_cashflow_live_proof=proof_artifacts.low_income_core_cashflow_live_proof,

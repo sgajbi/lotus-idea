@@ -29,6 +29,9 @@ from app.application.workbench.contract_proof import (
 from app.application.workbench.discovery_contract_proof import (
     GATEWAY_WORKBENCH_DISCOVERY_CONTRACT_PROOF_ENV,
 )
+from app.application.workbench.runtime_execution import (
+    GATEWAY_WORKBENCH_RUNTIME_EXECUTION_ENV,
+)
 from app.application.low_income_cashflow_runtime_evidence import (
     LOW_INCOME_CASHFLOW_RUNTIME_EXECUTION_ENV,
 )
@@ -116,6 +119,9 @@ def _configured_artifact_paths(tmp_path: Path) -> dict[str, Path]:
         ),
         "gateway_workbench_discovery": (
             tmp_path / "output" / "workbench" / "gateway-workbench-discovery-contract-proof.json"
+        ),
+        "gateway_workbench_runtime": (
+            tmp_path / "output" / "workbench" / "gateway-workbench-runtime-execution-proof.json"
         ),
         "outbox": tmp_path / "output" / "outbox" / "broker" / "source-contract-proof.json",
         "outbox_runtime": (
@@ -220,6 +226,13 @@ def _assert_configured_artifacts_are_bound(
         "output/workbench/gateway-workbench-discovery-contract-proof.json"
     )
     _assert_bound_artifact(
+        artifacts.gateway_workbench_runtime_execution_proof,
+        "gateway-workbench-runtime-execution-proof.json",
+    )
+    assert artifacts.gateway_workbench_runtime_execution_proof_ref == (
+        "output/workbench/gateway-workbench-runtime-execution-proof.json"
+    )
+    _assert_bound_artifact(
         artifacts.outbox_broker_source_contract_proof,
         "source-contract-proof.json",
     )
@@ -297,6 +310,9 @@ def _configure_relative_artifact_env(monkeypatch: pytest.MonkeyPatch) -> None:
         ),
         GATEWAY_WORKBENCH_DISCOVERY_CONTRACT_PROOF_ENV: (
             "output/workbench/gateway-workbench-discovery-contract-proof.json"
+        ),
+        GATEWAY_WORKBENCH_RUNTIME_EXECUTION_ENV: (
+            "output/workbench/gateway-workbench-runtime-execution-proof.json"
         ),
         OUTBOX_BROKER_SOURCE_CONTRACT_PROOF_ENV: (
             "output/outbox/broker/source-contract-proof.json"

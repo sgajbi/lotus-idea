@@ -34,6 +34,9 @@ from app.application.workbench.discovery_contract_proof import (
 from app.application.workbench.contract_proof import (
     GATEWAY_WORKBENCH_CONTRACT_PROOF_ENV,
 )
+from app.application.workbench.runtime_execution import (
+    GATEWAY_WORKBENCH_RUNTIME_EXECUTION_ENV,
+)
 from app.application.high_volatility_runtime_evidence import HIGH_VOLATILITY_RUNTIME_EXECUTION_ENV
 from app.application.low_income_cashflow_runtime_evidence import (
     LOW_INCOME_CASHFLOW_RUNTIME_EXECUTION_ENV,
@@ -209,6 +212,11 @@ PROOF_ARTIFACT_ARGS: tuple[tuple[str, str, str], ...] = (
         "--gateway-workbench-discovery-contract-proof",
         GATEWAY_WORKBENCH_DISCOVERY_CONTRACT_PROOF_ENV,
         "Optional bounded Gateway/Workbench discovery contract proof artifact path.",
+    ),
+    (
+        "--gateway-workbench-runtime-execution-proof",
+        GATEWAY_WORKBENCH_RUNTIME_EXECUTION_ENV,
+        "Optional Gateway/Workbench runtime execution proof artifact path.",
     ),
     (
         "--outbox-broker-source-contract-proof",

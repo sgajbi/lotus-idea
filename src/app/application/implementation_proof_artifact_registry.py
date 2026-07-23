@@ -280,6 +280,14 @@ IMPLEMENTATION_PROOF_ARTIFACT_SPECS = (
         408,
     ),
     _classified(
+        "--gateway-workbench-runtime-execution-proof",
+        "gateway_workbench_runtime_execution_proof",
+        EvidenceClass.RUNTIME_EXECUTION,
+        CLEARING,
+        "Gateway/Workbench runtime execution",
+        685,
+    ),
+    _classified(
         "--outbox-broker-source-contract-proof",
         "outbox_broker_source_contract_proof",
         EvidenceClass.SOURCE_CONTRACT,

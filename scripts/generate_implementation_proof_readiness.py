@@ -349,6 +349,11 @@ def _proof_artifact_inputs(args: argparse.Namespace) -> dict[str, ProofArtifactI
             artifact_name="Gateway/Workbench discovery contract proof",
             ref_name="Gateway/Workbench discovery contract proof artifact",
         ),
+        "gateway_workbench_runtime_execution": _proof_artifact_input(
+            args.gateway_workbench_runtime_execution_proof,
+            artifact_name="Gateway/Workbench runtime execution proof",
+            ref_name="Gateway/Workbench runtime execution proof artifact",
+        ),
         **outbox_proof_artifact_inputs(args, _proof_artifact_input),
         "platform_catalog_source_contract": _proof_artifact_input(
             args.platform_catalog_source_contract_proof,
