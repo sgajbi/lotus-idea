@@ -8,7 +8,7 @@
 | Required capability | `idea.implementation-proof.readiness.read` |
 | Required query | Timezone-aware `evaluatedAtUtc` |
 | Supportability | `not_certified` while blockers remain |
-| Product claim | Bounded live source-ingestion, runtime trust telemetry, digest-bound Advise/Manage/Report route source contracts, Advise idea-intake runtime execution, Report materialization, outbox broker/consumer/platform-mesh source contracts, outbox broker runtime-execution proof artifacts, Gateway/Workbench source contracts/discovery, optional Gateway/Workbench runtime-execution proof, mesh policy, platform catalog source contract, receipt-bound mainline AI lineage-store CI execution, AI workflow-pack registration/runtime execution proof artifacts, and opportunity archetype scenario readiness can be consumed. Source contracts add provenance without clearing live blockers; runtime-class Risk/Performance/Core/Manage/Advise/outbox-broker and Gateway/Workbench proofs clear only their named blockers when valid and current. No full live journey, live AI provider execution, suitability/rebalance/risk-profile/restriction-clearance/benchmark-assignment authority, platform mesh certification, external broker or platform-mesh publication without an accepted broker runtime artifact, downstream delivery beyond the named bounded proof, full Gateway/Workbench product certification, client-ready publication, or supported-feature promotion is proven. |
+| Product claim | Bounded live source-ingestion, runtime trust telemetry, digest-bound Advise/Manage/Report route source contracts, Advise idea-intake runtime execution, Report materialization, outbox broker/consumer/platform-mesh source contracts, outbox broker runtime-execution proof artifacts, Gateway/Workbench source contracts/discovery, optional Gateway/Workbench runtime-execution proof, mesh policy, platform catalog source contract, receipt-bound mainline AI lineage-store CI execution, AI workflow-pack registration/runtime execution proof artifacts, source-safe canonical opportunity archetype evidence-pack composition, and opportunity archetype scenario readiness can be consumed. Source contracts and the canonical archetype pack add provenance without clearing live blockers; runtime-class Risk/Performance/Core/Manage/Advise/outbox-broker and Gateway/Workbench proofs clear only their named blockers when valid and current. No full live journey, live AI provider execution, suitability/rebalance/risk-profile/restriction-clearance/benchmark-assignment authority, platform mesh certification, external broker or platform-mesh publication without an accepted broker runtime artifact, downstream delivery beyond the named bounded proof, full Gateway/Workbench product certification, client-ready publication, or supported-feature promotion is proven. |
 
 `GET /api/v1/implementation-proof/readiness` is the internal operator
 diagnostic for RFC-0002 implementation proof posture.
@@ -1214,6 +1214,14 @@ Implementation-backed evidence:
    including allocation-drift API module, endpoint, and integration-test
    evidence refs so the scenario readiness contract cannot understate the
    bounded caller-supplied API foundation,
+1. source-safe canonical opportunity archetype evidence pack:
+   `src/app/application/opportunity_archetype_evidence_pack.py`,
+1. opportunity archetype evidence-pack generator and gate:
+   `scripts/opportunity_archetype_evidence_pack/generate_evidence_pack.py` and
+   `make opportunity-archetype-evidence-pack-gate`; this pack hashes the
+   canonical portfolio reference, binds each archetype to source products,
+   evidence refs, blocker issue refs, and readiness blockers, and remains
+   supporting `source_contract` evidence only,
 1. AI model-risk operations contract:
    `contracts/observability/lotus-idea-ai-model-risk-operations.v1.json`,
 1. AI model-risk operations contract gate:
@@ -1507,6 +1515,7 @@ make gateway-workbench-contract-proof-contract-gate
 make gateway-workbench-discovery-contract-proof-contract-gate
 make source-ingestion-scheduled-worker-check
 make source-ingestion-runtime-execution-contract-gate
+make opportunity-archetype-evidence-pack-gate
 make risk-concentration-live-proof-contract-gate
 make high-volatility-live-proof-contract-gate
 make risk-drawdown-live-proof-contract-gate
