@@ -7,6 +7,14 @@ Current summary: no client-demo-ready supported business behavior is promoted.
 Use this page only for controlled foundation walkthroughs with explicit
 boundary language.
 
+The governed no-overclaim control is
+`contracts/demo-readiness/lotus-idea-demo-readiness-claim-matrix.v1.json`.
+`make demo-readiness-claim-matrix-gate` fails if claim posture drifts into
+client-demo-ready, client-publication-ready, supported-feature, data-mesh,
+production, live AI provider, production identity, full Workbench journey, or
+downstream runtime certification language while `supported-features` remains
+foundation-only.
+
 ## Demo Decision Matrix
 
 | Audience question | Safe answer |
@@ -30,6 +38,7 @@ promotion.
 | Workbench | Bounded read-only proof exists, but full product-surface certification is blocked. | Show only after validation and with explicit bounded-preview language. |
 | Downstream realization | Digest-bound Advise, Manage, and Report route source contracts can be consumed as non-clearing provenance; bounded Report/Render/Archive materialization source contracts can be consumed when sibling `lotus-report` evidence is present. | Describe domain boundaries; do not claim route serving or acceptance, suitability, rebalance/execution, client publication, or supported-feature promotion. |
 | Data mesh | Proposed products and readiness diagnostics exist. | Present as day-one governance foundation, not certified data-product status. |
+| Claim matrix and commercial proof pack | A contract-backed internal enablement matrix exists. It keeps all external distribution flags false and binds each blocked/prohibited claim to durable issue refs. | Use it to police language. Do not send it or derivative commercial material externally until the required live journey, Workbench/Gateway, downstream, data-mesh, supported-feature, identity, and publication evidence is merged and validated. |
 
 Concentration-risk review is an internal bounded foundation only.
 `POST /api/v1/idea-signals/concentration-risk/evaluate` consumes
@@ -228,6 +237,7 @@ client-ready:
 
 ```powershell
 make documentation-contract-gate
+make demo-readiness-claim-matrix-gate
 make implementation-truth-gate
 make supported-features-gate
 make ai-lineage-store-proof-contract-gate
@@ -248,6 +258,13 @@ The archetype contract also carries a top-level `blocker_issue_refs` map, and
 `make opportunity-archetype-contract-gate` fails if any archetype or scenario
 blocker lacks a durable GitHub issue ref anchored to Slice 16 issue
 `sgajbi/lotus-idea#696`. This is execution traceability, not demo readiness.
+
+The demo-readiness claim matrix is tracked by `sgajbi/lotus-idea#697`. It is a
+claim-control artifact, not a product promotion. It separates implemented
+internal foundation claims, bounded internal walkthrough language, blocked
+external proof gaps, and prohibited client/publication/support claims. Its
+commercial proof-pack section remains `internal_enablement_only` and keeps
+client-safe and RFP-safe external distribution false.
 
 The AI lineage store proof gate validates source-safe persistence evidence for
 AI explanation lineage before aggregate proof readiness consumes it. It does
@@ -277,6 +294,11 @@ rebalance execution, rendered client-ready output, client-ready publication,
 certified data-mesh product status, or supported external product availability.
 Bounded Report/Render/Archive proof may be described only as internal proof
 readiness evidence, not as client publication or product support.
+
+Do not classify missing implementation inside writable Lotus app/platform repos
+as blocked. Fix it forward and keep the claim matrix in bounded or prohibited
+posture until merged-main evidence supports a stronger claim. Reserve blocked
+language for non-writable or external dependencies.
 
 ## Acceptance Checklist
 

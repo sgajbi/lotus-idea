@@ -153,7 +153,16 @@ Current implementation includes these bounded foundations:
     invalid, or non-Slice-16-anchored blocker issue refs. Scheduled-worker
     source and deployment inputs are independently classified and cannot
     substitute for one another.
-14. a tracked architecture-boundary report contract at
+14. a Slice 16 demo-readiness claim matrix at
+    `contracts/demo-readiness/lotus-idea-demo-readiness-claim-matrix.v1.json`.
+    `make demo-readiness-claim-matrix-gate` keeps commercial language in
+    internal-foundation or prohibited posture until supported-features,
+    Workbench/Gateway, downstream runtime, data-mesh, production identity, AI
+    runtime, and client-publication evidence are merged and validated. Missing
+    implementation inside writable Lotus app/platform repositories is
+    fix-forward scope, not a blocker; blocked posture is reserved for
+    non-writable or external dependencies.
+15. a tracked architecture-boundary report contract at
     `quality/architecture_boundary_report.json`. The report binds the current
     `src/app` import inventory and rule digest through
     `architecture-boundary-report.v2`; `make architecture-boundary-gate` fails
@@ -1316,6 +1325,7 @@ make lint
 make typecheck
 make test-unit
 make documentation-contract-gate
+make demo-readiness-claim-matrix-gate
 make implementation-truth-gate
 make foundation-structure-gate
 make supported-features-gate
@@ -2341,6 +2351,13 @@ Every RFC slice that exposes behavior must update, as applicable:
 7. repository context when local implementation patterns changed,
 8. tests that prove both success and fail-closed behavior.
 
+For demo-readiness and commercial language changes, run
+`make demo-readiness-claim-matrix-gate` with the normal documentation,
+implementation-truth, supported-features, and issue-ledger gates. Do not promote
+client, RFP, production, data-mesh, identity, AI-provider, Workbench, downstream,
+or supported-feature claims from the claim matrix unless exact merged-main proof
+supports the promotion.
+
 Endpoint implementation quality and endpoint certification status are
 independent controls. Public business/operator operations marked
 `implemented_not_certified` must still carry the same capability,
@@ -2814,6 +2831,7 @@ Repository-local anchors:
 9. `docs/architecture/CODEBASE-REVIEW-LEDGER.md`
 10. `quality/quality_scorecard.md`
 11. `supported-features/supported-features.json`
-12. `wiki/Home.md`
-13. `docs/operations/service-slo-capacity.md`
-14. `docs/research/advisor-intelligence-product-differentiation.md`
+12. `contracts/demo-readiness/lotus-idea-demo-readiness-claim-matrix.v1.json`
+13. `wiki/Home.md`
+14. `docs/operations/service-slo-capacity.md`
+15. `docs/research/advisor-intelligence-product-differentiation.md`

@@ -234,6 +234,14 @@
           "ref": "contracts/implementation-proof/rfc0002-blueprint-scope-coverage.v1.json"
         },
         {
+          "type": "contract",
+          "ref": "contracts/demo-readiness/lotus-idea-demo-readiness-claim-matrix.v1.json"
+        },
+        {
+          "type": "gate",
+          "ref": "scripts/demo_readiness_claim_matrix_gate.py"
+        },
+        {
           "type": "docs",
           "ref": "docs/LOTUS_IDEA_BLUEPRINT.md"
         },
@@ -242,7 +250,7 @@
           "ref": "wiki/Supported-Features.md"
         }
       ],
-      "futureAgentRule": "Treat commercial language as downstream of evidence: canonical opportunity archetypes, demo claim matrices, and live journeys must cite current implementation proof and preserve blockers where source-owner runtime evidence is absent.",
+      "futureAgentRule": "Treat commercial language as downstream of evidence: canonical opportunity archetypes, demo claim matrices, and live journeys must cite current implementation proof and preserve blockers where source-owner runtime evidence is absent. Treat missing work inside writable Lotus app/platform repositories as fix-forward scope, not blocked; reserve blocked posture for external or non-writable dependencies such as core-owner work that must be issue-backed.",
       "nonClaimBoundaries": [
         "Research, blueprint language, and demo copy cannot promote unsupported features.",
         "A single capability proof does not certify the full API, Gateway, Workbench, and downstream handoff journey."

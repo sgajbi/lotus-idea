@@ -58,6 +58,7 @@ SCRIPT_TARGET_EXPECTATIONS = {
         "scripts/data_mesh/mesh_policy_source_contract_gate.py"
     ),
     "opportunity-archetype-contract-gate": "scripts/opportunity_archetype_contract_gate.py",
+    "demo-readiness-claim-matrix-gate": "scripts/demo_readiness_claim_matrix_gate.py",
     "durable-repository-proof-contract-gate": (
         "scripts/persistence/durable_repository_proof_contract_gate.py"
     ),

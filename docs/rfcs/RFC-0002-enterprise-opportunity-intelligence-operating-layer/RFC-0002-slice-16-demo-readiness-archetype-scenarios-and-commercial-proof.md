@@ -1,6 +1,6 @@
 # RFC-0002 Slice 16: Demo Readiness, Archetype Scenarios, And Commercial Proof
 
-Status: Partially implemented - proof-readiness diagnostic consumes the governed archetype/scenario contract as blocked scenario readiness; concentration risk review, underperformance review, allocation-drift mandate review, bond maturity / reinvestment, high-volatility / drawdown review, missing suitability context, missing risk-profile review, mandate/restriction review, low-income / liquidity shortfall, and missing-benchmark review are non-promoted bounded foundations with source-specific proof contracts where implemented; archetype blockers are issue-backed through a contract-gated `blocker_issue_refs` map; typed Advise mandate/restriction source-product proof and closed v2 receipt-bound Advise mandate/restriction runtime evidence clear only their named blockers; demo claims remain blocked
+Status: Partially implemented - proof-readiness diagnostic consumes the governed archetype/scenario contract as blocked scenario readiness; concentration risk review, underperformance review, allocation-drift mandate review, bond maturity / reinvestment, high-volatility / drawdown review, missing suitability context, missing risk-profile review, mandate/restriction review, low-income / liquidity shortfall, and missing-benchmark review are non-promoted bounded foundations with source-specific proof contracts where implemented; archetype blockers are issue-backed through a contract-gated `blocker_issue_refs` map; typed Advise mandate/restriction source-product proof and closed v2 receipt-bound Advise mandate/restriction runtime evidence clear only their named blockers; the Slice 16 claim matrix now gates internal commercial language and keeps all demo, client-publication, supported-feature, data-mesh, production, identity, AI-provider, Workbench, and downstream runtime claims unpromoted
 
 ## Outcome
 
@@ -82,6 +82,16 @@ capabilities exist.
    Mandate performance/risk health, data-mesh certification, Workbench proof,
    client-publication, and supported-feature blockers remain intact after
    source-specific proof.
+8. `contracts/demo-readiness/lotus-idea-demo-readiness-claim-matrix.v1.json`
+   records the current claim matrix for internal foundation walkthroughs,
+   blocked external proof, prohibited claims, do-not-claim boundaries, and the
+   commercial proof-pack posture. `src/app/application/demo_readiness_claims.py`
+   loads the contract, `scripts/demo_readiness_claim_matrix_gate.py` enforces it,
+   and `tests/unit/test_demo_readiness_claim_matrix.py` proves fail-closed
+   behavior for supported-feature promotion, external distribution, positive
+   demo language, supported-features drift, missing do-not-claim boundaries, and
+   commercial-pack distribution drift. This gate does not promote external
+   distribution; it prevents commercial language from getting ahead of proof.
 
 This slice does not create demo-ready material. It deliberately prevents
 commercial proof from getting ahead of implementation-backed runtime evidence.
@@ -94,6 +104,10 @@ commercial proof from getting ahead of implementation-backed runtime evidence.
 3. Update `docs/demo/demo-claims.md` only for supported claims.
 4. Create RFP-safe and demo-safe material that explains supported, gated,
    prohibited, and degraded behavior.
+5. Keep `make demo-readiness-claim-matrix-gate` aligned with every future
+   change to demo claims, supported-features, Workbench/Gateway proof,
+   downstream proof, production identity, AI runtime, or client-publication
+   posture.
 
 ## Remaining Gap
 
@@ -103,6 +117,10 @@ commercial proof from getting ahead of implementation-backed runtime evidence.
    evidence.
 3. RFP-safe language must remain blocked until supported-feature promotion
    evidence exists.
+4. The commercial proof pack remains internal-enablement only. Client-safe and
+   RFP-safe external distribution stay false until full live journey,
+   Workbench/Gateway, downstream owner runtime, data-mesh, production identity,
+   supported-feature, and publication evidence are merged and validated.
 4. Concentration risk review still requires live Risk source proof,
    data-mesh certification, Workbench proof, and supported-feature evidence
    before demo use. Risk consumer approval for

@@ -1,0 +1,291 @@
+{
+  "contract_id": "lotus-idea-demo-readiness-claim-matrix",
+  "contract_version": "1.0.0",
+  "repository": "lotus-idea",
+  "governing_rfcs": ["RFC-0002"],
+  "rfc_slices": ["slice-16"],
+  "issue_refs": [
+    "sgajbi/lotus-idea#697",
+    "sgajbi/lotus-idea#696",
+    "sgajbi/lotus-idea#699",
+    "sgajbi/lotus-idea#380"
+  ],
+  "canonical_portfolio_ref": "PB_SG_GLOBAL_BAL_001",
+  "claim_posture": "bounded_internal_foundation_not_client_demo_ready",
+  "demo_ready": false,
+  "client_publication_ready": false,
+  "supported_feature_promoted": false,
+  "data_mesh_certified": false,
+  "production_certified": false,
+  "ai_runtime_certified": false,
+  "authn_authz_certified": false,
+  "full_workbench_journey_certified": false,
+  "downstream_runtime_certified": false,
+  "source_of_truth": {
+    "rfc_slice_16": "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-16-demo-readiness-archetype-scenarios-and-commercial-proof.md",
+    "archetype_contract": "contracts/opportunity-archetypes/lotus-idea-opportunity-archetypes.v1.json",
+    "supported_features": "supported-features/supported-features.json",
+    "demo_claims": "docs/demo/demo-claims.md",
+    "client_demo_operating_process": "docs/demo/client-demo-operating-process.md",
+    "wiki_demo_readiness": "wiki/Demo-Readiness.md",
+    "contract_loader": "src/app/application/demo_readiness_claims.py",
+    "contract_gate": "scripts/demo_readiness_claim_matrix_gate.py"
+  },
+  "claim_matrix": [
+    {
+      "claim_key": "idea-governed-foundation",
+      "claim_category": "implemented_foundation",
+      "claim_status": "bounded_internal_only",
+      "audiences": ["engineering", "product", "internal-demo-lead"],
+      "external_distribution_allowed": false,
+      "allowed_language": "Lotus Idea has implementation-backed internal foundations for source-authority framing, candidate lifecycle posture, review workflow posture, proof-readiness diagnostics, and governance controls.",
+      "prohibited_language": "Lotus Idea is client-demo-ready, production-ready, or a supported external product feature.",
+      "evidence_refs": [
+        "docs/demo/demo-claims.md",
+        "docs/operations/implementation-proof-readiness.md",
+        "GET /api/v1/implementation-proof/readiness",
+        "supported-features/supported-features.json"
+      ],
+      "blockers": [
+        "client_publication_ready_missing",
+        "supported_feature_promotion_missing",
+        "full_live_journey_certification_missing"
+      ],
+      "issue_refs": ["sgajbi/lotus-idea#697", "sgajbi/lotus-idea#699"]
+    },
+    {
+      "claim_key": "opportunity-archetype-taxonomy",
+      "claim_category": "implemented_foundation",
+      "claim_status": "bounded_internal_only",
+      "audiences": ["engineering", "product", "internal-demo-lead"],
+      "external_distribution_allowed": false,
+      "allowed_language": "The opportunity archetype taxonomy is contract-backed for controlled internal walkthroughs and preserves source-owned portfolio, risk, performance, mandate, suitability, income, maturity, and benchmark authority boundaries.",
+      "prohibited_language": "The archetypes are certified client scenarios, suitability recommendations, mandate decisions, or trade instructions.",
+      "evidence_refs": [
+        "contracts/opportunity-archetypes/lotus-idea-opportunity-archetypes.v1.json",
+        "src/app/application/opportunity_archetype_contracts.py",
+        "make opportunity-archetype-contract-gate"
+      ],
+      "blockers": [
+        "canonical_opportunity_evidence_pack_missing",
+        "workbench_live_journey_proof_missing",
+        "data_mesh_certification_missing"
+      ],
+      "issue_refs": ["sgajbi/lotus-idea#696", "sgajbi/lotus-idea#380"]
+    },
+    {
+      "claim_key": "commercial-proof-pack-boundary",
+      "claim_category": "bounded_internal_walkthrough",
+      "claim_status": "bounded_internal_only",
+      "audiences": ["product", "sales-enablement", "internal-demo-lead"],
+      "external_distribution_allowed": false,
+      "allowed_language": "Commercial material may be drafted only as internal enablement with explicit foundation-only, not-client-published, and not-supported-feature wording.",
+      "prohibited_language": "RFP, sales, marketing, or client material may state that Lotus Idea is bank adopted, certified, production deployed, client published, or generally available.",
+      "evidence_refs": [
+        "docs/demo/client-demo-operating-process.md",
+        "docs/demo/client-demo-pack.template.md",
+        "wiki/Demo-Readiness.md"
+      ],
+      "blockers": [
+        "client_publication_ready_missing",
+        "production_certification_missing",
+        "supported_feature_promotion_missing"
+      ],
+      "issue_refs": ["sgajbi/lotus-idea#697"]
+    },
+    {
+      "claim_key": "workbench-live-journey",
+      "claim_category": "blocked_external_proof",
+      "claim_status": "blocked_pending_proof",
+      "audiences": ["engineering", "product", "internal-demo-lead"],
+      "external_distribution_allowed": false,
+      "allowed_language": "Workbench proof is a remaining certification dependency for full product-surface demo readiness.",
+      "prohibited_language": "Workbench panels, actions, feedback, conversion, screenshots, or live journey are complete and demo-ready.",
+      "evidence_refs": [
+        "docs/demo/demo-claims.md",
+        "wiki/Demo-Readiness.md"
+      ],
+      "blockers": [
+        "full_workbench_journey_certification_missing",
+        "gateway_product_surface_certification_missing"
+      ],
+      "issue_refs": ["sgajbi/lotus-idea#699"]
+    },
+    {
+      "claim_key": "downstream-runtime-outcomes",
+      "claim_category": "blocked_external_proof",
+      "claim_status": "blocked_pending_proof",
+      "audiences": ["engineering", "product", "operations"],
+      "external_distribution_allowed": false,
+      "allowed_language": "Downstream realization remains a governed intent and proof-readiness posture until accepted owner runtime outcomes are available.",
+      "prohibited_language": "Advise, Manage, Report, Render, or Archive has accepted, persisted, rendered, archived, or client-published the downstream outcome.",
+      "evidence_refs": [
+        "docs/demo/demo-claims.md",
+        "docs/operations/implementation-proof-readiness.md"
+      ],
+      "blockers": [
+        "downstream_runtime_outcome_proof_missing",
+        "report_render_archive_materialization_proof_missing",
+        "client_publication_ready_missing"
+      ],
+      "issue_refs": ["sgajbi/lotus-idea#379"]
+    },
+    {
+      "claim_key": "data-mesh-supported-feature-promotion",
+      "claim_category": "blocked_external_proof",
+      "claim_status": "blocked_pending_proof",
+      "audiences": ["engineering", "product", "operations"],
+      "external_distribution_allowed": false,
+      "allowed_language": "Data-mesh and supported-feature posture remains planned until mesh catalog, runtime telemetry, evidence policy, and supported-features promotion all agree.",
+      "prohibited_language": "Lotus Idea is a certified data product or has supported external business features.",
+      "evidence_refs": [
+        "supported-features/supported-features.json",
+        "docs/operations/supported-feature-promotion.md",
+        "wiki/Supported-Features.md"
+      ],
+      "blockers": [
+        "data_mesh_certification_missing",
+        "supported_feature_promotion_missing",
+        "runtime_trust_telemetry_certification_missing"
+      ],
+      "issue_refs": ["sgajbi/lotus-idea#380"]
+    },
+    {
+      "claim_key": "identity-and-production-controls",
+      "claim_category": "blocked_external_proof",
+      "claim_status": "blocked_pending_proof",
+      "audiences": ["engineering", "security", "operations"],
+      "external_distribution_allowed": false,
+      "allowed_language": "Local and development caller-context controls are not production identity-provider, authentication, authorization, or entitlement certification.",
+      "prohibited_language": "Production identity, signed caller assertions, client entitlement denial, or bank-hosted authorization is certified.",
+      "evidence_refs": [
+        "docs/demo/demo-claims.md",
+        "wiki/Demo-Readiness.md"
+      ],
+      "blockers": [
+        "identity_provider_certification_missing",
+        "signed_caller_assertion_proof_missing",
+        "production_authorization_certification_missing"
+      ],
+      "issue_refs": ["sgajbi/lotus-idea#687"]
+    },
+    {
+      "claim_key": "ai-runtime-provider-governance",
+      "claim_category": "blocked_external_proof",
+      "claim_status": "blocked_pending_proof",
+      "audiences": ["engineering", "model-risk", "operations"],
+      "external_distribution_allowed": false,
+      "allowed_language": "AI explanation posture remains governed and review-gated; live provider, model-risk, retention, and Workbench evidence are not certified by this claim matrix.",
+      "prohibited_language": "Lotus Idea delivers autonomous advice, approved model output, live provider operation, or client-ready AI explanations.",
+      "evidence_refs": [
+        "docs/operations/ai-governance.md",
+        "wiki/Demo-Readiness.md"
+      ],
+      "blockers": [
+        "ai_runtime_provider_certification_missing",
+        "model_risk_operations_certification_missing",
+        "client_publication_ready_missing"
+      ],
+      "issue_refs": ["sgajbi/lotus-idea#340"]
+    },
+    {
+      "claim_key": "client-publication-and-supported-product",
+      "claim_category": "prohibited_claim",
+      "claim_status": "prohibited",
+      "audiences": ["sales-enablement", "marketing", "client-facing"],
+      "external_distribution_allowed": false,
+      "allowed_language": "Do not distribute client-facing Lotus Idea product claims until supported-feature, demo, production, and publication evidence is merged and validated on main.",
+      "prohibited_language": "Lotus Idea is client-publication-ready, a supported external product, bank-buyable production capability, or generally available.",
+      "evidence_refs": [
+        "supported-features/supported-features.json",
+        "docs/demo/demo-claims.md",
+        "wiki/Supported-Features.md"
+      ],
+      "blockers": [
+        "client_publication_ready_missing",
+        "supported_feature_promotion_missing",
+        "production_certification_missing"
+      ],
+      "issue_refs": ["sgajbi/lotus-idea#697", "sgajbi/lotus-idea#699"]
+    }
+  ],
+  "do_not_claim": [
+    {
+      "boundary_key": "source-authority",
+      "owner_boundary": "Lotus Idea does not own official portfolio accounting, performance methodology, risk methodology, suitability, mandate compliance, report rendering, archive retention, or trade execution authority.",
+      "required_before_claim": [
+        "source-owner runtime evidence",
+        "data-mesh certification",
+        "supported-feature promotion"
+      ],
+      "issue_refs": ["sgajbi/lotus-idea#380", "sgajbi/lotus-idea#699"]
+    },
+    {
+      "boundary_key": "client-publication",
+      "owner_boundary": "Client-facing publication, RFP-safe supported capability statements, and marketing distribution remain blocked until exact mainline proof and approval evidence exist.",
+      "required_before_claim": [
+        "client-publication approval",
+        "supported-feature registry promotion",
+        "validated demo pack"
+      ],
+      "issue_refs": ["sgajbi/lotus-idea#697", "sgajbi/lotus-idea#699"]
+    },
+    {
+      "boundary_key": "identity-authn-authz",
+      "owner_boundary": "Local/dev caller-context policy is not a production identity-provider, authentication, authorization, or entitlement certification.",
+      "required_before_claim": [
+        "identity-provider integration",
+        "signed assertion proof",
+        "Workbench entitlement-denied proof"
+      ],
+      "issue_refs": ["sgajbi/lotus-idea#687"]
+    },
+    {
+      "boundary_key": "ai-governance",
+      "owner_boundary": "AI-assisted explanations require deterministic evidence, model-risk approval, provider execution proof, retention posture, audit, and human review before client claims.",
+      "required_before_claim": [
+        "live provider certification",
+        "model-risk operations approval",
+        "client-publication approval"
+      ],
+      "issue_refs": ["sgajbi/lotus-idea#340"]
+    },
+    {
+      "boundary_key": "downstream-realization",
+      "owner_boundary": "Conversion intent, downstream submission, and evidence-pack request posture do not prove Advise, Manage, Report, Render, or Archive owner acceptance.",
+      "required_before_claim": [
+        "owner runtime receipts",
+        "materialization receipts",
+        "archive receipts",
+        "reconciliation proof"
+      ],
+      "issue_refs": ["sgajbi/lotus-idea#379"]
+    }
+  ],
+  "commercial_proof_pack": {
+    "pack_status": "internal_enablement_only",
+    "client_safe_distribution_ready": false,
+    "rfp_safe_distribution_ready": false,
+    "approved_internal_uses": [
+      "engineering readiness review",
+      "product walkthrough planning",
+      "sales-enablement boundary training",
+      "RFP language drafting with explicit non-publication markings"
+    ],
+    "required_before_external_use": [
+      "full live journey validation",
+      "Workbench and Gateway product-surface certification",
+      "downstream owner runtime outcome proof",
+      "data-mesh certification",
+      "supported-feature promotion",
+      "production identity and entitlement certification",
+      "client-publication approval"
+    ],
+    "evidence_refs": [
+      "docs/demo/demo-claims.md",
+      "docs/demo/client-demo-operating-process.md",
+      "wiki/Demo-Readiness.md",
+      "supported-features/supported-features.json"
+    ]
+  }
+}
