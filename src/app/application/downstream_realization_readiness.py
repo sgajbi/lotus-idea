@@ -33,11 +33,11 @@ from app.application.report.intake_route_source_contract import (
     report_intake_route_source_contract_proof_is_valid,
 )
 from app.application.report.materialization_source_contract import (
+    REPORT_MATERIALIZATION_ROUTE,
     report_materialization_source_contract_is_valid,
 )
 from app.application.report.materialization_runtime_execution import (
     REPORT_MATERIALIZATION_RUNTIME_BLOCKERS_SATISFIED,
-    REPORT_MATERIALIZATION_ROUTE,
     report_materialization_runtime_execution_is_valid,
 )
 from app.domain.conversion_governance import GovernedConversionOutcome
