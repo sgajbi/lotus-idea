@@ -60,6 +60,10 @@ from app.application.operator_workflows_operations.source_contract_proof import 
 from app.application.outbox.broker.source_contract_proof import (
     outbox_broker_source_contract_proof_is_valid,
 )
+from app.application.outbox.broker.runtime_execution import (
+    OUTBOX_BROKER_RUNTIME_BLOCKERS_SATISFIED,
+    outbox_broker_runtime_execution_is_valid,
+)
 from app.application.outbox.consumer_contract_proof import (
     outbox_consumer_contract_proof_is_valid,
 )
@@ -533,6 +537,8 @@ def _apply_platform_and_surface_proofs(
     mesh_policy_source_contract_proof_ref: str | None,
     outbox_broker_source_contract_proof: Mapping[str, object] | None,
     outbox_broker_source_contract_proof_ref: str | None,
+    outbox_broker_runtime_execution_proof: Mapping[str, object] | None,
+    outbox_broker_runtime_execution_proof_ref: str | None,
     outbox_consumer_contract_proof: Mapping[str, object] | None,
     outbox_consumer_contract_proof_ref: str | None,
     outbox_platform_mesh_event_source_contract_proof: Mapping[str, object] | None,
@@ -568,6 +574,8 @@ def _apply_platform_and_surface_proofs(
         evaluated_at_utc=evaluated_at_utc,
         outbox_broker_source_contract_proof=outbox_broker_source_contract_proof,
         outbox_broker_source_contract_proof_ref=outbox_broker_source_contract_proof_ref,
+        outbox_broker_runtime_execution_proof=outbox_broker_runtime_execution_proof,
+        outbox_broker_runtime_execution_proof_ref=outbox_broker_runtime_execution_proof_ref,
         outbox_consumer_contract_proof=outbox_consumer_contract_proof,
         outbox_consumer_contract_proof_ref=outbox_consumer_contract_proof_ref,
         outbox_platform_mesh_event_source_contract_proof=(
@@ -611,6 +619,8 @@ def _apply_outbox_proofs(
     evaluated_at_utc: datetime,
     outbox_broker_source_contract_proof: Mapping[str, object] | None,
     outbox_broker_source_contract_proof_ref: str | None,
+    outbox_broker_runtime_execution_proof: Mapping[str, object] | None,
+    outbox_broker_runtime_execution_proof_ref: str | None,
     outbox_consumer_contract_proof: Mapping[str, object] | None,
     outbox_consumer_contract_proof_ref: str | None,
     outbox_platform_mesh_event_source_contract_proof: Mapping[str, object] | None,
@@ -628,6 +638,21 @@ def _apply_outbox_proofs(
             _apply_outbox_broker_source_contract(
                 capability,
                 outbox_broker_source_contract_proof_ref,
+            )
+            for capability in capabilities
+        )
+    if _registered_proof_is_valid_and_current(
+        "outbox_broker_runtime_execution_proof",
+        ProofArtifactEffect.BLOCKER_CLEARING,
+        outbox_broker_runtime_execution_proof,
+        outbox_broker_runtime_execution_proof_ref,
+        evaluated_at_utc=evaluated_at_utc,
+        proof_is_valid=outbox_broker_runtime_execution_is_valid,
+    ):
+        capabilities = tuple(
+            _apply_outbox_broker_runtime_execution(
+                capability,
+                outbox_broker_runtime_execution_proof_ref,
             )
             for capability in capabilities
         )
@@ -1133,6 +1158,19 @@ def _apply_outbox_broker_source_contract(
         evidence_refs=evidence_refs,
         blockers=capability.blockers,
         supported_feature_promoted=capability.supported_feature_promoted,
+    )
+
+
+def _apply_outbox_broker_runtime_execution(
+    capability: ImplementationProofCapabilityReadiness,
+    proof_ref: str | None,
+) -> ImplementationProofCapabilityReadiness:
+    if capability.capability_id not in {"outbox-delivery", "operator-workflows-operations"}:
+        return capability
+    return apply_blocker_proof(
+        capability,
+        blockers_cleared=OUTBOX_BROKER_RUNTIME_BLOCKERS_SATISFIED,
+        proof_ref=proof_ref,
     )
 
 

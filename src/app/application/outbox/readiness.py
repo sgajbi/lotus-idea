@@ -121,6 +121,12 @@ def build_outbox_delivery_readiness_snapshot(
             "outbox_readiness": "src/app/application/outbox/readiness.py",
             "publisher_port": "src/app/ports/outbox/publisher.py",
             "publisher_adapter": "src/app/infrastructure/outbox/publisher.py",
+            "outbox_broker_runtime_execution": (
+                "src/app/application/outbox/broker/runtime_execution.py"
+            ),
+            "outbox_broker_runtime_execution_gate": (
+                "make outbox-broker-runtime-execution-proof-gate"
+            ),
             "repository_port": "src/app/ports/idea_repository.py",
             "outbox_event_contract": ("contracts/outbox-events/lotus-idea-outbox-events.v1.json"),
             "outbox_event_contract_gate": "make outbox-event-contract-gate",

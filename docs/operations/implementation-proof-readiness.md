@@ -8,7 +8,7 @@
 | Required capability | `idea.implementation-proof.readiness.read` |
 | Required query | Timezone-aware `evaluatedAtUtc` |
 | Supportability | `not_certified` while blockers remain |
-| Product claim | Bounded live source-ingestion, runtime trust telemetry, digest-bound Advise/Manage/Report route source contracts, Advise idea-intake runtime execution, Report materialization, outbox broker/consumer/platform-mesh source contracts, Gateway/Workbench source contracts/discovery, mesh policy, platform catalog source contract, receipt-bound mainline AI lineage-store CI execution, AI workflow-pack registration/runtime execution proof artifacts, and opportunity archetype scenario readiness can be consumed. Source contracts add provenance without clearing live blockers; runtime-class Risk/Performance/Core/Manage/Advise proofs clear only their named source-specific blockers. No full live journey, live AI provider execution, suitability/rebalance/risk-profile/restriction-clearance/benchmark-assignment authority, platform mesh certification, external broker or platform-mesh publication, downstream delivery beyond the named bounded proof, full Gateway/Workbench product proof, client-ready publication, or supported-feature promotion is proven. |
+| Product claim | Bounded live source-ingestion, runtime trust telemetry, digest-bound Advise/Manage/Report route source contracts, Advise idea-intake runtime execution, Report materialization, outbox broker/consumer/platform-mesh source contracts, outbox broker runtime-execution proof artifacts, Gateway/Workbench source contracts/discovery, mesh policy, platform catalog source contract, receipt-bound mainline AI lineage-store CI execution, AI workflow-pack registration/runtime execution proof artifacts, and opportunity archetype scenario readiness can be consumed. Source contracts add provenance without clearing live blockers; runtime-class Risk/Performance/Core/Manage/Advise/outbox-broker proofs clear only their named blockers when valid and current. No full live journey, live AI provider execution, suitability/rebalance/risk-profile/restriction-clearance/benchmark-assignment authority, platform mesh certification, external broker or platform-mesh publication without an accepted broker runtime artifact, downstream delivery beyond the named bounded proof, full Gateway/Workbench product proof, client-ready publication, or supported-feature promotion is proven. |
 
 `GET /api/v1/implementation-proof/readiness` is the internal operator
 diagnostic for RFC-0002 implementation proof posture.
@@ -392,6 +392,8 @@ taxonomy and the #393 same-pattern campaign.
 | `LOTUS_IDEA_PLATFORM_CATALOG_SOURCE_CONTRACT_PROOF` | Overrides the default generated platform catalog source contract artifact passed into aggregate readiness. |
 | `LOTUS_IDEA_OUTBOX_CONSUMER_CONTRACT_PROOF_OUTPUT` | Selects the default generated outbox consumer source-contract proof consumed by aggregate readiness when no override is set. Defaults to `output/outbox/outbox-consumer-contract-proof.json`. |
 | `LOTUS_IDEA_OUTBOX_CONSUMER_CONTRACT_PROOF` | Overrides the default generated outbox consumer source-contract proof passed into aggregate readiness. |
+| `LOTUS_IDEA_OUTBOX_BROKER_RUNTIME_EXECUTION_PROOF_OUTPUT` | Selects the conventional outbox broker runtime-execution proof output path when a configured broker proof is generated. Defaults to `output/outbox/broker/runtime-execution-proof.json`. |
+| `LOTUS_IDEA_OUTBOX_BROKER_RUNTIME_EXECUTION_PROOF` | Overrides the outbox broker runtime-execution proof path consumed by aggregate readiness. A valid current artifact clears only `external_broker_runtime_proof_missing`; downstream, platform-mesh, Gateway/Workbench, production-certification, and supported-feature blockers remain. |
 | `LOTUS_IDEA_OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_PROOF_OUTPUT` | Selects the default generated outbox platform-mesh event source-contract proof consumed by aggregate readiness when no override is set. Defaults to `output/outbox/platform-mesh/event-source-contract-proof.json`. |
 | `LOTUS_IDEA_OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_PROOF` | Overrides the default generated outbox platform-mesh event source-contract proof passed into aggregate readiness. |
 | `LOTUS_IDEA_GATEWAY_WORKBENCH_CONTRACT_PROOF_OUTPUT` | Selects the default generated Gateway/Workbench contract proof artifact consumed by aggregate readiness when no override is set. Defaults to `output/workbench/gateway-workbench-contract-proof.json`. |
@@ -813,6 +815,20 @@ adapter source contract, operator API surface, event contracts, and
 `make outbox-broker-source-contract-proof-gate`; it does not certify runtime
 execution, deployment, external publication, downstream consumption, platform
 mesh publication, Gateway/Workbench behavior, or supported-feature promotion.
+
+Outbox broker runtime-execution proof is captured by
+`scripts/outbox/broker/generate_runtime_execution.py`. It uses the configured
+`LOTUS_IDEA_OUTBOX_BROKER_URL`, publishes a source-safe certification canary
+through the real `HttpOutboxEventPublisher`, and writes a bounded proof artifact
+that contains only outcome posture, not event identifiers, aggregate
+identifiers, raw payload, broker URL, or transport body. A valid artifact
+referenced through `LOTUS_IDEA_OUTBOX_BROKER_RUNTIME_EXECUTION_PROOF` or passed
+with `--outbox-broker-runtime-execution-proof` is classified as
+`runtime_execution` and clears only `external_broker_runtime_proof_missing` for
+the outbox/operator readiness capabilities. It does not certify downstream
+consumers, platform-mesh publication, Gateway/Workbench behavior, production
+identity, production certification, or supported-feature promotion. Validate the
+artifact with `make outbox-broker-runtime-execution-proof-gate`.
 
 Downstream outbox consumer contract posture is enforced by
 `contracts/outbox-events/lotus-idea-outbox-consumers.v1.json` and
@@ -1317,6 +1333,13 @@ Implementation-backed evidence:
     `tests/unit/outbox/test_outbox_consumer_contract_proof.py`,
 1. outbox broker source-contract proof gate:
     `make outbox-broker-source-contract-proof-gate`,
+1. outbox broker runtime-execution proof generator:
+    `scripts/outbox/broker/generate_runtime_execution.py`,
+1. outbox broker runtime-execution proof gate:
+    `make outbox-broker-runtime-execution-proof-gate`,
+1. outbox broker runtime-execution proof tests:
+    `tests/unit/outbox/broker/test_runtime_execution.py` and
+    `tests/unit/outbox/broker/test_readiness_consumption.py`,
 1. outbox platform-mesh event source-contract proof generator:
     `scripts/outbox/platform_mesh/generate_source_contract_proof.py`,
 1. outbox platform-mesh event source-contract proof gate:

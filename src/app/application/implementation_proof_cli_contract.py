@@ -67,6 +67,9 @@ from app.application.operator_workflows_operations.source_contract_proof import 
 from app.application.outbox.broker.source_contract_proof import (
     OUTBOX_BROKER_SOURCE_CONTRACT_PROOF_ENV,
 )
+from app.application.outbox.broker.runtime_execution import (
+    OUTBOX_BROKER_RUNTIME_EXECUTION_ENV,
+)
 from app.application.outbox.consumer_contract_proof import (
     OUTBOX_CONSUMER_CONTRACT_PROOF_ENV,
 )
@@ -208,6 +211,11 @@ PROOF_ARTIFACT_ARGS: tuple[tuple[str, str, str], ...] = (
         "--outbox-broker-source-contract-proof",
         OUTBOX_BROKER_SOURCE_CONTRACT_PROOF_ENV,
         "Optional outbox broker source-contract proof artifact path.",
+    ),
+    (
+        "--outbox-broker-runtime-execution-proof",
+        OUTBOX_BROKER_RUNTIME_EXECUTION_ENV,
+        "Optional outbox broker runtime publication proof artifact path.",
     ),
     (
         "--outbox-consumer-contract-proof",

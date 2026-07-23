@@ -35,6 +35,9 @@ from app.application.low_income_cashflow_runtime_evidence import (
 from app.application.outbox.broker.source_contract_proof import (
     OUTBOX_BROKER_SOURCE_CONTRACT_PROOF_ENV,
 )
+from app.application.outbox.broker.runtime_execution import (
+    OUTBOX_BROKER_RUNTIME_EXECUTION_ENV,
+)
 from app.application.outbox.platform_mesh.source_contract_proof import (
     OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_PROOF_ENV,
 )
@@ -115,6 +118,9 @@ def _configured_artifact_paths(tmp_path: Path) -> dict[str, Path]:
             tmp_path / "output" / "workbench" / "gateway-workbench-discovery-contract-proof.json"
         ),
         "outbox": tmp_path / "output" / "outbox" / "broker" / "source-contract-proof.json",
+        "outbox_runtime": (
+            tmp_path / "output" / "outbox" / "broker" / "runtime-execution-proof.json"
+        ),
         "outbox_mesh_event": (
             tmp_path / "output" / "outbox" / "platform-mesh" / "event-source-contract-proof.json"
         ),
@@ -221,6 +227,13 @@ def _assert_configured_artifacts_are_bound(
         "output/outbox/broker/source-contract-proof.json"
     )
     _assert_bound_artifact(
+        artifacts.outbox_broker_runtime_execution_proof,
+        "runtime-execution-proof.json",
+    )
+    assert artifacts.outbox_broker_runtime_execution_proof_ref == (
+        "output/outbox/broker/runtime-execution-proof.json"
+    )
+    _assert_bound_artifact(
         artifacts.outbox_platform_mesh_event_source_contract_proof,
         "event-source-contract-proof.json",
     )
@@ -287,6 +300,9 @@ def _configure_relative_artifact_env(monkeypatch: pytest.MonkeyPatch) -> None:
         ),
         OUTBOX_BROKER_SOURCE_CONTRACT_PROOF_ENV: (
             "output/outbox/broker/source-contract-proof.json"
+        ),
+        OUTBOX_BROKER_RUNTIME_EXECUTION_ENV: (
+            "output/outbox/broker/runtime-execution-proof.json"
         ),
         OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_PROOF_ENV: (
             "output/outbox/platform-mesh/event-source-contract-proof.json"

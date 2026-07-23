@@ -359,6 +359,11 @@ def _proof_artifact_inputs(args: argparse.Namespace) -> dict[str, ProofArtifactI
             artifact_name="outbox broker source-contract proof",
             ref_name="outbox broker source-contract proof artifact",
         ),
+        "outbox_broker_runtime_execution": _proof_artifact_input(
+            args.outbox_broker_runtime_execution_proof,
+            artifact_name="outbox broker runtime execution proof",
+            ref_name="outbox broker runtime execution proof artifact",
+        ),
         "outbox_consumer_contract": _proof_artifact_input(
             args.outbox_consumer_contract_proof,
             artifact_name="outbox consumer contract proof",
