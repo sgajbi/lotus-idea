@@ -210,18 +210,18 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/685",
       "rfcSlices": ["slice-11"],
       "githubState": "open",
-      "executionStatus": "open_pr_raised",
+      "executionStatus": "open_merged_main_qa_pending",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #685 open. PR #736 adds the optional Gateway/Workbench runtime-execution proof consumer for canonical Workbench live-validation evidence and may clear only workbench_gateway_bff_consumption_proof_missing when the artifact is valid and aggregate-current. Keep open until fresh Workbench/Gateway runtime evidence, browser/accessibility proof, canonical demo runtime proof, supported-feature posture, exact-main CI, wiki evidence, and branch cleanup are complete."
+      "closureInstruction": "Keep #685 open. PR #736 merged to main at 1ef9e93e64482f27225c72142944b6bd7c1ce142 after exact-main Main Releasability run 30011797717 passed, wiki source was published to lotus-idea.wiki.git commit 05b8dc8 with strict DiffCount 0, and remote/local feature-branch cleanup completed after patch-equivalence checks. The optional Gateway/Workbench runtime-execution proof consumer may clear only workbench_gateway_bff_consumption_proof_missing when the artifact is valid and aggregate-current. Keep open until QA verifies current Workbench/Gateway runtime evidence, browser/accessibility proof, canonical demo runtime proof, supported-feature posture, data-product certification, and broader production-readiness evidence."
     },
     {
       "issueNumber": 686,
       "url": "https://github.com/sgajbi/lotus-idea/issues/686",
       "rfcSlices": ["slice-08", "slice-11"],
       "githubState": "open",
-      "executionStatus": "open_pr_raised",
+      "executionStatus": "open_merged_main_qa_pending",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #686 open. PR #736 does not certify review-action, feedback, or conversion-intent browser mutation controls; it preserves production identity, authorization, supported-feature, and client-publication blockers until implementation-backed live evidence exists."
+      "closureInstruction": "Keep #686 open. PR #736 merged to main at 1ef9e93e64482f27225c72142944b6bd7c1ce142 after exact-main Main Releasability run 30011797717 passed, wiki source was published to lotus-idea.wiki.git commit 05b8dc8 with strict DiffCount 0, and remote/local feature-branch cleanup completed after patch-equivalence checks. PR #736 does not certify review-action, feedback, or conversion-intent browser mutation controls; it preserves production identity, authorization, supported-feature, and client-publication blockers until implementation-backed live browser/action evidence exists."
     },
     {
       "issueNumber": 687,
