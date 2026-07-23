@@ -47,8 +47,6 @@ from app.application.data_mesh.mesh_policy_source_contract import (
     build_mesh_policy_source_contract_payload,
 )
 from app.application.data_mesh.platform_catalog_source_contract import (
-    REQUIRED_CONSUMER_DEPENDENCIES,
-    REQUIRED_PRODUCER_PRODUCTS,
     build_platform_catalog_source_contract_payload,
 )
 from app.application.report.intake_route_source_contract import (
@@ -93,6 +91,7 @@ from tests.unit.downstream_realization.fixtures import (
 from tests.unit.report.materialization_source_contract_fixtures import (
     valid_report_materialization_source_contract,
 )
+from tests.unit.platform_mesh_fixture import write_platform_mesh_fixture
 from tests.support.proof_provenance import bound_aggregate_proof as _bound_aggregate_proof
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -713,7 +712,7 @@ def test_implementation_proof_readiness_uses_platform_catalog_source_contract_wi
         build_platform_catalog_source_contract_payload(
             generated_at_utc=datetime(2026, 6, 24, 0, 0, tzinfo=UTC),
             repository_root=ROOT,
-            platform_root=_write_platform_mesh_fixture(tmp_path),
+            platform_root=write_platform_mesh_fixture(tmp_path),
         ),
         proof_ref,
     )
@@ -764,7 +763,7 @@ def test_implementation_proof_readiness_rejects_stale_platform_catalog_source_co
         build_platform_catalog_source_contract_payload(
             generated_at_utc=datetime(2026, 6, 22, 0, 0, tzinfo=UTC),
             repository_root=ROOT,
-            platform_root=_write_platform_mesh_fixture(tmp_path),
+            platform_root=write_platform_mesh_fixture(tmp_path),
         ),
         proof_ref,
     )
@@ -1078,91 +1077,6 @@ def test_implementation_proof_readiness_blocks_invalid_supported_features_shape(
 
     assert evaluation.promoted_feature_count == 0
     assert evaluation.blocker_codes == (SUPPORTED_FEATURE_REGISTRY_INVALID,)
-
-
-def _write_platform_mesh_fixture(tmp_path: Path) -> Path:
-    platform_root = tmp_path / "lotus-platform"
-    source_manifest_path = (
-        platform_root
-        / "platform-contracts/domain-data-products/domain-product-source-manifest.v1.json"
-    )
-    catalog_path = platform_root / "generated/domain-product-catalog.json"
-    graph_path = platform_root / "generated/domain-product-dependency-graph.json"
-    maturity_path = platform_root / "generated/enterprise-mesh-maturity-matrix.json"
-    handoff_path = platform_root / "docs/operations/enterprise-mesh-completion-handoff.md"
-    source_manifest_path.parent.mkdir(parents=True)
-    catalog_path.parent.mkdir(parents=True)
-    handoff_path.parent.mkdir(parents=True)
-    source_manifest_path.write_text(
-        json.dumps(
-            {
-                "repositories": [
-                    {
-                        "repository": "lotus-idea",
-                        "source_mode": "repo_native",
-                        "catalog_inclusion": "included",
-                        "repo_native_status": "implemented",
-                        "repo_native_declaration_path": "contracts/domain-data-products",
-                        "platform_declaration_paths": [],
-                    }
-                ]
-            }
-        ),
-        encoding="utf-8",
-    )
-    catalog_path.write_text(
-        json.dumps(
-            {
-                "products": [
-                    {
-                        "product_id": product_id,
-                        "producer_repository": "lotus-idea",
-                        "lifecycle_status": "proposed",
-                        "current_routes": [],
-                    }
-                    for product_id in REQUIRED_PRODUCER_PRODUCTS
-                ],
-                "consumers": [
-                    {
-                        "consumer_repository": "lotus-idea",
-                        "dependencies": [
-                            {"dependency_id": dependency_id}
-                            for dependency_id in REQUIRED_CONSUMER_DEPENDENCIES
-                        ],
-                    }
-                ],
-            }
-        ),
-        encoding="utf-8",
-    )
-    graph_path.write_text(
-        '{"contract_id":"lotus-domain-product-dependency-graph"}', encoding="utf-8"
-    )
-    maturity_path.write_text(
-        json.dumps(
-            {
-                "repositories": [
-                    {
-                        "repository": "lotus-idea",
-                        "classification": "deferred",
-                        "mesh_role": "producer",
-                    }
-                ],
-                "products": [
-                    {
-                        "product_id": product_id,
-                        "classification": "deferred",
-                        "maturity_wave": "future_wave",
-                        "lifecycle_status": "proposed",
-                    }
-                    for product_id in REQUIRED_PRODUCER_PRODUCTS
-                ],
-            }
-        ),
-        encoding="utf-8",
-    )
-    handoff_path.write_text("lotus-idea future-wave onboarding proof\n", encoding="utf-8")
-    return platform_root
 
 
 def _valid_report_intake_route_source_contract_proof() -> dict[str, object]:

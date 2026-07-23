@@ -17,7 +17,7 @@ from app.application.outbox.platform_mesh.source_contract_proof import (
 )
 from app.domain import InMemoryIdeaRepository
 from tests.support.proof_provenance import bound_aggregate_proof
-from tests.unit.test_implementation_proof_readiness import _write_platform_mesh_fixture
+from tests.unit.platform_mesh_fixture import write_platform_mesh_fixture
 
 ROOT = Path(__file__).resolve().parents[4]
 EVALUATED_AT_UTC = datetime(2026, 6, 27, 0, 0, tzinfo=UTC)
@@ -30,7 +30,7 @@ def test_source_contract_adds_provenance_without_changing_readiness(tmp_path: Pa
         build_outbox_platform_mesh_event_source_contract_proof_payload(
             generated_at_utc=EVALUATED_AT_UTC,
             repository_root=ROOT,
-            platform_root=_write_platform_mesh_fixture(tmp_path),
+            platform_root=write_platform_mesh_fixture(tmp_path),
         ),
         PROOF_REF,
     )
@@ -75,7 +75,7 @@ def test_forged_runtime_claim_is_not_consumed(
     payload = build_outbox_platform_mesh_event_source_contract_proof_payload(
         generated_at_utc=EVALUATED_AT_UTC,
         repository_root=ROOT,
-        platform_root=_write_platform_mesh_fixture(tmp_path),
+        platform_root=write_platform_mesh_fixture(tmp_path),
     )
     payload[field_name] = forged_value
     actual = _snapshot(proof=bound_aggregate_proof(payload, PROOF_REF))
