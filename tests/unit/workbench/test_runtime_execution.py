@@ -115,6 +115,15 @@ def test_rejects_unknown_top_level_fields() -> None:
     assert "unknown top-level gateway-workbench runtime fields: ['supported']" in errors
 
 
+def test_rejects_unknown_proof_check_fields() -> None:
+    proof = _valid_gateway_workbench_runtime_execution_proof()
+    proof["proofChecks"]["callerAssertedRuntimeReadiness"] = True
+
+    errors = validate_gateway_workbench_runtime_execution_proof(proof)
+
+    assert "unknown proofChecks fields: ['callerAssertedRuntimeReadiness']" in errors
+
+
 def test_rejects_summary_without_gateway_backed_idea_journey() -> None:
     proof = build_gateway_workbench_runtime_execution_proof_payload(
         generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
@@ -133,6 +142,67 @@ def test_rejects_summary_without_gateway_backed_idea_journey() -> None:
 
     assert proof["runtimeExecutionProofValid"] is False
     assert proof["proofChecks"]["ideaJourneyThroughGatewayObserved"] is False
+    assert gateway_workbench_runtime_execution_proof_is_valid(proof) is False
+
+
+@pytest.mark.parametrize(
+    ("summary_patch", "failed_check"),
+    [
+        ({"advisoryJourneyChecks": "not-a-check-list"}, "ideaJourneyThroughGatewayObserved"),
+        ({"advisoryJourneyChecks": ["not-a-check-object"]}, "ideaJourneyThroughGatewayObserved"),
+        (
+            {
+                "uiChecks": [
+                    {
+                        "description": "Idea candidate review queue",
+                        "kind": "table",
+                        "rowCount": 0,
+                    }
+                ]
+            },
+            "ideaQueueRowsObserved",
+        ),
+        ({"uiChecks": "not-a-check-list"}, "ideaQueueRowsObserved"),
+        ({"uiChecks": ["not-a-check-object"]}, "ideaQueueRowsObserved"),
+        (
+            {
+                "screenshots": [
+                    {
+                        "name": "advisory-opportunities-live.png",
+                        "panel": "advisory.opportunities",
+                        "portfolioId": "PB_SG_GLOBAL_BAL_001",
+                        "benchmarkCode": "BMK_PB_GLOBAL_BALANCED_60_40",
+                        "state": "diagnostic_only",
+                    }
+                ]
+            },
+            "ideaScreenshotEvidenceObserved",
+        ),
+        ({"screenshots": "not-a-screenshot-list"}, "ideaScreenshotEvidenceObserved"),
+        ({"screenshots": ["not-a-screenshot-object"]}, "ideaScreenshotEvidenceObserved"),
+    ],
+)
+def test_rejects_malformed_workbench_runtime_summary_shapes(
+    summary_patch: dict[str, object],
+    failed_check: str,
+) -> None:
+    proof = build_gateway_workbench_runtime_execution_proof_payload(
+        generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
+        repository_root=ROOT,
+        workbench_live_validation_summary={
+            **_valid_workbench_summary(),
+            **summary_patch,
+        },
+        workbench_live_validation_summary_ref=(
+            "lotus-workbench:output/playwright/live-canonical/live-validation-summary.json"
+        ),
+        workbench_shot_index_text=_valid_shot_index(),
+        workbench_shot_index_ref="lotus-workbench:output/playwright/live-canonical/SHOT-INDEX.md",
+        owner_mainline_evidence=_owner_mainline_evidence(),
+    )
+
+    assert proof["runtimeExecutionProofValid"] is False
+    assert proof["proofChecks"][failed_check] is False
     assert gateway_workbench_runtime_execution_proof_is_valid(proof) is False
 
 
