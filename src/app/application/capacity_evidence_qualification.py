@@ -88,7 +88,7 @@ def qualify_dependency_recovery_evidence(
     qualification_run_id: str,
 ) -> dict[str, Any]:
     _validate_qualification_inputs(generated_at_utc, qualification_run_id)
-    _validate_dependency_recovery_proof(capacity_proof)
+    validate_dependency_recovery_proof(capacity_proof)
     _validate_attestation(
         verified_attestation,
         capacity_proof,
@@ -213,7 +213,7 @@ def _validate_qualification_inputs(generated_at_utc: datetime, qualification_run
         raise ValueError("qualification_run_id must not be blank")
 
 
-def _validate_dependency_recovery_proof(proof: dict[str, Any]) -> None:
+def validate_dependency_recovery_proof(proof: dict[str, Any]) -> None:
     _validate_capacity_proof_header(proof, proof_name="dependency recovery proof")
     scenarios = proof.get("scenarios")
     if not isinstance(scenarios, list):

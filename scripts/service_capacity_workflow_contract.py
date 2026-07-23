@@ -48,6 +48,7 @@ def _validate_postgres_capacity_workflow(repository_root: Path) -> list[str]:
         "POSTGRES_CAPACITY_CONFIRMATION: SATURATE_DEDICATED_LOTUS_IDEA_POSTGRES",
         "SERVICE_CAPACITY_PROFILE: test",
         "make postgres-capacity-threshold-proof",
+        "make postgres-capacity-threshold-proof-gate",
         ATTESTATION_ACTION,
     )
     errors = [
@@ -59,6 +60,10 @@ def _validate_postgres_capacity_workflow(repository_root: Path) -> list[str]:
         errors.append("PostgreSQL saturation workflow must not run on a schedule")
     if "SERVICE_CAPACITY_PROFILE: production" in workflow:
         errors.append("PostgreSQL threshold measurement must remain controlled-test classified")
+    proof_gate = workflow.find("make postgres-capacity-threshold-proof-gate")
+    attestation = workflow.find(ATTESTATION_ACTION)
+    if proof_gate < 0 or proof_gate > attestation:
+        errors.append("PostgreSQL threshold proof gate must run before provenance attestation")
     return errors
 
 
@@ -78,6 +83,7 @@ def validate_dependency_recovery_workflow(repository_root: Path) -> list[str]:
         "--scenario dependency_failure",
         "--dependency-recovery-delay-seconds",
         "--allow-mutating-workflows",
+        "make service-dependency-recovery-proof-gate",
         ATTESTATION_ACTION,
     )
     errors = [
@@ -87,6 +93,10 @@ def validate_dependency_recovery_workflow(repository_root: Path) -> list[str]:
     ]
     if "schedule:" in workflow:
         errors.append("dependency recovery workflow must not run on a schedule")
+    proof_gate = workflow.find("make service-dependency-recovery-proof-gate")
+    attestation = workflow.find(ATTESTATION_ACTION)
+    if proof_gate < 0 or proof_gate > attestation:
+        errors.append("dependency recovery proof gate must run before provenance attestation")
     return errors
 
 

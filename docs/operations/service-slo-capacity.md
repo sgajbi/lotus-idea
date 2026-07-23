@@ -257,8 +257,11 @@ the protected `capacity-production-like` environment on the governed
 self-hosted capacity runner. The operator must arrange the controlled
 source-unavailable condition, dispatch with the exact confirmation
 `RUN_CONTROLLED_LOTUS_IDEA_DEPENDENCY_RECOVERY`, and restore the authoritative
-source during the configured recovery delay. The workflow validates, attests,
-and uploads only the source-safe capacity artifact.
+source during the configured recovery delay. The workflow runs
+`make service-dependency-recovery-proof-gate` before provenance attestation, so
+generic baseline validation cannot substitute for the dependency-fault plus
+clean-recovery proof. It then attests and uploads only the source-safe capacity
+artifact.
 
 Consume the downloaded artifact only through cryptographic verification:
 
@@ -303,11 +306,13 @@ Qualifying evidence must be produced by the manual, main-only
 `--verify-postgres-threshold-attestation`; verification pins the repository,
 signer workflow, `refs/heads/main`, and source commit. The workflow and
 protected runtime must exist on `main` before qualifying evidence can be
-produced. Production-like resource evidence is co-observed and separately
-attested by the load/soak workflow. Official cost attribution remains governed
-by `lotus-platform#495` and cannot be produced by Idea. The platform producer
-and Idea consumer are implemented locally, but only a protected platform
-mainline execution can create qualifying cost evidence.
+produced. `make postgres-capacity-threshold-proof-gate` validates the exact
+threshold/recovery artifact before provenance attestation. Production-like
+resource evidence is co-observed and separately attested by the load/soak
+workflow. Official cost attribution remains governed by `lotus-platform#495`
+and cannot be produced by Idea. The platform producer and Idea consumer are
+implemented locally, but only a protected platform mainline execution can create
+qualifying cost evidence.
 
 Validate the evidence boundary independently:
 
@@ -315,6 +320,8 @@ Validate the evidence boundary independently:
 make service-capacity-baseline-contract-gate
 make service-resource-baseline-contract-gate
 make service-resource-proof-gate
+make service-dependency-recovery-proof-gate
+make postgres-capacity-threshold-proof-gate
 ```
 
 ## Resource Observation
