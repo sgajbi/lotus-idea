@@ -18,7 +18,7 @@ from app.application.data_mesh.platform_catalog_source_contract import (
     REQUIRED_PRODUCER_PRODUCTS,
     _catalog_includes_idea_consumer,
     _catalog_includes_idea_products,
-    _maturity_matrix_keeps_idea_deferred,
+    _maturity_matrix_keeps_idea_unpromoted,
     _source_manifest_includes_idea,
     build_platform_catalog_source_contract_payload,
     platform_catalog_source_contract_is_valid,
@@ -150,7 +150,7 @@ def test_rejects_platform_catalog_source_contract_with_invalid_contract_fields(
         "platformSourceManifestIncludesIdea",
         "platformCatalogIncludesIdeaProducts",
         "platformCatalogIncludesIdeaConsumer",
-        "platformMaturityKeepsIdeaDeferred",
+        "platformMaturityKeepsIdeaUnpromoted",
     ],
 )
 def test_rejects_platform_catalog_source_contract_with_invalid_proof_checks(
@@ -435,6 +435,10 @@ def test_catalog_consumer_inclusion_skips_non_idea_entries() -> None:
     )
 
 
+def test_maturity_matrix_unpromoted_posture_accepts_single_idea_candidate() -> None:
+    assert _maturity_matrix_keeps_idea_unpromoted(_maturity_payload()) is True
+
+
 @pytest.mark.parametrize(
     "payload",
     [
@@ -457,7 +461,56 @@ def test_catalog_consumer_inclusion_skips_non_idea_entries() -> None:
         },
         {
             "repositories": [
-                {"repository": "lotus-idea", "classification": "deferred", "mesh_role": "producer"}
+                {
+                    "repository": "lotus-idea",
+                    "classification": "certification_candidate",
+                    "mesh_role": "producer",
+                    "first_wave_product_count": 1,
+                    "required_next_step": "Complete promotion proof.",
+                }
+            ],
+            "products": [],
+        },
+        {
+            "repositories": [
+                {
+                    "repository": "lotus-idea",
+                    "classification": "certification_candidate",
+                    "mesh_role": "producer",
+                    "first_wave_product_count": 0,
+                }
+            ],
+            "products": [],
+        },
+        {
+            "repositories": [
+                {
+                    "repository": "lotus-idea",
+                    "classification": "certification_candidate",
+                    "mesh_role": "producer",
+                    "first_wave_product_count": 0,
+                    "required_next_step": "Complete promotion proof.",
+                }
+            ],
+            "products": [
+                {
+                    "product_id": product_id,
+                    "classification": "certification_candidate",
+                    "maturity_wave": "enterprise_wave_candidate",
+                    "lifecycle_status": "proposed",
+                }
+                for product_id in REQUIRED_PRODUCER_PRODUCTS
+            ],
+        },
+        {
+            "repositories": [
+                {
+                    "repository": "lotus-idea",
+                    "classification": "certification_candidate",
+                    "mesh_role": "producer",
+                    "first_wave_product_count": 0,
+                    "required_next_step": "Complete promotion proof.",
+                }
             ],
             "products": [
                 {
@@ -471,13 +524,27 @@ def test_catalog_consumer_inclusion_skips_non_idea_entries() -> None:
         },
         {
             "repositories": [
-                {"repository": "lotus-idea", "classification": "deferred", "mesh_role": "producer"}
+                {
+                    "repository": "lotus-idea",
+                    "classification": "certification_candidate",
+                    "mesh_role": "producer",
+                    "first_wave_product_count": 0,
+                    "required_next_step": "Complete promotion proof.",
+                }
             ],
             "products": [
                 {
                     "product_id": product_id,
-                    "classification": "deferred",
-                    "maturity_wave": "current_wave",
+                    "classification": (
+                        "certification_candidate"
+                        if product_id == "lotus-idea:IdeaCandidate:v1"
+                        else "deferred"
+                    ),
+                    "maturity_wave": (
+                        "enterprise_wave_candidate"
+                        if product_id == "lotus-idea:IdeaCandidate:v1"
+                        else "current_wave"
+                    ),
                     "lifecycle_status": "proposed",
                 }
                 for product_id in REQUIRED_PRODUCER_PRODUCTS
@@ -485,13 +552,27 @@ def test_catalog_consumer_inclusion_skips_non_idea_entries() -> None:
         },
         {
             "repositories": [
-                {"repository": "lotus-idea", "classification": "deferred", "mesh_role": "producer"}
+                {
+                    "repository": "lotus-idea",
+                    "classification": "certification_candidate",
+                    "mesh_role": "producer",
+                    "first_wave_product_count": 0,
+                    "required_next_step": "Complete promotion proof.",
+                }
             ],
             "products": [
                 {
                     "product_id": product_id,
-                    "classification": "deferred",
-                    "maturity_wave": "future_wave",
+                    "classification": (
+                        "certification_candidate"
+                        if product_id == "lotus-idea:IdeaCandidate:v1"
+                        else "deferred"
+                    ),
+                    "maturity_wave": (
+                        "enterprise_wave_candidate"
+                        if product_id == "lotus-idea:IdeaCandidate:v1"
+                        else "future_wave"
+                    ),
                     "lifecycle_status": "active",
                 }
                 for product_id in REQUIRED_PRODUCER_PRODUCTS
@@ -499,10 +580,10 @@ def test_catalog_consumer_inclusion_skips_non_idea_entries() -> None:
         },
     ],
 )
-def test_maturity_matrix_deferred_posture_fails_closed(
+def test_maturity_matrix_unpromoted_posture_fails_closed(
     payload: dict[str, object],
 ) -> None:
-    assert _maturity_matrix_keeps_idea_deferred(payload) is False
+    assert _maturity_matrix_keeps_idea_unpromoted(payload) is False
 
 
 def _valid_platform_catalog_source_contract(tmp_path: Path) -> dict[str, Any]:
@@ -579,15 +660,28 @@ def _maturity_payload() -> dict[str, object]:
         "repositories": [
             {
                 "repository": "lotus-idea",
-                "classification": "deferred",
+                "classification": "certification_candidate",
                 "mesh_role": "producer",
+                "first_wave_product_count": 0,
+                "required_next_step": (
+                    "Complete runtime telemetry, durable repository, Gateway/Workbench discovery, "
+                    "and supported-feature proof before promotion."
+                ),
             }
         ],
         "products": [
             {
                 "product_id": product_id,
-                "classification": "deferred",
-                "maturity_wave": "future_wave",
+                "classification": (
+                    "certification_candidate"
+                    if product_id == "lotus-idea:IdeaCandidate:v1"
+                    else "deferred"
+                ),
+                "maturity_wave": (
+                    "enterprise_wave_candidate"
+                    if product_id == "lotus-idea:IdeaCandidate:v1"
+                    else "future_wave"
+                ),
                 "lifecycle_status": "proposed",
             }
             for product_id in REQUIRED_PRODUCER_PRODUCTS
