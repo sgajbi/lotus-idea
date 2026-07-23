@@ -288,11 +288,19 @@ IMPLEMENTATION_PROOF_ARTIFACT_SPECS = (
         419,
     ),
     _classified(
+        "--outbox-broker-runtime-execution-proof",
+        "outbox_broker_runtime_execution_proof",
+        EvidenceClass.RUNTIME_EXECUTION,
+        CLEARING,
+        "Outbox broker runtime execution",
+        694,
+    ),
+    _classified(
         "--outbox-consumer-contract-proof",
         "outbox_consumer_contract_proof",
         EvidenceClass.SOURCE_CONTRACT,
         SUPPORTING,
-        "Outbox consumer runtime",
+        "Outbox consumer source contract",
         404,
     ),
     _classified(

@@ -458,6 +458,14 @@ downstream delivery contracts, or a supported-feature claim. Same-key /
 same-request retries replay without mutation, same-key / different-request
 reuse returns product-safe conflict, and responses expose only a source-safe
 `operatorRunReference`.
+The broker runtime-execution proof is separate from the source-contract proof:
+`scripts/outbox/broker/generate_runtime_execution.py` can publish a source-safe
+certification canary through the configured HTTP broker and
+`make outbox-broker-runtime-execution-proof-gate` validates the bounded receipt.
+That proof may clear only `external_broker_runtime_proof_missing`; downstream
+consumer runtime proof, platform-mesh event publication, Gateway/Workbench
+realization, production certification, and supported-feature promotion remain
+separate evidence classes.
 The repo-owned downstream consumer contract at
 `contracts/outbox-events/lotus-idea-outbox-consumers.v1.json` declares Gateway,
 Advise, Manage, and Report as downstream consumers with source-authority
