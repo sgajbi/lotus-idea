@@ -102,7 +102,9 @@ def test_report_materialization_runtime_execution_rejects_render_archive_certifi
 
 def test_report_materialization_runtime_execution_rejects_owner_evidence_drift() -> None:
     payload = deepcopy(valid_report_materialization_runtime_execution())
-    owner_evidence = cast(list[dict[str, Any]], list(payload["ownerMainlineEvidence"]))
+    owner_mainline_evidence = payload["ownerMainlineEvidence"]
+    assert isinstance(owner_mainline_evidence, tuple)
+    owner_evidence = [dict(cast(dict[str, Any], item)) for item in owner_mainline_evidence]
     owner_evidence[0] = dict(owner_evidence[0], mergedMainCommitSha="0" * 40)
     payload["ownerMainlineEvidence"] = owner_evidence
 

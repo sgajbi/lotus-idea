@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from datetime import UTC, datetime
 import hashlib
 import json
@@ -542,7 +542,10 @@ def _non_proof_claims_are_retained(value: object) -> bool:
 
 
 def _owner_mainline_evidence_is_valid(value: object) -> bool:
-    return tuple(value or ()) == REPORT_RENDER_ARCHIVE_OWNER_MAINLINE_EVIDENCE
+    return (
+        isinstance(value, Sequence)
+        and tuple(value) == REPORT_RENDER_ARCHIVE_OWNER_MAINLINE_EVIDENCE
+    )
 
 
 def _source_authority(report_root: Path) -> tuple[dict[str, str | None], ...]:
