@@ -59,6 +59,7 @@ def implementation_proof_artifact_registry_errors(*, root: Path) -> list[str]:
             or "test-execution" in option
             or "source-contract" in option
             or "deployment-evidence" in option
+            or "evidence-pack" in option
         )
     }
     registry_flags = set(flags)

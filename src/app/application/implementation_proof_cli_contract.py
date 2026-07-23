@@ -111,6 +111,9 @@ from app.application.source_ingestion_scheduler import (
 from app.application.workbench.read_path_source_contract import (
     WORKBENCH_READ_PATH_SOURCE_CONTRACT_PROOF_ENV,
 )
+from app.application.opportunity_archetype_evidence_pack import (
+    OPPORTUNITY_ARCHETYPE_EVIDENCE_PACK_ENV,
+)
 
 PROOF_ARTIFACT_ARGS: tuple[tuple[str, str, str], ...] = (
     (
@@ -327,5 +330,10 @@ PROOF_ARTIFACT_ARGS: tuple[tuple[str, str, str], ...] = (
         "--missing-benchmark-performance-readiness-proof",
         PERFORMANCE_BENCHMARK_READINESS_RUNTIME_EXECUTION_ENV,
         "Optional lotus-performance benchmark-readiness proof artifact path for missing-benchmark review.",
+    ),
+    (
+        "--opportunity-archetype-evidence-pack",
+        OPPORTUNITY_ARCHETYPE_EVIDENCE_PACK_ENV,
+        "Optional source-safe canonical opportunity archetype evidence-pack artifact path.",
     ),
 )

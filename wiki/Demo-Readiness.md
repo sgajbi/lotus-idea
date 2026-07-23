@@ -33,7 +33,7 @@ promotion.
 | Demo area | Current truth | Client-facing handling |
 | --- | --- | --- |
 | Opportunity intelligence | Internal candidate, review, feedback, conversion, and proof foundations exist. | Explain the governed operating model and current boundaries. |
-| Opportunity archetypes | Governed, non-promoted foundations exist across source-owned portfolio, risk, performance, mandate, suitability, risk-profile, income, maturity, and benchmark evidence. Independent closed v2 Core assignment and Performance benchmark-readiness contracts each perform one source fetch and reconcile pseudonymous request, exact source, and deterministic review-required or no-opportunity receipts. Fresh qualifying evidence, data mesh, Gateway/Workbench, client publication, deployment, production, and feature promotion remain blocked. | Use as taxonomy, source-authority framing, and internal foundation proof only; do not present it as full Workbench journey proof, client-demo proof, or a supported feature. |
+| Opportunity archetypes | Governed, non-promoted foundations exist across source-owned portfolio, risk, performance, mandate, suitability, risk-profile, income, maturity, and benchmark evidence. A source-safe canonical archetype evidence pack now hashes the canonical portfolio reference and binds each archetype to source products, evidence refs, blocker issue refs, and readiness blockers. Independent closed v2 Core assignment and Performance benchmark-readiness contracts each perform one source fetch and reconcile pseudonymous request, exact source, and deterministic review-required or no-opportunity receipts. Fresh qualifying evidence, data mesh, Gateway/Workbench, client publication, deployment, production, and feature promotion remain blocked. | Use as taxonomy, source-authority framing, and internal foundation proof only; do not present it as full Workbench journey proof, client-demo proof, or a supported feature. |
 | Supported features | No external supported feature is promoted. | Do not claim production availability or client-ready publication. |
 | Workbench | Bounded read-only proof exists, but full product-surface certification is blocked. | Show only after validation and with explicit bounded-preview language. |
 | Downstream realization | Digest-bound Advise, Manage, and Report route source contracts can be consumed as non-clearing provenance; bounded Report/Render/Archive materialization source contracts can be consumed when sibling `lotus-report` evidence is present. | Describe domain boundaries; do not claim route serving or acceptance, suitability, rebalance/execution, client publication, or supported-feature promotion. |
@@ -103,6 +103,13 @@ drift, bond maturity, high volatility, drawdown, missing suitability, missing
 risk profile, mandate/restriction, low-income, and missing-benchmark review.
 The gate improves proof discipline only; it does not certify data mesh, prove
 Workbench behavior, authorize client publication, or promote support.
+
+The canonical opportunity archetype evidence-pack gate,
+`make opportunity-archetype-evidence-pack-gate`, adds a source-safe Slice 16
+composition artifact for internal proof-readiness. It serializes only a hash of
+the canonical portfolio reference and keeps every unresolved source-authority,
+data-mesh, Workbench, client-publication, production, and supported-feature
+blocker explicit.
 
 Missing-benchmark review is an internal bounded foundation only. It can create
 advisor-review evidence-gap candidates from Core-owned benchmark-assignment

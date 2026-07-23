@@ -27,6 +27,9 @@ from app.application.implementation_proof_models import (
 )
 from app.application.implementation_proof_capability_updates import build_capability_readiness
 from app.application.opportunity_archetype_contracts import OPPORTUNITY_ARCHETYPE_CONTRACT_PATH
+from app.application.opportunity_archetype_evidence_pack import (
+    OPPORTUNITY_ARCHETYPE_EVIDENCE_PACK_REFS,
+)
 from app.application.opportunity_archetype_readiness import (
     build_opportunity_archetype_scenario_readiness,
 )
@@ -152,6 +155,8 @@ def build_implementation_proof_readiness_snapshot(
     missing_benchmark_live_proof_ref: str | None = None,
     missing_benchmark_performance_readiness_proof: Mapping[str, object] | None = None,
     missing_benchmark_performance_readiness_proof_ref: str | None = None,
+    opportunity_archetype_evidence_pack_proof: Mapping[str, object] | None = None,
+    opportunity_archetype_evidence_pack_proof_ref: str | None = None,
     repository_root: Path = REPOSITORY_ROOT,
 ) -> ImplementationProofReadinessSnapshot:
     if evaluated_at_utc.tzinfo is None or evaluated_at_utc.utcoffset() is None:
@@ -254,6 +259,7 @@ def _readiness_snapshot(
             "supported_features": "supported-features/supported-features.json",
             "endpoint_certification": "docs/operations/endpoint-certification-ledger.json",
             "opportunity_archetypes": str(OPPORTUNITY_ARCHETYPE_CONTRACT_PATH.as_posix()),
+            "opportunity_archetype_evidence_pack": str(OPPORTUNITY_ARCHETYPE_EVIDENCE_PACK_REFS[0]),
         },
         capabilities=capabilities,
     )

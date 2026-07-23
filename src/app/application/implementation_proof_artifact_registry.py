@@ -463,4 +463,12 @@ IMPLEMENTATION_PROOF_ARTIFACT_SPECS = (
         "Performance benchmark-readiness runtime execution",
         500,
     ),
+    _classified(
+        "--opportunity-archetype-evidence-pack",
+        "opportunity_archetype_evidence_pack_proof",
+        EvidenceClass.SOURCE_CONTRACT,
+        SUPPORTING,
+        "Canonical opportunity archetype evidence pack",
+        696,
+    ),
 )

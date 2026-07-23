@@ -55,6 +55,9 @@ from app.application.implementation_proof_models import (
 from app.application.implementation_proof_opportunity_archetype_proofs import (
     apply_opportunity_archetype_proofs_from_scope,
 )
+from app.application.opportunity_archetype_evidence_pack import (
+    opportunity_archetype_evidence_pack_is_valid,
+)
 from app.application.data_mesh.mesh_policy_source_contract import (
     mesh_policy_source_contract_is_valid,
 )
@@ -257,6 +260,7 @@ def _apply_opportunity_archetype_proofs(
     capabilities: tuple[ImplementationProofCapabilityReadiness, ...],
     scope: Mapping[str, object],
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
+    capabilities = _apply_opportunity_archetype_evidence_pack(capabilities, scope=scope)
     return apply_opportunity_archetype_proofs_from_scope(
         capabilities=capabilities,
         source_ingestion_runtime_execution_current=cast(
@@ -268,6 +272,32 @@ def _apply_opportunity_archetype_proofs(
         ),
         evaluated_at_utc=cast(datetime, scope["evaluated_at_utc"]),
         scope=scope,
+    )
+
+
+def _apply_opportunity_archetype_evidence_pack(
+    capabilities: tuple[ImplementationProofCapabilityReadiness, ...],
+    *,
+    scope: Mapping[str, object],
+) -> tuple[ImplementationProofCapabilityReadiness, ...]:
+    proof = _proof_payload_from_scope(scope, "opportunity_archetype_evidence_pack_proof")
+    proof_ref = _proof_ref_from_scope(scope, "opportunity_archetype_evidence_pack_proof_ref")
+    if not _registered_proof_is_valid_and_current(
+        "opportunity_archetype_evidence_pack_proof",
+        ProofArtifactEffect.SUPPORTING_EVIDENCE,
+        proof,
+        proof_ref,
+        evaluated_at_utc=_evaluated_at_utc_from_scope(scope),
+        proof_is_valid=opportunity_archetype_evidence_pack_is_valid,
+    ):
+        return capabilities
+    return tuple(
+        apply_supporting_evidence(
+            capability,
+            capability_ids=("opportunity-archetype-scenarios",),
+            evidence_ref=proof_ref,
+        )
+        for capability in capabilities
     )
 
 

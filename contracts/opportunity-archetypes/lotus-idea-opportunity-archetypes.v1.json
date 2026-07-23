@@ -13,7 +13,7 @@
   "supported_feature_promoted": false,
   "data_mesh_certified": false,
   "source_of_truth": {
-    "blueprint": "C:/Users/Sandeep/Downloads/LOTUS_IDEA_BLUEPRINT.md",
+    "blueprint": "docs/LOTUS_IDEA_BLUEPRINT.md",
     "rfc_main": "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-enterprise-opportunity-intelligence-operating-layer.md",
     "rfc_slice_00": "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-00-critical-review-source-map-and-product-gap-allocation.md",
     "rfc_slice_05": "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-05-deterministic-signal-evaluation-and-candidate-generation.md",

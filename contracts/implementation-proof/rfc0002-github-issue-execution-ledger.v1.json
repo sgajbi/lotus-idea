@@ -309,9 +309,9 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/696",
       "rfcSlices": ["slice-16"],
       "githubState": "open",
-      "executionStatus": "open_ready",
+      "executionStatus": "open_in_progress",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #696 open until canonical opportunity archetype evidence pack for PB_SG_GLOBAL_BAL_001 is implementation-backed."
+      "closureInstruction": "Keep #696 open until the rfc0002-slice16-canonical-archetype-evidence-pack branch delivers the bounded canonical opportunity archetype evidence-pack contract, generator, gate, readiness linkage, tests, PR, exact-main validation, and QA evidence without source-authority or client-demo overclaiming."
     },
     {
       "issueNumber": 697,

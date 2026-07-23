@@ -360,6 +360,11 @@ def _proof_artifact_inputs(args: argparse.Namespace) -> dict[str, ProofArtifactI
             artifact_name="platform catalog source contract",
             ref_name="platform catalog source contract artifact",
         ),
+        "opportunity_archetype_evidence_pack": _proof_artifact_input(
+            args.opportunity_archetype_evidence_pack,
+            artifact_name="canonical opportunity archetype evidence pack",
+            ref_name="canonical opportunity archetype evidence-pack artifact",
+        ),
         **_opportunity_archetype_proof_artifact_inputs(args),
     }
 

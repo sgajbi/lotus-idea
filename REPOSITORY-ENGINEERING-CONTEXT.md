@@ -1104,6 +1104,17 @@ product dependency issue was required by the audited contract state.
 RFC work can validate issue existence, RFC/slice labels, state, priority, and
 blocked posture without relying on chat memory.
 
+RFC-0002 Slice 16 canonical archetype evidence-pack composition is governed by
+`src/app/application/opportunity_archetype_evidence_pack.py` and
+`make opportunity-archetype-evidence-pack-gate`. The pack is supporting
+`source_contract` evidence only: it hashes the canonical portfolio reference,
+binds each archetype to source products, evidence refs, blocker issue refs, and
+remaining readiness blockers, and must not clear source-owner runtime,
+data-mesh, Workbench, client-publication, production, or supported-feature
+blockers. `make implementation-proof-readiness-check` generates the pack under
+`output/opportunity/canonical-archetype-evidence-pack.json` and consumes it only
+when aggregate provenance is current and the source tree is clean.
+
 RFC-0002 Slice 18 issue execution truth is governed by
 `contracts/implementation-proof/rfc0002-github-issue-execution-ledger.v1.json`
 and tracked by issue `#681`. `make rfc0002-github-issue-execution-ledger-gate`
