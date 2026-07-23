@@ -16,6 +16,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from scripts.proof_worktree_import_guard import ensure_worktree_imports
 
 ensure_worktree_imports(__file__)
+from scripts.implementation_proof_readiness_outbox_inputs import (
+    outbox_proof_artifact_inputs,
+)
 from app.application.implementation_proof_cli_contract import PROOF_ARTIFACT_ARGS
 from app.application.implementation_proof_models import (
     ImplementationProofCapabilityReadiness,
@@ -346,26 +349,7 @@ def _proof_artifact_inputs(args: argparse.Namespace) -> dict[str, ProofArtifactI
             artifact_name="Gateway/Workbench discovery contract proof",
             ref_name="Gateway/Workbench discovery contract proof artifact",
         ),
-        "outbox_broker_source_contract": _proof_artifact_input(
-            args.outbox_broker_source_contract_proof,
-            artifact_name="outbox broker source-contract proof",
-            ref_name="outbox broker source-contract proof artifact",
-        ),
-        "outbox_broker_runtime_execution": _proof_artifact_input(
-            args.outbox_broker_runtime_execution_proof,
-            artifact_name="outbox broker runtime execution proof",
-            ref_name="outbox broker runtime execution proof artifact",
-        ),
-        "outbox_consumer_contract": _proof_artifact_input(
-            args.outbox_consumer_contract_proof,
-            artifact_name="outbox consumer contract proof",
-            ref_name="outbox consumer contract proof artifact",
-        ),
-        "outbox_platform_mesh_event_source_contract": _proof_artifact_input(
-            args.outbox_platform_mesh_event_source_contract_proof,
-            artifact_name="outbox platform-mesh event source-contract proof",
-            ref_name="outbox platform-mesh event source-contract proof artifact",
-        ),
+        **outbox_proof_artifact_inputs(args, _proof_artifact_input),
         "platform_catalog_source_contract": _proof_artifact_input(
             args.platform_catalog_source_contract_proof,
             artifact_name="platform catalog source contract",

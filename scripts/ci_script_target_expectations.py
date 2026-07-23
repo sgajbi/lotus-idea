@@ -97,6 +97,9 @@ SCRIPT_TARGET_EXPECTATIONS = {
     "outbox-consumer-contract-proof-contract-gate": (
         "scripts/outbox/consumer_contract_proof_contract_gate.py"
     ),
+    "outbox-consumer-runtime-execution-proof-gate": (
+        "scripts/outbox/consumer_runtime_execution_gate.py"
+    ),
     "outbox-platform-mesh-event-source-contract-proof-gate": (
         "scripts/outbox/platform_mesh/source_contract_proof_gate.py"
     ),

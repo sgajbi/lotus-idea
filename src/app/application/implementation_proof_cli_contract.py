@@ -73,6 +73,9 @@ from app.application.outbox.broker.runtime_execution import (
 from app.application.outbox.consumer_contract_proof import (
     OUTBOX_CONSUMER_CONTRACT_PROOF_ENV,
 )
+from app.application.outbox.consumer_runtime import (
+    OUTBOX_CONSUMER_RUNTIME_EXECUTION_ENV,
+)
 from app.application.outbox.platform_mesh.source_contract_proof import (
     OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_PROOF_ENV,
 )
@@ -221,6 +224,11 @@ PROOF_ARTIFACT_ARGS: tuple[tuple[str, str, str], ...] = (
         "--outbox-consumer-contract-proof",
         OUTBOX_CONSUMER_CONTRACT_PROOF_ENV,
         "Optional bounded outbox downstream consumer contract proof artifact path.",
+    ),
+    (
+        "--outbox-consumer-runtime-execution-proof",
+        OUTBOX_CONSUMER_RUNTIME_EXECUTION_ENV,
+        "Optional outbox downstream domain-consumer runtime execution proof artifact path.",
     ),
     (
         "--outbox-platform-mesh-event-source-contract-proof",

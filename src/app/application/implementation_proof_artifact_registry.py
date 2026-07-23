@@ -304,6 +304,14 @@ IMPLEMENTATION_PROOF_ARTIFACT_SPECS = (
         404,
     ),
     _classified(
+        "--outbox-consumer-runtime-execution-proof",
+        "outbox_consumer_runtime_execution_proof",
+        EvidenceClass.RUNTIME_EXECUTION,
+        CLEARING,
+        "Outbox domain-consumer runtime execution",
+        694,
+    ),
+    _classified(
         "--outbox-platform-mesh-event-source-contract-proof",
         "outbox_platform_mesh_event_source_contract_proof",
         EvidenceClass.SOURCE_CONTRACT,

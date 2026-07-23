@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from . import advise_source_product_evidence_paths as advise_paths
+from . import outbox_paths
 from . import report_paths
 from . import runtime_evidence_paths as runtime_paths
 
@@ -117,26 +118,7 @@ REQUIRED_BOUNDED_MODULE_PATHS = {
     "tests/unit/ai_attestation/__init__.py",
     "tests/unit/ai_attestation/test_source_contract.py",
     "tests/unit/ai_attestation/test_source_contract_automation.py",
-    "scripts/outbox/broker/__init__.py",
-    "scripts/outbox/broker/generate_source_contract_proof.py",
-    "scripts/outbox/broker/generate_runtime_execution.py",
-    "scripts/outbox/broker/runtime_execution_gate.py",
-    "scripts/outbox/broker/source_contract_proof_gate.py",
-    "src/app/application/outbox/broker/__init__.py",
-    "src/app/application/outbox/broker/runtime_execution.py",
-    "src/app/application/outbox/broker/source_contract_proof.py",
-    "tests/unit/outbox/broker/__init__.py",
-    "tests/unit/outbox/broker/test_readiness_consumption.py",
-    "tests/unit/outbox/broker/test_runtime_execution.py",
-    "tests/unit/outbox/broker/test_source_contract_proof.py",
-    "scripts/outbox/platform_mesh/__init__.py",
-    "scripts/outbox/platform_mesh/generate_source_contract_proof.py",
-    "scripts/outbox/platform_mesh/source_contract_proof_gate.py",
-    "src/app/application/outbox/platform_mesh/__init__.py",
-    "src/app/application/outbox/platform_mesh/source_contract_proof.py",
-    "tests/unit/outbox/platform_mesh/__init__.py",
-    "tests/unit/outbox/platform_mesh/test_readiness_consumption.py",
-    "tests/unit/outbox/platform_mesh/test_source_contract_proof.py",
+    *outbox_paths.REQUIRED_OUTBOX_PROOF_PATHS,
     "scripts/operator_workflows_operations/__init__.py",
     "scripts/operator_workflows_operations/generate_source_contract_proof.py",
     "scripts/operator_workflows_operations/source_contract_proof_gate.py",
