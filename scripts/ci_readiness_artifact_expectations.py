@@ -35,6 +35,10 @@ GENERATED_READINESS_ARTIFACTS = (
         "an outbox consumer contract proof artifact",
     ),
     (
+        "scripts/outbox/generate_consumer_runtime_execution.py",
+        "an outbox consumer runtime-execution proof artifact",
+    ),
+    (
         "scripts/outbox/platform_mesh/generate_source_contract_proof.py",
         "an outbox platform-mesh event source-contract proof artifact",
     ),
@@ -134,6 +138,10 @@ PASSED_READINESS_ARTIFACTS = (
         "outbox broker source-contract proof artifact",
     ),
     ("--outbox-consumer-contract-proof", "outbox consumer contract proof artifact"),
+    (
+        "--outbox-consumer-runtime-execution-proof",
+        "outbox consumer runtime-execution proof artifact",
+    ),
     (
         "--outbox-platform-mesh-event-source-contract-proof",
         "outbox platform-mesh event source-contract proof artifact",

@@ -17,6 +17,9 @@ from app.application.source_authority import (
     build_source_authority_records,
     source_authority_records_are_valid,
 )
+from app.application.downstream_realization.intake_runtime_execution_common import (
+    non_proof_claims_are_retained as shared_non_proof_claims_are_retained,
+)
 from app.application.source_safe_cross_repo_proof import is_timezone_aware_datetime_text
 from app.application.source_runtime_evidence import is_sha256
 from app.domain.proof_evidence import EvidenceClass
@@ -534,10 +537,9 @@ def _receipt_matches(
 
 
 def _non_proof_claims_are_retained(value: object) -> bool:
-    return (
-        isinstance(value, Mapping)
-        and set(value) == _NON_PROOF_CLAIM_FIELDS
-        and all(value.get(key) is False for key in _NON_PROOF_CLAIM_FIELDS)
+    return shared_non_proof_claims_are_retained(
+        value,
+        expected_fields=_NON_PROOF_CLAIM_FIELDS,
     )
 
 
