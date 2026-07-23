@@ -74,6 +74,10 @@ from app.application.proof_provenance import aggregate_proof_artifact_is_current
 from app.application.report.materialization_source_contract import (
     report_materialization_source_contract_is_valid,
 )
+from app.application.report.materialization_runtime_execution import (
+    REPORT_MATERIALIZATION_RUNTIME_BLOCKERS_SATISFIED,
+    report_materialization_runtime_execution_is_valid,
+)
 from app.application.report.intake_route_source_contract import (
     report_intake_route_source_contract_proof_is_valid,
 )
@@ -239,6 +243,14 @@ def _apply_downstream_proofs_from_scope(
             scope,
             "report_materialization_source_contract_proof_ref",
         ),
+        report_materialization_runtime_execution_proof=_proof_payload_from_scope(
+            scope,
+            "report_materialization_runtime_execution_proof",
+        ),
+        report_materialization_runtime_execution_proof_ref=_proof_ref_from_scope(
+            scope,
+            "report_materialization_runtime_execution_proof_ref",
+        ),
     )
 
 
@@ -399,6 +411,8 @@ def _apply_downstream_proofs(
     report_intake_route_source_contract_proof_ref: str | None,
     report_materialization_source_contract_proof: Mapping[str, object] | None,
     report_materialization_source_contract_proof_ref: str | None,
+    report_materialization_runtime_execution_proof: Mapping[str, object] | None,
+    report_materialization_runtime_execution_proof_ref: str | None,
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
     if _registered_proof_is_valid_and_current(
         "advise_proposal_route_proof",
@@ -490,6 +504,21 @@ def _apply_downstream_proofs(
             _apply_report_materialization_source_contract(
                 capability,
                 report_materialization_source_contract_proof_ref,
+            )
+            for capability in capabilities
+        )
+    if _registered_proof_is_valid_and_current(
+        "report_materialization_runtime_execution_proof",
+        ProofArtifactEffect.BLOCKER_CLEARING,
+        report_materialization_runtime_execution_proof,
+        report_materialization_runtime_execution_proof_ref,
+        evaluated_at_utc=evaluated_at_utc,
+        proof_is_valid=report_materialization_runtime_execution_is_valid,
+    ):
+        capabilities = tuple(
+            _apply_report_materialization_runtime_execution(
+                capability,
+                report_materialization_runtime_execution_proof_ref,
             )
             for capability in capabilities
         )
@@ -826,6 +855,18 @@ def _apply_report_materialization_source_contract(
         capability,
         capability_ids=("downstream-realization",),
         evidence_ref=report_materialization_source_contract_ref,
+    )
+
+
+def _apply_report_materialization_runtime_execution(
+    capability: ImplementationProofCapabilityReadiness,
+    report_materialization_runtime_execution_proof_ref: str | None,
+) -> ImplementationProofCapabilityReadiness:
+    return apply_blocker_proof(
+        capability,
+        capability_ids=("downstream-realization",),
+        blockers_cleared=REPORT_MATERIALIZATION_RUNTIME_BLOCKERS_SATISFIED,
+        proof_ref=report_materialization_runtime_execution_proof_ref,
     )
 
 

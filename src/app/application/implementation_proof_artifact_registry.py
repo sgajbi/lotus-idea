@@ -240,6 +240,14 @@ IMPLEMENTATION_PROOF_ARTIFACT_SPECS = (
         438,
     ),
     _classified(
+        "--report-materialization-runtime-execution-proof",
+        "report_materialization_runtime_execution_proof",
+        EvidenceClass.RUNTIME_EXECUTION,
+        CLEARING,
+        "Report materialization runtime execution",
+        690,
+    ),
+    _classified(
         "--mesh-policy-source-contract-proof",
         "mesh_policy_source_contract_proof",
         EvidenceClass.SOURCE_CONTRACT,

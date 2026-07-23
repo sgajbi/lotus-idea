@@ -19,6 +19,9 @@ from app.application.downstream_realization.advise_intake_runtime_execution impo
 from app.application.downstream_realization.manage_intake_runtime_execution import (
     MANAGE_INTAKE_RUNTIME_EXECUTION_ENV,
 )
+from app.application.report.materialization_runtime_execution import (
+    REPORT_MATERIALIZATION_RUNTIME_EXECUTION_ENV,
+)
 from app.application.durable_repository_proof import DURABLE_REPOSITORY_PROOF_ENV
 from app.application.workbench.contract_proof import (
     GATEWAY_WORKBENCH_CONTRACT_PROOF_ENV,
@@ -101,6 +104,12 @@ def _configured_artifact_paths(tmp_path: Path) -> dict[str, Path]:
         "manage_runtime": (
             tmp_path / "output" / "downstream" / "manage-intake-runtime-execution-proof.json"
         ),
+        "report_materialization_runtime": (
+            tmp_path
+            / "output"
+            / "report"
+            / "materialization-runtime-execution-proof.json"
+        ),
         "workbench": (tmp_path / "output" / "workbench" / "read-path-source-contract-proof.json"),
         "gateway_workbench": (
             tmp_path / "output" / "workbench" / "gateway-workbench-contract-proof.json"
@@ -177,6 +186,13 @@ def _assert_configured_artifacts_are_bound(
     )
     assert artifacts.manage_intake_runtime_execution_proof_ref == (
         "output/downstream/manage-intake-runtime-execution-proof.json"
+    )
+    _assert_bound_artifact(
+        artifacts.report_materialization_runtime_execution_proof,
+        "materialization-runtime-execution-proof.json",
+    )
+    assert artifacts.report_materialization_runtime_execution_proof_ref == (
+        "output/report/materialization-runtime-execution-proof.json"
     )
     _assert_bound_artifact(
         artifacts.workbench_read_path_source_contract_proof,
@@ -259,6 +275,9 @@ def _configure_relative_artifact_env(monkeypatch: pytest.MonkeyPatch) -> None:
         ),
         MANAGE_INTAKE_RUNTIME_EXECUTION_ENV: (
             "output/downstream/manage-intake-runtime-execution-proof.json"
+        ),
+        REPORT_MATERIALIZATION_RUNTIME_EXECUTION_ENV: (
+            "output/report/materialization-runtime-execution-proof.json"
         ),
         WORKBENCH_READ_PATH_SOURCE_CONTRACT_PROOF_ENV: (
             "output/workbench/read-path-source-contract-proof.json"

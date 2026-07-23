@@ -85,6 +85,9 @@ from app.application.report.intake_route_source_contract import (
 from app.application.report.materialization_source_contract import (
     REPORT_MATERIALIZATION_SOURCE_CONTRACT_ENV,
 )
+from app.application.report.materialization_runtime_execution import (
+    REPORT_MATERIALIZATION_RUNTIME_EXECUTION_ENV,
+)
 from app.application.risk_concentration_runtime_evidence import (
     RISK_CONCENTRATION_RUNTIME_EXECUTION_ENV,
 )
@@ -175,6 +178,11 @@ PROOF_ARTIFACT_ARGS: tuple[tuple[str, str, str], ...] = (
         "--report-materialization-source-contract-proof",
         REPORT_MATERIALIZATION_SOURCE_CONTRACT_ENV,
         "Optional lotus-report idea evidence materialization source-contract artifact path.",
+    ),
+    (
+        "--report-materialization-runtime-execution-proof",
+        REPORT_MATERIALIZATION_RUNTIME_EXECUTION_ENV,
+        "Optional lotus-report idea evidence materialization runtime execution artifact path.",
     ),
     (
         "--mesh-policy-source-contract-proof",
