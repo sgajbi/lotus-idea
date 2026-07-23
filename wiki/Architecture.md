@@ -471,6 +471,12 @@ The repo-owned downstream consumer contract at
 Advise, Manage, and Report as downstream consumers with source-authority
 boundaries and keeps them not runtime certified. It changes the outbox blocker
 taxonomy from missing consumer contracts to missing consumer runtime proof.
+The outbox consumer runtime-execution proof is the separate runtime evidence
+class for the domain-consumer leg. It consumes valid Advise, Manage, and Report
+runtime receipts, binds their source-safe refs and digests, and may clear only
+`downstream_consumer_runtime_proof_missing`. Gateway/Workbench realization,
+platform-mesh publication, production certification, and supported-feature
+promotion remain separate proof obligations.
 Outbox event lineage is governed separately from business payload and
 idempotency. Every mutation event persists required correlation and trace,
 optional parent-event causation, and an explicit lineage origin through API,

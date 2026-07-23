@@ -522,17 +522,22 @@ Persistence adapter validation:
 14. `tests/unit/outbox/broker/test_source_contract_proof.py`,
     `tests/unit/outbox/broker/test_readiness_consumption.py`,
     `tests/unit/outbox/test_outbox_consumer_contract_proof.py`,
+    `tests/unit/outbox/test_outbox_consumer_runtime_execution.py`,
+    `tests/unit/outbox/test_outbox_consumer_runtime_readiness.py`,
     `tests/unit/outbox/platform_mesh/test_source_contract_proof.py`,
     `tests/unit/outbox/platform_mesh/test_readiness_consumption.py`,
     `make outbox-consumer-contract-gate`,
     `make outbox-broker-source-contract-proof-gate`,
     `make outbox-consumer-contract-proof-contract-gate`, and
+    `make outbox-consumer-runtime-execution-proof-gate`,
     `make outbox-platform-mesh-event-source-contract-proof-gate` prove the
     declared downstream consumer contract, source-safe bounded outbox broker
     source contract that clears no readiness blocker, bounded downstream
-    consumer source-contract proof, and bounded platform-mesh event
-    source-contract proof. Aggregate readiness records all three source
-    evidence references without clearing runtime blockers. In particular,
+    consumer source-contract proof, bounded domain-consumer runtime execution
+    proof, and bounded platform-mesh event source-contract proof. Aggregate
+    readiness records source-contract evidence without clearing runtime
+    blockers, and may clear only `downstream_consumer_runtime_proof_missing`
+    when the runtime proof consumes valid Advise, Manage, and Report receipts.
     `platform_mesh_event_publication_proof_missing` remains until runtime
     publication evidence exists.
 15. `tests/unit/report/test_intake_route_source_contract.py`,

@@ -293,7 +293,7 @@
       "githubState": "open",
       "executionStatus": "open_in_progress",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #694 open while the live broker and outbox publication operations proof tranche is in active implementation. Do not close from source-contract evidence alone."
+      "closureInstruction": "Keep #694 open while Slice 15 outbox publication operations proof is in active implementation. Broker runtime execution proof is merged on main through PR #732. This tranche adds an aggregate domain-consumer runtime execution proof for Advise, Manage, and Report receipts that may clear only downstream_consumer_runtime_proof_missing when valid. Do not close until Gateway/Workbench runtime proof, platform mesh publication proof, supported-feature promotion, production certification, exact-main CI, wiki publication or no-change evidence, and branch cleanup are recorded."
     },
     {
       "issueNumber": 695,

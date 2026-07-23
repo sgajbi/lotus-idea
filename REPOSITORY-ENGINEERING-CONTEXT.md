@@ -1205,6 +1205,16 @@ observed, machine-verifiable consumer execution receipt may satisfy
 consumer names, and authority-boundary text cannot be promoted into runtime
 truth.
 
+The aggregate outbox consumer runtime proof is runtime-execution evidence for
+the domain-consumer leg only. Keep it under `outbox/consumer_runtime.py`,
+`scripts/outbox/generate_consumer_runtime_execution.py`, and
+`scripts/outbox/consumer_runtime_execution_gate.py`. It must consume valid
+Advise, Manage, and Report runtime receipts, bind source-safe proof refs and
+digests, and clear only `downstream_consumer_runtime_proof_missing`.
+Gateway/Workbench product proof, platform-mesh event publication,
+supported-feature promotion, production certification, and core/external
+evidence remain separate blockers unless their owning runtime proof exists.
+
 AI proposed-action labels are untrusted input even when the structured action
 enum is allowed. Enforce `lotus-idea.ai-action-content-policy.v1` in the domain
 before claim verification, return only canonical server-owned labels, and keep
@@ -1861,7 +1871,15 @@ Recent issue-derived patterns to preserve:
     certification, downstream delivery, or supported-feature promotion. Keep
     this proof family under capability-owned `outbox/platform_mesh/` packages;
     repository hygiene prohibits the retired flat publication-proof paths.
-42. Lotus AI workflow-pack phase specs, registry seed declarations, bindings,
+42. Downstream outbox domain-consumer certification is represented by
+    `lotus-idea.outbox-consumer-runtime-execution.v1`. It is valid only when it
+    consumes Advise, Manage, and Report runtime-execution receipts; it must not
+    synthesize runtime truth from declared consumer contracts or source refs.
+    Its blocker effect is limited to
+    `downstream_consumer_runtime_proof_missing`; Gateway/Workbench,
+    platform-mesh publication, supported-feature promotion, production
+    certification, and core/external proof remain separately governed.
+43. Lotus AI workflow-pack phase specs, registry seed declarations, bindings,
     queue policy, supportability source, and tests are `source_contract`
     evidence. Keep this family under capability-owned
     `ai_workflow_pack_registration/` application, script, and test packages.
@@ -1869,7 +1887,7 @@ Recent issue-derived patterns to preserve:
     `workflow_pack_runtime_contract_not_certified`; it cannot claim runtime
     registry observation, deployment, production certification, provider
     execution, Workbench proof, client publication, or feature promotion.
-43. A sibling Report contract and static route declaration are
+44. A sibling Report contract and static route declaration are
     `source_contract` evidence, not live intake proof. Keep the application
     policy, thin generator, gate, and focused tests under capability-owned
     `report/` packages. A valid artifact adds provenance only, clears no
@@ -1878,7 +1896,7 @@ Recent issue-derived patterns to preserve:
     isolation, and request-execution evidence from the owning Report runtime.
     Never infer materialization, render, archive, publication, certification,
     or supported-feature posture from route declarations.
-44. A sibling Report materialization contract is also `source_contract`
+45. A sibling Report materialization contract is also `source_contract`
     evidence, even when that sibling contract declares an implemented route or
     records report-owned execution claims. Keep this family under the
     capability-owned `report/` application, script, and test packages. The v3
@@ -1902,7 +1920,7 @@ Recent issue-derived patterns to preserve:
     production-identity, retention, legal-hold, and final-certification blockers
     until the owning services provide separate runtime, legal, publication, and
     support evidence.
-45. The Idea Report consumer may submit the Report materialization route only
+46. The Idea Report consumer may submit the Report materialization route only
     after resolving the evidence pack's persisted candidate record. Project
     only the trusted `portfolio_id`; do not add raw scope to audits, public
     DTOs, or persisted evidence packs. Require all source summaries to carry
@@ -1912,7 +1930,7 @@ Recent issue-derived patterns to preserve:
     scope, and fails closed outside `local` and `test` until `#380` production
     identity prerequisites are available. This consumer mapping is not Report
     job, Render, Archive, publication, or supported-feature evidence.
-46. Platform source-manifest and generated-catalog inclusion are
+47. Platform source-manifest and generated-catalog inclusion are
     `source_contract` claims. Keep this family under capability-owned
     `data_mesh/` application, script, and test packages. Bind each authoritative
     sibling platform input by repository, ref, and SHA-256, reject unknown
@@ -1923,20 +1941,20 @@ Recent issue-derived patterns to preserve:
     certification, Gateway/Workbench discovery, deployment, production
     certification, or supported-feature promotion. This remains design
     modularity inside the existing Lotus Idea deployable.
-47. Deterministic workflow lint must not depend on GitHub pull-request diff
+48. Deterministic workflow lint must not depend on GitHub pull-request diff
     availability. Configure the pinned actionlint action with a blocking local
     reporter. CI signal evidence must consume only authoritative upstream job
     conclusions from the native GitHub Actions `needs` context, discard all job
     outputs, and avoid a same-run jobs API dependency. Failed, cancelled, or
     malformed upstream results remain hard failures and must never be converted
     into ignored or synthetic success evidence.
-48. Partial RFC PRs must not use GitHub auto-close keywords for still-open
+49. Partial RFC PRs must not use GitHub auto-close keywords for still-open
     execution issues. Link the issue neutrally, write `Keep #<issue> open`, name
     the remaining evidence class, and run
     `make rfc0002-github-issue-execution-ledger-gate` before PR evidence is
     posted. Use explicit QA-backed closure after exact-main validation instead
     of relying on accidental merge-time closure.
-49. When issue state, labels, or fixed counts are used as RFC execution truth,
+50. When issue state, labels, or fixed counts are used as RFC execution truth,
     run `make rfc0002-github-issue-execution-state-audit` after any manual
     reopen, close, or label correction. The audit catches ledger/GitHub state
     drift such as active execution issues missing `status/in-progress`, blocked

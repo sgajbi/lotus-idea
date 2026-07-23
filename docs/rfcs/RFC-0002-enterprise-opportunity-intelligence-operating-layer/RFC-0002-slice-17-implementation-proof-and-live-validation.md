@@ -68,17 +68,27 @@ Prove the complete supported opportunity journey end to end.
    runtime blocker. `downstream_consumer_runtime_proof_missing`, platform mesh
    event, Gateway/Workbench, downstream delivery, and supported-feature
    blockers remain.
-10. `scripts/outbox/platform_mesh/generate_source_contract_proof.py` and
+10. `scripts/outbox/generate_consumer_runtime_execution.py` and
+    `make outbox-consumer-runtime-execution-proof-gate` now generate and
+    validate the bounded domain-consumer runtime execution proof consumed by
+    aggregate implementation-proof readiness. The artifact requires valid
+    Advise, Manage, and Report runtime-execution receipts, binds their
+    source-safe refs and digests, and clears only
+    `downstream_consumer_runtime_proof_missing`. Gateway/Workbench runtime
+    product proof, platform-mesh event publication, client-ready publication,
+    supported-feature promotion, and production certification remain separate
+    blockers.
+11. `scripts/outbox/platform_mesh/generate_source_contract_proof.py` and
     `make outbox-platform-mesh-event-source-contract-proof-gate` now
     generate and validate the bounded outbox platform-mesh event
     source-contract proof consumed by aggregate implementation-proof readiness.
     A valid artifact adds provenance and clears no blocker after repo-owned
     outbox event and consumer contracts plus sibling platform
     source-manifest/catalog onboarding evidence validate. The
-    `platform_mesh_event_publication_proof_missing` blocker remains with
-    external broker publication, downstream delivery, Gateway/Workbench,
-    client-ready publication, and supported-feature blockers.
-11. `make downstream-realization-contract-gate` now validates the planned
+     `platform_mesh_event_publication_proof_missing` blocker remains with
+     external broker publication, downstream delivery, Gateway/Workbench,
+     client-ready publication, and supported-feature blockers.
+12. `make downstream-realization-contract-gate` now validates the planned
    downstream realization contract plan used by the downstream readiness proof
    family, so proof blockers stay source-authority preserving and cannot be
    rewritten as route-existence or downstream-execution claims.

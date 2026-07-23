@@ -390,8 +390,9 @@
       "groupId": "outbox-broker-and-platform-mesh-publication",
       "sliceIds": ["RFC-0002/slice-15", "RFC-0002/slice-17"],
       "requiredEvidenceClass": "runtime_execution",
-      "closureStatus": "external_dependency_open",
+      "closureStatus": "open",
       "supportedFeatureEffect": "no_promotion_until_broker_consumer_and_platform_mesh_publication_execute",
+      "partialProgress": "PR #732 added broker runtime execution proof for external_broker_runtime_proof_missing. This #694 tranche adds aggregate domain-consumer runtime execution proof for Advise, Manage, and Report receipts; Gateway/Workbench runtime proof, platform mesh publication proof, supported-feature promotion, production certification, and any core/external evidence remain separately governed.",
       "ownerIssue": {
         "repository": "sgajbi/lotus-idea",
         "number": 694,
