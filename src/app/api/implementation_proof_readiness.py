@@ -279,6 +279,12 @@ def _build_readiness_snapshot_from_configured_artifacts(
         ),
         report_intake_route_source_contract_proof=proof_artifacts.report_intake_route_source_contract_proof,
         report_intake_route_source_contract_proof_ref=proof_artifacts.report_intake_route_source_contract_proof_ref,
+        report_materialization_runtime_execution_proof=(
+            proof_artifacts.report_materialization_runtime_execution_proof
+        ),
+        report_materialization_runtime_execution_proof_ref=(
+            proof_artifacts.report_materialization_runtime_execution_proof_ref
+        ),
         platform_catalog_source_contract_proof=proof_artifacts.platform_catalog_source_contract,
         platform_catalog_source_contract_proof_ref=(
             proof_artifacts.platform_catalog_source_contract_ref

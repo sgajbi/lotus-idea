@@ -96,6 +96,8 @@ def build_implementation_proof_readiness_snapshot(
     report_intake_route_source_contract_proof_ref: str | None = None,
     report_materialization_source_contract_proof: Mapping[str, object] | None = None,
     report_materialization_source_contract_proof_ref: str | None = None,
+    report_materialization_runtime_execution_proof: Mapping[str, object] | None = None,
+    report_materialization_runtime_execution_proof_ref: str | None = None,
     mesh_policy_source_contract_proof: Mapping[str, object] | None = None,
     mesh_policy_source_contract_proof_ref: str | None = None,
     outbox_broker_source_contract_proof: Mapping[str, object] | None = None,
@@ -173,6 +175,12 @@ def build_implementation_proof_readiness_snapshot(
         advise_intake_runtime_execution_proof_ref=advise_intake_runtime_execution_proof_ref,
         manage_intake_runtime_execution_proof=manage_intake_runtime_execution_proof,
         manage_intake_runtime_execution_proof_ref=manage_intake_runtime_execution_proof_ref,
+        report_materialization_runtime_execution_proof=(
+            report_materialization_runtime_execution_proof
+        ),
+        report_materialization_runtime_execution_proof_ref=(
+            report_materialization_runtime_execution_proof_ref
+        ),
     )
     outbox_delivery = build_outbox_delivery_readiness_snapshot(
         repository=repository,

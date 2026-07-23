@@ -35,6 +35,11 @@ from app.application.report.intake_route_source_contract import (
 from app.application.report.materialization_source_contract import (
     report_materialization_source_contract_is_valid,
 )
+from app.application.report.materialization_runtime_execution import (
+    REPORT_MATERIALIZATION_RUNTIME_BLOCKERS_SATISFIED,
+    REPORT_MATERIALIZATION_ROUTE,
+    report_materialization_runtime_execution_is_valid,
+)
 from app.domain.conversion_governance import GovernedConversionOutcome
 from app.domain.conversion_outcome_policy import current_conversion_outcome_identity
 from app.domain.downstream_submission import DownstreamSubmissionPosture
@@ -141,6 +146,8 @@ def build_downstream_realization_readiness_snapshot(
     report_intake_route_source_contract_proof_ref: str | None = None,
     report_materialization_source_contract_proof: Mapping[str, object] | None = None,
     report_materialization_source_contract_proof_ref: str | None = None,
+    report_materialization_runtime_execution_proof: Mapping[str, object] | None = None,
+    report_materialization_runtime_execution_proof_ref: str | None = None,
 ) -> DownstreamRealizationReadinessSnapshot:
     readiness_summary = _downstream_realization_readiness_summary(repository)
     capabilities: tuple[DownstreamRealizationCapabilityReadiness, ...] = (
@@ -169,6 +176,12 @@ def build_downstream_realization_readiness_snapshot(
         report_materialization_source_contract_proof=report_materialization_source_contract_proof,
         report_materialization_source_contract_proof_ref=(
             report_materialization_source_contract_proof_ref
+        ),
+        report_materialization_runtime_execution_proof=(
+            report_materialization_runtime_execution_proof
+        ),
+        report_materialization_runtime_execution_proof_ref=(
+            report_materialization_runtime_execution_proof_ref
         ),
     )
     capability_blockers = tuple(
@@ -289,6 +302,8 @@ def _apply_available_downstream_proofs(
     report_intake_route_source_contract_proof_ref: str | None,
     report_materialization_source_contract_proof: Mapping[str, object] | None,
     report_materialization_source_contract_proof_ref: str | None,
+    report_materialization_runtime_execution_proof: Mapping[str, object] | None,
+    report_materialization_runtime_execution_proof_ref: str | None,
 ) -> tuple[
     tuple[DownstreamRealizationCapabilityReadiness, ...],
     tuple[DownstreamRealizationContractReadiness, ...],
@@ -398,6 +413,13 @@ def _apply_available_downstream_proofs(
             )
             for contract in downstream_contracts
         )
+    capabilities, downstream_contracts = _apply_report_materialization_runtime_proof_if_valid(
+        capabilities=capabilities,
+        downstream_contracts=downstream_contracts,
+        evaluated_at_utc=evaluated_at_utc,
+        proof=report_materialization_runtime_execution_proof,
+        proof_ref=report_materialization_runtime_execution_proof_ref,
+    )
     return capabilities, downstream_contracts
 
 
@@ -427,6 +449,38 @@ def _apply_manage_intake_proof_if_valid(
     ):
         return capabilities, downstream_contracts
     return _apply_manage_intake_runtime_execution(
+        capabilities=capabilities,
+        downstream_contracts=downstream_contracts,
+        proof_ref=proof_ref,
+    )
+
+
+def _apply_report_materialization_runtime_proof_if_valid(
+    *,
+    capabilities: tuple[DownstreamRealizationCapabilityReadiness, ...],
+    downstream_contracts: tuple[DownstreamRealizationContractReadiness, ...],
+    evaluated_at_utc: datetime,
+    proof: Mapping[str, object] | None,
+    proof_ref: str | None,
+) -> tuple[
+    tuple[DownstreamRealizationCapabilityReadiness, ...],
+    tuple[DownstreamRealizationContractReadiness, ...],
+]:
+    if not (
+        proof_artifact_effect_matches_payload(
+            "report_materialization_runtime_execution_proof",
+            ProofArtifactEffect.BLOCKER_CLEARING,
+        )
+        and proof
+        and report_materialization_runtime_execution_is_valid(proof)
+        and aggregate_proof_artifact_is_current(
+            proof,
+            evaluated_at_utc=evaluated_at_utc,
+            proof_ref=proof_ref,
+        )
+    ):
+        return capabilities, downstream_contracts
+    return _apply_report_materialization_runtime_execution(
         capabilities=capabilities,
         downstream_contracts=downstream_contracts,
         proof_ref=proof_ref,
@@ -470,6 +524,30 @@ def _apply_manage_intake_runtime_execution(
         ),
         tuple(
             _apply_manage_intake_runtime_execution_to_contract(contract, proof_ref)
+            for contract in downstream_contracts
+        ),
+    )
+
+
+def _apply_report_materialization_runtime_execution(
+    *,
+    capabilities: tuple[DownstreamRealizationCapabilityReadiness, ...],
+    downstream_contracts: tuple[DownstreamRealizationContractReadiness, ...],
+    proof_ref: str | None,
+) -> tuple[
+    tuple[DownstreamRealizationCapabilityReadiness, ...],
+    tuple[DownstreamRealizationContractReadiness, ...],
+]:
+    return (
+        tuple(
+            _apply_report_materialization_runtime_execution_to_capability(
+                capability,
+                proof_ref,
+            )
+            for capability in capabilities
+        ),
+        tuple(
+            _apply_report_materialization_runtime_execution_to_contract(contract, proof_ref)
             for contract in downstream_contracts
         ),
     )
@@ -835,6 +913,55 @@ def _apply_report_materialization_source_contract_to_contract(
         adapter_status=contract.adapter_status,
         evidence_refs=evidence_refs,
         blockers=contract.blockers,
+        blocker_issue_refs=contract.blocker_issue_refs,
+    )
+
+
+def _apply_report_materialization_runtime_execution_to_capability(
+    capability: DownstreamRealizationCapabilityReadiness,
+    proof_ref: str | None,
+) -> DownstreamRealizationCapabilityReadiness:
+    if capability.capability_id != "report-render-archive-realization":
+        return capability
+    evidence_refs = capability.evidence_refs
+    if proof_ref:
+        evidence_refs = tuple(dict.fromkeys((*evidence_refs, proof_ref)))
+    return _capability(
+        capability.capability_id,
+        capability.name,
+        capability.source_authority,
+        evidence_refs=evidence_refs,
+        blockers=tuple(
+            blocker
+            for blocker in capability.blockers
+            if blocker not in REPORT_MATERIALIZATION_RUNTIME_BLOCKERS_SATISFIED
+        ),
+        blocker_issue_refs=capability.blocker_issue_refs,
+    )
+
+
+def _apply_report_materialization_runtime_execution_to_contract(
+    contract: DownstreamRealizationContractReadiness,
+    proof_ref: str | None,
+) -> DownstreamRealizationContractReadiness:
+    if contract.contract_id != "lotus-idea-to-lotus-report-evidence-pack-intake:v1":
+        return contract
+    evidence_refs = contract.evidence_refs
+    if proof_ref:
+        evidence_refs = tuple(dict.fromkeys((*evidence_refs, proof_ref)))
+    return DownstreamRealizationContractReadiness(
+        contract_id=contract.contract_id,
+        owner_repository=contract.owner_repository,
+        source_authority=contract.source_authority,
+        target_route=REPORT_MATERIALIZATION_ROUTE,
+        route_fit_status="route_foundation_proven_not_certified",
+        adapter_status=contract.adapter_status,
+        evidence_refs=evidence_refs,
+        blockers=tuple(
+            blocker
+            for blocker in contract.blockers
+            if blocker not in REPORT_MATERIALIZATION_RUNTIME_BLOCKERS_SATISFIED
+        ),
         blocker_issue_refs=contract.blocker_issue_refs,
     )
 

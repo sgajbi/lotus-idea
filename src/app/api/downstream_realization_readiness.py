@@ -29,6 +29,9 @@ from app.application.downstream_realization.manage_intake_runtime_execution impo
 from app.application.report.intake_route_source_contract import (
     load_report_intake_route_source_contract_proof_from_env,
 )
+from app.application.report.materialization_runtime_execution import (
+    load_report_materialization_runtime_execution_from_env,
+)
 from app.api.problem_details import problem_details_response as problem_response
 from app.observability import (
     IdeaOperation,
@@ -214,6 +217,10 @@ async def get_downstream_realization_readiness(
     report_intake_route_source_contract_proof, report_intake_route_source_contract_proof_ref = (
         load_report_intake_route_source_contract_proof_from_env()
     )
+    (
+        report_materialization_runtime_execution_proof,
+        report_materialization_runtime_execution_proof_ref,
+    ) = load_report_materialization_runtime_execution_from_env()
     snapshot = build_downstream_realization_readiness_snapshot(
         repository=repository,
         durable_storage_backed=durable_storage_backed,
@@ -223,6 +230,12 @@ async def get_downstream_realization_readiness(
         manage_intake_runtime_execution_proof_ref=manage_intake_runtime_execution_proof_ref,
         report_intake_route_source_contract_proof=report_intake_route_source_contract_proof,
         report_intake_route_source_contract_proof_ref=report_intake_route_source_contract_proof_ref,
+        report_materialization_runtime_execution_proof=(
+            report_materialization_runtime_execution_proof
+        ),
+        report_materialization_runtime_execution_proof_ref=(
+            report_materialization_runtime_execution_proof_ref
+        ),
     )
     _emit_downstream_realization_readiness_event(
         OperationOutcome.ACCEPTED if snapshot.certification_ready else OperationOutcome.BLOCKED,
