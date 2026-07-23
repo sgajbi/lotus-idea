@@ -94,7 +94,9 @@ def test_rfc0002_github_issue_execution_ledger_keeps_report_live_proof_in_progre
     assert "Archive record" in issue_690["closureInstruction"]
 
 
-def test_rfc0002_github_issue_execution_ledger_tracks_render_archive_in_progress() -> None:
+def test_rfc0002_github_issue_execution_ledger_tracks_render_archive_merged_main_pending_qa() -> (
+    None
+):
     module = _load_gate()
     payload = _ledger_payload(module)
     issue_691 = next(
@@ -104,9 +106,11 @@ def test_rfc0002_github_issue_execution_ledger_tracks_render_archive_in_progress
     )
 
     assert issue_691["githubState"] == "open"
-    assert issue_691["executionStatus"] == "open_in_progress"
+    assert issue_691["executionStatus"] == "open_merged_main_qa_pending"
     assert issue_691["allowPullRequestAutoClose"] is False
     assert "Keep #691 open" in issue_691["closureInstruction"]
+    assert "PR #725 merged to main" in issue_691["closureInstruction"]
+    assert "29972535964" in issue_691["closureInstruction"]
     assert "rendered_output_creation_missing" in issue_691["closureInstruction"]
     assert "archive_record_creation_missing" in issue_691["closureInstruction"]
     assert "lotus-archive #55" in issue_691["closureInstruction"]
