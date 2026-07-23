@@ -444,6 +444,7 @@
       "requiredEvidenceClass": "runtime_execution",
       "closureStatus": "external_dependency_open",
       "supportedFeatureEffect": "no_promotion_until_report_render_archive_and_publication_authority_execute",
+      "partialProgress": "PR #723 introduces a bounded Report materialization runtime-execution proof path that may clear report_evidence_pack_live_materialization_proof_missing only after merge and exact-main validation. Rendered output, archive record, Report intake, publication authority, production identity, legal/retention, and supported-feature blockers remain open.",
       "ownerIssue": {
         "repository": "sgajbi/lotus-idea",
         "number": 690,

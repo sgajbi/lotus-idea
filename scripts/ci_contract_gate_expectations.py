@@ -60,6 +60,7 @@ REQUIRED_LINT_TARGETS = (
     "archive-lifecycle-posture-contract-gate",
     "report-intake-route-source-contract-proof-gate",
     "report-materialization-source-contract-proof-gate",
+    "report-materialization-runtime-execution-proof-gate",
     "workbench-read-path-source-contract-proof-gate",
     "gateway-workbench-contract-proof-contract-gate",
     "gateway-workbench-discovery-contract-proof-contract-gate",
@@ -175,6 +176,10 @@ GENERATED_READINESS_ARTIFACTS = (
         "a report materialization source-contract artifact",
     ),
     (
+        "scripts/report/generate_materialization_runtime_execution.py",
+        "a Report materialization runtime-execution proof artifact",
+    ),
+    (
         "scripts/data_mesh/generate_mesh_policy_source_contract.py",
         "mesh policy source-contract artifact",
     ),
@@ -231,6 +236,10 @@ PASSED_READINESS_ARTIFACTS = (
     (
         "--report-materialization-source-contract-proof",
         "report materialization source contract artifact",
+    ),
+    (
+        "--report-materialization-runtime-execution-proof",
+        "Report materialization runtime-execution proof artifact",
     ),
     ("--mesh-policy-source-contract-proof", "mesh policy source-contract artifact"),
     (
@@ -313,6 +322,14 @@ REQUIRED_READINESS_WIRING = (
     (
         "LOTUS_IDEA_REPORT_MATERIALIZATION_SOURCE_CONTRACT_PROOF",
         "support optional materialization source contract",
+    ),
+    (
+        "LOTUS_IDEA_REPORT_MATERIALIZATION_RUNTIME_EXECUTION_PROOF_OUTPUT",
+        "pass default Report materialization runtime-execution proof",
+    ),
+    (
+        "LOTUS_IDEA_REPORT_MATERIALIZATION_RUNTIME_EXECUTION_PROOF",
+        "support optional Report materialization runtime-execution proof",
     ),
     (
         "LOTUS_IDEA_MESH_POLICY_SOURCE_CONTRACT_PROOF_OUTPUT",
