@@ -458,8 +458,13 @@ def _write_platform_fixture(tmp_path: Path, *, publish_routes: bool = False) -> 
             "repositories": [
                 {
                     "repository": "lotus-idea",
-                    "classification": "deferred",
+                    "classification": "certification_candidate",
                     "mesh_role": "producer",
+                    "first_wave_product_count": 0,
+                    "required_next_step": (
+                        "Complete runtime telemetry, durable repository, Gateway/Workbench "
+                        "discovery, and supported-feature proof before promotion."
+                    ),
                 }
             ],
             "products": [
@@ -511,8 +516,14 @@ def _catalog_consumer() -> dict[str, Any]:
 def _maturity_product(product_id: str) -> dict[str, Any]:
     return {
         "product_id": product_id,
-        "classification": "deferred",
-        "maturity_wave": "future_wave",
+        "classification": (
+            "certification_candidate" if product_id == "lotus-idea:IdeaCandidate:v1" else "deferred"
+        ),
+        "maturity_wave": (
+            "enterprise_wave_candidate"
+            if product_id == "lotus-idea:IdeaCandidate:v1"
+            else "future_wave"
+        ),
         "lifecycle_status": "proposed",
     }
 

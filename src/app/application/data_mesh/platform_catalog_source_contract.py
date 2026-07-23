@@ -23,7 +23,7 @@ _required_file_evidence_present = required_file_evidence_present
 
 
 PLATFORM_CATALOG_SOURCE_CONTRACT_ENV = "LOTUS_IDEA_PLATFORM_CATALOG_SOURCE_CONTRACT_PROOF"
-PLATFORM_CATALOG_SOURCE_CONTRACT_SCHEMA_VERSION = "lotus-idea.platform-catalog-source-contract.v2"
+PLATFORM_CATALOG_SOURCE_CONTRACT_SCHEMA_VERSION = "lotus-idea.platform-catalog-source-contract.v3"
 
 PLATFORM_CATALOG_SOURCE_BLOCKERS_SATISFIED = (
     "platform_source_manifest_inclusion_missing",
@@ -96,7 +96,7 @@ _CONTRACT_CHECK_FIELDS = frozenset(
         "platformSourceManifestIncludesIdea",
         "platformCatalogIncludesIdeaProducts",
         "platformCatalogIncludesIdeaConsumer",
-        "platformMaturityKeepsIdeaDeferred",
+        "platformMaturityKeepsIdeaUnpromoted",
     }
 )
 
@@ -160,7 +160,9 @@ def build_platform_catalog_source_contract_payload(
     platform_source_manifest_includes_idea = _source_manifest_includes_idea(source_manifest)
     platform_catalog_includes_idea_products = _catalog_includes_idea_products(catalog)
     platform_catalog_includes_idea_consumer = _catalog_includes_idea_consumer(catalog)
-    platform_maturity_keeps_idea_deferred = _maturity_matrix_keeps_idea_deferred(maturity_matrix)
+    platform_maturity_keeps_idea_unpromoted = _maturity_matrix_keeps_idea_unpromoted(
+        maturity_matrix
+    )
     source_authority = _source_authority(platform_root)
     source_authority_digest_bound = all(
         isinstance(item["sha256"], str) for item in source_authority
@@ -172,7 +174,7 @@ def build_platform_catalog_source_contract_payload(
         and platform_source_manifest_includes_idea
         and platform_catalog_includes_idea_products
         and platform_catalog_includes_idea_consumer
-        and platform_maturity_keeps_idea_deferred
+        and platform_maturity_keeps_idea_unpromoted
     )
     return {
         "schemaVersion": PLATFORM_CATALOG_SOURCE_CONTRACT_SCHEMA_VERSION,
@@ -194,7 +196,7 @@ def build_platform_catalog_source_contract_payload(
             "platformSourceManifestIncludesIdea": platform_source_manifest_includes_idea,
             "platformCatalogIncludesIdeaProducts": platform_catalog_includes_idea_products,
             "platformCatalogIncludesIdeaConsumer": platform_catalog_includes_idea_consumer,
-            "platformMaturityKeepsIdeaDeferred": platform_maturity_keeps_idea_deferred,
+            "platformMaturityKeepsIdeaUnpromoted": platform_maturity_keeps_idea_unpromoted,
         },
         "remainingCertificationBlockers": REMAINING_PLATFORM_CATALOG_CERTIFICATION_BLOCKERS,
         "platformRuntimePublicationObserved": False,
@@ -272,7 +274,7 @@ def platform_catalog_source_contract_is_valid(payload: Mapping[str, Any]) -> boo
             "platformSourceManifestIncludesIdea",
             "platformCatalogIncludesIdeaProducts",
             "platformCatalogIncludesIdeaConsumer",
-            "platformMaturityKeepsIdeaDeferred",
+            "platformMaturityKeepsIdeaUnpromoted",
         )
     )
 
@@ -360,7 +362,7 @@ def _catalog_includes_idea_consumer(payload: dict[str, Any] | None) -> bool:
     return False
 
 
-def _maturity_matrix_keeps_idea_deferred(payload: dict[str, Any] | None) -> bool:
+def _maturity_matrix_keeps_idea_unpromoted(payload: dict[str, Any] | None) -> bool:
     if payload is None:
         return False
     repositories = {
@@ -371,10 +373,15 @@ def _maturity_matrix_keeps_idea_deferred(payload: dict[str, Any] | None) -> bool
     idea_repository = repositories.get("lotus-idea")
     if not isinstance(idea_repository, Mapping):
         return False
-    if idea_repository.get("classification") != "deferred":
+    if idea_repository.get("classification") not in ("deferred", "certification_candidate"):
         return False
     if idea_repository.get("mesh_role") != "producer":
         return False
+    if idea_repository.get("classification") == "certification_candidate":
+        if idea_repository.get("first_wave_product_count") not in (0, None):
+            return False
+        if not isinstance(idea_repository.get("required_next_step"), str):
+            return False
     product_entries = {
         product.get("product_id"): product
         for product in payload.get("products", ())
@@ -384,10 +391,18 @@ def _maturity_matrix_keeps_idea_deferred(payload: dict[str, Any] | None) -> bool
         product = product_entries.get(product_id)
         if not isinstance(product, Mapping):
             return False
-        if product.get("classification") != "deferred":
-            return False
-        if product.get("maturity_wave") != "future_wave":
-            return False
         if product.get("lifecycle_status") != "proposed":
+            return False
+        expected_classification = (
+            "certification_candidate" if product_id == "lotus-idea:IdeaCandidate:v1" else "deferred"
+        )
+        expected_wave = (
+            "enterprise_wave_candidate"
+            if product_id == "lotus-idea:IdeaCandidate:v1"
+            else "future_wave"
+        )
+        if product.get("classification") != expected_classification:
+            return False
+        if product.get("maturity_wave") != expected_wave:
             return False
     return True
