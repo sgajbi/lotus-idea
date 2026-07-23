@@ -72,6 +72,10 @@ def test_outbox_broker_runtime_execution_rejects_overclaims() -> None:
 
 def test_outbox_broker_runtime_execution_rejects_contract_drift() -> None:
     payload = deepcopy(valid_runtime_execution_payload())
+    payload["unexpectedField"] = "drift"
+    assert not outbox_broker_runtime_execution_is_valid(payload)
+
+    payload = deepcopy(valid_runtime_execution_payload())
     payload["evidenceClass"] = "source_contract"
     assert not outbox_broker_runtime_execution_is_valid(payload)
 
@@ -81,6 +85,39 @@ def test_outbox_broker_runtime_execution_rejects_contract_drift() -> None:
 
     payload = deepcopy(valid_runtime_execution_payload())
     payload["runtimeChecks"]["brokerConfigured"] = False  # type: ignore[index]
+    assert not outbox_broker_runtime_execution_is_valid(payload)
+
+    payload = deepcopy(valid_runtime_execution_payload())
+    payload["remainingCertificationBlockers"] = ()
+    assert not outbox_broker_runtime_execution_is_valid(payload)
+
+
+def test_outbox_broker_runtime_execution_rejects_malformed_receipt_and_runtime_checks() -> None:
+    payload = deepcopy(valid_runtime_execution_payload())
+    payload["publicationReceipt"] = {"outcomeAccepted": True}
+    assert not outbox_broker_runtime_execution_is_valid(payload)
+
+    payload = deepcopy(valid_runtime_execution_payload())
+    payload["runtimeChecks"]["unexpected"] = True  # type: ignore[index]
+    assert not outbox_broker_runtime_execution_is_valid(payload)
+
+    payload = deepcopy(valid_runtime_execution_payload())
+    payload["generatedAtUtc"] = "2026-07-23T04:45:00"
+    assert not outbox_broker_runtime_execution_is_valid(payload)
+
+
+def test_outbox_broker_runtime_execution_marks_unbounded_failure_reason_invalid() -> None:
+    payload = build_outbox_broker_runtime_execution_payload(
+        generated_at_utc=GENERATED_AT,
+        broker_configured=True,
+        publication_receipt={
+            **valid_receipt(),
+            "outcomeAccepted": False,
+            "failureReasonCode": "raw_unclassified_failure",
+        },
+    )
+
+    assert payload["runtimeChecks"]["failureReasonBounded"] is False
     assert not outbox_broker_runtime_execution_is_valid(payload)
 
 
@@ -115,6 +152,64 @@ def test_generate_runtime_execution_requires_configured_broker(
     )
 
     assert result == 2
+
+
+def test_generate_runtime_execution_publishes_canary_and_writes_valid_proof(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    output_path = tmp_path / "proof.json"
+    publisher = FakePublisher(accepted=True, failure_reason=None)
+    monkeypatch.setattr(
+        generate_runtime_execution,
+        "build_outbox_publisher_from_environment",
+        lambda: publisher,
+    )
+
+    result = generate_runtime_execution.main(
+        [
+            "--generated-at-utc",
+            "2026-07-23T04:45:00Z",
+            "--output",
+            str(output_path),
+        ]
+    )
+
+    payload = json.loads(output_path.read_text(encoding="utf-8"))
+    assert result == 0
+    assert publisher.published_event_type == "idea.candidate.persisted.v1"
+    assert publisher.closed is True
+    assert outbox_broker_runtime_execution_is_valid(payload)
+
+
+def test_generate_runtime_execution_rejects_naive_generation_time() -> None:
+    with pytest.raises(ValueError, match="timezone-aware"):
+        generate_runtime_execution.main(
+            [
+                "--generated-at-utc",
+                "2026-07-23T04:45:00",
+            ]
+        )
+
+
+class FakeOutcome:
+    def __init__(self, *, accepted: bool, failure_reason: str | None) -> None:
+        self.accepted = accepted
+        self.failure_reason = failure_reason
+
+
+class FakePublisher:
+    def __init__(self, *, accepted: bool, failure_reason: str | None) -> None:
+        self._outcome = FakeOutcome(accepted=accepted, failure_reason=failure_reason)
+        self.published_event_type: str | None = None
+        self.closed = False
+
+    def publish(self, event: object) -> FakeOutcome:
+        self.published_event_type = getattr(event, "event_type")
+        return self._outcome
+
+    def close(self) -> None:
+        self.closed = True
 
 
 def valid_runtime_execution_payload() -> dict[str, object]:
