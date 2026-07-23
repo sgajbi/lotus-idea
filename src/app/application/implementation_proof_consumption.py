@@ -635,9 +635,10 @@ def _apply_outbox_proofs(
         proof_is_valid=outbox_broker_source_contract_proof_is_valid,
     ):
         capabilities = tuple(
-            _apply_outbox_broker_source_contract(
+            _add_outbox_supporting_ref(
                 capability,
-                outbox_broker_source_contract_proof_ref,
+                proof_ref=outbox_broker_source_contract_proof_ref,
+                capability_ids={"outbox-delivery", "operator-workflows-operations"},
             )
             for capability in capabilities
         )
@@ -665,9 +666,10 @@ def _apply_outbox_proofs(
         proof_is_valid=outbox_consumer_contract_proof_is_valid,
     ):
         capabilities = tuple(
-            _apply_outbox_consumer_contract_proof(
+            _add_outbox_supporting_ref(
                 capability,
-                outbox_consumer_contract_proof_ref,
+                proof_ref=outbox_consumer_contract_proof_ref,
+                capability_ids={"outbox-delivery"},
             )
             for capability in capabilities
         )
@@ -680,9 +682,10 @@ def _apply_outbox_proofs(
         proof_is_valid=outbox_platform_mesh_event_source_contract_proof_is_valid,
     ):
         capabilities = tuple(
-            _apply_outbox_platform_mesh_event_source_contract(
+            _add_outbox_supporting_ref(
                 capability,
-                outbox_platform_mesh_event_source_contract_proof_ref,
+                proof_ref=outbox_platform_mesh_event_source_contract_proof_ref,
+                capability_ids={"outbox-delivery"},
             )
             for capability in capabilities
         )
@@ -1139,17 +1142,18 @@ def _apply_ai_workflow_pack_runtime_execution_proof(
     )
 
 
-def _apply_outbox_broker_source_contract(
+def _add_outbox_supporting_ref(
     capability: ImplementationProofCapabilityReadiness,
-    outbox_broker_source_contract_proof_ref: str | None,
+    proof_ref: str | None,
+    capability_ids: set[str],
 ) -> ImplementationProofCapabilityReadiness:
-    if capability.capability_id not in {"outbox-delivery", "operator-workflows-operations"}:
+    if capability.capability_id not in capability_ids:
         return capability
-    evidence_refs = capability.evidence_refs
-    if outbox_broker_source_contract_proof_ref:
-        evidence_refs = tuple(
-            dict.fromkeys((*evidence_refs, outbox_broker_source_contract_proof_ref))
-        )
+    evidence_refs = (
+        tuple(dict.fromkeys((*capability.evidence_refs, proof_ref)))
+        if proof_ref
+        else capability.evidence_refs
+    )
     return build_capability_readiness(
         capability.capability_id,
         capability.name,
@@ -1171,46 +1175,6 @@ def _apply_outbox_broker_runtime_execution(
         capability,
         blockers_cleared=OUTBOX_BROKER_RUNTIME_BLOCKERS_SATISFIED,
         proof_ref=proof_ref,
-    )
-
-
-def _apply_outbox_consumer_contract_proof(
-    capability: ImplementationProofCapabilityReadiness,
-    outbox_consumer_contract_proof_ref: str | None,
-) -> ImplementationProofCapabilityReadiness:
-    if capability.capability_id != "outbox-delivery":
-        return capability
-    evidence_refs = capability.evidence_refs
-    if outbox_consumer_contract_proof_ref:
-        evidence_refs = tuple(dict.fromkeys((*evidence_refs, outbox_consumer_contract_proof_ref)))
-    return build_capability_readiness(
-        capability.capability_id,
-        capability.name,
-        readiness_status=capability.readiness_status,
-        supportability_status=capability.supportability_status,
-        evidence_refs=evidence_refs,
-        blockers=capability.blockers,
-        supported_feature_promoted=capability.supported_feature_promoted,
-    )
-
-
-def _apply_outbox_platform_mesh_event_source_contract(
-    capability: ImplementationProofCapabilityReadiness,
-    proof_ref: str | None,
-) -> ImplementationProofCapabilityReadiness:
-    if capability.capability_id != "outbox-delivery":
-        return capability
-    evidence_refs = capability.evidence_refs
-    if proof_ref:
-        evidence_refs = tuple(dict.fromkeys((*evidence_refs, proof_ref)))
-    return build_capability_readiness(
-        capability.capability_id,
-        capability.name,
-        readiness_status=capability.readiness_status,
-        supportability_status=capability.supportability_status,
-        evidence_refs=evidence_refs,
-        blockers=capability.blockers,
-        supported_feature_promoted=capability.supported_feature_promoted,
     )
 
 

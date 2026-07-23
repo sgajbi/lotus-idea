@@ -51,9 +51,7 @@ except ImportError:  # pragma: no cover - supports direct script execution
 @dataclass(frozen=True)
 class ProofArtifactInput:
     payload: dict[str, Any] | None
-    path: Path | None
     proof_ref: str | None
-    ref_name: str
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -80,9 +78,7 @@ def main(argv: list[str] | None = None) -> int:
                         _resolve_optional_path(
                             args.source_ingestion_scheduled_worker_source_contract
                         ),
-                        artifact_name=(
-                            "source ingestion scheduled-worker source-contract artifact"
-                        ),
+                        artifact_name="source ingestion scheduled-worker source-contract artifact",
                     )
                 ),
                 source_ingestion_scheduled_worker_deployment_evidence_ref=(
@@ -90,9 +86,7 @@ def main(argv: list[str] | None = None) -> int:
                         _resolve_optional_path(
                             args.source_ingestion_scheduled_worker_deployment_evidence
                         ),
-                        artifact_name=(
-                            "source ingestion scheduled-worker deployment-evidence artifact"
-                        ),
+                        artifact_name="source ingestion scheduled-worker deployment-evidence artifact",
                     )
                 ),
                 **_proof_payload_kwargs(proof_artifacts),
@@ -146,11 +140,9 @@ def _capability_payload(
 def _proof_payload_kwargs(input_: Mapping[str, ProofArtifactInput]) -> dict[str, Any]:
     kwargs: dict[str, Any] = {}
     for field_name, artifact in input_.items():
-        argument_name = (
-            field_name
-            if field_name == "runtime_trust_telemetry_test_execution"
-            else f"{field_name}_proof"
-        )
+        argument_name = f"{field_name}_proof"
+        if field_name == "runtime_trust_telemetry_test_execution":
+            argument_name = field_name
         kwargs[argument_name] = artifact.payload
         kwargs[f"{argument_name}_ref"] = artifact.proof_ref
     return kwargs
@@ -172,7 +164,7 @@ def _proof_artifact_input(
             proof_ref=proof_ref,
             repository_root=Path.cwd(),
         )
-    return ProofArtifactInput(payload=payload, path=path, proof_ref=proof_ref, ref_name=ref_name)
+    return ProofArtifactInput(payload=payload, proof_ref=proof_ref)
 
 
 def _opportunity_archetype_proof_artifact_inputs(
