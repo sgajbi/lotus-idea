@@ -255,9 +255,9 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/690",
       "rfcSlices": ["slice-13"],
       "githubState": "open",
-      "executionStatus": "open_blocked",
+      "executionStatus": "open_in_progress",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #690 open until live Report intake/materialization, Render output, Archive record, publication authority, and supported-feature promotion evidence exist."
+      "closureInstruction": "Keep #690 open. PR #723 adds bounded Report materialization runtime-execution proof that may clear only report_evidence_pack_live_materialization_proof_missing after merge and exact-main validation. Do not close until remaining Report intake, rendered output, archive record, publication authority, production identity, and supported-feature promotion evidence exists."
     },
     {
       "issueNumber": 691,

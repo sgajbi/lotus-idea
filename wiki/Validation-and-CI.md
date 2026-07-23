@@ -554,7 +554,15 @@ Persistence adapter validation:
     `rendered_output_creation_missing`, `archive_record_creation_missing`,
     client-publication, certification, and promotion blockers, and reject
     inflated runtime or authority claims.
-17. `tests/unit/test_ai_lineage_store_proof.py` and
+17. `tests/unit/report/test_materialization_runtime_execution.py` and
+    `make report-materialization-runtime-execution-proof-gate` validate the
+    receipt-bound `lotus-report` materialization runtime-execution proof. A
+    valid current artifact clears only
+    `report_evidence_pack_live_materialization_proof_missing` and preserves
+    rendered-output creation, archive-record creation, client-publication,
+    production-identity, legal/retention, support, and supported-feature
+    blockers.
+18. `tests/unit/test_ai_lineage_store_proof.py` and
     `make ai-lineage-store-proof-contract-gate` prove the source-safe AI
     lineage store proof contract that aggregate readiness consumes to clear
     only `certified_ai_lineage_store_missing`, without leaking prompt,

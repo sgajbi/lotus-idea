@@ -591,7 +591,7 @@ the operator entrypoints by purpose so this page stays readable.
 | Source-ingestion evidence | `make source-ingestion-worker-check`, `make source-ingestion-scheduled-worker-check`, `make source-ingestion-runtime-execution-contract-gate` | Validate worker contracts and receipt-bound Core runtime execution evidence without promoting scheduler, mesh, UI, production, or support posture. |
 | Upstream runtime and source-product proof | `make risk-concentration-live-proof-contract-gate`, `make high-volatility-live-proof-contract-gate`, `make risk-drawdown-live-proof-contract-gate`, `make core-benchmark-assignment-live-proof-contract-gate`, `make core-portfolio-state-live-proof-contract-gate`, `make manage-mandate-live-proof-contract-gate`, `make mandate-restriction-live-proof-contract-gate`, `make missing-suitability-live-proof-contract-gate`, `make missing-risk-profile-live-proof-contract-gate`, `make performance-underperformance-live-proof-contract-gate` | Validate bounded sibling evidence. Risk and Performance signal runtime evidence binds current authority receipts to durable Idea persistence. Core and Advise read-only evidence binds pseudonymous request scope to exact producer receipts without inventing source identity or persistence. Advise mandate/restriction, missing-suitability, and missing-risk-profile gates accept truthful candidate and no-opportunity results but fail closed without producer-owned scope/time/hashes/posture. Command existence never promotes support. |
 | Runtime trust and implementation proof | `make runtime-trust-telemetry-test-execution-contract-gate`, `make implementation-proof-readiness-check`, `make runtime-trust-telemetry-preview-check`, `make runtime-trust-telemetry-snapshot-check` | Validate in-memory test evidence and inspect durable runtime posture without clearing certification blockers. |
-| Downstream proof | `make downstream-route-source-contract-proof-gate`, `make report-intake-route-source-contract-proof-gate`, `make report-materialization-source-contract-proof-gate` | Validate bounded Advise, Manage, and Report contract artifacts. |
+| Downstream proof | `make downstream-route-source-contract-proof-gate`, `make report-intake-route-source-contract-proof-gate`, `make report-materialization-source-contract-proof-gate`, `make report-materialization-runtime-execution-proof-gate` | Validate bounded Advise, Manage, and Report contract/runtime artifacts. |
 | Local hygiene | `make clean` | Remove ignored generated residue before branch hygiene checks. |
 
 Short local API example:
@@ -908,6 +908,7 @@ runtime-evidence artifact, Manage mandate runtime-evidence artifact, Core benchm
 evidence artifact, Core portfolio-state runtime evidence artifact, Manage route source-contract artifact,
 Manage action-intake runtime-evidence artifact,
 Report intake route source-contract artifact, Report materialization source-contract artifact,
+Report materialization runtime-execution artifact,
 mesh policy source-contract artifact, platform catalog
 onboarding proof artifact, AI lineage store proof artifact, AI workflow-pack registration proof artifact,
 AI workflow-pack runtime execution proof artifact,
@@ -946,7 +947,7 @@ artifact consumption, so a proof family can report `ready` and `supported` only
 when its blocker list is empty. The live operator API also honors aggregate-current source-ingestion live,
 source-ingestion scheduled-worker, durable repository, runtime trust telemetry,
 Workbench read-path source contract, report-intake route, report materialization
-source contract, platform catalog source contract, AI lineage store, AI
+source contract, report materialization runtime execution, platform catalog source contract, AI lineage store, AI
 workflow-pack registration proof, and AI workflow-pack runtime execution proof
 artifact paths configured through
 `LOTUS_IDEA_SOURCE_INGESTION_RUNTIME_EXECUTION`,
@@ -962,6 +963,8 @@ artifact paths configured through
 `LOTUS_IDEA_REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF`,
 `LOTUS_IDEA_REPORT_MATERIALIZATION_SOURCE_CONTRACT_PROOF_OUTPUT`,
 `LOTUS_IDEA_REPORT_MATERIALIZATION_SOURCE_CONTRACT_PROOF`,
+`LOTUS_IDEA_REPORT_MATERIALIZATION_RUNTIME_EXECUTION_PROOF_OUTPUT`,
+`LOTUS_IDEA_REPORT_MATERIALIZATION_RUNTIME_EXECUTION_PROOF`,
 `LOTUS_IDEA_MESH_POLICY_SOURCE_CONTRACT_PROOF_OUTPUT`,
 `LOTUS_IDEA_MESH_POLICY_SOURCE_CONTRACT_PROOF`,
 `LOTUS_PLATFORM_ROOT`,
