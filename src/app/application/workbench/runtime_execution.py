@@ -208,6 +208,10 @@ def validate_gateway_workbench_runtime_execution_proof(
     payload: Mapping[str, Any],
 ) -> list[str]:
     errors: list[str] = []
+    runtime_evidence_refs: Sequence[object] = ()
+    raw_runtime_evidence_refs = payload.get("runtimeEvidenceRefs")
+    if isinstance(raw_runtime_evidence_refs, list):
+        runtime_evidence_refs = raw_runtime_evidence_refs
     _validate_top_level_claims(payload, errors)
     _validate_exact_sequence(
         payload,
@@ -218,9 +222,7 @@ def validate_gateway_workbench_runtime_execution_proof(
     _validate_exact_sequence(
         payload,
         "runtimeEvidenceRefs",
-        payload.get("runtimeEvidenceRefs")
-        if isinstance(payload.get("runtimeEvidenceRefs"), list)
-        else (),
+        runtime_evidence_refs,
         errors,
         allow_dynamic_non_empty_text=True,
     )
