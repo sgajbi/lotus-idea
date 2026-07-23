@@ -55,6 +55,12 @@ def test_service_slo_capacity_contract_names_baseline_automation() -> None:
     assert payload["source_of_truth"]["load_soak_proof_gate"].endswith(
         "service_load_soak_proof_gate.py"
     )
+    assert payload["source_of_truth"]["postgres_threshold_proof_gate"].endswith(
+        "postgres_capacity_threshold_proof_gate.py"
+    )
+    assert payload["source_of_truth"]["dependency_recovery_proof_gate"].endswith(
+        "service_dependency_recovery_proof_gate.py"
+    )
 
 
 def test_service_slo_capacity_contract_blocks_false_certification() -> None:
@@ -206,6 +212,7 @@ def test_capacity_attestation_workflow_rejects_automatic_or_untrusted_shape(
 
     assert "PostgreSQL saturation workflow must not run on a schedule" in errors
     assert "PostgreSQL threshold measurement must remain controlled-test classified" in errors
+    assert "PostgreSQL threshold proof gate must run before provenance attestation" in errors
     assert any("capacity-production-like" in error for error in errors)
 
 
@@ -220,6 +227,7 @@ def test_dependency_recovery_workflow_rejects_automatic_or_untrusted_shape(
     errors = module._validate_dependency_recovery_workflow(tmp_path)
 
     assert "dependency recovery workflow must not run on a schedule" in errors
+    assert "dependency recovery proof gate must run before provenance attestation" in errors
     assert any("RUN_CONTROLLED_LOTUS_IDEA_DEPENDENCY_RECOVERY" in error for error in errors)
     assert any("capacity-production-like" in error for error in errors)
 

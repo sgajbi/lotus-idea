@@ -512,6 +512,19 @@ No qualifying artifact exists until this implementation is merged and the
 protected workflow succeeds, so certification and supported-feature posture do
 not change.
 
+Issue `#693` now also closes a proof-gate substitution gap in the protected
+capacity evidence producers. Dependency-recovery and PostgreSQL threshold
+artifacts have first-class CLI proof gates, Make targets, source-of-truth
+entries, and workflow-shape tests. The manual main-only
+`service-dependency-recovery-evidence.yml` and `postgres-capacity-evidence.yml`
+workflows must run those artifact-specific gates before provenance attestation,
+so a generic baseline contract pass cannot stand in for dependency-fault
+recovery or PostgreSQL threshold/recovery proof semantics. This is
+implementation-backed operational hardening only: no protected artifact has
+been produced by this change, the capacity blockers remain open until
+successful mainline protected executions and attestation verification, and no
+supported feature is promoted.
+
 ## Required Work
 
 The AI metadata boundary is now allowlist-based rather than denylist-based.

@@ -97,7 +97,10 @@ attested fault injection and recovery execution.
 The governed producer is
 `.github/workflows/service-dependency-recovery-evidence.yml`. It requires the
 protected capacity environment, governed self-hosted runner, and exact operator
-confirmation. Consumers must use `--dependency-recovery-proof` together with
+confirmation. The producer runs `make service-dependency-recovery-proof-gate`
+before provenance attestation, so a generic baseline contract pass cannot
+replace proof of an exclusive source-unavailable fault plus clean recovery.
+Consumers must use `--dependency-recovery-proof` together with
 `--verify-dependency-recovery-attestation`; a local artifact or serialized
 attestation claim cannot clear the blocker.
 
@@ -112,7 +115,9 @@ The threshold command is test-classified, requires a dedicated database, and
 reads `LOTUS_IDEA_DATABASE_URL` transiently. It cannot clear production
 certification by itself. Qualifying evidence must come from the main-only
 `postgres-capacity-evidence.yml` workflow, protected GitHub environment, and
-dedicated runner, then pass `gh attestation verify` with exact repository,
+dedicated runner. The workflow runs
+`make postgres-capacity-threshold-proof-gate` before provenance attestation,
+then consumers must pass `gh attestation verify` with exact repository,
 signer-workflow, main-ref, and source-commit constraints. This path becomes
 operational only after merge and protected-environment configuration.
 
