@@ -5,7 +5,7 @@ import importlib.util
 import json
 from pathlib import Path
 from types import ModuleType
-from typing import Any
+from typing import Any, cast
 
 from app.application.postgres_capacity_threshold_proof import (
     execute_postgres_capacity_threshold_proof,
@@ -68,7 +68,8 @@ def test_dependency_recovery_proof_gate_accepts_valid_fault_recovery_artifact(
 def test_dependency_recovery_proof_gate_rejects_recovery_with_errors(tmp_path: Path) -> None:
     module = _load_script("service_dependency_recovery_proof_gate.py")
     proof = _dependency_recovery_proof()
-    scenario = dict(proof["scenarios"][0])  # type: ignore[index]
+    scenarios = cast(list[dict[str, Any]], proof["scenarios"])
+    scenario = dict(scenarios[0])
     scenario["errorCount"] = 1
     proof["scenarios"] = [scenario]
     artifact = tmp_path / "service-dependency-recovery-proof.json"
