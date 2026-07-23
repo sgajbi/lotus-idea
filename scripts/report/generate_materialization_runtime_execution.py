@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-from datetime import UTC, datetime
 import json
 from pathlib import Path
 import subprocess
@@ -18,7 +17,7 @@ from app.application.report.materialization_runtime_execution import (  # noqa: 
     build_report_materialization_runtime_execution_payload,
     source_safe_report_materialization_receipt_digest,
 )
-from scripts.proof_generator_io import write_json_payload  # noqa: E402
+from scripts.proof_generator_io import parse_generated_at_utc, write_json_payload  # noqa: E402
 
 
 _REPORT_ASGI_PROBE = r"""
@@ -372,7 +371,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = _parser()
     args = parser.parse_args(argv)
     try:
-        generated_at_utc = _parse_datetime(args.generated_at_utc)
+        generated_at_utc = parse_generated_at_utc(args.generated_at_utc)
         report_root = Path(args.report_root).resolve()
         receipt_evidence = _generate_local_asgi_receipts(
             report_root=report_root,
@@ -412,16 +411,6 @@ def _parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _parse_datetime(value: str) -> datetime:
-    normalized = value.strip()
-    if normalized.endswith("Z"):
-        normalized = f"{normalized[:-1]}+00:00"
-    parsed = datetime.fromisoformat(normalized)
-    if parsed.tzinfo is None or parsed.utcoffset() is None:
-        raise ValueError("generated-at-utc must be timezone-aware")
-    return parsed.astimezone(UTC)
-
-
 def _generate_local_asgi_receipts(
     *,
     report_root: Path,
@@ -437,11 +426,7 @@ def _generate_local_asgi_receipts(
     receipts = json.loads(result.stdout)
     if not isinstance(receipts, dict):
         raise ValueError("report runtime probe must emit a JSON object")
-    return {
-        str(key): dict(value)
-        for key, value in receipts.items()
-        if isinstance(value, dict)
-    }
+    return {str(key): dict(value) for key, value in receipts.items() if isinstance(value, dict)}
 
 
 def _report_probe_source(report_root: Path) -> str:

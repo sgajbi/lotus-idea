@@ -32,7 +32,9 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Report materialization runtime execution proof read error: {exc}", file=sys.stderr)
         return 2
     if not isinstance(payload, dict):
-        print("Report materialization runtime execution proof must be a JSON object", file=sys.stderr)
+        print(
+            "Report materialization runtime execution proof must be a JSON object", file=sys.stderr
+        )
         return 1
     if not report_materialization_runtime_execution_is_valid(payload):
         print("Report materialization runtime execution proof is invalid", file=sys.stderr)

@@ -105,10 +105,7 @@ def _configured_artifact_paths(tmp_path: Path) -> dict[str, Path]:
             tmp_path / "output" / "downstream" / "manage-intake-runtime-execution-proof.json"
         ),
         "report_materialization_runtime": (
-            tmp_path
-            / "output"
-            / "report"
-            / "materialization-runtime-execution-proof.json"
+            tmp_path / "output" / "report" / "materialization-runtime-execution-proof.json"
         ),
         "workbench": (tmp_path / "output" / "workbench" / "read-path-source-contract-proof.json"),
         "gateway_workbench": (
