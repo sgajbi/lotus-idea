@@ -301,9 +301,7 @@ def _configure_relative_artifact_env(monkeypatch: pytest.MonkeyPatch) -> None:
         OUTBOX_BROKER_SOURCE_CONTRACT_PROOF_ENV: (
             "output/outbox/broker/source-contract-proof.json"
         ),
-        OUTBOX_BROKER_RUNTIME_EXECUTION_ENV: (
-            "output/outbox/broker/runtime-execution-proof.json"
-        ),
+        OUTBOX_BROKER_RUNTIME_EXECUTION_ENV: ("output/outbox/broker/runtime-execution-proof.json"),
         OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_PROOF_ENV: (
             "output/outbox/platform-mesh/event-source-contract-proof.json"
         ),
