@@ -4,6 +4,7 @@ from copy import deepcopy
 from datetime import UTC, datetime
 import json
 from pathlib import Path
+from typing import Any, cast
 
 import pytest
 
@@ -91,14 +92,17 @@ def test_report_materialization_runtime_execution_rejects_render_archive_overcla
 
 def test_report_materialization_runtime_execution_rejects_missing_receipt_path() -> None:
     payload = deepcopy(valid_report_materialization_runtime_execution())
-    del payload["receiptEvidence"]["archiveFailure"]  # type: ignore[index]
+    receipt_evidence = cast(dict[str, Any], payload["receiptEvidence"])
+    del receipt_evidence["archiveFailure"]
 
     assert not report_materialization_runtime_execution_is_valid(payload)
 
 
 def test_report_materialization_runtime_execution_rejects_receipt_digest_drift() -> None:
     payload = deepcopy(valid_report_materialization_runtime_execution())
-    payload["receiptEvidence"]["jsonOnlyAccepted"]["materializationStatus"] = "archived"  # type: ignore[index]
+    receipt_evidence = cast(dict[str, Any], payload["receiptEvidence"])
+    json_only_accepted = cast(dict[str, Any], receipt_evidence["jsonOnlyAccepted"])
+    json_only_accepted["materializationStatus"] = "archived"
 
     assert not report_materialization_runtime_execution_is_valid(payload)
 
