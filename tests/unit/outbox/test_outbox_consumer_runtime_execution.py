@@ -74,6 +74,13 @@ def test_rejects_top_level_contract_drift(field_name: str, forged_value: object)
     assert not outbox_consumer_runtime_execution_is_valid(payload)
 
 
+def test_rejects_unknown_top_level_runtime_proof_field() -> None:
+    payload = _valid_payload()
+    payload["gatewayWorkbenchRuntimeProof"] = {"claim": "overstated"}
+
+    assert not outbox_consumer_runtime_execution_is_valid(payload)
+
+
 @pytest.mark.parametrize(
     ("field_name", "forged_value"),
     [
@@ -116,6 +123,78 @@ def test_rejects_duplicate_consumer_runtime_refs() -> None:
     )
 
     assert payload["runtimeProofValid"] is False
+    assert not outbox_consumer_runtime_execution_is_valid(payload)
+
+
+def test_rejects_naive_generation_time() -> None:
+    with pytest.raises(ValueError, match="generated_at_utc must be timezone-aware"):
+        build_outbox_consumer_runtime_execution_payload(
+            generated_at_utc=datetime(2026, 7, 23, 8, 0),
+            advise_intake_runtime_execution_proof=valid_advise_intake_runtime_execution(),
+            advise_intake_runtime_execution_proof_ref=(
+                "output/downstream/advise-intake-runtime-execution-proof.json"
+            ),
+            manage_intake_runtime_execution_proof=valid_manage_intake_runtime_execution(),
+            manage_intake_runtime_execution_proof_ref=(
+                "output/downstream/manage-intake-runtime-execution-proof.json"
+            ),
+            report_materialization_runtime_execution_proof=(
+                valid_report_materialization_runtime_execution()
+            ),
+            report_materialization_runtime_execution_proof_ref=(
+                "output/report/materialization-runtime-execution-proof.json"
+            ),
+        )
+
+
+@pytest.mark.parametrize(
+    ("field_name", "forged_value"),
+    [
+        ("generatedAtUtc", "2026-07-23T08:00:00"),
+        ("evidenceRefs", ["contracts/outbox-events/lotus-idea-outbox-consumers.v1.json"]),
+        (
+            "consumerCoverage",
+            {
+                "domainConsumersCovered": ("lotus-advise", "lotus-manage", "lotus-report"),
+                "gatewayWorkbenchRuntimeProofRequiredSeparately": False,
+                "platformMeshPublicationProofRequiredSeparately": True,
+            },
+        ),
+        (
+            "runtimeChecks",
+            {
+                "timezoneAwareGeneratedAtUtc": True,
+                "adviseConsumerRuntimeObserved": True,
+                "manageConsumerRuntimeObserved": True,
+                "reportConsumerRuntimeObserved": True,
+                "consumerProofRefsBound": True,
+                "consumerProofDigestsBound": True,
+                "domainConsumerCoverageComplete": True,
+                "gatewayWorkbenchProofSeparated": True,
+                "platformMeshPublicationProofSeparated": True,
+                "nonProofClaimsRetained": False,
+            },
+        ),
+    ],
+)
+def test_rejects_runtime_proof_boundary_drift(
+    field_name: str,
+    forged_value: object,
+) -> None:
+    payload = _valid_payload()
+    payload[field_name] = forged_value
+
+    assert not outbox_consumer_runtime_execution_is_valid(payload)
+
+
+def test_rejects_malformed_consumer_runtime_evidence() -> None:
+    payload = _valid_payload()
+    consumer_runtime_evidence = cast(dict[str, dict[str, Any]], payload["consumerRuntimeEvidence"])
+    consumer_runtime_evidence["lotus-manage"] = {
+        "consumerRepository": "lotus-manage",
+        "proofType": "manage_idea_action_intake_runtime_execution",
+    }
+
     assert not outbox_consumer_runtime_execution_is_valid(payload)
 
 
