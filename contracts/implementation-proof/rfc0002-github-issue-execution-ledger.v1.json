@@ -210,18 +210,18 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/685",
       "rfcSlices": ["slice-11"],
       "githubState": "open",
-      "executionStatus": "open_in_progress",
+      "executionStatus": "open_pr_raised",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #685 open. This tranche adds the optional Gateway/Workbench runtime-execution proof consumer for canonical Workbench live-validation evidence and may clear only workbench_gateway_bff_consumption_proof_missing when the artifact is valid and aggregate-current. Keep open until fresh Workbench/Gateway runtime evidence, browser/accessibility proof, canonical demo runtime proof, supported-feature posture, exact-main CI, wiki evidence, and branch cleanup are complete."
+      "closureInstruction": "Keep #685 open. PR #736 adds the optional Gateway/Workbench runtime-execution proof consumer for canonical Workbench live-validation evidence and may clear only workbench_gateway_bff_consumption_proof_missing when the artifact is valid and aggregate-current. Keep open until fresh Workbench/Gateway runtime evidence, browser/accessibility proof, canonical demo runtime proof, supported-feature posture, exact-main CI, wiki evidence, and branch cleanup are complete."
     },
     {
       "issueNumber": 686,
       "url": "https://github.com/sgajbi/lotus-idea/issues/686",
       "rfcSlices": ["slice-08", "slice-11"],
       "githubState": "open",
-      "executionStatus": "open_in_progress",
+      "executionStatus": "open_pr_raised",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #686 open. This tranche does not certify review-action, feedback, or conversion-intent browser mutation controls; it preserves production identity, authorization, supported-feature, and client-publication blockers until implementation-backed live evidence exists."
+      "closureInstruction": "Keep #686 open. PR #736 does not certify review-action, feedback, or conversion-intent browser mutation controls; it preserves production identity, authorization, supported-feature, and client-publication blockers until implementation-backed live evidence exists."
     },
     {
       "issueNumber": 687,
