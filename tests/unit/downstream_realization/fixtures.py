@@ -20,6 +20,14 @@ from app.application.downstream_realization.manage_intake_runtime_execution impo
     REMAINING_MANAGE_INTAKE_RUNTIME_BLOCKERS,
     source_safe_manage_receipt_digest,
 )
+from app.application.report.materialization_runtime_execution import (
+    REMAINING_REPORT_MATERIALIZATION_RUNTIME_BLOCKERS,
+    REPORT_MATERIALIZATION_RUNTIME_BLOCKERS_SATISFIED,
+    REPORT_MATERIALIZATION_RUNTIME_EVIDENCE_REFS,
+    REPORT_MATERIALIZATION_RUNTIME_EXECUTION_SCHEMA_VERSION,
+    REPORT_MATERIALIZATION_RUNTIME_SOURCE_REFS,
+    source_safe_report_materialization_receipt_digest,
+)
 from app.domain.proof_evidence import EvidenceClass
 
 
@@ -144,6 +152,69 @@ def valid_manage_intake_runtime_execution() -> dict[str, object]:
             "actionRegisterCreated": False,
             "rebalanceExecutionAuthorityGranted": False,
             "orderCreated": False,
+            "clientPublicationAuthorized": False,
+            "productionIdentityCertified": False,
+            "productionCertificationGranted": False,
+            "supportedFeaturePromoted": False,
+            "certificationClosed": False,
+        },
+    }
+
+
+def valid_report_materialization_runtime_execution() -> dict[str, object]:
+    receipt_evidence = _valid_report_materialization_receipt_evidence()
+    return {
+        "schemaVersion": REPORT_MATERIALIZATION_RUNTIME_EXECUTION_SCHEMA_VERSION,
+        "repository": "lotus-idea",
+        "generatedAtUtc": "2026-07-22T00:00:00Z",
+        "proofType": "lotus_report_idea_evidence_pack_materialization_runtime_execution",
+        "proofScope": "report_materialization_route_serving_and_receipt_behavior",
+        "evidenceClass": EvidenceClass.RUNTIME_EXECUTION.value,
+        "runtimeProofValid": True,
+        "sourceRepository": "lotus-idea",
+        "downstreamAuthority": "lotus-report",
+        "targetRoute": "POST /reports/idea-evidence-packs/materializations",
+        "runtimeMode": "local_asgi_testclient",
+        "sourceAuthority": tuple(
+            {
+                "repository": "lotus-report",
+                "ref": f"../lotus-report/{ref}",
+                "sha256": "d" * 64,
+            }
+            for ref in REPORT_MATERIALIZATION_RUNTIME_SOURCE_REFS
+        ),
+        "evidenceRefs": REPORT_MATERIALIZATION_RUNTIME_EVIDENCE_REFS,
+        "receiptEvidence": receipt_evidence,
+        "runtimeChecks": {
+            "timezoneAwareGeneratedAtUtc": True,
+            "sourceAuthorityDigestBound": True,
+            "routeServingObserved": True,
+            "runtimeExecutionObserved": True,
+            "acceptedArchivedReceiptObserved": True,
+            "acceptedReplayReceiptObserved": True,
+            "jsonOnlyReceiptObserved": True,
+            "archiveFailureReceiptObserved": True,
+            "idempotencyConflictObserved": True,
+            "missingIdempotencyKeyObserved": True,
+            "clientPublicationDeniedObserved": True,
+            "reportMaterializationAuthorityObserved": True,
+            "renderArchiveAuthorityRetained": True,
+            "clientPublicationAuthorityRetained": True,
+            "supportedFeatureNotPromoted": True,
+            "productionIdentityNotCertified": True,
+        },
+        "aggregateBlockersSatisfied": REPORT_MATERIALIZATION_RUNTIME_BLOCKERS_SATISFIED,
+        "remainingCertificationBlockers": REMAINING_REPORT_MATERIALIZATION_RUNTIME_BLOCKERS,
+        "producerCertificationBlockersRetained": (
+            "rendered_output_creation_missing",
+            "archive_record_creation_missing",
+            "client_publication_authority_blocked",
+            "supported_feature_promotion_missing",
+            "production_identity_not_certified",
+        ),
+        "nonProofClaims": {
+            "renderedOutputCertified": False,
+            "archiveRecordCertified": False,
             "clientPublicationAuthorized": False,
             "productionIdentityCertified": False,
             "productionCertificationGranted": False,
@@ -304,6 +375,97 @@ def _valid_manage_intake_receipt_evidence() -> dict[str, dict[str, object]]:
     return receipts
 
 
+def _valid_report_materialization_receipt_evidence() -> dict[str, dict[str, object]]:
+    receipts = {
+        "acceptedArchived": _report_receipt(
+            status_code=202,
+            materialization_status="archived",
+            materialization_proven=True,
+            report_job_created=True,
+            rendered_output_created=True,
+            archive_record_created=True,
+            supportability_status="not_certified",
+            reason_codes=(
+                "client_publication_authority_blocked",
+                "supported_feature_promotion_missing",
+            ),
+        ),
+        "acceptedReplay": _report_receipt(
+            status_code=202,
+            materialization_status="archived",
+            materialization_proven=True,
+            report_job_created=True,
+            rendered_output_created=True,
+            archive_record_created=True,
+            supportability_status="not_certified",
+            reason_codes=(
+                "client_publication_authority_blocked",
+                "supported_feature_promotion_missing",
+            ),
+        ),
+        "jsonOnlyAccepted": _report_receipt(
+            status_code=202,
+            materialization_status="data_ready",
+            materialization_proven=True,
+            report_job_created=True,
+            rendered_output_created=False,
+            archive_record_created=False,
+            supportability_status="not_certified",
+            reason_codes=(
+                "client_publication_authority_blocked",
+                "supported_feature_promotion_missing",
+            ),
+        ),
+        "archiveFailure": _report_receipt(
+            status_code=202,
+            materialization_status="failed",
+            materialization_proven=True,
+            report_job_created=True,
+            rendered_output_created=True,
+            archive_record_created=False,
+            supportability_status="not_certified",
+            reason_codes=(
+                "archive_storage_failed",
+                "client_publication_authority_blocked",
+                "supported_feature_promotion_missing",
+            ),
+        ),
+        "idempotencyConflict": _report_receipt(
+            status_code=409,
+            materialization_status=None,
+            materialization_proven=False,
+            report_job_created=False,
+            rendered_output_created=False,
+            archive_record_created=False,
+            supportability_status=None,
+            reason_codes=("idempotency_conflict",),
+        ),
+        "missingIdempotencyKey": _report_receipt(
+            status_code=400,
+            materialization_status=None,
+            materialization_proven=False,
+            report_job_created=False,
+            rendered_output_created=False,
+            archive_record_created=False,
+            supportability_status=None,
+            reason_codes=("missing_idempotency_key",),
+        ),
+        "clientPublicationDenied": _report_receipt(
+            status_code=422,
+            materialization_status=None,
+            materialization_proven=False,
+            report_job_created=False,
+            rendered_output_created=False,
+            archive_record_created=False,
+            supportability_status=None,
+            reason_codes=("client_publication_authority_blocked",),
+        ),
+    }
+    for receipt in receipts.values():
+        receipt["receiptDigest"] = source_safe_report_materialization_receipt_digest(receipt)
+    return receipts
+
+
 def _receipt(
     *,
     status_code: int,
@@ -323,6 +485,32 @@ def _receipt(
         "suitabilityAuthorityGranted": False,
         "orderCreated": False,
         "clientPublicationAuthorized": False,
+    }
+
+
+def _report_receipt(
+    *,
+    status_code: int,
+    materialization_status: str | None,
+    materialization_proven: bool,
+    report_job_created: bool,
+    rendered_output_created: bool,
+    archive_record_created: bool,
+    supportability_status: str | None,
+    reason_codes: tuple[str, ...],
+) -> dict[str, object]:
+    return {
+        "statusCode": status_code,
+        "materializationStatus": materialization_status,
+        "materializationProven": materialization_proven,
+        "reportJobCreated": report_job_created,
+        "renderedOutputCreated": rendered_output_created,
+        "archiveRecordCreated": archive_record_created,
+        "clientPublicationAuthorized": False,
+        "supportedFeaturePromoted": False,
+        "supportabilityStatus": supportability_status,
+        "receiptDigest": None,
+        "reasonCodes": reason_codes,
     }
 
 
