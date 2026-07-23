@@ -1096,10 +1096,12 @@ Data-mesh foundation checks:
    source-product drift and validate governed `lotus-idea` onboarding without
    treating catalog visibility as certification,
 6. `make platform-catalog-source-contract-proof-gate` validates the bounded
-   cross-repo v2 `source_contract` when a sibling `lotus-platform` checkout is
+   cross-repo v3 `source_contract` when a sibling `lotus-platform` checkout is
    available. It checks closed fields, exact blocker scope, explicit false
-   runtime/certification claims, and repository/ref/SHA-256 authority for the
-   source manifest, catalog, dependency graph, and maturity matrix. The
+   runtime/certification claims, repository/ref/SHA-256 authority for the
+   source manifest, catalog, dependency graph, and maturity matrix, and the
+   unpromoted platform posture where `IdeaCandidate:v1` may be a non-blocking
+   certification candidate while all Idea producer products remain proposed. The
    aggregate readiness command generates an invalid non-proof artifact and
    keeps blockers when sibling platform evidence is absent,
 7. the sibling [Lotus Data Mesh Standard](https://github.com/sgajbi/lotus-platform/blob/main/docs/standards/Lotus%20Data%20Mesh%20Standard.md)
@@ -1128,9 +1130,11 @@ promotion.
 
 The internal runtime trust telemetry snapshot endpoint is covered by OpenAPI,
 endpoint certification, unit tests, integration tests, and a repo-native
-generator check. Its passing checks certify only that source-safe,
-contract-shaped snapshot evidence can be emitted from the active repository
-provider while remaining blocked and not certified.
+generator check. The repo-native generator check uses a deterministic
+source-safe local/test candidate exercise so it proves candidate-presence
+coverage without relying on process-local residue from another command. Its
+passing checks certify only that source-safe, contract-shaped snapshot evidence
+can be emitted while remaining blocked, non-durable, and not certified.
 
 The internal source-ingestion-readiness endpoint is covered by OpenAPI,
 endpoint certification, unit tests, and integration tests. Its passing checks

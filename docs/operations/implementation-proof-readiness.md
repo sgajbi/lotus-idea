@@ -944,13 +944,15 @@ to `LOTUS_IDEA_PLATFORM_CATALOG_SOURCE_CONTRACT_PROOF_OUTPUT`, and consumes it
 unless `LOTUS_IDEA_PLATFORM_CATALOG_SOURCE_CONTRACT_PROOF` provides an explicit
 artifact.
 
-The v2 artifact declares `evidenceClass=source_contract` and binds the exact
+The v3 artifact declares `evidenceClass=source_contract` and binds the exact
 platform source manifest, generated catalog, dependency graph, and maturity
 matrix with repository, ref, and SHA-256 metadata. Its closed-field validator
-rejects unknown claims and requires runtime publication, mesh certification,
-producer activation, discovery certification, production certification,
-supported-feature promotion, and closure fields to remain false. A valid,
-current aggregate artifact can therefore satisfy only:
+accepts only an unpromoted maturity posture: `IdeaCandidate:v1` may be a
+non-blocking `certification_candidate`, all Idea producer products must remain
+`proposed`, no first-wave product can be claimed, and runtime publication, mesh
+certification, producer activation, discovery certification, production
+certification, supported-feature promotion, and closure fields must remain
+false. A valid, current aggregate artifact can therefore satisfy only:
 
 1. `platform_source_manifest_inclusion_missing`,
 2. `platform_catalog_inclusion_missing`.
