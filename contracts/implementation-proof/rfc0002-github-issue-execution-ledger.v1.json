@@ -309,9 +309,9 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/696",
       "rfcSlices": ["slice-16"],
       "githubState": "open",
-      "executionStatus": "open_pr_raised",
+      "executionStatus": "open_merged_main_qa_pending",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #696 open until PR #738 passes GitHub checks, merges to main, records exact-main validation, and completes QA evidence without source-authority or client-demo overclaiming."
+      "closureInstruction": "Keep #696 open. PR #738 merged the Slice 16 canonical opportunity archetype evidence pack to exact main a3a62a40bc31c062dcef0318406582d34311ae33; Main Releasability run 30019870406 and CodeQL run 30019863754 passed; wiki publication commit 942feb9 reached strict DiffCount 0; local and remote implementation branches were removed after patch-equivalence proof. This clears only the source-safe canonical archetype evidence-pack tranche. Do not close until QA verifies the pack preserves source-authority, client-publication, production-identity, data-mesh, Workbench/Gateway, supported-feature, and full live-journey blockers without commercial or client-demo overclaiming."
     },
     {
       "issueNumber": 697,
