@@ -318,7 +318,7 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/697",
       "rfcSlices": ["slice-16"],
       "githubState": "open",
-      "executionStatus": "open_pr",
+      "executionStatus": "open_pr_raised",
       "allowPullRequestAutoClose": false,
       "closureInstruction": "Keep #697 open while PR #733 validates the Slice 16 demo-readiness claim matrix and client-safe commercial proof-pack guardrail. Do not close until merged-main validation proves the claim matrix, docs, wiki, context, and no-promotion gates."
     },
