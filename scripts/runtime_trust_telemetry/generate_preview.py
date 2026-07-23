@@ -23,6 +23,7 @@ ensure_worktree_imports(__file__)
 from app.application.runtime_trust_telemetry import (  # noqa: E402
     RuntimeTrustTelemetryPreview,
     build_runtime_trust_telemetry_preview,
+    build_source_safe_runtime_trust_telemetry_repository,
 )
 from app.runtime.repository_state import (  # noqa: E402
     get_idea_repository,
@@ -37,10 +38,19 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         generated_at_utc = parse_generated_at_utc(args.generated_at_utc)
-        repository = get_idea_repository()
+        repository = (
+            build_source_safe_runtime_trust_telemetry_repository(generated_at_utc=generated_at_utc)
+            if args.source_safe_local_exercise
+            else get_idea_repository()
+        )
+        durable_storage_backed = (
+            False
+            if args.source_safe_local_exercise
+            else idea_repository_durable_storage_backed(repository)
+        )
         snapshot = build_runtime_trust_telemetry_preview(
             repository=repository,
-            durable_storage_backed=idea_repository_durable_storage_backed(repository),
+            durable_storage_backed=durable_storage_backed,
             generated_at_utc=generated_at_utc,
         )
         rendered = json.dumps(runtime_trust_telemetry_preview_payload(snapshot), indent=2)
@@ -132,6 +142,14 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--output",
         help="Optional JSON output path. Parent directories are created when needed.",
+    )
+    parser.add_argument(
+        "--source-safe-local-exercise",
+        action="store_true",
+        help=(
+            "Generate the preview from a deterministic local/test source-safe candidate exercise. "
+            "This proves the Idea-owned telemetry path but remains non-durable and not certified."
+        ),
     )
     return parser
 

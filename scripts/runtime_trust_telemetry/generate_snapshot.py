@@ -22,6 +22,7 @@ ensure_worktree_imports(__file__)
 from app.application.runtime_trust_telemetry import (  # noqa: E402
     RUNTIME_TELEMETRY_OUTPUT_PATH,
     build_runtime_trust_telemetry_snapshot,
+    build_source_safe_runtime_trust_telemetry_repository,
     required_runtime_trust_telemetry_blocker_issue_refs,
 )
 from app.runtime.repository_state import (  # noqa: E402
@@ -131,10 +132,19 @@ def main(argv: list[str] | None = None) -> int:
     try:
         generated_at_utc = parse_generated_at_utc(args.generated_at_utc)
         output_path = Path(args.output)
-        repository = get_idea_repository()
+        repository = (
+            build_source_safe_runtime_trust_telemetry_repository(generated_at_utc=generated_at_utc)
+            if args.source_safe_local_exercise
+            else get_idea_repository()
+        )
+        durable_storage_backed = (
+            False
+            if args.source_safe_local_exercise
+            else idea_repository_durable_storage_backed(repository)
+        )
         snapshot = build_runtime_trust_telemetry_snapshot(
             repository=repository,
-            durable_storage_backed=idea_repository_durable_storage_backed(repository),
+            durable_storage_backed=durable_storage_backed,
             generated_at_utc=generated_at_utc,
             source_artifact_uri=f"lotus-idea://{output_path.as_posix()}",
         ).to_dict()
@@ -381,6 +391,14 @@ def _parser() -> argparse.ArgumentParser:
         "--output",
         default=RUNTIME_TELEMETRY_OUTPUT_PATH,
         help="JSON output path. Parent directories are created when needed.",
+    )
+    parser.add_argument(
+        "--source-safe-local-exercise",
+        action="store_true",
+        help=(
+            "Generate the snapshot from a deterministic local/test source-safe candidate exercise. "
+            "This proves the Idea-owned telemetry path but remains non-durable and not certified."
+        ),
     )
     return parser
 
