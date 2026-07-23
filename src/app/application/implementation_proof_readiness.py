@@ -118,6 +118,8 @@ def build_implementation_proof_readiness_snapshot(
     gateway_workbench_contract_proof_ref: str | None = None,
     gateway_workbench_discovery_contract_proof: Mapping[str, object] | None = None,
     gateway_workbench_discovery_contract_proof_ref: str | None = None,
+    gateway_workbench_runtime_execution_proof: Mapping[str, object] | None = None,
+    gateway_workbench_runtime_execution_proof_ref: str | None = None,
     risk_concentration_live_proof: Mapping[str, object] | None = None,
     risk_concentration_live_proof_ref: str | None = None,
     high_volatility_live_proof: Mapping[str, object] | None = None,

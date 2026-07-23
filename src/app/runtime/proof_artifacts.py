@@ -29,6 +29,9 @@ from app.application.workbench.contract_proof import (
 from app.application.workbench.discovery_contract_proof import (
     GATEWAY_WORKBENCH_DISCOVERY_CONTRACT_PROOF_ENV,
 )
+from app.application.workbench.runtime_execution import (
+    GATEWAY_WORKBENCH_RUNTIME_EXECUTION_ENV,
+)
 from app.application.low_income_cashflow_runtime_evidence import (
     LOW_INCOME_CASHFLOW_RUNTIME_EXECUTION_ENV,
 )
@@ -112,6 +115,8 @@ class ConfiguredImplementationProofArtifacts:
     gateway_workbench_contract_proof_ref: str | None
     gateway_workbench_discovery_contract_proof: dict[str, Any] | None
     gateway_workbench_discovery_contract_proof_ref: str | None
+    gateway_workbench_runtime_execution_proof: dict[str, Any] | None
+    gateway_workbench_runtime_execution_proof_ref: str | None
     bond_maturity_live_proof: dict[str, Any] | None
     bond_maturity_live_proof_ref: str | None
     low_income_core_cashflow_live_proof: dict[str, Any] | None
@@ -245,6 +250,12 @@ _JSON_PROOF_ARTIFACTS: tuple[tuple[str, str, str, str], ...] = (
         "gateway_workbench_discovery_contract_proof",
         "gateway_workbench_discovery_contract_proof_ref",
         "Gateway/Workbench discovery contract proof",
+    ),
+    (
+        GATEWAY_WORKBENCH_RUNTIME_EXECUTION_ENV,
+        "gateway_workbench_runtime_execution_proof",
+        "gateway_workbench_runtime_execution_proof_ref",
+        "Gateway/Workbench runtime execution proof",
     ),
     (
         BOND_MATURITY_RUNTIME_EXECUTION_ENV,
