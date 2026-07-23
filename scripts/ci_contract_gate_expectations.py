@@ -57,6 +57,7 @@ REQUIRED_LINT_TARGETS = (
     "data-mesh-contract-gate",
     "mesh-policy-source-contract-proof-gate",
     "opportunity-archetype-contract-gate",
+    "demo-readiness-claim-matrix-gate",
     "downstream-realization-contract-gate",
     "downstream-route-source-contract-proof-gate",
     "outbox-event-contract-gate",
