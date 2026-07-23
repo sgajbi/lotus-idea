@@ -86,12 +86,12 @@ def test_rfc0002_github_issue_execution_ledger_keeps_report_live_proof_in_progre
     )
 
     assert issue_690["githubState"] == "open"
-    assert issue_690["executionStatus"] == "open_in_progress"
+    assert issue_690["executionStatus"] == "open_merged_main_qa_pending"
     assert issue_690["allowPullRequestAutoClose"] is False
     assert "Keep #690 open" in issue_690["closureInstruction"]
-    assert "live Report intake/materialization" in issue_690["closureInstruction"]
-    assert "Render output" in issue_690["closureInstruction"]
-    assert "Archive record" in issue_690["closureInstruction"]
+    assert "PR #724 merged" in issue_690["closureInstruction"]
+    assert "publication authority" in issue_690["closureInstruction"]
+    assert "Report/Render/Archive production trust" in issue_690["closureInstruction"]
 
 
 def test_rfc0002_github_issue_execution_ledger_tracks_render_archive_merged_main_pending_qa() -> (
