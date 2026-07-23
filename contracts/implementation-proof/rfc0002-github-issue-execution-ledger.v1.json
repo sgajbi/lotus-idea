@@ -282,9 +282,9 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/693",
       "rfcSlices": ["slice-15"],
       "githubState": "open",
-      "executionStatus": "open_in_progress",
+      "executionStatus": "open_merged_main_qa_pending",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #693 open. This branch adds proof-specific dependency-recovery and PostgreSQL threshold gates plus protected workflow enforcement; it does not execute protected capacity, load, resource, dependency, PostgreSQL, or cost attestations and does not promote supported features."
+      "closureInstruction": "Keep #693 open. PR #730 merged proof-specific dependency-recovery and PostgreSQL threshold gates plus protected workflow enforcement with exact-main validation. This tranche does not execute protected capacity, load, resource, dependency, PostgreSQL, or cost attestations and does not promote supported features."
     },
     {
       "issueNumber": 694,
