@@ -519,7 +519,17 @@ Persistence adapter validation:
     merged-main Gateway and Workbench PR/CI evidence while preserving
     production identity, browser/accessibility, canonical runtime,
     data-product certification, and supported-feature promotion blockers.
-14. `tests/unit/outbox/broker/test_source_contract_proof.py`,
+14. `tests/unit/workbench/test_runtime_execution.py` and
+    `make gateway-workbench-runtime-execution-proof-gate` validate the optional
+    Gateway/Workbench runtime-execution proof consumer. The artifact consumes
+    Workbench canonical `live-validation-summary.json`, `SHOT-INDEX.md`, and
+    the owner-mainline evidence index. Aggregate readiness can clear only
+    `workbench_gateway_bff_consumption_proof_missing` from a valid
+    aggregate-current artifact; production identity, browser accessibility,
+    canonical demo runtime certification, data-product publication,
+    client-publication authority, suitability/execution authority, and
+    supported-feature promotion remain blocked.
+15. `tests/unit/outbox/broker/test_source_contract_proof.py`,
     `tests/unit/outbox/broker/test_readiness_consumption.py`,
     `tests/unit/outbox/test_outbox_consumer_contract_proof.py`,
     `tests/unit/outbox/test_outbox_consumer_runtime_execution.py`,

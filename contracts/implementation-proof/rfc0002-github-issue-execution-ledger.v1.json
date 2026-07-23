@@ -30,7 +30,7 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/343",
       "rfcSlices": ["slice-15"],
       "githubState": "open",
-      "executionStatus": "open_ready",
+      "executionStatus": "open_blocked",
       "allowPullRequestAutoClose": false,
       "closureInstruction": "Keep #343 open until Lotus Idea PostgreSQL backup and disaster recovery readiness are defined and proven."
     },
@@ -39,7 +39,7 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/344",
       "rfcSlices": ["slice-15"],
       "githubState": "open",
-      "executionStatus": "open_ready",
+      "executionStatus": "open_blocked",
       "allowPullRequestAutoClose": false,
       "closureInstruction": "Keep #344 open until retention, legal-hold, and erasure lifecycle controls for Idea-owned records are defined and proven."
     },
@@ -48,7 +48,7 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/345",
       "rfcSlices": ["slice-15"],
       "githubState": "open",
-      "executionStatus": "open_ready",
+      "executionStatus": "open_blocked",
       "allowPullRequestAutoClose": false,
       "closureInstruction": "Keep #345 open until service SLOs, capacity budgets, and error-budget telemetry for Idea workflows are defined and proven."
     },
@@ -57,7 +57,7 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/375",
       "rfcSlices": ["slice-15"],
       "githubState": "open",
-      "executionStatus": "open_ready",
+      "executionStatus": "open_blocked",
       "allowPullRequestAutoClose": false,
       "closureInstruction": "Keep #375 open until protected migration execution and rollout evidence are provisioned."
     },
@@ -212,7 +212,7 @@
       "githubState": "open",
       "executionStatus": "open_in_progress",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #685 open until Gateway/BFF-backed Workbench queue and candidate-detail reads have complete runtime proof."
+      "closureInstruction": "Keep #685 open. This tranche adds the optional Gateway/Workbench runtime-execution proof consumer for canonical Workbench live-validation evidence and may clear only workbench_gateway_bff_consumption_proof_missing when the artifact is valid and aggregate-current. Keep open until fresh Workbench/Gateway runtime evidence, browser/accessibility proof, canonical demo runtime proof, supported-feature posture, exact-main CI, wiki evidence, and branch cleanup are complete."
     },
     {
       "issueNumber": 686,
@@ -221,7 +221,7 @@
       "githubState": "open",
       "executionStatus": "open_in_progress",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #686 open until Workbench review-action, feedback, and conversion-intent controls are fully proven."
+      "closureInstruction": "Keep #686 open. This tranche does not certify review-action, feedback, or conversion-intent browser mutation controls; it preserves production identity, authorization, supported-feature, and client-publication blockers until implementation-backed live evidence exists."
     },
     {
       "issueNumber": 687,
@@ -282,7 +282,7 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/693",
       "rfcSlices": ["slice-15"],
       "githubState": "open",
-      "executionStatus": "open_merged_main_qa_pending",
+      "executionStatus": "open_blocked",
       "allowPullRequestAutoClose": false,
       "closureInstruction": "Keep #693 open. PR #730 merged proof-specific dependency-recovery and PostgreSQL threshold gates plus protected workflow enforcement with exact-main validation. This tranche does not execute protected capacity, load, resource, dependency, PostgreSQL, or cost attestations and does not promote supported features."
     },
@@ -290,10 +290,10 @@
       "issueNumber": 694,
       "url": "https://github.com/sgajbi/lotus-idea/issues/694",
       "rfcSlices": ["slice-15"],
-      "githubState": "open",
-      "executionStatus": "open_in_progress",
-      "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #694 open while Slice 15 outbox publication operations proof is in active implementation. Broker runtime execution proof is merged on main through PR #732. This tranche adds an aggregate domain-consumer runtime execution proof for Advise, Manage, and Report receipts that may clear only downstream_consumer_runtime_proof_missing when valid. Do not close until Gateway/Workbench runtime proof, platform mesh publication proof, supported-feature promotion, production certification, exact-main CI, wiki publication or no-change evidence, and branch cleanup are recorded."
+      "githubState": "closed",
+      "executionStatus": "closed_complete",
+      "allowPullRequestAutoClose": true,
+      "closureInstruction": "Closed #694 after Slice 15 broker runtime execution proof and aggregate domain-consumer runtime execution proof for Advise, Manage, and Report receipts merged to exact Idea main through PR #735, Main Releasability and CodeQL passed, wiki publication reached strict parity, and branch cleanup completed. The closed issue clears only its named outbox publication operations blockers; Gateway/Workbench runtime proof, platform mesh publication proof, supported-feature promotion, and production certification remain separately tracked."
     },
     {
       "issueNumber": 695,

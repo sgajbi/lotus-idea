@@ -295,6 +295,7 @@
       "sliceIds": ["RFC-0002/slice-11", "RFC-0002/slice-16", "RFC-0002/slice-17"],
       "requiredEvidenceClass": "runtime_execution",
       "closureStatus": "external_dependency_open",
+      "partialProgress": "This tranche adds an optional Gateway/Workbench runtime-execution proof consumer under app.application.workbench.runtime_execution plus generator, gate, registry, readiness, tests, docs, and wiki source. A valid aggregate-current artifact may clear only workbench_gateway_bff_consumption_proof_missing. Workbench panel, browser accessibility, canonical demo runtime certification, production identity, data-product certification, opportunity-archetype Workbench proof, and supported-feature promotion remain open.",
       "supportedFeatureEffect": "no_promotion_until_gateway_bff_workbench_browser_and_demo_runtime_proofs_pass",
       "ownerIssue": {
         "repository": "sgajbi/lotus-idea",
