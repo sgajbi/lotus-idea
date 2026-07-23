@@ -55,12 +55,12 @@ def test_github_issue_execution_summary_reports_current_rfc0002_counts() -> None
     assert summary["counts"]["open"] == 29
     assert summary["counts"]["closed"] == 11
     assert summary["counts"]["byExecutionStatus"]["open_in_progress"] == 4
-    assert summary["counts"]["byExecutionStatus"]["open_merged_main_qa_pending"] == 1
+    assert summary["counts"]["byExecutionStatus"]["open_merged_main_qa_pending"] == 2
     assert summary["counts"]["byExecutionStatus"]["open_ready"] == 12
     assert summary["counts"]["byExecutionStatus"]["open_blocked"] == 1
-    assert summary["counts"]["byExecutionStatus"]["open_pr_raised"] == 1
+    assert "open_pr_raised" not in summary["counts"]["byExecutionStatus"]
     assert summary["issuesByStatus"]["open_in_progress"] == [681, 685, 686, 690]
-    assert summary["issuesByStatus"]["open_merged_main_qa_pending"] == [691]
+    assert summary["issuesByStatus"]["open_merged_main_qa_pending"] == [691, 692]
     assert summary["issuesByStatus"]["open_blocked"] == [687]
     assert summary["issuesByStatus"]["open_ready"] == [
         340,
@@ -76,7 +76,7 @@ def test_github_issue_execution_summary_reports_current_rfc0002_counts() -> None
         697,
         699,
     ]
-    assert summary["issuesByStatus"]["open_pr_raised"] == [692]
+    assert "open_pr_raised" not in summary["issuesByStatus"]
     assert 681 in summary["issuesBySlice"]["slice-18"]
     assert summary["sourceOfTruth"]["liveGitHubAudit"] == (
         "make rfc0002-github-issue-execution-state-audit"
