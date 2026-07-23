@@ -76,7 +76,7 @@ def test_rfc0002_github_issue_execution_ledger_closes_advise_live_proof_after_ma
     assert "advise_live_contract_proof_missing" in issue_688["closureInstruction"]
 
 
-def test_rfc0002_github_issue_execution_ledger_keeps_report_live_proof_blocked() -> None:
+def test_rfc0002_github_issue_execution_ledger_keeps_report_live_proof_in_progress() -> None:
     module = _load_gate()
     payload = _ledger_payload(module)
     issue_690 = next(
@@ -86,7 +86,7 @@ def test_rfc0002_github_issue_execution_ledger_keeps_report_live_proof_blocked()
     )
 
     assert issue_690["githubState"] == "open"
-    assert issue_690["executionStatus"] == "open_blocked"
+    assert issue_690["executionStatus"] == "open_in_progress"
     assert issue_690["allowPullRequestAutoClose"] is False
     assert "Keep #690 open" in issue_690["closureInstruction"]
     assert "live Report intake/materialization" in issue_690["closureInstruction"]

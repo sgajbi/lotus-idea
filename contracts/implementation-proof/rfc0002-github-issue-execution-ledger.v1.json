@@ -21,7 +21,7 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/340",
       "rfcSlices": ["slice-09", "slice-17"],
       "githubState": "open",
-      "executionStatus": "open_blocked",
+      "executionStatus": "open_ready",
       "allowPullRequestAutoClose": false,
       "closureInstruction": "Keep #340 open until attested lotus-ai run evidence and model provenance exist for workflow output acceptance."
     },
@@ -30,7 +30,7 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/343",
       "rfcSlices": ["slice-15"],
       "githubState": "open",
-      "executionStatus": "open_blocked",
+      "executionStatus": "open_ready",
       "allowPullRequestAutoClose": false,
       "closureInstruction": "Keep #343 open until Lotus Idea PostgreSQL backup and disaster recovery readiness are defined and proven."
     },
@@ -39,7 +39,7 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/344",
       "rfcSlices": ["slice-15"],
       "githubState": "open",
-      "executionStatus": "open_blocked",
+      "executionStatus": "open_ready",
       "allowPullRequestAutoClose": false,
       "closureInstruction": "Keep #344 open until retention, legal-hold, and erasure lifecycle controls for Idea-owned records are defined and proven."
     },
@@ -48,7 +48,7 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/345",
       "rfcSlices": ["slice-15"],
       "githubState": "open",
-      "executionStatus": "open_blocked",
+      "executionStatus": "open_ready",
       "allowPullRequestAutoClose": false,
       "closureInstruction": "Keep #345 open until service SLOs, capacity budgets, and error-budget telemetry for Idea workflows are defined and proven."
     },
@@ -57,7 +57,7 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/375",
       "rfcSlices": ["slice-15"],
       "githubState": "open",
-      "executionStatus": "open_blocked",
+      "executionStatus": "open_ready",
       "allowPullRequestAutoClose": false,
       "closureInstruction": "Keep #375 open until protected migration execution and rollout evidence are provisioned."
     },
@@ -66,7 +66,7 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/379",
       "rfcSlices": ["slice-12", "slice-13"],
       "githubState": "open",
-      "executionStatus": "open_blocked",
+      "executionStatus": "open_ready",
       "allowPullRequestAutoClose": false,
       "closureInstruction": "Keep #379 open until live downstream persistence outcomes for Idea conversion and evidence handoffs are certified."
     },
@@ -75,7 +75,7 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/380",
       "rfcSlices": ["slice-14", "slice-16", "slice-20"],
       "githubState": "open",
-      "executionStatus": "open_blocked",
+      "executionStatus": "open_ready",
       "allowPullRequestAutoClose": false,
       "closureInstruction": "Keep #380 open until Idea data-product publication and supported-feature promotion are certified."
     },
@@ -138,7 +138,7 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/677",
       "rfcSlices": ["slice-14", "slice-20"],
       "githubState": "open",
-      "executionStatus": "open_blocked",
+      "executionStatus": "open_tracker",
       "allowPullRequestAutoClose": false,
       "closureInstruction": "Keep #677 open until data-product promotion and runtime trust telemetry certification have platform mesh evidence."
     },
@@ -257,14 +257,14 @@
       "githubState": "open",
       "executionStatus": "open_in_progress",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #690 open. PR #723 adds bounded Report materialization runtime-execution proof that may clear only report_evidence_pack_live_materialization_proof_missing after merge and exact-main validation. Do not close until remaining Report intake, rendered output, archive record, publication authority, production identity, and supported-feature promotion evidence exists."
+      "closureInstruction": "Keep #690 open. PR #724 adds bounded live Report intake/materialization runtime-execution proof that may clear only report_evidence_pack_live_materialization_proof_missing after merge and exact-main validation. Do not close until remaining Render output, Archive record, publication authority, production identity, and supported-feature promotion evidence exists."
     },
     {
       "issueNumber": 691,
       "url": "https://github.com/sgajbi/lotus-idea/issues/691",
       "rfcSlices": ["slice-13"],
       "githubState": "open",
-      "executionStatus": "open_blocked",
+      "executionStatus": "open_ready",
       "allowPullRequestAutoClose": false,
       "closureInstruction": "Keep #691 open until Idea consumes Report live materialization plus Render/Archive owner evidence without overclaiming authority. Render owner proof is now available through lotus-render #65 / PR #67 at c608fe4c5b22fa22e51e242894a76a8532839e9f with Main Releasability run 29966168422. Archive owner proof is now available through lotus-archive #72 / PR #73 at 61ff2cb56a0e3652c40df2740f1f5d8150e52071 with Main Releasability run 29966167055. #691 remains open because #690 Report live intake/materialization, #380/#683 publication and supported-feature promotion, and broader Archive production trust/legal evidence in lotus-archive #55 are not complete."
     },
@@ -273,7 +273,7 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/692",
       "rfcSlices": ["slice-14"],
       "githubState": "open",
-      "executionStatus": "open_blocked",
+      "executionStatus": "open_ready",
       "allowPullRequestAutoClose": false,
       "closureInstruction": "Keep #692 open until runtime trust telemetry and mesh catalog promotion gate are certified with owner evidence."
     },
@@ -282,7 +282,7 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/693",
       "rfcSlices": ["slice-15"],
       "githubState": "open",
-      "executionStatus": "open_blocked",
+      "executionStatus": "open_ready",
       "allowPullRequestAutoClose": false,
       "closureInstruction": "Keep #693 open until protected capacity, load, resource, dependency, and PostgreSQL attestations execute."
     },
@@ -291,7 +291,7 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/694",
       "rfcSlices": ["slice-15"],
       "githubState": "open",
-      "executionStatus": "open_blocked",
+      "executionStatus": "open_ready",
       "allowPullRequestAutoClose": false,
       "closureInstruction": "Keep #694 open until live broker and outbox publication operations are certified."
     },
@@ -309,7 +309,7 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/696",
       "rfcSlices": ["slice-16"],
       "githubState": "open",
-      "executionStatus": "open_blocked",
+      "executionStatus": "open_ready",
       "allowPullRequestAutoClose": false,
       "closureInstruction": "Keep #696 open until canonical opportunity archetype evidence pack for PB_SG_GLOBAL_BAL_001 is implementation-backed."
     },
@@ -318,7 +318,7 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/697",
       "rfcSlices": ["slice-16"],
       "githubState": "open",
-      "executionStatus": "open_blocked",
+      "executionStatus": "open_ready",
       "allowPullRequestAutoClose": false,
       "closureInstruction": "Keep #697 open until the demo-readiness claim matrix and client-safe commercial proof pack are complete."
     },
@@ -336,7 +336,7 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/699",
       "rfcSlices": ["slice-17"],
       "githubState": "open",
-      "executionStatus": "open_blocked",
+      "executionStatus": "open_ready",
       "allowPullRequestAutoClose": false,
       "closureInstruction": "Keep #699 open until the full live opportunity journey validates through API, Gateway, Workbench, and downstream handoffs."
     },

@@ -50,6 +50,7 @@ def _write_ledger(tmp_path: Path, payload: dict[str, Any]) -> Path:
 
 def _github_issue_payload(ledger: dict[str, Any]) -> list[dict[str, Any]]:
     status_label_by_execution_status = {
+        "open_ready": "status/ready",
         "open_blocked": "status/blocked",
         "open_in_progress": "status/in-progress",
         "open_fixed_local": "status/fixed-local",

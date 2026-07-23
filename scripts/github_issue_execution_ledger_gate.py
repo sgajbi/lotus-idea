@@ -63,6 +63,7 @@ EXPECTED_EXECUTION_ISSUES = frozenset(
 OPEN_STATUSES = frozenset(
     {
         "open_tracker",
+        "open_ready",
         "open_blocked",
         "open_in_progress",
         "open_fixed_local",
