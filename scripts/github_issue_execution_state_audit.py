@@ -26,6 +26,7 @@ from scripts.github_issue_execution_ledger_gate import (
 
 
 EXPECTED_OPEN_LABEL_BY_STATUS = {
+    "open_ready": "status/ready",
     "open_blocked": "status/blocked",
     "open_in_progress": "status/in-progress",
     "open_fixed_local": "status/fixed-local",
