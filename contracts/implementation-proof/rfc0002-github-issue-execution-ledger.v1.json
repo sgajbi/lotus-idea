@@ -273,9 +273,9 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/692",
       "rfcSlices": ["slice-14"],
       "githubState": "open",
-      "executionStatus": "open_in_progress",
+      "executionStatus": "open_pr_raised",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #692 open. Branch rfc0002-runtime-telemetry-exercise adds a deterministic source-safe local/test runtime telemetry exercise for preview/snapshot gates and removes only the generated snapshot candidate-presence diagnostic. The issue remains open until durable repository posture, complete runtime product coverage, platform mesh certification, Gateway/Workbench discovery proof, and supported-feature promotion are certified with owner evidence."
+      "closureInstruction": "Keep #692 open. PR #727 adds a deterministic source-safe local/test runtime telemetry exercise for preview/snapshot gates, removes only the generated snapshot candidate-presence diagnostic, and updates the Idea platform-catalog source-contract consumer for the current unpromoted IdeaCandidate certification-candidate posture. The issue remains open until durable repository posture, complete runtime product coverage, platform mesh certification, Gateway/Workbench discovery proof, and supported-feature promotion are certified with owner evidence."
     },
     {
       "issueNumber": 693,
