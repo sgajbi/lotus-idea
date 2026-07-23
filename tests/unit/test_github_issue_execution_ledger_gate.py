@@ -116,6 +116,25 @@ def test_rfc0002_github_issue_execution_ledger_tracks_render_archive_merged_main
     assert "lotus-archive #55" in issue_691["closureInstruction"]
 
 
+def test_rfc0002_github_issue_execution_ledger_tracks_claim_matrix_merged_main_pending_qa() -> None:
+    module = _load_gate()
+    payload = _ledger_payload(module)
+    issue_697 = next(
+        issue
+        for issue in payload["issues"]
+        if isinstance(issue, dict) and issue["issueNumber"] == 697
+    )
+
+    assert issue_697["githubState"] == "open"
+    assert issue_697["executionStatus"] == "open_merged_main_qa_pending"
+    assert issue_697["allowPullRequestAutoClose"] is False
+    assert "Keep #697 open" in issue_697["closureInstruction"]
+    assert "PR #733 merged" in issue_697["closureInstruction"]
+    assert "30000365330" in issue_697["closureInstruction"]
+    assert "30000359147" in issue_697["closureInstruction"]
+    assert "claim-matrix guardrail tranche" in issue_697["closureInstruction"]
+
+
 def test_rfc0002_github_issue_execution_ledger_blocks_auto_close_wording_for_open_issue(
     tmp_path: Path,
 ) -> None:

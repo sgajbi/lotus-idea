@@ -318,9 +318,9 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/697",
       "rfcSlices": ["slice-16"],
       "githubState": "open",
-      "executionStatus": "open_pr_raised",
+      "executionStatus": "open_merged_main_qa_pending",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #697 open while PR #733 validates the Slice 16 demo-readiness claim matrix and client-safe commercial proof-pack guardrail. Do not close until merged-main validation proves the claim matrix, docs, wiki, context, and no-promotion gates."
+      "closureInstruction": "Keep #697 open. PR #733 merged the Slice 16 demo-readiness claim matrix and client-safe commercial proof-pack guardrail to exact main c5226304a93fa1c39b53c446ae3005f472bd009f; Main Releasability run 30000365330 and CodeQL run 30000359147 passed; wiki publication commit 3394af1 reached strict DiffCount 0; local and remote implementation branches were removed after patch-equivalence proof. This clears only the claim-matrix guardrail tranche. Do not close until QA verifies the matrix and remaining live journey, Workbench/Gateway, downstream runtime, data-mesh, supported-feature promotion, production identity, and client-publication proof issues remain correctly bounded."
     },
     {
       "issueNumber": 698,
