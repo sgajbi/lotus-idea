@@ -168,7 +168,11 @@ Current RFC-0002 implementation-start baseline:
    Outbox downstream consumer declarations now follow the same taxonomy: the
    v2 consumer artifact is `source_contract` evidence, records authority
    boundaries, and clears no runtime blocker. Observed consumer execution
-   remains required for `downstream_consumer_runtime_proof_missing`.
+   remains required for `downstream_consumer_runtime_proof_missing`. The
+   bounded outbox consumer runtime-execution artifact consumes Advise, Manage,
+   and Report runtime receipts and may clear only that domain-consumer blocker;
+   Gateway/Workbench proof, platform-mesh publication, supported-feature
+   promotion, and production certification remain separate.
    Gateway/Workbench discovery declarations follow the same rule after #408:
    PR #409 merged and exact-main validation passed at `5a12dea7`; source
    evidence cannot prove publication, serving, consumption, or discovery.
