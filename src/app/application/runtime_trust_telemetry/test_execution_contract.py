@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import date, datetime
-from decimal import Decimal
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -13,17 +12,8 @@ from app.application.source_safe_cross_repo_proof import (
     required_file_evidence_present,
     required_make_target_evidence_present,
 )
-from app.domain import (
-    EvidenceFreshness,
-    HighCashSignalInput,
-    HighCashSignalPolicy,
-    InMemoryIdeaRepository,
-    SignalEvaluationOutcome,
-    SourceRef,
-    SourceSystem,
-    evaluate_high_cash_signal,
-)
 from app.domain.proof_evidence import EvidenceClass
+from .source_safe_exercise import build_source_safe_runtime_trust_telemetry_repository
 
 RUNTIME_TRUST_TELEMETRY_TEST_EXECUTION_ENV = "LOTUS_IDEA_RUNTIME_TRUST_TELEMETRY_TEST_EXECUTION"
 RUNTIME_TRUST_TELEMETRY_TEST_EXECUTION_SCHEMA_VERSION = (
@@ -105,7 +95,6 @@ _PRODUCT_COVERAGE_FIELDS = frozenset(
         "coverageBlockers",
     }
 )
-_AS_OF_DATE = date(2026, 6, 21)
 
 
 def build_runtime_trust_telemetry_test_execution_payload(
@@ -127,7 +116,9 @@ def build_runtime_trust_telemetry_test_execution_payload(
     non_durable_posture_preserved = False
     if timezone_aware:
         preview = build_runtime_trust_telemetry_preview(
-            repository=_source_safe_candidate_repository(generated_at_utc),
+            repository=build_source_safe_runtime_trust_telemetry_repository(
+                generated_at_utc=generated_at_utc
+            ),
             durable_storage_backed=False,
             generated_at_utc=generated_at_utc,
         )
@@ -310,58 +301,4 @@ def _product_coverage_is_valid(value: object) -> bool:
             "supported_feature_promotion_missing",
             "runtime_product_records_missing",
         )
-    )
-
-
-def _source_safe_candidate_repository(generated_at_utc: datetime) -> InMemoryIdeaRepository:
-    repository = InMemoryIdeaRepository()
-    result = evaluate_high_cash_signal(
-        _high_cash_input(generated_at_utc=generated_at_utc),
-        HighCashSignalPolicy(
-            policy_version="idle-liquidity-v1",
-            cash_weight_threshold=Decimal("0.12"),
-            candidate_score=Decimal("82"),
-        ),
-    )
-    if result.outcome is not SignalEvaluationOutcome.CANDIDATE_CREATED or result.candidate is None:
-        raise ValueError("runtime trust telemetry test seed did not create a candidate")
-    repository.persist_candidate(
-        result.candidate,
-        idempotency_key="runtime-trust-telemetry-test-execution",
-        payload={"testExecution": "runtime-trust-telemetry"},
-        actor_subject="test-operator",
-        occurred_at_utc=generated_at_utc,
-    )
-    return repository
-
-
-def _high_cash_input(*, generated_at_utc: datetime) -> HighCashSignalInput:
-    return HighCashSignalInput(
-        as_of_date=_AS_OF_DATE,
-        source_reported_cash_weight=Decimal("0.18"),
-        portfolio_state_ref=_source_ref(
-            "lotus-core:PortfolioStateSnapshot:v1", generated_at_utc=generated_at_utc
-        ),
-        holdings_ref=_source_ref("lotus-core:HoldingsAsOf:v1", generated_at_utc=generated_at_utc),
-        cash_movement_ref=_source_ref(
-            "lotus-core:PortfolioCashMovementSummary:v1", generated_at_utc=generated_at_utc
-        ),
-        cashflow_projection_ref=_source_ref(
-            "lotus-core:PortfolioCashflowProjection:v1", generated_at_utc=generated_at_utc
-        ),
-        evaluated_at_utc=generated_at_utc,
-    )
-
-
-def _source_ref(product_id: str, *, generated_at_utc: datetime) -> SourceRef:
-    return SourceRef(
-        product_id=product_id,
-        source_system=SourceSystem.LOTUS_CORE,
-        product_version="v1",
-        route="lotus-core://source-ref/redacted",
-        as_of_date=_AS_OF_DATE,
-        generated_at_utc=generated_at_utc,
-        content_hash=f"sha256:runtime-trust-telemetry-test:{product_id}",
-        data_quality_status="complete",
-        freshness=EvidenceFreshness.CURRENT,
     )
