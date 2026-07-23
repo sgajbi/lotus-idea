@@ -309,9 +309,9 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/696",
       "rfcSlices": ["slice-16"],
       "githubState": "open",
-      "executionStatus": "open_fixed_local",
+      "executionStatus": "open_pr_raised",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #696 open until the rfc0002-slice16-canonical-archetype-evidence-pack branch opens a PR, passes GitHub checks, merges to main, records exact-main validation, and completes QA evidence without source-authority or client-demo overclaiming."
+      "closureInstruction": "Keep #696 open until PR #738 passes GitHub checks, merges to main, records exact-main validation, and completes QA evidence without source-authority or client-demo overclaiming."
     },
     {
       "issueNumber": 697,
