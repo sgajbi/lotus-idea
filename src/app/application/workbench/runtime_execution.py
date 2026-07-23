@@ -19,16 +19,12 @@ from app.application.workbench.owner_mainline_evidence import (
 from app.domain.proof_evidence import EvidenceClass
 
 
-GATEWAY_WORKBENCH_RUNTIME_EXECUTION_ENV = (
-    "LOTUS_IDEA_GATEWAY_WORKBENCH_RUNTIME_EXECUTION_PROOF"
-)
+GATEWAY_WORKBENCH_RUNTIME_EXECUTION_ENV = "LOTUS_IDEA_GATEWAY_WORKBENCH_RUNTIME_EXECUTION_PROOF"
 GATEWAY_WORKBENCH_RUNTIME_EXECUTION_SCHEMA_VERSION = (
     "lotus-idea.gateway-workbench-runtime-execution-proof.v1"
 )
 
-GATEWAY_WORKBENCH_RUNTIME_BLOCKERS_SATISFIED = (
-    "workbench_gateway_bff_consumption_proof_missing",
-)
+GATEWAY_WORKBENCH_RUNTIME_BLOCKERS_SATISFIED = ("workbench_gateway_bff_consumption_proof_missing",)
 
 REMAINING_GATEWAY_WORKBENCH_RUNTIME_CERTIFICATION_BLOCKERS = (
     "workbench_panel_missing",
@@ -145,8 +141,7 @@ def build_gateway_workbench_runtime_execution_proof_payload(
             workbench_live_validation_summary.get("portfolioId") == "PB_SG_GLOBAL_BAL_001"
         ),
         "canonicalBenchmarkObserved": (
-            workbench_live_validation_summary.get("benchmarkCode")
-            == "BMK_PB_GLOBAL_BALANCED_60_40"
+            workbench_live_validation_summary.get("benchmarkCode") == "BMK_PB_GLOBAL_BALANCED_60_40"
         ),
         "canonicalContractObserved": _canonical_contract_observed(
             workbench_live_validation_summary
@@ -223,7 +218,9 @@ def validate_gateway_workbench_runtime_execution_proof(
     _validate_exact_sequence(
         payload,
         "runtimeEvidenceRefs",
-        payload.get("runtimeEvidenceRefs") if isinstance(payload.get("runtimeEvidenceRefs"), list) else (),
+        payload.get("runtimeEvidenceRefs")
+        if isinstance(payload.get("runtimeEvidenceRefs"), list)
+        else (),
         errors,
         allow_dynamic_non_empty_text=True,
     )
@@ -269,9 +266,7 @@ def _validate_top_level_claims(payload: Mapping[str, Any], errors: list[str]) ->
         errors.append("rfc must be RFC-0002")
     if payload.get("proofType") != "gateway_workbench_runtime_execution":
         errors.append("proofType must be gateway_workbench_runtime_execution")
-    if payload.get("proofScope") != (
-        "workbench_bff_gateway_idea_review_queue_and_detail_runtime"
-    ):
+    if payload.get("proofScope") != ("workbench_bff_gateway_idea_review_queue_and_detail_runtime"):
         errors.append("proofScope must be the governed Workbench/Gateway runtime boundary")
     if payload.get("evidenceClass") != EvidenceClass.RUNTIME_EXECUTION.value:
         errors.append("evidenceClass must be runtime_execution")

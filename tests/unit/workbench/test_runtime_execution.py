@@ -139,10 +139,13 @@ def test_rejects_summary_without_gateway_backed_idea_journey() -> None:
 def test_gate_script_accepts_contract_without_runtime_artifact() -> None:
     module = _load_gate_script()
 
-    assert module.validate_gateway_workbench_runtime_execution_contract(
-        repository_root=ROOT,
-        artifact_path=None,
-    ) == []
+    assert (
+        module.validate_gateway_workbench_runtime_execution_contract(
+            repository_root=ROOT,
+            artifact_path=None,
+        )
+        == []
+    )
 
 
 def test_gate_script_rejects_invalid_runtime_artifact(tmp_path: Path) -> None:

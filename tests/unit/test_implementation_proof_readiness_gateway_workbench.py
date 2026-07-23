@@ -201,9 +201,7 @@ def _valid_gateway_workbench_runtime_execution_proof() -> dict[str, object]:
             "screenshots": [
                 {
                     "name": "advisory-opportunities-live.png",
-                    "path": (
-                        "output/playwright/live-canonical/advisory-opportunities-live.png"
-                    ),
+                    "path": ("output/playwright/live-canonical/advisory-opportunities-live.png"),
                     "route": (
                         "/recommendations?mode=opportunities&portfolioId=PB_SG_GLOBAL_BAL_001"
                         "&candidateId=idea_high_cash_001"
