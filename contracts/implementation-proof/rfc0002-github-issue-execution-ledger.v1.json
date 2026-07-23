@@ -291,9 +291,9 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/694",
       "rfcSlices": ["slice-15"],
       "githubState": "open",
-      "executionStatus": "open_ready",
+      "executionStatus": "open_in_progress",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #694 open until live broker and outbox publication operations are certified."
+      "closureInstruction": "Keep #694 open while the live broker and outbox publication operations proof tranche is in active implementation. Do not close from source-contract evidence alone."
     },
     {
       "issueNumber": 695,
