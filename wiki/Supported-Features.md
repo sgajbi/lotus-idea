@@ -134,11 +134,15 @@ promotion. It consumes a
   source-safe receipt-bound source-ingestion runtime-execution artifact, digest-bound mesh
   policy source-contract artifact, bounded Workbench read-path source-contract artifact, bounded
   Gateway/Workbench source-contract proof artifact, and bounded
-  Gateway/Workbench discovery contract proof artifact. Both artifacts add
+  Gateway/Workbench discovery contract proof artifact. It can also consume an
+  optional bounded Gateway/Workbench runtime-execution artifact generated from
+  Workbench canonical live-validation evidence. The source-contract artifacts add
   evidence references without clearing runtime blockers:
   `gateway_workbench_proof_missing` and
   `gateway_workbench_discovery_proof_missing` remain until observed runtime
-  evidence exists. The diagnostic does not
+  evidence exists. The runtime artifact may clear only
+  `workbench_gateway_bff_consumption_proof_missing` when valid and
+  aggregate-current. The diagnostic does not
 provide full live implementation proof, external broker publication, downstream
 delivery, full Gateway/Workbench live proof, data-product certification, or
 supported-feature promotion. The opportunity archetype scenario readiness

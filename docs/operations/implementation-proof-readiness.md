@@ -8,7 +8,7 @@
 | Required capability | `idea.implementation-proof.readiness.read` |
 | Required query | Timezone-aware `evaluatedAtUtc` |
 | Supportability | `not_certified` while blockers remain |
-| Product claim | Bounded live source-ingestion, runtime trust telemetry, digest-bound Advise/Manage/Report route source contracts, Advise idea-intake runtime execution, Report materialization, outbox broker/consumer/platform-mesh source contracts, outbox broker runtime-execution proof artifacts, Gateway/Workbench source contracts/discovery, mesh policy, platform catalog source contract, receipt-bound mainline AI lineage-store CI execution, AI workflow-pack registration/runtime execution proof artifacts, and opportunity archetype scenario readiness can be consumed. Source contracts add provenance without clearing live blockers; runtime-class Risk/Performance/Core/Manage/Advise/outbox-broker proofs clear only their named blockers when valid and current. No full live journey, live AI provider execution, suitability/rebalance/risk-profile/restriction-clearance/benchmark-assignment authority, platform mesh certification, external broker or platform-mesh publication without an accepted broker runtime artifact, downstream delivery beyond the named bounded proof, full Gateway/Workbench product proof, client-ready publication, or supported-feature promotion is proven. |
+| Product claim | Bounded live source-ingestion, runtime trust telemetry, digest-bound Advise/Manage/Report route source contracts, Advise idea-intake runtime execution, Report materialization, outbox broker/consumer/platform-mesh source contracts, outbox broker runtime-execution proof artifacts, Gateway/Workbench source contracts/discovery, optional Gateway/Workbench runtime-execution proof, mesh policy, platform catalog source contract, receipt-bound mainline AI lineage-store CI execution, AI workflow-pack registration/runtime execution proof artifacts, and opportunity archetype scenario readiness can be consumed. Source contracts add provenance without clearing live blockers; runtime-class Risk/Performance/Core/Manage/Advise/outbox-broker and Gateway/Workbench proofs clear only their named blockers when valid and current. No full live journey, live AI provider execution, suitability/rebalance/risk-profile/restriction-clearance/benchmark-assignment authority, platform mesh certification, external broker or platform-mesh publication without an accepted broker runtime artifact, downstream delivery beyond the named bounded proof, full Gateway/Workbench product certification, client-ready publication, or supported-feature promotion is proven. |
 
 `GET /api/v1/implementation-proof/readiness` is the internal operator
 diagnostic for RFC-0002 implementation proof posture.
@@ -400,6 +400,8 @@ taxonomy and the #393 same-pattern campaign.
 | `LOTUS_IDEA_GATEWAY_WORKBENCH_CONTRACT_PROOF` | Overrides the default generated Gateway/Workbench contract proof artifact passed into aggregate readiness. |
 | `LOTUS_IDEA_GATEWAY_WORKBENCH_DISCOVERY_CONTRACT_PROOF_OUTPUT` | Selects the default generated Gateway/Workbench discovery contract proof artifact consumed by aggregate readiness when no override is set. Defaults to `output/workbench/gateway-workbench-discovery-contract-proof.json`. |
 | `LOTUS_IDEA_GATEWAY_WORKBENCH_DISCOVERY_CONTRACT_PROOF` | Overrides the default generated Gateway/Workbench discovery contract proof artifact passed into aggregate readiness. |
+| `LOTUS_IDEA_GATEWAY_WORKBENCH_RUNTIME_EXECUTION_PROOF_OUTPUT` | Selects the recommended local output path for generated Gateway/Workbench runtime-execution proof. Defaults to `output/workbench/gateway-workbench-runtime-execution-proof.json`; aggregate readiness consumes it only when `LOTUS_IDEA_GATEWAY_WORKBENCH_RUNTIME_EXECUTION_PROOF` is set. |
+| `LOTUS_IDEA_GATEWAY_WORKBENCH_RUNTIME_EXECUTION_PROOF` | Overrides the optional Gateway/Workbench runtime-execution proof artifact passed into aggregate readiness. A valid current artifact clears only `workbench_gateway_bff_consumption_proof_missing`; production identity, browser accessibility, canonical demo runtime, data-product, client-publication, suitability/execution, and supported-feature blockers remain. |
 | `LOTUS_IDEA_AI_LINEAGE_STORE_PROOF_OUTPUT` | Selects the default generated AI lineage store proof artifact consumed by aggregate readiness when no override is set. Defaults to `output/ai/ai-lineage-store-proof.json`. |
 | `LOTUS_IDEA_AI_LINEAGE_STORE_PROOF` | Overrides the default generated AI lineage store proof artifact passed into aggregate readiness. |
 | `LOTUS_AI_ROOT` | Selects the sibling `lotus-ai` checkout used to generate the workflow-pack registration source-contract proof. Defaults to `../lotus-ai`. |
@@ -802,6 +804,24 @@ It is not passed as blocker-clearing runtime evidence: production identity
 provider proof, entitlement-denied browser proof, canonical all-main runtime
 validation, data-product certification, and supported-feature promotion remain
 open dependencies.
+
+Gateway/Workbench runtime-execution proof is captured by
+`scripts/workbench/generate_runtime_execution_proof.py` and guarded by
+`make gateway-workbench-runtime-execution-proof-gate`. It consumes the
+Workbench-owned `live-validation-summary.json`, `SHOT-INDEX.md`, and the
+Idea-owned owner-mainline evidence contract. A valid artifact is classified as
+`runtime_execution` and may clear only
+`workbench_gateway_bff_consumption_proof_missing` when passed through
+`LOTUS_IDEA_GATEWAY_WORKBENCH_RUNTIME_EXECUTION_PROOF` or
+`--gateway-workbench-runtime-execution-proof` and when aggregate provenance is
+current. It requires canonical portfolio `PB_SG_GLOBAL_BAL_001`, canonical
+benchmark `BMK_PB_GLOBAL_BALANCED_60_40`, the RFC-0076 canonical contract,
+the Workbench opportunities journey with
+`sourcePosture=idea-review-queue-through-gateway`, at least one Idea candidate
+queue row, and the advisory opportunities screenshot bound by the shot index.
+It does not certify production identity, browser accessibility, full canonical
+demo runtime, data-product publication, client-ready publication,
+suitability/execution authority, or supported-feature promotion.
 
 Outbox broker source-contract proof is captured by
 `scripts/outbox/broker/generate_source_contract_proof.py`. A valid artifact
@@ -1321,6 +1341,10 @@ Implementation-backed evidence:
     `contracts/implementation-proof/rfc0002-slice11-owner-mainline-evidence.v1.json`,
 1. Gateway/Workbench owner-mainline evidence contract gate:
     `make gateway-workbench-owner-mainline-evidence-gate`,
+1. Gateway/Workbench runtime-execution proof generator:
+    `scripts/workbench/generate_runtime_execution_proof.py`,
+1. Gateway/Workbench runtime-execution proof gate:
+    `make gateway-workbench-runtime-execution-proof-gate`,
 1. outbox broker source-contract proof generator:
     `scripts/outbox/broker/generate_source_contract_proof.py`,
 1. outbox consumer contract gate:

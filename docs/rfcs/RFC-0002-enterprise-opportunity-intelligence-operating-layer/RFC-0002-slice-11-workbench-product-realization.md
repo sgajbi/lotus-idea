@@ -71,6 +71,19 @@ Active catalog publication, Gateway discovery, Workbench consumption,
 entitlement enforcement, and product support still require runtime evidence
 from the owning applications.
 
+This slice now adds an optional Gateway/Workbench `runtime_execution` proof
+consumer in `app.application.workbench.runtime_execution`, with
+`scripts/workbench/generate_runtime_execution_proof.py` and
+`make gateway-workbench-runtime-execution-proof-gate`. The proof consumes the
+Workbench canonical `live-validation-summary.json`, `SHOT-INDEX.md`, and the
+Idea owner-mainline evidence contract. When the artifact is valid and
+aggregate-current, readiness may clear only
+`workbench_gateway_bff_consumption_proof_missing`. The proof deliberately keeps
+`workbench_panel_missing`, `browser_accessibility_proof_missing`,
+`canonical_demo_runtime_proof_missing`, production identity, data-product,
+client-publication, suitability/execution, and supported-feature blockers open
+until their own implementation-backed evidence exists.
+
 ## Outcome
 
 Make supported opportunity intelligence visible in `lotus-workbench` through

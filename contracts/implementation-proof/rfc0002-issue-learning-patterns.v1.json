@@ -53,6 +53,14 @@
         },
         {
           "type": "gate",
+          "ref": "scripts/workbench/generate_runtime_execution_proof.py"
+        },
+        {
+          "type": "gate",
+          "ref": "scripts/workbench/runtime_execution_proof_gate.py"
+        },
+        {
+          "type": "gate",
           "ref": "scripts/caller_context_contract_gate.py"
         },
         {
@@ -68,7 +76,7 @@
           "ref": "README.md#downstream-consumers"
         }
       ],
-      "futureAgentRule": "Treat local/test caller fixtures and static Workbench or Gateway declarations as non-certifying until owner route proof, UI consumption proof, and production identity evidence are available; nested API route modules are inside the caller-context contract gate and must not bypass trusted-caller provenance or strict role-and-capability enforcement.",
+      "futureAgentRule": "Treat local/test caller fixtures and static Workbench or Gateway declarations as non-certifying until owner route proof, UI consumption proof, and production identity evidence are available. Runtime UI consumption must arrive through the Gateway/Workbench runtime-execution proof consumer and may clear only its named BFF-consumption blocker while preserving production identity, accessibility, canonical demo, data-product, client-publication, suitability/execution, and supported-feature blockers. Nested API route modules are inside the caller-context contract gate and must not bypass trusted-caller provenance or strict role-and-capability enforcement.",
       "nonClaimBoundaries": [
         "Local/test caller authority fixtures are not production identity, authentication, or authorization proof.",
         "Backend source contracts alone do not prove populated Workbench panel readiness."
