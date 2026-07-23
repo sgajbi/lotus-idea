@@ -12,7 +12,6 @@ import sys
 from pathlib import Path
 from typing import Any
 
-
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from scripts.proof_worktree_import_guard import ensure_worktree_imports
 
@@ -109,10 +108,11 @@ def main(argv: list[str] | None = None) -> int:
 def implementation_proof_readiness_payload(
     snapshot: ImplementationProofReadinessSnapshot,
 ) -> dict[str, Any]:
+    evaluated_at_utc = snapshot.evaluated_at_utc.astimezone(UTC).isoformat().replace("+00:00", "Z")
     return {
         "repository": snapshot.repository,
-        "generatedAtUtc": _format_utc(snapshot.evaluated_at_utc),
-        "evaluatedAtUtc": _format_utc(snapshot.evaluated_at_utc),
+        "generatedAtUtc": evaluated_at_utc,
+        "evaluatedAtUtc": evaluated_at_utc,
         "readinessStatus": snapshot.readiness_status,
         "supportabilityStatus": snapshot.supportability_status,
         "certificationReady": snapshot.certification_ready,
@@ -445,10 +445,6 @@ def _parse_evaluated_at_utc(value: str) -> datetime:
     if parsed.tzinfo is None or parsed.utcoffset() is None:
         raise ValueError("evaluated-at-utc must be timezone-aware")
     return parsed.astimezone(UTC)
-
-
-def _format_utc(value: datetime) -> str:
-    return value.astimezone(UTC).isoformat().replace("+00:00", "Z")
 
 
 def _readiness_environment_overrides(args: argparse.Namespace) -> dict[str, str | None]:

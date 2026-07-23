@@ -365,15 +365,42 @@ def _apply_available_downstream_proofs(
         proof=manage_intake_runtime_execution_proof,
         proof_ref=manage_intake_runtime_execution_proof_ref,
     )
-    if (
-        proof_artifact_effect_matches_payload(
-            "report_intake_route_source_contract_proof",
-            ProofArtifactEffect.SUPPORTING_EVIDENCE,
-        )
-        and report_intake_route_source_contract_proof
-        and report_intake_route_source_contract_proof_is_valid(
-            report_intake_route_source_contract_proof
-        )
+    capabilities, downstream_contracts = _apply_report_source_contract_proofs_if_valid(
+        capabilities=capabilities,
+        downstream_contracts=downstream_contracts,
+        report_intake_route_source_contract_proof=report_intake_route_source_contract_proof,
+        report_intake_route_source_contract_proof_ref=(
+            report_intake_route_source_contract_proof_ref
+        ),
+        report_materialization_source_contract_proof=(report_materialization_source_contract_proof),
+        report_materialization_source_contract_proof_ref=(
+            report_materialization_source_contract_proof_ref
+        ),
+    )
+    capabilities, downstream_contracts = _apply_report_materialization_runtime_proof_if_valid(
+        capabilities=capabilities,
+        downstream_contracts=downstream_contracts,
+        evaluated_at_utc=evaluated_at_utc,
+        proof=report_materialization_runtime_execution_proof,
+        proof_ref=report_materialization_runtime_execution_proof_ref,
+    )
+    return capabilities, downstream_contracts
+
+
+def _apply_report_source_contract_proofs_if_valid(
+    *,
+    capabilities: tuple[DownstreamRealizationCapabilityReadiness, ...],
+    downstream_contracts: tuple[DownstreamRealizationContractReadiness, ...],
+    report_intake_route_source_contract_proof: Mapping[str, object] | None,
+    report_intake_route_source_contract_proof_ref: str | None,
+    report_materialization_source_contract_proof: Mapping[str, object] | None,
+    report_materialization_source_contract_proof_ref: str | None,
+) -> tuple[
+    tuple[DownstreamRealizationCapabilityReadiness, ...],
+    tuple[DownstreamRealizationContractReadiness, ...],
+]:
+    if _report_intake_route_source_contract_proof_is_registered_and_valid(
+        report_intake_route_source_contract_proof
     ):
         capabilities = tuple(
             _apply_report_intake_route_source_contract_proof_to_capability(
@@ -389,15 +416,8 @@ def _apply_available_downstream_proofs(
             )
             for contract in downstream_contracts
         )
-    if (
-        proof_artifact_effect_matches_payload(
-            "report_materialization_source_contract_proof",
-            ProofArtifactEffect.SUPPORTING_EVIDENCE,
-        )
-        and report_materialization_source_contract_proof
-        and report_materialization_source_contract_is_valid(
-            report_materialization_source_contract_proof
-        )
+    if _report_materialization_source_contract_proof_is_registered_and_valid(
+        report_materialization_source_contract_proof
     ):
         capabilities = tuple(
             _apply_report_materialization_source_contract_to_capability(
@@ -413,14 +433,33 @@ def _apply_available_downstream_proofs(
             )
             for contract in downstream_contracts
         )
-    capabilities, downstream_contracts = _apply_report_materialization_runtime_proof_if_valid(
-        capabilities=capabilities,
-        downstream_contracts=downstream_contracts,
-        evaluated_at_utc=evaluated_at_utc,
-        proof=report_materialization_runtime_execution_proof,
-        proof_ref=report_materialization_runtime_execution_proof_ref,
-    )
     return capabilities, downstream_contracts
+
+
+def _report_intake_route_source_contract_proof_is_registered_and_valid(
+    proof: Mapping[str, object] | None,
+) -> bool:
+    return (
+        proof_artifact_effect_matches_payload(
+            "report_intake_route_source_contract_proof",
+            ProofArtifactEffect.SUPPORTING_EVIDENCE,
+        )
+        and proof is not None
+        and report_intake_route_source_contract_proof_is_valid(proof)
+    )
+
+
+def _report_materialization_source_contract_proof_is_registered_and_valid(
+    proof: Mapping[str, object] | None,
+) -> bool:
+    return (
+        proof_artifact_effect_matches_payload(
+            "report_materialization_source_contract_proof",
+            ProofArtifactEffect.SUPPORTING_EVIDENCE,
+        )
+        and proof is not None
+        and report_materialization_source_contract_is_valid(proof)
+    )
 
 
 def _apply_manage_intake_proof_if_valid(

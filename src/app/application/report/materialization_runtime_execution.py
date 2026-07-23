@@ -275,9 +275,7 @@ def report_materialization_runtime_execution_is_valid(payload: Mapping[str, Any]
         and _json_only_receipt_is_valid(receipt_evidence.get("jsonOnlyAccepted"))
         and _archive_failure_receipt_is_valid(receipt_evidence.get("archiveFailure"))
         and _idempotency_conflict_receipt_is_valid(receipt_evidence.get("idempotencyConflict"))
-        and _missing_idempotency_key_receipt_is_valid(
-            receipt_evidence.get("missingIdempotencyKey")
-        )
+        and _missing_idempotency_key_receipt_is_valid(receipt_evidence.get("missingIdempotencyKey"))
         and _client_publication_denied_receipt_is_valid(
             receipt_evidence.get("clientPublicationDenied")
         )

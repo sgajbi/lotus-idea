@@ -167,21 +167,7 @@ def build_implementation_proof_readiness_snapshot(
         durable_storage_backed=durable_storage_backed,
         generated_at_utc=evaluated_at_utc,
     )
-    downstream_realization = build_downstream_realization_readiness_snapshot(
-        repository=repository,
-        durable_storage_backed=durable_storage_backed,
-        evaluated_at_utc=evaluated_at_utc,
-        advise_intake_runtime_execution_proof=advise_intake_runtime_execution_proof,
-        advise_intake_runtime_execution_proof_ref=advise_intake_runtime_execution_proof_ref,
-        manage_intake_runtime_execution_proof=manage_intake_runtime_execution_proof,
-        manage_intake_runtime_execution_proof_ref=manage_intake_runtime_execution_proof_ref,
-        report_materialization_runtime_execution_proof=(
-            report_materialization_runtime_execution_proof
-        ),
-        report_materialization_runtime_execution_proof_ref=(
-            report_materialization_runtime_execution_proof_ref
-        ),
-    )
+    downstream_realization = _build_downstream_realization_from_scope(locals())
     outbox_delivery = build_outbox_delivery_readiness_snapshot(
         repository=repository,
         durable_storage_backed=durable_storage_backed,
@@ -195,6 +181,40 @@ def build_implementation_proof_readiness_snapshot(
     )
     capabilities = _build_capabilities_with_available_proofs(locals())
     return _readiness_snapshot(evaluated_at_utc, supported_feature_evaluation, capabilities)
+
+
+def _build_downstream_realization_from_scope(
+    scope: Mapping[str, object],
+) -> DownstreamRealizationReadinessSnapshot:
+    return build_downstream_realization_readiness_snapshot(
+        repository=cast(OutboxDeliveryRepository, scope["repository"]),
+        durable_storage_backed=cast(bool, scope["durable_storage_backed"]),
+        evaluated_at_utc=cast(datetime, scope["evaluated_at_utc"]),
+        advise_intake_runtime_execution_proof=cast(
+            Mapping[str, object] | None,
+            scope["advise_intake_runtime_execution_proof"],
+        ),
+        advise_intake_runtime_execution_proof_ref=cast(
+            str | None,
+            scope["advise_intake_runtime_execution_proof_ref"],
+        ),
+        manage_intake_runtime_execution_proof=cast(
+            Mapping[str, object] | None,
+            scope["manage_intake_runtime_execution_proof"],
+        ),
+        manage_intake_runtime_execution_proof_ref=cast(
+            str | None,
+            scope["manage_intake_runtime_execution_proof_ref"],
+        ),
+        report_materialization_runtime_execution_proof=cast(
+            Mapping[str, object] | None,
+            scope["report_materialization_runtime_execution_proof"],
+        ),
+        report_materialization_runtime_execution_proof_ref=cast(
+            str | None,
+            scope["report_materialization_runtime_execution_proof_ref"],
+        ),
+    )
 
 
 def _readiness_snapshot(

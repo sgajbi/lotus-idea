@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from . import advise_source_product_evidence_paths as advise_paths
+from . import report_paths
 from . import runtime_evidence_paths as runtime_paths
 
 PROHIBITED_EXACT_PATHS = {".coverage", ".env", "coverage.xml"}
@@ -74,6 +75,7 @@ REQUIRED_BOUNDED_MODULE_PATHS = {
     "tests/unit/risk_concentration_runtime_evidence/test_runtime_execution.py",
     "scripts/repository_hygiene/__init__.py",
     "scripts/repository_hygiene/policy.py",
+    "scripts/repository_hygiene/report_paths.py",
     "scripts/source_ingestion/__init__.py",
     "scripts/source_ingestion/generate_runtime_execution.py",
     "scripts/source_ingestion/runtime_execution_contract_gate.py",
@@ -233,26 +235,15 @@ REQUIRED_BOUNDED_MODULE_PATHS = {
     "scripts/workbench/generate_discovery_contract_proof.py",
     "scripts/workbench/generate_read_path_source_contract.py",
     "scripts/workbench/read_path_source_contract_gate.py",
-    "scripts/report/generate_intake_route_source_contract.py",
-    "scripts/report/generate_materialization_runtime_execution.py",
-    "scripts/report/generate_materialization_source_contract.py",
-    "scripts/report/intake_route_source_contract_gate.py",
-    "scripts/report/materialization_runtime_execution_gate.py",
-    "scripts/report/materialization_source_contract_gate.py",
+    *report_paths.REQUIRED_REPORT_PROOF_PATHS,
     "src/app/application/workbench/__init__.py",
     "src/app/application/workbench/contract_proof.py",
     "src/app/application/workbench/discovery_contract_proof.py",
     "src/app/application/workbench/read_path_source_contract.py",
-    "src/app/application/report/intake_route_source_contract.py",
-    "src/app/application/report/materialization_runtime_execution.py",
-    "src/app/application/report/materialization_source_contract.py",
     "tests/unit/workbench/__init__.py",
     "tests/unit/workbench/test_contract_proof.py",
     "tests/unit/workbench/test_discovery_contract_proof.py",
     "tests/unit/workbench/test_read_path_source_contract.py",
-    "tests/unit/report/test_intake_route_source_contract.py",
-    "tests/unit/report/test_materialization_runtime_execution.py",
-    "tests/unit/report/test_materialization_source_contract.py",
     "scripts/downstream_realization/__init__.py",
     "scripts/downstream_realization/generate_advise_intake_runtime_execution.py",
     "scripts/downstream_realization/generate_advise_route_source_contract.py",
