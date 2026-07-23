@@ -179,9 +179,12 @@ mesh.
 `make runtime-trust-telemetry-snapshot-check` generates the corresponding
 source-safe runtime snapshot under
 `output/trust-telemetry/runtime/idea-candidate.telemetry.v1.json`. The snapshot
-is contract-shaped runtime evidence only, including a closed local downstream
-submission posture block and issue-backed blocker refs; it does not promote
-producer products, prove downstream acceptance or materialization, or replace
+is contract-shaped runtime evidence only. The repo-native gate seeds one
+deterministic source-safe local/test candidate through the real Idea domain and
+repository path so the generated snapshot has candidate-presence coverage; it
+still includes a closed local downstream submission posture block and
+issue-backed blocker refs. It does not promote producer products, prove
+durable storage, prove downstream acceptance or materialization, or replace
 platform mesh certification.
 The internal `GET /api/v1/data-mesh/trust-telemetry/runtime-snapshot`
 diagnostic returns the same contract-shaped snapshot for operators with
@@ -983,14 +986,18 @@ platform mesh certification, product activation, Gateway/Workbench discovery,
 live AI provider execution, model-risk operations certification,
 client-ready report publication, full Workbench proof, or supported-feature
 promotion.
-The v2 platform catalog artifact declares `source_contract` evidence and binds
+The v3 platform catalog artifact declares `source_contract` evidence and binds
 the exact sibling source manifest, catalog, dependency graph, and maturity
-matrix by repository/ref/SHA-256. Its closed-field validator permits only the
-source-manifest and catalog-inclusion blockers to be satisfied. It cannot
-certify runtime publication, policy or platform operation, product activation,
-Gateway/Workbench discovery, deployment, production readiness, or support.
+matrix by repository/ref/SHA-256. Its closed-field validator accepts only an
+unpromoted platform posture where `IdeaCandidate:v1` may be a non-blocking
+certification candidate and all Idea producer products remain proposed. It
+permits only the source-manifest and catalog-inclusion blockers to be
+satisfied. It cannot certify runtime publication, policy or platform operation,
+product activation, Gateway/Workbench discovery, deployment, production
+readiness, or support.
 For runtime trust telemetry specifically, the current proof artifact clears
-only `runtime_candidate_snapshot_missing`; it preserves
+only the generated snapshot's local `runtime_candidate_snapshot_missing`
+diagnostic by exercising one deterministic source-safe candidate path; it preserves
 `runtime_trust_telemetry_product_coverage_incomplete`,
 `certified_runtime_trust_telemetry_missing`, and
 `data_mesh_runtime_telemetry_not_certified` while declared producer product

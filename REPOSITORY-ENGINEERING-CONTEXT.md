@@ -927,6 +927,16 @@ source-safe readiness evidence. They include bounded local downstream
 submission posture counts and issue-backed blocker refs, but those counts are
 Idea-owned posture only. They are not certified data products, downstream
 acceptance/materialization proof, or supported-feature promotion.
+The repo-native `runtime-trust-telemetry-preview-check` and
+`runtime-trust-telemetry-snapshot-check` targets use a deterministic
+source-safe local/test exercise from
+`app.application.runtime_trust_telemetry.source_safe_exercise` so local gates
+materialize one Idea-owned candidate path through the real domain evaluation
+and repository persistence boundary. This narrows only the generated snapshot's
+candidate-presence diagnostic; the exercise is non-durable, process-local, and
+cannot clear platform mesh certification, Gateway/Workbench discovery,
+supported-feature promotion, production deployment, or durable repository
+blockers.
 
 PostgreSQL trust projections count only lifecycle-active or held-from-active
 records as candidate and workflow data products. Erased and purged tombstones

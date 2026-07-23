@@ -43,8 +43,11 @@ This slice now has internal operator diagnostic foundations only:
    local Idea posture only; they are not downstream acceptance or
    materialization proof.
 10. `scripts/runtime_trust_telemetry/generate_preview.py` and
-    `make runtime-trust-telemetry-preview-check` generate the same
-    pre-certification preview as source-safe automation evidence.
+    `make runtime-trust-telemetry-preview-check` generate source-safe
+    pre-certification preview evidence. The repo-native gate uses a
+    deterministic local/test source-safe exercise so the preview includes one
+    Idea-owned candidate path without relying on local process memory left by a
+    prior command.
 11. The preview derives `runtimeTelemetryBacked` from the active repository's
     durable-storage posture while preserving `certificationStatus=not_certified`,
     `platformCertified=false`, `certificationReady=false`, and
@@ -55,14 +58,25 @@ This slice now has internal operator diagnostic foundations only:
 13. `scripts/runtime_trust_telemetry/generate_snapshot.py` and
     `make runtime-trust-telemetry-snapshot-check` generate a contract-shaped
     runtime trust telemetry snapshot under ignored
-    `output/trust-telemetry/runtime/idea-candidate.telemetry.v1.json`.
+    `output/trust-telemetry/runtime/idea-candidate.telemetry.v1.json`. The
+    repo-native gate uses the same deterministic local/test source-safe
+    exercise and therefore narrows only the local
+    `runtime_candidate_snapshot_missing` diagnostic for the generated
+    snapshot.
 14. The endpoint and generated snapshot use platform trust telemetry fields for
     `lotus-idea:IdeaCandidate:v1`, include a closed
     `downstream_submission_posture` block with local downstream submission
     counts, remain blocked, and omit candidate ids, portfolio ids, client ids,
     raw source routes, raw downstream payloads, support references, and raw
     evidence hashes.
-15. `src/app/application/runtime_trust_telemetry/test_execution_contract.py`,
+15. `src/app/application/runtime_trust_telemetry/source_safe_exercise.py`
+    centralizes the deterministic local/test source-safe candidate exercise
+    used by the preview/snapshot CLIs and runtime telemetry test-execution
+    contract. It persists one in-memory high-cash candidate through the real
+    domain evaluation and repository path, uses only governed Lotus Core
+    source-reference metadata, and deliberately sets durable storage posture to
+    false in CLI gates.
+16. `src/app/application/runtime_trust_telemetry/test_execution_contract.py`,
     `scripts/runtime_trust_telemetry/generate_test_execution_contract.py`, and
     `make runtime-trust-telemetry-test-execution-contract-gate` define and enforce a
     closed-field v2 `test_execution` contract for aggregate implementation
@@ -85,18 +99,21 @@ through `RuntimeTrustTelemetryProjectionRepository` over
 `idea_downstream_submission` only. Ordinary preview/snapshot reads do not
 hydrate audit, outbox, downstream-submission payloads, lifecycle-history,
 idempotency, or AI-lineage state.
-16. `src/app/application/data_mesh/platform_catalog_source_contract.py`,
+17. `src/app/application/data_mesh/platform_catalog_source_contract.py`,
     `scripts/data_mesh/generate_platform_catalog_source_contract.py`, and
     `make platform-catalog-source-contract-proof-gate` validate bounded
     sibling `lotus-platform` source-manifest, generated catalog, dependency
-    graph, maturity matrix, and handoff evidence. Issue `#443` replaces the
-    ambiguous v1 onboarding proof with a closed-field v2 `source_contract`,
-    binds the four authority files by repository/ref/SHA-256, and permits only
-    source-manifest and catalog-inclusion blockers to be satisfied. Runtime
+    graph, maturity matrix, and handoff evidence. The current v3
+    `source_contract` accepts the platform maturity matrix only when Idea
+    remains unpromoted: `IdeaCandidate:v1` may be a non-blocking
+    `certification_candidate`, all producer products must stay `proposed`, and
+    first-wave/product-activation claims must remain absent. It binds the four
+    authority files by repository/ref/SHA-256 and permits only source-manifest
+    and catalog-inclusion blockers to be satisfied. Runtime
     publication, platform certification, product activation, deployment,
     Gateway/Workbench discovery certification, production certification, and
     supported-feature promotion remain explicitly unproved.
-17. `src/app/application/data_mesh/mesh_policy_source_contract.py`,
+18. `src/app/application/data_mesh/mesh_policy_source_contract.py`,
     capability-owned `scripts/data_mesh/` automation, and
     `make mesh-policy-source-contract-proof-gate` define a closed-field v2
     `source_contract` for the repo-owned readiness, SLO, access, and evidence
@@ -118,10 +135,11 @@ Evidence:
 9. `scripts/openapi_quality_gate.py`
 10. `tests/unit/runtime_trust_telemetry/test_test_execution_contract.py`
 11. `scripts/runtime_trust_telemetry/test_execution_contract_gate.py`
-12. `tests/unit/data_mesh/test_platform_catalog_source_contract.py`
-13. `scripts/data_mesh/platform_catalog_source_contract_gate.py`
-14. `tests/unit/data_mesh/test_mesh_policy_source_contract.py`
-15. `scripts/data_mesh/mesh_policy_source_contract_gate.py`
+12. `src/app/application/runtime_trust_telemetry/source_safe_exercise.py`
+13. `tests/unit/data_mesh/test_platform_catalog_source_contract.py`
+14. `scripts/data_mesh/platform_catalog_source_contract_gate.py`
+15. `tests/unit/data_mesh/test_mesh_policy_source_contract.py`
+16. `scripts/data_mesh/mesh_policy_source_contract_gate.py`
 
 ## Current Non-Goals
 
@@ -164,7 +182,10 @@ The runtime telemetry preview, runtime snapshot endpoint, generated
 snapshot, runtime telemetry test-execution contract, mesh policy source contract, and platform
 onboarding proof are implementation-backed pre-certification evidence, but they do not
 activate producer declarations or replace the blocked static fallback for
-platform mesh certification. Full Slice 14 completion still requires
+platform mesh certification. The local source-safe exercise clears only the
+generated snapshot's candidate-presence diagnostic; durable repository,
+complete product coverage, platform mesh certification, Gateway/Workbench
+discovery, and supported-feature promotion remain open. Full Slice 14 completion still requires
 implementation-backed active product declarations, Gateway/Workbench discovery
 proof, certified consumer contracts, platform mesh certification, and
 supported-feature evidence. Until those exist, `lotus-idea` remains a planned

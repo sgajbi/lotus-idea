@@ -243,12 +243,13 @@ documentation across opportunity signal APIs.
 23. Repository context,
     `docs/operations/implementation-proof-readiness.md`,
     `docs/operations/mesh-readiness.md`, service runbooks, quality gate docs,
-    RFC evidence, and wiki source now describe the v2 platform catalog source
-    contract, digest-bound authority, default generation, and aggregate
-    consumption. They preserve the boundary that missing sibling evidence is a
-    non-proof artifact and no runtime publication, platform certification,
-    active product declaration, Gateway/Workbench discovery certification,
-    deployment, production certification, or supported-feature promotion is
+    RFC evidence, and wiki source now describe the v3 platform catalog source
+    contract, digest-bound authority, default generation, aggregate
+    consumption, and unpromoted certification-candidate boundary for
+    `IdeaCandidate:v1`. They preserve the boundary that missing sibling
+    evidence is a non-proof artifact and no runtime publication, platform
+    certification, active product declaration, Gateway/Workbench discovery
+    certification, deployment, production certification, or supported-feature promotion is
     implied. The README data-mesh capability row now uses the bounded
     source-contract name and blocker posture. OpenAPI, migrations, database
     ownership, runtime topology, and supported-feature truth remain unchanged.

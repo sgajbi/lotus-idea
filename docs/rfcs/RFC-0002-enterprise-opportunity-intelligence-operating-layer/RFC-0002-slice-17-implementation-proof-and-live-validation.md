@@ -220,10 +220,12 @@ Prove the complete supported opportunity journey end to end.
 21. `src/app/application/data_mesh/platform_catalog_source_contract.py`,
     `scripts/data_mesh/generate_platform_catalog_source_contract.py`, and
     `make platform-catalog-source-contract-proof-gate` now define and enforce
-    a bounded cross-repo platform catalog source contract. Issue `#443`
-    classifies it as `source_contract`, binds the exact source manifest,
-    catalog, dependency graph, and maturity matrix by SHA-256, and closes the
-    accepted field vocabulary against claim inflation. The repo-native
+    a bounded cross-repo platform catalog source contract. The current v3
+    contract classifies it as `source_contract`, binds the exact source
+    manifest, catalog, dependency graph, and maturity matrix by SHA-256,
+    accepts only an unpromoted platform maturity posture where
+    `IdeaCandidate:v1` may be a non-blocking certification candidate, and
+    closes the accepted field vocabulary against claim inflation. The repo-native
     `make implementation-proof-readiness-check` target generates the default
     artifact from `LOTUS_PLATFORM_ROOT`, tolerates absent sibling evidence by
     writing an invalid non-proof artifact, and passes it into aggregate
@@ -621,6 +623,11 @@ The runtime trust telemetry snapshot endpoint narrows the trust-evidence proof
 gap from "generated artifact only" to "API-certified diagnostic plus generated
 artifact"; it does not close platform mesh certification, Gateway/Workbench
 discovery, or supported-feature proof gaps.
+The repo-native preview and snapshot generator checks now use a deterministic
+source-safe local/test candidate exercise, which narrows only the generated
+snapshot's candidate-presence diagnostic. It remains process-local and
+non-durable, so it does not clear aggregate implementation-proof runtime
+certification blockers.
 The runtime telemetry v2 `test_execution` artifact proves only that a
 source-safe deterministic fixture exercises the telemetry contract. It does
 not narrow runtime readiness and preserves candidate-snapshot,

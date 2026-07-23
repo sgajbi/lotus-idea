@@ -158,9 +158,11 @@ products, or certifies the platform mesh.
 
 `scripts/data_mesh/generate_platform_catalog_source_contract.py` reads sibling
 `lotus-platform` source-manifest, generated catalog, dependency graph, maturity
-matrix, and mesh handoff evidence. The v2 artifact is explicitly
+matrix, and mesh handoff evidence. The v3 artifact is explicitly
 `source_contract` evidence and binds the first four authority files by
-repository, ref, and SHA-256. A valid, current artifact satisfies only
+repository, ref, and SHA-256. It accepts only the unpromoted platform posture
+where `IdeaCandidate:v1` may be a non-blocking certification candidate and all
+Idea producer products remain `proposed`. A valid, current artifact satisfies only
 `platform_source_manifest_inclusion_missing` and
 `platform_catalog_inclusion_missing` in aggregate readiness. It preserves
 `data_mesh_not_certified`, `producer_products_not_active`,
