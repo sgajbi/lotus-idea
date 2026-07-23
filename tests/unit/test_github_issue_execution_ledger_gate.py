@@ -94,6 +94,24 @@ def test_rfc0002_github_issue_execution_ledger_keeps_report_live_proof_in_progre
     assert "Archive record" in issue_690["closureInstruction"]
 
 
+def test_rfc0002_github_issue_execution_ledger_tracks_render_archive_in_progress() -> None:
+    module = _load_gate()
+    payload = _ledger_payload(module)
+    issue_691 = next(
+        issue
+        for issue in payload["issues"]
+        if isinstance(issue, dict) and issue["issueNumber"] == 691
+    )
+
+    assert issue_691["githubState"] == "open"
+    assert issue_691["executionStatus"] == "open_in_progress"
+    assert issue_691["allowPullRequestAutoClose"] is False
+    assert "Keep #691 open" in issue_691["closureInstruction"]
+    assert "rendered_output_creation_missing" in issue_691["closureInstruction"]
+    assert "archive_record_creation_missing" in issue_691["closureInstruction"]
+    assert "lotus-archive #55" in issue_691["closureInstruction"]
+
+
 def test_rfc0002_github_issue_execution_ledger_blocks_auto_close_wording_for_open_issue(
     tmp_path: Path,
 ) -> None:

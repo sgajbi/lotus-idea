@@ -175,6 +175,11 @@ Partially satisfied:
 5. The Idea consumer can submit a strictly bounded local/test materialization
    request only after resolving persisted candidate scope and matching source
    dates. The `json` fixture avoids a false render/archive claim.
+6. The receipt-bound Report materialization runtime proof now requires exact
+   Render #65/PR #67 and Archive #72/PR #73 owner-mainline evidence. When the
+   accepted archived receipt and owner evidence both validate, Idea readiness
+   clears `report_evidence_pack_live_materialization_proof_missing`,
+   `rendered_output_creation_missing`, and `archive_record_creation_missing`.
 
 Not yet satisfied:
 
@@ -189,7 +194,9 @@ Not yet satisfied:
 5. A source-safe local/test `json` request can observe a Report-owned job, but
    it does not certify a supportable Report completion, rendered document,
    Archive record, retention/legal-hold posture, client publication, or
-   production identity.
+   production identity. Rendered-output and Archive-record creation blockers
+   are cleared only by the separate accepted archived receipt path with bound
+   Render/Archive owner-mainline evidence.
 
 The downstream-realization readiness diagnostic and report submission API are
 certified as internal foundations. With a valid report-intake source contract,
@@ -198,12 +205,16 @@ route; the runtime target remains planned and the live-intake blocker remains.
 With a valid report-materialization source contract, they can cite
 `POST /reports/idea-evidence-packs/materializations` only as a declared
 report-owned route and can expose the closed Report owner proof ref
-`sgajbi/lotus-report#152` as provenance. The runtime target, readiness status,
-supportability status, and live materialization/render/archive blockers remain
-unchanged. They keep Report/Render/Archive ownership outside `lotus-idea` and
-remain `not_certified` until live execution, client publication,
-Gateway/Workbench product proof, data-mesh certification, and supported-feature
-promotion are implemented and validated.
+`sgajbi/lotus-report#152` as provenance. Source contracts clear no blocker.
+With a valid aggregate-current Report materialization runtime proof, the
+runtime target advances to the Report materialization route and the materialized
+Report/Render/Archive creation blockers are cleared only because the proof
+binds accepted archived receipt posture to exact Render and Archive owner
+mainline evidence. They keep Report/Render/Archive ownership outside
+`lotus-idea` and remain `not_certified` until live intake, client publication,
+Gateway/Workbench product proof, data-mesh certification, production identity,
+legal/retention posture, and supported-feature promotion are implemented and
+validated.
 
 ## Boundary Decision
 

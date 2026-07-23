@@ -29,13 +29,45 @@ REPORT_MATERIALIZATION_RUNTIME_EXECUTION_SCHEMA_VERSION = (
 )
 REPORT_MATERIALIZATION_RUNTIME_BLOCKERS_SATISFIED = (
     "report_evidence_pack_live_materialization_proof_missing",
-)
-REMAINING_REPORT_MATERIALIZATION_RUNTIME_BLOCKERS = (
     "rendered_output_creation_missing",
     "archive_record_creation_missing",
+)
+REMAINING_REPORT_MATERIALIZATION_RUNTIME_BLOCKERS = (
     "client_publication_authority_blocked",
     "supported_feature_promotion_missing",
     "production_identity_not_certified",
+)
+REPORT_RENDER_ARCHIVE_OWNER_MAINLINE_EVIDENCE = (
+    {
+        "ownerRepository": "lotus-render",
+        "ownerIssueNumber": 65,
+        "ownerIssueUrl": "https://github.com/sgajbi/lotus-render/issues/65",
+        "ownerPullRequestNumber": 67,
+        "ownerPullRequestUrl": "https://github.com/sgajbi/lotus-render/pull/67",
+        "mergedMainCommitSha": "c608fe4c5b22fa22e51e242894a76a8532839e9f",
+        "mainReleasabilityRunId": 29966168422,
+        "mainReleasabilityRunUrl": (
+            "https://github.com/sgajbi/lotus-render/actions/runs/29966168422"
+        ),
+        "mainReleasabilityCheckName": "Main Releasability Gate",
+        "mainReleasabilityConclusion": "success",
+        "proofStatus": "merged_main_validated",
+    },
+    {
+        "ownerRepository": "lotus-archive",
+        "ownerIssueNumber": 72,
+        "ownerIssueUrl": "https://github.com/sgajbi/lotus-archive/issues/72",
+        "ownerPullRequestNumber": 73,
+        "ownerPullRequestUrl": "https://github.com/sgajbi/lotus-archive/pull/73",
+        "mergedMainCommitSha": "61ff2cb56a0e3652c40df2740f1f5d8150e52071",
+        "mainReleasabilityRunId": 29966167055,
+        "mainReleasabilityRunUrl": (
+            "https://github.com/sgajbi/lotus-archive/actions/runs/29966167055"
+        ),
+        "mainReleasabilityCheckName": "Main Releasability Gate",
+        "mainReleasabilityConclusion": "success",
+        "proofStatus": "merged_main_validated",
+    },
 )
 REPORT_MATERIALIZATION_RUNTIME_EVIDENCE_REFS = (
     "../lotus-report/contracts/idea-evidence-materialization/"
@@ -52,6 +84,13 @@ REPORT_MATERIALIZATION_RUNTIME_EVIDENCE_REFS = (
     "GET /api/v1/downstream-realization/readiness",
     "GET /api/v1/implementation-proof/readiness",
     "sgajbi/lotus-idea#690",
+    "sgajbi/lotus-idea#691",
+    "sgajbi/lotus-render#65",
+    "sgajbi/lotus-render#67",
+    "sgajbi/lotus-render/actions/runs/29966168422",
+    "sgajbi/lotus-archive#72",
+    "sgajbi/lotus-archive#73",
+    "sgajbi/lotus-archive/actions/runs/29966167055",
 )
 REPORT_MATERIALIZATION_RUNTIME_SOURCE_REFS = (
     "contracts/idea-evidence-materialization/lotus-report-idea-evidence-pack-materialization.v1.json",
@@ -78,6 +117,7 @@ _PAYLOAD_FIELDS = frozenset(
         "runtimeMode",
         "sourceAuthority",
         "evidenceRefs",
+        "ownerMainlineEvidence",
         "receiptEvidence",
         "runtimeChecks",
         "aggregateBlockersSatisfied",
@@ -138,6 +178,10 @@ _RUNTIME_CHECK_FIELDS = frozenset(
         "missingIdempotencyKeyObserved",
         "clientPublicationDeniedObserved",
         "reportMaterializationAuthorityObserved",
+        "renderedOutputCreationObserved",
+        "archiveRecordCreationObserved",
+        "renderOwnerMainlineEvidenceConsumed",
+        "archiveOwnerMainlineEvidenceConsumed",
         "renderArchiveAuthorityRetained",
         "clientPublicationAuthorityRetained",
         "supportedFeatureNotPromoted",
@@ -156,8 +200,6 @@ _NON_PROOF_CLAIM_FIELDS = frozenset(
     }
 )
 _PRODUCER_CERTIFICATION_BLOCKERS_RETAINED = (
-    "rendered_output_creation_missing",
-    "archive_record_creation_missing",
     "client_publication_authority_blocked",
     "supported_feature_promotion_missing",
     "production_identity_not_certified",
@@ -200,6 +242,7 @@ def build_report_materialization_runtime_execution_payload(
         "runtimeMode": runtime_mode,
         "sourceAuthority": source_authority,
         "evidenceRefs": REPORT_MATERIALIZATION_RUNTIME_EVIDENCE_REFS,
+        "ownerMainlineEvidence": REPORT_RENDER_ARCHIVE_OWNER_MAINLINE_EVIDENCE,
         "receiptEvidence": {
             name: dict(receipt_evidence.get(name, {})) for name in _RECEIPT_EVIDENCE_FIELDS
         },
@@ -240,6 +283,8 @@ def report_materialization_runtime_execution_is_valid(payload: Mapping[str, Any]
     if not is_timezone_aware_datetime_text(payload.get("generatedAtUtc")):
         return False
     if tuple(payload.get("evidenceRefs") or ()) != REPORT_MATERIALIZATION_RUNTIME_EVIDENCE_REFS:
+        return False
+    if not _owner_mainline_evidence_is_valid(payload.get("ownerMainlineEvidence")):
         return False
     if (
         tuple(payload.get("aggregateBlockersSatisfied") or ())
@@ -345,6 +390,14 @@ def _runtime_checks(
             receipt_evidence.get("clientPublicationDenied")
         ),
         "reportMaterializationAuthorityObserved": True,
+        "renderedOutputCreationObserved": _accepted_archived_receipt_is_valid(
+            receipt_evidence.get("acceptedArchived")
+        ),
+        "archiveRecordCreationObserved": _accepted_archived_receipt_is_valid(
+            receipt_evidence.get("acceptedArchived")
+        ),
+        "renderOwnerMainlineEvidenceConsumed": True,
+        "archiveOwnerMainlineEvidenceConsumed": True,
         "renderArchiveAuthorityRetained": True,
         "clientPublicationAuthorityRetained": True,
         "supportedFeatureNotPromoted": True,
@@ -486,6 +539,10 @@ def _non_proof_claims_are_retained(value: object) -> bool:
         and set(value) == _NON_PROOF_CLAIM_FIELDS
         and all(value.get(key) is False for key in _NON_PROOF_CLAIM_FIELDS)
     )
+
+
+def _owner_mainline_evidence_is_valid(value: object) -> bool:
+    return tuple(value or ()) == REPORT_RENDER_ARCHIVE_OWNER_MAINLINE_EVIDENCE
 
 
 def _source_authority(report_root: Path) -> tuple[dict[str, str | None], ...]:
