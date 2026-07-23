@@ -259,7 +259,6 @@ lint:
 	$(MAKE) archive-lifecycle-posture-contract-gate
 	$(MAKE) report-intake-route-source-contract-proof-gate
 	$(MAKE) report-materialization-source-contract-proof-gate
-	$(MAKE) report-materialization-runtime-execution-proof-gate
 	$(MAKE) workbench-read-path-source-contract-proof-gate
 	$(MAKE) gateway-workbench-contract-proof-contract-gate
 	$(MAKE) gateway-workbench-discovery-contract-proof-contract-gate

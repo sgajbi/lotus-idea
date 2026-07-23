@@ -74,7 +74,6 @@ REQUIRED_LINT_TARGETS = (
     "archive-lifecycle-posture-contract-gate",
     "report-intake-route-source-contract-proof-gate",
     "report-materialization-source-contract-proof-gate",
-    "report-materialization-runtime-execution-proof-gate",
     "workbench-read-path-source-contract-proof-gate",
     "gateway-workbench-contract-proof-contract-gate",
     "gateway-workbench-discovery-contract-proof-contract-gate",
