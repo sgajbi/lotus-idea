@@ -52,12 +52,12 @@ def test_github_issue_execution_summary_reports_current_rfc0002_counts() -> None
 
     assert summary["schemaVersion"] == "lotus-idea:rfc0002-github-issue-execution-summary:v1"
     assert summary["counts"]["total"] == 41
-    assert summary["counts"]["open"] == 27
-    assert summary["counts"]["closed"] == 14
+    assert summary["counts"]["open"] == 26
+    assert summary["counts"]["closed"] == 15
     assert summary["counts"]["byExecutionStatus"]["open_in_progress"] == 2
     assert "open_fixed_local" not in summary["counts"]["byExecutionStatus"]
     assert "open_pr_raised" not in summary["counts"]["byExecutionStatus"]
-    assert summary["counts"]["byExecutionStatus"]["open_merged_main_qa_pending"] == 7
+    assert summary["counts"]["byExecutionStatus"]["open_merged_main_qa_pending"] == 6
     assert "open_ready" not in summary["counts"]["byExecutionStatus"]
     assert summary["counts"]["byExecutionStatus"]["open_blocked"] == 8
     assert summary["counts"]["byExecutionStatus"]["open_tracker"] == 8
@@ -71,7 +71,6 @@ def test_github_issue_execution_summary_reports_current_rfc0002_counts() -> None
         691,
         692,
         699,
-        756,
     ]
     assert summary["issuesByStatus"]["open_blocked"] == [
         343,
@@ -96,17 +95,17 @@ def test_github_issue_execution_summary_markdown_is_comment_ready() -> None:
     rendered = module.render_markdown(module.build_issue_execution_summary())
 
     assert "# RFC-0002 GitHub Issue Execution Summary" in rendered
-    assert "- Open issues: 27" in rendered
-    assert "- Closed issues: 14" in rendered
+    assert "- Open issues: 26" in rendered
+    assert "- Closed issues: 15" in rendered
     assert "## In-Progress Issues" in rendered
     assert "#681" in rendered
     assert "#681, #685" in rendered
-    assert "#756" in rendered
+    assert "#756" not in rendered
     assert "## Fixed Locally Issues" in rendered
     assert "## PR-Open Issues" in rendered
     assert "## PR-Open Issues\n\n_None._" in rendered
     assert "## Merged-Main QA Pending Issues" in rendered
-    assert "#340, #379, #690, #691, #692, #699, #756" in rendered
+    assert "#340, #379, #690, #691, #692, #699" in rendered
     assert "## Ready Issues" in rendered
     assert "## Ready Issues\n\n_None._" in rendered
     assert "## Blocked Issues" in rendered

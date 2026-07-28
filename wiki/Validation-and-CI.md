@@ -758,7 +758,7 @@ Persistence adapter validation:
    posture for #380 and reconciled it to `open_blocked` at
    `6f8875dc6784dd17975e6700c09b9ff71d66fb8b`; Main Releasability `30327202465`
    and CodeQL `30327193673` passed. The RFC-0002 execution summary now has 41
-   tracked issues, 14 closed complete, 27 open, 6
+   tracked issues, 15 closed complete, 26 open, 6
    `open_merged_main_qa_pending`, 2 `open_in_progress`, no `open_pr_raised`,
    8 `open_blocked`, and
    no ready issues. #685 is active fix-forward work, not passive blocked

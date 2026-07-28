@@ -126,16 +126,6 @@ REQUIRED_OPEN_ISSUE_EVIDENCE = {
         "platform issue #495 remains the protected FinOps execution",
         "does not provision self-hosted runners",
     ),
-    756: (
-        "Keep #756 open in status/merged-main",
-        "PR #757",
-        "dc2bb59b60ac22563a247f0959f48e3c6f8a0e54",
-        "30378345670",
-        "wiki publication e6c1517",
-        "build-system dependency posture gap",
-        "requirements/build-system.lock.txt",
-        "Do not use this issue to claim production vulnerability certification",
-    ),
 }
 
 

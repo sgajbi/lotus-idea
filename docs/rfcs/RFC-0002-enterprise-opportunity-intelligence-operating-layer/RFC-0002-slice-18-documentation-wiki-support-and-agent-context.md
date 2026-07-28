@@ -462,7 +462,7 @@ context. PR #745 reconciled #340 to `open_merged_main_qa_pending` at
 posture for #380 and reconciled it to `open_blocked` at
 `6f8875dc6784dd17975e6700c09b9ff71d66fb8b`; Main Releasability
 `30327202465` and CodeQL `30327193673` passed. Current source truth now records
-41 tracked RFC-0002 issues, 14 closed complete, 27 open, 6
+41 tracked RFC-0002 issues, 15 closed complete, 26 open, 6
 `open_merged_main_qa_pending`, 2 `open_in_progress`, no `open_pr_raised`,
 and 8 `open_blocked`
 issues. #685 is active fix-forward work, not passive blocked posture: the
