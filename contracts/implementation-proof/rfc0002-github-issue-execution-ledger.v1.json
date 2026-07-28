@@ -21,9 +21,9 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/340",
       "rfcSlices": ["slice-09", "slice-17"],
       "githubState": "open",
-      "executionStatus": "open_ready",
+      "executionStatus": "open_in_progress",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #340 open until attested lotus-ai run evidence and model provenance exist for workflow output acceptance."
+      "closureInstruction": "Keep #340 open. Implementation is active for the Idea-side AI execution attestation and model-provenance consumer boundary; do not auto-close until accepted lotus-ai runtime provenance, source-safe lineage, fail-closed production-like validation, docs, OpenAPI, and exact-main evidence prove the issue acceptance criteria. This does not claim lotus-ai provider runtime implementation, prompt/RAG infrastructure, model training, supported-feature promotion, or live-provider certification."
     },
     {
       "issueNumber": 343,
