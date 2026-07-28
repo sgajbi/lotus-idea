@@ -76,6 +76,31 @@ def test_rfc0002_github_issue_execution_ledger_closes_advise_live_proof_after_ma
     assert "advise_live_contract_proof_missing" in issue_688["closureInstruction"]
 
 
+def test_rfc0002_github_issue_execution_ledger_blocks_issue_379_on_certification_evidence() -> (
+    None
+):
+    module = _load_gate()
+    payload = _ledger_payload(module)
+    issue_379 = next(
+        issue
+        for issue in payload["issues"]
+        if isinstance(issue, dict) and issue["issueNumber"] == 379
+    )
+
+    assert issue_379["githubState"] == "open"
+    assert issue_379["executionStatus"] == "open_blocked"
+    assert issue_379["allowPullRequestAutoClose"] is False
+    assert "Keep #379 open and status/blocked" in issue_379["closureInstruction"]
+    assert "sgajbi/lotus-advise#461" in issue_379["closureInstruction"]
+    assert "sgajbi/lotus-manage#621" in issue_379["closureInstruction"]
+    assert "sgajbi/lotus-report#152" in issue_379["closureInstruction"]
+    assert "sgajbi/lotus-manage#620" in issue_379["closureInstruction"]
+    assert "sgajbi/lotus-manage#624" in issue_379["closureInstruction"]
+    assert "sgajbi/lotus-report#136" in issue_379["closureInstruction"]
+    assert "sgajbi/lotus-archive#55" in issue_379["closureInstruction"]
+    assert "production/certification evidence" in issue_379["closureInstruction"]
+
+
 def test_rfc0002_github_issue_execution_ledger_keeps_report_live_proof_in_progress() -> None:
     module = _load_gate()
     payload = _ledger_payload(module)

@@ -221,8 +221,11 @@ The downstream outcome certification aggregate in
 `make downstream-outcome-certification-proof-gate` now consumes the Report
 materialization runtime proof alongside Advise/Manage intake receipts and Idea
 durable reconciliation evidence for #379. It is supporting evidence only: it
-does not convert Report, Render, or Archive evidence into client-publication,
-production-identity, supported-feature, or final-certification claims.
+keeps #379 open in `open_blocked` until production/certification evidence,
+trusted IdP caller context, retention/legal proof, and Archive production
+conformance exist. It does not convert Report, Render, or Archive evidence into
+client-publication, production-identity, supported-feature, legal/privacy
+approval, or final-certification claims.
 
 ## Boundary Decision
 

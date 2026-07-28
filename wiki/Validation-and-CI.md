@@ -748,8 +748,10 @@ Persistence adapter validation:
    `30323405962`, wiki commit `ce29814` with strict `DiffCount 0`, followed by
    PR #743 ledger reconciliation on current main
    `8ccee32d9a25fb6c47c723e105e2c48d1c4b3c70` with Main Releasability
-   `30324178801`. Issue #379 remains open in `status/merged-main` pending
-   QA/final certification.
+   `30324178801`. Issue #379 remains open in `status/blocked`, not
+   QA-pending: owner-app local implementation evidence is merged, while
+   production/certification evidence, trusted IdP caller context,
+   retention/legal proof, and Archive production conformance remain open.
 
    Slice 18 issue-posture reconciliation also records the current #340 and
    #380 truth. PR #745 reconciled #340 to `open_merged_main_qa_pending` at
@@ -761,10 +763,14 @@ Persistence adapter validation:
    posture for #380 and reconciled it to `open_blocked` at
    `6f8875dc6784dd17975e6700c09b9ff71d66fb8b`; Main Releasability `30327202465`
    and CodeQL `30327193673` passed. The RFC-0002 execution summary now has 41
-   tracked issues, 16 closed complete, 25 open, 5
+   tracked issues, 16 closed complete, 25 open, 4
    `open_merged_main_qa_pending`, 1 `open_in_progress`, no `open_pr_raised`,
-   9 `open_blocked`, and
-   no ready issues. #685 is `open_blocked`, not QA-pending: the 2026-07-29
+   10 `open_blocked`, and
+   no ready issues. #379 is `open_blocked`, not QA-pending because
+   production/certification evidence remains open through
+   `sgajbi/lotus-manage#620`, `sgajbi/lotus-manage#624`,
+   `sgajbi/lotus-report#136`, and `sgajbi/lotus-archive#55`. #685 is
+   `open_blocked`, not QA-pending: the 2026-07-29
    governed Workbench startup attempt via `npm run live:stack:up` did not
    converge on core-owned canonical readiness for `PB_SG_GLOBAL_BAL_001`.
    Valuation jobs drained to zero, but Core still reported
