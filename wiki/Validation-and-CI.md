@@ -763,9 +763,9 @@ Persistence adapter validation:
    posture for #380 and reconciled it to `open_blocked` at
    `6f8875dc6784dd17975e6700c09b9ff71d66fb8b`; Main Releasability `30327202465`
    and CodeQL `30327193673` passed. The RFC-0002 execution summary now has 41
-   tracked issues, 16 closed complete, 25 open, 4
+   tracked issues, 16 closed complete, 25 open, no
    `open_merged_main_qa_pending`, 1 `open_in_progress`, no `open_pr_raised`,
-   10 `open_blocked`, and
+   14 `open_blocked`, and
    no ready issues. #379 is `open_blocked`, not QA-pending because
    production/certification evidence remains open through
    `sgajbi/lotus-manage#620`, `sgajbi/lotus-manage#624`,
@@ -791,7 +791,13 @@ Persistence adapter validation:
    canonical runtime, mesh onboarding, entitlement-denied, and supported-feature
    promotion evidence, and #693 is blocked rather than QA-pending until
    protected capacity-production-like runner/environment, protected attestations,
-   and matching FinOps evidence exist.
+   and matching FinOps evidence exist. #690, #691, #692, and #699 are blocked
+   rather than QA-pending because their merged implementation tranches preserve
+   only bounded Report/Render/Archive, mesh-readiness, and proof-control
+   evidence; lifecycle-safe publication authority, production identity, Archive
+   production trust/legal evidence, platform mesh certification, Gateway/Workbench
+   discovery proof, supported-feature promotion, and final live-journey evidence
+   remain open.
 19. `tests/unit/test_source_ingestion_readiness.py` and
    `tests/integration/test_source_ingestion_readiness_api.py` prove the
    operator readiness diagnostic for blocked/configured posture,

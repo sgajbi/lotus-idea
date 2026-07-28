@@ -109,11 +109,11 @@ def test_rfc0002_github_issue_execution_ledger_keeps_report_live_proof_in_progre
     )
 
     assert issue_690["githubState"] == "open"
-    assert issue_690["executionStatus"] == "open_merged_main_qa_pending"
+    assert issue_690["executionStatus"] == "open_blocked"
     assert issue_690["allowPullRequestAutoClose"] is False
-    assert "Keep #690 open" in issue_690["closureInstruction"]
+    assert "Keep #690 open and status/blocked" in issue_690["closureInstruction"]
     assert "PR #724 merged" in issue_690["closureInstruction"]
-    assert "publication authority" in issue_690["closureInstruction"]
+    assert "This issue is not QA-pending" in issue_690["closureInstruction"]
     assert "Report/Render/Archive production trust" in issue_690["closureInstruction"]
 
 
@@ -129,14 +129,15 @@ def test_rfc0002_github_issue_execution_ledger_tracks_render_archive_merged_main
     )
 
     assert issue_691["githubState"] == "open"
-    assert issue_691["executionStatus"] == "open_merged_main_qa_pending"
+    assert issue_691["executionStatus"] == "open_blocked"
     assert issue_691["allowPullRequestAutoClose"] is False
-    assert "Keep #691 open" in issue_691["closureInstruction"]
+    assert "Keep #691 open and status/blocked" in issue_691["closureInstruction"]
     assert "PR #725 merged to main" in issue_691["closureInstruction"]
     assert "29972535964" in issue_691["closureInstruction"]
     assert "rendered_output_creation_missing" in issue_691["closureInstruction"]
     assert "archive_record_creation_missing" in issue_691["closureInstruction"]
     assert "lotus-archive #55" in issue_691["closureInstruction"]
+    assert "This issue is not QA-pending" in issue_691["closureInstruction"]
 
 
 def test_rfc0002_github_issue_execution_ledger_closes_claim_matrix_after_qa() -> None:
@@ -330,7 +331,8 @@ def test_rfc0002_github_issue_execution_ledger_tracks_platform_mesh_readiness() 
     )
 
     assert issue_692["githubState"] == "open"
-    assert issue_692["executionStatus"] == "open_merged_main_qa_pending"
+    assert issue_692["executionStatus"] == "open_blocked"
+    assert "Keep #692 open and status/blocked" in issue_692["closureInstruction"]
     assert (
         "Platform PR #630 merged bounded mesh-readiness proof consumption"
         in (issue_692["closureInstruction"])
@@ -341,6 +343,26 @@ def test_rfc0002_github_issue_execution_ledger_tracks_platform_mesh_readiness() 
         "clears only the catalog/policy/telemetry-consumable dependency marker"
         in (issue_692["closureInstruction"])
     )
+    assert "This issue is not QA-pending" in issue_692["closureInstruction"]
+
+
+def test_rfc0002_github_issue_execution_ledger_tracks_live_journey_as_blocked() -> None:
+    module = _load_gate()
+    payload = _ledger_payload(module)
+    issue_699 = next(
+        issue
+        for issue in payload["issues"]
+        if isinstance(issue, dict) and issue["issueNumber"] == 699
+    )
+
+    assert issue_699["githubState"] == "open"
+    assert issue_699["executionStatus"] == "open_blocked"
+    assert issue_699["allowPullRequestAutoClose"] is False
+    assert "Keep #699 open and status/blocked" in issue_699["closureInstruction"]
+    assert "PR #740 merged to main" in issue_699["closureInstruction"]
+    assert "30319531736" in issue_699["closureInstruction"]
+    assert "This issue is not QA-pending" in issue_699["closureInstruction"]
+    assert "full live journey validation remains blocked" in issue_699["closureInstruction"]
 
 
 def test_rfc0002_github_issue_execution_ledger_blocks_auto_close_wording_for_open_issue(

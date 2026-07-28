@@ -57,19 +57,14 @@ def test_github_issue_execution_summary_reports_current_rfc0002_counts() -> None
     assert summary["counts"]["byExecutionStatus"]["open_in_progress"] == 1
     assert "open_fixed_local" not in summary["counts"]["byExecutionStatus"]
     assert "open_pr_raised" not in summary["counts"]["byExecutionStatus"]
-    assert summary["counts"]["byExecutionStatus"]["open_merged_main_qa_pending"] == 4
+    assert "open_merged_main_qa_pending" not in summary["counts"]["byExecutionStatus"]
     assert "open_ready" not in summary["counts"]["byExecutionStatus"]
-    assert summary["counts"]["byExecutionStatus"]["open_blocked"] == 10
+    assert summary["counts"]["byExecutionStatus"]["open_blocked"] == 14
     assert summary["counts"]["byExecutionStatus"]["open_tracker"] == 8
     assert summary["issuesByStatus"]["open_in_progress"] == [681]
     assert "open_fixed_local" not in summary["issuesByStatus"]
     assert "open_pr_raised" not in summary["issuesByStatus"]
-    assert summary["issuesByStatus"]["open_merged_main_qa_pending"] == [
-        690,
-        691,
-        692,
-        699,
-    ]
+    assert "open_merged_main_qa_pending" not in summary["issuesByStatus"]
     assert summary["issuesByStatus"]["open_blocked"] == [
         343,
         344,
@@ -80,7 +75,11 @@ def test_github_issue_execution_summary_reports_current_rfc0002_counts() -> None
         685,
         686,
         687,
+        690,
+        691,
+        692,
         693,
+        699,
     ]
     assert "open_ready" not in summary["issuesByStatus"]
     assert 681 in summary["issuesBySlice"]["slice-18"]
@@ -105,13 +104,16 @@ def test_github_issue_execution_summary_markdown_is_comment_ready() -> None:
     assert "## PR-Open Issues" in rendered
     assert "## PR-Open Issues\n\n_None._" in rendered
     assert "## Merged-Main QA Pending Issues" in rendered
-    assert "#690, #691, #692, #699" in rendered
+    assert "## Merged-Main QA Pending Issues\n\n_None._" in rendered
     assert "#379, #690" not in rendered
     assert "#340, #379" not in rendered
     assert "## Ready Issues" in rendered
     assert "## Ready Issues\n\n_None._" in rendered
     assert "## Blocked Issues" in rendered
-    assert "#343, #344, #345, #375, #379, #380, #685, #686, #687, #693" in rendered
+    assert (
+        "#343, #344, #345, #375, #379, #380, #685, #686, #687, #690, #691, "
+        "#692, #693, #699"
+    ) in rendered
     assert "Current issues: #679, #699" in rendered
     assert "Current issues: #679, #696, #697, #699" not in rendered
     assert "_None._" in rendered

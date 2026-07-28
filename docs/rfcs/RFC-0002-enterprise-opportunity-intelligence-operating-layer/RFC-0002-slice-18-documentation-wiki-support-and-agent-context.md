@@ -470,9 +470,9 @@ mainline evidence. PR #746 corrected stale ready
 posture for #380 and reconciled it to `open_blocked` at
 `6f8875dc6784dd17975e6700c09b9ff71d66fb8b`; Main Releasability
 `30327202465` and CodeQL `30327193673` passed. Current source truth now records
-41 tracked RFC-0002 issues, 16 closed complete, 25 open, 4
+41 tracked RFC-0002 issues, 16 closed complete, 25 open, no
 `open_merged_main_qa_pending`, 1 `open_in_progress`, no `open_pr_raised`,
-and 10 `open_blocked`
+and 14 `open_blocked`
 issues. #379 is `open_blocked`, not QA-pending because its owner-app local
 implementation dependencies are merged but production/certification,
 trusted-identity, retention/legal, and Archive production evidence remains
@@ -498,7 +498,13 @@ principal/session, authenticated Workbench BFF, core-owned canonical runtime,
 mesh onboarding, entitlement-denied, and supported-feature promotion evidence,
 and #693 is blocked rather than QA-pending until protected
 capacity-production-like runner/environment, protected attestations, and
-matching FinOps evidence exist.
+matching FinOps evidence exist. #690, #691, #692, and #699 are now recorded as
+blocked rather than QA-pending because their merged implementation tranches
+preserve only bounded Report/Render/Archive, mesh-readiness, and proof-control
+evidence; lifecycle-safe publication authority, production identity, Archive
+production trust/legal evidence, platform mesh certification, Gateway/Workbench
+discovery proof, supported-feature promotion, and final live-journey evidence
+remain open.
 
 The missing-benchmark Core material now records the independently owned closed
 v2 runtime contract implemented by issue `#499`. One named application use case

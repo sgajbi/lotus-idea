@@ -255,27 +255,27 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/690",
       "rfcSlices": ["slice-13"],
       "githubState": "open",
-      "executionStatus": "open_merged_main_qa_pending",
+      "executionStatus": "open_blocked",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #690 open. PR #724 merged bounded live Report intake/materialization runtime-execution proof with exact-main validation. This may clear only report_evidence_pack_live_materialization_proof_missing. Do not close until live intake where applicable, lifecycle-safe publication authority, production identity, supported-feature promotion, and broader Report/Render/Archive production trust evidence exist."
+      "closureInstruction": "Keep #690 open and status/blocked. PR #724 merged bounded live Report intake/materialization runtime-execution proof with exact-main validation. This clears only report_evidence_pack_live_materialization_proof_missing. This issue is not QA-pending: it remains blocked until lifecycle-safe publication authority, production identity, supported-feature promotion, and broader Report/Render/Archive production trust evidence exist. Do not claim client publication, production identity, supported-feature promotion, report rendering authority, Archive production trust, legal/privacy approval, or final Slice 13 certification from bounded Report intake proof."
     },
     {
       "issueNumber": 691,
       "url": "https://github.com/sgajbi/lotus-idea/issues/691",
       "rfcSlices": ["slice-13"],
       "githubState": "open",
-      "executionStatus": "open_merged_main_qa_pending",
+      "executionStatus": "open_blocked",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #691 open. PR #725 merged to main at 537e65a1545bce90646b31c0fc8b2702a46c1c3f after consuming exact Render owner proof lotus-render #65 / PR #67 at c608fe4c5b22fa22e51e242894a76a8532839e9f with Main Releasability run 29966168422 and Archive owner proof lotus-archive #72 / PR #73 at 61ff2cb56a0e3652c40df2740f1f5d8150e52071 with Main Releasability run 29966167055 inside the aggregate-current Report materialization runtime proof. Exact-main Idea validation passed with Main Releasability run 29972535964 and CodeQL run 29972532300; wiki parity was published and strict DiffCount 0 was verified; feature branch cleanup completed. This clears rendered_output_creation_missing and archive_record_creation_missing only when accompanied by accepted Report runtime receipts, but #691 remains open until lifecycle-safe publication, supported-feature promotion, production identity, and broader Archive production trust/legal evidence in lotus-archive #55 are complete."
+      "closureInstruction": "Keep #691 open and status/blocked. PR #725 merged to main at 537e65a1545bce90646b31c0fc8b2702a46c1c3f after consuming exact Render owner proof lotus-render #65 / PR #67 at c608fe4c5b22fa22e51e242894a76a8532839e9f with Main Releasability run 29966168422 and Archive owner proof lotus-archive #72 / PR #73 at 61ff2cb56a0e3652c40df2740f1f5d8150e52071 with Main Releasability run 29966167055 inside the aggregate-current Report materialization runtime proof. Exact-main Idea validation passed with Main Releasability run 29972535964 and CodeQL run 29972532300; wiki parity was published and strict DiffCount 0 was verified; feature branch cleanup completed. This issue is not QA-pending: rendered_output_creation_missing and archive_record_creation_missing are cleared only when accompanied by accepted Report runtime receipts, while lifecycle-safe publication, supported-feature promotion, production identity, and broader Archive production trust/legal evidence in lotus-archive #55 remain blocked. Do not claim client publication, retention/legal closure, Archive production conformance, production identity, or final Slice 13 certification."
     },
     {
       "issueNumber": 692,
       "url": "https://github.com/sgajbi/lotus-idea/issues/692",
       "rfcSlices": ["slice-14"],
       "githubState": "open",
-      "executionStatus": "open_merged_main_qa_pending",
+      "executionStatus": "open_blocked",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #692 open. PR #727 adds a deterministic source-safe local/test runtime telemetry exercise for preview/snapshot gates, removes only the generated snapshot candidate-presence diagnostic, and updates the Idea platform-catalog source-contract consumer for the current unpromoted IdeaCandidate certification-candidate posture. Platform PR #630 merged bounded mesh-readiness proof consumption on lotus-platform main SHA c0fb028a440a24622fe162e934c3469fcafb4055 and exact Main Releasability runs 30335871870 and 30335876432 passed; this clears only the catalog/policy/telemetry-consumable dependency marker in platform proof consumption. The issue remains open until durable repository posture, complete runtime product coverage, platform mesh event publication, platform mesh certification, Gateway/Workbench discovery proof, and supported-feature promotion are certified with owner evidence."
+      "closureInstruction": "Keep #692 open and status/blocked. PR #727 adds a deterministic source-safe local/test runtime telemetry exercise for preview/snapshot gates, removes only the generated snapshot candidate-presence diagnostic, and updates the Idea platform-catalog source-contract consumer for the current unpromoted IdeaCandidate certification-candidate posture. Platform PR #630 merged bounded mesh-readiness proof consumption on lotus-platform main SHA c0fb028a440a24622fe162e934c3469fcafb4055 and exact Main Releasability runs 30335871870 and 30335876432 passed; this clears only the catalog/policy/telemetry-consumable dependency marker in platform proof consumption. This issue is not QA-pending: durable repository posture, complete runtime product coverage, platform mesh event publication, platform mesh certification, Gateway/Workbench discovery proof, and supported-feature promotion remain blocked until owner evidence exists. Do not claim data-product certification, supported-feature promotion, Gateway/Workbench product support, client publication, production identity, or final Slice 14 certification."
     },
     {
       "issueNumber": 693,
@@ -336,9 +336,9 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/699",
       "rfcSlices": ["slice-17"],
       "githubState": "open",
-      "executionStatus": "open_merged_main_qa_pending",
+      "executionStatus": "open_blocked",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #699 open. PR #740 merged to main at 292fee7ca2d8d94dd9a228120be1ab8c34f205b7 and passed Main Releasability Gate run 30319531736, wiki publication parity, and branch-cleanup proof. This records the Slice 17 proof-control tranche as merged-main QA pending only; it does not certify the full journey, client publication, data-product certification, production identity, supported-feature promotion, or full demo readiness. Do not close until the journey validates through API, Gateway, Workbench, and downstream handoffs with final QA evidence."
+      "closureInstruction": "Keep #699 open and status/blocked. PR #740 merged to main at 292fee7ca2d8d94dd9a228120be1ab8c34f205b7 and passed Main Releasability Gate run 30319531736, wiki publication parity, and branch-cleanup proof. This records the Slice 17 proof-control tranche only; it does not certify the full journey, client publication, data-product certification, production identity, supported-feature promotion, or full demo readiness. This issue is not QA-pending: full live journey validation remains blocked until API, Gateway, Workbench, and downstream handoffs produce final owner evidence after the relevant core, identity, publication, data-product, and supported-feature prerequisites clear. Do not close until final QA evidence proves the complete journey."
     },
     {
       "issueNumber": 700,

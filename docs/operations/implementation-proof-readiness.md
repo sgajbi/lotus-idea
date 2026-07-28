@@ -152,8 +152,8 @@ live GitHub proof; it deliberately points back to
 open/closed verification.
 
 Current Slice 18 ledger synchronization records 41 tracked RFC-0002 issues:
-16 closed complete, 25 open, no ready issues, 4
-`open_merged_main_qa_pending`, 10 `open_blocked`, 1 `open_in_progress`, no
+16 closed complete, 25 open, no ready issues, no
+`open_merged_main_qa_pending`, 14 `open_blocked`, 1 `open_in_progress`, no
 `open_fixed_local`, no `open_pr_raised`, 1 `open_pending_final_closure`, 1
 `open_pending_post_completion`, and 8
 `open_tracker`. PR #745 reconciled #340 to `open_merged_main_qa_pending` on
@@ -200,6 +200,15 @@ Fresh Gateway/BFF-backed Workbench queue/detail runtime evidence,
 browser/accessibility proof, canonical demo runtime proof, and #380
 data-product/supported-feature posture reconciliation remain required before
 QA closure.
+
+#690, #691, #692, and #699 are also `open_blocked`, not QA-pending. Their
+merged PRs record bounded Report intake/materialization, Render/Archive
+owner-proof consumption, mesh-readiness proof consumption, and Slice 17
+proof-control evidence only. Lifecycle-safe publication authority, production
+identity, Archive production trust/legal evidence, platform mesh certification,
+Gateway/Workbench discovery proof, supported-feature promotion, and final
+API/Gateway/Workbench/downstream live-journey evidence remain required before
+any of these issues can move back to merged-main QA.
 
 ## GitHub Issue Learning Patterns
 
