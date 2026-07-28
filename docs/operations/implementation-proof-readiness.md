@@ -152,8 +152,8 @@ live GitHub proof; it deliberately points back to
 open/closed verification.
 
 Current Slice 18 ledger synchronization records 40 tracked RFC-0002 issues:
-12 closed complete, 28 open, no ready issues, 11
-`open_merged_main_qa_pending`, 6 `open_blocked`, 1 `open_in_progress`, no
+14 closed complete, 26 open, no ready issues, 8
+`open_merged_main_qa_pending`, 7 `open_blocked`, 1 `open_in_progress`, no
 `open_pr_raised`, 1 `open_pending_final_closure`, 1 `open_pending_post_completion`, and 8
 `open_tracker`. PR #745 reconciled #340 to `open_merged_main_qa_pending` on
 `eeabfc683f595b4cbc9ffb5aa0aa51c3e5622903`; Main Releasability `30326431318`
@@ -164,13 +164,15 @@ and CodeQL `30327193673` passed for that exact SHA. #340 and #380 remain open:
 the first for live Lotus AI provider/model-risk/runtime certification evidence,
 and the second for production principal/session, Workbench authenticated BFF,
 core-owned canonical runtime, mesh onboarding, entitlement-denied, and
-supported-feature promotion evidence. PR #748 reconciled #693 to
-`open_merged_main_qa_pending` on `29c235c21ff25c36f34d560e7794bc980661818f`;
+supported-feature promotion evidence. PR #748 merged the latest app-side
+protected workflow-pin hardening for #693 on
+`29c235c21ff25c36f34d560e7794bc980661818f`;
 Main Releasability `30330029033` and CodeQL `30330024353` passed for that
-exact SHA, and the merged PR branch is absent remotely and locally. #693
-remains open for self-hosted runner provisioning, protected environment
-variables/secrets, protected capacity/load/resource/dependency/PostgreSQL/cost
-attestation execution, and supported-feature blockers.
+exact SHA, and the merged PR branch is absent remotely and locally. #693 is
+`open_blocked`, not QA-pending: it remains open for self-hosted runner
+provisioning, protected environment variables/secrets, protected
+capacity/load/resource/dependency/PostgreSQL/cost attestation execution, and
+supported-feature blockers.
 
 ## GitHub Issue Learning Patterns
 
