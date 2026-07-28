@@ -99,6 +99,26 @@ REQUIRED_OPEN_ISSUE_EVIDENCE = {
         "30327202465",
         "30327193673",
     ),
+    345: (
+        "Platform PR #629 merged bounded cost-attribution",
+        "823e2641778aaf7db4e1df6218cf84eab0084526",
+        "sgajbi/lotus-platform#495",
+        "capacity-production-like environment",
+        "No supported-feature, production capacity, billing, scaling, or production certification claim is made.",
+    ),
+    692: (
+        "Platform PR #630 merged bounded mesh-readiness proof consumption",
+        "c0fb028a440a24622fe162e934c3469fcafb4055",
+        "30335871870",
+        "30335876432",
+        "clears only the catalog/policy/telemetry-consumable dependency marker",
+    ),
+    693: (
+        "Platform PR #629 merged bounded cost-attribution",
+        "823e2641778aaf7db4e1df6218cf84eab0084526",
+        "platform issue #495 remains the protected FinOps execution",
+        "does not provision self-hosted runners",
+    ),
 }
 
 
