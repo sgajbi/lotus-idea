@@ -249,6 +249,27 @@ def test_rfc0002_github_issue_execution_ledger_tracks_workbench_action_blocker()
     assert "production identity" in issue_686["closureInstruction"]
 
 
+def test_rfc0002_github_issue_execution_ledger_tracks_workbench_read_path_blocker() -> None:
+    module = _load_gate()
+    payload = _ledger_payload(module)
+    issue_685 = next(
+        issue
+        for issue in payload["issues"]
+        if isinstance(issue, dict) and issue["issueNumber"] == 685
+    )
+
+    assert issue_685["githubState"] == "open"
+    assert issue_685["executionStatus"] == "open_blocked"
+    assert issue_685["allowPullRequestAutoClose"] is False
+    assert "Keep #685 open and status/blocked" in issue_685["closureInstruction"]
+    assert "make gateway-workbench-runtime-execution-proof" in issue_685["closureInstruction"]
+    assert "runtimeExecutionProofValid" in issue_685["closureInstruction"]
+    assert "gatewayBffConsumptionObserved" in issue_685["closureInstruction"]
+    assert "proofChecks.workbenchEvidenceFresh" in issue_685["closureInstruction"]
+    assert "This issue is not QA-pending" in issue_685["closureInstruction"]
+    assert "supported-feature promotion" in issue_685["closureInstruction"]
+
+
 def test_rfc0002_github_issue_execution_ledger_tracks_platform_mesh_readiness() -> None:
     module = _load_gate()
     payload = _ledger_payload(module)

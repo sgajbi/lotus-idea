@@ -210,9 +210,9 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/685",
       "rfcSlices": ["slice-11"],
       "githubState": "open",
-      "executionStatus": "open_merged_main_qa_pending",
+      "executionStatus": "open_blocked",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #685 open. PR #736 merged to main at 1ef9e93e64482f27225c72142944b6bd7c1ce142 after exact-main Main Releasability run 30011797717 passed, wiki source was published to lotus-idea.wiki.git commit 05b8dc8 with strict DiffCount 0, and remote/local feature-branch cleanup completed after patch-equivalence checks. The optional Gateway/Workbench runtime-execution proof consumer may clear only workbench_gateway_bff_consumption_proof_missing when the artifact is valid and aggregate-current. Keep open until QA verifies current Workbench/Gateway runtime evidence, browser/accessibility proof, canonical demo runtime proof, supported-feature posture, data-product certification, and broader production-readiness evidence."
+      "closureInstruction": "Keep #685 open and status/blocked. PR #736 merged the optional Gateway/Workbench runtime-execution proof consumer to main at 1ef9e93e64482f27225c72142944b6bd7c1ce142 after exact-main Main Releasability run 30011797717 passed, wiki source was published to lotus-idea.wiki.git commit 05b8dc8 with strict DiffCount 0, and remote/local feature-branch cleanup completed after patch-equivalence checks. The current default Gateway/Workbench runtime artifact is not certification evidence: `make gateway-workbench-runtime-execution-proof` rejects it because `runtimeExecutionProofValid`, `gatewayBffConsumptionObserved`, and `proofChecks.workbenchEvidenceFresh` are not true. This issue is not QA-pending: it remains blocked until fresh Gateway/BFF-backed Workbench queue and candidate-detail read evidence is generated through the governed runtime, browser/accessibility proof is current, canonical demo runtime proof is current, and #380 data-product/supported-feature posture remains reconciled. PR #736 does not certify production identity, supported-feature promotion, client publication, suitability, proposal approval, rebalance/action execution, report/render/archive authority, or broader production readiness."
     },
     {
       "issueNumber": 686,

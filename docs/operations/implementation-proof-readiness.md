@@ -152,8 +152,8 @@ live GitHub proof; it deliberately points back to
 open/closed verification.
 
 Current Slice 18 ledger synchronization records 40 tracked RFC-0002 issues:
-14 closed complete, 26 open, no ready issues, 7
-`open_merged_main_qa_pending`, 8 `open_blocked`, 1 `open_in_progress`, no
+14 closed complete, 26 open, no ready issues, 6
+`open_merged_main_qa_pending`, 9 `open_blocked`, 1 `open_in_progress`, no
 `open_pr_raised`, 1 `open_pending_final_closure`, 1 `open_pending_post_completion`, and 8
 `open_tracker`. PR #745 reconciled #340 to `open_merged_main_qa_pending` on
 `eeabfc683f595b4cbc9ffb5aa0aa51c3e5622903`; Main Releasability `30326431318`
@@ -175,6 +175,16 @@ also `open_blocked`, not QA-pending: it remains open for self-hosted runner
 provisioning, protected environment variables/secrets, protected
 capacity/load/resource/dependency/PostgreSQL/cost attestation execution, and
 supported-feature blockers.
+
+#685 is also `open_blocked`, not QA-pending: the current default
+Gateway/Workbench runtime artifact is rejected by
+`make gateway-workbench-runtime-execution-proof` because
+`runtimeExecutionProofValid`, `gatewayBffConsumptionObserved`, and
+`proofChecks.workbenchEvidenceFresh` are not true. PR #736 merged the optional
+Idea-side consumer/gate path, but fresh Gateway/BFF-backed Workbench
+queue/detail runtime evidence, browser/accessibility proof, canonical demo
+runtime proof, and #380 data-product/supported-feature posture reconciliation
+remain required before QA closure.
 
 ## GitHub Issue Learning Patterns
 

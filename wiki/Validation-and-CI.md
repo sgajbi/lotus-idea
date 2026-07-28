@@ -754,17 +754,21 @@ Persistence adapter validation:
    posture for #380 and reconciled it to `open_blocked` at
    `6f8875dc6784dd17975e6700c09b9ff71d66fb8b`; Main Releasability `30327202465`
    and CodeQL `30327193673` passed. The RFC-0002 execution summary now has 40
-   tracked issues, 14 closed complete, 26 open, 7
-   `open_merged_main_qa_pending`, 8 `open_blocked`, and no ready issues. #686
-   is blocked, not QA-pending, until `lotus-core#836` restores canonical seed
-   readiness and Workbench live browser action-control proof can be rerun. #340
-   remains open for live Lotus AI provider/model-risk/runtime certification,
-   #380 remains blocked for production principal/session, authenticated
-   Workbench BFF, core-owned canonical runtime, mesh onboarding,
-   entitlement-denied, and supported-feature promotion evidence, and #693 is
-   blocked rather than QA-pending until protected capacity-production-like
-   runner/environment, protected attestations, and matching FinOps evidence
-   exist.
+   tracked issues, 14 closed complete, 26 open, 6
+   `open_merged_main_qa_pending`, 9 `open_blocked`, and no ready issues. #685
+   is blocked, not QA-pending, because the current default Gateway/Workbench
+   runtime artifact is rejected by `make gateway-workbench-runtime-execution-proof`
+   for missing `runtimeExecutionProofValid`, `gatewayBffConsumptionObserved`, and
+   fresh Workbench evidence; PR #736 only merged the optional Idea-side consumer
+   and gate path. #686 is blocked, not QA-pending, until `lotus-core#836`
+   restores canonical seed readiness and Workbench live browser action-control
+   proof can be rerun. #340 remains open for live Lotus AI
+   provider/model-risk/runtime certification, #380 remains blocked for
+   production principal/session, authenticated Workbench BFF, core-owned
+   canonical runtime, mesh onboarding, entitlement-denied, and supported-feature
+   promotion evidence, and #693 is blocked rather than QA-pending until
+   protected capacity-production-like runner/environment, protected attestations,
+   and matching FinOps evidence exist.
 19. `tests/unit/test_source_ingestion_readiness.py` and
    `tests/integration/test_source_ingestion_readiness_api.py` prove the
    operator readiness diagnostic for blocked/configured posture,
