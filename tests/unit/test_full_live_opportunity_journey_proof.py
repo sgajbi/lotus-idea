@@ -15,6 +15,7 @@ from app.application.full_live_opportunity_journey_proof import (
     REQUIRED_JOURNEY_CAPABILITY_IDS,
     build_full_live_opportunity_journey_proof_payload,
     full_live_opportunity_journey_proof_is_valid,
+    validate_full_live_opportunity_journey_proof,
 )
 from app.application.workbench.runtime_execution import (
     build_gateway_workbench_runtime_execution_proof_payload,
@@ -116,6 +117,126 @@ def test_rejects_invalid_gateway_workbench_runtime_proof() -> None:
 
     assert proof["aggregateJourneyProofValid"] is False
     assert proof["proofChecks"]["gatewayWorkbenchRuntimeEvidenceValid"] is False
+    assert full_live_opportunity_journey_proof_is_valid(proof) is False
+
+
+def test_rejects_unknown_fields_invalid_digests_and_missing_evidence_refs() -> None:
+    proof = _valid_full_live_journey_proof()
+    proof["unexpectedClaim"] = "unsupported"
+    proof["implementationProofReadinessDigest"] = "not-a-digest"
+    proof["gatewayWorkbenchRuntimeExecutionDigest"] = "sha256:not-hex"
+    proof["evidenceRefs"] = []
+
+    errors = validate_full_live_opportunity_journey_proof(proof)
+
+    assert "unknown full-live journey proof fields: ['unexpectedClaim']" in errors
+    assert "implementationProofReadinessDigest must be a sha256 digest" in errors
+    assert "gatewayWorkbenchRuntimeExecutionDigest must be null or a sha256 digest" in errors
+    assert "evidenceRefs must contain source-safe evidence refs" in errors
+
+
+def test_rejects_malformed_proof_checks_object() -> None:
+    proof = _valid_full_live_journey_proof()
+    proof["proofChecks"] = "not-an-object"
+
+    assert validate_full_live_opportunity_journey_proof(proof) == ["proofChecks must be an object"]
+
+
+def test_rejects_unknown_proof_check() -> None:
+    proof = _valid_full_live_journey_proof()
+    proof["proofChecks"]["unsupportedCheck"] = True
+
+    assert "unknown proofChecks fields: ['unsupportedCheck']" in (
+        validate_full_live_opportunity_journey_proof(proof)
+    )
+
+
+@pytest.mark.parametrize(
+    ("coverage", "expected_error"),
+    [
+        ("not-a-list", "journeyCapabilityCoverage must be a JSON array"),
+        ([object()], "journeyCapabilityCoverage entries must be objects"),
+        ([{"capabilityId": 123}], "journeyCapabilityCoverage capabilityId must be text"),
+    ],
+)
+def test_rejects_malformed_journey_capability_coverage(
+    coverage: object,
+    expected_error: str,
+) -> None:
+    proof = _valid_full_live_journey_proof()
+    proof["journeyCapabilityCoverage"] = coverage
+
+    assert validate_full_live_opportunity_journey_proof(proof) == [expected_error]
+
+
+def test_rejects_promoted_or_misordered_journey_capability_coverage() -> None:
+    proof = _valid_full_live_journey_proof()
+    proof["journeyCapabilityCoverage"][0]["supportedFeaturePromoted"] = True
+    proof["journeyCapabilityCoverage"][1]["blockers"] = "not-a-list"
+    proof["journeyCapabilityCoverage"] = list(reversed(proof["journeyCapabilityCoverage"]))
+
+    errors = validate_full_live_opportunity_journey_proof(proof)
+
+    assert "source-ingestion must not be promoted as a supported feature" in errors
+    assert "advisor-review-queue blockers must be a JSON array" in errors
+    assert "journeyCapabilityCoverage must match the required Slice 17 legs" in errors
+
+
+def test_rejects_invalid_blocker_posture_shapes() -> None:
+    proof = _valid_full_live_journey_proof()
+    proof["remainingCertificationBlockers"] = []
+    proof["aggregateBlockersCleared"] = "not-a-list"
+
+    errors = validate_full_live_opportunity_journey_proof(proof)
+
+    assert "remainingCertificationBlockers must preserve unresolved blockers" in errors
+    assert "aggregateBlockersCleared must be a JSON array" in errors
+
+
+def test_rejects_unsupported_blocker_clearance() -> None:
+    proof = _valid_full_live_journey_proof()
+    proof["aggregateBlockersCleared"] = ["unsupported_blocker"]
+
+    assert "aggregateBlockersCleared may clear only the Gateway/Workbench BFF proof" in (
+        validate_full_live_opportunity_journey_proof(proof)
+    )
+
+
+def test_rejects_invalid_governed_sequences() -> None:
+    proof = _valid_full_live_journey_proof()
+    proof["sliceIds"] = "not-a-list"
+    proof["trackingIssues"] = ["sgajbi/lotus-idea#699", "sgajbi/lotus-idea#680"]
+    proof["nonProofClaims"] = []
+
+    errors = validate_full_live_opportunity_journey_proof(proof)
+
+    assert "sliceIds must be a JSON array" in errors
+    assert "trackingIssues must match the governed full-live journey contract" in errors
+    assert "nonProofClaims must match the governed full-live journey contract" in errors
+
+
+def test_builder_fails_closed_for_malformed_readiness_snapshot() -> None:
+    proof = build_full_live_opportunity_journey_proof_payload(
+        generated_at_utc=datetime(2026, 7, 28, 0, 0, tzinfo=UTC),
+        repository_root=ROOT,
+        implementation_proof_readiness={
+            **_valid_readiness_snapshot(),
+            "capabilities": "not-a-capability-list",
+            "overallBlockers": "not-a-blocker-list",
+        },
+        implementation_proof_readiness_ref="output/implementation-proof/readiness-current.json",
+        gateway_workbench_runtime_execution_proof=_valid_gateway_workbench_runtime_proof(),
+        gateway_workbench_runtime_execution_proof_ref=(
+            "output/workbench/gateway-workbench-runtime-execution-proof.json"
+        ),
+    )
+
+    assert proof["aggregateJourneyProofValid"] is False
+    assert proof["journeyCapabilityCoverage"] == []
+    assert proof["remainingCertificationBlockers"] == []
+    assert proof["proofChecks"]["implementationProofReadinessValid"] is False
+    assert proof["proofChecks"]["requiredJourneyCapabilitiesPresent"] is False
+    assert proof["proofChecks"]["remainingBlockersPreserved"] is False
     assert full_live_opportunity_journey_proof_is_valid(proof) is False
 
 
