@@ -357,8 +357,6 @@ def _journey_capability_coverage(snapshot: Mapping[str, Any]) -> list[dict[str, 
     coverage: list[dict[str, Any]] = []
     for capability_id in REQUIRED_JOURNEY_CAPABILITY_IDS:
         capability = by_id.get(capability_id, {})
-        if not isinstance(capability, Mapping):
-            capability = {}
         blockers = capability.get("blockers")
         coverage.append(
             {
