@@ -216,6 +216,14 @@ Gateway/Workbench product proof, data-mesh certification, production identity,
 legal/retention posture, and supported-feature promotion are implemented and
 validated.
 
+The downstream outcome certification aggregate in
+`src/app/application/downstream_outcome_certification.py` and
+`make downstream-outcome-certification-proof-gate` now consumes the Report
+materialization runtime proof alongside Advise/Manage intake receipts and Idea
+durable reconciliation evidence for #379. It is supporting evidence only: it
+does not convert Report, Render, or Archive evidence into client-publication,
+production-identity, supported-feature, or final-certification claims.
+
 ## Boundary Decision
 
 This slice intentionally starts with `lotus-idea` source-owned request truth and
