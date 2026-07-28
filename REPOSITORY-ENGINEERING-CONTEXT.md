@@ -100,8 +100,8 @@ with Main Releasability `30327202465` and CodeQL `30327193673` passing; it
 records supported-feature/data-product promotion blockers without promoting
 support. After Slice 16 QA closure and Slice 15 protected-attestation
 reconciliation, the current RFC-0002 ledger posture is 41 tracked issues, 14
-closed complete, 27 open, 6 `open_merged_main_qa_pending`, 3
-`open_in_progress`, and 8 `open_blocked`; #685 and #756 are active
+closed complete, 27 open, 6 `open_merged_main_qa_pending`, 2
+`open_in_progress`, 1 `open_fixed_local`, and 8 `open_blocked`; #685 is active
 fix-forward work, not
 passive blocked posture, because the remaining default Gateway/Workbench
 runtime-proof path is inside writable Lotus app repositories. The current
