@@ -817,7 +817,7 @@ coverage-gate:
 	$(VENV_PYTHON) scripts/coverage_gate.py --coverage-dir $(COVERAGE_DATA_DIR)
 
 security-audit:
-	$(VENV_PYTHON) -m pip_audit -r requirements/runtime-resolved.lock.txt -r requirements/ci-tooling.lock.txt
+	$(VENV_PYTHON) -m pip_audit -r requirements/runtime-resolved.lock.txt -r requirements/ci-tooling.lock.txt -r requirements/build-system.lock.txt
 
 check: lint typecheck architecture-boundary-gate openapi-gate migration-contract-gate migration-execution-gate supported-features-gate endpoint-certification-gate test
 

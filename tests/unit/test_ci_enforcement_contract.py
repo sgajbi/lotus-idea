@@ -248,6 +248,15 @@ def test_ci_contract_gate_blocks_unconstrained_install_target() -> None:
     ) in errors
 
 
+def test_ci_contract_gate_blocks_security_audit_without_build_system_lock() -> None:
+    module = _load_ci_contract_gate()
+    makefile = _read("Makefile").replace(" -r requirements/build-system.lock.txt", "")
+
+    errors = module.validate_makefile(makefile)
+
+    assert "Makefile security-audit target must audit build-system lock" in errors
+
+
 def test_ci_contract_gate_blocks_missing_full_lane_release_proof_dependencies() -> None:
     module = _load_ci_contract_gate()
     makefile = _read("Makefile").replace(

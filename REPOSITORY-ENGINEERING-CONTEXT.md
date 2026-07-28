@@ -99,9 +99,10 @@ to `open_blocked` on exact main `6f8875dc6784dd17975e6700c09b9ff71d66fb8b`
 with Main Releasability `30327202465` and CodeQL `30327193673` passing; it
 records supported-feature/data-product promotion blockers without promoting
 support. After Slice 16 QA closure and Slice 15 protected-attestation
-reconciliation, the current RFC-0002 ledger posture is 40 tracked issues, 14
-closed complete, 26 open, 6 `open_merged_main_qa_pending`, 2
-`open_in_progress`, and 8 `open_blocked`; #685 is active fix-forward work, not
+reconciliation, the current RFC-0002 ledger posture is 41 tracked issues, 14
+closed complete, 27 open, 6 `open_merged_main_qa_pending`, 3
+`open_in_progress`, and 8 `open_blocked`; #685 and #756 are active
+fix-forward work, not
 passive blocked posture, because the remaining default Gateway/Workbench
 runtime-proof path is inside writable Lotus app repositories. The current
 non-certifying evidence was rejected by
@@ -1087,14 +1088,18 @@ feature and no runtime deployable.
 
 RFC-0002 Slice 15 dependency and container vulnerability posture is governed by
 `contracts/security/lotus-idea-dependency-vulnerability-posture.v1.json` and
-tracked by issue `#695`. `make dependency-vulnerability-posture-gate` is part of
-`make lint` and `make ci-contract-gate`; it fails closed when runtime or CI
-Python dependencies are not exact stable pins, a direct dependency is absent
+tracked by issue `#695`, with build-system lock hardening tracked by `#756`.
+`make dependency-vulnerability-posture-gate` is part of
+`make lint` and `make ci-contract-gate`; it fails closed when runtime, CI, or
+`pyproject.toml` build-system Python dependencies are not exact stable pins, a
+direct dependency is absent
 from the approved mature/widely deployed technology registry, runtime lock
-evidence drifts from the dependency-graph mirror, `pip-audit` is removed from
-governed lanes, Trivy image-scan wiring weakens, release SBOM/signing/provenance
-hooks disappear, or a vulnerability exception lacks a Lotus Idea issue, CVE,
-owner, control, rollback, and bounded expiry. This is source-design and local execution hardening only.
+evidence drifts from the dependency-graph mirror, the build-system lock is
+missing or stale, `pip-audit` no longer scans runtime, CI, and build-system
+locks, Trivy image-scan wiring weakens, release SBOM/signing/provenance hooks
+disappear, or a vulnerability exception lacks a Lotus Idea issue, CVE, owner,
+control, rollback, and bounded expiry. This is source-design and local
+execution hardening only.
 It adds no supported feature and does not certify production vulnerability
 posture until exact-main Main Releasability produces the scan, SBOM, signature,
 provenance, digest, release-manifest, and wiki/source closure evidence.

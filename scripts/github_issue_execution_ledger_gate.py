@@ -58,6 +58,7 @@ EXPECTED_EXECUTION_ISSUES = frozenset(
         701,
         702,
         704,
+        756,
     }
 )
 OPEN_STATUSES = frozenset(
@@ -124,6 +125,12 @@ REQUIRED_OPEN_ISSUE_EVIDENCE = {
         "823e2641778aaf7db4e1df6218cf84eab0084526",
         "platform issue #495 remains the protected FinOps execution",
         "does not provision self-hosted runners",
+    ),
+    756: (
+        "Keep #756 open and status/in-progress",
+        "build-system dependency posture gap",
+        "build-system lock evidence",
+        "Do not use this issue to claim production vulnerability certification",
     ),
 }
 
