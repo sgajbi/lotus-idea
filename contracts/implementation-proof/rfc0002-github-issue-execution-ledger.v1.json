@@ -308,19 +308,19 @@
       "issueNumber": 696,
       "url": "https://github.com/sgajbi/lotus-idea/issues/696",
       "rfcSlices": ["slice-16"],
-      "githubState": "open",
-      "executionStatus": "open_merged_main_qa_pending",
-      "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #696 open. PR #738 merged the Slice 16 canonical opportunity archetype evidence pack to exact main a3a62a40bc31c062dcef0318406582d34311ae33; Main Releasability run 30019870406 and CodeQL run 30019863754 passed; wiki publication commit 942feb9 reached strict DiffCount 0; local and remote implementation branches were removed after patch-equivalence proof. This clears only the source-safe canonical archetype evidence-pack tranche. Do not close until QA verifies the pack preserves source-authority, client-publication, production-identity, data-mesh, Workbench/Gateway, supported-feature, and full live-journey blockers without commercial or client-demo overclaiming."
+      "githubState": "closed",
+      "executionStatus": "closed_complete",
+      "allowPullRequestAutoClose": true,
+      "closureInstruction": "Closed #696 after QA verified the Slice 16 source-safe canonical archetype evidence-pack tranche remains source-safe and preserves source-authority, client-publication, production-identity, data-mesh, Workbench/Gateway, supported-feature, and full live-journey blockers without commercial or client-demo overclaiming. Implementation PR #738 merged to exact main a3a62a40bc31c062dcef0318406582d34311ae33; Main Releasability run 30019870406 and CodeQL run 30019863754 passed; wiki publication commit 942feb9 reached strict DiffCount 0; local and remote implementation branches were removed after patch-equivalence proof. QA closure PR validates make opportunity-archetype-evidence-pack-gate, make demo-readiness-claim-matrix-gate, make supported-features-gate, make supported-feature-promotion-contract-gate, make implementation-truth-gate, make blueprint-scope-coverage-gate, and the focused archetype/claim-matrix unit suite. This closure does not certify live journey, client publication, data-product certification, production identity, Workbench/Gateway support, or supported-feature promotion."
     },
     {
       "issueNumber": 697,
       "url": "https://github.com/sgajbi/lotus-idea/issues/697",
       "rfcSlices": ["slice-16"],
-      "githubState": "open",
-      "executionStatus": "open_merged_main_qa_pending",
-      "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #697 open. PR #733 merged the Slice 16 demo-readiness claim matrix and client-safe commercial proof-pack guardrail to exact main c5226304a93fa1c39b53c446ae3005f472bd009f; Main Releasability run 30000365330 and CodeQL run 30000359147 passed; wiki publication commit 3394af1 reached strict DiffCount 0; local and remote implementation branches were removed after patch-equivalence proof. This clears only the claim-matrix guardrail tranche. Do not close until QA verifies the matrix and remaining live journey, Workbench/Gateway, downstream runtime, data-mesh, supported-feature promotion, production identity, and client-publication proof issues remain correctly bounded."
+      "githubState": "closed",
+      "executionStatus": "closed_complete",
+      "allowPullRequestAutoClose": true,
+      "closureInstruction": "Closed #697 after QA verified the Slice 16 claim-matrix guardrail tranche, demo-readiness claim matrix, and client-safe commercial proof-pack guardrail preserve the remaining live journey, Workbench/Gateway, downstream runtime, data-mesh, supported-feature promotion, production identity, and client-publication blockers. Implementation PR #733 merged to exact main c5226304a93fa1c39b53c446ae3005f472bd009f; Main Releasability run 30000365330 and CodeQL run 30000359147 passed; wiki publication commit 3394af1 reached strict DiffCount 0; local and remote implementation branches were removed after patch-equivalence proof. QA closure PR validates make opportunity-archetype-evidence-pack-gate, make demo-readiness-claim-matrix-gate, make supported-features-gate, make supported-feature-promotion-contract-gate, make implementation-truth-gate, make blueprint-scope-coverage-gate, and the focused archetype/claim-matrix unit suite. This closure does not certify live journey, client publication, data-product certification, production identity, Workbench/Gateway support, downstream execution authority, or supported-feature promotion."
     },
     {
       "issueNumber": 698,

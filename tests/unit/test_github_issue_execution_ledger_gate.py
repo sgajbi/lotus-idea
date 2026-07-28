@@ -116,7 +116,7 @@ def test_rfc0002_github_issue_execution_ledger_tracks_render_archive_merged_main
     assert "lotus-archive #55" in issue_691["closureInstruction"]
 
 
-def test_rfc0002_github_issue_execution_ledger_tracks_claim_matrix_merged_main_pending_qa() -> None:
+def test_rfc0002_github_issue_execution_ledger_closes_claim_matrix_after_qa() -> None:
     module = _load_gate()
     payload = _ledger_payload(module)
     issue_697 = next(
@@ -125,19 +125,18 @@ def test_rfc0002_github_issue_execution_ledger_tracks_claim_matrix_merged_main_p
         if isinstance(issue, dict) and issue["issueNumber"] == 697
     )
 
-    assert issue_697["githubState"] == "open"
-    assert issue_697["executionStatus"] == "open_merged_main_qa_pending"
-    assert issue_697["allowPullRequestAutoClose"] is False
-    assert "Keep #697 open" in issue_697["closureInstruction"]
+    assert issue_697["githubState"] == "closed"
+    assert issue_697["executionStatus"] == "closed_complete"
+    assert issue_697["allowPullRequestAutoClose"] is True
+    assert "Closed #697" in issue_697["closureInstruction"]
     assert "PR #733 merged" in issue_697["closureInstruction"]
     assert "30000365330" in issue_697["closureInstruction"]
     assert "30000359147" in issue_697["closureInstruction"]
     assert "claim-matrix guardrail tranche" in issue_697["closureInstruction"]
+    assert "does not certify live journey" in issue_697["closureInstruction"]
 
 
-def test_rfc0002_github_issue_execution_ledger_tracks_archetype_pack_merged_main_pending_qa() -> (
-    None
-):
+def test_rfc0002_github_issue_execution_ledger_closes_archetype_pack_after_qa() -> None:
     module = _load_gate()
     payload = _ledger_payload(module)
     issue_696 = next(
@@ -146,16 +145,17 @@ def test_rfc0002_github_issue_execution_ledger_tracks_archetype_pack_merged_main
         if isinstance(issue, dict) and issue["issueNumber"] == 696
     )
 
-    assert issue_696["githubState"] == "open"
-    assert issue_696["executionStatus"] == "open_merged_main_qa_pending"
-    assert issue_696["allowPullRequestAutoClose"] is False
-    assert "Keep #696 open" in issue_696["closureInstruction"]
+    assert issue_696["githubState"] == "closed"
+    assert issue_696["executionStatus"] == "closed_complete"
+    assert issue_696["allowPullRequestAutoClose"] is True
+    assert "Closed #696" in issue_696["closureInstruction"]
     assert "PR #738 merged" in issue_696["closureInstruction"]
     assert "30019870406" in issue_696["closureInstruction"]
     assert "30019863754" in issue_696["closureInstruction"]
     assert (
         "source-safe canonical archetype evidence-pack tranche" in issue_696["closureInstruction"]
     )
+    assert "does not certify live journey" in issue_696["closureInstruction"]
 
 
 def test_rfc0002_github_issue_execution_ledger_requires_issue_340_mainline_evidence(
