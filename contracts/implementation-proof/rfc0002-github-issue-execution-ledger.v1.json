@@ -1,7 +1,7 @@
 {
   "schemaVersion": "lotus-idea:rfc0002-github-issue-execution-ledger:v1",
   "rfcId": "RFC-0002",
-  "asOfDate": "2026-07-23",
+  "asOfDate": "2026-07-28",
   "repository": "sgajbi/lotus-idea",
   "executionAnchor": {
     "issueNumber": 681,
@@ -50,7 +50,7 @@
       "githubState": "open",
       "executionStatus": "open_blocked",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #345 open until service SLOs, capacity budgets, and error-budget telemetry for Idea workflows are defined and proven."
+      "closureInstruction": "Keep #345 open. Service/workflow SLOs, capacity budgets, bounded metrics, alert/dashboard source contracts, source-safe capacity workload runners, PostgreSQL threshold proof gates, resource-observation gates, dependency-recovery gates, and platform cost-artifact consumer verification are implemented on Idea main. PR #693/#730 and PR #748/#749 hardened protected capacity evidence gates and workflow pins. Platform PR #629 merged bounded cost-attribution and deployment-promotion proof consumption on lotus-platform main SHA 823e2641778aaf7db4e1df6218cf84eab0084526; Idea may consume that only as contract/pending-deployment source proof. Platform PR #630 merged bounded mesh-readiness proof consumption on lotus-platform main SHA c0fb028a440a24622fe162e934c3469fcafb4055; it does not certify capacity or cost. Keep the issue blocked until the protected capacity-production-like environment, governed self-hosted lotus-capacity-evidence runner, load/soak execution, dependency-recovery execution, PostgreSQL saturation/recovery execution, production-like resource attestation, and matching protected platform FinOps attestation from sgajbi/lotus-platform#495 exist and verify against exact mainline evidence. No supported-feature, production capacity, billing, scaling, or production certification claim is made."
     },
     {
       "issueNumber": 375,
@@ -275,7 +275,7 @@
       "githubState": "open",
       "executionStatus": "open_merged_main_qa_pending",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #692 open. PR #727 adds a deterministic source-safe local/test runtime telemetry exercise for preview/snapshot gates, removes only the generated snapshot candidate-presence diagnostic, and updates the Idea platform-catalog source-contract consumer for the current unpromoted IdeaCandidate certification-candidate posture. The issue remains open until durable repository posture, complete runtime product coverage, platform mesh certification, Gateway/Workbench discovery proof, and supported-feature promotion are certified with owner evidence."
+      "closureInstruction": "Keep #692 open. PR #727 adds a deterministic source-safe local/test runtime telemetry exercise for preview/snapshot gates, removes only the generated snapshot candidate-presence diagnostic, and updates the Idea platform-catalog source-contract consumer for the current unpromoted IdeaCandidate certification-candidate posture. Platform PR #630 merged bounded mesh-readiness proof consumption on lotus-platform main SHA c0fb028a440a24622fe162e934c3469fcafb4055 and exact Main Releasability runs 30335871870 and 30335876432 passed; this clears only the catalog/policy/telemetry-consumable dependency marker in platform proof consumption. The issue remains open until durable repository posture, complete runtime product coverage, platform mesh event publication, platform mesh certification, Gateway/Workbench discovery proof, and supported-feature promotion are certified with owner evidence."
     },
     {
       "issueNumber": 693,
@@ -284,7 +284,7 @@
       "githubState": "open",
       "executionStatus": "open_merged_main_qa_pending",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #693 open. PR #730 merged proof-specific dependency-recovery and PostgreSQL threshold gates plus protected workflow enforcement with exact-main validation. PR #748 merged by rebase to exact main SHA 29c235c21ff25c36f34d560e7794bc980661818f and passed Main Releasability run 30330029033 plus CodeQL run 30330024353 for that SHA. It fixes truncated upload-artifact pins in the protected capacity evidence producers and adds deterministic gate coverage so load/soak, dependency-recovery, and PostgreSQL capacity workflows cannot drift from the governed pinned upload action. No repo-authored wiki source changed, no wiki publication was required, the remote PR branch is absent after fetch, and the local PR branch was removed after patch-equivalence evidence. This merged-main QA-pending tranche does not provision self-hosted runners, configure protected environment variables/secrets, execute protected capacity, load, resource, dependency, PostgreSQL, or cost attestations, or promote supported features."
+      "closureInstruction": "Keep #693 open. PR #730 merged proof-specific dependency-recovery and PostgreSQL threshold gates plus protected workflow enforcement with exact-main validation. PR #748 merged by rebase to exact main SHA 29c235c21ff25c36f34d560e7794bc980661818f and passed Main Releasability run 30330029033 plus CodeQL run 30330024353 for that SHA. It fixes truncated upload-artifact pins in the protected capacity evidence producers and adds deterministic gate coverage so load/soak, dependency-recovery, and PostgreSQL capacity workflows cannot drift from the governed pinned upload action. Platform PR #629 merged bounded cost-attribution and deployment-promotion proof consumption on lotus-platform main SHA 823e2641778aaf7db4e1df6218cf84eab0084526; platform issue #495 remains the protected FinOps execution and attestation dependency. No repo-authored wiki source changed, no wiki publication was required, the remote PR branch is absent after fetch, and the local PR branch was removed after patch-equivalence evidence. This merged-main QA-pending tranche does not provision self-hosted runners, configure protected environment variables/secrets, execute protected capacity, load, resource, dependency, PostgreSQL, or cost attestations, or promote supported features."
     },
     {
       "issueNumber": 694,

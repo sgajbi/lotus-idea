@@ -248,7 +248,11 @@
           "repository": "sgajbi/lotus-platform",
           "number": 598,
           "url": "https://github.com/sgajbi/lotus-platform/issues/598",
-          "dependencyRole": "Platform data-product catalog, mesh certification, and runtime trust telemetry authority"
+          "dependencyRole": "Platform data-product catalog, mesh certification, and runtime trust telemetry authority",
+          "dependencyStatus": "merged_main_partial_progress",
+          "mainSha": "c0fb028a440a24622fe162e934c3469fcafb4055",
+          "mainReleasabilityRunIds": ["30335871870", "30335876432"],
+          "evidenceBoundary": "Platform PR #630 makes IdeaCandidate catalog/policy/telemetry coverage consumable only as bounded source proof. Mesh event publication, data-product certification, Gateway/Workbench discovery, required-product promotion, and supported-feature promotion remain blocked."
         }
       ],
       "blockers": [
@@ -271,6 +275,7 @@
       "sliceIds": ["RFC-0002/slice-14", "RFC-0002/slice-17"],
       "requiredEvidenceClass": "source_contract",
       "closureStatus": "external_dependency_open",
+      "partialProgress": "Platform PR #630 merged bounded mesh-readiness proof consumption on lotus-platform main SHA c0fb028a440a24622fe162e934c3469fcafb4055. Idea may consume the platform source-manifest, SLO, access, evidence-policy, and telemetry coverage only as catalog/policy/telemetry dependency proof; platform mesh event publication, data-product certification, Gateway/Workbench discovery, required-product promotion, supported-feature promotion, and production certification remain blocked.",
       "supportedFeatureEffect": "source_contract_can_clear_only_catalog_and_manifest_inclusion_blockers",
       "ownerIssue": {
         "repository": "sgajbi/lotus-idea",
@@ -419,6 +424,7 @@
       "sliceIds": ["RFC-0002/slice-15", "RFC-0002/slice-17"],
       "requiredEvidenceClass": "runtime_execution",
       "closureStatus": "open",
+      "partialProgress": "Idea PRs #730/#748/#749 merged proof-gate and workflow-pin enforcement for protected capacity evidence. Platform PR #629 merged bounded cost-attribution and deployment-promotion proof-consumption source contracts. These are non-certifying until protected capacity-production-like execution, resource/dependency/PostgreSQL attestations, and matching platform FinOps attestation verify on main.",
       "supportedFeatureEffect": "no_promotion_until_dashboard_alert_and_operator_workflow_runtime_evidence_pass",
       "ownerIssue": {
         "repository": "sgajbi/lotus-idea",
@@ -430,7 +436,17 @@
           "repository": "sgajbi/lotus-platform",
           "number": 599,
           "url": "https://github.com/sgajbi/lotus-platform/issues/599",
-          "dependencyRole": "Platform protected capacity, load, resource, dashboard, and alert attestation"
+          "dependencyRole": "Platform bounded cost-attribution and deployment-promotion proof-consumption source contract",
+          "dependencyStatus": "merged_main_partial_progress",
+          "mainSha": "823e2641778aaf7db4e1df6218cf84eab0084526",
+          "mainReleasabilityRunIds": ["30334570871", "30334577382"],
+          "evidenceBoundary": "Contract and pending-deployment proof are consumable only as named dependency markers. Protected FinOps execution, attested cost verification, live deployed-digest observation, migration execution, supported-feature promotion, and production certification remain blocked."
+        },
+        {
+          "repository": "sgajbi/lotus-platform",
+          "number": 495,
+          "url": "https://github.com/sgajbi/lotus-platform/issues/495",
+          "dependencyRole": "Platform protected FinOps execution, attested cost verification, and official cost-attribution authority"
         }
       ],
       "blockers": [
