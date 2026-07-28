@@ -227,6 +227,28 @@ def test_rfc0002_github_issue_execution_ledger_tracks_platform_capacity_dependen
     )
 
 
+def test_rfc0002_github_issue_execution_ledger_tracks_workbench_action_blocker() -> None:
+    module = _load_gate()
+    payload = _ledger_payload(module)
+    issue_686 = next(
+        issue
+        for issue in payload["issues"]
+        if isinstance(issue, dict) and issue["issueNumber"] == 686
+    )
+
+    assert issue_686["githubState"] == "open"
+    assert issue_686["executionStatus"] == "open_blocked"
+    assert issue_686["allowPullRequestAutoClose"] is False
+    assert "Keep #686 open and status/blocked" in issue_686["closureInstruction"]
+    assert (
+        "Workbench PR #501 merged the browser-action proof path"
+        in (issue_686["closureInstruction"])
+    )
+    assert "sgajbi/lotus-core#836" in issue_686["closureInstruction"]
+    assert "This issue is not QA-pending" in issue_686["closureInstruction"]
+    assert "production identity" in issue_686["closureInstruction"]
+
+
 def test_rfc0002_github_issue_execution_ledger_tracks_platform_mesh_readiness() -> None:
     module = _load_gate()
     payload = _ledger_payload(module)

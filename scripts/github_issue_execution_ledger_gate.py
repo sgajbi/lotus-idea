@@ -99,6 +99,12 @@ REQUIRED_OPEN_ISSUE_EVIDENCE = {
         "30327202465",
         "30327193673",
     ),
+    686: (
+        "Keep #686 open and status/blocked",
+        "Workbench PR #501 merged the browser-action proof path",
+        "sgajbi/lotus-core#836",
+        "This issue is not QA-pending",
+    ),
     345: (
         "Platform PR #629 merged bounded cost-attribution",
         "823e2641778aaf7db4e1df6218cf84eab0084526",

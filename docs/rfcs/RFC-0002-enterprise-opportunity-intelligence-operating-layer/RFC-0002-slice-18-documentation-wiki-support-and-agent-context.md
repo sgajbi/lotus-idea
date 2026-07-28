@@ -462,8 +462,10 @@ context. PR #745 reconciled #340 to `open_merged_main_qa_pending` at
 posture for #380 and reconciled it to `open_blocked` at
 `6f8875dc6784dd17975e6700c09b9ff71d66fb8b`; Main Releasability
 `30327202465` and CodeQL `30327193673` passed. Current source truth now records
-40 tracked RFC-0002 issues, 14 closed complete, 26 open, 8
-`open_merged_main_qa_pending`, and 7 `open_blocked` issues. This records
+40 tracked RFC-0002 issues, 14 closed complete, 26 open, 7
+`open_merged_main_qa_pending`, and 8 `open_blocked` issues. #686 is blocked,
+not QA-pending, until `lotus-core#836` restores canonical seed readiness and
+Workbench live browser action-control proof can be rerun. This records
 lifecycle truth only: #340 remains open for live Lotus AI
 provider/model-risk/runtime certification, #380 remains blocked for production
 principal/session, authenticated Workbench BFF, core-owned canonical runtime,
