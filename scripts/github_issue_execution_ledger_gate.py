@@ -132,11 +132,10 @@ REQUIRED_OPEN_ISSUE_EVIDENCE = {
     ),
     685: (
         "Keep #685 open and status/blocked",
-        "sgajbi/lotus-core#836",
-        "positions_data_quality_not_complete",
-        "pending_aggregation_jobs",
-        "core_analytics_reference_stale",
-        "issuecomment-5107443336",
+        "sgajbi/lotus-core#840",
+        "valuation and aggregation jobs drained to zero",
+        "DPM_CORE_CONTEXT_INCOMPLETE",
+        "POST http://manage.dev.lotus/api/v1/rebalance/simulate",
     ),
     686: (
         "Keep #686 open and status/blocked",
