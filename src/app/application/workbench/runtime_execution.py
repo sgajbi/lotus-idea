@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from datetime import datetime
+from datetime import datetime, timedelta
 import hashlib
 import json
 from pathlib import Path
 from typing import Any
 
+from app.domain.proof_evidence import parse_timezone_aware_datetime
 from app.application.source_safe_cross_repo_proof import (
     is_timezone_aware_datetime_text,
     required_file_evidence_present,
@@ -23,6 +24,7 @@ GATEWAY_WORKBENCH_RUNTIME_EXECUTION_ENV = "LOTUS_IDEA_GATEWAY_WORKBENCH_RUNTIME_
 GATEWAY_WORKBENCH_RUNTIME_EXECUTION_SCHEMA_VERSION = (
     "lotus-idea.gateway-workbench-runtime-execution-proof.v1"
 )
+MAX_WORKBENCH_RUNTIME_EVIDENCE_AGE = timedelta(hours=24)
 
 GATEWAY_WORKBENCH_RUNTIME_BLOCKERS_SATISFIED = ("workbench_gateway_bff_consumption_proof_missing",)
 
@@ -96,6 +98,7 @@ EXPECTED_TOP_LEVEL_KEYS = frozenset(
         "canonicalContractRef",
         "ownerMainlineEvidenceSchemaVersion",
         "ownerMainlineEvidenceDigest",
+        "workbenchLiveValidationSummaryGeneratedAtUtc",
         "workbenchLiveValidationSummaryDigest",
         "workbenchShotIndexDigest",
         "runtimeEvidenceRefs",
@@ -146,6 +149,10 @@ def build_gateway_workbench_runtime_execution_proof_payload(
         "canonicalContractObserved": _canonical_contract_observed(
             workbench_live_validation_summary
         ),
+        "workbenchEvidenceFresh": _workbench_evidence_fresh(
+            generated_at_utc,
+            workbench_live_validation_summary,
+        ),
         "ideaJourneyThroughGatewayObserved": _idea_journey_through_gateway_observed(
             workbench_live_validation_summary
         ),
@@ -173,6 +180,9 @@ def build_gateway_workbench_runtime_execution_proof_payload(
         "canonicalContractRef": "lotus-platform/context/contracts/canonical-front-office-demo-data-contract.json",
         "ownerMainlineEvidenceSchemaVersion": OWNER_MAINLINE_EVIDENCE_SCHEMA_VERSION,
         "ownerMainlineEvidenceDigest": _digest_mapping(owner_mainline_evidence),
+        "workbenchLiveValidationSummaryGeneratedAtUtc": str(
+            workbench_live_validation_summary.get("generatedAt", "")
+        ),
         "workbenchLiveValidationSummaryDigest": _digest_mapping(workbench_live_validation_summary),
         "workbenchShotIndexDigest": _digest_text(workbench_shot_index_text),
         "runtimeEvidenceRefs": [
@@ -284,6 +294,10 @@ def _validate_top_level_claims(payload: Mapping[str, Any], errors: list[str]) ->
         errors.append("canonicalContractRef must be the governed front-office data contract")
     if payload.get("ownerMainlineEvidenceSchemaVersion") != OWNER_MAINLINE_EVIDENCE_SCHEMA_VERSION:
         errors.append("ownerMainlineEvidenceSchemaVersion must match owner-mainline evidence")
+    if not is_timezone_aware_datetime_text(
+        payload.get("workbenchLiveValidationSummaryGeneratedAtUtc")
+    ):
+        errors.append("workbenchLiveValidationSummaryGeneratedAtUtc must be timezone-aware")
     for digest_field in (
         "ownerMainlineEvidenceDigest",
         "workbenchLiveValidationSummaryDigest",
@@ -320,6 +334,7 @@ def _validate_proof_checks(payload: Mapping[str, Any], errors: list[str]) -> Non
         "canonicalPortfolioObserved",
         "canonicalBenchmarkObserved",
         "canonicalContractObserved",
+        "workbenchEvidenceFresh",
         "ideaJourneyThroughGatewayObserved",
         "ideaQueueRowsObserved",
         "ideaScreenshotEvidenceObserved",
@@ -380,6 +395,19 @@ def _canonical_contract_observed(summary: Mapping[str, Any]) -> bool:
         and isinstance(contract.get("canonicalAsOfDate"), str)
         and bool(contract.get("canonicalAsOfDate"))
     )
+
+
+def _workbench_evidence_fresh(
+    generated_at_utc: datetime,
+    summary: Mapping[str, Any],
+) -> bool:
+    generated_at = parse_timezone_aware_datetime(summary.get("generatedAt"))
+    if generated_at is None:
+        return False
+    generated_at_utc = generated_at_utc.astimezone(generated_at.tzinfo)
+    if generated_at > generated_at_utc:
+        return False
+    return generated_at_utc - generated_at <= MAX_WORKBENCH_RUNTIME_EVIDENCE_AGE
 
 
 def _idea_journey_through_gateway_observed(summary: Mapping[str, Any]) -> bool:

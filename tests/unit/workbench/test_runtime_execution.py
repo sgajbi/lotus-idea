@@ -34,6 +34,7 @@ def test_builds_closed_gateway_workbench_runtime_execution_proof() -> None:
     assert proof["sliceIds"] == ["RFC-0002/slice-11", "RFC-0002/slice-17"]
     assert proof["proofType"] == "gateway_workbench_runtime_execution"
     assert proof["evidenceClass"] == EvidenceClass.RUNTIME_EXECUTION.value
+    assert proof["workbenchLiveValidationSummaryGeneratedAtUtc"] == "2026-06-21T10:10:00Z"
     assert proof["runtimeExecutionProofValid"] is True
     assert proof["gatewayBffConsumptionObserved"] is True
     assert tuple(proof["aggregateBlockersCleared"]) == (
@@ -68,6 +69,7 @@ def test_builds_closed_gateway_workbench_runtime_execution_proof() -> None:
         ("canonicalPortfolioId", "OTHER"),
         ("canonicalBenchmarkCode", "OTHER"),
         ("gatewayBffConsumptionObserved", False),
+        ("workbenchLiveValidationSummaryGeneratedAtUtc", "not-a-time"),
         ("productionIdentityImplemented", True),
         ("browserAccessibilityCertified", True),
         ("canonicalDemoRuntimeCertified", True),
@@ -148,6 +150,9 @@ def test_rejects_summary_without_gateway_backed_idea_journey() -> None:
 @pytest.mark.parametrize(
     ("summary_patch", "failed_check"),
     [
+        ({"generatedAt": "2026-06-19T10:09:59Z"}, "workbenchEvidenceFresh"),
+        ({"generatedAt": "2026-06-21T10:10:01Z"}, "workbenchEvidenceFresh"),
+        ({"generatedAt": "not-a-time"}, "workbenchEvidenceFresh"),
         ({"advisoryJourneyChecks": "not-a-check-list"}, "ideaJourneyThroughGatewayObserved"),
         ({"advisoryJourneyChecks": ["not-a-check-object"]}, "ideaJourneyThroughGatewayObserved"),
         (

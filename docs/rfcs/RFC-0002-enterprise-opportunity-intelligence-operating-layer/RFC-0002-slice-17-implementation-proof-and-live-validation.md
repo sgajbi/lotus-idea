@@ -6,6 +6,24 @@ Status: Partially implemented - aggregate proof-readiness diagnostic, bounded so
 
 Prove the complete supported opportunity journey end to end.
 
+Current Slice 17 execution now includes a dedicated full-live opportunity
+journey proof contract:
+`src/app/application/full_live_opportunity_journey_proof.py`,
+`scripts/generate_full_live_opportunity_journey_proof.py`, and
+`make full-live-opportunity-journey-proof-gate`. The contract composes the
+implementation-proof readiness snapshot with Gateway/Workbench runtime
+execution evidence and preserves unresolved blockers across source ingestion,
+review queue, Workbench product proof, downstream realization, outbox delivery,
+data-mesh certification, runtime trust telemetry, and supported-feature
+promotion. It is intentionally fail-closed: the artifact can be valid while the
+journey remains uncertified, but it cannot claim production identity, client
+publication, suitability/execution authority, data-product certification,
+supported-feature promotion, or full demo readiness. Gateway/Workbench runtime
+execution proof now also rejects stale Workbench `live-validation-summary.json`
+evidence older than twenty-four hours or generated after the proof timestamp,
+preventing old screenshots from being regenerated into current live-journey
+evidence.
+
 ## Current Implementation Evidence
 
 1. `src/app/application/implementation_proof_readiness.py` builds a

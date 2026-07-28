@@ -14,9 +14,9 @@ packs, scores, review queues, feedback records, conversion intent, and readiness
 ## Current Posture
 
 `lotus-idea` is in RFC-0002 foundation implementation. Internal API,
-persistence, readiness, source-ingestion, outbox, AI-governance, downstream
-intent, Gateway/Workbench read-path, and data-mesh proof foundations exist, but
-no externally supported product feature is promoted.
+persistence, readiness, source-ingestion, outbox, AI-governance, downstream intent,
+Gateway/Workbench read-path, freshness-guarded runtime proof, full-live journey proof
+composition, and data-mesh foundations exist; no externally supported product feature is promoted.
 
 The supported-feature registry remains foundation-only. Feature promotion requires
 implementation-backed source certification, Gateway/Workbench proof, contracts, OpenAPI evidence,
@@ -189,7 +189,7 @@ Common gates:
 | `make test-e2e` | Deterministic end-to-end tests; override `E2E_TESTS` for focused work. |
 | `make test-client-lifecycle-gate` | Blocks unmanaged FastAPI/Starlette `TestClient` construction in integration and E2E tests. |
 | `make documentation-contract-gate` | README, repo context, docs, wiki, demo, and evidence-surface contract truth. |
-| `make implementation-truth-gate`, `make implementation-proof-closure-manifest-gate`, `make blueprint-scope-coverage-gate` | Blocks overclaims and requires RFC-0002 proof blockers plus blueprint scope to have issue/evidence-class closure truth. |
+| `make implementation-truth-gate`, `make implementation-proof-closure-manifest-gate`, `make full-live-opportunity-journey-proof-gate`, `make blueprint-scope-coverage-gate` | Blocks overclaims and requires RFC-0002 proof blockers, full-live journey composition, and blueprint scope to have issue/evidence-class closure truth. |
 | `make foundation-structure-gate` | Enforces foundation-only posture, documentation truth, and architecture-boundary agreement. |
 | `make dependency-vulnerability-posture-gate` | Enforces the RFC-0002 Slice 15 dependency/container vulnerability posture contract, including approved direct dependencies, exact stable pins, scanner wiring, release hooks, and issue-backed exceptions. |
 | `make quality-scorecard-gate` | Keeps quality posture aligned with implementation truth. |
