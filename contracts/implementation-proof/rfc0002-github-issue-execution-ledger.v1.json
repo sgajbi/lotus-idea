@@ -219,9 +219,9 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/686",
       "rfcSlices": ["slice-08", "slice-11"],
       "githubState": "open",
-      "executionStatus": "open_merged_main_qa_pending",
+      "executionStatus": "open_blocked",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #686 open. PR #736 merged to main at 1ef9e93e64482f27225c72142944b6bd7c1ce142 after exact-main Main Releasability run 30011797717 passed, wiki source was published to lotus-idea.wiki.git commit 05b8dc8 with strict DiffCount 0, and remote/local feature-branch cleanup completed after patch-equivalence checks. PR #736 does not certify review-action, feedback, or conversion-intent browser mutation controls; it preserves production identity, authorization, supported-feature, and client-publication blockers until implementation-backed live browser/action evidence exists."
+      "closureInstruction": "Keep #686 open and status/blocked. PR #736 merged Gateway/Workbench runtime-execution proof consumption to main at 1ef9e93e64482f27225c72142944b6bd7c1ce142 after exact-main Main Releasability run 30011797717 passed, wiki source was published to lotus-idea.wiki.git commit 05b8dc8 with strict DiffCount 0, and remote/local feature-branch cleanup completed after patch-equivalence checks. Workbench PR #501 merged the browser-action proof path, but final Slice 11 certification remains blocked by sgajbi/lotus-core#836 canonical seed readiness convergence for PB_SG_GLOBAL_BAL_001. This issue is not QA-pending: it remains blocked until core-owned readiness converges and Workbench live validation produces implementation-backed browser evidence for review-action, feedback, conversion-intent, permission-denied, and no-authority-inflation behavior. PR #736 and Workbench #501 do not certify production identity, supported-feature promotion, client publication, suitability, proposal approval, rebalance/action execution, or downstream authority."
     },
     {
       "issueNumber": 687,

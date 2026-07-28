@@ -100,10 +100,12 @@ with Main Releasability `30327202465` and CodeQL `30327193673` passing; it
 records supported-feature/data-product promotion blockers without promoting
 support. After Slice 16 QA closure and Slice 15 protected-attestation
 reconciliation, the current RFC-0002 ledger posture is 40 tracked issues, 14
-closed complete, 26 open, 8 `open_merged_main_qa_pending`, and 7
-`open_blocked`; #693 is blocked, not QA-pending, until protected
-capacity-production-like runner/environment and FinOps attestation evidence
-exist.
+closed complete, 26 open, 7 `open_merged_main_qa_pending`, and 8
+`open_blocked`; #686 is blocked, not QA-pending, until `lotus-core#836`
+restores canonical seed readiness and Workbench live browser validation
+produces current action-control evidence. #693 is blocked, not QA-pending,
+until protected capacity-production-like runner/environment and FinOps
+attestation evidence exist.
 
 Current internal foundations are real implementation. They are not client-ready
 publication, data-product certification, full Gateway/Workbench proof,
