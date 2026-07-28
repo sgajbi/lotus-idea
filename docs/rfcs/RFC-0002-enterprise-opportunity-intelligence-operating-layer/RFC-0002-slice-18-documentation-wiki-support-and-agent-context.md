@@ -458,11 +458,14 @@ execution ledger, `docs/operations/implementation-proof-readiness.md`,
 `wiki/Validation-and-CI.md`, `wiki/Supported-Features.md`, and repository
 context. PR #745 reconciled #340 to `open_merged_main_qa_pending` at
 `eeabfc683f595b4cbc9ffb5aa0aa51c3e5622903`; Main Releasability
-`30326431318` and CodeQL `30326422515` passed. PR #746 corrected stale ready
+`30326431318` and CodeQL `30326422515` passed. Final QA closed #340 on
+2026-07-29 after Idea-side attestation/governance/lineage/API proof and
+producer-side `lotus-ai` workflow-run attestation proof passed against current
+mainline evidence. PR #746 corrected stale ready
 posture for #380 and reconciled it to `open_blocked` at
 `6f8875dc6784dd17975e6700c09b9ff71d66fb8b`; Main Releasability
 `30327202465` and CodeQL `30327193673` passed. Current source truth now records
-41 tracked RFC-0002 issues, 15 closed complete, 26 open, 6
+41 tracked RFC-0002 issues, 16 closed complete, 25 open, 5
 `open_merged_main_qa_pending`, 1 `open_in_progress`, no `open_pr_raised`,
 and 9 `open_blocked`
 issues. #685 is `open_blocked`, not QA-pending: the 2026-07-29 governed
@@ -479,8 +482,10 @@ Platform PR `sgajbi/lotus-platform#631` fixes the prior Manage seed
 authorization failure; #686 is blocked, not QA-pending, until
 `sgajbi/lotus-core#840` restores canonical DPM source readiness and Workbench
 live browser action-control proof can be rerun. This records
-lifecycle truth only: #340 remains open for live Lotus AI
-provider/model-risk/runtime certification, #380 remains blocked for production
+lifecycle truth only: #340 is closed for the signed attestation trust boundary
+without claiming supported-feature promotion, client-ready publication,
+Workbench proof, autonomous advice, prompt/RAG infrastructure, model training,
+or broader production rollout. #380 remains blocked for production
 principal/session, authenticated Workbench BFF, core-owned canonical runtime,
 mesh onboarding, entitlement-denied, and supported-feature promotion evidence,
 and #693 is blocked rather than QA-pending until protected

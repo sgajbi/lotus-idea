@@ -158,19 +158,41 @@ def test_rfc0002_github_issue_execution_ledger_closes_archetype_pack_after_qa() 
     assert "does not certify live journey" in issue_696["closureInstruction"]
 
 
-def test_rfc0002_github_issue_execution_ledger_requires_issue_340_mainline_evidence(
+def test_rfc0002_github_issue_execution_ledger_requires_issue_340_qa_closure_evidence(
     tmp_path: Path,
 ) -> None:
     module = _load_gate()
     payload = _ledger_payload(module)
     for issue in payload["issues"]:
         if isinstance(issue, dict) and issue["issueNumber"] == 340:
-            issue["closureInstruction"] = issue["closureInstruction"].replace("30326431318", "")
+            issue["closureInstruction"] = issue["closureInstruction"].replace("154 passed", "")
             break
 
     errors = module.validate_github_issue_execution_ledger(_write_ledger(tmp_path, payload))
 
-    assert "#340: closureInstruction missing required evidence `30326431318`" in errors
+    assert "#340: closureInstruction missing required closed evidence `154 passed`" in errors
+
+
+def test_rfc0002_github_issue_execution_ledger_tracks_issue_340_closed_qa() -> None:
+    module = _load_gate()
+    payload = _ledger_payload(module)
+    issue_340 = next(
+        issue
+        for issue in payload["issues"]
+        if isinstance(issue, dict) and issue["issueNumber"] == 340
+    )
+
+    assert issue_340["githubState"] == "closed"
+    assert issue_340["executionStatus"] == "closed_complete"
+    assert issue_340["allowPullRequestAutoClose"] is True
+    assert "Closed #340 after QA passed" in issue_340["closureInstruction"]
+    assert "3ee62ed5947a0491362f5d080fd1c7deb5ff3567" in issue_340["closureInstruction"]
+    assert "30383665975" in issue_340["closureInstruction"]
+    assert "30383650543" in issue_340["closureInstruction"]
+    assert "154 passed" in issue_340["closureInstruction"]
+    assert "51 passed" in issue_340["closureInstruction"]
+    assert "sgajbi/lotus-ai#113" in issue_340["closureInstruction"]
+    assert "does not claim supported-feature promotion" in issue_340["closureInstruction"]
 
 
 def test_rfc0002_github_issue_execution_ledger_requires_issue_380_blocker_evidence(
