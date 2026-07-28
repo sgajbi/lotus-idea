@@ -282,9 +282,9 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/693",
       "rfcSlices": ["slice-15"],
       "githubState": "open",
-      "executionStatus": "open_pr_raised",
+      "executionStatus": "open_merged_main_qa_pending",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #693 open. PR #730 merged proof-specific dependency-recovery and PostgreSQL threshold gates plus protected workflow enforcement with exact-main validation. PR #748 fixes truncated upload-artifact pins in the protected capacity evidence producers and adds deterministic gate coverage so load/soak, dependency-recovery, and PostgreSQL capacity workflows cannot drift from the governed pinned upload action. This PR tranche does not provision self-hosted runners, configure protected environment variables/secrets, execute protected capacity, load, resource, dependency, PostgreSQL, or cost attestations, or promote supported features."
+      "closureInstruction": "Keep #693 open. PR #730 merged proof-specific dependency-recovery and PostgreSQL threshold gates plus protected workflow enforcement with exact-main validation. PR #748 merged by rebase to exact main SHA 29c235c21ff25c36f34d560e7794bc980661818f and passed Main Releasability run 30330029033 plus CodeQL run 30330024353 for that SHA. It fixes truncated upload-artifact pins in the protected capacity evidence producers and adds deterministic gate coverage so load/soak, dependency-recovery, and PostgreSQL capacity workflows cannot drift from the governed pinned upload action. No repo-authored wiki source changed, no wiki publication was required, the remote PR branch is absent after fetch, and the local PR branch was removed after patch-equivalence evidence. This merged-main QA-pending tranche does not provision self-hosted runners, configure protected environment variables/secrets, execute protected capacity, load, resource, dependency, PostgreSQL, or cost attestations, or promote supported features."
     },
     {
       "issueNumber": 694,
