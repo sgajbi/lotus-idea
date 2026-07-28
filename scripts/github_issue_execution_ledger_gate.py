@@ -127,7 +127,8 @@ REQUIRED_OPEN_ISSUE_EVIDENCE = {
         "does not provision self-hosted runners",
     ),
     756: (
-        "Keep #756 open and status/fixed-local",
+        "Keep #756 open and status/pr-open",
+        "PR #757",
         "build-system dependency posture gap",
         "requirements/build-system.lock.txt",
         "Do not use this issue to claim production vulnerability certification",

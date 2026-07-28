@@ -55,15 +55,15 @@ def test_github_issue_execution_summary_reports_current_rfc0002_counts() -> None
     assert summary["counts"]["open"] == 27
     assert summary["counts"]["closed"] == 14
     assert summary["counts"]["byExecutionStatus"]["open_in_progress"] == 2
-    assert summary["counts"]["byExecutionStatus"]["open_fixed_local"] == 1
-    assert "open_pr_raised" not in summary["counts"]["byExecutionStatus"]
+    assert "open_fixed_local" not in summary["counts"]["byExecutionStatus"]
+    assert summary["counts"]["byExecutionStatus"]["open_pr_raised"] == 1
     assert summary["counts"]["byExecutionStatus"]["open_merged_main_qa_pending"] == 6
     assert "open_ready" not in summary["counts"]["byExecutionStatus"]
     assert summary["counts"]["byExecutionStatus"]["open_blocked"] == 8
     assert summary["counts"]["byExecutionStatus"]["open_tracker"] == 8
     assert summary["issuesByStatus"]["open_in_progress"] == [681, 685]
-    assert summary["issuesByStatus"]["open_fixed_local"] == [756]
-    assert "open_pr_raised" not in summary["issuesByStatus"]
+    assert "open_fixed_local" not in summary["issuesByStatus"]
+    assert summary["issuesByStatus"]["open_pr_raised"] == [756]
     assert summary["issuesByStatus"]["open_merged_main_qa_pending"] == [
         340,
         379,
@@ -103,7 +103,6 @@ def test_github_issue_execution_summary_markdown_is_comment_ready() -> None:
     assert "#756" in rendered
     assert "## Fixed Locally Issues" in rendered
     assert "## PR-Open Issues" in rendered
-    assert "## PR-Open Issues\n\n_None._" in rendered
     assert "## Merged-Main QA Pending Issues" in rendered
     assert "#340, #379, #690, #691, #692, #699" in rendered
     assert "## Ready Issues" in rendered
