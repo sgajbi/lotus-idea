@@ -188,6 +188,60 @@ def test_rfc0002_github_issue_execution_ledger_requires_issue_380_blocker_eviden
     assert "#380: closureInstruction missing required evidence `open_blocked`" in errors
 
 
+def test_rfc0002_github_issue_execution_ledger_tracks_platform_capacity_dependencies() -> None:
+    module = _load_gate()
+    payload = _ledger_payload(module)
+    issue_345 = next(
+        issue
+        for issue in payload["issues"]
+        if isinstance(issue, dict) and issue["issueNumber"] == 345
+    )
+    issue_693 = next(
+        issue
+        for issue in payload["issues"]
+        if isinstance(issue, dict) and issue["issueNumber"] == 693
+    )
+
+    assert issue_345["githubState"] == "open"
+    assert issue_345["executionStatus"] == "open_blocked"
+    assert "Platform PR #629 merged bounded cost-attribution" in issue_345["closureInstruction"]
+    assert "823e2641778aaf7db4e1df6218cf84eab0084526" in issue_345["closureInstruction"]
+    assert "sgajbi/lotus-platform#495" in issue_345["closureInstruction"]
+    assert "capacity-production-like environment" in issue_345["closureInstruction"]
+    assert (
+        "No supported-feature, production capacity, billing, scaling"
+        in issue_345["closureInstruction"]
+    )
+    assert "Platform PR #629 merged bounded cost-attribution" in issue_693["closureInstruction"]
+    assert (
+        "platform issue #495 remains the protected FinOps execution"
+        in (issue_693["closureInstruction"])
+    )
+
+
+def test_rfc0002_github_issue_execution_ledger_tracks_platform_mesh_readiness() -> None:
+    module = _load_gate()
+    payload = _ledger_payload(module)
+    issue_692 = next(
+        issue
+        for issue in payload["issues"]
+        if isinstance(issue, dict) and issue["issueNumber"] == 692
+    )
+
+    assert issue_692["githubState"] == "open"
+    assert issue_692["executionStatus"] == "open_merged_main_qa_pending"
+    assert (
+        "Platform PR #630 merged bounded mesh-readiness proof consumption"
+        in (issue_692["closureInstruction"])
+    )
+    assert "30335871870" in issue_692["closureInstruction"]
+    assert "30335876432" in issue_692["closureInstruction"]
+    assert (
+        "clears only the catalog/policy/telemetry-consumable dependency marker"
+        in (issue_692["closureInstruction"])
+    )
+
+
 def test_rfc0002_github_issue_execution_ledger_blocks_auto_close_wording_for_open_issue(
     tmp_path: Path,
 ) -> None:

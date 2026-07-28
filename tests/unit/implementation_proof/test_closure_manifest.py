@@ -263,6 +263,51 @@ def test_closure_manifest_rejects_noncanonical_slice_numbering_and_effect_case()
     ) in errors
 
 
+def test_closure_manifest_records_platform_partial_progress_boundaries() -> None:
+    contract = _load_contract()
+    groups = {group["groupId"]: group for group in contract["blockerGroups"]}
+    mesh_dependencies = {
+        dependency["number"]: dependency
+        for dependency in groups["data-mesh-certification-and-platform-catalog"]["dependencyIssues"]
+    }
+    operations_dependencies = {
+        dependency["number"]: dependency
+        for dependency in groups["operator-workflow-operations-certification"]["dependencyIssues"]
+    }
+
+    platform_mesh = mesh_dependencies[598]
+    assert platform_mesh["dependencyStatus"] == "merged_main_partial_progress"
+    assert platform_mesh["mainSha"] == "c0fb028a440a24622fe162e934c3469fcafb4055"
+    assert "30335871870" in platform_mesh["mainReleasabilityRunIds"]
+    assert "Gateway/Workbench discovery" in platform_mesh["evidenceBoundary"]
+    assert "supported-feature promotion remain blocked" in platform_mesh["evidenceBoundary"]
+    assert (
+        "Platform PR #630 merged bounded mesh-readiness proof consumption"
+        in (groups["platform-source-contract-inclusion"]["partialProgress"])
+    )
+    assert (
+        "required-product promotion"
+        in (groups["platform-source-contract-inclusion"]["partialProgress"])
+    )
+
+    platform_cost_contract = operations_dependencies[599]
+    platform_finops_execution = operations_dependencies[495]
+    assert platform_cost_contract["dependencyStatus"] == "merged_main_partial_progress"
+    assert platform_cost_contract["mainSha"] == "823e2641778aaf7db4e1df6218cf84eab0084526"
+    assert "30334570871" in platform_cost_contract["mainReleasabilityRunIds"]
+    assert platform_finops_execution["dependencyRole"].startswith(
+        "Platform protected FinOps execution"
+    )
+    assert (
+        "Platform PR #629 merged bounded cost-attribution"
+        in (groups["operator-workflow-operations-certification"]["partialProgress"])
+    )
+    assert (
+        "non-certifying"
+        in (groups["operator-workflow-operations-certification"]["partialProgress"])
+    )
+
+
 def test_closure_manifest_rejects_unclassified_proof_artifact_registry(
     monkeypatch: Any,
 ) -> None:
