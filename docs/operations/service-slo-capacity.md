@@ -309,10 +309,13 @@ protected runtime must exist on `main` before qualifying evidence can be
 produced. `make postgres-capacity-threshold-proof-gate` validates the exact
 threshold/recovery artifact before provenance attestation. Production-like
 resource evidence is co-observed and separately attested by the load/soak
-workflow. Official cost attribution remains governed by `lotus-platform#495`
-and cannot be produced by Idea. The platform producer and Idea consumer are
-implemented locally, but only a protected platform mainline execution can create
-qualifying cost evidence.
+workflow. Bounded platform cost-attribution and deployment-promotion proof
+consumption is now available from `lotus-platform#599`, merged through platform
+PR #629 on main SHA `823e2641778aaf7db4e1df6218cf84eab0084526`. That proof is
+source-contract evidence only. Official cost attribution remains governed by
+`lotus-platform#495` and cannot be produced by Idea. Only protected platform
+mainline FinOps execution with attested cost verification can create qualifying
+cost evidence.
 
 Validate the evidence boundary independently:
 
@@ -362,7 +365,10 @@ workflow, main ref, and exact commit. A valid receipt clears only
 `production_like_resource_attestation_missing`; the aggregate retains
 `costAttributionVerified=false` and `cost_attribution_evidence_missing`.
 Official provider/platform billing allocation, decimal reconciliation, and
-attestation belong to `lotus-platform#495`, not Lotus Idea.
+protected FinOps attestation belong to `lotus-platform#495`, not Lotus Idea.
+The merged platform #599 source contract can support the consumer boundary, but
+it cannot clear `cost_attribution_evidence_missing` without matching protected
+execution evidence.
 
 After downloading a platform artifact, bind it to the same verified resource
 proof:

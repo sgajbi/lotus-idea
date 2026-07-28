@@ -447,15 +447,17 @@ and exact commit. A valid receipt removes only
 until mainline execution succeeds.
 
 The aggregate baseline now separates `resourceAttestationVerified` from
-`costAttributionVerified`. Official provider/platform billing adapters,
-allocation, decimal reconciliation, and attestation remain outside Idea and are
-tracked in `lotus-platform#495`. The platform producer contract and protected
-workflow plus Idea's narrow cross-repository verifier are implemented locally.
-Idea accepts cost qualification only when the platform repository, signer,
-main ref, commit, and artifact digest verify and the platform resource digest
-and run id match the already attested Idea resource proof. Therefore
-`cost_attribution_evidence_missing` stays open until protected mainline
-execution produces that matching evidence.
+`costAttributionVerified`. Platform issue `lotus-platform#599` has merged the
+bounded cost-attribution and deployment-promotion source contract, so Idea can
+recognize the contract boundary without claiming protected cost certification.
+Official provider/platform billing adapters, allocation, decimal reconciliation,
+and attestation remain outside Idea and are tracked in `lotus-platform#495`.
+The platform producer contract plus Idea's narrow cross-repository verifier are
+implemented locally. Idea accepts cost qualification only when the platform
+repository, signer, main ref, commit, and artifact digest verify and the
+platform resource digest and run id match the already attested Idea resource
+proof. Therefore `cost_attribution_evidence_missing` stays open until protected
+mainline execution produces that matching evidence.
 
 Dependency-failure evidence now uses closed source-failure classification
 instead of a caller-selected expectation boolean. The source-ingestion API
