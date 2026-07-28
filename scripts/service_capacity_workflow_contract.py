@@ -25,6 +25,7 @@ EXPECTED_WORKFLOWS = {
     "postgresql",
 }
 ATTESTATION_ACTION = "actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373"
+UPLOAD_ARTIFACT_ACTION = "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a"
 
 
 def validate_capacity_attestation_workflows(repository_root: Path) -> list[str]:
@@ -50,6 +51,7 @@ def _validate_postgres_capacity_workflow(repository_root: Path) -> list[str]:
         "make postgres-capacity-threshold-proof",
         "make postgres-capacity-threshold-proof-gate",
         ATTESTATION_ACTION,
+        UPLOAD_ARTIFACT_ACTION,
     )
     errors = [
         f"PostgreSQL capacity workflow missing {token!r}"
@@ -85,6 +87,7 @@ def validate_dependency_recovery_workflow(repository_root: Path) -> list[str]:
         "--allow-mutating-workflows",
         "make service-dependency-recovery-proof-gate",
         ATTESTATION_ACTION,
+        UPLOAD_ARTIFACT_ACTION,
     )
     errors = [
         f"dependency recovery workflow missing {token!r}"
@@ -129,6 +132,7 @@ def validate_load_soak_workflow(repository_root: Path) -> list[str]:
         "make service-resource-proof-gate",
         "subject-path: output/observability/service-resource-baseline.json",
         ATTESTATION_ACTION,
+        UPLOAD_ARTIFACT_ACTION,
     )
     errors = [
         f"load soak workflow missing {token!r}" for token in required if token not in workflow
