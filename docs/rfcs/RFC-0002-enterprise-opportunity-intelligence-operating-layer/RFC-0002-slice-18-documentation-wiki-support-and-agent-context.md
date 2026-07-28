@@ -448,10 +448,15 @@ ledger. PR #742 merged the aggregate proof to main at
 `ce29814` with strict `DiffCount 0`; PR #743 reconciled the execution ledger at
 current main `8ccee32d9a25fb6c47c723e105e2c48d1c4b3c70`, with Main
 Releasability run `30324178801` passing. Issue #379 remains open in
-`status/merged-main`: this evidence clears only the source-safe aggregate proof
-composition tranche and does not claim suitability, rebalance/execution, report
+`status/blocked`: this evidence clears only the source-safe aggregate proof
+composition and owner-app local implementation tranche. Production/certification
+evidence, trusted IdP caller context, retention/legal proof, and Archive
+production conformance remain open through `sgajbi/lotus-manage#620`,
+`sgajbi/lotus-manage#624`, `sgajbi/lotus-report#136`, and
+`sgajbi/lotus-archive#55`; no suitability, rebalance/execution, report
 rendering, archive authority, client publication, production identity,
-supported-feature promotion, or full downstream outcome certification closure.
+supported-feature promotion, legal/privacy approval, or full downstream outcome
+certification closure is claimed.
 
 The #340/#380 posture reconciliation is now synchronized across the RFC-0002
 execution ledger, `docs/operations/implementation-proof-readiness.md`,
@@ -465,10 +470,13 @@ mainline evidence. PR #746 corrected stale ready
 posture for #380 and reconciled it to `open_blocked` at
 `6f8875dc6784dd17975e6700c09b9ff71d66fb8b`; Main Releasability
 `30327202465` and CodeQL `30327193673` passed. Current source truth now records
-41 tracked RFC-0002 issues, 16 closed complete, 25 open, 5
+41 tracked RFC-0002 issues, 16 closed complete, 25 open, 4
 `open_merged_main_qa_pending`, 1 `open_in_progress`, no `open_pr_raised`,
-and 9 `open_blocked`
-issues. #685 is `open_blocked`, not QA-pending: the 2026-07-29 governed
+and 10 `open_blocked`
+issues. #379 is `open_blocked`, not QA-pending because its owner-app local
+implementation dependencies are merged but production/certification,
+trusted-identity, retention/legal, and Archive production evidence remains
+open. #685 is `open_blocked`, not QA-pending: the 2026-07-29 governed
 Workbench startup attempt via `npm run live:stack:up` did not converge on
 core-owned canonical readiness for `PB_SG_GLOBAL_BAL_001`. Valuation jobs
 drained to zero, but Core still reported `positions_data_quality_not_complete`,

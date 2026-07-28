@@ -324,7 +324,7 @@ def test_documentation_contract_gate_requires_downstream_outcome_mainline_eviden
             "Downstream Outcome Certification Aggregate Proof",
             "PR #742 merged this aggregate proof to `main`",
             "`30323405962` passed for that exact SHA",
-            "issue #379 remains open in `status/merged-main`",
+            "issue #379 remains open in `status/blocked`",
             "supporting proof only",
         ),
     )
@@ -341,7 +341,7 @@ def test_documentation_contract_gate_requires_downstream_outcome_mainline_eviden
         "docs/operations/downstream-realization-readiness.md: missing required fragment "
         "``30323405962` passed for that exact SHA`",
         "docs/operations/downstream-realization-readiness.md: missing required fragment "
-        "`issue #379 remains open in `status/merged-main``",
+        "`issue #379 remains open in `status/blocked``",
         "docs/operations/downstream-realization-readiness.md: missing required fragment "
         "`supporting proof only`",
     ]

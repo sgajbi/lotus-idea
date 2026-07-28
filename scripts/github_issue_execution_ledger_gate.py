@@ -87,6 +87,17 @@ AUTO_CLOSE_KEYWORDS = (
     "resolved",
 )
 REQUIRED_OPEN_ISSUE_EVIDENCE = {
+    379: (
+        "Keep #379 open and status/blocked",
+        "sgajbi/lotus-advise#461",
+        "sgajbi/lotus-manage#621",
+        "sgajbi/lotus-report#152",
+        "sgajbi/lotus-manage#620",
+        "sgajbi/lotus-manage#624",
+        "sgajbi/lotus-report#136",
+        "sgajbi/lotus-archive#55",
+        "production/certification evidence",
+    ),
     380: (
         "PR #746 corrected stale ready posture",
         "open_blocked",

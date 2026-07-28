@@ -291,10 +291,12 @@ The aggregate validates that the three owner artifacts are
 duplicate/replay, idempotency conflict, timeout-before-response,
 response-before-local-commit, restart reconciliation, and operator
 reconciliation replay windows through its durable submission and
-reconciliation tests. It clears no new aggregate blocker and keeps #379 open:
-full downstream outcome certification still requires live cross-repository
-owner evidence, production identity, supported-feature promotion evidence, and
-client-publication authority. The artifact must keep suitability,
+reconciliation tests. It clears no new aggregate blocker and keeps #379 open in
+`open_blocked`: owner-app local implementation evidence is mainline-backed, but
+full downstream outcome certification still requires production/certification
+evidence, trusted IdP caller context, retention/legal proof, Archive production
+conformance, supported-feature promotion evidence, and client-publication
+authority. The artifact must keep suitability,
 rebalance/execution, report-rendering authority, archive authority,
 client-publication, production certification, supported-feature, and
 certification-closure claims false.
@@ -307,9 +309,10 @@ Docker/release-image validation; wiki publication completed at
 then reconciled the RFC-0002 execution ledger on `main` at
 `8ccee32d9a25fb6c47c723e105e2c48d1c4b3c70`, with Main Releasability run
 `30324178801` passing for the current main SHA. Treat this as source-safe
-supporting proof only: issue #379 remains open in `status/merged-main` until
-QA/final certification proves the downstream outcome, publication,
-production-identity, supported-feature, and client-safe authority boundaries.
+supporting proof only: issue #379 remains open in `status/blocked` until
+production/certification evidence proves downstream outcome, publication,
+production-identity, supported-feature, legal/privacy, Archive production
+conformance, and client-safe authority boundaries.
 
 ## Report Materialization Source Contract
 

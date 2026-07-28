@@ -104,8 +104,14 @@ with Main Releasability `30327202465` and CodeQL `30327193673` passing; it
 records supported-feature/data-product promotion blockers without promoting
 support. After Slice 16 QA closure and Slice 15 protected-attestation
 reconciliation, the current RFC-0002 ledger posture is 41 tracked issues, 16
-closed complete, 25 open, 5 `open_merged_main_qa_pending`, 1
-`open_in_progress`, no `open_pr_raised`, and 9 `open_blocked`; #685 is now
+closed complete, 25 open, 4 `open_merged_main_qa_pending`, 1
+`open_in_progress`, no `open_pr_raised`, and 10 `open_blocked`; #379 is now
+blocked, not QA-pending: Advise, Manage, Report, and Idea owner-app local
+implementation evidence is already merged, but production/certification,
+trusted IdP caller context, retention/legal, and Archive production conformance
+evidence remains open through `sgajbi/lotus-manage#620`,
+`sgajbi/lotus-manage#624`, `sgajbi/lotus-report#136`, and
+`sgajbi/lotus-archive#55`. #685 is now
 blocked by `sgajbi/lotus-core#836` after the 2026-07-29 governed Workbench
 startup attempt via `npm run live:stack:up` did not converge on core-owned
 canonical readiness for `PB_SG_GLOBAL_BAL_001`. Valuation jobs drained to zero,
@@ -1505,10 +1511,11 @@ Manage, and Report owner runtime proofs with Idea durable
 submission/reconciliation coverage for accepted, rejected, duplicate/replay,
 idempotency-conflict, timeout-before-response, response-before-local-commit,
 restart reconciliation, and operator reconciliation replay windows. It is
-supporting evidence only: it clears no new aggregate blocker, keeps #379 open,
-and must preserve suitability, rebalance/execution, report-rendering/archive,
-client-publication, production-identity, supported-feature, and
-certification-closure claims as false.
+supporting evidence only: it clears no new aggregate blocker, keeps #379 open
+in `open_blocked`, and must preserve suitability, rebalance/execution,
+report-rendering/archive, client-publication, production-identity,
+supported-feature, legal/privacy approval, and certification-closure claims as
+false.
 
 Current repo-native aggregate command posture:
 

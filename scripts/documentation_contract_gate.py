@@ -188,7 +188,7 @@ REQUIRED_SURFACES = (
             "Downstream Outcome Certification Aggregate Proof",
             "PR #742 merged this aggregate proof to `main`",
             "`30323405962` passed for that exact SHA",
-            "issue #379 remains open in `status/merged-main`",
+            "issue #379 remains open in `status/blocked`",
             "supporting proof only",
         ),
     ),
@@ -231,7 +231,7 @@ REQUIRED_SURFACES = (
             "make documentation-contract-gate",
             "Branch hygiene policy",
             "Mainline evidence is PR #742",
-            "Issue #379 remains open in `status/merged-main`",
+            "Issue #379 remains open in `status/blocked`",
         ),
     ),
     DocumentationSurface(

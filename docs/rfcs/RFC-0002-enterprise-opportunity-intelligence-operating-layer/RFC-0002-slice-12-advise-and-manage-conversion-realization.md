@@ -248,10 +248,13 @@ Implemented in this slice:
     rejected, duplicate/replay, idempotency-conflict,
     timeout-before-response, response-before-local-commit, restart
     reconciliation, and operator reconciliation replay coverage while clearing
-    no new aggregate blocker. It deliberately keeps #379 open and preserves
-    suitability, rebalance/execution, report-rendering/archive,
-    client-publication, production-identity, supported-feature, and
-    certification-closure claims as false.
+    no new aggregate blocker. It deliberately keeps #379 open in
+    `open_blocked`: owner-app local implementation evidence is merged, while
+    production/certification evidence, trusted IdP caller context,
+    retention/legal proof, and Archive production conformance remain open. It
+    preserves suitability, rebalance/execution, report-rendering/archive,
+    client-publication, production-identity, supported-feature, legal/privacy
+    approval, and certification-closure claims as false.
 
 ## Issue 326 Outcome Lifecycle Hardening
 

@@ -152,8 +152,8 @@ live GitHub proof; it deliberately points back to
 open/closed verification.
 
 Current Slice 18 ledger synchronization records 41 tracked RFC-0002 issues:
-16 closed complete, 25 open, no ready issues, 5
-`open_merged_main_qa_pending`, 9 `open_blocked`, 1 `open_in_progress`, no
+16 closed complete, 25 open, no ready issues, 4
+`open_merged_main_qa_pending`, 10 `open_blocked`, 1 `open_in_progress`, no
 `open_fixed_local`, no `open_pr_raised`, 1 `open_pending_final_closure`, 1
 `open_pending_post_completion`, and 8
 `open_tracker`. PR #745 reconciled #340 to `open_merged_main_qa_pending` on
@@ -167,7 +167,14 @@ ready posture for #380, reconciled it to `open_blocked` on
 and CodeQL `30327193673` passed for that exact SHA. #380 remains open for
 production principal/session, Workbench authenticated BFF, core-owned canonical
 runtime, mesh onboarding, entitlement-denied, and supported-feature promotion
-evidence. Platform PR `sgajbi/lotus-platform#631`
+evidence. #379 is `open_blocked`, not QA-pending: owner-app local
+implementation evidence is already merged through `sgajbi/lotus-advise#461`,
+`sgajbi/lotus-manage#621`, `sgajbi/lotus-report#152`, and Idea PR #742/#743,
+but production/certification evidence, trusted IdP caller context,
+retention/legal proof, and Archive production conformance remain open through
+`sgajbi/lotus-manage#620`, `sgajbi/lotus-manage#624`,
+`sgajbi/lotus-report#136`, and `sgajbi/lotus-archive#55`. Platform PR
+`sgajbi/lotus-platform#631`
 fixes the prior Manage seed authorization failure, but #686 is still
 `open_blocked`, not QA-pending because `sgajbi/lotus-core#840` blocks
 canonical DPM source readiness and Workbench live browser action-control proof.
