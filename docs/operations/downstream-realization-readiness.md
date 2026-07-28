@@ -299,6 +299,18 @@ rebalance/execution, report-rendering authority, archive authority,
 client-publication, production certification, supported-feature, and
 certification-closure claims false.
 
+Current mainline evidence: PR #742 merged this aggregate proof to `main` at
+`0a4e7a55495cb3b979672f52b08ba2630603cf94`; Main Releasability run
+`30323405962` passed for that exact SHA, including coverage and
+Docker/release-image validation; wiki publication completed at
+`lotus-idea.wiki` commit `ce29814` with strict `DiffCount 0` parity. PR #743
+then reconciled the RFC-0002 execution ledger on `main` at
+`8ccee32d9a25fb6c47c723e105e2c48d1c4b3c70`, with Main Releasability run
+`30324178801` passing for the current main SHA. Treat this as source-safe
+supporting proof only: issue #379 remains open in `status/merged-main` until
+QA/final certification proves the downstream outcome, publication,
+production-identity, supported-feature, and client-safe authority boundaries.
+
 ## Report Materialization Source Contract
 
 `scripts/report/generate_materialization_source_contract.py` can read the sibling

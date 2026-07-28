@@ -304,6 +304,49 @@ def test_documentation_contract_gate_blocks_unpolished_operator_doc(
     ]
 
 
+def test_documentation_contract_gate_requires_downstream_outcome_mainline_evidence(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    doc = tmp_path / "docs" / "operations" / "downstream-realization-readiness.md"
+    doc.parent.mkdir(parents=True)
+    doc.write_text(
+        "# Downstream Realization Readiness\n\n"
+        "## Downstream Outcome Certification Aggregate Proof\n\n"
+        "The proof exists but this stale doc omits exact PR, mainline run, and "
+        "keep-open evidence.\n",
+        encoding="utf-8",
+    )
+    surface = module.DocumentationSurface(
+        "docs/operations/downstream-realization-readiness.md",
+        1,
+        (
+            "Downstream Outcome Certification Aggregate Proof",
+            "PR #742 merged this aggregate proof to `main`",
+            "`30323405962` passed for that exact SHA",
+            "issue #379 remains open in `status/merged-main`",
+            "supporting proof only",
+        ),
+    )
+
+    errors = module.validate_documentation_contract(
+        root=tmp_path,
+        surfaces=(surface,),
+        polished_surfaces=(),
+    )
+
+    assert errors == [
+        "docs/operations/downstream-realization-readiness.md: missing required fragment "
+        "`PR #742 merged this aggregate proof to `main``",
+        "docs/operations/downstream-realization-readiness.md: missing required fragment "
+        "``30323405962` passed for that exact SHA`",
+        "docs/operations/downstream-realization-readiness.md: missing required fragment "
+        "`issue #379 remains open in `status/merged-main``",
+        "docs/operations/downstream-realization-readiness.md: missing required fragment "
+        "`supporting proof only`",
+    ]
+
+
 def test_documentation_contract_gate_blocks_missing_required_diagram(
     tmp_path: Path,
 ) -> None:

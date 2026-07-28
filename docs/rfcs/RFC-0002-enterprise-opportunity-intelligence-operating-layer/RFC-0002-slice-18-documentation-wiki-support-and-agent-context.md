@@ -1,6 +1,6 @@
 # RFC-0002 Slice 18: Documentation, Wiki, Support, And Agent Context
 
-Status: Partially implemented - API certification, outbox readiness, implementation-proof, live source-proof contract, scheduled-worker source-contract and deployment-evidence contracts, durable repository proof contract, runtime telemetry test-execution contract, bounded Workbench read-path source contract, bounded Gateway/Workbench contract proof, bounded Gateway/Workbench discovery contract proof, digest-bound Advise/Manage route source contracts, bounded Report intake route source contract, bounded outbox broker source-contract proof, bounded outbox platform-mesh event source-contract proof, digest-bound mesh policy source contract, AI lineage store proof, closed v2 Manage mandate, Advise mandate/restriction, Advise missing-suitability, and Advise missing-risk-profile runtime evidence, receipt-bound Core portfolio-state, bond-maturity, and low-income cashflow runtime evidence, typed Advise mandate/restriction source-product proof, typed Advise missing risk-profile source-product proof, underperformance, allocation-drift, and drawdown-review API foundation truth, mandate/restriction and missing-benchmark policy foundation truth, client-demo process, downstream submission/reconciliation workload readiness truth, and downstream contract documentation synchronized
+Status: Partially implemented - API certification, outbox readiness, implementation-proof, live source-proof contract, scheduled-worker source-contract and deployment-evidence contracts, durable repository proof contract, runtime telemetry test-execution contract, bounded Workbench read-path source contract, bounded Gateway/Workbench contract proof, bounded Gateway/Workbench discovery contract proof, digest-bound Advise/Manage route source contracts, bounded Report intake route source contract, bounded downstream outcome certification supporting proof, bounded outbox broker source-contract proof, bounded outbox platform-mesh event source-contract proof, digest-bound mesh policy source contract, AI lineage store proof, closed v2 Manage mandate, Advise mandate/restriction, Advise missing-suitability, and Advise missing-risk-profile runtime evidence, receipt-bound Core portfolio-state, bond-maturity, and low-income cashflow runtime evidence, typed Advise mandate/restriction source-product proof, typed Advise missing risk-profile source-product proof, underperformance, allocation-drift, and drawdown-review API foundation truth, mandate/restriction and missing-benchmark policy foundation truth, client-demo process, downstream submission/reconciliation workload readiness truth, downstream contract documentation, and #379 merged-main execution-truth synchronization completed
 
 ## Outcome
 
@@ -437,6 +437,21 @@ the RFC label in GitHub. Parent `open_tracker` issues now require
 Slice 18 PRs must keep the correct lifecycle label and use `Keep #681 open`
 until full RFC documentation, wiki, support, and agent context closure is
 complete.
+
+The #379 downstream outcome certification supporting-proof tranche is now
+synchronized across repo context,
+`docs/operations/downstream-realization-readiness.md`,
+`wiki/Validation-and-CI.md`, Slice 12, Slice 13, and the RFC-0002 execution
+ledger. PR #742 merged the aggregate proof to main at
+`0a4e7a55495cb3b979672f52b08ba2630603cf94`; Main Releasability run
+`30323405962` passed; wiki publication completed at `lotus-idea.wiki` commit
+`ce29814` with strict `DiffCount 0`; PR #743 reconciled the execution ledger at
+current main `8ccee32d9a25fb6c47c723e105e2c48d1c4b3c70`, with Main
+Releasability run `30324178801` passing. Issue #379 remains open in
+`status/merged-main`: this evidence clears only the source-safe aggregate proof
+composition tranche and does not claim suitability, rebalance/execution, report
+rendering, archive authority, client publication, production identity,
+supported-feature promotion, or full downstream outcome certification closure.
 
 The missing-benchmark Core material now records the independently owned closed
 v2 runtime contract implemented by issue `#499`. One named application use case
