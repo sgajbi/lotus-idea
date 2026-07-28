@@ -8,7 +8,7 @@
 | Required capability | `idea.implementation-proof.readiness.read` |
 | Required query | Timezone-aware `evaluatedAtUtc` |
 | Supportability | `not_certified` while blockers remain |
-| Product claim | Bounded live source-ingestion, runtime trust telemetry, digest-bound Advise/Manage/Report route source contracts, Advise idea-intake runtime execution, Report materialization, outbox broker/consumer/platform-mesh source contracts, outbox broker runtime-execution proof artifacts, Gateway/Workbench source contracts/discovery, optional Gateway/Workbench runtime-execution proof, mesh policy, platform catalog source contract, receipt-bound mainline AI lineage-store CI execution, AI workflow-pack registration/runtime execution proof artifacts, source-safe canonical opportunity archetype evidence-pack composition, and opportunity archetype scenario readiness can be consumed. Source contracts and the canonical archetype pack add provenance without clearing live blockers; runtime-class Risk/Performance/Core/Manage/Advise/outbox-broker and Gateway/Workbench proofs clear only their named blockers when valid and current. No full live journey, live AI provider execution, suitability/rebalance/risk-profile/restriction-clearance/benchmark-assignment authority, platform mesh certification, external broker or platform-mesh publication without an accepted broker runtime artifact, downstream delivery beyond the named bounded proof, full Gateway/Workbench product certification, client-ready publication, or supported-feature promotion is proven. |
+| Product claim | Bounded live source-ingestion, runtime trust telemetry, digest-bound Advise/Manage/Report route source contracts, Advise idea-intake runtime execution, Report materialization, outbox broker/consumer/platform-mesh source contracts, outbox broker runtime-execution proof artifacts, Gateway/Workbench source contracts/discovery, optional freshness-guarded Gateway/Workbench runtime-execution proof, mesh policy, platform catalog source contract, receipt-bound mainline AI lineage-store CI execution, AI workflow-pack registration/runtime execution proof artifacts, source-safe canonical opportunity archetype evidence-pack composition, opportunity archetype scenario readiness, and the Slice 17 aggregate full-live journey proof contract can be consumed. Source contracts and the canonical archetype pack add provenance without clearing live blockers; runtime-class Risk/Performance/Core/Manage/Advise/outbox-broker and Gateway/Workbench proofs clear only their named blockers when valid and current. The full-live journey artifact composes proof posture and blocker truth; it does not certify the journey while blockers remain. No live AI provider execution, suitability/rebalance/risk-profile/restriction-clearance/benchmark-assignment authority, platform mesh certification, external broker or platform-mesh publication without an accepted broker runtime artifact, downstream delivery beyond the named bounded proof, full Gateway/Workbench product certification, client-ready publication, or supported-feature promotion is proven. |
 
 `GET /api/v1/implementation-proof/readiness` is the internal operator
 diagnostic for RFC-0002 implementation proof posture.
@@ -47,6 +47,30 @@ It returns:
 10. downstream realization blockers and internal submission route evidence,
 11. supported-feature promotion blockers,
 12. source-of-truth implementation paths.
+
+## Full-Live Journey Proof Contract
+
+`make full-live-opportunity-journey-proof-gate` validates the Slice 17
+aggregate journey proof schema and local evidence refs. A concrete artifact can
+be generated with `make full-live-opportunity-journey-proof` after
+`make implementation-proof-readiness-check` has produced
+`output/implementation-proof/readiness-current.json` and current
+Gateway/Workbench runtime execution evidence is available at
+`output/workbench/gateway-workbench-runtime-execution-proof.json`.
+
+The full-live journey proof is an aggregate control plane artifact, not a
+shortcut to support. It requires the implementation-proof readiness snapshot,
+the governed capability legs, and a valid Gateway/Workbench runtime execution
+proof, then preserves the remaining readiness blockers. It must keep
+production identity, client publication, suitability/execution authority,
+data-product certification, supported-feature promotion, full demo readiness,
+and issue closure false until those independent evidence classes exist.
+
+Gateway/Workbench runtime execution proof now records the Workbench
+`live-validation-summary.json` generation time and rejects stale evidence older
+than twenty-four hours, evidence generated after the proof time, malformed
+timestamps, and screenshot-only proof. This prevents stale local screenshots
+from being reissued as current live validation.
 
 ## Supported-Feature Reconciliation
 

@@ -2,7 +2,7 @@
 
 .PHONY: candidate-state-contract-gate review-identity-contract-gate conversion-outcome-contract-gate outbox-supportability-contract-gate outbox-supportability-rule-test service-slo-rule-test service-capacity-baseline-contract-gate service-load-soak-proof-gate service-resource-baseline-contract-gate service-resource-proof-gate service-dependency-recovery-proof-gate postgres-capacity-threshold-proof-gate service-capacity-workload downstream-capacity-seed service-resource-baseline postgres-capacity-threshold-proof supported-feature-promotion-contract-gate disaster-recovery-contract-gate disaster-recovery-proof-gate postgres-disaster-recovery-seed postgres-disaster-recovery-drill postgres-disaster-recovery-resume data-lifecycle-contract-gate scheduled-data-lifecycle-seed scheduled-data-lifecycle-review scheduled-data-lifecycle-review-proof-gate
 .PHONY: license-compliance-gate license-release-evidence-gate ai-attestation-source-contract ai-attestation-source-contract-gate ai-provider-retention-contract-gate archive-lifecycle-posture-contract-gate ai-lineage-store-ci-proof durable-repository-ci-proof
-.PHONY: gateway-workbench-owner-mainline-evidence-gate gateway-workbench-runtime-execution-proof-gate opportunity-archetype-evidence-pack-gate
+.PHONY: gateway-workbench-owner-mainline-evidence-gate gateway-workbench-runtime-execution-proof full-live-opportunity-journey-proof full-live-opportunity-journey-proof-gate opportunity-archetype-evidence-pack-gate
 
 VENV_DIR ?= .venv
 UNIT_TESTS ?= tests/unit
@@ -92,12 +92,15 @@ LOTUS_IDEA_MESH_POLICY_SOURCE_CONTRACT_PROOF_OUTPUT ?= output/data-mesh/mesh-pol
 LOTUS_PLATFORM_ROOT ?= ../lotus-platform
 LOTUS_IDEA_PLATFORM_CATALOG_SOURCE_CONTRACT_PROOF ?=
 LOTUS_IDEA_PLATFORM_CATALOG_SOURCE_CONTRACT_PROOF_OUTPUT ?= output/data-mesh/platform-catalog-source-contract.json
+LOTUS_WORKBENCH_ROOT ?= ../lotus-workbench
 LOTUS_IDEA_GATEWAY_WORKBENCH_CONTRACT_PROOF ?=
 LOTUS_IDEA_GATEWAY_WORKBENCH_CONTRACT_PROOF_OUTPUT ?= output/workbench/gateway-workbench-contract-proof.json
 LOTUS_IDEA_GATEWAY_WORKBENCH_DISCOVERY_CONTRACT_PROOF ?=
 LOTUS_IDEA_GATEWAY_WORKBENCH_DISCOVERY_CONTRACT_PROOF_OUTPUT ?= output/workbench/gateway-workbench-discovery-contract-proof.json
 LOTUS_IDEA_GATEWAY_WORKBENCH_RUNTIME_EXECUTION_PROOF ?=
 LOTUS_IDEA_GATEWAY_WORKBENCH_RUNTIME_EXECUTION_PROOF_OUTPUT ?= output/workbench/gateway-workbench-runtime-execution-proof.json
+LOTUS_IDEA_IMPLEMENTATION_PROOF_READINESS_OUTPUT ?= output/implementation-proof/readiness-current.json
+LOTUS_IDEA_FULL_LIVE_OPPORTUNITY_JOURNEY_PROOF_OUTPUT ?= output/implementation-proof/full-live-opportunity-journey-proof.json
 LOTUS_IDEA_OUTBOX_CONSUMER_CONTRACT_PROOF ?=
 LOTUS_IDEA_OUTBOX_CONSUMER_CONTRACT_PROOF_OUTPUT ?= output/outbox/outbox-consumer-contract-proof.json
 LOTUS_IDEA_OUTBOX_BROKER_RUNTIME_EXECUTION_PROOF ?=
@@ -274,6 +277,7 @@ lint:
 	$(MAKE) gateway-workbench-discovery-contract-proof-contract-gate
 	$(MAKE) gateway-workbench-owner-mainline-evidence-gate
 	$(MAKE) gateway-workbench-runtime-execution-proof-gate
+	$(MAKE) full-live-opportunity-journey-proof-gate
 	$(MAKE) outbox-broker-source-contract-proof-gate
 	$(MAKE) outbox-consumer-contract-proof-contract-gate
 	$(MAKE) outbox-platform-mesh-event-source-contract-proof-gate
@@ -609,6 +613,17 @@ gateway-workbench-owner-mainline-evidence-gate:
 
 gateway-workbench-runtime-execution-proof-gate:
 	$(VENV_PYTHON) scripts/workbench/runtime_execution_proof_gate.py
+
+gateway-workbench-runtime-execution-proof:
+	$(VENV_PYTHON) scripts/workbench/generate_runtime_execution_proof.py --generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --workbench-root $(LOTUS_WORKBENCH_ROOT) --output $(LOTUS_IDEA_GATEWAY_WORKBENCH_RUNTIME_EXECUTION_PROOF_OUTPUT)
+	$(VENV_PYTHON) scripts/workbench/runtime_execution_proof_gate.py $(LOTUS_IDEA_GATEWAY_WORKBENCH_RUNTIME_EXECUTION_PROOF_OUTPUT)
+
+full-live-opportunity-journey-proof:
+	$(VENV_PYTHON) scripts/generate_full_live_opportunity_journey_proof.py --generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --implementation-proof-readiness $(LOTUS_IDEA_IMPLEMENTATION_PROOF_READINESS_OUTPUT) --implementation-proof-readiness-ref $(LOTUS_IDEA_IMPLEMENTATION_PROOF_READINESS_OUTPUT) --gateway-workbench-runtime-execution-proof $(LOTUS_IDEA_GATEWAY_WORKBENCH_RUNTIME_EXECUTION_PROOF_OUTPUT) --gateway-workbench-runtime-execution-proof-ref $(LOTUS_IDEA_GATEWAY_WORKBENCH_RUNTIME_EXECUTION_PROOF_OUTPUT) --output $(LOTUS_IDEA_FULL_LIVE_OPPORTUNITY_JOURNEY_PROOF_OUTPUT)
+	$(VENV_PYTHON) scripts/full_live_opportunity_journey_proof_gate.py $(LOTUS_IDEA_FULL_LIVE_OPPORTUNITY_JOURNEY_PROOF_OUTPUT)
+
+full-live-opportunity-journey-proof-gate:
+	$(VENV_PYTHON) scripts/full_live_opportunity_journey_proof_gate.py
 
 outbox-broker-source-contract-proof-gate:
 	$(VENV_PYTHON) scripts/outbox/broker/source_contract_proof_gate.py

@@ -129,8 +129,13 @@ The implementation-proof readiness diagnostic is also an operator supportability
 check only; it aggregates blockers and evidence refs across source ingestion,
 advisor queue, AI explanation, data mesh, runtime trust telemetry
 preview/snapshot endpoint and evidence, outbox delivery, Workbench,
-opportunity archetype scenarios, downstream realization, and supported-feature
-promotion. It consumes a
+opportunity archetype scenarios, downstream realization, supported-feature
+promotion, and the Slice 17 full-live journey proof contract. The full-live
+journey proof can compose readiness, Gateway/Workbench runtime evidence,
+downstream handoff posture, and supported-feature blockers, but it remains
+non-promotional while any blocker remains. Freshness-guarded Workbench evidence
+is required; stale `live-validation-summary.json` and screenshot artifacts
+cannot be regenerated into current live-journey proof. It consumes a
   source-safe receipt-bound source-ingestion runtime-execution artifact, digest-bound mesh
   policy source-contract artifact, bounded Workbench read-path source-contract artifact, bounded
   Gateway/Workbench source-contract proof artifact, and bounded
