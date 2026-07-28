@@ -336,9 +336,9 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/699",
       "rfcSlices": ["slice-17"],
       "githubState": "open",
-      "executionStatus": "open_pr_raised",
+      "executionStatus": "open_merged_main_qa_pending",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #699 open. PR #740 composes the full live opportunity journey proof-control contract and rejects stale Gateway/Workbench runtime evidence. It does not certify the full journey, client publication, data-product certification, production identity, supported-feature promotion, or full demo readiness. Do not close until the journey validates through API, Gateway, Workbench, and downstream handoffs with exact main, wiki, and branch-cleanup evidence."
+      "closureInstruction": "Keep #699 open. PR #740 merged to main at 292fee7ca2d8d94dd9a228120be1ab8c34f205b7 and passed Main Releasability Gate run 30319531736, wiki publication parity, and branch-cleanup proof. This records the Slice 17 proof-control tranche as merged-main QA pending only; it does not certify the full journey, client publication, data-product certification, production identity, supported-feature promotion, or full demo readiness. Do not close until the journey validates through API, Gateway, Workbench, and downstream handoffs with final QA evidence."
     },
     {
       "issueNumber": 700,
