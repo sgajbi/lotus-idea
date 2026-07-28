@@ -87,12 +87,6 @@ AUTO_CLOSE_KEYWORDS = (
     "resolved",
 )
 REQUIRED_OPEN_ISSUE_EVIDENCE = {
-    340: (
-        "PR #745 reconciled #340 to open_merged_main_qa_pending",
-        "eeabfc683f595b4cbc9ffb5aa0aa51c3e5622903",
-        "30326431318",
-        "30326422515",
-    ),
     380: (
         "PR #746 corrected stale ready posture",
         "open_blocked",
@@ -133,6 +127,17 @@ REQUIRED_OPEN_ISSUE_EVIDENCE = {
         "823e2641778aaf7db4e1df6218cf84eab0084526",
         "platform issue #495 remains the protected FinOps execution",
         "does not provision self-hosted runners",
+    ),
+}
+REQUIRED_CLOSED_ISSUE_EVIDENCE = {
+    340: (
+        "QA closed #340",
+        "3ee62ed5947a0491362f5d080fd1c7deb5ff3567",
+        "30383665975",
+        "30383650543",
+        "154 passed",
+        "51 passed",
+        "sgajbi/lotus-ai#113",
     ),
 }
 
@@ -256,6 +261,11 @@ def validate_github_issue_execution_ledger(path: Path = LEDGER_PATH) -> list[str
                 errors.append(
                     f"#{number}: closed issue closureInstruction must contain Closed #{number}"
                 )
+            for fragment in REQUIRED_CLOSED_ISSUE_EVIDENCE.get(number, ()):
+                if fragment not in entry.closure_instruction:
+                    errors.append(
+                        f"#{number}: closureInstruction missing required closed evidence `{fragment}`"
+                    )
 
     missing = sorted(EXPECTED_EXECUTION_ISSUES - seen)
     extra = sorted(seen - EXPECTED_EXECUTION_ISSUES)

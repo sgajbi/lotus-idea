@@ -92,15 +92,19 @@ implemented feature.
 
 PR #745 reconciled #340 to `open_merged_main_qa_pending` on exact main
 `eeabfc683f595b4cbc9ffb5aa0aa51c3e5622903` with Main Releasability
-`30326431318` and CodeQL `30326422515` passing; it records Idea-side
-AI-attestation consumer proof without claiming live Lotus AI provider/runtime
-certification. PR #746 corrected stale ready posture for #380 and reconciled it
+`30326431318` and CodeQL `30326422515` passing; final QA closed #340 on
+2026-07-29 after Idea-side attestation/governance/lineage/API proof and
+producer-side `lotus-ai` workflow-run attestation proof passed against current
+mainline evidence. This closes the signed attestation trust boundary without
+claiming supported-feature promotion, client-ready publication, Workbench proof,
+autonomous advice, prompt/RAG infrastructure, model training, or broader
+production rollout. PR #746 corrected stale ready posture for #380 and reconciled it
 to `open_blocked` on exact main `6f8875dc6784dd17975e6700c09b9ff71d66fb8b`
 with Main Releasability `30327202465` and CodeQL `30327193673` passing; it
 records supported-feature/data-product promotion blockers without promoting
 support. After Slice 16 QA closure and Slice 15 protected-attestation
-reconciliation, the current RFC-0002 ledger posture is 41 tracked issues, 15
-closed complete, 26 open, 6 `open_merged_main_qa_pending`, 1
+reconciliation, the current RFC-0002 ledger posture is 41 tracked issues, 16
+closed complete, 25 open, 5 `open_merged_main_qa_pending`, 1
 `open_in_progress`, no `open_pr_raised`, and 9 `open_blocked`; #685 is now
 blocked by `sgajbi/lotus-core#836` after the 2026-07-29 governed Workbench
 startup attempt via `npm run live:stack:up` did not converge on core-owned

@@ -152,20 +152,22 @@ live GitHub proof; it deliberately points back to
 open/closed verification.
 
 Current Slice 18 ledger synchronization records 41 tracked RFC-0002 issues:
-15 closed complete, 26 open, no ready issues, 6
+16 closed complete, 25 open, no ready issues, 5
 `open_merged_main_qa_pending`, 9 `open_blocked`, 1 `open_in_progress`, no
 `open_fixed_local`, no `open_pr_raised`, 1 `open_pending_final_closure`, 1
 `open_pending_post_completion`, and 8
 `open_tracker`. PR #745 reconciled #340 to `open_merged_main_qa_pending` on
 `eeabfc683f595b4cbc9ffb5aa0aa51c3e5622903`; Main Releasability `30326431318`
-and CodeQL `30326422515` passed for that exact SHA. PR #746 corrected stale
+and CodeQL `30326422515` passed for that exact SHA. Final QA closed #340 on
+2026-07-29 after Idea-side attestation/governance/lineage/API proof and
+producer-side `lotus-ai` workflow-run attestation proof passed against current
+mainline evidence. PR #746 corrected stale
 ready posture for #380, reconciled it to `open_blocked` on
 `6f8875dc6784dd17975e6700c09b9ff71d66fb8b`; Main Releasability `30327202465`
-and CodeQL `30327193673` passed for that exact SHA. #340 and #380 remain open:
-the first for live Lotus AI provider/model-risk/runtime certification evidence,
-and the second for production principal/session, Workbench authenticated BFF,
-core-owned canonical runtime, mesh onboarding, entitlement-denied, and
-supported-feature promotion evidence. Platform PR `sgajbi/lotus-platform#631`
+and CodeQL `30327193673` passed for that exact SHA. #380 remains open for
+production principal/session, Workbench authenticated BFF, core-owned canonical
+runtime, mesh onboarding, entitlement-denied, and supported-feature promotion
+evidence. Platform PR `sgajbi/lotus-platform#631`
 fixes the prior Manage seed authorization failure, but #686 is still
 `open_blocked`, not QA-pending because `sgajbi/lotus-core#840` blocks
 canonical DPM source readiness and Workbench live browser action-control proof.
