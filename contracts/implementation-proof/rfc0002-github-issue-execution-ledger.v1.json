@@ -336,9 +336,9 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/699",
       "rfcSlices": ["slice-17"],
       "githubState": "open",
-      "executionStatus": "open_in_progress",
+      "executionStatus": "open_pr_raised",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #699 open. Active Slice 17 implementation is composing the full live opportunity journey proof across API, Gateway, Workbench, source, downstream handoff, data-mesh, supported-feature, and remaining blocker evidence. Do not close until the journey validates through API, Gateway, Workbench, and downstream handoffs with exact main, wiki, and branch-cleanup evidence."
+      "closureInstruction": "Keep #699 open. PR #740 composes the full live opportunity journey proof-control contract and rejects stale Gateway/Workbench runtime evidence. It does not certify the full journey, client publication, data-product certification, production identity, supported-feature promotion, or full demo readiness. Do not close until the journey validates through API, Gateway, Workbench, and downstream handoffs with exact main, wiki, and branch-cleanup evidence."
     },
     {
       "issueNumber": 700,
