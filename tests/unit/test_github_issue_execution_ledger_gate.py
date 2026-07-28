@@ -259,15 +259,19 @@ def test_rfc0002_github_issue_execution_ledger_tracks_workbench_read_path_blocke
     )
 
     assert issue_685["githubState"] == "open"
-    assert issue_685["executionStatus"] == "open_in_progress"
+    assert issue_685["executionStatus"] == "open_blocked"
     assert issue_685["allowPullRequestAutoClose"] is False
-    assert "Keep #685 open and status/in-progress" in issue_685["closureInstruction"]
+    assert "Keep #685 open and status/blocked" in issue_685["closureInstruction"]
     assert "make gateway-workbench-runtime-execution-proof" in issue_685["closureInstruction"]
     assert "runtimeExecutionProofValid" in issue_685["closureInstruction"]
     assert "gatewayBffConsumptionObserved" in issue_685["closureInstruction"]
     assert "proofChecks.workbenchEvidenceFresh" in issue_685["closureInstruction"]
-    assert "inside writable Lotus app repositories" in issue_685["closureInstruction"]
-    assert "fresh runtime-proof timestamp variable" in issue_685["closureInstruction"]
+    assert "stale runtime-proof timestamp variable" in issue_685["closureInstruction"]
+    assert "sgajbi/lotus-core#836" in issue_685["closureInstruction"]
+    assert "positions_data_quality_not_complete" in issue_685["closureInstruction"]
+    assert "pending_aggregation_jobs" in issue_685["closureInstruction"]
+    assert "core_analytics_reference_stale" in issue_685["closureInstruction"]
+    assert "issuecomment-5107443336" in issue_685["closureInstruction"]
     assert "supported-feature promotion" in issue_685["closureInstruction"]
 
 
