@@ -75,9 +75,9 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/380",
       "rfcSlices": ["slice-14", "slice-16", "slice-20"],
       "githubState": "open",
-      "executionStatus": "open_ready",
+      "executionStatus": "open_blocked",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #380 open until Idea data-product publication and supported-feature promotion are certified."
+      "closureInstruction": "Keep #380 open. Data-product publication and supported-feature promotion are blocked until production principal/session prerequisites, Workbench authenticated BFF principal resolution, core-owned canonical runtime prerequisites, canonical all-main Gateway/Workbench live evidence, entitlement-denied proof, mesh onboarding certification, and supported-feature promotion evaluation are complete. Current blocker issues include sgajbi/lotus-platform#563, sgajbi/lotus-workbench#436, and sgajbi/lotus-core#795. The current supported-feature registry remains foundation_only with zero promoted features, and mesh readiness remains planned/not_certified; do not promote product support or treat #380 as satisfied from static contracts, local fixtures, or source-contract evidence."
     },
     {
       "issueNumber": 482,
