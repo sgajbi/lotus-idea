@@ -189,16 +189,15 @@ capacity/load/resource/dependency/PostgreSQL/cost attestation execution, and
 supported-feature blockers.
 
 #685 is `open_blocked`, not QA-pending: the 2026-07-29 governed Workbench
-startup attempt via `npm run live:stack:up` did not converge on core-owned
-canonical readiness for `PB_SG_GLOBAL_BAL_001`. Valuation jobs drained to zero,
-but Core still reported `positions_data_quality_not_complete`,
-`pending_aggregation_jobs` in the 296-317 range, and
-`core_analytics_reference_stale=2025-12-04` during the run. The blocker is
-tracked in `sgajbi/lotus-core#836` with evidence comment
-`https://github.com/sgajbi/lotus-core/issues/836#issuecomment-5107443336`.
-Fresh Gateway/BFF-backed Workbench queue/detail runtime evidence,
-browser/accessibility proof, canonical demo runtime proof, and #380
-data-product/supported-feature posture reconciliation remain required before
+startup attempt via `npm run live:stack:up` restored core portfolio readiness
+for `PB_SG_GLOBAL_BAL_001`; valuation and aggregation jobs drained to zero,
+positions/cash data quality reached `COMPLETE`, and analytics/return-path
+dates reached `2026-04-10`. The run then failed in the DPM command-center
+action-register seed because `POST http://manage.dev.lotus/api/v1/rebalance/simulate`
+returned HTTP 424 with `DPM_CORE_CONTEXT_INCOMPLETE`. The current blocker is
+tracked in `sgajbi/lotus-core#840`. Fresh Gateway/BFF-backed Workbench
+queue/detail runtime evidence, browser/accessibility proof, canonical demo
+runtime proof, and #380 data-product/supported-feature posture reconciliation remain required before
 QA closure.
 
 #690, #691, #692, and #699 are also `open_blocked`, not QA-pending. Their

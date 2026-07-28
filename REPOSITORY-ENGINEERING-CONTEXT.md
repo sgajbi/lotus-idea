@@ -112,14 +112,15 @@ trusted IdP caller context, retention/legal, and Archive production conformance
 evidence remains open through `sgajbi/lotus-manage#620`,
 `sgajbi/lotus-manage#624`, `sgajbi/lotus-report#136`, and
 `sgajbi/lotus-archive#55`. #685 is now
-blocked by `sgajbi/lotus-core#836` after the 2026-07-29 governed Workbench
-startup attempt via `npm run live:stack:up` did not converge on core-owned
-canonical readiness for `PB_SG_GLOBAL_BAL_001`. Valuation jobs drained to zero,
-but Core still reported `positions_data_quality_not_complete`,
-`pending_aggregation_jobs` in the 296-317 range, and
-`core_analytics_reference_stale=2025-12-04` during the run. Fresh
-Gateway/BFF-backed Workbench queue/detail runtime evidence remains required
-before #685 can move to merged-main QA.
+blocked by `sgajbi/lotus-core#840` after the 2026-07-29 governed Workbench
+startup attempt via `npm run live:stack:up` restored core portfolio readiness
+for `PB_SG_GLOBAL_BAL_001`; valuation and aggregation jobs drained to zero,
+positions/cash data quality reached `COMPLETE`, and analytics/return-path
+dates reached `2026-04-10`. The run then failed in the DPM command-center
+action-register seed because `POST http://manage.dev.lotus/api/v1/rebalance/simulate`
+returned HTTP 424 with `DPM_CORE_CONTEXT_INCOMPLETE`. Fresh Gateway/BFF-backed
+Workbench queue/detail runtime evidence remains required before #685 can move
+to merged-main QA.
 Platform PR `sgajbi/lotus-platform#631` fixes the earlier Manage seed
 authorization failure; #686 is blocked, not QA-pending, until
 `sgajbi/lotus-core#840` restores canonical DPM source readiness and Workbench

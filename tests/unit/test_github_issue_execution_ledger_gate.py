@@ -313,11 +313,13 @@ def test_rfc0002_github_issue_execution_ledger_tracks_workbench_read_path_blocke
     assert "gatewayBffConsumptionObserved" in issue_685["closureInstruction"]
     assert "proofChecks.workbenchEvidenceFresh" in issue_685["closureInstruction"]
     assert "stale runtime-proof timestamp variable" in issue_685["closureInstruction"]
-    assert "sgajbi/lotus-core#836" in issue_685["closureInstruction"]
-    assert "positions_data_quality_not_complete" in issue_685["closureInstruction"]
-    assert "pending_aggregation_jobs" in issue_685["closureInstruction"]
-    assert "core_analytics_reference_stale" in issue_685["closureInstruction"]
-    assert "issuecomment-5107443336" in issue_685["closureInstruction"]
+    assert "sgajbi/lotus-core#840" in issue_685["closureInstruction"]
+    assert "valuation and aggregation jobs drained to zero" in issue_685["closureInstruction"]
+    assert "DPM_CORE_CONTEXT_INCOMPLETE" in issue_685["closureInstruction"]
+    assert (
+        "POST http://manage.dev.lotus/api/v1/rebalance/simulate"
+        in (issue_685["closureInstruction"])
+    )
     assert "supported-feature promotion" in issue_685["closureInstruction"]
 
 
