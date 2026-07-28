@@ -759,7 +759,8 @@ Persistence adapter validation:
    `6f8875dc6784dd17975e6700c09b9ff71d66fb8b`; Main Releasability `30327202465`
    and CodeQL `30327193673` passed. The RFC-0002 execution summary now has 41
    tracked issues, 14 closed complete, 27 open, 6
-   `open_merged_main_qa_pending`, 3 `open_in_progress`, 8 `open_blocked`, and
+   `open_merged_main_qa_pending`, 2 `open_in_progress`, 1 `open_fixed_local`,
+   8 `open_blocked`, and
    no ready issues. #685 is active fix-forward work, not passive blocked
    posture, because the remaining proof path is inside writable Lotus app
    repositories. The current default Gateway/Workbench runtime artifact was
