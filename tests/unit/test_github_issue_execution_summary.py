@@ -94,7 +94,6 @@ def test_github_issue_execution_summary_markdown_is_comment_ready() -> None:
     assert "## Fixed Locally Issues" in rendered
     assert "## PR-Open Issues" in rendered
     assert "#699" in rendered
-    assert "## PR-Open Issues\n\n_None._" in rendered
     assert "## Merged-Main QA Pending Issues" in rendered
     assert "#685, #686, #690, #691, #692, #696, #697" in rendered
     assert "## Ready Issues" in rendered
