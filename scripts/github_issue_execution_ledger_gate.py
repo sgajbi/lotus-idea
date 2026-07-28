@@ -85,6 +85,21 @@ AUTO_CLOSE_KEYWORDS = (
     "resolves",
     "resolved",
 )
+REQUIRED_OPEN_ISSUE_EVIDENCE = {
+    340: (
+        "PR #745 reconciled #340 to open_merged_main_qa_pending",
+        "eeabfc683f595b4cbc9ffb5aa0aa51c3e5622903",
+        "30326431318",
+        "30326422515",
+    ),
+    380: (
+        "PR #746 corrected stale ready posture",
+        "open_blocked",
+        "6f8875dc6784dd17975e6700c09b9ff71d66fb8b",
+        "30327202465",
+        "30327193673",
+    ),
+}
 
 
 @dataclass(frozen=True)
@@ -192,6 +207,11 @@ def validate_github_issue_execution_ledger(path: Path = LEDGER_PATH) -> list[str
                     f"#{number}: open issue closureInstruction must not contain GitHub "
                     "auto-close wording"
                 )
+            for fragment in REQUIRED_OPEN_ISSUE_EVIDENCE.get(number, ()):
+                if fragment not in entry.closure_instruction:
+                    errors.append(
+                        f"#{number}: closureInstruction missing required evidence `{fragment}`"
+                    )
         else:
             if entry.execution_status not in CLOSED_STATUSES:
                 errors.append(f"#{number}: closed issue has invalid executionStatus")
