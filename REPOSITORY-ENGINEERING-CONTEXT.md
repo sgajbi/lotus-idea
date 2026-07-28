@@ -1402,6 +1402,7 @@ make downstream-realization-contract-gate
 make downstream-route-source-contract-proof-gate
 make advise-intake-runtime-execution-proof-gate
 make manage-intake-runtime-execution-proof-gate
+make downstream-outcome-certification-proof-gate
 make outbox-broker-source-contract-proof-gate
 make runtime-trust-telemetry-test-execution-contract-gate
 make source-ingestion-runtime-execution-contract-gate
@@ -1460,6 +1461,19 @@ client publication, and must not claim production identity, support, or
 supported-feature promotion. This is the durable #689 lesson: downstream owner
 route execution proof can clear a named live-route blocker without becoming
 action-register persistence or execution certification.
+
+RFC-0002 #379 downstream outcome certification now has a standalone aggregate
+proof boundary in `app.application.downstream_outcome_certification`, generated
+by `scripts/generate_downstream_outcome_certification.py` and validated by
+`make downstream-outcome-certification-proof-gate`. It composes Advise,
+Manage, and Report owner runtime proofs with Idea durable
+submission/reconciliation coverage for accepted, rejected, duplicate/replay,
+idempotency-conflict, timeout-before-response, response-before-local-commit,
+restart reconciliation, and operator reconciliation replay windows. It is
+supporting evidence only: it clears no new aggregate blocker, keeps #379 open,
+and must preserve suitability, rebalance/execution, report-rendering/archive,
+client-publication, production-identity, supported-feature, and
+certification-closure claims as false.
 
 Current repo-native aggregate command posture:
 

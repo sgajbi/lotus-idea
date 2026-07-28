@@ -239,6 +239,19 @@ Implemented in this slice:
     retained non-proof claims for rebalance execution authority,
     action-register persistence, order/OMS execution, production identity,
     client publication, and supported-feature promotion.
+33. `src/app/application/downstream_outcome_certification.py`,
+    `scripts/generate_downstream_outcome_certification.py`,
+    `scripts/downstream_outcome_certification_gate.py`, and
+    `make downstream-outcome-certification-proof-gate` now compose the Advise,
+    Manage, and Report owner runtime proofs with Idea durable
+    submission/reconciliation windows for #379. The aggregate proves accepted,
+    rejected, duplicate/replay, idempotency-conflict,
+    timeout-before-response, response-before-local-commit, restart
+    reconciliation, and operator reconciliation replay coverage while clearing
+    no new aggregate blocker. It deliberately keeps #379 open and preserves
+    suitability, rebalance/execution, report-rendering/archive,
+    client-publication, production-identity, supported-feature, and
+    certification-closure claims as false.
 
 ## Issue 326 Outcome Lifecycle Hardening
 

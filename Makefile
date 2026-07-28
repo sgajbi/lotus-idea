@@ -2,7 +2,7 @@
 
 .PHONY: candidate-state-contract-gate review-identity-contract-gate conversion-outcome-contract-gate outbox-supportability-contract-gate outbox-supportability-rule-test service-slo-rule-test service-capacity-baseline-contract-gate service-load-soak-proof-gate service-resource-baseline-contract-gate service-resource-proof-gate service-dependency-recovery-proof-gate postgres-capacity-threshold-proof-gate service-capacity-workload downstream-capacity-seed service-resource-baseline postgres-capacity-threshold-proof supported-feature-promotion-contract-gate disaster-recovery-contract-gate disaster-recovery-proof-gate postgres-disaster-recovery-seed postgres-disaster-recovery-drill postgres-disaster-recovery-resume data-lifecycle-contract-gate scheduled-data-lifecycle-seed scheduled-data-lifecycle-review scheduled-data-lifecycle-review-proof-gate
 .PHONY: license-compliance-gate license-release-evidence-gate ai-attestation-source-contract ai-attestation-source-contract-gate ai-provider-retention-contract-gate archive-lifecycle-posture-contract-gate ai-lineage-store-ci-proof durable-repository-ci-proof
-.PHONY: gateway-workbench-owner-mainline-evidence-gate gateway-workbench-runtime-execution-proof full-live-opportunity-journey-proof full-live-opportunity-journey-proof-gate opportunity-archetype-evidence-pack-gate
+.PHONY: gateway-workbench-owner-mainline-evidence-gate gateway-workbench-runtime-execution-proof downstream-outcome-certification-proof downstream-outcome-certification-proof-gate full-live-opportunity-journey-proof full-live-opportunity-journey-proof-gate opportunity-archetype-evidence-pack-gate
 
 VENV_DIR ?= .venv
 UNIT_TESTS ?= tests/unit
@@ -87,6 +87,7 @@ LOTUS_IDEA_MANAGE_ROUTE_SOURCE_CONTRACT_PROOF_OUTPUT ?= output/downstream/manage
 LOTUS_IDEA_MANAGE_INTAKE_RUNTIME_EXECUTION_PROOF ?=
 LOTUS_IDEA_MANAGE_INTAKE_RUNTIME_EXECUTION_PROOF_OUTPUT ?= output/downstream/manage-intake-runtime-execution-proof.json
 LOTUS_MANAGE_PYTHON ?= python
+LOTUS_IDEA_DOWNSTREAM_OUTCOME_CERTIFICATION_PROOF_OUTPUT ?= output/downstream/downstream-outcome-certification-proof.json
 LOTUS_IDEA_MESH_POLICY_SOURCE_CONTRACT_PROOF ?=
 LOTUS_IDEA_MESH_POLICY_SOURCE_CONTRACT_PROOF_OUTPUT ?= output/data-mesh/mesh-policy-source-contract.json
 LOTUS_PLATFORM_ROOT ?= ../lotus-platform
@@ -256,6 +257,7 @@ lint:
 	$(MAKE) demo-readiness-claim-matrix-gate
 	$(MAKE) downstream-realization-contract-gate
 	$(MAKE) downstream-route-source-contract-proof-gate
+	$(MAKE) downstream-outcome-certification-proof-gate
 	$(MAKE) outbox-event-contract-gate
 	$(MAKE) outbox-consumer-contract-gate
 	$(MAKE) outbox-recovery-contract-gate
@@ -535,6 +537,13 @@ advise-intake-runtime-execution-proof-gate:
 
 manage-intake-runtime-execution-proof-gate:
 	$(VENV_PYTHON) scripts/downstream_realization/manage_intake_runtime_execution_gate.py $(LOTUS_IDEA_MANAGE_INTAKE_RUNTIME_EXECUTION_PROOF_OUTPUT)
+
+downstream-outcome-certification-proof:
+	$(VENV_PYTHON) scripts/generate_downstream_outcome_certification.py --generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --advise-intake-runtime-execution-proof $(LOTUS_IDEA_ADVISE_INTAKE_RUNTIME_EXECUTION_PROOF_OUTPUT) --advise-intake-runtime-execution-proof-ref $(LOTUS_IDEA_ADVISE_INTAKE_RUNTIME_EXECUTION_PROOF_OUTPUT) --manage-intake-runtime-execution-proof $(LOTUS_IDEA_MANAGE_INTAKE_RUNTIME_EXECUTION_PROOF_OUTPUT) --manage-intake-runtime-execution-proof-ref $(LOTUS_IDEA_MANAGE_INTAKE_RUNTIME_EXECUTION_PROOF_OUTPUT) --report-materialization-runtime-execution-proof $(LOTUS_IDEA_REPORT_MATERIALIZATION_RUNTIME_EXECUTION_PROOF_OUTPUT) --report-materialization-runtime-execution-proof-ref $(LOTUS_IDEA_REPORT_MATERIALIZATION_RUNTIME_EXECUTION_PROOF_OUTPUT) --output $(LOTUS_IDEA_DOWNSTREAM_OUTCOME_CERTIFICATION_PROOF_OUTPUT)
+	$(VENV_PYTHON) scripts/downstream_outcome_certification_gate.py $(LOTUS_IDEA_DOWNSTREAM_OUTCOME_CERTIFICATION_PROOF_OUTPUT)
+
+downstream-outcome-certification-proof-gate:
+	$(VENV_PYTHON) scripts/downstream_outcome_certification_gate.py
 
 outbox-event-contract-gate:
 	$(VENV_PYTHON) scripts/outbox/event_contract_gate.py

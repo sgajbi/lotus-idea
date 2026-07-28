@@ -268,6 +268,37 @@ aggregate-current; it deliberately preserves rebalance execution authority,
 action-register persistence, OMS/order execution, client publication,
 production identity, production certification, and supported-feature blockers.
 
+## Downstream Outcome Certification Aggregate Proof
+
+`scripts/generate_downstream_outcome_certification.py` composes the current
+Advise intake runtime proof, Manage action-intake runtime proof, Report
+materialization runtime proof, and Idea durable submission/reconciliation
+evidence into a source-safe RFC-0002 Slice 12/13 proof artifact:
+
+```powershell
+python scripts/generate_downstream_outcome_certification.py `
+  --generated-at-utc 2026-07-22T00:00:00Z `
+  --advise-intake-runtime-execution-proof output\downstream\advise-intake-runtime-execution-proof.json `
+  --manage-intake-runtime-execution-proof output\downstream\manage-intake-runtime-execution-proof.json `
+  --report-materialization-runtime-execution-proof output\report\materialization-runtime-execution-proof.json `
+  --output output\downstream\downstream-outcome-certification-proof.json
+
+make downstream-outcome-certification-proof-gate
+```
+
+The aggregate validates that the three owner artifacts are
+`runtime_execution` evidence and that Idea covers accepted, rejected,
+duplicate/replay, idempotency conflict, timeout-before-response,
+response-before-local-commit, restart reconciliation, and operator
+reconciliation replay windows through its durable submission and
+reconciliation tests. It clears no new aggregate blocker and keeps #379 open:
+full downstream outcome certification still requires live cross-repository
+owner evidence, production identity, supported-feature promotion evidence, and
+client-publication authority. The artifact must keep suitability,
+rebalance/execution, report-rendering authority, archive authority,
+client-publication, production certification, supported-feature, and
+certification-closure claims false.
+
 ## Report Materialization Source Contract
 
 `scripts/report/generate_materialization_source_contract.py` can read the sibling
@@ -608,6 +639,7 @@ make downstream-realization-contract-gate
 make downstream-route-source-contract-proof-gate
 make advise-intake-runtime-execution-proof-gate
 make manage-intake-runtime-execution-proof-gate
+make downstream-outcome-certification-proof-gate
 make report-intake-route-source-contract-proof-gate
 make report-materialization-source-contract-proof-gate
 make endpoint-certification-gate

@@ -729,7 +729,18 @@ Persistence adapter validation:
    boundaries, planned downstream contract-readiness records, and bounded
    `not_certified` operation events without calling Advise, Manage, Report,
    Render, or Archive.
-18. `tests/unit/test_source_ingestion_readiness.py` and
+18. `tests/unit/test_downstream_outcome_certification.py` and
+   `make downstream-outcome-certification-proof-gate` prove the #379 aggregate
+   downstream outcome certification boundary. The proof composes Advise,
+   Manage, and Report owner runtime receipts with Idea durable
+   submission/reconciliation coverage for accepted, rejected,
+   duplicate/replay, idempotency-conflict, timeout-before-response,
+   response-before-local-commit, restart reconciliation, and operator
+   reconciliation replay windows. It clears no new blocker and keeps
+   suitability, rebalance/execution, report-rendering/archive,
+   client-publication, production-identity, supported-feature, and
+   certification-closure claims false.
+19. `tests/unit/test_source_ingestion_readiness.py` and
    `tests/integration/test_source_ingestion_readiness_api.py` prove the
    operator readiness diagnostic for blocked/configured posture,
    permission-denied behavior, relative manifest resolution, and bounded
@@ -738,7 +749,7 @@ Persistence adapter validation:
    without durable storage or runtime configuration, executes the configured
    domain batch path source-safely, enforces operator capability, and emits a
    bounded `source_ingestion_run_once` event.
-19. `tests/unit/test_review_queue_application.py`,
+20. `tests/unit/test_review_queue_application.py`,
    `tests/unit/test_postgres_review_queue.py`,
    `tests/integration/test_review_queue_api.py`, and
    `tests/integration/test_api_operation_events.py` prove the advisor queue

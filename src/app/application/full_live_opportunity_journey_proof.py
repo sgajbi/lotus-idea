@@ -2,11 +2,13 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from datetime import datetime
-import hashlib
-import json
 from pathlib import Path
 from typing import Any
 
+from app.application.proof_payload_helpers import (
+    non_empty_text_array,
+    source_safe_mapping_digest,
+)
 from app.application.source_safe_cross_repo_proof import (
     is_timezone_aware_datetime_text,
     required_file_evidence_present,
@@ -111,7 +113,7 @@ def build_full_live_opportunity_journey_proof_payload(
         )
     )
     gateway_runtime_digest = (
-        _digest_mapping(gateway_workbench_runtime_execution_proof)
+        source_safe_mapping_digest(gateway_workbench_runtime_execution_proof)
         if gateway_workbench_runtime_execution_proof
         else None
     )
@@ -163,7 +165,9 @@ def build_full_live_opportunity_journey_proof_payload(
         "fullLiveJourneyCertified": full_live_certified,
         "canonicalPortfolioId": "PB_SG_GLOBAL_BAL_001",
         "canonicalBenchmarkCode": "BMK_PB_GLOBAL_BALANCED_60_40",
-        "implementationProofReadinessDigest": _digest_mapping(implementation_proof_readiness),
+        "implementationProofReadinessDigest": source_safe_mapping_digest(
+            implementation_proof_readiness
+        ),
         "gatewayWorkbenchRuntimeExecutionDigest": gateway_runtime_digest,
         "evidenceRefs": evidence_refs,
         "journeyCapabilityCoverage": _journey_capability_coverage(implementation_proof_readiness),
@@ -243,7 +247,7 @@ def _validate_top_level_claims(payload: Mapping[str, Any], errors: list[str]) ->
     gateway_digest = payload.get("gatewayWorkbenchRuntimeExecutionDigest")
     if gateway_digest is not None and not _is_sha256_digest(gateway_digest):
         errors.append("gatewayWorkbenchRuntimeExecutionDigest must be null or a sha256 digest")
-    if not _non_empty_text_array(payload.get("evidenceRefs")):
+    if not non_empty_text_array(payload.get("evidenceRefs")):
         errors.append("evidenceRefs must contain source-safe evidence refs")
     for field_name in (
         "productionIdentityImplemented",
@@ -418,26 +422,8 @@ def _local_make_targets_present(repository_root: Path) -> bool:
     )
 
 
-def _digest_mapping(payload: Mapping[str, Any]) -> str:
-    rendered = json.dumps(
-        payload,
-        sort_keys=True,
-        separators=(",", ":"),
-        ensure_ascii=True,
-    )
-    return f"sha256:{hashlib.sha256(rendered.encode('utf-8')).hexdigest()}"
-
-
 def _is_sha256_digest(value: object) -> bool:
     if not isinstance(value, str) or not value.startswith("sha256:"):
         return False
     digest = value.removeprefix("sha256:")
     return len(digest) == 64 and all(character in "0123456789abcdef" for character in digest)
-
-
-def _non_empty_text_array(value: object) -> bool:
-    return (
-        isinstance(value, list)
-        and bool(value)
-        and all(isinstance(item, str) and item.strip() for item in value)
-    )
