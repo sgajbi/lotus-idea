@@ -76,9 +76,7 @@ def test_rfc0002_github_issue_execution_ledger_closes_advise_live_proof_after_ma
     assert "advise_live_contract_proof_missing" in issue_688["closureInstruction"]
 
 
-def test_rfc0002_github_issue_execution_ledger_blocks_issue_379_on_certification_evidence() -> (
-    None
-):
+def test_rfc0002_github_issue_execution_ledger_blocks_issue_379_on_certification_evidence() -> None:
     module = _load_gate()
     payload = _ledger_payload(module)
     issue_379 = next(
