@@ -21,9 +21,9 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/340",
       "rfcSlices": ["slice-09", "slice-17"],
       "githubState": "open",
-      "executionStatus": "open_in_progress",
+      "executionStatus": "open_merged_main_qa_pending",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #340 open. Implementation is active for the Idea-side AI execution attestation and model-provenance consumer boundary; do not auto-close until accepted lotus-ai runtime provenance, source-safe lineage, fail-closed production-like validation, docs, OpenAPI, and exact-main evidence prove the issue acceptance criteria. This does not claim lotus-ai provider runtime implementation, prompt/RAG infrastructure, model training, supported-feature promotion, or live-provider certification."
+      "closureInstruction": "Keep #340 open. The Idea-side AI execution attestation and model-provenance consumer boundary is implemented on main: production-like self-asserted workflow output fails closed with ai_execution_provenance_required before lineage persistence; verified signed Lotus AI run attestations bind producer run, workflow pack, evaluator policy, provider, model, model version, request/evidence/output digests, issuer, audience, expiry, replay nonce, and source-safe lineage; local/test fixture output remains explicitly unattested and non-production. Producer source-contract evidence is recorded for lotus-ai#113 at main commit 162df803a7a835813dc17116be674842f12aa544 with Main Releasability run 29153879884, and Idea consumer evidence is recorded through main commit f496c4429178eaa5679767bc8f1c3102e17d5eb2 with Main Releasability run 29179489433. Current main 4979ce1a69736981326491777adfbf6ae4bb3948 passed Main Releasability run 30325363668; focused #340 validation passed the AI governance/attestation/lineage/API suite, ai-attestation source contract, model-risk ops/proof, workflow-pack registration/runtime proof, OpenAPI, and endpoint certification gates. This does not claim lotus-ai provider runtime implementation, prompt/RAG infrastructure, model training, supported-feature promotion, client-ready publication, Workbench proof, or live-provider certification."
     },
     {
       "issueNumber": 343,
