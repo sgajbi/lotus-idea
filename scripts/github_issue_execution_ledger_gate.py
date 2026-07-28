@@ -100,6 +100,14 @@ REQUIRED_OPEN_ISSUE_EVIDENCE = {
         "30327202465",
         "30327193673",
     ),
+    685: (
+        "Keep #685 open and status/blocked",
+        "sgajbi/lotus-core#836",
+        "positions_data_quality_not_complete",
+        "pending_aggregation_jobs",
+        "core_analytics_reference_stale",
+        "issuecomment-5107443336",
+    ),
     686: (
         "Keep #686 open and status/blocked",
         "Workbench PR #501 merged the browser-action proof path",

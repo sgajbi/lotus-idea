@@ -153,7 +153,7 @@ open/closed verification.
 
 Current Slice 18 ledger synchronization records 41 tracked RFC-0002 issues:
 15 closed complete, 26 open, no ready issues, 6
-`open_merged_main_qa_pending`, 8 `open_blocked`, 2 `open_in_progress`, no
+`open_merged_main_qa_pending`, 9 `open_blocked`, 1 `open_in_progress`, no
 `open_fixed_local`, no `open_pr_raised`, 1 `open_pending_final_closure`, 1
 `open_pending_post_completion`, and 8
 `open_tracker`. PR #745 reconciled #340 to `open_merged_main_qa_pending` on
@@ -179,15 +179,15 @@ provisioning, protected environment variables/secrets, protected
 capacity/load/resource/dependency/PostgreSQL/cost attestation execution, and
 supported-feature blockers.
 
-#685 is `open_in_progress`, not passive blocked posture: the current default
-Gateway/Workbench runtime artifact was rejected by
-`make gateway-workbench-runtime-execution-proof` because
-`runtimeExecutionProofValid`, `gatewayBffConsumptionObserved`, and
-`proofChecks.workbenchEvidenceFresh` were not true. PR #736 merged the optional
-Idea-side consumer/gate path; the active fix-forward tranche separates the
-fresh runtime-proof timestamp from the static implementation-proof timestamp
-while preserving the strict Workbench-evidence freshness gate. Fresh
-Gateway/BFF-backed Workbench queue/detail runtime evidence,
+#685 is `open_blocked`, not QA-pending: the 2026-07-29 governed Workbench
+startup attempt via `npm run live:stack:up` did not converge on core-owned
+canonical readiness for `PB_SG_GLOBAL_BAL_001`. Valuation jobs drained to zero,
+but Core still reported `positions_data_quality_not_complete`,
+`pending_aggregation_jobs` in the 296-317 range, and
+`core_analytics_reference_stale=2025-12-04` during the run. The blocker is
+tracked in `sgajbi/lotus-core#836` with evidence comment
+`https://github.com/sgajbi/lotus-core/issues/836#issuecomment-5107443336`.
+Fresh Gateway/BFF-backed Workbench queue/detail runtime evidence,
 browser/accessibility proof, canonical demo runtime proof, and #380
 data-product/supported-feature posture reconciliation remain required before
 QA closure.

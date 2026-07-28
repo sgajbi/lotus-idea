@@ -1,7 +1,7 @@
 {
   "schemaVersion": "lotus-idea:rfc0002-github-issue-execution-ledger:v1",
   "rfcId": "RFC-0002",
-  "asOfDate": "2026-07-28",
+  "asOfDate": "2026-07-29",
   "repository": "sgajbi/lotus-idea",
   "executionAnchor": {
     "issueNumber": 681,
@@ -210,9 +210,9 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/685",
       "rfcSlices": ["slice-11"],
       "githubState": "open",
-      "executionStatus": "open_in_progress",
+      "executionStatus": "open_blocked",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #685 open and status/in-progress. PR #736 merged the optional Gateway/Workbench runtime-execution proof consumer to main at 1ef9e93e64482f27225c72142944b6bd7c1ce142 after exact-main Main Releasability run 30011797717 passed, wiki source was published to lotus-idea.wiki.git commit 05b8dc8 with strict DiffCount 0, and remote/local feature-branch cleanup completed after patch-equivalence checks. PR #754 proved the default Gateway/Workbench runtime artifact was stale and non-certifying because `make gateway-workbench-runtime-execution-proof` rejected `runtimeExecutionProofValid`, `gatewayBffConsumptionObserved`, and `proofChecks.workbenchEvidenceFresh`. The next fix-forward tranche is active because the remaining proof path is inside writable Lotus app repositories: the Idea Make target now uses a fresh runtime-proof timestamp variable, then requires fresh Gateway/BFF-backed Workbench queue and candidate-detail read evidence from the governed runtime before the issue can move to merged-main QA. Keep browser/accessibility proof, canonical demo runtime proof, #380 data-product/supported-feature promotion posture, production identity, client publication, suitability, proposal approval, rebalance/action execution, report/render/archive authority, and broader production readiness out of closure claims until their independent evidence exists."
+      "closureInstruction": "Keep #685 open and status/blocked. PR #736 merged the optional Gateway/Workbench runtime-execution proof consumer to main at 1ef9e93e64482f27225c72142944b6bd7c1ce142 after exact-main Main Releasability run 30011797717 passed, wiki source was published to lotus-idea.wiki.git commit 05b8dc8 with strict DiffCount 0, and remote/local feature-branch cleanup completed after patch-equivalence checks. PR #754 proved the default Gateway/Workbench runtime artifact was stale and non-certifying because `make gateway-workbench-runtime-execution-proof` rejected `runtimeExecutionProofValid`, `gatewayBffConsumptionObserved`, and `proofChecks.workbenchEvidenceFresh`. PR #755 fixed the stale runtime-proof timestamp variable so stale artifacts cannot be accepted as fresh Gateway/Workbench evidence. The 2026-07-29 governed Workbench startup attempt via `npm run live:stack:up` did not converge on core-owned canonical readiness for `PB_SG_GLOBAL_BAL_001`: valuation jobs drained to zero, but Core still reported `positions_data_quality_not_complete`, `pending_aggregation_jobs` in the 296-317 range, and `core_analytics_reference_stale=2025-12-04` during the run. The current blocker is tracked in sgajbi/lotus-core#836 with fresh evidence at https://github.com/sgajbi/lotus-core/issues/836#issuecomment-5107443336. Fresh Gateway/BFF-backed Workbench queue and candidate-detail read evidence from the governed runtime remains required before the issue can move to merged-main QA. Keep browser/accessibility proof, canonical demo runtime proof, #380 data-product/supported-feature promotion posture, production identity, client publication, suitability, proposal approval, rebalance/action execution, report/render/archive authority, and broader production readiness out of closure claims until their independent evidence exists."
     },
     {
       "issueNumber": 686,
