@@ -182,6 +182,17 @@ REQUIRED_SURFACES = (
         ),
     ),
     DocumentationSurface(
+        "docs/operations/downstream-realization-readiness.md",
+        120,
+        (
+            "Downstream Outcome Certification Aggregate Proof",
+            "PR #742 merged this aggregate proof to `main`",
+            "`30323405962` passed for that exact SHA",
+            "issue #379 remains open in `status/merged-main`",
+            "supporting proof only",
+        ),
+    ),
+    DocumentationSurface(
         "quality/ci_quality_gates.md",
         25,
         ("make documentation-contract-gate", "implementation-truth-gate"),
@@ -216,7 +227,12 @@ REQUIRED_SURFACES = (
     DocumentationSurface(
         "wiki/Validation-and-CI.md",
         40,
-        ("make documentation-contract-gate", "Branch hygiene policy"),
+        (
+            "make documentation-contract-gate",
+            "Branch hygiene policy",
+            "Mainline evidence is PR #742",
+            "Issue #379 remains open in `status/merged-main`",
+        ),
     ),
     DocumentationSurface(
         "wiki/Development-Workflow.md",

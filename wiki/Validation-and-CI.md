@@ -739,7 +739,13 @@ Persistence adapter validation:
    reconciliation replay windows. It clears no new blocker and keeps
    suitability, rebalance/execution, report-rendering/archive,
    client-publication, production-identity, supported-feature, and
-   certification-closure claims false.
+   certification-closure claims false. Mainline evidence is PR #742 on
+   `0a4e7a55495cb3b979672f52b08ba2630603cf94` with Main Releasability
+   `30323405962`, wiki commit `ce29814` with strict `DiffCount 0`, followed by
+   PR #743 ledger reconciliation on current main
+   `8ccee32d9a25fb6c47c723e105e2c48d1c4b3c70` with Main Releasability
+   `30324178801`. Issue #379 remains open in `status/merged-main` pending
+   QA/final certification.
 19. `tests/unit/test_source_ingestion_readiness.py` and
    `tests/integration/test_source_ingestion_readiness_api.py` prove the
    operator readiness diagnostic for blocked/configured posture,
