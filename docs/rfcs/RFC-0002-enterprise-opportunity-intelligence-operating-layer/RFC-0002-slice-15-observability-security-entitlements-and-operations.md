@@ -33,10 +33,12 @@ runtime boundary, and does not change supported-feature posture.
 
 Issue `#695` adds a fail-closed source contract for the Slice 15 dependency and
 container vulnerability posture. The contract requires mature, widely deployed,
-well-documented, scanner-supported technology; exact stable runtime and CI
-Python pins; an approved direct-dependency registry for every runtime and CI
-root package; runtime-lock mirror parity for dependency graph truth; `pip-audit`
-coverage in feature, PR, and main lanes; Trivy image-scan coverage in PR and
+well-documented, scanner-supported technology; exact stable runtime, CI, and
+build-system Python pins; an approved direct-dependency registry for every
+runtime, CI, and build-system root package; runtime-lock mirror parity for
+dependency graph truth; a separate `requirements/build-system.lock.txt` for
+isolated build backend/tooling roots; `pip-audit` coverage over runtime, CI,
+and build-system locks in feature, PR, and main lanes; Trivy image-scan coverage in PR and
 main lanes; release SBOM, image identity, license, signature, provenance, SBOM
 attestation, digest-reference, and CI-only publish hooks; and issue-backed
 vulnerability exceptions with CVE, owner, compensating control, rollback, and
@@ -48,11 +50,20 @@ dependency and replaced the only test type import with the existing governed
 dependency approvals, which prevents novelty-driven package additions from
 entering the repo by lockfile drift alone.
 
+The 2026-07-28 follow-up hardening for `#756` brought
+`pyproject.toml:build-system.requires` under the same exact stable pin and
+approved-direct-dependency policy. Build isolation now uses `setuptools==83.0.0`
+and `wheel==0.47.0`, with matching `requirements/build-system.lock.txt`
+evidence and `make security-audit` coverage. This closes the prior resolver
+drift gap where runtime and CI roots were governed but build backend/tooling
+could still resolve from `setuptools>=70` or unpinned `wheel`.
+
 The implementation adds `make dependency-vulnerability-posture-gate` and wires
 it into `make lint` plus the CI contract gate so a future dependency, workflow,
 container, SBOM, or exception drift fails before product claims move forward.
 Local `make security-audit` on 2026-07-19 reported no known vulnerabilities for
-the governed runtime and CI Python lockfiles. This remains source-design and
+the governed runtime and CI Python lockfiles; the build-system lock is now part
+of the same audit surface. This remains source-design and
 local execution evidence only: production readiness still requires exact-main
 Main Releasability scan, SBOM, signing, provenance, digest publication,
 release-manifest binding, source/wiki closure, and branch hygiene. The contract

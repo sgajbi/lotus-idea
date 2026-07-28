@@ -10,6 +10,7 @@ def validate_approved_direct_dependencies(
     contract: dict[str, Any],
     runtime_roots: Iterable[str],
     dev_roots: Iterable[str],
+    build_roots: Iterable[str] = (),
 ) -> list[str]:
     policy = contract.get("approved_direct_dependency_policy")
     approved_dependencies = contract.get("approved_direct_dependencies")
@@ -30,7 +31,7 @@ def validate_approved_direct_dependencies(
         for key, value in expected_policy.items()
         if policy.get(key) != value
     ]
-    actual_scopes = _direct_dependency_scopes(runtime_roots, dev_roots)
+    actual_scopes = _direct_dependency_scopes(runtime_roots, dev_roots, build_roots)
     approved_by_name, approval_errors = _approved_dependency_entries(approved_dependencies)
     errors.extend(approval_errors)
     errors.extend(_validate_approval_coverage(actual_scopes, approved_by_name))
@@ -122,9 +123,14 @@ def _validate_approval_entry(
 def _direct_dependency_scopes(
     runtime_roots: Iterable[str],
     dev_roots: Iterable[str],
+    build_roots: Iterable[str] = (),
 ) -> dict[str, set[str]]:
     scopes: dict[str, set[str]] = {}
-    for scope, roots in {"runtime": runtime_roots, "ci": dev_roots}.items():
+    for scope, roots in {
+        "runtime": runtime_roots,
+        "ci": dev_roots,
+        "build": build_roots,
+    }.items():
         for raw in roots:
             name = canonicalize_name(Requirement(raw).name)
             scopes.setdefault(name, set()).add(scope)

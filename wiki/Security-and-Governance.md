@@ -72,6 +72,12 @@ drift, unknown or denied licenses, missing conditional obligations, stale
 notices, and incomplete exceptions. Exceptions require application-owner,
 security, and legal approval, immutable evidence, and expiry.
 
+The dependency vulnerability posture gate separately governs runtime, CI, and
+`pyproject.toml` build-system roots. `setuptools` and `wheel` are pinned as
+build-scope dependencies in `requirements/build-system.lock.txt`, and
+`make security-audit` scans that lock alongside runtime and CI locks so
+isolated build backend/tooling drift cannot bypass vulnerability posture.
+
 Main Releasability binds policy version, lock hashes, NOTICE digest, SBOM
 serial, exception IDs, and the final image digest in release evidence. The
 container also carries `LICENSE` and `THIRD_PARTY_NOTICES.md`. Repository

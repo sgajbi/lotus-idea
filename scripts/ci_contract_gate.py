@@ -275,6 +275,8 @@ def _validate_security_audit_target(makefile: str) -> list[str]:
         errors.append("Makefile security-audit target must not audit direct-only runtime lock")
     if "requirements/ci-tooling.lock.txt" not in security_audit:
         errors.append("Makefile security-audit target must audit CI tooling lock")
+    if "requirements/build-system.lock.txt" not in security_audit:
+        errors.append("Makefile security-audit target must audit build-system lock")
     return errors
 
 

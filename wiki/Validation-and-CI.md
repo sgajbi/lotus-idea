@@ -17,7 +17,7 @@ clean branch hygiene.
 | Small code or docs edit | `make lint`, focused tests | Fast local proof before commit. |
 | API contract change | `make openapi-gate`, `make endpoint-certification-gate`, focused API tests | Runtime/OpenAPI/certification agreement. |
 | Supported-feature claim | `make supported-features-gate`, `make implementation-truth-gate`, `make implementation-proof-closure-manifest-gate`, `make blueprint-scope-coverage-gate` | No unproved support or certification language; every proof blocker and blueprint capability has issue, evidence, slice, and non-promotion truth. |
-| Dependency or container vulnerability posture change | `make dependency-vulnerability-posture-gate`, `make security-audit`, release lane for image scan/SBOM/signing/provenance | Exact stable dependency pins, lock mirror truth, governed Python vulnerability audit, Trivy/release hook wiring, and issue-backed exceptions. |
+| Dependency or container vulnerability posture change | `make dependency-vulnerability-posture-gate`, `make security-audit`, release lane for image scan/SBOM/signing/provenance | Exact stable runtime, CI, and build-system dependency pins; lock mirror truth; governed Python vulnerability audit; Trivy/release hook wiring; and issue-backed exceptions. |
 | Persistence or migration change | `make migration-contract-gate`, `make migration-execution-gate`, focused repository tests | Apply/rollback and query-shape proof. |
 | PostgreSQL recovery change | `make disaster-recovery-contract-gate`, real restore/resume proof, `make disaster-recovery-proof-gate` | RPO/RTO, restored invariants, replay/fencing, and no-mutation evidence. |
 | Canonical source-proof run | `make canonical-opportunity-source-proofs` with governed runtime arguments | Source-specific live evidence, traceability, and fail-closed blocker posture. |
@@ -114,7 +114,7 @@ target and must not carry durable truth that is absent from `main`.
 | --- | --- | --- |
 | Aggregate lanes | `make check`, `make ci`, `make ci-release` | Routine local proof, broad CI-equivalent proof, and release evidence. |
 | Contract and documentation | `make ci-contract-gate`, `make foundation-structure-gate`, `make documentation-contract-gate`, `make implementation-truth-gate`, `make supported-features-gate`, `make blueprint-scope-coverage-gate`, `make rfc0002-github-issue-execution-ledger-gate`, `make rfc0002-github-issue-learning-pattern-gate` | Prevent workflow, docs, support, blueprint, issue-lifecycle, issue-learning, and certification drift. |
-| Dependency and vulnerability posture | `make dependency-vulnerability-posture-gate`, `make security-audit`, `make container-image-scan`, `make release-sbom` | Govern mature supported dependencies, Python vulnerability scan evidence, container scan wiring, SBOM/signing/provenance hooks, and issue-backed vulnerability exceptions. |
+| Dependency and vulnerability posture | `make dependency-vulnerability-posture-gate`, `make security-audit`, `make container-image-scan`, `make release-sbom` | Govern mature supported runtime, CI, and build-system dependencies, Python vulnerability scan evidence, container scan wiring, SBOM/signing/provenance hooks, and issue-backed vulnerability exceptions. |
 | API and OpenAPI | `make openapi-gate`, `make endpoint-certification-gate`, `make api-route-metadata-gate`, `make caller-context-contract-gate` | Keep runtime API and published contract truth aligned. |
 | Persistence and runtime | `make migration-contract-gate`, `make migration-execution-gate`, `make deployment-migration-contract-gate`, `make postgres-integration-gate`, `make disaster-recovery-contract-gate`, `make disaster-recovery-proof-gate`, `make container-runtime-smoke` | Prove durable storage, local migration plans, protected exact-image migration controls, restore/resume, and runtime behavior. |
 | Mesh and proof artifacts | `make data-mesh-contract-gate`, `make mesh-policy-source-contract-proof-gate`, `make implementation-proof-readiness-check`, `make full-live-opportunity-journey-proof`, `make full-live-opportunity-journey-proof-gate`, `make implementation-proof-closure-manifest-gate`, `make blueprint-scope-coverage-gate`, `make canonical-opportunity-source-proofs`, `make runtime-trust-telemetry-snapshot-check` | Validate data-mesh, source-contract, proof-readiness, full-live journey composition, blocker ownership, and blueprint scope posture without conflating policy declarations, stale screenshots, or aggregate proof artifacts with certification. |
@@ -273,6 +273,10 @@ for the `pyproject.toml` runtime roots and against the
 command: it installs from root pins without a stale runtime-lock constraint,
 then regenerates `requirements/runtime-resolved.lock.txt` and
 `requirements/requirements.txt` from the active runtime closure.
+Build isolation uses exact stable `pyproject.toml:build-system.requires` pins,
+mirrored in `requirements/build-system.lock.txt`; `make security-audit` scans
+that build-system lock alongside runtime and CI locks so build backend/tooling
+resolver drift cannot bypass vulnerability posture.
 Container OS/package posture remains the Trivy image scan's responsibility;
 the generated SBOM remains runtime-dependency scoped rather than a full
 container filesystem SBOM.
@@ -753,9 +757,9 @@ Persistence adapter validation:
    `30326431318` and CodeQL `30326422515` passed. PR #746 corrected stale ready
    posture for #380 and reconciled it to `open_blocked` at
    `6f8875dc6784dd17975e6700c09b9ff71d66fb8b`; Main Releasability `30327202465`
-   and CodeQL `30327193673` passed. The RFC-0002 execution summary now has 40
-   tracked issues, 14 closed complete, 26 open, 6
-   `open_merged_main_qa_pending`, 2 `open_in_progress`, 8 `open_blocked`, and
+   and CodeQL `30327193673` passed. The RFC-0002 execution summary now has 41
+   tracked issues, 14 closed complete, 27 open, 6
+   `open_merged_main_qa_pending`, 3 `open_in_progress`, 8 `open_blocked`, and
    no ready issues. #685 is active fix-forward work, not passive blocked
    posture, because the remaining proof path is inside writable Lotus app
    repositories. The current default Gateway/Workbench runtime artifact was

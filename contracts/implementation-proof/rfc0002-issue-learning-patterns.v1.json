@@ -169,8 +169,8 @@
     {
       "patternId": "operations_security_resilience_certification",
       "title": "Operations, security, lifecycle, migration, outbox, SLO, capacity, and disaster-recovery claims need protected or production-like attestations.",
-      "currentLedgerIssueNumbers": [343, 344, 345, 375, 678, 693],
-      "relatedIssueNumbers": [337, 343, 344, 345, 372, 375, 695],
+      "currentLedgerIssueNumbers": [343, 344, 345, 375, 678, 693, 756],
+      "relatedIssueNumbers": [337, 343, 344, 345, 372, 375, 695, 756],
       "rfcSlices": ["slice-15"],
       "durableControls": [
         {
@@ -190,10 +190,10 @@
           "ref": "docs/runbooks/postgres-disaster-recovery.md"
         }
       ],
-      "futureAgentRule": "Separate contract-green local posture from protected execution evidence; do not clear capacity, lifecycle, migration, broker, DR, or vulnerability blockers with static files, local-only probes, or stale report-only evidence.",
+      "futureAgentRule": "Separate contract-green local posture from protected execution evidence; do not clear capacity, lifecycle, migration, broker, DR, or vulnerability blockers with static files, local-only probes, or stale report-only evidence. Treat pyproject build-system roots as governed dependency posture inputs; exact runtime/dev pins are insufficient if build backend/tooling can resolve through unpinned or range-based requirements.",
       "nonClaimBoundaries": [
         "Local/disposable database drills are not provider backup, PITR, failover, or production certification.",
-        "Static SLO, dashboard, lifecycle, or outbox contracts are non-certifying until runtime/protected evidence exists."
+        "Static SLO, dashboard, lifecycle, outbox, or dependency posture contracts are non-certifying until runtime/protected/release evidence exists."
       ]
     },
     {

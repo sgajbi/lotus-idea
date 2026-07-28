@@ -375,6 +375,15 @@
       "executionStatus": "closed_complete",
       "allowPullRequestAutoClose": true,
       "closureInstruction": "Closed #704 after downstream realization blockers were made issue-backed."
+    },
+    {
+      "issueNumber": 756,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/756",
+      "rfcSlices": ["slice-15"],
+      "githubState": "open",
+      "executionStatus": "open_in_progress",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #756 open and status/in-progress until the build-system dependency posture gap is merged and exact-main validated. This issue covers exact stable pins, build-system lock evidence, direct dependency approval, security-audit coverage, docs/context/wiki sync, and branch hygiene for pyproject.toml build backend/tooling roots only. Do not use this issue to claim production vulnerability certification, supported-feature promotion, or final release image posture; those remain governed by exact-main release evidence and existing Slice 15 blockers."
     }
   ]
 }
