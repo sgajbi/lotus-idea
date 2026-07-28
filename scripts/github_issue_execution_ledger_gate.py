@@ -105,6 +105,31 @@ REQUIRED_OPEN_ISSUE_EVIDENCE = {
         "30327202465",
         "30327193673",
     ),
+    690: (
+        "Keep #690 open and status/blocked",
+        "PR #724 merged bounded live Report intake/materialization runtime-execution proof",
+        "This clears only report_evidence_pack_live_materialization_proof_missing",
+        "This issue is not QA-pending",
+        "Report/Render/Archive production trust evidence",
+    ),
+    691: (
+        "Keep #691 open and status/blocked",
+        "PR #725 merged to main",
+        "29972535964",
+        "rendered_output_creation_missing",
+        "archive_record_creation_missing",
+        "lotus-archive #55",
+        "This issue is not QA-pending",
+    ),
+    692: (
+        "Keep #692 open and status/blocked",
+        "Platform PR #630 merged bounded mesh-readiness proof consumption",
+        "c0fb028a440a24622fe162e934c3469fcafb4055",
+        "30335871870",
+        "30335876432",
+        "clears only the catalog/policy/telemetry-consumable dependency marker",
+        "This issue is not QA-pending",
+    ),
     685: (
         "Keep #685 open and status/blocked",
         "sgajbi/lotus-core#836",
@@ -126,18 +151,19 @@ REQUIRED_OPEN_ISSUE_EVIDENCE = {
         "capacity-production-like environment",
         "No supported-feature, production capacity, billing, scaling, or production certification claim is made.",
     ),
-    692: (
-        "Platform PR #630 merged bounded mesh-readiness proof consumption",
-        "c0fb028a440a24622fe162e934c3469fcafb4055",
-        "30335871870",
-        "30335876432",
-        "clears only the catalog/policy/telemetry-consumable dependency marker",
-    ),
     693: (
         "Platform PR #629 merged bounded cost-attribution",
         "823e2641778aaf7db4e1df6218cf84eab0084526",
         "platform issue #495 remains the protected FinOps execution",
         "does not provision self-hosted runners",
+    ),
+    699: (
+        "Keep #699 open and status/blocked",
+        "PR #740 merged to main",
+        "30319531736",
+        "This records the Slice 17 proof-control tranche only",
+        "This issue is not QA-pending",
+        "full live journey validation remains blocked",
     ),
 }
 REQUIRED_CLOSED_ISSUE_EVIDENCE = {
