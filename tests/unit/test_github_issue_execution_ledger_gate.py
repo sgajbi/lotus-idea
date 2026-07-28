@@ -158,6 +158,36 @@ def test_rfc0002_github_issue_execution_ledger_tracks_archetype_pack_merged_main
     )
 
 
+def test_rfc0002_github_issue_execution_ledger_requires_issue_340_mainline_evidence(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    payload = _ledger_payload(module)
+    for issue in payload["issues"]:
+        if isinstance(issue, dict) and issue["issueNumber"] == 340:
+            issue["closureInstruction"] = issue["closureInstruction"].replace("30326431318", "")
+            break
+
+    errors = module.validate_github_issue_execution_ledger(_write_ledger(tmp_path, payload))
+
+    assert "#340: closureInstruction missing required evidence `30326431318`" in errors
+
+
+def test_rfc0002_github_issue_execution_ledger_requires_issue_380_blocker_evidence(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    payload = _ledger_payload(module)
+    for issue in payload["issues"]:
+        if isinstance(issue, dict) and issue["issueNumber"] == 380:
+            issue["closureInstruction"] = issue["closureInstruction"].replace("open_blocked", "")
+            break
+
+    errors = module.validate_github_issue_execution_ledger(_write_ledger(tmp_path, payload))
+
+    assert "#380: closureInstruction missing required evidence `open_blocked`" in errors
+
+
 def test_rfc0002_github_issue_execution_ledger_blocks_auto_close_wording_for_open_issue(
     tmp_path: Path,
 ) -> None:

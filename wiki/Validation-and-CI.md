@@ -746,6 +746,19 @@ Persistence adapter validation:
    `8ccee32d9a25fb6c47c723e105e2c48d1c4b3c70` with Main Releasability
    `30324178801`. Issue #379 remains open in `status/merged-main` pending
    QA/final certification.
+
+   Slice 18 issue-posture reconciliation also records the current #340 and
+   #380 truth. PR #745 reconciled #340 to `open_merged_main_qa_pending` at
+   `eeabfc683f595b4cbc9ffb5aa0aa51c3e5622903`; Main Releasability
+   `30326431318` and CodeQL `30326422515` passed. PR #746 corrected stale ready
+   posture for #380 and reconciled it to `open_blocked` at
+   `6f8875dc6784dd17975e6700c09b9ff71d66fb8b`; Main Releasability `30327202465`
+   and CodeQL `30327193673` passed. The RFC-0002 execution summary now has 40
+   tracked issues, 12 closed complete, 28 open, and no ready issues. #340
+   remains open for live Lotus AI provider/model-risk/runtime certification,
+   and #380 remains blocked for production principal/session, authenticated
+   Workbench BFF, core-owned canonical runtime, mesh onboarding,
+   entitlement-denied, and supported-feature promotion evidence.
 19. `tests/unit/test_source_ingestion_readiness.py` and
    `tests/integration/test_source_ingestion_readiness_api.py` prove the
    operator readiness diagnostic for blocked/configured posture,

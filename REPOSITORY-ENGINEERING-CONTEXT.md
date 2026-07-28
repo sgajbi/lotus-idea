@@ -90,6 +90,17 @@ The supported-feature registry remains `foundation_only` with an empty
 docs/wiki, runtime proof, CI proof, and mainline validation exist for an
 implemented feature.
 
+PR #745 reconciled #340 to `open_merged_main_qa_pending` on exact main
+`eeabfc683f595b4cbc9ffb5aa0aa51c3e5622903` with Main Releasability
+`30326431318` and CodeQL `30326422515` passing; it records Idea-side
+AI-attestation consumer proof without claiming live Lotus AI provider/runtime
+certification. PR #746 corrected stale ready posture for #380 and reconciled it
+to `open_blocked` on exact main `6f8875dc6784dd17975e6700c09b9ff71d66fb8b`
+with Main Releasability `30327202465` and CodeQL `30327193673` passing; it
+records supported-feature/data-product promotion blockers without promoting
+support. The current RFC-0002 execution summary has 40 tracked issues, 12
+closed complete, 28 open, and no ready issues.
+
 Current internal foundations are real implementation. They are not client-ready
 publication, data-product certification, full Gateway/Workbench proof,
 downstream execution proof, live source certification, or supported-feature

@@ -17,6 +17,16 @@ a supported feature.
 | Promotion gate | `make supported-features-gate` |
 | Runtime reconciliation gate | `make supported-feature-promotion-contract-gate` |
 
+PR #746 corrected stale ready posture for issue #380 and reconciled it to
+`open_blocked` on exact main `6f8875dc6784dd17975e6700c09b9ff71d66fb8b`;
+Main Releasability `30327202465` and CodeQL `30327193673` passed for that
+state. This is blocker-truth evidence, not promotion evidence. The registry
+stays `foundation_only` with zero promoted features until production
+principal/session, authenticated Workbench BFF, core-owned canonical runtime,
+canonical all-main Gateway/Workbench live evidence, entitlement-denied proof,
+mesh onboarding certification, and the supported-feature promotion evaluator
+all agree that a feature is supportable.
+
 ## Support Vocabulary
 
 | Term | Meaning |

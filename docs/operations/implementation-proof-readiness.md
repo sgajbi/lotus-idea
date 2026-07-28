@@ -151,6 +151,21 @@ live GitHub proof; it deliberately points back to
 `make rfc0002-github-issue-execution-state-audit` for current GitHub label and
 open/closed verification.
 
+Current Slice 18 ledger synchronization records 40 tracked RFC-0002 issues:
+12 closed complete, 28 open, no ready issues, 10
+`open_merged_main_qa_pending`, 7 `open_blocked`, 1 `open_in_progress`, 1
+`open_pending_final_closure`, 1 `open_pending_post_completion`, and 8
+`open_tracker`. PR #745 reconciled #340 to `open_merged_main_qa_pending` on
+`eeabfc683f595b4cbc9ffb5aa0aa51c3e5622903`; Main Releasability `30326431318`
+and CodeQL `30326422515` passed for that exact SHA. PR #746 corrected stale
+ready posture for #380, reconciled it to `open_blocked` on
+`6f8875dc6784dd17975e6700c09b9ff71d66fb8b`; Main Releasability `30327202465`
+and CodeQL `30327193673` passed for that exact SHA. #340 and #380 remain open:
+the first for live Lotus AI provider/model-risk/runtime certification evidence,
+and the second for production principal/session, Workbench authenticated BFF,
+core-owned canonical runtime, mesh onboarding, entitlement-denied, and
+supported-feature promotion evidence.
+
 ## GitHub Issue Learning Patterns
 
 `contracts/implementation-proof/rfc0002-issue-learning-patterns.v1.json` is
