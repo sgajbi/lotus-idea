@@ -204,6 +204,9 @@ def test_rfc0002_github_issue_execution_ledger_tracks_platform_capacity_dependen
 
     assert issue_345["githubState"] == "open"
     assert issue_345["executionStatus"] == "open_blocked"
+    assert issue_693["githubState"] == "open"
+    assert issue_693["executionStatus"] == "open_blocked"
+    assert issue_693["allowPullRequestAutoClose"] is False
     assert "Platform PR #629 merged bounded cost-attribution" in issue_345["closureInstruction"]
     assert "823e2641778aaf7db4e1df6218cf84eab0084526" in issue_345["closureInstruction"]
     assert "sgajbi/lotus-platform#495" in issue_345["closureInstruction"]
@@ -216,6 +219,11 @@ def test_rfc0002_github_issue_execution_ledger_tracks_platform_capacity_dependen
     assert (
         "platform issue #495 remains the protected FinOps execution"
         in (issue_693["closureInstruction"])
+    )
+    assert "This issue is not QA-pending" in issue_693["closureInstruction"]
+    assert "governed self-hosted lotus-capacity-evidence runner" in issue_693["closureInstruction"]
+    assert (
+        "Do not close, auto-close, or promote supported features" in issue_693["closureInstruction"]
     )
 
 

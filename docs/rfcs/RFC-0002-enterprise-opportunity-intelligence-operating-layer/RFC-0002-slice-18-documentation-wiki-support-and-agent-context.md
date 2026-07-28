@@ -461,13 +461,16 @@ context. PR #745 reconciled #340 to `open_merged_main_qa_pending` at
 `30326431318` and CodeQL `30326422515` passed. PR #746 corrected stale ready
 posture for #380 and reconciled it to `open_blocked` at
 `6f8875dc6784dd17975e6700c09b9ff71d66fb8b`; Main Releasability
-`30327202465` and CodeQL `30327193673` passed. The current execution summary
-has 40 tracked RFC-0002 issues, 12 closed complete, 28 open, and no ready
-issues. This records lifecycle truth only: #340 remains open for live Lotus AI
-provider/model-risk/runtime certification, and #380 remains blocked for
-production principal/session, authenticated Workbench BFF, core-owned canonical
-runtime, mesh onboarding, entitlement-denied, and supported-feature promotion
-evidence.
+`30327202465` and CodeQL `30327193673` passed. Current source truth now records
+40 tracked RFC-0002 issues, 14 closed complete, 26 open, 8
+`open_merged_main_qa_pending`, and 7 `open_blocked` issues. This records
+lifecycle truth only: #340 remains open for live Lotus AI
+provider/model-risk/runtime certification, #380 remains blocked for production
+principal/session, authenticated Workbench BFF, core-owned canonical runtime,
+mesh onboarding, entitlement-denied, and supported-feature promotion evidence,
+and #693 is blocked rather than QA-pending until protected
+capacity-production-like runner/environment, protected attestations, and
+matching FinOps evidence exist.
 
 The missing-benchmark Core material now records the independently owned closed
 v2 runtime contract implemented by issue `#499`. One named application use case

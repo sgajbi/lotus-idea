@@ -98,8 +98,12 @@ certification. PR #746 corrected stale ready posture for #380 and reconciled it
 to `open_blocked` on exact main `6f8875dc6784dd17975e6700c09b9ff71d66fb8b`
 with Main Releasability `30327202465` and CodeQL `30327193673` passing; it
 records supported-feature/data-product promotion blockers without promoting
-support. The current RFC-0002 execution summary has 40 tracked issues, 12
-closed complete, 28 open, and no ready issues.
+support. After Slice 16 QA closure and Slice 15 protected-attestation
+reconciliation, the current RFC-0002 ledger posture is 40 tracked issues, 14
+closed complete, 26 open, 8 `open_merged_main_qa_pending`, and 7
+`open_blocked`; #693 is blocked, not QA-pending, until protected
+capacity-production-like runner/environment and FinOps attestation evidence
+exist.
 
 Current internal foundations are real implementation. They are not client-ready
 publication, data-product certification, full Gateway/Workbench proof,
