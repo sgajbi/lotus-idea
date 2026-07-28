@@ -153,8 +153,8 @@ open/closed verification.
 
 Current Slice 18 ledger synchronization records 40 tracked RFC-0002 issues:
 12 closed complete, 28 open, no ready issues, 10
-`open_merged_main_qa_pending`, 7 `open_blocked`, 1 `open_in_progress`, 1
-`open_pending_final_closure`, 1 `open_pending_post_completion`, and 8
+`open_merged_main_qa_pending`, 6 `open_blocked`, 1 `open_in_progress`, 1
+`open_pr_raised`, 1 `open_pending_final_closure`, 1 `open_pending_post_completion`, and 8
 `open_tracker`. PR #745 reconciled #340 to `open_merged_main_qa_pending` on
 `eeabfc683f595b4cbc9ffb5aa0aa51c3e5622903`; Main Releasability `30326431318`
 and CodeQL `30326422515` passed for that exact SHA. PR #746 corrected stale
@@ -164,7 +164,9 @@ and CodeQL `30327193673` passed for that exact SHA. #340 and #380 remain open:
 the first for live Lotus AI provider/model-risk/runtime certification evidence,
 and the second for production principal/session, Workbench authenticated BFF,
 core-owned canonical runtime, mesh onboarding, entitlement-denied, and
-supported-feature promotion evidence.
+supported-feature promotion evidence. #693 has a PR-open app-side
+protected workflow-pin hardening tranche; runner, environment variable/secret,
+protected execution, cost, and supported-feature blockers remain open.
 
 ## GitHub Issue Learning Patterns
 

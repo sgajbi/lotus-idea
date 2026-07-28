@@ -282,9 +282,9 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/693",
       "rfcSlices": ["slice-15"],
       "githubState": "open",
-      "executionStatus": "open_blocked",
+      "executionStatus": "open_pr_raised",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #693 open. PR #730 merged proof-specific dependency-recovery and PostgreSQL threshold gates plus protected workflow enforcement with exact-main validation. This tranche does not execute protected capacity, load, resource, dependency, PostgreSQL, or cost attestations and does not promote supported features."
+      "closureInstruction": "Keep #693 open. PR #730 merged proof-specific dependency-recovery and PostgreSQL threshold gates plus protected workflow enforcement with exact-main validation. PR #748 fixes truncated upload-artifact pins in the protected capacity evidence producers and adds deterministic gate coverage so load/soak, dependency-recovery, and PostgreSQL capacity workflows cannot drift from the governed pinned upload action. This PR tranche does not provision self-hosted runners, configure protected environment variables/secrets, execute protected capacity, load, resource, dependency, PostgreSQL, or cost attestations, or promote supported features."
     },
     {
       "issueNumber": 694,

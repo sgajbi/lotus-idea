@@ -232,6 +232,33 @@ def test_dependency_recovery_workflow_rejects_automatic_or_untrusted_shape(
     assert any("capacity-production-like" in error for error in errors)
 
 
+def test_capacity_workflows_reject_truncated_upload_artifact_pin(tmp_path: Path) -> None:
+    module = _load_gate()
+    workflows = tmp_path / ".github" / "workflows"
+    workflows.mkdir(parents=True)
+    canonical_upload_pin = "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a"
+    truncated_upload_pin = canonical_upload_pin.removesuffix("a")
+
+    for workflow_name in (
+        "service-dependency-recovery-evidence.yml",
+        "service-load-soak-evidence.yml",
+        "postgres-capacity-evidence.yml",
+    ):
+        source = ROOT / ".github" / "workflows" / workflow_name
+        target = workflows / workflow_name
+        target.write_text(
+            source.read_text(encoding="utf-8").replace(
+                canonical_upload_pin,
+                truncated_upload_pin,
+            ),
+            encoding="utf-8",
+        )
+
+    errors = module.validate_payload(_payload(module), repository_root=tmp_path)
+
+    assert any(canonical_upload_pin in error for error in errors)
+
+
 def test_load_soak_workflow_requires_concurrent_resource_proof_and_separate_attestation(
     tmp_path: Path,
 ) -> None:
