@@ -100,14 +100,19 @@ with Main Releasability `30327202465` and CodeQL `30327193673` passing; it
 records supported-feature/data-product promotion blockers without promoting
 support. After Slice 16 QA closure and Slice 15 protected-attestation
 reconciliation, the current RFC-0002 ledger posture is 40 tracked issues, 14
-closed complete, 26 open, 6 `open_merged_main_qa_pending`, and 9
-`open_blocked`; #685 is blocked, not QA-pending, because the current default
-Gateway/Workbench runtime artifact is rejected by
+closed complete, 26 open, 6 `open_merged_main_qa_pending`, 2
+`open_in_progress`, and 8 `open_blocked`; #685 is active fix-forward work, not
+passive blocked posture, because the remaining default Gateway/Workbench
+runtime-proof path is inside writable Lotus app repositories. The current
+non-certifying evidence was rejected by
 `make gateway-workbench-runtime-execution-proof` for missing
 `runtimeExecutionProofValid`, `gatewayBffConsumptionObserved`, and fresh
-Workbench evidence. #686 is blocked, not QA-pending, until `lotus-core#836`
-restores canonical seed readiness and Workbench live browser validation
-produces current action-control evidence. #693 is blocked, not QA-pending,
+Workbench evidence; the Make target now uses a fresh runtime-proof timestamp
+variable while retaining the strict Workbench-evidence freshness gate.
+Platform PR `sgajbi/lotus-platform#631` fixes the earlier Manage seed
+authorization failure; #686 is blocked, not QA-pending, until
+`sgajbi/lotus-core#840` restores canonical DPM source readiness and Workbench
+live browser validation produces current action-control evidence. #693 is blocked, not QA-pending,
 until protected capacity-production-like runner/environment and FinOps
 attestation evidence exist.
 

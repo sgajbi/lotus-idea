@@ -42,6 +42,7 @@ LICENSE_RELEASE_SBOM ?= sbom.cdx.json
 TRIVY_IMAGE ?= aquasec/trivy:0.71.2
 PROMETHEUS_IMAGE ?= prom/prometheus:v2.47.2
 IMPLEMENTATION_PROOF_EVALUATED_AT_UTC ?= 2026-06-21T10:10:00Z
+LOTUS_IDEA_GATEWAY_WORKBENCH_RUNTIME_EXECUTION_PROOF_GENERATED_AT_UTC ?= $(BUILD_TIMESTAMP)
 IMPLEMENTATION_PROOF_OUTPUT ?=
 LOTUS_CORE_BASE_URL ?=
 LOTUS_CORE_QUERY_BASE_URL ?=
@@ -624,7 +625,7 @@ gateway-workbench-runtime-execution-proof-gate:
 	$(VENV_PYTHON) scripts/workbench/runtime_execution_proof_gate.py
 
 gateway-workbench-runtime-execution-proof:
-	$(VENV_PYTHON) scripts/workbench/generate_runtime_execution_proof.py --generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --workbench-root $(LOTUS_WORKBENCH_ROOT) --output $(LOTUS_IDEA_GATEWAY_WORKBENCH_RUNTIME_EXECUTION_PROOF_OUTPUT)
+	$(VENV_PYTHON) scripts/workbench/generate_runtime_execution_proof.py --generated-at-utc $(LOTUS_IDEA_GATEWAY_WORKBENCH_RUNTIME_EXECUTION_PROOF_GENERATED_AT_UTC) --workbench-root $(LOTUS_WORKBENCH_ROOT) --output $(LOTUS_IDEA_GATEWAY_WORKBENCH_RUNTIME_EXECUTION_PROOF_OUTPUT)
 	$(VENV_PYTHON) scripts/workbench/runtime_execution_proof_gate.py $(LOTUS_IDEA_GATEWAY_WORKBENCH_RUNTIME_EXECUTION_PROOF_OUTPUT)
 
 full-live-opportunity-journey-proof:

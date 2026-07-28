@@ -14,6 +14,9 @@ from ci_contract_gate_expectations import (  # noqa: E402
     REQUIRED_TEST_SELECTORS,
     TEST_TARGET_EXPECTATIONS,
 )
+from ci_contract_gate_workbench_runtime import (  # noqa: E402
+    validate_workbench_runtime_proof_timestamp,
+)
 from ci_actionlint_contract import (  # noqa: E402
     validate_actionlint_governance,
 )
@@ -300,6 +303,7 @@ def _validate_script_targets(makefile: str) -> list[str]:
 
 def _validate_support_targets(makefile: str) -> list[str]:
     errors = _validate_implementation_proof_readiness_target(makefile)
+    errors.extend(validate_workbench_runtime_proof_timestamp(makefile))
     runtime_preview_check = _target_block(makefile, "runtime-trust-telemetry-preview-check")
     if "scripts/runtime_trust_telemetry/generate_preview.py" not in runtime_preview_check:
         errors.append(
