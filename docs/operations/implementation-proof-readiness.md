@@ -153,7 +153,7 @@ open/closed verification.
 
 Current Slice 18 ledger synchronization records 40 tracked RFC-0002 issues:
 14 closed complete, 26 open, no ready issues, 6
-`open_merged_main_qa_pending`, 9 `open_blocked`, 1 `open_in_progress`, no
+`open_merged_main_qa_pending`, 8 `open_blocked`, 2 `open_in_progress`, no
 `open_pr_raised`, 1 `open_pending_final_closure`, 1 `open_pending_post_completion`, and 8
 `open_tracker`. PR #745 reconciled #340 to `open_merged_main_qa_pending` on
 `eeabfc683f595b4cbc9ffb5aa0aa51c3e5622903`; Main Releasability `30326431318`
@@ -164,9 +164,11 @@ and CodeQL `30327193673` passed for that exact SHA. #340 and #380 remain open:
 the first for live Lotus AI provider/model-risk/runtime certification evidence,
 and the second for production principal/session, Workbench authenticated BFF,
 core-owned canonical runtime, mesh onboarding, entitlement-denied, and
-supported-feature promotion evidence. #686 is `open_blocked`, not QA-pending
-because `lotus-core#836` still blocks canonical seed readiness and Workbench
-live browser action-control proof. PR #748 merged the latest app-side
+supported-feature promotion evidence. Platform PR `sgajbi/lotus-platform#631`
+fixes the prior Manage seed authorization failure, but #686 is still
+`open_blocked`, not QA-pending because `sgajbi/lotus-core#840` blocks
+canonical DPM source readiness and Workbench live browser action-control proof.
+PR #748 merged the latest app-side
 protected workflow-pin hardening for #693 on
 `29c235c21ff25c36f34d560e7794bc980661818f`;
 Main Releasability `30330029033` and CodeQL `30330024353` passed for that
@@ -176,15 +178,18 @@ provisioning, protected environment variables/secrets, protected
 capacity/load/resource/dependency/PostgreSQL/cost attestation execution, and
 supported-feature blockers.
 
-#685 is also `open_blocked`, not QA-pending: the current default
-Gateway/Workbench runtime artifact is rejected by
+#685 is `open_in_progress`, not passive blocked posture: the current default
+Gateway/Workbench runtime artifact was rejected by
 `make gateway-workbench-runtime-execution-proof` because
 `runtimeExecutionProofValid`, `gatewayBffConsumptionObserved`, and
-`proofChecks.workbenchEvidenceFresh` are not true. PR #736 merged the optional
-Idea-side consumer/gate path, but fresh Gateway/BFF-backed Workbench
-queue/detail runtime evidence, browser/accessibility proof, canonical demo
-runtime proof, and #380 data-product/supported-feature posture reconciliation
-remain required before QA closure.
+`proofChecks.workbenchEvidenceFresh` were not true. PR #736 merged the optional
+Idea-side consumer/gate path; the active fix-forward tranche separates the
+fresh runtime-proof timestamp from the static implementation-proof timestamp
+while preserving the strict Workbench-evidence freshness gate. Fresh
+Gateway/BFF-backed Workbench queue/detail runtime evidence,
+browser/accessibility proof, canonical demo runtime proof, and #380
+data-product/supported-feature posture reconciliation remain required before
+QA closure.
 
 ## GitHub Issue Learning Patterns
 
@@ -459,6 +464,7 @@ taxonomy and the #393 same-pattern campaign.
 | `LOTUS_IDEA_GATEWAY_WORKBENCH_CONTRACT_PROOF` | Overrides the default generated Gateway/Workbench contract proof artifact passed into aggregate readiness. |
 | `LOTUS_IDEA_GATEWAY_WORKBENCH_DISCOVERY_CONTRACT_PROOF_OUTPUT` | Selects the default generated Gateway/Workbench discovery contract proof artifact consumed by aggregate readiness when no override is set. Defaults to `output/workbench/gateway-workbench-discovery-contract-proof.json`. |
 | `LOTUS_IDEA_GATEWAY_WORKBENCH_DISCOVERY_CONTRACT_PROOF` | Overrides the default generated Gateway/Workbench discovery contract proof artifact passed into aggregate readiness. |
+| `LOTUS_IDEA_GATEWAY_WORKBENCH_RUNTIME_EXECUTION_PROOF_GENERATED_AT_UTC` | Selects the proof generation instant for freshness-sensitive Gateway/Workbench runtime proof. Defaults to `BUILD_TIMESTAMP`; do not use the static `IMPLEMENTATION_PROOF_EVALUATED_AT_UTC` for current browser/runtime evidence. |
 | `LOTUS_IDEA_GATEWAY_WORKBENCH_RUNTIME_EXECUTION_PROOF_OUTPUT` | Selects the recommended local output path for generated Gateway/Workbench runtime-execution proof. Defaults to `output/workbench/gateway-workbench-runtime-execution-proof.json`; aggregate readiness consumes it only when `LOTUS_IDEA_GATEWAY_WORKBENCH_RUNTIME_EXECUTION_PROOF` is set. |
 | `LOTUS_IDEA_GATEWAY_WORKBENCH_RUNTIME_EXECUTION_PROOF` | Overrides the optional Gateway/Workbench runtime-execution proof artifact passed into aggregate readiness. A valid current artifact clears only `workbench_gateway_bff_consumption_proof_missing`; production identity, browser accessibility, canonical demo runtime, data-product, client-publication, suitability/execution, and supported-feature blockers remain. |
 | `LOTUS_IDEA_AI_LINEAGE_STORE_PROOF_OUTPUT` | Selects the default generated AI lineage store proof artifact consumed by aggregate readiness when no override is set. Defaults to `output/ai/ai-lineage-store-proof.json`. |

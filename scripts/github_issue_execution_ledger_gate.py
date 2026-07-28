@@ -102,7 +102,7 @@ REQUIRED_OPEN_ISSUE_EVIDENCE = {
     686: (
         "Keep #686 open and status/blocked",
         "Workbench PR #501 merged the browser-action proof path",
-        "sgajbi/lotus-core#836",
+        "sgajbi/lotus-core#840",
         "This issue is not QA-pending",
     ),
     345: (

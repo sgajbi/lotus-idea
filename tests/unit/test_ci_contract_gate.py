@@ -753,6 +753,70 @@ def test_ci_contract_gate_blocks_missing_platform_catalog_source_contract_output
     ) in errors
 
 
+def test_ci_contract_gate_blocks_missing_fresh_workbench_runtime_proof_timestamp() -> None:
+    module = _load_ci_contract_gate()
+    makefile = (
+        (ROOT / "Makefile")
+        .read_text(encoding="utf-8")
+        .replace(
+            "LOTUS_IDEA_GATEWAY_WORKBENCH_RUNTIME_EXECUTION_PROOF_GENERATED_AT_UTC ?= "
+            "$(BUILD_TIMESTAMP)",
+            "LOTUS_IDEA_GATEWAY_WORKBENCH_RUNTIME_EXECUTION_PROOF_GENERATED_AT_UTC ?= "
+            "$(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC)",
+        )
+    )
+
+    errors = module.validate_makefile(makefile)
+
+    assert (
+        "Makefile must default Gateway/Workbench runtime proof generation to `$(BUILD_TIMESTAMP)`"
+    ) in errors
+
+
+def test_ci_contract_gate_blocks_workbench_runtime_proof_wrong_timestamp_wiring() -> None:
+    module = _load_ci_contract_gate()
+    makefile = (
+        (ROOT / "Makefile")
+        .read_text(encoding="utf-8")
+        .replace(
+            "--generated-at-utc "
+            "$(LOTUS_IDEA_GATEWAY_WORKBENCH_RUNTIME_EXECUTION_PROOF_GENERATED_AT_UTC)",
+            "--generated-at-utc $(BUILD_TIMESTAMP)",
+        )
+    )
+
+    errors = module.validate_makefile(makefile)
+
+    assert (
+        "Makefile gateway-workbench-runtime-execution-proof target must use the "
+        "fresh runtime proof timestamp variable"
+    ) in errors
+
+
+def test_ci_contract_gate_blocks_workbench_runtime_proof_static_timestamp_regression() -> None:
+    module = _load_ci_contract_gate()
+    makefile = (
+        (ROOT / "Makefile")
+        .read_text(encoding="utf-8")
+        .replace(
+            "--generated-at-utc "
+            "$(LOTUS_IDEA_GATEWAY_WORKBENCH_RUNTIME_EXECUTION_PROOF_GENERATED_AT_UTC)",
+            "--generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC)",
+        )
+    )
+
+    errors = module.validate_makefile(makefile)
+
+    assert (
+        "Makefile gateway-workbench-runtime-execution-proof target must use the "
+        "fresh runtime proof timestamp variable"
+    ) in errors
+    assert (
+        "Makefile gateway-workbench-runtime-execution-proof target must not use the "
+        "static implementation proof timestamp"
+    ) in errors
+
+
 def test_ci_contract_gate_blocks_missing_platform_mesh_root_wiring() -> None:
     module = _load_ci_contract_gate()
     makefile = (
