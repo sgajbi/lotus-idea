@@ -111,8 +111,7 @@ def test_github_issue_execution_summary_markdown_is_comment_ready() -> None:
     assert "## Ready Issues\n\n_None._" in rendered
     assert "## Blocked Issues" in rendered
     assert (
-        "#343, #344, #345, #375, #379, #380, #685, #686, #687, #690, #691, "
-        "#692, #693, #699"
+        "#343, #344, #345, #375, #379, #380, #685, #686, #687, #690, #691, #692, #693, #699"
     ) in rendered
     assert "Current issues: #679, #699" in rendered
     assert "Current issues: #679, #696, #697, #699" not in rendered
