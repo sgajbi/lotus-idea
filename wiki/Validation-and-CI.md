@@ -474,7 +474,7 @@ Persistence adapter validation:
    proof consumption, bounded outbox broker source-contract proof consumption,
    default digest-bound Advise and Manage route source-contract generation and
    supporting-evidence consumption without live-blocker clearance,
-   optional closed v2 Manage mandate runtime-evidence consumption,
+   optional closed v3 Manage mandate runtime-evidence consumption,
    optional receipt-bound Core benchmark-assignment runtime evidence consumption,
    optional receipt-bound Core portfolio-state runtime evidence consumption,
    optional closed v2 Core missing-benchmark runtime-evidence consumption,
@@ -767,9 +767,11 @@ Persistence adapter validation:
    `open_merged_main_qa_pending`, 1 `open_in_progress`, no `open_pr_raised`,
    14 `open_blocked`, and
    no ready issues. #379 is `open_blocked`, not QA-pending because
+   Idea now consumes the `sgajbi/lotus-manage#620` temporal receipt identity
+   fields through closed v3 Manage mandate runtime evidence, while
    production/certification evidence remains open through
-   `sgajbi/lotus-manage#620`, `sgajbi/lotus-manage#624`,
-   `sgajbi/lotus-report#136`, and `sgajbi/lotus-archive#55`. #685 is
+   `sgajbi/lotus-manage#624`, `sgajbi/lotus-report#136`, and
+   `sgajbi/lotus-archive#55`. #685 is
    `open_blocked`, not QA-pending: the 2026-07-29 governed Workbench startup
    attempt via `npm run live:stack:up` restored core portfolio readiness for
    `PB_SG_GLOBAL_BAL_001`; valuation and aggregation jobs drained to zero,

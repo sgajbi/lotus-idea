@@ -107,10 +107,11 @@ reconciliation, the current RFC-0002 ledger posture is 41 tracked issues, 16
 closed complete, 25 open, no `open_merged_main_qa_pending`, 1
 `open_in_progress`, no `open_pr_raised`, and 14 `open_blocked`; #379 is now
 blocked, not QA-pending: Advise, Manage, Report, and Idea owner-app local
-implementation evidence is already merged, but production/certification,
-trusted IdP caller context, retention/legal, and Archive production conformance
-evidence remains open through `sgajbi/lotus-manage#620`,
-`sgajbi/lotus-manage#624`, `sgajbi/lotus-report#136`, and
+implementation evidence is already merged. Idea now consumes the
+`sgajbi/lotus-manage#620` temporal receipt identity fields through closed v3
+Manage mandate runtime evidence, but production/certification, trusted IdP
+caller context, retention/legal, and Archive production conformance evidence
+remain open through `sgajbi/lotus-manage#624`, `sgajbi/lotus-report#136`, and
 `sgajbi/lotus-archive#55`. #685 is now
 blocked by `sgajbi/lotus-core#840` after the 2026-07-29 governed Workbench
 startup attempt via `npm run live:stack:up` restored core portfolio readiness
@@ -279,9 +280,12 @@ source provides it. Do not synthesize source-owned hashes from response payloads
 unless the source contract explicitly permits it.
 Manage mandate-health runtime qualification also requires trusted tenant scope,
 producer-authored as-of and generated-at timestamps, and authoritative
-action-register, Performance-health, and Risk-health source identities. Missing
-metadata fails closed. Lotus Manage issue `#620` tracks the producer correction;
-Idea must not substitute request or consumer timestamps.
+action-register, Performance-health, and Risk-health source identities. The
+closed v3 Idea proof consumes Manage `#620` fields `evidence_as_of_date`,
+`producer_generated_at`, and `temporal_identity_status`; missing, mixed, stale,
+future, or consumer-substituted metadata fails closed. Production tenant/session
+scope remains blocked by Lotus Manage `#624` until a trusted IdP caller-context
+source exists.
 Caller-supplied signal APIs must also validate source refs against the route's
 governed source contract before candidate creation: wrong `sourceSystem` or
 wrong `productId` is `400 invalid_request`, and rejection telemetry must use

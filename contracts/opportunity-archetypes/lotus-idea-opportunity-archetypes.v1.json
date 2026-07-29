@@ -111,7 +111,8 @@
     "portfolio_scoped_manage_source_proof_missing": [
       "sgajbi/lotus-idea#696",
       "sgajbi/lotus-idea#698",
-      "sgajbi/lotus-manage#620"
+      "sgajbi/lotus-manage#620",
+      "sgajbi/lotus-manage#624"
     ],
     "supported_feature_promotion_missing": [
       "sgajbi/lotus-idea#696",

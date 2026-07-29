@@ -943,7 +943,7 @@ Deferred mainline and later-slice evidence:
    benchmark-readiness contract; historical flat-v1 artifacts no longer
    qualify,
 4. portfolio-scoped Manage, mandate performance-health, and mandate risk-health
-   live proof beyond the closed v2 Manage mandate runtime-evidence contract and Core
+   live proof beyond the closed v3 Manage mandate runtime-evidence contract and Core
    portfolio-state source-ref proof,
 5. source-worker certification beyond bounded live Core source-ingestion proof,
 6. live-service execution, restart, and recovery evidence for the scheduled

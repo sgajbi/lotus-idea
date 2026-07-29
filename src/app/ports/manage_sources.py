@@ -42,7 +42,10 @@ class ManageActionRegisterRuntimeEvidence:
     tenant_id_hash: str
     portfolio_id: str
     as_of_date: date
+    evidence_as_of_date: date
     generated_at_utc: datetime
+    producer_generated_at_utc: datetime
+    temporal_identity_status: str
     source_batch_fingerprint: str
     run_count: int
     operation_count: int

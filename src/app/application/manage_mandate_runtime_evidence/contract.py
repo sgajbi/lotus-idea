@@ -75,6 +75,9 @@ _ACTION_KEYS = _SOURCE_KEYS | {
     "responsePortfolioIdHash",
     "responseAsOfDate",
     "responseGeneratedAtUtc",
+    "responseEvidenceAsOfDate",
+    "responseProducerGeneratedAtUtc",
+    "temporalIdentityStatus",
     "sourceBatchFingerprint",
     "runCount",
     "operationCount",
@@ -254,11 +257,14 @@ def _receipts_reconcile(
         or request.get("portfolioIdHash") != action.get("responsePortfolioIdHash")
         or request.get("asOfDate") != action.get("asOfDate")
         or request.get("asOfDate") != action.get("responseAsOfDate")
+        or request.get("asOfDate") != action.get("responseEvidenceAsOfDate")
         or request.get("asOfDate") != performance.get("asOfDate")
         or request.get("asOfDate") != risk.get("asOfDate")
         or request.get("correlationIdHash") != action.get("sourceCorrelationIdHash")
         or action.get("generatedAtUtc") != action.get("responseGeneratedAtUtc")
+        or action.get("generatedAtUtc") != action.get("responseProducerGeneratedAtUtc")
         or action.get("contentHash") != action.get("sourceBatchFingerprint")
+        or action.get("temporalIdentityStatus") != "available"
     ):
         return False
     if not _source_is_valid(

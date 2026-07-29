@@ -105,6 +105,8 @@ def test_contract_rejects_unknown_claims_and_receipt_tampering(
         ("actionRegisterReceipt", {"runCount": -1}),
         ("actionRegisterReceipt", {"supportabilityState": "degraded"}),
         ("actionRegisterReceipt", {"responseTenantIdHash": "sha256:" + "f" * 64}),
+        ("actionRegisterReceipt", {"responseEvidenceAsOfDate": "2026-06-27"}),
+        ("actionRegisterReceipt", {"temporalIdentityStatus": "mixed_source_as_of"}),
         ("actionRegisterReceipt", {"workflowDecisionCount": 0}),
         ("mandatePerformanceHealthReceipt", {"route": "/wrong"}),
         ("mandateRiskHealthReceipt", {"generatedAtUtc": "2026-06-29T10:10:00Z"}),
@@ -189,6 +191,26 @@ def test_contract_rejects_semantic_forgery_with_recomputed_digest(
                 ),
             ),
             "manage_action_register_scope_mismatch",
+        ),
+        (
+            lambda evidence: replace(
+                evidence,
+                action_register_runtime=replace(
+                    evidence.action_register_runtime,
+                    temporal_identity_status="missing_source_evidence",
+                ),
+            ),
+            "manage_action_register_temporal_identity_mismatch",
+        ),
+        (
+            lambda evidence: replace(
+                evidence,
+                action_register_runtime=replace(
+                    evidence.action_register_runtime,
+                    evidence_as_of_date=date(2026, 6, 27),
+                ),
+            ),
+            "manage_action_register_temporal_identity_mismatch",
         ),
         (
             lambda evidence: replace(

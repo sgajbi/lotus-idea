@@ -257,14 +257,32 @@ def _action_register_runtime(
     request: ManageMandateHealthEvidenceRequest,
 ) -> ManageActionRegisterRuntimeEvidence | None:
     try:
+        supportability = _optional_object_field(payload, "supportability")
         product_id = _required_text_alias(payload, "product_id", "productId")
         product_version = _required_text_alias(payload, "product_version", "productVersion")
         tenant_id_hash = _required_text_alias(payload, "tenant_id_hash", "tenantIdHash")
         portfolio_id = _required_text_alias(payload, "portfolio_id", "portfolioId")
-        as_of_date = _required_date(payload, "manage_action_register_as_of_date_missing")
+        evidence_as_of_date = _required_date_alias(
+            payload,
+            supportability,
+            code="manage_action_register_evidence_as_of_date_missing",
+            keys=(
+                "evidence_as_of_date",
+                "evidenceAsOfDate",
+                "as_of_date",
+                "asOfDate",
+            ),
+        )
         generated_at = _required_generated_at(
             payload,
+            supportability,
             code="manage_action_register_generated_at_missing",
+        )
+        temporal_identity_status = _required_text_alias(
+            payload,
+            "temporal_identity_status",
+            "temporalIdentityStatus",
+            supportability,
         )
         fingerprint = _content_hash(payload)
         run_count = _int_field(payload, "run_count", code="manage_run_count_malformed")
@@ -279,7 +297,8 @@ def _action_register_runtime(
         product_id != ACTION_REGISTER_PRODUCT_ID
         or product_version != PRODUCT_VERSION
         or portfolio_id != request.portfolio_id
-        or as_of_date != request.as_of_date
+        or evidence_as_of_date != request.as_of_date
+        or temporal_identity_status != "available"
         or tenant_id_hash != identity_hash(request.tenant_id)
         or not _SHA256_PATTERN.fullmatch(fingerprint)
     ):
@@ -292,8 +311,11 @@ def _action_register_runtime(
         product_version=product_version,
         tenant_id_hash=tenant_id_hash,
         portfolio_id=portfolio_id,
-        as_of_date=as_of_date,
+        as_of_date=evidence_as_of_date,
+        evidence_as_of_date=evidence_as_of_date,
         generated_at_utc=generated_at,
+        producer_generated_at_utc=generated_at,
+        temporal_identity_status=temporal_identity_status,
         source_batch_fingerprint=fingerprint,
         run_count=run_count,
         operation_count=operation_count,
@@ -301,11 +323,21 @@ def _action_register_runtime(
     )
 
 
-def _required_text_alias(payload: dict[str, Any], *keys: str) -> str:
-    for key in keys:
-        value = _text_field(payload, key)
-        if value is not None:
-            return value
+def _required_text_alias(payload: dict[str, Any], *keys_or_payloads: object) -> str:
+    payloads: list[dict[str, Any]] = [payload]
+    keys: list[str] = []
+    for item in keys_or_payloads:
+        if isinstance(item, dict):
+            payloads.append(item)
+        elif isinstance(item, str):
+            keys.append(item)
+    for current_payload in payloads:
+        for key in keys:
+            value = _text_field(current_payload, key)
+            if value is not None:
+                return value
+    if not keys:
+        raise ManageSourceUnavailable(code="manage_required_text_missing")
     raise ManageSourceUnavailable(code=f"manage_{keys[0]}_missing")
 
 
@@ -317,6 +349,25 @@ def _required_date(payload: dict[str, Any], code: str) -> date:
         return date.fromisoformat(value)
     except ValueError as exc:
         raise ManageSourceUnavailable(code=code) from exc
+
+
+def _required_date_alias(
+    payload: dict[str, Any],
+    supportability: dict[str, Any],
+    *,
+    code: str,
+    keys: tuple[str, ...],
+) -> date:
+    for current_payload in (payload, supportability):
+        for key in keys:
+            value = _text_field(current_payload, key)
+            if value is None:
+                continue
+            try:
+                return date.fromisoformat(value)
+            except ValueError as exc:
+                raise ManageSourceUnavailable(code=code) from exc
+    raise ManageSourceUnavailable(code=code)
 
 
 def _portfolio_scope_confirmed(
@@ -338,15 +389,46 @@ def _portfolio_scope_confirmed(
     )
 
 
-def _required_generated_at(payload: dict[str, Any], *, code: str) -> datetime:
-    for key in (
-        "generated_at",
-        "generatedAt",
-        "generated_at_utc",
-        "generatedAtUtc",
-        "newest_operation_created_at",
-        "newest_run_created_at",
-    ):
+def _required_generated_at(
+    payload: dict[str, Any],
+    supportability: dict[str, Any] | None = None,
+    *,
+    code: str,
+) -> datetime:
+    source_payloads = (payload, supportability or {})
+    for current_payload in source_payloads:
+        value = _source_timestamp(
+            current_payload,
+            ("producer_generated_at", "producerGeneratedAt"),
+            code=code,
+        )
+        if value is not None:
+            return value
+    for current_payload in source_payloads:
+        value = _source_timestamp(
+            current_payload,
+            (
+                "generated_at",
+                "generatedAt",
+                "generated_at_utc",
+                "generatedAtUtc",
+                "newest_operation_created_at",
+                "newest_run_created_at",
+            ),
+            code=code,
+        )
+        if value is not None:
+            return value
+    raise ManageSourceUnavailable(code=code)
+
+
+def _source_timestamp(
+    payload: dict[str, Any],
+    keys: tuple[str, ...],
+    *,
+    code: str,
+) -> datetime | None:
+    for key in keys:
         value = payload.get(key)
         if isinstance(value, str) and value.strip():
             try:
@@ -356,7 +438,7 @@ def _required_generated_at(payload: dict[str, Any], *, code: str) -> datetime:
             if parsed.tzinfo is None or parsed.utcoffset() is None:
                 raise ManageSourceUnavailable(code=code)
             return parsed
-    raise ManageSourceUnavailable(code=code)
+    return None
 
 
 def _content_hash(payload: dict[str, Any]) -> str:
