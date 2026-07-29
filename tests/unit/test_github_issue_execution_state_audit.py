@@ -57,6 +57,8 @@ def _github_issue_payload(ledger: dict[str, Any]) -> list[dict[str, Any]]:
         "open_pr_raised": "status/pr-open",
         "open_merged_main_qa_pending": "status/merged-main",
         "open_tracker": "status/tracker",
+        "open_pending_final_closure": "status/blocked",
+        "open_pending_post_completion": "status/blocked",
         "closed_complete": "status/merged-main",
     }
     issues: list[dict[str, Any]] = []
@@ -227,6 +229,34 @@ def test_github_issue_execution_state_audit_rejects_tracker_without_tracker_labe
     )
 
     assert "#673: executionStatus=open_tracker requires GitHub label status/tracker" in errors
+
+
+def test_github_issue_execution_state_audit_rejects_pending_final_closure_ready_label(
+    tmp_path: Path,
+) -> None:
+    module = _load_audit()
+    ledger = _load_ledger()
+    ledger["issues"] = [
+        entry
+        for entry in ledger["issues"]
+        if isinstance(entry, dict) and entry["issueNumber"] == 683
+    ]
+    github_payload = _github_issue_payload(ledger)
+    github_payload[0]["labels"] = [
+        {"name": "rfc/RFC-0002"},
+        {"name": "rfc/RFC-0002/slice-20"},
+        {"name": "status/ready"},
+    ]
+    github_issues = module._parse_github_issue_states(github_payload)
+
+    errors = module.audit_github_issue_execution_state(
+        ledger_path=_write_ledger(tmp_path, ledger),
+        github_issues=github_issues,
+    )
+
+    assert (
+        "#683: executionStatus=open_pending_final_closure requires GitHub label status/blocked"
+    ) in errors
 
 
 def test_github_issue_execution_state_audit_rejects_closed_issue_without_merged_main_label(

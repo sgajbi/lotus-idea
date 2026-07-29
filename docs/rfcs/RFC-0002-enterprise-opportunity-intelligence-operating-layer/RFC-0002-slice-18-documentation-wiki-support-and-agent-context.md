@@ -455,8 +455,10 @@ assignee filters, or one-off shell snippets. The command checks the governed
 RFC-0002 coordination repo set across Idea, Advise, AI, Platform, Gateway,
 Workbench, Manage, Risk, and Performance; reports total open issues, open and
 closed RFC-0002 counts, open status-label posture, and attention issues such as
-`status/in-progress`, `status/ready`, `status/pr-open`, `status/fixed-local`,
-or `status/merged-main`. It is coordination evidence only: it does not clear
+`status/in-progress`, `status/blocked`, `status/pr-open`, `status/fixed-local`,
+or `status/merged-main`. Pending final-closure and post-completion issues must
+not carry `status/ready` while prerequisite blockers remain open. It is
+coordination evidence only: it does not clear
 blockers, promote supported features, prove implementation, replace repo-local
 ledgers, or substitute for exact-main validation.
 
@@ -506,12 +508,16 @@ Workbench main `1b4afb92f4c810c99921fc26e451b04bca731e28`; Pull Request Merge
 Gate `30464152669`, branch head `c4add59871bc3f0e78dc6602c8857c5e141e6367`,
 Main Releasability `30465110912`, Workbench wiki commit `3b4f78f`, strict wiki
 parity, and branch cleanup passed. Live Idea RFC-0002 ledger posture remains 42
-tracked issues, 24 open, and 18 closed. Live governed cross-repo posture remains
-77 tracked issues, 40 closed, and 37 open across 13 repositories, with 26
-blocked issues, 0 app-actionable blocked issues, 5 Core dependencies, and 21
-external/protected-evidence blockers. This evidence still preserves
-`sgajbi/lotus-manage#624` and the other blocked production/certification
-dependencies; it is not Slice 18 completion evidence and does not certify
+tracked issues, 24 open, and 18 closed. After the 2026-07-30
+pending-final/post-completion lifecycle correction, live governed cross-repo
+posture remains 77 tracked issues, 40 closed, and 37 open across 13
+repositories, with 28 blocked issues, 0 app-actionable blocked issues, 5 Core
+dependencies, and 23 external/protected-evidence blockers. #683 and #684 are
+not ready implementation issues while prerequisite RFC blockers remain open;
+their richer pending semantics remain in the execution ledger and summary. This
+evidence still preserves `sgajbi/lotus-manage#624` and the other blocked
+production/certification dependencies; it is not Slice 18 completion evidence
+and does not certify
 production vulnerability posture or production IdP/session/token-claims
 principal proof.
 
@@ -602,8 +608,8 @@ promotion, and final live-journey evidence remain open.
 The cross-repo posture command now includes a source-controlled blocker
 actionability classifier at
 `contracts/implementation-proof/rfc0002-cross-repo-blocker-classification.v1.json`.
-For the current 77-issue RFC-0002 program posture, all 26 open
-`status/blocked` issues are classified: 5 are Core dependencies and 21 require
+For the current 77-issue RFC-0002 program posture, all 28 open
+`status/blocked` issues are classified: 5 are Core dependencies and 23 require
 external or protected evidence. The current app-actionable blocked count is 0.
 Future agents must not use `status/blocked` for writable non-Core app work; if
 the remaining acceptance criteria can be satisfied in `lotus-idea`,

@@ -162,10 +162,12 @@ Main CodeQL `30460101418`, and `lotus-idea.wiki` publication
 Workbench PR #505 then narrowed the BFF principal-boundary blocker on Workbench
 main `1b4afb92f4c810c99921fc26e451b04bca731e28`; Pull Request Merge Gate
 `30464152669`, Main Releasability `30465110912`, and Workbench wiki publication
-`3b4f78f` passed. The live cross-repo posture is 77
-tracked RFC-0002 issues, 40 complete, and 37 open; the blocked subset is 26
-issues, 0 app-actionable blocked issues, 5 Core dependencies, and 21
-external/protected-evidence blockers. #691, #692, and
+`3b4f78f` passed. After the 2026-07-30 pending-final/post-completion lifecycle
+correction, the live cross-repo posture is 77 tracked RFC-0002 issues, 40
+complete, and 37 open; the blocked subset is 28 issues, 0 app-actionable
+blocked issues, 5 Core dependencies, and 23 external/protected-evidence
+blockers. #683 and #684 are pending final/post-completion issues that must not
+carry `status/ready` while prerequisite blockers remain open. #691, #692, and
 #699 remain blocked rather than
 QA-pending: their merged PRs preserve bounded Render/Archive, mesh-readiness,
 and proof-control evidence only, while production identity, client publication,
@@ -1301,9 +1303,9 @@ The classifier makes the blocker definition executable: a `status/blocked`
 RFC-0002 issue may remain blocked only when the remaining evidence is
 Core-owned, production identity/session authority, protected runtime or
 deployment evidence, provider/bank/legal approval, or certification proof that a
-writable Lotus app branch cannot truthfully produce. Current live posture is 26
+writable Lotus app branch cannot truthfully produce. Current live posture is 28
 blocked RFC-0002 issues, 0 app-actionable blocked issues, 5 Core dependencies,
-and 21 external/protected-evidence blockers. If a writable non-Core app-code
+and 23 external/protected-evidence blockers. If a writable non-Core app-code
 gap is found, update GitHub and this contract so the issue becomes ready or
 in-progress instead of hidden behind blocked posture.
 

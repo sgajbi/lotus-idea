@@ -843,11 +843,12 @@ Persistence adapter validation:
    Merge Gate `30464152669`, branch head
    `c4add59871bc3f0e78dc6602c8857c5e141e6367`, Main Releasability
    `30465110912`, Workbench wiki publication `3b4f78f`, strict `DiffCount 0`,
-   and branch cleanup passed. The current live
+   and branch cleanup passed. After the 2026-07-30 pending-final/post-completion lifecycle correction, the current live
    cross-repo RFC-0002 posture checks the governed 13-repository
    owner/dependency set: 77 tracked issues, 40 complete, and 37 open, including
-   26 blocked issues with 0 app-actionable blocked issues, 5 Core dependencies,
-   and 21 external/protected-evidence blockers. #691, #692, and #699 remain blocked rather
+   28 blocked issues with 0 app-actionable blocked issues, 5 Core dependencies,
+   and 23 external/protected-evidence blockers. #683 and #684 remain
+   prerequisite-gated and must not carry `status/ready`; #691, #692, and #699 remain blocked rather
    than QA-pending because their merged implementation tranches preserve only
    bounded Render/Archive, mesh-readiness, and proof-control evidence;
    lifecycle-safe publication authority, production identity, Archive production
@@ -1076,7 +1077,7 @@ ledger records the PR #765, #767, #768, #769, #770, #772, #775, #776, #777,
 `30460122600`, Main CodeQL `30460101418`, wiki commit
 `2453c3006722ee40e48762d884581fb6b3893bbe`,
 strict wiki parity, live Idea RFC-0002 ledger posture of 42 tracked issues, 24
-open, and 18 closed, live cross-repo RFC-0002 posture of 77 tracked issues, 40
+open, and 18 closed, then-current live cross-repo RFC-0002 posture of 77 tracked issues, 40
 complete, and 37 open across 13 repositories, and a classified blocked posture
 of 26 blocked issues, 0 app-actionable blocked issues, 5 Core dependencies, and
 21 external/protected-evidence blockers. Workbench PR #505 additionally records
@@ -1089,8 +1090,8 @@ release evidence exists.
 
 `make rfc0002-cross-repo-issue-posture` now renders blocker actionability from
 `contracts/implementation-proof/rfc0002-cross-repo-blocker-classification.v1.json`.
-Current live posture is 26 blocked RFC-0002 issues, 0 app-actionable blocked
-issues, 5 Core dependencies, and 21 external/protected-evidence blockers. This
+Current live posture is 28 blocked RFC-0002 issues, 0 app-actionable blocked
+issues, 5 Core dependencies, and 23 external/protected-evidence blockers. This
 keeps “blocked” aligned to Core, IdP/session authority, protected runtime or
 deployment evidence, provider/bank/legal approval, or certification proof. If a
 writable non-Core app-code gap appears, it should not remain blocked; it should
