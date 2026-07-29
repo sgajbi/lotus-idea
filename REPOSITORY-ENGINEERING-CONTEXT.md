@@ -102,9 +102,10 @@ production rollout. PR #746 corrected stale ready posture for #380 and reconcile
 to `open_blocked` on exact main `6f8875dc6784dd17975e6700c09b9ff71d66fb8b`
 with Main Releasability `30327202465` and CodeQL `30327193673` passing; it
 records supported-feature/data-product promotion blockers without promoting
-support. After #782 final QA closure and Slice 18 ledger synchronization, the
-current RFC-0002 ledger posture is 42 tracked issues, 18
-closed complete, 24 open, no `open_merged_main_qa_pending`, 1
+support. After PR #798 merged the incident-response operating model, wiki
+publication `0d075af` reached strict parity, and #797 moved into source-truth
+evidence synchronization, the current RFC-0002 ledger posture is 43 tracked
+issues, 18 closed complete, 25 open, 1 `open_merged_main_qa_pending`, 1
 `open_in_progress`, no `open_pr_raised`, and 13 `open_blocked`; #379 is now
 blocked, not QA-pending: Advise, Manage, Report, and Idea owner-app local
 implementation evidence is already merged. Idea now consumes the

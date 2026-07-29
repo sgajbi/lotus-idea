@@ -680,7 +680,7 @@ def test_rfc0002_github_issue_execution_ledger_blocks_open_issue_auto_close_flag
     assert "#681: open issue cannot allow PR auto-close" in errors
 
 
-def test_rfc0002_github_issue_execution_ledger_tracks_incident_response_pr() -> None:
+def test_rfc0002_github_issue_execution_ledger_tracks_incident_response_merge() -> None:
     module = _load_gate()
     payload = _ledger_payload(module)
 
@@ -691,11 +691,36 @@ def test_rfc0002_github_issue_execution_ledger_tracks_incident_response_pr() -> 
     )
 
     assert issue_797["githubState"] == "open"
-    assert issue_797["executionStatus"] == "open_pr_raised"
+    assert issue_797["executionStatus"] == "open_merged_main_qa_pending"
     assert issue_797["allowPullRequestAutoClose"] is False
     assert issue_797["rfcSlices"] == ["slice-15", "slice-18"]
-    assert "Keep #797 open until PR #798 is merged to main" in issue_797["closureInstruction"]
+    assert "PR #798 merged the incident-response operating model" in issue_797["closureInstruction"]
+    assert "cfedcc91a5d907e15aa9f50493454eead656b406" in issue_797["closureInstruction"]
+    assert "30481301564" in issue_797["closureInstruction"]
+    assert "0d075af" in issue_797["closureInstruction"]
     assert "production incident certification" in issue_797["closureInstruction"]
+
+
+def test_rfc0002_github_issue_execution_ledger_records_issue_681_sync_note() -> None:
+    module = _load_gate()
+    payload = _ledger_payload(module)
+
+    issue_681 = next(
+        issue
+        for issue in payload["issues"]
+        if isinstance(issue, dict) and issue["issueNumber"] == 681
+    )
+
+    notes = issue_681.get("evidenceSyncNotes")
+    assert isinstance(notes, list)
+    assert any(
+        isinstance(note, str)
+        and "PR #798 merged the incident-response operating model" in note
+        and "cfedcc91a5d907e15aa9f50493454eead656b406" in note
+        and "30481301564" in note
+        and "0d075af" in note
+        for note in notes
+    )
 
 
 def test_rfc0002_github_issue_execution_ledger_blocks_closed_issue_without_closed_instruction(
