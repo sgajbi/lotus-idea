@@ -277,8 +277,14 @@ PR #787 corrected cross-repo RFC-0002 posture coverage to the governed
 13-repository owner/dependency set on exact main
 `39a480ddf115649acc3f6793a69596d4e5912bc8`; Main Releasability `30451401411`,
 Push on main `30451387946`, repo-authored wiki publication `d06f46b`, strict
-wiki `DiffCount 0`, and local/remote branch cleanup passed. The corrected
-cross-repo posture is 77 tracked RFC-0002 issues, 40 complete, and 37 open.
+wiki `DiffCount 0`, and local/remote branch cleanup passed. PR #789 classified
+the open blocked RFC-0002 set on exact main
+`01ae36ba89f975508bde47b4361190ef5c083597`; Main Releasability `30456433618`,
+Main CodeQL/Push run `30456425304`, repo-authored wiki publication `c926899`,
+strict wiki `DiffCount 0`, and branch cleanup passed. The corrected cross-repo
+posture is 77 tracked RFC-0002 issues, 40 complete, and 37 open; the blocked
+subset is 26 issues with 0 app-actionable blocked issues, 5 Core dependencies,
+and 21 external/protected-evidence blockers.
 The current Idea RFC-0002 ledger posture is 42 tracked issues, 24 open, and 18
 closed after #782 final QA closure and source-controlled ledger synchronization.
 This is still coordination/documentation truth only;

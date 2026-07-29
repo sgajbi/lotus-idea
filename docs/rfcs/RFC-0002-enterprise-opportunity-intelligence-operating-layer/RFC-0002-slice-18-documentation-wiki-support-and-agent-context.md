@@ -487,8 +487,13 @@ The latest rollup checkpoint is main
 Push on main `30451387946`, wiki commit `d06f46b`, strict wiki parity, no unmerged
 local or remote feature branch, live cross-repo RFC-0002 posture over the
 governed 13-repository owner/dependency set of 77 tracked issues, 40 closed,
-and 37 open, and live Idea RFC-0002 ledger posture of 42 tracked issues, 24
-open, and 18 closed. This evidence still preserves
+and 37 open. PR #789 then source-controlled blocker actionability on main
+`01ae36ba89f975508bde47b4361190ef5c083597` with Main Releasability
+`30456433618`, Main CodeQL/Push run `30456425304`, wiki commit `c926899`,
+strict wiki parity, branch cleanup, and a classified blocked posture of 26
+blocked issues, 0 app-actionable blocked issues, 5 Core dependencies, and 21
+external/protected-evidence blockers. Live Idea RFC-0002 ledger posture remains
+42 tracked issues, 24 open, and 18 closed. This evidence still preserves
 `sgajbi/lotus-manage#624` and the other blocked production/certification
 dependencies; it is not Slice 18 completion evidence and does not certify
 production vulnerability posture.

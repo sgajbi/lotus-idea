@@ -825,10 +825,15 @@ Persistence adapter validation:
    cross-repo posture command on exact main
    `39a480ddf115649acc3f6793a69596d4e5912bc8`; Main Releasability
    `30451401411`, Push on main `30451387946`, wiki publication commit
-   `d06f46b`, strict `DiffCount 0`, and branch cleanup passed. The current live
+   `d06f46b`, strict `DiffCount 0`, and branch cleanup passed. PR #789 then
+   classified blocked issue actionability on exact main
+   `01ae36ba89f975508bde47b4361190ef5c083597`; Main Releasability
+   `30456433618`, Main CodeQL/Push run `30456425304`, wiki publication commit
+   `c926899`, strict `DiffCount 0`, and branch cleanup passed. The current live
    cross-repo RFC-0002 posture checks the governed 13-repository
-   owner/dependency set: 77 tracked issues, 40 complete, and 37 open. #691, #692,
-   and #699 remain blocked rather
+   owner/dependency set: 77 tracked issues, 40 complete, and 37 open, including
+   26 blocked issues with 0 app-actionable blocked issues, 5 Core dependencies,
+   and 21 external/protected-evidence blockers. #691, #692, and #699 remain blocked rather
    than QA-pending because their merged implementation tranches preserve only
    bounded Render/Archive, mesh-readiness, and proof-control evidence;
    lifecycle-safe publication authority, production identity, Archive production
@@ -1052,12 +1057,14 @@ bucket.
 
 Current Slice 18 handoff truth is anchored by `lotus-idea#681`. The source
 ledger records the PR #765, #767, #768, #769, #770, #772, #775, #776, #777,
-#779, #785, and #787 evidence chain through exact main
-`39a480ddf115649acc3f6793a69596d4e5912bc8`, Main Releasability
-`30451401411`, Push on main `30451387946`, wiki commit `d06f46b`, strict wiki
-parity, live Idea RFC-0002 ledger posture of 42 tracked issues, 24 open, and
-18 closed, and live cross-repo RFC-0002 posture of 77 tracked issues, 40
-complete, and 37 open across 13 repositories. Keep #681 open until the remaining documentation, wiki,
+#779, #785, #787, and #789 evidence chain through exact main
+`01ae36ba89f975508bde47b4361190ef5c083597`, Main Releasability
+`30456433618`, Main CodeQL/Push run `30456425304`, wiki commit `c926899`,
+strict wiki parity, live Idea RFC-0002 ledger posture of 42 tracked issues, 24
+open, and 18 closed, live cross-repo RFC-0002 posture of 77 tracked issues, 40
+complete, and 37 open across 13 repositories, and a classified blocked posture
+of 26 blocked issues, 0 app-actionable blocked issues, 5 Core dependencies, and
+21 external/protected-evidence blockers. Keep #681 open until the remaining documentation, wiki,
 support, context, and supported-feature truth is complete;
 `sgajbi/lotus-manage#624` remains the production trusted IdP caller-context
 boundary, and production vulnerability posture remains uncertified until
