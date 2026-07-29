@@ -90,11 +90,36 @@ def test_executes_governed_runtime_and_maps_only_bounded_receipt() -> None:
     assert request["version"] == "v1"
     assert request["workflow_surface"] == "idea-explanation-evidence"
     receipt = cast(Mapping[str, object], proof["runtimeReceipt"])
+    assert proof["generatedAtUtc"] == "2026-07-14T00:00:00+00:00"
     assert receipt["run_id"] == "wpr_runtime_proof_001"
     assert receipt["model_id"] == "deterministic-proof-model"
     assert receipt["model_version"] == "v1"
     assert "result" not in receipt
     assert "output_preview" not in receipt
+
+
+def test_actual_runtime_proof_generation_time_is_not_before_receipt_completion() -> None:
+    proof = execute_ai_workflow_pack_runtime_proof(
+        runtime=RecordingRuntime(lotus_ai_runtime_execution_response()),
+        generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
+    )
+
+    assert proof["generatedAtUtc"] == "2026-07-14T00:00:00+00:00"
+    proof_checks = cast(Mapping[str, object], proof["proofChecks"])
+    assert proof_checks["runtimeReceiptCompletedNotAfterProofGenerated"] is True
+    assert ai_workflow_pack_runtime_execution_proof_is_valid(proof) is True
+
+
+def test_rejects_runtime_receipt_completed_after_proof_generation_time() -> None:
+    proof = build_ai_workflow_pack_runtime_execution_proof_payload(
+        generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
+        receipt=ai_runtime_execution_receipt(),
+    )
+
+    assert proof["aiWorkflowPackRuntimeExecutionProofValid"] is False
+    proof_checks = cast(Mapping[str, object], proof["proofChecks"])
+    assert proof_checks["runtimeReceiptCompletedNotAfterProofGenerated"] is False
+    assert ai_workflow_pack_runtime_execution_proof_is_valid(proof) is False
 
 
 @pytest.mark.parametrize(

@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import asdict, dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 import hashlib
 import json
 from typing import Any
 
-from app.domain.proof_evidence import is_timezone_aware_datetime_text
+from app.domain.proof_evidence import is_timezone_aware_datetime_text, parse_timezone_aware_datetime
 from app.ports.lotus_ai_runtime import LotusAIWorkflowRuntime
 
 
@@ -83,6 +83,14 @@ def execute_ai_workflow_pack_runtime_proof(
     request = _runtime_proof_request(generated_at_utc)
     response = runtime.execute_workflow_pack(request, caller_app=_CALLER_APP)
     receipt = _map_runtime_execution_receipt(response)
+    receipt_completed_at_utc = parse_timezone_aware_datetime(receipt.completed_at_utc)
+    if (
+        receipt_completed_at_utc
+        and generated_at_utc.tzinfo is not None
+        and generated_at_utc.utcoffset() is not None
+        and receipt_completed_at_utc > generated_at_utc.astimezone(UTC)
+    ):
+        generated_at_utc = receipt_completed_at_utc
     return build_ai_workflow_pack_runtime_execution_proof_payload(
         generated_at_utc=generated_at_utc,
         receipt=receipt,
@@ -99,8 +107,15 @@ def build_ai_workflow_pack_runtime_execution_proof_payload(
     )
     receipt_payload = asdict(receipt)
     receipt_valid = _receipt_is_valid(receipt)
+    receipt_completed_not_after_proof_generated = _receipt_completed_not_after_proof_generated(
+        receipt, generated_at_utc
+    )
     receipt_digest = _sha256(receipt_payload)
-    proof_valid = timezone_aware_generated_at_utc and receipt_valid
+    proof_valid = (
+        timezone_aware_generated_at_utc
+        and receipt_valid
+        and receipt_completed_not_after_proof_generated
+    )
     return {
         "schemaVersion": AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF_SCHEMA_VERSION,
         "repository": "lotus-idea",
@@ -116,6 +131,9 @@ def build_ai_workflow_pack_runtime_execution_proof_payload(
         "proofChecks": {
             "timezoneAwareGeneratedAtUtc": timezone_aware_generated_at_utc,
             "actualRuntimeReceiptValid": receipt_valid,
+            "runtimeReceiptCompletedNotAfterProofGenerated": (
+                receipt_completed_not_after_proof_generated
+            ),
             "workflowPackIdentityBound": (
                 receipt.workflow_pack_id == _WORKFLOW_PACK_ID
                 and receipt.workflow_pack_version == _WORKFLOW_PACK_VERSION
@@ -249,6 +267,9 @@ def ai_workflow_pack_runtime_execution_proof_is_valid(payload: Mapping[str, Any]
         return False
     if not _receipt_is_valid(receipt):
         return False
+    generated_at_utc = parse_timezone_aware_datetime(payload.get("generatedAtUtc"))
+    if not _receipt_completed_not_after_proof_generated(receipt, generated_at_utc):
+        return False
     if payload.get("runtimeReceiptSha256") != _sha256(asdict(receipt)):
         return False
     if tuple(payload.get("evidenceRefs") or ()) != (
@@ -262,6 +283,7 @@ def ai_workflow_pack_runtime_execution_proof_is_valid(payload: Mapping[str, Any]
         for check_name in (
             "timezoneAwareGeneratedAtUtc",
             "actualRuntimeReceiptValid",
+            "runtimeReceiptCompletedNotAfterProofGenerated",
             "workflowPackIdentityBound",
             "callerIdentityBound",
             "executionCompleted",
@@ -434,6 +456,20 @@ def _receipt_is_valid(receipt: AIRuntimeExecutionReceipt) -> bool:
         and receipt.downstream_authority == "BLOCKED"
         and is_timezone_aware_datetime_text(receipt.completed_at_utc)
     )
+
+
+def _receipt_completed_not_after_proof_generated(
+    receipt: AIRuntimeExecutionReceipt,
+    generated_at_utc: datetime | None = None,
+) -> bool:
+    if generated_at_utc is None:
+        return False
+    if generated_at_utc.tzinfo is None or generated_at_utc.utcoffset() is None:
+        return False
+    receipt_completed_at_utc = parse_timezone_aware_datetime(receipt.completed_at_utc)
+    if receipt_completed_at_utc is None:
+        return False
+    return receipt_completed_at_utc <= generated_at_utc.astimezone(UTC)
 
 
 def _object(mapping: Mapping[str, object], field_name: str) -> Mapping[str, object]:

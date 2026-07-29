@@ -1294,6 +1294,19 @@ a synthetic redacted evidence packet through the governed
 hash matches the request, and whose review, client-publication, and downstream
 authority posture remains fail-closed.
 
+Runtime execution proof temporal provenance is fail-closed. A proof artifact
+cannot be generated before the runtime receipt it cites: `runtimeReceipt`
+`completed_at_utc` must be less than or equal to top-level `generatedAtUtc`, and
+the contract exposes this as
+`proofChecks.runtimeReceiptCompletedNotAfterProofGenerated`. When actual runtime
+execution is generated through
+`scripts/generate_ai_workflow_pack_runtime_execution_proof.py`, the emitted
+proof timestamp is advanced to the runtime receipt completion time when the
+caller-provided timestamp is earlier. Aggregate readiness still applies its
+own current-proof boundary; a temporally coherent runtime proof clears only
+`lotus_ai_runtime_execution_missing` when it is also current for the aggregate
+`evaluatedAtUtc`.
+
 The current owner-repo downstream evidence for this seam is
 `sgajbi/lotus-ai#122` / PR #123 on `lotus-ai` main
 `937501833b4c2a9d3031a108368ca113204b5db9`; Main Releasability
