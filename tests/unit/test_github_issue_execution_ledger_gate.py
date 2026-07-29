@@ -690,15 +690,23 @@ def test_rfc0002_github_issue_execution_ledger_tracks_incident_response_merge() 
         if isinstance(issue, dict) and issue["issueNumber"] == 797
     )
 
-    assert issue_797["githubState"] == "open"
-    assert issue_797["executionStatus"] == "open_merged_main_qa_pending"
-    assert issue_797["allowPullRequestAutoClose"] is False
+    assert issue_797["githubState"] == "closed"
+    assert issue_797["executionStatus"] == "closed_complete"
+    assert issue_797["allowPullRequestAutoClose"] is True
     assert issue_797["rfcSlices"] == ["slice-15", "slice-18"]
+    assert (
+        "Closed #797 after the incident-response operating model" in issue_797["closureInstruction"]
+    )
     assert "PR #798 merged the incident-response operating model" in issue_797["closureInstruction"]
     assert "cfedcc91a5d907e15aa9f50493454eead656b406" in issue_797["closureInstruction"]
     assert "30481301564" in issue_797["closureInstruction"]
     assert "0d075af" in issue_797["closureInstruction"]
-    assert "production incident certification" in issue_797["closureInstruction"]
+    assert "PR #799 synchronized the merge evidence" in issue_797["closureInstruction"]
+    assert "13300e21c8b27b4f1418240496f423d54d2ced3e" in issue_797["closureInstruction"]
+    assert "30483045202" in issue_797["closureInstruction"]
+    assert "90680095852" in issue_797["closureInstruction"]
+    assert "issue-797-final-evidence-sync" in issue_797["closureInstruction"]
+    assert "does not claim production incident certification" in issue_797["closureInstruction"]
 
 
 def test_rfc0002_github_issue_execution_ledger_records_issue_681_sync_note() -> None:
@@ -719,6 +727,15 @@ def test_rfc0002_github_issue_execution_ledger_records_issue_681_sync_note() -> 
         and "cfedcc91a5d907e15aa9f50493454eead656b406" in note
         and "30481301564" in note
         and "0d075af" in note
+        for note in notes
+    )
+    assert any(
+        isinstance(note, str)
+        and "PR #799 synchronized #797 merge evidence" in note
+        and "13300e21c8b27b4f1418240496f423d54d2ced3e" in note
+        and "30483045202" in note
+        and "90680095852" in note
+        and "43 tracked issues, 24 open, and 19 closed" in note
         for note in notes
     )
 

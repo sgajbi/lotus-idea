@@ -329,6 +329,19 @@ REQUIRED_CLOSED_ISSUE_EVIDENCE = {
         "111 passed",
         "does not claim live-provider execution",
     ),
+    797: (
+        "Closed #797 after the incident-response operating model",
+        "cfedcc91a5d907e15aa9f50493454eead656b406",
+        "30481301564",
+        "lotus-idea.wiki commit 0d075af",
+        "PR #799 synchronized the merge evidence",
+        "13300e21c8b27b4f1418240496f423d54d2ced3e",
+        "30483045202",
+        "90680095852",
+        "issue-797-final-evidence-sync",
+        "make incident-response-contract-gate",
+        "does not claim production incident certification",
+    ),
 }
 
 
