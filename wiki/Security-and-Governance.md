@@ -77,6 +77,14 @@ The dependency vulnerability posture gate separately governs runtime, CI, and
 build-scope dependencies in `requirements/build-system.lock.txt`, and
 `make security-audit` scans that lock alongside runtime and CI locks so
 isolated build backend/tooling drift cannot bypass vulnerability posture.
+Future vulnerability exceptions must also be linked to the platform-wide
+exception register: the Idea contract requires a `VX-*` platform identity, the
+current `lotus-platform` register schema ref, affected version or digest,
+exposure and exploitability assessments, planned fix path, and matching active
+register status. The platform validator remains report-only before promotion;
+the local gate and register link do not certify production vulnerability
+posture without exact-main release scan, SBOM, signing, provenance, digest,
+release-manifest, wiki, and branch-hygiene evidence.
 
 Main Releasability binds policy version, lock hashes, NOTICE digest, SBOM
 serial, exception IDs, and the final image digest in release evidence. The

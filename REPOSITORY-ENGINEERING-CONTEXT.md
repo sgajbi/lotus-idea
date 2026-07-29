@@ -1118,7 +1118,14 @@ evidence drifts from the dependency-graph mirror, the build-system lock is
 missing or stale, `pip-audit` no longer scans runtime, CI, and build-system
 locks, Trivy image-scan wiring weakens, release SBOM/signing/provenance hooks
 disappear, or a vulnerability exception lacks a Lotus Idea issue, CVE, owner,
-control, rollback, and bounded expiry. This is source-design and local
+control, rollback, bounded expiry, and platform exception-register linkage.
+The platform register binding is intentionally explicit: every active Idea
+exception must carry a `VX-*` platform exception identity, the current
+`lotus-platform` exception-register schema ref, affected version or digest,
+exposure and exploitability assessments, and a planned fix path. The Idea
+gate also records `lotus-platform#596` and the platform report-only validator
+as the upstream governance path without treating report-only platform posture
+as production vulnerability certification. This is source-design and local
 execution hardening only.
 It adds no supported feature and does not certify production vulnerability
 posture until exact-main Main Releasability produces the scan, SBOM, signature,

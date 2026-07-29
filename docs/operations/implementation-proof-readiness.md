@@ -268,6 +268,16 @@ issues, clear implementation blockers, or certify any capability. It exists so
 issue-derived lessons are durable in source control and GitHub-backed PR
 evidence, not only in chat memory or long-form prose.
 
+The 2026-07-29 Slice 18 dependency-vulnerability learning update records the
+platform exception-register control from `sgajbi/lotus-platform#596`. Future
+Idea vulnerability exceptions must carry platform `VX-*` identity, the current
+platform register schema ref, affected version or digest, exposure and
+exploitability assessments, planned fix path, and an active/no-active register
+status that matches the exception list. This strengthens future issue handling
+without certifying production vulnerability posture; release scan, SBOM,
+signing, provenance, digest, release-manifest, wiki/source, and branch hygiene
+remain exact-main requirements.
+
 ## Blueprint Scope Coverage
 
 `contracts/implementation-proof/rfc0002-blueprint-scope-coverage.v1.json`

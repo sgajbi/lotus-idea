@@ -484,6 +484,18 @@ remote feature branch, and live cross-repo posture of 66 RFC-0002 issues total,
 and the other blocked production/certification dependencies; it is not Slice 18
 completion evidence.
 
+This Slice 18 synchronization also carries the platform vulnerability-exception
+register lesson from `sgajbi/lotus-platform#596` into Idea's repository truth.
+The dependency vulnerability posture contract now records the platform schema
+and report-only validator, and the gate rejects active exceptions that lack a
+`VX-*` platform register identity, exact platform schema ref, affected
+version/digest, exposure and exploitability assessments, planned fix path, or
+matching active/no-active register status. This is documentation, context, and
+contract synchronization only. It keeps #681 open, adds no supported feature,
+and does not certify production vulnerability posture or replace exact-main
+release scanning, SBOM, signing, provenance, digest, release-manifest, wiki,
+and branch-hygiene evidence.
+
 The #379 downstream outcome certification supporting-proof tranche is now
 synchronized across repo context,
 `docs/operations/downstream-realization-readiness.md`,
