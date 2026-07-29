@@ -204,6 +204,26 @@ provisioning, protected environment variables/secrets, protected
 capacity/load/resource/dependency/PostgreSQL/cost attestation execution, and
 supported-feature blockers.
 
+Slice 15 operations blockers now also carry explicit source-controlled
+classification for disaster recovery, data lifecycle, and protected migration
+execution. #343 remains `open_blocked`, not QA-pending: repository-owned
+PostgreSQL DR contracts, logical restore/resume validation, source-safe proof
+gates, and runbooks are mainline-backed, but managed-provider backup topology,
+encrypted backup/WAL inventory, continuous WAL/PITR health, production-like
+physical restore, failover/cutover approval, rollback-window evidence, and
+provider evidence retention/signature proof remain absent. #344 remains
+`open_blocked`, not QA-pending: repository-owned retention/legal-hold/erasure
+controls, signed Archive lifecycle posture consumption, scheduled lifecycle
+review, and PostgreSQL policy are implemented, but live bank producer/key
+discovery, policy approval, managed Archive trust/key/store evidence,
+provider-native AI deletion conformance, and production authorized purge proof
+remain absent. #375 remains `open_blocked`, not QA-pending: protected GitHub
+environments exist and production has reviewer protection, but the 2026-07-29
+recheck found no environment-scoped `LOTUS_IDEA_DATABASE_URL` secrets and no
+`Deployment Migration Evidence` workflow runs; governed target, encrypted
+connectivity, staging replay, rollout-health, and same-digest production
+promotion evidence remain required.
+
 PR #765 merged the Slice 18 cross-repo issue posture command to main at
 `3ab78c4e9ba23b08eec5396f0641acf21c98f74a`; Main Releasability `30411606383`
 passed for that exact SHA; repo-authored wiki publication completed at

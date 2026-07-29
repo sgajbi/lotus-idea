@@ -87,6 +87,36 @@ AUTO_CLOSE_KEYWORDS = (
     "resolved",
 )
 REQUIRED_OPEN_ISSUE_EVIDENCE = {
+    343: (
+        "Keep #343 open and status/blocked",
+        "versioned DR contract",
+        "logical backup/restore drill workflow",
+        "managed-provider PITR/failover certification",
+        "2026-07-29",
+        "This issue is not QA-pending",
+        "continuous WAL/PITR health",
+        "Do not claim production DR",
+    ),
+    344: (
+        "Keep #344 open and status/blocked",
+        "versioned lifecycle contract",
+        "signed Archive lifecycle posture consumer",
+        "scheduled lifecycle review workflow",
+        "This issue is not QA-pending",
+        "live bank producer/key-discovery proof",
+        "provider-native AI deletion conformance",
+        "Do not claim legal retention approval",
+    ),
+    375: (
+        "Keep #375 open and status/blocked",
+        "exact-image deployment migration contract",
+        "protected workflow",
+        "2026-07-29 live GitHub configuration recheck",
+        "total_count=0",
+        "Deployment Migration Evidence workflow has no runs",
+        "This issue is not QA-pending",
+        "Do not claim production migration certification",
+    ),
     379: (
         "Keep #379 open and status/blocked",
         "sgajbi/lotus-advise#461",

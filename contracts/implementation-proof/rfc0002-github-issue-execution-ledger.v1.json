@@ -32,7 +32,7 @@
       "githubState": "open",
       "executionStatus": "open_blocked",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #343 open until Lotus Idea PostgreSQL backup and disaster recovery readiness are defined and proven."
+      "closureInstruction": "Keep #343 open and status/blocked. Repository-owned PostgreSQL disaster-recovery controls are partially implemented and mainline-backed: the versioned DR contract, restore/resume validators, logical backup/restore drill workflow, source-safe evidence posture, recovery-aware readiness/write guard, and docs/runbooks/postgres-disaster-recovery.md distinguish repository logical-restore proof from managed-provider PITR/failover certification. The latest recheck on 2026-07-29 is recorded on the issue thread. This issue is not QA-pending: managed PostgreSQL backup topology, encrypted backup/WAL inventory, continuous WAL/PITR health, production-like physical restore drill, failover/cutover approval, rollback-window evidence, scheduled provider evidence retention, and signature proof remain absent. Do not claim production DR, bank approval, supported-feature promotion, client-ready availability, or provider PITR readiness from local/disposable logical restore evidence."
     },
     {
       "issueNumber": 344,
@@ -41,7 +41,7 @@
       "githubState": "open",
       "executionStatus": "open_blocked",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #344 open until retention, legal-hold, and erasure lifecycle controls for Idea-owned records are defined and proven."
+      "closureInstruction": "Keep #344 open and status/blocked. Repository-owned data-lifecycle controls are partially implemented and mainline-backed: the versioned lifecycle contract, signed Archive lifecycle posture consumer, data-lifecycle API and PostgreSQL policy, migration 015 lifecycle persistence, scheduled lifecycle review workflow, source-safe proof gate, and docs/runbooks/data-lifecycle-operations.md define Idea-owned retention, legal-hold, erasure, purge, dual-authorization, and replay boundaries without taking Archive, bank legal, privacy, or AI-provider authority. This issue is not QA-pending: live bank producer/key-discovery proof, bank policy approval, managed Archive store/key/trust proof, provider-native AI deletion conformance, production authorized purge proof, and promotion criteria remain absent. Do not claim legal retention approval, Archive production conformance, provider deletion authority, client-ready publication, or supported-feature promotion from repository-local lifecycle proof."
     },
     {
       "issueNumber": 345,
@@ -59,7 +59,7 @@
       "githubState": "open",
       "executionStatus": "open_blocked",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #375 open until protected migration execution and rollout evidence are provisioned."
+      "closureInstruction": "Keep #375 open and status/blocked. Repository-owned protected migration controls are partially implemented and mainline-backed: the exact-image deployment migration contract, source-safe evidence gate, protected workflow, digest/provenance/signature verification, and docs/standards/migration-contract.md preserve main-only immutable-image execution without database credentials in evidence. The 2026-07-29 live GitHub configuration recheck found `lotus-idea-staging` and `lotus-idea-production` environments with protected-branch policy and production reviewer protection, but both environment secret inventories returned `total_count=0` and the Deployment Migration Evidence workflow has no runs. This issue is not QA-pending: environment-scoped LOTUS_IDEA_DATABASE_URL, governed PostgreSQL target, approved encrypted connectivity, staging execution/replay, rollout-health evidence, and same-digest production promotion remain absent. Do not claim production migration certification, protected rollout closure, or supported-feature promotion from static workflow configuration alone."
     },
     {
       "issueNumber": 379,

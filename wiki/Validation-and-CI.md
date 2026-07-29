@@ -828,6 +828,21 @@ Persistence adapter validation:
    trust/legal evidence, platform mesh certification, Gateway/Workbench
    discovery proof, supported-feature promotion, and final live-journey evidence
    remain open.
+
+   Slice 15 operations blockers have explicit no-claim boundaries. #343 remains
+   blocked, not QA-pending: logical restore/resume validation and DR runbooks
+   are repository-owned proof, while managed-provider backup topology,
+   encrypted backup/WAL inventory, continuous WAL/PITR health, physical restore,
+   failover/cutover approval, rollback-window evidence, and provider evidence
+   retention/signature proof remain absent. #344 remains blocked, not
+   QA-pending: repository data-lifecycle controls and signed Archive lifecycle
+   posture consumption exist, while live bank producer/key discovery, policy
+   approval, managed Archive trust/key/store proof, provider-native AI deletion,
+   and production authorized purge proof remain absent. #375 remains blocked,
+   not QA-pending: `lotus-idea-staging` and `lotus-idea-production`
+   environments exist, but the 2026-07-29 recheck found no environment-scoped
+   `LOTUS_IDEA_DATABASE_URL` secrets and no `Deployment Migration Evidence`
+   workflow runs.
 19. `tests/unit/test_source_ingestion_readiness.py` and
    `tests/integration/test_source_ingestion_readiness_api.py` prove the
    operator readiness diagnostic for blocked/configured posture,

@@ -151,6 +151,19 @@ Archive legal/trust posture, platform mesh certification, Gateway/Workbench
 discovery proof, supported-feature promotion, and final live journey evidence
 remain open.
 
+Slice 15 operations blockers #343, #344, and #375 are source-controlled as
+blocked external/protected-evidence items, not unresolved local app-code
+defects. #343 has repository DR contracts, logical restore/resume validation,
+proof gates, and runbooks, but no managed-provider backup/PITR/failover
+certification evidence. #344 has repository data-lifecycle controls and signed
+Archive lifecycle posture consumption, but no live bank producer/key-discovery,
+approved policy, managed Archive trust/key/store, provider-native AI deletion,
+or production authorized purge proof. #375 has protected GitHub environments,
+but the 2026-07-29 recheck found no environment-scoped
+`LOTUS_IDEA_DATABASE_URL` secrets and no `Deployment Migration Evidence`
+workflow runs. Do not promote production DR, legal-retention approval,
+protected rollout closure, or supported features from repository-local proof.
+
 Current internal foundations are real implementation. They are not client-ready
 publication, data-product certification, full Gateway/Workbench proof,
 downstream execution proof, live source certification, or supported-feature
