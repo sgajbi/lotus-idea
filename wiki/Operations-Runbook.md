@@ -25,6 +25,7 @@ promoted.
 | AI explanation is blocked | `/api/v1/ai-explanations/readiness` | `docs/operations/ai-governance.md` |
 | Mesh posture is blocked | `/api/v1/data-mesh/readiness` | `docs/operations/mesh-readiness.md` |
 | Error budget is burning or latency is elevated | Service SLO dashboard, dependency and PostgreSQL panels | [Service SLO and Capacity](Service-SLO-And-Capacity) |
+| Incident response is declared or severity is uncertain | Current severity, impacted workflow, mitigation status, next update time | [Incident Response](Incident-Response), `docs/runbooks/incident-response.md` |
 
 ## Operator Evidence Map
 
@@ -42,6 +43,7 @@ promoted.
 | `make supported-feature-promotion-contract-gate` | Confirms gate, readiness API, and generated artifact use one promotion evaluator. |
 | `make service-slo-capacity-contract-gate` | Validates service objectives, capacity budgets, safe labels, dashboard, and rule inventory. |
 | `make service-slo-rule-test` | Evaluates healthy and breached error-budget scenarios with `promtool`. |
+| `make incident-response-contract-gate` | Validates severity, escalation, source-safe evidence, communication, and post-incident problem-management posture. |
 
 ## Detailed Foundation Posture
 

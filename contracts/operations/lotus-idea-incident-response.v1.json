@@ -1,0 +1,193 @@
+{
+  "contract_id": "lotus-idea-incident-response",
+  "contract_version": "1.0.0",
+  "repository": "lotus-idea",
+  "lifecycle_status": "implemented_internal_foundation",
+  "production_incident_certification_status": "not_certified",
+  "supported_feature_promoted": false,
+  "source_of_truth": {
+    "contract": "contracts/operations/lotus-idea-incident-response.v1.json",
+    "contract_gate": "scripts/incident_response_contract_gate.py",
+    "unit_tests": "tests/unit/test_incident_response_contract_gate.py",
+    "incident_runbook": "docs/runbooks/incident-response.md",
+    "service_operations_runbook": "docs/runbooks/service-operations.md",
+    "service_slo_capacity_doc": "docs/operations/service-slo-capacity.md",
+    "operator_workflows_runbook": "docs/runbooks/operator-workflows-operations.md",
+    "postgres_disaster_recovery_runbook": "docs/runbooks/postgres-disaster-recovery.md",
+    "operations_wiki": "wiki/Operations-Runbook.md",
+    "incident_response_wiki": "wiki/Incident-Response.md",
+    "rfc_slice_15": "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-15-observability-security-entitlements-and-operations.md",
+    "rfc_slice_18": "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-18-documentation-wiki-support-and-agent-context.md"
+  },
+  "severity_classes": [
+    {
+      "severity_id": "sev1",
+      "name": "Critical service outage or unsafe client/advisor impact",
+      "business_impact": "Client/advisor-impacting Idea service outage, data-safety risk, unauthorized exposure risk, or unsafe opportunity workflow behavior.",
+      "initial_response_target_minutes": 15,
+      "update_cadence_minutes": 30,
+      "escalation_owner": "lotus-production-incident-commander",
+      "communication_required": true,
+      "promotion_freeze_required": true
+    },
+    {
+      "severity_id": "sev2",
+      "name": "Material workflow degradation",
+      "business_impact": "Core opportunity workflows, evidence generation, downstream handoff, or operator recovery is materially degraded but bounded mitigation exists.",
+      "initial_response_target_minutes": 30,
+      "update_cadence_minutes": 60,
+      "escalation_owner": "lotus-idea-service-owner",
+      "communication_required": true,
+      "promotion_freeze_required": true
+    },
+    {
+      "severity_id": "sev3",
+      "name": "Limited supportability or non-critical workflow issue",
+      "business_impact": "Internal operator, proof, telemetry, or non-critical workflow issue with no current client/advisor impact.",
+      "initial_response_target_minutes": 120,
+      "update_cadence_minutes": 240,
+      "escalation_owner": "lotus-idea-support-lead",
+      "communication_required": false,
+      "promotion_freeze_required": false
+    },
+    {
+      "severity_id": "sev4",
+      "name": "Tracked defect or documentation correction",
+      "business_impact": "Low-risk defect, stale operational guidance, or improvement item that does not require active incident coordination.",
+      "initial_response_target_minutes": 1440,
+      "update_cadence_minutes": 1440,
+      "escalation_owner": "lotus-idea-engineering",
+      "communication_required": false,
+      "promotion_freeze_required": false
+    }
+  ],
+  "incident_response_flow": [
+    "detect",
+    "acknowledge",
+    "triage",
+    "assess_impact",
+    "contain",
+    "communicate",
+    "recover",
+    "verify",
+    "document",
+    "problem_review",
+    "improve_controls"
+  ],
+  "escalation_roles": [
+    {
+      "role_id": "incident_commander",
+      "owner_group": "lotus-production-incident-commander",
+      "responsibility": "Own severity, incident timeline, containment decision, recovery authorization, communication cadence, and final closure decision.",
+      "escalation_condition": "Required for every Sev1 and for Sev2 incidents that cross a supported runtime, data-safety, production identity, or customer-impact boundary."
+    },
+    {
+      "role_id": "lotus_idea_service_owner",
+      "owner_group": "lotus-idea-service-owner",
+      "responsibility": "Own app behavior diagnosis, source-safe evidence capture, fix-forward plan, regression tests, and issue/PR tracking.",
+      "escalation_condition": "Required for every Idea incident or supportability defect."
+    },
+    {
+      "role_id": "platform_runtime_on_call",
+      "owner_group": "lotus-platform-runtime-on-call",
+      "responsibility": "Own ingress, deployment, runner, release image, environment, shared observability, and platform automation diagnosis.",
+      "escalation_condition": "Required when readiness, release identity, deployment, ingress, capacity runner, or platform-owned evidence is implicated."
+    },
+    {
+      "role_id": "database_on_call",
+      "owner_group": "lotus-platform-database-on-call",
+      "responsibility": "Own PostgreSQL backup, restore, PITR, credential rotation, provider restore identity, and database cutover support.",
+      "escalation_condition": "Required when durable repository, backup, restore, PITR, corruption, or data-loss risk is implicated."
+    },
+    {
+      "role_id": "security_privacy_reviewer",
+      "owner_group": "security-privacy-review",
+      "responsibility": "Own sensitive-data exposure assessment, evidence redaction, credential rotation decision, and privacy/legal escalation handoff.",
+      "escalation_condition": "Required when secrets, entitlements, tenant isolation, personal data, audit records, AI lineage, or legal/privacy lifecycle may be affected."
+    },
+    {
+      "role_id": "downstream_owner",
+      "owner_group": "source-or-downstream-domain-owner",
+      "responsibility": "Own source-system or downstream-system diagnosis without transferring source authority to Lotus Idea.",
+      "escalation_condition": "Required when Core, Performance, Risk, Advise, Manage, Report, Render, Archive, Gateway, Workbench, or AI ownership is implicated."
+    }
+  ],
+  "source_safe_evidence_policy": {
+    "allowed_identifiers": [
+      "GitHub issue or PR number",
+      "commit SHA",
+      "GitHub run id",
+      "contract id and digest",
+      "artifact SHA-256",
+      "operation name",
+      "route template",
+      "status class",
+      "bounded blocker code",
+      "opaque support reference"
+    ],
+    "prohibited_content": [
+      "tenant id",
+      "client id",
+      "portfolio id",
+      "account id",
+      "holding id",
+      "candidate id unless already source-safe and explicitly allowed",
+      "raw source payload",
+      "raw downstream payload",
+      "request or response body",
+      "authorization header",
+      "cookie",
+      "secret",
+      "DSN",
+      "hostname",
+      "raw database query text",
+      "raw exception text containing environment details"
+    ],
+    "evidence_storage": "Attach source-safe artifacts to GitHub issues, PRs, workflow artifacts, or repo-authored output summaries only after redaction review.",
+    "github_tracking_required": true,
+    "credential_rotation_decision_required": true,
+    "evidence_preservation_required": true
+  },
+  "communication_policy": {
+    "current_severity_required": true,
+    "impact_statement_required": true,
+    "next_update_time_required": true,
+    "mitigation_status_required": true,
+    "speculative_root_cause_prohibited": true,
+    "customer_communication_boundary": "Lotus Idea engineering may draft source-safe impact facts, but external customer or client communication requires the governed customer-communications owner and must not imply suitability, execution, reporting, archive, legal, privacy, or production certification authority."
+  },
+  "post_incident_problem_management": {
+    "github_tracking_required": true,
+    "action_owner_required": true,
+    "due_date_required": true,
+    "required_questions": [
+      "why_did_it_happen",
+      "why_was_it_not_prevented",
+      "why_was_it_not_detected_earlier",
+      "did_runbook_work",
+      "what_evidence_was_missing",
+      "what_permanent_fix_is_needed",
+      "what_gate_test_alert_or_runbook_should_change"
+    ],
+    "required_action_families": [
+      "add_or_harden_test",
+      "add_or_tune_alert",
+      "improve_dashboard_or_diagnostic",
+      "improve_runbook_or_wiki",
+      "update_contract_or_gate",
+      "fix_dependency_timeout_retry_or_recovery",
+      "update_context_skill_or_automation_when_repeatable"
+    ]
+  },
+  "non_proof_boundaries": [
+    "This contract is not production on-call staffing certification.",
+    "This contract is not protected-environment incident drill evidence.",
+    "This contract is not customer-communication approval.",
+    "This contract is not legal, privacy, suitability, execution, report rendering, or archive authority.",
+    "This contract is not authentication or authorization implementation.",
+    "This contract is not deployment or production certification.",
+    "This contract is not data-mesh certification.",
+    "This contract is not Gateway or Workbench proof.",
+    "This contract is not supported-feature promotion."
+  ]
+}
