@@ -60,6 +60,7 @@ EXPECTED_EXECUTION_ISSUES = frozenset(
         704,
         756,
         782,
+        797,
     }
 )
 OPEN_STATUSES = frozenset(

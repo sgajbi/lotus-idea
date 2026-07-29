@@ -393,6 +393,15 @@
       "executionStatus": "closed_complete",
       "allowPullRequestAutoClose": true,
       "closureInstruction": "Closed #756 after QA passed on the build-system dependency posture gap. PR #757 merged the implementation to exact main SHA dc2bb59b60ac22563a247f0959f48e3c6f8a0e54 and Main Releasability run 30378345670 passed for that SHA, including lint/typecheck/security, unit, integration, e2e, PostgreSQL runtime proof, coverage, Docker build, and CI signal evidence. PR #758 synchronized source-controlled merged-main evidence to exact main SHA a20ce9df784ad4f8c4edcd61f3fe32d079a4201d and Main Releasability run 30379695203 passed for that SHA. Wiki publications e6c1517 and b27585a have strict DiffCount 0 parity. Both PR branches are absent remotely and deleted locally after git cherry -v origin/main showed only patch-equivalent '-' entries; the repository has one clean main worktree. This closes only the build-system dependency posture gap and does not claim production vulnerability certification, supported-feature promotion, or final release image posture beyond this repository's governed dependency posture controls and existing Slice 15 blockers."
+    },
+    {
+      "issueNumber": 797,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/797",
+      "rfcSlices": ["slice-15", "slice-18"],
+      "githubState": "open",
+      "executionStatus": "open_pr_raised",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #797 open until PR #798 is merged to main, exact-main Main Releasability succeeds for the merge SHA, repo-authored wiki source is published with strict parity, #681 records the Slice 18 evidence-sync note, and local/remote branch hygiene is verified. PR #798 adds the incident-response operating model contract, repo-native incident-response contract gate, focused unit coverage, runbook, wiki source, service-operations links, issue closure matrix coverage, execution ledger coverage, and issue-learning pattern coverage. This does not claim production incident certification, production IdP/session/token-claims proof, supported-feature promotion, external client communication approval, provider/bank/legal approval, or full RFC-0002 Slice 15/18 closure."
     }
   ]
 }
