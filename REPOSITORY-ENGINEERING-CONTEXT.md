@@ -1238,12 +1238,13 @@ PR #770 (`c4a58683a05cb0c78bea5848a287abda682aea8f`, Main Releasability
 PR #776 (`aa492aedd46f30b854c8478edb919605dbdd58fc`, Main Releasability
 `30432065538`, CodeQL `30432058627`, `lotus-idea.wiki` commit `c08509a`), and
 PR #777 (`39d51c5cb63df360f1e97e6e9e862784a9ad9178`, Main Releasability
-`30434057675`, CodeQL `30434051218`, `lotus-idea.wiki` commit `d0a1fa1`)
-with strict wiki `DiffCount 0`. The current live cross-repo posture is 66
-RFC-0002 issues total, 33 closed, and 33 open; the current Idea ledger posture
-is 41 tracked issues, 24 open, and 17 closed. That evidence is coordination
-posture only; it does not clear blockers, promote supported features, certify
-production vulnerability posture, or complete Slice 18 closure.
+`30434057675`, CodeQL `30434051218`, `lotus-idea.wiki` commit `d0a1fa1`),
+and PR #779 (`655d1245e96b7a67dea6c5d9ff0c78d0a32ee9e6`, Main Releasability
+`30437706105`, CodeQL `30437690255`, `lotus-idea.wiki` commit `b3359fa`)
+with strict wiki `DiffCount 0`. The current Idea ledger posture is 41 tracked
+issues, 24 open, and 17 closed. That evidence is coordination posture only; it
+does not clear blockers, promote supported features, certify production
+vulnerability posture, or complete Slice 18 closure.
 
 RFC-0002 repeated issue-learning truth is governed by
 `contracts/implementation-proof/rfc0002-issue-learning-patterns.v1.json`.

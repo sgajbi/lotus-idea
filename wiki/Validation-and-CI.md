@@ -1044,12 +1044,11 @@ status reports cannot hide Slice 20 or Slice 21 work behind a generic ready
 bucket.
 
 Current Slice 18 handoff truth is anchored by `lotus-idea#681`. The source
-ledger records the PR #765, #767, #768, #769, #770, #772, #775, and #776
-evidence chain through main
-`aa492aedd46f30b854c8478edb919605dbdd58fc`, Main Releasability
-`30432065538`, CodeQL `30432058627`, wiki commit `c08509a`, strict wiki
-parity, live cross-repo RFC-0002 posture of 66 tracked issues, 33 closed, and
-33 open, and live Idea RFC-0002 ledger posture of 41 tracked issues, 24 open,
+ledger records the PR #765, #767, #768, #769, #770, #772, #775, #776, #777,
+and #779 evidence chain through main
+`655d1245e96b7a67dea6c5d9ff0c78d0a32ee9e6`, Main Releasability
+`30437706105`, CodeQL `30437690255`, wiki commit `b3359fa`, strict wiki
+parity, and live Idea RFC-0002 ledger posture of 41 tracked issues, 24 open,
 and 17 closed. Keep #681 open until the remaining documentation, wiki,
 support, context, and supported-feature truth is complete;
 `sgajbi/lotus-manage#624` remains the production trusted IdP caller-context
