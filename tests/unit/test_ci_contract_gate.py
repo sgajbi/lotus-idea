@@ -1057,25 +1057,6 @@ def test_ci_contract_gate_blocks_missing_live_core_url_readiness_wiring() -> Non
     ) in errors
 
 
-def test_ci_contract_gate_blocks_missing_implementation_proof_output_wiring() -> None:
-    module = _load_ci_contract_gate()
-    makefile = (
-        (ROOT / "Makefile")
-        .read_text(encoding="utf-8")
-        .replace(
-            "$(if $(IMPLEMENTATION_PROOF_OUTPUT),--output $(IMPLEMENTATION_PROOF_OUTPUT),) ",
-            "",
-        )
-    )
-
-    errors = module.validate_makefile(makefile)
-
-    assert (
-        "Makefile implementation-proof-readiness-check target must support "
-        "optional implementation proof output artifact wiring"
-    ) in errors
-
-
 def test_ci_contract_gate_blocks_missing_runtime_trust_telemetry_test_execution_gate() -> None:
     module = _load_ci_contract_gate()
     makefile = (

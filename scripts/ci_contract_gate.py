@@ -7,12 +7,12 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.append(str(Path(__file__).resolve().parent))
 from ci_contract_gate_expectations import (  # noqa: E402
-    GENERATED_READINESS_ARTIFACTS,
-    PASSED_READINESS_ARTIFACTS,
     REQUIRED_LINT_TARGETS,
-    REQUIRED_READINESS_WIRING,
     REQUIRED_TEST_SELECTORS,
     TEST_TARGET_EXPECTATIONS,
+)
+from ci_implementation_proof_readiness_contract import (  # noqa: E402
+    validate_implementation_proof_readiness_target,
 )
 from ci_contract_gate_workbench_runtime import (  # noqa: E402
     validate_workbench_runtime_proof_timestamp,
@@ -121,7 +121,6 @@ REQUIRED_CI_RELEASE_DEPS = (
     "container-image-scan",
     "release-sbom",
 )
-READINESS_TARGET = "Makefile implementation-proof-readiness-check target"
 REQUIRED_DOCKERIGNORE_LOCAL_ARTIFACTS = (
     ".coverage",
     ".coverage.*",
@@ -150,28 +149,6 @@ def _target_deps(makefile: str, target: str) -> set[str]:
     if not match:
         return set()
     return {dependency.strip() for dependency in match.group("deps").split() if dependency.strip()}
-
-
-def _validate_implementation_proof_readiness_target(makefile: str) -> list[str]:
-    errors: list[str] = []
-    target_block = _target_block(makefile, "implementation-proof-readiness-check")
-    for marker, description in GENERATED_READINESS_ARTIFACTS:
-        if marker not in target_block:
-            errors.append(f"{READINESS_TARGET} must generate {description}")
-    for marker, description in PASSED_READINESS_ARTIFACTS:
-        if marker not in target_block:
-            errors.append(
-                f"{READINESS_TARGET} must pass the {description} into readiness generation"
-            )
-    for marker, requirement in REQUIRED_READINESS_WIRING:
-        if marker not in target_block:
-            errors.append(f"{READINESS_TARGET} must {requirement}")
-    if target_block.count("--allow-missing-evidence") < 6:
-        errors.append(
-            f"{READINESS_TARGET} must keep all cross-repo proof generators CI-stable when "
-            "sibling evidence is absent"
-        )
-    return errors
 
 
 def _validate_required_makefile_targets(makefile: str) -> list[str]:
@@ -304,7 +281,8 @@ def _validate_script_targets(makefile: str) -> list[str]:
 
 
 def _validate_support_targets(makefile: str) -> list[str]:
-    errors = _validate_implementation_proof_readiness_target(makefile)
+    readiness_block = _target_block(makefile, "implementation-proof-readiness-check")
+    errors = validate_implementation_proof_readiness_target(makefile, readiness_block)
     errors.extend(validate_workbench_runtime_proof_timestamp(makefile))
     runtime_preview_check = _target_block(makefile, "runtime-trust-telemetry-preview-check")
     if "scripts/runtime_trust_telemetry/generate_preview.py" not in runtime_preview_check:

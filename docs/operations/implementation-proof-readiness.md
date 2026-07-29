@@ -536,7 +536,8 @@ taxonomy and the #393 same-pattern campaign.
 | Variable | Effect |
 | --- | --- |
 | `IMPLEMENTATION_PROOF_EVALUATED_AT_UTC` | Overrides the deterministic proof timestamp. |
-| `IMPLEMENTATION_PROOF_OUTPUT` | Writes the aggregate readiness JSON to a chosen ignored output path. |
+| `LOTUS_IDEA_IMPLEMENTATION_PROOF_READINESS_OUTPUT` | Defines the canonical aggregate readiness JSON path. Defaults to `output/implementation-proof/readiness-current.json`. |
+| `IMPLEMENTATION_PROOF_OUTPUT` | Overrides the aggregate readiness JSON output path. Defaults to `LOTUS_IDEA_IMPLEMENTATION_PROOF_READINESS_OUTPUT`, so `make implementation-proof-readiness-check` always leaves durable local readiness evidence instead of stdout-only proof. |
 | `LOTUS_CORE_QUERY_BASE_URL` | Passes the live Core query-service URL into readiness generation. |
 | `LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL` | Passes the live Core query-control-plane URL into readiness generation. |
 | `LOTUS_IDEA_SOURCE_INGESTION_RUNTIME_EXECUTION` | Passes receipt-bound v2 `runtime_execution` evidence into aggregate readiness. The artifact must be valid and aggregate-current before it can affect the source-ingestion or high-cash opportunity-archetype live Core posture. |
