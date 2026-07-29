@@ -162,9 +162,12 @@ Main CodeQL `30460101418`, and `lotus-idea.wiki` publication
 Workbench PR #505 then narrowed the BFF principal-boundary blocker on Workbench
 main `1b4afb92f4c810c99921fc26e451b04bca731e28`; Pull Request Merge Gate
 `30464152669`, Main Releasability `30465110912`, and Workbench wiki publication
-`3b4f78f` passed. After the 2026-07-30 pending-final/post-completion lifecycle
-correction and the platform #636 traceability label update, the live cross-repo
-posture is 78 tracked RFC-0002 issues, 41 complete, and 37 open; the blocked subset is 28 issues, 0 app-actionable
+`3b4f78f` passed. Platform PR #639 then hardened issue-loop guidance for stale
+PR-text payload handling on platform main `641aabe9f303a178f3a4e489c52b3d789d8339d3`;
+Main Releasability `30475978275` passed. After the 2026-07-30
+pending-final/post-completion lifecycle correction, the platform #636
+traceability label update, and platform #638 skill-guidance closure, the live
+cross-repo posture is 79 tracked RFC-0002 issues, 42 complete, and 37 open; the blocked subset is 28 issues, 0 app-actionable
 blocked issues, 5 Core dependencies, and 23 external/protected-evidence
 blockers. #683 and #684 are pending final/post-completion issues that must not
 carry `status/ready` while prerequisite blockers remain open. #691, #692, and
