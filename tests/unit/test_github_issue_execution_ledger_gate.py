@@ -374,7 +374,7 @@ def test_rfc0002_github_issue_execution_ledger_tracks_report_live_proof_qa_closu
     assert "make report-intake-runtime-execution-proof-gate" in issue_690["closureInstruction"]
 
 
-def test_rfc0002_github_issue_execution_ledger_tracks_render_archive_merged_main_pending_qa() -> (
+def test_rfc0002_github_issue_execution_ledger_tracks_render_archive_open_blocked_after_report_intake_qa() -> (
     None
 ):
     module = _load_gate()
@@ -391,6 +391,17 @@ def test_rfc0002_github_issue_execution_ledger_tracks_render_archive_merged_main
     assert "Keep #691 open and status/blocked" in issue_691["closureInstruction"]
     assert "PR #725 merged to main" in issue_691["closureInstruction"]
     assert "29972535964" in issue_691["closureInstruction"]
+    assert (
+        "The bounded #690 Report intake runtime tranche is complete"
+        in issue_691["closureInstruction"]
+    )
+    assert "PR #774" in issue_691["closureInstruction"]
+    assert "5f53c4ac6ac519c7e6b0019e00f5286109e1628c" in issue_691["closureInstruction"]
+    assert "PR #776 synchronized final QA truth" in issue_691["closureInstruction"]
+    assert "aa492aedd46f30b854c8478edb919605dbdd58fc" in issue_691["closureInstruction"]
+    assert "30432065538" in issue_691["closureInstruction"]
+    assert "30432058627" in issue_691["closureInstruction"]
+    assert "wiki commit c08509a" in issue_691["closureInstruction"]
     assert "rendered_output_creation_missing" in issue_691["closureInstruction"]
     assert "archive_record_creation_missing" in issue_691["closureInstruction"]
     assert "lotus-archive #55" in issue_691["closureInstruction"]
