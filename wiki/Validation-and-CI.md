@@ -765,7 +765,7 @@ Persistence adapter validation:
    posture for #380 and reconciled it to `open_blocked` at
    `6f8875dc6784dd17975e6700c09b9ff71d66fb8b`; Main Releasability `30327202465`
    and CodeQL `30327193673` passed. The RFC-0002 execution summary now has 41
-   tracked issues, 16 closed complete, 25 open, 1
+   tracked issues, 17 closed complete, 24 open, no
    `open_merged_main_qa_pending`, 1 `open_in_progress`, no `open_pr_raised`,
    13 `open_blocked`, and
    no ready issues. #379 is `open_blocked`, not QA-pending because
@@ -795,11 +795,14 @@ Persistence adapter validation:
    canonical runtime, mesh onboarding, entitlement-denied, and supported-feature
    promotion evidence, and #693 is blocked rather than QA-pending until
    protected capacity-production-like runner/environment, protected attestations,
-   and matching FinOps evidence exist. #690 is merged-main QA-pending after
-   PR #774 merged to main at `5f53c4ac6ac519c7e6b0019e00f5286109e1628c`;
-   Main Releasability `30428715937` and CodeQL `30428711385` passed, wiki
-   publication completed at `lotus-idea.wiki` commit `26d39d1` with strict
-   `DiffCount 0`, and branch cleanup completed. The bounded Report intake
+   and matching FinOps evidence exist. #690 is now closed complete after
+   PR #774 merged to main at `5f53c4ac6ac519c7e6b0019e00f5286109e1628c`,
+   PR #775 synchronized source truth to main at
+   `800f682c4f7ae20a2c0634eb112323d7936cca73`, Main Releasability
+   `30430120214` and CodeQL `30430108647` passed, wiki publication completed at
+   `lotus-idea.wiki` commit `3ebd0f0` with strict `DiffCount 0`, branch cleanup
+   completed, and final QA passed `make report-intake-runtime-execution-proof-gate`
+   plus `make implementation-proof-readiness-check`. The bounded Report intake
    runtime proof clears only `lotus_report_live_intake_route_proof_missing`
    after aggregate-current validation; client publication, production identity,
    supported-feature promotion, report rendering authority, Archive production
