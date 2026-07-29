@@ -99,6 +99,49 @@ def test_rfc0002_github_issue_execution_ledger_blocks_issue_379_on_certification
     assert "production/certification evidence" in issue_379["closureInstruction"]
 
 
+def test_rfc0002_github_issue_execution_ledger_tracks_slice18_posture_evidence() -> None:
+    module = _load_gate()
+    payload = _ledger_payload(module)
+    issue_681 = next(
+        issue
+        for issue in payload["issues"]
+        if isinstance(issue, dict) and issue["issueNumber"] == 681
+    )
+
+    assert issue_681["githubState"] == "open"
+    assert issue_681["executionStatus"] == "open_in_progress"
+    assert issue_681["allowPullRequestAutoClose"] is False
+    assert "Keep #681 open" in issue_681["closureInstruction"]
+    assert (
+        "PR #765 merged the Slice 18 cross-repo issue posture command"
+        in issue_681["closureInstruction"]
+    )
+    assert "3ab78c4e9ba23b08eec5396f0641acf21c98f74a" in issue_681["closureInstruction"]
+    assert "30411606383" in issue_681["closureInstruction"]
+    assert "lotus-idea.wiki commit 0aea688" in issue_681["closureInstruction"]
+    assert "strict DiffCount 0" in issue_681["closureInstruction"]
+    assert "coordination evidence only" in issue_681["closureInstruction"]
+    assert "does not clear RFC-0002 blockers" in issue_681["closureInstruction"]
+
+
+def test_rfc0002_github_issue_execution_ledger_requires_slice18_posture_evidence(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    payload = _ledger_payload(module)
+    for issue in payload["issues"]:
+        if isinstance(issue, dict) and issue["issueNumber"] == 681:
+            issue["closureInstruction"] = issue["closureInstruction"].replace(
+                "30411606383",
+                "",
+            )
+            break
+
+    errors = module.validate_github_issue_execution_ledger(_write_ledger(tmp_path, payload))
+
+    assert "#681: closureInstruction missing required evidence `30411606383`" in errors
+
+
 def test_rfc0002_github_issue_execution_ledger_keeps_report_live_proof_in_progress() -> None:
     module = _load_gate()
     payload = _ledger_payload(module)

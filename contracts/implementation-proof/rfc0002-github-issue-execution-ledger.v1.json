@@ -176,7 +176,7 @@
       "githubState": "open",
       "executionStatus": "open_in_progress",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #681 open until documentation, wiki, support truth, and agent context are synchronized after all remaining implementation truth changes."
+      "closureInstruction": "Keep #681 open. PR #765 merged the Slice 18 cross-repo issue posture command to main at 3ab78c4e9ba23b08eec5396f0641acf21c98f74a with Main Releasability Gate 30411606383 passing for that exact SHA; repo-authored wiki publication completed at lotus-idea.wiki commit 0aea688 with strict DiffCount 0; the PR branch was absent remotely and locally after patch-equivalence branch cleanup. This records coordination evidence only: it does not clear RFC-0002 blockers, promote supported features, prove product support, or complete documentation/wiki/support/context closure. Keep #681 open until documentation, wiki, support truth, and agent context are synchronized after all remaining implementation truth changes."
     },
     {
       "issueNumber": 682,

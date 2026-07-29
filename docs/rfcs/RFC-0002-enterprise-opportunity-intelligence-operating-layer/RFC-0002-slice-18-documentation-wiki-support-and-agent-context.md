@@ -450,6 +450,17 @@ or `status/merged-main`. It is coordination evidence only: it does not clear
 blockers, promote supported features, prove implementation, replace repo-local
 ledgers, or substitute for exact-main validation.
 
+PR #765 merged that cross-repo posture command to main at
+`3ab78c4e9ba23b08eec5396f0641acf21c98f74a`; Main Releasability `30411606383`
+passed for the exact SHA; repo-authored wiki publication completed at
+`lotus-idea.wiki` commit `0aea688` with strict `DiffCount 0`; and branch
+hygiene verified the PR branch absent remotely and locally after
+patch-equivalence cleanup. The source ledger now pins this #681 evidence and
+the gate requires those identifiers so the partial Slice 18 coordination work
+cannot regress into chat-only memory. #681 remains open: this tranche does not
+clear any RFC-0002 blocker, promote supported features, prove product support,
+or complete the full documentation/wiki/support/context closure requirement.
+
 The #379 downstream outcome certification supporting-proof tranche is now
 synchronized across repo context,
 `docs/operations/downstream-realization-readiness.md`,
