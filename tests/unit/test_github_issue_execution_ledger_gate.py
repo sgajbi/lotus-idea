@@ -778,6 +778,38 @@ def test_rfc0002_github_issue_execution_ledger_tracks_incident_response_merge() 
     assert "does not claim production incident certification" in issue_797["closureInstruction"]
 
 
+def test_rfc0002_github_issue_execution_ledger_tracks_runtime_image_hardening_issue() -> None:
+    module = _load_gate()
+    payload = _ledger_payload(module)
+
+    issue_807 = next(
+        issue
+        for issue in payload["issues"]
+        if isinstance(issue, dict) and issue["issueNumber"] == 807
+    )
+
+    assert issue_807["githubState"] == "open"
+    assert issue_807["executionStatus"] == "open_pr_raised"
+    assert issue_807["allowPullRequestAutoClose"] is False
+    assert issue_807["rfcSlices"] == ["slice-15"]
+    assert "Keep #807 open and status/pr-open" in issue_807["closureInstruction"]
+    assert (
+        "PR #806 branch commit 1d01e8da31b802de55fd553092e05c6ccfd9aea3"
+        in (issue_807["closureInstruction"])
+    )
+    assert (
+        "removes final-image package installer and build-tool metadata"
+        in (issue_807["closureInstruction"])
+    )
+    assert "make docker-build container-image-scan" in issue_807["closureInstruction"]
+    assert "make container-runtime-smoke" in issue_807["closureInstruction"]
+    assert "HIGH_CRITICAL_FINDINGS=0" in issue_807["closureInstruction"]
+    assert "This issue is not QA-pending" in issue_807["closureInstruction"]
+    assert (
+        "Do not claim production vulnerability certification" in (issue_807["closureInstruction"])
+    )
+
+
 def test_rfc0002_github_issue_execution_ledger_records_issue_681_sync_note() -> None:
     module = _load_gate()
     payload = _ledger_payload(module)
