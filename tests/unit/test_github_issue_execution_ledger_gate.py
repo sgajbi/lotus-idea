@@ -138,7 +138,16 @@ def test_rfc0002_github_issue_execution_ledger_tracks_slice18_posture_evidence()
     assert "c4a58683a05cb0c78bea5848a287abda682aea8f" in issue_681["closureInstruction"]
     assert "30418344813" in issue_681["closureInstruction"]
     assert "30418340512" in issue_681["closureInstruction"]
-    assert "66 RFC-0002 issues total, 32 closed, and 34 open" in issue_681["closureInstruction"]
+    assert "PR #776 synchronized #690 final QA closure truth" in issue_681["closureInstruction"]
+    assert "aa492aedd46f30b854c8478edb919605dbdd58fc" in issue_681["closureInstruction"]
+    assert "30432065538" in issue_681["closureInstruction"]
+    assert "30432058627" in issue_681["closureInstruction"]
+    assert "lotus-idea.wiki commit c08509a" in issue_681["closureInstruction"]
+    assert "66 RFC-0002 issues total, 33 closed, and 33 open" in issue_681["closureInstruction"]
+    assert (
+        "current Idea ledger posture after PR #776 is 41 tracked issues, 24 open, and 17 closed"
+        in issue_681["closureInstruction"]
+    )
     assert "strict DiffCount 0" in issue_681["closureInstruction"]
     assert "coordination and documentation truth only" in issue_681["closureInstruction"]
     assert "does not clear RFC-0002 blockers" in issue_681["closureInstruction"]
@@ -181,6 +190,14 @@ def test_rfc0002_github_issue_execution_ledger_tracks_report_live_proof_qa_closu
     assert "800f682c4f7ae20a2c0634eb112323d7936cca73" in issue_690["closureInstruction"]
     assert "30430120214" in issue_690["closureInstruction"]
     assert "lotus-idea.wiki commit 3ebd0f0" in issue_690["closureInstruction"]
+    assert (
+        "PR #776 then synchronized the closed-complete execution state"
+        in issue_690["closureInstruction"]
+    )
+    assert "aa492aedd46f30b854c8478edb919605dbdd58fc" in issue_690["closureInstruction"]
+    assert "30432065538" in issue_690["closureInstruction"]
+    assert "30432058627" in issue_690["closureInstruction"]
+    assert "lotus-idea.wiki commit c08509a" in issue_690["closureInstruction"]
     assert "make report-intake-runtime-execution-proof-gate" in issue_690["closureInstruction"]
 
 

@@ -138,7 +138,12 @@ proof clears only `lotus_report_live_intake_route_proof_missing` after
 aggregate-current validation; client publication, production identity,
 supported-feature promotion, report rendering authority, Archive production
 trust, legal/privacy approval, and final Slice 13 certification remain
-unclaimed. #691, #692, and
+unclaimed. PR #776 synchronized that #690 final QA closure truth to exact main
+`aa492aedd46f30b854c8478edb919605dbdd58fc`; Main Releasability `30432065538`
+and CodeQL `30432058627` passed, wiki publication completed at
+`lotus-idea.wiki` commit `c08509a` with strict `DiffCount 0`, branch cleanup
+completed, and live cross-repo RFC-0002 posture is now 66 tracked issues, 33
+closed, and 33 open. #691, #692, and
 #699 remain blocked rather than
 QA-pending: their merged PRs preserve bounded Render/Archive, mesh-readiness,
 and proof-control evidence only, while production identity, client publication,
@@ -1214,10 +1219,16 @@ the same source change. The current pinned rollup includes PR #765
 PR #770 (`c4a58683a05cb0c78bea5848a287abda682aea8f`, Main Releasability
 `30418344813`, CodeQL `30418340512`), and PR #772
 (`72b0a4c8ed99a4091f679e42486a3823ce3d8c0e`, Main Releasability
-`30423379257`, CodeQL `30423375042`, `lotus-idea.wiki` commit `1a8875c`)
-with strict wiki `DiffCount 0`. That evidence is coordination posture only;
-it does not clear blockers, promote supported features, certify production
-vulnerability posture, or complete Slice 18 closure.
+`30423379257`, CodeQL `30423375042`, `lotus-idea.wiki` commit `1a8875c`), PR
+#775 (`800f682c4f7ae20a2c0634eb112323d7936cca73`, Main Releasability
+`30430120214`, CodeQL `30430108647`, `lotus-idea.wiki` commit `3ebd0f0`), and
+PR #776 (`aa492aedd46f30b854c8478edb919605dbdd58fc`, Main Releasability
+`30432065538`, CodeQL `30432058627`, `lotus-idea.wiki` commit `c08509a`)
+with strict wiki `DiffCount 0`. The current live cross-repo posture is 66
+RFC-0002 issues total, 33 closed, and 33 open; the current Idea ledger posture
+is 41 tracked issues, 24 open, and 17 closed. That evidence is coordination
+posture only; it does not clear blockers, promote supported features, certify
+production vulnerability posture, or complete Slice 18 closure.
 
 RFC-0002 repeated issue-learning truth is governed by
 `contracts/implementation-proof/rfc0002-issue-learning-patterns.v1.json`.
