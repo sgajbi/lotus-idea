@@ -288,7 +288,19 @@ Main CodeQL/Push run `30458146092`, repo-authored wiki publication `bbd9e2f`,
 strict wiki `DiffCount 0`, and branch cleanup passed. The corrected cross-repo
 posture is 77 tracked RFC-0002 issues, 40 complete, and 37 open; the blocked
 subset is 26 issues with 0 app-actionable blocked issues, 5 Core dependencies,
-and 21 external/protected-evidence blockers.
+and 21 external/protected-evidence blockers. PR #791 then synchronized PR
+#790's evidence into source-controlled execution truth on exact main
+`65e11890aaddb70fea4cf9d80e836ce1625a6c44`; Main Releasability `30460122600`,
+Main CodeQL `30460101418`, repo-authored wiki publication
+`2453c3006722ee40e48762d884581fb6b3893bbe`, strict wiki `DiffCount 0`, and
+branch cleanup passed. Workbench PR #505 narrowed the BFF principal-boundary
+blocker on Workbench main `1b4afb92f4c810c99921fc26e451b04bca731e28`; Pull
+Request Merge Gate `30464152669`, branch head
+`c4add59871bc3f0e78dc6602c8857c5e141e6367`, Main Releasability `30465110912`,
+Workbench wiki publication `3b4f78f`, strict wiki `DiffCount 0`, and branch
+cleanup passed. This is still source-contract and BFF boundary evidence only;
+production IdP/session/token-claims, revocation/expiry, entitlement-denied, and
+canonical browser proof remain open.
 The current Idea RFC-0002 ledger posture is 42 tracked issues, 24 open, and 18
 closed after #782 final QA closure and source-controlled ledger synchronization.
 This is still coordination/documentation truth only;

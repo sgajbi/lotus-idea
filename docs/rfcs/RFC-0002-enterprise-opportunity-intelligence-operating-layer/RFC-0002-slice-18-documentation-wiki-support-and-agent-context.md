@@ -496,11 +496,24 @@ external/protected-evidence blockers. PR #790 synchronized that evidence into
 source-controlled execution truth on main
 `f23c72d7d95d1676b8f673f538a9336e4b704fbc` with Main Releasability
 `30458163573`, Main CodeQL/Push run `30458146092`, wiki commit `bbd9e2f`,
-strict wiki parity, and branch cleanup. Live Idea RFC-0002 ledger posture remains
-42 tracked issues, 24 open, and 18 closed. This evidence still preserves
+strict wiki parity, and branch cleanup. PR #791 synchronized PR #790 evidence
+into source-controlled execution truth on main
+`65e11890aaddb70fea4cf9d80e836ce1625a6c44` with Main Releasability
+`30460122600`, Main CodeQL `30460101418`, wiki commit
+`2453c3006722ee40e48762d884581fb6b3893bbe`, strict wiki parity, and branch
+cleanup. Workbench PR #505 narrowed the BFF principal-boundary blocker on
+Workbench main `1b4afb92f4c810c99921fc26e451b04bca731e28`; Pull Request Merge
+Gate `30464152669`, branch head `c4add59871bc3f0e78dc6602c8857c5e141e6367`,
+Main Releasability `30465110912`, Workbench wiki commit `3b4f78f`, strict wiki
+parity, and branch cleanup passed. Live Idea RFC-0002 ledger posture remains 42
+tracked issues, 24 open, and 18 closed. Live governed cross-repo posture remains
+77 tracked issues, 40 closed, and 37 open across 13 repositories, with 26
+blocked issues, 0 app-actionable blocked issues, 5 Core dependencies, and 21
+external/protected-evidence blockers. This evidence still preserves
 `sgajbi/lotus-manage#624` and the other blocked production/certification
 dependencies; it is not Slice 18 completion evidence and does not certify
-production vulnerability posture.
+production vulnerability posture or production IdP/session/token-claims
+principal proof.
 
 This Slice 18 synchronization also carries the platform vulnerability-exception
 register lesson from `sgajbi/lotus-platform#596` into Idea's repository truth.
