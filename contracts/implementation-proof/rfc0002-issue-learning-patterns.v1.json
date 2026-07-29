@@ -30,6 +30,10 @@
           "ref": "scripts/cross_repo_issue_posture.py"
         },
         {
+          "type": "contract",
+          "ref": "contracts/implementation-proof/rfc0002-cross-repo-blocker-classification.v1.json"
+        },
+        {
           "type": "gate",
           "ref": "scripts/github_issue_pr_text_gate.py"
         },
@@ -42,7 +46,7 @@
           "ref": "wiki/Validation-and-CI.md"
         }
       ],
-      "futureAgentRule": "Before changing RFC-0002 truth, run the execution ledger gate and live state audit, generate the issue execution summary instead of relying on chat or ad hoc assignee filters, and generate the live cross-repo posture from the governed owner/dependency repository set rather than a hand-maintained subset. Preserve Keep-open wording for partial issues, ensure partial PR title/body text uses neutral verbs instead of GitHub auto-close keywords, ensure parent open_tracker issues carry status/tracker, and record exact PR/main/wiki/branch evidence on the owning issue. When a partial merge changes an issue's execution posture, update the source-controlled ledger closure instruction and operator docs with the exact PR, main SHA, primary/security runs, wiki decision, and branch cleanup evidence instead of leaving older current-main references behind. If the PR-text gate fails, edit the PR body and create a fresh PR event with a source-controlled push before rerunning because Actions reruns can retain the stale pull_request payload.",
+      "futureAgentRule": "Before changing RFC-0002 truth, run the execution ledger gate and live state audit, generate the issue execution summary instead of relying on chat or ad hoc assignee filters, and generate the live cross-repo posture from the governed owner/dependency repository set rather than a hand-maintained subset. Preserve Keep-open wording for partial issues, ensure partial PR title/body text uses neutral verbs instead of GitHub auto-close keywords, ensure parent open_tracker issues carry status/tracker, and record exact PR/main/wiki/branch evidence on the owning issue. Classify every open status/blocked cross-repo RFC-0002 issue through the blocker classification contract: Core, production identity/session authority, protected runtime/deployment evidence, provider/bank/legal approval, and certification evidence may remain blocked; writable app-code work must move out of blocked posture and become ready or in-progress. When a partial merge changes an issue's execution posture, update the source-controlled ledger closure instruction and operator docs with the exact PR, main SHA, primary/security runs, wiki decision, and branch cleanup evidence instead of leaving older current-main references behind. If the PR-text gate fails, edit the PR body and create a fresh PR event with a source-controlled push before rerunning because Actions reruns can retain the stale pull_request payload.",
       "nonClaimBoundaries": [
         "Issue state labels are not proof; they must point to PR, SHA, run, wiki, and branch evidence.",
         "Slice 18 context updates do not complete RFC-0002 while implementation slices remain open."

@@ -204,6 +204,19 @@ provisioning, protected environment variables/secrets, protected
 capacity/load/resource/dependency/PostgreSQL/cost attestation execution, and
 supported-feature blockers.
 
+`make rfc0002-cross-repo-issue-posture` also validates
+`contracts/implementation-proof/rfc0002-cross-repo-blocker-classification.v1.json`.
+That contract is the durable answer to whether the remaining `status/blocked`
+issues are actually fixable app-code work. The live 2026-07-29 posture is 26
+blocked RFC-0002 issues, 0 app-actionable blocked issues, 5 Core dependencies,
+and 21 external/protected-evidence blockers. A blocked issue is valid only when
+the remaining authority is Core-owned source readiness, production identity or
+session/token-claims authority, protected runtime/deployment evidence,
+provider/bank/legal approval, or certification evidence. If a writable non-Core
+Lotus repository can implement the remaining acceptance criteria without those
+external inputs, the issue must move out of `status/blocked` and into ready or
+in-progress execution.
+
 Slice 15 operations blockers now also carry explicit source-controlled
 classification for disaster recovery, data lifecycle, and protected migration
 execution. #343 remains `open_blocked`, not QA-pending: repository-owned

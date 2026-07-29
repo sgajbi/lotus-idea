@@ -1262,6 +1262,18 @@ current Idea ledger posture is 42 tracked issues, 24 open, and 18 closed. That e
 does not clear blockers, promote supported features, certify production
 vulnerability posture, or complete Slice 18 closure.
 
+`make rfc0002-cross-repo-issue-posture` also validates
+`contracts/implementation-proof/rfc0002-cross-repo-blocker-classification.v1.json`.
+The classifier makes the blocker definition executable: a `status/blocked`
+RFC-0002 issue may remain blocked only when the remaining evidence is
+Core-owned, production identity/session authority, protected runtime or
+deployment evidence, provider/bank/legal approval, or certification proof that a
+writable Lotus app branch cannot truthfully produce. Current live posture is 26
+blocked RFC-0002 issues, 0 app-actionable blocked issues, 5 Core dependencies,
+and 21 external/protected-evidence blockers. If a writable non-Core app-code
+gap is found, update GitHub and this contract so the issue becomes ready or
+in-progress instead of hidden behind blocked posture.
+
 RFC-0002 repeated issue-learning truth is governed by
 `contracts/implementation-proof/rfc0002-issue-learning-patterns.v1.json`.
 `make rfc0002-github-issue-learning-pattern-gate` is part of `make lint`; it
