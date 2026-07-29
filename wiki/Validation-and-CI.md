@@ -985,6 +985,11 @@ paired with verbs such as `fixes`, `closes`, or `resolves`. Use neutral verbs
 such as `updates`, `records`, `reconciles`, or `addresses` until QA-backed
 closure is intended.
 
+When this gate fails, a manual PR body edit is necessary but may not be
+sufficient for an Actions rerun. Reruns reuse the original pull-request event
+payload, so push a small durable source correction or otherwise create a fresh PR
+event before expecting the remote gate to observe corrected title/body text.
+
 `make rfc0002-github-issue-execution-summary` renders the source-controlled
 RFC-0002 issue execution summary after the ledger and learning-pattern gates
 pass. Use it for implementation handoff and issue-count reporting after the live

@@ -131,6 +131,12 @@ Use neutral verbs such as `updates`, `records`, `reconciles`, or `addresses` for
 partial RFC evidence PRs, then close issues only through explicit QA-backed
 closure once the full evidence class is satisfied on exact main.
 
+If this gate fails because the PR body used completion wording, edit the PR body
+and push a small source-controlled correction before rerunning CI. GitHub Actions
+reruns keep the original `pull_request` event payload, so rerunning the failed
+job alone can continue evaluating stale title/body text even when the current PR
+description has already been corrected.
+
 `make rfc0002-github-issue-execution-state-audit` compares the ledger with
 current GitHub issue state through the GitHub CLI. It is intentionally a
 GitHub-backed audit rather than a CI lint gate: run it before PR evidence, after
