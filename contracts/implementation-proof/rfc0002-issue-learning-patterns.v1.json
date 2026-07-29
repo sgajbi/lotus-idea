@@ -207,7 +207,7 @@
     {
       "patternId": "ai_attestation_and_model_governance",
       "title": "AI explanation output acceptance requires attested lotus-ai execution, model provenance, retention, and lineage evidence.",
-      "currentLedgerIssueNumbers": [340, 782],
+      "currentLedgerIssueNumbers": [],
       "relatedIssueNumbers": [268, 340, 459, 668, 782],
       "rfcSlices": ["slice-09", "slice-17"],
       "durableControls": [

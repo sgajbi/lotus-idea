@@ -771,8 +771,8 @@ Persistence adapter validation:
    current mainline evidence. PR #746 corrected stale ready
    posture for #380 and reconciled it to `open_blocked` at
    `6f8875dc6784dd17975e6700c09b9ff71d66fb8b`; Main Releasability `30327202465`
-   and CodeQL `30327193673` passed. The RFC-0002 execution summary now has 41
-   tracked issues, 17 closed complete, 24 open, no
+   and CodeQL `30327193673` passed. The RFC-0002 execution summary now has 42
+   tracked issues, 18 closed complete, 24 open, no
    `open_merged_main_qa_pending`, 1 `open_in_progress`, no `open_pr_raised`,
    13 `open_blocked`, and
    no ready issues. #379 is `open_blocked`, not QA-pending because
@@ -1050,8 +1050,8 @@ ledger records the PR #765, #767, #768, #769, #770, #772, #775, #776, #777,
 and #779 evidence chain through main
 `655d1245e96b7a67dea6c5d9ff0c78d0a32ee9e6`, Main Releasability
 `30437706105`, CodeQL `30437690255`, wiki commit `b3359fa`, strict wiki
-parity, and live Idea RFC-0002 ledger posture of 41 tracked issues, 24 open,
-and 17 closed. Keep #681 open until the remaining documentation, wiki,
+parity, and live Idea RFC-0002 ledger posture of 42 tracked issues, 24 open,
+and 18 closed after #782 final QA closure. Keep #681 open until the remaining documentation, wiki,
 support, context, and supported-feature truth is complete;
 `sgajbi/lotus-manage#624` remains the production trusted IdP caller-context
 boundary, and production vulnerability posture remains uncertified until

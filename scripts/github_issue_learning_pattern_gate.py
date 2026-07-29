@@ -70,7 +70,7 @@ def _require_string_list(pattern: dict[str, Any], field: str, *, pattern_id: str
     return value
 
 
-def _load_execution_issues(pattern_payload: dict[str, Any]) -> tuple[set[int], set[int]]:
+def _load_execution_issues(pattern_payload: dict[str, Any]) -> tuple[set[int], set[int], set[int]]:
     ledger_ref = pattern_payload.get("executionLedgerRef")
     if not isinstance(ledger_ref, str) or not ledger_ref.strip():
         raise ValueError("executionLedgerRef is required")
@@ -81,6 +81,7 @@ def _load_execution_issues(pattern_payload: dict[str, Any]) -> tuple[set[int], s
 
     all_issues: set[int] = set()
     non_complete: set[int] = set()
+    closed_complete: set[int] = set()
     for index, issue in enumerate(raw_issues):
         if not isinstance(issue, dict):
             raise ValueError(f"execution ledger issues[{index}] must be an object")
@@ -93,13 +94,17 @@ def _load_execution_issues(pattern_payload: dict[str, Any]) -> tuple[set[int], s
         all_issues.add(issue_number)
         if execution_status != "closed_complete":
             non_complete.add(issue_number)
-    return all_issues, non_complete
+        else:
+            closed_complete.add(issue_number)
+    return all_issues, non_complete, closed_complete
 
 
 def validate_github_issue_learning_patterns(path: Path = PATTERN_LEDGER_PATH) -> list[str]:
     try:
         payload = _load_json(path)
-        execution_issues, non_complete_execution_issues = _load_execution_issues(payload)
+        execution_issues, non_complete_execution_issues, closed_complete_issues = (
+            _load_execution_issues(payload)
+        )
     except (FileNotFoundError, json.JSONDecodeError, ValueError) as exc:
         return [str(exc)]
 
@@ -127,7 +132,14 @@ def validate_github_issue_learning_patterns(path: Path = PATTERN_LEDGER_PATH) ->
             errors.append(f"patterns[{index}].patternId is required")
             continue
         pattern_ids.append(pattern_id)
-        errors.extend(_validate_pattern(raw_pattern, pattern_id, execution_issues))
+        errors.extend(
+            _validate_pattern(
+                raw_pattern,
+                pattern_id,
+                execution_issues,
+                closed_complete_issues,
+            )
+        )
         current_issues = raw_pattern.get("currentLedgerIssueNumbers")
         if isinstance(current_issues, list):
             covered_current_issues.update(
@@ -163,6 +175,7 @@ def _validate_pattern(
     pattern: dict[str, Any],
     pattern_id: str,
     execution_issues: set[int],
+    closed_complete_issues: set[int],
 ) -> list[str]:
     errors: list[str] = []
     try:
@@ -170,6 +183,7 @@ def _validate_pattern(
             pattern,
             "currentLedgerIssueNumbers",
             pattern_id=pattern_id,
+            allow_empty=True,
         )
         _require_int_list(pattern, "relatedIssueNumbers", pattern_id=pattern_id)
         _require_string_list(pattern, "rfcSlices", pattern_id=pattern_id)
@@ -193,6 +207,12 @@ def _validate_pattern(
         errors.append(
             f"{pattern_id}.currentLedgerIssueNumbers contains non-ledger issues: "
             + ", ".join(f"#{issue_number}" for issue_number in missing_current)
+        )
+    closed_current = sorted(set(current_issues) & closed_complete_issues)
+    if closed_current:
+        errors.append(
+            f"{pattern_id}.currentLedgerIssueNumbers contains closed-complete issues: "
+            + ", ".join(f"#{issue_number}" for issue_number in closed_current)
         )
     if len(non_claim_boundaries) < 2:
         errors.append(f"{pattern_id}.nonClaimBoundaries must contain at least two boundaries")

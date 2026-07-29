@@ -82,6 +82,26 @@ def test_github_issue_learning_pattern_gate_rejects_unknown_current_issue(
     )
 
 
+def test_github_issue_learning_pattern_gate_rejects_closed_complete_current_issue(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    payload = _pattern_payload(module)
+    for pattern in payload["patterns"]:
+        if pattern["patternId"] == "ai_attestation_and_model_governance":
+            pattern["currentLedgerIssueNumbers"].append(782)
+            break
+
+    errors = module.validate_github_issue_learning_patterns(
+        _write_pattern_payload(tmp_path, payload)
+    )
+
+    assert (
+        "ai_attestation_and_model_governance.currentLedgerIssueNumbers "
+        "contains closed-complete issues: #782"
+    ) in errors
+
+
 def test_github_issue_learning_pattern_gate_rejects_missing_local_control(
     tmp_path: Path,
 ) -> None:
