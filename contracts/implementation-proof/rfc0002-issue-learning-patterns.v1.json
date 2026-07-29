@@ -2,7 +2,7 @@
   "schemaVersion": "lotus-idea:rfc0002-issue-learning-patterns:v1",
   "rfcId": "RFC-0002",
   "repository": "sgajbi/lotus-idea",
-  "asOfDate": "2026-07-23",
+  "asOfDate": "2026-07-29",
   "executionLedgerRef": "contracts/implementation-proof/rfc0002-github-issue-execution-ledger.v1.json",
   "purpose": "Durably cluster RFC-0002 GitHub issue learnings so future implementation slices inspect related defects, preserve no-claim boundaries, and update context or skills when repeated patterns recur.",
   "patterns": [
@@ -182,6 +182,10 @@
           "ref": "scripts/dependency_vulnerability_posture_gate.py"
         },
         {
+          "type": "contract",
+          "ref": "contracts/security/lotus-idea-dependency-vulnerability-posture.v1.json"
+        },
+        {
           "type": "gate",
           "ref": "scripts/service_slo_capacity_contract_gate.py"
         },
@@ -194,7 +198,7 @@
           "ref": "docs/runbooks/postgres-disaster-recovery.md"
         }
       ],
-      "futureAgentRule": "Separate contract-green local posture from protected execution evidence; do not clear capacity, lifecycle, migration, broker, DR, or vulnerability blockers with static files, local-only probes, or stale report-only evidence. Treat pyproject build-system roots as governed dependency posture inputs; exact runtime/dev pins are insufficient if build backend/tooling can resolve through unpinned or range-based requirements.",
+      "futureAgentRule": "Separate contract-green local posture from protected execution evidence; do not clear capacity, lifecycle, migration, broker, DR, or vulnerability blockers with static files, local-only probes, or stale report-only evidence. Treat pyproject build-system roots as governed dependency posture inputs; exact runtime/dev pins are insufficient if build backend/tooling can resolve through unpinned or range-based requirements. Link any future vulnerability exception to the platform-wide exception register with a VX-* platform identity, current platform schema ref, affected version or digest, exposure and exploitability assessments, planned fix path, and active/no-active register status that matches the exception list; platform report-only validation remains non-certifying before promotion.",
       "nonClaimBoundaries": [
         "Local/disposable database drills are not provider backup, PITR, failover, or production certification.",
         "Static SLO, dashboard, lifecycle, outbox, or dependency posture contracts are non-certifying until runtime/protected/release evidence exists."

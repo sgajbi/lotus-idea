@@ -58,6 +58,17 @@ evidence and `make security-audit` coverage. This closes the prior resolver
 drift gap where runtime and CI roots were governed but build backend/tooling
 could still resolve from `setuptools>=70` or unpinned `wheel`.
 
+The 2026-07-29 Slice 18 synchronization binds future Idea vulnerability
+exceptions to the platform-wide exception register introduced by
+`sgajbi/lotus-platform#596`. Any active exception must now carry a `VX-*`
+platform exception identity, the exact platform register schema ref, affected
+version or digest, exposure and exploitability assessments, and a planned fix
+path. The gate derives `idea_register_status` from the active exception list so
+`no_active_exceptions` cannot mask a live exception. This remains a
+source-contract and local-gate control: the platform validator is report-only
+before promotion, and neither the platform register link nor the Idea local
+gate certifies production vulnerability posture.
+
 The implementation adds `make dependency-vulnerability-posture-gate` and wires
 it into `make lint` plus the CI contract gate so a future dependency, workflow,
 container, SBOM, or exception drift fails before product claims move forward.
