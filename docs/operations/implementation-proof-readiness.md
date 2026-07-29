@@ -307,10 +307,14 @@ canonical live Workbench proof blockers remain. PR #802 synchronized current
 RFC-0002 posture truth on Idea main
 `7df8fbff1fbab3acb5568a8e95eb7d5d58c8dcdd`; exact-main Main Releasability
 `30488990343` passed and wiki publication reached `ec05a36` with strict
-`DiffCount 0`. Current RFC-0002 source truth after PR #802 is 43 tracked Idea issues, 24 open, and 19 closed, with
-cross-repo posture of 80 tracked issues, 43 complete, and 37 open across 13
-repositories; 28 blocked issues remain classified as 5 Core dependencies and 23
-external/protected-evidence blockers, with 0 app-actionable blocked issues.
+`DiffCount 0`. PR #803 synchronized PR #802 evidence truth on Idea main
+`31e5157de796e0accd0f23d3a80102ecd0871c71`; exact-main Main Releasability
+`30490458612` passed and wiki publication reached `3743f01` with strict
+`DiffCount 0`. Current RFC-0002 source truth after PR #803 is 43 tracked Idea
+issues, 24 open, and 19 closed, with cross-repo posture of 80 tracked issues,
+43 complete, and 37 open across 13 repositories; 28 blocked issues remain
+classified as 5 Core dependencies and 23 external/protected-evidence blockers,
+with 0 app-actionable blocked issues.
 canonical browser proof remain open.
 The current Idea RFC-0002 ledger posture is 42 tracked issues, 24 open, and 18
 closed after #782 final QA closure and source-controlled ledger synchronization.

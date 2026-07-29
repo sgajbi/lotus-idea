@@ -174,6 +174,9 @@ Main Releasability `30475978275` passed. PR #801 then synchronized the final
 `30487277416` passed. PR #802 then synchronized current RFC-0002 posture truth
 on Idea main `7df8fbff1fbab3acb5568a8e95eb7d5d58c8dcdd`; exact-main Main
 Releasability `30488990343` passed and wiki publication reached `ec05a36`
+with strict `DiffCount 0`. PR #803 then synchronized PR #802 evidence truth on
+Idea main `31e5157de796e0accd0f23d3a80102ecd0871c71`; exact-main Main
+Releasability `30490458612` passed and wiki publication reached `3743f01`
 with strict `DiffCount 0`. The live cross-repo posture is 80 tracked RFC-0002
 issues, 43 complete, and 37 open; the blocked subset is 28 issues, 0
 app-actionable blocked issues, 5 Core dependencies, and 23
@@ -1307,8 +1310,11 @@ blocked. PR #801 synchronized #681 evidence on Idea main
 `95c47d27f45e09369f6b709588fa2de1a1f8700b` with Main Releasability
 `30487277416` passing. PR #802 synchronized the latest #681 source truth on
 Idea main `7df8fbff1fbab3acb5568a8e95eb7d5d58c8dcdd` with Main Releasability
-`30488990343` and wiki publication `ec05a36` passing. The current Idea ledger posture is
-43 tracked issues, 24 open, and 19 closed. That evidence is coordination
+`30488990343` and wiki publication `ec05a36` passing. PR #803 synchronized the
+latest #681 source truth on Idea main
+`31e5157de796e0accd0f23d3a80102ecd0871c71` with Main Releasability
+`30490458612` and wiki publication `3743f01` passing. The current Idea ledger
+posture is 43 tracked issues, 24 open, and 19 closed. That evidence is coordination
 posture only; it
 does not clear blockers, promote supported features, certify production
 vulnerability posture, or complete Slice 18 closure.
