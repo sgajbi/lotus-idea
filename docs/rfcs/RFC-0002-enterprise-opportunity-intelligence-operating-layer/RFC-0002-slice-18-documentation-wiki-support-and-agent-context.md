@@ -518,6 +518,9 @@ Releasability `30488990343` passed and wiki publication reached `ec05a36`
 with strict `DiffCount 0`. PR #803 then synchronized PR #802 evidence truth on
 Idea main `31e5157de796e0accd0f23d3a80102ecd0871c71`; exact-main Main
 Releasability `30490458612` passed and wiki publication reached `3743f01`
+with strict `DiffCount 0`. PR #804 then synchronized PR #803 evidence truth on
+Idea main `615e3ba848af551801c897dd9b0a52f964801da0`; exact-main Main
+Releasability `30491918891` passed and wiki publication reached `05026e8`
 with strict `DiffCount 0`. Live Idea RFC-0002 ledger posture is 43 tracked issues,
 24 open, and 19 closed. Live governed cross-repo posture is 80 tracked issues,
 43 closed, and 37 open across 13 repositories, with 28 blocked issues, 0

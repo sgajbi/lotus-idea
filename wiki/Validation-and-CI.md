@@ -854,7 +854,10 @@ Persistence adapter validation:
    `ec05a36` with strict `DiffCount 0`. PR #803 then synchronized PR #802
    evidence truth on Idea main `31e5157de796e0accd0f23d3a80102ecd0871c71`;
    exact-main Main Releasability `30490458612` passed and wiki publication
-   reached `3743f01` with strict `DiffCount 0`. The current live cross-repo RFC-0002 posture checks
+   reached `3743f01` with strict `DiffCount 0`. PR #804 then synchronized PR #803
+   evidence truth on Idea main `615e3ba848af551801c897dd9b0a52f964801da0`;
+   exact-main Main Releasability `30491918891` passed and wiki publication
+   reached `05026e8` with strict `DiffCount 0`. The current live cross-repo RFC-0002 posture checks
    the governed 13-repository owner/dependency set: 80 tracked issues, 43
    complete, and 37 open, including 28 blocked issues with 0 app-actionable
    blocked issues, 5 Core dependencies, and 23 external/protected-evidence
@@ -1091,10 +1094,13 @@ Idea RFC-0002 ledger posture of 42 tracked issues, 24 open, and 18 closed,
 then-current cross-repo RFC-0002 posture of 77 tracked issues, 40 complete, and
 37 open across 13 repositories, and a classified blocked posture of 26 blocked
 issues, 0 app-actionable blocked issues, 5 Core dependencies, and 21
-external/protected-evidence blockers. Current source truth after PR #803 is 43
-tracked Idea RFC-0002 issues, 24 open, and 19 closed, with live cross-repo
+external/protected-evidence blockers. PR #803 later synchronized that posture to
+43 tracked Idea RFC-0002 issues, 24 open, and 19 closed, with live cross-repo
 RFC-0002 posture of 80 tracked issues, 43 complete, and 37 open across 13
-repositories. Workbench PR #505 additionally records
+repositories. Current source truth after PR #804 remains 43 tracked Idea
+RFC-0002 issues, 24 open, and 19 closed, with live cross-repo RFC-0002 posture
+of 80 tracked issues, 43 complete, and 37 open across 13 repositories.
+Workbench PR #505 additionally records
 merged BFF principal-boundary hardening while preserving production
 IdP/session/token-claims and canonical browser proof blockers. Keep #681 open until the remaining documentation, wiki,
 support, context, and supported-feature truth is complete;
