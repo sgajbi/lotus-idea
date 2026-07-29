@@ -105,6 +105,15 @@ REQUIRED_OPEN_ISSUE_EVIDENCE = {
         "30327202465",
         "30327193673",
     ),
+    681: (
+        "PR #765 merged the Slice 18 cross-repo issue posture command",
+        "3ab78c4e9ba23b08eec5396f0641acf21c98f74a",
+        "30411606383",
+        "lotus-idea.wiki commit 0aea688",
+        "strict DiffCount 0",
+        "coordination evidence only",
+        "does not clear RFC-0002 blockers",
+    ),
     690: (
         "Keep #690 open and status/blocked",
         "PR #724 merged bounded live Report intake/materialization runtime-execution proof",

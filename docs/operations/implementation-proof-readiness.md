@@ -188,6 +188,16 @@ provisioning, protected environment variables/secrets, protected
 capacity/load/resource/dependency/PostgreSQL/cost attestation execution, and
 supported-feature blockers.
 
+PR #765 merged the Slice 18 cross-repo issue posture command to main at
+`3ab78c4e9ba23b08eec5396f0641acf21c98f74a`; Main Releasability `30411606383`
+passed for that exact SHA; repo-authored wiki publication completed at
+`lotus-idea.wiki` commit `0aea688` with strict `DiffCount 0`; the PR branch was
+absent remotely and locally after patch-equivalence branch cleanup. This is
+coordination evidence only: it does not clear RFC-0002 blockers, promote
+supported features, prove product support, or complete Slice 18
+documentation/wiki/support/context closure. The ledger gate now requires this
+partial #681 evidence to remain source-controlled while #681 stays open.
+
 #685 is `open_blocked`, not QA-pending: the 2026-07-29 governed Workbench
 startup attempt via `npm run live:stack:up` restored core portfolio readiness
 for `PB_SG_GLOBAL_BAL_001`; valuation and aggregation jobs drained to zero,

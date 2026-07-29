@@ -1178,6 +1178,14 @@ used as delivery truth, run
 GitHub open/closed state and lifecycle labels so reopened, blocked,
 in-progress, merged-main-QA-pending, and closed-complete issue posture cannot
 drift silently.
+When partial Slice 18 documentation, issue-automation, or posture PRs merge,
+update the `#681` ledger instruction with exact PR, main SHA, mainline run,
+wiki decision/publication, branch-cleanup evidence, and no-claim boundary in
+the same source change. The current pinned example is PR #765:
+`3ab78c4e9ba23b08eec5396f0641acf21c98f74a`, Main Releasability `30411606383`,
+`lotus-idea.wiki` commit `0aea688`, and strict `DiffCount 0`. That evidence is
+coordination posture only; it does not clear blockers, promote supported
+features, or complete Slice 18 closure.
 
 RFC-0002 repeated issue-learning truth is governed by
 `contracts/implementation-proof/rfc0002-issue-learning-patterns.v1.json`.
