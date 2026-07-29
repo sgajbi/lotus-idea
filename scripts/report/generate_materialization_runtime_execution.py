@@ -338,28 +338,32 @@ def main() -> None:
             app.dependency_overrides.clear()
         receipts["archiveFailure"] = _receipt(archive_failure)
 
-    client = TestClient(app)
-    headers = _headers("idea-report-materialization-missing-key")
-    headers.pop("Idempotency-Key")
-    receipts["missingIdempotencyKey"] = _receipt(
-        client.post(
-            "/reports/idea-evidence-packs/materializations",
-            json=_materialization_payload(),
-            headers=headers,
+    with TemporaryDirectory(prefix="lotus-report-materialization-rejections-") as tmp:
+        client = _client_with_services(tmp)
+        headers = _headers("idea-report-materialization-missing-key")
+        headers.pop("Idempotency-Key")
+        publication_payload = {
+            **_materialization_payload(),
+            "grants_client_publication_authority": True,
+        }
+        try:
+            missing_idempotency_key = client.post(
+                "/reports/idea-evidence-packs/materializations",
+                json=_materialization_payload(),
+                headers=headers,
+            )
+            client_publication_denied = client.post(
+                "/reports/idea-evidence-packs/materializations",
+                json=publication_payload,
+                headers=_headers("idea-report-materialization-publication-denied"),
+            )
+        finally:
+            app.dependency_overrides.clear()
+        receipts["missingIdempotencyKey"] = _receipt(missing_idempotency_key)
+        receipts["clientPublicationDenied"] = _receipt(
+            client_publication_denied,
+            forced_codes=["client_publication_authority_blocked"],
         )
-    )
-    publication_payload = {
-        **_materialization_payload(),
-        "grants_client_publication_authority": True,
-    }
-    receipts["clientPublicationDenied"] = _receipt(
-        client.post(
-            "/reports/idea-evidence-packs/materializations",
-            json=publication_payload,
-            headers=_headers("idea-report-materialization-publication-denied"),
-        ),
-        forced_codes=["client_publication_authority_blocked"],
-    )
     print(json.dumps(receipts, sort_keys=True))
 
 

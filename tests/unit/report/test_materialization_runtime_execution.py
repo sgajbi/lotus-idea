@@ -161,3 +161,23 @@ def test_load_report_materialization_runtime_execution_from_env_rejects_non_obje
 
     with pytest.raises(ValueError, match=REPORT_MATERIALIZATION_RUNTIME_EXECUTION_ENV):
         load_report_materialization_runtime_execution_from_env()
+
+
+def test_report_materialization_runtime_generator_keeps_rejections_isolated() -> None:
+    generator_source = (
+        Path(__file__)
+        .resolve()
+        .parents[3]
+        .joinpath("scripts/report/generate_materialization_runtime_execution.py")
+        .read_text(encoding="utf-8")
+    )
+
+    assert generator_source.count("TestClient(app)") == 1
+    assert 'prefix="lotus-report-materialization-rejections-"' in generator_source
+    rejections_section = generator_source.split(
+        'prefix="lotus-report-materialization-rejections-"', maxsplit=1
+    )[1]
+    assert "client = _client_with_services(tmp)" in rejections_section
+    assert 'headers.pop("Idempotency-Key")' in rejections_section
+    assert "client_publication_denied = client.post" in rejections_section
+    assert "app.dependency_overrides.clear()" in rejections_section
