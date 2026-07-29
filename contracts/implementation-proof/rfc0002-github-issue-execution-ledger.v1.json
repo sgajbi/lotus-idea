@@ -255,9 +255,9 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/690",
       "rfcSlices": ["slice-13"],
       "githubState": "open",
-      "executionStatus": "open_blocked",
+      "executionStatus": "open_pr_raised",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #690 open and status/blocked. PR #724 merged bounded live Report intake/materialization runtime-execution proof with exact-main validation. This clears only report_evidence_pack_live_materialization_proof_missing. This issue is not QA-pending: it remains blocked until lifecycle-safe publication authority, production identity, supported-feature promotion, and broader Report/Render/Archive production trust evidence exist. Do not claim client publication, production identity, supported-feature promotion, report rendering authority, Archive production trust, legal/privacy approval, or final Slice 13 certification from bounded Report intake proof."
+      "closureInstruction": "Keep #690 open and status/pr-open while PR #774 is under review. PR #774 contains commit 9ac6aff75ac64cd36ec8b189d5e55d1d48d47947 for Report materialization runtime proof isolation and commit 5f6bc54922037e536c84b784b10625edb2f45953 for closed v1 Report intake runtime execution proof consumption. The new proof invokes lotus-report POST /reports/idea-evidence-packs through isolated runtime receipts, validates source-safe accepted/replayed/conflict/rejection paths, binds sourceTreeDirty=false provenance to 5f6bc54922037e536c84b784b10625edb2f45953, and clears only lotus_report_live_intake_route_proof_missing when aggregate-current. Keep #690 open until PR #774 is merged, exact-main validation passes, wiki publication/parity and branch cleanup are recorded, and QA closes it. Do not claim client publication, production identity, supported-feature promotion, report rendering authority, Archive production trust, legal/privacy approval, or final Slice 13 certification from bounded Report intake proof."
     },
     {
       "issueNumber": 691,

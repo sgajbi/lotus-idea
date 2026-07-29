@@ -105,7 +105,7 @@ records supported-feature/data-product promotion blockers without promoting
 support. After Slice 16 QA closure and Slice 15 protected-attestation
 reconciliation, the current RFC-0002 ledger posture is 41 tracked issues, 16
 closed complete, 25 open, no `open_merged_main_qa_pending`, 1
-`open_in_progress`, no `open_pr_raised`, and 14 `open_blocked`; #379 is now
+`open_in_progress`, 1 `open_pr_raised`, and 13 `open_blocked`; #379 is now
 blocked, not QA-pending: Advise, Manage, Report, and Idea owner-app local
 implementation evidence is already merged. Idea now consumes the
 `sgajbi/lotus-manage#620` temporal receipt identity fields through closed v3
@@ -127,12 +127,16 @@ authorization failure; #686 is blocked, not QA-pending, until
 `sgajbi/lotus-core#840` restores canonical DPM source readiness and Workbench
 live browser validation produces current action-control evidence. #693 is blocked, not QA-pending,
 until protected capacity-production-like runner/environment and FinOps
-attestation evidence exist. #690, #691, #692, and #699 are also blocked rather
-than QA-pending: their merged PRs preserve bounded Report/Render/Archive,
-mesh-readiness, and proof-control evidence only, while production identity,
-client publication, Archive legal/trust posture, platform mesh certification,
-Gateway/Workbench discovery proof, supported-feature promotion, and final live
-journey evidence remain open.
+attestation evidence exist. #690 is PR-open through #774 rather than
+QA-pending: the branch-local Report intake runtime proof clears only
+`lotus_report_live_intake_route_proof_missing` after aggregate-current
+validation and still requires merge, exact-main validation, wiki publication,
+branch cleanup, and QA closure. #691, #692, and #699 remain blocked rather than
+QA-pending: their merged PRs preserve bounded Render/Archive, mesh-readiness,
+and proof-control evidence only, while production identity, client publication,
+Archive legal/trust posture, platform mesh certification, Gateway/Workbench
+discovery proof, supported-feature promotion, and final live journey evidence
+remain open.
 
 Current internal foundations are real implementation. They are not client-ready
 publication, data-product certification, full Gateway/Workbench proof,
