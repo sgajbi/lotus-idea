@@ -204,11 +204,17 @@ def test_rfc0002_github_issue_execution_ledger_tracks_slice18_posture_evidence()
     assert "Workbench wiki publication reached commit 3b4f78f" in (issue_681["closureInstruction"])
     assert "0 app-actionable blocked issues" in issue_681["closureInstruction"]
     assert (
-        "Current Idea ledger posture after PR #791 is 42 tracked issues, 24 open, and 18 closed"
+        "Current Idea ledger posture after PR #801 is 43 tracked issues, 24 open, and 19 closed"
         in issue_681["closureInstruction"]
     )
     assert (
-        "Current governed cross-repo RFC-0002 posture after Workbench PR #505, the platform #636 traceability label update, and platform #638 skill-guidance closure is 37 open and 42 closed issues across 13 repositories, 79 tracked issues total"
+        "PR #801 then synchronized the final #797/#681 evidence on Idea main"
+        in issue_681["closureInstruction"]
+    )
+    assert "95c47d27f45e09369f6b709588fa2de1a1f8700b" in issue_681["closureInstruction"]
+    assert "30487277416" in issue_681["closureInstruction"]
+    assert (
+        "Current governed cross-repo RFC-0002 posture after PR #801 is 37 open and 43 closed issues across 13 repositories, 80 tracked issues total"
         in issue_681["closureInstruction"]
     )
     assert (

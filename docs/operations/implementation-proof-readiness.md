@@ -288,10 +288,10 @@ strict wiki `DiffCount 0`, and branch cleanup passed. PR #790 synchronized that
 post-merge evidence into source-controlled execution truth on exact main
 `f23c72d7d95d1676b8f673f538a9336e4b704fbc`; Main Releasability `30458163573`,
 Main CodeQL/Push run `30458146092`, repo-authored wiki publication `bbd9e2f`,
-strict wiki `DiffCount 0`, and branch cleanup passed. The corrected cross-repo
-posture is 77 tracked RFC-0002 issues, 40 complete, and 37 open; the blocked
-subset was 26 issues with 0 app-actionable blocked issues, 5 Core dependencies,
-and 21 external/protected-evidence blockers. PR #791 then synchronized PR
+strict wiki `DiffCount 0`, and branch cleanup passed. The then-current
+corrected cross-repo posture was 77 tracked RFC-0002 issues, 40 complete, and
+37 open; the blocked subset was 26 issues with 0 app-actionable blocked issues,
+5 Core dependencies, and 21 external/protected-evidence blockers. PR #791 then synchronized PR
 #790's evidence into source-controlled execution truth on exact main
 `65e11890aaddb70fea4cf9d80e836ce1625a6c44`; Main Releasability `30460122600`,
 Main CodeQL `30460101418`, repo-authored wiki publication
@@ -303,6 +303,11 @@ Request Merge Gate `30464152669`, branch head
 Workbench wiki publication `3b4f78f`, strict wiki `DiffCount 0`, and branch
 cleanup passed. This is still source-contract and BFF boundary evidence only;
 production IdP/session/token-claims, revocation/expiry, entitlement-denied, and
+canonical live Workbench proof blockers remain. Current RFC-0002 source truth
+after PR #801 is 43 tracked Idea issues, 24 open, and 19 closed, with
+cross-repo posture of 80 tracked issues, 43 complete, and 37 open across 13
+repositories; 28 blocked issues remain classified as 5 Core dependencies and 23
+external/protected-evidence blockers, with 0 app-actionable blocked issues.
 canonical browser proof remain open.
 The current Idea RFC-0002 ledger posture is 42 tracked issues, 24 open, and 18
 closed after #782 final QA closure and source-controlled ledger synchronization.
