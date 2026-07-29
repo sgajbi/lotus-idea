@@ -236,6 +236,16 @@ production recovery, data-mesh certification, or supported-feature promotion.
 
 ## Incident First Checks
 
+Use the dedicated [Incident Response Operating Model](incident-response.md)
+when an alert, failed gate, readiness degradation, security/privacy concern,
+or operator report may require severity assignment, escalation, communication,
+source-safe evidence preservation, or post-incident corrective-action
+tracking. Validate the runbook source contract with:
+
+```powershell
+make incident-response-contract-gate
+```
+
 ```mermaid
 flowchart TD
     Alert["Operator signal or failed gate"]
