@@ -979,7 +979,11 @@ unit-tested.
 RFC-0002 issue execution summary after the ledger and learning-pattern gates
 pass. Use it for implementation handoff and issue-count reporting after the live
 state audit, so active issue counts and learning-pattern lenses come from
-durable source rather than chat memory or assignee-only filters.
+durable source rather than chat memory or assignee-only filters. The Markdown
+summary lists final-closure-pending and post-completion-pending issues
+separately from ready, blocked, active, QA-pending, and tracker issues so
+status reports cannot hide Slice 20 or Slice 21 work behind a generic ready
+bucket.
 
 The RFC-0002 issue-learning pattern gate keeps repeated defect lessons
 source-controlled. `contracts/implementation-proof/rfc0002-issue-learning-patterns.v1.json`
