@@ -848,7 +848,10 @@ Persistence adapter validation:
    Main Releasability `30475978275` passing. PR #801 then synchronized the final
    #797/#681 evidence on Idea main
    `95c47d27f45e09369f6b709588fa2de1a1f8700b`; exact-main Main Releasability
-   `30487277416` passed. The current live cross-repo RFC-0002 posture checks
+   `30487277416` passed. PR #802 then synchronized current RFC-0002 posture
+   truth on Idea main `7df8fbff1fbab3acb5568a8e95eb7d5d58c8dcdd`; exact-main
+   Main Releasability `30488990343` passed and wiki publication reached
+   `ec05a36` with strict `DiffCount 0`. The current live cross-repo RFC-0002 posture checks
    the governed 13-repository owner/dependency set: 80 tracked issues, 43
    complete, and 37 open, including 28 blocked issues with 0 app-actionable
    blocked issues, 5 Core dependencies, and 23 external/protected-evidence
@@ -1085,7 +1088,7 @@ Idea RFC-0002 ledger posture of 42 tracked issues, 24 open, and 18 closed,
 then-current cross-repo RFC-0002 posture of 77 tracked issues, 40 complete, and
 37 open across 13 repositories, and a classified blocked posture of 26 blocked
 issues, 0 app-actionable blocked issues, 5 Core dependencies, and 21
-external/protected-evidence blockers. Current source truth after PR #801 is 43
+external/protected-evidence blockers. Current source truth after PR #802 is 43
 tracked Idea RFC-0002 issues, 24 open, and 19 closed, with live cross-repo
 RFC-0002 posture of 80 tracked issues, 43 complete, and 37 open across 13
 repositories. Workbench PR #505 additionally records

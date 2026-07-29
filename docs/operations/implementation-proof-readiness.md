@@ -303,8 +303,11 @@ Request Merge Gate `30464152669`, branch head
 Workbench wiki publication `3b4f78f`, strict wiki `DiffCount 0`, and branch
 cleanup passed. This is still source-contract and BFF boundary evidence only;
 production IdP/session/token-claims, revocation/expiry, entitlement-denied, and
-canonical live Workbench proof blockers remain. Current RFC-0002 source truth
-after PR #801 is 43 tracked Idea issues, 24 open, and 19 closed, with
+canonical live Workbench proof blockers remain. PR #802 synchronized current
+RFC-0002 posture truth on Idea main
+`7df8fbff1fbab3acb5568a8e95eb7d5d58c8dcdd`; exact-main Main Releasability
+`30488990343` passed and wiki publication reached `ec05a36` with strict
+`DiffCount 0`. Current RFC-0002 source truth after PR #802 is 43 tracked Idea issues, 24 open, and 19 closed, with
 cross-repo posture of 80 tracked issues, 43 complete, and 37 open across 13
 repositories; 28 blocked issues remain classified as 5 Core dependencies and 23
 external/protected-evidence blockers, with 0 app-actionable blocked issues.
