@@ -229,9 +229,9 @@ REQUIRED_OPEN_ISSUE_EVIDENCE = {
         "full live journey validation remains blocked",
     ),
     782: (
-        "Keep #782 open and status/fixed-local",
-        "local commit ca09df6f",
-        "rejecting incoherent runtime-proof temporal provenance",
+        "Keep #782 open and status/pr-open",
+        "PR #783",
+        "rejects incoherent runtime-proof temporal provenance",
         "proof timestamp that is not before the cited runtime receipt",
         "clear only the exact runtime-execution blocker",
         "Do not claim live-provider execution",

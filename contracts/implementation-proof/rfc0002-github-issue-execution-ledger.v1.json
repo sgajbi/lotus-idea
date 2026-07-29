@@ -345,9 +345,9 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/782",
       "rfcSlices": ["slice-17"],
       "githubState": "open",
-      "executionStatus": "open_fixed_local",
+      "executionStatus": "open_pr_raised",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #782 open and status/fixed-local while local commit ca09df6f on branch rfc0002-issue782-ai-runtime-proof-temporal-provenance awaits PR publication. The branch reconciles the AI workflow-pack runtime proof contract and aggregate readiness consumer temporal provenance by rejecting incoherent runtime-proof temporal provenance, generating actual runtime proof with a proof timestamp that is not before the cited runtime receipt, and making aggregate readiness clear only the exact runtime-execution blocker for a valid current proof. Do not claim live-provider execution, model-risk approval, Workbench proof, client publication, supported-feature promotion, or final full-journey closure before PR checks, merge to main, exact-main validation, and required wiki publication."
+      "closureInstruction": "Keep #782 open and status/pr-open while PR #783 reconciles the AI workflow-pack runtime proof contract and aggregate readiness consumer temporal provenance. PR #783 rejects incoherent runtime-proof temporal provenance, generates actual runtime proof with a proof timestamp that is not before the cited runtime receipt, and makes aggregate readiness clear only the exact runtime-execution blocker for a valid current proof. Do not claim live-provider execution, model-risk approval, Workbench proof, client publication, supported-feature promotion, or final full-journey closure before PR checks, merge to main, exact-main validation, and required wiki publication."
     },
     {
       "issueNumber": 700,
