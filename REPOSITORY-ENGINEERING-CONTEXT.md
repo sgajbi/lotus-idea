@@ -109,12 +109,14 @@ evidence, and PR #800 moved #797 to closed source truth on exact main
 `30485290281`, PR Merge Gate, Feature Lane, and CodeQL passing, and PR #806
 merged the runtime-image vulnerability-posture remediation to exact main
 `a92144773d1b74bcf19e15396215dd988b5dc0af` with Main Releasability
-`30496796215` passing, the current RFC-0002 ledger posture is 44 tracked
-issues, 19 closed complete, 25 open, 1 `open_merged_main_qa_pending`, 1
-`open_in_progress`, no `open_pr_raised`, and 13 `open_blocked`; #807 is
-QA-pending for final current-main verification/source-truth synchronization
-only and does not certify production vulnerability posture, registry
-promotion, protected deployment, or full Slice 15 closure; #379 is now
+`30496796215` passing, PR #808 synchronized #807 source truth to exact main
+`f577efcc14d51208375f3fde87284ac98f8ebb7a` with Main Releasability
+`30498306031` passing, and final QA closed #807 for the repository-owned
+runtime-image remediation, the current RFC-0002 ledger posture is 44 tracked
+issues, 20 closed complete, 24 open, no `open_merged_main_qa_pending`, 1
+`open_in_progress`, no `open_pr_raised`, and 13 `open_blocked`; #807 does not
+certify production vulnerability posture, registry promotion, protected
+deployment, supported-feature promotion, or full Slice 15 closure; #379 is now
 blocked, not QA-pending: Advise, Manage, Report, and Idea owner-app local
 implementation evidence is already merged. Idea now consumes the
 `sgajbi/lotus-manage#620` temporal receipt identity fields through closed v3
@@ -185,8 +187,11 @@ Releasability `30490458612` passed and wiki publication reached `3743f01`
 with strict `DiffCount 0`. PR #804 then synchronized PR #803 evidence truth on
 Idea main `615e3ba848af551801c897dd9b0a52f964801da0`; exact-main Main
 Releasability `30491918891` passed and wiki publication reached `05026e8`
-with strict `DiffCount 0`. The live cross-repo posture is 80 tracked RFC-0002
-issues, 43 complete, and 37 open; the blocked subset is 28 issues, 0
+with strict `DiffCount 0`. PR #808 synchronized #807 source truth on exact
+Idea main `f577efcc14d51208375f3fde87284ac98f8ebb7a`; Main Releasability
+`30498306031` passed and final QA closed #807 for repository-owned
+runtime-image remediation only. The live cross-repo posture is 81 tracked
+RFC-0002 issues, 44 complete, and 37 open; the blocked subset is 28 issues, 0
 app-actionable blocked issues, 5 Core dependencies, and 23
 external/protected-evidence blockers. #683 and #684 are pending
 final/post-completion issues that must not
@@ -1327,8 +1332,12 @@ latest #681 source truth on Idea main
 `30491918891` and wiki publication `05026e8` passing. PR #806 merged the
 runtime-image hardening remediation on Idea main
 `a92144773d1b74bcf19e15396215dd988b5dc0af` with Main Releasability
-`30496796215` passing and moved #807 to merged-main QA-pending posture. The
-current Idea ledger posture is 44 tracked issues, 25 open, and 19 closed. That
+`30496796215` passing and moved #807 to merged-main QA-pending posture. PR #808
+synchronized #807 source truth on Idea main
+`f577efcc14d51208375f3fde87284ac98f8ebb7a` with Main Releasability
+`30498306031` passing; final QA closed #807 for repository-owned runtime-image
+remediation only. The current Idea ledger posture is 44 tracked issues, 24 open,
+and 20 closed. That
 evidence is coordination posture only; it
 does not clear blockers, promote supported features, certify production
 vulnerability posture, or complete Slice 18 closure.

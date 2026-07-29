@@ -52,22 +52,22 @@ def test_github_issue_execution_summary_reports_current_rfc0002_counts() -> None
 
     assert summary["schemaVersion"] == "lotus-idea:rfc0002-github-issue-execution-summary:v1"
     assert summary["counts"]["total"] == 44
-    assert summary["counts"]["open"] == 25
-    assert summary["counts"]["closed"] == 19
+    assert summary["counts"]["open"] == 24
+    assert summary["counts"]["closed"] == 20
     assert summary["counts"]["byExecutionStatus"]["open_in_progress"] == 1
     assert "open_fixed_local" not in summary["counts"]["byExecutionStatus"]
     assert "open_pr_raised" not in summary["counts"]["byExecutionStatus"]
-    assert summary["counts"]["byExecutionStatus"]["open_merged_main_qa_pending"] == 1
+    assert "open_merged_main_qa_pending" not in summary["counts"]["byExecutionStatus"]
     assert "open_ready" not in summary["counts"]["byExecutionStatus"]
     assert summary["counts"]["byExecutionStatus"]["open_pending_final_closure"] == 1
     assert summary["counts"]["byExecutionStatus"]["open_pending_post_completion"] == 1
     assert summary["counts"]["byExecutionStatus"]["open_blocked"] == 13
     assert summary["counts"]["byExecutionStatus"]["open_tracker"] == 8
-    assert summary["counts"]["byExecutionStatus"]["closed_complete"] == 19
+    assert summary["counts"]["byExecutionStatus"]["closed_complete"] == 20
     assert summary["issuesByStatus"]["open_in_progress"] == [681]
     assert "open_fixed_local" not in summary["issuesByStatus"]
     assert "open_pr_raised" not in summary["issuesByStatus"]
-    assert summary["issuesByStatus"]["open_merged_main_qa_pending"] == [807]
+    assert "open_merged_main_qa_pending" not in summary["issuesByStatus"]
     assert summary["issuesByStatus"]["open_pending_final_closure"] == [683]
     assert summary["issuesByStatus"]["open_pending_post_completion"] == [684]
     assert summary["issuesByStatus"]["open_blocked"] == [
@@ -98,8 +98,8 @@ def test_github_issue_execution_summary_markdown_is_comment_ready() -> None:
     rendered = module.render_markdown(module.build_issue_execution_summary())
 
     assert "# RFC-0002 GitHub Issue Execution Summary" in rendered
-    assert "- Open issues: 25" in rendered
-    assert "- Closed issues: 19" in rendered
+    assert "- Open issues: 24" in rendered
+    assert "- Closed issues: 20" in rendered
     assert "## In-Progress Issues" in rendered
     assert "#681" in rendered
     assert "#681, #782" not in rendered
@@ -110,7 +110,7 @@ def test_github_issue_execution_summary_markdown_is_comment_ready() -> None:
     assert "## PR-Open Issues" in rendered
     assert "## PR-Open Issues\n\n_None._" in rendered
     assert "## Merged-Main QA Pending Issues" in rendered
-    assert "## Merged-Main QA Pending Issues\n\n#807" in rendered
+    assert "## Merged-Main QA Pending Issues\n\n_None._" in rendered
     assert "#379, #690" not in rendered
     assert "#340, #379" not in rendered
     assert "## Ready Issues" in rendered
@@ -124,7 +124,7 @@ def test_github_issue_execution_summary_markdown_is_comment_ready() -> None:
     assert "Current issues: #340, #782" not in rendered
     assert "### `ai_attestation_and_model_governance`" in rendered
     assert "Current issues: _None._" in rendered
-    assert "Current issues: #343, #344, #345, #375, #678, #693, #807" in rendered
+    assert "Current issues: #343, #344, #345, #375, #678, #693" in rendered
     assert "Current issues: #679, #699" in rendered
     assert "Current issues: #679, #696, #697, #699" not in rendered
     assert "_None._" in rendered

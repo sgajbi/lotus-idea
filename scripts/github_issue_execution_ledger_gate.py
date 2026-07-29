@@ -265,20 +265,6 @@ REQUIRED_OPEN_ISSUE_EVIDENCE = {
         "This issue is not QA-pending",
         "full live journey validation remains blocked",
     ),
-    807: (
-        "Keep #807 open and status/merged-main",
-        "PR #806 merged to main at a92144773d1b74bcf19e15396215dd988b5dc0af",
-        "Main Releasability Gate run 30496796215 passed",
-        "PR #806 branch head fe77d768f09444c29efe508e7289b6704b65a69e",
-        "removes final-image package installer and build-tool metadata",
-        "make docker-build container-image-scan",
-        "make container-runtime-smoke",
-        "HIGH_CRITICAL_FINDINGS=0",
-        "strict wiki parity DiffCount 0",
-        "branch cleanup evidence",
-        "This issue is QA-pending",
-        "Do not claim production vulnerability certification",
-    ),
 }
 REQUIRED_CLOSED_ISSUE_EVIDENCE = {
     340: (
@@ -339,6 +325,23 @@ REQUIRED_CLOSED_ISSUE_EVIDENCE = {
         "issue-797-final-closure-sync",
         "make incident-response-contract-gate",
         "does not claim production incident certification",
+    ),
+    807: (
+        "Closed #807 after QA passed",
+        "a92144773d1b74bcf19e15396215dd988b5dc0af",
+        "fe77d768f09444c29efe508e7289b6704b65a69e",
+        "30496796215",
+        "make docker-build container-image-scan",
+        "HIGH_CRITICAL_FINDINGS=0",
+        "make container-runtime-smoke",
+        "PR #808 synchronized merged-main source truth",
+        "f577efcc14d51208375f3fde87284ac98f8ebb7a",
+        "30497951358",
+        "30497931322",
+        "30498306031",
+        "strict wiki parity DiffCount 0",
+        "git cherry patch-equivalence proof",
+        "does not claim production vulnerability certification",
     ),
 }
 
