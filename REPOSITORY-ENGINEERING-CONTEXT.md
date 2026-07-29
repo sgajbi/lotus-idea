@@ -1679,6 +1679,13 @@ source-controlled handoff view. Do not rely on chat memory, active IDE tabs, or
 assignee-only issue filters to decide how many RFC issues are open, fixed,
 blocked, or in progress.
 
+Use `make rfc0002-cross-repo-issue-posture` when quoting cross-repository
+RFC-0002 backlog posture across Idea, Advise, AI, Platform, Gateway, Workbench,
+Manage, Risk, and Performance. The cross-repo command queries live GitHub state
+and is coordination evidence only; it is not product-support evidence, blocker
+clearance proof, exact-main validation, or a replacement for repo-local
+execution ledgers.
+
 Recent issue-derived patterns to preserve:
 
 1. bounded PostgreSQL projections should replace whole-store snapshots for

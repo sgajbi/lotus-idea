@@ -113,7 +113,7 @@ target and must not carry durable truth that is absent from `main`.
 | Group | Primary commands | Use |
 | --- | --- | --- |
 | Aggregate lanes | `make check`, `make ci`, `make ci-release` | Routine local proof, broad CI-equivalent proof, and release evidence. |
-| Contract and documentation | `make ci-contract-gate`, `make foundation-structure-gate`, `make documentation-contract-gate`, `make implementation-truth-gate`, `make supported-features-gate`, `make blueprint-scope-coverage-gate`, `make rfc0002-github-issue-execution-ledger-gate`, `make rfc0002-github-issue-learning-pattern-gate` | Prevent workflow, docs, support, blueprint, issue-lifecycle, issue-learning, and certification drift. |
+| Contract and documentation | `make ci-contract-gate`, `make foundation-structure-gate`, `make documentation-contract-gate`, `make implementation-truth-gate`, `make supported-features-gate`, `make blueprint-scope-coverage-gate`, `make rfc0002-github-issue-execution-ledger-gate`, `make rfc0002-github-issue-execution-state-audit`, `make rfc0002-github-issue-execution-summary`, `make rfc0002-cross-repo-issue-posture`, `make rfc0002-github-issue-learning-pattern-gate` | Prevent workflow, docs, support, blueprint, issue-lifecycle, issue-learning, cross-repo status drift, and certification drift. |
 | Dependency and vulnerability posture | `make dependency-vulnerability-posture-gate`, `make security-audit`, `make container-image-scan`, `make release-sbom` | Govern mature supported runtime, CI, and build-system dependencies, Python vulnerability scan evidence, container scan wiring, SBOM/signing/provenance hooks, and issue-backed vulnerability exceptions. |
 | API and OpenAPI | `make openapi-gate`, `make endpoint-certification-gate`, `make api-route-metadata-gate`, `make caller-context-contract-gate` | Keep runtime API and published contract truth aligned. |
 | Persistence and runtime | `make migration-contract-gate`, `make migration-execution-gate`, `make deployment-migration-contract-gate`, `make postgres-integration-gate`, `make disaster-recovery-contract-gate`, `make disaster-recovery-proof-gate`, `make container-runtime-smoke` | Prove durable storage, local migration plans, protected exact-image migration controls, restore/resume, and runtime behavior. |
@@ -775,7 +775,7 @@ Persistence adapter validation:
    `PB_SG_GLOBAL_BAL_001`; valuation and aggregation jobs drained to zero,
    positions/cash data quality reached `COMPLETE`, and analytics/return-path
    dates reached `2026-04-10`. The run then failed in the DPM command-center
-   action-register seed because `POST http://manage.dev.lotus/api/v1/rebalance/simulate`
+   action-register seed because the Manage rebalance simulation endpoint
    returned HTTP 424 with `DPM_CORE_CONTEXT_INCOMPLETE`. The current blocker is
    tracked in `sgajbi/lotus-core#840`. Fresh Gateway/BFF-backed Workbench
    queue/detail runtime evidence remains required before #685 can move to
