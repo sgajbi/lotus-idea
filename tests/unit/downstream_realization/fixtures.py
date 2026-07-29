@@ -29,6 +29,14 @@ from app.application.report.materialization_runtime_execution import (
     REPORT_MATERIALIZATION_RUNTIME_SOURCE_REFS,
     source_safe_report_materialization_receipt_digest,
 )
+from app.application.report.intake_runtime_execution import (
+    REMAINING_REPORT_INTAKE_RUNTIME_BLOCKERS,
+    REPORT_INTAKE_RUNTIME_BLOCKERS_SATISFIED,
+    REPORT_INTAKE_RUNTIME_EVIDENCE_REFS,
+    REPORT_INTAKE_RUNTIME_EXECUTION_SCHEMA_VERSION,
+    REPORT_INTAKE_RUNTIME_SOURCE_REFS,
+    source_safe_report_intake_receipt_digest,
+)
 from app.domain.proof_evidence import EvidenceClass
 
 
@@ -222,6 +230,61 @@ def valid_report_materialization_runtime_execution() -> dict[str, object]:
             "clientPublicationAuthorized": False,
             "productionIdentityCertified": False,
             "productionCertificationGranted": False,
+            "supportedFeaturePromoted": False,
+            "certificationClosed": False,
+        },
+    }
+
+
+def valid_report_intake_runtime_execution() -> dict[str, object]:
+    receipt_evidence = _valid_report_intake_receipt_evidence()
+    return {
+        "schemaVersion": REPORT_INTAKE_RUNTIME_EXECUTION_SCHEMA_VERSION,
+        "repository": "lotus-idea",
+        "generatedAtUtc": "2026-07-22T00:00:00Z",
+        "proofType": "lotus_report_idea_evidence_pack_intake_runtime_execution",
+        "proofScope": "report_intake_route_serving_and_receipt_behavior",
+        "evidenceClass": EvidenceClass.RUNTIME_EXECUTION.value,
+        "runtimeProofValid": True,
+        "sourceRepository": "lotus-idea",
+        "downstreamAuthority": "lotus-report",
+        "targetRoute": "POST /reports/idea-evidence-packs",
+        "runtimeMode": "local_asgi_testclient",
+        "sourceAuthority": tuple(
+            {
+                "repository": "lotus-report",
+                "ref": f"../lotus-report/{ref}",
+                "sha256": "e" * 64,
+            }
+            for ref in REPORT_INTAKE_RUNTIME_SOURCE_REFS
+        ),
+        "evidenceRefs": REPORT_INTAKE_RUNTIME_EVIDENCE_REFS,
+        "receiptEvidence": receipt_evidence,
+        "runtimeChecks": {
+            "timezoneAwareGeneratedAtUtc": True,
+            "sourceAuthorityDigestBound": True,
+            "routeServingObserved": True,
+            "runtimeExecutionObserved": True,
+            "acceptedReceiptObserved": True,
+            "acceptedReplayReceiptObserved": True,
+            "idempotencyConflictObserved": True,
+            "missingIdempotencyKeyObserved": True,
+            "clientPublicationDeniedObserved": True,
+            "renderClaimDeniedObserved": True,
+            "materializationAuthorityRetained": True,
+            "renderArchiveAuthorityRetained": True,
+            "clientPublicationAuthorityRetained": True,
+            "supportedFeatureNotPromoted": True,
+            "productionIdentityNotCertified": True,
+        },
+        "aggregateBlockersSatisfied": REPORT_INTAKE_RUNTIME_BLOCKERS_SATISFIED,
+        "remainingCertificationBlockers": REMAINING_REPORT_INTAKE_RUNTIME_BLOCKERS,
+        "nonProofClaims": {
+            "materializationCertified": False,
+            "renderedOutputCertified": False,
+            "archiveRecordCertified": False,
+            "clientPublicationAuthorized": False,
+            "productionIdentityCertified": False,
             "supportedFeaturePromoted": False,
             "certificationClosed": False,
         },
@@ -470,6 +533,90 @@ def _valid_report_materialization_receipt_evidence() -> dict[str, dict[str, obje
     return receipts
 
 
+def _valid_report_intake_receipt_evidence() -> dict[str, dict[str, object]]:
+    receipts = {
+        "accepted": _report_intake_receipt(
+            status_code=202,
+            intake_status="accepted",
+            route_existence_proven=True,
+            materialization_proven=False,
+            report_job_created=False,
+            rendered_output_created=False,
+            archive_record_created=False,
+            supportability_status="not_certified",
+            reason_codes=(
+                "report_evidence_pack_live_materialization_proof_missing",
+                "rendered_output_creation_missing",
+                "archive_record_creation_missing",
+                "client_publication_authority_blocked",
+            ),
+        ),
+        "acceptedReplay": _report_intake_receipt(
+            status_code=202,
+            intake_status="accepted",
+            route_existence_proven=True,
+            materialization_proven=False,
+            report_job_created=False,
+            rendered_output_created=False,
+            archive_record_created=False,
+            supportability_status="not_certified",
+            reason_codes=(
+                "report_evidence_pack_live_materialization_proof_missing",
+                "rendered_output_creation_missing",
+                "archive_record_creation_missing",
+                "client_publication_authority_blocked",
+            ),
+        ),
+        "idempotencyConflict": _report_intake_receipt(
+            status_code=409,
+            intake_status=None,
+            route_existence_proven=False,
+            materialization_proven=False,
+            report_job_created=False,
+            rendered_output_created=False,
+            archive_record_created=False,
+            supportability_status=None,
+            reason_codes=("idea_evidence_intake_conflict",),
+        ),
+        "missingIdempotencyKey": _report_intake_receipt(
+            status_code=400,
+            intake_status=None,
+            route_existence_proven=False,
+            materialization_proven=False,
+            report_job_created=False,
+            rendered_output_created=False,
+            archive_record_created=False,
+            supportability_status=None,
+            reason_codes=("missing_idempotency_key",),
+        ),
+        "clientPublicationDenied": _report_intake_receipt(
+            status_code=422,
+            intake_status=None,
+            route_existence_proven=False,
+            materialization_proven=False,
+            report_job_created=False,
+            rendered_output_created=False,
+            archive_record_created=False,
+            supportability_status=None,
+            reason_codes=("client_publication_authority_blocked",),
+        ),
+        "renderClaimDenied": _report_intake_receipt(
+            status_code=422,
+            intake_status=None,
+            route_existence_proven=False,
+            materialization_proven=False,
+            report_job_created=False,
+            rendered_output_created=False,
+            archive_record_created=False,
+            supportability_status=None,
+            reason_codes=("render_archive_authority_blocked",),
+        ),
+    }
+    for receipt in receipts.values():
+        receipt["receiptDigest"] = source_safe_report_intake_receipt_digest(receipt)
+    return receipts
+
+
 def _receipt(
     *,
     status_code: int,
@@ -506,6 +653,34 @@ def _report_receipt(
     return {
         "statusCode": status_code,
         "materializationStatus": materialization_status,
+        "materializationProven": materialization_proven,
+        "reportJobCreated": report_job_created,
+        "renderedOutputCreated": rendered_output_created,
+        "archiveRecordCreated": archive_record_created,
+        "clientPublicationAuthorized": False,
+        "supportedFeaturePromoted": False,
+        "supportabilityStatus": supportability_status,
+        "receiptDigest": None,
+        "reasonCodes": reason_codes,
+    }
+
+
+def _report_intake_receipt(
+    *,
+    status_code: int,
+    intake_status: str | None,
+    route_existence_proven: bool,
+    materialization_proven: bool,
+    report_job_created: bool,
+    rendered_output_created: bool,
+    archive_record_created: bool,
+    supportability_status: str | None,
+    reason_codes: tuple[str, ...],
+) -> dict[str, object]:
+    return {
+        "statusCode": status_code,
+        "intakeStatus": intake_status,
+        "routeExistenceProven": route_existence_proven,
         "materializationProven": materialization_proven,
         "reportJobCreated": report_job_created,
         "renderedOutputCreated": rendered_output_created,

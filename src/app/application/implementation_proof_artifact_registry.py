@@ -232,6 +232,14 @@ IMPLEMENTATION_PROOF_ARTIFACT_SPECS = (
         437,
     ),
     _classified(
+        "--report-intake-runtime-execution-proof",
+        "report_intake_runtime_execution_proof",
+        EvidenceClass.RUNTIME_EXECUTION,
+        CLEARING,
+        "Report intake runtime execution",
+        690,
+    ),
+    _classified(
         "--report-materialization-source-contract-proof",
         "report_materialization_source_contract_proof",
         EvidenceClass.SOURCE_CONTRACT,

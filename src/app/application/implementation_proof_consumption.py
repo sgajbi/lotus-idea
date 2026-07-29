@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Mapping, cast
+from typing import Any, Callable, Mapping, cast
 
 from app.application.ai_lineage_store_proof import ai_lineage_store_proof_is_valid
 from app.application.ai_model_risk_operations.source_contract_proof import (
@@ -82,6 +82,10 @@ from app.application.report.materialization_runtime_execution import (
 from app.application.report.intake_route_source_contract import (
     report_intake_route_source_contract_proof_is_valid,
 )
+from app.application.report.intake_runtime_execution import (
+    REPORT_INTAKE_RUNTIME_BLOCKERS_SATISFIED,
+    report_intake_runtime_execution_is_valid,
+)
 from app.application.runtime_trust_telemetry.test_execution_contract import (
     runtime_trust_telemetry_test_execution_is_valid,
 )
@@ -91,6 +95,12 @@ from app.application.source_ingestion_runtime_evidence import (
 from app.application.workbench.read_path_source_contract import (
     workbench_read_path_source_contract_proof_is_valid,
 )
+
+ProofValidator = Callable[[Mapping[str, object]], bool]
+CapabilityProofApplier = Callable[
+    [ImplementationProofCapabilityReadiness, str | None],
+    ImplementationProofCapabilityReadiness,
+]
 
 
 def apply_available_proofs_from_scope(
@@ -235,6 +245,14 @@ def _apply_downstream_proofs_from_scope(
         report_intake_route_source_contract_proof_ref=_proof_ref_from_scope(
             scope,
             "report_intake_route_source_contract_proof_ref",
+        ),
+        report_intake_runtime_execution_proof=_proof_payload_from_scope(
+            scope,
+            "report_intake_runtime_execution_proof",
+        ),
+        report_intake_runtime_execution_proof_ref=_proof_ref_from_scope(
+            scope,
+            "report_intake_runtime_execution_proof_ref",
         ),
         report_materialization_source_contract_proof=_proof_payload_from_scope(
             scope,
@@ -437,120 +455,134 @@ def _apply_downstream_proofs(
     manage_action_route_proof_ref: str | None,
     report_intake_route_source_contract_proof: Mapping[str, object] | None,
     report_intake_route_source_contract_proof_ref: str | None,
+    report_intake_runtime_execution_proof: Mapping[str, object] | None,
+    report_intake_runtime_execution_proof_ref: str | None,
     report_materialization_source_contract_proof: Mapping[str, object] | None,
     report_materialization_source_contract_proof_ref: str | None,
     report_materialization_runtime_execution_proof: Mapping[str, object] | None,
     report_materialization_runtime_execution_proof_ref: str | None,
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
-    if _registered_proof_is_valid_and_current(
-        "advise_proposal_route_proof",
-        ProofArtifactEffect.SUPPORTING_EVIDENCE,
-        advise_proposal_route_proof,
-        advise_proposal_route_proof_ref,
+    capabilities = _apply_downstream_supporting_proof_if_current(
+        capabilities=capabilities,
         evaluated_at_utc=evaluated_at_utc,
+        proof_key="advise_proposal_route_proof",
+        proof=advise_proposal_route_proof,
+        proof_ref=advise_proposal_route_proof_ref,
         proof_is_valid=advise_route_source_contract_is_valid,
-    ):
-        capabilities = tuple(
-            apply_supporting_evidence(
-                capability,
-                capability_ids=("downstream-realization",),
-                evidence_ref=advise_proposal_route_proof_ref,
-            )
-            for capability in capabilities
-        )
-    if _registered_proof_is_valid_and_current(
-        "manage_action_route_proof",
-        ProofArtifactEffect.SUPPORTING_EVIDENCE,
-        manage_action_route_proof,
-        manage_action_route_proof_ref,
+    )
+    capabilities = _apply_downstream_supporting_proof_if_current(
+        capabilities=capabilities,
         evaluated_at_utc=evaluated_at_utc,
+        proof_key="manage_action_route_proof",
+        proof=manage_action_route_proof,
+        proof_ref=manage_action_route_proof_ref,
         proof_is_valid=manage_route_source_contract_is_valid,
-    ):
-        capabilities = tuple(
-            apply_supporting_evidence(
-                capability,
-                capability_ids=("downstream-realization",),
-                evidence_ref=manage_action_route_proof_ref,
-            )
-            for capability in capabilities
-        )
-    if _registered_proof_is_valid_and_current(
-        "advise_intake_runtime_execution_proof",
-        ProofArtifactEffect.BLOCKER_CLEARING,
-        advise_intake_runtime_execution_proof,
-        advise_intake_runtime_execution_proof_ref,
+    )
+    capabilities = _apply_downstream_blocker_proof_if_current(
+        capabilities=capabilities,
         evaluated_at_utc=evaluated_at_utc,
+        proof_key="advise_intake_runtime_execution_proof",
+        proof=advise_intake_runtime_execution_proof,
+        proof_ref=advise_intake_runtime_execution_proof_ref,
         proof_is_valid=advise_intake_runtime_execution_is_valid,
-    ):
-        capabilities = tuple(
-            _apply_advise_intake_runtime_execution(
-                capability,
-                advise_intake_runtime_execution_proof_ref,
-            )
-            for capability in capabilities
-        )
-    if _registered_proof_is_valid_and_current(
-        "manage_intake_runtime_execution_proof",
-        ProofArtifactEffect.BLOCKER_CLEARING,
-        manage_intake_runtime_execution_proof,
-        manage_intake_runtime_execution_proof_ref,
+        apply_proof=_apply_advise_intake_runtime_execution,
+    )
+    capabilities = _apply_downstream_blocker_proof_if_current(
+        capabilities=capabilities,
         evaluated_at_utc=evaluated_at_utc,
+        proof_key="manage_intake_runtime_execution_proof",
+        proof=manage_intake_runtime_execution_proof,
+        proof_ref=manage_intake_runtime_execution_proof_ref,
         proof_is_valid=manage_intake_runtime_execution_is_valid,
-    ):
-        capabilities = tuple(
-            _apply_manage_intake_runtime_execution(
-                capability,
-                manage_intake_runtime_execution_proof_ref,
-            )
-            for capability in capabilities
-        )
-    if _registered_proof_is_valid_and_current(
-        "report_intake_route_source_contract_proof",
-        ProofArtifactEffect.SUPPORTING_EVIDENCE,
-        report_intake_route_source_contract_proof,
-        report_intake_route_source_contract_proof_ref,
+        apply_proof=_apply_manage_intake_runtime_execution,
+    )
+    capabilities = _apply_downstream_supporting_proof_if_current(
+        capabilities=capabilities,
         evaluated_at_utc=evaluated_at_utc,
+        proof_key="report_intake_route_source_contract_proof",
+        proof=report_intake_route_source_contract_proof,
+        proof_ref=report_intake_route_source_contract_proof_ref,
         proof_is_valid=report_intake_route_source_contract_proof_is_valid,
-    ):
-        capabilities = tuple(
-            apply_supporting_evidence(
-                capability,
-                capability_ids=("downstream-realization",),
-                evidence_ref=report_intake_route_source_contract_proof_ref,
-            )
-            for capability in capabilities
-        )
-    if _registered_proof_is_valid_and_current(
-        "report_materialization_source_contract_proof",
-        ProofArtifactEffect.SUPPORTING_EVIDENCE,
-        report_materialization_source_contract_proof,
-        report_materialization_source_contract_proof_ref,
+    )
+    capabilities = _apply_downstream_blocker_proof_if_current(
+        capabilities=capabilities,
         evaluated_at_utc=evaluated_at_utc,
+        proof_key="report_intake_runtime_execution_proof",
+        proof=report_intake_runtime_execution_proof,
+        proof_ref=report_intake_runtime_execution_proof_ref,
+        proof_is_valid=report_intake_runtime_execution_is_valid,
+        apply_proof=_apply_report_intake_runtime_execution,
+    )
+    capabilities = _apply_downstream_blocker_proof_if_current(
+        capabilities=capabilities,
+        evaluated_at_utc=evaluated_at_utc,
+        proof_key="report_materialization_source_contract_proof",
+        proof=report_materialization_source_contract_proof,
+        proof_ref=report_materialization_source_contract_proof_ref,
         proof_is_valid=report_materialization_source_contract_is_valid,
-    ):
-        capabilities = tuple(
-            _apply_report_materialization_source_contract(
-                capability,
-                report_materialization_source_contract_proof_ref,
-            )
-            for capability in capabilities
-        )
-    if _registered_proof_is_valid_and_current(
-        "report_materialization_runtime_execution_proof",
-        ProofArtifactEffect.BLOCKER_CLEARING,
-        report_materialization_runtime_execution_proof,
-        report_materialization_runtime_execution_proof_ref,
+        apply_proof=_apply_report_materialization_source_contract,
+        effect=ProofArtifactEffect.SUPPORTING_EVIDENCE,
+    )
+    return _apply_downstream_blocker_proof_if_current(
+        capabilities=capabilities,
         evaluated_at_utc=evaluated_at_utc,
+        proof_key="report_materialization_runtime_execution_proof",
+        proof=report_materialization_runtime_execution_proof,
+        proof_ref=report_materialization_runtime_execution_proof_ref,
         proof_is_valid=report_materialization_runtime_execution_is_valid,
+        apply_proof=_apply_report_materialization_runtime_execution,
+    )
+
+
+def _apply_downstream_supporting_proof_if_current(
+    *,
+    capabilities: tuple[ImplementationProofCapabilityReadiness, ...],
+    evaluated_at_utc: datetime,
+    proof_key: str,
+    proof: Mapping[str, object] | None,
+    proof_ref: str | None,
+    proof_is_valid: ProofValidator,
+) -> tuple[ImplementationProofCapabilityReadiness, ...]:
+    if not _registered_proof_is_valid_and_current(
+        proof_key,
+        ProofArtifactEffect.SUPPORTING_EVIDENCE,
+        proof,
+        proof_ref,
+        evaluated_at_utc=evaluated_at_utc,
+        proof_is_valid=proof_is_valid,
     ):
-        capabilities = tuple(
-            _apply_report_materialization_runtime_execution(
-                capability,
-                report_materialization_runtime_execution_proof_ref,
-            )
-            for capability in capabilities
+        return capabilities
+    return tuple(
+        apply_supporting_evidence(
+            capability,
+            capability_ids=("downstream-realization",),
+            evidence_ref=proof_ref,
         )
-    return capabilities
+        for capability in capabilities
+    )
+
+
+def _apply_downstream_blocker_proof_if_current(
+    *,
+    capabilities: tuple[ImplementationProofCapabilityReadiness, ...],
+    evaluated_at_utc: datetime,
+    proof_key: str,
+    proof: Mapping[str, object] | None,
+    proof_ref: str | None,
+    proof_is_valid: ProofValidator,
+    apply_proof: CapabilityProofApplier,
+    effect: ProofArtifactEffect = ProofArtifactEffect.BLOCKER_CLEARING,
+) -> tuple[ImplementationProofCapabilityReadiness, ...]:
+    if not _registered_proof_is_valid_and_current(
+        proof_key,
+        effect,
+        proof,
+        proof_ref,
+        evaluated_at_utc=evaluated_at_utc,
+        proof_is_valid=proof_is_valid,
+    ):
+        return capabilities
+    return tuple(apply_proof(capability, proof_ref) for capability in capabilities)
 
 
 def _apply_platform_and_surface_proofs(
@@ -867,6 +899,18 @@ def _apply_report_materialization_runtime_execution(
         capability_ids=("downstream-realization",),
         blockers_cleared=REPORT_MATERIALIZATION_RUNTIME_BLOCKERS_SATISFIED,
         proof_ref=report_materialization_runtime_execution_proof_ref,
+    )
+
+
+def _apply_report_intake_runtime_execution(
+    capability: ImplementationProofCapabilityReadiness,
+    report_intake_runtime_execution_proof_ref: str | None,
+) -> ImplementationProofCapabilityReadiness:
+    return apply_blocker_proof(
+        capability,
+        capability_ids=("downstream-realization",),
+        blockers_cleared=REPORT_INTAKE_RUNTIME_BLOCKERS_SATISFIED,
+        proof_ref=report_intake_runtime_execution_proof_ref,
     )
 
 
