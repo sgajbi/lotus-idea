@@ -507,11 +507,13 @@ cleanup. Workbench PR #505 narrowed the BFF principal-boundary blocker on
 Workbench main `1b4afb92f4c810c99921fc26e451b04bca731e28`; Pull Request Merge
 Gate `30464152669`, branch head `c4add59871bc3f0e78dc6602c8857c5e141e6367`,
 Main Releasability `30465110912`, Workbench wiki commit `3b4f78f`, strict wiki
-parity, and branch cleanup passed. Live Idea RFC-0002 ledger posture remains 42
+parity, and branch cleanup passed. Platform PR #639 hardened stale PR-text
+payload guidance on platform main `641aabe9f303a178f3a4e489c52b3d789d8339d3`
+with Main Releasability `30475978275` passing. Live Idea RFC-0002 ledger posture remains 42
 tracked issues, 24 open, and 18 closed. After the 2026-07-30
-pending-final/post-completion lifecycle correction and platform #636
-traceability label update, live governed cross-repo posture is 78 tracked
-issues, 41 closed, and 37 open across 13
+pending-final/post-completion lifecycle correction, platform #636
+traceability label update, and platform #638 skill-guidance closure, live governed cross-repo posture is 79 tracked
+issues, 42 closed, and 37 open across 13
 repositories, with 28 blocked issues, 0 app-actionable blocked issues, 5 Core
 dependencies, and 23 external/protected-evidence blockers. #683 and #684 are
 not ready implementation issues while prerequisite RFC blockers remain open;
