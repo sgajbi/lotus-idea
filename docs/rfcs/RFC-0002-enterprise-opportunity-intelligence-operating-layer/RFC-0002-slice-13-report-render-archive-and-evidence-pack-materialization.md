@@ -218,7 +218,7 @@ runtime target advances to the Report materialization route and the materialized
 Report/Render/Archive creation blockers are cleared only because the proof
 binds accepted archived receipt posture to exact Render and Archive owner
 mainline evidence. They keep Report/Render/Archive ownership outside
-`lotus-idea` and remain `not_certified` until live intake, client publication,
+`lotus-idea` and remain `not_certified` until client publication,
 Gateway/Workbench product proof, data-mesh certification, production identity,
 legal/retention posture, and supported-feature promotion are implemented and
 validated.
