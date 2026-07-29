@@ -123,8 +123,24 @@ def test_rfc0002_github_issue_execution_ledger_tracks_slice18_posture_evidence()
     assert "3ab78c4e9ba23b08eec5396f0641acf21c98f74a" in issue_681["closureInstruction"]
     assert "30411606383" in issue_681["closureInstruction"]
     assert "lotus-idea.wiki commit 0aea688" in issue_681["closureInstruction"]
+    assert (
+        "PR #767 rendered pending final-closure and post-completion issue sections"
+        in issue_681["closureInstruction"]
+    )
+    assert "PR #768 added keep-open PR text enforcement" in issue_681["closureInstruction"]
+    assert (
+        "PR #769 synchronized Manage temporal receipt identity consumption"
+        in issue_681["closureInstruction"]
+    )
+    assert (
+        "PR #770 reconciled historical Manage #620 closure truth" in issue_681["closureInstruction"]
+    )
+    assert "c4a58683a05cb0c78bea5848a287abda682aea8f" in issue_681["closureInstruction"]
+    assert "30418344813" in issue_681["closureInstruction"]
+    assert "30418340512" in issue_681["closureInstruction"]
+    assert "66 RFC-0002 issues total, 32 closed, and 34 open" in issue_681["closureInstruction"]
     assert "strict DiffCount 0" in issue_681["closureInstruction"]
-    assert "coordination evidence only" in issue_681["closureInstruction"]
+    assert "coordination and documentation truth only" in issue_681["closureInstruction"]
     assert "does not clear RFC-0002 blockers" in issue_681["closureInstruction"]
 
 
@@ -136,14 +152,14 @@ def test_rfc0002_github_issue_execution_ledger_requires_slice18_posture_evidence
     for issue in payload["issues"]:
         if isinstance(issue, dict) and issue["issueNumber"] == 681:
             issue["closureInstruction"] = issue["closureInstruction"].replace(
-                "30411606383",
+                "30418344813",
                 "",
             )
             break
 
     errors = module.validate_github_issue_execution_ledger(_write_ledger(tmp_path, payload))
 
-    assert "#681: closureInstruction missing required evidence `30411606383`" in errors
+    assert "#681: closureInstruction missing required evidence `30418344813`" in errors
 
 
 def test_rfc0002_github_issue_execution_ledger_keeps_report_live_proof_in_progress() -> None:
