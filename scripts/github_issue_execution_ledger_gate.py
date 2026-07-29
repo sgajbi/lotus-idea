@@ -124,11 +124,12 @@ REQUIRED_OPEN_ISSUE_EVIDENCE = {
         "does not clear RFC-0002 blockers",
     ),
     690: (
-        "Keep #690 open and status/blocked",
-        "PR #724 merged bounded live Report intake/materialization runtime-execution proof",
-        "This clears only report_evidence_pack_live_materialization_proof_missing",
-        "This issue is not QA-pending",
-        "Report/Render/Archive production trust evidence",
+        "Keep #690 open and status/pr-open",
+        "PR #774",
+        "9ac6aff75ac64cd36ec8b189d5e55d1d48d47947",
+        "5f6bc54922037e536c84b784b10625edb2f45953",
+        "clears only lotus_report_live_intake_route_proof_missing",
+        "until PR #774 is merged",
     ),
     691: (
         "Keep #691 open and status/blocked",
