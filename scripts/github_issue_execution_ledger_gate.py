@@ -17,7 +17,7 @@ EXPECTED_SCHEMA_VERSION = "lotus-idea:rfc0002-github-issue-execution-ledger:v1"
 EXPECTED_RFC_ID = "RFC-0002"
 EXPECTED_REPOSITORY = "sgajbi/lotus-idea"
 EXPECTED_EXECUTION_ISSUES = frozenset(range(673, 703)) | frozenset(
-    {340, 343, 344, 345, 375, 379, 380, 482, 542, 704, 756, 782, 797}
+    {340, 343, 344, 345, 375, 379, 380, 482, 542, 704, 756, 782, 797, 807}
 )
 OPEN_STATUSES = frozenset(
     {
@@ -264,6 +264,16 @@ REQUIRED_OPEN_ISSUE_EVIDENCE = {
         "approved non-stub live-provider execution",
         "This issue is not QA-pending",
         "full live journey validation remains blocked",
+    ),
+    807: (
+        "Keep #807 open and status/pr-open",
+        "PR #806 branch commit 1d01e8da31b802de55fd553092e05c6ccfd9aea3",
+        "removes final-image package installer and build-tool metadata",
+        "make docker-build container-image-scan",
+        "make container-runtime-smoke",
+        "HIGH_CRITICAL_FINDINGS=0",
+        "This issue is not QA-pending",
+        "Do not claim production vulnerability certification",
     ),
 }
 REQUIRED_CLOSED_ISSUE_EVIDENCE = {
