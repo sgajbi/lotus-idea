@@ -59,6 +59,10 @@ GENERATED_READINESS_ARTIFACTS = (
         "a Report intake-route source-contract proof artifact",
     ),
     (
+        "scripts/report/generate_intake_runtime_execution.py",
+        "a Report intake runtime-execution proof artifact",
+    ),
+    (
         "scripts/report/generate_materialization_source_contract.py",
         "a report materialization source-contract artifact",
     ),
@@ -119,6 +123,10 @@ PASSED_READINESS_ARTIFACTS = (
     (
         "--report-intake-route-source-contract-proof",
         "Report intake-route source-contract proof artifact",
+    ),
+    (
+        "--report-intake-runtime-execution-proof",
+        "Report intake runtime-execution proof artifact",
     ),
     (
         "--report-materialization-source-contract-proof",

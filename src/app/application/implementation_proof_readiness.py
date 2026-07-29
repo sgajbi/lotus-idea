@@ -97,6 +97,8 @@ def build_implementation_proof_readiness_snapshot(
     manage_action_route_proof_ref: str | None = None,
     report_intake_route_source_contract_proof: Mapping[str, object] | None = None,
     report_intake_route_source_contract_proof_ref: str | None = None,
+    report_intake_runtime_execution_proof: Mapping[str, object] | None = None,
+    report_intake_runtime_execution_proof_ref: str | None = None,
     report_materialization_source_contract_proof: Mapping[str, object] | None = None,
     report_materialization_source_contract_proof_ref: str | None = None,
     report_materialization_runtime_execution_proof: Mapping[str, object] | None = None,
@@ -224,6 +226,14 @@ def _build_downstream_realization_from_scope(
         report_materialization_runtime_execution_proof_ref=cast(
             str | None,
             scope["report_materialization_runtime_execution_proof_ref"],
+        ),
+        report_intake_runtime_execution_proof=cast(
+            Mapping[str, object] | None,
+            scope["report_intake_runtime_execution_proof"],
+        ),
+        report_intake_runtime_execution_proof_ref=cast(
+            str | None,
+            scope["report_intake_runtime_execution_proof_ref"],
         ),
     )
 

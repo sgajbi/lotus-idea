@@ -75,6 +75,9 @@ SCRIPT_TARGET_EXPECTATIONS = {
     "ai-attestation-source-contract-gate": ("scripts/ai_attestation/source_contract_gate.py"),
     "downstream-route-source-contract-proof-gate": "scripts/downstream_realization/route_source_contract_gate.py",
     "report-intake-route-source-contract-proof-gate": "scripts/report/intake_route_source_contract_gate.py",
+    "report-intake-runtime-execution-proof-gate": (
+        "scripts/report/intake_runtime_execution_gate.py"
+    ),
     "report-materialization-source-contract-proof-gate": (
         "scripts/report/materialization_source_contract_gate.py"
     ),

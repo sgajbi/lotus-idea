@@ -169,13 +169,17 @@ Partially satisfied:
    foundation.
 2. Client-ready publication is explicitly blocked.
 3. Source evidence lineage and safe source summaries are preserved.
-4. `lotus-report` can provide source-safe materialization/render/archive proof
+4. `lotus-report` can provide source-safe intake proof for reviewed idea
+   evidence through `POST /reports/idea-evidence-packs`. A valid
+   aggregate-current intake runtime proof clears only
+   `lotus_report_live_intake_route_proof_missing`.
+5. `lotus-report` can provide source-safe materialization/render/archive proof
    for reviewed idea evidence when the sibling materialization contract is
    present.
-5. The Idea consumer can submit a strictly bounded local/test materialization
+6. The Idea consumer can submit a strictly bounded local/test materialization
    request only after resolving persisted candidate scope and matching source
    dates. The `json` fixture avoids a false render/archive claim.
-6. The receipt-bound Report materialization runtime proof now requires exact
+7. The receipt-bound Report materialization runtime proof now requires exact
    Render #65/PR #67 and Archive #72/PR #73 owner-mainline evidence. When the
    accepted archived receipt and owner evidence both validate, Idea readiness
    clears `report_evidence_pack_live_materialization_proof_missing`,
@@ -201,7 +205,10 @@ Not yet satisfied:
 The downstream-realization readiness diagnostic and report submission API are
 certified as internal foundations. With a valid report-intake source contract,
 they can cite `POST /reports/idea-evidence-packs` only as a declared sibling
-route; the runtime target remains planned and the live-intake blocker remains.
+route; source-contract evidence alone clears no blocker. With a valid
+aggregate-current Report intake runtime proof, the live-intake blocker is
+cleared while materialization, rendered output, Archive record,
+client-publication, production identity, and supported-feature blockers remain.
 With a valid report-materialization source contract, they can cite
 `POST /reports/idea-evidence-packs/materializations` only as a declared
 report-owned route and can expose the closed Report owner proof ref

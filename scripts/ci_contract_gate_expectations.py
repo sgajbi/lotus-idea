@@ -180,6 +180,14 @@ REQUIRED_READINESS_WIRING = (
         "pass the default Report intake-route source-contract proof into readiness generation",
     ),
     (
+        "LOTUS_IDEA_REPORT_INTAKE_RUNTIME_EXECUTION_PROOF_OUTPUT",
+        "pass the default Report intake runtime-execution proof into readiness generation",
+    ),
+    (
+        "LOTUS_IDEA_REPORT_INTAKE_RUNTIME_EXECUTION_PROOF",
+        "support optional Report intake runtime-execution proof wiring",
+    ),
+    (
         "LOTUS_IDEA_REPORT_MATERIALIZATION_SOURCE_CONTRACT_PROOF_OUTPUT",
         "pass default materialization source contract",
     ),

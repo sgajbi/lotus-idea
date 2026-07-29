@@ -319,6 +319,11 @@ def _proof_artifact_inputs(args: argparse.Namespace) -> dict[str, ProofArtifactI
             artifact_name="Report intake-route source-contract proof",
             ref_name="Report intake-route source-contract proof artifact",
         ),
+        "report_intake_runtime_execution": _proof_artifact_input(
+            args.report_intake_runtime_execution_proof,
+            artifact_name="Report intake runtime execution proof",
+            ref_name="Report intake runtime execution proof artifact",
+        ),
         "report_materialization_source_contract": _proof_artifact_input(
             args.report_materialization_source_contract_proof,
             artifact_name="report materialization source contract",

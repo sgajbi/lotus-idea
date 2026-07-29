@@ -2026,10 +2026,14 @@ Recent issue-derived patterns to preserve:
     policy, thin generator, gate, and focused tests under capability-owned
     `report/` packages. A valid artifact adds provenance only, clears no
     blocker, and must preserve `lotus_report_live_intake_route_proof_missing`.
-    Live proof requires machine-verifiable serving, authorization, tenant
-    isolation, and request-execution evidence from the owning Report runtime.
+    Report intake runtime proof is the separate `runtime_execution` evidence
+    class: it must execute the owning Report route with an isolated intake
+    ledger, bind source-safe accepted/replay/conflict/rejection receipts, be
+    aggregate-current, and may clear only
+    `lotus_report_live_intake_route_proof_missing`.
     Never infer materialization, render, archive, publication, certification,
-    or supported-feature posture from route declarations.
+    production identity, or supported-feature posture from route declarations
+    or intake receipts.
 45. A sibling Report materialization contract is also `source_contract`
     evidence, even when that sibling contract declares an implemented route or
     records report-owned execution claims. Keep this family under the

@@ -346,8 +346,11 @@ fixed central 20% downward jitter window; valid upstream `Retry-After` values
 remain capped but are not jittered.
 Valid Report intake and materialization source contracts add source-safe
 declaration refs for `POST /reports/idea-evidence-packs` and
-`POST /reports/idea-evidence-packs/materializations`. They do not change the
-planned target route, route-fit status, readiness, supportability, or blockers.
+`POST /reports/idea-evidence-packs/materializations`. Source contracts do not
+clear blockers. A valid aggregate-current Report intake runtime proof may clear
+only `lotus_report_live_intake_route_proof_missing`; it does not prove
+materialization, rendered output, Archive record creation, client publication,
+production identity, or supported-feature promotion.
 Serving/acceptance, materialization execution, rendered output, archive record,
 retention/legal hold, and publication require owning-runtime evidence.
 

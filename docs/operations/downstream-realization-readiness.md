@@ -133,6 +133,7 @@ request-acceptance, downstream-record, or supportability blockers:
 | Manage route source contract | None | The source contract must use Manage-native action-intake vocabulary (`runtime_action_receipt_proven`, `manage.idea_action_intake.accept`, bounded `ACCEPTED` / `ACCEPTED_REPLAYED` / `REJECTED` receipts). Source declarations still do not prove serving, authorization, tenant isolation, request acceptance, or a downstream action record. Rebalance/execution authority remains with `lotus-manage`. |
 | Manage action-intake runtime execution | `manage_live_contract_proof_missing` only | The proof observes bounded local/dev route serving, trusted-header authorization, tenant-scoped idempotency, accepted/replayed/rejected receipts, idempotency conflict, and authorization denial from `lotus-manage`. It does not create an action-register record, grant rebalance or execution authority, create orders, certify production identity, authorize client publication, prove Workbench/Gateway behavior, or promote support. |
 | Report intake route source contract | None | `lotus_report_live_intake_route_proof_missing` remains, together with report materialization, render output, archive record creation, client publication, and supported-feature promotion boundaries owned by Report/Render/Archive. |
+| Report intake runtime execution | `lotus_report_live_intake_route_proof_missing` only | The proof observes bounded local/dev Report route serving and source-safe accepted/replayed/conflict/rejection receipts for `POST /reports/idea-evidence-packs` through an isolated Report intake ledger. It does not create a report job, prove materialization, create rendered output, create an Archive record, grant client-publication authority, certify production identity, or promote support. |
 | Report materialization source contract | None | The v3 artifact links the closed Report owner proof `sgajbi/lotus-report#152` as provenance while preserving materialization execution, rendered output creation, archive record creation, client publication, and supported-feature blockers; `lotus-report`, `lotus-render`, and `lotus-archive` retain downstream authority. |
 | Report materialization runtime execution with Render/Archive owner evidence | `report_evidence_pack_live_materialization_proof_missing`, `rendered_output_creation_missing`, `archive_record_creation_missing` | The proof observes bounded local/dev Report materialization route execution, requires source-safe receipt outcomes, and binds exact merged-main owner evidence for Render #65/PR #67 and Archive #72/PR #73. It does not grant client-publication authority, retention/legal-hold authority, production identity, Workbench/Gateway behavior, supported-feature promotion, or final support certification. |
 
@@ -378,6 +379,23 @@ execution, clears no blocker, and deliberately keeps these blockers:
 | `archive_record_creation_missing` | No `lotus-archive` record, retention action, legal hold, or retrieval ref exists. |
 | `client_publication_authority_blocked` | No client-ready communication authority is granted. |
 
+## Report Intake Runtime Execution
+
+`scripts/report/generate_intake_runtime_execution.py` executes the sibling
+`lotus-report` ASGI app through `TestClient` with an isolated
+`IdeaEvidenceIntakeLedger` and writes
+`output/report/intake-runtime-execution-proof.json`. The proof is
+`runtime_execution` evidence and may clear only
+`lotus_report_live_intake_route_proof_missing` when it is aggregate-current and
+registered as blocker-clearing. It records accepted, replayed, idempotency
+conflict, missing-idempotency-key, client-publication-denied, and render-claim
+denied receipts without raw request or response bodies.
+
+The proof intentionally retains materialization, rendered-output,
+Archive-record, client-publication, supported-feature, and production-identity
+blockers. Use `make report-intake-runtime-execution-proof-gate` before relying
+on the artifact in downstream or aggregate readiness.
+
 ## Response Shape
 
 The success response is intentionally aggregate and source-safe:
@@ -614,9 +632,13 @@ Implementation-backed evidence:
    `scripts/report/generate_intake_route_source_contract.py`,
 26. report intake source-contract gate:
     `scripts/report/intake_route_source_contract_gate.py`,
-27. report materialization source-contract generator:
+27. report intake runtime-execution generator:
+   `scripts/report/generate_intake_runtime_execution.py`,
+28. report intake runtime-execution gate:
+    `scripts/report/intake_runtime_execution_gate.py`,
+29. report materialization source-contract generator:
    `scripts/report/generate_materialization_source_contract.py`,
-28. report materialization source-contract gate:
+30. report materialization source-contract gate:
     `scripts/report/materialization_source_contract_gate.py`,
 29. readiness API route: `src/app/api/downstream_realization_readiness.py`,
 30. operation events:
@@ -656,6 +678,7 @@ make advise-intake-runtime-execution-proof-gate
 make manage-intake-runtime-execution-proof-gate
 make downstream-outcome-certification-proof-gate
 make report-intake-route-source-contract-proof-gate
+make report-intake-runtime-execution-proof-gate
 make report-materialization-source-contract-proof-gate
 make endpoint-certification-gate
 make openapi-gate

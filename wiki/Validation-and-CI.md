@@ -555,14 +555,16 @@ Persistence adapter validation:
     `platform_mesh_event_publication_proof_missing` remains until runtime
     publication evidence exists.
 15. `tests/unit/report/test_intake_route_source_contract.py`,
+    `tests/unit/report/test_intake_runtime_execution.py`,
+    `tests/unit/report/test_intake_runtime_readiness.py`,
     `tests/unit/test_downstream_realization_readiness.py`,
-    `tests/integration/test_downstream_realization_readiness_api.py`, and
-    `make report-intake-route-source-contract-proof-gate` prove the source-safe
-    `lotus-report` intake route source contract that downstream and aggregate
-    readiness consume as provenance without clearing a blocker. The tests prove
-    `lotus_report_live_intake_route_proof_missing` remains and reject inflated
-    runtime, authorization, tenant-isolation, materialization, render, archive,
-    publication, certification, and promotion claims.
+    `tests/integration/test_downstream_realization_readiness_api.py`,
+    `make report-intake-route-source-contract-proof-gate`, and
+    `make report-intake-runtime-execution-proof-gate` separate Report intake
+    source-contract provenance from runtime serving proof. The runtime proof may
+    clear only `lotus_report_live_intake_route_proof_missing`; tests reject
+    inflated materialization, render, archive, publication, production identity,
+    certification, and promotion claims.
 16. `tests/unit/report/test_materialization_source_contract.py` and
     `make report-materialization-source-contract-proof-gate` validate the
     source-safe `lotus-report` materialization source contract. The v3 artifact

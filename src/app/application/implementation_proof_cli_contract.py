@@ -91,6 +91,7 @@ from app.application.performance_underperformance_runtime_evidence import (
 from app.application.report.intake_route_source_contract import (
     REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF_ENV,
 )
+from app.application.report.intake_runtime_execution import REPORT_INTAKE_RUNTIME_EXECUTION_ENV
 from app.application.report.materialization_source_contract import (
     REPORT_MATERIALIZATION_SOURCE_CONTRACT_ENV,
 )
@@ -185,6 +186,11 @@ PROOF_ARTIFACT_ARGS: tuple[tuple[str, str, str], ...] = (
         "--report-intake-route-source-contract-proof",
         REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF_ENV,
         "Optional lotus-report idea evidence intake route proof artifact path.",
+    ),
+    (
+        "--report-intake-runtime-execution-proof",
+        REPORT_INTAKE_RUNTIME_EXECUTION_ENV,
+        "Optional lotus-report idea evidence intake runtime execution artifact path.",
     ),
     (
         "--report-materialization-source-contract-proof",

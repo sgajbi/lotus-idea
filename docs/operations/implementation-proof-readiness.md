@@ -361,7 +361,10 @@ plus the report-owned planned intake contract at
 Default digest-bound Advise and Manage route source contracts add declaration
 provenance when merged sibling evidence is present while preserving every live
 route blocker. Report intake and materialization source contracts follow the
-same non-clearing rule. Those refs do not clear runtime execution,
+same non-clearing rule. The Report intake runtime-execution proof is the
+separate blocker-clearing artifact for `POST /reports/idea-evidence-packs` and
+may clear only `lotus_report_live_intake_route_proof_missing`. Source refs do
+not clear runtime execution,
 render/archive, suitability policy, rebalance/action, client-publication,
 certification, or supported-feature blockers.
 
@@ -511,6 +514,8 @@ taxonomy and the #393 same-pattern campaign.
 | `LOTUS_REPORT_ROOT` | Selects the sibling `lotus-report` checkout used to generate the default source-safe report-intake route proof. Defaults to `../lotus-report`. |
 | `LOTUS_IDEA_REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF_OUTPUT` | Selects the default generated report-intake route proof artifact consumed by aggregate readiness when no override is set. Defaults to `output/report/intake-route-source-contract-proof.json`. |
 | `LOTUS_IDEA_REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF` | Overrides the default generated report-intake route proof artifact passed into aggregate readiness. |
+| `LOTUS_IDEA_REPORT_INTAKE_RUNTIME_EXECUTION_PROOF_OUTPUT` | Selects the default generated Report intake runtime-execution artifact consumed by aggregate readiness. Defaults to `output/report/intake-runtime-execution-proof.json`. |
+| `LOTUS_IDEA_REPORT_INTAKE_RUNTIME_EXECUTION_PROOF` | Overrides the default Report intake runtime-execution proof path. A valid aggregate-current artifact clears only `lotus_report_live_intake_route_proof_missing` and preserves materialization, render/archive, client-publication, production identity, support, and supported-feature blockers. |
 | `LOTUS_IDEA_REPORT_MATERIALIZATION_SOURCE_CONTRACT_PROOF_OUTPUT` | Selects the default generated report materialization source-contract artifact consumed by aggregate readiness when no override is set. Defaults to `output/report/materialization-source-contract-proof.json`. |
 | `LOTUS_IDEA_REPORT_MATERIALIZATION_SOURCE_CONTRACT_PROOF` | Overrides the default report materialization source-contract artifact passed into aggregate readiness. |
 | `LOTUS_REPORT_PYTHON` | Selects the Python interpreter used to execute the sibling `lotus-report` local ASGI materialization runtime proof. Defaults to `python`; override only when a repo-local Report venv is required. |
@@ -1078,7 +1083,19 @@ provenance but clears no blocker. In particular,
 evidence observes the owning Report route serving and accepting the handoff.
 Missing sibling evidence writes an invalid non-proof artifact. It cites the merged
 `lotus-report` route contract for `POST /reports/idea-evidence-packs`, the
-report-owned intake route modules and tests, the `lotus-idea` downstream
+report-owned intake route modules and tests, and the `lotus-idea` downstream
+readiness consumers that keep runtime blockers visible.
+
+Report intake runtime execution is captured by
+`scripts/report/generate_intake_runtime_execution.py` and validated by
+`make report-intake-runtime-execution-proof-gate`. The proof executes
+`POST /reports/idea-evidence-packs` against a local `lotus-report` ASGI app with
+an isolated intake ledger and records source-safe accepted, replayed, conflict,
+missing-idempotency, client-publication-denied, and render-claim-denied
+receipts. Aggregate readiness consumes it from
+`LOTUS_IDEA_REPORT_INTAKE_RUNTIME_EXECUTION_PROOF_OUTPUT` unless
+`LOTUS_IDEA_REPORT_INTAKE_RUNTIME_EXECUTION_PROOF` is set. It clears only
+`lotus_report_live_intake_route_proof_missing`.
 contract, and the readiness endpoints. It does not create a report job, render
 output, archive record, client publication, suitability decision, mandate
 action, execution instruction, or supported feature.
@@ -1335,7 +1352,8 @@ Implementation-backed evidence:
    contract while preserving the deployment blocker, durable repository proof,
    runtime telemetry test-execution evidence, Workbench
    read-path proof, Advise and Manage route source contracts,
-   Report intake route source contract, Report materialization source contract, outbox broker
+   Report intake route source contract, Report intake runtime execution,
+   Report materialization source contract, outbox broker
    proof, outbox consumer contract proof, and outbox platform mesh event
    publication proof artifacts, generates default AI model-risk and non-AI
    operator workflow operations proof artifacts unless explicit artifacts are
@@ -1539,6 +1557,12 @@ Implementation-backed evidence:
     `make report-intake-route-source-contract-proof-gate`,
 1. report intake route source-contract tests:
     `tests/unit/report/test_intake_route_source_contract.py`,
+1. report intake runtime-execution generator and gate:
+    `scripts/report/generate_intake_runtime_execution.py`,
+    `make report-intake-runtime-execution-proof-gate`,
+1. report intake runtime-execution tests:
+    `tests/unit/report/test_intake_runtime_execution.py`,
+    `tests/unit/report/test_intake_runtime_readiness.py`,
 1. report materialization source-contract generator:
     `scripts/report/generate_materialization_source_contract.py`,
 1. report materialization source-contract gate:
@@ -1625,6 +1649,7 @@ $env:LOTUS_MANAGE_PYTHON = "python"
 $env:LOTUS_IDEA_MANAGE_INTAKE_RUNTIME_EXECUTION_PROOF_OUTPUT = "output/downstream/manage-intake-runtime-execution-proof.json"
 $env:LOTUS_REPORT_ROOT = "..\lotus-report"
 $env:LOTUS_IDEA_REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF_OUTPUT = "output/report/intake-route-source-contract-proof.json"
+$env:LOTUS_IDEA_REPORT_INTAKE_RUNTIME_EXECUTION_PROOF_OUTPUT = "output/report/intake-runtime-execution-proof.json"
 $env:LOTUS_IDEA_REPORT_MATERIALIZATION_SOURCE_CONTRACT_PROOF_OUTPUT = "output/report/materialization-source-contract-proof.json"
 $env:LOTUS_IDEA_OUTBOX_CONSUMER_CONTRACT_PROOF_OUTPUT = "output/outbox/outbox-consumer-contract-proof.json"
 $env:LOTUS_IDEA_OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_PROOF_OUTPUT = "output/outbox/platform-mesh/event-source-contract-proof.json"
@@ -1643,6 +1668,7 @@ make downstream-route-source-contract-proof-gate
 make advise-intake-runtime-execution-proof-gate
 make manage-intake-runtime-execution-proof-gate
 make report-intake-route-source-contract-proof-gate
+make report-intake-runtime-execution-proof-gate
 make report-materialization-source-contract-proof-gate
 make workbench-read-path-source-contract-proof-gate
 make gateway-workbench-contract-proof-contract-gate
