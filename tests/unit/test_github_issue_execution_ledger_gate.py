@@ -680,6 +680,24 @@ def test_rfc0002_github_issue_execution_ledger_blocks_open_issue_auto_close_flag
     assert "#681: open issue cannot allow PR auto-close" in errors
 
 
+def test_rfc0002_github_issue_execution_ledger_tracks_incident_response_pr() -> None:
+    module = _load_gate()
+    payload = _ledger_payload(module)
+
+    issue_797 = next(
+        issue
+        for issue in payload["issues"]
+        if isinstance(issue, dict) and issue["issueNumber"] == 797
+    )
+
+    assert issue_797["githubState"] == "open"
+    assert issue_797["executionStatus"] == "open_pr_raised"
+    assert issue_797["allowPullRequestAutoClose"] is False
+    assert issue_797["rfcSlices"] == ["slice-15", "slice-18"]
+    assert "Keep #797 open until PR #798 is merged to main" in issue_797["closureInstruction"]
+    assert "production incident certification" in issue_797["closureInstruction"]
+
+
 def test_rfc0002_github_issue_execution_ledger_blocks_closed_issue_without_closed_instruction(
     tmp_path: Path,
 ) -> None:

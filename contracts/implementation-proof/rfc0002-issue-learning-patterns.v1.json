@@ -181,9 +181,9 @@
     {
       "patternId": "operations_security_resilience_certification",
       "title": "Operations, security, lifecycle, migration, outbox, SLO, capacity, and disaster-recovery claims need protected or production-like attestations.",
-      "currentLedgerIssueNumbers": [343, 344, 345, 375, 678, 693],
-      "relatedIssueNumbers": [337, 343, 344, 345, 372, 375, 695, 756],
-      "rfcSlices": ["slice-15"],
+      "currentLedgerIssueNumbers": [343, 344, 345, 375, 678, 693, 797],
+      "relatedIssueNumbers": [337, 343, 344, 345, 372, 375, 695, 756, 797],
+      "rfcSlices": ["slice-15", "slice-18"],
       "durableControls": [
         {
           "type": "gate",
@@ -204,12 +204,24 @@
         {
           "type": "docs",
           "ref": "docs/runbooks/postgres-disaster-recovery.md"
+        },
+        {
+          "type": "gate",
+          "ref": "scripts/incident_response_contract_gate.py"
+        },
+        {
+          "type": "contract",
+          "ref": "contracts/operations/lotus-idea-incident-response.v1.json"
+        },
+        {
+          "type": "docs",
+          "ref": "docs/runbooks/incident-response.md"
         }
       ],
-      "futureAgentRule": "Separate contract-green local posture from protected execution evidence; do not clear capacity, lifecycle, migration, broker, DR, or vulnerability blockers with static files, local-only probes, or stale report-only evidence. For #343/#344/#375-style operations blockers, record which repository-owned controls are mainline-backed and which protected, bank, provider, environment-secret, target-database, workflow-run, or approval evidence remains absent before changing status. Treat pyproject build-system roots as governed dependency posture inputs; exact runtime/dev pins are insufficient if build backend/tooling can resolve through unpinned or range-based requirements. Link any future vulnerability exception to the platform-wide exception register with a VX-* platform identity, current platform schema ref, affected version or digest, exposure and exploitability assessments, planned fix path, and active/no-active register status that matches the exception list; platform report-only validation remains non-certifying before promotion.",
+      "futureAgentRule": "Separate contract-green local posture from protected execution evidence; do not clear capacity, lifecycle, migration, broker, DR, vulnerability, or incident-response blockers with static files, local-only probes, or stale report-only evidence. For #343/#344/#375/#797-style operations blockers, record which repository-owned controls are mainline-backed and which protected, bank, provider, environment-secret, target-database, workflow-run, approval, incident-commander, escalation, or post-incident problem-management evidence remains absent before changing status. Treat pyproject build-system roots as governed dependency posture inputs; exact runtime/dev pins are insufficient if build backend/tooling can resolve through unpinned or range-based requirements. Link any future vulnerability exception to the platform-wide exception register with a VX-* platform identity, current platform schema ref, affected version or digest, exposure and exploitability assessments, planned fix path, and active/no-active register status that matches the exception list; platform report-only validation remains non-certifying before promotion. Keep incident-response customer-communication and production-certification language source-safe until bank-approved communication authority, production identity, and protected operational evidence exist.",
       "nonClaimBoundaries": [
         "Local/disposable database drills are not provider backup, PITR, failover, or production certification.",
-        "Static SLO, dashboard, lifecycle, outbox, or dependency posture contracts are non-certifying until runtime/protected/release evidence exists."
+        "Static SLO, dashboard, lifecycle, outbox, incident-response, or dependency posture contracts are non-certifying until runtime/protected/release evidence exists."
       ]
     },
     {
