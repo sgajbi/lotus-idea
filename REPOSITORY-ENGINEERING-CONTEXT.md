@@ -104,10 +104,11 @@ with Main Releasability `30327202465` and CodeQL `30327193673` passing; it
 records supported-feature/data-product promotion blockers without promoting
 support. After PR #798 merged the incident-response operating model, wiki
 publication `0d075af` reached strict parity, PR #799 synchronized #797 merge
-evidence to exact main `13300e21c8b27b4f1418240496f423d54d2ced3e` with Main
-Releasability `30483045202` and CodeQL `90680095852`, and #797 moved to
-closed source truth, the current RFC-0002 ledger posture is 43 tracked issues,
-19 closed complete, 24 open, no `open_merged_main_qa_pending`, 1
+evidence, and PR #800 moved #797 to closed source truth on exact main
+`4ab19e3a85d4b00fc3daeb5d63d2ce1f98a43740` with Main Releasability
+`30485290281`, PR Merge Gate, Feature Lane, and CodeQL passing, the current
+RFC-0002 ledger posture is 43 tracked issues, 19 closed complete, 24 open, no
+`open_merged_main_qa_pending`, 1
 `open_in_progress`, no `open_pr_raised`, and 13 `open_blocked`; #379 is now
 blocked, not QA-pending: Advise, Manage, Report, and Idea owner-app local
 implementation evidence is already merged. Idea now consumes the

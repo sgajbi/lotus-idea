@@ -706,6 +706,10 @@ def test_rfc0002_github_issue_execution_ledger_tracks_incident_response_merge() 
     assert "30483045202" in issue_797["closureInstruction"]
     assert "90680095852" in issue_797["closureInstruction"]
     assert "issue-797-final-evidence-sync" in issue_797["closureInstruction"]
+    assert "PR #800 merged the closed-complete source truth" in issue_797["closureInstruction"]
+    assert "4ab19e3a85d4b00fc3daeb5d63d2ce1f98a43740" in issue_797["closureInstruction"]
+    assert "30485290281" in issue_797["closureInstruction"]
+    assert "issue-797-final-closure-sync" in issue_797["closureInstruction"]
     assert "does not claim production incident certification" in issue_797["closureInstruction"]
 
 
@@ -735,6 +739,15 @@ def test_rfc0002_github_issue_execution_ledger_records_issue_681_sync_note() -> 
         and "13300e21c8b27b4f1418240496f423d54d2ced3e" in note
         and "30483045202" in note
         and "90680095852" in note
+        and "43 tracked issues, 24 open, and 19 closed" in note
+        for note in notes
+    )
+    assert any(
+        isinstance(note, str)
+        and "PR #800 merged the final #797 closed-complete source truth" in note
+        and "4ab19e3a85d4b00fc3daeb5d63d2ce1f98a43740" in note
+        and "30485290281" in note
+        and "issue-797-final-closure-sync" in note
         and "43 tracked issues, 24 open, and 19 closed" in note
         for note in notes
     )
