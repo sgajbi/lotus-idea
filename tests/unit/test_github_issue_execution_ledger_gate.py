@@ -788,19 +788,13 @@ def test_rfc0002_github_issue_execution_ledger_tracks_runtime_image_hardening_is
         if isinstance(issue, dict) and issue["issueNumber"] == 807
     )
 
-    assert issue_807["githubState"] == "open"
-    assert issue_807["executionStatus"] == "open_merged_main_qa_pending"
-    assert issue_807["allowPullRequestAutoClose"] is False
+    assert issue_807["githubState"] == "closed"
+    assert issue_807["executionStatus"] == "closed_complete"
+    assert issue_807["allowPullRequestAutoClose"] is True
     assert issue_807["rfcSlices"] == ["slice-15"]
-    assert "Keep #807 open and status/merged-main" in issue_807["closureInstruction"]
-    assert (
-        "PR #806 merged to main at a92144773d1b74bcf19e15396215dd988b5dc0af"
-        in (issue_807["closureInstruction"])
-    )
-    assert (
-        "PR #806 branch head fe77d768f09444c29efe508e7289b6704b65a69e"
-        in (issue_807["closureInstruction"])
-    )
+    assert "Closed #807 after QA passed" in issue_807["closureInstruction"]
+    assert "a92144773d1b74bcf19e15396215dd988b5dc0af" in (issue_807["closureInstruction"])
+    assert "fe77d768f09444c29efe508e7289b6704b65a69e" in (issue_807["closureInstruction"])
     assert "Main Releasability Gate run 30496796215 passed" in (issue_807["closureInstruction"])
     assert (
         "removes final-image package installer and build-tool metadata"
@@ -809,11 +803,15 @@ def test_rfc0002_github_issue_execution_ledger_tracks_runtime_image_hardening_is
     assert "make docker-build container-image-scan" in issue_807["closureInstruction"]
     assert "make container-runtime-smoke" in issue_807["closureInstruction"]
     assert "HIGH_CRITICAL_FINDINGS=0" in issue_807["closureInstruction"]
+    assert "PR #808 synchronized merged-main source truth" in issue_807["closureInstruction"]
+    assert "f577efcc14d51208375f3fde87284ac98f8ebb7a" in (issue_807["closureInstruction"])
+    assert "30497951358" in issue_807["closureInstruction"]
+    assert "30497931322" in issue_807["closureInstruction"]
+    assert "30498306031" in issue_807["closureInstruction"]
     assert "strict wiki parity DiffCount 0" in issue_807["closureInstruction"]
-    assert "branch cleanup evidence" in issue_807["closureInstruction"]
-    assert "This issue is QA-pending" in issue_807["closureInstruction"]
+    assert "git cherry patch-equivalence proof" in issue_807["closureInstruction"]
     assert (
-        "Do not claim production vulnerability certification" in (issue_807["closureInstruction"])
+        "does not claim production vulnerability certification" in (issue_807["closureInstruction"])
     )
 
 
