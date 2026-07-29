@@ -256,9 +256,12 @@ PR #777 then synchronized #681 evidence after #690 QA closure to exact main
 `39d51c5cb63df360f1e97e6e9e862784a9ad9178`; Main Releasability
 `30434057675`, CodeQL `30434051218`, repo-authored wiki publication
 `d0a1fa1`, strict wiki `DiffCount 0`, and local/remote branch cleanup passed.
-The live cross-repo RFC-0002 posture remains 66 tracked issues, 33 closed, and
-33 open. This is still
-coordination/documentation truth only;
+PR #779 then hardened operations blocker truth to exact main
+`655d1245e96b7a67dea6c5d9ff0c78d0a32ee9e6`; Main Releasability
+`30437706105`, CodeQL `30437690255`, repo-authored wiki publication
+`b3359fa`, strict wiki `DiffCount 0`, and local/remote branch cleanup passed.
+The current Idea RFC-0002 ledger posture remains 41 tracked issues, 24 open,
+and 17 closed. This is still coordination/documentation truth only;
 `sgajbi/lotus-manage#624` and other blocked dependencies remain open, and
 production vulnerability posture is not certified.
 

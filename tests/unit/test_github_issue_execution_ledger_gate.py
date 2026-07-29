@@ -152,9 +152,14 @@ def test_rfc0002_github_issue_execution_ledger_tracks_slice18_posture_evidence()
     assert "30434051218" in issue_681["closureInstruction"]
     assert "lotus-idea.wiki commit d0a1fa1" in issue_681["closureInstruction"]
     assert "rfc0002-issue681-pr776-evidence-sync" in issue_681["closureInstruction"]
-    assert "66 RFC-0002 issues total, 33 closed, and 33 open" in issue_681["closureInstruction"]
+    assert "PR #779 hardened operations blocker truth" in issue_681["closureInstruction"]
+    assert "655d1245e96b7a67dea6c5d9ff0c78d0a32ee9e6" in issue_681["closureInstruction"]
+    assert "30437706105" in issue_681["closureInstruction"]
+    assert "30437690255" in issue_681["closureInstruction"]
+    assert "lotus-idea.wiki commit b3359fa" in issue_681["closureInstruction"]
+    assert "rfc0002-slice15-operations-blocker-truth" in issue_681["closureInstruction"]
     assert (
-        "current Idea ledger posture after PR #777 is 41 tracked issues, 24 open, and 17 closed"
+        "Current Idea ledger posture after PR #779 remains 41 tracked issues, 24 open, and 17 closed"
         in issue_681["closureInstruction"]
     )
     assert "strict DiffCount 0" in issue_681["closureInstruction"]
