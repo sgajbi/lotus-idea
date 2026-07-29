@@ -808,6 +808,11 @@ def test_rfc0002_github_issue_execution_ledger_tracks_runtime_image_hardening_is
     assert "30497951358" in issue_807["closureInstruction"]
     assert "30497931322" in issue_807["closureInstruction"]
     assert "30498306031" in issue_807["closureInstruction"]
+    assert "PR #809 synchronized final QA closure truth" in issue_807["closureInstruction"]
+    assert "c340daa01b41097410bbc8a802d9a8d1f9f24135" in (issue_807["closureInstruction"])
+    assert "30499121346" in issue_807["closureInstruction"]
+    assert "30499098859" in issue_807["closureInstruction"]
+    assert "30499444726" in issue_807["closureInstruction"]
     assert "strict wiki parity DiffCount 0" in issue_807["closureInstruction"]
     assert "git cherry patch-equivalence proof" in issue_807["closureInstruction"]
     assert (
@@ -851,6 +856,15 @@ def test_rfc0002_github_issue_execution_ledger_records_issue_681_sync_note() -> 
         and "30485290281" in note
         and "issue-797-final-closure-sync" in note
         and "43 tracked issues, 24 open, and 19 closed" in note
+        for note in notes
+    )
+    assert any(
+        isinstance(note, str)
+        and "PR #809 synchronized #807 final QA closure truth" in note
+        and "c340daa01b41097410bbc8a802d9a8d1f9f24135" in note
+        and "30499444726" in note
+        and "44 tracked issues, 24 open, and 20 closed" in note
+        and "0 app-actionable blocked issues" in note
         for note in notes
     )
 

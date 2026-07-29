@@ -111,8 +111,10 @@ merged the runtime-image vulnerability-posture remediation to exact main
 `a92144773d1b74bcf19e15396215dd988b5dc0af` with Main Releasability
 `30496796215` passing, PR #808 synchronized #807 source truth to exact main
 `f577efcc14d51208375f3fde87284ac98f8ebb7a` with Main Releasability
-`30498306031` passing, and final QA closed #807 for the repository-owned
-runtime-image remediation, the current RFC-0002 ledger posture is 44 tracked
+`30498306031` passing, final QA closed #807 for the repository-owned
+runtime-image remediation, and PR #809 synchronized the #807 final QA closure
+truth to exact main `c340daa01b41097410bbc8a802d9a8d1f9f24135` with Main
+Releasability `30499444726` passing, the current RFC-0002 ledger posture is 44 tracked
 issues, 20 closed complete, 24 open, no `open_merged_main_qa_pending`, 1
 `open_in_progress`, no `open_pr_raised`, and 13 `open_blocked`; #807 does not
 certify production vulnerability posture, registry promotion, protected
@@ -1336,7 +1338,12 @@ runtime-image hardening remediation on Idea main
 synchronized #807 source truth on Idea main
 `f577efcc14d51208375f3fde87284ac98f8ebb7a` with Main Releasability
 `30498306031` passing; final QA closed #807 for repository-owned runtime-image
-remediation only. The current Idea ledger posture is 44 tracked issues, 24 open,
+remediation only. PR #809 synchronized the final #807 closure truth on Idea main
+`c340daa01b41097410bbc8a802d9a8d1f9f24135`; exact-main Main Releasability
+`30499444726` passed, including lint/typecheck/security, unit, integration,
+e2e, PostgreSQL runtime proof, combined coverage, Docker build, runtime smoke,
+image scan, release identity/license evidence binding, and CI signal evidence.
+The current Idea ledger posture is 44 tracked issues, 24 open,
 and 20 closed. That
 evidence is coordination posture only; it
 does not clear blockers, promote supported features, certify production

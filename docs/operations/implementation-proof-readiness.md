@@ -313,14 +313,19 @@ RFC-0002 posture truth on Idea main
 `DiffCount 0`. PR #804 synchronized PR #803 evidence truth on Idea main
 `615e3ba848af551801c897dd9b0a52f964801da0`; exact-main Main Releasability
 `30491918891` passed and wiki publication reached `05026e8` with strict
-`DiffCount 0`. Current RFC-0002 source truth after PR #804 is 43 tracked Idea
-issues, 24 open, and 19 closed, with cross-repo posture of 80 tracked issues,
-43 complete, and 37 open across 13 repositories; 28 blocked issues remain
+`DiffCount 0`. PR #809 synchronized #807 final QA closure truth on Idea main
+`c340daa01b41097410bbc8a802d9a8d1f9f24135`; exact-main Main Releasability
+`30499444726` passed, including lint/typecheck/security, unit, integration,
+e2e, PostgreSQL runtime proof, combined coverage, Docker build, runtime smoke,
+image scan, release identity/license evidence binding, and CI signal evidence.
+Current RFC-0002 source truth after PR #809 is 44 tracked Idea
+issues, 24 open, and 20 closed, with cross-repo posture of 81 tracked issues,
+44 complete, and 37 open across 13 repositories; 28 blocked issues remain
 classified as 5 Core dependencies and 23 external/protected-evidence blockers,
 with 0 app-actionable blocked issues.
 canonical browser proof remain open.
-The current Idea RFC-0002 ledger posture is 42 tracked issues, 24 open, and 18
-closed after #782 final QA closure and source-controlled ledger synchronization.
+The current Idea RFC-0002 ledger posture is 44 tracked issues, 24 open, and 20
+closed after #807 final QA closure and source-controlled ledger synchronization.
 This is still coordination/documentation truth only;
 `sgajbi/lotus-manage#624` and other blocked dependencies remain open, and
 production vulnerability posture is not certified.
