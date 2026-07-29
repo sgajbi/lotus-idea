@@ -162,9 +162,7 @@ def test_rfc0002_github_issue_execution_ledger_requires_slice18_posture_evidence
     assert "#681: closureInstruction missing required evidence `30418344813`" in errors
 
 
-def test_rfc0002_github_issue_execution_ledger_tracks_report_live_proof_merged_main_pending_qa() -> (
-    None
-):
+def test_rfc0002_github_issue_execution_ledger_tracks_report_live_proof_qa_closure() -> None:
     module = _load_gate()
     payload = _ledger_payload(module)
     issue_690 = next(
@@ -173,15 +171,17 @@ def test_rfc0002_github_issue_execution_ledger_tracks_report_live_proof_merged_m
         if isinstance(issue, dict) and issue["issueNumber"] == 690
     )
 
-    assert issue_690["githubState"] == "open"
-    assert issue_690["executionStatus"] == "open_merged_main_qa_pending"
-    assert issue_690["allowPullRequestAutoClose"] is False
-    assert "Keep #690 open and status/merged-main" in issue_690["closureInstruction"]
+    assert issue_690["githubState"] == "closed"
+    assert issue_690["executionStatus"] == "closed_complete"
+    assert issue_690["allowPullRequestAutoClose"] is True
+    assert "Closed #690 after QA passed" in issue_690["closureInstruction"]
     assert "PR #774" in issue_690["closureInstruction"]
     assert "5f53c4ac6ac519c7e6b0019e00f5286109e1628c" in issue_690["closureInstruction"]
     assert "30428715937" in issue_690["closureInstruction"]
-    assert "lotus-idea.wiki commit 26d39d1" in issue_690["closureInstruction"]
-    assert "QA remains pending" in issue_690["closureInstruction"]
+    assert "800f682c4f7ae20a2c0634eb112323d7936cca73" in issue_690["closureInstruction"]
+    assert "30430120214" in issue_690["closureInstruction"]
+    assert "lotus-idea.wiki commit 3ebd0f0" in issue_690["closureInstruction"]
+    assert "make report-intake-runtime-execution-proof-gate" in issue_690["closureInstruction"]
 
 
 def test_rfc0002_github_issue_execution_ledger_tracks_render_archive_merged_main_pending_qa() -> (
@@ -440,15 +440,15 @@ def test_rfc0002_github_issue_execution_ledger_blocks_auto_close_wording_for_ope
     module = _load_gate()
     payload = _ledger_payload(module)
     for issue in payload["issues"]:
-        if isinstance(issue, dict) and issue["issueNumber"] == 690:
-            issue["closureInstruction"] = "Closes #690 after partial Report source proof."
+        if isinstance(issue, dict) and issue["issueNumber"] == 691:
+            issue["closureInstruction"] = "Closes #691 after partial Report source proof."
             break
 
     errors = module.validate_github_issue_execution_ledger(_write_ledger(tmp_path, payload))
 
-    assert "#690: open issue closureInstruction must contain Keep #690 open" in errors
+    assert "#691: open issue closureInstruction must contain Keep #691 open" in errors
     assert (
-        "#690: open issue closureInstruction must not contain GitHub auto-close wording" in errors
+        "#691: open issue closureInstruction must not contain GitHub auto-close wording" in errors
     )
 
 

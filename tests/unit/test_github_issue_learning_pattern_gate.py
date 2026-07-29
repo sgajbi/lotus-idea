@@ -48,7 +48,7 @@ def test_github_issue_learning_pattern_gate_requires_all_non_complete_issues(
     payload = _pattern_payload(module)
     for pattern in payload["patterns"]:
         if pattern["patternId"] == "downstream_owner_runtime_proof_boundary":
-            pattern["currentLedgerIssueNumbers"].remove(690)
+            pattern["currentLedgerIssueNumbers"].remove(691)
             break
 
     errors = module.validate_github_issue_learning_patterns(
@@ -56,7 +56,7 @@ def test_github_issue_learning_pattern_gate_requires_all_non_complete_issues(
     )
 
     assert (
-        "non-complete RFC-0002 execution issues missing from issue-learning patterns: #690"
+        "non-complete RFC-0002 execution issues missing from issue-learning patterns: #691"
         in errors
     )
 

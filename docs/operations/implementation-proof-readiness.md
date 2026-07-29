@@ -167,8 +167,8 @@ live GitHub proof; it deliberately points back to
 open/closed verification.
 
 Current Slice 18 ledger synchronization records 41 tracked RFC-0002 issues:
-16 closed complete, 25 open, no `open_ready`, 1
-`open_merged_main_qa_pending` issue, 13 `open_blocked`, 1
+17 closed complete, 24 open, no `open_ready`, no
+`open_merged_main_qa_pending` issues, 13 `open_blocked`, 1
 `open_in_progress`, no `open_fixed_local`, no `open_pr_raised`, 1
 `open_pending_final_closure`, 1 `open_pending_post_completion`, and 8
 `open_tracker`. PR #745 reconciled #340 to `open_merged_main_qa_pending` on
@@ -223,7 +223,12 @@ the platform vulnerability-exception register linkage. The latest exact-main
 checkpoint is `72b0a4c8ed99a4091f679e42486a3823ce3d8c0e` with Main
 Releasability `30423379257`, CodeQL `30423375042`, wiki commit `1a8875c`,
 strict wiki parity, and live RFC-0002 ledger posture of 41 tracked issues, 25
-open, and 16 closed. This is still coordination/documentation truth only;
+open, and 16 closed. PR #775 synchronized #690 merged-main evidence to exact
+main `800f682c4f7ae20a2c0634eb112323d7936cca73`; Main Releasability
+`30430120214`, CodeQL `30430108647`, wiki commit `3ebd0f0`, and strict wiki
+parity passed. Final #690 QA then moved the current source-controlled ledger
+posture to 41 tracked issues, 24 open, and 17 closed. This is still
+coordination/documentation truth only;
 `sgajbi/lotus-manage#624` and other blocked dependencies remain open, and
 production vulnerability posture is not certified.
 
@@ -239,16 +244,20 @@ queue/detail runtime evidence, browser/accessibility proof, canonical demo
 runtime proof, and #380 data-product/supported-feature posture reconciliation remain required before
 QA closure.
 
-#690 is `open_merged_main_qa_pending`. PR #774 merged to main at
+#690 is `closed_complete`. PR #774 merged to main at
 `5f53c4ac6ac519c7e6b0019e00f5286109e1628c`, Main Releasability
-`30428715937` and CodeQL `30428711385` passed for that exact SHA, repo-authored
-wiki publication completed at `lotus-idea.wiki` commit `26d39d1` with strict
-`DiffCount 0`, and branch cleanup completed. The bounded Report intake runtime
-proof clears only `lotus_report_live_intake_route_proof_missing` after
-aggregate-current validation. Keep it open for QA; it does not claim client
-publication, production identity, supported-feature promotion, report rendering
-authority, Archive production trust, legal/privacy approval, or final Slice 13
-certification. #691, #692, and #699 are still `open_blocked`, not
+`30428715937` and CodeQL `30428711385` passed for that exact SHA, PR #775
+synchronized merged-main evidence to exact main
+`800f682c4f7ae20a2c0634eb112323d7936cca73`, Main Releasability `30430120214`
+and CodeQL `30430108647` passed, repo-authored wiki publication completed at
+`lotus-idea.wiki` commit `3ebd0f0` with strict `DiffCount 0`, and branch
+cleanup completed. Final QA passed `make report-intake-runtime-execution-proof-gate`
+and `make implementation-proof-readiness-check`. The bounded Report intake
+runtime proof clears only `lotus_report_live_intake_route_proof_missing` after
+aggregate-current validation; it does not claim client publication, production
+identity, supported-feature promotion, report rendering authority, Archive
+production trust, legal/privacy approval, or final Slice 13 certification. #691,
+#692, and #699 are still `open_blocked`, not
 QA-pending. Their merged PRs record bounded Render/Archive owner-proof
 consumption, mesh-readiness proof consumption, and Slice 17 proof-control
 evidence only. Lifecycle-safe publication authority, production identity,

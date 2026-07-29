@@ -103,8 +103,8 @@ to `open_blocked` on exact main `6f8875dc6784dd17975e6700c09b9ff71d66fb8b`
 with Main Releasability `30327202465` and CodeQL `30327193673` passing; it
 records supported-feature/data-product promotion blockers without promoting
 support. After Slice 16 QA closure and Slice 15 protected-attestation
-reconciliation, the current RFC-0002 ledger posture is 41 tracked issues, 16
-closed complete, 25 open, 1 `open_merged_main_qa_pending`, 1
+reconciliation, the current RFC-0002 ledger posture is 41 tracked issues, 17
+closed complete, 24 open, no `open_merged_main_qa_pending`, 1
 `open_in_progress`, no `open_pr_raised`, and 13 `open_blocked`; #379 is now
 blocked, not QA-pending: Advise, Manage, Report, and Idea owner-app local
 implementation evidence is already merged. Idea now consumes the
@@ -127,15 +127,18 @@ authorization failure; #686 is blocked, not QA-pending, until
 `sgajbi/lotus-core#840` restores canonical DPM source readiness and Workbench
 live browser validation produces current action-control evidence. #693 is blocked, not QA-pending,
 until protected capacity-production-like runner/environment and FinOps
-attestation evidence exist. #690 is merged-main QA-pending after #774 merged to
-main at `5f53c4ac6ac519c7e6b0019e00f5286109e1628c`; Main Releasability
-`30428715937` and CodeQL `30428711385` passed, wiki publication completed at
-`lotus-idea.wiki` commit `26d39d1` with strict `DiffCount 0`, and branch cleanup
-completed. The Report intake runtime proof clears only
-`lotus_report_live_intake_route_proof_missing` after aggregate-current
-validation; client publication, production identity, supported-feature
-promotion, report rendering authority, Archive production trust, legal/privacy
-approval, and final Slice 13 certification remain unclaimed. #691, #692, and
+attestation evidence exist. #690 is closed complete after #774 merged to main
+at `5f53c4ac6ac519c7e6b0019e00f5286109e1628c`, #775 synchronized source truth
+to main at `800f682c4f7ae20a2c0634eb112323d7936cca73`, Main Releasability
+`30430120214` and CodeQL `30430108647` passed, wiki publication completed at
+`lotus-idea.wiki` commit `3ebd0f0` with strict `DiffCount 0`, branch cleanup
+completed, and final QA passed `make report-intake-runtime-execution-proof-gate`
+plus `make implementation-proof-readiness-check`. The Report intake runtime
+proof clears only `lotus_report_live_intake_route_proof_missing` after
+aggregate-current validation; client publication, production identity,
+supported-feature promotion, report rendering authority, Archive production
+trust, legal/privacy approval, and final Slice 13 certification remain
+unclaimed. #691, #692, and
 #699 remain blocked rather than
 QA-pending: their merged PRs preserve bounded Render/Archive, mesh-readiness,
 and proof-control evidence only, while production identity, client publication,
