@@ -528,7 +528,13 @@ remained `DiffCount 0`. PR #808 then synchronized #807 source truth on exact
 Idea main
 `f577efcc14d51208375f3fde87284ac98f8ebb7a`; Main Releasability `30498306031`
 passed, strict wiki parity remained `DiffCount 0`, and final QA closed #807 for
-the repository-owned runtime-image remediation only. Live Idea RFC-0002 ledger
+the repository-owned runtime-image remediation only. PR #809 then synchronized
+the final #807 closure truth on Idea main
+`c340daa01b41097410bbc8a802d9a8d1f9f24135`; exact-main Main Releasability
+`30499444726` passed, including lint/typecheck/security, unit, integration,
+e2e, PostgreSQL runtime proof, combined coverage, Docker build, runtime smoke,
+image scan, release identity/license evidence binding, and CI signal evidence.
+Live Idea RFC-0002 ledger
 posture is 44 tracked issues, 24 open, and 20 closed. Live governed cross-repo
 posture is 81 tracked issues,
 44 closed, and 37 open across 13 repositories, with 28 blocked issues, 0
@@ -596,7 +602,9 @@ merged the Slice 15 runtime-image hardening remediation to exact main
 `a92144773d1b74bcf19e15396215dd988b5dc0af` with Main Releasability
 `30496796215` passing, and PR #808 synchronized #807 source truth to exact main
 `f577efcc14d51208375f3fde87284ac98f8ebb7a` with Main Releasability
-`30498306031` passing, current source truth now records 44 tracked RFC-0002
+`30498306031` passing, and PR #809 synchronized #807 final QA closure truth to
+exact main `c340daa01b41097410bbc8a802d9a8d1f9f24135` with Main Releasability
+`30499444726` passing, current source truth now records 44 tracked RFC-0002
 issues, 20 closed complete, 24 open, no `open_merged_main_qa_pending`, 1
 `open_in_progress`, no `open_pr_raised`, and 13 `open_blocked` issues. #807 is
 closed complete for repository-owned runtime-image remediation only; no
