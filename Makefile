@@ -351,7 +351,7 @@ rfc0002-github-issue-execution-summary:
 	$(VENV_PYTHON) scripts/github_issue_execution_summary.py
 
 rfc0002-cross-repo-issue-posture:
-	$(VENV_PYTHON) scripts/rfc0002_cross_repo_issue_posture.py
+	$(VENV_PYTHON) scripts/cross_repo_issue_posture.py
 
 rfc0002-github-issue-learning-pattern-gate:
 	$(VENV_PYTHON) scripts/github_issue_learning_pattern_gate.py

@@ -11,8 +11,8 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 def _load_module() -> ModuleType:
-    script_path = ROOT / "scripts" / "rfc0002_cross_repo_issue_posture.py"
-    spec = importlib.util.spec_from_file_location("rfc0002_cross_repo_issue_posture", script_path)
+    script_path = ROOT / "scripts" / "cross_repo_issue_posture.py"
+    spec = importlib.util.spec_from_file_location("cross_repo_issue_posture", script_path)
     assert spec is not None
     assert spec.loader is not None
     module = importlib.util.module_from_spec(spec)

@@ -439,7 +439,7 @@ until full RFC documentation, wiki, support, and agent context closure is
 complete.
 
 Slice 18 now also adds `make rfc0002-cross-repo-issue-posture`, backed by
-`scripts/rfc0002_cross_repo_issue_posture.py`, so cross-repository RFC-0002
+`scripts/cross_repo_issue_posture.py`, so cross-repository RFC-0002
 status is generated from live GitHub state instead of reconstructed from chat,
 assignee filters, or one-off shell snippets. The command checks the governed
 RFC-0002 coordination repo set across Idea, Advise, AI, Platform, Gateway,
