@@ -845,11 +845,14 @@ Persistence adapter validation:
    `30465110912`, Workbench wiki publication `3b4f78f`, strict `DiffCount 0`,
    and branch cleanup passed. Platform PR #639 hardened stale PR-text payload
    guidance on platform main `641aabe9f303a178f3a4e489c52b3d789d8339d3` with
-   Main Releasability `30475978275` passing. After the 2026-07-30 pending-final/post-completion lifecycle correction, platform #636 traceability label update, and platform #638 skill-guidance closure, the current live
-   cross-repo RFC-0002 posture checks the governed 13-repository
-   owner/dependency set: 79 tracked issues, 42 complete, and 37 open, including
-   28 blocked issues with 0 app-actionable blocked issues, 5 Core dependencies,
-   and 23 external/protected-evidence blockers. #683 and #684 remain
+   Main Releasability `30475978275` passing. PR #801 then synchronized the final
+   #797/#681 evidence on Idea main
+   `95c47d27f45e09369f6b709588fa2de1a1f8700b`; exact-main Main Releasability
+   `30487277416` passed. The current live cross-repo RFC-0002 posture checks
+   the governed 13-repository owner/dependency set: 80 tracked issues, 43
+   complete, and 37 open, including 28 blocked issues with 0 app-actionable
+   blocked issues, 5 Core dependencies, and 23 external/protected-evidence
+   blockers. #683 and #684 remain
    prerequisite-gated and must not carry `status/ready`; #691, #692, and #699 remain blocked rather
    than QA-pending because their merged implementation tranches preserve only
    bounded Render/Archive, mesh-readiness, and proof-control evidence;
@@ -1074,15 +1077,18 @@ bucket.
 
 Current Slice 18 handoff truth is anchored by `lotus-idea#681`. The source
 ledger records the PR #765, #767, #768, #769, #770, #772, #775, #776, #777,
-#779, #785, #787, #789, #790, and #791 evidence chain through exact main
-`65e11890aaddb70fea4cf9d80e836ce1625a6c44`, Main Releasability
+#779, #785, #787, #789, #790, and #791 historical evidence chain through exact
+main `65e11890aaddb70fea4cf9d80e836ce1625a6c44`, Main Releasability
 `30460122600`, Main CodeQL `30460101418`, wiki commit
-`2453c3006722ee40e48762d884581fb6b3893bbe`,
-strict wiki parity, live Idea RFC-0002 ledger posture of 42 tracked issues, 24
-open, and 18 closed, then-current live cross-repo RFC-0002 posture of 77 tracked issues, 40
-complete, and 37 open across 13 repositories, and a classified blocked posture
-of 26 blocked issues, 0 app-actionable blocked issues, 5 Core dependencies, and
-21 external/protected-evidence blockers. Workbench PR #505 additionally records
+`2453c3006722ee40e48762d884581fb6b3893bbe`, strict wiki parity, then-current
+Idea RFC-0002 ledger posture of 42 tracked issues, 24 open, and 18 closed,
+then-current cross-repo RFC-0002 posture of 77 tracked issues, 40 complete, and
+37 open across 13 repositories, and a classified blocked posture of 26 blocked
+issues, 0 app-actionable blocked issues, 5 Core dependencies, and 21
+external/protected-evidence blockers. Current source truth after PR #801 is 43
+tracked Idea RFC-0002 issues, 24 open, and 19 closed, with live cross-repo
+RFC-0002 posture of 80 tracked issues, 43 complete, and 37 open across 13
+repositories. Workbench PR #505 additionally records
 merged BFF principal-boundary hardening while preserving production
 IdP/session/token-claims and canonical browser proof blockers. Keep #681 open until the remaining documentation, wiki,
 support, context, and supported-feature truth is complete;

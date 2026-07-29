@@ -168,12 +168,14 @@ main `1b4afb92f4c810c99921fc26e451b04bca731e28`; Pull Request Merge Gate
 `30464152669`, Main Releasability `30465110912`, and Workbench wiki publication
 `3b4f78f` passed. Platform PR #639 then hardened issue-loop guidance for stale
 PR-text payload handling on platform main `641aabe9f303a178f3a4e489c52b3d789d8339d3`;
-Main Releasability `30475978275` passed. After the 2026-07-30
-pending-final/post-completion lifecycle correction, the platform #636
-traceability label update, and platform #638 skill-guidance closure, the live
-cross-repo posture is 79 tracked RFC-0002 issues, 42 complete, and 37 open; the blocked subset is 28 issues, 0 app-actionable
-blocked issues, 5 Core dependencies, and 23 external/protected-evidence
-blockers. #683 and #684 are pending final/post-completion issues that must not
+Main Releasability `30475978275` passed. PR #801 then synchronized the final
+#797/#681 evidence on Idea main
+`95c47d27f45e09369f6b709588fa2de1a1f8700b`; exact-main Main Releasability
+`30487277416` passed. The live cross-repo posture is 80 tracked RFC-0002
+issues, 43 complete, and 37 open; the blocked subset is 28 issues, 0
+app-actionable blocked issues, 5 Core dependencies, and 23
+external/protected-evidence blockers. #683 and #684 are pending
+final/post-completion issues that must not
 carry `status/ready` while prerequisite blockers remain open. #691, #692, and
 #699 remain blocked rather than
 QA-pending: their merged PRs preserve bounded Render/Archive, mesh-readiness,
@@ -1298,8 +1300,10 @@ The Workbench PR #505 principal-boundary tranche is cross-repo evidence only:
 Workbench main `1b4afb92f4c810c99921fc26e451b04bca731e28` passed Pull Request
 Merge Gate `30464152669`, Main Releasability `30465110912`, and Workbench wiki
 publication `3b4f78f`, while production IdP/session/token-claims proof remains
-blocked. The current Idea ledger posture is
-42 tracked issues, 24 open, and 18 closed. That evidence is coordination
+blocked. PR #801 synchronized the latest #681 evidence on Idea main
+`95c47d27f45e09369f6b709588fa2de1a1f8700b` with Main Releasability
+`30487277416` passing. The current Idea ledger posture is
+43 tracked issues, 24 open, and 19 closed. That evidence is coordination
 posture only; it
 does not clear blockers, promote supported features, certify production
 vulnerability posture, or complete Slice 18 closure.

@@ -509,13 +509,14 @@ Gate `30464152669`, branch head `c4add59871bc3f0e78dc6602c8857c5e141e6367`,
 Main Releasability `30465110912`, Workbench wiki commit `3b4f78f`, strict wiki
 parity, and branch cleanup passed. Platform PR #639 hardened stale PR-text
 payload guidance on platform main `641aabe9f303a178f3a4e489c52b3d789d8339d3`
-with Main Releasability `30475978275` passing. Live Idea RFC-0002 ledger posture remains 42
-tracked issues, 24 open, and 18 closed. After the 2026-07-30
-pending-final/post-completion lifecycle correction, platform #636
-traceability label update, and platform #638 skill-guidance closure, live governed cross-repo posture is 79 tracked
-issues, 42 closed, and 37 open across 13
-repositories, with 28 blocked issues, 0 app-actionable blocked issues, 5 Core
-dependencies, and 23 external/protected-evidence blockers. #683 and #684 are
+with Main Releasability `30475978275` passing. PR #801 then synchronized final
+#797/#681 evidence on Idea main
+`95c47d27f45e09369f6b709588fa2de1a1f8700b`; exact-main Main Releasability
+`30487277416` passed. Live Idea RFC-0002 ledger posture is 43 tracked issues,
+24 open, and 19 closed. Live governed cross-repo posture is 80 tracked issues,
+43 closed, and 37 open across 13 repositories, with 28 blocked issues, 0
+app-actionable blocked issues, 5 Core dependencies, and 23
+external/protected-evidence blockers. #683 and #684 are
 not ready implementation issues while prerequisite RFC blockers remain open;
 their richer pending semantics remain in the execution ledger and summary. This
 evidence still preserves `sgajbi/lotus-manage#624` and the other blocked
