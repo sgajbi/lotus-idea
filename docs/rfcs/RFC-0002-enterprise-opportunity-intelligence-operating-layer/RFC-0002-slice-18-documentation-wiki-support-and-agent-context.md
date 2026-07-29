@@ -509,8 +509,9 @@ Gate `30464152669`, branch head `c4add59871bc3f0e78dc6602c8857c5e141e6367`,
 Main Releasability `30465110912`, Workbench wiki commit `3b4f78f`, strict wiki
 parity, and branch cleanup passed. Live Idea RFC-0002 ledger posture remains 42
 tracked issues, 24 open, and 18 closed. After the 2026-07-30
-pending-final/post-completion lifecycle correction, live governed cross-repo
-posture remains 77 tracked issues, 40 closed, and 37 open across 13
+pending-final/post-completion lifecycle correction and platform #636
+traceability label update, live governed cross-repo posture is 78 tracked
+issues, 41 closed, and 37 open across 13
 repositories, with 28 blocked issues, 0 app-actionable blocked issues, 5 Core
 dependencies, and 23 external/protected-evidence blockers. #683 and #684 are
 not ready implementation issues while prerequisite RFC blockers remain open;
