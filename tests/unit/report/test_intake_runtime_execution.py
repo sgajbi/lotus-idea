@@ -96,6 +96,54 @@ def test_report_intake_runtime_execution_rejects_receipt_digest_drift() -> None:
     assert not report_intake_runtime_execution_is_valid(payload)
 
 
+@pytest.mark.parametrize(
+    ("field", "invalid_value"),
+    [
+        ("schemaVersion", "lotus-idea.report-intake.runtime-execution.v0"),
+        ("runtimeMode", "caller_asserted"),
+        ("generatedAtUtc", "2026-07-22T00:00:00"),
+        ("evidenceRefs", []),
+        ("aggregateBlockersSatisfied", []),
+        ("remainingCertificationBlockers", []),
+        ("sourceAuthority", {}),
+        ("nonProofClaims", {}),
+        ("runtimeChecks", {}),
+        ("receiptEvidence", {}),
+    ],
+)
+def test_report_intake_runtime_execution_rejects_malformed_proof_fields(
+    field: str,
+    invalid_value: object,
+) -> None:
+    payload = deepcopy(valid_report_intake_runtime_execution())
+    payload[field] = invalid_value
+
+    assert not report_intake_runtime_execution_is_valid(payload)
+
+
+def test_report_intake_runtime_execution_rejects_unknown_top_level_field() -> None:
+    payload = deepcopy(valid_report_intake_runtime_execution())
+    payload["unsupportedClaim"] = True
+
+    assert not report_intake_runtime_execution_is_valid(payload)
+
+
+def test_report_intake_runtime_execution_rejects_non_mapping_receipt() -> None:
+    payload = deepcopy(valid_report_intake_runtime_execution())
+    receipt_evidence = cast(dict[str, Any], payload["receiptEvidence"])
+    receipt_evidence["accepted"] = "not-a-receipt"
+
+    assert not report_intake_runtime_execution_is_valid(payload)
+
+
+def test_load_report_intake_runtime_execution_from_env_returns_empty_when_unset(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv(REPORT_INTAKE_RUNTIME_EXECUTION_ENV, raising=False)
+
+    assert load_report_intake_runtime_execution_from_env() == (None, None)
+
+
 def test_load_report_intake_runtime_execution_from_env_returns_payload_and_ref(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
@@ -110,6 +158,33 @@ def test_load_report_intake_runtime_execution_from_env_returns_payload_and_ref(
     assert payload is not None
     assert report_intake_runtime_execution_is_valid(payload)
     assert artifact_ref == "report-intake-runtime-proof.json"
+
+
+def test_load_report_intake_runtime_execution_from_env_rejects_non_object(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    proof_path = tmp_path / "report-intake-runtime-proof.json"
+    proof_path.write_text(json.dumps(["not", "an", "object"]))
+    monkeypatch.setenv(REPORT_INTAKE_RUNTIME_EXECUTION_ENV, str(proof_path))
+
+    with pytest.raises(ValueError, match="must reference a JSON object"):
+        load_report_intake_runtime_execution_from_env()
+
+
+def test_load_report_intake_runtime_execution_from_env_uses_safe_external_ref(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    proof_path = tmp_path / "external-report-intake-runtime-proof.json"
+    proof_path.write_text(json.dumps(valid_report_intake_runtime_execution()))
+    monkeypatch.chdir(Path(__file__).resolve().parents[3])
+    monkeypatch.setenv(REPORT_INTAKE_RUNTIME_EXECUTION_ENV, str(proof_path))
+
+    payload, artifact_ref = load_report_intake_runtime_execution_from_env()
+
+    assert payload is not None
+    assert artifact_ref == f"{REPORT_INTAKE_RUNTIME_EXECUTION_ENV} artifact"
 
 
 def test_report_intake_runtime_generator_uses_isolated_intake_ledger() -> None:
