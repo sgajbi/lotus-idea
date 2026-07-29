@@ -521,8 +521,13 @@ Releasability `30490458612` passed and wiki publication reached `3743f01`
 with strict `DiffCount 0`. PR #804 then synchronized PR #803 evidence truth on
 Idea main `615e3ba848af551801c897dd9b0a52f964801da0`; exact-main Main
 Releasability `30491918891` passed and wiki publication reached `05026e8`
-with strict `DiffCount 0`. Live Idea RFC-0002 ledger posture is 43 tracked issues,
-24 open, and 19 closed. Live governed cross-repo posture is 80 tracked issues,
+with strict `DiffCount 0`. PR #806 merged the Slice 15 runtime-image hardening
+remediation on Idea main `a92144773d1b74bcf19e15396215dd988b5dc0af`;
+exact-main Main Releasability `30496796215` passed, strict wiki parity remained
+`DiffCount 0`, and #807 is now open in merged-main QA-pending posture until
+final current-main verification/source-truth synchronization. Live Idea
+RFC-0002 ledger posture is 44 tracked issues, 25 open, and 19 closed. Live
+governed cross-repo posture is 80 tracked issues,
 43 closed, and 37 open across 13 repositories, with 28 blocked issues, 0
 app-actionable blocked issues, 5 Core dependencies, and 23
 external/protected-evidence blockers. #683 and #684 are
@@ -583,10 +588,16 @@ incident-response operating model, wiki publication `0d075af` reached strict
 parity, PR #799 synchronized #797 merge evidence, and PR #800 moved #797 to
 closed source truth on exact main
 `4ab19e3a85d4b00fc3daeb5d63d2ce1f98a43740` with Main Releasability
-`30485290281`, PR Merge Gate, Feature Lane, and CodeQL passing, current source
-truth now records 43 tracked RFC-0002 issues, 19 closed complete, 24 open, no
-`open_merged_main_qa_pending`, 1 `open_in_progress`, no
-`open_pr_raised`, and 13 `open_blocked` issues. #379 is `open_blocked`, not
+`30485290281`, PR Merge Gate, Feature Lane, and CodeQL passing, and PR #806
+merged the Slice 15 runtime-image hardening remediation to exact main
+`a92144773d1b74bcf19e15396215dd988b5dc0af` with Main Releasability
+`30496796215` passing, current source truth now records 44 tracked RFC-0002
+issues, 19 closed complete, 25 open, 1 `open_merged_main_qa_pending`, 1
+`open_in_progress`, no `open_pr_raised`, and 13 `open_blocked` issues. #807 is
+merged-main QA-pending, not closed: the repository-owned runtime-image
+remediation is mainline-backed, but final QA/source-truth closure remains open
+and no production vulnerability certification, registry promotion, protected
+deployment, or full Slice 15 closure is claimed. #379 is `open_blocked`, not
 QA-pending because its
 owner-app local implementation dependencies are merged but
 production/certification, trusted-identity, retention/legal, and Archive

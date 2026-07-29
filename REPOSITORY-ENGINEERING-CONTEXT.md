@@ -106,10 +106,15 @@ support. After PR #798 merged the incident-response operating model, wiki
 publication `0d075af` reached strict parity, PR #799 synchronized #797 merge
 evidence, and PR #800 moved #797 to closed source truth on exact main
 `4ab19e3a85d4b00fc3daeb5d63d2ce1f98a43740` with Main Releasability
-`30485290281`, PR Merge Gate, Feature Lane, and CodeQL passing, the current
-RFC-0002 ledger posture is 43 tracked issues, 19 closed complete, 24 open, no
-`open_merged_main_qa_pending`, 1
-`open_in_progress`, no `open_pr_raised`, and 13 `open_blocked`; #379 is now
+`30485290281`, PR Merge Gate, Feature Lane, and CodeQL passing, and PR #806
+merged the runtime-image vulnerability-posture remediation to exact main
+`a92144773d1b74bcf19e15396215dd988b5dc0af` with Main Releasability
+`30496796215` passing, the current RFC-0002 ledger posture is 44 tracked
+issues, 19 closed complete, 25 open, 1 `open_merged_main_qa_pending`, 1
+`open_in_progress`, no `open_pr_raised`, and 13 `open_blocked`; #807 is
+QA-pending for final current-main verification/source-truth synchronization
+only and does not certify production vulnerability posture, registry
+promotion, protected deployment, or full Slice 15 closure; #379 is now
 blocked, not QA-pending: Advise, Manage, Report, and Idea owner-app local
 implementation evidence is already merged. Idea now consumes the
 `sgajbi/lotus-manage#620` temporal receipt identity fields through closed v3
@@ -1319,9 +1324,12 @@ latest #681 source truth on Idea main
 `30490458612` and wiki publication `3743f01` passing. PR #804 synchronized the
 latest #681 source truth on Idea main
 `615e3ba848af551801c897dd9b0a52f964801da0` with Main Releasability
-`30491918891` and wiki publication `05026e8` passing. The current Idea ledger
-posture is 43 tracked issues, 24 open, and 19 closed. That evidence is coordination
-posture only; it
+`30491918891` and wiki publication `05026e8` passing. PR #806 merged the
+runtime-image hardening remediation on Idea main
+`a92144773d1b74bcf19e15396215dd988b5dc0af` with Main Releasability
+`30496796215` passing and moved #807 to merged-main QA-pending posture. The
+current Idea ledger posture is 44 tracked issues, 25 open, and 19 closed. That
+evidence is coordination posture only; it
 does not clear blockers, promote supported features, certify production
 vulnerability posture, or complete Slice 18 closure.
 
