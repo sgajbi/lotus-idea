@@ -260,6 +260,12 @@ PR #779 then hardened operations blocker truth to exact main
 `655d1245e96b7a67dea6c5d9ff0c78d0a32ee9e6`; Main Releasability
 `30437706105`, CodeQL `30437690255`, repo-authored wiki publication
 `b3359fa`, strict wiki `DiffCount 0`, and local/remote branch cleanup passed.
+PR #787 corrected cross-repo RFC-0002 posture coverage to the governed
+13-repository owner/dependency set on exact main
+`39a480ddf115649acc3f6793a69596d4e5912bc8`; Main Releasability `30451401411`,
+Push on main `30451387946`, repo-authored wiki publication `d06f46b`, strict
+wiki `DiffCount 0`, and local/remote branch cleanup passed. The corrected
+cross-repo posture is 77 tracked RFC-0002 issues, 40 complete, and 37 open.
 The current Idea RFC-0002 ledger posture is 42 tracked issues, 24 open, and 18
 closed after #782 final QA closure and source-controlled ledger synchronization.
 This is still coordination/documentation truth only;

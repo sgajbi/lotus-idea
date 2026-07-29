@@ -480,9 +480,11 @@ truth after downstream evidence was posted. PR #772 synchronized platform
 vulnerability-exception register linkage from `sgajbi/lotus-platform#596`, PR
 #775 synchronized #690 merged-main evidence, and PR #776 synchronized #690
 final QA closure truth. PR #777 synchronized #681 evidence after #690 QA closure.
+PR #787 then corrected cross-repo RFC-0002 posture coverage so Core, Report,
+Render, and Archive dependencies are included in the default live posture.
 The latest rollup checkpoint is main
-`39d51c5cb63df360f1e97e6e9e862784a9ad9178`, Main Releasability `30434057675`,
-CodeQL `30434051218`, wiki commit `d0a1fa1`, strict wiki parity, no unmerged
+`39a480ddf115649acc3f6793a69596d4e5912bc8`, Main Releasability `30451401411`,
+Push on main `30451387946`, wiki commit `d06f46b`, strict wiki parity, no unmerged
 local or remote feature branch, live cross-repo RFC-0002 posture over the
 governed 13-repository owner/dependency set of 77 tracked issues, 40 closed,
 and 37 open, and live Idea RFC-0002 ledger posture of 42 tracked issues, 24

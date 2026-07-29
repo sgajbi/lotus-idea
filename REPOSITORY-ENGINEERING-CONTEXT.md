@@ -142,9 +142,12 @@ unclaimed. PR #776 synchronized that #690 final QA closure truth to exact main
 `aa492aedd46f30b854c8478edb919605dbdd58fc`; Main Releasability `30432065538`
 and CodeQL `30432058627` passed, wiki publication completed at
 `lotus-idea.wiki` commit `c08509a` with strict `DiffCount 0`, branch cleanup
-completed, and live cross-repo RFC-0002 posture now checks the governed
-13-repository owner/dependency set with 77 tracked issues, 40 closed, and 37
-open. #691, #692, and
+completed. PR #787 corrected the live cross-repo RFC-0002 posture command to
+check the governed 13-repository owner/dependency set on exact main
+`39a480ddf115649acc3f6793a69596d4e5912bc8`; Main Releasability `30451401411`,
+Push on main `30451387946`, and `lotus-idea.wiki` publication `d06f46b`
+passed with strict `DiffCount 0`. The live cross-repo posture is 77 tracked
+RFC-0002 issues, 40 complete, and 37 open. #691, #692, and
 #699 remain blocked rather than
 QA-pending: their merged PRs preserve bounded Render/Archive, mesh-readiness,
 and proof-control evidence only, while production identity, client publication,
@@ -1248,10 +1251,13 @@ PR #776 (`aa492aedd46f30b854c8478edb919605dbdd58fc`, Main Releasability
 `30432065538`, CodeQL `30432058627`, `lotus-idea.wiki` commit `c08509a`), and
 PR #777 (`39d51c5cb63df360f1e97e6e9e862784a9ad9178`, Main Releasability
 `30434057675`, CodeQL `30434051218`, `lotus-idea.wiki` commit `d0a1fa1`),
-and PR #779 (`655d1245e96b7a67dea6c5d9ff0c78d0a32ee9e6`, Main Releasability
+PR #779 (`655d1245e96b7a67dea6c5d9ff0c78d0a32ee9e6`, Main Releasability
 `30437706105`, CodeQL `30437690255`, `lotus-idea.wiki` commit `b3359fa`),
-and PR #785 (`3ed24b318923dd4bf172da315fdc5996a612f0dc`, Main Releasability
-`30447510833`, CodeQL `30447504086`) with strict wiki `DiffCount 0`. The
+PR #785 (`3ed24b318923dd4bf172da315fdc5996a612f0dc`, Main Releasability
+`30447510833`, CodeQL `30447504086`), and PR #787
+(`39a480ddf115649acc3f6793a69596d4e5912bc8`, Main Releasability
+`30451401411`, Push on main `30451387946`, `lotus-idea.wiki` commit
+`d06f46b`) with strict wiki `DiffCount 0`. The
 current Idea ledger posture is 42 tracked issues, 24 open, and 18 closed. That evidence is coordination posture only; it
 does not clear blockers, promote supported features, certify production
 vulnerability posture, or complete Slice 18 closure.

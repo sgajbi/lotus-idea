@@ -163,6 +163,13 @@ def test_rfc0002_github_issue_execution_ledger_tracks_slice18_posture_evidence()
     assert "30447510833" in issue_681["closureInstruction"]
     assert "30447504086" in issue_681["closureInstruction"]
     assert (
+        "PR #787 corrected cross-repo RFC-0002 posture coverage" in issue_681["closureInstruction"]
+    )
+    assert "39a480ddf115649acc3f6793a69596d4e5912bc8" in issue_681["closureInstruction"]
+    assert "30451401411" in issue_681["closureInstruction"]
+    assert "30451387946" in issue_681["closureInstruction"]
+    assert "lotus-idea.wiki commit d06f46b" in issue_681["closureInstruction"]
+    assert (
         "Current Idea ledger posture after PR #785 is 42 tracked issues, 24 open, and 18 closed"
         in issue_681["closureInstruction"]
     )
