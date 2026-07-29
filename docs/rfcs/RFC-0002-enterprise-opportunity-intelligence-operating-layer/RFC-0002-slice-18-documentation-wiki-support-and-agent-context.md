@@ -476,13 +476,16 @@ governance tranches: PR #767 made pending final-closure and post-completion
 issue sections explicit, PR #768 added keep-open PR text enforcement, PR #769
 synchronized Manage temporal receipt identity consumption after
 `sgajbi/lotus-manage#620`, and PR #770 reconciled historical Manage #620 closure
-truth after downstream evidence was posted. The latest rollup checkpoint is
-main `c4a58683a05cb0c78bea5848a287abda682aea8f`, Main Releasability
-`30418344813`, CodeQL `30418340512`, strict wiki parity, no unmerged local or
-remote feature branch, and live cross-repo posture of 66 RFC-0002 issues total,
-32 closed, and 34 open. This evidence still preserves `sgajbi/lotus-manage#624`
-and the other blocked production/certification dependencies; it is not Slice 18
-completion evidence.
+truth after downstream evidence was posted. PR #772 synchronized platform
+vulnerability-exception register linkage from `sgajbi/lotus-platform#596`.
+The latest rollup checkpoint is main
+`72b0a4c8ed99a4091f679e42486a3823ce3d8c0e`, Main Releasability `30423379257`,
+CodeQL `30423375042`, wiki commit `1a8875c`, strict wiki parity, no unmerged
+local or remote feature branch, and live RFC-0002 ledger posture of 41 tracked
+issues, 25 open, and 16 closed. This evidence still preserves
+`sgajbi/lotus-manage#624` and the other blocked production/certification
+dependencies; it is not Slice 18 completion evidence and does not certify
+production vulnerability posture.
 
 This Slice 18 synchronization also carries the platform vulnerability-exception
 register lesson from `sgajbi/lotus-platform#596` into Idea's repository truth.

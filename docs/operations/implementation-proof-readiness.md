@@ -218,12 +218,14 @@ The current #681 source-controlled rollup also includes later Slice 18 truth:
 PR #767 rendered pending final-closure and post-completion issue sections, PR
 #768 added keep-open PR text enforcement, PR #769 synchronized Manage temporal
 receipt identity consumption after `sgajbi/lotus-manage#620`, and PR #770
-reconciled historical Manage #620 closure evidence. The latest exact-main
-checkpoint is `c4a58683a05cb0c78bea5848a287abda682aea8f` with Main
-Releasability `30418344813`, CodeQL `30418340512`, strict wiki parity, and live
-cross-repo posture of 66 RFC-0002 issues total, 32 closed, and 34 open. This is
-still coordination/documentation truth only; `sgajbi/lotus-manage#624` and other
-blocked dependencies remain open.
+reconciled historical Manage #620 closure evidence. PR #772 then synchronized
+the platform vulnerability-exception register linkage. The latest exact-main
+checkpoint is `72b0a4c8ed99a4091f679e42486a3823ce3d8c0e` with Main
+Releasability `30423379257`, CodeQL `30423375042`, wiki commit `1a8875c`,
+strict wiki parity, and live RFC-0002 ledger posture of 41 tracked issues, 25
+open, and 16 closed. This is still coordination/documentation truth only;
+`sgajbi/lotus-manage#624` and other blocked dependencies remain open, and
+production vulnerability posture is not certified.
 
 #685 is `open_blocked`, not QA-pending: the 2026-07-29 governed Workbench
 startup attempt via `npm run live:stack:up` restored core portfolio readiness

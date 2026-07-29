@@ -1199,10 +1199,13 @@ wiki decision/publication, branch-cleanup evidence, and no-claim boundary in
 the same source change. The current pinned rollup includes PR #765
 (`3ab78c4e9ba23b08eec5396f0641acf21c98f74a`, Main Releasability
 `30411606383`, `lotus-idea.wiki` commit `0aea688`), PR #767, PR #768, PR #769,
-and PR #770 (`c4a58683a05cb0c78bea5848a287abda682aea8f`, Main Releasability
-`30418344813`, CodeQL `30418340512`) with strict wiki `DiffCount 0`. That
-evidence is coordination posture only; it does not clear blockers, promote
-supported features, or complete Slice 18 closure.
+PR #770 (`c4a58683a05cb0c78bea5848a287abda682aea8f`, Main Releasability
+`30418344813`, CodeQL `30418340512`), and PR #772
+(`72b0a4c8ed99a4091f679e42486a3823ce3d8c0e`, Main Releasability
+`30423379257`, CodeQL `30423375042`, `lotus-idea.wiki` commit `1a8875c`)
+with strict wiki `DiffCount 0`. That evidence is coordination posture only;
+it does not clear blockers, promote supported features, certify production
+vulnerability posture, or complete Slice 18 closure.
 
 RFC-0002 repeated issue-learning truth is governed by
 `contracts/implementation-proof/rfc0002-issue-learning-patterns.v1.json`.

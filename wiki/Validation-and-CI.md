@@ -1001,14 +1001,14 @@ status reports cannot hide Slice 20 or Slice 21 work behind a generic ready
 bucket.
 
 Current Slice 18 handoff truth is anchored by `lotus-idea#681`. The source
-ledger records the PR #765, #767, #768, #769, and #770 evidence chain through
-main `c4a58683a05cb0c78bea5848a287abda682aea8f`, Main Releasability
-`30418344813`, CodeQL `30418340512`, strict wiki parity, and live RFC-0002
-posture of 66 issues total, 32 closed, and 34 open after
-`sgajbi/lotus-manage#620` closure. Keep #681 open until the remaining
-documentation, wiki, support, context, and supported-feature truth is complete;
-`sgajbi/lotus-manage#624` remains the production trusted IdP caller-context
-boundary.
+ledger records the PR #765, #767, #768, #769, #770, and #772 evidence chain
+through main `72b0a4c8ed99a4091f679e42486a3823ce3d8c0e`, Main Releasability
+`30423379257`, CodeQL `30423375042`, wiki commit `1a8875c`, strict wiki
+parity, and live RFC-0002 ledger posture of 41 tracked issues, 25 open, and 16
+closed. Keep #681 open until the remaining documentation, wiki, support,
+context, and supported-feature truth is complete; `sgajbi/lotus-manage#624`
+remains the production trusted IdP caller-context boundary, and production
+vulnerability posture remains uncertified until release evidence exists.
 
 The RFC-0002 issue-learning pattern gate keeps repeated defect lessons
 source-controlled. `contracts/implementation-proof/rfc0002-issue-learning-patterns.v1.json`
