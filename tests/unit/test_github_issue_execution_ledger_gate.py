@@ -789,14 +789,19 @@ def test_rfc0002_github_issue_execution_ledger_tracks_runtime_image_hardening_is
     )
 
     assert issue_807["githubState"] == "open"
-    assert issue_807["executionStatus"] == "open_pr_raised"
+    assert issue_807["executionStatus"] == "open_merged_main_qa_pending"
     assert issue_807["allowPullRequestAutoClose"] is False
     assert issue_807["rfcSlices"] == ["slice-15"]
-    assert "Keep #807 open and status/pr-open" in issue_807["closureInstruction"]
+    assert "Keep #807 open and status/merged-main" in issue_807["closureInstruction"]
     assert (
-        "PR #806 branch commit 1d01e8da31b802de55fd553092e05c6ccfd9aea3"
+        "PR #806 merged to main at a92144773d1b74bcf19e15396215dd988b5dc0af"
         in (issue_807["closureInstruction"])
     )
+    assert (
+        "PR #806 branch head fe77d768f09444c29efe508e7289b6704b65a69e"
+        in (issue_807["closureInstruction"])
+    )
+    assert "Main Releasability Gate run 30496796215 passed" in (issue_807["closureInstruction"])
     assert (
         "removes final-image package installer and build-tool metadata"
         in (issue_807["closureInstruction"])
@@ -804,7 +809,9 @@ def test_rfc0002_github_issue_execution_ledger_tracks_runtime_image_hardening_is
     assert "make docker-build container-image-scan" in issue_807["closureInstruction"]
     assert "make container-runtime-smoke" in issue_807["closureInstruction"]
     assert "HIGH_CRITICAL_FINDINGS=0" in issue_807["closureInstruction"]
-    assert "This issue is not QA-pending" in issue_807["closureInstruction"]
+    assert "strict wiki parity DiffCount 0" in issue_807["closureInstruction"]
+    assert "branch cleanup evidence" in issue_807["closureInstruction"]
+    assert "This issue is QA-pending" in issue_807["closureInstruction"]
     assert (
         "Do not claim production vulnerability certification" in (issue_807["closureInstruction"])
     )
