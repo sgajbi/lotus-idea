@@ -345,9 +345,9 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/782",
       "rfcSlices": ["slice-17"],
       "githubState": "open",
-      "executionStatus": "open_pr_raised",
+      "executionStatus": "open_merged_main_qa_pending",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #782 open and status/pr-open while PR #783 reconciles the AI workflow-pack runtime proof contract and aggregate readiness consumer temporal provenance. PR #783 rejects incoherent runtime-proof temporal provenance, generates actual runtime proof with a proof timestamp that is not before the cited runtime receipt, and makes aggregate readiness clear only the exact runtime-execution blocker for a valid current proof. Do not claim live-provider execution, model-risk approval, Workbench proof, client publication, supported-feature promotion, or final full-journey closure before PR checks, merge to main, exact-main validation, and required wiki publication."
+      "closureInstruction": "Keep #782 open and status/merged-main pending QA. PR #783 reconciled the AI workflow-pack runtime proof contract and aggregate readiness consumer temporal provenance on main at 5a2782be07e4212acc5e6e8a3652c1724bed2038: runtime proof artifacts now reject receipt completion after top-level generatedAtUtc, actual runtime proof generation stamps the proof no earlier than the cited runtime receipt, and aggregate readiness clears only lotus_ai_runtime_execution_missing for a valid current temporally coherent proof. Main Releasability Gate run 30445295814 and CodeQL run 30445283264 passed for that exact main SHA. Repo-authored wiki source was published to lotus-idea.wiki commit c3a4afb with strict DiffCount 0. PR #783 remote branch was deleted by merge, and the local rebase-merged branch was deleted after PR merge evidence plus git cherry patch-equivalence proof. Do not claim live-provider execution, model-risk approval, Workbench proof, client publication, supported-feature promotion, or final full-journey closure. Next: QA verify #782 on main, then close only with QA evidence."
     },
     {
       "issueNumber": 700,
