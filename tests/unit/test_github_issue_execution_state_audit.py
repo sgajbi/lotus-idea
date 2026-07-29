@@ -153,7 +153,7 @@ def test_github_issue_execution_state_audit_rejects_auto_closed_open_issue(
     ledger["issues"] = [
         entry
         for entry in ledger["issues"]
-        if isinstance(entry, dict) and entry["issueNumber"] == 690
+        if isinstance(entry, dict) and entry["issueNumber"] == 691
     ]
     github_payload = _github_issue_payload(ledger)
     github_payload[0]["state"] = "CLOSED"
@@ -164,7 +164,7 @@ def test_github_issue_execution_state_audit_rejects_auto_closed_open_issue(
         github_issues=github_issues,
     )
 
-    assert "#690: ledger githubState=open but GitHub state=closed" in errors
+    assert "#691: ledger githubState=open but GitHub state=closed" in errors
 
 
 def test_github_issue_execution_state_audit_rejects_missing_status_label(
