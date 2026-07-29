@@ -477,12 +477,14 @@ issue sections explicit, PR #768 added keep-open PR text enforcement, PR #769
 synchronized Manage temporal receipt identity consumption after
 `sgajbi/lotus-manage#620`, and PR #770 reconciled historical Manage #620 closure
 truth after downstream evidence was posted. PR #772 synchronized platform
-vulnerability-exception register linkage from `sgajbi/lotus-platform#596`.
-The latest rollup checkpoint is main
-`72b0a4c8ed99a4091f679e42486a3823ce3d8c0e`, Main Releasability `30423379257`,
-CodeQL `30423375042`, wiki commit `1a8875c`, strict wiki parity, no unmerged
-local or remote feature branch, and live RFC-0002 ledger posture of 41 tracked
-issues, 25 open, and 16 closed. This evidence still preserves
+vulnerability-exception register linkage from `sgajbi/lotus-platform#596`, PR
+#775 synchronized #690 merged-main evidence, and PR #776 synchronized #690
+final QA closure truth. The latest rollup checkpoint is main
+`aa492aedd46f30b854c8478edb919605dbdd58fc`, Main Releasability `30432065538`,
+CodeQL `30432058627`, wiki commit `c08509a`, strict wiki parity, no unmerged
+local or remote feature branch, live cross-repo RFC-0002 posture of 66 tracked
+issues, 33 closed, and 33 open, and live Idea RFC-0002 ledger posture of 41
+tracked issues, 24 open, and 17 closed. This evidence still preserves
 `sgajbi/lotus-manage#624` and the other blocked production/certification
 dependencies; it is not Slice 18 completion evidence and does not certify
 production vulnerability posture.
@@ -532,44 +534,43 @@ mainline evidence. PR #746 corrected stale ready
 posture for #380 and reconciled it to `open_blocked` at
 `6f8875dc6784dd17975e6700c09b9ff71d66fb8b`; Main Releasability
 `30327202465` and CodeQL `30327193673` passed. Current source truth now records
-41 tracked RFC-0002 issues, 16 closed complete, 25 open, no
-`open_merged_main_qa_pending`, 1 `open_in_progress`, 1 `open_pr_raised`,
-and 13 `open_blocked`
-issues. #379 is `open_blocked`, not QA-pending because its owner-app local
-implementation dependencies are merged but production/certification,
-trusted-identity, retention/legal, and Archive production evidence remains
-open. #685 is `open_blocked`, not QA-pending: the 2026-07-29 governed
-Workbench startup attempt via `npm run live:stack:up` restored core portfolio
-readiness for `PB_SG_GLOBAL_BAL_001`; valuation and aggregation jobs drained
-to zero, positions/cash data quality reached `COMPLETE`, and analytics/
-return-path dates reached `2026-04-10`. The run then failed in the DPM
-command-center action-register seed because
-`POST http://manage.dev.lotus/api/v1/rebalance/simulate` returned HTTP 424
-with `DPM_CORE_CONTEXT_INCOMPLETE`. The current blocker is tracked in
+41 tracked RFC-0002 issues, 17 closed complete, 24 open, no
+`open_merged_main_qa_pending`, 1 `open_in_progress`, no `open_pr_raised`, and
+13 `open_blocked` issues. #379 is `open_blocked`, not QA-pending because its
+owner-app local implementation dependencies are merged but
+production/certification, trusted-identity, retention/legal, and Archive
+production evidence remains open. #685 is `open_blocked`, not QA-pending: the
+2026-07-29 governed Workbench startup attempt via `npm run live:stack:up`
+restored core portfolio readiness for `PB_SG_GLOBAL_BAL_001`; valuation and
+aggregation jobs drained to zero, positions/cash data quality reached
+`COMPLETE`, and analytics/return-path dates reached `2026-04-10`. The run then
+failed in the DPM command-center action-register seed because
+`POST http://manage.dev.lotus/api/v1/rebalance/simulate` returned HTTP 424 with
+`DPM_CORE_CONTEXT_INCOMPLETE`. The current blocker is tracked in
 `sgajbi/lotus-core#840`. Fresh Gateway/BFF-backed Workbench queue/detail
 runtime evidence remains required before #685 can move to merged-main QA.
 Platform PR `sgajbi/lotus-platform#631` fixes the prior Manage seed
 authorization failure; #686 is blocked, not QA-pending, until
 `sgajbi/lotus-core#840` restores canonical DPM source readiness and Workbench
-live browser action-control proof can be rerun. This records
-lifecycle truth only: #340 is closed for the signed attestation trust boundary
-without claiming supported-feature promotion, client-ready publication,
-Workbench proof, autonomous advice, prompt/RAG infrastructure, model training,
-or broader production rollout. #380 remains blocked for production
-principal/session, authenticated Workbench BFF, core-owned canonical runtime,
-mesh onboarding, entitlement-denied, and supported-feature promotion evidence,
-and #693 is blocked rather than QA-pending until protected
-capacity-production-like runner/environment, protected attestations, and
-matching FinOps evidence exist. #690 is now recorded as `open_pr_raised`
-rather than QA-pending because PR #774 carries bounded Report intake runtime
-proof consumption for only `lotus_report_live_intake_route_proof_missing` and
-still requires merge, exact-main validation, wiki publication, branch cleanup,
-and QA closure. #691, #692, and #699 remain blocked rather than QA-pending
-because their merged implementation tranches preserve only bounded
-Render/Archive, mesh-readiness, and proof-control evidence; lifecycle-safe
-publication authority, production identity, Archive production trust/legal
-evidence, platform mesh certification, Gateway/Workbench discovery proof,
-supported-feature promotion, and final live-journey evidence remain open.
+live browser action-control proof can be rerun. This records lifecycle truth
+only: #340 is closed for the signed attestation trust boundary without claiming
+supported-feature promotion, client-ready publication, Workbench proof,
+autonomous advice, prompt/RAG infrastructure, model training, or broader
+production rollout. #380 remains blocked for production principal/session,
+authenticated Workbench BFF, core-owned canonical runtime, mesh onboarding,
+entitlement-denied, and supported-feature promotion evidence; #690 is
+`closed_complete` after PR #774 merged bounded Report intake runtime proof, PR
+#775 synchronized merged-main evidence, and PR #776 synchronized final QA
+closure truth to exact main
+`aa492aedd46f30b854c8478edb919605dbdd58fc` with Main Releasability
+`30432065538`, CodeQL `30432058627`, wiki commit `c08509a`, strict wiki
+parity, and branch cleanup. #691, #692, #693, and #699 remain blocked rather
+than QA-pending because their merged implementation tranches preserve only
+bounded Render/Archive, mesh-readiness, cost-attribution, and proof-control
+evidence; lifecycle-safe publication authority, production identity, Archive
+production trust/legal evidence, platform mesh certification, Gateway/Workbench
+discovery proof, protected capacity/FinOps attestations, supported-feature
+promotion, and final live-journey evidence remain open.
 
 The missing-benchmark Core material now records the independently owned closed
 v2 runtime contract implemented by issue `#499`. One named application use case

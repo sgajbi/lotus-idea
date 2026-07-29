@@ -807,7 +807,12 @@ Persistence adapter validation:
    after aggregate-current validation; client publication, production identity,
    supported-feature promotion, report rendering authority, Archive production
    trust, legal/privacy approval, and final Slice 13 certification remain
-   unclaimed. #691, #692, and #699 remain blocked rather
+   unclaimed. PR #776 then synchronized that final QA closure truth to exact
+   main `aa492aedd46f30b854c8478edb919605dbdd58fc`; Main Releasability
+   `30432065538` and CodeQL `30432058627` passed, wiki publication completed at
+   `lotus-idea.wiki` commit `c08509a` with strict `DiffCount 0`, branch cleanup
+   completed, and the live cross-repo RFC-0002 posture is 66 tracked issues, 33
+   closed, and 33 open. #691, #692, and #699 remain blocked rather
    than QA-pending because their merged implementation tranches preserve only
    bounded Render/Archive, mesh-readiness, and proof-control evidence;
    lifecycle-safe publication authority, production identity, Archive production
@@ -1015,14 +1020,17 @@ status reports cannot hide Slice 20 or Slice 21 work behind a generic ready
 bucket.
 
 Current Slice 18 handoff truth is anchored by `lotus-idea#681`. The source
-ledger records the PR #765, #767, #768, #769, #770, and #772 evidence chain
-through main `72b0a4c8ed99a4091f679e42486a3823ce3d8c0e`, Main Releasability
-`30423379257`, CodeQL `30423375042`, wiki commit `1a8875c`, strict wiki
-parity, and live RFC-0002 ledger posture of 41 tracked issues, 25 open, and 16
-closed. Keep #681 open until the remaining documentation, wiki, support,
-context, and supported-feature truth is complete; `sgajbi/lotus-manage#624`
-remains the production trusted IdP caller-context boundary, and production
-vulnerability posture remains uncertified until release evidence exists.
+ledger records the PR #765, #767, #768, #769, #770, #772, #775, and #776
+evidence chain through main
+`aa492aedd46f30b854c8478edb919605dbdd58fc`, Main Releasability
+`30432065538`, CodeQL `30432058627`, wiki commit `c08509a`, strict wiki
+parity, live cross-repo RFC-0002 posture of 66 tracked issues, 33 closed, and
+33 open, and live Idea RFC-0002 ledger posture of 41 tracked issues, 24 open,
+and 17 closed. Keep #681 open until the remaining documentation, wiki,
+support, context, and supported-feature truth is complete;
+`sgajbi/lotus-manage#624` remains the production trusted IdP caller-context
+boundary, and production vulnerability posture remains uncertified until
+release evidence exists.
 
 The RFC-0002 issue-learning pattern gate keeps repeated defect lessons
 source-controlled. `contracts/implementation-proof/rfc0002-issue-learning-patterns.v1.json`
