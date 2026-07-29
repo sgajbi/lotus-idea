@@ -207,9 +207,12 @@ supported-feature blockers.
 `make rfc0002-cross-repo-issue-posture` also validates
 `contracts/implementation-proof/rfc0002-cross-repo-blocker-classification.v1.json`.
 That contract is the durable answer to whether the remaining `status/blocked`
-issues are actually fixable app-code work. The live 2026-07-29 posture is 26
+issues are actually fixable app-code work. The live 2026-07-30 posture is 28
 blocked RFC-0002 issues, 0 app-actionable blocked issues, 5 Core dependencies,
-and 21 external/protected-evidence blockers. A blocked issue is valid only when
+and 23 external/protected-evidence blockers. Pending final-closure issue #683
+and pending post-completion issue #684 are blocked by prerequisite evidence and
+must not carry `status/ready` while RFC-0002 blockers remain open. A blocked
+issue is valid only when
 the remaining authority is Core-owned source readiness, production identity or
 session/token-claims authority, protected runtime/deployment evidence,
 provider/bank/legal approval, or certification evidence. If a writable non-Core
@@ -287,7 +290,7 @@ post-merge evidence into source-controlled execution truth on exact main
 Main CodeQL/Push run `30458146092`, repo-authored wiki publication `bbd9e2f`,
 strict wiki `DiffCount 0`, and branch cleanup passed. The corrected cross-repo
 posture is 77 tracked RFC-0002 issues, 40 complete, and 37 open; the blocked
-subset is 26 issues with 0 app-actionable blocked issues, 5 Core dependencies,
+subset was 26 issues with 0 app-actionable blocked issues, 5 Core dependencies,
 and 21 external/protected-evidence blockers. PR #791 then synchronized PR
 #790's evidence into source-controlled execution truth on exact main
 `65e11890aaddb70fea4cf9d80e836ce1625a6c44`; Main Releasability `30460122600`,

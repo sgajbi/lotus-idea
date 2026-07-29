@@ -1,7 +1,7 @@
 {
   "schemaVersion": "lotus-idea:rfc0002-cross-repo-blocker-classification:v1",
   "rfcId": "RFC-0002",
-  "asOfDate": "2026-07-29",
+  "asOfDate": "2026-07-30",
   "repository": "sgajbi/lotus-idea",
   "purpose": "Classify live RFC-0002 status/blocked issues by actionability so blocked posture means external, Core-owned, protected-environment, IdP, provider, legal/privacy, or certification evidence rather than hidden app-code work.",
   "policy": {
@@ -51,6 +51,20 @@
       "actionability": "external_or_protected_evidence",
       "blockerClass": "supported_feature_promotion_prerequisites",
       "remainingAuthority": "production principal/session prerequisites, Workbench authenticated principal resolution, Core canonical runtime prerequisites, Gateway/Workbench live evidence, entitlement-denied proof, and mesh certification"
+    },
+    {
+      "repository": "sgajbi/lotus-idea",
+      "issueNumber": 683,
+      "actionability": "external_or_protected_evidence",
+      "blockerClass": "final_closure_prerequisites",
+      "remainingAuthority": "completion or explicit classification of prior RFC-0002 blockers, supported-feature truth, exact-main validation, wiki publication, and branch hygiene evidence"
+    },
+    {
+      "repository": "sgajbi/lotus-idea",
+      "issueNumber": 684,
+      "actionability": "external_or_protected_evidence",
+      "blockerClass": "post_completion_final_evidence",
+      "remainingAuthority": "Slice 20 final closure evidence and final supported-feature/publication posture before post-completion communication or LinkedIn decision"
     },
     {
       "repository": "sgajbi/lotus-idea",
