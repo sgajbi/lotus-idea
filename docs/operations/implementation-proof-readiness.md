@@ -167,9 +167,9 @@ live GitHub proof; it deliberately points back to
 open/closed verification.
 
 Current Slice 18 ledger synchronization records 41 tracked RFC-0002 issues:
-16 closed complete, 25 open, no `open_ready` or
-`open_merged_main_qa_pending` issues, 13 `open_blocked`, 1
-`open_in_progress`, no `open_fixed_local`, 1 `open_pr_raised`, 1
+16 closed complete, 25 open, no `open_ready`, 1
+`open_merged_main_qa_pending` issue, 13 `open_blocked`, 1
+`open_in_progress`, no `open_fixed_local`, no `open_pr_raised`, 1
 `open_pending_final_closure`, 1 `open_pending_post_completion`, and 8
 `open_tracker`. PR #745 reconciled #340 to `open_merged_main_qa_pending` on
 `eeabfc683f595b4cbc9ffb5aa0aa51c3e5622903`; Main Releasability `30326431318`
@@ -239,12 +239,16 @@ queue/detail runtime evidence, browser/accessibility proof, canonical demo
 runtime proof, and #380 data-product/supported-feature posture reconciliation remain required before
 QA closure.
 
-#690 is `open_pr_raised`, not QA-pending. PR #774 records bounded Report
-materialization proof isolation and branch-local Report intake runtime proof
-consumption that clears only `lotus_report_live_intake_route_proof_missing`
-after aggregate-current validation. Keep it open until PR #774 is merged,
-exact-main validation passes, wiki publication/parity and branch cleanup are
-recorded, and QA closes it. #691, #692, and #699 are still `open_blocked`, not
+#690 is `open_merged_main_qa_pending`. PR #774 merged to main at
+`5f53c4ac6ac519c7e6b0019e00f5286109e1628c`, Main Releasability
+`30428715937` and CodeQL `30428711385` passed for that exact SHA, repo-authored
+wiki publication completed at `lotus-idea.wiki` commit `26d39d1` with strict
+`DiffCount 0`, and branch cleanup completed. The bounded Report intake runtime
+proof clears only `lotus_report_live_intake_route_proof_missing` after
+aggregate-current validation. Keep it open for QA; it does not claim client
+publication, production identity, supported-feature promotion, report rendering
+authority, Archive production trust, legal/privacy approval, or final Slice 13
+certification. #691, #692, and #699 are still `open_blocked`, not
 QA-pending. Their merged PRs record bounded Render/Archive owner-proof
 consumption, mesh-readiness proof consumption, and Slice 17 proof-control
 evidence only. Lifecycle-safe publication authority, production identity,

@@ -104,8 +104,8 @@ with Main Releasability `30327202465` and CodeQL `30327193673` passing; it
 records supported-feature/data-product promotion blockers without promoting
 support. After Slice 16 QA closure and Slice 15 protected-attestation
 reconciliation, the current RFC-0002 ledger posture is 41 tracked issues, 16
-closed complete, 25 open, no `open_merged_main_qa_pending`, 1
-`open_in_progress`, 1 `open_pr_raised`, and 13 `open_blocked`; #379 is now
+closed complete, 25 open, 1 `open_merged_main_qa_pending`, 1
+`open_in_progress`, no `open_pr_raised`, and 13 `open_blocked`; #379 is now
 blocked, not QA-pending: Advise, Manage, Report, and Idea owner-app local
 implementation evidence is already merged. Idea now consumes the
 `sgajbi/lotus-manage#620` temporal receipt identity fields through closed v3
@@ -127,11 +127,16 @@ authorization failure; #686 is blocked, not QA-pending, until
 `sgajbi/lotus-core#840` restores canonical DPM source readiness and Workbench
 live browser validation produces current action-control evidence. #693 is blocked, not QA-pending,
 until protected capacity-production-like runner/environment and FinOps
-attestation evidence exist. #690 is PR-open through #774 rather than
-QA-pending: the branch-local Report intake runtime proof clears only
+attestation evidence exist. #690 is merged-main QA-pending after #774 merged to
+main at `5f53c4ac6ac519c7e6b0019e00f5286109e1628c`; Main Releasability
+`30428715937` and CodeQL `30428711385` passed, wiki publication completed at
+`lotus-idea.wiki` commit `26d39d1` with strict `DiffCount 0`, and branch cleanup
+completed. The Report intake runtime proof clears only
 `lotus_report_live_intake_route_proof_missing` after aggregate-current
-validation and still requires merge, exact-main validation, wiki publication,
-branch cleanup, and QA closure. #691, #692, and #699 remain blocked rather than
+validation; client publication, production identity, supported-feature
+promotion, report rendering authority, Archive production trust, legal/privacy
+approval, and final Slice 13 certification remain unclaimed. #691, #692, and
+#699 remain blocked rather than
 QA-pending: their merged PRs preserve bounded Render/Archive, mesh-readiness,
 and proof-control evidence only, while production identity, client publication,
 Archive legal/trust posture, platform mesh certification, Gateway/Workbench
