@@ -1,6 +1,6 @@
 # RFC-0002 Slice 18: Documentation, Wiki, Support, And Agent Context
 
-Status: Partially implemented - API certification, outbox readiness, implementation-proof, live source-proof contract, scheduled-worker source-contract and deployment-evidence contracts, durable repository proof contract, runtime telemetry test-execution contract, bounded Workbench read-path source contract, bounded Gateway/Workbench contract proof, bounded Gateway/Workbench discovery contract proof, digest-bound Advise/Manage route source contracts, bounded Report intake route source contract, bounded downstream outcome certification supporting proof, bounded outbox broker source-contract proof, bounded outbox platform-mesh event source-contract proof, digest-bound mesh policy source contract, AI lineage store proof, closed v2 Manage mandate, Advise mandate/restriction, Advise missing-suitability, and Advise missing-risk-profile runtime evidence, receipt-bound Core portfolio-state, bond-maturity, and low-income cashflow runtime evidence, typed Advise mandate/restriction source-product proof, typed Advise missing risk-profile source-product proof, underperformance, allocation-drift, and drawdown-review API foundation truth, mandate/restriction and missing-benchmark policy foundation truth, client-demo process, downstream submission/reconciliation workload readiness truth, downstream contract documentation, and #379 merged-main execution-truth synchronization completed
+Status: Partially implemented - API certification, outbox readiness, implementation-proof, live source-proof contract, scheduled-worker source-contract and deployment-evidence contracts, durable repository proof contract, runtime telemetry test-execution contract, bounded Workbench read-path source contract, bounded Gateway/Workbench contract proof, bounded Gateway/Workbench discovery contract proof, digest-bound Advise/Manage route source contracts, bounded Report intake route source contract, bounded downstream outcome certification supporting proof, bounded outbox broker source-contract proof, bounded outbox platform-mesh event source-contract proof, digest-bound mesh policy source contract, AI lineage store proof, closed v3 Manage mandate, closed v2 Advise mandate/restriction, Advise missing-suitability, and Advise missing-risk-profile runtime evidence, receipt-bound Core portfolio-state, bond-maturity, and low-income cashflow runtime evidence, typed Advise mandate/restriction source-product proof, typed Advise missing risk-profile source-product proof, underperformance, allocation-drift, and drawdown-review API foundation truth, mandate/restriction and missing-benchmark policy foundation truth, client-demo process, downstream submission/reconciliation workload readiness truth, downstream contract documentation, and #379 merged-main execution-truth synchronization completed
 
 ## Outcome
 
@@ -268,7 +268,7 @@ documentation across opportunity signal APIs.
     certified data-product claims out of client material.
 26. README, repository context, `docs/operations/implementation-proof-readiness.md`,
     service runbooks, quality gate docs, RFC evidence, demo claims, and wiki
-    source now describe closed v2 Manage mandate runtime evidence while preserving the
+    source now describe closed v3 Manage mandate runtime evidence while preserving the
     boundary that a valid artifact clears only the portfolio-scoped Manage
     source blocker plus source refs for source-owned mandate performance-health
     and mandate risk-health contexts, and does not prove Core portfolio state,
@@ -484,8 +484,9 @@ Releasability run `30324178801` passing. Issue #379 remains open in
 `status/blocked`: this evidence clears only the source-safe aggregate proof
 composition and owner-app local implementation tranche. Production/certification
 evidence, trusted IdP caller context, retention/legal proof, and Archive
-production conformance remain open through `sgajbi/lotus-manage#620`,
-`sgajbi/lotus-manage#624`, `sgajbi/lotus-report#136`, and
+production conformance remain open after Idea consumes the
+`sgajbi/lotus-manage#620` temporal receipt identity tranche. Remaining blockers
+are `sgajbi/lotus-manage#624`, `sgajbi/lotus-report#136`, and
 `sgajbi/lotus-archive#55`; no suitability, rebalance/execution, report
 rendering, archive authority, client publication, production identity,
 supported-feature promotion, legal/privacy approval, or full downstream outcome

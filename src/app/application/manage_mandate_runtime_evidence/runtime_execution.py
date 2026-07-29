@@ -34,7 +34,7 @@ from app.ports.manage_sources import (
 )
 
 MANAGE_MANDATE_RUNTIME_EXECUTION_ENV = "LOTUS_IDEA_MANAGE_MANDATE_LIVE_PROOF"
-MANAGE_MANDATE_RUNTIME_EXECUTION_SCHEMA_VERSION = "lotus-idea.manage-mandate.runtime-execution.v2"
+MANAGE_MANDATE_RUNTIME_EXECUTION_SCHEMA_VERSION = "lotus-idea.manage-mandate.runtime-execution.v3"
 MANAGE_MANDATE_RUNTIME_BLOCKERS_SATISFIED = (
     "opportunity_archetype_portfolio_scoped_manage_source_proof_missing",
     "opportunity_archetype_mandate_performance_health_source_ref_missing",
@@ -271,9 +271,15 @@ def _runtime_blockers(
     if runtime.portfolio_id != command.portfolio_id or runtime.as_of_date != command.as_of_date:
         blockers.append("manage_action_register_scope_mismatch")
     if (
+        runtime.temporal_identity_status != "available"
+        or runtime.evidence_as_of_date != command.as_of_date
+    ):
+        blockers.append("manage_action_register_temporal_identity_mismatch")
+    if (
         runtime.generated_at_utc.tzinfo is None
         or runtime.generated_at_utc.utcoffset() is None
         or runtime.generated_at_utc > command.evaluated_at_utc
+        or runtime.producer_generated_at_utc != runtime.generated_at_utc
     ):
         blockers.append("manage_action_register_future_evidence")
     if runtime.correlation_id != command.correlation_id:
@@ -388,6 +394,9 @@ def _action_register_receipt(
             "responsePortfolioIdHash": identity_hash(runtime.portfolio_id),
             "responseAsOfDate": runtime.as_of_date.isoformat(),
             "responseGeneratedAtUtc": format_utc(runtime.generated_at_utc),
+            "responseEvidenceAsOfDate": runtime.evidence_as_of_date.isoformat(),
+            "responseProducerGeneratedAtUtc": format_utc(runtime.producer_generated_at_utc),
+            "temporalIdentityStatus": runtime.temporal_identity_status,
             "sourceBatchFingerprint": runtime.source_batch_fingerprint,
             "runCount": runtime.run_count,
             "operationCount": runtime.operation_count,

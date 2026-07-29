@@ -192,7 +192,20 @@
       "family": "allocation drift / mandate review",
       "status": "blocked_pending_external_proof",
       "sliceIds": ["RFC-0002/slice-05", "RFC-0002/slice-16", "RFC-0002/slice-17"],
-      "issues": [{"repository": "sgajbi/lotus-manage", "number": 620, "url": "https://github.com/sgajbi/lotus-manage/issues/620"}],
+      "issues": [
+        {
+          "repository": "sgajbi/lotus-manage",
+          "number": 620,
+          "url": "https://github.com/sgajbi/lotus-manage/issues/620",
+          "posture": "temporal_receipt_identity_consumed_by_idea_v3_proof"
+        },
+        {
+          "repository": "sgajbi/lotus-manage",
+          "number": 624,
+          "url": "https://github.com/sgajbi/lotus-manage/issues/624",
+          "posture": "blocked_pending_trusted_idp_caller_context"
+        }
+      ],
       "evidenceRefs": ["src/app/application/mandate_health_signal.py"],
       "supportedFeaturePosture": "foundation_only_not_promoted"
     },

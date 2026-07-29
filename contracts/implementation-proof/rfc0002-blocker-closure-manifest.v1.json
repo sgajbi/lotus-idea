@@ -223,9 +223,18 @@
           "repository": "sgajbi/lotus-manage",
           "number": 620,
           "url": "https://github.com/sgajbi/lotus-manage/issues/620",
-          "dependencyRole": "Manage mandate-health source metadata and action-register receipt authority"
+          "dependencyRole": "Manage temporal receipt identity producer evidence now consumed by the Idea closed v3 Manage mandate runtime proof contract",
+          "dependencyStatus": "merged_main_consumed_pending_downstream_issue_evidence"
+        },
+        {
+          "repository": "sgajbi/lotus-manage",
+          "number": 624,
+          "url": "https://github.com/sgajbi/lotus-manage/issues/624",
+          "dependencyRole": "Production trusted IdP caller context for Manage action-register receipt scope",
+          "dependencyStatus": "blocked_pending_idp_authn_authz"
         }
       ],
+      "partialProgress": "Idea now consumes Manage temporal receipt identity from sgajbi/lotus-manage#620 through the closed v3 Manage mandate runtime proof contract. Valid proof must bind responseEvidenceAsOfDate, responseProducerGeneratedAtUtc, temporalIdentityStatus=available, source-batch fingerprint, tenant/portfolio scope, and producer/source time reconciliation. Production trusted caller-context scope remains blocked by sgajbi/lotus-manage#624; rebalance/action/order execution and supported-feature promotion remain outside this proof.",
       "blockers": [
         "rebalance_execution_authority_remains_lotus_manage",
         "manage_live_contract_proof_missing",

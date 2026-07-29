@@ -178,10 +178,11 @@ production principal/session, Workbench authenticated BFF, core-owned canonical
 runtime, mesh onboarding, entitlement-denied, and supported-feature promotion
 evidence. #379 is `open_blocked`, not QA-pending: owner-app local
 implementation evidence is already merged through `sgajbi/lotus-advise#461`,
-`sgajbi/lotus-manage#621`, `sgajbi/lotus-report#152`, and Idea PR #742/#743,
-but production/certification evidence, trusted IdP caller context,
-retention/legal proof, and Archive production conformance remain open through
-`sgajbi/lotus-manage#620`, `sgajbi/lotus-manage#624`,
+`sgajbi/lotus-manage#621`, `sgajbi/lotus-report#152`, and Idea PR #742/#743.
+Idea now consumes `sgajbi/lotus-manage#620` temporal receipt identity through
+closed v3 Manage mandate runtime evidence, but production/certification
+evidence, trusted IdP caller context, retention/legal proof, and Archive
+production conformance remain open through `sgajbi/lotus-manage#624`,
 `sgajbi/lotus-report#136`, and `sgajbi/lotus-archive#55`. Platform PR
 `sgajbi/lotus-platform#631`
 fixes the prior Manage seed authorization failure, but #686 is still
@@ -461,7 +462,7 @@ taxonomy and the #393 same-pattern campaign.
 | `LOTUS_IDEA_BOND_MATURITY_LIVE_PROOF` | Passes a validated source-safe Lotus Core maturity-summary live-proof artifact into opportunity-archetype readiness. The live adapter consumes Core-owned `PortfolioMaturitySummary:v1` and fails closed when explicit maturity facts or upstream holdings lineage are missing. A valid artifact clears only `opportunity_archetype_maturity_live_core_source_proof_missing`; it does not recommend reinvestment products, forecast cashflows, certify suitability or risk, certify data mesh, prove Workbench behavior, approve client publication, or promote support. |
 | `LOTUS_IDEA_MISSING_BENCHMARK_LIVE_PROOF` | Passes validated closed v2 Core missing-benchmark `runtime_execution` evidence into opportunity-archetype readiness. The compatibility environment name does not accept v1. One Core fetch must reconcile pseudonymous tenant/book/portfolio/client/evaluation/correlation/trace scope, current `BenchmarkAssignment:v1` evidence, assignment identity/effectiveness/status/version posture, and a deterministic candidate or truthful ready-assignment no-opportunity receipt. A valid artifact clears only `opportunity_archetype_missing_benchmark_live_core_source_proof_missing`; Performance readiness, methodology, data mesh, Gateway/Workbench, publication, deployment, production, and promotion remain blocked. |
 | `LOTUS_IDEA_LOW_INCOME_CORE_CASHFLOW_LIVE_PROOF` | Passes validated receipt-bound Core cashflow v2 runtime evidence into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_live_core_cashflow_source_proof_missing`; it does not certify client income needs, funding advice, treasury instruction, suitability, planning objectives, data mesh, Workbench, client publication, deployment, production, or supported-feature promotion. |
-| `LOTUS_IDEA_MANAGE_MANDATE_LIVE_PROOF` | Passes validated closed v2 Lotus Manage mandate runtime evidence into opportunity-archetype readiness. Exact source scope, time, identity, policy, and deterministic outcome must reconcile. A valid artifact clears only `opportunity_archetype_portfolio_scoped_manage_source_proof_missing`, `opportunity_archetype_mandate_performance_health_source_ref_missing`, and `opportunity_archetype_mandate_risk_health_source_ref_missing`; it does not certify Core portfolio state, data mesh, Workbench, client publication, supported-feature promotion, rebalance authority, action authority, order creation, execution, or settlement. |
+| `LOTUS_IDEA_MANAGE_MANDATE_LIVE_PROOF` | Passes validated closed v3 Lotus Manage mandate runtime evidence into opportunity-archetype readiness. Exact source scope, time, temporal receipt identity, policy, and deterministic outcome must reconcile. A valid artifact clears only `opportunity_archetype_portfolio_scoped_manage_source_proof_missing`, `opportunity_archetype_mandate_performance_health_source_ref_missing`, and `opportunity_archetype_mandate_risk_health_source_ref_missing`; it does not certify Core portfolio state, data mesh, Workbench, client publication, supported-feature promotion, production trusted caller context, rebalance authority, action authority, order creation, execution, or settlement. |
 | `LOTUS_IDEA_MANDATE_RESTRICTION_LIVE_PROOF` | Passes validated closed v2 Advise mandate/restriction `runtime_execution` evidence into opportunity-archetype readiness. The compatibility environment name does not accept v1. Exact pseudonymous request scope, producer scope/time, workflow posture, source/policy hashes, deterministic candidate or no-opportunity outcome, and receipt digests must reconcile. A valid artifact clears only `opportunity_archetype_live_restriction_source_proof_missing`; typed source-product, restriction clearance, mandate state, suitability, policy/proposal approval, data mesh, Workbench, client publication, rebalance/order authority, deployment, production, and support promotion remain blocked. |
 | `LOTUS_IDEA_MANDATE_RESTRICTION_SOURCE_PRODUCT_PROOF` | Passes a validated source-safe typed Lotus Advise mandate/restriction source-product proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_typed_restriction_source_product_missing`; it does not certify live Advise reachability, clear restrictions, change mandate state, approve suitability, approve policy, approve proposals, certify data mesh, prove Workbench behavior, approve client publication, create rebalance/order authority, or promote support. |
 | `LOTUS_IDEA_MISSING_SUITABILITY_LIVE_PROOF` | Passes a validated source-safe Lotus Advise policy-evaluation live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_advise_policy_live_source_proof_missing`; it does not certify suitability, policy approval, proposal approval, data mesh, Workbench, client publication, or supported-feature promotion. |
@@ -705,10 +706,11 @@ blockers remain.
 
 Lotus Manage mandate runtime evidence is captured by
 `scripts/manage_mandate_runtime_evidence/generate_runtime_execution.py`. The
-closed v2 artifact invokes the named Manage source-evaluation use case and binds
-pseudonymous tenant/portfolio scope, source-authored as-of and generation time,
-the exact action-register receipt, Performance and Risk mandate-health source
-receipts, policy, and deterministic candidate or no-opportunity outcome. A valid
+closed v3 artifact invokes the named Manage source-evaluation use case and binds
+pseudonymous tenant/portfolio scope, source-authored evidence as-of date,
+producer generation time, temporal identity status, the exact action-register
+receipt, Performance and Risk mandate-health source receipts, policy, and
+deterministic candidate or no-opportunity outcome. A valid
 artifact referenced
 through `LOTUS_IDEA_MANAGE_MANDATE_LIVE_PROOF` clears only
 `opportunity_archetype_portfolio_scoped_manage_source_proof_missing`,
@@ -723,10 +725,11 @@ refs for `lotus-performance:MandatePerformanceHealthContext:v1` and
 `lotus-risk:MandateRiskHealthContext:v1` without storing
 portfolio identity, request or response payloads, correlation IDs, trace IDs,
 candidate IDs, source routes, action identifiers, rebalance payloads, or order
-details. Unknown fields, source substitution, scope, time, correlation, count,
-policy, hash, freshness, or receipt drift fail closed. Lotus Manage issue `#620`
-tracks the producer metadata needed for live qualification. The artifact
-deliberately retains Core portfolio-state, data-mesh, Workbench,
+details. Unknown fields, source substitution, missing or mixed producer temporal
+identity, scope, time, correlation, count, policy, hash, freshness, or receipt
+drift fail closed. Lotus Manage issue `#620` supplies the consumed temporal
+receipt identity; Lotus Manage issue `#624` still tracks production trusted
+caller-context scope. The artifact deliberately retains Core portfolio-state, data-mesh, Workbench,
 client-publication, supported-feature, rebalance, action, order-creation,
 execution, and settlement blockers.
 

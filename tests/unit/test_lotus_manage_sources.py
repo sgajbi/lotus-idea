@@ -27,8 +27,9 @@ def _payload(*, extra: dict[str, Any] | None = None) -> dict[str, Any]:
         "product_version": "v1",
         "tenant_id_hash": identity_hash("tenant-a"),
         "portfolio_id": "PB_SG_GLOBAL_BAL_001",
-        "as_of_date": AS_OF_DATE.isoformat(),
-        "generated_at_utc": "2026-06-21T09:59:00Z",
+        "evidence_as_of_date": AS_OF_DATE.isoformat(),
+        "producer_generated_at": "2026-06-21T09:59:00Z",
+        "temporal_identity_status": "available",
         "correlation_id": "corr-manage",
         "store_backend": "INMEMORY",
         "retention_days": 7,
@@ -50,6 +51,9 @@ def _payload(*, extra: dict[str, Any] | None = None) -> dict[str, Any]:
             "run_count": 1,
             "operation_count": 1,
             "workflow_decision_count": 2,
+            "evidence_as_of_date": AS_OF_DATE.isoformat(),
+            "producer_generated_at": "2026-06-21T09:59:00Z",
+            "temporal_identity_status": "available",
         },
     }
     if extra:
@@ -123,6 +127,11 @@ def test_lotus_manage_adapter_fetches_declared_action_register_source_product() 
     assert evidence.manage_diagnostic == "manage_action_register_ready_portfolio_scope"
     assert evidence.action_register_runtime is not None
     assert evidence.action_register_runtime.tenant_id_hash == identity_hash("tenant-a")
+    assert evidence.action_register_runtime.evidence_as_of_date == AS_OF_DATE
+    assert evidence.action_register_runtime.producer_generated_at_utc == datetime(
+        2026, 6, 21, 9, 59, tzinfo=UTC
+    )
+    assert evidence.action_register_runtime.temporal_identity_status == "available"
     assert seen == [
         (
             "GET",
@@ -461,7 +470,7 @@ def test_lotus_manage_adapter_accepts_same_day_freshness_bucket_as_current() -> 
 def test_lotus_manage_adapter_uses_authoritative_source_metadata() -> None:
     payload = _payload(
         extra={
-            "generated_at_utc": "2026-06-21T09:58:00Z",
+            "producer_generated_at": "2026-06-21T09:58:00Z",
             "source_batch_fingerprint": "sha256:" + "b" * 64,
         }
     )
@@ -476,7 +485,7 @@ def test_lotus_manage_adapter_uses_authoritative_source_metadata() -> None:
 
 
 def test_lotus_manage_adapter_rejects_naive_source_timestamp() -> None:
-    payload = _payload(extra={"generated_at_utc": "2026-06-21T10:00:00"})
+    payload = _payload(extra={"producer_generated_at": "2026-06-21T10:00:00"})
 
     evidence = _adapter(
         httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
@@ -488,9 +497,12 @@ def test_lotus_manage_adapter_rejects_naive_source_timestamp() -> None:
 
 def test_lotus_manage_adapter_does_not_substitute_consumer_time() -> None:
     payload = _payload()
-    payload.pop("generated_at_utc")
+    payload.pop("producer_generated_at")
     payload.pop("newest_run_created_at")
     payload.pop("newest_operation_created_at")
+    supportability = payload["supportability"]
+    assert isinstance(supportability, dict)
+    supportability.pop("producer_generated_at")
 
     evidence = _adapter(
         httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
@@ -588,9 +600,10 @@ def test_manage_mandate_health_evidence_request_requires_tenant_id() -> None:
     ("field", "value"),
     (
         ("tenant_id_hash", "sha256:" + "f" * 64),
-        ("as_of_date", "2026-06-20"),
+        ("evidence_as_of_date", "2026-06-20"),
         ("correlation_id", "corr-other"),
         ("source_batch_fingerprint", "not-a-sha256"),
+        ("temporal_identity_status", "mixed_source_as_of"),
     ),
 )
 def test_lotus_manage_adapter_rejects_mismatched_receipt_identity(
@@ -605,3 +618,19 @@ def test_lotus_manage_adapter_rejects_mismatched_receipt_identity(
 
     assert evidence.action_register_runtime is None
     assert evidence.action_register_ref is None
+
+
+def test_lotus_manage_adapter_accepts_nested_manage_temporal_identity() -> None:
+    payload = _payload()
+    payload.pop("evidence_as_of_date")
+    payload.pop("producer_generated_at")
+    payload.pop("temporal_identity_status")
+
+    evidence = _adapter(
+        httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+    ).fetch_mandate_health_evidence(_request())
+
+    assert evidence.action_register_runtime is not None
+    assert evidence.action_register_runtime.evidence_as_of_date == AS_OF_DATE
+    assert evidence.action_register_ref is not None
+    assert evidence.action_register_ref.generated_at_utc == datetime(2026, 6, 21, 9, 59, tzinfo=UTC)

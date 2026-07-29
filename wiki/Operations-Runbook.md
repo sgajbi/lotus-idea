@@ -265,7 +265,7 @@ optional typed missing risk-profile source-product proof through
 `LOTUS_IDEA_MISSING_RISK_PROFILE_SOURCE_PRODUCT_PROOF`,
 optional closed v2 missing-risk-profile Advise runtime evidence through
 `LOTUS_IDEA_MISSING_RISK_PROFILE_LIVE_PROOF`,
-optional closed v2 Manage mandate runtime evidence through
+optional closed v3 Manage mandate runtime evidence through
 `LOTUS_IDEA_MANAGE_MANDATE_LIVE_PROOF`,
 optional receipt-bound Core benchmark-assignment runtime evidence through
 `LOTUS_IDEA_CORE_BENCHMARK_ASSIGNMENT_LIVE_PROOF`,
