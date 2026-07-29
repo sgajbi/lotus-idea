@@ -471,6 +471,19 @@ cannot regress into chat-only memory. #681 remains open: this tranche does not
 clear any RFC-0002 blocker, promote supported features, prove product support,
 or complete the full documentation/wiki/support/context closure requirement.
 
+The same #681 source ledger now rolls forward through the later Slice 18
+governance tranches: PR #767 made pending final-closure and post-completion
+issue sections explicit, PR #768 added keep-open PR text enforcement, PR #769
+synchronized Manage temporal receipt identity consumption after
+`sgajbi/lotus-manage#620`, and PR #770 reconciled historical Manage #620 closure
+truth after downstream evidence was posted. The latest rollup checkpoint is
+main `c4a58683a05cb0c78bea5848a287abda682aea8f`, Main Releasability
+`30418344813`, CodeQL `30418340512`, strict wiki parity, no unmerged local or
+remote feature branch, and live cross-repo posture of 66 RFC-0002 issues total,
+32 closed, and 34 open. This evidence still preserves `sgajbi/lotus-manage#624`
+and the other blocked production/certification dependencies; it is not Slice 18
+completion evidence.
+
 The #379 downstream outcome certification supporting-proof tranche is now
 synchronized across repo context,
 `docs/operations/downstream-realization-readiness.md`,
