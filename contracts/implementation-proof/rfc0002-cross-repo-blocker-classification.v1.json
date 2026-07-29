@@ -1,0 +1,196 @@
+{
+  "schemaVersion": "lotus-idea:rfc0002-cross-repo-blocker-classification:v1",
+  "rfcId": "RFC-0002",
+  "asOfDate": "2026-07-29",
+  "repository": "sgajbi/lotus-idea",
+  "purpose": "Classify live RFC-0002 status/blocked issues by actionability so blocked posture means external, Core-owned, protected-environment, IdP, provider, legal/privacy, or certification evidence rather than hidden app-code work.",
+  "policy": {
+    "blockedDefinition": "An issue may remain status/blocked only when the remaining acceptance criteria require Core owner work, production identity/authenticated-session authority, protected environment or deployment evidence, live provider/bank/legal/privacy approval, or certification evidence that cannot be truthfully produced by a Lotus app code branch.",
+    "appFixForwardRule": "If remaining work can be implemented in writable non-Core Lotus repositories without external approval or protected runtime evidence, it must be tracked as ready or in-progress rather than status/blocked.",
+    "noClaimBoundary": "This contract classifies execution actionability only. It is not product-support evidence, runtime proof, deployment proof, production certification, legal approval, or supported-feature promotion."
+  },
+  "classifications": [
+    {
+      "repository": "sgajbi/lotus-idea",
+      "issueNumber": 343,
+      "actionability": "external_or_protected_evidence",
+      "blockerClass": "managed_database_disaster_recovery_certification",
+      "remainingAuthority": "managed PostgreSQL backup, PITR, failover, provider evidence, and bank-approved recovery execution"
+    },
+    {
+      "repository": "sgajbi/lotus-idea",
+      "issueNumber": 344,
+      "actionability": "external_or_protected_evidence",
+      "blockerClass": "legal_privacy_lifecycle_certification",
+      "remainingAuthority": "bank legal/privacy approval, live lifecycle-authority producer/key discovery, Archive production conformance, and provider-native AI deletion proof"
+    },
+    {
+      "repository": "sgajbi/lotus-idea",
+      "issueNumber": 345,
+      "actionability": "external_or_protected_evidence",
+      "blockerClass": "protected_capacity_finops_certification",
+      "remainingAuthority": "protected capacity runner/environment, load/soak/resource/PostgreSQL attestations, and platform protected FinOps evidence"
+    },
+    {
+      "repository": "sgajbi/lotus-idea",
+      "issueNumber": 375,
+      "actionability": "external_or_protected_evidence",
+      "blockerClass": "protected_migration_execution",
+      "remainingAuthority": "environment-scoped database secrets, governed PostgreSQL target, approved connectivity, workflow runs, and same-digest promotion evidence"
+    },
+    {
+      "repository": "sgajbi/lotus-idea",
+      "issueNumber": 379,
+      "actionability": "external_or_protected_evidence",
+      "blockerClass": "downstream_production_identity_and_lifecycle_certification",
+      "remainingAuthority": "trusted IdP caller context plus Report/Archive legal-retention and production conformance evidence"
+    },
+    {
+      "repository": "sgajbi/lotus-idea",
+      "issueNumber": 380,
+      "actionability": "external_or_protected_evidence",
+      "blockerClass": "supported_feature_promotion_prerequisites",
+      "remainingAuthority": "production principal/session prerequisites, Workbench authenticated principal resolution, Core canonical runtime prerequisites, Gateway/Workbench live evidence, entitlement-denied proof, and mesh certification"
+    },
+    {
+      "repository": "sgajbi/lotus-idea",
+      "issueNumber": 685,
+      "actionability": "core_dependency",
+      "blockerClass": "canonical_workbench_runtime_core_readiness",
+      "remainingAuthority": "Core-owned canonical DPM source readiness for PB_SG_GLOBAL_BAL_001 before fresh Workbench/Gateway queue/detail runtime proof"
+    },
+    {
+      "repository": "sgajbi/lotus-idea",
+      "issueNumber": 686,
+      "actionability": "core_dependency",
+      "blockerClass": "canonical_workbench_action_core_readiness",
+      "remainingAuthority": "Core-owned canonical DPM source readiness before fresh Workbench review-action, feedback, and conversion-intent browser proof"
+    },
+    {
+      "repository": "sgajbi/lotus-idea",
+      "issueNumber": 687,
+      "actionability": "external_or_protected_evidence",
+      "blockerClass": "production_identity_contract",
+      "remainingAuthority": "platform/Workbench authenticated IdP session and token-claims contract"
+    },
+    {
+      "repository": "sgajbi/lotus-idea",
+      "issueNumber": 691,
+      "actionability": "external_or_protected_evidence",
+      "blockerClass": "archive_lifecycle_publication_certification",
+      "remainingAuthority": "lifecycle-safe publication, Archive production trust/legal evidence, production identity, and supported-feature promotion"
+    },
+    {
+      "repository": "sgajbi/lotus-idea",
+      "issueNumber": 692,
+      "actionability": "external_or_protected_evidence",
+      "blockerClass": "mesh_certification_and_discovery_proof",
+      "remainingAuthority": "platform mesh event publication, mesh certification, Gateway/Workbench discovery proof, and supported-feature promotion"
+    },
+    {
+      "repository": "sgajbi/lotus-idea",
+      "issueNumber": 693,
+      "actionability": "external_or_protected_evidence",
+      "blockerClass": "protected_capacity_finops_certification",
+      "remainingAuthority": "protected capacity environment, governed runner, protected secrets, load/resource/dependency/PostgreSQL/cost attestations, and platform FinOps evidence"
+    },
+    {
+      "repository": "sgajbi/lotus-idea",
+      "issueNumber": 699,
+      "actionability": "external_or_protected_evidence",
+      "blockerClass": "full_live_journey_certification",
+      "remainingAuthority": "API, Gateway, Workbench, downstream handoff, Core, identity, publication, data-product, and supported-feature prerequisites"
+    },
+    {
+      "repository": "sgajbi/lotus-core",
+      "issueNumber": 836,
+      "actionability": "core_dependency",
+      "blockerClass": "canonical_workbench_seed_readiness",
+      "remainingAuthority": "Core-owned canonical Workbench seed readiness for PB_SG_GLOBAL_BAL_001"
+    },
+    {
+      "repository": "sgajbi/lotus-core",
+      "issueNumber": 840,
+      "actionability": "core_dependency",
+      "blockerClass": "canonical_dpm_source_readiness",
+      "remainingAuthority": "Core-owned eligibility, tax-lot, market-data, and DPM source readiness convergence"
+    },
+    {
+      "repository": "sgajbi/lotus-manage",
+      "issueNumber": 624,
+      "actionability": "external_or_protected_evidence",
+      "blockerClass": "production_identity_contract",
+      "remainingAuthority": "trusted IdP caller context and server-derived tenant/session receipt scope"
+    },
+    {
+      "repository": "sgajbi/lotus-report",
+      "issueNumber": 136,
+      "actionability": "external_or_protected_evidence",
+      "blockerClass": "retention_policy_and_archive_conformance_certification",
+      "remainingAuthority": "production-authorized retention policy source, live Report-to-Archive handoff evidence, Archive enforcement conformance, and bank legal/privacy certification"
+    },
+    {
+      "repository": "sgajbi/lotus-archive",
+      "issueNumber": 55,
+      "actionability": "external_or_protected_evidence",
+      "blockerClass": "archive_lifecycle_authority_certification",
+      "remainingAuthority": "production durable Archive metadata/audit storage, managed signing-key rotation, governed public-key trust distribution, legal/privacy approval, and live production evidence"
+    },
+    {
+      "repository": "sgajbi/lotus-ai",
+      "issueNumber": 115,
+      "actionability": "external_or_protected_evidence",
+      "blockerClass": "provider_retention_deletion_certification",
+      "remainingAuthority": "provider-native confirmation integration, managed production keys, production SQL deployment proof, and privacy/outsourcing/model-risk approval"
+    },
+    {
+      "repository": "sgajbi/lotus-ai",
+      "issueNumber": 122,
+      "actionability": "external_or_protected_evidence",
+      "blockerClass": "live_provider_model_risk_certification",
+      "remainingAuthority": "approved non-stub live provider execution, effective model-risk approval, signed non-stub attestation, provider-native retention/deletion confirmation, and downstream Idea consumption"
+    },
+    {
+      "repository": "sgajbi/lotus-platform",
+      "issueNumber": 495,
+      "actionability": "external_or_protected_evidence",
+      "blockerClass": "protected_finops_attestation",
+      "remainingAuthority": "protected FinOps execution, billing adapter evidence, decimal reconciliation, and protected attestation"
+    },
+    {
+      "repository": "sgajbi/lotus-platform",
+      "issueNumber": 563,
+      "actionability": "external_or_protected_evidence",
+      "blockerClass": "production_identity_contract",
+      "remainingAuthority": "authenticated BFF principal session contract and IdP-backed token-claims authority"
+    },
+    {
+      "repository": "sgajbi/lotus-platform",
+      "issueNumber": 598,
+      "actionability": "external_or_protected_evidence",
+      "blockerClass": "mesh_publication_and_product_certification",
+      "remainingAuthority": "platform mesh event publication proof, Gateway/Workbench live journey proof, supported-feature promotion, required-product promotion, data-product certification, production certification, protected FinOps, live deployed-digest, and protected migration evidence"
+    },
+    {
+      "repository": "sgajbi/lotus-platform",
+      "issueNumber": 599,
+      "actionability": "external_or_protected_evidence",
+      "blockerClass": "protected_deployment_promotion_and_cost_evidence",
+      "remainingAuthority": "approved staging/production deployed-digest observation, same-digest promotion evidence, protected migration linkage, and final Idea closure linkage"
+    },
+    {
+      "repository": "sgajbi/lotus-workbench",
+      "issueNumber": 436,
+      "actionability": "external_or_protected_evidence",
+      "blockerClass": "production_identity_contract",
+      "remainingAuthority": "authenticated Workbench BFF principal resolution from IdP-backed session/token claims"
+    },
+    {
+      "repository": "sgajbi/lotus-workbench",
+      "issueNumber": 500,
+      "actionability": "core_dependency",
+      "blockerClass": "canonical_browser_validation_core_readiness",
+      "remainingAuthority": "Core-owned PB_SG_GLOBAL_BAL_001 seed readiness convergence before final canonical browser proof"
+    }
+  ]
+}

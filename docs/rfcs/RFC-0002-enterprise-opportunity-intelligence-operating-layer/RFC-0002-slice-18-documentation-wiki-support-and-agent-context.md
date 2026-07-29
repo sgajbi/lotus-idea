@@ -577,6 +577,19 @@ production trust/legal evidence, platform mesh certification, Gateway/Workbench
 discovery proof, protected capacity/FinOps attestations, supported-feature
 promotion, and final live-journey evidence remain open.
 
+The cross-repo posture command now includes a source-controlled blocker
+actionability classifier at
+`contracts/implementation-proof/rfc0002-cross-repo-blocker-classification.v1.json`.
+For the current 77-issue RFC-0002 program posture, all 26 open
+`status/blocked` issues are classified: 5 are Core dependencies and 21 require
+external or protected evidence. The current app-actionable blocked count is 0.
+Future agents must not use `status/blocked` for writable non-Core app work; if
+the remaining acceptance criteria can be satisfied in `lotus-idea`,
+`lotus-gateway`, `lotus-workbench`, `lotus-manage`, `lotus-report`,
+`lotus-render`, `lotus-archive`, `lotus-ai`, or `lotus-platform` without Core,
+IdP, protected-environment, provider, bank/legal, or certification evidence,
+the issue must be reclassified to ready or in-progress and implemented.
+
 The missing-benchmark Core material now records the independently owned closed
 v2 runtime contract implemented by issue `#499`. One named application use case
 performs one Core fetch and preserves exact evidence or a stable error. Request,

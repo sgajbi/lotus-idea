@@ -1063,6 +1063,15 @@ support, context, and supported-feature truth is complete;
 boundary, and production vulnerability posture remains uncertified until
 release evidence exists.
 
+`make rfc0002-cross-repo-issue-posture` now renders blocker actionability from
+`contracts/implementation-proof/rfc0002-cross-repo-blocker-classification.v1.json`.
+Current live posture is 26 blocked RFC-0002 issues, 0 app-actionable blocked
+issues, 5 Core dependencies, and 21 external/protected-evidence blockers. This
+keeps “blocked” aligned to Core, IdP/session authority, protected runtime or
+deployment evidence, provider/bank/legal approval, or certification proof. If a
+writable non-Core app-code gap appears, it should not remain blocked; it should
+move to ready or in-progress and receive implementation/PR evidence.
+
 The RFC-0002 issue-learning pattern gate keeps repeated defect lessons
 source-controlled. `contracts/implementation-proof/rfc0002-issue-learning-patterns.v1.json`
 maps every non-complete RFC-0002 execution issue to at least one learning

@@ -10,6 +10,16 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+SCRIPT_DIR = Path(__file__).resolve().parent
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
+
+from cross_repo_blocker_actionability import (  # noqa: E402
+    DEFAULT_BLOCKER_CLASSIFICATION_PATH,
+    blocked_actionability_summary,
+    load_blocker_classifications,
+)
+
 DEFAULT_REPOSITORIES = (
     "sgajbi/lotus-idea",
     "sgajbi/lotus-core",
@@ -60,6 +70,7 @@ def build_cross_repo_issue_posture(
     *,
     repositories: Sequence[str] = DEFAULT_REPOSITORIES,
     fixture_path: Path | None = None,
+    blocker_classification_path: Path | None = DEFAULT_BLOCKER_CLASSIFICATION_PATH,
     limit: int = 1000,
 ) -> dict[str, Any]:
     repo_payloads = (
@@ -74,6 +85,11 @@ def build_cross_repo_issue_posture(
     repo_summaries: list[dict[str, Any]] = []
     all_rfc_issues: list[IssueSnapshot] = []
     total_open_issues = 0
+    blocker_classifications = (
+        load_blocker_classifications(blocker_classification_path)
+        if blocker_classification_path is not None
+        else {}
+    )
 
     for repository in repositories:
         repo_payload = _repo_payload(repo_payloads, repository)
@@ -83,6 +99,11 @@ def build_cross_repo_issue_posture(
         total_open_issues += open_issue_count
         repo_summaries.append(_repository_summary(repository, open_issue_count, rfc_issues))
 
+    blocked_actionability = blocked_actionability_summary(
+        issues=all_rfc_issues,
+        classifications=blocker_classifications,
+        issue_projection=_issue_projection,
+    )
     return {
         "schemaVersion": "lotus-idea:rfc0002-cross-repo-issue-posture:v1",
         "rfcId": "RFC-0002",
@@ -92,6 +113,7 @@ def build_cross_repo_issue_posture(
             "rfcLabel": EXPECTED_RFC_LABEL,
         },
         "counts": _aggregate_counts(repo_summaries),
+        "blockedActionability": blocked_actionability,
         "repositories": repo_summaries,
         "openAttentionIssues": _attention_issues(all_rfc_issues),
         "usageBoundary": (
@@ -144,6 +166,32 @@ def render_markdown(summary: Mapping[str, Any]) -> str:
     lines.extend(
         f"- `{status}`: {count}"
         for status, count in sorted(counts["openRfc0002IssuesByStatus"].items())
+    )
+    blocked_actionability = summary["blockedActionability"]
+    lines.extend(
+        [
+            "",
+            "## Blocked RFC-0002 Actionability",
+            "",
+            f"- Open blocked issues: {blocked_actionability['openBlockedIssueCount']}",
+            f"- App-actionable blocked issues: {blocked_actionability['appActionableBlockedIssueCount']}",
+            "",
+            "### Blocked Issues By Actionability",
+            "",
+        ]
+    )
+    lines.extend(
+        f"- `{actionability}`: {count}"
+        for actionability, count in sorted(
+            blocked_actionability["openBlockedIssuesByActionability"].items()
+        )
+    )
+    lines.extend(["", "### Blocked Issues By Class", ""])
+    lines.extend(
+        f"- `{blocker_class}`: {count}"
+        for blocker_class, count in sorted(
+            blocked_actionability["openBlockedIssuesByClass"].items()
+        )
     )
     lines.extend(["", "## Repository Summary", ""])
     lines.append("| Repository | Open issues | Open RFC-0002 | Closed RFC-0002 | Status posture |")
@@ -375,6 +423,12 @@ def _parse_args(argv: Sequence[str] | None) -> argparse.Namespace:
         help="Repository in owner/name form. Defaults to the governed RFC-0002 repo set.",
     )
     parser.add_argument("--fixture-json", type=Path)
+    parser.add_argument(
+        "--blocker-classification-json",
+        type=Path,
+        default=DEFAULT_BLOCKER_CLASSIFICATION_PATH,
+        help="Source-controlled classifier for open RFC-0002 status/blocked issues.",
+    )
     parser.add_argument("--limit", type=int, default=1000)
     parser.add_argument("--format", choices=("json", "markdown"), default="markdown")
     parser.add_argument("--output", type=Path)
@@ -388,6 +442,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         summary = build_cross_repo_issue_posture(
             repositories=repositories,
             fixture_path=args.fixture_json,
+            blocker_classification_path=args.blocker_classification_json,
             limit=args.limit,
         )
         rendered = (
