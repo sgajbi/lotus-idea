@@ -71,7 +71,7 @@
       "issueNumber": 687,
       "actionability": "external_or_protected_evidence",
       "blockerClass": "production_identity_contract",
-      "remainingAuthority": "platform/Workbench authenticated IdP session and token-claims contract"
+      "remainingAuthority": "production IdP-backed session/token-claim principal derivation, revocation/session-expiry handling, entitlement-denied proof, canonical browser proof, and supported-feature promotion after platform source-contract posture and Workbench BFF boundary hardening"
     },
     {
       "repository": "sgajbi/lotus-idea",
@@ -162,7 +162,7 @@
       "issueNumber": 563,
       "actionability": "external_or_protected_evidence",
       "blockerClass": "production_identity_contract",
-      "remainingAuthority": "authenticated BFF principal session contract and IdP-backed token-claims authority"
+      "remainingAuthority": "production IdP-backed token-claims authority, session lifecycle, revocation/expiry posture, entitlement-denied certification, and consumer proof after platform source-contract posture is defined"
     },
     {
       "repository": "sgajbi/lotus-platform",
@@ -183,7 +183,7 @@
       "issueNumber": 436,
       "actionability": "external_or_protected_evidence",
       "blockerClass": "production_identity_contract",
-      "remainingAuthority": "authenticated Workbench BFF principal resolution from IdP-backed session/token claims"
+      "remainingAuthority": "production Workbench BFF principal resolution from IdP-backed session/token claims, revocation/session-expiry handling, entitlement-denied proof, and canonical browser certification after browser-supplied authority stripping is merged"
     },
     {
       "repository": "sgajbi/lotus-workbench",

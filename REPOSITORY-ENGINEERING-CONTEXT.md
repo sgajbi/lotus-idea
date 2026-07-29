@@ -154,7 +154,15 @@ Main CodeQL/Push run `30456425304`, and `lotus-idea.wiki` publication
 post-merge evidence into source-controlled execution truth on exact main
 `f23c72d7d95d1676b8f673f538a9336e4b704fbc`; Main Releasability `30458163573`,
 Main CodeQL/Push run `30458146092`, and `lotus-idea.wiki` publication
-`bbd9e2f` passed with strict `DiffCount 0`. The live cross-repo posture is 77
+`bbd9e2f` passed with strict `DiffCount 0`. PR #791 synchronized PR #790's
+evidence into source-controlled execution truth on exact main
+`65e11890aaddb70fea4cf9d80e836ce1625a6c44`; Main Releasability `30460122600`,
+Main CodeQL `30460101418`, and `lotus-idea.wiki` publication
+`2453c3006722ee40e48762d884581fb6b3893bbe` passed with strict `DiffCount 0`.
+Workbench PR #505 then narrowed the BFF principal-boundary blocker on Workbench
+main `1b4afb92f4c810c99921fc26e451b04bca731e28`; Pull Request Merge Gate
+`30464152669`, Main Releasability `30465110912`, and Workbench wiki publication
+`3b4f78f` passed. The live cross-repo posture is 77
 tracked RFC-0002 issues, 40 complete, and 37 open; the blocked subset is 26
 issues, 0 app-actionable blocked issues, 5 Core dependencies, and 21
 external/protected-evidence blockers. #691, #692, and
@@ -1273,7 +1281,15 @@ PR #785 (`3ed24b318923dd4bf172da315fdc5996a612f0dc`, Main Releasability
 `c926899`), and PR #790
 (`f23c72d7d95d1676b8f673f538a9336e4b704fbc`, Main Releasability
 `30458163573`, Main CodeQL/Push run `30458146092`, `lotus-idea.wiki` commit
-`bbd9e2f`) with strict wiki `DiffCount 0`. The current Idea ledger posture is
+`bbd9e2f`), and PR #791
+(`65e11890aaddb70fea4cf9d80e836ce1625a6c44`, Main Releasability
+`30460122600`, Main CodeQL `30460101418`, `lotus-idea.wiki` commit
+`2453c3006722ee40e48762d884581fb6b3893bbe`) with strict wiki `DiffCount 0`.
+The Workbench PR #505 principal-boundary tranche is cross-repo evidence only:
+Workbench main `1b4afb92f4c810c99921fc26e451b04bca731e28` passed Pull Request
+Merge Gate `30464152669`, Main Releasability `30465110912`, and Workbench wiki
+publication `3b4f78f`, while production IdP/session/token-claims proof remains
+blocked. The current Idea ledger posture is
 42 tracked issues, 24 open, and 18 closed. That evidence is coordination
 posture only; it
 does not clear blockers, promote supported features, certify production

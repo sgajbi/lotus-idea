@@ -182,14 +182,83 @@ def test_rfc0002_github_issue_execution_ledger_tracks_slice18_posture_evidence()
     assert "30458163573" in issue_681["closureInstruction"]
     assert "30458146092" in issue_681["closureInstruction"]
     assert "lotus-idea.wiki commit bbd9e2f" in issue_681["closureInstruction"]
+    assert (
+        "PR #791 synchronized PR #790 evidence into source-controlled execution truth"
+        in issue_681["closureInstruction"]
+    )
+    assert "65e11890aaddb70fea4cf9d80e836ce1625a6c44" in issue_681["closureInstruction"]
+    assert "30460122600" in issue_681["closureInstruction"]
+    assert "30460101418" in issue_681["closureInstruction"]
+    assert (
+        "lotus-idea.wiki commit 2453c3006722ee40e48762d884581fb6b3893bbe"
+        in issue_681["closureInstruction"]
+    )
+    assert (
+        "Workbench PR #505 merged BFF principal-boundary hardening"
+        in (issue_681["closureInstruction"])
+    )
+    assert "1b4afb92f4c810c99921fc26e451b04bca731e28" in issue_681["closureInstruction"]
+    assert "30464152669" in issue_681["closureInstruction"]
+    assert "c4add59871bc3f0e78dc6602c8857c5e141e6367" in issue_681["closureInstruction"]
+    assert "30465110912" in issue_681["closureInstruction"]
+    assert "Workbench wiki publication reached commit 3b4f78f" in (issue_681["closureInstruction"])
     assert "0 app-actionable blocked issues" in issue_681["closureInstruction"]
     assert (
-        "Current Idea ledger posture after PR #790 is 42 tracked issues, 24 open, and 18 closed"
+        "Current Idea ledger posture after PR #791 is 42 tracked issues, 24 open, and 18 closed"
+        in issue_681["closureInstruction"]
+    )
+    assert (
+        "Current governed cross-repo RFC-0002 posture after Workbench PR #505 is 37 open and 40 closed issues across 13 repositories"
         in issue_681["closureInstruction"]
     )
     assert "strict DiffCount 0" in issue_681["closureInstruction"]
     assert "coordination and documentation truth only" in issue_681["closureInstruction"]
     assert "does not clear RFC-0002 blockers" in issue_681["closureInstruction"]
+    assert (
+        "replace production IdP/session/token-claims evidence" in (issue_681["closureInstruction"])
+    )
+
+
+def test_rfc0002_github_issue_execution_ledger_tracks_workbench_principal_blocker() -> None:
+    module = _load_gate()
+    payload = _ledger_payload(module)
+    issue_687 = next(
+        issue
+        for issue in payload["issues"]
+        if isinstance(issue, dict) and issue["issueNumber"] == 687
+    )
+
+    assert issue_687["githubState"] == "open"
+    assert issue_687["executionStatus"] == "open_blocked"
+    assert issue_687["allowPullRequestAutoClose"] is False
+    assert "Keep #687 open and status/blocked" in issue_687["closureInstruction"]
+    assert (
+        "Platform PR #635 defined the authenticated BFF principal session source-contract posture"
+        in issue_687["closureInstruction"]
+    )
+    assert "68c9d3a377a0a801d1a89d1eccf00cefcb3b46b6" in issue_687["closureInstruction"]
+    assert "30462517594" in issue_687["closureInstruction"]
+    assert "30462522963" in issue_687["closureInstruction"]
+    assert "platform wiki commit 3f36de5" in issue_687["closureInstruction"]
+    assert (
+        "Workbench PR #505 merged BFF principal-boundary hardening"
+        in (issue_687["closureInstruction"])
+    )
+    assert "1b4afb92f4c810c99921fc26e451b04bca731e28" in issue_687["closureInstruction"]
+    assert "30464152669" in issue_687["closureInstruction"]
+    assert "c4add59871bc3f0e78dc6602c8857c5e141e6367" in issue_687["closureInstruction"]
+    assert "30465110912" in issue_687["closureInstruction"]
+    assert "Workbench wiki publication reached commit 3b4f78f" in (issue_687["closureInstruction"])
+    assert (
+        "strips browser-supplied Authorization, Cookie, Proxy-Authorization, and X-Session-Id"
+        in issue_687["closureInstruction"]
+    )
+    assert (
+        "production IdP-backed session/token-claim principal derivation"
+        in (issue_687["closureInstruction"])
+    )
+    assert "entitlement-denied proof" in issue_687["closureInstruction"]
+    assert "local/dev caller-authority fixture" in issue_687["closureInstruction"]
 
 
 def test_rfc0002_github_issue_execution_ledger_requires_slice18_posture_evidence(

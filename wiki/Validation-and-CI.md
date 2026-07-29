@@ -833,7 +833,17 @@ Persistence adapter validation:
    synchronized that evidence into source-controlled execution truth on exact
    main `f23c72d7d95d1676b8f673f538a9336e4b704fbc`; Main Releasability
    `30458163573`, Main CodeQL/Push run `30458146092`, wiki publication commit
-   `bbd9e2f`, strict `DiffCount 0`, and branch cleanup passed. The current live
+   `bbd9e2f`, strict `DiffCount 0`, and branch cleanup passed. PR #791 then
+   synchronized PR #790 evidence into source-controlled execution truth on exact
+   main `65e11890aaddb70fea4cf9d80e836ce1625a6c44`; Main Releasability
+   `30460122600`, Main CodeQL `30460101418`, wiki publication commit
+   `2453c3006722ee40e48762d884581fb6b3893bbe`, strict `DiffCount 0`, and branch
+   cleanup passed. Workbench PR #505 narrowed the BFF principal-boundary blocker
+   on Workbench main `1b4afb92f4c810c99921fc26e451b04bca731e28`; Pull Request
+   Merge Gate `30464152669`, branch head
+   `c4add59871bc3f0e78dc6602c8857c5e141e6367`, Main Releasability
+   `30465110912`, Workbench wiki publication `3b4f78f`, strict `DiffCount 0`,
+   and branch cleanup passed. The current live
    cross-repo RFC-0002 posture checks the governed 13-repository
    owner/dependency set: 77 tracked issues, 40 complete, and 37 open, including
    26 blocked issues with 0 app-actionable blocked issues, 5 Core dependencies,
@@ -1061,14 +1071,17 @@ bucket.
 
 Current Slice 18 handoff truth is anchored by `lotus-idea#681`. The source
 ledger records the PR #765, #767, #768, #769, #770, #772, #775, #776, #777,
-#779, #785, #787, #789, and #790 evidence chain through exact main
-`f23c72d7d95d1676b8f673f538a9336e4b704fbc`, Main Releasability
-`30458163573`, Main CodeQL/Push run `30458146092`, wiki commit `bbd9e2f`,
+#779, #785, #787, #789, #790, and #791 evidence chain through exact main
+`65e11890aaddb70fea4cf9d80e836ce1625a6c44`, Main Releasability
+`30460122600`, Main CodeQL `30460101418`, wiki commit
+`2453c3006722ee40e48762d884581fb6b3893bbe`,
 strict wiki parity, live Idea RFC-0002 ledger posture of 42 tracked issues, 24
 open, and 18 closed, live cross-repo RFC-0002 posture of 77 tracked issues, 40
 complete, and 37 open across 13 repositories, and a classified blocked posture
 of 26 blocked issues, 0 app-actionable blocked issues, 5 Core dependencies, and
-21 external/protected-evidence blockers. Keep #681 open until the remaining documentation, wiki,
+21 external/protected-evidence blockers. Workbench PR #505 additionally records
+merged BFF principal-boundary hardening while preserving production
+IdP/session/token-claims and canonical browser proof blockers. Keep #681 open until the remaining documentation, wiki,
 support, context, and supported-feature truth is complete;
 `sgajbi/lotus-manage#624` remains the production trusted IdP caller-context
 boundary, and production vulnerability posture remains uncertified until
