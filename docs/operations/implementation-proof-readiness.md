@@ -281,6 +281,10 @@ wiki `DiffCount 0`, and local/remote branch cleanup passed. PR #789 classified
 the open blocked RFC-0002 set on exact main
 `01ae36ba89f975508bde47b4361190ef5c083597`; Main Releasability `30456433618`,
 Main CodeQL/Push run `30456425304`, repo-authored wiki publication `c926899`,
+strict wiki `DiffCount 0`, and branch cleanup passed. PR #790 synchronized that
+post-merge evidence into source-controlled execution truth on exact main
+`f23c72d7d95d1676b8f673f538a9336e4b704fbc`; Main Releasability `30458163573`,
+Main CodeQL/Push run `30458146092`, repo-authored wiki publication `bbd9e2f`,
 strict wiki `DiffCount 0`, and branch cleanup passed. The corrected cross-repo
 posture is 77 tracked RFC-0002 issues, 40 complete, and 37 open; the blocked
 subset is 26 issues with 0 app-actionable blocked issues, 5 Core dependencies,

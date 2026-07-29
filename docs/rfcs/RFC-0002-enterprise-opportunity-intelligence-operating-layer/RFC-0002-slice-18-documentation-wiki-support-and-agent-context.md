@@ -492,7 +492,11 @@ and 37 open. PR #789 then source-controlled blocker actionability on main
 `30456433618`, Main CodeQL/Push run `30456425304`, wiki commit `c926899`,
 strict wiki parity, branch cleanup, and a classified blocked posture of 26
 blocked issues, 0 app-actionable blocked issues, 5 Core dependencies, and 21
-external/protected-evidence blockers. Live Idea RFC-0002 ledger posture remains
+external/protected-evidence blockers. PR #790 synchronized that evidence into
+source-controlled execution truth on main
+`f23c72d7d95d1676b8f673f538a9336e4b704fbc` with Main Releasability
+`30458163573`, Main CodeQL/Push run `30458146092`, wiki commit `bbd9e2f`,
+strict wiki parity, and branch cleanup. Live Idea RFC-0002 ledger posture remains
 42 tracked issues, 24 open, and 18 closed. This evidence still preserves
 `sgajbi/lotus-manage#624` and the other blocked production/certification
 dependencies; it is not Slice 18 completion evidence and does not certify
