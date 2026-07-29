@@ -121,7 +121,9 @@ def test_github_issue_execution_summary_markdown_is_comment_ready() -> None:
     assert (
         "#343, #344, #345, #375, #379, #380, #685, #686, #687, #691, #692, #693, #699"
     ) in rendered
-    assert "Current issues: #340, #782" in rendered
+    assert "Current issues: #340, #782" not in rendered
+    assert "### `ai_attestation_and_model_governance`" in rendered
+    assert "Current issues: _None._" in rendered
     assert "Current issues: #679, #699" in rendered
     assert "Current issues: #679, #696, #697, #699" not in rendered
     assert "_None._" in rendered

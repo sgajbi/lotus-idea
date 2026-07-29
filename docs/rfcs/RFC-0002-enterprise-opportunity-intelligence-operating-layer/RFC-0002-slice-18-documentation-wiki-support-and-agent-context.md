@@ -534,8 +534,9 @@ producer-side `lotus-ai` workflow-run attestation proof passed against current
 mainline evidence. PR #746 corrected stale ready
 posture for #380 and reconciled it to `open_blocked` at
 `6f8875dc6784dd17975e6700c09b9ff71d66fb8b`; Main Releasability
-`30327202465` and CodeQL `30327193673` passed. Current source truth now records
-41 tracked RFC-0002 issues, 17 closed complete, 24 open, no
+`30327202465` and CodeQL `30327193673` passed. After #782 final QA closure and
+source-controlled ledger synchronization, current source truth now records
+42 tracked RFC-0002 issues, 18 closed complete, 24 open, no
 `open_merged_main_qa_pending`, 1 `open_in_progress`, no `open_pr_raised`, and
 13 `open_blocked` issues. #379 is `open_blocked`, not QA-pending because its
 owner-app local implementation dependencies are merged but

@@ -166,8 +166,8 @@ live GitHub proof; it deliberately points back to
 `make rfc0002-github-issue-execution-state-audit` for current GitHub label and
 open/closed verification.
 
-Current Slice 18 ledger synchronization records 41 tracked RFC-0002 issues:
-17 closed complete, 24 open, no `open_ready`, no
+Current Slice 18 ledger synchronization records 42 tracked RFC-0002 issues:
+18 closed complete, 24 open, no `open_ready`, no
 `open_merged_main_qa_pending` issues, 13 `open_blocked`, 1
 `open_in_progress`, no `open_fixed_local`, no `open_pr_raised`, 1
 `open_pending_final_closure`, 1 `open_pending_post_completion`, and 8
@@ -260,8 +260,9 @@ PR #779 then hardened operations blocker truth to exact main
 `655d1245e96b7a67dea6c5d9ff0c78d0a32ee9e6`; Main Releasability
 `30437706105`, CodeQL `30437690255`, repo-authored wiki publication
 `b3359fa`, strict wiki `DiffCount 0`, and local/remote branch cleanup passed.
-The current Idea RFC-0002 ledger posture remains 41 tracked issues, 24 open,
-and 17 closed. This is still coordination/documentation truth only;
+The current Idea RFC-0002 ledger posture is 42 tracked issues, 24 open, and 18
+closed after #782 final QA closure and source-controlled ledger synchronization.
+This is still coordination/documentation truth only;
 `sgajbi/lotus-manage#624` and other blocked dependencies remain open, and
 production vulnerability posture is not certified.
 
