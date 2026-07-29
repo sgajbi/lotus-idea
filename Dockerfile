@@ -44,6 +44,12 @@ RUN python -m pip install --no-cache-dir --upgrade pip \
 COPY src ./src
 RUN python -m pip install --no-cache-dir --no-deps .
 
+# The final service image must not carry a package installer or its vendored
+# build-tool metadata. Dependencies are already resolved above; removing pip
+# reduces runtime supply-chain surface and prevents scanner findings against
+# installer-only packages that are not application runtime dependencies.
+RUN python -m pip uninstall --yes pip setuptools wheel
+
 COPY contracts ./contracts
 COPY migrations ./migrations
 COPY docs/examples/source-ingestion/canonical-high-cash-worker.manifest.json ./docs/examples/source-ingestion/canonical-high-cash-worker.manifest.json
