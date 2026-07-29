@@ -208,9 +208,14 @@ def test_rfc0002_github_issue_execution_ledger_tracks_slice18_posture_evidence()
         in issue_681["closureInstruction"]
     )
     assert (
-        "Current governed cross-repo RFC-0002 posture after Workbench PR #505 is 37 open and 40 closed issues across 13 repositories"
+        "Current governed cross-repo RFC-0002 posture after Workbench PR #505 and the platform #636 traceability label update is 37 open and 41 closed issues across 13 repositories, 78 tracked issues total"
         in issue_681["closureInstruction"]
     )
+    assert (
+        "Platform #636 / PR #637 closed stale queued workflow-run detection"
+        in (issue_681["closureInstruction"])
+    )
+    assert "30472672629" in issue_681["closureInstruction"]
     assert "strict DiffCount 0" in issue_681["closureInstruction"]
     assert "coordination and documentation truth only" in issue_681["closureInstruction"]
     assert "does not clear RFC-0002 blockers" in issue_681["closureInstruction"]
