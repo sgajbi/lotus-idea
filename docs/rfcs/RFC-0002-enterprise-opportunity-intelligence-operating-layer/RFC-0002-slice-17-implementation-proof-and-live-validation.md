@@ -320,7 +320,11 @@ evidence.
     readiness clears `lotus_ai_runtime_execution_missing` and adds
     `lotus_ai_live_provider_execution_missing`, preserving workflow-pack
     registration, provider rollout, runtime trust telemetry, Workbench,
-    client-publication, and supported-feature blockers.
+    client-publication, and supported-feature blockers. `lotus-ai` PR #123
+    (`937501833b4c2a9d3031a108368ca113204b5db9`, Main Releasability
+    `30402022877`) now provides owner-mainline deterministic local-dev proof
+    for the same `idea_explanation.pack@v1` proof-contract path; it is bounded
+    runtime-seam evidence, not non-stub provider certification.
     Model-risk dashboard and alert source validation is handled by the
     separate model-risk operations proof gate.
 27. The aggregate readiness diagnostic now includes an
@@ -578,9 +582,13 @@ without relying on chat memory.
 15. AI workflow-pack runtime execution proof is now explicit in aggregate
     readiness evidence, but it proves only an observed deterministic runtime
     invocation with a source-safe receipt, guardrails, stub-provider routing,
-    and restricted `lotus-idea` caller policy; live provider execution,
-    provider rollout, model-risk operations certification, runtime trust
-    telemetry, Workbench proof, and supported-feature promotion remain pending.
+    and restricted `lotus-idea` caller policy. `lotus-ai` PR #123 adds
+    owner-mainline deterministic local-dev proof for
+    `idea_explanation.pack@v1`; live provider execution, provider rollout,
+    effective model-risk approval, signed non-stub workflow-run attestation,
+    provider-native retention/deletion confirmation, runtime trust telemetry,
+    Workbench proof, client-ready publication, final journey proof, and
+    supported-feature promotion remain pending.
 16. Opportunity archetype scenario readiness is now explicit in aggregate
     readiness, but it proves only governed taxonomy, bounded concentration
     source/policy foundation, bounded high-volatility / drawdown source/policy
@@ -722,7 +730,13 @@ The AI workflow-pack runtime execution proof narrows the execution gap from
 review-gated `idea_explanation.pack@v1` invocation produced a bounded,
 digest-bound receipt with guardrails and caller policy enforced." It does not close
 live provider execution, provider rollout, certified model-risk operations,
-Workbench proof, or supported-feature proof.
+Workbench proof, or supported-feature proof. The current owner-repo downstream
+evidence is `sgajbi/lotus-ai#122` / PR #123 on `lotus-ai` main
+`937501833b4c2a9d3031a108368ca113204b5db9`, with Main Releasability
+`30402022877`; this evidence validates deterministic local-dev
+`idea_explanation.pack@v1` proof-contract execution and deliberately keeps the
+non-stub provider, model-risk, retention/deletion, Workbench, publication, and
+final live-journey blockers open.
 
 The signed AI attestation v2 source contract narrows the declaration gap from
 unbound file/token scans to exact producer and consumer source-authority records

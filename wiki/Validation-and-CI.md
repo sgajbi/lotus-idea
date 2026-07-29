@@ -603,7 +603,12 @@ Persistence adapter validation:
     A valid artifact clears only `lotus_ai_runtime_execution_missing` in
     aggregate readiness, adds `lotus_ai_live_provider_execution_missing`, and
     preserves workflow-pack registration, Workbench, client-ready, and
-    supported-feature blockers.
+    supported-feature blockers. `lotus-ai` PR #123 on main
+    `937501833b4c2a9d3031a108368ca113204b5db9` with Main Releasability
+    `30402022877` is bounded deterministic local-dev
+    `idea_explanation.pack@v1` proof-contract evidence only; live-provider,
+    model-risk, retention/deletion, Workbench, publication, and final journey
+    blockers remain open.
 20. `tests/unit/runtime_trust_telemetry/test_telemetry.py`,
     `tests/unit/runtime_trust_telemetry/test_snapshot_cli.py`,
     `tests/integration/test_runtime_trust_telemetry_api.py`,
@@ -811,8 +816,12 @@ Persistence adapter validation:
    main `aa492aedd46f30b854c8478edb919605dbdd58fc`; Main Releasability
    `30432065538` and CodeQL `30432058627` passed, wiki publication completed at
    `lotus-idea.wiki` commit `c08509a` with strict `DiffCount 0`, branch cleanup
-   completed, and the live cross-repo RFC-0002 posture is 66 tracked issues, 33
-   closed, and 33 open. #691, #692, and #699 remain blocked rather
+   completed. PR #777 then synchronized #681 evidence after #690 QA closure to
+   exact main `39d51c5cb63df360f1e97e6e9e862784a9ad9178`; Main Releasability
+   `30434057675`, CodeQL `30434051218`, wiki publication commit `d0a1fa1`,
+   strict `DiffCount 0`, and branch cleanup passed. The live cross-repo
+   RFC-0002 posture is 66 tracked issues, 33 closed, and 33 open. #691, #692,
+   and #699 remain blocked rather
    than QA-pending because their merged implementation tranches preserve only
    bounded Render/Archive, mesh-readiness, and proof-control evidence;
    lifecycle-safe publication authority, production identity, Archive production

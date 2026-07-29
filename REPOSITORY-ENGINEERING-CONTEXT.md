@@ -1223,7 +1223,9 @@ PR #770 (`c4a58683a05cb0c78bea5848a287abda682aea8f`, Main Releasability
 #775 (`800f682c4f7ae20a2c0634eb112323d7936cca73`, Main Releasability
 `30430120214`, CodeQL `30430108647`, `lotus-idea.wiki` commit `3ebd0f0`), and
 PR #776 (`aa492aedd46f30b854c8478edb919605dbdd58fc`, Main Releasability
-`30432065538`, CodeQL `30432058627`, `lotus-idea.wiki` commit `c08509a`)
+`30432065538`, CodeQL `30432058627`, `lotus-idea.wiki` commit `c08509a`), and
+PR #777 (`39d51c5cb63df360f1e97e6e9e862784a9ad9178`, Main Releasability
+`30434057675`, CodeQL `30434051218`, `lotus-idea.wiki` commit `d0a1fa1`)
 with strict wiki `DiffCount 0`. The current live cross-repo posture is 66
 RFC-0002 issues total, 33 closed, and 33 open; the current Idea ledger posture
 is 41 tracked issues, 24 open, and 17 closed. That evidence is coordination
@@ -1272,6 +1274,14 @@ evidence only and must never set `lotusAiRuntimeExecuted` or clear a runtime
 blocker. A deterministic stub receipt clears only the generic runtime seam and
 must add `lotus_ai_live_provider_execution_missing`; it is not provider,
 production approval, Workbench, client-publication, or supported-feature proof.
+`sgajbi/lotus-ai#122` / PR #123 on `lotus-ai` main
+`937501833b4c2a9d3031a108368ca113204b5db9` with Main Releasability
+`30402022877` is the current owner-mainline deterministic local-dev
+`idea_explanation.pack@v1` proof-contract evidence. It preserves approved
+non-stub live-provider execution, effective model-risk approval, signed non-stub
+workflow-run attestation, provider-native retention/deletion confirmation,
+Workbench proof, client publication, supported-feature promotion, and final
+live-journey blockers.
 Issue `#393` tracks the same evidence-classification audit across other proof
 builders.
 
@@ -1386,9 +1396,10 @@ unattested workflow output before candidate lookup or persistence and accept
 only a complete producer output bundle with a verified run receipt.
 Deterministic fallback remains allowed. Signed
 run/model attestation issuance and key distribution belong to `lotus-ai`; the
-producer contract was completed under `sgajbi/lotus-ai#113`. Live
-provider/model approval and runtime truth remain external and do not become
-Idea authority.
+producer contract was completed under `sgajbi/lotus-ai#113`, with later
+deterministic local-dev workflow-pack proof-contract evidence under
+`sgajbi/lotus-ai#122` / PR #123. Live provider/model approval and runtime truth
+remain external and do not become Idea authority.
 Idea consumes the exact producer envelope through `app.integration`, discovers
 keys only at the fixed well-known path, verifies Ed25519 signatures and
 deterministic input/output bindings, maps verified output through the
