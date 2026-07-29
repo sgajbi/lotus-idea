@@ -146,8 +146,14 @@ completed. PR #787 corrected the live cross-repo RFC-0002 posture command to
 check the governed 13-repository owner/dependency set on exact main
 `39a480ddf115649acc3f6793a69596d4e5912bc8`; Main Releasability `30451401411`,
 Push on main `30451387946`, and `lotus-idea.wiki` publication `d06f46b`
-passed with strict `DiffCount 0`. The live cross-repo posture is 77 tracked
-RFC-0002 issues, 40 complete, and 37 open. #691, #692, and
+passed with strict `DiffCount 0`. PR #789 then made the blocked-issue
+actionability classifier source-controlled on exact main
+`01ae36ba89f975508bde47b4361190ef5c083597`; Main Releasability `30456433618`,
+Main CodeQL/Push run `30456425304`, and `lotus-idea.wiki` publication
+`c926899` passed with strict `DiffCount 0`. The live cross-repo posture is 77
+tracked RFC-0002 issues, 40 complete, and 37 open; the blocked subset is 26
+issues, 0 app-actionable blocked issues, 5 Core dependencies, and 21
+external/protected-evidence blockers. #691, #692, and
 #699 remain blocked rather than
 QA-pending: their merged PRs preserve bounded Render/Archive, mesh-readiness,
 and proof-control evidence only, while production identity, client publication,
@@ -1257,8 +1263,12 @@ PR #785 (`3ed24b318923dd4bf172da315fdc5996a612f0dc`, Main Releasability
 `30447510833`, CodeQL `30447504086`), and PR #787
 (`39a480ddf115649acc3f6793a69596d4e5912bc8`, Main Releasability
 `30451401411`, Push on main `30451387946`, `lotus-idea.wiki` commit
-`d06f46b`) with strict wiki `DiffCount 0`. The
-current Idea ledger posture is 42 tracked issues, 24 open, and 18 closed. That evidence is coordination posture only; it
+`d06f46b`), and PR #789
+(`01ae36ba89f975508bde47b4361190ef5c083597`, Main Releasability
+`30456433618`, Main CodeQL/Push run `30456425304`, `lotus-idea.wiki` commit
+`c926899`) with strict wiki `DiffCount 0`. The current Idea ledger posture is
+42 tracked issues, 24 open, and 18 closed. That evidence is coordination
+posture only; it
 does not clear blockers, promote supported features, certify production
 vulnerability posture, or complete Slice 18 closure.
 
