@@ -570,9 +570,11 @@ posture for #380 and reconciled it to `open_blocked` at
 `6f8875dc6784dd17975e6700c09b9ff71d66fb8b`; Main Releasability
 `30327202465` and CodeQL `30327193673` passed. After PR #798 merged the
 incident-response operating model, wiki publication `0d075af` reached strict
-parity, and #797 moved into source-truth evidence synchronization, current
-source truth now records 43 tracked RFC-0002 issues, 18 closed complete, 25
-open, 1 `open_merged_main_qa_pending`, 1 `open_in_progress`, no
+parity, PR #799 synchronized #797 merge evidence to exact main
+`13300e21c8b27b4f1418240496f423d54d2ced3e` with Main Releasability
+`30483045202` and CodeQL `90680095852`, and #797 moved to closed source truth,
+current source truth now records 43 tracked RFC-0002 issues, 19 closed
+complete, 24 open, no `open_merged_main_qa_pending`, 1 `open_in_progress`, no
 `open_pr_raised`, and 13 `open_blocked` issues. #379 is `open_blocked`, not
 QA-pending because its
 owner-app local implementation dependencies are merged but

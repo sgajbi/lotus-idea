@@ -2,7 +2,7 @@
   "schemaVersion": "lotus-idea:rfc0002-issue-learning-patterns:v1",
   "rfcId": "RFC-0002",
   "repository": "sgajbi/lotus-idea",
-  "asOfDate": "2026-07-29",
+  "asOfDate": "2026-07-30",
   "executionLedgerRef": "contracts/implementation-proof/rfc0002-github-issue-execution-ledger.v1.json",
   "purpose": "Durably cluster RFC-0002 GitHub issue learnings so future implementation slices inspect related defects, preserve no-claim boundaries, and update context or skills when repeated patterns recur.",
   "patterns": [
@@ -181,7 +181,7 @@
     {
       "patternId": "operations_security_resilience_certification",
       "title": "Operations, security, lifecycle, migration, outbox, SLO, capacity, and disaster-recovery claims need protected or production-like attestations.",
-      "currentLedgerIssueNumbers": [343, 344, 345, 375, 678, 693, 797],
+      "currentLedgerIssueNumbers": [343, 344, 345, 375, 678, 693],
       "relatedIssueNumbers": [337, 343, 344, 345, 372, 375, 695, 756, 797],
       "rfcSlices": ["slice-15", "slice-18"],
       "durableControls": [
