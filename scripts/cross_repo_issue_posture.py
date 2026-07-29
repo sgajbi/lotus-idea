@@ -12,14 +12,18 @@ from typing import Any
 
 DEFAULT_REPOSITORIES = (
     "sgajbi/lotus-idea",
+    "sgajbi/lotus-core",
+    "sgajbi/lotus-performance",
+    "sgajbi/lotus-risk",
     "sgajbi/lotus-advise",
+    "sgajbi/lotus-manage",
+    "sgajbi/lotus-report",
+    "sgajbi/lotus-render",
+    "sgajbi/lotus-archive",
     "sgajbi/lotus-ai",
     "sgajbi/lotus-platform",
     "sgajbi/lotus-gateway",
     "sgajbi/lotus-workbench",
-    "sgajbi/lotus-manage",
-    "sgajbi/lotus-risk",
-    "sgajbi/lotus-performance",
 )
 
 EXPECTED_RFC_LABEL = "rfc/RFC-0002"

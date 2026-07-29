@@ -483,9 +483,10 @@ final QA closure truth. PR #777 synchronized #681 evidence after #690 QA closure
 The latest rollup checkpoint is main
 `39d51c5cb63df360f1e97e6e9e862784a9ad9178`, Main Releasability `30434057675`,
 CodeQL `30434051218`, wiki commit `d0a1fa1`, strict wiki parity, no unmerged
-local or remote feature branch, live cross-repo RFC-0002 posture of 66 tracked
-issues, 33 closed, and 33 open, and live Idea RFC-0002 ledger posture of 41
-tracked issues, 24 open, and 17 closed. This evidence still preserves
+local or remote feature branch, live cross-repo RFC-0002 posture over the
+governed 13-repository owner/dependency set of 77 tracked issues, 40 closed,
+and 37 open, and live Idea RFC-0002 ledger posture of 42 tracked issues, 24
+open, and 18 closed. This evidence still preserves
 `sgajbi/lotus-manage#624` and the other blocked production/certification
 dependencies; it is not Slice 18 completion evidence and does not certify
 production vulnerability posture.

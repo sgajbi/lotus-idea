@@ -183,3 +183,23 @@ def test_cross_repo_issue_posture_rejects_missing_repo_fixture(tmp_path: Path) -
         assert "missing repository payload for sgajbi/lotus-idea" in str(exc)
     else:
         raise AssertionError("expected missing repository fixture to fail")
+
+
+def test_default_repository_scope_covers_governed_rfc0002_owner_dependencies() -> None:
+    module = _load_module()
+
+    assert module.DEFAULT_REPOSITORIES == (
+        "sgajbi/lotus-idea",
+        "sgajbi/lotus-core",
+        "sgajbi/lotus-performance",
+        "sgajbi/lotus-risk",
+        "sgajbi/lotus-advise",
+        "sgajbi/lotus-manage",
+        "sgajbi/lotus-report",
+        "sgajbi/lotus-render",
+        "sgajbi/lotus-archive",
+        "sgajbi/lotus-ai",
+        "sgajbi/lotus-platform",
+        "sgajbi/lotus-gateway",
+        "sgajbi/lotus-workbench",
+    )

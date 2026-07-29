@@ -142,8 +142,9 @@ unclaimed. PR #776 synchronized that #690 final QA closure truth to exact main
 `aa492aedd46f30b854c8478edb919605dbdd58fc`; Main Releasability `30432065538`
 and CodeQL `30432058627` passed, wiki publication completed at
 `lotus-idea.wiki` commit `c08509a` with strict `DiffCount 0`, branch cleanup
-completed, and live cross-repo RFC-0002 posture is now 66 tracked issues, 33
-closed, and 33 open. #691, #692, and
+completed, and live cross-repo RFC-0002 posture now checks the governed
+13-repository owner/dependency set with 77 tracked issues, 40 closed, and 37
+open. #691, #692, and
 #699 remain blocked rather than
 QA-pending: their merged PRs preserve bounded Render/Archive, mesh-readiness,
 and proof-control evidence only, while production identity, client publication,
