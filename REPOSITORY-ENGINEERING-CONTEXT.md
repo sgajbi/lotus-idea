@@ -2075,7 +2075,10 @@ Recent issue-derived patterns to preserve:
     the remaining evidence class, and run
     `make rfc0002-github-issue-execution-ledger-gate` before PR evidence is
     posted. Use explicit QA-backed closure after exact-main validation instead
-    of relying on accidental merge-time closure.
+    of relying on accidental merge-time closure. If the PR-text gate fails and
+    the PR body is edited afterward, push a small source-controlled correction
+    before rerunning the failed Actions job because a rerun can keep evaluating
+    the stale `pull_request` event payload from the original run.
 50. When issue state, labels, or fixed counts are used as RFC execution truth,
     run `make rfc0002-github-issue-execution-state-audit` after any manual
     reopen, close, or label correction. The audit catches ledger/GitHub state
