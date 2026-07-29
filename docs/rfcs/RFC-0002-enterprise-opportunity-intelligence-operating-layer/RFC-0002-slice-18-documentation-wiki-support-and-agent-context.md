@@ -424,6 +424,16 @@ evidence-consumption PRs from using `Closes`, `Fixes`, or `Resolves` for work
 that still lacks live runtime, downstream, publication, support, or
 supported-feature evidence.
 
+Slice 18 also adds `make rfc0002-github-issue-pr-text-gate`, backed by
+`scripts/github_issue_pr_text_gate.py`, as the pull-request title/body
+companion for keep-open RFC issue posture. The target passes offline when no PR
+text is supplied. PR Merge Gate supplies the GitHub pull-request title and body,
+and the gate fails early when text says `Keep #<open issue> open` while also
+using standalone GitHub auto-close keywords such as `fixes`, `closes`, or
+`resolves`. Partial RFC PRs must use neutral verbs such as `updates`, `records`,
+`reconciles`, or `addresses` until the complete evidence class is merged and
+QA-backed closure is intended.
+
 The same Slice 18 learning loop now adds
 `make rfc0002-github-issue-execution-state-audit`, backed by
 `scripts/github_issue_execution_state_audit.py`. The audit compares the ledger

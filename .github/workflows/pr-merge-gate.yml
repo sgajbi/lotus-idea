@@ -35,6 +35,12 @@ jobs:
           reporter: local
           filter_mode: nofilter
           fail_level: error
+      - name: RFC-0002 keep-open PR text gate
+        if: github.event_name == 'pull_request'
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: python scripts/github_issue_pr_text_gate.py --title-env PR_TITLE --body-env PR_BODY
 
   lint-typecheck-security:
     name: PR Merge Gate / Lint Typecheck Security

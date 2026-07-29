@@ -975,6 +975,14 @@ from the ledger, if a ledger issue loses the RFC label in GitHub, or if an
 because it depends on GitHub state, but its parsing and failure modes are
 unit-tested.
 
+`make rfc0002-github-issue-pr-text-gate` prevents partial RFC PR title/body text
+from mixing `Keep #<issue> open` with standalone GitHub auto-close keywords.
+The target is no-op when PR text is not supplied locally; PR Merge Gate supplies
+the GitHub pull-request title and body and fails early if a keep-open issue is
+paired with verbs such as `fixes`, `closes`, or `resolves`. Use neutral verbs
+such as `updates`, `records`, `reconciles`, or `addresses` until QA-backed
+closure is intended.
+
 `make rfc0002-github-issue-execution-summary` renders the source-controlled
 RFC-0002 issue execution summary after the ledger and learning-pattern gates
 pass. Use it for implementation handoff and issue-count reporting after the live

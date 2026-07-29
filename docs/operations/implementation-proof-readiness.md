@@ -122,6 +122,15 @@ partial source-contract or evidence-consumption PRs can link issues without
 silently closing work that still needs live runtime, downstream, publication,
 support, or supported-feature proof.
 
+`make rfc0002-github-issue-pr-text-gate` is the PR-text companion for that
+ledger. In local/offline execution it passes when no PR title/body text is
+provided. In the PR Merge Gate, GitHub supplies the pull-request title and body;
+the gate fails when text says `Keep #<open issue> open` and also contains a
+standalone GitHub auto-close keyword such as `fixes`, `closes`, or `resolves`.
+Use neutral verbs such as `updates`, `records`, `reconciles`, or `addresses` for
+partial RFC evidence PRs, then close issues only through explicit QA-backed
+closure once the full evidence class is satisfied on exact main.
+
 `make rfc0002-github-issue-execution-state-audit` compares the ledger with
 current GitHub issue state through the GitHub CLI. It is intentionally a
 GitHub-backed audit rather than a CI lint gate: run it before PR evidence, after

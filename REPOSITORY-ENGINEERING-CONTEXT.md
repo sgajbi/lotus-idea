@@ -1169,11 +1169,15 @@ is part of `make lint`; it records the current RFC execution issues, their
 slice labels, open or closed posture, and whether a PR may use GitHub
 auto-close wording. Open, partial, blocked, or merged-main-QA-pending issues
 must keep `allowPullRequestAutoClose=false` and a `Keep #<issue> open`
-instruction. Do not use `Closes`, `Fixes`, or `Resolves` in PR bodies or commit
-messages for those issues until the full evidence class and QA-backed closure
-criteria are satisfied. The `#690` reopen after PR `#707` is the current
-regression case this gate prevents. When current GitHub state itself is being
-used as delivery truth, run
+instruction. `make rfc0002-github-issue-pr-text-gate` is the companion PR Merge
+Gate check for pull-request title/body text. Do not use standalone `Closes`,
+`Fixes`, or `Resolves` in PR titles, PR bodies, or commit messages for those
+issues until the full evidence class and QA-backed closure criteria are
+satisfied; use neutral verbs such as `updates`, `records`, `reconciles`, or
+`addresses` for partial evidence. The `#690` reopen after PR `#707` and the
+`#681` auto-close/reopen after PR `#767` are the current regression cases these
+gates prevent. When current GitHub state itself is being used as delivery truth,
+run
 `make rfc0002-github-issue-execution-state-audit`; it compares the ledger with
 GitHub open/closed state and lifecycle labels so reopened, blocked,
 in-progress, merged-main-QA-pending, and closed-complete issue posture cannot
