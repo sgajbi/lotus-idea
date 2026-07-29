@@ -327,6 +327,75 @@ def test_rfc0002_github_issue_execution_ledger_requires_issue_380_blocker_eviden
     assert "#380: closureInstruction missing required evidence `open_blocked`" in errors
 
 
+def test_rfc0002_github_issue_execution_ledger_tracks_slice15_operations_blockers() -> None:
+    module = _load_gate()
+    payload = _ledger_payload(module)
+    issue_343 = next(
+        issue
+        for issue in payload["issues"]
+        if isinstance(issue, dict) and issue["issueNumber"] == 343
+    )
+    issue_344 = next(
+        issue
+        for issue in payload["issues"]
+        if isinstance(issue, dict) and issue["issueNumber"] == 344
+    )
+    issue_375 = next(
+        issue
+        for issue in payload["issues"]
+        if isinstance(issue, dict) and issue["issueNumber"] == 375
+    )
+
+    assert issue_343["githubState"] == "open"
+    assert issue_343["executionStatus"] == "open_blocked"
+    assert issue_343["allowPullRequestAutoClose"] is False
+    assert "Keep #343 open and status/blocked" in issue_343["closureInstruction"]
+    assert "versioned DR contract" in issue_343["closureInstruction"]
+    assert "logical backup/restore drill workflow" in issue_343["closureInstruction"]
+    assert "managed-provider PITR/failover certification" in issue_343["closureInstruction"]
+    assert "continuous WAL/PITR health" in issue_343["closureInstruction"]
+    assert "Do not claim production DR" in issue_343["closureInstruction"]
+
+    assert issue_344["githubState"] == "open"
+    assert issue_344["executionStatus"] == "open_blocked"
+    assert issue_344["allowPullRequestAutoClose"] is False
+    assert "Keep #344 open and status/blocked" in issue_344["closureInstruction"]
+    assert "versioned lifecycle contract" in issue_344["closureInstruction"]
+    assert "signed Archive lifecycle posture consumer" in issue_344["closureInstruction"]
+    assert "scheduled lifecycle review workflow" in issue_344["closureInstruction"]
+    assert "provider-native AI deletion conformance" in issue_344["closureInstruction"]
+    assert "Do not claim legal retention approval" in issue_344["closureInstruction"]
+
+    assert issue_375["githubState"] == "open"
+    assert issue_375["executionStatus"] == "open_blocked"
+    assert issue_375["allowPullRequestAutoClose"] is False
+    assert "Keep #375 open and status/blocked" in issue_375["closureInstruction"]
+    assert "exact-image deployment migration contract" in issue_375["closureInstruction"]
+    assert "protected workflow" in issue_375["closureInstruction"]
+    assert "2026-07-29 live GitHub configuration recheck" in issue_375["closureInstruction"]
+    assert "total_count=0" in issue_375["closureInstruction"]
+    assert "Deployment Migration Evidence workflow has no runs" in issue_375["closureInstruction"]
+    assert "Do not claim production migration certification" in issue_375["closureInstruction"]
+
+
+def test_rfc0002_github_issue_execution_ledger_requires_slice15_operations_blocker_evidence(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    payload = _ledger_payload(module)
+    for issue in payload["issues"]:
+        if isinstance(issue, dict) and issue["issueNumber"] == 375:
+            issue["closureInstruction"] = issue["closureInstruction"].replace(
+                "total_count=0",
+                "",
+            )
+            break
+
+    errors = module.validate_github_issue_execution_ledger(_write_ledger(tmp_path, payload))
+
+    assert "#375: closureInstruction missing required evidence `total_count=0`" in errors
+
+
 def test_rfc0002_github_issue_execution_ledger_tracks_platform_capacity_dependencies() -> None:
     module = _load_gate()
     payload = _ledger_payload(module)
