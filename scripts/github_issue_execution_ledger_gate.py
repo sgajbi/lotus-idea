@@ -228,15 +228,6 @@ REQUIRED_OPEN_ISSUE_EVIDENCE = {
         "This issue is not QA-pending",
         "full live journey validation remains blocked",
     ),
-    782: (
-        "Keep #782 open and status/merged-main pending QA",
-        "5a2782be07e4212acc5e6e8a3652c1724bed2038",
-        "30445295814",
-        "30445283264",
-        "lotus-idea.wiki commit c3a4afb",
-        "git cherry patch-equivalence proof",
-        "Do not claim live-provider execution",
-    ),
 }
 REQUIRED_CLOSED_ISSUE_EVIDENCE = {
     340: (
@@ -265,6 +256,21 @@ REQUIRED_CLOSED_ISSUE_EVIDENCE = {
         "make report-intake-runtime-execution-proof-gate",
         "make implementation-proof-readiness-check",
         "clears only lotus_report_live_intake_route_proof_missing",
+    ),
+    782: (
+        "Closed #782 after QA passed on current main",
+        "5a2782be07e4212acc5e6e8a3652c1724bed2038",
+        "30445295814",
+        "30445283264",
+        "lotus-idea.wiki commit c3a4afb",
+        "git cherry patch-equivalence proof",
+        "4b1870f3a4e197e2b2ffa08bb41fd7ddeb5353e8",
+        "30446412020",
+        "30446397648",
+        "make ai-workflow-pack-runtime-execution-proof-contract-gate",
+        "make implementation-proof-readiness-check",
+        "111 passed",
+        "does not claim live-provider execution",
     ),
 }
 
