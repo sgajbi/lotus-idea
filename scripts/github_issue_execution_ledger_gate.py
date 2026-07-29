@@ -229,11 +229,11 @@ REQUIRED_OPEN_ISSUE_EVIDENCE = {
         "full live journey validation remains blocked",
     ),
     782: (
-        "Keep #782 open and status/in-progress",
-        "aiWorkflowPackRuntimeExecutionProofValid=true",
-        "generatedAtUtc was 2026-06-21T10:10:00+00:00",
-        "runtimeReceipt.completed_at_utc was 2026-07-29T09:48:05.014851Z",
-        "lotus_ai_runtime_execution_missing",
+        "Keep #782 open and status/fixed-local",
+        "local commit ca09df6f",
+        "rejecting incoherent runtime-proof temporal provenance",
+        "proof timestamp that is not before the cited runtime receipt",
+        "clear only the exact runtime-execution blocker",
         "Do not claim live-provider execution",
     ),
 }
