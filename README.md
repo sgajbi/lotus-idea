@@ -188,7 +188,7 @@ Common gates:
 | `make test-integration` | Integration tests; override `INTEGRATION_TESTS` for focused work. |
 | `make test-e2e` | Deterministic end-to-end tests; override `E2E_TESTS` for focused work. |
 | `make test-client-lifecycle-gate` | Blocks unmanaged FastAPI/Starlette `TestClient` construction in integration and E2E tests. |
-| `make documentation-contract-gate` | README, repo context, docs, wiki, demo, and evidence-surface contract truth. |
+| `make documentation-contract-gate`, `make rfc0002-cross-repo-issue-posture` | README, repo context, docs, wiki, demo, evidence-surface contract truth, and live cross-repo RFC-0002 issue posture for execution coordination. |
 | `make implementation-truth-gate`, `make implementation-proof-closure-manifest-gate`, `make full-live-opportunity-journey-proof-gate`, `make blueprint-scope-coverage-gate` | Blocks overclaims and requires RFC-0002 proof blockers, full-live journey composition, and blueprint scope to have issue/evidence-class closure truth. |
 | `make foundation-structure-gate` | Enforces foundation-only posture, documentation truth, and architecture-boundary agreement. |
 | `make dependency-vulnerability-posture-gate` | Enforces the RFC-0002 Slice 15 dependency/container vulnerability posture contract, including approved runtime, CI, and build-system direct dependencies; exact stable pins; scanner wiring; release hooks; and issue-backed exceptions. |

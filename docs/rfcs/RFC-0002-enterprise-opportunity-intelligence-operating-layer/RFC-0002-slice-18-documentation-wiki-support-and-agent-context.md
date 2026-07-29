@@ -438,6 +438,18 @@ Slice 18 PRs must keep the correct lifecycle label and use `Keep #681 open`
 until full RFC documentation, wiki, support, and agent context closure is
 complete.
 
+Slice 18 now also adds `make rfc0002-cross-repo-issue-posture`, backed by
+`scripts/rfc0002_cross_repo_issue_posture.py`, so cross-repository RFC-0002
+status is generated from live GitHub state instead of reconstructed from chat,
+assignee filters, or one-off shell snippets. The command checks the governed
+RFC-0002 coordination repo set across Idea, Advise, AI, Platform, Gateway,
+Workbench, Manage, Risk, and Performance; reports total open issues, open and
+closed RFC-0002 counts, open status-label posture, and attention issues such as
+`status/in-progress`, `status/ready`, `status/pr-open`, `status/fixed-local`,
+or `status/merged-main`. It is coordination evidence only: it does not clear
+blockers, promote supported features, prove implementation, replace repo-local
+ledgers, or substitute for exact-main validation.
+
 The #379 downstream outcome certification supporting-proof tranche is now
 synchronized across repo context,
 `docs/operations/downstream-realization-readiness.md`,
