@@ -822,7 +822,8 @@ Persistence adapter validation:
    exact main `39d51c5cb63df360f1e97e6e9e862784a9ad9178`; Main Releasability
    `30434057675`, CodeQL `30434051218`, wiki publication commit `d0a1fa1`,
    strict `DiffCount 0`, and branch cleanup passed. The live cross-repo
-   RFC-0002 posture is 66 tracked issues, 33 closed, and 33 open. #691, #692,
+   RFC-0002 posture now checks the governed 13-repository owner/dependency set:
+   77 tracked issues, 40 closed, and 37 open. #691, #692,
    and #699 remain blocked rather
    than QA-pending because their merged implementation tranches preserve only
    bounded Render/Archive, mesh-readiness, and proof-control evidence;
