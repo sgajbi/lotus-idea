@@ -234,6 +234,22 @@ def test_rfc0002_github_issue_execution_ledger_tracks_slice18_posture_evidence()
         in issue_681["closureInstruction"]
     )
     assert (
+        "PR #803 then synchronized PR #802 evidence truth on Idea main"
+        in issue_681["closureInstruction"]
+    )
+    assert "31e5157de796e0accd0f23d3a80102ecd0871c71" in issue_681["closureInstruction"]
+    assert "30490458612" in issue_681["closureInstruction"]
+    assert "3743f01" in issue_681["closureInstruction"]
+    assert "issue-681-pr802-evidence-sync" in issue_681["closureInstruction"]
+    assert (
+        "Current Idea ledger posture after PR #803 is 43 tracked issues, 24 open, and 19 closed"
+        in issue_681["closureInstruction"]
+    )
+    assert (
+        "Current governed cross-repo RFC-0002 posture after PR #803 is 37 open and 43 closed issues across 13 repositories, 80 tracked issues total"
+        in issue_681["closureInstruction"]
+    )
+    assert (
         "Platform #636 / PR #637 closed stale queued workflow-run detection"
         in (issue_681["closureInstruction"])
     )
