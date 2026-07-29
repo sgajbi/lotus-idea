@@ -162,7 +162,9 @@ def test_rfc0002_github_issue_execution_ledger_requires_slice18_posture_evidence
     assert "#681: closureInstruction missing required evidence `30418344813`" in errors
 
 
-def test_rfc0002_github_issue_execution_ledger_tracks_report_live_proof_merged_main_pending_qa() -> None:
+def test_rfc0002_github_issue_execution_ledger_tracks_report_live_proof_merged_main_pending_qa() -> (
+    None
+):
     module = _load_gate()
     payload = _ledger_payload(module)
     issue_690 = next(
