@@ -341,6 +341,15 @@
       "closureInstruction": "Keep #699 open and status/blocked. PR #740 merged to main at 292fee7ca2d8d94dd9a228120be1ab8c34f205b7 and passed Main Releasability Gate run 30319531736, wiki publication parity, and branch-cleanup proof. This records the Slice 17 proof-control tranche only; it does not certify the full journey, client publication, data-product certification, production identity, supported-feature promotion, or full demo readiness. Subsequent downstream dependency evidence is available from sgajbi/lotus-ai#122 / PR #123 on lotus-ai main 937501833b4c2a9d3031a108368ca113204b5db9 with Main Releasability 30402022877 for deterministic local-dev idea_explanation.pack@v1 proof-contract execution, but it preserves approved non-stub live-provider execution, effective model-risk approval, signed non-stub workflow-run attestation, provider-native retention/deletion confirmation, Idea consumption, Workbench, client-publication, supported-feature promotion, and final journey blockers. This issue is not QA-pending: full live journey validation remains blocked until API, Gateway, Workbench, and downstream handoffs produce final owner evidence after the relevant core, identity, publication, data-product, and supported-feature prerequisites clear. Do not close until final QA evidence proves the complete journey."
     },
     {
+      "issueNumber": 782,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/782",
+      "rfcSlices": ["slice-17"],
+      "githubState": "open",
+      "executionStatus": "open_ready",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #782 open and status/ready until the AI workflow-pack runtime proof contract and aggregate readiness consumer reconcile temporal provenance. The 2026-07-29 durability run showed output/ai/ai-workflow-pack-runtime-execution-proof.json marked aiWorkflowPackRuntimeExecutionProofValid=true while generatedAtUtc was 2026-06-21T10:10:00+00:00 and runtimeReceipt.completed_at_utc was 2026-07-29T09:48:05.014851Z; aggregate readiness correctly preserved lotus_ai_runtime_execution_missing. Fix in lotus-idea by rejecting or regenerating incoherent runtime-proof temporal provenance and by making aggregate readiness either clear only the exact runtime-execution blocker for a valid current proof or emit a source-safe provenance-mismatch diagnostic. Do not claim live-provider execution, model-risk approval, Workbench proof, client publication, supported-feature promotion, or final full-journey closure."
+    },
+    {
       "issueNumber": 700,
       "url": "https://github.com/sgajbi/lotus-idea/issues/700",
       "rfcSlices": ["slice-17"],
