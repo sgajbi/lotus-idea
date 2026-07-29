@@ -512,7 +512,10 @@ payload guidance on platform main `641aabe9f303a178f3a4e489c52b3d789d8339d3`
 with Main Releasability `30475978275` passing. PR #801 then synchronized final
 #797/#681 evidence on Idea main
 `95c47d27f45e09369f6b709588fa2de1a1f8700b`; exact-main Main Releasability
-`30487277416` passed. Live Idea RFC-0002 ledger posture is 43 tracked issues,
+`30487277416` passed. PR #802 then synchronized current RFC-0002 posture truth
+on Idea main `7df8fbff1fbab3acb5568a8e95eb7d5d58c8dcdd`; exact-main Main
+Releasability `30488990343` passed and wiki publication reached `ec05a36`
+with strict `DiffCount 0`. Live Idea RFC-0002 ledger posture is 43 tracked issues,
 24 open, and 19 closed. Live governed cross-repo posture is 80 tracked issues,
 43 closed, and 37 open across 13 repositories, with 28 blocked issues, 0
 app-actionable blocked issues, 5 Core dependencies, and 23
