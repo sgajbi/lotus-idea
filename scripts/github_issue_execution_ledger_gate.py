@@ -59,6 +59,7 @@ EXPECTED_EXECUTION_ISSUES = frozenset(
         702,
         704,
         756,
+        782,
     }
 )
 OPEN_STATUSES = frozenset(
@@ -226,6 +227,14 @@ REQUIRED_OPEN_ISSUE_EVIDENCE = {
         "approved non-stub live-provider execution",
         "This issue is not QA-pending",
         "full live journey validation remains blocked",
+    ),
+    782: (
+        "Keep #782 open and status/ready",
+        "aiWorkflowPackRuntimeExecutionProofValid=true",
+        "generatedAtUtc was 2026-06-21T10:10:00+00:00",
+        "runtimeReceipt.completed_at_utc was 2026-07-29T09:48:05.014851Z",
+        "lotus_ai_runtime_execution_missing",
+        "Do not claim live-provider execution",
     ),
 }
 REQUIRED_CLOSED_ISSUE_EVIDENCE = {
