@@ -384,6 +384,6 @@ REQUIRED_READINESS_WIRING = (
     ),
     (
         "IMPLEMENTATION_PROOF_OUTPUT",
-        "support optional implementation proof output artifact wiring",
+        "write the aggregate implementation proof readiness output artifact",
     ),
 )

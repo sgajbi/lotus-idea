@@ -1203,6 +1203,14 @@ blockers. `make implementation-proof-readiness-check` generates the pack under
 `output/opportunity/canonical-archetype-evidence-pack.json` and consumes it only
 when aggregate provenance is current and the source tree is clean.
 
+`make implementation-proof-readiness-check` also writes the aggregate readiness
+artifact by default to `output/implementation-proof/readiness-current.json`
+through `IMPLEMENTATION_PROOF_OUTPUT ?=
+$(LOTUS_IDEA_IMPLEMENTATION_PROOF_READINESS_OUTPUT)`. Do not infer current
+readiness from an old ignored file or stdout-only command output; rerun the
+target and inspect the generated artifact, or intentionally override
+`IMPLEMENTATION_PROOF_OUTPUT` to another ignored evidence path.
+
 RFC-0002 Slice 18 issue execution truth is governed by
 `contracts/implementation-proof/rfc0002-github-issue-execution-ledger.v1.json`
 and tracked by issue `#681`. `make rfc0002-github-issue-execution-ledger-gate`

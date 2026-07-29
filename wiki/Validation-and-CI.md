@@ -469,6 +469,8 @@ Persistence adapter validation:
    implementation-proof readiness artifact, including source-ingestion proof
    artifact refs, durable repository proof, runtime trust telemetry
    test-execution supporting evidence, non-AI operator workflow operations proof consumption,
+   and default durable output at `output/implementation-proof/readiness-current.json`
+   unless `IMPLEMENTATION_PROOF_OUTPUT` intentionally overrides the ignored artifact path,
    Workbench read-path source-contract proof consumption, Gateway/Workbench
    source-contract proof consumption, Gateway/Workbench discovery contract
    proof consumption, bounded outbox broker source-contract proof consumption,
