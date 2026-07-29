@@ -162,7 +162,7 @@ def test_rfc0002_github_issue_execution_ledger_requires_slice18_posture_evidence
     assert "#681: closureInstruction missing required evidence `30418344813`" in errors
 
 
-def test_rfc0002_github_issue_execution_ledger_keeps_report_live_proof_in_progress() -> None:
+def test_rfc0002_github_issue_execution_ledger_keeps_report_live_proof_pr_open() -> None:
     module = _load_gate()
     payload = _ledger_payload(module)
     issue_690 = next(
@@ -172,12 +172,12 @@ def test_rfc0002_github_issue_execution_ledger_keeps_report_live_proof_in_progre
     )
 
     assert issue_690["githubState"] == "open"
-    assert issue_690["executionStatus"] == "open_blocked"
+    assert issue_690["executionStatus"] == "open_pr_raised"
     assert issue_690["allowPullRequestAutoClose"] is False
-    assert "Keep #690 open and status/blocked" in issue_690["closureInstruction"]
-    assert "PR #724 merged" in issue_690["closureInstruction"]
-    assert "This issue is not QA-pending" in issue_690["closureInstruction"]
-    assert "Report/Render/Archive production trust" in issue_690["closureInstruction"]
+    assert "Keep #690 open and status/pr-open" in issue_690["closureInstruction"]
+    assert "PR #774" in issue_690["closureInstruction"]
+    assert "exact-main validation" in issue_690["closureInstruction"]
+    assert "wiki publication" in issue_690["closureInstruction"]
 
 
 def test_rfc0002_github_issue_execution_ledger_tracks_render_archive_merged_main_pending_qa() -> (
