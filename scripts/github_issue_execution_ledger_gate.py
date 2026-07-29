@@ -229,11 +229,12 @@ REQUIRED_OPEN_ISSUE_EVIDENCE = {
         "full live journey validation remains blocked",
     ),
     782: (
-        "Keep #782 open and status/pr-open",
-        "PR #783",
-        "rejects incoherent runtime-proof temporal provenance",
-        "proof timestamp that is not before the cited runtime receipt",
-        "clear only the exact runtime-execution blocker",
+        "Keep #782 open and status/merged-main pending QA",
+        "5a2782be07e4212acc5e6e8a3652c1724bed2038",
+        "30445295814",
+        "30445283264",
+        "lotus-idea.wiki commit c3a4afb",
+        "git cherry patch-equivalence proof",
         "Do not claim live-provider execution",
     ),
 }
