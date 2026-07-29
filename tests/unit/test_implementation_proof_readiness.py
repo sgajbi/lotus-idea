@@ -630,14 +630,14 @@ def test_implementation_proof_readiness_uses_ai_workflow_pack_runtime_execution_
     proof_ref = "output/ai/ai-workflow-pack-runtime-execution-proof.json"
     proof = _bound_aggregate_proof(
         build_ai_workflow_pack_runtime_execution_proof_payload(
-            generated_at_utc=datetime(2026, 6, 26, 0, 0, tzinfo=UTC),
+            generated_at_utc=datetime(2026, 7, 14, 0, 0, tzinfo=UTC),
             receipt=ai_runtime_execution_receipt(),
         ),
         proof_ref,
     )
 
     snapshot = build_implementation_proof_readiness_snapshot(
-        evaluated_at_utc=datetime(2026, 6, 26, 0, 0, tzinfo=UTC),
+        evaluated_at_utc=datetime(2026, 7, 14, 0, 0, tzinfo=UTC),
         repository=InMemoryIdeaRepository(),
         durable_storage_backed=False,
         ai_workflow_pack_runtime_execution_proof=proof,
@@ -666,6 +666,34 @@ def test_implementation_proof_readiness_uses_ai_workflow_pack_runtime_execution_
     assert "output/ai/ai-workflow-pack-runtime-execution-proof.json" in (
         ai_explanation.evidence_refs
     )
+
+
+def test_readiness_preserves_ai_runtime_blocker_for_temporal_mismatch() -> None:
+    proof_ref = "output/ai/ai-workflow-pack-runtime-execution-proof.json"
+    proof = _bound_aggregate_proof(
+        build_ai_workflow_pack_runtime_execution_proof_payload(
+            generated_at_utc=datetime(2026, 6, 26, 0, 0, tzinfo=UTC),
+            receipt=ai_runtime_execution_receipt(),
+        ),
+        proof_ref,
+    )
+
+    snapshot = build_implementation_proof_readiness_snapshot(
+        evaluated_at_utc=datetime(2026, 6, 26, 0, 0, tzinfo=UTC),
+        repository=InMemoryIdeaRepository(),
+        durable_storage_backed=False,
+        ai_workflow_pack_runtime_execution_proof=proof,
+        ai_workflow_pack_runtime_execution_proof_ref=proof_ref,
+    )
+
+    ai_explanation = next(
+        capability
+        for capability in snapshot.capabilities
+        if capability.capability_id == "ai-explanation"
+    )
+    assert "lotus_ai_runtime_execution_missing" in snapshot.overall_blockers
+    assert "lotus_ai_runtime_execution_missing" in ai_explanation.blockers
+    assert proof_ref not in ai_explanation.evidence_refs
 
 
 def test_workbench_read_path_source_contract_adds_evidence_without_clearing_runtime() -> None:

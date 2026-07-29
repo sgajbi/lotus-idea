@@ -229,7 +229,7 @@ REQUIRED_OPEN_ISSUE_EVIDENCE = {
         "full live journey validation remains blocked",
     ),
     782: (
-        "Keep #782 open and status/ready",
+        "Keep #782 open and status/in-progress",
         "aiWorkflowPackRuntimeExecutionProofValid=true",
         "generatedAtUtc was 2026-06-21T10:10:00+00:00",
         "runtimeReceipt.completed_at_utc was 2026-07-29T09:48:05.014851Z",

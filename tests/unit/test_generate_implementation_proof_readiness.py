@@ -555,7 +555,7 @@ def test_generate_implementation_proof_readiness_uses_explicit_ai_workflow_pack_
     ai_runtime_proof.write_text(
         json.dumps(
             build_ai_workflow_pack_runtime_execution_proof_payload(
-                generated_at_utc=datetime(2026, 6, 26, 0, 0, tzinfo=UTC),
+                generated_at_utc=datetime(2026, 7, 14, 0, 0, tzinfo=UTC),
                 receipt=ai_runtime_execution_receipt(),
             )
         ),
@@ -566,7 +566,7 @@ def test_generate_implementation_proof_readiness_uses_explicit_ai_workflow_pack_
     result = proof_report.main(
         [
             "--evaluated-at-utc",
-            "2026-06-26T00:00:00Z",
+            "2026-07-14T00:00:00Z",
             "--ai-workflow-pack-runtime-execution-proof",
             str(ai_runtime_proof),
             "--output",

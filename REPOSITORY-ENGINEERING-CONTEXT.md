@@ -1296,6 +1296,12 @@ evidence only and must never set `lotusAiRuntimeExecuted` or clear a runtime
 blocker. A deterministic stub receipt clears only the generic runtime seam and
 must add `lotus_ai_live_provider_execution_missing`; it is not provider,
 production approval, Workbench, client-publication, or supported-feature proof.
+The proof artifact must be temporally coherent: the bounded
+`runtimeReceipt.completed_at_utc` cannot be after top-level `generatedAtUtc`.
+`scripts/generate_ai_workflow_pack_runtime_execution_proof.py` stamps actual
+runtime proof no earlier than the cited receipt completion time, while aggregate
+readiness still requires the artifact to be current for the aggregate
+`evaluatedAtUtc` before clearing only `lotus_ai_runtime_execution_missing`.
 `sgajbi/lotus-ai#122` / PR #123 on `lotus-ai` main
 `937501833b4c2a9d3031a108368ca113204b5db9` with Main Releasability
 `30402022877` is the current owner-mainline deterministic local-dev

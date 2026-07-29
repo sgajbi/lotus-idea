@@ -345,9 +345,9 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/782",
       "rfcSlices": ["slice-17"],
       "githubState": "open",
-      "executionStatus": "open_ready",
+      "executionStatus": "open_in_progress",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #782 open and status/ready until the AI workflow-pack runtime proof contract and aggregate readiness consumer reconcile temporal provenance. The 2026-07-29 durability run showed output/ai/ai-workflow-pack-runtime-execution-proof.json marked aiWorkflowPackRuntimeExecutionProofValid=true while generatedAtUtc was 2026-06-21T10:10:00+00:00 and runtimeReceipt.completed_at_utc was 2026-07-29T09:48:05.014851Z; aggregate readiness correctly preserved lotus_ai_runtime_execution_missing. Fix in lotus-idea by rejecting or regenerating incoherent runtime-proof temporal provenance and by making aggregate readiness either clear only the exact runtime-execution blocker for a valid current proof or emit a source-safe provenance-mismatch diagnostic. Do not claim live-provider execution, model-risk approval, Workbench proof, client publication, supported-feature promotion, or final full-journey closure."
+      "closureInstruction": "Keep #782 open and status/in-progress while branch rfc0002-issue782-ai-runtime-proof-temporal-provenance reconciles the AI workflow-pack runtime proof contract and aggregate readiness consumer temporal provenance. The 2026-07-29 durability run showed output/ai/ai-workflow-pack-runtime-execution-proof.json marked aiWorkflowPackRuntimeExecutionProofValid=true while generatedAtUtc was 2026-06-21T10:10:00+00:00 and runtimeReceipt.completed_at_utc was 2026-07-29T09:48:05.014851Z; aggregate readiness correctly preserved lotus_ai_runtime_execution_missing. Implement by rejecting incoherent runtime-proof temporal provenance, generating actual runtime proof with a proof timestamp that is not before the cited runtime receipt, and making aggregate readiness clear only the exact runtime-execution blocker for a valid current proof. Do not claim live-provider execution, model-risk approval, Workbench proof, client publication, supported-feature promotion, or final full-journey closure."
     },
     {
       "issueNumber": 700,
