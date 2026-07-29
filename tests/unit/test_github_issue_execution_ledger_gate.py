@@ -143,9 +143,18 @@ def test_rfc0002_github_issue_execution_ledger_tracks_slice18_posture_evidence()
     assert "30432065538" in issue_681["closureInstruction"]
     assert "30432058627" in issue_681["closureInstruction"]
     assert "lotus-idea.wiki commit c08509a" in issue_681["closureInstruction"]
+    assert (
+        "PR #777 synchronized #681 evidence after #690 QA closure"
+        in issue_681["closureInstruction"]
+    )
+    assert "39d51c5cb63df360f1e97e6e9e862784a9ad9178" in issue_681["closureInstruction"]
+    assert "30434057675" in issue_681["closureInstruction"]
+    assert "30434051218" in issue_681["closureInstruction"]
+    assert "lotus-idea.wiki commit d0a1fa1" in issue_681["closureInstruction"]
+    assert "rfc0002-issue681-pr776-evidence-sync" in issue_681["closureInstruction"]
     assert "66 RFC-0002 issues total, 33 closed, and 33 open" in issue_681["closureInstruction"]
     assert (
-        "current Idea ledger posture after PR #776 is 41 tracked issues, 24 open, and 17 closed"
+        "current Idea ledger posture after PR #777 is 41 tracked issues, 24 open, and 17 closed"
         in issue_681["closureInstruction"]
     )
     assert "strict DiffCount 0" in issue_681["closureInstruction"]
@@ -447,6 +456,14 @@ def test_rfc0002_github_issue_execution_ledger_tracks_live_journey_as_blocked() 
     assert "Keep #699 open and status/blocked" in issue_699["closureInstruction"]
     assert "PR #740 merged to main" in issue_699["closureInstruction"]
     assert "30319531736" in issue_699["closureInstruction"]
+    assert "sgajbi/lotus-ai#122 / PR #123" in issue_699["closureInstruction"]
+    assert "937501833b4c2a9d3031a108368ca113204b5db9" in issue_699["closureInstruction"]
+    assert "30402022877" in issue_699["closureInstruction"]
+    assert (
+        "deterministic local-dev idea_explanation.pack@v1 proof-contract execution"
+        in issue_699["closureInstruction"]
+    )
+    assert "approved non-stub live-provider execution" in issue_699["closureInstruction"]
     assert "This issue is not QA-pending" in issue_699["closureInstruction"]
     assert "full live journey validation remains blocked" in issue_699["closureInstruction"]
 

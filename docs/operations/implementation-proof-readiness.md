@@ -232,7 +232,11 @@ that final QA closure truth to exact main
 `aa492aedd46f30b854c8478edb919605dbdd58fc`; Main Releasability
 `30432065538`, CodeQL `30432058627`, repo-authored wiki publication
 `c08509a`, strict wiki `DiffCount 0`, and local/remote branch cleanup passed.
-The live cross-repo RFC-0002 posture is now 66 tracked issues, 33 closed, and
+PR #777 then synchronized #681 evidence after #690 QA closure to exact main
+`39d51c5cb63df360f1e97e6e9e862784a9ad9178`; Main Releasability
+`30434057675`, CodeQL `30434051218`, repo-authored wiki publication
+`d0a1fa1`, strict wiki `DiffCount 0`, and local/remote branch cleanup passed.
+The live cross-repo RFC-0002 posture remains 66 tracked issues, 33 closed, and
 33 open. This is still
 coordination/documentation truth only;
 `sgajbi/lotus-manage#624` and other blocked dependencies remain open, and
@@ -1265,6 +1269,16 @@ a synthetic redacted evidence packet through the governed
 `lotus-idea`-scoped run whose task audit and run identity agree, whose evidence
 hash matches the request, and whose review, client-publication, and downstream
 authority posture remains fail-closed.
+
+The current owner-repo downstream evidence for this seam is
+`sgajbi/lotus-ai#122` / PR #123 on `lotus-ai` main
+`937501833b4c2a9d3031a108368ca113204b5db9`; Main Releasability
+`30402022877` passed for that SHA. Treat it as deterministic local-dev
+`idea_explanation.pack@v1` proof-contract execution only. It does not prove
+approved non-stub live-provider execution, effective model-risk approval, signed
+non-stub workflow-run attestation, provider-native retention/deletion
+confirmation, Workbench proof, client publication, supported-feature
+promotion, or final live-journey closure.
 
 The artifact retains a bounded receipt and its digest, not the request body,
 prompt, generated narrative, provider payload, candidate identity, portfolio
