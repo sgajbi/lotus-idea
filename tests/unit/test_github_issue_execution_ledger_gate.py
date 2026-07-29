@@ -162,7 +162,7 @@ def test_rfc0002_github_issue_execution_ledger_requires_slice18_posture_evidence
     assert "#681: closureInstruction missing required evidence `30418344813`" in errors
 
 
-def test_rfc0002_github_issue_execution_ledger_keeps_report_live_proof_pr_open() -> None:
+def test_rfc0002_github_issue_execution_ledger_tracks_report_live_proof_merged_main_pending_qa() -> None:
     module = _load_gate()
     payload = _ledger_payload(module)
     issue_690 = next(
@@ -172,12 +172,14 @@ def test_rfc0002_github_issue_execution_ledger_keeps_report_live_proof_pr_open()
     )
 
     assert issue_690["githubState"] == "open"
-    assert issue_690["executionStatus"] == "open_pr_raised"
+    assert issue_690["executionStatus"] == "open_merged_main_qa_pending"
     assert issue_690["allowPullRequestAutoClose"] is False
-    assert "Keep #690 open and status/pr-open" in issue_690["closureInstruction"]
+    assert "Keep #690 open and status/merged-main" in issue_690["closureInstruction"]
     assert "PR #774" in issue_690["closureInstruction"]
-    assert "exact-main validation" in issue_690["closureInstruction"]
-    assert "wiki publication" in issue_690["closureInstruction"]
+    assert "5f53c4ac6ac519c7e6b0019e00f5286109e1628c" in issue_690["closureInstruction"]
+    assert "30428715937" in issue_690["closureInstruction"]
+    assert "lotus-idea.wiki commit 26d39d1" in issue_690["closureInstruction"]
+    assert "QA remains pending" in issue_690["closureInstruction"]
 
 
 def test_rfc0002_github_issue_execution_ledger_tracks_render_archive_merged_main_pending_qa() -> (

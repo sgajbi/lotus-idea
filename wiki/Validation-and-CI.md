@@ -765,8 +765,8 @@ Persistence adapter validation:
    posture for #380 and reconciled it to `open_blocked` at
    `6f8875dc6784dd17975e6700c09b9ff71d66fb8b`; Main Releasability `30327202465`
    and CodeQL `30327193673` passed. The RFC-0002 execution summary now has 41
-   tracked issues, 16 closed complete, 25 open, no
-   `open_merged_main_qa_pending`, 1 `open_in_progress`, 1 `open_pr_raised`,
+   tracked issues, 16 closed complete, 25 open, 1
+   `open_merged_main_qa_pending`, 1 `open_in_progress`, no `open_pr_raised`,
    13 `open_blocked`, and
    no ready issues. #379 is `open_blocked`, not QA-pending because
    Idea now consumes the `sgajbi/lotus-manage#620` temporal receipt identity
@@ -795,11 +795,16 @@ Persistence adapter validation:
    canonical runtime, mesh onboarding, entitlement-denied, and supported-feature
    promotion evidence, and #693 is blocked rather than QA-pending until
    protected capacity-production-like runner/environment, protected attestations,
-   and matching FinOps evidence exist. #690 is PR-open through PR #774 rather
-   than QA-pending because its branch-local Report intake runtime proof clears
-   only `lotus_report_live_intake_route_proof_missing` after aggregate-current
-   validation and still requires merge, exact-main validation, wiki publication,
-   branch cleanup, and QA closure. #691, #692, and #699 remain blocked rather
+   and matching FinOps evidence exist. #690 is merged-main QA-pending after
+   PR #774 merged to main at `5f53c4ac6ac519c7e6b0019e00f5286109e1628c`;
+   Main Releasability `30428715937` and CodeQL `30428711385` passed, wiki
+   publication completed at `lotus-idea.wiki` commit `26d39d1` with strict
+   `DiffCount 0`, and branch cleanup completed. The bounded Report intake
+   runtime proof clears only `lotus_report_live_intake_route_proof_missing`
+   after aggregate-current validation; client publication, production identity,
+   supported-feature promotion, report rendering authority, Archive production
+   trust, legal/privacy approval, and final Slice 13 certification remain
+   unclaimed. #691, #692, and #699 remain blocked rather
    than QA-pending because their merged implementation tranches preserve only
    bounded Render/Archive, mesh-readiness, and proof-control evidence;
    lifecycle-safe publication authority, production identity, Archive production
