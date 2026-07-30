@@ -627,7 +627,10 @@ def test_rfc0002_github_issue_execution_ledger_tracks_workbench_action_blocker()
         "Workbench PR #501 merged the browser-action proof path"
         in (issue_686["closureInstruction"])
     )
+    assert "PR #810 preserved this as blocked posture" in issue_686["closureInstruction"]
+    assert "sgajbi/lotus-core#836" in issue_686["closureInstruction"]
     assert "sgajbi/lotus-core#840" in issue_686["closureInstruction"]
+    assert "sgajbi/lotus-workbench#500" in issue_686["closureInstruction"]
     assert "This issue is not QA-pending" in issue_686["closureInstruction"]
     assert "production identity" in issue_686["closureInstruction"]
 
@@ -650,7 +653,10 @@ def test_rfc0002_github_issue_execution_ledger_tracks_workbench_read_path_blocke
     assert "gatewayBffConsumptionObserved" in issue_685["closureInstruction"]
     assert "proofChecks.workbenchEvidenceFresh" in issue_685["closureInstruction"]
     assert "stale runtime-proof timestamp variable" in issue_685["closureInstruction"]
+    assert "PR #810 preserved this as blocked posture" in issue_685["closureInstruction"]
+    assert "sgajbi/lotus-core#836" in issue_685["closureInstruction"]
     assert "sgajbi/lotus-core#840" in issue_685["closureInstruction"]
+    assert "sgajbi/lotus-workbench#500" in issue_685["closureInstruction"]
     assert "valuation and aggregation jobs drained to zero" in issue_685["closureInstruction"]
     assert "DPM_CORE_CONTEXT_INCOMPLETE" in issue_685["closureInstruction"]
     assert (
@@ -864,6 +870,17 @@ def test_rfc0002_github_issue_execution_ledger_records_issue_681_sync_note() -> 
         and "c340daa01b41097410bbc8a802d9a8d1f9f24135" in note
         and "30499444726" in note
         and "44 tracked issues, 24 open, and 20 closed" in note
+        and "0 app-actionable blocked issues" in note
+        for note in notes
+    )
+    assert any(
+        isinstance(note, str)
+        and "PR #810 synchronized PR #809 main evidence" in note
+        and "fe7f0efac9fca86a3e19302e8b8436e8941f3d0c" in note
+        and "30500588217" in note
+        and "lotus-idea.wiki commit f0f9293" in note
+        and "sgajbi/lotus-core#836" in note
+        and "sgajbi/lotus-core#840" in note
         and "0 app-actionable blocked issues" in note
         for note in notes
     )

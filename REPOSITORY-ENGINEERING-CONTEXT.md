@@ -112,9 +112,12 @@ merged the runtime-image vulnerability-posture remediation to exact main
 `30496796215` passing, PR #808 synchronized #807 source truth to exact main
 `f577efcc14d51208375f3fde87284ac98f8ebb7a` with Main Releasability
 `30498306031` passing, final QA closed #807 for the repository-owned
-runtime-image remediation, and PR #809 synchronized the #807 final QA closure
+runtime-image remediation, PR #809 synchronized the #807 final QA closure
 truth to exact main `c340daa01b41097410bbc8a802d9a8d1f9f24135` with Main
-Releasability `30499444726` passing, the current RFC-0002 ledger posture is 44 tracked
+Releasability `30499444726` passing, and PR #810 synchronized PR #809 main
+evidence plus Core handoff posture to exact main
+`fe7f0efac9fca86a3e19302e8b8436e8941f3d0c` with Main Releasability
+`30500588217` passing. The current RFC-0002 ledger posture is 44 tracked
 issues, 20 closed complete, 24 open, no `open_merged_main_qa_pending`, 1
 `open_in_progress`, no `open_pr_raised`, and 13 `open_blocked`; #807 does not
 certify production vulnerability posture, registry promotion, protected
@@ -135,6 +138,9 @@ action-register seed because `POST http://manage.dev.lotus/api/v1/rebalance/simu
 returned HTTP 424 with `DPM_CORE_CONTEXT_INCOMPLETE`. Fresh Gateway/BFF-backed
 Workbench queue/detail runtime evidence remains required before #685 can move
 to merged-main QA.
+The 2026-07-30 handoff comments on `sgajbi/lotus-core#836`,
+`sgajbi/lotus-core#840`, `sgajbi/lotus-workbench#500`, #685, and #686 are the
+current durable dependency links for that unblock path.
 Platform PR `sgajbi/lotus-platform#631` fixes the earlier Manage seed
 authorization failure; #686 is blocked, not QA-pending, until
 `sgajbi/lotus-core#840` restores canonical DPM source readiness and Workbench
@@ -1343,7 +1349,14 @@ remediation only. PR #809 synchronized the final #807 closure truth on Idea main
 `30499444726` passed, including lint/typecheck/security, unit, integration,
 e2e, PostgreSQL runtime proof, combined coverage, Docker build, runtime smoke,
 image scan, release identity/license evidence binding, and CI signal evidence.
-The current Idea ledger posture is 44 tracked issues, 24 open,
+PR #810 synchronized PR #809 main evidence and Core/Workbench handoff posture
+on Idea main `fe7f0efac9fca86a3e19302e8b8436e8941f3d0c`; exact-main Main
+Releasability `30500588217` passed with release validation, published digest
+runtime proof, signing, provenance/SBOM attestation, and wiki publication
+`f0f9293` at strict `DiffCount 0`. Current durable handoff links are
+`sgajbi/lotus-core#836`, `sgajbi/lotus-core#840`,
+`sgajbi/lotus-workbench#500`, #685, and #686. The current Idea ledger posture
+is 44 tracked issues, 24 open,
 and 20 closed. That
 evidence is coordination posture only; it
 does not clear blockers, promote supported features, certify production

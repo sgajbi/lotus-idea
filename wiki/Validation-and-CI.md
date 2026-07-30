@@ -1097,14 +1097,25 @@ issues, 0 app-actionable blocked issues, 5 Core dependencies, and 21
 external/protected-evidence blockers. PR #803 later synchronized that posture to
 43 tracked Idea RFC-0002 issues, 24 open, and 19 closed, with live cross-repo
 RFC-0002 posture of 80 tracked issues, 43 complete, and 37 open across 13
-repositories. Current source truth after PR #809 records 44 tracked Idea
-RFC-0002 issues, 24 open, and 20 closed, with live cross-repo RFC-0002 posture
-of 81 tracked issues, 44 complete, and 37 open across 13 repositories. PR #809
-synchronized #807 final QA closure truth on Idea main
+repositories. PR #809 synchronized #807 final QA closure truth on Idea main
 `c340daa01b41097410bbc8a802d9a8d1f9f24135`; exact-main Main Releasability
 `30499444726` passed with lint/typecheck/security, unit, integration, e2e,
 PostgreSQL runtime proof, combined coverage, Docker build, runtime smoke, image
 scan, release identity/license evidence binding, and CI signal evidence.
+PR #810 synchronized PR #809 main evidence and Core/Workbench handoff posture
+on Idea main `fe7f0efac9fca86a3e19302e8b8436e8941f3d0c`; exact-main Main
+Releasability `30500588217` passed with workflow lint, lint/typecheck/security,
+unit, integration, e2e, PostgreSQL runtime proof, combined coverage,
+Docker/release validation, image scan, commit-tagged image publish and digest
+proof, published-digest runtime proof, image signing, provenance/SBOM
+attestations, release metadata, release identity/license evidence binding, and
+CI signal evidence. Repo-authored wiki publication reached `lotus-idea.wiki`
+commit `f0f9293` with strict `DiffCount 0`. Current source truth after PR #810
+records 44 tracked Idea RFC-0002 issues, 24 open, and 20 closed, with live
+cross-repo RFC-0002 posture of 81 tracked issues, 44 complete, and 37 open
+across 13 repositories. The refreshed dependency handoff is anchored on
+`sgajbi/lotus-core#836`, `sgajbi/lotus-core#840`,
+`sgajbi/lotus-workbench#500`, #685, and #686.
 Workbench PR #505 additionally records
 merged BFF principal-boundary hardening while preserving production
 IdP/session/token-claims and canonical browser proof blockers. Keep #681 open until the remaining documentation, wiki,

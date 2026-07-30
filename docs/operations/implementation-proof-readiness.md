@@ -318,12 +318,20 @@ RFC-0002 posture truth on Idea main
 `30499444726` passed, including lint/typecheck/security, unit, integration,
 e2e, PostgreSQL runtime proof, combined coverage, Docker build, runtime smoke,
 image scan, release identity/license evidence binding, and CI signal evidence.
-Current RFC-0002 source truth after PR #809 is 44 tracked Idea
-issues, 24 open, and 20 closed, with cross-repo posture of 81 tracked issues,
-44 complete, and 37 open across 13 repositories; 28 blocked issues remain
-classified as 5 Core dependencies and 23 external/protected-evidence blockers,
-with 0 app-actionable blocked issues.
-canonical browser proof remain open.
+PR #810 synchronized PR #809 main evidence and the current Core handoff
+posture on Idea main `fe7f0efac9fca86a3e19302e8b8436e8941f3d0c`;
+exact-main Main Releasability `30500588217` passed, including full
+Docker/release validation, image scan, commit-tagged image publish and digest
+proof, published-digest runtime proof, image signing, provenance/SBOM
+attestations, release metadata, image identity binding, license evidence
+binding, and CI signal evidence. Repo-authored wiki publication reached
+`lotus-idea.wiki` commit `f0f9293` with strict `DiffCount 0`. Current
+RFC-0002 source truth after PR #810 remains 44 tracked Idea issues, 24 open,
+and 20 closed, with cross-repo posture of 81 tracked issues, 44 complete, and
+37 open across 13 repositories; 28 blocked issues remain classified as 5 Core
+dependencies and 23 external/protected-evidence blockers, with 0
+app-actionable blocked issues.
+Production IdP/session/token-claims and canonical browser proof remain open.
 The current Idea RFC-0002 ledger posture is 44 tracked issues, 24 open, and 20
 closed after #807 final QA closure and source-controlled ledger synchronization.
 This is still coordination/documentation truth only;
@@ -341,6 +349,12 @@ tracked in `sgajbi/lotus-core#840`. Fresh Gateway/BFF-backed Workbench
 queue/detail runtime evidence, browser/accessibility proof, canonical demo
 runtime proof, and #380 data-product/supported-feature posture reconciliation remain required before
 QA closure.
+
+The 2026-07-30 dependency handoff refreshed durable owner evidence on
+`sgajbi/lotus-core#836`, `sgajbi/lotus-core#840`,
+`sgajbi/lotus-workbench#500`, #685, and #686. Those comments clarify that
+the remaining Slice 11/17 proof is Core-owned canonical seed/DPM readiness
+plus Workbench owner browser proof, not hidden Idea app-code work.
 
 #690 is `closed_complete`. PR #774 merged to main at
 `5f53c4ac6ac519c7e6b0019e00f5286109e1628c`, Main Releasability
