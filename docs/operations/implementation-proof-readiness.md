@@ -326,20 +326,24 @@ proof, published-digest runtime proof, image signing, provenance/SBOM
 attestations, release metadata, image identity binding, license evidence
 binding, and CI signal evidence. Repo-authored wiki publication reached
 `lotus-idea.wiki` commit `f0f9293` with strict `DiffCount 0`. Current
-RFC-0002 source truth after the Manage #626 traceability sync remains 44 tracked
-Idea issues, 24 open, and 20 closed, with cross-repo posture of 82 tracked
-issues, 44 complete, and 38 open across 13 repositories. After
+RFC-0002 source truth after the #814 intake and implementation-progress sync is
+45 tracked Idea issues, 25 open, and 20 closed, with cross-repo posture of 83
+tracked issues, 47 complete, and 36 open across 13 repositories. After
 `sgajbi/lotus-core#836` and
 `sgajbi/lotus-core#840` moved from `status/blocked` to `status/in-progress`,
-and `sgajbi/lotus-manage#626` was correctly labeled as RFC-0002, 27 blocked
-issues remain classified as 4 Core dependencies and 23
+and `sgajbi/lotus-manage#626` closed with `status/merged-main`, 26 blocked
+issues remain classified as 3 Core dependencies and 23
 external/protected-evidence blockers, with 0
 app-actionable blocked issues.
 Production IdP/session/token-claims and canonical browser proof remain open.
-The current Idea RFC-0002 ledger posture is 44 tracked issues, 24 open, and 20
-closed after #807 final QA closure and source-controlled ledger synchronization.
-This is still coordination/documentation truth only;
-`sgajbi/lotus-manage#624`, `sgajbi/lotus-manage#626`, and other blocked
+`sgajbi/lotus-idea#814` is active app-owned local/dev authorization wiring for
+the canonical downstream-capacity seed: the seed must call existing public Idea
+APIs with complete synthetic entitlement scope and a bounded per-run trusted
+caller marker without bypassing endpoint policy. The current Idea RFC-0002
+ledger posture is 45 tracked issues, 25 open, and 20 closed after #814 was
+added to the execution ledger. This is still coordination and branch-local
+implementation truth only;
+`sgajbi/lotus-manage#624` and other blocked
 dependencies remain open, and production vulnerability posture is not
 certified.
 
@@ -360,11 +364,10 @@ The 2026-07-30 dependency handoff refreshed durable owner evidence on
 `sgajbi/lotus-workbench#500`, #685, and #686. Those comments clarify that
 the remaining Slice 11/17 proof is Core-owned canonical seed/DPM readiness
 plus Workbench owner browser proof, not hidden Idea app-code work.
-`sgajbi/lotus-manage#626` adds the Manage tax-lot identity evidence boundary:
+`sgajbi/lotus-manage#626` records the closed Manage tax-lot identity evidence boundary:
 PR #627 merged on Manage main `5ba2757c1235ce3e28c630afd44257327c91edf3`,
 Main Releasability `30536615979` passed, and the remote feature branch was
-deleted; the issue remains blocked only for governed Platform command-center
-seed/runtime evidence after Core readiness is available.
+deleted; the issue is no longer in the open-blocked classifier.
 
 #690 is `closed_complete`. PR #774 merged to main at
 `5f53c4ac6ac519c7e6b0019e00f5286109e1628c`, Main Releasability

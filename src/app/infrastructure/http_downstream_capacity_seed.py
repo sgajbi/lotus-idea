@@ -80,15 +80,7 @@ class HttpDownstreamCapacitySeed:
             capability="idea.review.record",
             idempotency_key=f"capacity-{seed_key}-review",
         )
-        headers.update(
-            {
-                "X-Caller-Roles": "advisor",
-                "X-Caller-Tenant-Ids": SYNTHETIC_TENANT_ID,
-                "X-Caller-Book-Ids": SYNTHETIC_BOOK_ID,
-                "X-Caller-Portfolio-Ids": SYNTHETIC_PORTFOLIO_ID,
-                "X-Caller-Client-Ids": SYNTHETIC_CLIENT_ID,
-            }
-        )
+        headers.update(_scope_headers())
         self._post_json(
             f"/api/v1/idea-candidates/{candidate_id}/review-actions",
             payload={
@@ -108,6 +100,12 @@ class HttpDownstreamCapacitySeed:
         seed_key: str,
         requested_at_utc: datetime,
     ) -> None:
+        headers = _headers(
+            subject="capacity-seed-advisor",
+            capability="idea.conversion.intent.record",
+            idempotency_key=f"capacity-{seed_key}-conversion",
+        )
+        headers.update(_scope_headers())
         self._post_json(
             f"/api/v1/idea-candidates/{candidate_id}/conversion-intents",
             payload={
@@ -116,11 +114,7 @@ class HttpDownstreamCapacitySeed:
                 "reasonCodes": ["review_approved_for_conversion"],
                 "requestedAtUtc": _utc_text(requested_at_utc),
             },
-            headers=_headers(
-                subject="capacity-seed-advisor",
-                capability="idea.conversion.intent.record",
-                idempotency_key=f"capacity-{seed_key}-conversion",
-            ),
+            headers=headers,
         )
 
     def close(self) -> None:
@@ -185,6 +179,16 @@ def _access_scope() -> dict[str, str]:
         "bookId": SYNTHETIC_BOOK_ID,
         "portfolioId": SYNTHETIC_PORTFOLIO_ID,
         "clientId": SYNTHETIC_CLIENT_ID,
+    }
+
+
+def _scope_headers() -> dict[str, str]:
+    return {
+        "X-Caller-Roles": "advisor",
+        "X-Caller-Tenant-Ids": SYNTHETIC_TENANT_ID,
+        "X-Caller-Book-Ids": SYNTHETIC_BOOK_ID,
+        "X-Caller-Portfolio-Ids": SYNTHETIC_PORTFOLIO_ID,
+        "X-Caller-Client-Ids": SYNTHETIC_CLIENT_ID,
     }
 
 

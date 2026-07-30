@@ -73,6 +73,7 @@ def test_cli_writes_atomic_source_safe_seed_artifact(
             self.closed = True
 
     monkeypatch.setenv("LOTUS_IDEA_CAPACITY_AUTHORIZATION", "Bearer transient")
+    monkeypatch.setenv("LOTUS_IDEA_CAPACITY_TRUSTED_CALLER_CONTEXT", "local-capacity-provenance")
     monkeypatch.setattr(module, "HttpDownstreamCapacitySeed", FakeAdapter)
 
     assert module.main(_args(output)) == 0
@@ -84,7 +85,10 @@ def test_cli_writes_atomic_source_safe_seed_artifact(
     assert artifact["downstreamSubmissionPath"].startswith(
         "/api/v1/conversion-intents/capacity-conversion-"
     )
-    assert adapter.kwargs["base_headers"] == {"Authorization": "Bearer transient"}
+    assert adapter.kwargs["base_headers"] == {
+        "Authorization": "Bearer transient",
+        "X-Lotus-Trusted-Caller-Context": "local-capacity-provenance",
+    }
     assert adapter.closed is True
     assert not output.with_suffix(".json.tmp").exists()
 
