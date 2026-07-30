@@ -222,9 +222,10 @@ in-progress issues while preserving Idea-side Core-dependent blockers #685 and
 passed, and branch cleanup completed; it is excluded from the open-blocked
 classifier because it is no longer an open `status/blocked` issue. Current
 governed cross-repo RFC-0002 posture is 93 label-backed tracked issues, 56
-complete, and 37 open; the blocked subset is 28 issues, 0 app-actionable
-blocked issues, 5 Core dependencies, and 23 external/protected-evidence
-blockers. One closed Core title-only RFC-0002 reference remains reported
+complete, and 37 open; the blocked subset is 27 issues, 0 app-actionable
+blocked issues, 4 Core dependencies, and 23 external/protected-evidence
+blockers after `sgajbi/lotus-core#856` moved to `status/in-progress`. One closed
+Core title-only RFC-0002 reference remains reported
 outside the governed count because `lotus-core` is outside this agent's write
 scope. This is source-truth synchronization
 only: it does not certify Core readiness, clear #685/#686/#500, promote
@@ -1406,8 +1407,9 @@ change, strict parity stayed `DiffCount 0`, and the feature branch was removed
 locally and remotely after patch-equivalence proof. Current source truth remains
 54 tracked Idea RFC-0002 issues, 25 open, and 29 closed, with 93 cross-repo
 label-backed RFC-0002 issues, 37 open, and 56 closed. Blocked posture remains
-28 blocked issues, 0 app-actionable blocked issues, 5 Core dependencies, and
-23 external/protected-evidence blockers. This is evidence synchronization only;
+27 blocked issues, 0 app-actionable blocked issues, 4 Core dependencies, and
+23 external/protected-evidence blockers after `sgajbi/lotus-core#856` moved to
+`status/in-progress`. This is evidence synchronization only;
 #681 and #380 remain open and no supported feature is promoted.
 
 The 2026-07-31 writable-dependency audit is now source-synchronized in the
@@ -1432,8 +1434,8 @@ The classifier makes the blocker definition executable: a `status/blocked`
 RFC-0002 issue may remain blocked only when the remaining evidence is
 Core-owned, production identity/session authority, protected runtime or
 deployment evidence, provider/bank/legal approval, or certification proof that a
-writable Lotus app branch cannot truthfully produce. Current live posture is 28
-blocked RFC-0002 issues, 0 app-actionable blocked issues, 5 Core dependencies,
+writable Lotus app branch cannot truthfully produce. Current live posture is 27
+blocked RFC-0002 issues, 0 app-actionable blocked issues, 4 Core dependencies,
 and 23 external/protected-evidence blockers. Counts are label-backed by
 `rfc/RFC-0002`; title-only references are reported separately and excluded from
 governed counts unless deliberately labeled and ledgered. If a writable non-Core app-code

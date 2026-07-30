@@ -544,9 +544,10 @@ readiness. After
 `sgajbi/lotus-core#836`
 and `sgajbi/lotus-core#840` moved from `status/blocked` to
 `status/in-progress`, and `sgajbi/lotus-manage#626` closed with
-`status/merged-main`, current blocked posture is 28 blocked issues, 0 app-actionable
-blocked issues, 5 Core dependencies, and 23 external/protected-evidence
-blockers. #683 and #684 are
+`status/merged-main`, and `sgajbi/lotus-core#856` moved to
+`status/in-progress`, current blocked posture is 27 blocked issues, 0
+app-actionable blocked issues, 4 Core dependencies, and 23
+external/protected-evidence blockers. #683 and #684 are
 not ready implementation issues while prerequisite RFC blockers remain open;
 their richer pending semantics remain in the execution ledger and summary. This
 evidence still preserves `sgajbi/lotus-manage#624`
@@ -717,8 +718,8 @@ promotion, and final live-journey evidence remain open.
 The cross-repo posture command now includes a source-controlled blocker
 actionability classifier at
 `contracts/implementation-proof/rfc0002-cross-repo-blocker-classification.v1.json`.
-For the current 93-issue label-backed RFC-0002 program posture, all 28 open
-`status/blocked` issues are classified: 5 are Core dependencies and 23 require
+For the current 93-issue label-backed RFC-0002 program posture, all 27 open
+`status/blocked` issues are classified: 4 are Core dependencies and 23 require
 external or protected evidence. The current app-actionable blocked count is 0.
 Future agents must not use `status/blocked` for writable non-Core app work; if
 the remaining acceptance criteria can be satisfied in `lotus-idea`,

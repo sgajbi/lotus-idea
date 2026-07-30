@@ -207,8 +207,8 @@ supported-feature blockers.
 `make rfc0002-cross-repo-issue-posture` also validates
 `contracts/implementation-proof/rfc0002-cross-repo-blocker-classification.v1.json`.
 That contract is the durable answer to whether the remaining `status/blocked`
-issues are actually fixable app-code work. The live 2026-07-30 posture is 28
-blocked RFC-0002 issues, 0 app-actionable blocked issues, 5 Core dependencies,
+issues are actually fixable app-code work. The live 2026-07-31 posture is 27
+blocked RFC-0002 issues, 0 app-actionable blocked issues, 4 Core dependencies,
 and 23 external/protected-evidence blockers. Counts are label-backed by
 `rfc/RFC-0002`; title-only references are reported separately and excluded from
 governed counts unless deliberately labeled and ledgered. Pending final-closure issue #683
@@ -334,9 +334,9 @@ label-backed tracked issues, 56 complete, and 37 open across 13 repositories. Af
 `sgajbi/lotus-core#836` and
 `sgajbi/lotus-core#840` moved from `status/blocked` to `status/in-progress`,
 `sgajbi/lotus-manage#626` closed with `status/merged-main`, and
-`sgajbi/lotus-core#856` was opened for future-dated canonical aggregation
-readiness, 28 blocked issues remain classified as 5 Core dependencies and 23
-external/protected-evidence blockers, with 0
+`sgajbi/lotus-core#856` moved to `status/in-progress` for future-dated canonical
+aggregation readiness, 27 blocked issues remain classified as 4 Core
+dependencies and 23 external/protected-evidence blockers, with 0
 app-actionable blocked issues.
 Production IdP/session/token-claims and canonical browser proof remain open.
 The cross-repo posture count is label-backed by `rfc/RFC-0002`; title-only
@@ -364,9 +364,10 @@ Repo-authored wiki source did not change in PR #819; strict wiki parity stayed
 `DiffCount 0`, and branch cleanup completed after patch-equivalence proof.
 Current source truth remains 54 tracked Idea RFC-0002 issues, 25 open, and
 29 closed, with cross-repo posture of 93 label-backed RFC-0002 issues, 56
-closed, and 37 open. The blocked posture remains 28 blocked issues, 0
-app-actionable blocked issues, 5 Core dependencies, and 23 external/protected
-evidence blockers. #380 and #681 remain open, and no supported feature is
+closed, and 37 open. The blocked posture remains 27 blocked issues, 0
+app-actionable blocked issues, 4 Core dependencies, and 23 external/protected
+evidence blockers after `sgajbi/lotus-core#856` moved to `status/in-progress`.
+#380 and #681 remain open, and no supported feature is
 promoted from this evidence-sync tranche.
 
 #685 is `open_blocked`, not QA-pending: the 2026-07-29 governed Workbench

@@ -439,7 +439,7 @@ def test_default_blocker_classification_tracks_issue_814_core_capacity_blocker()
     ]
 
 
-def test_default_blocker_classification_tracks_core_issue_856() -> None:
+def test_default_blocker_classification_excludes_in_progress_core_issue_856() -> None:
     contract_path = (
         ROOT
         / "contracts"
@@ -454,15 +454,4 @@ def test_default_blocker_classification_tracks_core_issue_856() -> None:
         if row["repository"] == "sgajbi/lotus-core" and row["issueNumber"] == 856
     ]
 
-    assert matching_rows == [
-        {
-            "repository": "sgajbi/lotus-core",
-            "issueNumber": 856,
-            "actionability": "core_dependency",
-            "blockerClass": "canonical_idea_capacity_seed_core_readiness",
-            "remainingAuthority": (
-                "Core-owned future-dated aggregation job and positions data-quality "
-                "readiness behavior for PB_SG_GLOBAL_BAL_001 canonical validation"
-            ),
-        }
-    ]
+    assert matching_rows == []
