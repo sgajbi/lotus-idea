@@ -1137,6 +1137,18 @@ governed posture remains 54 tracked Idea RFC-0002 issues, 25 open, and 29
 closed; cross-repo RFC-0002 posture remains 93 label-backed issues, 37 open,
 and 56 closed, with 28 blocked issues, 0 app-actionable blocked issues, 5 Core
 dependencies, and 23 external/protected-evidence blockers.
+
+The 2026-07-31 writable-dependency audit keeps that posture intact. Current-main
+focused validation passed in the owning repositories for platform
+cost-attribution and BFF principal-session source contracts, lotus-ai Idea
+workflow-pack and provider-retention seams, Manage temporal receipt/action
+intake, Report Idea evidence intake/materialization and retention policy,
+Archive Idea lifecycle decisions, and Workbench opportunities/BFF action
+controls. Durable evidence is recorded on the owning GitHub issues and
+coordinated through `lotus-idea#681`. These checks are source-side evidence
+only; the issues stay open where production identity, Core readiness,
+protected FinOps/runtime, provider/model-risk, legal/lifecycle, canonical
+browser, client publication, supported-feature, or final closure proof remains.
 Keep #681 open until the remaining documentation, wiki,
 support, context, and supported-feature truth is complete;
 `sgajbi/lotus-manage#624` remains the production trusted IdP caller-context
