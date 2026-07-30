@@ -642,9 +642,9 @@ Core/Workbench handoff posture to exact main
 `fe7f0efac9fca86a3e19302e8b8436e8941f3d0c` with Main Releasability
 `30500588217` passing and repo-authored wiki publication `f0f9293` at strict
 `DiffCount 0`; current source truth now records 54 tracked RFC-0002
-issues, 29 closed complete, 25 open, no `open_merged_main_qa_pending`, no
-`open_in_progress`, 1 `open_pr_raised`, and 14 `open_blocked` issues. #681 is
-PR-open for #817 and #814 is blocked by `sgajbi/lotus-core#856`. #807 is
+issues, 29 closed complete, 25 open, no `open_merged_main_qa_pending`, 1
+`open_in_progress`, no `open_pr_raised`, and 14 `open_blocked` issues. #681 is
+active after #817 reached main and #814 is blocked by `sgajbi/lotus-core#856`. #807 is
 closed complete for repository-owned runtime-image remediation only; no
 production vulnerability certification, registry promotion, protected
 deployment, supported-feature promotion, or full Slice 15 closure is claimed.

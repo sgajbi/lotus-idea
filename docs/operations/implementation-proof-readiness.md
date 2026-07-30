@@ -168,8 +168,8 @@ open/closed verification.
 
 Current Slice 18 ledger synchronization records 54 tracked RFC-0002 issues:
 29 closed complete, 25 open, no `open_ready`, no
-`open_merged_main_qa_pending` issues, 14 `open_blocked`, no
-`open_in_progress`, no `open_fixed_local`, 1 `open_pr_raised`, 1
+`open_merged_main_qa_pending` issues, 14 `open_blocked`, 1
+`open_in_progress`, no `open_fixed_local`, no `open_pr_raised`, 1
 `open_pending_final_closure`, 1 `open_pending_post_completion`, and 8
 `open_tracker`. PR #745 reconciled #340 to `open_merged_main_qa_pending` on
 `eeabfc683f595b4cbc9ffb5aa0aa51c3e5622903`; Main Releasability `30326431318`
