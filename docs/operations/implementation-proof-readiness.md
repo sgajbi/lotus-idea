@@ -334,10 +334,11 @@ label-backed tracked issues, 56 complete, and 37 open across 13 repositories. Af
 `sgajbi/lotus-core#836` and
 `sgajbi/lotus-core#840` moved from `status/blocked` to `status/in-progress`,
 `sgajbi/lotus-manage#626` closed with `status/merged-main`, and
-`sgajbi/lotus-core#856` moved to `status/in-progress` for future-dated canonical
-aggregation readiness, 27 blocked issues remain classified as 4 Core
-dependencies and 23 external/protected-evidence blockers, with 0
-app-actionable blocked issues.
+`sgajbi/lotus-core#856` moved to `status/pr-open` through Core PR #858 for
+future-dated canonical aggregation readiness, the open split is 27 blocked, 1
+in-progress, 1 PR-open, and 8 tracker issues. The 27 blocked issues remain
+classified as 4 Core dependencies and 23 external/protected-evidence blockers,
+with 0 app-actionable blocked issues.
 Production IdP/session/token-claims and canonical browser proof remain open.
 The cross-repo posture count is label-backed by `rfc/RFC-0002`; title-only
 references are reported separately and excluded unless deliberately labeled and
@@ -364,9 +365,11 @@ Repo-authored wiki source did not change in PR #819; strict wiki parity stayed
 `DiffCount 0`, and branch cleanup completed after patch-equivalence proof.
 Current source truth remains 54 tracked Idea RFC-0002 issues, 25 open, and
 29 closed, with cross-repo posture of 93 label-backed RFC-0002 issues, 56
-closed, and 37 open. The blocked posture remains 27 blocked issues, 0
+closed, and 37 open. The open split is 27 blocked, 1 in-progress, 1 PR-open,
+and 8 tracker issues. The blocked posture remains 27 blocked issues, 0
 app-actionable blocked issues, 4 Core dependencies, and 23 external/protected
-evidence blockers after `sgajbi/lotus-core#856` moved to `status/in-progress`.
+evidence blockers after `sgajbi/lotus-core#856` moved to `status/pr-open`
+through Core PR #858.
 #380 and #681 remain open, and no supported feature is
 promoted from this evidence-sync tranche.
 

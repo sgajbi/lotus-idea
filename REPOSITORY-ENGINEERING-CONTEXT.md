@@ -222,9 +222,10 @@ in-progress issues while preserving Idea-side Core-dependent blockers #685 and
 passed, and branch cleanup completed; it is excluded from the open-blocked
 classifier because it is no longer an open `status/blocked` issue. Current
 governed cross-repo RFC-0002 posture is 93 label-backed tracked issues, 56
-complete, and 37 open; the blocked subset is 27 issues, 0 app-actionable
-blocked issues, 4 Core dependencies, and 23 external/protected-evidence
-blockers after `sgajbi/lotus-core#856` moved to `status/in-progress`. One closed
+complete, and 37 open; the open split is 27 blocked, 1 in progress, 1 PR-open,
+and 8 tracker issues. The blocked subset is 27 issues, 0 app-actionable blocked
+issues, 4 Core dependencies, and 23 external/protected-evidence blockers after
+`sgajbi/lotus-core#856` moved to `status/pr-open` through Core PR #858. One closed
 Core title-only RFC-0002 reference remains reported
 outside the governed count because `lotus-core` is outside this agent's write
 scope. This is source-truth synchronization
@@ -1406,11 +1407,13 @@ to the current Core issue `sgajbi/lotus-core#856` on Idea main
 change, strict parity stayed `DiffCount 0`, and the feature branch was removed
 locally and remotely after patch-equivalence proof. Current source truth remains
 54 tracked Idea RFC-0002 issues, 25 open, and 29 closed, with 93 cross-repo
-label-backed RFC-0002 issues, 37 open, and 56 closed. Blocked posture remains
-27 blocked issues, 0 app-actionable blocked issues, 4 Core dependencies, and
-23 external/protected-evidence blockers after `sgajbi/lotus-core#856` moved to
-`status/in-progress`. This is evidence synchronization only;
-#681 and #380 remain open and no supported feature is promoted.
+label-backed RFC-0002 issues, 37 open, and 56 closed. Open posture is now 27
+blocked issues, 1 in-progress issue, 1 PR-open issue, and 8 tracker issues.
+Blocked posture remains 27 blocked issues, 0 app-actionable blocked issues, 4
+Core dependencies, and 23 external/protected-evidence blockers after
+`sgajbi/lotus-core#856` moved to `status/pr-open` through Core PR #858. This
+is evidence synchronization only; #681 and #380 remain open and no supported
+feature is promoted.
 
 The 2026-07-31 writable-dependency audit is now source-synchronized in the
 RFC-0002 execution ledger after durable GitHub comments were posted on
