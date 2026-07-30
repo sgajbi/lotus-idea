@@ -361,10 +361,7 @@ def test_default_blocker_classification_tracks_issue_814_core_capacity_blocker()
     matching_rows = [
         row
         for row in payload["classifications"]
-        if (
-            row["repository"] == "sgajbi/lotus-idea"
-            and row["issueNumber"] == 814
-        )
+        if (row["repository"] == "sgajbi/lotus-idea" and row["issueNumber"] == 814)
     ]
 
     assert matching_rows == [
