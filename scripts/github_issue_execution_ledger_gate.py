@@ -12,12 +12,11 @@ ROOT = Path(__file__).resolve().parents[1]
 LEDGER_PATH = (
     ROOT / "contracts" / "implementation-proof" / "rfc0002-github-issue-execution-ledger.v1.json"
 )
-
 EXPECTED_SCHEMA_VERSION = "lotus-idea:rfc0002-github-issue-execution-ledger:v1"
 EXPECTED_RFC_ID = "RFC-0002"
 EXPECTED_REPOSITORY = "sgajbi/lotus-idea"
 EXPECTED_EXECUTION_ISSUES = frozenset(range(673, 703)) | frozenset(
-    {340, 343, 344, 345, 375, 379, 380, 482, 542, 704, 756, 782, 797, 807}
+    {340, 343, 344, 345, 375, 379, 380, 482, 542, 704, 756, 782, 797, 807, 814}
 )
 OPEN_STATUSES = frozenset(
     {
@@ -343,6 +342,11 @@ REQUIRED_CLOSED_ISSUE_EVIDENCE = {
         "git cherry patch-equivalence proof",
         "does not claim production vulnerability certification",
     ),
+    814: tuple(
+        "Keep #814 open|canonical Idea downstream-capacity seed|without bypassing endpoint authorization|complete synthetic trusted entitlement scope|per-run local trusted-caller marker|full Start-LotusFrontOfficeCanonical.ps1 -BuildImages -RunValidation path completes on main|does not implement production authentication|supported-feature promotion".split(
+            "|"
+        )
+    ),
 }
 
 
@@ -394,7 +398,6 @@ def _entries(payload: dict[str, Any]) -> list[IssueEntry]:
             raise ValueError(f"#{issue_number}: rfcSlices must be a non-empty list")
         if not all(isinstance(slice_id, str) for slice_id in rfc_slices):
             raise ValueError(f"#{issue_number}: every rfcSlices entry must be a string")
-
         entries.append(
             IssueEntry(
                 issue_number=issue_number,

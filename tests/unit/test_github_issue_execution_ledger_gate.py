@@ -826,6 +826,28 @@ def test_rfc0002_github_issue_execution_ledger_tracks_runtime_image_hardening_is
     )
 
 
+def test_rfc0002_github_issue_execution_ledger_tracks_capacity_seed_authorization_issue() -> None:
+    module = _load_gate()
+    payload = _ledger_payload(module)
+
+    issue_814 = next(
+        issue
+        for issue in payload["issues"]
+        if isinstance(issue, dict) and issue["issueNumber"] == 814
+    )
+
+    assert issue_814["githubState"] == "open"
+    assert issue_814["executionStatus"] == "open_in_progress"
+    assert issue_814["allowPullRequestAutoClose"] is False
+    assert issue_814["rfcSlices"] == ["slice-15", "slice-17"]
+    assert "Keep #814 open" in issue_814["closureInstruction"]
+    assert "without bypassing endpoint authorization" in issue_814["closureInstruction"]
+    assert "complete synthetic trusted entitlement scope" in issue_814["closureInstruction"]
+    assert "per-run local trusted-caller marker" in issue_814["closureInstruction"]
+    assert "does not implement production authentication" in issue_814["closureInstruction"]
+    assert "supported-feature promotion" in issue_814["closureInstruction"]
+
+
 def test_rfc0002_github_issue_execution_ledger_records_issue_681_sync_note() -> None:
     module = _load_gate()
     payload = _ledger_payload(module)

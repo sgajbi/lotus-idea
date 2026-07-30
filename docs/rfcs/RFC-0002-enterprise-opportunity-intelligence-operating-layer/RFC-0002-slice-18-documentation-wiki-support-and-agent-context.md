@@ -534,21 +534,25 @@ the final #807 closure truth on Idea main
 `30499444726` passed, including lint/typecheck/security, unit, integration,
 e2e, PostgreSQL runtime proof, combined coverage, Docker build, runtime smoke,
 image scan, release identity/license evidence binding, and CI signal evidence.
-Live Idea RFC-0002 ledger posture is 44 tracked issues, 24 open, and 20
-closed. Live governed cross-repo posture is 82 tracked issues, 44 closed, and
-38 open across 13 repositories. After `sgajbi/lotus-core#836`
+Live Idea RFC-0002 ledger posture is 45 tracked issues, 25 open, and 20
+closed. Live governed cross-repo posture is 83 tracked issues, 47 closed, and
+36 open across 13 repositories after #814 was added as active app-owned
+local/dev authorization wiring. After `sgajbi/lotus-core#836`
 and `sgajbi/lotus-core#840` moved from `status/blocked` to
-`status/in-progress`, and `sgajbi/lotus-manage#626` was correctly labeled as
-RFC-0002, current blocked posture is 27 blocked issues, 0 app-actionable
-blocked issues, 4 Core dependencies, and 23 external/protected-evidence
+`status/in-progress`, and `sgajbi/lotus-manage#626` closed with
+`status/merged-main`, current blocked posture is 26 blocked issues, 0 app-actionable
+blocked issues, 3 Core dependencies, and 23 external/protected-evidence
 blockers. #683 and #684 are
 not ready implementation issues while prerequisite RFC blockers remain open;
 their richer pending semantics remain in the execution ledger and summary. This
-evidence still preserves `sgajbi/lotus-manage#624`, `sgajbi/lotus-manage#626`,
+evidence still preserves `sgajbi/lotus-manage#624`
 and the other blocked production/certification dependencies; it is not Slice 18
 completion evidence and does not certify
 production vulnerability posture or production IdP/session/token-claims
-principal proof.
+principal proof. #814 also remains open until complete synthetic entitlement
+scope, a bounded per-run trusted-caller marker, fresh-image capacity-seed proof,
+and full canonical validation are mainline-backed; it does not implement
+production authentication or promote supported features.
 
 PR #810 then synchronized PR #809 main evidence and Core/Workbench handoff
 posture to Idea main `fe7f0efac9fca86a3e19302e8b8436e8941f3d0c`;
@@ -562,7 +566,7 @@ publication reached `lotus-idea.wiki` commit `f0f9293` with strict
 `DiffCount 0`. The current durable handoff evidence is recorded on
 `sgajbi/lotus-core#836`, `sgajbi/lotus-core#840`,
 `sgajbi/lotus-workbench#500`, #685, and #686; `sgajbi/lotus-manage#626`
-records the Manage tax-lot identity fix merged by PR #627 on Manage main
+records the closed Manage tax-lot identity fix merged by PR #627 on Manage main
 `5ba2757c1235ce3e28c630afd44257327c91edf3` with Main Releasability
 `30536615979` passing and branch cleanup complete. The open blocker is now
 canonical Core/Platform command-center seed runtime evidence, not hidden Manage
@@ -628,9 +632,10 @@ exact main `c340daa01b41097410bbc8a802d9a8d1f9f24135` with Main Releasability
 Core/Workbench handoff posture to exact main
 `fe7f0efac9fca86a3e19302e8b8436e8941f3d0c` with Main Releasability
 `30500588217` passing and repo-authored wiki publication `f0f9293` at strict
-`DiffCount 0`; current source truth now records 44 tracked RFC-0002
-issues, 20 closed complete, 24 open, no `open_merged_main_qa_pending`, 1
-`open_in_progress`, no `open_pr_raised`, and 13 `open_blocked` issues. #807 is
+`DiffCount 0`; current source truth now records 45 tracked RFC-0002
+issues, 20 closed complete, 25 open, no `open_merged_main_qa_pending`, 2
+`open_in_progress`, no `open_pr_raised`, and 13 `open_blocked` issues. #681
+and #814 are in progress. #807 is
 closed complete for repository-owned runtime-image remediation only; no
 production vulnerability certification, registry promotion, protected
 deployment, supported-feature promotion, or full Slice 15 closure is claimed.

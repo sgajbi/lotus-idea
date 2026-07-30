@@ -65,8 +65,17 @@ def test_adapter_calls_governed_api_sequence_with_synthetic_scope() -> None:
         "clientId": "capacity-synthetic-client",
     }
     assert candidate_payload["sourceReportedCashWeight"] == "0.18"
-    assert requests[2].headers["x-caller-roles"] == "advisor"
-    assert requests[3].headers["x-caller-capabilities"] == ("idea.conversion.intent.record")
+    expected_scope_headers = {
+        "x-caller-roles": "advisor",
+        "x-caller-tenant-ids": "capacity-synthetic-tenant",
+        "x-caller-book-ids": "capacity-synthetic-book",
+        "x-caller-portfolio-ids": "CAPACITY_SYNTHETIC_PORTFOLIO_001",
+        "x-caller-client-ids": "capacity-synthetic-client",
+    }
+    for header_name, expected_value in expected_scope_headers.items():
+        assert requests[2].headers[header_name] == expected_value
+        assert requests[3].headers[header_name] == expected_value
+    assert requests[3].headers["x-caller-capabilities"] == "idea.conversion.intent.record"
 
 
 @pytest.mark.parametrize(

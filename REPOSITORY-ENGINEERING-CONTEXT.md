@@ -117,9 +117,10 @@ truth to exact main `c340daa01b41097410bbc8a802d9a8d1f9f24135` with Main
 Releasability `30499444726` passing, and PR #810 synchronized PR #809 main
 evidence plus Core handoff posture to exact main
 `fe7f0efac9fca86a3e19302e8b8436e8941f3d0c` with Main Releasability
-`30500588217` passing. The current RFC-0002 ledger posture is 44 tracked
-issues, 20 closed complete, 24 open, no `open_merged_main_qa_pending`, 1
-`open_in_progress`, no `open_pr_raised`, and 13 `open_blocked`; #807 does not
+`30500588217` passing. The current RFC-0002 ledger posture is 45 tracked
+issues, 20 closed complete, 25 open, no `open_merged_main_qa_pending`, 2
+`open_in_progress`, no `open_pr_raised`, and 13 `open_blocked`; #681 and
+#814 are in progress. #807 does not
 certify production vulnerability posture, registry promotion, protected
 deployment, supported-feature promotion, or full Slice 15 closure; #379 is now
 blocked, not QA-pending: Advise, Manage, Report, and Idea owner-app local
@@ -215,16 +216,23 @@ remain open.
 `sgajbi/lotus-core#840` moved from `status/blocked` to `status/in-progress`.
 The live cross-repo blocked classifier therefore excludes those Core
 in-progress issues while preserving Idea-side Core-dependent blockers #685 and
-#686 and Workbench #500. `sgajbi/lotus-manage#626` is now correctly labeled as
-RFC-0002 after Manage PR #627 merged the tax-lot identity fix on main
+#686 and Workbench #500. `sgajbi/lotus-manage#626` is now closed with
+`status/merged-main` after Manage PR #627 merged the tax-lot identity fix on main
 `5ba2757c1235ce3e28c630afd44257327c91edf3`, Main Releasability `30536615979`
-passed, and branch cleanup completed; it remains blocked only for governed
-Core/Platform command-center seed runtime evidence. Current governed cross-repo
-RFC-0002 posture is 82 tracked issues, 44 complete, and 38 open; the blocked
-subset is 27 issues, 0 app-actionable blocked issues, 4 Core dependencies, and
+passed, and branch cleanup completed; it is excluded from the open-blocked
+classifier because it is no longer an open `status/blocked` issue. Current
+governed cross-repo RFC-0002 posture is 83 tracked issues, 47 complete, and
+36 open; the blocked subset is 26 issues, 0 app-actionable blocked issues,
+3 Core dependencies, and
 23 external/protected-evidence blockers. This is source-truth synchronization
-only: it does not certify Core readiness, clear #685/#686/#500/#626, promote
+only: it does not certify Core readiness, clear #685/#686/#500, promote
 supported features, or replace production IdP/session/token-claims evidence.
+`sgajbi/lotus-idea#814` is now active app-owned work, not an external blocker:
+the local/dev canonical capacity seed must call existing public Idea APIs with
+complete synthetic entitlement scope and a bounded per-run trusted-caller marker
+without weakening endpoint authorization. That work does not implement
+production authentication, production IdP/session/token-claims authority,
+supported-feature promotion, capacity certification, or client publication.
 
 Slice 15 operations blockers #343, #344, and #375 are source-controlled as
 blocked external/protected-evidence items, not unresolved local app-code
@@ -1370,14 +1378,17 @@ Releasability `30500588217` passed with release validation, published digest
 runtime proof, signing, provenance/SBOM attestation, and wiki publication
 `f0f9293` at strict `DiffCount 0`. Current durable handoff links are
 `sgajbi/lotus-core#836`, `sgajbi/lotus-core#840`,
-`sgajbi/lotus-workbench#500`, #685, and #686. `sgajbi/lotus-manage#626` now
-records the Manage PR #627 tax-lot identity fix on main
+`sgajbi/lotus-workbench#500`, #685, and #686. `sgajbi/lotus-manage#626`
+is closed with `status/merged-main` after the Manage PR #627 tax-lot identity
+fix on main
 `5ba2757c1235ce3e28c630afd44257327c91edf3` with Main Releasability
 `30536615979` passing and branch cleanup complete. The current Idea ledger
-posture is 44 tracked issues, 24 open, and 20 closed. That evidence is
-coordination posture only; it does not clear blockers, promote supported
-features, certify production vulnerability posture, or complete Slice 18
-closure.
+posture is 45 tracked issues, 25 open, and 20 closed after #814 moved into
+active implementation for local/dev capacity-seed authorization wiring. That
+evidence is coordination and branch-local implementation posture only; it does
+not close #814, clear blockers, promote supported features, certify production
+vulnerability posture, implement production IdP/session/token-claims authority,
+or complete Slice 18 closure.
 
 `make rfc0002-cross-repo-issue-posture` also validates
 `contracts/implementation-proof/rfc0002-cross-repo-blocker-classification.v1.json`.
@@ -1385,8 +1396,8 @@ The classifier makes the blocker definition executable: a `status/blocked`
 RFC-0002 issue may remain blocked only when the remaining evidence is
 Core-owned, production identity/session authority, protected runtime or
 deployment evidence, provider/bank/legal approval, or certification proof that a
-writable Lotus app branch cannot truthfully produce. Current live posture is 27
-blocked RFC-0002 issues, 0 app-actionable blocked issues, 4 Core dependencies,
+writable Lotus app branch cannot truthfully produce. Current live posture is 26
+blocked RFC-0002 issues, 0 app-actionable blocked issues, 3 Core dependencies,
 and 23 external/protected-evidence blockers. If a writable non-Core app-code
 gap is found, update GitHub and this contract so the issue becomes ready or
 in-progress instead of hidden behind blocked posture.
