@@ -16,58 +16,19 @@ EXPECTED_SCHEMA_VERSION = "lotus-idea:rfc0002-github-issue-execution-ledger:v1"
 EXPECTED_RFC_ID = "RFC-0002"
 EXPECTED_REPOSITORY = "sgajbi/lotus-idea"
 EXPECTED_EXECUTION_ISSUES = frozenset(range(673, 703)) | frozenset(
-    {
-        340,
-        343,
-        344,
-        345,
-        375,
-        379,
-        380,
-        482,
-        542,
-        555,
-        557,
-        559,
-        561,
-        563,
-        565,
-        567,
-        569,
-        579,
-        704,
-        756,
-        782,
-        797,
-        807,
-        814,
-    }
+    map(
+        int,
+        "340 343 344 345 375 379 380 482 542 555 557 559 561 563 565 567 "
+        "569 579 704 756 782 797 807 814".split(),
+    )
 )
 OPEN_STATUSES = frozenset(
-    {
-        "open_tracker",
-        "open_ready",
-        "open_blocked",
-        "open_in_progress",
-        "open_fixed_local",
-        "open_pr_raised",
-        "open_merged_main_qa_pending",
-        "open_pending_final_closure",
-        "open_pending_post_completion",
-    }
+    "open_tracker open_ready open_blocked open_in_progress open_fixed_local "
+    "open_pr_raised open_merged_main_qa_pending open_pending_final_closure "
+    "open_pending_post_completion".split()
 )
 CLOSED_STATUSES = frozenset({"closed_complete"})
-AUTO_CLOSE_KEYWORDS = (
-    "close",
-    "closes",
-    "closed",
-    "fix",
-    "fixes",
-    "fixed",
-    "resolve",
-    "resolves",
-    "resolved",
-)
+AUTO_CLOSE_KEYWORDS = tuple("close closes closed fix fixes fixed resolve resolves resolved".split())
 REQUIRED_OPEN_ISSUE_EVIDENCE = {
     343: (
         "Keep #343 open and status/blocked",
