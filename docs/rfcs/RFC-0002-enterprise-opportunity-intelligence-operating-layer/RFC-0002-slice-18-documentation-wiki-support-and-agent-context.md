@@ -673,6 +673,24 @@ remote/local branch cleanup completed after patch-equivalence proof. This is
 Slice 18 source-truth synchronization only: #681 and #380 stay open, Core #856
 continues to block canonical proof, and supported-feature promotion remains
 unclaimed.
+
+The 2026-07-31 dependency audit then verified current-main source-side posture
+for the writable cross-repo blockers without finding hidden app-actionable
+blocked work. Durable evidence comments were posted on `sgajbi/lotus-platform#495`,
+`sgajbi/lotus-platform#563`, `sgajbi/lotus-ai#115`, `sgajbi/lotus-ai#122`,
+`sgajbi/lotus-manage#624`, `sgajbi/lotus-report#136`,
+`sgajbi/lotus-archive#55`, `sgajbi/lotus-workbench#436`, and
+`sgajbi/lotus-workbench#500`, then coordinated through #681. Focused
+owner-repo validation passed for platform cost-attribution, BFF
+principal-session source contracts, AI retention and Idea workflow-pack proof,
+Manage temporal receipt/action-intake proof, Report Idea intake/materialization
+and retention policy, Archive Idea lifecycle decisions, and Workbench
+opportunities/BFF/action-control proof. This audit keeps those issues open
+because remaining acceptance criteria require Core readiness, production
+IdP/session/token-claims authority, protected FinOps evidence, live
+provider/model-risk certification, legal/lifecycle approval, managed signing
+keys, canonical live browser proof, client-publication authority, or final
+RFC-0002 closure evidence.
 Platform PR `sgajbi/lotus-platform#631` fixes the prior Manage seed
 authorization failure; #686 is blocked, not QA-pending, until
 `sgajbi/lotus-core#840` restores canonical DPM source readiness and Workbench
@@ -699,7 +717,7 @@ promotion, and final live-journey evidence remain open.
 The cross-repo posture command now includes a source-controlled blocker
 actionability classifier at
 `contracts/implementation-proof/rfc0002-cross-repo-blocker-classification.v1.json`.
-For the current 77-issue RFC-0002 program posture, all 28 open
+For the current 93-issue label-backed RFC-0002 program posture, all 28 open
 `status/blocked` issues are classified: 5 are Core dependencies and 23 require
 external or protected evidence. The current app-actionable blocked count is 0.
 Future agents must not use `status/blocked` for writable non-Core app work; if

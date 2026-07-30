@@ -1410,6 +1410,22 @@ label-backed RFC-0002 issues, 37 open, and 56 closed. Blocked posture remains
 23 external/protected-evidence blockers. This is evidence synchronization only;
 #681 and #380 remain open and no supported feature is promoted.
 
+The 2026-07-31 writable-dependency audit is now source-synchronized in the
+RFC-0002 execution ledger after durable GitHub comments were posted on
+`sgajbi/lotus-platform#495`, `sgajbi/lotus-platform#563`,
+`sgajbi/lotus-ai#115`, `sgajbi/lotus-ai#122`, `sgajbi/lotus-manage#624`,
+`sgajbi/lotus-report#136`, `sgajbi/lotus-archive#55`,
+`sgajbi/lotus-workbench#436`, and `sgajbi/lotus-workbench#500`. Focused
+owner-repo validations passed for platform proof-consumption and BFF
+principal-session contracts, AI Idea workflow-pack and provider-retention
+source seams, Manage temporal receipt/action-intake proof, Report Idea
+intake/materialization and retention policy, Archive Idea lifecycle decisions,
+and Workbench opportunities/BFF action controls. No writable source gap was
+found. The audited issues stay blocked only for Core readiness, production
+IdP/session/token-claims, protected FinOps/runtime, provider/model-risk,
+legal/lifecycle, canonical browser, client-publication, supported-feature, or
+final RFC-0002 certification evidence.
+
 `make rfc0002-cross-repo-issue-posture` also validates
 `contracts/implementation-proof/rfc0002-cross-repo-blocker-classification.v1.json`.
 The classifier makes the blocker definition executable: a `status/blocked`
