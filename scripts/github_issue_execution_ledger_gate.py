@@ -343,7 +343,7 @@ REQUIRED_CLOSED_ISSUE_EVIDENCE = {
         "does not claim production vulnerability certification",
     ),
     814: tuple(
-        "Keep #814 open|Idea PR #815|Workbench PR #515|canonical Idea downstream-capacity seed|without bypassing endpoint authorization|complete synthetic trusted entitlement scope|per-run local trusted-caller marker|full Start-LotusFrontOfficeCanonical.ps1 -BuildImages -RunValidation path completes on main|does not implement production authentication|supported-feature promotion".split(
+        "Keep #814 open and status/blocked|Idea PR #815 merged|Workbench PR #515 merged|Workbench PR #516|1787da79fb4abaf574ebe4ebc3f8b4d5fed7bdac|30543504302|original #814 authorization and Workbench validator defects are no longer the active failure path|sgajbi/lotus-core#856|pending_valuation_jobs=0|analytics_performance_end_date=2026-04-10|positions_data_quality_status=UNKNOWN|2026-04-17|2026-04-30|fresh canonical validation completes on mainline sources|does not implement production authentication|supported-feature promotion".split(
             "|"
         )
     ),

@@ -347,3 +347,64 @@ def test_default_blocker_classification_excludes_closed_manage_tax_lot_seed_issu
     ]
 
     assert matching_rows == []
+
+
+def test_default_blocker_classification_tracks_issue_814_core_capacity_blocker() -> None:
+    contract_path = (
+        ROOT
+        / "contracts"
+        / "implementation-proof"
+        / ("rfc0002-cross-repo-blocker-classification.v1.json")
+    )
+    payload = json.loads(contract_path.read_text(encoding="utf-8"))
+
+    matching_rows = [
+        row
+        for row in payload["classifications"]
+        if (
+            row["repository"] == "sgajbi/lotus-idea"
+            and row["issueNumber"] == 814
+        )
+    ]
+
+    assert matching_rows == [
+        {
+            "repository": "sgajbi/lotus-idea",
+            "issueNumber": 814,
+            "actionability": "core_dependency",
+            "blockerClass": "canonical_idea_capacity_seed_core_readiness",
+            "remainingAuthority": (
+                "Core-owned PB_SG_GLOBAL_BAL_001 readiness convergence for "
+                "canonical capacity-seed validation, tracked by sgajbi/lotus-core#856"
+            ),
+        }
+    ]
+
+
+def test_default_blocker_classification_tracks_core_issue_856() -> None:
+    contract_path = (
+        ROOT
+        / "contracts"
+        / "implementation-proof"
+        / ("rfc0002-cross-repo-blocker-classification.v1.json")
+    )
+    payload = json.loads(contract_path.read_text(encoding="utf-8"))
+
+    matching_rows = [
+        row
+        for row in payload["classifications"]
+        if row["repository"] == "sgajbi/lotus-core" and row["issueNumber"] == 856
+    ]
+
+    assert matching_rows == [
+        {
+            "repository": "sgajbi/lotus-core",
+            "issueNumber": 856,
+            "actionability": "core_dependency",
+            "blockerClass": "canonical_idea_capacity_seed_core_readiness",
+            "remainingAuthority": (
+                "Core-owned future-dated aggregation job and positions data-quality "
+                "readiness behavior for PB_SG_GLOBAL_BAL_001 canonical validation"
+            ),
+        }
+    ]
