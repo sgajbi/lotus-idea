@@ -535,14 +535,15 @@ the final #807 closure truth on Idea main
 e2e, PostgreSQL runtime proof, combined coverage, Docker build, runtime smoke,
 image scan, release identity/license evidence binding, and CI signal evidence.
 Live Idea RFC-0002 ledger posture is 45 tracked issues, 25 open, and 20
-closed. Live governed cross-repo posture is 83 tracked issues, 47 closed, and
-36 open across 13 repositories after #814 moved to PR-open app-owned local/dev
-authorization wiring through Idea PR #815 and Workbench PR #515. After
+closed. Live governed cross-repo posture is 84 tracked issues, 47 closed, and
+37 open across 13 repositories after #814 moved from PR-open to Core-blocked
+posture and `sgajbi/lotus-core#856` was opened for canonical capacity-seed
+readiness. After
 `sgajbi/lotus-core#836`
 and `sgajbi/lotus-core#840` moved from `status/blocked` to
 `status/in-progress`, and `sgajbi/lotus-manage#626` closed with
-`status/merged-main`, current blocked posture is 26 blocked issues, 0 app-actionable
-blocked issues, 3 Core dependencies, and 23 external/protected-evidence
+`status/merged-main`, current blocked posture is 28 blocked issues, 0 app-actionable
+blocked issues, 5 Core dependencies, and 23 external/protected-evidence
 blockers. #683 and #684 are
 not ready implementation issues while prerequisite RFC blockers remain open;
 their richer pending semantics remain in the execution ledger and summary. This
@@ -550,10 +551,9 @@ evidence still preserves `sgajbi/lotus-manage#624`
 and the other blocked production/certification dependencies; it is not Slice 18
 completion evidence and does not certify
 production vulnerability posture or production IdP/session/token-claims
-principal proof. #814 also remains open until complete synthetic entitlement
-scope, a bounded per-run trusted-caller marker, fresh-image capacity-seed proof,
-and full canonical validation are mainline-backed; it does not implement
-production authentication or promote supported features.
+principal proof. #814 also remains open until Core #856 is resolved and fresh
+full canonical validation produces mainline capacity-seed evidence; it does not
+implement production authentication or promote supported features.
 
 PR #810 then synchronized PR #809 main evidence and Core/Workbench handoff
 posture to Idea main `fe7f0efac9fca86a3e19302e8b8436e8941f3d0c`;
@@ -635,8 +635,8 @@ Core/Workbench handoff posture to exact main
 `30500588217` passing and repo-authored wiki publication `f0f9293` at strict
 `DiffCount 0`; current source truth now records 45 tracked RFC-0002
 issues, 20 closed complete, 25 open, no `open_merged_main_qa_pending`, 1
-`open_in_progress`, 1 `open_pr_raised`, and 13 `open_blocked` issues. #681 is
-in progress and #814 is PR-open. #807 is
+`open_in_progress`, no `open_pr_raised`, and 14 `open_blocked` issues. #681 is
+in progress and #814 is blocked by `sgajbi/lotus-core#856`. #807 is
 closed complete for repository-owned runtime-image remediation only; no
 production vulnerability certification, registry promotion, protected
 deployment, supported-feature promotion, or full Slice 15 closure is claimed.

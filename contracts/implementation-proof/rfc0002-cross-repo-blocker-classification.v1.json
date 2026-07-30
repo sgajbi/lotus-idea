@@ -54,6 +54,13 @@
     },
     {
       "repository": "sgajbi/lotus-idea",
+      "issueNumber": 814,
+      "actionability": "core_dependency",
+      "blockerClass": "canonical_idea_capacity_seed_core_readiness",
+      "remainingAuthority": "Core-owned PB_SG_GLOBAL_BAL_001 readiness convergence for canonical capacity-seed validation, tracked by sgajbi/lotus-core#856"
+    },
+    {
+      "repository": "sgajbi/lotus-idea",
       "issueNumber": 683,
       "actionability": "external_or_protected_evidence",
       "blockerClass": "final_closure_prerequisites",
@@ -177,6 +184,13 @@
       "actionability": "external_or_protected_evidence",
       "blockerClass": "protected_deployment_promotion_and_cost_evidence",
       "remainingAuthority": "approved staging/production deployed-digest observation, same-digest promotion evidence, protected migration linkage, and final Idea closure linkage"
+    },
+    {
+      "repository": "sgajbi/lotus-core",
+      "issueNumber": 856,
+      "actionability": "core_dependency",
+      "blockerClass": "canonical_idea_capacity_seed_core_readiness",
+      "remainingAuthority": "Core-owned future-dated aggregation job and positions data-quality readiness behavior for PB_SG_GLOBAL_BAL_001 canonical validation"
     },
     {
       "repository": "sgajbi/lotus-workbench",

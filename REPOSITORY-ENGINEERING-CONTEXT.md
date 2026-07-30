@@ -119,8 +119,8 @@ evidence plus Core handoff posture to exact main
 `fe7f0efac9fca86a3e19302e8b8436e8941f3d0c` with Main Releasability
 `30500588217` passing. The current RFC-0002 ledger posture is 45 tracked
 issues, 20 closed complete, 25 open, no `open_merged_main_qa_pending`, 1
-`open_in_progress`, 1 `open_pr_raised`, and 13 `open_blocked`; #681 is in
-progress and #814 is PR-open. #807 does not
+`open_in_progress`, no `open_pr_raised`, and 14 `open_blocked`; #681 is in
+progress and #814 is blocked by `sgajbi/lotus-core#856`. #807 does not
 certify production vulnerability posture, registry promotion, protected
 deployment, supported-feature promotion, or full Slice 15 closure; #379 is now
 blocked, not QA-pending: Advise, Manage, Report, and Idea owner-app local
@@ -221,19 +221,22 @@ in-progress issues while preserving Idea-side Core-dependent blockers #685 and
 `5ba2757c1235ce3e28c630afd44257327c91edf3`, Main Releasability `30536615979`
 passed, and branch cleanup completed; it is excluded from the open-blocked
 classifier because it is no longer an open `status/blocked` issue. Current
-governed cross-repo RFC-0002 posture is 83 tracked issues, 47 complete, and
-36 open; the blocked subset is 26 issues, 0 app-actionable blocked issues,
-3 Core dependencies, and
+governed cross-repo RFC-0002 posture is 84 tracked issues, 47 complete, and
+37 open; the blocked subset is 28 issues, 0 app-actionable blocked issues,
+5 Core dependencies, and
 23 external/protected-evidence blockers. This is source-truth synchronization
 only: it does not certify Core readiness, clear #685/#686/#500, promote
 supported features, or replace production IdP/session/token-claims evidence.
-`sgajbi/lotus-idea#814` is now active app-owned PR work, not an external
-blocker: Idea PR #815 and Workbench PR #515 wire the local/dev canonical
-capacity seed to call existing public Idea APIs with complete synthetic
-entitlement scope and a bounded per-run trusted-caller marker without weakening
-endpoint authorization. That work does not implement
-production authentication, production IdP/session/token-claims authority,
-supported-feature promotion, capacity certification, or client publication.
+`sgajbi/lotus-idea#814` is now blocked by Core readiness rather than open PR
+work: Idea PR #815, Workbench PR #515, and Workbench PR #516 are merged, and
+Workbench Main Releasability `30543504302` passed for exact main
+`1787da79fb4abaf574ebe4ebc3f8b4d5fed7bdac`. The remaining canonical
+validation blocker is `sgajbi/lotus-core#856`, where Core reports two
+future-dated pending aggregation jobs for `PB_SG_GLOBAL_BAL_001` beyond the
+governed `2026-04-10` as-of date and leaves positions data quality
+`UNKNOWN`. This does not implement production authentication, production
+IdP/session/token-claims authority, supported-feature promotion, capacity
+certification, or client publication.
 
 Slice 15 operations blockers #343, #344, and #375 are source-controlled as
 blocked external/protected-evidence items, not unresolved local app-code
@@ -1384,12 +1387,13 @@ is closed with `status/merged-main` after the Manage PR #627 tax-lot identity
 fix on main
 `5ba2757c1235ce3e28c630afd44257327c91edf3` with Main Releasability
 `30536615979` passing and branch cleanup complete. The current Idea ledger
-posture is 45 tracked issues, 25 open, and 20 closed after #814 moved into
-PR-open posture for local/dev capacity-seed authorization wiring. That
-evidence is coordination and branch-local implementation posture only; it does
-not close #814, clear blockers, promote supported features, certify production
-vulnerability posture, implement production IdP/session/token-claims authority,
-or complete Slice 18 closure.
+posture is 45 tracked issues, 25 open, and 20 closed after #814 moved from
+PR-open posture to Core-blocked posture. Idea PR #815, Workbench PR #515, and
+Workbench PR #516 are merged, but final canonical validation is blocked by
+`sgajbi/lotus-core#856`. That evidence is coordination and source-truth
+synchronization only; it does not close #814, promote supported features,
+certify production vulnerability posture, implement production
+IdP/session/token-claims authority, or complete Slice 18 closure.
 
 `make rfc0002-cross-repo-issue-posture` also validates
 `contracts/implementation-proof/rfc0002-cross-repo-blocker-classification.v1.json`.
