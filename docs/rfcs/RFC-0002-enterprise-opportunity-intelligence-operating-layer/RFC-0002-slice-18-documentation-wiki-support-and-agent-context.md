@@ -536,8 +536,9 @@ e2e, PostgreSQL runtime proof, combined coverage, Docker build, runtime smoke,
 image scan, release identity/license evidence binding, and CI signal evidence.
 Live Idea RFC-0002 ledger posture is 45 tracked issues, 25 open, and 20
 closed. Live governed cross-repo posture is 83 tracked issues, 47 closed, and
-36 open across 13 repositories after #814 was added as active app-owned
-local/dev authorization wiring. After `sgajbi/lotus-core#836`
+36 open across 13 repositories after #814 moved to PR-open app-owned local/dev
+authorization wiring through Idea PR #815 and Workbench PR #515. After
+`sgajbi/lotus-core#836`
 and `sgajbi/lotus-core#840` moved from `status/blocked` to
 `status/in-progress`, and `sgajbi/lotus-manage#626` closed with
 `status/merged-main`, current blocked posture is 26 blocked issues, 0 app-actionable
@@ -633,9 +634,9 @@ Core/Workbench handoff posture to exact main
 `fe7f0efac9fca86a3e19302e8b8436e8941f3d0c` with Main Releasability
 `30500588217` passing and repo-authored wiki publication `f0f9293` at strict
 `DiffCount 0`; current source truth now records 45 tracked RFC-0002
-issues, 20 closed complete, 25 open, no `open_merged_main_qa_pending`, 2
-`open_in_progress`, no `open_pr_raised`, and 13 `open_blocked` issues. #681
-and #814 are in progress. #807 is
+issues, 20 closed complete, 25 open, no `open_merged_main_qa_pending`, 1
+`open_in_progress`, 1 `open_pr_raised`, and 13 `open_blocked` issues. #681 is
+in progress and #814 is PR-open. #807 is
 closed complete for repository-owned runtime-image remediation only; no
 production vulnerability certification, registry promotion, protected
 deployment, supported-feature promotion, or full Slice 15 closure is claimed.

@@ -326,7 +326,7 @@ proof, published-digest runtime proof, image signing, provenance/SBOM
 attestations, release metadata, image identity binding, license evidence
 binding, and CI signal evidence. Repo-authored wiki publication reached
 `lotus-idea.wiki` commit `f0f9293` with strict `DiffCount 0`. Current
-RFC-0002 source truth after the #814 intake and implementation-progress sync is
+RFC-0002 source truth after the #814 PR-open sync is
 45 tracked Idea issues, 25 open, and 20 closed, with cross-repo posture of 83
 tracked issues, 47 complete, and 36 open across 13 repositories. After
 `sgajbi/lotus-core#836` and
@@ -336,12 +336,12 @@ issues remain classified as 3 Core dependencies and 23
 external/protected-evidence blockers, with 0
 app-actionable blocked issues.
 Production IdP/session/token-claims and canonical browser proof remain open.
-`sgajbi/lotus-idea#814` is active app-owned local/dev authorization wiring for
-the canonical downstream-capacity seed: the seed must call existing public Idea
-APIs with complete synthetic entitlement scope and a bounded per-run trusted
-caller marker without bypassing endpoint policy. The current Idea RFC-0002
-ledger posture is 45 tracked issues, 25 open, and 20 closed after #814 was
-added to the execution ledger. This is still coordination and branch-local
+`sgajbi/lotus-idea#814` is active app-owned PR work for the canonical
+downstream-capacity seed: Idea PR #815 and Workbench PR #515 wire the seed to
+call existing public Idea APIs with complete synthetic entitlement scope and a
+bounded per-run trusted caller marker without bypassing endpoint policy. The
+current Idea RFC-0002 ledger posture is 45 tracked issues, 25 open, and 20
+closed after #814 moved to PR-open execution posture. This is still coordination and branch-local
 implementation truth only;
 `sgajbi/lotus-manage#624` and other blocked
 dependencies remain open, and production vulnerability posture is not

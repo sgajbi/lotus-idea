@@ -343,7 +343,7 @@ REQUIRED_CLOSED_ISSUE_EVIDENCE = {
         "does not claim production vulnerability certification",
     ),
     814: tuple(
-        "Keep #814 open|canonical Idea downstream-capacity seed|without bypassing endpoint authorization|complete synthetic trusted entitlement scope|per-run local trusted-caller marker|full Start-LotusFrontOfficeCanonical.ps1 -BuildImages -RunValidation path completes on main|does not implement production authentication|supported-feature promotion".split(
+        "Keep #814 open|Idea PR #815|Workbench PR #515|canonical Idea downstream-capacity seed|without bypassing endpoint authorization|complete synthetic trusted entitlement scope|per-run local trusted-caller marker|full Start-LotusFrontOfficeCanonical.ps1 -BuildImages -RunValidation path completes on main|does not implement production authentication|supported-feature promotion".split(
             "|"
         )
     ),
