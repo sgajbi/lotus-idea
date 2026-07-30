@@ -116,20 +116,6 @@
       "remainingAuthority": "API, Gateway, Workbench, downstream handoff, Core, identity, publication, data-product, and supported-feature prerequisites"
     },
     {
-      "repository": "sgajbi/lotus-core",
-      "issueNumber": 836,
-      "actionability": "core_dependency",
-      "blockerClass": "canonical_workbench_seed_readiness",
-      "remainingAuthority": "Core-owned canonical Workbench seed readiness for PB_SG_GLOBAL_BAL_001"
-    },
-    {
-      "repository": "sgajbi/lotus-core",
-      "issueNumber": 840,
-      "actionability": "core_dependency",
-      "blockerClass": "canonical_dpm_source_readiness",
-      "remainingAuthority": "Core-owned eligibility, tax-lot, market-data, and DPM source readiness convergence"
-    },
-    {
       "repository": "sgajbi/lotus-manage",
       "issueNumber": 624,
       "actionability": "external_or_protected_evidence",
