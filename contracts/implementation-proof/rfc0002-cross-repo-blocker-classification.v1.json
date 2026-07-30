@@ -1,7 +1,7 @@
 {
   "schemaVersion": "lotus-idea:rfc0002-cross-repo-blocker-classification:v1",
   "rfcId": "RFC-0002",
-  "asOfDate": "2026-07-30",
+  "asOfDate": "2026-07-31",
   "repository": "sgajbi/lotus-idea",
   "purpose": "Classify live RFC-0002 status/blocked issues by actionability so blocked posture means external, Core-owned, protected-environment, IdP, provider, legal/privacy, or certification evidence rather than hidden app-code work.",
   "policy": {
@@ -184,13 +184,6 @@
       "actionability": "external_or_protected_evidence",
       "blockerClass": "protected_deployment_promotion_and_cost_evidence",
       "remainingAuthority": "approved staging/production deployed-digest observation, same-digest promotion evidence, protected migration linkage, and final Idea closure linkage"
-    },
-    {
-      "repository": "sgajbi/lotus-core",
-      "issueNumber": 856,
-      "actionability": "core_dependency",
-      "blockerClass": "canonical_idea_capacity_seed_core_readiness",
-      "remainingAuthority": "Core-owned future-dated aggregation job and positions data-quality readiness behavior for PB_SG_GLOBAL_BAL_001 canonical validation"
     },
     {
       "repository": "sgajbi/lotus-workbench",
