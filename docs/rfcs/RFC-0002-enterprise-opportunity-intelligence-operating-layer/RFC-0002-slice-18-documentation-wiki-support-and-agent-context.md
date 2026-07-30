@@ -534,8 +534,8 @@ the final #807 closure truth on Idea main
 `30499444726` passed, including lint/typecheck/security, unit, integration,
 e2e, PostgreSQL runtime proof, combined coverage, Docker build, runtime smoke,
 image scan, release identity/license evidence binding, and CI signal evidence.
-Live Idea RFC-0002 ledger posture is 45 tracked issues, 25 open, and 20
-closed. Live governed cross-repo posture is 84 tracked issues, 47 closed, and
+Live Idea RFC-0002 ledger posture is 54 tracked issues, 25 open, and 29
+closed. Live governed cross-repo posture is 93 label-backed tracked issues, 56 closed, and
 37 open across 13 repositories after #814 moved from PR-open to Core-blocked
 posture and `sgajbi/lotus-core#856` was opened for canonical capacity-seed
 readiness. After
@@ -554,6 +554,12 @@ production vulnerability posture or production IdP/session/token-claims
 principal proof. #814 also remains open until Core #856 is resolved and fresh
 full canonical validation produces mainline capacity-seed evidence; it does not
 implement production authentication or promote supported features.
+
+The cross-repo issue posture count is label-backed by `rfc/RFC-0002`. Historical
+title-only RFC-0002 references are reported separately and excluded from the
+governed count unless they are deliberately labeled and ledgered; this prevents
+ad hoc title searches from overstating or understating durable RFC execution
+truth.
 
 PR #810 then synchronized PR #809 main evidence and Core/Workbench handoff
 posture to Idea main `fe7f0efac9fca86a3e19302e8b8436e8941f3d0c`;
@@ -633,8 +639,8 @@ exact main `c340daa01b41097410bbc8a802d9a8d1f9f24135` with Main Releasability
 Core/Workbench handoff posture to exact main
 `fe7f0efac9fca86a3e19302e8b8436e8941f3d0c` with Main Releasability
 `30500588217` passing and repo-authored wiki publication `f0f9293` at strict
-`DiffCount 0`; current source truth now records 45 tracked RFC-0002
-issues, 20 closed complete, 25 open, no `open_merged_main_qa_pending`, 1
+`DiffCount 0`; current source truth now records 54 tracked RFC-0002
+issues, 29 closed complete, 25 open, no `open_merged_main_qa_pending`, 1
 `open_in_progress`, no `open_pr_raised`, and 14 `open_blocked` issues. #681 is
 in progress and #814 is blocked by `sgajbi/lotus-core#856`. #807 is
 closed complete for repository-owned runtime-image remediation only; no

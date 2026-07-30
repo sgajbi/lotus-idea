@@ -16,7 +16,32 @@ EXPECTED_SCHEMA_VERSION = "lotus-idea:rfc0002-github-issue-execution-ledger:v1"
 EXPECTED_RFC_ID = "RFC-0002"
 EXPECTED_REPOSITORY = "sgajbi/lotus-idea"
 EXPECTED_EXECUTION_ISSUES = frozenset(range(673, 703)) | frozenset(
-    {340, 343, 344, 345, 375, 379, 380, 482, 542, 704, 756, 782, 797, 807, 814}
+    {
+        340,
+        343,
+        344,
+        345,
+        375,
+        379,
+        380,
+        482,
+        542,
+        555,
+        557,
+        559,
+        561,
+        563,
+        565,
+        567,
+        569,
+        579,
+        704,
+        756,
+        782,
+        797,
+        807,
+        814,
+    }
 )
 OPEN_STATUSES = frozenset(
     {

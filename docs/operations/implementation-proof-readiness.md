@@ -207,9 +207,11 @@ supported-feature blockers.
 `make rfc0002-cross-repo-issue-posture` also validates
 `contracts/implementation-proof/rfc0002-cross-repo-blocker-classification.v1.json`.
 That contract is the durable answer to whether the remaining `status/blocked`
-issues are actually fixable app-code work. The live 2026-07-30 posture is 26
-blocked RFC-0002 issues, 0 app-actionable blocked issues, 3 Core dependencies,
-and 23 external/protected-evidence blockers. Pending final-closure issue #683
+issues are actually fixable app-code work. The live 2026-07-30 posture is 28
+blocked RFC-0002 issues, 0 app-actionable blocked issues, 5 Core dependencies,
+and 23 external/protected-evidence blockers. Counts are label-backed by
+`rfc/RFC-0002`; title-only references are reported separately and excluded from
+governed counts unless deliberately labeled and ledgered. Pending final-closure issue #683
 and pending post-completion issue #684 are blocked by prerequisite evidence and
 must not carry `status/ready` while RFC-0002 blockers remain open. A blocked
 issue is valid only when
@@ -327,8 +329,8 @@ attestations, release metadata, image identity binding, license evidence
 binding, and CI signal evidence. Repo-authored wiki publication reached
 `lotus-idea.wiki` commit `f0f9293` with strict `DiffCount 0`. Current
 RFC-0002 source truth after the #814 Core-blocker sync is
-45 tracked Idea issues, 25 open, and 20 closed, with cross-repo posture of 84
-tracked issues, 47 complete, and 37 open across 13 repositories. After
+54 tracked Idea issues, 25 open, and 29 closed, with cross-repo posture of 93
+label-backed tracked issues, 56 complete, and 37 open across 13 repositories. After
 `sgajbi/lotus-core#836` and
 `sgajbi/lotus-core#840` moved from `status/blocked` to `status/in-progress`,
 `sgajbi/lotus-manage#626` closed with `status/merged-main`, and
@@ -337,6 +339,9 @@ readiness, 28 blocked issues remain classified as 5 Core dependencies and 23
 external/protected-evidence blockers, with 0
 app-actionable blocked issues.
 Production IdP/session/token-claims and canonical browser proof remain open.
+The cross-repo posture count is label-backed by `rfc/RFC-0002`; title-only
+references are reported separately and excluded unless deliberately labeled and
+ledgered.
 `sgajbi/lotus-idea#814` is blocked by Core readiness rather than active PR
 work: Idea PR #815, Workbench PR #515, and Workbench PR #516 are merged, and
 Workbench Main Releasability `30543504302` passed for exact Workbench main

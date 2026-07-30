@@ -84,6 +84,7 @@ def build_cross_repo_issue_posture(
 
     repo_summaries: list[dict[str, Any]] = []
     all_rfc_issues: list[IssueSnapshot] = []
+    all_title_only_references: list[IssueSnapshot] = []
     total_open_issues = 0
     blocker_classifications = (
         load_blocker_classifications(blocker_classification_path)
@@ -95,9 +96,21 @@ def build_cross_repo_issue_posture(
         repo_payload = _repo_payload(repo_payloads, repository)
         open_issue_count = _open_issue_count(repo_payload)
         rfc_issues = _parse_issues(repository, repo_payload["rfc0002Issues"])
+        title_only_references = _title_only_rfc_references(
+            repository,
+            repo_payload.get("allIssues", []),
+        )
         all_rfc_issues.extend(rfc_issues)
+        all_title_only_references.extend(title_only_references)
         total_open_issues += open_issue_count
-        repo_summaries.append(_repository_summary(repository, open_issue_count, rfc_issues))
+        repo_summaries.append(
+            _repository_summary(
+                repository,
+                open_issue_count,
+                rfc_issues,
+                title_only_references,
+            )
+        )
 
     blocked_actionability = blocked_actionability_summary(
         issues=all_rfc_issues,
@@ -116,10 +129,20 @@ def build_cross_repo_issue_posture(
         "blockedActionability": blocked_actionability,
         "repositories": repo_summaries,
         "openAttentionIssues": _attention_issues(all_rfc_issues),
+        "titleOnlyRfc0002References": [
+            _issue_projection(issue) | {"repository": issue.repository.removeprefix("sgajbi/")}
+            for issue in sorted(
+                all_title_only_references,
+                key=lambda item: (item.repository, item.number),
+            )
+        ],
         "usageBoundary": (
             "This is live GitHub issue posture for RFC-0002 execution coordination. "
-            "It is not product-support evidence, implementation proof, or a substitute "
-            "for repo-local ledgers and exact-main validation."
+            "Counts are label-backed by rfc/RFC-0002; title-only references are "
+            "reported separately and excluded from governed counts unless they are "
+            "deliberately labeled and ledgered. This is not product-support evidence, "
+            "implementation proof, or a substitute for repo-local ledgers and exact-main "
+            "validation."
         ),
         "totalOpenIssuesAcrossRepositories": total_open_issues,
     }
@@ -129,6 +152,7 @@ def fetch_repository_payloads(*, repositories: Sequence[str], limit: int) -> dic
     return {
         repository: {
             "openIssues": _fetch_issues(repository=repository, state="open", limit=limit),
+            "allIssues": _fetch_issues(repository=repository, state="all", limit=limit),
             "rfc0002Issues": _fetch_issues(
                 repository=repository,
                 state="all",
@@ -216,6 +240,16 @@ def render_markdown(summary: Mapping[str, Any]) -> str:
                 f"- `{issue['repository']}#{issue['number']}` "
                 f"`{issue['status']}` {issue['title']} - {issue['url']}"
             )
+    lines.extend(["", "## Title-Only RFC-0002 References Excluded From Governed Counts", ""])
+    title_only_references = summary.get("titleOnlyRfc0002References", [])
+    if not title_only_references:
+        lines.append("_None._")
+    else:
+        for issue in title_only_references:
+            lines.append(
+                f"- `{issue['repository']}#{issue['number']}` "
+                f"`{issue['status']}` {issue['title']} - {issue['url']}"
+            )
     lines.extend(["", "## Usage Boundary", "", str(summary["usageBoundary"])])
     return "\n".join(lines).rstrip() + "\n"
 
@@ -257,9 +291,12 @@ def _repo_payload(repo_payloads: Mapping[str, Any], repository: str) -> Mapping[
     if not isinstance(raw_repo_payload, Mapping):
         raise ValueError(f"fixture is missing repository payload for {repository}")
     raw_open = raw_repo_payload.get("openIssues")
+    raw_all = raw_repo_payload.get("allIssues", [])
     raw_rfc = raw_repo_payload.get("rfc0002Issues")
     if not isinstance(raw_open, list):
         raise ValueError(f"{repository}: openIssues must be a list")
+    if not isinstance(raw_all, list):
+        raise ValueError(f"{repository}: allIssues must be a list")
     if not isinstance(raw_rfc, list):
         raise ValueError(f"{repository}: rfc0002Issues must be a list")
     return raw_repo_payload
@@ -327,6 +364,7 @@ def _repository_summary(
     repository: str,
     open_issue_count: int,
     rfc_issues: Sequence[IssueSnapshot],
+    title_only_references: Sequence[IssueSnapshot],
 ) -> dict[str, Any]:
     open_rfc_issues = [issue for issue in rfc_issues if issue.state == "OPEN"]
     closed_rfc_issues = [issue for issue in rfc_issues if issue.state == "CLOSED"]
@@ -336,9 +374,21 @@ def _repository_summary(
         "totalRfc0002IssueCount": len(rfc_issues),
         "openRfc0002IssueCount": len(open_rfc_issues),
         "closedRfc0002IssueCount": len(closed_rfc_issues),
+        "titleOnlyRfc0002ReferenceCount": len(title_only_references),
         "openRfc0002IssuesByStatus": _status_counts(open_rfc_issues),
         "openRfc0002Issues": [_issue_projection(issue) for issue in open_rfc_issues],
     }
+
+
+def _title_only_rfc_references(
+    repository: str,
+    payload: Sequence[Mapping[str, Any]],
+) -> list[IssueSnapshot]:
+    return [
+        issue
+        for issue in _parse_issues(repository, payload)
+        if "RFC-0002" in issue.title and EXPECTED_RFC_LABEL not in issue.labels
+    ]
 
 
 def _aggregate_counts(repo_summaries: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
