@@ -118,9 +118,9 @@ Releasability `30499444726` passing, and PR #810 synchronized PR #809 main
 evidence plus Core handoff posture to exact main
 `fe7f0efac9fca86a3e19302e8b8436e8941f3d0c` with Main Releasability
 `30500588217` passing. The current RFC-0002 ledger posture is 54 tracked
-issues, 29 closed complete, 25 open, no `open_merged_main_qa_pending`, 1
-`open_in_progress`, no `open_pr_raised`, and 14 `open_blocked`; #681 is in
-progress and #814 is blocked by `sgajbi/lotus-core#856`. #807 does not
+issues, 29 closed complete, 25 open, no `open_merged_main_qa_pending`, no
+`open_in_progress`, 1 `open_pr_raised`, and 14 `open_blocked`; #681 is
+PR-open for #817 and #814 is blocked by `sgajbi/lotus-core#856`. #807 does not
 certify production vulnerability posture, registry promotion, protected
 deployment, supported-feature promotion, or full Slice 15 closure; #379 is now
 blocked, not QA-pending: Advise, Manage, Report, and Idea owner-app local
