@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import sys
+from collections import Counter
 from pathlib import Path
 from types import ModuleType
 from typing import Any, cast
@@ -47,16 +48,21 @@ def _write_json(tmp_path: Path, name: str, payload: dict[str, Any]) -> Path:
 
 def test_github_issue_execution_summary_reports_current_rfc0002_counts() -> None:
     module = _load_summary()
+    ledger_payload = _load_ledger_payload()
+    ledger_issues = [issue for issue in ledger_payload["issues"] if isinstance(issue, dict)]
+    expected_github_counts = Counter(issue["githubState"] for issue in ledger_issues)
+    expected_execution_counts = Counter(issue["executionStatus"] for issue in ledger_issues)
 
     summary = module.build_issue_execution_summary()
 
     assert summary["schemaVersion"] == "lotus-idea:rfc0002-github-issue-execution-summary:v1"
-    assert summary["counts"]["total"] == 44
-    assert summary["counts"]["open"] == 24
-    assert summary["counts"]["closed"] == 20
+    assert summary["counts"]["total"] == len(ledger_issues)
+    assert summary["counts"]["open"] == expected_github_counts["open"]
+    assert summary["counts"]["closed"] == expected_github_counts["closed"]
     assert summary["counts"]["byExecutionStatus"]["open_in_progress"] == 1
+    assert summary["counts"]["byExecutionStatus"] == dict(sorted(expected_execution_counts.items()))
     assert "open_fixed_local" not in summary["counts"]["byExecutionStatus"]
-    assert "open_pr_raised" not in summary["counts"]["byExecutionStatus"]
+    assert summary["counts"]["byExecutionStatus"]["open_pr_raised"] == 1
     assert "open_merged_main_qa_pending" not in summary["counts"]["byExecutionStatus"]
     assert "open_ready" not in summary["counts"]["byExecutionStatus"]
     assert summary["counts"]["byExecutionStatus"]["open_pending_final_closure"] == 1
@@ -66,7 +72,7 @@ def test_github_issue_execution_summary_reports_current_rfc0002_counts() -> None
     assert summary["counts"]["byExecutionStatus"]["closed_complete"] == 20
     assert summary["issuesByStatus"]["open_in_progress"] == [681]
     assert "open_fixed_local" not in summary["issuesByStatus"]
-    assert "open_pr_raised" not in summary["issuesByStatus"]
+    assert summary["issuesByStatus"]["open_pr_raised"] == [814]
     assert "open_merged_main_qa_pending" not in summary["issuesByStatus"]
     assert summary["issuesByStatus"]["open_pending_final_closure"] == [683]
     assert summary["issuesByStatus"]["open_pending_post_completion"] == [684]
@@ -95,11 +101,12 @@ def test_github_issue_execution_summary_reports_current_rfc0002_counts() -> None
 def test_github_issue_execution_summary_markdown_is_comment_ready() -> None:
     module = _load_summary()
 
-    rendered = module.render_markdown(module.build_issue_execution_summary())
+    summary = module.build_issue_execution_summary()
+    rendered = module.render_markdown(summary)
 
     assert "# RFC-0002 GitHub Issue Execution Summary" in rendered
-    assert "- Open issues: 24" in rendered
-    assert "- Closed issues: 20" in rendered
+    assert f"- Open issues: {summary['counts']['open']}" in rendered
+    assert f"- Closed issues: {summary['counts']['closed']}" in rendered
     assert "## In-Progress Issues" in rendered
     assert "#681" in rendered
     assert "#681, #782" not in rendered
@@ -108,7 +115,7 @@ def test_github_issue_execution_summary_markdown_is_comment_ready() -> None:
     assert "## Fixed Locally Issues" in rendered
     assert "## Fixed Locally Issues\n\n_None._" in rendered
     assert "## PR-Open Issues" in rendered
-    assert "## PR-Open Issues\n\n_None._" in rendered
+    assert "## PR-Open Issues\n\n#814" in rendered
     assert "## Merged-Main QA Pending Issues" in rendered
     assert "## Merged-Main QA Pending Issues\n\n_None._" in rendered
     assert "#379, #690" not in rendered
@@ -124,7 +131,7 @@ def test_github_issue_execution_summary_markdown_is_comment_ready() -> None:
     assert "Current issues: #340, #782" not in rendered
     assert "### `ai_attestation_and_model_governance`" in rendered
     assert "Current issues: _None._" in rendered
-    assert "Current issues: #343, #344, #345, #375, #678, #693" in rendered
+    assert "Current issues: #343, #344, #345, #375, #678, #693, #814" in rendered
     assert "Current issues: #679, #699" in rendered
     assert "Current issues: #679, #696, #697, #699" not in rendered
     assert "_None._" in rendered
