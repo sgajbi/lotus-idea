@@ -329,3 +329,33 @@ def test_cross_repo_issue_posture_rejects_stale_classification_for_scoped_repo(
         ) in str(exc)
     else:
         raise AssertionError("expected stale blocked classification to fail")
+
+
+def test_default_blocker_classification_tracks_manage_tax_lot_seed_boundary() -> None:
+    contract_path = (
+        ROOT
+        / "contracts"
+        / "implementation-proof"
+        / ("rfc0002-cross-repo-blocker-classification.v1.json")
+    )
+    payload = json.loads(contract_path.read_text(encoding="utf-8"))
+
+    matching_rows = [
+        row
+        for row in payload["classifications"]
+        if row["repository"] == "sgajbi/lotus-manage" and row["issueNumber"] == 626
+    ]
+
+    assert matching_rows == [
+        {
+            "repository": "sgajbi/lotus-manage",
+            "issueNumber": 626,
+            "actionability": "core_dependency",
+            "blockerClass": "canonical_dpm_seed_runtime_core_readiness",
+            "remainingAuthority": (
+                "Core-owned canonical DPM source readiness and governed Platform "
+                "command-center seed runtime evidence for PB_SG_GLOBAL_BAL_001 after "
+                "the Manage tax-lot identity fix merged"
+            ),
+        }
+    ]

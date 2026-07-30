@@ -534,19 +534,19 @@ the final #807 closure truth on Idea main
 `30499444726` passed, including lint/typecheck/security, unit, integration,
 e2e, PostgreSQL runtime proof, combined coverage, Docker build, runtime smoke,
 image scan, release identity/license evidence binding, and CI signal evidence.
-Live Idea RFC-0002 ledger
-posture is 44 tracked issues, 24 open, and 20 closed. Live governed cross-repo
-posture is 81 tracked issues,
-44 closed, and 37 open across 13 repositories. After `sgajbi/lotus-core#836`
+Live Idea RFC-0002 ledger posture is 44 tracked issues, 24 open, and 20
+closed. Live governed cross-repo posture is 82 tracked issues, 44 closed, and
+38 open across 13 repositories. After `sgajbi/lotus-core#836`
 and `sgajbi/lotus-core#840` moved from `status/blocked` to
-`status/in-progress`, current blocked posture is 26 blocked issues, 0
-app-actionable blocked issues, 3 Core dependencies, and 23
-external/protected-evidence blockers. #683 and #684 are
+`status/in-progress`, and `sgajbi/lotus-manage#626` was correctly labeled as
+RFC-0002, current blocked posture is 27 blocked issues, 0 app-actionable
+blocked issues, 4 Core dependencies, and 23 external/protected-evidence
+blockers. #683 and #684 are
 not ready implementation issues while prerequisite RFC blockers remain open;
 their richer pending semantics remain in the execution ledger and summary. This
-evidence still preserves `sgajbi/lotus-manage#624` and the other blocked
-production/certification dependencies; it is not Slice 18 completion evidence
-and does not certify
+evidence still preserves `sgajbi/lotus-manage#624`, `sgajbi/lotus-manage#626`,
+and the other blocked production/certification dependencies; it is not Slice 18
+completion evidence and does not certify
 production vulnerability posture or production IdP/session/token-claims
 principal proof.
 
@@ -561,9 +561,12 @@ license evidence binding, and CI signal evidence. Repo-authored wiki
 publication reached `lotus-idea.wiki` commit `f0f9293` with strict
 `DiffCount 0`. The current durable handoff evidence is recorded on
 `sgajbi/lotus-core#836`, `sgajbi/lotus-core#840`,
-`sgajbi/lotus-workbench#500`, #685, and #686; it keeps Slice 11/17 blockers
-classified as Core-owned canonical seed/DPM readiness plus Workbench owner
-browser proof, not hidden Idea app-code work.
+`sgajbi/lotus-workbench#500`, #685, and #686; `sgajbi/lotus-manage#626`
+records the Manage tax-lot identity fix merged by PR #627 on Manage main
+`5ba2757c1235ce3e28c630afd44257327c91edf3` with Main Releasability
+`30536615979` passing and branch cleanup complete. The open blocker is now
+canonical Core/Platform command-center seed runtime evidence, not hidden Manage
+app-code work.
 
 This Slice 18 synchronization also carries the platform vulnerability-exception
 register lesson from `sgajbi/lotus-platform#596` into Idea's repository truth.

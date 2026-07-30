@@ -1112,24 +1112,30 @@ attestations, release metadata, release identity/license evidence binding, and
 CI signal evidence. Repo-authored wiki publication reached `lotus-idea.wiki`
 commit `f0f9293` with strict `DiffCount 0`. Current source truth after PR #810
 records 44 tracked Idea RFC-0002 issues, 24 open, and 20 closed, with live
-cross-repo RFC-0002 posture of 81 tracked issues, 44 complete, and 37 open
-across 13 repositories. The refreshed dependency handoff is anchored on
+cross-repo RFC-0002 posture of 82 tracked issues, 44 complete, and 38 open
+across 13 repositories after `sgajbi/lotus-manage#626` was correctly labeled as
+RFC-0002. The refreshed dependency handoff is anchored on
 `sgajbi/lotus-core#836`, `sgajbi/lotus-core#840`,
-`sgajbi/lotus-workbench#500`, #685, and #686.
+`sgajbi/lotus-workbench#500`, #685, and #686, while
+`sgajbi/lotus-manage#626` records the Manage PR #627 tax-lot identity fix on
+main `5ba2757c1235ce3e28c630afd44257327c91edf3` with Main Releasability
+`30536615979` passing and branch cleanup complete.
 Workbench PR #505 additionally records
 merged BFF principal-boundary hardening while preserving production
 IdP/session/token-claims and canonical browser proof blockers. Keep #681 open until the remaining documentation, wiki,
 support, context, and supported-feature truth is complete;
 `sgajbi/lotus-manage#624` remains the production trusted IdP caller-context
-boundary, and production vulnerability posture remains uncertified until
-release evidence exists.
+boundary, `sgajbi/lotus-manage#626` remains blocked only for governed
+Core/Platform command-center seed runtime evidence, and production vulnerability
+posture remains uncertified until release evidence exists.
 
 `make rfc0002-cross-repo-issue-posture` now renders blocker actionability from
 `contracts/implementation-proof/rfc0002-cross-repo-blocker-classification.v1.json`.
-Current live posture is 26 blocked RFC-0002 issues, 0 app-actionable blocked
-issues, 3 Core dependencies, and 23 external/protected-evidence blockers after
+Current live posture is 27 blocked RFC-0002 issues, 0 app-actionable blocked
+issues, 4 Core dependencies, and 23 external/protected-evidence blockers after
 `sgajbi/lotus-core#836` and `sgajbi/lotus-core#840` moved from
-`status/blocked` to `status/in-progress`. This
+`status/blocked` to `status/in-progress` and `sgajbi/lotus-manage#626` entered
+the RFC-0002 classifier as a Core-dependent runtime-certification blocker. This
 keeps “blocked” aligned to Core, IdP/session authority, protected runtime or
 deployment evidence, provider/bank/legal approval, or certification proof. If a
 writable non-Core app-code gap appears, it should not remain blocked; it should
