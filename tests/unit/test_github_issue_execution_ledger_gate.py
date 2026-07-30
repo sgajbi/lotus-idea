@@ -939,6 +939,17 @@ def test_rfc0002_github_issue_execution_ledger_records_issue_681_sync_note() -> 
         and "returned to open_in_progress" in note
         for note in notes
     )
+    assert any(
+        isinstance(note, str)
+        and "PR #819 evidence-sync tranche" in note
+        and "3b2cc0bb4472a158cb4617b277276244c0e4a22b" in note
+        and "30555536256" in note
+        and "30555528134" in note
+        and "strict wiki parity stayed DiffCount 0" in note
+        and "0 app-actionable blocked issues" in note
+        and "keeps #681 and #380 open" in note
+        for note in notes
+    )
 
 
 def test_rfc0002_github_issue_execution_ledger_blocks_closed_issue_without_closed_instruction(
