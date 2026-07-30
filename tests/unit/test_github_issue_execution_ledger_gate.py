@@ -113,7 +113,7 @@ def test_rfc0002_github_issue_execution_ledger_tracks_slice18_posture_evidence()
     )
 
     assert issue_681["githubState"] == "open"
-    assert issue_681["executionStatus"] == "open_pr_raised"
+    assert issue_681["executionStatus"] == "open_in_progress"
     assert issue_681["allowPullRequestAutoClose"] is False
     assert "Keep #681 open" in issue_681["closureInstruction"]
     assert (
@@ -910,6 +910,16 @@ def test_rfc0002_github_issue_execution_ledger_records_issue_681_sync_note() -> 
         and "sgajbi/lotus-core#836" in note
         and "sgajbi/lotus-core#840" in note
         and "0 app-actionable blocked issues" in note
+        for note in notes
+    )
+    assert any(
+        isinstance(note, str)
+        and "PR #817 merged this synchronization" in note
+        and "c4c14598be2fa021f7adf9aaf166954ca4f903cf" in note
+        and "30551831675" in note
+        and "30551812269" in note
+        and "lotus-idea.wiki commit 8b36421" in note
+        and "returned to open_in_progress" in note
         for note in notes
     )
 
