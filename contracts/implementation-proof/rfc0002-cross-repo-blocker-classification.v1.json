@@ -123,6 +123,13 @@
       "remainingAuthority": "trusted IdP caller context and server-derived tenant/session receipt scope"
     },
     {
+      "repository": "sgajbi/lotus-manage",
+      "issueNumber": 626,
+      "actionability": "core_dependency",
+      "blockerClass": "canonical_dpm_seed_runtime_core_readiness",
+      "remainingAuthority": "Core-owned canonical DPM source readiness and governed Platform command-center seed runtime evidence for PB_SG_GLOBAL_BAL_001 after the Manage tax-lot identity fix merged"
+    },
+    {
       "repository": "sgajbi/lotus-report",
       "issueNumber": 136,
       "actionability": "external_or_protected_evidence",

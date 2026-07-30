@@ -27,5 +27,6 @@
 - [Service SLO and Capacity](Service-SLO-And-Capacity)
 - [Data Lifecycle Operations](Data-Lifecycle-Operations)
 - [PostgreSQL Disaster Recovery](PostgreSQL-Disaster-Recovery)
+- [Incident Response](Incident-Response)
 - [Troubleshooting](Troubleshooting)
 - [Security and Governance](Security-and-Governance)
