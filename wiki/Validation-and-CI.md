@@ -771,10 +771,10 @@ Persistence adapter validation:
    current mainline evidence. PR #746 corrected stale ready
    posture for #380 and reconciled it to `open_blocked` at
    `6f8875dc6784dd17975e6700c09b9ff71d66fb8b`; Main Releasability `30327202465`
-   and CodeQL `30327193673` passed. The RFC-0002 execution summary now has 42
-   tracked issues, 18 closed complete, 24 open, no
-   `open_merged_main_qa_pending`, 1 `open_in_progress`, no `open_pr_raised`,
-   13 `open_blocked`, and
+   and CodeQL `30327193673` passed. The RFC-0002 execution summary now has 54
+   tracked issues, 29 closed complete, 25 open, no
+   `open_merged_main_qa_pending`, no `open_in_progress`, 1 `open_pr_raised`,
+   14 `open_blocked`, and
    no ready issues. #379 is `open_blocked`, not QA-pending because
    Idea now consumes the `sgajbi/lotus-manage#620` temporal receipt identity
    fields through closed v3 Manage mandate runtime evidence, while

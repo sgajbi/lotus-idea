@@ -443,8 +443,10 @@ merged-main-QA-pending issues, and closed-complete issues cannot drift silently
 away from the durable execution ledger. It also fails when a GitHub issue is
 labeled `rfc/RFC-0002` but missing from the ledger, or when a ledger issue lacks
 the RFC label in GitHub. Parent `open_tracker` issues now require
-`status/tracker`; the #681 anchor carries `status/in-progress`. Future partial
-Slice 18 PRs must keep the correct lifecycle label and use `Keep #681 open`
+`status/tracker`; the #681 anchor carries the current execution label, such as
+`status/pr-open` while a Slice 18 synchronization PR is open and
+`status/in-progress` between PRs. Future partial Slice 18 PRs must keep the
+correct lifecycle label and use `Keep #681 open`
 until full RFC documentation, wiki, support, and agent context closure is
 complete.
 
@@ -640,9 +642,9 @@ Core/Workbench handoff posture to exact main
 `fe7f0efac9fca86a3e19302e8b8436e8941f3d0c` with Main Releasability
 `30500588217` passing and repo-authored wiki publication `f0f9293` at strict
 `DiffCount 0`; current source truth now records 54 tracked RFC-0002
-issues, 29 closed complete, 25 open, no `open_merged_main_qa_pending`, 1
-`open_in_progress`, no `open_pr_raised`, and 14 `open_blocked` issues. #681 is
-in progress and #814 is blocked by `sgajbi/lotus-core#856`. #807 is
+issues, 29 closed complete, 25 open, no `open_merged_main_qa_pending`, no
+`open_in_progress`, 1 `open_pr_raised`, and 14 `open_blocked` issues. #681 is
+PR-open for #817 and #814 is blocked by `sgajbi/lotus-core#856`. #807 is
 closed complete for repository-owned runtime-image remediation only; no
 production vulnerability certification, registry promotion, protected
 deployment, supported-feature promotion, or full Slice 15 closure is claimed.

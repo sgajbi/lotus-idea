@@ -59,10 +59,10 @@ def test_github_issue_execution_summary_reports_current_rfc0002_counts() -> None
     assert summary["counts"]["total"] == len(ledger_issues)
     assert summary["counts"]["open"] == expected_github_counts["open"]
     assert summary["counts"]["closed"] == expected_github_counts["closed"]
-    assert summary["counts"]["byExecutionStatus"]["open_in_progress"] == 1
+    assert "open_in_progress" not in summary["counts"]["byExecutionStatus"]
     assert summary["counts"]["byExecutionStatus"] == dict(sorted(expected_execution_counts.items()))
     assert "open_fixed_local" not in summary["counts"]["byExecutionStatus"]
-    assert "open_pr_raised" not in summary["counts"]["byExecutionStatus"]
+    assert summary["counts"]["byExecutionStatus"]["open_pr_raised"] == 1
     assert "open_merged_main_qa_pending" not in summary["counts"]["byExecutionStatus"]
     assert "open_ready" not in summary["counts"]["byExecutionStatus"]
     assert summary["counts"]["byExecutionStatus"]["open_pending_final_closure"] == 1
@@ -73,9 +73,9 @@ def test_github_issue_execution_summary_reports_current_rfc0002_counts() -> None
         summary["counts"]["byExecutionStatus"]["closed_complete"]
         == expected_execution_counts["closed_complete"]
     )
-    assert summary["issuesByStatus"]["open_in_progress"] == [681]
+    assert "open_in_progress" not in summary["issuesByStatus"]
     assert "open_fixed_local" not in summary["issuesByStatus"]
-    assert "open_pr_raised" not in summary["issuesByStatus"]
+    assert summary["issuesByStatus"]["open_pr_raised"] == [681]
     assert "open_merged_main_qa_pending" not in summary["issuesByStatus"]
     assert summary["issuesByStatus"]["open_pending_final_closure"] == [683]
     assert summary["issuesByStatus"]["open_pending_post_completion"] == [684]
@@ -119,7 +119,7 @@ def test_github_issue_execution_summary_markdown_is_comment_ready() -> None:
     assert "## Fixed Locally Issues" in rendered
     assert "## Fixed Locally Issues\n\n_None._" in rendered
     assert "## PR-Open Issues" in rendered
-    assert "## PR-Open Issues\n\n_None._" in rendered
+    assert "## PR-Open Issues\n\n#681" in rendered
     assert "## Merged-Main QA Pending Issues" in rendered
     assert "## Merged-Main QA Pending Issues\n\n_None._" in rendered
     assert "#379, #690" not in rendered
