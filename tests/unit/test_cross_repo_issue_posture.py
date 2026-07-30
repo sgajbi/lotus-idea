@@ -90,6 +90,25 @@ def test_cross_repo_issue_posture_counts_statuses_and_attention_issues(tmp_path:
                     _issue(681, state="OPEN", title="Slice 18 docs", labels=[]),
                     _issue(685, state="OPEN", title="Workbench proof", labels=[]),
                 ],
+                "allIssues": [
+                    _issue(
+                        681,
+                        state="OPEN",
+                        title="Slice 18 docs",
+                        labels=[
+                            "rfc/RFC-0002",
+                            "rfc/RFC-0002/slice-18",
+                            "status/in-progress",
+                            "priority/P1",
+                        ],
+                    ),
+                    _issue(
+                        563,
+                        state="CLOSED",
+                        title="RFC-0002 Slice 10: certify high-volatility success-mode contracts",
+                        labels=["status/merged-main"],
+                    ),
+                ],
                 "rfc0002Issues": [
                     _issue(
                         681,
@@ -132,6 +151,20 @@ def test_cross_repo_issue_posture_counts_statuses_and_attention_issues(tmp_path:
                     ),
                     _issue(42, state="OPEN", title="Other", labels=[], repo="lotus-platform"),
                 ],
+                "allIssues": [
+                    _issue(
+                        598,
+                        state="OPEN",
+                        title="Platform mesh proof",
+                        labels=[
+                            "rfc/RFC-0002",
+                            "rfc/RFC-0002/slice-14",
+                            "status/merged-main",
+                            "priority/P1",
+                        ],
+                        repo="lotus-platform",
+                    )
+                ],
                 "rfc0002Issues": [
                     _issue(
                         598,
@@ -165,6 +198,18 @@ def test_cross_repo_issue_posture_counts_statuses_and_attention_issues(tmp_path:
     assert summary["counts"]["repositories"] == 2
     assert summary["counts"]["openRfc0002Issues"] == 3
     assert summary["counts"]["closedRfc0002Issues"] == 1
+    assert summary["titleOnlyRfc0002References"] == [
+        {
+            "number": 563,
+            "title": "RFC-0002 Slice 10: certify high-volatility success-mode contracts",
+            "url": "https://github.com/sgajbi/lotus-idea/issues/563",
+            "updatedAt": "2026-07-29T00:00:00Z",
+            "status": "status/merged-main",
+            "priorityLabels": [],
+            "sliceLabels": [],
+            "repository": "lotus-idea",
+        }
+    ]
     assert summary["counts"]["openRfc0002IssuesByStatus"] == {
         "status/blocked": 1,
         "status/in-progress": 1,
@@ -189,6 +234,20 @@ def test_cross_repo_issue_posture_markdown_is_comment_ready(tmp_path: Path) -> N
         {
             "sgajbi/lotus-idea": {
                 "openIssues": [_issue(681, state="OPEN", title="Slice 18 docs", labels=[])],
+                "allIssues": [
+                    _issue(
+                        681,
+                        state="OPEN",
+                        title="Slice 18 docs",
+                        labels=["rfc/RFC-0002", "status/in-progress"],
+                    ),
+                    _issue(
+                        555,
+                        state="CLOSED",
+                        title="RFC-0002 Slice 10: certify bond-maturity success-mode contracts",
+                        labels=["status/merged-main"],
+                    ),
+                ],
                 "rfc0002Issues": [
                     _issue(
                         681,
@@ -214,8 +273,10 @@ def test_cross_repo_issue_posture_markdown_is_comment_ready(tmp_path: Path) -> N
     assert "- Open RFC-0002 issues: 1" in rendered
     assert "| `sgajbi/lotus-idea` | 1 | 1 | 0 | `status/in-progress` 1 |" in rendered
     assert "- App-actionable blocked issues: 0" in rendered
+    assert "Title-Only RFC-0002 References Excluded From Governed Counts" in rendered
+    assert "`lotus-idea#555` `status/merged-main`" in rendered
     assert "`lotus-idea#681` `status/in-progress` Slice 18 docs" in rendered
-    assert "not product-support evidence" in rendered
+    assert "Counts are label-backed by rfc/RFC-0002" in rendered
 
 
 def test_cross_repo_issue_posture_rejects_missing_repo_fixture(tmp_path: Path) -> None:

@@ -69,7 +69,10 @@ def test_github_issue_execution_summary_reports_current_rfc0002_counts() -> None
     assert summary["counts"]["byExecutionStatus"]["open_pending_post_completion"] == 1
     assert summary["counts"]["byExecutionStatus"]["open_blocked"] == 14
     assert summary["counts"]["byExecutionStatus"]["open_tracker"] == 8
-    assert summary["counts"]["byExecutionStatus"]["closed_complete"] == 20
+    assert (
+        summary["counts"]["byExecutionStatus"]["closed_complete"]
+        == expected_execution_counts["closed_complete"]
+    )
     assert summary["issuesByStatus"]["open_in_progress"] == [681]
     assert "open_fixed_local" not in summary["issuesByStatus"]
     assert "open_pr_raised" not in summary["issuesByStatus"]

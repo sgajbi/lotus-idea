@@ -117,8 +117,8 @@ truth to exact main `c340daa01b41097410bbc8a802d9a8d1f9f24135` with Main
 Releasability `30499444726` passing, and PR #810 synchronized PR #809 main
 evidence plus Core handoff posture to exact main
 `fe7f0efac9fca86a3e19302e8b8436e8941f3d0c` with Main Releasability
-`30500588217` passing. The current RFC-0002 ledger posture is 45 tracked
-issues, 20 closed complete, 25 open, no `open_merged_main_qa_pending`, 1
+`30500588217` passing. The current RFC-0002 ledger posture is 54 tracked
+issues, 29 closed complete, 25 open, no `open_merged_main_qa_pending`, 1
 `open_in_progress`, no `open_pr_raised`, and 14 `open_blocked`; #681 is in
 progress and #814 is blocked by `sgajbi/lotus-core#856`. #807 does not
 certify production vulnerability posture, registry promotion, protected
@@ -221,10 +221,12 @@ in-progress issues while preserving Idea-side Core-dependent blockers #685 and
 `5ba2757c1235ce3e28c630afd44257327c91edf3`, Main Releasability `30536615979`
 passed, and branch cleanup completed; it is excluded from the open-blocked
 classifier because it is no longer an open `status/blocked` issue. Current
-governed cross-repo RFC-0002 posture is 84 tracked issues, 47 complete, and
-37 open; the blocked subset is 28 issues, 0 app-actionable blocked issues,
-5 Core dependencies, and
-23 external/protected-evidence blockers. This is source-truth synchronization
+governed cross-repo RFC-0002 posture is 93 label-backed tracked issues, 56
+complete, and 37 open; the blocked subset is 28 issues, 0 app-actionable
+blocked issues, 5 Core dependencies, and 23 external/protected-evidence
+blockers. One closed Core title-only RFC-0002 reference remains reported
+outside the governed count because `lotus-core` is outside this agent's write
+scope. This is source-truth synchronization
 only: it does not certify Core readiness, clear #685/#686/#500, promote
 supported features, or replace production IdP/session/token-claims evidence.
 `sgajbi/lotus-idea#814` is now blocked by Core readiness rather than open PR
@@ -1387,7 +1389,8 @@ is closed with `status/merged-main` after the Manage PR #627 tax-lot identity
 fix on main
 `5ba2757c1235ce3e28c630afd44257327c91edf3` with Main Releasability
 `30536615979` passing and branch cleanup complete. The current Idea ledger
-posture is 45 tracked issues, 25 open, and 20 closed after #814 moved from
+posture is 54 tracked issues, 25 open, and 29 closed after the closed Slice 10
+child issues were restored to the label-backed execution ledger and #814 moved from
 PR-open posture to Core-blocked posture. Idea PR #815, Workbench PR #515, and
 Workbench PR #516 are merged, but final canonical validation is blocked by
 `sgajbi/lotus-core#856`. That evidence is coordination and source-truth
@@ -1401,9 +1404,11 @@ The classifier makes the blocker definition executable: a `status/blocked`
 RFC-0002 issue may remain blocked only when the remaining evidence is
 Core-owned, production identity/session authority, protected runtime or
 deployment evidence, provider/bank/legal approval, or certification proof that a
-writable Lotus app branch cannot truthfully produce. Current live posture is 26
-blocked RFC-0002 issues, 0 app-actionable blocked issues, 3 Core dependencies,
-and 23 external/protected-evidence blockers. If a writable non-Core app-code
+writable Lotus app branch cannot truthfully produce. Current live posture is 28
+blocked RFC-0002 issues, 0 app-actionable blocked issues, 5 Core dependencies,
+and 23 external/protected-evidence blockers. Counts are label-backed by
+`rfc/RFC-0002`; title-only references are reported separately and excluded from
+governed counts unless deliberately labeled and ledgered. If a writable non-Core app-code
 gap is found, update GitHub and this contract so the issue becomes ready or
 in-progress instead of hidden behind blocked posture.
 
