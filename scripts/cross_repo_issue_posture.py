@@ -20,20 +20,10 @@ from cross_repo_blocker_actionability import (  # noqa: E402
     load_blocker_classifications,
 )
 
-DEFAULT_REPOSITORIES = (
-    "sgajbi/lotus-idea",
-    "sgajbi/lotus-core",
-    "sgajbi/lotus-performance",
-    "sgajbi/lotus-risk",
-    "sgajbi/lotus-advise",
-    "sgajbi/lotus-manage",
-    "sgajbi/lotus-report",
-    "sgajbi/lotus-render",
-    "sgajbi/lotus-archive",
-    "sgajbi/lotus-ai",
-    "sgajbi/lotus-platform",
-    "sgajbi/lotus-gateway",
-    "sgajbi/lotus-workbench",
+DEFAULT_REPOSITORIES = tuple(
+    f"sgajbi/{name}"
+    for name in "lotus-idea lotus-core lotus-performance lotus-risk lotus-advise lotus-manage "
+    "lotus-report lotus-render lotus-archive lotus-ai lotus-platform lotus-gateway lotus-workbench".split()
 )
 
 EXPECTED_RFC_LABEL = "rfc/RFC-0002"
@@ -94,7 +84,7 @@ def build_cross_repo_issue_posture(
 
     for repository in repositories:
         repo_payload = _repo_payload(repo_payloads, repository)
-        open_issue_count = _open_issue_count(repo_payload)
+        open_issue_count = len(repo_payload["openIssues"])
         rfc_issues = _parse_issues(repository, repo_payload["rfc0002Issues"])
         title_only_references = _title_only_rfc_references(
             repository,
@@ -136,13 +126,14 @@ def build_cross_repo_issue_posture(
                 key=lambda item: (item.repository, item.number),
             )
         ],
-        "usageBoundary": (
-            "This is live GitHub issue posture for RFC-0002 execution coordination. "
-            "Counts are label-backed by rfc/RFC-0002; title-only references are "
-            "reported separately and excluded from governed counts unless they are "
-            "deliberately labeled and ledgered. This is not product-support evidence, "
-            "implementation proof, or a substitute for repo-local ledgers and exact-main "
-            "validation."
+        "usageBoundary": " ".join(
+            (
+                "This is live GitHub issue posture for RFC-0002 execution coordination.",
+                "Counts are label-backed by rfc/RFC-0002; title-only references are",
+                "reported separately and excluded from governed counts unless they are",
+                "deliberately labeled and ledgered. This is not product-support evidence,",
+                "implementation proof, or a substitute for repo-local ledgers and exact-main validation.",
+            )
         ),
         "totalOpenIssuesAcrossRepositories": total_open_issues,
     }
@@ -300,13 +291,6 @@ def _repo_payload(repo_payloads: Mapping[str, Any], repository: str) -> Mapping[
     if not isinstance(raw_rfc, list):
         raise ValueError(f"{repository}: rfc0002Issues must be a list")
     return raw_repo_payload
-
-
-def _open_issue_count(repo_payload: Mapping[str, Any]) -> int:
-    open_issues = repo_payload["openIssues"]
-    if not isinstance(open_issues, list):
-        raise ValueError("openIssues must be a list")
-    return len(open_issues)
 
 
 def _parse_issues(repository: str, payload: Sequence[Mapping[str, Any]]) -> list[IssueSnapshot]:
