@@ -537,8 +537,10 @@ image scan, release identity/license evidence binding, and CI signal evidence.
 Live Idea RFC-0002 ledger
 posture is 44 tracked issues, 24 open, and 20 closed. Live governed cross-repo
 posture is 81 tracked issues,
-44 closed, and 37 open across 13 repositories, with 28 blocked issues, 0
-app-actionable blocked issues, 5 Core dependencies, and 23
+44 closed, and 37 open across 13 repositories. After `sgajbi/lotus-core#836`
+and `sgajbi/lotus-core#840` moved from `status/blocked` to
+`status/in-progress`, current blocked posture is 26 blocked issues, 0
+app-actionable blocked issues, 3 Core dependencies, and 23
 external/protected-evidence blockers. #683 and #684 are
 not ready implementation issues while prerequisite RFC blockers remain open;
 their richer pending semantics remain in the execution ledger and summary. This

@@ -207,8 +207,8 @@ supported-feature blockers.
 `make rfc0002-cross-repo-issue-posture` also validates
 `contracts/implementation-proof/rfc0002-cross-repo-blocker-classification.v1.json`.
 That contract is the durable answer to whether the remaining `status/blocked`
-issues are actually fixable app-code work. The live 2026-07-30 posture is 28
-blocked RFC-0002 issues, 0 app-actionable blocked issues, 5 Core dependencies,
+issues are actually fixable app-code work. The live 2026-07-30 posture is 26
+blocked RFC-0002 issues, 0 app-actionable blocked issues, 3 Core dependencies,
 and 23 external/protected-evidence blockers. Pending final-closure issue #683
 and pending post-completion issue #684 are blocked by prerequisite evidence and
 must not carry `status/ready` while RFC-0002 blockers remain open. A blocked
@@ -328,7 +328,9 @@ binding, and CI signal evidence. Repo-authored wiki publication reached
 `lotus-idea.wiki` commit `f0f9293` with strict `DiffCount 0`. Current
 RFC-0002 source truth after PR #810 remains 44 tracked Idea issues, 24 open,
 and 20 closed, with cross-repo posture of 81 tracked issues, 44 complete, and
-37 open across 13 repositories; 28 blocked issues remain classified as 5 Core
+37 open across 13 repositories. After `sgajbi/lotus-core#836` and
+`sgajbi/lotus-core#840` moved from `status/blocked` to `status/in-progress`,
+26 blocked issues remain classified as 3 Core
 dependencies and 23 external/protected-evidence blockers, with 0
 app-actionable blocked issues.
 Production IdP/session/token-claims and canonical browser proof remain open.

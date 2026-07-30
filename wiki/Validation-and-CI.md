@@ -858,9 +858,9 @@ Persistence adapter validation:
    evidence truth on Idea main `615e3ba848af551801c897dd9b0a52f964801da0`;
    exact-main Main Releasability `30491918891` passed and wiki publication
    reached `05026e8` with strict `DiffCount 0`. The current live cross-repo RFC-0002 posture checks
-   the governed 13-repository owner/dependency set: 80 tracked issues, 43
-   complete, and 37 open, including 28 blocked issues with 0 app-actionable
-   blocked issues, 5 Core dependencies, and 23 external/protected-evidence
+   the governed 13-repository owner/dependency set: 81 tracked issues, 44
+   complete, and 37 open, including 26 blocked issues with 0 app-actionable
+   blocked issues, 3 Core dependencies, and 23 external/protected-evidence
    blockers. #683 and #684 remain
    prerequisite-gated and must not carry `status/ready`; #691, #692, and #699 remain blocked rather
    than QA-pending because their merged implementation tranches preserve only
@@ -1126,8 +1126,10 @@ release evidence exists.
 
 `make rfc0002-cross-repo-issue-posture` now renders blocker actionability from
 `contracts/implementation-proof/rfc0002-cross-repo-blocker-classification.v1.json`.
-Current live posture is 28 blocked RFC-0002 issues, 0 app-actionable blocked
-issues, 5 Core dependencies, and 23 external/protected-evidence blockers. This
+Current live posture is 26 blocked RFC-0002 issues, 0 app-actionable blocked
+issues, 3 Core dependencies, and 23 external/protected-evidence blockers after
+`sgajbi/lotus-core#836` and `sgajbi/lotus-core#840` moved from
+`status/blocked` to `status/in-progress`. This
 keeps “blocked” aligned to Core, IdP/session authority, protected runtime or
 deployment evidence, provider/bank/legal approval, or certification proof. If a
 writable non-Core app-code gap appears, it should not remain blocked; it should

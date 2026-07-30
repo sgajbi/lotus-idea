@@ -198,8 +198,8 @@ Releasability `30491918891` passed and wiki publication reached `05026e8`
 with strict `DiffCount 0`. PR #808 synchronized #807 source truth on exact
 Idea main `f577efcc14d51208375f3fde87284ac98f8ebb7a`; Main Releasability
 `30498306031` passed and final QA closed #807 for repository-owned
-runtime-image remediation only. The live cross-repo posture is 81 tracked
-RFC-0002 issues, 44 complete, and 37 open; the blocked subset is 28 issues, 0
+runtime-image remediation only. That source-truth sync recorded 81 tracked
+RFC-0002 issues, 44 complete, and 37 open; the blocked subset was 28 issues, 0
 app-actionable blocked issues, 5 Core dependencies, and 23
 external/protected-evidence blockers. #683 and #684 are pending
 final/post-completion issues that must not
@@ -210,6 +210,17 @@ and proof-control evidence only, while production identity, client publication,
 Archive legal/trust posture, platform mesh certification, Gateway/Workbench
 discovery proof, supported-feature promotion, and final live journey evidence
 remain open.
+
+2026-07-30 Core blocker-state sync: `sgajbi/lotus-core#836` and
+`sgajbi/lotus-core#840` moved from `status/blocked` to `status/in-progress`.
+The live cross-repo blocked classifier therefore excludes those Core
+in-progress issues while preserving Idea-side Core-dependent blockers #685 and
+#686 and Workbench #500. Current governed cross-repo RFC-0002 posture is 81
+tracked issues, 44 complete, and 37 open; the blocked subset is 26 issues, 0
+app-actionable blocked issues, 3 Core dependencies, and 23
+external/protected-evidence blockers. This is source-truth synchronization only:
+it does not certify Core readiness, clear #685/#686/#500, promote supported
+features, or replace production IdP/session/token-claims evidence.
 
 Slice 15 operations blockers #343, #344, and #375 are source-controlled as
 blocked external/protected-evidence items, not unresolved local app-code
@@ -1368,8 +1379,8 @@ The classifier makes the blocker definition executable: a `status/blocked`
 RFC-0002 issue may remain blocked only when the remaining evidence is
 Core-owned, production identity/session authority, protected runtime or
 deployment evidence, provider/bank/legal approval, or certification proof that a
-writable Lotus app branch cannot truthfully produce. Current live posture is 28
-blocked RFC-0002 issues, 0 app-actionable blocked issues, 5 Core dependencies,
+writable Lotus app branch cannot truthfully produce. Current live posture is 26
+blocked RFC-0002 issues, 0 app-actionable blocked issues, 3 Core dependencies,
 and 23 external/protected-evidence blockers. If a writable non-Core app-code
 gap is found, update GitHub and this contract so the issue becomes ready or
 in-progress instead of hidden behind blocked posture.
