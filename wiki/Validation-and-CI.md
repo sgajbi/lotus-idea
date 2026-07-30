@@ -859,10 +859,11 @@ Persistence adapter validation:
    exact-main Main Releasability `30491918891` passed and wiki publication
    reached `05026e8` with strict `DiffCount 0`. The current live cross-repo RFC-0002 posture checks
    the governed 13-repository owner/dependency set: 93 label-backed tracked
-   issues, 56 complete, and 37 open, including 27 blocked issues with 0
-   app-actionable blocked issues, 4 Core dependencies, and 23
-   external/protected-evidence blockers after `sgajbi/lotus-core#856` moved to
-   `status/in-progress`. #683 and #684 remain
+   issues, 56 complete, and 37 open, split into 27 blocked, 1 in-progress, 1
+   PR-open, and 8 tracker issues. The blocked subset has 0 app-actionable
+   blocked issues, 4 Core dependencies, and 23 external/protected-evidence
+   blockers after `sgajbi/lotus-core#856` moved to `status/pr-open` through
+   Core PR #858. #683 and #684 remain
    prerequisite-gated and must not carry `status/ready`; #691, #692, and #699 remain blocked rather
    than QA-pending because their merged implementation tranches preserve only
    bounded Render/Archive, mesh-readiness, and proof-control evidence;
@@ -1136,9 +1137,10 @@ reference synchronized to `sgajbi/lotus-core#856`. Main Releasability
 did not change in that tranche and strict parity stayed `DiffCount 0`. Current
 governed posture remains 54 tracked Idea RFC-0002 issues, 25 open, and 29
 closed; cross-repo RFC-0002 posture remains 93 label-backed issues, 37 open,
-and 56 closed, with 27 blocked issues, 0 app-actionable blocked issues, 4 Core
-dependencies, and 23 external/protected-evidence blockers after
-`sgajbi/lotus-core#856` moved to `status/in-progress`.
+and 56 closed, split into 27 blocked, 1 in-progress, 1 PR-open, and 8 tracker
+issues. The blocked subset remains 27 blocked issues, 0 app-actionable blocked
+issues, 4 Core dependencies, and 23 external/protected-evidence blockers after
+`sgajbi/lotus-core#856` moved to `status/pr-open` through Core PR #858.
 
 The 2026-07-31 writable-dependency audit keeps that posture intact. Current-main
 focused validation passed in the owning repositories for platform

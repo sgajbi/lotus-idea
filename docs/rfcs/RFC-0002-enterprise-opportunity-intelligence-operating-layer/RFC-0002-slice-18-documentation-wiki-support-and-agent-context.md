@@ -545,8 +545,10 @@ readiness. After
 and `sgajbi/lotus-core#840` moved from `status/blocked` to
 `status/in-progress`, and `sgajbi/lotus-manage#626` closed with
 `status/merged-main`, and `sgajbi/lotus-core#856` moved to
-`status/in-progress`, current blocked posture is 27 blocked issues, 0
-app-actionable blocked issues, 4 Core dependencies, and 23
+`status/pr-open` through Core PR #858, current open posture is 27 blocked
+issues, 1 in-progress issue, 1 PR-open issue, and 8 tracker issues. The blocked
+posture remains 27 blocked issues, 0 app-actionable blocked issues, 4 Core
+dependencies, and 23
 external/protected-evidence blockers. #683 and #684 are
 not ready implementation issues while prerequisite RFC blockers remain open;
 their richer pending semantics remain in the execution ledger and summary. This
