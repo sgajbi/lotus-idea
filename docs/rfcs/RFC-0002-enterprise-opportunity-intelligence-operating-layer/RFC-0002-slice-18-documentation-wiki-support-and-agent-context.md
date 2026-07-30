@@ -548,6 +548,21 @@ and does not certify
 production vulnerability posture or production IdP/session/token-claims
 principal proof.
 
+PR #810 then synchronized PR #809 main evidence and Core/Workbench handoff
+posture to Idea main `fe7f0efac9fca86a3e19302e8b8436e8941f3d0c`;
+exact-main Main Releasability `30500588217` passed, including workflow lint,
+lint/typecheck/security, unit, integration, e2e, PostgreSQL runtime proof,
+combined coverage, Docker/release validation, image scan, commit-tagged image
+publish and digest proof, published-digest runtime proof, image signing,
+provenance/SBOM attestations, release metadata, image identity binding, release
+license evidence binding, and CI signal evidence. Repo-authored wiki
+publication reached `lotus-idea.wiki` commit `f0f9293` with strict
+`DiffCount 0`. The current durable handoff evidence is recorded on
+`sgajbi/lotus-core#836`, `sgajbi/lotus-core#840`,
+`sgajbi/lotus-workbench#500`, #685, and #686; it keeps Slice 11/17 blockers
+classified as Core-owned canonical seed/DPM readiness plus Workbench owner
+browser proof, not hidden Idea app-code work.
+
 This Slice 18 synchronization also carries the platform vulnerability-exception
 register lesson from `sgajbi/lotus-platform#596` into Idea's repository truth.
 The dependency vulnerability posture contract now records the platform schema
@@ -604,7 +619,11 @@ merged the Slice 15 runtime-image hardening remediation to exact main
 `f577efcc14d51208375f3fde87284ac98f8ebb7a` with Main Releasability
 `30498306031` passing, and PR #809 synchronized #807 final QA closure truth to
 exact main `c340daa01b41097410bbc8a802d9a8d1f9f24135` with Main Releasability
-`30499444726` passing, current source truth now records 44 tracked RFC-0002
+`30499444726` passing. PR #810 synchronized PR #809 main evidence and
+Core/Workbench handoff posture to exact main
+`fe7f0efac9fca86a3e19302e8b8436e8941f3d0c` with Main Releasability
+`30500588217` passing and repo-authored wiki publication `f0f9293` at strict
+`DiffCount 0`; current source truth now records 44 tracked RFC-0002
 issues, 20 closed complete, 24 open, no `open_merged_main_qa_pending`, 1
 `open_in_progress`, no `open_pr_raised`, and 13 `open_blocked` issues. #807 is
 closed complete for repository-owned runtime-image remediation only; no
@@ -622,7 +641,10 @@ aggregation jobs drained to zero, positions/cash data quality reached
 failed in the DPM command-center action-register seed because
 `POST http://manage.dev.lotus/api/v1/rebalance/simulate` returned HTTP 424 with
 `DPM_CORE_CONTEXT_INCOMPLETE`. The current blocker is tracked in
-`sgajbi/lotus-core#840`. Fresh Gateway/BFF-backed Workbench queue/detail
+`sgajbi/lotus-core#840`, with refreshed 2026-07-30 owner handoff evidence on
+`sgajbi/lotus-core#836`, `sgajbi/lotus-core#840`,
+`sgajbi/lotus-workbench#500`, #685, and #686. Fresh Gateway/BFF-backed
+Workbench queue/detail
 runtime evidence remains required before #685 can move to merged-main QA.
 Platform PR `sgajbi/lotus-platform#631` fixes the prior Manage seed
 authorization failure; #686 is blocked, not QA-pending, until
