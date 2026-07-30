@@ -502,6 +502,23 @@ def test_rfc0002_github_issue_execution_ledger_requires_issue_380_blocker_eviden
     assert "#380: closureInstruction missing required evidence `open_blocked`" in errors
 
 
+def test_rfc0002_github_issue_execution_ledger_tracks_current_issue_380_core_blocker() -> None:
+    module = _load_gate()
+    payload = _ledger_payload(module)
+    issue_380 = next(
+        issue
+        for issue in payload["issues"]
+        if isinstance(issue, dict) and issue["issueNumber"] == 380
+    )
+
+    assert issue_380["githubState"] == "open"
+    assert issue_380["executionStatus"] == "open_blocked"
+    assert "sgajbi/lotus-core#856" in issue_380["closureInstruction"]
+    assert "sgajbi/lotus-core#795" not in issue_380["closureInstruction"]
+    assert "future-dated Core aggregation jobs" in issue_380["closureInstruction"]
+    assert "foundation_only with zero promoted features" in issue_380["closureInstruction"]
+
+
 def test_rfc0002_github_issue_execution_ledger_tracks_slice15_operations_blockers() -> None:
     module = _load_gate()
     payload = _ledger_payload(module)
