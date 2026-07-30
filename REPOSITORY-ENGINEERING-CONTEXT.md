@@ -118,9 +118,9 @@ Releasability `30499444726` passing, and PR #810 synchronized PR #809 main
 evidence plus Core handoff posture to exact main
 `fe7f0efac9fca86a3e19302e8b8436e8941f3d0c` with Main Releasability
 `30500588217` passing. The current RFC-0002 ledger posture is 45 tracked
-issues, 20 closed complete, 25 open, no `open_merged_main_qa_pending`, 2
-`open_in_progress`, no `open_pr_raised`, and 13 `open_blocked`; #681 and
-#814 are in progress. #807 does not
+issues, 20 closed complete, 25 open, no `open_merged_main_qa_pending`, 1
+`open_in_progress`, 1 `open_pr_raised`, and 13 `open_blocked`; #681 is in
+progress and #814 is PR-open. #807 does not
 certify production vulnerability posture, registry promotion, protected
 deployment, supported-feature promotion, or full Slice 15 closure; #379 is now
 blocked, not QA-pending: Advise, Manage, Report, and Idea owner-app local
@@ -227,10 +227,11 @@ governed cross-repo RFC-0002 posture is 83 tracked issues, 47 complete, and
 23 external/protected-evidence blockers. This is source-truth synchronization
 only: it does not certify Core readiness, clear #685/#686/#500, promote
 supported features, or replace production IdP/session/token-claims evidence.
-`sgajbi/lotus-idea#814` is now active app-owned work, not an external blocker:
-the local/dev canonical capacity seed must call existing public Idea APIs with
-complete synthetic entitlement scope and a bounded per-run trusted-caller marker
-without weakening endpoint authorization. That work does not implement
+`sgajbi/lotus-idea#814` is now active app-owned PR work, not an external
+blocker: Idea PR #815 and Workbench PR #515 wire the local/dev canonical
+capacity seed to call existing public Idea APIs with complete synthetic
+entitlement scope and a bounded per-run trusted-caller marker without weakening
+endpoint authorization. That work does not implement
 production authentication, production IdP/session/token-claims authority,
 supported-feature promotion, capacity certification, or client publication.
 
@@ -1384,7 +1385,7 @@ fix on main
 `5ba2757c1235ce3e28c630afd44257327c91edf3` with Main Releasability
 `30536615979` passing and branch cleanup complete. The current Idea ledger
 posture is 45 tracked issues, 25 open, and 20 closed after #814 moved into
-active implementation for local/dev capacity-seed authorization wiring. That
+PR-open posture for local/dev capacity-seed authorization wiring. That
 evidence is coordination and branch-local implementation posture only; it does
 not close #814, clear blockers, promote supported features, certify production
 vulnerability posture, implement production IdP/session/token-claims authority,

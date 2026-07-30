@@ -1111,9 +1111,9 @@ proof, published-digest runtime proof, image signing, provenance/SBOM
 attestations, release metadata, release identity/license evidence binding, and
 CI signal evidence. Repo-authored wiki publication reached `lotus-idea.wiki`
 commit `f0f9293` with strict `DiffCount 0`. Current source truth after the
-#814 intake and implementation-progress sync records 45 tracked Idea RFC-0002
-issues, 25 open, and 20 closed, with live cross-repo RFC-0002 posture of 83
-tracked issues, 47 complete, and 36 open across 13 repositories after
+#814 PR-open sync records 45 tracked Idea RFC-0002 issues, 25 open, and 20
+closed, with live cross-repo RFC-0002 posture of 83 tracked issues, 47
+complete, and 36 open across 13 repositories after
 `sgajbi/lotus-manage#626` closed with
 `status/merged-main`. The refreshed dependency handoff is anchored on
 `sgajbi/lotus-core#836`, `sgajbi/lotus-core#840`,
@@ -1124,7 +1124,8 @@ main `5ba2757c1235ce3e28c630afd44257327c91edf3` with Main Releasability
 Workbench PR #505 additionally records
 merged BFF principal-boundary hardening while preserving production
 IdP/session/token-claims and canonical browser proof blockers. #814 is active
-local/dev authorization wiring and remains open until the canonical
+PR-open local/dev authorization wiring through Idea PR #815 and Workbench PR
+#515, and remains open until the canonical
 downstream-capacity seed carries complete synthetic entitlement scope, uses a
 bounded per-run trusted-caller marker, and passes fresh-image plus full
 canonical validation without endpoint-policy bypass. Keep #681 open until the remaining documentation, wiki,

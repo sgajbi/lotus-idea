@@ -837,10 +837,12 @@ def test_rfc0002_github_issue_execution_ledger_tracks_capacity_seed_authorizatio
     )
 
     assert issue_814["githubState"] == "open"
-    assert issue_814["executionStatus"] == "open_in_progress"
+    assert issue_814["executionStatus"] == "open_pr_raised"
     assert issue_814["allowPullRequestAutoClose"] is False
     assert issue_814["rfcSlices"] == ["slice-15", "slice-17"]
     assert "Keep #814 open" in issue_814["closureInstruction"]
+    assert "Idea PR #815" in issue_814["closureInstruction"]
+    assert "Workbench PR #515" in issue_814["closureInstruction"]
     assert "without bypassing endpoint authorization" in issue_814["closureInstruction"]
     assert "complete synthetic trusted entitlement scope" in issue_814["closureInstruction"]
     assert "per-run local trusted-caller marker" in issue_814["closureInstruction"]
