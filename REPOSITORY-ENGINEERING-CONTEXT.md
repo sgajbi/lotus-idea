@@ -1398,6 +1398,18 @@ synchronization only; it does not close #814, promote supported features,
 certify production vulnerability posture, implement production
 IdP/session/token-claims authority, or complete Slice 18 closure.
 
+PR #819 synchronized the #380 supported-feature/data-product blocker reference
+to the current Core issue `sgajbi/lotus-core#856` on Idea main
+`3b2cc0bb4472a158cb4617b277276244c0e4a22b`. Exact-main Main Releasability
+`30555536256` and CodeQL `30555528134` passed for that SHA; wiki source did not
+change, strict parity stayed `DiffCount 0`, and the feature branch was removed
+locally and remotely after patch-equivalence proof. Current source truth remains
+54 tracked Idea RFC-0002 issues, 25 open, and 29 closed, with 93 cross-repo
+label-backed RFC-0002 issues, 37 open, and 56 closed. Blocked posture remains
+28 blocked issues, 0 app-actionable blocked issues, 5 Core dependencies, and
+23 external/protected-evidence blockers. This is evidence synchronization only;
+#681 and #380 remain open and no supported feature is promoted.
+
 `make rfc0002-cross-repo-issue-posture` also validates
 `contracts/implementation-proof/rfc0002-cross-repo-blocker-classification.v1.json`.
 The classifier makes the blocker definition executable: a `status/blocked`

@@ -665,6 +665,14 @@ failed in the DPM command-center action-register seed because
 `sgajbi/lotus-workbench#500`, #685, and #686. Fresh Gateway/BFF-backed
 Workbench queue/detail
 runtime evidence remains required before #685 can move to merged-main QA.
+PR #819 synchronized the #380 Core-blocker reference to `sgajbi/lotus-core#856`
+on Idea main `3b2cc0bb4472a158cb4617b277276244c0e4a22b`; exact-main Main
+Releasability `30555536256` and CodeQL `30555528134` passed for that SHA.
+Wiki source did not change in PR #819, strict parity stayed `DiffCount 0`, and
+remote/local branch cleanup completed after patch-equivalence proof. This is
+Slice 18 source-truth synchronization only: #681 and #380 stay open, Core #856
+continues to block canonical proof, and supported-feature promotion remains
+unclaimed.
 Platform PR `sgajbi/lotus-platform#631` fixes the prior Manage seed
 authorization failure; #686 is blocked, not QA-pending, until
 `sgajbi/lotus-core#840` restores canonical DPM source readiness and Workbench

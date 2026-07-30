@@ -1128,6 +1128,15 @@ blocked by Core #856 after Idea PR #815, Workbench PR #515, and Workbench PR
 #516 merged; the original authorization and Workbench validator defects are no
 longer the active failure path. It remains open until Core readiness converges
 and fresh full canonical validation produces mainline capacity-seed evidence.
+PR #819 then reached Idea main
+`3b2cc0bb4472a158cb4617b277276244c0e4a22b` with the #380 Core-blocker
+reference synchronized to `sgajbi/lotus-core#856`. Main Releasability
+`30555536256` and CodeQL `30555528134` passed for that exact SHA; wiki source
+did not change in that tranche and strict parity stayed `DiffCount 0`. Current
+governed posture remains 54 tracked Idea RFC-0002 issues, 25 open, and 29
+closed; cross-repo RFC-0002 posture remains 93 label-backed issues, 37 open,
+and 56 closed, with 28 blocked issues, 0 app-actionable blocked issues, 5 Core
+dependencies, and 23 external/protected-evidence blockers.
 Keep #681 open until the remaining documentation, wiki,
 support, context, and supported-feature truth is complete;
 `sgajbi/lotus-manage#624` remains the production trusted IdP caller-context

@@ -354,6 +354,21 @@ synchronization only;
 dependencies remain open, and production vulnerability posture is not
 certified.
 
+PR #819 then synchronized the #380 Core-blocker reference to the same current
+Core issue and reached Idea main
+`3b2cc0bb4472a158cb4617b277276244c0e4a22b`. Exact-main Main Releasability
+`30555536256` and CodeQL `30555528134` passed for that SHA, including the
+release-image validation chain, signing, provenance/SBOM attestations, release
+metadata, release identity/license evidence binding, and CI signal evidence.
+Repo-authored wiki source did not change in PR #819; strict wiki parity stayed
+`DiffCount 0`, and branch cleanup completed after patch-equivalence proof.
+Current source truth remains 54 tracked Idea RFC-0002 issues, 25 open, and
+29 closed, with cross-repo posture of 93 label-backed RFC-0002 issues, 56
+closed, and 37 open. The blocked posture remains 28 blocked issues, 0
+app-actionable blocked issues, 5 Core dependencies, and 23 external/protected
+evidence blockers. #380 and #681 remain open, and no supported feature is
+promoted from this evidence-sync tranche.
+
 #685 is `open_blocked`, not QA-pending: the 2026-07-29 governed Workbench
 startup attempt via `npm run live:stack:up` restored core portfolio readiness
 for `PB_SG_GLOBAL_BAL_001`; valuation and aggregation jobs drained to zero,
