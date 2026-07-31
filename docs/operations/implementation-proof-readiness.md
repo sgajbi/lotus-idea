@@ -402,6 +402,19 @@ in-progress, and 8 tracker issues with 0 app-actionable blocked issues. This is
 source-truth synchronization only; #681 and the remaining blocker issues stay
 open until their own evidence classes are satisfied.
 
+PR #826 then synchronized PR #825 source truth to Idea main
+`6fd8159495ca3a7294ade2d819c80ea6aaa350fd`. PR Merge Gate `30623781720`,
+Feature Lane `30623778382`, CodeQL `30624121200`, and exact-main Main
+Releasability `30624125739` passed. Repo-authored wiki source was published to
+`lotus-idea.wiki` commit `272f7cf` with strict `DiffCount 0`; remote branch
+cleanup completed, the local feature branch was absent after fetch/prune, the
+local branch list contained only `main`, and no unmerged remote branches
+remained. #681 returned to `open_in_progress` because it remains a continuing
+Slice 18 synchronization issue. This keeps the governed posture at 93
+label-backed RFC-0002 issues, 56 closed, and 37 open with 0 app-actionable
+blocked issues; no supported-feature, production identity, canonical browser,
+client-publication, or final closure claim is made.
+
 #685 is `open_blocked`, not QA-pending: the 2026-07-29 governed Workbench
 startup attempt via `npm run live:stack:up` restored core portfolio readiness
 for `PB_SG_GLOBAL_BAL_001`; valuation and aggregation jobs drained to zero,
