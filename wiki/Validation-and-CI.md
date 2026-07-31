@@ -1146,6 +1146,16 @@ Core dependencies, and 23 external/protected-evidence blockers after fresh
 canonical validation reopened `sgajbi/lotus-core#836` as the active Core
 positions data-quality metadata blocker.
 
+PR #824 then synchronized the Core #836 canonical QA-failure posture to Idea
+main `f4904af523cb2e54cd18db0c5eb71c8725998df8`. Exact-main Main
+Releasability `30620242970` and CodeQL `30620237795` passed for that SHA,
+including release-image build/smoke/scan, image push, digest inspection,
+signing, provenance/SBOM attestations, release manifest, and release evidence
+upload. Repo-authored wiki source was published to `lotus-idea.wiki` commit
+`5e63705` with strict `DiffCount 0`, and local/remote branch cleanup completed
+with no unmerged remote branches. This is Slice 18 source-truth synchronization
+only; #681 and the remaining blocker issues stay open.
+
 The 2026-07-31 writable-dependency audit keeps that posture intact. Current-main
 focused validation passed in the owning repositories for platform
 cost-attribution and BFF principal-session source contracts, lotus-ai Idea
