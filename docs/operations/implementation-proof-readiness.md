@@ -331,12 +331,10 @@ binding, and CI signal evidence. Repo-authored wiki publication reached
 RFC-0002 source truth after the #814 Core-blocker sync is
 54 tracked Idea issues, 25 open, and 29 closed, with cross-repo posture of 93
 label-backed tracked issues, 56 complete, and 37 open across 13 repositories. After
-`sgajbi/lotus-core#836` and
-`sgajbi/lotus-core#840` moved from `status/blocked` to `status/in-progress`,
-`sgajbi/lotus-manage#626` closed with `status/merged-main`, and
-`sgajbi/lotus-core#856` moved to `status/pr-open` through Core PR #858 for
-future-dated canonical aggregation readiness, the open split is 27 blocked, 1
-in-progress, 1 PR-open, and 8 tracker issues. The 27 blocked issues remain
+`sgajbi/lotus-core#836` was reopened as `status/in-progress` by the fresh
+canonical QA failure, `sgajbi/lotus-core#840` remained `status/in-progress`,
+and `sgajbi/lotus-manage#626` closed with `status/merged-main`, the open split
+is 27 blocked, 2 in-progress, and 8 tracker issues. The 27 blocked issues remain
 classified as 4 Core dependencies and 23 external/protected-evidence blockers,
 with 0 app-actionable blocked issues.
 Production IdP/session/token-claims and canonical browser proof remain open.
@@ -347,9 +345,11 @@ ledgered.
 work: Idea PR #815, Workbench PR #515, and Workbench PR #516 are merged, and
 Workbench Main Releasability `30543504302` passed for exact Workbench main
 `1787da79fb4abaf574ebe4ebc3f8b4d5fed7bdac`. The remaining canonical proof
-depends on `sgajbi/lotus-core#856`, where two future-dated pending aggregation
-jobs for `PB_SG_GLOBAL_BAL_001` beyond `2026-04-10` keep positions data quality
-from reaching `COMPLETE`. This is still coordination and source-truth
+depends on reopened `sgajbi/lotus-core#836`, where positions data quality stays
+`UNKNOWN` even though holdings, pricing, transactions, and reporting are
+`READY`, blocking reason codes are empty, valuation and aggregation queues are
+zero, aggregation is `COMPLETE`, and Core/Gateway dates are current to
+`2026-04-10`. This is still coordination and source-truth
 synchronization only;
 `sgajbi/lotus-manage#624` and other blocked
 dependencies remain open, and production vulnerability posture is not
@@ -365,11 +365,12 @@ Repo-authored wiki source did not change in PR #819; strict wiki parity stayed
 `DiffCount 0`, and branch cleanup completed after patch-equivalence proof.
 Current source truth remains 54 tracked Idea RFC-0002 issues, 25 open, and
 29 closed, with cross-repo posture of 93 label-backed RFC-0002 issues, 56
-closed, and 37 open. The open split is 27 blocked, 1 in-progress, 1 PR-open,
-and 8 tracker issues. The blocked posture remains 27 blocked issues, 0
+closed, and 37 open. The open split is 27 blocked, 2 in-progress, and 8 tracker
+issues. The blocked posture remains 27 blocked issues, 0
 app-actionable blocked issues, 4 Core dependencies, and 23 external/protected
-evidence blockers after `sgajbi/lotus-core#856` moved to `status/pr-open`
-through Core PR #858.
+evidence blockers after fresh canonical validation reopened
+`sgajbi/lotus-core#836` as the active Core positions data-quality metadata
+blocker.
 #380 and #681 remain open, and no supported feature is
 promoted from this evidence-sync tranche.
 

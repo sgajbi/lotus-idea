@@ -57,7 +57,7 @@
       "issueNumber": 814,
       "actionability": "core_dependency",
       "blockerClass": "canonical_idea_capacity_seed_core_readiness",
-      "remainingAuthority": "Core-owned PB_SG_GLOBAL_BAL_001 readiness convergence for canonical capacity-seed validation, tracked by sgajbi/lotus-core#856"
+      "remainingAuthority": "Core-owned PB_SG_GLOBAL_BAL_001 positions data-quality metadata convergence for canonical capacity-seed validation, tracked by reopened sgajbi/lotus-core#836"
     },
     {
       "repository": "sgajbi/lotus-idea",
