@@ -1564,6 +1564,30 @@ Passing this gate certifies the internal paging contract only. It does not
 certify Workbench behavior, data-product support, client publication, or a
 supported feature.
 
+## RFC-0002 Current Execution Posture
+
+RFC-0002 execution is tracked through GitHub issue state plus the
+source-controlled implementation-proof ledgers. The current governed posture is
+94 label-backed RFC-0002 issues: 57 closed and 37 open. The open set is 27
+blocked issues, 8 tracker issues, and 2 in-progress issues (`#681` and
+`sgajbi/lotus-core#873`).
+
+The blocked-actionability classifier reports 0 app-actionable blocked issues.
+The blocked set is currently 4 Core dependencies and 23 external/protected
+evidence blockers after Core #873 moved to active implementation. The canonical
+Workbench/Idea live proof path is still blocked by `sgajbi/lotus-core#873`
+until Core merges a fix and fresh canonical validation passes; source-side
+Workbench action-control tests do not replace full-stack machine-readable
+validation output, screenshot/index evidence, or final supported-feature
+promotion proof.
+
+Platform protected-lane queue hygiene is separate from protected evidence. The
+stale queued Platform End-to-End Validation run `30603744637` was recorded on
+`sgajbi/lotus-platform#599`, cancelled, and the post-cancel detector returned
+`Stale workflow runs: 0`. That cleanup improves queue clarity only; it does not
+provision a protected runner, certify cost attribution, prove deployment
+promotion, or clear RFC-0002 production-readiness blockers.
+
 CI warning policy:
 
 1. use current approved action versions,

@@ -747,6 +747,26 @@ canonical browser proof, client publication, supported-feature promotion,
 production identity/session-token authority, protected runtime certification,
 or final closure.
 
+PR #830 then synchronized PR #829 evidence through Idea main
+`8a8cd5431e725267a1a0d39e6e1742fe8e7c5721`; exact-main Main Releasability
+`30650553039` passed and no repo-authored wiki source changed. PR #831 then
+merged the file-backed PR title/body validation guard to Idea main
+`17e64208c6d0614fdd07f95755453978813a7612`; replacement exact-main Main
+Releasability `30652543470` passed, and the earlier duplicate-dispatch runs
+`30652453290` and `30652462394` are explicitly non-certifying cancelled runs.
+The current blocker and CI audit still reports 94 label-backed RFC-0002 issues,
+57 closed and 37 open, with 27 blocked, 8 tracker, and 2 in-progress issues
+(#681 and `sgajbi/lotus-core#873`). The blocked-actionability classifier
+remains at 0 app-actionable blocked issues, split into 4 Core dependencies and
+23 external/protected evidence blockers after Core #873 moved to
+`status/in-progress`. Current canonical Workbench proof remains blocked by
+`sgajbi/lotus-core#873` until Core merges a fix and fresh canonical validation
+passes. The stale queued Platform End-to-End Validation run
+`30603744637` was recorded on `sgajbi/lotus-platform#599`, cancelled as queue
+hygiene, and the post-cancel detector returned `Stale workflow runs: 0`; this
+does not clear protected runner, cost-attribution, deployment-promotion, or
+production-certification blockers.
+
 The 2026-07-31 dependency audit then verified current-main source-side posture
 for the writable cross-repo blockers without finding hidden app-actionable
 blocked work. Durable evidence comments were posted on `sgajbi/lotus-platform#495`,

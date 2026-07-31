@@ -117,12 +117,15 @@ truth to exact main `c340daa01b41097410bbc8a802d9a8d1f9f24135` with Main
 Releasability `30499444726` passing, and PR #810 synchronized PR #809 main
 evidence plus Core handoff posture to exact main
 `fe7f0efac9fca86a3e19302e8b8436e8941f3d0c` with Main Releasability
-`30500588217` passing. After the PR #828/#829 evidence-sync cycle, the current
+`30500588217` passing. After the PR #828 through PR #831 evidence-sync and
+issue-execution prevention cycle, the current
 RFC-0002 ledger posture is 54 tracked issues, 29 closed complete, 25 open, no
 `open_merged_main_qa_pending`, 1 `open_in_progress`, no `open_pr_raised`, and
-14 `open_blocked`; #681 is active after PR #829 reached exact main
-`b9793a6e119a7510cd8aa881ad37abefe3612a81`, and #814 is currently blocked by
-Core in-window aggregation readiness issue `sgajbi/lotus-core#873`. #807 does not
+14 `open_blocked`; #681 is active after PR #831 reached exact main
+`17e64208c6d0614fdd07f95755453978813a7612`, and #814 is currently blocked by
+Core in-window aggregation readiness issue `sgajbi/lotus-core#873`. PR #831
+also makes saved partial RFC-0002 PR title/body validation file-backed so
+future keep-open PRs can prove the exact GitHub text before creation. #807 does not
 certify production vulnerability posture, registry promotion, protected
 deployment, supported-feature promotion, or full Slice 15 closure; #379 is now
 blocked, not QA-pending: Advise, Manage, Report, and Idea owner-app local
@@ -141,9 +144,17 @@ action-register seed because `POST http://manage.dev.lotus/api/v1/rebalance/simu
 returned HTTP 424 with `DPM_CORE_CONTEXT_INCOMPLETE`. Fresh Gateway/BFF-backed
 Workbench queue/detail runtime evidence remains required before #685 can move
 to merged-main QA.
-The 2026-07-30 handoff comments on `sgajbi/lotus-core#836`,
-`sgajbi/lotus-core#840`, `sgajbi/lotus-workbench#500`, #685, and #686 are the
-current durable dependency links for that unblock path.
+The current canonical Workbench/browser unblock path is anchored by
+`sgajbi/lotus-core#873`, `sgajbi/lotus-workbench#500`, #814, #685, and #686.
+Do not rerun or close canonical browser proof from source-side Workbench tests
+alone; final proof still needs the full governed stack to produce current
+machine-readable validation output and screenshot/index evidence.
+Platform protected-lane queue hygiene is currently recorded on
+`sgajbi/lotus-platform#599`: stale queued Platform End-to-End Validation run
+`30603744637` was cancelled after the merged detector reported it, and the
+post-cancel detector returned `Stale workflow runs: 0`. This improves CI queue
+clarity only; it does not clear protected runner, cost-attribution,
+deployment-promotion, or production-certification blockers.
 Platform PR `sgajbi/lotus-platform#631` fixes the earlier Manage seed
 authorization failure; #686 is blocked, not QA-pending, until
 `sgajbi/lotus-core#840` restores canonical DPM source readiness and Workbench
