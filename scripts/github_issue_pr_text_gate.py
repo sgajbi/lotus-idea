@@ -112,15 +112,62 @@ def _parse_args(argv: Sequence[str] | None) -> argparse.Namespace:
     parser.add_argument("--body", default="")
     parser.add_argument("--title-env")
     parser.add_argument("--body-env")
+    parser.add_argument(
+        "--title-file",
+        type=Path,
+        help="Read the pull request title from a UTF-8 text file.",
+    )
+    parser.add_argument(
+        "--body-file",
+        type=Path,
+        help="Read the pull request body from a UTF-8 Markdown/text file.",
+    )
     parser.add_argument("--ledger", type=Path, default=LEDGER_PATH)
     return parser.parse_args(argv)
 
 
+def _resolve_text_argument(
+    *,
+    field_name: str,
+    direct_value: str,
+    env_name: str | None,
+    file_path: Path | None,
+) -> str:
+    sources = [
+        source
+        for source, present in (
+            ("inline", bool(direct_value)),
+            ("environment", bool(env_name)),
+            ("file", file_path is not None),
+        )
+        if present
+    ]
+    if len(sources) > 1:
+        raise ValueError(
+            f"{field_name} text must be provided by only one source; received {', '.join(sources)}"
+        )
+    if env_name:
+        return os.environ.get(env_name, "")
+    if file_path is not None:
+        return file_path.read_text(encoding="utf-8")
+    return direct_value
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     args = _parse_args(argv)
-    title = os.environ.get(args.title_env, "") if args.title_env else args.title
-    body = os.environ.get(args.body_env, "") if args.body_env else args.body
     try:
+        title = _resolve_text_argument(
+            field_name="title",
+            direct_value=args.title,
+            env_name=args.title_env,
+            file_path=args.title_file,
+        )
+        body = _resolve_text_argument(
+            field_name="body",
+            direct_value=args.body,
+            env_name=args.body_env,
+            file_path=args.body_file,
+        )
         errors = validate_pr_text(title=title, body=body, ledger_path=args.ledger)
     except (OSError, ValueError) as exc:
         print(str(exc))
