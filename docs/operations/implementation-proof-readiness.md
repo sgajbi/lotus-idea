@@ -374,6 +374,21 @@ blocker.
 #380 and #681 remain open, and no supported feature is
 promoted from this evidence-sync tranche.
 
+PR #824 then synchronized the Core #836 canonical QA-failure posture to Idea
+main `f4904af523cb2e54cd18db0c5eb71c8725998df8`. Exact-main Main
+Releasability `30620242970` and CodeQL `30620237795` passed for that SHA,
+including the full release-image build/smoke/scan, commit-tagged image push,
+digest inspection, signing, provenance/SBOM attestations, release manifest,
+identity/license binding, and release evidence upload. Repo-authored wiki source
+was published to `lotus-idea.wiki` commit `5e63705` with strict `DiffCount 0`,
+the remote PR branch was deleted by merge cleanup, the local branch was removed
+after patch-equivalence verification, and no unmerged remote branches remained.
+This keeps the governed posture at 93 label-backed RFC-0002 issues, 56 closed,
+and 37 open, split into 27 blocked, 2 in-progress, and 8 tracker issues with 0
+app-actionable blocked issues. This is merged-main evidence synchronization
+only; #681, #814, #685, #686, #699, #500, #380, #683, and #684 remain open
+until their own evidence classes are satisfied.
+
 #685 is `open_blocked`, not QA-pending: the 2026-07-29 governed Workbench
 startup attempt via `npm run live:stack:up` restored core portfolio readiness
 for `PB_SG_GLOBAL_BAL_001`; valuation and aggregation jobs drained to zero,

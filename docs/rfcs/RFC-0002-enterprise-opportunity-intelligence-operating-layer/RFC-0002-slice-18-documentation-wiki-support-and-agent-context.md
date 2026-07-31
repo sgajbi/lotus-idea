@@ -674,6 +674,19 @@ canonical validation after Core PR #858 reopened Core #836 because positions
 data quality remained `UNKNOWN` despite ready/current Core diagnostics, and
 supported-feature promotion remains unclaimed.
 
+PR #824 then synchronized that Core #836 canonical QA-failure posture through
+Idea main `f4904af523cb2e54cd18db0c5eb71c8725998df8`. Exact-main Main
+Releasability `30620242970` and CodeQL `30620237795` passed for that SHA,
+including release-image build/smoke/scan, image push, digest inspection,
+signing, provenance/SBOM attestations, release manifest, and release evidence
+upload. Repo-authored wiki source was published to `lotus-idea.wiki` commit
+`5e63705` with strict `DiffCount 0`, and local/remote branch cleanup completed
+with no unmerged remote branches. The governed posture remains 93 label-backed
+RFC-0002 issues, 56 closed, and 37 open: 27 blocked, 2 in-progress, 8 tracker,
+0 app-actionable blocked, 4 Core dependencies, and 23 external/protected
+evidence blockers. This is Slice 18 source-truth synchronization only; #681 and
+the remaining blocker issues stay open.
+
 The 2026-07-31 dependency audit then verified current-main source-side posture
 for the writable cross-repo blockers without finding hidden app-actionable
 blocked work. Durable evidence comments were posted on `sgajbi/lotus-platform#495`,

@@ -1417,6 +1417,18 @@ issues, 0 app-actionable blocked issues, 4 Core dependencies, and 23
 external/protected-evidence blockers. This is evidence synchronization only;
 #681 and #380 remain open and no supported feature is promoted.
 
+PR #824 then synchronized the Core #836 canonical QA-failure posture to Idea
+main `f4904af523cb2e54cd18db0c5eb71c8725998df8`. Exact-main Main
+Releasability `30620242970` and CodeQL `30620237795` passed for that SHA,
+including release-image build/smoke/scan, image push, digest inspection,
+signing, provenance/SBOM attestations, release manifest, and release evidence
+upload. Repo-authored wiki source was published to `lotus-idea.wiki` commit
+`5e63705` with strict `DiffCount 0`; local and remote branch cleanup completed,
+and no unmerged remote branches remained. This records merged-main evidence for
+Slice 18 source-truth synchronization only; #681, Core readiness, canonical
+Workbench/browser proof, production identity/session-token authority,
+supported-feature promotion, and final RFC-0002 closure remain open.
+
 The 2026-07-31 writable-dependency audit is now source-synchronized in the
 RFC-0002 execution ledger after durable GitHub comments were posted on
 `sgajbi/lotus-platform#495`, `sgajbi/lotus-platform#563`,
