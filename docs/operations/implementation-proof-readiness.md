@@ -389,6 +389,19 @@ app-actionable blocked issues. This is merged-main evidence synchronization
 only; #681, #814, #685, #686, #699, #500, #380, #683, and #684 remain open
 until their own evidence classes are satisfied.
 
+PR #825 then synchronized PR #824 merged-main evidence to Idea main
+`8e76736148e9cd2078a1adfd692884da7d78a95f`. PR Merge Gate `30621485539`,
+post-merge Main Releasability `30621899968`, and post-merge CodeQL
+`30621893764` passed. Repo-authored wiki source was published to
+`lotus-idea.wiki` commit `eefd44a` with strict `DiffCount 0`; the remote PR
+branch was deleted, the local feature branch was deleted after exact
+tree-equivalence verification, the local branch list contained only `main`, and
+no unmerged remote branches remained. This keeps the governed posture at 93
+label-backed RFC-0002 issues, 56 closed, and 37 open, split into 27 blocked, 2
+in-progress, and 8 tracker issues with 0 app-actionable blocked issues. This is
+source-truth synchronization only; #681 and the remaining blocker issues stay
+open until their own evidence classes are satisfied.
+
 #685 is `open_blocked`, not QA-pending: the 2026-07-29 governed Workbench
 startup attempt via `npm run live:stack:up` restored core portfolio readiness
 for `PB_SG_GLOBAL_BAL_001`; valuation and aggregation jobs drained to zero,
