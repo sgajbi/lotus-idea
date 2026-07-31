@@ -859,11 +859,11 @@ Persistence adapter validation:
    exact-main Main Releasability `30491918891` passed and wiki publication
    reached `05026e8` with strict `DiffCount 0`. The current live cross-repo RFC-0002 posture checks
    the governed 13-repository owner/dependency set: 93 label-backed tracked
-   issues, 56 complete, and 37 open, split into 27 blocked, 1 in-progress, 1
-   PR-open, and 8 tracker issues. The blocked subset has 0 app-actionable
+   issues, 56 complete, and 37 open, split into 27 blocked, 2 in-progress, and
+   8 tracker issues. The blocked subset has 0 app-actionable
    blocked issues, 4 Core dependencies, and 23 external/protected-evidence
-   blockers after `sgajbi/lotus-core#856` moved to `status/pr-open` through
-   Core PR #858. #683 and #684 remain
+   blockers after fresh canonical validation reopened `sgajbi/lotus-core#836`
+   as `status/in-progress`. #683 and #684 remain
    prerequisite-gated and must not carry `status/ready`; #691, #692, and #699 remain blocked rather
    than QA-pending because their merged implementation tranches preserve only
    bounded Render/Archive, mesh-readiness, and proof-control evidence;
@@ -1118,7 +1118,7 @@ commit `f0f9293` with strict `DiffCount 0`. Current source truth after the
 complete, and 37 open across 13 repositories after
 `sgajbi/lotus-manage#626` closed with
 `status/merged-main`. The refreshed dependency handoff is anchored on
-`sgajbi/lotus-core#836`, `sgajbi/lotus-core#840`, `sgajbi/lotus-core#856`,
+`sgajbi/lotus-core#836`, `sgajbi/lotus-core#840`,
 `sgajbi/lotus-workbench#500`, #685, and #686, while
 `sgajbi/lotus-manage#626` records the closed Manage PR #627 tax-lot identity fix on
 main `5ba2757c1235ce3e28c630afd44257327c91edf3` with Main Releasability
@@ -1126,21 +1126,25 @@ main `5ba2757c1235ce3e28c630afd44257327c91edf3` with Main Releasability
 Workbench PR #505 additionally records
 merged BFF principal-boundary hardening while preserving production
 IdP/session/token-claims and canonical browser proof blockers. #814 is now
-blocked by Core #856 after Idea PR #815, Workbench PR #515, and Workbench PR
-#516 merged; the original authorization and Workbench validator defects are no
-longer the active failure path. It remains open until Core readiness converges
-and fresh full canonical validation produces mainline capacity-seed evidence.
+blocked by reopened Core #836 after Idea PR #815, Workbench PR #515, and
+Workbench PR #516 merged; the original authorization and Workbench validator
+defects are no longer the active failure path. The latest canonical rerun
+drained valuation and aggregation queues and reached current Core/Gateway dates,
+but Core positions data quality remained `UNKNOWN`. It remains open until Core
+readiness converges and fresh full canonical validation produces mainline
+capacity-seed evidence.
 PR #819 then reached Idea main
-`3b2cc0bb4472a158cb4617b277276244c0e4a22b` with the #380 Core-blocker
-reference synchronized to `sgajbi/lotus-core#856`. Main Releasability
+`3b2cc0bb4472a158cb4617b277276244c0e4a22b` with the then-current #380
+Core-blocker reference synchronized to `sgajbi/lotus-core#856`. Main Releasability
 `30555536256` and CodeQL `30555528134` passed for that exact SHA; wiki source
 did not change in that tranche and strict parity stayed `DiffCount 0`. Current
 governed posture remains 54 tracked Idea RFC-0002 issues, 25 open, and 29
 closed; cross-repo RFC-0002 posture remains 93 label-backed issues, 37 open,
-and 56 closed, split into 27 blocked, 1 in-progress, 1 PR-open, and 8 tracker
-issues. The blocked subset remains 27 blocked issues, 0 app-actionable blocked
-issues, 4 Core dependencies, and 23 external/protected-evidence blockers after
-`sgajbi/lotus-core#856` moved to `status/pr-open` through Core PR #858.
+and 56 closed, split into 27 blocked, 2 in-progress, and 8 tracker issues. The
+blocked subset remains 27 blocked issues, 0 app-actionable blocked issues, 4
+Core dependencies, and 23 external/protected-evidence blockers after fresh
+canonical validation reopened `sgajbi/lotus-core#836` as the active Core
+positions data-quality metadata blocker.
 
 The 2026-07-31 writable-dependency audit keeps that posture intact. Current-main
 focused validation passed in the owning repositories for platform

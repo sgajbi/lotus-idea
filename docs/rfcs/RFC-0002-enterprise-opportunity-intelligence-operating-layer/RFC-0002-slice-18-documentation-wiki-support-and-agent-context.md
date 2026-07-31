@@ -539,14 +539,10 @@ image scan, release identity/license evidence binding, and CI signal evidence.
 Live Idea RFC-0002 ledger posture is 54 tracked issues, 25 open, and 29
 closed. Live governed cross-repo posture is 93 label-backed tracked issues, 56 closed, and
 37 open across 13 repositories after #814 moved from PR-open to Core-blocked
-posture and `sgajbi/lotus-core#856` was opened for canonical capacity-seed
-readiness. After
-`sgajbi/lotus-core#836`
-and `sgajbi/lotus-core#840` moved from `status/blocked` to
-`status/in-progress`, and `sgajbi/lotus-manage#626` closed with
-`status/merged-main`, and `sgajbi/lotus-core#856` moved to
-`status/pr-open` through Core PR #858, current open posture is 27 blocked
-issues, 1 in-progress issue, 1 PR-open issue, and 8 tracker issues. The blocked
+posture. After fresh canonical validation reopened `sgajbi/lotus-core#836` as
+`status/in-progress`, `sgajbi/lotus-core#840` remained `status/in-progress`,
+and `sgajbi/lotus-manage#626` closed with `status/merged-main`, current open
+posture is 27 blocked issues, 2 in-progress issues, and 8 tracker issues. The blocked
 posture remains 27 blocked issues, 0 app-actionable blocked issues, 4 Core
 dependencies, and 23
 external/protected-evidence blockers. #683 and #684 are
@@ -556,7 +552,7 @@ evidence still preserves `sgajbi/lotus-manage#624`
 and the other blocked production/certification dependencies; it is not Slice 18
 completion evidence and does not certify
 production vulnerability posture or production IdP/session/token-claims
-principal proof. #814 also remains open until Core #856 is resolved and fresh
+principal proof. #814 also remains open until Core #836 is resolved and fresh
 full canonical validation produces mainline capacity-seed evidence; it does not
 implement production authentication or promote supported features.
 
@@ -647,7 +643,7 @@ Core/Workbench handoff posture to exact main
 `DiffCount 0`; current source truth now records 54 tracked RFC-0002
 issues, 29 closed complete, 25 open, no `open_merged_main_qa_pending`, 1
 `open_in_progress`, no `open_pr_raised`, and 14 `open_blocked` issues. #681 is
-active after #817 reached main and #814 is blocked by `sgajbi/lotus-core#856`. #807 is
+active after #817 reached main and #814 is blocked by reopened `sgajbi/lotus-core#836`. #807 is
 closed complete for repository-owned runtime-image remediation only; no
 production vulnerability certification, registry promotion, protected
 deployment, supported-feature promotion, or full Slice 15 closure is claimed.
@@ -668,14 +664,15 @@ failed in the DPM command-center action-register seed because
 `sgajbi/lotus-workbench#500`, #685, and #686. Fresh Gateway/BFF-backed
 Workbench queue/detail
 runtime evidence remains required before #685 can move to merged-main QA.
-PR #819 synchronized the #380 Core-blocker reference to `sgajbi/lotus-core#856`
+PR #819 synchronized the #380 Core-blocker reference to then-current `sgajbi/lotus-core#856`
 on Idea main `3b2cc0bb4472a158cb4617b277276244c0e4a22b`; exact-main Main
 Releasability `30555536256` and CodeQL `30555528134` passed for that SHA.
 Wiki source did not change in PR #819, strict parity stayed `DiffCount 0`, and
 remote/local branch cleanup completed after patch-equivalence proof. This is
-Slice 18 source-truth synchronization only: #681 and #380 stay open, Core #856
-continues to block canonical proof, and supported-feature promotion remains
-unclaimed.
+Slice 18 source-truth synchronization only: #681 and #380 stay open. Fresh
+canonical validation after Core PR #858 reopened Core #836 because positions
+data quality remained `UNKNOWN` despite ready/current Core diagnostics, and
+supported-feature promotion remains unclaimed.
 
 The 2026-07-31 dependency audit then verified current-main source-side posture
 for the writable cross-repo blockers without finding hidden app-actionable
