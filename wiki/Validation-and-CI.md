@@ -1156,6 +1156,18 @@ upload. Repo-authored wiki source was published to `lotus-idea.wiki` commit
 with no unmerged remote branches. This is Slice 18 source-truth synchronization
 only; #681 and the remaining blocker issues stay open.
 
+PR #825 then synchronized PR #824 merged-main evidence to Idea main
+`8e76736148e9cd2078a1adfd692884da7d78a95f`. PR Merge Gate `30621485539`,
+post-merge Main Releasability `30621899968`, and post-merge CodeQL
+`30621893764` passed. Repo-authored wiki source was published to
+`lotus-idea.wiki` commit `eefd44a` with strict `DiffCount 0`; the remote PR
+branch was deleted, the local feature branch was deleted after exact
+tree-equivalence verification, the local branch list contained only `main`, and
+no unmerged remote branches remained. This is Slice 18 source-truth
+synchronization only; #681 remains open and no Core readiness, canonical browser
+proof, production identity/session-token authority, supported-feature
+promotion, client-publication, or final RFC-0002 closure is claimed.
+
 The 2026-07-31 writable-dependency audit keeps that posture intact. Current-main
 focused validation passed in the owning repositories for platform
 cost-attribution and BFF principal-session source contracts, lotus-ai Idea

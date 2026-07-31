@@ -687,6 +687,21 @@ RFC-0002 issues, 56 closed, and 37 open: 27 blocked, 2 in-progress, 8 tracker,
 evidence blockers. This is Slice 18 source-truth synchronization only; #681 and
 the remaining blocker issues stay open.
 
+PR #825 then synchronized PR #824 merged-main evidence through Idea main
+`8e76736148e9cd2078a1adfd692884da7d78a95f`. PR Merge Gate `30621485539`,
+post-merge Main Releasability `30621899968`, and post-merge CodeQL
+`30621893764` passed. Repo-authored wiki source was published to
+`lotus-idea.wiki` commit `eefd44a` with strict `DiffCount 0`; the remote PR
+branch was deleted, the local feature branch was deleted after exact
+tree-equivalence verification, the local branch list contained only `main`, and
+no unmerged remote branches remained. The governed posture remains 93
+label-backed RFC-0002 issues, 56 closed, and 37 open: 27 blocked, 2
+in-progress, 8 tracker, 0 app-actionable blocked, 4 Core dependencies, and 23
+external/protected evidence blockers. This is Slice 18 source-truth
+synchronization only; #681 remains open and no blocker issue, supported feature,
+client-publication claim, production identity/session-token authority, canonical
+browser proof, or final RFC-0002 closure is promoted.
+
 The 2026-07-31 dependency audit then verified current-main source-side posture
 for the writable cross-repo blockers without finding hidden app-actionable
 blocked work. Durable evidence comments were posted on `sgajbi/lotus-platform#495`,

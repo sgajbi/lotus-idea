@@ -1429,6 +1429,19 @@ Slice 18 source-truth synchronization only; #681, Core readiness, canonical
 Workbench/browser proof, production identity/session-token authority,
 supported-feature promotion, and final RFC-0002 closure remain open.
 
+PR #825 then synchronized PR #824 merged-main evidence into source truth on Idea
+main `8e76736148e9cd2078a1adfd692884da7d78a95f`. PR Merge Gate
+`30621485539`, post-merge Main Releasability `30621899968`, and post-merge
+CodeQL `30621893764` passed. Repo-authored wiki source was published to
+`lotus-idea.wiki` commit `eefd44a` with strict `DiffCount 0`; the remote PR
+branch was deleted, the local feature branch was deleted after exact
+tree-equivalence verification, the local branch list contained only `main`, and
+no unmerged remote branches remained. Current governed RFC-0002 posture stays
+93 label-backed issues, 56 closed, and 37 open. This is Slice 18
+source-truth synchronization only; #681 remains open and no Core readiness,
+canonical browser, production identity/session-token, supported-feature,
+client-publication, or final RFC-0002 closure claim is made.
+
 The 2026-07-31 writable-dependency audit is now source-synchronized in the
 RFC-0002 execution ledger after durable GitHub comments were posted on
 `sgajbi/lotus-platform#495`, `sgajbi/lotus-platform#563`,
