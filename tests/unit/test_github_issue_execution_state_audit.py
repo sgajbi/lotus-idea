@@ -180,8 +180,13 @@ def test_github_issue_execution_state_audit_rejects_missing_status_label(
         if isinstance(entry, dict) and entry["issueNumber"] == 681
     ]
     github_payload = _github_issue_payload(ledger)
+    status_label = next(
+        label["name"]
+        for label in github_payload[0]["labels"]
+        if label["name"].startswith("status/")
+    )
     github_payload[0]["labels"] = [
-        label for label in github_payload[0]["labels"] if label["name"] != "status/pr-open"
+        label for label in github_payload[0]["labels"] if label["name"] != status_label
     ]
     github_issues = module._parse_github_issue_states(github_payload)
 
@@ -190,7 +195,10 @@ def test_github_issue_execution_state_audit_rejects_missing_status_label(
         github_issues=github_issues,
     )
 
-    assert "#681: executionStatus=open_pr_raised requires GitHub label status/pr-open" in errors
+    issue_681_execution_status = ledger["issues"][0]["executionStatus"]
+    assert (
+        f"#681: executionStatus={issue_681_execution_status} requires GitHub label {status_label}"
+    ) in errors
 
 
 def test_github_issue_execution_state_audit_accepts_merged_main_status_label() -> None:

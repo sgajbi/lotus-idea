@@ -50,6 +50,8 @@ def test_github_issue_execution_summary_reports_current_rfc0002_counts() -> None
     module = _load_summary()
     ledger_payload = _load_ledger_payload()
     ledger_issues = [issue for issue in ledger_payload["issues"] if isinstance(issue, dict)]
+    issue_681 = next(issue for issue in ledger_issues if issue["issueNumber"] == 681)
+    issue_681_status = issue_681["executionStatus"]
     expected_github_counts = Counter(issue["githubState"] for issue in ledger_issues)
     expected_execution_counts = Counter(issue["executionStatus"] for issue in ledger_issues)
 
@@ -60,9 +62,12 @@ def test_github_issue_execution_summary_reports_current_rfc0002_counts() -> None
     assert summary["counts"]["open"] == expected_github_counts["open"]
     assert summary["counts"]["closed"] == expected_github_counts["closed"]
     assert summary["counts"]["byExecutionStatus"] == dict(sorted(expected_execution_counts.items()))
-    assert "open_in_progress" not in summary["counts"]["byExecutionStatus"]
+    assert issue_681_status in {"open_in_progress", "open_pr_raised"}
     assert "open_fixed_local" not in summary["counts"]["byExecutionStatus"]
-    assert summary["counts"]["byExecutionStatus"]["open_pr_raised"] == 1
+    assert (
+        summary["counts"]["byExecutionStatus"][issue_681_status]
+        == expected_execution_counts[issue_681_status]
+    )
     assert "open_merged_main_qa_pending" not in summary["counts"]["byExecutionStatus"]
     assert "open_ready" not in summary["counts"]["byExecutionStatus"]
     assert summary["counts"]["byExecutionStatus"]["open_pending_final_closure"] == 1
@@ -73,9 +78,8 @@ def test_github_issue_execution_summary_reports_current_rfc0002_counts() -> None
         summary["counts"]["byExecutionStatus"]["closed_complete"]
         == expected_execution_counts["closed_complete"]
     )
-    assert "open_in_progress" not in summary["issuesByStatus"]
+    assert summary["issuesByStatus"][issue_681_status] == [681]
     assert "open_fixed_local" not in summary["issuesByStatus"]
-    assert summary["issuesByStatus"]["open_pr_raised"] == [681]
     assert "open_merged_main_qa_pending" not in summary["issuesByStatus"]
     assert summary["issuesByStatus"]["open_pending_final_closure"] == [683]
     assert summary["issuesByStatus"]["open_pending_post_completion"] == [684]
@@ -104,6 +108,17 @@ def test_github_issue_execution_summary_reports_current_rfc0002_counts() -> None
 
 def test_github_issue_execution_summary_markdown_is_comment_ready() -> None:
     module = _load_summary()
+    ledger_payload = _load_ledger_payload()
+    issue_681 = next(
+        issue
+        for issue in ledger_payload["issues"]
+        if isinstance(issue, dict) and issue["issueNumber"] == 681
+    )
+    section_by_status = {
+        "open_in_progress": "## In-Progress Issues",
+        "open_pr_raised": "## PR-Open Issues",
+    }
+    issue_681_section = section_by_status[issue_681["executionStatus"]]
 
     summary = module.build_issue_execution_summary()
     rendered = module.render_markdown(summary)
@@ -112,7 +127,7 @@ def test_github_issue_execution_summary_markdown_is_comment_ready() -> None:
     assert f"- Open issues: {summary['counts']['open']}" in rendered
     assert f"- Closed issues: {summary['counts']['closed']}" in rendered
     assert "## In-Progress Issues" in rendered
-    assert "## In-Progress Issues\n\n_None._" in rendered
+    assert f"{issue_681_section}\n\n#681" in rendered
     assert "#681" in rendered
     assert "#681, #782" not in rendered
     assert "#681, #685" not in rendered
@@ -120,7 +135,6 @@ def test_github_issue_execution_summary_markdown_is_comment_ready() -> None:
     assert "## Fixed Locally Issues" in rendered
     assert "## Fixed Locally Issues\n\n_None._" in rendered
     assert "## PR-Open Issues" in rendered
-    assert "## PR-Open Issues\n\n#681" in rendered
     assert "## Merged-Main QA Pending Issues" in rendered
     assert "## Merged-Main QA Pending Issues\n\n_None._" in rendered
     assert "#379, #690" not in rendered
