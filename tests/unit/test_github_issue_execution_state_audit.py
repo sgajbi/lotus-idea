@@ -181,7 +181,7 @@ def test_github_issue_execution_state_audit_rejects_missing_status_label(
     ]
     github_payload = _github_issue_payload(ledger)
     github_payload[0]["labels"] = [
-        label for label in github_payload[0]["labels"] if label["name"] != "status/in-progress"
+        label for label in github_payload[0]["labels"] if label["name"] != "status/pr-open"
     ]
     github_issues = module._parse_github_issue_states(github_payload)
 
@@ -191,7 +191,7 @@ def test_github_issue_execution_state_audit_rejects_missing_status_label(
     )
 
     assert (
-        "#681: executionStatus=open_in_progress requires GitHub label status/in-progress" in errors
+        "#681: executionStatus=open_pr_raised requires GitHub label status/pr-open" in errors
     )
 
 
