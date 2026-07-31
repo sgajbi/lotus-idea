@@ -198,6 +198,13 @@
       "actionability": "core_dependency",
       "blockerClass": "canonical_browser_validation_core_readiness",
       "remainingAuthority": "Core-owned PB_SG_GLOBAL_BAL_001 seed readiness convergence before final canonical browser proof"
+    },
+    {
+      "repository": "sgajbi/lotus-core",
+      "issueNumber": 873,
+      "actionability": "core_dependency",
+      "blockerClass": "canonical_front_office_in_window_aggregation_readiness",
+      "remainingAuthority": "Core-owned claim, supersession, processing, or readiness semantics for in-window PB_SG_GLOBAL_BAL_001 portfolio aggregation jobs that remain PENDING and unleased after canonical data quality and as-of dates converge"
     }
   ]
 }
