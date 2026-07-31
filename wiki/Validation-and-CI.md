@@ -1168,6 +1168,19 @@ synchronization only; #681 remains open and no Core readiness, canonical browser
 proof, production identity/session-token authority, supported-feature
 promotion, client-publication, or final RFC-0002 closure is claimed.
 
+PR #826 then synchronized PR #825 source truth to Idea main
+`6fd8159495ca3a7294ade2d819c80ea6aaa350fd`. PR Merge Gate `30623781720`,
+Feature Lane `30623778382`, CodeQL `30624121200`, and exact-main Main
+Releasability `30624125739` passed. Repo-authored wiki source was published to
+`lotus-idea.wiki` commit `272f7cf` with strict `DiffCount 0`; remote branch
+cleanup completed, the local feature branch was absent after fetch/prune, the
+local branch list contained only `main`, and no unmerged remote branches
+remained. #681 returned to `open_in_progress` because Slice 18 remains a
+continuing synchronization issue. This is merged-main evidence synchronization
+only; no Core readiness, canonical browser proof, production identity/session
+authority, supported-feature promotion, client-publication, or final RFC-0002
+closure is claimed.
+
 The 2026-07-31 writable-dependency audit keeps that posture intact. Current-main
 focused validation passed in the owning repositories for platform
 cost-attribution and BFF principal-session source contracts, lotus-ai Idea

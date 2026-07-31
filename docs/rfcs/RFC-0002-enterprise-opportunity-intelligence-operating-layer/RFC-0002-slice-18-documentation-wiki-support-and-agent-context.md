@@ -702,6 +702,19 @@ synchronization only; #681 remains open and no blocker issue, supported feature,
 client-publication claim, production identity/session-token authority, canonical
 browser proof, or final RFC-0002 closure is promoted.
 
+PR #826 then synchronized that PR #825 evidence through Idea main
+`6fd8159495ca3a7294ade2d819c80ea6aaa350fd`. PR Merge Gate `30623781720`,
+Feature Lane `30623778382`, CodeQL `30624121200`, and exact-main Main
+Releasability `30624125739` passed. Repo-authored wiki source was published to
+`lotus-idea.wiki` commit `272f7cf` with strict `DiffCount 0`; remote branch
+cleanup completed, the local feature branch was absent after fetch/prune, the
+local branch list contained only `main`, and no unmerged remote branches
+remained. #681 returned to `open_in_progress` because Slice 18 remains a
+continuing synchronization issue. This is merged-main evidence synchronization
+only; the remaining RFC-0002 blockers, supported-feature promotion,
+client-publication, production identity/session-token authority, canonical
+browser proof, and final RFC-0002 closure remain open.
+
 The 2026-07-31 dependency audit then verified current-main source-side posture
 for the writable cross-repo blockers without finding hidden app-actionable
 blocked work. Durable evidence comments were posted on `sgajbi/lotus-platform#495`,
