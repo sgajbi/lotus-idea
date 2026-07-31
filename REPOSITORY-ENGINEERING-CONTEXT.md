@@ -1523,6 +1523,13 @@ execution ledger and this pattern ledger together. The pattern ledger does not
 close issues or clear blockers; it prevents the same defect family from being
 handled only as a one-off chat-memory fix.
 
+For partial RFC-0002 PRs that keep issues open, validate the exact PR title/body
+artifact before creation when the text is drafted outside GitHub Actions. Use
+`scripts/github_issue_pr_text_gate.py --title-file <path>` or `--title <text>`
+with `--body-file <path>` so local evidence checks the same Markdown body that
+will reach GitHub. The gate rejects ambiguous mixed sources and keep-open issue
+references combined with GitHub auto-close wording.
+
 ## Observability And Operability
 
 Operation events are the primary supportability surface. They must stay

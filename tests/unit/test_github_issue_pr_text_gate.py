@@ -5,6 +5,8 @@ import sys
 from pathlib import Path
 from types import ModuleType
 
+from _pytest.capture import CaptureFixture
+
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -114,3 +116,53 @@ def test_github_issue_pr_text_gate_ignores_closed_issue_completion_text() -> Non
     )
 
     assert errors == []
+
+
+def test_github_issue_pr_text_gate_reads_exact_pr_body_file(
+    tmp_path: Path,
+    capsys: CaptureFixture[str],
+) -> None:
+    module = _load_gate()
+    body_file = tmp_path / "pr-body.md"
+    body_file.write_text(
+        "Keep #681 open.\n\nThis fixes nothing; it only records partial Slice 18 evidence.",
+        encoding="utf-8",
+    )
+
+    exit_code = module.main(
+        [
+            "--title",
+            "Record Slice 18 evidence",
+            "--body-file",
+            str(body_file),
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert exit_code == 1
+    assert "PR text references keep-open RFC-0002 issue(s) #681" in captured.out
+    assert "GitHub auto-close keyword(s) `fixes`" in captured.out
+
+
+def test_github_issue_pr_text_gate_rejects_multiple_body_sources(
+    tmp_path: Path,
+    capsys: CaptureFixture[str],
+) -> None:
+    module = _load_gate()
+    body_file = tmp_path / "pr-body.md"
+    body_file.write_text("Keep #681 open.", encoding="utf-8")
+
+    exit_code = module.main(
+        [
+            "--title",
+            "Record Slice 18 evidence",
+            "--body",
+            "Keep #681 open.",
+            "--body-file",
+            str(body_file),
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert exit_code == 1
+    assert "body text must be provided by only one source; received inline, file" in captured.out

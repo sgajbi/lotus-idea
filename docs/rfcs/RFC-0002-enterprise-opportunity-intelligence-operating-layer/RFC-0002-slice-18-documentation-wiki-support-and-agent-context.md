@@ -108,7 +108,10 @@ documentation across opportunity signal APIs.
     RFC-0002 execution issue must belong to a durable learning cluster with
     control refs, future-agent guidance, and no-claim boundaries, so repeated
     GitHub issue patterns are handled before the next slice rather than being
-    kept in chat memory.
+    kept in chat memory. Partial PR text can now be validated from exact
+    `--title-file` and `--body-file` artifacts before PR creation, preventing
+    saved PR Markdown from bypassing the local keep-open/auto-close wording
+    gate.
 11. The caller-context contract gate now scans nested API route modules under
     `src/app/api/**`, not only top-level API files. This promotes the #686
     same-pattern lesson into deterministic enforcement: future route packages
