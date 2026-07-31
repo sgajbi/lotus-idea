@@ -640,10 +640,12 @@ exact main `c340daa01b41097410bbc8a802d9a8d1f9f24135` with Main Releasability
 Core/Workbench handoff posture to exact main
 `fe7f0efac9fca86a3e19302e8b8436e8941f3d0c` with Main Releasability
 `30500588217` passing and repo-authored wiki publication `f0f9293` at strict
-`DiffCount 0`; current source truth now records 54 tracked RFC-0002
-issues, 29 closed complete, 25 open, no `open_merged_main_qa_pending`, 1
-`open_in_progress`, no `open_pr_raised`, and 14 `open_blocked` issues. #681 is
-active after #817 reached main and #814 is blocked by reopened `sgajbi/lotus-core#836`. #807 is
+`DiffCount 0`; after the PR #828/#829 evidence-sync cycle, current source truth
+records 54 tracked RFC-0002 issues, 29 closed complete, 25 open, no
+`open_merged_main_qa_pending`, 1 `open_in_progress`, no `open_pr_raised`, and
+14 `open_blocked` issues. #681 is active after PR #829 reached exact main
+`b9793a6e119a7510cd8aa881ad37abefe3612a81`, and #814 is currently blocked by
+Core in-window aggregation readiness issue `sgajbi/lotus-core#873`. #807 is
 closed complete for repository-owned runtime-image remediation only; no
 production vulnerability certification, registry promotion, protected
 deployment, supported-feature promotion, or full Slice 15 closure is claimed.
@@ -714,6 +716,33 @@ continuing synchronization issue. This is merged-main evidence synchronization
 only; the remaining RFC-0002 blockers, supported-feature promotion,
 client-publication, production identity/session-token authority, canonical
 browser proof, and final RFC-0002 closure remain open.
+
+PR #828 then synchronized the Render/Core validation handoff through Idea main
+`82884cf8953ebcd2a33d42a6f1159ec9f4328421`. Render PR #69 had merged the local
+host allowlist fix to Render main `034b085f0e208f1a322eaaea12edb2f00f009ba6`
+with Main Releasability `30642955519` and wiki publication `ededc37` at strict
+`DiffCount 0`. The follow-on canonical Workbench validation advanced beyond
+Render readiness, Core instrument persistence, valuation queue drain, and
+positions/cash data-quality convergence, then blocked in Core on two in-window
+unleased `PENDING` aggregation jobs for `PB_SG_GLOBAL_BAL_001`; the current
+Core blocker is `sgajbi/lotus-core#873`. PR #828 reached exact Idea main after
+PR Merge Gate `30646651549`, Feature Lane `30646648800`, CodeQL `91209723012`,
+Queue Auto Merge `30646652878`, and Main Releasability `30647077649` passed. No
+repo-authored wiki source changed and branch cleanup completed.
+
+PR #829 then synchronized PR #828 merged-main evidence and the continuing #681
+execution posture through Idea main `b9793a6e119a7510cd8aa881ad37abefe3612a81`.
+Exact-main Main Releasability `30648791483` passed for that SHA, including
+workflow lint, lint/typecheck/security, PostgreSQL runtime proof, unit,
+integration, e2e, combined coverage, Docker build validation, and CI signal
+evidence. Repo-authored wiki source did not change in PR #829, so no wiki
+publication was required. Local `main` tracked `origin/main`, no open PRs
+remained, no extra worktrees or feature branches remained, and no remote
+branches were unmerged into `origin/main`. This is source-truth synchronization
+only; #681 stays open and RFC-0002 still does not claim Core readiness,
+canonical browser proof, client publication, supported-feature promotion,
+production identity/session-token authority, protected runtime certification,
+or final closure.
 
 The 2026-07-31 dependency audit then verified current-main source-side posture
 for the writable cross-repo blockers without finding hidden app-actionable
