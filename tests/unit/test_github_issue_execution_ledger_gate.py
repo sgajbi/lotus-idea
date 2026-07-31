@@ -513,9 +513,11 @@ def test_rfc0002_github_issue_execution_ledger_tracks_current_issue_380_core_blo
 
     assert issue_380["githubState"] == "open"
     assert issue_380["executionStatus"] == "open_blocked"
-    assert "sgajbi/lotus-core#856" in issue_380["closureInstruction"]
+    assert "reopened sgajbi/lotus-core#836" in issue_380["closureInstruction"]
     assert "sgajbi/lotus-core#795" not in issue_380["closureInstruction"]
-    assert "future-dated Core aggregation jobs" in issue_380["closureInstruction"]
+    assert "positions data quality UNKNOWN" in issue_380["closureInstruction"]
+    assert "drained valuation and aggregation queues" in issue_380["closureInstruction"]
+    assert "current Core/Gateway dates for 2026-04-10" in issue_380["closureInstruction"]
     assert "foundation_only with zero promoted features" in issue_380["closureInstruction"]
 
 
@@ -863,10 +865,17 @@ def test_rfc0002_github_issue_execution_ledger_tracks_capacity_seed_authorizatio
     assert "Workbench PR #516" in issue_814["closureInstruction"]
     assert "1787da79fb4abaf574ebe4ebc3f8b4d5fed7bdac" in issue_814["closureInstruction"]
     assert "30543504302" in issue_814["closureInstruction"]
-    assert "sgajbi/lotus-core#856" in issue_814["closureInstruction"]
+    assert "sgajbi/lotus-core#836" in issue_814["closureInstruction"]
+    assert "holdings_status=READY" in issue_814["closureInstruction"]
+    assert "pricing_status=READY" in issue_814["closureInstruction"]
+    assert "transactions_status=READY" in issue_814["closureInstruction"]
+    assert "reporting_status=READY" in issue_814["closureInstruction"]
+    assert "blocking_reason_codes=[]" in issue_814["closureInstruction"]
+    assert "pending_aggregation_jobs=0" in issue_814["closureInstruction"]
+    assert "aggregation_jobs.statuses=[COMPLETE]" in issue_814["closureInstruction"]
     assert "positions_data_quality_status=UNKNOWN" in issue_814["closureInstruction"]
-    assert "2026-04-17" in issue_814["closureInstruction"]
-    assert "2026-04-30" in issue_814["closureInstruction"]
+    assert "2026-04-17" not in issue_814["closureInstruction"]
+    assert "2026-04-30" not in issue_814["closureInstruction"]
     assert "does not implement production authentication" in issue_814["closureInstruction"]
     assert "supported-feature promotion" in issue_814["closureInstruction"]
 

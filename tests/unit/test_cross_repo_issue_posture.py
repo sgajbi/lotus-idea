@@ -432,8 +432,9 @@ def test_default_blocker_classification_tracks_issue_814_core_capacity_blocker()
             "actionability": "core_dependency",
             "blockerClass": "canonical_idea_capacity_seed_core_readiness",
             "remainingAuthority": (
-                "Core-owned PB_SG_GLOBAL_BAL_001 readiness convergence for "
-                "canonical capacity-seed validation, tracked by sgajbi/lotus-core#856"
+                "Core-owned PB_SG_GLOBAL_BAL_001 positions data-quality metadata "
+                "convergence for canonical capacity-seed validation, tracked by "
+                "reopened sgajbi/lotus-core#836"
             ),
         }
     ]
