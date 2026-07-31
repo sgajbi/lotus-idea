@@ -190,9 +190,7 @@ def test_github_issue_execution_state_audit_rejects_missing_status_label(
         github_issues=github_issues,
     )
 
-    assert (
-        "#681: executionStatus=open_pr_raised requires GitHub label status/pr-open" in errors
-    )
+    assert "#681: executionStatus=open_pr_raised requires GitHub label status/pr-open" in errors
 
 
 def test_github_issue_execution_state_audit_accepts_merged_main_status_label() -> None:
