@@ -118,10 +118,12 @@ Releasability `30499444726` passing, and PR #810 synchronized PR #809 main
 evidence plus Core handoff posture to exact main
 `fe7f0efac9fca86a3e19302e8b8436e8941f3d0c` with Main Releasability
 `30500588217` passing. After the PR #828 through PR #831 evidence-sync and
-issue-execution prevention cycle, the current live cross-repo RFC-0002 posture
-is 106 label-backed issues across 13 repositories: 59 closed and 47 open. The
-open set is 28 blocked issues, 10 open merged-main/merged-to-main QA-pending
-items, no PR-open issues, 1 in-progress issue (#681), and 8 tracker issues.
+issue-execution prevention cycle plus QA closure of the already merged-main
+Advise, Gateway, Workbench, and AI dependency issues, the current live
+cross-repo RFC-0002 posture is 106 label-backed issues across 13 repositories:
+69 closed and 37 open. The open set is 28 blocked issues, no
+merged-main/merged-to-main QA-pending items, no PR-open issues, 1 in-progress
+issue (#681), and 8 tracker issues.
 #681 returned to `status/in-progress` after PR #834 merged source truth for
 Core DPM candidate-source batch-fingerprint issue `sgajbi/lotus-core#882`
 after earlier Core readiness blockers `#836`, `#840`, `#856`, and `#873`
