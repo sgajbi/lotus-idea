@@ -755,8 +755,8 @@ merged the file-backed PR title/body validation guard to Idea main
 Releasability `30652543470` passed, and the earlier duplicate-dispatch runs
 `30652453290` and `30652462394` are explicitly non-certifying cancelled runs.
 The 2026-08-02 live blocker and CI audit reports 106 label-backed RFC-0002
-issues across 13 repositories, with 58 closed and 48 open. The open set is 28
-blocked, 1 PR-open (#681 / PR #834), 1 in-progress, 8 tracker, and 10 open
+issues across 13 repositories, with 59 closed and 47 open. The open set is 28
+blocked, no PR-open issues, 1 in-progress issue (#681), 8 tracker, and 10 open
 merged-main/merged-to-main QA-pending issues. The
 blocked-actionability classifier remains at 0 app-actionable blocked issues,
 split into 5 Core dependencies and 23 external/protected evidence blockers.

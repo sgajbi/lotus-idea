@@ -119,13 +119,13 @@ evidence plus Core handoff posture to exact main
 `fe7f0efac9fca86a3e19302e8b8436e8941f3d0c` with Main Releasability
 `30500588217` passing. After the PR #828 through PR #831 evidence-sync and
 issue-execution prevention cycle, the current live cross-repo RFC-0002 posture
-is 106 label-backed issues across 13 repositories: 58 closed and 48 open. The
+is 106 label-backed issues across 13 repositories: 59 closed and 47 open. The
 open set is 28 blocked issues, 10 open merged-main/merged-to-main QA-pending
-items, 1 PR-open issue (#681 / PR #834), 1 in-progress issue, and 8 tracker
-issues. #681 is currently `status/pr-open` while PR #834 reconciles source
-truth after PR #833 reached main for Core DPM candidate-source batch-fingerprint issue
-`sgajbi/lotus-core#882` after earlier Core readiness blockers `#836`, `#840`,
-`#856`, and `#873` closed. PR #831
+items, no PR-open issues, 1 in-progress issue (#681), and 8 tracker issues.
+#681 returned to `status/in-progress` after PR #834 merged source truth for
+Core DPM candidate-source batch-fingerprint issue `sgajbi/lotus-core#882`
+after earlier Core readiness blockers `#836`, `#840`, `#856`, and `#873`
+closed. PR #831
 also makes saved partial RFC-0002 PR title/body validation file-backed so
 future keep-open PRs can prove the exact GitHub text before creation. #807 does not
 certify production vulnerability posture, registry promotion, protected
