@@ -1,7 +1,7 @@
 {
   "schemaVersion": "lotus-idea:rfc0002-cross-repo-blocker-classification:v1",
   "rfcId": "RFC-0002",
-  "asOfDate": "2026-08-01",
+  "asOfDate": "2026-08-02",
   "repository": "sgajbi/lotus-idea",
   "purpose": "Classify live RFC-0002 status/blocked issues by actionability so blocked posture means external, Core-owned, protected-environment, IdP, provider, legal/privacy, or certification evidence rather than hidden app-code work.",
   "policy": {
@@ -165,6 +165,13 @@
       "remainingAuthority": "Core-owned deterministic non-empty source_batch_fingerprint/content_hash on DpmPortfolioUniverseCandidate:v1 READY responses so Manage, Gateway, and Workbench canonical validation can preserve source-ref authority without fabricating hashes downstream"
     },
     {
+      "repository": "sgajbi/lotus-core",
+      "issueNumber": 885,
+      "actionability": "core_dependency",
+      "blockerClass": "core_domain_product_request_scope_semantics",
+      "remainingAuthority": "Core-owned domain-product request-scope declaration repair for HoldingsAsOf and IngestionEvidenceBundle so platform and Idea data-product trust telemetry do not consume contradictory route, identifier, and bulk-support semantics"
+    },
+    {
       "repository": "sgajbi/lotus-platform",
       "issueNumber": 495,
       "actionability": "external_or_protected_evidence",
@@ -198,13 +205,6 @@
       "actionability": "external_or_protected_evidence",
       "blockerClass": "production_identity_contract",
       "remainingAuthority": "production Workbench BFF principal resolution from IdP-backed session/token claims, revocation/session-expiry handling, entitlement-denied proof, and canonical browser certification after browser-supplied authority stripping is merged"
-    },
-    {
-      "repository": "sgajbi/lotus-workbench",
-      "issueNumber": 500,
-      "actionability": "core_dependency",
-      "blockerClass": "canonical_browser_validation_core_readiness",
-      "remainingAuthority": "Core-owned DPM portfolio-universe candidate source-batch fingerprint publication for PB_SG_GLOBAL_BAL_001 before final canonical browser proof, tracked by sgajbi/lotus-core#882"
     }
   ]
 }
