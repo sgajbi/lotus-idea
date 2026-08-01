@@ -1568,18 +1568,18 @@ supported feature.
 
 RFC-0002 execution is tracked through GitHub issue state plus the
 source-controlled implementation-proof ledgers. The current governed posture is
-94 label-backed RFC-0002 issues: 57 closed and 37 open. The open set is 27
-blocked issues, 8 tracker issues, and 2 in-progress issues (`#681` and
-`sgajbi/lotus-core#873`).
+106 label-backed RFC-0002 issues across 13 repositories: 58 closed and 48 open.
+The open set is 28 blocked issues, 10 PR-open issues, 8 tracker issues, and 2
+in-progress issues.
 
 The blocked-actionability classifier reports 0 app-actionable blocked issues.
-The blocked set is currently 4 Core dependencies and 23 external/protected
-evidence blockers after Core #873 moved to active implementation. The canonical
-Workbench/Idea live proof path is still blocked by `sgajbi/lotus-core#873`
-until Core merges a fix and fresh canonical validation passes; source-side
-Workbench action-control tests do not replace full-stack machine-readable
-validation output, screenshot/index evidence, or final supported-feature
-promotion proof.
+The blocked set is currently 5 Core dependencies and 23 external/protected
+evidence blockers. The canonical Workbench/Idea live proof path is now blocked
+by `sgajbi/lotus-core#882`, which owns the missing deterministic
+`source_batch_fingerprint` / content hash for
+`DpmPortfolioUniverseCandidate:v1` READY responses. Source-side Workbench
+action-control tests do not replace full-stack machine-readable validation
+output, screenshot/index evidence, or final supported-feature promotion proof.
 
 Platform protected-lane queue hygiene is separate from protected evidence. The
 stale queued Platform End-to-End Validation run `30603744637` was recorded on

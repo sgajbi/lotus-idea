@@ -646,10 +646,9 @@ def test_rfc0002_github_issue_execution_ledger_tracks_workbench_action_blocker()
         "Workbench PR #501 merged the browser-action proof path"
         in (issue_686["closureInstruction"])
     )
-    assert "PR #810 preserved this as blocked posture" in issue_686["closureInstruction"]
-    assert "sgajbi/lotus-core#836" in issue_686["closureInstruction"]
-    assert "sgajbi/lotus-core#840" in issue_686["closureInstruction"]
-    assert "sgajbi/lotus-workbench#500" in issue_686["closureInstruction"]
+    assert "sgajbi/lotus-core#882" in issue_686["closureInstruction"]
+    assert "source_batch_fingerprint/content_hash" in issue_686["closureInstruction"]
+    assert "DpmPortfolioUniverseCandidate:v1" in issue_686["closureInstruction"]
     assert "This issue is not QA-pending" in issue_686["closureInstruction"]
     assert "production identity" in issue_686["closureInstruction"]
 
@@ -672,16 +671,12 @@ def test_rfc0002_github_issue_execution_ledger_tracks_workbench_read_path_blocke
     assert "gatewayBffConsumptionObserved" in issue_685["closureInstruction"]
     assert "proofChecks.workbenchEvidenceFresh" in issue_685["closureInstruction"]
     assert "stale runtime-proof timestamp variable" in issue_685["closureInstruction"]
-    assert "PR #810 preserved this as blocked posture" in issue_685["closureInstruction"]
-    assert "sgajbi/lotus-core#836" in issue_685["closureInstruction"]
-    assert "sgajbi/lotus-core#840" in issue_685["closureInstruction"]
-    assert "sgajbi/lotus-workbench#500" in issue_685["closureInstruction"]
-    assert "valuation and aggregation jobs drained to zero" in issue_685["closureInstruction"]
-    assert "DPM_CORE_CONTEXT_INCOMPLETE" in issue_685["closureInstruction"]
     assert (
-        "POST http://manage.dev.lotus/api/v1/rebalance/simulate"
-        in (issue_685["closureInstruction"])
+        "later Core blockers #836, #840, #856, and #873 closed" in issue_685["closureInstruction"]
     )
+    assert "sgajbi/lotus-core#882" in issue_685["closureInstruction"]
+    assert "BULK_REVIEW_CAMPAIGN_SOURCE_HASH_REQUIRED" in issue_685["closureInstruction"]
+    assert "DpmPortfolioUniverseCandidate:v1" in issue_685["closureInstruction"]
     assert "supported-feature promotion" in issue_685["closureInstruction"]
 
 
@@ -865,15 +860,12 @@ def test_rfc0002_github_issue_execution_ledger_tracks_capacity_seed_authorizatio
     assert "Workbench PR #516" in issue_814["closureInstruction"]
     assert "1787da79fb4abaf574ebe4ebc3f8b4d5fed7bdac" in issue_814["closureInstruction"]
     assert "30543504302" in issue_814["closureInstruction"]
-    assert "sgajbi/lotus-core#836" in issue_814["closureInstruction"]
-    assert "holdings_status=READY" in issue_814["closureInstruction"]
-    assert "pricing_status=READY" in issue_814["closureInstruction"]
-    assert "transactions_status=READY" in issue_814["closureInstruction"]
-    assert "reporting_status=READY" in issue_814["closureInstruction"]
-    assert "blocking_reason_codes=[]" in issue_814["closureInstruction"]
-    assert "pending_aggregation_jobs=0" in issue_814["closureInstruction"]
-    assert "aggregation_jobs.statuses=[COMPLETE]" in issue_814["closureInstruction"]
-    assert "positions_data_quality_status=UNKNOWN" in issue_814["closureInstruction"]
+    assert (
+        "earlier Core blockers #836, #840, #856, and #873 are closed"
+        in issue_814["closureInstruction"]
+    )
+    assert "sgajbi/lotus-core#882" in issue_814["closureInstruction"]
+    assert "source_batch_fingerprint/content_hash" in issue_814["closureInstruction"]
     assert "2026-04-17" not in issue_814["closureInstruction"]
     assert "2026-04-30" not in issue_814["closureInstruction"]
     assert "does not implement production authentication" in issue_814["closureInstruction"]
@@ -957,6 +949,16 @@ def test_rfc0002_github_issue_execution_ledger_records_issue_681_sync_note() -> 
         and "strict wiki parity stayed DiffCount 0" in note
         and "0 app-actionable blocked issues" in note
         and "keeps #681 and #380 open" in note
+        for note in notes
+    )
+    assert any(
+        isinstance(note, str)
+        and "2026-08-02 SGT cross-repo blocker sync" in note
+        and "sgajbi/lotus-core#882" in note
+        and "core_dpm_portfolio_universe_source_batch_fingerprint" in note
+        and "106 label-backed RFC-0002 issues" in note
+        and "5 Core dependencies" in note
+        and "0 app-actionable blocked issues" in note
         for note in notes
     )
 

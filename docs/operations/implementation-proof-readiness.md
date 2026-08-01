@@ -364,13 +364,16 @@ metadata, release identity/license evidence binding, and CI signal evidence.
 Repo-authored wiki source did not change in PR #819; strict wiki parity stayed
 `DiffCount 0`, and branch cleanup completed after patch-equivalence proof.
 Current source truth remains 54 tracked Idea RFC-0002 issues, 25 open, and
-29 closed, with cross-repo posture of 93 label-backed RFC-0002 issues, 56
-closed, and 37 open. The open split is 27 blocked, 2 in-progress, and 8 tracker
-issues. The blocked posture remains 27 blocked issues, 0
-app-actionable blocked issues, 4 Core dependencies, and 23 external/protected
-evidence blockers after fresh canonical validation reopened
-`sgajbi/lotus-core#836` as the active Core positions data-quality metadata
-blocker.
+29 closed. The 2026-08-02 live cross-repo posture now reports 106
+label-backed RFC-0002 issues across 13 repositories: 58 closed and 48 open.
+The open split is 28 blocked, 10 PR-open, 2 in-progress, and 8 tracker issues.
+The blocked posture remains 0 app-actionable blocked issues, now split into 5
+Core dependencies and 23 external/protected evidence blockers. The active Core
+blocker is `sgajbi/lotus-core#882`: Core must publish a deterministic non-empty
+`source_batch_fingerprint` / content hash on
+`DpmPortfolioUniverseCandidate:v1` READY responses so Manage, Gateway, and
+Workbench can preserve source-ref authority without fabricating hashes
+downstream.
 #380 and #681 remain open, and no supported feature is
 promoted from this evidence-sync tranche.
 
@@ -415,17 +418,15 @@ label-backed RFC-0002 issues, 56 closed, and 37 open with 0 app-actionable
 blocked issues; no supported-feature, production identity, canonical browser,
 client-publication, or final closure claim is made.
 
-#685 is `open_blocked`, not QA-pending: the 2026-07-29 governed Workbench
-startup attempt via `npm run live:stack:up` restored core portfolio readiness
-for `PB_SG_GLOBAL_BAL_001`; valuation and aggregation jobs drained to zero,
-positions/cash data quality reached `COMPLETE`, and analytics/return-path
-dates reached `2026-04-10`. The run then failed in the DPM command-center
-action-register seed because `POST http://manage.dev.lotus/api/v1/rebalance/simulate`
-returned HTTP 424 with `DPM_CORE_CONTEXT_INCOMPLETE`. The current blocker is
-tracked in `sgajbi/lotus-core#840`. Fresh Gateway/BFF-backed Workbench
-queue/detail runtime evidence, browser/accessibility proof, canonical demo
-runtime proof, and #380 data-product/supported-feature posture reconciliation remain required before
-QA closure.
+#685 is `open_blocked`, not QA-pending: after earlier Core readiness blockers
+closed, the fresh canonical path reached Manage-owned DPM candidate discovery
+and failed closed with `BULK_REVIEW_CAMPAIGN_SOURCE_HASH_REQUIRED`. The current
+blocker is tracked in `sgajbi/lotus-core#882`, which owns the missing Core
+`DpmPortfolioUniverseCandidate:v1` source-batch fingerprint. Fresh
+Gateway/BFF-backed Workbench queue/detail runtime evidence,
+browser/accessibility proof, canonical demo runtime proof, and #380
+data-product/supported-feature posture reconciliation remain required before QA
+closure.
 
 The 2026-07-30 dependency handoff refreshed durable owner evidence on
 `sgajbi/lotus-core#836`, `sgajbi/lotus-core#840`,

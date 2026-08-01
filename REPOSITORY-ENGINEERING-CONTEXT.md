@@ -123,7 +123,9 @@ RFC-0002 ledger posture is 54 tracked issues, 29 closed complete, 25 open, no
 `open_merged_main_qa_pending`, 1 `open_in_progress`, no `open_pr_raised`, and
 14 `open_blocked`; #681 is active after PR #831 reached exact main
 `17e64208c6d0614fdd07f95755453978813a7612`, and #814 is currently blocked by
-Core in-window aggregation readiness issue `sgajbi/lotus-core#873`. PR #831
+Core DPM candidate-source batch-fingerprint issue `sgajbi/lotus-core#882`
+after earlier Core readiness blockers `#836`, `#840`, `#856`, and `#873`
+closed. PR #831
 also makes saved partial RFC-0002 PR title/body validation file-backed so
 future keep-open PRs can prove the exact GitHub text before creation. #807 does not
 certify production vulnerability posture, registry promotion, protected
@@ -134,18 +136,14 @@ implementation evidence is already merged. Idea now consumes the
 Manage mandate runtime evidence, but production/certification, trusted IdP
 caller context, retention/legal, and Archive production conformance evidence
 remain open through `sgajbi/lotus-manage#624`, `sgajbi/lotus-report#136`, and
-`sgajbi/lotus-archive#55`. #685 is now
-blocked by `sgajbi/lotus-core#840` after the 2026-07-29 governed Workbench
-startup attempt via `npm run live:stack:up` restored core portfolio readiness
-for `PB_SG_GLOBAL_BAL_001`; valuation and aggregation jobs drained to zero,
-positions/cash data quality reached `COMPLETE`, and analytics/return-path
-dates reached `2026-04-10`. The run then failed in the DPM command-center
-action-register seed because `POST http://manage.dev.lotus/api/v1/rebalance/simulate`
-returned HTTP 424 with `DPM_CORE_CONTEXT_INCOMPLETE`. Fresh Gateway/BFF-backed
-Workbench queue/detail runtime evidence remains required before #685 can move
-to merged-main QA.
+`sgajbi/lotus-archive#55`. #685 is now blocked by `sgajbi/lotus-core#882`
+after canonical validation advanced to Manage-owned DPM candidate discovery but
+failed closed with `BULK_REVIEW_CAMPAIGN_SOURCE_HASH_REQUIRED`; Core must
+publish a deterministic `source_batch_fingerprint` / content hash on
+`DpmPortfolioUniverseCandidate:v1` responses before fresh Gateway/BFF-backed
+Workbench queue/detail runtime evidence can move #685 to merged-main QA.
 The current canonical Workbench/browser unblock path is anchored by
-`sgajbi/lotus-core#873`, `sgajbi/lotus-workbench#500`, #814, #685, and #686.
+`sgajbi/lotus-core#882`, `sgajbi/lotus-workbench#500`, #814, #685, and #686.
 Do not rerun or close canonical browser proof from source-side Workbench tests
 alone; final proof still needs the full governed stack to produce current
 machine-readable validation output and screenshot/index evidence.
@@ -245,17 +243,20 @@ outside the governed count because `lotus-core` is outside this agent's write
 scope. This is source-truth synchronization
 only: it does not certify Core readiness, clear #685/#686/#500, promote
 supported features, or replace production IdP/session/token-claims evidence.
-`sgajbi/lotus-idea#814` is now blocked by Core readiness rather than open PR
-work: Idea PR #815, Workbench PR #515, and Workbench PR #516 are merged, and
-Workbench Main Releasability `30543504302` passed for exact main
-`1787da79fb4abaf574ebe4ebc3f8b4d5fed7bdac`. The remaining canonical
-validation blocker is reopened `sgajbi/lotus-core#836`, where Core leaves
-positions data quality `UNKNOWN` even though holdings, pricing, transactions,
-and reporting readiness are `READY`, blocking reason codes are empty, valuation
-and aggregation queues are zero, aggregation is `COMPLETE`, and Core/Gateway
-dates are current to the governed `2026-04-10` as-of date. This does not implement production authentication, production
-IdP/session/token-claims authority, supported-feature promotion, capacity
-certification, or client publication.
+`sgajbi/lotus-idea#814` is now blocked by Core-owned canonical DPM candidate
+source evidence rather than open Idea or Workbench PR work: Idea PR #815,
+Workbench PR #515, and Workbench PR #516 are merged, and Workbench Main
+Releasability `30543504302` passed for exact main
+`1787da79fb4abaf574ebe4ebc3f8b4d5fed7bdac`. Earlier Core readiness blockers
+`sgajbi/lotus-core#836`, `#840`, `#856`, and `#873` are closed. The current
+canonical validation blocker is `sgajbi/lotus-core#882`, where Manage fails
+closed with `BULK_REVIEW_CAMPAIGN_SOURCE_HASH_REQUIRED` because Core
+`DpmPortfolioUniverseCandidate:v1` source refs do not yet carry a deterministic
+non-empty `source_batch_fingerprint` / content hash. Idea, Gateway, Workbench,
+and Manage must not fabricate that Core-owned source hash downstream. This does
+not implement production authentication, production IdP/session-token-claims
+authority, supported-feature promotion, capacity certification, or client
+publication.
 
 Slice 15 operations blockers #343, #344, and #375 are source-controlled as
 blocked external/protected-evidence items, not unresolved local app-code

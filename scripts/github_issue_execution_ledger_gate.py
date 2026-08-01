@@ -213,15 +213,16 @@ REQUIRED_OPEN_ISSUE_EVIDENCE = {
     ),
     685: (
         "Keep #685 open and status/blocked",
-        "sgajbi/lotus-core#840",
-        "valuation and aggregation jobs drained to zero",
-        "DPM_CORE_CONTEXT_INCOMPLETE",
-        "POST http://manage.dev.lotus/api/v1/rebalance/simulate",
+        "later Core blockers #836, #840, #856, and #873 closed",
+        "sgajbi/lotus-core#882",
+        "BULK_REVIEW_CAMPAIGN_SOURCE_HASH_REQUIRED",
+        "DpmPortfolioUniverseCandidate:v1",
     ),
     686: (
         "Keep #686 open and status/blocked",
         "Workbench PR #501 merged the browser-action proof path",
-        "sgajbi/lotus-core#840",
+        "sgajbi/lotus-core#882",
+        "source_batch_fingerprint/content_hash",
         "This issue is not QA-pending",
     ),
     345: (
