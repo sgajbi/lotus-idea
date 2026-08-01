@@ -1569,8 +1569,9 @@ supported feature.
 RFC-0002 execution is tracked through GitHub issue state plus the
 source-controlled implementation-proof ledgers. The current governed posture is
 106 label-backed RFC-0002 issues across 13 repositories: 58 closed and 48 open.
-The open set is 28 blocked issues, 10 PR-open issues, 8 tracker issues, and 2
-in-progress issues.
+The open set is 28 blocked issues, 1 PR-open issue (#681 / PR #833), 1
+in-progress issue, 8 tracker issues, and 10 open merged-main/merged-to-main
+QA-pending issues.
 
 The blocked-actionability classifier reports 0 app-actionable blocked issues.
 The blocked set is currently 5 Core dependencies and 23 external/protected

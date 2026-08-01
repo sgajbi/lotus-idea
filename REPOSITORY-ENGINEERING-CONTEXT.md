@@ -118,14 +118,14 @@ Releasability `30499444726` passing, and PR #810 synchronized PR #809 main
 evidence plus Core handoff posture to exact main
 `fe7f0efac9fca86a3e19302e8b8436e8941f3d0c` with Main Releasability
 `30500588217` passing. After the PR #828 through PR #831 evidence-sync and
-issue-execution prevention cycle, the current
-RFC-0002 ledger posture is 54 tracked issues, 29 closed complete, 25 open, no
-`open_merged_main_qa_pending`, 1 `open_in_progress`, no `open_pr_raised`, and
-14 `open_blocked`; #681 is active after PR #831 reached exact main
-`17e64208c6d0614fdd07f95755453978813a7612`, and #814 is currently blocked by
-Core DPM candidate-source batch-fingerprint issue `sgajbi/lotus-core#882`
-after earlier Core readiness blockers `#836`, `#840`, `#856`, and `#873`
-closed. PR #831
+issue-execution prevention cycle, the current live cross-repo RFC-0002 posture
+is 106 label-backed issues across 13 repositories: 58 closed and 48 open. The
+open set is 28 blocked issues, 10 open merged-main/merged-to-main QA-pending
+items, 1 PR-open issue (#681 / PR #833), 1 in-progress issue, and 8 tracker
+issues. #681 is currently `status/pr-open` while PR #833 synchronizes source
+truth for Core DPM candidate-source batch-fingerprint issue
+`sgajbi/lotus-core#882` after earlier Core readiness blockers `#836`, `#840`,
+`#856`, and `#873` closed. PR #831
 also makes saved partial RFC-0002 PR title/body validation file-backed so
 future keep-open PRs can prove the exact GitHub text before creation. #807 does not
 certify production vulnerability posture, registry promotion, protected
@@ -155,8 +155,10 @@ clarity only; it does not clear protected runner, cost-attribution,
 deployment-promotion, or production-certification blockers.
 Platform PR `sgajbi/lotus-platform#631` fixes the earlier Manage seed
 authorization failure; #686 is blocked, not QA-pending, until
-`sgajbi/lotus-core#840` restores canonical DPM source readiness and Workbench
-live browser validation produces current action-control evidence. #693 is blocked, not QA-pending,
+`sgajbi/lotus-core#882` restores Core-owned deterministic
+`source_batch_fingerprint` / content-hash publication for
+`DpmPortfolioUniverseCandidate:v1` and Workbench live browser validation
+produces current action-control evidence. #693 is blocked, not QA-pending,
 until protected capacity-production-like runner/environment and FinOps
 attestation evidence exist. #690 is closed complete after #774 merged to main
 at `5f53c4ac6ac519c7e6b0019e00f5286109e1628c`, #775 synchronized source truth
