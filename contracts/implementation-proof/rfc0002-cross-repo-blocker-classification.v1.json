@@ -57,7 +57,7 @@
       "issueNumber": 814,
       "actionability": "core_dependency",
       "blockerClass": "canonical_idea_capacity_seed_core_readiness",
-      "remainingAuthority": "Core-owned PB_SG_GLOBAL_BAL_001 positions data-quality metadata convergence for canonical capacity-seed validation, tracked by reopened sgajbi/lotus-core#836"
+      "remainingAuthority": "Core-owned DPM portfolio-universe candidate source-batch fingerprint publication for canonical Workbench/Idea validation, tracked by sgajbi/lotus-core#882 after earlier Core readiness blockers #836, #840, #856, and #873 closed"
     },
     {
       "repository": "sgajbi/lotus-idea",
@@ -78,14 +78,14 @@
       "issueNumber": 685,
       "actionability": "core_dependency",
       "blockerClass": "canonical_workbench_runtime_core_readiness",
-      "remainingAuthority": "Core-owned canonical DPM source readiness for PB_SG_GLOBAL_BAL_001 before fresh Workbench/Gateway queue/detail runtime proof"
+      "remainingAuthority": "Core-owned DPM portfolio-universe candidate source-batch fingerprint publication for PB_SG_GLOBAL_BAL_001 before fresh Workbench/Gateway queue/detail runtime proof, tracked by sgajbi/lotus-core#882"
     },
     {
       "repository": "sgajbi/lotus-idea",
       "issueNumber": 686,
       "actionability": "core_dependency",
       "blockerClass": "canonical_workbench_action_core_readiness",
-      "remainingAuthority": "Core-owned canonical DPM source readiness before fresh Workbench review-action, feedback, and conversion-intent browser proof"
+      "remainingAuthority": "Core-owned DPM portfolio-universe candidate source-batch fingerprint publication before fresh Workbench review-action, feedback, and conversion-intent browser proof, tracked by sgajbi/lotus-core#882"
     },
     {
       "repository": "sgajbi/lotus-idea",
@@ -158,6 +158,13 @@
       "remainingAuthority": "approved non-stub live provider execution, effective model-risk approval, signed non-stub attestation, provider-native retention/deletion confirmation, and downstream Idea consumption"
     },
     {
+      "repository": "sgajbi/lotus-core",
+      "issueNumber": 882,
+      "actionability": "core_dependency",
+      "blockerClass": "core_dpm_portfolio_universe_source_batch_fingerprint",
+      "remainingAuthority": "Core-owned deterministic non-empty source_batch_fingerprint/content_hash on DpmPortfolioUniverseCandidate:v1 READY responses so Manage, Gateway, and Workbench canonical validation can preserve source-ref authority without fabricating hashes downstream"
+    },
+    {
       "repository": "sgajbi/lotus-platform",
       "issueNumber": 495,
       "actionability": "external_or_protected_evidence",
@@ -197,7 +204,7 @@
       "issueNumber": 500,
       "actionability": "core_dependency",
       "blockerClass": "canonical_browser_validation_core_readiness",
-      "remainingAuthority": "Core-owned PB_SG_GLOBAL_BAL_001 seed readiness convergence before final canonical browser proof"
+      "remainingAuthority": "Core-owned DPM portfolio-universe candidate source-batch fingerprint publication for PB_SG_GLOBAL_BAL_001 before final canonical browser proof, tracked by sgajbi/lotus-core#882"
     }
   ]
 }

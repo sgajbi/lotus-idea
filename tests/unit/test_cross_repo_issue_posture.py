@@ -432,9 +432,41 @@ def test_default_blocker_classification_tracks_issue_814_core_capacity_blocker()
             "actionability": "core_dependency",
             "blockerClass": "canonical_idea_capacity_seed_core_readiness",
             "remainingAuthority": (
-                "Core-owned PB_SG_GLOBAL_BAL_001 positions data-quality metadata "
-                "convergence for canonical capacity-seed validation, tracked by "
-                "reopened sgajbi/lotus-core#836"
+                "Core-owned DPM portfolio-universe candidate source-batch fingerprint "
+                "publication for canonical Workbench/Idea validation, tracked by "
+                "sgajbi/lotus-core#882 after earlier Core readiness blockers #836, "
+                "#840, #856, and #873 closed"
+            ),
+        }
+    ]
+
+
+def test_default_blocker_classification_tracks_core_dpm_source_batch_fingerprint() -> None:
+    contract_path = (
+        ROOT
+        / "contracts"
+        / "implementation-proof"
+        / ("rfc0002-cross-repo-blocker-classification.v1.json")
+    )
+    payload = json.loads(contract_path.read_text(encoding="utf-8"))
+
+    matching_rows = [
+        row
+        for row in payload["classifications"]
+        if row["repository"] == "sgajbi/lotus-core" and row["issueNumber"] == 882
+    ]
+
+    assert matching_rows == [
+        {
+            "repository": "sgajbi/lotus-core",
+            "issueNumber": 882,
+            "actionability": "core_dependency",
+            "blockerClass": "core_dpm_portfolio_universe_source_batch_fingerprint",
+            "remainingAuthority": (
+                "Core-owned deterministic non-empty source_batch_fingerprint/content_hash "
+                "on DpmPortfolioUniverseCandidate:v1 READY responses so Manage, Gateway, "
+                "and Workbench canonical validation can preserve source-ref authority "
+                "without fabricating hashes downstream"
             ),
         }
     ]

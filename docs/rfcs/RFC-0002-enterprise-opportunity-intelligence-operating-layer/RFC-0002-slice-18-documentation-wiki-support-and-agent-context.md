@@ -754,14 +754,16 @@ merged the file-backed PR title/body validation guard to Idea main
 `17e64208c6d0614fdd07f95755453978813a7612`; replacement exact-main Main
 Releasability `30652543470` passed, and the earlier duplicate-dispatch runs
 `30652453290` and `30652462394` are explicitly non-certifying cancelled runs.
-The current blocker and CI audit still reports 94 label-backed RFC-0002 issues,
-57 closed and 37 open, with 27 blocked, 8 tracker, and 2 in-progress issues
-(#681 and `sgajbi/lotus-core#873`). The blocked-actionability classifier
-remains at 0 app-actionable blocked issues, split into 4 Core dependencies and
-23 external/protected evidence blockers after Core #873 moved to
-`status/in-progress`. Current canonical Workbench proof remains blocked by
-`sgajbi/lotus-core#873` until Core merges a fix and fresh canonical validation
-passes. The stale queued Platform End-to-End Validation run
+The 2026-08-02 live blocker and CI audit reports 106 label-backed RFC-0002
+issues across 13 repositories, with 58 closed and 48 open. The open set is 28
+blocked, 10 PR-open, 2 in-progress, and 8 tracker issues. The
+blocked-actionability classifier remains at 0 app-actionable blocked issues,
+split into 5 Core dependencies and 23 external/protected evidence blockers.
+The current canonical Workbench/Idea proof blocker is `sgajbi/lotus-core#882`:
+Core must publish a deterministic non-empty `source_batch_fingerprint` /
+content hash for `DpmPortfolioUniverseCandidate:v1` READY responses before
+Manage, Gateway, and Workbench can preserve source-ref authority through fresh
+canonical validation. The stale queued Platform End-to-End Validation run
 `30603744637` was recorded on `sgajbi/lotus-platform#599`, cancelled as queue
 hygiene, and the post-cancel detector returned `Stale workflow runs: 0`; this
 does not clear protected runner, cost-attribution, deployment-promotion, or
@@ -786,9 +788,10 @@ keys, canonical live browser proof, client-publication authority, or final
 RFC-0002 closure evidence.
 Platform PR `sgajbi/lotus-platform#631` fixes the prior Manage seed
 authorization failure; #686 is blocked, not QA-pending, until
-`sgajbi/lotus-core#840` restores canonical DPM source readiness and Workbench
-live browser action-control proof can be rerun. This records lifecycle truth
-only: #340 is closed for the signed attestation trust boundary without claiming
+`sgajbi/lotus-core#882` restores Core DPM portfolio-universe candidate
+source-batch fingerprints and Workbench live browser action-control proof can
+be rerun. This records lifecycle truth only: #340 is closed for the signed
+attestation trust boundary without claiming
 supported-feature promotion, client-ready publication, Workbench proof,
 autonomous advice, prompt/RAG infrastructure, model training, or broader
 production rollout. #380 remains blocked for production principal/session,
