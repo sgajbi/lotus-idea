@@ -121,9 +121,9 @@ evidence plus Core handoff posture to exact main
 issue-execution prevention cycle, the current live cross-repo RFC-0002 posture
 is 106 label-backed issues across 13 repositories: 58 closed and 48 open. The
 open set is 28 blocked issues, 10 open merged-main/merged-to-main QA-pending
-items, 1 PR-open issue (#681 / PR #833), 1 in-progress issue, and 8 tracker
-issues. #681 is currently `status/pr-open` while PR #833 synchronizes source
-truth for Core DPM candidate-source batch-fingerprint issue
+items, 1 PR-open issue (#681 / PR #834), 1 in-progress issue, and 8 tracker
+issues. #681 is currently `status/pr-open` while PR #834 reconciles source
+truth after PR #833 reached main for Core DPM candidate-source batch-fingerprint issue
 `sgajbi/lotus-core#882` after earlier Core readiness blockers `#836`, `#840`,
 `#856`, and `#873` closed. PR #831
 also makes saved partial RFC-0002 PR title/body validation file-backed so
