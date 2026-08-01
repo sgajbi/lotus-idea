@@ -1117,9 +1117,12 @@ commit `f0f9293` with strict `DiffCount 0`. Current source truth after the
 29 closed, with live cross-repo RFC-0002 posture of 93 label-backed tracked issues, 56
 complete, and 37 open across 13 repositories after
 `sgajbi/lotus-manage#626` closed with
-`status/merged-main`. The refreshed dependency handoff is anchored on
+`status/merged-main`. That dependency handoff was anchored on
 `sgajbi/lotus-core#836`, `sgajbi/lotus-core#840`,
-`sgajbi/lotus-workbench#500`, #685, and #686, while
+`sgajbi/lotus-workbench#500`, #685, and #686. Workbench #500 is now closed
+with `status/merged-main` after Workbench PR #501 and Idea PR #837; current
+active blockers are anchored by `sgajbi/lotus-core#882`,
+`sgajbi/lotus-core#885`, #814, #685, and #686, while
 `sgajbi/lotus-manage#626` records the closed Manage PR #627 tax-lot identity fix on
 main `5ba2757c1235ce3e28c630afd44257327c91edf3` with Main Releasability
 `30536615979` passing and branch cleanup complete.

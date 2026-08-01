@@ -574,9 +574,12 @@ publish and digest proof, published-digest runtime proof, image signing,
 provenance/SBOM attestations, release metadata, image identity binding, release
 license evidence binding, and CI signal evidence. Repo-authored wiki
 publication reached `lotus-idea.wiki` commit `f0f9293` with strict
-`DiffCount 0`. The current durable handoff evidence is recorded on
+`DiffCount 0`. The historical durable handoff evidence was recorded on
 `sgajbi/lotus-core#836`, `sgajbi/lotus-core#840`,
-`sgajbi/lotus-workbench#500`, #685, and #686; `sgajbi/lotus-manage#626`
+`sgajbi/lotus-workbench#500`, #685, and #686. Workbench #500 is now closed
+with `status/merged-main` after Workbench PR #501 and Idea PR #837; current
+open proof posture is anchored by `sgajbi/lotus-core#882`,
+`sgajbi/lotus-core#885`, #814, #685, and #686. `sgajbi/lotus-manage#626`
 records the closed Manage tax-lot identity fix merged by PR #627 on Manage main
 `5ba2757c1235ce3e28c630afd44257327c91edf3` with Main Releasability
 `30536615979` passing and branch cleanup complete. The open blocker is now
@@ -663,11 +666,12 @@ aggregation jobs drained to zero, positions/cash data quality reached
 `COMPLETE`, and analytics/return-path dates reached `2026-04-10`. The run then
 failed in the DPM command-center action-register seed because
 `POST http://manage.dev.lotus/api/v1/rebalance/simulate` returned HTTP 424 with
-`DPM_CORE_CONTEXT_INCOMPLETE`. The current blocker is tracked in
+`DPM_CORE_CONTEXT_INCOMPLETE`. The then-current blocker was tracked in
 `sgajbi/lotus-core#840`, with refreshed 2026-07-30 owner handoff evidence on
 `sgajbi/lotus-core#836`, `sgajbi/lotus-core#840`,
-`sgajbi/lotus-workbench#500`, #685, and #686. Fresh Gateway/BFF-backed
-Workbench queue/detail
+`sgajbi/lotus-workbench#500`, #685, and #686. Workbench #500 is now closed;
+current canonical proof remains blocked by `sgajbi/lotus-core#882` and
+`sgajbi/lotus-core#885` until fresh Gateway/BFF-backed Workbench queue/detail
 runtime evidence remains required before #685 can move to merged-main QA.
 PR #819 synchronized the #380 Core-blocker reference to then-current `sgajbi/lotus-core#856`
 on Idea main `3b2cc0bb4472a158cb4617b277276244c0e4a22b`; exact-main Main
@@ -777,7 +781,9 @@ blocked work. Durable evidence comments were posted on `sgajbi/lotus-platform#49
 `sgajbi/lotus-platform#563`, `sgajbi/lotus-ai#115`, `sgajbi/lotus-ai#122`,
 `sgajbi/lotus-manage#624`, `sgajbi/lotus-report#136`,
 `sgajbi/lotus-archive#55`, `sgajbi/lotus-workbench#436`, and
-`sgajbi/lotus-workbench#500`, then coordinated through #681. Focused
+`sgajbi/lotus-workbench#500`, then coordinated through #681. Workbench #500
+later closed with `status/merged-main` and was removed from the current open
+blocked classifier by Idea PR #837. Focused
 owner-repo validation passed for platform cost-attribution, BFF
 principal-session source contracts, AI retention and Idea workflow-pack proof,
 Manage temporal receipt/action-intake proof, Report Idea intake/materialization
