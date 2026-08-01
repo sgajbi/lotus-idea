@@ -106,6 +106,23 @@ def test_github_issue_execution_summary_reports_current_rfc0002_counts() -> None
     )
 
 
+def test_issue_681_ledger_records_pr837_exact_main_evidence() -> None:
+    ledger_payload = _load_ledger_payload()
+    issue_681 = next(
+        issue
+        for issue in ledger_payload["issues"]
+        if isinstance(issue, dict) and issue["issueNumber"] == 681
+    )
+    evidence_notes = "\n".join(issue_681["evidenceSyncNotes"])
+
+    assert "PR #837 merged the Workbench/Core classification sync" in evidence_notes
+    assert "2f47c476855aa6ddc9bc8c5b359f85f023725e8f" in evidence_notes
+    assert "30721884347" in evidence_notes
+    assert "30721880898" in evidence_notes
+    assert "sgajbi/lotus-workbench#500 is now closed" in evidence_notes
+    assert "sgajbi/lotus-core#885" in evidence_notes
+
+
 def test_github_issue_execution_summary_markdown_is_comment_ready() -> None:
     module = _load_summary()
     ledger_payload = _load_ledger_payload()

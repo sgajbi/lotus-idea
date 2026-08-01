@@ -145,7 +145,10 @@ publish a deterministic `source_batch_fingerprint` / content hash on
 `DpmPortfolioUniverseCandidate:v1` responses before fresh Gateway/BFF-backed
 Workbench queue/detail runtime evidence can move #685 to merged-main QA.
 The current canonical Workbench/browser unblock path is anchored by
-`sgajbi/lotus-core#882`, `sgajbi/lotus-workbench#500`, #814, #685, and #686.
+`sgajbi/lotus-core#882`, `sgajbi/lotus-core#885`, #814, #685, and #686.
+`sgajbi/lotus-workbench#500` is closed with `status/merged-main` after
+Workbench PR #501 and Idea PR #837 consumed that closure into the
+source-controlled blocker classifier.
 Do not rerun or close canonical browser proof from source-side Workbench tests
 alone; final proof still needs the full governed stack to produce current
 machine-readable validation output and screenshot/index evidence.
@@ -229,9 +232,12 @@ remain open.
 
 2026-07-30 Core and Manage blocker-state sync: `sgajbi/lotus-core#836` and
 `sgajbi/lotus-core#840` moved from `status/blocked` to `status/in-progress`.
-The live cross-repo blocked classifier therefore excludes those Core
-in-progress issues while preserving Idea-side Core-dependent blockers #685 and
-#686 and Workbench #500. `sgajbi/lotus-manage#626` is now closed with
+That historical live cross-repo blocked classifier excluded those Core
+in-progress issues while then preserving Idea-side Core-dependent blockers #685,
+#686, and Workbench #500. Workbench #500 is now closed with
+`status/merged-main`; current open Core-dependent posture is tracked through
+`sgajbi/lotus-core#882`, `sgajbi/lotus-core#885`, #814, #685, and #686.
+`sgajbi/lotus-manage#626` is now closed with
 `status/merged-main` after Manage PR #627 merged the tax-lot identity fix on main
 `5ba2757c1235ce3e28c630afd44257327c91edf3`, Main Releasability `30536615979`
 passed, and branch cleanup completed; it is excluded from the open-blocked
@@ -1404,9 +1410,11 @@ PR #810 synchronized PR #809 main evidence and Core/Workbench handoff posture
 on Idea main `fe7f0efac9fca86a3e19302e8b8436e8941f3d0c`; exact-main Main
 Releasability `30500588217` passed with release validation, published digest
 runtime proof, signing, provenance/SBOM attestation, and wiki publication
-`f0f9293` at strict `DiffCount 0`. Current durable handoff links are
+`f0f9293` at strict `DiffCount 0`. That historical durable handoff linked
 `sgajbi/lotus-core#836`, `sgajbi/lotus-core#840`,
-`sgajbi/lotus-workbench#500`, #685, and #686. `sgajbi/lotus-manage#626`
+`sgajbi/lotus-workbench#500`, #685, and #686; current active posture now
+excludes closed Workbench #500 and is anchored by `sgajbi/lotus-core#882`,
+`sgajbi/lotus-core#885`, #814, #685, and #686. `sgajbi/lotus-manage#626`
 is closed with `status/merged-main` after the Manage PR #627 tax-lot identity
 fix on main
 `5ba2757c1235ce3e28c630afd44257327c91edf3` with Main Releasability

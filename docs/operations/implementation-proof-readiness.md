@@ -433,9 +433,13 @@ closure.
 
 The 2026-07-30 dependency handoff refreshed durable owner evidence on
 `sgajbi/lotus-core#836`, `sgajbi/lotus-core#840`,
-`sgajbi/lotus-workbench#500`, #685, and #686. Those comments clarify that
-the remaining Slice 11/17 proof is Core-owned canonical seed/DPM readiness
-plus Workbench owner browser proof, not hidden Idea app-code work.
+`sgajbi/lotus-workbench#500`, #685, and #686. Workbench #500 is now closed
+with `status/merged-main` after Workbench PR #501 and Idea PR #837 consumed
+that closure into the source-controlled classifier. The remaining Slice 11/17
+proof is Core-owned canonical seed/DPM readiness through
+`sgajbi/lotus-core#882` and `sgajbi/lotus-core#885`, plus fresh governed
+Gateway/BFF-backed canonical Workbench validation for #685/#686; it is not
+hidden Idea app-code work.
 `sgajbi/lotus-manage#626` records the closed Manage tax-lot identity evidence boundary:
 PR #627 merged on Manage main `5ba2757c1235ce3e28c630afd44257327c91edf3`,
 Main Releasability `30536615979` passed, and the remote feature branch was
