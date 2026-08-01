@@ -472,6 +472,55 @@ def test_default_blocker_classification_tracks_core_dpm_source_batch_fingerprint
     ]
 
 
+def test_default_blocker_classification_tracks_core_domain_product_scope_drift() -> None:
+    contract_path = (
+        ROOT
+        / "contracts"
+        / "implementation-proof"
+        / ("rfc0002-cross-repo-blocker-classification.v1.json")
+    )
+    payload = json.loads(contract_path.read_text(encoding="utf-8"))
+
+    matching_rows = [
+        row
+        for row in payload["classifications"]
+        if row["repository"] == "sgajbi/lotus-core" and row["issueNumber"] == 885
+    ]
+
+    assert matching_rows == [
+        {
+            "repository": "sgajbi/lotus-core",
+            "issueNumber": 885,
+            "actionability": "core_dependency",
+            "blockerClass": "core_domain_product_request_scope_semantics",
+            "remainingAuthority": (
+                "Core-owned domain-product request-scope declaration repair for "
+                "HoldingsAsOf and IngestionEvidenceBundle so platform and Idea "
+                "data-product trust telemetry do not consume contradictory route, "
+                "identifier, and bulk-support semantics"
+            ),
+        }
+    ]
+
+
+def test_default_blocker_classification_excludes_closed_workbench_issue_500() -> None:
+    contract_path = (
+        ROOT
+        / "contracts"
+        / "implementation-proof"
+        / ("rfc0002-cross-repo-blocker-classification.v1.json")
+    )
+    payload = json.loads(contract_path.read_text(encoding="utf-8"))
+
+    matching_rows = [
+        row
+        for row in payload["classifications"]
+        if row["repository"] == "sgajbi/lotus-workbench" and row["issueNumber"] == 500
+    ]
+
+    assert matching_rows == []
+
+
 def test_default_blocker_classification_excludes_in_progress_core_issue_856() -> None:
     contract_path = (
         ROOT
