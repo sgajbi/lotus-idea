@@ -758,13 +758,18 @@ merged the file-backed PR title/body validation guard to Idea main
 `17e64208c6d0614fdd07f95755453978813a7612`; replacement exact-main Main
 Releasability `30652543470` passed, and the earlier duplicate-dispatch runs
 `30652453290` and `30652462394` are explicitly non-certifying cancelled runs.
-The 2026-08-02 live blocker and CI audit reports 106 label-backed RFC-0002
-issues across 13 repositories, with 69 closed and 37 open after QA closure of
+The 2026-08-02 live blocker and CI audit reports 108 label-backed RFC-0002
+issues across 13 repositories, with 71 closed and 37 open after QA closure of
 the already merged-main Advise, Gateway, Workbench, and AI dependency issues.
 The open set is 28 blocked, no PR-open issues, 1 in-progress issue (#681), 8
 tracker, and no open merged-main/merged-to-main QA-pending issues. The
 blocked-actionability classifier remains at 0 app-actionable blocked issues,
 split into 5 Core dependencies and 23 external/protected evidence blockers.
+Idea PR #838 synchronized PR #837 exact-main evidence to main
+`2c2d35667643ad5efae83924475574ab6c16be03`, passed Main Releasability
+`30723235065`, published wiki source to `lotus-idea.wiki` commit `ee15dc3`,
+completed branch cleanup, and returned #681 to `status/in-progress` because
+Slice 18 remains a continuing synchronization issue.
 The current canonical Workbench/Idea proof blocker is `sgajbi/lotus-core#882`:
 Core must publish a deterministic non-empty `source_batch_fingerprint` /
 content hash for `DpmPortfolioUniverseCandidate:v1` READY responses before

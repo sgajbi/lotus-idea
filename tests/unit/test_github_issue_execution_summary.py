@@ -62,7 +62,7 @@ def test_github_issue_execution_summary_reports_current_rfc0002_counts() -> None
     assert summary["counts"]["open"] == expected_github_counts["open"]
     assert summary["counts"]["closed"] == expected_github_counts["closed"]
     assert summary["counts"]["byExecutionStatus"] == dict(sorted(expected_execution_counts.items()))
-    assert issue_681_status == "open_pr_raised"
+    assert issue_681_status == "open_in_progress"
     assert "open_fixed_local" not in summary["counts"]["byExecutionStatus"]
     assert (
         summary["counts"]["byExecutionStatus"][issue_681_status]
@@ -79,7 +79,7 @@ def test_github_issue_execution_summary_reports_current_rfc0002_counts() -> None
         == expected_execution_counts["closed_complete"]
     )
     assert summary["issuesByStatus"][issue_681_status] == [681]
-    assert "open_in_progress" not in summary["issuesByStatus"]
+    assert "open_pr_raised" not in summary["issuesByStatus"]
     assert "open_fixed_local" not in summary["issuesByStatus"]
     assert "open_merged_main_qa_pending" not in summary["issuesByStatus"]
     assert summary["issuesByStatus"]["open_pending_final_closure"] == [683]
@@ -124,6 +124,22 @@ def test_issue_681_ledger_records_pr837_exact_main_evidence() -> None:
     assert "sgajbi/lotus-core#885" in evidence_notes
 
 
+def test_issue_681_ledger_records_pr838_exact_main_evidence() -> None:
+    ledger_payload = _load_ledger_payload()
+    issue_681 = next(
+        issue
+        for issue in ledger_payload["issues"]
+        if isinstance(issue, dict) and issue["issueNumber"] == 681
+    )
+    evidence_notes = "\n".join(issue_681["evidenceSyncNotes"])
+
+    assert "PR #838 merged to Idea main" in evidence_notes
+    assert "2c2d35667643ad5efae83924475574ab6c16be03" in evidence_notes
+    assert "30723235065" in evidence_notes
+    assert "lotus-idea.wiki commit ee15dc3" in evidence_notes
+    assert "#681 returned to open_in_progress/status/in-progress" in evidence_notes
+
+
 def test_github_issue_execution_summary_markdown_is_comment_ready() -> None:
     module = _load_summary()
     ledger_payload = _load_ledger_payload()
@@ -145,7 +161,6 @@ def test_github_issue_execution_summary_markdown_is_comment_ready() -> None:
     assert f"- Open issues: {summary['counts']['open']}" in rendered
     assert f"- Closed issues: {summary['counts']['closed']}" in rendered
     assert "## In-Progress Issues" in rendered
-    assert "## In-Progress Issues\n\n_None._" in rendered
     assert f"{issue_681_section}\n\n#681" in rendered
     assert "#681" in rendered
     assert "#681, #782" not in rendered
@@ -154,6 +169,7 @@ def test_github_issue_execution_summary_markdown_is_comment_ready() -> None:
     assert "## Fixed Locally Issues" in rendered
     assert "## Fixed Locally Issues\n\n_None._" in rendered
     assert "## PR-Open Issues" in rendered
+    assert "## PR-Open Issues\n\n_None._" in rendered
     assert "## Merged-Main QA Pending Issues" in rendered
     assert "## Merged-Main QA Pending Issues\n\n_None._" in rendered
     assert "#379, #690" not in rendered

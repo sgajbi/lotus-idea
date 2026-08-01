@@ -364,8 +364,8 @@ metadata, release identity/license evidence binding, and CI signal evidence.
 Repo-authored wiki source did not change in PR #819; strict wiki parity stayed
 `DiffCount 0`, and branch cleanup completed after patch-equivalence proof.
 Current source truth remains 54 tracked Idea RFC-0002 issues, 25 open, and
-29 closed. The 2026-08-02 live cross-repo posture now reports 106
-label-backed RFC-0002 issues across 13 repositories: 69 closed and 37 open
+29 closed. The 2026-08-02 live cross-repo posture now reports 108
+label-backed RFC-0002 issues across 13 repositories: 71 closed and 37 open
 after QA closure of the already merged-main Advise, Gateway, Workbench, and AI
 dependency issues. The open split is 28 blocked, no PR-open issues, 1
 in-progress issue (#681), 8 tracker, and no open merged-main/merged-to-main
@@ -435,7 +435,11 @@ The 2026-07-30 dependency handoff refreshed durable owner evidence on
 `sgajbi/lotus-core#836`, `sgajbi/lotus-core#840`,
 `sgajbi/lotus-workbench#500`, #685, and #686. Workbench #500 is now closed
 with `status/merged-main` after Workbench PR #501 and Idea PR #837 consumed
-that closure into the source-controlled classifier. The remaining Slice 11/17
+that closure into the source-controlled classifier. Idea PR #838 then merged
+that evidence synchronization to main `2c2d35667643ad5efae83924475574ab6c16be03`,
+published wiki source to `lotus-idea.wiki` commit `ee15dc3`, passed Main
+Releasability `30723235065`, completed branch cleanup, and returned #681 to
+`status/in-progress` for continuing Slice 18 coordination. The remaining Slice 11/17
 proof is Core-owned canonical seed/DPM readiness through
 `sgajbi/lotus-core#882` and `sgajbi/lotus-core#885`, plus fresh governed
 Gateway/BFF-backed canonical Workbench validation for #685/#686; it is not

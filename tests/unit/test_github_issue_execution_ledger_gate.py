@@ -113,7 +113,7 @@ def test_rfc0002_github_issue_execution_ledger_tracks_slice18_posture_evidence()
     )
 
     assert issue_681["githubState"] == "open"
-    assert issue_681["executionStatus"] == "open_pr_raised"
+    assert issue_681["executionStatus"] == "open_in_progress"
     assert issue_681["allowPullRequestAutoClose"] is False
     assert "Keep #681 open" in issue_681["closureInstruction"]
     assert (
@@ -959,6 +959,16 @@ def test_rfc0002_github_issue_execution_ledger_records_issue_681_sync_note() -> 
         and "106 label-backed RFC-0002 issues" in note
         and "5 Core dependencies" in note
         and "0 app-actionable blocked issues" in note
+        for note in notes
+    )
+    assert any(
+        isinstance(note, str)
+        and "PR #838 merged to Idea main" in note
+        and "2c2d35667643ad5efae83924475574ab6c16be03" in note
+        and "30723235065" in note
+        and "lotus-idea.wiki commit ee15dc3" in note
+        and "#681 returned to open_in_progress/status/in-progress" in note
+        and "108 label-backed issues across 13 repositories" in note
         for note in notes
     )
 
