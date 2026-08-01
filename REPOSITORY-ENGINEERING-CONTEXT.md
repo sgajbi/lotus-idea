@@ -120,8 +120,8 @@ evidence plus Core handoff posture to exact main
 `30500588217` passing. After the PR #828 through PR #831 evidence-sync and
 issue-execution prevention cycle plus QA closure of the already merged-main
 Advise, Gateway, Workbench, and AI dependency issues, the current live
-cross-repo RFC-0002 posture is 106 label-backed issues across 13 repositories:
-69 closed and 37 open. The open set is 28 blocked issues, no
+cross-repo RFC-0002 posture is 108 label-backed issues across 13 repositories:
+71 closed and 37 open. The open set is 28 blocked issues, no
 merged-main/merged-to-main QA-pending items, no PR-open issues, 1 in-progress
 issue (#681), and 8 tracker issues.
 #681 returned to `status/in-progress` after PR #834 merged source truth for
@@ -148,7 +148,11 @@ The current canonical Workbench/browser unblock path is anchored by
 `sgajbi/lotus-core#882`, `sgajbi/lotus-core#885`, #814, #685, and #686.
 `sgajbi/lotus-workbench#500` is closed with `status/merged-main` after
 Workbench PR #501 and Idea PR #837 consumed that closure into the
-source-controlled blocker classifier.
+source-controlled blocker classifier. Idea PR #838 then synchronized PR #837
+exact-main evidence to Idea main `2c2d35667643ad5efae83924475574ab6c16be03`,
+published wiki source to `lotus-idea.wiki` commit `ee15dc3`, passed Main
+Releasability `30723235065`, cleaned the feature branch, and returned #681 to
+`status/in-progress` because Slice 18 remains open.
 Do not rerun or close canonical browser proof from source-side Workbench tests
 alone; final proof still needs the full governed stack to produce current
 machine-readable validation output and screenshot/index evidence.

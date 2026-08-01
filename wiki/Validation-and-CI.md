@@ -1571,10 +1571,15 @@ supported feature.
 
 RFC-0002 execution is tracked through GitHub issue state plus the
 source-controlled implementation-proof ledgers. The current governed posture is
-106 label-backed RFC-0002 issues across 13 repositories: 69 closed and 37 open.
+108 label-backed RFC-0002 issues across 13 repositories: 71 closed and 37 open.
 The open set is 28 blocked issues, no PR-open issues, 1 in-progress issue
 (#681), 8 tracker issues, and no open merged-main/merged-to-main QA-pending
 issues.
+Idea PR #838 synchronized PR #837 exact-main evidence to main
+`2c2d35667643ad5efae83924475574ab6c16be03`, passed Main Releasability
+`30723235065`, published wiki source to `lotus-idea.wiki` commit `ee15dc3`,
+completed branch cleanup, and returned #681 to `status/in-progress` because
+Slice 18 remains a continuing synchronization issue.
 
 The blocked-actionability classifier reports 0 app-actionable blocked issues.
 The blocked set is currently 5 Core dependencies and 23 external/protected
