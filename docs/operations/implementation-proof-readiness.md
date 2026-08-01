@@ -365,8 +365,8 @@ Repo-authored wiki source did not change in PR #819; strict wiki parity stayed
 `DiffCount 0`, and branch cleanup completed after patch-equivalence proof.
 Current source truth remains 54 tracked Idea RFC-0002 issues, 25 open, and
 29 closed. The 2026-08-02 live cross-repo posture now reports 106
-label-backed RFC-0002 issues across 13 repositories: 58 closed and 48 open.
-The open split is 28 blocked, 1 PR-open (#681 / PR #834), 1 in-progress,
+label-backed RFC-0002 issues across 13 repositories: 59 closed and 47 open.
+The open split is 28 blocked, no PR-open issues, 1 in-progress issue (#681),
 8 tracker, and 10 open merged-main/merged-to-main QA-pending issues.
 The blocked posture remains 0 app-actionable blocked issues, now split into 5
 Core dependencies and 23 external/protected evidence blockers. The active Core

@@ -62,7 +62,7 @@ def test_github_issue_execution_summary_reports_current_rfc0002_counts() -> None
     assert summary["counts"]["open"] == expected_github_counts["open"]
     assert summary["counts"]["closed"] == expected_github_counts["closed"]
     assert summary["counts"]["byExecutionStatus"] == dict(sorted(expected_execution_counts.items()))
-    assert issue_681_status in {"open_in_progress", "open_pr_raised"}
+    assert issue_681_status == "open_in_progress"
     assert "open_fixed_local" not in summary["counts"]["byExecutionStatus"]
     assert (
         summary["counts"]["byExecutionStatus"][issue_681_status]
