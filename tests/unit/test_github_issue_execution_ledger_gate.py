@@ -1000,6 +1000,17 @@ def test_rfc0002_github_issue_execution_ledger_records_issue_681_sync_note() -> 
         and "#681 returned to open_in_progress/status/in-progress" in note
         for note in notes
     )
+    assert any(
+        isinstance(note, str)
+        and "PR #844 merged the PR #843 evidence synchronization" in note
+        and "c21deeb55dcb1d46395c02c95053ab6149ef6ad6" in note
+        and "30728738511" in note
+        and "30728733346" in note
+        and "lotus-idea.wiki commit b47cbcb" in note
+        and "issuecomment-5154685336" in note
+        and "#681 returned to open_in_progress/status/in-progress" in note
+        for note in notes
+    )
 
 
 def test_rfc0002_github_issue_execution_ledger_blocks_closed_issue_without_closed_instruction(

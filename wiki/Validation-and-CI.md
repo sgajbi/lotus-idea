@@ -1595,6 +1595,13 @@ change. Idea PR #843 merged the posture-snapshot documentation guard to main
 Releasability `30728039165` and CodeQL `30728037050`, published wiki source to
 `lotus-idea.wiki` commit `87dd4e4` with strict DiffCount 0, and completed
 branch cleanup.
+Idea PR #844 synchronized PR #843 evidence to main
+`c21deeb55dcb1d46395c02c95053ab6149ef6ad6`, passed exact-main Main
+Releasability `30728738511` and CodeQL `30728733346`, published wiki source to
+`lotus-idea.wiki` commit `b47cbcb` with strict DiffCount 0, recorded final
+#681 GitHub evidence in the
+[#681 PR #844 final evidence comment](https://github.com/sgajbi/lotus-idea/issues/681#issuecomment-5154685336),
+and completed branch cleanup.
 
 The blocked-actionability classifier reports 0 app-actionable blocked issues.
 The blocked set is currently 5 Core dependencies and 23 external/protected

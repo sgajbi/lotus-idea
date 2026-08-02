@@ -158,7 +158,7 @@ def test_issue_681_ledger_records_pr839_exact_main_evidence() -> None:
     assert "#681 returned to open_in_progress/status/in-progress" in evidence_notes
 
 
-def test_issue_681_ledger_records_pr843_exact_main_evidence() -> None:
+def test_issue_681_ledger_records_latest_exact_main_evidence() -> None:
     ledger_payload = _load_ledger_payload()
     issue_681 = next(
         issue
@@ -175,6 +175,12 @@ def test_issue_681_ledger_records_pr843_exact_main_evidence() -> None:
     assert "30728039165" in evidence_notes
     assert "30728037050" in evidence_notes
     assert "lotus-idea.wiki commit 87dd4e4" in evidence_notes
+    assert "PR #844 merged the PR #843 evidence synchronization" in evidence_notes
+    assert "c21deeb55dcb1d46395c02c95053ab6149ef6ad6" in evidence_notes
+    assert "30728738511" in evidence_notes
+    assert "30728733346" in evidence_notes
+    assert "lotus-idea.wiki commit b47cbcb" in evidence_notes
+    assert "issuecomment-5154685336" in evidence_notes
     assert "#681 returned to open_in_progress/status/in-progress" in evidence_notes
 
 

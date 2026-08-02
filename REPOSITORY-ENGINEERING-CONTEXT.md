@@ -164,6 +164,13 @@ main `2ed353b0394a625dd212b437fb93c0d5d4c02a89`, passed exact-main Main
 Releasability `30728039165` and CodeQL `30728037050`, published wiki source to
 `lotus-idea.wiki` commit `87dd4e4` with strict DiffCount 0, and completed
 branch cleanup.
+Idea PR #844 then synchronized PR #843 evidence to main
+`c21deeb55dcb1d46395c02c95053ab6149ef6ad6`, passed exact-main Main
+Releasability `30728738511` and CodeQL `30728733346`, published wiki source to
+`lotus-idea.wiki` commit `b47cbcb` with strict DiffCount 0, recorded the final
+#681 evidence in the
+[#681 PR #844 final evidence comment](https://github.com/sgajbi/lotus-idea/issues/681#issuecomment-5154685336),
+and completed remote/local branch cleanup.
 Do not rerun or close canonical browser proof from source-side Workbench tests
 alone; final proof still needs the full governed stack to produce current
 machine-readable validation output and screenshot/index evidence.
