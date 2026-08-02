@@ -48,7 +48,7 @@ def test_documentation_contract_gate_blocks_missing_campaign_inventory_occurrenc
         encoding="utf-8",
     )
 
-    errors = module.evidence_classification_inventory_errors(root=tmp_path)
+    errors = module.evidence_inventory.evidence_classification_inventory_errors(root=tmp_path)
 
     assert errors == [
         "docs/architecture/implementation-proof-evidence-classification.md: "
@@ -74,7 +74,7 @@ def test_documentation_contract_gate_requires_explicit_governance_exclusion(
     )
     (tmp_path / ISSUE_CLOSURE_MATRIX_PATH).write_text(matrix, encoding="utf-8")
 
-    errors = module.evidence_classification_inventory_errors(root=tmp_path)
+    errors = module.evidence_inventory.evidence_classification_inventory_errors(root=tmp_path)
 
     assert errors == [
         "docs/architecture/implementation-proof-evidence-classification.md: "
@@ -103,7 +103,7 @@ def test_documentation_contract_gate_blocks_stale_completed_occurrence_posture(
         encoding="utf-8",
     )
 
-    errors = module.evidence_classification_inventory_errors(root=tmp_path)
+    errors = module.evidence_inventory.evidence_classification_inventory_errors(root=tmp_path)
 
     assert errors == [
         "docs/architecture/implementation-proof-evidence-classification.md: "
@@ -136,7 +136,7 @@ def test_documentation_contract_gate_blocks_unregistered_completed_occurrence(
         encoding="utf-8",
     )
 
-    errors = module.evidence_classification_inventory_errors(root=tmp_path)
+    errors = module.evidence_inventory.evidence_classification_inventory_errors(root=tmp_path)
 
     assert errors == [
         "docs/architecture/implementation-proof-evidence-classification.md: "
@@ -269,6 +269,46 @@ def test_documentation_contract_gate_blocks_stale_maturity_summary_claim(
         "describe current PortfolioMaturitySummary:v1 consumption, not the superseded "
         "Core #686 blocker"
     ]
+
+
+def test_documentation_contract_gate_blocks_superseded_current_issue_posture(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    doc = tmp_path / "wiki" / "Validation-and-CI.md"
+    doc.parent.mkdir(parents=True)
+    doc.write_text(
+        "# Validation and CI\n\n"
+        "Current governed posture remains 93 label-backed RFC-0002 issues, "
+        "56 closed, and 37 open.\n",
+        encoding="utf-8",
+    )
+
+    errors = module.rfc0002_issue_posture_snapshot_errors(root=tmp_path)
+
+    assert errors == [
+        "wiki/Validation-and-CI.md: paragraph 2 describes a superseded "
+        "RFC-0002 issue-count snapshot as current/live posture; use `then-current` "
+        "or update the count from `make rfc0002-cross-repo-issue-posture`"
+    ]
+
+
+def test_documentation_contract_gate_allows_then_current_issue_posture_snapshot(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    doc = tmp_path / "wiki" / "Validation-and-CI.md"
+    doc.parent.mkdir(parents=True)
+    doc.write_text(
+        "# Validation and CI\n\n"
+        "The then-current governed posture was 93 label-backed RFC-0002 issues, "
+        "56 closed, and 37 open.\n",
+        encoding="utf-8",
+    )
+
+    errors = module.rfc0002_issue_posture_snapshot_errors(root=tmp_path)
+
+    assert errors == []
 
 
 def test_documentation_contract_gate_blocks_unpolished_operator_doc(

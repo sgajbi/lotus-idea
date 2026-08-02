@@ -392,8 +392,9 @@ identity/license binding, and release evidence upload. Repo-authored wiki source
 was published to `lotus-idea.wiki` commit `5e63705` with strict `DiffCount 0`,
 the remote PR branch was deleted by merge cleanup, the local branch was removed
 after patch-equivalence verification, and no unmerged remote branches remained.
-This keeps the governed posture at 93 label-backed RFC-0002 issues, 56 closed,
-and 37 open, split into 27 blocked, 2 in-progress, and 8 tracker issues with 0
+At that synchronized snapshot, the then-current governed posture was 93
+label-backed RFC-0002 issues, 56 closed, and 37 open, split into 27 blocked, 2
+in-progress, and 8 tracker issues with 0
 app-actionable blocked issues. This is merged-main evidence synchronization
 only; #681, #814, #685, #686, #699, #500, #380, #683, and #684 remain open
 until their own evidence classes are satisfied.
@@ -405,8 +406,9 @@ post-merge Main Releasability `30621899968`, and post-merge CodeQL
 `lotus-idea.wiki` commit `eefd44a` with strict `DiffCount 0`; the remote PR
 branch was deleted, the local feature branch was deleted after exact
 tree-equivalence verification, the local branch list contained only `main`, and
-no unmerged remote branches remained. This keeps the governed posture at 93
-label-backed RFC-0002 issues, 56 closed, and 37 open, split into 27 blocked, 2
+no unmerged remote branches remained. At that synchronized snapshot, the
+then-current governed posture was 93 label-backed RFC-0002 issues, 56 closed,
+and 37 open, split into 27 blocked, 2
 in-progress, and 8 tracker issues with 0 app-actionable blocked issues. This is
 source-truth synchronization only; #681 and the remaining blocker issues stay
 open until their own evidence classes are satisfied.
@@ -419,8 +421,9 @@ Releasability `30624125739` passed. Repo-authored wiki source was published to
 cleanup completed, the local feature branch was absent after fetch/prune, the
 local branch list contained only `main`, and no unmerged remote branches
 remained. #681 returned to `open_in_progress` because it remains a continuing
-Slice 18 synchronization issue. This keeps the governed posture at 93
-label-backed RFC-0002 issues, 56 closed, and 37 open with 0 app-actionable
+Slice 18 synchronization issue. At that synchronized snapshot, the then-current
+governed posture was 93 label-backed RFC-0002 issues, 56 closed, and 37 open
+with 0 app-actionable
 blocked issues; no supported-feature, production identity, canonical browser,
 client-publication, or final closure claim is made.
 

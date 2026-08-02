@@ -857,9 +857,10 @@ Persistence adapter validation:
    reached `3743f01` with strict `DiffCount 0`. PR #804 then synchronized PR #803
    evidence truth on Idea main `615e3ba848af551801c897dd9b0a52f964801da0`;
    exact-main Main Releasability `30491918891` passed and wiki publication
-   reached `05026e8` with strict `DiffCount 0`. The current live cross-repo RFC-0002 posture checks
-   the governed 13-repository owner/dependency set: 93 label-backed tracked
-   issues, 56 complete, and 37 open, split into 27 blocked, 2 in-progress, and
+   reached `05026e8` with strict `DiffCount 0`. At that synchronized snapshot,
+   the then-current cross-repo RFC-0002 posture checked the governed
+   13-repository owner/dependency set: 93 label-backed tracked issues, 56
+   complete, and 37 open, split into 27 blocked, 2 in-progress, and
    8 tracker issues. The blocked subset has 0 app-actionable
    blocked issues, 4 Core dependencies, and 23 external/protected-evidence
    blockers after fresh canonical validation reopened `sgajbi/lotus-core#836`

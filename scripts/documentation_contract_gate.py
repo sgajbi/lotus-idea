@@ -15,7 +15,11 @@ try:
         mermaid_fence_count,
         non_empty_lines,
     )
-    from documentation_stale_claims import PROHIBITED_STALE_CLAIMS, PROOF_READINESS_HEADINGS
+    from documentation_stale_claims import (
+        PROHIBITED_STALE_CLAIMS,
+        PROOF_READINESS_HEADINGS,
+        rfc0002_issue_posture_snapshot_errors,
+    )
     from wiki_navigation_contract import same_wiki_page_link_errors
 except ModuleNotFoundError:
     from scripts.documentation import evidence_classification_inventory as evidence_inventory
@@ -30,12 +34,10 @@ except ModuleNotFoundError:
     from scripts.documentation_stale_claims import (
         PROHIBITED_STALE_CLAIMS,
         PROOF_READINESS_HEADINGS,
+        rfc0002_issue_posture_snapshot_errors,
     )
     from scripts.wiki_navigation_contract import same_wiki_page_link_errors
 
-evidence_classification_inventory_errors = (
-    evidence_inventory.evidence_classification_inventory_errors
-)
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -410,7 +412,6 @@ POLISHED_SURFACES = (
         1,
     ),
 )
-
 PROHIBITED_PLACEHOLDERS = ("TODO", "TBD", "lorem ipsum", "coming soon")
 
 
@@ -482,6 +483,7 @@ def validate_documentation_contract(
     errors.extend(same_wiki_page_link_errors(root=root))
     errors.extend(evidence_inventory.evidence_classification_inventory_errors(root=root))
     errors.extend(artifact_registry.implementation_proof_artifact_registry_errors(root=root))
+    errors.extend(rfc0002_issue_posture_snapshot_errors(root=root))
     return errors
 
 

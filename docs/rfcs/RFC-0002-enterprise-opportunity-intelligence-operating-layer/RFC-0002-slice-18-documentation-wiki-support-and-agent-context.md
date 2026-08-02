@@ -539,10 +539,11 @@ the final #807 closure truth on Idea main
 `30499444726` passed, including lint/typecheck/security, unit, integration,
 e2e, PostgreSQL runtime proof, combined coverage, Docker build, runtime smoke,
 image scan, release identity/license evidence binding, and CI signal evidence.
-Live Idea RFC-0002 ledger posture is 54 tracked issues, 25 open, and 29
-closed. Live governed cross-repo posture is 93 label-backed tracked issues, 56 closed, and
-37 open across 13 repositories after #814 moved from PR-open to Core-blocked
-posture. After fresh canonical validation reopened `sgajbi/lotus-core#836` as
+At the PR #809 snapshot, the then-current Idea RFC-0002 ledger posture was 54
+tracked issues, 25 open, and 29 closed. The then-current governed cross-repo
+posture was 93 label-backed tracked issues, 56 closed, and 37 open across 13
+repositories after #814 moved from PR-open to Core-blocked posture. After fresh
+canonical validation reopened `sgajbi/lotus-core#836` as
 `status/in-progress`, `sgajbi/lotus-core#840` remained `status/in-progress`,
 and `sgajbi/lotus-manage#626` closed with `status/merged-main`, current open
 posture is 27 blocked issues, 2 in-progress issues, and 8 tracker issues. The blocked
@@ -690,11 +691,12 @@ including release-image build/smoke/scan, image push, digest inspection,
 signing, provenance/SBOM attestations, release manifest, and release evidence
 upload. Repo-authored wiki source was published to `lotus-idea.wiki` commit
 `5e63705` with strict `DiffCount 0`, and local/remote branch cleanup completed
-with no unmerged remote branches. The governed posture remains 93 label-backed
-RFC-0002 issues, 56 closed, and 37 open: 27 blocked, 2 in-progress, 8 tracker,
-0 app-actionable blocked, 4 Core dependencies, and 23 external/protected
-evidence blockers. This is Slice 18 source-truth synchronization only; #681 and
-the remaining blocker issues stay open.
+with no unmerged remote branches. At that synchronized snapshot, the
+then-current governed posture was 93 label-backed RFC-0002 issues, 56 closed,
+and 37 open: 27 blocked, 2 in-progress, 8 tracker, 0 app-actionable blocked, 4
+Core dependencies, and 23 external/protected evidence blockers. This is Slice
+18 source-truth synchronization only; #681 and the remaining blocker issues
+stay open.
 
 PR #825 then synchronized PR #824 merged-main evidence through Idea main
 `8e76736148e9cd2078a1adfd692884da7d78a95f`. PR Merge Gate `30621485539`,
