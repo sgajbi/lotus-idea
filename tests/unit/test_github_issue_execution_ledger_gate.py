@@ -982,6 +982,24 @@ def test_rfc0002_github_issue_execution_ledger_records_issue_681_sync_note() -> 
         and "0 PR-open issues" in note
         for note in notes
     )
+    assert any(
+        isinstance(note, str)
+        and "PR #842 merged the PR #841 evidence-sync tranche" in note
+        and "4e2dd20c3f1b7f17a30eda016e79c62e631b2a2f" in note
+        and "30727100273" in note
+        and "30727098069" in note
+        for note in notes
+    )
+    assert any(
+        isinstance(note, str)
+        and "PR #843 merged the RFC-0002 posture snapshot documentation guard" in note
+        and "2ed353b0394a625dd212b437fb93c0d5d4c02a89" in note
+        and "30728039165" in note
+        and "30728037050" in note
+        and "lotus-idea.wiki commit 87dd4e4" in note
+        and "#681 returned to open_in_progress/status/in-progress" in note
+        for note in notes
+    )
 
 
 def test_rfc0002_github_issue_execution_ledger_blocks_closed_issue_without_closed_instruction(

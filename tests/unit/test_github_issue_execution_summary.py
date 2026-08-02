@@ -158,6 +158,26 @@ def test_issue_681_ledger_records_pr839_exact_main_evidence() -> None:
     assert "#681 returned to open_in_progress/status/in-progress" in evidence_notes
 
 
+def test_issue_681_ledger_records_pr843_exact_main_evidence() -> None:
+    ledger_payload = _load_ledger_payload()
+    issue_681 = next(
+        issue
+        for issue in ledger_payload["issues"]
+        if isinstance(issue, dict) and issue["issueNumber"] == 681
+    )
+    evidence_notes = "\n".join(issue_681["evidenceSyncNotes"])
+
+    assert "PR #842 merged the PR #841 evidence-sync tranche" in evidence_notes
+    assert "4e2dd20c3f1b7f17a30eda016e79c62e631b2a2f" in evidence_notes
+    assert "30727100273" in evidence_notes
+    assert "PR #843 merged the RFC-0002 posture snapshot documentation guard" in evidence_notes
+    assert "2ed353b0394a625dd212b437fb93c0d5d4c02a89" in evidence_notes
+    assert "30728039165" in evidence_notes
+    assert "30728037050" in evidence_notes
+    assert "lotus-idea.wiki commit 87dd4e4" in evidence_notes
+    assert "#681 returned to open_in_progress/status/in-progress" in evidence_notes
+
+
 def test_github_issue_execution_summary_markdown_is_comment_ready() -> None:
     module = _load_summary()
     ledger_payload = _load_ledger_payload()

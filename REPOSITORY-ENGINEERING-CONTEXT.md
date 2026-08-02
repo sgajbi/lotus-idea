@@ -156,6 +156,14 @@ merged-main evidence to Idea main `71867084c2832d053342db048557e03720a3773a`,
 published wiki source to `lotus-idea.wiki` commit `c2258e6`, passed Main
 Releasability `30724145516`, cleaned the feature branch, and returned #681 to
 `status/in-progress` because Slice 18 remains open.
+Idea PR #842 then synchronized PR #841 evidence to main
+`4e2dd20c3f1b7f17a30eda016e79c62e631b2a2f`, passed exact-main Main
+Releasability `30727100273` and CodeQL `30727098069`, and had no wiki-source
+change. Idea PR #843 then merged the posture-snapshot documentation guard to
+main `2ed353b0394a625dd212b437fb93c0d5d4c02a89`, passed exact-main Main
+Releasability `30728039165` and CodeQL `30728037050`, published wiki source to
+`lotus-idea.wiki` commit `87dd4e4` with strict DiffCount 0, and completed
+branch cleanup.
 Do not rerun or close canonical browser proof from source-side Workbench tests
 alone; final proof still needs the full governed stack to produce current
 machine-readable validation output and screenshot/index evidence.
