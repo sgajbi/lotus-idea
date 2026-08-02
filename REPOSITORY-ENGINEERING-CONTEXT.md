@@ -249,16 +249,14 @@ in-progress issues while then preserving Idea-side Core-dependent blockers #685,
 `5ba2757c1235ce3e28c630afd44257327c91edf3`, Main Releasability `30536615979`
 passed, and branch cleanup completed; it is excluded from the open-blocked
 classifier because it is no longer an open `status/blocked` issue. Current
-governed cross-repo RFC-0002 posture is 93 label-backed tracked issues, 56
-complete, and 37 open; the open split is 27 blocked, 2 in progress, and 8
-tracker issues. The blocked subset is 27 issues, 0 app-actionable blocked
-issues, 4 Core dependencies, and 23 external/protected-evidence blockers after
-fresh canonical validation reopened `sgajbi/lotus-core#836` as
-`status/in-progress`. One closed
-Core title-only RFC-0002 reference remains reported
-outside the governed count because `lotus-core` is outside this agent's write
-scope. This is source-truth synchronization
-only: it does not certify Core readiness, clear #685/#686/#500, promote
+governed cross-repo RFC-0002 posture is 108 label-backed issues across 13
+repositories: 71 closed and 37 open. The open split is 28 blocked, 1
+in-progress (#681), and 8 tracker issues. The blocked subset has 0
+app-actionable blocked issues: 5 Core dependencies and 23 external/protected
+evidence blockers. Title-only RFC-0002 references remain reported separately
+outside the governed count until deliberately labeled and ledgered. This is
+source-truth synchronization only: it does not certify Core readiness, clear
+#685/#686, promote
 supported features, or replace production IdP/session/token-claims evidence.
 `sgajbi/lotus-idea#814` is now blocked by Core-owned canonical DPM candidate
 source evidence rather than open Idea or Workbench PR work: Idea PR #815,
@@ -1469,9 +1467,10 @@ CodeQL `30621893764` passed. Repo-authored wiki source was published to
 `lotus-idea.wiki` commit `eefd44a` with strict `DiffCount 0`; the remote PR
 branch was deleted, the local feature branch was deleted after exact
 tree-equivalence verification, the local branch list contained only `main`, and
-no unmerged remote branches remained. Current governed RFC-0002 posture stays
-93 label-backed issues, 56 closed, and 37 open. This is Slice 18
-source-truth synchronization only; #681 remains open and no Core readiness,
+no unmerged remote branches remained. At that synchronized snapshot, the
+then-current governed RFC-0002 posture was 93 label-backed issues, 56 closed,
+and 37 open. This is Slice 18 source-truth synchronization only; #681 remains
+open and no Core readiness,
 canonical browser, production identity/session-token, supported-feature,
 client-publication, or final RFC-0002 closure claim is made.
 
