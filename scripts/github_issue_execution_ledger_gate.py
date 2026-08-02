@@ -29,6 +29,14 @@ OPEN_STATUSES = frozenset(
 )
 CLOSED_STATUSES = frozenset({"closed_complete"})
 AUTO_CLOSE_KEYWORDS = tuple("close closes closed fix fixes fixed resolve resolves resolved".split())
+REQUIRED_EVIDENCE_ONLY_SYNC_POLICY = (
+    "Evidence-only Slice 18 synchronization PRs must not recursively require another "
+    "source-sync PR for their own post-merge evidence",
+    "final PR evidence comment",
+    "If the PR changes implementation truth, blocker state, support posture, wiki source, "
+    "context, or policy",
+    "source-controlled ledger/docs/wiki/context update is required",
+)
 REQUIRED_OPEN_ISSUE_EVIDENCE = {
     343: (
         "Keep #343 open and status/blocked",
@@ -417,6 +425,18 @@ def validate_github_issue_execution_ledger(path: Path = LEDGER_PATH) -> list[str
         errors.append("rfcId must be RFC-0002")
     if payload.get("repository") != EXPECTED_REPOSITORY:
         errors.append("repository must be sgajbi/lotus-idea")
+    policy = payload.get("policy")
+    if not isinstance(policy, dict):
+        errors.append("policy must be an object")
+    else:
+        policy_key = "evidenceOnlySyncPrRule"
+        policy_value = policy.get(policy_key)
+        if not isinstance(policy_value, str) or not policy_value.strip():
+            errors.append(f"policy.{policy_key} is required")
+        else:
+            for fragment in REQUIRED_EVIDENCE_ONLY_SYNC_POLICY:
+                if fragment not in policy_value:
+                    errors.append(f"policy.{policy_key} missing required evidence `{fragment}`")
 
     seen: set[int] = set()
     for entry in entries:
@@ -474,14 +494,7 @@ def validate_github_issue_execution_ledger(path: Path = LEDGER_PATH) -> list[str
     return errors
 
 
-def main() -> int:
-    errors = validate_github_issue_execution_ledger()
-    if errors:
-        print("\n".join(errors))
-        return 1
-    print("RFC-0002 GitHub issue execution ledger gate passed")
-    return 0
-
-
 if __name__ == "__main__":
-    sys.exit(main())
+    validation_errors = validate_github_issue_execution_ledger()
+    print("\n".join(validation_errors or ["RFC-0002 GitHub issue execution ledger gate passed"]))
+    sys.exit(bool(validation_errors))

@@ -41,6 +41,43 @@ def test_rfc0002_github_issue_execution_ledger_gate_passes_current_ledger() -> N
     assert module.validate_github_issue_execution_ledger() == []
 
 
+def test_rfc0002_github_issue_execution_ledger_declares_evidence_only_sync_policy() -> None:
+    module = _load_gate()
+    payload = _ledger_payload(module)
+
+    policy = payload["policy"]["evidenceOnlySyncPrRule"]
+
+    assert "Evidence-only Slice 18 synchronization PRs" in policy
+    assert "must not recursively require another source-sync PR" in policy
+    assert "final PR evidence comment" in policy
+    assert "exact-main Main Releasability run" in policy
+    assert "branch/worktree hygiene" in policy
+    assert "If the PR changes implementation truth" in policy
+    assert "source-controlled ledger/docs/wiki/context update is required" in policy
+
+
+def test_rfc0002_github_issue_execution_ledger_requires_evidence_only_sync_policy(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    payload = _ledger_payload(module)
+    payload["policy"]["evidenceOnlySyncPrRule"] = (
+        "Evidence-only Slice 18 synchronization PRs can use comments."
+    )
+
+    errors = module.validate_github_issue_execution_ledger(_write_ledger(tmp_path, payload))
+
+    assert (
+        "policy.evidenceOnlySyncPrRule missing required evidence "
+        "`Evidence-only Slice 18 synchronization PRs must not recursively "
+        "require another source-sync PR for their own post-merge evidence`"
+    ) in errors
+    assert (
+        "policy.evidenceOnlySyncPrRule missing required evidence "
+        "`source-controlled ledger/docs/wiki/context update is required`"
+    ) in errors
+
+
 def test_rfc0002_github_issue_execution_ledger_requires_current_issue_690(
     tmp_path: Path,
 ) -> None:

@@ -13,7 +13,8 @@
     "openIssueAutoCloseDefault": false,
     "openIssueRequiredInstruction": "Keep #{issueNumber} open",
     "autoCloseKeywords": ["close", "closes", "closed", "fix", "fixes", "fixed", "resolve", "resolves", "resolved"],
-    "partialProgressRule": "Partial RFC progress must be recorded as evidence on the issue without GitHub auto-close keywords. Issues close only when their complete evidence class and slice DoD are satisfied on main."
+    "partialProgressRule": "Partial RFC progress must be recorded as evidence on the issue without GitHub auto-close keywords. Issues close only when their complete evidence class and slice DoD are satisfied on main.",
+    "evidenceOnlySyncPrRule": "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence. Their final post-merge proof is durable when recorded as a final PR evidence comment on #681 with PR URL, merged main SHA, exact-main Main Releasability run, wiki publication or no-wiki-change decision, and branch/worktree hygiene. If the PR changes implementation truth, blocker state, support posture, wiki source, context, or policy, a source-controlled ledger/docs/wiki/context update is required."
   },
   "issues": [
     {

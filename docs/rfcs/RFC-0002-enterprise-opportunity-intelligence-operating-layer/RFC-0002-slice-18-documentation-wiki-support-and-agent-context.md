@@ -793,6 +793,15 @@ and completed branch cleanup. This keeps #681 open because remaining RFC-0002
 blockers still require Core #882/#885, production identity/session-token,
 protected runtime, provider, legal, client-publication, support, supported
 feature, and final closure evidence.
+Evidence-only Slice 18 synchronization PRs now have a non-recursive evidence
+boundary: the PR's own post-merge proof is durable when recorded as a final
+#681 GitHub issue comment with PR URL, merged main SHA, exact-main Main
+Releasability run, wiki publication or no-wiki-change decision, and branch
+hygiene. PR #845 is the current example in the
+[#681 PR #845 final evidence comment](https://github.com/sgajbi/lotus-idea/issues/681#issuecomment-5154811626).
+This policy prevents evidence-sync churn while preserving the stricter rule
+that implementation truth, blocker state, support posture, wiki source,
+context, or policy changes still require source-controlled updates.
 The current canonical Workbench/Idea proof blocker is `sgajbi/lotus-core#882`:
 Core must publish a deterministic non-empty `source_batch_fingerprint` /
 content hash for `DpmPortfolioUniverseCandidate:v1` READY responses before

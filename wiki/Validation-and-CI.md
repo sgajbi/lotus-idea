@@ -1603,6 +1603,16 @@ Releasability `30728738511` and CodeQL `30728733346`, published wiki source to
 [#681 PR #844 final evidence comment](https://github.com/sgajbi/lotus-idea/issues/681#issuecomment-5154685336),
 and completed branch cleanup.
 
+Evidence-only Slice 18 synchronization PRs must not create an infinite
+source-sync loop merely to record their own post-merge proof. Their final proof
+is durable when recorded as a #681 GitHub issue comment with PR URL, merged main
+SHA, exact-main Main Releasability run, wiki publication or no-wiki-change
+decision, and branch/worktree hygiene. PR #845 is the current example, recorded
+in the
+[#681 PR #845 final evidence comment](https://github.com/sgajbi/lotus-idea/issues/681#issuecomment-5154811626).
+Implementation truth, blocker state, support posture, wiki source, context, or
+policy changes still require source-controlled ledger/docs/wiki/context updates.
+
 The blocked-actionability classifier reports 0 app-actionable blocked issues.
 The blocked set is currently 5 Core dependencies and 23 external/protected
 evidence blockers. The canonical Workbench/Idea live proof path is now blocked
