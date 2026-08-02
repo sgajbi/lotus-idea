@@ -207,7 +207,10 @@ supported-feature blockers.
 `make rfc0002-cross-repo-issue-posture` also validates
 `contracts/implementation-proof/rfc0002-cross-repo-blocker-classification.v1.json`.
 That contract is the durable answer to whether the remaining `status/blocked`
-issues are actually fixable app-code work. The live 2026-07-31 posture is 27
+issues are actually fixable app-code work, and the rendered report lists every
+blocked issue with its actionability, blocker class, remaining authority, and
+GitHub URL so operators do not have to reconstruct the blocker set from chat or
+ad hoc queries. The live 2026-07-31 posture is 27
 blocked RFC-0002 issues, 0 app-actionable blocked issues, 4 Core dependencies,
 and 23 external/protected-evidence blockers. Counts are label-backed by
 `rfc/RFC-0002`; title-only references are reported separately and excluded from

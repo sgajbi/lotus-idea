@@ -90,6 +90,43 @@ def blocked_actionability_summary(
     }
 
 
+def render_blocked_actionability_markdown(blocked_actionability: Mapping[str, Any]) -> list[str]:
+    lines = [
+        "",
+        "## Blocked RFC-0002 Actionability",
+        "",
+        f"- Open blocked issues: {blocked_actionability['openBlockedIssueCount']}",
+        f"- App-actionable blocked issues: {blocked_actionability['appActionableBlockedIssueCount']}",
+        "",
+        "### Blocked Issues By Actionability",
+        "",
+    ]
+    lines.extend(
+        f"- `{actionability}`: {count}"
+        for actionability, count in sorted(
+            blocked_actionability["openBlockedIssuesByActionability"].items()
+        )
+    )
+    lines.extend(["", "### Blocked Issues By Class", ""])
+    lines.extend(
+        f"- `{blocker_class}`: {count}"
+        for blocker_class, count in sorted(
+            blocked_actionability["openBlockedIssuesByClass"].items()
+        )
+    )
+    lines.extend(["", "### Blocked Issue Detail", ""])
+    blocked_issues = blocked_actionability.get("openBlockedIssues", [])
+    if not blocked_issues:
+        lines.append("_None._")
+    else:
+        lines.extend(_blocked_issue_detail_lines(blocked_issues))
+
+    classification_boundary = blocked_actionability.get("classificationBoundary")
+    if classification_boundary:
+        lines.extend(["", "Classification boundary: " + str(classification_boundary)])
+    return lines
+
+
 def _parse_classification(raw_classification: Mapping[str, Any], index: int) -> dict[str, Any]:
     repository = raw_classification.get("repository")
     issue_number = raw_classification.get("issueNumber")
@@ -109,6 +146,20 @@ def _parse_classification(raw_classification: Mapping[str, Any], index: int) -> 
     if not isinstance(remaining_authority, str) or not remaining_authority:
         raise ValueError(f"{repository}#{issue_number}: remainingAuthority is required")
     return dict(raw_classification)
+
+
+def _blocked_issue_detail_lines(blocked_issues: Sequence[Mapping[str, Any]]) -> list[str]:
+    return [
+        (
+            f"- `{issue['actionability']}` / `{issue['blockerClass']}`: "
+            f"`{issue['repository']}#{issue['number']}` {issue['title']} - "
+            f"{issue['url']}; remaining authority: {issue['remainingAuthority']}"
+        )
+        for issue in sorted(
+            blocked_issues,
+            key=lambda item: (item["actionability"], item["repository"], item["number"]),
+        )
+    ]
 
 
 def _require_complete_classification(

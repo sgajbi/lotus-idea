@@ -220,6 +220,21 @@ def test_cross_repo_issue_posture_counts_statuses_and_attention_issues(tmp_path:
     assert summary["blockedActionability"]["openBlockedIssuesByClass"] == {
         "canonical_workbench_runtime_core_readiness": 1
     }
+    assert summary["blockedActionability"]["openBlockedIssues"] == [
+        {
+            "number": 685,
+            "title": "Workbench proof",
+            "url": "https://github.com/sgajbi/lotus-idea/issues/685",
+            "updatedAt": "2026-07-29T00:00:00Z",
+            "status": "status/blocked",
+            "priorityLabels": ["priority/P0"],
+            "sliceLabels": ["rfc/RFC-0002/slice-11"],
+            "repository": "lotus-idea",
+            "actionability": "external_or_protected_evidence",
+            "blockerClass": "canonical_workbench_runtime_core_readiness",
+            "remainingAuthority": "test authority boundary",
+        }
+    ]
     assert [issue["repository"] for issue in summary["openAttentionIssues"]] == [
         "lotus-idea",
         "lotus-platform",
@@ -273,10 +288,65 @@ def test_cross_repo_issue_posture_markdown_is_comment_ready(tmp_path: Path) -> N
     assert "- Open RFC-0002 issues: 1" in rendered
     assert "| `sgajbi/lotus-idea` | 1 | 1 | 0 | `status/in-progress` 1 |" in rendered
     assert "- App-actionable blocked issues: 0" in rendered
+    assert "### Blocked Issue Detail" in rendered
+    assert "_None._" in rendered
+    assert "Classification boundary: A zero app-actionable blocked count means" in rendered
     assert "Title-Only RFC-0002 References Excluded From Governed Counts" in rendered
     assert "`lotus-idea#555` `status/merged-main`" in rendered
     assert "`lotus-idea#681` `status/in-progress` Slice 18 docs" in rendered
     assert "Counts are label-backed by rfc/RFC-0002" in rendered
+
+
+def test_cross_repo_issue_posture_markdown_lists_blocked_issue_authority(
+    tmp_path: Path,
+) -> None:
+    module = _load_module()
+    fixture = _write_fixture(
+        tmp_path,
+        {
+            "sgajbi/lotus-idea": {
+                "openIssues": [_issue(685, state="OPEN", title="Workbench proof", labels=[])],
+                "allIssues": [],
+                "rfc0002Issues": [
+                    _issue(
+                        685,
+                        state="OPEN",
+                        title="Workbench proof",
+                        labels=[
+                            "rfc/RFC-0002",
+                            "rfc/RFC-0002/slice-11",
+                            "status/blocked",
+                        ],
+                    )
+                ],
+            }
+        },
+    )
+    blocker_classification = _write_blocker_classification(
+        tmp_path,
+        [
+            _classification(
+                685,
+                blocker_class="canonical_workbench_runtime_core_readiness",
+            )
+        ],
+    )
+
+    rendered = module.render_markdown(
+        module.build_cross_repo_issue_posture(
+            repositories=("sgajbi/lotus-idea",),
+            fixture_path=fixture,
+            blocker_classification_path=blocker_classification,
+        )
+    )
+
+    assert (
+        "- `external_or_protected_evidence` / "
+        "`canonical_workbench_runtime_core_readiness`: "
+        "`lotus-idea#685` Workbench proof - "
+        "https://github.com/sgajbi/lotus-idea/issues/685; "
+        "remaining authority: test authority boundary"
+    ) in rendered
 
 
 def test_cross_repo_issue_posture_rejects_missing_repo_fixture(tmp_path: Path) -> None:

@@ -18,6 +18,7 @@ from cross_repo_blocker_actionability import (  # noqa: E402
     DEFAULT_BLOCKER_CLASSIFICATION_PATH,
     blocked_actionability_summary,
     load_blocker_classifications,
+    render_blocked_actionability_markdown,
 )
 
 DEFAULT_REPOSITORIES = tuple(
@@ -182,32 +183,7 @@ def render_markdown(summary: Mapping[str, Any]) -> str:
         f"- `{status}`: {count}"
         for status, count in sorted(counts["openRfc0002IssuesByStatus"].items())
     )
-    blocked_actionability = summary["blockedActionability"]
-    lines.extend(
-        [
-            "",
-            "## Blocked RFC-0002 Actionability",
-            "",
-            f"- Open blocked issues: {blocked_actionability['openBlockedIssueCount']}",
-            f"- App-actionable blocked issues: {blocked_actionability['appActionableBlockedIssueCount']}",
-            "",
-            "### Blocked Issues By Actionability",
-            "",
-        ]
-    )
-    lines.extend(
-        f"- `{actionability}`: {count}"
-        for actionability, count in sorted(
-            blocked_actionability["openBlockedIssuesByActionability"].items()
-        )
-    )
-    lines.extend(["", "### Blocked Issues By Class", ""])
-    lines.extend(
-        f"- `{blocker_class}`: {count}"
-        for blocker_class, count in sorted(
-            blocked_actionability["openBlockedIssuesByClass"].items()
-        )
-    )
+    lines.extend(render_blocked_actionability_markdown(summary["blockedActionability"]))
     lines.extend(["", "## Repository Summary", ""])
     lines.append("| Repository | Open issues | Open RFC-0002 | Closed RFC-0002 | Status posture |")
     lines.append("| --- | ---: | ---: | ---: | --- |")
