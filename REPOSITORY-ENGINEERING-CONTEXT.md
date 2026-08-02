@@ -148,10 +148,13 @@ The current canonical Workbench/browser unblock path is anchored by
 `sgajbi/lotus-core#882`, `sgajbi/lotus-core#885`, #814, #685, and #686.
 `sgajbi/lotus-workbench#500` is closed with `status/merged-main` after
 Workbench PR #501 and Idea PR #837 consumed that closure into the
-source-controlled blocker classifier. Idea PR #838 then synchronized PR #837
+source-controlled blocker classifier. Idea PR #838 synchronized PR #837
 exact-main evidence to Idea main `2c2d35667643ad5efae83924475574ab6c16be03`,
-published wiki source to `lotus-idea.wiki` commit `ee15dc3`, passed Main
-Releasability `30723235065`, cleaned the feature branch, and returned #681 to
+published wiki source to `lotus-idea.wiki` commit `ee15dc3`, and passed Main
+Releasability `30723235065`. Idea PR #839 then synchronized PR #838
+merged-main evidence to Idea main `71867084c2832d053342db048557e03720a3773a`,
+published wiki source to `lotus-idea.wiki` commit `c2258e6`, passed Main
+Releasability `30724145516`, cleaned the feature branch, and returned #681 to
 `status/in-progress` because Slice 18 remains open.
 Do not rerun or close canonical browser proof from source-side Workbench tests
 alone; final proof still needs the full governed stack to produce current
