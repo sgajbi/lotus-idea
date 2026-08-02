@@ -767,7 +767,10 @@ blocked-actionability classifier remains at 0 app-actionable blocked issues,
 split into 5 Core dependencies and 23 external/protected evidence blockers.
 Idea PR #838 synchronized PR #837 exact-main evidence to main
 `2c2d35667643ad5efae83924475574ab6c16be03`, passed Main Releasability
-`30723235065`, published wiki source to `lotus-idea.wiki` commit `ee15dc3`,
+`30723235065`, and published wiki source to `lotus-idea.wiki` commit
+`ee15dc3`. Idea PR #839 synchronized PR #838 merged-main evidence to main
+`71867084c2832d053342db048557e03720a3773a`, passed Main Releasability
+`30724145516`, published wiki source to `lotus-idea.wiki` commit `c2258e6`,
 completed branch cleanup, and returned #681 to `status/in-progress` because
 Slice 18 remains a continuing synchronization issue.
 The current canonical Workbench/Idea proof blocker is `sgajbi/lotus-core#882`:
