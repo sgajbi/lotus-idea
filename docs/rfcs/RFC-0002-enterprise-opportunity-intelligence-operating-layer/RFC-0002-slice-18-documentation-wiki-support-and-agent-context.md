@@ -829,8 +829,12 @@ promotion, and final live-journey evidence remain open.
 The cross-repo posture command now includes a source-controlled blocker
 actionability classifier at
 `contracts/implementation-proof/rfc0002-cross-repo-blocker-classification.v1.json`.
-For the current 93-issue label-backed RFC-0002 program posture, all 27 open
-`status/blocked` issues are classified: 4 are Core dependencies and 23 require
+Its Markdown output also renders each blocked issue with issue URL,
+actionability, blocker class, and remaining authority, so the current
+Core-vs-protected/external split is durable execution evidence rather than a
+chat-only explanation.
+For the current 108-issue label-backed RFC-0002 program posture, all 28 open
+`status/blocked` issues are classified: 5 are Core dependencies and 23 require
 external or protected evidence. The current app-actionable blocked count is 0.
 Future agents must not use `status/blocked` for writable non-Core app work; if
 the remaining acceptance criteria can be satisfied in `lotus-idea`,

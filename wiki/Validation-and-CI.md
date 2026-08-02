@@ -1203,8 +1203,11 @@ posture remains uncertified until release evidence exists.
 
 `make rfc0002-cross-repo-issue-posture` now renders blocker actionability from
 `contracts/implementation-proof/rfc0002-cross-repo-blocker-classification.v1.json`.
-Current live posture is 27 blocked RFC-0002 issues, 0 app-actionable blocked
-issues, 4 Core dependencies, and 23 external/protected-evidence blockers. Counts
+It also lists every blocked issue with the GitHub URL, actionability, blocker
+class, and remaining authority so the Core-vs-protected/external split is
+auditable without chat memory or one-off GitHub queries.
+Current live posture is 28 blocked RFC-0002 issues, 0 app-actionable blocked
+issues, 5 Core dependencies, and 23 external/protected-evidence blockers. Counts
 are label-backed by `rfc/RFC-0002`; title-only references are reported
 separately and excluded from governed counts unless deliberately labeled and
 ledgered. This
