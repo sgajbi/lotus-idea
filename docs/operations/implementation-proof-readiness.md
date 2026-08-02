@@ -467,6 +467,16 @@ proof is Core-owned canonical seed/DPM readiness through
 `sgajbi/lotus-core#882` and `sgajbi/lotus-core#885`, plus fresh governed
 Gateway/BFF-backed canonical Workbench validation for #685/#686; it is not
 hidden Idea app-code work.
+Evidence-only Slice 18 synchronization PRs must not create an endless
+source-sync chain solely to record their own post-merge evidence. Their final
+proof is durable when recorded as a #681 GitHub issue comment with the PR URL,
+merged main SHA, exact-main Main Releasability run, wiki publication or
+no-wiki-change decision, and branch/worktree hygiene. PR #845 is the current
+example in the
+[#681 PR #845 final evidence comment](https://github.com/sgajbi/lotus-idea/issues/681#issuecomment-5154811626).
+If an evidence-sync PR changes implementation truth, blocker state, support
+posture, wiki source, context, or policy, source-controlled
+ledger/docs/wiki/context truth remains mandatory.
 `sgajbi/lotus-manage#626` records the closed Manage tax-lot identity evidence boundary:
 PR #627 merged on Manage main `5ba2757c1235ce3e28c630afd44257327c91edf3`,
 Main Releasability `30536615979` passed, and the remote feature branch was

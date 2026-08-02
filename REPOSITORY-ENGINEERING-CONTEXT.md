@@ -171,6 +171,16 @@ Releasability `30728738511` and CodeQL `30728733346`, published wiki source to
 #681 evidence in the
 [#681 PR #844 final evidence comment](https://github.com/sgajbi/lotus-idea/issues/681#issuecomment-5154685336),
 and completed remote/local branch cleanup.
+Evidence-only Slice 18 synchronization PRs must not recursively require another
+source-sync PR solely to record their own post-merge evidence. PR #845 is the
+current example: it merged to `909f045251a300326ed772c3b676509011237cc8`,
+passed exact-main Main Releasability `30729531793`, published wiki commit
+`41cf454` with strict `DiffCount 0`, completed branch hygiene, and recorded its
+final #681 evidence in the
+[#681 PR #845 final evidence comment](https://github.com/sgajbi/lotus-idea/issues/681#issuecomment-5154811626).
+If an evidence-sync PR changes implementation truth, blocker state, support
+posture, wiki source, context, or policy, source-controlled ledger/docs/wiki
+truth must still be updated in the next implementation-bearing slice.
 Do not rerun or close canonical browser proof from source-side Workbench tests
 alone; final proof still needs the full governed stack to produce current
 machine-readable validation output and screenshot/index evidence.
