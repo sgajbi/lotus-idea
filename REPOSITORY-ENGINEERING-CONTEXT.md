@@ -181,6 +181,16 @@ final #681 evidence in the
 If an evidence-sync PR changes implementation truth, blocker state, support
 posture, wiki source, context, or policy, source-controlled ledger/docs/wiki
 truth must still be updated in the next implementation-bearing slice.
+Platform PR `sgajbi/lotus-platform#646` then merged the reusable keep-open PR
+guidance hardening on platform main
+`c041a7e13358feb322b8e92b3827f3ed2a834b43`; exact-main Main Releasability run
+`30731910564` passed, and the duplicate exact-SHA dispatch run `30731913286`
+was cancelled only after the push-triggered exact-SHA run remained preserved.
+The platform-owned `gh-issue-fix-qa-loop`, `lotus-pr-premerge-gate`, and
+`PR-LOOP-PLAYBOOK.md` now explicitly reject negated closing-keyword text with
+issue references for keep-open work, and platform tests enforce that guidance.
+This is Slice 18 agent-context/source-truth synchronization only; it does not
+clear RFC-0002 blockers or promote supported features.
 Do not rerun or close canonical browser proof from source-side Workbench tests
 alone; final proof still needs the full governed stack to produce current
 machine-readable validation output and screenshot/index evidence.

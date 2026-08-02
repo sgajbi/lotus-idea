@@ -1616,6 +1616,17 @@ in the
 Implementation truth, blocker state, support posture, wiki source, context, or
 policy changes still require source-controlled ledger/docs/wiki/context updates.
 
+Platform PR `sgajbi/lotus-platform#646` merged the reusable keep-open PR
+guidance hardening to platform main
+`c041a7e13358feb322b8e92b3827f3ed2a834b43`, with exact-main Main
+Releasability run `30731910564` passing. The platform-owned
+`gh-issue-fix-qa-loop`, `lotus-pr-premerge-gate`, and `PR-LOOP-PLAYBOOK.md`
+now reject negated closing-keyword issue references for keep-open PRs, and
+platform tests cover the rule across the issue-loop, premerge, and PR-loop
+surfaces. This is execution-control guidance only; it does not clear RFC-0002
+product, Core, protected-evidence, supported-feature, or final-closure
+blockers.
+
 The blocked-actionability classifier reports 0 app-actionable blocked issues.
 The blocked set is currently 5 Core dependencies and 23 external/protected
 evidence blockers. The canonical Workbench/Idea live proof path is now blocked

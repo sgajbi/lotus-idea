@@ -804,6 +804,14 @@ hygiene. PR #845 is the current example in the
 This policy prevents evidence-sync churn while preserving the stricter rule
 that implementation truth, blocker state, support posture, wiki source,
 context, or policy changes still require source-controlled updates.
+Platform PR `sgajbi/lotus-platform#646` merged the platform-owned keep-open PR
+guidance hardening to main `c041a7e13358feb322b8e92b3827f3ed2a834b43` and
+passed exact-main Main Releasability run `30731910564`. The reusable
+`gh-issue-fix-qa-loop`, `lotus-pr-premerge-gate`, and `PR-LOOP-PLAYBOOK.md`
+guidance now treats negated closing-keyword text with an issue reference as
+unsafe for keep-open work, with platform regression coverage. This is Slice 18
+agent-context synchronization only; it does not clear implementation blockers,
+promote supported features, or replace final closure evidence.
 The current canonical Workbench/Idea proof blocker is `sgajbi/lotus-core#882`:
 Core must publish a deterministic non-empty `source_batch_fingerprint` /
 content hash for `DpmPortfolioUniverseCandidate:v1` READY responses before

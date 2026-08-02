@@ -480,6 +480,15 @@ example in the
 If an evidence-sync PR changes implementation truth, blocker state, support
 posture, wiki source, context, or policy, source-controlled
 ledger/docs/wiki/context truth remains mandatory.
+Platform PR `sgajbi/lotus-platform#646` merged the corresponding reusable
+guidance hardening into platform-owned agent workflow source on main
+`c041a7e13358feb322b8e92b3827f3ed2a834b43`, with exact-main Main
+Releasability run `30731910564` passing. It updates
+`gh-issue-fix-qa-loop`, `lotus-pr-premerge-gate`, and `PR-LOOP-PLAYBOOK.md`
+so future agents treat negated closing-keyword issue references as unsafe and
+use neutral keep-open wording. This improves execution control only; it does
+not clear Core, production identity, protected runtime, provider, legal,
+client-publication, supported-feature, support, or final closure blockers.
 `sgajbi/lotus-manage#626` records the closed Manage tax-lot identity evidence boundary:
 PR #627 merged on Manage main `5ba2757c1235ce3e28c630afd44257327c91edf3`,
 Main Releasability `30536615979` passed, and the remote feature branch was
