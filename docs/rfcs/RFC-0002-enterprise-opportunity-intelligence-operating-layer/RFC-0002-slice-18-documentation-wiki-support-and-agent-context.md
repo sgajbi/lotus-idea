@@ -435,7 +435,9 @@ and the gate fails early when text says `Keep #<open issue> open` while also
 using standalone GitHub auto-close keywords such as `fixes`, `closes`, or
 `resolves`. Partial RFC PRs must use neutral verbs such as `updates`, `records`,
 `reconciles`, or `addresses` until the complete evidence class is merged and
-QA-backed closure is intended.
+QA-backed closure is intended. Negated closure references such as `does not
+close #681` remain unsafe because GitHub still sees the closing keyword and
+issue reference; describe non-completion without an issue reference instead.
 
 The same Slice 18 learning loop now adds
 `make rfc0002-github-issue-execution-state-audit`, backed by

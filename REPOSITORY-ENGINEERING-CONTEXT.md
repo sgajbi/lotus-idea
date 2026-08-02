@@ -1370,9 +1370,12 @@ Gate check for pull-request title/body text. Do not use standalone `Closes`,
 `Fixes`, or `Resolves` in PR titles, PR bodies, or commit messages for those
 issues until the full evidence class and QA-backed closure criteria are
 satisfied; use neutral verbs such as `updates`, `records`, `reconciles`, or
-`addresses` for partial evidence. The `#690` reopen after PR `#707` and the
-`#681` auto-close/reopen after PR `#767` are the current regression cases these
-gates prevent. When current GitHub state itself is being used as delivery truth,
+`addresses` for partial evidence. Negated issue references such as `does not
+close #681` are also unsafe because GitHub still matches the closing keyword and
+issue reference. The `#690` reopen after PR `#707`, the `#681` auto-close/reopen
+after PR `#767`, and the `#681` auto-close/reopen after PR `#846` are the
+current regression cases these gates prevent. When current GitHub state itself
+is being used as delivery truth,
 run
 `make rfc0002-github-issue-execution-state-audit`; it compares the ledger with
 GitHub open/closed state and lifecycle labels so reopened, blocked,
@@ -1583,7 +1586,8 @@ artifact before creation when the text is drafted outside GitHub Actions. Use
 `scripts/github_issue_pr_text_gate.py --title-file <path>` or `--title <text>`
 with `--body-file <path>` so local evidence checks the same Markdown body that
 will reach GitHub. The gate rejects ambiguous mixed sources and keep-open issue
-references combined with GitHub auto-close wording.
+references combined with GitHub auto-close wording, including negated phrases
+such as `does not close #681`.
 
 ## Observability And Operability
 

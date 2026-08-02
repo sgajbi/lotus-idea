@@ -127,6 +127,9 @@ ledger. In local/offline execution it passes when no PR title/body text is
 provided. In the PR Merge Gate, GitHub supplies the pull-request title and body;
 the gate fails when text says `Keep #<open issue> open` and also contains a
 standalone GitHub auto-close keyword such as `fixes`, `closes`, or `resolves`.
+Negated phrasing such as `does not close #681` is still unsafe because GitHub
+matches the closing keyword plus issue reference; use `does not complete Slice
+18` or another neutral non-issue-reference phrase instead.
 Use neutral verbs such as `updates`, `records`, `reconciles`, or `addresses` for
 partial RFC evidence PRs, then close issues only through explicit QA-backed
 closure once the full evidence class is satisfied on exact main.
