@@ -77,6 +77,9 @@ def _unsafe_auto_close_keywords(text: str) -> tuple[str, ...]:
         for match in pattern.finditer(text):
             if _is_safe_hyphenated_term(text, match.end()):
                 continue
+            if _is_issue_reference_after_keyword(text, match.end()):
+                found.add(match.group(0).lower())
+                continue
             if _is_safe_negated_boundary(text, match.start()):
                 continue
             found.add(match.group(0).lower())
@@ -86,6 +89,11 @@ def _unsafe_auto_close_keywords(text: str) -> tuple[str, ...]:
 def _is_safe_hyphenated_term(text: str, keyword_end: int) -> bool:
     suffix = text[keyword_end : keyword_end + 16].lower()
     return suffix.startswith("-forward")
+
+
+def _is_issue_reference_after_keyword(text: str, keyword_end: int) -> bool:
+    suffix = text[keyword_end : keyword_end + 32]
+    return re.match(r"\s+#\d+\b", suffix) is not None
 
 
 def _is_safe_negated_boundary(text: str, keyword_start: int) -> bool:

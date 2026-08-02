@@ -1070,7 +1070,10 @@ The target is no-op when PR text is not supplied locally; PR Merge Gate supplies
 the GitHub pull-request title and body and fails early if a keep-open issue is
 paired with verbs such as `fixes`, `closes`, or `resolves`. Use neutral verbs
 such as `updates`, `records`, `reconciles`, or `addresses` until QA-backed
-closure is intended.
+closure is intended. Negated issue references such as `does not close #681` are
+also unsafe because GitHub still matches the closing keyword and issue
+reference; say the PR `does not complete Slice 18` or use another neutral
+non-issue-reference phrase.
 
 When this gate fails, a manual PR body edit is necessary but may not be
 sufficient for an Actions rerun. Reruns reuse the original pull-request event

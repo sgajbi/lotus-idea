@@ -96,6 +96,24 @@ def test_github_issue_pr_text_gate_allows_negated_close_boundary() -> None:
     assert errors == []
 
 
+def test_github_issue_pr_text_gate_blocks_negated_close_with_issue_reference() -> None:
+    module = _load_gate()
+
+    errors = module.validate_pr_text(
+        title="Record Slice 18 evidence",
+        body=("Keep #681 open.\n\nThis records documentation policy only and does not close #681."),
+    )
+
+    assert errors == [
+        (
+            "PR text references keep-open RFC-0002 issue(s) #681 but contains "
+            "GitHub auto-close keyword(s) `close`. Use neutral verbs such as "
+            "`updates`, `records`, `reconciles`, or `addresses`, and keep "
+            "completion language out of partial PR titles and bodies."
+        )
+    ]
+
+
 def test_github_issue_pr_text_gate_allows_fix_forward_as_governed_delivery_term() -> None:
     module = _load_gate()
 
