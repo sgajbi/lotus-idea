@@ -449,7 +449,14 @@ merged-main evidence synchronization to main
 `71867084c2832d053342db048557e03720a3773a`, published wiki source to
 `lotus-idea.wiki` commit `c2258e6`, passed Main Releasability `30724145516`,
 completed branch cleanup, and returned #681 to `status/in-progress` for
-continuing Slice 18 coordination. The remaining Slice 11/17
+continuing Slice 18 coordination. Idea PR #842 synchronized PR #841 evidence to
+main `4e2dd20c3f1b7f17a30eda016e79c62e631b2a2f`, passed exact-main Main
+Releasability `30727100273` and CodeQL `30727098069`, and had no wiki-source
+change. Idea PR #843 merged the posture-snapshot documentation guard to main
+`2ed353b0394a625dd212b437fb93c0d5d4c02a89`, passed exact-main Main
+Releasability `30728039165` and CodeQL `30728037050`, published wiki source to
+`lotus-idea.wiki` commit `87dd4e4` with strict DiffCount 0, and completed
+branch cleanup. The remaining Slice 11/17
 proof is Core-owned canonical seed/DPM readiness through
 `sgajbi/lotus-core#882` and `sgajbi/lotus-core#885`, plus fresh governed
 Gateway/BFF-backed canonical Workbench validation for #685/#686; it is not
