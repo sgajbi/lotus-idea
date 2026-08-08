@@ -189,10 +189,12 @@ evidence. #379 is `open_blocked`, not QA-pending: owner-app local
 implementation evidence is already merged through `sgajbi/lotus-advise#461`,
 `sgajbi/lotus-manage#621`, `sgajbi/lotus-report#152`, and Idea PR #742/#743.
 Idea now consumes `sgajbi/lotus-manage#620` temporal receipt identity through
-closed v3 Manage mandate runtime evidence, but production/certification
-evidence, trusted IdP caller context, retention/legal proof, and Archive
-production conformance remain open through `sgajbi/lotus-manage#624`,
-`sgajbi/lotus-report#136`, and `sgajbi/lotus-archive#55`. Platform PR
+closed v3 Manage mandate runtime evidence, and Report-owned retention-policy
+conformance is closed through `sgajbi/lotus-report#136` on lotus-report main
+`f8d220d74dd21d0c51cc310c117264c96b879d62`. Production/certification
+evidence, trusted IdP caller context, and Archive legal/privacy lifecycle
+conformance remain open through `sgajbi/lotus-manage#624` and
+`sgajbi/lotus-archive#55`. Platform PR
 `sgajbi/lotus-platform#631`
 fixes the prior Manage seed authorization failure, but #686 is still
 `open_blocked`, not QA-pending because `sgajbi/lotus-core#840` blocks

@@ -136,10 +136,12 @@ deployment, supported-feature promotion, or full Slice 15 closure; #379 is now
 blocked, not QA-pending: Advise, Manage, Report, and Idea owner-app local
 implementation evidence is already merged. Idea now consumes the
 `sgajbi/lotus-manage#620` temporal receipt identity fields through closed v3
-Manage mandate runtime evidence, but production/certification, trusted IdP
-caller context, retention/legal, and Archive production conformance evidence
-remain open through `sgajbi/lotus-manage#624`, `sgajbi/lotus-report#136`, and
-`sgajbi/lotus-archive#55`. #685 is now blocked by `sgajbi/lotus-core#882`
+Manage mandate runtime evidence, and Report-owned Idea evidence retention-policy
+conformance is closed through `sgajbi/lotus-report#136` on lotus-report main
+`f8d220d74dd21d0c51cc310c117264c96b879d62`. Production/certification,
+trusted IdP caller context, and Archive legal/privacy lifecycle conformance
+remain open through `sgajbi/lotus-manage#624` and `sgajbi/lotus-archive#55`.
+#685 is now blocked by `sgajbi/lotus-core#882`
 after canonical validation advanced to Manage-owned DPM candidate discovery but
 failed closed with `BULK_REVIEW_CAMPAIGN_SOURCE_HASH_REQUIRED`; Core must
 publish a deterministic `source_batch_fingerprint` / content hash on
@@ -1604,7 +1606,7 @@ The 2026-07-31 writable-dependency audit is now source-synchronized in the
 RFC-0002 execution ledger after durable GitHub comments were posted on
 `sgajbi/lotus-platform#495`, `sgajbi/lotus-platform#563`,
 `sgajbi/lotus-ai#115`, `sgajbi/lotus-ai#122`, `sgajbi/lotus-manage#624`,
-`sgajbi/lotus-report#136`, `sgajbi/lotus-archive#55`,
+then-open `sgajbi/lotus-report#136`, `sgajbi/lotus-archive#55`,
 `sgajbi/lotus-workbench#436`, and `sgajbi/lotus-workbench#500`. Focused
 owner-repo validations passed for platform proof-consumption and BFF
 principal-session contracts, AI Idea workflow-pack and provider-retention

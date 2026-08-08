@@ -759,8 +759,11 @@ Persistence adapter validation:
    `8ccee32d9a25fb6c47c723e105e2c48d1c4b3c70` with Main Releasability
    `30324178801`. Issue #379 remains open in `status/blocked`, not
    QA-pending: owner-app local implementation evidence is merged, while
-   production/certification evidence, trusted IdP caller context,
-   retention/legal proof, and Archive production conformance remain open.
+   production/certification evidence, trusted IdP caller context, and Archive
+   legal/privacy lifecycle conformance remain open. Report-owned
+   retention-policy conformance is closed through `sgajbi/lotus-report#136`
+   on lotus-report main `f8d220d74dd21d0c51cc310c117264c96b879d62`
+   with Main Releasability run `30898036781` and current-main focused QA.
 
    Slice 18 issue-posture reconciliation also records the current #340 and
    #380 truth. PR #745 reconciled #340 to `open_merged_main_qa_pending` at
@@ -779,8 +782,7 @@ Persistence adapter validation:
    Idea now consumes the `sgajbi/lotus-manage#620` temporal receipt identity
    fields through closed v3 Manage mandate runtime evidence, while
    production/certification evidence remains open through
-   `sgajbi/lotus-manage#624`, `sgajbi/lotus-report#136`, and
-   `sgajbi/lotus-archive#55`. #685 is
+   `sgajbi/lotus-manage#624` and `sgajbi/lotus-archive#55`. #685 is
    `open_blocked`, not QA-pending: the 2026-07-29 governed Workbench startup
    attempt via `npm run live:stack:up` restored core portfolio readiness for
    `PB_SG_GLOBAL_BAL_001`; valuation and aggregation jobs drained to zero,

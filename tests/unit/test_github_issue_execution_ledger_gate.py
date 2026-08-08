@@ -130,14 +130,21 @@ def test_rfc0002_github_issue_execution_ledger_blocks_issue_379_on_certification
     assert "sgajbi/lotus-manage#621" in issue_379["closureInstruction"]
     assert "sgajbi/lotus-report#152" in issue_379["closureInstruction"]
     assert (
+        "sgajbi/lotus-report#136 is closed for Report-owned Idea evidence retention-policy conformance"
+        in issue_379["closureInstruction"]
+    )
+    assert "30898036781" in issue_379["closureInstruction"]
+    assert (
         "consumes sgajbi/lotus-manage#620 Manage temporal receipt identity"
         in issue_379["closureInstruction"]
     )
     assert "closed v3 Manage mandate runtime proof contract" in issue_379["closureInstruction"]
     assert "sgajbi/lotus-manage#624" in issue_379["closureInstruction"]
-    assert "sgajbi/lotus-report#136" in issue_379["closureInstruction"]
     assert "sgajbi/lotus-archive#55" in issue_379["closureInstruction"]
     assert "production/certification evidence" in issue_379["closureInstruction"]
+    assert (
+        "Archive production legal/privacy lifecycle conformance" in issue_379["closureInstruction"]
+    )
 
 
 def test_rfc0002_github_issue_execution_ledger_tracks_slice18_posture_evidence() -> None:

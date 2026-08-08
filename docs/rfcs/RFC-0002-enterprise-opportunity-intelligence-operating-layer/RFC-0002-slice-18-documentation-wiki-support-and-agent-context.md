@@ -628,11 +628,14 @@ current main `8ccee32d9a25fb6c47c723e105e2c48d1c4b3c70`, with Main
 Releasability run `30324178801` passing. Issue #379 remains open in
 `status/blocked`: this evidence clears only the source-safe aggregate proof
 composition and owner-app local implementation tranche. Production/certification
-evidence, trusted IdP caller context, retention/legal proof, and Archive
-production conformance remain open after Idea consumes the
-`sgajbi/lotus-manage#620` temporal receipt identity tranche. Remaining blockers
-are `sgajbi/lotus-manage#624`, `sgajbi/lotus-report#136`, and
-`sgajbi/lotus-archive#55`; no suitability, rebalance/execution, report
+evidence, trusted IdP caller context, and Archive legal/privacy lifecycle
+conformance remain open after Idea consumes the
+`sgajbi/lotus-manage#620` temporal receipt identity tranche. Report-owned
+retention-policy conformance is closed through `sgajbi/lotus-report#136` on
+lotus-report main `f8d220d74dd21d0c51cc310c117264c96b879d62` with Main
+Releasability run `30898036781` and current-main focused QA. Remaining blockers
+are `sgajbi/lotus-manage#624` and `sgajbi/lotus-archive#55`; no suitability,
+rebalance/execution, report
 rendering, archive authority, client publication, production identity,
 supported-feature promotion, legal/privacy approval, or full downstream outcome
 certification closure is claimed.
@@ -675,9 +678,10 @@ production vulnerability certification, registry promotion, protected
 deployment, supported-feature promotion, or full Slice 15 closure is claimed.
 #379 is `open_blocked`, not
 QA-pending because its
-owner-app local implementation dependencies are merged but
-production/certification, trusted-identity, retention/legal, and Archive
-production evidence remains open. #685 is `open_blocked`, not QA-pending: the
+owner-app local implementation dependencies are merged and Report-owned
+retention-policy conformance is closed, but production/certification,
+trusted-identity, and Archive legal/privacy lifecycle evidence remains open.
+#685 is `open_blocked`, not QA-pending: the
 2026-07-29 governed Workbench startup attempt via `npm run live:stack:up`
 restored core portfolio readiness for `PB_SG_GLOBAL_BAL_001`; valuation and
 aggregation jobs drained to zero, positions/cash data quality reached
@@ -901,7 +905,7 @@ The 2026-07-31 dependency audit then verified current-main source-side posture
 for the writable cross-repo blockers without finding hidden app-actionable
 blocked work. Durable evidence comments were posted on `sgajbi/lotus-platform#495`,
 `sgajbi/lotus-platform#563`, `sgajbi/lotus-ai#115`, `sgajbi/lotus-ai#122`,
-`sgajbi/lotus-manage#624`, `sgajbi/lotus-report#136`,
+`sgajbi/lotus-manage#624`, then-open `sgajbi/lotus-report#136`,
 `sgajbi/lotus-archive#55`, `sgajbi/lotus-workbench#436`, and
 `sgajbi/lotus-workbench#500`, then coordinated through #681. Workbench #500
 later closed with `status/merged-main` and was removed from the current open
