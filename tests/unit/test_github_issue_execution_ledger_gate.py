@@ -321,6 +321,27 @@ def test_rfc0002_github_issue_execution_ledger_tracks_slice18_posture_evidence()
     )
 
 
+def test_rfc0002_github_issue_execution_ledger_tracks_issue_854_gate_false_positive() -> None:
+    module = _load_gate()
+    payload = _ledger_payload(module)
+    issue_854 = next(
+        issue
+        for issue in payload["issues"]
+        if isinstance(issue, dict) and issue["issueNumber"] == 854
+    )
+
+    assert issue_854["githubState"] == "open"
+    assert issue_854["executionStatus"] == "open_fixed_local"
+    assert issue_854["allowPullRequestAutoClose"] is False
+    assert issue_854["rfcSlices"] == ["slice-18"]
+    assert "Keep #854 open with status/fixed-local" in issue_854["closureInstruction"]
+    assert "fixed-local branch commit" in issue_854["closureInstruction"]
+    assert "fail-closed PR text gate terminology fix" in issue_854["closureInstruction"]
+    assert "direct issue-reference regression guard" in issue_854["closureInstruction"]
+    assert "This does not close #681" not in issue_854["closureInstruction"]
+    assert "complete Slice 18" in issue_854["closureInstruction"]
+
+
 def test_rfc0002_github_issue_execution_ledger_tracks_workbench_principal_blocker() -> None:
     module = _load_gate()
     payload = _ledger_payload(module)

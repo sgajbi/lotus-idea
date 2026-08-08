@@ -19,7 +19,7 @@ EXPECTED_EXECUTION_ISSUES = frozenset(range(673, 703)) | frozenset(
     map(
         int,
         "340 343 344 345 375 379 380 482 542 555 557 559 561 563 565 567 "
-        "569 579 704 756 782 797 807 814".split(),
+        "569 579 704 756 782 797 807 814 854".split(),
     )
 )
 OPEN_STATUSES = frozenset(
@@ -408,7 +408,7 @@ def _entries(payload: dict[str, Any]) -> list[IssueEntry]:
 
 def _auto_close_phrase_re(issue_number: int) -> re.Pattern[str]:
     keywords = "|".join(re.escape(keyword) for keyword in AUTO_CLOSE_KEYWORDS)
-    return re.compile(rf"\b(?:{keywords})\s+#{issue_number}\b", re.IGNORECASE)
+    return re.compile(rf"(?<![-\w])(?:{keywords})\s+#{issue_number}\b", re.IGNORECASE)
 
 
 def validate_github_issue_execution_ledger(path: Path = LEDGER_PATH) -> list[str]:
