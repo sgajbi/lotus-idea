@@ -4,7 +4,7 @@
   "service_license": "LicenseRef-Lotus-Proprietary",
   "runtime_lock": {
     "path": "requirements/runtime-resolved.lock.txt",
-    "sha256": "8fba00b2e8b852a4c24bbe393f3e6bf0f713c0270d4cafcfa7e65d74d6ee43ac"
+    "sha256": "7c0dc494308fb5f206ef2e6ed5981b79ff2d95b84a894da12be49c0707152d69"
   },
   "ci_lock": {
     "path": "requirements/ci-tooling.lock.txt",
@@ -28,7 +28,7 @@
     {"name":"cffi","version":"2.1.0","scopes":["runtime"],"spdx":"MIT","source_url":"https://github.com/python-cffi/cffi","attribution_status":"included","obligations":[]},
     {"name":"click","version":"8.4.1","scopes":["runtime"],"spdx":"BSD-3-Clause","source_url":"https://github.com/pallets/click","attribution_status":"included","obligations":[]},
     {"name":"colorama","version":"0.4.6","scopes":["runtime"],"spdx":"BSD-3-Clause","source_url":"https://github.com/tartley/colorama","attribution_status":"included","obligations":[]},
-    {"name":"cryptography","version":"49.0.0","scopes":["runtime"],"spdx":"Apache-2.0 OR BSD-3-Clause","source_url":"https://github.com/pyca/cryptography","attribution_status":"included","obligations":[]},
+    {"name":"cryptography","version":"50.0.0","scopes":["runtime"],"spdx":"Apache-2.0 OR BSD-3-Clause","source_url":"https://github.com/pyca/cryptography","attribution_status":"included","obligations":[]},
     {"name":"fastapi","version":"0.138.2","scopes":["runtime"],"spdx":"MIT","source_url":"https://github.com/fastapi/fastapi","attribution_status":"included","obligations":[]},
     {"name":"h11","version":"0.16.0","scopes":["runtime"],"spdx":"MIT","source_url":"https://github.com/python-hyper/h11","attribution_status":"included","obligations":[]},
     {"name":"httpcore","version":"1.0.9","scopes":["runtime"],"spdx":"BSD-3-Clause","source_url":"https://github.com/encode/httpcore","attribution_status":"included","obligations":[]},

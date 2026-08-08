@@ -200,6 +200,40 @@ Platform protected-lane queue hygiene is currently recorded on
 post-cancel detector returned `Stale workflow runs: 0`. This improves CI queue
 clarity only; it does not clear protected runner, cost-attribution,
 deployment-promotion, or production-certification blockers.
+
+The 2026-08-08 continuation audit refreshed the repo-owned and cross-repo
+RFC-0002 execution posture from current `lotus-idea` main. `make
+rfc0002-github-issue-execution-state-audit`, `make
+rfc0002-github-issue-execution-summary`, and `make
+rfc0002-cross-repo-issue-posture` passed. Idea remains at 54 tracked issues,
+29 closed and 25 open. The governed cross-repo posture remains 108
+label-backed RFC-0002 issues across 13 repositories, 71 closed and 37 open:
+28 blocked, 1 in progress (#681), and 8 tracker issues. Blocked actionability
+remains 0 app-actionable blocked issues: 5 Core dependencies and 23
+external/protected-evidence blockers. Fresh durable evidence is recorded on
+`sgajbi/lotus-idea#681`, `sgajbi/lotus-core#882`, and
+`sgajbi/lotus-core#885`. `#882` remains the canonical blocker for #814/#685/#686
+and full Workbench/Idea proof until Core publishes deterministic non-empty
+`source_batch_fingerprint` / content-hash evidence on
+`DpmPortfolioUniverseCandidate:v1` READY responses. `#885` remains the Slice 14
+trust-telemetry/catalog blocker until Core `HoldingsAsOf` and
+`IngestionEvidenceBundle` request-scope semantics converge. Platform
+`sgajbi/lotus-platform#647` remains open/blocked for protected/self-hosted
+runner capacity after stale scheduled run `31235891576` was cancelled and the
+stalled-run detector returned zero stale runs. Current Core main release
+instability is tracked outside RFC-0002 through Core `#795` for same-SHA
+`Performance Load Gate (Full)` drain timeout; earlier PR #897 merge-SHA
+migration rollback evidence is already represented by Core `#730` / PR #899.
+2026-08-08 stranded-truth reconciliation first found only active Dependabot
+`cryptography-50.0.0` branches touching `pyproject.toml`, with no unique
+RFC/docs/wiki/context/contract/workflow truth. The same source-sync PR then
+incorporated the runtime dependency security remediation by pinning
+`cryptography==50.0.0`, because GitHub PR Merge Gate `security-audit` reported
+`cryptography 49.0.0` as vulnerable with fixed version `50.0.0`. This is
+source-truth and vulnerability-posture synchronization only: it does not clear
+RFC-0002 blockers, promote supported features, certify product support, or
+replace Core, production identity, protected runtime, provider, legal,
+client-publication, support, or final closure evidence.
 Platform PR `sgajbi/lotus-platform#631` fixes the earlier Manage seed
 authorization failure; #686 is blocked, not QA-pending, until
 `sgajbi/lotus-core#882` restores Core-owned deterministic
