@@ -1643,6 +1643,48 @@ stale queued Platform End-to-End Validation run `30603744637` was recorded on
 provision a protected runner, certify cost attribution, prove deployment
 promotion, or clear RFC-0002 production-readiness blockers.
 
+2026-08-08 execution posture refresh:
+
+1. `make rfc0002-github-issue-execution-state-audit`, `make
+   rfc0002-github-issue-execution-summary`, and `make
+   rfc0002-cross-repo-issue-posture` passed from current `lotus-idea` main.
+2. The current Idea ledger remains 54 tracked RFC-0002 issues, 29 closed and
+   25 open.
+3. The current governed cross-repo posture remains 108 label-backed RFC-0002
+   issues across 13 repositories, 71 closed and 37 open: 28 blocked, 1 in
+   progress (#681), and 8 tracker issues.
+4. The blocked-actionability classifier reports 0 app-actionable blocked
+   issues: 5 Core dependencies and 23 external/protected-evidence dependencies.
+5. `sgajbi/lotus-core#882` still blocks #814/#685/#686 and full canonical
+   Workbench/Idea proof until Core publishes deterministic non-empty
+   `source_batch_fingerprint` / content-hash evidence on
+   `DpmPortfolioUniverseCandidate:v1` READY responses.
+6. `sgajbi/lotus-core#885` still blocks Slice 14 trust-telemetry/catalog
+   promotion until Core `HoldingsAsOf` and `IngestionEvidenceBundle`
+   request-scope semantics converge across declaration, route,
+   OpenAPI/source contract, generated catalog, and telemetry.
+7. `sgajbi/lotus-platform#647` remains open/blocked for protected/self-hosted
+   runner capacity. Stale scheduled run `31235891576` was cancelled and the
+   detector returned zero stale runs, but this queue hygiene does not clear
+   protected evidence.
+8. Current Core main release instability is tracked outside RFC-0002 through
+   Core `#795` for same-SHA `Performance Load Gate (Full)` drain timeout; the
+   earlier PR #897 merge-SHA migration rollback failure is already represented
+   by Core `#730` / PR #899.
+9. 2026-08-08 stranded-truth reconciliation first found only active Dependabot
+   `cryptography-50.0.0` branches touching `pyproject.toml`, with no unique
+   RFC, docs, wiki, context, contract, or workflow truth.
+10. The same source-sync PR incorporated the runtime dependency security
+    remediation by pinning `cryptography==50.0.0`, because GitHub PR Merge Gate
+    `security-audit` reported `cryptography 49.0.0` as vulnerable with fixed
+    version `50.0.0`.
+
+This refresh is coordination and evidence hygiene only. It does not clear
+RFC-0002 blockers, promote supported features, certify product support, or
+replace Core, production identity, protected runtime, provider, legal,
+client-publication, support, or final closure evidence. The dependency pin
+change is limited to governed vulnerability posture.
+
 CI warning policy:
 
 1. use current approved action versions,
