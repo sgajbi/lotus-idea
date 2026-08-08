@@ -1,7 +1,7 @@
 {
   "schemaVersion": "lotus-idea:rfc0002-cross-repo-blocker-classification:v1",
   "rfcId": "RFC-0002",
-  "asOfDate": "2026-08-08",
+  "asOfDate": "2026-08-09",
   "repository": "sgajbi/lotus-idea",
   "purpose": "Classify live RFC-0002 status/blocked issues by actionability so blocked posture means external, Core-owned, protected-environment, IdP, provider, legal/privacy, or certification evidence rather than hidden app-code work.",
   "policy": {
@@ -128,13 +128,6 @@
       "actionability": "external_or_protected_evidence",
       "blockerClass": "production_identity_contract",
       "remainingAuthority": "trusted IdP caller context and server-derived tenant/session receipt scope"
-    },
-    {
-      "repository": "sgajbi/lotus-report",
-      "issueNumber": 136,
-      "actionability": "external_or_protected_evidence",
-      "blockerClass": "retention_policy_and_archive_conformance_certification",
-      "remainingAuthority": "production-authorized retention policy source, live Report-to-Archive handoff evidence, Archive enforcement conformance, and bank legal/privacy certification"
     },
     {
       "repository": "sgajbi/lotus-archive",
