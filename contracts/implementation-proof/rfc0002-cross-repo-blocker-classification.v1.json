@@ -1,7 +1,7 @@
 {
   "schemaVersion": "lotus-idea:rfc0002-cross-repo-blocker-classification:v1",
   "rfcId": "RFC-0002",
-  "asOfDate": "2026-08-02",
+  "asOfDate": "2026-08-08",
   "repository": "sgajbi/lotus-idea",
   "purpose": "Classify live RFC-0002 status/blocked issues by actionability so blocked posture means external, Core-owned, protected-environment, IdP, provider, legal/privacy, or certification evidence rather than hidden app-code work.",
   "policy": {
@@ -170,6 +170,13 @@
       "actionability": "core_dependency",
       "blockerClass": "core_domain_product_request_scope_semantics",
       "remainingAuthority": "Core-owned domain-product request-scope declaration repair for HoldingsAsOf and IngestionEvidenceBundle so platform and Idea data-product trust telemetry do not consume contradictory route, identifier, and bulk-support semantics"
+    },
+    {
+      "repository": "sgajbi/lotus-core",
+      "issueNumber": 917,
+      "actionability": "core_dependency",
+      "blockerClass": "core_technology_governance_vulnerability_posture_pilot",
+      "remainingAuthority": "Core-owned report-only pilot of the platform technology-governance policy against lotus-core dependency, SBOM, scanner, container-image, vulnerability, and exception posture, tracked by sgajbi/lotus-core#917 before sgajbi/lotus-platform#595 can close rollout evidence"
     },
     {
       "repository": "sgajbi/lotus-platform",

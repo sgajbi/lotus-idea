@@ -826,21 +826,27 @@ The 2026-08-08 continuation audit refreshed the execution posture from current
 `lotus-idea` main and live GitHub state. `make
 rfc0002-github-issue-execution-state-audit`, `make
 rfc0002-github-issue-execution-summary`, and `make
-rfc0002-cross-repo-issue-posture` passed. The current Idea ledger remains 54
+rfc0002-cross-repo-issue-posture` passed after classifying the new
+`sgajbi/lotus-core#917` rollout issue. The current Idea ledger remains 54
 tracked RFC-0002 issues, 29 closed and 25 open. The governed cross-repo posture
-remains 108 label-backed RFC-0002 issues across 13 repositories, 71 closed and
-37 open: 28 blocked, 1 in progress (#681), and 8 tracker issues. The
+is now 109 label-backed RFC-0002 issues across 13 repositories, 71 closed and
+38 open: 29 blocked, 1 in progress (#681), and 8 tracker issues. The
 blocked-actionability classifier still reports 0 app-actionable blocked
-issues: 5 Core dependencies and 23 external/protected-evidence dependencies.
+issues: 6 Core dependencies and 23 external/protected-evidence dependencies.
 
 Fresh durable blocker evidence was recorded on `sgajbi/lotus-idea#681`,
-`sgajbi/lotus-core#882`, and `sgajbi/lotus-core#885`. `#882` remains the
+`sgajbi/lotus-core#882`, `sgajbi/lotus-core#885`,
+`sgajbi/lotus-core#917`, and `sgajbi/lotus-platform#595`. `#882` remains the
 canonical live-proof blocker for #814/#685/#686 until Core publishes
 deterministic non-empty `source_batch_fingerprint` / content-hash evidence on
 `DpmPortfolioUniverseCandidate:v1` READY responses. `#885` remains the Slice 14
 trust-telemetry/catalog blocker until Core `HoldingsAsOf` and
 `IngestionEvidenceBundle` request-scope semantics converge across declaration,
-route, OpenAPI/source contract, generated catalog, and telemetry. Platform
+route, OpenAPI/source contract, generated catalog, and telemetry. `#917`
+remains the platform technology-governance rollout blocker until Core records
+report-only dependency, SBOM, scanner, container-image, vulnerability, and
+exception posture evidence against `lotus-platform#595` / PR #652 policy truth.
+Platform
 `sgajbi/lotus-platform#647` remains open/blocked: stale scheduled run
 `31235891576` was cancelled and the detector returned zero stale runs, but
 protected/self-hosted runner capacity is still absent. Current Core main
@@ -910,8 +916,8 @@ Its Markdown output also renders each blocked issue with issue URL,
 actionability, blocker class, and remaining authority, so the current
 Core-vs-protected/external split is durable execution evidence rather than a
 chat-only explanation.
-For the current 108-issue label-backed RFC-0002 program posture, all 28 open
-`status/blocked` issues are classified: 5 are Core dependencies and 23 require
+For the current 109-issue label-backed RFC-0002 program posture, all 29 open
+`status/blocked` issues are classified: 6 are Core dependencies and 23 require
 external or protected evidence. The current app-actionable blocked count is 0.
 Future agents must not use `status/blocked` for writable non-Core app work; if
 the remaining acceptance criteria can be satisfied in `lotus-idea`,
