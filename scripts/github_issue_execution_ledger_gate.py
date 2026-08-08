@@ -320,22 +320,15 @@ REQUIRED_CLOSED_ISSUE_EVIDENCE = {
         "make incident-response-contract-gate",
         "does not claim production incident certification",
     ),
-    807: (
-        "Closed #807 after QA passed",
-        "a92144773d1b74bcf19e15396215dd988b5dc0af",
-        "fe77d768f09444c29efe508e7289b6704b65a69e",
-        "30496796215",
-        "make docker-build container-image-scan",
-        "HIGH_CRITICAL_FINDINGS=0",
-        "make container-runtime-smoke",
-        "PR #808 synchronized merged-main source truth",
-        "f577efcc14d51208375f3fde87284ac98f8ebb7a",
-        "30497951358",
-        "30497931322",
-        "30498306031",
-        "strict wiki parity DiffCount 0",
-        "git cherry patch-equivalence proof",
-        "does not claim production vulnerability certification",
+    807: tuple(
+        "Closed #807 after QA passed|a92144773d1b74bcf19e15396215dd988b5dc0af|fe77d768f09444c29efe508e7289b6704b65a69e|30496796215|make docker-build container-image-scan|HIGH_CRITICAL_FINDINGS=0|make container-runtime-smoke|PR #808 synchronized merged-main source truth|f577efcc14d51208375f3fde87284ac98f8ebb7a|30497951358|30497931322|30498306031|strict wiki parity DiffCount 0|git cherry patch-equivalence proof|does not claim production vulnerability certification".split(
+            "|"
+        )
+    ),
+    854: tuple(
+        "Closed #854 after PR #855 merged|1f8a5ffaed7a6d6aaa522d1c4cb06ca6a5602cc5|31258522447|31258517415|fail-closed PR text gate terminology parser correction|67 passed|strict wiki parity returned DiffCount 0|issue-854-pr-text-fail-closed-term|git cherry patch-equivalence proof|does not complete Slice 18".split(
+            "|"
+        )
     ),
     814: tuple(
         "Keep #814 open and status/blocked|Idea PR #815 merged|Workbench PR #515 merged|Workbench PR #516|1787da79fb4abaf574ebe4ebc3f8b4d5fed7bdac|30543504302|original #814 authorization and Workbench validator defects are no longer the active failure path|sgajbi/lotus-core#836|holdings_status=READY|pricing_status=READY|transactions_status=READY|reporting_status=READY|blocking_reason_codes=[]|pending_valuation_jobs=0|pending_aggregation_jobs=0|aggregation_jobs.statuses=[COMPLETE]|analytics_performance_end_date=2026-04-10|positions_data_quality_status=UNKNOWN|fresh canonical validation completes on mainline sources|does not implement production authentication|supported-feature promotion".split(

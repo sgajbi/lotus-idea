@@ -330,18 +330,21 @@ def test_rfc0002_github_issue_execution_ledger_tracks_issue_854_gate_false_posit
         if isinstance(issue, dict) and issue["issueNumber"] == 854
     )
 
-    assert issue_854["githubState"] == "open"
-    assert issue_854["executionStatus"] == "open_pr_raised"
-    assert issue_854["allowPullRequestAutoClose"] is False
+    assert issue_854["githubState"] == "closed"
+    assert issue_854["executionStatus"] == "closed_complete"
+    assert issue_854["allowPullRequestAutoClose"] is True
     assert issue_854["rfcSlices"] == ["slice-18"]
-    assert "Keep #854 open with status/pr-open" in issue_854["closureInstruction"]
+    assert "Closed #854 after PR #855 merged" in issue_854["closureInstruction"]
     assert "PR #855" in issue_854["closureInstruction"]
+    assert "1f8a5ffaed7a6d6aaa522d1c4cb06ca6a5602cc5" in issue_854["closureInstruction"]
+    assert "31258522447" in issue_854["closureInstruction"]
+    assert "31258517415" in issue_854["closureInstruction"]
     assert (
         "fail-closed PR text gate terminology parser correction" in issue_854["closureInstruction"]
     )
     assert "direct issue-reference regression guard" in issue_854["closureInstruction"]
-    assert "This does not close #681" not in issue_854["closureInstruction"]
-    assert "complete Slice 18" in issue_854["closureInstruction"]
+    assert "Keep #681 open" in issue_854["closureInstruction"]
+    assert "does not complete Slice 18" in issue_854["closureInstruction"]
 
 
 def test_rfc0002_github_issue_execution_ledger_tracks_workbench_principal_blocker() -> None:
