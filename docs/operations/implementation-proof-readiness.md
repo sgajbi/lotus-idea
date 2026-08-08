@@ -521,6 +521,28 @@ Gateway/Workbench discovery proof, supported-feature promotion, and final
 API/Gateway/Workbench/downstream live-journey evidence remain required before
 any of these issues can move back to merged-main QA.
 
+2026-08-09 SGT Manage #629 QA-failed source-truth sync:
+
+- `sgajbi/lotus-manage#629` is open with `status/in-progress` after post-merge
+  QA found two valid defects in the Manage PR #630 fix on main
+  `4638650e5544900f571303c4767c520f1f28f610`.
+- The corrective scope is Manage-owned and writable: preserve both
+  `wave_content_hash` and `DpmWaveReportInput.content_hash` for
+  legacy-equivalent waves when optional batch lineage is absent/null; keep
+  non-null batch lineage hash-significant in both hashes; restrict
+  compatibility normalization to schema-known Manage `DpmWaveSourceRef`
+  fields/paths; and add regressions for report-input hash compatibility plus
+  nested producer-owned metadata under `selection_basis.source_refs`.
+- Live `make rfc0002-cross-repo-issue-posture` now reports 111 label-backed
+  RFC-0002 issues across 13 repositories: 72 closed and 39 open. The open set
+  is 29 blocked, no PR-open or merged-main QA-pending issues, 2 in-progress
+  issues (#681 and `lotus-manage#629`), and 8 tracker issues.
+- Blocked actionability remains 0 app-actionable blocked issues: 6 Core
+  dependencies and 23 external/protected-evidence blockers.
+- This does not close Idea downstream proof, Workbench proof, supported-feature
+  promotion, production identity/session authority, protected runtime,
+  Report/Archive lifecycle conformance, or final RFC-0002 closure evidence.
+
 ## GitHub Issue Learning Patterns
 
 `contracts/implementation-proof/rfc0002-issue-learning-patterns.v1.json` is

@@ -842,10 +842,11 @@ The 2026-08-08 continuation audit refreshed the execution posture from current
 rfc0002-github-issue-execution-state-audit`, `make
 rfc0002-github-issue-execution-summary`, and `make
 rfc0002-cross-repo-issue-posture` passed after classifying the new
-`sgajbi/lotus-core#917` rollout issue. The current Idea ledger remains 54
-tracked RFC-0002 issues, 29 closed and 25 open. The governed cross-repo posture
-is now 109 label-backed RFC-0002 issues across 13 repositories, 71 closed and
-38 open: 29 blocked, 1 in progress (#681), and 8 tracker issues. The
+`sgajbi/lotus-core#917` rollout issue. The current Idea ledger now has 55
+tracked RFC-0002 issues, 30 closed and 25 open. The governed cross-repo posture
+is now 111 label-backed RFC-0002 issues across 13 repositories, 72 closed and
+39 open: 29 blocked, no PR-open or merged-main QA-pending issues, 2
+in-progress issues (#681 and `sgajbi/lotus-manage#629`), and 8 tracker issues. The
 blocked-actionability classifier still reports 0 app-actionable blocked
 issues: 6 Core dependencies and 23 external/protected-evidence dependencies.
 
@@ -880,6 +881,21 @@ dependency posture update do not clear blockers, promote supported features,
 certify product support, or replace Core, production identity, protected
 runtime, provider, legal, client-publication, support, or final closure
 evidence.
+
+The 2026-08-09 SGT continuation sync incorporated the Manage
+`sgajbi/lotus-manage#629` post-merge QA finding after PR #630 merged the Core
+content-identity consumer fix to Manage main
+`4638650e5544900f571303c4767c520f1f28f610`. Although Manage Main Releasability
+run `31266349878` and local exact-main `make check` passed, QA found two valid
+hash-compatibility defects: the report-input `content_hash` still drifted for
+legacy-equivalent waves when optional batch lineage was absent/null, and the
+normalizer still mutated unrestricted producer metadata under nested
+`selection_basis.source_refs`. #629 is therefore open with
+`status/in-progress`, not merged-main QA-pending. It does not clear #379, #675,
+#676, #685, #686, #699, or #814 by implication: Manage corrective work, Core
+owner evidence, production identity/session authority, protected runtime
+evidence, Report/Archive legal-lifecycle conformance, supported-feature
+promotion, and final Slice 20 closure remain separately tracked.
 
 The 2026-07-31 dependency audit then verified current-main source-side posture
 for the writable cross-repo blockers without finding hidden app-actionable

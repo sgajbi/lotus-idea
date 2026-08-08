@@ -1217,10 +1217,10 @@ It also lists every blocked issue with the GitHub URL, actionability, blocker
 class, and remaining authority so the Core-vs-protected/external split is
 auditable without chat memory or one-off GitHub queries.
 Current live posture is 29 blocked RFC-0002 issues, 0 app-actionable blocked
-issues, 6 Core dependencies, and 23 external/protected-evidence blockers. Counts
-are label-backed by `rfc/RFC-0002`; title-only references are reported
-separately and excluded from governed counts unless deliberately labeled and
-ledgered. This
+issues, 6 Core dependencies, 23 external/protected-evidence blockers, and 2
+in-progress RFC-0002 issues (#681 and `lotus-manage#629`). Counts are
+label-backed by `rfc/RFC-0002`; title-only references are reported separately
+and excluded from governed counts unless deliberately labeled and ledgered. This
 keeps “blocked” aligned to Core, IdP/session authority, protected runtime or
 deployment evidence, provider/bank/legal approval, or certification proof. If a
 writable non-Core app-code gap appears, it should not remain blocked; it should
@@ -1584,10 +1584,9 @@ supported feature.
 
 RFC-0002 execution is tracked through GitHub issue state plus the
 source-controlled implementation-proof ledgers. The current governed posture is
-109 label-backed RFC-0002 issues across 13 repositories: 71 closed and 38 open.
-The open set is 29 blocked issues, no PR-open issues, 1 in-progress issue
-(#681), 8 tracker issues, and no open merged-main/merged-to-main QA-pending
-issues.
+111 label-backed RFC-0002 issues across 13 repositories: 72 closed and 39 open.
+The open set is 29 blocked issues, no PR-open or merged-main QA-pending issues,
+2 in-progress issues (#681 and `lotus-manage#629`), and 8 tracker issues.
 Idea PR #838 synchronized PR #837 exact-main evidence to main
 `2c2d35667643ad5efae83924475574ab6c16be03`, passed Main Releasability
 `30723235065`, and published wiki source to `lotus-idea.wiki` commit
@@ -1652,16 +1651,17 @@ stale queued Platform End-to-End Validation run `30603744637` was recorded on
 provision a protected runner, certify cost attribution, prove deployment
 promotion, or clear RFC-0002 production-readiness blockers.
 
-2026-08-08 execution posture refresh:
+2026-08-09 SGT execution posture refresh:
 
 1. `make rfc0002-github-issue-execution-state-audit`, `make
    rfc0002-github-issue-execution-summary`, and `make
    rfc0002-cross-repo-issue-posture` passed from current `lotus-idea` main.
-2. The current Idea ledger remains 54 tracked RFC-0002 issues, 29 closed and
+2. The current Idea ledger has 55 tracked RFC-0002 issues, 30 closed and
    25 open.
-3. The current governed cross-repo posture is now 109 label-backed RFC-0002
-   issues across 13 repositories, 71 closed and 38 open: 29 blocked, 1 in
-   progress (#681), and 8 tracker issues.
+3. The current governed cross-repo posture is now 111 label-backed RFC-0002
+   issues across 13 repositories, 72 closed and 39 open: 29 blocked, no
+   PR-open or merged-main QA-pending issues, 2 in-progress issues (#681 and
+   `lotus-manage#629`), and 8 tracker issues.
 4. The blocked-actionability classifier reports 0 app-actionable blocked
    issues: 6 Core dependencies and 23 external/protected-evidence dependencies.
 5. `sgajbi/lotus-core#882` still blocks #814/#685/#686 and full canonical
