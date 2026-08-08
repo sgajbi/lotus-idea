@@ -73,12 +73,12 @@ def _referenced_keep_open_issues(text: str, open_issue_numbers: frozenset[int]) 
 def _unsafe_auto_close_keywords(text: str) -> tuple[str, ...]:
     found: set[str] = set()
     for keyword in AUTO_CLOSE_KEYWORDS:
-        pattern = re.compile(rf"(?<!auto-)\b{re.escape(keyword)}\b", re.IGNORECASE)
+        pattern = re.compile(rf"(?<![-\w]){re.escape(keyword)}(?![-\w])", re.IGNORECASE)
         for match in pattern.finditer(text):
-            if _is_safe_hyphenated_term(text, match.end()):
-                continue
             if _is_issue_reference_after_keyword(text, match.end()):
                 found.add(match.group(0).lower())
+                continue
+            if _is_safe_governance_term(text, match.group(0), match.start()):
                 continue
             if _is_safe_negated_boundary(text, match.start()):
                 continue
@@ -86,9 +86,11 @@ def _unsafe_auto_close_keywords(text: str) -> tuple[str, ...]:
     return tuple(sorted(found))
 
 
-def _is_safe_hyphenated_term(text: str, keyword_end: int) -> bool:
-    suffix = text[keyword_end : keyword_end + 16].lower()
-    return suffix.startswith("-forward")
+def _is_safe_governance_term(text: str, keyword: str, keyword_start: int) -> bool:
+    if keyword.lower() != "closed":
+        return False
+    prefix = text[max(0, keyword_start - 16) : keyword_start].lower()
+    return prefix.endswith(("fail ", "fails ", "failed "))
 
 
 def _is_issue_reference_after_keyword(text: str, keyword_end: int) -> bool:

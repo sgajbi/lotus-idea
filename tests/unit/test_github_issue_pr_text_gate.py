@@ -125,6 +125,57 @@ def test_github_issue_pr_text_gate_allows_fix_forward_as_governed_delivery_term(
     assert errors == []
 
 
+def test_github_issue_pr_text_gate_allows_fail_closed_as_governance_term() -> None:
+    module = _load_gate()
+
+    errors = module.validate_pr_text(
+        title="Record Slice 18 evidence",
+        body=(
+            "Keep #681 open. This records a fail-closed PR-text precondition. "
+            "PowerShell flows fail closed by checking $LASTEXITCODE immediately, "
+            "and the remote PR event still fails closed when unsafe wording appears."
+        ),
+    )
+
+    assert errors == []
+
+
+def test_github_issue_pr_text_gate_still_blocks_closed_issue_reference() -> None:
+    module = _load_gate()
+
+    errors = module.validate_pr_text(
+        title="Record Slice 18 evidence",
+        body="Keep #681 open. This closed #681 with partial documentation evidence.",
+    )
+
+    assert errors == [
+        (
+            "PR text references keep-open RFC-0002 issue(s) #681 but contains "
+            "GitHub auto-close keyword(s) `closed`. Use neutral verbs such as "
+            "`updates`, `records`, `reconciles`, or `addresses`, and keep "
+            "completion language out of partial PR titles and bodies."
+        )
+    ]
+
+
+def test_github_issue_pr_text_gate_still_blocks_fail_closed_issue_reference() -> None:
+    module = _load_gate()
+
+    errors = module.validate_pr_text(
+        title="Record Slice 18 evidence",
+        body="Keep #681 open. This flow will fail closed #681 if unsafe wording appears.",
+    )
+
+    assert errors == [
+        (
+            "PR text references keep-open RFC-0002 issue(s) #681 but contains "
+            "GitHub auto-close keyword(s) `closed`. Use neutral verbs such as "
+            "`updates`, `records`, `reconciles`, or `addresses`, and keep "
+            "completion language out of partial PR titles and bodies."
+        )
+    ]
+
+
 def test_github_issue_pr_text_gate_ignores_closed_issue_completion_text() -> None:
     module = _load_gate()
 
