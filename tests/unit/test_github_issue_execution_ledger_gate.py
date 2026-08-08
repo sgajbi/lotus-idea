@@ -336,9 +336,9 @@ def test_rfc0002_github_issue_execution_ledger_tracks_issue_854_gate_false_posit
     assert issue_854["rfcSlices"] == ["slice-18"]
     assert "Keep #854 open with status/pr-open" in issue_854["closureInstruction"]
     assert "PR #855" in issue_854["closureInstruction"]
-    assert "fail-closed PR text gate terminology parser correction" in issue_854[
-        "closureInstruction"
-    ]
+    assert (
+        "fail-closed PR text gate terminology parser correction" in issue_854["closureInstruction"]
+    )
     assert "direct issue-reference regression guard" in issue_854["closureInstruction"]
     assert "This does not close #681" not in issue_854["closureInstruction"]
     assert "complete Slice 18" in issue_854["closureInstruction"]
