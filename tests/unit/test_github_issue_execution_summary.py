@@ -80,7 +80,7 @@ def test_github_issue_execution_summary_reports_current_rfc0002_counts() -> None
     )
     assert summary["issuesByStatus"][issue_681_status] == [681]
     assert summary["issuesByStatus"]["open_in_progress"] == [681]
-    assert summary["issuesByStatus"]["open_pr_raised"] == [854]
+    assert "open_pr_raised" not in summary["issuesByStatus"]
     assert "open_fixed_local" not in summary["issuesByStatus"]
     assert "open_merged_main_qa_pending" not in summary["issuesByStatus"]
     assert summary["issuesByStatus"]["open_pending_final_closure"] == [683]
@@ -215,7 +215,7 @@ def test_github_issue_execution_summary_markdown_is_comment_ready() -> None:
     assert "## Fixed Locally Issues\n\n_None._" in rendered
     assert "## PR-Open Issues" in rendered
     assert "## In-Progress Issues\n\n#681" in rendered
-    assert "## PR-Open Issues\n\n#854" in rendered
+    assert "## PR-Open Issues\n\n_None._" in rendered
     assert "## Merged-Main QA Pending Issues" in rendered
     assert "## Merged-Main QA Pending Issues\n\n_None._" in rendered
     assert "#379, #690" not in rendered
@@ -229,7 +229,7 @@ def test_github_issue_execution_summary_markdown_is_comment_ready() -> None:
         "#343, #344, #345, #375, #379, #380, #685, #686, #687, #691, #692, #693, #699, #814"
     ) in rendered
     assert "Current issues: #340, #782" not in rendered
-    assert "Current issues: #673, #681, #683, #684, #854" in rendered
+    assert "Current issues: #673, #681, #683, #684" in rendered
     assert "### `ai_attestation_and_model_governance`" in rendered
     assert "Current issues: _None._" in rendered
     assert "Current issues: #343, #344, #345, #375, #678, #693, #814" in rendered
