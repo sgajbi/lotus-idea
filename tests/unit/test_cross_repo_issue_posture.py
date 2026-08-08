@@ -573,6 +573,37 @@ def test_default_blocker_classification_tracks_core_domain_product_scope_drift()
     ]
 
 
+def test_default_blocker_classification_tracks_core_technology_governance_pilot() -> None:
+    contract_path = (
+        ROOT
+        / "contracts"
+        / "implementation-proof"
+        / ("rfc0002-cross-repo-blocker-classification.v1.json")
+    )
+    payload = json.loads(contract_path.read_text(encoding="utf-8"))
+
+    matching_rows = [
+        row
+        for row in payload["classifications"]
+        if row["repository"] == "sgajbi/lotus-core" and row["issueNumber"] == 917
+    ]
+
+    assert matching_rows == [
+        {
+            "repository": "sgajbi/lotus-core",
+            "issueNumber": 917,
+            "actionability": "core_dependency",
+            "blockerClass": "core_technology_governance_vulnerability_posture_pilot",
+            "remainingAuthority": (
+                "Core-owned report-only pilot of the platform technology-governance "
+                "policy against lotus-core dependency, SBOM, scanner, container-image, "
+                "vulnerability, and exception posture, tracked by sgajbi/lotus-core#917 "
+                "before sgajbi/lotus-platform#595 can close rollout evidence"
+            ),
+        }
+    ]
+
+
 def test_default_blocker_classification_excludes_closed_workbench_issue_500() -> None:
     contract_path = (
         ROOT

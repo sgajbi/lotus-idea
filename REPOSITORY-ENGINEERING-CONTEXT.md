@@ -119,9 +119,10 @@ evidence plus Core handoff posture to exact main
 `fe7f0efac9fca86a3e19302e8b8436e8941f3d0c` with Main Releasability
 `30500588217` passing. After the PR #828 through PR #831 evidence-sync and
 issue-execution prevention cycle plus QA closure of the already merged-main
-Advise, Gateway, Workbench, and AI dependency issues, the current live
-cross-repo RFC-0002 posture is 108 label-backed issues across 13 repositories:
-71 closed and 37 open. The open set is 28 blocked issues, no
+Advise, Gateway, Workbench, and AI dependency issues, plus the platform
+technology-governance rollout blocker `sgajbi/lotus-core#917`, the current
+live cross-repo RFC-0002 posture is 109 label-backed issues across 13
+repositories: 71 closed and 38 open. The open set is 29 blocked issues, no
 merged-main/merged-to-main QA-pending items, no PR-open issues, 1 in-progress
 issue (#681), and 8 tracker issues.
 #681 returned to `status/in-progress` after PR #834 merged source truth for
@@ -145,7 +146,8 @@ publish a deterministic `source_batch_fingerprint` / content hash on
 `DpmPortfolioUniverseCandidate:v1` responses before fresh Gateway/BFF-backed
 Workbench queue/detail runtime evidence can move #685 to merged-main QA.
 The current canonical Workbench/browser unblock path is anchored by
-`sgajbi/lotus-core#882`, `sgajbi/lotus-core#885`, #814, #685, and #686.
+`sgajbi/lotus-core#882`, `sgajbi/lotus-core#885`,
+`sgajbi/lotus-core#917`, #814, #685, and #686.
 `sgajbi/lotus-workbench#500` is closed with `status/merged-main` after
 Workbench PR #501 and Idea PR #837 consumed that closure into the
 source-controlled blocker classifier. Idea PR #838 synchronized PR #837
@@ -205,19 +207,24 @@ The 2026-08-08 continuation audit refreshed the repo-owned and cross-repo
 RFC-0002 execution posture from current `lotus-idea` main. `make
 rfc0002-github-issue-execution-state-audit`, `make
 rfc0002-github-issue-execution-summary`, and `make
-rfc0002-cross-repo-issue-posture` passed. Idea remains at 54 tracked issues,
-29 closed and 25 open. The governed cross-repo posture remains 108
-label-backed RFC-0002 issues across 13 repositories, 71 closed and 37 open:
-28 blocked, 1 in progress (#681), and 8 tracker issues. Blocked actionability
-remains 0 app-actionable blocked issues: 5 Core dependencies and 23
+rfc0002-cross-repo-issue-posture` passed after classifying the new
+`sgajbi/lotus-core#917` rollout issue. Idea remains at 54 tracked issues,
+29 closed and 25 open. The governed cross-repo posture is now 109
+label-backed RFC-0002 issues across 13 repositories, 71 closed and 38 open:
+29 blocked, 1 in progress (#681), and 8 tracker issues. Blocked actionability
+remains 0 app-actionable blocked issues: 6 Core dependencies and 23
 external/protected-evidence blockers. Fresh durable evidence is recorded on
-`sgajbi/lotus-idea#681`, `sgajbi/lotus-core#882`, and
-`sgajbi/lotus-core#885`. `#882` remains the canonical blocker for #814/#685/#686
+`sgajbi/lotus-idea#681`, `sgajbi/lotus-core#882`,
+`sgajbi/lotus-core#885`, `sgajbi/lotus-core#917`, and
+`sgajbi/lotus-platform#595`. `#882` remains the canonical blocker for #814/#685/#686
 and full Workbench/Idea proof until Core publishes deterministic non-empty
 `source_batch_fingerprint` / content-hash evidence on
 `DpmPortfolioUniverseCandidate:v1` READY responses. `#885` remains the Slice 14
 trust-telemetry/catalog blocker until Core `HoldingsAsOf` and
-`IngestionEvidenceBundle` request-scope semantics converge. Platform
+`IngestionEvidenceBundle` request-scope semantics converge. `#917` remains the
+platform technology-governance rollout blocker until Core records report-only
+dependency, SBOM, scanner, container-image, vulnerability, and exception posture
+evidence against `lotus-platform#595` / PR #652 policy truth. Platform
 `sgajbi/lotus-platform#647` remains open/blocked for protected/self-hosted
 runner capacity after stale scheduled run `31235891576` was cancelled and the
 stalled-run detector returned zero stale runs. Current Core main release
@@ -318,10 +325,10 @@ in-progress issues while then preserving Idea-side Core-dependent blockers #685,
 `5ba2757c1235ce3e28c630afd44257327c91edf3`, Main Releasability `30536615979`
 passed, and branch cleanup completed; it is excluded from the open-blocked
 classifier because it is no longer an open `status/blocked` issue. Current
-governed cross-repo RFC-0002 posture is 108 label-backed issues across 13
-repositories: 71 closed and 37 open. The open split is 28 blocked, 1
+governed cross-repo RFC-0002 posture is 109 label-backed issues across 13
+repositories: 71 closed and 38 open. The open split is 29 blocked, 1
 in-progress (#681), and 8 tracker issues. The blocked subset has 0
-app-actionable blocked issues: 5 Core dependencies and 23 external/protected
+app-actionable blocked issues: 6 Core dependencies and 23 external/protected
 evidence blockers. Title-only RFC-0002 references remain reported separately
 outside the governed count until deliberately labeled and ledgered. This is
 source-truth synchronization only: it does not certify Core readiness, clear
@@ -1607,8 +1614,8 @@ The classifier makes the blocker definition executable: a `status/blocked`
 RFC-0002 issue may remain blocked only when the remaining evidence is
 Core-owned, production identity/session authority, protected runtime or
 deployment evidence, provider/bank/legal approval, or certification proof that a
-writable Lotus app branch cannot truthfully produce. Current live posture is 28
-blocked RFC-0002 issues, 0 app-actionable blocked issues, 5 Core dependencies,
+writable Lotus app branch cannot truthfully produce. Current live posture is 29
+blocked RFC-0002 issues, 0 app-actionable blocked issues, 6 Core dependencies,
 and 23 external/protected-evidence blockers. Counts are label-backed by
 `rfc/RFC-0002`; title-only references are reported separately and excluded from
 governed counts unless deliberately labeled and ledgered. If a writable non-Core app-code
