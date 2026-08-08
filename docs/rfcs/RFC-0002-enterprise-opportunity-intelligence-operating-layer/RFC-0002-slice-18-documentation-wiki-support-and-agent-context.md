@@ -111,7 +111,10 @@ documentation across opportunity signal APIs.
     kept in chat memory. Partial PR text can now be validated from exact
     `--title-file` and `--body-file` artifacts before PR creation, preventing
     saved PR Markdown from bypassing the local keep-open/auto-close wording
-    gate.
+    gate. After `sgajbi/lotus-platform#653` / PR #654, that validation is also
+    treated as a fail-closed precondition before `gh pr create`, `gh pr edit`,
+    or a branch-head refresh; PowerShell runners must check `$LASTEXITCODE`
+    immediately so unsafe PR text cannot be followed by a later GitHub mutation.
 11. The caller-context contract gate now scans nested API route modules under
     `src/app/api/**`, not only top-level API files. This promotes the #686
     same-pattern lesson into deterministic enforcement: future route packages
@@ -438,6 +441,14 @@ using standalone GitHub auto-close keywords such as `fixes`, `closes`, or
 QA-backed closure is intended. Negated closure references such as `does not
 close #681` remain unsafe because GitHub still sees the closing keyword and
 issue reference; describe non-completion without an issue reference instead.
+When the gate is run locally or in an agent script, it is a fail-closed
+precondition before `gh pr create`, `gh pr edit`, or any branch-head refresh
+intended to prove corrected PR text. PowerShell flows must check
+`$LASTEXITCODE` immediately after the gate and exit on failure; do not group the
+gate with a later GitHub mutation in a way that can continue after unsafe
+keep-open wording is rejected. This consumes the platform-wide
+execution-control fix tracked by `sgajbi/lotus-platform#653` and merged in PR
+#654.
 
 The same Slice 18 learning loop now adds
 `make rfc0002-github-issue-execution-state-audit`, backed by
@@ -516,7 +527,11 @@ Gate `30464152669`, branch head `c4add59871bc3f0e78dc6602c8857c5e141e6367`,
 Main Releasability `30465110912`, Workbench wiki commit `3b4f78f`, strict wiki
 parity, and branch cleanup passed. Platform PR #639 hardened stale PR-text
 payload guidance on platform main `641aabe9f303a178f3a4e489c52b3d789d8339d3`
-with Main Releasability `30475978275` passing. PR #801 then synchronized final
+with Main Releasability `30475978275` passing. Platform PR #654 then hardened
+the platform-owned issue/PR skills and PR loop playbook so PR-text gates run
+fail closed before PR creation, PR edits, or branch-head refreshes; platform
+Main Releasability `31256159863` passed on main
+`e0ad0596afcda7bc8cf33909f8ece04b1d944647`. PR #801 then synchronized final
 #797/#681 evidence on Idea main
 `95c47d27f45e09369f6b709588fa2de1a1f8700b`; exact-main Main Releasability
 `30487277416` passed. PR #802 then synchronized current RFC-0002 posture truth

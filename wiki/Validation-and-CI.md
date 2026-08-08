@@ -1079,6 +1079,12 @@ When this gate fails, a manual PR body edit is necessary but may not be
 sufficient for an Actions rerun. Reruns reuse the original pull-request event
 payload, so push a small durable source correction or otherwise create a fresh PR
 event before expecting the remote gate to observe corrected title/body text.
+Run the gate as a fail-closed precondition before `gh pr create`, `gh pr edit`,
+or any branch-head refresh intended to prove corrected PR text. PowerShell
+automation must check `$LASTEXITCODE` immediately after the gate and exit on
+failure; do not group the gate with a later GitHub mutation in a command block
+that can continue after unsafe keep-open wording is rejected. This mirrors the
+platform-wide guardrail from `sgajbi/lotus-platform#653` / PR #654.
 
 `make rfc0002-github-issue-execution-summary` renders the source-controlled
 RFC-0002 issue execution summary after the ledger and learning-pattern gates
@@ -1670,11 +1676,16 @@ promotion, or clear RFC-0002 production-readiness blockers.
    closure until Core records report-only dependency, SBOM, scanner,
    container-image, vulnerability, and exception posture evidence against
    `lotus-platform#595` / PR #652 policy truth.
-8. `sgajbi/lotus-platform#647` remains open/blocked for protected/self-hosted
+8. `sgajbi/lotus-platform#653` closed through PR #654 on platform main
+   `e0ad0596afcda7bc8cf33909f8ece04b1d944647` after Main Releasability
+   `31256159863` passed. The durable lesson is execution hygiene only: partial
+   RFC PR text gates must fail closed before PR mutation and PowerShell scripts
+   must check `$LASTEXITCODE` immediately.
+9. `sgajbi/lotus-platform#647` remains open/blocked for protected/self-hosted
    runner capacity. Stale scheduled run `31235891576` was cancelled and the
    detector returned zero stale runs, but this queue hygiene does not clear
    protected evidence.
-8. Current Core main release instability is tracked outside RFC-0002 through
+10. Current Core main release instability is tracked outside RFC-0002 through
    Core `#795` for same-SHA `Performance Load Gate (Full)` drain timeout; the
    earlier PR #897 merge-SHA migration rollback failure is already represented
    by Core `#730` / PR #899.
