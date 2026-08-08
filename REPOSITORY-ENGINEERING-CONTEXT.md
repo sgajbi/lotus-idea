@@ -1640,6 +1640,15 @@ will reach GitHub. The gate rejects ambiguous mixed sources and keep-open issue
 references combined with GitHub auto-close wording, including negated phrases
 such as `does not close #681`.
 
+Treat the PR-text gate as a fail-closed precondition before any PR mutation,
+not as advisory output. Before `gh pr create`, `gh pr edit`, or a branch-head
+refresh intended to prove corrected PR text, run the gate against the exact
+title/body artifact and stop immediately on non-zero exit. In PowerShell, check
+`$LASTEXITCODE` after `scripts/github_issue_pr_text_gate.py`; do not put the
+gate and GitHub mutation in one loose command group where later commands can
+continue after unsafe keep-open wording is rejected. This consumes the
+platform-wide execution-control fix in `sgajbi/lotus-platform#653` / PR #654.
+
 ## Observability And Operability
 
 Operation events are the primary supportability surface. They must stay
@@ -2532,7 +2541,12 @@ Recent issue-derived patterns to preserve:
     of relying on accidental merge-time closure. If the PR-text gate fails and
     the PR body is edited afterward, push a small source-controlled correction
     before rerunning the failed Actions job because a rerun can keep evaluating
-    the stale `pull_request` event payload from the original run.
+    the stale `pull_request` event payload from the original run. Run the
+    PR-text gate as a fail-closed precondition before `gh pr create`,
+    `gh pr edit`, or any branch-head refresh intended to prove corrected PR
+    text; in PowerShell, check `$LASTEXITCODE` immediately so unsafe PR text
+    cannot be followed by a later GitHub mutation in the same loose command
+    group.
 50. When issue state, labels, or fixed counts are used as RFC execution truth,
     run `make rfc0002-github-issue-execution-state-audit` after any manual
     reopen, close, or label correction. The audit catches ledger/GitHub state
