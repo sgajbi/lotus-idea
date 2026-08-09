@@ -570,8 +570,8 @@ any of these issues can move back to merged-main QA.
 
 2026-08-09 SGT Core blocker closure sync:
 
-- Live `make rfc0002-cross-repo-issue-posture` now reports 126 label-backed
-  RFC-0002 issues across 13 repositories: 88 closed and 38 open.
+- Live `make rfc0002-cross-repo-issue-posture` now reports 127 label-backed
+  RFC-0002 issues across 13 repositories: 89 closed and 38 open.
 - Open status is 25 `status/blocked`, 1 `status/in-progress`
   (`sgajbi/lotus-idea#681`), 2
   `status/merged-main`, 2 `status/merged-to-main`, and 8 `status/tracker`.
@@ -588,6 +588,26 @@ any of these issues can move back to merged-main QA.
   technology-governance pilot posture; it does not certify production
   vulnerability posture, supported-feature promotion, or Lotus Idea product
   support.
+
+2026-08-09 SGT #871 closure-truth sync:
+
+- Idea PR #872 merged the RFC-0002 execution-ledger gate-policy refactor to
+  Idea main `f7aca4746e16d3d851c892654a8007743d7ec87a`.
+- Main CodeQL `31321978400` and exact-main Main Releasability `31321981636`
+  passed, including workflow lint, lint/typecheck/security,
+  unit/integration/e2e, PostgreSQL runtime proof, combined coverage,
+  Docker/release validation, image scan, SBOM, signed published image digest,
+  provenance/SBOM attestations, release metadata manifest, and release
+  identity/license binding.
+- Repo-authored wiki source was published to `lotus-idea.wiki` commit
+  `852ba82` with strict `DiffCount 0`.
+- The Idea ledger now has 58 tracked RFC-0002 issues, 33 closed and 25 open.
+  Live cross-repo posture has 127 label-backed RFC-0002 issues, 89 closed and
+  38 open. Only `sgajbi/lotus-idea#681` remains `status/in-progress`.
+- This sync closes only the ledger-gate maintainability issue. It does not
+  close Workbench/Gateway runtime-proof blockers, production identity/session
+  blockers, protected runtime evidence, supported-feature promotion, or final
+  RFC-0002 closure.
 
 2026-08-09 SGT #864/#866 proof-readiness hardening closure sync:
 
@@ -606,8 +626,8 @@ any of these issues can move back to merged-main QA.
   `31306932624` and CodeQL `31306929484` passed on that exact SHA.
 - Idea #866 is now present in the RFC-0002 execution ledger as a closed Slice
   17/19 hardening issue.
-- Live `make rfc0002-cross-repo-issue-posture` now reports 126 label-backed
-  RFC-0002 issues across 13 repositories: 88 closed and 38 open.
+- Live `make rfc0002-cross-repo-issue-posture` now reports 127 label-backed
+  RFC-0002 issues across 13 repositories: 89 closed and 38 open.
 - Open status is 25 `status/blocked`, 1 `status/in-progress`
   (`sgajbi/lotus-idea#681`), 2 `status/merged-main`, 2 `status/merged-to-main`,
   and 8 `status/tracker`.

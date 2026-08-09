@@ -120,8 +120,8 @@ evidence plus Core handoff posture to exact main
 `30500588217` passing. After the PR #828 through PR #831 evidence-sync and
 issue-execution prevention cycle plus QA closure of the already merged-main
 Advise, Gateway, Workbench, and AI dependency issues, the current live
-cross-repo RFC-0002 posture is 126 label-backed issues across 13 repositories:
-88 closed and 38 open. The open set is 25 blocked issues, 1 in-progress issue
+cross-repo RFC-0002 posture is 127 label-backed issues across 13 repositories:
+89 closed and 38 open. The open set is 25 blocked issues, 1 in-progress issue
 (#681), 2 `status/merged-main`, 2 `status/merged-to-main`, and 8 tracker
 issues. Idea #864 and #866 are closed and now source-ledgered as Slice 17/19
 hardening issues. #864 closed after PR #865 reached Idea main
@@ -270,8 +270,8 @@ does not close QA-pending merged-main issues, clear the remaining runtime/protec
 promote supported features, or replace production IdP/session-token, protected
 runtime, provider, legal, client-publication, support, or final RFC-0002
 closure evidence.
-The later 2026-08-09 QA and issue-posture refresh reports 126 label-backed
-RFC-0002 issues across 13 repositories: 88 closed and 38 open. Open status is
+The later 2026-08-09 QA and issue-posture refresh reports 127 label-backed
+RFC-0002 issues across 13 repositories: 89 closed and 38 open. Open status is
 25 `status/blocked`, 1 `status/in-progress` (`sgajbi/lotus-idea#681`), 2
 `status/merged-main`, 2 `status/merged-to-main`,
 and 8 `status/tracker`; blocked actionability remains 0 app-actionable issues.
@@ -289,6 +289,17 @@ copilot or Advise proposal proof path, so it cannot close
 `sgajbi/lotus-advise#485`, or `sgajbi/lotus-platform#659`. Current next proof
 work is the Workbench/Gateway/Idea feedback-action blocker and fresh
 queue/detail/action runtime proof after Core `#882` closure.
+The 2026-08-09 #871 closure-truth sync records that PR #872 merged the
+execution-ledger gate-policy refactor to Idea main
+`f7aca4746e16d3d851c892654a8007743d7ec87a`; main CodeQL `31321978400`,
+exact-main Main Releasability `31321981636`, wiki publication `852ba82`, and
+strict wiki `DiffCount 0` passed. The local Idea ledger now has 58 tracked
+RFC-0002 issues, 33 closed and 25 open. Live cross-repo posture has 127
+label-backed RFC-0002 issues, 89 closed and 38 open, with only
+`sgajbi/lotus-idea#681` in progress. #871 is closed-complete; this does not
+clear Workbench/Gateway runtime-proof blockers, production identity/session
+blockers, protected runtime evidence, supported-feature promotion, or final
+RFC-0002 closure.
 Platform PR `sgajbi/lotus-platform#631` fixes the earlier Manage seed
 authorization failure; #686 is blocked, not QA-pending, until Workbench live
 browser validation produces current Gateway-backed action-control evidence.
@@ -375,8 +386,8 @@ classifier because it is no longer an open `status/blocked` issue.
 fixed the post-merge QA hash-compatibility defects on main
 `a6bc609f379b8efadb226c9a2084d7c97b2e26e7` with Main Releasability run
 `31268949391` passing.
-Current governed cross-repo RFC-0002 posture is 126 label-backed issues across
-13 repositories: 88 closed and 38 open. The open split is 25 blocked, 1
+Current governed cross-repo RFC-0002 posture is 127 label-backed issues across
+13 repositories: 89 closed and 38 open. The open split is 25 blocked, 1
 in-progress issue (`sgajbi/lotus-idea#681`), 2 `status/merged-main`,
 2 `status/merged-to-main`, and 8 tracker issues. The blocked subset has 0
 app-actionable blocked issues: all 25 are external/protected/canonical-proof
@@ -1667,7 +1678,7 @@ writable Lotus app branch cannot truthfully produce. Current live posture is 25
 blocked RFC-0002 issues, 0 app-actionable blocked issues, 25
 external/protected/canonical-proof evidence blockers, and 1 in-progress
 RFC-0002 issue (`sgajbi/lotus-idea#681`). The full live posture is
-126 label-backed RFC-0002 issues across 13 repositories: 88 closed and 38 open.
+127 label-backed RFC-0002 issues across 13 repositories: 89 closed and 38 open.
 Counts are label-backed by
 `rfc/RFC-0002`; title-only references are reported separately and excluded from
 governed counts unless deliberately labeled and ledgered. If a writable non-Core app-code

@@ -1673,7 +1673,7 @@ promotion, or clear RFC-0002 production-readiness blockers.
    `status/merged-main`; they no longer justify app-code blocking by
    themselves. Fresh canonical Workbench/Gateway/Idea proof is still required
    before #814/#685/#686 can close.
-6. `#871` is an in-progress Slice 18 maintainability issue. It keeps static
+6. `#871` later closed as a Slice 18 maintainability issue. It keeps static
    RFC-0002 execution-ledger gate policy in a versioned contract while Python
    remains responsible for validator behavior.
 7. The policy refactor does not change supported-feature posture, product
@@ -1723,8 +1723,8 @@ promotion, or clear RFC-0002 production-readiness blockers.
 
 2026-08-09 SGT Core blocker closure sync:
 
-1. Live `make rfc0002-cross-repo-issue-posture` now reports 126 label-backed
-   RFC-0002 issues across 13 repositories: 88 closed and 38 open.
+1. Live `make rfc0002-cross-repo-issue-posture` now reports 127 label-backed
+   RFC-0002 issues across 13 repositories: 89 closed and 38 open.
 2. Open status is 25 `status/blocked`, 1 `status/in-progress`
    (`sgajbi/lotus-idea#681`), 2
    `status/merged-main`, 2 `status/merged-to-main`, and 8 `status/tracker`.
@@ -1746,6 +1746,26 @@ RFC-0002 blockers, promote supported features, certify product support, or
 replace Core, production identity, protected runtime, provider, legal,
 client-publication, support, or final closure evidence. The dependency pin
 change is limited to governed vulnerability posture.
+
+2026-08-09 SGT #871 closure-truth sync:
+
+1. Idea PR #872 merged the RFC-0002 execution-ledger gate-policy refactor to
+   Idea main `f7aca4746e16d3d851c892654a8007743d7ec87a`.
+2. Main CodeQL `31321978400` and exact-main Main Releasability `31321981636`
+   passed, including workflow lint, lint/typecheck/security,
+   unit/integration/e2e, PostgreSQL runtime proof, combined coverage,
+   Docker/release validation, image scan, SBOM, signed published image digest,
+   provenance/SBOM attestations, release metadata manifest, and release
+   identity/license binding.
+3. Repo-authored wiki source was published to `lotus-idea.wiki` commit
+   `852ba82` with strict `DiffCount 0`.
+4. The Idea ledger now has 58 tracked RFC-0002 issues, 33 closed and 25 open.
+   Live cross-repo posture has 127 label-backed RFC-0002 issues, 89 closed and
+   38 open. Only `sgajbi/lotus-idea#681` remains `status/in-progress`.
+5. This sync closes only the ledger-gate maintainability issue. It does not
+   close Workbench/Gateway runtime-proof blockers, production identity/session
+   blockers, protected runtime evidence, supported-feature promotion, or final
+   RFC-0002 closure.
 
 CI warning policy:
 

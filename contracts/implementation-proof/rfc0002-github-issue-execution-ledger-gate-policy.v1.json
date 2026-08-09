@@ -292,14 +292,6 @@
       "approved non-stub live-provider execution",
       "This issue is not QA-pending",
       "full live journey validation remains blocked"
-    ],
-    "871": [
-      "Keep #871 open",
-      "scripts/github_issue_execution_ledger_gate.py",
-      "rfc0002-github-issue-execution-ledger-gate-policy.v1.json",
-      "open_in_progress",
-      "Do not auto-close from PR text",
-      "does not change RFC-0002 issue posture"
     ]
   },
   "requiredClosedIssueEvidence": {
@@ -439,6 +431,19 @@
       "31306932624",
       "31306929484",
       "does not implement authentication or authorization"
+    ],
+    "871": [
+      "Closed #871",
+      "PR #872",
+      "fdf829011e3c2b8bb32e6142b49f16bcd7fe7f82",
+      "f7aca4746e16d3d851c892654a8007743d7ec87a",
+      "scripts/github_issue_execution_ledger_gate.py",
+      "rfc0002-github-issue-execution-ledger-gate-policy.v1.json",
+      "31321978400",
+      "31321981636",
+      "lotus-idea.wiki commit 852ba82",
+      "strict DiffCount 0",
+      "does not change supported-feature claims"
     ]
   }
 }
