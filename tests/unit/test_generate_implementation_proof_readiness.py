@@ -25,6 +25,7 @@ from app.application.workbench.discovery_contract_proof import (
     build_gateway_workbench_discovery_contract_proof_payload,
 )
 from app.application.implementation_proof_readiness import (
+    ImplementationProofReadinessProofInputs,
     build_implementation_proof_readiness_snapshot,
 )
 from app.application.data_mesh.mesh_policy_source_contract import (
@@ -185,6 +186,49 @@ def test_generate_implementation_proof_readiness_writes_output_file(
     assert payload["aggregateProofProvenance"]["repository"] == "lotus-idea"
     assert payload["aggregateProofProvenance"]["proofRef"].endswith("proof/readiness.json")
     assert payload["readinessStatus"] == "blocked"
+
+
+def test_generate_implementation_proof_readiness_builds_typed_proof_inputs(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr("app.application.proof_provenance.source_tree_dirty", lambda _: False)
+    durable_repository_proof = tmp_path / "durable-repository-proof.json"
+    durable_repository_proof.write_text(
+        json.dumps(
+            build_durable_repository_proof_payload(
+                generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
+                repository_root=Path(__file__).resolve().parents[2],
+                source_commit_sha=SOURCE_COMMIT_SHA,
+                ci_execution_receipt=valid_durable_repository_ci_execution_receipt(),
+            )
+        ),
+        encoding="utf-8",
+    )
+    risk_concentration_proof = tmp_path / "risk-concentration-live-proof.json"
+    risk_concentration_proof.write_text(
+        json.dumps(risk_concentration_runtime_execution()),
+        encoding="utf-8",
+    )
+    args = proof_report._parser().parse_args(
+        [
+            "--evaluated-at-utc",
+            "2026-06-21T10:10:00Z",
+            "--durable-repository-proof",
+            str(durable_repository_proof),
+            "--risk-concentration-live-proof",
+            str(risk_concentration_proof),
+        ]
+    )
+
+    proof_inputs = proof_report._build_proof_inputs(args)
+
+    assert isinstance(proof_inputs, ImplementationProofReadinessProofInputs)
+    assert proof_inputs.durable_repository_proof is not None
+    assert proof_inputs.durable_repository_proof_ref == "durable repository proof artifact"
+    assert proof_inputs.risk_concentration_live_proof is not None
+    expected_ref = "Risk concentration runtime execution artifact"
+    assert proof_inputs.risk_concentration_live_proof_ref == expected_ref
 
 
 def test_static_scheduled_worker_source_contract_preserves_deployment_blocker(
