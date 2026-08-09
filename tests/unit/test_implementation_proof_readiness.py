@@ -26,6 +26,7 @@ from app.application.implementation_proof_consumption import (
     _apply_report_materialization_source_contract,
 )
 from app.application.implementation_proof_readiness import (
+    ImplementationProofReadinessProofInputs,
     build_implementation_proof_readiness_snapshot,
 )
 from app.application.implementation_proof_models import (
@@ -730,6 +731,61 @@ def test_workbench_read_path_source_contract_adds_evidence_without_clearing_runt
     assert "workbench_gateway_bff_consumption_proof_missing" in workbench.blockers
     assert "workbench_panel_missing" in workbench.blockers
     assert "output/workbench/read-path-source-contract-proof.json" in workbench.evidence_refs
+
+
+def test_implementation_proof_readiness_accepts_explicit_proof_input_scope() -> None:
+    proof_ref = "output/workbench/read-path-source-contract-proof.json"
+    proof = _bound_aggregate_proof(
+        build_workbench_read_path_source_contract_proof_payload(
+            generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
+            repository_root=ROOT,
+        ),
+        proof_ref,
+    )
+
+    snapshot = build_implementation_proof_readiness_snapshot(
+        evaluated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
+        repository=InMemoryIdeaRepository(),
+        durable_storage_backed=False,
+        proof_inputs=ImplementationProofReadinessProofInputs(
+            workbench_read_path_source_contract_proof=proof,
+            workbench_read_path_source_contract_proof_ref=proof_ref,
+        ),
+    )
+
+    workbench = _capability(snapshot, "workbench-product-proof")
+    assert "workbench_gateway_bff_consumption_proof_missing" in workbench.blockers
+    assert proof_ref in workbench.evidence_refs
+    assert snapshot.supported_features_promoted is False
+
+
+def test_implementation_proof_readiness_rejects_unknown_legacy_proof_input() -> None:
+    with pytest.raises(
+        ValueError,
+        match="unsupported implementation proof readiness inputs: typo_proof_ref",
+    ):
+        build_implementation_proof_readiness_snapshot(
+            evaluated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
+            repository=InMemoryIdeaRepository(),
+            durable_storage_backed=False,
+            typo_proof_ref="output/proof.json",
+        )
+
+
+def test_implementation_proof_readiness_rejects_mixed_proof_input_styles() -> None:
+    with pytest.raises(
+        ValueError,
+        match="proof_inputs cannot be combined with legacy proof keyword arguments",
+    ):
+        build_implementation_proof_readiness_snapshot(
+            evaluated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
+            repository=InMemoryIdeaRepository(),
+            durable_storage_backed=False,
+            proof_inputs=ImplementationProofReadinessProofInputs(),
+            workbench_read_path_source_contract_proof_ref=(
+                "output/workbench/read-path-source-contract-proof.json"
+            ),
+        )
 
 
 def test_implementation_proof_readiness_uses_platform_catalog_source_contract_without_certification(

@@ -136,13 +136,53 @@ def _apply_opportunity_archetype_proofs(
         source_ingestion_runtime_execution_current=source_ingestion_runtime_execution_current,
         source_ingestion_runtime_execution_ref=source_ingestion_runtime_execution_ref,
     )
+    proof_scope = _opportunity_proof_scope(
+        risk_concentration_live_proof=risk_concentration_live_proof,
+        risk_concentration_live_proof_ref=risk_concentration_live_proof_ref,
+        high_volatility_live_proof=high_volatility_live_proof,
+        high_volatility_live_proof_ref=high_volatility_live_proof_ref,
+        risk_drawdown_live_proof=risk_drawdown_live_proof,
+        risk_drawdown_live_proof_ref=risk_drawdown_live_proof_ref,
+        performance_underperformance_live_proof=performance_underperformance_live_proof,
+        performance_underperformance_live_proof_ref=performance_underperformance_live_proof_ref,
+        core_benchmark_assignment_live_proof=core_benchmark_assignment_live_proof,
+        core_benchmark_assignment_live_proof_ref=core_benchmark_assignment_live_proof_ref,
+        core_portfolio_state_live_proof=core_portfolio_state_live_proof,
+        core_portfolio_state_live_proof_ref=core_portfolio_state_live_proof_ref,
+        bond_maturity_live_proof=bond_maturity_live_proof,
+        bond_maturity_live_proof_ref=bond_maturity_live_proof_ref,
+        low_income_core_cashflow_live_proof=low_income_core_cashflow_live_proof,
+        low_income_core_cashflow_live_proof_ref=low_income_core_cashflow_live_proof_ref,
+        manage_mandate_live_proof=manage_mandate_live_proof,
+        manage_mandate_live_proof_ref=manage_mandate_live_proof_ref,
+        mandate_restriction_live_proof=mandate_restriction_live_proof,
+        mandate_restriction_live_proof_ref=mandate_restriction_live_proof_ref,
+        mandate_restriction_source_product_proof=mandate_restriction_source_product_proof,
+        mandate_restriction_source_product_proof_ref=(mandate_restriction_source_product_proof_ref),
+        missing_suitability_live_proof=missing_suitability_live_proof,
+        missing_suitability_live_proof_ref=missing_suitability_live_proof_ref,
+        missing_risk_profile_source_product_proof=missing_risk_profile_source_product_proof,
+        missing_risk_profile_source_product_proof_ref=(
+            missing_risk_profile_source_product_proof_ref
+        ),
+        missing_risk_profile_live_proof=missing_risk_profile_live_proof,
+        missing_risk_profile_live_proof_ref=missing_risk_profile_live_proof_ref,
+        missing_benchmark_live_proof=missing_benchmark_live_proof,
+        missing_benchmark_live_proof_ref=missing_benchmark_live_proof_ref,
+        missing_benchmark_performance_readiness_proof=(
+            missing_benchmark_performance_readiness_proof
+        ),
+        missing_benchmark_performance_readiness_proof_ref=(
+            missing_benchmark_performance_readiness_proof_ref
+        ),
+    )
     for (
         payload_argument,
         proof,
         proof_is_valid,
         apply_proof,
         proof_ref,
-    ) in _opportunity_proof_steps(locals()):
+    ) in _opportunity_proof_steps(proof_scope):
         capabilities = _apply_valid_opportunity_proof(
             capabilities,
             payload_argument=payload_argument,
@@ -153,6 +193,12 @@ def _apply_opportunity_archetype_proofs(
             evaluated_at_utc=evaluated_at_utc,
         )
     return capabilities
+
+
+def _opportunity_proof_scope(
+    **proof_inputs: object,
+) -> Mapping[str, object]:
+    return proof_inputs
 
 
 def _opportunity_proof_steps(scope: Mapping[str, object]) -> tuple[OpportunityProofStep, ...]:

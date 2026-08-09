@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+from dataclasses import dataclass, fields
 from datetime import datetime
 from pathlib import Path
-from typing import Mapping, cast
+from typing import Mapping
 
 from app.application.ai_governance import (
     AIExplanationReadinessSnapshot,
@@ -64,109 +65,182 @@ from app.ports.idea_repository import OutboxDeliveryRepository
 SUPPORTED_FEATURES_PATH = Path("supported-features/supported-features.json")
 
 
+@dataclass(frozen=True, slots=True)
+class ImplementationProofReadinessProofInputs:
+    source_ingestion_runtime_execution: Mapping[str, object] | None = None
+    source_ingestion_runtime_execution_ref: str | None = None
+    source_ingestion_scheduled_worker_source_contract_ref: str | None = None
+    source_ingestion_scheduled_worker_deployment_evidence_ref: str | None = None
+    durable_repository_proof: Mapping[str, object] | None = None
+    durable_repository_proof_ref: str | None = None
+    runtime_trust_telemetry_test_execution: Mapping[str, object] | None = None
+    runtime_trust_telemetry_test_execution_ref: str | None = None
+    ai_lineage_store_proof: Mapping[str, object] | None = None
+    ai_lineage_store_proof_ref: str | None = None
+    ai_model_risk_operations_proof: Mapping[str, object] | None = None
+    ai_model_risk_operations_proof_ref: str | None = None
+    operator_workflows_operations_proof: Mapping[str, object] | None = None
+    operator_workflows_operations_proof_ref: str | None = None
+    ai_workflow_pack_registration_proof: Mapping[str, object] | None = None
+    ai_workflow_pack_registration_proof_ref: str | None = None
+    ai_workflow_pack_runtime_execution_proof: Mapping[str, object] | None = None
+    ai_workflow_pack_runtime_execution_proof_ref: str | None = None
+    advise_proposal_route_proof: Mapping[str, object] | None = None
+    advise_proposal_route_proof_ref: str | None = None
+    advise_intake_runtime_execution_proof: Mapping[str, object] | None = None
+    advise_intake_runtime_execution_proof_ref: str | None = None
+    manage_intake_runtime_execution_proof: Mapping[str, object] | None = None
+    manage_intake_runtime_execution_proof_ref: str | None = None
+    manage_action_route_proof: Mapping[str, object] | None = None
+    manage_action_route_proof_ref: str | None = None
+    report_intake_route_source_contract_proof: Mapping[str, object] | None = None
+    report_intake_route_source_contract_proof_ref: str | None = None
+    report_intake_runtime_execution_proof: Mapping[str, object] | None = None
+    report_intake_runtime_execution_proof_ref: str | None = None
+    report_materialization_source_contract_proof: Mapping[str, object] | None = None
+    report_materialization_source_contract_proof_ref: str | None = None
+    report_materialization_runtime_execution_proof: Mapping[str, object] | None = None
+    report_materialization_runtime_execution_proof_ref: str | None = None
+    mesh_policy_source_contract_proof: Mapping[str, object] | None = None
+    mesh_policy_source_contract_proof_ref: str | None = None
+    outbox_broker_source_contract_proof: Mapping[str, object] | None = None
+    outbox_broker_source_contract_proof_ref: str | None = None
+    outbox_broker_runtime_execution_proof: Mapping[str, object] | None = None
+    outbox_broker_runtime_execution_proof_ref: str | None = None
+    outbox_consumer_contract_proof: Mapping[str, object] | None = None
+    outbox_consumer_contract_proof_ref: str | None = None
+    outbox_consumer_runtime_execution_proof: Mapping[str, object] | None = None
+    outbox_consumer_runtime_execution_proof_ref: str | None = None
+    outbox_platform_mesh_event_source_contract_proof: Mapping[str, object] | None = None
+    outbox_platform_mesh_event_source_contract_proof_ref: str | None = None
+    platform_catalog_source_contract_proof: Mapping[str, object] | None = None
+    platform_catalog_source_contract_proof_ref: str | None = None
+    workbench_read_path_source_contract_proof: Mapping[str, object] | None = None
+    workbench_read_path_source_contract_proof_ref: str | None = None
+    gateway_workbench_contract_proof: Mapping[str, object] | None = None
+    gateway_workbench_contract_proof_ref: str | None = None
+    gateway_workbench_discovery_contract_proof: Mapping[str, object] | None = None
+    gateway_workbench_discovery_contract_proof_ref: str | None = None
+    gateway_workbench_runtime_execution_proof: Mapping[str, object] | None = None
+    gateway_workbench_runtime_execution_proof_ref: str | None = None
+    risk_concentration_live_proof: Mapping[str, object] | None = None
+    risk_concentration_live_proof_ref: str | None = None
+    high_volatility_live_proof: Mapping[str, object] | None = None
+    high_volatility_live_proof_ref: str | None = None
+    risk_drawdown_live_proof: Mapping[str, object] | None = None
+    risk_drawdown_live_proof_ref: str | None = None
+    performance_underperformance_live_proof: Mapping[str, object] | None = None
+    performance_underperformance_live_proof_ref: str | None = None
+    core_benchmark_assignment_live_proof: Mapping[str, object] | None = None
+    core_benchmark_assignment_live_proof_ref: str | None = None
+    core_portfolio_state_live_proof: Mapping[str, object] | None = None
+    core_portfolio_state_live_proof_ref: str | None = None
+    bond_maturity_live_proof: Mapping[str, object] | None = None
+    bond_maturity_live_proof_ref: str | None = None
+    low_income_core_cashflow_live_proof: Mapping[str, object] | None = None
+    low_income_core_cashflow_live_proof_ref: str | None = None
+    manage_mandate_live_proof: Mapping[str, object] | None = None
+    manage_mandate_live_proof_ref: str | None = None
+    mandate_restriction_live_proof: Mapping[str, object] | None = None
+    mandate_restriction_live_proof_ref: str | None = None
+    mandate_restriction_source_product_proof: Mapping[str, object] | None = None
+    mandate_restriction_source_product_proof_ref: str | None = None
+    missing_suitability_live_proof: Mapping[str, object] | None = None
+    missing_suitability_live_proof_ref: str | None = None
+    missing_risk_profile_source_product_proof: Mapping[str, object] | None = None
+    missing_risk_profile_source_product_proof_ref: str | None = None
+    missing_risk_profile_live_proof: Mapping[str, object] | None = None
+    missing_risk_profile_live_proof_ref: str | None = None
+    missing_benchmark_live_proof: Mapping[str, object] | None = None
+    missing_benchmark_live_proof_ref: str | None = None
+    missing_benchmark_performance_readiness_proof: Mapping[str, object] | None = None
+    missing_benchmark_performance_readiness_proof_ref: str | None = None
+    opportunity_archetype_evidence_pack_proof: Mapping[str, object] | None = None
+    opportunity_archetype_evidence_pack_proof_ref: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class _ReadinessFoundations:
+    evaluated_at_utc: datetime
+    source_ingestion: SourceIngestionReadinessSnapshot
+    review_queue: ReviewQueueReadinessSnapshot
+    ai_explanation: AIExplanationReadinessSnapshot
+    data_mesh: DataMeshReadinessSnapshot
+    runtime_trust_telemetry: RuntimeTrustTelemetryPreview
+    outbox_delivery: OutboxDeliveryReadinessSnapshot
+    opportunity_archetype_scenario: ImplementationProofCapabilityReadiness
+    downstream_realization: DownstreamRealizationReadinessSnapshot
+    supported_feature_evaluation: SupportedFeaturePromotionEvaluation
+
+
+_PROOF_INPUT_FIELD_NAMES = frozenset(
+    field.name for field in fields(ImplementationProofReadinessProofInputs)
+)
+
+
 def build_implementation_proof_readiness_snapshot(
     *,
     evaluated_at_utc: datetime,
     repository: OutboxDeliveryRepository,
     durable_storage_backed: bool,
-    source_ingestion_runtime_execution: Mapping[str, object] | None = None,
-    source_ingestion_runtime_execution_ref: str | None = None,
-    source_ingestion_scheduled_worker_source_contract_ref: str | None = None,
-    source_ingestion_scheduled_worker_deployment_evidence_ref: str | None = None,
-    durable_repository_proof: Mapping[str, object] | None = None,
-    durable_repository_proof_ref: str | None = None,
-    runtime_trust_telemetry_test_execution: Mapping[str, object] | None = None,
-    runtime_trust_telemetry_test_execution_ref: str | None = None,
-    ai_lineage_store_proof: Mapping[str, object] | None = None,
-    ai_lineage_store_proof_ref: str | None = None,
-    ai_model_risk_operations_proof: Mapping[str, object] | None = None,
-    ai_model_risk_operations_proof_ref: str | None = None,
-    operator_workflows_operations_proof: Mapping[str, object] | None = None,
-    operator_workflows_operations_proof_ref: str | None = None,
-    ai_workflow_pack_registration_proof: Mapping[str, object] | None = None,
-    ai_workflow_pack_registration_proof_ref: str | None = None,
-    ai_workflow_pack_runtime_execution_proof: Mapping[str, object] | None = None,
-    ai_workflow_pack_runtime_execution_proof_ref: str | None = None,
-    advise_proposal_route_proof: Mapping[str, object] | None = None,
-    advise_proposal_route_proof_ref: str | None = None,
-    advise_intake_runtime_execution_proof: Mapping[str, object] | None = None,
-    advise_intake_runtime_execution_proof_ref: str | None = None,
-    manage_intake_runtime_execution_proof: Mapping[str, object] | None = None,
-    manage_intake_runtime_execution_proof_ref: str | None = None,
-    manage_action_route_proof: Mapping[str, object] | None = None,
-    manage_action_route_proof_ref: str | None = None,
-    report_intake_route_source_contract_proof: Mapping[str, object] | None = None,
-    report_intake_route_source_contract_proof_ref: str | None = None,
-    report_intake_runtime_execution_proof: Mapping[str, object] | None = None,
-    report_intake_runtime_execution_proof_ref: str | None = None,
-    report_materialization_source_contract_proof: Mapping[str, object] | None = None,
-    report_materialization_source_contract_proof_ref: str | None = None,
-    report_materialization_runtime_execution_proof: Mapping[str, object] | None = None,
-    report_materialization_runtime_execution_proof_ref: str | None = None,
-    mesh_policy_source_contract_proof: Mapping[str, object] | None = None,
-    mesh_policy_source_contract_proof_ref: str | None = None,
-    outbox_broker_source_contract_proof: Mapping[str, object] | None = None,
-    outbox_broker_source_contract_proof_ref: str | None = None,
-    outbox_broker_runtime_execution_proof: Mapping[str, object] | None = None,
-    outbox_broker_runtime_execution_proof_ref: str | None = None,
-    outbox_consumer_contract_proof: Mapping[str, object] | None = None,
-    outbox_consumer_contract_proof_ref: str | None = None,
-    outbox_consumer_runtime_execution_proof: Mapping[str, object] | None = None,
-    outbox_consumer_runtime_execution_proof_ref: str | None = None,
-    outbox_platform_mesh_event_source_contract_proof: Mapping[str, object] | None = None,
-    outbox_platform_mesh_event_source_contract_proof_ref: str | None = None,
-    platform_catalog_source_contract_proof: Mapping[str, object] | None = None,
-    platform_catalog_source_contract_proof_ref: str | None = None,
-    workbench_read_path_source_contract_proof: Mapping[str, object] | None = None,
-    workbench_read_path_source_contract_proof_ref: str | None = None,
-    gateway_workbench_contract_proof: Mapping[str, object] | None = None,
-    gateway_workbench_contract_proof_ref: str | None = None,
-    gateway_workbench_discovery_contract_proof: Mapping[str, object] | None = None,
-    gateway_workbench_discovery_contract_proof_ref: str | None = None,
-    gateway_workbench_runtime_execution_proof: Mapping[str, object] | None = None,
-    gateway_workbench_runtime_execution_proof_ref: str | None = None,
-    risk_concentration_live_proof: Mapping[str, object] | None = None,
-    risk_concentration_live_proof_ref: str | None = None,
-    high_volatility_live_proof: Mapping[str, object] | None = None,
-    high_volatility_live_proof_ref: str | None = None,
-    risk_drawdown_live_proof: Mapping[str, object] | None = None,
-    risk_drawdown_live_proof_ref: str | None = None,
-    performance_underperformance_live_proof: Mapping[str, object] | None = None,
-    performance_underperformance_live_proof_ref: str | None = None,
-    core_benchmark_assignment_live_proof: Mapping[str, object] | None = None,
-    core_benchmark_assignment_live_proof_ref: str | None = None,
-    core_portfolio_state_live_proof: Mapping[str, object] | None = None,
-    core_portfolio_state_live_proof_ref: str | None = None,
-    bond_maturity_live_proof: Mapping[str, object] | None = None,
-    bond_maturity_live_proof_ref: str | None = None,
-    low_income_core_cashflow_live_proof: Mapping[str, object] | None = None,
-    low_income_core_cashflow_live_proof_ref: str | None = None,
-    manage_mandate_live_proof: Mapping[str, object] | None = None,
-    manage_mandate_live_proof_ref: str | None = None,
-    mandate_restriction_live_proof: Mapping[str, object] | None = None,
-    mandate_restriction_live_proof_ref: str | None = None,
-    mandate_restriction_source_product_proof: Mapping[str, object] | None = None,
-    mandate_restriction_source_product_proof_ref: str | None = None,
-    missing_suitability_live_proof: Mapping[str, object] | None = None,
-    missing_suitability_live_proof_ref: str | None = None,
-    missing_risk_profile_source_product_proof: Mapping[str, object] | None = None,
-    missing_risk_profile_source_product_proof_ref: str | None = None,
-    missing_risk_profile_live_proof: Mapping[str, object] | None = None,
-    missing_risk_profile_live_proof_ref: str | None = None,
-    missing_benchmark_live_proof: Mapping[str, object] | None = None,
-    missing_benchmark_live_proof_ref: str | None = None,
-    missing_benchmark_performance_readiness_proof: Mapping[str, object] | None = None,
-    missing_benchmark_performance_readiness_proof_ref: str | None = None,
-    opportunity_archetype_evidence_pack_proof: Mapping[str, object] | None = None,
-    opportunity_archetype_evidence_pack_proof_ref: str | None = None,
     repository_root: Path = REPOSITORY_ROOT,
+    proof_inputs: ImplementationProofReadinessProofInputs | None = None,
+    **legacy_proof_inputs: object,
 ) -> ImplementationProofReadinessSnapshot:
     if evaluated_at_utc.tzinfo is None or evaluated_at_utc.utcoffset() is None:
         raise ValueError("evaluated_at_utc must be timezone-aware")
+    proof_input_scope = _coerce_proof_inputs(
+        proof_inputs=proof_inputs,
+        legacy_proof_inputs=legacy_proof_inputs,
+    )
+    foundations = _build_readiness_foundations(
+        evaluated_at_utc=evaluated_at_utc,
+        repository=repository,
+        durable_storage_backed=durable_storage_backed,
+        repository_root=repository_root,
+        proof_inputs=proof_input_scope,
+    )
+    capabilities = _build_capabilities_with_available_proofs(
+        proof_inputs=proof_input_scope,
+        foundations=foundations,
+        repository_root=repository_root,
+    )
+    return _readiness_snapshot(
+        evaluated_at_utc,
+        foundations.supported_feature_evaluation,
+        capabilities,
+    )
+
+
+def _coerce_proof_inputs(
+    *,
+    proof_inputs: ImplementationProofReadinessProofInputs | None,
+    legacy_proof_inputs: Mapping[str, object],
+) -> ImplementationProofReadinessProofInputs:
+    if proof_inputs is not None and legacy_proof_inputs:
+        raise ValueError("proof_inputs cannot be combined with legacy proof keyword arguments")
+    unknown_inputs = sorted(set(legacy_proof_inputs) - _PROOF_INPUT_FIELD_NAMES)
+    if unknown_inputs:
+        raise ValueError(
+            "unsupported implementation proof readiness inputs: " + ", ".join(unknown_inputs)
+        )
+    if proof_inputs is not None:
+        return proof_inputs
+    return ImplementationProofReadinessProofInputs(**legacy_proof_inputs)  # type: ignore[arg-type]
+
+
+def _build_readiness_foundations(
+    *,
+    evaluated_at_utc: datetime,
+    repository: OutboxDeliveryRepository,
+    durable_storage_backed: bool,
+    repository_root: Path,
+    proof_inputs: ImplementationProofReadinessProofInputs,
+) -> _ReadinessFoundations:
     source_ingestion = build_source_ingestion_readiness_snapshot(
         repository_root=repository_root,
         evaluated_at_utc=evaluated_at_utc,
-        runtime_execution_proof_ref=source_ingestion_runtime_execution_ref,
+        runtime_execution_proof_ref=proof_inputs.source_ingestion_runtime_execution_ref,
     )
     review_queue = build_review_queue_readiness_snapshot(
         BuildReviewQueueFromRepositoryCommand(evaluated_at_utc=evaluated_at_utc),
@@ -180,7 +254,12 @@ def build_implementation_proof_readiness_snapshot(
         durable_storage_backed=durable_storage_backed,
         generated_at_utc=evaluated_at_utc,
     )
-    downstream_realization = _build_downstream_realization_from_scope(locals())
+    downstream_realization = _build_downstream_realization_from_inputs(
+        proof_inputs=proof_inputs,
+        repository=repository,
+        durable_storage_backed=durable_storage_backed,
+        evaluated_at_utc=evaluated_at_utc,
+    )
     outbox_delivery = build_outbox_delivery_readiness_snapshot(
         repository=repository,
         durable_storage_backed=durable_storage_backed,
@@ -192,48 +271,48 @@ def build_implementation_proof_readiness_snapshot(
         repository_root / SUPPORTED_FEATURES_PATH,
         evaluated_at_utc=evaluated_at_utc,
     )
-    capabilities = _build_capabilities_with_available_proofs(locals())
-    return _readiness_snapshot(evaluated_at_utc, supported_feature_evaluation, capabilities)
+    return _ReadinessFoundations(
+        evaluated_at_utc=evaluated_at_utc,
+        source_ingestion=source_ingestion,
+        review_queue=review_queue,
+        ai_explanation=ai_explanation,
+        data_mesh=data_mesh,
+        runtime_trust_telemetry=runtime_trust_telemetry,
+        outbox_delivery=outbox_delivery,
+        opportunity_archetype_scenario=opportunity_archetype_scenario,
+        downstream_realization=downstream_realization,
+        supported_feature_evaluation=supported_feature_evaluation,
+    )
 
 
-def _build_downstream_realization_from_scope(
-    scope: Mapping[str, object],
+def _build_downstream_realization_from_inputs(
+    *,
+    proof_inputs: ImplementationProofReadinessProofInputs,
+    repository: OutboxDeliveryRepository,
+    durable_storage_backed: bool,
+    evaluated_at_utc: datetime,
 ) -> DownstreamRealizationReadinessSnapshot:
     return build_downstream_realization_readiness_snapshot(
-        repository=cast(OutboxDeliveryRepository, scope["repository"]),
-        durable_storage_backed=cast(bool, scope["durable_storage_backed"]),
-        evaluated_at_utc=cast(datetime, scope["evaluated_at_utc"]),
-        advise_intake_runtime_execution_proof=cast(
-            Mapping[str, object] | None,
-            scope["advise_intake_runtime_execution_proof"],
+        repository=repository,
+        durable_storage_backed=durable_storage_backed,
+        evaluated_at_utc=evaluated_at_utc,
+        advise_intake_runtime_execution_proof=proof_inputs.advise_intake_runtime_execution_proof,
+        advise_intake_runtime_execution_proof_ref=(
+            proof_inputs.advise_intake_runtime_execution_proof_ref
         ),
-        advise_intake_runtime_execution_proof_ref=cast(
-            str | None,
-            scope["advise_intake_runtime_execution_proof_ref"],
+        manage_intake_runtime_execution_proof=proof_inputs.manage_intake_runtime_execution_proof,
+        manage_intake_runtime_execution_proof_ref=(
+            proof_inputs.manage_intake_runtime_execution_proof_ref
         ),
-        manage_intake_runtime_execution_proof=cast(
-            Mapping[str, object] | None,
-            scope["manage_intake_runtime_execution_proof"],
+        report_materialization_runtime_execution_proof=(
+            proof_inputs.report_materialization_runtime_execution_proof
         ),
-        manage_intake_runtime_execution_proof_ref=cast(
-            str | None,
-            scope["manage_intake_runtime_execution_proof_ref"],
+        report_materialization_runtime_execution_proof_ref=(
+            proof_inputs.report_materialization_runtime_execution_proof_ref
         ),
-        report_materialization_runtime_execution_proof=cast(
-            Mapping[str, object] | None,
-            scope["report_materialization_runtime_execution_proof"],
-        ),
-        report_materialization_runtime_execution_proof_ref=cast(
-            str | None,
-            scope["report_materialization_runtime_execution_proof_ref"],
-        ),
-        report_intake_runtime_execution_proof=cast(
-            Mapping[str, object] | None,
-            scope["report_intake_runtime_execution_proof"],
-        ),
-        report_intake_runtime_execution_proof_ref=cast(
-            str | None,
-            scope["report_intake_runtime_execution_proof_ref"],
+        report_intake_runtime_execution_proof=proof_inputs.report_intake_runtime_execution_proof,
+        report_intake_runtime_execution_proof_ref=(
+            proof_inputs.report_intake_runtime_execution_proof_ref
         ),
     )
 
@@ -276,55 +355,63 @@ def _readiness_snapshot(
 
 
 def _build_capabilities_with_available_proofs(
-    scope: Mapping[str, object],
+    *,
+    proof_inputs: ImplementationProofReadinessProofInputs,
+    foundations: _ReadinessFoundations,
+    repository_root: Path,
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
     source_ingestion_runtime_execution_current = (
         source_ingestion_runtime_execution_is_registered_and_current(
-            cast(Mapping[str, object] | None, scope["source_ingestion_runtime_execution"]),
-            evaluated_at_utc=cast(datetime, scope["evaluated_at_utc"]),
-            proof_ref=cast(str | None, scope["source_ingestion_runtime_execution_ref"]),
-            repository_root=cast(Path, scope["repository_root"]),
+            proof_inputs.source_ingestion_runtime_execution,
+            evaluated_at_utc=foundations.evaluated_at_utc,
+            proof_ref=proof_inputs.source_ingestion_runtime_execution_ref,
+            repository_root=repository_root,
         )
     )
     capabilities = _build_base_capabilities(
-        source_ingestion=cast(SourceIngestionReadinessSnapshot, scope["source_ingestion"]),
+        source_ingestion=foundations.source_ingestion,
         source_ingestion_runtime_execution_current=source_ingestion_runtime_execution_current,
-        source_ingestion_runtime_execution_ref=cast(
-            str | None, scope["source_ingestion_runtime_execution_ref"]
+        source_ingestion_runtime_execution_ref=proof_inputs.source_ingestion_runtime_execution_ref,
+        source_ingestion_scheduled_worker_source_contract_ref=(
+            proof_inputs.source_ingestion_scheduled_worker_source_contract_ref
         ),
-        source_ingestion_scheduled_worker_source_contract_ref=cast(
-            str | None,
-            scope["source_ingestion_scheduled_worker_source_contract_ref"],
+        source_ingestion_scheduled_worker_deployment_evidence_ref=(
+            proof_inputs.source_ingestion_scheduled_worker_deployment_evidence_ref
         ),
-        source_ingestion_scheduled_worker_deployment_evidence_ref=cast(
-            str | None,
-            scope["source_ingestion_scheduled_worker_deployment_evidence_ref"],
-        ),
-        review_queue=cast(ReviewQueueReadinessSnapshot, scope["review_queue"]),
-        ai_explanation=cast(AIExplanationReadinessSnapshot, scope["ai_explanation"]),
-        data_mesh=cast(DataMeshReadinessSnapshot, scope["data_mesh"]),
-        runtime_trust_telemetry=cast(
-            RuntimeTrustTelemetryPreview, scope["runtime_trust_telemetry"]
-        ),
-        outbox_delivery=cast(OutboxDeliveryReadinessSnapshot, scope["outbox_delivery"]),
-        opportunity_archetype_scenario=cast(
-            ImplementationProofCapabilityReadiness,
-            scope["opportunity_archetype_scenario"],
-        ),
-        downstream_realization=cast(
-            DownstreamRealizationReadinessSnapshot,
-            scope["downstream_realization"],
-        ),
-        supported_feature_evaluation=cast(
-            SupportedFeaturePromotionEvaluation,
-            scope["supported_feature_evaluation"],
-        ),
+        review_queue=foundations.review_queue,
+        ai_explanation=foundations.ai_explanation,
+        data_mesh=foundations.data_mesh,
+        runtime_trust_telemetry=foundations.runtime_trust_telemetry,
+        outbox_delivery=foundations.outbox_delivery,
+        opportunity_archetype_scenario=foundations.opportunity_archetype_scenario,
+        downstream_realization=foundations.downstream_realization,
+        supported_feature_evaluation=foundations.supported_feature_evaluation,
     )
-    proof_scope = dict(scope)
-    proof_scope["source_ingestion_runtime_execution_current"] = (
-        source_ingestion_runtime_execution_current
+    proof_scope = _proof_consumption_scope(
+        proof_inputs=proof_inputs,
+        evaluated_at_utc=foundations.evaluated_at_utc,
+        source_ingestion_runtime_execution_current=source_ingestion_runtime_execution_current,
     )
     return apply_available_proofs_from_scope(capabilities=capabilities, scope=proof_scope)
+
+
+def _proof_consumption_scope(
+    *,
+    proof_inputs: ImplementationProofReadinessProofInputs,
+    evaluated_at_utc: datetime,
+    source_ingestion_runtime_execution_current: bool,
+) -> dict[str, object]:
+    scope: dict[str, object] = {
+        "evaluated_at_utc": evaluated_at_utc,
+        "source_ingestion_runtime_execution_current": (source_ingestion_runtime_execution_current),
+    }
+    scope.update(
+        {
+            field.name: getattr(proof_inputs, field.name)
+            for field in fields(ImplementationProofReadinessProofInputs)
+        }
+    )
+    return scope
 
 
 def _build_base_capabilities(
