@@ -22,9 +22,9 @@ dependency map, and closure rules without relying on chat memory.
 | Snapshot command | `make rfc0002-cross-repo-issue-posture` |
 | Execution audit | `make rfc0002-github-issue-execution-state-audit` passed |
 | Repositories checked | 13 |
-| Total RFC-0002 issues | 126 |
-| Closed RFC-0002 issues | 88 |
-| Open RFC-0002 issues | 38 |
+| Total RFC-0002 issues | 128 |
+| Closed RFC-0002 issues | 91 |
+| Open RFC-0002 issues | 37 |
 | Open blocked issues | 25 |
 | App-actionable blocked issues | 0 |
 | Active synchronization tracker | `sgajbi/lotus-idea#681` |
@@ -39,7 +39,7 @@ blocked posture and implement or reclassify it.
 ```mermaid
 flowchart LR
     Issues["GitHub issue posture<br/>128 label-backed RFC-0002 issues"]
-    Open["90 closed and 38 open<br/>25 `status/blocked`, 1 `status/in-progress`<br/>4 QA-pending aliases, 8 trackers"]
+    Open["91 closed and 37 open<br/>25 `status/blocked`, 1 `status/in-progress`<br/>3 QA-pending aliases, 8 trackers"]
     Blocked["Blocked classifier<br/>0 app-actionable blocked"]
     Work["Writable work<br/>only when evidence proves app-code ownership"]
     External["Core / protected / identity / provider / legal evidence"]
@@ -58,12 +58,12 @@ flowchart LR
 | --- | ---: | --- |
 | `status/blocked` | 25 | Protected, identity, provider, legal, publication, canonical QA, or certification evidence. |
 | `status/in-progress` | 1 | Continuous Slice 18 synchronization tracker `sgajbi/lotus-idea#681`. |
-| `status/merged-main` | 2 | Merged-main issues awaiting canonical QA closure evidence. |
+| `status/merged-main` | 1 | Merged-main issue awaiting canonical QA closure evidence. |
 | `status/merged-to-main` | 2 | Repository-local Advise merged-main alias awaiting QA closure evidence. |
 | `status/tracker` | 8 | Parent or umbrella tracking issues, not immediate implementation items. |
 
 Latest synchronization evidence: Current GitHub issue posture has 128
-label-backed RFC-0002 issues, 90 closed and 38 open, with 25 `status/blocked`,
+label-backed RFC-0002 issues, 91 closed and 37 open, with 25 `status/blocked`,
 1 `status/in-progress`, and 0 app-actionable blocked issues. `lotus-idea#864`,
 `lotus-idea#866`, `lotus-idea#871`, and `lotus-idea#874` are closed with
 `status/merged-main` and now appear in the RFC-0002 execution ledger as
@@ -79,7 +79,7 @@ closures promotes a Lotus Idea supported feature.
 | --- | --- | --- | --- |
 | 1 | Workbench/Gateway/Idea feedback-action proof | The latest canonical QA stopped before AI/Advise proof because the Workbench browser did not observe the expected Gateway-backed feedback confirmation. | Workbench/Gateway/Idea investigation; not identity work. |
 | 2 | Idea `#814`, `#685`, and `#686` canonical proof | Core `#882` is closed; these issues now require fresh governed PB_SG_GLOBAL_BAL_001 queue/detail/action evidence, not downstream hash fabrication or stale artifacts. | Canonical full-stack proof across Idea, Gateway, and Workbench. |
-| 3 | QA-pending merged-main issues | `sgajbi/lotus-ai#126`, `sgajbi/lotus-advise#481`, `sgajbi/lotus-advise#485`, and `sgajbi/lotus-platform#659` need fresh issue-specific canonical evidence before closure. | Close only when the fresh run reaches and proves each path. |
+| 3 | QA-pending merged-main issues | `sgajbi/lotus-ai#126`, `sgajbi/lotus-advise#481`, and `sgajbi/lotus-advise#485` need fresh issue-specific canonical evidence before closure. | Close only when the fresh run reaches and proves each path. |
 | 4 | Production identity/session issues | Blocks supported-feature promotion and production principal proof. | Not implemented in local/dev; tracked through Workbench `#436`, platform `#563`, Manage `#624`, and Idea `#687` / `#380`. |
 
 ```mermaid
@@ -89,7 +89,7 @@ flowchart TD
     CanonicalQA["Canonical front-office QA<br/>PB_SG_GLOBAL_BAL_001"]
     IdeaProof["Idea #685/#686/#814<br/>queue, detail, actions, seed proof"]
     Core917["Core #917<br/>closed report-only governance pilot"]
-    QAPending["QA-pending merged-main issues<br/>AI #126, Advise #481/#485, Platform #659"]
+    QAPending["QA-pending merged-main issues<br/>AI #126, Advise #481/#485"]
     Support["Supported feature promotion<br/>still blocked"]
     Identity["Production identity/session<br/>Workbench #436 / Platform #563 / Manage #624 / Idea #687/#380"]
     Protected["Protected/runtime/provider/legal evidence"]
@@ -110,6 +110,7 @@ flowchart TD
 | `sgajbi/lotus-core#882` | Closed on 2026-08-09 with `status/merged-main`. | The blocker classifier no longer treats Core DPM source-batch fingerprint publication as open. Idea `#814`, `#685`, and `#686` must now be proved with fresh canonical runtime evidence. |
 | `sgajbi/lotus-core#885` | Closed on 2026-08-09 with `status/merged-main`. | Data-product request-scope drift is no longer an open blocked dependency in the RFC-0002 cross-repo posture. |
 | `sgajbi/lotus-core#917` | Closed on 2026-08-09 with `status/merged-main`. | Core completed the report-only technology-governance pilot evidence. It removes the Core pilot from active in-progress posture but does not certify production vulnerability posture or supported-feature promotion. |
+| `sgajbi/lotus-platform#659` | Closed on 2026-08-09 with `status/merged-main`. | Canonical QA `canonical-front-office-qa-20260809-084903` proved the DPM command-center seed completed with status `ok`; the later Workbench browser failure remains tracked separately. |
 
 ## Canonical Front-Office QA Status
 
@@ -141,7 +142,6 @@ proposal proof paths. Therefore it cannot close:
 | `sgajbi/lotus-ai#126` | Fresh canonical QA must prove the advisory copilot `PROPOSAL_EXPLANATION` path reaches `REVIEW_REQUIRED` or later reviewed posture. |
 | `sgajbi/lotus-advise#481` | Fresh canonical QA must prove Advise startup remains valid in the full front-office runtime. |
 | `sgajbi/lotus-advise#485` | Fresh canonical QA must prove the reviewed narrative report-package request path progresses through Workbench/Gateway. |
-| `sgajbi/lotus-platform#659` | Fresh canonical QA must prove the DPM seed no longer fails on `DPM_WORKFLOW_NOT_REQUIRED_FOR_RUN_STATUS`. |
 
 ## Closure Decision Matrix
 

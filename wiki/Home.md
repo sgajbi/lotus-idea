@@ -37,7 +37,7 @@ supported yet.
 
 | Signal | Current state |
 | --- | --- |
-| GitHub issue posture | Current posture is 128 label-backed RFC-0002 issues: 90 closed and 38 open. |
+| GitHub issue posture | Current posture is 128 label-backed RFC-0002 issues: 91 closed and 37 open. |
 | Open blocked work | 25 `status/blocked`, 1 `status/in-progress`, and 0 app-actionable blocked issues. |
 | Active slice work | `sgajbi/lotus-idea#681` remains open as the Slice 18 synchronization tracker; `sgajbi/lotus-idea#874` is closed in source truth after documentation-gate hardening. |
 | Latest Idea closure truth | `lotus-idea#864`, `#866`, `#871`, and `#874` are closed and ledgered as RFC-0002 hardening issues. |
