@@ -568,6 +568,23 @@ any of these issues can move back to merged-main QA.
   protected runtime, provider, legal, client-publication, support, or final
   RFC-0002 closure evidence.
 
+2026-08-09 SGT Core blocker closure sync:
+
+- Live `make rfc0002-cross-repo-issue-posture` now reports 124 label-backed
+  RFC-0002 issues across 13 repositories: 85 closed and 39 open.
+- Open status is 25 `status/blocked`, 2 `status/in-progress`
+  (`sgajbi/lotus-idea#681` and `sgajbi/lotus-core#917`), 2
+  `status/merged-main`, 2 `status/merged-to-main`, and 8 `status/tracker`.
+- Blocked actionability remains 0 app-actionable blocked issues. The live
+  blocker classifier now contains 25 external/protected/canonical-proof
+  evidence blockers and no Core dependency rows.
+- `sgajbi/lotus-core#882` and `sgajbi/lotus-core#885` are closed. Idea
+  `#814`, `#685`, and `#686` now require fresh governed runtime evidence for
+  Idea seed, Gateway-backed Workbench queue/detail reads, and browser
+  review-action/feedback/conversion-intent controls.
+- `sgajbi/lotus-core#917` remains an attention issue with
+  `status/in-progress`, not an open blocked issue.
+
 ## GitHub Issue Learning Patterns
 
 `contracts/implementation-proof/rfc0002-issue-learning-patterns.v1.json` is

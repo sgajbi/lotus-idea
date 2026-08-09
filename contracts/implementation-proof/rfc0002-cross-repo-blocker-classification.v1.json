@@ -55,9 +55,9 @@
     {
       "repository": "sgajbi/lotus-idea",
       "issueNumber": 814,
-      "actionability": "core_dependency",
-      "blockerClass": "canonical_idea_capacity_seed_core_readiness",
-      "remainingAuthority": "Core-owned DPM portfolio-universe candidate source-batch fingerprint publication for canonical Workbench/Idea validation, tracked by sgajbi/lotus-core#882 after earlier Core readiness blockers #836, #840, #856, and #873 closed"
+      "actionability": "external_or_protected_evidence",
+      "blockerClass": "canonical_front_office_qa_evidence",
+      "remainingAuthority": "Fresh canonical front-office QA evidence for PB_SG_GLOBAL_BAL_001 after Core DPM candidate source-batch fingerprint repair landed in sgajbi/lotus-core#882; the next closure proof must show the governed stack reaches Idea capacity seed, Gateway-backed Workbench queue/detail reads, and browser validation without stale or partial artifacts"
     },
     {
       "repository": "sgajbi/lotus-idea",
@@ -76,16 +76,16 @@
     {
       "repository": "sgajbi/lotus-idea",
       "issueNumber": 685,
-      "actionability": "core_dependency",
-      "blockerClass": "canonical_workbench_runtime_core_readiness",
-      "remainingAuthority": "Core-owned DPM portfolio-universe candidate source-batch fingerprint publication for PB_SG_GLOBAL_BAL_001 before fresh Workbench/Gateway queue/detail runtime proof, tracked by sgajbi/lotus-core#882"
+      "actionability": "external_or_protected_evidence",
+      "blockerClass": "canonical_workbench_runtime_evidence",
+      "remainingAuthority": "Fresh governed Gateway/BFF-backed Workbench queue and candidate-detail runtime proof for PB_SG_GLOBAL_BAL_001 after the Core #882 source-fingerprint blocker closed; do not close from merged PRs, stale artifacts, or partial browser validation"
     },
     {
       "repository": "sgajbi/lotus-idea",
       "issueNumber": 686,
-      "actionability": "core_dependency",
-      "blockerClass": "canonical_workbench_action_core_readiness",
-      "remainingAuthority": "Core-owned DPM portfolio-universe candidate source-batch fingerprint publication before fresh Workbench review-action, feedback, and conversion-intent browser proof, tracked by sgajbi/lotus-core#882"
+      "actionability": "external_or_protected_evidence",
+      "blockerClass": "canonical_workbench_action_evidence",
+      "remainingAuthority": "Fresh Workbench browser proof for review-action, feedback, and conversion-intent controls after the Core #882 source-fingerprint blocker closed, including Gateway-backed feedback confirmation and no authority inflation"
     },
     {
       "repository": "sgajbi/lotus-idea",
@@ -149,27 +149,6 @@
       "actionability": "external_or_protected_evidence",
       "blockerClass": "live_provider_model_risk_certification",
       "remainingAuthority": "approved non-stub live provider execution, effective model-risk approval, signed non-stub attestation, provider-native retention/deletion confirmation, and downstream Idea consumption"
-    },
-    {
-      "repository": "sgajbi/lotus-core",
-      "issueNumber": 882,
-      "actionability": "core_dependency",
-      "blockerClass": "core_dpm_portfolio_universe_source_batch_fingerprint",
-      "remainingAuthority": "Core-owned deterministic non-empty source_batch_fingerprint/content_hash on DpmPortfolioUniverseCandidate:v1 READY responses so Manage, Gateway, and Workbench canonical validation can preserve source-ref authority without fabricating hashes downstream"
-    },
-    {
-      "repository": "sgajbi/lotus-core",
-      "issueNumber": 885,
-      "actionability": "core_dependency",
-      "blockerClass": "core_domain_product_request_scope_semantics",
-      "remainingAuthority": "Core-owned domain-product request-scope declaration repair for HoldingsAsOf and IngestionEvidenceBundle so platform and Idea data-product trust telemetry do not consume contradictory route, identifier, and bulk-support semantics"
-    },
-    {
-      "repository": "sgajbi/lotus-core",
-      "issueNumber": 917,
-      "actionability": "core_dependency",
-      "blockerClass": "core_technology_governance_vulnerability_posture_pilot",
-      "remainingAuthority": "Core-owned report-only pilot of the platform technology-governance policy against lotus-core dependency, SBOM, scanner, container-image, vulnerability, and exception posture, tracked by sgajbi/lotus-core#917 before sgajbi/lotus-platform#595 can close rollout evidence"
     },
     {
       "repository": "sgajbi/lotus-platform",
