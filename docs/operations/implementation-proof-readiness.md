@@ -535,15 +535,38 @@ any of these issues can move back to merged-main QA.
   compatibility normalization to schema-known Manage `DpmWaveSourceRef`
   fields/paths; and add regressions for report-input hash compatibility plus
   nested producer-owned metadata under `selection_basis.source_refs`.
-- Live `make rfc0002-cross-repo-issue-posture` now reports 111 label-backed
-  RFC-0002 issues across 13 repositories: 72 closed and 39 open. The open set
-  is 29 blocked, no PR-open or merged-main QA-pending issues, 2 in-progress
-  issues (#681 and `lotus-manage#629`), and 8 tracker issues.
-- Blocked actionability remains 0 app-actionable blocked issues: 6 Core
+- At that sync point, live `make rfc0002-cross-repo-issue-posture` reported 111
+  label-backed RFC-0002 issues across 13 repositories: 72 closed and 39 open.
+  The open set was 29 blocked, no PR-open or merged-main QA-pending issues, 2
+  in-progress issues (#681 and `lotus-manage#629`), and 8 tracker issues.
+- Blocked actionability remained 0 app-actionable blocked issues: 6 Core
   dependencies and 23 external/protected-evidence blockers.
 - This does not close Idea downstream proof, Workbench proof, supported-feature
   promotion, production identity/session authority, protected runtime,
   Report/Archive lifecycle conformance, or final RFC-0002 closure evidence.
+
+2026-08-09 SGT Workbench PR #555 and Manage #629 exact-main refresh:
+
+- `sgajbi/lotus-workbench#549`, `#550`, `#556`, and `#557` now carry
+  `status/merged-main` after Workbench PR #555 merged to main
+  `afd0474524f20bc7d001ccb764a6e587f81d02c5`; Main Releasability run
+  `31285317629` passed for that exact SHA, including workflow lint,
+  lint/typecheck/coverage/build, Playwright smoke, Docker build/security/SBOM,
+  and CI-local Docker parity.
+- `sgajbi/lotus-manage#629` now carries `status/merged-main` after Manage PR
+  #631 merged the QA fix to main `a6bc609f379b8efadb226c9a2084d7c97b2e26e7`;
+  Main Releasability run `31268949391` passed for that exact SHA.
+- Live `make rfc0002-cross-repo-issue-posture` now reports 124 label-backed
+  RFC-0002 issues across 13 repositories: 75 closed and 49 open. The open set
+  is 28 blocked, 1 in-progress issue (#681), 10 `status/merged-main`, 2
+  `status/merged-to-main`, and 8 tracker issues.
+- Blocked actionability remains 0 app-actionable blocked issues: 6 Core
+  dependencies and 22 external/protected-evidence dependencies.
+- This is source-truth synchronization only. It does not close QA-pending
+  merged-main issues, clear Core #882/#885/#917, promote supported features,
+  certify product support, or replace production identity/session authority,
+  protected runtime, provider, legal, client-publication, support, or final
+  RFC-0002 closure evidence.
 
 ## GitHub Issue Learning Patterns
 
