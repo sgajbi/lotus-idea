@@ -63,8 +63,8 @@ def test_rfc0002_github_issue_execution_ledger_gate_loads_policy_contract() -> N
         "rfc0002-github-issue-execution-ledger-gate-policy.v1.json"
         in policy.required_closed_issue_evidence[871]
     )
-    assert "Keep #874 open and status/in-progress" in policy.required_open_issue_evidence[874]
-    assert "rfc0002-issue-posture-snapshot.v1.json" in policy.required_open_issue_evidence[874]
+    assert "Closed #874" in policy.required_closed_issue_evidence[874]
+    assert "rfc0002-issue-posture-snapshot.v1.json" in policy.required_closed_issue_evidence[874]
     assert policy.ledger_schema_version == ("lotus-idea:rfc0002-github-issue-execution-ledger:v1")
 
 
