@@ -939,6 +939,24 @@ supported feature, close QA-pending issues, or replace production
 identity/session, protected runtime, provider, legal, client-publication,
 support, or final RFC-0002 closure evidence.
 
+The 2026-08-09 #866 proof-readiness hardening closure sync then moved the live
+posture to 126 label-backed RFC-0002 issues across 13 repositories: 87 closed
+and 39 open. The open set remains 25 `status/blocked`, 2
+`status/in-progress` (`sgajbi/lotus-idea#681` and `sgajbi/lotus-core#917`), 2
+`status/merged-main`, 2 `status/merged-to-main`, and 8 `status/tracker`.
+Blocked actionability remains 0 app-actionable blocked issues. Idea PR #867
+merged implementation-proof readiness generator input hardening to exact main
+`6d40f7489d70af33e42e28dfb9ffe6e40d880994`; Main Releasability
+`31306314749` and CodeQL `31306311168` passed. Idea PR #868 synchronized
+source-controlled closure truth to exact main
+`560ddcfff9ba61f2db3008fabc62c31c20cfb425`; Main Releasability
+`31306932624` and CodeQL `31306929484` passed. This is Slice 18
+source-truth synchronization only; #681 remains open and the update does not
+clear Workbench/Gateway runtime proof, data-product certification,
+supported-feature promotion, production identity/session, protected runtime,
+provider, legal, client-publication, support, or final RFC-0002 closure
+evidence.
+
 The 2026-07-31 dependency audit then verified current-main source-side posture
 for the writable cross-repo blockers without finding hidden app-actionable
 blocked work. Durable evidence comments were posted on `sgajbi/lotus-platform#495`,

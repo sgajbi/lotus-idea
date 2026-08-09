@@ -37,9 +37,10 @@ supported yet.
 
 | Signal | Current state |
 | --- | --- |
-| GitHub issue posture | 124 RFC-0002 issues: 85 closed, 39 open. |
+| GitHub issue posture | 126 RFC-0002 issues: 87 closed, 39 open. |
 | Open blocked work | 25 blocked issues, 0 app-actionable blocked issues. |
 | Active tracker | `sgajbi/lotus-idea#681` remains open as the Slice 18 synchronization tracker. |
+| Latest Idea closure truth | `lotus-idea#866` is closed on exact main after PR #867 and PR #868 synchronized code and source-controlled closure evidence. |
 | Latest canonical QA | Failed before AI/Advise proof on Workbench browser feedback-action confirmation. |
 | Next proof path | Complete fresh Gateway-backed Workbench queue/detail/action proof, then rerun canonical QA and close only issues with issue-specific proof. |
 

@@ -38,7 +38,7 @@ blocked posture and implement or reclassify it.
 
 ```mermaid
 flowchart LR
-    Issues["GitHub issue posture<br/>124 RFC-0002 issues"]
+    Issues["GitHub issue posture<br/>126 RFC-0002 issues"]
     Open["39 open<br/>25 blocked, 2 in progress,<br/>4 QA-pending aliases, 8 trackers"]
     Blocked["Blocked classifier<br/>0 app-actionable"]
     Work["Writable work<br/>only when evidence proves app-code ownership"]
@@ -61,6 +61,12 @@ flowchart LR
 | `status/merged-main` | 2 | Merged-main issues awaiting canonical QA closure evidence. |
 | `status/merged-to-main` | 2 | Repository-local Advise merged-main alias awaiting QA closure evidence. |
 | `status/tracker` | 8 | Parent or umbrella tracking issues, not immediate implementation items. |
+
+Latest synchronization evidence: `lotus-idea#866` is closed on exact main after
+PR #867 merged the implementation hardening and PR #868 synchronized
+source-controlled closure truth. Exact-main Main Releasability `31306932624`
+and CodeQL `31306929484` passed for PR #868 main commit
+`560ddcfff9ba61f2db3008fabc62c31c20cfb425`.
 
 ## Highest-Leverage Remaining Dependencies
 
