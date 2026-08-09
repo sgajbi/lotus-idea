@@ -57,10 +57,10 @@ def test_rfc0002_github_issue_execution_ledger_gate_loads_policy_contract() -> N
     policy = module._load_gate_policy()
 
     assert 871 in policy.expected_issue_numbers
-    assert "Keep #871 open" in policy.required_open_issue_evidence[871]
+    assert "Closed #871" in policy.required_closed_issue_evidence[871]
     assert (
         "rfc0002-github-issue-execution-ledger-gate-policy.v1.json"
-        in policy.required_open_issue_evidence[871]
+        in policy.required_closed_issue_evidence[871]
     )
     assert policy.ledger_schema_version == ("lotus-idea:rfc0002-github-issue-execution-ledger:v1")
 
@@ -86,13 +86,15 @@ def test_rfc0002_github_issue_execution_ledger_gate_enforces_policy_contract_evi
 ) -> None:
     module = _load_gate()
     policy = _policy_payload(module)
-    policy["requiredOpenIssueEvidence"]["871"] = ["missing #871 fragment"]
+    policy["requiredClosedIssueEvidence"]["871"] = ["missing #871 fragment"]
 
     errors = module.validate_github_issue_execution_ledger(
         policy_path=_write_policy(tmp_path, policy),
     )
 
-    assert ("#871: closureInstruction missing required evidence `missing #871 fragment`") in errors
+    assert (
+        "#871: closureInstruction missing required closed evidence `missing #871 fragment`"
+    ) in errors
 
 
 def test_rfc0002_github_issue_execution_ledger_declares_evidence_only_sync_policy() -> None:

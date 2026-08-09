@@ -584,10 +584,10 @@
       "issueNumber": 871,
       "url": "https://github.com/sgajbi/lotus-idea/issues/871",
       "rfcSlices": ["slice-18"],
-      "githubState": "open",
-      "executionStatus": "open_in_progress",
-      "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #871 open until the RFC-0002 execution ledger gate-policy refactor reaches main, exact-main validation passes, wiki/context impact is reconciled, and follow-up closure truth is synchronized. This issue tracks moving static RFC-0002 execution ledger gate policy out of scripts/github_issue_execution_ledger_gate.py and into contracts/implementation-proof/rfc0002-github-issue-execution-ledger-gate-policy.v1.json so future Slice 18 evidence updates edit a versioned data contract instead of executable validator logic. Branch issue-871-ledger-gate-policy-contract is implementation in progress with open_in_progress source truth. Do not auto-close from PR text; this refactor does not change RFC-0002 issue posture, supported-feature claims, Workbench/Gateway/Core blocker state, production identity, or protected runtime certification."
+      "githubState": "closed",
+      "executionStatus": "closed_complete",
+      "allowPullRequestAutoClose": true,
+      "closureInstruction": "Closed #871 after PR #872 merged the RFC-0002 execution ledger gate-policy refactor to Idea main f7aca4746e16d3d851c892654a8007743d7ec87a from branch head fdf829011e3c2b8bb32e6142b49f16bcd7fe7f82. PR #872 checks passed, including PR Merge Gate, Feature Lane, CodeQL, and Queue Auto Merge. Exact-main validation passed on f7aca4746e16d3d851c892654a8007743d7ec87a: 72 focused unit tests, make rfc0002-github-issue-execution-ledger-gate, make rfc0002-github-issue-learning-pattern-gate, make rfc0002-github-issue-execution-state-audit, make rfc0002-github-issue-execution-summary, make rfc0002-cross-repo-issue-posture, make documentation-contract-gate, and make lint. Main CodeQL run 31321978400 passed and exact-main Main Releasability run 31321981636 passed, including workflow lint, lint/typecheck/security, unit, integration, e2e, PostgreSQL runtime proof, combined coverage, Docker/release validation, image scan, SBOM, signed published image digest, provenance/SBOM attestations, release metadata manifest, and release identity/license binding. Repo-authored wiki source was published to lotus-idea.wiki commit 852ba82 with strict DiffCount 0. This closes only the Slice 18 ledger-gate maintainability issue: it moved static policy out of scripts/github_issue_execution_ledger_gate.py into contracts/implementation-proof/rfc0002-github-issue-execution-ledger-gate-policy.v1.json and kept Python responsible for validator behavior. It does not change supported-feature claims, Workbench/Gateway/Core blocker state, production identity/session/token-claims, or protected runtime certification."
     }
   ]
 }
