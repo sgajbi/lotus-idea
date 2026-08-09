@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import inspect
+from dataclasses import fields
 from pathlib import Path
 
 import sys
@@ -17,6 +18,7 @@ from app.application.implementation_proof_artifact_registry import (
     ProofArtifactClassificationStatus,
 )
 from app.application.implementation_proof_readiness import (
+    ImplementationProofReadinessProofInputs,
     build_implementation_proof_readiness_snapshot,
 )
 
@@ -70,9 +72,10 @@ def implementation_proof_artifact_registry_errors(*, root: Path) -> list[str]:
             f"unexpected={sorted(registry_flags - parser_flags)}"
         )
 
-    readiness_parameters = inspect.signature(
-        build_implementation_proof_readiness_snapshot
-    ).parameters
+    readiness_parameters = {
+        *inspect.signature(build_implementation_proof_readiness_snapshot).parameters,
+        *(field.name for field in fields(ImplementationProofReadinessProofInputs)),
+    }
     for spec in IMPLEMENTATION_PROOF_ARTIFACT_SPECS:
         if spec.payload_argument and spec.payload_argument not in readiness_parameters:
             errors.append(

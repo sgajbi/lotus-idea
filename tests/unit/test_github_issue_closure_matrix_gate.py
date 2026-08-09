@@ -356,10 +356,11 @@ def test_github_issue_closure_matrix_gate_requires_downstream_reconciliation_rea
     _assert_matrix_requires_issue(tmp_path, 662)
 
 
-def test_github_issue_closure_matrix_gate_requires_runtime_trust_downstream_posture_issue(
+def test_github_issue_closure_matrix_gate_requires_recent_local_issue_rows(
     tmp_path: Path,
 ) -> None:
-    _assert_matrix_requires_issue(tmp_path, 663)
+    for issue_number in (663, 864):
+        _assert_matrix_requires_issue(tmp_path, issue_number)
 
 
 def test_github_issue_closure_matrix_gate_requires_proof_worktree_import_issue(
