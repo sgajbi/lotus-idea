@@ -1659,26 +1659,25 @@ promotion, or clear RFC-0002 production-readiness blockers.
 1. `make rfc0002-github-issue-execution-state-audit`, `make
    rfc0002-github-issue-execution-summary`, and `make
    rfc0002-cross-repo-issue-posture` passed from current `lotus-idea` main.
-2. The current Idea ledger has 57 tracked RFC-0002 issues, 32 closed and
-   25 open.
-3. At that sync point, the governed cross-repo posture was 111 label-backed
-   RFC-0002 issues across 13 repositories, 72 closed and 39 open: 29 blocked,
-   no PR-open or merged-main QA-pending issues, 2 in-progress issues (#681 and
-   `lotus-manage#629`), and 8 tracker issues.
+2. The current Idea ledger has 58 tracked RFC-0002 issues, 32 closed and
+   26 open after adding `#871` for the execution-ledger gate-policy refactor.
+3. At that sync point, the governed cross-repo posture was 127 label-backed
+   RFC-0002 issues across 13 repositories, 88 closed and 39 open: 25 blocked,
+   no PR-open issues, 2 in-progress issues (`#681` and `#871`), 4
+   merged-main or merged-to-main QA-pending dependencies, and 8 tracker issues.
 4. The blocked-actionability classifier reported 0 app-actionable blocked
-   issues: 6 Core dependencies and 23 external/protected-evidence dependencies.
-5. `sgajbi/lotus-core#882` still blocks #814/#685/#686 and full canonical
-   Workbench/Idea proof until Core publishes deterministic non-empty
-   `source_batch_fingerprint` / content-hash evidence on
-   `DpmPortfolioUniverseCandidate:v1` READY responses.
-6. `sgajbi/lotus-core#885` still blocks Slice 14 trust-telemetry/catalog
-   promotion until Core `HoldingsAsOf` and `IngestionEvidenceBundle`
-   request-scope semantics converge across declaration, route,
-   OpenAPI/source contract, generated catalog, and telemetry.
-7. `sgajbi/lotus-core#917` blocks platform technology-governance rollout
-   closure until Core records report-only dependency, SBOM, scanner,
-   container-image, vulnerability, and exception posture evidence against
-   `lotus-platform#595` / PR #652 policy truth.
+   issues; the remaining blocked issues require production identity/session
+   authority, protected runtime/deployment evidence, provider/bank/legal
+   approval, final-closure prerequisites, or certification evidence.
+5. `sgajbi/lotus-core#882`, `#885`, and `#917` are closed with
+   `status/merged-main`; they no longer justify app-code blocking by
+   themselves. Fresh canonical Workbench/Gateway/Idea proof is still required
+   before #814/#685/#686 can close.
+6. `#871` is an in-progress Slice 18 maintainability issue. It keeps static
+   RFC-0002 execution-ledger gate policy in a versioned contract while Python
+   remains responsible for validator behavior.
+7. The policy refactor does not change supported-feature posture, product
+   certification, production identity, or protected runtime evidence.
 8. `sgajbi/lotus-platform#653` closed through PR #654 on platform main
    `e0ad0596afcda7bc8cf33909f8ece04b1d944647` after Main Releasability
    `31256159863` passed. The durable lesson is execution hygiene only: partial

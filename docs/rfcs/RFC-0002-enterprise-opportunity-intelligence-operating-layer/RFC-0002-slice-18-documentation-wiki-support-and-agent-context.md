@@ -842,34 +842,33 @@ hygiene, and the post-cancel detector returned `Stale workflow runs: 0`; this
 does not clear protected runner, cost-attribution, deployment-promotion, or
 production-certification blockers.
 
-The 2026-08-08 continuation audit refreshed the execution posture from current
-`lotus-idea` main and live GitHub state. `make
+The 2026-08-09 continuation audit refreshed the execution posture from current
+`lotus-idea` branch source and live GitHub state after creating #871 for the
+execution-ledger gate-policy refactor. `make
 rfc0002-github-issue-execution-state-audit`, `make
 rfc0002-github-issue-execution-summary`, and `make
-rfc0002-cross-repo-issue-posture` passed after classifying the new
-`sgajbi/lotus-core#917` rollout issue. At that audit point, the Idea ledger had
-57 tracked RFC-0002 issues, 32 closed and 25 open. The governed cross-repo
-posture was 111 label-backed RFC-0002 issues across 13 repositories, 72 closed
-and 39 open: 29 blocked, no PR-open or merged-main QA-pending issues, 2
-in-progress issues (#681 and `sgajbi/lotus-manage#629`), and 8 tracker issues. The
-blocked-actionability classifier reported 0 app-actionable blocked
-issues: 6 Core dependencies and 23 external/protected-evidence dependencies.
+rfc0002-cross-repo-issue-posture` passed. At that audit point, the Idea ledger
+had 58 tracked RFC-0002 issues, 32 closed and 26 open. The governed cross-repo
+posture was 127 label-backed RFC-0002 issues across 13 repositories, 88 closed
+and 39 open: 25 blocked, no PR-open issues, 2 in-progress issues (#681 and
+#871), 4 merged-main or merged-to-main QA-pending dependencies, and 8 tracker
+issues. The blocked-actionability classifier reported 0 app-actionable blocked
+issues; the remaining blocked issues require production identity/session
+authority, protected runtime/deployment evidence, provider/bank/legal approval,
+final-closure prerequisites, or certification evidence.
 
-Fresh durable blocker evidence was recorded on `sgajbi/lotus-idea#681`,
-`sgajbi/lotus-core#882`, `sgajbi/lotus-core#885`,
-`sgajbi/lotus-core#917`, and `sgajbi/lotus-platform#595`. `#882` was then the
-canonical live-proof blocker for #814/#685/#686 until Core publishes
-deterministic non-empty `source_batch_fingerprint` / content-hash evidence on
-`DpmPortfolioUniverseCandidate:v1` READY responses. `#885` was then the Slice 14
-trust-telemetry/catalog blocker until Core `HoldingsAsOf` and
-`IngestionEvidenceBundle` request-scope semantics converge across declaration,
-route, OpenAPI/source contract, generated catalog, and telemetry. Current
-state: Core `#882`, `#885`, and `#917` are closed with `status/merged-main`.
-Core `#917` closed after PR #929 reached exact main
-`6bc937bb173051e0bd4ee9a07ffebd54face0163` and Main Releasability
-`31308743764` passed. That evidence is report-only technology-governance pilot
-posture and does not certify production vulnerability posture or Lotus Idea
-supported-feature promotion.
+Fresh durable blocker evidence now treats Core `#882`, `#885`, and `#917` as
+closed with `status/merged-main`; those issues no longer justify app-code
+blocking by themselves. Fresh canonical Workbench/Gateway/Idea proof remains
+required before #814/#685/#686 can close. Core `#917` closed after PR #929
+reached exact main `6bc937bb173051e0bd4ee9a07ffebd54face0163` and Main
+Releasability `31308743764` passed. That evidence is report-only
+technology-governance pilot posture and does not certify production
+vulnerability posture or Lotus Idea supported-feature promotion. #871 is an
+in-progress Slice 18 maintainability issue that moves static gate policy into a
+versioned implementation-proof contract without changing supported-feature
+posture, product certification, production identity, or protected runtime
+evidence.
 Platform
 `sgajbi/lotus-platform#647` remains open/blocked: stale scheduled run
 `31235891576` was cancelled and the detector returned zero stale runs, but

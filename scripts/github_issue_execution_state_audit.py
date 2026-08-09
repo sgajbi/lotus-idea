@@ -16,11 +16,12 @@ if str(ROOT) not in sys.path:
 
 from scripts.github_issue_execution_ledger_gate import (
     CLOSED_STATUSES,
-    EXPECTED_EXECUTION_ISSUES,
     LEDGER_PATH,
     OPEN_STATUSES,
+    POLICY_PATH,
     IssueEntry,
     _entries,
+    _load_gate_policy,
     _load_json,
 )
 
@@ -88,17 +89,19 @@ def fetch_github_issue_states(*, repository: str, limit: int) -> dict[int, GitHu
 def audit_github_issue_execution_state(
     *,
     ledger_path: Path = LEDGER_PATH,
+    policy_path: Path = POLICY_PATH,
     github_issues: Mapping[int, GitHubIssueState],
 ) -> list[str]:
     try:
         ledger_payload = _load_json(ledger_path)
+        gate_policy = _load_gate_policy(policy_path)
         ledger_entries = _entries(ledger_payload)
     except (FileNotFoundError, json.JSONDecodeError, ValueError) as exc:
         return [str(exc)]
 
     errors: list[str] = []
     seen_ledger_issues = {entry.issue_number for entry in ledger_entries}
-    missing_expected = sorted(EXPECTED_EXECUTION_ISSUES - seen_ledger_issues)
+    missing_expected = sorted(gate_policy.expected_issue_numbers - seen_ledger_issues)
     if missing_expected:
         errors.append(
             "ledger is missing expected RFC-0002 issue entries: "

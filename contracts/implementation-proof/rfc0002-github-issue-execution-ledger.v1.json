@@ -579,6 +579,15 @@
       "executionStatus": "open_blocked",
       "allowPullRequestAutoClose": false,
       "closureInstruction": "Keep #814 open and status/blocked. Idea PR #815 merged to main at ed2562ee431e3cb5c5e7ff6698060c83e1e34dc6 and Workbench PR #515 merged the local/dev trusted-caller orchestration wiring to main at 112d0db76ad8bd3b11d3c73164719b7cd75dfb37; Workbench PR #516 then merged the capacity workload validator fix to main at 1787da79fb4abaf574ebe4ebc3f8b4d5fed7bdac with Workbench Main Releasability run 30543504302 passing for that exact SHA. The original #814 authorization and Workbench validator defects are no longer the active failure path, and earlier Core blockers #836, #840, #856, and #873 are closed. Final canonical proof remains blocked by Core issue sgajbi/lotus-core#882: the canonical path now reaches Manage candidate discovery, where Manage rejects Core DpmPortfolioUniverseCandidate:v1 source refs that omit deterministic non-empty source_batch_fingerprint/content_hash evidence. Keep #814 open until Core #882 is fixed, fresh canonical validation completes on mainline sources with idea-capacity seed evidence, and source truth is reconciled again. This issue does not implement production authentication, production IdP/session/token-claims authority, production capacity certification, supported-feature promotion, or client-publication proof."
+    },
+    {
+      "issueNumber": 871,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/871",
+      "rfcSlices": ["slice-18"],
+      "githubState": "open",
+      "executionStatus": "open_in_progress",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #871 open until the RFC-0002 execution ledger gate-policy refactor reaches main, exact-main validation passes, wiki/context impact is reconciled, and follow-up closure truth is synchronized. This issue tracks moving static RFC-0002 execution ledger gate policy out of scripts/github_issue_execution_ledger_gate.py and into contracts/implementation-proof/rfc0002-github-issue-execution-ledger-gate-policy.v1.json so future Slice 18 evidence updates edit a versioned data contract instead of executable validator logic. Branch issue-871-ledger-gate-policy-contract is implementation in progress with open_in_progress source truth. Do not auto-close from PR text; this refactor does not change RFC-0002 issue posture, supported-feature claims, Workbench/Gateway/Core blocker state, production identity, or protected runtime certification."
     }
   ]
 }
