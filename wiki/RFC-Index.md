@@ -15,6 +15,7 @@ documentation, CI, and mainline validation agree.
 | Product boundary | [Overview](Overview), [Architecture](Architecture) |
 | Support posture | [Supported Features](Supported-Features) |
 | CI and closure proof | [Validation and CI](Validation-and-CI) |
+| Current GitHub execution posture | [RFC-0002 Execution Status](RFC-0002-Execution-Status) |
 
 Primary RFCs:
 
@@ -27,6 +28,13 @@ contracts, signal generation, persistence, scoring, review, AI explanation,
 certified APIs, Gateway, Workbench, Advise/Manage conversion,
 Report/Render/Archive materialization, data products, operations, demo
 readiness, live proof, documentation, hardening, and closure.
+
+The live issue-backed status map is maintained in
+[RFC-0002 Execution Status](RFC-0002-Execution-Status). It currently records
+124 label-backed RFC-0002 issues across 13 repositories: 83 closed and 41
+open, with 28 blocked issues and zero app-actionable blocked issues. The page
+also records the latest canonical front-office QA failure and the issue-specific
+proof still required before QA-pending merged-main issues can close.
 
 ## Detailed RFC-0002 Implementation Ledger
 

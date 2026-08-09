@@ -20,6 +20,7 @@
 - [Development Workflow](Development-Workflow)
 - [Validation and CI](Validation-and-CI)
 - [RFC Index](RFC-Index)
+- [RFC-0002 Execution Status](RFC-0002-Execution-Status)
 
 ## Operations And Governance
 

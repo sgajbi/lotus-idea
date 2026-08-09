@@ -15,7 +15,7 @@ supported yet.
 | Business and product | [Overview](Overview), [Architecture](Architecture), and [Supported Features](Supported-Features) | Product blueprint, current capability truth, ownership boundaries, and promotion requirements. |
 | Sales and demo | [Demo Readiness](Demo-Readiness) and [Roadmap](Roadmap) | Implementation-backed talk tracks, do-not-claim rules, and planned capability framing. |
 | Operations and support | [Operations Runbook](Operations-Runbook), [Service SLO and Capacity](Service-SLO-And-Capacity), [Data Lifecycle Operations](Data-Lifecycle-Operations), [PostgreSQL Disaster Recovery](PostgreSQL-Disaster-Recovery), [Canonical Opportunity Source Proofs](Canonical-Opportunity-Source-Proofs), [Troubleshooting](Troubleshooting), [Validation and CI](Validation-and-CI), and [Security and Governance](Security-and-Governance) | Reliability budgets, supportability posture, governed privacy lifecycle, recovery, source-proof execution, diagnostics, gates, and incident first checks. |
-| Engineering and agents | [Architecture](Architecture), [API Surface](API-Surface), [Integrations](Integrations), [Development Workflow](Development-Workflow), and [RFC Index](RFC-Index) | Source authority, API foundations, repo-native commands, and RFC slice truth. |
+| Engineering and agents | [Architecture](Architecture), [API Surface](API-Surface), [Integrations](Integrations), [Development Workflow](Development-Workflow), [RFC Index](RFC-Index), and [RFC-0002 Execution Status](RFC-0002-Execution-Status) | Source authority, API foundations, repo-native commands, RFC slice truth, and current GitHub execution posture. |
 
 ## Start Here
 
@@ -31,7 +31,20 @@ supported yet.
 | Run live source proof | [Canonical Opportunity Source Proofs](Canonical-Opportunity-Source-Proofs) |
 | Operate or troubleshoot | [Operations Runbook](Operations-Runbook), [Data Lifecycle Operations](Data-Lifecycle-Operations), [PostgreSQL Disaster Recovery](PostgreSQL-Disaster-Recovery), [Troubleshooting](Troubleshooting) |
 | Prepare a safe demo | [Demo Readiness](Demo-Readiness) |
-| Review governance and roadmap | [Security and Governance](Security-and-Governance), [RFC Index](RFC-Index), [Roadmap](Roadmap) |
+| Review governance and roadmap | [Security and Governance](Security-and-Governance), [RFC Index](RFC-Index), [RFC-0002 Execution Status](RFC-0002-Execution-Status), [Roadmap](Roadmap) |
+
+## Current RFC-0002 Execution Posture
+
+| Signal | Current state |
+| --- | --- |
+| GitHub issue posture | 124 RFC-0002 issues: 83 closed, 41 open. |
+| Open blocked work | 28 blocked issues, 0 app-actionable blocked issues. |
+| Active tracker | `sgajbi/lotus-idea#681` remains open as the Slice 18 synchronization tracker. |
+| Latest canonical QA | Failed before AI/Advise proof on Workbench browser feedback-action confirmation. |
+| Next proof path | Fix the Workbench/Gateway/Idea feedback-action blocker, then rerun canonical QA and close only issues with fresh proof. |
+
+See [RFC-0002 Execution Status](RFC-0002-Execution-Status) for the durable
+issue-backed status map and closure boundaries.
 
 ## Evidence Standard
 

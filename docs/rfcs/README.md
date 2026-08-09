@@ -5,6 +5,13 @@ currently in foundation state; business features remain planned until their RFCs
 carry implementation evidence, endpoint certification, data-product posture,
 tests, docs, wiki, and supported-feature promotion.
 
+For the current live GitHub execution posture, canonical QA status, dependency
+map, and closure decision rules, use
+[wiki/RFC-0002-Execution-Status.md](../../wiki/RFC-0002-Execution-Status.md).
+At the latest refresh, RFC-0002 has 124 label-backed issues across 13
+repositories: 83 closed and 41 open, with 28 blocked issues and zero
+app-actionable blocked issues.
+
 ## Active RFC Suite
 
 1. [RFC-0001: Repository Foundation And Service Boundary](RFC-0001-repository-foundation-and-service-boundary.md)

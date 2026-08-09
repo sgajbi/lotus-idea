@@ -261,6 +261,24 @@ does not close QA-pending merged-main issues, clear Core #882/#885/#917,
 promote supported features, or replace production IdP/session-token, protected
 runtime, provider, legal, client-publication, support, or final RFC-0002
 closure evidence.
+The later 2026-08-09 QA and issue-posture refresh reports 124 label-backed
+RFC-0002 issues across 13 repositories: 83 closed and 41 open. Open status is
+28 `status/blocked`, 1 `status/in-progress` (#681), 2 `status/merged-main`,
+2 `status/merged-to-main`, and 8 `status/tracker`; blocked actionability
+remains 0 app-actionable issues. `sgajbi/lotus-workbench#548`, `#549`, `#550`,
+`#551`, `#552`, `#556`, `#557`, and `#558` are QA-closed.
+`sgajbi/lotus-manage#629` is QA-closed. `sgajbi/lotus-idea#681` stays open as
+Slice 18 synchronization, not final closure. The canonical front-office QA run
+recorded in
+`lotus-platform/output/front-office-qa/canonical-front-office-qa-20260809-084903.*`
+started the governed stack, passed DPM command-center seed and Idea readiness,
+then failed in Workbench browser validation because the expected Gateway-backed
+feedback confirmation was not visible. That run did not reach the advisory
+copilot or Advise proposal proof path, so it cannot close
+`sgajbi/lotus-ai#126`, `sgajbi/lotus-advise#481`,
+`sgajbi/lotus-advise#485`, or `sgajbi/lotus-platform#659`. Current next proof
+work is the Workbench/Gateway/Idea feedback-action blocker plus Core `#882`
+for `DpmPortfolioUniverseCandidate:v1` source-batch fingerprint authority.
 Platform PR `sgajbi/lotus-platform#631` fixes the earlier Manage seed
 authorization failure; #686 is blocked, not QA-pending, until
 `sgajbi/lotus-core#882` restores Core-owned deterministic
