@@ -354,6 +354,42 @@ def test_rfc0002_github_issue_execution_ledger_tracks_issue_854_gate_false_posit
     assert "does not complete Slice 18" in issue_854["closureInstruction"]
 
 
+def test_rfc0002_github_issue_execution_ledger_tracks_proof_readiness_hardening_closures() -> None:
+    module = _load_gate()
+    payload = _ledger_payload(module)
+    issues_by_number = {
+        issue["issueNumber"]: issue
+        for issue in payload["issues"]
+        if isinstance(issue, dict) and isinstance(issue.get("issueNumber"), int)
+    }
+
+    issue_864 = issues_by_number[864]
+    issue_866 = issues_by_number[866]
+
+    assert issue_864["githubState"] == "closed"
+    assert issue_864["executionStatus"] == "closed_complete"
+    assert issue_864["allowPullRequestAutoClose"] is True
+    assert issue_864["rfcSlices"] == ["slice-17", "slice-19"]
+    assert "Closed #864" in issue_864["closureInstruction"]
+    assert "PR #865" in issue_864["closureInstruction"]
+    assert "35091eec121ea0c7186302526b211e288a59abed" in issue_864["closureInstruction"]
+    assert "locals()-based implicit composition" in issue_864["closureInstruction"]
+    assert "31304700457" in issue_864["closureInstruction"]
+    assert "does not complete Slice 17" in issue_864["closureInstruction"]
+
+    assert issue_866["githubState"] == "closed"
+    assert issue_866["executionStatus"] == "closed_complete"
+    assert issue_866["allowPullRequestAutoClose"] is True
+    assert issue_866["rfcSlices"] == ["slice-17", "slice-19"]
+    assert "Closed #866" in issue_866["closureInstruction"]
+    assert "PR #867" in issue_866["closureInstruction"]
+    assert "PR #868" in issue_866["closureInstruction"]
+    assert "ImplementationProofReadinessProofInputs" in issue_866["closureInstruction"]
+    assert "6d40f7489d70af33e42e28dfb9ffe6e40d880994" in issue_866["closureInstruction"]
+    assert "560ddcfff9ba61f2db3008fabc62c31c20cfb425" in issue_866["closureInstruction"]
+    assert "does not implement authentication or authorization" in issue_866["closureInstruction"]
+
+
 def test_rfc0002_github_issue_execution_ledger_tracks_workbench_principal_blocker() -> None:
     module = _load_gate()
     payload = _ledger_payload(module)

@@ -22,9 +22,9 @@ dependency map, and closure rules without relying on chat memory.
 | Snapshot command | `make rfc0002-cross-repo-issue-posture` |
 | Execution audit | `make rfc0002-github-issue-execution-state-audit` passed |
 | Repositories checked | 13 |
-| Total RFC-0002 issues | 124 |
-| Closed RFC-0002 issues | 85 |
-| Open RFC-0002 issues | 39 |
+| Total RFC-0002 issues | 126 |
+| Closed RFC-0002 issues | 88 |
+| Open RFC-0002 issues | 38 |
 | Open blocked issues | 25 |
 | App-actionable blocked issues | 0 |
 | Active synchronization tracker | `sgajbi/lotus-idea#681` |
@@ -39,7 +39,7 @@ blocked posture and implement or reclassify it.
 ```mermaid
 flowchart LR
     Issues["GitHub issue posture<br/>126 RFC-0002 issues"]
-    Open["39 open<br/>25 blocked, 2 in progress,<br/>4 QA-pending aliases, 8 trackers"]
+    Open["38 open<br/>25 blocked, 1 in progress,<br/>4 QA-pending aliases, 8 trackers"]
     Blocked["Blocked classifier<br/>0 app-actionable"]
     Work["Writable work<br/>only when evidence proves app-code ownership"]
     External["Core / protected / identity / provider / legal evidence"]
@@ -57,16 +57,18 @@ flowchart LR
 | Status label | Count | Interpretation |
 | --- | ---: | --- |
 | `status/blocked` | 25 | Protected, identity, provider, legal, publication, canonical QA, or certification evidence. |
-| `status/in-progress` | 2 | Continuous Slice 18 synchronization tracker `sgajbi/lotus-idea#681` and Core technology-governance pilot `sgajbi/lotus-core#917`. |
+| `status/in-progress` | 1 | Continuous Slice 18 synchronization tracker `sgajbi/lotus-idea#681`. |
 | `status/merged-main` | 2 | Merged-main issues awaiting canonical QA closure evidence. |
 | `status/merged-to-main` | 2 | Repository-local Advise merged-main alias awaiting QA closure evidence. |
 | `status/tracker` | 8 | Parent or umbrella tracking issues, not immediate implementation items. |
 
-Latest synchronization evidence: `lotus-idea#866` is closed on exact main after
-PR #867 merged the implementation hardening and PR #868 synchronized
-source-controlled closure truth. Exact-main Main Releasability `31306932624`
-and CodeQL `31306929484` passed for PR #868 main commit
-`560ddcfff9ba61f2db3008fabc62c31c20cfb425`.
+Latest synchronization evidence: `lotus-idea#864` and `lotus-idea#866` are
+closed with `status/merged-main` and now appear in the RFC-0002 execution
+ledger as Slice 17/19 hardening issues. `sgajbi/lotus-core#917` is also closed
+with `status/merged-main` after Core PR #929 reached exact main
+`6bc937bb173051e0bd4ee9a07ffebd54face0163` and Main Releasability
+`31308743764` passed. This is source-truth synchronization only; none of these
+closures promotes a Lotus Idea supported feature.
 
 ## Highest-Leverage Remaining Dependencies
 
@@ -75,8 +77,7 @@ and CodeQL `31306929484` passed for PR #868 main commit
 | 1 | Workbench/Gateway/Idea feedback-action proof | The latest canonical QA stopped before AI/Advise proof because the Workbench browser did not observe the expected Gateway-backed feedback confirmation. | Workbench/Gateway/Idea investigation; not identity work. |
 | 2 | Idea `#814`, `#685`, and `#686` canonical proof | Core `#882` is closed; these issues now require fresh governed PB_SG_GLOBAL_BAL_001 queue/detail/action evidence, not downstream hash fabrication or stale artifacts. | Canonical full-stack proof across Idea, Gateway, and Workbench. |
 | 3 | QA-pending merged-main issues | `sgajbi/lotus-ai#126`, `sgajbi/lotus-advise#481`, `sgajbi/lotus-advise#485`, and `sgajbi/lotus-platform#659` need fresh issue-specific canonical evidence before closure. | Close only when the fresh run reaches and proves each path. |
-| 4 | `sgajbi/lotus-core#917` | Still open as `status/in-progress` for Core-side report-only technology-governance vulnerability posture evidence. | Core owns the pilot evidence; platform owns policy/gate rollout. |
-| 5 | Production identity/session issues | Blocks supported-feature promotion and production principal proof. | Not implemented in local/dev; tracked through Workbench `#436`, platform `#563`, Manage `#624`, and Idea `#687` / `#380`. |
+| 4 | Production identity/session issues | Blocks supported-feature promotion and production principal proof. | Not implemented in local/dev; tracked through Workbench `#436`, platform `#563`, Manage `#624`, and Idea `#687` / `#380`. |
 
 ```mermaid
 flowchart TD
@@ -84,7 +85,7 @@ flowchart TD
     Feedback["Workbench/Gateway/Idea<br/>feedback-action proof"]
     CanonicalQA["Canonical front-office QA<br/>PB_SG_GLOBAL_BAL_001"]
     IdeaProof["Idea #685/#686/#814<br/>queue, detail, actions, seed proof"]
-    Core917["Core #917<br/>technology governance in progress"]
+    Core917["Core #917<br/>closed report-only governance pilot"]
     QAPending["QA-pending merged-main issues<br/>AI #126, Advise #481/#485, Platform #659"]
     Support["Supported feature promotion<br/>still blocked"]
     Identity["Production identity/session<br/>Workbench #436 / Platform #563 / Manage #624 / Idea #687/#380"]
@@ -93,7 +94,6 @@ flowchart TD
     CoreClosed --> IdeaProof
     Feedback --> CanonicalQA
     IdeaProof --> CanonicalQA
-    Core917 --> Support
     CanonicalQA --> QAPending
     QAPending --> Support
     Identity --> Support
@@ -106,6 +106,7 @@ flowchart TD
 | --- | --- | --- |
 | `sgajbi/lotus-core#882` | Closed on 2026-08-09 with `status/merged-main`. | The blocker classifier no longer treats Core DPM source-batch fingerprint publication as open. Idea `#814`, `#685`, and `#686` must now be proved with fresh canonical runtime evidence. |
 | `sgajbi/lotus-core#885` | Closed on 2026-08-09 with `status/merged-main`. | Data-product request-scope drift is no longer an open blocked dependency in the RFC-0002 cross-repo posture. |
+| `sgajbi/lotus-core#917` | Closed on 2026-08-09 with `status/merged-main`. | Core completed the report-only technology-governance pilot evidence. It removes the Core pilot from active in-progress posture but does not certify production vulnerability posture or supported-feature promotion. |
 
 ## Canonical Front-Office QA Status
 
