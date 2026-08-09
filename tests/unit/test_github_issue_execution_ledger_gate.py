@@ -29,8 +29,18 @@ def _ledger_payload(module: ModuleType) -> dict[str, Any]:
     return cast(dict[str, Any], json.loads(module.LEDGER_PATH.read_text(encoding="utf-8")))
 
 
+def _policy_payload(module: ModuleType) -> dict[str, Any]:
+    return cast(dict[str, Any], json.loads(module.POLICY_PATH.read_text(encoding="utf-8")))
+
+
 def _write_ledger(tmp_path: Path, payload: dict[str, Any]) -> Path:
     path = tmp_path / "ledger.json"
+    path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    return path
+
+
+def _write_policy(tmp_path: Path, payload: dict[str, Any]) -> Path:
+    path = tmp_path / "policy.json"
     path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
     return path
 
@@ -39,6 +49,50 @@ def test_rfc0002_github_issue_execution_ledger_gate_passes_current_ledger() -> N
     module = _load_gate()
 
     assert module.validate_github_issue_execution_ledger() == []
+
+
+def test_rfc0002_github_issue_execution_ledger_gate_loads_policy_contract() -> None:
+    module = _load_gate()
+
+    policy = module._load_gate_policy()
+
+    assert 871 in policy.expected_issue_numbers
+    assert "Keep #871 open" in policy.required_open_issue_evidence[871]
+    assert (
+        "rfc0002-github-issue-execution-ledger-gate-policy.v1.json"
+        in policy.required_open_issue_evidence[871]
+    )
+    assert policy.ledger_schema_version == ("lotus-idea:rfc0002-github-issue-execution-ledger:v1")
+
+
+def test_rfc0002_github_issue_execution_ledger_gate_rejects_bad_policy_schema(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    policy = _policy_payload(module)
+    policy["schemaVersion"] = "lotus-idea:bad-policy:v1"
+
+    errors = module.validate_github_issue_execution_ledger(
+        policy_path=_write_policy(tmp_path, policy),
+    )
+
+    assert errors == [
+        "schemaVersion must be lotus-idea:rfc0002-github-issue-execution-ledger-gate-policy:v1",
+    ]
+
+
+def test_rfc0002_github_issue_execution_ledger_gate_enforces_policy_contract_evidence(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    policy = _policy_payload(module)
+    policy["requiredOpenIssueEvidence"]["871"] = ["missing #871 fragment"]
+
+    errors = module.validate_github_issue_execution_ledger(
+        policy_path=_write_policy(tmp_path, policy),
+    )
+
+    assert ("#871: closureInstruction missing required evidence `missing #871 fragment`") in errors
 
 
 def test_rfc0002_github_issue_execution_ledger_declares_evidence_only_sync_policy() -> None:

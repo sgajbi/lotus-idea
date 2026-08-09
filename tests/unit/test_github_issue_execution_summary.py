@@ -78,8 +78,16 @@ def test_github_issue_execution_summary_reports_current_rfc0002_counts() -> None
         summary["counts"]["byExecutionStatus"]["closed_complete"]
         == expected_execution_counts["closed_complete"]
     )
-    assert summary["issuesByStatus"][issue_681_status] == [681]
-    assert summary["issuesByStatus"]["open_in_progress"] == [681]
+    assert summary["issuesByStatus"][issue_681_status] == sorted(
+        issue["issueNumber"]
+        for issue in ledger_issues
+        if issue["executionStatus"] == issue_681_status
+    )
+    assert summary["issuesByStatus"]["open_in_progress"] == sorted(
+        issue["issueNumber"]
+        for issue in ledger_issues
+        if issue["executionStatus"] == "open_in_progress"
+    )
     assert "open_pr_raised" not in summary["issuesByStatus"]
     assert "open_fixed_local" not in summary["issuesByStatus"]
     assert "open_merged_main_qa_pending" not in summary["issuesByStatus"]

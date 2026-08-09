@@ -12,16 +12,13 @@ ROOT = Path(__file__).resolve().parents[1]
 LEDGER_PATH = (
     ROOT / "contracts" / "implementation-proof" / "rfc0002-github-issue-execution-ledger.v1.json"
 )
-EXPECTED_SCHEMA_VERSION = "lotus-idea:rfc0002-github-issue-execution-ledger:v1"
-EXPECTED_RFC_ID = "RFC-0002"
-EXPECTED_REPOSITORY = "sgajbi/lotus-idea"
-EXPECTED_EXECUTION_ISSUES = frozenset(range(673, 703)) | frozenset(
-    map(
-        int,
-        "340 343 344 345 375 379 380 482 542 555 557 559 561 563 565 567 "
-        "569 579 704 756 782 797 807 814 854 864 866".split(),
-    )
+POLICY_PATH = (
+    ROOT
+    / "contracts"
+    / "implementation-proof"
+    / "rfc0002-github-issue-execution-ledger-gate-policy.v1.json"
 )
+EXPECTED_POLICY_SCHEMA_VERSION = "lotus-idea:rfc0002-github-issue-execution-ledger-gate-policy:v1"
 OPEN_STATUSES = frozenset(
     "open_tracker open_ready open_blocked open_in_progress open_fixed_local "
     "open_pr_raised open_merged_main_qa_pending open_pending_final_closure "
@@ -30,311 +27,16 @@ OPEN_STATUSES = frozenset(
 CLOSED_STATUSES = frozenset({"closed_complete"})
 AUTO_CLOSE_KEYWORDS = tuple("close closes closed fix fixes fixed resolve resolves resolved".split())
 
-REQUIRED_EVIDENCE_ONLY_SYNC_POLICY = (
-    "Evidence-only Slice 18 synchronization PRs must not recursively require another "
-    "source-sync PR for their own post-merge evidence",
-    "final PR evidence comment",
-    "If the PR changes implementation truth, blocker state, support posture, wiki source, "
-    "context, or policy",
-    "source-controlled ledger/docs/wiki/context update is required",
-)
-REQUIRED_OPEN_ISSUE_EVIDENCE = {
-    343: (
-        "Keep #343 open and status/blocked",
-        "versioned DR contract",
-        "logical backup/restore drill workflow",
-        "managed-provider PITR/failover certification",
-        "2026-07-29",
-        "This issue is not QA-pending",
-        "continuous WAL/PITR health",
-        "Do not claim production DR",
-    ),
-    344: (
-        "Keep #344 open and status/blocked",
-        "versioned lifecycle contract",
-        "signed Archive lifecycle posture consumer",
-        "scheduled lifecycle review workflow",
-        "This issue is not QA-pending",
-        "live bank producer/key-discovery proof",
-        "provider-native AI deletion conformance",
-        "Do not claim legal retention approval",
-    ),
-    375: (
-        "Keep #375 open and status/blocked",
-        "exact-image deployment migration contract",
-        "protected workflow",
-        "2026-07-29 live GitHub configuration recheck",
-        "total_count=0",
-        "Deployment Migration Evidence workflow has no runs",
-        "This issue is not QA-pending",
-        "Do not claim production migration certification",
-    ),
-    379: (
-        "Keep #379 open and status/blocked",
-        "sgajbi/lotus-advise#461",
-        "sgajbi/lotus-manage#621",
-        "sgajbi/lotus-report#152",
-        "sgajbi/lotus-report#136 is closed for Report-owned Idea evidence retention-policy conformance",
-        "30898036781",
-        "consumes sgajbi/lotus-manage#620 Manage temporal receipt identity",
-        "closed v3 Manage mandate runtime proof contract",
-        "sgajbi/lotus-manage#624",
-        "sgajbi/lotus-archive#55",
-        "production/certification evidence",
-        "Archive production legal/privacy lifecycle conformance",
-    ),
-    380: (
-        "PR #746 corrected stale ready posture",
-        "open_blocked",
-        "6f8875dc6784dd17975e6700c09b9ff71d66fb8b",
-        "30327202465",
-        "30327193673",
-    ),
-    681: (
-        "PR #765 merged the Slice 18 cross-repo issue posture command",
-        "3ab78c4e9ba23b08eec5396f0641acf21c98f74a",
-        "30411606383",
-        "lotus-idea.wiki commit 0aea688",
-        "PR #767 rendered pending final-closure and post-completion issue sections",
-        "PR #768 added keep-open PR text enforcement",
-        "PR #769 synchronized Manage temporal receipt identity consumption",
-        "PR #770 reconciled historical Manage #620 closure truth",
-        "c4a58683a05cb0c78bea5848a287abda682aea8f",
-        "30418344813",
-        "30418340512",
-        "PR #776 synchronized #690 final QA closure truth",
-        "aa492aedd46f30b854c8478edb919605dbdd58fc",
-        "30432065538",
-        "30432058627",
-        "lotus-idea.wiki commit c08509a",
-        "PR #777 synchronized #681 evidence after #690 QA closure",
-        "39d51c5cb63df360f1e97e6e9e862784a9ad9178",
-        "30434057675",
-        "30434051218",
-        "lotus-idea.wiki commit d0a1fa1",
-        "rfc0002-issue681-pr776-evidence-sync",
-        "PR #779 hardened operations blocker truth",
-        "655d1245e96b7a67dea6c5d9ff0c78d0a32ee9e6",
-        "30437706105",
-        "30437690255",
-        "lotus-idea.wiki commit b3359fa",
-        "rfc0002-slice15-operations-blocker-truth",
-        "PR #785 synchronized #782 final QA closure truth",
-        "3ed24b318923dd4bf172da315fdc5996a612f0dc",
-        "30447510833",
-        "30447504086",
-        "PR #787 corrected cross-repo RFC-0002 posture coverage",
-        "39a480ddf115649acc3f6793a69596d4e5912bc8",
-        "30451401411",
-        "30451387946",
-        "lotus-idea.wiki commit d06f46b",
-        "PR #789 classified RFC-0002 blocker actionability",
-        "01ae36ba89f975508bde47b4361190ef5c083597",
-        "30456433618",
-        "30456425304",
-        "lotus-idea.wiki commit c926899",
-        "PR #790 synchronized PR #789 evidence into source-controlled execution truth",
-        "f23c72d7d95d1676b8f673f538a9336e4b704fbc",
-        "30458163573",
-        "30458146092",
-        "lotus-idea.wiki commit bbd9e2f",
-        "PR #791 synchronized PR #790 evidence into source-controlled execution truth",
-        "65e11890aaddb70fea4cf9d80e836ce1625a6c44",
-        "30460122600",
-        "30460101418",
-        "lotus-idea.wiki commit 2453c3006722ee40e48762d884581fb6b3893bbe",
-        "Workbench PR #505 merged BFF principal-boundary hardening",
-        "1b4afb92f4c810c99921fc26e451b04bca731e28",
-        "30464152669",
-        "c4add59871bc3f0e78dc6602c8857c5e141e6367",
-        "30465110912",
-        "Workbench wiki publication reached commit 3b4f78f",
-        "0 app-actionable blocked issues",
-        "Current Idea ledger posture after PR #801 is 43 tracked issues, 24 open, and 19 closed",
-        "PR #801 then synchronized the final #797/#681 evidence on Idea main",
-        "95c47d27f45e09369f6b709588fa2de1a1f8700b",
-        "30487277416",
-        "Current governed cross-repo RFC-0002 posture after PR #801 is 37 open and 43 closed issues across 13 repositories, 80 tracked issues total",
-        "PR #802 then synchronized current RFC-0002 posture truth on Idea main",
-        "7df8fbff1fbab3acb5568a8e95eb7d5d58c8dcdd",
-        "30488990343",
-        "ec05a36",
-        "issue-681-current-posture-sync",
-        "Current Idea ledger posture after PR #802 is 43 tracked issues, 24 open, and 19 closed",
-        "Current governed cross-repo RFC-0002 posture after PR #802 is 37 open and 43 closed issues across 13 repositories, 80 tracked issues total",
-        "PR #803 then synchronized PR #802 evidence truth on Idea main",
-        "31e5157de796e0accd0f23d3a80102ecd0871c71",
-        "30490458612",
-        "3743f01",
-        "issue-681-pr802-evidence-sync",
-        "Current Idea ledger posture after PR #803 is 43 tracked issues, 24 open, and 19 closed",
-        "Current governed cross-repo RFC-0002 posture after PR #803 is 37 open and 43 closed issues across 13 repositories, 80 tracked issues total",
-        "PR #804 then synchronized PR #803 evidence truth on Idea main",
-        "615e3ba848af551801c897dd9b0a52f964801da0",
-        "30491918891",
-        "05026e8",
-        "issue-681-pr803-evidence-sync",
-        "Current Idea ledger posture after PR #804 is 43 tracked issues, 24 open, and 19 closed",
-        "Current governed cross-repo RFC-0002 posture after PR #804 is 37 open and 43 closed issues across 13 repositories, 80 tracked issues total",
-        "Platform #636 / PR #637 closed stale queued workflow-run detection",
-        "30472672629",
-        "Platform #638 / PR #639 hardened stale PR-text payload guidance",
-        "641aabe9f303a178f3a4e489c52b3d789d8339d3",
-        "30475978275",
-        "strict DiffCount 0",
-        "coordination and documentation truth only",
-        "does not clear RFC-0002 blockers",
-        "replace production IdP/session/token-claims evidence",
-    ),
-    687: (
-        "Keep #687 open and status/blocked",
-        "Platform PR #635 defined the authenticated BFF principal session source-contract posture",
-        "68c9d3a377a0a801d1a89d1eccf00cefcb3b46b6",
-        "30462517594",
-        "30462522963",
-        "platform wiki commit 3f36de5",
-        "Workbench PR #505 merged BFF principal-boundary hardening",
-        "1b4afb92f4c810c99921fc26e451b04bca731e28",
-        "30464152669",
-        "c4add59871bc3f0e78dc6602c8857c5e141e6367",
-        "30465110912",
-        "Workbench wiki publication reached commit 3b4f78f",
-        "strips browser-supplied Authorization, Cookie, Proxy-Authorization, and X-Session-Id",
-        "production IdP-backed session/token-claim principal derivation",
-        "entitlement-denied proof",
-        "local/dev caller-authority fixture",
-    ),
-    691: (
-        "Keep #691 open and status/blocked",
-        "PR #725 merged to main",
-        "29972535964",
-        "rendered_output_creation_missing",
-        "archive_record_creation_missing",
-        "lotus-archive #55",
-        "This issue is not QA-pending",
-    ),
-    692: (
-        "Keep #692 open and status/blocked",
-        "Platform PR #630 merged bounded mesh-readiness proof consumption",
-        "c0fb028a440a24622fe162e934c3469fcafb4055",
-        "30335871870",
-        "30335876432",
-        "clears only the catalog/policy/telemetry-consumable dependency marker",
-        "This issue is not QA-pending",
-    ),
-    685: (
-        "Keep #685 open and status/blocked",
-        "later Core blockers #836, #840, #856, and #873 closed",
-        "sgajbi/lotus-core#882",
-        "BULK_REVIEW_CAMPAIGN_SOURCE_HASH_REQUIRED",
-        "DpmPortfolioUniverseCandidate:v1",
-    ),
-    686: (
-        "Keep #686 open and status/blocked",
-        "Workbench PR #501 merged the browser-action proof path",
-        "sgajbi/lotus-core#882",
-        "source_batch_fingerprint/content_hash",
-        "This issue is not QA-pending",
-    ),
-    345: (
-        "Platform PR #629 merged bounded cost-attribution",
-        "823e2641778aaf7db4e1df6218cf84eab0084526",
-        "sgajbi/lotus-platform#495",
-        "capacity-production-like environment",
-        "No supported-feature, production capacity, billing, scaling, or production certification claim is made.",
-    ),
-    693: (
-        "Platform PR #629 merged bounded cost-attribution",
-        "823e2641778aaf7db4e1df6218cf84eab0084526",
-        "platform issue #495 remains the protected FinOps execution",
-        "does not provision self-hosted runners",
-    ),
-    699: (
-        "Keep #699 open and status/blocked",
-        "PR #740 merged to main",
-        "30319531736",
-        "This records the Slice 17 proof-control tranche only",
-        "sgajbi/lotus-ai#122 / PR #123",
-        "937501833b4c2a9d3031a108368ca113204b5db9",
-        "30402022877",
-        "deterministic local-dev idea_explanation.pack@v1 proof-contract execution",
-        "approved non-stub live-provider execution",
-        "This issue is not QA-pending",
-        "full live journey validation remains blocked",
-    ),
-}
-PIPE_CLOSED_ISSUE_EVIDENCE = {
-    807: "Closed #807 after QA passed|a92144773d1b74bcf19e15396215dd988b5dc0af|fe77d768f09444c29efe508e7289b6704b65a69e|30496796215|make docker-build container-image-scan|HIGH_CRITICAL_FINDINGS=0|make container-runtime-smoke|PR #808 synchronized merged-main source truth|f577efcc14d51208375f3fde87284ac98f8ebb7a|30497951358|30497931322|30498306031|strict wiki parity DiffCount 0|git cherry patch-equivalence proof|does not claim production vulnerability certification",
-    854: "Closed #854 after PR #855 merged|1f8a5ffaed7a6d6aaa522d1c4cb06ca6a5602cc5|31258522447|31258517415|fail-closed PR text gate terminology parser correction|67 passed|strict wiki parity returned DiffCount 0|issue-854-pr-text-fail-closed-term|git cherry patch-equivalence proof|does not complete Slice 18",
-    864: "Closed #864|PR #865|35091eec121ea0c7186302526b211e288a59abed|locals()-based implicit composition|31304700457|31304443459|31304442120|128 focused readiness/closure/documentation tests|duplicate implementation gate with 0 clusters|does not complete Slice 17",
-    866: "Closed #866|PR #867|6d40f7489d70af33e42e28dfb9ffe6e40d880994|ImplementationProofReadinessProofInputs|scripts/implementation_proof_readiness_cli_inputs.py|31306314749|31306311168|PR #868|560ddcfff9ba61f2db3008fabc62c31c20cfb425|31306932624|31306929484|does not implement authentication or authorization",
-    814: "Keep #814 open and status/blocked|Idea PR #815 merged|Workbench PR #515 merged|Workbench PR #516|1787da79fb4abaf574ebe4ebc3f8b4d5fed7bdac|30543504302|original #814 authorization and Workbench validator defects are no longer the active failure path|sgajbi/lotus-core#836|holdings_status=READY|pricing_status=READY|transactions_status=READY|reporting_status=READY|blocking_reason_codes=[]|pending_valuation_jobs=0|pending_aggregation_jobs=0|aggregation_jobs.statuses=[COMPLETE]|analytics_performance_end_date=2026-04-10|positions_data_quality_status=UNKNOWN|fresh canonical validation completes on mainline sources|does not implement production authentication|supported-feature promotion",
-}
-REQUIRED_CLOSED_ISSUE_EVIDENCE = {
-    340: (
-        "QA closed #340",
-        "3ee62ed5947a0491362f5d080fd1c7deb5ff3567",
-        "30383665975",
-        "30383650543",
-        "154 passed",
-        "51 passed",
-        "sgajbi/lotus-ai#113",
-    ),
-    690: (
-        "Closed #690 after QA passed",
-        "5f53c4ac6ac519c7e6b0019e00f5286109e1628c",
-        "30428715937",
-        "30428711385",
-        "800f682c4f7ae20a2c0634eb112323d7936cca73",
-        "30430120214",
-        "30430108647",
-        "lotus-idea.wiki commit 3ebd0f0",
-        "PR #776 then synchronized the closed-complete execution state",
-        "aa492aedd46f30b854c8478edb919605dbdd58fc",
-        "30432065538",
-        "30432058627",
-        "lotus-idea.wiki commit c08509a",
-        "make report-intake-runtime-execution-proof-gate",
-        "make implementation-proof-readiness-check",
-        "clears only lotus_report_live_intake_route_proof_missing",
-    ),
-    782: (
-        "Closed #782 after QA passed on current main",
-        "5a2782be07e4212acc5e6e8a3652c1724bed2038",
-        "30445295814",
-        "30445283264",
-        "lotus-idea.wiki commit c3a4afb",
-        "git cherry patch-equivalence proof",
-        "4b1870f3a4e197e2b2ffa08bb41fd7ddeb5353e8",
-        "30446412020",
-        "30446397648",
-        "make ai-workflow-pack-runtime-execution-proof-contract-gate",
-        "make implementation-proof-readiness-check",
-        "111 passed",
-        "does not claim live-provider execution",
-    ),
-    797: (
-        "Closed #797 after the incident-response operating model",
-        "cfedcc91a5d907e15aa9f50493454eead656b406",
-        "30481301564",
-        "lotus-idea.wiki commit 0d075af",
-        "PR #799 synchronized the merge evidence",
-        "13300e21c8b27b4f1418240496f423d54d2ced3e",
-        "30483045202",
-        "90680095852",
-        "issue-797-final-evidence-sync",
-        "PR #800 merged the closed-complete source truth",
-        "4ab19e3a85d4b00fc3daeb5d63d2ce1f98a43740",
-        "30485290281",
-        "issue-797-final-closure-sync",
-        "make incident-response-contract-gate",
-        "does not claim production incident certification",
-    ),
-    **{
-        issue_number: tuple(fragment_text.split("|"))
-        for issue_number, fragment_text in PIPE_CLOSED_ISSUE_EVIDENCE.items()
-    },
-}
+
+@dataclass(frozen=True)
+class GatePolicy:
+    ledger_schema_version: str
+    rfc_id: str
+    repository: str
+    expected_issue_numbers: frozenset[int]
+    required_evidence_only_sync_policy_fragments: tuple[str, ...]
+    required_open_issue_evidence: dict[int, tuple[str, ...]]
+    required_closed_issue_evidence: dict[int, tuple[str, ...]]
 
 
 @dataclass(frozen=True)
@@ -354,6 +56,67 @@ def _load_json(path: Path) -> dict[str, Any]:
     if not isinstance(payload, dict):
         raise ValueError(f"{path.relative_to(ROOT).as_posix()} must contain a JSON object")
     return payload
+
+
+def _required_evidence_map(payload: dict[str, Any], key: str) -> dict[int, tuple[str, ...]]:
+    raw_map = payload.get(key)
+    if not isinstance(raw_map, dict):
+        raise ValueError(f"{key} must be an object")
+
+    evidence: dict[int, tuple[str, ...]] = {}
+    for raw_issue_number, raw_fragments in raw_map.items():
+        try:
+            issue_number = int(raw_issue_number)
+        except ValueError as exc:
+            raise ValueError(f"{key}.{raw_issue_number} must use an integer issue number") from exc
+        if not isinstance(raw_fragments, list) or not raw_fragments:
+            raise ValueError(f"{key}.{issue_number} must be a non-empty list")
+        if not all(isinstance(fragment, str) and fragment for fragment in raw_fragments):
+            raise ValueError(f"{key}.{issue_number} must contain non-empty strings")
+        evidence[issue_number] = tuple(raw_fragments)
+    return evidence
+
+
+def _load_gate_policy(path: Path = POLICY_PATH) -> GatePolicy:
+    payload = _load_json(path)
+
+    if payload.get("schemaVersion") != EXPECTED_POLICY_SCHEMA_VERSION:
+        raise ValueError(f"schemaVersion must be {EXPECTED_POLICY_SCHEMA_VERSION}")
+
+    ledger_schema_version = payload.get("ledgerSchemaVersion")
+    rfc_id = payload.get("rfcId")
+    repository = payload.get("repository")
+    expected_issue_numbers = payload.get("expectedIssueNumbers")
+    evidence_only_fragments = payload.get("requiredEvidenceOnlySyncPolicyFragments")
+
+    if not isinstance(ledger_schema_version, str) or not ledger_schema_version:
+        raise ValueError("ledgerSchemaVersion is required")
+    if not isinstance(rfc_id, str) or not rfc_id:
+        raise ValueError("rfcId is required")
+    if not isinstance(repository, str) or not repository:
+        raise ValueError("repository is required")
+    if not isinstance(expected_issue_numbers, list) or not expected_issue_numbers:
+        raise ValueError("expectedIssueNumbers must be a non-empty list")
+    if not all(isinstance(number, int) for number in expected_issue_numbers):
+        raise ValueError("expectedIssueNumbers must contain integers")
+    if len(expected_issue_numbers) != len(set(expected_issue_numbers)):
+        raise ValueError("expectedIssueNumbers must not contain duplicates")
+    if not isinstance(evidence_only_fragments, list) or not evidence_only_fragments:
+        raise ValueError("requiredEvidenceOnlySyncPolicyFragments must be a non-empty list")
+    if not all(isinstance(fragment, str) and fragment for fragment in evidence_only_fragments):
+        raise ValueError("requiredEvidenceOnlySyncPolicyFragments must contain non-empty strings")
+
+    return GatePolicy(
+        ledger_schema_version=ledger_schema_version,
+        rfc_id=rfc_id,
+        repository=repository,
+        expected_issue_numbers=frozenset(expected_issue_numbers),
+        required_evidence_only_sync_policy_fragments=tuple(evidence_only_fragments),
+        required_open_issue_evidence=_required_evidence_map(payload, "requiredOpenIssueEvidence"),
+        required_closed_issue_evidence=_required_evidence_map(
+            payload, "requiredClosedIssueEvidence"
+        ),
+    )
 
 
 def _entries(payload: dict[str, Any]) -> list[IssueEntry]:
@@ -403,20 +166,24 @@ def _auto_close_phrase_re(issue_number: int) -> re.Pattern[str]:
     return re.compile(rf"(?<![-\w])(?:{keywords})\s+#{issue_number}\b", re.IGNORECASE)
 
 
-def validate_github_issue_execution_ledger(path: Path = LEDGER_PATH) -> list[str]:
+def validate_github_issue_execution_ledger(
+    path: Path = LEDGER_PATH,
+    policy_path: Path = POLICY_PATH,
+) -> list[str]:
     try:
         payload = _load_json(path)
+        gate_policy = _load_gate_policy(policy_path)
         entries = _entries(payload)
     except (FileNotFoundError, json.JSONDecodeError, ValueError) as exc:
         return [str(exc)]
 
     errors: list[str] = []
-    if payload.get("schemaVersion") != EXPECTED_SCHEMA_VERSION:
-        errors.append("schemaVersion must be lotus-idea:rfc0002-github-issue-execution-ledger:v1")
-    if payload.get("rfcId") != EXPECTED_RFC_ID:
-        errors.append("rfcId must be RFC-0002")
-    if payload.get("repository") != EXPECTED_REPOSITORY:
-        errors.append("repository must be sgajbi/lotus-idea")
+    if payload.get("schemaVersion") != gate_policy.ledger_schema_version:
+        errors.append(f"schemaVersion must be {gate_policy.ledger_schema_version}")
+    if payload.get("rfcId") != gate_policy.rfc_id:
+        errors.append(f"rfcId must be {gate_policy.rfc_id}")
+    if payload.get("repository") != gate_policy.repository:
+        errors.append(f"repository must be {gate_policy.repository}")
     policy = payload.get("policy")
     if not isinstance(policy, dict):
         errors.append("policy must be an object")
@@ -426,7 +193,7 @@ def validate_github_issue_execution_ledger(path: Path = LEDGER_PATH) -> list[str
         if not isinstance(policy_value, str) or not policy_value.strip():
             errors.append(f"policy.{policy_key} is required")
         else:
-            for fragment in REQUIRED_EVIDENCE_ONLY_SYNC_POLICY:
+            for fragment in gate_policy.required_evidence_only_sync_policy_fragments:
                 if fragment not in policy_value:
                     errors.append(f"policy.{policy_key} missing required evidence `{fragment}`")
 
@@ -436,7 +203,7 @@ def validate_github_issue_execution_ledger(path: Path = LEDGER_PATH) -> list[str
         if number in seen:
             errors.append(f"#{number}: duplicate issue entry")
         seen.add(number)
-        if number not in EXPECTED_EXECUTION_ISSUES:
+        if number not in gate_policy.expected_issue_numbers:
             errors.append(f"#{number}: issue is not in the RFC-0002 execution issue set")
 
         if entry.github_state == "open":
@@ -453,7 +220,7 @@ def validate_github_issue_execution_ledger(path: Path = LEDGER_PATH) -> list[str
                     f"#{number}: open issue closureInstruction must not contain GitHub "
                     "auto-close wording"
                 )
-            for fragment in REQUIRED_OPEN_ISSUE_EVIDENCE.get(number, ()):
+            for fragment in gate_policy.required_open_issue_evidence.get(number, ()):
                 if fragment not in entry.closure_instruction:
                     errors.append(
                         f"#{number}: closureInstruction missing required evidence `{fragment}`"
@@ -467,14 +234,14 @@ def validate_github_issue_execution_ledger(path: Path = LEDGER_PATH) -> list[str
                 errors.append(
                     f"#{number}: closed issue closureInstruction must contain Closed #{number}"
                 )
-            for fragment in REQUIRED_CLOSED_ISSUE_EVIDENCE.get(number, ()):
+            for fragment in gate_policy.required_closed_issue_evidence.get(number, ()):
                 if fragment not in entry.closure_instruction:
                     errors.append(
                         f"#{number}: closureInstruction missing required closed evidence `{fragment}`"
                     )
 
-    missing = sorted(EXPECTED_EXECUTION_ISSUES - seen)
-    extra = sorted(seen - EXPECTED_EXECUTION_ISSUES)
+    missing = sorted(gate_policy.expected_issue_numbers - seen)
+    extra = sorted(seen - gate_policy.expected_issue_numbers)
     if missing:
         errors.append(
             f"Missing RFC-0002 execution issue entries: {', '.join(f'#{n}' for n in missing)}"
