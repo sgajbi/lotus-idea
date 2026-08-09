@@ -7,6 +7,11 @@ from app.domain.signal_evaluation_models import SignalEvaluationOutcome, SignalE
 from app.domain.source_temporal import source_temporal_violation
 
 
+def validate_timezone_aware_evaluation_time(evaluated_at_utc: datetime) -> None:
+    if evaluated_at_utc.tzinfo is None or evaluated_at_utc.utcoffset() is None:
+        raise ValueError("evaluated_at_utc must be timezone-aware")
+
+
 def blocked_signal_result(
     *,
     family: OpportunityFamily,
@@ -47,4 +52,5 @@ def temporal_blocked_signal_result(
 __all__ = [
     "blocked_signal_result",
     "temporal_blocked_signal_result",
+    "validate_timezone_aware_evaluation_time",
 ]
