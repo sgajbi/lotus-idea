@@ -727,13 +727,13 @@ post-merge Main Releasability `30621899968`, and post-merge CodeQL
 `lotus-idea.wiki` commit `eefd44a` with strict `DiffCount 0`; the remote PR
 branch was deleted, the local feature branch was deleted after exact
 tree-equivalence verification, the local branch list contained only `main`, and
-no unmerged remote branches remained. The governed posture remains 93
+no unmerged remote branches remained. The then-current governed posture was 93
 label-backed RFC-0002 issues, 56 closed, and 37 open: 27 blocked, 2
 in-progress, 8 tracker, 0 app-actionable blocked, 4 Core dependencies, and 23
-external/protected evidence blockers. This is Slice 18 source-truth
-synchronization only; #681 remains open and no blocker issue, supported feature,
-client-publication claim, production identity/session-token authority, canonical
-browser proof, or final RFC-0002 closure is promoted.
+external/protected evidence blockers. This was Slice 18 source-truth
+synchronization only; #681 remained open and no blocker issue, supported
+feature, client-publication claim, production identity/session-token authority,
+canonical browser proof, or final RFC-0002 closure was promoted.
 
 PR #826 then synchronized that PR #825 evidence through Idea main
 `6fd8159495ca3a7294ade2d819c80ea6aaa350fd`. PR Merge Gate `30623781720`,
@@ -904,7 +904,7 @@ owner evidence, production identity/session authority, protected runtime
 evidence, Report/Archive legal-lifecycle conformance, supported-feature
 promotion, and final Slice 20 closure remain separately tracked.
 
-The 2026-08-09 Workbench/Manage exact-main refresh records current live GitHub
+The 2026-08-09 Workbench/Manage exact-main refresh recorded then-current live GitHub
 state after Workbench PR #555 and Manage PR #631 completed. Workbench PR #555
 merged `sgajbi/lotus-workbench#549`, `#550`, `#556`, and `#557` to main
 `afd0474524f20bc7d001ccb764a6e587f81d02c5`; Main Releasability run
@@ -912,13 +912,13 @@ merged `sgajbi/lotus-workbench#549`, `#550`, `#556`, and `#557` to main
 lint/typecheck/coverage/build, Playwright smoke, Docker build/security/SBOM,
 and CI-local Docker parity. Manage PR #631 moved `sgajbi/lotus-manage#629` to
 `status/merged-main` on main `a6bc609f379b8efadb226c9a2084d7c97b2e26e7` after
-Main Releasability run `31268949391` passed. Live `make
-rfc0002-cross-repo-issue-posture` now reports 124 label-backed RFC-0002 issues
+Main Releasability run `31268949391` passed. Then-current live `make
+rfc0002-cross-repo-issue-posture` reported 124 label-backed RFC-0002 issues
 across 13 repositories: 75 closed and 49 open. The open set is 28 blocked, 1
 in-progress issue (#681), 10 `status/merged-main`, 2 `status/merged-to-main`,
-and 8 tracker issues. Blocked actionability remains 0 app-actionable blocked
+and 8 tracker issues. Blocked actionability remained 0 app-actionable blocked
 issues: 6 Core dependencies and 22 external/protected-evidence dependencies.
-This is Slice 18 source-truth synchronization only; it does not close
+This was Slice 18 source-truth synchronization only; it did not close
 QA-pending merged-main issues, clear the remaining runtime/protected-evidence blockers, promote supported
 features, certify product support, or replace production identity/session
 authority, protected runtime, provider, legal, client-publication, support, or
@@ -928,10 +928,11 @@ The 2026-08-09 Core blocker closure sync then updated the live blocker
 classifier after `sgajbi/lotus-core#882` and `sgajbi/lotus-core#885` closed on
 main. Core `#917` later also closed with `status/merged-main` after the
 report-only technology-governance pilot reached main. Live `make
-rfc0002-cross-repo-issue-posture` now reports 127 label-backed RFC-0002 issues
-across 13 repositories: 89 closed and 38 open. The open set is 25
-`status/blocked`, 1 `status/in-progress` (`sgajbi/lotus-idea#681`), 2
-`status/merged-main`, 2 `status/merged-to-main`, and 8 `status/tracker`.
+rfc0002-cross-repo-issue-posture` now reports 128 label-backed RFC-0002 issues
+across 13 repositories: 89 closed and 39 open. The open set is 25
+`status/blocked`, 2 `status/in-progress` (`sgajbi/lotus-idea#681` and
+`sgajbi/lotus-idea#874`), 2 `status/merged-main`, 2 `status/merged-to-main`,
+and 8 `status/tracker`.
 Blocked actionability remains 0 app-actionable blocked
 issues; the classifier now contains 25 external/protected/canonical-proof
 evidence blockers and no Core dependency rows. Idea `#814`, `#685`, and `#686`
@@ -951,10 +952,11 @@ combined coverage, Docker/release validation, image scan, SBOM, signed
 published image digest, provenance/SBOM attestations, release metadata
 manifest, and release identity/license binding. Repo-authored wiki source was
 published to `lotus-idea.wiki` commit `852ba82` with strict `DiffCount 0`.
-The Idea ledger now has 58 tracked RFC-0002 issues, 33 closed and 25 open; the
-cross-repo posture has 127 label-backed RFC-0002 issues, 89 closed and 38 open.
-Only `sgajbi/lotus-idea#681` remains `status/in-progress`. This sync closes
-only the ledger-gate maintainability issue and does not close Workbench/Gateway
+The Idea ledger now has 59 tracked RFC-0002 issues, 33 closed and 26 open;
+`#681 and #874` are the in-progress Slice 18 issues. The cross-repo posture has
+128 label-backed RFC-0002 issues, 89 closed and 39 open, with 25
+`status/blocked`, 2 `status/in-progress`, and 0 app-actionable blocked issues.
+This sync closes only the ledger-gate maintainability issue and does not close Workbench/Gateway
 runtime-proof blockers, production identity/session blockers, protected runtime
 evidence, supported-feature promotion, or final RFC-0002 closure.
 

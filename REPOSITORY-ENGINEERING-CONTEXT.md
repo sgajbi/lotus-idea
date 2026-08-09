@@ -120,10 +120,12 @@ evidence plus Core handoff posture to exact main
 `30500588217` passing. After the PR #828 through PR #831 evidence-sync and
 issue-execution prevention cycle plus QA closure of the already merged-main
 Advise, Gateway, Workbench, and AI dependency issues, the current live
-cross-repo RFC-0002 posture is 127 label-backed issues across 13 repositories:
-89 closed and 38 open. The open set is 25 blocked issues, 1 in-progress issue
-(#681), 2 `status/merged-main`, 2 `status/merged-to-main`, and 8 tracker
-issues. Idea #864 and #866 are closed and now source-ledgered as Slice 17/19
+cross-repo RFC-0002 posture is 128 label-backed RFC-0002 issues across 13
+repositories: 89 closed and 39 open. The open set is 25 `status/blocked`, 2
+`status/in-progress` (#681 and #874), 2 `status/merged-main`,
+2 `status/merged-to-main`, and 8 `status/tracker` issues; blocked actionability
+remains 0 app-actionable blocked issues. Idea #864, #866, and #874 are now
+source-ledgered as Slice 17/18/19 hardening issues. #864 closed after PR #865 reached Idea main
 hardening issues. #864 closed after PR #865 reached Idea main
 `35091eec121ea0c7186302526b211e288a59abed`; Main Releasability `31304700457`,
 PR Merge Gate `31304443459`, CodeQL `31304442120`, and Feature Lane
@@ -386,11 +388,13 @@ classifier because it is no longer an open `status/blocked` issue.
 fixed the post-merge QA hash-compatibility defects on main
 `a6bc609f379b8efadb226c9a2084d7c97b2e26e7` with Main Releasability run
 `31268949391` passing.
-Current governed cross-repo RFC-0002 posture is 127 label-backed issues across
-13 repositories: 89 closed and 38 open. The open split is 25 blocked, 1
-in-progress issue (`sgajbi/lotus-idea#681`), 2 `status/merged-main`,
-2 `status/merged-to-main`, and 8 tracker issues. The blocked subset has 0
-app-actionable blocked issues: all 25 are external/protected/canonical-proof
+Current Idea ledger posture has 59 tracked RFC-0002 issues, 33 closed and 26
+open; `sgajbi/lotus-idea#681` and `sgajbi/lotus-idea#874` are the in-progress
+Slice 18 issues. Current governed cross-repo RFC-0002 posture is 128
+label-backed RFC-0002 issues across 13 repositories: 89 closed and 39 open. The
+open split is 25 `status/blocked`, 2 `status/in-progress`, 2
+`status/merged-main`, 2 `status/merged-to-main`, and 8 `status/tracker`. The
+blocked subset has 0 app-actionable blocked issues: all 25 are external/protected/canonical-proof
 evidence blockers. Title-only
 RFC-0002 references remain reported separately
 outside the governed count until deliberately labeled and ledgered. This is
@@ -1676,9 +1680,12 @@ Core-owned, production identity/session authority, protected runtime or
 deployment evidence, provider/bank/legal approval, or certification proof that a
 writable Lotus app branch cannot truthfully produce. Current live posture is 25
 blocked RFC-0002 issues, 0 app-actionable blocked issues, 25
-external/protected/canonical-proof evidence blockers, and 1 in-progress
-RFC-0002 issue (`sgajbi/lotus-idea#681`). The full live posture is
-127 label-backed RFC-0002 issues across 13 repositories: 89 closed and 38 open.
+external/protected/canonical-proof evidence blockers, and 2 in-progress
+RFC-0002 issues (`sgajbi/lotus-idea#681` and `sgajbi/lotus-idea#874`). The
+full live posture is 128 label-backed RFC-0002 issues across 13 repositories:
+89 closed and 39 open. The open split is 25 `status/blocked`, 2
+`status/in-progress`, 2 `status/merged-main`, 2 `status/merged-to-main`, and
+8 `status/tracker`.
 Counts are label-backed by
 `rfc/RFC-0002`; title-only references are reported separately and excluded from
 governed counts unless deliberately labeled and ledgered. If a writable non-Core app-code

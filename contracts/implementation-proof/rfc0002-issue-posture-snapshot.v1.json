@@ -1,0 +1,63 @@
+{
+  "schemaVersion": "lotus-idea:rfc0002-issue-posture-snapshot:v1",
+  "rfcId": "RFC-0002",
+  "repository": "sgajbi/lotus-idea",
+  "asOfDate": "2026-08-10",
+  "sourceCommands": [
+    "make rfc0002-github-issue-execution-summary",
+    "make rfc0002-cross-repo-issue-posture"
+  ],
+  "trackingIssue": "sgajbi/lotus-idea#874",
+  "ideaLedger": {
+    "totalTrackedIssues": 59,
+    "openIssues": 26,
+    "closedIssues": 33,
+    "openStatusCounts": {
+      "open_blocked": 14,
+      "open_in_progress": 2,
+      "open_pending_final_closure": 1,
+      "open_pending_post_completion": 1,
+      "open_tracker": 8
+    },
+    "inProgressIssues": [
+      "sgajbi/lotus-idea#681",
+      "sgajbi/lotus-idea#874"
+    ]
+  },
+  "crossRepo": {
+    "repositoriesChecked": 13,
+    "totalRfc0002Issues": 128,
+    "openRfc0002Issues": 39,
+    "closedRfc0002Issues": 89,
+    "openBlockedIssues": 25,
+    "appActionableBlockedIssues": 0,
+    "openStatusCounts": {
+      "status/blocked": 25,
+      "status/in-progress": 2,
+      "status/merged-main": 2,
+      "status/merged-to-main": 2,
+      "status/tracker": 8
+    },
+    "titleOnlyReferencesExcludedFromGovernedCounts": [
+      "sgajbi/lotus-core#704"
+    ]
+  },
+  "expectedCurrentFragments": {
+    "ideaLedger": [
+      "59 tracked RFC-0002 issues",
+      "33 closed and 26 open",
+      "#681 and #874"
+    ],
+    "crossRepo": [
+      "128 label-backed RFC-0002 issues",
+      "89 closed and 39 open",
+      "25 `status/blocked`, 2 `status/in-progress`",
+      "0 app-actionable blocked"
+    ]
+  },
+  "nonClaimBoundaries": [
+    "This contract records current GitHub issue posture only; it is not product support, implementation proof, or supported-feature promotion.",
+    "Historical posture paragraphs may keep older counts only when explicitly marked as historical, then-current, or earlier.",
+    "Updating this contract does not close RFC-0002 Slice 18 or any downstream, Workbench, Gateway, Core, identity, protected runtime, provider, legal, client-publication, or final-closure blocker."
+  ]
+}

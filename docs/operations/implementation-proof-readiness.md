@@ -363,7 +363,7 @@ synchronization only;
 dependencies remain open, and production vulnerability posture is not
 certified.
 
-PR #819 then synchronized the #380 Core-blocker reference to the same current
+PR #819 then synchronized the #380 Core-blocker reference to the same then-current
 Core issue and reached Idea main
 `3b2cc0bb4472a158cb4617b277276244c0e4a22b`. Exact-main Main Releasability
 `30555536256` and CodeQL `30555528134` passed for that SHA, including the
@@ -371,22 +371,22 @@ release-image validation chain, signing, provenance/SBOM attestations, release
 metadata, release identity/license evidence binding, and CI signal evidence.
 Repo-authored wiki source did not change in PR #819; strict wiki parity stayed
 `DiffCount 0`, and branch cleanup completed after patch-equivalence proof.
-Current source truth remains 54 tracked Idea RFC-0002 issues, 25 open, and
-29 closed. The 2026-08-02 live cross-repo posture now reports 108
+Then-current source truth remained 54 tracked Idea RFC-0002 issues, 25 open, and
+29 closed. The 2026-08-02 live cross-repo posture reported 108
 label-backed RFC-0002 issues across 13 repositories: 71 closed and 37 open
 after QA closure of the already merged-main Advise, Gateway, Workbench, and AI
 dependency issues. The open split is 28 blocked, no PR-open issues, 1
 in-progress issue (#681), 8 tracker, and no open merged-main/merged-to-main
 QA-pending issues.
-The blocked posture remains 0 app-actionable blocked issues, now split into 5
+The blocked posture remained 0 app-actionable blocked issues, then split into 5
 Core dependencies and 23 external/protected evidence blockers. The active Core
 blocker is `sgajbi/lotus-core#882`: Core must publish a deterministic non-empty
 `source_batch_fingerprint` / content hash on
 `DpmPortfolioUniverseCandidate:v1` READY responses so Manage, Gateway, and
 Workbench can preserve source-ref authority without fabricating hashes
 downstream.
-#380 and #681 remain open, and no supported feature is
-promoted from this evidence-sync tranche.
+#380 and #681 remained open at that snapshot, and no supported feature was
+promoted from that evidence-sync tranche.
 
 PR #824 then synchronized the Core #836 canonical QA-failure posture to Idea
 main `f4904af523cb2e54cd18db0c5eb71c8725998df8`. Exact-main Main
@@ -601,9 +601,12 @@ any of these issues can move back to merged-main QA.
   identity/license binding.
 - Repo-authored wiki source was published to `lotus-idea.wiki` commit
   `852ba82` with strict `DiffCount 0`.
-- The Idea ledger now has 58 tracked RFC-0002 issues, 33 closed and 25 open.
-  Live cross-repo posture has 127 label-backed RFC-0002 issues, 89 closed and
-  38 open. Only `sgajbi/lotus-idea#681` remains `status/in-progress`.
+- The Idea ledger now has 59 tracked RFC-0002 issues, 33 closed and 26 open;
+  `#681 and #874` are the in-progress Slice 18 issues. Live cross-repo posture
+  has 128 label-backed RFC-0002 issues, 89 closed and 39 open, with 25
+  `status/blocked`, 2 `status/in-progress`, 2 `status/merged-main`, 2
+  `status/merged-to-main`, 8 `status/tracker`, and 0 app-actionable blocked
+  issues.
 - This sync closes only the ledger-gate maintainability issue. It does not
   close Workbench/Gateway runtime-proof blockers, production identity/session
   blockers, protected runtime evidence, supported-feature promotion, or final
@@ -626,11 +629,11 @@ any of these issues can move back to merged-main QA.
   `31306932624` and CodeQL `31306929484` passed on that exact SHA.
 - Idea #866 is now present in the RFC-0002 execution ledger as a closed Slice
   17/19 hardening issue.
-- Live `make rfc0002-cross-repo-issue-posture` now reports 127 label-backed
-  RFC-0002 issues across 13 repositories: 89 closed and 38 open.
-- Open status is 25 `status/blocked`, 1 `status/in-progress`
-  (`sgajbi/lotus-idea#681`), 2 `status/merged-main`, 2 `status/merged-to-main`,
-  and 8 `status/tracker`.
+- Live `make rfc0002-cross-repo-issue-posture` now reports 128 label-backed
+  RFC-0002 issues across 13 repositories: 89 closed and 39 open.
+- Open status is 25 `status/blocked`, 2 `status/in-progress`
+  (`sgajbi/lotus-idea#681` and `sgajbi/lotus-idea#874`), 2
+  `status/merged-main`, 2 `status/merged-to-main`, and 8 `status/tracker`.
 - Blocked actionability remains 0 app-actionable blocked issues. The live
   blocker classifier remains restricted to external/protected/canonical-proof
   evidence blockers.

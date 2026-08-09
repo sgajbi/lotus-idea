@@ -1,7 +1,7 @@
 {
   "schemaVersion": "lotus-idea:rfc0002-github-issue-execution-ledger:v1",
   "rfcId": "RFC-0002",
-  "asOfDate": "2026-08-09",
+  "asOfDate": "2026-08-10",
   "repository": "sgajbi/lotus-idea",
   "executionAnchor": {
     "issueNumber": 681,
@@ -588,6 +588,15 @@
       "executionStatus": "closed_complete",
       "allowPullRequestAutoClose": true,
       "closureInstruction": "Closed #871 after PR #872 merged the RFC-0002 execution ledger gate-policy refactor to Idea main f7aca4746e16d3d851c892654a8007743d7ec87a from branch head fdf829011e3c2b8bb32e6142b49f16bcd7fe7f82. PR #872 checks passed, including PR Merge Gate, Feature Lane, CodeQL, and Queue Auto Merge. Exact-main validation passed on f7aca4746e16d3d851c892654a8007743d7ec87a: 72 focused unit tests, make rfc0002-github-issue-execution-ledger-gate, make rfc0002-github-issue-learning-pattern-gate, make rfc0002-github-issue-execution-state-audit, make rfc0002-github-issue-execution-summary, make rfc0002-cross-repo-issue-posture, make documentation-contract-gate, and make lint. Main CodeQL run 31321978400 passed and exact-main Main Releasability run 31321981636 passed, including workflow lint, lint/typecheck/security, unit, integration, e2e, PostgreSQL runtime proof, combined coverage, Docker/release validation, image scan, SBOM, signed published image digest, provenance/SBOM attestations, release metadata manifest, and release identity/license binding. Repo-authored wiki source was published to lotus-idea.wiki commit 852ba82 with strict DiffCount 0. This closes only the Slice 18 ledger-gate maintainability issue: it moved static policy out of scripts/github_issue_execution_ledger_gate.py into contracts/implementation-proof/rfc0002-github-issue-execution-ledger-gate-policy.v1.json and kept Python responsible for validator behavior. It does not change supported-feature claims, Workbench/Gateway/Core blocker state, production identity/session/token-claims, or protected runtime certification."
+    },
+    {
+      "issueNumber": 874,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/874",
+      "rfcSlices": ["slice-18"],
+      "githubState": "open",
+      "executionStatus": "open_in_progress",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #874 open and status/in-progress while branch issue-874-posture-snapshot-contract is implementing the Slice 18 documentation-posture hardening. This branch adds contracts/implementation-proof/rfc0002-issue-posture-snapshot.v1.json, hardens scripts/documentation_stale_claims.py and the documentation-contract-gate path, and updates RFC/docs/wiki/context truth to the contract-backed current posture: 59 tracked RFC-0002 issues, 33 closed and 26 open, #681 and #874 in progress, and 128 label-backed RFC-0002 issues across 13 repositories, 89 closed and 39 open, with 25 status/blocked, 2 status/in-progress, and 0 app-actionable blocked issues. Keep #681 open. This Slice 18 hardening preserves Workbench/Gateway/Core, identity, protected runtime, data-mesh, client-publication, and final-closure blockers and does not promote supported features."
     }
   ]
 }
