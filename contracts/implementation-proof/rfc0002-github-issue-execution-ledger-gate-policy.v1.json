@@ -293,16 +293,6 @@
       "approved non-stub live-provider execution",
       "This issue is not QA-pending",
       "full live journey validation remains blocked"
-    ],
-    "874": [
-      "Keep #874 open and status/in-progress",
-      "rfc0002-issue-posture-snapshot.v1.json",
-      "scripts/documentation_stale_claims.py",
-      "documentation-contract-gate",
-      "59 tracked RFC-0002 issues",
-      "128 label-backed RFC-0002 issues",
-      "Keep #681 open",
-      "does not promote supported features"
     ]
   },
   "requiredClosedIssueEvidence": {
@@ -455,6 +445,22 @@
       "lotus-idea.wiki commit 852ba82",
       "strict DiffCount 0",
       "does not change supported-feature claims"
+    ],
+    "874": [
+      "Closed #874",
+      "PR #875",
+      "6889123bcbe742ccb3da074a12d5b94f2c1589e1",
+      "ff6eff3a4d66aaa7917c305ce6527196ae8eef08",
+      "31325174863",
+      "31325025004",
+      "workflow concurrency",
+      "lotus-idea.wiki commit 5b52566",
+      "strict DiffCount 0",
+      "rfc0002-issue-posture-snapshot.v1.json",
+      "34 closed and 25 open",
+      "90 closed and 38 open",
+      "does not close #681",
+      "does not promote supported features"
     ]
   }
 }

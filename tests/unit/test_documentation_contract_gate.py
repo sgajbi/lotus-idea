@@ -333,8 +333,7 @@ def test_documentation_contract_gate_blocks_non_contract_current_issue_posture(
     assert errors == [
         "wiki/RFC-Index.md: paragraph 2 describes current/live RFC-0002 issue posture "
         "without contract-backed crossRepo fragment(s): "
-        "`128 label-backed RFC-0002 issues`, `89 closed and 39 open`, "
-        "`25 `status/blocked`, 2 `status/in-progress``"
+        "`128 label-backed RFC-0002 issues`, `90 closed and 38 open`"
     ]
 
 
@@ -353,13 +352,13 @@ def test_documentation_contract_gate_allows_contract_current_issue_posture(
                 "expectedCurrentFragments": {
                     "ideaLedger": [
                         "59 tracked RFC-0002 issues",
-                        "33 closed and 26 open",
-                        "#681 and #874",
+                        "34 closed and 25 open",
+                        "#681",
                     ],
                     "crossRepo": [
                         "128 label-backed RFC-0002 issues",
-                        "89 closed and 39 open",
-                        "25 `status/blocked`, 2 `status/in-progress`",
+                        "90 closed and 38 open",
+                        "25 `status/blocked`, 1 `status/in-progress`",
                         "0 app-actionable blocked",
                     ],
                 },
@@ -371,11 +370,11 @@ def test_documentation_contract_gate_allows_contract_current_issue_posture(
     doc.write_text(
         "# Repository Engineering Context\n\n"
         "Current Idea ledger posture has 59 tracked RFC-0002 issues, "
-        "33 closed and 26 open; #681 and #874 are the in-progress Slice 18 "
-        "issues. Current governed cross-repo RFC-0002 posture has "
-        "128 label-backed RFC-0002 issues across 13 repositories: 89 closed "
-        "and 39 open. The open split is 25 `status/blocked`, "
-        "2 `status/in-progress`, 2 `status/merged-main`, "
+        "34 closed and 25 open; #681 is the in-progress Slice 18 "
+        "tracker. Current governed cross-repo RFC-0002 posture has "
+        "128 label-backed RFC-0002 issues across 13 repositories: 90 closed "
+        "and 38 open. The open split is 25 `status/blocked`, "
+        "1 `status/in-progress`, 2 `status/merged-main`, "
         "2 `status/merged-to-main`, and 8 `status/tracker`; "
         "blocked actionability remains 0 app-actionable blocked issues.\n",
         encoding="utf-8",

@@ -39,7 +39,7 @@ blocked posture and implement or reclassify it.
 ```mermaid
 flowchart LR
     Issues["GitHub issue posture<br/>128 label-backed RFC-0002 issues"]
-    Open["89 closed and 39 open<br/>25 `status/blocked`, 2 `status/in-progress`<br/>4 QA-pending aliases, 8 trackers"]
+    Open["90 closed and 38 open<br/>25 `status/blocked`, 1 `status/in-progress`<br/>4 QA-pending aliases, 8 trackers"]
     Blocked["Blocked classifier<br/>0 app-actionable blocked"]
     Work["Writable work<br/>only when evidence proves app-code ownership"]
     External["Core / protected / identity / provider / legal evidence"]
@@ -57,16 +57,17 @@ flowchart LR
 | Status label | Count | Interpretation |
 | --- | ---: | --- |
 | `status/blocked` | 25 | Protected, identity, provider, legal, publication, canonical QA, or certification evidence. |
-| `status/in-progress` | 2 | Continuous Slice 18 synchronization tracker `sgajbi/lotus-idea#681` and current documentation-gate hardening issue `sgajbi/lotus-idea#874`. |
+| `status/in-progress` | 1 | Continuous Slice 18 synchronization tracker `sgajbi/lotus-idea#681`. |
 | `status/merged-main` | 2 | Merged-main issues awaiting canonical QA closure evidence. |
 | `status/merged-to-main` | 2 | Repository-local Advise merged-main alias awaiting QA closure evidence. |
 | `status/tracker` | 8 | Parent or umbrella tracking issues, not immediate implementation items. |
 
 Latest synchronization evidence: Current GitHub issue posture has 128
-label-backed RFC-0002 issues, 89 closed and 39 open, with 25 `status/blocked`,
-2 `status/in-progress`, and 0 app-actionable blocked issues. `lotus-idea#864`
-and `lotus-idea#866` are closed with `status/merged-main` and now appear in the RFC-0002 execution
-ledger as Slice 17/19 hardening issues. `sgajbi/lotus-core#917` is also closed
+label-backed RFC-0002 issues, 90 closed and 38 open, with 25 `status/blocked`,
+1 `status/in-progress`, and 0 app-actionable blocked issues. `lotus-idea#864`,
+`lotus-idea#866`, `lotus-idea#871`, and `lotus-idea#874` are closed with
+`status/merged-main` and now appear in the RFC-0002 execution ledger as
+hardening issues. `sgajbi/lotus-core#917` is also closed
 with `status/merged-main` after Core PR #929 reached exact main
 `6bc937bb173051e0bd4ee9a07ffebd54face0163` and Main Releasability
 `31308743764` passed. This is source-truth synchronization only; none of these
