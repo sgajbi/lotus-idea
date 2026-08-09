@@ -692,9 +692,10 @@ failed in the DPM command-center action-register seed because
 `sgajbi/lotus-core#840`, with refreshed 2026-07-30 owner handoff evidence on
 `sgajbi/lotus-core#836`, `sgajbi/lotus-core#840`,
 `sgajbi/lotus-workbench#500`, #685, and #686. Workbench #500 is now closed;
-current canonical proof remains blocked by `sgajbi/lotus-core#882` and
-`sgajbi/lotus-core#885` until fresh Gateway/BFF-backed Workbench queue/detail
-runtime evidence remains required before #685 can move to merged-main QA.
+Core `sgajbi/lotus-core#882` and `sgajbi/lotus-core#885` closed on
+2026-08-09, so current canonical proof now requires fresh
+Gateway/BFF-backed Workbench queue/detail/action runtime evidence before #685,
+#686, or #814 can move to QA closure.
 PR #819 synchronized the #380 Core-blocker reference to then-current `sgajbi/lotus-core#856`
 on Idea main `3b2cc0bb4472a158cb4617b277276244c0e4a22b`; exact-main Main
 Releasability `30555536256` and CodeQL `30555528134` passed for that SHA.
@@ -920,6 +921,23 @@ QA-pending merged-main issues, clear Core #882/#885/#917, promote supported
 features, certify product support, or replace production identity/session
 authority, protected runtime, provider, legal, client-publication, support, or
 final RFC-0002 closure evidence.
+
+The 2026-08-09 Core blocker closure sync then updated the live blocker
+classifier after `sgajbi/lotus-core#882` and `sgajbi/lotus-core#885` closed on
+main and `sgajbi/lotus-core#917` stayed open as `status/in-progress`. Live
+`make rfc0002-cross-repo-issue-posture` reports 124 label-backed RFC-0002
+issues across 13 repositories: 85 closed and 39 open. The open set is 25
+`status/blocked`, 2 `status/in-progress` (`sgajbi/lotus-idea#681` and
+`sgajbi/lotus-core#917`), 2 `status/merged-main`, 2 `status/merged-to-main`,
+and 8 `status/tracker`. Blocked actionability remains 0 app-actionable blocked
+issues; the classifier now contains 25 external/protected/canonical-proof
+evidence blockers and no Core dependency rows. Idea `#814`, `#685`, and `#686`
+now require fresh governed PB_SG_GLOBAL_BAL_001 runtime evidence for Idea seed,
+Gateway-backed Workbench queue/detail reads, and browser
+review-action/feedback/conversion-intent controls. This sync does not promote a
+supported feature, close QA-pending issues, or replace production
+identity/session, protected runtime, provider, legal, client-publication,
+support, or final RFC-0002 closure evidence.
 
 The 2026-07-31 dependency audit then verified current-main source-side posture
 for the writable cross-repo blockers without finding hidden app-actionable

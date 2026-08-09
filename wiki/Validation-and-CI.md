@@ -1218,9 +1218,9 @@ posture remains uncertified until release evidence exists.
 It also lists every blocked issue with the GitHub URL, actionability, blocker
 class, and remaining authority so the Core-vs-protected/external split is
 auditable without chat memory or one-off GitHub queries.
-Current live posture is 28 blocked RFC-0002 issues, 0 app-actionable blocked
-issues, 6 Core dependencies, 22 external/protected-evidence blockers, and 1
-in-progress RFC-0002 issue (#681). Counts are
+Current live posture is 25 blocked RFC-0002 issues, 0 app-actionable blocked
+issues, 25 external/protected/canonical-proof evidence blockers, and 2
+in-progress RFC-0002 issues (#681 and `sgajbi/lotus-core#917`). Counts are
 label-backed by `rfc/RFC-0002`; title-only references are reported separately
 and excluded from governed counts unless deliberately labeled and ledgered. This
 keeps “blocked” aligned to Core, IdP/session authority, protected runtime or
@@ -1635,16 +1635,17 @@ product, Core, protected-evidence, supported-feature, or final-closure
 blockers.
 
 The blocked-actionability classifier reports 0 app-actionable blocked issues.
-The blocked set is currently 6 Core dependencies and 22 external/protected
-evidence blockers. The canonical Workbench/Idea live proof path is now blocked
-by `sgajbi/lotus-core#882`, which owns the missing deterministic
-`source_batch_fingerprint` / content hash for
-`DpmPortfolioUniverseCandidate:v1` READY responses. Source-side Workbench
-action-control tests do not replace full-stack machine-readable validation
-output, screenshot/index evidence, or final supported-feature promotion proof.
-`sgajbi/lotus-core#917` now owns the core-side report-only pilot of the
-platform technology-governance policy introduced by `sgajbi/lotus-platform#595`
-and PR #652.
+The blocked set is currently 25 external/protected/canonical-proof evidence
+blockers. Core `sgajbi/lotus-core#882` and `sgajbi/lotus-core#885` closed on
+2026-08-09 and are no longer live blocker-classifier rows. The canonical
+Workbench/Idea live proof path now requires fresh PB_SG_GLOBAL_BAL_001
+Gateway-backed queue/detail/action evidence after those Core fixes, not stale
+artifacts or downstream hash fabrication. Source-side Workbench action-control
+tests do not replace full-stack machine-readable validation output,
+screenshot/index evidence, or final supported-feature promotion proof.
+`sgajbi/lotus-core#917` is open as `status/in-progress` for the core-side
+report-only pilot of the platform technology-governance policy introduced by
+`sgajbi/lotus-platform#595` and PR #652.
 
 Platform protected-lane queue hygiene is separate from protected evidence. The
 stale queued Platform End-to-End Validation run `30603744637` was recorded on
@@ -1720,6 +1721,23 @@ promotion, or clear RFC-0002 production-readiness blockers.
    certify product support, or replace production identity/session authority,
    protected runtime, provider, legal, client-publication, support, or final
    RFC-0002 closure evidence.
+
+2026-08-09 SGT Core blocker closure sync:
+
+1. Live `make rfc0002-cross-repo-issue-posture` now reports 124 label-backed
+   RFC-0002 issues across 13 repositories: 85 closed and 39 open.
+2. Open status is 25 `status/blocked`, 2 `status/in-progress`
+   (`sgajbi/lotus-idea#681` and `sgajbi/lotus-core#917`), 2
+   `status/merged-main`, 2 `status/merged-to-main`, and 8 `status/tracker`.
+3. Blocked actionability remains 0 app-actionable blocked issues. The live
+   blocker classifier contains 25 external/protected/canonical-proof evidence
+   blockers and no Core dependency rows.
+4. `sgajbi/lotus-core#882` and `sgajbi/lotus-core#885` are closed. Idea
+   `#814`, `#685`, and `#686` now require fresh governed runtime evidence for
+   Idea seed, Gateway-backed Workbench queue/detail reads, and browser
+   review-action/feedback/conversion-intent controls.
+5. `sgajbi/lotus-core#917` remains an attention issue with
+   `status/in-progress`, not an open blocked issue.
 
 This refresh is coordination and evidence hygiene only. It does not clear
 RFC-0002 blockers, promote supported features, certify product support, or

@@ -499,19 +499,20 @@ def test_default_blocker_classification_tracks_issue_814_core_capacity_blocker()
         {
             "repository": "sgajbi/lotus-idea",
             "issueNumber": 814,
-            "actionability": "core_dependency",
-            "blockerClass": "canonical_idea_capacity_seed_core_readiness",
+            "actionability": "external_or_protected_evidence",
+            "blockerClass": "canonical_front_office_qa_evidence",
             "remainingAuthority": (
-                "Core-owned DPM portfolio-universe candidate source-batch fingerprint "
-                "publication for canonical Workbench/Idea validation, tracked by "
-                "sgajbi/lotus-core#882 after earlier Core readiness blockers #836, "
-                "#840, #856, and #873 closed"
+                "Fresh canonical front-office QA evidence for PB_SG_GLOBAL_BAL_001 "
+                "after Core DPM candidate source-batch fingerprint repair landed in "
+                "sgajbi/lotus-core#882; the next closure proof must show the governed "
+                "stack reaches Idea capacity seed, Gateway-backed Workbench queue/detail "
+                "reads, and browser validation without stale or partial artifacts"
             ),
         }
     ]
 
 
-def test_default_blocker_classification_tracks_core_dpm_source_batch_fingerprint() -> None:
+def test_default_blocker_classification_excludes_closed_core_dpm_source_batch_fingerprint() -> None:
     contract_path = (
         ROOT
         / "contracts"
@@ -526,23 +527,10 @@ def test_default_blocker_classification_tracks_core_dpm_source_batch_fingerprint
         if row["repository"] == "sgajbi/lotus-core" and row["issueNumber"] == 882
     ]
 
-    assert matching_rows == [
-        {
-            "repository": "sgajbi/lotus-core",
-            "issueNumber": 882,
-            "actionability": "core_dependency",
-            "blockerClass": "core_dpm_portfolio_universe_source_batch_fingerprint",
-            "remainingAuthority": (
-                "Core-owned deterministic non-empty source_batch_fingerprint/content_hash "
-                "on DpmPortfolioUniverseCandidate:v1 READY responses so Manage, Gateway, "
-                "and Workbench canonical validation can preserve source-ref authority "
-                "without fabricating hashes downstream"
-            ),
-        }
-    ]
+    assert matching_rows == []
 
 
-def test_default_blocker_classification_tracks_core_domain_product_scope_drift() -> None:
+def test_default_blocker_classification_excludes_closed_core_domain_product_scope_drift() -> None:
     contract_path = (
         ROOT
         / "contracts"
@@ -557,23 +545,12 @@ def test_default_blocker_classification_tracks_core_domain_product_scope_drift()
         if row["repository"] == "sgajbi/lotus-core" and row["issueNumber"] == 885
     ]
 
-    assert matching_rows == [
-        {
-            "repository": "sgajbi/lotus-core",
-            "issueNumber": 885,
-            "actionability": "core_dependency",
-            "blockerClass": "core_domain_product_request_scope_semantics",
-            "remainingAuthority": (
-                "Core-owned domain-product request-scope declaration repair for "
-                "HoldingsAsOf and IngestionEvidenceBundle so platform and Idea "
-                "data-product trust telemetry do not consume contradictory route, "
-                "identifier, and bulk-support semantics"
-            ),
-        }
-    ]
+    assert matching_rows == []
 
 
-def test_default_blocker_classification_tracks_core_technology_governance_pilot() -> None:
+def test_default_blocker_classification_excludes_in_progress_core_technology_governance_pilot() -> (
+    None
+):
     contract_path = (
         ROOT
         / "contracts"
@@ -588,20 +565,7 @@ def test_default_blocker_classification_tracks_core_technology_governance_pilot(
         if row["repository"] == "sgajbi/lotus-core" and row["issueNumber"] == 917
     ]
 
-    assert matching_rows == [
-        {
-            "repository": "sgajbi/lotus-core",
-            "issueNumber": 917,
-            "actionability": "core_dependency",
-            "blockerClass": "core_technology_governance_vulnerability_posture_pilot",
-            "remainingAuthority": (
-                "Core-owned report-only pilot of the platform technology-governance "
-                "policy against lotus-core dependency, SBOM, scanner, container-image, "
-                "vulnerability, and exception posture, tracked by sgajbi/lotus-core#917 "
-                "before sgajbi/lotus-platform#595 can close rollout evidence"
-            ),
-        }
-    ]
+    assert matching_rows == []
 
 
 def test_default_blocker_classification_excludes_closed_workbench_issue_500() -> None:
