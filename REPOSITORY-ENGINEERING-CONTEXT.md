@@ -125,11 +125,11 @@ repositories: 89 closed and 39 open. The open set is 25 `status/blocked`, 2
 `status/in-progress` (#681 and #874), 2 `status/merged-main`,
 2 `status/merged-to-main`, and 8 `status/tracker` issues; blocked actionability
 remains 0 app-actionable blocked issues. Idea #864, #866, and #874 are now
-source-ledgered as Slice 17/18/19 hardening issues. #864 closed after PR #865 reached Idea main
-hardening issues. #864 closed after PR #865 reached Idea main
-`35091eec121ea0c7186302526b211e288a59abed`; Main Releasability `31304700457`,
-PR Merge Gate `31304443459`, CodeQL `31304442120`, and Feature Lane
-`31304427464` passed. #866 is closed on exact main after PR #867 merged
+source-ledgered as Slice 17/18/19 hardening issues. #864 closed after PR #865
+reached Idea main `35091eec121ea0c7186302526b211e288a59abed`; Main
+Releasability `31304700457`, PR Merge Gate `31304443459`, CodeQL
+`31304442120`, and Feature Lane `31304427464` passed. #866 is closed on exact
+main after PR #867 merged
 implementation-proof readiness generator input hardening and PR #868
 synchronized the source-controlled merged-main closure truth. PR #868 merged
 at `560ddcfff9ba61f2db3008fabc62c31c20cfb425`; exact-main Main Releasability
