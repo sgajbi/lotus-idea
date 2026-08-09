@@ -121,10 +121,15 @@ evidence plus Core handoff posture to exact main
 issue-execution prevention cycle plus QA closure of the already merged-main
 Advise, Gateway, Workbench, and AI dependency issues, plus the platform
 technology-governance in-progress issue `sgajbi/lotus-core#917`, the current
-live cross-repo RFC-0002 posture is 124 label-backed issues across 13
-repositories: 85 closed and 39 open. The open set is 25 blocked issues, 2
+live cross-repo RFC-0002 posture is 126 label-backed issues across 13
+repositories: 87 closed and 39 open. The open set is 25 blocked issues, 2
 in-progress issues (#681 and `sgajbi/lotus-core#917`), 2 `status/merged-main`, 2 `status/merged-to-main`,
 and 8 tracker issues.
+Idea #866 is closed on exact main after PR #867 merged implementation-proof
+readiness generator input hardening and PR #868 synchronized the
+source-controlled merged-main closure truth. PR #868 merged at
+`560ddcfff9ba61f2db3008fabc62c31c20cfb425`; exact-main Main Releasability
+`31306932624` and CodeQL `31306929484` passed.
 #681 returned to `status/in-progress` after PR #834 merged source truth for
 Core DPM candidate-source batch-fingerprint issue `sgajbi/lotus-core#882`
 after earlier Core readiness blockers `#836`, `#840`, `#856`, and `#873`
@@ -259,8 +264,8 @@ does not close QA-pending merged-main issues, clear Core #882/#885/#917,
 promote supported features, or replace production IdP/session-token, protected
 runtime, provider, legal, client-publication, support, or final RFC-0002
 closure evidence.
-The later 2026-08-09 QA and issue-posture refresh reports 124 label-backed
-RFC-0002 issues across 13 repositories: 85 closed and 39 open. Open status is
+The later 2026-08-09 QA and issue-posture refresh reports 126 label-backed
+RFC-0002 issues across 13 repositories: 87 closed and 39 open. Open status is
 25 `status/blocked`, 2 `status/in-progress` (#681 and
 `sgajbi/lotus-core#917`), 2 `status/merged-main`, 2 `status/merged-to-main`,
 and 8 `status/tracker`; blocked actionability remains 0 app-actionable issues.
@@ -364,8 +369,8 @@ classifier because it is no longer an open `status/blocked` issue.
 fixed the post-merge QA hash-compatibility defects on main
 `a6bc609f379b8efadb226c9a2084d7c97b2e26e7` with Main Releasability run
 `31268949391` passing.
-Current governed cross-repo RFC-0002 posture is 124 label-backed issues across
-13 repositories: 85 closed and 39 open. The open split is 25 blocked, 2
+Current governed cross-repo RFC-0002 posture is 126 label-backed issues across
+13 repositories: 87 closed and 39 open. The open split is 25 blocked, 2
 in-progress issues (#681 and `sgajbi/lotus-core#917`), 2 `status/merged-main`,
 2 `status/merged-to-main`, and 8 tracker issues. The blocked subset has 0
 app-actionable blocked issues: all 25 are external/protected/canonical-proof
@@ -1655,7 +1660,9 @@ deployment evidence, provider/bank/legal approval, or certification proof that a
 writable Lotus app branch cannot truthfully produce. Current live posture is 25
 blocked RFC-0002 issues, 0 app-actionable blocked issues, 25
 external/protected/canonical-proof evidence blockers, and 2 in-progress
-RFC-0002 issues (#681 and `sgajbi/lotus-core#917`). Counts are label-backed by
+RFC-0002 issues (#681 and `sgajbi/lotus-core#917`). The full live posture is
+126 label-backed RFC-0002 issues across 13 repositories: 87 closed and 39 open.
+Counts are label-backed by
 `rfc/RFC-0002`; title-only references are reported separately and excluded from
 governed counts unless deliberately labeled and ledgered. If a writable non-Core app-code
 gap is found, update GitHub and this contract so the issue becomes ready or

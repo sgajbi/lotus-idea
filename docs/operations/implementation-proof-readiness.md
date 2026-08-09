@@ -585,6 +585,28 @@ any of these issues can move back to merged-main QA.
 - `sgajbi/lotus-core#917` remains an attention issue with
   `status/in-progress`, not an open blocked issue.
 
+2026-08-09 SGT #866 proof-readiness hardening closure sync:
+
+- Idea PR #867 merged implementation-proof readiness generator input hardening
+  by rebase to exact main `6d40f7489d70af33e42e28dfb9ffe6e40d880994`.
+  Main Releasability `31306314749` and CodeQL `31306311168` passed on that
+  exact SHA.
+- Idea PR #868 then synchronized source-controlled closure truth for #866 to
+  exact main `560ddcfff9ba61f2db3008fabc62c31c20cfb425`. Main Releasability
+  `31306932624` and CodeQL `31306929484` passed on that exact SHA.
+- Live `make rfc0002-cross-repo-issue-posture` now reports 126 label-backed
+  RFC-0002 issues across 13 repositories: 87 closed and 39 open.
+- Open status is 25 `status/blocked`, 2 `status/in-progress`
+  (`sgajbi/lotus-idea#681` and `sgajbi/lotus-core#917`), 2
+  `status/merged-main`, 2 `status/merged-to-main`, and 8 `status/tracker`.
+- Blocked actionability remains 0 app-actionable blocked issues. The live
+  blocker classifier remains restricted to external/protected/canonical-proof
+  evidence blockers.
+- This is Slice 18 source-truth synchronization only. It does not close #681,
+  clear Workbench/Gateway live proof blockers, promote supported features,
+  certify production identity/session, authorize client publication, or replace
+  final Slice 20 closure evidence.
+
 ## GitHub Issue Learning Patterns
 
 `contracts/implementation-proof/rfc0002-issue-learning-patterns.v1.json` is
