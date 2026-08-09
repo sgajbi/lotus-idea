@@ -548,9 +548,7 @@ def test_default_blocker_classification_excludes_closed_core_domain_product_scop
     assert matching_rows == []
 
 
-def test_default_blocker_classification_excludes_in_progress_core_technology_governance_pilot() -> (
-    None
-):
+def test_default_blocker_classification_excludes_closed_core_technology_governance_pilot() -> None:
     contract_path = (
         ROOT
         / "contracts"

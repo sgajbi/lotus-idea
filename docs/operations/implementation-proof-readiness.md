@@ -563,17 +563,17 @@ any of these issues can move back to merged-main QA.
 - Blocked actionability remains 0 app-actionable blocked issues: 6 Core
   dependencies and 22 external/protected-evidence dependencies.
 - This is source-truth synchronization only. It does not close QA-pending
-  merged-main issues, clear Core #882/#885/#917, promote supported features,
+  merged-main issues, clear the remaining runtime/protected-evidence blockers, promote supported features,
   certify product support, or replace production identity/session authority,
   protected runtime, provider, legal, client-publication, support, or final
   RFC-0002 closure evidence.
 
 2026-08-09 SGT Core blocker closure sync:
 
-- Live `make rfc0002-cross-repo-issue-posture` now reports 124 label-backed
-  RFC-0002 issues across 13 repositories: 85 closed and 39 open.
-- Open status is 25 `status/blocked`, 2 `status/in-progress`
-  (`sgajbi/lotus-idea#681` and `sgajbi/lotus-core#917`), 2
+- Live `make rfc0002-cross-repo-issue-posture` now reports 126 label-backed
+  RFC-0002 issues across 13 repositories: 88 closed and 38 open.
+- Open status is 25 `status/blocked`, 1 `status/in-progress`
+  (`sgajbi/lotus-idea#681`), 2
   `status/merged-main`, 2 `status/merged-to-main`, and 8 `status/tracker`.
 - Blocked actionability remains 0 app-actionable blocked issues. The live
   blocker classifier now contains 25 external/protected/canonical-proof
@@ -582,11 +582,21 @@ any of these issues can move back to merged-main QA.
   `#814`, `#685`, and `#686` now require fresh governed runtime evidence for
   Idea seed, Gateway-backed Workbench queue/detail reads, and browser
   review-action/feedback/conversion-intent controls.
-- `sgajbi/lotus-core#917` remains an attention issue with
-  `status/in-progress`, not an open blocked issue.
+- `sgajbi/lotus-core#917` has since closed with `status/merged-main` after
+  Core PR #929 reached exact main `6bc937bb173051e0bd4ee9a07ffebd54face0163`
+  and Main Releasability run `31308743764` passed. The evidence is report-only
+  technology-governance pilot posture; it does not certify production
+  vulnerability posture, supported-feature promotion, or Lotus Idea product
+  support.
 
-2026-08-09 SGT #866 proof-readiness hardening closure sync:
+2026-08-09 SGT #864/#866 proof-readiness hardening closure sync:
 
+- Idea #864 is closed with `status/merged-main` after PR #865 refactored the
+  implementation-proof readiness composition scope to exact main
+  `35091eec121ea0c7186302526b211e288a59abed`; Main Releasability
+  `31304700457`, PR Merge Gate `31304443459`, CodeQL `31304442120`, and
+  Feature Lane `31304427464` passed. It is now present in the RFC-0002
+  execution ledger as a closed Slice 17/19 hardening issue.
 - Idea PR #867 merged implementation-proof readiness generator input hardening
   by rebase to exact main `6d40f7489d70af33e42e28dfb9ffe6e40d880994`.
   Main Releasability `31306314749` and CodeQL `31306311168` passed on that
@@ -594,11 +604,13 @@ any of these issues can move back to merged-main QA.
 - Idea PR #868 then synchronized source-controlled closure truth for #866 to
   exact main `560ddcfff9ba61f2db3008fabc62c31c20cfb425`. Main Releasability
   `31306932624` and CodeQL `31306929484` passed on that exact SHA.
+- Idea #866 is now present in the RFC-0002 execution ledger as a closed Slice
+  17/19 hardening issue.
 - Live `make rfc0002-cross-repo-issue-posture` now reports 126 label-backed
-  RFC-0002 issues across 13 repositories: 87 closed and 39 open.
-- Open status is 25 `status/blocked`, 2 `status/in-progress`
-  (`sgajbi/lotus-idea#681` and `sgajbi/lotus-core#917`), 2
-  `status/merged-main`, 2 `status/merged-to-main`, and 8 `status/tracker`.
+  RFC-0002 issues across 13 repositories: 88 closed and 38 open.
+- Open status is 25 `status/blocked`, 1 `status/in-progress`
+  (`sgajbi/lotus-idea#681`), 2 `status/merged-main`, 2 `status/merged-to-main`,
+  and 8 `status/tracker`.
 - Blocked actionability remains 0 app-actionable blocked issues. The live
   blocker classifier remains restricted to external/protected/canonical-proof
   evidence blockers.

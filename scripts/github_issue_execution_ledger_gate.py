@@ -19,7 +19,7 @@ EXPECTED_EXECUTION_ISSUES = frozenset(range(673, 703)) | frozenset(
     map(
         int,
         "340 343 344 345 375 379 380 482 542 555 557 559 561 563 565 567 "
-        "569 579 704 756 782 797 807 814 854".split(),
+        "569 579 704 756 782 797 807 814 854 864 866".split(),
     )
 )
 OPEN_STATUSES = frozenset(
@@ -29,6 +29,7 @@ OPEN_STATUSES = frozenset(
 )
 CLOSED_STATUSES = frozenset({"closed_complete"})
 AUTO_CLOSE_KEYWORDS = tuple("close closes closed fix fixes fixed resolve resolves resolved".split())
+
 REQUIRED_EVIDENCE_ONLY_SYNC_POLICY = (
     "Evidence-only Slice 18 synchronization PRs must not recursively require another "
     "source-sync PR for their own post-merge evidence",
@@ -262,6 +263,13 @@ REQUIRED_OPEN_ISSUE_EVIDENCE = {
         "full live journey validation remains blocked",
     ),
 }
+PIPE_CLOSED_ISSUE_EVIDENCE = {
+    807: "Closed #807 after QA passed|a92144773d1b74bcf19e15396215dd988b5dc0af|fe77d768f09444c29efe508e7289b6704b65a69e|30496796215|make docker-build container-image-scan|HIGH_CRITICAL_FINDINGS=0|make container-runtime-smoke|PR #808 synchronized merged-main source truth|f577efcc14d51208375f3fde87284ac98f8ebb7a|30497951358|30497931322|30498306031|strict wiki parity DiffCount 0|git cherry patch-equivalence proof|does not claim production vulnerability certification",
+    854: "Closed #854 after PR #855 merged|1f8a5ffaed7a6d6aaa522d1c4cb06ca6a5602cc5|31258522447|31258517415|fail-closed PR text gate terminology parser correction|67 passed|strict wiki parity returned DiffCount 0|issue-854-pr-text-fail-closed-term|git cherry patch-equivalence proof|does not complete Slice 18",
+    864: "Closed #864|PR #865|35091eec121ea0c7186302526b211e288a59abed|locals()-based implicit composition|31304700457|31304443459|31304442120|128 focused readiness/closure/documentation tests|duplicate implementation gate with 0 clusters|does not complete Slice 17",
+    866: "Closed #866|PR #867|6d40f7489d70af33e42e28dfb9ffe6e40d880994|ImplementationProofReadinessProofInputs|scripts/implementation_proof_readiness_cli_inputs.py|31306314749|31306311168|PR #868|560ddcfff9ba61f2db3008fabc62c31c20cfb425|31306932624|31306929484|does not implement authentication or authorization",
+    814: "Keep #814 open and status/blocked|Idea PR #815 merged|Workbench PR #515 merged|Workbench PR #516|1787da79fb4abaf574ebe4ebc3f8b4d5fed7bdac|30543504302|original #814 authorization and Workbench validator defects are no longer the active failure path|sgajbi/lotus-core#836|holdings_status=READY|pricing_status=READY|transactions_status=READY|reporting_status=READY|blocking_reason_codes=[]|pending_valuation_jobs=0|pending_aggregation_jobs=0|aggregation_jobs.statuses=[COMPLETE]|analytics_performance_end_date=2026-04-10|positions_data_quality_status=UNKNOWN|fresh canonical validation completes on mainline sources|does not implement production authentication|supported-feature promotion",
+}
 REQUIRED_CLOSED_ISSUE_EVIDENCE = {
     340: (
         "QA closed #340",
@@ -322,21 +330,10 @@ REQUIRED_CLOSED_ISSUE_EVIDENCE = {
         "make incident-response-contract-gate",
         "does not claim production incident certification",
     ),
-    807: tuple(
-        "Closed #807 after QA passed|a92144773d1b74bcf19e15396215dd988b5dc0af|fe77d768f09444c29efe508e7289b6704b65a69e|30496796215|make docker-build container-image-scan|HIGH_CRITICAL_FINDINGS=0|make container-runtime-smoke|PR #808 synchronized merged-main source truth|f577efcc14d51208375f3fde87284ac98f8ebb7a|30497951358|30497931322|30498306031|strict wiki parity DiffCount 0|git cherry patch-equivalence proof|does not claim production vulnerability certification".split(
-            "|"
-        )
-    ),
-    854: tuple(
-        "Closed #854 after PR #855 merged|1f8a5ffaed7a6d6aaa522d1c4cb06ca6a5602cc5|31258522447|31258517415|fail-closed PR text gate terminology parser correction|67 passed|strict wiki parity returned DiffCount 0|issue-854-pr-text-fail-closed-term|git cherry patch-equivalence proof|does not complete Slice 18".split(
-            "|"
-        )
-    ),
-    814: tuple(
-        "Keep #814 open and status/blocked|Idea PR #815 merged|Workbench PR #515 merged|Workbench PR #516|1787da79fb4abaf574ebe4ebc3f8b4d5fed7bdac|30543504302|original #814 authorization and Workbench validator defects are no longer the active failure path|sgajbi/lotus-core#836|holdings_status=READY|pricing_status=READY|transactions_status=READY|reporting_status=READY|blocking_reason_codes=[]|pending_valuation_jobs=0|pending_aggregation_jobs=0|aggregation_jobs.statuses=[COMPLETE]|analytics_performance_end_date=2026-04-10|positions_data_quality_status=UNKNOWN|fresh canonical validation completes on mainline sources|does not implement production authentication|supported-feature promotion".split(
-            "|"
-        )
-    ),
+    **{
+        issue_number: tuple(fragment_text.split("|"))
+        for issue_number, fragment_text in PIPE_CLOSED_ISSUE_EVIDENCE.items()
+    },
 }
 
 

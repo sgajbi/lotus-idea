@@ -848,7 +848,7 @@ rfc0002-github-issue-execution-state-audit`, `make
 rfc0002-github-issue-execution-summary`, and `make
 rfc0002-cross-repo-issue-posture` passed after classifying the new
 `sgajbi/lotus-core#917` rollout issue. At that audit point, the Idea ledger had
-55 tracked RFC-0002 issues, 30 closed and 25 open. The governed cross-repo
+57 tracked RFC-0002 issues, 32 closed and 25 open. The governed cross-repo
 posture was 111 label-backed RFC-0002 issues across 13 repositories, 72 closed
 and 39 open: 29 blocked, no PR-open or merged-main QA-pending issues, 2
 in-progress issues (#681 and `sgajbi/lotus-manage#629`), and 8 tracker issues. The
@@ -857,16 +857,19 @@ issues: 6 Core dependencies and 23 external/protected-evidence dependencies.
 
 Fresh durable blocker evidence was recorded on `sgajbi/lotus-idea#681`,
 `sgajbi/lotus-core#882`, `sgajbi/lotus-core#885`,
-`sgajbi/lotus-core#917`, and `sgajbi/lotus-platform#595`. `#882` remains the
+`sgajbi/lotus-core#917`, and `sgajbi/lotus-platform#595`. `#882` was then the
 canonical live-proof blocker for #814/#685/#686 until Core publishes
 deterministic non-empty `source_batch_fingerprint` / content-hash evidence on
-`DpmPortfolioUniverseCandidate:v1` READY responses. `#885` remains the Slice 14
+`DpmPortfolioUniverseCandidate:v1` READY responses. `#885` was then the Slice 14
 trust-telemetry/catalog blocker until Core `HoldingsAsOf` and
 `IngestionEvidenceBundle` request-scope semantics converge across declaration,
-route, OpenAPI/source contract, generated catalog, and telemetry. `#917`
-remains the platform technology-governance rollout blocker until Core records
-report-only dependency, SBOM, scanner, container-image, vulnerability, and
-exception posture evidence against `lotus-platform#595` / PR #652 policy truth.
+route, OpenAPI/source contract, generated catalog, and telemetry. Current
+state: Core `#882`, `#885`, and `#917` are closed with `status/merged-main`.
+Core `#917` closed after PR #929 reached exact main
+`6bc937bb173051e0bd4ee9a07ffebd54face0163` and Main Releasability
+`31308743764` passed. That evidence is report-only technology-governance pilot
+posture and does not certify production vulnerability posture or Lotus Idea
+supported-feature promotion.
 Platform
 `sgajbi/lotus-platform#647` remains open/blocked: stale scheduled run
 `31235891576` was cancelled and the detector returned zero stale runs, but
@@ -917,19 +920,20 @@ in-progress issue (#681), 10 `status/merged-main`, 2 `status/merged-to-main`,
 and 8 tracker issues. Blocked actionability remains 0 app-actionable blocked
 issues: 6 Core dependencies and 22 external/protected-evidence dependencies.
 This is Slice 18 source-truth synchronization only; it does not close
-QA-pending merged-main issues, clear Core #882/#885/#917, promote supported
+QA-pending merged-main issues, clear the remaining runtime/protected-evidence blockers, promote supported
 features, certify product support, or replace production identity/session
 authority, protected runtime, provider, legal, client-publication, support, or
 final RFC-0002 closure evidence.
 
 The 2026-08-09 Core blocker closure sync then updated the live blocker
 classifier after `sgajbi/lotus-core#882` and `sgajbi/lotus-core#885` closed on
-main and `sgajbi/lotus-core#917` stayed open as `status/in-progress`. Live
-`make rfc0002-cross-repo-issue-posture` reports 124 label-backed RFC-0002
-issues across 13 repositories: 85 closed and 39 open. The open set is 25
-`status/blocked`, 2 `status/in-progress` (`sgajbi/lotus-idea#681` and
-`sgajbi/lotus-core#917`), 2 `status/merged-main`, 2 `status/merged-to-main`,
-and 8 `status/tracker`. Blocked actionability remains 0 app-actionable blocked
+main. Core `#917` later also closed with `status/merged-main` after the
+report-only technology-governance pilot reached main. Live `make
+rfc0002-cross-repo-issue-posture` now reports 126 label-backed RFC-0002 issues
+across 13 repositories: 88 closed and 38 open. The open set is 25
+`status/blocked`, 1 `status/in-progress` (`sgajbi/lotus-idea#681`), 2
+`status/merged-main`, 2 `status/merged-to-main`, and 8 `status/tracker`.
+Blocked actionability remains 0 app-actionable blocked
 issues; the classifier now contains 25 external/protected/canonical-proof
 evidence blockers and no Core dependency rows. Idea `#814`, `#685`, and `#686`
 now require fresh governed PB_SG_GLOBAL_BAL_001 runtime evidence for Idea seed,
@@ -939,20 +943,21 @@ supported feature, close QA-pending issues, or replace production
 identity/session, protected runtime, provider, legal, client-publication,
 support, or final RFC-0002 closure evidence.
 
-The 2026-08-09 #866 proof-readiness hardening closure sync then moved the live
-posture to 126 label-backed RFC-0002 issues across 13 repositories: 87 closed
-and 39 open. The open set remains 25 `status/blocked`, 2
-`status/in-progress` (`sgajbi/lotus-idea#681` and `sgajbi/lotus-core#917`), 2
-`status/merged-main`, 2 `status/merged-to-main`, and 8 `status/tracker`.
-Blocked actionability remains 0 app-actionable blocked issues. Idea PR #867
+The 2026-08-09 #864/#866 proof-readiness hardening closure sync keeps
+`lotus-idea#681` as the only in-progress RFC-0002 issue. Idea #864 is closed
+after PR #865 refactored implementation-proof readiness composition to exact
+main `35091eec121ea0c7186302526b211e288a59abed`; Main Releasability
+`31304700457`, PR Merge Gate `31304443459`, CodeQL `31304442120`, and Feature
+Lane `31304427464` passed. Idea PR #867
 merged implementation-proof readiness generator input hardening to exact main
 `6d40f7489d70af33e42e28dfb9ffe6e40d880994`; Main Releasability
 `31306314749` and CodeQL `31306311168` passed. Idea PR #868 synchronized
 source-controlled closure truth to exact main
 `560ddcfff9ba61f2db3008fabc62c31c20cfb425`; Main Releasability
-`31306932624` and CodeQL `31306929484` passed. This is Slice 18
-source-truth synchronization only; #681 remains open and the update does not
-clear Workbench/Gateway runtime proof, data-product certification,
+`31306932624` and CodeQL `31306929484` passed. #864 and #866 are now present
+in the RFC-0002 execution ledger as closed Slice 17/19 hardening issues. This
+is Slice 18 source-truth synchronization only; #681 remains open and the update
+does not clear Workbench/Gateway runtime proof, data-product certification,
 supported-feature promotion, production identity/session, protected runtime,
 provider, legal, client-publication, support, or final RFC-0002 closure
 evidence.
