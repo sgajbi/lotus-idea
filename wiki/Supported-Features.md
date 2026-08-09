@@ -27,6 +27,24 @@ canonical all-main Gateway/Workbench live evidence, entitlement-denied proof,
 mesh onboarding certification, and the supported-feature promotion evaluator
 all agree that a feature is supportable.
 
+## Current Execution Impact
+
+For live RFC execution posture, see
+[RFC-0002 Execution Status](RFC-0002-Execution-Status).
+
+| Audience | What this means now | Safe next action |
+| --- | --- | --- |
+| Business and product | Lotus Idea has implementation-backed foundations for opportunity intelligence, review, evidence, and conversion intent, but no external feature is supportable yet. | Use foundation language; do not claim a supported advisory product. |
+| Sales and demo | Demonstrations may describe governed foundations and do-not-claim boundaries only. The latest canonical QA did not complete. | Wait for fresh canonical QA evidence before using end-to-end product proof. |
+| Operations and support | Internal health, readiness, issue posture, and supportability diagnostics exist; production support obligations are not promoted. | Use the runbooks and QA artifacts to diagnose, not to certify production readiness. |
+| Engineering and agents | 124 label-backed RFC-0002 issues are tracked across 13 repositories: 83 closed and 41 open. Open blocked work is classified as 0 app-actionable. | Fix writable blockers when discovered, keep GitHub state durable, and rerun canonical QA before closure. |
+
+The latest canonical front-office QA failed before AI/Advise proof because the
+Workbench browser did not observe the Gateway-backed feedback confirmation.
+That run cannot close QA-pending merged-main issues such as
+`sgajbi/lotus-ai#126`, `sgajbi/lotus-advise#481`,
+`sgajbi/lotus-advise#485`, or `sgajbi/lotus-platform#659`.
+
 ## Support Vocabulary
 
 | Term | Meaning |
