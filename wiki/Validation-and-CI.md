@@ -1219,8 +1219,8 @@ It also lists every blocked issue with the GitHub URL, actionability, blocker
 class, and remaining authority so the Core-vs-protected/external split is
 auditable without chat memory or one-off GitHub queries.
 Current live posture is 128 label-backed RFC-0002 issues across 13
-repositories: 90 closed and 38 open. The open split is 25 `status/blocked`, 1
-`status/in-progress` (`sgajbi/lotus-idea#681`), 2
+repositories: 91 closed and 37 open. The open split is 25 `status/blocked`, 1
+`status/in-progress` (`sgajbi/lotus-idea#681`), 1
 `status/merged-main`, 2 `status/merged-to-main`, and 8 `status/tracker`.
 Blocked actionability remains 0 app-actionable blocked issues, with 25
 external/protected/canonical-proof evidence blockers. Counts are label-backed
@@ -1589,9 +1589,9 @@ supported feature.
 
 RFC-0002 execution is tracked through GitHub issue state plus the
 source-controlled implementation-proof ledgers. The current governed posture is
-128 label-backed RFC-0002 issues across 13 repositories: 90 closed and 38 open.
+128 label-backed RFC-0002 issues across 13 repositories: 91 closed and 37 open.
 The open set is 25 `status/blocked`, 1 `status/in-progress` (#681),
-2 `status/merged-main`, 2 `status/merged-to-main`, and 8 `status/tracker`;
+1 `status/merged-main`, 2 `status/merged-to-main`, and 8 `status/tracker`;
 blocked actionability remains 0 app-actionable blocked issues.
 Idea PR #838 synchronized PR #837 exact-main evidence to main
 `2c2d35667643ad5efae83924475574ab6c16be03`, passed Main Releasability
@@ -1728,9 +1728,9 @@ promotion, or clear RFC-0002 production-readiness blockers.
 2026-08-09 SGT Core blocker closure sync:
 
 1. Live `make rfc0002-cross-repo-issue-posture` now reports 128 label-backed
-   RFC-0002 issues across 13 repositories: 90 closed and 38 open.
+   RFC-0002 issues across 13 repositories: 91 closed and 37 open.
 2. Open status is 25 `status/blocked`, 1 `status/in-progress`
-   (`sgajbi/lotus-idea#681`), 2
+   (`sgajbi/lotus-idea#681`), 1
    `status/merged-main`, 2 `status/merged-to-main`, and 8 `status/tracker`.
 3. Blocked actionability remains 0 app-actionable blocked issues. The live
    blocker classifier contains 25 external/protected/canonical-proof evidence
@@ -1765,7 +1765,7 @@ change is limited to governed vulnerability posture.
    `852ba82` with strict `DiffCount 0`.
 4. The Idea ledger now has 59 tracked RFC-0002 issues, 34 closed and 25 open;
    `#681` is the in-progress Slice 18 tracker. Live cross-repo posture has
-   128 label-backed RFC-0002 issues, 90 closed and 38 open, with 25
+   128 label-backed RFC-0002 issues, 91 closed and 37 open, with 25
    `status/blocked`, 1 `status/in-progress`, and 0 app-actionable blocked
    issues.
 5. This sync closes only the ledger-gate maintainability issue. It does not

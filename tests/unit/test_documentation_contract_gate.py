@@ -333,7 +333,7 @@ def test_documentation_contract_gate_blocks_non_contract_current_issue_posture(
     assert errors == [
         "wiki/RFC-Index.md: paragraph 2 describes current/live RFC-0002 issue posture "
         "without contract-backed crossRepo fragment(s): "
-        "`128 label-backed RFC-0002 issues`, `90 closed and 38 open`"
+        "`128 label-backed RFC-0002 issues`, `91 closed and 37 open`"
     ]
 
 
@@ -357,7 +357,7 @@ def test_documentation_contract_gate_allows_contract_current_issue_posture(
                     ],
                     "crossRepo": [
                         "128 label-backed RFC-0002 issues",
-                        "90 closed and 38 open",
+                        "91 closed and 37 open",
                         "25 `status/blocked`, 1 `status/in-progress`",
                         "0 app-actionable blocked",
                     ],
@@ -372,9 +372,9 @@ def test_documentation_contract_gate_allows_contract_current_issue_posture(
         "Current Idea ledger posture has 59 tracked RFC-0002 issues, "
         "34 closed and 25 open; #681 is the in-progress Slice 18 "
         "tracker. Current governed cross-repo RFC-0002 posture has "
-        "128 label-backed RFC-0002 issues across 13 repositories: 90 closed "
-        "and 38 open. The open split is 25 `status/blocked`, "
-        "1 `status/in-progress`, 2 `status/merged-main`, "
+        "128 label-backed RFC-0002 issues across 13 repositories: 91 closed "
+        "and 37 open. The open split is 25 `status/blocked`, "
+        "1 `status/in-progress`, 1 `status/merged-main`, "
         "2 `status/merged-to-main`, and 8 `status/tracker`; "
         "blocked actionability remains 0 app-actionable blocked issues.\n",
         encoding="utf-8",

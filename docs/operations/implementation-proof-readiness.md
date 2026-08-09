@@ -603,8 +603,8 @@ any of these issues can move back to merged-main QA.
   `852ba82` with strict `DiffCount 0`.
 - The Idea ledger now has 59 tracked RFC-0002 issues, 34 closed and 25 open;
   `#681` is the in-progress Slice 18 tracker. Live cross-repo posture has
-  128 label-backed RFC-0002 issues, 90 closed and 38 open, with 25
-  `status/blocked`, 1 `status/in-progress`, 2 `status/merged-main`, 2
+  128 label-backed RFC-0002 issues, 91 closed and 37 open, with 25
+  `status/blocked`, 1 `status/in-progress`, 1 `status/merged-main`, 2
   `status/merged-to-main`, 8 `status/tracker`, and 0 app-actionable blocked
   issues.
 - This sync closes only the ledger-gate maintainability issue. It does not
@@ -630,9 +630,9 @@ any of these issues can move back to merged-main QA.
 - Idea #866 is now present in the RFC-0002 execution ledger as a closed Slice
   17/19 hardening issue.
 - Live `make rfc0002-cross-repo-issue-posture` now reports 128 label-backed
-  RFC-0002 issues across 13 repositories: 90 closed and 38 open.
+  RFC-0002 issues across 13 repositories: 91 closed and 37 open.
 - Open status is 25 `status/blocked`, 1 `status/in-progress`
-  (`sgajbi/lotus-idea#681`), 2
+  (`sgajbi/lotus-idea#681`), 1
   `status/merged-main`, 2 `status/merged-to-main`, and 8 `status/tracker`.
 - Blocked actionability remains 0 app-actionable blocked issues. The live
   blocker classifier remains restricted to external/protected/canonical-proof
