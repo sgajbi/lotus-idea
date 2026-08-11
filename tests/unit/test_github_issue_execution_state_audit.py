@@ -5,6 +5,7 @@ import json
 import sys
 from pathlib import Path
 from types import ModuleType
+from types import SimpleNamespace
 from typing import Any, cast
 
 
@@ -115,6 +116,58 @@ def test_github_issue_execution_state_audit_rejects_missing_github_issue(
 
     assert "#690: missing from GitHub issue state" in errors
     assert "GitHub state input omitted ledger issues: #690" in errors
+
+
+def test_fetch_github_issue_states_recovers_required_issue_outside_list_window(
+    monkeypatch: Any,
+) -> None:
+    module = _load_audit()
+    ledger = _load_ledger()
+    scoped_entries = [
+        entry
+        for entry in ledger["issues"]
+        if isinstance(entry, dict) and entry["issueNumber"] in {340, 681}
+    ]
+    ledger["issues"] = scoped_entries
+    payload_by_number = {issue["number"]: issue for issue in _github_issue_payload(ledger)}
+    commands: list[list[str]] = []
+
+    def fake_run(
+        command: list[str],
+        *,
+        check: bool,
+        capture_output: bool,
+        text: bool,
+    ) -> SimpleNamespace:
+        assert check is False
+        assert capture_output is True
+        assert text is True
+        commands.append(command)
+        if command[:3] == ["gh", "issue", "list"]:
+            return SimpleNamespace(
+                returncode=0,
+                stdout=json.dumps([payload_by_number[681]]),
+                stderr="",
+            )
+        if command[:3] == ["gh", "issue", "view"]:
+            return SimpleNamespace(
+                returncode=0,
+                stdout=json.dumps(payload_by_number[int(command[3])]),
+                stderr="",
+            )
+        raise AssertionError(f"unexpected command: {command}")
+
+    monkeypatch.setattr(module.subprocess, "run", fake_run)
+
+    states = module.fetch_github_issue_states(
+        repository="sgajbi/lotus-idea",
+        limit=1,
+        required_issue_numbers={340, 681},
+    )
+
+    assert sorted(states) == [340, 681]
+    assert commands[0][:3] == ["gh", "issue", "list"]
+    assert commands[1][:4] == ["gh", "issue", "view", "340"]
 
 
 def test_github_issue_execution_state_audit_rejects_rfc_labeled_issue_missing_from_ledger(

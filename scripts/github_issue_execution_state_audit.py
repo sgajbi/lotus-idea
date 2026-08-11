@@ -64,7 +64,25 @@ def load_github_issue_states(path: Path) -> dict[int, GitHubIssueState]:
     return _parse_github_issue_states(raw_payload)
 
 
-def fetch_github_issue_states(*, repository: str, limit: int) -> dict[int, GitHubIssueState]:
+def fetch_github_issue_states(
+    *,
+    repository: str,
+    limit: int,
+    required_issue_numbers: set[int] | frozenset[int] | None = None,
+) -> dict[int, GitHubIssueState]:
+    states = _fetch_github_issue_list(repository=repository, limit=limit)
+    if required_issue_numbers:
+        states.update(
+            _fetch_missing_required_issue_states(
+                repository=repository,
+                fetched_issue_numbers=set(states),
+                required_issue_numbers=required_issue_numbers,
+            )
+        )
+    return states
+
+
+def _fetch_github_issue_list(*, repository: str, limit: int) -> dict[int, GitHubIssueState]:
     result = subprocess.run(
         [
             "gh",
@@ -90,6 +108,52 @@ def fetch_github_issue_states(*, repository: str, limit: int) -> dict[int, GitHu
     if not isinstance(raw_payload, list):
         raise ValueError("gh issue list returned non-list JSON")
     return _parse_github_issue_states(raw_payload)
+
+
+def _fetch_missing_required_issue_states(
+    *,
+    repository: str,
+    fetched_issue_numbers: set[int],
+    required_issue_numbers: set[int] | frozenset[int],
+) -> dict[int, GitHubIssueState]:
+    missing_issue_numbers = sorted(required_issue_numbers - fetched_issue_numbers)
+    states: dict[int, GitHubIssueState] = {}
+    for issue_number in missing_issue_numbers:
+        states.update(_fetch_github_issue_state(repository=repository, issue_number=issue_number))
+    return states
+
+
+def _fetch_github_issue_state(
+    *,
+    repository: str,
+    issue_number: int,
+) -> dict[int, GitHubIssueState]:
+    result = subprocess.run(
+        [
+            "gh",
+            "issue",
+            "view",
+            str(issue_number),
+            "--repo",
+            repository,
+            "--json",
+            GITHUB_ISSUE_FIELDS,
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        stderr = result.stderr.strip() or result.stdout.strip()
+        raise RuntimeError(f"gh issue view {issue_number} failed: {stderr}")
+    raw_payload = json.loads(result.stdout)
+    if not isinstance(raw_payload, Mapping):
+        raise ValueError(f"gh issue view {issue_number} returned non-object JSON")
+    return _parse_github_issue_states([raw_payload])
+
+
+def _ledger_issue_numbers(path: Path) -> frozenset[int]:
+    return frozenset(entry.issue_number for entry in _entries(_load_json(path)))
 
 
 def audit_github_issue_execution_state(
@@ -283,11 +347,21 @@ def _parse_args(argv: Sequence[str] | None) -> argparse.Namespace:
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = _parse_args(argv)
+    required_issue_numbers: frozenset[int] | None = None
+    if args.github_issues_json is None:
+        try:
+            required_issue_numbers = _ledger_issue_numbers(args.ledger)
+        except (FileNotFoundError, json.JSONDecodeError, ValueError):
+            required_issue_numbers = None
     try:
         github_issues = (
             load_github_issue_states(args.github_issues_json)
             if args.github_issues_json is not None
-            else fetch_github_issue_states(repository=args.repo, limit=args.limit)
+            else fetch_github_issue_states(
+                repository=args.repo,
+                limit=args.limit,
+                required_issue_numbers=required_issue_numbers,
+            )
         )
     except (json.JSONDecodeError, OSError, RuntimeError, ValueError) as exc:
         print(str(exc))

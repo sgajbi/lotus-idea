@@ -85,7 +85,9 @@
     932,
     935,
     937,
-    941
+    941,
+    943,
+    944
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -340,6 +342,34 @@
       "does not clear #379",
       "production IdP/session-token authority",
       "supported-feature promotion",
+      "final RFC-0002 closure"
+    ],
+    "943": [
+      "Keep #943 open while implementation is in progress",
+      "downstream realization readiness proof-application refactor",
+      "src/app/application/downstream_realization_readiness.py",
+      "1196-line application module",
+      "source-contract proof application",
+      "runtime-execution proof application",
+      "build_downstream_realization_readiness_snapshot",
+      "does not clear #379",
+      "production IdP/session-token authority",
+      "supported-feature promotion",
+      "final RFC-0002 closure"
+    ],
+    "944": [
+      "Keep #944 open while implementation is in progress",
+      "GitHub issue execution state-audit fetch hardening",
+      "scripts/github_issue_execution_state_audit.py",
+      "omit older ledger-tracked issues",
+      "initial `gh issue list` result window",
+      "targeted live GitHub lookup",
+      "strict missing-state and RFC-label coverage semantics",
+      "focused regression coverage",
+      "does not change GitHub lifecycle labels",
+      "does not weaken the state audit",
+      "production identity/session-token authority",
+      "Gateway/Workbench runtime behavior",
       "final RFC-0002 closure"
     ]
   },
