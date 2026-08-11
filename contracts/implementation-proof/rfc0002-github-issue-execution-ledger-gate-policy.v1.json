@@ -92,7 +92,8 @@
     950,
     953,
     956,
-    960
+    960,
+    964
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -357,6 +358,21 @@
       "authentication",
       "authorization",
       "supported-feature posture",
+      "final RFC-0002 closure"
+    ],
+    "964": [
+      "Keep #964 open",
+      "RFC-0002 Slice 19 PostgreSQL mutating workflow proof helper refactor",
+      "make quality-baseline",
+      "tests/unit/test_postgres_repository_mutating_workflow.py::_record_mutating_workflow_details",
+      "current largest function at 116 lines",
+      "second-tranche test-support maintainability refactor",
+      "lifecycle/review/feedback",
+      "conversion/report",
+      "replay/idempotency precheck",
+      "lookup proof",
+      "Do not use GitHub auto-close wording",
+      "does not claim runtime code changes",
       "final RFC-0002 closure"
     ]
   },
