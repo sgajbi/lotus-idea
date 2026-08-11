@@ -40,6 +40,12 @@ EXPECTED_OPEN_LABEL_BY_STATUS = {
 EXPECTED_CLOSED_LABEL = "status/merged-main"
 EXPECTED_RFC_LABEL = "rfc/RFC-0002"
 GITHUB_ISSUE_FIELDS = "number,state,title,labels,url"
+KNOWN_STATUS_LABELS = frozenset(
+    {
+        *EXPECTED_OPEN_LABEL_BY_STATUS.values(),
+        EXPECTED_CLOSED_LABEL,
+    }
+)
 
 
 @dataclass(frozen=True)
@@ -147,6 +153,7 @@ def _audit_issue_state(entry: IssueEntry, github_issue: GitHubIssueState) -> lis
             f"#{entry.issue_number}: executionStatus={entry.execution_status} "
             f"requires GitHub label {expected_label}"
         )
+    errors.extend(_audit_conflicting_status_labels(entry, github_issue, expected_label))
     if (
         entry.execution_status == "closed_complete"
         and EXPECTED_CLOSED_LABEL not in github_issue.labels
@@ -154,9 +161,32 @@ def _audit_issue_state(entry: IssueEntry, github_issue: GitHubIssueState) -> lis
         errors.append(
             f"#{entry.issue_number}: closed_complete requires GitHub label {EXPECTED_CLOSED_LABEL}"
         )
+    if entry.execution_status == "closed_complete":
+        errors.extend(_audit_conflicting_status_labels(entry, github_issue, EXPECTED_CLOSED_LABEL))
     if entry.execution_status == "open_blocked" and github_issue.state != "OPEN":
         errors.append(f"#{entry.issue_number}: blocked execution issue must remain open")
     return errors
+
+
+def _audit_conflicting_status_labels(
+    entry: IssueEntry,
+    github_issue: GitHubIssueState,
+    expected_label: str | None,
+) -> list[str]:
+    if expected_label is None:
+        return []
+    conflicting_labels = sorted(
+        label
+        for label in github_issue.labels
+        if label.startswith("status/") and label != expected_label
+    )
+    if not conflicting_labels:
+        return []
+    return [
+        f"#{entry.issue_number}: executionStatus={entry.execution_status} "
+        f"allows only GitHub status label {expected_label}; found conflicting status "
+        f"label(s): {', '.join(conflicting_labels)}"
+    ]
 
 
 def _audit_rfc_label_coverage(
