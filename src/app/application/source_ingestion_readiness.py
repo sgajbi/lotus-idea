@@ -11,7 +11,7 @@ from app.application.implementation_proof_artifact_registry import (
     proof_artifact_effect_matches_ref,
 )
 from app.application.source_ingestion_runtime_evidence import (
-    SOURCE_INGESTION_RUNTIME_EXECUTION_ENV as SOURCE_INGESTION_RUNTIME_EXECUTION_ENV,
+    SOURCE_INGESTION_RUNTIME_EXECUTION_ENV,
     source_ingestion_runtime_execution_can_clear_aggregate_blockers,
 )
 from app.application.source_ingestion_scheduler import (
@@ -77,70 +77,28 @@ def build_source_ingestion_readiness_snapshot(
     runtime_execution_proof_ref: str | None = None,
 ) -> SourceIngestionReadinessSnapshot:
     evaluated_at_utc = evaluated_at_utc or datetime.now(UTC)
-    example_manifest = repository_root / EXAMPLE_MANIFEST_PATH
-    configured_manifest = os.getenv(MANIFEST_ENV, "").strip()
-    configured_manifest_path = resolve_source_ingestion_manifest_path(
-        configured_manifest,
-        repository_root=repository_root,
-    )
-    configured_runtime_execution_path = resolve_source_ingestion_manifest_path(
-        os.getenv(SOURCE_INGESTION_RUNTIME_EXECUTION_ENV, "").strip(),
-        repository_root=repository_root,
-    )
-    configured_scheduled_worker_source_contract_path = resolve_source_ingestion_manifest_path(
-        os.getenv(SCHEDULED_WORKER_SOURCE_CONTRACT_ENV, "").strip(),
-        repository_root=repository_root,
-    )
-    configured_scheduled_worker_deployment_evidence_path = resolve_source_ingestion_manifest_path(
-        os.getenv(SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE_ENV, "").strip(),
-        repository_root=repository_root,
-    )
+    paths = _source_ingestion_readiness_paths(repository_root)
     core_source_urls = core_source_runtime_urls_from_environment()
     live_core_source_proof_valid = _runtime_execution_valid(
-        configured_runtime_execution_path,
+        paths.runtime_execution_proof,
         evaluated_at_utc=evaluated_at_utc,
         proof_ref=runtime_execution_proof_ref,
         repository_root=repository_root,
     )
-    scheduled_worker_source_contract = _read_json_object(
-        configured_scheduled_worker_source_contract_path
-    )
-    scheduled_worker_deployment_evidence = _read_json_object(
-        configured_scheduled_worker_deployment_evidence_path
-    )
-    scheduled_worker_source_contract_valid = bool(
-        proof_artifact_effect_matches_ref(
-            "source_ingestion_scheduled_worker_source_contract_ref",
-            ProofArtifactEffect.SUPPORTING_EVIDENCE,
-        )
-        and scheduled_worker_source_contract
-        and scheduled_worker_source_contract_is_valid(
-            scheduled_worker_source_contract,
-            repository_root=repository_root,
-        )
-    )
-    scheduled_worker_deployment_evidence_valid = bool(
-        proof_artifact_effect_matches_ref(
-            "source_ingestion_scheduled_worker_deployment_evidence_ref",
-            ProofArtifactEffect.BLOCKER_CLEARING,
-        )
-        and scheduled_worker_source_contract_valid
-        and scheduled_worker_deployment_evidence
-        and scheduled_worker_source_contract
-        and scheduled_worker_deployment_evidence_is_valid(scheduled_worker_deployment_evidence)
-        and scheduled_worker_deployment_matches_source_contract(
-            scheduled_worker_deployment_evidence,
-            scheduled_worker_source_contract,
-        )
+    scheduled_worker_evidence = _scheduled_worker_readiness_evidence(
+        paths,
+        repository_root=repository_root,
     )
     configuration_blockers = _configuration_blockers(
-        example_manifest=example_manifest,
-        configured_manifest_path=configured_manifest_path,
+        example_manifest=paths.example_manifest,
+        configured_manifest_path=paths.configured_manifest,
         core_source_urls=core_source_urls,
     )
     certification_blockers = _certification_blockers(
         live_core_source_proof_valid=live_core_source_proof_valid,
-        scheduled_worker_deployment_evidence_valid=scheduled_worker_deployment_evidence_valid,
+        scheduled_worker_deployment_evidence_valid=(
+            scheduled_worker_evidence.deployment_evidence_valid
+        ),
     )
     return SourceIngestionReadinessSnapshot(
         repository="lotus-idea",
@@ -148,24 +106,20 @@ def build_source_ingestion_readiness_snapshot(
         opportunity_family="high_cash",
         manifest_schema_version=MANIFEST_SCHEMA_VERSION,
         example_manifest_path=EXAMPLE_MANIFEST_PATH.as_posix(),
-        example_manifest_available=example_manifest.is_file(),
-        configured_manifest_available=bool(
-            configured_manifest_path and configured_manifest_path.is_file()
-        ),
-        configured_live_proof_available=bool(
-            configured_runtime_execution_path and configured_runtime_execution_path.is_file()
-        ),
+        example_manifest_available=paths.example_manifest.is_file(),
+        configured_manifest_available=_configured_path_is_file(paths.configured_manifest),
+        configured_live_proof_available=_configured_path_is_file(paths.runtime_execution_proof),
         live_core_source_proof_valid=live_core_source_proof_valid,
         configured_scheduled_worker_source_contract_available=bool(
-            configured_scheduled_worker_source_contract_path
-            and configured_scheduled_worker_source_contract_path.is_file()
+            _configured_path_is_file(paths.scheduled_worker_source_contract)
         ),
-        scheduled_worker_source_contract_valid=scheduled_worker_source_contract_valid,
+        scheduled_worker_source_contract_valid=scheduled_worker_evidence.source_contract_valid,
         configured_scheduled_worker_deployment_evidence_available=bool(
-            configured_scheduled_worker_deployment_evidence_path
-            and configured_scheduled_worker_deployment_evidence_path.is_file()
+            _configured_path_is_file(paths.scheduled_worker_deployment_evidence)
         ),
-        scheduled_worker_deployment_evidence_valid=scheduled_worker_deployment_evidence_valid,
+        scheduled_worker_deployment_evidence_valid=(
+            scheduled_worker_evidence.deployment_evidence_valid
+        ),
         core_base_url_configured=core_source_urls.fully_configured,
         core_query_base_url_configured=core_source_urls.query_base_url_configured,
         core_query_control_plane_base_url_configured=(
@@ -178,6 +132,110 @@ def build_source_ingestion_readiness_snapshot(
         certification_blockers=certification_blockers,
         supported_feature_promoted=False,
     )
+
+
+@dataclass(frozen=True)
+class _SourceIngestionReadinessPaths:
+    example_manifest: Path
+    configured_manifest: Path | None
+    runtime_execution_proof: Path | None
+    scheduled_worker_source_contract: Path | None
+    scheduled_worker_deployment_evidence: Path | None
+
+
+def _source_ingestion_readiness_paths(
+    repository_root: Path,
+) -> _SourceIngestionReadinessPaths:
+    return _SourceIngestionReadinessPaths(
+        example_manifest=repository_root / EXAMPLE_MANIFEST_PATH,
+        configured_manifest=resolve_source_ingestion_manifest_path(
+            os.getenv(MANIFEST_ENV, "").strip(),
+            repository_root=repository_root,
+        ),
+        runtime_execution_proof=resolve_source_ingestion_manifest_path(
+            os.getenv(SOURCE_INGESTION_RUNTIME_EXECUTION_ENV, "").strip(),
+            repository_root=repository_root,
+        ),
+        scheduled_worker_source_contract=resolve_source_ingestion_manifest_path(
+            os.getenv(SCHEDULED_WORKER_SOURCE_CONTRACT_ENV, "").strip(),
+            repository_root=repository_root,
+        ),
+        scheduled_worker_deployment_evidence=resolve_source_ingestion_manifest_path(
+            os.getenv(SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE_ENV, "").strip(),
+            repository_root=repository_root,
+        ),
+    )
+
+
+@dataclass(frozen=True)
+class _ScheduledWorkerReadinessEvidence:
+    source_contract_valid: bool
+    deployment_evidence_valid: bool
+
+
+def _scheduled_worker_readiness_evidence(
+    paths: _SourceIngestionReadinessPaths,
+    *,
+    repository_root: Path,
+) -> _ScheduledWorkerReadinessEvidence:
+    source_contract = _read_json_object(paths.scheduled_worker_source_contract)
+    deployment_evidence = _read_json_object(paths.scheduled_worker_deployment_evidence)
+    source_contract_valid = _scheduled_worker_source_contract_valid(
+        source_contract,
+        repository_root=repository_root,
+    )
+    return _ScheduledWorkerReadinessEvidence(
+        source_contract_valid=source_contract_valid,
+        deployment_evidence_valid=_scheduled_worker_deployment_evidence_valid(
+            deployment_evidence,
+            source_contract=source_contract,
+            source_contract_valid=source_contract_valid,
+        ),
+    )
+
+
+def _scheduled_worker_source_contract_valid(
+    source_contract: dict[str, object] | None,
+    *,
+    repository_root: Path,
+) -> bool:
+    return bool(
+        proof_artifact_effect_matches_ref(
+            "source_ingestion_scheduled_worker_source_contract_ref",
+            ProofArtifactEffect.SUPPORTING_EVIDENCE,
+        )
+        and source_contract
+        and scheduled_worker_source_contract_is_valid(
+            source_contract,
+            repository_root=repository_root,
+        )
+    )
+
+
+def _scheduled_worker_deployment_evidence_valid(
+    deployment_evidence: dict[str, object] | None,
+    *,
+    source_contract: dict[str, object] | None,
+    source_contract_valid: bool,
+) -> bool:
+    return bool(
+        proof_artifact_effect_matches_ref(
+            "source_ingestion_scheduled_worker_deployment_evidence_ref",
+            ProofArtifactEffect.BLOCKER_CLEARING,
+        )
+        and source_contract_valid
+        and deployment_evidence
+        and source_contract
+        and scheduled_worker_deployment_evidence_is_valid(deployment_evidence)
+        and scheduled_worker_deployment_matches_source_contract(
+            deployment_evidence,
+            source_contract,
+        )
+    )
+
+
+def _configured_path_is_file(path: Path | None) -> bool:
+    return bool(path and path.is_file())
 
 
 @dataclass(frozen=True)
