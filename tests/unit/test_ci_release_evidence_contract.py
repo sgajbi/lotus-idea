@@ -249,6 +249,25 @@ def test_ci_contract_gate_blocks_removed_container_provenance_resolution(
     )
 
 
+def test_ci_contract_gate_blocks_removed_release_publish_retry_budget(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    module = _load_ci_contract_gate()
+    workflow_dir = tmp_path / ".github" / "workflows"
+    _copy_workflows(
+        workflow_dir,
+        "main-releasability.yml",
+        "          publish_attempts=4\n          publish_retry_delay_seconds=30\n",
+        "",
+    )
+
+    monkeypatch.setattr(module, "WORKFLOWS_DIR", workflow_dir)
+
+    errors = module.validate_ci_contract()
+    assert "main-releasability.yml missing `publish_attempts=4`" in errors
+    assert "main-releasability.yml missing `publish_retry_delay_seconds=30`" in errors
+
+
 def test_ci_contract_gate_blocks_removed_release_digest_fields(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

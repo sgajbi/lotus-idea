@@ -298,11 +298,27 @@ jobs:
         run: |
           set -euo pipefail
 
-          docker push "$CONTAINER_IMAGE_NAME"
-          release_image_digest="$(
-            docker buildx imagetools inspect "$CONTAINER_IMAGE_NAME" \
-              --format '{{json .Manifest.Digest}}' | tr -d '"'
-          )"
+          publish_attempts=4
+          publish_retry_delay_seconds=30
+          release_image_digest=""
+          for publish_attempt in $(seq 1 "$publish_attempts"); do
+            if docker push "$CONTAINER_IMAGE_NAME"; then
+              release_image_digest="$(
+                docker buildx imagetools inspect "$CONTAINER_IMAGE_NAME" \
+                  --format '{{json .Manifest.Digest}}' | tr -d '"'
+              )"
+              if [[ "$release_image_digest" == sha256:* ]]; then
+                break
+              fi
+              echo "Registry digest was not available after publish attempt ${publish_attempt}/${publish_attempts}" >&2
+            else
+              echo "Image publish attempt ${publish_attempt}/${publish_attempts} failed for $CONTAINER_IMAGE_NAME" >&2
+            fi
+            if [[ "$publish_attempt" -lt "$publish_attempts" ]]; then
+              echo "Retrying image publish after ${publish_retry_delay_seconds}s to absorb transient registry throttling" >&2
+              sleep "$publish_retry_delay_seconds"
+            fi
+          done
           if [[ "$release_image_digest" != sha256:* ]]; then
             echo "Unable to resolve registry digest for $CONTAINER_IMAGE_NAME" >&2
             exit 1
