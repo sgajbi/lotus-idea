@@ -156,15 +156,7 @@ def build_downstream_realization_readiness_snapshot(
     report_materialization_runtime_execution_proof_ref: str | None = None,
 ) -> DownstreamRealizationReadinessSnapshot:
     readiness_summary = _downstream_realization_readiness_summary(repository)
-    capabilities: tuple[DownstreamRealizationCapabilityReadiness, ...] = (
-        _advise_conversion_capability(),
-        _manage_conversion_capability(),
-        _report_render_archive_capability(),
-    )
-    contract_plan = load_downstream_realization_contract_plan()
-    downstream_contracts: tuple[DownstreamRealizationContractReadiness, ...] = tuple(
-        _downstream_contract_from_plan(record) for record in contract_plan.contracts
-    )
+    capabilities, downstream_contracts = _initial_downstream_readiness_components()
     capabilities, downstream_contracts = _apply_available_downstream_proofs(
         capabilities=capabilities,
         downstream_contracts=downstream_contracts,
@@ -192,15 +184,58 @@ def build_downstream_realization_readiness_snapshot(
             report_materialization_runtime_execution_proof_ref
         ),
     )
+    blockers = _aggregate_downstream_blockers(capabilities, downstream_contracts)
+    blocker_issue_refs = _merge_blocker_issue_refs(capabilities, downstream_contracts)
+    certification_ready = not blockers
+    return _build_downstream_readiness_snapshot(
+        readiness_summary=readiness_summary,
+        durable_storage_backed=durable_storage_backed,
+        certification_ready=certification_ready,
+        blockers=blockers,
+        blocker_issue_refs=blocker_issue_refs,
+        capabilities=capabilities,
+        downstream_contracts=downstream_contracts,
+    )
+
+
+def _initial_downstream_readiness_components() -> tuple[
+    tuple[DownstreamRealizationCapabilityReadiness, ...],
+    tuple[DownstreamRealizationContractReadiness, ...],
+]:
+    contract_plan = load_downstream_realization_contract_plan()
+    return (
+        (
+            _advise_conversion_capability(),
+            _manage_conversion_capability(),
+            _report_render_archive_capability(),
+        ),
+        tuple(_downstream_contract_from_plan(record) for record in contract_plan.contracts),
+    )
+
+
+def _aggregate_downstream_blockers(
+    capabilities: tuple[DownstreamRealizationCapabilityReadiness, ...],
+    downstream_contracts: tuple[DownstreamRealizationContractReadiness, ...],
+) -> tuple[str, ...]:
     capability_blockers = tuple(
         blocker for capability in capabilities for blocker in capability.blockers
     )
     contract_blockers = tuple(
         blocker for contract in downstream_contracts for blocker in contract.blockers
     )
-    blockers = tuple(dict.fromkeys((*capability_blockers, *contract_blockers)))
-    blocker_issue_refs = _merge_blocker_issue_refs(capabilities, downstream_contracts)
-    certification_ready = not blockers
+    return tuple(dict.fromkeys((*capability_blockers, *contract_blockers)))
+
+
+def _build_downstream_readiness_snapshot(
+    *,
+    readiness_summary: DownstreamRealizationReadinessRepositorySummary,
+    durable_storage_backed: bool,
+    certification_ready: bool,
+    blockers: tuple[str, ...],
+    blocker_issue_refs: Mapping[str, tuple[str, ...]],
+    capabilities: tuple[DownstreamRealizationCapabilityReadiness, ...],
+    downstream_contracts: tuple[DownstreamRealizationContractReadiness, ...],
+) -> DownstreamRealizationReadinessSnapshot:
     return DownstreamRealizationReadinessSnapshot(
         repository="lotus-idea",
         readiness_status=("ready" if certification_ready else "blocked"),
@@ -215,37 +250,39 @@ def build_downstream_realization_readiness_snapshot(
             readiness_summary.downstream_reconciliation_required_count
         ),
         downstream_adapter_foundation_present=True,
-        source_of_truth={
-            "conversion_workflow": "src/app/application/conversion_workflow.py",
-            "report_evidence_workflow": "src/app/application/report_evidence.py",
-            "downstream_realization_orchestration": (
-                "src/app/application/downstream_realization.py"
-            ),
-            "downstream_realization_api": "src/app/api/downstream_realization.py",
-            "downstream_adapter_port": "src/app/ports/downstream_realization.py",
-            "downstream_adapter_foundation": "src/app/infrastructure/downstream_realization.py",
-            "downstream_submission_reconciliation": (
-                "src/app/application/downstream_submission_reconciliation.py"
-            ),
-            "downstream_contract_plan": (
-                "contracts/downstream-realization/lotus-idea-downstream-contracts.v1.json"
-            ),
-            "downstream_contract_gate": "scripts/downstream_realization_contract_gate.py",
-            "rfc_slice_12": (
-                "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/"
-                "RFC-0002-slice-12-advise-and-manage-conversion-realization.md"
-            ),
-            "rfc_slice_13": (
-                "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/"
-                "RFC-0002-slice-13-report-render-archive-and-evidence-pack-materialization.md"
-            ),
-        },
+        source_of_truth=_downstream_realization_source_of_truth(),
         blockers=blockers,
         blocker_issue_refs=blocker_issue_refs,
         capabilities=capabilities,
         downstream_contracts=downstream_contracts,
         supported_feature_promoted=False,
     )
+
+
+def _downstream_realization_source_of_truth() -> Mapping[str, str]:
+    return {
+        "conversion_workflow": "src/app/application/conversion_workflow.py",
+        "report_evidence_workflow": "src/app/application/report_evidence.py",
+        "downstream_realization_orchestration": "src/app/application/downstream_realization.py",
+        "downstream_realization_api": "src/app/api/downstream_realization.py",
+        "downstream_adapter_port": "src/app/ports/downstream_realization.py",
+        "downstream_adapter_foundation": "src/app/infrastructure/downstream_realization.py",
+        "downstream_submission_reconciliation": (
+            "src/app/application/downstream_submission_reconciliation.py"
+        ),
+        "downstream_contract_plan": (
+            "contracts/downstream-realization/lotus-idea-downstream-contracts.v1.json"
+        ),
+        "downstream_contract_gate": "scripts/downstream_realization_contract_gate.py",
+        "rfc_slice_12": (
+            "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/"
+            "RFC-0002-slice-12-advise-and-manage-conversion-realization.md"
+        ),
+        "rfc_slice_13": (
+            "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/"
+            "RFC-0002-slice-13-report-render-archive-and-evidence-pack-materialization.md"
+        ),
+    }
 
 
 def _downstream_realization_readiness_summary(

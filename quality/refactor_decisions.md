@@ -6,6 +6,59 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-08-11: Downstream Realization Readiness Composition Boundary
+
+Issue `#894` applies the RFC-0002 Slice 12/13 maintainability lens to the
+downstream-realization readiness application boundary. The report-only quality
+baseline listed `src/app/application/downstream_realization_readiness.py` at
+`1,186` lines and
+`build_downstream_realization_readiness_snapshot(...)` at `113` lines.
+
+The public readiness builder mixed:
+
+1. repository readiness-summary loading,
+2. capability and contract-plan construction,
+3. available proof application,
+4. blocker aggregation,
+5. source-of-truth mapping,
+6. final response snapshot assembly.
+
+`src/app/application/downstream_realization_readiness.py` now keeps the public
+`build_downstream_realization_readiness_snapshot(...)` signature and behavior
+stable while extracting named helpers for initial capability/contract
+construction, blocker aggregation, final snapshot assembly, and source-of-truth
+mapping. The public builder is now `63` lines; the extracted helper boundaries
+are `13`, `11`, `31`, and `24` lines. The file remains within the source
+maintainability threshold at `1,198` lines.
+
+Focused validation passed:
+
+1. `.venv/Scripts/python.exe -m ruff format src/app/application/downstream_realization_readiness.py tests/unit/test_downstream_realization_readiness.py`,
+2. `.venv/Scripts/python.exe -m ruff check src/app/application/downstream_realization_readiness.py tests/unit/test_downstream_realization_readiness.py`,
+3. `.venv/Scripts/python.exe -m mypy src/app/application/downstream_realization_readiness.py tests/unit/test_downstream_realization_readiness.py`,
+4. `.venv/Scripts/python.exe -m pytest tests/unit/test_downstream_realization_readiness.py -q`
+   (`13` passed),
+5. `make maintainability-gate`,
+6. `make duplicate-implementation-gate` (`0` duplicate clusters),
+7. `make architecture-boundary-gate`,
+8. `make rfc0002-github-issue-execution-ledger-gate`,
+9. `make rfc0002-github-issue-learning-pattern-gate`,
+10. `make rfc0002-github-issue-execution-summary`.
+
+The focused regression tests now assert the source-of-truth map values that
+were moved behind the named helper, while preserving existing projection-only
+repository use, blocker aggregation, source-contract non-clearing posture, and
+runtime-proof blocker-clearing boundaries.
+
+This is internal application-layer maintainability only. It does not change
+API/OpenAPI behavior, downstream readiness response semantics, blocker
+vocabulary, evidence refs, issue refs, source-owner authority, persistence,
+migrations, authentication or authorization infrastructure, Gateway,
+Workbench, runtime topology, wiki source, supported features, data-mesh
+certification, client publication, or supported-feature promotion. No wiki
+publication is required because no operator-facing command or readiness truth
+changed.
+
 ## 2026-07-19: Outbox Dead-Letter Recovery Policy Boundary
 
 Issue `#670` applies the Slice 19 report-only quality-baseline lens to the
