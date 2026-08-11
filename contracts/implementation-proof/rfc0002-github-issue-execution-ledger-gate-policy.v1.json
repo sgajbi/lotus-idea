@@ -333,27 +333,6 @@
       "Issue #814 remains the separate canonical runtime proof blocker",
       "production IdP/session/token-claims authority",
       "supported-feature promotion"
-    ],
-    "950": [
-      "Keep #950 open",
-      "status/pr-open",
-      "PR #951",
-      "refactor/950-ledger-test-posture-evidence",
-      "0dd8d6f7756f2c4198b7126c0e80d523a25bc3ec",
-      "tests/unit/test_github_issue_execution_ledger_gate.py::test_rfc0002_github_issue_execution_ledger_tracks_slice18_posture_evidence",
-      "quality/baseline_report.md",
-      "largest function at 179 lines",
-      "ISSUE_681_SLICE18_POSTURE_FRAGMENTS",
-      "_assert_closure_instruction_contains_fragments",
-      "data-driven assertions",
-      "preserving every lifecycle assertion",
-      "36 passed",
-      "does not change runtime code",
-      "Core, Gateway, Workbench",
-      "authentication",
-      "authorization",
-      "supported-feature posture",
-      "final RFC-0002 closure"
     ]
   },
   "requiredClosedIssueEvidence": {
@@ -407,6 +386,28 @@
       "does not weaken the state audit",
       "production identity/session-token authority",
       "Gateway/Workbench runtime behavior",
+      "final RFC-0002 closure"
+    ],
+    "950": [
+      "Closed #950 after QA passed",
+      "PR #951 merged by rebase",
+      "a2632f02a940ca19fd627a471608fe8fa726a2f9",
+      "31529635948",
+      "31529628828",
+      "tests/unit/test_github_issue_execution_ledger_gate.py::test_rfc0002_github_issue_execution_ledger_tracks_slice18_posture_evidence",
+      "quality/baseline_report.md",
+      "largest function at 179 lines",
+      "ISSUE_681_SLICE18_POSTURE_FRAGMENTS",
+      "_assert_closure_instruction_contains_fragments",
+      "data-driven assertions",
+      "36 passed",
+      "No repo-authored wiki source changed",
+      "git cherry patch-equivalence proof",
+      "does not change runtime code",
+      "Core, Gateway, Workbench",
+      "authentication",
+      "authorization",
+      "supported-feature posture",
       "final RFC-0002 closure"
     ],
     "947": [
