@@ -77,6 +77,21 @@ def test_underperformance_positive_case_creates_reproducible_candidate() -> None
     assert second.candidate is not None
     assert first.signal.family is OpportunityFamily.UNDERPERFORMANCE
     assert first.candidate.candidate_id == second.candidate.candidate_id
+    assert first.signal.source_refs == (source_ref(),)
+    assert first.candidate.evidence_packet.source_refs == first.signal.source_refs
+    assert (
+        first.candidate.evidence_packet.lineage_ref.source_refs
+        == first.candidate.evidence_packet.source_refs
+    )
+    assert (
+        first.candidate.evidence_packet.lineage_ref.content_hash.removeprefix("sha256:")
+        in first.candidate.candidate_id
+    )
+    assert (
+        first.signal.signal_id.removeprefix("signal_underperformance_")
+        in first.candidate.candidate_id
+    )
+    assert first.candidate.source_signal_ids == (first.signal.signal_id,)
     assert first.candidate.lifecycle_status is IdeaLifecycleStatus.GENERATED
     assert first.candidate.review_posture is ReviewPosture.ADVISOR_REVIEW_REQUIRED
     assert first.reason_codes == (
