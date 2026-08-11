@@ -45,8 +45,12 @@ PR `#957` merged by rebase to Idea main at
 `24841f43fd776672c9e19deb7b7e50dfe925060d` from PR head
 `11a924f6c35166062c3a65f49f839fe7f8590777`. Exact-main Main Releasability
 Gate run `31537452298` and exact-main CodeQL push run `31537443335` passed for
-that SHA. GitHub deleted the remote implementation branch during merge, and no
-local or remote `#956` branch remains after pruning.
+that SHA. PR `#958` synchronized merged-main source truth to Idea main at
+`c28962222c64b4e2d57405f3bfa962bc77975deb`; exact-main Main Releasability
+Gate run `31538823333` and exact-main CodeQL push run `31538817255` passed for
+that source-sync SHA. GitHub deleted the implementation and source-sync remote
+branches during merge, no local or remote `#956` branch remains after pruning,
+and issue `#956` is closed with QA evidence.
 
 This is test-support maintainability only. It does not change runtime code,
 API/OpenAPI behavior, proof schemas, Core, Gateway, Workbench, authentication,
