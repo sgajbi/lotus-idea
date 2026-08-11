@@ -11,7 +11,7 @@ from app.application.implementation_proof_artifact_registry import (
     proof_artifact_effect_matches_ref,
 )
 from app.application.source_ingestion_runtime_evidence import (
-    SOURCE_INGESTION_RUNTIME_EXECUTION_ENV,
+    SOURCE_INGESTION_RUNTIME_EXECUTION_ENV as SOURCE_INGESTION_RUNTIME_EXECUTION_ENV,
     source_ingestion_runtime_execution_can_clear_aggregate_blockers,
 )
 from app.application.source_ingestion_scheduler import (
