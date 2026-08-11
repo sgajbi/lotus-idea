@@ -6,6 +6,58 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-08-11: Low-Income Signal Evaluation Domain Boundary
+
+Issue `#932` applies the RFC-0002 Slice 05 and Slice 19 maintainability lens to
+`src/app/domain/low_income_signal.py::evaluate_low_income_signal(...)`. The
+current `make quality-baseline` report listed the function as a `107` line
+production-domain hotspot in the low-income cashflow-pressure evaluator.
+
+The evaluator mixed:
+
+1. evaluation-time validation,
+2. temporal, entitlement, missing-source, and freshness blockers,
+3. duplicate suppression,
+4. cash-movement count and projected cashflow source-value validation,
+5. materiality threshold evaluation,
+6. stable identity construction,
+7. signal, lineage, evidence-packet, score, and candidate assembly.
+
+`src/app/domain/low_income_signal.py` now keeps `LowIncomeSignalPolicy`,
+`LowIncomeSignalInput`, and `evaluate_low_income_signal(...)` public behavior
+stable while extracting named helpers for blocking posture, source cashflow
+materiality, candidate-result assembly, signal construction, evidence-packet
+construction, candidate construction, and missing-source accounting. The
+evaluator now uses the shared timezone and blocked-result helpers used by
+sibling RFC-0002 signal evaluators.
+
+Focused validation passed:
+
+1. `python -m ruff check src/app/domain/low_income_signal.py tests/unit/test_low_income_signal_evaluation.py`,
+2. `python -m ruff format --check src/app/domain/low_income_signal.py tests/unit/test_low_income_signal_evaluation.py`,
+3. `python -m mypy src/app/domain/low_income_signal.py tests/unit/test_low_income_signal_evaluation.py`,
+4. `python -m pytest tests/unit/test_low_income_signal_evaluation.py tests/unit/test_low_income_application.py tests/unit/api_examples/test_low_income_signal_examples.py -q`
+   (`20` passed).
+
+Broader local validation also passed: JSON contract validation, `make
+maintainability-gate`, `make duplicate-implementation-gate`, `make
+quality-baseline`, `make rfc0002-github-issue-execution-ledger-gate`, `make
+rfc0002-github-issue-learning-pattern-gate`, `make
+rfc0002-github-issue-execution-state-audit`, `make
+rfc0002-github-issue-execution-summary`, `make documentation-contract-gate`,
+full `make typecheck`, full `make lint`, and `git diff --check`. The refreshed
+quality baseline no longer lists `evaluate_low_income_signal(...)`.
+
+The focused unit suite now includes an access-scope identity regression proving
+that two private-banking review scopes with identical source evidence produce
+different candidate identities and preserve their candidate access scopes.
+
+This is internal domain maintainability only. It does not change API/OpenAPI
+behavior, Core cashflow or cash-movement source authority, persistence schema,
+migrations, authentication or authorization infrastructure, production
+IdP/session-token authority, Gateway, Workbench, supported-feature promotion,
+runtime topology, wiki source, client publication, or final RFC-0002 closure.
+
 ## 2026-08-11: Manage Mandate Runtime Receipt Reconciliation Boundary
 
 Issue `#926` applies the RFC-0002 Slice 12/13 and Slice 19

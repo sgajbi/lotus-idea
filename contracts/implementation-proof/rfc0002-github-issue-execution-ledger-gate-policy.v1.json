@@ -81,7 +81,8 @@
     920,
     923,
     926,
-    929
+    929,
+    932
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -325,6 +326,25 @@
       "Issue #814 remains the separate canonical runtime proof blocker",
       "production IdP/session/token-claims authority",
       "supported-feature promotion"
+    ],
+    "932": [
+      "Keep #932 open until",
+      "RFC-0002 Slice 05/19 low-income signal evaluator boundary refactor",
+      "evaluate_low_income_signal",
+      "deterministic candidate identity inputs",
+      "access-scope binding",
+      "Core-owned cashflow and cash-movement source authority",
+      "evidence packet semantics",
+      "blocked/suppressed/not-eligible outcomes",
+      "low-income domain/application/API-example tests",
+      "maintainability",
+      "duplicate-implementation",
+      "quality-baseline",
+      "documentation-contract",
+      "internal domain maintainability only",
+      "production IdP/session-token authority",
+      "supported-feature promotion",
+      "final RFC-0002 closure"
     ]
   },
   "requiredClosedIssueEvidence": {

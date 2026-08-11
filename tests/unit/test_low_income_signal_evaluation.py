@@ -12,6 +12,7 @@ from app.domain import (
     LowIncomeSignalPolicy,
     OpportunityFamily,
     ReasonCode,
+    ReviewAccessScope,
     ReviewPosture,
     SignalEvaluationOutcome,
     SourceRef,
@@ -66,6 +67,7 @@ def low_income_input(
     entitlement_allowed: bool = True,
     duplicate_of_candidate_id: str | None = None,
     include_cashflow_projection: bool = True,
+    access_scope: ReviewAccessScope | None = None,
 ) -> LowIncomeSignalInput:
     return LowIncomeSignalInput(
         as_of_date=AS_OF_DATE,
@@ -81,6 +83,7 @@ def low_income_input(
         ),
         evaluated_at_utc=EVALUATED_AT,
         entitlement_allowed=entitlement_allowed,
+        access_scope=access_scope,
         duplicate_of_candidate_id=duplicate_of_candidate_id,
     )
 
@@ -98,6 +101,36 @@ def test_low_income_positive_case_creates_review_candidate() -> None:
     assert first.candidate.lifecycle_status is IdeaLifecycleStatus.GENERATED
     assert first.candidate.review_posture is ReviewPosture.ADVISOR_REVIEW_REQUIRED
     assert first.reason_codes == (ReasonCode.INCOME_ATTENTION, ReasonCode.REVIEW_REQUIRED)
+
+
+def test_low_income_candidate_identity_is_bound_to_access_scope() -> None:
+    private_book_scope = ReviewAccessScope(
+        tenant_id="tenant-a",
+        book_id="private-bank-sg",
+        portfolio_id="PB_SG_GLOBAL_BAL_001",
+        client_id="client-001",
+    )
+    discretionary_book_scope = ReviewAccessScope(
+        tenant_id="tenant-a",
+        book_id="discretionary-book",
+        portfolio_id="PB_SG_GLOBAL_BAL_001",
+        client_id="client-001",
+    )
+
+    private_book = evaluate_low_income_signal(
+        low_income_input(access_scope=private_book_scope),
+        policy(),
+    )
+    discretionary_book = evaluate_low_income_signal(
+        low_income_input(access_scope=discretionary_book_scope),
+        policy(),
+    )
+
+    assert private_book.candidate is not None
+    assert discretionary_book.candidate is not None
+    assert private_book.candidate.access_scope == private_book_scope
+    assert discretionary_book.candidate.access_scope == discretionary_book_scope
+    assert private_book.candidate.candidate_id != discretionary_book.candidate.candidate_id
 
 
 def test_low_income_not_eligible_when_projected_cashflow_above_threshold() -> None:
