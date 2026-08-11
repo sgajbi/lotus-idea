@@ -315,14 +315,21 @@
       "Issue #814 remains the separate canonical runtime proof blocker",
       "production IdP/session/token-claims authority",
       "supported-feature promotion"
-    ],
+    ]
+  },
+  "requiredClosedIssueEvidence": {
     "899": [
-      "Keep #899 open while PR #900 is under review",
-      "Local commit a44ab05c092c8b1d38ee3a420160f98a0599659b",
-      "Local proof passed",
-      "PR-text gate",
+      "Closed #899 after PR #900 merged",
+      "downstream outcome certification payload assembly boundary refactor",
+      "ca2448f34a0a642441f196a6bb9d86f5020ec104",
+      "31463823085",
+      "31463828820",
+      "Feature Lane",
+      "PR Merge Gate",
+      "combined coverage",
+      "Docker build",
+      "CI signal evidence",
       "src/app/application/downstream_outcome_certification.py::build_downstream_outcome_certification_payload",
-      "internal application-layer maintainability",
       "owner-runtime proof assembly",
       "proof-check evaluation",
       "final payload projection",
@@ -330,14 +337,14 @@
       "generated certification payload shape",
       "tracking issue #379",
       "issue379ClosureReady: false",
-      "non-proof claim boundary",
-      "does not implement live downstream owner runtime certification",
+      "No repo-authored wiki source changed",
+      "local branch was deleted after git cherry patch-equivalence proof",
+      "internal application-layer maintainability issue",
+      "does not close or dilute #379",
       "production identity/session-token-claims authority",
       "supported-feature promotion",
       "final RFC-0002 closure"
-    ]
-  },
-  "requiredClosedIssueEvidence": {
+    ],
     "897": [
       "Closed #897 after PR #898 merged",
       "review-queue API route composition boundary refactor",
