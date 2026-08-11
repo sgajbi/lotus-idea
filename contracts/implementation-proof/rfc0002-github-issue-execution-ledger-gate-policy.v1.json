@@ -65,7 +65,8 @@
     874,
     878,
     880,
-    883
+    883,
+    886
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -296,6 +297,15 @@
       "approved non-stub live-provider execution",
       "This issue is not QA-pending",
       "full live journey validation remains blocked"
+    ],
+    "886": [
+      "Keep #886 open",
+      "downstream-capacity seed timestamp-normalization fix",
+      "canonical UTC request timestamp formatting",
+      "fail-closed naive timestamp handling",
+      "does not close #814",
+      "production IdP/session/token-claims authority",
+      "supported-feature promotion"
     ]
   },
   "requiredClosedIssueEvidence": {
