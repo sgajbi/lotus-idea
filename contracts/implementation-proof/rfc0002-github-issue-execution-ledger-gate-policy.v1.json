@@ -93,7 +93,8 @@
     953,
     956,
     960,
-    964
+    964,
+    966
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -362,6 +363,7 @@
     ],
     "964": [
       "Keep #964 open",
+      "open_merged_main_qa_pending/status/merged-main",
       "RFC-0002 Slice 19 PostgreSQL mutating workflow proof helper refactor",
       "make quality-baseline",
       "tests/unit/test_postgres_repository_mutating_workflow.py::_record_mutating_workflow_details",
@@ -371,8 +373,29 @@
       "conversion/report",
       "replay/idempotency precheck",
       "lookup proof",
-      "Do not use GitHub auto-close wording",
+      "PR #965 merged by rebase",
+      "31545494785",
+      "31545490224",
+      "untracked `quality/baseline_report.md`",
+      "No repo-authored wiki source changed",
+      "GitHub auto-close wording remains disallowed",
       "does not claim runtime code changes",
+      "final RFC-0002 closure"
+    ],
+    "966": [
+      "Keep #966 open and status/ready",
+      "RFC-0002 Slice 19 quality-baseline follow-through",
+      "tests/integration/test_postgres_runtime_integration.py::test_postgres_runtime_serializes_conversion_outcome_identity_and_source_version",
+      "largest remaining function at 114 lines",
+      "#648 is related but closed a different PostgreSQL runtime workflow proof",
+      "conversion-intent setup",
+      "conversion-outcome serialization",
+      "source-version identity",
+      "durable reload/query",
+      "quality-baseline",
+      "maintainability gate",
+      "duplicate-implementation gate",
+      "test-support maintainability only",
       "final RFC-0002 closure"
     ]
   },
