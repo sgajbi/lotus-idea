@@ -6,6 +6,73 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-08-11: RFC-0002 Issue State Audit Fetch Completeness
+
+Issue `#944` hardens `scripts/github_issue_execution_state_audit.py` after the
+live state audit omitted older ledger-tracked issue `#340` from the initial
+`gh issue list` result window. GitHub and the source ledger both showed `#340`
+closed with `status/merged-main`; the failure was incomplete audit input, not
+issue lifecycle drift.
+
+The audit still fails on missing GitHub state and missing RFC-label coverage.
+The fetch path now recovers every source-ledger issue omitted by the initial
+list response through targeted `gh issue view` calls before running the strict
+audit. This keeps the gate deterministic as the RFC-0002 issue ledger grows
+without weakening validation.
+
+Focused validation passed:
+
+1. Ruff format/check over the touched audit script and unit test,
+2. MyPy over the touched audit script and unit test,
+3. `python -m pytest tests/unit/test_github_issue_execution_state_audit.py -q`
+   (`11` passed).
+
+This is internal governance-gate reliability only. It does not change GitHub
+lifecycle labels, application runtime behavior, Gateway/Workbench proof,
+production identity/session-token authority, supported-feature promotion, or
+final RFC-0002 closure.
+
+## 2026-08-11: Downstream Realization Readiness Proof Application Boundary
+
+Issue `#943` applies the RFC-0002 Slice 12/13/19 maintainability lens to
+`src/app/application/downstream_realization_readiness.py`. The current
+`make quality-baseline` report listed the file at `1196` lines, one small
+change below the source-file maintainability cap.
+
+The module mixed:
+
+1. readiness DTOs and immutability normalization,
+2. static Advise/Manage/Report capability and contract catalog construction,
+3. repository summary projection,
+4. source-contract supporting-evidence proof application,
+5. runtime-execution blocker-clearing proof application,
+6. blocker aggregation and issue-reference merging,
+7. final readiness snapshot assembly.
+
+`build_downstream_realization_readiness_snapshot(...)` remains the stable
+public application entry point. Readiness DTOs now live in
+`src/app/application/downstream_realization_readiness_models.py`, static
+capability/contract construction lives in
+`src/app/application/downstream_realization_readiness_catalog.py`, and
+source-contract/runtime-execution proof application lives in
+`src/app/application/downstream_realization_readiness_proofs.py`.
+
+Focused validation passed:
+
+1. Ruff check and format over touched source/test files,
+2. MyPy over touched source/test files,
+3. `python -m pytest tests/unit/test_downstream_realization_readiness.py tests/integration/test_downstream_realization_readiness_api.py -q`
+   (`19` passed).
+
+The focused unit suite now proves Advise route source-contract evidence and
+Advise intake runtime-execution evidence compose without clearing Manage or
+owner-authority blockers.
+
+This is internal application-layer maintainability only. It does not change
+API/OpenAPI behavior, persistence schema, migrations, Core/Gateway/Workbench
+behavior, production IdP/session-token authority, supported-feature promotion,
+runtime topology, wiki source, client publication, or final RFC-0002 closure.
+
 ## 2026-08-11: Low-Income Signal Evaluation Domain Boundary
 
 Issue `#932` applies the RFC-0002 Slice 05 and Slice 19 maintainability lens to
