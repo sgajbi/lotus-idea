@@ -639,19 +639,19 @@
       "issueNumber": 890,
       "url": "https://github.com/sgajbi/lotus-idea/issues/890",
       "rfcSlices": ["slice-18"],
-      "githubState": "open",
-      "executionStatus": "open_pr_raised",
-      "allowPullRequestAutoClose": false,
-      "closureInstruction": "PR #891 opened from branch fix/890-review-ledger-closure-sync to synchronize the LI-CR-0120 codebase review ledger row with the already closed #862 / PR #863 merged-main truth and add documentation-contract coverage for stale local/pending review-ledger posture. Keep #890 open until PR checks pass, exact-main validation is recorded, no-wiki-change or wiki-publication evidence is captured, and branch cleanup is complete. This is a bounded RFC-0002 Slice 18 source-truth correction under #681. It must not promote supported features, clear Workbench/Gateway/Core blockers, claim production identity/session/token-claims authority, change runtime behavior, or reopen #862."
+      "githubState": "closed",
+      "executionStatus": "closed_complete",
+      "allowPullRequestAutoClose": true,
+      "closureInstruction": "Closed #890 after PR #891 merged the LI-CR-0120 review-ledger closure synchronization to Idea main at 1e5300786f3509df65b8235b220a90832f474a52. Exact-main Main Releasability run 31457627481 and Push on main run 31457623135 passed for that SHA. Final evidence was recorded on #681 at issuecomment-5248932374. Local exact-main validation passed: RFC-0002 execution ledger gate, live state audit, execution summary, learning-pattern gate, documentation contract gate, maintainability gate, focused unit suite with 71 passed, and git diff --check. No repo-authored wiki source changed, so wiki publication was not required. The remote branch fix/890-review-ledger-closure-sync was deleted by GitHub, and the local branch was deleted after git cherry patch-equivalence proof. This closes only the bounded Slice 18 source-truth correction for LI-CR-0120 and does not promote supported features, clear Workbench/Gateway/Core blockers, claim production identity/session/token-claims authority, change runtime behavior, or reopen #862."
     },
     {
       "issueNumber": 892,
       "url": "https://github.com/sgajbi/lotus-idea/issues/892",
       "rfcSlices": ["slice-18"],
-      "githubState": "open",
-      "executionStatus": "open_pr_raised",
-      "allowPullRequestAutoClose": false,
-      "closureInstruction": "PR #891 expanded from branch fix/890-review-ledger-closure-sync to synchronize the adjacent LI-CR-0115, LI-CR-0116, and LI-CR-0117 codebase review ledger rows with their already closed issue and merged-main PR evidence: #661/#664 via PR #665 at 6b562ac87ca61575c13fefc63b8c688c915da3fc with Main Releasability 29671128884, and #657 via PR #660 at 7aa14e0174b2584110d1d217e31f06c24b1bd153 with Main Releasability 29667502188. Keep #892 open until PR checks pass, exact-main validation is recorded, no-wiki-change or wiki-publication evidence is captured, and branch cleanup is complete. This is a bounded RFC-0002 Slice 18 source-truth correction under #681. It must not promote supported features, clear Workbench/Gateway/Core blockers, claim production identity/session/token-claims authority, change runtime behavior, or reopen #657, #661, or #664."
+      "githubState": "closed",
+      "executionStatus": "closed_complete",
+      "allowPullRequestAutoClose": true,
+      "closureInstruction": "Closed #892 after PR #891 merged the adjacent LI-CR-0115, LI-CR-0116, and LI-CR-0117 review-ledger closure synchronization to Idea main at 1e5300786f3509df65b8235b220a90832f474a52. PR #891 records #661/#664 via PR #665 at 6b562ac87ca61575c13fefc63b8c688c915da3fc with Main Releasability 29671128884, and #657 via PR #660 at 7aa14e0174b2584110d1d217e31f06c24b1bd153 with Main Releasability 29667502188. Exact-main Main Releasability run 31457627481 and Push on main run 31457623135 passed for PR #891's merge SHA. Final evidence was recorded on #681 at issuecomment-5248932374. Local exact-main validation passed: RFC-0002 execution ledger gate, live state audit, execution summary, learning-pattern gate, documentation contract gate, maintainability gate, focused unit suite with 71 passed, and git diff --check. No repo-authored wiki source changed, so wiki publication was not required. The remote branch fix/890-review-ledger-closure-sync was deleted by GitHub, and the local branch was deleted after git cherry patch-equivalence proof. This closes only the bounded Slice 18 source-truth correction for LI-CR-0115 through LI-CR-0117 and does not promote supported features, clear Workbench/Gateway/Core blockers, claim production identity/session/token-claims authority, change runtime behavior, or reopen #657, #661, or #664."
     }
   ]
 }
