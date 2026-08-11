@@ -63,6 +63,24 @@ def _assert_closure_instruction_contains_fragments(
     assert missing_fragments == []
 
 
+EvidenceNoteSignature = tuple[str, ...]
+
+
+def _assert_evidence_notes_contain_signatures(
+    notes: object,
+    signatures: tuple[EvidenceNoteSignature, ...],
+) -> None:
+    assert isinstance(notes, list)
+    note_texts = [note for note in notes if isinstance(note, str)]
+    missing_signatures = [
+        signature
+        for signature in signatures
+        if not any(all(fragment in note for fragment in signature) for note in note_texts)
+    ]
+
+    assert missing_signatures == []
+
+
 ISSUE_681_SLICE18_POSTURE_FRAGMENTS = (
     "Keep #681 open",
     "PR #765 merged the Slice 18 cross-repo issue posture command",
@@ -171,6 +189,111 @@ ISSUE_681_SLICE18_POSTURE_FRAGMENTS = (
     "coordination and documentation truth only",
     "does not clear RFC-0002 blockers",
     "replace production IdP/session/token-claims evidence",
+)
+
+
+ISSUE_681_EVIDENCE_SYNC_NOTE_SIGNATURES: tuple[EvidenceNoteSignature, ...] = (
+    (
+        "PR #798 merged the incident-response operating model",
+        "cfedcc91a5d907e15aa9f50493454eead656b406",
+        "30481301564",
+        "0d075af",
+    ),
+    (
+        "PR #799 synchronized #797 merge evidence",
+        "13300e21c8b27b4f1418240496f423d54d2ced3e",
+        "30483045202",
+        "90680095852",
+        "43 tracked issues, 24 open, and 19 closed",
+    ),
+    (
+        "PR #800 merged the final #797 closed-complete source truth",
+        "4ab19e3a85d4b00fc3daeb5d63d2ce1f98a43740",
+        "30485290281",
+        "issue-797-final-closure-sync",
+        "43 tracked issues, 24 open, and 19 closed",
+    ),
+    (
+        "PR #809 synchronized #807 final QA closure truth",
+        "c340daa01b41097410bbc8a802d9a8d1f9f24135",
+        "30499444726",
+        "44 tracked issues, 24 open, and 20 closed",
+        "0 app-actionable blocked issues",
+    ),
+    (
+        "PR #810 synchronized PR #809 main evidence",
+        "fe7f0efac9fca86a3e19302e8b8436e8941f3d0c",
+        "30500588217",
+        "lotus-idea.wiki commit f0f9293",
+        "sgajbi/lotus-core#836",
+        "sgajbi/lotus-core#840",
+        "0 app-actionable blocked issues",
+    ),
+    (
+        "PR #817 merged this synchronization",
+        "c4c14598be2fa021f7adf9aaf166954ca4f903cf",
+        "30551831675",
+        "30551812269",
+        "lotus-idea.wiki commit 8b36421",
+        "returned to open_in_progress",
+    ),
+    (
+        "PR #819 evidence-sync tranche",
+        "3b2cc0bb4472a158cb4617b277276244c0e4a22b",
+        "30555536256",
+        "30555528134",
+        "strict wiki parity stayed DiffCount 0",
+        "0 app-actionable blocked issues",
+        "keeps #681 and #380 open",
+    ),
+    (
+        "2026-08-02 SGT cross-repo blocker sync",
+        "sgajbi/lotus-core#882",
+        "core_dpm_portfolio_universe_source_batch_fingerprint",
+        "106 label-backed RFC-0002 issues",
+        "5 Core dependencies",
+        "0 app-actionable blocked issues",
+    ),
+    (
+        "PR #838 merged to Idea main",
+        "2c2d35667643ad5efae83924475574ab6c16be03",
+        "30723235065",
+        "lotus-idea.wiki commit ee15dc3",
+        "#681 returned to open_in_progress/status/in-progress",
+        "108 label-backed issues across 13 repositories",
+    ),
+    (
+        "PR #839 merged to Idea main",
+        "71867084c2832d053342db048557e03720a3773a",
+        "30724145516",
+        "91432087325",
+        "lotus-idea.wiki commit c2258e6",
+        "#681 returned to open_in_progress/status/in-progress",
+        "0 PR-open issues",
+    ),
+    (
+        "PR #842 merged the PR #841 evidence-sync tranche",
+        "4e2dd20c3f1b7f17a30eda016e79c62e631b2a2f",
+        "30727100273",
+        "30727098069",
+    ),
+    (
+        "PR #843 merged the RFC-0002 posture snapshot documentation guard",
+        "2ed353b0394a625dd212b437fb93c0d5d4c02a89",
+        "30728039165",
+        "30728037050",
+        "lotus-idea.wiki commit 87dd4e4",
+        "#681 returned to open_in_progress/status/in-progress",
+    ),
+    (
+        "PR #844 merged the PR #843 evidence synchronization",
+        "c21deeb55dcb1d46395c02c95053ab6149ef6ad6",
+        "30728738511",
+        "30728733346",
+        "lotus-idea.wiki commit b47cbcb",
+        "issuecomment-5154685336",
+        "#681 returned to open_in_progress/status/in-progress",
+    ),
 )
 
 
@@ -1003,140 +1126,11 @@ def test_rfc0002_github_issue_execution_ledger_records_issue_681_sync_note() -> 
     module = _load_gate()
     payload = _ledger_payload(module)
 
-    issue_681 = next(
-        issue
-        for issue in payload["issues"]
-        if isinstance(issue, dict) and issue["issueNumber"] == 681
-    )
+    issue_681 = _issue_by_number(payload, 681)
 
-    notes = issue_681.get("evidenceSyncNotes")
-    assert isinstance(notes, list)
-    assert any(
-        isinstance(note, str)
-        and "PR #798 merged the incident-response operating model" in note
-        and "cfedcc91a5d907e15aa9f50493454eead656b406" in note
-        and "30481301564" in note
-        and "0d075af" in note
-        for note in notes
-    )
-    assert any(
-        isinstance(note, str)
-        and "PR #799 synchronized #797 merge evidence" in note
-        and "13300e21c8b27b4f1418240496f423d54d2ced3e" in note
-        and "30483045202" in note
-        and "90680095852" in note
-        and "43 tracked issues, 24 open, and 19 closed" in note
-        for note in notes
-    )
-    assert any(
-        isinstance(note, str)
-        and "PR #800 merged the final #797 closed-complete source truth" in note
-        and "4ab19e3a85d4b00fc3daeb5d63d2ce1f98a43740" in note
-        and "30485290281" in note
-        and "issue-797-final-closure-sync" in note
-        and "43 tracked issues, 24 open, and 19 closed" in note
-        for note in notes
-    )
-    assert any(
-        isinstance(note, str)
-        and "PR #809 synchronized #807 final QA closure truth" in note
-        and "c340daa01b41097410bbc8a802d9a8d1f9f24135" in note
-        and "30499444726" in note
-        and "44 tracked issues, 24 open, and 20 closed" in note
-        and "0 app-actionable blocked issues" in note
-        for note in notes
-    )
-    assert any(
-        isinstance(note, str)
-        and "PR #810 synchronized PR #809 main evidence" in note
-        and "fe7f0efac9fca86a3e19302e8b8436e8941f3d0c" in note
-        and "30500588217" in note
-        and "lotus-idea.wiki commit f0f9293" in note
-        and "sgajbi/lotus-core#836" in note
-        and "sgajbi/lotus-core#840" in note
-        and "0 app-actionable blocked issues" in note
-        for note in notes
-    )
-    assert any(
-        isinstance(note, str)
-        and "PR #817 merged this synchronization" in note
-        and "c4c14598be2fa021f7adf9aaf166954ca4f903cf" in note
-        and "30551831675" in note
-        and "30551812269" in note
-        and "lotus-idea.wiki commit 8b36421" in note
-        and "returned to open_in_progress" in note
-        for note in notes
-    )
-    assert any(
-        isinstance(note, str)
-        and "PR #819 evidence-sync tranche" in note
-        and "3b2cc0bb4472a158cb4617b277276244c0e4a22b" in note
-        and "30555536256" in note
-        and "30555528134" in note
-        and "strict wiki parity stayed DiffCount 0" in note
-        and "0 app-actionable blocked issues" in note
-        and "keeps #681 and #380 open" in note
-        for note in notes
-    )
-    assert any(
-        isinstance(note, str)
-        and "2026-08-02 SGT cross-repo blocker sync" in note
-        and "sgajbi/lotus-core#882" in note
-        and "core_dpm_portfolio_universe_source_batch_fingerprint" in note
-        and "106 label-backed RFC-0002 issues" in note
-        and "5 Core dependencies" in note
-        and "0 app-actionable blocked issues" in note
-        for note in notes
-    )
-    assert any(
-        isinstance(note, str)
-        and "PR #838 merged to Idea main" in note
-        and "2c2d35667643ad5efae83924475574ab6c16be03" in note
-        and "30723235065" in note
-        and "lotus-idea.wiki commit ee15dc3" in note
-        and "#681 returned to open_in_progress/status/in-progress" in note
-        and "108 label-backed issues across 13 repositories" in note
-        for note in notes
-    )
-    assert any(
-        isinstance(note, str)
-        and "PR #839 merged to Idea main" in note
-        and "71867084c2832d053342db048557e03720a3773a" in note
-        and "30724145516" in note
-        and "91432087325" in note
-        and "lotus-idea.wiki commit c2258e6" in note
-        and "#681 returned to open_in_progress/status/in-progress" in note
-        and "0 PR-open issues" in note
-        for note in notes
-    )
-    assert any(
-        isinstance(note, str)
-        and "PR #842 merged the PR #841 evidence-sync tranche" in note
-        and "4e2dd20c3f1b7f17a30eda016e79c62e631b2a2f" in note
-        and "30727100273" in note
-        and "30727098069" in note
-        for note in notes
-    )
-    assert any(
-        isinstance(note, str)
-        and "PR #843 merged the RFC-0002 posture snapshot documentation guard" in note
-        and "2ed353b0394a625dd212b437fb93c0d5d4c02a89" in note
-        and "30728039165" in note
-        and "30728037050" in note
-        and "lotus-idea.wiki commit 87dd4e4" in note
-        and "#681 returned to open_in_progress/status/in-progress" in note
-        for note in notes
-    )
-    assert any(
-        isinstance(note, str)
-        and "PR #844 merged the PR #843 evidence synchronization" in note
-        and "c21deeb55dcb1d46395c02c95053ab6149ef6ad6" in note
-        and "30728738511" in note
-        and "30728733346" in note
-        and "lotus-idea.wiki commit b47cbcb" in note
-        and "issuecomment-5154685336" in note
-        and "#681 returned to open_in_progress/status/in-progress" in note
-        for note in notes
+    _assert_evidence_notes_contain_signatures(
+        issue_681.get("evidenceSyncNotes"),
+        ISSUE_681_EVIDENCE_SYNC_NOTE_SIGNATURES,
     )
 
 
