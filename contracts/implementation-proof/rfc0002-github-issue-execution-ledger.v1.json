@@ -652,6 +652,15 @@
       "executionStatus": "closed_complete",
       "allowPullRequestAutoClose": true,
       "closureInstruction": "Closed #892 after PR #891 merged the adjacent LI-CR-0115, LI-CR-0116, and LI-CR-0117 review-ledger closure synchronization to Idea main at 1e5300786f3509df65b8235b220a90832f474a52. PR #891 records #661/#664 via PR #665 at 6b562ac87ca61575c13fefc63b8c688c915da3fc with Main Releasability 29671128884, and #657 via PR #660 at 7aa14e0174b2584110d1d217e31f06c24b1bd153 with Main Releasability 29667502188. Exact-main Main Releasability run 31457627481 and Push on main run 31457623135 passed for PR #891's merge SHA. Final evidence was recorded on #681 at issuecomment-5248932374. Local exact-main validation passed: RFC-0002 execution ledger gate, live state audit, execution summary, learning-pattern gate, documentation contract gate, maintainability gate, focused unit suite with 71 passed, and git diff --check. No repo-authored wiki source changed, so wiki publication was not required. The remote branch fix/890-review-ledger-closure-sync was deleted by GitHub, and the local branch was deleted after git cherry patch-equivalence proof. This closes only the bounded Slice 18 source-truth correction for LI-CR-0115 through LI-CR-0117 and does not promote supported features, clear Workbench/Gateway/Core blockers, claim production identity/session/token-claims authority, change runtime behavior, or reopen #657, #661, or #664."
+    },
+    {
+      "issueNumber": 894,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/894",
+      "rfcSlices": ["slice-12", "slice-13"],
+      "githubState": "open",
+      "executionStatus": "open_in_progress",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #894 open until the downstream-realization readiness composition boundary refactor is merged, exact-main validated, QA-closed, and source truth is reconciled. The issue is an internal maintainability slice for `src/app/application/downstream_realization_readiness.py::build_downstream_realization_readiness_snapshot`, which the report-only quality baseline lists as a 113-line production orchestration hotspot inside a 1,186-line production file. The slice must preserve downstream readiness API behavior, blocker vocabulary, evidence refs, issue refs, source-of-truth keys, route proof behavior, runtime proof behavior, and supported-feature non-promotion posture. It must not claim Advise, Manage, Report, Render, Archive runtime certification, production identity/session/token-claims authority, API/OpenAPI behavior change, persistence schema change, runtime-service split, supported-feature promotion, or final RFC-0002 closure."
     }
   ]
 }
