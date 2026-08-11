@@ -236,7 +236,7 @@
       "replace production IdP/session/token-claims evidence"
     ],
     "902": [
-      "Keep #902 open for PR review",
+      "Keep #902 open while PR #903 is under review",
       "RFC-0002 Slice 05 domain maintainability",
       "src/app/domain/signal_evaluation.py::evaluate_high_cash_signal",
       "source guard, materiality decision, candidate-created result",
@@ -250,6 +250,7 @@
       "17 passed",
       "quality-baseline refresh",
       "removed from the top-largest production function list",
+      "PR-text gate",
       "reason-code ordering",
       "production identity/session-token authority",
       "supported-feature promotion",
