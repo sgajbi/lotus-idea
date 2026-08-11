@@ -6,6 +6,45 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-08-12: Slice 18 Ledger Posture Evidence Test Fragments
+
+Issue `#950` applies the RFC-0002 Slice 18/19 maintainability lens to
+`tests/unit/test_github_issue_execution_ledger_gate.py`. The quality baseline
+listed `test_rfc0002_github_issue_execution_ledger_tracks_slice18_posture_evidence`
+as the largest function at `179` lines. The test protects #681 source-sync
+evidence, but the inline assertion history was too large for reviewable future
+updates.
+
+The refactor keeps every #681 lifecycle assertion and required evidence
+fragment, but moves the protected evidence strings into
+`ISSUE_681_SLICE18_POSTURE_FRAGMENTS` and verifies them through
+`_assert_closure_instruction_contains_fragments(...)`. The test remains a small
+orchestrator over the same ledger contract.
+
+Focused local validation passed:
+
+1. JSON validation for the RFC-0002 execution ledger, execution-ledger gate
+   policy, and issue-learning-pattern contracts,
+2. `python -m ruff check tests/unit/test_github_issue_execution_ledger_gate.py`,
+3. `python -m ruff format --check tests/unit/test_github_issue_execution_ledger_gate.py`,
+4. `python -m mypy tests/unit/test_github_issue_execution_ledger_gate.py`,
+5. `python -m pytest tests/unit/test_github_issue_execution_ledger_gate.py -q`
+   (`36` passed),
+6. RFC-0002 execution ledger, live issue-state audit, execution summary, and
+   issue-learning-pattern gates,
+7. documentation-contract, quality-baseline, maintainability,
+   duplicate-implementation, and git diff whitespace gates.
+
+The refreshed quality baseline no longer lists the targeted test as the largest
+function; the next largest function is
+`tests/unit/test_cross_repo_issue_posture.py::test_cross_repo_issue_posture_counts_statuses_and_attention_issues`
+at `160` lines.
+
+This is test-support maintainability only. It does not change runtime code,
+API/OpenAPI behavior, proof schemas, Core, Gateway, Workbench, authentication,
+authorization, supported-feature posture, wiki source, or final RFC-0002
+closure.
+
 ## 2026-08-12: Implementation Proof Consumption Registered-Proof Applier
 
 Issue `#947` applies the RFC-0002 Slice 17/19 maintainability lens to

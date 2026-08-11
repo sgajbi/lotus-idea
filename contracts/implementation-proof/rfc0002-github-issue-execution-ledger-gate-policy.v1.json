@@ -88,7 +88,8 @@
     941,
     943,
     944,
-    947
+    947,
+    950
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -332,6 +333,21 @@
       "Issue #814 remains the separate canonical runtime proof blocker",
       "production IdP/session/token-claims authority",
       "supported-feature promotion"
+    ],
+    "950": [
+      "Keep #950 open",
+      "status/in-progress",
+      "tests/unit/test_github_issue_execution_ledger_gate.py::test_rfc0002_github_issue_execution_ledger_tracks_slice18_posture_evidence",
+      "quality/baseline_report.md",
+      "largest function at 179 lines",
+      "data-driven assertions",
+      "preserving every lifecycle assertion",
+      "does not change runtime code",
+      "Core, Gateway, Workbench",
+      "authentication",
+      "authorization",
+      "supported-feature posture",
+      "final RFC-0002 closure"
     ]
   },
   "requiredClosedIssueEvidence": {
