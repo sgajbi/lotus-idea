@@ -268,6 +268,30 @@ def test_ci_contract_gate_blocks_removed_release_publish_retry_budget(
     assert "main-releasability.yml missing `publish_retry_delay_seconds=30`" in errors
 
 
+def test_ci_contract_gate_blocks_removed_release_digest_retry_diagnostic(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    module = _load_ci_contract_gate()
+    workflow_dir = tmp_path / ".github" / "workflows"
+    _copy_workflows(
+        workflow_dir,
+        "main-releasability.yml",
+        (
+            '                echo "Registry digest resolution attempt '
+            '${publish_attempt}/${publish_attempts} failed for $CONTAINER_IMAGE_NAME" >&2\n'
+        ),
+        "",
+    )
+
+    monkeypatch.setattr(module, "WORKFLOWS_DIR", workflow_dir)
+
+    assert (
+        "main-releasability.yml missing `Registry digest resolution attempt "
+        "${publish_attempt}/${publish_attempts} failed for $CONTAINER_IMAGE_NAME`"
+        in module.validate_ci_contract()
+    )
+
+
 def test_ci_contract_gate_blocks_removed_release_digest_fields(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
