@@ -281,8 +281,8 @@
     {
       "patternId": "demo_commercial_and_live_journey_claims",
       "title": "Demo readiness, commercial proof, canonical archetypes, and full live journey claims must be implementation-backed end to end.",
-      "currentLedgerIssueNumbers": [679, 699, 902],
-      "relatedIssueNumbers": [701, 702, 880],
+      "currentLedgerIssueNumbers": [679, 699],
+      "relatedIssueNumbers": [701, 702, 880, 902],
       "rfcSlices": ["slice-05", "slice-16", "slice-17"],
       "durableControls": [
         {
