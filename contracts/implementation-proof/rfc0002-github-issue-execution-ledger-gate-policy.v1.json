@@ -326,30 +326,6 @@
       "Issue #814 remains the separate canonical runtime proof blocker",
       "production IdP/session/token-claims authority",
       "supported-feature promotion"
-    ],
-    "932": [
-      "Keep #932 open with status/pr-open",
-      "PR #933",
-      "refactor/932-low-income-signal-boundary",
-      "stable implementation commit",
-      "fba81c2f48080381f958eb90308df90793798a11",
-      "RFC-0002 Slice 05/19 low-income signal evaluator boundary refactor",
-      "evaluate_low_income_signal",
-      "deterministic candidate identity inputs",
-      "access-scope binding",
-      "Core-owned cashflow and cash-movement source authority",
-      "evidence packet semantics",
-      "blocked/suppressed/not-eligible outcomes",
-      "low-income domain/application/API-example tests",
-      "full make lint",
-      "maintainability",
-      "duplicate-implementation",
-      "quality-baseline",
-      "documentation-contract",
-      "internal domain maintainability only",
-      "production IdP/session-token authority",
-      "supported-feature promotion",
-      "final RFC-0002 closure"
     ]
   },
   "requiredClosedIssueEvidence": {
@@ -915,6 +891,33 @@
       "Issue #379 remains the live downstream certification authority",
       "production IdP/session-token-claims",
       "supported-feature promotion"
+    ],
+    "932": [
+      "Closed #932 after PR #933 merged",
+      "RFC-0002 Slice 05/19 low-income signal evaluator domain-boundary refactor",
+      "c56c4aa0e7a558a6110b7ab81465b890bda563c6",
+      "4af3d9373c6ac4fd3fdb8166bd14bae4e1625142",
+      "31501670883",
+      "31501662661",
+      "Feature Lane run 31500954806 completed successfully",
+      "evaluate_low_income_signal",
+      "deterministic candidate identity inputs",
+      "access-scope binding",
+      "Core-owned cashflow and cash-movement source authority",
+      "evidence packet semantics",
+      "blocked/suppressed/not-eligible outcomes",
+      "20 low-income domain/application/API-example tests",
+      "maintainability",
+      "duplicate-implementation",
+      "quality-baseline",
+      "No repo-authored wiki source changed",
+      "git cherry patch-equivalence proof",
+      "internal domain maintainability hardening",
+      "API/OpenAPI behavior changes",
+      "production IdP/session-token authority",
+      "Gateway or Workbench proof",
+      "supported-feature promotion",
+      "final RFC-0002 closure"
     ]
   }
 }
