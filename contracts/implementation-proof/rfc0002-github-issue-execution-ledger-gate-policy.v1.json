@@ -318,25 +318,36 @@
       "Issue #814 remains the separate canonical runtime proof blocker",
       "production IdP/session/token-claims authority",
       "supported-feature promotion"
-    ],
+    ]
+  },
+  "requiredClosedIssueEvidence": {
     "908": [
-      "Keep #908 open while the RFC-0002 Slice 19 underperformance signal evaluator maintainability refactor is in PR/open validation",
-      "behavior-preserving domain decomposition",
-      "focused underperformance unit proof",
+      "Closed #908 after PR #909 merged",
+      "RFC-0002 Slice 19 underperformance signal evaluator maintainability refactor",
+      "6197a1393af9b2c789f4d51f70b3c39de8257306",
+      "612a62a326fbbe2800da4811c90b8f7f584eb61c",
+      "31472472905",
+      "31472462397",
+      "Feature Lane",
+      "PR Merge Gate",
+      "CodeQL",
+      "Queue Auto Merge",
+      "evaluate_underperformance_signal",
+      "validation, source references, bounded active-return materiality, signal, lineage, evidence-packet, and candidate construction",
+      "targeted unit and integration proof",
       "maintainability",
       "duplicate-implementation",
       "quality-baseline",
-      "exact-main Main Releasability",
-      "CodeQL",
-      "No-wiki-change or wiki publication decision",
+      "No repo-authored wiki source changed",
+      "local branch was deleted after git cherry patch-equivalence proof",
+      "internal maintainability closure",
       "live Performance source certification",
+      "Core benchmark assignment closure",
       "Gateway/Workbench runtime proof",
       "production identity/session-token authority",
       "supported-feature promotion",
       "final RFC-0002 closure"
-    ]
-  },
-  "requiredClosedIssueEvidence": {
+    ],
     "899": [
       "Closed #899 after PR #900 merged",
       "downstream outcome certification payload assembly boundary refactor",
