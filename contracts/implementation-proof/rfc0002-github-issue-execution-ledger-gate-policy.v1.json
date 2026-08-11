@@ -324,16 +324,6 @@
       "Issue #814 remains the separate canonical runtime proof blocker",
       "production IdP/session/token-claims authority",
       "supported-feature promotion"
-    ],
-    "926": [
-      "Keep #926 open",
-      "PR #927",
-      "Manage mandate runtime receipt reconciliation",
-      "_receipts_reconcile",
-      "v3 Manage mandate runtime proof schema",
-      "#379 production/certification blocker",
-      "must not implement authentication or authorization",
-      "supported-feature promotion"
     ]
   },
   "requiredClosedIssueEvidence": {
@@ -850,6 +840,27 @@
       "internal application-layer maintainability issue",
       "does not claim Advise, Manage, Report, Render, Archive runtime certification",
       "production identity/session-token-claims authority",
+      "supported-feature promotion"
+    ],
+    "926": [
+      "Closed #926 after PR #927 merged",
+      "17aba428572ef38fb30b8a0bec16e2b77eaae85b",
+      "79fa5b7cfa347e39ee77e5c3f1cf2920a26672d9",
+      "31493352525",
+      "31493345202",
+      "Manage mandate runtime receipt reconciliation",
+      "_receipts_reconcile",
+      "request-scope reconciliation",
+      "Manage temporal identity reconciliation",
+      "Performance/Risk source receipt qualification",
+      "source-ref digest reconciliation",
+      "action-register supportability",
+      "allocation-drift outcome validation",
+      "58 focused unit tests",
+      "No repo-authored wiki source changed",
+      "internal proof-contract maintainability hardening",
+      "Issue #379 remains the live downstream certification authority",
+      "production IdP/session-token-claims",
       "supported-feature promotion"
     ]
   }
