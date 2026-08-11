@@ -6,6 +6,48 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-08-11: Manage Mandate Runtime Receipt Reconciliation Boundary
+
+Issue `#926` applies the RFC-0002 Slice 12/13 and Slice 19
+maintainability lens to
+`src/app/application/manage_mandate_runtime_evidence/contract.py::_receipts_reconcile(...)`.
+The current `make quality-baseline` report listed the function as a `108` line
+production hotspot in the closed v3 Lotus Manage mandate runtime-evidence
+contract.
+
+The validator mixed:
+
+1. Idea request scope and evaluated-at reconciliation,
+2. Manage temporal receipt identity reconciliation,
+3. Performance and Risk mandate-health source receipt qualification,
+4. upstream and aggregate source-ref digest reconstruction,
+5. action-register supportability and count checks,
+6. allocation-drift outcome and candidate-identity rules.
+
+`src/app/application/manage_mandate_runtime_evidence/contract.py` now keeps the
+public `manage_mandate_runtime_execution_is_valid(...)` behavior and schema
+stable while extracting named helpers for request scope, action temporal
+identity, source receipt qualification, source-ref digest reconciliation,
+action-register supportability, and allocation-drift outcome validation. The
+original receipt reconciliation function is now a short coordinator over those
+proof-contract responsibilities.
+
+Focused validation passed:
+
+1. `python -m ruff check src/app/application/manage_mandate_runtime_evidence/contract.py tests/unit/manage_mandate_runtime_evidence/test_runtime_execution.py`,
+2. `python -m ruff format --check src/app/application/manage_mandate_runtime_evidence/contract.py tests/unit/manage_mandate_runtime_evidence/test_runtime_execution.py`,
+3. `python -m mypy src/app/application/manage_mandate_runtime_evidence/contract.py`,
+4. `python -m pytest tests/unit/manage_mandate_runtime_evidence/test_runtime_execution.py -q`
+   (`58` passed).
+
+This is internal proof-contract maintainability only. It does not change
+API/OpenAPI behavior, persistence schema, migrations, authentication or
+authorization infrastructure, production IdP/session/token-claims authority,
+Core, Gateway, Workbench, downstream live certification, Report/Render/Archive
+authority, supported-feature promotion, client publication, runtime topology,
+wiki source, or final RFC-0002 closure. Issue `#379` remains the live
+downstream certification authority.
+
 ## 2026-08-11: Outbox Delivery Application Orchestration Boundary
 
 Issue `#914` applies the RFC-0002 Slice 15 maintainability lens to
