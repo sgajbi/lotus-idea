@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from datetime import datetime
-from typing import Mapping
+from typing import Any, Mapping
 
 from fastapi import FastAPI, Header, Query, status
 from fastapi.responses import JSONResponse
@@ -28,6 +28,7 @@ from app.application.implementation_proof_models import (
     ImplementationProofReadinessSnapshot,
 )
 from app.application.implementation_proof_readiness import (
+    ImplementationProofReadinessProofInputs,
     build_implementation_proof_readiness_snapshot,
 )
 from app.api.problem_details import problem_details_response as problem_response
@@ -223,103 +224,173 @@ def _build_readiness_snapshot_from_configured_artifacts(
         evaluated_at_utc=evaluated_at_utc,
         repository=repository,
         durable_storage_backed=durable_storage_backed,
-        source_ingestion_runtime_execution=(proof_artifacts.source_ingestion_runtime_execution),
-        source_ingestion_runtime_execution_ref=(
+        proof_inputs=_proof_inputs_from_configured_artifacts(proof_artifacts),
+    )
+
+
+def _proof_inputs_from_configured_artifacts(
+    proof_artifacts: ConfiguredImplementationProofArtifacts,
+) -> ImplementationProofReadinessProofInputs:
+    proof_values: dict[str, Any] = {}
+    proof_values.update(_source_ingestion_proof_values(proof_artifacts))
+    proof_values.update(_repository_runtime_ai_proof_values(proof_artifacts))
+    proof_values.update(_downstream_owner_proof_values(proof_artifacts))
+    proof_values.update(_workbench_gateway_proof_values(proof_artifacts))
+    proof_values.update(_core_source_proof_values(proof_artifacts))
+    return ImplementationProofReadinessProofInputs(**proof_values)
+
+
+def _source_ingestion_proof_values(
+    proof_artifacts: ConfiguredImplementationProofArtifacts,
+) -> dict[str, Any]:
+    return {
+        "source_ingestion_runtime_execution": (proof_artifacts.source_ingestion_runtime_execution),
+        "source_ingestion_runtime_execution_ref": (
             proof_artifacts.source_ingestion_runtime_execution_ref
         ),
-        source_ingestion_scheduled_worker_source_contract_ref=(
+        "source_ingestion_scheduled_worker_source_contract_ref": (
             proof_artifacts.source_ingestion_scheduled_worker_source_contract_ref
         ),
-        source_ingestion_scheduled_worker_deployment_evidence_ref=(
+        "source_ingestion_scheduled_worker_deployment_evidence_ref": (
             proof_artifacts.source_ingestion_scheduled_worker_deployment_evidence_ref
         ),
-        durable_repository_proof=proof_artifacts.durable_repository_proof,
-        durable_repository_proof_ref=proof_artifacts.durable_repository_proof_ref,
-        runtime_trust_telemetry_test_execution=proof_artifacts.runtime_trust_telemetry_test_execution,
-        runtime_trust_telemetry_test_execution_ref=proof_artifacts.runtime_trust_telemetry_test_execution_ref,
-        ai_lineage_store_proof=proof_artifacts.ai_lineage_store_proof,
-        ai_lineage_store_proof_ref=proof_artifacts.ai_lineage_store_proof_ref,
-        ai_model_risk_operations_proof=proof_artifacts.ai_model_risk_operations_proof,
-        ai_model_risk_operations_proof_ref=proof_artifacts.ai_model_risk_operations_proof_ref,
-        operator_workflows_operations_proof=proof_artifacts.operator_workflows_operations_proof,
-        operator_workflows_operations_proof_ref=(
+    }
+
+
+def _repository_runtime_ai_proof_values(
+    proof_artifacts: ConfiguredImplementationProofArtifacts,
+) -> dict[str, Any]:
+    return {
+        "durable_repository_proof": proof_artifacts.durable_repository_proof,
+        "durable_repository_proof_ref": proof_artifacts.durable_repository_proof_ref,
+        "runtime_trust_telemetry_test_execution": (
+            proof_artifacts.runtime_trust_telemetry_test_execution
+        ),
+        "runtime_trust_telemetry_test_execution_ref": (
+            proof_artifacts.runtime_trust_telemetry_test_execution_ref
+        ),
+        "ai_lineage_store_proof": proof_artifacts.ai_lineage_store_proof,
+        "ai_lineage_store_proof_ref": proof_artifacts.ai_lineage_store_proof_ref,
+        "ai_model_risk_operations_proof": proof_artifacts.ai_model_risk_operations_proof,
+        "ai_model_risk_operations_proof_ref": proof_artifacts.ai_model_risk_operations_proof_ref,
+        "operator_workflows_operations_proof": (
+            proof_artifacts.operator_workflows_operations_proof
+        ),
+        "operator_workflows_operations_proof_ref": (
             proof_artifacts.operator_workflows_operations_proof_ref
         ),
-        ai_workflow_pack_registration_proof=proof_artifacts.ai_workflow_pack_registration_proof,
-        ai_workflow_pack_registration_proof_ref=(
+        "ai_workflow_pack_registration_proof": (
+            proof_artifacts.ai_workflow_pack_registration_proof
+        ),
+        "ai_workflow_pack_registration_proof_ref": (
             proof_artifacts.ai_workflow_pack_registration_proof_ref
         ),
-        ai_workflow_pack_runtime_execution_proof=(
+        "ai_workflow_pack_runtime_execution_proof": (
             proof_artifacts.ai_workflow_pack_runtime_execution_proof
         ),
-        ai_workflow_pack_runtime_execution_proof_ref=(
+        "ai_workflow_pack_runtime_execution_proof_ref": (
             proof_artifacts.ai_workflow_pack_runtime_execution_proof_ref
         ),
-        advise_intake_runtime_execution_proof=(
-            proof_artifacts.advise_intake_runtime_execution_proof
+        "platform_catalog_source_contract_proof": (
+            proof_artifacts.platform_catalog_source_contract
         ),
-        advise_intake_runtime_execution_proof_ref=(
-            proof_artifacts.advise_intake_runtime_execution_proof_ref
-        ),
-        manage_intake_runtime_execution_proof=(
-            proof_artifacts.manage_intake_runtime_execution_proof
-        ),
-        manage_intake_runtime_execution_proof_ref=(
-            proof_artifacts.manage_intake_runtime_execution_proof_ref
-        ),
-        outbox_broker_source_contract_proof=proof_artifacts.outbox_broker_source_contract_proof,
-        outbox_broker_source_contract_proof_ref=(
-            proof_artifacts.outbox_broker_source_contract_proof_ref
-        ),
-        outbox_broker_runtime_execution_proof=(
-            proof_artifacts.outbox_broker_runtime_execution_proof
-        ),
-        outbox_broker_runtime_execution_proof_ref=(
-            proof_artifacts.outbox_broker_runtime_execution_proof_ref
-        ),
-        outbox_platform_mesh_event_source_contract_proof=(
-            proof_artifacts.outbox_platform_mesh_event_source_contract_proof
-        ),
-        outbox_platform_mesh_event_source_contract_proof_ref=(
-            proof_artifacts.outbox_platform_mesh_event_source_contract_proof_ref
-        ),
-        report_intake_route_source_contract_proof=proof_artifacts.report_intake_route_source_contract_proof,
-        report_intake_route_source_contract_proof_ref=proof_artifacts.report_intake_route_source_contract_proof_ref,
-        report_materialization_runtime_execution_proof=(
-            proof_artifacts.report_materialization_runtime_execution_proof
-        ),
-        report_materialization_runtime_execution_proof_ref=(
-            proof_artifacts.report_materialization_runtime_execution_proof_ref
-        ),
-        platform_catalog_source_contract_proof=proof_artifacts.platform_catalog_source_contract,
-        platform_catalog_source_contract_proof_ref=(
+        "platform_catalog_source_contract_proof_ref": (
             proof_artifacts.platform_catalog_source_contract_ref
         ),
-        workbench_read_path_source_contract_proof=(
+    }
+
+
+def _downstream_owner_proof_values(
+    proof_artifacts: ConfiguredImplementationProofArtifacts,
+) -> dict[str, Any]:
+    return {
+        "advise_intake_runtime_execution_proof": (
+            proof_artifacts.advise_intake_runtime_execution_proof
+        ),
+        "advise_intake_runtime_execution_proof_ref": (
+            proof_artifacts.advise_intake_runtime_execution_proof_ref
+        ),
+        "manage_intake_runtime_execution_proof": (
+            proof_artifacts.manage_intake_runtime_execution_proof
+        ),
+        "manage_intake_runtime_execution_proof_ref": (
+            proof_artifacts.manage_intake_runtime_execution_proof_ref
+        ),
+        "report_intake_route_source_contract_proof": (
+            proof_artifacts.report_intake_route_source_contract_proof
+        ),
+        "report_intake_route_source_contract_proof_ref": (
+            proof_artifacts.report_intake_route_source_contract_proof_ref
+        ),
+        "report_materialization_runtime_execution_proof": (
+            proof_artifacts.report_materialization_runtime_execution_proof
+        ),
+        "report_materialization_runtime_execution_proof_ref": (
+            proof_artifacts.report_materialization_runtime_execution_proof_ref
+        ),
+        "outbox_broker_source_contract_proof": (
+            proof_artifacts.outbox_broker_source_contract_proof
+        ),
+        "outbox_broker_source_contract_proof_ref": (
+            proof_artifacts.outbox_broker_source_contract_proof_ref
+        ),
+        "outbox_broker_runtime_execution_proof": (
+            proof_artifacts.outbox_broker_runtime_execution_proof
+        ),
+        "outbox_broker_runtime_execution_proof_ref": (
+            proof_artifacts.outbox_broker_runtime_execution_proof_ref
+        ),
+        "outbox_platform_mesh_event_source_contract_proof": (
+            proof_artifacts.outbox_platform_mesh_event_source_contract_proof
+        ),
+        "outbox_platform_mesh_event_source_contract_proof_ref": (
+            proof_artifacts.outbox_platform_mesh_event_source_contract_proof_ref
+        ),
+    }
+
+
+def _workbench_gateway_proof_values(
+    proof_artifacts: ConfiguredImplementationProofArtifacts,
+) -> dict[str, Any]:
+    return {
+        "workbench_read_path_source_contract_proof": (
             proof_artifacts.workbench_read_path_source_contract_proof
         ),
-        workbench_read_path_source_contract_proof_ref=(
+        "workbench_read_path_source_contract_proof_ref": (
             proof_artifacts.workbench_read_path_source_contract_proof_ref
         ),
-        gateway_workbench_contract_proof=proof_artifacts.gateway_workbench_contract_proof,
-        gateway_workbench_contract_proof_ref=(proof_artifacts.gateway_workbench_contract_proof_ref),
-        gateway_workbench_discovery_contract_proof=proof_artifacts.gateway_workbench_discovery_contract_proof,
-        gateway_workbench_discovery_contract_proof_ref=(
+        "gateway_workbench_contract_proof": proof_artifacts.gateway_workbench_contract_proof,
+        "gateway_workbench_contract_proof_ref": (
+            proof_artifacts.gateway_workbench_contract_proof_ref
+        ),
+        "gateway_workbench_discovery_contract_proof": (
+            proof_artifacts.gateway_workbench_discovery_contract_proof
+        ),
+        "gateway_workbench_discovery_contract_proof_ref": (
             proof_artifacts.gateway_workbench_discovery_contract_proof_ref
         ),
-        gateway_workbench_runtime_execution_proof=(
+        "gateway_workbench_runtime_execution_proof": (
             proof_artifacts.gateway_workbench_runtime_execution_proof
         ),
-        gateway_workbench_runtime_execution_proof_ref=(
+        "gateway_workbench_runtime_execution_proof_ref": (
             proof_artifacts.gateway_workbench_runtime_execution_proof_ref
         ),
-        bond_maturity_live_proof=proof_artifacts.bond_maturity_live_proof,
-        bond_maturity_live_proof_ref=proof_artifacts.bond_maturity_live_proof_ref,
-        low_income_core_cashflow_live_proof=proof_artifacts.low_income_core_cashflow_live_proof,
-        low_income_core_cashflow_live_proof_ref=(
+    }
+
+
+def _core_source_proof_values(
+    proof_artifacts: ConfiguredImplementationProofArtifacts,
+) -> dict[str, Any]:
+    return {
+        "bond_maturity_live_proof": proof_artifacts.bond_maturity_live_proof,
+        "bond_maturity_live_proof_ref": proof_artifacts.bond_maturity_live_proof_ref,
+        "low_income_core_cashflow_live_proof": (
+            proof_artifacts.low_income_core_cashflow_live_proof
+        ),
+        "low_income_core_cashflow_live_proof_ref": (
             proof_artifacts.low_income_core_cashflow_live_proof_ref
         ),
-    )
+    }
 
 
 IMPLEMENTATION_PROOF_READINESS_ROUTE: RouteMetadata = {
