@@ -658,9 +658,9 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/894",
       "rfcSlices": ["slice-12", "slice-13"],
       "githubState": "open",
-      "executionStatus": "open_in_progress",
+      "executionStatus": "open_pr_raised",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #894 open until the downstream-realization readiness composition boundary refactor is merged, exact-main validated, QA-closed, and source truth is reconciled. The issue is an internal maintainability slice for `src/app/application/downstream_realization_readiness.py::build_downstream_realization_readiness_snapshot`, which the report-only quality baseline lists as a 113-line production orchestration hotspot inside a 1,186-line production file. The slice must preserve downstream readiness API behavior, blocker vocabulary, evidence refs, issue refs, source-of-truth keys, route proof behavior, runtime proof behavior, and supported-feature non-promotion posture. It must not claim Advise, Manage, Report, Render, Archive runtime certification, production identity/session/token-claims authority, API/OpenAPI behavior change, persistence schema change, runtime-service split, supported-feature promotion, or final RFC-0002 closure."
+      "closureInstruction": "PR #895 is open on branch refactor/894-downstream-readiness-boundary for the downstream-realization readiness composition boundary refactor. Keep #894 open until PR #895 is merged, exact-main validated, QA-closed, and source truth is reconciled. The issue is an internal maintainability slice for `src/app/application/downstream_realization_readiness.py::build_downstream_realization_readiness_snapshot`, which the report-only quality baseline listed as a 113-line production orchestration hotspot inside a 1,186-line production file. The slice preserves downstream readiness API behavior, blocker vocabulary, evidence refs, issue refs, source-of-truth keys, route proof behavior, runtime proof behavior, and supported-feature non-promotion posture. It must not claim Advise, Manage, Report, Render, Archive runtime certification, production identity/session/token-claims authority, API/OpenAPI behavior change, persistence schema change, runtime-service split, supported-feature promotion, or final RFC-0002 closure."
     }
   ]
 }
