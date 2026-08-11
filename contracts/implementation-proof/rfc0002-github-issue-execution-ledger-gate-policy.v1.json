@@ -87,7 +87,8 @@
     937,
     941,
     943,
-    944
+    944,
+    947
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -318,6 +319,21 @@
       "approved non-stub live-provider execution",
       "This issue is not QA-pending",
       "full live journey validation remains blocked"
+    ],
+    "947": [
+      "Keep #947 open",
+      "refactor/947-proof-consumption-appliers",
+      "src/app/application/implementation_proof_consumption.py",
+      "registered-proof validation",
+      "capability-mapping pattern",
+      "proof-artifact effect checks",
+      "72 passed",
+      "does not unblock external dependencies",
+      "does not implement authentication or authorization",
+      "does not change Core/Gateway/Workbench",
+      "does not alter proof schemas",
+      "does not promote supported features",
+      "does not complete final RFC-0002 closure"
     ],
     "886": [
       "Keep #886 open for QA closure",
