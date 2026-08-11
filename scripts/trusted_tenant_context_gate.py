@@ -54,12 +54,29 @@ def validate_trusted_tenant_context(root: Path = ROOT) -> list[str]:
     if errors:
         return sorted(errors)
 
+    _validate_access_scope_contract(errors, texts)
+    _validate_core_source_port_contract(errors, texts)
+    _validate_core_adapter_contract(errors, texts)
+    _validate_core_application_contracts(errors, texts)
+    _validate_source_ingestion_contract(errors, texts)
+    _validate_signal_api_support_contract(errors, texts)
+    _validate_api_base_model_contract(errors, texts)
+    _validate_observability_contract(errors, texts)
+    _validate_core_api_contracts(errors, texts)
+    _validate_required_test_contracts(errors, texts)
+    return sorted(errors)
+
+
+def _validate_access_scope_contract(errors: list[str], texts: dict[Path, str]) -> None:
     _require_fragments(
         errors,
         ACCESS_SCOPE_MODULE,
         texts[ACCESS_SCOPE_MODULE],
         ("def tenant_portfolio_scope", "tenant_id=tenant_id", '"tenant_id is required"'),
     )
+
+
+def _validate_core_source_port_contract(errors: list[str], texts: dict[Path, str]) -> None:
     _require_fragments(
         errors,
         CORE_PORT_MODULE,
@@ -71,6 +88,8 @@ def validate_trusted_tenant_context(root: Path = ROOT) -> list[str]:
         ),
     )
 
+
+def _validate_core_adapter_contract(errors: list[str], texts: dict[Path, str]) -> None:
     adapter_text = texts[CORE_ADAPTER_MODULE]
     if '"tenant_id": "default"' in adapter_text:
         errors.append(
@@ -81,6 +100,8 @@ def validate_trusted_tenant_context(root: Path = ROOT) -> list[str]:
             f"{CORE_ADAPTER_MODULE.as_posix()}: both tenant-aware Core snapshot payloads must use the request tenant"
         )
 
+
+def _validate_core_application_contracts(errors: list[str], texts: dict[Path, str]) -> None:
     for relative_path in CORE_APPLICATION_MODULES:
         text = texts[relative_path]
         _require_fragments(
@@ -94,6 +115,8 @@ def validate_trusted_tenant_context(root: Path = ROOT) -> list[str]:
                 f"{relative_path.as_posix()}: Core-backed candidate scope must not discard tenant context"
             )
 
+
+def _validate_source_ingestion_contract(errors: list[str], texts: dict[Path, str]) -> None:
     _require_fragments(
         errors,
         SOURCE_INGESTION_MODULE,
@@ -104,6 +127,9 @@ def validate_trusted_tenant_context(root: Path = ROOT) -> list[str]:
             "{tenant_id}:{portfolio_id}:{as_of_date.isoformat()}",
         ),
     )
+
+
+def _validate_signal_api_support_contract(errors: list[str], texts: dict[Path, str]) -> None:
     _require_fragments(
         errors,
         SIGNAL_API_SUPPORT_MODULE,
@@ -115,18 +141,27 @@ def validate_trusted_tenant_context(root: Path = ROOT) -> list[str]:
             "attributes=event_attributes",
         ),
     )
+
+
+def _validate_api_base_model_contract(errors: list[str], texts: dict[Path, str]) -> None:
     _require_fragments(
         errors,
         API_BASE_MODEL_MODULE,
         texts[API_BASE_MODEL_MODULE],
         ('ConfigDict(populate_by_name=True, extra="forbid")',),
     )
+
+
+def _validate_observability_contract(errors: list[str], texts: dict[Path, str]) -> None:
     _require_fragments(
         errors,
         OBSERVABILITY_MODULE,
         texts[OBSERVABILITY_MODULE],
         ('"tenant_id"', '"tenant_ids"'),
     )
+
+
+def _validate_core_api_contracts(errors: list[str], texts: dict[Path, str]) -> None:
     for relative_path in CORE_API_MODULES:
         _require_fragments(
             errors,
@@ -135,6 +170,8 @@ def validate_trusted_tenant_context(root: Path = ROOT) -> list[str]:
             ("require_tenant_context=True", "trusted caller context", "candidate access scope"),
         )
 
+
+def _validate_required_test_contracts(errors: list[str], texts: dict[Path, str]) -> None:
     test_fragments = {
         Path("tests/unit/test_high_cash_application.py"): (
             "test_core_backed_high_cash_candidate_identity_is_isolated_by_tenant",
@@ -155,7 +192,6 @@ def validate_trusted_tenant_context(root: Path = ROOT) -> list[str]:
     }
     for relative_path, fragments in test_fragments.items():
         _require_fragments(errors, relative_path, texts[relative_path], fragments)
-    return sorted(errors)
 
 
 def _read_required_files(root: Path, errors: list[str]) -> dict[Path, str]:
