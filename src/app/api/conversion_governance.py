@@ -14,13 +14,12 @@ from app.api.conversion_governance_models import (
     ConversionPersistenceSummaryResponse,
 )
 from app.api.conversion_governance_operations import (
-    ConversionCallerHeaders,
-    emit_conversion_operation_event,
-    error_code_from_conversion_decision,
-    operation_outcome_from_conversion_decision,
-    permission_denied,
+    build_conversion_caller_headers,
+    conversion_invalid_request_response,
+    conversion_invalid_state_response,
+    conversion_permission_denied_response,
+    emit_conversion_persistence_event_or_problem,
     prepare_conversion_mutation,
-    problem_for_conversion_persistence,
 )
 from app.api.durable_write_guard import durable_repository_write_unavailable_metadata
 from app.api.event_lineage import EventCausationHeader, event_lineage_from_request
@@ -45,8 +44,7 @@ from app.domain import (
     InvalidConversionIntent,
     InvalidConversionOutcome,
 )
-from app.api.problem_details import problem_details_response as problem_response
-from app.observability import IdeaOperation, OperationOutcome
+from app.observability import IdeaOperation
 from app.security.caller_context import PermissionDeniedError
 
 _CONVERSION_INTENT_CAPABILITY = "idea.conversion.intent.record"
@@ -97,7 +95,7 @@ async def record_conversion_intent(
 ) -> ConversionIntentApiResponse | JSONResponse:
     try:
         context = prepare_conversion_mutation(
-            headers=ConversionCallerHeaders(
+            headers=build_conversion_caller_headers(
                 subject=x_caller_subject,
                 roles=x_caller_roles,
                 capabilities=x_caller_capabilities,
@@ -128,58 +126,35 @@ async def record_conversion_intent(
             repository=context.repository,
         )
     except PermissionDeniedError:
-        emit_conversion_operation_event(
-            IdeaOperation.CONVERSION_INTENT,
-            OperationOutcome.PERMISSION_DENIED,
-            error_code="permission_denied",
+        return conversion_permission_denied_response(
+            operation=IdeaOperation.CONVERSION_INTENT,
+            detail="The caller is not permitted to record idea conversion intents.",
         )
-        return permission_denied("The caller is not permitted to record idea conversion intents.")
     except ConversionAccessScopeDenied:
-        emit_conversion_operation_event(
-            IdeaOperation.CONVERSION_INTENT,
-            OperationOutcome.PERMISSION_DENIED,
-            error_code="permission_denied",
+        return conversion_permission_denied_response(
+            operation=IdeaOperation.CONVERSION_INTENT,
+            detail="The caller is not permitted to record idea conversion intents.",
         )
-        return permission_denied("The caller is not permitted to record idea conversion intents.")
     except InvalidConversionIntent:
-        emit_conversion_operation_event(
-            IdeaOperation.CONVERSION_INTENT,
-            OperationOutcome.INVALID_STATE,
-            error_code="conversion_intent_conflict",
-        )
-        return problem_response(
-            status_code=status.HTTP_409_CONFLICT,
+        return conversion_invalid_state_response(
+            operation=IdeaOperation.CONVERSION_INTENT,
             code="conversion_intent_conflict",
             title="Conversion intent conflict",
             detail="The conversion intent is not valid for the current idea candidate state.",
         )
     except ValueError:
-        emit_conversion_operation_event(
-            IdeaOperation.CONVERSION_INTENT,
-            OperationOutcome.INVALID_REQUEST,
-            error_code="invalid_request",
-        )
-        return problem_response(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            code="invalid_request",
-            title="Invalid request",
+        return conversion_invalid_request_response(
+            operation=IdeaOperation.CONVERSION_INTENT,
             detail="Correct the conversion intent request and retry.",
         )
 
-    problem = problem_for_conversion_persistence(result.persistence)
-    if problem is not None:
-        emit_conversion_operation_event(
-            IdeaOperation.CONVERSION_INTENT,
-            operation_outcome_from_conversion_decision(result.persistence.decision),
-            error_code=error_code_from_conversion_decision(result.persistence.decision),
-            durable_storage_backed=context.durable_storage_backed,
-        )
-        return problem
-    emit_conversion_operation_event(
-        IdeaOperation.CONVERSION_INTENT,
-        operation_outcome_from_conversion_decision(result.persistence.decision),
+    problem = emit_conversion_persistence_event_or_problem(
+        operation=IdeaOperation.CONVERSION_INTENT,
+        result=result.persistence,
         durable_storage_backed=context.durable_storage_backed,
     )
+    if problem is not None:
+        return problem
     return ConversionIntentApiResponse(
         conversionIntent=(
             ConversionIntentResponse.from_domain(result.conversion_result.conversion_intent)
@@ -212,7 +187,7 @@ async def record_conversion_outcome(
 ) -> ConversionOutcomeApiResponse | JSONResponse:
     try:
         context = prepare_conversion_mutation(
-            headers=ConversionCallerHeaders(
+            headers=build_conversion_caller_headers(
                 subject=x_caller_subject,
                 roles=x_caller_roles,
                 capabilities=x_caller_capabilities,
@@ -241,51 +216,30 @@ async def record_conversion_outcome(
             repository=context.repository,
         )
     except PermissionDeniedError:
-        emit_conversion_operation_event(
-            IdeaOperation.CONVERSION_OUTCOME,
-            OperationOutcome.PERMISSION_DENIED,
-            error_code="permission_denied",
+        return conversion_permission_denied_response(
+            operation=IdeaOperation.CONVERSION_OUTCOME,
+            detail="The caller is not permitted to record idea conversion outcomes.",
         )
-        return permission_denied("The caller is not permitted to record idea conversion outcomes.")
     except InvalidConversionOutcome:
-        emit_conversion_operation_event(
-            IdeaOperation.CONVERSION_OUTCOME,
-            OperationOutcome.INVALID_STATE,
-            error_code="conversion_outcome_conflict",
-        )
-        return problem_response(
-            status_code=status.HTTP_409_CONFLICT,
+        return conversion_invalid_state_response(
+            operation=IdeaOperation.CONVERSION_OUTCOME,
             code="conversion_outcome_conflict",
             title="Conversion outcome conflict",
             detail="The conversion outcome is not valid for the recorded conversion intent.",
         )
     except ValueError:
-        emit_conversion_operation_event(
-            IdeaOperation.CONVERSION_OUTCOME,
-            OperationOutcome.INVALID_REQUEST,
-            error_code="invalid_request",
-        )
-        return problem_response(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            code="invalid_request",
-            title="Invalid request",
+        return conversion_invalid_request_response(
+            operation=IdeaOperation.CONVERSION_OUTCOME,
             detail="Correct the conversion outcome request and retry.",
         )
 
-    problem = problem_for_conversion_persistence(result.persistence)
-    if problem is not None:
-        emit_conversion_operation_event(
-            IdeaOperation.CONVERSION_OUTCOME,
-            operation_outcome_from_conversion_decision(result.persistence.decision),
-            error_code=error_code_from_conversion_decision(result.persistence.decision),
-            durable_storage_backed=context.durable_storage_backed,
-        )
-        return problem
-    emit_conversion_operation_event(
-        IdeaOperation.CONVERSION_OUTCOME,
-        operation_outcome_from_conversion_decision(result.persistence.decision),
+    problem = emit_conversion_persistence_event_or_problem(
+        operation=IdeaOperation.CONVERSION_OUTCOME,
+        result=result.persistence,
         durable_storage_backed=context.durable_storage_backed,
     )
+    if problem is not None:
+        return problem
     return ConversionOutcomeApiResponse(
         conversionOutcome=(
             ConversionOutcomeResponse.from_domain(result.outcome_result.conversion_outcome)

@@ -62,7 +62,8 @@
     864,
     866,
     871,
-    874
+    874,
+    878
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -293,6 +294,19 @@
       "approved non-stub live-provider execution",
       "This issue is not QA-pending",
       "full live journey validation remains blocked"
+    ],
+    "878": [
+      "Keep #878 open",
+      "conversion-governance mutation plumbing refactor",
+      "route contracts",
+      "OpenAPI metadata",
+      "trusted caller context",
+      "idempotency",
+      "durable-write",
+      "operation-event",
+      "non-claim behavior",
+      "does not promote supported features",
+      "does not promote supported features, clear Gateway/Workbench runtime proof"
     ]
   },
   "requiredClosedIssueEvidence": {
