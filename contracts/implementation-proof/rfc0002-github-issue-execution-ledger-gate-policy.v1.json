@@ -77,7 +77,8 @@
     908,
     911,
     914,
-    917
+    917,
+    920
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -86,6 +87,28 @@
     "source-controlled ledger/docs/wiki/context update is required"
   ],
   "requiredOpenIssueEvidence": {
+    "920": [
+      "Keep #920 open",
+      "trusted tenant-context gate validation-boundary refactor",
+      "validate_trusted_tenant_context",
+      "access-scope",
+      "Core source-port",
+      "Core adapter",
+      "Core-backed application",
+      "source-ingestion identity",
+      "signal API support",
+      "API base-model",
+      "observability",
+      "Core API route",
+      "required-test coverage",
+      "source-safe error semantics",
+      "does not implement production authentication",
+      "public API/OpenAPI behavior",
+      "trusted-caller policy",
+      "production IdP/session/token-claims authority",
+      "supported-feature promotion",
+      "final RFC-0002 closure"
+    ],
     "343": [
       "Keep #343 open and status/blocked",
       "versioned DR contract",
