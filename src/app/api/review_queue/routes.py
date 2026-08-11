@@ -60,6 +60,7 @@ from app.observability import (
 )
 from app.security.caller_context import (
     CapabilityPolicy,
+    CallerContext,
     PermissionDeniedError,
     require_role_and_capability,
 )
@@ -135,6 +136,64 @@ def _get_business_review_queue(
     audience: ReviewQueueAudience,
     permission_policy: CapabilityPolicy,
 ) -> BusinessReviewQueueResponse | JSONResponse:
+    caller_or_problem = _authorized_review_queue_caller(
+        request,
+        audience=audience,
+        permission_policy=permission_policy,
+    )
+    if isinstance(caller_or_problem, JSONResponse):
+        return caller_or_problem
+
+    resolved_evaluated_at_utc = _resolved_review_queue_evaluation_time(request)
+    if isinstance(resolved_evaluated_at_utc, JSONResponse):
+        return resolved_evaluated_at_utc
+
+    effective_scope_filter = _effective_review_queue_access_scope(
+        request,
+        caller=caller_or_problem,
+        audience=audience,
+    )
+    if isinstance(effective_scope_filter, JSONResponse):
+        return effective_scope_filter
+
+    repository = get_idea_repository()
+    durable_storage_backed = idea_repository_durable_storage_backed(repository)
+    try:
+        queue = build_review_queue_from_repository(
+            _review_queue_command(
+                request,
+                audience=audience,
+                evaluated_at_utc=resolved_evaluated_at_utc,
+                access_scope_filter=effective_scope_filter,
+            ),
+            repository=repository,
+        )
+    except (
+        InvalidReviewQueueSnapshotTokenError,
+        ReviewQueueSnapshotConflictError,
+        ReviewQueueSnapshotTokenRequiredError,
+    ) as error:
+        return _review_queue_snapshot_problem(
+            error,
+            audience=audience,
+            durable_storage_backed=durable_storage_backed,
+        )
+    _emit_review_queue_operation_event(
+        OperationOutcome.ACCEPTED,
+        durable_storage_backed=durable_storage_backed,
+    )
+    return BusinessReviewQueueResponse.from_domain(
+        queue,
+        durable_storage_backed=durable_storage_backed,
+    )
+
+
+def _authorized_review_queue_caller(
+    request: ReviewQueueRequest,
+    *,
+    audience: ReviewQueueAudience,
+    permission_policy: CapabilityPolicy,
+) -> CallerContext | JSONResponse:
     try:
         caller = caller_context_from_headers(
             subject=request.caller_subject,
@@ -170,9 +229,24 @@ def _get_business_review_queue(
             title="Permission denied",
             detail=_queue_permission_denied_detail(audience),
         )
+    return caller
+
+
+def _resolved_review_queue_evaluation_time(
+    request: ReviewQueueRequest,
+) -> datetime | JSONResponse:
     resolved_evaluated_at_utc = request.evaluated_at_utc or ACTIVE_REVIEW_QUEUE_EVALUATED_AT_UTC
     if not is_timezone_aware(resolved_evaluated_at_utc):
         return _invalid_review_queue_evaluation_time_problem()
+    return resolved_evaluated_at_utc
+
+
+def _effective_review_queue_access_scope(
+    request: ReviewQueueRequest,
+    *,
+    caller: CallerContext,
+    audience: ReviewQueueAudience,
+) -> QueueAccessScopeFilter | None | JSONResponse:
     try:
         requested_scope_filter = QueueAccessScopeFilter(
             tenant_id=request.tenant_id,
@@ -206,40 +280,23 @@ def _get_business_review_queue(
             title="Permission denied",
             detail=_queue_scope_permission_denied_detail(audience),
         )
+    return None if effective_scope_filter.is_empty else effective_scope_filter
 
-    repository = get_idea_repository()
-    durable_storage_backed = idea_repository_durable_storage_backed(repository)
-    try:
-        queue = build_review_queue_from_repository(
-            BuildReviewQueueFromRepositoryCommand(
-                evaluated_at_utc=resolved_evaluated_at_utc,
-                audience=audience,
-                limit=request.limit,
-                offset=request.offset,
-                snapshot_token=request.snapshot_token,
-                access_scope_filter=(
-                    None if effective_scope_filter.is_empty else effective_scope_filter
-                ),
-            ),
-            repository=repository,
-        )
-    except (
-        InvalidReviewQueueSnapshotTokenError,
-        ReviewQueueSnapshotConflictError,
-        ReviewQueueSnapshotTokenRequiredError,
-    ) as error:
-        return _review_queue_snapshot_problem(
-            error,
-            audience=audience,
-            durable_storage_backed=durable_storage_backed,
-        )
-    _emit_review_queue_operation_event(
-        OperationOutcome.ACCEPTED,
-        durable_storage_backed=durable_storage_backed,
-    )
-    return BusinessReviewQueueResponse.from_domain(
-        queue,
-        durable_storage_backed=durable_storage_backed,
+
+def _review_queue_command(
+    request: ReviewQueueRequest,
+    *,
+    audience: ReviewQueueAudience,
+    evaluated_at_utc: datetime,
+    access_scope_filter: QueueAccessScopeFilter | None,
+) -> BuildReviewQueueFromRepositoryCommand:
+    return BuildReviewQueueFromRepositoryCommand(
+        evaluated_at_utc=evaluated_at_utc,
+        audience=audience,
+        limit=request.limit,
+        offset=request.offset,
+        snapshot_token=request.snapshot_token,
+        access_scope_filter=access_scope_filter,
     )
 
 

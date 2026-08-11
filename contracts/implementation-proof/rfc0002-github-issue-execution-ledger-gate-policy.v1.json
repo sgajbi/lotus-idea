@@ -69,7 +69,8 @@
     886,
     890,
     892,
-    894
+    894,
+    897
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -313,6 +314,22 @@
       "Issue #814 remains the separate canonical runtime proof blocker",
       "production IdP/session/token-claims authority",
       "supported-feature promotion"
+    ],
+    "897": [
+      "Keep #897 open while the review-queue API route composition boundary refactor is in progress",
+      "src/app/api/review_queue/routes.py::_get_business_review_queue",
+      "112 lines",
+      "internal API maintainability only",
+      "caller-context construction",
+      "role/capability authorization",
+      "evaluation-time validation",
+      "entitlement-scope resolution",
+      "snapshot-token ProblemDetails handling",
+      "preserving public route behavior",
+      "supported-feature non-promotion",
+      "Gateway/Workbench runtime proof",
+      "production identity/session-token-claims authority",
+      "final RFC-0002 closure"
     ]
   },
   "requiredClosedIssueEvidence": {
