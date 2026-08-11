@@ -295,28 +295,6 @@
       "approved non-stub live-provider execution",
       "This issue is not QA-pending",
       "full live journey validation remains blocked"
-    ],
-    "878": [
-      "Keep #878 open",
-      "conversion-governance mutation plumbing refactor",
-      "route contracts",
-      "OpenAPI metadata",
-      "trusted caller context",
-      "idempotency",
-      "durable-write",
-      "operation-event",
-      "non-claim behavior",
-      "does not promote supported features",
-      "does not promote supported features, clear Gateway/Workbench runtime proof"
-    ],
-    "880": [
-      "Keep #880 open",
-      "bond-maturity domain policy refactor",
-      "evaluate_bond_maturity_signal",
-      "identity, signal, lineage, evidence packet, and candidate construction",
-      "focused domain tests",
-      "does not promote the bond-maturity archetype to supported feature",
-      "does not clear live Core source proof"
     ]
   },
   "requiredClosedIssueEvidence": {
@@ -485,6 +463,37 @@
       "90 closed and 38 open",
       "does not close #681",
       "does not promote supported features"
+    ],
+    "878": [
+      "Closed #878 after QA passed",
+      "conversion-governance mutation plumbing refactor",
+      "route contracts",
+      "OpenAPI metadata",
+      "trusted caller context",
+      "idempotency",
+      "durable-write",
+      "operation-event",
+      "non-claim behavior",
+      "c0547718e231eaa1ed61ff7da7db7d4378a6274c",
+      "31447684811",
+      "ead2b1f437a8b05576ced7deb629713e72732cd9",
+      "31448704170",
+      "45 focused tests",
+      "does not promote supported features",
+      "clear Gateway/Workbench runtime proof"
+    ],
+    "880": [
+      "Closed #880 after QA passed",
+      "bond-maturity domain policy refactor",
+      "evaluate_bond_maturity_signal",
+      "identity, signal, lineage, evidence packet, and candidate construction",
+      "45 focused tests",
+      "c0547718e231eaa1ed61ff7da7db7d4378a6274c",
+      "31447684811",
+      "ead2b1f437a8b05576ced7deb629713e72732cd9",
+      "31448704170",
+      "does not promote the bond-maturity archetype to supported feature",
+      "live Core source proof"
     ]
   }
 }
