@@ -316,9 +316,10 @@
       "supported-feature promotion"
     ],
     "897": [
-      "Keep #897 open while the review-queue API route composition boundary refactor is in progress",
+      "Keep #897 open while PR #898 is under review",
       "src/app/api/review_queue/routes.py::_get_business_review_queue",
       "112 lines",
+      "reduced to 56 lines",
       "internal API maintainability only",
       "caller-context construction",
       "role/capability authorization",
