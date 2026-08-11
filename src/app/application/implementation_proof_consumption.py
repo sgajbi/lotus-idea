@@ -341,34 +341,26 @@ def _apply_storage_and_runtime_proofs(
     runtime_trust_telemetry_test_execution: Mapping[str, object] | None,
     runtime_trust_telemetry_test_execution_ref: str | None,
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
-    if _registered_proof_is_valid_and_current(
-        "durable_repository_proof",
-        ProofArtifactEffect.BLOCKER_CLEARING,
-        durable_repository_proof,
-        durable_repository_proof_ref,
+    capabilities = _apply_registered_capability_proof_if_current(
+        capabilities=capabilities,
         evaluated_at_utc=evaluated_at_utc,
+        proof_key="durable_repository_proof",
+        effect=ProofArtifactEffect.BLOCKER_CLEARING,
+        proof=durable_repository_proof,
+        proof_ref=durable_repository_proof_ref,
         proof_is_valid=durable_repository_proof_is_valid,
-    ):
-        capabilities = tuple(
-            _apply_durable_repository_proof(capability, durable_repository_proof_ref)
-            for capability in capabilities
-        )
-    if _registered_proof_is_valid_and_current(
-        "runtime_trust_telemetry_test_execution",
-        ProofArtifactEffect.SUPPORTING_EVIDENCE,
-        runtime_trust_telemetry_test_execution,
-        runtime_trust_telemetry_test_execution_ref,
+        apply_proof=_apply_durable_repository_proof,
+    )
+    return _apply_registered_capability_proof_if_current(
+        capabilities=capabilities,
         evaluated_at_utc=evaluated_at_utc,
+        proof_key="runtime_trust_telemetry_test_execution",
+        effect=ProofArtifactEffect.SUPPORTING_EVIDENCE,
+        proof=runtime_trust_telemetry_test_execution,
+        proof_ref=runtime_trust_telemetry_test_execution_ref,
         proof_is_valid=runtime_trust_telemetry_test_execution_is_valid,
-    ):
-        capabilities = tuple(
-            _apply_runtime_trust_telemetry_test_execution(
-                capability,
-                runtime_trust_telemetry_test_execution_ref,
-            )
-            for capability in capabilities
-        )
-    return capabilities
+        apply_proof=_apply_runtime_trust_telemetry_test_execution,
+    )
 
 
 def _apply_ai_proofs(
@@ -384,61 +376,46 @@ def _apply_ai_proofs(
     ai_workflow_pack_runtime_execution_proof: Mapping[str, object] | None,
     ai_workflow_pack_runtime_execution_proof_ref: str | None,
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
-    if _registered_proof_is_valid_and_current(
-        "ai_lineage_store_proof",
-        ProofArtifactEffect.BLOCKER_CLEARING,
-        ai_lineage_store_proof,
-        ai_lineage_store_proof_ref,
+    capabilities = _apply_registered_capability_proof_if_current(
+        capabilities=capabilities,
         evaluated_at_utc=evaluated_at_utc,
+        proof_key="ai_lineage_store_proof",
+        effect=ProofArtifactEffect.BLOCKER_CLEARING,
+        proof=ai_lineage_store_proof,
+        proof_ref=ai_lineage_store_proof_ref,
         proof_is_valid=ai_lineage_store_proof_is_valid,
-    ):
-        capabilities = tuple(
-            _apply_ai_lineage_store_proof(capability, ai_lineage_store_proof_ref)
-            for capability in capabilities
-        )
-    if _registered_proof_is_valid_and_current(
-        "ai_model_risk_operations_proof",
-        ProofArtifactEffect.SUPPORTING_EVIDENCE,
-        ai_model_risk_operations_proof,
-        ai_model_risk_operations_proof_ref,
+        apply_proof=_apply_ai_lineage_store_proof,
+    )
+    capabilities = _apply_registered_capability_proof_if_current(
+        capabilities=capabilities,
         evaluated_at_utc=evaluated_at_utc,
+        proof_key="ai_model_risk_operations_proof",
+        effect=ProofArtifactEffect.SUPPORTING_EVIDENCE,
+        proof=ai_model_risk_operations_proof,
+        proof_ref=ai_model_risk_operations_proof_ref,
         proof_is_valid=ai_model_risk_operations_proof_is_valid,
-    ):
-        capabilities = tuple(
-            _apply_ai_model_risk_operations_proof(capability, ai_model_risk_operations_proof_ref)
-            for capability in capabilities
-        )
-    if _registered_proof_is_valid_and_current(
-        "ai_workflow_pack_registration_proof",
-        ProofArtifactEffect.SUPPORTING_EVIDENCE,
-        ai_workflow_pack_registration_proof,
-        ai_workflow_pack_registration_proof_ref,
+        apply_proof=_apply_ai_model_risk_operations_proof,
+    )
+    capabilities = _apply_registered_capability_proof_if_current(
+        capabilities=capabilities,
         evaluated_at_utc=evaluated_at_utc,
+        proof_key="ai_workflow_pack_registration_proof",
+        effect=ProofArtifactEffect.SUPPORTING_EVIDENCE,
+        proof=ai_workflow_pack_registration_proof,
+        proof_ref=ai_workflow_pack_registration_proof_ref,
         proof_is_valid=ai_workflow_pack_registration_proof_is_valid,
-    ):
-        capabilities = tuple(
-            _apply_ai_workflow_pack_registration_proof(
-                capability,
-                ai_workflow_pack_registration_proof_ref,
-            )
-            for capability in capabilities
-        )
-    if _registered_proof_is_valid_and_current(
-        "ai_workflow_pack_runtime_execution_proof",
-        ProofArtifactEffect.BLOCKER_CLEARING,
-        ai_workflow_pack_runtime_execution_proof,
-        ai_workflow_pack_runtime_execution_proof_ref,
+        apply_proof=_apply_ai_workflow_pack_registration_proof,
+    )
+    return _apply_registered_capability_proof_if_current(
+        capabilities=capabilities,
         evaluated_at_utc=evaluated_at_utc,
+        proof_key="ai_workflow_pack_runtime_execution_proof",
+        effect=ProofArtifactEffect.BLOCKER_CLEARING,
+        proof=ai_workflow_pack_runtime_execution_proof,
+        proof_ref=ai_workflow_pack_runtime_execution_proof_ref,
         proof_is_valid=ai_workflow_pack_runtime_execution_proof_is_valid,
-    ):
-        capabilities = tuple(
-            _apply_ai_workflow_pack_runtime_execution_proof(
-                capability,
-                ai_workflow_pack_runtime_execution_proof_ref,
-            )
-            for capability in capabilities
-        )
-    return capabilities
+        apply_proof=_apply_ai_workflow_pack_runtime_execution_proof,
+    )
 
 
 def _apply_downstream_proofs(
@@ -543,22 +520,15 @@ def _apply_downstream_supporting_proof_if_current(
     proof_ref: str | None,
     proof_is_valid: ProofValidator,
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
-    if not _registered_proof_is_valid_and_current(
-        proof_key,
-        ProofArtifactEffect.SUPPORTING_EVIDENCE,
-        proof,
-        proof_ref,
+    return _apply_registered_capability_proof_if_current(
+        capabilities=capabilities,
         evaluated_at_utc=evaluated_at_utc,
+        proof_key=proof_key,
+        effect=ProofArtifactEffect.SUPPORTING_EVIDENCE,
+        proof=proof,
+        proof_ref=proof_ref,
         proof_is_valid=proof_is_valid,
-    ):
-        return capabilities
-    return tuple(
-        apply_supporting_evidence(
-            capability,
-            capability_ids=("downstream-realization",),
-            evidence_ref=proof_ref,
-        )
-        for capability in capabilities
+        apply_proof=_apply_downstream_realization_supporting_evidence,
     )
 
 
@@ -572,6 +542,40 @@ def _apply_downstream_blocker_proof_if_current(
     proof_is_valid: ProofValidator,
     apply_proof: CapabilityProofApplier,
     effect: ProofArtifactEffect = ProofArtifactEffect.BLOCKER_CLEARING,
+) -> tuple[ImplementationProofCapabilityReadiness, ...]:
+    return _apply_registered_capability_proof_if_current(
+        capabilities=capabilities,
+        evaluated_at_utc=evaluated_at_utc,
+        proof_key=proof_key,
+        effect=effect,
+        proof=proof,
+        proof_ref=proof_ref,
+        proof_is_valid=proof_is_valid,
+        apply_proof=apply_proof,
+    )
+
+
+def _apply_downstream_realization_supporting_evidence(
+    capability: ImplementationProofCapabilityReadiness,
+    proof_ref: str | None,
+) -> ImplementationProofCapabilityReadiness:
+    return apply_supporting_evidence(
+        capability,
+        capability_ids=("downstream-realization",),
+        evidence_ref=proof_ref,
+    )
+
+
+def _apply_registered_capability_proof_if_current(
+    *,
+    capabilities: tuple[ImplementationProofCapabilityReadiness, ...],
+    evaluated_at_utc: datetime,
+    proof_key: str,
+    effect: ProofArtifactEffect,
+    proof: Mapping[str, object] | None,
+    proof_ref: str | None,
+    proof_is_valid: ProofValidator,
+    apply_proof: CapabilityProofApplier,
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
     if not _registered_proof_is_valid_and_current(
         proof_key,
@@ -614,21 +618,16 @@ def _apply_platform_and_surface_proofs(
     operator_workflows_operations_proof: Mapping[str, object] | None,
     operator_workflows_operations_proof_ref: str | None,
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
-    if _registered_proof_is_valid_and_current(
-        "mesh_policy_source_contract_proof",
-        ProofArtifactEffect.SUPPORTING_EVIDENCE,
-        mesh_policy_source_contract_proof,
-        mesh_policy_source_contract_proof_ref,
+    capabilities = _apply_registered_capability_proof_if_current(
+        capabilities=capabilities,
         evaluated_at_utc=evaluated_at_utc,
+        proof_key="mesh_policy_source_contract_proof",
+        effect=ProofArtifactEffect.SUPPORTING_EVIDENCE,
+        proof=mesh_policy_source_contract_proof,
+        proof_ref=mesh_policy_source_contract_proof_ref,
         proof_is_valid=mesh_policy_source_contract_is_valid,
-    ):
-        capabilities = tuple(
-            _apply_mesh_policy_source_contract(
-                capability,
-                mesh_policy_source_contract_proof_ref,
-            )
-            for capability in capabilities
-        )
+        apply_proof=_apply_mesh_policy_source_contract,
+    )
     capabilities = apply_outbox_proofs(
         capabilities=capabilities,
         evaluated_at_utc=evaluated_at_utc,
@@ -692,67 +691,46 @@ def _apply_workbench_proofs(
     gateway_workbench_runtime_execution_proof: Mapping[str, object] | None,
     gateway_workbench_runtime_execution_proof_ref: str | None,
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
-    if _registered_proof_is_valid_and_current(
-        "workbench_read_path_source_contract_proof",
-        ProofArtifactEffect.SUPPORTING_EVIDENCE,
-        workbench_read_path_source_contract_proof,
-        workbench_read_path_source_contract_proof_ref,
+    capabilities = _apply_registered_capability_proof_if_current(
+        capabilities=capabilities,
         evaluated_at_utc=evaluated_at_utc,
+        proof_key="workbench_read_path_source_contract_proof",
+        effect=ProofArtifactEffect.SUPPORTING_EVIDENCE,
+        proof=workbench_read_path_source_contract_proof,
+        proof_ref=workbench_read_path_source_contract_proof_ref,
         proof_is_valid=workbench_read_path_source_contract_proof_is_valid,
-    ):
-        capabilities = tuple(
-            _apply_workbench_read_path_source_contract(
-                capability,
-                workbench_read_path_source_contract_proof_ref,
-            )
-            for capability in capabilities
-        )
-    if _registered_proof_is_valid_and_current(
-        "gateway_workbench_contract_proof",
-        ProofArtifactEffect.SUPPORTING_EVIDENCE,
-        gateway_workbench_contract_proof,
-        gateway_workbench_contract_proof_ref,
+        apply_proof=_apply_workbench_read_path_source_contract,
+    )
+    capabilities = _apply_registered_capability_proof_if_current(
+        capabilities=capabilities,
         evaluated_at_utc=evaluated_at_utc,
+        proof_key="gateway_workbench_contract_proof",
+        effect=ProofArtifactEffect.SUPPORTING_EVIDENCE,
+        proof=gateway_workbench_contract_proof,
+        proof_ref=gateway_workbench_contract_proof_ref,
         proof_is_valid=gateway_workbench_contract_proof_is_valid,
-    ):
-        capabilities = tuple(
-            _apply_gateway_workbench_contract_proof(
-                capability,
-                gateway_workbench_contract_proof_ref,
-            )
-            for capability in capabilities
-        )
-    if _registered_proof_is_valid_and_current(
-        "gateway_workbench_discovery_contract_proof",
-        ProofArtifactEffect.SUPPORTING_EVIDENCE,
-        gateway_workbench_discovery_contract_proof,
-        gateway_workbench_discovery_contract_proof_ref,
+        apply_proof=_apply_gateway_workbench_contract_proof,
+    )
+    capabilities = _apply_registered_capability_proof_if_current(
+        capabilities=capabilities,
         evaluated_at_utc=evaluated_at_utc,
+        proof_key="gateway_workbench_discovery_contract_proof",
+        effect=ProofArtifactEffect.SUPPORTING_EVIDENCE,
+        proof=gateway_workbench_discovery_contract_proof,
+        proof_ref=gateway_workbench_discovery_contract_proof_ref,
         proof_is_valid=gateway_workbench_discovery_contract_proof_is_valid,
-    ):
-        capabilities = tuple(
-            _apply_gateway_workbench_discovery_contract_proof(
-                capability,
-                gateway_workbench_discovery_contract_proof_ref,
-            )
-            for capability in capabilities
-        )
-    if _registered_proof_is_valid_and_current(
-        "gateway_workbench_runtime_execution_proof",
-        ProofArtifactEffect.BLOCKER_CLEARING,
-        gateway_workbench_runtime_execution_proof,
-        gateway_workbench_runtime_execution_proof_ref,
+        apply_proof=_apply_gateway_workbench_discovery_contract_proof,
+    )
+    return _apply_registered_capability_proof_if_current(
+        capabilities=capabilities,
         evaluated_at_utc=evaluated_at_utc,
+        proof_key="gateway_workbench_runtime_execution_proof",
+        effect=ProofArtifactEffect.BLOCKER_CLEARING,
+        proof=gateway_workbench_runtime_execution_proof,
+        proof_ref=gateway_workbench_runtime_execution_proof_ref,
         proof_is_valid=gateway_workbench_runtime_execution_proof_is_valid,
-    ):
-        capabilities = tuple(
-            _apply_gateway_workbench_runtime_execution_proof(
-                capability,
-                gateway_workbench_runtime_execution_proof_ref,
-            )
-            for capability in capabilities
-        )
-    return capabilities
+        apply_proof=_apply_gateway_workbench_runtime_execution_proof,
+    )
 
 
 def _apply_platform_catalog_source_contract_if_valid(
@@ -762,18 +740,15 @@ def _apply_platform_catalog_source_contract_if_valid(
     proof: Mapping[str, object] | None,
     proof_ref: str | None,
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
-    if not _registered_proof_is_valid_and_current(
-        "platform_catalog_source_contract_proof",
-        ProofArtifactEffect.BLOCKER_CLEARING,
-        proof,
-        proof_ref,
+    return _apply_registered_capability_proof_if_current(
+        capabilities=capabilities,
         evaluated_at_utc=evaluated_at_utc,
+        proof_key="platform_catalog_source_contract_proof",
+        effect=ProofArtifactEffect.BLOCKER_CLEARING,
+        proof=proof,
+        proof_ref=proof_ref,
         proof_is_valid=platform_catalog_source_contract_is_valid,
-    ):
-        return capabilities
-    return tuple(
-        _apply_platform_catalog_source_contract(capability, proof_ref)
-        for capability in capabilities
+        apply_proof=_apply_platform_catalog_source_contract,
     )
 
 
@@ -784,20 +759,15 @@ def _apply_operator_workflows_operations_proof_if_valid(
     operator_workflows_operations_proof: Mapping[str, object] | None,
     operator_workflows_operations_proof_ref: str | None,
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
-    if not _registered_proof_is_valid_and_current(
-        "operator_workflows_operations_proof",
-        ProofArtifactEffect.SUPPORTING_EVIDENCE,
-        operator_workflows_operations_proof,
-        operator_workflows_operations_proof_ref,
+    return _apply_registered_capability_proof_if_current(
+        capabilities=capabilities,
         evaluated_at_utc=evaluated_at_utc,
+        proof_key="operator_workflows_operations_proof",
+        effect=ProofArtifactEffect.SUPPORTING_EVIDENCE,
+        proof=operator_workflows_operations_proof,
+        proof_ref=operator_workflows_operations_proof_ref,
         proof_is_valid=operator_workflows_operations_proof_is_valid,
-    ):
-        return capabilities
-    return tuple(
-        _apply_operator_workflows_operations_source_contract(
-            capability, operator_workflows_operations_proof_ref
-        )
-        for capability in capabilities
+        apply_proof=_apply_operator_workflows_operations_source_contract,
     )
 
 

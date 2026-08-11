@@ -6,6 +6,38 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-08-12: Implementation Proof Consumption Registered-Proof Applier
+
+Issue `#947` applies the RFC-0002 Slice 17/19 maintainability lens to
+`src/app/application/implementation_proof_consumption.py`. The current
+quality baseline keeps that module in the largest production-file list, and
+inspection showed repeated local branches for the same application-layer proof
+pattern:
+
+1. validate the proof artifact is registered for the expected effect,
+2. prove the artifact payload is valid and current,
+3. apply a proof-specific capability update across readiness capabilities.
+
+The refactor keeps `apply_available_proofs_from_scope(...)` and every
+proof-specific capability applier as the stable behavior boundary. The shared
+`_apply_registered_capability_proof_if_current(...)` helper now owns the
+registered-proof validation plus capability-mapping pattern for storage,
+runtime trust telemetry, AI, downstream realization, data-mesh, operator
+workflow, and Workbench/Gateway proof families.
+
+Focused local validation passed:
+
+1. `python -m ruff check src/app/application/implementation_proof_consumption.py`,
+2. `python -m pytest tests/unit/implementation_proof tests/unit/ai_model_risk_operations/test_readiness_consumption.py tests/unit/operator_workflows_operations/test_readiness_consumption.py tests/integration/test_implementation_proof_readiness_api.py -q`
+   (`72` passed).
+
+This is internal application maintainability only. It does not change
+API/OpenAPI behavior, proof artifact schemas, persistence, migrations,
+authentication or authorization, Core, Gateway, Workbench, runtime topology,
+supported-feature truth, wiki source, or final RFC-0002 closure. No wiki
+publication is required for the current local source diff because repo-authored
+wiki source did not change.
+
 ## 2026-08-11: RFC-0002 Issue State Audit Fetch Completeness
 
 Issue `#944` hardens `scripts/github_issue_execution_state_audit.py` after the
