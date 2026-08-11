@@ -354,9 +354,10 @@
       "final RFC-0002 closure"
     ],
     "937": [
-      "Keep #937 open with status/in-progress",
+      "Keep #937 open with status/fixed-local",
       "signed AI attestation source-contract builder",
       "106-line application-layer hotspot",
+      "commit 256d9efb",
       "source-authority assembly",
       "producer contract checks",
       "consumer contract checks",
