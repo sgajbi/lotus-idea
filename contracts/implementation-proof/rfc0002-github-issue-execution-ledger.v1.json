@@ -702,10 +702,10 @@
       "issueNumber": 908,
       "url": "https://github.com/sgajbi/lotus-idea/issues/908",
       "rfcSlices": ["slice-19"],
-      "githubState": "open",
-      "executionStatus": "open_pr_raised",
-      "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #908 open while the RFC-0002 Slice 19 underperformance signal evaluator maintainability refactor is in PR/open validation; PR #909 is the active implementation PR. Closure requires the behavior-preserving domain decomposition to merge to Idea main, focused underperformance unit proof, Ruff, MyPy, maintainability, duplicate-implementation, quality-baseline, RFC-0002 ledger/state/summary evidence, exact-main Main Releasability, CodeQL, No-wiki-change or wiki publication decision, and branch/worktree cleanup. This issue must not claim live Performance source certification, Core benchmark assignment closure, Gateway/Workbench runtime proof, production identity/session-token authority, supported-feature promotion, client publication, or final RFC-0002 closure."
+      "githubState": "closed",
+      "executionStatus": "closed_complete",
+      "allowPullRequestAutoClose": true,
+      "closureInstruction": "Closed #908 after PR #909 merged the RFC-0002 Slice 19 underperformance signal evaluator maintainability refactor to Idea main at 6197a1393af9b2c789f4d51f70b3c39de8257306 from PR head 612a62a326fbbe2800da4811c90b8f7f584eb61c. PR #909 passed Feature Lane, PR Merge Gate, CodeQL, and Queue Auto Merge. Exact-main Main Releasability run 31472472905 and exact-main CodeQL run 31472462397 both passed for 6197a1393af9b2c789f4d51f70b3c39de8257306. The implementation preserved the public evaluate_underperformance_signal API while splitting validation, source references, bounded active-return materiality, signal, lineage, evidence-packet, and candidate construction into focused helpers with targeted unit and integration proof. Maintainability, duplicate-implementation, and quality-baseline gates passed before merge. No repo-authored wiki source changed, so no wiki publication was required. The remote feature branch was deleted by GitHub and the local branch was deleted after git cherry patch-equivalence proof. This internal maintainability closure does not claim live Performance source certification, Core benchmark assignment closure, Gateway/Workbench runtime proof, production identity/session-token authority, supported-feature promotion, client publication, or final RFC-0002 closure."
     }
   ]
 }
