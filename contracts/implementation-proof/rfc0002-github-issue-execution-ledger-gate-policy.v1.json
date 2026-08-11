@@ -89,7 +89,8 @@
     943,
     944,
     947,
-    950
+    950,
+    953
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -333,6 +334,25 @@
       "Issue #814 remains the separate canonical runtime proof blocker",
       "production IdP/session/token-claims authority",
       "supported-feature promotion"
+    ],
+    "953": [
+      "Keep #953 open",
+      "status/in-progress",
+      "tests/unit/test_cross_repo_issue_posture.py::test_cross_repo_issue_posture_counts_statuses_and_attention_issues",
+      "quality/baseline_report.md",
+      "largest function at 160 lines",
+      "cross-repo fixture payload",
+      "expected title-only/blocker outputs",
+      "repository counts",
+      "RFC-0002 status counts",
+      "title-only detection",
+      "blocked actionability",
+      "attention ordering",
+      "does not change production posture logic",
+      "runtime code",
+      "Core, Gateway, Workbench",
+      "supported-feature posture",
+      "final RFC-0002 closure"
     ]
   },
   "requiredClosedIssueEvidence": {
