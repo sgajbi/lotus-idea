@@ -6,6 +6,54 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-08-11: Outbox Delivery Application Orchestration Boundary
+
+Issue `#914` applies the RFC-0002 Slice 15 maintainability lens to
+`src/app/application/outbox/delivery.py::run_outbox_delivery_once(...)`.
+The current `make quality-baseline` report listed the function as a `109` line
+production hotspot in an operator-facing outbox delivery path.
+
+The use case mixed:
+
+1. input, UTC, and capacity validation,
+2. lease-owner, lease-attempt, and operator-run identity construction,
+3. idempotency replay and conflict handling,
+4. outbox event claim-window construction,
+5. publisher execution and source-safe failure mapping,
+6. repository publish/fail/dead-letter decision mapping,
+7. final operator summary aggregation.
+
+`src/app/application/outbox/delivery.py` now keeps the public
+`run_outbox_delivery_once(...)` signature and behavior stable while extracting
+named helpers for run context construction, idempotency status handling, event
+claiming, batch delivery, single-event publisher/repository result
+classification, and final summary assembly. The public use case is now a
+short coordinator over those application-layer boundaries.
+
+Focused validation passed:
+
+1. `.venv\Scripts\python.exe -m pytest tests\unit\outbox\test_outbox_delivery.py -q`
+   (`17` passed),
+2. `.venv\Scripts\python.exe -m ruff check src\app\application\outbox\delivery.py tests\unit\outbox\test_outbox_delivery.py`,
+3. `.venv\Scripts\python.exe -m ruff format --check src\app\application\outbox\delivery.py tests\unit\outbox\test_outbox_delivery.py`,
+4. `.venv\Scripts\python.exe -m mypy src\app\application\outbox\delivery.py tests\unit\outbox\test_outbox_delivery.py`,
+5. `make maintainability-gate`,
+6. `make duplicate-implementation-gate` (`0` duplicate clusters),
+7. `make quality-baseline`.
+
+The focused outbox delivery test suite now includes a repository-race
+regression proving a failed publisher attempt whose repository failure mark
+loses the lease is counted as skipped, not failed or dead-lettered, while still
+preserving the bounded `publisher_rejected` failure reason.
+
+This is internal application-layer maintainability only. It does not change
+API/OpenAPI behavior, persistence schema, migrations, authentication or
+authorization infrastructure, external broker runtime certification,
+platform-mesh publication, Gateway/Workbench behavior, supported-feature
+promotion, client publication, runtime topology, wiki source, or final
+RFC-0002 closure. No wiki publication is required because no operator-facing
+command or published wiki truth changed.
+
 ## 2026-08-11: Downstream Proof Application Helper Boundary
 
 Issue `#911` applies the RFC-0002 Slice 12/13 maintainability lens to
