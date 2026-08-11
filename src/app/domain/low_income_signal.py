@@ -22,10 +22,14 @@ from app.domain.ideas import (
     SourceRef,
     UnsupportedEvidenceReason,
 )
-from app.domain.signal_evaluation import (
+from app.domain.signal_evaluation_common import (
+    blocked_signal_result,
+    temporal_blocked_signal_result,
+    validate_timezone_aware_evaluation_time,
+)
+from app.domain.signal_evaluation_models import (
     SignalEvaluationOutcome,
     SignalEvaluationResult,
-    temporal_blocked_signal_result,
 )
 
 
@@ -57,41 +61,71 @@ class LowIncomeSignalInput:
     duplicate_of_candidate_id: str | None = None
 
 
+@dataclass(frozen=True)
+class _LowIncomeCandidateInputs:
+    source_input: LowIncomeSignalInput
+    policy: LowIncomeSignalPolicy
+    source_refs: tuple[SourceRef, ...]
+    identity: str
+
+
 def evaluate_low_income_signal(
     source_input: LowIncomeSignalInput,
     policy: LowIncomeSignalPolicy,
 ) -> SignalEvaluationResult:
-    if (
-        source_input.evaluated_at_utc.tzinfo is None
-        or source_input.evaluated_at_utc.utcoffset() is None
-    ):
-        raise ValueError("evaluated_at_utc must be timezone-aware")
-
+    validate_timezone_aware_evaluation_time(source_input.evaluated_at_utc)
     source_refs = _available_low_income_source_refs(source_input)
-    missing_count = 2 - len(source_refs)
-    temporal_block = temporal_blocked_signal_result(
+    blocking_result = _evaluate_blocking_posture(source_input, source_refs)
+    if blocking_result is not None:
+        return blocking_result
+
+    materiality_result = _source_cashflow_materiality_result(source_input, policy)
+    if materiality_result is not None:
+        return materiality_result
+
+    return _candidate_result(
+        _LowIncomeCandidateInputs(
+            source_input=source_input,
+            policy=policy,
+            source_refs=source_refs,
+            identity=_stable_low_income_identity(source_input, policy, source_refs),
+        )
+    )
+
+
+def _evaluate_blocking_posture(
+    source_input: LowIncomeSignalInput,
+    source_refs: tuple[SourceRef, ...],
+) -> SignalEvaluationResult | None:
+    if temporal_block := temporal_blocked_signal_result(
         family=OpportunityFamily.LOW_INCOME,
         as_of_date=source_input.as_of_date,
         evaluated_at_utc=source_input.evaluated_at_utc,
         source_refs=source_refs,
-    )
-    if temporal_block is not None:
+    ):
         return temporal_block
     if not source_input.entitlement_allowed:
-        return _blocked(
+        return _blocked_low_income_result(
             reason_codes=(ReasonCode.REVIEW_REQUIRED,),
             unsupported_reasons=(UnsupportedEvidenceReason.ENTITLEMENT_DENIED,),
         )
-    if missing_count:
-        return _blocked(
+    if missing_source_count := _missing_required_source_count(source_refs):
+        return _blocked_low_income_result(
             reason_codes=(ReasonCode.SOURCE_PARTIAL,),
-            unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,) * missing_count,
+            unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,) * missing_source_count,
         )
     if any(source_ref.freshness is not EvidenceFreshness.CURRENT for source_ref in source_refs):
-        return _blocked(
+        return _blocked_low_income_result(
             reason_codes=(ReasonCode.SOURCE_STALE,),
             unsupported_reasons=(UnsupportedEvidenceReason.STALE_SOURCE,),
         )
+    return None
+
+
+def _source_cashflow_materiality_result(
+    source_input: LowIncomeSignalInput,
+    policy: LowIncomeSignalPolicy,
+) -> SignalEvaluationResult | None:
     if source_input.duplicate_of_candidate_id is not None:
         return SignalEvaluationResult(
             outcome=SignalEvaluationOutcome.SUPPRESSED,
@@ -99,17 +133,11 @@ def evaluate_low_income_signal(
             reason_codes=(ReasonCode.DUPLICATE_SUPPRESSED,),
         )
     if source_input.cash_movement_count is None:
-        return _blocked(
-            reason_codes=(ReasonCode.SOURCE_PARTIAL,),
-            unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,),
-        )
+        return _missing_source_value_result()
     if source_input.cash_movement_count < 0:
         raise ValueError("cash_movement_count must be non-negative")
     if source_input.source_reported_min_projected_cumulative_cashflow is None:
-        return _blocked(
-            reason_codes=(ReasonCode.SOURCE_PARTIAL,),
-            unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,),
-        )
+        return _missing_source_value_result()
     if (
         source_input.source_reported_min_projected_cumulative_cashflow
         > policy.projected_cumulative_cashflow_threshold
@@ -119,44 +147,13 @@ def evaluate_low_income_signal(
             family=OpportunityFamily.LOW_INCOME,
             reason_codes=(ReasonCode.BELOW_MATERIALITY,),
         )
+    return None
 
-    identity = _stable_low_income_identity(source_input, policy, source_refs)
-    signal = OpportunitySignal(
-        signal_id=f"signal_low_income_{identity}",
-        family=OpportunityFamily.LOW_INCOME,
-        source_refs=source_refs,
-        reason_codes=(ReasonCode.INCOME_ATTENTION,),
-        detected_at_utc=source_input.evaluated_at_utc,
-    )
-    lineage = LineageRef(
-        lineage_id=f"lineage:lotus-idea:low-income:{identity}",
-        source_refs=source_refs,
-        content_hash=f"sha256:{identity}",
-    )
-    evidence_packet = IdeaEvidencePacket(
-        evidence_packet_id=f"iep_low_income_{identity}",
-        supportability=EvidenceSupportability.READY,
-        source_refs=source_refs,
-        lineage_ref=lineage,
-        reason_codes=(ReasonCode.INCOME_ATTENTION, ReasonCode.REVIEW_REQUIRED),
-        created_at_utc=source_input.evaluated_at_utc,
-    )
-    candidate = IdeaCandidate(
-        candidate_id=f"idea_low_income_{identity}",
-        family=OpportunityFamily.LOW_INCOME,
-        lifecycle_status=IdeaLifecycleStatus.GENERATED,
-        review_posture=ReviewPosture.ADVISOR_REVIEW_REQUIRED,
-        evidence_packet=evidence_packet,
-        source_signal_ids=(signal.signal_id,),
-        score=IdeaScore(
-            policy_version=policy.policy_version,
-            score=policy.candidate_score,
-            reason_codes=(ReasonCode.INCOME_ATTENTION, ReasonCode.REVIEW_REQUIRED),
-        ),
-        access_scope=source_input.access_scope,
-        created_at_utc=source_input.evaluated_at_utc,
-        updated_at_utc=source_input.evaluated_at_utc,
-    )
+
+def _candidate_result(inputs: _LowIncomeCandidateInputs) -> SignalEvaluationResult:
+    signal = _opportunity_signal(inputs)
+    evidence_packet = _evidence_packet(inputs)
+    candidate = _idea_candidate(inputs, signal, evidence_packet)
     return SignalEvaluationResult(
         outcome=SignalEvaluationOutcome.CANDIDATE_CREATED,
         family=OpportunityFamily.LOW_INCOME,
@@ -166,13 +163,61 @@ def evaluate_low_income_signal(
     )
 
 
-def _blocked(
+def _opportunity_signal(inputs: _LowIncomeCandidateInputs) -> OpportunitySignal:
+    return OpportunitySignal(
+        signal_id=f"signal_low_income_{inputs.identity}",
+        family=OpportunityFamily.LOW_INCOME,
+        source_refs=inputs.source_refs,
+        reason_codes=(ReasonCode.INCOME_ATTENTION,),
+        detected_at_utc=inputs.source_input.evaluated_at_utc,
+    )
+
+
+def _evidence_packet(inputs: _LowIncomeCandidateInputs) -> IdeaEvidencePacket:
+    lineage = LineageRef(
+        lineage_id=f"lineage:lotus-idea:low-income:{inputs.identity}",
+        source_refs=inputs.source_refs,
+        content_hash=f"sha256:{inputs.identity}",
+    )
+    return IdeaEvidencePacket(
+        evidence_packet_id=f"iep_low_income_{inputs.identity}",
+        supportability=EvidenceSupportability.READY,
+        source_refs=inputs.source_refs,
+        lineage_ref=lineage,
+        reason_codes=(ReasonCode.INCOME_ATTENTION, ReasonCode.REVIEW_REQUIRED),
+        created_at_utc=inputs.source_input.evaluated_at_utc,
+    )
+
+
+def _idea_candidate(
+    inputs: _LowIncomeCandidateInputs,
+    signal: OpportunitySignal,
+    evidence_packet: IdeaEvidencePacket,
+) -> IdeaCandidate:
+    return IdeaCandidate(
+        candidate_id=f"idea_low_income_{inputs.identity}",
+        family=OpportunityFamily.LOW_INCOME,
+        lifecycle_status=IdeaLifecycleStatus.GENERATED,
+        review_posture=ReviewPosture.ADVISOR_REVIEW_REQUIRED,
+        evidence_packet=evidence_packet,
+        source_signal_ids=(signal.signal_id,),
+        score=IdeaScore(
+            policy_version=inputs.policy.policy_version,
+            score=inputs.policy.candidate_score,
+            reason_codes=(ReasonCode.INCOME_ATTENTION, ReasonCode.REVIEW_REQUIRED),
+        ),
+        access_scope=inputs.source_input.access_scope,
+        created_at_utc=inputs.source_input.evaluated_at_utc,
+        updated_at_utc=inputs.source_input.evaluated_at_utc,
+    )
+
+
+def _blocked_low_income_result(
     *,
     reason_codes: tuple[ReasonCode, ...],
     unsupported_reasons: tuple[UnsupportedEvidenceReason, ...],
 ) -> SignalEvaluationResult:
-    return SignalEvaluationResult(
-        outcome=SignalEvaluationOutcome.BLOCKED,
+    return blocked_signal_result(
         family=OpportunityFamily.LOW_INCOME,
         reason_codes=reason_codes,
         unsupported_reasons=unsupported_reasons,
@@ -187,6 +232,17 @@ def _available_low_income_source_refs(source_input: LowIncomeSignalInput) -> tup
             source_input.cashflow_projection_ref,
         )
         if source_ref is not None
+    )
+
+
+def _missing_required_source_count(source_refs: tuple[SourceRef, ...]) -> int:
+    return 2 - len(source_refs)
+
+
+def _missing_source_value_result() -> SignalEvaluationResult:
+    return _blocked_low_income_result(
+        reason_codes=(ReasonCode.SOURCE_PARTIAL,),
+        unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,),
     )
 
 
