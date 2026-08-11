@@ -39,7 +39,10 @@ The refreshed quality baseline no longer lists the targeted test as a largest
 function; the next largest function is
 `tests/unit/test_proof_artifacts.py::_assert_configured_artifacts_are_bound` at
 `126` lines. No repo-authored wiki source changed, so wiki publication is not
-required for this branch.
+required for PR `#957`.
+
+PR `#957` is open with implementation commit
+`5efc4e589c6de548bd10647049371d478c3d3b93`.
 
 This is test-support maintainability only. It does not change runtime code,
 API/OpenAPI behavior, proof schemas, Core, Gateway, Workbench, authentication,
