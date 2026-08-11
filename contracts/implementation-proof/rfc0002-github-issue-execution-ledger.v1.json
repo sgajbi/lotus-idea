@@ -706,6 +706,15 @@
       "executionStatus": "closed_complete",
       "allowPullRequestAutoClose": true,
       "closureInstruction": "Closed #908 after PR #909 merged the RFC-0002 Slice 19 underperformance signal evaluator maintainability refactor to Idea main at 6197a1393af9b2c789f4d51f70b3c39de8257306 from PR head 612a62a326fbbe2800da4811c90b8f7f584eb61c. PR #909 passed Feature Lane, PR Merge Gate, CodeQL, and Queue Auto Merge. Exact-main Main Releasability run 31472472905 and exact-main CodeQL run 31472462397 both passed for 6197a1393af9b2c789f4d51f70b3c39de8257306. The implementation preserved the public evaluate_underperformance_signal API while splitting validation, source references, bounded active-return materiality, signal, lineage, evidence-packet, and candidate construction into focused helpers with targeted unit and integration proof. Maintainability, duplicate-implementation, and quality-baseline gates passed before merge. No repo-authored wiki source changed, so no wiki publication was required. The remote feature branch was deleted by GitHub and the local branch was deleted after git cherry patch-equivalence proof. This internal maintainability closure does not claim live Performance source certification, Core benchmark assignment closure, Gateway/Workbench runtime proof, production identity/session-token authority, supported-feature promotion, client publication, or final RFC-0002 closure."
+    },
+    {
+      "issueNumber": 911,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/911",
+      "rfcSlices": ["slice-12", "slice-13"],
+      "githubState": "open",
+      "executionStatus": "open_in_progress",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #911 open while the RFC-0002 Slice 12/13 downstream proof application helper boundary refactor is in progress. Closure requires a behavior-preserving split of `src/app/application/downstream_realization_readiness.py::_apply_available_downstream_proofs(...)` into source-contract supporting-evidence and runtime-execution blocker-clearing proof-family helpers, focused downstream-realization readiness proof-family tests including report intake runtime no-route-promotion coverage, Ruff, MyPy, maintainability, duplicate-implementation, quality-baseline, RFC-0002 ledger/state/summary/learning evidence, PR Merge Gate, exact-main Main Releasability, CodeQL, an explicit no-wiki-change or wiki-publication decision, and branch/worktree cleanup. This issue must not claim Advise, Manage, Report, Render, or Archive live certification, Gateway/Workbench runtime proof, production identity/session-token authority, persistence schema, migration, OpenAPI or API route behavior change, supported-feature promotion, runtime-service split, client publication, or final RFC-0002 closure."
     }
   ]
 }

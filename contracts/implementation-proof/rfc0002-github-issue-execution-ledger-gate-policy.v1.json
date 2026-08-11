@@ -74,7 +74,8 @@
     899,
     902,
     905,
-    908
+    908,
+    911
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -318,6 +319,36 @@
       "Issue #814 remains the separate canonical runtime proof blocker",
       "production IdP/session/token-claims authority",
       "supported-feature promotion"
+    ],
+    "911": [
+      "Keep #911 open while the RFC-0002 Slice 12/13 downstream proof application helper boundary refactor is in progress",
+      "behavior-preserving split",
+      "_apply_available_downstream_proofs",
+      "source-contract supporting-evidence",
+      "runtime-execution blocker-clearing",
+      "proof-family helpers",
+      "report intake runtime no-route-promotion coverage",
+      "Ruff",
+      "MyPy",
+      "maintainability",
+      "duplicate-implementation",
+      "quality-baseline",
+      "RFC-0002 ledger/state/summary/learning evidence",
+      "PR Merge Gate",
+      "exact-main Main Releasability",
+      "CodeQL",
+      "explicit no-wiki-change or wiki-publication decision",
+      "branch/worktree cleanup",
+      "Advise, Manage, Report, Render, or Archive live certification",
+      "Gateway/Workbench runtime proof",
+      "production identity/session-token authority",
+      "persistence schema",
+      "migration",
+      "OpenAPI or API route behavior change",
+      "supported-feature promotion",
+      "runtime-service split",
+      "client publication",
+      "final RFC-0002 closure"
     ]
   },
   "requiredClosedIssueEvidence": {

@@ -6,6 +6,62 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-08-11: Downstream Proof Application Helper Boundary
+
+Issue `#911` applies the RFC-0002 Slice 12/13 maintainability lens to
+`src/app/application/downstream_realization_readiness.py::_apply_available_downstream_proofs(...)`.
+After the Slice 12/13 public builder split in issue `#894`, the report-only
+quality baseline still listed `_apply_available_downstream_proofs(...)` as a
+`109` line production hotspot.
+
+The helper mixed:
+
+1. Advise, Manage, and Report source-contract supporting-evidence checks,
+2. Advise, Manage, and Report runtime-execution blocker-clearing checks,
+3. proof-artifact registry effect validation,
+4. aggregate proof freshness validation,
+5. route-foundation updates,
+6. live-intake and materialization blocker reduction.
+
+`src/app/application/downstream_realization_readiness.py` now keeps the public
+`build_downstream_realization_readiness_snapshot(...)` signature and readiness
+behavior stable while introducing
+`_apply_source_contract_proofs_if_valid(...)`,
+`_apply_runtime_execution_proofs_if_valid(...)`,
+`_apply_advise_intake_proof_if_valid(...)`. This keeps source-contract
+supporting evidence separate from runtime-execution blocker-clearing evidence.
+The generic proof input and proof-effect/freshness guard logic now lives in
+`src/app/application/downstream_realization_proof_application.py` as
+`DownstreamProofInputs`, `supporting_source_contract_proof_is_valid(...)`, and
+`current_blocker_clearing_proof_is_valid(...)`, keeping the readiness module
+under the maintainability line-count cap.
+
+The focused downstream-realization readiness test suite now includes
+`test_report_intake_runtime_execution_clears_only_live_intake_blocker`. The test
+proves a current Report intake runtime receipt clears only
+`lotus_report_live_intake_route_proof_missing`, keeps materialization, render,
+archive, and client-publication blockers intact, keeps readiness blocked and
+supportability not certified, and preserves the no-route-promotion boundary by
+leaving `target_route` on the planned route while setting
+`route_fit_status` to `route_foundation_proven_not_certified`.
+
+Focused validation passed:
+
+1. `.venv\Scripts\python.exe -m ruff check src\app\application\downstream_realization_readiness.py src\app\application\downstream_realization_proof_application.py tests\unit\test_downstream_realization_readiness.py`,
+2. `.venv\Scripts\python.exe -m ruff format --check src\app\application\downstream_realization_readiness.py src\app\application\downstream_realization_proof_application.py tests\unit\test_downstream_realization_readiness.py`,
+3. `.venv\Scripts\python.exe -m mypy src\app\application\downstream_realization_readiness.py src\app\application\downstream_realization_proof_application.py tests\unit\test_downstream_realization_readiness.py`,
+4. `.venv\Scripts\python.exe -m pytest tests\unit\test_downstream_realization_readiness.py -q`
+   (`14` passed).
+
+This is internal application-layer maintainability only. It does not change
+API/OpenAPI behavior, persistence schema, migrations, authentication or
+authorization infrastructure, Gateway/Workbench runtime proof, Advise, Manage,
+Report, Render, or Archive live certification, production
+identity/session-token authority, supported-feature promotion, client
+publication, runtime topology, wiki source, or final RFC-0002 closure. No wiki
+publication is required because no operator-facing command or published wiki
+truth changed.
+
 ## 2026-08-11: Underperformance Signal Evaluator Boundary
 
 Issue `#908` applies the RFC-0002 Slice 19 maintainability lens to the
