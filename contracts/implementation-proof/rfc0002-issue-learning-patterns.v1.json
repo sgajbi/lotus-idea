@@ -9,7 +9,7 @@
     {
       "patternId": "github_execution_control_and_context_sync",
       "title": "GitHub issue state, closure wording, docs, wiki, and agent-context truth must remain executable and mainline-backed.",
-      "currentLedgerIssueNumbers": [673, 681, 683, 684, 944],
+      "currentLedgerIssueNumbers": [673, 681, 683, 684],
       "relatedIssueNumbers": [681, 854, 871, 874, 883, 890, 892, 929, 944],
       "rfcSlices": ["slice-18", "slice-20", "slice-21"],
       "durableControls": [
@@ -121,7 +121,7 @@
     {
       "patternId": "downstream_owner_runtime_proof_boundary",
       "title": "Core, Advise, Manage, Report, Render, and Archive handoffs require owner runtime or materialization evidence before blockers clear.",
-      "currentLedgerIssueNumbers": [379, 675, 676, 691, 941, 943],
+      "currentLedgerIssueNumbers": [379, 675, 676, 691],
       "relatedIssueNumbers": [482, 792, 437, 438, 449, 456, 688, 689, 690, 878, 894, 899, 911, 926, 943],
       "rfcSlices": ["slice-09", "slice-12", "slice-13", "slice-17"],
       "durableControls": [
