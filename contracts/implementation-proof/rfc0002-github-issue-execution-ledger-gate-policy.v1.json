@@ -320,21 +320,6 @@
       "This issue is not QA-pending",
       "full live journey validation remains blocked"
     ],
-    "947": [
-      "Keep #947 open",
-      "refactor/947-proof-consumption-appliers",
-      "src/app/application/implementation_proof_consumption.py",
-      "registered-proof validation",
-      "capability-mapping pattern",
-      "proof-artifact effect checks",
-      "72 passed",
-      "does not unblock external dependencies",
-      "does not implement authentication or authorization",
-      "does not change Core/Gateway/Workbench",
-      "does not alter proof schemas",
-      "does not promote supported features",
-      "does not complete final RFC-0002 closure"
-    ],
     "886": [
       "Keep #886 open for QA closure",
       "PR #887 merged by rebase",
@@ -400,6 +385,26 @@
       "does not weaken the state audit",
       "production identity/session-token authority",
       "Gateway/Workbench runtime behavior",
+      "final RFC-0002 closure"
+    ],
+    "947": [
+      "Closed #947 after QA passed",
+      "PR #948 merged by rebase",
+      "3b61fb49ff3a3f7457b5ebf73a68b3f6b4ab15bf",
+      "31525892622",
+      "31525872690",
+      "src/app/application/implementation_proof_consumption.py",
+      "_apply_registered_capability_proof_if_current",
+      "registered-proof validation",
+      "capability mapping",
+      "72 passed",
+      "No repo-authored wiki source changed",
+      "git cherry patch-equivalence proof",
+      "does not unblock external dependencies",
+      "does not implement authentication or authorization",
+      "does not change Core/Gateway/Workbench",
+      "does not alter proof schemas",
+      "does not promote supported features",
       "final RFC-0002 closure"
     ],
     "935": [
