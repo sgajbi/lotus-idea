@@ -730,9 +730,9 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/917",
       "rfcSlices": ["slice-15"],
       "githubState": "open",
-      "executionStatus": "open_in_progress",
+      "executionStatus": "open_pr_raised",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #917 open while the RFC-0002 Slice 15 Dockerfile runtime release-evidence validator boundary refactor is in flight. Scope is internal CI/release-evidence maintainability for `scripts/ci_release_evidence_contract.py::validate_dockerfile_runtime(...)`: split governed base-image/runtime metadata, runtime dependency, runtime entrypoint, prohibited-fragment, secret-like build metadata, and dependency-install ordering checks into reviewable rule families while preserving the public validator contract and existing error semantics. Do not close until the implementation PR merges to main, exact-main Main Releasability and CodeQL pass, issue comments cite local and GitHub validation evidence, and branch cleanup is proven. This does not change Dockerfile behavior, dependency pins, scanner policy, runtime image contents, OpenAPI, migrations, authn/authz, Gateway/Workbench/Core behavior, supported-feature promotion, client publication, or final RFC-0002 closure."
+      "closureInstruction": "Keep #917 open while PR #918 carries the RFC-0002 Slice 15 Dockerfile runtime release-evidence validator boundary refactor. Scope is internal CI/release-evidence maintainability for `scripts/ci_release_evidence_contract.py::validate_dockerfile_runtime(...)`: split governed base-image/runtime metadata, runtime dependency, runtime entrypoint, prohibited-fragment, secret-like build metadata, and dependency-install ordering checks into reviewable rule families while preserving the public validator contract and existing error semantics. Do not close until PR #918 merges to main, exact-main Main Releasability and CodeQL pass, issue comments cite local and GitHub validation evidence, and branch cleanup is proven. This does not change Dockerfile behavior, dependency pins, scanner policy, runtime image contents, OpenAPI, migrations, authn/authz, Gateway/Workbench/Core behavior, supported-feature promotion, client publication, or final RFC-0002 closure."
     }
   ]
 }
