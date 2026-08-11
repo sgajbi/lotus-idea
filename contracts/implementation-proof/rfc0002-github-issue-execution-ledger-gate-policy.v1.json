@@ -84,7 +84,8 @@
     929,
     932,
     935,
-    937
+    937,
+    941
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -328,6 +329,18 @@
       "Issue #814 remains the separate canonical runtime proof blocker",
       "production IdP/session/token-claims authority",
       "supported-feature promotion"
+    ],
+    "941": [
+      "Keep #941 open while implementation is in progress",
+      "Advise intake runtime proof generator helper",
+      "_execute_advise_testclient",
+      "107-line script helper hotspot",
+      "accepted replay rejected idempotency-conflict authorization-denied tenant-scoped scenarios",
+      "source-safe receipt projection",
+      "does not clear #379",
+      "production IdP/session-token authority",
+      "supported-feature promotion",
+      "final RFC-0002 closure"
     ]
   },
   "requiredClosedIssueEvidence": {

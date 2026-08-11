@@ -88,7 +88,22 @@ def _parser() -> argparse.ArgumentParser:
 def _execute_advise_testclient(
     *, advise_root: Path, advise_python: str
 ) -> dict[str, dict[str, Any]]:
-    script = r"""
+    completed = _run_advise_testclient_script(
+        advise_root=advise_root,
+        advise_python=advise_python,
+        script=_advise_testclient_script(),
+        env=_advise_testclient_env(advise_root),
+    )
+    return _source_safe_receipts(
+        _json_object_from_stdout(
+            completed.stdout,
+            "Advise testclient execution did not return a JSON object",
+        )
+    )
+
+
+def _advise_testclient_script() -> str:
+    return r"""
 import json
 from fastapi.testclient import TestClient
 from src.api.main import app
@@ -171,6 +186,9 @@ print(json.dumps({
     "tenantScopedIdempotency": response_payload(tenant_scoped),
 }, sort_keys=True))
 """
+
+
+def _advise_testclient_env(advise_root: Path) -> dict[str, str]:
     env = os.environ.copy()
     env["PYTHONPATH"] = str(advise_root.resolve())
     env.setdefault("ENVIRONMENT", "test")
@@ -180,7 +198,17 @@ print(json.dumps({
     env.setdefault("POLICY_POSTGRES_DSN", "postgresql://test:test@localhost:5432/policy")
     env.setdefault("WORKSPACE_STORE_BACKEND", "POSTGRES")
     env.setdefault("WORKSPACE_POSTGRES_DSN", "postgresql://test:test@localhost:5432/workspace")
-    completed = subprocess.run(
+    return env
+
+
+def _run_advise_testclient_script(
+    *,
+    advise_root: Path,
+    advise_python: str,
+    script: str,
+    env: Mapping[str, str],
+) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
         [advise_python, "-c", script],
         cwd=advise_root,
         env=env,
@@ -188,10 +216,13 @@ print(json.dumps({
         capture_output=True,
         text=True,
     )
-    raw = json.loads(completed.stdout)
+
+
+def _json_object_from_stdout(stdout: str, error_message: str) -> dict[str, Any]:
+    raw = json.loads(stdout)
     if not isinstance(raw, dict):
-        raise ValueError("Advise testclient execution did not return a JSON object")
-    return _source_safe_receipts(raw)
+        raise ValueError(error_message)
+    return raw
 
 
 def _execute_http_service(base_url: str | None) -> dict[str, dict[str, Any]]:
