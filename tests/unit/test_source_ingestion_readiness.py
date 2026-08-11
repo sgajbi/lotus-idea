@@ -380,6 +380,35 @@ def test_deployment_evidence_clears_only_scheduled_worker_deployment_blocker(
     assert snapshot.certification_status == "not_certified"
 
 
+def test_deployment_evidence_requires_valid_scheduled_worker_source_contract(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text("{}", encoding="utf-8")
+    evidence_path = tmp_path / "scheduled-worker-deployment-evidence.json"
+    source_contract_path = tmp_path / "scheduled-worker-source-contract.json"
+    source_contract_path.write_text('{"schemaVersion": "wrong"}', encoding="utf-8")
+    evidence_path.write_text(
+        json.dumps(deployment_evidence(repository_root=ROOT)),
+        encoding="utf-8",
+    )
+    monkeypatch.setenv(MANIFEST_ENV, str(manifest))
+    monkeypatch.delenv(SOURCE_INGESTION_RUNTIME_EXECUTION_ENV, raising=False)
+    monkeypatch.setenv(SCHEDULED_WORKER_SOURCE_CONTRACT_ENV, str(source_contract_path))
+    monkeypatch.setenv(SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE_ENV, str(evidence_path))
+    monkeypatch.setenv(CORE_BASE_URL_ENV, "http://localhost:8310")
+    monkeypatch.setenv(DATABASE_URL_ENV, "postgresql://localhost/lotus_idea")
+
+    snapshot = build_source_ingestion_readiness_snapshot()
+
+    assert snapshot.configured_scheduled_worker_source_contract_available is True
+    assert snapshot.scheduled_worker_source_contract_valid is False
+    assert snapshot.configured_scheduled_worker_deployment_evidence_available is True
+    assert snapshot.scheduled_worker_deployment_evidence_valid is False
+    assert "scheduled_worker_deploy_proof_missing" in snapshot.certification_blockers
+
+
 def test_source_ingestion_readiness_keeps_deployment_blocker_for_invalid_evidence(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
