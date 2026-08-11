@@ -228,15 +228,6 @@
       "does not clear RFC-0002 blockers",
       "replace production IdP/session/token-claims evidence"
     ],
-    "883": [
-      "Keep #883 open and status/pr-open",
-      "conflicting GitHub lifecycle labels",
-      "scripts/github_issue_execution_state_audit.py",
-      "status/*",
-      "focused regression coverage",
-      "Keep #681 open",
-      "does not promote supported features"
-    ],
     "685": [
       "Keep #685 open and status/blocked",
       "later Core blockers #836, #840, #856, and #873 closed",
@@ -504,6 +495,19 @@
       "31448704170",
       "does not promote the bond-maturity archetype to supported feature",
       "live Core source proof"
+    ],
+    "883": [
+      "Closed #883 after QA passed",
+      "conflicting GitHub lifecycle-label guard",
+      "scripts/github_issue_execution_state_audit.py",
+      "extra status/* labels",
+      "841c2e4298e9dcf2b0aabcb58e4eb9f499c93ffc",
+      "31450672654",
+      "23 focused tests",
+      "No wiki source changed",
+      "local branch was deleted after patch-equivalence proof",
+      "Keep #681 open",
+      "does not promote supported features"
     ]
   }
 }

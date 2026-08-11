@@ -621,10 +621,10 @@
       "issueNumber": 883,
       "url": "https://github.com/sgajbi/lotus-idea/issues/883",
       "rfcSlices": ["slice-18"],
-      "githubState": "open",
-      "executionStatus": "open_pr_raised",
-      "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #883 open and status/pr-open until the conflicting GitHub lifecycle labels guard is merged to main, exact-main validation passes, and QA closure evidence is recorded. The implementation scope is limited to scripts/github_issue_execution_state_audit.py and focused regression coverage for extra status/* labels on ledger-tracked issues. Keep #681 open as the Slice 18 documentation/wiki/support/context tracker. This does not promote supported features, clear Core, Workbench, Gateway, production identity, protected runtime, provider, legal, client-publication, support, or final RFC-0002 closure blockers."
+      "githubState": "closed",
+      "executionStatus": "closed_complete",
+      "allowPullRequestAutoClose": true,
+      "closureInstruction": "Closed #883 after QA passed on lotus-idea main 841c2e4298e9dcf2b0aabcb58e4eb9f499c93ffc. PR #884 merged by rebase to Idea main and implemented a conflicting GitHub lifecycle-label guard in scripts/github_issue_execution_state_audit.py so ledger-tracked issues fail audit when they carry extra status/* labels alongside the required lifecycle label. Exact-main Main Releasability run 31450672654 passed for 841c2e4298e9dcf2b0aabcb58e4eb9f499c93ffc, including lint/typecheck/security, unit, integration, e2e, PostgreSQL runtime proof, combined coverage, Docker image build and smoke, image scan, digest run, signing, provenance, SBOM attestation, release manifest, and evidence upload. QA closure evidence included 23 focused tests for issue execution state audit, summary, and learning-pattern gates; make rfc0002-github-issue-execution-ledger-gate, rfc0002-github-issue-execution-state-audit, rfc0002-github-issue-execution-summary, and rfc0002-github-issue-learning-pattern-gate passed; focused Ruff, Ruff format-check, MyPy, and git diff --check passed before merge. No wiki source changed; repo-authored wiki publication was not required. The remote PR branch was deleted by GitHub and the local branch was deleted after patch-equivalence proof. This closes only the Slice 18 GitHub issue lifecycle-label audit hardening issue. Keep #681 open as the Slice 18 documentation/wiki/support/context tracker. This does not promote supported features, clear Core, Workbench, Gateway, production identity, protected runtime, provider, legal, client-publication, support, or final RFC-0002 closure blockers."
     }
   ]
 }
