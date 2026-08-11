@@ -40,6 +40,10 @@ function; the next largest function is
 `tests/unit/test_cross_repo_issue_posture.py::test_cross_repo_issue_posture_counts_statuses_and_attention_issues`
 at `160` lines.
 
+PR `#951` is open from branch `refactor/950-ledger-test-posture-evidence` at
+head `0dd8d6f7756f2c4198b7126c0e80d523a25bc3ec`; PR checks, merge-to-main,
+exact-main validation, QA closure, and branch cleanup remain pending.
+
 This is test-support maintainability only. It does not change runtime code,
 API/OpenAPI behavior, proof schemas, Core, Gateway, Workbench, authentication,
 authorization, supported-feature posture, wiki source, or final RFC-0002
