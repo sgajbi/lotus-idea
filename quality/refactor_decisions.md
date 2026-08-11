@@ -27,6 +27,12 @@ Focused validation passed:
 3. `python -m pytest tests/unit/test_github_issue_execution_state_audit.py -q`
    (`11` passed).
 
+PR `#945` merged this hardening by rebase to exact-main SHA
+`8329c2911e38e5f4761396565de50f8dbb8e1f78`. Exact-main Main
+Releasability Gate run `31520663608` and CodeQL run `31520653759` passed
+for that SHA. No repo-authored wiki source changed, and the implementation
+branch was deleted remotely and locally after patch-equivalence proof.
+
 This is internal governance-gate reliability only. It does not change GitHub
 lifecycle labels, application runtime behavior, Gateway/Workbench proof,
 production identity/session-token authority, supported-feature promotion, or
@@ -68,10 +74,52 @@ The focused unit suite now proves Advise route source-contract evidence and
 Advise intake runtime-execution evidence compose without clearing Manage or
 owner-authority blockers.
 
+PR `#945` merged this refactor by rebase to exact-main SHA
+`8329c2911e38e5f4761396565de50f8dbb8e1f78`. Exact-main Main
+Releasability Gate run `31520663608` and CodeQL run `31520653759` passed
+for that SHA. No repo-authored wiki source changed, and the implementation
+branch was deleted remotely and locally after patch-equivalence proof.
+
 This is internal application-layer maintainability only. It does not change
 API/OpenAPI behavior, persistence schema, migrations, Core/Gateway/Workbench
 behavior, production IdP/session-token authority, supported-feature promotion,
 runtime topology, wiki source, client publication, or final RFC-0002 closure.
+
+## 2026-08-11: Advise Intake Runtime Proof Generator Boundary
+
+Issue `#941` applies the RFC-0002 Slice 12/13/19 maintainability lens to
+`scripts/downstream_realization/generate_advise_intake_runtime_execution.py`.
+The current quality baseline listed `_execute_advise_testclient(...)` as a
+`107` line script helper in the Advise intake runtime-execution proof path.
+
+The helper mixed owner-app test-client script construction, environment
+defaults, subprocess execution, JSON decoding, scenario receipt projection,
+and no-claim posture. The refactor keeps the generated proof contract and CLI
+behavior stable while moving those responsibilities behind named helpers. The
+coordinator is now short enough to review against the proof contract directly.
+
+Focused validation passed:
+
+1. Ruff check and format-check over the touched generator script and tests,
+2. MyPy over the touched generator script and tests,
+3. `python -m pytest tests/unit/downstream_realization/test_generate_advise_intake_runtime_execution.py tests/unit/downstream_realization/test_advise_intake_runtime_execution.py -q`
+   (`13` passed).
+
+Broader local validation passed quality-baseline, maintainability,
+duplicate-implementation, RFC-0002 execution ledger, live state audit,
+execution summary, issue-learning-pattern, documentation-contract, full
+`make lint`, and git diff check. PR `#942` merged by rebase to exact-main SHA
+`ddafd313ec0606e795838fca4fddc3c9037c2306`; exact-main Main Releasability
+Gate run `31517388895` and CodeQL run `31517379659` passed for that SHA. No
+repo-authored wiki source changed, and the implementation branch is absent
+locally and remotely after cleanup.
+
+This is internal script maintainability only. It does not clear `#379`,
+`#676`, `#691`, `#685`, `#686`, `#687`, or `#699`; does not change
+API/OpenAPI behavior, persistence schema, migrations, Core/Gateway/Workbench
+behavior, production IdP/session-token authority, supported-feature
+promotion, runtime topology, wiki source, client publication, or final
+RFC-0002 closure.
 
 ## 2026-08-11: Low-Income Signal Evaluation Domain Boundary
 
