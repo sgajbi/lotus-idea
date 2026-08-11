@@ -1860,7 +1860,11 @@ Evidence:
 3. Focused validation passed: Ruff, format check, MyPy, and
    `tests/integration/test_implementation_proof_readiness_api.py` (`8 passed`),
    plus maintainability, duplicate implementation, and quality-baseline gates.
-4. No wiki, README, supported-feature, OpenAPI, migration, runtime topology,
+4. PR #930 merged by rebase to exact-main SHA
+   `35f302e53be2178640bdbac6ae11b9643e1193d6`; exact-main Main
+   Releasability `31497468739` and exact-main Push/CodeQL `31497459747`
+   passed.
+5. No wiki, README, supported-feature, OpenAPI, migration, runtime topology,
    skill, or central context change is justified; this is internal API
    maintainability only.
 
