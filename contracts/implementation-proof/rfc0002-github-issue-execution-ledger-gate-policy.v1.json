@@ -329,7 +329,8 @@
       "supported-feature promotion"
     ],
     "935": [
-      "Keep #935 open with status/fixed-local",
+      "Keep #935 open with status/pr-open",
+      "PR #936",
       "Local fix branch fix/935-ghcr-publish-retry",
       "Main Releasability run 31503147563",
       "e1dea44cfdda65b42cfc0d0371f48a2092bebb47",
