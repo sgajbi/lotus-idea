@@ -205,7 +205,7 @@
     {
       "patternId": "operations_security_resilience_certification",
       "title": "Operations, security, lifecycle, migration, outbox, SLO, capacity, and disaster-recovery claims need protected or production-like attestations.",
-      "currentLedgerIssueNumbers": [343, 344, 345, 375, 678, 693, 814, 935],
+      "currentLedgerIssueNumbers": [343, 344, 345, 375, 678, 693, 814],
       "relatedIssueNumbers": [
         337,
         343,
@@ -219,6 +219,7 @@
         807,
         814,
         886,
+        935,
         914,
         917,
         920,
@@ -272,8 +273,8 @@
     {
       "patternId": "ai_attestation_and_model_governance",
       "title": "AI explanation output acceptance requires attested lotus-ai execution, model provenance, retention, and lineage evidence.",
-      "currentLedgerIssueNumbers": [937],
-      "relatedIssueNumbers": [268, 340, 459, 668, 782],
+      "currentLedgerIssueNumbers": [],
+      "relatedIssueNumbers": [268, 340, 459, 668, 782, 937],
       "rfcSlices": ["slice-09", "slice-17"],
       "durableControls": [
         {
