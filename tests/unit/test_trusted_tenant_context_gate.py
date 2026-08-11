@@ -70,6 +70,43 @@ def test_trusted_tenant_context_gate_rejects_default_adapter_tenant(tmp_path: Pa
     assert any("hard-coded production tenant fallback" in error for error in errors)
 
 
+def test_trusted_tenant_context_gate_rejects_source_ingestion_without_tenant_identity(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    _copy_gate_inputs(module, tmp_path)
+    path = tmp_path / "src/app/application/source_ingestion.py"
+    path.write_text(
+        path.read_text(encoding="utf-8").replace(
+            "{tenant_id}:{portfolio_id}:{as_of_date.isoformat()}",
+            "{portfolio_id}:{as_of_date.isoformat()}",
+        ),
+        encoding="utf-8",
+    )
+
+    errors = module.validate_trusted_tenant_context(tmp_path)
+
+    assert any("source_ingestion.py" in error for error in errors)
+    assert any("required tenant contract fragment" in error for error in errors)
+
+
+def test_trusted_tenant_context_gate_rejects_core_api_without_trusted_context(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    _copy_gate_inputs(module, tmp_path)
+    path = tmp_path / "src/app/api/idea_signals.py"
+    path.write_text(
+        path.read_text(encoding="utf-8").replace("require_tenant_context=True", ""),
+        encoding="utf-8",
+    )
+
+    errors = module.validate_trusted_tenant_context(tmp_path)
+
+    assert any("idea_signals.py" in error for error in errors)
+    assert any("required tenant contract fragment" in error for error in errors)
+
+
 def test_required_fragment_diagnostic_does_not_echo_scanned_content() -> None:
     module = _load_gate()
     errors: list[str] = []
