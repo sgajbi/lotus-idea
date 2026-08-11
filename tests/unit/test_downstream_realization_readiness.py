@@ -531,6 +531,39 @@ def test_route_source_contracts_preserve_live_and_authority_blockers() -> None:
     )
 
 
+def test_advise_source_and_runtime_proofs_compose_without_cross_clearing() -> None:
+    route_ref = "output/downstream/advise-route-source-contract-proof.json"
+    runtime_ref = "output/downstream/advise-intake-runtime-execution-proof.json"
+    snapshot = build_downstream_realization_readiness_snapshot(
+        repository=InMemoryIdeaRepository(),
+        durable_storage_backed=False,
+        evaluated_at_utc=datetime(2026, 7, 22, 0, 0, tzinfo=UTC),
+        advise_proposal_route_proof=valid_advise_route_source_contract(),
+        advise_proposal_route_proof_ref=route_ref,
+        advise_intake_runtime_execution_proof=_bound_aggregate_proof(
+            valid_advise_intake_runtime_execution(),
+            runtime_ref,
+        ),
+        advise_intake_runtime_execution_proof_ref=runtime_ref,
+    )
+
+    assert "advise_live_contract_proof_missing" not in snapshot.blockers
+    assert "suitability_policy_authority_remains_lotus_advise" in snapshot.blockers
+    assert "manage_live_contract_proof_missing" in snapshot.blockers
+    assert "rebalance_execution_authority_remains_lotus_manage" in snapshot.blockers
+    advise_contract = next(
+        contract
+        for contract in snapshot.downstream_contracts
+        if contract.contract_id == "lotus-idea-to-lotus-advise-proposal-intake:v1"
+    )
+    assert advise_contract.target_route == ADVISE_PROPOSAL_ROUTE
+    assert advise_contract.route_fit_status == "route_foundation_proven_not_certified"
+    assert route_ref in advise_contract.evidence_refs
+    assert runtime_ref in advise_contract.evidence_refs
+    assert "advise_live_contract_proof_missing" not in advise_contract.blockers
+    assert "suitability_policy_authority_remains_lotus_advise" in advise_contract.blockers
+
+
 def test_advise_intake_runtime_execution_clears_only_advise_live_blocker() -> None:
     proof_ref = "output/downstream/advise-intake-runtime-execution-proof.json"
     snapshot = build_downstream_realization_readiness_snapshot(
