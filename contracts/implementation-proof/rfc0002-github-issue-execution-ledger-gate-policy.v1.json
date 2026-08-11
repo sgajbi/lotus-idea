@@ -64,7 +64,8 @@
     871,
     874,
     878,
-    880
+    880,
+    883
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -226,6 +227,15 @@
       "coordination and documentation truth only",
       "does not clear RFC-0002 blockers",
       "replace production IdP/session/token-claims evidence"
+    ],
+    "883": [
+      "Keep #883 open and status/pr-open",
+      "conflicting GitHub lifecycle labels",
+      "scripts/github_issue_execution_state_audit.py",
+      "status/*",
+      "focused regression coverage",
+      "Keep #681 open",
+      "does not promote supported features"
     ],
     "685": [
       "Keep #685 open and status/blocked",

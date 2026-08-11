@@ -616,6 +616,15 @@
       "executionStatus": "closed_complete",
       "allowPullRequestAutoClose": true,
       "closureInstruction": "Closed #880 after QA passed on lotus-idea main ead2b1f437a8b05576ced7deb629713e72732cd9. PR #879 merged by rebase to Idea main c0547718e231eaa1ed61ff7da7db7d4378a6274c and implemented the bond-maturity domain policy refactor for `src/app/domain/bond_maturity_signal.py::evaluate_bond_maturity_signal`: source-supportability, candidate-created, missing-source, and materiality-result helpers now keep guard/decision flow separate from identity, signal, lineage, evidence packet, and candidate construction without changing public domain API behavior, repository contracts, OpenAPI, or supported-feature posture. Exact-main Main Releasability run 31447684811 passed for the implementation merge SHA, and source-sync PR #881 merged to main ead2b1f437a8b05576ced7deb629713e72732cd9 with exact-main Main Releasability run 31448704170 passing. QA closure evidence on main ead2b1f437a8b05576ced7deb629713e72732cd9 included 45 focused tests passing for conversion-governance API operations, API operation events, and bond-maturity signal evaluation; make rfc0002-github-issue-execution-ledger-gate, rfc0002-github-issue-execution-state-audit, rfc0002-github-issue-execution-summary, and rfc0002-github-issue-learning-pattern-gate passed. No wiki source changed in PR #879 or PR #881; repo-authored wiki publication was not required. Branch cleanup completed for both PR branches with remote deletion/prune and local branch deletion after patch-equivalence proof. This closes only the bond-maturity domain policy maintainability issue. It does not promote the bond-maturity archetype to supported feature, client-publication, Workbench proof, data-product certification, final RFC-0002 closure, or live Core source proof."
+    },
+    {
+      "issueNumber": 883,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/883",
+      "rfcSlices": ["slice-18"],
+      "githubState": "open",
+      "executionStatus": "open_pr_raised",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #883 open and status/pr-open until the conflicting GitHub lifecycle labels guard is merged to main, exact-main validation passes, and QA closure evidence is recorded. The implementation scope is limited to scripts/github_issue_execution_state_audit.py and focused regression coverage for extra status/* labels on ledger-tracked issues. Keep #681 open as the Slice 18 documentation/wiki/support/context tracker. This does not promote supported features, clear Core, Workbench, Gateway, production identity, protected runtime, provider, legal, client-publication, support, or final RFC-0002 closure blockers."
     }
   ]
 }
