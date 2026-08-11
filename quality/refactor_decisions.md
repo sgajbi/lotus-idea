@@ -31,6 +31,12 @@ Focused local validation passed:
 2. `python -m pytest tests/unit/implementation_proof tests/unit/ai_model_risk_operations/test_readiness_consumption.py tests/unit/operator_workflows_operations/test_readiness_consumption.py tests/integration/test_implementation_proof_readiness_api.py -q`
    (`72` passed).
 
+PR `#948` merged by rebase to exact Lotus Idea main
+`3b61fb49ff3a3f7457b5ebf73a68b3f6b4ab15bf`. Exact-main Main
+Releasability Gate run `31525892622` and exact-main CodeQL run
+`31525872690` both passed. The remote PR branch was deleted by GitHub, and
+the local branch was deleted after `git cherry` patch-equivalence proof.
+
 This is internal application maintainability only. It does not change
 API/OpenAPI behavior, proof artifact schemas, persistence, migrations,
 authentication or authorization, Core, Gateway, Workbench, runtime topology,
