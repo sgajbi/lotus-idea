@@ -385,6 +385,54 @@ def test_documentation_contract_gate_allows_contract_current_issue_posture(
     assert errors == []
 
 
+def test_documentation_contract_gate_blocks_stale_review_ledger_closure_truth(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    ledger_path = tmp_path / "docs" / "architecture" / "CODEBASE-REVIEW-LEDGER.md"
+    ledger_path.parent.mkdir(parents=True)
+    ledger_path.write_text(
+        "# Codebase Review Ledger\n\n"
+        "| Review ID | Scope / Pattern | Status | Finding | Action Taken | Evidence | Follow-up |\n"
+        "| --- | --- | --- | --- | --- | --- | --- |\n"
+        "| `LI-CR-0115` | Drawdown-review signal evaluation | "
+        "`Closed on main` | Issue `#661` | PR `#665` merged | "
+        "`6b562ac87ca61575c13fefc63b8c688c915da3fc`; "
+        "Main Releasability `29671128884` | Issue `#661` is closed. |\n"
+        "| `LI-CR-0116` | Live Core receipt observation | "
+        "`Closed on main` | Issue `#657` | PR `#660` merged | "
+        "`7aa14e0174b2584110d1d217e31f06c24b1bd153`; "
+        "Main Releasability `29667502188` | Issue `#657` is closed. |\n"
+        "| `LI-CR-0117` | Proof import guard | "
+        "`Closed on main` | Issue `#664` | PR `#665` merged | "
+        "`6b562ac87ca61575c13fefc63b8c688c915da3fc`; "
+        "Main Releasability `29671128884` | Issue `#664` is closed. |\n"
+        "| `LI-CR-0120` | High-volatility signal evaluation | "
+        "`Fixed locally; PR/main validation pending` | Issue `#862` | "
+        "PR `#863` merged | Main Releasability pending | "
+        "Complete PR checks before closure. |\n",
+        encoding="utf-8",
+    )
+
+    errors = module.review_ledger.codebase_review_ledger_closure_errors(root=tmp_path)
+
+    assert errors == [
+        "docs/architecture/CODEBASE-REVIEW-LEDGER.md: "
+        "`LI-CR-0120` retains stale local/pending posture after merged-main closure",
+        "docs/architecture/CODEBASE-REVIEW-LEDGER.md: "
+        "`LI-CR-0120` must be marked closed or hardened on main",
+        "docs/architecture/CODEBASE-REVIEW-LEDGER.md: "
+        "`LI-CR-0120` missing merged-main evidence fragment "
+        "``7ab7bec457f7da1982d91f5238217914d96bb583``",
+        "docs/architecture/CODEBASE-REVIEW-LEDGER.md: "
+        "`LI-CR-0120` missing merged-main evidence fragment "
+        "`Main Releasability `31303468026``",
+        "docs/architecture/CODEBASE-REVIEW-LEDGER.md: "
+        "`LI-CR-0120` missing merged-main evidence fragment "
+        "`Issue `#862` is closed with `status/merged-main``",
+    ]
+
+
 def test_documentation_contract_gate_blocks_unpolished_operator_doc(
     tmp_path: Path,
 ) -> None:

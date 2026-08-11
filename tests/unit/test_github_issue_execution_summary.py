@@ -223,17 +223,20 @@ def test_issue_681_ledger_records_latest_exact_main_evidence() -> None:
 def test_github_issue_execution_summary_markdown_is_comment_ready() -> None:
     module = _load_summary()
     ledger_payload = _load_ledger_payload()
-    issue_681 = next(
-        issue
-        for issue in ledger_payload["issues"]
-        if isinstance(issue, dict) and issue["issueNumber"] == 681
-    )
+    ledger_issues = [issue for issue in ledger_payload["issues"] if isinstance(issue, dict)]
+    issue_681 = next(issue for issue in ledger_issues if issue["issueNumber"] == 681)
     section_by_status = {
         "open_in_progress": "## In-Progress Issues",
         "open_pr_raised": "## PR-Open Issues",
         "open_merged_main_qa_pending": "## Merged-Main QA Pending Issues",
     }
     issue_681_section = section_by_status[issue_681["executionStatus"]]
+    pr_open_issues = sorted(
+        issue["issueNumber"]
+        for issue in ledger_issues
+        if issue["executionStatus"] == "open_pr_raised"
+    )
+    pr_open_rendering = ", ".join(f"#{issue_number}" for issue_number in pr_open_issues)
 
     summary = module.build_issue_execution_summary()
     rendered = module.render_markdown(summary)
@@ -250,7 +253,10 @@ def test_github_issue_execution_summary_markdown_is_comment_ready() -> None:
     assert "## Fixed Locally Issues" in rendered
     assert "## Fixed Locally Issues\n\n_None._" in rendered
     assert "## PR-Open Issues" in rendered
-    assert "## PR-Open Issues\n\n_None._" in rendered
+    if pr_open_issues:
+        assert f"## PR-Open Issues\n\n{pr_open_rendering}" in rendered
+    else:
+        assert "## PR-Open Issues\n\n_None._" in rendered
     assert "## In-Progress Issues\n\n#681" in rendered
     assert "#681, #874" not in rendered
     assert "## Merged-Main QA Pending Issues" in rendered

@@ -66,7 +66,9 @@
     878,
     880,
     883,
-    886
+    886,
+    890,
+    892
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -310,6 +312,35 @@
       "Issue #814 remains the separate canonical runtime proof blocker",
       "production IdP/session/token-claims authority",
       "supported-feature promotion"
+    ],
+    "890": [
+      "PR #891 opened from branch fix/890-review-ledger-closure-sync",
+      "#862 / PR #863 merged-main truth",
+      "documentation-contract coverage for stale local/pending review-ledger posture",
+      "Keep #890 open until PR checks pass",
+      "no-wiki-change or wiki-publication evidence",
+      "bounded RFC-0002 Slice 18 source-truth correction under #681",
+      "must not promote supported features",
+      "production identity/session/token-claims authority",
+      "change runtime behavior",
+      "reopen #862"
+    ],
+    "892": [
+      "PR #891 expanded from branch fix/890-review-ledger-closure-sync",
+      "LI-CR-0115, LI-CR-0116, and LI-CR-0117",
+      "#661/#664 via PR #665",
+      "6b562ac87ca61575c13fefc63b8c688c915da3fc",
+      "Main Releasability 29671128884",
+      "#657 via PR #660",
+      "7aa14e0174b2584110d1d217e31f06c24b1bd153",
+      "Main Releasability 29667502188",
+      "Keep #892 open until PR checks pass",
+      "no-wiki-change or wiki-publication evidence",
+      "bounded RFC-0002 Slice 18 source-truth correction under #681",
+      "must not promote supported features",
+      "production identity/session/token-claims authority",
+      "change runtime behavior",
+      "reopen #657, #661, or #664"
     ]
   },
   "requiredClosedIssueEvidence": {

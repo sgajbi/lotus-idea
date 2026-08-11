@@ -1,13 +1,13 @@
 from __future__ import annotations
-
 import sys
 import re
-from dataclasses import dataclass
 from pathlib import Path
 
 try:
+    from documentation import codebase_review_ledger as review_ledger
     from documentation import evidence_classification_inventory as evidence_inventory
     from documentation import implementation_proof_artifact_registry as artifact_registry
+    from documentation.surfaces import DocumentationSurface, PolishedDocumentationSurface
     from documentation.quality_contract import (
         code_fence_count,
         has_heading,
@@ -22,8 +22,10 @@ try:
     )
     from wiki_navigation_contract import same_wiki_page_link_errors
 except ModuleNotFoundError:
+    from scripts.documentation import codebase_review_ledger as review_ledger
     from scripts.documentation import evidence_classification_inventory as evidence_inventory
     from scripts.documentation import implementation_proof_artifact_registry as artifact_registry
+    from scripts.documentation.surfaces import DocumentationSurface, PolishedDocumentationSurface
     from scripts.documentation.quality_contract import (
         code_fence_count,
         has_heading,
@@ -39,24 +41,6 @@ except ModuleNotFoundError:
     from scripts.wiki_navigation_contract import same_wiki_page_link_errors
 
 ROOT = Path(__file__).resolve().parents[1]
-
-
-@dataclass(frozen=True)
-class DocumentationSurface:
-    relative_path: str
-    min_non_empty_lines: int
-    required_fragments: tuple[str, ...]
-    max_non_empty_lines: int | None = None
-
-
-@dataclass(frozen=True)
-class PolishedDocumentationSurface:
-    relative_path: str
-    required_headings: tuple[str, ...]
-    min_markdown_tables: int
-    min_code_fences: int
-    min_mermaid_fences: int = 0
-
 
 REQUIRED_SURFACES = (
     DocumentationSurface(
@@ -255,7 +239,6 @@ REQUIRED_SURFACES = (
         ("Roadmap", "Planned"),
     ),
 )
-
 POLISHED_SURFACES = (
     PolishedDocumentationSurface(
         "README.md",
@@ -484,6 +467,9 @@ def validate_documentation_contract(
     errors.extend(evidence_inventory.evidence_classification_inventory_errors(root=root))
     errors.extend(artifact_registry.implementation_proof_artifact_registry_errors(root=root))
     errors.extend(rfc0002_issue_posture_snapshot_errors(root=root))
+    errors.extend(
+        review_ledger.codebase_review_ledger_closure_errors(root=root, require_ledger=root == ROOT)
+    )
     return errors
 
 

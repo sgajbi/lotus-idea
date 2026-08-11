@@ -634,6 +634,24 @@
       "executionStatus": "closed_complete",
       "allowPullRequestAutoClose": true,
       "closureInstruction": "Closed #886 after QA passed. PR #887 merged the downstream-capacity seed timestamp-normalization fix to lotus-idea main at 2cfeb9008ac7965246afa0da5a6181b0a74a6dd2, and exact-main Main Releasability run 31453461450 plus CodeQL run 31453455926 passed for that SHA. PR #888 synchronized merged-main source truth to main at ce8dcd9b784067f9a2308c0f6ac4cbdda1f35a90, and exact-main Main Releasability run 31454400123 plus Push on main / CodeQL-equivalent run 31454395937 passed for that SHA. QA closure evidence includes the original focused timestamp tests, downstream-capacity focused suite, RFC-0002 issue ledger/state/summary/learning gates, documentation contract gate, release-image validation, and local exact-main git diff check. The accepted behavior proves canonical UTC request timestamp formatting and fail-closed naive timestamp handling at the Idea-owned synthetic capacity seed HTTP boundary. No repo-authored wiki source changed in PR #887 or #888, so wiki publication was not required. PR #887 and #888 remote branches were deleted by GitHub, and local branches were deleted after git cherry patch-equivalence proof. Issue #814 remains the separate canonical runtime proof blocker. This closes only the Idea-owned synthetic capacity seed timestamp normalization defect and does not implement production authentication, production IdP/session/token-claims authority, Workbench/Gateway/Core changes, production capacity certification, supported-feature promotion, client-publication proof, or final canonical RFC-0002 runtime proof."
+    },
+    {
+      "issueNumber": 890,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/890",
+      "rfcSlices": ["slice-18"],
+      "githubState": "open",
+      "executionStatus": "open_pr_raised",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "PR #891 opened from branch fix/890-review-ledger-closure-sync to synchronize the LI-CR-0120 codebase review ledger row with the already closed #862 / PR #863 merged-main truth and add documentation-contract coverage for stale local/pending review-ledger posture. Keep #890 open until PR checks pass, exact-main validation is recorded, no-wiki-change or wiki-publication evidence is captured, and branch cleanup is complete. This is a bounded RFC-0002 Slice 18 source-truth correction under #681. It must not promote supported features, clear Workbench/Gateway/Core blockers, claim production identity/session/token-claims authority, change runtime behavior, or reopen #862."
+    },
+    {
+      "issueNumber": 892,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/892",
+      "rfcSlices": ["slice-18"],
+      "githubState": "open",
+      "executionStatus": "open_pr_raised",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "PR #891 expanded from branch fix/890-review-ledger-closure-sync to synchronize the adjacent LI-CR-0115, LI-CR-0116, and LI-CR-0117 codebase review ledger rows with their already closed issue and merged-main PR evidence: #661/#664 via PR #665 at 6b562ac87ca61575c13fefc63b8c688c915da3fc with Main Releasability 29671128884, and #657 via PR #660 at 7aa14e0174b2584110d1d217e31f06c24b1bd153 with Main Releasability 29667502188. Keep #892 open until PR checks pass, exact-main validation is recorded, no-wiki-change or wiki-publication evidence is captured, and branch cleanup is complete. This is a bounded RFC-0002 Slice 18 source-truth correction under #681. It must not promote supported features, clear Workbench/Gateway/Core blockers, claim production identity/session/token-claims authority, change runtime behavior, or reopen #657, #661, or #664."
     }
   ]
 }
