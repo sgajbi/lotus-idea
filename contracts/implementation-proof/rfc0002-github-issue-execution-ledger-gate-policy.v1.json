@@ -581,6 +581,7 @@
     ],
     "917": [
       "Keep #917 open",
+      "PR #918",
       "Dockerfile runtime release-evidence validator boundary refactor",
       "validate_dockerfile_runtime",
       "base-image/runtime metadata",
