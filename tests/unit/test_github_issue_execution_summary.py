@@ -80,7 +80,10 @@ def test_github_issue_execution_summary_reports_current_rfc0002_counts() -> None
         summary["counts"]["byExecutionStatus"].get("open_merged_main_qa_pending", 0)
         == expected_execution_counts["open_merged_main_qa_pending"]
     )
-    assert "open_ready" not in summary["counts"]["byExecutionStatus"]
+    assert (
+        summary["counts"]["byExecutionStatus"].get("open_ready", 0)
+        == expected_execution_counts["open_ready"]
+    )
     assert summary["counts"]["byExecutionStatus"]["open_pending_final_closure"] == 1
     assert summary["counts"]["byExecutionStatus"]["open_pending_post_completion"] == 1
     assert summary["counts"]["byExecutionStatus"]["open_blocked"] == 14
@@ -116,6 +119,14 @@ def test_github_issue_execution_summary_reports_current_rfc0002_counts() -> None
         )
     else:
         assert "open_merged_main_qa_pending" not in summary["issuesByStatus"]
+    if expected_execution_counts["open_ready"]:
+        assert summary["issuesByStatus"]["open_ready"] == sorted(
+            issue["issueNumber"]
+            for issue in ledger_issues
+            if issue["executionStatus"] == "open_ready"
+        )
+    else:
+        assert "open_ready" not in summary["issuesByStatus"]
     assert summary["issuesByStatus"]["open_pending_final_closure"] == [683]
     assert summary["issuesByStatus"]["open_pending_post_completion"] == [684]
     assert summary["issuesByStatus"]["open_blocked"] == [
@@ -134,7 +145,6 @@ def test_github_issue_execution_summary_reports_current_rfc0002_counts() -> None
         699,
         814,
     ]
-    assert "open_ready" not in summary["issuesByStatus"]
     assert 681 in summary["issuesBySlice"]["slice-18"]
     assert 878 in summary["issuesBySlice"]["slice-12"]
     assert 878 in summary["issuesBySlice"]["slice-13"]
@@ -248,6 +258,10 @@ def test_github_issue_execution_summary_markdown_is_comment_ready() -> None:
     merged_main_qa_pending_rendering = ", ".join(
         f"#{issue_number}" for issue_number in merged_main_qa_pending_issues
     )
+    ready_issues = sorted(
+        issue["issueNumber"] for issue in ledger_issues if issue["executionStatus"] == "open_ready"
+    )
+    ready_rendering = ", ".join(f"#{issue_number}" for issue_number in ready_issues)
 
     summary = module.build_issue_execution_summary()
     rendered = module.render_markdown(summary)
@@ -291,7 +305,10 @@ def test_github_issue_execution_summary_markdown_is_comment_ready() -> None:
     assert "#379, #690" not in rendered
     assert "#340, #379" not in rendered
     assert "## Ready Issues" in rendered
-    assert "## Ready Issues\n\n_None._" in rendered
+    if ready_issues:
+        assert f"## Ready Issues\n\n{ready_rendering}" in rendered
+    else:
+        assert "## Ready Issues\n\n_None._" in rendered
     assert "## Pending Final Closure Issues\n\n#683" in rendered
     assert "## Pending Post-Completion Issues\n\n#684" in rendered
     assert "## Blocked Issues" in rendered
