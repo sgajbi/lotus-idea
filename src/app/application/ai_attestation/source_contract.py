@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Any, cast
@@ -121,101 +122,109 @@ _FALSE_AUTHORITY_CLAIMS = (
 )
 
 
+@dataclass(frozen=True, slots=True)
+class _SourceContractAuthority:
+    consumer_sources: tuple[SourceAuthoritySource, ...]
+    producer_sources: tuple[SourceAuthoritySource, ...]
+    consumer_authority: tuple[Mapping[str, Any], ...]
+    producer_authority: tuple[Mapping[str, Any], ...]
+    consumer_valid: bool
+    producer_valid: bool
+
+
+@dataclass(frozen=True, slots=True)
+class _SourceContractChecks:
+    timezone_aware_generated_at_utc: bool
+    consumer_source_authority_digest_bound: bool
+    producer_source_authority_digest_bound: bool
+    producer_claims_declared: bool
+    producer_signing_declared: bool
+    producer_issuance_fail_closed: bool
+    consumer_verification_declared: bool
+    consumer_replay_persistence_declared: bool
+    evidence_class_matches_blockers: bool
+
+    def as_contract_payload(self) -> dict[str, bool]:
+        return {
+            "timezoneAwareGeneratedAtUtc": self.timezone_aware_generated_at_utc,
+            "consumerSourceAuthorityDigestBound": self.consumer_source_authority_digest_bound,
+            "producerSourceAuthorityDigestBound": self.producer_source_authority_digest_bound,
+            "producerClaimsDeclared": self.producer_claims_declared,
+            "producerSigningDeclared": self.producer_signing_declared,
+            "producerIssuanceFailClosed": self.producer_issuance_fail_closed,
+            "consumerVerificationDeclared": self.consumer_verification_declared,
+            "consumerReplayPersistenceDeclared": self.consumer_replay_persistence_declared,
+            "evidenceClassMatchesBlockers": self.evidence_class_matches_blockers,
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class _SourceContractValidity:
+    consumer_valid: bool
+    producer_valid: bool
+
+    @property
+    def source_contract_valid(self) -> bool:
+        return self.consumer_valid and self.producer_valid
+
+    @property
+    def validation_scope(self) -> str:
+        return "full_cross_repository" if self.producer_valid else "idea_consumer_only"
+
+
 def build_ai_attestation_source_contract(
     *,
     generated_at_utc: datetime,
     repository_root: Path,
     lotus_ai_root: Path | None = None,
 ) -> dict[str, Any]:
-    lotus_ai_root = lotus_ai_root or repository_root.parent / "lotus-ai"
-    consumer_sources = _consumer_sources(repository_root)
-    producer_sources = _producer_sources(lotus_ai_root)
-    consumer_authority = build_source_authority_records(consumer_sources)
-    producer_authority = build_source_authority_records(producer_sources)
-    consumer_authority_valid = source_authority_records_are_valid(
-        consumer_authority,
-        expected_sources=consumer_sources,
+    resolved_lotus_ai_root = lotus_ai_root or repository_root.parent / "lotus-ai"
+    authority = _build_source_contract_authority(repository_root, resolved_lotus_ai_root)
+    checks = _build_source_contract_checks(
+        generated_at_utc=generated_at_utc,
+        repository_root=repository_root,
+        lotus_ai_root=resolved_lotus_ai_root,
+        authority=authority,
     )
-    producer_authority_valid = source_authority_records_are_valid(
-        producer_authority,
-        expected_sources=producer_sources,
+    validity = _build_source_contract_validity(checks)
+    return _build_source_contract_payload(
+        generated_at_utc=generated_at_utc,
+        authority=authority,
+        checks=checks,
+        validity=validity,
     )
-    producer_claims_declared = text_file_contains_all(
-        lotus_ai_root / PRODUCER_SOURCE_REFS[0],
-        ("WorkflowRunAttestationClaims", "model_risk_approval_ref", "replay_nonce"),
-    )
-    producer_signing_declared = text_file_contains_all(
-        lotus_ai_root / PRODUCER_SOURCE_REFS[1],
-        ("EdDSA", "signature_base64url", "canonical_attestation_payload"),
-    )
-    producer_issuance_fail_closed = text_file_contains_all(
-        lotus_ai_root / PRODUCER_SOURCE_REFS[2],
-        ("model_risk_status", "approval_ref", "stubbed"),
-    )
-    consumer_verification_declared = text_file_contains_all(
-        repository_root / CONSUMER_SOURCE_REFS[1],
-        (
-            "verify_lotus_ai_run_attestation",
-            "select_trusted_ed25519_key",
-            "signature_verifier.verify",
-            "input digest",
-            "output digest",
-        ),
-    )
-    consumer_replay_persistence_declared = _consumer_replay_persistence_declared(repository_root)
-    timezone_aware = (
-        generated_at_utc.tzinfo is not None and generated_at_utc.utcoffset() is not None
-    )
-    evidence_class_matches_blockers = all(
-        evidence_class_can_clear(
-            actual=EvidenceClass.SOURCE_CONTRACT,
-            required=EvidenceClass(required_class),
-        )
-        for _blocker, required_class in AI_ATTESTATION_REQUIRED_BLOCKER_EVIDENCE_CLASSES
-    )
-    consumer_valid = (
-        timezone_aware
-        and consumer_authority_valid
-        and consumer_verification_declared
-        and consumer_replay_persistence_declared
-        and evidence_class_matches_blockers
-    )
-    producer_valid = (
-        producer_authority_valid
-        and producer_claims_declared
-        and producer_signing_declared
-        and producer_issuance_fail_closed
-    )
-    source_contract_valid = consumer_valid and producer_valid
+
+
+def _build_source_contract_payload(
+    *,
+    generated_at_utc: datetime,
+    authority: _SourceContractAuthority,
+    checks: _SourceContractChecks,
+    validity: _SourceContractValidity,
+) -> dict[str, Any]:
     return {
         "schemaVersion": AI_ATTESTATION_SOURCE_CONTRACT_SCHEMA_VERSION,
         "repository": "lotus-idea",
         "generatedAtUtc": generated_at_utc.isoformat(),
         "proofType": "signed_ai_attestation_source_contract",
         "proofScope": "lotus_ai_producer_and_idea_consumer_source_declarations",
-        "validationScope": ("full_cross_repository" if producer_valid else "idea_consumer_only"),
+        "validationScope": validity.validation_scope,
         "evidenceClass": EvidenceClass.SOURCE_CONTRACT.value,
-        "sourceContractValid": source_contract_valid,
-        "consumerSourceContractValid": consumer_valid,
-        "producerSourceContractValid": producer_valid,
+        "sourceContractValid": validity.source_contract_valid,
+        "consumerSourceContractValid": validity.consumer_valid,
+        "producerSourceContractValid": validity.producer_valid,
         "sourceContractBlockersSatisfied": AI_ATTESTATION_SOURCE_CONTRACT_BLOCKERS_SATISFIED,
         "requiredBlockerEvidenceClasses": dict(AI_ATTESTATION_REQUIRED_BLOCKER_EVIDENCE_CLASSES),
         "evidenceRefs": REQUIRED_AI_ATTESTATION_EVIDENCE_REFS,
-        "consumerSourceAuthority": consumer_authority,
-        "consumerSourceAuthorityDigest": source_authority_records_digest(consumer_authority),
-        "producerSourceAuthority": producer_authority,
-        "producerSourceAuthorityDigest": source_authority_records_digest(producer_authority),
-        "contractChecks": {
-            "timezoneAwareGeneratedAtUtc": timezone_aware,
-            "consumerSourceAuthorityDigestBound": consumer_authority_valid,
-            "producerSourceAuthorityDigestBound": producer_authority_valid,
-            "producerClaimsDeclared": producer_claims_declared,
-            "producerSigningDeclared": producer_signing_declared,
-            "producerIssuanceFailClosed": producer_issuance_fail_closed,
-            "consumerVerificationDeclared": consumer_verification_declared,
-            "consumerReplayPersistenceDeclared": consumer_replay_persistence_declared,
-            "evidenceClassMatchesBlockers": evidence_class_matches_blockers,
-        },
+        "consumerSourceAuthority": authority.consumer_authority,
+        "consumerSourceAuthorityDigest": source_authority_records_digest(
+            authority.consumer_authority
+        ),
+        "producerSourceAuthority": authority.producer_authority,
+        "producerSourceAuthorityDigest": source_authority_records_digest(
+            authority.producer_authority
+        ),
+        "contractChecks": checks.as_contract_payload(),
         "remainingCertificationBlockers": REMAINING_AI_ATTESTATION_CERTIFICATION_BLOCKERS,
         "runtimeExecutionObserved": False,
         "liveProviderExecuted": False,
@@ -227,6 +236,120 @@ def build_ai_attestation_source_contract(
         "supportedFeaturePromoted": False,
         "certificationClosed": False,
     }
+
+
+def _build_source_contract_authority(
+    repository_root: Path,
+    lotus_ai_root: Path,
+) -> _SourceContractAuthority:
+    consumer_sources = _consumer_sources(repository_root)
+    producer_sources = _producer_sources(lotus_ai_root)
+    consumer_authority = build_source_authority_records(consumer_sources)
+    producer_authority = build_source_authority_records(producer_sources)
+    return _SourceContractAuthority(
+        consumer_sources=consumer_sources,
+        producer_sources=producer_sources,
+        consumer_authority=consumer_authority,
+        producer_authority=producer_authority,
+        consumer_valid=source_authority_records_are_valid(
+            consumer_authority,
+            expected_sources=consumer_sources,
+        ),
+        producer_valid=source_authority_records_are_valid(
+            producer_authority,
+            expected_sources=producer_sources,
+        ),
+    )
+
+
+def _build_source_contract_checks(
+    *,
+    generated_at_utc: datetime,
+    repository_root: Path,
+    lotus_ai_root: Path,
+    authority: _SourceContractAuthority,
+) -> _SourceContractChecks:
+    return _SourceContractChecks(
+        timezone_aware_generated_at_utc=_is_timezone_aware_datetime(generated_at_utc),
+        consumer_source_authority_digest_bound=authority.consumer_valid,
+        producer_source_authority_digest_bound=authority.producer_valid,
+        producer_claims_declared=_producer_claims_declared(lotus_ai_root),
+        producer_signing_declared=_producer_signing_declared(lotus_ai_root),
+        producer_issuance_fail_closed=_producer_issuance_fail_closed(lotus_ai_root),
+        consumer_verification_declared=_consumer_verification_declared(repository_root),
+        consumer_replay_persistence_declared=_consumer_replay_persistence_declared(repository_root),
+        evidence_class_matches_blockers=_evidence_class_matches_blockers(),
+    )
+
+
+def _build_source_contract_validity(
+    checks: _SourceContractChecks,
+) -> _SourceContractValidity:
+    consumer_valid = (
+        checks.timezone_aware_generated_at_utc
+        and checks.consumer_source_authority_digest_bound
+        and checks.consumer_verification_declared
+        and checks.consumer_replay_persistence_declared
+        and checks.evidence_class_matches_blockers
+    )
+    producer_valid = (
+        checks.producer_source_authority_digest_bound
+        and checks.producer_claims_declared
+        and checks.producer_signing_declared
+        and checks.producer_issuance_fail_closed
+    )
+    return _SourceContractValidity(
+        consumer_valid=consumer_valid,
+        producer_valid=producer_valid,
+    )
+
+
+def _is_timezone_aware_datetime(value: datetime) -> bool:
+    return value.tzinfo is not None and value.utcoffset() is not None
+
+
+def _producer_claims_declared(lotus_ai_root: Path) -> bool:
+    return text_file_contains_all(
+        lotus_ai_root / PRODUCER_SOURCE_REFS[0],
+        ("WorkflowRunAttestationClaims", "model_risk_approval_ref", "replay_nonce"),
+    )
+
+
+def _producer_signing_declared(lotus_ai_root: Path) -> bool:
+    return text_file_contains_all(
+        lotus_ai_root / PRODUCER_SOURCE_REFS[1],
+        ("EdDSA", "signature_base64url", "canonical_attestation_payload"),
+    )
+
+
+def _producer_issuance_fail_closed(lotus_ai_root: Path) -> bool:
+    return text_file_contains_all(
+        lotus_ai_root / PRODUCER_SOURCE_REFS[2],
+        ("model_risk_status", "approval_ref", "stubbed"),
+    )
+
+
+def _consumer_verification_declared(repository_root: Path) -> bool:
+    return text_file_contains_all(
+        repository_root / CONSUMER_SOURCE_REFS[1],
+        (
+            "verify_lotus_ai_run_attestation",
+            "select_trusted_ed25519_key",
+            "signature_verifier.verify",
+            "input digest",
+            "output digest",
+        ),
+    )
+
+
+def _evidence_class_matches_blockers() -> bool:
+    return all(
+        evidence_class_can_clear(
+            actual=EvidenceClass.SOURCE_CONTRACT,
+            required=EvidenceClass(required_class),
+        )
+        for _blocker, required_class in AI_ATTESTATION_REQUIRED_BLOCKER_EVIDENCE_CLASSES
+    )
 
 
 def signed_ai_attestation_source_contract_is_valid(payload: Mapping[str, Any]) -> bool:

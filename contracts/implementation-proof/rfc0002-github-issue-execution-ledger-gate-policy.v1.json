@@ -83,7 +83,8 @@
     926,
     929,
     932,
-    935
+    935,
+    937
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -349,6 +350,22 @@
       "product behavior",
       "API/OpenAPI behavior",
       "production IdP/session-token authority",
+      "supported-feature promotion",
+      "final RFC-0002 closure"
+    ],
+    "937": [
+      "Keep #937 open with status/in-progress",
+      "signed AI attestation source-contract builder",
+      "106-line application-layer hotspot",
+      "source-authority assembly",
+      "producer contract checks",
+      "consumer contract checks",
+      "payload projection",
+      "runtime/provider/deployment/supported-feature certification flags false",
+      "does not implement production authentication",
+      "production IdP/session-token authority",
+      "Lotus AI live provider execution",
+      "model-risk approval authority",
       "supported-feature promotion",
       "final RFC-0002 closure"
     ]
