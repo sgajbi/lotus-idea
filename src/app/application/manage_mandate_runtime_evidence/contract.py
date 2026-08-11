@@ -245,50 +245,91 @@ def _receipts_reconcile(
     evaluation: Mapping[str, Any],
     evaluated: Any,
 ) -> bool:
+    return (
+        _request_scope_reconciles(request, action, performance, risk, evaluation, evaluated)
+        and _source_receipts_are_valid(action, performance, risk, evaluated)
+        and _source_ref_digests_reconcile(action, performance, risk, evaluation)
+        and _action_register_supportability_is_valid(action)
+        and _evaluation_outcome_is_valid(action, evaluation)
+    )
+
+
+def _request_scope_reconciles(
+    request: Mapping[str, Any],
+    action: Mapping[str, Any],
+    performance: Mapping[str, Any],
+    risk: Mapping[str, Any],
+    evaluation: Mapping[str, Any],
+    evaluated: Any,
+) -> bool:
     try:
         date.fromisoformat(str(request.get("asOfDate")))
     except ValueError:
         return False
-    if (
-        request.get("consumerSystem") != "lotus-idea"
-        or request.get("evaluatedAtUtc") != evaluated.isoformat().replace("+00:00", "Z")
-        or request.get("policyVersion") != evaluation.get("policyVersion")
-        or request.get("tenantIdHash") != action.get("responseTenantIdHash")
-        or request.get("portfolioIdHash") != action.get("responsePortfolioIdHash")
-        or request.get("asOfDate") != action.get("asOfDate")
-        or request.get("asOfDate") != action.get("responseAsOfDate")
-        or request.get("asOfDate") != action.get("responseEvidenceAsOfDate")
-        or request.get("asOfDate") != performance.get("asOfDate")
-        or request.get("asOfDate") != risk.get("asOfDate")
-        or request.get("correlationIdHash") != action.get("sourceCorrelationIdHash")
-        or action.get("generatedAtUtc") != action.get("responseGeneratedAtUtc")
-        or action.get("generatedAtUtc") != action.get("responseProducerGeneratedAtUtc")
-        or action.get("contentHash") != action.get("sourceBatchFingerprint")
-        or action.get("temporalIdentityStatus") != "available"
-    ):
-        return False
-    if not _source_is_valid(
-        action,
-        product_id="lotus-manage:PortfolioActionRegister:v1",
-        source_system="lotus-manage",
-        route="/api/v1/rebalance/supportability/summary",
-        evaluated=evaluated,
-    ):
-        return False
-    if not _source_is_valid(
-        performance,
-        product_id="lotus-performance:MandatePerformanceHealthContext:v1",
-        source_system="lotus-performance",
-        route="/performance/mandate-health-context",
-        evaluated=evaluated,
-    ) or not _source_is_valid(
-        risk,
-        product_id="lotus-risk:MandateRiskHealthContext:v1",
-        source_system="lotus-risk",
-        route="/analytics/risk/mandate-health-context",
-        evaluated=evaluated,
-    ):
-        return False
+
+    as_of_date = request.get("asOfDate")
+    return (
+        request.get("consumerSystem") == "lotus-idea"
+        and request.get("evaluatedAtUtc") == evaluated.isoformat().replace("+00:00", "Z")
+        and request.get("policyVersion") == evaluation.get("policyVersion")
+        and request.get("tenantIdHash") == action.get("responseTenantIdHash")
+        and request.get("portfolioIdHash") == action.get("responsePortfolioIdHash")
+        and as_of_date == action.get("asOfDate")
+        and as_of_date == action.get("responseAsOfDate")
+        and as_of_date == action.get("responseEvidenceAsOfDate")
+        and as_of_date == performance.get("asOfDate")
+        and as_of_date == risk.get("asOfDate")
+        and request.get("correlationIdHash") == action.get("sourceCorrelationIdHash")
+        and _action_temporal_identity_reconciles(action)
+    )
+
+
+def _action_temporal_identity_reconciles(action: Mapping[str, Any]) -> bool:
+    return (
+        action.get("generatedAtUtc") == action.get("responseGeneratedAtUtc")
+        and action.get("generatedAtUtc") == action.get("responseProducerGeneratedAtUtc")
+        and action.get("contentHash") == action.get("sourceBatchFingerprint")
+        and action.get("temporalIdentityStatus") == "available"
+    )
+
+
+def _source_receipts_are_valid(
+    action: Mapping[str, Any],
+    performance: Mapping[str, Any],
+    risk: Mapping[str, Any],
+    evaluated: Any,
+) -> bool:
+    return (
+        _source_is_valid(
+            action,
+            product_id="lotus-manage:PortfolioActionRegister:v1",
+            source_system="lotus-manage",
+            route="/api/v1/rebalance/supportability/summary",
+            evaluated=evaluated,
+        )
+        and _source_is_valid(
+            performance,
+            product_id="lotus-performance:MandatePerformanceHealthContext:v1",
+            source_system="lotus-performance",
+            route="/performance/mandate-health-context",
+            evaluated=evaluated,
+        )
+        and _source_is_valid(
+            risk,
+            product_id="lotus-risk:MandateRiskHealthContext:v1",
+            source_system="lotus-risk",
+            route="/analytics/risk/mandate-health-context",
+            evaluated=evaluated,
+        )
+    )
+
+
+def _source_ref_digests_reconcile(
+    action: Mapping[str, Any],
+    performance: Mapping[str, Any],
+    risk: Mapping[str, Any],
+    evaluation: Mapping[str, Any],
+) -> bool:
     upstream = [dict(performance), dict(risk)]
     if action.get("upstreamSourceRefsDigest") != sha256_json(upstream):
         return False
@@ -297,23 +338,33 @@ def _receipts_reconcile(
         **action_source_material,
         "receiptDigest": sha256_json(action_source_material),
     }
-    if evaluation.get("sourceRefsDigest") != sha256_json([action_source, *upstream]):
-        return False
+    return evaluation.get("sourceRefsDigest") == sha256_json([action_source, *upstream])
+
+
+def _action_register_supportability_is_valid(action: Mapping[str, Any]) -> bool:
     counts = (
         action.get("runCount"),
         action.get("operationCount"),
         action.get("workflowDecisionCount"),
         action.get("lineageEdgeCount"),
     )
-    if (
-        any(not isinstance(value, int) or isinstance(value, bool) or value < 0 for value in counts)
-        or action.get("supportabilityState") != "ready"
-        or action.get("supportabilityReason") != "supportability_summary_ready"
-        or action.get("freshnessBucket") not in {"current", "same_day"}
-        or action.get("portfolioScopeConfirmed") is not True
-        or evaluation.get("family") != "allocation_drift"
-        or evaluation.get("unsupportedReasons") != []
-    ):
+    return (
+        all(
+            isinstance(value, int) and not isinstance(value, bool) and value >= 0
+            for value in counts
+        )
+        and action.get("supportabilityState") == "ready"
+        and action.get("supportabilityReason") == "supportability_summary_ready"
+        and action.get("freshnessBucket") in {"current", "same_day"}
+        and action.get("portfolioScopeConfirmed") is True
+    )
+
+
+def _evaluation_outcome_is_valid(
+    action: Mapping[str, Any],
+    evaluation: Mapping[str, Any],
+) -> bool:
+    if evaluation.get("family") != "allocation_drift" or evaluation.get("unsupportedReasons") != []:
         return False
     minimum_workflow = evaluation.get("minimumWorkflowDecisionCount")
     minimum_lineage = evaluation.get("minimumLineageEdgeCount")

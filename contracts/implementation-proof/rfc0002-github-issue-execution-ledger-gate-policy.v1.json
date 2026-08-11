@@ -79,7 +79,8 @@
     914,
     917,
     920,
-    923
+    923,
+    926
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -322,6 +323,15 @@
       "fail-closed naive timestamp handling",
       "Issue #814 remains the separate canonical runtime proof blocker",
       "production IdP/session/token-claims authority",
+      "supported-feature promotion"
+    ],
+    "926": [
+      "Keep #926 open",
+      "Manage mandate runtime receipt reconciliation",
+      "_receipts_reconcile",
+      "closed v3 Manage mandate runtime proof schema",
+      "#379 production/certification blocker",
+      "must not implement authentication or authorization",
       "supported-feature promotion"
     ]
   },
