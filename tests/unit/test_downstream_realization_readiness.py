@@ -152,6 +152,18 @@ def test_downstream_realization_readiness_reports_blocked_foundation_posture() -
         "rfc_slice_12",
         "rfc_slice_13",
     }
+    assert snapshot.source_of_truth["downstream_realization_orchestration"] == (
+        "src/app/application/downstream_realization.py"
+    )
+    assert snapshot.source_of_truth["downstream_contract_plan"] == (
+        "contracts/downstream-realization/lotus-idea-downstream-contracts.v1.json"
+    )
+    assert snapshot.source_of_truth["rfc_slice_12"].endswith(
+        "RFC-0002-slice-12-advise-and-manage-conversion-realization.md"
+    )
+    assert snapshot.source_of_truth["rfc_slice_13"].endswith(
+        "RFC-0002-slice-13-report-render-archive-and-evidence-pack-materialization.md"
+    )
     assert len(snapshot.downstream_contracts) == 3
 
 
