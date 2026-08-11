@@ -63,7 +63,8 @@
     866,
     871,
     874,
-    878
+    878,
+    880
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -307,6 +308,15 @@
       "non-claim behavior",
       "does not promote supported features",
       "does not promote supported features, clear Gateway/Workbench runtime proof"
+    ],
+    "880": [
+      "Keep #880 open",
+      "bond-maturity domain policy refactor",
+      "evaluate_bond_maturity_signal",
+      "identity, signal, lineage, evidence packet, and candidate construction",
+      "focused domain tests",
+      "does not promote the bond-maturity archetype to supported feature",
+      "does not clear live Core source proof"
     ]
   },
   "requiredClosedIssueEvidence": {
