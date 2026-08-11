@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import UTC, date, datetime
 import hashlib
 from typing import Any, Mapping
 
@@ -202,4 +202,6 @@ def _headers(*, subject: str, capability: str, idempotency_key: str) -> dict[str
 
 
 def _utc_text(value: datetime) -> str:
-    return value.isoformat().replace("+00:00", "Z")
+    if value.tzinfo is None or value.utcoffset() is None:
+        raise ValueError("capacity seed timestamp must be timezone-aware")
+    return value.astimezone(UTC).isoformat().replace("+00:00", "Z")
