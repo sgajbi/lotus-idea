@@ -31,6 +31,30 @@ def caller_headers(
     )
 
 
+def test_build_conversion_caller_headers_preserves_trusted_context_and_scope() -> None:
+    headers = operations.build_conversion_caller_headers(
+        subject="advisor-002",
+        roles="relationship-manager",
+        capabilities="idea.conversion.outcome.record",
+        tenant_ids="tenant-private-bank-sg",
+        book_ids="book-advisor-002",
+        portfolio_ids="PB_SG_GLOBAL_BAL_001",
+        client_ids="client-002",
+        trusted_caller_context="trusted-context-token",
+    )
+
+    assert headers == operations.ConversionCallerHeaders(
+        subject="advisor-002",
+        roles="relationship-manager",
+        capabilities="idea.conversion.outcome.record",
+        tenant_ids="tenant-private-bank-sg",
+        book_ids="book-advisor-002",
+        portfolio_ids="PB_SG_GLOBAL_BAL_001",
+        client_ids="client-002",
+        trusted_caller_context="trusted-context-token",
+    )
+
+
 def test_prepare_conversion_mutation_builds_context_without_runtime_split(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -132,6 +156,42 @@ def test_prepare_conversion_mutation_returns_product_safe_durable_write_problem(
     ]
 
 
+def test_conversion_permission_denied_response_emits_product_safe_event(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    emitted_events: list[dict[str, Any]] = []
+    monkeypatch.setattr(
+        operations,
+        "emit_conversion_operation_event",
+        lambda operation, outcome, error_code=None, durable_storage_backed=False: (
+            emitted_events.append(
+                {
+                    "operation": operation,
+                    "outcome": outcome,
+                    "error_code": error_code,
+                    "durable_storage_backed": durable_storage_backed,
+                }
+            )
+        ),
+    )
+
+    response = operations.conversion_permission_denied_response(
+        operation=IdeaOperation.CONVERSION_OUTCOME,
+        detail="The caller is not permitted to record idea conversion outcomes.",
+    )
+
+    assert response.status_code == 403
+    assert b"permission_denied" in response.body
+    assert emitted_events == [
+        {
+            "operation": IdeaOperation.CONVERSION_OUTCOME,
+            "outcome": OperationOutcome.PERMISSION_DENIED,
+            "error_code": "permission_denied",
+            "durable_storage_backed": False,
+        }
+    ]
+
+
 @pytest.mark.parametrize(
     ("decision", "expected_status", "expected_code"),
     (
@@ -156,3 +216,59 @@ def test_problem_for_conversion_persistence_maps_product_safe_problem_details(
     assert response is not None
     assert response.status_code == expected_status
     assert expected_code.encode() in response.body
+
+
+@pytest.mark.parametrize(
+    ("decision", "expected_problem_code", "expected_outcome", "expected_error_code"),
+    (
+        (ConversionPersistenceDecision.ACCEPTED, None, OperationOutcome.ACCEPTED, None),
+        (
+            ConversionPersistenceDecision.CONFLICT,
+            "idempotency_conflict",
+            OperationOutcome.CONFLICT,
+            "idempotency_conflict",
+        ),
+    ),
+)
+def test_emit_conversion_persistence_event_or_problem_maps_event_and_problem_once(
+    monkeypatch: pytest.MonkeyPatch,
+    decision: ConversionPersistenceDecision,
+    expected_problem_code: str | None,
+    expected_outcome: OperationOutcome,
+    expected_error_code: str | None,
+) -> None:
+    emitted_events: list[dict[str, Any]] = []
+    monkeypatch.setattr(
+        operations,
+        "emit_conversion_operation_event",
+        lambda operation, outcome, error_code=None, durable_storage_backed=False: (
+            emitted_events.append(
+                {
+                    "operation": operation,
+                    "outcome": outcome,
+                    "error_code": error_code,
+                    "durable_storage_backed": durable_storage_backed,
+                }
+            )
+        ),
+    )
+
+    response = operations.emit_conversion_persistence_event_or_problem(
+        operation=IdeaOperation.CONVERSION_INTENT,
+        result=ConversionPersistenceResult(decision=decision, record=None),
+        durable_storage_backed=True,
+    )
+
+    if expected_problem_code is None:
+        assert response is None
+    else:
+        assert response is not None
+        assert expected_problem_code.encode() in response.body
+    assert emitted_events == [
+        {
+            "operation": IdeaOperation.CONVERSION_INTENT,
+            "outcome": expected_outcome,
+            "error_code": expected_error_code,
+            "durable_storage_backed": True,
+        }
+    ]

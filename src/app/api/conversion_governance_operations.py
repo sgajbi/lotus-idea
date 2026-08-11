@@ -29,7 +29,12 @@ from app.security.caller_context import CallerContext, PermissionDeniedError
 __all__ = [
     "ConversionCallerHeaders",
     "ConversionMutationContext",
+    "build_conversion_caller_headers",
+    "conversion_invalid_request_response",
+    "conversion_invalid_state_response",
+    "conversion_permission_denied_response",
     "emit_conversion_operation_event",
+    "emit_conversion_persistence_event_or_problem",
     "error_code_from_conversion_decision",
     "operation_outcome_from_conversion_decision",
     "permission_denied",
@@ -57,6 +62,29 @@ class ConversionMutationContext:
     repository: ConversionWorkflowRepository
     durable_storage_backed: bool
     access_scope_filter: QueueAccessScopeFilter | None = None
+
+
+def build_conversion_caller_headers(
+    *,
+    subject: str | None,
+    roles: str | None,
+    capabilities: str | None,
+    tenant_ids: str | None,
+    book_ids: str | None,
+    portfolio_ids: str | None,
+    client_ids: str | None,
+    trusted_caller_context: str | None,
+) -> ConversionCallerHeaders:
+    return ConversionCallerHeaders(
+        subject=subject,
+        roles=roles,
+        capabilities=capabilities,
+        tenant_ids=tenant_ids,
+        book_ids=book_ids,
+        portfolio_ids=portfolio_ids,
+        client_ids=client_ids,
+        trusted_caller_context=trusted_caller_context,
+    )
 
 
 def prepare_conversion_mutation(
@@ -140,6 +168,73 @@ def problem_for_conversion_persistence(
 
 def permission_denied(detail: str) -> JSONResponse:
     return permission_denied_problem(detail)
+
+
+def conversion_permission_denied_response(
+    *,
+    operation: IdeaOperation,
+    detail: str,
+) -> JSONResponse:
+    emit_conversion_operation_event(
+        operation,
+        OperationOutcome.PERMISSION_DENIED,
+        error_code="permission_denied",
+    )
+    return permission_denied(detail)
+
+
+def conversion_invalid_state_response(
+    *,
+    operation: IdeaOperation,
+    code: str,
+    title: str,
+    detail: str,
+) -> JSONResponse:
+    emit_conversion_operation_event(
+        operation,
+        OperationOutcome.INVALID_STATE,
+        error_code=code,
+    )
+    return problem_response(
+        status_code=status.HTTP_409_CONFLICT,
+        code=code,
+        title=title,
+        detail=detail,
+    )
+
+
+def conversion_invalid_request_response(
+    *,
+    operation: IdeaOperation,
+    detail: str,
+) -> JSONResponse:
+    emit_conversion_operation_event(
+        operation,
+        OperationOutcome.INVALID_REQUEST,
+        error_code="invalid_request",
+    )
+    return problem_response(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        code="invalid_request",
+        title="Invalid request",
+        detail=detail,
+    )
+
+
+def emit_conversion_persistence_event_or_problem(
+    *,
+    operation: IdeaOperation,
+    result: ConversionPersistenceResult,
+    durable_storage_backed: bool,
+) -> JSONResponse | None:
+    problem = problem_for_conversion_persistence(result)
+    emit_conversion_operation_event(
+        operation,
+        operation_outcome_from_conversion_decision(result.decision),
+        error_code=error_code_from_conversion_decision(result.decision),
+        durable_storage_backed=durable_storage_backed,
+    )
+    return problem
 
 
 def operation_outcome_from_conversion_decision(

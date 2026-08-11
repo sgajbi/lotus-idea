@@ -598,6 +598,15 @@
       "executionStatus": "closed_complete",
       "allowPullRequestAutoClose": true,
       "closureInstruction": "Closed #874 after PR #875 merged the RFC-0002 current issue posture snapshot contract and documentation gate hardening to Idea main 6889123bcbe742ccb3da074a12d5b94f2c1589e1. PR #875 head ff6eff3a4d66aaa7917c305ce6527196ae8eef08 passed Feature Lane, PR Merge Gate, and CodeQL; exact-main Main Releasability run 31325174863 passed for 6889123bcbe742ccb3da074a12d5b94f2c1589e1 after earlier exact-SHA dispatch run 31325025004 was cancelled by workflow concurrency and was not used as evidence. Repo-authored wiki source was published to lotus-idea.wiki commit 5b52566 with strict DiffCount 0. The final closure-sync branch updates contracts/implementation-proof/rfc0002-issue-posture-snapshot.v1.json, the execution ledger, policy, tests, RFC/docs/wiki/context truth, and current posture text to 59 tracked RFC-0002 issues, 34 closed and 25 open, #681 as the only in-progress Slice 18 issue, and 128 label-backed RFC-0002 issues across 13 repositories, 90 closed and 38 open, with 25 status/blocked, 1 status/in-progress, and 0 app-actionable blocked issues. This closes only the Slice 18 documentation-posture hardening issue. It does not close #681, clear Workbench/Gateway/Core, identity, protected runtime, data-mesh, client-publication, supported-feature promotion, or final RFC-0002 completion blockers, and it does not promote supported features."
+    },
+    {
+      "issueNumber": 878,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/878",
+      "rfcSlices": ["slice-12", "slice-13"],
+      "githubState": "open",
+      "executionStatus": "open_fixed_local",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #878 open until the conversion-governance mutation plumbing refactor is merged, remotely validated, and QA closure evidence is recorded. Local implementation is fixed on the active branch after `make check` passed and focused tests passed for `tests/unit/test_conversion_governance_api_operations.py`, conversion workflow API integration cases, and `tests/integration/test_api_operation_events.py::test_conversion_and_report_workflow_emit_operation_events`; post-status-sync focused issue gates and summary tests also passed, with the exact branch commit recorded in the GitHub fixed-local evidence comment. The scope is internal API maintainability for `src/app/api/conversion_governance.py` and `src/app/api/conversion_governance_operations.py`: preserve route contracts, OpenAPI metadata, trusted caller context, idempotency, durable-write, operation-event, and non-claim behavior while reducing drift risk between conversion-intent and conversion-outcome endpoints. No wiki source changed; supported features remain foundation_only. This issue does not promote supported features, clear Gateway/Workbench runtime proof, production identity/session-token proof, downstream owner runtime proof, protected operational evidence, client publication, or final RFC-0002 closure blockers."
     }
   ]
 }

@@ -12,7 +12,7 @@ import app.api.candidate_detail as candidate_detail_api
 import app.api.candidate_evidence_replay as candidate_evidence_replay_api
 import app.api.candidate_lifecycle as candidate_lifecycle_api
 import app.api.concentration_risk_signals as concentration_risk_signals_api
-import app.api.conversion_governance as conversion_governance_api
+import app.api.conversion_governance_operations as conversion_governance_operations_api
 import app.api.drawdown_review_signals as drawdown_review_signals_api
 import app.api.high_volatility_signals as high_volatility_signals_api
 import app.api.idea_signals as idea_signals_api
@@ -1142,7 +1142,7 @@ def test_conversion_and_report_workflow_emit_operation_events(
 ) -> None:
     reset_idea_repository_for_tests()
     client = managed_test_client(app)
-    conversion_events = capture_operation_events(monkeypatch, conversion_governance_api)
+    conversion_events = capture_operation_events(monkeypatch, conversion_governance_operations_api)
     report_events = capture_operation_events(monkeypatch, report_evidence_api)
     candidate_id = persist_candidate(
         client,
