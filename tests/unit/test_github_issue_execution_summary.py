@@ -240,9 +240,28 @@ def test_github_issue_execution_summary_markdown_is_comment_ready() -> None:
         if issue["executionStatus"] == "open_pr_raised"
     )
     pr_open_rendering = ", ".join(f"#{issue_number}" for issue_number in pr_open_issues)
+    merged_main_qa_pending_issues = sorted(
+        issue["issueNumber"]
+        for issue in ledger_issues
+        if issue["executionStatus"] == "open_merged_main_qa_pending"
+    )
+    merged_main_qa_pending_rendering = ", ".join(
+        f"#{issue_number}" for issue_number in merged_main_qa_pending_issues
+    )
 
     summary = module.build_issue_execution_summary()
     rendered = module.render_markdown(summary)
+    ai_attestation_pattern = next(
+        pattern
+        for pattern in summary["learningPatterns"]
+        if pattern["patternId"] == "ai_attestation_and_model_governance"
+    )
+    ai_attestation_current_issues = ai_attestation_pattern["currentOpenOrPendingIssues"]
+    ai_attestation_current_rendering = (
+        ", ".join(f"#{issue_number}" for issue_number in ai_attestation_current_issues)
+        if ai_attestation_current_issues
+        else "_None._"
+    )
 
     assert "# RFC-0002 GitHub Issue Execution Summary" in rendered
     assert f"- Open issues: {summary['counts']['open']}" in rendered
@@ -263,7 +282,12 @@ def test_github_issue_execution_summary_markdown_is_comment_ready() -> None:
     assert "## In-Progress Issues\n\n#681" in rendered
     assert "#681, #874" not in rendered
     assert "## Merged-Main QA Pending Issues" in rendered
-    assert "## Merged-Main QA Pending Issues\n\n_None._" in rendered
+    if merged_main_qa_pending_issues:
+        assert (
+            f"## Merged-Main QA Pending Issues\n\n{merged_main_qa_pending_rendering}"
+        ) in rendered
+    else:
+        assert "## Merged-Main QA Pending Issues\n\n_None._" in rendered
     assert "#379, #690" not in rendered
     assert "#340, #379" not in rendered
     assert "## Ready Issues" in rendered
@@ -278,7 +302,7 @@ def test_github_issue_execution_summary_markdown_is_comment_ready() -> None:
     assert "Current issues: #673, #681, #683, #684" in rendered
     assert "Current issues: #673, #681, #683, #684, #874" not in rendered
     assert "### `ai_attestation_and_model_governance`" in rendered
-    assert "Current issues: _None._" in rendered
+    assert f"Current issues: {ai_attestation_current_rendering}" in rendered
     assert "Current issues: #343, #344, #345, #375, #678, #693, #814" in rendered
     assert "Current issues: #343, #344, #345, #375, #678, #693, #814, #886" not in rendered
     assert "Current issues: #679, #699" in rendered
