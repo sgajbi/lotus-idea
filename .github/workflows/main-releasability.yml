@@ -303,10 +303,13 @@ jobs:
           release_image_digest=""
           for publish_attempt in $(seq 1 "$publish_attempts"); do
             if docker push "$CONTAINER_IMAGE_NAME"; then
-              release_image_digest="$(
-                docker buildx imagetools inspect "$CONTAINER_IMAGE_NAME" \
-                  --format '{{json .Manifest.Digest}}' | tr -d '"'
-              )"
+              digest_output=""
+              if digest_output="$(docker buildx imagetools inspect "$CONTAINER_IMAGE_NAME" --format '{{json .Manifest.Digest}}' 2>&1)"; then
+                release_image_digest="$(printf '%s' "$digest_output" | tr -d '"')"
+              else
+                echo "Registry digest resolution attempt ${publish_attempt}/${publish_attempts} failed for $CONTAINER_IMAGE_NAME" >&2
+                printf '%s\n' "$digest_output" >&2
+              fi
               if [[ "$release_image_digest" == sha256:* ]]; then
                 break
               fi

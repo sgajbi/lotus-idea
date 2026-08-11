@@ -135,6 +135,7 @@ WORKFLOW_EXPECTATIONS: dict[str, tuple[str, ...]] = {
         "publish_retry_delay_seconds=30",
         'docker push "$CONTAINER_IMAGE_NAME"',
         'docker buildx imagetools inspect "$CONTAINER_IMAGE_NAME"',
+        "Registry digest resolution attempt ${publish_attempt}/${publish_attempts} failed for $CONTAINER_IMAGE_NAME",
         "Retrying image publish after ${publish_retry_delay_seconds}s to absorb transient registry throttling",
         "RELEASE_IMAGE_DIGEST",
         "RELEASE_IMAGE_DIGEST_REF",

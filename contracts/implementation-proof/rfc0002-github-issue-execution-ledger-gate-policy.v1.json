@@ -329,13 +329,15 @@
       "supported-feature promotion"
     ],
     "935": [
-      "Keep #935 open with status/in-progress",
+      "Keep #935 open with status/fixed-local",
+      "Local fix branch fix/935-ghcr-publish-retry",
       "Main Releasability run 31503147563",
       "e1dea44cfdda65b42cfc0d0371f48a2092bebb47",
       "Main Releasability / Validate Docker Build",
       "secondary-rate-limit",
       "bounded retry/backoff around GHCR image publish",
       "registry digest resolution",
+      "focused CI contract regressions",
       "fail-closed release evidence",
       "digest capture",
       "signing",
