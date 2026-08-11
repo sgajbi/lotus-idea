@@ -79,9 +79,9 @@
     {
       "patternId": "workbench_gateway_surface_proof_boundary",
       "title": "Workbench and Gateway product-surface proof must be backed by route, panel, action, feedback, conversion-intent, and identity evidence.",
-      "currentLedgerIssueNumbers": [674, 685, 686, 687],
+      "currentLedgerIssueNumbers": [674, 685, 686, 687, 897],
       "relatedIssueNumbers": [449],
-      "rfcSlices": ["slice-08", "slice-11", "slice-15"],
+      "rfcSlices": ["slice-08", "slice-10", "slice-11", "slice-15"],
       "durableControls": [
         {
           "type": "gate",
@@ -112,7 +112,7 @@
           "ref": "README.md#downstream-consumers"
         }
       ],
-      "futureAgentRule": "Treat local/test caller fixtures and static Workbench or Gateway declarations as non-certifying until owner route proof, UI consumption proof, and production identity evidence are available. Runtime UI consumption must arrive through the Gateway/Workbench runtime-execution proof consumer and may clear only its named BFF-consumption blocker while preserving production identity, accessibility, canonical demo, data-product, client-publication, suitability/execution, and supported-feature blockers. Nested API route modules are inside the caller-context contract gate and must not bypass trusted-caller provenance or strict role-and-capability enforcement.",
+      "futureAgentRule": "Treat local/test caller fixtures and static Workbench or Gateway declarations as non-certifying until owner route proof, UI consumption proof, and production identity evidence are available. Runtime UI consumption must arrive through the Gateway/Workbench runtime-execution proof consumer and may clear only its named BFF-consumption blocker while preserving production identity, accessibility, canonical demo, data-product, client-publication, suitability/execution, and supported-feature blockers. Nested API route modules are inside the caller-context contract gate and must not bypass trusted-caller provenance or strict role-and-capability enforcement. When refactoring review-queue API route composition, keep caller-context construction, role/capability authorization, entitlement-scope intersection, snapshot-token ProblemDetails, operation-event emission, and response projection as named API-boundary responsibilities; do not convert route maintainability into a Workbench/Gateway runtime proof or supported-feature claim.",
       "nonClaimBoundaries": [
         "Local/test caller authority fixtures are not production identity, authentication, or authorization proof.",
         "Backend source contracts alone do not prove populated Workbench panel readiness."

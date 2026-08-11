@@ -59,6 +59,68 @@ certification, client publication, or supported-feature promotion. No wiki
 publication is required because no operator-facing command or readiness truth
 changed.
 
+## 2026-08-11: Review Queue API Route Composition Boundary
+
+Issue `#897` applies the RFC-0002 Slice 08/10/11 maintainability lens to the
+review-queue API route boundary. The report-only quality baseline listed
+`src/app/api/review_queue/routes.py::_get_business_review_queue` at `112`
+lines, making it the largest measured source API/application function.
+
+The route helper mixed:
+
+1. caller-context construction,
+2. role/capability authorization,
+3. evaluation-time defaulting and timezone validation,
+4. requested scope validation,
+5. caller entitlement-scope intersection,
+6. repository/provider selection,
+7. queue command construction,
+8. snapshot-token Problem Details mapping,
+9. operation-event emission,
+10. response projection.
+
+`src/app/api/review_queue/routes.py` now keeps the public advisor, portfolio
+manager, and compliance route behavior stable while extracting named helpers
+for authorized caller resolution, evaluation-time validation, effective access
+scope resolution, and review-queue command construction. The public helper is
+now `56` lines; the extracted helpers are `42`, `7`, `40`, and `15` lines.
+The refreshed `make quality-baseline` report no longer lists
+`_get_business_review_queue` in the top-10 largest functions.
+
+Focused validation passed:
+
+1. `.venv/Scripts/python.exe -m ruff format src/app/api/review_queue/routes.py`,
+2. `.venv/Scripts/python.exe -m ruff check src/app/api/review_queue/routes.py`,
+3. `.venv/Scripts/python.exe -m mypy src/app/api/review_queue/routes.py`,
+4. `.venv/Scripts/python.exe -m pytest tests/integration/test_review_queue_api.py tests/integration/test_api_operation_events.py -q`
+   (`51` passed),
+5. `make maintainability-gate`,
+6. `make duplicate-implementation-gate` (`0` duplicate clusters),
+7. `make architecture-boundary-gate`,
+8. `make documentation-contract-gate`,
+9. `make rfc0002-github-issue-execution-ledger-gate`,
+10. `make rfc0002-github-issue-learning-pattern-gate`,
+11. `make rfc0002-github-issue-execution-state-audit`,
+12. `make rfc0002-github-issue-execution-summary`,
+13. `make quality-baseline`.
+
+The source-controlled RFC-0002 issue ledger now tracks `#897` as
+`open_in_progress`, the gate-policy contract includes the required open-issue
+evidence fragments, and the learning-pattern ledger records that review-queue
+route refactors must keep caller-context, role/capability, entitlement-scope,
+snapshot-token, operation-event, and response-projection boundaries explicit
+without converting route maintainability into Workbench/Gateway runtime proof
+or supported-feature claims.
+
+This is internal API-boundary maintainability only. It does not change route
+paths, OpenAPI metadata, response schemas, persistence, migrations,
+authentication or authorization infrastructure, production identity or
+session/token-claims authority, Gateway, Workbench, data-product
+certification, runtime topology, wiki source, supported features, client
+publication, or supported-feature promotion. No wiki publication is required
+because no operator-facing command, public route behavior, or wiki truth
+changed.
+
 ## 2026-07-19: Outbox Dead-Letter Recovery Policy Boundary
 
 Issue `#670` applies the Slice 19 report-only quality-baseline lens to the
