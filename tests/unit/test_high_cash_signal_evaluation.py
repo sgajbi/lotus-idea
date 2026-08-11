@@ -92,9 +92,24 @@ def test_high_cash_positive_case_creates_reproducible_candidate() -> None:
     assert first.outcome is SignalEvaluationOutcome.CANDIDATE_CREATED
     assert first.signal is not None
     assert first.candidate is not None
+    assert second.signal is not None
     assert second.candidate is not None
     assert first.signal.family is OpportunityFamily.HIGH_CASH
+    assert first.signal.signal_id == second.signal.signal_id
     assert first.candidate.candidate_id == second.candidate.candidate_id
+    assert (
+        first.candidate.evidence_packet.evidence_packet_id
+        == second.candidate.evidence_packet.evidence_packet_id
+    )
+    assert (
+        first.candidate.evidence_packet.lineage_ref.lineage_id
+        == second.candidate.evidence_packet.lineage_ref.lineage_id
+    )
+    assert (
+        first.candidate.evidence_packet.lineage_ref.content_hash
+        == second.candidate.evidence_packet.lineage_ref.content_hash
+    )
+    assert first.candidate.source_signal_ids == (first.signal.signal_id,)
     assert first.candidate.lifecycle_status is IdeaLifecycleStatus.GENERATED
     assert first.candidate.review_posture is ReviewPosture.ADVISOR_REVIEW_REQUIRED
     assert first.candidate.evidence_packet.lineage_ref.source_refs

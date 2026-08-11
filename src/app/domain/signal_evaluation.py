@@ -48,17 +48,28 @@ def evaluate_high_cash_signal(
     source_input: HighCashSignalInput,
     policy: HighCashSignalPolicy,
 ) -> SignalEvaluationResult:
-    if source_input.evaluated_at_utc.tzinfo is None:
-        raise ValueError("evaluated_at_utc must be timezone-aware")
-
+    validate_timezone_aware_evaluation_time(source_input.evaluated_at_utc)
     source_refs = _available_source_refs(source_input)
-    missing_reasons = _missing_required_sources(source_input)
+
+    if source_block := _high_cash_source_block(source_input, source_refs):
+        return source_block
+    if materiality_result := _high_cash_materiality_result(source_input, policy):
+        return materiality_result
+
+    return _high_cash_candidate_created_result(source_input, policy, source_refs)
+
+
+def _high_cash_source_block(
+    source_input: HighCashSignalInput,
+    source_refs: tuple[SourceRef, ...],
+) -> SignalEvaluationResult | None:
     if not source_input.entitlement_allowed:
         return blocked_signal_result(
             family=OpportunityFamily.HIGH_CASH,
             reason_codes=(ReasonCode.REVIEW_REQUIRED,),
             unsupported_reasons=(UnsupportedEvidenceReason.ENTITLEMENT_DENIED,),
         )
+    missing_reasons = _missing_required_sources(source_input)
     if missing_reasons:
         return blocked_signal_result(
             family=OpportunityFamily.HIGH_CASH,
@@ -84,6 +95,13 @@ def evaluate_high_cash_signal(
             reason_codes=(ReasonCode.SOURCE_STALE,),
             unsupported_reasons=(UnsupportedEvidenceReason.STALE_SOURCE,),
         )
+    return None
+
+
+def _high_cash_materiality_result(
+    source_input: HighCashSignalInput,
+    policy: HighCashSignalPolicy,
+) -> SignalEvaluationResult | None:
     if source_input.duplicate_of_candidate_id is not None:
         return SignalEvaluationResult(
             outcome=SignalEvaluationOutcome.SUPPRESSED,
@@ -96,31 +114,73 @@ def evaluate_high_cash_signal(
             reason_codes=(ReasonCode.SOURCE_PARTIAL,),
             unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,),
         )
-    if source_input.source_reported_cash_weight < Decimal(
-        "0"
-    ) or source_input.source_reported_cash_weight > Decimal("1"):
-        raise ValueError("source_reported_cash_weight must be between 0 and 1")
-    if source_input.source_reported_cash_weight < policy.cash_weight_threshold:
+    source_reported_cash_weight = _bounded_optional_weight(
+        source_input.source_reported_cash_weight,
+        "source_reported_cash_weight",
+    )
+    if source_reported_cash_weight is None:
+        return blocked_signal_result(
+            family=OpportunityFamily.HIGH_CASH,
+            reason_codes=(ReasonCode.SOURCE_PARTIAL,),
+            unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,),
+        )
+    if source_reported_cash_weight < policy.cash_weight_threshold:
         return SignalEvaluationResult(
             outcome=SignalEvaluationOutcome.NOT_ELIGIBLE,
             family=OpportunityFamily.HIGH_CASH,
             reason_codes=(ReasonCode.BELOW_MATERIALITY,),
         )
+    return None
 
+
+def _high_cash_candidate_created_result(
+    source_input: HighCashSignalInput,
+    policy: HighCashSignalPolicy,
+    source_refs: tuple[SourceRef, ...],
+) -> SignalEvaluationResult:
     identity = _stable_identity(source_input, policy, source_refs)
-    signal = OpportunitySignal(
+    signal = _high_cash_signal(identity, source_input, source_refs)
+    lineage = _high_cash_lineage(identity, source_refs)
+    evidence_packet = _high_cash_evidence_packet(identity, source_input, source_refs, lineage)
+    candidate = _high_cash_candidate(identity, source_input, policy, signal, evidence_packet)
+    return SignalEvaluationResult(
+        outcome=SignalEvaluationOutcome.CANDIDATE_CREATED,
+        family=OpportunityFamily.HIGH_CASH,
+        reason_codes=evidence_packet.reason_codes,
+        signal=signal,
+        candidate=candidate,
+    )
+
+
+def _high_cash_signal(
+    identity: str,
+    source_input: HighCashSignalInput,
+    source_refs: tuple[SourceRef, ...],
+) -> OpportunitySignal:
+    return OpportunitySignal(
         signal_id=f"signal_high_cash_{identity}",
         family=OpportunityFamily.HIGH_CASH,
         source_refs=source_refs,
         reason_codes=(ReasonCode.HIGH_CASH_RATIO, ReasonCode.CASH_SOURCE_READY),
         detected_at_utc=source_input.evaluated_at_utc,
     )
-    lineage = LineageRef(
+
+
+def _high_cash_lineage(identity: str, source_refs: tuple[SourceRef, ...]) -> LineageRef:
+    return LineageRef(
         lineage_id=f"lineage:lotus-idea:high-cash:{identity}",
         source_refs=source_refs,
         content_hash=f"sha256:{identity}",
     )
-    evidence_packet = IdeaEvidencePacket(
+
+
+def _high_cash_evidence_packet(
+    identity: str,
+    source_input: HighCashSignalInput,
+    source_refs: tuple[SourceRef, ...],
+    lineage: LineageRef,
+) -> IdeaEvidencePacket:
+    return IdeaEvidencePacket(
         evidence_packet_id=f"iep_high_cash_{identity}",
         supportability=EvidenceSupportability.READY,
         source_refs=source_refs,
@@ -132,7 +192,16 @@ def evaluate_high_cash_signal(
         ),
         created_at_utc=source_input.evaluated_at_utc,
     )
-    candidate = IdeaCandidate(
+
+
+def _high_cash_candidate(
+    identity: str,
+    source_input: HighCashSignalInput,
+    policy: HighCashSignalPolicy,
+    signal: OpportunitySignal,
+    evidence_packet: IdeaEvidencePacket,
+) -> IdeaCandidate:
+    return IdeaCandidate(
         candidate_id=f"idea_high_cash_{identity}",
         family=OpportunityFamily.HIGH_CASH,
         lifecycle_status=IdeaLifecycleStatus.GENERATED,
@@ -147,13 +216,6 @@ def evaluate_high_cash_signal(
         access_scope=source_input.access_scope,
         created_at_utc=source_input.evaluated_at_utc,
         updated_at_utc=source_input.evaluated_at_utc,
-    )
-    return SignalEvaluationResult(
-        outcome=SignalEvaluationOutcome.CANDIDATE_CREATED,
-        family=OpportunityFamily.HIGH_CASH,
-        reason_codes=evidence_packet.reason_codes,
-        signal=signal,
-        candidate=candidate,
     )
 
 
