@@ -205,7 +205,7 @@
     {
       "patternId": "operations_security_resilience_certification",
       "title": "Operations, security, lifecycle, migration, outbox, SLO, capacity, and disaster-recovery claims need protected or production-like attestations.",
-      "currentLedgerIssueNumbers": [343, 344, 345, 375, 678, 693, 814],
+      "currentLedgerIssueNumbers": [343, 344, 345, 375, 678, 693, 814, 923],
       "relatedIssueNumbers": [
         337,
         343,
@@ -221,7 +221,8 @@
         886,
         914,
         917,
-        920
+        920,
+        923
       ],
       "rfcSlices": ["slice-15", "slice-18"],
       "durableControls": [
