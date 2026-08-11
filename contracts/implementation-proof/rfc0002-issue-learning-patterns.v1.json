@@ -361,8 +361,8 @@
     {
       "patternId": "test_support_maintainability_quality_baseline",
       "title": "Report-only quality-baseline hotspots in high-value proof tests need issue-backed decomposition without changing product claims.",
-      "currentLedgerIssueNumbers": [964],
-      "relatedIssueNumbers": [645, 950, 953, 956, 960, 964],
+      "currentLedgerIssueNumbers": [964, 966],
+      "relatedIssueNumbers": [645, 950, 953, 956, 960, 964, 966],
       "rfcSlices": ["slice-19"],
       "durableControls": [
         {
