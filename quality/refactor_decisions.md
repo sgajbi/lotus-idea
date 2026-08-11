@@ -40,9 +40,11 @@ function; the next largest function is
 `tests/unit/test_cross_repo_issue_posture.py::test_cross_repo_issue_posture_counts_statuses_and_attention_issues`
 at `160` lines.
 
-PR `#951` is open from branch `refactor/950-ledger-test-posture-evidence` at
-head `0dd8d6f7756f2c4198b7126c0e80d523a25bc3ec`; PR checks, merge-to-main,
-exact-main validation, QA closure, and branch cleanup remain pending.
+PR `#951` merged by rebase to exact Lotus Idea main
+`a2632f02a940ca19fd627a471608fe8fa726a2f9`. Exact-main Main Releasability
+Gate run `31529635948` and exact-main Push on main run `31529628828` both
+passed. The remote PR branch was deleted by GitHub, and the local branch was
+deleted after `git cherry` patch-equivalence proof.
 
 This is test-support maintainability only. It does not change runtime code,
 API/OpenAPI behavior, proof schemas, Core, Gateway, Workbench, authentication,
