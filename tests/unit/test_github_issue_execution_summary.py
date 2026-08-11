@@ -73,7 +73,10 @@ def test_github_issue_execution_summary_reports_current_rfc0002_counts() -> None
         summary["counts"]["byExecutionStatus"].get("open_pr_raised", 0)
         == expected_execution_counts["open_pr_raised"]
     )
-    assert "open_merged_main_qa_pending" not in summary["counts"]["byExecutionStatus"]
+    assert (
+        summary["counts"]["byExecutionStatus"].get("open_merged_main_qa_pending", 0)
+        == expected_execution_counts["open_merged_main_qa_pending"]
+    )
     assert "open_ready" not in summary["counts"]["byExecutionStatus"]
     assert summary["counts"]["byExecutionStatus"]["open_pending_final_closure"] == 1
     assert summary["counts"]["byExecutionStatus"]["open_pending_post_completion"] == 1
@@ -102,7 +105,14 @@ def test_github_issue_execution_summary_reports_current_rfc0002_counts() -> None
     else:
         assert "open_pr_raised" not in summary["issuesByStatus"]
     assert "open_fixed_local" not in summary["issuesByStatus"]
-    assert "open_merged_main_qa_pending" not in summary["issuesByStatus"]
+    if expected_execution_counts["open_merged_main_qa_pending"]:
+        assert summary["issuesByStatus"]["open_merged_main_qa_pending"] == sorted(
+            issue["issueNumber"]
+            for issue in ledger_issues
+            if issue["executionStatus"] == "open_merged_main_qa_pending"
+        )
+    else:
+        assert "open_merged_main_qa_pending" not in summary["issuesByStatus"]
     assert summary["issuesByStatus"]["open_pending_final_closure"] == [683]
     assert summary["issuesByStatus"]["open_pending_post_completion"] == [684]
     assert summary["issuesByStatus"]["open_blocked"] == [
@@ -218,11 +228,18 @@ def test_github_issue_execution_summary_markdown_is_comment_ready() -> None:
         for issue in ledger_payload["issues"]
         if isinstance(issue, dict) and issue["issueNumber"] == 681
     )
+    issue_886 = next(
+        issue
+        for issue in ledger_payload["issues"]
+        if isinstance(issue, dict) and issue["issueNumber"] == 886
+    )
     section_by_status = {
         "open_in_progress": "## In-Progress Issues",
         "open_pr_raised": "## PR-Open Issues",
+        "open_merged_main_qa_pending": "## Merged-Main QA Pending Issues",
     }
     issue_681_section = section_by_status[issue_681["executionStatus"]]
+    issue_886_section = section_by_status[issue_886["executionStatus"]]
 
     summary = module.build_issue_execution_summary()
     rendered = module.render_markdown(summary)
@@ -239,11 +256,10 @@ def test_github_issue_execution_summary_markdown_is_comment_ready() -> None:
     assert "## Fixed Locally Issues" in rendered
     assert "## Fixed Locally Issues\n\n_None._" in rendered
     assert "## PR-Open Issues" in rendered
-    assert "## PR-Open Issues\n\n#886" in rendered
+    assert f"{issue_886_section}\n\n#886" in rendered
     assert "## In-Progress Issues\n\n#681" in rendered
     assert "#681, #874" not in rendered
     assert "## Merged-Main QA Pending Issues" in rendered
-    assert "## Merged-Main QA Pending Issues\n\n_None._" in rendered
     assert "#379, #690" not in rendered
     assert "#340, #379" not in rendered
     assert "## Ready Issues" in rendered

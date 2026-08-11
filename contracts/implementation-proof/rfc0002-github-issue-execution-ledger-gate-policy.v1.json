@@ -299,11 +299,15 @@
       "full live journey validation remains blocked"
     ],
     "886": [
-      "Keep #886 open",
+      "Keep #886 open for QA closure",
+      "PR #887 merged by rebase",
+      "2cfeb9008ac7965246afa0da5a6181b0a74a6dd2",
+      "31453461450",
+      "31453455926",
       "downstream-capacity seed timestamp-normalization fix",
       "canonical UTC request timestamp formatting",
       "fail-closed naive timestamp handling",
-      "does not close #814",
+      "Issue #814 remains the separate canonical runtime proof blocker",
       "production IdP/session/token-claims authority",
       "supported-feature promotion"
     ]
