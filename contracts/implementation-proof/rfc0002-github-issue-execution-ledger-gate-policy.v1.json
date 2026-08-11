@@ -334,7 +334,8 @@
       "final RFC-0002 closure"
     ],
     "899": [
-      "Keep #899 open while the downstream outcome certification payload assembly boundary refactor is in progress",
+      "Keep #899 open after local commit a44ab05c092c8b1d38ee3a420160f98a0599659b",
+      "Local proof passed",
       "src/app/application/downstream_outcome_certification.py::build_downstream_outcome_certification_payload",
       "internal application-layer maintainability only",
       "owner-runtime proof assembly",
