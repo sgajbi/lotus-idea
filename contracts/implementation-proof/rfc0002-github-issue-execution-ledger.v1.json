@@ -760,6 +760,15 @@
       "executionStatus": "closed_complete",
       "allowPullRequestAutoClose": true,
       "closureInstruction": "Closed #926 after PR #927 merged the RFC-0002 Slice 12/13 and Slice 19 Manage mandate runtime receipt reconciliation refactor to Idea main at 17aba428572ef38fb30b8a0bec16e2b77eaae85b from PR head 79fa5b7cfa347e39ee77e5c3f1cf2920a26672d9. PR #927 passed Feature Lane, PR Merge Gate, Queue Auto Merge, and CodeQL before rebase merge. Exact-main Main Releasability Gate run 31493352525 and exact-main Push on main run 31493345202 passed for 17aba428572ef38fb30b8a0bec16e2b77eaae85b. The implementation preserved `manage_mandate_runtime_execution_is_valid(...)` and the v3 Manage mandate runtime proof schema while splitting `src/app/application/manage_mandate_runtime_evidence/contract.py::_receipts_reconcile(...)` into named request-scope reconciliation, Manage temporal identity reconciliation, Performance/Risk source receipt qualification, source-ref digest reconciliation, action-register supportability, and allocation-drift outcome validation helpers. Local proof passed focused Ruff, format check, MyPy, 58 focused unit tests, maintainability, duplicate implementation, quality baseline, RFC-0002 issue execution ledger/state/summary gates, documentation-contract, typecheck, full make lint, PR-text gate, and git diff check. No repo-authored wiki source changed, so no wiki publication was required. This closes only internal proof-contract maintainability hardening. It does not implement authentication or authorization, production IdP/session-token-claims, Core/Gateway/Workbench changes, downstream live certification, Report/Render/Archive authority, persistence schema, migrations, OpenAPI behavior changes, runtime topology changes, supported-feature promotion, or final RFC-0002 completion. Issue #379 remains the live downstream certification authority."
+    },
+    {
+      "issueNumber": 929,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/929",
+      "rfcSlices": ["slice-18", "slice-19"],
+      "githubState": "open",
+      "executionStatus": "open_in_progress",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #929 open. Refactor src/app/api/implementation_proof_readiness.py::_build_readiness_snapshot_from_configured_artifacts so the API route consumes the typed ImplementationProofReadinessProofInputs aggregate instead of maintaining broad configured-artifact wiring as a legacy keyword fan-out. The branch must preserve public API/OpenAPI behavior, trusted caller-context policy, proof-artifact refs, blocker semantics, supported-feature non-promotion, Core/Workbench/Gateway/downstream authority boundaries, and no-claim posture. Close only after PR merge, exact-main Push/Main Releasability evidence, source-controlled ledger/learning/review evidence, no-wiki-change or wiki publication evidence, and branch cleanup."
     }
   ]
 }

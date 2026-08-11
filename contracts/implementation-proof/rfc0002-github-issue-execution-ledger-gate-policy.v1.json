@@ -80,7 +80,8 @@
     917,
     920,
     923,
-    926
+    926,
+    929
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -324,6 +325,19 @@
       "Issue #814 remains the separate canonical runtime proof blocker",
       "production IdP/session/token-claims authority",
       "supported-feature promotion"
+    ],
+    "929": [
+      "Keep #929 open",
+      "_build_readiness_snapshot_from_configured_artifacts",
+      "ImplementationProofReadinessProofInputs",
+      "configured-artifact wiring",
+      "public API/OpenAPI behavior",
+      "trusted caller-context policy",
+      "proof-artifact refs",
+      "supported-feature non-promotion",
+      "Core/Workbench/Gateway/downstream authority boundaries",
+      "exact-main Push/Main Releasability evidence",
+      "branch cleanup"
     ]
   },
   "requiredClosedIssueEvidence": {

@@ -1842,6 +1842,28 @@ Evidence:
    README, supported-feature, seed, automation, or platform skill change is
    justified by this internal modularity slice.
 
+## 2026-08-11: Implementation-Proof Readiness Artifact Wiring
+
+Issue #929 refactors the API-layer configured-artifact mapping for
+`/api/v1/implementation-proof/readiness`. The route now builds the
+application-owned `ImplementationProofReadinessProofInputs` aggregate through
+named source-authority helper groups instead of passing a broad legacy keyword
+fan-out into the readiness builder.
+
+Evidence:
+
+1. `_build_readiness_snapshot_from_configured_artifacts(...)` moved from 108
+   lines to 13 lines.
+2. Largest new helper is 47 lines; helpers are grouped by source ingestion,
+   repository/runtime/AI, downstream owner, Workbench/Gateway, and Core source
+   evidence.
+3. Focused validation passed: Ruff, format check, MyPy, and
+   `tests/integration/test_implementation_proof_readiness_api.py` (`8 passed`),
+   plus maintainability, duplicate implementation, and quality-baseline gates.
+4. No wiki, README, supported-feature, OpenAPI, migration, runtime topology,
+   skill, or central context change is justified; this is internal API
+   maintainability only.
+
 ## Aggregate Persistence Mutation Boundary
 
 Candidate ingestion first exposed the generic whole-repository snapshot cost.
