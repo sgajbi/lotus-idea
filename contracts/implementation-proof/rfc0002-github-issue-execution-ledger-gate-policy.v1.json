@@ -334,10 +334,12 @@
       "final RFC-0002 closure"
     ],
     "899": [
-      "Keep #899 open after local commit a44ab05c092c8b1d38ee3a420160f98a0599659b",
+      "Keep #899 open while PR #900 is under review",
+      "Local commit a44ab05c092c8b1d38ee3a420160f98a0599659b",
       "Local proof passed",
+      "PR-text gate",
       "src/app/application/downstream_outcome_certification.py::build_downstream_outcome_certification_payload",
-      "internal application-layer maintainability only",
+      "internal application-layer maintainability",
       "owner-runtime proof assembly",
       "proof-check evaluation",
       "final payload projection",
