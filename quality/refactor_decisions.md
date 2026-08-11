@@ -52,6 +52,9 @@ The focused unit suite now includes an access-scope identity regression proving
 that two private-banking review scopes with identical source evidence produce
 different candidate identities and preserve their candidate access scopes.
 
+PR `#933` is open from branch `refactor/932-low-income-signal-boundary` at head
+`fba81c2f48080381f958eb90308df90793798a11` for merge validation.
+
 This is internal domain maintainability only. It does not change API/OpenAPI
 behavior, Core cashflow or cash-movement source authority, persistence schema,
 migrations, authentication or authorization infrastructure, production
