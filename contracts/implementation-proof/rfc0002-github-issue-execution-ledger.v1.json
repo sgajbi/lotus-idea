@@ -613,9 +613,9 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/880",
       "rfcSlices": ["slice-16", "slice-17"],
       "githubState": "open",
-      "executionStatus": "open_in_progress",
+      "executionStatus": "open_pr_raised",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #880 open until the bond-maturity domain policy refactor is merged, remotely validated on exact main, and QA closure evidence is recorded. The scope is internal maintainability for `src/app/domain/bond_maturity_signal.py::evaluate_bond_maturity_signal`: preserve public domain API behavior and keep missing, stale, denied, duplicate, negative-count, empty-window, outside-window, identity, signal, lineage, evidence packet, and candidate construction behavior covered by focused domain tests. No wiki source or supported-feature posture changes are expected. This issue does not promote the bond-maturity archetype to supported feature, client-publication, Workbench proof, data-product certification, or final RFC-0002 closure, and it does not clear live Core source proof."
+      "closureInstruction": "Keep #880 open until PR #879 is merged, remotely validated on exact main, and QA closure evidence is recorded. PR #879 includes the bond-maturity domain policy refactor for `src/app/domain/bond_maturity_signal.py::evaluate_bond_maturity_signal`: preserve public domain API behavior and keep missing, stale, denied, duplicate, negative-count, empty-window, outside-window, identity, signal, lineage, evidence packet, and candidate construction behavior covered by focused domain tests. No wiki source or supported-feature posture changes are expected. This issue does not promote the bond-maturity archetype to supported feature, client-publication, Workbench proof, data-product certification, or final RFC-0002 closure, and it does not clear live Core source proof."
     }
   ]
 }
