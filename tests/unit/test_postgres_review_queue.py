@@ -10,6 +10,7 @@ from app.domain import (
     EvidenceSupportability,
     IdeaCandidate,
     IdeaLifecycleStatus,
+    QueueExclusionReason,
     QueueAccessScopeFilter,
     ReviewQueueAudience,
     ReviewQueueSnapshotConflictError,
@@ -21,6 +22,7 @@ from app.infrastructure.postgres_repository import PostgresIdeaRepository
 from app.infrastructure.postgres_review_queue import (
     REVIEW_QUEUE_ACCESS_SCOPE_FILTER_FIELDS,
     _review_queue_candidate_predicates,
+    _review_queue_readiness_summary_query,
     load_review_queue_candidate_page,
     load_review_queue_readiness_summary,
 )
@@ -407,6 +409,34 @@ def test_postgres_review_queue_readiness_summary_uses_bounded_candidate_aggregat
     assert "idea_ai_explanation_lineage" not in executed_sql
     assert "idea_audit_event" not in executed_sql
     assert "idea_idempotency_record" not in executed_sql
+
+
+def test_review_queue_readiness_summary_sql_exposes_all_exclusion_counts() -> None:
+    query = _review_queue_readiness_summary_query("FALSE")
+
+    assert query.count("%s") == 9
+    assert "WITH base AS" in query
+    assert "classified AS" in query
+    assert "duplicate_counts AS" in query
+    for reason in QueueExclusionReason:
+        assert f"AS {reason.value}" in query
+
+    classification_order = (
+        QueueExclusionReason.ACCESS_SCOPE_MISMATCH,
+        QueueExclusionReason.INVALID_STATE,
+        QueueExclusionReason.SUPPRESSED,
+        QueueExclusionReason.EXPIRED,
+        QueueExclusionReason.CLOSED,
+        QueueExclusionReason.REJECTED,
+        QueueExclusionReason.UNSUPPORTED_EVIDENCE,
+        QueueExclusionReason.UNSCORED,
+        QueueExclusionReason.UNRANKABLE_SCORE_POLICY,
+        QueueExclusionReason.NON_REVIEWABLE_STATUS,
+    )
+    reason_positions = [query.index(f"THEN '{reason.value}'") for reason in classification_order]
+    assert reason_positions == sorted(reason_positions)
+    assert "(0)::integer AS snoozed" in query
+    assert "(SELECT duplicate_count FROM duplicate_counts)::integer AS duplicate" in query
 
 
 def test_review_queue_candidate_page_rejects_unsafe_page_controls() -> None:
