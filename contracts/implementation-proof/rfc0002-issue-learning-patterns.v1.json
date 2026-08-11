@@ -357,6 +357,36 @@
         "Research, blueprint language, and demo copy cannot promote unsupported features.",
         "A single capability proof does not certify the full API, Gateway, Workbench, and downstream handoff journey."
       ]
+    },
+    {
+      "patternId": "test_support_maintainability_quality_baseline",
+      "title": "Report-only quality-baseline hotspots in high-value proof tests need issue-backed decomposition without changing product claims.",
+      "currentLedgerIssueNumbers": [964],
+      "relatedIssueNumbers": [645, 950, 953, 956, 960, 964],
+      "rfcSlices": ["slice-19"],
+      "durableControls": [
+        {
+          "type": "quality",
+          "ref": "quality/baseline_report.md"
+        },
+        {
+          "type": "quality",
+          "ref": "quality/refactor_decisions.md"
+        },
+        {
+          "type": "docs",
+          "ref": "docs/architecture/CODEBASE-REVIEW-LEDGER.md"
+        },
+        {
+          "type": "docs",
+          "ref": "docs/architecture/GITHUB-ISSUE-CLOSURE-MATRIX.md"
+        }
+      ],
+      "futureAgentRule": "When `make quality-baseline` surfaces a large helper in RFC-0002 proof tests, duplicate-check GitHub first, create or reuse one focused issue, preserve behavior through focused tests, and split by domain proof stage rather than by arbitrary line count. Keep production, API/OpenAPI, schema, migration, supported-feature, Core, Gateway, Workbench, runtime, and final-RFC claims explicitly out of scope unless those surfaces actually changed.",
+      "nonClaimBoundaries": [
+        "Reducing test-support function size does not certify production PostgreSQL behavior beyond the tests already exercising it.",
+        "A maintainability refactor does not promote supported features, clear downstream runtime blockers, or complete RFC-0002."
+      ]
     }
   ]
 }

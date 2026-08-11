@@ -28,6 +28,7 @@ from app.domain.persistence import (
     ReviewPersistenceDecision,
     ReviewPersistenceResult,
 )
+from app.domain.review_governance import ReviewMutationIdentity
 from app.infrastructure.postgres_repository import PostgresIdeaRepository
 from tests.unit.postgres_repository_fake import FakePostgresConnection
 from tests.unit.postgres_repository_query_assertions import assert_no_whole_store_snapshot
@@ -44,10 +45,29 @@ from tests.unit.test_postgres_repository import (
 )
 
 
+CONVERSION_INTENT_ID = "conversion-report-001"
+REPORT_EVIDENCE_PACK_ID = "report-evidence-pack-001"
+
+
 @dataclass(frozen=True)
 class MutatingWorkflowSeedCandidates:
     review_ready: IdeaCandidate
     approved: IdeaCandidate
+
+
+@dataclass(frozen=True)
+class MutatingWorkflowReviewFeedbackProof:
+    lifecycle: LifecyclePersistenceResult
+    review: ReviewPersistenceResult
+    feedback: ReviewPersistenceResult
+    review_identity: ReviewMutationIdentity
+
+
+@dataclass(frozen=True)
+class MutatingWorkflowConversionReportProof:
+    conversion: ConversionPersistenceResult
+    outcome: ConversionPersistenceResult
+    pack: EvidencePackPersistenceResult
 
 
 @dataclass(frozen=True)
@@ -137,12 +157,37 @@ def _record_mutating_workflow_details(
     repository: PostgresIdeaRepository,
     candidates: MutatingWorkflowSeedCandidates,
 ) -> MutatingWorkflowRoundTripProof:
+    review_feedback = _record_review_feedback_path(repository, candidates.review_ready)
+    conversion_report = _record_conversion_report_path(repository, candidates.approved)
+    replay = _record_replay_and_idempotency_prechecks(
+        repository,
+        candidates.review_ready,
+        review_identity=review_feedback.review_identity,
+        conversion_intent_id=CONVERSION_INTENT_ID,
+        report_evidence_pack_id=REPORT_EVIDENCE_PACK_ID,
+    )
+    lookup = _load_conversion_lookup_proof(repository, conversion_intent_id=CONVERSION_INTENT_ID)
+
+    return MutatingWorkflowRoundTripProof(
+        persistence=_build_mutating_workflow_persistence_proof(
+            review_feedback,
+            conversion_report,
+        ),
+        replay=replay,
+        lookup=lookup,
+    )
+
+
+def _record_review_feedback_path(
+    repository: PostgresIdeaRepository,
+    candidate: IdeaCandidate,
+) -> MutatingWorkflowReviewFeedbackProof:
     lifecycle = repository.record_lifecycle_transition(
-        candidates.review_ready.candidate_id,
+        candidate.candidate_id,
         IdeaLifecycleStatus.REVIEWED_BY_ADVISOR,
         idempotency_key="lifecycle:reviewed",
         payload={
-            "candidateId": candidates.review_ready.candidate_id,
+            "candidateId": candidate.candidate_id,
             "target": "reviewed_by_advisor",
         },
         actor_subject="advisor-001",
@@ -171,9 +216,20 @@ def _record_mutating_workflow_details(
         idempotency_key="feedback:useful",
         payload={"feedbackId": feedback_result.feedback_event.feedback.feedback_id},
     )
+    return MutatingWorkflowReviewFeedbackProof(
+        lifecycle=lifecycle,
+        review=review,
+        feedback=feedback,
+        review_identity=review_result.decision.mutation_identity,
+    )
 
+
+def _record_conversion_report_path(
+    repository: PostgresIdeaRepository,
+    candidate: IdeaCandidate,
+) -> MutatingWorkflowConversionReportProof:
     conversion_result = request_conversion_intent(
-        candidates.approved,
+        candidate,
         conversion_command(),
     )
     conversion = repository.record_conversion_intent(
@@ -205,49 +261,71 @@ def _record_mutating_workflow_details(
         idempotency_key="report:evidence-pack",
         payload={"reportEvidencePackId": pack_result.evidence_pack.report_evidence_pack_id},
     )
+    return MutatingWorkflowConversionReportProof(
+        conversion=conversion,
+        outcome=outcome,
+        pack=pack,
+    )
+
+
+def _record_replay_and_idempotency_prechecks(
+    repository: PostgresIdeaRepository,
+    candidate: IdeaCandidate,
+    *,
+    review_identity: ReviewMutationIdentity,
+    conversion_intent_id: str,
+    report_evidence_pack_id: str,
+) -> MutatingWorkflowReplayProof:
     replay = repository.replay_evidence(
-        candidates.review_ready.candidate_id,
-        current_source_refs=candidates.review_ready.evidence_packet.source_refs,
+        candidate.candidate_id,
+        current_source_refs=candidate.evidence_packet.source_refs,
         evaluated_at_utc=EVALUATED_AT + timedelta(minutes=7),
     )
     review_precheck = repository.precheck_review_mutation(
         idempotency_key="review:approve",
-        payload={"reviewId": review_result.decision.review_id},
-        identity=review_result.decision.mutation_identity,
+        payload={"reviewId": review_command().review_id},
+        identity=review_identity,
     )
     conversion_precheck = repository.precheck_conversion_mutation(
         idempotency_key="conversion:intent",
-        payload={
-            "conversionIntentId": conversion_result.conversion_intent.intent.conversion_intent_id
-        },
+        payload={"conversionIntentId": conversion_intent_id},
     )
     evidence_pack_precheck = repository.precheck_evidence_pack_mutation(
         idempotency_key="report:evidence-pack",
-        payload={"reportEvidencePackId": pack_result.evidence_pack.report_evidence_pack_id},
+        payload={"reportEvidencePackId": report_evidence_pack_id},
     )
-    loaded_intent = repository.conversion_intent_by_id("conversion-report-001")
-    loaded_conversion_record = repository.candidate_record_for_conversion_intent(
-        "conversion-report-001"
+    return MutatingWorkflowReplayProof(
+        replay=replay,
+        review_precheck=review_precheck,
+        conversion_precheck=conversion_precheck,
+        evidence_pack_precheck=evidence_pack_precheck,
     )
-    return MutatingWorkflowRoundTripProof(
-        persistence=MutatingWorkflowPersistenceProof(
-            lifecycle=lifecycle,
-            review=review,
-            feedback=feedback,
-            conversion=conversion,
-            outcome=outcome,
-            pack=pack,
+
+
+def _load_conversion_lookup_proof(
+    repository: PostgresIdeaRepository,
+    *,
+    conversion_intent_id: str,
+) -> MutatingWorkflowLookupProof:
+    return MutatingWorkflowLookupProof(
+        loaded_intent=repository.conversion_intent_by_id(conversion_intent_id),
+        loaded_conversion_record=repository.candidate_record_for_conversion_intent(
+            conversion_intent_id
         ),
-        replay=MutatingWorkflowReplayProof(
-            replay=replay,
-            review_precheck=review_precheck,
-            conversion_precheck=conversion_precheck,
-            evidence_pack_precheck=evidence_pack_precheck,
-        ),
-        lookup=MutatingWorkflowLookupProof(
-            loaded_intent=loaded_intent,
-            loaded_conversion_record=loaded_conversion_record,
-        ),
+    )
+
+
+def _build_mutating_workflow_persistence_proof(
+    review_feedback: MutatingWorkflowReviewFeedbackProof,
+    conversion_report: MutatingWorkflowConversionReportProof,
+) -> MutatingWorkflowPersistenceProof:
+    return MutatingWorkflowPersistenceProof(
+        lifecycle=review_feedback.lifecycle,
+        review=review_feedback.review,
+        feedback=review_feedback.feedback,
+        conversion=conversion_report.conversion,
+        outcome=conversion_report.outcome,
+        pack=conversion_report.pack,
     )
 
 
@@ -279,7 +357,7 @@ def _assert_mutating_workflow_lookup(
     approved: IdeaCandidate,
 ) -> None:
     assert proof.loaded_intent is not None
-    assert proof.loaded_intent.intent.conversion_intent_id == "conversion-report-001"
+    assert proof.loaded_intent.intent.conversion_intent_id == CONVERSION_INTENT_ID
     assert proof.loaded_conversion_record is not None
     assert proof.loaded_conversion_record.candidate.candidate_id == approved.candidate_id
 
@@ -308,11 +386,11 @@ def _assert_mutating_workflow_snapshot(
         "idea.report_evidence_pack.requested.v1",
     ]
     assert (
-        recovered.conversion_intent_candidates["conversion-report-001"]
+        recovered.conversion_intent_candidates[CONVERSION_INTENT_ID]
         == candidates.approved.candidate_id
     )
     assert (
-        recovered.report_evidence_pack_candidates["report-evidence-pack-001"]
+        recovered.report_evidence_pack_candidates[REPORT_EVIDENCE_PACK_ID]
         == candidates.approved.candidate_id
     )
 
