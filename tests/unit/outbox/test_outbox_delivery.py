@@ -389,6 +389,28 @@ def test_run_outbox_delivery_once_counts_repository_race_as_skipped() -> None:
     assert summary.published_count == 0
 
 
+def test_run_outbox_delivery_once_counts_failed_mark_repository_race_as_skipped() -> None:
+    event = outbox_event("idea.review.decision_recorded.v1")
+    repository = DeliveryEdgeRepository(
+        event,
+        fail_decision=OutboxDeliveryDecision.LEASE_LOST,
+    )
+
+    summary = run_outbox_delivery_once(
+        repository,
+        RejectingPublisher(),
+        lease_owner="worker-1",
+        lease_attempt_id="attempt-1",
+        **operator_run_kwargs("outbox-run:failed-race:001"),
+    )
+
+    assert summary.attempted_count == 1
+    assert summary.skipped_count == 1
+    assert summary.failed_count == 0
+    assert summary.dead_lettered_count == 0
+    assert repository.failure_reason == "publisher_rejected"
+
+
 def test_run_outbox_delivery_once_claims_before_publishing_to_fence_second_worker() -> None:
     event = outbox_event("idea.review.decision_recorded.v1")
     repository = repository_with_events(event)
