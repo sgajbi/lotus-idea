@@ -67,7 +67,7 @@ def test_github_issue_execution_summary_reports_current_rfc0002_counts() -> None
         summary["counts"]["byExecutionStatus"][issue_681_status]
         == expected_execution_counts[issue_681_status]
     )
-    assert summary["counts"]["byExecutionStatus"]["open_in_progress"] == 1
+    assert summary["counts"]["byExecutionStatus"]["open_in_progress"] == 2
     assert "open_fixed_local" not in summary["counts"]["byExecutionStatus"]
     assert summary["counts"]["byExecutionStatus"]["open_pr_raised"] == 1
     assert "open_merged_main_qa_pending" not in summary["counts"]["byExecutionStatus"]
@@ -115,6 +115,8 @@ def test_github_issue_execution_summary_reports_current_rfc0002_counts() -> None
     assert 681 in summary["issuesBySlice"]["slice-18"]
     assert 878 in summary["issuesBySlice"]["slice-12"]
     assert 878 in summary["issuesBySlice"]["slice-13"]
+    assert 880 in summary["issuesBySlice"]["slice-16"]
+    assert 880 in summary["issuesBySlice"]["slice-17"]
     assert 874 in summary["issuesBySlice"]["slice-18"]
     assert 854 in summary["issuesBySlice"]["slice-18"]
     assert summary["sourceOfTruth"]["liveGitHubAudit"] == (
@@ -228,7 +230,7 @@ def test_github_issue_execution_summary_markdown_is_comment_ready() -> None:
     assert "## Fixed Locally Issues\n\n_None._" in rendered
     assert "## PR-Open Issues" in rendered
     assert "## PR-Open Issues\n\n#878" in rendered
-    assert "## In-Progress Issues\n\n#681" in rendered
+    assert "## In-Progress Issues\n\n#681, #880" in rendered
     assert "#681, #874" not in rendered
     assert "## Merged-Main QA Pending Issues" in rendered
     assert "## Merged-Main QA Pending Issues\n\n_None._" in rendered
@@ -248,7 +250,7 @@ def test_github_issue_execution_summary_markdown_is_comment_ready() -> None:
     assert "### `ai_attestation_and_model_governance`" in rendered
     assert "Current issues: _None._" in rendered
     assert "Current issues: #343, #344, #345, #375, #678, #693, #814" in rendered
-    assert "Current issues: #679, #699" in rendered
+    assert "Current issues: #679, #699, #880" in rendered
     assert "Current issues: #679, #696, #697, #699" not in rendered
     assert "_None._" in rendered
     assert "Run the live GitHub state audit" in rendered

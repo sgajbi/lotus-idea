@@ -98,6 +98,18 @@ def test_bond_maturity_positive_case_creates_review_candidate() -> None:
     assert first.candidate.lifecycle_status is IdeaLifecycleStatus.GENERATED
     assert first.candidate.review_posture is ReviewPosture.ADVISOR_REVIEW_REQUIRED
     assert first.reason_codes == (ReasonCode.MATURITY_WINDOW, ReasonCode.REVIEW_REQUIRED)
+    assert first.candidate.source_signal_ids == (first.signal.signal_id,)
+    assert first.candidate.evidence_packet.source_refs == first.signal.source_refs
+    assert first.candidate.evidence_packet.lineage_ref is not None
+    identity_suffix = first.candidate.candidate_id.removeprefix("idea_bond_maturity_")
+    assert first.signal.signal_id == f"signal_bond_maturity_{identity_suffix}"
+    assert first.candidate.evidence_packet.evidence_packet_id == (
+        f"iep_bond_maturity_{identity_suffix}"
+    )
+    assert first.candidate.evidence_packet.lineage_ref.lineage_id == (
+        f"lineage:lotus-idea:bond-maturity:{identity_suffix}"
+    )
+    assert first.candidate.evidence_packet.lineage_ref.content_hash == (f"sha256:{identity_suffix}")
 
 
 def test_bond_maturity_not_eligible_outside_maturity_window() -> None:

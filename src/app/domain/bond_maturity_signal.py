@@ -61,14 +61,42 @@ def evaluate_bond_maturity_signal(
     source_input: BondMaturitySignalInput,
     policy: BondMaturitySignalPolicy,
 ) -> SignalEvaluationResult:
+    _require_timezone_aware_evaluation_time(source_input)
+
+    source_refs = _available_bond_maturity_source_refs(source_input)
+    source_ref_result = _source_ref_supportability_result(source_input, source_refs)
+    if source_ref_result is not None:
+        return source_ref_result
+
+    source_value_result = _source_value_supportability_result(source_input)
+    if source_value_result is not None:
+        return source_value_result
+
+    maturity_date = source_input.source_reported_next_maturity_date
+    if maturity_date is None:
+        return _missing_source_block()
+    if not _within_maturity_window(
+        as_of_date=source_input.as_of_date,
+        maturity_date=maturity_date,
+        window_days=policy.maturity_window_days,
+    ):
+        return _not_eligible_below_materiality()
+
+    return _candidate_created_result(source_input, policy, source_refs)
+
+
+def _require_timezone_aware_evaluation_time(source_input: BondMaturitySignalInput) -> None:
     if (
         source_input.evaluated_at_utc.tzinfo is None
         or source_input.evaluated_at_utc.utcoffset() is None
     ):
         raise ValueError("evaluated_at_utc must be timezone-aware")
 
-    source_refs = _available_bond_maturity_source_refs(source_input)
-    missing_count = 2 - len(source_refs)
+
+def _source_ref_supportability_result(
+    source_input: BondMaturitySignalInput,
+    source_refs: tuple[SourceRef, ...],
+) -> SignalEvaluationResult | None:
     temporal_block = temporal_blocked_signal_result(
         family=OpportunityFamily.BOND_MATURITY,
         as_of_date=source_input.as_of_date,
@@ -82,6 +110,7 @@ def evaluate_bond_maturity_signal(
             reason_codes=(ReasonCode.REVIEW_REQUIRED,),
             unsupported_reasons=(UnsupportedEvidenceReason.ENTITLEMENT_DENIED,),
         )
+    missing_count = 2 - len(source_refs)
     if missing_count:
         return _blocked(
             reason_codes=(ReasonCode.SOURCE_PARTIAL,),
@@ -92,41 +121,33 @@ def evaluate_bond_maturity_signal(
             reason_codes=(ReasonCode.SOURCE_STALE,),
             unsupported_reasons=(UnsupportedEvidenceReason.STALE_SOURCE,),
         )
+    return None
+
+
+def _source_value_supportability_result(
+    source_input: BondMaturitySignalInput,
+) -> SignalEvaluationResult | None:
     if source_input.duplicate_of_candidate_id is not None:
         return SignalEvaluationResult(
             outcome=SignalEvaluationOutcome.SUPPRESSED,
             family=OpportunityFamily.BOND_MATURITY,
             reason_codes=(ReasonCode.DUPLICATE_SUPPRESSED,),
         )
-    if source_input.source_reported_maturing_position_count is None:
-        return _blocked(
-            reason_codes=(ReasonCode.SOURCE_PARTIAL,),
-            unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,),
-        )
-    if source_input.source_reported_maturing_position_count < 0:
+    maturing_position_count = source_input.source_reported_maturing_position_count
+    if maturing_position_count is None:
+        return _missing_source_block()
+    if maturing_position_count < 0:
         raise ValueError("source_reported_maturing_position_count must be non-negative")
-    if source_input.source_reported_maturing_position_count == 0:
-        return SignalEvaluationResult(
-            outcome=SignalEvaluationOutcome.NOT_ELIGIBLE,
-            family=OpportunityFamily.BOND_MATURITY,
-            reason_codes=(ReasonCode.BELOW_MATERIALITY,),
-        )
-    if source_input.source_reported_next_maturity_date is None:
-        return _blocked(
-            reason_codes=(ReasonCode.SOURCE_PARTIAL,),
-            unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,),
-        )
-    if not _within_maturity_window(
-        as_of_date=source_input.as_of_date,
-        maturity_date=source_input.source_reported_next_maturity_date,
-        window_days=policy.maturity_window_days,
-    ):
-        return SignalEvaluationResult(
-            outcome=SignalEvaluationOutcome.NOT_ELIGIBLE,
-            family=OpportunityFamily.BOND_MATURITY,
-            reason_codes=(ReasonCode.BELOW_MATERIALITY,),
-        )
+    if maturing_position_count == 0:
+        return _not_eligible_below_materiality()
+    return None
 
+
+def _candidate_created_result(
+    source_input: BondMaturitySignalInput,
+    policy: BondMaturitySignalPolicy,
+    source_refs: tuple[SourceRef, ...],
+) -> SignalEvaluationResult:
     identity = _stable_bond_maturity_identity(source_input, policy, source_refs)
     signal = OpportunitySignal(
         signal_id=f"signal_bond_maturity_{identity}",
@@ -170,6 +191,21 @@ def evaluate_bond_maturity_signal(
         reason_codes=evidence_packet.reason_codes,
         signal=signal,
         candidate=candidate,
+    )
+
+
+def _missing_source_block() -> SignalEvaluationResult:
+    return _blocked(
+        reason_codes=(ReasonCode.SOURCE_PARTIAL,),
+        unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,),
+    )
+
+
+def _not_eligible_below_materiality() -> SignalEvaluationResult:
+    return SignalEvaluationResult(
+        outcome=SignalEvaluationOutcome.NOT_ELIGIBLE,
+        family=OpportunityFamily.BOND_MATURITY,
+        reason_codes=(ReasonCode.BELOW_MATERIALITY,),
     )
 
 
