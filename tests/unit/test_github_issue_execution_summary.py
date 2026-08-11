@@ -67,7 +67,10 @@ def test_github_issue_execution_summary_reports_current_rfc0002_counts() -> None
         summary["counts"]["byExecutionStatus"][issue_681_status]
         == expected_execution_counts[issue_681_status]
     )
-    assert summary["counts"]["byExecutionStatus"]["open_in_progress"] == 1
+    assert (
+        summary["counts"]["byExecutionStatus"]["open_in_progress"]
+        == expected_execution_counts["open_in_progress"]
+    )
     assert "open_fixed_local" not in summary["counts"]["byExecutionStatus"]
     assert (
         summary["counts"]["byExecutionStatus"].get("open_pr_raised", 0)

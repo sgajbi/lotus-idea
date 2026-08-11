@@ -388,10 +388,42 @@ def _review_queue_count_query(predicate_sql: str) -> str:
 
 
 def _review_queue_readiness_summary_query(access_scope_mismatch_sql: str) -> str:
-    compatible_state_sql = candidate_record_state_compatibility_sql()
+    return (
+        "/* lotus-idea review-queue-readiness-summary */\n"
+        + _review_queue_readiness_candidate_ctes(access_scope_mismatch_sql)
+        + "\n"
+        + _review_queue_readiness_summary_select()
+    )
+
+
+def _review_queue_readiness_candidate_ctes(access_scope_mismatch_sql: str) -> str:
     return f"""
-        /* lotus-idea review-queue-readiness-summary */
         WITH base AS (
+            {_review_queue_base_candidate_select()}
+        ),
+        classified AS (
+            SELECT *,
+                   {_review_queue_readiness_exclusion_case(access_scope_mismatch_sql)}
+            FROM base
+        ),
+        eligible AS (
+            SELECT *
+            FROM classified
+            WHERE exclusion_reason IS NULL
+        ),
+        deduped AS (
+            SELECT DISTINCT ON (source_signal_key) *
+            FROM eligible
+            ORDER BY source_signal_key, queue_score DESC, queue_created_at_utc, candidate_id
+        ),
+        duplicate_counts AS (
+            {_review_queue_duplicate_count_select()}
+        )
+        """
+
+
+def _review_queue_base_candidate_select() -> str:
+    return """
             SELECT candidate_id, lifecycle_status, review_posture,
                    candidate_json,
                    COALESCE(
@@ -408,9 +440,12 @@ def _review_queue_readiness_summary_query(access_scope_mismatch_sql: str) -> str
             FROM idea_candidate_record
             WHERE (candidate_json->>'created_at_utc')::timestamptz <= %s
               AND review_posture = %s
-        ),
-        classified AS (
-            SELECT *,
+        """
+
+
+def _review_queue_readiness_exclusion_case(access_scope_mismatch_sql: str) -> str:
+    compatible_state_sql = candidate_record_state_compatibility_sql()
+    return f"""
                     CASE
                         WHEN {access_scope_mismatch_sql}
                             THEN '{QueueExclusionReason.ACCESS_SCOPE_MISMATCH.value}'
@@ -436,24 +471,20 @@ def _review_queue_readiness_summary_query(access_scope_mismatch_sql: str) -> str
                            THEN '{QueueExclusionReason.NON_REVIEWABLE_STATUS.value}'
                        ELSE NULL
                    END AS exclusion_reason
-            FROM base
-        ),
-        eligible AS (
-            SELECT *
-            FROM classified
-            WHERE exclusion_reason IS NULL
-        ),
-        deduped AS (
-            SELECT DISTINCT ON (source_signal_key) *
-            FROM eligible
-            ORDER BY source_signal_key, queue_score DESC, queue_created_at_utc, candidate_id
-        ),
-        duplicate_counts AS (
+        """
+
+
+def _review_queue_duplicate_count_select() -> str:
+    return """
             SELECT GREATEST(
                 (SELECT COUNT(*) FROM eligible) - (SELECT COUNT(*) FROM deduped),
                 0
             )::integer AS duplicate_count
-        )
+        """
+
+
+def _review_queue_readiness_summary_select() -> str:
+    return f"""
         SELECT
             (SELECT COUNT(*) FROM base)::integer AS candidate_snapshot_count,
             (SELECT COUNT(*) FROM deduped)::integer AS reviewable_item_count,
@@ -468,36 +499,24 @@ def _review_queue_readiness_summary_query(access_scope_mismatch_sql: str) -> str
             (SELECT COUNT(*) FROM classified
                 WHERE exclusion_reason = '{QueueExclusionReason.INVALID_STATE.value}')::integer
                 AS invalid_state,
-            (SELECT COUNT(*) FROM classified
-                WHERE exclusion_reason = '{QueueExclusionReason.SUPPRESSED.value}')::integer
-                AS suppressed,
+            {_queue_exclusion_count_projection(QueueExclusionReason.SUPPRESSED)},
             (SELECT duplicate_count FROM duplicate_counts)::integer AS duplicate,
-            (SELECT COUNT(*) FROM classified
-                WHERE exclusion_reason = '{QueueExclusionReason.EXPIRED.value}')::integer
-                AS expired,
+            {_queue_exclusion_count_projection(QueueExclusionReason.EXPIRED)},
             (0)::integer AS snoozed,
-            (SELECT COUNT(*) FROM classified
-                WHERE exclusion_reason = '{QueueExclusionReason.CLOSED.value}')::integer
-                AS closed,
-            (SELECT COUNT(*) FROM classified
-                WHERE exclusion_reason = '{QueueExclusionReason.REJECTED.value}')::integer
-                AS rejected,
-            (SELECT COUNT(*) FROM classified
-                WHERE exclusion_reason = '{QueueExclusionReason.UNSUPPORTED_EVIDENCE.value}')::integer
-                AS unsupported_evidence,
-            (SELECT COUNT(*) FROM classified
-                WHERE exclusion_reason = '{QueueExclusionReason.UNSCORED.value}')::integer
-                AS unscored,
-            (SELECT COUNT(*) FROM classified
-                WHERE exclusion_reason = '{QueueExclusionReason.UNRANKABLE_SCORE_POLICY.value}')::integer
-                AS unrankable_score_policy,
-            (SELECT COUNT(*) FROM classified
-                WHERE exclusion_reason = '{QueueExclusionReason.NON_REVIEWABLE_STATUS.value}')::integer
-                AS non_reviewable_status,
-            (SELECT COUNT(*) FROM classified
-                WHERE exclusion_reason = '{QueueExclusionReason.ACCESS_SCOPE_MISMATCH.value}')::integer
-                AS access_scope_mismatch
+            {_queue_exclusion_count_projection(QueueExclusionReason.CLOSED)},
+            {_queue_exclusion_count_projection(QueueExclusionReason.REJECTED)},
+            {_queue_exclusion_count_projection(QueueExclusionReason.UNSUPPORTED_EVIDENCE)},
+            {_queue_exclusion_count_projection(QueueExclusionReason.UNSCORED)},
+            {_queue_exclusion_count_projection(QueueExclusionReason.UNRANKABLE_SCORE_POLICY)},
+            {_queue_exclusion_count_projection(QueueExclusionReason.NON_REVIEWABLE_STATUS)},
+            {_queue_exclusion_count_projection(QueueExclusionReason.ACCESS_SCOPE_MISMATCH)}
         """
+
+
+def _queue_exclusion_count_projection(reason: QueueExclusionReason) -> str:
+    return f"""(SELECT COUNT(*) FROM classified
+                WHERE exclusion_reason = '{reason.value}')::integer
+                AS {reason.value}"""
 
 
 def _review_queue_page_query(predicate_sql: str) -> str:
