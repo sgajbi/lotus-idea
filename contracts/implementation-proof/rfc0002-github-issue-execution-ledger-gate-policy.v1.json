@@ -327,9 +327,10 @@
     ],
     "926": [
       "Keep #926 open",
+      "PR #927",
       "Manage mandate runtime receipt reconciliation",
       "_receipts_reconcile",
-      "closed v3 Manage mandate runtime proof schema",
+      "v3 Manage mandate runtime proof schema",
       "#379 production/certification blocker",
       "must not implement authentication or authorization",
       "supported-feature promotion"
