@@ -9,7 +9,7 @@
     {
       "patternId": "github_execution_control_and_context_sync",
       "title": "GitHub issue state, closure wording, docs, wiki, and agent-context truth must remain executable and mainline-backed.",
-      "currentLedgerIssueNumbers": [673, 681, 683, 684, 953],
+      "currentLedgerIssueNumbers": [673, 681, 683, 684],
       "relatedIssueNumbers": [681, 854, 871, 874, 883, 890, 892, 929, 944, 950, 953],
       "rfcSlices": ["slice-18", "slice-20", "slice-21"],
       "durableControls": [

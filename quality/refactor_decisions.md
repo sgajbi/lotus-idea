@@ -41,10 +41,12 @@ function; the next largest function is
 `tests/unit/test_github_issue_execution_ledger_gate.py::test_rfc0002_github_issue_execution_ledger_records_issue_681_sync_note`
 at `139` lines.
 
-PR `#954` is open from branch `refactor/953-cross-repo-posture-test-fixture`
-at head `6fd53e9ec7a344bd456dd9eb558a2144d73fc57c`; PR checks,
-merge-to-main, exact-main validation, QA closure, and branch cleanup remain
-pending.
+PR `#954` merged by rebase to Idea main at
+`28c70b8b96f29d93ec7d1953419ee2fe6e3f4e6d`. Exact-main Main Releasability
+Gate `31533477901` and exact-main Push on main `31533462119` passed for that
+SHA. No repo-authored wiki source changed, so wiki publication was not
+required. The remote branch was deleted by GitHub, and the local branch was
+deleted after git cherry patch-equivalence proof.
 
 This is test-support maintainability only. It does not change runtime code,
 API/OpenAPI behavior, proof schemas, Core, Gateway, Workbench, authentication,
