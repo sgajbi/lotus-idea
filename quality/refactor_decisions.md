@@ -41,6 +41,11 @@ function; the next largest function is
 `tests/unit/test_github_issue_execution_ledger_gate.py::test_rfc0002_github_issue_execution_ledger_records_issue_681_sync_note`
 at `139` lines.
 
+PR `#954` is open from branch `refactor/953-cross-repo-posture-test-fixture`
+at head `6fd53e9ec7a344bd456dd9eb558a2144d73fc57c`; PR checks,
+merge-to-main, exact-main validation, QA closure, and branch cleanup remain
+pending.
+
 This is test-support maintainability only. It does not change runtime code,
 API/OpenAPI behavior, proof schemas, Core, Gateway, Workbench, authentication,
 authorization, supported-feature posture, wiki source, or final RFC-0002
