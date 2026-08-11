@@ -18,6 +18,17 @@ from tests.support.ai_attestation.source_fixture import write_lotus_ai_attestati
 
 ROOT = Path(__file__).resolve().parents[3]
 GENERATED_AT = datetime(2026, 7, 15, 0, 0, tzinfo=UTC)
+FALSE_CERTIFICATION_CLAIMS = (
+    "runtimeExecutionObserved",
+    "liveProviderExecuted",
+    "modelRiskApprovalObserved",
+    "deploymentObserved",
+    "productionCertificationGranted",
+    "workbenchProductProofCertified",
+    "clientReadyPublicationAuthorized",
+    "supportedFeaturePromoted",
+    "certificationClosed",
+)
 
 
 def test_builds_closed_digest_bound_signed_ai_attestation_source_contract(
@@ -56,6 +67,23 @@ def test_missing_producer_is_explicit_consumer_only_non_proof(tmp_path: Path) ->
     assert payload["producerSourceAuthorityDigest"] is None
     assert idea_consumer_source_contract_is_valid(payload) is True
     assert signed_ai_attestation_source_contract_is_valid(payload) is False
+
+
+@pytest.mark.parametrize("payload_kind", ["full", "consumer_only"])
+def test_source_contract_evidence_never_claims_runtime_certification(
+    payload_kind: str,
+    tmp_path: Path,
+) -> None:
+    payload = (
+        _valid_payload(tmp_path) if payload_kind == "full" else _consumer_only_payload(tmp_path)
+    )
+
+    assert payload["sourceContractBlockersSatisfied"] == ()
+    assert payload["requiredBlockerEvidenceClasses"] == {}
+    assert payload["remainingCertificationBlockers"] == (
+        REMAINING_AI_ATTESTATION_CERTIFICATION_BLOCKERS
+    )
+    assert all(payload[claim] is False for claim in FALSE_CERTIFICATION_CLAIMS)
 
 
 @pytest.mark.parametrize(
