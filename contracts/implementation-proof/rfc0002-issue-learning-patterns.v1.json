@@ -366,8 +366,8 @@
       "rfcSlices": ["slice-19"],
       "durableControls": [
         {
-          "type": "quality",
-          "ref": "quality/baseline_report.md"
+          "type": "gate",
+          "ref": "scripts/generate_quality_baseline.py"
         },
         {
           "type": "quality",
