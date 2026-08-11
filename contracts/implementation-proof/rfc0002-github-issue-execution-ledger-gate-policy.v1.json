@@ -522,6 +522,22 @@
       "local branch was deleted after patch-equivalence proof",
       "Keep #681 open",
       "does not promote supported features"
+    ],
+    "886": [
+      "Closed #886 after QA passed",
+      "downstream-capacity seed timestamp-normalization fix",
+      "2cfeb9008ac7965246afa0da5a6181b0a74a6dd2",
+      "31453461450",
+      "31453455926",
+      "ce8dcd9b784067f9a2308c0f6ac4cbdda1f35a90",
+      "31454400123",
+      "31454395937",
+      "canonical UTC request timestamp formatting",
+      "fail-closed naive timestamp handling",
+      "No repo-authored wiki source changed",
+      "local branches were deleted after git cherry patch-equivalence proof",
+      "Issue #814 remains the separate canonical runtime proof blocker",
+      "supported-feature promotion"
     ]
   }
 }
