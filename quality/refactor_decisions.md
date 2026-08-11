@@ -38,11 +38,15 @@ Focused local validation passed:
 The refreshed quality baseline no longer lists the targeted test as a largest
 function; the next largest function is
 `tests/unit/test_proof_artifacts.py::_assert_configured_artifacts_are_bound` at
-`126` lines. No repo-authored wiki source changed, so wiki publication is not
+`126` lines. No repo-authored wiki source changed, so wiki publication was not
 required for PR `#957`.
 
-PR `#957` is open with implementation commit
-`5efc4e589c6de548bd10647049371d478c3d3b93`.
+PR `#957` merged by rebase to Idea main at
+`24841f43fd776672c9e19deb7b7e50dfe925060d` from PR head
+`11a924f6c35166062c3a65f49f839fe7f8590777`. Exact-main Main Releasability
+Gate run `31537452298` and exact-main CodeQL push run `31537443335` passed for
+that SHA. GitHub deleted the remote implementation branch during merge, and no
+local or remote `#956` branch remains after pruning.
 
 This is test-support maintainability only. It does not change runtime code,
 API/OpenAPI behavior, proof schemas, Core, Gateway, Workbench, authentication,
