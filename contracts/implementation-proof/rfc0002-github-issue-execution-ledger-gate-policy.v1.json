@@ -320,23 +320,31 @@
       "Issue #814 remains the separate canonical runtime proof blocker",
       "production IdP/session/token-claims authority",
       "supported-feature promotion"
-    ],
-    "914": [
-      "Keep #914 open until the outbox delivery application orchestration refactor reaches main",
-      "internal RFC-0002 Slice 15 maintainability hardening",
-      "src/app/application/outbox/delivery.py::run_outbox_delivery_once",
-      "request/lease context construction",
-      "idempotency replay/conflict handling",
-      "single-event delivery classification",
-      "17 passed",
-      "duplicate-implementation gate with zero clusters",
-      "quality-baseline refresh showing the production hotspot removed",
-      "live broker runtime",
-      "supported-feature promotion",
-      "final RFC-0002 closure"
     ]
   },
   "requiredClosedIssueEvidence": {
+    "914": [
+      "Closed #914 after PR #915 merged",
+      "RFC-0002 Slice 15 outbox delivery application orchestration refactor",
+      "72dd37bf19270cc204812868bc848d94c59f308e",
+      "9e85ddfa24afcddee5f917347a393ed05bf37cba",
+      "31479560423",
+      "31479545150",
+      "run_outbox_delivery_once",
+      "request/lease context construction",
+      "idempotency replay/conflict handling",
+      "single-event publisher/repository result classification",
+      "17 passed",
+      "36 passed",
+      "duplicate-implementation gate with zero clusters",
+      "No repo-authored wiki source changed",
+      "git cherry patch-equivalence proof",
+      "empty direct branch-vs-main diff",
+      "internal application-layer maintainability hardening",
+      "live broker runtime",
+      "supported-feature promotion",
+      "final RFC-0002 closure"
+    ],
     "911": [
       "Closed #911 after PR #912 merged",
       "RFC-0002 Slice 12/13 downstream proof application helper boundary refactor",
