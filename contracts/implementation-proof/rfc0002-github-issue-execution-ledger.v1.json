@@ -1,7 +1,7 @@
 {
   "schemaVersion": "lotus-idea:rfc0002-github-issue-execution-ledger:v1",
   "rfcId": "RFC-0002",
-  "asOfDate": "2026-08-10",
+  "asOfDate": "2026-08-11",
   "repository": "sgajbi/lotus-idea",
   "executionAnchor": {
     "issueNumber": 681,
@@ -625,6 +625,15 @@
       "executionStatus": "closed_complete",
       "allowPullRequestAutoClose": true,
       "closureInstruction": "Closed #883 after QA passed on lotus-idea main 841c2e4298e9dcf2b0aabcb58e4eb9f499c93ffc. PR #884 merged by rebase to Idea main and implemented a conflicting GitHub lifecycle-label guard in scripts/github_issue_execution_state_audit.py so ledger-tracked issues fail audit when they carry extra status/* labels alongside the required lifecycle label. Exact-main Main Releasability run 31450672654 passed for 841c2e4298e9dcf2b0aabcb58e4eb9f499c93ffc, including lint/typecheck/security, unit, integration, e2e, PostgreSQL runtime proof, combined coverage, Docker image build and smoke, image scan, digest run, signing, provenance, SBOM attestation, release manifest, and evidence upload. QA closure evidence included 23 focused tests for issue execution state audit, summary, and learning-pattern gates; make rfc0002-github-issue-execution-ledger-gate, rfc0002-github-issue-execution-state-audit, rfc0002-github-issue-execution-summary, and rfc0002-github-issue-learning-pattern-gate passed; focused Ruff, Ruff format-check, MyPy, and git diff --check passed before merge. No wiki source changed; repo-authored wiki publication was not required. The remote PR branch was deleted by GitHub and the local branch was deleted after patch-equivalence proof. This closes only the Slice 18 GitHub issue lifecycle-label audit hardening issue. Keep #681 open as the Slice 18 documentation/wiki/support/context tracker. This does not promote supported features, clear Core, Workbench, Gateway, production identity, protected runtime, provider, legal, client-publication, support, or final RFC-0002 closure blockers."
+    },
+    {
+      "issueNumber": 886,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/886",
+      "rfcSlices": ["slice-15", "slice-17"],
+      "githubState": "open",
+      "executionStatus": "open_in_progress",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #886 open while the downstream-capacity seed timestamp-normalization fix is under active implementation. The scope is limited to canonical UTC request timestamp formatting and fail-closed naive timestamp handling in the Idea-owned synthetic capacity seed HTTP adapter, with focused unit coverage and codebase review ledger evidence. This issue does not close #814, implement production authentication, production IdP/session/token-claims authority, Workbench/Gateway/Core changes, production capacity certification, supported-feature promotion, client-publication proof, or final canonical RFC-0002 runtime proof."
     }
   ]
 }
