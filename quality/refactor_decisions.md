@@ -6,6 +6,46 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-08-12: Cross-Repo Issue Posture Count Test Fixtures
+
+Issue `#953` applies the RFC-0002 Slice 18/19 maintainability lens to
+`tests/unit/test_cross_repo_issue_posture.py`. The quality baseline listed
+`test_cross_repo_issue_posture_counts_statuses_and_attention_issues` as the
+largest function at `160` lines. The test protects cross-repo posture counts,
+title-only RFC reference detection, blocker classification, and attention
+ordering, but the inline fixture and expected-output blocks were too large for
+reviewable future updates.
+
+The refactor keeps production posture logic unchanged. The test fixture now
+lives in `_cross_repo_posture_fixture_payload()`, while protected expected
+outputs live in `EXPECTED_TITLE_ONLY_RFC0002_REFERENCES` and
+`EXPECTED_WORKBENCH_BLOCKED_ISSUE`. The public test remains a small
+orchestrator over the same cross-repo behavior.
+
+Focused local validation passed:
+
+1. JSON validation for the RFC-0002 execution ledger, execution-ledger gate
+   policy, and issue-learning-pattern contracts,
+2. `python -m ruff check tests/unit/test_cross_repo_issue_posture.py`,
+3. `python -m ruff format --check tests/unit/test_cross_repo_issue_posture.py`,
+4. `python -m mypy tests/unit/test_cross_repo_issue_posture.py`,
+5. `python -m pytest tests/unit/test_cross_repo_issue_posture.py -q`
+   (`14` passed),
+6. RFC-0002 execution ledger, live issue-state audit, execution summary, and
+   issue-learning-pattern gates,
+7. documentation-contract, quality-baseline, maintainability,
+   duplicate-implementation, and git diff whitespace gates.
+
+The refreshed quality baseline no longer lists the targeted test as the largest
+function; the next largest function is
+`tests/unit/test_github_issue_execution_ledger_gate.py::test_rfc0002_github_issue_execution_ledger_records_issue_681_sync_note`
+at `139` lines.
+
+This is test-support maintainability only. It does not change runtime code,
+API/OpenAPI behavior, proof schemas, Core, Gateway, Workbench, authentication,
+authorization, supported-feature posture, wiki source, or final RFC-0002
+closure.
+
 ## 2026-08-12: Slice 18 Ledger Posture Evidence Test Fragments
 
 Issue `#950` applies the RFC-0002 Slice 18/19 maintainability lens to

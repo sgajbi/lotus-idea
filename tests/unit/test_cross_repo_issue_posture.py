@@ -80,108 +80,138 @@ def _classification(
     }
 
 
+def _cross_repo_posture_fixture_payload() -> dict[str, Any]:
+    return {
+        "sgajbi/lotus-idea": {
+            "openIssues": [
+                _issue(681, state="OPEN", title="Slice 18 docs", labels=[]),
+                _issue(685, state="OPEN", title="Workbench proof", labels=[]),
+            ],
+            "allIssues": [
+                _issue(
+                    681,
+                    state="OPEN",
+                    title="Slice 18 docs",
+                    labels=[
+                        "rfc/RFC-0002",
+                        "rfc/RFC-0002/slice-18",
+                        "status/in-progress",
+                        "priority/P1",
+                    ],
+                ),
+                _issue(
+                    563,
+                    state="CLOSED",
+                    title="RFC-0002 Slice 10: certify high-volatility success-mode contracts",
+                    labels=["status/merged-main"],
+                ),
+            ],
+            "rfc0002Issues": [
+                _issue(
+                    681,
+                    state="OPEN",
+                    title="Slice 18 docs",
+                    labels=[
+                        "rfc/RFC-0002",
+                        "rfc/RFC-0002/slice-18",
+                        "status/in-progress",
+                        "priority/P1",
+                    ],
+                ),
+                _issue(
+                    685,
+                    state="OPEN",
+                    title="Workbench proof",
+                    labels=[
+                        "rfc/RFC-0002",
+                        "rfc/RFC-0002/slice-11",
+                        "status/blocked",
+                        "priority/P0",
+                    ],
+                ),
+                _issue(
+                    340,
+                    state="CLOSED",
+                    title="AI proof",
+                    labels=["rfc/RFC-0002", "status/merged-main"],
+                ),
+            ],
+        },
+        "sgajbi/lotus-platform": {
+            "openIssues": [
+                _issue(
+                    598,
+                    state="OPEN",
+                    title="Platform mesh proof",
+                    labels=[],
+                    repo="lotus-platform",
+                ),
+                _issue(42, state="OPEN", title="Other", labels=[], repo="lotus-platform"),
+            ],
+            "allIssues": [
+                _issue(
+                    598,
+                    state="OPEN",
+                    title="Platform mesh proof",
+                    labels=[
+                        "rfc/RFC-0002",
+                        "rfc/RFC-0002/slice-14",
+                        "status/merged-main",
+                        "priority/P1",
+                    ],
+                    repo="lotus-platform",
+                )
+            ],
+            "rfc0002Issues": [
+                _issue(
+                    598,
+                    state="OPEN",
+                    title="Platform mesh proof",
+                    labels=[
+                        "rfc/RFC-0002",
+                        "rfc/RFC-0002/slice-14",
+                        "status/merged-main",
+                        "priority/P1",
+                    ],
+                    repo="lotus-platform",
+                )
+            ],
+        },
+    }
+
+
+EXPECTED_TITLE_ONLY_RFC0002_REFERENCES = [
+    {
+        "number": 563,
+        "title": "RFC-0002 Slice 10: certify high-volatility success-mode contracts",
+        "url": "https://github.com/sgajbi/lotus-idea/issues/563",
+        "updatedAt": "2026-07-29T00:00:00Z",
+        "status": "status/merged-main",
+        "priorityLabels": [],
+        "sliceLabels": [],
+        "repository": "lotus-idea",
+    }
+]
+
+
+EXPECTED_WORKBENCH_BLOCKED_ISSUE = {
+    "number": 685,
+    "title": "Workbench proof",
+    "url": "https://github.com/sgajbi/lotus-idea/issues/685",
+    "updatedAt": "2026-07-29T00:00:00Z",
+    "status": "status/blocked",
+    "priorityLabels": ["priority/P0"],
+    "sliceLabels": ["rfc/RFC-0002/slice-11"],
+    "repository": "lotus-idea",
+    "actionability": "external_or_protected_evidence",
+    "blockerClass": "canonical_workbench_runtime_core_readiness",
+    "remainingAuthority": "test authority boundary",
+}
+
+
 def test_cross_repo_issue_posture_counts_statuses_and_attention_issues(tmp_path: Path) -> None:
     module = _load_module()
-    fixture = _write_fixture(
-        tmp_path,
-        {
-            "sgajbi/lotus-idea": {
-                "openIssues": [
-                    _issue(681, state="OPEN", title="Slice 18 docs", labels=[]),
-                    _issue(685, state="OPEN", title="Workbench proof", labels=[]),
-                ],
-                "allIssues": [
-                    _issue(
-                        681,
-                        state="OPEN",
-                        title="Slice 18 docs",
-                        labels=[
-                            "rfc/RFC-0002",
-                            "rfc/RFC-0002/slice-18",
-                            "status/in-progress",
-                            "priority/P1",
-                        ],
-                    ),
-                    _issue(
-                        563,
-                        state="CLOSED",
-                        title="RFC-0002 Slice 10: certify high-volatility success-mode contracts",
-                        labels=["status/merged-main"],
-                    ),
-                ],
-                "rfc0002Issues": [
-                    _issue(
-                        681,
-                        state="OPEN",
-                        title="Slice 18 docs",
-                        labels=[
-                            "rfc/RFC-0002",
-                            "rfc/RFC-0002/slice-18",
-                            "status/in-progress",
-                            "priority/P1",
-                        ],
-                    ),
-                    _issue(
-                        685,
-                        state="OPEN",
-                        title="Workbench proof",
-                        labels=[
-                            "rfc/RFC-0002",
-                            "rfc/RFC-0002/slice-11",
-                            "status/blocked",
-                            "priority/P0",
-                        ],
-                    ),
-                    _issue(
-                        340,
-                        state="CLOSED",
-                        title="AI proof",
-                        labels=["rfc/RFC-0002", "status/merged-main"],
-                    ),
-                ],
-            },
-            "sgajbi/lotus-platform": {
-                "openIssues": [
-                    _issue(
-                        598,
-                        state="OPEN",
-                        title="Platform mesh proof",
-                        labels=[],
-                        repo="lotus-platform",
-                    ),
-                    _issue(42, state="OPEN", title="Other", labels=[], repo="lotus-platform"),
-                ],
-                "allIssues": [
-                    _issue(
-                        598,
-                        state="OPEN",
-                        title="Platform mesh proof",
-                        labels=[
-                            "rfc/RFC-0002",
-                            "rfc/RFC-0002/slice-14",
-                            "status/merged-main",
-                            "priority/P1",
-                        ],
-                        repo="lotus-platform",
-                    )
-                ],
-                "rfc0002Issues": [
-                    _issue(
-                        598,
-                        state="OPEN",
-                        title="Platform mesh proof",
-                        labels=[
-                            "rfc/RFC-0002",
-                            "rfc/RFC-0002/slice-14",
-                            "status/merged-main",
-                            "priority/P1",
-                        ],
-                        repo="lotus-platform",
-                    )
-                ],
-            },
-        },
-    )
+    fixture = _write_fixture(tmp_path, _cross_repo_posture_fixture_payload())
     blocker_classification = _write_blocker_classification(
         tmp_path,
         [_classification(685, blocker_class="canonical_workbench_runtime_core_readiness")],
@@ -198,18 +228,7 @@ def test_cross_repo_issue_posture_counts_statuses_and_attention_issues(tmp_path:
     assert summary["counts"]["repositories"] == 2
     assert summary["counts"]["openRfc0002Issues"] == 3
     assert summary["counts"]["closedRfc0002Issues"] == 1
-    assert summary["titleOnlyRfc0002References"] == [
-        {
-            "number": 563,
-            "title": "RFC-0002 Slice 10: certify high-volatility success-mode contracts",
-            "url": "https://github.com/sgajbi/lotus-idea/issues/563",
-            "updatedAt": "2026-07-29T00:00:00Z",
-            "status": "status/merged-main",
-            "priorityLabels": [],
-            "sliceLabels": [],
-            "repository": "lotus-idea",
-        }
-    ]
+    assert summary["titleOnlyRfc0002References"] == EXPECTED_TITLE_ONLY_RFC0002_REFERENCES
     assert summary["counts"]["openRfc0002IssuesByStatus"] == {
         "status/blocked": 1,
         "status/in-progress": 1,
@@ -221,19 +240,7 @@ def test_cross_repo_issue_posture_counts_statuses_and_attention_issues(tmp_path:
         "canonical_workbench_runtime_core_readiness": 1
     }
     assert summary["blockedActionability"]["openBlockedIssues"] == [
-        {
-            "number": 685,
-            "title": "Workbench proof",
-            "url": "https://github.com/sgajbi/lotus-idea/issues/685",
-            "updatedAt": "2026-07-29T00:00:00Z",
-            "status": "status/blocked",
-            "priorityLabels": ["priority/P0"],
-            "sliceLabels": ["rfc/RFC-0002/slice-11"],
-            "repository": "lotus-idea",
-            "actionability": "external_or_protected_evidence",
-            "blockerClass": "canonical_workbench_runtime_core_readiness",
-            "remainingAuthority": "test authority boundary",
-        }
+        EXPECTED_WORKBENCH_BLOCKED_ISSUE
     ]
     assert [issue["repository"] for issue in summary["openAttentionIssues"]] == [
         "lotus-idea",
