@@ -45,6 +45,135 @@ def _write_policy(tmp_path: Path, payload: dict[str, Any]) -> Path:
     return path
 
 
+def _issue_by_number(payload: dict[str, Any], issue_number: int) -> dict[str, Any]:
+    return next(
+        issue
+        for issue in payload["issues"]
+        if isinstance(issue, dict) and issue["issueNumber"] == issue_number
+    )
+
+
+def _assert_closure_instruction_contains_fragments(
+    issue: dict[str, Any],
+    fragments: tuple[str, ...],
+) -> None:
+    instruction = cast(str, issue["closureInstruction"])
+    missing_fragments = [fragment for fragment in fragments if fragment not in instruction]
+
+    assert missing_fragments == []
+
+
+ISSUE_681_SLICE18_POSTURE_FRAGMENTS = (
+    "Keep #681 open",
+    "PR #765 merged the Slice 18 cross-repo issue posture command",
+    "3ab78c4e9ba23b08eec5396f0641acf21c98f74a",
+    "30411606383",
+    "lotus-idea.wiki commit 0aea688",
+    "PR #767 rendered pending final-closure and post-completion issue sections",
+    "PR #768 added keep-open PR text enforcement",
+    "PR #769 synchronized Manage temporal receipt identity consumption",
+    "PR #770 reconciled historical Manage #620 closure truth",
+    "c4a58683a05cb0c78bea5848a287abda682aea8f",
+    "30418344813",
+    "30418340512",
+    "PR #776 synchronized #690 final QA closure truth",
+    "aa492aedd46f30b854c8478edb919605dbdd58fc",
+    "30432065538",
+    "30432058627",
+    "lotus-idea.wiki commit c08509a",
+    "PR #777 synchronized #681 evidence after #690 QA closure",
+    "39d51c5cb63df360f1e97e6e9e862784a9ad9178",
+    "30434057675",
+    "30434051218",
+    "lotus-idea.wiki commit d0a1fa1",
+    "rfc0002-issue681-pr776-evidence-sync",
+    "PR #779 hardened operations blocker truth",
+    "655d1245e96b7a67dea6c5d9ff0c78d0a32ee9e6",
+    "30437706105",
+    "30437690255",
+    "lotus-idea.wiki commit b3359fa",
+    "rfc0002-slice15-operations-blocker-truth",
+    "PR #785 synchronized #782 final QA closure truth",
+    "3ed24b318923dd4bf172da315fdc5996a612f0dc",
+    "30447510833",
+    "30447504086",
+    "PR #787 corrected cross-repo RFC-0002 posture coverage",
+    "39a480ddf115649acc3f6793a69596d4e5912bc8",
+    "30451401411",
+    "30451387946",
+    "lotus-idea.wiki commit d06f46b",
+    "PR #789 classified RFC-0002 blocker actionability",
+    "01ae36ba89f975508bde47b4361190ef5c083597",
+    "30456433618",
+    "30456425304",
+    "lotus-idea.wiki commit c926899",
+    "PR #790 synchronized PR #789 evidence into source-controlled execution truth",
+    "f23c72d7d95d1676b8f673f538a9336e4b704fbc",
+    "30458163573",
+    "30458146092",
+    "lotus-idea.wiki commit bbd9e2f",
+    "PR #791 synchronized PR #790 evidence into source-controlled execution truth",
+    "65e11890aaddb70fea4cf9d80e836ce1625a6c44",
+    "30460122600",
+    "30460101418",
+    "lotus-idea.wiki commit 2453c3006722ee40e48762d884581fb6b3893bbe",
+    "Workbench PR #505 merged BFF principal-boundary hardening",
+    "1b4afb92f4c810c99921fc26e451b04bca731e28",
+    "30464152669",
+    "c4add59871bc3f0e78dc6602c8857c5e141e6367",
+    "30465110912",
+    "Workbench wiki publication reached commit 3b4f78f",
+    "0 app-actionable blocked issues",
+    "Current Idea ledger posture after PR #801 is 43 tracked issues, 24 open, and 19 closed",
+    "PR #801 then synchronized the final #797/#681 evidence on Idea main",
+    "95c47d27f45e09369f6b709588fa2de1a1f8700b",
+    "30487277416",
+    (
+        "Current governed cross-repo RFC-0002 posture after PR #801 is 37 open "
+        "and 43 closed issues across 13 repositories, 80 tracked issues total"
+    ),
+    "PR #802 then synchronized current RFC-0002 posture truth on Idea main",
+    "7df8fbff1fbab3acb5568a8e95eb7d5d58c8dcdd",
+    "30488990343",
+    "ec05a36",
+    "issue-681-current-posture-sync",
+    "Current Idea ledger posture after PR #802 is 43 tracked issues, 24 open, and 19 closed",
+    (
+        "Current governed cross-repo RFC-0002 posture after PR #802 is 37 open "
+        "and 43 closed issues across 13 repositories, 80 tracked issues total"
+    ),
+    "PR #803 then synchronized PR #802 evidence truth on Idea main",
+    "31e5157de796e0accd0f23d3a80102ecd0871c71",
+    "30490458612",
+    "3743f01",
+    "issue-681-pr802-evidence-sync",
+    "Current Idea ledger posture after PR #803 is 43 tracked issues, 24 open, and 19 closed",
+    (
+        "Current governed cross-repo RFC-0002 posture after PR #803 is 37 open "
+        "and 43 closed issues across 13 repositories, 80 tracked issues total"
+    ),
+    "PR #804 then synchronized PR #803 evidence truth on Idea main",
+    "615e3ba848af551801c897dd9b0a52f964801da0",
+    "30491918891",
+    "05026e8",
+    "issue-681-pr803-evidence-sync",
+    "Current Idea ledger posture after PR #804 is 43 tracked issues, 24 open, and 19 closed",
+    (
+        "Current governed cross-repo RFC-0002 posture after PR #804 is 37 open "
+        "and 43 closed issues across 13 repositories, 80 tracked issues total"
+    ),
+    "Platform #636 / PR #637 closed stale queued workflow-run detection",
+    "30472672629",
+    "Platform #638 / PR #639 hardened stale PR-text payload guidance",
+    "641aabe9f303a178f3a4e489c52b3d789d8339d3",
+    "30475978275",
+    "strict DiffCount 0",
+    "coordination and documentation truth only",
+    "does not clear RFC-0002 blockers",
+    "replace production IdP/session/token-claims evidence",
+)
+
+
 def test_rfc0002_github_issue_execution_ledger_gate_passes_current_ledger() -> None:
     module = _load_gate()
 
@@ -209,181 +338,14 @@ def test_rfc0002_github_issue_execution_ledger_blocks_issue_379_on_certification
 def test_rfc0002_github_issue_execution_ledger_tracks_slice18_posture_evidence() -> None:
     module = _load_gate()
     payload = _ledger_payload(module)
-    issue_681 = next(
-        issue
-        for issue in payload["issues"]
-        if isinstance(issue, dict) and issue["issueNumber"] == 681
-    )
+    issue_681 = _issue_by_number(payload, 681)
 
     assert issue_681["githubState"] == "open"
     assert issue_681["executionStatus"] == "open_in_progress"
     assert issue_681["allowPullRequestAutoClose"] is False
-    assert "Keep #681 open" in issue_681["closureInstruction"]
-    assert (
-        "PR #765 merged the Slice 18 cross-repo issue posture command"
-        in issue_681["closureInstruction"]
-    )
-    assert "3ab78c4e9ba23b08eec5396f0641acf21c98f74a" in issue_681["closureInstruction"]
-    assert "30411606383" in issue_681["closureInstruction"]
-    assert "lotus-idea.wiki commit 0aea688" in issue_681["closureInstruction"]
-    assert (
-        "PR #767 rendered pending final-closure and post-completion issue sections"
-        in issue_681["closureInstruction"]
-    )
-    assert "PR #768 added keep-open PR text enforcement" in issue_681["closureInstruction"]
-    assert (
-        "PR #769 synchronized Manage temporal receipt identity consumption"
-        in issue_681["closureInstruction"]
-    )
-    assert (
-        "PR #770 reconciled historical Manage #620 closure truth" in issue_681["closureInstruction"]
-    )
-    assert "c4a58683a05cb0c78bea5848a287abda682aea8f" in issue_681["closureInstruction"]
-    assert "30418344813" in issue_681["closureInstruction"]
-    assert "30418340512" in issue_681["closureInstruction"]
-    assert "PR #776 synchronized #690 final QA closure truth" in issue_681["closureInstruction"]
-    assert "aa492aedd46f30b854c8478edb919605dbdd58fc" in issue_681["closureInstruction"]
-    assert "30432065538" in issue_681["closureInstruction"]
-    assert "30432058627" in issue_681["closureInstruction"]
-    assert "lotus-idea.wiki commit c08509a" in issue_681["closureInstruction"]
-    assert (
-        "PR #777 synchronized #681 evidence after #690 QA closure"
-        in issue_681["closureInstruction"]
-    )
-    assert "39d51c5cb63df360f1e97e6e9e862784a9ad9178" in issue_681["closureInstruction"]
-    assert "30434057675" in issue_681["closureInstruction"]
-    assert "30434051218" in issue_681["closureInstruction"]
-    assert "lotus-idea.wiki commit d0a1fa1" in issue_681["closureInstruction"]
-    assert "rfc0002-issue681-pr776-evidence-sync" in issue_681["closureInstruction"]
-    assert "PR #779 hardened operations blocker truth" in issue_681["closureInstruction"]
-    assert "655d1245e96b7a67dea6c5d9ff0c78d0a32ee9e6" in issue_681["closureInstruction"]
-    assert "30437706105" in issue_681["closureInstruction"]
-    assert "30437690255" in issue_681["closureInstruction"]
-    assert "lotus-idea.wiki commit b3359fa" in issue_681["closureInstruction"]
-    assert "rfc0002-slice15-operations-blocker-truth" in issue_681["closureInstruction"]
-    assert "PR #785 synchronized #782 final QA closure truth" in issue_681["closureInstruction"]
-    assert "3ed24b318923dd4bf172da315fdc5996a612f0dc" in issue_681["closureInstruction"]
-    assert "30447510833" in issue_681["closureInstruction"]
-    assert "30447504086" in issue_681["closureInstruction"]
-    assert (
-        "PR #787 corrected cross-repo RFC-0002 posture coverage" in issue_681["closureInstruction"]
-    )
-    assert "39a480ddf115649acc3f6793a69596d4e5912bc8" in issue_681["closureInstruction"]
-    assert "30451401411" in issue_681["closureInstruction"]
-    assert "30451387946" in issue_681["closureInstruction"]
-    assert "lotus-idea.wiki commit d06f46b" in issue_681["closureInstruction"]
-    assert "PR #789 classified RFC-0002 blocker actionability" in issue_681["closureInstruction"]
-    assert "01ae36ba89f975508bde47b4361190ef5c083597" in issue_681["closureInstruction"]
-    assert "30456433618" in issue_681["closureInstruction"]
-    assert "30456425304" in issue_681["closureInstruction"]
-    assert "lotus-idea.wiki commit c926899" in issue_681["closureInstruction"]
-    assert (
-        "PR #790 synchronized PR #789 evidence into source-controlled execution truth"
-        in issue_681["closureInstruction"]
-    )
-    assert "f23c72d7d95d1676b8f673f538a9336e4b704fbc" in issue_681["closureInstruction"]
-    assert "30458163573" in issue_681["closureInstruction"]
-    assert "30458146092" in issue_681["closureInstruction"]
-    assert "lotus-idea.wiki commit bbd9e2f" in issue_681["closureInstruction"]
-    assert (
-        "PR #791 synchronized PR #790 evidence into source-controlled execution truth"
-        in issue_681["closureInstruction"]
-    )
-    assert "65e11890aaddb70fea4cf9d80e836ce1625a6c44" in issue_681["closureInstruction"]
-    assert "30460122600" in issue_681["closureInstruction"]
-    assert "30460101418" in issue_681["closureInstruction"]
-    assert (
-        "lotus-idea.wiki commit 2453c3006722ee40e48762d884581fb6b3893bbe"
-        in issue_681["closureInstruction"]
-    )
-    assert (
-        "Workbench PR #505 merged BFF principal-boundary hardening"
-        in (issue_681["closureInstruction"])
-    )
-    assert "1b4afb92f4c810c99921fc26e451b04bca731e28" in issue_681["closureInstruction"]
-    assert "30464152669" in issue_681["closureInstruction"]
-    assert "c4add59871bc3f0e78dc6602c8857c5e141e6367" in issue_681["closureInstruction"]
-    assert "30465110912" in issue_681["closureInstruction"]
-    assert "Workbench wiki publication reached commit 3b4f78f" in (issue_681["closureInstruction"])
-    assert "0 app-actionable blocked issues" in issue_681["closureInstruction"]
-    assert (
-        "Current Idea ledger posture after PR #801 is 43 tracked issues, 24 open, and 19 closed"
-        in issue_681["closureInstruction"]
-    )
-    assert (
-        "PR #801 then synchronized the final #797/#681 evidence on Idea main"
-        in issue_681["closureInstruction"]
-    )
-    assert "95c47d27f45e09369f6b709588fa2de1a1f8700b" in issue_681["closureInstruction"]
-    assert "30487277416" in issue_681["closureInstruction"]
-    assert (
-        "Current governed cross-repo RFC-0002 posture after PR #801 is 37 open and 43 closed issues across 13 repositories, 80 tracked issues total"
-        in issue_681["closureInstruction"]
-    )
-    assert (
-        "PR #802 then synchronized current RFC-0002 posture truth on Idea main"
-        in issue_681["closureInstruction"]
-    )
-    assert "7df8fbff1fbab3acb5568a8e95eb7d5d58c8dcdd" in issue_681["closureInstruction"]
-    assert "30488990343" in issue_681["closureInstruction"]
-    assert "ec05a36" in issue_681["closureInstruction"]
-    assert "issue-681-current-posture-sync" in issue_681["closureInstruction"]
-    assert (
-        "Current Idea ledger posture after PR #802 is 43 tracked issues, 24 open, and 19 closed"
-        in issue_681["closureInstruction"]
-    )
-    assert (
-        "Current governed cross-repo RFC-0002 posture after PR #802 is 37 open and 43 closed issues across 13 repositories, 80 tracked issues total"
-        in issue_681["closureInstruction"]
-    )
-    assert (
-        "PR #803 then synchronized PR #802 evidence truth on Idea main"
-        in issue_681["closureInstruction"]
-    )
-    assert "31e5157de796e0accd0f23d3a80102ecd0871c71" in issue_681["closureInstruction"]
-    assert "30490458612" in issue_681["closureInstruction"]
-    assert "3743f01" in issue_681["closureInstruction"]
-    assert "issue-681-pr802-evidence-sync" in issue_681["closureInstruction"]
-    assert (
-        "Current Idea ledger posture after PR #803 is 43 tracked issues, 24 open, and 19 closed"
-        in issue_681["closureInstruction"]
-    )
-    assert (
-        "Current governed cross-repo RFC-0002 posture after PR #803 is 37 open and 43 closed issues across 13 repositories, 80 tracked issues total"
-        in issue_681["closureInstruction"]
-    )
-    assert (
-        "PR #804 then synchronized PR #803 evidence truth on Idea main"
-        in issue_681["closureInstruction"]
-    )
-    assert "615e3ba848af551801c897dd9b0a52f964801da0" in issue_681["closureInstruction"]
-    assert "30491918891" in issue_681["closureInstruction"]
-    assert "05026e8" in issue_681["closureInstruction"]
-    assert "issue-681-pr803-evidence-sync" in issue_681["closureInstruction"]
-    assert (
-        "Current Idea ledger posture after PR #804 is 43 tracked issues, 24 open, and 19 closed"
-        in issue_681["closureInstruction"]
-    )
-    assert (
-        "Current governed cross-repo RFC-0002 posture after PR #804 is 37 open and 43 closed issues across 13 repositories, 80 tracked issues total"
-        in issue_681["closureInstruction"]
-    )
-    assert (
-        "Platform #636 / PR #637 closed stale queued workflow-run detection"
-        in (issue_681["closureInstruction"])
-    )
-    assert "30472672629" in issue_681["closureInstruction"]
-    assert (
-        "Platform #638 / PR #639 hardened stale PR-text payload guidance"
-        in issue_681["closureInstruction"]
-    )
-    assert "641aabe9f303a178f3a4e489c52b3d789d8339d3" in issue_681["closureInstruction"]
-    assert "30475978275" in issue_681["closureInstruction"]
-    assert "strict DiffCount 0" in issue_681["closureInstruction"]
-    assert "coordination and documentation truth only" in issue_681["closureInstruction"]
-    assert "does not clear RFC-0002 blockers" in issue_681["closureInstruction"]
-    assert (
-        "replace production IdP/session/token-claims evidence" in (issue_681["closureInstruction"])
+    _assert_closure_instruction_contains_fragments(
+        issue_681,
+        ISSUE_681_SLICE18_POSTURE_FRAGMENTS,
     )
 
 

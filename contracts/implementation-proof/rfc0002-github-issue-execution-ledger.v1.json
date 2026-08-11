@@ -832,6 +832,15 @@
       "executionStatus": "closed_complete",
       "allowPullRequestAutoClose": true,
       "closureInstruction": "Closed #947 after QA passed. PR #948 merged by rebase to Idea main at 3b61fb49ff3a3f7457b5ebf73a68b3f6b4ab15bf from branch refactor/947-proof-consumption-appliers and implemented the RFC-0002 Slice 17/19 application-layer maintainability refactor for `src/app/application/implementation_proof_consumption.py`. The refactor centralizes registered-proof validation and capability mapping in `_apply_registered_capability_proof_if_current(...)` while preserving proof-artifact effect checks, current-proof validation, evidence refs, blocker clearing, supporting-evidence semantics, supported-feature non-promotion, and all public API/OpenAPI contracts. Exact-main Main Releasability Gate run 31525892622 and exact-main CodeQL run 31525872690 passed for 3b61fb49ff3a3f7457b5ebf73a68b3f6b4ab15bf. Local focused proof included Ruff check, format check, MyPy for the changed module, `python -m pytest tests/unit/implementation_proof tests/unit/ai_model_risk_operations/test_readiness_consumption.py tests/unit/operator_workflows_operations/test_readiness_consumption.py tests/integration/test_implementation_proof_readiness_api.py -q` with 72 passed, quality baseline, maintainability, duplicate implementation, RFC-0002 execution ledger/state/summary/learning gates, documentation-contract, full typecheck, full make lint, and git diff check. No repo-authored wiki source changed, so wiki publication was not required. The remote PR branch was deleted by GitHub, and the local branch was deleted after git cherry patch-equivalence proof. This issue does not unblock external dependencies, does not implement authentication or authorization, does not change Core/Gateway/Workbench, does not alter proof schemas, does not promote supported features, does not change runtime topology, and does not complete final RFC-0002 closure."
+    },
+    {
+      "issueNumber": 950,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/950",
+      "rfcSlices": ["slice-18", "slice-19"],
+      "githubState": "open",
+      "executionStatus": "open_in_progress",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #950 open with status/in-progress until the Slice 18 ledger posture evidence test refactor is merged, exact-main validated, QA closed, branch cleanup is complete, and source-truth closure evidence is synchronized. The issue owns the test-maintainability hotspot in `tests/unit/test_github_issue_execution_ledger_gate.py::test_rfc0002_github_issue_execution_ledger_tracks_slice18_posture_evidence`, which `quality/baseline_report.md` lists as the largest function at 179 lines. The intended bounded refactor moves protected #681 evidence fragments into data-driven assertions while preserving every lifecycle assertion and required evidence fragment. This issue does not change runtime code, API/OpenAPI behavior, proof schemas, Core, Gateway, Workbench, authentication, authorization, supported-feature posture, wiki source, or final RFC-0002 closure."
     }
   ]
 }
