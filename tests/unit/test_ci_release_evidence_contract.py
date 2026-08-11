@@ -460,6 +460,32 @@ def test_ci_contract_gate_blocks_missing_runtime_scripts_package_marker() -> Non
     )
 
 
+@pytest.mark.parametrize(
+    ("entrypoint_fragment", "expected_error"),
+    [
+        (
+            "COPY scripts/run_source_ingestion_worker.py ./scripts/run_source_ingestion_worker.py\n",
+            "Dockerfile must keep the runtime run-once worker entrypoint available",
+        ),
+        (
+            (
+                "COPY scripts/run_scheduled_source_ingestion_worker.py "
+                "./scripts/run_scheduled_source_ingestion_worker.py\n"
+            ),
+            "Dockerfile must keep the runtime scheduled-worker entrypoint available",
+        ),
+    ],
+)
+def test_ci_contract_gate_blocks_missing_runtime_worker_entrypoints(
+    entrypoint_fragment: str,
+    expected_error: str,
+) -> None:
+    dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
+    degraded = dockerfile.replace(entrypoint_fragment, "")
+
+    assert expected_error in validate_dockerfile_runtime(degraded)
+
+
 def test_ci_contract_gate_blocks_unfinalized_cyclonedx_release_sbom() -> None:
     makefile = (
         (ROOT / "Makefile")

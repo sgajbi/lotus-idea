@@ -76,7 +76,8 @@
     905,
     908,
     911,
-    914
+    914,
+    917
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -576,6 +577,21 @@
       "positions_data_quality_status=UNKNOWN",
       "fresh canonical validation completes on mainline sources",
       "does not implement production authentication",
+      "supported-feature promotion"
+    ],
+    "917": [
+      "Keep #917 open",
+      "Dockerfile runtime release-evidence validator boundary refactor",
+      "validate_dockerfile_runtime",
+      "base-image/runtime metadata",
+      "runtime dependency",
+      "runtime entrypoint",
+      "prohibited-fragment",
+      "secret-like build metadata",
+      "dependency-install ordering",
+      "does not change Dockerfile behavior",
+      "dependency pins",
+      "scanner policy",
       "supported-feature promotion"
     ],
     "854": [
