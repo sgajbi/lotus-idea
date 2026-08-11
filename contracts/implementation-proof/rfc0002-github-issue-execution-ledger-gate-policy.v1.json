@@ -328,7 +328,10 @@
       "supported-feature promotion"
     ],
     "932": [
-      "Keep #932 open until",
+      "Keep #932 open with status/pr-open",
+      "PR #933",
+      "refactor/932-low-income-signal-boundary",
+      "fba81c2f48080381f958eb90308df90793798a11",
       "RFC-0002 Slice 05/19 low-income signal evaluator boundary refactor",
       "evaluate_low_income_signal",
       "deterministic candidate identity inputs",
@@ -337,6 +340,7 @@
       "evidence packet semantics",
       "blocked/suppressed/not-eligible outcomes",
       "low-income domain/application/API-example tests",
+      "full make lint",
       "maintainability",
       "duplicate-implementation",
       "quality-baseline",
