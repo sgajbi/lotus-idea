@@ -206,10 +206,47 @@ def build_downstream_outcome_certification_payload(
     report_materialization_runtime_execution_proof: Mapping[str, Any],
     report_materialization_runtime_execution_proof_ref: str,
 ) -> dict[str, Any]:
+    _require_timezone_aware_generated_at(generated_at_utc)
+    owner_runtime_proofs = _downstream_owner_runtime_proofs(
+        advise_intake_runtime_execution_proof=advise_intake_runtime_execution_proof,
+        advise_intake_runtime_execution_proof_ref=advise_intake_runtime_execution_proof_ref,
+        manage_intake_runtime_execution_proof=manage_intake_runtime_execution_proof,
+        manage_intake_runtime_execution_proof_ref=manage_intake_runtime_execution_proof_ref,
+        report_materialization_runtime_execution_proof=report_materialization_runtime_execution_proof,
+        report_materialization_runtime_execution_proof_ref=report_materialization_runtime_execution_proof_ref,
+    )
+    idea_durable_submission_proof = _idea_durable_submission_proof()
+    diagnostics_coverage = _readiness_and_diagnostics_coverage()
+    proof_checks = _downstream_outcome_proof_checks(
+        repository_root=repository_root,
+        owner_runtime_proofs=owner_runtime_proofs,
+        idea_durable_submission_proof=idea_durable_submission_proof,
+        diagnostics_coverage=diagnostics_coverage,
+    )
+    return _downstream_outcome_certification_payload(
+        generated_at_utc=generated_at_utc,
+        owner_runtime_proofs=owner_runtime_proofs,
+        idea_durable_submission_proof=idea_durable_submission_proof,
+        diagnostics_coverage=diagnostics_coverage,
+        proof_checks=proof_checks,
+    )
+
+
+def _require_timezone_aware_generated_at(generated_at_utc: datetime) -> None:
     if generated_at_utc.tzinfo is None or generated_at_utc.utcoffset() is None:
         raise ValueError("generated_at_utc must be timezone-aware")
 
-    owner_runtime_proofs = [
+
+def _downstream_owner_runtime_proofs(
+    *,
+    advise_intake_runtime_execution_proof: Mapping[str, Any],
+    advise_intake_runtime_execution_proof_ref: str,
+    manage_intake_runtime_execution_proof: Mapping[str, Any],
+    manage_intake_runtime_execution_proof_ref: str,
+    report_materialization_runtime_execution_proof: Mapping[str, Any],
+    report_materialization_runtime_execution_proof_ref: str,
+) -> list[dict[str, Any]]:
+    return [
         _owner_runtime_proof(
             proof_id="lotus-advise:proposal-intake",
             owner_repository="lotus-advise",
@@ -235,9 +272,16 @@ def build_downstream_outcome_certification_payload(
             expected_blockers_satisfied=REPORT_MATERIALIZATION_RUNTIME_BLOCKERS_SATISFIED,
         ),
     ]
-    idea_durable_submission_proof = _idea_durable_submission_proof()
-    diagnostics_coverage = _readiness_and_diagnostics_coverage()
-    proof_checks = {
+
+
+def _downstream_outcome_proof_checks(
+    *,
+    repository_root: Path,
+    owner_runtime_proofs: Sequence[Mapping[str, Any]],
+    idea_durable_submission_proof: Mapping[str, Any],
+    diagnostics_coverage: Mapping[str, Any],
+) -> dict[str, bool]:
+    return {
         "timezoneAwareGeneratedAtUtc": True,
         "localEvidencePresent": required_file_evidence_present(
             repository_root=repository_root,
@@ -281,6 +325,16 @@ def build_downstream_outcome_certification_payload(
         ),
         "issue379RemainsOpen": True,
     }
+
+
+def _downstream_outcome_certification_payload(
+    *,
+    generated_at_utc: datetime,
+    owner_runtime_proofs: list[dict[str, Any]],
+    idea_durable_submission_proof: dict[str, Any],
+    diagnostics_coverage: dict[str, Any],
+    proof_checks: Mapping[str, bool],
+) -> dict[str, Any]:
     aggregate_valid = all(value is True for value in proof_checks.values())
     return {
         "schemaVersion": DOWNSTREAM_OUTCOME_CERTIFICATION_SCHEMA_VERSION,

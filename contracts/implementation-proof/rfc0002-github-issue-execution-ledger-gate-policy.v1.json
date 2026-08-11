@@ -70,7 +70,8 @@
     890,
     892,
     894,
-    897
+    897,
+    899
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -330,6 +331,23 @@
       "supported-feature non-promotion",
       "Gateway/Workbench runtime proof",
       "production identity/session-token-claims authority",
+      "final RFC-0002 closure"
+    ],
+    "899": [
+      "Keep #899 open while the downstream outcome certification payload assembly boundary refactor is in progress",
+      "src/app/application/downstream_outcome_certification.py::build_downstream_outcome_certification_payload",
+      "internal application-layer maintainability only",
+      "owner-runtime proof assembly",
+      "proof-check evaluation",
+      "final payload projection",
+      "preserving the public builder signature",
+      "generated certification payload shape",
+      "tracking issue #379",
+      "issue379ClosureReady: false",
+      "non-proof claim boundary",
+      "does not implement live downstream owner runtime certification",
+      "production identity/session-token-claims authority",
+      "supported-feature promotion",
       "final RFC-0002 closure"
     ]
   },
