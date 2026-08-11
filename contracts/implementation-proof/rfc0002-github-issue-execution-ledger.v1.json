@@ -697,6 +697,15 @@
       "executionStatus": "closed_complete",
       "allowPullRequestAutoClose": true,
       "closureInstruction": "Closed #905 after PR #906 merged the RFC-0002 Slice 11 review-queue readiness SQL boundary refactor to Idea main at 2324c700fc412e361be47fc44f9888577d035a06 from branch head 2e8a34c30a41592b74c4973454446a98a39c416d. PR #906 passed Feature Lane, PR Merge Gate, CodeQL, and Queue Auto Merge before rebase merge, including lint/typecheck/security, unit, integration, e2e, PostgreSQL runtime proof, combined coverage, Docker build, and CI signal evidence. Exact-main Main Releasability Gate run 31469498492 and exact-main CodeQL run 31469485683 passed for 2324c700fc412e361be47fc44f9888577d035a06. The implementation split `src/app/infrastructure/postgres_review_queue.py::_review_queue_readiness_summary_query(...)` into named base candidate selection, exclusion classification, duplicate-count, summary projection, and QueueExclusionReason alias helper boundaries while preserving SQL parameter ordering, reviewability semantics, access-scope mismatch behavior, generated aliases, public API behavior, persistence schema, OpenAPI, Gateway/Workbench proof blockers, production identity/session-token authority, supported-feature non-promotion, and final RFC-0002 closure. Local pre-merge proof passed focused review-queue unit tests, review-queue API integration tests, Ruff, MyPy, maintainability, duplicate implementation, architecture-boundary, documentation-contract, quality-baseline, RFC-0002 execution ledger/state/summary/learning gates, PR-text gate, and git diff check. Repo-authored wiki source did not change, so no wiki publication was required. The remote branch was deleted by GitHub, and the local branch was deleted after patch-equivalence proof. This closes only the internal PostgreSQL adapter maintainability issue; it does not clear Workbench/Gateway runtime proof blockers, production identity/session-token authority, supported-feature promotion, client publication, or final RFC-0002 closure."
+    },
+    {
+      "issueNumber": 908,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/908",
+      "rfcSlices": ["slice-19"],
+      "githubState": "open",
+      "executionStatus": "open_in_progress",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #908 open while the RFC-0002 Slice 19 underperformance signal evaluator maintainability refactor is in PR/open validation. Closure requires the behavior-preserving domain decomposition to merge to Idea main, focused underperformance unit proof, Ruff, MyPy, maintainability, duplicate-implementation, quality-baseline, RFC-0002 ledger/state/summary evidence, exact-main Main Releasability, CodeQL, No-wiki-change or wiki publication decision, and branch/worktree cleanup. This issue must not claim live Performance source certification, Core benchmark assignment closure, Gateway/Workbench runtime proof, production identity/session-token authority, supported-feature promotion, client publication, or final RFC-0002 closure."
     }
   ]
 }

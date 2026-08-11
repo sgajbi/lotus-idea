@@ -6,6 +6,59 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-08-11: Underperformance Signal Evaluator Boundary
+
+Issue `#908` applies the RFC-0002 Slice 19 maintainability lens to the
+underperformance signal evaluator while preserving the Slice 04/16
+underperformance opportunity signal semantics. The report-only quality baseline
+listed `src/app/domain/signal_evaluation.py::evaluate_underperformance_signal`
+at `110` lines.
+
+The evaluator mixed:
+
+1. evaluation-time validation,
+2. entitlement and Performance source-reference gating,
+3. source temporal and freshness checks,
+4. benchmark-context gating,
+5. duplicate suppression,
+6. active-return validation and materiality,
+7. signal, lineage, evidence-packet, and candidate construction,
+8. final evaluation-result assembly.
+
+`src/app/domain/signal_evaluation.py` now keeps the public
+`evaluate_underperformance_signal(...)` signature and behavior stable while
+extracting named helpers for pre-source gating, source-readiness gating,
+materiality evaluation, bounded active-return validation, source refs, signal
+construction, lineage construction, evidence packet construction, candidate
+construction, and final result assembly. The public evaluator is now `15` lines;
+the extracted helper boundaries are `4`, `16`, `31`, `26`, `28`, `4`, `12`,
+`9`, `17`, `23`, and `4` lines.
+
+Focused validation passed:
+
+1. `.venv/Scripts/python.exe -m pytest tests/unit/test_underperformance_signal_evaluation.py -q`
+   (`14` passed),
+2. `.venv/Scripts/python.exe -m ruff check src/app/domain/signal_evaluation.py tests/unit/test_underperformance_signal_evaluation.py`,
+3. `.venv/Scripts/python.exe -m ruff format --check src/app/domain/signal_evaluation.py tests/unit/test_underperformance_signal_evaluation.py`,
+4. `.venv/Scripts/python.exe -m mypy src/app/domain/signal_evaluation.py`,
+5. `make maintainability-gate`,
+6. `make duplicate-implementation-gate` (`0` duplicate clusters),
+7. `make quality-baseline`.
+
+The positive-case unit test now asserts the source refs, evidence packet,
+lineage, signal, and candidate retain one stable source-backed identity. Existing
+fail-closed tests continue to prove entitlement denial, missing Performance
+source refs, stale source evidence, missing benchmark context, missing active
+return, out-of-range active return, duplicate suppression, and below-materiality
+behavior.
+
+This is internal domain maintainability only. It does not change API/OpenAPI
+behavior, source-authority contracts, Performance/Core/Gateway/Workbench
+runtime evidence, persistence, migrations, authentication or authorization
+infrastructure, wiki source, supported-feature posture, data-mesh certification,
+client publication, or final RFC-0002 closure. No wiki publication is required
+because no operator-facing command or published readiness truth changed.
+
 ## 2026-08-11: Downstream Realization Readiness Composition Boundary
 
 Issue `#894` applies the RFC-0002 Slice 12/13 maintainability lens to the

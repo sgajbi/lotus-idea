@@ -73,7 +73,8 @@
     897,
     899,
     902,
-    905
+    905,
+    908
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -317,6 +318,22 @@
       "Issue #814 remains the separate canonical runtime proof blocker",
       "production IdP/session/token-claims authority",
       "supported-feature promotion"
+    ],
+    "908": [
+      "Keep #908 open while the RFC-0002 Slice 19 underperformance signal evaluator maintainability refactor is in PR/open validation",
+      "behavior-preserving domain decomposition",
+      "focused underperformance unit proof",
+      "maintainability",
+      "duplicate-implementation",
+      "quality-baseline",
+      "exact-main Main Releasability",
+      "CodeQL",
+      "No-wiki-change or wiki publication decision",
+      "live Performance source certification",
+      "Gateway/Workbench runtime proof",
+      "production identity/session-token authority",
+      "supported-feature promotion",
+      "final RFC-0002 closure"
     ]
   },
   "requiredClosedIssueEvidence": {

@@ -414,9 +414,28 @@ def evaluate_underperformance_signal(
     source_input: UnderperformanceSignalInput,
     policy: UnderperformanceSignalPolicy,
 ) -> SignalEvaluationResult:
-    if source_input.evaluated_at_utc.tzinfo is None:
-        raise ValueError("evaluated_at_utc must be timezone-aware")
+    _validate_underperformance_evaluation_time(source_input)
+    if pre_source_block := _underperformance_pre_source_block(source_input):
+        return pre_source_block
 
+    source_refs = _underperformance_source_refs(source_input)
+    if source_block := _underperformance_source_block(source_input, source_refs):
+        return source_block
+    if materiality_result := _underperformance_materiality_result(source_input, policy):
+        return materiality_result
+
+    return _underperformance_candidate_created_result(source_input, policy, source_refs)
+
+
+def _validate_underperformance_evaluation_time(
+    source_input: UnderperformanceSignalInput,
+) -> None:
+    validate_timezone_aware_evaluation_time(source_input.evaluated_at_utc)
+
+
+def _underperformance_pre_source_block(
+    source_input: UnderperformanceSignalInput,
+) -> SignalEvaluationResult | None:
     if not source_input.entitlement_allowed:
         return blocked_signal_result(
             family=OpportunityFamily.UNDERPERFORMANCE,
@@ -429,15 +448,28 @@ def evaluate_underperformance_signal(
             reason_codes=(ReasonCode.SOURCE_PARTIAL,),
             unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,),
         )
+    return None
+
+
+def _underperformance_source_block(
+    source_input: UnderperformanceSignalInput,
+    source_refs: tuple[SourceRef, ...],
+) -> SignalEvaluationResult | None:
+    if not source_refs:
+        return blocked_signal_result(
+            family=OpportunityFamily.UNDERPERFORMANCE,
+            reason_codes=(ReasonCode.SOURCE_PARTIAL,),
+            unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,),
+        )
     temporal_block = temporal_blocked_signal_result(
         family=OpportunityFamily.UNDERPERFORMANCE,
         as_of_date=source_input.as_of_date,
         evaluated_at_utc=source_input.evaluated_at_utc,
-        source_refs=(source_input.performance_ref,),
+        source_refs=source_refs,
     )
     if temporal_block is not None:
         return temporal_block
-    if source_input.performance_ref.freshness is not EvidenceFreshness.CURRENT:
+    if any(source_ref.freshness is not EvidenceFreshness.CURRENT for source_ref in source_refs):
         return blocked_signal_result(
             family=OpportunityFamily.UNDERPERFORMANCE,
             reason_codes=(ReasonCode.SOURCE_STALE,),
@@ -449,6 +481,13 @@ def evaluate_underperformance_signal(
             reason_codes=(ReasonCode.MISSING_BENCHMARK,),
             unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,),
         )
+    return None
+
+
+def _underperformance_materiality_result(
+    source_input: UnderperformanceSignalInput,
+    policy: UnderperformanceSignalPolicy,
+) -> SignalEvaluationResult | None:
     if source_input.duplicate_of_candidate_id is not None:
         return SignalEvaluationResult(
             outcome=SignalEvaluationOutcome.SUPPRESSED,
@@ -461,32 +500,86 @@ def evaluate_underperformance_signal(
             reason_codes=(ReasonCode.SOURCE_PARTIAL,),
             unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,),
         )
-    if source_input.source_reported_active_return < Decimal(
-        "-1"
-    ) or source_input.source_reported_active_return > Decimal("1"):
-        raise ValueError("source_reported_active_return must be between -1 and 1")
-    if source_input.source_reported_active_return > policy.active_return_threshold:
+    active_return = _bounded_underperformance_active_return(
+        source_input.source_reported_active_return,
+    )
+    if active_return > policy.active_return_threshold:
         return SignalEvaluationResult(
             outcome=SignalEvaluationOutcome.NOT_ELIGIBLE,
             family=OpportunityFamily.UNDERPERFORMANCE,
             reason_codes=(ReasonCode.BELOW_MATERIALITY,),
         )
+    return None
 
-    source_refs = (source_input.performance_ref,)
+
+def _underperformance_candidate_created_result(
+    source_input: UnderperformanceSignalInput,
+    policy: UnderperformanceSignalPolicy,
+    source_refs: tuple[SourceRef, ...],
+) -> SignalEvaluationResult:
     identity = _stable_underperformance_identity(source_input, policy, source_refs)
-    signal = OpportunitySignal(
+    signal = _underperformance_signal(identity, source_input, source_refs)
+    lineage = _underperformance_lineage(identity, source_refs)
+    evidence_packet = _underperformance_evidence_packet(
+        identity,
+        source_input,
+        source_refs,
+        lineage,
+    )
+    candidate = _underperformance_candidate(
+        identity,
+        source_input,
+        policy,
+        signal,
+        evidence_packet,
+    )
+    return SignalEvaluationResult(
+        outcome=SignalEvaluationOutcome.CANDIDATE_CREATED,
+        family=OpportunityFamily.UNDERPERFORMANCE,
+        reason_codes=evidence_packet.reason_codes,
+        signal=signal,
+        candidate=candidate,
+    )
+
+
+def _bounded_underperformance_active_return(active_return: Decimal) -> Decimal:
+    if active_return < Decimal("-1") or active_return > Decimal("1"):
+        raise ValueError("source_reported_active_return must be between -1 and 1")
+    return active_return
+
+
+def _underperformance_signal(
+    identity: str,
+    source_input: UnderperformanceSignalInput,
+    source_refs: tuple[SourceRef, ...],
+) -> OpportunitySignal:
+    return OpportunitySignal(
         signal_id=f"signal_underperformance_{identity}",
         family=OpportunityFamily.UNDERPERFORMANCE,
         source_refs=source_refs,
         reason_codes=(ReasonCode.UNDERPERFORMANCE_ATTENTION,),
         detected_at_utc=source_input.evaluated_at_utc,
     )
-    lineage = LineageRef(
+
+
+def _underperformance_lineage(
+    identity: str,
+    source_refs: tuple[SourceRef, ...],
+) -> LineageRef:
+    return LineageRef(
         lineage_id=f"lineage:lotus-idea:underperformance:{identity}",
         source_refs=source_refs,
         content_hash=f"sha256:{identity}",
     )
-    evidence_packet = IdeaEvidencePacket(
+
+
+def _underperformance_evidence_packet(
+    identity: str,
+    source_input: UnderperformanceSignalInput,
+    source_refs: tuple[SourceRef, ...],
+    lineage: LineageRef,
+) -> IdeaEvidencePacket:
+    return IdeaEvidencePacket(
         evidence_packet_id=f"iep_underperformance_{identity}",
         supportability=EvidenceSupportability.READY,
         source_refs=source_refs,
@@ -497,7 +590,16 @@ def evaluate_underperformance_signal(
         ),
         created_at_utc=source_input.evaluated_at_utc,
     )
-    candidate = IdeaCandidate(
+
+
+def _underperformance_candidate(
+    identity: str,
+    source_input: UnderperformanceSignalInput,
+    policy: UnderperformanceSignalPolicy,
+    signal: OpportunitySignal,
+    evidence_packet: IdeaEvidencePacket,
+) -> IdeaCandidate:
+    return IdeaCandidate(
         candidate_id=f"idea_underperformance_{identity}",
         family=OpportunityFamily.UNDERPERFORMANCE,
         lifecycle_status=IdeaLifecycleStatus.GENERATED,
@@ -513,13 +615,12 @@ def evaluate_underperformance_signal(
         created_at_utc=source_input.evaluated_at_utc,
         updated_at_utc=source_input.evaluated_at_utc,
     )
-    return SignalEvaluationResult(
-        outcome=SignalEvaluationOutcome.CANDIDATE_CREATED,
-        family=OpportunityFamily.UNDERPERFORMANCE,
-        reason_codes=evidence_packet.reason_codes,
-        signal=signal,
-        candidate=candidate,
-    )
+
+
+def _underperformance_source_refs(
+    source_input: UnderperformanceSignalInput,
+) -> tuple[SourceRef, ...]:
+    return () if source_input.performance_ref is None else (source_input.performance_ref,)
 
 
 def evaluate_mandate_health_signal(
