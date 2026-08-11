@@ -323,23 +323,34 @@
       "Issue #814 remains the separate canonical runtime proof blocker",
       "production IdP/session/token-claims authority",
       "supported-feature promotion"
-    ],
-    "923": [
-      "Keep #923 open until",
-      "source-ingestion readiness snapshot assembly refactor",
-      "environment/path resolution",
-      "scheduled-worker source-contract evidence validation",
-      "scheduled-worker deployment evidence validation",
-      "conservative blocker semantics",
-      "supported-feature non-promotion",
-      "No production authentication or authorization",
-      "IdP/session/token-claims authority",
-      "live Core source certification",
-      "Gateway/Workbench proof",
-      "final RFC-0002 closure"
     ]
   },
   "requiredClosedIssueEvidence": {
+    "923": [
+      "Closed #923 after PR #924 merged",
+      "RFC-0002 Slice 15 source-ingestion readiness snapshot assembly refactor",
+      "d88cb7d9ee2e04693effeb6e4e0546b4545d6002",
+      "d80fffa7cb8e4494e5f6b6d9dc2afb7cd4010ac7",
+      "31489573334",
+      "31489557103",
+      "build_source_ingestion_readiness_snapshot",
+      "readiness path resolution",
+      "scheduled-worker source-contract validation",
+      "scheduled-worker deployment-evidence validation",
+      "configured-path availability",
+      "17 passed",
+      "35 passed",
+      "full `make typecheck`",
+      "duplicate-implementation gate with zero clusters",
+      "No repo-authored wiki source changed",
+      "git cherry patch-equivalence proof",
+      "explicit runtime environment re-export",
+      "internal application-layer maintainability hardening",
+      "production authentication or authorization",
+      "IdP/session/token-claims authority",
+      "supported-feature promotion",
+      "final RFC-0002 closure"
+    ],
     "914": [
       "Closed #914 after PR #915 merged",
       "RFC-0002 Slice 15 outbox delivery application orchestration refactor",
