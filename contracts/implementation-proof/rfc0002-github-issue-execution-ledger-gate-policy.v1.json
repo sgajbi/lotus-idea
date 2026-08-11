@@ -68,7 +68,8 @@
     883,
     886,
     890,
-    892
+    892,
+    894
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -413,6 +414,18 @@
       "fresh canonical validation completes on mainline sources",
       "does not implement production authentication",
       "supported-feature promotion"
+    ],
+    "894": [
+      "Keep #894 open",
+      "downstream-realization readiness composition boundary refactor",
+      "build_downstream_realization_readiness_snapshot",
+      "113-line production orchestration hotspot",
+      "1,186-line production file",
+      "preserve downstream readiness API behavior",
+      "supported-feature non-promotion posture",
+      "must not claim Advise, Manage, Report, Render, Archive runtime certification",
+      "production identity/session-token-claims authority",
+      "runtime-service split"
     ],
     "854": [
       "Closed #854 after PR #855 merged",
