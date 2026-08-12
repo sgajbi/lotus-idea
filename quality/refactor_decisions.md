@@ -6,6 +6,56 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-08-12: Manage Intake Runtime Proof Generator Responsibilities
+
+Issue `#983` applies the RFC-0002 Slice 12/13/18 maintainability lens to
+`scripts/downstream_realization/generate_manage_intake_runtime_execution.py::_execute_manage_testclient`.
+The current report-only quality baseline listed the helper as a `102` line
+script hotspot in the Manage action-intake owner-runtime proof path.
+
+The refactor preserves the bounded #689 Manage route receipt proof while
+separating:
+
+1. inline owner-app TestClient script construction,
+2. local Manage environment construction,
+3. subprocess execution,
+4. JSON-object stdout decoding, and
+5. source-safe receipt projection.
+
+Focused and repo-level local validation passed:
+
+1. `python -m pytest tests/unit/downstream_realization/test_manage_intake_runtime_execution.py -q`
+   (`12` passed),
+2. `.venv/Scripts/ruff.exe check scripts/downstream_realization/generate_manage_intake_runtime_execution.py tests/unit/downstream_realization/test_manage_intake_runtime_execution.py`,
+3. `.venv/Scripts/ruff.exe format --check scripts/downstream_realization/generate_manage_intake_runtime_execution.py tests/unit/downstream_realization/test_manage_intake_runtime_execution.py`,
+4. `.venv/Scripts/mypy.exe scripts/downstream_realization/generate_manage_intake_runtime_execution.py tests/unit/downstream_realization/test_manage_intake_runtime_execution.py`,
+5. `make rfc0002-github-issue-execution-ledger-gate`,
+6. `make rfc0002-github-issue-execution-state-audit`,
+7. `make rfc0002-github-issue-execution-summary`,
+8. `make rfc0002-github-issue-learning-pattern-gate`,
+9. `make quality-baseline`,
+10. `make maintainability-gate`,
+11. `make duplicate-implementation-gate`,
+12. `make documentation-contract-gate`,
+13. `make implementation-truth-gate`,
+14. `make typecheck`,
+15. `make lint`,
+16. `make test-unit` (`5472` passed),
+17. `git diff --check`.
+
+The generator now rejects non-object Manage stdout through
+`_decode_manage_testclient_stdout(...)` before source-safe receipt projection.
+`make quality-baseline` no longer lists `_execute_manage_testclient`; the next
+script hotspot is `scripts/run_service_capacity_workload.py::main`.
+
+This is internal proof-generator maintainability only. It does not change the
+proof payload schema, API/OpenAPI contracts, migrations, runtime topology,
+downstream action-register persistence, rebalance/order authority, client
+publication, production identity/authn/authz, supported-feature promotion,
+owner runtime certification beyond the bounded Manage route receipt, or final
+RFC-0002 closure. No repo-authored wiki source changed, so wiki publication is
+not required for this source change.
+
 ## 2026-08-12: Canonical Opportunity Archetype Evidence-Pack Builder
 
 Issue `#980` applies the RFC-0002 Slice 16/19 maintainability lens to
