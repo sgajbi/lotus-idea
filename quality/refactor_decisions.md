@@ -48,6 +48,14 @@ The generator now rejects non-object Manage stdout through
 `make quality-baseline` no longer lists `_execute_manage_testclient`; the next
 script hotspot is `scripts/run_service_capacity_workload.py::main`.
 
+PR `#984` merged by rebase to `main` at
+`fea78cf18bf0f2c31fb95a27d9a0ee5abb3d1e89` from branch head
+`9d699505df9183d1bc7368db7cdc11e14d62002b` after PR Merge Gate run
+`31562370588`, Feature Lane run `31562368147`, CodeQL run `31562368715`, and
+Queue Auto Merge run `31562369305` passed. Exact-main CodeQL run
+`31562833226` and Main Releasability Gate run `31562838110` passed for the
+merged `fea78cf18bf0f2c31fb95a27d9a0ee5abb3d1e89` main commit.
+
 This is internal proof-generator maintainability only. It does not change the
 proof payload schema, API/OpenAPI contracts, migrations, runtime topology,
 downstream action-register persistence, rebalance/order authority, client
