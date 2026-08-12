@@ -604,7 +604,7 @@ any of these issues can move back to merged-main QA.
 - The Idea ledger now has 59 tracked RFC-0002 issues, 34 closed and 25 open;
   `#681` is the in-progress Slice 18 tracker. Live cross-repo posture has
   128 label-backed RFC-0002 issues, 91 closed and 37 open, with 25
-  `status/blocked`, 1 `status/in-progress`, 1 `status/merged-main`, 2
+  `status/blocked`, 1 `status/in-progress`, 2 `status/merged-main`, 2
   `status/merged-to-main`, 8 `status/tracker`, and 0 app-actionable blocked
   issues.
 - This sync closes only the ledger-gate maintainability issue. It does not

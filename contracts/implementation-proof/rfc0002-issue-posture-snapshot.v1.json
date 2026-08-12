@@ -9,18 +9,22 @@
   ],
   "trackingIssue": "sgajbi/lotus-idea#681",
   "ideaLedger": {
-    "totalTrackedIssues": 107,
-    "openIssues": 25,
+    "totalTrackedIssues": 108,
+    "openIssues": 26,
     "closedIssues": 82,
     "openStatusCounts": {
       "open_blocked": 14,
       "open_in_progress": 1,
+      "open_merged_main_qa_pending": 1,
       "open_pending_final_closure": 1,
       "open_pending_post_completion": 1,
       "open_tracker": 8
     },
     "inProgressIssues": [
       "sgajbi/lotus-idea#681"
+    ],
+    "mergedMainQaPendingIssues": [
+      "sgajbi/lotus-idea#1020"
     ],
     "recentlyClosedIssues": [
       "sgajbi/lotus-idea#1014",
@@ -29,15 +33,15 @@
   },
   "crossRepo": {
     "repositoriesChecked": 13,
-    "totalRfc0002Issues": 176,
-    "openRfc0002Issues": 37,
+    "totalRfc0002Issues": 177,
+    "openRfc0002Issues": 38,
     "closedRfc0002Issues": 139,
     "openBlockedIssues": 25,
     "appActionableBlockedIssues": 0,
     "openStatusCounts": {
       "status/blocked": 25,
       "status/in-progress": 1,
-      "status/merged-main": 1,
+      "status/merged-main": 2,
       "status/merged-to-main": 2,
       "status/tracker": 8
     },
@@ -47,14 +51,15 @@
   },
   "expectedCurrentFragments": {
     "ideaLedger": [
-      "107 tracked RFC-0002 issues",
-      "82 closed and 25 open",
+      "108 tracked RFC-0002 issues",
+      "82 closed and 26 open",
+      "#1020",
       "#681"
     ],
     "crossRepo": [
-      "176 label-backed RFC-0002 issues",
-      "139 closed and 37 open",
-      "25 `status/blocked`, 1 `status/in-progress`",
+      "177 label-backed RFC-0002 issues",
+      "139 closed and 38 open",
+      "25 `status/blocked`, 1 `status/in-progress`, 2 `status/merged-main`",
       "0 app-actionable blocked"
     ]
   },
