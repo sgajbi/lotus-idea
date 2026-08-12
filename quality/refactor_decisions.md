@@ -125,6 +125,7 @@ bound to the same repository instance. Broader validation then passed
 `make typecheck`, `make lint`, and `make test-unit` (`5,473` passed). The
 issue-execution summary unit tests were tightened to render fixed-local issues
 from the ledger state machine instead of assuming that section is always empty.
+PR #990 carries this implementation with neutral Keep-open wording for #988.
 
 No repo-authored wiki, README, supported-features, OpenAPI, migration, runtime
 topology, Core, Workbench, Gateway, production IdP/session-token,
