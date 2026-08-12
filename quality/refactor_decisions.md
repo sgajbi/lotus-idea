@@ -3310,3 +3310,8 @@ Evidence:
 2. Focused validation passed: Ruff format/check, MyPy over
    `src/app/api/report_evidence.py`, and 62 report evidence/review
    workflow/API example/operation-event/event-lineage/caller-context tests.
+3. PR #1001 merged by rebase to exact-main SHA
+   `734a873d16137027bcf12fccf935cfc1395c2677`. Exact-main Main
+   Releasability `31581082960` and CodeQL `31581074756` passed, issue
+   #1000 is closed with QA evidence, and the local/remote implementation
+   branches are cleaned up.
