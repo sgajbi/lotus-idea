@@ -56,6 +56,33 @@ REQUIRED_AI_WORKFLOW_PACK_EVIDENCE_REFS = (
     "lotus-ai PR Merge Gate / Lint Typecheck Security",
 )
 
+AI_WORKFLOW_PACK_REGISTRATION_TRUE_PROOF_CHECKS = (
+    "timezoneAwareGeneratedAtUtc",
+    "fileEvidencePresent",
+    "makeTargetEvidencePresent",
+    "phase1SpecDeclaresIdeaAuthority",
+    "registrySeedDeclaresIdeaRegistration",
+    "bindingRegistryIncludesIdeaPack",
+    "queuePolicyIncludesIdeaPack",
+    "supportabilitySurfaceIncludesIdeaPack",
+    "testsCoverIdeaPack",
+    "evidenceClassMatchesBlockers",
+)
+
+AI_WORKFLOW_PACK_REGISTRATION_UNSUPPORTED_CLAIMS = (
+    "runtimeExecutionObserved",
+    "deploymentObserved",
+    "productionCertificationGranted",
+    "workflowPackRuntimeExecutionCertified",
+    "lotusAiRuntimeExecuted",
+    "modelRiskDashboardCertified",
+    "modelRiskAlertsCertified",
+    "workbenchProductProofCertified",
+    "clientReadyPublicationAuthorized",
+    "supportedFeaturePromoted",
+    "proofClosed",
+)
+
 
 def build_ai_workflow_pack_registration_proof_payload(
     *,
@@ -64,58 +91,14 @@ def build_ai_workflow_pack_registration_proof_payload(
     lotus_ai_root: Path | None = None,
 ) -> dict[str, Any]:
     lotus_ai_root = lotus_ai_root or repository_root.parent / "lotus-ai"
-    timezone_aware_generated_at_utc = (
-        generated_at_utc.tzinfo is not None and generated_at_utc.utcoffset() is not None
-    )
     evidence_refs = tuple(REQUIRED_AI_WORKFLOW_PACK_EVIDENCE_REFS)
-    file_evidence_present = required_file_evidence_present(
-        repository_root=repository_root,
-        sibling_roots={"../lotus-ai/": lotus_ai_root},
-        evidence_refs=evidence_refs,
-        non_file_ref_prefixes=("make ", "lotus-ai make ", "lotus-ai PR Merge Gate /"),
-    )
-    make_target_evidence_present = required_make_target_evidence_present(
+    proof_checks = _ai_workflow_pack_registration_proof_checks(
+        generated_at_utc=generated_at_utc,
         repository_root=repository_root,
         evidence_refs=evidence_refs,
+        lotus_ai_root=lotus_ai_root,
     )
-    phase1_spec_declares_idea_authority = _phase1_spec_declares_idea_authority(lotus_ai_root)
-    registry_seed_declares_idea_registration = _registry_seed_declares_idea_registration(
-        lotus_ai_root
-    )
-    binding_registry_includes_idea_pack = text_file_contains_all(
-        lotus_ai_root / "src/app/services/workflow_pack_bindings.py",
-        ("IDEA_EXPLANATION_V1_SPEC", "_build_execution_binding_from_spec"),
-    )
-    queue_policy_includes_idea_pack = text_file_contains_all(
-        lotus_ai_root / "src/app/services/workflow_pack_queue_policy_catalog.py",
-        ("_review_support_idea_explanation_policy", "queue-policy.idea-explanation.v1"),
-    )
-    supportability_surface_includes_idea_pack = text_file_contains_all(
-        lotus_ai_root / "src/app/services/ai_surface_supportability.py",
-        ("idea_explanation.pack@v1", "lotus-idea"),
-    )
-    tests_cover_idea_pack = _tests_cover_idea_pack(lotus_ai_root)
-    evidence_class_matches_blockers = all(
-        evidence_class_can_clear(
-            actual=EvidenceClass.SOURCE_CONTRACT,
-            required=EvidenceClass(required_class),
-        )
-        for _blocker, required_class in (
-            AI_WORKFLOW_PACK_REGISTRATION_REQUIRED_BLOCKER_EVIDENCE_CLASSES
-        )
-    )
-    proof_valid = (
-        timezone_aware_generated_at_utc
-        and file_evidence_present
-        and make_target_evidence_present
-        and phase1_spec_declares_idea_authority
-        and registry_seed_declares_idea_registration
-        and binding_registry_includes_idea_pack
-        and queue_policy_includes_idea_pack
-        and supportability_surface_includes_idea_pack
-        and tests_cover_idea_pack
-        and evidence_class_matches_blockers
-    )
+    proof_valid = _all_required_registration_proof_checks_pass(proof_checks)
     return {
         "schemaVersion": AI_WORKFLOW_PACK_REGISTRATION_PROOF_SCHEMA_VERSION,
         "repository": "lotus-idea",
@@ -129,18 +112,7 @@ def build_ai_workflow_pack_registration_proof_payload(
         "aiWorkflowPackRegistrationProofValid": proof_valid,
         "aggregateBlockersCleared": AI_WORKFLOW_PACK_REGISTRATION_BLOCKERS_CLEARED,
         "evidenceRefs": evidence_refs,
-        "proofChecks": {
-            "timezoneAwareGeneratedAtUtc": timezone_aware_generated_at_utc,
-            "fileEvidencePresent": file_evidence_present,
-            "makeTargetEvidencePresent": make_target_evidence_present,
-            "phase1SpecDeclaresIdeaAuthority": phase1_spec_declares_idea_authority,
-            "registrySeedDeclaresIdeaRegistration": registry_seed_declares_idea_registration,
-            "bindingRegistryIncludesIdeaPack": binding_registry_includes_idea_pack,
-            "queuePolicyIncludesIdeaPack": queue_policy_includes_idea_pack,
-            "supportabilitySurfaceIncludesIdeaPack": supportability_surface_includes_idea_pack,
-            "testsCoverIdeaPack": tests_cover_idea_pack,
-            "evidenceClassMatchesBlockers": evidence_class_matches_blockers,
-        },
+        "proofChecks": proof_checks,
         "remainingCertificationBlockers": REMAINING_AI_WORKFLOW_PACK_REGISTRATION_BLOCKERS,
         "workflowPackId": GOVERNED_IDEA_EXPLANATION_WORKFLOW_PACK.proof_workflow_pack_id,
         "workflowAuthorityOwner": (
@@ -148,17 +120,7 @@ def build_ai_workflow_pack_registration_proof_payload(
         ),
         "aiCapabilityOwner": GOVERNED_IDEA_EXPLANATION_WORKFLOW_PACK.ai_capability_owner,
         "workflowPackRegistrationSourceContractValid": proof_valid,
-        "runtimeExecutionObserved": False,
-        "deploymentObserved": False,
-        "productionCertificationGranted": False,
-        "workflowPackRuntimeExecutionCertified": False,
-        "lotusAiRuntimeExecuted": False,
-        "modelRiskDashboardCertified": False,
-        "modelRiskAlertsCertified": False,
-        "workbenchProductProofCertified": False,
-        "clientReadyPublicationAuthorized": False,
-        "supportedFeaturePromoted": False,
-        "proofClosed": False,
+        **_unsupported_registration_claims(),
     }
 
 
@@ -196,27 +158,7 @@ def ai_workflow_pack_registration_proof_is_valid(payload: Mapping[str, Any]) -> 
         return False
     if payload.get("workflowPackRegistrationSourceContractValid") is not True:
         return False
-    if payload.get("runtimeExecutionObserved") is not False:
-        return False
-    if payload.get("deploymentObserved") is not False:
-        return False
-    if payload.get("productionCertificationGranted") is not False:
-        return False
-    if payload.get("workflowPackRuntimeExecutionCertified") is not False:
-        return False
-    if payload.get("lotusAiRuntimeExecuted") is not False:
-        return False
-    if payload.get("modelRiskDashboardCertified") is not False:
-        return False
-    if payload.get("modelRiskAlertsCertified") is not False:
-        return False
-    if payload.get("workbenchProductProofCertified") is not False:
-        return False
-    if payload.get("clientReadyPublicationAuthorized") is not False:
-        return False
-    if payload.get("supportedFeaturePromoted") is not False:
-        return False
-    if payload.get("proofClosed") is not False:
+    if not _unsupported_registration_claims_are_false(payload):
         return False
     if not is_timezone_aware_datetime_text(payload.get("generatedAtUtc")):
         return False
@@ -233,20 +175,78 @@ def ai_workflow_pack_registration_proof_is_valid(payload: Mapping[str, Any]) -> 
     proof_checks = payload.get("proofChecks")
     if not isinstance(proof_checks, Mapping):
         return False
+    return _all_required_registration_proof_checks_pass(proof_checks)
+
+
+def _ai_workflow_pack_registration_proof_checks(
+    *,
+    generated_at_utc: datetime,
+    repository_root: Path,
+    evidence_refs: tuple[str, ...],
+    lotus_ai_root: Path,
+) -> dict[str, bool]:
+    return {
+        "timezoneAwareGeneratedAtUtc": (
+            generated_at_utc.tzinfo is not None and generated_at_utc.utcoffset() is not None
+        ),
+        "fileEvidencePresent": required_file_evidence_present(
+            repository_root=repository_root,
+            sibling_roots={"../lotus-ai/": lotus_ai_root},
+            evidence_refs=evidence_refs,
+            non_file_ref_prefixes=("make ", "lotus-ai make ", "lotus-ai PR Merge Gate /"),
+        ),
+        "makeTargetEvidencePresent": required_make_target_evidence_present(
+            repository_root=repository_root,
+            evidence_refs=evidence_refs,
+        ),
+        "phase1SpecDeclaresIdeaAuthority": _phase1_spec_declares_idea_authority(lotus_ai_root),
+        "registrySeedDeclaresIdeaRegistration": _registry_seed_declares_idea_registration(
+            lotus_ai_root
+        ),
+        "bindingRegistryIncludesIdeaPack": text_file_contains_all(
+            lotus_ai_root / "src/app/services/workflow_pack_bindings.py",
+            ("IDEA_EXPLANATION_V1_SPEC", "_build_execution_binding_from_spec"),
+        ),
+        "queuePolicyIncludesIdeaPack": text_file_contains_all(
+            lotus_ai_root / "src/app/services/workflow_pack_queue_policy_catalog.py",
+            ("_review_support_idea_explanation_policy", "queue-policy.idea-explanation.v1"),
+        ),
+        "supportabilitySurfaceIncludesIdeaPack": text_file_contains_all(
+            lotus_ai_root / "src/app/services/ai_surface_supportability.py",
+            ("idea_explanation.pack@v1", "lotus-idea"),
+        ),
+        "testsCoverIdeaPack": _tests_cover_idea_pack(lotus_ai_root),
+        "evidenceClassMatchesBlockers": _registration_evidence_class_matches_blockers(),
+    }
+
+
+def _registration_evidence_class_matches_blockers() -> bool:
+    return all(
+        evidence_class_can_clear(
+            actual=EvidenceClass.SOURCE_CONTRACT,
+            required=EvidenceClass(required_class),
+        )
+        for _blocker, required_class in (
+            AI_WORKFLOW_PACK_REGISTRATION_REQUIRED_BLOCKER_EVIDENCE_CLASSES
+        )
+    )
+
+
+def _all_required_registration_proof_checks_pass(proof_checks: Mapping[str, Any]) -> bool:
     return all(
         proof_checks.get(check_name) is True
-        for check_name in (
-            "timezoneAwareGeneratedAtUtc",
-            "fileEvidencePresent",
-            "makeTargetEvidencePresent",
-            "phase1SpecDeclaresIdeaAuthority",
-            "registrySeedDeclaresIdeaRegistration",
-            "bindingRegistryIncludesIdeaPack",
-            "queuePolicyIncludesIdeaPack",
-            "supportabilitySurfaceIncludesIdeaPack",
-            "testsCoverIdeaPack",
-            "evidenceClassMatchesBlockers",
-        )
+        for check_name in AI_WORKFLOW_PACK_REGISTRATION_TRUE_PROOF_CHECKS
+    )
+
+
+def _unsupported_registration_claims() -> dict[str, bool]:
+    return {claim_name: False for claim_name in AI_WORKFLOW_PACK_REGISTRATION_UNSUPPORTED_CLAIMS}
+
+
+def _unsupported_registration_claims_are_false(payload: Mapping[str, Any]) -> bool:
+    return all(
+        payload.get(claim_name) is False
+        for claim_name in AI_WORKFLOW_PACK_REGISTRATION_UNSUPPORTED_CLAIMS
     )
 
 

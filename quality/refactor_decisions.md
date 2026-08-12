@@ -6,6 +6,55 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-08-12: AI Workflow-Pack Registration Proof Builder
+
+Issue `#977` applies the RFC-0002 Slice 19 maintainability lens to
+`src/app/application/ai_workflow_pack_registration/source_contract_proof.py::build_ai_workflow_pack_registration_proof_payload`.
+The refreshed quality baseline listed the builder as a `103` line production
+source hotspot in the AI workflow-pack registration proof path.
+
+The builder mixed:
+
+1. generated-at timestamp awareness validation,
+2. source-safe file and Make-target evidence checks,
+3. Lotus AI sibling-repository source-contract evidence inspection,
+4. evidence-class blocker clearing checks,
+5. aggregate proof validity,
+6. proof payload construction,
+7. explicit false runtime/deployment/model-risk/Workbench/client-publication
+   and supported-feature claims.
+
+The refactor keeps the public builder and validator unchanged while extracting:
+
+1. `AI_WORKFLOW_PACK_REGISTRATION_TRUE_PROOF_CHECKS`,
+2. `AI_WORKFLOW_PACK_REGISTRATION_UNSUPPORTED_CLAIMS`,
+3. `_ai_workflow_pack_registration_proof_checks(...)`,
+4. `_registration_evidence_class_matches_blockers()`,
+5. `_all_required_registration_proof_checks_pass(...)`,
+6. `_unsupported_registration_claims()`,
+7. `_unsupported_registration_claims_are_false(...)`.
+
+Focused local validation passed:
+
+1. `python -m ruff check src/app/application/ai_workflow_pack_registration/source_contract_proof.py tests/unit/ai_workflow_pack_registration/test_source_contract_proof.py`,
+2. `python -m ruff format --check src/app/application/ai_workflow_pack_registration/source_contract_proof.py tests/unit/ai_workflow_pack_registration/test_source_contract_proof.py`,
+3. `python -m mypy src/app/application/ai_workflow_pack_registration/source_contract_proof.py`,
+4. `python -m pytest tests/unit/ai_workflow_pack_registration/test_source_contract_proof.py -q`
+   (`45` passed),
+5. `make maintainability-gate`,
+6. `make quality-baseline`.
+
+The refreshed quality baseline no longer lists
+`build_ai_workflow_pack_registration_proof_payload` in the largest source
+function list.
+
+This is internal application-layer maintainability only. It does not change
+payload schema, API/OpenAPI contracts, runtime proof authority, deployment
+certification, model-risk dashboard/alert certification, Workbench product
+proof, Gateway, Core, Lotus AI implementation, client-output publication
+authority, supported-feature promotion, identity/authn/authz posture,
+migrations, or final RFC-0002 closure.
+
 ## 2026-08-12: Candidate Lifecycle Transition API Boundary
 
 Issue `#974` applies the RFC-0002 Slice 15/19 maintainability lens to
