@@ -8,8 +8,8 @@ tests, docs, wiki, and supported-feature promotion.
 For the current live GitHub execution posture, canonical QA status, dependency
 map, and closure decision rules, use
 [wiki/RFC-0002-Execution-Status.md](../../wiki/RFC-0002-Execution-Status.md).
-At the latest refresh, RFC-0002 has 128 label-backed RFC-0002 issues across 13
-repositories: 91 closed and 37 open, with 25 `status/blocked`, 1
+At the latest refresh, RFC-0002 has 162 label-backed RFC-0002 issues across 13
+repositories: 125 closed and 37 open, with 25 `status/blocked`, 1
 `status/in-progress`, and 0 app-actionable blocked issues.
 
 ## Active RFC Suite
