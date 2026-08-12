@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime
 
 from fastapi import FastAPI, Header, Path, Request, status
@@ -32,6 +33,7 @@ from app.api.runtime_dependencies import (
 )
 from app.application.report_evidence import (
     RequestReportEvidencePackToRepositoryCommand,
+    ReportEvidencePackWorkflowResult,
     request_report_evidence_pack_to_repository,
 )
 from app.domain import (
@@ -49,9 +51,17 @@ from app.domain import (
 from app.domain.data_lifecycle import resolve_external_retention_policy_ref
 from app.api.problem_details import problem_details_response as problem_response
 from app.observability import IdeaOperation, OperationEvent, OperationOutcome, emit_operation_event
+from app.ports.idea_repository import ReportEvidenceWorkflowRepository
 from app.security.caller_context import CallerContext, PermissionDeniedError
 
 _REPORT_EVIDENCE_PACK_CAPABILITY = "idea.report-evidence-pack.request"
+
+
+@dataclass(frozen=True)
+class ReportEvidenceMutationContext:
+    caller: CallerContext
+    repository: ReportEvidenceWorkflowRepository
+    durable_storage_backed: bool
 
 
 class ReportEvidencePackRequest(CamelModel):
@@ -233,68 +243,134 @@ async def record_report_evidence_pack(
     ),
     x_causation_id: EventCausationHeader = None,
 ) -> ReportEvidencePackApiResponse | JSONResponse:
+    try:
+        context = _report_evidence_mutation_context(
+            x_caller_subject=x_caller_subject,
+            x_caller_roles=x_caller_roles,
+            x_caller_capabilities=x_caller_capabilities,
+            x_lotus_trusted_caller_context=x_lotus_trusted_caller_context,
+            idempotency_key=idempotency_key,
+        )
+        if isinstance(context, JSONResponse):
+            return context
+        result = _apply_report_evidence_request(
+            request,
+            context=context,
+            conversion_intent_id=conversion_intent_id,
+            idempotency_key=idempotency_key,
+            http_request=http_request,
+            causation_id=x_causation_id,
+        )
+    except PermissionDeniedError:
+        return _report_evidence_permission_problem(
+            "The caller is not permitted to request idea report evidence packs."
+        )
+    except InvalidReportEvidencePack:
+        return _report_evidence_conflict_problem()
+    except ValueError:
+        return _report_evidence_invalid_request_problem()
+
+    return _report_evidence_response(
+        result,
+        durable_storage_backed=context.durable_storage_backed,
+    )
+
+
+def _report_evidence_mutation_context(
+    *,
+    x_caller_subject: str | None,
+    x_caller_roles: str | None,
+    x_caller_capabilities: str | None,
+    x_lotus_trusted_caller_context: str | None,
+    idempotency_key: str,
+) -> ReportEvidenceMutationContext | JSONResponse:
     caller = caller_context_from_headers(
         subject=x_caller_subject,
         roles=x_caller_roles,
         capabilities=x_caller_capabilities,
         trusted_caller_context=x_lotus_trusted_caller_context,
     )
-    try:
-        _require_report_evidence_caller(caller)
-        validate_idempotency_key(idempotency_key)
-        repository = get_idea_repository()
-        durable_storage_backed = idea_repository_durable_storage_backed(repository)
-        configuration_problem = durable_write_problem(repository)
-        if configuration_problem is not None:
-            _emit_report_evidence_operation_event(
-                OperationOutcome.BLOCKED,
-                DURABLE_REPOSITORY_NOT_CONFIGURED,
-                durable_storage_backed,
-            )
-            return configuration_problem
-        result = request_report_evidence_pack_to_repository(
-            request.to_command(
-                conversion_intent_id=conversion_intent_id,
-                caller=caller,
-                idempotency_key=idempotency_key,
-                event_lineage=event_lineage_from_request(
-                    http_request,
-                    causation_id=x_causation_id,
-                ),
-            ),
-            repository=repository,
-        )
-    except PermissionDeniedError:
+    _require_report_evidence_caller(caller)
+    validate_idempotency_key(idempotency_key)
+    repository = get_idea_repository()
+    durable_storage_backed = idea_repository_durable_storage_backed(repository)
+    configuration_problem = durable_write_problem(repository)
+    if configuration_problem is not None:
         _emit_report_evidence_operation_event(
-            OperationOutcome.PERMISSION_DENIED,
-            "permission_denied",
+            OperationOutcome.BLOCKED,
+            DURABLE_REPOSITORY_NOT_CONFIGURED,
+            durable_storage_backed,
         )
-        return _permission_denied(
-            "The caller is not permitted to request idea report evidence packs."
-        )
-    except InvalidReportEvidencePack:
-        _emit_report_evidence_operation_event(
-            OperationOutcome.INVALID_STATE,
-            "report_evidence_pack_conflict",
-        )
-        return problem_response(
-            status_code=status.HTTP_409_CONFLICT,
-            code="report_evidence_pack_conflict",
-            title="Report evidence pack conflict",
-            detail="The report evidence pack request is not valid for the current conversion state.",
-        )
-    except ValueError:
-        _emit_report_evidence_operation_event(
-            OperationOutcome.INVALID_REQUEST,
-            "invalid_request",
-        )
-        return problem_response(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            code="invalid_request",
-            title="Invalid request",
-            detail="Correct the report evidence pack request and retry.",
-        )
+        return configuration_problem
+    return ReportEvidenceMutationContext(
+        caller=caller,
+        repository=repository,
+        durable_storage_backed=durable_storage_backed,
+    )
 
+
+def _apply_report_evidence_request(
+    request: ReportEvidencePackRequest,
+    *,
+    context: ReportEvidenceMutationContext,
+    conversion_intent_id: str,
+    idempotency_key: str,
+    http_request: Request,
+    causation_id: EventCausationHeader,
+) -> ReportEvidencePackWorkflowResult:
+    return request_report_evidence_pack_to_repository(
+        request.to_command(
+            conversion_intent_id=conversion_intent_id,
+            caller=context.caller,
+            idempotency_key=idempotency_key,
+            event_lineage=event_lineage_from_request(
+                http_request,
+                causation_id=causation_id,
+            ),
+        ),
+        repository=context.repository,
+    )
+
+
+def _report_evidence_permission_problem(detail: str) -> JSONResponse:
+    _emit_report_evidence_operation_event(
+        OperationOutcome.PERMISSION_DENIED,
+        "permission_denied",
+    )
+    return _permission_denied(detail)
+
+
+def _report_evidence_conflict_problem() -> JSONResponse:
+    _emit_report_evidence_operation_event(
+        OperationOutcome.INVALID_STATE,
+        "report_evidence_pack_conflict",
+    )
+    return problem_response(
+        status_code=status.HTTP_409_CONFLICT,
+        code="report_evidence_pack_conflict",
+        title="Report evidence pack conflict",
+        detail="The report evidence pack request is not valid for the current conversion state.",
+    )
+
+
+def _report_evidence_invalid_request_problem() -> JSONResponse:
+    _emit_report_evidence_operation_event(
+        OperationOutcome.INVALID_REQUEST,
+        "invalid_request",
+    )
+    return problem_response(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        code="invalid_request",
+        title="Invalid request",
+        detail="Correct the report evidence pack request and retry.",
+    )
+
+
+def _report_evidence_response(
+    result: ReportEvidencePackWorkflowResult,
+    *,
+    durable_storage_backed: bool,
+) -> ReportEvidencePackApiResponse | JSONResponse:
     problem = _problem_for_evidence_pack_persistence(result.persistence)
     if problem is not None:
         _emit_report_evidence_operation_event(
