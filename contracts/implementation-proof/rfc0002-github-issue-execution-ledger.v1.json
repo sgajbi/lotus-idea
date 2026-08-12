@@ -910,9 +910,9 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/977",
       "rfcSlices": ["slice-19"],
       "githubState": "open",
-      "executionStatus": "open_in_progress",
+      "executionStatus": "open_pr_raised",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #977 open until the AI workflow-pack registration proof-builder refactor merges to main, exact-main Main Releasability and CodeQL pass, branch hygiene is clean, and the issue receives QA-passed closure evidence. The issue owns internal RFC-0002 Slice 19 maintainability only for `src/app/application/ai_workflow_pack_registration/source_contract_proof.py::build_ai_workflow_pack_registration_proof_payload`: split proof-check construction, evidence-class evaluation, and explicit unsupported runtime/non-publication claim flags into focused helpers while preserving payload schema and source-contract-only semantics. Do not claim API/OpenAPI changes, runtime proof authority, deployment certification, model-risk dashboard/alert certification, Workbench product proof, Gateway, Core, Lotus AI implementation, client-ready publication, supported-feature promotion, identity/authn/authz posture, migrations, or final RFC-0002 closure from this issue."
+      "closureInstruction": "Keep #977 open while PR #978 is open for the AI workflow-pack registration proof-builder refactor. Close only after PR #978 merges to main, exact-main Main Releasability and CodeQL pass, branch hygiene is clean, and the issue receives QA-passed closure evidence. The issue owns internal RFC-0002 Slice 19 maintainability only for `src/app/application/ai_workflow_pack_registration/source_contract_proof.py::build_ai_workflow_pack_registration_proof_payload`: split proof-check construction, evidence-class evaluation, and explicit unsupported runtime/non-publication claim flags into focused helpers while preserving payload schema and source-contract-only semantics. Do not claim API/OpenAPI changes, runtime proof authority, deployment certification, model-risk dashboard/alert certification, Workbench product proof, Gateway, Core, Lotus AI implementation, client-output publication authority, supported-feature promotion, identity/authn/authz posture, migrations, or final RFC-0002 closure from this issue."
     }
   ]
 }
