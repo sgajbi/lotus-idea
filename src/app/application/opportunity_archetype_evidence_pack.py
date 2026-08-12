@@ -65,24 +65,62 @@ def build_canonical_opportunity_archetype_evidence_pack(
     generated_at_utc: datetime,
     repository_root: Path,
 ) -> dict[str, Any]:
+    contract = _load_canonical_opportunity_archetype_contract(
+        generated_at_utc=generated_at_utc,
+        repository_root=repository_root,
+    )
+    archetype_evidence = _canonical_archetype_evidence(contract)
+    blockers = _remaining_certification_blockers(archetype_evidence)
+    payload = _opportunity_archetype_evidence_pack_payload(
+        generated_at_utc=generated_at_utc,
+        contract=contract,
+        archetype_evidence=archetype_evidence,
+        blockers=blockers,
+    )
+    payload["packDigest"] = _sha256_json_without_pack_digest(payload)
+    return payload
+
+
+def _load_canonical_opportunity_archetype_contract(
+    *,
+    generated_at_utc: datetime,
+    repository_root: Path,
+) -> OpportunityArchetypeContract:
     if generated_at_utc.tzinfo is None or generated_at_utc.utcoffset() is None:
         raise ValueError("generated_at_utc must be timezone-aware")
-
     contract = load_opportunity_archetype_contract(repository_root=repository_root)
     if contract.canonical_portfolio_ref != CANONICAL_PORTFOLIO_REF:
         raise ValueError("opportunity archetype contract is not bound to the canonical portfolio")
+    return contract
 
-    archetype_evidence = tuple(
-        _archetype_evidence(archetype, contract) for archetype in contract.archetypes
-    )
-    blockers = tuple(
+
+def _canonical_archetype_evidence(
+    contract: OpportunityArchetypeContract,
+) -> tuple[dict[str, Any], ...]:
+    return tuple(_archetype_evidence(archetype, contract) for archetype in contract.archetypes)
+
+
+def _remaining_certification_blockers(
+    archetype_evidence: tuple[dict[str, Any], ...],
+) -> tuple[str, ...]:
+    return tuple(
         dict.fromkeys(
             blocker
             for archetype in archetype_evidence
             for blocker in archetype["remainingBlockers"]
+            if isinstance(blocker, str)
         )
     )
-    payload: dict[str, Any] = {
+
+
+def _opportunity_archetype_evidence_pack_payload(
+    *,
+    generated_at_utc: datetime,
+    contract: OpportunityArchetypeContract,
+    archetype_evidence: tuple[dict[str, Any], ...],
+    blockers: tuple[str, ...],
+) -> dict[str, Any]:
+    return {
         "schemaVersion": OPPORTUNITY_ARCHETYPE_EVIDENCE_PACK_SCHEMA_VERSION,
         "repository": "lotus-idea",
         "rfc": "RFC-0002",
@@ -91,78 +129,103 @@ def build_canonical_opportunity_archetype_evidence_pack(
         "evidenceClass": EvidenceClass.SOURCE_CONTRACT.value,
         "proofFamily": "opportunity_archetype",
         "proofType": "canonical_archetype_evidence_pack",
-        "sourceAuthorityBoundary": {
-            "lotusIdeaOwns": (
-                "opportunity detection, idea lifecycle, evidence-pack composition, "
-                "scoring, review workflow, feedback, conversion intent, and readiness posture"
-            ),
-            "sourceAuthoritiesRemainOwnedBy": (
-                "lotus-core, lotus-risk, lotus-performance, lotus-advise, lotus-manage, "
-                "lotus-report, lotus-render, lotus-archive, and lotus-ai"
-            ),
-            "sourceCalculationsPerformedByLotusIdea": False,
-        },
-        "canonicalPortfolioScope": {
-            "scopeId": "canonical-front-office-private-bank-balanced-portfolio",
-            "sourceRefHandling": "canonical portfolio reference hashed and not serialized",
-            "sourceRefSha256": _sha256_text(CANONICAL_PORTFOLIO_REF),
-            "governedDatasetRefs": [
-                "lotus-platform/context/contracts/canonical-front-office-demo-data-contract.json",
-                "lotus-platform/context/contracts/canonical-front-office-demo-data-invariants.json",
-            ],
-        },
-        "claimBoundary": {
-            "supportabilityStatus": "not_certified",
-            "readinessStatus": "blocked",
-            "demoReady": False,
-            "clientPublicationReady": False,
-            "supportedFeaturePromoted": False,
-            "dataMeshCertified": False,
-            "productionIdentityCertified": False,
-            "commercialClaimAllowed": "internal_foundation_walkthrough_only",
-        },
-        "sourceOfTruth": {
-            "archetypeContract": OPPORTUNITY_ARCHETYPE_CONTRACT_PATH.as_posix(),
-            "implementationProofReadiness": "src/app/application/implementation_proof_readiness.py",
-            "rfcSlice16": (
-                "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/"
-                "RFC-0002-slice-16-demo-readiness-archetype-scenarios-and-commercial-proof.md"
-            ),
-            "issue": "sgajbi/lotus-idea#696",
-            **dict(contract.source_of_truth),
-        },
-        "packSummary": {
-            "archetypeCount": len(archetype_evidence),
-            "boundedFoundationCount": sum(
-                1
-                for archetype in archetype_evidence
-                if archetype["classification"] == "bounded_foundation"
-            ),
-            "plannedCount": sum(
-                1 for archetype in archetype_evidence if archetype["classification"] == "planned"
-            ),
-            "supportedCount": 0,
-            "scenarioCount": sum(
-                len(archetype["canonicalScenarios"]) for archetype in archetype_evidence
-            ),
-            "blockerCount": len(blockers),
-        },
+        "sourceAuthorityBoundary": _source_authority_boundary(),
+        "canonicalPortfolioScope": _canonical_portfolio_scope(),
+        "claimBoundary": _claim_boundary(),
+        "sourceOfTruth": _source_of_truth(contract),
+        "packSummary": _pack_summary(archetype_evidence, blockers),
         "archetypeEvidence": list(archetype_evidence),
         "remainingCertificationBlockers": list(blockers),
-        "evidenceRefs": list(
-            dict.fromkeys(
-                (
-                    OPPORTUNITY_ARCHETYPE_CONTRACT_PATH.as_posix(),
-                    *OPPORTUNITY_ARCHETYPE_EVIDENCE_PACK_REFS,
-                    "docs/demo/demo-claims.md",
-                    "docs/operations/implementation-proof-readiness.md",
-                    "wiki/Demo-Readiness.md",
-                )
-            )
-        ),
+        "evidenceRefs": _evidence_refs(),
     }
-    payload["packDigest"] = _sha256_json_without_pack_digest(payload)
-    return payload
+
+
+def _source_authority_boundary() -> dict[str, object]:
+    return {
+        "lotusIdeaOwns": (
+            "opportunity detection, idea lifecycle, evidence-pack composition, "
+            "scoring, review workflow, feedback, conversion intent, and readiness posture"
+        ),
+        "sourceAuthoritiesRemainOwnedBy": (
+            "lotus-core, lotus-risk, lotus-performance, lotus-advise, lotus-manage, "
+            "lotus-report, lotus-render, lotus-archive, and lotus-ai"
+        ),
+        "sourceCalculationsPerformedByLotusIdea": False,
+    }
+
+
+def _canonical_portfolio_scope() -> dict[str, object]:
+    return {
+        "scopeId": "canonical-front-office-private-bank-balanced-portfolio",
+        "sourceRefHandling": "canonical portfolio reference hashed and not serialized",
+        "sourceRefSha256": _sha256_text(CANONICAL_PORTFOLIO_REF),
+        "governedDatasetRefs": [
+            "lotus-platform/context/contracts/canonical-front-office-demo-data-contract.json",
+            "lotus-platform/context/contracts/canonical-front-office-demo-data-invariants.json",
+        ],
+    }
+
+
+def _claim_boundary() -> dict[str, object]:
+    return {
+        "supportabilityStatus": "not_certified",
+        "readinessStatus": "blocked",
+        "demoReady": False,
+        "clientPublicationReady": False,
+        "supportedFeaturePromoted": False,
+        "dataMeshCertified": False,
+        "productionIdentityCertified": False,
+        "commercialClaimAllowed": "internal_foundation_walkthrough_only",
+    }
+
+
+def _source_of_truth(contract: OpportunityArchetypeContract) -> dict[str, object]:
+    return {
+        "archetypeContract": OPPORTUNITY_ARCHETYPE_CONTRACT_PATH.as_posix(),
+        "implementationProofReadiness": "src/app/application/implementation_proof_readiness.py",
+        "rfcSlice16": (
+            "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/"
+            "RFC-0002-slice-16-demo-readiness-archetype-scenarios-and-commercial-proof.md"
+        ),
+        "issue": "sgajbi/lotus-idea#696",
+        **dict(contract.source_of_truth),
+    }
+
+
+def _pack_summary(
+    archetype_evidence: tuple[dict[str, Any], ...],
+    blockers: tuple[str, ...],
+) -> dict[str, int]:
+    return {
+        "archetypeCount": len(archetype_evidence),
+        "boundedFoundationCount": sum(
+            1
+            for archetype in archetype_evidence
+            if archetype["classification"] == "bounded_foundation"
+        ),
+        "plannedCount": sum(
+            1 for archetype in archetype_evidence if archetype["classification"] == "planned"
+        ),
+        "supportedCount": 0,
+        "scenarioCount": sum(
+            len(archetype["canonicalScenarios"]) for archetype in archetype_evidence
+        ),
+        "blockerCount": len(blockers),
+    }
+
+
+def _evidence_refs() -> list[str]:
+    return list(
+        dict.fromkeys(
+            (
+                OPPORTUNITY_ARCHETYPE_CONTRACT_PATH.as_posix(),
+                *OPPORTUNITY_ARCHETYPE_EVIDENCE_PACK_REFS,
+                "docs/demo/demo-claims.md",
+                "docs/operations/implementation-proof-readiness.md",
+                "wiki/Demo-Readiness.md",
+            )
+        )
+    )
 
 
 def opportunity_archetype_evidence_pack_is_valid(payload: Mapping[str, object]) -> bool:

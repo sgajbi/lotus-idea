@@ -6,6 +6,55 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-08-12: Canonical Opportunity Archetype Evidence-Pack Builder
+
+Issue `#980` applies the RFC-0002 Slice 16/19 maintainability lens to
+`src/app/application/opportunity_archetype_evidence_pack.py::build_canonical_opportunity_archetype_evidence_pack`.
+The current report-only quality baseline listed the builder as a `103` line
+production source hotspot in the canonical opportunity-archetype evidence-pack
+proof path.
+
+The refactor keeps the public builder and validator unchanged while extracting:
+
+1. `_load_canonical_opportunity_archetype_contract(...)`,
+2. `_canonical_archetype_evidence(...)`,
+3. `_remaining_certification_blockers(...)`,
+4. `_opportunity_archetype_evidence_pack_payload(...)`,
+5. `_source_authority_boundary()`,
+6. `_canonical_portfolio_scope()`,
+7. `_claim_boundary()`,
+8. `_source_of_truth(...)`,
+9. `_pack_summary(...)`,
+10. `_evidence_refs()`.
+
+Focused local validation passed:
+
+1. `python -m ruff check src/app/application/opportunity_archetype_evidence_pack.py tests/unit/test_opportunity_archetype_evidence_pack.py tests/unit/test_implementation_proof_readiness_opportunity_archetype_evidence_pack.py tests/unit/test_generate_implementation_proof_readiness_opportunity_archetype_evidence_pack.py`,
+2. `python -m ruff format --check src/app/application/opportunity_archetype_evidence_pack.py tests/unit/test_opportunity_archetype_evidence_pack.py tests/unit/test_implementation_proof_readiness_opportunity_archetype_evidence_pack.py tests/unit/test_generate_implementation_proof_readiness_opportunity_archetype_evidence_pack.py`,
+3. `python -m mypy src/app/application/opportunity_archetype_evidence_pack.py`,
+4. `python -m pytest tests/unit/test_opportunity_archetype_evidence_pack.py tests/unit/test_implementation_proof_readiness_opportunity_archetype_evidence_pack.py tests/unit/test_generate_implementation_proof_readiness_opportunity_archetype_evidence_pack.py -q`
+   (`12` passed),
+5. `make quality-baseline`,
+6. `make maintainability-gate`,
+7. `make duplicate-implementation-gate`,
+8. `make rfc0002-github-issue-execution-ledger-gate`,
+9. `make rfc0002-github-issue-execution-state-audit`,
+10. `make rfc0002-github-issue-execution-summary`,
+11. `make rfc0002-github-issue-learning-pattern-gate`,
+12. `make documentation-contract-gate`,
+13. `make implementation-truth-gate`,
+14. `make typecheck`,
+15. `git diff --check`.
+
+The public builder moved from `103` lines to `19` lines and no longer appears
+in the largest source function list.
+
+This is internal proof-builder maintainability only. It does not change payload
+schema, API/OpenAPI contracts, migrations, runtime topology, Workbench/Gateway
+proof, source-owner authority, client-ready publication, data-mesh
+certification, supported-feature promotion, production identity/authn/authz,
+demo certification, or final RFC-0002 closure.
+
 ## 2026-08-12: AI Workflow-Pack Registration Proof Builder
 
 Issue `#977` applies the RFC-0002 Slice 19 maintainability lens to

@@ -97,7 +97,8 @@
     966,
     971,
     974,
-    977
+    977,
+    980
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -362,6 +363,25 @@
       "authentication",
       "authorization",
       "supported-feature posture",
+      "final RFC-0002 closure"
+    ],
+    "980": [
+      "Keep #980 open",
+      "RFC-0002 Slice 16/19 canonical opportunity-archetype evidence-pack builder refactor",
+      "build_canonical_opportunity_archetype_evidence_pack",
+      "timestamp/scope validation",
+      "canonical archetype projection",
+      "blocker aggregation",
+      "source-authority boundary",
+      "claim boundary",
+      "evidence refs",
+      "source-contract-only semantics",
+      "PB_SG_GLOBAL_BAL_001",
+      "supported-feature non-promotion posture",
+      "Do not claim API/OpenAPI changes",
+      "Workbench/Gateway proof",
+      "client-ready publication",
+      "demo certification",
       "final RFC-0002 closure"
     ]
   },
