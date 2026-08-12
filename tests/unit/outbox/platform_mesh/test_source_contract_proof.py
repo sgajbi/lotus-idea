@@ -218,6 +218,28 @@ def test_outbox_platform_mesh_event_source_contract_rejects_non_object_payload(
     assert proof_module._load_json_object(contract_path) is None
 
 
+def test_outbox_platform_mesh_event_source_contract_keeps_runtime_blocker_closed(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    monkeypatch.setattr(
+        proof_module,
+        "OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_REQUIRED_BLOCKER_EVIDENCE_CLASSES",
+        (("platform_mesh_event_publication_proof_missing", "runtime_execution"),),
+    )
+
+    proof = _valid_outbox_platform_mesh_event_source_contract_proof(tmp_path)
+
+    assert proof["outboxPlatformMeshEventSourceContractValid"] is False
+    assert proof["sourceContractStatus"] == "invalid"
+    assert proof["proofChecks"]["evidenceClassMatchesBlockers"] is False
+    assert proof["aggregateBlockersCleared"] == ()
+    assert proof["runtimeExecutionObserved"] is False
+    assert proof["platformMeshEventPublished"] is False
+    assert proof["supportedFeaturePromoted"] is False
+    assert outbox_platform_mesh_event_source_contract_proof_is_valid(proof) is False
+
+
 @pytest.mark.parametrize(
     ("field_name", "bad_value"),
     [

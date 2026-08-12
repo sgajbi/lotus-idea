@@ -77,6 +77,31 @@ REQUIRED_PLATFORM_PRODUCT_IDS = (
     "lotus-idea:IdeaReviewDecision:v1",
 )
 
+OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_FALSE_CLAIM_FIELDS = (
+    "runtimeExecutionObserved",
+    "platformMeshEventPublished",
+    "publicationReceiptObserved",
+    "externalBrokerPublicationSupported",
+    "downstreamConsumersCertified",
+    "deploymentObserved",
+    "productionCertificationGranted",
+    "gatewayWorkbenchProofPresent",
+    "supportedFeaturePromoted",
+    "proofClosed",
+)
+
+OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_REQUIRED_CHECKS = (
+    "timezoneAwareGeneratedAtUtc",
+    "fileEvidencePresent",
+    "makeTargetEvidencePresent",
+    "eventContractSourceSafe",
+    "eventFamilyCoveragePresent",
+    "consumerContractLinksDeclaredEvents",
+    "platformSourceManifestIncludesLotusIdea",
+    "platformCatalogMapsIdeaProducts",
+    "evidenceClassMatchesBlockers",
+)
+
 
 def build_outbox_platform_mesh_event_source_contract_proof_payload(
     *,
@@ -85,59 +110,24 @@ def build_outbox_platform_mesh_event_source_contract_proof_payload(
     platform_root: Path | None = None,
 ) -> dict[str, Any]:
     platform_root = platform_root or repository_root.parent / "lotus-platform"
-    timezone_aware_generated_at_utc = (
-        generated_at_utc.tzinfo is not None and generated_at_utc.utcoffset() is not None
-    )
     evidence_refs = tuple(REQUIRED_OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_EVIDENCE_REFS)
-    file_evidence_present = _required_file_evidence_present(
+    event_contract, consumer_contract, source_manifest, catalog = (
+        _load_outbox_platform_mesh_contract_payloads(
+            repository_root=repository_root,
+            platform_root=platform_root,
+        )
+    )
+    proof_checks = _build_outbox_platform_mesh_event_source_contract_proof_checks(
+        generated_at_utc=generated_at_utc,
         repository_root=repository_root,
-        sibling_roots={"../lotus-platform/": platform_root},
+        platform_root=platform_root,
         evidence_refs=evidence_refs,
-        non_file_ref_prefixes=("GET ", "POST ", "make "),
-    )
-    make_target_evidence_present = _required_make_target_evidence_present(
-        repository_root=repository_root,
-        evidence_refs=evidence_refs,
-    )
-    event_contract = _load_json_object(
-        repository_root / "contracts/outbox-events/lotus-idea-outbox-events.v1.json"
-    )
-    consumer_contract = _load_json_object(
-        repository_root / "contracts/outbox-events/lotus-idea-outbox-consumers.v1.json"
-    )
-    source_manifest = _load_json_object(
-        platform_root
-        / "platform-contracts/domain-data-products/domain-product-source-manifest.v1.json"
-    )
-    catalog = _load_json_object(platform_root / "generated/domain-product-catalog.json")
-    event_contract_source_safe = _event_contract_is_source_safe(event_contract)
-    event_family_coverage = _event_family_coverage_present(event_contract)
-    consumer_contract_links_events = _consumer_contract_links_declared_events(
-        consumer_contract=consumer_contract,
         event_contract=event_contract,
+        consumer_contract=consumer_contract,
+        source_manifest=source_manifest,
+        catalog=catalog,
     )
-    platform_onboarding_present = _platform_source_manifest_includes_lotus_idea(source_manifest)
-    platform_catalog_maps_idea_products = _platform_catalog_maps_idea_products(catalog)
-    evidence_class_matches_blockers = all(
-        evidence_class_can_clear(
-            actual=EvidenceClass.SOURCE_CONTRACT,
-            required=EvidenceClass(required_class),
-        )
-        for _blocker, required_class in (
-            OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_REQUIRED_BLOCKER_EVIDENCE_CLASSES
-        )
-    )
-    proof_valid = (
-        timezone_aware_generated_at_utc
-        and file_evidence_present
-        and make_target_evidence_present
-        and event_contract_source_safe
-        and event_family_coverage
-        and consumer_contract_links_events
-        and platform_onboarding_present
-        and platform_catalog_maps_idea_products
-        and evidence_class_matches_blockers
-    )
+    proof_valid = _all_required_proof_checks_pass(proof_checks)
     return {
         "schemaVersion": OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_PROOF_SCHEMA_VERSION,
         "repository": "lotus-idea",
@@ -153,17 +143,7 @@ def build_outbox_platform_mesh_event_source_contract_proof_payload(
         "evidenceRefs": evidence_refs,
         "eventTypeCount": len(REQUIRED_OUTBOX_EVENT_TYPES),
         "platformProductCount": len(REQUIRED_PLATFORM_PRODUCT_IDS),
-        "proofChecks": {
-            "timezoneAwareGeneratedAtUtc": timezone_aware_generated_at_utc,
-            "fileEvidencePresent": file_evidence_present,
-            "makeTargetEvidencePresent": make_target_evidence_present,
-            "eventContractSourceSafe": event_contract_source_safe,
-            "eventFamilyCoveragePresent": event_family_coverage,
-            "consumerContractLinksDeclaredEvents": consumer_contract_links_events,
-            "platformSourceManifestIncludesLotusIdea": platform_onboarding_present,
-            "platformCatalogMapsIdeaProducts": platform_catalog_maps_idea_products,
-            "evidenceClassMatchesBlockers": evidence_class_matches_blockers,
-        },
+        "proofChecks": proof_checks,
         "remainingCertificationBlockers": REMAINING_OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_BLOCKERS,
         "sourceContractStatus": "valid" if proof_valid else "invalid",
         "runtimeExecutionObserved": False,
@@ -193,19 +173,10 @@ def outbox_platform_mesh_event_source_contract_proof_is_valid(
     }
     if any(payload.get(key) != value for key, value in expected_values.items()):
         return False
-    false_claims = (
-        "runtimeExecutionObserved",
-        "platformMeshEventPublished",
-        "publicationReceiptObserved",
-        "externalBrokerPublicationSupported",
-        "downstreamConsumersCertified",
-        "deploymentObserved",
-        "productionCertificationGranted",
-        "gatewayWorkbenchProofPresent",
-        "supportedFeaturePromoted",
-        "proofClosed",
-    )
-    if any(payload.get(field_name) is not False for field_name in false_claims):
+    if any(
+        payload.get(field_name) is not False
+        for field_name in OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_FALSE_CLAIM_FIELDS
+    ):
         return False
     if not _is_timezone_aware_datetime_text(payload.get("generatedAtUtc")):
         return False
@@ -235,19 +206,90 @@ def outbox_platform_mesh_event_source_contract_proof_is_valid(
     proof_checks = payload.get("proofChecks")
     if not isinstance(proof_checks, Mapping):
         return False
+    return _all_required_proof_checks_pass(proof_checks)
+
+
+def _load_outbox_platform_mesh_contract_payloads(
+    *,
+    repository_root: Path,
+    platform_root: Path,
+) -> tuple[
+    Mapping[str, Any] | None,
+    Mapping[str, Any] | None,
+    Mapping[str, Any] | None,
+    Mapping[str, Any] | None,
+]:
+    event_contract = _load_json_object(
+        repository_root / "contracts/outbox-events/lotus-idea-outbox-events.v1.json"
+    )
+    consumer_contract = _load_json_object(
+        repository_root / "contracts/outbox-events/lotus-idea-outbox-consumers.v1.json"
+    )
+    source_manifest = _load_json_object(
+        platform_root
+        / "platform-contracts/domain-data-products/domain-product-source-manifest.v1.json"
+    )
+    catalog = _load_json_object(platform_root / "generated/domain-product-catalog.json")
+    return event_contract, consumer_contract, source_manifest, catalog
+
+
+def _build_outbox_platform_mesh_event_source_contract_proof_checks(
+    *,
+    generated_at_utc: datetime,
+    repository_root: Path,
+    platform_root: Path,
+    evidence_refs: tuple[str, ...],
+    event_contract: Mapping[str, Any] | None,
+    consumer_contract: Mapping[str, Any] | None,
+    source_manifest: Mapping[str, Any] | None,
+    catalog: Mapping[str, Any] | None,
+) -> dict[str, bool]:
+    return {
+        "timezoneAwareGeneratedAtUtc": _generated_at_is_timezone_aware(generated_at_utc),
+        "fileEvidencePresent": _required_file_evidence_present(
+            repository_root=repository_root,
+            sibling_roots={"../lotus-platform/": platform_root},
+            evidence_refs=evidence_refs,
+            non_file_ref_prefixes=("GET ", "POST ", "make "),
+        ),
+        "makeTargetEvidencePresent": _required_make_target_evidence_present(
+            repository_root=repository_root,
+            evidence_refs=evidence_refs,
+        ),
+        "eventContractSourceSafe": _event_contract_is_source_safe(event_contract),
+        "eventFamilyCoveragePresent": _event_family_coverage_present(event_contract),
+        "consumerContractLinksDeclaredEvents": _consumer_contract_links_declared_events(
+            consumer_contract=consumer_contract,
+            event_contract=event_contract,
+        ),
+        "platformSourceManifestIncludesLotusIdea": (
+            _platform_source_manifest_includes_lotus_idea(source_manifest)
+        ),
+        "platformCatalogMapsIdeaProducts": _platform_catalog_maps_idea_products(catalog),
+        "evidenceClassMatchesBlockers": _source_contract_evidence_can_clear_required_blockers(),
+    }
+
+
+def _generated_at_is_timezone_aware(generated_at_utc: datetime) -> bool:
+    return generated_at_utc.tzinfo is not None and generated_at_utc.utcoffset() is not None
+
+
+def _source_contract_evidence_can_clear_required_blockers() -> bool:
+    return all(
+        evidence_class_can_clear(
+            actual=EvidenceClass.SOURCE_CONTRACT,
+            required=EvidenceClass(required_class),
+        )
+        for _blocker, required_class in (
+            OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_REQUIRED_BLOCKER_EVIDENCE_CLASSES
+        )
+    )
+
+
+def _all_required_proof_checks_pass(proof_checks: Mapping[str, Any]) -> bool:
     return all(
         proof_checks.get(check_name) is True
-        for check_name in (
-            "timezoneAwareGeneratedAtUtc",
-            "fileEvidencePresent",
-            "makeTargetEvidencePresent",
-            "eventContractSourceSafe",
-            "eventFamilyCoveragePresent",
-            "consumerContractLinksDeclaredEvents",
-            "platformSourceManifestIncludesLotusIdea",
-            "platformCatalogMapsIdeaProducts",
-            "evidenceClassMatchesBlockers",
-        )
+        for check_name in OUTBOX_PLATFORM_MESH_EVENT_SOURCE_CONTRACT_REQUIRED_CHECKS
     )
 
 
