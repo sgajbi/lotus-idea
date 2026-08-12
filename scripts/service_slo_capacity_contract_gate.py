@@ -266,6 +266,7 @@ def _validate_source_truth(payload: dict[str, Any], repository_root: Path) -> li
         "baseline_generator",
         "baseline_contract_gate",
         "baseline_workload_runner",
+        "baseline_workload_planning_policy",
         "downstream_capacity_seed_model",
         "downstream_capacity_seed_port",
         "downstream_capacity_seed_adapter",
@@ -348,7 +349,13 @@ def _validate_downstream_capacity_seed(repository_root: Path) -> list[str]:
         ),
         "scripts/run_service_capacity_workload.py": (
             "--downstream-capacity-seed",
+            "service_capacity_workload_cli",
+        ),
+        "src/app/application/service_capacity_workload_cli.py": (
             "downstream capacity seed provenance is invalid",
+            "seed_only_not_capacity_evidence",
+            "productionCapacityCertified",
+            "supportedFeaturePromoted",
         ),
         "Makefile": (
             "downstream-capacity-seed:",

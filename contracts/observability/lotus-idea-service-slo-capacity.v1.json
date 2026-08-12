@@ -133,6 +133,7 @@
     "baseline_generator": "scripts/generate_service_capacity_baseline.py",
     "baseline_contract_gate": "scripts/service_capacity_baseline_contract_gate.py",
     "baseline_workload_runner": "scripts/run_service_capacity_workload.py",
+    "baseline_workload_planning_policy": "src/app/application/service_capacity_workload_cli.py",
     "downstream_capacity_seed_model": "src/app/application/downstream_capacity_seed.py",
     "downstream_capacity_seed_port": "src/app/ports/downstream_capacity_seed.py",
     "downstream_capacity_seed_adapter": "src/app/infrastructure/http_downstream_capacity_seed.py",
