@@ -35,6 +35,27 @@ Focused local validation passed so far:
    (`23` passed), and
 2. `.venv\Scripts\ruff.exe check src\app\application\implementation_proof_opportunity_archetype_proofs.py tests\unit\implementation_proof\test_effect_enforcement.py`.
 
+Merged-main evidence:
+
+1. PR `#995` merged by rebase to Idea main
+   `05dfb48ede9198a8b0a568122e5691a1589fb205` from PR head
+   `57f0f0d7e29c6db3e3e1e7c32547d49f4e9f4797`.
+2. Local validation passed `make test-unit` (`5,476` passed),
+   `make typecheck`, `make lint`, `make quality-baseline`,
+   `make maintainability-gate`, `make duplicate-implementation-gate`
+   (`0` duplicate clusters), `make rfc0002-github-issue-execution-ledger-gate`,
+   `make rfc0002-github-issue-learning-pattern-gate`,
+   `make documentation-contract-gate`,
+   `make rfc0002-github-issue-execution-state-audit`, and
+   `make rfc0002-github-issue-execution-summary`.
+3. GitHub validation passed Feature Lane, PR Merge Gate run `31573819143`,
+   CodeQL, Queue Auto Merge, and exact-main Main Releasability Gate run
+   `31574238002`.
+4. No repo-authored wiki source changed. GitHub deleted the remote
+   implementation branch and `git fetch --prune` removed the remote-tracking
+   ref; local branch deletion remains pending patch-equivalence proof after the
+   source-truth sync lands.
+
 The new focused tests prove both a valid source-ingestion plus
 risk-concentration proof path and invalid scoped proof payload handling without
 calling the validator. This preserves source-safe fail-closed behavior for
