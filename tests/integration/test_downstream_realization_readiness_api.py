@@ -48,6 +48,14 @@ def test_downstream_realization_readiness_api_returns_blocked_operator_posture(
     assert response.status_code == 200
     assert response.headers["X-Correlation-Id"] == ("corr-downstream-realization-readiness-api")
     payload = response.json()
+    _assert_blocked_operator_envelope(payload)
+    _assert_downstream_blocker_issue_refs(payload)
+    _assert_downstream_capability_catalog(payload)
+    _assert_report_contract_non_certification(payload)
+    _assert_source_safe_response_text(response.text)
+
+
+def _assert_blocked_operator_envelope(payload: dict[str, Any]) -> None:
     assert payload["repository"] == "lotus-idea"
     assert payload["readinessStatus"] == "blocked"
     assert payload["supportabilityStatus"] == "not_certified"
@@ -68,6 +76,9 @@ def test_downstream_realization_readiness_api_returns_blocked_operator_posture(
     assert "lotus_report_live_intake_route_proof_missing" in payload["blockers"]
     assert "report_evidence_pack_live_materialization_proof_missing" in payload["blockers"]
     assert "dedicated_report_idea_evidence_intake_contract_missing" not in payload["blockers"]
+
+
+def _assert_downstream_blocker_issue_refs(payload: dict[str, Any]) -> None:
     assert payload["blockerIssueRefs"]["advise_live_contract_proof_missing"] == [
         "sgajbi/lotus-idea#688",
         "sgajbi/lotus-idea#379",
@@ -83,6 +94,9 @@ def test_downstream_realization_readiness_api_returns_blocked_operator_posture(
         "sgajbi/lotus-idea#691",
         "sgajbi/lotus-archive#72",
     ]
+
+
+def _assert_downstream_capability_catalog(payload: dict[str, Any]) -> None:
     assert {capability["capabilityId"] for capability in payload["capabilities"]} == {
         "advise-proposal-realization",
         "manage-action-realization",
@@ -103,6 +117,9 @@ def test_downstream_realization_readiness_api_returns_blocked_operator_posture(
         "sgajbi/lotus-idea#379",
         "sgajbi/lotus-advise#461",
     ]
+
+
+def _assert_report_contract_non_certification(payload: dict[str, Any]) -> None:
     assert {contract["contractId"] for contract in payload["downstreamContracts"]} == {
         "lotus-idea-to-lotus-advise-proposal-intake:v1",
         "lotus-idea-to-lotus-manage-action-intake:v1",
@@ -133,12 +150,15 @@ def test_downstream_realization_readiness_api_returns_blocked_operator_posture(
         "lotus-report/contracts/idea-evidence-intake/"
         "lotus-report-idea-evidence-pack-intake.v1.json" in report_contract["evidenceRefs"]
     )
-    assert "client_id" not in response.text
-    assert "portfolio_id" not in response.text
-    assert "request_body" not in response.text
-    assert "clientId" not in response.text
-    assert "portfolioId" not in response.text
-    assert "requestBody" not in response.text
+
+
+def _assert_source_safe_response_text(response_text: str) -> None:
+    assert "client_id" not in response_text
+    assert "portfolio_id" not in response_text
+    assert "request_body" not in response_text
+    assert "clientId" not in response_text
+    assert "portfolioId" not in response_text
+    assert "requestBody" not in response_text
 
 
 def test_downstream_readiness_api_adds_report_source_contract_without_runtime_clearance(
