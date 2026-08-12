@@ -55,6 +55,14 @@ Merged-main evidence:
    implementation branch and `git fetch --prune` removed the remote-tracking
    ref; local branch deletion remains pending patch-equivalence proof after the
    source-truth sync lands.
+5. Source-sync PR `#996` merged to Idea main
+   `c95217fd07cecd4dcb83c934167ad996ce1e69e0`. Exact-main Main
+   Releasability Gate run `31575711931` passed for that SHA, including
+   Docker image scan, SBOM generation, image signing, provenance/SBOM
+   attestations, release metadata, and CI signal evidence. #994 was then
+   closed with `Loop status: qa_passed_closed` while retaining
+   `status/merged-main`; local implementation and source-sync branches were
+   deleted after patch-equivalence proof.
 
 The new focused tests prove both a valid source-ingestion plus
 risk-concentration proof path and invalid scoped proof payload handling without
