@@ -96,7 +96,8 @@
     964,
     966,
     971,
-    974
+    974,
+    977
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -362,6 +363,14 @@
       "authorization",
       "supported-feature posture",
       "final RFC-0002 closure"
+    ],
+    "977": [
+      "Keep #977 open until the AI workflow-pack registration proof-builder refactor merges to main",
+      "internal RFC-0002 Slice 19 maintainability only",
+      "build_ai_workflow_pack_registration_proof_payload",
+      "split proof-check construction",
+      "source-contract-only semantics",
+      "Do not claim API/OpenAPI changes"
     ]
   },
   "requiredClosedIssueEvidence": {
