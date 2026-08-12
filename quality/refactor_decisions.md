@@ -47,6 +47,39 @@ Focused local validation passed:
 4. `python -m pytest tests/unit/test_candidate_lifecycle_application.py tests/unit/test_api_request_validation.py tests/unit/test_service_contract.py tests/unit/api_examples/test_candidate_state_examples.py tests/integration/test_api_operation_events.py -q`
    (`44` passed).
 
+Broader implementation-branch validation passed:
+
+1. `make quality-baseline`,
+2. `make maintainability-gate`,
+3. `make duplicate-implementation-gate`,
+4. `make rfc0002-github-issue-execution-ledger-gate`,
+5. `make rfc0002-github-issue-learning-pattern-gate`,
+6. `make rfc0002-github-issue-execution-state-audit`,
+7. `make rfc0002-github-issue-execution-summary`,
+8. `make documentation-contract-gate`,
+9. `make typecheck`,
+10. `make lint`,
+11. `git diff --check`,
+12. `make check` (`5471` passed).
+
+The refreshed quality baseline no longer lists
+`record_candidate_lifecycle_transition` in the production API hotspot list.
+
+PR `#975` merged the implementation to `lotus-idea` main
+`290405c80f18c2accb05dee7f7e3da1cbbb7b6a8` from PR head
+`2a1e45b72879b2859afc1b2fee48c122b3e61e7e`. PR Merge Gate run
+`31553971359`, Feature Lane run `31553968230`, PR CodeQL run `31553970021`,
+and Queue Auto Merge run `31553971522` passed before merge. Exact-main Main
+Releasability Gate run `31554345807` and exact-main CodeQL push run
+`31554335729` passed for the merged SHA, including Docker build/runtime smoke,
+vulnerability scan, SBOM, image push, signing, provenance, release metadata,
+image identity/license binding, and CI signal evidence.
+
+The source-controlled RFC-0002 execution ledger now tracks #974 as
+`closed_complete`, and the issue-learning pattern ledger retains it as related
+evidence under operations/security/resilience certification so future
+candidate-lifecycle API changes preserve the same no-claim boundary.
+
 No repo-authored wiki source change is expected because this is internal API
 structure hardening only. The implementation does not change public API or
 OpenAPI contracts, persistence schema, migrations, authentication,

@@ -333,7 +333,7 @@ def test_documentation_contract_gate_blocks_non_contract_current_issue_posture(
     assert errors == [
         "wiki/RFC-Index.md: paragraph 2 describes current/live RFC-0002 issue posture "
         "without contract-backed crossRepo fragment(s): "
-        "`128 label-backed RFC-0002 issues`, `91 closed and 37 open`"
+        "`162 label-backed RFC-0002 issues`, `125 closed and 37 open`"
     ]
 
 

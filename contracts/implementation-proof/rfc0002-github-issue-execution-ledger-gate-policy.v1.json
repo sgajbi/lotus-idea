@@ -362,9 +362,11 @@
       "authorization",
       "supported-feature posture",
       "final RFC-0002 closure"
-    ],
+    ]
+  },
+  "requiredClosedIssueEvidence": {
     "974": [
-      "Keep #974 open",
+      "Closed #974 after QA passed",
       "RFC-0002 Slice 15/19 candidate-lifecycle API route maintainability refactor",
       "record_candidate_lifecycle_transition",
       "trusted caller construction",
@@ -376,19 +378,27 @@
       "response projection",
       "persistence-problem projection",
       "operation-event preservation",
-      "Ruff check",
-      "Ruff format check",
-      "MyPy",
-      "44 candidate lifecycle/API operation-event tests",
-      "No repo-authored wiki source change is expected",
+      "PR #975 merged by rebase",
+      "2a1e45b72879b2859afc1b2fee48c122b3e61e7e",
+      "290405c80f18c2accb05dee7f7e3da1cbbb7b6a8",
+      "31553971359",
+      "31553968230",
+      "31553970021",
+      "31553971522",
+      "31554345807",
+      "31554335729",
+      "quality-baseline",
+      "no longer lists `record_candidate_lifecycle_transition`",
+      "No repo-authored wiki source changed",
+      "Loop status: qa_passed_closed",
+      "status/merged-main",
+      "internal API maintainability hardening",
       "production IdP/session-token authority",
       "Gateway/Workbench runtime proof",
       "legal/privacy/Archive/provider certification",
       "supported-feature promotion",
       "final RFC-0002 completion"
-    ]
-  },
-  "requiredClosedIssueEvidence": {
+    ],
     "964": [
       "Closed #964 after QA passed",
       "RFC-0002 Slice 19 PostgreSQL mutating workflow proof helper refactor",
