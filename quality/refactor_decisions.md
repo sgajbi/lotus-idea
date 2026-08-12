@@ -3214,3 +3214,49 @@ Evidence:
    review ledger, refactor decision log, and wiki source were updated. No
    README, supported-feature, seed, automation, or platform skill change is
    justified by this internal modularity slice.
+## 2026-08-12: Review Feedback API Handler Boundary
+
+Issue: [#998](https://github.com/sgajbi/lotus-idea/issues/998)
+
+Decision:
+
+`src/app/api/review_workflow.py::record_feedback` stays as the public FastAPI
+route entry point, but the route now delegates feedback mutation setup,
+application-command execution, permission/entitlement denial mapping,
+invalid-request mapping, persistence problem projection, and successful
+response assembly to named API-boundary helpers. This mirrors the hardened
+`record_review_action` pattern from #606 without changing route behavior.
+
+Why:
+
+`make quality-baseline` listed `record_feedback` as the next production API
+hotspot at 99 lines. The function mixed trusted caller context, idempotency,
+event lineage, entitlement failure handling, persistence decision projection,
+operation-event emission, and response DTO assembly in one route body. Keeping
+those concerns named reduces review risk around RFC-0002 Slice 08 human
+feedback, Slice 15 operation/security posture, and Slice 19 maintainability.
+
+Preserved boundaries:
+
+1. Route signature, route metadata, response model, status codes,
+   ProblemDetails behavior, event-lineage/causation handling, idempotency-key
+   semantics, durable-storage-backed truth, operation-event family, and
+   `supportedFeaturePromoted=false` remain unchanged.
+2. No authentication/authz infrastructure, persistence schema, migration,
+   runtime topology, Gateway, Workbench, Core, data-product certification,
+   supported-feature promotion, client-publication, or final RFC-0002 closure
+   claim is made.
+3. No repo-authored wiki source changed because this is internal API-boundary
+   maintainability and does not change operator- or user-facing truth.
+
+Evidence:
+
+1. Duplicate issue searches for `record_feedback review_workflow quality
+   baseline RFC-0002` and `record_feedback review_workflow maintainability
+   hotspot quality-baseline RFC-0002` found no focused existing owner.
+2. Focused validation passed: Ruff format/check, MyPy over
+   `src/app/api/review_workflow.py`, and 83 review workflow
+   API/application/example/entitlement/operation-event tests.
+3. Quality validation passed: `make quality-baseline`,
+   `make maintainability-gate`, and `make duplicate-implementation-gate`
+   (`0` duplicate clusters across `3,572` source/script functions).
