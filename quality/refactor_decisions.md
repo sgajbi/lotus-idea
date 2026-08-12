@@ -6,6 +6,71 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-08-12: Data Lifecycle Action API Boundary
+
+Issue `#971` applies the RFC-0002 Slice 15/19 maintainability lens to
+`src/app/api/data_lifecycle/__init__.py::post_data_lifecycle_action`. The
+quality baseline listed the route as a `105` line production API hotspot in
+the governed data-lifecycle, retention, legal-hold, erasure, purge, authority,
+Archive posture, and replay boundary.
+
+The route mixed:
+
+1. trusted caller construction and tenant/capability authorization,
+2. idempotency validation,
+3. lifecycle-authority verification,
+4. Archive lifecycle posture verification,
+5. command construction with request event lineage,
+6. durable repository selection and capability checks,
+7. application execution,
+8. response and ProblemDetails projection.
+
+The refactor keeps `post_data_lifecycle_action(...)` as the public FastAPI
+handler while splitting the review-sensitive responsibilities into named
+API-boundary helpers:
+
+1. `_caller_from_action_headers(...)`,
+2. `_authorize_data_lifecycle_action(...)`,
+3. `_command_for_data_lifecycle_action(...)`,
+4. `_data_lifecycle_precondition_problem(...)`,
+5. `_execute_data_lifecycle_action(...)`.
+
+Focused local validation passed:
+
+1. `python -m ruff check src/app/api/data_lifecycle/__init__.py tests/integration/test_data_lifecycle_api.py tests/integration/data_lifecycle/test_operation_events.py`,
+2. `python -m ruff format --check src/app/api/data_lifecycle/__init__.py tests/integration/test_data_lifecycle_api.py tests/integration/data_lifecycle/test_operation_events.py`,
+3. `python -m mypy src/app/api/data_lifecycle/__init__.py tests/integration/test_data_lifecycle_api.py tests/integration/data_lifecycle/test_operation_events.py`,
+4. `python -m pytest tests/integration/test_data_lifecycle_api.py tests/integration/data_lifecycle/test_operation_events.py -q`
+   (`14` passed),
+5. `make quality-baseline`,
+6. `make maintainability-gate`,
+7. `make duplicate-implementation-gate`,
+8. `make rfc0002-github-issue-execution-ledger-gate`,
+9. `make rfc0002-github-issue-learning-pattern-gate`,
+10. `make rfc0002-github-issue-execution-state-audit`,
+11. `make rfc0002-github-issue-execution-summary`,
+12. `make documentation-contract-gate`,
+13. `make typecheck`,
+14. `make lint`,
+15. `git diff --check`.
+
+The refreshed quality baseline no longer lists `post_data_lifecycle_action` in
+the largest-function list; the next production API hotspot is
+`src/app/api/candidate_lifecycle.py::record_candidate_lifecycle_transition` at
+`103` lines.
+
+The source-controlled RFC-0002 execution ledger now tracks #971 as
+`open_in_progress`, and the issue-learning pattern ledger classifies it under
+operations/security/resilience certification so future data-lifecycle changes
+preserve the same no-claim boundary.
+
+This is internal API maintainability only. It does not change API/OpenAPI
+contracts, persistence schema, migrations, authentication, authorization
+infrastructure, production IdP/session-token authority, legal/privacy
+certification, Archive production conformance, Core, Gateway, Workbench,
+supported-feature posture, runtime topology, wiki source, client publication,
+or final RFC-0002 closure.
+
 ## 2026-08-12: Issue 681 Evidence-Sync Note Signatures
 
 Issue `#956` applies the RFC-0002 Slice 18/19 maintainability lens to
