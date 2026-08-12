@@ -360,22 +360,6 @@
       "authorization",
       "supported-feature posture",
       "final RFC-0002 closure"
-    ],
-    "966": [
-      "Keep #966 open and status/in-progress",
-      "RFC-0002 Slice 19 quality-baseline follow-through",
-      "tests/integration/test_postgres_runtime_integration.py::test_postgres_runtime_serializes_conversion_outcome_identity_and_source_version",
-      "largest remaining function at 114 lines",
-      "#648 is related but closed a different PostgreSQL runtime workflow proof",
-      "conversion-intent setup",
-      "conversion-outcome serialization",
-      "source-version identity",
-      "durable reload/query",
-      "quality-baseline",
-      "maintainability gate",
-      "duplicate-implementation gate",
-      "test-support maintainability only",
-      "final RFC-0002 closure"
     ]
   },
   "requiredClosedIssueEvidence": {
@@ -408,6 +392,34 @@
       "Loop status: qa_passed_closed",
       "status/merged-main",
       "does not claim runtime code changes",
+      "final RFC-0002 closure"
+    ],
+    "966": [
+      "Closed #966 after QA passed",
+      "RFC-0002 Slice 19 PostgreSQL conversion-outcome runtime proof helper refactor",
+      "tests/integration/test_postgres_runtime_integration.py::test_postgres_runtime_serializes_conversion_outcome_identity_and_source_version",
+      "tests/support/postgres_conversion_outcome_runtime.py",
+      "conversion intent setup",
+      "conversion-outcome identity replay",
+      "source-event-version conflict",
+      "PR #969 merged by rebase",
+      "1522aef787446bb9df136da833274e1ab9aaad5a",
+      "98a4042670f73f744d3f6797d2f0a9066c2a53b0",
+      "31548838194",
+      "31548834259",
+      "31548836310",
+      "31548838420",
+      "31549256660",
+      "31549249580",
+      "quality-baseline",
+      "no longer lists the targeted conversion-outcome proof function",
+      "No repo-authored wiki source changed",
+      "Loop status: qa_passed_closed",
+      "test-support maintainability hardening",
+      "production behavior",
+      "API/OpenAPI contracts",
+      "persistence schema",
+      "Core, Gateway, Workbench",
       "final RFC-0002 closure"
     ],
     "941": [
