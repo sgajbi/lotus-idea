@@ -928,9 +928,9 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/983",
       "rfcSlices": ["slice-12", "slice-13", "slice-18"],
       "githubState": "open",
-      "executionStatus": "open_in_progress",
+      "executionStatus": "open_pr_raised",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #983 open until the Manage intake runtime proof-generator responsibility refactor is merged to Idea main, exact-main validation passes, GitHub source truth is synchronized, and the issue receives final QA closure evidence. The implementation must keep inline owner-app TestClient script construction, local Manage environment construction, subprocess execution, JSON-object stdout decoding, and source-safe receipt projection as named reviewable responsibilities while preserving accepted/replay/rejected/idempotency-conflict/authorization-denied/tenant-scoped scenarios. It must not claim downstream action-register persistence, rebalance/order execution authority, client publication, production identity/authn/authz, supported-feature promotion, owner runtime certification beyond the bounded Manage route receipt, or final RFC-0002 closure."
+      "closureInstruction": "Keep #983 open while PR #984 is open. The issue can move to merged-main QA only after PR #984 merges to Idea main and exact-main validation passes. The Manage intake runtime proof-generator responsibility refactor keeps inline owner-app TestClient script construction, local Manage environment construction, subprocess execution, JSON-object stdout decoding, and source-safe receipt projection as named reviewable responsibilities while preserving accepted/replay/rejected/idempotency-conflict/authorization-denied/tenant-scoped scenarios. It must not claim downstream action-register persistence, rebalance/order execution authority, client publication, production identity/authn/authz, supported-feature promotion, owner runtime certification beyond the bounded Manage route receipt, or final RFC-0002 closure."
     }
   ]
 }
