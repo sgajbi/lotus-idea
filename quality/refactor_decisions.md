@@ -6,6 +6,44 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-08-12: Opportunity Archetype Proof Application Scope Boundary
+
+Issue `#994` applies the RFC-0002 Slice 16/18/19 maintainability lens to
+`src/app/application/implementation_proof_opportunity_archetype_proofs.py::_apply_opportunity_archetype_proofs`.
+After #991 closed, the report-only `make quality-baseline` inventory listed
+this production-code proof-application helper as a `101` line hotspot.
+
+Duplicate-check result: no existing focused issue owned the opportunity
+archetype proof application keyword fan-out. The related RFC blockers for Core,
+Workbench/Gateway runtime proof, data-mesh certification, client publication,
+production identity/session-token authority, and final RFC closure remain
+separate and must not be cleared by this internal refactor.
+
+The branch refactor makes `apply_opportunity_archetype_proofs_from_scope(...)`
+pass the proof scope directly into the existing proof-step descriptors instead
+of manually unpacking and repacking every proof/ref pair. It separates:
+
+1. source-ingestion runtime proof application,
+2. opportunity proof-scope iteration,
+3. payload/ref type filtering,
+4. registered artifact-effect enforcement, and
+5. current aggregate-proof validation before blocker clearing.
+
+Focused local validation passed so far:
+
+1. `.venv\Scripts\python.exe -m pytest tests\unit\implementation_proof\test_effect_enforcement.py -q`
+   (`23` passed), and
+2. `.venv\Scripts\ruff.exe check src\app\application\implementation_proof_opportunity_archetype_proofs.py tests\unit\implementation_proof\test_effect_enforcement.py`.
+
+The new focused tests prove both a valid source-ingestion plus
+risk-concentration proof path and invalid scoped proof payload handling without
+calling the validator. This preserves source-safe fail-closed behavior for
+missing or incorrectly typed proof inputs.
+
+No repo-authored wiki, README, supported-features, OpenAPI, migration, runtime
+topology, Core, Workbench, Gateway, authentication, or authorization source
+change is expected for this internal proof-application maintainability slice.
+
 ## 2026-08-12: Service Capacity Workload CLI Orchestration
 
 Issue `#986` applies the RFC-0002 Slice 15/19 maintainability lens to

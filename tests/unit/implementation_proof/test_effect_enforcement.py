@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import replace
 from datetime import UTC, datetime
 import json
@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 import app.application.implementation_proof_artifact_registry as artifact_registry
+import app.application.implementation_proof_opportunity_archetype_proofs as opportunity_archetype_proofs
 from app.application.downstream_realization_readiness import (
     build_downstream_realization_readiness_snapshot,
 )
@@ -26,6 +27,7 @@ from app.application.implementation_proof_consumption import (
 )
 from app.application.implementation_proof_opportunity_archetype_proofs import (
     _apply_valid_opportunity_proof,
+    apply_opportunity_archetype_proofs_from_scope,
 )
 from app.application.implementation_proof_readiness import (
     build_implementation_proof_readiness_snapshot,
@@ -39,6 +41,12 @@ from app.application.source_ingestion_readiness import (
     MANIFEST_ENV,
     SOURCE_INGESTION_RUNTIME_EXECUTION_ENV,
     build_source_ingestion_readiness_snapshot,
+)
+from app.application.risk_concentration_runtime_evidence import (
+    RISK_CONCENTRATION_RUNTIME_BLOCKERS_SATISFIED,
+)
+from app.application.source_ingestion_runtime_evidence.runtime_execution import (
+    SOURCE_INGESTION_RUNTIME_BLOCKERS_SATISFIED,
 )
 from app.application.source_ingestion_scheduler import (
     SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE_ENV,
@@ -136,6 +144,82 @@ def test_opportunity_proofs_reject_registry_effect_drift(
 
     assert capabilities[0].blockers == ("live_proof_missing",)
     assert proof_ref not in capabilities[0].evidence_refs
+
+
+def test_opportunity_archetype_scope_applies_valid_proof_and_source_ingestion(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        opportunity_archetype_proofs,
+        "risk_concentration_runtime_execution_is_valid",
+        lambda candidate: bool(candidate),
+    )
+    source_ref = "output/source-ingestion/live-proof.json"
+    proof_ref = "output/opportunity/risk-concentration-live-proof.json"
+    blockers = (
+        *SOURCE_INGESTION_RUNTIME_BLOCKERS_SATISFIED,
+        *RISK_CONCENTRATION_RUNTIME_BLOCKERS_SATISFIED,
+    )
+    capability = build_capability_readiness(
+        "opportunity-archetype-scenarios",
+        "Opportunity archetype scenarios",
+        readiness_status="blocked",
+        supportability_status="not_certified",
+        evidence_refs=(),
+        blockers=blockers,
+    )
+
+    capabilities = apply_opportunity_archetype_proofs_from_scope(
+        capabilities=(capability,),
+        source_ingestion_runtime_execution_current=True,
+        source_ingestion_runtime_execution_ref=source_ref,
+        evaluated_at_utc=EVALUATED_AT,
+        scope={
+            "risk_concentration_live_proof": bound_aggregate_proof(
+                {"generatedAtUtc": "2026-06-21T10:10:00Z"},
+                proof_ref,
+            ),
+            "risk_concentration_live_proof_ref": proof_ref,
+        },
+    )
+
+    assert capabilities[0].blockers == ()
+    assert source_ref in capabilities[0].evidence_refs
+    assert proof_ref in capabilities[0].evidence_refs
+
+
+def test_opportunity_archetype_scope_ignores_invalid_proof_payload(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def fail_if_called(candidate: Mapping[str, object]) -> bool:
+        raise AssertionError(f"invalid proof payload was validated: {candidate!r}")
+
+    monkeypatch.setattr(
+        opportunity_archetype_proofs,
+        "risk_concentration_runtime_execution_is_valid",
+        fail_if_called,
+    )
+    capability = build_capability_readiness(
+        "opportunity-archetype-scenarios",
+        "Opportunity archetype scenarios",
+        readiness_status="blocked",
+        supportability_status="not_certified",
+        evidence_refs=(),
+        blockers=RISK_CONCENTRATION_RUNTIME_BLOCKERS_SATISFIED,
+    )
+
+    capabilities = apply_opportunity_archetype_proofs_from_scope(
+        capabilities=(capability,),
+        source_ingestion_runtime_execution_current=False,
+        source_ingestion_runtime_execution_ref=None,
+        evaluated_at_utc=EVALUATED_AT,
+        scope={
+            "risk_concentration_live_proof": "not-a-proof-payload",
+            "risk_concentration_live_proof_ref": 42,
+        },
+    )
+
+    assert capabilities == (capability,)
 
 
 def test_source_ingestion_runtime_proof_rejects_registry_effect_drift(
