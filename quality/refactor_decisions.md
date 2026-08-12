@@ -44,6 +44,19 @@ Focused local validation passed:
 5. `make maintainability-gate`,
 6. `make quality-baseline`.
 
+PR `#978` merged by rebase to Idea main
+`1630eb73a863f77cdf94da225d457810e8c0fb79` from PR head
+`b6f6b983815217cbd5526e47ce415bc4c6c9ae35`. PR-side validation passed
+PR Merge Gate run `31557536789`, Feature Lane run `31557534356`,
+PR CodeQL run `31557535042`, and Queue Auto Merge run `31557535731`.
+Exact-main CodeQL run `31557927299` and exact-main Main Releasability
+Gate run `31557931974` passed for
+`1630eb73a863f77cdf94da225d457810e8c0fb79`. Issue `#977` is closed
+with `Loop status: qa_passed_closed` evidence. No repo-authored wiki
+source changed, so wiki publication was not required. The implementation
+branch was already deleted server-side and stale remote tracking was pruned
+after patch-equivalence proof.
+
 The refreshed quality baseline no longer lists
 `build_ai_workflow_pack_registration_proof_payload` in the largest source
 function list.
