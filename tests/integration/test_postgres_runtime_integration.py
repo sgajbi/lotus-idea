@@ -18,9 +18,6 @@ from app.application.source_ingestion import (
 from app.runtime.repository_state import reset_idea_repository_for_tests
 from app.domain import (
     EvidenceFreshness,
-    ConversionOutcomeCommand,
-    ConversionOutcomeStatus,
-    ConversionPersistenceDecision,
     FeedbackCommand,
     FeedbackOutcome,
     ReasonCode,
@@ -32,7 +29,6 @@ from app.domain import (
     SourceRef,
     SourceSystem,
     apply_review_action,
-    record_conversion_outcome,
     record_feedback,
 )
 from app.infrastructure.migrations import (
@@ -58,6 +54,9 @@ from tests.integration.postgres_runtime_support import (
     high_cash_payload,
     persistence_headers,
     run_concurrent_repository_mutations,
+)
+from tests.support.postgres_conversion_outcome_runtime import (
+    assert_postgres_conversion_outcome_identity_and_source_version_runtime_proof,
 )
 
 
@@ -655,117 +654,10 @@ def test_postgres_runtime_serializes_concurrent_review_and_feedback_resource_ide
 def test_postgres_runtime_serializes_conversion_outcome_identity_and_source_version(
     postgres_database_url: str,
 ) -> None:
-    client = managed_test_client(app)
-    persisted = client.post(
-        "/api/v1/idea-signals/high-cash/evaluate-and-persist",
-        json=high_cash_payload(),
-        headers=persistence_headers("postgres-conversion-lifecycle-persist"),
-    )
-    candidate_id = str(persisted.json()["persistence"]["candidateId"])
-    _transition_candidate_to_review_ready(client, candidate_id)
-    approved = client.post(
-        f"/api/v1/idea-candidates/{candidate_id}/review-actions",
-        json=_approve_review_payload(),
-        headers=_review_headers("postgres-conversion-lifecycle-review"),
-    )
-    assert approved.status_code == 200
-    intent_id = "postgres-concurrent-conversion-intent"
-    intent_response = client.post(
-        f"/api/v1/idea-candidates/{candidate_id}/conversion-intents",
-        json={**_conversion_intent_payload(), "conversionIntentId": intent_id},
-        headers=_conversion_intent_headers("postgres-conversion-lifecycle-intent"),
-    )
-    assert intent_response.status_code == 200
-    reset_idea_repository_for_tests()
-
-    with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
-        repository = PostgresIdeaRepository(cast(Any, connection))
-        intent = repository.conversion_intent_by_id(intent_id)
-    assert intent is not None
-    accepted_command = ConversionOutcomeCommand(
-        conversion_outcome_id="postgres-concurrent-outcome-v1",
-        status=ConversionOutcomeStatus.ACCEPTED,
-        source_system=SourceSystem.LOTUS_REPORT,
-        source_event_version=1,
-        downstream_reference="postgres-report-reference",
-        recorded_at_utc=datetime(2026, 6, 21, 10, 20, tzinfo=UTC),
-        actor_subject="lotus-report-worker",
-    )
-    accepted_result = record_conversion_outcome(intent, accepted_command)
-    before_audit = _table_count(postgres_database_url, "idea_audit_event")
-    before_outbox = _table_count(postgres_database_url, "idea_outbox_event")
-
-    identity_decisions = run_concurrent_repository_mutations(
+    assert_postgres_conversion_outcome_identity_and_source_version_runtime_proof(
+        app,
         postgres_database_url,
-        lambda repository, key: (
-            repository.record_conversion_outcome(
-                accepted_result,
-                idempotency_key=key,
-                payload={"conversionOutcomeId": accepted_command.conversion_outcome_id},
-            ).decision
-        ),
-        ("outcome:concurrent-identity:first", "outcome:concurrent-identity:second"),
     )
-
-    assert set(identity_decisions) == {
-        ConversionPersistenceDecision.ACCEPTED,
-        ConversionPersistenceDecision.REPLAYED,
-    }
-    assert _table_count(postgres_database_url, "idea_conversion_outcome") == 1
-    assert _table_count(postgres_database_url, "idea_audit_event") == before_audit + 1
-    assert _table_count(postgres_database_url, "idea_outbox_event") == before_outbox + 1
-
-    with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
-        repository = PostgresIdeaRepository(cast(Any, connection))
-        history = repository.conversion_outcomes_for_intent(intent_id)
-    first_completion = record_conversion_outcome(
-        intent,
-        ConversionOutcomeCommand(
-            conversion_outcome_id="postgres-concurrent-completion-a",
-            status=ConversionOutcomeStatus.COMPLETED,
-            source_system=SourceSystem.LOTUS_REPORT,
-            source_event_version=2,
-            downstream_reference="postgres-report-reference",
-            recorded_at_utc=datetime(2026, 6, 21, 10, 21, tzinfo=UTC),
-            actor_subject="lotus-report-worker",
-        ),
-        existing_outcomes=history,
-    )
-    second_completion = record_conversion_outcome(
-        intent,
-        ConversionOutcomeCommand(
-            conversion_outcome_id="postgres-concurrent-completion-b",
-            status=ConversionOutcomeStatus.COMPLETED,
-            source_system=SourceSystem.LOTUS_REPORT,
-            source_event_version=2,
-            downstream_reference="postgres-report-reference",
-            recorded_at_utc=datetime(2026, 6, 21, 10, 21, tzinfo=UTC),
-            actor_subject="lotus-report-worker",
-        ),
-        existing_outcomes=history,
-    )
-    before_audit = _table_count(postgres_database_url, "idea_audit_event")
-    before_outbox = _table_count(postgres_database_url, "idea_outbox_event")
-
-    version_decisions = run_concurrent_repository_mutations(
-        postgres_database_url,
-        lambda repository, key: (
-            repository.record_conversion_outcome(
-                first_completion if key.endswith("first") else second_completion,
-                idempotency_key=key,
-                payload={"sourceEventVersion": 2},
-            ).decision
-        ),
-        ("outcome:concurrent-version:first", "outcome:concurrent-version:second"),
-    )
-
-    assert set(version_decisions) == {
-        ConversionPersistenceDecision.ACCEPTED,
-        ConversionPersistenceDecision.OUTCOME_CONFLICT,
-    }
-    assert _table_count(postgres_database_url, "idea_conversion_outcome") == 2
-    assert _table_count(postgres_database_url, "idea_audit_event") == before_audit + 1
-    assert _table_count(postgres_database_url, "idea_outbox_event") == before_outbox + 1
 
 
 def test_postgres_runtime_provider_persists_ai_explanation_lineage(
