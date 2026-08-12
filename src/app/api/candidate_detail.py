@@ -32,11 +32,17 @@ from app.api.runtime_dependencies import (
     get_idea_repository,
     idea_repository_durable_storage_backed,
 )
-from app.application.candidate_detail import GetCandidateDetailCommand, get_candidate_detail
+from app.application.candidate_detail import (
+    CandidateDetailResult,
+    GetCandidateDetailCommand,
+    get_candidate_detail,
+)
 from app.api.problem_details import problem_details_response as problem_response
 from app.observability import IdeaOperation, OperationOutcome, emit_foundation_operation_event
+from app.ports.idea_repository import CandidateSnapshotRepository
 from app.security.caller_context import (
     CapabilityPolicy,
+    CallerContext,
     PermissionDeniedError,
     require_role_and_capability,
 )
@@ -77,85 +83,92 @@ async def get_idea_candidate_detail(
         alias=TRUSTED_CALLER_CONTEXT_HEADER,
     ),
 ) -> CandidateDetailResponse | JSONResponse:
+    caller = _candidate_detail_caller_from_headers(
+        subject=x_caller_subject,
+        roles=x_caller_roles,
+        capabilities=x_caller_capabilities,
+        tenant_ids=x_caller_tenant_ids,
+        book_ids=x_caller_book_ids,
+        portfolio_ids=x_caller_portfolio_ids,
+        client_ids=x_caller_client_ids,
+        trusted_caller_context=x_lotus_trusted_caller_context,
+    )
+    if isinstance(caller, JSONResponse):
+        return caller
+
     try:
-        caller = caller_context_from_headers(
-            subject=x_caller_subject,
-            roles=x_caller_roles,
-            capabilities=x_caller_capabilities,
-            tenant_ids=x_caller_tenant_ids,
-            book_ids=x_caller_book_ids,
-            portfolio_ids=x_caller_portfolio_ids,
-            client_ids=x_caller_client_ids,
-            trusted_caller_context=x_lotus_trusted_caller_context,
-        )
-    except ValueError:
-        _emit_candidate_detail_operation_event(
-            OperationOutcome.INVALID_REQUEST,
-            "invalid_request",
-        )
-        return problem_response(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            code="invalid_request",
-            title="Invalid request",
-            detail=INVALID_CALLER_SCOPE_DETAIL,
-        )
-    try:
-        require_role_and_capability(caller, _READ_CANDIDATE_DETAIL_POLICY)
-        result = get_candidate_detail(
-            GetCandidateDetailCommand(
-                candidate_id=candidate_id,
-                access_scope_filter=caller_access_scope_filter(caller),
-            ),
-            repository=get_idea_repository(),
+        _authorize_candidate_detail_read(caller)
+        repository = get_idea_repository()
+        result = _load_candidate_detail(
+            candidate_id=candidate_id,
+            caller=caller,
+            repository=repository,
         )
     except PermissionDeniedError:
-        _emit_candidate_detail_operation_event(
-            OperationOutcome.PERMISSION_DENIED,
-            "permission_denied",
-        )
-        return problem_response(
-            status_code=status.HTTP_403_FORBIDDEN,
-            code="permission_denied",
-            title="Permission denied",
-            detail="The caller is not permitted to read idea candidate detail.",
+        return _candidate_detail_permission_denied_response()
+    except ValueError:
+        return _candidate_detail_invalid_request_response("candidateId is required.")
+
+    return _candidate_detail_result_response(result, repository=repository)
+
+
+def _candidate_detail_caller_from_headers(
+    *,
+    subject: str | None,
+    roles: str | None,
+    capabilities: str | None,
+    tenant_ids: str | None,
+    book_ids: str | None,
+    portfolio_ids: str | None,
+    client_ids: str | None,
+    trusted_caller_context: str | None,
+) -> CallerContext | JSONResponse:
+    try:
+        return caller_context_from_headers(
+            subject=subject,
+            roles=roles,
+            capabilities=capabilities,
+            tenant_ids=tenant_ids,
+            book_ids=book_ids,
+            portfolio_ids=portfolio_ids,
+            client_ids=client_ids,
+            trusted_caller_context=trusted_caller_context,
         )
     except ValueError:
-        _emit_candidate_detail_operation_event(
-            OperationOutcome.INVALID_REQUEST,
-            "invalid_request",
-        )
-        return problem_response(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            code="invalid_request",
-            title="Invalid request",
-            detail="candidateId is required.",
-        )
+        return _candidate_detail_invalid_request_response(INVALID_CALLER_SCOPE_DETAIL)
 
+
+def _authorize_candidate_detail_read(caller: CallerContext) -> None:
+    require_role_and_capability(caller, _READ_CANDIDATE_DETAIL_POLICY)
+
+
+def _load_candidate_detail(
+    *,
+    candidate_id: str,
+    caller: CallerContext,
+    repository: CandidateSnapshotRepository,
+) -> CandidateDetailResult:
+    return get_candidate_detail(
+        GetCandidateDetailCommand(
+            candidate_id=candidate_id,
+            access_scope_filter=caller_access_scope_filter(caller),
+        ),
+        repository=repository,
+    )
+
+
+def _candidate_detail_result_response(
+    result: CandidateDetailResult,
+    *,
+    repository: object,
+) -> CandidateDetailResponse | JSONResponse:
     if result.access_scope_denied:
-        _emit_candidate_detail_operation_event(
-            OperationOutcome.PERMISSION_DENIED,
-            "permission_denied",
-        )
-        return problem_response(
-            status_code=status.HTTP_403_FORBIDDEN,
-            code="permission_denied",
-            title="Permission denied",
-            detail="The caller is not permitted to read idea candidate detail.",
-        )
+        return _candidate_detail_permission_denied_response()
 
     if result.record is None:
-        _emit_candidate_detail_operation_event(
-            OperationOutcome.NOT_FOUND,
-            "candidate_not_found",
-        )
-        return problem_response(
-            status_code=status.HTTP_404_NOT_FOUND,
-            code="candidate_not_found",
-            title="Candidate not found",
-            detail="The idea candidate was not found.",
-        )
+        return _candidate_detail_not_found_response()
 
-    durable_storage_backed = idea_repository_durable_storage_backed(get_idea_repository())
+    durable_storage_backed = idea_repository_durable_storage_backed(repository)
     _emit_candidate_detail_operation_event(
         OperationOutcome.ACCEPTED,
         durable_storage_backed=durable_storage_backed,
@@ -163,6 +176,45 @@ async def get_idea_candidate_detail(
     return CandidateDetailResponse.from_record(
         result.record,
         durable_storage_backed=durable_storage_backed,
+    )
+
+
+def _candidate_detail_invalid_request_response(detail: str) -> JSONResponse:
+    _emit_candidate_detail_operation_event(
+        OperationOutcome.INVALID_REQUEST,
+        "invalid_request",
+    )
+    return problem_response(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        code="invalid_request",
+        title="Invalid request",
+        detail=detail,
+    )
+
+
+def _candidate_detail_permission_denied_response() -> JSONResponse:
+    _emit_candidate_detail_operation_event(
+        OperationOutcome.PERMISSION_DENIED,
+        "permission_denied",
+    )
+    return problem_response(
+        status_code=status.HTTP_403_FORBIDDEN,
+        code="permission_denied",
+        title="Permission denied",
+        detail="The caller is not permitted to read idea candidate detail.",
+    )
+
+
+def _candidate_detail_not_found_response() -> JSONResponse:
+    _emit_candidate_detail_operation_event(
+        OperationOutcome.NOT_FOUND,
+        "candidate_not_found",
+    )
+    return problem_response(
+        status_code=status.HTTP_404_NOT_FOUND,
+        code="candidate_not_found",
+        title="Candidate not found",
+        detail="The idea candidate was not found.",
     )
 
 
