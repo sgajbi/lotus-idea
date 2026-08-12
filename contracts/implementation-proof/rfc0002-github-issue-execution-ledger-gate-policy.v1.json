@@ -374,16 +374,25 @@
       "authorization",
       "supported-feature posture",
       "final RFC-0002 closure"
-    ],
+    ]
+  },
+  "requiredClosedIssueEvidence": {
     "1010": [
-      "Keep #1010 open until final QA closure evidence is recorded",
+      "Closed #1010 after QA passed",
       "PR #1011",
       "ec92d05fd6b1f7e5dd93ff7e8c20ceb186cbb77c",
       "3af9ba96c3b680e92c9711dbf95de60fb2c18b90",
       "31593349384",
       "31593340430",
+      "PR #1012",
+      "2e6c30ccccce28b007eaea0f12afb508c05d4a80",
+      "c1df915f3309e41a6e1ace34302b6d0151797a9b",
+      "31594758932",
+      "31594741752",
       "DiffCount 0",
       "patch-equivalent",
+      "Loop status: qa_passed_closed",
+      "status/merged-main",
       "duplicate-key",
       "CLI-drift",
       "readiness-argument",
@@ -392,19 +401,16 @@
       "existing failure messages",
       "evidence-classification guard behavior",
       "RFC-0002 no-claim boundaries",
+      "implementation-proof artifact registry documentation-gate refactor",
       "runtime behavior",
       "API/OpenAPI contracts",
       "proof schemas",
-      "Core",
-      "Gateway",
-      "Workbench",
+      "Core, Gateway, Workbench",
       "authentication",
       "authorization",
       "supported-feature posture",
       "final RFC-0002 closure"
-    ]
-  },
-  "requiredClosedIssueEvidence": {
+    ],
     "1006": [
       "Closed #1006 after QA passed",
       "PR #1007",
