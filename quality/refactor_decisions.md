@@ -3260,3 +3260,53 @@ Evidence:
 3. Quality validation passed: `make quality-baseline`,
    `make maintainability-gate`, and `make duplicate-implementation-gate`
    (`0` duplicate clusters across `3,572` source/script functions).
+
+## 2026-08-12: Report Evidence API Handler Boundary
+
+Issue: [#1000](https://github.com/sgajbi/lotus-idea/issues/1000)
+
+Decision:
+
+`src/app/api/report_evidence.py::record_report_evidence_pack` stays as the
+public FastAPI route entry point, but the route now delegates report-evidence
+mutation setup, application-command execution, permission/conflict/invalid
+request mapping, persistence problem projection, and successful response
+assembly to named API-boundary helpers. This mirrors the hardened review and
+conversion route patterns without changing route behavior.
+
+Why:
+
+`make quality-baseline` listed `record_report_evidence_pack` as the next
+production API hotspot at 98 lines. The function mixed trusted caller context,
+capability authorization, idempotency, event lineage, durable-write
+configuration, application command construction, exception/problem mapping,
+operation-event emission, persistence projection, and response DTO assembly in
+one route body. Keeping those concerns named reduces review risk around
+RFC-0002 Slice 13 Report/Render/Archive boundary truth, Slice 15
+operation/security posture, and Slice 19 maintainability.
+
+Preserved boundaries:
+
+1. Route signature, route metadata, response model, status codes,
+   ProblemDetails behavior, capability requirement, event-lineage/causation
+   handling, idempotency-key semantics, durable-write guard,
+   durable-storage-backed truth, operation-event family, and
+   `supportedFeaturePromoted=false` remain unchanged.
+2. Idea still records only the governed report evidence-pack request posture.
+   This refactor does not create lotus-report, lotus-render, or lotus-archive
+   records and does not authorize client-ready publication.
+3. No authentication/authz infrastructure, persistence schema, migration,
+   runtime topology, Gateway, Workbench, Core, data-product certification,
+   supported-feature promotion, client-publication, or final RFC-0002 closure
+   claim is made.
+4. No repo-authored wiki source changed because this is internal API-boundary
+   maintainability and does not change operator- or user-facing truth.
+
+Evidence:
+
+1. Duplicate issue search for `report evidence pack API handler`,
+   `record_report_evidence_pack`, `report_evidence.py`, and
+   `Report Render Archive evidence refactor` found no focused existing owner.
+2. Focused validation passed: Ruff format/check, MyPy over
+   `src/app/api/report_evidence.py`, and 62 report evidence/review
+   workflow/API example/operation-event/event-lineage/caller-context tests.
