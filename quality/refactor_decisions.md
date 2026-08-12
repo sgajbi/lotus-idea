@@ -59,10 +59,13 @@ the largest-function list; the next production API hotspot is
 `src/app/api/candidate_lifecycle.py::record_candidate_lifecycle_transition` at
 `103` lines.
 
-The source-controlled RFC-0002 execution ledger now tracks #971 as
-`open_in_progress`, and the issue-learning pattern ledger classifies it under
-operations/security/resilience certification so future data-lifecycle changes
-preserve the same no-claim boundary.
+PR `#972` merged the implementation to `lotus-idea` main
+`4a68b6e0d55fe3ceec8251aca7e154aadbe3f935`. Exact-main Main Releasability
+run `31551701446` and exact-main CodeQL push run `31551695891` passed for that
+SHA. The source-controlled RFC-0002 execution ledger now tracks #971 as
+`closed_complete`, and the issue-learning pattern ledger retains it as related
+evidence under operations/security/resilience certification so future
+data-lifecycle changes preserve the same no-claim boundary.
 
 This is internal API maintainability only. It does not change API/OpenAPI
 contracts, persistence schema, migrations, authentication, authorization
