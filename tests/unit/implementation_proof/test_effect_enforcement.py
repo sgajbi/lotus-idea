@@ -27,6 +27,7 @@ from app.application.implementation_proof_consumption import (
 )
 from app.application.implementation_proof_opportunity_archetype_proofs import (
     _apply_valid_opportunity_proof,
+    _opportunity_proof_steps,
     apply_opportunity_archetype_proofs_from_scope,
 )
 from app.application.implementation_proof_readiness import (
@@ -64,6 +65,24 @@ from tests.unit.downstream_realization.fixtures import valid_advise_route_source
 
 ROOT = Path(__file__).resolve().parents[3]
 EVALUATED_AT = datetime(2026, 6, 21, 10, 10, tzinfo=UTC)
+OPPORTUNITY_PROOF_PAYLOAD_ARGUMENTS = (
+    "risk_concentration_live_proof",
+    "high_volatility_live_proof",
+    "risk_drawdown_live_proof",
+    "performance_underperformance_live_proof",
+    "core_benchmark_assignment_live_proof",
+    "core_portfolio_state_live_proof",
+    "bond_maturity_live_proof",
+    "low_income_core_cashflow_live_proof",
+    "manage_mandate_live_proof",
+    "mandate_restriction_live_proof",
+    "mandate_restriction_source_product_proof",
+    "missing_suitability_live_proof",
+    "missing_risk_profile_source_product_proof",
+    "missing_risk_profile_live_proof",
+    "missing_benchmark_live_proof",
+    "missing_benchmark_performance_readiness_proof",
+)
 
 
 def test_registered_aggregate_proof_rejects_wrong_effect() -> None:
@@ -85,24 +104,7 @@ def test_registered_aggregate_proof_rejects_wrong_effect() -> None:
 
 @pytest.mark.parametrize(
     "payload_argument",
-    (
-        "risk_concentration_live_proof",
-        "high_volatility_live_proof",
-        "risk_drawdown_live_proof",
-        "performance_underperformance_live_proof",
-        "core_benchmark_assignment_live_proof",
-        "core_portfolio_state_live_proof",
-        "bond_maturity_live_proof",
-        "low_income_core_cashflow_live_proof",
-        "manage_mandate_live_proof",
-        "mandate_restriction_live_proof",
-        "mandate_restriction_source_product_proof",
-        "missing_suitability_live_proof",
-        "missing_risk_profile_source_product_proof",
-        "missing_risk_profile_live_proof",
-        "missing_benchmark_live_proof",
-        "missing_benchmark_performance_readiness_proof",
-    ),
+    OPPORTUNITY_PROOF_PAYLOAD_ARGUMENTS,
 )
 def test_opportunity_proofs_reject_registry_effect_drift(
     monkeypatch: pytest.MonkeyPatch,
@@ -144,6 +146,26 @@ def test_opportunity_proofs_reject_registry_effect_drift(
 
     assert capabilities[0].blockers == ("live_proof_missing",)
     assert proof_ref not in capabilities[0].evidence_refs
+
+
+def test_opportunity_proof_step_catalog_preserves_payload_order_and_refs() -> None:
+    scope = {
+        argument: {"generatedAtUtc": "2026-06-21T10:10:00Z"}
+        for argument in OPPORTUNITY_PROOF_PAYLOAD_ARGUMENTS
+    } | {
+        f"{argument}_ref": f"output/opportunity/{argument}.json"
+        for argument in OPPORTUNITY_PROOF_PAYLOAD_ARGUMENTS
+    }
+
+    steps = _opportunity_proof_steps(scope)
+
+    assert tuple(step[0] for step in steps) == OPPORTUNITY_PROOF_PAYLOAD_ARGUMENTS
+    assert tuple(step[1] for step in steps) == tuple(
+        scope[argument] for argument in OPPORTUNITY_PROOF_PAYLOAD_ARGUMENTS
+    )
+    assert tuple(step[4] for step in steps) == tuple(
+        scope[f"{argument}_ref"] for argument in OPPORTUNITY_PROOF_PAYLOAD_ARGUMENTS
+    )
 
 
 def test_opportunity_archetype_scope_applies_valid_proof_and_source_ingestion(

@@ -139,6 +139,19 @@ def _apply_opportunity_proof_scope(
 
 def _opportunity_proof_steps(scope: Mapping[str, object]) -> tuple[OpportunityProofStep, ...]:
     return (
+        *_risk_opportunity_proof_steps(scope),
+        *_performance_opportunity_proof_steps(scope),
+        *_core_opportunity_proof_steps(scope),
+        *_cashflow_and_mandate_opportunity_proof_steps(scope),
+        *_advise_opportunity_proof_steps(scope),
+        *_missing_benchmark_opportunity_proof_steps(scope),
+    )
+
+
+def _risk_opportunity_proof_steps(
+    scope: Mapping[str, object],
+) -> tuple[OpportunityProofStep, ...]:
+    return (
         _proof_step(
             scope,
             "risk_concentration_live",
@@ -157,12 +170,26 @@ def _opportunity_proof_steps(scope: Mapping[str, object]) -> tuple[OpportunityPr
             risk_drawdown_runtime_execution_is_valid,
             _apply_risk_drawdown_live_proof,
         ),
+    )
+
+
+def _performance_opportunity_proof_steps(
+    scope: Mapping[str, object],
+) -> tuple[OpportunityProofStep, ...]:
+    return (
         _proof_step(
             scope,
             "performance_underperformance_live",
             performance_underperformance_runtime_execution_is_valid,
             _apply_performance_underperformance_live_proof,
         ),
+    )
+
+
+def _core_opportunity_proof_steps(
+    scope: Mapping[str, object],
+) -> tuple[OpportunityProofStep, ...]:
+    return (
         _proof_step(
             scope,
             "core_benchmark_assignment_live",
@@ -181,6 +208,13 @@ def _opportunity_proof_steps(scope: Mapping[str, object]) -> tuple[OpportunityPr
             bond_maturity_runtime_execution_is_valid,
             _apply_bond_maturity_live_proof,
         ),
+    )
+
+
+def _cashflow_and_mandate_opportunity_proof_steps(
+    scope: Mapping[str, object],
+) -> tuple[OpportunityProofStep, ...]:
+    return (
         _proof_step(
             scope,
             "low_income_core_cashflow_live",
@@ -193,6 +227,13 @@ def _opportunity_proof_steps(scope: Mapping[str, object]) -> tuple[OpportunityPr
             manage_mandate_runtime_execution_is_valid,
             _apply_manage_mandate_runtime_execution,
         ),
+    )
+
+
+def _advise_opportunity_proof_steps(
+    scope: Mapping[str, object],
+) -> tuple[OpportunityProofStep, ...]:
+    return (
         _proof_step(
             scope,
             "mandate_restriction_live",
@@ -223,6 +264,13 @@ def _opportunity_proof_steps(scope: Mapping[str, object]) -> tuple[OpportunityPr
             advise_missing_risk_profile_runtime_execution_is_valid,
             _apply_missing_risk_profile_live_proof,
         ),
+    )
+
+
+def _missing_benchmark_opportunity_proof_steps(
+    scope: Mapping[str, object],
+) -> tuple[OpportunityProofStep, ...]:
+    return (
         _proof_step(
             scope,
             "missing_benchmark_live",

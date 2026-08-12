@@ -109,7 +109,8 @@
     1003,
     1006,
     1010,
-    1014
+    1014,
+    1016
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -377,7 +378,14 @@
       "final RFC-0002 closure"
     ],
     "1014": [
-      "Keep #1014 open until the outbox platform-mesh event source-contract proof builder refactor is merged to main",
+      "Keep #1014 open pending QA",
+      "PR #1015",
+      "9c9c2260c4560459124b8e64a863d4fb80731b2c",
+      "31599428348",
+      "31599420445",
+      "No repo-authored wiki source changed",
+      "remote branch `refactor/1014-outbox-platform-mesh-proof-builder`",
+      "patch-equivalent",
       "source-contract-only posture",
       "public payload shape",
       "blocker vocabulary",
@@ -393,6 +401,35 @@
       "API/OpenAPI changes",
       "migrations",
       "runtime topology changes",
+      "final RFC-0002 closure"
+    ],
+    "1016": [
+      "Keep #1016 open",
+      "opportunity proof-step catalog refactor",
+      "src/app/application/implementation_proof_opportunity_archetype_proofs.py::_opportunity_proof_steps",
+      "source-family proof-step catalog helpers",
+      "payload argument name",
+      "proof-ref name",
+      "validator",
+      "applicator",
+      "deterministic ordering",
+      "blocker-clearing effect enforcement",
+      "freshness check",
+      "source-safe fail-closed behavior",
+      "supported-feature non-promotion",
+      "no-claim boundary",
+      "internal RFC-0002 Slice 15/19 maintainability hardening",
+      "new runtime behavior",
+      "API/OpenAPI changes",
+      "persistence schema changes",
+      "migrations",
+      "authentication",
+      "authorization",
+      "Gateway/Workbench proof",
+      "Core/downstream authority",
+      "supported-feature promotion",
+      "deployment certification",
+      "production certification",
       "final RFC-0002 closure"
     ]
   },
