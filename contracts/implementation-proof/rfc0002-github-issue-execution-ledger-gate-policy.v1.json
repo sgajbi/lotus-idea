@@ -423,6 +423,35 @@
       "Core, Gateway, Workbench",
       "final RFC-0002 closure"
     ],
+    "971": [
+      "Closed #971 after QA passed",
+      "RFC-0002 Slice 15/19 data-lifecycle API route maintainability refactor",
+      "post_data_lifecycle_action",
+      "trusted caller construction",
+      "tenant/capability authorization",
+      "lifecycle authority and Archive lifecycle posture verification",
+      "command construction",
+      "repository execution",
+      "response/problem projection",
+      "PR #972 merged by rebase",
+      "e4b0e79fcd6f35e17ffa234b2b9b4b1c3250f7db",
+      "4a68b6e0d55fe3ceec8251aca7e154aadbe3f935",
+      "31551264701",
+      "31551262373",
+      "31551262790",
+      "31551263388",
+      "31551701446",
+      "31551695891",
+      "quality-baseline",
+      "no longer lists `post_data_lifecycle_action`",
+      "No repo-authored wiki source changed",
+      "Loop status: qa_passed_closed",
+      "status/merged-main",
+      "internal API maintainability hardening",
+      "legal/privacy lifecycle certification",
+      "Gateway/Workbench runtime proof",
+      "final RFC-0002 completion"
+    ],
     "941": [
       "Closed #941 after QA passed",
       "PR #942 merged by rebase",
@@ -904,17 +933,6 @@
       "fresh canonical validation completes on mainline sources",
       "does not implement production authentication",
       "supported-feature promotion"
-    ],
-    "971": [
-      "Keep #971 open",
-      "PR #972",
-      "post_data_lifecycle_action",
-      "trusted caller authorization",
-      "lifecycle authority and Archive lifecycle posture verification",
-      "focused data-lifecycle API and operation-event tests",
-      "full lint",
-      "This is only internal API maintainability hardening",
-      "must not claim legal/privacy lifecycle certification"
     ],
     "917": [
       "Closed #917 after PR #918 merged",
