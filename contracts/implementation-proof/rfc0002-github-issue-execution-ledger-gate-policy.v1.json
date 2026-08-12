@@ -94,7 +94,8 @@
     956,
     960,
     964,
-    966
+    966,
+    971
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -903,6 +904,15 @@
       "fresh canonical validation completes on mainline sources",
       "does not implement production authentication",
       "supported-feature promotion"
+    ],
+    "971": [
+      "Keep #971 open",
+      "post_data_lifecycle_action",
+      "trusted caller authorization",
+      "lifecycle authority and Archive lifecycle posture verification",
+      "focused data-lifecycle API and operation-event tests",
+      "This is only internal API maintainability hardening",
+      "must not claim legal/privacy lifecycle certification"
     ],
     "917": [
       "Closed #917 after PR #918 merged",

@@ -45,6 +45,7 @@ from app.application.data_lifecycle.authority_verification import (
 from app.application.data_lifecycle import ExecuteDataLifecycle
 from app.domain.data_lifecycle import (
     DataLifecycleBlocker,
+    DataLifecycleCommand,
     DataLifecycleDecision,
     DataLifecycleOperationResult,
 )
@@ -60,6 +61,7 @@ from app.observability import IdeaOperation, OperationOutcome
 from app.ports.data_lifecycle import DataLifecycleRepository
 from app.security.caller_context import (
     CapabilityPolicy,
+    CallerContext,
     PermissionDeniedError,
     require_role_and_capability,
 )
@@ -90,16 +92,53 @@ async def post_data_lifecycle_action(
         alias=TRUSTED_CALLER_CONTEXT_HEADER,
     ),
 ) -> DataLifecycleActionResponse | JSONResponse:
-    caller = caller_context_from_headers(
+    caller = _caller_from_action_headers(
         subject=x_caller_subject,
         roles=x_caller_roles,
         capabilities=x_caller_capabilities,
         tenant_ids=x_caller_tenant_ids,
         trusted_caller_context=x_lotus_trusted_caller_context,
     )
+    authorization_problem = _authorize_data_lifecycle_action(caller, tenant_id=request.tenant_id)
+    if authorization_problem is not None:
+        return authorization_problem
+    command = _command_for_data_lifecycle_action(
+        request=request,
+        http_request=http_request,
+        candidate_id=candidate_id,
+        caller=caller,
+        idempotency_key=idempotency_key,
+    )
+    if isinstance(command, JSONResponse):
+        return command
+    return _execute_data_lifecycle_action(command, request=request)
+
+
+def _caller_from_action_headers(
+    *,
+    subject: str | None,
+    roles: str | None,
+    capabilities: str | None,
+    tenant_ids: str | None,
+    trusted_caller_context: str | None,
+) -> CallerContext:
+    return caller_context_from_headers(
+        subject=subject,
+        roles=roles,
+        capabilities=capabilities,
+        tenant_ids=tenant_ids,
+        trusted_caller_context=trusted_caller_context,
+    )
+
+
+def _authorize_data_lifecycle_action(
+    caller: CallerContext,
+    *,
+    tenant_id: str,
+) -> JSONResponse | None:
     try:
         require_role_and_capability(caller, _MANAGE_POLICY)
-        if request.tenant_id not in caller.entitlement_scope.tenant_ids:
+        if tenant_id not in caller.entitlement_scope.tenant_ids:
             raise PermissionDeniedError(_MANAGE_POLICY.required_capability)
     except PermissionDeniedError:
         _emit_event(IdeaOperation.DATA_LIFECYCLE_ACTION, OperationOutcome.PERMISSION_DENIED)
@@ -109,6 +148,17 @@ async def post_data_lifecycle_action(
             title="Permission denied",
             detail="The caller is not permitted to manage this tenant's data lifecycle.",
         )
+    return None
+
+
+def _command_for_data_lifecycle_action(
+    *,
+    request: DataLifecycleActionRequest,
+    http_request: Request,
+    candidate_id: str,
+    caller: CallerContext,
+    idempotency_key: str,
+) -> DataLifecycleCommand | JSONResponse:
     try:
         validate_idempotency_key(idempotency_key)
         authority_required = (
@@ -123,7 +173,7 @@ async def post_data_lifecycle_action(
             request=request,
             candidate_id=candidate_id,
         )
-        command = request.to_command(
+        return request.to_command(
             candidate_id=candidate_id,
             caller=caller,
             idempotency_key=idempotency_key,
@@ -133,37 +183,61 @@ async def post_data_lifecycle_action(
             archive_lifecycle_receipt=archive_lifecycle_receipt,
         )
     except ArchiveLifecycleTrustUnavailableError:
-        _emit_event(IdeaOperation.DATA_LIFECYCLE_ACTION, OperationOutcome.BLOCKED)
-        return problem_details_response(
+        return _data_lifecycle_precondition_problem(
+            outcome=OperationOutcome.BLOCKED,
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             code="archive_lifecycle_trust_unavailable",
             title="Archive lifecycle trust unavailable",
             detail=_ARCHIVE_LIFECYCLE_UNAVAILABLE_DETAIL,
         )
     except ArchiveLifecycleVerificationError:
-        _emit_event(IdeaOperation.DATA_LIFECYCLE_ACTION, OperationOutcome.INVALID_REQUEST)
-        return problem_details_response(
+        return _data_lifecycle_precondition_problem(
+            outcome=OperationOutcome.INVALID_REQUEST,
             status_code=status.HTTP_400_BAD_REQUEST,
             code="archive_lifecycle_posture_invalid",
             title="Archive lifecycle posture invalid",
             detail="The signed Archive lifecycle posture could not be accepted.",
         )
     except RuntimeError:
-        _emit_event(IdeaOperation.DATA_LIFECYCLE_ACTION, OperationOutcome.BLOCKED)
-        return problem_details_response(
+        return _data_lifecycle_precondition_problem(
+            outcome=OperationOutcome.BLOCKED,
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             code="lifecycle_authority_unavailable",
             title="Lifecycle authority unavailable",
             detail=_LIFECYCLE_AUTHORITY_UNAVAILABLE_DETAIL,
         )
     except ValueError:
-        _emit_event(IdeaOperation.DATA_LIFECYCLE_ACTION, OperationOutcome.INVALID_REQUEST)
-        return problem_details_response(
+        return _data_lifecycle_precondition_problem(
+            outcome=OperationOutcome.INVALID_REQUEST,
             status_code=status.HTTP_400_BAD_REQUEST,
             code="invalid_request",
             title="Invalid request",
             detail="The lifecycle action or Idempotency-Key is invalid.",
         )
+
+
+def _data_lifecycle_precondition_problem(
+    *,
+    outcome: OperationOutcome,
+    status_code: int,
+    code: str,
+    title: str,
+    detail: str,
+) -> JSONResponse:
+    _emit_event(IdeaOperation.DATA_LIFECYCLE_ACTION, outcome)
+    return problem_details_response(
+        status_code=status_code,
+        code=code,
+        title=title,
+        detail=detail,
+    )
+
+
+def _execute_data_lifecycle_action(
+    command: DataLifecycleCommand,
+    *,
+    request: DataLifecycleActionRequest,
+) -> DataLifecycleActionResponse | JSONResponse:
     repository = get_idea_repository()
     configuration_problem = durable_write_problem(repository)
     if configuration_problem is not None:
