@@ -108,7 +108,8 @@
     1000,
     1003,
     1006,
-    1010
+    1010,
+    1014
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -373,6 +374,25 @@
       "authentication",
       "authorization",
       "supported-feature posture",
+      "final RFC-0002 closure"
+    ],
+    "1014": [
+      "Keep #1014 open until the outbox platform-mesh event source-contract proof builder refactor is merged to main",
+      "source-contract-only posture",
+      "public payload shape",
+      "blocker vocabulary",
+      "no-claim boundaries",
+      "fail-closed runtime blocker behavior",
+      "platform mesh runtime publication",
+      "broker publication",
+      "deployment",
+      "production certification",
+      "Gateway/Workbench proof",
+      "supported-feature promotion",
+      "client publication",
+      "API/OpenAPI changes",
+      "migrations",
+      "runtime topology changes",
       "final RFC-0002 closure"
     ]
   },
