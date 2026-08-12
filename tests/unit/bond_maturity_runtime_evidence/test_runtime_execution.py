@@ -315,6 +315,73 @@ def test_domain_failures_cannot_clear_aggregate_blocker(
     assert not bond_maturity_runtime_execution_is_valid(payload)
 
 
+def test_qualification_blockers_preserve_source_authority_order() -> None:
+    source = RecordingSource()
+    maturity_ref = source.evidence.maturity_fact_ref
+    holdings_ref = source.evidence.holdings_ref
+    assert maturity_ref is not None
+    assert holdings_ref is not None
+    source.evidence = replace(
+        source.evidence,
+        maturity_fact_ref=replace(
+            maturity_ref,
+            freshness=EvidenceFreshness.STALE,
+            data_quality_status="PARTIAL",
+        ),
+        holdings_ref=replace(holdings_ref, freshness=EvidenceFreshness.STALE),
+        entitlement_allowed=False,
+        response_product_name="Other",
+        response_tenant_id="tenant-b",
+        horizon_days=31,
+        maturity_basis="CALL_DATE",
+        source_reported_maturing_position_count=-1,
+        supportability_status="PARTIAL",
+        supportability_reasons=("HOLDINGS_PARTIAL",),
+        missing_maturity_date_count=1,
+        unsupported_maturity_feature_count=1,
+        request_fingerprint="summary",
+        snapshot_id=None,
+        restatement_version=None,
+        policy_version=None,
+        response_content_hash="sha256:" + "c" * 64,
+        reconciliation_status="UNKNOWN",
+        source_evidence_current=False,
+        latest_evidence_at_utc=NOW + timedelta(seconds=1),
+        source_correlation_id="corr-b",
+    )
+    result = evaluate_bond_maturity_readiness(_command(), core_source=source)
+
+    payload = build_bond_maturity_runtime_execution(generated_at_utc=NOW, result=result)
+
+    assert payload["execution"]["qualificationBlockers"] == [
+        "core_maturity_evidence_not_current",
+        "core_maturity_upstream_not_current",
+        "core_maturity_entitlement_denied",
+        "core_maturity_product_identity_mismatch",
+        "core_maturity_response_scope_mismatch",
+        "core_maturity_window_scope_mismatch",
+        "core_maturity_basis_unsupported",
+        "core_maturity_counts_invalid",
+        "core_maturity_fact_inconsistent",
+        "core_maturity_supportability_not_supported",
+        "core_maturity_supportability_reasons_present",
+        "core_maturity_dates_incomplete",
+        "core_maturity_product_features_unsupported",
+        "core_maturity_request_fingerprint_invalid",
+        "core_maturity_snapshot_identity_missing",
+        "core_maturity_restatement_version_missing",
+        "core_maturity_policy_version_missing",
+        "core_maturity_source_digest_mismatch",
+        "core_maturity_reconciliation_incomplete",
+        "core_maturity_data_quality_incomplete",
+        "core_maturity_source_current_posture_missing",
+        "core_maturity_latest_evidence_time_invalid",
+        "core_maturity_correlation_binding_missing",
+    ]
+    assert payload["aggregateBlockersSatisfied"] == []
+    assert not bond_maturity_runtime_execution_is_valid(payload)
+
+
 @pytest.mark.parametrize(
     "tamper",
     [

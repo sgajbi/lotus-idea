@@ -185,6 +185,40 @@ supported-feature promotion, production identity/session-token authority,
 schema or migration changes, deployment certification, production
 certification, or final RFC-0002 closure.
 
+The local implementation now keeps `_qualification_blockers` as a thin
+orchestrator over named helpers for:
+
+1. Core maturity source-ref authority,
+2. Core holdings upstream source-ref authority,
+3. entitlement posture,
+4. product identity,
+5. response tenant/portfolio scope,
+6. maturity-window semantics,
+7. maturity basis,
+8. count validity and maturity fact consistency,
+9. supportability status,
+10. source identity,
+11. source integrity, and
+12. correlation binding.
+
+Focused local validation passed:
+
+1. `.venv\Scripts\ruff.exe check src\app\application\bond_maturity_runtime_evidence\runtime_execution.py tests\unit\bond_maturity_runtime_evidence\test_runtime_execution.py`,
+2. `.venv\Scripts\mypy.exe src\app\application\bond_maturity_runtime_evidence\runtime_execution.py tests\unit\bond_maturity_runtime_evidence\test_runtime_execution.py`,
+3. `.venv\Scripts\python.exe -m pytest tests\unit\bond_maturity_runtime_evidence\test_runtime_execution.py -q`
+   (`66` passed),
+4. `make quality-baseline`,
+5. `make maintainability-gate`, and
+6. `make duplicate-implementation-gate` (`0` duplicate clusters).
+
+The focused test suite now includes an order-preservation case that exercises
+every major blocker group without clearing the aggregate runtime blocker.
+Same-pattern scan reviewed surrounding runtime-evidence `_qualification_blockers`
+and blocker helper functions. No high-confidence sibling issue was folded into
+this bounded branch; the credible adjacent blocker families are already
+separate source-authority/runtime-proof issue areas and should not be bundled
+without their own issue acceptance criteria.
+
 ## 2026-08-12: Manage Intake Runtime Proof Generator Responsibilities
 
 Issue `#983` applies the RFC-0002 Slice 12/13/18 maintainability lens to

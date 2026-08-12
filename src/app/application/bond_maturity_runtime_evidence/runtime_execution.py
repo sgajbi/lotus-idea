@@ -203,45 +203,104 @@ def _qualification_blockers(
     *,
     evidence_observed_at_utc: datetime,
 ) -> tuple[str, ...]:
+    blocker_groups = (
+        _maturity_source_ref_blockers(
+            command,
+            evidence,
+            evidence_observed_at_utc=evidence_observed_at_utc,
+        ),
+        _holdings_upstream_ref_blockers(command, evidence),
+        _entitlement_blockers(evidence),
+        _product_identity_blockers(evidence),
+        _response_scope_blockers(command, evidence),
+        _maturity_window_blockers(command, evidence),
+        _maturity_basis_blockers(evidence),
+        _maturity_count_and_fact_blockers(evidence),
+        _supportability_blockers(evidence),
+        _source_identity_blockers(evidence),
+        _source_integrity_blockers(
+            evidence,
+            evidence_observed_at_utc=evidence_observed_at_utc,
+        ),
+        _correlation_binding_blockers(command, evidence),
+    )
+    blockers = [blocker for group in blocker_groups for blocker in group]
+    return tuple(dict.fromkeys(blockers))
+
+
+def _maturity_source_ref_blockers(
+    command: EvaluateBondMaturityReadiness,
+    evidence: CoreBondMaturityEvidence,
+    *,
+    evidence_observed_at_utc: datetime,
+) -> tuple[str, ...]:
     maturity_ref = evidence.maturity_fact_ref
-    holdings_ref = evidence.holdings_ref
-    blockers: list[str] = []
     if (
         maturity_ref is None
         or maturity_ref.source_system is not SourceSystem.LOTUS_CORE
         or maturity_ref.product_id != _MATURITY_PRODUCT_ID
     ):
-        blockers.append("core_maturity_source_ref_missing")
-    elif maturity_ref.as_of_date != command.as_of_date:
-        blockers.append("core_maturity_scope_mismatch")
-    elif maturity_ref.generated_at_utc > evidence_observed_at_utc:
-        blockers.append("core_maturity_source_time_invalid")
-    elif maturity_ref.freshness is not EvidenceFreshness.CURRENT:
-        blockers.append("core_maturity_evidence_not_current")
+        return ("core_maturity_source_ref_missing",)
+    if maturity_ref.as_of_date != command.as_of_date:
+        return ("core_maturity_scope_mismatch",)
+    if maturity_ref.generated_at_utc > evidence_observed_at_utc:
+        return ("core_maturity_source_time_invalid",)
+    if maturity_ref.freshness is not EvidenceFreshness.CURRENT:
+        return ("core_maturity_evidence_not_current",)
+    return ()
+
+
+def _holdings_upstream_ref_blockers(
+    command: EvaluateBondMaturityReadiness,
+    evidence: CoreBondMaturityEvidence,
+) -> tuple[str, ...]:
+    holdings_ref = evidence.holdings_ref
     if (
         holdings_ref is None
         or holdings_ref.source_system is not SourceSystem.LOTUS_CORE
         or holdings_ref.product_id != _HOLDINGS_PRODUCT_ID
     ):
-        blockers.append("core_maturity_upstream_holdings_ref_missing")
-    elif holdings_ref.as_of_date != command.as_of_date:
-        blockers.append("core_maturity_upstream_scope_mismatch")
-    elif holdings_ref.freshness is not EvidenceFreshness.CURRENT:
-        blockers.append("core_maturity_upstream_not_current")
+        return ("core_maturity_upstream_holdings_ref_missing",)
+    if holdings_ref.as_of_date != command.as_of_date:
+        return ("core_maturity_upstream_scope_mismatch",)
+    if holdings_ref.freshness is not EvidenceFreshness.CURRENT:
+        return ("core_maturity_upstream_not_current",)
+    return ()
+
+
+def _entitlement_blockers(evidence: CoreBondMaturityEvidence) -> tuple[str, ...]:
     if not evidence.entitlement_allowed:
-        blockers.append("core_maturity_entitlement_denied")
+        return ("core_maturity_entitlement_denied",)
+    return ()
+
+
+def _product_identity_blockers(evidence: CoreBondMaturityEvidence) -> tuple[str, ...]:
     if (
         evidence.response_product_name != _MATURITY_PRODUCT_NAME
         or evidence.response_product_version != _PRODUCT_VERSION
         or evidence.source_product_name != _HOLDINGS_PRODUCT_NAME
         or evidence.source_product_version != _PRODUCT_VERSION
     ):
-        blockers.append("core_maturity_product_identity_mismatch")
+        return ("core_maturity_product_identity_mismatch",)
+    return ()
+
+
+def _response_scope_blockers(
+    command: EvaluateBondMaturityReadiness,
+    evidence: CoreBondMaturityEvidence,
+) -> tuple[str, ...]:
     if (
         evidence.response_tenant_id != command.tenant_id
         or evidence.response_portfolio_id != command.portfolio_id
     ):
-        blockers.append("core_maturity_response_scope_mismatch")
+        return ("core_maturity_response_scope_mismatch",)
+    return ()
+
+
+def _maturity_window_blockers(
+    command: EvaluateBondMaturityReadiness,
+    evidence: CoreBondMaturityEvidence,
+) -> tuple[str, ...]:
     expected_window_end = command.as_of_date + timedelta(days=command.maturity_window_days)
     if (
         evidence.window_start_date != command.as_of_date
@@ -249,13 +308,27 @@ def _qualification_blockers(
         or evidence.horizon_days != command.maturity_window_days
         or evidence.include_projected is not False
     ):
-        blockers.append("core_maturity_window_scope_mismatch")
+        return ("core_maturity_window_scope_mismatch",)
+    return ()
+
+
+def _maturity_basis_blockers(evidence: CoreBondMaturityEvidence) -> tuple[str, ...]:
     if evidence.maturity_basis != _MATURITY_BASIS:
-        blockers.append("core_maturity_basis_unsupported")
+        return ("core_maturity_basis_unsupported",)
+    return ()
+
+
+def _maturity_count_and_fact_blockers(evidence: CoreBondMaturityEvidence) -> tuple[str, ...]:
+    blockers: list[str] = []
     if not _counts_are_valid(evidence):
         blockers.append("core_maturity_counts_invalid")
     if not _maturity_fact_is_consistent(evidence):
         blockers.append("core_maturity_fact_inconsistent")
+    return tuple(blockers)
+
+
+def _supportability_blockers(evidence: CoreBondMaturityEvidence) -> tuple[str, ...]:
+    blockers: list[str] = []
     if (evidence.supportability_status or "").upper() != _SUPPORTED:
         blockers.append("core_maturity_supportability_not_supported")
     if evidence.supportability_reasons:
@@ -264,6 +337,11 @@ def _qualification_blockers(
         blockers.append("core_maturity_dates_incomplete")
     if evidence.unsupported_maturity_feature_count != 0:
         blockers.append("core_maturity_product_features_unsupported")
+    return tuple(blockers)
+
+
+def _source_identity_blockers(evidence: CoreBondMaturityEvidence) -> tuple[str, ...]:
+    blockers: list[str] = []
     if not evidence.request_fingerprint or not _REQUEST_FINGERPRINT_PATTERN.fullmatch(
         evidence.request_fingerprint
     ):
@@ -274,6 +352,16 @@ def _qualification_blockers(
         blockers.append("core_maturity_restatement_version_missing")
     if not evidence.policy_version:
         blockers.append("core_maturity_policy_version_missing")
+    return tuple(blockers)
+
+
+def _source_integrity_blockers(
+    evidence: CoreBondMaturityEvidence,
+    *,
+    evidence_observed_at_utc: datetime,
+) -> tuple[str, ...]:
+    maturity_ref = evidence.maturity_fact_ref
+    blockers: list[str] = []
     if not _source_hashes_reconcile(evidence):
         blockers.append("core_maturity_source_digest_mismatch")
     if (evidence.reconciliation_status or "").upper() != _COMPLETE:
@@ -291,13 +379,20 @@ def _qualification_blockers(
         )
     ):
         blockers.append("core_maturity_latest_evidence_time_invalid")
+    return tuple(blockers)
+
+
+def _correlation_binding_blockers(
+    command: EvaluateBondMaturityReadiness,
+    evidence: CoreBondMaturityEvidence,
+) -> tuple[str, ...]:
     if (
         command.correlation_id is None
         or evidence.source_correlation_id is None
         or command.correlation_id != evidence.source_correlation_id
     ):
-        blockers.append("core_maturity_correlation_binding_missing")
-    return tuple(dict.fromkeys(blockers))
+        return ("core_maturity_correlation_binding_missing",)
+    return ()
 
 
 def _counts_are_valid(evidence: CoreBondMaturityEvidence) -> bool:
