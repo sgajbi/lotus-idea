@@ -38,8 +38,8 @@ blocked posture and implement or reclassify it.
 
 ```mermaid
 flowchart LR
-    Issues["GitHub issue posture<br/>162 label-backed RFC-0002 issues"]
-    Open["125 closed and 37 open<br/>25 `status/blocked`, 1 `status/in-progress`<br/>3 QA-pending aliases, 8 trackers"]
+    Issues["GitHub issue posture<br/>176 label-backed RFC-0002 issues"]
+    Open["139 closed and 37 open<br/>25 `status/blocked`, 1 `status/in-progress`<br/>3 merged-main attention issues, 8 trackers"]
     Blocked["Blocked classifier<br/>0 app-actionable blocked"]
     Work["Writable work<br/>only when evidence proves app-code ownership"]
     External["Core / protected / identity / provider / legal evidence"]
@@ -62,12 +62,12 @@ flowchart LR
 | `status/merged-to-main` | 2 | Repository-local Advise merged-main alias awaiting QA closure evidence. |
 | `status/tracker` | 8 | Parent or umbrella tracking issues, not immediate implementation items. |
 
-Latest synchronization evidence: Current GitHub issue posture has 162
-label-backed RFC-0002 issues, 125 closed and 37 open, with 25 `status/blocked`,
-1 `status/in-progress`, and 0 app-actionable blocked issues. `lotus-idea#864`,
-`lotus-idea#866`, `lotus-idea#871`, `lotus-idea#874`, and `lotus-idea#974` are closed with
-`status/merged-main` and now appear in the RFC-0002 execution ledger as
-hardening issues. `sgajbi/lotus-core#917` is also closed
+Latest synchronization evidence: Current GitHub issue posture has 176
+label-backed RFC-0002 issues, 139 closed and 37 open, with 25 `status/blocked`,
+1 `status/in-progress`, and 0 app-actionable blocked issues. `lotus-idea#1014`
+and `lotus-idea#1016` are closed with `status/merged-main` and now appear in
+the RFC-0002 execution ledger as Slice 15/19 hardening issues.
+`sgajbi/lotus-core#917` is also closed
 with `status/merged-main` after Core PR #929 reached exact main
 `6bc937bb173051e0bd4ee9a07ffebd54face0163` and Main Releasability
 `31308743764` passed. This is source-truth synchronization only; none of these

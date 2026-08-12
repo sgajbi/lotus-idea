@@ -225,7 +225,7 @@
     {
       "patternId": "operations_security_resilience_certification",
       "title": "Operations, security, lifecycle, migration, outbox, SLO, capacity, and disaster-recovery claims need protected or production-like attestations.",
-      "currentLedgerIssueNumbers": [343, 344, 345, 375, 678, 693, 814, 1014],
+      "currentLedgerIssueNumbers": [343, 344, 345, 375, 678, 693, 814],
       "relatedIssueNumbers": [
         337,
         343,
@@ -329,7 +329,7 @@
     {
       "patternId": "demo_commercial_and_live_journey_claims",
       "title": "Demo readiness, commercial proof, canonical archetypes, and full live journey claims must be implementation-backed end to end.",
-      "currentLedgerIssueNumbers": [679, 699, 1016],
+      "currentLedgerIssueNumbers": [679, 699],
       "relatedIssueNumbers": [701, 702, 880, 902, 908, 932, 980, 994, 1016],
       "rfcSlices": ["slice-05", "slice-16", "slice-17", "slice-19"],
       "durableControls": [
