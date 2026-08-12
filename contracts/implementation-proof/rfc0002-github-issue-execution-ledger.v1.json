@@ -1036,9 +1036,9 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/1020",
       "rfcSlices": ["slice-12", "slice-13", "slice-19"],
       "githubState": "open",
-      "executionStatus": "open_fixed_local",
+      "executionStatus": "open_pr_raised",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #1020 open until the downstream realization readiness API posture test refactor is merged to main, exact-main validation passes, wiki/no-wiki-change and branch cleanup evidence are recorded, and QA confirms the `make quality-baseline` hotspot improvement. The implementation must preserve the public downstream readiness API behavior, blocker vocabulary, blocker issue refs, capability and contract posture, source-safe response projection, supported-feature non-promotion, and RFC-0002 no-claim boundaries. This is test-support maintainability only: it must not claim Report/Render/Archive materialization, Workbench/Gateway browser proof, client publication, supported-feature promotion, production identity/session-token authority, protected runtime evidence, or final RFC-0002 completion."
+      "closureInstruction": "Keep #1020 open until PR #1021 is merged to main, exact-main validation passes, wiki/no-wiki-change and branch cleanup evidence are recorded, and QA confirms the downstream realization readiness API posture test refactor plus `make quality-baseline` hotspot improvement. The implementation must preserve the public downstream readiness API behavior, blocker vocabulary, blocker issue refs, capability and contract posture, source-safe response projection, supported-feature non-promotion, and RFC-0002 no-claim boundaries. This is test-support maintainability only: it must not claim Report/Render/Archive materialization, Workbench/Gateway browser proof, client publication, supported-feature promotion, production identity/session-token authority, protected runtime evidence, or final RFC-0002 completion."
     }
   ]
 }
