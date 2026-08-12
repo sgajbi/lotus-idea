@@ -126,12 +126,64 @@ bound to the same repository instance. Broader validation then passed
 issue-execution summary unit tests were tightened to render fixed-local issues
 from the ledger state machine instead of assuming that section is always empty.
 PR #990 carries this implementation with neutral Keep-open wording for #988.
+PR #990 then merged by rebase to Idea main
+`2f727245685834d3e55de2aba5281c4467859bdb` from PR head
+`eea7b79475615a45a328cdb321cc4395d926a1e2`. Feature Lane, PR
+Merge Gate, CodeQL, Queue Auto Merge, and the merged-PR main releasability
+dispatch completed successfully before merge. Exact-main Main Releasability
+Gate run `31568912323` passed for the merged main SHA, including workflow
+lint, lint/typecheck/security, unit, integration, e2e, PostgreSQL runtime
+proof, combined coverage, Docker build/runtime smoke, image scan, dependency
+SBOM, published digest proof, image signing, provenance and SBOM
+attestations, release metadata, release image identity binding, release
+license binding, and CI signal evidence.
+
+The implementation branch was deleted remotely by GitHub and pruned locally.
+The local branch was deleted after patch-equivalence and zero-diff proof
+because the repository uses rebase merge. No repo-authored wiki source changed,
+so wiki publication was not required. The source ledger now records #988 as
+`closed_complete`; the GitHub issue lifecycle should be normalized with
+`Loop status: qa_passed_closed` and retained `status/merged-main` evidence
+after this closure-sync source truth merges.
 
 No repo-authored wiki, README, supported-features, OpenAPI, migration, runtime
 topology, Core, Workbench, Gateway, production IdP/session-token,
 authentication, or authorization infrastructure source change is expected for
 this internal API-maintainability slice unless implementation reveals real
 behavioral or operator-facing truth changes.
+
+## 2026-08-12: Bond Maturity Runtime-Evidence Qualification Blockers
+
+Issue `#991` applies the RFC-0002 Slice 12/13/15/18 maintainability lens to
+`src/app/application/bond_maturity_runtime_evidence/runtime_execution.py::_qualification_blockers`.
+The current report-only `make quality-baseline` inventory lists this function
+as a `101` line production-code hotspot in a source-authority proof path.
+
+Duplicate-check result: no focused existing issue owned the bond-maturity
+runtime-evidence qualification blocker maintainability gap. The issue was
+created as https://github.com/sgajbi/lotus-idea/issues/991 with `status/ready`
+because the work is writable in `lotus-idea` and does not require a Core code
+change before the internal refactor can start.
+
+The intended implementation should separate:
+
+1. Core maturity source-ref authority checks,
+2. Core holdings upstream source-ref authority checks,
+3. caller entitlement posture,
+4. maturity and holdings product identity checks,
+5. response tenant/portfolio scope checks,
+6. maturity-window start/end/horizon/projected semantics,
+7. maturity basis supportability,
+8. count validity and maturity fact consistency, and
+9. Core supportability status.
+
+The refactor must preserve the public payload schema, supported blocker
+vocabulary, source-safe no-promotion posture, and deterministic blocker order
+where that order is observable. It must not claim new Core runtime evidence,
+Workbench/Gateway runtime proof, data-mesh certification, client publication,
+supported-feature promotion, production identity/session-token authority,
+schema or migration changes, deployment certification, production
+certification, or final RFC-0002 closure.
 
 ## 2026-08-12: Manage Intake Runtime Proof Generator Responsibilities
 
