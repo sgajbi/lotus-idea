@@ -6,6 +6,55 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-08-12: Candidate Lifecycle Transition API Boundary
+
+Issue `#974` applies the RFC-0002 Slice 15/19 maintainability lens to
+`src/app/api/candidate_lifecycle.py::record_candidate_lifecycle_transition`.
+After #971 closed, the refreshed quality baseline listed the route as a `103`
+line production API hotspot in the candidate lifecycle, idempotency,
+repository durability, audit, and operation-event boundary.
+
+The route mixed:
+
+1. trusted caller construction from request headers,
+2. lifecycle capability authorization,
+3. idempotency-key validation,
+4. durable repository selection and configuration checks,
+5. event-lineage construction,
+6. application command construction,
+7. application execution,
+8. exception and persistence Problem Details projection,
+9. operation-event emission,
+10. accepted/replayed response projection.
+
+The refactor keeps `record_candidate_lifecycle_transition(...)` as the public
+FastAPI handler while splitting review-sensitive responsibilities into named
+API-boundary helpers:
+
+1. `_caller_from_lifecycle_headers(...)`,
+2. `_validate_lifecycle_request_authority(...)`,
+3. `_lifecycle_repository_context_or_problem(...)`,
+4. `_apply_lifecycle_transition(...)`,
+5. `_lifecycle_transition_command(...)`,
+6. `_candidate_lifecycle_response(...)`,
+7. `_candidate_lifecycle_transition_summary(...)`.
+
+Focused local validation passed:
+
+1. `python -m ruff check src/app/api/candidate_lifecycle.py tests/unit/test_candidate_lifecycle_application.py tests/unit/test_api_request_validation.py tests/unit/test_service_contract.py tests/unit/api_examples/test_candidate_state_examples.py tests/integration/test_api_operation_events.py`,
+2. `python -m ruff format --check src/app/api/candidate_lifecycle.py tests/unit/test_candidate_lifecycle_application.py tests/unit/test_api_request_validation.py tests/unit/test_service_contract.py tests/unit/api_examples/test_candidate_state_examples.py tests/integration/test_api_operation_events.py`,
+3. `python -m mypy src/app/api/candidate_lifecycle.py`,
+4. `python -m pytest tests/unit/test_candidate_lifecycle_application.py tests/unit/test_api_request_validation.py tests/unit/test_service_contract.py tests/unit/api_examples/test_candidate_state_examples.py tests/integration/test_api_operation_events.py -q`
+   (`44` passed).
+
+No repo-authored wiki source change is expected because this is internal API
+structure hardening only. The implementation does not change public API or
+OpenAPI contracts, persistence schema, migrations, authentication,
+authorization infrastructure, production IdP/session-token authority, Core,
+Gateway, Workbench, supported-feature posture, runtime topology, client
+publication, legal/privacy/Archive/provider certification, or final RFC-0002
+closure.
+
 ## 2026-08-12: Data Lifecycle Action API Boundary
 
 Issue `#971` applies the RFC-0002 Slice 15/19 maintainability lens to

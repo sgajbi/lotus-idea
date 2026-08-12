@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
 
@@ -48,9 +49,16 @@ from app.domain import (
 )
 from app.api.problem_details import problem_details_response as problem_response
 from app.observability import IdeaOperation, OperationOutcome, emit_foundation_operation_event
+from app.ports.idea_repository import CandidateLifecycleRepository
 from app.security.caller_context import CallerContext, PermissionDeniedError
 
 _LIFECYCLE_TRANSITION_CAPABILITY = "idea.candidate.lifecycle.transition"
+
+
+@dataclass(frozen=True)
+class _LifecycleRepositoryContext:
+    repository: CandidateLifecycleRepository
+    durable_storage_backed: bool
 
 
 class CallerSettableIdeaLifecycleStatus(StrEnum):
@@ -184,36 +192,25 @@ async def record_candidate_lifecycle_transition(
     ),
     x_causation_id: EventCausationHeader = None,
 ) -> CandidateLifecycleTransitionResponse | JSONResponse:
-    caller = caller_context_from_headers(
-        subject=x_caller_subject,
-        roles=x_caller_roles,
-        capabilities=x_caller_capabilities,
-        trusted_caller_context=x_lotus_trusted_caller_context,
+    caller = _caller_from_lifecycle_headers(
+        x_caller_subject=x_caller_subject,
+        x_caller_roles=x_caller_roles,
+        x_caller_capabilities=x_caller_capabilities,
+        x_lotus_trusted_caller_context=x_lotus_trusted_caller_context,
     )
     try:
-        _require_lifecycle_caller(caller)
-        validate_idempotency_key(idempotency_key)
-        repository = get_idea_repository()
-        durable_storage_backed = idea_repository_durable_storage_backed(repository)
-        configuration_problem = durable_write_problem(repository)
-        if configuration_problem is not None:
-            _emit_lifecycle_operation_event(
-                OperationOutcome.BLOCKED,
-                DURABLE_REPOSITORY_NOT_CONFIGURED,
-                durable_storage_backed,
-            )
-            return configuration_problem
-        result = apply_candidate_lifecycle_transition_to_repository(
-            request.to_command(
-                candidate_id=candidate_id,
-                caller=caller,
-                idempotency_key=idempotency_key,
-                event_lineage=event_lineage_from_request(
-                    http_request,
-                    causation_id=x_causation_id,
-                ),
-            ),
-            repository=repository,
+        _validate_lifecycle_request_authority(caller, idempotency_key)
+        repository_context = _lifecycle_repository_context_or_problem()
+        if isinstance(repository_context, JSONResponse):
+            return repository_context
+        result = _apply_lifecycle_transition(
+            request,
+            candidate_id=candidate_id,
+            caller=caller,
+            idempotency_key=idempotency_key,
+            http_request=http_request,
+            x_causation_id=x_causation_id,
+            repository_context=repository_context,
         )
     except PermissionDeniedError:
         _emit_lifecycle_operation_event(
@@ -249,29 +246,138 @@ async def record_candidate_lifecycle_transition(
         _emit_lifecycle_operation_event(
             _operation_outcome_from_lifecycle_decision(result.decision),
             _error_code_from_lifecycle_decision(result.decision),
-            durable_storage_backed,
+            repository_context.durable_storage_backed,
         )
         return problem
     _emit_lifecycle_operation_event(
         _operation_outcome_from_lifecycle_decision(result.decision),
+        durable_storage_backed=repository_context.durable_storage_backed,
+    )
+    return _candidate_lifecycle_response(
+        request,
+        candidate_id=candidate_id,
+        result=result,
+        durable_storage_backed=repository_context.durable_storage_backed,
+    )
+
+
+def _caller_from_lifecycle_headers(
+    *,
+    x_caller_subject: str | None,
+    x_caller_roles: str | None,
+    x_caller_capabilities: str | None,
+    x_lotus_trusted_caller_context: str | None,
+) -> CallerContext:
+    return caller_context_from_headers(
+        subject=x_caller_subject,
+        roles=x_caller_roles,
+        capabilities=x_caller_capabilities,
+        trusted_caller_context=x_lotus_trusted_caller_context,
+    )
+
+
+def _validate_lifecycle_request_authority(
+    caller: CallerContext,
+    idempotency_key: str,
+) -> None:
+    _require_lifecycle_caller(caller)
+    validate_idempotency_key(idempotency_key)
+
+
+def _lifecycle_repository_context_or_problem() -> _LifecycleRepositoryContext | JSONResponse:
+    repository = get_idea_repository()
+    durable_storage_backed = idea_repository_durable_storage_backed(repository)
+    configuration_problem = durable_write_problem(repository)
+    if configuration_problem is not None:
+        _emit_lifecycle_operation_event(
+            OperationOutcome.BLOCKED,
+            DURABLE_REPOSITORY_NOT_CONFIGURED,
+            durable_storage_backed,
+        )
+        return configuration_problem
+    return _LifecycleRepositoryContext(
+        repository=repository,
         durable_storage_backed=durable_storage_backed,
     )
+
+
+def _apply_lifecycle_transition(
+    request: CandidateLifecycleTransitionRequest,
+    *,
+    candidate_id: str,
+    caller: CallerContext,
+    idempotency_key: str,
+    http_request: Request,
+    x_causation_id: EventCausationHeader,
+    repository_context: _LifecycleRepositoryContext,
+) -> LifecyclePersistenceResult:
+    return apply_candidate_lifecycle_transition_to_repository(
+        _lifecycle_transition_command(
+            request,
+            candidate_id=candidate_id,
+            caller=caller,
+            idempotency_key=idempotency_key,
+            http_request=http_request,
+            x_causation_id=x_causation_id,
+        ),
+        repository=repository_context.repository,
+    )
+
+
+def _lifecycle_transition_command(
+    request: CandidateLifecycleTransitionRequest,
+    *,
+    candidate_id: str,
+    caller: CallerContext,
+    idempotency_key: str,
+    http_request: Request,
+    x_causation_id: EventCausationHeader,
+) -> ApplyCandidateLifecycleTransitionCommand:
+    return request.to_command(
+        candidate_id=candidate_id,
+        caller=caller,
+        idempotency_key=idempotency_key,
+        event_lineage=event_lineage_from_request(
+            http_request,
+            causation_id=x_causation_id,
+        ),
+    )
+
+
+def _candidate_lifecycle_response(
+    request: CandidateLifecycleTransitionRequest,
+    *,
+    candidate_id: str,
+    result: LifecyclePersistenceResult,
+    durable_storage_backed: bool,
+) -> CandidateLifecycleTransitionResponse:
     return CandidateLifecycleTransitionResponse(
-        transition=(
-            CandidateLifecycleTransitionSummaryResponse(
-                transitionId=request.transition_id,
-                candidateId=candidate_id,
-                lifecycleStatus=request.target_lifecycle_status.to_domain_status(),
-                changedAtUtc=request.changed_at_utc,
-                reasonCodes=tuple(reason.value for reason in request.reason_codes),
-                grantsDownstreamAuthority=False,
-            )
-            if result.decision is LifecyclePersistenceDecision.ACCEPTED
-            else None
+        transition=_candidate_lifecycle_transition_summary(
+            request,
+            candidate_id=candidate_id,
+            result=result,
         ),
         persistence=LifecyclePersistenceSummaryResponse.from_result(result),
         durableStorageBacked=durable_storage_backed,
         supportedFeaturePromoted=False,
+    )
+
+
+def _candidate_lifecycle_transition_summary(
+    request: CandidateLifecycleTransitionRequest,
+    *,
+    candidate_id: str,
+    result: LifecyclePersistenceResult,
+) -> CandidateLifecycleTransitionSummaryResponse | None:
+    if result.decision is not LifecyclePersistenceDecision.ACCEPTED:
+        return None
+    return CandidateLifecycleTransitionSummaryResponse(
+        transitionId=request.transition_id,
+        candidateId=candidate_id,
+        lifecycleStatus=request.target_lifecycle_status.to_domain_status(),
+        changedAtUtc=request.changed_at_utc,
+        reasonCodes=tuple(reason.value for reason in request.reason_codes),
+        grantsDownstreamAuthority=False,
     )
 
 
