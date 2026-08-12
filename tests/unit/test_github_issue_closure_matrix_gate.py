@@ -716,6 +716,41 @@ def test_github_issue_closure_matrix_gate_freezes_postgres_runtime_workflow_issu
     assert "#648: merged-main issue cannot regress to `locally_fixed`" in errors
 
 
+def test_github_issue_closure_matrix_gate_freezes_rfc0002_stale_closed_rows(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    matrix = tmp_path / "matrix.md"
+    content = module.MATRIX_PATH.read_text(encoding="utf-8")
+    stale_closed_issues = {
+        650,
+        652,
+        653,
+        654,
+        655,
+        656,
+        657,
+        658,
+        659,
+        661,
+        662,
+        663,
+        664,
+        666,
+    }
+    lines = []
+    for line in content.splitlines():
+        if any(line.startswith(f"| [#{issue}](") for issue in stale_closed_issues):
+            line = line.replace("| `merged_main` |", "| `locally_fixed` |", 1)
+        lines.append(line)
+    matrix.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+    errors = module.validate_issue_closure_matrix(matrix)
+
+    for issue in stale_closed_issues:
+        assert f"#{issue}: merged-main issue cannot regress to `locally_fixed`" in errors
+
+
 def test_github_issue_closure_matrix_gate_freezes_postgres_snapshot_writes_main_truth(
     tmp_path: Path,
 ) -> None:

@@ -105,7 +105,8 @@
     991,
     994,
     998,
-    1000
+    1000,
+    1003
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -370,6 +371,33 @@
       "authentication",
       "authorization",
       "supported-feature posture",
+      "final RFC-0002 closure"
+    ],
+    "1003": [
+      "Keep #1003 open",
+      "stale RFC-0002 closure-matrix rows",
+      "#650, #652, #653, #654, #655, #656, #657, #658, #659, #661, #662, #663, #664, and #666",
+      "PR #665",
+      "6b562ac87ca61575c13fefc63b8c688c915da3fc",
+      "29671128884",
+      "29671126613",
+      "PR #660",
+      "7aa14e0174b2584110d1d217e31f06c24b1bd153",
+      "29667502188",
+      "29667499685",
+      "PR #667",
+      "76c6a597ecb0469232eaf42f7928552c123dfbc1",
+      "29671779848",
+      "29671775486",
+      "issue-650-critical-workflow-e2e-helpers",
+      "fix/core-live-proof-observation-time",
+      "fix/666-package-proof-import-guard-docker",
+      "runtime behavior",
+      "API/OpenAPI behavior",
+      "authn/authz",
+      "Core, Gateway, Workbench",
+      "supported features",
+      "wiki source",
       "final RFC-0002 closure"
     ]
   },
