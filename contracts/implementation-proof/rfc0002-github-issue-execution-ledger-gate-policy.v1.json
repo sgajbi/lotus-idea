@@ -376,7 +376,14 @@
       "final RFC-0002 closure"
     ],
     "1010": [
-      "Keep #1010 open until the implementation-proof artifact registry documentation gate refactor has merged to main",
+      "Keep #1010 open until final QA closure evidence is recorded",
+      "PR #1011",
+      "ec92d05fd6b1f7e5dd93ff7e8c20ceb186cbb77c",
+      "3af9ba96c3b680e92c9711dbf95de60fb2c18b90",
+      "31593349384",
+      "31593340430",
+      "DiffCount 0",
+      "patch-equivalent",
       "duplicate-key",
       "CLI-drift",
       "readiness-argument",
