@@ -46,6 +46,9 @@ def test_service_slo_capacity_contract_names_baseline_automation() -> None:
     assert payload["source_of_truth"]["baseline_workload_runner"].endswith(
         "run_service_capacity_workload.py"
     )
+    assert payload["source_of_truth"]["baseline_workload_planning_policy"].endswith(
+        "service_capacity_workload_cli.py"
+    )
     assert payload["source_of_truth"]["postgres_threshold_attestation_workflow"].endswith(
         "postgres-capacity-evidence.yml"
     )

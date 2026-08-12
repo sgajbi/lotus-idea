@@ -99,7 +99,8 @@
     974,
     977,
     980,
-    983
+    983,
+    986
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -364,6 +365,36 @@
       "authentication",
       "authorization",
       "supported-feature posture",
+      "final RFC-0002 closure"
+    ],
+    "986": [
+      "Keep #986 open",
+      "scripts/run_service_capacity_workload.py::main",
+      "102-line script hotspot",
+      "CLI timing validation",
+      "downstream seed/path resolution",
+      "paced workload measurement execution",
+      "optional proof and resource-baseline attestation loading",
+      "platform cost-attribution verification",
+      "capacity baseline artifact construction",
+      "atomic output preservation",
+      "focused unit coverage for invalid timing fail-closed before probe construction",
+      "Ruff check",
+      "Ruff format check",
+      "MyPy",
+      "focused capacity workload tests",
+      "quality-baseline",
+      "maintainability gate",
+      "duplicate-implementation gate",
+      "service SLO capacity contract gate",
+      "baseline_workload_planning_policy",
+      "no-wiki/no-supported-feature/no-runtime-topology-change decision",
+      "does not clear #345 or #814",
+      "protected capacity",
+      "canonical downstream-capacity seed authorization",
+      "production IdP/session-token authority",
+      "Gateway/Workbench/Core behavior",
+      "supported-feature promotion",
       "final RFC-0002 closure"
     ]
   },

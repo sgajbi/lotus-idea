@@ -236,6 +236,41 @@ def test_cli_writes_source_safe_report_only_evidence(
     assert "load_soak_attestation_missing" in artifact["certificationBlockers"]
 
 
+def test_cli_rejects_invalid_timeout_before_probe_construction(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    module = _load_script()
+
+    def fail_probe_construction(**kwargs: object) -> object:
+        raise AssertionError("probe should not be constructed for invalid timing input")
+
+    monkeypatch.setattr(module, "HttpCapacityProbe", fail_probe_construction)
+
+    exit_code = module.main(
+        [
+            "--base-url",
+            "https://idea.example",
+            "--environment-profile",
+            "test",
+            "--scenario",
+            "api",
+            "--timeout-seconds",
+            "0",
+            "--commit-sha",
+            "abc123",
+            "--branch",
+            "feature/capacity",
+            "--run-id",
+            "local-1",
+            "--output",
+            str(tmp_path / "capacity.json"),
+        ]
+    )
+
+    assert exit_code == 2
+
+
 def test_cli_links_validated_threshold_proof_without_clearing_test_blocker(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

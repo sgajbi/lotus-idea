@@ -6,6 +6,63 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-08-12: Service Capacity Workload CLI Orchestration
+
+Issue `#986` applies the RFC-0002 Slice 15/19 maintainability lens to
+`scripts/run_service_capacity_workload.py::main`. After #983 closed, the
+report-only `make quality-baseline` inventory listed this CLI entrypoint as the
+next script hotspot at `102` lines.
+
+Duplicate-check result: #345 and #814 remain the related capacity and canonical
+downstream-capacity runtime-proof blockers, but neither owns this narrow
+internal orchestration issue. This refactor must therefore keep #345/#814 open
+and preserve every non-certifying capacity blocker.
+
+The branch refactor moves reusable workload planning and downstream seed
+validation into `src/app/application/service_capacity_workload_cli.py` and keeps
+`scripts/run_service_capacity_workload.py` as the operator entrypoint. It
+separates:
+
+1. CLI timing validation,
+2. downstream capacity seed and submission-path resolution,
+3. paced workload measurement execution,
+4. optional PostgreSQL/dependency/load/resource proof loading and attestation,
+5. platform cost-attribution verification,
+6. capacity baseline artifact construction, and
+7. atomic JSON output.
+
+Focused local validation passed so far:
+
+1. `python -m pytest tests/unit/test_run_service_capacity_workload.py -q`
+   (`34` passed),
+2. `python -m pytest tests/unit/test_run_service_capacity_workload.py tests/unit/test_github_issue_execution_summary.py tests/unit/test_github_issue_execution_ledger_gate.py tests/unit/test_github_issue_learning_pattern_gate.py -q`
+   (`83` passed),
+3. `.venv/Scripts/ruff.exe check scripts/run_service_capacity_workload.py src/app/application/service_capacity_workload_cli.py tests/unit/test_run_service_capacity_workload.py`,
+4. `.venv/Scripts/ruff.exe format --check scripts/run_service_capacity_workload.py src/app/application/service_capacity_workload_cli.py tests/unit/test_run_service_capacity_workload.py`,
+5. `.venv/Scripts/mypy.exe scripts/run_service_capacity_workload.py src/app/application/service_capacity_workload_cli.py tests/unit/test_run_service_capacity_workload.py`,
+6. `make quality-baseline`,
+7. `make service-slo-capacity-contract-gate`,
+8. RFC-0002 execution ledger gate,
+9. live GitHub issue execution state audit,
+10. RFC-0002 issue execution summary,
+11. RFC-0002 issue learning-pattern gate,
+12. `make maintainability-gate`,
+13. `make duplicate-implementation-gate`,
+14. `make documentation-contract-gate`,
+15. `make implementation-truth-gate`, and
+16. `make test-unit` (`5473` passed), and
+17. `git diff --check`.
+
+The service SLO/capacity source-of-truth contract now names
+`baseline_workload_planning_policy` so the governed baseline runner and the
+application-owned workload planning policy cannot drift.
+The architecture-boundary report was regenerated because the new application
+module changes the source-file count and import digest.
+
+No repo-authored wiki, README, supported-features, OpenAPI, migration, runtime
+topology, Core, Workbench, Gateway, authentication, or authorization source
+change is expected for this internal script-maintainability slice.
+
 ## 2026-08-12: Manage Intake Runtime Proof Generator Responsibilities
 
 Issue `#983` applies the RFC-0002 Slice 12/13/18 maintainability lens to
