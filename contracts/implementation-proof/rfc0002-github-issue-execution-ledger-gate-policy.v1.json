@@ -106,7 +106,8 @@
     994,
     998,
     1000,
-    1003
+    1003,
+    1006
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -370,6 +371,24 @@
       "Core, Gateway, Workbench",
       "authentication",
       "authorization",
+      "supported-feature posture",
+      "final RFC-0002 closure"
+    ],
+    "1006": [
+      "Keep #1006 open",
+      "RFC-0002 issue execution summary test maintainability refactor",
+      "tests/unit/test_github_issue_execution_summary.py",
+      "summary count",
+      "issue bucket",
+      "slice membership",
+      "learning-pattern",
+      "markdown rendering behavior stable",
+      "named helpers or data-driven assertions",
+      "test-support maintainability only",
+      "runtime behavior",
+      "API/OpenAPI behavior",
+      "authentication/authorization",
+      "Core, Gateway, Workbench",
       "supported-feature posture",
       "final RFC-0002 closure"
     ]
