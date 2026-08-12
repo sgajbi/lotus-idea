@@ -98,84 +98,26 @@ def _apply_opportunity_archetype_proofs(
     source_ingestion_runtime_execution_current: bool,
     source_ingestion_runtime_execution_ref: str | None,
     evaluated_at_utc: datetime,
-    risk_concentration_live_proof: Mapping[str, object] | None,
-    risk_concentration_live_proof_ref: str | None,
-    high_volatility_live_proof: Mapping[str, object] | None,
-    high_volatility_live_proof_ref: str | None,
-    risk_drawdown_live_proof: Mapping[str, object] | None,
-    risk_drawdown_live_proof_ref: str | None,
-    performance_underperformance_live_proof: Mapping[str, object] | None,
-    performance_underperformance_live_proof_ref: str | None,
-    core_benchmark_assignment_live_proof: Mapping[str, object] | None,
-    core_benchmark_assignment_live_proof_ref: str | None,
-    core_portfolio_state_live_proof: Mapping[str, object] | None,
-    core_portfolio_state_live_proof_ref: str | None,
-    bond_maturity_live_proof: Mapping[str, object] | None,
-    bond_maturity_live_proof_ref: str | None,
-    low_income_core_cashflow_live_proof: Mapping[str, object] | None,
-    low_income_core_cashflow_live_proof_ref: str | None,
-    manage_mandate_live_proof: Mapping[str, object] | None,
-    manage_mandate_live_proof_ref: str | None,
-    mandate_restriction_live_proof: Mapping[str, object] | None,
-    mandate_restriction_live_proof_ref: str | None,
-    mandate_restriction_source_product_proof: Mapping[str, object] | None,
-    mandate_restriction_source_product_proof_ref: str | None,
-    missing_suitability_live_proof: Mapping[str, object] | None,
-    missing_suitability_live_proof_ref: str | None,
-    missing_risk_profile_source_product_proof: Mapping[str, object] | None,
-    missing_risk_profile_source_product_proof_ref: str | None,
-    missing_risk_profile_live_proof: Mapping[str, object] | None,
-    missing_risk_profile_live_proof_ref: str | None,
-    missing_benchmark_live_proof: Mapping[str, object] | None,
-    missing_benchmark_live_proof_ref: str | None,
-    missing_benchmark_performance_readiness_proof: Mapping[str, object] | None,
-    missing_benchmark_performance_readiness_proof_ref: str | None,
+    proof_scope: Mapping[str, object],
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
     capabilities = _apply_source_ingestion_runtime_execution(
         capabilities,
         source_ingestion_runtime_execution_current=source_ingestion_runtime_execution_current,
         source_ingestion_runtime_execution_ref=source_ingestion_runtime_execution_ref,
     )
-    proof_scope = _opportunity_proof_scope(
-        risk_concentration_live_proof=risk_concentration_live_proof,
-        risk_concentration_live_proof_ref=risk_concentration_live_proof_ref,
-        high_volatility_live_proof=high_volatility_live_proof,
-        high_volatility_live_proof_ref=high_volatility_live_proof_ref,
-        risk_drawdown_live_proof=risk_drawdown_live_proof,
-        risk_drawdown_live_proof_ref=risk_drawdown_live_proof_ref,
-        performance_underperformance_live_proof=performance_underperformance_live_proof,
-        performance_underperformance_live_proof_ref=performance_underperformance_live_proof_ref,
-        core_benchmark_assignment_live_proof=core_benchmark_assignment_live_proof,
-        core_benchmark_assignment_live_proof_ref=core_benchmark_assignment_live_proof_ref,
-        core_portfolio_state_live_proof=core_portfolio_state_live_proof,
-        core_portfolio_state_live_proof_ref=core_portfolio_state_live_proof_ref,
-        bond_maturity_live_proof=bond_maturity_live_proof,
-        bond_maturity_live_proof_ref=bond_maturity_live_proof_ref,
-        low_income_core_cashflow_live_proof=low_income_core_cashflow_live_proof,
-        low_income_core_cashflow_live_proof_ref=low_income_core_cashflow_live_proof_ref,
-        manage_mandate_live_proof=manage_mandate_live_proof,
-        manage_mandate_live_proof_ref=manage_mandate_live_proof_ref,
-        mandate_restriction_live_proof=mandate_restriction_live_proof,
-        mandate_restriction_live_proof_ref=mandate_restriction_live_proof_ref,
-        mandate_restriction_source_product_proof=mandate_restriction_source_product_proof,
-        mandate_restriction_source_product_proof_ref=(mandate_restriction_source_product_proof_ref),
-        missing_suitability_live_proof=missing_suitability_live_proof,
-        missing_suitability_live_proof_ref=missing_suitability_live_proof_ref,
-        missing_risk_profile_source_product_proof=missing_risk_profile_source_product_proof,
-        missing_risk_profile_source_product_proof_ref=(
-            missing_risk_profile_source_product_proof_ref
-        ),
-        missing_risk_profile_live_proof=missing_risk_profile_live_proof,
-        missing_risk_profile_live_proof_ref=missing_risk_profile_live_proof_ref,
-        missing_benchmark_live_proof=missing_benchmark_live_proof,
-        missing_benchmark_live_proof_ref=missing_benchmark_live_proof_ref,
-        missing_benchmark_performance_readiness_proof=(
-            missing_benchmark_performance_readiness_proof
-        ),
-        missing_benchmark_performance_readiness_proof_ref=(
-            missing_benchmark_performance_readiness_proof_ref
-        ),
+    return _apply_opportunity_proof_scope(
+        capabilities=capabilities,
+        proof_scope=proof_scope,
+        evaluated_at_utc=evaluated_at_utc,
     )
+
+
+def _apply_opportunity_proof_scope(
+    *,
+    capabilities: tuple[ImplementationProofCapabilityReadiness, ...],
+    proof_scope: Mapping[str, object],
+    evaluated_at_utc: datetime,
+) -> tuple[ImplementationProofCapabilityReadiness, ...]:
     for (
         payload_argument,
         proof,
@@ -193,12 +135,6 @@ def _apply_opportunity_archetype_proofs(
             evaluated_at_utc=evaluated_at_utc,
         )
     return capabilities
-
-
-def _opportunity_proof_scope(
-    **proof_inputs: object,
-) -> Mapping[str, object]:
-    return proof_inputs
 
 
 def _opportunity_proof_steps(scope: Mapping[str, object]) -> tuple[OpportunityProofStep, ...]:
@@ -379,60 +315,7 @@ def apply_opportunity_archetype_proofs_from_scope(
         source_ingestion_runtime_execution_current=source_ingestion_runtime_execution_current,
         source_ingestion_runtime_execution_ref=source_ingestion_runtime_execution_ref,
         evaluated_at_utc=evaluated_at_utc,
-        risk_concentration_live_proof=_payload(scope, "risk_concentration_live_proof"),
-        risk_concentration_live_proof_ref=_ref(scope, "risk_concentration_live_proof_ref"),
-        high_volatility_live_proof=_payload(scope, "high_volatility_live_proof"),
-        high_volatility_live_proof_ref=_ref(scope, "high_volatility_live_proof_ref"),
-        risk_drawdown_live_proof=_payload(scope, "risk_drawdown_live_proof"),
-        risk_drawdown_live_proof_ref=_ref(scope, "risk_drawdown_live_proof_ref"),
-        performance_underperformance_live_proof=_payload(
-            scope, "performance_underperformance_live_proof"
-        ),
-        performance_underperformance_live_proof_ref=_ref(
-            scope, "performance_underperformance_live_proof_ref"
-        ),
-        core_benchmark_assignment_live_proof=_payload(
-            scope, "core_benchmark_assignment_live_proof"
-        ),
-        core_benchmark_assignment_live_proof_ref=_ref(
-            scope, "core_benchmark_assignment_live_proof_ref"
-        ),
-        core_portfolio_state_live_proof=_payload(scope, "core_portfolio_state_live_proof"),
-        core_portfolio_state_live_proof_ref=_ref(scope, "core_portfolio_state_live_proof_ref"),
-        bond_maturity_live_proof=_payload(scope, "bond_maturity_live_proof"),
-        bond_maturity_live_proof_ref=_ref(scope, "bond_maturity_live_proof_ref"),
-        low_income_core_cashflow_live_proof=_payload(scope, "low_income_core_cashflow_live_proof"),
-        low_income_core_cashflow_live_proof_ref=_ref(
-            scope, "low_income_core_cashflow_live_proof_ref"
-        ),
-        manage_mandate_live_proof=_payload(scope, "manage_mandate_live_proof"),
-        manage_mandate_live_proof_ref=_ref(scope, "manage_mandate_live_proof_ref"),
-        mandate_restriction_live_proof=_payload(scope, "mandate_restriction_live_proof"),
-        mandate_restriction_live_proof_ref=_ref(scope, "mandate_restriction_live_proof_ref"),
-        mandate_restriction_source_product_proof=_payload(
-            scope, "mandate_restriction_source_product_proof"
-        ),
-        mandate_restriction_source_product_proof_ref=_ref(
-            scope, "mandate_restriction_source_product_proof_ref"
-        ),
-        missing_suitability_live_proof=_payload(scope, "missing_suitability_live_proof"),
-        missing_suitability_live_proof_ref=_ref(scope, "missing_suitability_live_proof_ref"),
-        missing_risk_profile_source_product_proof=_payload(
-            scope, "missing_risk_profile_source_product_proof"
-        ),
-        missing_risk_profile_source_product_proof_ref=_ref(
-            scope, "missing_risk_profile_source_product_proof_ref"
-        ),
-        missing_risk_profile_live_proof=_payload(scope, "missing_risk_profile_live_proof"),
-        missing_risk_profile_live_proof_ref=_ref(scope, "missing_risk_profile_live_proof_ref"),
-        missing_benchmark_live_proof=_payload(scope, "missing_benchmark_live_proof"),
-        missing_benchmark_live_proof_ref=_ref(scope, "missing_benchmark_live_proof_ref"),
-        missing_benchmark_performance_readiness_proof=_payload(
-            scope, "missing_benchmark_performance_readiness_proof"
-        ),
-        missing_benchmark_performance_readiness_proof_ref=_ref(
-            scope, "missing_benchmark_performance_readiness_proof_ref"
-        ),
+        proof_scope=scope,
     )
 
 
