@@ -59,9 +59,58 @@ application-owned workload planning policy cannot drift.
 The architecture-boundary report was regenerated because the new application
 module changes the source-file count and import digest.
 
+PR `#987` merged by rebase to `main` at
+`830870721982d5d7a4968708bcba1723ef3620ea` from branch head
+`34324318631988ea8c76413d981f4ecf25397ebc`. PR Merge Gate run
+`31565751153`, Feature Lane run `31565748332`, PR CodeQL run `31565748721`,
+Queue Auto Merge run `31565749694`, and merged-PR main releasability dispatch
+run `31566091370` passed before merge. Exact-main Main Releasability Gate run
+`31566095536` passed for the merged main SHA, including workflow lint,
+lint/typecheck/security, unit, integration, e2e, PostgreSQL runtime proof,
+combined coverage, Docker build/runtime smoke, image scan, dependency SBOM,
+published digest proof, image signing, provenance and SBOM attestations,
+release metadata, release image identity binding, release license binding, and
+CI signal evidence.
+
 No repo-authored wiki, README, supported-features, OpenAPI, migration, runtime
 topology, Core, Workbench, Gateway, authentication, or authorization source
 change is expected for this internal script-maintainability slice.
+The remote implementation branch was deleted by GitHub and pruned locally; the
+local branch was deleted after diff-equivalence proof because the repository
+uses rebase merge.
+
+## 2026-08-12: Candidate Detail API Boundary Orchestration
+
+Issue `#988` applies the RFC-0002 Slice 10/11/15/19 maintainability lens to
+`src/app/api/candidate_detail.py::get_idea_candidate_detail`. After #986
+closed, the report-only `make quality-baseline` inventory listed this route as
+a `101` line production API boundary hotspot.
+
+Duplicate-check result: no focused existing issue owned the candidate-detail
+route maintainability gap. Related Workbench/Gateway runtime proof issues
+#685/#686/#687 remain separate because this refactor is internal Idea API
+boundary hardening and cannot certify product-surface runtime proof.
+
+The intended implementation should separate:
+
+1. caller-context parsing and invalid-scope rejection,
+2. role/capability authorization,
+3. application command and repository execution,
+4. access-scope denial mapping,
+5. not-found mapping,
+6. successful response projection and durable-storage posture, and
+7. bounded operation-event emission.
+
+The refactor must preserve route path, operation id, response model, OpenAPI
+metadata, response schema, status codes, ProblemDetails codes/details,
+authorization ordering, tenant/book/portfolio/client entitlement behavior,
+source-safe redaction, and supported-feature non-promotion posture.
+
+No repo-authored wiki, README, supported-features, OpenAPI, migration, runtime
+topology, Core, Workbench, Gateway, production IdP/session-token,
+authentication, or authorization infrastructure source change is expected for
+this internal API-maintainability slice unless implementation reveals real
+behavioral or operator-facing truth changes.
 
 ## 2026-08-12: Manage Intake Runtime Proof Generator Responsibilities
 
