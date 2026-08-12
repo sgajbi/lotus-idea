@@ -38,6 +38,7 @@ from app.api.review_workflow_operations import (
 )
 from app.api.route_metadata import RouteMetadata
 from app.application.review_workflow import (
+    FeedbackWorkflowResult,
     ReviewWorkflowResult,
     apply_review_action_to_repository,
     record_feedback_to_repository,
@@ -315,75 +316,130 @@ async def record_feedback(
     x_causation_id: EventCausationHeader = None,
 ) -> FeedbackResponse | JSONResponse:
     try:
-        context = prepare_review_workflow_mutation(
-            headers=ReviewWorkflowCallerHeaders(
-                subject=x_caller_subject,
-                roles=x_caller_roles,
-                capabilities=x_caller_capabilities,
-                tenant_ids=x_caller_tenant_ids,
-                book_ids=x_caller_book_ids,
-                portfolio_ids=x_caller_portfolio_ids,
-                client_ids=x_caller_client_ids,
-                trusted_caller_context=x_lotus_trusted_caller_context,
-            ),
-            capability=_FEEDBACK_CAPABILITY,
+        context = _feedback_mutation_context(
+            x_caller_subject=x_caller_subject,
+            x_caller_roles=x_caller_roles,
+            x_caller_capabilities=x_caller_capabilities,
+            x_caller_tenant_ids=x_caller_tenant_ids,
+            x_caller_book_ids=x_caller_book_ids,
+            x_caller_portfolio_ids=x_caller_portfolio_ids,
+            x_caller_client_ids=x_caller_client_ids,
+            x_lotus_trusted_caller_context=x_lotus_trusted_caller_context,
             idempotency_key=idempotency_key,
-            operation=IdeaOperation.FEEDBACK_RECORD,
         )
         if isinstance(context, JSONResponse):
             return context
-        result = record_feedback_to_repository(
-            request.to_command(
-                candidate_id=candidate_id,
-                caller=context.caller,
-                role=context.role,
-                idempotency_key=idempotency_key,
-                event_lineage=event_lineage_from_request(http_request, causation_id=x_causation_id),
-            ),
-            repository=context.repository,
+        result = _apply_feedback_request(
+            request,
+            context=context,
+            candidate_id=candidate_id,
+            idempotency_key=idempotency_key,
+            http_request=http_request,
+            causation_id=x_causation_id,
         )
     except PermissionDeniedError:
-        _emit_review_operation_event(
-            IdeaOperation.FEEDBACK_RECORD,
-            OperationOutcome.PERMISSION_DENIED,
-            "permission_denied",
-        )
-        return _permission_denied("The caller is not permitted to record idea feedback.")
+        return _feedback_permission_problem("The caller is not permitted to record idea feedback.")
     except ReviewEntitlementDenied:
-        _emit_review_operation_event(
-            IdeaOperation.FEEDBACK_RECORD,
-            OperationOutcome.PERMISSION_DENIED,
-            "permission_denied",
-        )
-        return _permission_denied(
+        return _feedback_permission_problem(
             "The caller is not permitted to record feedback for this idea candidate."
         )
     except ValueError:
-        _emit_review_operation_event(
-            IdeaOperation.FEEDBACK_RECORD,
-            OperationOutcome.INVALID_REQUEST,
-            "invalid_request",
-        )
-        return problem_response(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            code="invalid_request",
-            title="Invalid request",
-            detail="Correct the feedback request and retry.",
-        )
+        return _feedback_invalid_request_problem()
 
+    return _feedback_response(result, durable_storage_backed=context.durable_storage_backed)
+
+
+def _feedback_mutation_context(
+    *,
+    x_caller_subject: str | None,
+    x_caller_roles: str | None,
+    x_caller_capabilities: str | None,
+    x_caller_tenant_ids: str | None,
+    x_caller_book_ids: str | None,
+    x_caller_portfolio_ids: str | None,
+    x_caller_client_ids: str | None,
+    x_lotus_trusted_caller_context: str | None,
+    idempotency_key: str,
+) -> ReviewWorkflowMutationContext | JSONResponse:
+    return prepare_review_workflow_mutation(
+        headers=ReviewWorkflowCallerHeaders(
+            subject=x_caller_subject,
+            roles=x_caller_roles,
+            capabilities=x_caller_capabilities,
+            tenant_ids=x_caller_tenant_ids,
+            book_ids=x_caller_book_ids,
+            portfolio_ids=x_caller_portfolio_ids,
+            client_ids=x_caller_client_ids,
+            trusted_caller_context=x_lotus_trusted_caller_context,
+        ),
+        capability=_FEEDBACK_CAPABILITY,
+        idempotency_key=idempotency_key,
+        operation=IdeaOperation.FEEDBACK_RECORD,
+    )
+
+
+def _apply_feedback_request(
+    request: FeedbackRequest,
+    *,
+    context: ReviewWorkflowMutationContext,
+    candidate_id: str,
+    idempotency_key: str,
+    http_request: Request,
+    causation_id: EventCausationHeader,
+) -> FeedbackWorkflowResult:
+    return record_feedback_to_repository(
+        request.to_command(
+            candidate_id=candidate_id,
+            caller=context.caller,
+            role=context.role,
+            idempotency_key=idempotency_key,
+            event_lineage=event_lineage_from_request(http_request, causation_id=causation_id),
+        ),
+        repository=context.repository,
+    )
+
+
+def _feedback_permission_problem(detail: str) -> JSONResponse:
+    _emit_review_operation_event(
+        IdeaOperation.FEEDBACK_RECORD,
+        OperationOutcome.PERMISSION_DENIED,
+        "permission_denied",
+    )
+    return _permission_denied(detail)
+
+
+def _feedback_invalid_request_problem() -> JSONResponse:
+    _emit_review_operation_event(
+        IdeaOperation.FEEDBACK_RECORD,
+        OperationOutcome.INVALID_REQUEST,
+        "invalid_request",
+    )
+    return problem_response(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        code="invalid_request",
+        title="Invalid request",
+        detail="Correct the feedback request and retry.",
+    )
+
+
+def _feedback_response(
+    result: FeedbackWorkflowResult,
+    *,
+    durable_storage_backed: bool,
+) -> FeedbackResponse | JSONResponse:
     problem = _problem_for_review_persistence(result.persistence)
     if problem is not None:
         _emit_review_operation_event(
             IdeaOperation.FEEDBACK_RECORD,
             _operation_outcome_from_review_decision(result.persistence.decision),
             _error_code_from_review_decision(result.persistence.decision),
-            context.durable_storage_backed,
+            durable_storage_backed,
         )
         return problem
     _emit_review_operation_event(
         IdeaOperation.FEEDBACK_RECORD,
         _operation_outcome_from_review_decision(result.persistence.decision),
-        durable_storage_backed=context.durable_storage_backed,
+        durable_storage_backed=durable_storage_backed,
     )
     return FeedbackResponse(
         feedbackEvent=(
@@ -392,7 +448,7 @@ async def record_feedback(
             else None
         ),
         persistence=ReviewPersistenceSummaryResponse.from_result(result.persistence),
-        durableStorageBacked=context.durable_storage_backed,
+        durableStorageBacked=durable_storage_backed,
         supportedFeaturePromoted=False,
     )
 
