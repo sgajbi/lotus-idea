@@ -107,7 +107,8 @@
     998,
     1000,
     1003,
-    1006
+    1006,
+    1010
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -369,6 +370,27 @@
       "test-support maintainability only",
       "runtime code",
       "Core, Gateway, Workbench",
+      "authentication",
+      "authorization",
+      "supported-feature posture",
+      "final RFC-0002 closure"
+    ],
+    "1010": [
+      "Keep #1010 open until the implementation-proof artifact registry documentation gate refactor has merged to main",
+      "duplicate-key",
+      "CLI-drift",
+      "readiness-argument",
+      "inventory-validation",
+      "implementation_proof_artifact_registry_errors(root=...)",
+      "existing failure messages",
+      "evidence-classification guard behavior",
+      "RFC-0002 no-claim boundaries",
+      "runtime behavior",
+      "API/OpenAPI contracts",
+      "proof schemas",
+      "Core",
+      "Gateway",
+      "Workbench",
       "authentication",
       "authorization",
       "supported-feature posture",
