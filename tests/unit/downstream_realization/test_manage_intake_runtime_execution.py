@@ -15,6 +15,9 @@ from app.application.downstream_realization.manage_intake_runtime_execution impo
 from tests.unit.downstream_realization.fixtures import (
     valid_manage_intake_runtime_execution,
 )
+from scripts.downstream_realization.generate_manage_intake_runtime_execution import (
+    _decode_manage_testclient_stdout,
+)
 
 
 def test_manage_intake_runtime_execution_accepts_bounded_live_receipts() -> None:
@@ -114,6 +117,11 @@ def test_manage_intake_runtime_execution_rejects_payload_and_receipt_shape_drift
     payload = deepcopy(valid_manage_intake_runtime_execution())
     payload["receiptEvidence"]["accepted"]["unexpectedField"] = True  # type: ignore[index]
     assert not manage_intake_runtime_execution_is_valid(payload)
+
+
+def test_manage_intake_runtime_generator_rejects_non_object_stdout() -> None:
+    with pytest.raises(ValueError, match="JSON object"):
+        _decode_manage_testclient_stdout("[]")
 
 
 def test_load_manage_intake_runtime_execution_from_env_returns_payload_and_relative_ref(

@@ -36,59 +36,7 @@ except ImportError:  # pragma: no cover - supports direct script execution
     )
 
 ROUTE_PATH = "/api/v1/rebalance/idea-action-intake"
-
-
-def main(argv: list[str] | None = None) -> int:
-    parser = _parser()
-    args = parser.parse_args(argv)
-    try:
-        generated_at_utc = parse_generated_at_utc(args.generated_at_utc)
-        if args.runtime_mode == "http_service":
-            receipt_evidence = _execute_http_service(args.manage_base_url)
-        else:
-            receipt_evidence = _execute_manage_testclient(
-                manage_root=Path(args.manage_root),
-                manage_python=args.manage_python,
-            )
-        payload = build_manage_intake_runtime_execution_payload(
-            generated_at_utc=generated_at_utc,
-            repository_root=Path.cwd(),
-            manage_root=Path(args.manage_root),
-            runtime_mode=args.runtime_mode,
-            receipt_evidence=receipt_evidence,
-        )
-        write_json_payload(payload, output=args.output)
-        return 0
-    except subprocess.CalledProcessError as exc:
-        detail = (exc.stderr or exc.stdout or str(exc)).strip()
-        print(f"Manage intake runtime proof generation error: {detail}", file=sys.stderr)
-        return 2
-    except (OSError, ValueError, json.JSONDecodeError) as exc:
-        print(f"Manage intake runtime proof generation error: {exc}", file=sys.stderr)
-        return 2
-
-
-def _parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
-        description="Generate source-safe lotus-manage idea action-intake runtime-execution proof."
-    )
-    parser.add_argument("--generated-at-utc", required=True)
-    parser.add_argument("--output", required=True)
-    parser.add_argument("--manage-root", default="../lotus-manage")
-    parser.add_argument(
-        "--runtime-mode",
-        choices=("local_asgi_testclient", "http_service"),
-        default="local_asgi_testclient",
-    )
-    parser.add_argument("--manage-base-url")
-    parser.add_argument("--manage-python", default=sys.executable)
-    return parser
-
-
-def _execute_manage_testclient(
-    *, manage_root: Path, manage_python: str
-) -> dict[str, dict[str, Any]]:
-    script = r"""
+MANAGE_TESTCLIENT_SCRIPT = r"""
 import json
 from fastapi.testclient import TestClient
 from src.api.main import app
@@ -172,21 +120,91 @@ print(json.dumps({
     "tenantScopedIdempotency": response_payload(tenant_scoped),
 }, sort_keys=True))
 """
-    env = os.environ.copy()
-    env["PYTHONPATH"] = str(manage_root.resolve())
-    env.setdefault("ENVIRONMENT", "test")
-    completed = subprocess.run(
-        [manage_python, "-c", script],
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = _parser()
+    args = parser.parse_args(argv)
+    try:
+        generated_at_utc = parse_generated_at_utc(args.generated_at_utc)
+        if args.runtime_mode == "http_service":
+            receipt_evidence = _execute_http_service(args.manage_base_url)
+        else:
+            receipt_evidence = _execute_manage_testclient(
+                manage_root=Path(args.manage_root),
+                manage_python=args.manage_python,
+            )
+        payload = build_manage_intake_runtime_execution_payload(
+            generated_at_utc=generated_at_utc,
+            repository_root=Path.cwd(),
+            manage_root=Path(args.manage_root),
+            runtime_mode=args.runtime_mode,
+            receipt_evidence=receipt_evidence,
+        )
+        write_json_payload(payload, output=args.output)
+        return 0
+    except subprocess.CalledProcessError as exc:
+        detail = (exc.stderr or exc.stdout or str(exc)).strip()
+        print(f"Manage intake runtime proof generation error: {detail}", file=sys.stderr)
+        return 2
+    except (OSError, ValueError, json.JSONDecodeError) as exc:
+        print(f"Manage intake runtime proof generation error: {exc}", file=sys.stderr)
+        return 2
+
+
+def _parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="Generate source-safe lotus-manage idea action-intake runtime-execution proof."
+    )
+    parser.add_argument("--generated-at-utc", required=True)
+    parser.add_argument("--output", required=True)
+    parser.add_argument("--manage-root", default="../lotus-manage")
+    parser.add_argument(
+        "--runtime-mode",
+        choices=("local_asgi_testclient", "http_service"),
+        default="local_asgi_testclient",
+    )
+    parser.add_argument("--manage-base-url")
+    parser.add_argument("--manage-python", default=sys.executable)
+    return parser
+
+
+def _execute_manage_testclient(
+    *, manage_root: Path, manage_python: str
+) -> dict[str, dict[str, Any]]:
+    completed = _run_manage_testclient_process(
+        manage_root=manage_root,
+        manage_python=manage_python,
+    )
+    raw = _decode_manage_testclient_stdout(completed.stdout)
+    return _source_safe_receipts(raw)
+
+
+def _run_manage_testclient_process(
+    *, manage_root: Path, manage_python: str
+) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        [manage_python, "-c", MANAGE_TESTCLIENT_SCRIPT],
         cwd=manage_root,
-        env=env,
+        env=_manage_testclient_env(manage_root),
         check=True,
         capture_output=True,
         text=True,
     )
-    raw = json.loads(completed.stdout)
+
+
+def _manage_testclient_env(manage_root: Path) -> dict[str, str]:
+    env = os.environ.copy()
+    env["PYTHONPATH"] = str(manage_root.resolve())
+    env.setdefault("ENVIRONMENT", "test")
+    return env
+
+
+def _decode_manage_testclient_stdout(stdout: str) -> dict[str, Any]:
+    raw = json.loads(stdout)
     if not isinstance(raw, dict):
         raise ValueError("Manage testclient execution did not return a JSON object")
-    return _source_safe_receipts(raw)
+    return raw
 
 
 def _execute_http_service(base_url: str | None) -> dict[str, dict[str, Any]]:
