@@ -359,7 +359,7 @@ def test_github_issue_closure_matrix_gate_requires_downstream_reconciliation_rea
 def test_github_issue_closure_matrix_gate_requires_recent_local_issue_rows(
     tmp_path: Path,
 ) -> None:
-    for issue_number in (663, 864, 866, 998):
+    for issue_number in (663, 864, 866, 998, 1000):
         _assert_matrix_requires_issue(tmp_path, issue_number)
 
 
