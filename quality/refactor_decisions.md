@@ -49,6 +49,21 @@ Focused local validation passed:
 The public builder moved from `103` lines to `19` lines and no longer appears
 in the largest source function list.
 
+PR `#981` merged by rebase to exact Idea main
+`ed895d35b3cda7d3e835a07c46f4a36abd0aced5`. PR evidence passed PR Merge
+Gate run `31559901205`, Feature Lane run `31559897869`, CodeQL run
+`31559898157`, and Queue Auto Merge run `31559899348`. Exact-main evidence
+passed CodeQL run `31560260581` and Main Releasability Gate run
+`31560267153`, including workflow lint, lint/typecheck/security, unit,
+integration, e2e, PostgreSQL runtime proof, combined coverage, Docker
+build/runtime smoke, image scan, SBOM, signed published image digest,
+provenance/SBOM attestations, release metadata, release image identity binding,
+release license evidence binding, and CI signal evidence. Issue `#980` was
+closed with `Loop status: qa_passed_closed` evidence while retaining
+`status/merged-main`. No repo-authored wiki source changed, so wiki publication
+was not required. The remote implementation branch was deleted by GitHub and
+pruned locally; local state returned cleanly to `main` tracking `origin/main`.
+
 This is internal proof-builder maintainability only. It does not change payload
 schema, API/OpenAPI contracts, migrations, runtime topology, Workbench/Gateway
 proof, source-owner authority, client-ready publication, data-mesh
