@@ -156,6 +156,48 @@ def test_registry_gate_rejects_duplicate_consumption_keys(
     assert any(message in error for error in errors)
 
 
+def test_registry_gate_rejects_cli_parser_drift(monkeypatch: pytest.MonkeyPatch) -> None:
+    class FakeParserAction:
+        option_strings = ["--durable-repository-proof"]
+
+    class FakeParser:
+        _actions = [FakeParserAction()]
+
+    monkeypatch.setattr(registry_gate, "_parser", FakeParser)
+
+    errors = implementation_proof_artifact_registry_errors(root=ROOT)
+
+    assert any(
+        error.startswith("implementation proof artifact registry/CLI drift:")
+        and "unexpected=" in error
+        for error in errors
+    )
+
+
+def test_registry_gate_rejects_readiness_argument_drift(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    source = IMPLEMENTATION_PROOF_ARTIFACT_SPECS[0]
+    drifted = replace(
+        source,
+        cli_flag="--drifted-proof",
+        payload_argument="missing_payload_argument",
+        ref_argument="missing_ref_argument",
+    )
+    monkeypatch.setattr(
+        registry_gate,
+        "IMPLEMENTATION_PROOF_ARTIFACT_SPECS",
+        (drifted,),
+    )
+
+    errors = implementation_proof_artifact_registry_errors(root=ROOT)
+
+    assert (
+        "--drifted-proof: missing readiness payload argument `missing_payload_argument`" in errors
+    )
+    assert "--drifted-proof: missing readiness reference argument `missing_ref_argument`" in errors
+
+
 def test_registry_lookup_requires_one_classified_effect_match(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
