@@ -219,6 +219,24 @@ this bounded branch; the credible adjacent blocker families are already
 separate source-authority/runtime-proof issue areas and should not be bundled
 without their own issue acceptance criteria.
 
+PR `#992` merged by rebase to `main` at
+`9123ae3583837da1dc40d4d72e8fd9bf6851a479` from branch head
+`60f22a3d70e95b1759e6d59439f963e187b1400f`. The PR satisfied Feature Lane,
+PR Merge Gate, CodeQL, and Queue Auto Merge checks. Exact-main Main
+Releasability Gate run `31570863800` passed for the merge SHA, including
+unit, integration, e2e, PostgreSQL runtime proof, coverage, Docker build,
+image scan, provenance, SBOM, signing, attestations, release metadata, and CI
+signal evidence.
+
+No repo-authored wiki source changed. Issue `#991` was closed with
+`Loop status: qa_passed_closed` after `status/merged-main` evidence was
+recorded. GitHub deleted and pruned the remote implementation branch after the
+merge; the corresponding local branch had patch-equivalence proof against
+`origin/main` before cleanup. This closure remains an internal
+source-authority proof maintainability hardening slice and does not claim new
+Core runtime evidence, Workbench/Gateway runtime proof, supported-feature
+promotion, or final RFC-0002 closure.
+
 ## 2026-08-12: Manage Intake Runtime Proof Generator Responsibilities
 
 Issue `#983` applies the RFC-0002 Slice 12/13/18 maintainability lens to
