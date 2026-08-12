@@ -10,6 +10,16 @@ from typing import Any, cast
 
 
 ROOT = Path(__file__).resolve().parents[2]
+STATUS_SECTION_TITLES = {
+    "open_in_progress": "## In-Progress Issues",
+    "open_fixed_local": "## Fixed Locally Issues",
+    "open_pr_raised": "## PR-Open Issues",
+    "open_merged_main_qa_pending": "## Merged-Main QA Pending Issues",
+    "open_ready": "## Ready Issues",
+    "open_pending_final_closure": "## Pending Final Closure Issues",
+    "open_pending_post_completion": "## Pending Post-Completion Issues",
+    "open_blocked": "## Blocked Issues",
+}
 
 
 def _load_summary() -> ModuleType:
@@ -40,6 +50,52 @@ def _load_ledger_payload() -> dict[str, Any]:
     )
 
 
+def _ledger_issues(payload: dict[str, Any]) -> list[dict[str, Any]]:
+    return [issue for issue in payload["issues"] if isinstance(issue, dict)]
+
+
+def _issue_numbers_by_status(
+    ledger_issues: list[dict[str, Any]],
+    execution_status: str,
+) -> list[int]:
+    return sorted(
+        issue["issueNumber"]
+        for issue in ledger_issues
+        if issue["executionStatus"] == execution_status
+    )
+
+
+def _render_issue_numbers(issue_numbers: list[int]) -> str:
+    if not issue_numbers:
+        return "_None._"
+    return ", ".join(f"#{issue_number}" for issue_number in issue_numbers)
+
+
+def _assert_summary_status_bucket(
+    summary: dict[str, Any],
+    ledger_issues: list[dict[str, Any]],
+    execution_status: str,
+) -> None:
+    expected_issue_numbers = _issue_numbers_by_status(ledger_issues, execution_status)
+    if expected_issue_numbers:
+        assert summary["issuesByStatus"][execution_status] == expected_issue_numbers
+    else:
+        assert execution_status not in summary["issuesByStatus"]
+
+
+def _assert_rendered_status_section(
+    rendered: str,
+    ledger_issues: list[dict[str, Any]],
+    execution_status: str,
+) -> None:
+    title = STATUS_SECTION_TITLES[execution_status]
+    expected_rendering = _render_issue_numbers(
+        _issue_numbers_by_status(ledger_issues, execution_status)
+    )
+    assert title in rendered
+    assert f"{title}\n\n{expected_rendering}" in rendered
+
+
 def _write_json(tmp_path: Path, name: str, payload: dict[str, Any]) -> Path:
     path = tmp_path / name
     path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
@@ -49,7 +105,7 @@ def _write_json(tmp_path: Path, name: str, payload: dict[str, Any]) -> Path:
 def test_github_issue_execution_summary_reports_current_rfc0002_counts() -> None:
     module = _load_summary()
     ledger_payload = _load_ledger_payload()
-    ledger_issues = [issue for issue in ledger_payload["issues"] if isinstance(issue, dict)]
+    ledger_issues = _ledger_issues(ledger_payload)
     issue_681 = next(issue for issue in ledger_issues if issue["issueNumber"] == 681)
     issue_681_status = issue_681["executionStatus"]
     expected_github_counts = Counter(issue["githubState"] for issue in ledger_issues)
@@ -67,26 +123,17 @@ def test_github_issue_execution_summary_reports_current_rfc0002_counts() -> None
         summary["counts"]["byExecutionStatus"][issue_681_status]
         == expected_execution_counts[issue_681_status]
     )
-    assert (
-        summary["counts"]["byExecutionStatus"]["open_in_progress"]
-        == expected_execution_counts["open_in_progress"]
-    )
-    assert (
-        summary["counts"]["byExecutionStatus"].get("open_fixed_local", 0)
-        == expected_execution_counts["open_fixed_local"]
-    )
-    assert (
-        summary["counts"]["byExecutionStatus"].get("open_pr_raised", 0)
-        == expected_execution_counts["open_pr_raised"]
-    )
-    assert (
-        summary["counts"]["byExecutionStatus"].get("open_merged_main_qa_pending", 0)
-        == expected_execution_counts["open_merged_main_qa_pending"]
-    )
-    assert (
-        summary["counts"]["byExecutionStatus"].get("open_ready", 0)
-        == expected_execution_counts["open_ready"]
-    )
+    for execution_status in (
+        "open_in_progress",
+        "open_fixed_local",
+        "open_pr_raised",
+        "open_merged_main_qa_pending",
+        "open_ready",
+    ):
+        assert (
+            summary["counts"]["byExecutionStatus"].get(execution_status, 0)
+            == expected_execution_counts[execution_status]
+        )
     assert summary["counts"]["byExecutionStatus"]["open_pending_final_closure"] == 1
     assert summary["counts"]["byExecutionStatus"]["open_pending_post_completion"] == 1
     assert summary["counts"]["byExecutionStatus"]["open_blocked"] == 14
@@ -95,48 +142,16 @@ def test_github_issue_execution_summary_reports_current_rfc0002_counts() -> None
         summary["counts"]["byExecutionStatus"]["closed_complete"]
         == expected_execution_counts["closed_complete"]
     )
-    assert summary["issuesByStatus"][issue_681_status] == sorted(
-        issue["issueNumber"]
-        for issue in ledger_issues
-        if issue["executionStatus"] == issue_681_status
-    )
-    assert summary["issuesByStatus"]["open_in_progress"] == sorted(
-        issue["issueNumber"]
-        for issue in ledger_issues
-        if issue["executionStatus"] == "open_in_progress"
-    )
-    if expected_execution_counts["open_pr_raised"]:
-        assert summary["issuesByStatus"]["open_pr_raised"] == sorted(
-            issue["issueNumber"]
-            for issue in ledger_issues
-            if issue["executionStatus"] == "open_pr_raised"
-        )
-    else:
-        assert "open_pr_raised" not in summary["issuesByStatus"]
-    if expected_execution_counts["open_fixed_local"]:
-        assert summary["issuesByStatus"]["open_fixed_local"] == sorted(
-            issue["issueNumber"]
-            for issue in ledger_issues
-            if issue["executionStatus"] == "open_fixed_local"
-        )
-    else:
-        assert "open_fixed_local" not in summary["issuesByStatus"]
-    if expected_execution_counts["open_merged_main_qa_pending"]:
-        assert summary["issuesByStatus"]["open_merged_main_qa_pending"] == sorted(
-            issue["issueNumber"]
-            for issue in ledger_issues
-            if issue["executionStatus"] == "open_merged_main_qa_pending"
-        )
-    else:
-        assert "open_merged_main_qa_pending" not in summary["issuesByStatus"]
-    if expected_execution_counts["open_ready"]:
-        assert summary["issuesByStatus"]["open_ready"] == sorted(
-            issue["issueNumber"]
-            for issue in ledger_issues
-            if issue["executionStatus"] == "open_ready"
-        )
-    else:
-        assert "open_ready" not in summary["issuesByStatus"]
+    assert issue_681_status == "open_in_progress"
+    assert 681 in summary["issuesByStatus"][issue_681_status]
+    for execution_status in (
+        "open_in_progress",
+        "open_fixed_local",
+        "open_pr_raised",
+        "open_merged_main_qa_pending",
+        "open_ready",
+    ):
+        _assert_summary_status_bucket(summary, ledger_issues, execution_status)
     assert summary["issuesByStatus"]["open_pending_final_closure"] == [683]
     assert summary["issuesByStatus"]["open_pending_post_completion"] == [684]
     assert summary["issuesByStatus"]["open_blocked"] == [
@@ -246,38 +261,9 @@ def test_issue_681_ledger_records_latest_exact_main_evidence() -> None:
 def test_github_issue_execution_summary_markdown_is_comment_ready() -> None:
     module = _load_summary()
     ledger_payload = _load_ledger_payload()
-    ledger_issues = [issue for issue in ledger_payload["issues"] if isinstance(issue, dict)]
+    ledger_issues = _ledger_issues(ledger_payload)
     issue_681 = next(issue for issue in ledger_issues if issue["issueNumber"] == 681)
-    section_by_status = {
-        "open_in_progress": "## In-Progress Issues",
-        "open_pr_raised": "## PR-Open Issues",
-        "open_merged_main_qa_pending": "## Merged-Main QA Pending Issues",
-    }
-    issue_681_section = section_by_status[issue_681["executionStatus"]]
-    pr_open_issues = sorted(
-        issue["issueNumber"]
-        for issue in ledger_issues
-        if issue["executionStatus"] == "open_pr_raised"
-    )
-    pr_open_rendering = ", ".join(f"#{issue_number}" for issue_number in pr_open_issues)
-    fixed_local_issues = sorted(
-        issue["issueNumber"]
-        for issue in ledger_issues
-        if issue["executionStatus"] == "open_fixed_local"
-    )
-    fixed_local_rendering = ", ".join(f"#{issue_number}" for issue_number in fixed_local_issues)
-    merged_main_qa_pending_issues = sorted(
-        issue["issueNumber"]
-        for issue in ledger_issues
-        if issue["executionStatus"] == "open_merged_main_qa_pending"
-    )
-    merged_main_qa_pending_rendering = ", ".join(
-        f"#{issue_number}" for issue_number in merged_main_qa_pending_issues
-    )
-    ready_issues = sorted(
-        issue["issueNumber"] for issue in ledger_issues if issue["executionStatus"] == "open_ready"
-    )
-    ready_rendering = ", ".join(f"#{issue_number}" for issue_number in ready_issues)
+    issue_681_section = STATUS_SECTION_TITLES[issue_681["executionStatus"]]
 
     summary = module.build_issue_execution_summary()
     rendered = module.render_markdown(summary)
@@ -297,37 +283,22 @@ def test_github_issue_execution_summary_markdown_is_comment_ready() -> None:
     assert f"- Open issues: {summary['counts']['open']}" in rendered
     assert f"- Closed issues: {summary['counts']['closed']}" in rendered
     assert "## In-Progress Issues" in rendered
-    assert f"{issue_681_section}\n\n#681" in rendered
+    assert f"{issue_681_section}\n\n" in rendered
     assert "#681" in rendered
     assert "#681, #782" not in rendered
     assert "#681, #685" not in rendered
     assert "#756" not in rendered
-    assert "## Fixed Locally Issues" in rendered
-    if fixed_local_issues:
-        assert f"## Fixed Locally Issues\n\n{fixed_local_rendering}" in rendered
-    else:
-        assert "## Fixed Locally Issues\n\n_None._" in rendered
-    assert "## PR-Open Issues" in rendered
-    if pr_open_issues:
-        assert f"## PR-Open Issues\n\n{pr_open_rendering}" in rendered
-    else:
-        assert "## PR-Open Issues\n\n_None._" in rendered
-    assert "## In-Progress Issues\n\n#681" in rendered
+    for execution_status in (
+        "open_in_progress",
+        "open_fixed_local",
+        "open_pr_raised",
+        "open_merged_main_qa_pending",
+        "open_ready",
+    ):
+        _assert_rendered_status_section(rendered, ledger_issues, execution_status)
     assert "#681, #874" not in rendered
-    assert "## Merged-Main QA Pending Issues" in rendered
-    if merged_main_qa_pending_issues:
-        assert (
-            f"## Merged-Main QA Pending Issues\n\n{merged_main_qa_pending_rendering}"
-        ) in rendered
-    else:
-        assert "## Merged-Main QA Pending Issues\n\n_None._" in rendered
     assert "#379, #690" not in rendered
     assert "#340, #379" not in rendered
-    assert "## Ready Issues" in rendered
-    if ready_issues:
-        assert f"## Ready Issues\n\n{ready_rendering}" in rendered
-    else:
-        assert "## Ready Issues\n\n_None._" in rendered
     assert "## Pending Final Closure Issues\n\n#683" in rendered
     assert "## Pending Post-Completion Issues\n\n#684" in rendered
     assert "## Blocked Issues" in rendered
