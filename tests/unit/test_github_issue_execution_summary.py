@@ -71,7 +71,10 @@ def test_github_issue_execution_summary_reports_current_rfc0002_counts() -> None
         summary["counts"]["byExecutionStatus"]["open_in_progress"]
         == expected_execution_counts["open_in_progress"]
     )
-    assert "open_fixed_local" not in summary["counts"]["byExecutionStatus"]
+    assert (
+        summary["counts"]["byExecutionStatus"].get("open_fixed_local", 0)
+        == expected_execution_counts["open_fixed_local"]
+    )
     assert (
         summary["counts"]["byExecutionStatus"].get("open_pr_raised", 0)
         == expected_execution_counts["open_pr_raised"]
@@ -110,7 +113,14 @@ def test_github_issue_execution_summary_reports_current_rfc0002_counts() -> None
         )
     else:
         assert "open_pr_raised" not in summary["issuesByStatus"]
-    assert "open_fixed_local" not in summary["issuesByStatus"]
+    if expected_execution_counts["open_fixed_local"]:
+        assert summary["issuesByStatus"]["open_fixed_local"] == sorted(
+            issue["issueNumber"]
+            for issue in ledger_issues
+            if issue["executionStatus"] == "open_fixed_local"
+        )
+    else:
+        assert "open_fixed_local" not in summary["issuesByStatus"]
     if expected_execution_counts["open_merged_main_qa_pending"]:
         assert summary["issuesByStatus"]["open_merged_main_qa_pending"] == sorted(
             issue["issueNumber"]
@@ -250,6 +260,12 @@ def test_github_issue_execution_summary_markdown_is_comment_ready() -> None:
         if issue["executionStatus"] == "open_pr_raised"
     )
     pr_open_rendering = ", ".join(f"#{issue_number}" for issue_number in pr_open_issues)
+    fixed_local_issues = sorted(
+        issue["issueNumber"]
+        for issue in ledger_issues
+        if issue["executionStatus"] == "open_fixed_local"
+    )
+    fixed_local_rendering = ", ".join(f"#{issue_number}" for issue_number in fixed_local_issues)
     merged_main_qa_pending_issues = sorted(
         issue["issueNumber"]
         for issue in ledger_issues
@@ -287,7 +303,10 @@ def test_github_issue_execution_summary_markdown_is_comment_ready() -> None:
     assert "#681, #685" not in rendered
     assert "#756" not in rendered
     assert "## Fixed Locally Issues" in rendered
-    assert "## Fixed Locally Issues\n\n_None._" in rendered
+    if fixed_local_issues:
+        assert f"## Fixed Locally Issues\n\n{fixed_local_rendering}" in rendered
+    else:
+        assert "## Fixed Locally Issues\n\n_None._" in rendered
     assert "## PR-Open Issues" in rendered
     if pr_open_issues:
         assert f"## PR-Open Issues\n\n{pr_open_rendering}" in rendered

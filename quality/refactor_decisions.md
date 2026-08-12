@@ -106,6 +106,26 @@ metadata, response schema, status codes, ProblemDetails codes/details,
 authorization ordering, tenant/book/portfolio/client entitlement behavior,
 source-safe redaction, and supported-feature non-promotion posture.
 
+The local implementation now keeps the public route handler as a thin
+orchestrator over named API-boundary helpers for caller construction,
+authorization, application execution, result projection, ProblemDetails, and
+operation-event emission. Focused local validation passed:
+
+1. `.venv\Scripts\ruff.exe check src\app\api\candidate_detail.py tests\integration\test_candidate_detail_api.py tests\integration\test_api_operation_events.py tests\unit\test_candidate_detail_application.py tests\unit\test_candidate_detail_models.py`,
+2. `.venv\Scripts\mypy.exe src\app\api\candidate_detail.py tests\integration\test_candidate_detail_api.py tests\integration\test_api_operation_events.py tests\unit\test_candidate_detail_application.py tests\unit\test_candidate_detail_models.py`,
+3. `.venv\Scripts\python.exe -m pytest tests\integration\test_candidate_detail_api.py tests\integration\test_api_operation_events.py::test_candidate_detail_api_emits_bounded_operation_event tests\unit\test_candidate_detail_application.py tests\unit\test_candidate_detail_models.py -q`
+   (`12` passed),
+4. `make quality-baseline`,
+5. `make maintainability-gate`, and
+6. `make duplicate-implementation-gate`.
+
+The route resolves the runtime repository once and passes it through the
+application load and durable-storage posture projection so both decisions are
+bound to the same repository instance. Broader validation then passed
+`make typecheck`, `make lint`, and `make test-unit` (`5,473` passed). The
+issue-execution summary unit tests were tightened to render fixed-local issues
+from the ledger state machine instead of assuming that section is always empty.
+
 No repo-authored wiki, README, supported-features, OpenAPI, migration, runtime
 topology, Core, Workbench, Gateway, production IdP/session-token,
 authentication, or authorization infrastructure source change is expected for
