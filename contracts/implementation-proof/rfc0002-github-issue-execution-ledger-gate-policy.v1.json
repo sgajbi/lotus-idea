@@ -95,7 +95,8 @@
     960,
     964,
     966,
-    971
+    971,
+    974
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -361,6 +362,30 @@
       "authorization",
       "supported-feature posture",
       "final RFC-0002 closure"
+    ],
+    "974": [
+      "Keep #974 open",
+      "RFC-0002 Slice 15/19 candidate-lifecycle API route maintainability refactor",
+      "record_candidate_lifecycle_transition",
+      "trusted caller construction",
+      "lifecycle capability authorization",
+      "idempotency validation",
+      "durable repository configuration guard",
+      "event-lineage and command construction",
+      "application execution",
+      "response projection",
+      "persistence-problem projection",
+      "operation-event preservation",
+      "Ruff check",
+      "Ruff format check",
+      "MyPy",
+      "44 candidate lifecycle/API operation-event tests",
+      "No repo-authored wiki source change is expected",
+      "production IdP/session-token authority",
+      "Gateway/Workbench runtime proof",
+      "legal/privacy/Archive/provider certification",
+      "supported-feature promotion",
+      "final RFC-0002 completion"
     ]
   },
   "requiredClosedIssueEvidence": {
