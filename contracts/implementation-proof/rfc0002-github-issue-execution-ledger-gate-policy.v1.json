@@ -365,7 +365,7 @@
       "final RFC-0002 closure"
     ],
     "977": [
-      "Keep #977 open until the AI workflow-pack registration proof-builder refactor merges to main",
+      "Keep #977 open while PR #978 is open",
       "internal RFC-0002 Slice 19 maintainability only",
       "build_ai_workflow_pack_registration_proof_payload",
       "split proof-check construction",
