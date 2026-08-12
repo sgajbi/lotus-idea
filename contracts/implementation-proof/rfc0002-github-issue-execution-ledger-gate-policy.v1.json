@@ -373,14 +373,21 @@
       "authorization",
       "supported-feature posture",
       "final RFC-0002 closure"
-    ],
+    ]
+  },
+  "requiredClosedIssueEvidence": {
     "1006": [
-      "Keep #1006 open",
+      "Closed #1006 after QA passed",
       "PR #1007",
       "4cc19d7b8ae1b4ec62504f34037b21113fffb644",
       "bc819661a68d2463f6a7a4e0dce72bc316d7aec3",
       "31588539724",
       "31588526422",
+      "PR #1008",
+      "91b67892266bf8b9e7500c977c67f5cfb19d131a",
+      "4fc3dbb661fb9dd02192ede65ad92809da6dc631",
+      "31590129935",
+      "31590118892",
       "RFC-0002 issue execution summary test maintainability refactor",
       "tests/unit/test_github_issue_execution_summary.py",
       "summary count",
@@ -391,6 +398,8 @@
       "named helpers or data-driven assertions",
       "DiffCount 0",
       "patch-equivalent",
+      "Loop status: qa_passed_closed",
+      "status/merged-main",
       "test-support maintainability only",
       "runtime behavior",
       "API/OpenAPI behavior",
@@ -398,9 +407,7 @@
       "Core, Gateway, Workbench",
       "supported-feature posture",
       "final RFC-0002 closure"
-    ]
-  },
-  "requiredClosedIssueEvidence": {
+    ],
     "1000": [
       "Closed #1000 after QA passed",
       "PR #1001",
