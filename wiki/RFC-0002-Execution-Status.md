@@ -38,8 +38,8 @@ blocked posture and implement or reclassify it.
 
 ```mermaid
 flowchart LR
-    Issues["GitHub issue posture<br/>178 label-backed RFC-0002 issues"]
-    Open["140 closed and 38 open<br/>25 `status/blocked`, 1 `status/in-progress`, 2 `status/merged-main`<br/>2 `status/merged-to-main`, 8 trackers"]
+    Issues["GitHub issue posture<br/>179 label-backed RFC-0002 issues"]
+    Open["140 closed and 39 open<br/>25 `status/blocked`, 2 `status/in-progress`, 2 `status/merged-main`<br/>2 `status/merged-to-main`, 8 trackers"]
     Blocked["Blocked classifier<br/>0 app-actionable blocked"]
     Work["Writable work<br/>only when evidence proves app-code ownership"]
     External["Core / protected / identity / provider / legal evidence"]
@@ -57,13 +57,13 @@ flowchart LR
 | Status label | Count | Interpretation |
 | --- | ---: | --- |
 | `status/blocked` | 25 | Protected, identity, provider, legal, publication, canonical QA, or certification evidence. |
-| `status/in-progress` | 1 | Continuous Slice 18 synchronization tracker `sgajbi/lotus-idea#681`. |
+| `status/in-progress` | 2 | Continuous Slice 18 synchronization tracker `sgajbi/lotus-idea#681` plus Slice 19 test-maintainability refactor `sgajbi/lotus-idea#1027`. |
 | `status/merged-main` | 2 | Merged-main issues awaiting QA closure evidence, including Slice 19 test-support hardening `sgajbi/lotus-idea#1024`. |
 | `status/merged-to-main` | 2 | Repository-local Advise merged-main alias awaiting QA closure evidence. |
 | `status/tracker` | 8 | Parent or umbrella tracking issues, not immediate implementation items. |
 
-Latest synchronization evidence: Current GitHub issue posture has 178
-label-backed RFC-0002 issues, 140 closed and 38 open, with 25 `status/blocked`, 1 `status/in-progress`, 2 `status/merged-main`, 2 `status/merged-to-main`,
+Latest synchronization evidence: Current GitHub issue posture has 179
+label-backed RFC-0002 issues, 140 closed and 39 open, with 25 `status/blocked`, 2 `status/in-progress`, 2 `status/merged-main`, 2 `status/merged-to-main`,
 8 `status/tracker`, and 0 app-actionable blocked issues. `lotus-idea#1014`,
 `lotus-idea#1016`, and `lotus-idea#1020` are closed with `status/merged-main`
 and now appear in the RFC-0002 execution ledger as Slice 12/13/15/19 hardening
