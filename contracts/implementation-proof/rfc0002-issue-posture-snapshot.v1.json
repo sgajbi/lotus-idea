@@ -10,13 +10,13 @@
   "trackingIssue": "sgajbi/lotus-idea#681",
   "ideaLedger": {
     "totalTrackedIssues": 114,
-    "openIssues": 27,
-    "closedIssues": 87,
+    "openIssues": 25,
+    "closedIssues": 89,
     "openStatusCounts": {
       "open_blocked": 14,
       "open_fixed_local": 0,
       "open_in_progress": 1,
-      "open_merged_main_qa_pending": 2,
+      "open_merged_main_qa_pending": 0,
       "open_pr_raised": 0,
       "open_pending_final_closure": 1,
       "open_pending_post_completion": 1,
@@ -27,10 +27,7 @@
       "sgajbi/lotus-idea#681"
     ],
     "prOpenIssues": [],
-    "mergedMainQaPendingIssues": [
-      "sgajbi/lotus-idea#1037",
-      "sgajbi/lotus-idea#1040"
-    ],
+    "mergedMainQaPendingIssues": [],
     "recentlyClosedIssues": [
       "sgajbi/lotus-idea#1014",
       "sgajbi/lotus-idea#1016",
@@ -38,21 +35,23 @@
       "sgajbi/lotus-idea#1024",
       "sgajbi/lotus-idea#1027",
       "sgajbi/lotus-idea#1029",
-      "sgajbi/lotus-idea#1033"
+      "sgajbi/lotus-idea#1033",
+      "sgajbi/lotus-idea#1037",
+      "sgajbi/lotus-idea#1040"
     ]
   },
   "crossRepo": {
     "repositoriesChecked": 13,
     "totalRfc0002Issues": 183,
-    "openRfc0002Issues": 39,
-    "closedRfc0002Issues": 144,
+    "openRfc0002Issues": 37,
+    "closedRfc0002Issues": 146,
     "openBlockedIssues": 25,
     "appActionableBlockedIssues": 0,
     "openStatusCounts": {
       "status/blocked": 25,
       "status/fixed-local": 0,
       "status/in-progress": 1,
-      "status/merged-main": 3,
+      "status/merged-main": 1,
       "status/merged-to-main": 2,
       "status/pr-open": 0,
       "status/tracker": 8
@@ -64,15 +63,15 @@
   "expectedCurrentFragments": {
     "ideaLedger": [
       "114 tracked RFC-0002 issues",
-      "87 closed and 27 open",
+      "89 closed and 25 open",
       "#681",
       "#1037",
       "#1040"
     ],
     "crossRepo": [
       "183 label-backed RFC-0002 issues",
-      "144 closed and 39 open",
-      "25 `status/blocked`, 1 `status/in-progress`, 3 `status/merged-main`, 2 `status/merged-to-main`, 0 `status/pr-open`, 8 `status/tracker`",
+      "146 closed and 37 open",
+      "25 `status/blocked`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 0 `status/pr-open`, 8 `status/tracker`",
       "0 app-actionable blocked"
     ]
   },
