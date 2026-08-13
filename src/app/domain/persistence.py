@@ -476,56 +476,26 @@ class InMemoryIdeaRepository(
         if identity_result is not None:
             return identity_result
 
-        candidate_id = self._conversion_intent_candidates.get(conversion_intent_id)
-        if candidate_id is None:
-            return ConversionPersistenceResult(
-                decision=ConversionPersistenceDecision.NOT_FOUND,
-                record=None,
-            )
-        record = self._candidate_records.get(candidate_id)
+        candidate_id, record = self._conversion_record_for_intent(conversion_intent_id)
         if record is None:
             return ConversionPersistenceResult(
                 decision=ConversionPersistenceDecision.NOT_FOUND,
                 record=None,
             )
-        try:
-            validate_conversion_outcome_progression(
-                tuple(
-                    outcome.identity
-                    for outcome in record.conversion_outcomes
-                    if outcome.conversion_intent_id == conversion_intent_id
-                ),
-                result.conversion_outcome.identity,
-            )
-        except ConversionOutcomePolicyViolation:
+
+        if _conversion_outcome_progression_conflicts(record, result):
             return ConversionPersistenceResult(
                 decision=ConversionPersistenceDecision.OUTCOME_CONFLICT,
                 record=record,
             )
 
-        updated = replace(
-            record,
-            audit_events=(*record.audit_events, result.audit_event),
-            conversion_outcomes=(*record.conversion_outcomes, result.conversion_outcome),
-        )
-        self._candidate_records[candidate_id] = updated
-        self._idempotency_records[idempotency_key] = idempotency_record
-        self._idempotency_candidates[idempotency_key] = candidate_id
-        self._append_outbox_event(
-            event_type="idea.conversion.outcome_recorded.v1",
-            aggregate_id=candidate_id,
-            occurred_at_utc=result.conversion_outcome.outcome.recorded_at_utc,
+        updated = self._accept_conversion_outcome(
+            candidate_id=candidate_id,
+            record=record,
+            result=result,
             idempotency_key=idempotency_key,
+            idempotency_record=idempotency_record,
             event_lineage=event_lineage,
-            payload={
-                "source_system": result.conversion_outcome.source_system.value,
-                "source_event_version": str(result.conversion_outcome.source_event_version),
-                "status": result.conversion_outcome.outcome.status.value,
-                "supersedes_outcome": str(
-                    result.conversion_outcome.supersedes_conversion_outcome_id is not None
-                ).lower(),
-                "target": result.conversion_outcome.target.value,
-            },
         )
         return ConversionPersistenceResult(
             decision=ConversionPersistenceDecision.ACCEPTED,
@@ -703,6 +673,38 @@ class InMemoryIdeaRepository(
         self._candidate_records[candidate_id] = updated
         return updated, audit_event
 
+    def _conversion_record_for_intent(
+        self, conversion_intent_id: str
+    ) -> tuple[str, CandidatePersistenceRecord | None]:
+        candidate_id = self._conversion_intent_candidates.get(conversion_intent_id)
+        if candidate_id is None:
+            return "", None
+        return candidate_id, self._candidate_records.get(candidate_id)
+
+    def _accept_conversion_outcome(
+        self,
+        *,
+        candidate_id: str,
+        record: CandidatePersistenceRecord,
+        result: ConversionOutcomeResult,
+        idempotency_key: str,
+        idempotency_record: IdempotencyRecord,
+        event_lineage: EventLineageContext | None,
+    ) -> CandidatePersistenceRecord:
+        updated = _record_with_conversion_outcome(record, result)
+        self._candidate_records[candidate_id] = updated
+        self._idempotency_records[idempotency_key] = idempotency_record
+        self._idempotency_candidates[idempotency_key] = candidate_id
+        self._append_outbox_event(
+            event_type="idea.conversion.outcome_recorded.v1",
+            aggregate_id=candidate_id,
+            occurred_at_utc=result.conversion_outcome.outcome.recorded_at_utc,
+            idempotency_key=idempotency_key,
+            event_lineage=event_lineage,
+            payload=_conversion_outcome_outbox_payload(result),
+        )
+        return updated
+
 
 def _audit_event(
     *,
@@ -719,6 +721,60 @@ def _audit_event(
         occurred_at_utc=occurred_at_utc,
         attributes=attributes,
     )
+
+
+def _record_with_conversion_outcome(
+    record: CandidatePersistenceRecord,
+    result: ConversionOutcomeResult,
+) -> CandidatePersistenceRecord:
+    return replace(
+        record,
+        audit_events=(*record.audit_events, result.audit_event),
+        conversion_outcomes=(*record.conversion_outcomes, result.conversion_outcome),
+    )
+
+
+def _conversion_outcome_progression_conflicts(
+    record: CandidatePersistenceRecord,
+    result: ConversionOutcomeResult,
+) -> bool:
+    try:
+        validate_conversion_outcome_progression(
+            _conversion_outcome_identities_for_intent(
+                record,
+                result.conversion_outcome.conversion_intent_id,
+            ),
+            result.conversion_outcome.identity,
+        )
+    except ConversionOutcomePolicyViolation:
+        return True
+    return False
+
+
+def _conversion_outcome_identities_for_intent(
+    record: CandidatePersistenceRecord,
+    conversion_intent_id: str,
+) -> tuple[ConversionOutcomeIdentity, ...]:
+    return tuple(
+        outcome.identity
+        for outcome in record.conversion_outcomes
+        if outcome.conversion_intent_id == conversion_intent_id
+    )
+
+
+def _conversion_outcome_outbox_payload(
+    result: ConversionOutcomeResult,
+) -> dict[str, str]:
+    conversion_outcome = result.conversion_outcome
+    return {
+        "source_system": conversion_outcome.source_system.value,
+        "source_event_version": str(conversion_outcome.source_event_version),
+        "status": conversion_outcome.outcome.status.value,
+        "supersedes_outcome": str(
+            conversion_outcome.supersedes_conversion_outcome_id is not None
+        ).lower(),
+        "target": conversion_outcome.target.value,
+    }
 
 
 def _require_text(value: str, field_name: str) -> None:

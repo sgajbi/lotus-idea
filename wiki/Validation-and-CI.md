@@ -1218,10 +1218,12 @@ posture remains uncertified until release evidence exists.
 It also lists every blocked issue with the GitHub URL, actionability, blocker
 class, and remaining authority so the Core-vs-protected/external split is
 auditable without chat memory or one-off GitHub queries.
-Current live posture is 183 label-backed RFC-0002 issues across 13
-repositories: 146 closed and 37 open. The open split is 25 `status/blocked`,
-1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 0
-`status/pr-open`, 8 `status/tracker`; `sgajbi/lotus-idea#1040` is
+Current live posture is 184 label-backed RFC-0002 issues across 13
+repositories: 146 closed and 38 open. The open split is 25 `status/blocked`,
+2 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 0
+`status/pr-open`, 8 `status/tracker`; `sgajbi/lotus-idea#1044` is the
+in-progress Slice 12/13/19 conversion outcome persistence maintainability
+refactor and `sgajbi/lotus-idea#1040` is
 closed after QA-backed Slice 19 configured implementation-proof artifact-loader
 binding coverage; `sgajbi/lotus-idea#1024` is closed after QA-backed
 Slice 19 test-maintainability evidence, `sgajbi/lotus-idea#1027` and
@@ -1598,9 +1600,9 @@ supported feature.
 
 RFC-0002 execution is tracked through GitHub issue state plus the
 source-controlled implementation-proof ledgers. The current governed posture is
-183 label-backed RFC-0002 issues across 13 repositories: 146 closed and 37 open.
-The open set is 25 `status/blocked`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 0 `status/pr-open`, 8 `status/tracker`;
-#1024, #1027, #1029, #1033, #1037, and #1040 are closed after QA-backed Slice 19 hardening, and #681 is the in-progress Slice 18 issue;
+184 label-backed RFC-0002 issues across 13 repositories: 146 closed and 38 open.
+The open set is 25 `status/blocked`, 2 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 0 `status/pr-open`, 8 `status/tracker`;
+#1024, #1027, #1029, #1033, #1037, and #1040 are closed after QA-backed Slice 19 hardening, #1044 is the in-progress Slice 12/13/19 maintainability refactor, and #681 is the in-progress Slice 18 issue;
 blocked actionability remains 0 app-actionable blocked issues.
 Idea PR #838 synchronized PR #837 exact-main evidence to main
 `2c2d35667643ad5efae83924475574ab6c16be03`, passed Main Releasability
