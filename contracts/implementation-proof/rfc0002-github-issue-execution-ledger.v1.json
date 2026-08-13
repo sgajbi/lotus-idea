@@ -1084,6 +1084,15 @@
       "executionStatus": "open_merged_main_qa_pending",
       "allowPullRequestAutoClose": false,
       "closureInstruction": "Keep #1037 open pending QA closure evidence after PR #1038 merged by rebase to Idea main at `e1937e2370d844809b5a043084fd654954d3767b`. Exact-main Main Releasability Gate run `31732655144` and security-equivalent Push/CodeQL run `31732645995` passed for that SHA. The repo-authored wiki source was published to lotus-idea.wiki commit `013cec7`, strict wiki parity reported `DiffCount 0`, the remote PR branch was deleted and pruned, and the local implementation branch was deleted only after patch-equivalence plus zero-diff branch cleanup proof. The implementation split the public Core benchmark-assignment runtime evidence validator into named payload-envelope, execution-envelope, no-claim-boundary, receipt-integrity, execution-success, and control-list helpers while preserving the public `core_benchmark_assignment_runtime_execution_is_valid` signature and return semantics. This source-truth synchronization records merged-main QA-pending posture only and keeps #1037 open; it makes no claim to runtime behavior changes, API/OpenAPI changes, persistence, migrations, Core/Gateway/Workbench/Report/Render/Archive/Advise/Manage/AI authority, supported-feature promotion, production certification, client publication, or final RFC-0002 closure."
+    },
+    {
+      "issueNumber": 1040,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/1040",
+      "rfcSlices": ["slice-19"],
+      "githubState": "open",
+      "executionStatus": "open_fixed_local",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #1040 open pending PR review and mainline validation. Local commit `4dfb2b44` refactored configured implementation-proof artifact loader bindings into typed binding definitions and extended the unit coverage matrix so it must match every JSON and ref-only runtime loader binding. Focused local validation passed `python -m pytest tests/unit/test_proof_artifacts.py -q`, `python -m ruff check src/app/runtime/proof_artifacts.py tests/unit/test_proof_artifacts.py`, `python -m mypy src/app/runtime/proof_artifacts.py tests/unit/test_proof_artifacts.py`, and `git diff --check`. This is RFC-0002 Slice 19 implementation-proof aggregation hardening only; it makes no claim to runtime behavior changes, API/OpenAPI changes, persistence, migrations, Core/Gateway/Workbench/Report/Render/Archive/Advise/Manage/AI authority, supported-feature promotion, production certification, client publication, or final RFC-0002 closure."
     }
   ]
 }
