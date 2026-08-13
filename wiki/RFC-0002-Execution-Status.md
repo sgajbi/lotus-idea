@@ -39,7 +39,7 @@ blocked posture and implement or reclassify it.
 ```mermaid
 flowchart LR
     Issues["GitHub issue posture<br/>180 label-backed RFC-0002 issues"]
-    Open["140 closed and 40 open<br/>25 `status/blocked`, 1 `status/in-progress`, 2 `status/merged-main`, 2 `status/merged-to-main`, 2 `status/pr-open`<br/>8 trackers"]
+    Open["140 closed and 40 open<br/>25 `status/blocked`, 1 `status/in-progress`, 4 `status/merged-main`, 2 `status/merged-to-main`, 8 `status/tracker`"]
     Blocked["Blocked classifier<br/>0 app-actionable blocked"]
     Work["Writable work<br/>only when evidence proves app-code ownership"]
     External["Core / protected / identity / provider / legal evidence"]
@@ -58,17 +58,18 @@ flowchart LR
 | --- | ---: | --- |
 | `status/blocked` | 25 | Protected, identity, provider, legal, publication, canonical QA, or certification evidence. |
 | `status/in-progress` | 1 | Continuous Slice 18 synchronization tracker `sgajbi/lotus-idea#681`. |
-| `status/merged-main` | 2 | Merged-main issues awaiting QA closure evidence, including Slice 19 test-support hardening `sgajbi/lotus-idea#1024`. |
+| `status/merged-main` | 4 | Merged-main issues awaiting QA closure evidence, including Slice 19 test-support hardening `sgajbi/lotus-idea#1024`, `sgajbi/lotus-idea#1027`, and `sgajbi/lotus-idea#1029`. |
 | `status/merged-to-main` | 2 | Repository-local Advise merged-main alias awaiting QA closure evidence. |
-| `status/pr-open` | 2 | Slice 19 test-maintainability refactors `sgajbi/lotus-idea#1027` and `sgajbi/lotus-idea#1029` are under PR #1028 validation. |
+| `status/pr-open` | 0 | No RFC-0002 issue is currently in PR-open posture. |
 | `status/tracker` | 8 | Parent or umbrella tracking issues, not immediate implementation items. |
 
 Latest synchronization evidence: Current GitHub issue posture has 180
-label-backed RFC-0002 issues, 140 closed and 40 open, with 25 `status/blocked`, 1 `status/in-progress`, 2 `status/merged-main`, 2 `status/merged-to-main`,
-2 `status/pr-open`, 8 `status/tracker`, and 0 app-actionable blocked issues. `lotus-idea#1014`,
-`lotus-idea#1016`, and `lotus-idea#1020` are closed with `status/merged-main`
-and now appear in the RFC-0002 execution ledger as Slice 12/13/15/19 hardening
-issues.
+label-backed RFC-0002 issues, 140 closed and 40 open, with 25 `status/blocked`, 1 `status/in-progress`, 4 `status/merged-main`, 2 `status/merged-to-main`, 8 `status/tracker`, and 0 app-actionable blocked issues. `lotus-idea#1027`
+and `lotus-idea#1029` are merged-main QA-pending after PR #1028 landed Slice 19
+implementation-proof readiness API test-maintainability hardening on exact main
+`06f650a0e6532c2f71caf71240f6bd0120fb3f59` with Main Releasability
+`31713951440`, Push/CodeQL `31713943556`, wiki publication `a44291d`, and
+branch cleanup evidence.
 `sgajbi/lotus-core#917` is also closed
 with `status/merged-main` after Core PR #929 reached exact main
 `6bc937bb173051e0bd4ee9a07ffebd54face0163` and Main Releasability
