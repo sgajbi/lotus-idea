@@ -367,8 +367,8 @@
     {
       "patternId": "test_support_maintainability_quality_baseline",
       "title": "Quality-baseline hotspots need issue-backed decomposition without changing product claims.",
-      "currentLedgerIssueNumbers": [1037, 1040],
-      "relatedIssueNumbers": [645, 950, 953, 956, 960, 964, 966, 1006, 1010, 1020, 1029, 1033],
+      "currentLedgerIssueNumbers": [],
+      "relatedIssueNumbers": [645, 950, 953, 956, 960, 964, 966, 1006, 1010, 1020, 1029, 1033, 1037, 1040],
       "rfcSlices": ["slice-19"],
       "durableControls": [
         {

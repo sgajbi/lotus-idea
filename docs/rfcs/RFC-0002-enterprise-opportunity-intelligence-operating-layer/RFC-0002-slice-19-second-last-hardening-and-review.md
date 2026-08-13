@@ -2096,6 +2096,38 @@ Core, Gateway, Workbench, Report, Render, Archive, downstream live proof,
 data-product support, external-publication authority, production certification,
 supported-feature promotion, or final RFC-0002 closure.
 
+Issue `#1037` is QA-closed after PR #1038 reached exact main, PR #1039
+synchronized merged-main source truth, and current-main QA on
+`8f0df9f97898e9b346abb09e62eb01e9ced1f3db` passed focused pytest, Ruff,
+MyPy, and `make core-benchmark-assignment-live-proof-contract-gate`. The
+closure records validator maintainability hardening only; it does not certify a
+new Core contract, runtime environment, API surface, supported feature, or final
+RFC-0002 completion.
+
+## Issue 1040 Configured Implementation-Proof Artifact Loader Binding Coverage
+
+Issue `#1040` continues the Slice 19 proof-aggregation hardening pattern for
+configured implementation-proof artifact loading. The refactor moved runtime
+artifact bindings into typed binding definitions under
+`src/app/runtime/proof_artifacts.py`, preserving source-safe reference loading
+while removing duplicated literal binding maps from the loader path.
+
+Focused unit coverage asserts exact parity between the configured JSON artifact
+inventory and the ref-only loader bindings. That makes future proof inputs fail
+closed when a new artifact is added without an explicit source-safe binding and
+provenance expectation.
+
+Issue `#1040` is QA-closed after PR #1041 reached exact main
+`020dd70a65c29040d330c7a07e8aa2fb923f4baf`, PR #1042 synchronized merged-main
+source truth to main `8f0df9f97898e9b346abb09e62eb01e9ced1f3db`, exact-main
+Main Releasability and CodeQL passed, the wiki reached strict parity, branch
+cleanup completed, and current-main QA passed focused pytest, Ruff, MyPy, and
+`make core-benchmark-assignment-live-proof-contract-gate`. This is configured
+artifact-loader maintainability hardening only. It does not change proof
+semantics, runtime behavior, API/OpenAPI contracts, persistence, migrations,
+authentication/authorization, downstream authority, supported-feature posture,
+production certification, or final RFC-0002 closure.
+
 ## Issue 682 Closure-Manifest Coverage And Cross-Repo Backlog Traceability
 
 The 2026-07-19 Slice 19 pass fixed a PR coverage regression without weakening
