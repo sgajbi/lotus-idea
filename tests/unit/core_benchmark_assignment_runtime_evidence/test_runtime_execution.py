@@ -145,6 +145,8 @@ def test_source_authority_scope_and_entitlement_fail_closed(failure_mode: str) -
         "lowercase_currency",
         "empty_source_route",
         "empty_diagnostic",
+        "non_success_status",
+        "wrong_evidence_refs",
         "wrong_aggregate_blockers",
         "wrong_remaining_blockers",
     ],
@@ -174,6 +176,10 @@ def test_closed_contract_rejects_malformed_receipts_and_control_fields(failure_m
         _refresh_digest(execution["sourceReceipt"], "receiptDigest")
     elif failure_mode == "empty_diagnostic":
         execution["diagnosticCode"] = ""
+    elif failure_mode == "non_success_status":
+        execution["status"] = "blocked"
+    elif failure_mode == "wrong_evidence_refs":
+        payload["evidenceRefs"] = []
     elif failure_mode == "wrong_aggregate_blockers":
         payload["aggregateBlockersSatisfied"] = []
     else:
