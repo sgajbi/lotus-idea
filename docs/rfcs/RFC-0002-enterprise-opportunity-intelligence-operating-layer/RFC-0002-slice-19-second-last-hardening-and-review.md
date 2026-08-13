@@ -2024,6 +2024,37 @@ data-product support, external-publication authority, or supported-feature
 promotion. README, wiki, supported features, OpenAPI, migrations, and central
 skills are unchanged by explicit scope decision.
 
+## Issue 1033 Platform Route Registration Maintainability
+
+Issue `#1033` follows the same Slice 19 quality-baseline discipline for runtime
+composition. `make quality-baseline` surfaced
+`src/app/main.py::_register_platform_routes` as a `96` line platform metadata
+registration hotspot. The function was behaviorally valid, but it concentrated
+health, liveness, readiness, metadata, and version route registration metadata in
+one helper, making unrelated endpoint metadata easier to drift during later
+OpenAPI or operational-health changes.
+
+The implementation keeps `_register_platform_routes` as the application startup
+orchestrator and delegates the stable platform routes to named helpers:
+
+1. `_register_health_route`,
+2. `_register_liveness_route`,
+3. `_register_readiness_route`,
+4. `_register_metadata_route`,
+5. `_register_version_route`.
+
+The refactor preserves public paths, handlers, response models, tags, summaries,
+descriptions, response examples, health/version behavior, and the foundation-only
+supported-feature posture. Validation scope is focused on health integration
+tests, service-contract tests, OpenAPI gate, quality-baseline, RFC-0002 ledger
+and learning gates, documentation-contract gate, and whitespace checks.
+
+This is runtime-composition maintainability only. It does not change API
+contracts, persistence, migrations, authentication/authorization, Core, Gateway,
+Workbench, Report, Render, Archive, downstream live proof, data-product support,
+external-publication authority, production certification, supported-feature
+promotion, or final RFC-0002 closure.
+
 ## Issue 682 Closure-Manifest Coverage And Cross-Repo Backlog Traceability
 
 The 2026-07-19 Slice 19 pass fixed a PR coverage regression without weakening
