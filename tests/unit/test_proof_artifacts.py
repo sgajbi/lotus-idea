@@ -244,12 +244,8 @@ CONFIGURED_REF_ONLY_ARTIFACT_BINDINGS: tuple[ConfiguredRefOnlyArtifactBinding, .
 
 def test_configured_artifact_binding_matrix_covers_runtime_loader_bindings() -> None:
     assert {
-        (binding.payload_field, binding.ref_field)
-        for binding in CONFIGURED_ARTIFACT_BINDINGS
-    } == {
-        (binding.proof_field, binding.ref_field)
-        for binding in _JSON_PROOF_ARTIFACTS
-    }
+        (binding.payload_field, binding.ref_field) for binding in CONFIGURED_ARTIFACT_BINDINGS
+    } == {(binding.proof_field, binding.ref_field) for binding in _JSON_PROOF_ARTIFACTS}
     assert {binding.ref_field for binding in CONFIGURED_REF_ONLY_ARTIFACT_BINDINGS} == {
         binding.ref_field for binding in _REF_ONLY_PROOF_ARTIFACTS
     }
@@ -313,10 +309,7 @@ def _configured_artifact_paths(tmp_path: Path) -> dict[str, Path]:
             tmp_path / "output" / "ai" / "ai-model-risk-operations-proof.json"
         ),
         "operator_workflows_operations": (
-            tmp_path
-            / "output"
-            / "operations"
-            / "operator-workflows-operations-proof.json"
+            tmp_path / "output" / "operations" / "operator-workflows-operations-proof.json"
         ),
         "ai_workflow_pack": (
             tmp_path / "output" / "ai" / "ai-workflow-pack-registration-source-contract-proof.json"
