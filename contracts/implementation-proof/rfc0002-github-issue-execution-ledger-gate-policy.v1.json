@@ -111,7 +111,8 @@
     1010,
     1014,
     1016,
-    1020
+    1020,
+    1024
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -389,6 +390,19 @@
       "Workbench/Gateway browser proof",
       "production identity/session-token authority",
       "final RFC-0002 completion"
+    ],
+    "1024": [
+      "Keep #1024 open",
+      "downstream realization proof test refactor",
+      "Advise and Manage downstream realization proof tests",
+      "nested proof-boundary tamper cases",
+      "local type suppressions",
+      "supported-feature overclaims",
+      "Manage rebalance-execution authority overclaims",
+      "test-support maintainability only",
+      "Gateway, Workbench",
+      "supported-feature promotion",
+      "final RFC-0002 closure"
     ]
   },
   "requiredClosedIssueEvidence": {
