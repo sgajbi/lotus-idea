@@ -19,7 +19,7 @@ REPORT_EVIDENCE_PACK_OPERATION = (
     "/api/v1/conversion-intents/{conversionIntentId}/report-evidence-packs",
 )
 REPORT_EVIDENCE_PACK_REPLAY_TEST = (
-    "tests/integration/test_review_workflow_api.py::"
+    "tests/integration/test_report_evidence_pack_api.py::"
     "test_report_evidence_pack_api_replays_conflicts_and_blocks_client_ready_publication"
 )
 REPORT_EVIDENCE_PACK_SUCCESS_CONTRACT_TEST = (

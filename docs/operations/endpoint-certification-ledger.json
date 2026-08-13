@@ -1344,8 +1344,8 @@
         "400 returns product-safe Problem Details when request validation fails or Idempotency-Key is absent or blank."
       ],
       "test_evidence": [
-        "tests/integration/test_review_workflow_api.py::test_report_evidence_pack_api_records_request_without_render_or_archive_authority",
-        "tests/integration/test_review_workflow_api.py::test_report_evidence_pack_api_replays_conflicts_and_blocks_client_ready_publication",
+        "tests/integration/test_report_evidence_pack_api.py::test_report_evidence_pack_api_records_request_without_render_or_archive_authority",
+        "tests/integration/test_report_evidence_pack_api.py::test_report_evidence_pack_api_replays_conflicts_and_blocks_client_ready_publication",
         "tests/unit/api_examples/test_report_evidence_examples.py::test_report_evidence_pack_success_examples_match_ledger_and_openapi",
         "tests/unit/test_report_evidence.py::test_report_evidence_pack_requires_report_conversion_intent_and_preserves_authorities",
         "tests/unit/test_idea_persistence.py::test_report_evidence_pack_persistence_records_idempotent_request",
