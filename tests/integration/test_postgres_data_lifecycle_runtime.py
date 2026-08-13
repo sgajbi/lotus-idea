@@ -52,6 +52,21 @@ def test_postgres_data_lifecycle_survives_restart_and_redacts_atomically(
     postgres_database_url: str,
 ) -> None:
     client = managed_test_client(app)
+    candidate_id = _persist_lifecycle_candidate(client, postgres_database_url)
+    requested_at = datetime.now(UTC) - timedelta(seconds=1)
+
+    _assert_preview_replays_after_restart(client, candidate_id, requested_at)
+    _assert_legal_hold_blocks_erasure(client, candidate_id, requested_at)
+    _assert_release_allows_erasure(client, candidate_id, requested_at)
+    _assert_erased_state_survives_restart(postgres_database_url, candidate_id)
+    _assert_retention_expiry_surfaces_scheduled_review(postgres_database_url, candidate_id)
+    _assert_purge_removes_candidate_graph(client, postgres_database_url, candidate_id, requested_at)
+
+
+def _persist_lifecycle_candidate(
+    client: ManagedTestClient,
+    postgres_database_url: str,
+) -> str:
     persisted = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
         json=high_cash_payload(),
@@ -60,8 +75,14 @@ def test_postgres_data_lifecycle_survives_restart_and_redacts_atomically(
     assert persisted.status_code == 200
     candidate_id = str(persisted.json()["persistence"]["candidateId"])
     _complete_outbox_delivery(postgres_database_url, candidate_id)
-    requested_at = datetime.now(UTC) - timedelta(seconds=1)
+    return candidate_id
 
+
+def _assert_preview_replays_after_restart(
+    client: ManagedTestClient,
+    candidate_id: str,
+    requested_at: datetime,
+) -> None:
     preview_payload = _action_payload("erase", requested_at=requested_at, dry_run=True)
     preview = _action(client, candidate_id, "lifecycle-preview-001", preview_payload)
     assert preview.status_code == 200
@@ -80,6 +101,12 @@ def test_postgres_data_lifecycle_survives_restart_and_redacts_atomically(
     assert conflict.status_code == 409
     assert conflict.json()["code"] == "data_lifecycle_idempotency_conflict"
 
+
+def _assert_legal_hold_blocks_erasure(
+    client: ManagedTestClient,
+    candidate_id: str,
+    requested_at: datetime,
+) -> None:
     hold = _action(
         client,
         candidate_id,
@@ -101,6 +128,12 @@ def test_postgres_data_lifecycle_survives_restart_and_redacts_atomically(
     assert blocked.status_code == 409
     assert blocked.json()["code"] == "data_lifecycle_action_blocked"
 
+
+def _assert_release_allows_erasure(
+    client: ManagedTestClient,
+    candidate_id: str,
+    requested_at: datetime,
+) -> None:
     release = _action(
         client,
         candidate_id,
@@ -123,6 +156,11 @@ def test_postgres_data_lifecycle_survives_restart_and_redacts_atomically(
     assert erased.status_code == 200
     assert erased.json()["state"] == "erased"
 
+
+def _assert_erased_state_survives_restart(
+    postgres_database_url: str,
+    candidate_id: str,
+) -> None:
     _assert_erased_graph(postgres_database_url, candidate_id)
     reset_idea_repository_for_tests(reload_from_environment=True)
     with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
@@ -133,6 +171,11 @@ def test_postgres_data_lifecycle_survives_restart_and_redacts_atomically(
         assert erased_telemetry.data_lifecycle_state_counts == {"erased": 1}
         assert erased_telemetry.lifecycle_control_missing_count == 0
 
+
+def _assert_retention_expiry_surfaces_scheduled_review(
+    postgres_database_url: str,
+    candidate_id: str,
+) -> None:
     _expire_retention(postgres_database_url, candidate_id)
     with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
         scheduled_review = ReviewScheduledDataLifecycle(
@@ -143,6 +186,13 @@ def test_postgres_data_lifecycle_survives_restart_and_redacts_atomically(
     assert scheduled_review.ready_count == 1
     assert [item.snapshot.candidate_id for item in scheduled_review.items] == [candidate_id]
 
+
+def _assert_purge_removes_candidate_graph(
+    client: ManagedTestClient,
+    postgres_database_url: str,
+    candidate_id: str,
+    requested_at: datetime,
+) -> None:
     purged = _action(
         client,
         candidate_id,
