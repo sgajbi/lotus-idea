@@ -1218,8 +1218,8 @@ posture remains uncertified until release evidence exists.
 It also lists every blocked issue with the GitHub URL, actionability, blocker
 class, and remaining authority so the Core-vs-protected/external split is
 auditable without chat memory or one-off GitHub queries.
-Current live posture is 184 label-backed RFC-0002 issues across 13
-repositories: 147 closed and 37 open. The open split is 25 `status/blocked`,
+Current live posture is 187 label-backed RFC-0002 issues across 13
+repositories: 150 closed and 37 open. The open split is 25 `status/blocked`,
 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 0
 `status/pr-open`, 8 `status/tracker`; `sgajbi/lotus-idea#1044` is
 closed after QA-backed Slice 12/13/19 conversion outcome persistence
@@ -1600,9 +1600,9 @@ supported feature.
 
 RFC-0002 execution is tracked through GitHub issue state plus the
 source-controlled implementation-proof ledgers. The current governed posture is
-184 label-backed RFC-0002 issues across 13 repositories: 147 closed and 37 open.
+187 label-backed RFC-0002 issues across 13 repositories: 150 closed and 37 open.
 The open set is 25 `status/blocked`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 0 `status/pr-open`, 8 `status/tracker`;
-#1024, #1027, #1029, #1033, #1037, #1040, and #1044 are closed after QA-backed Slice 19 hardening, and #681 is the in-progress Slice 18 issue;
+#1024, #1027, #1029, #1033, #1037, #1040, #1044, #1047, #1049, and #1052 are closed after QA-backed Slice 19 hardening, and #681 is the in-progress Slice 18 issue;
 blocked actionability remains 0 app-actionable blocked issues.
 Idea PR #838 synchronized PR #837 exact-main evidence to main
 `2c2d35667643ad5efae83924475574ab6c16be03`, passed Main Releasability
