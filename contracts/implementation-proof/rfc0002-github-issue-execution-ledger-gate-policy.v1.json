@@ -405,14 +405,22 @@
       "Gateway, Workbench",
       "supported-feature promotion",
       "final RFC-0002 closure"
-    ],
+    ]
+  },
+  "requiredClosedIssueEvidence": {
     "1027": [
-      "Keep #1027 open",
+      "Closed #1027 after QA passed",
       "PR #1028",
       "06f650a0e6532c2f71caf71240f6bd0120fb3f59",
       "31713951440",
       "31713943556",
-      "lotus-idea.wiki commit `a44291d`",
+      "PR #1030",
+      "309f9bb0efbea7b7eab7cdbf4af31703c91e0c89",
+      "31716248828",
+      "31716237061",
+      "lotus-idea.wiki commit `9cd499a`",
+      "Loop status: qa_passed_closed",
+      "strict targeted audit reported `violationCount: 0`",
       "patch-equivalent to main",
       "implementation proof readiness blocked-posture API test refactor",
       "test_implementation_proof_readiness_api_returns_blocked_operator_posture",
@@ -428,12 +436,18 @@
       "final RFC-0002 closure"
     ],
     "1029": [
-      "Keep #1029 open",
+      "Closed #1029 after QA passed",
       "PR #1028",
       "06f650a0e6532c2f71caf71240f6bd0120fb3f59",
       "31713951440",
       "31713943556",
-      "lotus-idea.wiki commit `a44291d`",
+      "PR #1030",
+      "309f9bb0efbea7b7eab7cdbf4af31703c91e0c89",
+      "31716248828",
+      "31716237061",
+      "lotus-idea.wiki commit `9cd499a`",
+      "Loop status: qa_passed_closed",
+      "strict targeted audit reported `violationCount: 0`",
       "patch-equivalent to main",
       "configured proof-artifact readiness API test refactor",
       "test_implementation_proof_readiness_api_consumes_configured_proof_artifacts",
@@ -449,9 +463,7 @@
       "Gateway, Workbench",
       "supported-feature promotion",
       "final RFC-0002 closure"
-    ]
-  },
-  "requiredClosedIssueEvidence": {
+    ],
     "1016": [
       "Closed #1016 after QA passed",
       "opportunity proof-step catalog refactor",
