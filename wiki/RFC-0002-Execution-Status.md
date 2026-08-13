@@ -27,7 +27,7 @@ dependency map, and closure rules without relying on chat memory.
 | Open RFC-0002 issues | 38 |
 | Open blocked issues | 25 |
 | App-actionable blocked issues | 0 |
-| Active synchronization tracker | `sgajbi/lotus-idea#681`; fixed-local Slice 19 refactor `sgajbi/lotus-idea#1037` |
+| Active synchronization tracker | `sgajbi/lotus-idea#681`; PR-open Slice 19 refactor `sgajbi/lotus-idea#1037` |
 
 The zero app-actionable blocked count is important. It means an open issue may
 remain `status/blocked` only when the remaining authority is Core-owned,
@@ -39,7 +39,7 @@ blocked posture and implement or reclassify it.
 ```mermaid
 flowchart LR
     Issues["GitHub issue posture<br/>182 label-backed RFC-0002 issues"]
-    Open["144 closed and 38 open<br/>25 `status/blocked`, 1 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 8 `status/tracker`"]
+    Open["144 closed and 38 open<br/>25 `status/blocked`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 1 `status/pr-open`, 8 `status/tracker`"]
     Blocked["Blocked classifier<br/>0 app-actionable blocked"]
     Work["Writable work<br/>only when evidence proves app-code ownership"]
     External["Core / protected / identity / provider / legal evidence"]
@@ -57,14 +57,14 @@ flowchart LR
 | Status label | Count | Interpretation |
 | --- | ---: | --- |
 | `status/blocked` | 25 | Protected, identity, provider, legal, publication, canonical QA, or certification evidence. |
-| `status/fixed-local` | 1 | Slice 19 Core benchmark runtime evidence validator refactor `sgajbi/lotus-idea#1037` has local implementation and gate evidence pending PR/merge/QA closure. |
 | `status/in-progress` | 1 | Continuous Slice 18 synchronization tracker `sgajbi/lotus-idea#681`. |
 | `status/merged-main` | 1 | Merged-main issue awaiting QA closure evidence, currently `sgajbi/lotus-ai#126`. |
 | `status/merged-to-main` | 2 | Repository-local Advise merged-main alias awaiting QA closure evidence. |
+| `status/pr-open` | 1 | Slice 19 Core benchmark runtime evidence validator refactor `sgajbi/lotus-idea#1037` is in PR #1038. |
 | `status/tracker` | 8 | Parent or umbrella tracking issues, not immediate implementation items. |
 
 Latest synchronization evidence: Current GitHub issue posture has 182
-label-backed RFC-0002 issues, 144 closed and 38 open, with 25 `status/blocked`, 1 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 8 `status/tracker`, and 0 app-actionable blocked issues. `lotus-idea#1037` is fixed-local for Slice 19 Core benchmark runtime evidence validator maintainability hardening. `lotus-idea#1033` is closed after QA-backed Slice 19 platform route-registration maintainability hardening reached exact main, source truth synchronized, wiki parity passed, and strict issue-loop audit reported `violationCount: 0`. `lotus-idea#1024` is closed after QA-backed Slice 19 downstream realization proof test hardening; `lotus-idea#1027`
+label-backed RFC-0002 issues, 144 closed and 38 open, with 25 `status/blocked`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 1 `status/pr-open`, 8 `status/tracker`, and 0 app-actionable blocked issues. `lotus-idea#1037` is PR-open for Slice 19 Core benchmark runtime evidence validator maintainability hardening. `lotus-idea#1033` is closed after QA-backed Slice 19 platform route-registration maintainability hardening reached exact main, source truth synchronized, wiki parity passed, and strict issue-loop audit reported `violationCount: 0`. `lotus-idea#1024` is closed after QA-backed Slice 19 downstream realization proof test hardening; `lotus-idea#1027`
 and `lotus-idea#1029` are closed after PR #1028 landed Slice 19
 implementation-proof readiness API test-maintainability hardening, PR #1030
 synchronized merged-main source truth, exact-main Main Releasability
