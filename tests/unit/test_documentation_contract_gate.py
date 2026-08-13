@@ -334,7 +334,7 @@ def test_documentation_contract_gate_blocks_non_contract_current_issue_posture(
         "wiki/RFC-Index.md: paragraph 2 describes current/live RFC-0002 issue posture "
         "without contract-backed crossRepo fragment(s): "
         "`180 label-backed RFC-0002 issues`, `140 closed and 40 open`, "
-        "`25 `status/blocked`, 1 `status/fixed-local`, 1 `status/in-progress`, 2 `status/merged-main`, 2 `status/merged-to-main`, 1 `status/pr-open``"
+        "`25 `status/blocked`, 1 `status/in-progress`, 2 `status/merged-main`, 2 `status/merged-to-main`, 2 `status/pr-open``"
     ]
 
 
