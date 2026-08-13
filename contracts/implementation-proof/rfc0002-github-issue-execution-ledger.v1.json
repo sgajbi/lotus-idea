@@ -1048,6 +1048,15 @@
       "executionStatus": "open_merged_main_qa_pending",
       "allowPullRequestAutoClose": false,
       "closureInstruction": "Keep #1024 open until QA closure evidence is recorded. PR #1025 rebase-merged the downstream realization proof test refactor to Idea main `2597811841e3c2bdcfb5c30dbf6bf616fb311eba`; exact-main Main Releasability Gate run `31707632385` and CodeQL Push run `31707624422` passed for that SHA. Wiki source changed in PR #1025 and was published to lotus-idea.wiki commit `ad19471` with strict `Sync-RepoWikis.ps1 -CheckOnly -Repository lotus-idea` parity `DiffCount 0`. Branch cleanup evidence: GitHub deleted remote branch `issue/1024-downstream-proof-test-refactor`, `git fetch --prune` removed the remote-tracking ref, the local branch was deleted after content-equivalence proof against main, and the repository was clean on `main...origin/main`. Scope is limited to refactoring Advise and Manage downstream realization proof tests so nested proof-boundary tamper cases are expressed through clear helpers instead of repeated untyped dictionary mutation and local type suppressions. All existing rejection behavior is preserved for supported-feature overclaims, Manage rebalance-execution authority overclaims, replay-evidence drift, runtime metadata drift, and receipt-shape drift. This is test-support maintainability only and does not change runtime behavior, API/OpenAPI contracts, persistence, migrations, authentication, authorization, Core, Gateway, Workbench, Report, Render, Archive, downstream live proof, supported-feature promotion, client publication, production certification, or final RFC-0002 closure."
+    },
+    {
+      "issueNumber": 1027,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/1027",
+      "rfcSlices": ["slice-19"],
+      "githubState": "open",
+      "executionStatus": "open_in_progress",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #1027 open until the implementation proof readiness blocked-posture API test refactor is implemented, merged to main, exact-main validation passes, and issue-loop QA closure evidence is recorded. Scope is limited to refactoring `tests/integration/test_implementation_proof_readiness_api.py::test_implementation_proof_readiness_api_returns_blocked_operator_posture` into named assertion helpers for blocked operator API envelope/count posture, global blockers/source-of-truth, capability catalog membership, AI explanation proof posture, operator workflow proof posture, opportunity archetype proof posture, supported-feature non-promotion, and source-safe redaction. Preserve every existing behavioral assertion and all RFC-0002 no-claim boundaries. This is test-support maintainability only and does not change runtime behavior, API/OpenAPI contracts, persistence, migrations, authentication, authorization, Core, Gateway, Workbench, Report, Render, Archive, downstream live proof, supported-feature promotion, client publication, production certification, or final RFC-0002 closure."
     }
   ]
 }

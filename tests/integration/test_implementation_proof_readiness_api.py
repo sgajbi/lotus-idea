@@ -133,6 +133,17 @@ def test_implementation_proof_readiness_api_returns_blocked_operator_posture(
 
     assert response.status_code == 200
     payload = response.json()
+    _assert_blocked_operator_readiness_envelope(payload)
+    _assert_blocked_operator_source_of_truth(payload)
+    capabilities = _capabilities_by_id(payload)
+    _assert_blocked_operator_capability_catalog(capabilities)
+    _assert_ai_explanation_blocked_posture(capabilities)
+    _assert_operator_workflows_blocked_posture(capabilities)
+    _assert_opportunity_archetype_blocked_posture(capabilities)
+    _assert_source_safe_readiness_response(response.text)
+
+
+def _assert_blocked_operator_readiness_envelope(payload: dict[str, Any]) -> None:
     assert payload["repository"] == "lotus-idea"
     assert payload["readinessStatus"] == "blocked"
     assert payload["supportabilityStatus"] == "not_certified"
@@ -152,13 +163,25 @@ def test_implementation_proof_readiness_api_returns_blocked_operator_posture(
     )
     assert "workbench_panel_missing" in payload["overallBlockers"]
     assert "no_supported_features_promoted" in payload["overallBlockers"]
+
+
+def _assert_blocked_operator_source_of_truth(payload: dict[str, Any]) -> None:
     assert payload["sourceOfTruth"]["endpoint_certification"] == (
         "docs/operations/endpoint-certification-ledger.json"
     )
     assert payload["sourceOfTruth"]["opportunity_archetypes"] == (
         "contracts/opportunity-archetypes/lotus-idea-opportunity-archetypes.v1.json"
     )
-    assert {capability["capabilityId"] for capability in payload["capabilities"]} == {
+
+
+def _capabilities_by_id(payload: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    return {capability["capabilityId"]: capability for capability in payload["capabilities"]}
+
+
+def _assert_blocked_operator_capability_catalog(
+    capabilities: dict[str, dict[str, Any]],
+) -> None:
+    assert set(capabilities) == {
         "source-ingestion",
         "advisor-review-queue",
         "ai-explanation",
@@ -171,9 +194,11 @@ def test_implementation_proof_readiness_api_returns_blocked_operator_posture(
         "downstream-realization",
         "supported-feature-promotion",
     }
-    capabilities = {
-        capability["capabilityId"]: capability for capability in payload["capabilities"]
-    }
+
+
+def _assert_ai_explanation_blocked_posture(
+    capabilities: dict[str, dict[str, Any]],
+) -> None:
     assert (
         "contracts/observability/lotus-idea-ai-model-risk-operations.v1.json"
         in capabilities["ai-explanation"]["evidenceRefs"]
@@ -187,6 +212,11 @@ def test_implementation_proof_readiness_api_returns_blocked_operator_posture(
     assert "model_risk_operations_dashboard_not_certified" not in ai_explanation_blockers
     assert "model_risk_operations_alerts_not_certified" not in ai_explanation_blockers
     assert "certified_runtime_trust_telemetry_missing" in ai_explanation_blockers
+
+
+def _assert_operator_workflows_blocked_posture(
+    capabilities: dict[str, dict[str, Any]],
+) -> None:
     operator_workflows = capabilities["operator-workflows-operations"]
     assert (
         "contracts/observability/lotus-idea-operator-workflows-operations.v1.json"
@@ -194,6 +224,11 @@ def test_implementation_proof_readiness_api_returns_blocked_operator_posture(
     )
     assert "operator_workflow_dashboard_runtime_proof_missing" in operator_workflows["blockers"]
     assert "operator_workflow_alert_rules_runtime_proof_missing" in operator_workflows["blockers"]
+
+
+def _assert_opportunity_archetype_blocked_posture(
+    capabilities: dict[str, dict[str, Any]],
+) -> None:
     archetype_scenarios = capabilities["opportunity-archetype-scenarios"]
     assert (
         "contracts/opportunity-archetypes/lotus-idea-opportunity-archetypes.v1.json"
@@ -213,8 +248,11 @@ def test_implementation_proof_readiness_api_returns_blocked_operator_posture(
         in (archetype_scenarios["blockers"])
     )
     assert archetype_scenarios["supportedFeaturePromoted"] is False
-    assert "portfolio_id" not in response.text
-    assert "client_id" not in response.text
+
+
+def _assert_source_safe_readiness_response(response_text: str) -> None:
+    assert "portfolio_id" not in response_text
+    assert "client_id" not in response_text
 
 
 def test_implementation_proof_readiness_api_blocks_invalid_registry_safely(

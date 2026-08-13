@@ -112,7 +112,8 @@
     1014,
     1016,
     1020,
-    1024
+    1024,
+    1027
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -399,6 +400,21 @@
       "local type suppressions",
       "supported-feature overclaims",
       "Manage rebalance-execution authority overclaims",
+      "test-support maintainability only",
+      "Gateway, Workbench",
+      "supported-feature promotion",
+      "final RFC-0002 closure"
+    ],
+    "1027": [
+      "Keep #1027 open",
+      "implementation proof readiness blocked-posture API test refactor",
+      "test_implementation_proof_readiness_api_returns_blocked_operator_posture",
+      "blocked operator API envelope/count posture",
+      "AI explanation proof posture",
+      "operator workflow proof posture",
+      "opportunity archetype proof posture",
+      "supported-feature non-promotion",
+      "source-safe redaction",
       "test-support maintainability only",
       "Gateway, Workbench",
       "supported-feature promotion",
