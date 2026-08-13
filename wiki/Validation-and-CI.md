@@ -1220,9 +1220,9 @@ class, and remaining authority so the Core-vs-protected/external split is
 auditable without chat memory or one-off GitHub queries.
 Current live posture is 183 label-backed RFC-0002 issues across 13
 repositories: 144 closed and 39 open. The open split is 25 `status/blocked`,
-1 `status/fixed-local`, 1 `status/in-progress`, 2 `status/merged-main`, 2
-`status/merged-to-main`, 8 `status/tracker`; `sgajbi/lotus-idea#1040` is
-fixed-local for Slice 19 configured implementation-proof artifact-loader
+1 `status/in-progress`, 2 `status/merged-main`, 2 `status/merged-to-main`, 1
+`status/pr-open`, 8 `status/tracker`; `sgajbi/lotus-idea#1040` is
+PR-open for Slice 19 configured implementation-proof artifact-loader
 binding coverage; `sgajbi/lotus-idea#1024` is now closed after QA-backed
 Slice 19 test-maintainability evidence, `sgajbi/lotus-idea#1027` and
 `sgajbi/lotus-idea#1029` are closed after QA-backed Slice 19 maintainability
@@ -1599,8 +1599,8 @@ supported feature.
 RFC-0002 execution is tracked through GitHub issue state plus the
 source-controlled implementation-proof ledgers. The current governed posture is
 183 label-backed RFC-0002 issues across 13 repositories: 144 closed and 39 open.
-The open set is 25 `status/blocked`, 1 `status/fixed-local`, 1 `status/in-progress`, 2 `status/merged-main`, 2 `status/merged-to-main`, 8 `status/tracker`;
-#1024, #1027, #1029, and #1033 are closed after QA-backed Slice 19 hardening, #1040 is the fixed-local Slice 19 configured proof-artifact loader binding coverage refactor, #681 is the in-progress Slice 18 issue, and #1037 is the merged-main QA-pending Slice 19 validator refactor;
+The open set is 25 `status/blocked`, 1 `status/in-progress`, 2 `status/merged-main`, 2 `status/merged-to-main`, 1 `status/pr-open`, 8 `status/tracker`;
+#1024, #1027, #1029, and #1033 are closed after QA-backed Slice 19 hardening, #1040 is the PR-open Slice 19 configured proof-artifact loader binding coverage refactor, #681 is the in-progress Slice 18 issue, and #1037 is the merged-main QA-pending Slice 19 validator refactor;
 blocked actionability remains 0 app-actionable blocked issues.
 Idea PR #838 synchronized PR #837 exact-main evidence to main
 `2c2d35667643ad5efae83924475574ab6c16be03`, passed Main Releasability
