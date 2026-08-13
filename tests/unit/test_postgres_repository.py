@@ -27,6 +27,8 @@ from app.domain import (
     IdeaCandidate,
     IdeaLifecycleStatus,
     OutboxDeliveryDecision,
+    OutboxDeliveryResult,
+    OutboxEventRecord,
     OutboxEventStatus,
     ReasonCode,
     ReportEvidencePackCommand,
@@ -450,6 +452,32 @@ def test_postgres_candidate_updates_use_optimistic_snapshot_guard() -> None:
 def test_postgres_repository_persists_outbox_delivery_status_updates() -> None:
     connection = FakePostgresConnection()
     repository = PostgresIdeaRepository(connection)
+    event = _persist_candidate_and_load_outbox_event(connection, repository)
+
+    first_claim, second_claim = _claim_outbox_event_twice(repository)
+    wrong_owner = _publish_outbox_event_with_wrong_owner(repository, event)
+    failed = _fail_claimed_outbox_event(repository, event)
+    failed_event = _assert_failed_delivery_schedules_retry(failed)
+    not_due_retryable, due_retryable = _load_retryable_outbox_events(connection)
+    retry_claim = _claim_retryable_outbox_event(connection)
+    published, already_published = _publish_retry_claim(connection, event)
+    missing_failure = _fail_missing_outbox_event(connection)
+    reloaded = PostgresIdeaRepository(connection).snapshot().outbox_events[event.event_id]
+
+    _assert_initial_claim_was_lease_fenced(first_claim, second_claim, wrong_owner)
+    assert not_due_retryable == ()
+    assert due_retryable == (failed_event,)
+    _assert_retry_claim_clears_retry_schedule(retry_claim)
+    assert published.decision is OutboxDeliveryDecision.ACCEPTED
+    assert already_published.decision is OutboxDeliveryDecision.ALREADY_PUBLISHED
+    assert missing_failure.decision is OutboxDeliveryDecision.NOT_FOUND
+    _assert_published_event_reload_preserves_failure_history(reloaded)
+
+
+def _persist_candidate_and_load_outbox_event(
+    connection: FakePostgresConnection,
+    repository: PostgresIdeaRepository,
+) -> OutboxEventRecord:
     candidate = high_cash_candidate(candidate_scope=access_scope())
     repository.persist_candidate(
         candidate,
@@ -458,8 +486,12 @@ def test_postgres_repository_persists_outbox_delivery_status_updates() -> None:
         actor_subject="signal-ingestion-worker",
         occurred_at_utc=EVALUATED_AT,
     )
-    event = next(iter(PostgresIdeaRepository(connection).snapshot().outbox_events.values()))
+    return next(iter(PostgresIdeaRepository(connection).snapshot().outbox_events.values()))
 
+
+def _claim_outbox_event_twice(
+    repository: PostgresIdeaRepository,
+) -> tuple[tuple[OutboxEventRecord, ...], tuple[OutboxEventRecord, ...]]:
     first_claim = repository.claim_outbox_events_for_delivery(
         limit=10,
         max_retry_count=2,
@@ -476,13 +508,26 @@ def test_postgres_repository_persists_outbox_delivery_status_updates() -> None:
         claimed_at_utc=EVALUATED_AT,
         lease_expires_at_utc=EVALUATED_AT + timedelta(minutes=5),
     )
-    wrong_owner = repository.mark_outbox_event_published(
+    return first_claim, second_claim
+
+
+def _publish_outbox_event_with_wrong_owner(
+    repository: PostgresIdeaRepository,
+    event: OutboxEventRecord,
+) -> OutboxDeliveryResult:
+    return repository.mark_outbox_event_published(
         event.event_id,
         lease_owner="worker-2",
         lease_attempt_id="attempt-2",
         published_at_utc=EVALUATED_AT + timedelta(minutes=1),
     )
-    failed = repository.mark_outbox_event_failed(
+
+
+def _fail_claimed_outbox_event(
+    repository: PostgresIdeaRepository,
+    event: OutboxEventRecord,
+) -> OutboxDeliveryResult:
+    return repository.mark_outbox_event_failed(
         event.event_id,
         lease_owner="worker-1",
         lease_attempt_id="attempt-1",
@@ -490,6 +535,11 @@ def test_postgres_repository_persists_outbox_delivery_status_updates() -> None:
         failed_at_utc=EVALUATED_AT,
         max_retry_count=2,
     )
+
+
+def _load_retryable_outbox_events(
+    connection: FakePostgresConnection,
+) -> tuple[tuple[OutboxEventRecord, ...], tuple[OutboxEventRecord, ...]]:
     not_due_retryable = PostgresIdeaRepository(connection).outbox_events_for_delivery(
         limit=10,
         max_retry_count=2,
@@ -500,7 +550,13 @@ def test_postgres_repository_persists_outbox_delivery_status_updates() -> None:
         max_retry_count=2,
         evaluated_at_utc=EVALUATED_AT + timedelta(seconds=60),
     )
-    retry_claim = PostgresIdeaRepository(connection).claim_outbox_events_for_delivery(
+    return not_due_retryable, due_retryable
+
+
+def _claim_retryable_outbox_event(
+    connection: FakePostgresConnection,
+) -> tuple[OutboxEventRecord, ...]:
+    return PostgresIdeaRepository(connection).claim_outbox_events_for_delivery(
         limit=10,
         max_retry_count=2,
         lease_owner="worker-1",
@@ -508,6 +564,12 @@ def test_postgres_repository_persists_outbox_delivery_status_updates() -> None:
         claimed_at_utc=EVALUATED_AT + timedelta(seconds=60),
         lease_expires_at_utc=EVALUATED_AT + timedelta(minutes=6),
     )
+
+
+def _publish_retry_claim(
+    connection: FakePostgresConnection,
+    event: OutboxEventRecord,
+) -> tuple[OutboxDeliveryResult, OutboxDeliveryResult]:
     published = PostgresIdeaRepository(connection).mark_outbox_event_published(
         event.event_id,
         lease_owner="worker-1",
@@ -520,34 +582,54 @@ def test_postgres_repository_persists_outbox_delivery_status_updates() -> None:
         lease_attempt_id="attempt-3",
         published_at_utc=EVALUATED_AT + timedelta(minutes=2),
     )
-    missing_failure = PostgresIdeaRepository(connection).mark_outbox_event_failed(
+    return published, already_published
+
+
+def _fail_missing_outbox_event(connection: FakePostgresConnection) -> OutboxDeliveryResult:
+    return PostgresIdeaRepository(connection).mark_outbox_event_failed(
         "missing-event",
         lease_owner="worker-1",
         lease_attempt_id="attempt-missing",
         failure_reason="publisher_unavailable",
         max_retry_count=2,
     )
-    reloaded = PostgresIdeaRepository(connection).snapshot().outbox_events[event.event_id]
 
+
+def _assert_initial_claim_was_lease_fenced(
+    first_claim: tuple[OutboxEventRecord, ...],
+    second_claim: tuple[OutboxEventRecord, ...],
+    wrong_owner: OutboxDeliveryResult,
+) -> None:
     assert first_claim[0].status is OutboxEventStatus.LEASED
     assert first_claim[0].lease_owner == "worker-1"
     assert second_claim == ()
     assert wrong_owner.decision is OutboxDeliveryDecision.LEASE_LOST
+
+
+def _assert_failed_delivery_schedules_retry(
+    failed: OutboxDeliveryResult,
+) -> OutboxEventRecord:
     assert failed.decision is OutboxDeliveryDecision.ACCEPTED
     assert failed.event is not None
     assert failed.event.status is OutboxEventStatus.FAILED
     assert failed.event.first_failed_at_utc == EVALUATED_AT
     assert failed.event.last_failed_at_utc == EVALUATED_AT
     assert failed.event.next_attempt_at_utc == EVALUATED_AT + timedelta(seconds=60)
-    assert not_due_retryable == ()
-    assert due_retryable == (failed.event,)
+    return failed.event
+
+
+def _assert_retry_claim_clears_retry_schedule(
+    retry_claim: tuple[OutboxEventRecord, ...],
+) -> None:
     assert retry_claim[0].status is OutboxEventStatus.LEASED
     assert retry_claim[0].first_failed_at_utc == EVALUATED_AT
     assert retry_claim[0].last_failed_at_utc == EVALUATED_AT
     assert retry_claim[0].next_attempt_at_utc is None
-    assert published.decision is OutboxDeliveryDecision.ACCEPTED
-    assert already_published.decision is OutboxDeliveryDecision.ALREADY_PUBLISHED
-    assert missing_failure.decision is OutboxDeliveryDecision.NOT_FOUND
+
+
+def _assert_published_event_reload_preserves_failure_history(
+    reloaded: OutboxEventRecord,
+) -> None:
     assert reloaded.status is OutboxEventStatus.PUBLISHED
     assert reloaded.published_at_utc == EVALUATED_AT + timedelta(minutes=1)
     assert reloaded.failure_reason == "publisher_unavailable"
