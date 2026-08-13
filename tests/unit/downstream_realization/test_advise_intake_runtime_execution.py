@@ -15,6 +15,12 @@ from app.application.downstream_realization.advise_intake_runtime_execution impo
 from tests.unit.downstream_realization.fixtures import (
     valid_advise_intake_runtime_execution,
 )
+from tests.unit.downstream_realization.runtime_execution_test_support import (
+    nested_payload_section,
+    receipt_evidence_for_builder,
+    set_nested_payload_value,
+    set_receipt_evidence_value,
+)
 
 
 def test_advise_intake_runtime_execution_accepts_bounded_live_receipts() -> None:
@@ -25,7 +31,7 @@ def test_advise_intake_runtime_execution_accepts_bounded_live_receipts() -> None
     assert payload["remainingCertificationBlockers"] == (
         "suitability_policy_authority_remains_lotus_advise",
     )
-    assert payload["nonProofClaims"]["supportedFeaturePromoted"] is False  # type: ignore[index]
+    assert nested_payload_section(payload, "nonProofClaims")["supportedFeaturePromoted"] is False
 
 
 def test_advise_intake_runtime_execution_builder_binds_contract_checks() -> None:
@@ -36,7 +42,7 @@ def test_advise_intake_runtime_execution_builder_binds_contract_checks() -> None
         repository_root=Path(__file__).resolve().parents[3],
         advise_root=None,
         runtime_mode="local_asgi_testclient",
-        receipt_evidence=baseline["receiptEvidence"],  # type: ignore[arg-type]
+        receipt_evidence=receipt_evidence_for_builder(baseline),
     )
 
     assert payload["runtimeChecks"]["acceptedReceiptObserved"] is True
@@ -52,7 +58,7 @@ def test_advise_intake_runtime_execution_builder_requires_aware_generation_time(
             repository_root=Path(__file__).resolve().parents[3],
             advise_root=None,
             runtime_mode="local_asgi_testclient",
-            receipt_evidence=baseline["receiptEvidence"],  # type: ignore[arg-type]
+            receipt_evidence=receipt_evidence_for_builder(baseline),
         )
     except ValueError as exc:
         assert "timezone-aware" in str(exc)
@@ -62,14 +68,14 @@ def test_advise_intake_runtime_execution_builder_requires_aware_generation_time(
 
 def test_advise_intake_runtime_execution_rejects_supported_feature_overclaim() -> None:
     payload = deepcopy(valid_advise_intake_runtime_execution())
-    payload["nonProofClaims"]["supportedFeaturePromoted"] = True  # type: ignore[index]
+    set_nested_payload_value(payload, "nonProofClaims", "supportedFeaturePromoted", True)
 
     assert not advise_intake_runtime_execution_is_valid(payload)
 
 
 def test_advise_intake_runtime_execution_rejects_missing_replay_evidence() -> None:
     payload = deepcopy(valid_advise_intake_runtime_execution())
-    payload["receiptEvidence"]["acceptedReplay"]["intakeStatus"] = "ACCEPTED"  # type: ignore[index]
+    set_receipt_evidence_value(payload, "acceptedReplay", "intakeStatus", "ACCEPTED")
 
     assert not advise_intake_runtime_execution_is_valid(payload)
 
@@ -106,7 +112,7 @@ def test_advise_intake_runtime_execution_rejects_runtime_metadata_drift() -> Non
     assert not advise_intake_runtime_execution_is_valid(payload)
 
     payload = deepcopy(valid_advise_intake_runtime_execution())
-    payload["runtimeChecks"]["routeServingObserved"] = False  # type: ignore[index]
+    set_nested_payload_value(payload, "runtimeChecks", "routeServingObserved", False)
     assert not advise_intake_runtime_execution_is_valid(payload)
 
 
@@ -116,7 +122,7 @@ def test_advise_intake_runtime_execution_rejects_payload_and_receipt_shape_drift
     assert not advise_intake_runtime_execution_is_valid(payload)
 
     payload = deepcopy(valid_advise_intake_runtime_execution())
-    payload["receiptEvidence"]["accepted"]["unexpectedField"] = True  # type: ignore[index]
+    set_receipt_evidence_value(payload, "accepted", "unexpectedField", True)
     assert not advise_intake_runtime_execution_is_valid(payload)
 
 
