@@ -2,19 +2,19 @@
   "schemaVersion": "lotus-idea:rfc0002-issue-posture-snapshot:v1",
   "rfcId": "RFC-0002",
   "repository": "sgajbi/lotus-idea",
-  "asOfDate": "2026-08-13",
+  "asOfDate": "2026-08-14",
   "sourceCommands": [
     "make rfc0002-github-issue-execution-summary",
     "make rfc0002-cross-repo-issue-posture"
   ],
   "trackingIssue": "sgajbi/lotus-idea#681",
   "ideaLedger": {
-    "totalTrackedIssues": 111,
-    "openIssues": 25,
+    "totalTrackedIssues": 112,
+    "openIssues": 26,
     "closedIssues": 86,
     "openStatusCounts": {
       "open_blocked": 14,
-      "open_in_progress": 1,
+      "open_in_progress": 2,
       "open_merged_main_qa_pending": 0,
       "open_pr_raised": 0,
       "open_pending_final_closure": 1,
@@ -23,7 +23,8 @@
     },
     "fixedLocalIssues": [],
     "inProgressIssues": [
-      "sgajbi/lotus-idea#681"
+      "sgajbi/lotus-idea#681",
+      "sgajbi/lotus-idea#1033"
     ],
     "prOpenIssues": [],
     "mergedMainQaPendingIssues": [],
@@ -38,14 +39,14 @@
   },
   "crossRepo": {
     "repositoriesChecked": 13,
-    "totalRfc0002Issues": 180,
-    "openRfc0002Issues": 37,
+    "totalRfc0002Issues": 181,
+    "openRfc0002Issues": 38,
     "closedRfc0002Issues": 143,
     "openBlockedIssues": 25,
     "appActionableBlockedIssues": 0,
     "openStatusCounts": {
       "status/blocked": 25,
-      "status/in-progress": 1,
+      "status/in-progress": 2,
       "status/merged-main": 1,
       "status/merged-to-main": 2,
       "status/tracker": 8
@@ -56,14 +57,15 @@
   },
   "expectedCurrentFragments": {
     "ideaLedger": [
-      "111 tracked RFC-0002 issues",
-      "86 closed and 25 open",
-      "#681"
+      "112 tracked RFC-0002 issues",
+      "86 closed and 26 open",
+      "#681",
+      "#1033"
     ],
     "crossRepo": [
-      "180 label-backed RFC-0002 issues",
-      "143 closed and 37 open",
-      "25 `status/blocked`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 8 `status/tracker`",
+      "181 label-backed RFC-0002 issues",
+      "143 closed and 38 open",
+      "25 `status/blocked`, 2 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 8 `status/tracker`",
       "0 app-actionable blocked"
     ]
   },

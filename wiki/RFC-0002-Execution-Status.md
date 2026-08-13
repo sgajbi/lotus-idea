@@ -38,8 +38,8 @@ blocked posture and implement or reclassify it.
 
 ```mermaid
 flowchart LR
-    Issues["GitHub issue posture<br/>180 label-backed RFC-0002 issues"]
-    Open["143 closed and 37 open<br/>25 `status/blocked`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 8 `status/tracker`"]
+    Issues["GitHub issue posture<br/>181 label-backed RFC-0002 issues"]
+    Open["143 closed and 38 open<br/>25 `status/blocked`, 2 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 8 `status/tracker`"]
     Blocked["Blocked classifier<br/>0 app-actionable blocked"]
     Work["Writable work<br/>only when evidence proves app-code ownership"]
     External["Core / protected / identity / provider / legal evidence"]
@@ -57,14 +57,14 @@ flowchart LR
 | Status label | Count | Interpretation |
 | --- | ---: | --- |
 | `status/blocked` | 25 | Protected, identity, provider, legal, publication, canonical QA, or certification evidence. |
-| `status/in-progress` | 1 | Continuous Slice 18 synchronization tracker `sgajbi/lotus-idea#681`. |
+| `status/in-progress` | 2 | Continuous Slice 18 synchronization tracker `sgajbi/lotus-idea#681` and active Slice 19 route-registration maintainability issue `sgajbi/lotus-idea#1033`. |
 | `status/merged-main` | 1 | Merged-main issue awaiting QA closure evidence outside the Idea ledger; Idea Slice 19 test-support hardening `sgajbi/lotus-idea#1024` is now QA-closed. |
 | `status/merged-to-main` | 2 | Repository-local Advise merged-main alias awaiting QA closure evidence. |
 | `status/pr-open` | 0 | No RFC-0002 issue is currently in PR-open posture. |
 | `status/tracker` | 8 | Parent or umbrella tracking issues, not immediate implementation items. |
 
-Latest synchronization evidence: Current GitHub issue posture has 180
-label-backed RFC-0002 issues, 143 closed and 37 open, with 25 `status/blocked`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 8 `status/tracker`, and 0 app-actionable blocked issues. `lotus-idea#1024` is closed after QA-backed Slice 19 downstream realization proof test hardening; `lotus-idea#1027`
+Latest synchronization evidence: Current GitHub issue posture has 181
+label-backed RFC-0002 issues, 143 closed and 38 open, with 25 `status/blocked`, 2 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 8 `status/tracker`, and 0 app-actionable blocked issues. `lotus-idea#1033` is open for Slice 19 platform route-registration maintainability hardening. `lotus-idea#1024` is closed after QA-backed Slice 19 downstream realization proof test hardening; `lotus-idea#1027`
 and `lotus-idea#1029` are closed after PR #1028 landed Slice 19
 implementation-proof readiness API test-maintainability hardening, PR #1030
 synchronized merged-main source truth, exact-main Main Releasability
