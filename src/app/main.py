@@ -191,6 +191,14 @@ def _register_exception_handlers(application: FastAPI) -> None:
 
 
 def _register_platform_routes(application: FastAPI) -> None:
+    _register_health_route(application)
+    _register_liveness_route(application)
+    _register_readiness_route(application)
+    _register_metadata_route(application)
+    _register_version_route(application)
+
+
+def _register_health_route(application: FastAPI) -> None:
     application.get(
         "/health",
         tags=["Health"],
@@ -205,6 +213,9 @@ def _register_platform_routes(application: FastAPI) -> None:
             }
         },
     )(health)
+
+
+def _register_liveness_route(application: FastAPI) -> None:
     application.get(
         "/health/live",
         tags=["Health"],
@@ -217,6 +228,9 @@ def _register_platform_routes(application: FastAPI) -> None:
             }
         },
     )(health_live)
+
+
+def _register_readiness_route(application: FastAPI) -> None:
     application.get(
         "/health/ready",
         tags=["Health"],
@@ -241,6 +255,9 @@ def _register_platform_routes(application: FastAPI) -> None:
             },
         },
     )(health_ready)
+
+
+def _register_metadata_route(application: FastAPI) -> None:
     application.get(
         "/metadata",
         tags=["Metadata"],
@@ -262,6 +279,9 @@ def _register_platform_routes(application: FastAPI) -> None:
             }
         },
     )(metadata)
+
+
+def _register_version_route(application: FastAPI) -> None:
     application.get(
         "/version",
         tags=["Metadata"],
