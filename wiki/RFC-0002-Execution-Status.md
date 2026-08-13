@@ -22,12 +22,12 @@ dependency map, and closure rules without relying on chat memory.
 | Snapshot command | `make rfc0002-cross-repo-issue-posture` |
 | Execution audit | `make rfc0002-github-issue-execution-state-audit` passed |
 | Repositories checked | 13 |
-| Total RFC-0002 issues | 182 |
+| Total RFC-0002 issues | 183 |
 | Closed RFC-0002 issues | 144 |
-| Open RFC-0002 issues | 38 |
+| Open RFC-0002 issues | 39 |
 | Open blocked issues | 25 |
 | App-actionable blocked issues | 0 |
-| Active synchronization tracker | `sgajbi/lotus-idea#681`; merged-main QA-pending Slice 19 refactor `sgajbi/lotus-idea#1037` |
+| Active synchronization tracker | `sgajbi/lotus-idea#681`; fixed-local Slice 19 refactor `sgajbi/lotus-idea#1040`; merged-main QA-pending Slice 19 refactor `sgajbi/lotus-idea#1037` |
 
 The zero app-actionable blocked count is important. It means an open issue may
 remain `status/blocked` only when the remaining authority is Core-owned,
@@ -38,8 +38,8 @@ blocked posture and implement or reclassify it.
 
 ```mermaid
 flowchart LR
-    Issues["GitHub issue posture<br/>182 label-backed RFC-0002 issues"]
-    Open["144 closed and 38 open<br/>25 `status/blocked`, 1 `status/in-progress`, 2 `status/merged-main`, 2 `status/merged-to-main`, 8 `status/tracker`"]
+    Issues["GitHub issue posture<br/>183 label-backed RFC-0002 issues"]
+    Open["144 closed and 39 open<br/>25 `status/blocked`, 1 `status/fixed-local`, 1 `status/in-progress`, 2 `status/merged-main`, 2 `status/merged-to-main`, 8 `status/tracker`"]
     Blocked["Blocked classifier<br/>0 app-actionable blocked"]
     Work["Writable work<br/>only when evidence proves app-code ownership"]
     External["Core / protected / identity / provider / legal evidence"]
@@ -57,13 +57,14 @@ flowchart LR
 | Status label | Count | Interpretation |
 | --- | ---: | --- |
 | `status/blocked` | 25 | Protected, identity, provider, legal, publication, canonical QA, or certification evidence. |
+| `status/fixed-local` | 1 | Local fix exists and is awaiting PR, currently `sgajbi/lotus-idea#1040`. |
 | `status/in-progress` | 1 | Continuous Slice 18 synchronization tracker `sgajbi/lotus-idea#681`. |
 | `status/merged-main` | 2 | Merged-main issues awaiting QA closure evidence, currently `sgajbi/lotus-ai#126` and `sgajbi/lotus-idea#1037`. |
 | `status/merged-to-main` | 2 | Repository-local Advise merged-main alias awaiting QA closure evidence. |
 | `status/tracker` | 8 | Parent or umbrella tracking issues, not immediate implementation items. |
 
-Latest synchronization evidence: Current GitHub issue posture has 182
-label-backed RFC-0002 issues, 144 closed and 38 open, with 25 `status/blocked`, 1 `status/in-progress`, 2 `status/merged-main`, 2 `status/merged-to-main`, 8 `status/tracker`, and 0 app-actionable blocked issues. `lotus-idea#1037` is merged-main QA-pending for Slice 19 Core benchmark runtime evidence validator maintainability hardening after PR #1038 reached exact main. `lotus-idea#1033` is closed after QA-backed Slice 19 platform route-registration maintainability hardening reached exact main, source truth synchronized, wiki parity passed, and strict issue-loop audit reported `violationCount: 0`. `lotus-idea#1024` is closed after QA-backed Slice 19 downstream realization proof test hardening; `lotus-idea#1027`
+Latest synchronization evidence: Current GitHub issue posture has 183
+label-backed RFC-0002 issues, 144 closed and 39 open, with 25 `status/blocked`, 1 `status/fixed-local`, 1 `status/in-progress`, 2 `status/merged-main`, 2 `status/merged-to-main`, 8 `status/tracker`, and 0 app-actionable blocked issues. `lotus-idea#1040` is fixed-local for Slice 19 configured implementation-proof artifact-loader binding coverage. `lotus-idea#1037` is merged-main QA-pending for Slice 19 Core benchmark runtime evidence validator maintainability hardening after PR #1038 reached exact main. `lotus-idea#1033` is closed after QA-backed Slice 19 platform route-registration maintainability hardening reached exact main, source truth synchronized, wiki parity passed, and strict issue-loop audit reported `violationCount: 0`. `lotus-idea#1024` is closed after QA-backed Slice 19 downstream realization proof test hardening; `lotus-idea#1027`
 and `lotus-idea#1029` are closed after PR #1028 landed Slice 19
 implementation-proof readiness API test-maintainability hardening, PR #1030
 synchronized merged-main source truth, exact-main Main Releasability
