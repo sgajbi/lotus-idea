@@ -121,8 +121,8 @@ evidence plus Core handoff posture to exact main
 issue-execution prevention cycle plus QA closure of the already merged-main
 Advise, Gateway, Workbench, and AI dependency issues, the current live
 cross-repo RFC-0002 posture is 179 label-backed RFC-0002 issues across 13
-repositories: 140 closed and 39 open. The open set is 25 `status/blocked`, 2
-`status/in-progress` (#681 and #1027), 2 `status/merged-main` including #1024, 2
+repositories: 140 closed and 39 open. The open set is 25 `status/blocked`, 1
+`status/fixed-local` (#1027), 1 `status/in-progress` (#681), 2 `status/merged-main` including #1024, 2
 `status/merged-to-main`, and 8 `status/tracker` issues; blocked actionability
 remains 0 app-actionable blocked issues. Idea #864, #866, and #874 are now
 source-ledgered as Slice 17/18/19 hardening issues. #864 closed after PR #865
@@ -393,13 +393,13 @@ fixed the post-merge QA hash-compatibility defects on main
 `31268949391` passing.
 Current Idea ledger posture has 110 tracked RFC-0002 issues, 83 closed and 27
 open; `sgajbi/lotus-idea#681` is the in-progress Slice 18 tracker,
-`sgajbi/lotus-idea#1027` is the in-progress Slice 19 implementation-proof
+`sgajbi/lotus-idea#1027` is fixed locally for the Slice 19 implementation-proof
 readiness blocked-posture API test refactor, and `sgajbi/lotus-idea#1024` is
 merged-main QA-pending after PR #1025 landed Slice 19 downstream realization
 proof-test maintainability hardening on exact main
 `2597811841e3c2bdcfb5c30dbf6bf616fb311eba`. Current governed cross-repo RFC-0002 posture
 is 179 label-backed RFC-0002 issues across 13 repositories: 140 closed and 39
-open. The open split is 25 `status/blocked`, 2 `status/in-progress`, 2
+open. The open split is 25 `status/blocked`, 1 `status/fixed-local`, 1 `status/in-progress`, 2
 `status/merged-main`, 2 `status/merged-to-main`, and
 8 `status/tracker`. The
 blocked subset has 0 app-actionable blocked issues: all 25 are external/protected/canonical-proof
@@ -1692,8 +1692,8 @@ external/protected/canonical-proof evidence blockers, 2 merged-main RFC-0002
 issues including `sgajbi/lotus-idea#1024`, and 1 in-progress RFC-0002 issue
 (`sgajbi/lotus-idea#681`). The
 full live posture is 179 label-backed RFC-0002 issues across 13 repositories:
-140 closed and 39 open. The open split is 25 `status/blocked`, 2
-`status/in-progress`, 2 `status/merged-main`, 2 `status/merged-to-main`, and
+140 closed and 39 open. The open split is 25 `status/blocked`, 1
+`status/fixed-local`, 1 `status/in-progress`, 2 `status/merged-main`, 2 `status/merged-to-main`, and
 8 `status/tracker`.
 Counts are label-backed by
 `rfc/RFC-0002`; title-only references are reported separately and excluded from
