@@ -2067,6 +2067,35 @@ Workbench, Report, Render, Archive, downstream live proof, data-product support,
 external-publication authority, production certification, supported-feature
 promotion, or final RFC-0002 closure.
 
+## Issue 1037 Core Benchmark Runtime Evidence Validator Maintainability
+
+Issue `#1037` continues the Slice 19 quality-baseline discipline for runtime
+proof validators. `make quality-baseline` surfaced
+`src/app/application/core_benchmark_assignment_runtime_evidence/contract.py::core_benchmark_assignment_runtime_execution_is_valid`
+as a `95` line source validator. The validator is below the hard
+maintainability threshold, but it concentrated payload-envelope checks,
+source-authority validation, receipt integrity, execution-success semantics,
+blocker/evidence reference controls, and the no-claim boundary in one function.
+
+The refactor keeps the public validator signature and Boolean return contract
+unchanged while delegating stable responsibilities to named helpers:
+
+1. payload envelope validation,
+2. execution and receipt envelope validation,
+3. no-claim boundary validation,
+4. request and source receipt integrity validation,
+5. execution-success validation,
+6. aggregate blocker and evidence-reference validation.
+
+Focused tests now explicitly reject non-success runtime status and
+evidence-reference drift in addition to existing source-authority, scope,
+digest, freshness, diagnostic, blocker, and unsupported-claim tamper cases.
+This is maintainability hardening only. It does not change runtime behavior,
+API/OpenAPI contracts, persistence, migrations, authentication/authorization,
+Core, Gateway, Workbench, Report, Render, Archive, downstream live proof,
+data-product support, external-publication authority, production certification,
+supported-feature promotion, or final RFC-0002 closure.
+
 ## Issue 682 Closure-Manifest Coverage And Cross-Repo Backlog Traceability
 
 The 2026-07-19 Slice 19 pass fixed a PR coverage regression without weakening
