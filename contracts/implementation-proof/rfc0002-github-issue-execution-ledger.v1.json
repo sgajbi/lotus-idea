@@ -1093,6 +1093,15 @@
       "executionStatus": "closed_complete",
       "allowPullRequestAutoClose": true,
       "closureInstruction": "Closed #1040 after QA passed on current Idea main `8f0df9f97898e9b346abb09e62eb01e9ced1f3db`. PR #1041 rebase-merged the Slice 19 configured implementation-proof artifact-loader binding coverage refactor to Idea main `020dd70a65c29040d330c7a07e8aa2fb923f4baf`; exact-main Main Releasability Gate run `31737445148` and security-equivalent Push/CodeQL run `31737435367` passed; repo-authored wiki source was published to lotus-idea.wiki commit `37722e4` with strict `DiffCount 0`; and branch cleanup completed after patch-equivalence plus zero-diff proof. PR #1042 synchronized merged-main source truth to Idea main `8f0df9f97898e9b346abb09e62eb01e9ced1f3db`; exact-main Main Releasability Gate run `31739277000` and CodeQL run `31739270435` passed; wiki source was published to commit `fbcd0d1` with strict `DiffCount 0`; and branch cleanup completed. QA closure on current main passed `python -m pytest tests/unit/test_proof_artifacts.py tests/unit/core_benchmark_assignment_runtime_evidence/test_runtime_execution.py -q` with 37 tests, targeted Ruff, targeted MyPy, and `make core-benchmark-assignment-live-proof-contract-gate`; #1040 was closed with `Loop status: qa_passed_closed` while retaining `status/merged-main`. The implementation refactored configured implementation-proof artifact loader bindings into typed binding definitions and added unit coverage parity for JSON and ref-only runtime loader bindings. This is Slice 19 proof-aggregation hardening only and makes no runtime behavior, API/OpenAPI, persistence, migration, Core/Gateway/Workbench/Report/Render/Archive/Advise/Manage/AI authority, supported-feature, production, client-publication, or final RFC-0002 closure claim."
+    },
+    {
+      "issueNumber": 1044,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/1044",
+      "rfcSlices": ["slice-12", "slice-13", "slice-19"],
+      "githubState": "open",
+      "executionStatus": "open_in_progress",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #1044 open until the conversion outcome persistence recording boundary refactor is merged to Idea main, focused conversion outcome persistence/API tests pass, repository-native maintainability and duplicate gates pass, live GitHub issue execution state audit includes the issue, and branch cleanup evidence is recorded. The implementation is internal maintainability hardening for `src/app/domain/persistence.py::record_conversion_outcome`: it may reduce quality-baseline hotspot risk only and must not claim API/OpenAPI changes, persistence schema or migration changes, downstream live certification, Report/Render/Archive authority, Workbench/Gateway behavior, production identity/session-token authority, supported-feature promotion, client publication, or final RFC-0002 closure."
     }
   ]
 }

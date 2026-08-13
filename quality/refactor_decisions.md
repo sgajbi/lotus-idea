@@ -6,6 +6,52 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-08-14: Conversion Outcome Persistence Recording Boundary
+
+Issue `#1044` applies the RFC-0002 Slice 12/13/19 maintainability lens to
+`src/app/domain/persistence.py::record_conversion_outcome`. The report-only
+quality baseline listed the method as a `95` line production-domain hotspot
+after the prior conversion-governance API and PostgreSQL runtime proof
+refactors had already merged.
+
+Duplicate-check result: closed issues `#326`, `#878`, `#538`, `#364`, `#327`,
+`#648`, and `#645` cover conversion-outcome semantics, API plumbing, database
+proof, or adjacent workflow refactors, but no open issue owned this focused
+in-memory behavioral-reference repository boundary.
+
+The branch refactor keeps `record_conversion_outcome(...)` as the repository
+port implementation while separating:
+
+1. conversion-intent to candidate-record resolution,
+2. same-intent conversion outcome identity history,
+3. progression-policy conflict detection,
+4. accepted-record mutation,
+5. idempotency index updates, and
+6. conversion-outcome outbox payload construction.
+
+Focused local validation passed:
+
+1. `.venv\Scripts\python.exe -m ruff format --check src\app\domain\persistence.py`,
+2. `.venv\Scripts\python.exe -m ruff check src\app\domain\persistence.py`,
+3. `.venv\Scripts\python.exe -m mypy src\app\domain\persistence.py`,
+4. `.venv\Scripts\python.exe -m pytest tests\unit\test_conversion_outcome_workflow_application.py tests\unit\test_conversion_outcome_policy.py tests\unit\test_conversion_outcome_contract_gate.py tests\integration\test_conversion_outcome_lifecycle_api.py -q`
+   (`31` passed),
+5. `.venv\Scripts\python.exe -m pytest tests\unit\test_idea_persistence.py tests\unit\test_postgres_conversion_outcome_lifecycle.py -q`
+   (`29` passed),
+6. `make maintainability-gate`,
+7. `make duplicate-implementation-gate`, and
+8. `make quality-baseline`.
+
+The refactor reduced `record_conversion_outcome` from `95` to `65` lines and
+removed it from the largest-function list without creating duplicate clusters.
+
+No API/OpenAPI, persistence schema, migration, runtime topology, downstream
+handoff, Report/Render/Archive authority, Workbench/Gateway behavior,
+authentication/authorization, supported-feature promotion, client publication,
+production identity/session-token authority, or RFC-0002 blocker-clearing claim
+is made by this internal maintainability slice. No repo-authored wiki source
+change is expected unless PR review requests broader publication evidence.
+
 ## 2026-08-12: Opportunity Archetype Proof Application Scope Boundary
 
 Issue `#994` applies the RFC-0002 Slice 16/18/19 maintainability lens to
