@@ -1219,7 +1219,7 @@ It also lists every blocked issue with the GitHub URL, actionability, blocker
 class, and remaining authority so the Core-vs-protected/external split is
 auditable without chat memory or one-off GitHub queries.
 Current live posture is 177 label-backed RFC-0002 issues across 13
-repositories: 139 closed and 38 open. The open split is 25 `status/blocked`, 1 `status/in-progress`, 2 `status/merged-main`, 2 `status/merged-to-main`, and 8 `status/tracker`;
+repositories: 140 closed and 37 open. The open split is 25 `status/blocked`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, and 8 `status/tracker`;
 `sgajbi/lotus-idea#681` is the single in-progress issue.
 Blocked actionability remains 0 app-actionable blocked issues, with 25
 external/protected/canonical-proof evidence blockers. Counts are label-backed
@@ -1588,8 +1588,8 @@ supported feature.
 
 RFC-0002 execution is tracked through GitHub issue state plus the
 source-controlled implementation-proof ledgers. The current governed posture is
-177 label-backed RFC-0002 issues across 13 repositories: 139 closed and 38 open.
-The open set is 25 `status/blocked`, 1 `status/in-progress`, 2 `status/merged-main`, 2 `status/merged-to-main`, and 8 `status/tracker`;
+177 label-backed RFC-0002 issues across 13 repositories: 140 closed and 37 open.
+The open set is 25 `status/blocked`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, and 8 `status/tracker`;
 #681 is the single in-progress issue;
 blocked actionability remains 0 app-actionable blocked issues.
 Idea PR #838 synchronized PR #837 exact-main evidence to main

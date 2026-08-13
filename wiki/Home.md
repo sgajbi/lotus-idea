@@ -37,10 +37,10 @@ supported yet.
 
 | Signal | Current state |
 | --- | --- |
-| GitHub issue posture | Current posture is 177 label-backed RFC-0002 issues: 139 closed and 38 open. |
-| Open blocked work | 25 `status/blocked`, 1 `status/in-progress`, 2 `status/merged-main`, 2 `status/merged-to-main`, 8 `status/tracker`, and 0 app-actionable blocked issues. |
-| Active slice work | `sgajbi/lotus-idea#681` remains open as the Slice 18 synchronization tracker; `sgajbi/lotus-idea#1020` is merged-main QA-pending after PR #1021; `sgajbi/lotus-idea#1014` and `#1016` are closed in source truth after QA-backed maintainability hardening. |
-| Latest Idea closure truth | `lotus-idea#1014` and `#1016` are closed and ledgered as RFC-0002 Slice 15/19 hardening issues; no supported feature or production/runtime claim is promoted. |
+| GitHub issue posture | Current posture is 177 label-backed RFC-0002 issues: 140 closed and 37 open. |
+| Open blocked work | 25 `status/blocked`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 8 `status/tracker`, and 0 app-actionable blocked issues. |
+| Active slice work | `sgajbi/lotus-idea#681` remains open as the Slice 18 synchronization tracker; `sgajbi/lotus-idea#1014`, `#1016`, and `#1020` are closed in source truth after QA-backed maintainability hardening. |
+| Latest Idea closure truth | `lotus-idea#1020` is closed and ledgered after PR #1021/#1022 QA-backed Slice 12/13/19 test-support hardening; no supported feature or production/runtime claim is promoted. |
 | Latest canonical QA | Failed before AI/Advise proof on Workbench browser feedback-action confirmation. |
 | Next proof path | Complete fresh Gateway-backed Workbench queue/detail/action proof, then rerun canonical QA and close only issues with issue-specific proof. |
 

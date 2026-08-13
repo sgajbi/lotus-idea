@@ -322,7 +322,7 @@ def test_documentation_contract_gate_blocks_non_contract_current_issue_posture(
         "# RFC Index\n\n"
         "Current summary: RFC-0002 has 127 label-backed RFC-0002 issues across "
         "13 repositories: 89 closed and 38 open. Open status is "
-        "25 `status/blocked`, 1 `status/in-progress`, 2 `status/merged-main`, "
+        "25 `status/blocked`, 1 `status/in-progress`, 1 `status/merged-main`, "
         "2 `status/merged-to-main`, and 8 `status/tracker`; blocked actionability "
         "remains 0 app-actionable blocked issues.\n",
         encoding="utf-8",
@@ -333,7 +333,7 @@ def test_documentation_contract_gate_blocks_non_contract_current_issue_posture(
     assert errors == [
         "wiki/RFC-Index.md: paragraph 2 describes current/live RFC-0002 issue posture "
         "without contract-backed crossRepo fragment(s): "
-        "`177 label-backed RFC-0002 issues`, `139 closed and 38 open`"
+        "`177 label-backed RFC-0002 issues`, `140 closed and 37 open`"
     ]
 
 
