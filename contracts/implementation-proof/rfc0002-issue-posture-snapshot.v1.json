@@ -12,19 +12,20 @@
     "totalTrackedIssues": 109,
     "openIssues": 26,
     "closedIssues": 83,
-      "openStatusCounts": {
-        "open_blocked": 14,
-        "open_in_progress": 1,
-        "open_merged_main_qa_pending": 0,
-        "open_pending_final_closure": 1,
-        "open_pending_post_completion": 1,
-        "open_pr_raised": 1,
-        "open_tracker": 8
+    "openStatusCounts": {
+      "open_blocked": 14,
+      "open_in_progress": 1,
+      "open_merged_main_qa_pending": 1,
+      "open_pending_final_closure": 1,
+      "open_pending_post_completion": 1,
+      "open_tracker": 8
     },
     "inProgressIssues": [
       "sgajbi/lotus-idea#681"
     ],
-    "mergedMainQaPendingIssues": [],
+    "mergedMainQaPendingIssues": [
+      "sgajbi/lotus-idea#1024"
+    ],
     "recentlyClosedIssues": [
       "sgajbi/lotus-idea#1014",
       "sgajbi/lotus-idea#1016",
@@ -38,12 +39,11 @@
     "closedRfc0002Issues": 140,
     "openBlockedIssues": 25,
     "appActionableBlockedIssues": 0,
-      "openStatusCounts": {
-        "status/blocked": 25,
+    "openStatusCounts": {
+      "status/blocked": 25,
       "status/in-progress": 1,
-      "status/merged-main": 1,
+      "status/merged-main": 2,
       "status/merged-to-main": 2,
-      "status/pr-open": 1,
       "status/tracker": 8
     },
     "titleOnlyReferencesExcludedFromGovernedCounts": [
@@ -59,7 +59,7 @@
     "crossRepo": [
       "178 label-backed RFC-0002 issues",
       "140 closed and 38 open",
-      "25 `status/blocked`, 1 `status/in-progress`, 1 `status/merged-main`, 1 `status/pr-open`",
+      "25 `status/blocked`, 1 `status/in-progress`, 2 `status/merged-main`",
       "0 app-actionable blocked"
     ]
   },
