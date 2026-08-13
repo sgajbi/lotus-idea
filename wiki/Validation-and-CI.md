@@ -1220,12 +1220,12 @@ class, and remaining authority so the Core-vs-protected/external split is
 auditable without chat memory or one-off GitHub queries.
 Current live posture is 181 label-backed RFC-0002 issues across 13
 repositories: 143 closed and 38 open. The open split is 25 `status/blocked`,
-2 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 8
+1 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 8
 `status/tracker`; `sgajbi/lotus-idea#1024` is now closed after QA-backed
 Slice 19 test-maintainability evidence, `sgajbi/lotus-idea#1027` and
 `sgajbi/lotus-idea#1029` are closed after QA-backed Slice 19 maintainability
 hardening, `sgajbi/lotus-idea#681` is the in-progress Slice 18 issue, and
-`sgajbi/lotus-idea#1033` is the in-progress Slice 19 route-registration
+`sgajbi/lotus-idea#1033` is the fixed-local Slice 19 route-registration
 maintainability issue.
 Blocked actionability remains 0 app-actionable blocked issues, with 25
 external/protected/canonical-proof evidence blockers. Counts are label-backed
@@ -1595,8 +1595,8 @@ supported feature.
 RFC-0002 execution is tracked through GitHub issue state plus the
 source-controlled implementation-proof ledgers. The current governed posture is
 181 label-backed RFC-0002 issues across 13 repositories: 143 closed and 38 open.
-The open set is 25 `status/blocked`, 2 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 8 `status/tracker`;
-#1024, #1027, and #1029 are closed after QA-backed Slice 19 hardening, #681 is the in-progress Slice 18 issue, and #1033 is the in-progress Slice 19 route-registration maintainability issue;
+The open set is 25 `status/blocked`, 1 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 8 `status/tracker`;
+#1024, #1027, and #1029 are closed after QA-backed Slice 19 hardening, #681 is the in-progress Slice 18 issue, and #1033 is the fixed-local Slice 19 route-registration maintainability issue;
 blocked actionability remains 0 app-actionable blocked issues.
 Idea PR #838 synchronized PR #837 exact-main evidence to main
 `2c2d35667643ad5efae83924475574ab6c16be03`, passed Main Releasability
