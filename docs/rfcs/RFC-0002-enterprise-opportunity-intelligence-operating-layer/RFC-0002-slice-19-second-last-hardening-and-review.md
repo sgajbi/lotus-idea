@@ -2053,9 +2053,13 @@ PR `#1034` rebase-merged the refactor to exact Idea main
 `9e818ec481e0c14e6c8b8cb8e9936e3f3746f21c`. Exact-main Main Releasability
 Gate run `31725039005` and Push/security-equivalent run `31725023751` passed
 for that SHA. Wiki source changed in the PR and was published to
-`lotus-idea.wiki` commit `433593c` with strict `DiffCount 0`. Issue `#1033`
-now carries `status/merged-main` and remains open pending issue-specific QA
-closure evidence.
+`lotus-idea.wiki` commit `433593c` with strict `DiffCount 0`. PR `#1035`
+synchronized merged-main evidence to exact Idea main
+`a42e5e12a507fb73db84524489c4bad37de2fdf9`, passed Main Releasability
+`31726816611` and Push/security-equivalent run `31726810264`, published wiki
+source to `lotus-idea.wiki` commit `5a8d21d` with strict `DiffCount 0`, and
+completed branch cleanup. Issue `#1033` is now QA-closed after strict targeted
+issue-loop audit reported `violationCount: 0`.
 
 This is runtime-composition maintainability only. It does not change API
 contracts, persistence, migrations, authentication/authorization, Core, Gateway,
