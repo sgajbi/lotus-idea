@@ -8,6 +8,9 @@ from typing import cast
 import pytest
 
 from app.application.ai_lineage_store_proof import AI_LINEAGE_STORE_PROOF_ENV
+from app.application.ai_model_risk_operations.source_contract_proof import (
+    AI_MODEL_RISK_OPERATIONS_PROOF_ENV,
+)
 from app.application.ai_workflow_pack_registration.source_contract_proof import (
     AI_WORKFLOW_PACK_REGISTRATION_PROOF_ENV,
 )
@@ -24,7 +27,13 @@ from app.application.downstream_realization.manage_intake_runtime_execution impo
 from app.application.report.materialization_runtime_execution import (
     REPORT_MATERIALIZATION_RUNTIME_EXECUTION_ENV,
 )
+from app.application.report.intake_route_source_contract import (
+    REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF_ENV,
+)
 from app.application.durable_repository_proof import DURABLE_REPOSITORY_PROOF_ENV
+from app.application.operator_workflows_operations.source_contract_proof import (
+    OPERATOR_WORKFLOWS_OPERATIONS_PROOF_ENV,
+)
 from app.application.workbench.contract_proof import (
     GATEWAY_WORKBENCH_CONTRACT_PROOF_ENV,
 )
@@ -53,11 +62,17 @@ from app.application.runtime_trust_telemetry.test_execution_contract import (
     RUNTIME_TRUST_TELEMETRY_TEST_EXECUTION_ENV,
 )
 from app.application.source_ingestion_readiness import SOURCE_INGESTION_RUNTIME_EXECUTION_ENV
+from app.application.source_ingestion_scheduler import (
+    SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE_ENV,
+    SCHEDULED_WORKER_SOURCE_CONTRACT_ENV,
+)
 from app.application.workbench.read_path_source_contract import (
     WORKBENCH_READ_PATH_SOURCE_CONTRACT_PROOF_ENV,
 )
 from app.runtime.proof_artifacts import (
     ConfiguredImplementationProofArtifacts,
+    _JSON_PROOF_ARTIFACTS,
+    _REF_ONLY_PROOF_ARTIFACTS,
     configured_implementation_proof_artifacts,
 )
 
@@ -67,6 +82,13 @@ class ConfiguredArtifactBinding:
     payload_field: str
     ref_field: str
     artifact_name: str
+    expected_ref: str
+
+
+@dataclass(frozen=True)
+class ConfiguredRefOnlyArtifactBinding:
+    ref_field: str
+    env_name: str
     expected_ref: str
 
 
@@ -96,6 +118,18 @@ CONFIGURED_ARTIFACT_BINDINGS: tuple[ConfiguredArtifactBinding, ...] = (
         expected_ref="output/ai/ai-lineage-store-proof.json",
     ),
     ConfiguredArtifactBinding(
+        payload_field="ai_model_risk_operations_proof",
+        ref_field="ai_model_risk_operations_proof_ref",
+        artifact_name="ai-model-risk-operations-proof.json",
+        expected_ref="output/ai/ai-model-risk-operations-proof.json",
+    ),
+    ConfiguredArtifactBinding(
+        payload_field="operator_workflows_operations_proof",
+        ref_field="operator_workflows_operations_proof_ref",
+        artifact_name="operator-workflows-operations-proof.json",
+        expected_ref="output/operations/operator-workflows-operations-proof.json",
+    ),
+    ConfiguredArtifactBinding(
         payload_field="ai_workflow_pack_registration_proof",
         ref_field="ai_workflow_pack_registration_proof_ref",
         artifact_name="ai-workflow-pack-registration-source-contract-proof.json",
@@ -118,6 +152,12 @@ CONFIGURED_ARTIFACT_BINDINGS: tuple[ConfiguredArtifactBinding, ...] = (
         ref_field="manage_intake_runtime_execution_proof_ref",
         artifact_name="manage-intake-runtime-execution-proof.json",
         expected_ref="output/downstream/manage-intake-runtime-execution-proof.json",
+    ),
+    ConfiguredArtifactBinding(
+        payload_field="report_intake_route_source_contract_proof",
+        ref_field="report_intake_route_source_contract_proof_ref",
+        artifact_name="report-intake-route-source-contract-proof.json",
+        expected_ref="output/report/report-intake-route-source-contract-proof.json",
     ),
     ConfiguredArtifactBinding(
         payload_field="report_materialization_runtime_execution_proof",
@@ -188,6 +228,33 @@ CONFIGURED_ARTIFACT_BINDINGS: tuple[ConfiguredArtifactBinding, ...] = (
 )
 
 
+CONFIGURED_REF_ONLY_ARTIFACT_BINDINGS: tuple[ConfiguredRefOnlyArtifactBinding, ...] = (
+    ConfiguredRefOnlyArtifactBinding(
+        ref_field="source_ingestion_scheduled_worker_source_contract_ref",
+        env_name=SCHEDULED_WORKER_SOURCE_CONTRACT_ENV,
+        expected_ref="output/source-ingestion/scheduled-worker-source-contract.json",
+    ),
+    ConfiguredRefOnlyArtifactBinding(
+        ref_field="source_ingestion_scheduled_worker_deployment_evidence_ref",
+        env_name=SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE_ENV,
+        expected_ref="output/source-ingestion/scheduled-worker-deployment-evidence.json",
+    ),
+)
+
+
+def test_configured_artifact_binding_matrix_covers_runtime_loader_bindings() -> None:
+    assert {
+        (binding.payload_field, binding.ref_field)
+        for binding in CONFIGURED_ARTIFACT_BINDINGS
+    } == {
+        (binding.proof_field, binding.ref_field)
+        for binding in _JSON_PROOF_ARTIFACTS
+    }
+    assert {binding.ref_field for binding in CONFIGURED_REF_ONLY_ARTIFACT_BINDINGS} == {
+        binding.ref_field for binding in _REF_ONLY_PROOF_ARTIFACTS
+    }
+
+
 def test_configured_implementation_proof_artifacts_loads_relative_source_safe_refs(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
@@ -198,6 +265,22 @@ def test_configured_implementation_proof_artifacts_loads_relative_source_safe_re
     artifacts = configured_implementation_proof_artifacts(repository_root=tmp_path)
 
     _assert_configured_artifacts_are_bound(artifacts)
+    _assert_ref_only_artifact_refs_are_bound(artifacts)
+
+
+def test_configured_ref_only_artifacts_resolve_refs_without_json_parsing(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    for binding in CONFIGURED_REF_ONLY_ARTIFACT_BINDINGS:
+        path = tmp_path / binding.expected_ref
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("not json because this artifact is ref-only", encoding="utf-8")
+        monkeypatch.setenv(binding.env_name, binding.expected_ref)
+
+    artifacts = configured_implementation_proof_artifacts(repository_root=tmp_path)
+
+    _assert_ref_only_artifact_refs_are_bound(artifacts)
 
 
 def test_configured_implementation_proof_artifacts_rejects_non_object_payload(
@@ -226,6 +309,15 @@ def _configured_artifact_paths(tmp_path: Path) -> dict[str, Path]:
             / "runtime-trust-telemetry-test-execution.json"
         ),
         "ai_lineage": tmp_path / "output" / "ai" / "ai-lineage-store-proof.json",
+        "ai_model_risk_operations": (
+            tmp_path / "output" / "ai" / "ai-model-risk-operations-proof.json"
+        ),
+        "operator_workflows_operations": (
+            tmp_path
+            / "output"
+            / "operations"
+            / "operator-workflows-operations-proof.json"
+        ),
         "ai_workflow_pack": (
             tmp_path / "output" / "ai" / "ai-workflow-pack-registration-source-contract-proof.json"
         ),
@@ -237,6 +329,9 @@ def _configured_artifact_paths(tmp_path: Path) -> dict[str, Path]:
         ),
         "manage_runtime": (
             tmp_path / "output" / "downstream" / "manage-intake-runtime-execution-proof.json"
+        ),
+        "report_intake_route": (
+            tmp_path / "output" / "report" / "report-intake-route-source-contract-proof.json"
         ),
         "report_materialization_runtime": (
             tmp_path / "output" / "report" / "materialization-runtime-execution-proof.json"
@@ -284,6 +379,13 @@ def _assert_configured_artifacts_are_bound(
         assert artifact_ref == binding.expected_ref
 
 
+def _assert_ref_only_artifact_refs_are_bound(
+    artifacts: ConfiguredImplementationProofArtifacts,
+) -> None:
+    for binding in CONFIGURED_REF_ONLY_ARTIFACT_BINDINGS:
+        assert getattr(artifacts, binding.ref_field) == binding.expected_ref
+
+
 def _write_artifacts(*paths: Path) -> None:
     for path in paths:
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -298,6 +400,10 @@ def _configure_relative_artifact_env(monkeypatch: pytest.MonkeyPatch) -> None:
             "output/trust-telemetry/test-execution/runtime-trust-telemetry-test-execution.json"
         ),
         AI_LINEAGE_STORE_PROOF_ENV: "output/ai/ai-lineage-store-proof.json",
+        AI_MODEL_RISK_OPERATIONS_PROOF_ENV: "output/ai/ai-model-risk-operations-proof.json",
+        OPERATOR_WORKFLOWS_OPERATIONS_PROOF_ENV: (
+            "output/operations/operator-workflows-operations-proof.json"
+        ),
         AI_WORKFLOW_PACK_REGISTRATION_PROOF_ENV: (
             "output/ai/ai-workflow-pack-registration-source-contract-proof.json"
         ),
@@ -309,6 +415,9 @@ def _configure_relative_artifact_env(monkeypatch: pytest.MonkeyPatch) -> None:
         ),
         MANAGE_INTAKE_RUNTIME_EXECUTION_ENV: (
             "output/downstream/manage-intake-runtime-execution-proof.json"
+        ),
+        REPORT_INTAKE_ROUTE_SOURCE_CONTRACT_PROOF_ENV: (
+            "output/report/report-intake-route-source-contract-proof.json"
         ),
         REPORT_MATERIALIZATION_RUNTIME_EXECUTION_ENV: (
             "output/report/materialization-runtime-execution-proof.json"
@@ -340,6 +449,12 @@ def _configure_relative_artifact_env(monkeypatch: pytest.MonkeyPatch) -> None:
         ),
         LOW_INCOME_CASHFLOW_RUNTIME_EXECUTION_ENV: (
             "output/opportunity-archetypes/low-income-core-cashflow-live-proof.json"
+        ),
+        SCHEDULED_WORKER_SOURCE_CONTRACT_ENV: (
+            "output/source-ingestion/scheduled-worker-source-contract.json"
+        ),
+        SCHEDULED_WORKER_DEPLOYMENT_EVIDENCE_ENV: (
+            "output/source-ingestion/scheduled-worker-deployment-evidence.json"
         ),
     }
     for env_name, path in env_paths.items():
