@@ -2049,6 +2049,14 @@ supported-feature posture. Validation scope is focused on health integration
 tests, service-contract tests, OpenAPI gate, quality-baseline, RFC-0002 ledger
 and learning gates, documentation-contract gate, and whitespace checks.
 
+PR `#1034` rebase-merged the refactor to exact Idea main
+`9e818ec481e0c14e6c8b8cb8e9936e3f3746f21c`. Exact-main Main Releasability
+Gate run `31725039005` and Push/security-equivalent run `31725023751` passed
+for that SHA. Wiki source changed in the PR and was published to
+`lotus-idea.wiki` commit `433593c` with strict `DiffCount 0`. Issue `#1033`
+now carries `status/merged-main` and remains open pending issue-specific QA
+closure evidence.
+
 This is runtime-composition maintainability only. It does not change API
 contracts, persistence, migrations, authentication/authorization, Core, Gateway,
 Workbench, Report, Render, Archive, downstream live proof, data-product support,
