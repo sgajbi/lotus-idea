@@ -344,75 +344,94 @@ def test_implementation_proof_readiness_api_consumes_configured_proof_artifacts(
 
     assert response.status_code == 200
     payload = response.json()
+    _assert_configured_artifact_readiness_envelope(payload)
+    _assert_configured_artifact_overall_blockers(payload)
+    capabilities = _capabilities_by_id(payload)
+    _assert_configured_source_ingestion_artifacts(capabilities)
+    _assert_configured_runtime_trust_artifacts(capabilities)
+    _assert_configured_ai_artifacts(capabilities)
+    _assert_configured_operator_workflow_artifacts(capabilities)
+    _assert_configured_workbench_and_downstream_artifacts(capabilities)
+    _assert_configured_opportunity_archetype_artifacts(capabilities)
+    _assert_configured_artifact_response_redaction(response.text)
+
+
+def _assert_configured_artifact_readiness_envelope(payload: dict[str, Any]) -> None:
     assert payload["readinessStatus"] == "blocked"
     assert payload["supportabilityStatus"] == "not_certified"
     assert payload["supportedFeaturePromoted"] is False
-    assert "live_core_source_proof_missing" not in payload["overallBlockers"]
-    assert "scheduled_worker_deploy_proof_missing" not in payload["overallBlockers"]
-    assert "durable_repository_not_configured" not in payload["overallBlockers"]
-    assert "runtime_candidate_snapshot_missing" in payload["overallBlockers"]
-    assert "certified_runtime_trust_telemetry_missing" in payload["overallBlockers"]
-    assert "data_mesh_runtime_telemetry_not_certified" in payload["overallBlockers"]
-    assert "runtime_trust_telemetry_product_coverage_incomplete" in payload["overallBlockers"]
-    assert "certified_ai_lineage_store_missing" not in payload["overallBlockers"]
-    assert "operator_workflow_dashboard_runtime_proof_missing" in payload["overallBlockers"]
-    assert "operator_workflow_alert_rules_runtime_proof_missing" in payload["overallBlockers"]
-    assert "workbench_gateway_bff_consumption_proof_missing" in payload["overallBlockers"]
-    assert "lotus_report_live_intake_route_proof_missing" in payload["overallBlockers"]
-    assert (
-        "opportunity_archetype_maturity_live_core_source_proof_missing"
-        not in payload["overallBlockers"]
-    )
-    assert "report_evidence_pack_live_materialization_proof_missing" in (payload["overallBlockers"])
-    assert "workbench_panel_missing" in payload["overallBlockers"]
-    assert "platform_mesh_certification_missing" in payload["overallBlockers"]
-    assert "no_supported_features_promoted" in payload["overallBlockers"]
-    capabilities = {
-        capability["capabilityId"]: capability for capability in payload["capabilities"]
+
+
+def _assert_configured_artifact_overall_blockers(payload: dict[str, Any]) -> None:
+    overall_blockers = payload["overallBlockers"]
+    cleared_blockers = {
+        "live_core_source_proof_missing",
+        "scheduled_worker_deploy_proof_missing",
+        "durable_repository_not_configured",
+        "certified_ai_lineage_store_missing",
+        "opportunity_archetype_maturity_live_core_source_proof_missing",
     }
-    assert (
-        "source ingestion runtime execution artifact"
-        in capabilities["source-ingestion"]["evidenceRefs"]
-    )
-    assert (
-        "source ingestion scheduled-worker deployment evidence artifact"
-        in capabilities["source-ingestion"]["evidenceRefs"]
-    )
-    assert (
-        "source ingestion scheduled-worker source contract artifact"
-        in capabilities["source-ingestion"]["evidenceRefs"]
-    )
-    assert "durable repository proof artifact" in capabilities["source-ingestion"]["evidenceRefs"]
-    assert (
-        "runtime trust telemetry test execution artifact"
-        in capabilities["runtime-trust-telemetry-preview"]["evidenceRefs"]
-    )
-    assert (
-        "runtime_candidate_snapshot_missing"
-        in (capabilities["runtime-trust-telemetry-preview"]["blockers"])
-    )
-    assert (
-        "certified_runtime_trust_telemetry_missing"
-        in (capabilities["runtime-trust-telemetry-preview"]["blockers"])
-    )
+    remaining_blockers = {
+        "runtime_candidate_snapshot_missing",
+        "certified_runtime_trust_telemetry_missing",
+        "data_mesh_runtime_telemetry_not_certified",
+        "runtime_trust_telemetry_product_coverage_incomplete",
+        "operator_workflow_dashboard_runtime_proof_missing",
+        "operator_workflow_alert_rules_runtime_proof_missing",
+        "workbench_gateway_bff_consumption_proof_missing",
+        "lotus_report_live_intake_route_proof_missing",
+        "report_evidence_pack_live_materialization_proof_missing",
+        "workbench_panel_missing",
+        "platform_mesh_certification_missing",
+        "no_supported_features_promoted",
+    }
+    for blocker in cleared_blockers:
+        assert blocker not in overall_blockers
+    for blocker in remaining_blockers:
+        assert blocker in overall_blockers
+
+
+def _assert_configured_source_ingestion_artifacts(
+    capabilities: dict[str, dict[str, Any]],
+) -> None:
+    evidence_refs = capabilities["source-ingestion"]["evidenceRefs"]
+    assert "source ingestion runtime execution artifact" in evidence_refs
+    assert "source ingestion scheduled-worker deployment evidence artifact" in evidence_refs
+    assert "source ingestion scheduled-worker source contract artifact" in evidence_refs
+    assert "durable repository proof artifact" in evidence_refs
+
+
+def _assert_configured_runtime_trust_artifacts(
+    capabilities: dict[str, dict[str, Any]],
+) -> None:
+    runtime_trust = capabilities["runtime-trust-telemetry-preview"]
+    assert "runtime trust telemetry test execution artifact" in runtime_trust["evidenceRefs"]
+    assert "runtime_candidate_snapshot_missing" in runtime_trust["blockers"]
+    assert "certified_runtime_trust_telemetry_missing" in runtime_trust["blockers"]
     assert (
         "runtime_trust_telemetry_product_coverage_incomplete"
-        in (capabilities["data-mesh-certification"]["blockers"])
+        in capabilities["data-mesh-certification"]["blockers"]
     )
-    assert "AI lineage store proof artifact" in capabilities["ai-explanation"]["evidenceRefs"]
-    assert (
-        "AI model-risk operations proof artifact"
-        in (capabilities["ai-explanation"]["evidenceRefs"])
-    )
-    assert "lotus_ai_runtime_execution_missing" in capabilities["ai-explanation"]["blockers"]
-    assert (
-        "operator workflows operations proof artifact"
-        in capabilities["operator-workflows-operations"]["evidenceRefs"]
-    )
-    assert (
-        "external_broker_runtime_proof_missing"
-        in (capabilities["operator-workflows-operations"]["blockers"])
-    )
+
+
+def _assert_configured_ai_artifacts(capabilities: dict[str, dict[str, Any]]) -> None:
+    ai_explanation = capabilities["ai-explanation"]
+    assert "AI lineage store proof artifact" in ai_explanation["evidenceRefs"]
+    assert "AI model-risk operations proof artifact" in ai_explanation["evidenceRefs"]
+    assert "lotus_ai_runtime_execution_missing" in ai_explanation["blockers"]
+
+
+def _assert_configured_operator_workflow_artifacts(
+    capabilities: dict[str, dict[str, Any]],
+) -> None:
+    operator_workflows = capabilities["operator-workflows-operations"]
+    assert "operator workflows operations proof artifact" in operator_workflows["evidenceRefs"]
+    assert "external_broker_runtime_proof_missing" in operator_workflows["blockers"]
+
+
+def _assert_configured_workbench_and_downstream_artifacts(
+    capabilities: dict[str, dict[str, Any]],
+) -> None:
     assert (
         "Workbench read-path source-contract proof artifact"
         in capabilities["workbench-product-proof"]["evidenceRefs"]
@@ -420,15 +439,21 @@ def test_implementation_proof_readiness_api_consumes_configured_proof_artifacts(
     assert "Report intake-route source-contract proof artifact" in " ".join(
         capabilities["downstream-realization"]["evidenceRefs"]
     )
-    assert (
-        "bond maturity live proof artifact"
-        in capabilities["opportunity-archetype-scenarios"]["evidenceRefs"]
-    )
+
+
+def _assert_configured_opportunity_archetype_artifacts(
+    capabilities: dict[str, dict[str, Any]],
+) -> None:
+    archetype_scenarios = capabilities["opportunity-archetype-scenarios"]
+    assert "bond maturity live proof artifact" in archetype_scenarios["evidenceRefs"]
     assert (
         "opportunity_archetype_maturity_live_core_source_proof_missing"
-        not in capabilities["opportunity-archetype-scenarios"]["blockers"]
+        not in archetype_scenarios["blockers"]
     )
-    assert "PB_SG_GLOBAL_BAL_001" not in response.text
+
+
+def _assert_configured_artifact_response_redaction(response_text: str) -> None:
+    assert "PB_SG_GLOBAL_BAL_001" not in response_text
 
 
 def test_implementation_proof_readiness_api_requires_operator_permission() -> None:

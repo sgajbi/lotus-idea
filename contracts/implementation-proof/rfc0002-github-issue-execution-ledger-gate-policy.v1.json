@@ -113,7 +113,8 @@
     1016,
     1020,
     1024,
-    1027
+    1027,
+    1029
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -415,6 +416,23 @@
       "opportunity archetype proof posture",
       "supported-feature non-promotion",
       "source-safe redaction",
+      "test-support maintainability only",
+      "Gateway, Workbench",
+      "supported-feature promotion",
+      "final RFC-0002 closure"
+    ],
+    "1029": [
+      "Keep #1029 open",
+      "configured proof-artifact readiness API test refactor",
+      "test_implementation_proof_readiness_api_consumes_configured_proof_artifacts",
+      "blocked API envelope/supportability posture",
+      "configured artifact blocker clearing",
+      "runtime-trust telemetry and data-mesh residual blockers",
+      "AI explanation proof evidence",
+      "operator-workflow evidence",
+      "Workbench/downstream evidence refs",
+      "opportunity-archetype proof evidence",
+      "source-safe response redaction",
       "test-support maintainability only",
       "Gateway, Workbench",
       "supported-feature promotion",
