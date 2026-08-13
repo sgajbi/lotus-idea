@@ -392,9 +392,24 @@
       "Workbench/Gateway browser proof",
       "production identity/session-token authority",
       "final RFC-0002 completion"
-    ],
+    ]
+  },
+  "requiredClosedIssueEvidence": {
     "1024": [
-      "Keep #1024 open",
+      "Closed #1024 after QA passed",
+      "PR #1025",
+      "2597811841e3c2bdcfb5c30dbf6bf616fb311eba",
+      "31707632385",
+      "31707624422",
+      "PR #1026",
+      "57d3a7936352baf3b474a20a661569f63846ea15",
+      "31710019641",
+      "31710012895",
+      "Loop status: qa_passed_closed",
+      "strict issue-loop QA audit for #1024",
+      "00729b52b7f51e05b59100b617419fe6d33a1dbe",
+      "31719191672",
+      "31719184299",
       "downstream realization proof test refactor",
       "Advise and Manage downstream realization proof tests",
       "nested proof-boundary tamper cases",
@@ -405,9 +420,7 @@
       "Gateway, Workbench",
       "supported-feature promotion",
       "final RFC-0002 closure"
-    ]
-  },
-  "requiredClosedIssueEvidence": {
+    ],
     "1027": [
       "Closed #1027 after QA passed",
       "PR #1028",
