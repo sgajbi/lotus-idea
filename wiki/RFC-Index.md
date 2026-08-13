@@ -32,9 +32,9 @@ readiness, live proof, documentation, hardening, and closure.
 The live issue-backed status map is maintained in
 [RFC-0002 Execution Status](RFC-0002-Execution-Status). It currently records
 181 label-backed RFC-0002 issues across 13 repositories: 143 closed and 38
-open, with 25 `status/blocked`, 2 `status/in-progress`, 1
-`status/merged-main`, 2 `status/merged-to-main`, 8 `status/tracker`, and 0
-app-actionable blocked issues. The page
+open, with 25 `status/blocked`, 1 `status/fixed-local`, 1
+`status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 8
+`status/tracker`, and 0 app-actionable blocked issues. The page
 also records the latest canonical front-office QA failure and the issue-specific
 proof still required before QA-pending merged-main issues can close.
 

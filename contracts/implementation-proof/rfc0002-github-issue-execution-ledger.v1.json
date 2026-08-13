@@ -1072,7 +1072,7 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/1033",
       "rfcSlices": ["slice-19"],
       "githubState": "open",
-      "executionStatus": "open_in_progress",
+      "executionStatus": "open_fixed_local",
       "allowPullRequestAutoClose": false,
       "closureInstruction": "Keep #1033 open. This Slice 19 maintainability issue tracks the platform route-registration metadata hotspot reported by `make quality-baseline` in `src/app/main.py::_register_platform_routes`. The intended implementation splits `/health`, `/health/live`, `/health/ready`, `/metadata`, and `/version` route registration into named helpers while preserving every public path, handler, response model, tag, summary, description, OpenAPI example, foundation-only supported-feature posture, and no-claim boundary. Required validation includes focused health integration tests, service-contract unit tests, OpenAPI gate, quality-baseline, RFC-0002 ledger/state/learning gates, documentation-contract gate, and whitespace checks. This issue does not claim new runtime behavior, API/OpenAPI contract changes, persistence, migrations, authentication, authorization, Core, Gateway, Workbench, Report, Render, Archive, downstream live proof, supported-feature promotion, production certification, client publication, or final RFC-0002 closure."
     }
