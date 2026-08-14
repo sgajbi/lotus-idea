@@ -44,12 +44,21 @@ Focused local validation passed:
    source/script functions), and
 8. `make quality-baseline`.
 
+PR `#1063` rebase-merged to Idea main
+`6efb5c67a7f8baf10cb94b5699ec1ed2c7e584b9`. Exact-main Main Releasability
+Gate run `31764819665` passed for that SHA, including Docker/release evidence,
+image scan, SBOM, signing/provenance, release image identity binding, license
+evidence binding, and CI signal evidence. Exact-main local closure validation
+passed focused source-observability pytest, source-observability contract gate,
+RFC-0002 issue execution ledger, learning-pattern, state-audit, documentation,
+and whitespace gates.
+
 No API/OpenAPI, persistence schema, migration, runtime topology,
 authentication/authorization, Core, Gateway, Workbench, source-authority
 methodology, supported-feature promotion, data-product certification,
 client-publication, or final RFC-0002 closure claim is made by this internal
-governance-gate maintainability slice. No repo-authored wiki source change is
-expected unless PR review requests broader publication evidence.
+governance-gate maintainability slice. No repo-authored wiki source changed;
+strict wiki parity reported DiffCount 0 and publication was not required.
 
 ## 2026-08-14: Conversion Outcome Persistence Recording Boundary
 
