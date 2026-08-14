@@ -52,8 +52,9 @@ Broader local validation passed:
 13. `git diff --check`,
 14. `make lint`.
 
-PR, exact-main, wiki-publication, and branch-cleanup evidence remains pending.
-Keep issue `#1088` open while this branch is in progress.
+Branch commit `defe461e` was posted to issue `#1088` with fixed-local
+evidence. PR, exact-main, wiki-publication, and branch-cleanup evidence remains
+pending. Keep issue `#1088` open until that evidence is complete.
 
 No API/OpenAPI behavior, persistence migration, event-publisher behavior,
 broker integration, runtime topology, authentication, authorization, Gateway,
