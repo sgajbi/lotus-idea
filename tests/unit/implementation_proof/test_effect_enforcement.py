@@ -23,6 +23,7 @@ from app.application.implementation_proof_capability_updates import (
     build_capability_readiness,
 )
 from app.application.implementation_proof_consumption import (
+    _downstream_proof_applications,
     registered_proof_is_valid_and_current,
 )
 from app.application.implementation_proof_opportunity_archetype_proofs import (
@@ -344,6 +345,58 @@ def test_downstream_source_contract_rejects_registry_effect_drift(
     )
     assert proof_ref not in advise.evidence_refs
     assert "advise_live_contract_proof_missing" in advise.blockers
+
+
+def test_downstream_proof_catalog_preserves_order_and_effects() -> None:
+    applications = _downstream_proof_applications(
+        advise_proposal_route_proof=None,
+        advise_proposal_route_proof_ref="output/downstream/advise-route.json",
+        advise_intake_runtime_execution_proof=None,
+        advise_intake_runtime_execution_proof_ref="output/downstream/advise-runtime.json",
+        manage_intake_runtime_execution_proof=None,
+        manage_intake_runtime_execution_proof_ref="output/downstream/manage-runtime.json",
+        manage_action_route_proof=None,
+        manage_action_route_proof_ref="output/downstream/manage-route.json",
+        report_intake_route_source_contract_proof=None,
+        report_intake_route_source_contract_proof_ref="output/report/intake-route.json",
+        report_intake_runtime_execution_proof=None,
+        report_intake_runtime_execution_proof_ref="output/report/intake-runtime.json",
+        report_materialization_source_contract_proof=None,
+        report_materialization_source_contract_proof_ref="output/report/materialization-source.json",
+        report_materialization_runtime_execution_proof=None,
+        report_materialization_runtime_execution_proof_ref="output/report/materialization-runtime.json",
+    )
+
+    assert tuple(application.proof_key for application in applications) == (
+        "advise_proposal_route_proof",
+        "manage_action_route_proof",
+        "advise_intake_runtime_execution_proof",
+        "manage_intake_runtime_execution_proof",
+        "report_intake_route_source_contract_proof",
+        "report_intake_runtime_execution_proof",
+        "report_materialization_source_contract_proof",
+        "report_materialization_runtime_execution_proof",
+    )
+    assert tuple(application.effect for application in applications) == (
+        ProofArtifactEffect.SUPPORTING_EVIDENCE,
+        ProofArtifactEffect.SUPPORTING_EVIDENCE,
+        ProofArtifactEffect.BLOCKER_CLEARING,
+        ProofArtifactEffect.BLOCKER_CLEARING,
+        ProofArtifactEffect.SUPPORTING_EVIDENCE,
+        ProofArtifactEffect.BLOCKER_CLEARING,
+        ProofArtifactEffect.SUPPORTING_EVIDENCE,
+        ProofArtifactEffect.BLOCKER_CLEARING,
+    )
+    assert tuple(application.proof_ref for application in applications) == (
+        "output/downstream/advise-route.json",
+        "output/downstream/manage-route.json",
+        "output/downstream/advise-runtime.json",
+        "output/downstream/manage-runtime.json",
+        "output/report/intake-route.json",
+        "output/report/intake-runtime.json",
+        "output/report/materialization-source.json",
+        "output/report/materialization-runtime.json",
+    )
 
 
 def _replace_payload_effect(
