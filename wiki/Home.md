@@ -37,12 +37,12 @@ supported yet.
 
 | Signal | Current state |
 | --- | --- |
-| GitHub issue posture | Current posture is 204 label-backed RFC-0002 issues across 13 repositories: 167 closed and 37 open. |
-| Open blocked work | 25 `status/blocked`, 0 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 0 `status/pr-open`, 8 `status/tracker`, and 0 app-actionable blocked issues. |
-| Active slice work | `sgajbi/lotus-idea#681` remains open as the Slice 18 synchronization tracker; `sgajbi/lotus-idea#1101` is closed after PR #1102 for Slice 09/17/19 AI workflow evaluator hardening; `sgajbi/lotus-idea#1098` is closed after main releasability GHCR-authentication retry hardening. The current Idea source ledger tracks 135 RFC-0002 issues: 110 closed and 25 open. |
+| GitHub issue posture | Current posture is 205 label-backed RFC-0002 issues across 13 repositories: 167 closed and 38 open. |
+| Open blocked work | 25 `status/blocked`, 0 `status/fixed-local`, 2 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 0 `status/pr-open`, 8 `status/tracker`, and 0 app-actionable blocked issues. |
+| Active slice work | `sgajbi/lotus-idea#681` remains open as the Slice 18 synchronization tracker; `sgajbi/lotus-idea#1104` is open as the Slice 19 supported-feature gate fixture refactor; `sgajbi/lotus-idea#1101` is closed after PR #1102 for Slice 09/17/19 AI workflow evaluator hardening; `sgajbi/lotus-idea#1098` is closed after main releasability GHCR-authentication retry hardening. The current Idea source ledger tracks 136 RFC-0002 issues: 110 closed and 26 open. |
 | Latest Idea closure truth | `lotus-idea#1101` is closed after PR #1102 hardened the AI workflow output evaluator boundary to main `2b0cdafa02a4c98b52090abe4f06bbd863776c83`; Main Releasability `31817955897`, Push-on-main `31817948440`, wiki publication `77c049d`, strict wiki parity, and branch hygiene passed. No supported feature or production/runtime claim is promoted. |
 | Latest canonical QA | Failed before AI/Advise proof on Workbench browser feedback-action confirmation. Workbench PR #698 is now merged and exact-main validated, but fresh canonical QA remains required. |
-| Next proof path | Resolve current mainline-source blockers first: Core PR #948 must merge and this Idea closure-sync PR must merge so all canonical repositories return to clean exact `origin/main`. Gateway PR #550 has merged and `lotus-gateway` is exact main; Workbench is also exact main at `0c86cf491004a0706f9d12ff12ad07fd799a36fb`. Then rerun the governed `PB_SG_GLOBAL_BAL_001` canonical proof for Gateway-backed Workbench queue/detail/action behavior and close only issues with issue-specific proof. |
+| Next proof path | Resolve current mainline-source blockers first: Core PR #948 and Workbench PR #708 must merge or be superseded, and this Idea issue-backed refactor must merge, so canonical repositories return to clean exact `origin/main`. Gateway PR #550 has merged and `lotus-gateway` is exact main. Then rerun the governed `PB_SG_GLOBAL_BAL_001` canonical proof for Gateway-backed Workbench queue/detail/action behavior and close only issues with issue-specific proof. |
 
 See [RFC-0002 Execution Status](RFC-0002-Execution-Status) for the durable
 issue-backed status map and closure boundaries.
