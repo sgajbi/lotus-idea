@@ -58,6 +58,13 @@ supported-feature posture, data-product promotion, client-publication,
 production certification, wiki source, or final RFC-0002 closure claim is in
 scope.
 
+Closure evidence: PR `#1072` rebase-merged to main at
+`65bb7c936177602bf5f10bdb752826db96077975`, and Main Releasability run
+`31771189732` passed for that exact SHA. GitHub deleted the remote PR branch by
+merge, the stale remote-tracking ref was pruned, and the local implementation
+branch was deleted after `git cherry` showed both branch commits
+patch-equivalent to main. No repo-authored wiki source changed.
+
 ## 2026-08-14: Platform Mesh Proof Fixture Writer Boundary
 
 Issue `#1068` applies the RFC-0002 Slice 14/17/19 maintainability lens to
