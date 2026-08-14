@@ -6,6 +6,63 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-08-14: AI Explanation Lineage Assembly Boundary
+
+Issue `#1080` applies the RFC-0002 Slice 15/17/19 maintainability lens to
+`src/app/domain/ai_lineage_persistence.py::ai_explanation_lineage_record_from_result`.
+After issue `#1078` removed the prior production/API hotspot, refreshed
+quality evidence identified this AI lineage assembly function as the next
+production-code function-size hotspot at `92` lines.
+
+The refactor keeps the public function signature, `AIExplanationLineageRecord`
+semantics, persisted canonical lineage-hash payload, attestation receipt
+binding, provider-retention receipt binding, fallback/no-output timestamp
+behavior, and PostgreSQL codec verification stable while separating:
+
+1. attestation and provider-retention compatibility validation,
+2. effective lineage evaluation timestamp selection,
+3. canonical lineage-hash payload construction,
+4. persisted lineage record construction,
+5. output claim-id extraction, and
+6. proposed action-type extraction.
+
+Focused local validation passed:
+
+1. `python -m ruff format src/app/domain/ai_lineage_persistence.py tests/unit/test_ai_lineage_content_integrity.py`,
+2. `python -m ruff check src/app/domain/ai_lineage_persistence.py tests/unit/test_ai_lineage_content_integrity.py`,
+3. `python -m mypy src/app/domain/ai_lineage_persistence.py tests/unit/test_ai_lineage_content_integrity.py`
+   with `MYPYPATH=src;scripts`, and
+4. `python -m pytest tests/unit/test_ai_lineage_content_integrity.py -q`
+   (`13` passed).
+
+The focused test update proves fallback audit-event timestamp selection,
+attestation request mismatch rejection, provider-retention-without-attestation
+rejection, provider-retention run mismatch rejection, attested receipt/provider
+retention round-trip hash binding, and tamper rejection.
+
+Broader local validation passed:
+
+1. `make quality-baseline`,
+2. `make maintainability-gate`, and
+3. `make duplicate-implementation-gate` (`0` duplicate clusters across
+   `3,633` source/script functions).
+
+The refreshed quality baseline no longer lists
+`src/app/domain/ai_lineage_persistence.py::ai_explanation_lineage_record_from_result`.
+The next production-code entries are
+`src/app/application/implementation_proof_consumption.py::_apply_downstream_proofs`,
+`src/app/application/runtime_trust_telemetry/test_execution_contract.py::build_runtime_trust_telemetry_test_execution_payload`,
+`src/app/domain/missing_benchmark_signal.py::evaluate_missing_benchmark_signal`,
+and
+`src/app/infrastructure/outbox/postgres_delivery.py::load_outbox_delivery_readiness_summary`,
+each at `91` lines.
+
+No API/OpenAPI behavior, persistence migration, runtime topology, production
+identity, model-risk certification, AI-provider certification, Core, Gateway,
+Workbench, lotus-ai, supported-feature promotion, wiki source, client
+publication, production certification, or final RFC-0002 closure claim is in
+scope.
+
 ## 2026-08-14: Source-Ingestion Run-Once API Boundary
 
 Issue `#1078` applies the RFC-0002 Slice 15/17/19 maintainability lens to
@@ -45,6 +102,17 @@ Broader local validation passed:
 6. `make rfc0002-github-issue-execution-state-audit`,
 7. `make documentation-contract-gate`, and
 8. `git diff --check`.
+
+PR `#1079` rebase-merged this refactor to Idea main SHA
+`58bcfab81e6c9c274c4e850cfcf973a99c854a2a`. Exact-main Main Releasability
+Gate run `31776306524` passed for that SHA. GitHub deleted the remote
+`issue/1078-source-ingestion-run-boundary` branch, `git fetch origin --prune`
+removed the remote-tracking ref, `git ls-remote --heads origin
+issue/1078-source-ingestion-run-boundary` returned no heads, and the local
+branch was deleted after `git cherry -v origin/main
+issue/1078-source-ingestion-run-boundary` showed the rebased branch commit was
+patch-equivalent to `origin/main`. Issue `#1078` is closed with
+`status/merged-main` and `Loop status: qa_passed_closed` evidence.
 
 The refreshed quality baseline no longer lists
 `src/app/api/source_ingestion_readiness.py::post_source_ingestion_run_once`.

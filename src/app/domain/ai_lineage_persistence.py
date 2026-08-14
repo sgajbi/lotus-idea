@@ -7,7 +7,7 @@ import hashlib
 import json
 from typing import TYPE_CHECKING, Any, Mapping
 
-from app.domain.ai_governance import AIExplanationResult
+from app.domain.ai_governance import AIExplanationResult, AIWorkflowOutput
 from app.domain.ai_action_policy import AI_ACTION_POLICY_VERSION
 from app.domain.ai_output_integrity import AIOutputIntegrity
 from app.domain.ai_execution_provenance import AIExecutionProvenancePosture
@@ -112,6 +112,35 @@ def ai_explanation_lineage_record_from_result(
     attestation_receipt: VerifiedLotusAIRunAttestationReceipt | None = None,
     provider_retention_receipt: VerifiedAIProviderRetentionReceipt | None = None,
 ) -> AIExplanationLineageRecord:
+    _validate_ai_lineage_receipts(
+        result=result,
+        attestation_receipt=attestation_receipt,
+        provider_retention_receipt=provider_retention_receipt,
+    )
+    evaluated_at_utc = _ai_lineage_evaluated_at_utc(result)
+    lineage_hash = _hash_payload(
+        _ai_lineage_hash_payload_from_result(
+            result=result,
+            evaluated_at_utc=evaluated_at_utc,
+            attestation_receipt=attestation_receipt,
+            provider_retention_receipt=provider_retention_receipt,
+        )
+    )
+    return _ai_lineage_record_from_result(
+        result=result,
+        evaluated_at_utc=evaluated_at_utc,
+        lineage_hash=lineage_hash,
+        attestation_receipt=attestation_receipt,
+        provider_retention_receipt=provider_retention_receipt,
+    )
+
+
+def _validate_ai_lineage_receipts(
+    *,
+    result: AIExplanationResult,
+    attestation_receipt: VerifiedLotusAIRunAttestationReceipt | None,
+    provider_retention_receipt: VerifiedAIProviderRetentionReceipt | None,
+) -> None:
     if (
         attestation_receipt is not None
         and attestation_receipt.consumer_request_id != result.request.request_id
@@ -122,14 +151,26 @@ def ai_explanation_lineage_record_from_result(
             raise ValueError("provider retention receipt requires a verified run attestation")
         if provider_retention_receipt.workflow_run_id != attestation_receipt.run_id:
             raise ValueError("provider retention receipt run does not match run attestation")
+
+
+def _ai_lineage_evaluated_at_utc(result: AIExplanationResult) -> datetime:
+    if result.output is not None:
+        return result.output.verifier_ran_at_utc
+    return result.audit_event.occurred_at_utc
+
+
+def _ai_lineage_hash_payload_from_result(
+    *,
+    result: AIExplanationResult,
+    evaluated_at_utc: datetime,
+    attestation_receipt: VerifiedLotusAIRunAttestationReceipt | None,
+    provider_retention_receipt: VerifiedAIProviderRetentionReceipt | None,
+) -> dict[str, Any]:
     output = result.output
-    evaluated_at_utc = (
-        output.verifier_ran_at_utc if output is not None else result.audit_event.occurred_at_utc
-    )
     record_payload: dict[str, Any] = {
         "actor_subject": result.request.actor_subject,
         "candidate_id": result.request.redacted_evidence.candidate_id,
-        "claim_ids": [claim.claim_id for claim in output.claims] if output is not None else [],
+        "claim_ids": _ai_output_claim_ids(output),
         "evidence_content_hash": result.request.redacted_evidence.evidence_content_hash,
         "evidence_packet_id": result.request.redacted_evidence.evidence_packet_id,
         "fallback_reason": (
@@ -139,11 +180,7 @@ def ai_explanation_lineage_record_from_result(
         "grants_downstream_authority": result.grants_downstream_authority,
         "output_id": output.output_id if output is not None else None,
         "posture": result.posture.value,
-        "proposed_action_types": (
-            [action.action_type.value for action in output.proposed_actions]
-            if output is not None
-            else []
-        ),
+        "proposed_action_types": _ai_output_proposed_action_types(output),
         "action_policy_version": AI_ACTION_POLICY_VERSION,
         "output_integrity_version": result.output_integrity.version,
         "output_content_digest": result.output_integrity.digest,
@@ -163,7 +200,18 @@ def ai_explanation_lineage_record_from_result(
         record_payload["provider_retention_receipt"] = ai_provider_retention_receipt_to_mapping(
             provider_retention_receipt
         )
-    lineage_hash = _hash_payload(record_payload)
+    return record_payload
+
+
+def _ai_lineage_record_from_result(
+    *,
+    result: AIExplanationResult,
+    evaluated_at_utc: datetime,
+    lineage_hash: str,
+    attestation_receipt: VerifiedLotusAIRunAttestationReceipt | None,
+    provider_retention_receipt: VerifiedAIProviderRetentionReceipt | None,
+) -> AIExplanationLineageRecord:
+    output = result.output
     return AIExplanationLineageRecord(
         request_id=result.request.request_id,
         candidate_id=result.request.redacted_evidence.candidate_id,
@@ -180,12 +228,8 @@ def ai_explanation_lineage_record_from_result(
         ),
         reason_codes=tuple(reason.value for reason in result.reason_codes),
         output_id=output.output_id if output is not None else None,
-        claim_ids=tuple(claim.claim_id for claim in output.claims) if output is not None else (),
-        proposed_action_types=(
-            tuple(action.action_type.value for action in output.proposed_actions)
-            if output is not None
-            else ()
-        ),
+        claim_ids=tuple(_ai_output_claim_ids(output)),
+        proposed_action_types=tuple(_ai_output_proposed_action_types(output)),
         action_policy_version=AI_ACTION_POLICY_VERSION,
         output_integrity_version=result.output_integrity.version,
         output_content_digest=result.output_integrity.digest,
@@ -200,6 +244,18 @@ def ai_explanation_lineage_record_from_result(
     )
 
 
+def _ai_output_claim_ids(output: AIWorkflowOutput | None) -> list[str]:
+    if output is None:
+        return []
+    return [claim.claim_id for claim in output.claims]
+
+
+def _ai_output_proposed_action_types(output: AIWorkflowOutput | None) -> list[str]:
+    if output is None:
+        return []
+    return [action.action_type.value for action in output.proposed_actions]
+
+
 def verify_ai_explanation_lineage_record_integrity(
     record: AIExplanationLineageRecord,
 ) -> None:
@@ -210,6 +266,15 @@ def verify_ai_explanation_lineage_record_integrity(
         == AIExecutionProvenancePosture.PRE_ATTESTATION_UNVERIFIABLE.value
     ):
         return
+
+    expected = _hash_payload(_ai_lineage_hash_payload_from_record(record))
+    if record.lineage_hash != expected:
+        raise ValueError("AI explanation lineage hash does not match persisted content")
+
+
+def _ai_lineage_hash_payload_from_record(
+    record: AIExplanationLineageRecord,
+) -> dict[str, Any]:
     expected_payload: dict[str, Any] = {
         "actor_subject": record.actor_subject,
         "candidate_id": record.candidate_id,
@@ -243,9 +308,7 @@ def verify_ai_explanation_lineage_record_integrity(
         expected_payload["provider_retention_receipt"] = ai_provider_retention_receipt_to_mapping(
             record.provider_retention_receipt
         )
-    expected = _hash_payload(expected_payload)
-    if record.lineage_hash != expected:
-        raise ValueError("AI explanation lineage hash does not match persisted content")
+    return expected_payload
 
 
 def _hash_payload(payload: Mapping[str, Any]) -> str:

@@ -115,6 +115,56 @@ def test_lineage_codec_rejects_v1_hash_tampering(tampered_field: str) -> None:
         ai_explanation_lineage_from_json(payload)
 
 
+def test_lineage_record_uses_audit_event_time_for_fallback_without_ai_output() -> None:
+    candidate, _ = high_cash_candidate()
+    result = ai_explanation_result_for_candidate(candidate)
+
+    record = ai_explanation_lineage_record_from_result(result)
+
+    assert result.output is None
+    assert record.evaluated_at_utc == result.audit_event.occurred_at_utc
+
+
+def test_lineage_record_rejects_attestation_for_different_request() -> None:
+    candidate, _ = high_cash_candidate()
+    result = ai_explanation_result_for_candidate(candidate)
+
+    with pytest.raises(ValueError, match="attestation receipt request does not match"):
+        ai_explanation_lineage_record_from_result(
+            result,
+            attestation_receipt=_verified_receipt("different-request-id"),
+        )
+
+
+def test_lineage_record_rejects_provider_retention_without_attestation() -> None:
+    candidate, _ = high_cash_candidate()
+    result = ai_explanation_result_for_candidate(candidate)
+
+    with pytest.raises(ValueError, match="requires a verified run attestation"):
+        ai_explanation_lineage_record_from_result(
+            result,
+            provider_retention_receipt=_provider_retention_receipt(),
+        )
+
+
+def test_lineage_record_rejects_provider_retention_for_different_run() -> None:
+    request = build_ai_explanation_request(candidate(), command())
+    result = replace(
+        evaluate_ai_workflow_output(request, output(request.request_id)),
+        execution_provenance_posture=AIExecutionProvenancePosture.LOTUS_AI_ATTESTATION_VERIFIED,
+    )
+
+    with pytest.raises(ValueError, match="provider retention receipt run does not match"):
+        ai_explanation_lineage_record_from_result(
+            result,
+            attestation_receipt=_verified_receipt(request.request_id),
+            provider_retention_receipt=replace(
+                _provider_retention_receipt(),
+                workflow_run_id="different-workflow-run",
+            ),
+        )
+
+
 def test_verified_attestation_receipt_round_trips_and_is_lineage_hash_bound() -> None:
     request = build_ai_explanation_request(candidate(), command())
     result = replace(
