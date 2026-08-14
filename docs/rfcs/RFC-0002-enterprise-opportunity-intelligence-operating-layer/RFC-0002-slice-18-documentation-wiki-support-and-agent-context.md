@@ -1029,9 +1029,10 @@ Its Markdown output also renders each blocked issue with issue URL,
 actionability, blocker class, and remaining authority, so the current
 Core-vs-protected/external split is durable execution evidence rather than a
 chat-only explanation.
-For the current 109-issue label-backed RFC-0002 program posture, all 29 open
-`status/blocked` issues are classified: 6 are Core dependencies and 23 require
-external or protected evidence. The current app-actionable blocked count is 0.
+For the current 199 label-backed RFC-0002 issue program posture, 25 open
+`status/blocked` issues are classified; 0 are app-actionable blocked issues.
+The current cross-repo posture is 162 closed and 37 open across 13
+repositories, with `sgajbi/lotus-idea#681` as the in-progress Slice 18 tracker.
 Future agents must not use `status/blocked` for writable non-Core app work; if
 the remaining acceptance criteria can be satisfied in `lotus-idea`,
 `lotus-gateway`, `lotus-workbench`, `lotus-manage`, `lotus-report`,
@@ -1064,6 +1065,19 @@ runtime proof. The bond-maturity / reinvestment update records only
 deterministic policy, caller-supplied API, and fail-closed source-port truth; it
 does not prove source-backed generation or promote a client-ready reinvestment
 journey.
+
+2026-08-14 SGT continuation update: PR #1086 synchronized source/docs/wiki
+posture to Idea main `a8857f62782c4cd9105bc22790332b9ec2d43983`; exact-main
+Main Releasability `31783746700`, CodeQL `31783742917`, wiki publication
+`9256a45`, strict wiki parity, and branch hygiene passed. Workbench PR #698
+then merged the governed advisor-brief review workspace to Workbench main
+`9ff3161c917bf38c41aef4e8f9c42cb3d9c40b50`; exact-main Main Releasability
+`31784470442`, wiki parity, and changed-page wiki quality audit passed. These
+facts update Slice 18 execution truth only. They do not clear the remaining
+canonical QA blockers, close `sgajbi/lotus-ai#126` or
+`sgajbi/lotus-advise#481/#485`, promote supported features, or replace Core,
+production identity/session, protected runtime, provider, legal,
+client-publication, support, or final closure evidence.
 
 ## Required Work
 

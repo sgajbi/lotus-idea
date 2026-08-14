@@ -39,10 +39,10 @@ supported yet.
 | --- | --- |
 | GitHub issue posture | Current posture is 199 label-backed RFC-0002 issues across 13 repositories: 162 closed and 37 open. |
 | Open blocked work | 25 `status/blocked`, 0 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 0 `status/pr-open`, 8 `status/tracker`, and 0 app-actionable blocked issues. |
-| Active slice work | `sgajbi/lotus-idea#681` remains open as the Slice 18 synchronization tracker. The current Idea source ledger tracks 130 RFC-0002 issues: 105 closed and 25 open after #1084 closure truth synchronized. |
-| Latest Idea closure truth | `lotus-idea#1084` is closed after PR #1085 merged missing-benchmark signal evaluation domain-boundary hardening to main `03b12bb50c8c2bbaaf6d5396ea614cc13e80f4cd`; Main Releasability run `31781165482` passed. No supported feature or production/runtime claim is promoted. |
-| Latest canonical QA | Failed before AI/Advise proof on Workbench browser feedback-action confirmation. |
-| Next proof path | Complete fresh Gateway-backed Workbench queue/detail/action proof, then rerun canonical QA and close only issues with issue-specific proof. |
+| Active slice work | `sgajbi/lotus-idea#681` remains open as the Slice 18 synchronization tracker. The current Idea source ledger tracks 130 RFC-0002 issues: 105 closed and 25 open after #1084 closure truth and PR #1086 source synchronization. |
+| Latest Idea closure truth | `lotus-idea#1084` is closed after PR #1085 merged missing-benchmark signal evaluation domain-boundary hardening to main `03b12bb50c8c2bbaaf6d5396ea614cc13e80f4cd`; Main Releasability run `31781165482` passed. PR #1086 then synchronized source/docs/wiki posture to main `a8857f62782c4cd9105bc22790332b9ec2d43983`; Main Releasability `31783746700`, CodeQL `31783742917`, wiki publication `9256a45`, strict wiki parity, and branch hygiene passed. No supported feature or production/runtime claim is promoted. |
+| Latest canonical QA | Failed before AI/Advise proof on Workbench browser feedback-action confirmation. Workbench PR #698 is now merged and exact-main validated, but fresh canonical QA remains required. |
+| Next proof path | Get Core PR #948 green/merged if it remains required for the current canonical stack, then complete fresh Gateway-backed Workbench queue/detail/action proof, rerun canonical QA, and close only issues with issue-specific proof. |
 
 See [RFC-0002 Execution Status](RFC-0002-Execution-Status) for the durable
 issue-backed status map and closure boundaries.

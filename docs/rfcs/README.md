@@ -13,6 +13,13 @@ repositories: 162 closed and 37 open, with 25 `status/blocked`, 0
 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2
 `status/merged-to-main`, 0 `status/pr-open`, 8 `status/tracker`, and 0
 app-actionable blocked issues.
+The latest Idea source-truth synchronization is PR #1086 on main
+`a8857f62782c4cd9105bc22790332b9ec2d43983`; it records the current 130 tracked
+RFC-0002 Idea issues, 105 closed and 25 open, with `#681` in progress and
+`#1084`, `#1082`, and `#1080` as the latest QA-closed Idea maintainability
+issues. Workbench PR #698 is merged and exact-main validated, but fresh
+canonical QA is still required before closing AI/Advise QA-pending issues or
+promoting support.
 
 ## Active RFC Suite
 
