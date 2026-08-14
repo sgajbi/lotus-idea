@@ -54,6 +54,12 @@ functions; the largest remaining report-only function is
 `tests/unit/test_cross_repo_issue_posture.py::_cross_repo_posture_fixture_payload`
 at `98` lines.
 
+PR `#1069` was opened from branch `issue/1068-platform-mesh-fixture-refactor`
+after `python scripts/github_issue_pr_text_gate.py --title-env PR_TITLE --body-env PR_BODY`
+passed against the exact PR title/body text. Issue `#1068` remains open with
+`status/pr-open` until PR checks, merge-to-main, exact-main validation, and
+branch cleanup complete.
+
 No runtime code, API/OpenAPI behavior, persistence schema, migration,
 authentication/authorization, Core, Gateway, Workbench, platform mesh
 certification, supported-feature promotion, client-publication, production
