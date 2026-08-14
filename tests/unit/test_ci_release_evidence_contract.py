@@ -268,6 +268,69 @@ def test_ci_contract_gate_blocks_removed_release_publish_retry_budget(
     assert "main-releasability.yml missing `publish_retry_delay_seconds=30`" in errors
 
 
+def test_ci_contract_gate_blocks_removed_release_auth_retry_budget(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    module = _load_ci_contract_gate()
+    workflow_dir = tmp_path / ".github" / "workflows"
+    _copy_workflows(
+        workflow_dir,
+        "main-releasability.yml",
+        "          auth_attempts=4\n          auth_retry_delay_seconds=15\n",
+        "",
+    )
+
+    monkeypatch.setattr(module, "WORKFLOWS_DIR", workflow_dir)
+
+    errors = module.validate_ci_contract()
+    assert "main-releasability.yml missing `auth_attempts=4`" in errors
+    assert "main-releasability.yml missing `auth_retry_delay_seconds=15`" in errors
+
+
+def test_ci_contract_gate_blocks_removed_release_auth_retry_diagnostic(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    module = _load_ci_contract_gate()
+    workflow_dir = tmp_path / ".github" / "workflows"
+    _copy_workflows(
+        workflow_dir,
+        "main-releasability.yml",
+        ('            echo "GHCR authentication failed after ${auth_attempts} attempts" >&2\n'),
+        "",
+    )
+
+    monkeypatch.setattr(module, "WORKFLOWS_DIR", workflow_dir)
+
+    assert (
+        "main-releasability.yml missing `GHCR authentication failed after "
+        "${auth_attempts} attempts`" in module.validate_ci_contract()
+    )
+
+
+def test_ci_contract_gate_blocks_removed_release_auth_retry_attempt_diagnostic(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    module = _load_ci_contract_gate()
+    workflow_dir = tmp_path / ".github" / "workflows"
+    _copy_workflows(
+        workflow_dir,
+        "main-releasability.yml",
+        (
+            '            echo "GHCR authentication attempt ${auth_attempt}/${auth_attempts} '
+            'failed; retrying after ${auth_retry_delay_seconds}s" >&2\n'
+        ),
+        "",
+    )
+
+    monkeypatch.setattr(module, "WORKFLOWS_DIR", workflow_dir)
+
+    assert (
+        "main-releasability.yml missing `GHCR authentication attempt "
+        "${auth_attempt}/${auth_attempts} failed; retrying after "
+        "${auth_retry_delay_seconds}s`" in module.validate_ci_contract()
+    )
+
+
 def test_ci_contract_gate_blocks_removed_release_digest_retry_diagnostic(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

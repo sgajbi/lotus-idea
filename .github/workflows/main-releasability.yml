@@ -291,7 +291,20 @@ jobs:
           GHCR_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          echo "$GHCR_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+
+          auth_attempts=4
+          auth_retry_delay_seconds=15
+          for auth_attempt in $(seq 1 "$auth_attempts"); do
+            if echo "$GHCR_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin; then
+              break
+            fi
+            if [[ "$auth_attempt" -eq "$auth_attempts" ]]; then
+              echo "GHCR authentication failed after ${auth_attempts} attempts" >&2
+              exit 1
+            fi
+            echo "GHCR authentication attempt ${auth_attempt}/${auth_attempts} failed; retrying after ${auth_retry_delay_seconds}s" >&2
+            sleep "$auth_retry_delay_seconds"
+          done
       - name: Push commit-tagged image and resolve digest
         id: publish-image
         shell: bash
