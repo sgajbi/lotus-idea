@@ -210,10 +210,10 @@
       "issueNumber": 1056,
       "url": "https://github.com/sgajbi/lotus-idea/issues/1056",
       "rfcSlices": ["slice-12"],
-      "githubState": "open",
-      "executionStatus": "open_pr_raised",
-      "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #1056 open until PR #1057 reaches main, exact-main validation passes, issue-loop QA evidence is recorded, wiki publication reaches strict parity, and branch hygiene is clean. Local proof passed for src/app/api/downstream_realization.py with focused downstream realization API/application/problem-details tests, full make lint, downstream realization contract gate, and cross-repo posture evidence; this maintainability refactor does not certify live Advise/Manage/Report/Render/Archive downstream acceptance, downstream authority, Gateway/Workbench behavior, supported-feature promotion, or final RFC-0002 completion."
+      "githubState": "closed",
+      "executionStatus": "closed_complete",
+      "allowPullRequestAutoClose": true,
+      "closureInstruction": "Closed #1056 after PR #1057 reached Idea main 9bce18299fc94f97a9461b401762f623271e8280. Exact-main Main Releasability run 31758404602 passed, including lint/typecheck/security, unit/integration/e2e tests, 99% combined coverage, PostgreSQL runtime proof, Docker build, image scan, SBOM, signing/provenance, and CI signal evidence; CodeQL run 31758399729 passed for the same SHA; repo-authored wiki parity reported DiffCount 0 at lotus-idea.wiki f761d04; the implementation branch was patch-equivalent to origin/main and removed locally; and git branch -r --no-merged origin/main reported no unmerged lotus-idea remote branches. This closes only the Slice 12 maintainability refactor that centralized downstream submission API orchestration; it does not certify live Advise/Manage/Report/Render/Archive downstream acceptance, downstream authority, Gateway/Workbench behavior, supported-feature promotion, production identity, or final RFC-0002 completion."
     },
     {
       "issueNumber": 676,
