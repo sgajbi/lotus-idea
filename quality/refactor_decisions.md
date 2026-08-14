@@ -6,6 +6,47 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-08-14: Endpoint Certification Gate Entrypoint Boundary
+
+Issue `#1076` applies the RFC-0002 Slice 17/19 maintainability lens to
+`scripts/endpoint_certification_gate.py::main`. The refreshed report-only
+quality baseline listed the CLI entrypoint as the largest remaining function at
+`96` lines after issue `#1074` removed the prior PostgreSQL proof hotspot.
+
+The refactor keeps `main() -> int` as the public CLI boundary while separating:
+
+1. endpoint certification ledger loading,
+2. OpenAPI operation collection,
+3. per-endpoint ledger-entry validation,
+4. ledger/OpenAPI coverage reconciliation, and
+5. final result emission.
+
+Focused local validation passed:
+
+1. `python -m ruff check scripts/endpoint_certification_gate.py tests/unit/test_endpoint_certification_gate.py`,
+2. `python -m ruff format --check scripts/endpoint_certification_gate.py tests/unit/test_endpoint_certification_gate.py`,
+3. `python -m mypy scripts/endpoint_certification_gate.py tests/unit/test_endpoint_certification_gate.py`
+   with `MYPYPATH=scripts;src`, and
+4. `python -m pytest tests/unit/test_endpoint_certification_gate.py -q`
+   (`40` passed).
+
+Broader local validation passed:
+
+1. `make quality-baseline`,
+2. `make maintainability-gate`, and
+3. `make duplicate-implementation-gate` (`0` duplicate clusters across
+   `3,625` source/script functions).
+
+The script is now `490` lines, below the `500` line maintainability cap. The
+refreshed quality baseline no longer lists
+`scripts/endpoint_certification_gate.py::main`; the largest remaining
+report-only functions are `95` lines.
+
+No runtime endpoint behavior, API/OpenAPI contract, persistence, migration,
+authentication, authorization, Gateway, Workbench, Core, supported-feature
+promotion, endpoint certification promotion, client publication, production
+certification, wiki source, or final RFC-0002 closure claim is in scope.
+
 ## 2026-08-14: PostgreSQL Review And Feedback Concurrency Proof Boundary
 
 Issue `#1074` applies the RFC-0002 Slice 06/08/17/19 maintainability lens to
