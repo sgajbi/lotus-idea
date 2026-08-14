@@ -34,6 +34,14 @@ Focused local validation passed:
 The refreshed quality baseline no longer lists the targeted `102` line test in
 largest functions; the largest report-only function is now `98` lines.
 
+PR `#1066` rebase-merged to Idea main
+`051698ea1f94347d8b998c94c6b76b00bdec3376`. Exact-main Main Releasability
+Gate run `31766805721` passed for that SHA, including Docker/release evidence,
+image scan, SBOM, signing/provenance, release image identity binding, license
+evidence binding, and CI signal evidence. Exact-main local closure validation
+passed focused AI governance API-contract pytest, RFC-0002 issue execution
+ledger, learning-pattern, state-audit, documentation, and whitespace gates.
+
 No production API/OpenAPI, domain behavior, persistence schema, migration,
 runtime topology, authentication/authorization, Core, Gateway, Workbench,
 production AI provider execution, model-risk approval, supported-feature
