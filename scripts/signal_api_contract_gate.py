@@ -95,15 +95,17 @@ def _responses_include_signal_problem_responses(node: ast.AST | None) -> bool:
     return False
 
 
-def _validate_signal_api_module(path: Path, root: Path) -> list[str]:
-    relative_path = _relative(path, root)
-    if not path.exists():
-        return [f"{relative_path}: missing signal API module"]
+def _uses_shared_source_boundary(text: str) -> bool:
+    return "_from_source" in text and SOURCE_SIGNAL_SHARED_HELPER in text
 
-    text = path.read_text(encoding="utf-8")
-    tree = ast.parse(text, filename=str(path))
+
+def _validate_shared_signal_api_helpers(
+    relative_path: str,
+    text: str,
+    *,
+    uses_shared_source_boundary: bool,
+) -> list[str]:
     errors: list[str] = []
-    uses_shared_source_boundary = "_from_source" in text and SOURCE_SIGNAL_SHARED_HELPER in text
 
     for helper in REQUIRED_SHARED_HELPERS:
         if uses_shared_source_boundary and helper in {
@@ -121,6 +123,17 @@ def _validate_signal_api_module(path: Path, root: Path) -> list[str]:
             "(`source_authority_from_refs` or `source_authority_from_contracts`)"
         )
 
+    return errors
+
+
+def _validate_source_signal_boundary(
+    path: Path,
+    relative_path: str,
+    text: str,
+    tree: ast.AST,
+) -> list[str]:
+    errors: list[str] = []
+
     if "_from_source" in text and SOURCE_SIGNAL_SHARED_HELPER not in text:
         errors.append(
             f"{relative_path}: source-backed signal APIs must use shared "
@@ -137,55 +150,87 @@ def _validate_signal_api_module(path: Path, root: Path) -> list[str]:
             f"{relative_path}: Core-backed source APIs must require one trusted tenant context"
         )
 
-    for node in ast.walk(tree):
-        if (
-            isinstance(node, ast.FunctionDef)
-            and node.name == "_operation_outcome_from_signal_evaluation"
-        ):
+    return errors
+
+
+def _validate_signal_api_node(node: ast.AST, relative_path: str) -> list[str]:
+    errors: list[str] = []
+
+    if (
+        isinstance(node, ast.FunctionDef)
+        and node.name == "_operation_outcome_from_signal_evaluation"
+    ):
+        errors.append(
+            f"{relative_path}:{node.lineno}: signal API modules must use "
+            "`operation_outcome_from_signal_evaluation` from signal_api_support"
+        )
+
+    if isinstance(node, ast.Call) and call_name(node.func) == "CapabilityPolicy.for_roles":
+        if keyword_string_value(node, "required_capability") == "idea.signal.evaluate":
             errors.append(
-                f"{relative_path}:{node.lineno}: signal API modules must use "
-                "`operation_outcome_from_signal_evaluation` from signal_api_support"
+                f"{relative_path}:{node.lineno}: signal evaluation permission policy "
+                "must be centralized in signal_api_support"
             )
 
-        if isinstance(node, ast.Call) and call_name(node.func) == "CapabilityPolicy.for_roles":
-            if keyword_string_value(node, "required_capability") == "idea.signal.evaluate":
-                errors.append(
-                    f"{relative_path}:{node.lineno}: signal evaluation permission policy "
-                    "must be centralized in signal_api_support"
-                )
-
-        if isinstance(node, ast.Call) and call_name(node.func) == "Header":
-            alias = keyword_string_value(node, "alias")
-            if alias in CALLER_HEADER_ALIASES:
-                errors.append(
-                    f"{relative_path}:{node.lineno}: signal API caller context headers "
-                    "must use `CallerContextHeaders` from caller_headers"
-                )
-
-        if (
-            isinstance(node, ast.Call)
-            and call_name(node.func) == "signal_permission_problem_or_none"
-        ):
-            if not any(keyword.arg == "requested_access_scope" for keyword in node.keywords):
-                errors.append(
-                    f"{relative_path}:{node.lineno}: signal permission checks must pass "
-                    "`requested_access_scope` for entitlement-scope intersection"
-                )
-
-        if (
-            isinstance(node, ast.Assign)
-            and isinstance(node.value, ast.Dict)
-            and any(
-                isinstance(target, ast.Name) and target.id.endswith("_EVALUATE_ROUTE")
-                for target in node.targets
+    if isinstance(node, ast.Call) and call_name(node.func) == "Header":
+        alias = keyword_string_value(node, "alias")
+        if alias in CALLER_HEADER_ALIASES:
+            errors.append(
+                f"{relative_path}:{node.lineno}: signal API caller context headers "
+                "must use `CallerContextHeaders` from caller_headers"
             )
-        ):
-            responses = _route_dict_value(node.value, "responses")
-            if not _responses_include_signal_problem_responses(responses):
-                errors.append(
-                    f"{relative_path}:{node.lineno}: signal evaluation routes must compose "
-                    "`signal_problem_responses()` for product-safe OpenAPI 400/403 examples"
-                )
+
+    if isinstance(node, ast.Call) and call_name(node.func) == "signal_permission_problem_or_none":
+        if not any(keyword.arg == "requested_access_scope" for keyword in node.keywords):
+            errors.append(
+                f"{relative_path}:{node.lineno}: signal permission checks must pass "
+                "`requested_access_scope` for entitlement-scope intersection"
+            )
+
+    if (
+        isinstance(node, ast.Assign)
+        and isinstance(node.value, ast.Dict)
+        and any(
+            isinstance(target, ast.Name) and target.id.endswith("_EVALUATE_ROUTE")
+            for target in node.targets
+        )
+    ):
+        responses = _route_dict_value(node.value, "responses")
+        if not _responses_include_signal_problem_responses(responses):
+            errors.append(
+                f"{relative_path}:{node.lineno}: signal evaluation routes must compose "
+                "`signal_problem_responses()` for product-safe OpenAPI 400/403 examples"
+            )
+
+    return errors
+
+
+def _validate_signal_api_ast_rules(tree: ast.AST, relative_path: str) -> list[str]:
+    errors: list[str] = []
+    for node in ast.walk(tree):
+        errors.extend(_validate_signal_api_node(node, relative_path))
+    return errors
+
+
+def _validate_signal_api_module(path: Path, root: Path) -> list[str]:
+    relative_path = _relative(path, root)
+    if not path.exists():
+        return [f"{relative_path}: missing signal API module"]
+
+    text = path.read_text(encoding="utf-8")
+    tree = ast.parse(text, filename=str(path))
+    uses_shared_source_boundary = _uses_shared_source_boundary(text)
+
+    errors: list[str] = []
+    errors.extend(
+        _validate_shared_signal_api_helpers(
+            relative_path,
+            text,
+            uses_shared_source_boundary=uses_shared_source_boundary,
+        )
+    )
+    errors.extend(_validate_source_signal_boundary(path, relative_path, text, tree))
+    errors.extend(_validate_signal_api_ast_rules(tree, relative_path))
 
     return errors
 

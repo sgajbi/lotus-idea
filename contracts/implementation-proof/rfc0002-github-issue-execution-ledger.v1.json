@@ -1293,6 +1293,24 @@
       "executionStatus": "closed_complete",
       "allowPullRequestAutoClose": true,
       "closureInstruction": "Closed #1104 after QA passed for the RFC-0002 Slice 19 supported-feature gate implemented-feature fixture refactor. PR #1105 merged by rebase to Idea main `a5bc341501c7fb3790f329850bbf950d7ec8d3a0` from PR head `649ddee953cdbb80d0fe3cc765683a1760631c5f` and split `tests/unit/test_supported_features_gate.py::_valid_implemented_feature`, reported by `make quality-baseline` as a 95-line test-support hotspot, into named helpers for feature identity, API surfaces, UI surfaces, source dependencies, CI evidence, promotion evidence, and supported-feature non-promotion posture. Focused local validation passed `python -m pytest tests/unit/test_supported_features_gate.py -q` with 8 tests, RFC-0002 execution ledger, learning-pattern, state-audit, execution-summary, cross-repo posture, documentation-contract, wiki check-only, `make lint`, and `make typecheck`. PR #1105 passed Feature Lane, PR Merge Gate, Queue Auto Merge, and CodeQL before merge. Exact-main Main Releasability Gate run `31825052693` passed for `a5bc341501c7fb3790f329850bbf950d7ec8d3a0`, including workflow lint, lint/typecheck/security, unit, integration, e2e, PostgreSQL runtime proof, combined coverage, Docker build validation, and CI signal evidence. Repo-authored wiki source was published to lotus-idea.wiki commit `897fb10` with strict DiffCount 0. The remote implementation branch was deleted by GitHub; the local branch was deleted after patch-equivalence and zero-diff proof because rebase merge changed commit ids. #1104 was closed with `Loop status: qa_passed_closed` evidence on 2026-08-15 while retaining `status/merged-main`. This closes only test-support maintainability hardening. It does not claim product behavior, API/OpenAPI contract change, persistence, migration, runtime topology, authentication, authorization, Core, Gateway, Workbench, data-mesh certification, supported-feature promotion, client publication, production certification, or final RFC-0002 closure."
+    },
+    {
+      "issueNumber": 1109,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/1109",
+      "rfcSlices": ["slice-19"],
+      "githubState": "open",
+      "executionStatus": "open_in_progress",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #1109 open until the signal API contract gate validation boundary refactor is merged to main with local and GitHub proof. The issue owns the current report-only quality-baseline finding that `scripts/signal_api_contract_gate.py::_validate_signal_api_module` was a 93-line CI/release-evidence contract-gate hotspot mixing module loading, required shared helper checks, source-backed orchestration checks, Core tenant-context checks, local outcome-helper and permission-policy prohibitions, route-local caller-context header prohibition, requested-access-scope enforcement, and OpenAPI ProblemDetails metadata enforcement. This is internal gate maintainability only. It must not claim API/OpenAPI behavior change, authentication or authorization implementation, persistence, migration, runtime topology, Core, Gateway, Workbench, data-mesh certification, supported-feature promotion, client publication, production certification, or final RFC-0002 closure."
+    },
+    {
+      "issueNumber": 1110,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/1110",
+      "rfcSlices": ["slice-12", "slice-13", "slice-19"],
+      "githubState": "open",
+      "executionStatus": "open_ready",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #1110 open and status/ready until the downstream intake wire-contract validation boundary is implemented in a separate focused slice. The issue owns the sibling report-only quality-baseline finding that `scripts/downstream_realization_contract_gate.py::_validate_downstream_intake_wire_contract` is an 88-line downstream realization CI/proof contract-gate hotspot mixing contract envelope, security-boundary, consumer inventory, Advise/Manage consumer fields, Report consumer fields, and required server-header validation. This is internal gate maintainability only. It must not claim downstream owner-service implementation, production IdP/session/token-claims implementation, downstream execution proof, Report materialization proof, Render output, Archive record, client-publication authority, supported-feature promotion, data-mesh certification, production certification, runtime topology, API/OpenAPI, persistence, migration, or final RFC-0002 closure."
     }
   ]
 }
