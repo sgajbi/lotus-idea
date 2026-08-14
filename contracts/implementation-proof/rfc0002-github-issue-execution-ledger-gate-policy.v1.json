@@ -472,7 +472,7 @@
       "image signing",
       "provenance and SBOM attestations",
       "No repo-authored wiki source changed",
-      "Sibling hotspot #1110 remains open",
+      "Sibling hotspot #1110 was tracked separately",
       "No API/OpenAPI behavior change",
       "No authentication or authorization implementation",
       "Core, Gateway, Workbench",
