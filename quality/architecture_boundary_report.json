@@ -2,7 +2,7 @@
   "input_fingerprint": {
     "rule_digest": "7ac722a440e92064c348b878ae630578e6badfdc91971683691c31c134a14a82",
     "source_file_count": 500,
-    "source_import_digest": "5f3e14dd7b6eb8dcadc5101744d4cdef69fca8819eaa0b3f4a8ad745c76ea80a",
+    "source_import_digest": "a9ebb915979f22c98200bd66759529be33a728be1b97bd730af4f1c86ad82217",
     "source_root": "src/app"
   },
   "mode": "report-only",

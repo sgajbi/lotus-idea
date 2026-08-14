@@ -27,6 +27,7 @@ from app.domain.signal_evaluation import (
     SignalEvaluationResult,
     temporal_blocked_signal_result,
 )
+from app.domain.signal_evaluation_common import validate_timezone_aware_evaluation_time
 
 
 @dataclass(frozen=True)
@@ -59,18 +60,47 @@ def evaluate_missing_benchmark_signal(
     source_input: MissingBenchmarkSignalInput,
     policy: MissingBenchmarkSignalPolicy,
 ) -> SignalEvaluationResult:
-    if (
-        source_input.evaluated_at_utc.tzinfo is None
-        or source_input.evaluated_at_utc.utcoffset() is None
-    ):
-        raise ValueError("evaluated_at_utc must be timezone-aware")
+    _validate_missing_benchmark_evaluation_time(source_input)
+    non_candidate_result = _missing_benchmark_non_candidate_result(source_input)
+    if non_candidate_result is not None:
+        return non_candidate_result
 
+    source_refs = _current_benchmark_assignment_refs(source_input)
+    identity = _stable_missing_benchmark_identity(source_input, policy, source_refs)
+    signal = _missing_benchmark_source_signal(source_input, source_refs, identity)
+    evidence_packet = _missing_benchmark_evidence_packet(source_input, source_refs, identity)
+    candidate = _missing_benchmark_candidate(
+        source_input,
+        policy,
+        signal,
+        evidence_packet,
+        identity,
+    )
+    return SignalEvaluationResult(
+        outcome=SignalEvaluationOutcome.CANDIDATE_CREATED,
+        family=OpportunityFamily.MISSING_BENCHMARK,
+        reason_codes=evidence_packet.reason_codes,
+        signal=signal,
+        candidate=candidate,
+    )
+
+
+def _validate_missing_benchmark_evaluation_time(
+    source_input: MissingBenchmarkSignalInput,
+) -> None:
+    validate_timezone_aware_evaluation_time(source_input.evaluated_at_utc)
+
+
+def _missing_benchmark_non_candidate_result(
+    source_input: MissingBenchmarkSignalInput,
+) -> SignalEvaluationResult | None:
     if not source_input.entitlement_allowed:
         return _blocked(
             reason_codes=(ReasonCode.REVIEW_REQUIRED,),
             unsupported_reasons=(UnsupportedEvidenceReason.ENTITLEMENT_DENIED,),
         )
-    if source_input.benchmark_assignment_ref is None:
+    benchmark_assignment_ref = source_input.benchmark_assignment_ref
+    if benchmark_assignment_ref is None:
         return _blocked(
             reason_codes=(ReasonCode.SOURCE_PARTIAL,),
             unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,),
@@ -79,11 +109,11 @@ def evaluate_missing_benchmark_signal(
         family=OpportunityFamily.MISSING_BENCHMARK,
         as_of_date=source_input.as_of_date,
         evaluated_at_utc=source_input.evaluated_at_utc,
-        source_refs=(source_input.benchmark_assignment_ref,),
+        source_refs=(benchmark_assignment_ref,),
     )
     if temporal_block is not None:
         return temporal_block
-    if source_input.benchmark_assignment_ref.freshness is not EvidenceFreshness.CURRENT:
+    if benchmark_assignment_ref.freshness is not EvidenceFreshness.CURRENT:
         return _blocked(
             reason_codes=(ReasonCode.SOURCE_STALE,),
             unsupported_reasons=(UnsupportedEvidenceReason.STALE_SOURCE,),
@@ -100,22 +130,42 @@ def evaluate_missing_benchmark_signal(
             family=OpportunityFamily.MISSING_BENCHMARK,
             reason_codes=(ReasonCode.BELOW_MATERIALITY,),
         )
+    return None
 
-    source_refs = (source_input.benchmark_assignment_ref,)
-    identity = _stable_missing_benchmark_identity(source_input, policy, source_refs)
-    signal = OpportunitySignal(
+
+def _current_benchmark_assignment_refs(
+    source_input: MissingBenchmarkSignalInput,
+) -> tuple[SourceRef, ...]:
+    if source_input.benchmark_assignment_ref is None:
+        raise ValueError("benchmark_assignment_ref is required after blocker classification")
+    return (source_input.benchmark_assignment_ref,)
+
+
+def _missing_benchmark_source_signal(
+    source_input: MissingBenchmarkSignalInput,
+    source_refs: tuple[SourceRef, ...],
+    identity: str,
+) -> OpportunitySignal:
+    return OpportunitySignal(
         signal_id=f"signal_missing_benchmark_{identity}",
         family=OpportunityFamily.MISSING_BENCHMARK,
         source_refs=source_refs,
         reason_codes=(ReasonCode.MISSING_BENCHMARK,),
         detected_at_utc=source_input.evaluated_at_utc,
     )
+
+
+def _missing_benchmark_evidence_packet(
+    source_input: MissingBenchmarkSignalInput,
+    source_refs: tuple[SourceRef, ...],
+    identity: str,
+) -> IdeaEvidencePacket:
     lineage = LineageRef(
         lineage_id=f"lineage:lotus-idea:missing-benchmark:{identity}",
         source_refs=source_refs,
         content_hash=f"sha256:{identity}",
     )
-    evidence_packet = IdeaEvidencePacket(
+    return IdeaEvidencePacket(
         evidence_packet_id=f"iep_missing_benchmark_{identity}",
         supportability=EvidenceSupportability.READY,
         source_refs=source_refs,
@@ -123,7 +173,16 @@ def evaluate_missing_benchmark_signal(
         reason_codes=(ReasonCode.MISSING_BENCHMARK, ReasonCode.REVIEW_REQUIRED),
         created_at_utc=source_input.evaluated_at_utc,
     )
-    candidate = IdeaCandidate(
+
+
+def _missing_benchmark_candidate(
+    source_input: MissingBenchmarkSignalInput,
+    policy: MissingBenchmarkSignalPolicy,
+    signal: OpportunitySignal,
+    evidence_packet: IdeaEvidencePacket,
+    identity: str,
+) -> IdeaCandidate:
+    return IdeaCandidate(
         candidate_id=f"idea_missing_benchmark_{identity}",
         family=OpportunityFamily.MISSING_BENCHMARK,
         lifecycle_status=IdeaLifecycleStatus.GENERATED,
@@ -138,13 +197,6 @@ def evaluate_missing_benchmark_signal(
         access_scope=source_input.access_scope,
         created_at_utc=source_input.evaluated_at_utc,
         updated_at_utc=source_input.evaluated_at_utc,
-    )
-    return SignalEvaluationResult(
-        outcome=SignalEvaluationOutcome.CANDIDATE_CREATED,
-        family=OpportunityFamily.MISSING_BENCHMARK,
-        reason_codes=evidence_packet.reason_codes,
-        signal=signal,
-        candidate=candidate,
     )
 
 
