@@ -427,9 +427,17 @@
       "runtime blocker-clearing posture",
       "supported-feature non-promotion",
       "No API/OpenAPI, persistence, migration, authentication, authorization, Core, Gateway, Workbench, runtime stack, broker, platform-mesh, supported-feature, data-product certification, or production certification change"
-    ],
+    ]
+  },
+  "requiredClosedIssueEvidence": {
     "1101": [
-      "Keep #1101 open",
+      "Closed #1101",
+      "PR #1102",
+      "2b0cdafa02a4c98b52090abe4f06bbd863776c83",
+      "d7e901c6145d3f6d7ffeff79e354d1983f3a69f3",
+      "31817955897",
+      "31817948440",
+      "77c049d",
       "AI workflow output evaluator boundary refactor",
       "quality/baseline_report.md",
       "src/app/domain/ai_governance.py::evaluate_ai_workflow_output",
@@ -437,14 +445,12 @@
       "action-policy evaluation and canonical action-label projection",
       "unsupported-claim source-authority detection",
       "provider-output integrity digest chaining",
-      "AI governance maintainability hardening only",
+      "AI governance maintainability hardening",
       "No API/OpenAPI behavior, persistence, migrations, authentication, authorization, runtime topology, live provider/model-risk certification",
       "Gateway, Workbench, Core",
       "supported-feature promotion",
       "final RFC-0002 closure"
-    ]
-  },
-  "requiredClosedIssueEvidence": {
+    ],
     "1098": [
       "Closed #1098",
       "PR #1099",

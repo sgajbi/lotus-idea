@@ -4137,3 +4137,8 @@ Evidence:
    tests/unit/test_ai_attestation_replay.py -q` (`45` passed).
 3. `make quality-baseline` passed and the refreshed largest-function list no
    longer includes `evaluate_ai_workflow_output`.
+4. PR #1102 rebase-merged to Idea main
+   `2b0cdafa02a4c98b52090abe4f06bbd863776c83`; exact-main Main Releasability
+   `31817955897`, Push-on-main `31817948440`, wiki publication `77c049d`,
+   strict wiki parity, and branch hygiene passed before #1101 closure truth was
+   synchronized.

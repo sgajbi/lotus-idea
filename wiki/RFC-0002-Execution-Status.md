@@ -23,11 +23,11 @@ dependency map, and closure rules without relying on chat memory.
 | Execution audit | `make rfc0002-github-issue-execution-state-audit` passed |
 | Repositories checked | 13 |
 | Total RFC-0002 issues | 204 |
-| Closed RFC-0002 issues | 166 |
-| Open RFC-0002 issues | 38 |
+| Closed RFC-0002 issues | 167 |
+| Open RFC-0002 issues | 37 |
 | Open blocked issues | 25 |
 | App-actionable blocked issues | 0 |
-| Active synchronization tracker | `sgajbi/lotus-idea#681` remains open after PR #1097 merged; `sgajbi/lotus-idea#1101` is open in PR #1102 for Slice 09/17/19 AI workflow evaluator hardening and awaits PR/mainline proof; `sgajbi/lotus-idea#1098` is closed after main releasability GHCR-authentication retry hardening. `sgajbi/lotus-idea#1094` is closed after PR #1095 for AI-governance test-support maintainability. The latest Idea implementation-backed closure is PR #1099 on main `00aa2cd9698f6b80d27f763772e243e75d026b2d` after exact-main Main Releasability run `31811097774`, wiki publication `fd23192`, strict wiki parity, and branch hygiene passed. `sgajbi/lotus-idea#1091` is the previous Slice 12/13/19 conversion-intent API handler boundary maintainability issue. The latest QA-closed Idea issues are `sgajbi/lotus-idea#1098`, `#1094`, `#1091`, `#1088`, and `#1084`. |
+| Active synchronization tracker | `sgajbi/lotus-idea#681` remains open as the Slice 18 synchronization tracker; `sgajbi/lotus-idea#1101` is closed after PR #1102 for Slice 09/17/19 AI workflow evaluator hardening. `sgajbi/lotus-idea#1098` is closed after main releasability GHCR-authentication retry hardening and `sgajbi/lotus-idea#1094` is closed after PR #1095 for AI-governance test-support maintainability. The latest Idea implementation-backed closure is PR #1102 on main `2b0cdafa02a4c98b52090abe4f06bbd863776c83` after exact-main Main Releasability run `31817955897`, Push-on-main run `31817948440`, wiki publication `77c049d`, strict wiki parity, and branch hygiene passed. `sgajbi/lotus-idea#1091` is the previous Slice 12/13/19 conversion-intent API handler boundary maintainability issue. |
 
 The zero app-actionable blocked count is important. It means an open issue may
 remain `status/blocked` only when the remaining authority is Core-owned,
@@ -39,7 +39,7 @@ blocked posture and implement or reclassify it.
 ```mermaid
 flowchart LR
     Issues["GitHub issue posture<br/>204 label-backed RFC-0002 issues"]
-    Open["166 closed and 38 open<br/>25 `status/blocked`, 0 `status/fixed-local`, 0 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 2 `status/pr-open`, 8 `status/tracker`"]
+    Open["167 closed and 37 open<br/>25 `status/blocked`, 0 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 0 `status/pr-open`, 8 `status/tracker`"]
     Blocked["Blocked classifier<br/>0 app-actionable blocked"]
     Work["Writable work<br/>only when evidence proves app-code ownership"]
     External["Core / protected / identity / provider / legal evidence"]
@@ -58,19 +58,19 @@ flowchart LR
 | --- | ---: | --- |
 | `status/blocked` | 25 | Protected, identity, provider, legal, publication, canonical QA, or certification evidence. |
 | `status/fixed-local` | 0 | No locally proven issue is waiting for PR handoff. |
-| `status/in-progress` | 0 | No issue is currently labeled active implementation. |
+| `status/in-progress` | 1 | Slice 18 synchronization tracker `sgajbi/lotus-idea#681` remains active. |
 | `status/merged-main` | 1 | Merged-main issue awaiting QA closure evidence, currently `sgajbi/lotus-ai#126`. |
 | `status/merged-to-main` | 2 | Repository-local Advise merged-main alias awaiting QA closure evidence. |
-| `status/pr-open` | 2 | Slice 18 synchronization tracker `sgajbi/lotus-idea#681` has PR #1097 open, and AI workflow evaluator hardening issue `sgajbi/lotus-idea#1101` has PR #1102 open. |
+| `status/pr-open` | 0 | No RFC-0002 issue currently has an open Idea PR. |
 | `status/tracker` | 8 | Parent or umbrella tracking issues, not immediate implementation items. |
 
 Latest synchronization evidence: Current GitHub issue posture has 204
-label-backed RFC-0002 issues, 166 closed and 38 open, with 25
-`status/blocked`, 0 `status/fixed-local`, 0 `status/in-progress`, 1
-`status/merged-main`, 2 `status/merged-to-main`, 2 `status/pr-open`, 8
+label-backed RFC-0002 issues, 167 closed and 37 open, with 25
+`status/blocked`, 0 `status/fixed-local`, 1 `status/in-progress`, 1
+`status/merged-main`, 2 `status/merged-to-main`, 0 `status/pr-open`, 8
 `status/tracker`, and 0 app-actionable blocked issues. The Idea source ledger
-tracks 135 RFC-0002 issues: 109 closed and 26 open. `lotus-idea#1101` is
-open in PR #1102 for AI workflow evaluator hardening; `lotus-idea#1098` is
+tracks 135 RFC-0002 issues: 110 closed and 25 open. `lotus-idea#1101` is
+closed after PR #1102 for AI workflow evaluator hardening; `lotus-idea#1098` is
 closed after PR #1099 for release-CI hardening; `lotus-idea#1094` is closed
 after PR #1095 for test-support maintainability; `lotus-idea#1091` is
 closed after PR #1092 reached exact main

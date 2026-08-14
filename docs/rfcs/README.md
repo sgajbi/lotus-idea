@@ -9,21 +9,21 @@ For the current live GitHub execution posture, canonical QA status, dependency
 map, and closure decision rules, use
 [wiki/RFC-0002-Execution-Status.md](../../wiki/RFC-0002-Execution-Status.md).
 At the latest refresh, RFC-0002 has 204 label-backed RFC-0002 issues across 13
-repositories: 166 closed and 38 open, with 25 `status/blocked`, 0
-`status/fixed-local`, 0 `status/in-progress`, 1 `status/merged-main`, 2
-`status/merged-to-main`, 2 `status/pr-open`, 8 `status/tracker`, and 0
+repositories: 167 closed and 37 open, with 25 `status/blocked`, 0
+`status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2
+`status/merged-to-main`, 0 `status/pr-open`, 8 `status/tracker`, and 0
 app-actionable blocked issues.
-The latest Idea implementation-backed closure is `#1098`. PR #1099 hardened
-main releasability GHCR-authentication retry evidence and reached main
-`00aa2cd9698f6b80d27f763772e243e75d026b2d`; exact-main Main Releasability
-`31811097774`, wiki publication `fd23192`, strict wiki parity, and branch
-cleanup passed. PR #1095 previously split AI-governance verifier-field
+The latest Idea implementation-backed closure is `#1101`. PR #1102 hardened
+the AI workflow output evaluator boundary and reached main
+`2b0cdafa02a4c98b52090abe4f06bbd863776c83`; exact-main Main Releasability
+`31817955897`, Push-on-main `31817948440`, wiki publication `77c049d`,
+strict wiki parity, and branch cleanup passed. PR #1095 previously split AI-governance verifier-field
 validation tests to main `0a8fbfac146c6fb99c70ddb109b33b9b88586f66`;
 exact-main Main Releasability `31802296872`, CodeQL `31802289873`, wiki
 publication `44060bc`, strict wiki parity, and branch cleanup passed. The
 current Idea source ledger tracks 135
-RFC-0002 issues, 109 closed and 26 open, with `#681` open as the Slice 18
-synchronization tracker, `#1101` open in PR #1102 as the Slice 09/17/19 AI workflow
+RFC-0002 issues, 110 closed and 25 open, with `#681` open as the Slice 18
+synchronization tracker, `#1101` closed after PR #1102 as the Slice 09/17/19 AI workflow
 evaluator hardening issue, `#1098` closed after release-CI hardening, and
 `#1094`, `#1091`, `#1088`, and `#1084` as the latest QA-closed Idea
 maintainability issues. `#1094` is an issue-backed AI-governance test-support
