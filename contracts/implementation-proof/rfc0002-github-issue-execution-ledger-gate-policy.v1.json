@@ -137,7 +137,8 @@
     1088,
     1091,
     1094,
-    1098
+    1098,
+    1101
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -426,6 +427,21 @@
       "runtime blocker-clearing posture",
       "supported-feature non-promotion",
       "No API/OpenAPI, persistence, migration, authentication, authorization, Core, Gateway, Workbench, runtime stack, broker, platform-mesh, supported-feature, data-product certification, or production certification change"
+    ],
+    "1101": [
+      "Keep #1101 open",
+      "AI workflow output evaluator boundary refactor",
+      "quality/baseline_report.md",
+      "src/app/domain/ai_governance.py::evaluate_ai_workflow_output",
+      "89 lines",
+      "action-policy evaluation and canonical action-label projection",
+      "unsupported-claim source-authority detection",
+      "provider-output integrity digest chaining",
+      "AI governance maintainability hardening only",
+      "No API/OpenAPI behavior, persistence, migrations, authentication, authorization, runtime topology, live provider/model-risk certification",
+      "Gateway, Workbench, Core",
+      "supported-feature promotion",
+      "final RFC-0002 closure"
     ]
   },
   "requiredClosedIssueEvidence": {

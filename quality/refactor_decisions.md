@@ -4086,3 +4086,54 @@ Evidence:
 4. The refreshed `quality/baseline_report.md` no longer lists
    `tests/unit/test_ai_governance.py::test_ai_request_and_output_validate_required_verifier_fields`
    in the largest-function set.
+
+## 2026-08-14: AI Workflow Output Evaluator Boundary
+
+Issue: [#1101](https://github.com/sgajbi/lotus-idea/issues/1101)
+
+Decision:
+
+`src/app/domain/ai_governance.py::evaluate_ai_workflow_output` remains the
+public domain evaluator for governed AI workflow output, but the implementation
+now delegates action-policy evaluation and canonical action-label projection,
+action-policy blocker projection, unsupported-claim detection, unsupported-claim
+blocker projection, and grounded accepted-result projection to named domain
+helpers.
+
+Why:
+
+`make quality-baseline` listed the evaluator as an `89` line production-code
+hotspot in the RFC-0002 Slice 09/17/19 AI governance path. The previous single
+function mixed verifier identity checks, output-integrity calculation,
+action-policy canonicalization, blocked-output projection, source-authority
+claim checks, grounded narrative construction, provider-output digest chaining,
+audit attributes, and final result construction. Splitting those responsibilities
+reduces review risk for future AI governance changes without changing product
+behavior.
+
+Preserved boundaries:
+
+1. Public evaluator signature, result postures, verifier outcomes, reason
+   codes, audit-event attributes, grounded narrative behavior, canonical action
+   labels, and unsupported-claim/action blockers remain stable.
+2. Accepted output integrity still chains the submitted provider-output digest
+   after deterministic grounding, so two different submitted narratives that
+   ground to the same supported explanation remain distinguishable.
+3. No API/OpenAPI behavior, persistence, migration, runtime topology,
+   authentication, authorization, live AI provider/model-risk certification,
+   Gateway, Workbench, Core, supported-feature promotion, client-publication,
+   production certification, or final RFC-0002 closure claim is made.
+4. No runtime split is justified; this is internal domain design modularity
+   inside the existing Idea service.
+
+Evidence:
+
+1. Duplicate issue search for `evaluate_ai_workflow_output ai_governance AI
+   workflow output evaluator RFC-0002` found no focused existing owner before
+   #1101 was created.
+2. Focused validation passed: Ruff format/check, MyPy with `MYPYPATH=src;scripts`,
+   and `python -m pytest tests/unit/test_ai_governance.py
+   tests/unit/test_ai_lineage_content_integrity.py
+   tests/unit/test_ai_attestation_replay.py -q` (`45` passed).
+3. `make quality-baseline` passed and the refreshed largest-function list no
+   longer includes `evaluate_ai_workflow_output`.

@@ -9,6 +9,7 @@ from typing import Mapping
 from app.domain.audit import AuditEvent
 from app.domain.ai_action_policy import (
     AI_ACTION_POLICY_VERSION,
+    AIActionPolicyDecision,
     AIActionPolicyReason,
     AIProposedActionType as AIProposedActionType,
     evaluate_ai_action_policy,
@@ -367,6 +368,12 @@ class AIExplanationResult:
         object.__setattr__(self, "reason_codes", tuple(self.reason_codes))
 
 
+@dataclass(frozen=True)
+class _AIWorkflowActionPolicyEvaluation:
+    sanitized_output: AIWorkflowOutput
+    decisions: tuple[AIActionPolicyDecision, ...]
+
+
 def build_ai_explanation_request(
     candidate: IdeaCandidate,
     command: AIExplanationCommand,
@@ -435,7 +442,34 @@ def evaluate_ai_workflow_output(
 ) -> AIExplanationResult:
     _ensure_output_matches_request(request, output)
     output_integrity = _workflow_output_integrity(request, output)
-    action_decisions = tuple(
+    action_policy = _evaluate_ai_workflow_action_policy(output)
+
+    action_blocker = _action_policy_blocker_result(
+        request=request,
+        action_policy=action_policy,
+        output_integrity=output_integrity,
+    )
+    if action_blocker is not None:
+        return action_blocker
+
+    if _unsupported_claims(request, action_policy.sanitized_output):
+        return _unsupported_claim_blocker_result(
+            request=request,
+            output=action_policy.sanitized_output,
+            output_integrity=output_integrity,
+        )
+
+    return _accepted_ai_workflow_result(
+        request=request,
+        sanitized_output=action_policy.sanitized_output,
+        provider_output_integrity=output_integrity,
+    )
+
+
+def _evaluate_ai_workflow_action_policy(
+    output: AIWorkflowOutput,
+) -> _AIWorkflowActionPolicyEvaluation:
+    decisions = tuple(
         evaluate_ai_action_policy(action.action_type, action.action_label)
         for action in output.proposed_actions
     )
@@ -443,16 +477,28 @@ def evaluate_ai_workflow_output(
         output,
         proposed_actions=tuple(
             AIProposedAction(action.action_type, decision.canonical_label)
-            for action, decision in zip(output.proposed_actions, action_decisions)
+            for action, decision in zip(output.proposed_actions, decisions)
         ),
     )
+    return _AIWorkflowActionPolicyEvaluation(
+        sanitized_output=sanitized_output,
+        decisions=decisions,
+    )
+
+
+def _action_policy_blocker_result(
+    *,
+    request: AIExplanationRequest,
+    action_policy: _AIWorkflowActionPolicyEvaluation,
+    output_integrity: AIOutputIntegrity,
+) -> AIExplanationResult | None:
     if any(
         decision.reason is AIActionPolicyReason.FORBIDDEN_ACTION_TYPE
-        for decision in action_decisions
+        for decision in action_policy.decisions
     ):
         return _blocked_ai_result(
             request=request,
-            output=sanitized_output,
+            output=action_policy.sanitized_output,
             posture=AIExplanationPosture.BLOCKED_FORBIDDEN_ACTION,
             verifier_outcome=AIVerifierOutcome.FAILED_FORBIDDEN_ACTION,
             reason_code=ReasonCode.AI_FORBIDDEN_ACTION_BLOCKED,
@@ -460,35 +506,57 @@ def evaluate_ai_workflow_output(
             output_integrity=output_integrity,
         )
     rejected_content = next(
-        (decision for decision in action_decisions if not decision.allowed),
+        (decision for decision in action_policy.decisions if not decision.allowed),
         None,
     )
     if rejected_content is not None:
         return _blocked_ai_result(
             request=request,
-            output=sanitized_output,
+            output=action_policy.sanitized_output,
             posture=AIExplanationPosture.BLOCKED_FORBIDDEN_ACTION,
             verifier_outcome=AIVerifierOutcome.FAILED_ACTION_CONTENT,
             reason_code=ReasonCode.AI_ACTION_CONTENT_BLOCKED,
             action_policy_reason=rejected_content.reason,
             output_integrity=output_integrity,
         )
+    return None
+
+
+def _unsupported_claims(
+    request: AIExplanationRequest,
+    output: AIWorkflowOutput,
+) -> tuple[AIOutputClaim, ...]:
     allowed_source_product_ids = request.redacted_evidence.source_product_ids
-    unsupported_claims = tuple(
+    return tuple(
         claim
-        for claim in sanitized_output.claims
+        for claim in output.claims
         if not set(claim.source_product_ids).issubset(allowed_source_product_ids)
     )
-    if unsupported_claims:
-        return _blocked_ai_result(
-            request=request,
-            output=sanitized_output,
-            posture=AIExplanationPosture.BLOCKED_UNSUPPORTED_CLAIM,
-            verifier_outcome=AIVerifierOutcome.FAILED_UNSUPPORTED_CLAIM,
-            reason_code=ReasonCode.AI_UNSUPPORTED_CLAIM_BLOCKED,
-            action_policy_reason=AIActionPolicyReason.ALLOWED,
-            output_integrity=output_integrity,
-        )
+
+
+def _unsupported_claim_blocker_result(
+    *,
+    request: AIExplanationRequest,
+    output: AIWorkflowOutput,
+    output_integrity: AIOutputIntegrity,
+) -> AIExplanationResult:
+    return _blocked_ai_result(
+        request=request,
+        output=output,
+        posture=AIExplanationPosture.BLOCKED_UNSUPPORTED_CLAIM,
+        verifier_outcome=AIVerifierOutcome.FAILED_UNSUPPORTED_CLAIM,
+        reason_code=ReasonCode.AI_UNSUPPORTED_CLAIM_BLOCKED,
+        action_policy_reason=AIActionPolicyReason.ALLOWED,
+        output_integrity=output_integrity,
+    )
+
+
+def _accepted_ai_workflow_result(
+    *,
+    request: AIExplanationRequest,
+    sanitized_output: AIWorkflowOutput,
+    provider_output_integrity: AIOutputIntegrity,
+) -> AIExplanationResult:
     grounded_output = replace(
         sanitized_output,
         explanation_text=render_grounded_claim_narrative(sanitized_output.claims),
@@ -496,7 +564,7 @@ def evaluate_ai_workflow_output(
     grounded_output_integrity = _workflow_output_integrity(
         request,
         grounded_output,
-        provider_output_digest=output_integrity.digest,
+        provider_output_digest=provider_output_integrity.digest,
     )
     return AIExplanationResult(
         request=request,
