@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any
 
 from fastapi import FastAPI, Header, Path, Request, status
@@ -20,6 +21,7 @@ from app.api.problem_details import (
     merged_problem_response_metadata,
     not_found_metadata,
     permission_denied_metadata,
+    problem_details_response as problem_response,
     service_unavailable_metadata,
 )
 from app.api.route_metadata import RouteMetadata
@@ -39,7 +41,6 @@ from app.application.downstream_realization import (
     submit_report_evidence_pack_to_downstream,
 )
 from app.domain import ConversionTarget, SourceSystem
-from app.api.problem_details import problem_details_response as problem_response
 from app.observability import (
     IdeaOperation,
     OperationEvent,
@@ -47,6 +48,7 @@ from app.observability import (
     OperationSupportability,
     emit_operation_event,
 )
+from app.ports.idea_repository import DownstreamSubmissionRepository
 from app.security.caller_context import CallerContext, PermissionDeniedError
 
 _DOWNSTREAM_REALIZATION_SUBMIT_CAPABILITY = "idea.downstream-realization.submit"
@@ -181,6 +183,15 @@ class DownstreamSubmissionApiResponse(CamelModel):
     supported_feature_promoted: bool = Field(False, alias="supportedFeaturePromoted")
 
 
+@dataclass(frozen=True)
+class _DownstreamSubmissionRequestContext:
+    caller: CallerContext
+    repository: DownstreamSubmissionRepository
+    durable_storage_backed: bool
+    correlation_id: str | None
+    trace_id: str | None
+
+
 async def submit_conversion_intent_downstream(
     request: Request,
     conversion_intent_id: str = Path(..., alias="conversionIntentId"),
@@ -193,46 +204,16 @@ async def submit_conversion_intent_downstream(
         alias=TRUSTED_CALLER_CONTEXT_HEADER,
     ),
 ) -> DownstreamSubmissionApiResponse | JSONResponse:
-    correlation_id = _request_correlation_id(request)
-    trace_id = _request_trace_id(request)
-    caller = caller_context_from_headers(
-        subject=x_caller_subject,
-        roles=x_caller_roles,
-        capabilities=x_caller_capabilities,
-        trusted_caller_context=x_lotus_trusted_caller_context,
+    context = _prepare_downstream_submission_request(
+        request,
+        idempotency_key=idempotency_key,
+        x_caller_subject=x_caller_subject,
+        x_caller_roles=x_caller_roles,
+        x_caller_capabilities=x_caller_capabilities,
+        x_lotus_trusted_caller_context=x_lotus_trusted_caller_context,
     )
-    try:
-        _require_submission_caller(caller)
-        validate_idempotency_key(idempotency_key)
-    except PermissionDeniedError:
-        _emit_downstream_submission_event(
-            OperationOutcome.PERMISSION_DENIED,
-            "permission_denied",
-            correlation_id=correlation_id,
-            trace_id=trace_id,
-        )
-        return _permission_denied()
-    except ValueError:
-        _emit_downstream_submission_event(
-            OperationOutcome.INVALID_REQUEST,
-            "invalid_request",
-            correlation_id=correlation_id,
-            trace_id=trace_id,
-        )
-        return _invalid_request()
-
-    repository = get_idea_repository()
-    durable_storage_backed = idea_repository_durable_storage_backed(repository)
-    configuration_problem = durable_write_problem(repository)
-    if configuration_problem is not None:
-        _emit_downstream_submission_event(
-            OperationOutcome.BLOCKED,
-            DURABLE_REPOSITORY_NOT_CONFIGURED,
-            durable_storage_backed=durable_storage_backed,
-            correlation_id=correlation_id,
-            trace_id=trace_id,
-        )
-        return configuration_problem
+    if isinstance(context, JSONResponse):
+        return context
     try:
         clients = get_conversion_realization_clients()
         advise_client = clients.advise_client
@@ -244,37 +225,15 @@ async def submit_conversion_intent_downstream(
         RealizeConversionIntentCommand(
             conversion_intent_id=conversion_intent_id,
             idempotency_key=idempotency_key,
-            actor_subject=caller.subject,
-            correlation_id=correlation_id,
-            trace_id=trace_id,
+            actor_subject=context.caller.subject,
+            correlation_id=context.correlation_id,
+            trace_id=context.trace_id,
         ),
-        repository=repository,
+        repository=context.repository,
         advise_client=advise_client,
         manage_client=manage_client,
     )
-    problem = _problem_for_submission_result(result)
-    if problem is not None:
-        _emit_downstream_submission_event(
-            _operation_outcome_from_submission_status(result.status),
-            _error_code_from_submission_status(result.status),
-            durable_storage_backed=durable_storage_backed,
-            correlation_id=correlation_id,
-            trace_id=trace_id,
-        )
-        return problem
-    _emit_downstream_submission_event(
-        _operation_outcome_from_submission_status(result.status),
-        result.downstream_failure_reason,
-        durable_storage_backed=durable_storage_backed,
-        correlation_id=correlation_id,
-        trace_id=trace_id,
-    )
-    response = DownstreamSubmissionApiResponse(
-        downstreamSubmission=DownstreamSubmissionResultResponse.from_domain(result),
-        durableStorageBacked=durable_storage_backed,
-        supportedFeaturePromoted=False,
-    )
-    return _submission_response(result, response)
+    return _submission_api_response(result, context)
 
 
 async def submit_report_evidence_pack_downstream(
@@ -289,6 +248,43 @@ async def submit_report_evidence_pack_downstream(
         alias=TRUSTED_CALLER_CONTEXT_HEADER,
     ),
 ) -> DownstreamSubmissionApiResponse | JSONResponse:
+    context = _prepare_downstream_submission_request(
+        request,
+        idempotency_key=idempotency_key,
+        x_caller_subject=x_caller_subject,
+        x_caller_roles=x_caller_roles,
+        x_caller_capabilities=x_caller_capabilities,
+        x_lotus_trusted_caller_context=x_lotus_trusted_caller_context,
+    )
+    if isinstance(context, JSONResponse):
+        return context
+    try:
+        report_client = get_report_evidence_pack_realization_client()
+    except DownstreamRealizationClientsUnavailableError:
+        report_client = None
+    result = submit_report_evidence_pack_to_downstream(
+        RealizeReportEvidencePackCommand(
+            report_evidence_pack_id=report_evidence_pack_id,
+            idempotency_key=idempotency_key,
+            actor_subject=context.caller.subject,
+            correlation_id=context.correlation_id,
+            trace_id=context.trace_id,
+        ),
+        repository=context.repository,
+        report_client=report_client,
+    )
+    return _submission_api_response(result, context)
+
+
+def _prepare_downstream_submission_request(
+    request: Request,
+    *,
+    idempotency_key: str,
+    x_caller_subject: str | None,
+    x_caller_roles: str | None,
+    x_caller_capabilities: str | None,
+    x_lotus_trusted_caller_context: str | None,
+) -> _DownstreamSubmissionRequestContext | JSONResponse:
     correlation_id = _request_correlation_id(request)
     trace_id = _request_trace_id(request)
     caller = caller_context_from_headers(
@@ -329,41 +325,39 @@ async def submit_report_evidence_pack_downstream(
             trace_id=trace_id,
         )
         return configuration_problem
-    try:
-        report_client = get_report_evidence_pack_realization_client()
-    except DownstreamRealizationClientsUnavailableError:
-        report_client = None
-    result = submit_report_evidence_pack_to_downstream(
-        RealizeReportEvidencePackCommand(
-            report_evidence_pack_id=report_evidence_pack_id,
-            idempotency_key=idempotency_key,
-            actor_subject=caller.subject,
-            correlation_id=correlation_id,
-            trace_id=trace_id,
-        ),
+    return _DownstreamSubmissionRequestContext(
+        caller=caller,
         repository=repository,
-        report_client=report_client,
+        durable_storage_backed=durable_storage_backed,
+        correlation_id=correlation_id,
+        trace_id=trace_id,
     )
+
+
+def _submission_api_response(
+    result: DownstreamRealizationSubmissionResult,
+    context: _DownstreamSubmissionRequestContext,
+) -> DownstreamSubmissionApiResponse | JSONResponse:
     problem = _problem_for_submission_result(result)
     if problem is not None:
         _emit_downstream_submission_event(
             _operation_outcome_from_submission_status(result.status),
             _error_code_from_submission_status(result.status),
-            durable_storage_backed=durable_storage_backed,
-            correlation_id=correlation_id,
-            trace_id=trace_id,
+            durable_storage_backed=context.durable_storage_backed,
+            correlation_id=context.correlation_id,
+            trace_id=context.trace_id,
         )
         return problem
     _emit_downstream_submission_event(
         _operation_outcome_from_submission_status(result.status),
         result.downstream_failure_reason,
-        durable_storage_backed=durable_storage_backed,
-        correlation_id=correlation_id,
-        trace_id=trace_id,
+        durable_storage_backed=context.durable_storage_backed,
+        correlation_id=context.correlation_id,
+        trace_id=context.trace_id,
     )
     response = DownstreamSubmissionApiResponse(
         downstreamSubmission=DownstreamSubmissionResultResponse.from_domain(result),
-        durableStorageBacked=durable_storage_backed,
+        durableStorageBacked=context.durable_storage_backed,
         supportedFeaturePromoted=False,
     )
     return _submission_response(result, response)
