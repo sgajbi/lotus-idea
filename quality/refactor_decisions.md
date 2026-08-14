@@ -6,6 +6,58 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-08-14: Cross-Repo Posture Fixture Helper Boundary
+
+Issue `#1071` applies the RFC-0002 Slice 18/19 maintainability lens to
+`tests/unit/test_cross_repo_issue_posture.py::_cross_repo_posture_fixture_payload`.
+The current report-only quality baseline lists this extracted helper as the
+largest remaining function at `98` lines after closed issue `#953` split the
+original `160` line cross-repo posture test.
+
+Duplicate-check result: `cross_repo_posture_fixture_payload` found no existing
+GitHub issue for this exact helper. Closed issue `#953` remains the parent
+historical refactor for the original monolithic test.
+
+The branch refactor preserves the public `_cross_repo_posture_fixture_payload()`
+test-support boundary while separating:
+
+1. shared RFC-0002 label constants,
+2. Idea open/all/RFC-0002 issue fixture lists,
+3. Platform open/RFC-0002 issue fixture lists,
+4. the reusable Platform mesh issue builder, and
+5. the common repository-posture wrapper.
+
+Focused local validation passed:
+
+1. `python -m ruff check tests/unit/test_cross_repo_issue_posture.py`,
+2. `python -m ruff format --check tests/unit/test_cross_repo_issue_posture.py`,
+3. `python -m mypy tests/unit/test_cross_repo_issue_posture.py`, and
+4. `python -m pytest tests/unit/test_cross_repo_issue_posture.py -q`
+   (`14` passed).
+
+Broader local validation passed:
+
+1. `make rfc0002-github-issue-execution-ledger-gate`,
+2. `make rfc0002-github-issue-learning-pattern-gate`,
+3. `make rfc0002-github-issue-execution-state-audit`,
+4. `make documentation-contract-gate`,
+5. `make maintainability-gate`,
+6. `make duplicate-implementation-gate` (`0` duplicate clusters across
+   `3,622` source/script functions),
+7. `make quality-baseline`, and
+8. `git diff --check`.
+
+The refreshed quality baseline no longer lists the targeted `98` line helper.
+The largest remaining report-only function is
+`tests/integration/test_postgres_runtime_integration.py::test_postgres_runtime_serializes_concurrent_review_and_feedback_resource_identity`
+at `97` lines.
+
+No runtime code, production posture logic, API/OpenAPI behavior, persistence
+schema, migration, authentication/authorization, Core, Gateway, Workbench,
+supported-feature posture, data-product promotion, client-publication,
+production certification, wiki source, or final RFC-0002 closure claim is in
+scope.
+
 ## 2026-08-14: Platform Mesh Proof Fixture Writer Boundary
 
 Issue `#1068` applies the RFC-0002 Slice 14/17/19 maintainability lens to

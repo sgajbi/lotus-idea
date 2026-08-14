@@ -80,103 +80,112 @@ def _classification(
     }
 
 
-def _cross_repo_posture_fixture_payload() -> dict[str, Any]:
+RFC_0002_SLICE_18_LABELS = [
+    "rfc/RFC-0002",
+    "rfc/RFC-0002/slice-18",
+    "status/in-progress",
+    "priority/P1",
+]
+
+RFC_0002_WORKBENCH_BLOCKED_LABELS = [
+    "rfc/RFC-0002",
+    "rfc/RFC-0002/slice-11",
+    "status/blocked",
+    "priority/P0",
+]
+
+RFC_0002_PLATFORM_MESH_LABELS = [
+    "rfc/RFC-0002",
+    "rfc/RFC-0002/slice-14",
+    "status/merged-main",
+    "priority/P1",
+]
+
+
+def _idea_open_issues() -> list[dict[str, Any]]:
+    return [
+        _issue(681, state="OPEN", title="Slice 18 docs", labels=[]),
+        _issue(685, state="OPEN", title="Workbench proof", labels=[]),
+    ]
+
+
+def _idea_all_issues() -> list[dict[str, Any]]:
+    return [
+        _issue(681, state="OPEN", title="Slice 18 docs", labels=RFC_0002_SLICE_18_LABELS),
+        _issue(
+            563,
+            state="CLOSED",
+            title="RFC-0002 Slice 10: certify high-volatility success-mode contracts",
+            labels=["status/merged-main"],
+        ),
+    ]
+
+
+def _idea_rfc0002_issues() -> list[dict[str, Any]]:
+    return [
+        _issue(681, state="OPEN", title="Slice 18 docs", labels=RFC_0002_SLICE_18_LABELS),
+        _issue(
+            685,
+            state="OPEN",
+            title="Workbench proof",
+            labels=RFC_0002_WORKBENCH_BLOCKED_LABELS,
+        ),
+        _issue(
+            340,
+            state="CLOSED",
+            title="AI proof",
+            labels=["rfc/RFC-0002", "status/merged-main"],
+        ),
+    ]
+
+
+def _platform_mesh_issue(*, labels: list[str]) -> dict[str, Any]:
+    return _issue(
+        598,
+        state="OPEN",
+        title="Platform mesh proof",
+        labels=labels,
+        repo="lotus-platform",
+    )
+
+
+def _platform_open_issues() -> list[dict[str, Any]]:
+    return [
+        _platform_mesh_issue(labels=[]),
+        _issue(42, state="OPEN", title="Other", labels=[], repo="lotus-platform"),
+    ]
+
+
+def _platform_rfc0002_issues() -> list[dict[str, Any]]:
+    return [_platform_mesh_issue(labels=RFC_0002_PLATFORM_MESH_LABELS)]
+
+
+def _repository_posture(
+    *,
+    open_issues: list[dict[str, Any]],
+    all_issues: list[dict[str, Any]],
+    rfc0002_issues: list[dict[str, Any]],
+) -> dict[str, list[dict[str, Any]]]:
     return {
-        "sgajbi/lotus-idea": {
-            "openIssues": [
-                _issue(681, state="OPEN", title="Slice 18 docs", labels=[]),
-                _issue(685, state="OPEN", title="Workbench proof", labels=[]),
-            ],
-            "allIssues": [
-                _issue(
-                    681,
-                    state="OPEN",
-                    title="Slice 18 docs",
-                    labels=[
-                        "rfc/RFC-0002",
-                        "rfc/RFC-0002/slice-18",
-                        "status/in-progress",
-                        "priority/P1",
-                    ],
-                ),
-                _issue(
-                    563,
-                    state="CLOSED",
-                    title="RFC-0002 Slice 10: certify high-volatility success-mode contracts",
-                    labels=["status/merged-main"],
-                ),
-            ],
-            "rfc0002Issues": [
-                _issue(
-                    681,
-                    state="OPEN",
-                    title="Slice 18 docs",
-                    labels=[
-                        "rfc/RFC-0002",
-                        "rfc/RFC-0002/slice-18",
-                        "status/in-progress",
-                        "priority/P1",
-                    ],
-                ),
-                _issue(
-                    685,
-                    state="OPEN",
-                    title="Workbench proof",
-                    labels=[
-                        "rfc/RFC-0002",
-                        "rfc/RFC-0002/slice-11",
-                        "status/blocked",
-                        "priority/P0",
-                    ],
-                ),
-                _issue(
-                    340,
-                    state="CLOSED",
-                    title="AI proof",
-                    labels=["rfc/RFC-0002", "status/merged-main"],
-                ),
-            ],
-        },
-        "sgajbi/lotus-platform": {
-            "openIssues": [
-                _issue(
-                    598,
-                    state="OPEN",
-                    title="Platform mesh proof",
-                    labels=[],
-                    repo="lotus-platform",
-                ),
-                _issue(42, state="OPEN", title="Other", labels=[], repo="lotus-platform"),
-            ],
-            "allIssues": [
-                _issue(
-                    598,
-                    state="OPEN",
-                    title="Platform mesh proof",
-                    labels=[
-                        "rfc/RFC-0002",
-                        "rfc/RFC-0002/slice-14",
-                        "status/merged-main",
-                        "priority/P1",
-                    ],
-                    repo="lotus-platform",
-                )
-            ],
-            "rfc0002Issues": [
-                _issue(
-                    598,
-                    state="OPEN",
-                    title="Platform mesh proof",
-                    labels=[
-                        "rfc/RFC-0002",
-                        "rfc/RFC-0002/slice-14",
-                        "status/merged-main",
-                        "priority/P1",
-                    ],
-                    repo="lotus-platform",
-                )
-            ],
-        },
+        "openIssues": open_issues,
+        "allIssues": all_issues,
+        "rfc0002Issues": rfc0002_issues,
+    }
+
+
+def _cross_repo_posture_fixture_payload() -> dict[str, Any]:
+    platform_rfc0002_issues = _platform_rfc0002_issues()
+    return {
+        "sgajbi/lotus-idea": _repository_posture(
+            open_issues=_idea_open_issues(),
+            all_issues=_idea_all_issues(),
+            rfc0002_issues=_idea_rfc0002_issues(),
+        ),
+        "sgajbi/lotus-platform": _repository_posture(
+            open_issues=_platform_open_issues(),
+            all_issues=platform_rfc0002_issues,
+            rfc0002_issues=platform_rfc0002_issues,
+        ),
     }
 
 
