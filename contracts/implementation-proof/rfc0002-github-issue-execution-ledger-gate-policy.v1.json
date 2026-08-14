@@ -126,7 +126,8 @@
     1059,
     1062,
     1065,
-    1068
+    1068,
+    1071
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -415,6 +416,25 @@
       "runtime blocker-clearing posture",
       "supported-feature non-promotion",
       "No API/OpenAPI, persistence, migration, authentication, authorization, Core, Gateway, Workbench, runtime stack, broker, platform-mesh, supported-feature, data-product certification, or production certification change"
+    ],
+    "1071": [
+      "Keep #1071 open",
+      "tests/unit/test_cross_repo_issue_posture.py::_cross_repo_posture_fixture_payload",
+      "quality/baseline_report.md",
+      "largest remaining function at 98 lines",
+      "split remaining cross-repo posture fixture helper",
+      "Ruff check",
+      "Ruff format check",
+      "MyPy",
+      "python -m pytest tests/unit/test_cross_repo_issue_posture.py -q",
+      "test-support maintainability only",
+      "No repo-authored wiki source change is expected",
+      "runtime code",
+      "Core, Gateway, Workbench",
+      "authentication",
+      "authorization",
+      "supported-feature posture",
+      "final RFC-0002 closure"
     ]
   },
   "requiredClosedIssueEvidence": {
