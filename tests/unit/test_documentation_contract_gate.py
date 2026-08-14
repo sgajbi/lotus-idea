@@ -334,7 +334,7 @@ def test_documentation_contract_gate_blocks_non_contract_current_issue_posture(
         "wiki/RFC-Index.md: paragraph 2 describes current/live RFC-0002 issue posture "
         "without contract-backed crossRepo fragment(s): "
         "`189 label-backed RFC-0002 issues`, `151 closed and 38 open`, "
-        "`25 `status/blocked`, 0 `status/fixed-local`, 2 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 0 `status/pr-open`, 8 `status/tracker``"
+        "`25 `status/blocked`, 0 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 1 `status/pr-open`, 8 `status/tracker``"
     ]
 
 
@@ -360,7 +360,7 @@ def test_documentation_contract_gate_allows_contract_current_issue_posture(
                     "crossRepo": [
                         "189 label-backed RFC-0002 issues",
                         "151 closed and 38 open",
-                        "25 `status/blocked`, 2 `status/in-progress`",
+                        "25 `status/blocked`, 0 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 1 `status/pr-open`, 8 `status/tracker`",
                         "0 app-actionable blocked",
                     ],
                 },
@@ -373,12 +373,12 @@ def test_documentation_contract_gate_allows_contract_current_issue_posture(
         "# Repository Engineering Context\n\n"
         "Current Idea ledger posture has 120 tracked RFC-0002 issues, "
         "94 closed and 26 open; #681 is the in-progress Slice 18 "
-        "tracker and #1059 is the in-progress Slice 15/19 refactor. "
+        "tracker and #1059 has PR #1060 open for the Slice 15/19 refactor. "
         "Current governed cross-repo RFC-0002 posture has "
         "189 label-backed RFC-0002 issues across 13 repositories: 151 closed "
         "and 38 open. The open split is 25 `status/blocked`, "
-        "2 `status/in-progress`, 1 `status/merged-main`, "
-        "2 `status/merged-to-main`, and 8 `status/tracker`; "
+        "0 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, "
+        "2 `status/merged-to-main`, 1 `status/pr-open`, 8 `status/tracker`; "
         "blocked actionability remains 0 app-actionable blocked issues.\n",
         encoding="utf-8",
     )

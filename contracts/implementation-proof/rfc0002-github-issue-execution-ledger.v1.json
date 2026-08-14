@@ -220,9 +220,9 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/1059",
       "rfcSlices": ["slice-15", "slice-19"],
       "githubState": "open",
-      "executionStatus": "open_in_progress",
+      "executionStatus": "open_pr_raised",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #1059 open until the outbox proof consumption refactor is merged to main, exact-main validation passes, and source-controlled RFC-0002 issue truth is synchronized. The implementation must preserve source-contract supporting-evidence posture, runtime blocker-clearing posture, registered artifact-effect enforcement, current-proof validation, evidence-ref de-duplication, supported-feature non-promotion, and every existing no-claim boundary. No API/OpenAPI, persistence, migration, authentication, authorization, Core, Gateway, Workbench, runtime stack, broker, platform-mesh, supported-feature, data-product certification, or production certification change is allowed in this issue."
+      "closureInstruction": "Keep #1059 open while PR #1060 checks, merge-to-main, exact-main validation, wiki publication, branch cleanup, and source-controlled RFC-0002 issue truth synchronization remain pending. The outbox proof consumption refactor must preserve source-contract supporting-evidence posture, runtime blocker-clearing posture, registered artifact-effect enforcement, current-proof validation, evidence-ref de-duplication, supported-feature non-promotion, and every existing no-claim boundary. No API/OpenAPI, persistence, migration, authentication, authorization, Core, Gateway, Workbench, runtime stack, broker, platform-mesh, supported-feature, data-product certification, or production certification change is allowed in this issue."
     },
     {
       "issueNumber": 676,
