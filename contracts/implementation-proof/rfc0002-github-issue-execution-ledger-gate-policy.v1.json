@@ -127,7 +127,8 @@
     1062,
     1065,
     1068,
-    1071
+    1071,
+    1074
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -416,6 +417,33 @@
       "runtime blocker-clearing posture",
       "supported-feature non-promotion",
       "No API/OpenAPI, persistence, migration, authentication, authorization, Core, Gateway, Workbench, runtime stack, broker, platform-mesh, supported-feature, data-product certification, or production certification change"
+    ],
+    "1074": [
+      "Keep #1074 open",
+      "tests/integration/test_postgres_runtime_integration.py::test_postgres_runtime_serializes_concurrent_review_and_feedback_resource_identity",
+      "quality/baseline_report.md",
+      "largest remaining report-only function at 97 lines",
+      "review and feedback concurrency proof",
+      "accepted/replayed behavior",
+      "audit and outbox delta assertions",
+      "Ruff check",
+      "Ruff format check",
+      "MyPy",
+      "python -m pytest tests/integration/test_postgres_runtime_integration.py -q",
+      "9 skipped",
+      "make quality-baseline",
+      "maintainability gate",
+      "duplicate-implementation gate",
+      "no longer lists the targeted PostgreSQL proof test",
+      "scripts/endpoint_certification_gate.py::main",
+      "96 lines",
+      "test-support maintainability only",
+      "runtime behavior",
+      "persistence schema",
+      "API/OpenAPI",
+      "Core, Gateway, Workbench",
+      "supported-feature posture",
+      "final RFC-0002 closure"
     ]
   },
   "requiredClosedIssueEvidence": {
