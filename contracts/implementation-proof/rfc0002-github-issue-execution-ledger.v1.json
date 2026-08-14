@@ -211,9 +211,9 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/1056",
       "rfcSlices": ["slice-12"],
       "githubState": "open",
-      "executionStatus": "open_fixed_local",
+      "executionStatus": "open_pr_raised",
       "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #1056 open until the downstream submission API orchestration refactor is merged to main, exact-main validation passes, issue-loop QA evidence is recorded, and branch hygiene is clean. Local proof passed for src/app/api/downstream_realization.py with focused downstream realization API/application/problem-details tests; this maintainability refactor does not certify live Advise/Manage/Report/Render/Archive downstream acceptance, downstream authority, Gateway/Workbench behavior, supported-feature promotion, or final RFC-0002 closure."
+      "closureInstruction": "Keep #1056 open until PR #1057 reaches main, exact-main validation passes, issue-loop QA evidence is recorded, wiki publication reaches strict parity, and branch hygiene is clean. Local proof passed for src/app/api/downstream_realization.py with focused downstream realization API/application/problem-details tests, full make lint, downstream realization contract gate, and cross-repo posture evidence; this maintainability refactor does not certify live Advise/Manage/Report/Render/Archive downstream acceptance, downstream authority, Gateway/Workbench behavior, supported-feature promotion, or final RFC-0002 completion."
     },
     {
       "issueNumber": 676,
