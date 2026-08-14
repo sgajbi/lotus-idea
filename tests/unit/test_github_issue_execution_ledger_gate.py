@@ -464,7 +464,7 @@ def test_rfc0002_github_issue_execution_ledger_tracks_slice18_posture_evidence()
     issue_681 = _issue_by_number(payload, 681)
 
     assert issue_681["githubState"] == "open"
-    assert issue_681["executionStatus"] == "open_pr_raised"
+    assert issue_681["executionStatus"] == "open_in_progress"
     assert issue_681["allowPullRequestAutoClose"] is False
     _assert_closure_instruction_contains_fragments(
         issue_681,

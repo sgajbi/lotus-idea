@@ -10,24 +10,23 @@
   "trackingIssue": "sgajbi/lotus-idea#681",
   "ideaLedger": {
     "totalTrackedIssues": 135,
-    "openIssues": 26,
-    "closedIssues": 109,
+    "openIssues": 25,
+    "closedIssues": 110,
     "openStatusCounts": {
       "open_blocked": 14,
       "open_fixed_local": 0,
-      "open_in_progress": 0,
+      "open_in_progress": 1,
       "open_merged_main_qa_pending": 0,
-      "open_pr_raised": 2,
+      "open_pr_raised": 0,
       "open_pending_final_closure": 1,
       "open_pending_post_completion": 1,
       "open_tracker": 8
     },
     "fixedLocalIssues": [],
-    "prOpenIssues": [
-      "sgajbi/lotus-idea#681",
-      "sgajbi/lotus-idea#1101"
+    "prOpenIssues": [],
+    "inProgressIssues": [
+      "sgajbi/lotus-idea#681"
     ],
-    "inProgressIssues": [],
     "mergedMainQaPendingIssues": [],
     "recentlyClosedIssues": [
       "sgajbi/lotus-idea#1014",
@@ -51,23 +50,24 @@
       "sgajbi/lotus-idea#1088",
       "sgajbi/lotus-idea#1091",
       "sgajbi/lotus-idea#1094",
-      "sgajbi/lotus-idea#1098"
+      "sgajbi/lotus-idea#1098",
+      "sgajbi/lotus-idea#1101"
     ]
   },
   "crossRepo": {
     "repositoriesChecked": 13,
     "totalRfc0002Issues": 204,
-    "openRfc0002Issues": 38,
-    "closedRfc0002Issues": 166,
+    "openRfc0002Issues": 37,
+    "closedRfc0002Issues": 167,
     "openBlockedIssues": 25,
     "appActionableBlockedIssues": 0,
     "openStatusCounts": {
       "status/blocked": 25,
       "status/fixed-local": 0,
-      "status/in-progress": 0,
+      "status/in-progress": 1,
       "status/merged-main": 1,
       "status/merged-to-main": 2,
-      "status/pr-open": 2,
+      "status/pr-open": 0,
       "status/tracker": 8
     },
     "titleOnlyReferencesExcludedFromGovernedCounts": [
@@ -77,7 +77,7 @@
   "expectedCurrentFragments": {
     "ideaLedger": [
       "135 tracked RFC-0002 issues",
-      "109 closed and 26 open",
+      "110 closed and 25 open",
       "#681",
       "#1101",
       "#1098",
@@ -89,8 +89,8 @@
     ],
     "crossRepo": [
       "204 label-backed RFC-0002 issues",
-      "166 closed and 38 open",
-      "25 `status/blocked`, 0 `status/fixed-local`, 0 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 2 `status/pr-open`, 8 `status/tracker`",
+      "167 closed and 37 open",
+      "25 `status/blocked`, 0 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 0 `status/pr-open`, 8 `status/tracker`",
       "0 app-actionable blocked"
     ]
   },
