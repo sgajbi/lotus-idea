@@ -22,12 +22,12 @@ dependency map, and closure rules without relying on chat memory.
 | Snapshot command | `make rfc0002-cross-repo-issue-posture` |
 | Execution audit | `make rfc0002-github-issue-execution-state-audit` passed |
 | Repositories checked | 13 |
-| Total RFC-0002 issues | 189 |
-| Closed RFC-0002 issues | 151 |
-| Open RFC-0002 issues | 38 |
+| Total RFC-0002 issues | 199 |
+| Closed RFC-0002 issues | 162 |
+| Open RFC-0002 issues | 37 |
 | Open blocked issues | 25 |
 | App-actionable blocked issues | 0 |
-| Active synchronization tracker | `sgajbi/lotus-idea#681`; `sgajbi/lotus-idea#1059` is closed after Slice 15/19 outbox proof consumer hardening reached exact main and QA; `sgajbi/lotus-idea#1056` is closed after Slice 12 downstream submission API orchestration reached exact main and QA; `sgajbi/lotus-idea#1044`, `sgajbi/lotus-idea#1037`, `sgajbi/lotus-idea#1040`, `sgajbi/lotus-idea#1047`, `sgajbi/lotus-idea#1049`, and `sgajbi/lotus-idea#1052` are QA-closed Slice 19 hardening issues |
+| Active synchronization tracker | `sgajbi/lotus-idea#681`; latest Idea closure truth is `sgajbi/lotus-idea#1084` after PR #1085 merged to main `03b12bb50c8c2bbaaf6d5396ea614cc13e80f4cd` and exact-main Main Releasability run `31781165482` passed. |
 
 The zero app-actionable blocked count is important. It means an open issue may
 remain `status/blocked` only when the remaining authority is Core-owned,
@@ -38,8 +38,8 @@ blocked posture and implement or reclassify it.
 
 ```mermaid
 flowchart LR
-    Issues["GitHub issue posture<br/>189 label-backed RFC-0002 issues"]
-    Open["152 closed and 37 open<br/>25 `status/blocked`, 0 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 0 `status/pr-open`, 8 `status/tracker`"]
+    Issues["GitHub issue posture<br/>199 label-backed RFC-0002 issues"]
+    Open["162 closed and 37 open<br/>25 `status/blocked`, 0 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 0 `status/pr-open`, 8 `status/tracker`"]
     Blocked["Blocked classifier<br/>0 app-actionable blocked"]
     Work["Writable work<br/>only when evidence proves app-code ownership"]
     External["Core / protected / identity / provider / legal evidence"]
@@ -64,20 +64,17 @@ flowchart LR
 | `status/pr-open` | 0 | No RFC-0002 issue is currently represented as PR-open in the cross-repo posture snapshot. |
 | `status/tracker` | 8 | Parent or umbrella tracking issues, not immediate implementation items. |
 
-Latest synchronization evidence: Current GitHub issue posture has 189
-label-backed RFC-0002 issues, 152 closed and 37 open, with 25 `status/blocked`, 0 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 0 `status/pr-open`, 8 `status/tracker`, and 0 app-actionable blocked issues. `lotus-idea#1059` is closed after PR #1060 reached exact main `7277ec38afe6d665108bee944020599ef47d2cbf`, Main Releasability run `31761903797` passed, CodeQL run `31761895579` passed, wiki publication reached `5015f7d` with strict `DiffCount 0`, and branch hygiene was clean. `lotus-idea#1056` is closed after PR #1057 reached exact main `9bce18299fc94f97a9461b401762f623271e8280`, Main Releasability run `31758404602` passed, CodeQL run `31758399729` passed, wiki parity reported `DiffCount 0`, and branch hygiene was clean. The Slice 12 downstream submission API orchestration refactor preserved route-specific command construction while centralizing caller validation, durable-write guarding, telemetry, problem mapping, and response shaping. `lotus-idea#1044` is closed after PR #1045 reached exact main `f2b60af95bf25ca09d2d48800c`, Main Releasability run `31744825538` passed, security-equivalent Push/CodeQL run `31744818432` passed, the wiki was published at commit `a10656a`, strict wiki parity reported `DiffCount 0`, and current-main QA passed focused conversion outcome persistence and lifecycle tests. `lotus-idea#1040` is closed after PR #1041 reached exact main `020dd70a65c29040d330c7a07e8aa2fb923f4baf`, Main Releasability run `31737445148` passed, security-equivalent Push/CodeQL run `31737435367` passed, the wiki was published at commit `37722e4`, strict wiki parity reported `DiffCount 0`, PR #1042 synchronized source truth to main `8f0df9f97898e9b346abb09e62eb01e9ced1f3db`, and current-main QA passed focused pytest, Ruff, MyPy, and `make core-benchmark-assignment-live-proof-contract-gate`. `lotus-idea#1037` is closed after QA-backed Slice 19 Core benchmark runtime evidence validator maintainability hardening reached exact main and passed the same current-main QA closure proof. `lotus-idea#1033` is closed after QA-backed Slice 19 platform route-registration maintainability hardening reached exact main, source truth synchronized, wiki parity passed, and strict issue-loop audit reported `violationCount: 0`. `lotus-idea#1047`, `lotus-idea#1049`, and `lotus-idea#1052` are closed after QA-backed PostgreSQL proof-test and report evidence-pack integration proof maintainability hardening reached exact main without product-claim changes. `lotus-idea#1024` is closed after QA-backed Slice 19 downstream realization proof test hardening; `lotus-idea#1027`
-and `lotus-idea#1029` are closed after PR #1028 landed Slice 19
-implementation-proof readiness API test-maintainability hardening, PR #1030
-synchronized merged-main source truth, exact-main Main Releasability
-`31716248828` and CodeQL `31716237061` passed for
-`309f9bb0efbea7b7eab7cdbf4af31703c91e0c89`, wiki publication `9cd499a`
-reached strict parity, and strict targeted issue lifecycle audit reported
-`violationCount: 0`.
-`sgajbi/lotus-core#917` is also closed
-with `status/merged-main` after Core PR #929 reached exact main
-`6bc937bb173051e0bd4ee9a07ffebd54face0163` and Main Releasability
-`31308743764` passed. This is source-truth synchronization only; none of these
-closures promotes a Lotus Idea supported feature.
+Latest synchronization evidence: Current GitHub issue posture has 199
+label-backed RFC-0002 issues, 162 closed and 37 open, with 25
+`status/blocked`, 0 `status/fixed-local`, 1 `status/in-progress`, 1
+`status/merged-main`, 2 `status/merged-to-main`, 0 `status/pr-open`, 8
+`status/tracker`, and 0 app-actionable blocked issues. The Idea source ledger
+tracks 130 RFC-0002 issues: 105 closed and 25 open. `lotus-idea#1084` is
+closed after PR #1085 reached exact main
+`03b12bb50c8c2bbaaf6d5396ea614cc13e80f4cd`; Main Releasability run
+`31781165482` passed and branch cleanup completed. This is source-truth
+synchronization only; no closure in this section promotes a Lotus Idea
+supported feature.
 
 ## Highest-Leverage Remaining Dependencies
 

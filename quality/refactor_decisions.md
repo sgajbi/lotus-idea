@@ -38,6 +38,12 @@ The strengthened unit test proves source-signal linkage, evidence-packet
 source-ref binding, lineage source-ref/hash binding, score policy version,
 score value, and score reason-code preservation.
 
+PR `#1085` rebase-merged the refactor to Idea main
+`03b12bb50c8c2bbaaf6d5396ea614cc13e80f4cd`; exact-main Main
+Releasability Gate run `31781165482` passed for that SHA. GitHub deleted the
+remote branch by merge, and the local branch was deleted after `git cherry`
+patch-equivalence proof for the three rebased commits.
+
 No API/OpenAPI behavior, persistence migration, runtime topology,
 authentication, authorization, Core benchmark-assignment authority,
 Performance benchmark methodology authority, Gateway, Workbench,
