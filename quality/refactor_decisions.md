@@ -60,6 +60,16 @@ passed against the exact PR title/body text. Issue `#1068` remains open with
 `status/pr-open` until PR checks, merge-to-main, exact-main validation, and
 branch cleanup complete.
 
+PR `#1069` rebase-merged to Idea main
+`898f49e55b6036c07f2d4e10940eeaa6bb48e54f`. Exact-main Main Releasability
+Gate run `31768918566` passed for that SHA, including Docker/release evidence,
+image scan, SBOM, digest publication, signing/provenance, release image
+identity binding, license evidence binding, and CI signal evidence. Exact-main
+local closure validation passed focused platform-mesh pytest, RFC-0002 issue
+execution ledger, learning-pattern, state-audit, documentation, and whitespace
+gates. The remote PR branch was deleted by merge, and the local feature branch
+was deleted after patch-equivalence proof.
+
 No runtime code, API/OpenAPI behavior, persistence schema, migration,
 authentication/authorization, Core, Gateway, Workbench, platform mesh
 certification, supported-feature promotion, client-publication, production

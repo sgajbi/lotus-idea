@@ -415,25 +415,26 @@
       "runtime blocker-clearing posture",
       "supported-feature non-promotion",
       "No API/OpenAPI, persistence, migration, authentication, authorization, Core, Gateway, Workbench, runtime stack, broker, platform-mesh, supported-feature, data-product certification, or production certification change"
-    ],
+    ]
+  },
+  "requiredClosedIssueEvidence": {
     "1068": [
-      "Keep #1068 open",
+      "Closed #1068",
+      "PR #1069",
+      "898f49e55b6036c07f2d4e10940eeaa6bb48e54f",
+      "31768918566",
       "platform mesh proof fixture writer",
       "write_platform_mesh_fixture",
       "quality/baseline_report.md",
       "98 lines",
-      "source manifest JSON",
-      "catalog JSON",
-      "dependency graph JSON",
-      "maturity matrix JSON",
+      "42` passed",
+      "no longer lists the targeted fixture",
       "test-support boundary only",
       "No runtime topology change",
       "No mesh-certification promotion",
       "No supported-feature promotion",
       "No claim that RFC-0002 Slice 14 or Slice 17 is complete"
-    ]
-  },
-  "requiredClosedIssueEvidence": {
+    ],
     "1065": [
       "Closed #1065",
       "PR #1066",
