@@ -552,9 +552,45 @@ def _assert_workflow_outbox_lineage(postgres_database_url: str) -> None:
             assert row["lineage_origin"] == "request"
 
 
+@dataclass(frozen=True)
+class _ConcurrentReviewFeedbackProofContext:
+    candidate_id: str
+    actor: ReviewActorContext
+    candidate: Any
+
+
 def test_postgres_runtime_serializes_concurrent_review_and_feedback_resource_identity(
     postgres_database_url: str,
 ) -> None:
+    proof_context = _concurrent_review_feedback_proof_context(postgres_database_url)
+    _assert_concurrent_review_action_resource_identity(
+        postgres_database_url,
+        proof_context,
+    )
+    approved_candidate = _candidate_for_concurrency_proof(
+        postgres_database_url,
+        proof_context.candidate_id,
+    )
+    _assert_concurrent_feedback_resource_identity(
+        postgres_database_url,
+        proof_context.actor,
+        approved_candidate,
+    )
+
+
+def _concurrent_review_feedback_proof_context(
+    postgres_database_url: str,
+) -> _ConcurrentReviewFeedbackProofContext:
+    candidate_id = _persist_review_ready_candidate_for_concurrency_proof()
+    candidate = _candidate_for_concurrency_proof(postgres_database_url, candidate_id)
+    return _ConcurrentReviewFeedbackProofContext(
+        candidate_id=candidate_id,
+        actor=_review_actor_context(candidate),
+        candidate=candidate,
+    )
+
+
+def _persist_review_ready_candidate_for_concurrency_proof() -> str:
     client = managed_test_client(app)
     persisted = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
@@ -564,14 +600,20 @@ def test_postgres_runtime_serializes_concurrent_review_and_feedback_resource_ide
     candidate_id = str(persisted.json()["persistence"]["candidateId"])
     _transition_candidate_to_review_ready(client, candidate_id)
     reset_idea_repository_for_tests()
+    return candidate_id
 
+
+def _candidate_for_concurrency_proof(postgres_database_url: str, candidate_id: str) -> Any:
     with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
         record = PostgresIdeaRepository(cast(Any, connection)).candidate_record_by_id(candidate_id)
     assert record is not None
-    candidate = record.candidate
+    return record.candidate
+
+
+def _review_actor_context(candidate: Any) -> ReviewActorContext:
     scope = candidate.access_scope
     assert scope is not None
-    actor = ReviewActorContext(
+    return ReviewActorContext(
         actor_subject="advisor-001",
         role=ReviewActorRole.ADVISOR,
         tenant_ids=frozenset({scope.tenant_id}),
@@ -579,18 +621,23 @@ def test_postgres_runtime_serializes_concurrent_review_and_feedback_resource_ide
         portfolio_ids=frozenset({scope.portfolio_id}),
         client_ids=frozenset({scope.client_id}),
     )
+
+
+def _assert_concurrent_review_action_resource_identity(
+    postgres_database_url: str,
+    proof_context: _ConcurrentReviewFeedbackProofContext,
+) -> None:
     review = apply_review_action(
-        candidate,
+        proof_context.candidate,
         ReviewDecisionCommand(
             review_id="postgres-concurrent-review-identity-001",
             action=ReviewAction.APPROVE_FOR_CONVERSION,
-            actor=actor,
+            actor=proof_context.actor,
             reason_codes=(ReasonCode.REVIEW_REQUIRED,),
             decided_at_utc=datetime(2026, 6, 21, 10, 5, tzinfo=UTC),
         ),
     )
-    before_audit = _table_count(postgres_database_url, "idea_audit_event")
-    before_outbox = _table_count(postgres_database_url, "idea_outbox_event")
+    before_counts = _review_feedback_side_effect_counts(postgres_database_url)
 
     review_decisions = run_concurrent_repository_mutations(
         postgres_database_url,
@@ -604,21 +651,18 @@ def test_postgres_runtime_serializes_concurrent_review_and_feedback_resource_ide
         ("review:concurrent:first", "review:concurrent:second"),
     )
 
-    assert set(review_decisions) == {
-        ReviewPersistenceDecision.ACCEPTED,
-        ReviewPersistenceDecision.REPLAYED,
-    }
+    _assert_accepted_and_replayed(review_decisions)
     assert _table_count(postgres_database_url, "idea_review_decision") == 1
-    assert _table_count(postgres_database_url, "idea_audit_event") == before_audit + 1
-    assert _table_count(postgres_database_url, "idea_outbox_event") == before_outbox + 1
+    _assert_review_feedback_side_effect_delta(postgres_database_url, before_counts)
 
-    with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
-        approved = PostgresIdeaRepository(cast(Any, connection)).candidate_record_by_id(
-            candidate_id
-        )
-    assert approved is not None
+
+def _assert_concurrent_feedback_resource_identity(
+    postgres_database_url: str,
+    actor: ReviewActorContext,
+    candidate: Any,
+) -> None:
     feedback = record_feedback(
-        approved.candidate,
+        candidate,
         FeedbackCommand(
             feedback_id="postgres-concurrent-feedback-identity-001",
             actor=actor,
@@ -627,8 +671,7 @@ def test_postgres_runtime_serializes_concurrent_review_and_feedback_resource_ide
             recorded_at_utc=datetime(2026, 6, 21, 10, 6, tzinfo=UTC),
         ),
     )
-    before_audit = _table_count(postgres_database_url, "idea_audit_event")
-    before_outbox = _table_count(postgres_database_url, "idea_outbox_event")
+    before_counts = _review_feedback_side_effect_counts(postgres_database_url)
 
     feedback_decisions = run_concurrent_repository_mutations(
         postgres_database_url,
@@ -642,13 +685,33 @@ def test_postgres_runtime_serializes_concurrent_review_and_feedback_resource_ide
         ("feedback:concurrent:first", "feedback:concurrent:second"),
     )
 
-    assert set(feedback_decisions) == {
+    _assert_accepted_and_replayed(feedback_decisions)
+    assert _table_count(postgres_database_url, "idea_feedback_event") == 1
+    _assert_review_feedback_side_effect_delta(postgres_database_url, before_counts)
+
+
+def _assert_accepted_and_replayed(
+    decisions: tuple[ReviewPersistenceDecision, ...],
+) -> None:
+    assert set(decisions) == {
         ReviewPersistenceDecision.ACCEPTED,
         ReviewPersistenceDecision.REPLAYED,
     }
-    assert _table_count(postgres_database_url, "idea_feedback_event") == 1
-    assert _table_count(postgres_database_url, "idea_audit_event") == before_audit + 1
-    assert _table_count(postgres_database_url, "idea_outbox_event") == before_outbox + 1
+
+
+def _review_feedback_side_effect_counts(postgres_database_url: str) -> dict[str, int]:
+    return {
+        "audit": _table_count(postgres_database_url, "idea_audit_event"),
+        "outbox": _table_count(postgres_database_url, "idea_outbox_event"),
+    }
+
+
+def _assert_review_feedback_side_effect_delta(
+    postgres_database_url: str,
+    before_counts: dict[str, int],
+) -> None:
+    assert _table_count(postgres_database_url, "idea_audit_event") == before_counts["audit"] + 1
+    assert _table_count(postgres_database_url, "idea_outbox_event") == before_counts["outbox"] + 1
 
 
 def test_postgres_runtime_serializes_conversion_outcome_identity_and_source_version(
