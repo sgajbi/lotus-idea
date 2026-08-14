@@ -299,7 +299,7 @@
     {
       "patternId": "ai_attestation_and_model_governance",
       "title": "AI explanation output acceptance requires attested lotus-ai execution, model provenance, retention, and lineage evidence.",
-      "currentLedgerIssueNumbers": [],
+      "currentLedgerIssueNumbers": [1065],
       "relatedIssueNumbers": [268, 340, 459, 668, 782, 937, 977],
       "rfcSlices": ["slice-09", "slice-17", "slice-19"],
       "durableControls": [
@@ -320,7 +320,7 @@
           "ref": "REPOSITORY-ENGINEERING-CONTEXT.md#github-issue-learning-loop"
         }
       ],
-      "futureAgentRule": "Keep deterministic fallback/local AI output and static workflow-pack registration separate from live provider attestation; only signed, source-safe, retention-bound runtime execution can clear #340. When an AI runtime proof cites an actual runtime receipt, validate temporal provenance coherently: the proof artifact cannot be generated before the runtime receipt it cites, and aggregate readiness should preserve the runtime blocker or emit a source-safe provenance diagnostic instead of accepting internally inconsistent evidence. For signed AI attestation and workflow-pack registration source-contract maintainability refactors, keep source-authority assembly, producer contract checks, consumer contract checks, proof-check construction, evidence-class evaluation, unsupported-claim flags, validity derivation, and payload projection separately reviewable; preserve closed payload fields and prove source-contract evidence does not set runtime, provider, deployment, model-risk, Workbench, client-publication, supported-feature, or certification flags.",
+      "futureAgentRule": "Keep deterministic fallback/local AI output and static workflow-pack registration separate from live provider attestation; only signed, source-safe, retention-bound runtime execution can clear #340. When an AI runtime proof cites an actual runtime receipt, validate temporal provenance coherently: the proof artifact cannot be generated before the runtime receipt it cites, and aggregate readiness should preserve the runtime blocker or emit a source-safe provenance diagnostic instead of accepting internally inconsistent evidence. For signed AI attestation and workflow-pack registration source-contract maintainability refactors, keep source-authority assembly, producer contract checks, consumer contract checks, proof-check construction, evidence-class evaluation, unsupported-claim flags, validity derivation, and payload projection separately reviewable; preserve closed payload fields and prove source-contract evidence does not set runtime, provider, deployment, model-risk, Workbench, client-publication, supported-feature, or certification flags. For #1065-style AI workflow output unsafe-shape API contract proof refactors, keep the public test behavior stable while separating valid request setup, invalid claim/action/output payload variants, duplicate claim identity checks, timezone validation, and validation-error assertions; do not convert DTO validation cleanup into production provider, model-risk, API/OpenAPI, supported-feature, or final-RFC certification claims.",
       "nonClaimBoundaries": [
         "Idea does not implement lotus-ai provider execution, model approval, or provider retention authority.",
         "Local fallback output is diagnostic and cannot certify workflow output acceptance."
@@ -367,7 +367,7 @@
     {
       "patternId": "test_support_maintainability_quality_baseline",
       "title": "Quality-baseline hotspots need issue-backed decomposition without changing product claims.",
-      "currentLedgerIssueNumbers": [],
+      "currentLedgerIssueNumbers": [1065],
       "relatedIssueNumbers": [645, 950, 953, 956, 960, 964, 966, 1006, 1010, 1020, 1029, 1033, 1037, 1040, 1044, 1047, 1049, 1052, 1059, 1062],
       "rfcSlices": ["slice-15", "slice-19"],
       "durableControls": [
