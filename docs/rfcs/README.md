@@ -13,17 +13,22 @@ repositories: 165 closed and 37 open, with 25 `status/blocked`, 0
 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2
 `status/merged-to-main`, 0 `status/pr-open`, 8 `status/tracker`, and 0
 app-actionable blocked issues.
-The latest Idea implementation-backed closure is PR #1092 on main
-`a1273204c47168806e4f1b1b21d8c30660aa8970`; exact-main Main Releasability run
-`31796812445`, Push-on-main run `31796803970`, wiki publication `37352ca`,
-strict wiki parity, and branch cleanup passed. The current Idea source ledger
-tracks 133 RFC-0002 issues, 108 closed and 25 open, with `#681` in progress
-and `#1094`, `#1091`, `#1088`, `#1084`, and `#1082` as the latest QA-closed
-Idea maintainability issues. `#1094` is an issue-backed
-AI-governance test-support maintainability refactor and does not change product
-behavior or support posture. Workbench PR #698 is merged and exact-main
-validated, but fresh canonical QA is still required before closing AI/Advise
-QA-pending issues or promoting support.
+The latest Idea implementation-backed closure is `#1094`. PR #1095 split
+AI-governance verifier-field validation tests to main
+`0a8fbfac146c6fb99c70ddb109b33b9b88586f66`; exact-main Main Releasability
+`31802296872`, CodeQL `31802289873`, wiki publication `44060bc`, strict wiki
+parity, and branch cleanup passed. PR #1096 then synchronized closure-source
+truth to main `6724724da9a9a47ade85d8d7cfa09e7444f113f7`; Main Releasability
+`31803889231`, CodeQL `31803883100`, wiki publication `e145b08`, strict wiki
+parity, and branch cleanup passed. The current Idea source ledger tracks 133
+RFC-0002 issues, 108 closed and 25 open, with `#681` in progress and `#1094`,
+`#1091`, `#1088`, `#1084`, and `#1082` as the latest QA-closed Idea
+maintainability issues. `#1094` is an issue-backed AI-governance test-support
+maintainability refactor and does not change product behavior or support
+posture. Fresh canonical QA is still required before closing AI/Advise
+QA-pending issues or promoting support; the current mainline-source preflight
+is blocked by Core PR #948 and Workbench PR #701 not yet being clean exact
+`origin/main`.
 
 ## Active RFC Suite
 

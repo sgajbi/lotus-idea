@@ -82,8 +82,8 @@ supported feature.
 
 | Priority | Issue | Why it matters | Current owner boundary |
 | --- | --- | --- | --- |
-| 1 | Current Core dependency readiness | Core PR #948 is open and not mergeable at head `5f04e5f72d001c2ec05295fd89590391f9c90238`; current checks are not green. | Core-owned; do not modify from Idea. Ask the Core agent to get PR #948 green/merged before closure-grade canonical proof. |
-| 2 | Workbench/Gateway/Idea feedback-action proof | The latest completed canonical QA stopped before AI/Advise proof because the Workbench browser did not observe the expected Gateway-backed feedback confirmation. Workbench PR #698 is now merged and exact-main validated, but it is not a replacement for a fresh canonical QA artifact. | Workbench/Gateway/Idea runtime proof after Core is green. |
+| 1 | Current mainline-source provenance readiness | Fresh read-only preflight `rfc0002-mainline-preflight-20260814-212624.json` failed closed with 11/13 repositories aligned. Core PR #948 leaves `lotus-core` on `feat/ingestion-evidence-authority` at `5acbfae338918acb96195205f9e8aeee52273958` instead of `origin/main` `04939c7d360233e35746639c7f823f9f4563d9c9`; Workbench PR #701 leaves `lotus-workbench` on `feat/699-performance-evidence-assurance` at `6eba673f0abd049fc91654f7707e829dabc2fa10` instead of `origin/main` `9ff3161c917bf38c41aef4e8f9c42cb3d9c40b50`. | Core and Workbench owned; do not modify from Idea. Ask the owning agents to get PR #948 and PR #701 green/merged before closure-grade canonical proof. |
+| 2 | Workbench/Gateway/Idea feedback-action proof | The latest completed canonical QA stopped before AI/Advise proof because the Workbench browser did not observe the expected Gateway-backed feedback confirmation. Workbench PR #698 is merged and exact-main validated, but Workbench PR #701 is now the active non-mainline Workbench branch and neither PR replaces fresh canonical QA. | Workbench/Gateway/Idea runtime proof after Core and Workbench are clean exact main. |
 | 3 | Idea `#814`, `#685`, and `#686` canonical proof | Core `#882` is closed; these issues still require fresh governed PB_SG_GLOBAL_BAL_001 queue/detail/action evidence, not downstream hash fabrication or stale artifacts. | Canonical full-stack proof across Idea, Gateway, and Workbench. |
 | 4 | QA-pending merged-main issues | `sgajbi/lotus-ai#126`, `sgajbi/lotus-advise#481`, and `sgajbi/lotus-advise#485` need fresh issue-specific canonical evidence before closure. | Close only when the fresh run reaches and proves each path. |
 | 5 | Production identity/session issues | Blocks supported-feature promotion and production principal proof. | Not implemented in local/dev; tracked through Workbench `#436`, platform `#563`, Manage `#624`, and Idea `#687` / `#380`. |
@@ -91,7 +91,8 @@ supported feature.
 ```mermaid
 flowchart TD
     CoreClosed["Core #882/#885<br/>closed on 2026-08-09"]
-    Core948["Core PR #948<br/>open / checks not green"]
+    Core948["Core PR #948<br/>open / not exact main"]
+    Workbench701["Workbench PR #701<br/>open / not exact main"]
     Workbench698["Workbench PR #698<br/>merged and exact-main validated"]
     Feedback["Workbench/Gateway/Idea<br/>feedback-action proof"]
     CanonicalQA["Canonical front-office QA<br/>PB_SG_GLOBAL_BAL_001"]
@@ -104,6 +105,7 @@ flowchart TD
 
     CoreClosed --> IdeaProof
     Core948 --> CanonicalQA
+    Workbench701 --> CanonicalQA
     Workbench698 --> Feedback
     Feedback --> CanonicalQA
     IdeaProof --> CanonicalQA
@@ -158,8 +160,11 @@ Current dependency refresh: `lotus-workbench` PR #698 is merged to main
 run `31784470442` passed, wiki parity is `DiffCount 0`, and issue
 `sgajbi/lotus-workbench#697` carries post-merge evidence. That removes the
 known Workbench review-workspace implementation dependency, but it does not
-replace a fresh canonical QA run. Core PR #948 remains open and not mergeable,
-so closure-grade canonical proof remains pending.
+replace a fresh canonical QA run. A fresh 2026-08-14 read-only mainline-source
+preflight now fails before stack mutation because Core PR #948 and Workbench
+PR #701 leave `lotus-core` and `lotus-workbench` off exact `origin/main`.
+Closure-grade canonical proof remains pending until both repositories return to
+clean exact mainline state.
 
 ## Closure Decision Matrix
 
@@ -194,11 +199,12 @@ list.
 
 | Order | Work | Completion evidence |
 | --- | --- | --- |
-| 1 | Finish the current Workbench/Gateway/Idea feedback-action canonical QA blocker. | Issue-backed commits, focused tests, and fresh canonical QA progressing past the feedback step. |
-| 2 | Re-run canonical front-office QA after Core `#882` closure is consumed by the stack. | Machine-readable `live-validation-summary.json`, screenshot index, platform QA JSON/Markdown, and no failed browser assertions for queue/detail/action proof. |
-| 3 | Reconcile Idea `#814`, `#685`, and `#686` from fresh runtime artifacts only. | Queue/detail/action-control proof from the governed runtime, with stale artifacts rejected. |
-| 4 | Close QA-pending merged-main issues only when their specific proof appears in the fresh run. | Issue-loop `qa_passed_closed` comments retaining merged-main evidence. |
-| 5 | Continue Slice 18/19 hardening and Slice 20 closure only after blockers are resolved or explicitly classified. | Updated docs/wiki/context, exact-main CI evidence, wiki publication, and branch hygiene. |
+| 1 | Resolve current mainline-source blockers: Core PR #948 and Workbench PR #701 must merge or the repos must otherwise return to clean exact `origin/main`. | Passing `mainline-source-provenance` preflight for all 13 canonical repositories before any stack mutation. |
+| 2 | Finish the current Workbench/Gateway/Idea feedback-action canonical QA blocker. | Issue-backed commits, focused tests, and fresh canonical QA progressing past the feedback step. |
+| 3 | Re-run canonical front-office QA after Core `#882` closure is consumed by the stack and current Core/Workbench branches are mainline-clean. | Machine-readable `live-validation-summary.json`, screenshot index, platform QA JSON/Markdown, and no failed browser assertions for queue/detail/action proof. |
+| 4 | Reconcile Idea `#814`, `#685`, and `#686` from fresh runtime artifacts only. | Queue/detail/action-control proof from the governed runtime, with stale artifacts rejected. |
+| 5 | Close QA-pending merged-main issues only when their specific proof appears in the fresh run. | Issue-loop `qa_passed_closed` comments retaining merged-main evidence. |
+| 6 | Continue Slice 18/19 hardening and Slice 20 closure only after blockers are resolved or explicitly classified. | Updated docs/wiki/context, exact-main CI evidence, wiki publication, and branch hygiene. |
 
 ## Non-Claims
 

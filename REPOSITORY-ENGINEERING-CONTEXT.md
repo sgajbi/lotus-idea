@@ -147,6 +147,20 @@ implementation-proof readiness generator input hardening and PR #868
 synchronized the source-controlled merged-main closure truth. PR #868 merged
 at `560ddcfff9ba61f2db3008fabc62c31c20cfb425`; exact-main Main Releasability
 `31306932624` and CodeQL `31306929484` passed.
+Fresh 2026-08-14 read-only canonical mainline-source preflight evidence is
+recorded in
+`lotus-platform/output/front-office-qa/rfc0002-mainline-preflight-20260814-212624.json`.
+It failed closed before any stack/container/build/seed/validation mutation with
+11 of 13 repositories aligned. The remaining exact-main blockers are Core PR
+`sgajbi/lotus-core#948` (`feat/ingestion-evidence-authority` at
+`5acbfae338918acb96195205f9e8aeee52273958`, expected `origin/main`
+`04939c7d360233e35746639c7f823f9f4563d9c9`) and Workbench PR
+`sgajbi/lotus-workbench#701` (`feat/699-performance-evidence-assurance` at
+`6eba673f0abd049fc91654f7707e829dabc2fa10`, expected `origin/main`
+`9ff3161c917bf38c41aef4e8f9c42cb3d9c40b50`). This is a provenance blocker,
+not an Idea code defect. Do not run closure-grade canonical QA or close #685,
+#686, #814, `lotus-ai#126`, or the Advise QA-pending issues until Core and
+Workbench are clean exact main and the preflight passes.
 #681 returned to `status/in-progress` after PR #834 merged source truth for
 Core DPM candidate-source batch-fingerprint issue `sgajbi/lotus-core#882`
 after earlier Core readiness blockers `#836`, `#840`, `#856`, and `#873`
