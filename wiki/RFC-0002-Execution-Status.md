@@ -27,7 +27,7 @@ dependency map, and closure rules without relying on chat memory.
 | Open RFC-0002 issues | 38 |
 | Open blocked issues | 25 |
 | App-actionable blocked issues | 0 |
-| Active synchronization tracker | `sgajbi/lotus-idea#681`; `sgajbi/lotus-idea#1094` is also in progress for AI-governance test-support maintainability. The latest Idea implementation-backed closure is PR #1092 on main `a1273204c47168806e4f1b1b21d8c30660aa8970` after exact-main Main Releasability run `31796812445`, Push-on-main run `31796803970`, wiki publication `37352ca`, strict wiki parity, and branch hygiene passed. `sgajbi/lotus-idea#1091` is closed for the Slice 12/13/19 conversion-intent API handler boundary maintainability issue. The latest QA-closed Idea maintainability issues are `sgajbi/lotus-idea#1091`, `#1088`, `#1084`, `#1082`, and `#1080`. |
+| Active synchronization tracker | `sgajbi/lotus-idea#681`; `sgajbi/lotus-idea#1094` is fixed locally for AI-governance test-support maintainability and awaiting PR handoff. The latest Idea implementation-backed closure is PR #1092 on main `a1273204c47168806e4f1b1b21d8c30660aa8970` after exact-main Main Releasability run `31796812445`, Push-on-main run `31796803970`, wiki publication `37352ca`, strict wiki parity, and branch hygiene passed. `sgajbi/lotus-idea#1091` is closed for the Slice 12/13/19 conversion-intent API handler boundary maintainability issue. The latest QA-closed Idea maintainability issues are `sgajbi/lotus-idea#1091`, `#1088`, `#1084`, `#1082`, and `#1080`. |
 
 The zero app-actionable blocked count is important. It means an open issue may
 remain `status/blocked` only when the remaining authority is Core-owned,
@@ -39,7 +39,7 @@ blocked posture and implement or reclassify it.
 ```mermaid
 flowchart LR
     Issues["GitHub issue posture<br/>202 label-backed RFC-0002 issues"]
-    Open["164 closed and 38 open<br/>25 `status/blocked`, 0 `status/fixed-local`, 2 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 0 `status/pr-open`, 8 `status/tracker`"]
+    Open["164 closed and 38 open<br/>25 `status/blocked`, 1 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 0 `status/pr-open`, 8 `status/tracker`"]
     Blocked["Blocked classifier<br/>0 app-actionable blocked"]
     Work["Writable work<br/>only when evidence proves app-code ownership"]
     External["Core / protected / identity / provider / legal evidence"]
@@ -57,8 +57,8 @@ flowchart LR
 | Status label | Count | Interpretation |
 | --- | ---: | --- |
 | `status/blocked` | 25 | Protected, identity, provider, legal, publication, canonical QA, or certification evidence. |
-| `status/fixed-local` | 0 | No locally proven issue is waiting for a PR. |
-| `status/in-progress` | 2 | Continuous Slice 18 synchronization tracker `sgajbi/lotus-idea#681` plus AI-governance test-support maintainability issue `sgajbi/lotus-idea#1094`. |
+| `status/fixed-local` | 1 | Locally proven issue awaiting PR handoff: `sgajbi/lotus-idea#1094`. |
+| `status/in-progress` | 1 | Continuous Slice 18 synchronization tracker `sgajbi/lotus-idea#681`. |
 | `status/merged-main` | 1 | Merged-main issue awaiting QA closure evidence, currently `sgajbi/lotus-ai#126`. |
 | `status/merged-to-main` | 2 | Repository-local Advise merged-main alias awaiting QA closure evidence. |
 | `status/pr-open` | 0 | No RFC-0002 issue currently has an open PR. |
@@ -66,11 +66,11 @@ flowchart LR
 
 Latest synchronization evidence: Current GitHub issue posture has 202
 label-backed RFC-0002 issues, 164 closed and 38 open, with 25
-`status/blocked`, 0 `status/fixed-local`, 2 `status/in-progress`, 1
+`status/blocked`, 1 `status/fixed-local`, 1 `status/in-progress`, 1
 `status/merged-main`, 2 `status/merged-to-main`, 0 `status/pr-open`, 8
 `status/tracker`, and 0 app-actionable blocked issues. The Idea source ledger
-tracks 133 RFC-0002 issues: 107 closed and 26 open. `lotus-idea#1094` is in
-progress for test-support maintainability; `lotus-idea#1091` is
+tracks 133 RFC-0002 issues: 107 closed and 26 open. `lotus-idea#1094` is
+fixed locally for test-support maintainability and awaiting PR handoff; `lotus-idea#1091` is
 closed after PR #1092 reached exact main
 `a1273204c47168806e4f1b1b21d8c30660aa8970`; Main Releasability run
 `31796812445`, Push-on-main run `31796803970`, wiki publication `37352ca`,
