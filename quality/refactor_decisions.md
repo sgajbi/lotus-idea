@@ -6,6 +6,40 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-08-14: Platform Mesh Proof Fixture Writer Boundary
+
+Issue `#1068` applies the RFC-0002 Slice 14/17/19 maintainability lens to
+`tests/unit/platform_mesh_fixture.py::write_platform_mesh_fixture`. The current
+report-only quality baseline lists the fixture writer as the largest remaining
+function at `98` lines.
+
+Duplicate-check result: `platform_mesh_fixture` and
+`write_platform_mesh_fixture` found no existing GitHub issue for this exact
+fixture maintainability hotspot.
+
+The branch refactor preserves the public `write_platform_mesh_fixture(tmp_path)`
+test-support entry point while separating:
+
+1. platform mesh fixture path resolution,
+2. directory creation,
+3. JSON file writing,
+4. source-manifest payload construction,
+5. domain-product catalog payload construction,
+6. dependency-graph payload construction,
+7. maturity-matrix payload construction, and
+8. product classification / maturity-wave derivation.
+
+Validation is in progress on branch `issue/1068-platform-mesh-fixture-refactor`.
+The intended local proof is focused Ruff, MyPy, and pytest over the fixture
+consumers, plus maintainability, duplicate-implementation, quality-baseline,
+RFC-0002 execution-ledger, learning-pattern, live issue-state audit,
+documentation, and whitespace gates.
+
+No runtime code, API/OpenAPI behavior, persistence schema, migration,
+authentication/authorization, Core, Gateway, Workbench, platform mesh
+certification, supported-feature promotion, client-publication, production
+certification, or final RFC-0002 closure claim is in scope.
+
 ## 2026-08-14: AI Workflow Output Unsafe-Shape API Contract Proof Boundary
 
 Issue `#1065` applies the RFC-0002 Slice 09/17/19 maintainability lens to

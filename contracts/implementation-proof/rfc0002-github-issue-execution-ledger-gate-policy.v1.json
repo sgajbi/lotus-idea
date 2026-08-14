@@ -125,7 +125,8 @@
     1056,
     1059,
     1062,
-    1065
+    1065,
+    1068
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -414,6 +415,22 @@
       "runtime blocker-clearing posture",
       "supported-feature non-promotion",
       "No API/OpenAPI, persistence, migration, authentication, authorization, Core, Gateway, Workbench, runtime stack, broker, platform-mesh, supported-feature, data-product certification, or production certification change"
+    ],
+    "1068": [
+      "Keep #1068 open",
+      "platform mesh proof fixture writer",
+      "write_platform_mesh_fixture",
+      "quality/baseline_report.md",
+      "98 lines",
+      "source manifest JSON",
+      "catalog JSON",
+      "dependency graph JSON",
+      "maturity matrix JSON",
+      "test-support boundary only",
+      "No runtime topology change",
+      "No mesh-certification promotion",
+      "No supported-feature promotion",
+      "No claim that RFC-0002 Slice 14 or Slice 17 is complete"
     ]
   },
   "requiredClosedIssueEvidence": {
