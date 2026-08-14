@@ -138,7 +138,8 @@
     1091,
     1094,
     1098,
-    1101
+    1101,
+    1104
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -427,6 +428,20 @@
       "runtime blocker-clearing posture",
       "supported-feature non-promotion",
       "No API/OpenAPI, persistence, migration, authentication, authorization, Core, Gateway, Workbench, runtime stack, broker, platform-mesh, supported-feature, data-product certification, or production certification change"
+    ],
+    "1104": [
+      "Keep #1104 open",
+      "supported-feature gate implemented-feature fixture refactor",
+      "tests/unit/test_supported_features_gate.py::_valid_implemented_feature",
+      "95 lines",
+      "public supported-feature promotion gate behavior",
+      "supported-feature non-promotion semantics",
+      "named test-support helpers",
+      "No product behavior, API/OpenAPI contract, persistence, migration, runtime topology, authentication, authorization",
+      "Core, Gateway, Workbench",
+      "data-mesh certification",
+      "supported-feature promotion",
+      "final RFC-0002 closure"
     ]
   },
   "requiredClosedIssueEvidence": {
