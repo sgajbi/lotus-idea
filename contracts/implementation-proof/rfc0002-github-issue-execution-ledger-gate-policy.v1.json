@@ -136,7 +136,8 @@
     1084,
     1088,
     1091,
-    1094
+    1094,
+    1098
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -425,6 +426,17 @@
       "runtime blocker-clearing posture",
       "supported-feature non-promotion",
       "No API/OpenAPI, persistence, migration, authentication, authorization, Core, Gateway, Workbench, runtime stack, broker, platform-mesh, supported-feature, data-product certification, or production certification change"
+    ],
+    "1098": [
+      "Keep #1098 open",
+      "GHCR authentication retry hardening",
+      "Main Releasability run `31808187953`",
+      "main `61c5d879cf9cb18f656866adcc62984b10ee4df2`",
+      "Docker build, runtime smoke, Trivy image scan",
+      "dependency SBOM generation passed",
+      "bounded fail-closed retry around GHCR authentication only",
+      "persistent authentication/permission failures must still fail the release",
+      "No product behavior, API/OpenAPI contract, persistence, migration, runtime topology, authentication or authorization feature implementation, supported-feature promotion, client publication, production certification, or final RFC-0002 closure claim is in scope"
     ]
   },
   "requiredClosedIssueEvidence": {

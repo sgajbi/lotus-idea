@@ -283,7 +283,8 @@ container filesystem SBOM.
 
 Images are pushed by CI only. Main Releasability lower-cases the GHCR
 repository, tags the service image with `${GITHUB_SHA}`, scans and smoke-tests
-the same tag, pushes it only after the release gates pass, resolves
+the same tag, authenticates to GHCR with bounded fail-closed retry, pushes it
+only after the release gates pass, resolves
 `RELEASE_IMAGE_DIGEST_REF`, signs that digest with keyless Cosign, and creates
 GitHub provenance and SBOM attestations. Environments must promote the same
 `repository@sha256:<digest>` reference; deployment by mutable tag or
@@ -1218,9 +1219,9 @@ posture remains uncertified until release evidence exists.
 It also lists every blocked issue with the GitHub URL, actionability, blocker
 class, and remaining authority so the Core-vs-protected/external split is
 auditable without chat memory or one-off GitHub queries.
-Current live posture is 202 label-backed RFC-0002 issues across 13
-repositories: 165 closed and 37 open. The open split is 25 `status/blocked`,
-0 `status/fixed-local`, 0 `status/in-progress`, 1 `status/merged-main`, 2
+Current live posture is 203 label-backed RFC-0002 issues across 13
+repositories: 165 closed and 38 open. The open split is 25 `status/blocked`,
+0 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2
 `status/merged-to-main`, 1 `status/pr-open`, 8 `status/tracker`;
 `sgajbi/lotus-idea#1091`, `sgajbi/lotus-idea#1088`,
 `sgajbi/lotus-idea#1084`, `sgajbi/lotus-idea#1082`, and
@@ -1597,9 +1598,9 @@ supported feature.
 
 RFC-0002 execution is tracked through GitHub issue state plus the
 source-controlled implementation-proof ledgers. The current governed posture is
-202 label-backed RFC-0002 issues across 13 repositories: 165 closed and 37 open.
-The open set is 25 `status/blocked`, 0 `status/fixed-local`, 0 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 1 `status/pr-open`, 8 `status/tracker`;
-#1094, #1091, #1088, #1084, and #1082 are the latest closed Idea maintainability hardening issues, while #681 has PR #1097 open;
+203 label-backed RFC-0002 issues across 13 repositories: 165 closed and 38 open.
+The open set is 25 `status/blocked`, 0 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 1 `status/pr-open`, 8 `status/tracker`;
+#1098 is the active in-progress release-CI hardening issue; #1094, #1091, #1088, #1084, and #1082 are the latest closed Idea maintainability hardening issues, while #681 remains open after PR #1097 merged;
 blocked actionability remains 0 app-actionable blocked issues.
 Idea PR #838 synchronized PR #837 exact-main evidence to main
 `2c2d35667643ad5efae83924475574ab6c16be03`, passed Main Releasability
