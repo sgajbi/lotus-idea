@@ -139,7 +139,9 @@
     1094,
     1098,
     1101,
-    1104
+    1104,
+    1109,
+    1110
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
