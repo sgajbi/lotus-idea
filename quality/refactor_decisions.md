@@ -90,12 +90,18 @@ The refreshed quality baseline no longer lists the targeted `97` line proof.
 The largest remaining report-only function is
 `scripts/endpoint_certification_gate.py::main` at `96` lines.
 
+PR `#1075` rebase-merged to main SHA
+`f87f64a5aa84346cee7b35cea9239693e274712f`. Exact-main Main Releasability
+Gate run `31773677715` passed for that SHA, including PostgreSQL Runtime Proof.
+Branch cleanup completed after GitHub deleted the remote branch and the local
+branch was deleted with `git cherry` patch-equivalence proof for all three
+commits. Issue `#1074` is closed with `status/merged-main`.
+
 No production runtime behavior, persistence schema, migration, API/OpenAPI
 behavior, authentication/authorization, Core, Gateway, Workbench,
 supported-feature posture, data-product promotion, client-publication,
 production certification, wiki source, or final RFC-0002 closure claim is in
-scope. PR/main PostgreSQL Runtime Proof remains required before issue `#1074`
-can close.
+scope.
 
 ## 2026-08-14: Cross-Repo Posture Fixture Helper Boundary
 
