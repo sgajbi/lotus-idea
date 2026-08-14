@@ -37,9 +37,9 @@ supported yet.
 
 | Signal | Current state |
 | --- | --- |
-| GitHub issue posture | Current posture is 200 label-backed RFC-0002 issues across 13 repositories: 163 closed and 37 open. |
-| Open blocked work | 25 `status/blocked`, 0 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 0 `status/pr-open`, 8 `status/tracker`, and 0 app-actionable blocked issues. |
-| Active slice work | `sgajbi/lotus-idea#681` remains open as the Slice 18 synchronization tracker. No RFC-0002 issue is PR-open. The current Idea source ledger tracks 131 RFC-0002 issues: 106 closed and 25 open. |
+| GitHub issue posture | Current posture is 201 label-backed RFC-0002 issues across 13 repositories: 163 closed and 38 open. |
+| Open blocked work | 25 `status/blocked`, 1 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 0 `status/pr-open`, 8 `status/tracker`, and 0 app-actionable blocked issues. |
+| Active slice work | `sgajbi/lotus-idea#681` remains open as the Slice 18 synchronization tracker; `sgajbi/lotus-idea#1091` is fixed-local for conversion-intent API handler hardening. No RFC-0002 issue is PR-open. The current Idea source ledger tracks 132 RFC-0002 issues: 106 closed and 26 open. |
 | Latest Idea closure truth | `lotus-idea#1088` is closed after PR #1089 merged outbox readiness summary projection hardening to main `06e4d2fdeda6f884186345f574dbb46ffe880502`; Main Releasability run `31791018583` passed. Wiki publication `0d9937d`, strict wiki parity, and branch hygiene passed. No supported feature or production/runtime claim is promoted. |
 | Latest canonical QA | Failed before AI/Advise proof on Workbench browser feedback-action confirmation. Workbench PR #698 is now merged and exact-main validated, but fresh canonical QA remains required. |
 | Next proof path | Get Core PR #948 green/merged if it remains required for the current canonical stack, then complete fresh Gateway-backed Workbench queue/detail/action proof, rerun canonical QA, and close only issues with issue-specific proof. |
