@@ -352,13 +352,101 @@ def _validate_gateway_publication_posture(endpoint: dict[str, Any]) -> list[str]
     return errors
 
 
-def main() -> int:
+def _load_endpoint_certification_payload() -> tuple[dict[str, Any] | None, list[str]]:
     if not LEDGER_PATH.exists():
-        print(f"Missing {LEDGER_PATH}")
-        return 1
+        return None, [f"Missing {LEDGER_PATH}"]
 
-    payload = json.loads(LEDGER_PATH.read_text(encoding="utf-8"))
+    return json.loads(LEDGER_PATH.read_text(encoding="utf-8")), []
+
+
+def _openapi_operations_from_spec(openapi_spec: dict[str, Any]) -> set[tuple[str, str]]:
+    return {
+        (method, path)
+        for path, path_item in openapi_spec.get("paths", {}).items()
+        if isinstance(path_item, dict)
+        for method in (method.upper() for method in path_item)
+        if method in {"GET", "POST", "PUT", "PATCH", "DELETE"}
+    }
+
+
+def _validate_endpoint_entry(
+    *,
+    index: int,
+    endpoint: Any,
+    openapi_spec: dict[str, Any],
+    ledger_operations: set[tuple[str, str]],
+) -> list[str]:
     errors: list[str] = []
+    if not isinstance(endpoint, dict):
+        return [f"endpoints[{index}] must be an object"]
+
+    missing = [field for field in REQUIRED_FIELDS if field not in endpoint]
+    if missing:
+        return [f"endpoints[{index}] missing fields: {', '.join(missing)}"]
+
+    operation = (str(endpoint["method"]).upper(), str(endpoint["path"]))
+    ledger_operations.add(operation)
+
+    if endpoint["certification_status"] not in ALLOWED_CERTIFICATION_STATUSES:
+        errors.append(
+            f"{operation}: invalid certification_status {endpoint['certification_status']!r}"
+        )
+
+    for field in ("purpose", "when_to_use", "when_not_to_use", "owner", "openapi_evidence"):
+        if not str(endpoint.get(field, "")).strip():
+            errors.append(f"{operation}: {field} is required")
+
+    for field in ("request_examples", "response_examples"):
+        errors.extend(
+            _parse_json_examples(
+                operation=operation,
+                field=field,
+                examples=endpoint.get(field),
+            )
+        )
+
+    for field in ("error_examples", "test_evidence"):
+        value = endpoint.get(field)
+        if not isinstance(value, list) or not value:
+            errors.append(f"{operation}: {field} must be a non-empty list")
+
+    for reference in endpoint.get("test_evidence", []):
+        if isinstance(reference, str):
+            errors.extend(_validate_test_reference(operation, reference))
+
+    if (
+        operation in BASELINE_OPERATIONS
+        and endpoint["certification_status"] != "baseline_certified"
+    ):
+        errors.append(f"{operation}: baseline endpoint must use baseline_certified status")
+
+    errors.extend(_validate_implemented_endpoint_posture(endpoint, openapi_spec))
+    errors.extend(validate_named_success_contracts(endpoint, openapi_spec))
+    return errors
+
+
+def _validate_ledger_openapi_coverage(
+    *,
+    openapi_operations: set[tuple[str, str]],
+    ledger_operations: set[tuple[str, str]],
+) -> list[str]:
+    errors: list[str] = []
+    missing_from_ledger = sorted(openapi_operations - ledger_operations)
+    stale_in_ledger = sorted(ledger_operations - openapi_operations)
+
+    for method, path in missing_from_ledger:
+        errors.append(f"{method} {path}: missing endpoint certification ledger entry")
+    for method, path in stale_in_ledger:
+        errors.append(f"{method} {path}: stale endpoint certification ledger entry")
+
+    return errors
+
+
+def main() -> int:
+    payload, errors = _load_endpoint_certification_payload()
+    if payload is None:
+        print("\n".join(errors))
+        return 1
 
     if (
         payload.get("policy")
@@ -372,76 +460,24 @@ def main() -> int:
         entries = []
 
     openapi_spec = _openapi_schema_from_app()
-    openapi_operations = {
-        (method, path)
-        for path, path_item in openapi_spec.get("paths", {}).items()
-        if isinstance(path_item, dict)
-        for method in (method.upper() for method in path_item)
-        if method in {"GET", "POST", "PUT", "PATCH", "DELETE"}
-    }
+    openapi_operations = _openapi_operations_from_spec(openapi_spec)
     ledger_operations: set[tuple[str, str]] = set()
     for index, endpoint in enumerate(entries):
-        if not isinstance(endpoint, dict):
-            errors.append(f"endpoints[{index}] must be an object")
-            continue
-
-        missing = [field for field in REQUIRED_FIELDS if field not in endpoint]
-        if missing:
-            errors.append(f"endpoints[{index}] missing fields: {', '.join(missing)}")
-            continue
-
-        operation = (str(endpoint["method"]).upper(), str(endpoint["path"]))
-        ledger_operations.add(operation)
-
-        if endpoint["certification_status"] not in ALLOWED_CERTIFICATION_STATUSES:
-            errors.append(
-                f"{operation}: invalid certification_status {endpoint['certification_status']!r}"
-            )
-
-        for field in ("purpose", "when_to_use", "when_not_to_use", "owner", "openapi_evidence"):
-            if not str(endpoint.get(field, "")).strip():
-                errors.append(f"{operation}: {field} is required")
-
         errors.extend(
-            _parse_json_examples(
-                operation=operation,
-                field="request_examples",
-                examples=endpoint.get("request_examples"),
+            _validate_endpoint_entry(
+                index=index,
+                endpoint=endpoint,
+                openapi_spec=openapi_spec,
+                ledger_operations=ledger_operations,
             )
         )
-        errors.extend(
-            _parse_json_examples(
-                operation=operation,
-                field="response_examples",
-                examples=endpoint.get("response_examples"),
-            )
+
+    errors.extend(
+        _validate_ledger_openapi_coverage(
+            openapi_operations=openapi_operations,
+            ledger_operations=ledger_operations,
         )
-        for field in ("error_examples", "test_evidence"):
-            value = endpoint.get(field)
-            if not isinstance(value, list) or not value:
-                errors.append(f"{operation}: {field} must be a non-empty list")
-
-        for reference in endpoint.get("test_evidence", []):
-            if isinstance(reference, str):
-                errors.extend(_validate_test_reference(operation, reference))
-
-        if (
-            operation in BASELINE_OPERATIONS
-            and endpoint["certification_status"] != "baseline_certified"
-        ):
-            errors.append(f"{operation}: baseline endpoint must use baseline_certified status")
-
-        errors.extend(_validate_implemented_endpoint_posture(endpoint, openapi_spec))
-        errors.extend(validate_named_success_contracts(endpoint, openapi_spec))
-
-    missing_from_ledger = sorted(openapi_operations - ledger_operations)
-    stale_in_ledger = sorted(ledger_operations - openapi_operations)
-
-    for method, path in missing_from_ledger:
-        errors.append(f"{method} {path}: missing endpoint certification ledger entry")
-    for method, path in stale_in_ledger:
-        errors.append(f"{method} {path}: stale endpoint certification ledger entry")
-
+    )
     if errors:
         print("\n".join(errors))
         return 1
