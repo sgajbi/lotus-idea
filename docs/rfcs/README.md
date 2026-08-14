@@ -9,8 +9,8 @@ For the current live GitHub execution posture, canonical QA status, dependency
 map, and closure decision rules, use
 [wiki/RFC-0002-Execution-Status.md](../../wiki/RFC-0002-Execution-Status.md).
 At the latest refresh, RFC-0002 has 204 label-backed RFC-0002 issues across 13
-repositories: 166 closed and 38 open, with 25 `status/blocked`, 0
-`status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2
+repositories: 166 closed and 38 open, with 25 `status/blocked`, 1
+`status/fixed-local`, 0 `status/in-progress`, 1 `status/merged-main`, 2
 `status/merged-to-main`, 1 `status/pr-open`, 8 `status/tracker`, and 0
 app-actionable blocked issues.
 The latest Idea implementation-backed closure is `#1098`. PR #1099 hardened
@@ -23,7 +23,7 @@ exact-main Main Releasability `31802296872`, CodeQL `31802289873`, wiki
 publication `44060bc`, strict wiki parity, and branch cleanup passed. The
 current Idea source ledger tracks 135
 RFC-0002 issues, 109 closed and 26 open, with `#681` open as the Slice 18
-synchronization tracker, `#1101` open as the Slice 09/17/19 AI workflow
+synchronization tracker, `#1101` fixed local as the Slice 09/17/19 AI workflow
 evaluator hardening issue, `#1098` closed after release-CI hardening, and
 `#1094`, `#1091`, `#1088`, and `#1084` as the latest QA-closed Idea
 maintainability issues. `#1094` is an issue-backed AI-governance test-support
