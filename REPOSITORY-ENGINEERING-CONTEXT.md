@@ -123,6 +123,10 @@ Advise, Gateway, Workbench, and AI dependency issues, Current Idea ledger
 posture has 130 tracked RFC-0002 issues, 105 closed and 25 open; #681 is the
 Slice 18 in-progress issue, while #1084, #1082, and #1080 are the latest
 QA-closed Idea maintainability hardening issues after exact-main validation.
+PR #1086 then synchronized source/docs/wiki posture to Idea main
+`a8857f62782c4cd9105bc22790332b9ec2d43983`; Main Releasability
+`31783746700`, CodeQL `31783742917`, wiki publication `9256a45`, strict wiki
+parity, and branch hygiene passed.
 The current live cross-repo RFC-0002 posture is 199 label-backed RFC-0002
 issues across 13 repositories: 162 closed and 37 open. The open set is 25
 `status/blocked`, 0 `status/fixed-local`, 1 `status/in-progress`, 1
@@ -400,6 +404,10 @@ open; `sgajbi/lotus-idea#681` is the in-progress Slice 18 tracker. The latest
 Idea closures are `sgajbi/lotus-idea#1084`, `sgajbi/lotus-idea#1082`, and
 `sgajbi/lotus-idea#1080`, each closed after exact-main validation and branch
 cleanup, without changing product behavior or supported-feature posture.
+PR #1086 is the latest source-truth sync on main
+`a8857f62782c4cd9105bc22790332b9ec2d43983`; exact-main Main Releasability
+`31783746700`, CodeQL `31783742917`, wiki publication `9256a45`, strict wiki
+parity, and branch hygiene passed.
 Current governed cross-repo RFC-0002 posture is 199 label-backed RFC-0002
 issues across 13 repositories: 162 closed and 37 open.
 The open split is 25 `status/blocked`, 0 `status/fixed-local`, 1 `status/in-progress`, 1

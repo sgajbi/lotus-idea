@@ -27,7 +27,7 @@ dependency map, and closure rules without relying on chat memory.
 | Open RFC-0002 issues | 37 |
 | Open blocked issues | 25 |
 | App-actionable blocked issues | 0 |
-| Active synchronization tracker | `sgajbi/lotus-idea#681`; latest Idea closure truth is `sgajbi/lotus-idea#1084` after PR #1085 merged to main `03b12bb50c8c2bbaaf6d5396ea614cc13e80f4cd` and exact-main Main Releasability run `31781165482` passed. |
+| Active synchronization tracker | `sgajbi/lotus-idea#681`; latest Idea source-truth synchronization is PR #1086 on main `a8857f62782c4cd9105bc22790332b9ec2d43983` after exact-main Main Releasability run `31783746700`, CodeQL run `31783742917`, wiki publication `9256a45`, strict wiki parity, and branch hygiene passed. The latest QA-closed Idea maintainability issues remain `sgajbi/lotus-idea#1084`, `#1082`, and `#1080`. |
 
 The zero app-actionable blocked count is important. It means an open issue may
 remain `status/blocked` only when the remaining authority is Core-owned,
@@ -72,7 +72,10 @@ label-backed RFC-0002 issues, 162 closed and 37 open, with 25
 tracks 130 RFC-0002 issues: 105 closed and 25 open. `lotus-idea#1084` is
 closed after PR #1085 reached exact main
 `03b12bb50c8c2bbaaf6d5396ea614cc13e80f4cd`; Main Releasability run
-`31781165482` passed and branch cleanup completed. This is source-truth
+`31781165482` passed and branch cleanup completed. PR #1086 then synchronized
+that posture to Idea main `a8857f62782c4cd9105bc22790332b9ec2d43983`; Main
+Releasability `31783746700`, CodeQL `31783742917`, wiki publication
+`9256a45`, strict wiki parity, and branch hygiene passed. This is source-truth
 synchronization only; no closure in this section promotes a Lotus Idea
 supported feature.
 
@@ -80,14 +83,17 @@ supported feature.
 
 | Priority | Issue | Why it matters | Current owner boundary |
 | --- | --- | --- | --- |
-| 1 | Workbench/Gateway/Idea feedback-action proof | The latest canonical QA stopped before AI/Advise proof because the Workbench browser did not observe the expected Gateway-backed feedback confirmation. | Workbench/Gateway/Idea investigation; not identity work. |
-| 2 | Idea `#814`, `#685`, and `#686` canonical proof | Core `#882` is closed; these issues now require fresh governed PB_SG_GLOBAL_BAL_001 queue/detail/action evidence, not downstream hash fabrication or stale artifacts. | Canonical full-stack proof across Idea, Gateway, and Workbench. |
-| 3 | QA-pending merged-main issues | `sgajbi/lotus-ai#126`, `sgajbi/lotus-advise#481`, and `sgajbi/lotus-advise#485` need fresh issue-specific canonical evidence before closure. | Close only when the fresh run reaches and proves each path. |
-| 4 | Production identity/session issues | Blocks supported-feature promotion and production principal proof. | Not implemented in local/dev; tracked through Workbench `#436`, platform `#563`, Manage `#624`, and Idea `#687` / `#380`. |
+| 1 | Current Core dependency readiness | Core PR #948 is open and not mergeable at head `5f04e5f72d001c2ec05295fd89590391f9c90238`; current checks are not green. | Core-owned; do not modify from Idea. Ask the Core agent to get PR #948 green/merged before closure-grade canonical proof. |
+| 2 | Workbench/Gateway/Idea feedback-action proof | The latest completed canonical QA stopped before AI/Advise proof because the Workbench browser did not observe the expected Gateway-backed feedback confirmation. Workbench PR #698 is now merged and exact-main validated, but it is not a replacement for a fresh canonical QA artifact. | Workbench/Gateway/Idea runtime proof after Core is green. |
+| 3 | Idea `#814`, `#685`, and `#686` canonical proof | Core `#882` is closed; these issues still require fresh governed PB_SG_GLOBAL_BAL_001 queue/detail/action evidence, not downstream hash fabrication or stale artifacts. | Canonical full-stack proof across Idea, Gateway, and Workbench. |
+| 4 | QA-pending merged-main issues | `sgajbi/lotus-ai#126`, `sgajbi/lotus-advise#481`, and `sgajbi/lotus-advise#485` need fresh issue-specific canonical evidence before closure. | Close only when the fresh run reaches and proves each path. |
+| 5 | Production identity/session issues | Blocks supported-feature promotion and production principal proof. | Not implemented in local/dev; tracked through Workbench `#436`, platform `#563`, Manage `#624`, and Idea `#687` / `#380`. |
 
 ```mermaid
 flowchart TD
     CoreClosed["Core #882/#885<br/>closed on 2026-08-09"]
+    Core948["Core PR #948<br/>open / checks not green"]
+    Workbench698["Workbench PR #698<br/>merged and exact-main validated"]
     Feedback["Workbench/Gateway/Idea<br/>feedback-action proof"]
     CanonicalQA["Canonical front-office QA<br/>PB_SG_GLOBAL_BAL_001"]
     IdeaProof["Idea #685/#686/#814<br/>queue, detail, actions, seed proof"]
@@ -98,6 +104,8 @@ flowchart TD
     Protected["Protected/runtime/provider/legal evidence"]
 
     CoreClosed --> IdeaProof
+    Core948 --> CanonicalQA
+    Workbench698 --> Feedback
     Feedback --> CanonicalQA
     IdeaProof --> CanonicalQA
     CanonicalQA --> QAPending
@@ -145,6 +153,14 @@ proposal proof paths. Therefore it cannot close:
 | `sgajbi/lotus-ai#126` | Fresh canonical QA must prove the advisory copilot `PROPOSAL_EXPLANATION` path reaches `REVIEW_REQUIRED` or later reviewed posture. |
 | `sgajbi/lotus-advise#481` | Fresh canonical QA must prove Advise startup remains valid in the full front-office runtime. |
 | `sgajbi/lotus-advise#485` | Fresh canonical QA must prove the reviewed narrative report-package request path progresses through Workbench/Gateway. |
+
+Current dependency refresh: `lotus-workbench` PR #698 is merged to main
+`9ff3161c917bf38c41aef4e8f9c42cb3d9c40b50`, exact-main Main Releasability
+run `31784470442` passed, wiki parity is `DiffCount 0`, and issue
+`sgajbi/lotus-workbench#697` carries post-merge evidence. That removes the
+known Workbench review-workspace implementation dependency, but it does not
+replace a fresh canonical QA run. Core PR #948 remains open and not mergeable,
+so closure-grade canonical proof remains pending.
 
 ## Closure Decision Matrix
 
