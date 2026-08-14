@@ -37,10 +37,10 @@ supported yet.
 
 | Signal | Current state |
 | --- | --- |
-| GitHub issue posture | Current posture is 189 label-backed RFC-0002 issues: 152 closed and 37 open. |
+| GitHub issue posture | Current posture is 199 label-backed RFC-0002 issues across 13 repositories: 162 closed and 37 open. |
 | Open blocked work | 25 `status/blocked`, 0 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 0 `status/pr-open`, 8 `status/tracker`, and 0 app-actionable blocked issues. |
-| Active slice work | `sgajbi/lotus-idea#681` remains open as the Slice 18 synchronization tracker; `sgajbi/lotus-idea#1059` is closed after the Slice 15/19 outbox proof consumer refactor reached exact main and QA; `sgajbi/lotus-idea#1056` is closed after the Slice 12 downstream submission API orchestration refactor reached exact main and QA; `sgajbi/lotus-idea#1044`, `#1037`, `#1040`, `#1047`, `#1049`, and `#1052` are closed after QA-backed Slice 19 maintainability hardening; `sgajbi/lotus-idea#1014`, `#1016`, `#1020`, `#1024`, `#1027`, `#1029`, and `#1033` are closed in source truth after QA-backed maintainability hardening. |
-| Latest Idea closure truth | `lotus-idea#1052` is closed and ledgered after PR #1053 QA-backed Slice 13/19 report evidence-pack proof-step hardening; no supported feature or production/runtime claim is promoted. |
+| Active slice work | `sgajbi/lotus-idea#681` remains open as the Slice 18 synchronization tracker. The current Idea source ledger tracks 130 RFC-0002 issues: 105 closed and 25 open after #1084 closure truth synchronized. |
+| Latest Idea closure truth | `lotus-idea#1084` is closed after PR #1085 merged missing-benchmark signal evaluation domain-boundary hardening to main `03b12bb50c8c2bbaaf6d5396ea614cc13e80f4cd`; Main Releasability run `31781165482` passed. No supported feature or production/runtime claim is promoted. |
 | Latest canonical QA | Failed before AI/Advise proof on Workbench browser feedback-action confirmation. |
 | Next proof path | Complete fresh Gateway-backed Workbench queue/detail/action proof, then rerun canonical QA and close only issues with issue-specific proof. |
 
