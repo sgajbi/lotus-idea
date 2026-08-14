@@ -123,7 +123,8 @@
     1049,
     1052,
     1056,
-    1059
+    1059,
+    1062
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -412,6 +413,25 @@
       "runtime blocker-clearing posture",
       "supported-feature non-promotion",
       "No API/OpenAPI, persistence, migration, authentication, authorization, Core, Gateway, Workbench, runtime stack, broker, platform-mesh, supported-feature, data-product certification, or production certification change"
+    ],
+    "1062": [
+      "Keep #1062 open",
+      "source observability contract gate validation-boundary refactor",
+      "raw logging",
+      "low-level log_event",
+      "source-authority hash fallback",
+      "source-adapter freshness-inference",
+      "Ruff check/format-check",
+      "MyPy",
+      "focused source-observability contract tests",
+      "make source-observability-contract-gate",
+      "make maintainability-gate",
+      "make duplicate-implementation-gate",
+      "make quality-baseline",
+      "make documentation-contract-gate",
+      "does not change runtime behavior, API/OpenAPI contracts, persistence, migrations, authentication, authorization, Core, Gateway, Workbench",
+      "supported-feature promotion",
+      "final RFC-0002 closure"
     ]
   },
   "requiredClosedIssueEvidence": {

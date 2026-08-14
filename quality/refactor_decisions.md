@@ -6,6 +6,51 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-08-14: Source Observability Contract Gate Validation Boundary
+
+Issue `#1062` applies the RFC-0002 Slice 15/19 maintainability lens to
+`scripts/source_observability_contract_gate.py::_validate_file`. The current
+report-only quality baseline listed the function as a `95` line governance-gate
+hotspot after the prior proof-consumer and issue-ledger hardening work had
+removed larger source-owned application hotspots from the top production list.
+
+Duplicate-check result: `source_observability_contract_gate`,
+`_validate_file`, `source observability contract gate maintainability`, and
+`source observability logging freshness hash authority maintainability` found
+the issue-discovery ledger `#225`, open SLO issue `#345`, and closed adjacent
+governance issues such as `#920` and `#296`, but no focused owner for this
+source-observability gate validation boundary.
+
+The branch refactor keeps `_validate_file(...)` as the stable per-file checker
+while extracting named AST validators for:
+
+1. direct logging import prohibition,
+2. low-level observability-helper import prohibition,
+3. raw logging/`print`/`log_event` call prohibition,
+4. source-authority hash fallback prohibition, and
+5. source-adapter freshness inference from readiness/supportability/data-quality
+   posture.
+
+Focused local validation passed:
+
+1. `python -m ruff check scripts/source_observability_contract_gate.py tests/unit/test_source_observability_contract_gate.py`,
+2. `python -m ruff format --check scripts/source_observability_contract_gate.py tests/unit/test_source_observability_contract_gate.py`,
+3. `python -m mypy scripts/source_observability_contract_gate.py tests/unit/test_source_observability_contract_gate.py`,
+4. `python -m pytest tests/unit/test_source_observability_contract_gate.py -q`
+   (`10` passed),
+5. `make source-observability-contract-gate`,
+6. `make maintainability-gate`,
+7. `make duplicate-implementation-gate` (`0` duplicate clusters across `3,622`
+   source/script functions), and
+8. `make quality-baseline`.
+
+No API/OpenAPI, persistence schema, migration, runtime topology,
+authentication/authorization, Core, Gateway, Workbench, source-authority
+methodology, supported-feature promotion, data-product certification,
+client-publication, or final RFC-0002 closure claim is made by this internal
+governance-gate maintainability slice. No repo-authored wiki source change is
+expected unless PR review requests broader publication evidence.
+
 ## 2026-08-14: Conversion Outcome Persistence Recording Boundary
 
 Issue `#1044` applies the RFC-0002 Slice 12/13/19 maintainability lens to
