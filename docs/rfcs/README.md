@@ -27,9 +27,10 @@ maintainability issues. `#1094` is an issue-backed AI-governance test-support
 maintainability refactor and does not change product behavior or support
 posture. Fresh canonical QA is still required before closing AI/Advise
 QA-pending issues or promoting support; the current branch-local
-mainline-source preflight is blocked by Core PR #948, the issue-backed
-Gateway #549 branch, and this Idea PR branch not yet being clean exact
-`origin/main`. Workbench PR #701 has merged and is exact main.
+mainline-source preflight is blocked by Core PR #948, this Idea PR branch, and
+an in-flight dirty Workbench `fix/702-performance-period-assurance` checkout
+not yet being clean exact `origin/main`. Gateway PR #550 has merged and
+`lotus-gateway` is now exact main.
 
 ## Active RFC Suite
 

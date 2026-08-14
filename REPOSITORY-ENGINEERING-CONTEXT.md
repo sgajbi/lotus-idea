@@ -149,23 +149,22 @@ at `560ddcfff9ba61f2db3008fabc62c31c20cfb425`; exact-main Main Releasability
 `31306932624` and CodeQL `31306929484` passed.
 Fresh 2026-08-14 read-only branch-local canonical mainline-source preflight
 evidence is recorded in
-`lotus-platform/output/front-office-qa/rfc0002-mainline-preflight-20260814-213841.json`.
+`lotus-platform/output/front-office-qa/rfc0002-mainline-preflight-20260814-215840.json`.
 It failed closed before any stack/container/build/seed/validation mutation with
-10 of 13 repositories aligned. Workbench PR `sgajbi/lotus-workbench#701` has
-merged and the local Workbench checkout is exact `origin/main`
-`9aaaa9343baa278a2f6b2cacb0a9c2431ba5c023`. The remaining exact-main blockers
+10 of 13 repositories aligned. Gateway PR `sgajbi/lotus-gateway#550` has
+merged and the local Gateway checkout is exact `origin/main`
+`192c74279e48bdeeca6514110a0210999aaac996`. The remaining exact-main blockers
 are Core PR `sgajbi/lotus-core#948` (`feat/ingestion-evidence-authority` at
-`5acbfae338918acb96195205f9e8aeee52273958`, expected `origin/main`
-`04939c7d360233e35746639c7f823f9f4563d9c9`), the issue-backed Gateway #549
-branch (`fix/549-performance-evidence-window` at
-`4a080495122f20b9823cc487a1866db0da09112c`, expected `origin/main`
-`621a1b92a786e689a5ebf4d32fc1d27bbe2a94e7`), and this Idea PR branch
+`ea09e901d8e88751f13965f74c26bd6bb68f1170`, expected `origin/main`
+`04939c7d360233e35746639c7f823f9f4563d9c9`), this Idea PR branch
 (`issue/681-current-preflight-sync` at
-`5b4ff54e3adf58c2824194769b091bd4d050cbcd`, expected `origin/main`
-`6724724da9a9a47ade85d8d7cfa09e7444f113f7`). This is a provenance blocker,
+`0654b24d52c2371daad1f9b61cb7c0689f32c57c`, expected `origin/main`
+`6724724da9a9a47ade85d8d7cfa09e7444f113f7`), and the in-flight dirty
+Workbench branch `fix/702-performance-period-assurance` at main head
+`9aaaa9343baa278a2f6b2cacb0a9c2431ba5c023`. This is a provenance blocker,
 not a new Idea code defect. Do not run closure-grade canonical QA or close
 #685, #686, #814, `lotus-ai#126`, or the Advise QA-pending issues until Core,
-Gateway, Workbench, and Idea are clean exact main and the preflight passes.
+Idea, and Workbench are clean exact main and the preflight passes.
 #681 returned to `status/in-progress` after PR #834 merged source truth for
 Core DPM candidate-source batch-fingerprint issue `sgajbi/lotus-core#882`
 after earlier Core readiness blockers `#836`, `#840`, `#856`, and `#873`
