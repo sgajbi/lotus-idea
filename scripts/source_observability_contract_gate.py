@@ -88,84 +88,16 @@ def _validate_file(path: Path, root: Path) -> list[str]:
     errors: list[str] = []
 
     for node in ast.walk(tree):
-        if isinstance(node, ast.Import):
-            for alias in node.names:
-                if alias.name == "logging" and not allowed_logging_module:
-                    errors.append(
-                        f"{relative_path}:{node.lineno}: direct logging imports are only "
-                        "allowed in src/app/observability/logging.py"
-                    )
-                if alias.name in prohibited_source_hash_modules:
-                    errors.append(
-                        f"{relative_path}:{node.lineno}: {alias.name} import is prohibited "
-                        "because upstream source-ref hashes must be source-authored"
-                    )
-
-        if isinstance(node, ast.ImportFrom):
-            module = node.module or ""
-            imported_names = {alias.name for alias in node.names}
-            if module == "logging" and not allowed_logging_module:
-                errors.append(
-                    f"{relative_path}:{node.lineno}: direct logging imports are only "
-                    "allowed in src/app/observability/logging.py"
-                )
-            if (
-                module in {"app.observability", "app.observability.logging"}
-                and LOW_LEVEL_OBSERVABILITY_HELPERS.intersection(imported_names)
-                and not allowed_logging_module
-            ):
-                errors.append(
-                    f"{relative_path}:{node.lineno}: import bounded operation-event helpers "
-                    "instead of low-level log_event"
-                )
-            if module in prohibited_source_hash_modules:
-                errors.append(
-                    f"{relative_path}:{node.lineno}: {module} import is prohibited because "
-                    "upstream source-ref hashes must be source-authored"
-                )
-
-        if isinstance(node, ast.Call):
-            current_call_name = call_name(node.func)
-            if current_call_name == "print":
-                errors.append(
-                    f"{relative_path}:{node.lineno}: print() is prohibited in application "
-                    "source; use bounded structured logging"
-                )
-            if current_call_name == "log_event" and not allowed_logging_module:
-                errors.append(
-                    f"{relative_path}:{node.lineno}: call emit_operation_event or "
-                    "emit_foundation_operation_event instead of log_event"
-                )
-            if (
-                current_call_name
-                and current_call_name.startswith("logging.")
-                and current_call_name.removeprefix("logging.") in PROHIBITED_LOGGING_ATTRIBUTES
-                and not allowed_logging_module
-            ):
-                errors.append(
-                    f"{relative_path}:{node.lineno}: direct logging calls are only allowed in "
-                    "src/app/observability/logging.py"
-                )
-            if (
-                current_call_name in {"hashlib.sha256", "json.dumps"}
-                and prohibited_source_hash_modules
-            ):
-                errors.append(
-                    f"{relative_path}:{node.lineno}: {current_call_name} fallback is prohibited "
-                    "because upstream source-ref hashes must be source-authored"
-                )
-
-        if isinstance(node, ast.If) and _is_source_adapter(relative):
-            test_source = ast.get_source_segment(source_text, node.test) or ""
-            normalized_test = test_source.replace(" ", "").lower()
-            if _contains_current_freshness_return(node.body) and any(
-                term in normalized_test for term in FRESHNESS_INFERENCE_TEST_TERMS
-            ):
-                errors.append(
-                    f"{relative_path}:{node.lineno}: source adapters must not infer current "
-                    "freshness from readiness, supportability, coverage, health-state, or "
-                    "data-quality posture"
-                )
+        errors.extend(
+            _validate_ast_node(
+                node,
+                allowed_logging_module=allowed_logging_module,
+                prohibited_source_hash_modules=prohibited_source_hash_modules,
+                relative=relative,
+                relative_path=relative_path,
+                source_text=source_text,
+            )
+        )
 
     for forbidden_text, reason in FORBIDDEN_SOURCE_AUTHORITY_TEXT.get(relative, {}).items():
         line_number = _line_number(source_text, forbidden_text)
@@ -173,6 +105,154 @@ def _validate_file(path: Path, root: Path) -> list[str]:
             errors.append(f"{relative_path}:{line_number}: {reason}")
 
     return errors
+
+
+def _validate_ast_node(
+    node: ast.AST,
+    *,
+    allowed_logging_module: bool,
+    prohibited_source_hash_modules: set[str],
+    relative: Path,
+    relative_path: str,
+    source_text: str,
+) -> list[str]:
+    if isinstance(node, ast.Import):
+        return _validate_import_node(
+            node,
+            allowed_logging_module=allowed_logging_module,
+            prohibited_source_hash_modules=prohibited_source_hash_modules,
+            relative_path=relative_path,
+        )
+    if isinstance(node, ast.ImportFrom):
+        return _validate_import_from_node(
+            node,
+            allowed_logging_module=allowed_logging_module,
+            prohibited_source_hash_modules=prohibited_source_hash_modules,
+            relative_path=relative_path,
+        )
+    if isinstance(node, ast.Call):
+        return _validate_call_node(
+            node,
+            allowed_logging_module=allowed_logging_module,
+            prohibited_source_hash_modules=prohibited_source_hash_modules,
+            relative_path=relative_path,
+        )
+    if isinstance(node, ast.If) and _is_source_adapter(relative):
+        return _validate_source_adapter_freshness_inference(node, relative_path, source_text)
+    return []
+
+
+def _validate_import_node(
+    node: ast.Import,
+    *,
+    allowed_logging_module: bool,
+    prohibited_source_hash_modules: set[str],
+    relative_path: str,
+) -> list[str]:
+    errors: list[str] = []
+    for alias in node.names:
+        if alias.name == "logging" and not allowed_logging_module:
+            errors.append(
+                f"{relative_path}:{node.lineno}: direct logging imports are only "
+                "allowed in src/app/observability/logging.py"
+            )
+        if alias.name in prohibited_source_hash_modules:
+            errors.append(
+                f"{relative_path}:{node.lineno}: {alias.name} import is prohibited "
+                "because upstream source-ref hashes must be source-authored"
+            )
+    return errors
+
+
+def _validate_import_from_node(
+    node: ast.ImportFrom,
+    *,
+    allowed_logging_module: bool,
+    prohibited_source_hash_modules: set[str],
+    relative_path: str,
+) -> list[str]:
+    module = node.module or ""
+    imported_names = {alias.name for alias in node.names}
+    errors: list[str] = []
+    if module == "logging" and not allowed_logging_module:
+        errors.append(
+            f"{relative_path}:{node.lineno}: direct logging imports are only "
+            "allowed in src/app/observability/logging.py"
+        )
+    if (
+        module in {"app.observability", "app.observability.logging"}
+        and LOW_LEVEL_OBSERVABILITY_HELPERS.intersection(imported_names)
+        and not allowed_logging_module
+    ):
+        errors.append(
+            f"{relative_path}:{node.lineno}: import bounded operation-event helpers "
+            "instead of low-level log_event"
+        )
+    if module in prohibited_source_hash_modules:
+        errors.append(
+            f"{relative_path}:{node.lineno}: {module} import is prohibited because "
+            "upstream source-ref hashes must be source-authored"
+        )
+    return errors
+
+
+def _validate_call_node(
+    node: ast.Call,
+    *,
+    allowed_logging_module: bool,
+    prohibited_source_hash_modules: set[str],
+    relative_path: str,
+) -> list[str]:
+    current_call_name = call_name(node.func)
+    errors: list[str] = []
+    if current_call_name == "print":
+        errors.append(
+            f"{relative_path}:{node.lineno}: print() is prohibited in application "
+            "source; use bounded structured logging"
+        )
+    if current_call_name == "log_event" and not allowed_logging_module:
+        errors.append(
+            f"{relative_path}:{node.lineno}: call emit_operation_event or "
+            "emit_foundation_operation_event instead of log_event"
+        )
+    if _is_prohibited_logging_call(current_call_name, allowed_logging_module):
+        errors.append(
+            f"{relative_path}:{node.lineno}: direct logging calls are only allowed in "
+            "src/app/observability/logging.py"
+        )
+    if current_call_name in {"hashlib.sha256", "json.dumps"} and prohibited_source_hash_modules:
+        errors.append(
+            f"{relative_path}:{node.lineno}: {current_call_name} fallback is prohibited "
+            "because upstream source-ref hashes must be source-authored"
+        )
+    return errors
+
+
+def _is_prohibited_logging_call(
+    current_call_name: str | None, allowed_logging_module: bool
+) -> bool:
+    return (
+        current_call_name is not None
+        and current_call_name.startswith("logging.")
+        and current_call_name.removeprefix("logging.") in PROHIBITED_LOGGING_ATTRIBUTES
+        and not allowed_logging_module
+    )
+
+
+def _validate_source_adapter_freshness_inference(
+    node: ast.If, relative_path: str, source_text: str
+) -> list[str]:
+    test_source = ast.get_source_segment(source_text, node.test) or ""
+    normalized_test = test_source.replace(" ", "").lower()
+    if _contains_current_freshness_return(node.body) and any(
+        term in normalized_test for term in FRESHNESS_INFERENCE_TEST_TERMS
+    ):
+        return [
+            f"{relative_path}:{node.lineno}: source adapters must not infer current "
+            "freshness from readiness, supportability, coverage, health-state, or "
+            "data-quality posture"
+        ]
+    return []
 
 
 def validate_source_observability_contract(root: Path = ROOT) -> list[str]:
