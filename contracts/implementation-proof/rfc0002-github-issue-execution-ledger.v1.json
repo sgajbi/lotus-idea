@@ -219,10 +219,10 @@
       "issueNumber": 1059,
       "url": "https://github.com/sgajbi/lotus-idea/issues/1059",
       "rfcSlices": ["slice-15", "slice-19"],
-      "githubState": "open",
-      "executionStatus": "open_pr_raised",
-      "allowPullRequestAutoClose": false,
-      "closureInstruction": "Keep #1059 open while PR #1060 checks, merge-to-main, exact-main validation, wiki publication, branch cleanup, and source-controlled RFC-0002 issue truth synchronization remain pending. The outbox proof consumption refactor must preserve source-contract supporting-evidence posture, runtime blocker-clearing posture, registered artifact-effect enforcement, current-proof validation, evidence-ref de-duplication, supported-feature non-promotion, and every existing no-claim boundary. No API/OpenAPI, persistence, migration, authentication, authorization, Core, Gateway, Workbench, runtime stack, broker, platform-mesh, supported-feature, data-product certification, or production certification change is allowed in this issue."
+      "githubState": "closed",
+      "executionStatus": "closed_complete",
+      "allowPullRequestAutoClose": true,
+      "closureInstruction": "Closed #1059 after PR #1060 merged the Slice 15/19 outbox proof consumption refactor to Idea main 7277ec38afe6d665108bee944020599ef47d2cbf. Exact-main Main Releasability run 31761903797 passed, including lint/typecheck/security, unit/integration/e2e tests, PostgreSQL runtime proof, coverage, Docker/release evidence, and CI signal evidence; CodeQL run 31761895579 passed for the same SHA; repo-authored wiki source was published to lotus-idea.wiki commit 5015f7d with strict DiffCount 0; origin/issue/1059-outbox-proof-steps was pruned after merge; and local main matched origin/main. This closes only the bounded outbox proof consumer maintainability refactor. It preserved source-contract supporting-evidence posture, runtime blocker-clearing posture, registered artifact-effect enforcement, current-proof validation, evidence-ref de-duplication, supported-feature non-promotion, and no-claim boundaries. It does not change API/OpenAPI, persistence, migration, authentication, authorization, Core, Gateway, Workbench, runtime stack, broker, platform-mesh, supported-feature, data-product certification, production certification, or final RFC-0002 completion posture."
     },
     {
       "issueNumber": 676,
