@@ -131,7 +131,8 @@
     1074,
     1076,
     1078,
-    1080
+    1080,
+    1082
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -421,24 +422,23 @@
       "supported-feature non-promotion",
       "No API/OpenAPI, persistence, migration, authentication, authorization, Core, Gateway, Workbench, runtime stack, broker, platform-mesh, supported-feature, data-product certification, or production certification change"
     ],
-    "1080": [
-      "Refactor AI explanation lineage record assembly boundary",
-      "src/app/domain/ai_lineage_persistence.py::ai_explanation_lineage_record_from_result",
-      "92 lines",
+    "1082": [
+      "Refactor downstream implementation-proof application boundary",
+      "src/app/application/implementation_proof_consumption.py::_apply_downstream_proofs",
+      "91 lines",
       "quality/refactor_decisions.md",
-      "PR #1081",
-      "Keep #1080 open",
-      "AI explanation lineage",
-      "attestation receipt",
-      "provider retention receipt",
-      "canonical lineage-hash payload",
-      "fallback timestamp",
-      "tests/unit/test_ai_lineage_content_integrity.py",
-      "No OpenAPI change",
+      "Keep #1082 open",
+      "route source-contract proofs",
+      "intake runtime execution proofs",
+      "report materialization source-contract proof",
+      "source-contract supporting-evidence posture",
+      "runtime blocker-clearing posture",
+      "supported-feature non-promotion",
+      "No API/OpenAPI change",
       "No persistence migration",
       "No runtime topology change",
-      "No supported-feature promotion",
-      "No Core, Gateway, Workbench, or lotus-ai change"
+      "No authentication or authorization implementation",
+      "No Core, Gateway, or Workbench change"
     ]
   },
   "requiredClosedIssueEvidence": {
@@ -2171,6 +2171,33 @@
       "No runtime topology change",
       "No supported-feature promotion",
       "No Core, Gateway, or Workbench change",
+      "final RFC-0002 closure"
+    ],
+    "1080": [
+      "Closed #1080",
+      "PR #1081",
+      "aafe93d6ace60265819785e32afce11f68a41223",
+      "31777507234",
+      "src/app/domain/ai_lineage_persistence.py::ai_explanation_lineage_record_from_result",
+      "quality/baseline_report.md",
+      "AI explanation lineage record assembly boundary",
+      "attestation receipt",
+      "provider-retention receipt",
+      "canonical hash payload",
+      "fallback timestamp",
+      "tests/unit/test_ai_lineage_content_integrity.py",
+      "13 passed",
+      "quality/refactor_decisions.md",
+      "CODEBASE-REVIEW-LEDGER.md",
+      "No repo-authored wiki source changed",
+      "branch cleanup",
+      "Loop status: qa_passed_closed",
+      "status/merged-main",
+      "No OpenAPI change",
+      "No persistence migration",
+      "No runtime topology change",
+      "No supported-feature promotion",
+      "No Core, Gateway, Workbench, or lotus-ai change",
       "final RFC-0002 closure"
     ]
   }
