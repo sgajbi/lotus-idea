@@ -9,15 +9,15 @@ For the current live GitHub execution posture, canonical QA status, dependency
 map, and closure decision rules, use
 [wiki/RFC-0002-Execution-Status.md](../../wiki/RFC-0002-Execution-Status.md).
 At the latest refresh, RFC-0002 has 200 label-backed RFC-0002 issues across 13
-repositories: 162 closed and 38 open, with 25 `status/blocked`, 1
+repositories: 162 closed and 38 open, with 25 `status/blocked`, 0
 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2
-`status/merged-to-main`, 0 `status/pr-open`, 8 `status/tracker`, and 0
+`status/merged-to-main`, 1 `status/pr-open`, 8 `status/tracker`, and 0
 app-actionable blocked issues.
 The latest Idea source-truth synchronization is PR #1087 on main
 `1242a42f94991fa9d285b0d0e1cafe788efce9b5`; exact-main Main Releasability run
 `31786775671` and wiki publication `25c91f3` passed. The current Idea source
 ledger tracks 131 RFC-0002 issues, 105 closed and 26 open, with `#681` in
-progress, `#1088` fixed locally, and `#1084`, `#1082`, and `#1080` as the latest QA-closed
+progress, `#1088` PR-open in PR #1089, and `#1084`, `#1082`, and `#1080` as the latest QA-closed
 Idea maintainability issues. Workbench PR #698 is merged and exact-main
 validated, but fresh canonical QA is still required before closing AI/Advise
 QA-pending issues or promoting support.
