@@ -39,7 +39,7 @@ blocked posture and implement or reclassify it.
 ```mermaid
 flowchart LR
     Issues["GitHub issue posture<br/>201 label-backed RFC-0002 issues"]
-    Open["163 closed and 38 open<br/>25 `status/blocked`, 1 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 0 `status/pr-open`, 8 `status/tracker`"]
+    Open["163 closed and 38 open<br/>25 `status/blocked`, 0 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 1 `status/pr-open`, 8 `status/tracker`"]
     Blocked["Blocked classifier<br/>0 app-actionable blocked"]
     Work["Writable work<br/>only when evidence proves app-code ownership"]
     External["Core / protected / identity / provider / legal evidence"]
@@ -57,21 +57,21 @@ flowchart LR
 | Status label | Count | Interpretation |
 | --- | ---: | --- |
 | `status/blocked` | 25 | Protected, identity, provider, legal, publication, canonical QA, or certification evidence. |
-| `status/fixed-local` | 1 | `sgajbi/lotus-idea#1091` is locally proven and waiting for PR/main evidence. |
+| `status/fixed-local` | 0 | No locally proven issue is waiting for a PR. |
 | `status/in-progress` | 1 | Continuous Slice 18 synchronization tracker `sgajbi/lotus-idea#681`. |
 | `status/merged-main` | 1 | Merged-main issue awaiting QA closure evidence, currently `sgajbi/lotus-ai#126`. |
 | `status/merged-to-main` | 2 | Repository-local Advise merged-main alias awaiting QA closure evidence. |
-| `status/pr-open` | 0 | No RFC-0002 issue is currently PR-open. |
+| `status/pr-open` | 1 | `sgajbi/lotus-idea#1091` is linked to PR #1092. |
 | `status/tracker` | 8 | Parent or umbrella tracking issues, not immediate implementation items. |
 
 Latest synchronization evidence: Current GitHub issue posture has 201
 label-backed RFC-0002 issues, 163 closed and 38 open, with 25
-`status/blocked`, 1 `status/fixed-local`, 1 `status/in-progress`, 1
-`status/merged-main`, 2 `status/merged-to-main`, 0 `status/pr-open`, 8
+`status/blocked`, 0 `status/fixed-local`, 1 `status/in-progress`, 1
+`status/merged-main`, 2 `status/merged-to-main`, 1 `status/pr-open`, 8
 `status/tracker`, and 0 app-actionable blocked issues. The Idea source ledger
 tracks 132 RFC-0002 issues: 106 closed and 26 open. `lotus-idea#1091` is
-fixed-local for conversion-intent API handler hardening, and `lotus-idea#1088`
-is closed after PR #1089 reached exact main
+PR-open through PR #1092 for conversion-intent API handler hardening, and
+`lotus-idea#1088` is closed after PR #1089 reached exact main
 `06e4d2fdeda6f884186345f574dbb46ffe880502`; Main Releasability run
 `31791018583` passed, wiki publication reached `0d9937d`, strict wiki parity
 passed, and branch cleanup completed. This is source-truth

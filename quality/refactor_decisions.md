@@ -63,6 +63,8 @@ features, endpoint certification, and RFC-0002 issue-governance gates.
 
 The refreshed quality baseline no longer lists
 `src/app/api/conversion_governance.py::record_conversion_intent`.
+PR #1092 is open for PR checks, exact-main validation, wiki publication, branch
+cleanup, and QA evidence.
 
 No API/OpenAPI behavior, persistence migration, runtime topology,
 authentication, authorization, production IdP/session-token authority,
