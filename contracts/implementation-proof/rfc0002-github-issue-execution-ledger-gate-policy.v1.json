@@ -134,7 +134,8 @@
     1080,
     1082,
     1084,
-    1088
+    1088,
+    1091
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -423,6 +424,24 @@
       "runtime blocker-clearing posture",
       "supported-feature non-promotion",
       "No API/OpenAPI, persistence, migration, authentication, authorization, Core, Gateway, Workbench, runtime stack, broker, platform-mesh, supported-feature, data-product certification, or production certification change"
+    ],
+    "1091": [
+      "Keep #1091 open",
+      "conversion intent API handler boundary refactor",
+      "src/app/api/conversion_governance.py::record_conversion_intent",
+      "90 lines",
+      "trusted caller context preparation",
+      "complete entitlement-scope requirement",
+      "event lineage binding",
+      "durable-write unavailable posture",
+      "persistence decision mapping",
+      "supported-feature non-promotion",
+      "No API/OpenAPI contract change",
+      "No persistence migration",
+      "No runtime topology change",
+      "No authentication or authorization implementation",
+      "Core, Gateway, Workbench",
+      "final RFC-0002 closure"
     ]
   },
   "requiredClosedIssueEvidence": {

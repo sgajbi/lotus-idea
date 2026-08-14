@@ -6,6 +6,70 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-08-14: Conversion Intent API Handler Boundary
+
+Issue `#1091` applies the RFC-0002 Slice 12/13/19 maintainability lens to
+`src/app/api/conversion_governance.py::record_conversion_intent`. After issue
+`#1088` closed, refreshed quality evidence identified this conversion-intent
+route handler as a `90` line production/API hotspot.
+
+The refactor keeps the public FastAPI route, request and response contracts,
+conversion-intent application command, durable-write behavior, operation-event
+posture, and `supportedFeaturePromoted=false` response truth stable while
+separating:
+
+1. route caller-header construction,
+2. complete entitlement-scope mutation-context preparation,
+3. event-lineage-bound application command execution,
+4. permission, invalid-state, and invalid-request problem mapping, and
+5. durable-write and persistence-decision response projection.
+
+Focused local validation passed:
+
+1. `python -m ruff check src/app/api/conversion_governance.py`,
+2. `python -m ruff format --check src/app/api/conversion_governance.py`,
+3. `python -m mypy src/app/api/conversion_governance.py`,
+4. `python -m pytest tests/unit/test_conversion_governance_api_operations.py -q`
+   (`11` passed),
+5. `python -m pytest tests/unit/test_conversion_workflow_application.py -q`
+   (`4` passed),
+6. `python -m pytest tests/integration/outbox/test_event_lineage_api.py -q`
+   (`5` passed), and
+7. `python -m pytest tests/integration/test_api_operation_events.py -q`
+   (`21` passed).
+
+Broader local validation passed:
+
+1. `make quality-baseline`,
+2. `make maintainability-gate`,
+3. `make duplicate-implementation-gate`,
+4. `make rfc0002-github-issue-execution-ledger-gate`,
+5. `make rfc0002-github-issue-learning-pattern-gate`,
+6. `make rfc0002-github-issue-execution-state-audit`,
+7. `make rfc0002-github-issue-execution-summary`,
+8. `make documentation-contract-gate`,
+9. `make github-issue-closure-matrix-gate`,
+10. `make openapi-gate`,
+11. `make api-route-metadata-gate`,
+12. `make caller-context-contract-gate`,
+13. `make api-problem-details-boundary-gate`,
+14. `make api-idempotency-boundary-gate`, and
+15. `make operation-metric-contract-gate`.
+
+Full local lint validation passed with `make lint`, including repository
+hygiene, CI contract, security/dependency posture, license compliance,
+OpenAPI/API governance, source-observability, migration dry-run, supported
+features, endpoint certification, and RFC-0002 issue-governance gates.
+
+The refreshed quality baseline no longer lists
+`src/app/api/conversion_governance.py::record_conversion_intent`.
+
+No API/OpenAPI behavior, persistence migration, runtime topology,
+authentication, authorization, production IdP/session-token authority,
+downstream owner runtime proof, Gateway, Workbench, supported-feature
+promotion, data-mesh certification, client publication, production
+certification, or final RFC-0002 closure claim is in scope.
+
 ## 2026-08-14: Outbox Delivery Readiness PostgreSQL Summary Boundary
 
 Issue `#1088` applies the RFC-0002 Slice 15/19 maintainability lens to

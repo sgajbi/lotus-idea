@@ -14,6 +14,8 @@ from app.api.conversion_governance_models import (
     ConversionPersistenceSummaryResponse,
 )
 from app.api.conversion_governance_operations import (
+    ConversionCallerHeaders,
+    ConversionMutationContext,
     build_conversion_caller_headers,
     conversion_invalid_request_response,
     conversion_invalid_state_response,
@@ -37,6 +39,7 @@ from app.api.problem_details import (
 from app.api.route_metadata import RouteMetadata
 from app.application.conversion_workflow import (
     ConversionAccessScopeDenied,
+    ConversionIntentWorkflowResult,
     record_conversion_outcome_to_repository,
     request_conversion_intent_to_repository,
 )
@@ -94,8 +97,8 @@ async def record_conversion_intent(
     x_causation_id: EventCausationHeader = None,
 ) -> ConversionIntentApiResponse | JSONResponse:
     try:
-        context = prepare_conversion_mutation(
-            headers=build_conversion_caller_headers(
+        context = _prepare_conversion_intent_mutation(
+            headers=_route_caller_headers(
                 subject=x_caller_subject,
                 roles=x_caller_roles,
                 capabilities=x_caller_capabilities,
@@ -105,53 +108,123 @@ async def record_conversion_intent(
                 client_ids=x_caller_client_ids,
                 trusted_caller_context=x_lotus_trusted_caller_context,
             ),
-            capability=_CONVERSION_INTENT_CAPABILITY,
             idempotency_key=idempotency_key,
-            operation=IdeaOperation.CONVERSION_INTENT,
-            require_complete_entitlement_scope=True,
         )
         if isinstance(context, JSONResponse):
             return context
-        result = request_conversion_intent_to_repository(
-            request.to_command(
-                candidate_id=candidate_id,
-                caller=context.caller,
-                idempotency_key=idempotency_key,
-                access_scope_filter=context.access_scope_filter,
-                event_lineage=event_lineage_from_request(
-                    http_request,
-                    causation_id=x_causation_id,
-                ),
-            ),
-            repository=context.repository,
+        result = _record_conversion_intent(
+            request=request,
+            candidate_id=candidate_id,
+            idempotency_key=idempotency_key,
+            context=context,
+            http_request=http_request,
+            causation_id=x_causation_id,
         )
-    except PermissionDeniedError:
-        return conversion_permission_denied_response(
-            operation=IdeaOperation.CONVERSION_INTENT,
-            detail="The caller is not permitted to record idea conversion intents.",
-        )
-    except ConversionAccessScopeDenied:
-        return conversion_permission_denied_response(
-            operation=IdeaOperation.CONVERSION_INTENT,
-            detail="The caller is not permitted to record idea conversion intents.",
-        )
+    except (PermissionDeniedError, ConversionAccessScopeDenied):
+        return _conversion_intent_permission_denied_response()
     except InvalidConversionIntent:
-        return conversion_invalid_state_response(
-            operation=IdeaOperation.CONVERSION_INTENT,
-            code="conversion_intent_conflict",
-            title="Conversion intent conflict",
-            detail="The conversion intent is not valid for the current idea candidate state.",
-        )
+        return _conversion_intent_conflict_response()
     except ValueError:
-        return conversion_invalid_request_response(
-            operation=IdeaOperation.CONVERSION_INTENT,
-            detail="Correct the conversion intent request and retry.",
-        )
+        return _conversion_intent_invalid_request_response()
 
+    return _conversion_intent_api_response(
+        result, durable_storage_backed=context.durable_storage_backed
+    )
+
+
+def _route_caller_headers(
+    *,
+    subject: str | None,
+    roles: str | None,
+    capabilities: str | None,
+    tenant_ids: str | None,
+    book_ids: str | None,
+    portfolio_ids: str | None,
+    client_ids: str | None,
+    trusted_caller_context: str | None,
+) -> ConversionCallerHeaders:
+    return build_conversion_caller_headers(
+        subject=subject,
+        roles=roles,
+        capabilities=capabilities,
+        tenant_ids=tenant_ids,
+        book_ids=book_ids,
+        portfolio_ids=portfolio_ids,
+        client_ids=client_ids,
+        trusted_caller_context=trusted_caller_context,
+    )
+
+
+def _prepare_conversion_intent_mutation(
+    *,
+    headers: ConversionCallerHeaders,
+    idempotency_key: str,
+) -> ConversionMutationContext | JSONResponse:
+    return prepare_conversion_mutation(
+        headers=headers,
+        capability=_CONVERSION_INTENT_CAPABILITY,
+        idempotency_key=idempotency_key,
+        operation=IdeaOperation.CONVERSION_INTENT,
+        require_complete_entitlement_scope=True,
+    )
+
+
+def _record_conversion_intent(
+    *,
+    request: ConversionIntentRequest,
+    candidate_id: str,
+    idempotency_key: str,
+    context: ConversionMutationContext,
+    http_request: Request,
+    causation_id: EventCausationHeader,
+) -> ConversionIntentWorkflowResult:
+    return request_conversion_intent_to_repository(
+        request.to_command(
+            candidate_id=candidate_id,
+            caller=context.caller,
+            idempotency_key=idempotency_key,
+            access_scope_filter=context.access_scope_filter,
+            event_lineage=event_lineage_from_request(
+                http_request,
+                causation_id=causation_id,
+            ),
+        ),
+        repository=context.repository,
+    )
+
+
+def _conversion_intent_permission_denied_response() -> JSONResponse:
+    return conversion_permission_denied_response(
+        operation=IdeaOperation.CONVERSION_INTENT,
+        detail="The caller is not permitted to record idea conversion intents.",
+    )
+
+
+def _conversion_intent_conflict_response() -> JSONResponse:
+    return conversion_invalid_state_response(
+        operation=IdeaOperation.CONVERSION_INTENT,
+        code="conversion_intent_conflict",
+        title="Conversion intent conflict",
+        detail="The conversion intent is not valid for the current idea candidate state.",
+    )
+
+
+def _conversion_intent_invalid_request_response() -> JSONResponse:
+    return conversion_invalid_request_response(
+        operation=IdeaOperation.CONVERSION_INTENT,
+        detail="Correct the conversion intent request and retry.",
+    )
+
+
+def _conversion_intent_api_response(
+    result: ConversionIntentWorkflowResult,
+    *,
+    durable_storage_backed: bool,
+) -> ConversionIntentApiResponse | JSONResponse:
     problem = emit_conversion_persistence_event_or_problem(
         operation=IdeaOperation.CONVERSION_INTENT,
         result=result.persistence,
-        durable_storage_backed=context.durable_storage_backed,
+        durable_storage_backed=durable_storage_backed,
     )
     if problem is not None:
         return problem
@@ -162,7 +235,7 @@ async def record_conversion_intent(
             else None
         ),
         persistence=ConversionPersistenceSummaryResponse.from_result(result.persistence),
-        durableStorageBacked=context.durable_storage_backed,
+        durableStorageBacked=durable_storage_backed,
         supportedFeaturePromoted=False,
     )
 
