@@ -128,7 +128,8 @@
     1065,
     1068,
     1071,
-    1074
+    1074,
+    1076
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -444,6 +445,25 @@
       "API/OpenAPI",
       "Core, Gateway, Workbench",
       "supported-feature posture",
+      "final RFC-0002 closure"
+    ],
+    "1076": [
+      "Keep #1076 open",
+      "scripts/endpoint_certification_gate.py::main",
+      "quality/baseline_report.md",
+      "largest remaining report-only function at 96 lines",
+      "endpoint certification gate entrypoint",
+      "CLI behavior",
+      "exit codes",
+      "validation semantics",
+      "tests/unit/test_endpoint_certification_gate.py",
+      "quality/refactor_decisions.md",
+      "CODEBASE-REVIEW-LEDGER.md",
+      "implementation on a separate issue branch",
+      "No runtime endpoint behavior change",
+      "No API/OpenAPI contract change",
+      "supported-feature promotion",
+      "endpoint certification promotion",
       "final RFC-0002 closure"
     ]
   },
