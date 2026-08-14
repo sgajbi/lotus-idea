@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable, Mapping, cast
@@ -101,6 +102,16 @@ CapabilityProofApplier = Callable[
     [ImplementationProofCapabilityReadiness, str | None],
     ImplementationProofCapabilityReadiness,
 ]
+
+
+@dataclass(frozen=True)
+class _DownstreamProofApplication:
+    proof_key: str
+    effect: ProofArtifactEffect
+    proof: Mapping[str, object] | None
+    proof_ref: str | None
+    proof_is_valid: ProofValidator
+    apply_proof: CapabilityProofApplier
 
 
 def apply_available_proofs_from_scope(
@@ -439,90 +450,127 @@ def _apply_downstream_proofs(
     report_materialization_runtime_execution_proof: Mapping[str, object] | None,
     report_materialization_runtime_execution_proof_ref: str | None,
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
-    capabilities = _apply_downstream_supporting_proof_if_current(
-        capabilities=capabilities,
-        evaluated_at_utc=evaluated_at_utc,
-        proof_key="advise_proposal_route_proof",
-        proof=advise_proposal_route_proof,
-        proof_ref=advise_proposal_route_proof_ref,
-        proof_is_valid=advise_route_source_contract_is_valid,
-    )
-    capabilities = _apply_downstream_supporting_proof_if_current(
-        capabilities=capabilities,
-        evaluated_at_utc=evaluated_at_utc,
-        proof_key="manage_action_route_proof",
-        proof=manage_action_route_proof,
-        proof_ref=manage_action_route_proof_ref,
-        proof_is_valid=manage_route_source_contract_is_valid,
-    )
-    capabilities = _apply_downstream_blocker_proof_if_current(
-        capabilities=capabilities,
-        evaluated_at_utc=evaluated_at_utc,
-        proof_key="advise_intake_runtime_execution_proof",
-        proof=advise_intake_runtime_execution_proof,
-        proof_ref=advise_intake_runtime_execution_proof_ref,
-        proof_is_valid=advise_intake_runtime_execution_is_valid,
-        apply_proof=_apply_advise_intake_runtime_execution,
-    )
-    capabilities = _apply_downstream_blocker_proof_if_current(
-        capabilities=capabilities,
-        evaluated_at_utc=evaluated_at_utc,
-        proof_key="manage_intake_runtime_execution_proof",
-        proof=manage_intake_runtime_execution_proof,
-        proof_ref=manage_intake_runtime_execution_proof_ref,
-        proof_is_valid=manage_intake_runtime_execution_is_valid,
-        apply_proof=_apply_manage_intake_runtime_execution,
-    )
-    capabilities = _apply_downstream_supporting_proof_if_current(
-        capabilities=capabilities,
-        evaluated_at_utc=evaluated_at_utc,
-        proof_key="report_intake_route_source_contract_proof",
-        proof=report_intake_route_source_contract_proof,
-        proof_ref=report_intake_route_source_contract_proof_ref,
-        proof_is_valid=report_intake_route_source_contract_proof_is_valid,
-    )
-    capabilities = _apply_downstream_blocker_proof_if_current(
-        capabilities=capabilities,
-        evaluated_at_utc=evaluated_at_utc,
-        proof_key="report_intake_runtime_execution_proof",
-        proof=report_intake_runtime_execution_proof,
-        proof_ref=report_intake_runtime_execution_proof_ref,
-        proof_is_valid=report_intake_runtime_execution_is_valid,
-        apply_proof=_apply_report_intake_runtime_execution,
-    )
-    capabilities = _apply_downstream_blocker_proof_if_current(
-        capabilities=capabilities,
-        evaluated_at_utc=evaluated_at_utc,
-        proof_key="report_materialization_source_contract_proof",
-        proof=report_materialization_source_contract_proof,
-        proof_ref=report_materialization_source_contract_proof_ref,
-        proof_is_valid=report_materialization_source_contract_is_valid,
-        apply_proof=_apply_report_materialization_source_contract,
-        effect=ProofArtifactEffect.SUPPORTING_EVIDENCE,
-    )
-    return _apply_downstream_blocker_proof_if_current(
-        capabilities=capabilities,
-        evaluated_at_utc=evaluated_at_utc,
-        proof_key="report_materialization_runtime_execution_proof",
-        proof=report_materialization_runtime_execution_proof,
-        proof_ref=report_materialization_runtime_execution_proof_ref,
-        proof_is_valid=report_materialization_runtime_execution_is_valid,
-        apply_proof=_apply_report_materialization_runtime_execution,
-    )
+    report_route_ref = report_intake_route_source_contract_proof_ref
+    materialization_source_proof = report_materialization_source_contract_proof
+    materialization_source_ref = report_materialization_source_contract_proof_ref
+    materialization_runtime_proof = report_materialization_runtime_execution_proof
+    materialization_runtime_ref = report_materialization_runtime_execution_proof_ref
+
+    for application in _downstream_proof_applications(
+        advise_proposal_route_proof=advise_proposal_route_proof,
+        advise_proposal_route_proof_ref=advise_proposal_route_proof_ref,
+        advise_intake_runtime_execution_proof=advise_intake_runtime_execution_proof,
+        advise_intake_runtime_execution_proof_ref=advise_intake_runtime_execution_proof_ref,
+        manage_intake_runtime_execution_proof=manage_intake_runtime_execution_proof,
+        manage_intake_runtime_execution_proof_ref=manage_intake_runtime_execution_proof_ref,
+        manage_action_route_proof=manage_action_route_proof,
+        manage_action_route_proof_ref=manage_action_route_proof_ref,
+        report_intake_route_source_contract_proof=report_intake_route_source_contract_proof,
+        report_intake_route_source_contract_proof_ref=report_route_ref,
+        report_intake_runtime_execution_proof=report_intake_runtime_execution_proof,
+        report_intake_runtime_execution_proof_ref=report_intake_runtime_execution_proof_ref,
+        report_materialization_source_contract_proof=materialization_source_proof,
+        report_materialization_source_contract_proof_ref=materialization_source_ref,
+        report_materialization_runtime_execution_proof=materialization_runtime_proof,
+        report_materialization_runtime_execution_proof_ref=materialization_runtime_ref,
+    ):
+        capabilities = _apply_registered_capability_proof_if_current(
+            capabilities=capabilities,
+            evaluated_at_utc=evaluated_at_utc,
+            proof_key=application.proof_key,
+            effect=application.effect,
+            proof=application.proof,
+            proof_ref=application.proof_ref,
+            proof_is_valid=application.proof_is_valid,
+            apply_proof=application.apply_proof,
+        )
+    return capabilities
 
 
-def _apply_downstream_supporting_proof_if_current(
+def _downstream_proof_applications(
     *,
-    capabilities: tuple[ImplementationProofCapabilityReadiness, ...],
-    evaluated_at_utc: datetime,
+    advise_proposal_route_proof: Mapping[str, object] | None,
+    advise_proposal_route_proof_ref: str | None,
+    advise_intake_runtime_execution_proof: Mapping[str, object] | None,
+    advise_intake_runtime_execution_proof_ref: str | None,
+    manage_intake_runtime_execution_proof: Mapping[str, object] | None,
+    manage_intake_runtime_execution_proof_ref: str | None,
+    manage_action_route_proof: Mapping[str, object] | None,
+    manage_action_route_proof_ref: str | None,
+    report_intake_route_source_contract_proof: Mapping[str, object] | None,
+    report_intake_route_source_contract_proof_ref: str | None,
+    report_intake_runtime_execution_proof: Mapping[str, object] | None,
+    report_intake_runtime_execution_proof_ref: str | None,
+    report_materialization_source_contract_proof: Mapping[str, object] | None,
+    report_materialization_source_contract_proof_ref: str | None,
+    report_materialization_runtime_execution_proof: Mapping[str, object] | None,
+    report_materialization_runtime_execution_proof_ref: str | None,
+) -> tuple[_DownstreamProofApplication, ...]:
+    return (
+        _supporting_downstream_proof(
+            "advise_proposal_route_proof",
+            advise_proposal_route_proof,
+            advise_proposal_route_proof_ref,
+            advise_route_source_contract_is_valid,
+        ),
+        _supporting_downstream_proof(
+            "manage_action_route_proof",
+            manage_action_route_proof,
+            manage_action_route_proof_ref,
+            manage_route_source_contract_is_valid,
+        ),
+        _blocker_downstream_proof(
+            "advise_intake_runtime_execution_proof",
+            advise_intake_runtime_execution_proof,
+            advise_intake_runtime_execution_proof_ref,
+            advise_intake_runtime_execution_is_valid,
+            _apply_advise_intake_runtime_execution,
+        ),
+        _blocker_downstream_proof(
+            "manage_intake_runtime_execution_proof",
+            manage_intake_runtime_execution_proof,
+            manage_intake_runtime_execution_proof_ref,
+            manage_intake_runtime_execution_is_valid,
+            _apply_manage_intake_runtime_execution,
+        ),
+        _supporting_downstream_proof(
+            "report_intake_route_source_contract_proof",
+            report_intake_route_source_contract_proof,
+            report_intake_route_source_contract_proof_ref,
+            report_intake_route_source_contract_proof_is_valid,
+        ),
+        _blocker_downstream_proof(
+            "report_intake_runtime_execution_proof",
+            report_intake_runtime_execution_proof,
+            report_intake_runtime_execution_proof_ref,
+            report_intake_runtime_execution_is_valid,
+            _apply_report_intake_runtime_execution,
+        ),
+        _blocker_downstream_proof(
+            "report_materialization_source_contract_proof",
+            report_materialization_source_contract_proof,
+            report_materialization_source_contract_proof_ref,
+            report_materialization_source_contract_is_valid,
+            _apply_report_materialization_source_contract,
+            effect=ProofArtifactEffect.SUPPORTING_EVIDENCE,
+        ),
+        _blocker_downstream_proof(
+            "report_materialization_runtime_execution_proof",
+            report_materialization_runtime_execution_proof,
+            report_materialization_runtime_execution_proof_ref,
+            report_materialization_runtime_execution_is_valid,
+            _apply_report_materialization_runtime_execution,
+        ),
+    )
+
+
+def _supporting_downstream_proof(
     proof_key: str,
     proof: Mapping[str, object] | None,
     proof_ref: str | None,
     proof_is_valid: ProofValidator,
-) -> tuple[ImplementationProofCapabilityReadiness, ...]:
-    return _apply_registered_capability_proof_if_current(
-        capabilities=capabilities,
-        evaluated_at_utc=evaluated_at_utc,
+) -> _DownstreamProofApplication:
+    return _DownstreamProofApplication(
         proof_key=proof_key,
         effect=ProofArtifactEffect.SUPPORTING_EVIDENCE,
         proof=proof,
@@ -532,20 +580,15 @@ def _apply_downstream_supporting_proof_if_current(
     )
 
 
-def _apply_downstream_blocker_proof_if_current(
-    *,
-    capabilities: tuple[ImplementationProofCapabilityReadiness, ...],
-    evaluated_at_utc: datetime,
+def _blocker_downstream_proof(
     proof_key: str,
     proof: Mapping[str, object] | None,
     proof_ref: str | None,
     proof_is_valid: ProofValidator,
     apply_proof: CapabilityProofApplier,
     effect: ProofArtifactEffect = ProofArtifactEffect.BLOCKER_CLEARING,
-) -> tuple[ImplementationProofCapabilityReadiness, ...]:
-    return _apply_registered_capability_proof_if_current(
-        capabilities=capabilities,
-        evaluated_at_utc=evaluated_at_utc,
+) -> _DownstreamProofApplication:
+    return _DownstreamProofApplication(
         proof_key=proof_key,
         effect=effect,
         proof=proof,
