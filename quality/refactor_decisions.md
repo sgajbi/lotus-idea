@@ -6,6 +6,61 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-08-14: Outbox Delivery Readiness PostgreSQL Summary Boundary
+
+Issue `#1088` applies the RFC-0002 Slice 15/19 maintainability lens to
+`src/app/infrastructure/outbox/postgres_delivery.py::load_outbox_delivery_readiness_summary`.
+After issue `#1084` closed, refreshed quality evidence identified this
+PostgreSQL adapter method as a `91` line production-code hotspot.
+
+The refactor keeps the public repository method and aggregate outbox delivery
+readiness semantics stable while separating:
+
+1. the PostgreSQL readiness-summary SQL text,
+2. ordered status and evaluation-time parameter assembly,
+3. the empty-summary fallback, and
+4. row-to-domain projection.
+
+Focused local validation passed:
+
+1. `python -m pytest tests/unit/outbox/test_postgres_readiness.py tests/unit/outbox/test_outbox_delivery_readiness.py -q`
+   (`7` passed),
+2. `python -m ruff check src/app/infrastructure/outbox/postgres_delivery.py tests/unit/outbox/test_postgres_readiness.py`,
+3. `python -m ruff format --check src/app/infrastructure/outbox/postgres_delivery.py tests/unit/outbox/test_postgres_readiness.py`, and
+4. `python -m mypy src/app/infrastructure/outbox/postgres_delivery.py tests/unit/outbox/test_postgres_readiness.py`.
+
+The new empty-summary regression proves zero-count and no-oldest-ready behavior
+when the outbox event table has no rows. The refactor preserves pending, leased,
+failed, published, dead-letter, due-retry, retry-deferred, expired-lease, and
+oldest-ready aggregate semantics without adding a runtime boundary.
+
+Broader local validation passed:
+
+1. `make quality-baseline`,
+2. `make maintainability-gate`,
+3. `make duplicate-implementation-gate`,
+4. `make rfc0002-github-issue-execution-ledger-gate`,
+5. `make rfc0002-github-issue-learning-pattern-gate`,
+6. `make rfc0002-github-issue-execution-state-audit`,
+7. `make rfc0002-github-issue-execution-summary`,
+8. `make rfc0002-cross-repo-issue-posture`,
+9. `make documentation-contract-gate`,
+10. `make github-issue-closure-matrix-gate`,
+11. wiki quality audit for `Home.md`, `Supported-Features.md`,
+    `RFC-0002-Execution-Status.md`, and `Validation-and-CI.md`,
+12. repo-wiki check-only with expected branch-local `DiffCount 4`, and
+13. `git diff --check`,
+14. `make lint`.
+
+PR, exact-main, wiki-publication, and branch-cleanup evidence remains pending.
+Keep issue `#1088` open while this branch is in progress.
+
+No API/OpenAPI behavior, persistence migration, event-publisher behavior,
+broker integration, runtime topology, authentication, authorization, Gateway,
+Workbench, downstream consumer execution, supported-feature promotion,
+data-mesh certification, client publication, production certification, or
+final RFC-0002 closure claim is in scope.
+
 ## 2026-08-14: Missing-Benchmark Signal Evaluation Domain Boundary
 
 Issue `#1084` applies the RFC-0002 Slice 05/16/19 maintainability lens to

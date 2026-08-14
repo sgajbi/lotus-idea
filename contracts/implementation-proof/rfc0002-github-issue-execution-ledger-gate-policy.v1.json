@@ -133,7 +133,8 @@
     1078,
     1080,
     1082,
-    1084
+    1084,
+    1088
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -422,6 +423,33 @@
       "runtime blocker-clearing posture",
       "supported-feature non-promotion",
       "No API/OpenAPI, persistence, migration, authentication, authorization, Core, Gateway, Workbench, runtime stack, broker, platform-mesh, supported-feature, data-product certification, or production certification change"
+    ],
+    "1088": [
+      "Keep #1088 open",
+      "outbox delivery readiness PostgreSQL summary projection",
+      "quality/baseline_report.md",
+      "91 line production-code hotspot",
+      "OUTBOX_DELIVERY_READINESS_SUMMARY_SQL",
+      "_outbox_delivery_readiness_summary_params",
+      "_empty_outbox_delivery_readiness_summary",
+      "_outbox_readiness_summary_from_row",
+      "tests/unit/outbox/test_postgres_readiness.py",
+      "empty-summary regression",
+      "pending, leased, failed, published, dead-letter",
+      "due-retry, retry-deferred, expired-lease, and oldest-ready aggregate semantics",
+      "Ruff check",
+      "Ruff format check",
+      "MyPy",
+      "python -m pytest tests/unit/outbox/test_postgres_readiness.py tests/unit/outbox/test_outbox_delivery_readiness.py -q",
+      "maintainability only",
+      "No API/OpenAPI behavior change",
+      "No persistence migration",
+      "No event-publisher behavior change",
+      "No runtime topology change",
+      "No authentication or authorization implementation",
+      "No Gateway, Workbench, or downstream consumer execution change",
+      "No supported-feature promotion",
+      "final RFC-0002 closure"
     ]
   },
   "requiredClosedIssueEvidence": {

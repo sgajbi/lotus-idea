@@ -22,12 +22,12 @@ dependency map, and closure rules without relying on chat memory.
 | Snapshot command | `make rfc0002-cross-repo-issue-posture` |
 | Execution audit | `make rfc0002-github-issue-execution-state-audit` passed |
 | Repositories checked | 13 |
-| Total RFC-0002 issues | 199 |
+| Total RFC-0002 issues | 200 |
 | Closed RFC-0002 issues | 162 |
-| Open RFC-0002 issues | 37 |
+| Open RFC-0002 issues | 38 |
 | Open blocked issues | 25 |
 | App-actionable blocked issues | 0 |
-| Active synchronization tracker | `sgajbi/lotus-idea#681`; latest Idea source-truth synchronization is PR #1086 on main `a8857f62782c4cd9105bc22790332b9ec2d43983` after exact-main Main Releasability run `31783746700`, CodeQL run `31783742917`, wiki publication `9256a45`, strict wiki parity, and branch hygiene passed. The latest QA-closed Idea maintainability issues remain `sgajbi/lotus-idea#1084`, `#1082`, and `#1080`. |
+| Active synchronization tracker | `sgajbi/lotus-idea#681`; latest Idea source-truth synchronization is PR #1087 on main `1242a42f94991fa9d285b0d0e1cafe788efce9b5` after exact-main Main Releasability run `31786775671`, wiki publication `25c91f3`, strict wiki parity, and branch hygiene passed. `sgajbi/lotus-idea#1088` is the active Slice 15/19 outbox readiness summary maintainability issue. The latest QA-closed Idea maintainability issues remain `sgajbi/lotus-idea#1084`, `#1082`, and `#1080`. |
 
 The zero app-actionable blocked count is important. It means an open issue may
 remain `status/blocked` only when the remaining authority is Core-owned,
@@ -38,8 +38,8 @@ blocked posture and implement or reclassify it.
 
 ```mermaid
 flowchart LR
-    Issues["GitHub issue posture<br/>199 label-backed RFC-0002 issues"]
-    Open["162 closed and 37 open<br/>25 `status/blocked`, 0 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 0 `status/pr-open`, 8 `status/tracker`"]
+    Issues["GitHub issue posture<br/>200 label-backed RFC-0002 issues"]
+    Open["162 closed and 38 open<br/>25 `status/blocked`, 0 `status/fixed-local`, 2 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 0 `status/pr-open`, 8 `status/tracker`"]
     Blocked["Blocked classifier<br/>0 app-actionable blocked"]
     Work["Writable work<br/>only when evidence proves app-code ownership"]
     External["Core / protected / identity / provider / legal evidence"]
@@ -58,24 +58,25 @@ flowchart LR
 | --- | ---: | --- |
 | `status/blocked` | 25 | Protected, identity, provider, legal, publication, canonical QA, or certification evidence. |
 | `status/fixed-local` | 0 | No locally proven issue is waiting for a PR. |
-| `status/in-progress` | 1 | Continuous Slice 18 synchronization tracker `sgajbi/lotus-idea#681`. |
+| `status/in-progress` | 2 | Continuous Slice 18 synchronization tracker `sgajbi/lotus-idea#681` and active Slice 15/19 maintainability issue `sgajbi/lotus-idea#1088`. |
 | `status/merged-main` | 1 | Merged-main issue awaiting QA closure evidence, currently `sgajbi/lotus-ai#126`. |
 | `status/merged-to-main` | 2 | Repository-local Advise merged-main alias awaiting QA closure evidence. |
 | `status/pr-open` | 0 | No RFC-0002 issue is currently represented as PR-open in the cross-repo posture snapshot. |
 | `status/tracker` | 8 | Parent or umbrella tracking issues, not immediate implementation items. |
 
-Latest synchronization evidence: Current GitHub issue posture has 199
-label-backed RFC-0002 issues, 162 closed and 37 open, with 25
-`status/blocked`, 0 `status/fixed-local`, 1 `status/in-progress`, 1
+Latest synchronization evidence: Current GitHub issue posture has 200
+label-backed RFC-0002 issues, 162 closed and 38 open, with 25
+`status/blocked`, 0 `status/fixed-local`, 2 `status/in-progress`, 1
 `status/merged-main`, 2 `status/merged-to-main`, 0 `status/pr-open`, 8
 `status/tracker`, and 0 app-actionable blocked issues. The Idea source ledger
-tracks 130 RFC-0002 issues: 105 closed and 25 open. `lotus-idea#1084` is
+tracks 131 RFC-0002 issues: 105 closed and 26 open. `lotus-idea#1088` is
+the active outbox readiness summary maintainability issue. `lotus-idea#1084` is
 closed after PR #1085 reached exact main
 `03b12bb50c8c2bbaaf6d5396ea614cc13e80f4cd`; Main Releasability run
-`31781165482` passed and branch cleanup completed. PR #1086 then synchronized
-that posture to Idea main `a8857f62782c4cd9105bc22790332b9ec2d43983`; Main
-Releasability `31783746700`, CodeQL `31783742917`, wiki publication
-`9256a45`, strict wiki parity, and branch hygiene passed. This is source-truth
+`31781165482` passed and branch cleanup completed. PR #1087 then synchronized
+that posture to Idea main `1242a42f94991fa9d285b0d0e1cafe788efce9b5`; Main
+Releasability `31786775671`, wiki publication `25c91f3`, strict wiki parity,
+and branch hygiene passed. This is source-truth
 synchronization only; no closure in this section promotes a Lotus Idea
 supported feature.
 
