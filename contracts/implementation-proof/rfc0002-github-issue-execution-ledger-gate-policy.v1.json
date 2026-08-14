@@ -426,6 +426,7 @@
       "src/app/domain/ai_lineage_persistence.py::ai_explanation_lineage_record_from_result",
       "92 lines",
       "quality/refactor_decisions.md",
+      "PR #1081",
       "Keep #1080 open",
       "AI explanation lineage",
       "attestation receipt",
