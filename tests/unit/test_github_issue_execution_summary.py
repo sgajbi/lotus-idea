@@ -118,7 +118,7 @@ def test_github_issue_execution_summary_reports_current_rfc0002_counts() -> None
     assert summary["counts"]["open"] == expected_github_counts["open"]
     assert summary["counts"]["closed"] == expected_github_counts["closed"]
     assert summary["counts"]["byExecutionStatus"] == dict(sorted(expected_execution_counts.items()))
-    assert issue_681_status == "open_in_progress"
+    assert issue_681_status == "open_pr_raised"
     assert (
         summary["counts"]["byExecutionStatus"][issue_681_status]
         == expected_execution_counts[issue_681_status]
@@ -142,7 +142,7 @@ def test_github_issue_execution_summary_reports_current_rfc0002_counts() -> None
         summary["counts"]["byExecutionStatus"]["closed_complete"]
         == expected_execution_counts["closed_complete"]
     )
-    assert issue_681_status == "open_in_progress"
+    assert issue_681_status == "open_pr_raised"
     assert 681 in summary["issuesByStatus"][issue_681_status]
     for execution_status in (
         "open_in_progress",

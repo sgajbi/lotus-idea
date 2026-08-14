@@ -274,7 +274,7 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/681",
       "rfcSlices": ["slice-18"],
       "githubState": "open",
-      "executionStatus": "open_in_progress",
+      "executionStatus": "open_pr_raised",
       "allowPullRequestAutoClose": false,
       "evidenceSyncNotes": [
         "PR #798 merged the incident-response operating model on Idea main cfedcc91a5d907e15aa9f50493454eead656b406; exact-main Main Releasability run 30481301564 passed for that SHA; lotus-idea.wiki publication reached commit 0d075af with strict DiffCount 0; #797 is now synchronized from PR-open to merged-main QA-pending source truth. Current Idea ledger posture is 43 tracked issues, 25 open, and 18 closed. Current governed cross-repo RFC-0002 posture is 38 open and 42 closed issues across 13 repositories, 80 tracked issues total, with 28 blocked issues, 0 app-actionable blocked issues, 5 Core dependencies, and 23 external/protected-evidence blockers.",

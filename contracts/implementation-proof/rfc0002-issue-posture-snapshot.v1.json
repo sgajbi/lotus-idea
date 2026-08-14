@@ -15,18 +15,18 @@
     "openStatusCounts": {
       "open_blocked": 14,
       "open_fixed_local": 0,
-      "open_in_progress": 1,
+      "open_in_progress": 0,
       "open_merged_main_qa_pending": 0,
-      "open_pr_raised": 0,
+      "open_pr_raised": 1,
       "open_pending_final_closure": 1,
       "open_pending_post_completion": 1,
       "open_tracker": 8
     },
     "fixedLocalIssues": [],
-    "prOpenIssues": [],
-    "inProgressIssues": [
+    "prOpenIssues": [
       "sgajbi/lotus-idea#681"
     ],
+    "inProgressIssues": [],
     "mergedMainQaPendingIssues": [],
     "recentlyClosedIssues": [
       "sgajbi/lotus-idea#1014",
@@ -62,10 +62,10 @@
     "openStatusCounts": {
       "status/blocked": 25,
       "status/fixed-local": 0,
-      "status/in-progress": 1,
+      "status/in-progress": 0,
       "status/merged-main": 1,
       "status/merged-to-main": 2,
-      "status/pr-open": 0,
+      "status/pr-open": 1,
       "status/tracker": 8
     },
     "titleOnlyReferencesExcludedFromGovernedCounts": [
@@ -86,7 +86,7 @@
     "crossRepo": [
       "202 label-backed RFC-0002 issues",
       "165 closed and 37 open",
-      "25 `status/blocked`, 0 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 0 `status/pr-open`, 8 `status/tracker`",
+      "25 `status/blocked`, 0 `status/fixed-local`, 0 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 1 `status/pr-open`, 8 `status/tracker`",
       "0 app-actionable blocked"
     ]
   },

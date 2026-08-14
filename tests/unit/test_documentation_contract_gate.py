@@ -380,7 +380,7 @@ def test_documentation_contract_gate_allows_contract_current_issue_posture(
     doc.write_text(
         "# Repository Engineering Context\n\n"
         "Current Idea ledger posture has 120 tracked RFC-0002 issues, "
-        "95 closed and 25 open; #681 is the in-progress Slice 18 "
+        "95 closed and 25 open; #681 is the current Slice 18 "
         "tracker and #1059 is QA-closed after the Slice 15/19 refactor. "
         "Current governed cross-repo RFC-0002 posture has "
         f"{cross_repo_fragments[0]} across 13 repositories: "

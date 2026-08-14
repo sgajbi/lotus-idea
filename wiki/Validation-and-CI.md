@@ -1220,15 +1220,15 @@ class, and remaining authority so the Core-vs-protected/external split is
 auditable without chat memory or one-off GitHub queries.
 Current live posture is 202 label-backed RFC-0002 issues across 13
 repositories: 165 closed and 37 open. The open split is 25 `status/blocked`,
-0 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2
-`status/merged-to-main`, 0 `status/pr-open`, 8 `status/tracker`;
+0 `status/fixed-local`, 0 `status/in-progress`, 1 `status/merged-main`, 2
+`status/merged-to-main`, 1 `status/pr-open`, 8 `status/tracker`;
 `sgajbi/lotus-idea#1091`, `sgajbi/lotus-idea#1088`,
 `sgajbi/lotus-idea#1084`, `sgajbi/lotus-idea#1082`, and
 `sgajbi/lotus-idea#1080` are the latest
 QA-closed Idea maintainability hardening issues after exact-main validation,
 wiki publication, and branch cleanup.
-`sgajbi/lotus-idea#681` remains the in-progress Slice 18 synchronization
-issue, and no RFC-0002 issue is currently PR-open; older QA-closed hardening issues remain in the
+`sgajbi/lotus-idea#681` remains the Slice 18 synchronization issue and has PR
+#1097 open; older QA-closed hardening issues remain in the
 execution ledger and are not repeated here as current work.
 Blocked actionability remains 0 app-actionable blocked issues, with 25
 external/protected/canonical-proof evidence blockers. Counts are label-backed
@@ -1598,8 +1598,8 @@ supported feature.
 RFC-0002 execution is tracked through GitHub issue state plus the
 source-controlled implementation-proof ledgers. The current governed posture is
 202 label-backed RFC-0002 issues across 13 repositories: 165 closed and 37 open.
-The open set is 25 `status/blocked`, 0 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 0 `status/pr-open`, 8 `status/tracker`;
-#1094, #1091, #1088, #1084, and #1082 are the latest closed Idea maintainability hardening issues, while #681 is in progress;
+The open set is 25 `status/blocked`, 0 `status/fixed-local`, 0 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 1 `status/pr-open`, 8 `status/tracker`;
+#1094, #1091, #1088, #1084, and #1082 are the latest closed Idea maintainability hardening issues, while #681 has PR #1097 open;
 blocked actionability remains 0 app-actionable blocked issues.
 Idea PR #838 synchronized PR #837 exact-main evidence to main
 `2c2d35667643ad5efae83924475574ab6c16be03`, passed Main Releasability
