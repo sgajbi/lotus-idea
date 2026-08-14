@@ -6,6 +6,56 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-08-14: PostgreSQL Review And Feedback Concurrency Proof Boundary
+
+Issue `#1074` applies the RFC-0002 Slice 06/08/17/19 maintainability lens to
+`tests/integration/test_postgres_runtime_integration.py::test_postgres_runtime_serializes_concurrent_review_and_feedback_resource_identity`.
+The current report-only quality baseline listed this integration proof as the
+largest remaining function at `97` lines.
+
+Duplicate-check result:
+`test_postgres_runtime_serializes_concurrent_review_and_feedback_resource_identity`
+found no existing GitHub issue for this exact proof. Closed issue `#1071`
+remains the immediately preceding quality-baseline hotspot and recorded this
+function as the next measured target.
+
+The branch refactor preserves the public integration test name while separating:
+
+1. review-ready candidate setup,
+2. PostgreSQL candidate reload,
+3. review actor construction from persisted access scope,
+4. concurrent review-action resource-identity proof,
+5. concurrent feedback resource-identity proof,
+6. accepted/replayed decision assertions, and
+7. audit/outbox side-effect delta assertions.
+
+Focused local validation passed:
+
+1. `python -m ruff check tests/integration/test_postgres_runtime_integration.py`,
+2. `python -m ruff format --check tests/integration/test_postgres_runtime_integration.py`,
+3. `python -m mypy tests/integration/test_postgres_runtime_integration.py`, and
+4. `python -m pytest tests/integration/test_postgres_runtime_integration.py -q`
+   (`9` skipped locally because `LOTUS_IDEA_POSTGRES_INTEGRATION_URL` is not
+   configured).
+
+Broader local validation passed:
+
+1. `make quality-baseline`,
+2. `make maintainability-gate`, and
+3. `make duplicate-implementation-gate` (`0` duplicate clusters across
+   `3,622` source/script functions).
+
+The refreshed quality baseline no longer lists the targeted `97` line proof.
+The largest remaining report-only function is
+`scripts/endpoint_certification_gate.py::main` at `96` lines.
+
+No production runtime behavior, persistence schema, migration, API/OpenAPI
+behavior, authentication/authorization, Core, Gateway, Workbench,
+supported-feature posture, data-product promotion, client-publication,
+production certification, wiki source, or final RFC-0002 closure claim is in
+scope. PR/main PostgreSQL Runtime Proof remains required before issue `#1074`
+can close.
+
 ## 2026-08-14: Cross-Repo Posture Fixture Helper Boundary
 
 Issue `#1071` applies the RFC-0002 Slice 18/19 maintainability lens to
