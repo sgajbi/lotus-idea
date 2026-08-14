@@ -29,11 +29,30 @@ test-support entry point while separating:
 7. maturity-matrix payload construction, and
 8. product classification / maturity-wave derivation.
 
-Validation is in progress on branch `issue/1068-platform-mesh-fixture-refactor`.
-The intended local proof is focused Ruff, MyPy, and pytest over the fixture
-consumers, plus maintainability, duplicate-implementation, quality-baseline,
-RFC-0002 execution-ledger, learning-pattern, live issue-state audit,
-documentation, and whitespace gates.
+Focused local validation passed:
+
+1. `python -m ruff check tests/unit/platform_mesh_fixture.py tests/unit/outbox/platform_mesh/test_readiness_consumption.py tests/unit/test_implementation_proof_readiness.py`,
+2. `python -m ruff format --check tests/unit/platform_mesh_fixture.py tests/unit/outbox/platform_mesh/test_readiness_consumption.py tests/unit/test_implementation_proof_readiness.py`,
+3. `python -m mypy tests/unit/platform_mesh_fixture.py tests/unit/outbox/platform_mesh/test_readiness_consumption.py tests/unit/test_implementation_proof_readiness.py`, and
+4. `python -m pytest tests/unit/outbox/platform_mesh/test_readiness_consumption.py tests/unit/test_implementation_proof_readiness.py -q`
+   (`42` passed).
+
+Broader local validation passed:
+
+1. `make maintainability-gate`,
+2. `make duplicate-implementation-gate` (`0` duplicate clusters across `3,622`
+   source/script functions),
+3. `make quality-baseline`,
+4. `make rfc0002-github-issue-execution-ledger-gate`,
+5. `make rfc0002-github-issue-learning-pattern-gate`,
+6. `make rfc0002-github-issue-execution-state-audit`,
+7. `make documentation-contract-gate`, and
+8. `git diff --check`.
+
+The refreshed quality baseline no longer lists the targeted fixture in largest
+functions; the largest remaining report-only function is
+`tests/unit/test_cross_repo_issue_posture.py::_cross_repo_posture_fixture_payload`
+at `98` lines.
 
 No runtime code, API/OpenAPI behavior, persistence schema, migration,
 authentication/authorization, Core, Gateway, Workbench, platform mesh
