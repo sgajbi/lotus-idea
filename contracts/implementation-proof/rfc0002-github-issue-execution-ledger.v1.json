@@ -216,6 +216,15 @@
       "closureInstruction": "Closed #1056 after PR #1057 reached Idea main 9bce18299fc94f97a9461b401762f623271e8280. Exact-main Main Releasability run 31758404602 passed, including lint/typecheck/security, unit/integration/e2e tests, 99% combined coverage, PostgreSQL runtime proof, Docker build, image scan, SBOM, signing/provenance, and CI signal evidence; CodeQL run 31758399729 passed for the same SHA; repo-authored wiki parity reported DiffCount 0 at lotus-idea.wiki f761d04; the implementation branch was patch-equivalent to origin/main and removed locally; and git branch -r --no-merged origin/main reported no unmerged lotus-idea remote branches. This closes only the Slice 12 maintainability refactor that centralized downstream submission API orchestration; it does not certify live Advise/Manage/Report/Render/Archive downstream acceptance, downstream authority, Gateway/Workbench behavior, supported-feature promotion, production identity, or final RFC-0002 completion."
     },
     {
+      "issueNumber": 1059,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/1059",
+      "rfcSlices": ["slice-15", "slice-19"],
+      "githubState": "open",
+      "executionStatus": "open_in_progress",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #1059 open until the outbox proof consumption refactor is merged to main, exact-main validation passes, and source-controlled RFC-0002 issue truth is synchronized. The implementation must preserve source-contract supporting-evidence posture, runtime blocker-clearing posture, registered artifact-effect enforcement, current-proof validation, evidence-ref de-duplication, supported-feature non-promotion, and every existing no-claim boundary. No API/OpenAPI, persistence, migration, authentication, authorization, Core, Gateway, Workbench, runtime stack, broker, platform-mesh, supported-feature, data-product certification, or production certification change is allowed in this issue."
+    },
+    {
       "issueNumber": 676,
       "url": "https://github.com/sgajbi/lotus-idea/issues/676",
       "rfcSlices": ["slice-12", "slice-13"],
