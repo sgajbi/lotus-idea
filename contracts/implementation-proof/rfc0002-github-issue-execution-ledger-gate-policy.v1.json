@@ -419,6 +419,7 @@
       "No API/OpenAPI, persistence, migration, authentication, authorization, Core, Gateway, Workbench, runtime stack, broker, platform-mesh, supported-feature, data-product certification, or production certification change"
     ],
     "1074": [
+      "PR #1075",
       "Keep #1074 open",
       "tests/integration/test_postgres_runtime_integration.py::test_postgres_runtime_serializes_concurrent_review_and_feedback_resource_identity",
       "quality/baseline_report.md",
