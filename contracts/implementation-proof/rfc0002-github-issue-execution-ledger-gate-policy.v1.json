@@ -130,7 +130,8 @@
     1071,
     1074,
     1076,
-    1078
+    1078,
+    1080
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -420,24 +421,23 @@
       "supported-feature non-promotion",
       "No API/OpenAPI, persistence, migration, authentication, authorization, Core, Gateway, Workbench, runtime stack, broker, platform-mesh, supported-feature, data-product certification, or production certification change"
     ],
-    "1078": [
-      "Refactor source-ingestion run-once API boundary",
-      "src/app/api/source_ingestion_readiness.py::post_source_ingestion_run_once",
+    "1080": [
+      "Refactor AI explanation lineage record assembly boundary",
+      "src/app/domain/ai_lineage_persistence.py::ai_explanation_lineage_record_from_result",
       "92 lines",
-      "quality/baseline_report.md",
-      "PR #1079",
-      "Keep #1078 open",
-      "caller context",
-      "operator authorization",
-      "durable repository posture",
-      "capacity shedding",
-      "runtime blocker mapping",
-      "tests/integration/test_source_ingestion_readiness_api.py",
-      "18 passed",
-      "No API/OpenAPI behavior change",
+      "quality/refactor_decisions.md",
+      "Keep #1080 open",
+      "AI explanation lineage",
+      "attestation receipt",
+      "provider retention receipt",
+      "canonical lineage-hash payload",
+      "fallback timestamp",
+      "tests/unit/test_ai_lineage_content_integrity.py",
+      "No OpenAPI change",
+      "No persistence migration",
       "No runtime topology change",
       "No supported-feature promotion",
-      "No Core, Gateway, or Workbench change"
+      "No Core, Gateway, Workbench, or lotus-ai change"
     ]
   },
   "requiredClosedIssueEvidence": {
@@ -2143,6 +2143,33 @@
       "status/merged-main",
       "supported-feature promotion",
       "endpoint certification promotion",
+      "final RFC-0002 closure"
+    ],
+    "1078": [
+      "Closed #1078",
+      "PR #1079",
+      "58bcfab81e6c9c274c4e850cfcf973a99c854a2a",
+      "31776306524",
+      "src/app/api/source_ingestion_readiness.py::post_source_ingestion_run_once",
+      "quality/baseline_report.md",
+      "source-ingestion run-once API boundary",
+      "caller context",
+      "operator authorization",
+      "durable repository posture",
+      "capacity shedding",
+      "runtime blocker mapping",
+      "tests/integration/test_source_ingestion_readiness_api.py",
+      "18 passed",
+      "quality/refactor_decisions.md",
+      "CODEBASE-REVIEW-LEDGER.md",
+      "No repo-authored wiki source changed",
+      "branch cleanup",
+      "Loop status: qa_passed_closed",
+      "status/merged-main",
+      "No API/OpenAPI behavior change",
+      "No runtime topology change",
+      "No supported-feature promotion",
+      "No Core, Gateway, or Workbench change",
       "final RFC-0002 closure"
     ]
   }
