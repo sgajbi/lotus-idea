@@ -6,6 +6,59 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-08-14: Source-Ingestion Run-Once API Boundary
+
+Issue `#1078` applies the RFC-0002 Slice 15/17/19 maintainability lens to
+`src/app/api/source_ingestion_readiness.py::post_source_ingestion_run_once`.
+The refreshed report-only quality baseline listed the operator API handler as
+the largest remaining production/API function at `92` lines after issue `#1076`
+removed the endpoint-certification gate hotspot.
+
+The refactor keeps the public `POST /api/v1/source-ingestion/run-once` route
+signature, route metadata, response model, status codes, `ProblemDetails`
+behavior, operator capability requirement, source-safe blocker responses,
+operation events, runtime cleanup, and `supportedFeaturePromoted=false` posture
+stable while separating:
+
+1. operator authorization failure mapping after trusted caller-context parsing,
+2. durable repository and capacity precondition evaluation,
+3. runtime-configuration blocker response mapping, and
+4. source-ingestion runtime execution dispatch.
+
+Focused local validation passed:
+
+1. `python -m ruff format src/app/api/source_ingestion_readiness.py`,
+2. `python -m ruff check src/app/api/source_ingestion_readiness.py tests/integration/test_source_ingestion_readiness_api.py`,
+3. `python -m mypy src/app/api/source_ingestion_readiness.py tests/integration/test_source_ingestion_readiness_api.py`
+   with `MYPYPATH=src;scripts`, and
+4. `python -m pytest tests/integration/test_source_ingestion_readiness_api.py -q`
+   (`18` passed).
+
+Broader local validation passed:
+
+1. `make quality-baseline`,
+2. `make maintainability-gate`,
+3. `make duplicate-implementation-gate` (`0` duplicate clusters across
+   `3,629` source/script functions),
+4. `make rfc0002-github-issue-execution-ledger-gate`,
+5. `make rfc0002-github-issue-learning-pattern-gate`,
+6. `make rfc0002-github-issue-execution-state-audit`,
+7. `make documentation-contract-gate`, and
+8. `git diff --check`.
+
+The refreshed quality baseline no longer lists
+`src/app/api/source_ingestion_readiness.py::post_source_ingestion_run_once`.
+The largest remaining report-only functions are `95` lines, and the next
+production-code entries are `src/app/domain/ai_lineage_persistence.py::ai_explanation_lineage_record_from_result`
+at `92` lines and
+`src/app/application/implementation_proof_consumption.py::_apply_downstream_proofs`
+at `91` lines.
+
+No API/OpenAPI behavior, persistence, migration, production identity, Core,
+Gateway, Workbench, live-source certification, data-mesh promotion,
+supported-feature promotion, runtime topology, wiki source, client publication,
+production certification, or final RFC-0002 closure claim is in scope.
+
 ## 2026-08-14: Endpoint Certification Gate Entrypoint Boundary
 
 Issue `#1076` applies the RFC-0002 Slice 17/19 maintainability lens to
@@ -41,6 +94,15 @@ The script is now `490` lines, below the `500` line maintainability cap. The
 refreshed quality baseline no longer lists
 `scripts/endpoint_certification_gate.py::main`; the largest remaining
 report-only functions are `95` lines.
+
+PR `#1077` rebase-merged this refactor to main SHA
+`f7dd7b2d3f1c37b0c32d4648bc03863482250899`. Exact-main Main Releasability Gate
+run `31774915457` passed for that SHA, including lint/typecheck/security,
+unit/integration/e2e tests, PostgreSQL runtime proof, coverage, Docker
+build/runtime/scan, release evidence, and CI signal evidence. No repo-authored
+wiki source changed. Branch cleanup completed: GitHub deleted the remote branch,
+fetch/prune removed the remote-tracking ref, and no local or remote
+`issue/1076-endpoint-gate-ledger-sync` branch remains.
 
 No runtime endpoint behavior, API/OpenAPI contract, persistence, migration,
 authentication, authorization, Gateway, Workbench, Core, supported-feature
