@@ -448,6 +448,7 @@
       "final RFC-0002 closure"
     ],
     "1076": [
+      "PR #1077",
       "Keep #1076 open",
       "scripts/endpoint_certification_gate.py::main",
       "quality/baseline_report.md",
@@ -457,9 +458,12 @@
       "exit codes",
       "validation semantics",
       "tests/unit/test_endpoint_certification_gate.py",
+      "40 passed",
+      "490",
+      "3,625",
+      "no longer lists",
       "quality/refactor_decisions.md",
       "CODEBASE-REVIEW-LEDGER.md",
-      "implementation on a separate issue branch",
       "No runtime endpoint behavior change",
       "No API/OpenAPI contract change",
       "supported-feature promotion",
