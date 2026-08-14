@@ -139,9 +139,10 @@ rebase-merged #1091 to Idea main
 strict wiki parity, and branch hygiene passed.
 The current live cross-repo RFC-0002 posture is 205 label-backed RFC-0002
 issues across 13 repositories: 167 closed and 38 open. The open set is 25
-`status/blocked`, 0 `status/fixed-local`, 2 `status/in-progress`, 1
+`status/blocked`, 1 `status/fixed-local`, 1 `status/in-progress`, 1
 `status/merged-main`, 2 `status/merged-to-main`, 0 `status/pr-open`, and 8
-`status/tracker` issues; this includes #681 and #1104 as the active Idea issues
+`status/tracker` issues; this includes #681 as the active Idea Slice 18 issue and
+#1104 as the fixed-local Idea Slice 19 issue
 and #1101 as the latest closed Idea AI-governance maintainability hardening issue.
 Blocked actionability
 remains 0 app-actionable blocked issues. Idea #864, #866, and #874 are now
@@ -446,9 +447,9 @@ PR #1102 is the latest implementation-backed closure on main
 `2b0cdafa02a4c98b52090abe4f06bbd863776c83`; exact-main Main Releasability
 `31817955897`, Push-on-main run `31817948440`, wiki publication `77c049d`,
 strict wiki parity, and branch hygiene passed.
-Current governed cross-repo RFC-0002 posture is 204 label-backed RFC-0002
-issues across 13 repositories: 167 closed and 37 open.
-The open split is 25 `status/blocked`, 0 `status/fixed-local`, 1 `status/in-progress`, 1
+Current governed cross-repo RFC-0002 posture is 205 label-backed RFC-0002
+issues across 13 repositories: 167 closed and 38 open.
+The open split is 25 `status/blocked`, 1 `status/fixed-local`, 1 `status/in-progress`, 1
 `status/merged-main`, 2 `status/merged-to-main`, 0 `status/pr-open`, 8
 `status/tracker`. The
 blocked subset has 0 app-actionable blocked issues: all 25 are external/protected/canonical-proof
@@ -1748,7 +1749,7 @@ closed after release-CI hardening, and `sgajbi/lotus-idea#1094`,
 `sgajbi/lotus-idea#1091`, `sgajbi/lotus-idea#1088`,
 `sgajbi/lotus-idea#1084`, and `sgajbi/lotus-idea#1082` as the latest QA-closed maintainability hardening
 issues. The full live posture is 205 label-backed RFC-0002 issues across 13
-repositories: 167 closed and 38 open. The open split is 25 `status/blocked`, 0 `status/fixed-local`, 2 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 0 `status/pr-open`, 8 `status/tracker`.
+repositories: 167 closed and 38 open. The open split is 25 `status/blocked`, 1 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 0 `status/pr-open`, 8 `status/tracker`.
 Counts are label-backed by
 `rfc/RFC-0002`; title-only references are reported separately and excluded from
 governed counts unless deliberately labeled and ledgered. If a writable non-Core app-code
