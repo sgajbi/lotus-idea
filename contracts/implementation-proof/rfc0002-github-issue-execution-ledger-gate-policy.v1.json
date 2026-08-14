@@ -129,7 +129,8 @@
     1068,
     1071,
     1074,
-    1076
+    1076,
+    1078
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -419,28 +420,24 @@
       "supported-feature non-promotion",
       "No API/OpenAPI, persistence, migration, authentication, authorization, Core, Gateway, Workbench, runtime stack, broker, platform-mesh, supported-feature, data-product certification, or production certification change"
     ],
-    "1076": [
-      "PR #1077",
-      "Keep #1076 open",
-      "scripts/endpoint_certification_gate.py::main",
+    "1078": [
+      "Refactor source-ingestion run-once API boundary",
+      "src/app/api/source_ingestion_readiness.py::post_source_ingestion_run_once",
+      "92 lines",
       "quality/baseline_report.md",
-      "largest remaining report-only function at 96 lines",
-      "endpoint certification gate entrypoint",
-      "CLI behavior",
-      "exit codes",
-      "validation semantics",
-      "tests/unit/test_endpoint_certification_gate.py",
-      "40 passed",
-      "490",
-      "3,625",
-      "no longer lists",
-      "quality/refactor_decisions.md",
-      "CODEBASE-REVIEW-LEDGER.md",
-      "No runtime endpoint behavior change",
-      "No API/OpenAPI contract change",
-      "supported-feature promotion",
-      "endpoint certification promotion",
-      "final RFC-0002 closure"
+      "PR #1079",
+      "Keep #1078 open",
+      "caller context",
+      "operator authorization",
+      "durable repository posture",
+      "capacity shedding",
+      "runtime blocker mapping",
+      "tests/integration/test_source_ingestion_readiness_api.py",
+      "18 passed",
+      "No API/OpenAPI behavior change",
+      "No runtime topology change",
+      "No supported-feature promotion",
+      "No Core, Gateway, or Workbench change"
     ]
   },
   "requiredClosedIssueEvidence": {
@@ -2117,6 +2114,35 @@
       "new Lotus Core runtime evidence",
       "Workbench/Gateway runtime proof",
       "supported-feature promotion",
+      "final RFC-0002 closure"
+    ],
+    "1076": [
+      "Closed #1076",
+      "PR #1077",
+      "f7dd7b2d3f1c37b0c32d4648bc03863482250899",
+      "31774915457",
+      "scripts/endpoint_certification_gate.py::main",
+      "quality/baseline_report.md",
+      "largest remaining report-only function at 96 lines",
+      "endpoint certification gate entrypoint",
+      "CLI behavior",
+      "exit codes",
+      "validation semantics",
+      "tests/unit/test_endpoint_certification_gate.py",
+      "40 passed",
+      "490",
+      "3,625",
+      "no longer lists",
+      "quality/refactor_decisions.md",
+      "CODEBASE-REVIEW-LEDGER.md",
+      "No runtime endpoint behavior change",
+      "No API/OpenAPI contract change",
+      "No repo-authored wiki source changed",
+      "branch cleanup",
+      "Loop status: qa_passed_closed",
+      "status/merged-main",
+      "supported-feature promotion",
+      "endpoint certification promotion",
       "final RFC-0002 closure"
     ]
   }

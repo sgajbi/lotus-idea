@@ -45,6 +45,7 @@ from app.observability import (
 from app.observability.service_slo_metrics import observe_workflow_run
 from app.security.caller_context import (
     CapabilityPolicy,
+    CallerContext,
     PermissionDeniedError,
     require_role_and_capability,
 )
@@ -120,6 +121,34 @@ async def post_source_ingestion_run_once(
         capabilities=x_caller_capabilities,
         trusted_caller_context=x_lotus_trusted_caller_context,
     )
+    permission_failure = _authorize_source_ingestion_run(caller)
+    if permission_failure is not None:
+        return permission_failure
+
+    repository = get_idea_repository()
+    durable_storage_backed = idea_repository_durable_storage_backed(repository)
+    precondition_failure = _source_ingestion_run_precondition_failure(
+        repository=repository,
+        durable_storage_backed=durable_storage_backed,
+    )
+    if precondition_failure is not None:
+        return precondition_failure
+
+    runtime = _build_source_ingestion_runtime_from_environment()
+    if isinstance(runtime, SourceIngestionRuntimeBlocker):
+        return _source_ingestion_runtime_blocker_response(
+            runtime,
+            durable_storage_backed=durable_storage_backed,
+        )
+
+    return _execute_source_ingestion_runtime(
+        runtime,
+        repository=repository,
+        durable_storage_backed=durable_storage_backed,
+    )
+
+
+def _authorize_source_ingestion_run(caller: CallerContext) -> JSONResponse | None:
     try:
         require_role_and_capability(caller, _RUN_SOURCE_INGESTION_POLICY)
     except PermissionDeniedError:
@@ -133,69 +162,71 @@ async def post_source_ingestion_run_once(
             title="Permission denied",
             detail="The caller is not permitted to run idea source ingestion.",
         )
+    return None
 
-    repository = get_idea_repository()
-    durable_storage_backed = idea_repository_durable_storage_backed(repository)
+
+def _source_ingestion_run_precondition_failure(
+    *,
+    repository: IdeaRepository,
+    durable_storage_backed: bool,
+) -> SourceIngestionRunOnceResponse | None:
     if not durable_storage_backed:
-        _emit_source_ingestion_run_event(
-            OperationOutcome.BLOCKED,
-            "durable_repository_not_configured",
-            durable_storage_backed=durable_storage_backed,
-        )
-        snapshot = build_source_ingestion_readiness_snapshot()
-        return SourceIngestionRunOnceResponse.blocked(
+        return _source_ingestion_blocked_readiness_response(
             blocker="durable_repository_not_configured",
             durable_storage_backed=durable_storage_backed,
-            configured_manifest_available=snapshot.configured_manifest_available,
-            core_base_url_configured=snapshot.core_base_url_configured,
-            core_query_base_url_configured=snapshot.core_query_base_url_configured,
-            core_query_control_plane_base_url_configured=(
-                snapshot.core_query_control_plane_base_url_configured
-            ),
         )
 
     capacity_decision = evaluate_nonessential_workload_capacity(repository)
     if not capacity_decision.allowed:
-        blocker = capacity_decision.blocker or "postgres_capacity_posture_unavailable"
-        _emit_source_ingestion_run_event(
-            OperationOutcome.BLOCKED,
-            blocker,
+        return _source_ingestion_blocked_readiness_response(
+            blocker=capacity_decision.blocker or "postgres_capacity_posture_unavailable",
             durable_storage_backed=durable_storage_backed,
         )
-        snapshot = build_source_ingestion_readiness_snapshot()
-        return SourceIngestionRunOnceResponse.blocked(
-            blocker=blocker,
-            durable_storage_backed=durable_storage_backed,
-            configured_manifest_available=snapshot.configured_manifest_available,
-            core_base_url_configured=snapshot.core_base_url_configured,
-            core_query_base_url_configured=snapshot.core_query_base_url_configured,
-            core_query_control_plane_base_url_configured=(
-                snapshot.core_query_control_plane_base_url_configured
-            ),
-        )
+    return None
 
-    runtime = _build_source_ingestion_runtime_from_environment()
-    if isinstance(runtime, SourceIngestionRuntimeBlocker):
-        _emit_source_ingestion_run_event(
-            OperationOutcome.BLOCKED,
-            runtime.code,
-            durable_storage_backed=durable_storage_backed,
-        )
-        return SourceIngestionRunOnceResponse.blocked(
-            blocker=runtime.code,
-            durable_storage_backed=durable_storage_backed,
-            configured_manifest_available=runtime.configured_manifest_available,
-            core_base_url_configured=runtime.core_base_url_configured,
-            core_query_base_url_configured=runtime.core_query_base_url_configured,
-            core_query_control_plane_base_url_configured=(
-                runtime.core_query_control_plane_base_url_configured
-            ),
-        )
 
-    return _execute_source_ingestion_runtime(
-        runtime,
-        repository=repository,
+def _source_ingestion_blocked_readiness_response(
+    *,
+    blocker: str,
+    durable_storage_backed: bool,
+) -> SourceIngestionRunOnceResponse:
+    _emit_source_ingestion_run_event(
+        OperationOutcome.BLOCKED,
+        blocker,
         durable_storage_backed=durable_storage_backed,
+    )
+    snapshot = build_source_ingestion_readiness_snapshot()
+    return SourceIngestionRunOnceResponse.blocked(
+        blocker=blocker,
+        durable_storage_backed=durable_storage_backed,
+        configured_manifest_available=snapshot.configured_manifest_available,
+        core_base_url_configured=snapshot.core_base_url_configured,
+        core_query_base_url_configured=snapshot.core_query_base_url_configured,
+        core_query_control_plane_base_url_configured=(
+            snapshot.core_query_control_plane_base_url_configured
+        ),
+    )
+
+
+def _source_ingestion_runtime_blocker_response(
+    runtime: SourceIngestionRuntimeBlocker,
+    *,
+    durable_storage_backed: bool,
+) -> SourceIngestionRunOnceResponse:
+    _emit_source_ingestion_run_event(
+        OperationOutcome.BLOCKED,
+        runtime.code,
+        durable_storage_backed=durable_storage_backed,
+    )
+    return SourceIngestionRunOnceResponse.blocked(
+        blocker=runtime.code,
+        durable_storage_backed=durable_storage_backed,
+        configured_manifest_available=runtime.configured_manifest_available,
+        core_base_url_configured=runtime.core_base_url_configured,
+        core_query_base_url_configured=runtime.core_query_base_url_configured,
+        core_query_control_plane_base_url_configured=(
+            runtime.core_query_control_plane_base_url_configured
+        ),
     )
 
 
