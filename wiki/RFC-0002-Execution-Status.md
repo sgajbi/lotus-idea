@@ -38,8 +38,8 @@ blocked posture and implement or reclassify it.
 
 ```mermaid
 flowchart LR
-    Issues["GitHub issue posture<br/>205 label-backed RFC-0002 issues"]
-    Open["168 closed and 37 open<br/>25 `status/blocked`, 0 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 0 `status/pr-open`, 8 `status/tracker`"]
+    Issues["GitHub issue posture<br/>207 label-backed RFC-0002 issues"]
+    Open["170 closed and 37 open<br/>25 `status/blocked`, 0 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 0 `status/pr-open`, 8 `status/tracker`"]
     Blocked["Blocked classifier<br/>0 app-actionable blocked"]
     Work["Writable work<br/>only when evidence proves app-code ownership"]
     External["Core / protected / identity / provider / legal evidence"]
@@ -64,15 +64,18 @@ flowchart LR
 | `status/pr-open` | 0 | No RFC-0002 issue currently has an open Idea PR. |
 | `status/tracker` | 8 | Parent or umbrella tracking issues, not immediate implementation items. |
 
-Latest synchronization evidence: Current GitHub issue posture has 205
-label-backed RFC-0002 issues, 168 closed and 37 open, with 25
+Latest synchronization evidence: Current GitHub issue posture has 207
+label-backed RFC-0002 issues, 170 closed and 37 open, with 25
 `status/blocked`, 0 `status/fixed-local`, 1 `status/in-progress`, 1
 `status/merged-main`, 2 `status/merged-to-main`, 0 `status/pr-open`, 8
 `status/tracker`, and 0 app-actionable blocked issues. The Idea source ledger
-tracks 136 RFC-0002 issues: 111 closed and 25 open. `lotus-idea#1104` is
-closed after PR #1105 for Slice 19 supported-feature gate fixture hardening; `lotus-idea#1101` is
-closed after PR #1102 for AI workflow evaluator hardening; `lotus-idea#1098` is
-closed after PR #1099 for release-CI hardening; `lotus-idea#1094` is closed
+tracks 138 RFC-0002 issues: 113 closed and 25 open. `lotus-idea#1110` is
+closed after PR #1114/#1115/#1116 for downstream intake wire-contract gate
+hardening; `lotus-idea#1109` is closed after PR #1111/#1112 for signal API
+contract-gate hardening; `lotus-idea#1104` is closed after PR #1105 for
+supported-feature gate fixture hardening; `lotus-idea#1101` is closed after PR
+#1102 for AI workflow evaluator hardening; `lotus-idea#1098` is closed after
+PR #1099 for release-CI hardening; `lotus-idea#1094` is closed
 after PR #1095 for test-support maintainability; `lotus-idea#1091` is
 closed after PR #1092 reached exact main
 `a1273204c47168806e4f1b1b21d8c30660aa8970`; Main Releasability run
