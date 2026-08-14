@@ -122,7 +122,8 @@
     1047,
     1049,
     1052,
-    1056
+    1056,
+    1059
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -400,6 +401,17 @@
       "Workbench/Gateway browser proof",
       "production identity/session-token authority",
       "final RFC-0002 completion"
+    ],
+    "1059": [
+      "Keep #1059 open",
+      "outbox proof consumption refactor",
+      "registered artifact-effect enforcement",
+      "current-proof validation",
+      "evidence-ref de-duplication",
+      "source-contract supporting-evidence posture",
+      "runtime blocker-clearing posture",
+      "supported-feature non-promotion",
+      "No API/OpenAPI, persistence, migration, authentication, authorization, Core, Gateway, Workbench, runtime stack, broker, platform-mesh, supported-feature, data-product certification, or production certification change"
     ]
   },
   "requiredClosedIssueEvidence": {

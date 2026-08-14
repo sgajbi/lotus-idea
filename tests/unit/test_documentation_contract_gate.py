@@ -333,8 +333,8 @@ def test_documentation_contract_gate_blocks_non_contract_current_issue_posture(
     assert errors == [
         "wiki/RFC-Index.md: paragraph 2 describes current/live RFC-0002 issue posture "
         "without contract-backed crossRepo fragment(s): "
-        "`188 label-backed RFC-0002 issues`, `151 closed and 37 open`, "
-        "`25 `status/blocked`, 0 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 0 `status/pr-open`, 8 `status/tracker``"
+        "`189 label-backed RFC-0002 issues`, `151 closed and 38 open`, "
+        "`25 `status/blocked`, 0 `status/fixed-local`, 2 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 0 `status/pr-open`, 8 `status/tracker``"
     ]
 
 
@@ -352,14 +352,15 @@ def test_documentation_contract_gate_allows_contract_current_issue_posture(
                 "schemaVersion": "lotus-idea:rfc0002-issue-posture-snapshot:v1",
                 "expectedCurrentFragments": {
                     "ideaLedger": [
-                        "59 tracked RFC-0002 issues",
-                        "34 closed and 25 open",
+                        "120 tracked RFC-0002 issues",
+                        "94 closed and 26 open",
                         "#681",
+                        "#1059",
                     ],
                     "crossRepo": [
-                        "128 label-backed RFC-0002 issues",
-                        "91 closed and 37 open",
-                        "25 `status/blocked`, 1 `status/in-progress`",
+                        "189 label-backed RFC-0002 issues",
+                        "151 closed and 38 open",
+                        "25 `status/blocked`, 2 `status/in-progress`",
                         "0 app-actionable blocked",
                     ],
                 },
@@ -370,12 +371,13 @@ def test_documentation_contract_gate_allows_contract_current_issue_posture(
     doc = tmp_path / "REPOSITORY-ENGINEERING-CONTEXT.md"
     doc.write_text(
         "# Repository Engineering Context\n\n"
-        "Current Idea ledger posture has 59 tracked RFC-0002 issues, "
-        "34 closed and 25 open; #681 is the in-progress Slice 18 "
-        "tracker. Current governed cross-repo RFC-0002 posture has "
-        "128 label-backed RFC-0002 issues across 13 repositories: 91 closed "
-        "and 37 open. The open split is 25 `status/blocked`, "
-        "1 `status/in-progress`, 1 `status/merged-main`, "
+        "Current Idea ledger posture has 120 tracked RFC-0002 issues, "
+        "94 closed and 26 open; #681 is the in-progress Slice 18 "
+        "tracker and #1059 is the in-progress Slice 15/19 refactor. "
+        "Current governed cross-repo RFC-0002 posture has "
+        "189 label-backed RFC-0002 issues across 13 repositories: 151 closed "
+        "and 38 open. The open split is 25 `status/blocked`, "
+        "2 `status/in-progress`, 1 `status/merged-main`, "
         "2 `status/merged-to-main`, and 8 `status/tracker`; "
         "blocked actionability remains 0 app-actionable blocked issues.\n",
         encoding="utf-8",

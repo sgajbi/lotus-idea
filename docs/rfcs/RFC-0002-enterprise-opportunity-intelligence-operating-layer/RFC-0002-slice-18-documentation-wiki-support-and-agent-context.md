@@ -960,8 +960,8 @@ This sync closes only the ledger-gate maintainability issue and does not close W
 runtime-proof blockers, production identity/session blockers, protected runtime
 evidence, supported-feature promotion, or final RFC-0002 closure.
 
-The 2026-08-09 #864/#866 proof-readiness hardening closure sync keeps
-`lotus-idea#681` as the only in-progress RFC-0002 issue. Idea #864 is closed
+The 2026-08-09 #864/#866 proof-readiness hardening closure sync kept
+`lotus-idea#681` as the then-current only in-progress RFC-0002 issue. Idea #864 is closed
 after PR #865 refactored implementation-proof readiness composition to exact
 main `35091eec121ea0c7186302526b211e288a59abed`; Main Releasability
 `31304700457`, PR Merge Gate `31304443459`, CodeQL `31304442120`, and Feature
