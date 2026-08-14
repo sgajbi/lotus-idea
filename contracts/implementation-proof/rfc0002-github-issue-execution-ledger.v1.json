@@ -1289,7 +1289,7 @@
       "url": "https://github.com/sgajbi/lotus-idea/issues/1104",
       "rfcSlices": ["slice-19"],
       "githubState": "open",
-      "executionStatus": "open_in_progress",
+      "executionStatus": "open_fixed_local",
       "allowPullRequestAutoClose": false,
       "closureInstruction": "Keep #1104 open until the supported-feature gate implemented-feature fixture refactor is merged to main, exact-main validation passes, wiki/no-wiki evidence is recorded, branch cleanup is complete, and QA closure evidence is posted. This issue owns the `quality/baseline_report.md` test-support hotspot `tests/unit/test_supported_features_gate.py::_valid_implemented_feature`, measured at 95 lines before the refactor. The implementation must preserve public supported-feature promotion gate behavior, supported-feature non-promotion semantics, and every existing fail-closed assertion while splitting the fixture into named test-support helpers. No product behavior, API/OpenAPI contract, persistence, migration, runtime topology, authentication, authorization, Core, Gateway, Workbench, data-mesh certification, supported-feature promotion, client publication, production certification, or final RFC-0002 closure claim is in scope."
     }
