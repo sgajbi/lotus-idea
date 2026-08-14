@@ -132,10 +132,10 @@ rebase-merged #1091 to Idea main
 strict wiki parity, and branch hygiene passed.
 The current live cross-repo RFC-0002 posture is 202 label-backed RFC-0002
 issues across 13 repositories: 165 closed and 37 open. The open set is 25
-`status/blocked`, 0 `status/fixed-local`, 1 `status/in-progress`, 1
-`status/merged-main`, 2 `status/merged-to-main`, 0 `status/pr-open`, and 8
-`status/tracker` issues; this includes #681 as the Idea in-progress issue and
-#1094 as the latest closed Idea maintainability issue.
+`status/blocked`, 0 `status/fixed-local`, 0 `status/in-progress`, 1
+`status/merged-main`, 2 `status/merged-to-main`, 1 `status/pr-open`, and 8
+`status/tracker` issues; this includes #681 as the Idea PR-open Slice 18 issue
+and #1094 as the latest closed Idea maintainability issue.
 Blocked actionability
 remains 0 app-actionable blocked issues. Idea #864, #866, and #874 are now
 source-ledgered as Slice 17/18/19 hardening issues. #864 closed after PR #865
@@ -147,20 +147,25 @@ implementation-proof readiness generator input hardening and PR #868
 synchronized the source-controlled merged-main closure truth. PR #868 merged
 at `560ddcfff9ba61f2db3008fabc62c31c20cfb425`; exact-main Main Releasability
 `31306932624` and CodeQL `31306929484` passed.
-Fresh 2026-08-14 read-only canonical mainline-source preflight evidence is
-recorded in
-`lotus-platform/output/front-office-qa/rfc0002-mainline-preflight-20260814-212624.json`.
+Fresh 2026-08-14 read-only branch-local canonical mainline-source preflight
+evidence is recorded in
+`lotus-platform/output/front-office-qa/rfc0002-mainline-preflight-20260814-213841.json`.
 It failed closed before any stack/container/build/seed/validation mutation with
-11 of 13 repositories aligned. The remaining exact-main blockers are Core PR
-`sgajbi/lotus-core#948` (`feat/ingestion-evidence-authority` at
+10 of 13 repositories aligned. Workbench PR `sgajbi/lotus-workbench#701` has
+merged and the local Workbench checkout is exact `origin/main`
+`9aaaa9343baa278a2f6b2cacb0a9c2431ba5c023`. The remaining exact-main blockers
+are Core PR `sgajbi/lotus-core#948` (`feat/ingestion-evidence-authority` at
 `5acbfae338918acb96195205f9e8aeee52273958`, expected `origin/main`
-`04939c7d360233e35746639c7f823f9f4563d9c9`) and Workbench PR
-`sgajbi/lotus-workbench#701` (`feat/699-performance-evidence-assurance` at
-`6eba673f0abd049fc91654f7707e829dabc2fa10`, expected `origin/main`
-`9ff3161c917bf38c41aef4e8f9c42cb3d9c40b50`). This is a provenance blocker,
-not an Idea code defect. Do not run closure-grade canonical QA or close #685,
-#686, #814, `lotus-ai#126`, or the Advise QA-pending issues until Core and
-Workbench are clean exact main and the preflight passes.
+`04939c7d360233e35746639c7f823f9f4563d9c9`), the issue-backed Gateway #549
+branch (`fix/549-performance-evidence-window` at
+`4a080495122f20b9823cc487a1866db0da09112c`, expected `origin/main`
+`621a1b92a786e689a5ebf4d32fc1d27bbe2a94e7`), and this Idea PR branch
+(`issue/681-current-preflight-sync` at
+`5b4ff54e3adf58c2824194769b091bd4d050cbcd`, expected `origin/main`
+`6724724da9a9a47ade85d8d7cfa09e7444f113f7`). This is a provenance blocker,
+not a new Idea code defect. Do not run closure-grade canonical QA or close
+#685, #686, #814, `lotus-ai#126`, or the Advise QA-pending issues until Core,
+Gateway, Workbench, and Idea are clean exact main and the preflight passes.
 #681 returned to `status/in-progress` after PR #834 merged source truth for
 Core DPM candidate-source batch-fingerprint issue `sgajbi/lotus-core#882`
 after earlier Core readiness blockers `#836`, `#840`, `#856`, and `#873`
@@ -436,8 +441,8 @@ PR #1092 is the latest implementation-backed closure on main
 strict wiki parity, and branch hygiene passed.
 Current governed cross-repo RFC-0002 posture is 202 label-backed RFC-0002
 issues across 13 repositories: 165 closed and 37 open.
-The open split is 25 `status/blocked`, 0 `status/fixed-local`, 1 `status/in-progress`, 1
-`status/merged-main`, 2 `status/merged-to-main`, 0 `status/pr-open`, 8
+The open split is 25 `status/blocked`, 0 `status/fixed-local`, 0 `status/in-progress`, 1
+`status/merged-main`, 2 `status/merged-to-main`, 1 `status/pr-open`, 8
 `status/tracker`. The
 blocked subset has 0 app-actionable blocked issues: all 25 are external/protected/canonical-proof
 evidence blockers. Title-only
@@ -1734,7 +1739,7 @@ merged-main QA-pending Idea RFC-0002 issues, 1 in-progress RFC-0002 issue
 `sgajbi/lotus-idea#1091`, `sgajbi/lotus-idea#1088`,
 `sgajbi/lotus-idea#1084`, and `sgajbi/lotus-idea#1082` as the latest QA-closed maintainability hardening
 issues. The full live posture is 202 label-backed RFC-0002 issues across 13
-repositories: 165 closed and 37 open. The open split is 25 `status/blocked`, 0 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 0 `status/pr-open`, 8 `status/tracker`.
+repositories: 165 closed and 37 open. The open split is 25 `status/blocked`, 0 `status/fixed-local`, 0 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 1 `status/pr-open`, 8 `status/tracker`.
 Counts are label-backed by
 `rfc/RFC-0002`; title-only references are reported separately and excluded from
 governed counts unless deliberately labeled and ledgered. If a writable non-Core app-code
