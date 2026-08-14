@@ -426,20 +426,29 @@
       "runtime blocker-clearing posture",
       "supported-feature non-promotion",
       "No API/OpenAPI, persistence, migration, authentication, authorization, Core, Gateway, Workbench, runtime stack, broker, platform-mesh, supported-feature, data-product certification, or production certification change"
-    ],
-    "1098": [
-      "Keep #1098 open",
-      "GHCR authentication retry hardening",
-      "Main Releasability run `31808187953`",
-      "main `61c5d879cf9cb18f656866adcc62984b10ee4df2`",
-      "Docker build, runtime smoke, Trivy image scan",
-      "dependency SBOM generation passed",
-      "bounded fail-closed retry around GHCR authentication only",
-      "persistent authentication/permission failures must still fail the release",
-      "No product behavior, API/OpenAPI contract, persistence, migration, runtime topology, authentication or authorization feature implementation, supported-feature promotion, client publication, production certification, or final RFC-0002 closure claim is in scope"
     ]
   },
   "requiredClosedIssueEvidence": {
+    "1098": [
+      "Closed #1098",
+      "PR #1099",
+      "00aa2cd9698f6b80d27f763772e243e75d026b2d",
+      "464f88195a591fbc0d42fb6fb0372677300b2a41",
+      "31811097774",
+      "lotus-idea.wiki commit `fd23192`",
+      "strict `DiffCount 0`",
+      "Main Releasability run `31808187953`",
+      "Authenticate to GHCR",
+      "denied: denied",
+      "bounded fail-closed retry around GHCR authentication",
+      "fail-closed persistent authentication/permission failures",
+      "make lint",
+      "make typecheck",
+      "No product behavior, API/OpenAPI contract, persistence, migration, runtime topology, authentication or authorization feature implementation",
+      "Core, Gateway, Workbench",
+      "supported-feature promotion",
+      "final RFC-0002 closure claim"
+    ],
     "1091": [
       "Closed #1091",
       "PR #1092",

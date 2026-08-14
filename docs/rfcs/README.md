@@ -9,29 +9,29 @@ For the current live GitHub execution posture, canonical QA status, dependency
 map, and closure decision rules, use
 [wiki/RFC-0002-Execution-Status.md](../../wiki/RFC-0002-Execution-Status.md).
 At the latest refresh, RFC-0002 has 203 label-backed RFC-0002 issues across 13
-repositories: 165 closed and 38 open, with 25 `status/blocked`, 0
-`status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2
+repositories: 166 closed and 37 open, with 25 `status/blocked`, 0
+`status/fixed-local`, 0 `status/in-progress`, 1 `status/merged-main`, 2
 `status/merged-to-main`, 1 `status/pr-open`, 8 `status/tracker`, and 0
 app-actionable blocked issues.
-The latest Idea implementation-backed closure is `#1094`. PR #1095 split
-AI-governance verifier-field validation tests to main
-`0a8fbfac146c6fb99c70ddb109b33b9b88586f66`; exact-main Main Releasability
-`31802296872`, CodeQL `31802289873`, wiki publication `44060bc`, strict wiki
-parity, and branch cleanup passed. PR #1096 then synchronized closure-source
-truth to main `6724724da9a9a47ade85d8d7cfa09e7444f113f7`; Main Releasability
-`31803889231`, CodeQL `31803883100`, wiki publication `e145b08`, strict wiki
-parity, and branch cleanup passed. The current Idea source ledger tracks 134
-RFC-0002 issues, 108 closed and 26 open, with `#681` open as the Slice 18
-synchronization tracker, `#1098` in progress for release-CI hardening, and
-`#1094`, `#1091`, `#1088`, `#1084`, and `#1082` as the latest QA-closed Idea
+The latest Idea implementation-backed closure is `#1098`. PR #1099 hardened
+main releasability GHCR-authentication retry evidence and reached main
+`00aa2cd9698f6b80d27f763772e243e75d026b2d`; exact-main Main Releasability
+`31811097774`, wiki publication `fd23192`, strict wiki parity, and branch
+cleanup passed. PR #1095 previously split AI-governance verifier-field
+validation tests to main `0a8fbfac146c6fb99c70ddb109b33b9b88586f66`;
+exact-main Main Releasability `31802296872`, CodeQL `31802289873`, wiki
+publication `44060bc`, strict wiki parity, and branch cleanup passed. The
+current Idea source ledger tracks 134
+RFC-0002 issues, 109 closed and 25 open, with `#681` open as the Slice 18
+synchronization tracker, `#1098` closed after release-CI hardening, and
+`#1094`, `#1091`, `#1088`, and `#1084` as the latest QA-closed Idea
 maintainability issues. `#1094` is an issue-backed AI-governance test-support
 maintainability refactor and does not change product behavior or support
 posture. Fresh canonical QA is still required before closing AI/Advise
-QA-pending issues or promoting support; the current branch-local
-mainline-source preflight is blocked by Core PR #948, this Idea PR branch, and
-an in-flight dirty Workbench `fix/702-performance-period-assurance` checkout
-not yet being clean exact `origin/main`. Gateway PR #550 has merged and
-`lotus-gateway` is now exact main.
+QA-pending issues or promoting support; current blockers remain Core owner
+work, production identity/session authority, protected runtime evidence,
+provider/legal approvals, and final certification evidence. Gateway PR #550
+has merged and `lotus-gateway` is now exact main.
 
 ## Active RFC Suite
 
