@@ -6,6 +6,49 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-08-14: Downstream Implementation-Proof Application Boundary
+
+Issue `#1082` applies the RFC-0002 Slice 12/13/17/19 maintainability lens to
+`src/app/application/implementation_proof_consumption.py::_apply_downstream_proofs`.
+After issue `#1080` removed the prior production-code hotspot, refreshed
+quality evidence identified this downstream proof application helper as the
+next production-code hotspot at `91` lines.
+
+The refactor keeps implementation-proof readiness behavior stable while
+separating downstream proof metadata from the application loop. Each downstream
+proof now has explicit internal metadata for:
+
+1. proof key,
+2. artifact effect,
+3. proof payload,
+4. proof reference,
+5. validator, and
+6. capability applier.
+
+This preserves the critical no-claim boundary between source-contract
+supporting evidence and runtime blocker-clearing proof. In particular, report
+materialization source-contract proof remains supporting evidence and does not
+clear report materialization runtime blockers.
+
+Focused local validation passed:
+
+1. `python -m ruff format src/app/application/implementation_proof_consumption.py tests/unit/implementation_proof/test_effect_enforcement.py`,
+2. `python -m ruff check src/app/application/implementation_proof_consumption.py tests/unit/implementation_proof/test_effect_enforcement.py`,
+3. `python -m mypy src/app/application/implementation_proof_consumption.py tests/unit/implementation_proof/test_effect_enforcement.py`
+   with `MYPYPATH=src;scripts`, and
+4. `python -m pytest tests/unit/implementation_proof/test_effect_enforcement.py tests/unit/test_downstream_realization_readiness.py -q`
+   (`40` passed).
+
+The focused test update proves downstream proof catalog order, proof-ref
+preservation, source-contract supporting-evidence effects, runtime
+blocker-clearing effects, and the report materialization source-contract
+supporting-evidence exception.
+
+No API/OpenAPI behavior, persistence migration, runtime topology,
+authentication, authorization, Core, Gateway, Workbench, supported-feature
+promotion, data-mesh certification, client publication, production
+certification, or final RFC-0002 closure claim is in scope.
+
 ## 2026-08-14: AI Explanation Lineage Assembly Boundary
 
 Issue `#1080` applies the RFC-0002 Slice 15/17/19 maintainability lens to
@@ -46,6 +89,12 @@ Broader local validation passed:
 2. `make maintainability-gate`, and
 3. `make duplicate-implementation-gate` (`0` duplicate clusters across
    `3,633` source/script functions).
+
+PR `#1081` rebase-merged to main SHA
+`aafe93d6ace60265819785e32afce11f68a41223`; exact-main Main Releasability
+Gate run `31777507234` passed for that SHA. Issue `#1080` is closed with
+`status/merged-main`, and the implementation branch is absent locally and
+remotely after patch-equivalence branch cleanup.
 
 The refreshed quality baseline no longer lists
 `src/app/domain/ai_lineage_persistence.py::ai_explanation_lineage_record_from_result`.
