@@ -20,7 +20,10 @@ the supported-feature gate implemented-feature fixture boundary and reached main
 cleanup passed. PR #1106 then synchronized closure source truth to main
 `f257c21e0af6c2958794a860aaa518d35b8e3627`; exact-main Main Releasability
 `31826903476`, wiki publication `86cff66`, strict wiki parity, and branch
-cleanup passed. The
+cleanup passed. PR #1107 then synchronized current RFC-0002 issue posture and
+wiki/context source truth to main `ea0b5951de8245e97e436e7e2e5cd46a1e1c2639`;
+exact-main Main Releasability `31828341891`, wiki publication `6f435b4`,
+strict wiki parity, and branch cleanup passed. The
 current Idea source ledger tracks 136
 RFC-0002 issues, 111 closed and 25 open, with `#681` open as the Slice 18
 synchronization tracker, `#1104` closed after PR #1105 as the Slice 19 supported-feature gate
@@ -30,10 +33,13 @@ evaluator hardening issue, `#1098` closed after release-CI hardening, and
 maintainability issues. `#1094` is an issue-backed AI-governance test-support
 maintainability refactor and does not change product behavior or support
 posture. Fresh canonical QA is still required before closing AI/Advise
-QA-pending issues or promoting support; current blockers remain Core owner
-work, production identity/session authority, protected runtime evidence,
-provider/legal approvals, and final certification evidence. Gateway PR #550
-has merged and `lotus-gateway` is now exact main.
+QA-pending issues or promoting support; current blockers remain fresh exact-main
+canonical QA evidence, production identity/session authority, protected runtime
+evidence, provider/legal approvals, and final certification evidence. Core PR
+#948, Gateway PR #550, Workbench PR #701, and Workbench PR #708 have merged, but
+the shared local Core and Workbench checkouts are currently active non-main
+agent branches, so closure-grade canonical proof requires exact-main or an
+isolated non-conflicting QA workspace.
 
 ## Active RFC Suite
 

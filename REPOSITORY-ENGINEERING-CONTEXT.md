@@ -158,19 +158,25 @@ at `560ddcfff9ba61f2db3008fabc62c31c20cfb425`; exact-main Main Releasability
 Fresh 2026-08-14 read-only branch-local canonical mainline-source preflight
 evidence is recorded in
 `lotus-platform/output/front-office-qa/rfc0002-mainline-preflight-20260814-215840.json`.
-It failed closed before any stack/container/build/seed/validation mutation with
-10 of 13 repositories aligned. Gateway PR `sgajbi/lotus-gateway#550` has
-merged and the local Gateway checkout is exact `origin/main`
-`192c74279e48bdeeca6514110a0210999aaac996`; Workbench is now exact
-`origin/main` `0c86cf491004a0706f9d12ff12ad07fd799a36fb`. The current
-mainline-source blockers are Core PR `sgajbi/lotus-core#948`
-(`feat/ingestion-evidence-authority` at
-`3d127a315c42b9edb2acf98052d4ec5b3872ff0f`, expected `origin/main`
-`04939c7d360233e35746639c7f823f9f4563d9c9`) and this Idea closure-sync
-branch until it reaches `main`. This is a provenance blocker, not a new Idea
-code defect. Do not run closure-grade canonical QA or close #685, #686, #814,
-`lotus-ai#126`, or the Advise QA-pending issues until Core, Idea, Gateway, and
-Workbench are clean exact main and the preflight passes.
+That historical preflight failed closed before any stack/container/build/seed/validation
+mutation with 10 of 13 repositories aligned. The dependency truth has since
+changed: Core PR `sgajbi/lotus-core#948` merged to
+`43c8933fd40d5e45a1097619623878d3d41bfec4`, Gateway PR
+`sgajbi/lotus-gateway#550` merged to
+`192c74279e48bdeeca6514110a0210999aaac996`, Workbench PR
+`sgajbi/lotus-workbench#701` merged to
+`9aaaa9343baa278a2f6b2cacb0a9c2431ba5c023`, Workbench PR
+`sgajbi/lotus-workbench#708` merged to
+`5b9b431c9d1c73a58dacdbdcfa4ee3eacb00abba`, and Idea PR #1107 synchronized
+current RFC-0002 issue posture and wiki/context source truth to main
+`ea0b5951de8245e97e436e7e2e5cd46a1e1c2639`. The current preflight concern is
+workspace hygiene, not a new Idea code defect: the shared local Core checkout is
+on `fix/c157-integration-fixture-contract` and the shared local Workbench
+checkout is on `ux/706-performance-drivers-reflow`, both active non-main agent
+branches. Do not run closure-grade canonical QA or close #685, #686, #814,
+`lotus-ai#126`, or the Advise QA-pending issues until the QA run uses clean
+exact-main repositories or an isolated non-conflicting workspace and the
+preflight passes.
 #681 returned to `status/in-progress` after PR #834 merged source truth for
 Core DPM candidate-source batch-fingerprint issue `sgajbi/lotus-core#882`
 after earlier Core readiness blockers `#836`, `#840`, `#856`, and `#873`
