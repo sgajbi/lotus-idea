@@ -12,6 +12,9 @@ EVIDENCE_CLASSIFICATION_INVENTORY_PATH = Path(
     "docs/architecture/implementation-proof-evidence-classification.md"
 )
 ISSUE_CLOSURE_MATRIX_PATH = Path("docs/architecture/GITHUB-ISSUE-CLOSURE-MATRIX.md")
+RFC0002_POSTURE_SNAPSHOT_PATH = Path(
+    "contracts/implementation-proof/rfc0002-issue-posture-snapshot.v1.json"
+)
 
 
 def _load_gate() -> ModuleType:
@@ -23,6 +26,14 @@ def _load_gate() -> ModuleType:
     sys.modules[spec.name] = module
     spec.loader.exec_module(module)
     return module
+
+
+def _current_rfc0002_posture_fragments(family: str) -> list[str]:
+    snapshot = json.loads((ROOT / RFC0002_POSTURE_SNAPSHOT_PATH).read_text(encoding="utf-8"))
+    fragments = snapshot["expectedCurrentFragments"][family]
+    assert isinstance(fragments, list)
+    assert all(isinstance(fragment, str) and fragment for fragment in fragments)
+    return fragments
 
 
 def test_documentation_contract_gate_passes_current_repository_truth() -> None:
@@ -333,8 +344,9 @@ def test_documentation_contract_gate_blocks_non_contract_current_issue_posture(
     assert errors == [
         "wiki/RFC-Index.md: paragraph 2 describes current/live RFC-0002 issue posture "
         "without contract-backed crossRepo fragment(s): "
-        "`189 label-backed RFC-0002 issues`, `152 closed and 37 open`, "
-        "`25 `status/blocked`, 0 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 0 `status/pr-open`, 8 `status/tracker``"
+        + ", ".join(
+            f"`{fragment}`" for fragment in _current_rfc0002_posture_fragments("crossRepo")[:3]
+        )
     ]
 
 
@@ -342,6 +354,7 @@ def test_documentation_contract_gate_allows_contract_current_issue_posture(
     tmp_path: Path,
 ) -> None:
     module = _load_gate()
+    cross_repo_fragments = _current_rfc0002_posture_fragments("crossRepo")
     contract_path = (
         tmp_path / "contracts" / "implementation-proof" / "rfc0002-issue-posture-snapshot.v1.json"
     )
@@ -357,12 +370,7 @@ def test_documentation_contract_gate_allows_contract_current_issue_posture(
                         "#681",
                         "#1059",
                     ],
-                    "crossRepo": [
-                        "189 label-backed RFC-0002 issues",
-                        "152 closed and 37 open",
-                        "25 `status/blocked`, 0 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 0 `status/pr-open`, 8 `status/tracker`",
-                        "0 app-actionable blocked",
-                    ],
+                    "crossRepo": cross_repo_fragments,
                 },
             }
         ),
@@ -375,11 +383,9 @@ def test_documentation_contract_gate_allows_contract_current_issue_posture(
         "95 closed and 25 open; #681 is the in-progress Slice 18 "
         "tracker and #1059 is QA-closed after the Slice 15/19 refactor. "
         "Current governed cross-repo RFC-0002 posture has "
-        "189 label-backed RFC-0002 issues across 13 repositories: 152 closed "
-        "and 37 open. The open split is 25 `status/blocked`, "
-        "0 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, "
-        "2 `status/merged-to-main`, 0 `status/pr-open`, 8 `status/tracker`; "
-        "blocked actionability remains 0 app-actionable blocked issues.\n",
+        f"{cross_repo_fragments[0]} across 13 repositories: "
+        f"{cross_repo_fragments[1]}. The open split is {cross_repo_fragments[2]}; "
+        f"blocked actionability remains {cross_repo_fragments[3]} issues.\n",
         encoding="utf-8",
     )
 
