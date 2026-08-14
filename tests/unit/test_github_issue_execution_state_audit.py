@@ -265,6 +265,11 @@ def test_github_issue_execution_state_audit_rejects_conflicting_status_labels(
         if isinstance(entry, dict) and entry["issueNumber"] == 681
     ]
     github_payload = _github_issue_payload(ledger)
+    status_label = next(
+        label["name"]
+        for label in github_payload[0]["labels"]
+        if label["name"].startswith("status/")
+    )
     github_payload[0]["labels"].append({"name": "status/ready"})
     github_issues = module._parse_github_issue_states(github_payload)
 
@@ -273,9 +278,10 @@ def test_github_issue_execution_state_audit_rejects_conflicting_status_labels(
         github_issues=github_issues,
     )
 
+    issue_681_execution_status = ledger["issues"][0]["executionStatus"]
     assert (
-        "#681: executionStatus=open_in_progress allows only GitHub status label "
-        "status/in-progress; found conflicting status label(s): status/ready"
+        f"#681: executionStatus={issue_681_execution_status} allows only GitHub status label "
+        f"{status_label}; found conflicting status label(s): status/ready"
     ) in errors
 
 
