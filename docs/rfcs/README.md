@@ -13,14 +13,14 @@ repositories: 168 closed and 37 open, with 25 `status/blocked`, 0
 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2
 `status/merged-to-main`, 0 `status/pr-open`, 8 `status/tracker`, and 0
 app-actionable blocked issues.
-The latest Idea implementation-backed closure is `#1101`. PR #1102 hardened
-the AI workflow output evaluator boundary and reached main
-`2b0cdafa02a4c98b52090abe4f06bbd863776c83`; exact-main Main Releasability
-`31817955897`, Push-on-main `31817948440`, wiki publication `77c049d`,
-strict wiki parity, and branch cleanup passed. PR #1095 previously split AI-governance verifier-field
-validation tests to main `0a8fbfac146c6fb99c70ddb109b33b9b88586f66`;
-exact-main Main Releasability `31802296872`, CodeQL `31802289873`, wiki
-publication `44060bc`, strict wiki parity, and branch cleanup passed. The
+The latest Idea implementation-backed closure is `#1104`. PR #1105 refactored
+the supported-feature gate implemented-feature fixture boundary and reached main
+`a5bc341501c7fb3790f329850bbf950d7ec8d3a0`; exact-main Main Releasability
+`31825052693`, wiki publication `897fb10`, strict wiki parity, and branch
+cleanup passed. PR #1106 then synchronized closure source truth to main
+`f257c21e0af6c2958794a860aaa518d35b8e3627`; exact-main Main Releasability
+`31826903476`, wiki publication `86cff66`, strict wiki parity, and branch
+cleanup passed. The
 current Idea source ledger tracks 136
 RFC-0002 issues, 111 closed and 25 open, with `#681` open as the Slice 18
 synchronization tracker, `#1104` closed after PR #1105 as the Slice 19 supported-feature gate
