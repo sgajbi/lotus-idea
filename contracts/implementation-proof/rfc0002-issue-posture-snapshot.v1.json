@@ -9,12 +9,12 @@
   ],
   "trackingIssue": "sgajbi/lotus-idea#681",
   "ideaLedger": {
-    "totalTrackedIssues": 131,
-    "openIssues": 25,
+    "totalTrackedIssues": 132,
+    "openIssues": 26,
     "closedIssues": 106,
     "openStatusCounts": {
       "open_blocked": 14,
-      "open_fixed_local": 0,
+      "open_fixed_local": 1,
       "open_in_progress": 1,
       "open_merged_main_qa_pending": 0,
       "open_pr_raised": 0,
@@ -22,7 +22,9 @@
       "open_pending_post_completion": 1,
       "open_tracker": 8
     },
-    "fixedLocalIssues": [],
+    "fixedLocalIssues": [
+      "sgajbi/lotus-idea#1091"
+    ],
     "prOpenIssues": [],
     "inProgressIssues": [
       "sgajbi/lotus-idea#681"
@@ -52,14 +54,14 @@
   },
   "crossRepo": {
     "repositoriesChecked": 13,
-    "totalRfc0002Issues": 200,
-    "openRfc0002Issues": 37,
+    "totalRfc0002Issues": 201,
+    "openRfc0002Issues": 38,
     "closedRfc0002Issues": 163,
     "openBlockedIssues": 25,
     "appActionableBlockedIssues": 0,
     "openStatusCounts": {
       "status/blocked": 25,
-      "status/fixed-local": 0,
+      "status/fixed-local": 1,
       "status/in-progress": 1,
       "status/merged-main": 1,
       "status/merged-to-main": 2,
@@ -72,18 +74,19 @@
   },
   "expectedCurrentFragments": {
     "ideaLedger": [
-      "131 tracked RFC-0002 issues",
-      "106 closed and 25 open",
+      "132 tracked RFC-0002 issues",
+      "106 closed and 26 open",
       "#681",
+      "#1091",
       "#1088",
       "#1084",
       "#1082",
       "#1080"
     ],
     "crossRepo": [
-      "200 label-backed RFC-0002 issues",
-      "163 closed and 37 open",
-      "25 `status/blocked`, 0 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 0 `status/pr-open`, 8 `status/tracker`",
+      "201 label-backed RFC-0002 issues",
+      "163 closed and 38 open",
+      "25 `status/blocked`, 1 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 0 `status/pr-open`, 8 `status/tracker`",
       "0 app-actionable blocked"
     ]
   },
