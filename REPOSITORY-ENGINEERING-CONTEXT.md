@@ -121,7 +121,7 @@ evidence plus Core handoff posture to exact main
 issue-execution prevention cycle plus QA closure of the already merged-main
 Advise, Gateway, Workbench, and AI dependency issues, Current Idea ledger
 posture has 135 tracked RFC-0002 issues, 109 closed and 26 open; #681 remains
-the Slice 18 synchronization tracker, #1101 is fixed local for Slice 09/17/19 AI
+the Slice 18 synchronization tracker, #1101 is open in PR #1102 for Slice 09/17/19 AI
 workflow evaluator hardening and awaits PR/mainline proof, and #1098 is closed after PR #1099
 hardened Main Releasability GHCR authentication retry evidence. #1094 is
 closed after PR #1095. #1094 owns the
@@ -135,8 +135,8 @@ rebase-merged #1091 to Idea main
 strict wiki parity, and branch hygiene passed.
 The current live cross-repo RFC-0002 posture is 204 label-backed RFC-0002
 issues across 13 repositories: 166 closed and 38 open. The open set is 25
-`status/blocked`, 1 `status/fixed-local`, 0 `status/in-progress`, 1
-`status/merged-main`, 2 `status/merged-to-main`, 1 `status/pr-open`, and 8
+`status/blocked`, 0 `status/fixed-local`, 0 `status/in-progress`, 1
+`status/merged-main`, 2 `status/merged-to-main`, 2 `status/pr-open`, and 8
 `status/tracker` issues; this includes #681 as the Idea PR-open Slice 18 issue
 and #1098 as the latest closed Idea release-CI hardening issue.
 Blocked actionability
@@ -425,7 +425,7 @@ fixed the post-merge QA hash-compatibility defects on main
 `31268949391` passing.
 Current Idea ledger posture has 135 tracked RFC-0002 issues, 109 closed and 26
 open; `sgajbi/lotus-idea#681` remains the Slice 18 synchronization tracker,
-`sgajbi/lotus-idea#1101` is fixed local for Slice 09/17/19 AI workflow evaluator
+`sgajbi/lotus-idea#1101` is open in PR #1102 for Slice 09/17/19 AI workflow evaluator
 hardening and awaits PR/mainline proof, `sgajbi/lotus-idea#1098` is closed after the Slice 15/19 main releasability
 GHCR-authentication retry hardening issue, and `sgajbi/lotus-idea#1094` is the
 latest QA-closed Slice 09/17/19 AI-governance
@@ -444,8 +444,8 @@ PR #1092 is the latest implementation-backed closure on main
 strict wiki parity, and branch hygiene passed.
 Current governed cross-repo RFC-0002 posture is 204 label-backed RFC-0002
 issues across 13 repositories: 166 closed and 38 open.
-The open split is 25 `status/blocked`, 1 `status/fixed-local`, 0 `status/in-progress`, 1
-`status/merged-main`, 2 `status/merged-to-main`, 1 `status/pr-open`, 8
+The open split is 25 `status/blocked`, 0 `status/fixed-local`, 0 `status/in-progress`, 1
+`status/merged-main`, 2 `status/merged-to-main`, 2 `status/pr-open`, 8
 `status/tracker`. The
 blocked subset has 0 app-actionable blocked issues: all 25 are external/protected/canonical-proof
 evidence blockers. Title-only
@@ -1736,14 +1736,14 @@ has 135 tracked RFC-0002 issues, 109 closed and 26 open. Current live posture is
 25 blocked RFC-0002 issues, 0 app-actionable blocked issues, 25
 external/protected/canonical-proof evidence blockers, 1 PR-open Idea
 RFC-0002 issues, 1 merged-main RFC-0002 issue outside the Idea ledger, no
-merged-main QA-pending Idea RFC-0002 issues, 1 fixed-local RFC-0002 issue
+merged-main QA-pending Idea RFC-0002 issues, 1 PR-open RFC-0002 issue
 (`sgajbi/lotus-idea#1101`), with `sgajbi/lotus-idea#681` remaining open and `sgajbi/lotus-idea#1098`
 closed after release-CI hardening, and
 `sgajbi/lotus-idea#1094`,
 `sgajbi/lotus-idea#1091`, `sgajbi/lotus-idea#1088`,
 `sgajbi/lotus-idea#1084`, and `sgajbi/lotus-idea#1082` as the latest QA-closed maintainability hardening
 issues. The full live posture is 204 label-backed RFC-0002 issues across 13
-repositories: 166 closed and 38 open. The open split is 25 `status/blocked`, 1 `status/fixed-local`, 0 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 1 `status/pr-open`, 8 `status/tracker`.
+repositories: 166 closed and 38 open. The open split is 25 `status/blocked`, 0 `status/fixed-local`, 0 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 2 `status/pr-open`, 8 `status/tracker`.
 Counts are label-backed by
 `rfc/RFC-0002`; title-only references are reported separately and excluded from
 governed counts unless deliberately labeled and ledgered. If a writable non-Core app-code
