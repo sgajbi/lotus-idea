@@ -424,10 +424,19 @@
       "runtime blocker-clearing posture",
       "supported-feature non-promotion",
       "No API/OpenAPI, persistence, migration, authentication, authorization, Core, Gateway, Workbench, runtime stack, broker, platform-mesh, supported-feature, data-product certification, or production certification change"
-    ],
+    ]
+  },
+  "requiredClosedIssueEvidence": {
     "1091": [
-      "Keep #1091 open",
+      "Closed #1091",
+      "PR #1092",
+      "a1273204c47168806e4f1b1b21d8c30660aa8970",
+      "31796812445",
+      "31796803970",
+      "lotus-idea.wiki commit `37352ca`",
+      "strict `DiffCount 0`",
       "conversion intent API handler boundary refactor",
+      "quality/baseline_report.md",
       "src/app/api/conversion_governance.py::record_conversion_intent",
       "90 lines",
       "trusted caller context preparation",
@@ -442,9 +451,7 @@
       "No authentication or authorization implementation",
       "Core, Gateway, Workbench",
       "final RFC-0002 closure"
-    ]
-  },
-  "requiredClosedIssueEvidence": {
+    ],
     "1088": [
       "Closed #1088",
       "PR #1089",

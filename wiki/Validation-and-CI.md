@@ -1219,14 +1219,14 @@ It also lists every blocked issue with the GitHub URL, actionability, blocker
 class, and remaining authority so the Core-vs-protected/external split is
 auditable without chat memory or one-off GitHub queries.
 Current live posture is 201 label-backed RFC-0002 issues across 13
-repositories: 163 closed and 38 open. The open split is 25 `status/blocked`,
+repositories: 164 closed and 37 open. The open split is 25 `status/blocked`,
 0 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2
-`status/merged-to-main`, 1 `status/pr-open`, 8 `status/tracker`;
-`sgajbi/lotus-idea#1091` is PR-open through PR #1092, and `sgajbi/lotus-idea#1088`,
-`sgajbi/lotus-idea#1084`,
-`sgajbi/lotus-idea#1082`, and `sgajbi/lotus-idea#1080` are the latest
-QA-closed Idea maintainability hardening issues after exact-main validation and
-branch cleanup.
+`status/merged-to-main`, 0 `status/pr-open`, 8 `status/tracker`;
+`sgajbi/lotus-idea#1091`, `sgajbi/lotus-idea#1088`,
+`sgajbi/lotus-idea#1084`, `sgajbi/lotus-idea#1082`, and
+`sgajbi/lotus-idea#1080` are the latest
+QA-closed Idea maintainability hardening issues after exact-main validation,
+wiki publication, and branch cleanup.
 `sgajbi/lotus-idea#681` remains the in-progress Slice 18 synchronization
 issue, and no RFC-0002 issue is currently PR-open; older QA-closed hardening issues remain in the
 execution ledger and are not repeated here as current work.
@@ -1597,9 +1597,9 @@ supported feature.
 
 RFC-0002 execution is tracked through GitHub issue state plus the
 source-controlled implementation-proof ledgers. The current governed posture is
-201 label-backed RFC-0002 issues across 13 repositories: 163 closed and 38 open.
-The open set is 25 `status/blocked`, 0 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 1 `status/pr-open`, 8 `status/tracker`;
-#1091 is PR-open through PR #1092, #1088, #1084, #1082, and #1080 are the latest closed Idea maintainability hardening issues, while #681 is in progress;
+201 label-backed RFC-0002 issues across 13 repositories: 164 closed and 37 open.
+The open set is 25 `status/blocked`, 0 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 0 `status/pr-open`, 8 `status/tracker`;
+#1091, #1088, #1084, #1082, and #1080 are the latest closed Idea maintainability hardening issues, while #681 is in progress;
 blocked actionability remains 0 app-actionable blocked issues.
 Idea PR #838 synchronized PR #837 exact-main evidence to main
 `2c2d35667643ad5efae83924475574ab6c16be03`, passed Main Releasability
