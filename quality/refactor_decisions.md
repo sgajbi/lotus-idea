@@ -6,6 +6,48 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-08-14: Supported-Feature Gate Implemented-Feature Fixture Boundary
+
+Issue `#1104` applies the RFC-0002 Slice 19 maintainability lens to
+`tests/unit/test_supported_features_gate.py::_valid_implemented_feature`. After
+issue `#1101` closed, refreshed `make quality-baseline` evidence identified the
+fixture helper as a `95` line test-support hotspot in the supported-feature
+promotion guardrail.
+
+The refactor keeps the supported-feature gate assertions and
+supported-feature non-promotion posture stable while separating:
+
+1. implemented-feature identity and support posture,
+2. API surface fixture evidence,
+3. Workbench/UI surface fixture evidence,
+4. Core source-dependency boundary fixture evidence,
+5. local/GitHub validation references, and
+6. promotion-evidence and known-gap fixture assembly.
+
+Focused local validation passed:
+
+1. `python -m pytest tests/unit/test_supported_features_gate.py -q`
+   (`8` passed),
+2. `make quality-baseline`,
+3. `make maintainability-gate`,
+4. `make duplicate-implementation-gate`,
+5. `make rfc0002-github-issue-execution-ledger-gate`,
+6. `make rfc0002-github-issue-learning-pattern-gate`,
+7. `make rfc0002-github-issue-execution-state-audit`,
+8. `make rfc0002-github-issue-execution-summary`,
+9. `make rfc0002-cross-repo-issue-posture`, and
+10. `make documentation-contract-gate`.
+
+The refreshed quality baseline no longer lists
+`tests/unit/test_supported_features_gate.py::_valid_implemented_feature`.
+PR checks, exact-main validation, wiki publication, branch cleanup, and QA
+closure evidence remain pending.
+
+No product behavior, API/OpenAPI contract, persistence, migration, runtime
+topology, authentication, authorization, Core, Gateway, Workbench, data-mesh
+certification, supported-feature promotion, client publication, production
+certification, or final RFC-0002 closure claim is in scope.
+
 ## 2026-08-14: Conversion Intent API Handler Boundary
 
 Issue `#1091` applies the RFC-0002 Slice 12/13/19 maintainability lens to
