@@ -423,9 +423,16 @@
       "runtime blocker-clearing posture",
       "supported-feature non-promotion",
       "No API/OpenAPI, persistence, migration, authentication, authorization, Core, Gateway, Workbench, runtime stack, broker, platform-mesh, supported-feature, data-product certification, or production certification change"
-    ],
+    ]
+  },
+  "requiredClosedIssueEvidence": {
     "1088": [
-      "Keep #1088 open",
+      "Closed #1088",
+      "PR #1089",
+      "06e4d2fdeda6f884186345f574dbb46ffe880502",
+      "31791018583",
+      "lotus-idea.wiki commit `0d9937d`",
+      "strict `DiffCount 0`",
       "outbox delivery readiness PostgreSQL summary projection",
       "quality/baseline_report.md",
       "91 line production-code hotspot",
@@ -437,11 +444,9 @@
       "empty-summary regression",
       "pending, leased, failed, published, dead-letter",
       "due-retry, retry-deferred, expired-lease, and oldest-ready aggregate semantics",
-      "Ruff check",
-      "Ruff format check",
-      "MyPy",
       "python -m pytest tests/unit/outbox/test_postgres_readiness.py tests/unit/outbox/test_outbox_delivery_readiness.py -q",
-      "maintainability only",
+      "git diff --exit-code origin/main..issue/1088-outbox-readiness-summary-boundary",
+      "maintainability hardening",
       "No API/OpenAPI behavior change",
       "No persistence migration",
       "No event-publisher behavior change",
@@ -450,9 +455,7 @@
       "No Gateway, Workbench, or downstream consumer execution change",
       "No supported-feature promotion",
       "final RFC-0002 closure"
-    ]
-  },
-  "requiredClosedIssueEvidence": {
+    ],
     "1074": [
       "Closed #1074",
       "PR #1075",

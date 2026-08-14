@@ -51,3 +51,21 @@ def test_github_issue_closure_matrix_gate_freezes_rfc0002_stale_closed_rows(
 
     for issue in stale_closed_issues:
         assert f"#{issue}: merged-main issue cannot regress to `locally_fixed`" in errors
+
+
+def test_github_issue_closure_matrix_gate_freezes_latest_outbox_readiness_closure(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    matrix = tmp_path / "matrix.md"
+    content = module.MATRIX_PATH.read_text(encoding="utf-8")
+    content = content.replace(
+        "Refactor outbox delivery readiness PostgreSQL summary projection | `merged_main` |",
+        "Refactor outbox delivery readiness PostgreSQL summary projection | `locally_fixed` |",
+        1,
+    )
+    matrix.write_text(content, encoding="utf-8")
+
+    errors = module.validate_issue_closure_matrix(matrix)
+
+    assert "#1088: merged-main issue cannot regress to `locally_fixed`" in errors

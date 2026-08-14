@@ -53,9 +53,13 @@ Broader local validation passed:
 14. `make lint`.
 
 Branch commit `defe461e` was posted to issue `#1088` with fixed-local
-evidence. PR #1089 is open with keep-open wording. Exact-main,
-wiki-publication, and branch-cleanup evidence remains pending. Keep issue
-`#1088` open until that evidence is complete.
+evidence. PR #1089 rebase-merged to main SHA
+`06e4d2fdeda6f884186345f574dbb46ffe880502`; exact-main Main Releasability Gate
+run `31791018583` passed; repo-authored wiki source was published to
+`lotus-idea.wiki` commit `0d9937d` with strict `DiffCount 0`; and branch
+cleanup completed after remote deletion/prune plus local patch-equivalence and
+no-diff proof. Issue `#1088` is closed with `status/merged-main` after QA
+evidence.
 
 No API/OpenAPI behavior, persistence migration, event-publisher behavior,
 broker integration, runtime topology, authentication, authorization, Gateway,
