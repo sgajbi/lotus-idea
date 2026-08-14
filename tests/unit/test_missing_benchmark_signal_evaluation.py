@@ -113,6 +113,14 @@ def test_missing_benchmark_gap_creates_reproducible_review_candidate() -> None:
     assert first.candidate.lifecycle_status is IdeaLifecycleStatus.GENERATED
     assert first.candidate.review_posture is ReviewPosture.ADVISOR_REVIEW_REQUIRED
     assert first.reason_codes == (ReasonCode.MISSING_BENCHMARK, ReasonCode.REVIEW_REQUIRED)
+    assert first.candidate.source_signal_ids == (first.signal.signal_id,)
+    assert first.candidate.evidence_packet.source_refs == first.signal.source_refs
+    assert first.candidate.evidence_packet.lineage_ref.source_refs == first.signal.source_refs
+    assert first.candidate.evidence_packet.lineage_ref.content_hash.startswith("sha256:")
+    assert first.candidate.score is not None
+    assert first.candidate.score.policy_version == "missing-benchmark-review-v1"
+    assert first.candidate.score.score == Decimal("68")
+    assert first.candidate.score.reason_codes == first.reason_codes
 
 
 def test_missing_benchmark_ready_assignment_is_not_eligible() -> None:
