@@ -207,6 +207,15 @@
       "closureInstruction": "Keep #675 open until Advise and Manage conversion realization is complete with live downstream proof."
     },
     {
+      "issueNumber": 1056,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/1056",
+      "rfcSlices": ["slice-12"],
+      "githubState": "open",
+      "executionStatus": "open_fixed_local",
+      "allowPullRequestAutoClose": false,
+      "closureInstruction": "Keep #1056 open until the downstream submission API orchestration refactor is merged to main, exact-main validation passes, issue-loop QA evidence is recorded, and branch hygiene is clean. Local proof passed for src/app/api/downstream_realization.py with focused downstream realization API/application/problem-details tests; this maintainability refactor does not certify live Advise/Manage/Report/Render/Archive downstream acceptance, downstream authority, Gateway/Workbench behavior, supported-feature promotion, or final RFC-0002 closure."
+    },
+    {
       "issueNumber": 676,
       "url": "https://github.com/sgajbi/lotus-idea/issues/676",
       "rfcSlices": ["slice-12", "slice-13"],
