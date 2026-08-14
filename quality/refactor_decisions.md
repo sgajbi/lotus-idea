@@ -4036,4 +4036,53 @@ Evidence:
    `734a873d16137027bcf12fccf935cfc1395c2677`. Exact-main Main
    Releasability `31581082960` and CodeQL `31581074756` passed, issue
    #1000 is closed with QA evidence, and the local/remote implementation
-   branches are cleaned up.
+branches are cleaned up.
+
+## 2026-08-14: AI Governance Verifier Field Test Boundary
+
+Issue: [#1094](https://github.com/sgajbi/lotus-idea/issues/1094)
+
+Decision:
+
+`tests/unit/test_ai_governance.py` now keeps verifier-field validation as
+named focused tests rather than one broad
+`test_ai_request_and_output_validate_required_verifier_fields` function. The
+test suite still proves the same fail-closed AI governance constraints:
+approved metadata values must be non-blank, request timestamps must be
+timezone-aware, request reason codes are required, output claims require
+non-blank unique source-product ids, duplicate claim ids are rejected, and
+workflow outputs require both claims and proposed actions.
+
+Why:
+
+`make quality-baseline` listed the prior broad test as the repository's largest
+function at 95 lines. The issue was test-support maintainability, not product
+behavior. Splitting the assertions by validation responsibility lowers review
+risk for future RFC-0002 Slice 09 AI-governance and Slice 17 proof changes
+without weakening any verifier-contract guardrail.
+
+Preserved boundaries:
+
+1. All existing error-message assertions and fail-closed behavior are preserved.
+2. No production AI governance behavior, OpenAPI/API contract, persistence,
+   migration, runtime topology, authentication, authorization, live
+   provider/model-risk certification, Gateway, Workbench, Core,
+   supported-feature promotion, client-publication, production certification,
+   or final RFC-0002 closure claim is made.
+3. No repo-authored wiki change is required for the test behavior itself, but
+   wiki current-status source changed because the GitHub issue posture changed
+   when #1094 was opened.
+
+Evidence:
+
+1. Duplicate issue searches for `ai_governance verifier fields maintainability`
+   and `test_ai_governance` found no focused existing owner before #1094 was
+   created.
+2. Focused validation passed:
+   `python -m pytest tests/unit/test_ai_governance.py -q` (`28 passed`).
+3. Quality validation passed: `make quality-baseline`,
+   `make maintainability-gate`, and `make duplicate-implementation-gate`
+   (`0` duplicate clusters across `3,646` source/script functions).
+4. The refreshed `quality/baseline_report.md` no longer lists
+   `tests/unit/test_ai_governance.py::test_ai_request_and_output_validate_required_verifier_fields`
+   in the largest-function set.
