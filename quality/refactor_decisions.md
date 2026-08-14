@@ -6,6 +6,44 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-08-14: Missing-Benchmark Signal Evaluation Domain Boundary
+
+Issue `#1084` applies the RFC-0002 Slice 05/16/19 maintainability lens to
+`src/app/domain/missing_benchmark_signal.py::evaluate_missing_benchmark_signal`.
+After issue `#1082` removed the prior production-code hotspot, refreshed
+quality evidence identified this missing-benchmark domain evaluator as a
+`91` line production hotspot.
+
+The refactor keeps the public domain API, deterministic candidate identity,
+Core benchmark-assignment source authority, and candidate/no-candidate
+semantics stable while separating:
+
+1. evaluation-time validation,
+2. non-candidate blocker, suppression, and ready-assignment classification,
+3. current Core benchmark-assignment source-ref extraction,
+4. source signal assembly,
+5. evidence-packet and lineage assembly, and
+6. candidate construction and score binding.
+
+Focused local validation passed:
+
+1. `python -m ruff format src/app/domain/missing_benchmark_signal.py tests/unit/test_missing_benchmark_signal_evaluation.py`,
+2. `python -m ruff check src/app/domain/missing_benchmark_signal.py tests/unit/test_missing_benchmark_signal_evaluation.py`,
+3. `python -m mypy src/app/domain/missing_benchmark_signal.py tests/unit/test_missing_benchmark_signal_evaluation.py`
+   with `MYPYPATH=src;scripts`, and
+4. `python -m pytest tests/unit/test_missing_benchmark_signal_evaluation.py tests/integration/test_missing_benchmark_signal_api.py -q`
+   (`34` passed).
+
+The strengthened unit test proves source-signal linkage, evidence-packet
+source-ref binding, lineage source-ref/hash binding, score policy version,
+score value, and score reason-code preservation.
+
+No API/OpenAPI behavior, persistence migration, runtime topology,
+authentication, authorization, Core benchmark-assignment authority,
+Performance benchmark methodology authority, Gateway, Workbench,
+supported-feature promotion, data-mesh certification, client publication,
+production certification, or final RFC-0002 closure claim is in scope.
+
 ## 2026-08-14: Downstream Implementation-Proof Application Boundary
 
 Issue `#1082` applies the RFC-0002 Slice 12/13/17/19 maintainability lens to
@@ -43,6 +81,12 @@ The focused test update proves downstream proof catalog order, proof-ref
 preservation, source-contract supporting-evidence effects, runtime
 blocker-clearing effects, and the report materialization source-contract
 supporting-evidence exception.
+
+PR `#1083` rebase-merged to main
+`52789077dac27aed773e52b6397752a0aee4a5a0`; exact-main Main Releasability
+Gate run `31779272309` passed for that SHA. Issue `#1082` is closed with
+`status/merged-main`. Branch cleanup completed after GitHub deleted the remote
+branch and local deletion used patch-equivalence proof for the rebased commits.
 
 No API/OpenAPI behavior, persistence migration, runtime topology,
 authentication, authorization, Core, Gateway, Workbench, supported-feature
