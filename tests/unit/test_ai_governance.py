@@ -655,15 +655,19 @@ def test_ai_domain_objects_validate_required_redaction_fields() -> None:
         )
 
 
-def test_ai_request_and_output_validate_required_verifier_fields() -> None:
-    request = build_ai_explanation_request(
+def _ai_validation_request() -> AIExplanationRequest:
+    return build_ai_explanation_request(
         candidate(),
         command(AIWorkflowPurpose.UNSUPPORTED_CLAIM_VERIFICATION),
     )
 
+
+def test_ai_command_rejects_blank_approved_metadata_value() -> None:
     with pytest.raises(ValueError, match="metadata value must be non-blank"):
         command(approved_metadata={"audience": " "})
 
+
+def test_ai_command_requires_timezone_aware_requested_at() -> None:
     with pytest.raises(ValueError, match="requested_at_utc must be timezone-aware"):
         AIExplanationCommand(
             request_id="ai-request-naive",
@@ -672,6 +676,10 @@ def test_ai_request_and_output_validate_required_verifier_fields() -> None:
             approved_metadata={"audience": "internal_advisor_review"},
             requested_at_utc=datetime(2026, 6, 21, 10, 15),
         )
+
+
+def test_ai_explanation_request_requires_reason_codes() -> None:
+    request = _ai_validation_request()
 
     with pytest.raises(ValueError, match="reason_codes is required"):
         AIExplanationRequest(
@@ -684,6 +692,8 @@ def test_ai_request_and_output_validate_required_verifier_fields() -> None:
             reason_codes=(),
         )
 
+
+def test_ai_output_claim_requires_source_product_ids() -> None:
     with pytest.raises(ValueError, match="source_product_ids is required"):
         AIOutputClaim(
             claim_id="claim-no-source",
@@ -691,6 +701,8 @@ def test_ai_request_and_output_validate_required_verifier_fields() -> None:
             source_product_ids=(),
         )
 
+
+def test_ai_output_claim_rejects_blank_source_product_ids() -> None:
     with pytest.raises(ValueError, match="source_product_ids cannot contain blank"):
         AIOutputClaim(
             claim_id="claim-blank-source",
@@ -698,6 +710,8 @@ def test_ai_request_and_output_validate_required_verifier_fields() -> None:
             source_product_ids=(" ",),
         )
 
+
+def test_ai_output_claim_requires_unique_source_product_ids() -> None:
     with pytest.raises(ValueError, match="source_product_ids must be unique"):
         AIOutputClaim(
             claim_id="claim-duplicate-source",
@@ -708,13 +722,24 @@ def test_ai_request_and_output_validate_required_verifier_fields() -> None:
             ),
         )
 
+
+def test_ai_workflow_output_requires_unique_claim_ids() -> None:
+    request = _ai_validation_request()
     duplicate_claim = AIOutputClaim(
         claim_id="claim-duplicate",
         claim_text="Duplicate identity.",
         source_product_ids=("lotus-core:PortfolioStateSnapshot:v1",),
     )
+
     with pytest.raises(ValueError, match="claim_ids must be unique"):
         output(request.request_id, claims=(duplicate_claim, duplicate_claim))
+
+
+def test_ai_workflow_output_requires_claims() -> None:
+    request = build_ai_explanation_request(
+        candidate(),
+        command(AIWorkflowPurpose.UNSUPPORTED_CLAIM_VERIFICATION),
+    )
 
     with pytest.raises(ValueError, match="claims is required"):
         AIWorkflowOutput(
@@ -732,6 +757,10 @@ def test_ai_request_and_output_validate_required_verifier_fields() -> None:
             ),
             verifier_ran_at_utc=VERIFIED_AT,
         )
+
+
+def test_ai_workflow_output_requires_proposed_actions() -> None:
+    request = _ai_validation_request()
 
     with pytest.raises(ValueError, match="proposed_actions is required"):
         AIWorkflowOutput(
