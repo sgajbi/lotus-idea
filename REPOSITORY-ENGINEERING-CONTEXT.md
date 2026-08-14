@@ -120,10 +120,10 @@ evidence plus Core handoff posture to exact main
 `30500588217` passing. After the PR #828 through PR #831 evidence-sync and
 issue-execution prevention cycle plus QA closure of the already merged-main
 Advise, Gateway, Workbench, and AI dependency issues, Current Idea ledger
-posture has 134 tracked RFC-0002 issues, 108 closed and 26 open; #681 remains
-the Slice 18 synchronization tracker and #1098 is the in-progress main
-releasability GHCR-authentication retry hardening issue. #1094 is closed after
-PR #1095. #1094 owns the
+posture has 134 tracked RFC-0002 issues, 109 closed and 25 open; #681 remains
+the Slice 18 synchronization tracker and #1098 is closed after PR #1099
+hardened Main Releasability GHCR authentication retry evidence. #1094 is
+closed after PR #1095. #1094 owns the
 AI-governance verifier-field test boundary refactor and does not change
 production AI behavior or support posture. #1091 is now QA-closed after PR #1092 for the conversion-intent API
 handler boundary refactor. #1088, #1084, #1082, and #1080 are the next latest
@@ -133,11 +133,11 @@ rebase-merged #1091 to Idea main
 `31796812445`, Push-on-main run `31796803970`, wiki publication `37352ca`,
 strict wiki parity, and branch hygiene passed.
 The current live cross-repo RFC-0002 posture is 203 label-backed RFC-0002
-issues across 13 repositories: 165 closed and 38 open. The open set is 25
-`status/blocked`, 0 `status/fixed-local`, 1 `status/in-progress`, 1
+issues across 13 repositories: 166 closed and 37 open. The open set is 25
+`status/blocked`, 0 `status/fixed-local`, 0 `status/in-progress`, 1
 `status/merged-main`, 2 `status/merged-to-main`, 1 `status/pr-open`, and 8
 `status/tracker` issues; this includes #681 as the Idea PR-open Slice 18 issue
-and #1098 as the active Idea release-CI hardening issue.
+and #1098 as the latest closed Idea release-CI hardening issue.
 Blocked actionability
 remains 0 app-actionable blocked issues. Idea #864, #866, and #874 are now
 source-ledgered as Slice 17/18/19 hardening issues. #864 closed after PR #865
@@ -155,18 +155,16 @@ evidence is recorded in
 It failed closed before any stack/container/build/seed/validation mutation with
 10 of 13 repositories aligned. Gateway PR `sgajbi/lotus-gateway#550` has
 merged and the local Gateway checkout is exact `origin/main`
-`192c74279e48bdeeca6514110a0210999aaac996`. The remaining exact-main blockers
-are Core PR `sgajbi/lotus-core#948` (`feat/ingestion-evidence-authority` at
-`ea09e901d8e88751f13965f74c26bd6bb68f1170`, expected `origin/main`
-`04939c7d360233e35746639c7f823f9f4563d9c9`), this Idea PR branch
-(`issue/681-current-preflight-sync` at
-`0654b24d52c2371daad1f9b61cb7c0689f32c57c`, expected `origin/main`
-`6724724da9a9a47ade85d8d7cfa09e7444f113f7`), and the in-flight dirty
-Workbench branch `fix/702-performance-period-assurance` at main head
-`9aaaa9343baa278a2f6b2cacb0a9c2431ba5c023`. This is a provenance blocker,
-not a new Idea code defect. Do not run closure-grade canonical QA or close
-#685, #686, #814, `lotus-ai#126`, or the Advise QA-pending issues until Core,
-Idea, and Workbench are clean exact main and the preflight passes.
+`192c74279e48bdeeca6514110a0210999aaac996`; Workbench is now exact
+`origin/main` `0c86cf491004a0706f9d12ff12ad07fd799a36fb`. The current
+mainline-source blockers are Core PR `sgajbi/lotus-core#948`
+(`feat/ingestion-evidence-authority` at
+`3d127a315c42b9edb2acf98052d4ec5b3872ff0f`, expected `origin/main`
+`04939c7d360233e35746639c7f823f9f4563d9c9`) and this Idea closure-sync
+branch until it reaches `main`. This is a provenance blocker, not a new Idea
+code defect. Do not run closure-grade canonical QA or close #685, #686, #814,
+`lotus-ai#126`, or the Advise QA-pending issues until Core, Idea, Gateway, and
+Workbench are clean exact main and the preflight passes.
 #681 returned to `status/in-progress` after PR #834 merged source truth for
 Core DPM candidate-source batch-fingerprint issue `sgajbi/lotus-core#882`
 after earlier Core readiness blockers `#836`, `#840`, `#856`, and `#873`
@@ -424,9 +422,9 @@ classifier because it is no longer an open `status/blocked` issue.
 fixed the post-merge QA hash-compatibility defects on main
 `a6bc609f379b8efadb226c9a2084d7c97b2e26e7` with Main Releasability run
 `31268949391` passing.
-Current Idea ledger posture has 134 tracked RFC-0002 issues, 108 closed and 26
+Current Idea ledger posture has 134 tracked RFC-0002 issues, 109 closed and 25
 open; `sgajbi/lotus-idea#681` remains the Slice 18 synchronization tracker,
-`sgajbi/lotus-idea#1098` is the in-progress Slice 15/19 main releasability
+`sgajbi/lotus-idea#1098` is closed after the Slice 15/19 main releasability
 GHCR-authentication retry hardening issue, and `sgajbi/lotus-idea#1094` is the
 latest QA-closed Slice 09/17/19 AI-governance
 test-support maintainability hardening issue after PR #1095 reached exact main.
@@ -443,8 +441,8 @@ PR #1092 is the latest implementation-backed closure on main
 `31796812445`, Push-on-main run `31796803970`, wiki publication `37352ca`,
 strict wiki parity, and branch hygiene passed.
 Current governed cross-repo RFC-0002 posture is 203 label-backed RFC-0002
-issues across 13 repositories: 165 closed and 38 open.
-The open split is 25 `status/blocked`, 0 `status/fixed-local`, 1 `status/in-progress`, 1
+issues across 13 repositories: 166 closed and 37 open.
+The open split is 25 `status/blocked`, 0 `status/fixed-local`, 0 `status/in-progress`, 1
 `status/merged-main`, 2 `status/merged-to-main`, 1 `status/pr-open`, 8
 `status/tracker`. The
 blocked subset has 0 app-actionable blocked issues: all 25 are external/protected/canonical-proof
@@ -1732,17 +1730,18 @@ RFC-0002 issue may remain blocked only when the remaining evidence is
 Core-owned, production identity/session authority, protected runtime or
 deployment evidence, provider/bank/legal approval, or certification proof that a
 writable Lotus app branch cannot truthfully produce. Current Idea ledger posture
-has 134 tracked RFC-0002 issues, 108 closed and 26 open. Current live posture is
+has 134 tracked RFC-0002 issues, 109 closed and 25 open. Current live posture is
 25 blocked RFC-0002 issues, 0 app-actionable blocked issues, 25
 external/protected/canonical-proof evidence blockers, 1 PR-open Idea
 RFC-0002 issues, 1 merged-main RFC-0002 issue outside the Idea ledger, no
-merged-main QA-pending Idea RFC-0002 issues, 1 in-progress RFC-0002 issue
-(`sgajbi/lotus-idea#1098`), with `sgajbi/lotus-idea#681` remaining open and
+merged-main QA-pending Idea RFC-0002 issues, 0 in-progress RFC-0002 issues,
+with `sgajbi/lotus-idea#681` remaining open and `sgajbi/lotus-idea#1098`
+closed after release-CI hardening, and
 `sgajbi/lotus-idea#1094`,
 `sgajbi/lotus-idea#1091`, `sgajbi/lotus-idea#1088`,
 `sgajbi/lotus-idea#1084`, and `sgajbi/lotus-idea#1082` as the latest QA-closed maintainability hardening
 issues. The full live posture is 203 label-backed RFC-0002 issues across 13
-repositories: 165 closed and 38 open. The open split is 25 `status/blocked`, 0 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 1 `status/pr-open`, 8 `status/tracker`.
+repositories: 166 closed and 37 open. The open split is 25 `status/blocked`, 0 `status/fixed-local`, 0 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 1 `status/pr-open`, 8 `status/tracker`.
 Counts are label-backed by
 `rfc/RFC-0002`; title-only references are reported separately and excluded from
 governed counts unless deliberately labeled and ledgered. If a writable non-Core app-code

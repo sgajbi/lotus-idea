@@ -27,7 +27,7 @@ dependency map, and closure rules without relying on chat memory.
 | Open RFC-0002 issues | 37 |
 | Open blocked issues | 25 |
 | App-actionable blocked issues | 0 |
-| Active synchronization tracker | `sgajbi/lotus-idea#681` remains open after PR #1097 merged; `sgajbi/lotus-idea#1098` is in progress for main releasability GHCR-authentication retry hardening. `sgajbi/lotus-idea#1094` is closed after PR #1095 for AI-governance test-support maintainability. The latest Idea implementation-backed closure is PR #1095 on main `0a8fbfac146c6fb99c70ddb109b33b9b88586f66` after exact-main Main Releasability run `31802296872`, CodeQL run `31802289873`, wiki publication `44060bc`, strict wiki parity, and branch hygiene passed. `sgajbi/lotus-idea#1091` is the previous Slice 12/13/19 conversion-intent API handler boundary maintainability issue. The latest QA-closed Idea maintainability issues are `sgajbi/lotus-idea#1094`, `#1091`, `#1088`, `#1084`, and `#1082`. |
+| Active synchronization tracker | `sgajbi/lotus-idea#681` remains open after PR #1097 merged; `sgajbi/lotus-idea#1098` is closed after main releasability GHCR-authentication retry hardening. `sgajbi/lotus-idea#1094` is closed after PR #1095 for AI-governance test-support maintainability. The latest Idea implementation-backed closure is PR #1099 on main `00aa2cd9698f6b80d27f763772e243e75d026b2d` after exact-main Main Releasability run `31811097774`, wiki publication `fd23192`, strict wiki parity, and branch hygiene passed. `sgajbi/lotus-idea#1091` is the previous Slice 12/13/19 conversion-intent API handler boundary maintainability issue. The latest QA-closed Idea issues are `sgajbi/lotus-idea#1098`, `#1094`, `#1091`, `#1088`, and `#1084`. |
 
 The zero app-actionable blocked count is important. It means an open issue may
 remain `status/blocked` only when the remaining authority is Core-owned,
@@ -39,7 +39,7 @@ blocked posture and implement or reclassify it.
 ```mermaid
 flowchart LR
     Issues["GitHub issue posture<br/>203 label-backed RFC-0002 issues"]
-    Open["165 closed and 38 open<br/>25 `status/blocked`, 0 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 1 `status/pr-open`, 8 `status/tracker`"]
+    Open["166 closed and 37 open<br/>25 `status/blocked`, 0 `status/fixed-local`, 0 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 1 `status/pr-open`, 8 `status/tracker`"]
     Blocked["Blocked classifier<br/>0 app-actionable blocked"]
     Work["Writable work<br/>only when evidence proves app-code ownership"]
     External["Core / protected / identity / provider / legal evidence"]
@@ -65,12 +65,12 @@ flowchart LR
 | `status/tracker` | 8 | Parent or umbrella tracking issues, not immediate implementation items. |
 
 Latest synchronization evidence: Current GitHub issue posture has 203
-label-backed RFC-0002 issues, 165 closed and 38 open, with 25
-`status/blocked`, 0 `status/fixed-local`, 1 `status/in-progress`, 1
+label-backed RFC-0002 issues, 166 closed and 37 open, with 25
+`status/blocked`, 0 `status/fixed-local`, 0 `status/in-progress`, 1
 `status/merged-main`, 2 `status/merged-to-main`, 1 `status/pr-open`, 8
 `status/tracker`, and 0 app-actionable blocked issues. The Idea source ledger
-tracks 134 RFC-0002 issues: 108 closed and 26 open. `lotus-idea#1098` is the
-active in-progress release-CI hardening issue. `lotus-idea#1094` is closed
+tracks 134 RFC-0002 issues: 109 closed and 25 open. `lotus-idea#1098` is
+closed after PR #1099 for release-CI hardening; `lotus-idea#1094` is closed
 after PR #1095 for test-support maintainability; `lotus-idea#1091` is
 closed after PR #1092 reached exact main
 `a1273204c47168806e4f1b1b21d8c30660aa8970`; Main Releasability run
@@ -83,7 +83,7 @@ supported feature.
 
 | Priority | Issue | Why it matters | Current owner boundary |
 | --- | --- | --- | --- |
-| 1 | Current mainline-source provenance readiness | Fresh read-only branch-local preflight `rfc0002-mainline-preflight-20260814-215840.json` failed closed with 10/13 repositories aligned. Core PR #948 leaves `lotus-core` on `feat/ingestion-evidence-authority` at `ea09e901d8e88751f13965f74c26bd6bb68f1170` instead of `origin/main` `04939c7d360233e35746639c7f823f9f4563d9c9`; this Idea PR branch leaves `lotus-idea` on `issue/681-current-preflight-sync` at `0654b24d52c2371daad1f9b61cb7c0689f32c57c` instead of `origin/main` `6724724da9a9a47ade85d8d7cfa09e7444f113f7`; and `lotus-workbench` is on in-flight dirty branch `fix/702-performance-period-assurance` at main head `9aaaa9343baa278a2f6b2cacb0a9c2431ba5c023`. Gateway PR #550 has merged and `lotus-gateway` is exact main at `192c74279e48bdeeca6514110a0210999aaac996`. | Core is protected-owner work; the dirty Workbench branch is separate in-flight work that must be merged or parked without code loss; this Idea PR must merge before closure-grade canonical proof. |
+| 1 | Current mainline-source provenance readiness | Fresh read-only branch-local preflight `rfc0002-mainline-preflight-20260814-215840.json` failed closed with 10/13 repositories aligned. Core PR #948 leaves `lotus-core` on `feat/ingestion-evidence-authority` at `3d127a315c42b9edb2acf98052d4ec5b3872ff0f` instead of `origin/main` `04939c7d360233e35746639c7f823f9f4563d9c9`; this Idea closure-sync branch must also merge before closure-grade canonical proof can claim exact-main source truth. Gateway PR #550 has merged and `lotus-gateway` is exact main at `192c74279e48bdeeca6514110a0210999aaac996`; Workbench is exact main at `0c86cf491004a0706f9d12ff12ad07fd799a36fb`. | Core is protected-owner work; this Idea PR must merge before closure-grade canonical proof. |
 | 2 | Workbench/Gateway/Idea feedback-action proof | The latest completed canonical QA stopped before AI/Advise proof because the Workbench browser did not observe the expected Gateway-backed feedback confirmation. Workbench PR #698 and PR #701 are now merged to exact main, but neither PR replaces fresh canonical QA. | Workbench/Gateway/Idea runtime proof after Core, Gateway, Workbench, and Idea are clean exact main. |
 | 3 | Idea `#814`, `#685`, and `#686` canonical proof | Core `#882` is closed; these issues still require fresh governed PB_SG_GLOBAL_BAL_001 queue/detail/action evidence, not downstream hash fabrication or stale artifacts. | Canonical full-stack proof across Idea, Gateway, and Workbench. |
 | 4 | QA-pending merged-main issues | `sgajbi/lotus-ai#126`, `sgajbi/lotus-advise#481`, and `sgajbi/lotus-advise#485` need fresh issue-specific canonical evidence before closure. | Close only when the fresh run reaches and proves each path. |
@@ -167,13 +167,12 @@ run `31784470442` passed, wiki parity is `DiffCount 0`, and issue
 known Workbench review-workspace implementation dependency, but it does not
 replace a fresh canonical QA run. `lotus-workbench` PR #701 is also merged and
 the local Workbench checkout is exact `origin/main`
-`9aaaa9343baa278a2f6b2cacb0a9c2431ba5c023`. A fresh 2026-08-14 read-only
+`0c86cf491004a0706f9d12ff12ad07fd799a36fb`. A fresh 2026-08-14 read-only
 branch-local mainline-source preflight now fails before stack mutation because
-Core PR #948, this Idea PR branch, and the in-flight dirty Workbench
-`fix/702-performance-period-assurance` checkout leave their repositories off
+Core PR #948 and this Idea closure-sync branch leave their repositories off
 clean exact `origin/main`. Gateway PR #550 is merged and exact main.
-Closure-grade canonical proof remains pending until Core, Idea, and Workbench are clean exact
-mainline state.
+Closure-grade canonical proof remains pending until Core, Idea, Gateway, and
+Workbench are clean exact mainline state.
 
 ## Closure Decision Matrix
 
@@ -208,7 +207,7 @@ list.
 
 | Order | Work | Completion evidence |
 | --- | --- | --- |
-| 1 | Resolve current mainline-source blockers: Core PR #948 must merge, this Idea PR must merge, and Workbench `fix/702-performance-period-assurance` must be merged or parked without code loss and returned to clean exact main. | Passing `mainline-source-provenance` preflight for all 13 canonical repositories before any stack mutation. |
+| 1 | Resolve current mainline-source blockers: Core PR #948 must merge and this Idea closure-sync PR must merge. Gateway and Workbench are already clean exact main in the latest read-only posture check. | Passing `mainline-source-provenance` preflight for all 13 canonical repositories before any stack mutation. |
 | 2 | Finish the current Workbench/Gateway/Idea feedback-action canonical QA blocker. | Issue-backed commits, focused tests, and fresh canonical QA progressing past the feedback step. |
 | 3 | Re-run canonical front-office QA after Core `#882` closure is consumed by the stack and current Core/Gateway/Workbench/Idea branches are mainline-clean. | Machine-readable `live-validation-summary.json`, screenshot index, platform QA JSON/Markdown, and no failed browser assertions for queue/detail/action proof. |
 | 4 | Reconcile Idea `#814`, `#685`, and `#686` from fresh runtime artifacts only. | Queue/detail/action-control proof from the governed runtime, with stale artifacts rejected. |
