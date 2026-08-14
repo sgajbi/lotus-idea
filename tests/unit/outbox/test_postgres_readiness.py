@@ -86,6 +86,27 @@ def test_postgres_repository_uses_outbox_only_readiness_projection() -> None:
         assert unrelated_table not in executed_sql
 
 
+def test_postgres_repository_outbox_readiness_reports_empty_summary() -> None:
+    connection = FakePostgresConnection()
+    repository = PostgresIdeaRepository(connection)
+    connection.rows["idea_outbox_event"] = []
+
+    summary = repository.outbox_delivery_readiness_summary(
+        max_retry_count=3,
+        evaluated_at_utc=EVALUATED_AT,
+    )
+
+    assert summary.pending_count == 0
+    assert summary.leased_count == 0
+    assert summary.failed_count == 0
+    assert summary.published_count == 0
+    assert summary.dead_letter_count == 0
+    assert summary.expired_lease_count == 0
+    assert summary.delivery_ready_count == 0
+    assert summary.retry_deferred_count == 0
+    assert summary.oldest_delivery_ready_at_utc is None
+
+
 def _outbox_row(
     base_row: dict[str, Any],
     event_id: str,

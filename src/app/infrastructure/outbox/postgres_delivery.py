@@ -60,6 +60,48 @@ OUTBOX_EVENT_RETURNING_COLUMNS = ", ".join(OUTBOX_EVENT_COLUMN_NAMES)
 OUTBOX_EVENT_CLAIM_RETURNING_COLUMNS = ", ".join(
     f"event.{column_name}" for column_name in OUTBOX_EVENT_COLUMN_NAMES
 )
+OUTBOX_DELIVERY_READINESS_SUMMARY_SQL = """
+/* lotus-idea outbox-readiness-summary */
+SELECT
+    COUNT(*) FILTER (WHERE status = %s) AS pending_count,
+    COUNT(*) FILTER (WHERE status = %s) AS leased_count,
+    COUNT(*) FILTER (WHERE status = %s) AS failed_count,
+    COUNT(*) FILTER (WHERE status = %s) AS published_count,
+    COUNT(*) FILTER (WHERE status = %s) AS dead_letter_count,
+    COUNT(*) FILTER (
+        WHERE status = %s AND lease_expires_at_utc <= %s
+    ) AS expired_lease_count,
+    COUNT(*) FILTER (
+        WHERE status = %s
+           OR (
+               status = %s
+               AND retry_count < %s
+               AND next_attempt_at_utc IS NOT NULL
+               AND next_attempt_at_utc <= %s
+           )
+           OR (status = %s AND lease_expires_at_utc <= %s)
+    ) AS delivery_ready_count,
+    COUNT(*) FILTER (
+        WHERE status = %s
+           AND retry_count < %s
+           AND next_attempt_at_utc IS NOT NULL
+           AND next_attempt_at_utc > %s
+    ) AS retry_deferred_count,
+    MIN(
+        CASE
+            WHEN status = %s THEN occurred_at_utc
+            WHEN status = %s
+             AND retry_count < %s
+             AND next_attempt_at_utc IS NOT NULL
+             AND next_attempt_at_utc <= %s
+                THEN next_attempt_at_utc
+            WHEN status = %s AND lease_expires_at_utc <= %s
+                THEN lease_expires_at_utc
+            ELSE NULL
+        END
+    ) AS oldest_delivery_ready_at_utc
+FROM idea_outbox_event
+"""
 
 
 def claim_outbox_events_for_delivery(
@@ -176,86 +218,15 @@ def load_outbox_delivery_readiness_summary(
     _require_aware_utc(evaluated_at_utc, "evaluated_at_utc")
     with connection.cursor() as cursor:
         cursor.execute(
-            """
-            /* lotus-idea outbox-readiness-summary */
-            SELECT
-                COUNT(*) FILTER (WHERE status = %s) AS pending_count,
-                COUNT(*) FILTER (WHERE status = %s) AS leased_count,
-                COUNT(*) FILTER (WHERE status = %s) AS failed_count,
-                COUNT(*) FILTER (WHERE status = %s) AS published_count,
-                COUNT(*) FILTER (WHERE status = %s) AS dead_letter_count,
-                COUNT(*) FILTER (
-                    WHERE status = %s AND lease_expires_at_utc <= %s
-                ) AS expired_lease_count,
-                COUNT(*) FILTER (
-                    WHERE status = %s
-                       OR (
-                           status = %s
-                           AND retry_count < %s
-                           AND next_attempt_at_utc IS NOT NULL
-                           AND next_attempt_at_utc <= %s
-                       )
-                       OR (status = %s AND lease_expires_at_utc <= %s)
-                ) AS delivery_ready_count,
-                COUNT(*) FILTER (
-                    WHERE status = %s
-                       AND retry_count < %s
-                       AND next_attempt_at_utc IS NOT NULL
-                       AND next_attempt_at_utc > %s
-                ) AS retry_deferred_count,
-                MIN(
-                    CASE
-                        WHEN status = %s THEN occurred_at_utc
-                        WHEN status = %s
-                         AND retry_count < %s
-                         AND next_attempt_at_utc IS NOT NULL
-                         AND next_attempt_at_utc <= %s
-                            THEN next_attempt_at_utc
-                        WHEN status = %s AND lease_expires_at_utc <= %s
-                            THEN lease_expires_at_utc
-                        ELSE NULL
-                    END
-                ) AS oldest_delivery_ready_at_utc
-            FROM idea_outbox_event
-            """,
-            (
-                OutboxEventStatus.PENDING.value,
-                OutboxEventStatus.LEASED.value,
-                OutboxEventStatus.FAILED.value,
-                OutboxEventStatus.PUBLISHED.value,
-                OutboxEventStatus.DEAD_LETTER.value,
-                OutboxEventStatus.LEASED.value,
-                evaluated_at_utc,
-                OutboxEventStatus.PENDING.value,
-                OutboxEventStatus.FAILED.value,
-                max_retry_count,
-                evaluated_at_utc,
-                OutboxEventStatus.LEASED.value,
-                evaluated_at_utc,
-                OutboxEventStatus.FAILED.value,
-                max_retry_count,
-                evaluated_at_utc,
-                OutboxEventStatus.PENDING.value,
-                OutboxEventStatus.FAILED.value,
-                max_retry_count,
-                evaluated_at_utc,
-                OutboxEventStatus.LEASED.value,
-                evaluated_at_utc,
+            OUTBOX_DELIVERY_READINESS_SUMMARY_SQL,
+            _outbox_delivery_readiness_summary_params(
+                max_retry_count=max_retry_count,
+                evaluated_at_utc=evaluated_at_utc,
             ),
         )
         rows = cursor.fetchall()
     if not rows:
-        return OutboxDeliveryReadinessRepositorySummary(
-            pending_count=0,
-            leased_count=0,
-            failed_count=0,
-            published_count=0,
-            dead_letter_count=0,
-            expired_lease_count=0,
-            delivery_ready_count=0,
-            retry_deferred_count=0,
-            oldest_delivery_ready_at_utc=None,
-        )
+        return _empty_outbox_delivery_readiness_summary()
     return _outbox_readiness_summary_from_row(rows[0])
 
 
@@ -407,6 +378,51 @@ def outbox_event_from_row(row: Any) -> OutboxEventRecord:
         lease_owner=read_row_value(row, "lease_owner"),
         lease_attempt_id=read_row_value(row, "lease_attempt_id"),
         lease_expires_at_utc=read_row_value(row, "lease_expires_at_utc"),
+    )
+
+
+def _outbox_delivery_readiness_summary_params(
+    *,
+    max_retry_count: int,
+    evaluated_at_utc: datetime,
+) -> tuple[Any, ...]:
+    return (
+        OutboxEventStatus.PENDING.value,
+        OutboxEventStatus.LEASED.value,
+        OutboxEventStatus.FAILED.value,
+        OutboxEventStatus.PUBLISHED.value,
+        OutboxEventStatus.DEAD_LETTER.value,
+        OutboxEventStatus.LEASED.value,
+        evaluated_at_utc,
+        OutboxEventStatus.PENDING.value,
+        OutboxEventStatus.FAILED.value,
+        max_retry_count,
+        evaluated_at_utc,
+        OutboxEventStatus.LEASED.value,
+        evaluated_at_utc,
+        OutboxEventStatus.FAILED.value,
+        max_retry_count,
+        evaluated_at_utc,
+        OutboxEventStatus.PENDING.value,
+        OutboxEventStatus.FAILED.value,
+        max_retry_count,
+        evaluated_at_utc,
+        OutboxEventStatus.LEASED.value,
+        evaluated_at_utc,
+    )
+
+
+def _empty_outbox_delivery_readiness_summary() -> OutboxDeliveryReadinessRepositorySummary:
+    return OutboxDeliveryReadinessRepositorySummary(
+        pending_count=0,
+        leased_count=0,
+        failed_count=0,
+        published_count=0,
+        dead_letter_count=0,
+        expired_lease_count=0,
+        delivery_ready_count=0,
+        retry_deferred_count=0,
+        oldest_delivery_ready_at_utc=None,
     )
 
 
