@@ -6,6 +6,39 @@ change the repository's bank-buyable posture.
 Do not use this file for aspirational claims. Every entry should name code, tests, and validation
 evidence or explicitly mark the item as planned.
 
+## 2026-08-14: AI Workflow Output Unsafe-Shape API Contract Proof Boundary
+
+Issue `#1065` applies the RFC-0002 Slice 09/17/19 maintainability lens to
+`tests/unit/test_ai_governance_api_contract.py::test_ai_workflow_output_request_rejects_unsafe_shape`.
+The current report-only quality baseline lists the test as a `102` line
+test-support hotspot.
+
+The branch refactor preserves the public test name and DTO validation behavior
+while separating valid request setup, unsafe claim/action/output payload
+variants, duplicate claim identity checks, naive verifier timestamp rejection,
+and expected validation-error assertions into named helpers. This is a
+test-support maintainability slice only.
+
+Focused local validation passed:
+
+1. `python -m ruff check tests/unit/test_ai_governance_api_contract.py`,
+2. `python -m ruff format --check tests/unit/test_ai_governance_api_contract.py`,
+3. `python -m mypy tests/unit/test_ai_governance_api_contract.py`,
+4. `python -m pytest tests/unit/test_ai_governance_api_contract.py -q`
+   (`8` passed),
+5. `make maintainability-gate`,
+6. `make duplicate-implementation-gate` (`0` duplicate clusters across `3,622`
+   source/script functions), and
+7. `make quality-baseline`.
+
+The refreshed quality baseline no longer lists the targeted `102` line test in
+largest functions; the largest report-only function is now `98` lines.
+
+No production API/OpenAPI, domain behavior, persistence schema, migration,
+runtime topology, authentication/authorization, Core, Gateway, Workbench,
+production AI provider execution, model-risk approval, supported-feature
+promotion, client-publication, or final RFC-0002 closure claim is in scope.
+
 ## 2026-08-14: Source Observability Contract Gate Validation Boundary
 
 Issue `#1062` applies the RFC-0002 Slice 15/19 maintainability lens to

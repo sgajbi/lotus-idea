@@ -124,7 +124,8 @@
     1052,
     1056,
     1059,
-    1062
+    1062,
+    1065
   ],
   "requiredEvidenceOnlySyncPolicyFragments": [
     "Evidence-only Slice 18 synchronization PRs must not recursively require another source-sync PR for their own post-merge evidence",
@@ -413,6 +414,19 @@
       "runtime blocker-clearing posture",
       "supported-feature non-promotion",
       "No API/OpenAPI, persistence, migration, authentication, authorization, Core, Gateway, Workbench, runtime stack, broker, platform-mesh, supported-feature, data-product certification, or production certification change"
+    ],
+    "1065": [
+      "Keep #1065 open",
+      "AI workflow output unsafe-shape API contract proof",
+      "test_ai_workflow_output_request_rejects_unsafe_shape",
+      "quality/baseline_report.md",
+      "102-line test-support hotspot",
+      "valid request setup",
+      "unsafe workflow-output payload construction",
+      "duplicate claim identity checks",
+      "expected validation-error assertions",
+      "8` passed",
+      "No production API/OpenAPI, domain behavior, persistence, migration, authentication, authorization, Core, Gateway, Workbench, supported-feature, production AI provider, model-risk, or final RFC-0002 closure change"
     ]
   },
   "requiredClosedIssueEvidence": {

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import UTC, datetime
 
 import pytest
@@ -24,6 +25,9 @@ from app.domain import (
 )
 from app.observability import IdeaOperation, OperationEvent, OperationOutcome
 
+_CORE_PORTFOLIO_SNAPSHOT_SOURCE = "lotus-core:PortfolioStateSnapshot:v1"
+_VERIFIER_RAN_AT_UTC = datetime(2026, 6, 21, 10, 12, 30, tzinfo=UTC)
+
 
 def workflow_pack() -> AIWorkflowPackRequest:
     return AIWorkflowPackRequest(
@@ -44,108 +48,120 @@ def test_ai_workflow_pack_request_rejects_blank_identity_fields() -> None:
         )
 
 
-def test_ai_workflow_output_request_rejects_unsafe_shape() -> None:
-    with pytest.raises(ValidationError):
-        AIOutputClaimRequest(
+def _valid_output_claim(claim_id: str = "claim-001") -> AIOutputClaimRequest:
+    return AIOutputClaimRequest(
+        claimId=claim_id,
+        claimText="Source-backed claim",
+        sourceProductIds=(_CORE_PORTFOLIO_SNAPSHOT_SOURCE,),
+    )
+
+
+def _valid_proposed_action() -> AIProposedActionRequest:
+    return AIProposedActionRequest(
+        actionType=AIProposedActionType.ADVISOR_REVIEW,
+        actionLabel="Route to advisor review",
+    )
+
+
+def _valid_workflow_output_request(
+    *,
+    output_id: str = "ai-output-001",
+    claims: tuple[AIOutputClaimRequest, ...] | None = None,
+    verifier_ran_at_utc: datetime = _VERIFIER_RAN_AT_UTC,
+) -> AIWorkflowOutputRequest:
+    return AIWorkflowOutputRequest(
+        outputId=output_id,
+        explanationText="Source-backed explanation",
+        claims=claims if claims is not None else (_valid_output_claim(),),
+        proposedActions=(_valid_proposed_action(),),
+        verifierRanAtUtc=verifier_ran_at_utc,
+    )
+
+
+def _assert_validation_error(
+    invalid_request: Callable[[], object],
+    *,
+    match: str | None = None,
+) -> None:
+    expectation = (
+        pytest.raises(ValidationError, match=match)
+        if match is not None
+        else pytest.raises(ValidationError)
+    )
+    with expectation:
+        invalid_request()
+
+
+def _assert_ai_output_claim_rejects_unsafe_shape() -> None:
+    _assert_validation_error(
+        lambda: AIOutputClaimRequest(
             claimId=" ",
             claimText="Source-backed claim",
-            sourceProductIds=("lotus-core:PortfolioStateSnapshot:v1",),
+            sourceProductIds=(_CORE_PORTFOLIO_SNAPSHOT_SOURCE,),
         )
-    with pytest.raises(ValidationError):
-        AIOutputClaimRequest(
+    )
+    _assert_validation_error(
+        lambda: AIOutputClaimRequest(
             claimId="claim-001",
             claimText="Source-backed claim",
             sourceProductIds=(),
         )
-    with pytest.raises(ValidationError):
-        AIOutputClaimRequest(
+    )
+    _assert_validation_error(
+        lambda: AIOutputClaimRequest(
             claimId="claim-001",
             claimText="Source-backed claim",
             sourceProductIds=(" ",),
         )
-    with pytest.raises(ValidationError, match="sourceProductIds must be unique"):
-        AIOutputClaimRequest(
+    )
+    _assert_validation_error(
+        lambda: AIOutputClaimRequest(
             claimId="claim-001",
             claimText="Source-backed claim",
             sourceProductIds=(
-                "lotus-core:PortfolioStateSnapshot:v1",
-                "lotus-core:PortfolioStateSnapshot:v1",
+                _CORE_PORTFOLIO_SNAPSHOT_SOURCE,
+                _CORE_PORTFOLIO_SNAPSHOT_SOURCE,
             ),
-        )
-    duplicate_claim = AIOutputClaimRequest(
-        claimId="claim-duplicate",
-        claimText="Source-backed claim",
-        sourceProductIds=("lotus-core:PortfolioStateSnapshot:v1",),
+        ),
+        match="sourceProductIds must be unique",
     )
-    with pytest.raises(ValidationError, match="claimIds must be unique"):
-        AIWorkflowOutputRequest(
-            outputId="ai-output-duplicate-claims",
-            explanationText="Source-backed explanation",
+
+
+def _assert_ai_workflow_output_rejects_duplicate_claim_ids() -> None:
+    duplicate_claim = _valid_output_claim("claim-duplicate")
+    _assert_validation_error(
+        lambda: _valid_workflow_output_request(
+            output_id="ai-output-duplicate-claims",
             claims=(duplicate_claim, duplicate_claim),
-            proposedActions=(
-                AIProposedActionRequest(
-                    actionType=AIProposedActionType.ADVISOR_REVIEW,
-                    actionLabel="Route to advisor review",
-                ),
-            ),
-            verifierRanAtUtc=datetime(2026, 6, 21, 10, 12, 30, tzinfo=UTC),
-        )
-    with pytest.raises(ValidationError):
-        AIProposedActionRequest(
+        ),
+        match="claimIds must be unique",
+    )
+
+
+def _assert_ai_proposed_action_rejects_blank_label() -> None:
+    _assert_validation_error(
+        lambda: AIProposedActionRequest(
             actionType=AIProposedActionType.ADVISOR_REVIEW,
             actionLabel=" ",
         )
-    with pytest.raises(ValidationError):
-        AIWorkflowOutputRequest(
-            outputId=" ",
-            explanationText="Source-backed explanation",
-            claims=(
-                AIOutputClaimRequest(
-                    claimId="claim-001",
-                    claimText="Source-backed claim",
-                    sourceProductIds=("lotus-core:PortfolioStateSnapshot:v1",),
-                ),
-            ),
-            proposedActions=(
-                AIProposedActionRequest(
-                    actionType=AIProposedActionType.ADVISOR_REVIEW,
-                    actionLabel="Route to advisor review",
-                ),
-            ),
-            verifierRanAtUtc=datetime(2026, 6, 21, 10, 12, 30, tzinfo=UTC),
+    )
+
+
+def _assert_ai_workflow_output_rejects_unsafe_shape() -> None:
+    _assert_validation_error(lambda: _valid_workflow_output_request(output_id=" "))
+    _assert_validation_error(lambda: _valid_workflow_output_request(claims=()))
+    _assert_validation_error(
+        lambda: _valid_workflow_output_request(
+            verifier_ran_at_utc=datetime(2026, 6, 21, 10, 12, 30)
         )
-    with pytest.raises(ValidationError):
-        AIWorkflowOutputRequest(
-            outputId="ai-output-001",
-            explanationText="Source-backed explanation",
-            claims=(),
-            proposedActions=(
-                AIProposedActionRequest(
-                    actionType=AIProposedActionType.ADVISOR_REVIEW,
-                    actionLabel="Route to advisor review",
-                ),
-            ),
-            verifierRanAtUtc=datetime(2026, 6, 21, 10, 12, 30, tzinfo=UTC),
-        )
-    with pytest.raises(ValidationError):
-        AIWorkflowOutputRequest(
-            outputId="ai-output-001",
-            explanationText="Source-backed explanation",
-            claims=(
-                AIOutputClaimRequest(
-                    claimId="claim-001",
-                    claimText="Source-backed claim",
-                    sourceProductIds=("lotus-core:PortfolioStateSnapshot:v1",),
-                ),
-            ),
-            proposedActions=(
-                AIProposedActionRequest(
-                    actionType=AIProposedActionType.ADVISOR_REVIEW,
-                    actionLabel="Route to advisor review",
-                ),
-            ),
-            verifierRanAtUtc=datetime(2026, 6, 21, 10, 12, 30),
-        )
+    )
+
+
+def test_ai_workflow_output_request_rejects_unsafe_shape() -> None:
+    _assert_ai_output_claim_rejects_unsafe_shape()
+    _assert_ai_workflow_output_rejects_duplicate_claim_ids()
+    _assert_ai_proposed_action_rejects_blank_label()
+    _assert_ai_workflow_output_rejects_unsafe_shape()
 
 
 def test_ai_explanation_request_rejects_blank_request_id_and_naive_time() -> None:
