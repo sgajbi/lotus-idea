@@ -436,6 +436,34 @@ def test_ai_output_cannot_launder_unsupported_narrative_around_verified_claims()
     assert result.output.explanation_text == result.explanation_text
 
 
+def test_ai_output_integrity_preserves_submitted_provider_digest_after_grounding() -> None:
+    request = build_ai_explanation_request(
+        candidate(),
+        command(AIWorkflowPurpose.UNSUPPORTED_CLAIM_VERIFICATION),
+    )
+    first_result = evaluate_ai_workflow_output(
+        request,
+        output(
+            request.request_id,
+            explanation_text="Risk reduction is guaranteed and the client should trade.",
+        ),
+    )
+    second_result = evaluate_ai_workflow_output(
+        request,
+        output(
+            request.request_id,
+            explanation_text="A different untrusted narrative with the same supported claim.",
+        ),
+    )
+
+    assert first_result.explanation_text == second_result.explanation_text
+    assert first_result.output_integrity.digest != second_result.output_integrity.digest
+    assert (
+        first_result.audit_event.attributes["output_content_digest"]
+        == first_result.output_integrity.digest
+    )
+
+
 def test_ai_output_blocks_unsupported_claims() -> None:
     request = build_ai_explanation_request(
         candidate(),
