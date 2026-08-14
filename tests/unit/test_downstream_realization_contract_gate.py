@@ -7,6 +7,11 @@ from pathlib import Path
 from types import ModuleType
 from typing import Any
 
+from app.application.downstream_realization.intake_wire_contract_gate import (
+    DOWNSTREAM_INTAKE_WIRE_CONTRACT_PATH,
+    validate_downstream_intake_wire_contract,
+)
+
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -146,6 +151,135 @@ def test_downstream_realization_contract_gate_blocks_downstream_intake_wire_cont
     errors = module._validate_downstream_intake_wire_contract(tmp_path)
 
     assert "manage_review intake wire contract required_server_headers drifted" in errors
+
+
+def test_downstream_intake_wire_contract_rejects_unreadable_payload(tmp_path: Path) -> None:
+    target = tmp_path / DOWNSTREAM_INTAKE_WIRE_CONTRACT_PATH
+    target.parent.mkdir(parents=True)
+    target.write_text("{", encoding="utf-8")
+
+    errors = validate_downstream_intake_wire_contract(tmp_path)
+
+    assert len(errors) == 1
+    assert errors[0].startswith("downstream intake wire contract is unreadable:")
+
+
+def test_downstream_intake_wire_contract_rejects_non_object_payload(tmp_path: Path) -> None:
+    target = tmp_path / DOWNSTREAM_INTAKE_WIRE_CONTRACT_PATH
+    target.parent.mkdir(parents=True)
+    target.write_text("[]", encoding="utf-8")
+
+    errors = validate_downstream_intake_wire_contract(tmp_path)
+
+    assert errors == ["downstream intake wire contract must be a JSON object"]
+
+
+def test_downstream_intake_wire_contract_rejects_malformed_consumer_entries(
+    tmp_path: Path,
+) -> None:
+    payload = _intake_wire_contract_payload()
+    payload["contract_id"] = "wrong"
+    payload["consumer_contracts"] = ["not-object"]
+    _write_intake_wire_contract(tmp_path, payload)
+
+    errors = validate_downstream_intake_wire_contract(tmp_path)
+
+    assert "downstream intake wire contract has an unexpected contract_id" in errors
+    assert "downstream intake wire contract consumer_contracts must be objects" in errors
+
+
+def test_downstream_intake_wire_contract_rejects_envelope_and_security_drift(
+    tmp_path: Path,
+) -> None:
+    payload = _intake_wire_contract_payload()
+    payload["contract_version"] = "2.0.0"
+    payload["repository"] = "lotus-report"
+    payload["lifecycle_status"] = "active"
+    payload["supportability_status"] = "supported"
+    payload["non_authoritative"] = False
+    payload["security_boundary"] = {
+        "development_fixture_only": False,
+        "client_supplied_principal_rejected": True,
+        "dev_only_fixture": True,
+        "does_not_grant_downstream_business_authority": True,
+    }
+    _write_intake_wire_contract(tmp_path, payload)
+
+    errors = validate_downstream_intake_wire_contract(tmp_path)
+
+    assert "downstream intake wire contract must be version 1.5.0" in errors
+    assert "downstream intake wire contract repository must be lotus-idea" in errors
+    assert "downstream intake wire contract must remain development_only" in errors
+    assert "downstream intake wire contract must remain not_certified" in errors
+    assert "downstream intake wire contract must remain non_authoritative" in errors
+    assert (
+        "downstream intake wire contract security_boundary.development_fixture_only must be true"
+    ) in errors
+
+
+def test_downstream_intake_wire_contract_rejects_missing_security_boundary(
+    tmp_path: Path,
+) -> None:
+    payload = _intake_wire_contract_payload()
+    payload["security_boundary"] = []
+    _write_intake_wire_contract(tmp_path, payload)
+
+    errors = validate_downstream_intake_wire_contract(tmp_path)
+
+    assert "downstream intake wire contract security_boundary must be an object" in errors
+
+
+def test_downstream_intake_wire_contract_rejects_missing_consumer_inventory(
+    tmp_path: Path,
+) -> None:
+    payload = _intake_wire_contract_payload()
+    payload["consumer_contracts"] = payload["consumer_contracts"][:2]
+    _write_intake_wire_contract(tmp_path, payload)
+
+    errors = validate_downstream_intake_wire_contract(tmp_path)
+
+    assert (
+        "downstream intake wire contract must declare exactly Advise, Manage, and Report consumers"
+        in errors
+    )
+
+
+def test_downstream_intake_wire_contract_rejects_owner_and_request_field_drift(
+    tmp_path: Path,
+) -> None:
+    payload = _intake_wire_contract_payload()
+    advise_contract = dict(payload["consumer_contracts"][0])
+    advise_contract["owner_repository"] = "lotus-idea"
+    advise_contract["owner_route"] = "/wrong"
+    advise_contract["request_fields"] = []
+    payload["consumer_contracts"][0] = advise_contract
+    _write_intake_wire_contract(tmp_path, payload)
+
+    errors = validate_downstream_intake_wire_contract(tmp_path)
+
+    assert "advise_proposal intake wire contract owner_repository drifted" in errors
+    assert "advise_proposal intake wire contract owner_route drifted" in errors
+    assert "advise_proposal intake wire contract request_fields drifted" in errors
+
+
+def test_downstream_intake_wire_contract_rejects_advise_manage_field_drift(
+    tmp_path: Path,
+) -> None:
+    payload = _intake_wire_contract_payload()
+    manage_contract = dict(payload["consumer_contracts"][1])
+    manage_contract["intent_type"] = "wrong"
+    manage_contract["receipt_outcomes"] = []
+    manage_contract["principal_capability"] = "wrong"
+    manage_contract["local_dev_principal_source"] = "browser"
+    payload["consumer_contracts"][1] = manage_contract
+    _write_intake_wire_contract(tmp_path, payload)
+
+    errors = validate_downstream_intake_wire_contract(tmp_path)
+
+    assert "manage_review intake wire contract intent_type drifted" in errors
+    assert "manage_review intake wire contract receipt_outcomes drifted" in errors
+    assert "manage_review intake wire contract principal_capability drifted" in errors
+    assert "manage_review intake wire contract local_dev_principal_source drifted" in errors
 
 
 def test_downstream_realization_contract_gate_blocks_report_intake_wire_contract_drift(
@@ -301,3 +435,16 @@ def _plan_payload(plan: Any) -> dict[str, Any]:
             "expected downstream realization plan payload to round-trip as an object"
         )
     return payload
+
+
+def _intake_wire_contract_payload() -> dict[str, Any]:
+    payload = json.loads((ROOT / DOWNSTREAM_INTAKE_WIRE_CONTRACT_PATH).read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise AssertionError("expected downstream intake wire contract to be an object")
+    return payload
+
+
+def _write_intake_wire_contract(repository_root: Path, payload: dict[str, Any]) -> None:
+    target = repository_root / DOWNSTREAM_INTAKE_WIRE_CONTRACT_PATH
+    target.parent.mkdir(parents=True)
+    target.write_text(json.dumps(payload), encoding="utf-8")
