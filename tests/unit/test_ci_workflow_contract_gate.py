@@ -191,6 +191,33 @@ def test_ci_contract_gate_accepts_guarded_braced_dispatch_ref_lookup(
     ]
 
 
+def test_ci_contract_gate_ignores_commented_dispatch_ref_lookup(
+    tmp_path: Path,
+) -> None:
+    module = _load_ci_contract_gate()
+    workflow_dir = _copy_workflows(tmp_path)
+    dispatch_workflow = workflow_dir / "merged-pr-main-releasability.yml"
+    dispatch_workflow.write_text(
+        dispatch_workflow.read_text(encoding="utf-8").replace(
+            '          if existing_ref_sha="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$dispatch_ref" --jq .object.sha 2>/dev/null)"; then',
+            (
+                "          # Lookup repos/$GITHUB_REPOSITORY/git/ref/tags/$dispatch_ref "
+                "before creating it.\n"
+                '          if existing_ref_sha="$(gh api '
+                '"repos/$GITHUB_REPOSITORY/git/ref/tags/$dispatch_ref" '
+                '--jq .object.sha 2>/dev/null)"; then'
+            ),
+        ),
+        encoding="utf-8",
+    )
+
+    errors = module.validate_workflows(workflow_dir)
+
+    assert not [
+        error for error in errors if error.startswith("merged-pr-main-releasability.yml must")
+    ]
+
+
 def test_ci_contract_gate_blocks_later_braced_unguarded_dispatch_ref_lookup(
     tmp_path: Path,
 ) -> None:
@@ -335,6 +362,42 @@ def test_ci_contract_gate_blocks_nested_dispatch_ref_mismatch_condition(
                 "                exit 1\n"
                 "              fi\n"
                 "            fi"
+            ),
+        ),
+        encoding="utf-8",
+    )
+
+    errors = module.validate_workflows(workflow_dir)
+
+    assert (
+        "merged-pr-main-releasability.yml must fail closed with exit 1 when "
+        "an existing immutable dispatch ref points to a different SHA"
+    ) in errors
+
+
+def test_ci_contract_gate_blocks_subshell_masked_dispatch_ref_mismatch_exit(
+    tmp_path: Path,
+) -> None:
+    module = _load_ci_contract_gate()
+    workflow_dir = _copy_workflows(tmp_path)
+    dispatch_workflow = workflow_dir / "merged-pr-main-releasability.yml"
+    dispatch_workflow.write_text(
+        dispatch_workflow.read_text(encoding="utf-8").replace(
+            (
+                '            if [ "$existing_ref_sha" != "$MERGE_COMMIT_SHA" ]; then\n'
+                '              echo "::error::Dispatch ref $dispatch_ref points to '
+                '$existing_ref_sha, expected $MERGE_COMMIT_SHA"\n'
+                "              exit 1\n"
+                "            fi"
+            ),
+            (
+                "            (\n"
+                '              if [ "$existing_ref_sha" != "$MERGE_COMMIT_SHA" ]; then\n'
+                '                echo "::error::Dispatch ref $dispatch_ref points to '
+                '$existing_ref_sha, expected $MERGE_COMMIT_SHA"\n'
+                "                exit 1\n"
+                "              fi\n"
+                "            ) || true"
             ),
         ),
         encoding="utf-8",
