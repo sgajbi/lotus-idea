@@ -37,10 +37,10 @@ supported yet.
 
 | Signal | Current state |
 | --- | --- |
-| GitHub issue posture | Current posture is 207 label-backed RFC-0002 issues across 13 repositories: 170 closed and 37 open. |
-| Open blocked work | 25 `status/blocked`, 0 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 0 `status/pr-open`, 8 `status/tracker`, and 0 app-actionable blocked issues. |
-| Active slice work | `sgajbi/lotus-idea#681` remains open as the Slice 18 synchronization tracker; `sgajbi/lotus-idea#1110` is closed after downstream intake wire-contract gate hardening; `sgajbi/lotus-idea#1109` is closed after signal API contract-gate hardening; `sgajbi/lotus-idea#1104` is closed after supported-feature gate fixture hardening. The current Idea source ledger tracks 138 RFC-0002 issues: 113 closed and 25 open. |
-| Latest Idea closure truth | `lotus-idea#1110` is closed after PR #1114 refactored the downstream intake wire-contract gate, PR #1115 synchronized merged-main evidence, and PR #1116 synchronized final QA closure source truth to main `1208330a4fba9914307d4df84c5f84afcb54c417`; Main Releasability `31843321791`, push-on-main CodeQL `31843316096`, and branch hygiene passed. No supported feature or production/runtime claim is promoted. |
+| GitHub issue posture | Current posture is 234 label-backed RFC-0002 issues across 13 repositories: 195 closed and 39 open. |
+| Open blocked work | 25 `status/blocked`, 0 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 2 `status/pr-open`, 8 `status/tracker`, and 0 app-actionable blocked issues. |
+| Active slice work | `sgajbi/lotus-idea#681` remains open as the Slice 18 synchronization tracker. The current Idea source ledger tracks 145 RFC-0002 issues: 120 closed and 25 open. |
+| Latest Idea closure truth | `lotus-idea#1119`, `#1121`, `#1123`, `#1125`, `#1127`, `#1129`, and `#1131` are closed after PRs #1120, #1122, #1124, #1126, #1128, #1130, and #1132 hardened merged-PR releasability dispatch policy. No supported feature or production/runtime claim is promoted. |
 | Latest canonical QA | Failed before AI/Advise proof on Workbench browser feedback-action confirmation. Workbench PR #698 is now merged and exact-main validated, but fresh canonical QA remains required. |
 | Next proof path | Core PR #948, Gateway PR #550, Workbench PR #701, Workbench PR #708, and the latest Idea source-truth PRs are merged. Fresh closure-grade proof now requires the governed `PB_SG_GLOBAL_BAL_001` canonical run from exact-main repositories or an isolated non-conflicting QA workspace because the shared local Core and Workbench checkouts are active non-main agent branches. Close only issues with issue-specific queue, detail, action, feedback, conversion-intent, downstream, AI, or Advise proof. |
 

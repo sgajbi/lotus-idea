@@ -2,16 +2,16 @@
   "schemaVersion": "lotus-idea:rfc0002-issue-posture-snapshot:v1",
   "rfcId": "RFC-0002",
   "repository": "sgajbi/lotus-idea",
-  "asOfDate": "2026-08-14",
+  "asOfDate": "2026-08-21",
   "sourceCommands": [
     "make rfc0002-github-issue-execution-summary",
     "make rfc0002-cross-repo-issue-posture"
   ],
   "trackingIssue": "sgajbi/lotus-idea#681",
   "ideaLedger": {
-    "totalTrackedIssues": 138,
+    "totalTrackedIssues": 145,
     "openIssues": 25,
-    "closedIssues": 113,
+    "closedIssues": 120,
     "openStatusCounts": {
       "open_blocked": 14,
       "open_fixed_local": 0,
@@ -29,6 +29,13 @@
     ],
     "mergedMainQaPendingIssues": [],
     "recentlyClosedIssues": [
+      "sgajbi/lotus-idea#1131",
+      "sgajbi/lotus-idea#1129",
+      "sgajbi/lotus-idea#1127",
+      "sgajbi/lotus-idea#1125",
+      "sgajbi/lotus-idea#1123",
+      "sgajbi/lotus-idea#1121",
+      "sgajbi/lotus-idea#1119",
       "sgajbi/lotus-idea#1110",
       "sgajbi/lotus-idea#1109",
       "sgajbi/lotus-idea#1104",
@@ -59,9 +66,9 @@
   },
   "crossRepo": {
     "repositoriesChecked": 13,
-    "totalRfc0002Issues": 207,
-    "openRfc0002Issues": 37,
-    "closedRfc0002Issues": 170,
+    "totalRfc0002Issues": 234,
+    "openRfc0002Issues": 39,
+    "closedRfc0002Issues": 195,
     "openBlockedIssues": 25,
     "appActionableBlockedIssues": 0,
     "openStatusCounts": {
@@ -70,7 +77,7 @@
       "status/in-progress": 1,
       "status/merged-main": 1,
       "status/merged-to-main": 2,
-      "status/pr-open": 0,
+      "status/pr-open": 2,
       "status/tracker": 8
     },
     "titleOnlyReferencesExcludedFromGovernedCounts": [
@@ -79,9 +86,16 @@
   },
   "expectedCurrentFragments": {
     "ideaLedger": [
-      "138 tracked RFC-0002 issues",
-      "113 closed and 25 open",
+      "145 tracked RFC-0002 issues",
+      "120 closed and 25 open",
       "#681",
+      "#1131",
+      "#1129",
+      "#1127",
+      "#1125",
+      "#1123",
+      "#1121",
+      "#1119",
       "#1110",
       "#1109",
       "#1104",
@@ -94,9 +108,9 @@
       "#1082"
     ],
     "crossRepo": [
-      "207 label-backed RFC-0002 issues",
-      "170 closed and 37 open",
-      "25 `status/blocked`, 0 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 0 `status/pr-open`, 8 `status/tracker`",
+      "234 label-backed RFC-0002 issues",
+      "195 closed and 39 open",
+      "25 `status/blocked`, 0 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 2 `status/pr-open`, 8 `status/tracker`",
       "0 app-actionable blocked"
     ]
   },

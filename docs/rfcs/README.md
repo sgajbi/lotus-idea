@@ -8,22 +8,21 @@ tests, docs, wiki, and supported-feature promotion.
 For the current live GitHub execution posture, canonical QA status, dependency
 map, and closure decision rules, use
 [wiki/RFC-0002-Execution-Status.md](../../wiki/RFC-0002-Execution-Status.md).
-At the latest refresh, RFC-0002 has 207 label-backed RFC-0002 issues across 13
-repositories: 170 closed and 37 open, with 25 `status/blocked`, 0
+At the latest refresh, RFC-0002 has 234 label-backed RFC-0002 issues across 13
+repositories: 195 closed and 39 open, with 25 `status/blocked`, 0
 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2
-`status/merged-to-main`, 0 `status/pr-open`, 8 `status/tracker`, and 0
+`status/merged-to-main`, 2 `status/pr-open`, 8 `status/tracker`, and 0
 app-actionable blocked issues.
-The latest Idea implementation-backed closure is `#1110`. PR #1114 refactored
-the downstream intake wire-contract gate boundary, PR #1115 synchronized
-merged-main evidence, and PR #1116 synchronized final QA closure source truth
-to main `1208330a4fba9914307d4df84c5f84afcb54c417`; exact-main Main
-Releasability `31843321791`, push-on-main CodeQL `31843316096`, and branch
-hygiene passed. The current Idea source ledger tracks 138 RFC-0002 issues, 113
-closed and 25 open, with `#681` open as the Slice 18 synchronization tracker,
-`#1110` closed after downstream intake wire-contract gate hardening, `#1109`
-closed after signal API contract-gate hardening, `#1104` closed after
-supported-feature gate fixture hardening, and `#1101`, `#1098`, `#1094`,
-`#1091`, `#1088`, and `#1084` as recent QA-closed Idea maintainability issues.
+The latest Idea implementation-backed closures are Slice 17 release-governance
+hardening issues `#1119`, `#1121`, `#1123`, `#1125`, `#1127`, `#1129`, and
+`#1131`, merged through PRs #1120, #1122, #1124, #1126, #1128, #1130, and
+#1132. They harden immutable merged-PR releasability dispatch, structural
+lookup policy, exact dispatch-ref payloads, dispatch ordering, POST override
+semantics, chained-command rejection, SHA/cardinality guards, and masked/nested
+dispatch rejection. The current Idea source ledger tracks 145 RFC-0002 issues,
+120 closed and 25 open, with `#681` open as the Slice 18 synchronization
+tracker; `#1110`, `#1109`, `#1104`, `#1101`, `#1098`, `#1094`, `#1091`,
+`#1088`, and `#1084` remain recent QA-closed Idea maintainability issues.
 These are issue-backed internal hardening closures and do not change product
 behavior or support posture. Fresh canonical QA is still required before closing AI/Advise
 QA-pending issues or promoting support; current blockers remain fresh exact-main

@@ -1,7 +1,7 @@
 {
   "schemaVersion": "lotus-idea:rfc0002-github-issue-execution-ledger:v1",
   "rfcId": "RFC-0002",
-  "asOfDate": "2026-08-14",
+  "asOfDate": "2026-08-21",
   "repository": "sgajbi/lotus-idea",
   "executionAnchor": {
     "issueNumber": 681,
@@ -1311,6 +1311,69 @@
       "executionStatus": "closed_complete",
       "allowPullRequestAutoClose": true,
       "closureInstruction": "Closed #1110 after QA passed for the RFC-0002 Slice 12/13/19 downstream intake wire-contract gate validation boundary refactor. PR #1114 rebase-merged the implementation to Idea main `db9bbd302aa92a684c2eccacc2e7493f7750b31e` from branch head `c19928cb77524356df9f288f7f19cfb90f899518`; PR #1115 then rebase-merged the merged-main evidence sync to Idea main `c1989509c59572c77ebb66ac58af374395f8b7b7` from branch head `de26185a94987f7730efe6a48d563216b3e1603f`. Commit `5fa32f08b0bbf5952ae37c8d43faa493673971d0` implemented the code change, commit `67e626431b10dde560d108516142f25b26c6aeaf` recorded fixed-local source-ledger evidence, commit `3146234ff8fd249f8bf6ba267267b3f22cb63d80` added direct rule-family coverage for the new application validator after the PR coverage gate exposed an uncovered-module drop, commit `c19928cb77524356df9f288f7f19cfb90f899518` recorded the fix-forward coverage evidence, and commit `de26185a94987f7730efe6a48d563216b3e1603f` recorded merged-main evidence. The change moves the downstream intake wire-contract rule-family validation from the 500-line-capped CLI script into `src/app/application/downstream_realization/intake_wire_contract_gate.py` and leaves `scripts/downstream_realization_contract_gate.py::_validate_downstream_intake_wire_contract` as a thin imported entrypoint for existing callers/tests. The validator is split into named helpers for contract envelope, security-boundary controls, consumer inventory, owner-route fields, Advise/Manage consumer fields, Report consumer fields, request-field shape, and required server-header checks. Local implementation validation passed `python scripts/downstream_realization_contract_gate.py`, `python -m pytest tests/unit/test_downstream_realization_contract_gate.py -q` with 21 tests, `python -m mypy scripts/downstream_realization_contract_gate.py src/app/application/downstream_realization/intake_wire_contract_gate.py tests/unit/test_downstream_realization_contract_gate.py`, focused Ruff check and format check, `make maintainability-gate`, `make duplicate-implementation-gate` with 0 duplicate clusters across 3663 source/script functions, `make quality-baseline`, `make rfc0002-github-issue-execution-ledger-gate`, `make rfc0002-github-issue-execution-state-audit`, `make rfc0002-github-issue-learning-pattern-gate`, `git diff --check`, and focused coverage showing `src/app/application/downstream_realization/intake_wire_contract_gate.py` at 110 statements, 0 missed, 100%. PR #1114 passed Feature Lane, PR Merge Gate, Queue Auto Merge, and CodeQL on head `c19928cb77524356df9f288f7f19cfb90f899518`, including lint/typecheck/security, unit, integration, e2e, PostgreSQL runtime proof, combined coverage, Docker build validation, and CI signal evidence. Exact-main Main Releasability Gate run `31840490712` passed for `db9bbd302aa92a684c2eccacc2e7493f7750b31e`; exact-main CodeQL run `31840483580` passed for the same SHA. PR #1115 passed Feature Lane, PR Merge Gate, Queue Auto Merge, and CodeQL before merge. Focused QA on Idea main `c1989509c59572c77ebb66ac58af374395f8b7b7` passed `python scripts/downstream_realization_contract_gate.py`, `python -m pytest tests/unit/test_downstream_realization_contract_gate.py -q` with 21 tests, MyPy, Ruff check, Ruff format check, `make rfc0002-github-issue-execution-ledger-gate`, and `make rfc0002-github-issue-execution-state-audit`. Exact-main Main Releasability Gate run `31841959619` passed for `c1989509c59572c77ebb66ac58af374395f8b7b7`, including workflow lint, lint/typecheck/security, unit, integration, e2e, PostgreSQL runtime proof, combined coverage, Docker build/runtime smoke, image scan, dependency SBOM, GHCR push/digest, digest runtime, image signing, provenance/SBOM attestations, release metadata, release image identity binding, release license binding, and CI signal evidence. Push-on-main/CodeQL run `31841952344` passed for the same SHA. No repo-authored wiki source changed in PR #1114 or PR #1115, so wiki publication was not required. Branch cleanup completed for both branches: GitHub deleted the remote branches, `git fetch origin --prune` removed remote-tracking refs, patch-equivalence/zero-diff checks passed, and local branches were deleted. This closes only internal gate maintainability hardening. It does not claim downstream owner-service implementation, production IdP/session/token-claims implementation, downstream execution proof, Report materialization proof, Render output, Archive record, client-publication authority, supported-feature promotion, data-mesh certification, production certification, runtime topology, API/OpenAPI behavior change, persistence, migration, or final RFC-0002 closure."
+    },
+    {
+      "issueNumber": 1119,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/1119",
+      "rfcSlices": ["slice-17"],
+      "githubState": "closed",
+      "executionStatus": "closed_complete",
+      "allowPullRequestAutoClose": true,
+      "closureInstruction": "Closed #1119 after PR #1120 rebase-merged the RFC-0002 Slice 17 immutable merged-PR main-releasability dispatcher fix to Idea main `55729ba1c6a0671bbe1b2a9e46ab11819bc7cee2`. The dispatcher no longer dispatches `main-releasability.yml` through mutable `main`; it verifies or creates a per-merge dispatch tag tied to `pull_request.merge_commit_sha` and dispatches the gate with `expected_sha` preserved. PR checks passed, including Feature Lane, PR Merge Gate, CodeQL, PostgreSQL Runtime Proof, coverage, Docker validation, and CI signal evidence. This is release-evidence workflow hardening only and does not change product behavior, API/OpenAPI, persistence, production identity, protected deployment, supported-feature promotion, or final RFC-0002 closure."
+    },
+    {
+      "issueNumber": 1121,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/1121",
+      "rfcSlices": ["slice-17"],
+      "githubState": "closed",
+      "executionStatus": "closed_complete",
+      "allowPullRequestAutoClose": true,
+      "closureInstruction": "Closed #1121 after PR #1122 rebase-merged the final structural dispatch-ref lookup policy to Idea main `fbc4e638b34e7d30ca259b13b9d250a267d413b9`. The contract gate now follows the sibling Manage/Advise review standard for guarded immutable-ref lookup, failure masking, reset discipline, suffix drift, duplicate lookup behavior, and mismatch failure semantics. PR checks passed, including Feature Lane, PR Merge Gate, CodeQL, PostgreSQL Runtime Proof, coverage, Docker validation, and CI signal evidence. This closes only CI/release-evidence policy hardening and does not promote product support or clear live RFC-0002 blockers."
+    },
+    {
+      "issueNumber": 1123,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/1123",
+      "rfcSlices": ["slice-17"],
+      "githubState": "closed",
+      "executionStatus": "closed_complete",
+      "allowPullRequestAutoClose": true,
+      "closureInstruction": "Closed #1123 after PR #1124 rebase-merged the exact dispatch-ref creation payload guard to Idea main `fb46c98e0fd269de4cd1aa47af4d579ae3cef795`. The gate now rejects wrong or missing `refs/tags/$dispatch_ref` and `MERGE_COMMIT_SHA` payload fields for immutable ref creation, preserving exact-main release evidence. PR checks passed, including Feature Lane, PR Merge Gate, CodeQL, PostgreSQL Runtime Proof, coverage, Docker validation, and CI signal evidence. This is CI contract hardening only and does not change runtime product semantics or supported-feature posture."
+    },
+    {
+      "issueNumber": 1125,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/1125",
+      "rfcSlices": ["slice-17"],
+      "githubState": "closed",
+      "executionStatus": "closed_complete",
+      "allowPullRequestAutoClose": true,
+      "closureInstruction": "Closed #1125 after PR #1126 rebase-merged dispatch ordering and POST override semantics to Idea main `9fa1357af73aee51d192b706c39d1329ae5284b4`. The workflow contract permits explicit POST semantics while rejecting non-POST/input-body drift and proves `gh workflow run main-releasability.yml` happens only after guarded absent-ref creation. PR checks passed, including Feature Lane, PR Merge Gate, CodeQL, PostgreSQL Runtime Proof, coverage, Docker validation, and CI signal evidence. This is release-governance hardening only and leaves RFC-0002 product/support blockers unchanged."
+    },
+    {
+      "issueNumber": 1127,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/1127",
+      "rfcSlices": ["slice-17"],
+      "githubState": "closed",
+      "executionStatus": "closed_complete",
+      "allowPullRequestAutoClose": true,
+      "closureInstruction": "Closed #1127 after PR #1128 rebase-merged chained dispatch-ref creation rejection to Idea main `8ec9d18e3572ef4ea03b17f118d6770c12a51af1`. The contract gate rejects chained shell control after the canonical immutable-ref creation command so a workflow cannot create the ref and exit before dispatching main releasability. PR checks passed, including Feature Lane, PR Merge Gate, CodeQL, PostgreSQL Runtime Proof, coverage, Docker validation, and CI signal evidence. This is CI/release-evidence hardening only and does not clear runtime, deployment, identity, provider, legal, or final-certification blockers."
+    },
+    {
+      "issueNumber": 1129,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/1129",
+      "rfcSlices": ["slice-17"],
+      "githubState": "closed",
+      "executionStatus": "closed_complete",
+      "allowPullRequestAutoClose": true,
+      "closureInstruction": "Closed #1129 after PR #1130 rebase-merged dispatch SHA mutation and ref-creation cardinality guards to Idea main `53776cca02676b241b06a130c9b21e150b4f18c3`. The gate rejects top-level `existing_ref_sha` mutation before mismatch comparison and requires exactly one guarded immutable-ref creation invocation. PR checks passed, including Feature Lane, PR Merge Gate, CodeQL, PostgreSQL Runtime Proof, coverage, Docker validation, and CI signal evidence. This is workflow policy hardening only and does not change application behavior or RFC-0002 support posture."
+    },
+    {
+      "issueNumber": 1131,
+      "url": "https://github.com/sgajbi/lotus-idea/issues/1131",
+      "rfcSlices": ["slice-17"],
+      "githubState": "closed",
+      "executionStatus": "closed_complete",
+      "allowPullRequestAutoClose": true,
+      "closureInstruction": "Closed #1131 after PR #1132 rebase-merged masked or nested releasability dispatch rejection to Idea main `015b96ba0f2ce560456dc88c3340cd25a6ab3162`. The dispatcher contract now validates only outer-shell `gh workflow run main-releasability.yml` invocations, rejects masked/chained/backgrounded dispatch commands, and requires the complete dispatch command to carry the immutable dispatch ref plus exact expected SHA. PR checks passed, including Feature Lane, PR Merge Gate, CodeQL, PostgreSQL Runtime Proof, coverage, Docker validation, and CI signal evidence. This is release-evidence assurance only and does not promote supported features, certify product support, or close final RFC-0002 blockers."
     }
   ]
 }

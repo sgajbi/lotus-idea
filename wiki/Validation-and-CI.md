@@ -1219,14 +1219,16 @@ posture remains uncertified until release evidence exists.
 It also lists every blocked issue with the GitHub URL, actionability, blocker
 class, and remaining authority so the Core-vs-protected/external split is
 auditable without chat memory or one-off GitHub queries.
-Current live posture is 207 label-backed RFC-0002 issues across 13
-repositories: 170 closed and 37 open. The open split is 25 `status/blocked`,
+Current live posture is 234 label-backed RFC-0002 issues across 13
+repositories: 195 closed and 39 open. The open split is 25 `status/blocked`,
 0 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2
-`status/merged-to-main`, 0 `status/pr-open`, 8 `status/tracker`;
-`sgajbi/lotus-idea#1110` is closed after PR #1116 synchronized final QA closure
-source truth; `sgajbi/lotus-idea#1109` is closed after signal API contract-gate
-hardening; `sgajbi/lotus-idea#1104` is closed after supported-feature gate
-fixture hardening. `sgajbi/lotus-idea#1101`, `sgajbi/lotus-idea#1098`,
+`status/merged-to-main`, 2 `status/pr-open`, 8 `status/tracker`;
+`sgajbi/lotus-idea#1119`, `#1121`, `#1123`, `#1125`, `#1127`, `#1129`, and
+`#1131` are closed after Slice 17 release-governance hardening. `sgajbi/lotus-idea#1110`
+is closed after PR #1116 synchronized final QA closure source truth;
+`sgajbi/lotus-idea#1109` is closed after signal API contract-gate hardening;
+`sgajbi/lotus-idea#1104` is closed after supported-feature gate fixture
+hardening. `sgajbi/lotus-idea#1101`, `sgajbi/lotus-idea#1098`,
 `sgajbi/lotus-idea#1094`, `sgajbi/lotus-idea#1091`,
 `sgajbi/lotus-idea#1088`, and `sgajbi/lotus-idea#1084` are the latest
 QA-closed Idea maintainability hardening issues after local, PR, or
@@ -1602,11 +1604,12 @@ supported feature.
 
 RFC-0002 execution is tracked through GitHub issue state plus the
 source-controlled implementation-proof ledgers. The current governed posture is
-207 label-backed RFC-0002 issues across 13 repositories: 170 closed and 37 open.
-The open set is 25 `status/blocked`, 0 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 0 `status/pr-open`, 8 `status/tracker`,
-and 0 app-actionable blocked issues. #1110 is closed after PR #1116 synchronized
-final QA closure source truth; #1109 is closed after signal API contract-gate
-hardening; #1104 is closed after supported-feature gate fixture hardening;
+234 label-backed RFC-0002 issues across 13 repositories: 195 closed and 39 open.
+The open set is 25 `status/blocked`, 0 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 2 `status/pr-open`, 8 `status/tracker`,
+and 0 app-actionable blocked issues. #1119, #1121, #1123, #1125, #1127, #1129,
+and #1131 are closed after Slice 17 release-governance hardening; #1110 is
+closed after PR #1116 synchronized final QA closure source truth; #1109 is
+closed after signal API contract-gate hardening; #1104 is closed after supported-feature gate fixture hardening;
 #1101 is closed after AI workflow evaluator hardening; #1098 is the
 release-CI hardening closure; #1094, #1091, #1088, and #1084 are the
 latest closed Idea maintainability hardening issues, while #681 remains open
