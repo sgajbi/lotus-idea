@@ -42,6 +42,13 @@ def test_ci_contract_gate_blocks_duplicate_main_releasability_push_trigger(
     assert "main-releasability.yml must not contain `  push:`" in errors
 
 
+def test_ci_contract_gate_requires_revision_aware_main_releasability_concurrency() -> None:
+    workflow = ROOT / ".github" / "workflows" / "main-releasability.yml"
+    text = workflow.read_text(encoding="utf-8")
+
+    assert "group: ${{ github.workflow }}-${{ inputs.expected_sha || github.sha }}" in text
+
+
 def test_ci_contract_gate_blocks_raw_pr_coverage_enforcement(tmp_path: Path) -> None:
     module = _load_ci_contract_gate()
     workflow_dir = _copy_workflows(tmp_path)
