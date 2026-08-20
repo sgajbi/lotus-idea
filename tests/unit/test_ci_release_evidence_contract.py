@@ -533,6 +533,27 @@ def test_ci_contract_gate_blocks_missing_runtime_license_notices() -> None:
     )
 
 
+def test_ci_contract_gate_blocks_missing_os_package_refresh() -> None:
+    dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
+    degraded = dockerfile.replace(
+        "RUN apt-get update \\\n"
+        "    && DEBIAN_FRONTEND=noninteractive apt-get upgrade --yes --no-install-recommends \\\n"
+        "    && rm -rf /var/lib/apt/lists/*\n\n",
+        "",
+    )
+
+    errors = validate_dockerfile_runtime(degraded)
+
+    assert (
+        "Dockerfile must apply patched operating-system packages before runtime dependencies"
+        in errors
+    )
+    assert (
+        "Dockerfile must remove apt package lists after operating-system package refresh"
+        in errors
+    )
+
+
 def test_ci_contract_gate_blocks_missing_standalone_migration_entrypoint() -> None:
     dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
     degraded = dockerfile.replace(
