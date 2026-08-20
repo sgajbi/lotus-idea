@@ -598,6 +598,73 @@ def test_ci_contract_gate_blocks_commented_dispatch_ref_payload_fields(
     ) in errors
 
 
+def test_ci_contract_gate_blocks_masked_dispatch_ref_creation_failure(
+    tmp_path: Path,
+) -> None:
+    module = _load_ci_contract_gate()
+    workflow_dir = _copy_workflows(tmp_path)
+    dispatch_workflow = workflow_dir / "merged-pr-main-releasability.yml"
+    dispatch_workflow.write_text(
+        dispatch_workflow.read_text(encoding="utf-8").replace(
+            (
+                '            gh api "repos/$GITHUB_REPOSITORY/git/refs" \\\n'
+                '              -f ref="refs/tags/$dispatch_ref" \\\n'
+                '              -f sha="$MERGE_COMMIT_SHA" >/dev/null'
+            ),
+            (
+                '            gh api "repos/$GITHUB_REPOSITORY/git/refs" '
+                '-f ref="refs/tags/$dispatch_ref" -f sha="$MERGE_COMMIT_SHA" || true'
+            ),
+        ),
+        encoding="utf-8",
+    )
+
+    errors = module.validate_workflows(workflow_dir)
+
+    assert (
+        "merged-pr-main-releasability.yml must create the immutable dispatch ref only "
+        "inside the empty existing-ref branch with exact ref and SHA fields"
+    ) in errors
+
+
+def test_ci_contract_gate_blocks_function_scoped_dispatch_ref_lookup_guard(
+    tmp_path: Path,
+) -> None:
+    module = _load_ci_contract_gate()
+    workflow_dir = _copy_workflows(tmp_path)
+    dispatch_workflow = workflow_dir / "merged-pr-main-releasability.yml"
+    dispatch_workflow.write_text(
+        dispatch_workflow.read_text(encoding="utf-8")
+        .replace(
+            (
+                '          if existing_ref_sha="$(gh api '
+                '"repos/$GITHUB_REPOSITORY/git/ref/tags/$dispatch_ref" '
+                '--jq .object.sha 2>/dev/null)"; then\n'
+            ),
+            (
+                "          lookup_dispatch_ref() {\n"
+                '            if existing_ref_sha="$(gh api '
+                '"repos/$GITHUB_REPOSITORY/git/ref/tags/$dispatch_ref" '
+                '--jq .object.sha 2>/dev/null)"; then\n'
+            ),
+            1,
+        )
+        .replace(
+            ('          fi\n          if [ -z "$existing_ref_sha" ]; then\n'),
+            ('            fi\n          }\n          if [ -z "$existing_ref_sha" ]; then\n'),
+            1,
+        ),
+        encoding="utf-8",
+    )
+
+    errors = module.validate_workflows(workflow_dir)
+
+    assert (
+        "merged-pr-main-releasability.yml must guard immutable-ref lookup with an if/else reset "
+        "before dispatch"
+    ) in errors
+
+
 def test_ci_contract_gate_binds_dispatch_ref_payload_to_creation_command(
     tmp_path: Path,
 ) -> None:
