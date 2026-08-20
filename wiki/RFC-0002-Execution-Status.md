@@ -27,7 +27,7 @@ dependency map, and closure rules without relying on chat memory.
 | Open RFC-0002 issues | 37 |
 | Open blocked issues | 25 |
 | App-actionable blocked issues | 0 |
-| Active synchronization tracker | `sgajbi/lotus-idea#681` remains open as the Slice 18 synchronization tracker. The latest Slice 18 issue-posture synchronization is PR #1135 on main `1859e6b8f94e1d1a8d3f2cf3088ea153f6cfc0bb` after exact-main Main Releasability run `32420553023`, wiki publication `7edba27`, strict wiki parity, and branch hygiene passed. This sync updates durable posture only; it does not promote a supported feature or close final RFC-0002 blockers. |
+| Active synchronization tracker | `sgajbi/lotus-idea#681` remains open as the Slice 18 synchronization tracker. The latest Slice 18 issue-posture synchronization is PR #1136 on main `97e7641a49b882d05e5583675a7881df0d89db63` after exact-main Main Releasability run `32429389622`, wiki publication `8d2fc0b`, strict wiki parity, and branch hygiene passed. This sync updates durable posture only; it does not promote a supported feature or complete final RFC-0002 blockers. |
 
 The zero app-actionable blocked count is important. It means an open issue may
 remain `status/blocked` only when the remaining authority is Core-owned,
