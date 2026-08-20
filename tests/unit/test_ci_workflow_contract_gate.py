@@ -411,6 +411,38 @@ def test_ci_contract_gate_blocks_subshell_masked_dispatch_ref_mismatch_exit(
     ) in errors
 
 
+def test_ci_contract_gate_blocks_unconditional_dispatch_ref_creation(
+    tmp_path: Path,
+) -> None:
+    module = _load_ci_contract_gate()
+    workflow_dir = _copy_workflows(tmp_path)
+    dispatch_workflow = workflow_dir / "merged-pr-main-releasability.yml"
+    dispatch_workflow.write_text(
+        dispatch_workflow.read_text(encoding="utf-8").replace(
+            (
+                '          if [ -z "$existing_ref_sha" ]; then\n'
+                '            gh api "repos/$GITHUB_REPOSITORY/git/refs" \\\n'
+                '              -f ref="refs/tags/$dispatch_ref" \\\n'
+                '              -f sha="$MERGE_COMMIT_SHA" >/dev/null\n'
+                "          fi"
+            ),
+            (
+                '          gh api "repos/$GITHUB_REPOSITORY/git/refs" \\\n'
+                '            -f ref="refs/tags/$dispatch_ref" \\\n'
+                '            -f sha="$MERGE_COMMIT_SHA" >/dev/null'
+            ),
+        ),
+        encoding="utf-8",
+    )
+
+    errors = module.validate_workflows(workflow_dir)
+
+    assert (
+        "merged-pr-main-releasability.yml must create the immutable dispatch ref only "
+        "inside the empty existing-ref branch"
+    ) in errors
+
+
 def _copy_workflows(tmp_path: Path) -> Path:
     workflow_dir = tmp_path / ".github" / "workflows"
     workflow_dir.mkdir(parents=True)
