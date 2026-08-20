@@ -14,6 +14,9 @@ from ci_contract_gate_expectations import (  # noqa: E402
 from ci_implementation_proof_readiness_contract import (  # noqa: E402
     validate_implementation_proof_readiness_target,
 )
+from ci_merged_pr_dispatch_contract import (  # noqa: E402
+    validate_merged_pr_main_releasability_dispatch,
+)
 from ci_contract_gate_workbench_runtime import (  # noqa: E402
     validate_workbench_runtime_proof_timestamp,
 )
@@ -344,6 +347,7 @@ def validate_workflows(workflows_dir: Path) -> list[str]:
         for prohibited in PROHIBITED_WORKFLOW_PATTERNS.get(workflow_name, ()):
             if prohibited in content:
                 errors.append(f"{workflow_name} must not contain `{prohibited}`")
+        errors.extend(validate_merged_pr_main_releasability_dispatch(workflow_name, content))
         errors.extend(_validate_job_timeouts(workflow_name, content))
         errors.extend(_validate_action_pins(workflow_name, content))
     return errors
