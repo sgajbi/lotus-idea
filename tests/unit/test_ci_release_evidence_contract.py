@@ -549,8 +549,7 @@ def test_ci_contract_gate_blocks_missing_os_package_refresh() -> None:
         in errors
     )
     assert (
-        "Dockerfile must remove apt package lists after operating-system package refresh"
-        in errors
+        "Dockerfile must remove apt package lists after operating-system package refresh" in errors
     )
 
 
