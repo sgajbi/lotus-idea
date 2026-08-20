@@ -685,6 +685,99 @@ def test_ci_contract_gate_blocks_non_post_dispatch_ref_creation_override(
     ) in errors
 
 
+def test_ci_contract_gate_allows_explicit_post_dispatch_ref_creation_method(
+    tmp_path: Path,
+) -> None:
+    module = _load_ci_contract_gate()
+    workflow_dir = _copy_workflows(tmp_path)
+    dispatch_workflow = workflow_dir / "merged-pr-main-releasability.yml"
+    dispatch_workflow.write_text(
+        dispatch_workflow.read_text(encoding="utf-8").replace(
+            '            gh api "repos/$GITHUB_REPOSITORY/git/refs" \\',
+            '            gh api "repos/$GITHUB_REPOSITORY/git/refs" --method POST \\',
+            1,
+        ),
+        encoding="utf-8",
+    )
+
+    errors = module.validate_workflows(workflow_dir)
+
+    assert (
+        "merged-pr-main-releasability.yml must create the immutable dispatch ref only "
+        "inside the empty existing-ref branch with exact ref and SHA fields"
+    ) not in errors
+
+
+def test_ci_contract_gate_blocks_input_body_dispatch_ref_creation_override(
+    tmp_path: Path,
+) -> None:
+    module = _load_ci_contract_gate()
+    workflow_dir = _copy_workflows(tmp_path)
+    dispatch_workflow = workflow_dir / "merged-pr-main-releasability.yml"
+    dispatch_workflow.write_text(
+        dispatch_workflow.read_text(encoding="utf-8").replace(
+            (
+                '            gh api "repos/$GITHUB_REPOSITORY/git/refs" \\\n'
+                '              -f ref="refs/tags/$dispatch_ref" \\\n'
+                '              -f sha="$MERGE_COMMIT_SHA" >/dev/null'
+            ),
+            (
+                '            gh api "repos/$GITHUB_REPOSITORY/git/refs" --input ref.json '
+                '-f ref="refs/tags/$dispatch_ref" -f sha="$MERGE_COMMIT_SHA"'
+            ),
+        ),
+        encoding="utf-8",
+    )
+
+    errors = module.validate_workflows(workflow_dir)
+
+    assert (
+        "merged-pr-main-releasability.yml must create the immutable dispatch ref only "
+        "inside the empty existing-ref branch with exact ref and SHA fields"
+    ) in errors
+
+
+def test_ci_contract_gate_blocks_dispatch_before_ref_creation(
+    tmp_path: Path,
+) -> None:
+    module = _load_ci_contract_gate()
+    workflow_dir = _copy_workflows(tmp_path)
+    dispatch_workflow = workflow_dir / "merged-pr-main-releasability.yml"
+    dispatch_workflow.write_text(
+        dispatch_workflow.read_text(encoding="utf-8").replace(
+            (
+                '          if [ -z "$existing_ref_sha" ]; then\n'
+                '            gh api "repos/$GITHUB_REPOSITORY/git/refs" \\\n'
+                '              -f ref="refs/tags/$dispatch_ref" \\\n'
+                '              -f sha="$MERGE_COMMIT_SHA" >/dev/null\n'
+                "          fi\n"
+                "          gh workflow run main-releasability.yml \\"
+            ),
+            (
+                "          gh workflow run main-releasability.yml \\\n"
+                '            --ref "$dispatch_ref" \\\n'
+                '            -f expected_sha="$MERGE_COMMIT_SHA" \\\n'
+                '            -f triggering_pr="$PR_NUMBER"\n'
+                '          if [ -z "$existing_ref_sha" ]; then\n'
+                '            gh api "repos/$GITHUB_REPOSITORY/git/refs" \\\n'
+                '              -f ref="refs/tags/$dispatch_ref" \\\n'
+                '              -f sha="$MERGE_COMMIT_SHA" >/dev/null\n'
+                "          fi\n"
+                "          : # displaced dispatch command"
+            ),
+            1,
+        ),
+        encoding="utf-8",
+    )
+
+    errors = module.validate_workflows(workflow_dir)
+
+    assert (
+        "merged-pr-main-releasability.yml must run the main releasability dispatch "
+        "only after the absent immutable-ref creation branch has completed"
+    ) in errors
+
+
 def test_ci_contract_gate_blocks_function_scoped_dispatch_ref_lookup_guard(
     tmp_path: Path,
 ) -> None:
