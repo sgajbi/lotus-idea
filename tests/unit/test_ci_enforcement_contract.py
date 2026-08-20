@@ -609,6 +609,21 @@ def test_ci_contract_gate_requires_merged_pr_main_releasability_dispatch(tmp_pat
         in errors
     )
 
+    dispatch_workflow.write_text(
+        dispatch_workflow.read_text(encoding="utf-8").replace(
+            "github.event.pull_request.merge_commit_sha",
+            "github.event.pull_request.head.sha",
+        ),
+        encoding="utf-8",
+    )
+
+    errors = module.validate_workflows(workflow_dir)
+
+    assert (
+        "merged-pr-main-releasability.yml missing `github.event.pull_request.merge_commit_sha`"
+        in errors
+    )
+
 
 def test_ci_contract_gate_requires_non_suppressed_auto_merge_token(tmp_path: Path) -> None:
     module = _load_ci_contract_gate()

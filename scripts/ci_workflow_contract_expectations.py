@@ -228,8 +228,10 @@ WORKFLOW_EXPECTATIONS: dict[str, tuple[str, ...]] = {
         "contents: read",
         "github.event.pull_request.merged == true",
         "github.event.pull_request.base.ref == 'main'",
+        "github.event.pull_request.merge_commit_sha",
         "gh workflow run main-releasability.yml",
         "--ref main",
+        "-f expected_sha=",
     ),
     "postgres-disaster-recovery-drill.yml": (
         "schedule:",
