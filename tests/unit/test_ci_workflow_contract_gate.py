@@ -101,6 +101,75 @@ def test_ci_contract_gate_requires_receipt_bound_durable_repository_proof(
     assert "main-releasability.yml missing `make durable-repository-ci-proof`" in errors
 
 
+def test_ci_contract_gate_blocks_mutable_merged_pr_main_releasability_ref(
+    tmp_path: Path,
+) -> None:
+    module = _load_ci_contract_gate()
+    workflow_dir = _copy_workflows(tmp_path)
+    dispatch_workflow = workflow_dir / "merged-pr-main-releasability.yml"
+    dispatch_workflow.write_text(
+        dispatch_workflow.read_text(encoding="utf-8").replace(
+            '--ref "$dispatch_ref"',
+            "--ref main",
+        ),
+        encoding="utf-8",
+    )
+
+    errors = module.validate_workflows(workflow_dir)
+
+    assert "merged-pr-main-releasability.yml must not contain `--ref main`" in errors
+    assert 'merged-pr-main-releasability.yml missing `--ref "$dispatch_ref"`' in errors
+
+
+def test_ci_contract_gate_blocks_unguarded_immutable_dispatch_ref_lookup(
+    tmp_path: Path,
+) -> None:
+    module = _load_ci_contract_gate()
+    workflow_dir = _copy_workflows(tmp_path)
+    dispatch_workflow = workflow_dir / "merged-pr-main-releasability.yml"
+    dispatch_workflow.write_text(
+        dispatch_workflow.read_text(encoding="utf-8").replace(
+            '          if existing_ref_sha="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$dispatch_ref" --jq .object.sha 2>/dev/null)"; then',
+            '          existing_ref_sha="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$dispatch_ref" --jq .object.sha 2>/dev/null)"',
+        ),
+        encoding="utf-8",
+    )
+
+    errors = module.validate_workflows(workflow_dir)
+
+    assert (
+        "merged-pr-main-releasability.yml must guard immutable-ref lookup "
+        "with an if/else reset before dispatch"
+    ) in errors
+
+
+def test_ci_contract_gate_blocks_trailing_command_after_dispatch_lookup_reset(
+    tmp_path: Path,
+) -> None:
+    module = _load_ci_contract_gate()
+    workflow_dir = _copy_workflows(tmp_path)
+    dispatch_workflow = workflow_dir / "merged-pr-main-releasability.yml"
+    dispatch_workflow.write_text(
+        dispatch_workflow.read_text(encoding="utf-8").replace(
+            '          else\n            existing_ref_sha=""\n          fi',
+            (
+                "          else\n"
+                '            existing_ref_sha=""\n'
+                '            gh api "repos/$GITHUB_REPOSITORY/actions/runs?per_page=1" >/dev/null\n'
+                "          fi"
+            ),
+        ),
+        encoding="utf-8",
+    )
+
+    errors = module.validate_workflows(workflow_dir)
+
+    assert (
+        "merged-pr-main-releasability.yml must guard immutable-ref lookup "
+        "with an if/else reset before dispatch"
+    ) in errors
+
+
 def _copy_workflows(tmp_path: Path) -> Path:
     workflow_dir = tmp_path / ".github" / "workflows"
     workflow_dir.mkdir(parents=True)
