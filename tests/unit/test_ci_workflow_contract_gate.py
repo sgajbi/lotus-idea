@@ -685,6 +685,41 @@ def test_ci_contract_gate_blocks_chained_dispatch_ref_creation_command(
     ) in errors
 
 
+def test_ci_contract_gate_blocks_dispatch_ref_sha_mutation_before_mismatch(
+    tmp_path: Path,
+) -> None:
+    module = _load_ci_contract_gate()
+    workflow_dir = _copy_workflows(tmp_path)
+    dispatch_workflow = workflow_dir / "merged-pr-main-releasability.yml"
+    dispatch_workflow.write_text(
+        dispatch_workflow.read_text(encoding="utf-8").replace(
+            (
+                '            if [ "$existing_ref_sha" != "$MERGE_COMMIT_SHA" ]; then\n'
+                '              echo "::error::Dispatch ref $dispatch_ref points to '
+                '$existing_ref_sha, expected $MERGE_COMMIT_SHA"\n'
+                "              exit 1\n"
+                "            fi"
+            ),
+            (
+                '            existing_ref_sha="$MERGE_COMMIT_SHA"\n'
+                '            if [ "$existing_ref_sha" != "$MERGE_COMMIT_SHA" ]; then\n'
+                '              echo "::error::Dispatch ref $dispatch_ref points to '
+                '$existing_ref_sha, expected $MERGE_COMMIT_SHA"\n'
+                "              exit 1\n"
+                "            fi"
+            ),
+        ),
+        encoding="utf-8",
+    )
+
+    errors = module.validate_workflows(workflow_dir)
+
+    assert (
+        "merged-pr-main-releasability.yml must fail closed with exit 1 when "
+        "an existing immutable dispatch ref points to a different SHA"
+    ) in errors
+
+
 def test_ci_contract_gate_blocks_non_post_dispatch_ref_creation_override(
     tmp_path: Path,
 ) -> None:
@@ -701,6 +736,39 @@ def test_ci_contract_gate_blocks_non_post_dispatch_ref_creation_override(
             (
                 '            gh api "repos/$GITHUB_REPOSITORY/git/refs" --method GET '
                 '-f ref="refs/tags/$dispatch_ref" -f sha="$MERGE_COMMIT_SHA"'
+            ),
+        ),
+        encoding="utf-8",
+    )
+
+    errors = module.validate_workflows(workflow_dir)
+
+    assert (
+        "merged-pr-main-releasability.yml must create the immutable dispatch ref only "
+        "inside the empty existing-ref branch with exact ref and SHA fields"
+    ) in errors
+
+
+def test_ci_contract_gate_blocks_duplicate_guarded_dispatch_ref_creation(
+    tmp_path: Path,
+) -> None:
+    module = _load_ci_contract_gate()
+    workflow_dir = _copy_workflows(tmp_path)
+    dispatch_workflow = workflow_dir / "merged-pr-main-releasability.yml"
+    dispatch_workflow.write_text(
+        dispatch_workflow.read_text(encoding="utf-8").replace(
+            (
+                '            gh api "repos/$GITHUB_REPOSITORY/git/refs" \\\n'
+                '              -f ref="refs/tags/$dispatch_ref" \\\n'
+                '              -f sha="$MERGE_COMMIT_SHA" >/dev/null'
+            ),
+            (
+                '            gh api "repos/$GITHUB_REPOSITORY/git/refs" \\\n'
+                '              -f ref="refs/tags/$dispatch_ref" \\\n'
+                '              -f sha="$MERGE_COMMIT_SHA" >/dev/null\n'
+                '            gh api "repos/$GITHUB_REPOSITORY/git/refs" \\\n'
+                '              -f ref="refs/tags/$dispatch_ref" \\\n'
+                '              -f sha="$MERGE_COMMIT_SHA" >/dev/null'
             ),
         ),
         encoding="utf-8",
