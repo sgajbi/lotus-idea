@@ -67,8 +67,8 @@
   "crossRepo": {
     "repositoriesChecked": 13,
     "totalRfc0002Issues": 234,
-    "openRfc0002Issues": 39,
-    "closedRfc0002Issues": 195,
+    "openRfc0002Issues": 37,
+    "closedRfc0002Issues": 197,
     "openBlockedIssues": 25,
     "appActionableBlockedIssues": 0,
     "openStatusCounts": {
@@ -77,7 +77,7 @@
       "status/in-progress": 1,
       "status/merged-main": 1,
       "status/merged-to-main": 2,
-      "status/pr-open": 2,
+      "status/pr-open": 0,
       "status/tracker": 8
     },
     "titleOnlyReferencesExcludedFromGovernedCounts": [
@@ -109,8 +109,8 @@
     ],
     "crossRepo": [
       "234 label-backed RFC-0002 issues",
-      "195 closed and 39 open",
-      "25 `status/blocked`, 0 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 2 `status/pr-open`, 8 `status/tracker`",
+      "197 closed and 37 open",
+      "25 `status/blocked`, 0 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2 `status/merged-to-main`, 0 `status/pr-open`, 8 `status/tracker`",
       "0 app-actionable blocked"
     ]
   },

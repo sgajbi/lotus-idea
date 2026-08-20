@@ -9,9 +9,9 @@ For the current live GitHub execution posture, canonical QA status, dependency
 map, and closure decision rules, use
 [wiki/RFC-0002-Execution-Status.md](../../wiki/RFC-0002-Execution-Status.md).
 At the latest refresh, RFC-0002 has 234 label-backed RFC-0002 issues across 13
-repositories: 195 closed and 39 open, with 25 `status/blocked`, 0
+repositories: 197 closed and 37 open, with 25 `status/blocked`, 0
 `status/fixed-local`, 1 `status/in-progress`, 1 `status/merged-main`, 2
-`status/merged-to-main`, 2 `status/pr-open`, 8 `status/tracker`, and 0
+`status/merged-to-main`, 0 `status/pr-open`, 8 `status/tracker`, and 0
 app-actionable blocked issues.
 The latest Idea implementation-backed closures are Slice 17 release-governance
 hardening issues `#1119`, `#1121`, `#1123`, `#1125`, `#1127`, `#1129`, and
