@@ -397,20 +397,44 @@ def _conditionally_creates_absent_immutable_ref(text: str) -> bool:
     )
 
 
-def _main_releasability_dispatch_command_indices(text: str) -> list[int]:
+def _main_releasability_dispatch_commands(text: str) -> list[tuple[int, str]]:
     lines = text.splitlines()
-    indices: list[int] = []
+    commands: list[tuple[int, str]] = []
+    depth = 0
     index = 0
     while index < len(lines):
         stripped_line = lines[index].strip()
-        if not _is_shell_comment(stripped_line) and (
+        if not stripped_line or _is_shell_comment(stripped_line):
+            index += 1
+            continue
+        if depth == 0 and (
             stripped_line == MAIN_RELEASABILITY_DISPATCH_COMMAND
             or stripped_line.startswith(f"{MAIN_RELEASABILITY_DISPATCH_COMMAND} ")
         ):
-            _, index = _continued_shell_command(lines, index)
-            indices.append(index)
+            command, index = _continued_shell_command(lines, index)
+            commands.append((index, command))
+            index += 1
+            continue
+        if _opens_nested_shell_scope(stripped_line):
+            depth += 1
+        if _closes_nested_shell_scope(stripped_line):
+            depth -= 1
         index += 1
-    return indices
+    return commands
+
+
+def _is_exact_main_releasability_dispatch_command(command: str) -> bool:
+    normalized_command = " ".join(command.split())
+    if not normalized_command.startswith(f"{MAIN_RELEASABILITY_DISPATCH_COMMAND} "):
+        return False
+    if any(token in normalized_command for token in (" || ", " && ", " ; ")):
+        return False
+    if normalized_command.endswith(" &"):
+        return False
+    return (
+        '--ref "$dispatch_ref"' in normalized_command
+        and '-f expected_sha="$MERGE_COMMIT_SHA"' in normalized_command
+    )
 
 
 def _absent_ref_creation_block_end_index(text: str) -> int | None:
@@ -453,10 +477,11 @@ def _absent_ref_creation_block_end_index(text: str) -> int | None:
 
 
 def _dispatches_after_absent_ref_creation(text: str) -> bool:
-    dispatch_indices = _main_releasability_dispatch_command_indices(text)
+    dispatch_commands = _main_releasability_dispatch_commands(text)
     creation_block_end_index = _absent_ref_creation_block_end_index(text)
     return (
-        len(dispatch_indices) == 1
+        len(dispatch_commands) == 1
         and creation_block_end_index is not None
-        and dispatch_indices[0] > creation_block_end_index
+        and dispatch_commands[0][0] > creation_block_end_index
+        and _is_exact_main_releasability_dispatch_command(dispatch_commands[0][1])
     )

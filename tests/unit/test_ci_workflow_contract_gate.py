@@ -569,6 +569,66 @@ def test_ci_contract_gate_blocks_trailing_dispatch_ref_creation(
     ) in errors
 
 
+def test_ci_contract_gate_blocks_masked_releasability_dispatch_failure(
+    tmp_path: Path,
+) -> None:
+    module = _load_ci_contract_gate()
+    workflow_dir = _copy_workflows(tmp_path)
+    dispatch_workflow = workflow_dir / "merged-pr-main-releasability.yml"
+    dispatch_workflow.write_text(
+        dispatch_workflow.read_text(encoding="utf-8").replace(
+            '-f triggering_pr="$PR_NUMBER"',
+            '-f triggering_pr="$PR_NUMBER" || true',
+            1,
+        ),
+        encoding="utf-8",
+    )
+
+    errors = module.validate_workflows(workflow_dir)
+
+    assert (
+        "merged-pr-main-releasability.yml must run the main releasability dispatch "
+        "only after the absent immutable-ref creation branch has completed"
+    ) in errors
+
+
+def test_ci_contract_gate_blocks_nested_releasability_dispatch_command(
+    tmp_path: Path,
+) -> None:
+    module = _load_ci_contract_gate()
+    workflow_dir = _copy_workflows(tmp_path)
+    dispatch_workflow = workflow_dir / "merged-pr-main-releasability.yml"
+    dispatch_workflow.write_text(
+        dispatch_workflow.read_text(encoding="utf-8").replace(
+            (
+                "          gh workflow run main-releasability.yml \\\n"
+                '            --repo "$GITHUB_REPOSITORY" \\\n'
+                '            --ref "$dispatch_ref" \\\n'
+                '            -f expected_sha="$MERGE_COMMIT_SHA" \\\n'
+                '            -f triggering_pr="$PR_NUMBER"'
+            ),
+            (
+                "          if false; then\n"
+                "            gh workflow run main-releasability.yml \\\n"
+                '              --repo "$GITHUB_REPOSITORY" \\\n'
+                '              --ref "$dispatch_ref" \\\n'
+                '              -f expected_sha="$MERGE_COMMIT_SHA" \\\n'
+                '              -f triggering_pr="$PR_NUMBER"\n'
+                "          fi"
+            ),
+            1,
+        ),
+        encoding="utf-8",
+    )
+
+    errors = module.validate_workflows(workflow_dir)
+
+    assert (
+        "merged-pr-main-releasability.yml must run the main releasability dispatch "
+        "only after the absent immutable-ref creation branch has completed"
+    ) in errors
+
+
 def test_ci_contract_gate_blocks_commented_dispatch_ref_payload_fields(
     tmp_path: Path,
 ) -> None:
