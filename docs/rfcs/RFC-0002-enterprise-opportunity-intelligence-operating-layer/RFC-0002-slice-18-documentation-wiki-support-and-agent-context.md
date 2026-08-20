@@ -1031,7 +1031,7 @@ Core-vs-protected/external split is durable execution evidence rather than a
 chat-only explanation.
 For the current 234 label-backed RFC-0002 issue program posture, 25 open
 `status/blocked` issues are classified; 0 are app-actionable blocked issues.
-The current cross-repo posture is 195 closed and 39 open across 13
+The current cross-repo posture is 197 closed and 37 open across 13
 repositories, with `sgajbi/lotus-idea#681` as the in-progress Slice 18 tracker.
 Future agents must not use `status/blocked` for writable non-Core app work; if
 the remaining acceptance criteria can be satisfied in `lotus-idea`,
