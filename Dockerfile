@@ -36,6 +36,10 @@ ENV PIP_DISABLE_PIP_VERSION_CHECK=1 \
 
 WORKDIR /app
 
+RUN apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get upgrade --yes --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY pyproject.toml README.md LICENSE THIRD_PARTY_NOTICES.md ./
 COPY requirements/runtime-resolved.lock.txt ./requirements/runtime-resolved.lock.txt
 RUN python -m pip install --no-cache-dir --upgrade pip \

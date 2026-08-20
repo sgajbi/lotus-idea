@@ -61,6 +61,12 @@ GOVERNED_DOCKERFILE_BASE_AND_METADATA_FRAGMENTS = {
 }
 
 GOVERNED_DOCKERFILE_DEPENDENCY_FRAGMENTS = {
+    "apt-get upgrade --yes --no-install-recommends": (
+        "Dockerfile must apply patched operating-system packages before runtime dependencies"
+    ),
+    "rm -rf /var/lib/apt/lists/*": (
+        "Dockerfile must remove apt package lists after operating-system package refresh"
+    ),
     "COPY requirements/runtime-resolved.lock.txt ./requirements/runtime-resolved.lock.txt": (
         "Dockerfile must copy the resolved runtime dependency lockfile"
     ),
