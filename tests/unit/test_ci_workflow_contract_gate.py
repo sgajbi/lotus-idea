@@ -439,7 +439,29 @@ def test_ci_contract_gate_blocks_unconditional_dispatch_ref_creation(
 
     assert (
         "merged-pr-main-releasability.yml must create the immutable dispatch ref only "
-        "inside the empty existing-ref branch"
+        "inside the empty existing-ref branch with exact ref and SHA fields"
+    ) in errors
+
+
+def test_ci_contract_gate_blocks_wrong_dispatch_ref_creation_payload(
+    tmp_path: Path,
+) -> None:
+    module = _load_ci_contract_gate()
+    workflow_dir = _copy_workflows(tmp_path)
+    dispatch_workflow = workflow_dir / "merged-pr-main-releasability.yml"
+    dispatch_workflow.write_text(
+        dispatch_workflow.read_text(encoding="utf-8").replace(
+            '-f sha="$MERGE_COMMIT_SHA" >/dev/null',
+            '-f sha="$WRONG_SHA" >/dev/null',
+        ),
+        encoding="utf-8",
+    )
+
+    errors = module.validate_workflows(workflow_dir)
+
+    assert (
+        "merged-pr-main-releasability.yml must create the immutable dispatch ref only "
+        "inside the empty existing-ref branch with exact ref and SHA fields"
     ) in errors
 
 
