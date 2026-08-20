@@ -13,9 +13,7 @@ IMMUTABLE_DISPATCH_REF_LOOKUP_CONDITIONS = (
         '--jq .object.sha 2>/dev/null)"; then'
     ),
 )
-IMMUTABLE_DISPATCH_REF_MISMATCH_CONDITION = (
-    'if [ "$existing_ref_sha" != "$MERGE_COMMIT_SHA" ]; then'
-)
+REF_MISMATCH_CONDITION = 'if [ "$existing_ref_sha" != "$MERGE_COMMIT_SHA" ]; then'
 IMMUTABLE_DISPATCH_REF_CREATION_CONDITION = 'if [ -z "$existing_ref_sha" ]; then'
 IMMUTABLE_DISPATCH_REF_CREATION_COMMAND = 'gh api "repos/$GITHUB_REPOSITORY/git/refs"'
 IMMUTABLE_DISPATCH_REF_CREATION_REF_FIELD = '-f ref="refs/tags/$dispatch_ref"'
@@ -64,10 +62,7 @@ def _continued_shell_command(lines: list[str], start_index: int) -> tuple[str, i
     return " ".join(command_parts), index
 
 
-def validate_merged_pr_main_releasability_dispatch(
-    workflow_name: str,
-    workflow: str,
-) -> list[str]:
+def validate_merged_pr_main_releasability_dispatch(workflow_name: str, workflow: str) -> list[str]:
     if workflow_name != "merged-pr-main-releasability.yml":
         return []
 
@@ -295,7 +290,7 @@ def _outer_lookup_then_arm_has_mismatch_exit(block: str) -> bool:
         stripped_line = line.strip()
         if condition_depth == 1 and stripped_line.startswith("existing_ref_sha="):
             return False
-        if stripped_line != IMMUTABLE_DISPATCH_REF_MISMATCH_CONDITION or condition_depth != 1:
+        if stripped_line != REF_MISMATCH_CONDITION or condition_depth != 1:
             if _opens_nested_shell_scope(stripped_line):
                 condition_depth += 1
             if _closes_nested_shell_scope(stripped_line):
@@ -425,14 +420,11 @@ def _main_releasability_dispatch_commands(text: str) -> list[tuple[int, str]]:
 
 def _is_exact_main_releasability_dispatch_command(command: str) -> bool:
     normalized_command = " ".join(command.split())
-    if not normalized_command.startswith(f"{MAIN_RELEASABILITY_DISPATCH_COMMAND} "):
-        return False
-    if any(token in normalized_command for token in (" || ", " && ", " ; ")):
-        return False
-    if normalized_command.endswith(" &"):
-        return False
     return (
-        '--ref "$dispatch_ref"' in normalized_command
+        normalized_command.startswith(f"{MAIN_RELEASABILITY_DISPATCH_COMMAND} ")
+        and not any(token in normalized_command for token in (" || ", " && ", " ; "))
+        and not normalized_command.endswith(" &")
+        and '--ref "$dispatch_ref"' in normalized_command
         and '-f expected_sha="$MERGE_COMMIT_SHA"' in normalized_command
     )
 
@@ -477,10 +469,10 @@ def _absent_ref_creation_block_end_index(text: str) -> int | None:
 
 
 def _has_dispatch_ref_reassignment_between(text: str, *, start_index: int, end_index: int) -> bool:
-    lines = text.splitlines()
     depth = 0
-    for line in lines[start_index + 1 : end_index + 1]:
-        stripped_line = line.strip()
+    for stripped_line in (
+        line.strip() for line in text.splitlines()[start_index + 1 : end_index + 1]
+    ):
         if not stripped_line or _is_shell_comment(stripped_line):
             continue
         if depth == 0 and stripped_line.startswith("dispatch_ref="):
@@ -495,14 +487,14 @@ def _has_dispatch_ref_reassignment_between(text: str, *, start_index: int, end_i
 def _dispatches_after_absent_ref_creation(text: str) -> bool:
     dispatch_commands = _main_releasability_dispatch_commands(text)
     creation_block_end_index = _absent_ref_creation_block_end_index(text)
+    if len(dispatch_commands) != 1 or creation_block_end_index is None:
+        return False
+    dispatch_index, dispatch_command = dispatch_commands[0]
+    no_ref_reassignment = not _has_dispatch_ref_reassignment_between(
+        text, start_index=creation_block_end_index, end_index=dispatch_index
+    )
     return (
-        len(dispatch_commands) == 1
-        and creation_block_end_index is not None
-        and dispatch_commands[0][0] > creation_block_end_index
-        and not _has_dispatch_ref_reassignment_between(
-            text,
-            start_index=creation_block_end_index,
-            end_index=dispatch_commands[0][0],
-        )
-        and _is_exact_main_releasability_dispatch_command(dispatch_commands[0][1])
+        dispatch_index > creation_block_end_index
+        and no_ref_reassignment
+        and _is_exact_main_releasability_dispatch_command(dispatch_command)
     )
