@@ -11,24 +11,220 @@ certification, client-ready publication, and supported-feature promotion remain 
 
 ## Route Families
 
-| Family | Routes | Current use | Boundary |
-| --- | --- | --- | --- |
-| Health and metadata | `GET /health`, `GET /health/live`, `GET /health/ready`, `GET /metadata` | Platform smoke checks, readiness probes, service inventory. `/health/ready` publishes code-owned `200 ready` and source-safe `503` draining, restoring, durable-repository, and release-identity traffic-control modes. | No business capability, source quality, portfolio supportability, Gateway/Workbench product proof, client publication, or supported-feature proof. |
-| Caller-supplied opportunity signals | `POST /api/v1/idea-signals/*/evaluate` | Deterministic candidate posture over source-owned evidence supplied by authorized callers. Signal routes reject source refs whose `sourceSystem` or `productId` does not match the route's governed source contract before candidate creation. High-cash, low-income, bond-maturity, allocation-drift, underperformance, concentration-risk, high-volatility, drawdown-review, mandate-restriction, missing-risk-profile, missing-benchmark, and missing-suitability OpenAPI publish candidate-created, blocked, suppressed, and not-eligible modes from application-backed response factories. Mandate-restriction, missing-risk-profile, and missing-suitability preserve Advise `AdvisoryPolicyEvaluationRecord:v1` authority; missing-benchmark preserves Core `BenchmarkAssignment:v1` authority. | No upstream source fetch, official calculation ownership, suitability or policy approval, client risk-profile approval or creation, risk-capacity determination, Gateway/Workbench support, or supported-feature promotion. |
-| Bounded source-backed signal evaluation | `POST /api/v1/idea-signals/high-cash/evaluate-from-source`, `POST /api/v1/idea-signals/low-income/evaluate-from-source`, `POST /api/v1/idea-signals/bond-maturity/evaluate-from-source`, `POST /api/v1/idea-signals/missing-benchmark/evaluate-from-source`, `POST /api/v1/idea-signals/concentration-risk/evaluate-from-source`, `POST /api/v1/idea-signals/high-volatility/evaluate-from-source`, `POST /api/v1/idea-signals/drawdown-review/evaluate-from-source`, `POST /api/v1/idea-signals/underperformance/evaluate-from-source`, `POST /api/v1/idea-signals/allocation-drift/evaluate-from-source`, `POST /api/v1/idea-signals/missing-suitability/evaluate-from-source`, `POST /api/v1/idea-signals/missing-risk-profile/evaluate-from-source`, `POST /api/v1/idea-signals/mandate-restriction/evaluate-from-source` | Fetches Core-owned high-cash, low-income, bond-maturity, or benchmark-assignment evidence, Lotus Risk-owned concentration, volatility, or drawdown evidence, Lotus Performance-owned active-return and benchmark-context evidence, Lotus Manage-owned action-register posture, or Lotus Advise-owned policy-evaluation workflow, risk-profile diagnostic, or explicit mandate/restriction diagnostic posture through the configured source adapter after advisor role, `idea.signal.evaluate`, and required entitlement checks pass. It returns source-redacted candidate or blocked posture and closes the runtime client after each request. High-cash, low-income, bond-maturity, missing-benchmark, allocation-drift, underperformance, concentration-risk, high-volatility, drawdown-review, mandate-restriction, missing-risk-profile, and missing-suitability each publish complete candidate-created, blocked, suppressed, and not-eligible named modes through their source-backed application paths. Missing-benchmark retains Core `BenchmarkAssignment:v1` identity without transferring benchmark assignment, methodology, or performance authority; allocation-drift candidate lineage retains supporting Manage, Performance, and Risk product identities without transferring source authority; underperformance retains Performance `ReturnsSeriesBundle:v1` identity without transferring returns or benchmark authority; concentration-risk retains Risk `ConcentrationRiskReport:v1` identity without transferring calculation or methodology authority; high-volatility retains Risk `RiskMetricsReport:v1` identity without transferring volatility, VaR, tracking-error, or methodology authority; drawdown-review retains Risk `DrawdownAnalyticsReport:v1` identity without transferring calculation, period-selection, or methodology authority; mandate-restriction, missing-risk-profile, and missing-suitability retain Advise `AdvisoryPolicyEvaluationRecord:v1` identity without transferring restriction, mandate, client risk-profile approval or creation, risk-capacity, suitability, policy, publication, rebalance, order, or execution authority. | High-cash, low-income, bond-maturity, missing-benchmark, concentration-risk, high-volatility, drawdown-review, underperformance, allocation-drift, missing-suitability, missing-risk-profile, and mandate/restriction only; no persistence, source-worker certification, live source certification, income-needs assessment, funding advice, treasury instruction, maturity schedule authority, replacement product recommendation, reinvestment advice, planning suitability approval, benchmark assignment, benchmark methodology authority, performance calculation, concentration calculation, volatility/VaR/tracking-error calculation, drawdown calculation, drift calculation, mandate compliance approval, mandate-state change, restriction clearance, risk-profile approval or creation, risk-capacity determination, suitability approval, policy approval, proposal approval, sign-off approval, typed risk-profile or restriction data-product certification, risk methodology approval, trade recommendation, rebalance action, order creation, data-product certification, Gateway/Workbench support, client publication, or supported-feature promotion. |
-| Candidate persistence and lifecycle | `POST /api/v1/idea-signals/high-cash/evaluate-and-persist`, `POST /api/v1/idea-candidates/{candidateId}/lifecycle-transitions`, `GET /api/v1/idea-candidates/{candidateId}`, `POST /api/v1/idea-candidates/{candidateId}/evidence-replay` | Internal persisted candidate, idempotency, lifecycle, detail, and evidence-replay foundations. High-cash persistence OpenAPI distinguishes accepted, replayed, duplicate-candidate, blocked, suppressed, and not-eligible modes; non-candidate outcomes return `persistence=null`. Lifecycle transition input uses the caller-settable vocabulary and rejects `accepted` and `executed`; its OpenAPI contract publishes accepted and idempotent replay modes. Evidence replay publishes matched, hash-mismatch, stale-source, and expired modes from one DTO-validated factory. Durable PostgreSQL providers use repository-side candidate-detail projection instead of whole-store snapshot hydration for ordinary detail reads. | `local`/`test` may use process-local writes; production-like profiles require PostgreSQL and fail closed when absent. Replay responses expose no raw source route or payload. No downstream authority, client-ready publication, or supported-feature promotion. |
+Eleven families covering the 61 operations this service serves. The machine-readable inventory is the [endpoint certification ledger](https://github.com/sgajbi/lotus-idea/blob/main/docs/operations/endpoint-certification-ledger.json), which `make endpoint-certification-gate` verifies against the generated OpenAPI.
 
-Missing-suitability caller and Advise-backed source evaluation publish candidate-created,
-blocked, suppressed, and not-eligible response modes from their application paths.
-Advise retains suitability, policy, proposal, sign-off, and client-publication posture
-authority; Idea only detects evidence gaps and routes compliance review.
-| Privacy and records lifecycle | `POST /api/v1/data-lifecycle/candidates/{candidateId}/actions` | Authorized preview/apply workflow for legal hold, hold release, erasure, and purge with exact tenant scope, idempotency, governed authority, dual approval, immutable audit, and PostgreSQL lifecycle fencing. | Internal and not certified. Lotus Idea enforces approved local decisions but does not own legal/privacy approval, Report/Archive policy, AI-provider deletion, or supported-feature promotion. |
-| Review workflow | `GET /api/v1/review-queues/advisor`, `GET /api/v1/review-queues/portfolio-manager`, `GET /api/v1/review-queues/compliance`, `GET /api/v1/review-queues/operator/exceptions`, `GET /api/v1/review-queues/advisor/readiness`, `POST /api/v1/idea-candidates/{candidateId}/review-actions`, `POST /api/v1/idea-candidates/{candidateId}/feedback` | Audience-bound business queues, candidate-safe operator exception posture, readiness, and review/feedback capture. Queue reads use candidate-created-at as-of visibility and audience-bound opaque continuation snapshots. The advisor queue publishes application-backed `itemsAvailable` and `noItemsAvailable` 200 examples through its real projection and response DTO. Queue `policyVersion` is distinct from candidate `scorePolicyVersion`; unknown score policies fail closed. Mutations accept no body scope and authorize persisted candidate scope against trusted caller entitlements. Review-action and feedback OpenAPI publish both newly accepted and idempotent business-resource replay success modes; replay payloads explicitly expose a null decision/event without granting downstream authority. Gateway and Workbench expose bounded controls through their BFF path; browser-supplied Idea authority is not trusted, and the configured authority fixture is local/dev/test only. | PM/compliance routes do not grant Manage or compliance authority. The action path is not authenticated-principal proof, full Workbench runtime proof, data-product certification, or supported review-product promotion. |
-| AI explanation governance | `POST /api/v1/idea-candidates/{candidateId}/ai-explanations/evaluate`, `GET /api/v1/ai-explanations/readiness` | Deterministic fallback and model-risk diagnostics. Local/test may use a visibly unattested fixture; production-like profiles accept workflow output only as a complete producer bundle with verified Lotus AI run attestation. Accepted narrative is server-rendered from verified claims under `lotus-idea.ai-claim-grounding-policy.v1`, with source-safe product/version, as-of, freshness, and quality references. Blocked output exposes no grounding and uses deterministic server-owned explanation text; submitted provider narrative is digest-bound but not returned or persisted across accepted, blocked, replay, or conflict paths. Readiness reports dashboard and alert-rule source-contract validity separately from their runtime blockers. | No provider call by Idea, autonomous advice, dashboard provisioning, alert evaluation/delivery, live-provider certification, or client-ready explanation claim. |
-| Conversion and report evidence | `POST /api/v1/idea-candidates/{candidateId}/conversion-intents`, `POST /api/v1/conversion-intents/{conversionIntentId}/outcomes`, `POST /api/v1/conversion-intents/{conversionIntentId}/report-evidence-packs` | Internal review-gated intent, source-versioned append-only outcome history/current posture, and report evidence-pack request recording. Conversion-intent recording requires the conversion capability, `Idempotency-Key`, and complete trusted tenant/book/portfolio/client caller entitlement scope covering the persisted candidate; missing or mismatched scope fails closed as `403 permission_denied` before intent persistence. All three mutations publish named accepted and replayed OpenAPI modes with explicit null replay resources and false authority boundaries. Report evidence-pack examples additionally preserve no client-publication, rendered-output, or archive-record authority. Outcome resource identity is independent of the retry key; equivalent cross-key events replay, changed identity/version/progression returns `conversion_outcome_conflict`, and candidate detail separates full history from policy-valid current posture. | No suitability approval, rebalance/execution authority, report rendering, archive record, client publication, or supported-feature promotion; quarantined histories do not count as ready. |
-| Downstream realization and recovery | `GET /api/v1/downstream-realization/readiness`, `POST /api/v1/conversion-intents/{conversionIntentId}/downstream-submissions`, `POST /api/v1/report-evidence-packs/{reportEvidencePackId}/downstream-submissions`, `GET /api/v1/downstream-submissions/reconciliation`, `POST /api/v1/downstream-submissions/reconciliation/{supportReference}` | Planned-contract readiness plus source-safe claim-before-call submission. Readiness includes the local downstream submission denominator and unresolved reconciliation workload. Both submission routes publish accepted, rejected, accepted-replayed, and rejected-replayed `200` modes, with `reconciliation_required` separately published as `202`; exact retries never make another adapter call. Timeouts, transport ambiguity, 5xx responses, malformed responses, lease loss, and local finalization failure become durable reconciliation posture. Operator routes expose opaque inspection and audited accepted/rejected/quarantined resolution. | No authoritative conversion outcome, automatic uncertain-call retry, route-existence proof by default, suitability, execution, materialization, client publication, or support promotion. |
-| Source ingestion and outbox operations | `GET /api/v1/source-ingestion/readiness`, `POST /api/v1/source-ingestion/run-once`, `GET /api/v1/outbox-delivery/readiness`, `POST /api/v1/outbox-delivery/run-once`, `GET /api/v1/outbox-delivery/dead-letters`, `POST /api/v1/outbox-delivery/dead-letters/{supportReference}/redrive` | Operator diagnostics and bounded actions over configured internal foundations. Dead-letter inspection exposes opaque support references and bounded failure posture only. Re-drive requires a dedicated capability, trusted production provenance, idempotency key, reason, change reference, eligibility checks, append-only audit evidence, and a fenced lease. Poison or unsupported events remain quarantined. | No long-running scheduler certification, live broker certification, downstream delivery proof, platform mesh proof, or supported ingestion/event product. |
-| Data mesh and implementation proof | `GET /api/v1/data-mesh/readiness`, `GET /api/v1/data-mesh/trust-telemetry/runtime-preview`, `GET /api/v1/data-mesh/trust-telemetry/runtime-snapshot`, `GET /api/v1/implementation-proof/readiness` | Source-safe readiness, telemetry, local downstream submission posture, and aggregate proof-blocker diagnostics. | Diagnostics only; downstream posture is local Idea state, not downstream acceptance or materialization proof. No mesh certification, Gateway/Workbench discovery, live implementation proof, or supported-feature promotion. |
+Each family below states what its routes do today and, separately, what they explicitly do **not** grant. The boundary text is load-bearing: it is what keeps a certified internal foundation from being read as an externally supported capability.
+
+| # | Family | Covers |
+| ---: | --- | --- |
+| 1 | [Health and metadata](#health-and-metadata) | Platform probes and release identity |
+| 2 | [Caller-supplied opportunity signals](#caller-supplied-opportunity-signals) | All 12 caller-supplied signal evaluations |
+| 3 | [Bounded source-backed signal evaluation](#bounded-source-backed-signal-evaluation) | All 12 source-backed signal evaluations |
+| 4 | [Candidate persistence and lifecycle](#candidate-persistence-and-lifecycle) | Persistence, lifecycle, detail, evidence replay |
+| 5 | [Privacy and records lifecycle](#privacy-and-records-lifecycle) | Legal hold, erasure, purge |
+| 6 | [Review workflow](#review-workflow) | Advisor, PM, compliance and operator queues; review and feedback |
+| 7 | [AI explanation governance](#ai-explanation-governance) | Explanation evaluation and readiness |
+| 8 | [Conversion and report evidence](#conversion-and-report-evidence) | Conversion intent, outcomes, report evidence packs |
+| 9 | [Downstream realization and recovery](#downstream-realization-and-recovery) | Submission, reconciliation, readiness |
+| 10 | [Source ingestion and outbox operations](#source-ingestion-and-outbox-operations) | Ingestion and outbox operator actions |
+| 11 | [Data mesh and implementation proof](#data-mesh-and-implementation-proof) | Readiness, trust telemetry, proof diagnostics |
+
+### Health and metadata
+
+**Routes**
+
+- `GET /health`
+- `GET /health/live`
+- `GET /health/ready`
+- `GET /metadata`
+- `GET /version`
+
+**Current use**
+
+Platform smoke checks, readiness probes, service inventory. `/health/ready` publishes code-owned `200 ready` and source-safe `503` draining, restoring, durable-repository, and release-identity traffic-control modes.
+
+`GET /version` publishes the release identity used by the deployment and container-provenance checks in [Validation and CI](Validation-and-CI).
+
+**Boundary — not granted by these routes**
+
+No business capability, source quality, portfolio supportability, Gateway/Workbench product proof, client publication, or supported-feature proof.
+
+### Caller-supplied opportunity signals
+
+**Routes**
+
+- `POST /api/v1/idea-signals/*/evaluate`
+
+**Current use**
+
+Deterministic candidate posture over source-owned evidence supplied by authorized callers. Signal routes reject source refs whose `sourceSystem` or `productId` does not match the route's governed source contract before candidate creation. High-cash, low-income, bond-maturity, allocation-drift, underperformance, concentration-risk, high-volatility, drawdown-review, mandate-restriction, missing-risk-profile, missing-benchmark, and missing-suitability OpenAPI publish candidate-created, blocked, suppressed, and not-eligible modes from application-backed response factories. Mandate-restriction, missing-risk-profile, and missing-suitability preserve Advise `AdvisoryPolicyEvaluationRecord:v1` authority; missing-benchmark preserves Core `BenchmarkAssignment:v1` authority.
+
+**Boundary — not granted by these routes**
+
+No upstream source fetch, official calculation ownership, suitability or policy approval, client risk-profile approval or creation, risk-capacity determination, Gateway/Workbench support, or supported-feature promotion.
+
+### Bounded source-backed signal evaluation
+
+**Routes**
+
+- `POST /api/v1/idea-signals/high-cash/evaluate-from-source`
+- `POST /api/v1/idea-signals/low-income/evaluate-from-source`
+- `POST /api/v1/idea-signals/bond-maturity/evaluate-from-source`
+- `POST /api/v1/idea-signals/missing-benchmark/evaluate-from-source`
+- `POST /api/v1/idea-signals/concentration-risk/evaluate-from-source`
+- `POST /api/v1/idea-signals/high-volatility/evaluate-from-source`
+- `POST /api/v1/idea-signals/drawdown-review/evaluate-from-source`
+- `POST /api/v1/idea-signals/underperformance/evaluate-from-source`
+- `POST /api/v1/idea-signals/allocation-drift/evaluate-from-source`
+- `POST /api/v1/idea-signals/missing-suitability/evaluate-from-source`
+- `POST /api/v1/idea-signals/missing-risk-profile/evaluate-from-source`
+- `POST /api/v1/idea-signals/mandate-restriction/evaluate-from-source`
+
+**Current use**
+
+Fetches Core-owned high-cash, low-income, bond-maturity, or benchmark-assignment evidence, Lotus Risk-owned concentration, volatility, or drawdown evidence, Lotus Performance-owned active-return and benchmark-context evidence, Lotus Manage-owned action-register posture, or Lotus Advise-owned policy-evaluation workflow, risk-profile diagnostic, or explicit mandate/restriction diagnostic posture through the configured source adapter after advisor role, `idea.signal.evaluate`, and required entitlement checks pass. It returns source-redacted candidate or blocked posture and closes the runtime client after each request. High-cash, low-income, bond-maturity, missing-benchmark, allocation-drift, underperformance, concentration-risk, high-volatility, drawdown-review, mandate-restriction, missing-risk-profile, and missing-suitability each publish complete candidate-created, blocked, suppressed, and not-eligible named modes through their source-backed application paths. Missing-benchmark retains Core `BenchmarkAssignment:v1` identity without transferring benchmark assignment, methodology, or performance authority; allocation-drift candidate lineage retains supporting Manage, Performance, and Risk product identities without transferring source authority; underperformance retains Performance `ReturnsSeriesBundle:v1` identity without transferring returns or benchmark authority; concentration-risk retains Risk `ConcentrationRiskReport:v1` identity without transferring calculation or methodology authority; high-volatility retains Risk `RiskMetricsReport:v1` identity without transferring volatility, VaR, tracking-error, or methodology authority; drawdown-review retains Risk `DrawdownAnalyticsReport:v1` identity without transferring calculation, period-selection, or methodology authority; mandate-restriction, missing-risk-profile, and missing-suitability retain Advise `AdvisoryPolicyEvaluationRecord:v1` identity without transferring restriction, mandate, client risk-profile approval or creation, risk-capacity, suitability, policy, publication, rebalance, order, or execution authority.
+
+**Boundary — not granted by these routes**
+
+High-cash, low-income, bond-maturity, missing-benchmark, concentration-risk, high-volatility, drawdown-review, underperformance, allocation-drift, missing-suitability, missing-risk-profile, and mandate/restriction only; no persistence, source-worker certification, live source certification, income-needs assessment, funding advice, treasury instruction, maturity schedule authority, replacement product recommendation, reinvestment advice, planning suitability approval, benchmark assignment, benchmark methodology authority, performance calculation, concentration calculation, volatility/VaR/tracking-error calculation, drawdown calculation, drift calculation, mandate compliance approval, mandate-state change, restriction clearance, risk-profile approval or creation, risk-capacity determination, suitability approval, policy approval, proposal approval, sign-off approval, typed risk-profile or restriction data-product certification, risk methodology approval, trade recommendation, rebalance action, order creation, data-product certification, Gateway/Workbench support, client publication, or supported-feature promotion.
+
+Missing-suitability caller and Advise-backed source evaluation publish candidate-created, blocked, suppressed, and not-eligible response modes from their application paths. Advise retains suitability, policy, proposal, sign-off, and client-publication posture authority; Idea only detects evidence gaps and routes compliance review.
+
+### Candidate persistence and lifecycle
+
+**Routes**
+
+- `POST /api/v1/idea-signals/high-cash/evaluate-and-persist`
+- `POST /api/v1/idea-candidates/{candidateId}/lifecycle-transitions`
+- `GET /api/v1/idea-candidates/{candidateId}`
+- `POST /api/v1/idea-candidates/{candidateId}/evidence-replay`
+
+**Current use**
+
+Internal persisted candidate, idempotency, lifecycle, detail, and evidence-replay foundations. High-cash persistence OpenAPI distinguishes accepted, replayed, duplicate-candidate, blocked, suppressed, and not-eligible modes; non-candidate outcomes return `persistence=null`. Lifecycle transition input uses the caller-settable vocabulary and rejects `accepted` and `executed`; its OpenAPI contract publishes accepted and idempotent replay modes. Evidence replay publishes matched, hash-mismatch, stale-source, and expired modes from one DTO-validated factory. Durable PostgreSQL providers use repository-side candidate-detail projection instead of whole-store snapshot hydration for ordinary detail reads.
+
+**Boundary — not granted by these routes**
+
+`local`/`test` may use process-local writes; production-like profiles require PostgreSQL and fail closed when absent. Replay responses expose no raw source route or payload. No downstream authority, client-ready publication, or supported-feature promotion.
+
+### Privacy and records lifecycle
+
+**Routes**
+
+- `POST /api/v1/data-lifecycle/candidates/{candidateId}/actions`
+
+**Current use**
+
+Authorized preview/apply workflow for legal hold, hold release, erasure, and purge with exact tenant scope, idempotency, governed authority, dual approval, immutable audit, and PostgreSQL lifecycle fencing.
+
+**Boundary — not granted by these routes**
+
+Internal and not certified. Lotus Idea enforces approved local decisions but does not own legal/privacy approval, Report/Archive policy, AI-provider deletion, or supported-feature promotion.
+
+### Review workflow
+
+**Routes**
+
+- `GET /api/v1/review-queues/advisor`
+- `GET /api/v1/review-queues/portfolio-manager`
+- `GET /api/v1/review-queues/compliance`
+- `GET /api/v1/review-queues/operator/exceptions`
+- `GET /api/v1/review-queues/advisor/readiness`
+- `POST /api/v1/idea-candidates/{candidateId}/review-actions`
+- `POST /api/v1/idea-candidates/{candidateId}/feedback`
+
+**Current use**
+
+Audience-bound business queues, candidate-safe operator exception posture, readiness, and review/feedback capture. Queue reads use candidate-created-at as-of visibility and audience-bound opaque continuation snapshots. The advisor queue publishes application-backed `itemsAvailable` and `noItemsAvailable` 200 examples through its real projection and response DTO. Queue `policyVersion` is distinct from candidate `scorePolicyVersion`; unknown score policies fail closed. Mutations accept no body scope and authorize persisted candidate scope against trusted caller entitlements. Review-action and feedback OpenAPI publish both newly accepted and idempotent business-resource replay success modes; replay payloads explicitly expose a null decision/event without granting downstream authority. Gateway and Workbench expose bounded controls through their BFF path; browser-supplied Idea authority is not trusted, and the configured authority fixture is local/dev/test only.
+
+**Boundary — not granted by these routes**
+
+PM/compliance routes do not grant Manage or compliance authority. The action path is not authenticated-principal proof, full Workbench runtime proof, data-product certification, or supported review-product promotion.
+
+### AI explanation governance
+
+**Routes**
+
+- `POST /api/v1/idea-candidates/{candidateId}/ai-explanations/evaluate`
+- `GET /api/v1/ai-explanations/readiness`
+
+**Current use**
+
+Deterministic fallback and model-risk diagnostics. Local/test may use a visibly unattested fixture; production-like profiles accept workflow output only as a complete producer bundle with verified Lotus AI run attestation. Accepted narrative is server-rendered from verified claims under `lotus-idea.ai-claim-grounding-policy.v1`, with source-safe product/version, as-of, freshness, and quality references. Blocked output exposes no grounding and uses deterministic server-owned explanation text; submitted provider narrative is digest-bound but not returned or persisted across accepted, blocked, replay, or conflict paths. Readiness reports dashboard and alert-rule source-contract validity separately from their runtime blockers.
+
+**Boundary — not granted by these routes**
+
+No provider call by Idea, autonomous advice, dashboard provisioning, alert evaluation/delivery, live-provider certification, or client-ready explanation claim.
+
+### Conversion and report evidence
+
+**Routes**
+
+- `POST /api/v1/idea-candidates/{candidateId}/conversion-intents`
+- `POST /api/v1/conversion-intents/{conversionIntentId}/outcomes`
+- `POST /api/v1/conversion-intents/{conversionIntentId}/report-evidence-packs`
+
+**Current use**
+
+Internal review-gated intent, source-versioned append-only outcome history/current posture, and report evidence-pack request recording. Conversion-intent recording requires the conversion capability, `Idempotency-Key`, and complete trusted tenant/book/portfolio/client caller entitlement scope covering the persisted candidate; missing or mismatched scope fails closed as `403 permission_denied` before intent persistence. All three mutations publish named accepted and replayed OpenAPI modes with explicit null replay resources and false authority boundaries. Report evidence-pack examples additionally preserve no client-publication, rendered-output, or archive-record authority. Outcome resource identity is independent of the retry key; equivalent cross-key events replay, changed identity/version/progression returns `conversion_outcome_conflict`, and candidate detail separates full history from policy-valid current posture.
+
+**Boundary — not granted by these routes**
+
+No suitability approval, rebalance/execution authority, report rendering, archive record, client publication, or supported-feature promotion; quarantined histories do not count as ready.
+
+### Downstream realization and recovery
+
+**Routes**
+
+- `GET /api/v1/downstream-realization/readiness`
+- `POST /api/v1/conversion-intents/{conversionIntentId}/downstream-submissions`
+- `POST /api/v1/report-evidence-packs/{reportEvidencePackId}/downstream-submissions`
+- `GET /api/v1/downstream-submissions/reconciliation`
+- `POST /api/v1/downstream-submissions/reconciliation/{supportReference}`
+
+**Current use**
+
+Planned-contract readiness plus source-safe claim-before-call submission. Readiness includes the local downstream submission denominator and unresolved reconciliation workload. Both submission routes publish accepted, rejected, accepted-replayed, and rejected-replayed `200` modes, with `reconciliation_required` separately published as `202`; exact retries never make another adapter call. Timeouts, transport ambiguity, 5xx responses, malformed responses, lease loss, and local finalization failure become durable reconciliation posture. Operator routes expose opaque inspection and audited accepted/rejected/quarantined resolution.
+
+**Boundary — not granted by these routes**
+
+No authoritative conversion outcome, automatic uncertain-call retry, route-existence proof by default, suitability, execution, materialization, client publication, or support promotion.
+
+### Source ingestion and outbox operations
+
+**Routes**
+
+- `GET /api/v1/source-ingestion/readiness`
+- `POST /api/v1/source-ingestion/run-once`
+- `GET /api/v1/outbox-delivery/readiness`
+- `POST /api/v1/outbox-delivery/run-once`
+- `GET /api/v1/outbox-delivery/dead-letters`
+- `POST /api/v1/outbox-delivery/dead-letters/{supportReference}/redrive`
+
+**Current use**
+
+Operator diagnostics and bounded actions over configured internal foundations. Dead-letter inspection exposes opaque support references and bounded failure posture only. Re-drive requires a dedicated capability, trusted production provenance, idempotency key, reason, change reference, eligibility checks, append-only audit evidence, and a fenced lease. Poison or unsupported events remain quarantined.
+
+**Boundary — not granted by these routes**
+
+No long-running scheduler certification, live broker certification, downstream delivery proof, platform mesh proof, or supported ingestion/event product.
+
+### Data mesh and implementation proof
+
+**Routes**
+
+- `GET /api/v1/data-mesh/readiness`
+- `GET /api/v1/data-mesh/trust-telemetry/runtime-preview`
+- `GET /api/v1/data-mesh/trust-telemetry/runtime-snapshot`
+- `GET /api/v1/implementation-proof/readiness`
+
+**Current use**
+
+Source-safe readiness, telemetry, local downstream submission posture, and aggregate proof-blocker diagnostics.
+
+**Boundary — not granted by these routes**
+
+Diagnostics only; downstream posture is local Idea state, not downstream acceptance or materialization proof. No mesh certification, Gateway/Workbench discovery, live implementation proof, or supported-feature promotion.
 
 Core-backed source routes require exactly one tenant from trusted caller
 context. They reject missing, ambiguous, self-asserted production, and
