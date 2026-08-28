@@ -1,7 +1,7 @@
 # RFC Index
 
 This page is the reader-friendly RFC entrypoint. The canonical detailed ledger
-is [`docs/rfcs/README.md`](../docs/rfcs/README.md).
+is [`docs/rfcs/README.md`](https://github.com/sgajbi/lotus-idea/blob/main/docs/rfcs/README.md).
 
 Current summary: RFC-0002 foundations are actively implemented, but final
 supported-feature promotion remains blocked until implementation-backed proof,

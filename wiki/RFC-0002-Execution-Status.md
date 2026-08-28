@@ -71,8 +71,8 @@ label-backed RFC-0002 issues, 197 closed and 37 open, with 25
 `status/tracker`, and 0 app-actionable blocked issues. The Idea source ledger
 tracks 145 RFC-0002 issues: 120 closed and 25 open. `lotus-idea#1119`,
 `#1121`, `#1123`, `#1125`, `#1127`, `#1129`, and `#1131` are closed after
-Slice 17 release-governance hardening; `lotus-idea#1110` is closed after PR
-#1114/#1115/#1116 for downstream intake wire-contract gate hardening;
+Slice 17 release-governance hardening; `lotus-idea#1110` is closed after PR #1114/#1115/#1116 for
+downstream intake wire-contract gate hardening;
 `lotus-idea#1109` is closed after PR #1111/#1112 for signal API contract-gate
 hardening; `lotus-idea#1104` is closed after PR #1105 for supported-feature
 gate fixture hardening; `lotus-idea#1101` is closed after PR #1102 for AI
@@ -174,8 +174,7 @@ Current dependency refresh: `lotus-workbench` PR #698 is merged to main
 run `31784470442` passed, wiki parity is `DiffCount 0`, and issue
 `sgajbi/lotus-workbench#697` carries post-merge evidence. That removes the
 known Workbench review-workspace implementation dependency, but it does not
-replace a fresh canonical QA run. Core PR #948, Gateway PR #550, Workbench PR
-#701, Workbench PR #708, and the latest Idea source-truth PRs are merged. The
+replace a fresh canonical QA run. Core PR #948, Gateway PR #550, Workbench PR #701, Workbench PR #708, and the latest Idea source-truth PRs are merged. The
 remaining preflight concern is workspace hygiene: the shared local Core and
 Workbench checkouts are active non-main agent branches, so closure-grade
 canonical proof should run only from exact-main repositories or an isolated

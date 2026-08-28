@@ -172,7 +172,7 @@ flowchart LR
 
 Use the demo assets in this order:
 
-1. Start with the [demo hub](../docs/demo/README.md) to understand the
+1. Start with the [demo hub](https://github.com/sgajbi/lotus-idea/blob/main/docs/demo/README.md) to understand the
    client-facing process, proof anchors, and current do-not-claim boundary.
 2. Use the client-facing brief so the audience understands the
    private-banking problem, Lotus response, trust anchors, and current boundary.
@@ -227,15 +227,15 @@ Every external Lotus Idea demo pack should include:
 8. product, engineering, operations, security, commercial, and marketing follow-up owners.
 
 The app-level process lives in
-[docs/demo/README.md](../docs/demo/README.md) and
-[docs/demo/client-demo-operating-process.md](../docs/demo/client-demo-operating-process.md).
+[docs/demo/README.md](https://github.com/sgajbi/lotus-idea/blob/main/docs/demo/README.md) and
+[docs/demo/client-demo-operating-process.md](https://github.com/sgajbi/lotus-idea/blob/main/docs/demo/client-demo-operating-process.md).
 Use the client-facing opening brief at
-[docs/demo/client-facing-lotus-idea-brief.md](../docs/demo/client-facing-lotus-idea-brief.md)
+[docs/demo/client-facing-lotus-idea-brief.md](https://github.com/sgajbi/lotus-idea/blob/main/docs/demo/client-facing-lotus-idea-brief.md)
 when the audience needs a polished explanation of what Lotus is doing before
 the evidence pack.
 Start each client-specific pack from
-[docs/demo/client-demo-pack.template.md](../docs/demo/client-demo-pack.template.md).
-The current claim ledger lives in [docs/demo/demo-claims.md](../docs/demo/demo-claims.md).
+[docs/demo/client-demo-pack.template.md](https://github.com/sgajbi/lotus-idea/blob/main/docs/demo/client-demo-pack.template.md).
+The current claim ledger lives in [docs/demo/demo-claims.md](https://github.com/sgajbi/lotus-idea/blob/main/docs/demo/demo-claims.md).
 
 ## Validation
 
